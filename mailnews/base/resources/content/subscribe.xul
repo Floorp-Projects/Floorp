@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/subscribe.css" type="text/css"?>
 
@@ -23,11 +23,7 @@
 <!ENTITY collapseAllButton.label "Collapse All">
 <!ENTITY stopButton.label "Stop">
 <!ENTITY nameColumn.label "Name">
-<!ENTITY check.img "chrome://messenger/skin/check.gif">
-<!ENTITY dot.img "chrome://messenger/skin/dot.gif">
 <!ENTITY messagesColumn.label "Messages">
-<!ENTITY accounts.label "accounts">
-<!ENTITY accounts.img "chrome://messenger/skin/localMailHost.gif"> 
 <!ENTITY getNewButton.label "Get New">
 <!ENTITY clearNewButton.label "Clear New">
 <!ENTITY searchNowButton.label "Search Now">
@@ -36,20 +32,20 @@
 
 ]> 
 
-<window style="height: 100%; width: 100%;" 
+<window id="subscribe"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	title="&subscribeWindow.title;">
 
-<box align="vertical" style="width: 100%" >
-	<tabcontrol align="vertical" flex="100%" >
-		<tabbox align="horizontal">
+<box align="vertical" style="width: 100%; height: 100%">
+	<tabcontrol align="vertical" >
+		<tabbox align="horizontal" >
 			<tab>&allTab.label;</tab>
 			<tab>&searchTab.label;</tab>
 			<tab>&newTab.label;</tab>
 		</tabbox>
    
-	<tabpanel flex="100%" style="border: 2px outset gray">
+	<tabpanel flex="100%" >
 <!-- all tab -->
 		<box align="vertical" class="cleanborder">
 			<box align="horizontal">
@@ -62,24 +58,24 @@
 	<treehead>
 		<treeitem>
 			<treecell>&nameColumn.label;</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&check.img;"/></treecell>
+			<treecell><html:img src="chrome://messenger/skin/check.gif"/></treecell>
 			<treecell>&messagesColumn.label;</treecell>
 		</treeitem>
 	</treehead>
 	<treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 		<treeitem id="tintin">
 			<treecell><treeindentation/>tintin</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&check.img;"/></treecell> 
+			<treecell onclick="dump('clicked here\n');"><titledbutton/></treecell>
 			<treecell/>
 		</treeitem>
 		<treeitem id="news">
 			<treecell><treeindentation/>news</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&dot.img;"/></treecell>
+			<treecell><titledbutton/></treecell>
 			<treecell/>
 		</treeitem>
 		<treeitem id="news.mozilla.org">
 			<treecell><treeindentation/>news.mozilla.org</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&dot.img;"/></treecell>
+			<treecell><titledbutton/></treecell>
 			<treecell/>
 		</treeitem>
 	</treebody>
@@ -89,7 +85,7 @@
 				</box>
 				<spring flex="100%"/>
 				<box align="vertical">
-					<titledbutton class="push" flex="50%" name="addserver" value="&addServerButton.label;"/>
+					<titledbutton class="push" flex="50%" name="addserver" value="&addServerButton.label;" onclick="dump('Add Server button pressed\n');"/>
 					<html:hr/>
 					<titledbutton class="push" flex="50%" name="subscribe" value="&subscribeButton.label;"/>
 					<titledbutton class="push" flex="50%" name="unsubscribe" value="&unsubscribeButton.label;"/>
@@ -115,24 +111,24 @@
 	<treehead>
 		<treeitem>
 			<treecell>&nameColumn.label;</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&check.img;"/></treecell>
+			<treecell><html:img src="chrome://messenger/skin/check.gif"/></treecell>
 			<treecell>&messagesColumn.label;</treecell>
 		</treeitem>
 	</treehead>
 	<treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 		<treeitem id="a">
 			<treecell><treeindentation/>a</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&check.img;"/></treecell> 
+			<treecell/>
 			<treecell/>
 		</treeitem>
 		<treeitem id="b">
 			<treecell><treeindentation/>b</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&dot.img;"/></treecell>
+			<treecell/>
 			<treecell/>
 		</treeitem>
 		<treeitem id="c">
 			<treecell><treeindentation/>c</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&dot.img;"/></treecell>
+			<treecell/>
 			<treecell/>
 		</treeitem>
 	</treebody>
@@ -161,24 +157,24 @@
 	<treehead>
 		<treeitem>
 			<treecell>&nameColumn.label;</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&check.img;"/></treecell>
+			<treecell><html:img src="chrome://messenger/skin/check.gif"/></treecell>
 			<treecell>&messagesColumn.label;</treecell>
 		</treeitem>
 	</treehead>
 	<treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 		<treeitem id="1">
 			<treecell><treeindentation/>1</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&check.img;"/></treecell> 
+			<treecell/>
 			<treecell/>
 		</treeitem>
 		<treeitem id="2">
 			<treecell><treeindentation/>2</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&dot.img;"/></treecell>
+			<treecell/>
 			<treecell/>
 		</treeitem>
 		<treeitem id="3">
 			<treecell><treeindentation/>3</treecell>
-			<treecell><html:img hspace="2" style="vertical-align: bottom" src="&dot.img;"/></treecell>
+			<treecell/>
 			<treecell/>
 		</treeitem>
 	</treebody>
@@ -201,6 +197,7 @@
 <!-- end of new tab -->
 	   </tabpanel> 
 	</tabcontrol>
+    <spring flex="100%"/>
 	<box align="horizontal">
 		<titledbutton class="push" flex="50%" name="ok" value="&okButton.label;"/>
 		<spring flex="100%"/>
