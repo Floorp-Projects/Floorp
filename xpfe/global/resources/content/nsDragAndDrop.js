@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com> (Original Author)
+ *   Pierre Chanial <pierrechanial@netscape.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -167,7 +168,7 @@ var nsDragAndDrop = {
    * called when a drag passes over this element
    *
    * @param DOMEvent aEvent
-   *        the DOM event fired by the drag init
+   *        the DOM event fired by passing over the element
    * @param Object aDragDropObserver
    *        javascript object of format described above that specifies
    *        the way in which the element responds to drag events.
@@ -176,22 +177,18 @@ var nsDragAndDrop = {
     { 
       if (!("onDragOver" in aDragDropObserver)) 
         return;
-      if (!this.mDragSession) 
-        this.mDragSession = this.mDragService.getCurrentSession();
-      if (this.mDragSession)
+      if (!this.checkCanDrop(aEvent, aDragDropObserver))
+        return;
+      var flavourSet = aDragDropObserver.getSupportedFlavours();
+      for (var flavour in flavourSet.flavourTable)
         {
-          var flavourSet = aDragDropObserver.getSupportedFlavours();
-          for (var flavour in flavourSet.flavourTable)
+          if (this.mDragSession.isDataFlavorSupported(flavour))
             {
-              if (this.mDragSession.isDataFlavorSupported(flavour))
-                {
-                  this.mDragSession.canDrop = (this.mDragSession.sourceNode != aEvent.target);
-                  aDragDropObserver.onDragOver(aEvent, 
-                                               flavourSet.flavourTable[flavour], 
-                                               this.mDragSession);
-                  aEvent.preventBubble();
-                  break;
-                }
+              aDragDropObserver.onDragOver(aEvent, 
+                                           flavourSet.flavourTable[flavour], 
+                                           this.mDragSession);
+              aEvent.preventBubble();
+              break;
             }
         }
     },
@@ -204,7 +201,7 @@ var nsDragAndDrop = {
    * called when the user drops on the element
    *
    * @param DOMEvent aEvent
-   *        the DOM event fired by the drag init
+   *        the DOM event fired by the drop
    * @param Object aDragDropObserver
    *        javascript object of format described above that specifies
    *        the way in which the element responds to drag events.
@@ -213,25 +210,55 @@ var nsDragAndDrop = {
     {
       if (!("onDrop" in aDragDropObserver))
         return;
-        
-      if (!this.mDragSession) 
-        this.mDragSession = this.mDragService.getCurrentSession();
-      if (this.mDragSession)
-        {
-          var flavourSet = aDragDropObserver.getSupportedFlavours();
-          var transferData = nsTransferable.get(flavourSet, this.getDragData, true);
-          aEvent.preventBubble();
-          // hand over to the client to respond to dropped data
-          var multiple = "canHandleMultipleItems" in aDragDropObserver && aDragDropObserver.canHandleMultipleItems;
-          var dropData = multiple ? transferData : transferData.first.first;
-          aDragDropObserver.onDrop(aEvent, dropData, this.mDragSession);
-        }
+      if (!this.checkCanDrop(aEvent, aDragDropObserver))
+        return;  
+      if (this.mDragSession.canDrop) {
+        var flavourSet = aDragDropObserver.getSupportedFlavours();
+        var transferData = nsTransferable.get(flavourSet, this.getDragData, true);
+        // hand over to the client to respond to dropped data
+        var multiple = "canHandleMultipleItems" in aDragDropObserver && aDragDropObserver.canHandleMultipleItems;
+        var dropData = multiple ? transferData : transferData.first.first;
+        aDragDropObserver.onDrop(aEvent, dropData, this.mDragSession);
+      }
+      aEvent.preventBubble();
     },
 
+  /** 
+   * void dragExit (DOMEvent aEvent, Object aDragDropObserver) ;
+   *
+   * called when a drag leaves this element
+   *
+   * @param DOMEvent aEvent
+   *        the DOM event fired by leaving the element
+   * @param Object aDragDropObserver
+   *        javascript object of format described above that specifies
+   *        the way in which the element responds to drag events.
+   **/
   dragExit: function (aEvent, aDragDropObserver)
     {
+      if (!this.checkCanDrop(aEvent, aDragDropObserver))
+        return;
       if ("onDragExit" in aDragDropObserver)
         aDragDropObserver.onDragExit(aEvent, this.mDragSession);
+    },  
+    
+  /** 
+   * void dragEnter (DOMEvent aEvent, Object aDragDropObserver) ;
+   *
+   * called when a drag enters in this element
+   *
+   * @param DOMEvent aEvent
+   *        the DOM event fired by entering in the element
+   * @param Object aDragDropObserver
+   *        javascript object of format described above that specifies
+   *        the way in which the element responds to drag events.
+   **/
+  dragEnter: function (aEvent, aDragDropObserver)
+    {
+      if (!this.checkCanDrop(aEvent, aDragDropObserver))
+        return;
+      if ("onDragEnter" in aDragDropObserver)
+        aDragDropObserver.onDragEnter(aEvent, this.mDragSession);
     },  
     
   /** 
@@ -257,7 +284,30 @@ var nsDragAndDrop = {
           supportsArray.AppendElement(trans);
         }
       return supportsArray;
-    }
+    },
 
+  /** 
+   * Boolean checkCanDrop (DOMEvent aEvent, Object aDragDropObserver) ;
+   *
+   * Sets the canDrop attribute for the drag session.
+   * returns false if there is no current drag session.
+   *
+   * @param DOMEvent aEvent
+   *        the DOM event fired by the drop
+   * @param Object aDragDropObserver
+   *        javascript object of format described above that specifies
+   *        the way in which the element responds to drag events.
+   **/
+  checkCanDrop: function (aEvent, aDragDropObserver)
+    {
+      if (!this.mDragSession) 
+        this.mDragSession = this.mDragService.getCurrentSession();
+      if (!this.mDragSession) 
+        return false;
+      this.mDragSession.canDrop = this.mDragSession.sourceNode != aEvent.target;
+      if ("canDrop" in aDragDropObserver)
+        this.mDragSession.canDrop &= aDragDropObserver.canDrop(aEvent, this.mDragSession);
+      return true;
+    } 
 };
 
