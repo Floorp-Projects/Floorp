@@ -50,13 +50,16 @@
 #include "nsCOMPtr.h"
 #include "nsSOAPBlock.h"
 
-class nsSOAPParameter:public nsSOAPBlock, public nsISOAPParameter {
+class nsSOAPParameter : public nsSOAPBlock,
+                        public nsISOAPParameter
+{
 public:
   nsSOAPParameter();
   virtual ~ nsSOAPParameter();
 
   NS_DECL_ISUPPORTS NS_FORWARD_NSISOAPBLOCK(nsSOAPBlock::)
       // nsISOAPParameter
- NS_DECL_NSISOAPPARAMETER};
+  NS_DECL_NSISOAPPARAMETER
+};
 
 #endif
