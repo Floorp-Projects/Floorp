@@ -22,7 +22,7 @@ function Startup()
   var dateEndedField = document.getElementById("dateEnded");
   
   var dateStarted = ds.GetTarget(resource, dateStartedRes, true).QueryInterface(Components.interfaces.nsIRDFDate).Value;
-  var dateEnded = ds.GetTarget(resource, dateStartedRes, true).QueryInterface(Components.interfaces.nsIRDFDate).Value;
+  var dateEnded = ds.GetTarget(resource, dateEndedRes, true).QueryInterface(Components.interfaces.nsIRDFDate).Value;
   dateStarted = new Date(dateStarted/1000);
   dateStarted = dateTimeService.FormatDateTime("", dateTimeService.dateFormatShort, dateTimeService.timeFormatSeconds, dateStarted.getFullYear(), dateStarted.getMonth()+1, dateStarted.getDate(), dateStarted.getHours(), dateStarted.getMinutes(), dateStarted.getSeconds());
   dateEnded = new Date(dateEnded/1000);
