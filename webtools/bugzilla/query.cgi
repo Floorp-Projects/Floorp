@@ -443,7 +443,7 @@ if (!($cgi->param('query_format') || $cgi->param('format'))) {
 
 # Set cookie to current format as default, but only if the format
 # one that we should remember.
-if (IsValidQueryType($vars->{'format'})) {
+if (defined($vars->{'format'}) && IsValidQueryType($vars->{'format'})) {
     $cgi->send_cookie(-name => 'DEFAULTFORMAT',
                       -value => $vars->{'format'},
                       -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
