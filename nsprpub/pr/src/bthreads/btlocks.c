@@ -53,8 +53,11 @@ PR_IMPLEMENT(PRLock*)
 PR_IMPLEMENT(void)
     PR_DestroyLock (PRLock* lock)
 {
+    status_t result;
+
     PR_ASSERT(NULL != lock);
-    PR_ASSERT(delete_sem(lock->semaphoreID) == B_NO_ERROR);
+    result = delete_sem(lock->semaphoreID);
+    PR_ASSERT(result == B_NO_ERROR);
     PR_DELETE(lock);
 }
 

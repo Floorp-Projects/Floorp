@@ -34,7 +34,8 @@ PR_IMPLEMENT(PRCondVar*)
     if( NULL != cv )
     {
 	cv->lock = lock;
-	PR_ASSERT((cv->isem = create_sem( 1, "nspr_sem")) >= B_NO_ERROR );
+	cv->isem = create_sem( 1, "nspr_sem");
+	PR_ASSERT( cv->isem >= B_NO_ERROR );
     }
     return cv;
 } /* PR_NewCondVar */
@@ -48,7 +49,10 @@ PR_IMPLEMENT(PRCondVar*)
 PR_IMPLEMENT(void)
     PR_DestroyCondVar (PRCondVar *cvar)
 {
-    PR_ASSERT( delete_sem( cvar->isem ) == B_NO_ERROR );
+    status_t result;
+
+    result = delete_sem( cvar->isem );
+    PR_ASSERT( result == B_NO_ERROR );
     PR_DELETE( cvar );
 }
 

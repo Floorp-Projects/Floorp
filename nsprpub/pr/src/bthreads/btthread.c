@@ -198,7 +198,8 @@ _bt_root (void* arg)
     /* Set within the current thread the pointer to our object. This
        object will be deleted when the thread termintates.  */
 
-    PR_ASSERT( PR_SetThreadPrivate( 0, (void *) thred ) == PR_SUCCESS );
+    result = PR_SetThreadPrivate( 0, (void *) thred );
+    PR_ASSERT( result == PR_SUCCESS );
 
     thred->startFunc(thred->arg);  /* run the dang thing */
 
@@ -266,7 +267,8 @@ _bt_root (void* arg)
     /* delete the thread object */
     PR_DELETE(thred);
 
-    PR_ASSERT( PR_SetThreadPrivate( (PRUint8) 0, (void *) NULL ) == PR_SUCCESS );
+    result = PR_SetThreadPrivate( (PRUint8) 0, (void *) NULL );
+    PR_ASSERT( result == PR_SUCCESS );
     exit_thread( NULL );
 }
 

@@ -42,8 +42,11 @@ PR_IMPLEMENT(PRSemaphore*)
 PR_IMPLEMENT(void)
     PR_DestroySem (PRSemaphore *sem)
 {
+	status_t result;
+
 	PR_ASSERT(sem != NULL);
-	PR_ASSERT(delete_sem(sem->sem) == B_NO_ERROR);
+	result = delete_sem(sem->sem);
+	PR_ASSERT(result == B_NO_ERROR);
 	PR_DELETE(sem);
 } 
 
@@ -79,8 +82,11 @@ PR_IMPLEMENT(PRStatus)
 PR_IMPLEMENT(void)
     PR_PostSem (PRSemaphore *sem)
 {
+	status_t result;
+
 	PR_ASSERT(sem != NULL);
-	PR_ASSERT(release_sem(sem->sem) == B_NO_ERROR);
+	result = release_sem(sem->sem);
+	PR_ASSERT(result == B_NO_ERROR);
 }
 
 /*
