@@ -2430,8 +2430,8 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext*     aDContext,
 
     // Only Shrink if we are smaller
     if (mPrt->mShrinkRatio < 0.998f) {
-      // Clamp Shrink to Fit to 30%
-      mPrt->mShrinkRatio = PR_MAX(mPrt->mShrinkRatio, 0.30f);
+      // Clamp Shrink to Fit to 60%
+      mPrt->mShrinkRatio = PR_MAX(mPrt->mShrinkRatio, 0.60f);
 
       for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
         nsPrintObject* po = (nsPrintObject*)mPrt->mPrintDocList->ElementAt(i);
