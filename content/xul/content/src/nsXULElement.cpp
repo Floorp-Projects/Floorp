@@ -2879,6 +2879,7 @@ NS_IMETHODIMP
 nsXULElement::GetRangeList(nsVoidArray*& aResult) const
 {
     // rdf content does not yet support DOM ranges
+    aResult = nsnull;
     return NS_OK;
 }
 
