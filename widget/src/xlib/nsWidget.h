@@ -99,6 +99,7 @@ public:
 
   PRBool                  OnPaint(nsPaintEvent &event);
   PRBool                  OnResize(nsSizeEvent &event);
+  PRBool                  DispatchMouseEvent(nsMouseEvent &aEvent);
   static nsWidget        *getWidgetForWindow(Window aWindow);
 protected:
   // create the native window for this class

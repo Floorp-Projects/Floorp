@@ -325,11 +325,81 @@ nsAppShell::DispatchEvent(XEvent *event)
   case ConfigureNotify:
     HandleConfigureNotifyEvent(event, widget);
     break;
+  case ButtonPress:
+  case ButtonRelease:
+    HandleButtonEvent(event, widget);
+    break;
+  case MotionNotify:
+    HandleMotionNotifyEvent(event, widget);
+    break;
   default:
     printf("Unhandled window event: Window 0x%lxd Got a %s event\n",
            event->xany.window, event_names[event->type]);
     break;
   }
+}
+
+void
+nsAppShell::HandleMotionNotifyEvent(XEvent *event, nsWidget *aWidget)
+{
+  nsMouseEvent mevent;
+  mevent.message = NS_MOUSE_MOVE;
+  mevent.widget = aWidget;
+  mevent.eventStructType = NS_MOUSE_EVENT;
+  mevent.point.x = event->xmotion.x;
+  mevent.point.y = event->xmotion.y;
+  mevent.time = 0;
+  NS_ADDREF(aWidget);
+  aWidget->DispatchMouseEvent(mevent);
+  NS_RELEASE(aWidget);
+}
+
+void
+nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
+{
+  nsMouseEvent mevent;
+  PRUint32 eventType = 0;
+  printf("Button event for window 0x%lxd button %d type %s\n",
+         event->xany.window, event->xbutton.button, (event->type == ButtonPress ? "ButtonPress" : "ButtonRelease"));
+  switch(event->type) {
+  case ButtonPress:
+    switch(event->xbutton.button) {
+    case 1:
+      eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+      break;
+    case 2:
+      eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+      break;
+    case 3:
+      eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+      break;
+    }
+    break;
+  case ButtonRelease:
+    switch(event->xbutton.button) {
+    case 1:
+      eventType = NS_MOUSE_LEFT_BUTTON_UP;
+      break;
+    case 2:
+      eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+      break;
+    case 3:
+      eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+      break;
+    }
+    break;
+  }
+  mevent.message = eventType;
+  mevent.widget = aWidget;
+  mevent.eventStructType = NS_MOUSE_EVENT;
+  mevent.point.x = event->xbutton.x;
+  mevent.point.y = event->xbutton.y;
+  // XXX fix this.  We need clicks
+  mevent.clickCount = 1;
+  mevent.time = 0;
+  NS_ADDREF(aWidget);
+  aWidget->DispatchMouseEvent(mevent);
+  NS_ADDREF(aWidget);
 }
 
 void
