@@ -311,7 +311,16 @@ nsWebShellWindow::Close()
      Revisit this later!?
   */
 //  Release();
-  return NS_OK;
+  nsIAppShellService* appShell;
+  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                  kIAppShellServiceIID,
+                                  (nsISupports**)&appShell);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  rv = appShell->UnregisterTopLevelWindow(this);
+  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  return rv;
 }
 
 
@@ -324,7 +333,6 @@ nsWebShellWindow::Close()
 nsEventStatus PR_CALLBACK
 nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 {
-  nsresult rv;
   nsEventStatus result = nsEventStatus_eIgnore;
   nsIWebShell* webShell = nsnull;
 
@@ -354,19 +362,10 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
        * Notify the ApplicationShellService that the window is being closed...
        */
       case NS_DESTROY: {
-        nsIAppShellService* appShell;
-
-        rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                          kIAppShellServiceIID,
-                                          (nsISupports**)&appShell);
-        if (NS_SUCCEEDED(rv)) {
-          void             *data;
-
-          aEvent->widget->GetClientData(data);
-          if (data != nsnull)
-            appShell->CloseTopLevelWindow((nsWebShellWindow *)data);
-          nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-        }
+        void* data;
+        aEvent->widget->GetClientData(data);
+        if (data)
+           ((nsWebShellWindow *)data)->Close();
         break;
       }
     }
