@@ -131,7 +131,6 @@
 #define _NSSILOCK_H_
 
 #include "prtypes.h"
-#include "nssilock.h"
 #include "prmon.h"
 #include "prlock.h"
 #include "prcvar.h"
@@ -139,49 +138,49 @@
 PR_BEGIN_EXTERN_C
 
 typedef enum {
-    nssILockArena,
-    nssILockSession,
-    nssILockObject,
-    nssILockRefLock,
-    nssILockCert,
-    nssILockCertDB,
-    nssILockDBM,
-    nssILockCache,
-    nssILockSSL,
-    nssILockList,
-    nssILockSlot,
-    nssILockFreelist,
-    nssILockOID,
-    nssILockAttribute,
-    nssILockPK11cxt,  /* pk11context */
-    nssILockRWLock,
-    nssILockOther,
-    nssILockSelfServ,
+    nssILockArena = 0,
+    nssILockSession = 1,
+    nssILockObject = 2,
+    nssILockRefLock = 3,
+    nssILockCert = 4,
+    nssILockCertDB = 5,
+    nssILockDBM = 6,
+    nssILockCache = 7,
+    nssILockSSL = 8,
+    nssILockList = 9,
+    nssILockSlot = 10,
+    nssILockFreelist = 11,
+    nssILockOID = 12,
+    nssILockAttribute = 13,
+    nssILockPK11cxt = 14,  /* pk11context */
+    nssILockRWLock = 15,
+    nssILockOther = 16,
+    nssILockSelfServ = 17,
     nssILockLast  /* don't use this one! */
 } nssILockType;
 
 /*
 ** Declare operation type enumerator
-** enumerations identify the function being perfromed
+** enumerations identify the function being performed
 */
 typedef enum  {
-    FlushTT,
-    NewLock,
-    Lock,
-    Unlock,
-    DestroyLock,
-    NewCondVar,
-    WaitCondVar,
-    NotifyCondVar,
-    NotifyAllCondVar,
-    DestroyCondVar,
-    NewMonitor,
-    EnterMonitor,
-    ExitMonitor,
-    Notify,
-    NotifyAll,
-    Wait,
-    DestroyMonitor
+    FlushTT = 0,
+    NewLock = 1,
+    Lock = 2,
+    Unlock = 3,
+    DestroyLock = 4,
+    NewCondVar = 5,
+    WaitCondVar = 6,
+    NotifyCondVar = 7,
+    NotifyAllCondVar = 8,
+    DestroyCondVar = 9,
+    NewMonitor = 10,
+    EnterMonitor = 11,
+    ExitMonitor = 12,
+    Notify = 13,
+    NotifyAll = 14,
+    Wait = 15,
+    DestroyMonitor = 16
 } nssILockOp;
 
 /*
