@@ -45,12 +45,12 @@ interface nsIDocShellHistory : nsISupports
   /**
    * Get the SHEntry associated with a child docshell
    */
-  nsISHEntry GetChildSHEntry(in long aChildOffset);
+  nsISHEntry getChildSHEntry(in long aChildOffset);
 
   /**
    * Add a Child SHEntry for a frameset page
    */
-  void AddChildSHEntry(in nsISHEntry aCloneReference,
+  void addChildSHEntry(in nsISHEntry aCloneReference,
                        in nsISHEntry aHistoryEntry,
                        in long aChildOffset);
 
