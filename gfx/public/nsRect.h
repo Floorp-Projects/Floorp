@@ -123,13 +123,23 @@ struct NS_GFX nsRect {
   PRBool  operator!=(const nsRect& aRect) const {
     return (PRBool) !operator==(aRect);
   }
+
+  // This method is weird. It should probably be deprecated.
   nsRect  operator+(const nsRect& aRect) const {
     return nsRect(x + aRect.x, y + aRect.y,
                   width + aRect.width, height + aRect.height);
   }
+  nsRect  operator+(const nsPoint& aPoint) const {
+    return nsRect(x + aPoint.x, y + aPoint.y, width, height);
+  }
+
+  // This method is weird. It should probably be deprecated.
   nsRect  operator-(const nsRect& aRect) const {
     return nsRect(x - aRect.x, y - aRect.y,
                   width - aRect.width, height - aRect.height);
+  }
+  nsRect  operator-(const nsPoint& aPoint) const {
+    return nsRect(x - aPoint.x, y - aPoint.y, width, height);
   }
   nsRect& operator+=(const nsPoint& aPoint) {x += aPoint.x; y += aPoint.y; return *this;}
   nsRect& operator-=(const nsPoint& aPoint) {x -= aPoint.x; y -= aPoint.y; return *this;}

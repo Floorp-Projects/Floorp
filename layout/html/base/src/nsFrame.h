@@ -327,12 +327,6 @@ public:
   //--------------------------------------------------
   // Additional methods
 
-  // Invalidate part of the frame by asking the view manager to repaint.
-  // aDamageRect is in the frame's local coordinate space
-  void        Invalidate(nsIPresContext* aPresContext,
-                         const nsRect& aDamageRect,
-                         PRBool aImmediate = PR_FALSE) const;
-
   /**
    * Helper method to invalidate portions of a standard container frame if the
    * reflow state indicates that the size has changed (specifically border,

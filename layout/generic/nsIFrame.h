@@ -1010,6 +1010,14 @@ public:
    */
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const = 0;
 
+  // Invalidate part of the frame by asking the view manager to repaint.
+  // aDamageRect is in the frame's local coordinate space
+  void Invalidate(const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE) const;
+  // XXX deprecated, remove once we've fixed all callers
+  void Invalidate(nsIPresContext* aPresContext,
+                  const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE) const
+  { Invalidate(aDamageRect, aImmediate); }
+
   /** Selection related calls
    */
   /** 

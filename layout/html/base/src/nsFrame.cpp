@@ -2489,43 +2489,24 @@ nsFrame::GetType() const
 }
 
 void
-nsFrame::Invalidate(nsIPresContext* aPresContext,
-                    const nsRect&   aDamageRect,
-                    PRBool          aImmediate) const
+nsIFrame::Invalidate(const nsRect& aDamageRect,
+                     PRBool        aImmediate) const
 {
   if (aDamageRect.IsEmpty()) {
     return;
   }
 
-  if (aPresContext) {
-    // Don't allow invalidates to do anything when
-    // painting is suppressed.
-    nsIPresShell *shell = aPresContext->GetPresShell();
-    if (shell) {
-      PRBool suppressed = PR_FALSE;
-      shell->IsPaintingSuppressed(&suppressed);
-      if (suppressed)
-        return;
-    }
+  // Don't allow invalidates to do anything when
+  // painting is suppressed.
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
+  if (shell) {
+    PRBool suppressed = PR_FALSE;
+    shell->IsPaintingSuppressed(&suppressed);
+    if (suppressed)
+      return;
   }
 
   nsRect damageRect(aDamageRect);
-
-#if 0
-  // NOTE: inflating the damagerect is to account for outlines but 
-  // ONLY WHEN outlines are actually drawn outside of the frame. This
-  // assumes that they are *but they are not* and it also assumes that the
-  // entire frame is being invalidated, which it often is not
-  // - therefore, this code is invalid and has been removed
-
-  // Checks to see if the damaged rect should be infalted 
-  // to include the outline
-  nscoord width;
-  GetStyleOutline()->GetOutlineWidth(width);
-  if (width > 0) {
-    damageRect.Inflate(width, width);
-  }
-#endif
 
   PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
   if (HasView()) {
@@ -2536,7 +2517,7 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
     nsPoint   offset;
   
     nsIView *view;
-    GetOffsetFromView(aPresContext, offset, &view);
+    GetOffsetFromView(GetPresContext(), offset, &view);
     NS_ASSERTION(view, "no view");
     rect += offset;
     view->GetViewManager()->UpdateView(view, rect, flags);
