@@ -65,6 +65,7 @@ CPPSRCS		= \
 # Can't use JAVA_SRCS for now, since that one is referenced in config.mk
 JAVA_SRCS_ = \
 		XPCOM.java \
+		XPCOMException.java \
 		GeckoEmbed.java \
 		$(NULL)
 
@@ -100,7 +101,7 @@ _IGNORE_STUBS = domstubs gfxIFormats
 IGNORE_STUBS = $(patsubst %,org/mozilla/xpcom/stubs/%_Stub.class,$(_IGNORE_STUBS))
 JAVA_STUB_CLASSES = $(filter-out $(IGNORE_STUBS),$(_JAVA_STUB_CLASSES))
 
-GARBAGE = $(EMBED_JAR) $(EMBED_JAR_SRC)
+GARBAGE += $(EMBED_JAR) $(EMBED_JAR_SRC)
 GARBAGE_DIRS += $(XPIDL_GEN_DIR) org
 
 include $(topsrcdir)/config/rules.mk
