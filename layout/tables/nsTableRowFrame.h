@@ -127,7 +127,11 @@ protected:
 
   void FixMinCellHeight();
 
-  nsresult RecoverState(RowReflowState& aState, nsIFrame* aKidFrame);
+  nsresult RecoverState(nsIPresContext* aPresContext,
+                        RowReflowState& aState,
+                        nsIFrame*       aKidFrame,
+                        nscoord&        aMaxCellTopMargin,
+                        nscoord&        aMaxCellBottomMargin);
 
   void PlaceChild(nsIPresContext* aPresContext,
                   RowReflowState& aState,
