@@ -1142,30 +1142,64 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
     // means necessary
     //
 
+    // If you decide to mess with this code in some way other than just
+    // converting it to be just like the anchored codepath, please make sure to
+    // not regress bug 120226, bug 172530, bug 245163.
+
+    // XXXbz this is really silly.  We should be able to anchor popups to a
+    // point or rect, not a frame, and we should be doing so with context
+    // menus.  Furthermore, we should not be adding in pixels manually to
+    // adjust position (in XULPopupListenerImpl::LaunchPopup comes to mind,
+    // though ConvertPosition in the same file has some 21-px bogosity in the
+    // y-direction too).
+
     // shrink to fit onto the screen, vertically and horizontally
     if(mRect.width > screenWidthTwips) 
         mRect.width = screenWidthTwips;    
     if(mRect.height > screenHeightTwips)
         mRect.height = screenHeightTwips;   
-    
-    // we now know where the view is...make sure that it's still onscreen at all!
+
+    // First, adjust the X position.  For the X position, we slide the popup
+    // left or right as needed to get it on screen.
     if ( screenViewLocX < screenLeftTwips ) {
       PRInt32 moveDistX = screenLeftTwips - screenViewLocX;
       xpos += moveDistX;
       screenViewLocX += moveDistX;
     }
+    if ( (screenViewLocX + mRect.width) > screenRightTwips )
+      xpos -= (screenViewLocX + mRect.width) - screenRightTwips;
+
+    // Now the Y position.  If the popup is up too high, slide it down so it's
+    // on screen.
     if ( screenViewLocY < screenTopTwips ) {
       PRInt32 moveDistY = screenTopTwips - screenViewLocY;
       ypos += moveDistY;
       screenViewLocY += moveDistY;
     }
 
-    // ensure it is not even partially offscreen.
-    if ( (screenViewLocX + mRect.width) > screenRightTwips )
-      xpos -= (screenViewLocX + mRect.width) - screenRightTwips;
-    if ( (screenViewLocY + mRect.height) > screenBottomTwips )
-      ypos -= (mRect.height + margin.top + margin.bottom);
-      
+    // Now if the popup extends down too far, either resize it or flip it to be
+    // above the anchor point and resize it to fit above, depending on where we
+    // have more room.
+    if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
+      // XXXbz it'd be good to make use of IsMoreRoomOnOtherSideOfParent and
+      // such here, but that's really focused on having a nonempty parent
+      // rect...
+      if (screenBottomTwips - screenViewLocY >
+          screenViewLocY - screenTopTwips) {
+        // More space below our desired point.  Resize to fit in this space.
+        // Note that this is making mRect smaller; othewise we would not have
+        // reached this code.
+        mRect.height = screenBottomTwips - screenViewLocY;
+      } else {
+        // More space above our desired point.  Flip and resize to fit in this
+        // space.
+        if (mRect.height > screenViewLocY - screenTopTwips) {
+          // We wouldn't fit.  Shorten before flipping.
+          mRect.height = screenViewLocY - screenTopTwips;
+        }
+        ypos -= (mRect.height + margin.top + margin.bottom);
+      }
+    }
   }  
 
   viewManager->MoveViewTo(view, xpos, ypos); 
