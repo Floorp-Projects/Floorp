@@ -598,7 +598,13 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     if (lastc == '\n')
 	limit[-1] = lastc;
     if (message) JS_free(cx, message);
-    if (report.messageArgs) JS_free(cx, (void *)report.messageArgs);
+    if (report.messageArgs) {
+        int i = 0;
+        while (report.messageArgs[i]) 
+            JS_free(cx, (void *)report.messageArgs[i++]);
+        JS_free(cx, (void *)report.messageArgs);
+    }
+    if (report.ucmessage) JS_free(cx, (void *)report.ucmessage);
 }
 
 JSTokenType
