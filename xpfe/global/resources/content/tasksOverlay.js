@@ -115,9 +115,12 @@ function OpenBrowserWindow()
        
       try 
       {
+          //let's try to extract the current charset menu setting
           var DocCharset = appCore.GetDocumentCharset();
           charsetArg = "charset="+DocCharset;
           dump("*** Current document charset: " + DocCharset + "\n");
+
+          //we should "inherit" the charset menu setting in a new window
           window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
       }
  
@@ -127,7 +130,8 @@ function OpenBrowserWindow()
        }
 
   } else {
-    window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
+      //if everythig else fails, forget about the charset
+      window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
   }
 
  }
