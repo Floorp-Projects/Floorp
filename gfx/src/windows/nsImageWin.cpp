@@ -193,23 +193,60 @@ PRUintn nsImageWin :: UsePalette(HDC* aHdc, PRBool bBackground)
 
 //------------------------------------------------------------
 
+struct MONOBITMAPINFO {
+  BITMAPINFOHEADER  bmiHeader;
+  RGBQUAD           bmiColors[2];
+
+  MONOBITMAPINFO(LONG aWidth, LONG aHeight)
+  {
+    memset(&bmiHeader, 0, sizeof(bmiHeader));
+    bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmiHeader.biWidth = aWidth;
+    bmiHeader.biHeight = aHeight;
+    bmiHeader.biPlanes = 1;
+    bmiHeader.biBitCount = 1;
+
+    // Note that the palette is being set up so the DIB and the DDB have white and
+    // black reversed. This is because we need the mask to have 0 for the opaque
+    // pixels of the image, and 1 for the transparent pixels. This way the SRCAND
+    // operation sets the opaque pixels to 0, and leaves the transparent pixels
+    // undisturbed
+    bmiColors[0].rgbBlue = 255;
+    bmiColors[0].rgbGreen = 255;
+    bmiColors[0].rgbRed = 255;
+    bmiColors[0].rgbReserved = 0;
+    bmiColors[1].rgbBlue = 0;
+    bmiColors[1].rgbGreen = 0;
+    bmiColors[1].rgbRed = 0;
+    bmiColors[1].rgbReserved = 0;
+  }
+};
+
 // Draw the bitmap, this method has a source and destination coordinates
 PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  PRUint32  value,error;
-  HDC       the_hdc = (HDC)aSurface;
+  HDC   the_hdc = (HDC)aSurface;
 
   if (mBHead == nsnull) 
     return PR_FALSE;
 
   if (!IsOptimized())
   {
-    value = ::StretchDIBits(the_hdc,aDX,aDY,aDWidth,aDHeight,
-                            0,0,aSWidth, aSHeight,
-                            mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS,SRCCOPY);
-    if (value == GDI_ERROR)
-      error = ::GetLastError();
+    DWORD rop = SRCCOPY;
+
+    if (nsnull != mAlphaBits) {
+      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
+      ::StretchDIBits(the_hdc, aDX, aDY, aDWidth, aDHeight,
+                      aSX, aSY, aSWidth, aSHeight, mAlphaBits,
+                      (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+      rop = SRCPAINT;
+    }
+
+    ::StretchDIBits(the_hdc, aDX, aDY, aDWidth, aDHeight,
+                    aSX, aSY, aSWidth, aSHeight, mImageBits,
+                    (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
   }
   else
   {
@@ -218,14 +255,24 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
     if (NULL != srcdc)
     {
-      HBITMAP oldbits = ::SelectObject(srcdc, mHBitmap);
- 
-      if (!::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
-                        aSWidth, aSHeight, SRCCOPY))
-        error = ::GetLastError();
+      HBITMAP oldbits;
 
-      if (nsnull != oldbits)
-        ::SelectObject(srcdc, oldbits);
+      if (nsnull == mAlphaHBitmap) {
+        oldbits = ::SelectObject(srcdc, mHBitmap);
+        ::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
+                     aSWidth, aSHeight, SRCCOPY);
+      }
+      else
+      {
+        oldbits = ::SelectObject(srcdc, mAlphaHBitmap);
+        ::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
+                     aSWidth, aSHeight, SRCAND);
+        ::SelectObject(srcdc, mHBitmap);
+        ::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
+                     aSWidth, aSHeight, SRCPAINT);
+      }
+
+      ::SelectObject(srcdc, oldbits);
     }
 
     NS_RELEASE(dx);
@@ -240,7 +287,6 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                           PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  PRUint32  value,error;
   HDC   the_hdc = (HDC)aSurface;
 
   if (mBHead == nsnull) 
@@ -248,12 +294,20 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
   if (!IsOptimized())
   {
-    value = ::StretchDIBits(the_hdc,aX,aY,aWidth,aHeight,
-                            0,0,mBHead->biWidth, mBHead->biHeight,
-                            mImageBits,(LPBITMAPINFO)mBHead,DIB_RGB_COLORS,SRCCOPY);
-    
-    if (value == GDI_ERROR)
-      error = ::GetLastError();
+    DWORD rop = SRCCOPY;
+
+    if (nsnull != mAlphaBits) {
+      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
+      ::StretchDIBits(the_hdc, aX, aY, aWidth, aHeight,
+                      0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
+                      (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+      rop = SRCPAINT;
+    }
+
+    ::StretchDIBits(the_hdc, aX, aY, aWidth, aHeight,
+                    0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
+                    (LPBITMAPINFO)mBHead, DIB_RGB_COLORS, rop);
   }
   else
   {
@@ -262,16 +316,25 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
     if (NULL != srcdc)
     {
-      HBITMAP oldbits = ::SelectObject(srcdc, mHBitmap);
-      //if((aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight))
-      //BitBlt(the_hdc,aX,aY,aWidth,aHeight,mOptimizeDC,0,0,SRCCOPY);
-    
-      if (!::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
-                        mBHead->biWidth, mBHead->biHeight, SRCCOPY))
-        error = ::GetLastError();
+      HBITMAP oldbits;
 
-      if (nsnull != oldbits)
-        ::SelectObject(srcdc, oldbits);
+      if (nsnull == mAlphaHBitmap)
+      {
+        oldbits = ::SelectObject(srcdc, mHBitmap);
+        ::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
+                     mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+      }
+      else
+      {
+        oldbits = ::SelectObject(srcdc, mAlphaHBitmap);
+        ::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
+                     mAlphaWidth, mAlphaHeight, SRCAND);
+        ::SelectObject(srcdc, mHBitmap);
+        ::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
+                     mBHead->biWidth, mBHead->biHeight, SRCPAINT);
+      }
+
+      ::SelectObject(srcdc, oldbits);
     }
 
     NS_RELEASE(dx);
@@ -827,29 +890,6 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 
 //------------------------------------------------------------
 
-struct MONOBITMAPINFO {
-  BITMAPINFOHEADER  bmiHeader;
-  RGBQUAD           bmiColors[2];
-
-  MONOBITMAPINFO(LONG aWidth, LONG aHeight)
-  {
-    memset(&bmiHeader, 0, sizeof(bmiHeader));
-    bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmiHeader.biWidth = aWidth;
-    bmiHeader.biHeight = aHeight;
-    bmiHeader.biPlanes = 1;
-    bmiHeader.biBitCount = 1;
-    bmiColors[0].rgbBlue = 0;
-    bmiColors[0].rgbGreen = 0;
-    bmiColors[0].rgbRed = 0;
-    bmiColors[0].rgbReserved = 0;
-    bmiColors[1].rgbBlue = 255;
-    bmiColors[1].rgbGreen = 255;
-    bmiColors[1].rgbRed = 255;
-    bmiColors[1].rgbReserved = 0;
-  }
-};
-
 // creates an optimized bitmap, or HBITMAP
 nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
 {
@@ -863,7 +903,8 @@ nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
     if (nsnull != mAlphaBits)
     {
       // Create a monochrome bitmap
-      // XXX Handle the case of 8-bit alpha bits...
+      // XXX Handle the case of 8-bit alpha...
+      NS_ASSERTION(1 == mAlphaDepth, "unexpected alpha depth");
       mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
 
       MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
