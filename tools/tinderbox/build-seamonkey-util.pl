@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.76 $ ';
+$::UtilsVersion = '$Revision: 1.77 $ ';
 
 package TinderUtils;
 
@@ -874,13 +874,16 @@ sub run_all_tests {
 		# Then load startup-test.html, which will pull off the begin argument
 		# and compare it to the current time to compute startup time.
 		# Since we are iterating here, save off logs as StartupPerformanceTest-0,1,2...
-		$startuptime = AliveTestReturnToken("StartupPerformanceTest-$i", 
-											$build_dir,
-											$binary, 
-											$url,
-											$Settings::StartupPerformanceTestTimeout,
-											"__startuptime",
-											",");
+		if($test_result eq 'success') {
+		  $startuptime = AliveTestReturnToken("StartupPerformanceTest-$i", 
+											  $build_dir,
+											  $binary, 
+											  $url,
+											  $Settings::StartupPerformanceTestTimeout,
+											  "__startuptime",
+											  ",");
+		}
+		
 		if($startuptime) {
 		  $test_result = 'success';
 
@@ -890,20 +893,34 @@ sub run_all_tests {
 
 		  # Keep track of the results in an array.
 		  push(@times, $startuptime);
+		} else {
+		  $test_result = 'testfailed';
 		}
-	  }
+
+	  } # for loop
 	  
-	  print_log "\nSummary for startup test:\n";
+	  if($test_result eq 'success') {
+		print_log "\nSummary for startup test:\n";
+		
+		# Print startup times.
+		chop(@times);
+		my $times_string = join(" ", @times);
+		print_log "times = [$times_string]\n";
+		
+		# Figure out the average startup time.
+		$avg_startuptime = $agg_startuptime / $startup_count;
+		print_log "Average startup time: $avg_startuptime\n";
+		print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
+		
+		# Report data back to server
+		if($Settings::TestsPhoneHome) {
+		  print_log "phonehome = 1\n";
+		  send_startup_results_to_server($avg_startuptime,
+										$times_string, 
+										"coffee");
+		}
 
-	  # Print startup times.
-	  chop(@times);
-	  my $times_string = join(" ", @times);
-	  print_log "times = [$times_string]\n";
-
-	  # Figure out the average startup time.
-	  $avg_startuptime = $agg_startuptime / $startup_count;
-	  print_log "Average startup time: $avg_startuptime\n";
-      print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
+	  }
     }
 
     return $test_result;
@@ -1182,6 +1199,48 @@ sub print_test_errors {
         }
     }
 }
+
+
+# Report test results back to a server.
+# Netscape-internal now, will push to mozilla.org, ask
+# mcafee or jrgm for details.
+#
+# Needs the following perl stubs, installed for rh7.1:
+# perl-Digest-MD5-2.13-1.i386.rpm
+# perl-MIME-Base64-2.12-6.i386.rpm
+# perl-libnet-1.0703-6.noarch.rpm
+# perl-HTML-Tagset-3.03-3.i386.rpm
+# perl-HTML-Parser-3.25-2.i386.rpm
+# perl-URI-1.12-5.noarch.rpm
+# perl-libwww-perl-5.53-3.noarch.rpm
+#
+sub send_startup_results_to_server () {
+    my ($avg, $data, $tbox) = @_;
+    $data =~ s/ /:/g;
+    my $url = 'http://cowtools.mcom.com/cgi-bin/startup/tinderbox/collect.pl';
+    $url .= "?avg=$avg&data=$data&tbox=$tbox";
+    my $res = eval q{
+        use LWP::UserAgent;
+        use HTTP::Request;
+        my $ua  = LWP::UserAgent->new;
+        $ua->timeout(10); # seconds
+        my $req = HTTP::Request->new(GET => $url);
+        my $res = $ua->request($req);
+        return $res;
+    };
+	if ($@) {
+	  warn "Failed to submit startup results: $@";
+	  print_log "send_startup_results_to_server() failed.\n";
+    } else {
+	  print "Startup results submitted to server: \n", 
+		$res->status_line, "\n", $res->content, "\n";
+	  print_log "send_startup_results_to_server() succeeded.\n";
+    }
+
+}
+
+
+
 
 sub print_logfile {
     my ($logfile, $test_name) = @_;

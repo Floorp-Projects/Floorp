@@ -25,6 +25,7 @@ $MailNewsTest             = 0;  # Bit-rotted, currently not working.
 $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
 $LayoutPerformanceTest    = 0;
 $StartupPerformanceTest   = 0;
+$TestsPhoneHome           = 0;  # Should test report back to server?
 
 $BloatTestTimeout  = 120;    # seconds
 $DomTestTimeout	   = 45;     # seconds
