@@ -67,7 +67,6 @@ var gIsEditableMsgFolder = false;
 
 function OnMailWindowUnload()
 {
-	dump("we get here\n");
 	var mailSession = Components.classes[mailSessionContractID].getService();
 	if(mailSession)
 	{
@@ -340,9 +339,8 @@ nsMsgStatusFeedback.prototype =
       this.ensureStatusFields();
 	    // Record page loading time.
 	    var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
-      var msg = gMessengerBundle.getString("documentDonePrefix") +
-                elapsed + gMessengerBundle.getString("documentDonePostfix");
-
+      var msg = gMessengerBundle.getFormattedString("documentDoneTime",
+                                                    [ elapsed ]);
       this.showStatusString(msg);
       defaultStatus = msg;
 
