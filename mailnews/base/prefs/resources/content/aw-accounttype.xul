@@ -21,6 +21,7 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/wizardOverlay.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accounttype.dtd" >
@@ -34,32 +35,37 @@ Rights Reserved.
 
   <script src="aw-accounttype.js"/>
   <script src="aw-wizardAdapter.js"/>
-  <box class="box-header" value="&accountTypeTitle.label;"/>
+  <box class="box-header" title="&accountTypeTitle.label;"/>
 
-  <html class="desc">&accountTypeDesc.label;</html>
-  <spring class="spacer"/>
-  <html class="desc">&accountTypeDirections.label;</html>
+  <separator/>
+  
+  <box class="box-wizardcontent" orient="vertical" flex="1">
 
-  <radiogroup orient="vertical" 
-              name="acctyperadio" id="acctyperadio" >
-    <radio id="mailaccount" group="acctyperadio" data="mailaccount"
-           checked="true"
-           value="&accountTypeMail.label;"/>
+    <html class="desc">&accountTypeDesc.label;</html>
+    <html class="desc">&accountTypeDirections.label;</html>
+    <separator/>
+    <radiogroup orient="vertical" 
+                name="acctyperadio" id="acctyperadio" >
+      <radio id="mailaccount" group="acctyperadio" data="mailaccount"
+             checked="true"
+             value="&accountTypeMail.label;"/>
+  
+      <box orient="vertical"
+           datasources="rdf:ispdefaults" 
+           containment="http://home.netscape.com/NC-rdf#providers"
+           id="ispBox"
+           ref="NC:ispinfo">
+        <template>
+          <rule nc:wizardShow="true">
+            <radio group="acctyperadio" uri="..." 
+                      data="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
+                      value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
+          </rule>
+       </template>
+      </box>
+      <radio group="acctyperadio" id="newsaccount" data="newsaccount"
+             value="&accountTypeNews.label;"/>
+    </radiogroup>
+  </box>
 
-    <box orient="vertical"
-         datasources="rdf:ispdefaults" 
-         containment="http://home.netscape.com/NC-rdf#providers"
-         id="ispBox"
-         ref="NC:ispinfo">
-      <template>
-        <rule nc:wizardShow="true">
-          <radio group="acctyperadio" uri="..." 
-                    data="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
-                    value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
-        </rule>
-     </template>
-    </box>
-    <radio group="acctyperadio" id="newsaccount" data="newsaccount"
-           value="&accountTypeNews.label;"/>
-  </radiogroup>
 </window>

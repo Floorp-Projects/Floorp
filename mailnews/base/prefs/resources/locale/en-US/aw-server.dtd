@@ -25,10 +25,5 @@
      this variable. Also, translate currentSmtpBefore.label and currentSmtpAfter.label as a single sentence,
 	  inserting text after the "&quot;" entity in currentSmtpAfter.label, if required grammatically
 -->
-<!ENTITY currentSmtpBefore.label "Your outgoing (SMTP) server is currently set to &quot;">
-<!-- LOCALIZATION NOTE (currentSmtpAfter.label) : see note for currentSmtpBefore.label -->
-<!ENTITY currentSmtpAfter.label "&quot;.">
 <!-- LOCALIZATION NOTE (haveSmtp1.label) : Do not translate "SMTP" in below line -->
-<!ENTITY haveSmtp1.label "For multiple mail accounts, only one outgoing server needs to be specified. For most Internet Service Providers, you should use the SMTP server associated with the account you use most often to connect to the Internet.">
-<!-- LOCALIZATION NOTE (haveSmtp2.label) : Do not translate "SMTP" in below line -->
-<!ENTITY haveSmtp2.label "If you change the account you use to connect to the Internet or if you know that you can use your SMTP server from any Internet connection, you can go to Mail/News Account Settings | Outgoing (SMTP) Server to configure another SMTP server.">
+<!ENTITY haveSmtp1.label "'@server_name@' is set as your outgoing (SMTP) server. You need only one outgoing server, even for multiple accounts. Normally you choose the outgoing server for your most active mail account . To specify additional outgoing servers, choose Mail/News Account Settings from the Edit menu.">

@@ -21,44 +21,49 @@
 	<keyset id="keyset"/>
 
 	<box flex="1">
-		<box orient="vertical" flex="1">
-         <tree rdf:datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
-          rdf:containment="http://home.netscape.com/NC-rdf#Settings"
-          onselect="onAccountClick(event.target)" id="accounttree"
-          class="inset"
-          sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
-          sortDirection="ascending"
-          ref="msgaccounts:/">
-          <treecolgroup>
-            <treecol flex="1"/>
-          </treecolgroup>
-          <template>
+    <box orient="vertical" flex="1">
+      <tree rdf:datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
+            rdf:containment="http://home.netscape.com/NC-rdf#Settings"
+            onselect="onAccountClick(event.target)" id="accounttree"
+            class="inset"
+            sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
+            sortDirection="ascending"
+            ref="msgaccounts:/">
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <template>
           <rule>
             <treechildren flex="1">
-			<treeitem uri="..." open="true"
-                sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
-                IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
-                PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
-		  		<treerow >
-					<treecell class="treecell-indent"
-                              value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-		  		</treerow>
-			</treeitem>
+              <treeitem uri="..." open="true"
+                        sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
+                        IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
+                        PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
+                <treerow >
+                  <treecell class="treecell-indent"
+                            value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                </treerow>
+              </treeitem>
             </treechildren>
           </rule>
-          </template>
-         </tree>
-         <button class="dialog" value="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"/>
-         <button class="dialog" value="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
-         <box orient="horizontal">
-<!-- taking out for PR2
-           <button class="dialog" disabled="true" value="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
--->
-           <button class="dialog" disabled="true" value="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"/>
-         </box>
-		</box>
-        <spring style="width: 5px"/>
-		<iframe id="contentFrame" name="contentFrame" flex="6" style="width: 0px"/>
-	</box>
-    <box id="okCancelButtonsRight"/>
+        </template>
+      </tree>
+      <button value="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"/>
+      <button value="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
+  
+      <box >
+        <!-- taking out for PR2
+          <button class="dialog" disabled="true" value="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
+        -->
+        <button class="dialog" disabled="true" value="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"/>
+      </box>
+    </box>
+  
+    <iframe id="contentFrame" name="contentFrame" flex="6" style="width: 0px"/>
+  </box>
+  
+  <separator/>
+  
+  <box id="okCancelButtonsRight"/>
+
 </window>

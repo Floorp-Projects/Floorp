@@ -65,19 +65,21 @@ function onInit() {
       smtpServer.hostname)
     smtpTextField.value = smtpServer.hostname;
 
-  setDivText("smtpStaticText", smtpServer.hostname);
-
+  // modify the value in the smtp display if we already have a 
+  // smtp server so that the single string displays the 
+  // name of the smtp server.
+  var smtpStatic = document.getElementById("smtpStaticText");
+  if (smtpServer && smtpServer.hostname && 
+      smtpStatic.hasChildNodes()) {
+    var staticText = smtpStatic.firstChild.nodeValue;
+    staticText = staticText.replace(/@server_name@/, smtpServer.hostname);
+    while (smtpStatic.hasChildNodes())
+      smtpStatic.removeChild(smtpStatic.firstChild);
+    var staticTextNode = document.createTextNode(staticText);
+    smtpStatic.appendChild(staticTextNode);
+  }
   
   hideShowSmtpSettings(smtpServer);
-}
-
-function setDivText(id, value) {
-  if (!value) return;
-  
-  var div = document.getElementById("smtpStaticText");
-  if (!div) return;
-
-  div.setAttribute("value", value);
 }
 
 function hideShowSmtpSettings(smtpServer) {
@@ -93,7 +95,6 @@ function hideShowSmtpSettings(smtpServer) {
     // we have a hostname, so show the static text
     boxToShow = haveSmtpBox;
     boxToHide = noSmtpBox;
-
   } else {
     // no default hostname yet
     boxToShow = noSmtpBox;
