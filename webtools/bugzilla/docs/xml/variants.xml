@@ -13,17 +13,24 @@
   <section id="rhbugzilla" xreflabel="Red Hat Bugzilla">
     <title>Red Hat Bugzilla</title>
 
-    <para>Red Hat Bugzilla is a fork of Bugzilla 2.8. 
-    One of its major benefits is the ability
-    to work with Oracle, MySQL, and PostGreSQL databases serving as the
-    back-end, instead of just MySQL. Dave Lawrence of Red Hat is 
-    active in the Bugzilla community, and we hope to see a reunification
-    of the fork before too long.</para>
+    <para>Red Hat's old fork of Bugzilla which was based on version 2.8 is now
+    obsolete.  The newest version in use is based on version 2.17.1 and is in
+    the process of being integrated into the main Bugzilla source tree.  The
+    back-end is modified to work with PostgreSQL instead of MySQL and they have
+    custom templates to get their desired look and feel, but other than that it
+    is Bugzilla 2.17.1.  Dave Lawrence of Red Hat put forth a great deal of
+    effort to make sure that the changes he made could be integrated back into
+    the main tree. 
+    <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=98304">Bug
+    98304</ulink> exists to track this integration.
+    </para>
 
     <para>URL: 
     <ulink url="http://bugzilla.redhat.com/bugzilla/">
     http://bugzilla.redhat.com/bugzilla/</ulink>
     </para>
+
+    <para>This section last updated 24 Dec 2002</para>
   </section>
 
   <section id="variant-fenris" xreflabel="Loki Bugzilla, a.k.a. Fenris">
@@ -33,6 +40,8 @@
     Loki went into receivership, it died. While Loki's other code lives on,
     its custodians recommend Bugzilla for future bug-tracker deployments.
     </para>
+
+    <para>This section last updated 27 Jul 2002</para>
   </section>
 
   <section id="variant-issuezilla" xreflabel="Issuezilla">
@@ -42,6 +51,8 @@
     hosted at tigris.org. It is also dead; the primary focus of bug-tracking 
     at tigris.org is their Java-based bug-tracker, 
     <xref linkend="variant-scarab"/>.</para>
+
+    <para>This section last updated 27 Jul 2002</para>
   </section>
 
   <section id="variant-scarab" xreflabel="Scarab">
@@ -53,6 +64,8 @@
     <para>URL: 
     <ulink url="http://scarab.tigris.org/">http://scarab.tigris.org</ulink>
     </para>
+
+    <para>This section last updated 27 Jul 2002</para>
   </section>
 
   <section id="variant-perforce" xreflabel="Using Perforce to track bugs">
@@ -67,6 +80,8 @@
     http://www.perforce.com/perforce/technotes/note052.html
     </ulink>
     </para>
+
+    <para>This section last updated 27 Jul 2002</para>
   </section>
 
   <section id="variant-sourceforge" xreflabel="SourceForge">
@@ -80,6 +95,8 @@
     <ulink url="http://www.sourceforge.net">
     http://www.sourceforge.net</ulink>
     </para>
+
+    <para>This section last updated 27 Jul 2002</para>
   </section>
 </appendix>
 
