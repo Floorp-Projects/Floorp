@@ -94,7 +94,7 @@ ifdef MOZ_MAIL_NEWS
 ICONS += $(MAIL_OR_COMPOSE_ICONS) \
     $(wildcard images/MNTB*.gif images/MNAB*.gif images/MN_*.gif) \
 	images/threadoff.gif \
-	images/threadon.gif
+	images/threadon.gif \
 	images/Desk_Address.gif \
 	images/Desk_Collabra.gif \
 	images/Desk_Messenger.gif \
