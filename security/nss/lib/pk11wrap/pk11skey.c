@@ -3563,6 +3563,7 @@ PK11_CreateDigestContext(SECOidTag hashAlg)
     /* maybe should really be PK11_GenerateNewParam?? */
     param.data = NULL;
     param.len = 0;
+    param.type = 0;
 
     context = pk11_CreateNewContextInSlot(type, slot, CKA_DIGEST, NULL, &param);
     PK11_FreeSlot(slot);
