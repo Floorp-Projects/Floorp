@@ -47,6 +47,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		abDragDrop.js \
 		abMailListDialog.js \
 		abMailListDialog.xul \
+		abListOverlay.xul \
+		abEditListDialog.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

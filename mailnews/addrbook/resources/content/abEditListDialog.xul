@@ -30,11 +30,13 @@ Rights Reserved.
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&mailListWindow.title;"
 		class="dialog"
+		onload="OnLoadEditList()"
         ondragover="return DragOverTree(event);"
         ondragdrop="return DropOnAddressListTree(event);"
 		align="vertical">
 
 <script language="JavaScript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
 
 	<keyset id="keyset"/>
 

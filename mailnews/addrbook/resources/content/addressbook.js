@@ -241,16 +241,38 @@ function AbDelete()
 }
 */
 
-/*
+
 function AbDeleteDirectory()
 {
-//	dump("\AbDeleteDirectory from XUL\n");
-	var tree = document.getElementById('dirTree');
-	
-//	if ( tree && tree.selectedItems && tree.selectedItems.length )
-	if ( tree )
-		top.addressbook.deleteAddressBooks(tree.database, tree, tree.selectedItems);
+	dump("\AbDeleteDirectory from XUL\n");
+
+
+	var selArray = dirTree.selectedItems;
+	var count = selArray.length;
+	debugDump("selArray.length = " + count + "\n");
+	if (count == 0)
+		return;
+
+	var parentArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+	if ( !parentArray ) return (false); 
+	for ( var i = 0; i < count; ++i )
+	{
+		var parent = selArray[i].parentNode.parentNode;
+		if (parent)
+		{
+			if (parent == dirTree)
+				var parentId = "abdirectory://";
+			else	
+				var parentId = parent.getAttribute("id");
+			debugDump("    parentId #" + i + " = " + parentId + "\n");
+			var dirResource = rdf.GetResource(parentId);
+			var parentDir = dirResource.QueryInterface(Components.interfaces.nsIAbDirectory);
+			parentArray.AppendElement(parentDir);
+		}
+	}
+
+	top.addressbook.deleteAddressBooks(dirTree.database, parentArray, dirTree.selectedItems);
 }
-*/
+
 
 

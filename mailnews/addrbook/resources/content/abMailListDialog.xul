@@ -22,11 +22,11 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/addressbook/abListOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&mailListWindow.title;"
 		class="dialog"
@@ -36,6 +36,7 @@ Rights Reserved.
 		align="vertical">
 
 <script language="JavaScript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
 
 	<keyset id="keyset"/>
 
@@ -53,70 +54,9 @@ Rights Reserved.
 	</box>
 
 	<spring style="height:1em"/>
-		
-	<box align="vertical" style="width:100%">
-		<box orient="horizontal">
-			<spring flex="1"/>
-			<text for="ListName" value="&ListName.label;" class="CardEditLabel"/>
-			<box class="CardEditWidth">
-				<textfield id="ListName" flex="1"/>
-			</box>
-		</box>
-		<box orient="horizontal">
-			<spring flex="1"/>
-			<text for="ListNickName" value="&ListNickName.label;" class="CardEditLabel"/>
-			<box class="CardEditWidth">
-				<textfield id="ListNickName" flex="1"/>
-			</box>
-		</box>
-		<box orient="horizontal">
-			<spring flex="1"/>
-			<text for="ListDescription" value="&ListDescription.label;" class="CardEditLabel"/>
-			<box class="CardEditWidth">
-				<textfield id="ListDescription" flex="1"/>
-			</box>
-		</box>
-	</box>
 
-	<spring style="height:1em"/>
+	<box id="editlist"/>
 		
-	<text value="&AddressTitle.label;"/>
-	<spring style="height:0.1em"/>
-	<box orient="horizontal"  flex="100%">
-		<box orient="vertical" flex="80%">
-			<tree id="addressListTree"		
-				  rows="8"
-				  flex="100%"
-				  onclick="awClickEmptySpace(true)"
-				  style="border:solid black 1px">
-				<treechildren id="addressList">
-					<treeitem>
-						<treerow>
-							<treecell allowevents="true">
-								<textfield id="address#1"
-											flex="100%"
-											onkeydown="if (event.which == 9) awReturnHit(this);"
-											onclick="awNotAnEmptyArea(event);"
-											autocomplete="true"
-											timeout="300"
-											searchSessionType="addrbook"
-											/>
-							</treecell>
-						</treerow>
-					</treeitem>
-				</treechildren>
-			</tree>
-		</box>
-		<spring style="width:1em"/>
-		<box orient="vertical" flex="20%">
-			<spring style="height:30px"/>
-			<button id="button_remove" disabled="true" value="&RemoveButton.label;" />	
-			<spring style="height:40px"/>
-			<button id="button_up"  disabled="true" value="&UpButton.label;" />	
-			<spring style="height:10px"/>
-			<button id="button_down"  disabled="true" value="&DownButton.label;"/>	
-		</box>
-	</box>
 	<spring style="height:1em"/>
 		
 	<box id="okCancelButtons"/>

@@ -21,7 +21,46 @@
 
 top.MAX_RECIPIENTS = 1;
 var inputElementType = "";
-var strBundle = srGetStrBundle("chrome://messenger/locale/addressBook.properties");
+
+var parentURI;
+var editList;
+
+function GetListValue(mailList)
+{
+	mailList.listName = document.getElementById('ListName').value;
+
+	if (mailList.listName.length == 0)
+	{
+		var strBundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
+		var alertText = strBundle.GetStringFromName("emptyListName");
+		alert(alertText);
+		return false;
+	}
+
+	mailList.listNickName = document.getElementById('ListNickName').value;
+	mailList.description = document.getElementById('ListDescription').value;
+	
+	var i = 1;
+	while ((inputField = awGetInputElement(i)))
+	{
+	    fieldValue = inputField.value;
+	    if (fieldValue != "")
+	    {
+			var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
+			if (cardproperty)
+			{
+				cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
+				if (cardproperty)
+				{
+					cardproperty.primaryEmail = fieldValue
+					mailList.addressLists.AppendElement(cardproperty);
+				}
+			}
+		}
+	    i++;
+	}
+	return true;
+}
 
 function MailListOKButton()
 {
@@ -40,40 +79,11 @@ function MailListOKButton()
 		var mailList = Components.classes["component://netscape/addressbook/directoryproperty"].createInstance();
 		mailList = mailList.QueryInterface(Components.interfaces.nsIAbDirectory);
 
-		mailList.listName = document.getElementById('ListName').value;
-
-		if (mailList.listName.length == 0)
-		{
-			var alertText = strBundle.GetStringFromName("emptyListName");
-			alert(alertText);
+		if (GetListValue(mailList))
+			mailList.addMailListToDatabase(uri);
+		else
 			return false;
-		}
-
-		mailList.listNickName = document.getElementById('ListNickName').value;
-		mailList.description = document.getElementById('ListDescription').value;
-		
-		var i = 1;
-	    while ((inputField = awGetInputElement(i)))
-	    {
-	    	fieldValue = inputField.value;
-	    	if (fieldValue != "")
-	    	{
-				var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
-				if (cardproperty)
-				{
-					cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
-					if (cardproperty)
-					{
-						cardproperty.primaryEmail = fieldValue
-						mailList.addressLists.AppendElement(cardproperty);
-					}
-				}
-			}
-	    	i++;
-	    }
-		mailList.addMailListToDatabase(uri);
-	}	
-	
+	}		
 	return true;	// close the window
 }
 
@@ -81,7 +91,6 @@ function OnLoadMailList()
 {
 	doSetOKCancel(MailListOKButton, 0);
 	
-	var selectedAB;
 	if (window.arguments && window.arguments[0])
 	{
 		if ( window.arguments[0].selectedAB )
@@ -109,12 +118,61 @@ function OnLoadMailList()
 			}
 		}
 	}
-
-//	GetCardValues(editCard.card, document);
-
-	//// FIX ME - looks like we need to focus on both the text field and the tab widget
-	//// probably need to do the same in the addressing widget
 	
+	// focus on first name
+	var listName = document.getElementById('ListName');
+	if ( listName )
+		listName.focus();
+}
+
+function EditListOKButton()
+{
+	//Add mailing list to database
+
+	var parentURI = selectedAB.GetAttribute('id');
+
+	if (GetListValue(editList))
+	{
+		editList.editMailListToDatabase(parentURI);
+		return true;	// close the window
+	}
+	else
+		return false;	
+}
+
+function OnLoadEditList()
+{
+dump("***** OnLoadEditList\n");
+	doSetOKCancel(EditListOKButton, 0);
+	
+	parentUri  = window.arguments[0].abURI;
+	var listUri  = window.arguments[0].listURI;
+
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+	editList = rdf.GetResource(listUri);
+	editList = editList.QueryInterface(Components.interfaces.nsIAbDirectory);
+
+	document.getElementById('ListName').value = editList.listName;
+	document.getElementById('ListNickName').value = editList.listNickName;
+	document.getElementById('ListDescription').value = editList.description;
+
+	top.MAX_RECIPIENTS = 0;
+
+	var treeChildren = document.getElementById('addressList');
+	var newTreeChildrenNode = treeChildren.cloneNode(false);
+	var templateNode = treeChildren.firstChild;
+
+	if (editList.addressLists)
+	{
+		var total = editList.addressLists.Count();
+		for ( var i = 0;  i < total; i++ )
+		{
+			var card = editList.addressLists.GetElementAt(i);
+			card = card.QueryInterface(Components.interfaces.nsIAbCard);
+		}
+	}
+
 	// focus on first name
 	var listName = document.getElementById('ListName');
 	if ( listName )

@@ -133,7 +133,8 @@ var DirPaneController =
 			case "cmd_delete":
 			case "button_delete":
 				if ( dirTree )
-					top.addressbook.deleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
+					AbDeleteDirectory();
+//					top.addressbook.deleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
 				break;
 		}
 	},
@@ -186,7 +187,16 @@ function AbEditCard()
 		var uri = resultsTree.selectedItems[0].getAttribute('id');
 		var card = rdf.GetResource(uri);
 		card = card.QueryInterface(Components.interfaces.nsIAbCard);
-		goEditCardDialog(resultsTree.getAttribute('ref'), card, top.gUpdateCardView);
+		if (card.isMailList)
+		{
+			var dirUri = dirTree.selectedItems[0].getAttribute('id');
+			listUri = dirUri + "/MailList" + card.dbRowID;
+			goEditListDialog(resultsTree.getAttribute('ref'), listUri);
+		}
+		else
+		{
+			goEditCardDialog(resultsTree.getAttribute('ref'), card, top.gUpdateCardView);
+		}
 	}
 }
 
@@ -531,3 +541,11 @@ function AbNewList()
 					  {selectedAB:selectedAB});
 }
 
+
+function goEditListDialog(abURI, listURI)
+{
+	window.openDialog("chrome://messenger/content/addressbook/abEditListDialog.xul",
+					  "",
+					  "chrome,resizeable=no",
+					  {abURI:abURI, listURI:listURI});
+}

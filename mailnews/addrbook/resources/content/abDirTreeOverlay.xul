@@ -45,8 +45,8 @@ Rights Reserved.
 			<rule>
 	          <treechildren>
 				<treeitem uri="...">
-				  <treerow >
-				    <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
+				  <treerow>
+				    <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
 				  </treerow>
 				</treeitem>
 	          </treechildren>
