@@ -2947,7 +2947,6 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
   nsCOMPtr <nsIMsgDBHdr> hdr;
   PRBool leaveOnServer = PR_FALSE;
   PRBool deleteMailLeftOnServer = PR_FALSE;
-  PRBool changed = PR_FALSE;
   nsCOMPtr<nsIPop3IncomingServer> pop3MailServer;
   nsCOMPtr<nsIFileSpec> localPath;
   nsCOMPtr<nsIFileSpec> mailboxSpec;
@@ -3518,4 +3517,3 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
 
   return NS_OK;
 }
-

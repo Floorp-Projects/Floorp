@@ -2102,7 +2102,6 @@ static nsresult addProperty(char **currentVCard, const char *currentRoot, const 
     // we add those automatically...
     
     const char *beginPhrase = "begin";
-    char *children = nsnull;
     
     nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (currentVCard && prefBranch)
