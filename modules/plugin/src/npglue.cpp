@@ -2940,7 +2940,8 @@ np_newstream(URL_Struct *urls, np_handle *handle, np_instance *instance)
     NET_StreamClass *nstream = nil;
     NPStream *pstream = nil;
     np_stream *stream = nil;
-    uint16 stype;
+    uint stype;
+    uint16 stype2;
 	XP_Bool alreadyLocal;
     XP_Bool b1;
 	XP_Bool b2;
@@ -2982,7 +2983,7 @@ np_newstream(URL_Struct *urls, np_handle *handle, np_instance *instance)
 
     /* and call the plugin */
     instance->reentrant = 1;
-    stype = NP_NORMAL;
+    stype = (uint) stype2 = NP_NORMAL;
     TRACEMSG(("npglue.c: CallNPP_NewStreamProc"));
     if (handle->userPlugin) {
         nsPluginInstancePeer* peerInst = (nsPluginInstancePeer*)instance->npp->pdata;
@@ -3011,7 +3012,8 @@ np_newstream(URL_Struct *urls, np_handle *handle, np_instance *instance)
     else if (ISFUNCPTR(handle->f->newstream))
     {
         /*XXX*/CallNPP_NewStreamProc(handle->f->newstream, instance->npp, urls->content_type, 
-                                     pstream, stream->seekable, &stype);
+                                     pstream, stream->seekable, &stype2);
+        stype = (uint) stype2;
     }
     if(!instance->reentrant)
     {
