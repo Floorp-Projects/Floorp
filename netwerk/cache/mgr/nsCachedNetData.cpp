@@ -1215,11 +1215,15 @@ nsCachedNetData::InterceptAsyncRead(nsIStreamListener *aOriginalListener,
     interceptListener = new InterceptStreamListener(this, aOriginalListener);
     if (!interceptListener)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(interceptListener); // for return
     
     rv = interceptListener->Init(aStartingOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(interceptListener);
+        return rv;
+    }
 
-    NS_ADDREF(interceptListener);
-    *aResult = interceptListener;
+    *aResult = interceptListener; // addref above
     return NS_OK;
 }
