@@ -39,13 +39,12 @@
 #include "utilities.h"
 #include "interpreter.h"
 
-#include <iosfwd>
+#include <stdio.h>
 
 namespace JavaScript {
 namespace Debugger {
 
     using namespace Interpreter;
-    using std::istream;
     
     class Breakpoint {
     public:
@@ -115,7 +114,7 @@ namespace Debugger {
 
     class Shell : public Context::Listener {
     public:        
-        Shell (World &aWorld, istream &aIn, Formatter &aOut, Formatter &aErr) :
+        Shell (World &aWorld, FILE *aIn, Formatter &aOut, Formatter &aErr) :
             mWorld(aWorld), mIn(aIn), mOut(aOut), mErr(aErr),
             mStopMask(IS_ALL), mTraceFlag(true)
         {
@@ -153,7 +152,7 @@ namespace Debugger {
         void doPrint (Context *cx, Lexer &lex);
         
         World &mWorld;
-        istream &mIn;
+        FILE *mIn;
         Formatter &mOut, &mErr;
         ICodeDebugger *mDebugger;
         uint32 mStopMask;
