@@ -24,6 +24,21 @@
  */
 
 
+#ifdef RAPTOR_PERF_METRICS
+#  define START_TIMER()                    \
+    if(mParser) mParser->mParseTime.Start(PR_FALSE); \
+    if(mParser) mParser->mDTDTime.Start(PR_FALSE); 
+
+#  define STOP_TIMER()                     \
+    if(mParser) mParser->mParseTime.Stop(); \
+    if(mParser) mParser->mDTDTime.Stop(); 
+
+#else
+#  define STOP_TIMER() 
+#  define START_TIMER()
+#endif
+
+
 #include "nsIDTDDebug.h"
 #include "nsViewSourceHTML.h"
 #include "nsCRT.h"
@@ -35,8 +50,6 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
-#include "nsHTMLEntities.h"
-
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -49,11 +62,23 @@
 #include "prmem.h"
 
 
+#ifdef RAPTOR_PERF_METRICS
+#include "stopwatch.h"
+Stopwatch vsTimer;
+#endif
+
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID); 
 
 static CTokenRecycler* gTokenRecycler=0;
+
+//#define rickgdebug
+#ifdef rickgdebug
+#include <fstream.h>
+  fstream* gDumpFile=0;
+#endif
 
 
 /**
@@ -141,11 +166,7 @@ class CSharedVSContext {
 public:
 
   CSharedVSContext() : 
-    mStartEntity("lt"), 
-    mEndEntity("gt"),
-    mEndTextToken("/"),
     mEndNode(), 
-    mEndTextNode(&mEndTextToken), 
     mStartNode(),
     mTokenNode(),
     mITextToken(),
@@ -162,90 +183,14 @@ public:
     return gSharedVSContext;
   }
 
-  CEntityToken        mStartEntity;
-  CEntityToken        mEndEntity;
-  CTextToken          mEndTextToken;
   nsCParserNode       mEndNode;
-  nsCParserNode       mEndTextNode;
   nsCParserNode       mStartNode;
   nsCParserNode       mTokenNode;
   CIndirectTextToken  mITextToken;
   nsCParserNode       mITextNode;
   CTextToken          mTextToken;
   nsCParserNode       mTextNode;
-
 };
-
-
-
-static void SetFont(const char* aFace,const char* aSize,PRBool aEnable,nsIContentSink& aSink) {
-  static nsCParserNode theNode;
-  CToken*       theToken=0;
-
-  if(aEnable){
-    theToken=gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_font); 
-    theNode.Init(theToken,0);
-    CAttributeToken theFontAttr("face",aFace);
-    theNode.AddAttribute(&theFontAttr);
-    CAttributeToken theSizeAttr("size",aSize);
-    theNode.AddAttribute(&theSizeAttr);
-    aSink.OpenContainer(theNode);
-  }
-  else {
-    theToken=gTokenRecycler->CreateTokenOfType(eToken_end,eHTMLTag_font); 
-    theNode.Init(theToken,0);
-    aSink.CloseContainer(theNode);
-  }
-
-  while((theToken=(CToken*)theNode.PopAttributeToken())){
-    //dump the attributes since they're on the stack...
-  }
-
-  if(theToken)
-    gTokenRecycler->RecycleToken(theToken);
-}
-
-static void SetColor(const char* aColor,PRBool aEnable,nsIContentSink& aSink) {
-  static nsCParserNode theNode;
-  CToken*       theToken=0;
-  if(aEnable){
-    theToken=gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_font); 
-    theNode.Init(theToken,0);
-    CAttributeToken theFontAttr("color",aColor);
-    theNode.AddAttribute(&theFontAttr);
-    aSink.OpenContainer(theNode);
-  }
-  else {
-    theToken=gTokenRecycler->CreateTokenOfType(eToken_end,eHTMLTag_font); 
-    theNode.Init(theToken,0);
-    aSink.CloseContainer(theNode);
-  }
-
-  while((theToken=(CToken*)theNode.PopAttributeToken())){
-    //dump the attributes since they're on the stack...
-  }
-
-  if(theToken)
-    gTokenRecycler->RecycleToken(theToken);
-}
-
-static void SetStyle(eHTMLTags theTag,PRBool aEnable,nsIContentSink& aSink) {
-  static nsCParserNode theNode;
-  CToken*       theToken=0;
-  if(aEnable){
-    theToken=gTokenRecycler->CreateTokenOfType(eToken_start,theTag); 
-    theNode.Init(theToken);
-    aSink.OpenContainer(theNode);
-  }
-  else {
-    theToken=gTokenRecycler->CreateTokenOfType(eToken_end,theTag); 
-    theNode.Init(theToken);
-    aSink.CloseContainer(theNode);
-  }
-
-  if(theToken)
-    gTokenRecycler->RecycleToken(theToken);
-}
 
 
 /**
@@ -255,15 +200,22 @@ static void SetStyle(eHTMLTags theTag,PRBool aEnable,nsIContentSink& aSink) {
  *  @param   
  *  @return  
  */
-CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mFilename("") {
+CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mFilename(""), 
+  mStartTag("start"), mEndTag("end"), mCommentTag("comment"), 
+  mPITag("pi"), mEntityTag("entity"), mText("txt"),
+  mKey("key"), mValue("val"), mDocTypeTag("doctype")
+{
   NS_INIT_REFCNT();
   mParser=0;
   mSink=0;
   mLineNumber=0;
   mTokenizer=0;
-  mIsHTML=PR_FALSE;
-  mHasOpenHead=0;
-  mNeedsFontSpec=PR_TRUE;
+
+#ifdef rickgdebug
+  gDumpFile = new fstream("c:/temp/viewsource.xml",ios::trunc);
+#endif
+
+
 }
 
 /**
@@ -337,35 +289,37 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
   nsresult result=NS_OK;
   mFilename=aFilename;
 
-  mSink=(nsIHTMLContentSink*)aSink;
+#ifdef RAPTOR_PERF_METRICS
+  vsTimer.Reset();
+  NS_START_STOPWATCH(vsTimer);
+#endif RAPTOR_PERF_METRICS
+
+  STOP_TIMER();
+  mSink=(nsIXMLContentSink*)aSink;
   if((aNotifySink) && (mSink)) {
 
     mLineNumber=0;
     result = mSink->WillBuildModel();
 
-    mIsHTML=aSourceType.Equals(kHTMLTextContentType);
-    mIsPlaintext=aSourceType.Equals(kPlainTextContentType);
+    static const char* theHeader="<?xml version=\"1.0\"?>";
+    CToken ssToken(theHeader);
+    nsCParserNode ssNode(&ssToken);
+    result= mSink->AddCharacterData(ssNode);
 
-    //now let's automatically open the html...
-    CStartToken theHTMLToken(eHTMLTag_html);
-    nsCParserNode theNode(&theHTMLToken,0);
-    mSink->OpenHTML(theNode);
+#ifdef rickgdebug
+      (*gDumpFile) << theHeader << endl;
+      (*gDumpFile) << "<viewsource xmlns=\"viewsource\">" << endl;
+#endif
 
-      //now let's automatically open the body...
-    CStartToken theBodyToken(eHTMLTag_body);
-    theNode.Init(&theBodyToken,0);
-    CAttributeToken theColor("bgcolor","white");
-    theNode.AddAttribute(&theColor);
+    //now let's automatically open the root container...
+    CToken theToken("viewsource");
+    nsCParserNode theNode(&theToken,0);
+    CAttributeToken theAttr("xmlns","http://www.mozilla.org/viewsource");
 
-    mSink->OpenBody(theNode);
-
-     //now let's automatically open the pre...
-    if(mIsPlaintext) {
-      CStartToken thePREToken(eHTMLTag_pre);
-      theNode.Init(&thePREToken,0);
-      mSink->OpenContainer(theNode);
-    }
+    theNode.AddAttribute(&theAttr);
+    mSink->OpenContainer(theNode);
   }
+  START_TIMER();
   return result;
 }
 
@@ -386,11 +340,6 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
     gTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
 
     if(gTokenRecycler) {
-
-      if(mNeedsFontSpec){
-        SetFont("courier","-1",PR_TRUE,*mSink);
-        mNeedsFontSpec=PR_FALSE;
-      }
 
       while(NS_SUCCEEDED(result)){
         CToken* theToken=mTokenizer->PopToken();
@@ -425,35 +374,41 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
 
   if(aParser){
-    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+
+    mParser=(nsParser*)aParser;  //debug XXX
+    STOP_TIMER();
+
+    mSink=(nsIXMLContentSink*)aParser->GetContentSink();
     if((aNotifySink) && (mSink)) {
         //now let's automatically close the pre...
 
-      if(!mIsPlaintext){
-        SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
-      }
+#ifdef rickgdebug
+  if(gDumpFile){
+    (*gDumpFile) << "</viewsource>" << endl;
+    gDumpFile->close();
+    delete gDumpFile;
+  }
+#endif
 
-      nsCParserNode theNode;
+      //now let's automatically close the root container...
+      CToken theToken("viewsource");
+      nsCParserNode theNode(&theToken,0);
+      mSink->CloseContainer(theNode);
 
-       //now let'close our containing PRE...
-      if(mIsPlaintext) {
-        CEndToken thePREToken(eHTMLTag_pre);        
-        theNode.Init(&thePREToken,0);
-        mSink->CloseContainer(theNode);
-      }
-      
-      //now let's automatically close the body...
-      CEndToken theBodyToken(eHTMLTag_body);
-      theNode.Init(&theBodyToken,0);
-      mSink->CloseBody(theNode);
-
-       //now let's automatically close the html...
-      CEndToken theHTMLToken(eHTMLTag_html);
-      theNode.Init(&theHTMLToken,0);
-      mSink->CloseHTML(theNode);
       result = mSink->DidBuildModel(1);
     }
+
+    START_TIMER();
+
   }
+
+#ifdef RAPTOR_PERF_METRICS
+  NS_STOP_STOPWATCH(vsTimer);
+  printf("viewsource timer: ");
+  vsTimer.Print();
+  printf("\n");
+#endif RAPTOR_PERF_METRICS
+
   return result;
 }
 
@@ -568,20 +523,17 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  */
 NS_IMETHODIMP CViewSourceHTML::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 {
-  *aIntTag = nsHTMLTags::LookupTag(aTag);
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
 {
-  aTag = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP CViewSourceHTML::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
 {
-  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /**
@@ -597,49 +549,6 @@ PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
   return result;
 }
 
-
-/**
- *  This method gets called when a tag needs to be sent out
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  result status
- */
-static
-nsresult WriteNewline(nsIContentSink& aSink,CSharedVSContext& aContext) {
-  nsresult result=NS_OK;
-
-  //if you're here, we already know gTokenRecyler is valid...
-
-//  CToken* theToken = (CStartToken*)gTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_br);
-  CStartToken theToken(eHTMLTag_br);
-  aContext.mStartNode.Init(&theToken);
-  result=aSink.AddLeaf(aContext.mStartNode); 
-  return NS_OK;
-}
-
-
-/**
- *  This method gets called when a tag needs to be sent out
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  result status
- */
-static
-nsresult WriteNBSP(PRInt32 aCount, nsIContentSink& aSink,CSharedVSContext& aContext) {
-  nsresult result=NS_OK;
-
-  //if you're here, we already know gTokenRecyler is valid...
-
-  CEntityToken theToken("nbsp");
-  aContext.mStartNode.Init(&theToken);
-  int theIndex;
-  for(theIndex=0;theIndex<aCount;theIndex++)
-    result=aSink.AddLeaf(aContext.mStartNode); 
-
-  return NS_OK;
-}
 
 /**
  *  This method gets called when a tag needs to be sent out
@@ -706,7 +615,10 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
           if((kCR==theChar) && (kLF==theNextChar)) {
             theOffset++;
           }
-          WriteNewline(aSink,aContext);
+
+          CStartToken theToken(eHTMLTag_br);
+          aContext.mStartNode.Init(&theToken);
+          result=aSink.AddLeaf(aContext.mStartNode); 
           theTextOffset=theOffset+1;
         }
         break;
@@ -719,7 +631,12 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
       temp.Truncate();
     }
     if(0<theSpaces){
-      WriteNBSP(theSpaces,aSink,aContext); 
+
+      CEntityToken theToken("nbsp");
+      aContext.mStartNode.Init(&theToken);
+      int theIndex;
+      for(theIndex=0;theIndex<theSpaces;theIndex++)
+        result=aSink.AddLeaf(aContext.mStartNode); 
       theSpaces=0;
     }
   }
@@ -747,115 +664,163 @@ nsresult CViewSourceHTML::WriteText(const nsString& aTextString,nsIContentSink& 
 
 
 /**
+ *  This method gets called when a tag needs to write it's attributes
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  result status
+ */
+nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
+  nsresult result=NS_OK;
+  
+  if(attrCount){ //go collect the attributes...
+    int attr=0;
+    for(attr=0;attr<attrCount;attr++){
+      CToken* theToken=mTokenizer->PeekToken();
+      if(theToken)  {
+        eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
+        if(eToken_attribute==theType){
+          mTokenizer->PopToken(); //pop it for real...
+
+          CAttributeToken* theAttrToken=(CAttributeToken*)theToken;
+          CToken theKeyToken(theAttrToken->GetKey());
+          result=WriteTag(mKey,&theKeyToken,0,PR_FALSE);
+          nsString& theValue=theToken->GetStringValueXXX();
+          if(0<theValue.Length()) {
+            result=WriteTag(mValue,theToken,0,PR_FALSE);
+          }
+        } 
+      }
+      else return kEOF;
+    }
+  }
+
+  return result;
+}
+
+/**
  *  This method gets called when a tag needs to be sent out
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  result status
  */
-static
-PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRBool aIsHTML,PRBool aIsPlaintext,CSharedVSContext& aContext) {
-  static const char*    theColors[][2]={{"purple","purple"},{"purple","red"}};
+nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
   static nsString       theString("");
 
-  PRBool result=PR_TRUE;
+  nsresult result=NS_OK;
 
-  aContext.mStartNode.Init(&aContext.mStartEntity,aNode.GetSourceLineNumber());
-  aSink.AddLeaf(aContext.mStartNode);
+  CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
 
-  if(!aIsPlaintext) {
-    SetStyle(eHTMLTag_b,PR_TRUE,aSink);
-    SetColor(theColors[aIsHTML][eHTMLTag_userdefined==aNode.GetNodeType()],PR_TRUE,aSink);
-  }
+  CToken theTagToken(theXMLTagName);
+  theContext.mStartNode.Init(&theTagToken,mLineNumber);
 
-  if(anEndToken) {
-    aSink.AddLeaf(aContext.mEndTextNode);
-  }
+  STOP_TIMER();
+  mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
+  START_TIMER();
 
-  aContext.mITextToken.SetIndirectString(aNode.GetText());
-  aSink.AddLeaf(aContext.mITextNode);
 
-  if(!aIsPlaintext){
-    SetStyle(eHTMLTag_font,PR_FALSE,aSink);
-    SetStyle(eHTMLTag_b,PR_FALSE,aSink);
-  }
+#ifdef rickgdebug
 
-  PRInt32 theCount=aNode.GetAttributeCount();
-  if(0<theCount){
-    PRInt32 theIndex=0;
-    for(theIndex=0;theIndex<theCount;theIndex++){
-      
-       //begin by writing the key...
-      {
-        if(!aIsPlaintext){
-          SetStyle(eHTMLTag_b,PR_TRUE,aSink);
-        }
-        theString=" ";
-        theString.Append(aNode.GetKeyAt(theIndex));
-        aContext.mITextToken.SetIndirectString(theString);
-        aSink.AddLeaf(aContext.mITextNode);
-        if(!aIsPlaintext){
-          SetStyle(eHTMLTag_b,PR_FALSE,aSink);
-        }
+      if(aNewlineRequired) {
+        (*gDumpFile)<<endl;
       }
 
-       //now write the value...
-      {
-        if(!aIsPlaintext){
-          SetColor("blue",PR_TRUE,aSink);
-        }
-        theString=aNode.GetValueAt(theIndex);
-        if(0<theString.Length()){
-          theString.Insert('=',0);
-          aContext.mITextToken.SetIndirectString(theString);
-          aSink.AddLeaf(aContext.mITextNode);
-        }
-        if(!aIsPlaintext){
-          SetStyle(eHTMLTag_font,PR_FALSE,aSink);
-        }
+      nsCAutoString cstr(theXMLTagName);
+      (*gDumpFile) << "<" << cstr << ">";
+      cstr.Assign(aToken->GetStringValueXXX());
+      if('<'==cstr.First()) {
+        cstr.Cut(0,2);
+        cstr.Truncate(cstr.Length()-1);
       }
-    }
+      (*gDumpFile) << cstr;
+#endif
+  
+
+  theContext.mITextToken.SetIndirectString(aToken->GetStringValueXXX());  //now emit the tag name...
+  STOP_TIMER();
+  mSink->AddLeaf(theContext.mITextNode);
+  START_TIMER();
+
+  if(attrCount){
+    result=WriteAttributes(attrCount);
   }
 
-  aContext.mEndNode.Init(&aContext.mEndEntity,aNode.GetSourceLineNumber());
-  aSink.AddLeaf(aContext.mEndNode);
+  STOP_TIMER();
+  theContext.mEndNode.Init(&theTagToken,mLineNumber);
+  mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
+  START_TIMER();
+
+
+#ifdef rickgdebug
+      cstr.Assign(theXMLTagName);
+      (*gDumpFile) << "</" << cstr << ">";
+#endif
 
   return result;
 }
 
 /**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
+ *  This method gets called when a tag needs to be sent out
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  result status
  */
-nsresult CViewSourceHTML::OpenHead(const nsIParserNode& aNode){
+nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
+  static nsString       theString("");
+
   nsresult result=NS_OK;
-  if(!mHasOpenHead++) {
-    result=(mSink) ? mSink->OpenHead(aNode) : NS_OK; 
+
+  CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
+
+  CToken theTagToken(theXMLTagName);
+  theContext.mStartNode.Init(&theTagToken,mLineNumber);
+
+  STOP_TIMER();
+  mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
+  START_TIMER();
+
+
+#ifdef rickgdebug
+
+      if(aNewlineRequired) {
+        (*gDumpFile)<<endl;
+      }
+
+      nsCAutoString cstr(theXMLTagName);
+      (*gDumpFile) << "<" << cstr << ">";
+      cstr.Assign(aText);
+      (*gDumpFile) << cstr;
+#endif
+  
+
+  theContext.mITextToken.SetIndirectString(aText);  //now emit the tag name...
+
+  STOP_TIMER();
+  mSink->AddLeaf(theContext.mITextNode);
+  START_TIMER();
+
+  if(attrCount){
+    result=WriteAttributes(attrCount);
   }
+
+  theContext.mEndNode.Init(&theTagToken,mLineNumber);
+
+  STOP_TIMER();
+  mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
+  START_TIMER();
+
+
+#ifdef rickgdebug
+      cstr.Assign(theXMLTagName);
+      (*gDumpFile) << "</" << cstr << ">";
+#endif
+
   return result;
 }
 
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CViewSourceHTML::CloseHead(const nsIParserNode& aNode){
-  nsresult result=NS_OK;
-  if(mHasOpenHead) {
-    if(0==--mHasOpenHead){
-      result=(mSink) ? mSink->CloseHead(aNode) : NS_OK; 
-    }
-  }
-  return result;
-}
+
 /**
  *  
  *  @update  gess 3/25/98
@@ -871,182 +836,54 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
   PRBool          theEndTag=PR_TRUE;
 
   mParser=(nsParser*)aParser;
-  mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+  mSink=(nsIXMLContentSink*)aParser->GetContentSink();
  
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
   theContext.mTokenNode.Init(theToken,mLineNumber);
 
   switch(theType) {
+    
+    case eToken_start:
+      result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
+      break;
+
+    case eToken_end:
+      result=WriteTag(mEndTag,aToken,0,PR_TRUE);
+      break;
+
+    case eToken_comment:
+      result=WriteTag(mCommentTag,aToken,0,PR_TRUE);
+      break;
+
+    case eToken_doctypeDecl:
+      result=WriteTag(mDocTypeTag,aToken,0,PR_TRUE);
+      break;
 
     case eToken_newline:
-      mLineNumber++; //now fall through
-      WriteNewline(*mSink,theContext);
+      mLineNumber++;
+    case eToken_whitespace:
+    case eToken_text:
+      result=WriteTag(mText,aToken,0,PR_FALSE);
       break;
 
     case eToken_entity:
       {
-        if(!mIsPlaintext){
-          SetColor("maroon",PR_TRUE,*mSink);
-        }
-        nsAutoString theStr("&");
+        nsAutoString theStr;
         nsString& theEntity=aToken->GetStringValueXXX();
         if(!theEntity.EqualsIgnoreCase("XI",2)) {
           PRUnichar theChar=theEntity.CharAt(0);
           if((nsString::IsDigit(theChar)) || ('X'==theChar) || ('x'==theChar)){
             theStr.Append("#");
           }
+          theStr.Append(theEntity);
         }
-        theStr.Append(aToken->GetStringValueXXX());
-        //theStr.Append(";");
-        ::WriteText(theStr,*mSink,PR_FALSE,mIsPlaintext,theContext);
-        if(!mIsPlaintext){
-          SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
-        }
-      }
-      break;
-
-    case eToken_doctypeDecl:
-    case eToken_comment:
-      {
-        if(!mIsPlaintext){
-          SetColor("green",PR_TRUE,*mSink);
-          SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
-        }
-        nsString& theText=aToken->GetStringValueXXX();
-
-        //if the comment has had it's markup stripped, then write it out seperately...
-        nsAutoString theLeft("");
-        theText.Left(theLeft,2);
-        if(theLeft!="<!")
-          ::WriteText(nsAutoString("<!"),*mSink,PR_TRUE,mIsPlaintext,theContext);
-        ::WriteText(theText,*mSink,PR_TRUE,mIsPlaintext,theContext);
-        if(kGreaterThan!=theText.Last())
-          ::WriteText(nsAutoString(">"),*mSink,PR_TRUE,mIsPlaintext,theContext);
-        if(!mIsPlaintext){
-          SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
-          SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
-        }
-      }
-      break;
-
-    case eToken_style:
-    case eToken_skippedcontent:
-      {
-        CAttributeToken* theAToken=(CAttributeToken*)aToken;
-        nsString& theText=theAToken->GetKey();
-        ::WriteText(theText,*mSink,PR_FALSE,mIsPlaintext,theContext);
-      }
-      break;
-
-    case eToken_whitespace:
-    case eToken_text:
-      {
-        if(!mIsPlaintext) {
-          nsString& theText=aToken->GetStringValueXXX();
-          ::WriteText(theText,*mSink,PR_TRUE,mIsPlaintext,theContext);
-        }
-        else {
-          result=mSink->AddLeaf(theContext.mTokenNode);
-        }
+        result=WriteTag(mEntityTag,theStr,0,PR_FALSE);
       }
       break;
 
     case eToken_instruction:
-      {
-        if(!mIsPlaintext){
-          SetColor("#D74702",PR_TRUE,*mSink);
-          SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
-        }
+      result=WriteTag(mPITag,aToken,0,PR_TRUE);
 
-        nsString& theText=aToken->GetStringValueXXX();
-        theContext.mITextToken.SetIndirectString(theText);
-        mSink->AddLeaf(theContext.mITextNode);
-
-        if(!mIsPlaintext){
-          SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
-          SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
-        }
-      }
-      break;
-    
-    case eToken_start:
-      {
-
-        PRInt16 attrCount=aToken->GetAttributeCount();
-        theEndTag=PR_FALSE;
-        if(0<attrCount){ //go collect the attributes...
-          int attr=0;
-          for(attr=0;attr<attrCount;attr++){
-            CToken* theInnerToken=mTokenizer->PeekToken();
-            if(theInnerToken)  {
-              eHTMLTokenTypes theInnerType=eHTMLTokenTypes(theInnerToken->GetTokenType());
-              if(eToken_attribute==theInnerType){
-                mTokenizer->PopToken(); //pop it for real...
-                theContext.mTokenNode.AddAttribute(theInnerToken);
-              } 
-            }
-            else return kEOF;
-          }
-        }
-        if(mParser) {
-          nsAutoString      charsetValue;
-          nsCharsetSource   charsetSource;
-          CObserverService& theService=mParser->GetObserverService();
-          CParserContext*   pc=mParser->PeekContext(); 
-          void*             theDocID=(pc)? pc->mKey:0; 
-    
-          mParser->GetDocumentCharset(charsetValue,charsetSource);
-          result=theService.Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,
-                                   kViewSourceCommand,charsetValue,charsetSource);
-        }
-        if(NS_SUCCEEDED(result)) {
-
-          WriteTag(theContext.mTokenNode,*mSink,theEndTag,mIsHTML,mIsPlaintext,theContext);
-      
-          // We make sure to display the title on the view source window.
-      
-          if(eHTMLTag_title == theTag){
-            nsCParserNode attrNode(theToken,mLineNumber,GetTokenRecycler());
-
-
-            nsAutoString theTempStr;
-            nsAutoString theStr;
-            PRBool  done=PR_FALSE;
-            while(!done) {
-              CHTMLToken* theNextToken=(CHTMLToken*)mTokenizer->PeekToken();
-              if(theNextToken) {
-
-                eHTMLTokenTypes theSubType=eHTMLTokenTypes(theNextToken->GetTokenType());
-                if(eToken_end!=theSubType) {
-                  theNextToken=(CHTMLToken*)mTokenizer->PopToken();
-                  theNextToken->GetSource(theTempStr);
-                  theStr+=theTempStr;
-                  gTokenRecycler->RecycleToken(theNextToken);  
-                }
-                else done=PR_TRUE;
-              }
-              else done=PR_TRUE;
-            }
-            theStr.CompressWhitespace();
-            attrNode.SetSkippedContent(theStr);
-
-            result= OpenHead(attrNode);
-            if(NS_OK==result) {
-              if(mSink) {
-                mSink->SetTitle(attrNode.GetSkippedContent());
-              }
-              if(NS_OK==result)
-                result=CloseHead(attrNode);
-            }
-            const nsString& theText=attrNode.GetSkippedContent();
-            ::WriteText(theText,*mSink,PR_FALSE,mIsPlaintext,theContext);
-          }
-        }
-        break;
-      }
-    case eToken_end:
-      WriteTag(theContext.mTokenNode,*mSink,theEndTag,mIsHTML,mIsPlaintext,theContext);
-      break;
     default:
       result=NS_OK;
   }//switch

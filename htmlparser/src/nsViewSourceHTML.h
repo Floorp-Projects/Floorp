@@ -32,6 +32,7 @@
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
 #include "nsIHTMLContentSink.h"
+#include "nsIXMLContentSink.h"
 #include "nsDTDUtils.h"
 #include "nsParserNode.h"
 
@@ -108,7 +109,6 @@ class CViewSourceHTML: public nsIDTD {
                                 nsString& aSourceType,
                                 eParseMode  aParseMode,
                                 nsIContentSink* aSink=0);
-
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
       * the process begins, WillBuildModel() is called. Afterwards the parser
@@ -253,28 +253,28 @@ class CViewSourceHTML: public nsIDTD {
 
     static nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveText,PRBool aPlainText);
 
-    /** These methods are used while setting setting title
-     *  in the view source window. Same code fragment as in
-     *  CNavDTD.
-     *  
-     *  @update  02/22/99
-     *  
-     */
-    nsresult OpenHead(const nsIParserNode& aNode);
-    nsresult CloseHead(const nsIParserNode& aNode);
-    
+
+private:
+    nsresult WriteTag(nsString &anXMLName,CToken* aTag,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteTag(nsString &anXMLName,nsString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteAttributes(PRInt32 attrCount);
+
 protected:
 
     nsParser*           mParser;
-    nsIHTMLContentSink* mSink;
+    nsIXMLContentSink*  mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
-    PRBool              mIsHTML;
     nsITokenizer*       mTokenizer;
-    PRInt32             mHasOpenHead;
-    PRBool              mIsPlaintext;
-
-    PRBool              mNeedsFontSpec;
+    nsAutoString        mStartTag;
+    nsAutoString        mEndTag;
+    nsAutoString        mCommentTag;
+    nsAutoString        mDocTypeTag;
+    nsAutoString        mPITag;
+    nsAutoString        mEntityTag;
+    nsAutoString        mText;
+    nsAutoString        mKey;
+    nsAutoString        mValue;
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);
