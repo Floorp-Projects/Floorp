@@ -45,12 +45,7 @@ enum {
 #define IS_ASCII_ALPHA(u) (IS_ASCII_UPPER(u) || IS_ASCII_LOWER(u))
 #define IS_ASCII_SPACE(u) ( 0x0020 == (u) )
 
-#define IS_NOCASE_CHAR(u)  \
-                     (((0x2500 <= (u)) && ( (u) <= 0xFEFF)) || \
-                      ((0x0600 <= (u)) && ( (u) <= 0x0FFF)) || \
-                      ((0x1100 <= (u)) && ( (u) <= 0x1DFF)) || \
-                      ((0x2000 <= (u)) && ( (u) <= 0x20FF)) || \
-                      ((0x2200 <= (u)) && ( (u) <= 0x23FF)))
+#define IS_NOCASE_CHAR(u)  (0==(1&(gCaseBlocks[(u)>>13]>>(0x001F&((u)>>8)))))
   
 // Size of Tables
 
@@ -70,12 +65,14 @@ private:
    PRUnichar *mTable;
    PRUint32 mSize;
    PRUint32 *mCache;
+   PRUint32 mLastBase;
 };
 
 nsCompressedMap::nsCompressedMap(PRUnichar *aTable, PRUint32 aSize)
 {
    mTable = aTable;
    mSize = aSize;
+   mLastBase = 0;
    mCache = new PRUint32[CASE_MAP_CACHE_SIZE];
    for(int i = 0; i < CASE_MAP_CACHE_SIZE; i++)
       mCache[i] = 0;
@@ -98,7 +95,27 @@ PRUnichar nsCompressedMap::Map(PRUnichar aChar)
    if(aChar == ((cachedData >> 16) & 0x0000FFFF))
      return (cachedData & 0x0000FFFF);
 
-   PRUnichar res = this->Lookup(0, (mSize/2), mSize-1, aChar);
+   // try the last index first
+   // store into local variable so we can be thread safe
+   PRUint32 base = mLastBase; 
+   PRUnichar res = 0;
+ 
+   if (( aChar <=  ((mTable[base+kSizeEveryIdx] >> 8) + 
+                 mTable[base+kLowIdx])) &&
+       ( mTable[base+kLowIdx]  <= aChar )) 
+   {
+      // Hit the last base
+      if(((mTable[base+kSizeEveryIdx] & 0x00FF) > 0) && 
+         (0 != ((aChar - mTable[base+kLowIdx]) % 
+               (mTable[base+kSizeEveryIdx] & 0x00FF))))
+      {
+         res = aChar;
+      } else {
+         res = aChar + mTable[base+kDiffIdx];
+      }
+   } else {
+      res = this->Lookup(0, (mSize/2), mSize-1, aChar);
+   }
 
    mCache[aChar & CASE_MAP_CACHE_MASK] =
        (((aChar << 16) & 0xFFFF0000) | (0x0000FFFF & res));
@@ -108,8 +125,9 @@ PRUnichar nsCompressedMap::Map(PRUnichar aChar)
 PRUnichar nsCompressedMap::Lookup(
    PRUint32 l, PRUint32 m, PRUint32 r, PRUnichar aChar)
 {
-  if ( aChar >  ((mTable[(m*3)+kSizeEveryIdx] >> 8) + 
-                 mTable[(m*3)+kLowIdx])) 
+  PRUint32 base = m*3;
+  if ( aChar >  ((mTable[base+kSizeEveryIdx] >> 8) + 
+                 mTable[base+kLowIdx])) 
   {
     if( l > m )
       return aChar;
@@ -118,7 +136,7 @@ PRUnichar nsCompressedMap::Lookup(
 	   newm++;
     return this->Lookup(m+1, newm , r, aChar);
     
-  } else if ( mTable[(m*3)+kLowIdx]  > aChar ) {
+  } else if ( mTable[base+kLowIdx]  > aChar ) {
     if( r < m )
       return aChar;
     PRUint32 newm = (l+m-1)/2;
@@ -127,13 +145,14 @@ PRUnichar nsCompressedMap::Lookup(
 	return this->Lookup(l, newm, m-1, aChar);
 
   } else  {
-    if(((mTable[(m*3)+kSizeEveryIdx] & 0x00FF) > 0) && 
-       (0 != ((aChar - mTable[(m*3)+kLowIdx]) % 
-              (mTable[(m*3)+kSizeEveryIdx] & 0x00FF))))
+    if(((mTable[base+kSizeEveryIdx] & 0x00FF) > 0) && 
+       (0 != ((aChar - mTable[base+kLowIdx]) % 
+              (mTable[base+kSizeEveryIdx] & 0x00FF))))
     {
        return aChar;
     }
-    return aChar + mTable[(m*3)+kDiffIdx];
+    mLastBase = base; // cache the base
+    return aChar + mTable[base+kDiffIdx];
   }
 }
 
