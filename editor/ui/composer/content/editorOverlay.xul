@@ -443,7 +443,8 @@
     <!-- Font face submenu -->
     <menu id="fontFaceMenu" label="&fontfaceMenu.label;" accesskey="&formatfontmenu.accesskey;" 
           position="1">
-      <menupopup oncommand="if (event.target.localName == 'menuitem') doStatefulCommand('cmd_fontFace', event.target.value);"
+      <menupopup oncommand="if (event.target.localName == 'menuitem')
+                              doStatefulCommand('cmd_fontFace', event.target.getAttribute('value'));"
                  onpopupshowing="initFontFaceMenu(this);">
         <menuitem label="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    value=""    type="radio" name="1" observes="cmd_renderedHTMLEnabler"/>
         <menuitem label="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  value="tt"  type="radio" name="1" observes="cmd_renderedHTMLEnabler"/>
