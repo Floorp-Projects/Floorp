@@ -601,7 +601,8 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
       msgurl->GetCanonicalLineEnding(&canonicalLineEnding);
     do
     {
-      line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+      char *saveLine;
+      saveLine = line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
       
       if (!line || (line[0] == '.' && line[1] == 0))
       {
@@ -643,6 +644,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
         else
           SetFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
       } 
+      PR_Free(saveLine);
     }
     while (line && !pauseForMoreData);
   }
