@@ -219,44 +219,38 @@ nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
     }
   }
   // otherwise, if it's a cell, create an implicit row for it
-  else 
+  else if (IsTableCell(aContent))
   {
-    nsTableContent *tableContent = (nsTableContent *)aContent;
-    const int contentType = tableContent->GetType();
-    if (contentType == nsITableContent::kTableCellType)
+    // find last row, if ! implicit, make one, append there
+    nsTableRow *row = nsnull;
+    int index = ChildCount ();
+    while ((0 < index) && (nsnull==row))
     {
-      // find last row, if ! implicit, make one, append there
-      nsTableRow *row = nsnull;
-      int index = ChildCount ();
-      while ((0 < index) && (nsnull==row))
+      nsIContent *child = ChildAt (--index);  // child: REFCNT++    
+      if (nsnull != child)
       {
-        nsIContent *child = ChildAt (--index);  // child: REFCNT++    
-        if (nsnull != child)
-        {
-          nsTableContent * content = (nsTableContent *)child;
-          if (content->GetType()==nsITableContent::kTableRowType)
-            row = (nsTableRow *)content;
-          NS_RELEASE(child);                    // child: REFCNT--
-        }
+        if (IsRow(child))
+          row = (nsTableRow *)child;
+        NS_RELEASE(child);                    // child: REFCNT--
       }
-      if ((nsnull == row) || (! row->IsImplicit ()))
-      {
-        printf ("nsTableRow::AppendChild -- creating an implicit row.\n");
-        nsIAtom * trDefaultTag = NS_NewAtom(nsTablePart::kRowTagString);   // trDefaultTag: REFCNT++
-        row = new nsTableRow (trDefaultTag, PR_TRUE);
-        NS_RELEASE(trDefaultTag);                               // trDefaultTag: REFCNT--
-        result = AppendChild (row, PR_FALSE);
-        // SEC: check result
-      }
-      // group is guaranteed to be allocated at this point
-      result = row->AppendChild(aContent, PR_FALSE);
     }
-    // otherwise, punt and let the table try to insert it.  Or maybe just return a failure?
-    else
+    if ((nsnull == row) || (! row->IsImplicit ()))
     {
-      // you should go talk to my parent if you want to insert something other than a row
-      result = NS_ERROR_FAILURE;
+      printf ("nsTableRow::AppendChild -- creating an implicit row.\n");
+      nsIAtom * trDefaultTag = NS_NewAtom(nsTablePart::kRowTagString);   // trDefaultTag: REFCNT++
+      row = new nsTableRow (trDefaultTag, PR_TRUE);
+      NS_RELEASE(trDefaultTag);                               // trDefaultTag: REFCNT--
+      result = AppendChild (row, PR_FALSE);
+      // SEC: check result
     }
+    // group is guaranteed to be allocated at this point
+    result = row->AppendChild(aContent, PR_FALSE);
+  }
+  // otherwise, punt and let the table try to insert it.  Or maybe just return a failure?
+  else
+  {
+    // you should go talk to my parent if you want to insert something other than a row
+    result = NS_ERROR_FAILURE;
   }
   return result;
 }
@@ -351,9 +345,32 @@ PRBool nsTableRowGroup::IsRow(nsIContent * aContent) const
   if (nsnull!=aContent)
   {
     // is aContent a row?
-    nsTableContent *tableContent = (nsTableContent *)aContent;
-    const int contentType = tableContent->GetType();
+    nsITableContent *tableContentInterface = nsnull;
+    nsresult rv = aContent->QueryInterface(kITableContentIID, 
+                                           (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+
+    const int contentType = tableContentInterface->GetType();
+    NS_RELEASE(tableContentInterface);
     if (contentType == nsITableContent::kTableRowType)
+      result = PR_TRUE;
+  }
+  return result;
+}
+
+/** support method to determine if the param aContent is a TableCell object */
+PRBool nsTableRowGroup::IsTableCell(nsIContent * aContent) const
+{
+  PRBool result = PR_FALSE;
+  if (nsnull!=aContent)
+  {
+    // is aContent a table cell?
+    nsITableContent *tableContentInterface = nsnull;
+    nsresult rv = aContent->QueryInterface(kITableContentIID, 
+                                           (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+
+    const int contentType = tableContentInterface->GetType();
+    NS_RELEASE(tableContentInterface);
+    if (contentType == nsITableContent::kTableCellType)
       result = PR_TRUE;
   }
   return result;

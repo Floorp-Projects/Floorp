@@ -31,6 +31,8 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 
+static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
+
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
 static PRBool gsNoisyRefs = PR_FALSE;
@@ -134,10 +136,7 @@ nsTableRow::AppendChild (nsIContent *aContent, PRBool aNotify)
   nsresult rv = NS_OK;
   if (nsnull!=aContent)
   {
-    // SEC: should verify that it is indeed table content before we do the cast
-    nsTableContent *tableContent = (nsTableContent *)aContent;
-    const int contentType = tableContent->GetType();
-    if (contentType != nsITableContent::kTableCellType)
+    if (!IsTableCell(aContent))
     {
       if (gsDebug==PR_TRUE) printf ("nsTableRow::AppendChild -- didn't get a cell, giving up to parent.\n");
       if (nsnull != mRowGroup)
@@ -165,9 +164,7 @@ nsTableRow::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
   nsresult rv = NS_OK;
   if (nsnull!=aContent)
   {
-    nsTableContent *tableContent = (nsTableContent *)aContent;
-    const int contentType = tableContent->GetType();
-    if (contentType != nsITableContent::kTableCellType)
+    if (!IsTableCell(aContent))
     { // I only insert cells for now
       // TODO: wrap whatever I'm given here in a cell and insert it
       NS_ASSERTION(PR_FALSE, "unimplemented attempt to insert a non-cell into a row");
@@ -199,9 +196,7 @@ nsTableRow::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
     return NS_ERROR_FAILURE;
   else
   {
-    nsTableContent *tableContent = (nsTableContent *)aContent;
-    const int contentType = tableContent->GetType();
-    if (contentType != nsITableContent::kTableCellType)
+    if (!IsTableCell(aContent))
     { // I only insert cells for now
       // TODO: wrap whatever I'm given here in a cell and insert it
       NS_ASSERTION(PR_FALSE, "unimplemented attempt to insert a non-cell into a row");
@@ -325,6 +320,25 @@ nsTableRow::CreateFrame(nsIPresContext* aPresContext,
   frame->SetStyleContext(aPresContext, aStyleContext);
   aResult = frame;
   return rv;
+}
+
+/** support method to determine if the param aContent is a TableCell object */
+PRBool nsTableRow::IsTableCell(nsIContent * aContent) const
+{
+  PRBool result = PR_FALSE;
+  if (nsnull!=aContent)
+  {
+    // is aContent a table cell?
+    nsITableContent *tableContentInterface = nsnull;
+    nsresult rv = aContent->QueryInterface(kITableContentIID, 
+                                           (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+
+    const int contentType = tableContentInterface->GetType();
+    NS_RELEASE(tableContentInterface);
+    if (contentType == nsITableContent::kTableCellType)
+      result = PR_TRUE;
+  }
+  return result;
 }
 
 /* ---------- Global Functions ---------- */
