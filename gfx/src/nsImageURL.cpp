@@ -108,7 +108,7 @@ NS_IMPL_ADDREF(ImageURLImpl)
 nsrefcnt ImageURLImpl::Release(void)                         
 {                                                      
   if (--mRefCnt == 0) {                                
-    delete this;                                       
+    NS_DELETEXPCOM(this);
     return 0;                                          
   }                                                    
   return mRefCnt;                                      

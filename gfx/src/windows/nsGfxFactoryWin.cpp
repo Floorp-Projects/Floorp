@@ -123,22 +123,34 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
   nsISupports *inst = nsnull;
 
   if (mClassID.Equals(kCFontMetrics)) {
-    inst = (nsISupports *)new nsFontMetricsWin();
+    nsFontMetricsWin* fm;
+    NS_NEWXPCOM(fm, nsFontMetricsWin);
+    inst = (nsISupports *)fm;
   }
   else if (mClassID.Equals(kCDeviceContext)) {
-    inst = (nsISupports *)new nsDeviceContextWin();
+    nsDeviceContextWin* dc;
+    NS_NEWXPCOM(dc, nsDeviceContextWin);
+    inst = (nsISupports *)dc;
   }
   else if (mClassID.Equals(kCRenderingContext)) {
-    inst = (nsISupports *)new nsRenderingContextWin();
+    nsRenderingContextWin*  rc;
+    NS_NEWXPCOM(rc, nsRenderingContextWin);
+    inst = (nsISupports *)rc;
   }
   else if (mClassID.Equals(kCImage)) {
-    inst = (nsISupports *)new nsImageWin();
+    nsImageWin* image;
+    NS_NEWXPCOM(image, nsImageWin);
+    inst = (nsISupports *)image;
   }
   else if (mClassID.Equals(kCRegion)) {
-    inst = (nsISupports *)new nsRegionWin();
+    nsRegionWin*  region;
+    NS_NEWXPCOM(region, nsRegionWin);
+    inst = (nsISupports *)region;
   }
   else if (mClassID.Equals(kCBlender)) {
-    inst = (nsISupports *)new nsBlenderWin();
+    nsBlenderWin* blender;
+    NS_NEWXPCOM(blender, nsBlenderWin);
+    inst = (nsISupports *)blender;
   }
 
   if (inst == NULL) {  
