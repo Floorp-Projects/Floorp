@@ -60,11 +60,11 @@ AC_PROG_INSTALL
 AC_PROG_AWK
 AC_PROG_RANLIB
 
-AC_PATH_PROGS(EMACS, xemacs lemacs emacs, /bin/true)
-AC_PATH_PROGS(PERL, perl5 perl, /bin/true)
-AC_PATH_PROG(WHOAMI, whoami, /bin/true)
-AC_PATH_PROG(UNZIP, unzip, /bin/true)
-AC_PATH_PROG(ZIP, zip, /bin/true)
+AC_PATH_PROGS(EMACS, xemacs lemacs emacs, :)
+AC_PATH_PROGS(PERL, perl5 perl, :)
+AC_PATH_PROG(WHOAMI, whoami, :)
+AC_PATH_PROG(UNZIP, unzip, :)
+AC_PATH_PROG(ZIP, zip, :)
 
 AC_PATH_X
 AC_PATH_XTRA
@@ -98,11 +98,16 @@ AC_SUBST(GNU_CXX)
 
 dnl Checks for system specific bits
 dnl ========================================================
+dnl the qsort routine under solaris is faulty
+dnl Linux Alpha needs -mieee-with-inexact for FPU to work correctly
+dnl Note this case statement doesn't seem to handle [] as part of a regexp
 
-res=`echo $target_os| grep -c "^solaris"`
-if [ test $res != 0 ]; then
-    AC_DEFINE(BROKEN_QSORT)
-fi
+case "$target" in
+*-*-solaris*) 
+	AC_DEFINE(BROKEN_QSORT) ;;
+alpha-*-linux*)
+	CFLAGS="$CFLAGS -mieee-with-inexact" ;;
+esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -488,7 +493,7 @@ if [ test $res != 0 ]; then
 	[FE_QT_LIBS='-L$(QTDIR)/lib -lqt' FE_QT_CFLAGS='-I$(QTDIR)/include'],
 	[MISSING_QT=1])
     LDFLAGS=$_SAVE_LDFLAGS 
-    AC_PATH_PROG(MOC, moc, /bin/true)
+    AC_PATH_PROG(MOC, moc, :)
 fi
 
 res=`echo :$MOZ_FE | grep -c " gtk"`
