@@ -8,3 +8,4 @@ nsIUnicodeEncoder.h
 uconvutil.h
 nsIMappingCache.h
 nsICharRepresentable.h
+nsIConverterInputStream.h
