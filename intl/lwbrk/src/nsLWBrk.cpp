@@ -121,7 +121,10 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kLWBrkCID, NULL, NULL, path,
+  rv = compMgr->RegisterComponent(kLWBrkCID, 
+                                  "Line and Word Breaker", 
+                                  NS_LWBRK_PROGID, 
+                                  path,
                                   PR_TRUE, PR_TRUE);
 
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
