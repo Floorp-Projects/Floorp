@@ -70,10 +70,10 @@ Formatter& operator<< (Formatter& f, const ArgList& al)
     ArgumentList::const_iterator i = rl.begin(), e = rl.end();
     if (i != e) {
         Argument r = *i++;
-        f << "R" << r.first.first << '=' << registers[r.first.first];
+        f << getRegisterValue(registers, r.first.first);
         while (i != e) {
             r = *i++;
-            f << ", R" << r.first << '=' << registers[r.first.first];
+            f << ", " << getRegisterValue(registers, r.first.first);
         }
     }
     f << ")";
