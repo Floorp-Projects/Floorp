@@ -1124,37 +1124,43 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
       if ( NS_SUCCEEDED(rv) && trans ) {
         // Add the text Flavor to the transferable, 
         // because that is the only type of data we are looking for at the moment
-        nsAutoString textMime(kTextMime);
-        trans->AddDataFlavor(&textMime);
-        //genericTrans->AddDataFlavor(mImageDataFlavor);
+        nsString* textMime = new nsString(kTextMime);
+        trans->AddDataFlavor(textMime);     // transferable consumes flavor type
+        //trans->AddDataFlavor(mImageDataFlavor);
 
-        if (trans) {
+        // Fill the transferable with data for each drag item in succession
+        PRUint32 numItems = 0; 
+        if (NS_SUCCEEDED(dragSession->GetNumDropItems(&numItems))) { 
 
-          // Fill the transferable with our requested data flavor
-          dragSession->GetData(trans);
+          printf("Num Drop Items %d\n", numItems); 
 
-          // Get the string data out of the transferable
-          // Note: the transferable owns the pointer to the data
-          char *str = 0;
-          PRUint32 len;
-          trans->GetTransferData(&textMime, (void **)&str, &len);
+          PRUint32 i; 
+          for (i=0;i<numItems;++i) {
+            if (NS_SUCCEEDED(dragSession->GetData(trans, i))) { 
+ 
+              // Get the string data out of the transferable
+              // Note: the transferable owns the pointer to the data
+              char *str = 0;
+              PRUint32 len;
+              trans->GetAnyTransferData(textMime, (void **)&str, &len);
 
-          // If the string was not empty then paste it in
-          if (str) {
-            stuffToPaste.SetString(str, len);
-            mEditor->InsertText(stuffToPaste);
-            dragSession->SetCanDrop(PR_TRUE);
-          }
+              // If the string was not empty then paste it in
+              if (str) {
+                stuffToPaste.SetString(str, len);
+                mEditor->InsertText(stuffToPaste);
+                dragSession->SetCanDrop(PR_TRUE);
+              }
 
-          // XXX This is where image support might go
-          //void * data;
-          //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
-
+              // XXX This is where image support might go
+              //void * data;
+              //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
+            }
+          } // foreach drag item
         }
-      }
-    }
+      } // if valid transferable
+    } // if valid drag session
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
-  }
+  } // if valid drag service
 
 #endif  
   
