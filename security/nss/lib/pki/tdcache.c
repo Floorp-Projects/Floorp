@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.24 $ $Date: 2002/02/05 23:55:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.25 $ $Date: 2002/02/08 02:51:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -724,8 +724,8 @@ add_cert_to_cache
 	}
 #endif
     }
-    PZ_Unlock(td->cache->lock);
     nssCertificate_AddRef(cert);
+    PZ_Unlock(td->cache->lock);
     return nssrv;
 loser:
     /* Remove any handles that have been created */
@@ -796,13 +796,13 @@ collect_subject_certs
 {
     NSSCertificate *c;
     NSSCertificate **rvArray = NULL;
-    PRUint32 i, count;
+    PRUint32 count;
     if (rvCertListOpt) {
 	nssListIterator *iter = nssList_CreateIterator(subjectList);
 	for (c  = (NSSCertificate *)nssListIterator_Start(iter);
 	     c != (NSSCertificate *)NULL;
 	     c  = (NSSCertificate *)nssListIterator_Next(iter)) {
-	    nssList_Add(rvCertListOpt, nssCertificate_AddRef(c));
+	    nssList_Add(rvCertListOpt, c);
 	}
 	nssListIterator_Finish(iter);
 	nssListIterator_Destroy(iter);
@@ -813,7 +813,6 @@ collect_subject_certs
 	    return (NSSCertificate **)NULL;
 	}
 	nssList_GetArray(subjectList, (void **)rvArray, count);
-	for (i=0; i<count; i++) nssCertificate_AddRef(rvArray[i]);
     }
     return rvArray;
 }
@@ -842,6 +841,8 @@ nssTrustDomain_GetCertsForSubjectFromCache
 #ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
+	/* get references before leaving the cache's lock protection */
+	nssCertificateList_AddReferences(ce->entry.list);
     }
     PZ_Unlock(td->cache->lock);
     if (ce) {
@@ -874,6 +875,8 @@ nssTrustDomain_GetCertsForNicknameFromCache
 #ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
+	/* get references before leaving the cache's lock protection */
+	nssCertificateList_AddReferences(ce->entry.list);
     }
     PZ_Unlock(td->cache->lock);
     if (ce) {
@@ -896,6 +899,8 @@ nssTrustDomain_GetCertsForEmailAddressFromCache
     NSSCertificate **rvArray = NULL;
     cache_entry *ce;
     nssList *collectList = NULL;
+    nssListIterator *iter = NULL;
+    nssList *subjectList;
 #ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("looking for cert by email %s", email));
 #endif
@@ -907,17 +912,23 @@ nssTrustDomain_GetCertsForEmailAddressFromCache
 #ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
+	/* loop over subject lists and get refs for certs */
+	iter = nssList_CreateIterator(ce->entry.list);
+	for (subjectList  = (nssList *)nssListIterator_Start(iter);
+	     subjectList != (nssList *)NULL;
+	     subjectList  = (nssList *)nssListIterator_Next(iter)) 
+	{
+	    /* get references before leaving the cache's lock protection */
+	    nssCertificateList_AddReferences(subjectList);
+	}
     }
     PZ_Unlock(td->cache->lock);
     if (ce) {
-	nssListIterator *iter;
-	nssList *subjectList;
 	if (certListOpt) {
 	    collectList = certListOpt;
 	} else {
 	    collectList = nssList_Create(NULL, PR_FALSE);
 	}
-	iter = nssList_CreateIterator(ce->entry.list);
 	for (subjectList  = (nssList *)nssListIterator_Start(iter);
 	     subjectList != (nssList *)NULL;
 	     subjectList  = (nssList *)nssListIterator_Next(iter)) {
@@ -964,13 +975,13 @@ nssTrustDomain_GetCertForIssuerAndSNFromCache
     if (ce) {
 	ce->hits++;
 	ce->lastHit = PR_Now();
-	rvCert = ce->entry.cert;
+	rvCert = nssCertificate_AddRef(ce->entry.cert);
 #ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
     }
     PZ_Unlock(td->cache->lock);
-    return nssCertificate_AddRef(rvCert);
+    return rvCert;
 }
 
 #ifdef NSS_3_4_CODE
@@ -1030,7 +1041,7 @@ nssTrustDomain_GetCertByDERFromCache
     PORT_Free(issuer.data);
     PORT_Free(serial.data);
 #endif
-    return nssCertificate_AddRef(rvCert);
+    return rvCert;
 }
 
 static void cert_iter(const void *k, void *v, void *a)

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.31 $ $Date: 2002/02/01 17:25:15 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.32 $ $Date: 2002/02/08 02:51:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -903,15 +903,37 @@ static PRStatus traverse_callback(NSSCertificate *c, void *arg)
 {
     PRStatus nssrv;
     struct traverse_arg *ta = (struct traverse_arg *)arg;
-    nssrv = (*ta->callback)(c, ta->arg);
-    if (nssrv == PR_SUCCESS) {
-	NSSTrustDomain *td = NSSCertificate_GetTrustDomain(c);
-	nssTrustDomain_AddCertsToCache(td, &c, 1);
-	if (!nssList_Get(ta->cached, c)) {
-	    nssCertificate_AddRef(c);
-	    nssList_Add(ta->cached, c);
-	}
+    NSSCertificate *cp = nssCertificate_AddRef(c);
+    NSSTrustDomain *td = NSSCertificate_GetTrustDomain(c);
+    /* The cert coming in has been retrieved from a token.  It was not in
+     * the cache when the search was begun.  But it may be in the cache now,
+     * and if it isn't, it will be, because it is going to be cracked into
+     * a CERTCertificate and fed into the callback.
+     */
+    nssrv = nssTrustDomain_AddCertsToCache(td, &c, 1);
+    if (!nssList_Get(ta->cached, c)) {
+	/* add it to the cached list for this search */
+	nssCertificate_AddRef(c);
+	nssList_Add(ta->cached, c);
     }
+    /* This is why the hack of copying the cert was done above.  The pointer
+     * c passed to this function is provided by retrieve_cert.  That function
+     * will destroy the pointer once this function returns.  Since c is a local
+     * copy, there is no way to notify retrieve_cert if it has changed.  That
+     * would happen if the above call to add it to the cache found the cert
+     * already there.  In that case, the pointer c passed to the callback
+     * below will be the cached cert, and the pointer c that retrieve_cert
+     * has will be the same as the copy made above.  Thus, retrieve_cert will
+     * destroy the reference to the copy, the callback will use the reference
+     * to the cached entry, and everyone should be happy.
+     */
+    if (cp == c) {
+	/* However, if the call to add c to the cache was successful, cp is
+	 * now an extra copy within this function and needs to be destroyed.
+	 */
+	NSSCertificate_Destroy(cp);
+    }
+    nssrv = (*ta->callback)(c, ta->arg);
     return nssrv;
 }
 
