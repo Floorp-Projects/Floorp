@@ -114,6 +114,9 @@ public:
   /** set this row's starting row index */
   virtual void SetRowIndex (int aRowIndex);
 
+  /** get the row's enclosing table frame in a safe way */
+  NS_IMETHOD GetTableFrame(nsIFrame *& aFrame);
+
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 
 protected:

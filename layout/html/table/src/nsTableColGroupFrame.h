@@ -70,6 +70,9 @@ public:
   
   virtual void SetStartColumnIndex (PRInt32 aIndex);
 
+  /** helper method to get the span attribute for this colgroup */
+  PRInt32 GetSpan();
+
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 
 protected:
@@ -82,8 +85,7 @@ protected:
     * Since we need to know the full column structure before the COLS attribute
     * can be interpreted, we can't just use DidSetStyleContext
     */
-  NS_METHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext,
-                                        PRInt32         aColIndex);
+  NS_METHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext);
 
   nsresult InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
