@@ -25,6 +25,15 @@ include $(DEPTH)/config/autoconf.mk
 MODULE=nntp
 LIBRARY_NAME=nntp
 
+EXPORTS = \
+	nsNNTPProtocol.h	\
+	nsNntpUrl.h		\
+	nsNNTPArticleSet.h	\
+	nsNNTPNewsgroupList.h	\
+	nsNNTPNewsgroup.h	\
+	nntpCore.h		\
+	$(NULL)
+
 CPPSRCS = \
 	nsNNTPArticleList.cpp \
 	nsNNTPArticleSet.cpp \
