@@ -64,6 +64,7 @@ input, select, textarea {
 */
 a:link {
   text-decoration: underline;
+  color: blue;
 }
 
 input[type="hidden"] {
