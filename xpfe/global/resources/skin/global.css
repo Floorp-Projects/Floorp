@@ -917,6 +917,10 @@ tree {
   width: 100%;
 }
 
+treecol[hidden="true"] {
+  visibility: collapse;
+}
+ 
 /* BEN: making dialog trees nicely inset */
 tree.inset {
   border: 1px inset white;

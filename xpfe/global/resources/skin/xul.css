@@ -190,6 +190,10 @@ treecol {
  display: table-column;
 }
 
+treecolgroup {
+  display: table-column-group;
+}
+
 /********** Tab widget *********/
 
 tab { 
