@@ -581,9 +581,8 @@
 ; Emit a conditional line break.  If the line break is not needed, emit width spaces instead.
 ; If width is t or omitted, the line break is unconditional.
 ; If width is nil, do nothing.
-; If the line break is needed, the new line is indented to the current indent level and groups,
-; if provided, are added to the beginning of the new line.  The width of these groups is currently not taken
-; into account.
+; If the line break is needed, the new line is indented to the current indent level and groups, if provided,
+; are added to the beginning of the new line.  The width of these groups is currently not taken into account.
 ; Must be called from the dynamic scope of a depict-logical-block.
 (defun depict-break (markup-stream &optional (width t) &rest groups)
   (assert-true (>= (markup-stream-level markup-stream) *markup-stream-content-level*))
@@ -605,6 +604,21 @@
           (when *show-logical-blocks*
             (markup-stream-append1 markup-stream '(:invisible :bullet)))
           (markup-stream-append1 markup-stream (make-soft-break width groups)))))))
+
+
+; Depict the string unquoted, except that replace each space with a one-character break.
+(defun depict-string-words (markup-stream string)
+  (do ((low 0)
+       (high (length string)))
+      ((= low high))
+    (cond
+     ((char= (char string low) #\space)
+      (depict-break markup-stream 1)
+      (incf low))
+     (t
+      (let ((word-end (or (position #\space string :start low) high)))
+        (depict markup-stream (subseq string low word-end))
+        (setq low word-end))))))
 
 
 ; Call emitter to emit each element of the given list onto the markup-stream.
