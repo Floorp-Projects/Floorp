@@ -790,6 +790,9 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   rect.SetRect(0, 0, dialogWidth, 162);  
 
   nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mRobotDialog);
+  if (nsnull == mRobotDialog)
+  	return FALSE;
+  
   NS_CreateDialog(aParent, mRobotDialog,rect,HandleRobotEvent,&font);
   mRobotDialog->SetLabel("Debug Robot Options");
 
@@ -1162,7 +1165,10 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 
     nsIWidget* widget = nsnull;
     nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mSiteDialog);
-    if (mSiteDialog && NS_OK == mSiteDialog->QueryInterface(kIWidgetIID,(void**)&widget))
+    if (nsnull == mSiteDialog)
+      return FALSE;
+    
+    if (NS_OK == mSiteDialog->QueryInterface(kIWidgetIID,(void**)&widget))
     {
       widget->Create(aParent, rect, HandleSiteEvent, NULL);
       mSiteDialog->SetLabel("Top 100 Site Walker");
