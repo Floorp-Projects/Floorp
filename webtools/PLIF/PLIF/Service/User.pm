@@ -112,7 +112,7 @@ sub objectInit {
     $self->{'_DIRTY'} = {}; # make sure propertySet is happy
     $self->SUPER::objectInit(@_);
     $self->userID($userID);
-    $self->mode($mode); # active (0), disabled (1), logging out (2) XXX need a way to make this extensible
+    $self->mode($mode); # 0=active, 1=logging out, 2=disabled   XXX need a way to make this extensible
     $self->password($password);
     $self->adminMessage($adminMessage);
     $self->newFieldID($newFieldID);
@@ -286,6 +286,24 @@ sub checkPassword {
     my $self = shift;
     my($password) = @_;
     return $self->app->getService('service.passwords')->checkPassword($self->password, $password);
+}
+
+sub logout {
+    my $self = shift;
+    if ($self->mode == 0) {
+        $self->mode(1);
+    }
+}
+
+sub checkLogin {
+    my $self = shift;
+    # check to see if the account is disabled
+    my $enabled = $self->mode == 0;
+    # if user is logging out, clear flag
+    if ($self->mode == 1) {
+        $self->mode(0);
+    }
+    return $enabled;
 }
 
 sub joinGroup {

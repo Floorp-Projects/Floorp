@@ -337,7 +337,7 @@ sub setupInstall {
         # +-------------------+
         # | userID         K1 | auto_increment
         # | password          |
-        # | mode              | active, disabled, logging out, etc
+        # | mode              | 0 = active, 1 = logging out, 2 = account disabled
         # | adminMessage      | string displayed when user (tries to) log in
         # | newFieldID        | \
         # | newFieldValue     |  > used when user tries to change his e-mail

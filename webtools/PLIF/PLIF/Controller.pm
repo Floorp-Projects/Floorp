@@ -89,6 +89,17 @@ sub addObject {
     }
 }
 
+sub removeObject {
+    my $self = shift;
+    foreach my $object (@_) {
+        foreach my $index (0..$#{$self->objects}) {
+            if ($self->objects->[$index] == $object) {
+                delete($self->objects->[$index]);
+            }
+        }
+    }
+}
+
 sub getService {
     my $self = shift;
     my($name) = @_;

@@ -59,10 +59,11 @@ sub verifyInput {
     # now let's see what that gave us
     if (@result) {
         # horrah, somebody knew what to do!
-        if (defined($result[0])) {
+        if ((defined($result[0])) and ($result[0]->checkLogin())) {
             $app->addObject($result[0]); # they will have returned a user object
         } else {
             # hmm, so apparently user is not authentic
+            $self->errorState(\@result);
             return $self; # supports user.login (reportInputVerificationError)
         }
     }
@@ -84,12 +85,37 @@ sub authenticateUser {
 sub reportInputVerificationError {
     my $self = shift;
     my($app) = @_;
-    $app->output->loginFailed(1); # 1 means 'unknown username/password'
+    my $message = '';
+    if (defined($self->errorState) and defined($self->errorState->[0])) {
+        $message = $self->errorState->[0]->adminMessage;
+    }
+    $self->errorState(undef);
+    $app->output->loginFailed(1, $message); # 1 means 'unknown username/password'
 }
 
-# cmdSendPassword could also be called 'cmdNewUser'
 # dispatcher.commands
-sub cmdSendPassword {
+sub cmdLoginRequestAccount {
+    my $self = shift;
+    my($app) = @_;
+    $app->output->loginRequestAccount();
+}
+
+# dispatcher.commands
+sub cmdLoginLogout {
+    my $self = shift;
+    my($app) = @_;
+    # mark the user as logged out and then return to the main index page
+    my $user = $app->getObject('user');
+    if (defined($user)) {
+        $user->logout();
+        $app->removeObject($user);
+    }
+    $app->noCommand();
+}
+
+# cmdLoginSendPassword could also be called 'cmdLoginNewUser'
+# dispatcher.commands
+sub cmdLoginSendPassword {
     my $self = shift;
     my($app) = @_;
     my $protocol = $app->input->getArgument('protocol');
@@ -102,13 +128,13 @@ sub cmdSendPassword {
         } else {
             ($user, $password) = $self->createUser($app, $protocol, $address);
             if (not defined($user)) {
-                $app->output->loginFailed(2); # 2 means 'invalid protocol/username'
+                $app->output->loginFailed(2, ''); # 2 means 'invalid protocol/username'
                 return;
             }
         }
         $self->sendPassword($app, $user, $protocol, $password);
     } else {
-        $app->output->loginFailed(0); # 0 means 'no username/password'
+        $app->output->loginFailed(0, ''); # 0 means 'no username/password'
     }
 }
 
@@ -141,7 +167,7 @@ sub requireLogin {
         my($user, $password) = $self->createUser($app, $app->input->protocol, $address);
         $self->sendPassword($app, $user, $app->input->protocol, $password);
     } else {
-        $app->output->loginFailed(0);
+        $app->output->loginFailed(0, '');
     }
 }
 
@@ -157,9 +183,19 @@ sub outputLoginInsufficient {
 # dispatcher.output.generic
 sub outputLoginFailed {
     my $self = shift;
-    my($app, $output, $tried) = @_;
+    my($app, $output, $tried, $message) = @_;
     $output->output('login.failed', {
         'tried' => $tried, # 0 = no username; 1 = unknown username; 2 = invalid username
+        'contacts' => [$app->getService('dataSource.user')->getFieldNamesByCategory($app, 'contact')],
+        'message' => $message,
+    });   
+}
+
+# dispatcher.output.generic
+sub outputLoginRequestAccount {
+    my $self = shift;
+    my($app, $output, $tried) = @_;
+    $output->output('login.requestAccount', {
         'contacts' => [$app->getService('dataSource.user')->getFieldNamesByCategory($app, 'contact')],
     });   
 }
@@ -187,10 +223,11 @@ sub outputLoginDetails {
 # dispatcher.output
 sub strings {
     return (
-            'login.accessDenied' => 'Displayed when the user does not have the requisite right (namely, data.right)',
-            'login.failed' => 'Displayed when the user has not logged in (data.tried is false) or when the credentials were wrong (data.tried is true)',
-            'login.detailsSent' => 'The password was sent to data.address using data.protocol',
-            'login.details' => 'The message containing the data.username and data.password of a new account or when the user has forgotten his password (only required for contact protocols, e.g. e-mail)',
+            'login.accessDenied' => 'Displayed when the user does not have the requisite right (namely, data.right).',
+            'login.failed' => 'Displayed when the user has not logged in (data.tried is false) or when the credentials were wrong (data.tried is true). A message may be given in data.message.',
+            'login.requestAccount' => 'Displayed when the user requests the form to enter a new account (should display the same form as login.failed, basically).',
+            'login.detailsSent' => 'The password was sent to data.address using data.protocol.',
+            'login.details' => 'The message containing the data.username and data.password of a new account or when the user has forgotten his password (only required for contact protocols, e.g. e-mail).',
             );
 }
 
