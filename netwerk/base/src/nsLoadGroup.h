@@ -67,8 +67,8 @@ protected:
 
     nsISupportsArray*           mChannels;
 
-////    nsWeakPtr               mObserver;
-    nsCOMPtr<nsIStreamObserver> mObserver;
+    nsWeakPtr               mObserver;
+    // nsCOMPtr<nsIStreamObserver> mObserver;
     nsCOMPtr<nsIChannel>        mDefaultLoadChannel;
 
     nsWeakPtr                   mGroupListenerFactory;

@@ -442,13 +442,14 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
         // If the notification fails then DO NOT add the channel to
         // the load group.
         //
-        if (mObserver) {
+        nsCOMPtr<nsIStreamObserver> observer (do_QueryReferent(mObserver));
+        if (observer) {
             PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
                    ("LOADGROUP [%x]: Firing OnStartRequest for channel %x."
                    "(foreground count=%d).\n",
                    this, channel, mForegroundCount));
 
-            rv = mObserver->OnStartRequest(channel, ctxt);
+            rv = observer->OnStartRequest(channel, ctxt);
             if (NS_FAILED(rv)) {
                 PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
                        ("LOADGROUP [%x]: OnStartRequest for channel %x FAILED.\n",
@@ -526,13 +527,14 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
         mForegroundCount -= 1;
 
         // Fire the OnStopRequest out to the observer...
-        if (mObserver) {
+        nsCOMPtr<nsIStreamObserver> observer (do_QueryReferent(mObserver));
+        if (observer) {
             PR_LOG(gLoadGroupLog, PR_LOG_DEBUG,
                    ("LOADGROUP [%x]: Firing OnStopRequest for channel %x."
                     "(foreground count=%d).\n",
                     this, channel, mForegroundCount));
 
-            rv = mObserver->OnStopRequest(channel, ctxt, status, errorMsg);
+            rv = observer->OnStopRequest(channel, ctxt, status, errorMsg);
             if (NS_FAILED(rv)) {
                 PR_LOG(gLoadGroupLog, PR_LOG_ERROR,
                        ("LOADGROUP [%x]: OnStopRequest for channel %x FAILED.\n",
@@ -590,7 +592,8 @@ nsLoadGroup::SetGroupObserver(nsIStreamObserver* aObserver)
                                        eventQueue, aObserver);
     }
 #else
-    mObserver = aObserver;
+    //mObserver = aObserver;
+    mObserver = getter_AddRefs(NS_GetWeakReference(aObserver));
 #endif
 
     return rv;
@@ -600,10 +603,10 @@ nsLoadGroup::SetGroupObserver(nsIStreamObserver* aObserver)
 NS_IMETHODIMP
 nsLoadGroup::GetGroupObserver(nsIStreamObserver* *aResult)
 {
-    *aResult = mObserver;
-    NS_IF_ADDREF(*aResult);
-
-    return NS_OK;
+  nsCOMPtr<nsIStreamObserver> observer (do_QueryReferent(mObserver));
+  *aResult = observer;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
 }
 
 
