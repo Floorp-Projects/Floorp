@@ -125,9 +125,10 @@ sub create {
 }
 
 sub init {
-    my($exception, $method, @data) = @_;
+    my($exception, @data) = @_;
     if (not ref($exception)) {
         # in case we were called as a constructor
+        syntaxError 'odd number of elements passed to exception constructor', 1 if @data % 2;
         $exception = $exception->create(@data);
     }
     # set up the exception and return it
