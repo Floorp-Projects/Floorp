@@ -532,9 +532,9 @@ nsFrameImageLoader::NotifyError(nsIImageRequest *aImageRequest,
 void
 nsFrameImageLoader::NotifyFrames(PRBool aIsSizeUpdate)
 {
-
-  PerFrameData* pfd = mFrames;
-  while (nsnull != pfd) {
+  PerFrameData** pfdp = &mFrames;
+  PerFrameData* pfd = *pfdp;
+  while (nsnull != (pfd = *pfdp)) {
     if ((aIsSizeUpdate && pfd->mNeedSizeUpdate) || !aIsSizeUpdate) {
       if (pfd->mCallBack) {
 #ifdef NOISY_IMAGE_LOADING
@@ -543,11 +543,14 @@ nsFrameImageLoader::NotifyFrames(PRBool aIsSizeUpdate)
         (*pfd->mCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
                           mImageLoadStatus);
       }
+      if (pfd != *pfdp) {
+        continue; //pfd has been deleted in the callback, don't chain to next
+      }
       if (aIsSizeUpdate) {
         pfd->mNeedSizeUpdate = PR_FALSE;
       }
     }
-    pfd = pfd->mNext;
+    pfdp = &pfd->mNext;
   }
   
 }
