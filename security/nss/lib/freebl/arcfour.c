@@ -45,7 +45,7 @@
 #endif
 
 /* this case is failing for 3.1.  See bug #55234.  */
-#if defined(SOLARIS) && defined(NSS_USE_64)
+#if (defined(SOLARIS) || defined(HPUX)) && defined(NSS_USE_64)
 #undef CONVERT_TO_WORDS
 #endif
 
