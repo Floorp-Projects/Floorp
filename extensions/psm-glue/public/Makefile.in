@@ -32,9 +32,9 @@ include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS = \
 	nsIPSMComponent.idl \
-    nsIPSMUIHandler.idl \
-    nsISecureBrowserUI.idl \
-    nsISSLSocketProvider.idl \
+	nsIPSMUIHandler.idl \
+	nsISecureBrowserUI.idl \
+	nsISSLSocketProvider.idl \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
