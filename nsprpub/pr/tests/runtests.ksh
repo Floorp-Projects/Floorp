@@ -148,6 +148,7 @@ sockping
 sprintf
 stack
 stdio
+str2addr
 strod
 switch
 system

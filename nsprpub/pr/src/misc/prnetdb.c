@@ -1013,6 +1013,7 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
         }
     }
 #else /* _PR_INET6 */
+    addr->inet.family = AF_INET;
 #ifdef XP_OS2_VACPP
     addr->inet.ip = inet_addr((char *)string);
 #else
