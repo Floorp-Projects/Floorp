@@ -122,6 +122,17 @@
         [% END %]
       </td>
     </tr>
+    [% IF (user.userid != bugassignee_id) AND UserInGroup("editbugs") %]
+      <tr>
+        <th>Reassignment:</th>
+        <td>
+          <em>If you want to assign this bug to yourself, 
+              check the box below.</em><br>
+          <input type="checkbox" id="takebug" name="takebug" value="1"> 
+          <label for="takebug">take bug</label>
+        </td>
+      </tr>
+    [% END %]
     <tr>
       <th>Comment:</th>
       <td>

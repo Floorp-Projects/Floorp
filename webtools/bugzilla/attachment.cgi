@@ -416,14 +416,16 @@ sub viewall
     push @attachments, \%a;
   }
 
-  # Retrieve the bug summary for displaying on screen.
-  SendSQL("SELECT short_desc FROM bugs WHERE bug_id = $::FORM{'bugid'}");
-  my ($bugsummary) = FetchSQLData();
+  # Retrieve the bug summary (for displaying on screen) and assignee.
+  SendSQL("SELECT short_desc, assigned_to FROM bugs " .
+          "WHERE bug_id = $::FORM{'bugid'}");
+  my ($bugsummary, $assignee_id) = FetchSQLData();
 
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'bugid'} = $::FORM{'bugid'};
-  $vars->{'bugsummary'} = $bugsummary;
   $vars->{'attachments'} = \@attachments;
+  $vars->{'bugassignee_id'} = $assignee_id;
+  $vars->{'bugsummary'} = $bugsummary;
 
   # Return the appropriate HTTP response headers.
   print "Content-Type: text/html\n\n";
@@ -458,14 +460,16 @@ sub enter
     push @attachments, \%a;
   }
 
-  # Retrieve the bug summary for displaying on screen.
-  SendSQL("SELECT short_desc FROM bugs WHERE bug_id = $::FORM{'bugid'}");
-  my ($bugsummary) = FetchSQLData();
+  # Retrieve the bug summary (for displaying on screen) and assignee.
+  SendSQL("SELECT short_desc, assigned_to FROM bugs 
+           WHERE bug_id = $::FORM{'bugid'}");
+  my ($bugsummary, $assignee_id) = FetchSQLData();
 
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'bugid'} = $::FORM{'bugid'};
-  $vars->{'bugsummary'} = $bugsummary;
   $vars->{'attachments'} = \@attachments;
+  $vars->{'bugassignee_id'} = $assignee_id;
+  $vars->{'bugsummary'} = $bugsummary;
 
   # Return the appropriate HTTP response headers.
   print "Content-Type: text/html\n\n";
@@ -523,6 +527,51 @@ sub insert
       }
   }
 
+  # Assign the bug to the user, if they are allowed to take it
+  my $forcecc = "";
+  
+  if ($::FORM{'takebug'} && UserInGroup("editbugs")) {
+      SendSQL("select NOW()");
+      my $timestamp = FetchOneColumn();
+      
+      my @fields = ("assigned_to", "bug_status", "resolution", "login_name");
+      
+      # Get the old values, for the bugs_activity table
+      SendSQL("SELECT " . join(", ", @fields) . " FROM bugs, profiles " .
+              "WHERE bugs.bug_id = $::FORM{'bugid'} " .
+              "AND   profiles.userid = bugs.assigned_to");
+      
+      my @oldvalues = FetchSQLData();
+      my @newvalues = ($::userid, "ASSIGNED", "", DBID_to_name($::userid));
+      
+      # Make sure the person we are taking the bug from gets mail.
+      $forcecc = $oldvalues[3];  
+                  
+      @oldvalues = map(SqlQuote($_), @oldvalues);
+      @newvalues = map(SqlQuote($_), @newvalues);
+               
+      # Update the bug record. Note that this doesn't involve login_name.
+      SendSQL("UPDATE bugs SET " . 
+              join(", ", map("$fields[$_] = $newvalues[$_]", (0..2))) . 
+              " WHERE bug_id = $::FORM{'bugid'}");
+      
+      # We store email addresses in the bugs_activity table rather than IDs.
+      $oldvalues[0] = $oldvalues[3];
+      $newvalues[0] = $newvalues[3];
+      
+      # Add the changes to the bugs_activity table
+      for (my $i = 0; $i < 3; $i++) {
+          if ($oldvalues[$i] ne $newvalues[$i]) {
+              my $fieldid = GetFieldID($fields[$i]);
+              SendSQL("INSERT INTO bugs_activity " .
+                      "(bug_id, who, bug_when, fieldid, removed, added) " .
+                      " VALUES ($::FORM{'bugid'}, $::userid, " . 
+                      SqlQuote($timestamp) . 
+                      ", $fieldid, $oldvalues[$i], $newvalues[$i])");
+          }
+      }      
+  }   
+  
   # Send mail to let people know the attachment has been created.  Uses a 
   # special syntax of the "open" and "exec" commands to capture the output of 
   # "processmail", which "system" doesn't allow, without running the command 
@@ -530,7 +579,8 @@ sub insert
   #system ("./processmail", $bugid , $::userid);
   #my $mailresults = `./processmail $bugid $::userid`;
   my $mailresults = '';
-  open(PMAIL, "-|") or exec('./processmail', $::FORM{'bugid'}, $::COOKIE{'Bugzilla_login'});
+  open(PMAIL, "-|") or exec('./processmail', '-forcecc', $forcecc,  
+                            $::FORM{'bugid'}, $::COOKIE{'Bugzilla_login'});
   $mailresults .= $_ while <PMAIL>;
   close(PMAIL);
  
