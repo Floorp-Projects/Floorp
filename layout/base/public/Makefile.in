@@ -42,7 +42,6 @@ nsIFrameManager.h \
 nsILayoutDebugger.h \
 nsINameSpace.h \
 nsINameSpaceManager.h \
-nsIFrameReflow.h \
 nsIFrameUtil.h \
 nsISelectionControler.h \
 nsIPageSequenceFrame.h \
