@@ -2820,7 +2820,7 @@ nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsCString & aURL)
 
 nsresult nsChromeRegistry::GetFormSheetURL(nsCString& aURL)
 {
-  aURL = mUseXBLForms ? "resource:/res/builtin/xbl-forms.css" : "resource:/res/forms.css";
+  aURL = mUseXBLForms ? "chrome://forms/content/xbl-forms.css" : "resource:/res/forms.css";
 
   return NS_OK;
 }

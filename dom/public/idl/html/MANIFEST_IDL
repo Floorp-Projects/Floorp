@@ -67,3 +67,4 @@ nsIDOMNSHTMLInputElement.idl
 nsIDOMNSHTMLOptionCollectn.idl
 nsIDOMNSHTMLSelectElement.idl
 nsIDOMNSHTMLTextAreaElement.idl
+nsIDOMNSXBLFormControl.idl

@@ -933,11 +933,7 @@ public:
 
   NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo,
                                  nsIContent** aResult);
-
-  static PRBool mUseXBLForms;
 };
-
-PRBool nsHTMLElementFactory::mUseXBLForms = PR_FALSE;
 
 nsresult
 NS_NewHTMLElementFactory(nsIElementFactory** aInstancePtrResult)
@@ -957,10 +953,6 @@ NS_NewHTMLElementFactory(nsIElementFactory** aInstancePtrResult)
 nsHTMLElementFactory::nsHTMLElementFactory()
 {
   NS_INIT_REFCNT();
-
-  nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
-  if (prefService)
-    prefService->GetBoolPref("nglayout.debug.enable_xbl_forms", &mUseXBLForms);
 }
 
 nsHTMLElementFactory::~nsHTMLElementFactory()
@@ -1022,13 +1014,9 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLBRElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_button:
-    if (nsHTMLElementFactory::mUseXBLForms)
-      rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    else {
-      rv = NS_NewHTMLButtonElement(aResult, aNodeInfo);
-      if (!aInsideNoXXXTag) {
-        SetForm(*aResult, aForm);
-      }
+    rv = NS_NewHTMLButtonElement(aResult, aNodeInfo);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
     }
     break;
   case eHTMLTag_caption:
@@ -1061,13 +1049,9 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLEmbedElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_fieldset:
-    if (nsHTMLElementFactory::mUseXBLForms)
-      rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    else {
-      rv = NS_NewHTMLFieldSetElement(aResult, aNodeInfo);
-      if (!aInsideNoXXXTag) {
-        SetForm(*aResult, aForm);
-      }
+    rv = NS_NewHTMLFieldSetElement(aResult, aNodeInfo);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
     }
     break;
   case eHTMLTag_font:
@@ -1123,23 +1107,15 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLIsIndexElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_label:
-    if (nsHTMLElementFactory::mUseXBLForms)
-      rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    else {
-      rv = NS_NewHTMLLabelElement(aResult, aNodeInfo);
-      if (!aInsideNoXXXTag) {
-        SetForm(*aResult, aForm);
-      }
+    rv = NS_NewHTMLLabelElement(aResult, aNodeInfo);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
     }
     break;
   case eHTMLTag_legend:
-    if (nsHTMLElementFactory::mUseXBLForms)
-      rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    else {
-      rv = NS_NewHTMLLegendElement(aResult, aNodeInfo);
-      if (!aInsideNoXXXTag) {
-        SetForm(*aResult, aForm);
-      }
+    rv = NS_NewHTMLLegendElement(aResult, aNodeInfo);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
     }
     break;
   case eHTMLTag_li:
@@ -1164,16 +1140,10 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLOListElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_optgroup:
-    if (nsHTMLElementFactory::mUseXBLForms)
-      rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    else
-      rv = NS_NewHTMLOptGroupElement(aResult, aNodeInfo);
+    rv = NS_NewHTMLOptGroupElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_option:
-    if (nsHTMLElementFactory::mUseXBLForms)
-      rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    else
-      rv = NS_NewHTMLOptionElement(aResult, aNodeInfo);
+    rv = NS_NewHTMLOptionElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_p:
     rv = NS_NewHTMLParagraphElement(aResult, aNodeInfo);
@@ -1191,13 +1161,9 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLScriptElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_select:
-    if (nsHTMLElementFactory::mUseXBLForms)
-      rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-    else {
-      rv = NS_NewHTMLSelectElement(aResult, aNodeInfo);
-      if (!aInsideNoXXXTag) {
-        SetForm(*aResult, aForm);
-      }
+    rv = NS_NewHTMLSelectElement(aResult, aNodeInfo);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
     }
     break;
   case eHTMLTag_spacer:

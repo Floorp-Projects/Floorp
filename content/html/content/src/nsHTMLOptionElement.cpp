@@ -114,12 +114,12 @@ public:
 
 protected:
   // Get the primary frame associated with this content
-  nsIFormControlFrame *GetSelectFrame();
+  nsIFormControlFrame *GetSelectFrame() const;
 
   // Get the select content element that contains this option, this
   // intentionally does not return nsresult, all we care about is if
   // there's a select associated with this option or not.
-  void GetSelect(nsIDOMHTMLSelectElement **aSelectElement);
+  void GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const;
 
   PRBool mIsInitialized;
 };
@@ -487,13 +487,18 @@ NS_IMETHODIMP
 nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                               PRInt32& aHint) const
 {
-  if (aAttribute == nsHTMLAtoms::label) {
-    aHint = NS_STYLE_HINT_REFLOW; 
-  } else if (aAttribute == nsHTMLAtoms::text) {
-    aHint = NS_STYLE_HINT_REFLOW; 
-  } else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
+  nsIFormControlFrame* fcFrame = GetSelectFrame();
+  
+  if (fcFrame) {    
+    if (aAttribute == nsHTMLAtoms::label) {
+      aHint = NS_STYLE_HINT_REFLOW; 
+    } else if (aAttribute == nsHTMLAtoms::text) {
+      aHint = NS_STYLE_HINT_REFLOW; 
+    } else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
+  } else  // XXX fix me
+    aHint = NS_STYLE_HINT_NONE;
 
   return NS_OK;
 }
@@ -622,7 +627,7 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
 // then call nsGenericHTMLElement::GetFormControlFrameFor()
 
 nsIFormControlFrame *
-nsHTMLOptionElement::GetSelectFrame()
+nsHTMLOptionElement::GetSelectFrame() const
 {
   if (!mParent || !mDocument) {
     return nsnull;
@@ -643,7 +648,7 @@ nsHTMLOptionElement::GetSelectFrame()
 
 // Get the select content element that contains this option
 void
-nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement **aSelectElement)
+nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const
 {
   *aSelectElement = nsnull;
 

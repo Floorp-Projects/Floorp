@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsCSSFrameConstructor.cpp \
 		nsCSSRendering.cpp \
 		nsFrameContentIterator.cpp \
+		nsChildIterator.cpp \
 		$(NULL)
 
 EXPORTS		= \
