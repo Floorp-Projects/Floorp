@@ -200,7 +200,7 @@ int main(int argc, char **argv)
         }
 #endif
 
-        if (NET_PollSockets() == PR_FALSE) urlLoaded = 1;
+        (void) NET_PollSockets();
     }
 
     pURL->Release();
