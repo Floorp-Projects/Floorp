@@ -55,7 +55,7 @@ function Startup()
 function useNavigatorColors()
   {
     // use colors from navigator
-    var prefstrings = ["browser.foreground_color", "browser.anchor_color", "browser.visited_color", "browser.background_color"];
+    var prefstrings = ["browser.display.foreground_color", "browser.anchor_color", "browser.visited_color", "browser.display.background_color"];
     var dataEls = ["text", "link", "fLink", "background"];
     for( var i = 0; i < dataEls.length; i++ )
       {

@@ -186,7 +186,7 @@
     <!-- note that this removes the ability to select dynamic fonts -->
     <checkbox id="browserUseDocumentFonts" 
               value="&useDocumentFonts.label;" accesskey="&useDocumentFonts.accesskey;"
-              preftype="int" prefstring="browser.use_document_fonts"/>
+              preftype="int" prefstring="browser.display.use_document_fonts"/>
 
   </titledbox>
 
@@ -195,7 +195,7 @@
     <html>&fontScalingIntro;</html>
     <box autostretch="never">
       <text class="label" value="&resolution.label;" accesskey="&resolution.accesskey;" for="browserScreenResolution"/>
-      <textfield id="browserScreenResolution" size="4" maxlength="3" value="&defaultScaling;" preftype="int" prefstring="browser.screen_resolution"/>
+      <textfield id="browserScreenResolution" size="4" maxlength="3" value="&defaultScaling;" preftype="int" prefstring="browser.display.screen_resolution"/>
       <text class="label" value="&fontScalingExample;"/>
     </box>
   </titledbox>  

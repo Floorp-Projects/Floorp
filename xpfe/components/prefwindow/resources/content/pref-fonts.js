@@ -212,17 +212,17 @@ function saveFontPrefs()
     
     try
       {
-        var currDPI = pref.GetIntPref( "browser.screen_resolution" );
-        var currFonts = pref.GetIntPref( "browser.use_document_fonts" );
+        var currDPI = pref.GetIntPref( "browser.display.screen_resolution" );
+        var currFonts = pref.GetIntPref( "browser.display.use_document_fonts" );
         var currDefault = pref.CopyUnicharPref( "font.default" );
       }
     catch(e)
       {
       }
     if( currDPI != fontDPI )
-      pref.SetIntPref( "browser.screen_resolution", fontDPI );
+      pref.SetIntPref( "browser.display.screen_resolution", fontDPI );
     if( currFonts != documentFonts )
-      pref.SetIntPref( "browser.use_document_fonts", documentFonts );
+      pref.SetIntPref( "browser.display.use_document_fonts", documentFonts );
     if( currDefault != defaultFont )
       {
         dump("*** defaultFont = " + defaultFont + "\n");

@@ -36,7 +36,7 @@ Contributor(s): ______________________________________. -->
       <html:div>
         <html:label for="browserScreenResolution">&resolution;</html:label>
         <html:input type="text" id="browserScreenResolution" pref="true" preftype="int"
-                    prefstring="browser.screen_resolution" value="&defaultScaling;" size="3"/>
+                    prefstring="browser.display.screen_resolution" value="&defaultScaling;" size="3"/>
         <html:label>&fontScalingExample;</html:label>
       </html:div>
     </titledbox>
