@@ -100,6 +100,7 @@ private:
   
   ControlHandle	mControl;
   PRBool				mMouseDownInButton;
+  PRBool				mWidgetArmed;
 
 
 };

@@ -332,7 +332,7 @@ nsMouseEvent	mouseevent;
 
 	partcode = FindWindow(aTheEvent->where,&whichwindow);
 
-	if(FALSE && gGrabWindow)
+	if(gGrabWindow)
 		{
 		mouseevent.message = NS_MOUSE_LEFT_BUTTON_UP;
 		mouseevent.widget  = (nsWindow *) gGrabWindow;
@@ -347,6 +347,8 @@ nsMouseEvent	mouseevent;
 		mouseevent.clickCount = 1;
 		mouseevent.eventStructType = NS_MOUSE_EVENT;
 		gGrabWindow->DispatchMouseEvent(mouseevent);
+		gGrabWindow = nsnull;		// mouse grab no longer in effect
+		return;
 		}
 
 	if(whichwindow!=0)

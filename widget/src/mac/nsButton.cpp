@@ -141,6 +141,7 @@ void nsButton::Create(nsIWidget *aParent,
 	  mEventCallback = aHandleEventFunction;
 	  
 	  mMouseDownInButton = PR_FALSE;
+	  mWidgetArmed = PR_FALSE;
 
 	  //InitCallbacks("nsButton");
 	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
@@ -239,14 +240,8 @@ void nsButton::GetLabel(nsString& aBuffer)
 //-------------------------------------------------------------------------
 PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 {
-nsRect	therect;
-Rect		macrect;
-
-  //if (mControl)
-	  //Draw1Control(mControl);
 	  
-	DrawWidget(FALSE);
-	
+	DrawWidget(FALSE);	
   return PR_FALSE;
 }
 
@@ -290,36 +285,30 @@ nsButton::PtInWindow(PRInt32 aX,PRInt32 aY)
 PRBool 
 nsButton::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-Point 	pt;
 PRBool 	result;
-	
-	result = nsWindow::DispatchMouseEvent(aEvent);
 	
 	switch (aEvent.message)
 		{
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
-			pt.h = aEvent.point.x;
-			pt.v = aEvent.point.y;
-			if (mControl)
-				{
-				// Draw the button
-				mMouseDownInButton = PR_TRUE;
-				DrawWidget(PR_TRUE);
-				nsWindow::DispatchMouseEvent(aEvent);
-				}
+			mMouseDownInButton = PR_TRUE;
+			DrawWidget(PR_TRUE);
+			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
 			mMouseDownInButton = PR_FALSE;
 			DrawWidget(PR_TRUE);
-			nsWindow::DispatchMouseEvent(aEvent);
+			if(mWidgetArmed==PR_TRUE)
+				result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_EXIT:
 			DrawWidget(PR_FALSE);
-			nsWindow::DispatchMouseEvent(aEvent);
+			mWidgetArmed = PR_FALSE;
+			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_ENTER:
 			DrawWidget(PR_TRUE);
-			nsWindow::DispatchMouseEvent(aEvent);
+			mWidgetArmed = PR_TRUE;
+			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		}
 	
@@ -337,7 +326,6 @@ void
 nsButton::DrawWidget(PRBool	aMouseInside)
 {
 nsRect							therect;
-nsIRenderingContext *drawctx;
 Rect								macrect;
 GrafPtr							theport;
 RGBColor						blackcolor = {0,0,0};
@@ -345,7 +333,6 @@ RgnHandle						thergn;
 
 
 	GetPort(&theport);
-	//drawctx = this->GetRenderingContext();
 	::SetPort(mWindowPtr);
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
@@ -365,7 +352,6 @@ RgnHandle						thergn;
 	::PenSize(1,1);
 	::SetClip(thergn);
 	::SetPort(theport);
-	//NS_RELEASE(drawctx);
 }
 
 //-------------------------------------------------------------------------
