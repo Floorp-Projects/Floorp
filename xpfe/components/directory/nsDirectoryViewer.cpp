@@ -663,7 +663,7 @@ nsHTTPIndexParser::ParseLiteral(const nsString& aValue, nsIRDFNode** aResult)
   rv = gRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
   if (NS_FAILED(rv)) return rv;
 
-  return CallQueryInterface(result, aResult);
+  return result->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aResult);
 }
 
 
@@ -680,7 +680,7 @@ nsHTTPIndexParser::ParseDate(const nsString& aValue, nsIRDFNode** aResult)
   rv = gRDF->GetDateLiteral(tm, getter_AddRefs(result));
   if (NS_FAILED(rv)) return rv;
 
-  return CallQueryInterface(result, aResult);
+  return result->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aResult);
 }
 
 
@@ -697,7 +697,7 @@ nsHTTPIndexParser::ParseInt(const nsString& aValue, nsIRDFNode** aResult)
   rv = gRDF->GetIntLiteral(i, getter_AddRefs(result));
   if (NS_FAILED(rv)) return rv;
 
-  return CallQueryInterface(result, aResult);
+  return result->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aResult);
 }
 
 ////////////////////////////////////////////////////////////////////////
