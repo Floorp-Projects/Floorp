@@ -143,6 +143,19 @@ nsCacheService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
     return rv;
 }
 
+/* nsICacheSession createSession (in string clientID, in long storagePolicy, in boolean streamBased); */
+NS_IMETHODIMP nsCacheService::CreateSession(const char *clientID, PRInt32 storagePolicy, PRBool streamBased, nsICacheSession **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/* void visitEntries (in nsICacheVisitor visitor); */
+NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 nsresult
 nsCacheService::CommonOpenCacheEntry(const char *clientID, const char *clientKey,
@@ -170,7 +183,7 @@ nsCacheService::CommonOpenCacheEntry(const char *clientID, const char *clientKey
 }                                     
 
 
-NS_IMETHODIMP
+nsresult
 nsCacheService::OpenCacheEntry(const char *clientID, const char *clientKey, 
                                PRUint32  accessRequested, PRBool  streamBased,
                                nsICacheEntryDescriptor **result)
@@ -197,7 +210,7 @@ nsCacheService::OpenCacheEntry(const char *clientID, const char *clientKey,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsCacheService::AsyncOpenCacheEntry(const char *  clientID, const char *  key, 
                                     PRUint32  accessRequested, PRBool streamBased, 
                                     nsICacheListener *listener)
@@ -218,7 +231,6 @@ nsCacheService::AsyncOpenCacheEntry(const char *  clientID, const char *  key,
 
    return rv;
 }
-
 
 nsresult
 nsCacheService::ActivateEntry(nsCacheRequest * request, 
@@ -241,7 +253,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     nsCacheEntry *entry = mActiveEntries.GetEntry(request->mKey);
 
     // doom existing entry if we are processing a FORCE-WRITE
-    if (entry && (request->mAccessRequested == nsICacheService::WRITE)) {
+    if (entry && (request->mAccessRequested == nsICache::ACCESS_WRITE)) {
         entry->Doom();
     }
 
@@ -259,7 +271,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         rv = SearchCacheDevices(entry, &device);
 
         if ((rv == NS_ERROR_CACHE_KEY_NOT_FOUND) &&
-            !(request->mAccessRequested & nsICacheService::WRITE)) {
+            !(request->mAccessRequested & nsICache::ACCESS_WRITE)) {
             // this was a READ-ONLY request, deallocate entry
             //** dealloc entry, call listener with error, etc.
             *result = nsnull;
@@ -302,37 +314,6 @@ nsCacheEntry *
 nsCacheService::SearchActiveEntries(const nsCString * key)
 {
     return nsnull;
-}
-
-
-NS_IMETHODIMP
-nsCacheService::EnumerateDeviceIDs(nsISimpleEnumerator **_retval)
-{
-    if (!mCacheServiceLock)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsCacheService::EnumerateClientIDs(nsISimpleEnumerator **_retval)
-{
-    if (!mCacheServiceLock)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsCacheService::EnumerateEntries(const char *deviceID, const char *clientID,
-				 nsISimpleEnumerator **_retval)
-{
-    if (!mCacheServiceLock)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

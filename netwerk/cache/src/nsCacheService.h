@@ -127,6 +127,14 @@ private:
                                         PRUint32  accessRequested, PRBool  streamBased,
                                         nsCacheRequest **request, nsCacheEntry **entry);
 
+    nsresult       OpenCacheEntry(const char *clientID, const char *clientKey, 
+                                  PRUint32  accessRequested, PRBool  streamBased,
+                                  nsICacheEntryDescriptor **result);
+
+    nsresult       AsyncOpenCacheEntry(const char *  clientID, const char *  key, 
+                                       PRUint32  accessRequested, PRBool streamBased, 
+                                       nsICacheListener *listener);
+
     /**
      *  Data Members
      */

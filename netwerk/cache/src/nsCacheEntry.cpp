@@ -116,17 +116,17 @@ nsCacheEntry::CommonOpen(nsCacheRequest * request, PRUint32 *accessGranted)
     
     if (!IsInitialized()) {
         // brand new, unbound entry
-        NS_ASSERTION(request->mAccessRequested & nsICacheService::WRITE,
+        NS_ASSERTION(request->mAccessRequested & nsICache::ACCESS_WRITE,
                      "new cache entry for READ-ONLY request");
         if (request->mStreamBased)  MarkStreamBased();
         mFetchCount = 1;
         MarkInitialized();
-        *accessGranted = request->mAccessRequested & ~nsICacheService::WRITE;
+        *accessGranted = request->mAccessRequested & ~nsICache::ACCESS_WRITE;
         return rv;
     }
 
     if (IsStreamData() != request->mStreamBased) {
-        *accessGranted = nsICacheService::NO_ACCESS;
+        *accessGranted = nsICache::ACCESS_NONE;
         return request->mStreamBased ?
             NS_ERROR_CACHE_DATA_IS_NOT_STREAM : NS_ERROR_CACHE_DATA_IS_STREAM;
     }
@@ -136,7 +136,7 @@ nsCacheEntry::CommonOpen(nsCacheRequest * request, PRUint32 *accessGranted)
         *accessGranted = request->mAccessRequested;
     } else {
         // nth request for existing, bound entry
-        *accessGranted = request->mAccessRequested & ~nsICacheService::WRITE;
+        *accessGranted = request->mAccessRequested & ~nsICache::ACCESS_WRITE;
         if (!IsValid())
             rv = NS_ERROR_CACHE_WAIT_FOR_VALIDATION;
     }

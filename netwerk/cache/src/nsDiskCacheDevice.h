@@ -39,9 +39,15 @@ public:
 
     static nsresult  Create(nsCacheDevice **result);
 
+    virtual const char *  GetDeviceID(void);
     virtual nsresult ActivateEntryIfFound( nsCacheEntry * entry );
     virtual nsresult DeactivateEntry( nsCacheEntry * entry );
     virtual nsresult BindEntry( nsCacheEntry * entry );
+
+    virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
+                                           nsITransport **transport );
+
+    virtual nsresult OnDataSizeChanged( nsCacheEntry * entry );
 
 private:
 

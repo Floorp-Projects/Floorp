@@ -91,7 +91,7 @@ nsCacheEntryDescriptor::GetKey(char ** result)
 
 /* readonly attribute unsigned long fetchCount; */
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetFetchCount(PRUint32 *fetchCount)
+nsCacheEntryDescriptor::GetFetchCount(PRInt32 *fetchCount)
 {
     if (!fetchCount) return NS_ERROR_NULL_POINTER;
     mCacheEntry->GetFetchCount(fetchCount);
@@ -165,40 +165,14 @@ nsCacheEntryDescriptor::GetAccessGranted(PRUint32 *accessGranted)
 
 /* attribute unsigned long storageFlags; */
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetStorageFlags(PRUint32 *storageFlags)
+nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *policy)
 {
     
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetStorageFlags(PRUint32 storageFlags)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute boolean allowInMemory; */
-NS_IMETHODIMP
-nsCacheEntryDescriptor::GetAllowInMemory(PRBool *aAllowInMemory)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCacheEntryDescriptor::SetAllowInMemory(PRBool aAllowInMemory)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute boolean allowOnDisk; */
-NS_IMETHODIMP
-nsCacheEntryDescriptor::GetAllowOnDisk(PRBool *aAllowOnDisk)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCacheEntryDescriptor::SetAllowOnDisk(PRBool aAllowOnDisk)
+nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -217,19 +191,6 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void truncateExistingData (in unsigned long newLength); */
-NS_IMETHODIMP
-nsCacheEntryDescriptor::TruncateExistingData(PRUint32 newLength)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void appendToExistingData (); */
-NS_IMETHODIMP
-nsCacheEntryDescriptor::AppendToExistingData()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 /* void markValid (); */
 NS_IMETHODIMP

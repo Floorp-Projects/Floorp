@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= nkcache 
-LIBRARY_NAME	= nkcachemgr_s
+LIBRARY_NAME	= nkcacheservice_s
 REQUIRES	= xpcom necko pref js
 
 EXPORTS		= \
@@ -38,7 +38,9 @@ CPPSRCS		= \
 	nsCacheEntry.cpp \
 	nsCacheEntryDescriptor.cpp \
 	nsCacheMetaData.cpp \
+	nsCacheModule.cpp \
         nsCacheService.cpp \
+	nsCacheSession.cpp \
 	nsDiskCacheDevice.cpp \
 	nsMemoryCacheDevice.cpp \
 		$(NULL)

@@ -59,8 +59,8 @@ public:
 
     void GetKey( nsCString ** key)            { if (key) *key = mKey; }
 
-    void GetFetchCount( PRUint32 * result)    { if (result) *result = mFetchCount; }
-    void SetFetchCount( PRUint32   count)     { mFetchCount = count; }
+    void GetFetchCount( PRInt32 * result)    { if (result) *result = mFetchCount; }
+    void SetFetchCount( PRInt32   count)     { mFetchCount = count; }
 
     void GetLastFetched( PRTime * result)     { if (result) *result = mLastFetched; }
     void SetLastFetched( PRTime   lastFetched)
