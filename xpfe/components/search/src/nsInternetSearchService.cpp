@@ -5350,6 +5350,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 			// forced to use an nsAutoString (which copies)
 			// as CBufDescriptor doesn't guarantee null terminator
+			if (resultItemEnd - resultItemStart - 1 <= 0)    break;
 			nsAutoString resultItem(&htmlPage[resultItemStart],
 				resultItemEnd - resultItemStart - 1);
 
