@@ -145,7 +145,14 @@ clobber:: clobber_dist clobber_nglayout
 
 clobber_all:: clobber_all_dist clobber_all_nglayout
 	cd $(MOZ_SRC)\$(MOZ_TOP)
+	-rd /s /q dist
 	-rm -r -f dist
+
+browse_info::
+	cd $(MOZ_SRC)\$(MOZ_TOP)
+	-dir /s /b *.sbr > sbrlist.tmp
+	-bscmake /n /o nglayout.bsc @sbrlist.tmp
+	-rm sbrlist.tmp
 
 ######################################################################
 
