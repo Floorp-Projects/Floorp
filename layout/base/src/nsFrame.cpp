@@ -168,7 +168,7 @@ NS_METHOD nsFrame::SetIndexInParent(PRInt32 aIndexInParent)
 NS_METHOD nsFrame::GetStyleContext(nsIPresContext*   aPresContext,
                                    nsIStyleContext*& aStyleContext)
 {
-  if (nsnull == mStyleContext) {
+  if ((nsnull == mStyleContext) && (nsnull != aPresContext)) {
     mStyleContext = aPresContext->ResolveStyleContextFor(mContent, mGeometricParent); // XXX should be content parent???
   }
   NS_IF_ADDREF(mStyleContext);
