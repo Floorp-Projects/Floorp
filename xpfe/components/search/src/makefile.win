@@ -48,6 +48,7 @@ LLIBS=                          \
  $(DIST)\lib\xpcom.lib          \
  $(LIBNSPR)                     \
  $(DIST)\lib\js3250.lib        \
+ $(DIST)\lib\timer_s.lib        \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
