@@ -76,6 +76,7 @@ static PRBool gDoPurify;
 static PRBool gDoQuantify;
 static PRBool gLoadTestFromFile;
 static PRInt32 gDelay=1;
+static PRInt32 gRepeatCount=1;
 static char gInputFileName[_MAX_PATH+1];
 
 // Debug Robot options
@@ -755,14 +756,16 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
     dl = new nsDocLoader(wd->ww, gDelay);
 
     // Add the documents to the loader
-    AddTestDocs(dl);
+    for (PRInt32 i=0; i<gRepeatCount; i++)
+      AddTestDocs(dl);
 
     // Start the timer
     dl->StartTimedLoading();
   }
   else if (gLoadTestFromFile) {
     dl = new nsDocLoader(wd->ww, gDelay);
-    AddTestDocsFromFile(dl, gInputFileName);
+    for (PRInt32 i=0; i<gRepeatCount; i++)
+      AddTestDocsFromFile(dl, gInputFileName);
     dl->StartTimedLoading();
   }
   else {
@@ -862,6 +865,7 @@ void PrintHelpInfo(char **argv)
   fprintf(stderr, "\t-p   -- run purify\n");
   fprintf(stderr, "\t-q   -- run quantify\n");
   fprintf(stderr, "\t-d # -- set the delay between URL loads to # (in milliseconds)\n");
+  fprintf(stderr, "\t-r # -- set the repeat count, which is the number of times the URLs will be loaded in batch mode.\n");
   fprintf(stderr, "\t-f filename -- read a list of URLs from <filename>\n");
 }
 
@@ -888,6 +892,14 @@ void main(int argc, char **argv)
       else if (strcmp(argv[i], "-d") == 0) {
         i++;
         if (i>=argc || 1!=sscanf(argv[i], "%d", &gDelay))
+        {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+      }
+      else if (strcmp(argv[i], "-r") == 0) {
+        i++;
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &gRepeatCount))
         {
           PrintHelpInfo(argv);
           exit(-1);
