@@ -224,7 +224,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->RegisterComponent(kNntpServiceCID, "Nntp Message Service", 
-									"component://netscape/messenger/messageservice;type=nntp", 
+									"component://netscape/messenger/messageservice;type=news", 
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
