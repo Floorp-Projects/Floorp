@@ -958,7 +958,7 @@ NS_IMETHODIMP nsScrollPortView::SetWidget(nsIWidget *aWidget)
 
 NS_IMETHODIMP nsScrollPortView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 {
-  NS_WARNING("Not implemented");
+  NS_WARNING("nsScrollPortView::ComputeScrollOffsets() not implemented");
 
   /*
   nsIView       *scrolledView;
@@ -1234,27 +1234,27 @@ NS_IMETHODIMP nsScrollPortView::GetContainerSize(nscoord *aWidth, nscoord *aHeig
 NS_IMETHODIMP nsScrollPortView::ShowQuality(PRBool aShow)
 {
   //((CornerView *)mCornerView)->ShowQuality(aShow);
-  NS_WARNING("Not implemented");
+  NS_WARNING("nsScrollPortView::ShowQuality() not implemented");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollPortView::GetShowQuality(PRBool &aShow) const
 {
   //aShow = ((CornerView *)mCornerView)->mShowQuality;
-  NS_ERROR("Not implemented");
+  NS_ERROR("nsScrollPortView::GetShowQuality() ot implemented");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollPortView::SetQuality(nsContentQuality aQuality)
 {
   //((CornerView *)mCornerView)->SetQuality(aQuality);
-  NS_WARNING("Not implemented");
+  NS_WARNING("nsScrollPortView::SetQuality() ot implemented");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollPortView::SetScrollPreference(nsScrollPreference aPref)
 {
-  NS_WARNING("Not supported");
+  NS_WARNING("nsScrollPortView::SetScrollPreference() not supported");
   return NS_OK;
 }
 
@@ -1358,20 +1358,20 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
 
 NS_IMETHODIMP nsScrollPortView::SetControlInsets(const nsMargin &aInsets)
 {
-    NS_WARNING("Not implemented");
+    NS_WARNING("nsScrollPortView::SetControlInsets() not implemented");
     return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollPortView::GetControlInsets(nsMargin &aInsets) const
 {
-  NS_ERROR("Not implemented");
+  NS_ERROR("nsScrollPortView::GetControlInsets() not implemented");
   return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollPortView::GetScrollbarVisibility(PRBool *aVerticalVisible,
                                                         PRBool *aHorizontalVisible) const
 { 
-  NS_ERROR("Not implemented");
+  NS_ERROR("nsScrollPortView::GetScrollbarVisibility() not implemented");
   return NS_OK;
 }
 
