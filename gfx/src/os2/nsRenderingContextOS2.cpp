@@ -890,7 +890,7 @@ LONG nsRenderingContextOS2::GetGPIColor (void)
 {
    LONG gcolor = MK_RGB (NS_GAMMA_CORRECT_COMPONENT(NS_GET_R (mColor)),
                          NS_GAMMA_CORRECT_COMPONENT(NS_GET_G (mColor)),
-                         NS_GAMMA_CORRECT_COMPONENT(NS_GET_B (mColor));
+                         NS_GAMMA_CORRECT_COMPONENT(NS_GET_B (mColor)));
 
    return (mPaletteMode) ? GFX (::GpiQueryColorIndex (mPS, 0, gcolor), GPI_ALTERROR) :
                            gcolor ;
