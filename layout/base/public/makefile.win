@@ -46,6 +46,7 @@ EXPORTS =				\
 	nsIStyleSet.h			\
 	nsIStyleSheet.h			\
 	nsIStyleSheetLinkingElement.h	\
+	nsIStyledContent.h \
 	nsITextContent.h		\
 	nsFrameList.h                   \
 	nsFrameTraversal.h              \
