@@ -82,13 +82,11 @@ NS_IMETHODIMP
 nsCodebasePrincipal::GetPreferences(char** aPrefName, char** aID, 
                                     char** aGrantedList, char** aDeniedList)
 {
-    if (!mPrefName)
+    if (mPrefName.IsEmpty())
 	{
-        nsCAutoString s;
-        s.Assign("capability.principal.codebase.p");
-        s.AppendInt(mCapabilitiesOrdinal++);
-        s.Append(".id");
-        mPrefName = ToNewCString(s);
+        mPrefName.Assign("capability.principal.codebase.p");
+        mPrefName.AppendInt(mCapabilitiesOrdinal++);
+        mPrefName.Append(".id");
     }
     return nsBasePrincipal::GetPreferences(aPrefName, aID, 
                                            aGrantedList, aDeniedList);
