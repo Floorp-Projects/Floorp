@@ -211,8 +211,13 @@ sub SendSQL {
     }
     SqlLog($str);
     $::currentquery = $::db->prepare($str);
-    $::currentquery->execute
-	|| die "$str: " . $::db->errstr;
+    if (!$::currentquery->execute) {
+    	my $errstr = $::db->errstr;
+	# Cut down the error string to a reasonable.size
+	$errstr = substr($errstr, 0, 100) . ' ... ' . substr($errstr, -100)
+		if length($errstr) > 200;
+	die "$str: " . $errstr;
+    }
     SqlLog("Done");
     if (!$dontshadow && $iswrite && Param("shadowdb")) {
         my $q = SqlQuote($str);
