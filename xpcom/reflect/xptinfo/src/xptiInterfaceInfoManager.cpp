@@ -496,10 +496,8 @@ xptiInterfaceInfoManager::BuildOrderedFileArray(nsISupportsArray* aFileList,
     // fill our list for sorting
     for(i = 0; i < countOfFilesInFileList; ++i)
     {
-        nsCOMPtr<nsISupports> sup;
-        aFileList->GetElementAt(i, getter_AddRefs(sup));
-        NS_ASSERTION(sup, "loser!");
-        nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
+        nsCOMPtr<nsILocalFile> file;
+        aFileList->QueryElementAt(i, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
         NS_ASSERTION(file, "loser!");
 
         // Intentionally NOT addref'd cuz we know these are pinned in aFileList.
@@ -546,10 +544,8 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
         PRBool same = PR_TRUE;
         for(i = 0; i < countOfFilesInFileList && same; ++i)
         {
-            nsCOMPtr<nsISupports> sup;
-            aFileList->GetElementAt(i, getter_AddRefs(sup));
-            NS_ASSERTION(sup, "loser!");
-            nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
+            nsCOMPtr<nsILocalFile> file;
+            aFileList->QueryElementAt(i, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
             NS_ASSERTION(file, "loser!");
     
             char*   name;
@@ -597,10 +593,8 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
             
             for(k = 0; k < countOfFilesInFileList; ++k)
             {
-                nsCOMPtr<nsISupports> sup;
-                aFileList->GetElementAt(k, getter_AddRefs(sup));
-                NS_ASSERTION(sup, "loser!");
-                nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
+                nsCOMPtr<nsILocalFile> file;
+                aFileList->QueryElementAt(k, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
                 NS_ASSERTION(file, "loser!");
                 
                 char*   name;
@@ -1232,11 +1226,8 @@ xptiInterfaceInfoManager::DEBUG_DumpFileList(nsISupportsArray* aFileList)
     
     for(PRUint32 i = 0; i < count; i++)
     {
-        nsCOMPtr<nsISupports> sup;
-        aFileList->GetElementAt(i, getter_AddRefs(sup));
-        if(!sup)
-            return PR_FALSE;
-        nsCOMPtr<nsIFile> file = do_QueryInterface(sup);
+        nsCOMPtr<nsIFile> file;
+        aFileList->QueryElementAt(i, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
         if(!file)
             return PR_FALSE;
 
