@@ -39,7 +39,7 @@ open( LOG, "<$ARGV[0]") || die "cant open $!";
  
 &check_required_vars;
 $tree = $tbx{tree} unless defined $tree;
-$logfile = "$builddate.$$.gz" if unless defined $logfile;
+$logfile = "$builddate.$$.gz" unless defined $logfile;
 $building++ if $tbx{status} =~ m/building/;
 &lock;
 &write_build_data;
