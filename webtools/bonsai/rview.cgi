@@ -130,29 +130,11 @@ Branch:
 
 @dirs = ();
 
-sub clean_dirpath {
-     my ($dirpath) = @_;
-
-     $dirpath =~ s!^/+!!;
-     $dirpath =~ s!/+!/!g;
-     return $dirpath;
-}
-
 
 DIR:
 while( <*> ){
     if( -d $_ ){
-LEGALDIR:
-        for my $testdir  (sort( grep(!/\*$/, @::LegalDirs) ) ) {
-             my $trial = clean_dirpath("$other_dir/$_");
-             my $trial2 = clean_dirpath("$dir/$_");
-
-             if (($other_dir_used && $trial =~ m!^$testdir(/|$)!) ||
-                     (!$other_dir_used && $trial2 =~ m!^$testdir(/|$)!)) {
-                  push @dirs, $_;
-                  next DIR;
-             }
-        }
+        push @dirs, $_;
     }
 }
 
