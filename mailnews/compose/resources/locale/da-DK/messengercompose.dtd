@@ -26,6 +26,7 @@
 <!ENTITY attachFileCmd.label "Fil...">
 <!ENTITY attachMenu.label "vedhæft...">
 <!ENTITY attachPageCmd.label "Web-side...">
+<!ENTITY removeLastAttachmentCmd.label "Fjern sidste vedhæng">
 <!ENTITY attachVCardCmd.label ".Visitkort (vCard)">
 <!ENTITY attachments.label "Attachments:">
 <!ENTITY attachmentsCmd.label ".Vedhæng">
