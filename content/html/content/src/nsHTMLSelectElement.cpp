@@ -1876,11 +1876,11 @@ nsHTMLSelectElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32 aModType,
                                               nsChangeHint& aHint) const
 {
-  if (aAttribute == nsHTMLAtoms::multiple) {
+  if (aAttribute == nsHTMLAtoms::multiple ||
+      aAttribute == nsHTMLAtoms::size) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
-  else if ((aAttribute == nsHTMLAtoms::align) ||
-           (aAttribute == nsHTMLAtoms::size)) {
+  else if (aAttribute == nsHTMLAtoms::align) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
