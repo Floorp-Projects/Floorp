@@ -72,6 +72,7 @@
 #include "nsIDOMHTMLHRElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDeviceContext.h"
+#include "nsIEditorDocShell.h"
 #include "nsIEventStateManager.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
@@ -4566,6 +4567,17 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex)
     const nsStyleVisibility* vis = GetStyleVisibility();
     if (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
         vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) {
+      if (mContent->IsContentOfType(nsIContent::eHTML)) {
+        nsCOMPtr<nsISupports> container(GetPresContext()->GetContainer());
+        nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
+        if (editorDocShell) {
+          PRBool isEditable;
+          editorDocShell->GetEditable(&isEditable);
+          if (isEditable) {
+            return NS_OK;  // Editor content is not focusable
+          }
+        }
+      }
       const nsStyleUserInterface* ui = GetStyleUserInterface();
       if (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
           ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
