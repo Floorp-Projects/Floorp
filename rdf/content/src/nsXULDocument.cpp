@@ -541,6 +541,8 @@ public:
     nsresult Init(void);
     nsresult StartLayout(void);
 
+    void SearchForNodeByID(const nsString& anID, nsIContent* anElement, nsIDOMNode** aReturn);
+
     nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
                          const nsString& aTagName,
@@ -1841,13 +1843,13 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
     aElement->ChildCount(childCount);
     for (PRInt32 j = 0; j < childCount; j++)
     {
-        nsIContent* pChildContent;
+        nsIContent* pChildContent = nsnull;
         aElement->ChildAt(j, pChildContent);
       
         if (!pChildContent)
           break;
 
-        nsIAtom* pTag;
+        nsIAtom* pTag = nsnull;
         pChildContent->GetTag(pTag);
 
         if (!pTag)
@@ -2096,9 +2098,54 @@ XULDocumentImpl::GetElementByID(const nsString& aId, nsIDOMNode** aReturn)
         return rv;
     }
 
-    // XXX else walk the tree looking for the node
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // Didn't find it in our hash table. Walk the tree looking for the node
+    *aReturn = nsnull;
+    SearchForNodeByID(aId, mRootContent, aReturn);
+
+    return NS_OK;
+}
+
+void
+XULDocumentImpl::SearchForNodeByID(const nsString& anID, 
+                                   nsIContent* anElement,
+                                   nsIDOMNode** aReturn)
+{
+    // See if we match.
+    nsIAtom* pIDAtom = NS_NewAtom("id");
+    PRInt32 namespaceID;
+    anElement->GetNameSpaceID(namespaceID);
+    
+    nsString idValue;
+
+    anElement->GetAttribute(namespaceID, pIDAtom, idValue);
+
+    NS_RELEASE(pIDAtom);
+
+    if (idValue == anID)
+    {
+      nsCOMPtr<nsIDOMNode> pDomNode(anElement);
+      if (pDomNode)
+      {
+        *aReturn = pDomNode;
+      }
+
+      return;
+    }
+
+    // Walk children.
+    // XXX: Don't descend into closed tree items (or menu items or buttons?).
+    PRInt32 childCount;
+    anElement->ChildCount(childCount);
+    for (PRInt32 i = 0; i < childCount && !(*aReturn); i++)
+    {
+        nsIContent* pContent = nsnull;
+        anElement->ChildAt(i, pContent);
+        if (pContent)
+        {
+            SearchForNodeByID(anID, pContent, aReturn);
+            NS_RELEASE(pContent);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
