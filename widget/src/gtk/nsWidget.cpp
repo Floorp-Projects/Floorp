@@ -1383,8 +1383,6 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
     event.time = aGdkMotionEvent->time;
   }
 
-  printf("x=%i , y=%i target=%p\n", event.point.x, event.point.y, event.widget);
-
   AddRef();
 
   if (sButtonMotionTarget)
