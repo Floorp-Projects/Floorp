@@ -944,6 +944,11 @@ HRESULT STDMETHODCALLTYPE CControlSite::DeactivateAndUndo(void)
 
 HRESULT STDMETHODCALLTYPE CControlSite::OnPosRectChange(/* [in] */ LPCRECT lprcPosRect)
 {
+    if (lprcPosRect == NULL)
+    {
+        return E_INVALIDARG;
+    }
+    SetPosition(m_rcObjectPos);
     return S_OK;
 }
 
