@@ -171,7 +171,10 @@ nsHTMLDocument::~nsHTMLDocument()
     NS_RELEASE(map);
   }
   NS_IF_RELEASE(mForms);
-  NS_IF_RELEASE(mCSSLoader);
+  if (mCSSLoader) {
+    mCSSLoader->DropDocumentReference();  // release weak ref
+    NS_RELEASE(mCSSLoader);
+  }
 
 // XXX don't bother doing this until the dll is unloaded???
 //  nsHTMLAtoms::ReleaseAtoms();
