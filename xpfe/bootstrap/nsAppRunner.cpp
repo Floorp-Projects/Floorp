@@ -751,11 +751,9 @@ int main1(int argc, char* argv[])
                                     kIWalletServiceIID,
                                      (nsISupports **)&walletService);
  
-#ifndef XP_MAC
   if (NS_SUCCEEDED(rv)) {
       walletService->WALLET_FetchFromNetCenter();
   }
-#endif
 
   /*
    * Start up the main event loop...

@@ -85,16 +85,12 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #include "prinrval.h"
 
 /*************************************
- * Code that really belings in necko *
+ * Code that really belongs in necko *
  *************************************/
 
 #ifdef WIN32 
 #include <windows.h>
 #endif
-#ifdef XP_MAC
-#include "nsMacMessagePump.h"
-#endif
-//#include "nsNeckoUtil2.h"
 #include "nsFileStream.h"
 #include "nsIFileSpec.h"
 #include "nsIEventQueueService.h"
@@ -150,8 +146,13 @@ mOutFile(nsnull)
 {
   NS_INIT_REFCNT();
 }
+
+
 InputConsumer::~InputConsumer()
 {
+  if (mOutFile) {
+      delete mOutFile;
+  }
 }
 
 
@@ -220,6 +221,7 @@ nsresult
 NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
 {
     nsresult rv;
+    gKeepRunning = 0;
 
     // Create the Event Queue for this thread...
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
@@ -229,7 +231,8 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
     rv = eventQService->CreateThreadEventQueue();
     if (NS_FAILED(rv)) return rv;
 
-    eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+    if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -256,13 +259,21 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
         return NS_ERROR_OUT_OF_MEMORY;;
     }
     rv = listener->Init(dirSpec, out);
-    rv = pChannel->AsyncRead(0,         // staring position
+
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(listener);
+        return rv;
+    }
+
+    rv = pChannel->AsyncRead(0,         // starting position
                              -1,        // number of bytes to read
                              nsnull,    // ISupports context
                              listener); // IStreamListener consumer
+
     if (NS_SUCCEEDED(rv)) {
          gKeepRunning = 1;
     }
+
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) return rv;
 
@@ -278,16 +289,11 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
             gKeepRunning = 0;
         }
 #else
-#ifdef XP_MAC
-     	  PRBool				haveEvent;
-	      EventRecord			theEvent;
-//		    haveEvent = GetEvent(theEvent);
-//   		  DispatchEvent(haveEvent, &theEvent);
-#else
         PLEvent *gEvent;
         rv = gEventQ->GetEvent(&gEvent);
-        rv = gEventQ->HandleEvent(gEvent);
-#endif /* XP_UNIX */
+        if (NS_SUCCEEDED(rv)) {
+            rv  = gEventQ->HandleEvent(gEvent);
+        }
 #endif /* !WIN32 */
     }
     return rv;
@@ -1100,6 +1106,15 @@ PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
   return spec->GetFileSpec(&dirSpec);
 }
 
+PUBLIC nsresult Wallet_ResourceDirectory(nsFileSpec& dirSpec) {
+  nsIFileSpec* spec =
+    NS_LocateFileOrDirectory(nsSpecialFileSpec::App_ResDirectory);
+  if (!spec) {
+    return NS_ERROR_FAILURE;
+  }
+  return spec->GetFileSpec(&dirSpec);
+}
+
 /* returns -1 if key does not exist, 0 if key is of length 0, 1 otherwise */
 PRIVATE PRInt32
 wallet_KeySize() {
@@ -1376,16 +1391,23 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
 /*
  * Read contents of designated file into designated list
  */
+
 void
 wallet_ReadFromFile
-    (char* filename, XP_List*& list, PRBool obscure, PlacementType placement = DUP_AFTER) {
+    (char* filename, XP_List*& list, PRBool obscure, PRBool localFile, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
   nsFileSpec dirSpec;
-  nsresult rv = Wallet_ProfileDirectory(dirSpec);
+  nsresult rv;
+  if (localFile) {
+    rv = Wallet_ProfileDirectory(dirSpec);
+  } else {
+    rv = Wallet_ResourceDirectory(dirSpec);
+  }
   if (NS_FAILED(rv)) {
     return;
   }
+
   nsInputFileStream strm(dirSpec + filename);
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
@@ -1472,7 +1494,7 @@ wallet_ReadFromURLFieldToSchemaFile
 
   /* open input stream */
   nsFileSpec dirSpec;
-  nsresult rv = Wallet_ProfileDirectory(dirSpec);
+  nsresult rv = Wallet_ResourceDirectory(dirSpec);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1772,9 +1794,9 @@ wallet_Initialize() {
   static PRBool wallet_Initialized = PR_FALSE;
   static PRBool wallet_keyInitialized = PR_FALSE;
   if (!wallet_Initialized) {
-    wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, PR_FALSE);
+    wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, PR_FALSE, PR_FALSE);
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
-    wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, PR_FALSE);
+    wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, PR_FALSE, PR_FALSE);
     wallet_Initialized = PR_TRUE;
   }
 
@@ -1788,7 +1810,7 @@ wallet_Initialize() {
       }
     }
     PR_FREEIF(message);
-    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
     wallet_keyInitialized = PR_TRUE;
   }
 
@@ -1853,7 +1875,7 @@ void
 wallet_InitializeURLList() {
   static PRBool wallet_URLListInitialized = PR_FALSE;
   if (!wallet_URLListInitialized) {
-    wallet_ReadFromFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    wallet_ReadFromFile("URL.tbl", wallet_URL_list, PR_FALSE, PR_TRUE);
     wallet_URLListInitialized = PR_TRUE;
   }
 }
@@ -2312,7 +2334,7 @@ WLLT_PostEdit(nsAutoString walletList) {
   /* close the file and read it back into the SchemaToValue list */
   strm.close();
   wallet_Clear(&wallet_SchemaToValue_list);
-  wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+  wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
   delete []walletListAsCString;
 }
 
@@ -2780,10 +2802,13 @@ WLLT_OnSubmit(nsIContent* formNode) {
 PUBLIC void
 WLLT_FetchFromNetCenter() {
 
+  /* temporary patch to avoid bug 11766 */
+  return;
+
   nsresult rv;
 
   nsFileSpec dirSpec;
-  rv = Wallet_ProfileDirectory(dirSpec);
+  rv = Wallet_ResourceDirectory(dirSpec);
   if (NS_FAILED(rv)) {
     return;
   }

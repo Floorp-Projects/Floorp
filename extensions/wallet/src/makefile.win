@@ -78,5 +78,8 @@ clobber::
 
 install:: $(DLL)
 		$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+		$(MAKE_INSTALL) FieldSchema.tbl $(DIST)\bin\res
+		$(MAKE_INSTALL) URLFieldSchema.tbl $(DIST)\bin\res
+		$(MAKE_INSTALL) SchemaConcat.tbl $(DIST)\bin\res
 		$(MAKE_INSTALL) cookie.properties $(DIST)\bin\res
 		$(MAKE_INSTALL) wallet.properties $(DIST)\bin\res

@@ -249,6 +249,17 @@ void nsSpecialFileSpec::operator = (Type aType)
                 break;
             }
         
+        case App_ResDirectory:
+            {
+                *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+#ifdef XP_MAC
+                *this += "Res";
+#else
+                *this += "res";
+#endif
+            }
+            break;
+
         case App_ComponentsDirectory:
             {
                 *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);

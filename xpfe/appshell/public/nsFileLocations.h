@@ -52,6 +52,8 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
 		,   App_PrefsDirectory40           = App_DirectoryBase +    2
 		,   App_PrefsDirectory50           = App_DirectoryBase +    3
 
+		,   App_ResDirectory               = App_DirectoryBase +    5
+
 		,   App_UserProfileDirectory30     = App_DirectoryBase +   10
 		,   App_UserProfileDirectory40     = App_DirectoryBase +   11
 		,   App_UserProfileDirectory50     = App_DirectoryBase +   12

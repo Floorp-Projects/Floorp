@@ -44,5 +44,8 @@ EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lxp
 include $(topsrcdir)/config/rules.mk
 
 install::
+	$(INSTALL) $(srcdir)/FieldSchema.tbl $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/URLFieldSchema.tbl $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/SchemaConcat.tbl $(DIST)/bin/res
 	$(INSTALL) $(srcdir)/cookie.properties $(DIST)/bin/res
 	$(INSTALL) $(srcdir)/wallet.properties $(DIST)/bin/res
