@@ -421,7 +421,7 @@ MonthView.prototype.refreshDisplay = function( )
    }
 	document.getElementById( "0-year-title" ).setAttribute( "value" , newYear );
    
-   var Offset = this.calendarWindow.calendarPreferences.getPref( "weekstart" );
+   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", 0 );
    
    NewArrayOfDayNames = new Array();
    

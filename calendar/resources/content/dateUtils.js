@@ -106,7 +106,7 @@ DateFormater.prototype.getFormatedDate = function( date )
 
    try
    {     
-      if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
+      if( getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "date.format", 0 ) == 0 )
          return( this.getLongFormatedDate( date ) );
       else
          return( this.getShortFormatedDate( date ) );

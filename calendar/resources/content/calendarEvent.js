@@ -704,7 +704,7 @@ CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
       return;
    }
       
-   if( gCalendarWindow.calendarPreferences.getPref( "alarmsplaysound" ) )
+   if( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "alarms.playsound", false ) )
    {
       playSound();
    }

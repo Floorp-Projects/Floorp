@@ -67,9 +67,15 @@
       
             document.getElementById( "dateformat-short-menuitem" ).setAttribute( "label", DateFormatShort );
           }
+      
+      /* 
+      ** NOTE: 
+      ** When you add a pref to this page, you have to add its ID to the following list.
+      */
        
       var _elementIDs = [
-         "alarmshow", "alarmplaysound", "categories", "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength"
+         "alarmplaysound", "alarmshow", "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength",
+         "reloadonlaunch", "categories"
        ];
      ]]>
    </script>

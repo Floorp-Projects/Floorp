@@ -445,7 +445,7 @@ WeekView.prototype.refreshDisplay = function( )
 {
    
    // Set the from-to title string, based on the selected date
-   var Offset = this.calendarWindow.calendarPreferences.getPref( "weekstart" );
+   var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", 0 );
    
    var viewDay = this.calendarWindow.getSelectedDate().getDay();
    var viewDayOfMonth = this.calendarWindow.getSelectedDate().getDate();

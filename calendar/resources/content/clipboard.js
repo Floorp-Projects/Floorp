@@ -231,7 +231,7 @@ function pasteFromClipboard()
             
             //change the date of all the events to now
             startDate = gCalendarWindow.currentView.getNewEventDate();
-            var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
+            var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
    
             var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
    
@@ -256,7 +256,7 @@ function pasteFromClipboard()
                calendarEventArray = parseIcalData( data );
                //change the date of all the events to now
                startDate = gCalendarWindow.currentView.getNewEventDate();
-               var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
+               var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
       
                var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
       

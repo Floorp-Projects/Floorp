@@ -123,12 +123,13 @@ calendarManager.prototype.addServerDialogResponse = function( CalendarObject )
       
       this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseAndRefresh );
 
-      alert( "Remote Calendar Added" );
+      alert( "Remote Calendar Number "+CurrentNumberOfServers+" Added" );
    }
    else
    {
-      alert( "Calendar Added" );
+      alert( "Calendar Number "+CurrentNumberOfServers+" Added" );
    }
+  
    //add the information to the preferences.
    this.CalendarWindow.calendarPreferences.calendarPref.setCharPref( "server"+CurrentNumberOfServers+".name", CalendarObject.name );
    this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server"+CurrentNumberOfServers+".remote", true );
@@ -206,8 +207,8 @@ calendarManager.prototype.getAllCalendars = function()
    this.calendars[ this.calendars.length ] = thisCalendar;
    
    //go through the prefs file, calendars are stored in there.
-   var NumberOfCalendars = this.CalendarWindow.calendarPreferences.arrayOfPrefs.numberofservers;
-
+   var NumberOfCalendars = getIntPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.count", 1 );
+   
    var RefreshServers = getBoolPref(this.CalendarWindow.calendarPreferences.calendarPref, "servers.reloadonlaunch", false );
    
    //don't count the default server, so this starts at 1

@@ -489,7 +489,7 @@ function newEvent( startDate, endDate )
    
    if( !endDate )
    {
-      var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
+      var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
    
       var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
    
@@ -766,7 +766,8 @@ function getCharPref (prefObj, prefName, defaultValue)
     }
     catch (e)
     {
-        return defaultValue;
+       prefObj.setCharPref( prefName, defaultValue );  
+       return defaultValue;
     }
 }
 
@@ -778,7 +779,8 @@ function getIntPref (prefObj, prefName, defaultValue)
     }
     catch (e)
     {
-        return defaultValue;
+       prefObj.setIntPref( prefName, defaultValue );  
+       return defaultValue;
     }
 }
 
@@ -790,6 +792,7 @@ function getBoolPref (prefObj, prefName, defaultValue)
     }
     catch (e)
     {
-        return defaultValue;
+       prefObj.setBoolPref( prefName, defaultValue );  
+       return defaultValue;
     }
 }

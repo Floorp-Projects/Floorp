@@ -109,7 +109,7 @@ function addEventToDialog( Event )
    {
       gAllowWindowOpen = false;
       
-      if( gCalendarWindow.calendarPreferences.getPref( "showalarms" ) )
+      if( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "alarms.show", true ) )
       {
          calendarAlarmWindow = openCalendarAlarmWindow( Event );
       }

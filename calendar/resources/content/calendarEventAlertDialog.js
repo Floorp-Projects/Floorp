@@ -146,7 +146,7 @@ function createAlarmBox( Event )
    
    OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0].setAttribute( "onclick", "snoozeAlarm( this.event );removeAlarmBox( this.event );" ); 
    
-   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = opener.gCalendarWindow.calendarPreferences.getPref( "defaultsnoozelength" );
+   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = opener.getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultsnoozelength", 60 );
       
    kungFooDeathGripOnEventBoxes.push( OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0] );
    

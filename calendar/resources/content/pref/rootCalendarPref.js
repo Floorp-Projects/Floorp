@@ -52,8 +52,6 @@ calendarPrefObserver.prototype =
    observe: function(subject, topic, prefName)
    {
       // when calendar pref was changed, we reinitialize 
-      this.CalendarPreferences.loadPreferences();
-
       switch( prefName )
       {
          case "calendar.week.start" :
@@ -90,32 +88,11 @@ function calendarPreferences( CalendarWindow )
    
    this.calendarWindow = CalendarWindow;
 
-   this.arrayOfPrefs = new Object();
-   
    this.calendarPref = prefService.getBranch("calendar."); // preferences calendar node
-   
-   // read prefs or set Defaults on the first run
-   this.loadPreferences();  
+
+   //go through all the preferences and set default values?
+   getCharPref( this.calendarPref, "categories.names", getDefaultCategories() );
+   getIntPref( this.calendarPref, "event.defaultlength", 60 );
+   getIntPref( this.calendarPref, "event.defaultsnoozelength", 60 );
 }
-
-calendarPreferences.prototype.loadPreferences = function()
-{
-   this.arrayOfPrefs.showalarms = getBoolPref(this.calendarPref, "alarms.show", true );
-   this.arrayOfPrefs.alarmsplaysound = getBoolPref(this.calendarPref, "alarms.playsound", false );
-   this.arrayOfPrefs.dateformat = getIntPref(this.calendarPref, "date.format", 0 );
-   this.arrayOfPrefs.weekstart = getIntPref(this.calendarPref, "week.start", 0 );
-   this.arrayOfPrefs.defaulteventlength = getIntPref(this.calendarPref, "event.defaultlength", 60 );
-   this.arrayOfPrefs.defaultsnoozelength = getIntPref(this.calendarPref, "alarms.defaultsnoozelength", 10 );
-   this.arrayOfPrefs.categories = getCharPref(this.calendarPref, "categories.names", getDefaultCategories() );
-   this.arrayOfPrefs.numberofservers = getIntPref(this.calendarPref, "servers.count", 1 ); //this counts the default server
-   this.arrayOfPrefs.reloadonlaunch = getBoolPref(this.calendarPref, "servers.reloadonlaunch", false ); //this counts the default server   
-}
-
-calendarPreferences.prototype.getPref = function( Preference )
-{
-   var ThisPref = eval( "this.arrayOfPrefs."+Preference );
-
-   return( ThisPref );
-}
-
 

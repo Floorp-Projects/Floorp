@@ -264,7 +264,7 @@ function initCalendarEvent( calendarEvent )
 
    calendarEvent.start.setTime( startDate );
    
-   var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
+   var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
 
    var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
 
