@@ -195,6 +195,8 @@ static const PRUnichar sHTMLTagUnicodeName_optgroup[] =
   {'o', 'p', 't', 'g', 'r', 'o', 'u', 'p', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_option[] =
   {'o', 'p', 't', 'i', 'o', 'n', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_output[] =
+  {'o', 'u', 't', 'p', 'u', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_p[] =
   {'p', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_param[] =

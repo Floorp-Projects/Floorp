@@ -221,7 +221,9 @@ static const EventDispatchData sFormEvents[] = {
   {NS_FORM_RESET,   HANDLER(&nsIDOMFormListener::Reset), NS_EVENT_BITS_FORM_RESET},
   {NS_FORM_CHANGE,  HANDLER(&nsIDOMFormListener::Change),NS_EVENT_BITS_FORM_CHANGE},
   {NS_FORM_SELECTED,HANDLER(&nsIDOMFormListener::Select),NS_EVENT_BITS_FORM_SELECT},
-  {NS_FORM_INPUT,   HANDLER(&nsIDOMFormListener::Input), NS_EVENT_BITS_FORM_INPUT}
+  {NS_FORM_INPUT,   HANDLER(&nsIDOMFormListener::Input), NS_EVENT_BITS_FORM_INPUT},
+  {NS_FORM_FORMCHANGE, HANDLER(&nsIDOMFormListener::FormChange), NS_EVENT_BITS_FORM_FORMCHANGE},
+  {NS_FORM_FORMINPUT,   HANDLER(&nsIDOMFormListener::FormInput), NS_EVENT_BITS_FORM_FORMINPUT}
 };
 
 static const EventDispatchData sLoadEvents[] = {
@@ -852,6 +854,14 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
   else if (aType == nsLayoutAtoms::oninput) {
     *aArrayType = eEventArrayType_Form;
     *aFlags = NS_EVENT_BITS_FORM_INPUT;
+  }
+  else if (aType == nsLayoutAtoms::onformchange) {
+    *aArrayType = eEventArrayType_Form;
+    *aFlags = NS_EVENT_BITS_FORM_FORMCHANGE;
+  }
+  else if (aType == nsLayoutAtoms::onforminput) {
+    *aArrayType = eEventArrayType_Form;
+    *aFlags = NS_EVENT_BITS_FORM_FORMINPUT;
   }
   else if (aType == nsLayoutAtoms::onload) {
     *aArrayType = eEventArrayType_Load;

@@ -105,6 +105,7 @@ CPPSRCS		= \
 		nsHTMLObjectElement.cpp \
 		nsHTMLOptionElement.cpp \
 		nsHTMLOptGroupElement.cpp \
+		nsHTMLOutputElement.cpp \
 		nsHTMLParagraphElement.cpp \
 		nsHTMLPreElement.cpp \
 		nsHTMLScriptElement.cpp \

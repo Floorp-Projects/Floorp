@@ -2341,6 +2341,8 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_option].mContainsGroups.mAllBits=0;
   mDfltElements[eHTMLTag_option].mContainsGroups.mBits.mLeaf=1;
 
+  CElement::Initialize(             mDfltElements[eHTMLTag_output],        eHTMLTag_output, CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
+ 
   CElement::Initialize(             mDfltElements[eHTMLTag_p],          eHTMLTag_p, CBlockElement::GetGroup(), CInlineElement::GetContainedGroups());
   mDfltElements[eHTMLTag_p].mContainsGroups.mBits.mSelf=0;
 
