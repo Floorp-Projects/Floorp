@@ -61,7 +61,7 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     nsString mOutputFormat;                       // how to format output
     nsCOMPtr<nsILDAPURL> mServerURL;        // URL for the directory to search
     PRInt32 mSizeLimit;                     // return at most this many entries
-
+    PRUint32 mMinStringLength;              // strings < this size are ignored
 
     // stopgap until nsLDAPService works
     nsresult InitConnection();             
