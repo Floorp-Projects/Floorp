@@ -6148,6 +6148,7 @@ nsDocShell::GetRootScrollableView(nsIScrollableView ** aOutScrollView)
 
     nsCOMPtr<nsIPresShell> shell;
     NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(shell)), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
 
     nsCOMPtr<nsIViewManager> viewManager;
     NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(viewManager)),
