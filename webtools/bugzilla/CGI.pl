@@ -1108,7 +1108,7 @@ Actions:
             GetVersionTable();
         }
         if ($::anyvotesallowed) {
-            $html .= qq{ | <A HREF="showvotes.cgi"><NOBR>My votes</NOBR></A>};
+            $html .= qq{ <BR> <A HREF="showvotes.cgi"><NOBR>My votes</NOBR></A>};
         }
         $html .= "</TR><TR>";
         $html .= "<TD>Preset Queries: </TD>";
@@ -1127,7 +1127,7 @@ Actions:
         $html .= "</TR>\n<TR>";
     } else {
         $html .=
-            " | <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
+            " <BR> <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
         $html .=
             " | <NOBR><a href=query.cgi?GoAheadAndLogIn=1>Log in</a></NOBR>";
         $html .= "</TD></TR>";
