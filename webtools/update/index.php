@@ -44,7 +44,7 @@ require"core/config.php";
 
 <head>
  <title>Mozilla Update</title>
-
+ <link rel="alternate" type="application/rss+xml" title="New <?php echo ucwords($application); ?> Additions" href="/rss/?application=<?php echo"$application"; ?>&amp;list=newest">
 <?php
 include"$page_header";
 ?>

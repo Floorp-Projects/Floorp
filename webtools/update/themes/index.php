@@ -44,7 +44,7 @@ require"../core/config.php";
 
 <head>
 <TITLE>Mozilla Update :: Themes - Change the Look of Mozilla Software</TITLE>
-
+ <link rel="alternate" type="application/rss+xml" title="New <?php echo ucwords($application); ?> Theme Additions" href="/rss/?application=<?php echo"$application"; ?>&amp;type=T&amp;list=newest">
 <?php
 include"$page_header";
 ?>

@@ -447,7 +447,13 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		<li><?php echo"$datestring"; // Last Updated: September 11, 2004 5:38am ?>
 		<li>Total Downloads: <?php echo"$downloadcount"; ?> &nbsp;&#8212;&nbsp; Downloads this Week: <?php echo"$populardownloads"; ?></li>
 		<li>See <a href="?<?php echo"".uriparams()."&amp;id=$id&amp;page=releases"; ?>">all previous releases</a> of this extension.</li>
+        <?php
+        if ($homepage) {
+        ?>
 		<li>View the Author's <a href="<?php echo"$homepage"; ?>">Homepage</a> for this Theme.</li>
+        <?php
+        }
+        ?>
 		</ul>
 
 
@@ -754,6 +760,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     <INPUT NAME="title" TYPE="TEXT" SIZE=30 MAXLENGTH=50><BR>
 
     Review/Comments:*<BR>
+
     <TEXTAREA NAME="comments" ROWS=5 COLS=55></TEXTAREA><BR>
     <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Post">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset"><BR>
     <SPAN class="smallfont">* Required Fields</SPAN>

@@ -44,7 +44,7 @@ require"../core/config.php";
 
 <head>
     <TITLE>Mozilla Update :: Extensions - Add Features to Mozilla Software</TITLE>
-
+ <link rel="alternate" type="application/rss+xml" title="New <?php echo ucwords($application); ?> Extensions Additions" href="/rss/?application=<?php echo"$application"; ?>&amp;type=E&amp;list=newest">
 <?php
 include"$page_header";
 ?>

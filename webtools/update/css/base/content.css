@@ -16,6 +16,8 @@ a:visited { color: #609; }
 a:hover { color: #333; }
 a:active { color: #000; }
 
+#header a:visited { color: #039; }
+
 #mBody li { padding-bottom: 0.5em; }
 
 .sidebar_content > h1,.sidebar_content > h2,.sidebar_content > h3,.sidebar_content > h4,.sidebar_content > h5,.sidebar_content > h6,.sidebar > h1,.sidebar_general > h2,.sidebar_general > h3,.sidebar_general > h4,.sidebar_general > h5,.sidebar_general > h6 {
