@@ -399,6 +399,8 @@ const PRInt32 nsCSSProps::kCursorKTable[] = {
   eCSSKeyword_text, NS_STYLE_CURSOR_TEXT,
   eCSSKeyword_wait, NS_STYLE_CURSOR_WAIT,
   eCSSKeyword_help, NS_STYLE_CURSOR_HELP,
+  // CSS 2.1
+  eCSSKeyword_progress, NS_STYLE_CURSOR_SPINNING,
   // CSS3 proposed
   eCSSKeyword__moz_copy, NS_STYLE_CURSOR_COPY,
   eCSSKeyword__moz_alias, NS_STYLE_CURSOR_ALIAS,
