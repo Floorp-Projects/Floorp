@@ -144,10 +144,10 @@ public:
 protected:
   nsCSSUnit mUnit;
   union {
-    PRInt32   mInt;
-    float     mFloat;
-    nsString* mString;
-    nscolor   mColor;
+    PRInt32    mInt;
+    float      mFloat;
+    PRUnichar* mString;
+    nscolor    mColor;
   }         mValue;
 };
 
@@ -186,7 +186,7 @@ inline nsString& nsCSSValue::GetStringValue(nsString& aBuffer) const
   aBuffer.Truncate();
   if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters) && 
       (nsnull != mValue.mString)) {
-    aBuffer.Append(*(mValue.mString));
+    aBuffer.Append(mValue.mString);
   }
   return aBuffer;
 }

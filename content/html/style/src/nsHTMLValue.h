@@ -84,7 +84,7 @@ protected:
   union {
     PRInt32       mInt;
     float         mFloat;
-    nsString*     mString;
+    PRUnichar*    mString;
     nsISupports*  mISupports;
     nscolor       mColor;
   }           mValue;
@@ -102,8 +102,11 @@ inline PRInt32 nsHTMLValue::GetIntValue(void) const
     return mValue.mInt;
   }
   else if (mUnit == eHTMLUnit_String) {
-    PRInt32 err=0;
-    return (mValue.mString) ? mValue.mString->ToInteger(&err):0;
+    if (mValue.mString) {
+      PRInt32 err=0;
+      nsAutoString str = mValue.mString; // XXX copy. new string APIs will make this better, right?
+      return str.ToInteger(&err);
+    }
   }
   return 0;
 }
@@ -133,7 +136,7 @@ inline nsString& nsHTMLValue::GetStringValue(nsString& aBuffer) const
   aBuffer.SetLength(0);
   if (((mUnit == eHTMLUnit_String) || (mUnit == eHTMLUnit_ColorName)) && 
       (nsnull != mValue.mString)) {
-    aBuffer.Append(*(mValue.mString));
+    aBuffer.Append(mValue.mString);
   }
   return aBuffer;
 }
@@ -158,7 +161,7 @@ inline nscolor nsHTMLValue::GetColorValue(void) const
   }
   if ((mUnit == eHTMLUnit_ColorName) && (mValue.mString)) {
     nscolor color;
-    if (NS_ColorNameToRGB(*(mValue.mString), &color)) {
+    if (NS_ColorNameToRGB(nsAutoString(mValue.mString), &color)) {
       return color;
     }
   }
