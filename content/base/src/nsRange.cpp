@@ -956,7 +956,7 @@ nsresult nsRange::GetIsPositioned(PRBool* aIsPositioned)
 nsresult nsRange::GetStartContainer(nsIDOMNode** aStartParent)
 {
   if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
+    return NS_ERROR_NOT_INITIALIZED;
   if (!aStartParent)
     return NS_ERROR_NULL_POINTER;
   //NS_IF_RELEASE(*aStartParent); don't think we should be doing this
@@ -968,7 +968,7 @@ nsresult nsRange::GetStartContainer(nsIDOMNode** aStartParent)
 nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
 {
   if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
+    return NS_ERROR_NOT_INITIALIZED;
   if (!aStartOffset)
     return NS_ERROR_NULL_POINTER;
   *aStartOffset = mStartOffset;
@@ -978,7 +978,7 @@ nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
 nsresult nsRange::GetEndContainer(nsIDOMNode** aEndParent)
 {
   if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
+    return NS_ERROR_NOT_INITIALIZED;
   if (!aEndParent)
     return NS_ERROR_NULL_POINTER;
   //NS_IF_RELEASE(*aEndParent); don't think we should be doing this
@@ -990,7 +990,7 @@ nsresult nsRange::GetEndContainer(nsIDOMNode** aEndParent)
 nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
 {
   if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
+    return NS_ERROR_NOT_INITIALIZED;
   if (!aEndOffset)
     return NS_ERROR_NULL_POINTER;
   *aEndOffset = mEndOffset;
@@ -1000,7 +1000,7 @@ nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
 nsresult nsRange::GetCollapsed(PRBool* aIsCollapsed)
 {
   if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
+    return NS_ERROR_NOT_INITIALIZED;
   if (mEndParent == 0 ||
       (mStartParent == mEndParent && mStartOffset == mEndOffset))
     *aIsCollapsed = PR_TRUE;
@@ -1011,8 +1011,6 @@ nsresult nsRange::GetCollapsed(PRBool* aIsCollapsed)
 
 nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
 { 
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
   *aCommonParent = CommonParent(mStartParent,mEndParent);
   NS_IF_ADDREF(*aCommonParent);
   return NS_OK;
@@ -1021,8 +1019,6 @@ nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 {
   nsresult res;
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
   
@@ -1047,12 +1043,10 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
-  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
+  if (nsnull == aSibling) {
+    // Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
-
+  }
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1062,12 +1056,10 @@ nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
-  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
+  if (nsnull == aSibling) {
+    // Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
-
+  }
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1078,8 +1070,6 @@ nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 {
   nsresult res;
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
 
@@ -1104,12 +1094,10 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
-  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
+  if (nsnull == aSibling) {
+    // Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
-
+  }
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1119,12 +1107,10 @@ nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
-  if (nsnull == aSibling)// Not the correct one to throw, but spec doesn't say what is
+  if (nsnull == aSibling) {
+    // Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
-
+  }
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
@@ -1135,7 +1121,7 @@ nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 nsresult nsRange::Collapse(PRBool aToStart)
 {
   if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
+    return NS_ERROR_NOT_INITIALIZED;
 
   if (aToStart)
   {
@@ -1155,9 +1141,6 @@ nsresult nsRange::Unposition()
 
 nsresult nsRange::SelectNode(nsIDOMNode* aN)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
   if (!aN) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> parent;
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
@@ -1182,9 +1165,6 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
 
 nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
   nsCOMPtr<nsIDOMNodeList> aChildNodes;
   
@@ -1206,9 +1186,6 @@ nsresult nsRange::DeleteContents()
   nsCOMPtr<nsIContent> cEnd;
   
   // get the content versions of our endpoints
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
   nsresult res = mStartParent->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(cStart));
   if (NS_FAILED(res)) 
   {
@@ -1356,9 +1333,6 @@ nsresult nsRange::DeleteContents()
 nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
                                    PRInt32* aCmpRet)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
   nsresult res;
   if (aCmpRet == 0)
     return NS_ERROR_NULL_POINTER;
@@ -1419,9 +1393,6 @@ nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
 
 nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
 { 
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
   nsresult res = CloneContents(aReturn);
   if (NS_FAILED(res))
     return res;
@@ -1586,9 +1557,6 @@ return NS_ERROR_NOT_IMPLEMENTED;
 
 nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
   if (aReturn == 0)
     return NS_ERROR_NULL_POINTER;
 
@@ -1612,9 +1580,6 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
 
 nsresult nsRange::ToString(nsAWritableString& aReturn)
 { 
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
-
   nsCOMPtr<nsIContent> cStart( do_QueryInterface(mStartParent) );
   nsCOMPtr<nsIContent> cEnd( do_QueryInterface(mEndParent) );
   
@@ -1712,8 +1677,6 @@ nsresult nsRange::ToString(nsAWritableString& aReturn)
 nsresult
 nsRange::Detach()
 {
-  if (!mIsPositioned)
-    return NS_ERROR_DOM_INVALID_STATE_ERR;// range is detached
   return DoSetRange(nsnull,0,nsnull,0);
 }
 
