@@ -15,9 +15,9 @@
  * Reserved.
  */
 GOOD { background-image: none; }
-GOOD { background-image: url(fowl.url); }
-GOOD { background-image: url( fowl.url ); }
-GOOD { background-image: url( "fowl.url" ); }
-GOOD { background-image: url( 'fowl.url' ); }
-BAD { background-image: none url(fowl.url); }
-BAD { background-image: url(fowl.url) none; }
+GOOD { background-image: url(fowl1.url); }
+GOOD { background-image: url( fowl2.url ); }
+GOOD { background-image: url( "fowl3.url" ); }
+GOOD { background-image: url( 'fowl4.url' ); }
+BAD { background-image: none url(fowl5.url); }
+BAD { background-image: url(fowl6.url) none; }
