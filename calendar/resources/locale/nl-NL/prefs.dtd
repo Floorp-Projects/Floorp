@@ -68,7 +68,7 @@
 <!ENTITY pref.dateformat.label      "Datum/Tijd formaat:" >
 <!ENTITY pref.dateformat.long       "Lang" >
 <!ENTITY pref.dateformat.short      "Kort"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
+<!ENTITY pref.dateformat.storeingmt "Data als universele tijd opslaan" >
 <!ENTITY pref.defaultlength.label   "Standaard gebeurtenisduur:" >
 <!ENTITY pref.defaultsnoozelength.label   "Standaard snooze-duur:" >
 
