@@ -180,6 +180,10 @@ pref("font.size.fixed.zh-CN", 16);
 pref("font.size.variable.zh-TW", 15);
 pref("font.size.fixed.zh-TW", 16);
 
+// Tab focus model bit field:
+// 1 focuses text controls, 2 focuses other form elements, 4 adds links.
+pref("accessibility.tabfocus", 1);
+
 // Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL
 // Use 17 for Ctrl, 18 for Option, 224 for Cmd, 0 for none
 pref("ui.key.menuAccessKey", 0);

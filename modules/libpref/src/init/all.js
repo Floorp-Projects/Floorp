@@ -125,6 +125,10 @@ pref("browser.helperApps.neverAsk.openFile", "");
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
+// Tab focus model bit field:
+// 1 focuses text controls, 2 focuses other form elements, 4 adds links.
+// Most users will want 1, 3, or 7.
+pref("accessibility.tabfocus", 7);
 pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
 pref("accessibility.accesskeycausesactivation", true);

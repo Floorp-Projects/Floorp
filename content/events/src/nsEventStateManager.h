@@ -71,6 +71,13 @@ class nsEventStateManager : public nsSupportsWeakReference,
                             public nsIEventStateManager,
                             public nsIObserver
 {
+  // Tab focus model bit field:
+  enum nsTabFocusModel {
+    eTabFocus_unset = 0,                  // unset, check preferences
+    eTabFocus_textControlsMask = (1<<0),  // text elements
+    eTabFocus_formElementsMask = (1<<1),  // non-text form elements
+    eTabFocus_linksMask = (1<<2)          // links
+  };
 
 public:
   nsEventStateManager();
@@ -272,6 +279,10 @@ protected:
 
   // So we don't have to keep checking accessibility.browsewithcaret pref
   PRBool mBrowseWithCaret;
+
+  // Tab focus policy (static, constant across the app):
+  // Which types of elements are in the tab order?
+  static PRInt32 sTabFocusModel;
 
   // Recursion guard for tabbing
   PRBool mTabbedThroughDocument;

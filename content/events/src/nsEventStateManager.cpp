@@ -140,6 +140,8 @@ nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
 
+PRInt32 nsEventStateManager::sTabFocusModel = eTabFocus_unset;
+
 PRUint32 nsEventStateManager::mInstanceCount = 0;
 PRInt32 nsEventStateManager::gGeneralAccesskeyModifier = -1; // magic value of -1 means uninitialized
 
@@ -3286,7 +3288,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
   if (mCurrentFocus) {
     nsCOMPtr<nsIAtom> tag;
     mCurrentFocus->GetTag(*getter_AddRefs(tag));
-    if(nsHTMLAtoms::area==tag.get()) {
+    if(nsHTMLAtoms::area==tag) {
       //Focus is in an imagemap area
       nsCOMPtr<nsIPresShell> presShell;
       if (mPresContext) {
@@ -3366,10 +3368,22 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       PRBool disabled = PR_TRUE;
       PRBool hidden = PR_FALSE;
 
+      // Tab focus mode is constant across all windows.
+      // It would be nicer if ESM had a prefs callback,
+      // so we could store this and change behavior when it changes.
+      // But until the pref is exposed, that doesn't matter.
+      if (sTabFocusModel == eTabFocus_unset) {
+        sTabFocusModel = (eTabFocus_textControlsMask | eTabFocus_formElementsMask
+                          | eTabFocus_linksMask);
+        nsresult rv = getPrefService();
+        if (NS_SUCCEEDED(rv))
+          mPrefService->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
+      }
+
       child->GetTag(*getter_AddRefs(tag));
       nsCOMPtr<nsIDOMHTMLElement> htmlElement(do_QueryInterface(child));
       if (htmlElement) {
-        if (nsHTMLAtoms::input==tag.get()) {
+        if (nsHTMLAtoms::input==tag) {
           nsCOMPtr<nsIDOMHTMLInputElement> nextInput(do_QueryInterface(child));
           if (nextInput) {
             nextInput->GetDisabled(&disabled);
@@ -3377,30 +3391,49 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
 
             nsAutoString type;
             nextInput->GetType(type);
-            if (type.EqualsIgnoreCase("hidden")) {
+            if (type.EqualsIgnoreCase("text")) {
+              // It's a text field
+              disabled = !(sTabFocusModel & eTabFocus_textControlsMask);
+            }
+            else if (type.EqualsIgnoreCase("hidden")) {
               hidden = PR_TRUE;
             }
             else if (type.EqualsIgnoreCase("file")) {
               disabled = PR_TRUE;
             }
+            else {
+              // it's some other type of form element
+              disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+            }
           }
         }
-        else if (nsHTMLAtoms::select==tag.get()) {
+        else if (nsHTMLAtoms::select==tag) {
+          // Select counts as form but not as text
+          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+          if (!disabled) {
           nsCOMPtr<nsIDOMHTMLSelectElement> nextSelect(do_QueryInterface(child));
           if (nextSelect) {
             nextSelect->GetDisabled(&disabled);
             nextSelect->GetTabIndex(&tabIndex);
           }
         }
-        else if (nsHTMLAtoms::textarea==tag.get()) {
+        }
+        else if (nsHTMLAtoms::textarea==tag) {
+          // it's a textarea
+          disabled = !(sTabFocusModel & eTabFocus_textControlsMask);
+          if (!disabled) {
           nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
           if (nextTextArea) {
             nextTextArea->GetDisabled(&disabled);
             nextTextArea->GetTabIndex(&tabIndex);
           }
         }
-        else if(nsHTMLAtoms::a==tag.get()) {
+        }
+        else if (nsHTMLAtoms::a==tag) {
+          // it's a link
+          disabled = !(sTabFocusModel & eTabFocus_linksMask);
           nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
+          if (!disabled) {
           if (nextAnchor)
             nextAnchor->GetTabIndex(&tabIndex);
           nsAutoString href;
@@ -3411,14 +3444,22 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             disabled = PR_FALSE;
           }
         }
-        else if(nsHTMLAtoms::button==tag.get()) {
+        }
+        else if (nsHTMLAtoms::button==tag) {
+          // Button counts as a form element but not as text
+          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+          if (!disabled) {
           nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
           if (nextButton) {
             nextButton->GetTabIndex(&tabIndex);
             nextButton->GetDisabled(&disabled);
           }
         }
-        else if(nsHTMLAtoms::img==tag.get()) {
+        }
+        else if (nsHTMLAtoms::img==tag) {
+          // Images are treated like links for tab focus purposes.
+          disabled = !(sTabFocusModel & eTabFocus_linksMask);
+          if (!disabled) {
           nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
           nsAutoString usemap;
           if (nextImage) {
@@ -3439,10 +3480,12 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
                       PRInt32 val = 0;
                       TabIndexFrom(childArea, &val);
                       if (mCurrentTabIndex == val) {
-                        //mCurrentFocus is in this map so we must start iterating past it.
-                        //We skip the case where mCurrentFocus has the same tab index
-                        //as mCurrentTabIndex since the next tab ordered element might
-                        //be before it (or after for backwards) in the child list.
+                          // mCurrentFocus is in this map so we must start
+                          // iterating past it.
+                          // We skip the case where mCurrentFocus has the
+                          // same tab index as mCurrentTabIndex since the
+                          // next tab ordered element might be before it
+                          // (or after for backwards) in the child list.
                         break;
                       }
                     }
@@ -3468,20 +3511,27 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             }
           }
         }
-        else if(nsHTMLAtoms::object==tag.get()) {
+        }
+        else if (nsHTMLAtoms::object==tag) {
+          // OBJECT is treated as a form element.
+          disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
+          if (!disabled) {
           nsCOMPtr<nsIDOMHTMLObjectElement> nextObject(do_QueryInterface(child));
           if (nextObject) 
             nextObject->GetTabIndex(&tabIndex);
           disabled = PR_FALSE;
         }
-        else if (nsHTMLAtoms::iframe==tag.get()) {
+        }
+        else if (nsHTMLAtoms::iframe==tag) {
           disabled = PR_FALSE;
         } 
-        else if (nsHTMLAtoms::frame==tag.get()) {
+        else if (nsHTMLAtoms::frame==tag) {
           disabled = PR_FALSE;
         }
       }
-      else {
+      // Check the tabindex attribute, unless the model specifies text only.
+      // If the model is unset then we'll depend on tabindex.
+      else if (sTabFocusModel != eTabFocus_textControlsMask) {
         nsAutoString value;
         child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
         nsAutoString tabStr;
