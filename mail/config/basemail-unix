@@ -26,6 +26,11 @@ components/mailview.xpt
 
 chrome/mail.jar
 
+chrome/icons/default/abcardWindow.xpm
+chrome/icons/default/addressbookWindow.xpm
+chrome/icons/default/messengerWindow.xpm
+chrome/icons/default/msgcomposeWindow.xpm
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mail Extensions (smime, etc.)
@@ -43,7 +48,7 @@ chrome/qute.jar
 chrome/en-US-mail.jar
 ;;this maybe incorrect but we use win because of 
 ;;a static installed-chrome.txt
-chrome/en-win.jar
+chrome/en-unix.jar
 ;;chrome/en-unix.jar
 chrome/overlayinfo/messenger/content/overlays.rdf
 
@@ -277,6 +282,7 @@ components/txtsvc.xpt
 
 ; netwerk
 components/libnecko.so
+components/libnecko2.so
 components/necko.xpt                    
 components/necko_about.xpt              
 components/necko_data.xpt               
@@ -285,6 +291,7 @@ components/necko_http.xpt
 components/necko_jar.xpt                
 components/necko_res.xpt                
 components/necko_strconv.xpt
+components/necko_viewsource.xpt
 components/necko_file.xpt
 components/necko_cache.xpt
 components/necko_cookie.xpt         
