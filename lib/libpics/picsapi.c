@@ -758,13 +758,13 @@ CSLabel_callback_t ProcessService;
 CSLabel_callback_t ProcessLabel;
 CSLabel_callback_t ProcessSingleLabel;
 
-Bool IsValidValue( FVal_t *Value, int MinValue, int MaxValue, int *TheValue );
-Bool IsExpired( DVal_t *Value, PRTime *ExpirationDate );
-Bool IsValidTrustService( char *ServiceName );
-Bool ISODateToLocalTime( DVal_t *Value, PRTime *LocalDate );
-Bool CheckOptions( LabelOptions_t  *LabelOptions, PRTime *ExpirationDate );
-Bool IsLabelSigned( Extension_t *AExt );
-Bool IsSignatureValid( Extension_t *AExt, LabelOptions_t  *LabelOptions );
+PRBool IsValidValue( FVal_t *Value, int MinValue, int MaxValue, int *TheValue );
+PRBool IsExpired( DVal_t *Value, PRTime *ExpirationDate );
+PRBool IsValidTrustService( char *ServiceName );
+PRBool ISODateToLocalTime( DVal_t *Value, PRTime *LocalDate );
+PRBool CheckOptions( LabelOptions_t  *LabelOptions, PRTime *ExpirationDate );
+PRBool IsLabelSigned( Extension_t *AExt );
+PRBool IsSignatureValid( Extension_t *AExt, LabelOptions_t  *LabelOptions );
 
 extern int NET_SameDomain(char * currentHost, char * inlineHost);		  
 extern char * lowercase_string(char *string);
@@ -779,7 +779,7 @@ XP_List *TrustList = NULL;
 /**************    FOR DEBUGGINGG   ***********************************/ 
 #include "csparse.h"
 LabelTargetCallback_t targetCallback;
-StateRet_t trustCallback(CSLabel_t * pCSMR, CSParse_t * pCSParse, CSLLTC_t target, Bool closed, void * pVoid)
+StateRet_t trustCallback(CSLabel_t * pCSMR, CSParse_t * pCSParse, CSLLTC_t target, PRBool closed, void * pVoid)
 {
 #ifdef NOPE
 	static int Total = 0;
@@ -993,7 +993,7 @@ CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const
 	Extension_t *AExt;
 	ExtensionData_t	*AData;
 	char	*AName;				
-	Bool	bForgedLabel;
+	PRBool	bForgedLabel;
 
 	/* march thru the ratings looking for purpose, Recipients and identification.  When found save their values. */
 	int count = 0;
@@ -1015,7 +1015,7 @@ CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const
 			/* get the Ratings list */
 			HTList *LabelRatings = pSingleLabel->labelRatings;
 			LabelRating_t *Rating;
-			Bool bContinue = TRUE;
+			PRBool bContinue = TRUE;
 			short AllRatings = HAVE_PURPOSE | HAVE_RECIPIENTS | HAVE_ID;
 			/* look thru all the ratings until I have the 3 required ratings */
 			while ( AllRatings != 0 && (Rating = (LabelRating_t *) HTList_nextObject(LabelRatings))) {
@@ -1183,7 +1183,7 @@ CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const
  *  Purpose: determine if the value for a rating falls within the specified range
  *  
  * ---------------------------------------------------------------------------------------------------- */
-Bool IsValidValue( FVal_t *Value, int MinValue, int MaxValue, int *TheValue )
+PRBool IsValidValue( FVal_t *Value, int MinValue, int MaxValue, int *TheValue )
 {
 	if ( FVal_initialized(Value) ) {
 		/* NOTE: the conversion from a float to an int, since for trust labels we are  */
@@ -1204,9 +1204,9 @@ Bool IsValidValue( FVal_t *Value, int MinValue, int MaxValue, int *TheValue )
  *     ExpDate  - returns the label expiration date
  *  
  * ---------------------------------------------------------------------------------------------------- */
-Bool CheckOptions( LabelOptions_t  *LabelOptions, PRTime *ExpirationDate )
+PRBool CheckOptions( LabelOptions_t  *LabelOptions, PRTime *ExpirationDate )
 {
-	Bool Status = FALSE;
+	PRBool Status = FALSE;
 	/* According to the spec these options must be present:
 	 *   "by", "gen", "for", "on" AND "exp" OR "until".  AND the expiration date must
 	 *   not have passed.
@@ -1235,7 +1235,7 @@ Bool CheckOptions( LabelOptions_t  *LabelOptions, PRTime *ExpirationDate )
  * 	TRUE if the expiration date has PASSED or is not present
  *   FALSE if the expiration date is AFTER now.
  * ---------------------------------------------------------------------------------------------------- */
-Bool IsExpired( DVal_t *Value, PRTime *ExpirationDate )
+PRBool IsExpired( DVal_t *Value, PRTime *ExpirationDate )
 {
 	PRTime			CurrentTime;
 	/* Has the expiration date been given?? */
@@ -1271,11 +1271,11 @@ Bool IsExpired( DVal_t *Value, PRTime *ExpirationDate )
  *  
  *  returns TRUE if the given service is a valid trust service
  * ----------------------------------------------------------------------------------------------------*/
-Bool IsValidTrustService( char *ServiceName )
+PRBool IsValidTrustService( char *ServiceName )
 {
 	char	*PrefName;
 	char	*escaped_service;
-	XP_Bool bool_pref;
+	PRBool bool_pref;
 
 	if ( ServiceName && *ServiceName ) {
 		/* Build the preference string - first escape the service name */
@@ -1323,7 +1323,7 @@ Bool IsValidTrustService( char *ServiceName )
  * 	TRUE if the date  is valid
  *   FALSE if the date is not a valid ISO string
  * ---------------------------------------------------------------------------------------------------- */
-Bool ISODateToLocalTime( DVal_t *Value, PRTime *LocalDate )
+PRBool ISODateToLocalTime( DVal_t *Value, PRTime *LocalDate )
 {
     if (DVal_initialized( Value ) ) {
 		/* the string was parsed into the different fields */
@@ -1349,7 +1349,7 @@ Bool ISODateToLocalTime( DVal_t *Value, PRTime *LocalDate )
  *  
  *  returns - TRUE if it is
  *---------------------------------------------------------------------------------------------------- */
-Bool IsPrefix( char *path1, char *path2 )
+PRBool IsPrefix( char *path1, char *path2 )
 {
 	int i;
 	if ( path1 && path2 ) {
@@ -1386,9 +1386,9 @@ Bool IsPrefix( char *path1, char *path2 )
  *  FALSE if none found
  *  TheLabel - ptr to the matching trust label
  *----------------------------------------------------------------------------------------------------*/
-PUBLIC Bool MatchCookieToLabel( char *CurURL, JSCFCookieData *CookieData, TrustLabel **TheLabel )
+PUBLIC PRBool MatchCookieToLabel( char *CurURL, JSCFCookieData *CookieData, TrustLabel **TheLabel )
 {
-	Bool Status = FALSE;
+	PRBool Status = FALSE;
 	if ( CurURL && CookieData && 
 		 !XP_ListIsEmpty( TrustList ) && TheLabel ) {
 		Status = MatchCookieToLabel2( CurURL, CookieData->name_from_header,
@@ -1417,17 +1417,17 @@ PUBLIC Bool MatchCookieToLabel( char *CurURL, JSCFCookieData *CookieData, TrustL
  * History:
  *  Paul Chek - initial creation
  ****************************************************************/
-PUBLIC Bool MatchCookieToLabel2( char *CurURL, char *CookieName,
+PUBLIC PRBool MatchCookieToLabel2( char *CurURL, char *CookieName,
 								 char *CookiePath, char *CookieHost, 
 								 TrustLabel **TheLabel )
 {
-	Bool	Status = FALSE;
+	PRBool	Status = FALSE;
 	TrustLabel  *ALabel;
 	char	*AName;
-	Bool	bNameMatch;
+	PRBool	bNameMatch;
 	XP_List *TempList;
 	TrustLabel	*LastMatch = NULL;
-	Bool		LastMatchNamed;
+	PRBool		LastMatchNamed;
 	XP_List *TempTrustList;
 
 	/* make sure I have the data I need										 */
@@ -1529,7 +1529,7 @@ PUBLIC Bool MatchCookieToLabel2( char *CurURL, char *CookieName,
  *  
  *  
  *---------------------------------------------------------------------------------------------------- */
-PUBLIC Bool IsTrustLabelsEnabled()
+PUBLIC PRBool IsTrustLabelsEnabled()
 {
 #ifndef FOR_PHASE2
 	return TRUE;
@@ -1539,7 +1539,7 @@ static int bEnabled = -1;
 		/* on the first call get it from the preferences */	
 		PREF_GetBoolPref("browser.PICS.trust_labels_enabled", &bEnabled);
 	}
-	return (Bool)bEnabled;
+	return (PRBool)bEnabled;
 #endif
 }
 
@@ -1548,7 +1548,7 @@ static int bEnabled = -1;
  *  Purpose: returns true if the given extension is the Digital Signature extension
  *  
  *---------------------------------------------------------------------------------------------------- */
-Bool IsLabelSigned( Extension_t *AExt )
+PRBool IsLabelSigned( Extension_t *AExt )
 {
 	return FALSE;			/* not handling signed label right now */
 }
@@ -1558,7 +1558,7 @@ Bool IsLabelSigned( Extension_t *AExt )
  *			 the given label.  If this returns false then we have a forged label.
  *  
  *---------------------------------------------------------------------------------------------------- */
-Bool IsSignatureValid( Extension_t *AExt, LabelOptions_t  *LabelOptions )
+PRBool IsSignatureValid( Extension_t *AExt, LabelOptions_t  *LabelOptions )
 {
 	return TRUE;			/* not handling signed label right now */
 
