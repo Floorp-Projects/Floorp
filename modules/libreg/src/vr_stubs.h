@@ -64,17 +64,29 @@
 #define XP_FileFlush(file)              fflush(file)
 #define XP_FileClose(file)              fclose(file)
 
-#ifdef XP_UNIX
-#define XP_FileOpen(name,type,mode)     VR_StubOpen((name), (mode))
+#if defined(__cplusplus)
+# define XP_CPLUSPLUS
+# define XP_IS_CPLUSPLUS 1
 #else
-#define XP_FileOpen(name,type,mode)     VR_StubOpen((mode))
+# define XP_IS_CPLUSPLUS 0
 #endif
 
-#define XP_BEGIN_PROTOS
-#define XP_END_PROTOS
+#if defined(XP_CPLUSPLUS)
+# define XP_BEGIN_PROTOS extern "C" {
+# define XP_END_PROTOS }
+#else
+# define XP_BEGIN_PROTOS
+# define XP_END_PROTOS
+#endif
 
+#ifdef STANDALONE_REGISTRY
 #define XP_ASSERT(x)        ((void)0)
+#else
+#define XP_ASSERT(x)        PR_ASSERT((x))
+#endif
+
 #define XP_STRCAT(a,b)      strcat((a),(b))
+#define XP_ATOI             atoi
 #define XP_STRCPY(a,b)      strcpy((a),(b))
 #define XP_STRLEN(x)        strlen(x)
 #define XP_SPRINTF          sprintf
@@ -98,6 +110,9 @@
 typedef FILE          * XP_File;
 
 #ifdef STANDALONE_REGISTRY /* included from prmon.h otherwise */
+#include "prtypes.h"
+
+#if 0
 typedef long            int32;
 typedef unsigned long   uint32;
 typedef short           int16;
@@ -122,39 +137,34 @@ typedef unsigned char   uint8;
 
     typedef char Bool;
     typedef char XP_Bool;
+#endif 
 #endif
-#endif /* STANDALONE_REGISTRY */
+#endif
 
 #ifdef XP_PC
- typedef struct _stat   VR_StatStruct;
- #define VR_Stat(file,data)     _stat((file),(data))
+ typedef struct _stat   XP_StatStruct;
+ #define XP_Stat(file,data,type)     _stat((file),(data))
 #else
- typedef struct stat    VR_StatStruct;
-#define  VR_Stat(file,data)     stat((file),(data))
+ typedef struct stat    XP_StatStruct;
+ #define  XP_Stat(file,data,type)     stat((file),(data))
+#endif
+
+#ifndef XP_MAC
+ #define nr_RenameFile(from, to)    rename((from), (to))
 #endif
 
 
-
-#if defined(__cplusplus)
-# define XP_BEGIN_PROTOS extern "C" {
-# define XP_END_PROTOS }
-#else
-# define XP_BEGIN_PROTOS
-# define XP_END_PROTOS
-#endif
 
 XP_BEGIN_PROTOS
+extern XP_File vr_fileOpen (const char *name, const char * mode);
+extern void vr_findGlobalRegName ();
 
-#ifdef XP_UNIX
-extern XP_File VR_StubOpen (const char *name, const char * mode);
-#else
-extern XP_File VR_StubOpen (const char * mode);
+#ifndef XP_PC
+extern char * strdup (const char * s);
 #endif
 
 #ifdef XP_MAC
-extern int strcasecmp(const char *str1, const char *str2);
-extern int strncasecmp(const char *str1, const char *str2, int length);
-extern char * strdup(const char *str);
+ extern int nr_RenameFile(char *from, char *to);
 #endif
 
 XP_END_PROTOS

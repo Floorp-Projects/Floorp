@@ -21,6 +21,12 @@
  * ====================================================================
  */
 
+/* TODO:
+ *	- Replace 'malloc' in NR_RegPack with the Netscape XP equivalent
+ *	- Solve DOS 'errno' problem mentioned below
+ *	- Solve rename across volume problem described in VR_PackRegistry
+ */
+
 /* Preprocessor Defines
  *  STANDALONE_REGISTRY - define if not linking with Navigator
  *  NOCACHE_HDR			- define if multi-threaded access to registry
@@ -33,10 +39,6 @@
 #define VERIFY_READ     1
 #endif
 
-#ifdef XP_MAC
-#include <size_t.h>
-#endif
-	
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -50,11 +52,15 @@
 #include "reg.h"
 #include "NSReg.h"
 
+#if defined(XP_UNIX)
+#ifndef MAX_PATH
+#define MAX_PATH 1024
+#endif
+#endif
+
 
 /* NOTE! It is EXREMELY important that node names be in UTF-8; otherwise
- * backwards path search for delim char will fail for multi-byte/Unicode names.
- * SmartUpdate will also break, as it relies on Java's UTF-8 -> Unicode
- * conversion, which will fail if the text is not actually valid UTF-8
+ * backwards path search for delim char will fail for multi-byte/Unicode names
  */
 
 /* ====================================================================
@@ -93,6 +99,7 @@ static XP_Bool bRegStarted = FALSE;
 #if !defined(STANDALONE_REGISTRY)
 static PRMonitor *reglist_monitor;
 #endif
+char *globalRegName = NULL;
 static char *user_name = NULL;
 
 
@@ -183,7 +190,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
     XP_ASSERT( fh != NULL );
 
 	/* Open the file for exclusive random read/write */
-	(*fh) = XP_FileOpen(path, xpRegistry, XP_FILE_UPDATE_BIN);
+	(*fh) = vr_fileOpen(path, XP_FILE_UPDATE_BIN);
 	if ( !VALID_FILEHANDLE(*fh) )
 	{
 		switch (errno)
@@ -193,7 +200,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 
 		case EACCES:	/* file in use */
             /* DVNOTE: should we try read only? */
-    	    (*fh) = XP_FileOpen(path, xpRegistry, XP_FILE_READ_BIN);
+    	    (*fh) = vr_fileOpen(path, XP_FILE_READ_BIN);
 	        if ( VALID_FILEHANDLE(*fh) )
                 return REGERR_READONLY;
             else
@@ -440,6 +447,8 @@ static REGERR nr_AppendDesc(REGFILE *reg, REGDESC *desc, REGOFF *result);	/* add
 static REGERR nr_AppendName(REGFILE *reg, char *name, REGDESC *desc);	    /* adds a name */
 static REGERR nr_AppendString(REGFILE *reg, char *string, REGDESC *desc);	/* adds a string */
 static REGERR nr_AppendData(REGFILE *reg, char *string, uint32 len, REGDESC *desc);	/* adds a string */
+
+static XP_Bool nr_IsValidUTF8(char *string);	/* checks if a string is UTF-8 encoded */
 /* -------------------------------------------------------------------- */
 
 
@@ -807,6 +816,8 @@ static REGERR nr_AppendName(REGFILE *reg, char *name, REGDESC *desc)
 	XP_ASSERT(name);
 	XP_ASSERT(desc);
 
+    if (!nr_IsValidUTF8(name))
+        return REGERR_BADUTF8;
     if (reg->readOnly)
         return REGERR_READONLY;
 
@@ -850,6 +861,8 @@ static REGERR nr_WriteString(REGFILE *reg, char *string, REGDESC *desc)
 	uint32 len;
 
 	XP_ASSERT(string);
+    if (!nr_IsValidUTF8(string))
+        return REGERR_BADUTF8;
     if (reg->readOnly)
         return REGERR_READONLY;
 	len = XP_STRLEN(string) + 1;
@@ -900,6 +913,8 @@ static REGERR nr_AppendString(REGFILE *reg, char *string, REGDESC *desc)
 	uint32 len;
 
 	XP_ASSERT(string);
+    if (!nr_IsValidUTF8(string))
+        return REGERR_BADUTF8;
     if (reg->readOnly)
         return REGERR_READONLY;
 	len = XP_STRLEN(string) + 1;
@@ -946,7 +961,69 @@ static REGERR nr_AppendData(REGFILE *reg, char *string, uint32 len, REGDESC *des
 
 }	/* nr_AppendData */
 
+static XP_Bool nr_IsValidUTF8(char *string)
+{
+	int follow = 0;
+    char *c;
+    unsigned char ch;
 
+	XP_ASSERT(string);
+    if ( !string )
+        return FALSE;
+
+    for ( c = string; *c != '\0'; c++ )
+    {
+        ch = (unsigned char)*c;
+        if( follow == 0 )
+        {
+            /* expecting an initial byte */
+            if ( ch <= 0x7F )
+            {
+                /* standard byte -- do nothing */
+            }
+            else if ((0xC0 & ch) == 0x80)
+            {
+                /* follow byte illegal here */
+                return FALSE;
+            }
+            else if ((0xE0 & ch) == 0xC0)
+            {
+                follow = 1;
+            }
+            else if ((0xF0 & ch) == 0xE0)
+            {
+                follow = 2;
+            }
+            else
+            { 
+                /* unexpected (unsupported) initial byte */
+                return FALSE;
+            }
+        }
+        else 
+        {
+            XP_ASSERT( follow > 0 );
+            if ((0xC0 & ch) == 0x80)
+            {
+                /* expecting follow byte and found one */
+                follow--;
+            }
+            else 
+            {
+                /* invalid state */
+                return FALSE;
+            }
+        }
+    } /* for */
+
+    if ( follow != 0 )
+    {
+        /* invalid state -- interrupted character */
+        return FALSE;
+    }
+    
+    return TRUE;
+}   /* checks if a string is UTF-8 encoded */
 
 /* --------------------------------------------------------------------
  * Path Parsing
@@ -1510,6 +1587,7 @@ static Bool   nr_ProtectedNode( REGFILE *reg, REGOFF key );
 static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey );
 static void   nr_Upgrade_1_1( REGFILE *reg );
 static char*  nr_GetUsername();
+static char*  nr_GetRegName (char *name);
 
 /* --------------------------------------------------------------------- */
 
@@ -1783,7 +1861,15 @@ static char *nr_GetUsername()
   }
 }
 
-
+static char* nr_GetRegName (char *name)
+{
+    if (name == NULL || *name == '\0') {
+        XP_ASSERT( globalRegName != NULL );
+        return globalRegName;
+    } else {
+        return name;
+    }
+}
 
 /* ---------------------------------------------------------------------
  * Public API
@@ -1860,10 +1946,16 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
     REGFILE   *pReg;
     REGHANDLE *pHandle;
 
+    filename = nr_GetRegName( filename );
+
     XP_ASSERT(bRegStarted);
 
     /* initialize output handle in case of error */
     *hReg = NULL;
+
+    XP_ASSERT(bRegStarted); /* you must call NR_StartupRegistry() */
+    if ( !bRegStarted )
+        return REGERR_FAIL;
 
 #if !defined(STANDALONE_REGISTRY)
     PR_EnterMonitor(reglist_monitor);
@@ -2014,6 +2106,122 @@ VR_INTERFACE(REGERR) NR_RegClose( HREG hReg )
 }   /* NR_RegClose */
 
 
+#ifndef STANDALONE_REGISTRY
+#include "VerReg.h"
+
+/* --------------------------------------------------------------------
+ * Registry Packing
+ * --------------------------------------------------------------------
+ */
+static REGERR nr_createTempRegName( char *filename, uint32 filesize );
+static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *userData, nr_RegPackCallbackFunc fn );
+/* -------------------------------------------------------------------- */
+
+static REGERR nr_createTempRegName( char *filename, uint32 filesize )
+{
+    struct stat statbuf;
+    Bool nameFound = FALSE;
+    char tmpname[MAX_PATH];
+    uint32 len;
+    int err;
+
+    XP_STRCPY( tmpname, filename );
+    len = XP_STRLEN(tmpname);
+    while (!nameFound && len < filesize ) {
+        tmpname[len-1] = '~';
+        tmpname[len] = '\0';
+        if ( stat(tmpname, &statbuf) != 0 )
+            nameFound = TRUE;
+        else
+            len++;
+    }  
+    if (nameFound) {
+        XP_STRCPY(filename, tmpname);
+        err = REGERR_OK;
+    } else {
+        err = REGERR_FAIL;
+    }
+   return err;
+}
+
+static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *userData, nr_RegPackCallbackFunc fn )
+{
+    char keyname[MAXREGPATHLEN+1] = {0};
+    char entryname[MAXREGPATHLEN+1] = {0};
+    void *buffer;
+    uint32 bufsize = 2024;
+    uint32 datalen;
+    REGENUM state = 0;
+    REGENUM entrystate = 0;
+    REGINFO info;
+	char *path = NULL;
+	int err = REGERR_OK;
+    int status = REGERR_OK;
+    RKEY key;
+    RKEY newKey;
+    REGFILE* reg;
+    REGFILE* regNew;
+    static int32 cnt = 0;
+    static int32 prevCnt = 0;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+    regNew = ((REGHANDLE*)hRegNew)->pReg;
+
+    buffer = XP_ALLOC(bufsize);
+    if ( buffer == NULL ) {
+        err = REGERR_MEMORY;
+        return err;
+    }
+
+    while (err == REGERR_OK)
+    {
+        err = NR_RegEnumSubkeys( hReg, rootkey, &state, keyname, sizeof(keyname), REGENUM_DESCEND );
+        if ( err != REGERR_OK )
+    	    break;
+        err = NR_RegAddKey( hRegNew, rootkey, keyname, &newKey);
+        if ( err != REGERR_OK )
+    	    break;
+        cnt++;
+        if (cnt >= prevCnt + 15) 
+        {
+            fn(userData, regNew->hdr.avail, reg->hdr.avail);
+            prevCnt = cnt;
+        }
+        err = NR_RegGetKey( hReg, rootkey, keyname, &key );
+        if ( err != REGERR_OK )
+    	    break;
+        entrystate = 0;
+        status = REGERR_OK;
+        while (status == REGERR_OK) {
+	        info.size = sizeof(REGINFO);
+            status = NR_RegEnumEntries( hReg, key, &entrystate, entryname, 
+                                        sizeof(entryname), &info );
+            if ( status == REGERR_OK ) {
+                XP_ASSERT( bufsize >= info.entryLength );
+                datalen = bufsize;
+                status = NR_RegGetEntry( hReg, key, entryname, buffer, &datalen );
+                XP_ASSERT( info.entryLength == datalen );
+                if ( status == REGERR_OK ) {
+                    /* copy entry */
+                    status = NR_RegSetEntry( hRegNew, newKey, entryname, 
+                                info.entryType, buffer, info.entryLength );
+                }
+            } 
+        }
+        if ( status != REGERR_NOMORE ) {
+            /* pass real error to outer loop */
+            err = status;
+        }
+    }
+
+    if ( err == REGERR_NOMORE )
+        err = REGERR_OK;
+
+    XP_FREEIF(buffer);
+    return err;
+
+}
+
 
 /* ---------------------------------------------------------------------
  * NR_RegPack    - Pack an open registry.  
@@ -2023,12 +2231,118 @@ VR_INTERFACE(REGERR) NR_RegClose( HREG hReg )
  *    hReg     - handle of open registry to pack
  * ---------------------------------------------------------------------
  */
-VR_INTERFACE(REGERR) NR_RegPack( HREG hReg )
+VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFunc fn)
 {
-    XP_ASSERT(bRegStarted);
+    XP_File  fh;
+    REGFILE* reg;
+    HREG hRegTemp;
+    char tempfilename[MAX_PATH] = {0};
+    char oldfilename[MAX_PATH] = {0};
+    char regbuf[MAXREGPATHLEN+1] = {0};
+    char buffer[MAXREGPATHLEN+1] = {0};
+    char bufvalue[MAXREGPATHLEN+1] = {0};
 
-    return REGERR_FAIL;
-}
+    XP_Bool bCloseTempFile = FALSE;
+
+    char *path = NULL;
+	int err = REGERR_OK;
+    int status = REGERR_OK;
+   	RKEY key;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lock registry */
+	err = nr_Lock( reg );
+	if ( err != REGERR_OK )
+    	return err; 
+
+    PR_EnterMonitor(reglist_monitor); 
+    XP_STRCPY(tempfilename, reg->filename);
+    err = nr_createTempRegName(tempfilename, sizeof(tempfilename));
+    if ( err != REGERR_OK )
+    	goto safe_exit; 
+     
+    /* force file creation */
+    fh = vr_fileOpen(tempfilename, XP_FILE_WRITE_BIN);
+	if ( !VALID_FILEHANDLE(fh) ) {
+		err = REGERR_FAIL;
+        goto safe_exit;
+    }
+    XP_FileClose(fh);
+
+    err = NR_RegOpen(tempfilename, &hRegTemp);
+    if ( err != REGERR_OK )
+    	goto safe_exit;
+    bCloseTempFile = TRUE;
+	
+    /* must open temp file first or we get the same name twice */
+    XP_STRCPY(oldfilename, reg->filename);
+    err = nr_createTempRegName(oldfilename, sizeof(oldfilename));
+    if ( err != REGERR_OK )
+    	goto safe_exit; 
+     
+    key = ROOTKEY_PRIVATE;
+    err = nr_addNodesToNewReg( hReg, key, hRegTemp, userData, fn);
+    if ( err != REGERR_OK  )
+    	goto safe_exit;
+    key = ROOTKEY_VERSIONS;
+    err = nr_addNodesToNewReg( hReg, key, hRegTemp, userData, fn);
+    if ( err != REGERR_OK  )
+    	goto safe_exit;
+    key = ROOTKEY_COMMON;
+    err = nr_addNodesToNewReg( hReg, key, hRegTemp, userData, fn);
+    if ( err != REGERR_OK  )
+    	goto safe_exit;
+    key = ROOTKEY_USERS;
+    err = nr_addNodesToNewReg( hReg, key, hRegTemp, userData, fn);
+    if ( err != REGERR_OK  )
+    	goto safe_exit;
+
+    err = NR_RegClose(hRegTemp);
+    bCloseTempFile = FALSE;
+  
+    /* close current reg file so we can rename it */
+    XP_FileClose(reg->fh);
+   
+    /* rename current reg file out of the way */
+    err = nr_RenameFile(reg->filename, oldfilename);
+    if ( err == -1 ) {
+        /* rename failed, get rid of the new registry and reopen the old one*/
+        remove(tempfilename);
+        reg->fh = vr_fileOpen(reg->filename, XP_FILE_UPDATE_BIN);
+    	goto safe_exit;
+    }
+
+    /* rename packed registry to the correct name */
+    err = nr_RenameFile(tempfilename, reg->filename);
+    if ( err == -1 ) {
+        /* failure, recover original registry */
+        err = nr_RenameFile(oldfilename, reg->filename);
+        remove(tempfilename);
+        reg->fh = vr_fileOpen(reg->filename, XP_FILE_UPDATE_BIN);
+    	goto safe_exit;
+    
+    } else {
+        remove(oldfilename); 
+    }
+    reg->fh = vr_fileOpen(reg->filename, XP_FILE_UPDATE_BIN);
+
+safe_exit:
+    if ( bCloseTempFile ) {
+        NR_RegClose(hRegTemp);
+    }
+    PR_ExitMonitor( reglist_monitor );
+	nr_Unlock(reg);
+	return err;
+
+}	
+
+#ifdef XP_MAC
+#pragma export reset
+#endif
+
+#endif /* STANDALONE_REGISTRY */
+
 
 
 
@@ -3016,6 +3330,8 @@ VR_INTERFACE(void) NR_StartupRegistry(void)
 
     bRegStarted = TRUE;
 
+    vr_findGlobalRegName();
+
     /* check to see that we have a valid registry */
     if (REGERR_OK == NR_RegOpen("", &reg)) {
         NR_RegClose(reg);
@@ -3032,6 +3348,9 @@ VR_INTERFACE(void) NR_StartupRegistry(void)
 VR_INTERFACE(void) NR_ShutdownRegistry(void)
 {
     REGFILE* pReg;
+
+    if (!bRegStarted)
+        return;
 
     if ( vr_monitor != NULL ) {
         VR_Close();
@@ -3055,6 +3374,8 @@ VR_INTERFACE(void) NR_ShutdownRegistry(void)
     }
 
     XP_FREEIF(user_name);
+
+    XP_FREEIF(globalRegName);
 
     bRegStarted = FALSE;
 }

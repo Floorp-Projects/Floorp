@@ -41,11 +41,20 @@ XP_BEGIN_PROTOS
  * Version Registry Operations
  * ---------------------------------------------------------------------
  */
-VR_INTERFACE(REGERR) VR_Close(void);
-VR_INTERFACE(REGERR) VR_PackRegistry(void);
-VR_INTERFACE(REGERR) VR_CreateRegistry(char *installation, char *programPath, char *versionStr);
+/* global registry operations */
 VR_INTERFACE(REGERR) VR_SetRegDirectory(const char *path);
+VR_INTERFACE(REGERR) VR_CreateRegistry(char *installation, char *programPath, char *versionStr);
+VR_INTERFACE(REGERR) VR_PackRegistry(void *userData,  nr_RegPackCallbackFunc pdCallbackFunction);
+VR_INTERFACE(REGERR) VR_Close(void);
 
+/* component-level functions */
+VR_INTERFACE(REGERR) VR_Install(char *component_path, char *filepath, char *version, int bDirectory);
+VR_INTERFACE(REGERR) VR_Remove(char *component_path);
+VR_INTERFACE(REGERR) VR_InRegistry(char *path);
+VR_INTERFACE(REGERR) VR_ValidateComponent(char *path);
+VR_INTERFACE(REGERR) VR_Enum(char *component_path, REGENUM *state, char *buffer, uint32 buflen);
+
+/* dealing with parts of individual components */
 VR_INTERFACE(REGERR) VR_GetVersion(char *component_path, VERSION *result);
 VR_INTERFACE(REGERR) VR_GetPath(char *component_path, uint32 sizebuf, char *buf);
 VR_INTERFACE(REGERR) VR_SetRefCount(char *component_path, int refcount);
@@ -53,12 +62,7 @@ VR_INTERFACE(REGERR) VR_GetRefCount(char *component_path, int *result);
 VR_INTERFACE(REGERR) VR_GetDefaultDirectory(char *component_path, uint32 sizebuf, char *buf);
 VR_INTERFACE(REGERR) VR_SetDefaultDirectory(char *component_path, char *directory);
 
-VR_INTERFACE(REGERR) VR_Install(char *component_path, char *filepath, char *version, int bDirectory);
-VR_INTERFACE(REGERR) VR_Remove(char *component_path);
-VR_INTERFACE(REGERR) VR_InRegistry(char *path);
-VR_INTERFACE(REGERR) VR_ValidateComponent(char *path);
-VR_INTERFACE(REGERR) VR_Enum(char *component_path, REGENUM *state, char *buffer, uint32 buflen);
-
+/* uninstall functions */
 VR_INTERFACE(REGERR) VR_UninstallCreateNode(char *regPackageName, char *userPackageName);
 VR_INTERFACE(REGERR) VR_UninstallAddFileToList(char *regPackageName, char *vrName);
 VR_INTERFACE(REGERR) VR_UninstallFileExistsInList(char *regPackageName, char *vrName);
@@ -68,9 +72,11 @@ VR_INTERFACE(REGERR) VR_UninstallDeleteSharedFilesKey(char *regPackageName);
 VR_INTERFACE(REGERR) VR_UninstallDestroy(char *regPackageName);
 VR_INTERFACE(REGERR) VR_EnumUninstall(REGENUM *state, char* userPackageName,
                                     int32 len1, char*regPackageName, int32 len2, Bool bSharedList);
+VR_INTERFACE(REGERR) VR_GetUninstallUserName(char *regPackageName, char *outbuf, uint32 buflen);
 
 XP_END_PROTOS
 
 #endif   /* _VERREG_H_ */
 
 /* EOF: VerReg.h */
+

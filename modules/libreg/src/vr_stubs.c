@@ -38,8 +38,12 @@
 #include <Folders.h>
 #include <Script.h>
 #include <stdlib.h>
+#include <Errors.h>
+#include "MoreFiles.h"
+#include "FullPath.h"  /* For FSpLocationFromFullPath() */
 #endif
 
+extern char* globalRegName;
 /* ------------------------------------------------------------------
  *  OS/2 STUBS
  * ------------------------------------------------------------------
@@ -47,7 +51,23 @@
 #ifdef XP_OS2
 #define INCL_DOS
 #include <os2.h>
-extern XP_File VR_StubOpen (const char * mode)
+
+extern XP_File vr_fileOpen (const char *name, const char * mode)
+{
+    XP_File fh = NULL;
+    struct stat st;
+
+    if ( name != NULL ) {
+        if ( stat( name, &st ) == 0 )
+            fh = fopen( name, XP_FILE_UPDATE_BIN );
+        else
+            fh = fopen( name, XP_FILE_WRITE_BIN );
+    }
+
+    return fh;
+}
+
+extern void vr_findGlobalRegName ()
 {
     char    path[ CCHMAXPATH ];
     int     pathlen;
@@ -63,43 +83,47 @@ extern XP_File VR_StubOpen (const char * mode)
 
     if ( pathlen > 0 ) {
         XP_STRCPY( path+pathlen, "\\nsreg.dat" );
-
-        if ( stat( path, &st ) == 0 )
-            fh = fopen( path, XP_FILE_UPDATE_BIN );
-        else
-            fh = fopen( path, XP_FILE_WRITE_BIN );
+        globalRegName = XP_STRDUP(path);
     }
-
-    return fh;
 }
+#endif /* XP_OS2 */
+
 
 /* ------------------------------------------------------------------
  *  WINDOWS STUBS
  * ------------------------------------------------------------------
  */
-#elif XP_PC
+#ifdef XP_PC
 #include "windows.h"
 #define PATHLEN 260
 
-extern XP_File VR_StubOpen (const char * mode)
+extern XP_File vr_fileOpen (const char *name, const char * mode)
 {
-    char    path[ PATHLEN ];
-    int     pathlen;
     XP_File fh = NULL;
     struct stat st;
 
-    pathlen = GetWindowsDirectory(path, PATHLEN);
-    if ( pathlen > 0 ) {
-        XP_STRCPY( path+pathlen, "\\nsreg.dat" );
-
-        if ( stat( path, &st ) == 0 )
-            fh = fopen( path, XP_FILE_UPDATE_BIN );
+    if ( name != NULL ) {
+        if ( stat( name, &st ) == 0 )
+            fh = fopen( name, XP_FILE_UPDATE_BIN );
         else
-            fh = fopen( path, XP_FILE_WRITE_BIN );
+            fh = fopen( name, XP_FILE_WRITE_BIN );
     }
 
     return fh;
 }
+
+extern void vr_findGlobalRegName ()
+{
+    char    path[ PATHLEN ];
+    int     pathlen;
+   
+    pathlen = GetWindowsDirectory(path, PATHLEN);
+    if ( pathlen > 0 ) {
+        XP_STRCPY( path+pathlen, "\\nsreg.dat" );
+        globalRegName = XP_STRDUP(path);
+    }
+}
+
 
 #if !defined(WIN32) && !defined(__BORLANDC__)
 int FAR PASCAL _export WEP(int);
@@ -128,10 +152,24 @@ int FAR PASCAL _export WEP(int nParam)
 #ifdef XP_MAC
 #include <Files.h>
 #include "FullPath.h"
-extern XP_File VR_StubOpen (const char *mode)
-{
 
+extern XP_File vr_fileOpen (const char *name, const char * mode)
+{
     XP_File fh = NULL;
+    struct stat st;
+
+    if ( name != NULL ) {
+        if ( stat( name, &st ) == 0 )
+            fh = fopen( name, XP_FILE_UPDATE_BIN ); /* If/when we switch to MSL C Lib (gromit uses this), we might have to take out the Macro per bug #62382 */
+	    else 
+            fh = fopen( name, XP_FILE_WRITE_BIN );
+     }
+
+    return fh;
+}
+
+extern void vr_findGlobalRegName ()
+{
     FSSpec	regSpec;
     OSErr	err;
     short	foundVRefNum;
@@ -160,18 +198,54 @@ extern XP_File VR_StubOpen (const char *mode)
 			
 			finalPath = NewPtrClear(pathLen+1);
 			BlockMoveData(*thePath, finalPath, pathLen);
-						
-            if (bCreate)
-			    fh = fopen( finalPath, XP_FILE_WRITE_BIN );
-            else 
-                fh = fopen( finalPath, "w+b" ); /* this hack to support CW11 MSL C Lib fopen update mode */
-             
+			globalRegName = XP_STRDUP(finalPath);			
             DisposePtr(finalPath);
 		}
 	}
-								
-    return fh;
 }
+
+/* Moves and renames a file or directory.
+   Returns 0 on success, -1 on failure (errno contains mac error code).
+ */
+extern int nr_RenameFile(char *from, char *to)
+{
+	OSErr			err = -1;
+	FSSpec			fromSpec;
+	FSSpec			toSpec;
+	FSSpec			destDirSpec;
+	FSSpec			beforeRenameSpec;
+	
+	errno = 0; // reset errno
+	
+	if (from && to) {
+    	err = FSpLocationFromFullPath(strlen(from), from, &fromSpec);
+    	if (err != noErr) goto exit;
+    	
+    	err = FSpLocationFromFullPath(strlen(to), to, &toSpec);
+        if (err != noErr && err != fnfErr) goto exit;
+    	
+    	// make an FSSpec for the destination directory
+		err = FSMakeFSSpec(toSpec.vRefNum, toSpec.parID, nil, &destDirSpec);
+    	if (err != noErr) goto exit; // parent directory must exist
+
+		// move it to the directory specified
+    	err = FSpCatMove(&fromSpec, &destDirSpec);
+    	if (err != noErr) goto exit;
+	    
+	    // make a new FSSpec for the file or directory in its new location	
+		err = FSMakeFSSpec(toSpec.vRefNum, toSpec.parID, fromSpec.name, &beforeRenameSpec);
+    	if (err != noErr) goto exit;
+    	
+    	// rename the file or directory
+    	err = FSpRename(&beforeRenameSpec, toSpec.name);
+	}
+		
+	exit:
+	if (err != noErr)
+		errno = err;
+	return (err == noErr ? 0 : -1);
+}
+
 
 #if 0
 /* Uncomment the following for older Mac build environments
@@ -250,7 +324,7 @@ int strncasecmp(const char *str1, const char *str2, int length)
 
 	return currentChar1 - currentChar2;
 }
-#endif
+#endif /* 0 */
 
 #endif /* XP_MAC */
 
@@ -273,60 +347,59 @@ int strncasecmp(const char *str1, const char *str2, int length)
 #include "NSReg.h"
 #include "VerReg.h"
 
-#define DEF_REG "/.netscape/registry"
-
-char *TheRegistry; 
+char *TheRegistry = "registry"; 
 char *Flist;
 
-#ifdef STANDALONE_REGISTRY
 /* WARNING: build hackery */
+#ifdef STANDALONE_REGISTRY
 long BUILDNUM =
 #include "../../../build/build_number"
 ;
 #endif
 
 REGERR vr_ParseVersion(char *verstr, VERSION *result);
+int main(int argc, char *argv[]);
 
 #ifdef XP_UNIX
-XP_File VR_StubOpen (const char *name, const char * mode)
+
+#define DEF_REG "/.netscape/registry"
+
+extern XP_File vr_fileOpen (const char *name, const char * mode)
 {
-	XP_File fh;
+    XP_File fh = NULL;
     struct stat st;
 
+    if ( name != NULL ) {
+        if ( stat( name, &st ) == 0 )
+            fh = fopen( name, XP_FILE_UPDATE_BIN );
+        else
+            fh = fopen( name, XP_FILE_WRITE_BIN );
+    }
+
+    return fh;
+}
+
+extern void vr_findGlobalRegName ()
+{
 #ifndef STANDALONE_REGISTRY
     char *def = NULL;
-    char *home = NULL;
-    if (name == NULL || *name == '\0') {
-        home = getenv("HOME");
-        if (home != NULL) {
-            def = (char *) XP_ALLOC(XP_STRLEN(home) + XP_STRLEN(DEF_REG) + 1);
-            if (def != NULL) {
-                XP_STRCPY(def, home);
-                XP_STRCAT(def, DEF_REG);
-            }
-        }
+    char *home = getenv("HOME");
+    if (home != NULL) {
+        def = (char *) XP_ALLOC(XP_STRLEN(home) + XP_STRLEN(DEF_REG));
         if (def != NULL) {
-            name = def;
-        } 
-        else {
-            /* couldn't find the filename to open */
-            return (XP_File)NULL;
+          XP_STRCPY(def, home);
+          XP_STRCAT(def, DEF_REG);
         }
     }
-#else
-    name = TheRegistry;
-#endif
-
-    if ( stat( name, &st ) == 0 )
-        fh = fopen( name, XP_FILE_UPDATE_BIN );
-    else
-        fh = fopen( name, XP_FILE_WRITE_BIN );
-
-#ifndef STANDALONE_REGISTRY
+    if (def != NULL) {
+        globalRegName = XP_STRDUP(def);
+    } else {
+        globalRegName = TheRegistry;
+    }
     XP_FREEIF(def);
+#else
+    globalRegName = TheRegistry;
 #endif
-	
-    return fh;
 }
 
 #endif
