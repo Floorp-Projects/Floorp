@@ -812,6 +812,20 @@ PRBool nsMsgHdr::IsParentOf(nsIMsgDBHdr *possibleChild)
   return PR_FALSE;
 }
 
+PRBool nsMsgHdr::IsAncestorOf(nsIMsgDBHdr *possibleChild)
+{
+  const char *references;
+  nsMsgHdr* curHdr = NS_STATIC_CAST(nsMsgHdr*, possibleChild);      // closed system, cast ok
+  m_mdb->RowCellColumnToConstCharPtr(curHdr->GetMDBRow(), m_mdb->m_referencesColumnToken, &references);
+  if (!references)
+    return PR_FALSE;
+  nsXPIDLCString messageId;
+  
+  // should put < > around message id to make strstr strictly match
+  GetMessageId(getter_Copies(messageId));
+  return (strstr(references, messageId.get()) != nsnull);
+}
+
 NS_IMETHODIMP nsMsgHdr::GetIsRead(PRBool *isRead)
 {
     NS_ENSURE_ARG_POINTER(isRead);

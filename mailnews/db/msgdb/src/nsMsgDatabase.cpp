@@ -1063,9 +1063,6 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
   PRBool summaryFileExists;
   PRBool newFile = PR_FALSE;
   PRBool deleteInvalidDB = PR_FALSE;
-#ifdef DEBUG_bienvenu
-  NS_ASSERTION(m_folder, "folder should be set");
-#endif
   if (!aFolderName)
     return NS_ERROR_NULL_POINTER;
   
@@ -1075,7 +1072,7 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
   
   nsIDBFolderInfo	*folderInfo = nsnull;
   
-#if defined(DEBUG_bienvenu) || defined(DEBUG_jefft)
+#if defined(DEBUG_bienvenu)
   printf("really opening db in nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
     (const char*)folderName, aCreate ? "TRUE":"FALSE",
     this, aUpgrading ? "TRUE":"FALSE", (const char*)folderName);
@@ -4147,14 +4144,11 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
       
       while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
       {
-        nsIMsgDBHdr *pMessage = nsnull;
-        rv = enumerator->GetNext((nsISupports**)&pMessage);
+        nsCOMPtr <nsIMsgDBHdr> pMessage;
+        rv = enumerator->GetNext(getter_AddRefs(pMessage));
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
-        if (NS_FAILED(rv)) 
+        if (NS_FAILED(rv) || !pMessage) 
           break;
-        
-        //		NS_RELEASE(pMessage);
-        pMessage = nsnull;
       }
       NS_RELEASE(enumerator);
       
