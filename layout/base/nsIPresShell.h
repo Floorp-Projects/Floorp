@@ -19,10 +19,11 @@
 #define nsIPresShell_h___
 
 #include "nslayout.h"
-#include "nsIDocumentObserver.h"
+#include "nsISupports.h"
 #include "nsCoord.h"
 class nsIContent;
 class nsIDocument;
+class nsIDocumentObserver;
 class nsIFrame;
 class nsIPresContext;
 class nsIStyleSet;
@@ -44,12 +45,12 @@ class nsReflowCommand;
  * presentation context, the style manager, the style set and the root
  * frame.
  */
-class nsIPresShell : public nsIDocumentObserver {
+class nsIPresShell : public nsISupports {
 public:
-  virtual nsresult Init(nsIDocument* aDocument,
-                         nsIPresContext* aPresContext,
-                         nsIViewManager* aViewManager,
-                         nsIStyleSet* aStyleSet) = 0;
+  NS_IMETHOD Init(nsIDocument* aDocument,
+                  nsIPresContext* aPresContext,
+                  nsIViewManager* aViewManager,
+                  nsIStyleSet* aStyleSet) = 0;
 
   virtual nsIDocument* GetDocument() = 0;
 
