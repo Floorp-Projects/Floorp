@@ -54,11 +54,7 @@
 #include "nsIPref.h"
 #include "nsCRT.h"
 #include "nsRect.h"
-#ifdef NECKO
 #include "nsIPrompt.h"
-#else
-#include "nsINetSupport.h"
-#endif
 #include "nsIModalWindowSupport.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
@@ -68,14 +64,10 @@
 #include "nsBarProps.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSContextStack.h"
-#ifndef NECKO
-#include "nsINetService.h"
-#else
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 #if defined(OJI)
 #include "nsIJVMManager.h"
@@ -106,11 +98,6 @@ static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
-#ifndef NECKO
-static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#endif // NECKO
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -1108,19 +1095,11 @@ GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
       nsIWebShellContainer *rootContainer;
       ret = rootWebShell->GetContainer(rootContainer);
       if (nsnull != rootContainer) {
-#ifdef NECKO
         nsIPrompt *prompter;
         if (NS_OK == (ret = rootContainer->QueryInterface(nsIPrompt::GetIID(), (void**)&prompter))) {
           ret = prompter->Alert(str.GetUnicode());
           NS_RELEASE(prompter);
         }
-#else
-        nsINetSupport *support;
-        if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
-          support->Alert(str);
-          NS_RELEASE(support);
-        }
-#endif
         NS_RELEASE(rootContainer);
       }
       NS_RELEASE(rootWebShell);
@@ -1189,7 +1168,6 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
       nsIWebShellContainer *rootContainer;
       ret = rootWebShell->GetContainer(rootContainer);
       if (nsnull != rootContainer) {
-#ifdef NECKO
         nsIPrompt *prompter;
         if (NS_OK == (ret = rootContainer->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter))) {
           PRBool b;
@@ -1207,18 +1185,6 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
           }
           NS_RELEASE(prompter);
         }
-#else
-        nsINetSupport *support;
-        if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
-          if (!support->Prompt(str, initial, aReturn)) {
-            // XXX Need to check return value and return null if the
-            // user hits cancel. Currently, we can only return a 
-            // string reference.
-            aReturn.SetString("");
-          }
-          NS_RELEASE(support);
-        }
-#endif
         NS_RELEASE(rootContainer);
       }
       NS_RELEASE(rootWebShell);
@@ -1987,11 +1953,6 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
       NS_RELEASE(mDoc);
     }
 
-#ifndef NECKO    
-    if (NS_OK != NS_MakeAbsoluteURL(mDocURL, mEmpty, mURL, mAbsURL)) {
-      return NS_ERROR_FAILURE;
-    }
-#else
     nsresult rv;
     nsIURI *baseUri = nsnull;
     rv = mDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
@@ -2000,7 +1961,6 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     rv = NS_MakeAbsoluteURI(mURL, baseUri, mAbsURL);
     NS_RELEASE(baseUri);
     if (NS_FAILED(rv)) return rv;
-#endif // NECKO
 
   }
   
@@ -3084,16 +3044,6 @@ NS_IMETHODIMP
 NavigatorImpl::GetUserAgent(nsString& aUserAgent)
 {
   nsresult res;
-#ifndef NECKO
-  nsINetService *service = nsnull;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&service);
-  if (NS_SUCCEEDED(res) && (nsnull != service)) {
-    res = service->GetUserAgent(aUserAgent);
-    NS_RELEASE(service);
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *ua = nsnull;
@@ -3101,7 +3051,6 @@ NavigatorImpl::GetUserAgent(nsString& aUserAgent)
     aUserAgent = ua;
     delete [] ua;
   }
-#endif // NECKO
 
   return res;
 }
@@ -3110,16 +3059,6 @@ NS_IMETHODIMP
 NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
 {
   nsresult res;
-#ifndef NECKO
-  nsINetService *service = nsnull;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&service);
-  if (NS_SUCCEEDED(res) && (nsnull != service)) {
-    res = service->GetAppCodeName(aAppCodeName);
-    NS_RELEASE(service);
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *appName = nsnull;
@@ -3127,7 +3066,6 @@ NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
     aAppCodeName = appName;
     delete [] appName;
   }
-#endif // NECKO
 
   return res;
 }
@@ -3136,23 +3074,12 @@ NS_IMETHODIMP
 NavigatorImpl::GetAppVersion(nsString& aAppVersion)
 {
   nsresult res;
-#ifndef NECKO
-  nsINetService *service = nsnull;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&service);
-  if (NS_SUCCEEDED(res) && (nsnull != service)) {
-    res = service->GetAppVersion(aAppVersion);
-    NS_RELEASE(service);
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *appVer = nsnull;
     res = service->GetAppVersion(&appVer);
     aAppVersion = appVer;
     delete [] appVer;
-#endif // NECKO
   }
 
   return res;
@@ -3162,16 +3089,6 @@ NS_IMETHODIMP
 NavigatorImpl::GetAppName(nsString& aAppName)
 {
   nsresult res;
-#ifndef NECKO
-  nsINetService *service = nsnull;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&service);
-  if (NS_SUCCEEDED(res) && (nsnull != service)) {
-    res = service->GetAppName(aAppName);
-    NS_RELEASE(service);
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *appName = nsnull;
@@ -3179,7 +3096,6 @@ NavigatorImpl::GetAppName(nsString& aAppName)
     aAppName = appName;
     delete [] appName;
   }
-#endif // NECKO
 
   return res;
 }
@@ -3188,16 +3104,6 @@ NS_IMETHODIMP
 NavigatorImpl::GetLanguage(nsString& aLanguage)
 {
   nsresult res;
-#ifndef NECKO
-  nsINetService *service = nsnull;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&service);
-  if (NS_SUCCEEDED(res) && (nsnull != service)) {
-    res = service->GetLanguage(aLanguage);
-    NS_RELEASE(service);
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *lang = nsnull;
@@ -3205,7 +3111,6 @@ NavigatorImpl::GetLanguage(nsString& aLanguage)
     aLanguage = lang;
     delete [] lang;
   }
-#endif // NECKO
 
   return res;
 }
@@ -3214,16 +3119,6 @@ NS_IMETHODIMP
 NavigatorImpl::GetPlatform(nsString& aPlatform)
 {
   nsresult res;
-#ifndef NECKO
-  nsINetService *service = nsnull;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&service);
-  if (NS_SUCCEEDED(res) && (nsnull != service)) {
-    res = service->GetPlatform(aPlatform);
-    NS_RELEASE(service);
-  }
-#else
   NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
   if (NS_SUCCEEDED(res) && (nsnull != service)) {
     PRUnichar *plat = nsnull;
@@ -3231,7 +3126,6 @@ NavigatorImpl::GetPlatform(nsString& aPlatform)
     aPlatform = plat;
     delete [] plat;
   }
-#endif // NECKO
 
   return res;
 }
