@@ -92,6 +92,9 @@ protected:
 private:
     // Current number of rows
     PRInt32 mRowCount;
+
+    // Expecting absolute locations, given by 201 lines.
+    PRBool mExpectAbsLoc;
 };
 
 #endif
