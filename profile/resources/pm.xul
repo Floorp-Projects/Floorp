@@ -186,15 +186,6 @@ setTimeout("loadElements()", 0);
 
 </html:script>
 
-<popup id="renamePopup">
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="100" height="50">
-If you don't type in the input field, it works.
-<html:input type="text" id="NewName" size="20" />
-<titledbutton value="Ok" class="push" onclick="opener.RenameProfile(window);window.close();" />
-<titledbutton value="Cancel" class="push" onclick="window.close();" />
-</window>
-</popup>
-
 <popup id="deletePopup">
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="100" height="50">
 Deleting an unmigrated profile will prevent you from ever migrating it in the future.
@@ -253,7 +244,7 @@ bookmarks, and stored messages in your personal profile.
 
 <titledbutton value="New" class="push" onclick="CreateProfile();" />
 <titledbutton value="Migrate" class="push" onclick="MigrateProfile();" />
-<titledbutton value="Rename" class="push" popup="renamePopup" />
+<titledbutton value="Rename" class="push" onclick="window.openDialog('pmrename.xul', 'Renamer', 'chrome');" />
 <titledbutton value="Delete" class="push" popup="deletePopup" />
 </html:center>
 
