@@ -97,6 +97,24 @@ myLL_II2L(PRInt32 hi, PRInt32 lo, PRInt64 *result)
 }
 
 
+static void
+myLL_L2II(PRInt64 result, PRInt32 *hi, PRInt32 *lo )
+{
+    PRInt64 a64, b64;  // probably could have been done with 
+                       // only one PRInt64, but these are macros, 
+                       // and I am a wimp.
+    
+    // shift the hi word to the low word, then push it into a long.
+    LL_SHR(a64, result, 32);
+    LL_L2I(*hi, a64);
+
+    // shift the low word to the hi word first, then shift it back.
+    LL_SHL(b64, result, 32);
+    LL_SHR(a64, b64, 32);
+    LL_L2I(*lo, a64);
+}
+
+
 class nsDirEnumerator : public nsISimpleEnumerator
 {
     public:
@@ -205,12 +223,6 @@ class nsDirEnumerator : public nsISimpleEnumerator
 NS_IMPL_ISUPPORTS(nsDirEnumerator, NS_GET_IID(nsISimpleEnumerator));
 
 
-
-
-
-
-
-
 nsLocalFile::nsLocalFile()
 {
     NS_INIT_REFCNT();
@@ -225,8 +237,6 @@ nsLocalFile::nsLocalFile()
     { 
         // Get a pointer to the IPersistFile interface. 
         hres = mShellLink->QueryInterface(IID_IPersistFile, (void**)&mPersistFile); 
-        
-        
     }
 
     MakeDirty();
@@ -464,6 +474,13 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
             slash = strchr(slash, '\\');
         }
     }
+
+    // kill any trailing seperator
+    char* temp = filePath;
+    int len = strlen(temp) - 1;
+    if(temp[len] == '\\')
+        temp[len] = '\0';
+    
     *resolvedPath = filePath;
     return rv;
 }
@@ -510,10 +527,6 @@ nsLocalFile::InitWithFile(nsIFile *file)
 {
     MakeDirty();
     NS_ENSURE_ARG(file);
-
-    // TODO:  how do we get to the |file|'s working    XXXXXX
-    //        directory so that we do not expose
-    //        symlinked directories.
 
     char* aFilePath;
     file->GetPath(&aFilePath);
@@ -645,7 +658,7 @@ nsLocalFile::AppendPath(const char *node)
 NS_IMETHODIMP
 nsLocalFile::Normalize()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
@@ -677,8 +690,6 @@ nsLocalFile::GetPath(char **_retval)
     *_retval = (char*) nsAllocator::Clone(mWorkingPath, strlen(mWorkingPath)+1);
     return NS_OK;
 }
-
-
 
 nsresult
 nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char * newName, PRBool followSymlinks, PRBool move)
@@ -712,7 +723,9 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
            
     if (followSymlinks)
     {
-       rv = sourceFile->GetTarget(&filePath);
+        rv = sourceFile->GetTarget(&filePath);
+        if (!filePath)
+            rv = sourceFile->GetPath(&filePath);
     }
     else
     {
@@ -830,7 +843,21 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
         char *allocatedNewName;
         if (!newName)
         {
-            GetLeafName(&allocatedNewName);// this should be the leaf name of the 
+            PRBool isLink;
+            IsSymlink(&isLink);
+            if (isLink)
+            {
+                char* temp;
+                GetTarget(&temp);
+                const char* leaf = strrchr(temp, '\\');
+                if (leaf[0] == '\\')
+                    leaf++;
+                allocatedNewName = (char*) nsAllocator::Clone( leaf, strlen(leaf)+1 );
+            }
+            else
+            {
+                GetLeafName(&allocatedNewName);// this should be the leaf name of the 
+            }
         }
         else
         {
@@ -1039,8 +1066,12 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
     
     FILETIME time = mFileAttrData.ftLastAccessTime;
     
-    time.dwLowDateTime  = aLastModificationDate;
-    
+    PRInt32 hi, lo;
+    myLL_L2II(aLastModificationDate, &hi, &lo );
+ 
+    time.dwHighDateTime  = hi;
+    time.dwLowDateTime   = lo;
+
     const char *filePath = mResolvedPath.GetBuffer();
     
     HANDLE file = CreateFile(  filePath,          // pointer to name of the file
@@ -1099,10 +1130,14 @@ nsLocalFile::SetLastModificationDateOfLink(PRInt64 aLastModificationDate)
     if (NS_FAILED(rv))
         return rv;
     
+    PRInt32 hi, lo;
+    myLL_L2II(aLastModificationDate, &hi, &lo );
+ 
     FILETIME time = mFileAttrData.ftLastAccessTime;
     
-    time.dwLowDateTime  = aLastModificationDate;
-    
+    time.dwHighDateTime  = hi;
+    time.dwLowDateTime   = lo;
+        
     const char *filePath = mResolvedPath.GetBuffer();
     
     HANDLE file = CreateFile(  filePath,          // pointer to name of the file
@@ -1205,7 +1240,10 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
         return NS_ERROR_FAILURE;
 
     // Seek to new, desired end of file
-    status = SetFilePointer(hFile, aFileSize, NULL, FILE_BEGIN);
+    PRInt32 hi, lo;
+    myLL_L2II(aFileSize, &hi, &lo );
+    
+    status = SetFilePointer(hFile, lo, NULL, FILE_BEGIN);
     if (status == 0xffffffff)
         goto error;
 
@@ -1473,7 +1511,6 @@ nsLocalFile::IsSymlink(PRBool *_retval)
 
     char* path;
     int   pathLen;
-    PRBool symLink;
     
     GetPath(&path);
     pathLen = strlen(path);
@@ -1531,9 +1568,45 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsContainedIn(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
-    NS_ENSURE_ARG(_retval);
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIFile> iter = this;
+    nsCOMPtr<nsIFile> parent;
+    
     *_retval = PR_FALSE;
-    return NS_ERROR_NOT_IMPLEMENTED;
+       
+    char* inFilePath;
+    inFile->GetPath(&inFilePath);
+    PRInt32 inFilePathLen = strlen(inFilePath);
+    
+    if (inFilePathLen > 257)
+        return NS_ERROR_FAILURE;
+
+    while (1)
+    {
+        char* iterPath;
+        iter->GetPath(&iterPath);
+
+        if ( strncmp( inFilePath, iterPath, inFilePathLen) == 0)
+        {
+            nsAllocator::Free(iterPath);
+            *_retval = PR_FALSE;
+            break;
+        }
+
+        nsAllocator::Free(iterPath);
+
+        rv = iter->GetParent(getter_AddRefs(parent));
+        if (NS_FAILED(rv))
+        {
+            break;
+        }
+        
+        iter = parent;
+    }
+
+    nsAllocator::Free(inFilePath);
+
+    return rv;
 }
 
 
@@ -1543,7 +1616,7 @@ nsLocalFile::GetTarget(char **_retval)
 {   
     NS_ENSURE_ARG(_retval);
     *_retval = nsnull;
-    
+#if STRICT_FAKE_SYMLINKS    
     PRBool symLink;
     
     nsresult rv = IsSymlink(&symLink);
@@ -1554,7 +1627,7 @@ nsLocalFile::GetTarget(char **_retval)
     {
         return NS_ERROR_FILE_INVALID_PATH;
     }
-
+#endif
     ResolveAndStat(PR_TRUE);
         
     *_retval = (char*) nsAllocator::Clone( mResolvedPath, strlen(mResolvedPath)+1 );
