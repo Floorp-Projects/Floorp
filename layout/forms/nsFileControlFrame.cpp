@@ -244,22 +244,13 @@ nsFileControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 nsresult 
 nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  nsIView* textView;
   nsIView*   parentView;
   nsresult result = NS_OK;
-#ifdef ENDER_LITE
   nsIFrame *parentWithView;
   if (NS_SUCCEEDED(mTextFrame->GetParentWithView(mPresContext, &parentWithView)) && parentWithView)
   {
     parentWithView->GetView(mPresContext,&parentView);
   }
-#else
-  mTextFrame->GetView(mPresContext, &textView);
-  if (nsnull == textView) {
-    return NS_OK;
-  }
-  textView->GetParent(parentView);
-#endif
 
   nsIWidget* parentWidget = GetWindowTemp(parentView);
  
