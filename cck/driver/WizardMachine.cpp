@@ -857,11 +857,6 @@ BOOL CWizardMachineApp::interpret(CString cmd)
 						strcat(tmpPath,"NCIFiles");
 						_mkdir (tmpPath);
 					}
-					else 
-					{
-						CWnd dirwnd;
-						dirwnd.MessageBox(CString(nciPath),"found",MB_OK);
-					}
 				}
 			
 			}
