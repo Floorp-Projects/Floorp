@@ -73,6 +73,7 @@ sub splitArguments {
                 my $value = $2;
                 # decode the strings
                 foreach my $string ($name, $value) {
+                    $string =~ tr/+/ /; # convert + to spaces
                     $string =~ s/% # a percent symbol
                                  ( # followed by
                     [0-9A-Fa-f]{2} # 2 hexidecimal characters
