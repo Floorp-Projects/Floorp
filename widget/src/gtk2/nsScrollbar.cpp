@@ -37,7 +37,7 @@
 
 #include <gtk/gtkscrollbar.h>
 
-nsScrollbar::nsScrollbar()
+nsScrollbar::nsScrollbar(PRBool aIsVertical)
 {
   mScrollbar = nsnull;
 }
@@ -45,3 +45,70 @@ nsScrollbar::nsScrollbar()
 nsScrollbar::~nsScrollbar()
 {
 }
+
+NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsCommonWidget)
+NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsCommonWidget)
+NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
+
+NS_IMETHODIMP
+nsScrollbar::SetMaxRange(PRUint32 aEndRange)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::GetMaxRange(PRUint32& aMaxRange)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsScrollbar::SetPosition(PRUint32 aPos)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsScrollbar::GetPosition(PRUint32& aPos)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsScrollbar::SetThumbSize(PRUint32 aSize)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsScrollbar::GetThumbSize(PRUint32& aSize)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsScrollbar::SetLineIncrement(PRUint32 aSize)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsScrollbar::GetLineIncrement(PRUint32& aSize)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
+			 PRUint32 aPosition, PRUint32 aLineIncrement)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+

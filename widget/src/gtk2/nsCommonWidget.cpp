@@ -131,12 +131,41 @@ nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
 }
 
 void
-nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent, PRUint32 aMsg)
+nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
+				     GdkEventScroll *aGdkEvent, PRUint32 aMsg)
 {
   memset(&aEvent, 0, sizeof(nsMouseScrollEvent));
   aEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
   aEvent.message = aMsg;
   aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+
+  switch (aGdkEvent->direction) {
+  case GDK_SCROLL_UP:
+    aEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
+    aEvent.delta = -3;
+    break;
+  case GDK_SCROLL_DOWN:
+    aEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
+    aEvent.delta = 3;
+    break;
+  case GDK_SCROLL_LEFT:
+    aEvent.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+    aEvent.delta = -3;
+    break;
+  case GDK_SCROLL_RIGHT:
+    aEvent.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
+    aEvent.delta = 3;
+    break;
+  }
+
+  aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
+    ? PR_TRUE : PR_FALSE;
+  aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK)
+    ? PR_TRUE : PR_FALSE;
+  aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
+    ? PR_TRUE : PR_FALSE;
+  aEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
+
 }
 
 void

@@ -75,6 +75,8 @@ static gboolean key_press_event_cb        (GtkWidget *widget,
 					   GdkEventKey *event);
 static gboolean key_release_event_cb      (GtkWidget *widget,
 					   GdkEventKey *event);
+static gboolean scroll_event_cb           (GtkWidget *widget,
+					   GdkEventScroll *event);
 
 nsWindow::nsWindow()
 {
@@ -865,36 +867,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 {
   nsMouseEvent  event;
   PRUint32      eventType;
-  PRBool        isWheel;
   nsEventStatus status;
-
-  // wheel mouse is button 4 or 5
-  isWheel = (aEvent->button == 4 || aEvent->button == 5);
-
-  if (isWheel) {
-    nsMouseScrollEvent scrollEvent;
-
-    InitMouseScrollEvent(scrollEvent, NS_MOUSE_SCROLL);
-
-    if (aEvent->button == 4)
-      scrollEvent.delta = -3;
-    else
-      scrollEvent.delta = -4;
-
-    scrollEvent.point.x = nscoord(aEvent->x);
-    scrollEvent.point.y = nscoord(aEvent->y);
-
-    scrollEvent.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-      ? PR_TRUE : PR_FALSE;
-    scrollEvent.isControl = (aEvent->state & GDK_CONTROL_MASK)
-      ? PR_TRUE : PR_FALSE;
-    scrollEvent.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-      ? PR_TRUE : PR_FALSE;
-    scrollEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
-
-    DispatchEvent(&scrollEvent, status);
-    return;
-  }
 
   switch (aEvent->button) {
   case 2:
@@ -1051,6 +1024,16 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
   DispatchEvent(&event, status);
 
   return TRUE;
+}
+
+void
+nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
+{
+  nsMouseScrollEvent event;
+  InitMouseScrollEvent(event, aEvent, NS_MOUSE_SCROLL);
+
+  nsEventStatus status;
+  DispatchEvent(&event, status);
 }
 
 void
@@ -1226,6 +1209,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 		     G_CALLBACK(key_press_event_cb), NULL);
     g_signal_connect(G_OBJECT(mContainer), "key_release_event",
 		     G_CALLBACK(key_release_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "scroll_event",
+		     G_CALLBACK(scroll_event_cb), NULL);
   }
 
   printf("nsWindow [%p]\n", (void *)this);
@@ -1448,6 +1433,19 @@ key_release_event_cb (GtkWidget *widget, GdkEventKey *event)
     focusWindow = window;
 
   return focusWindow->OnKeyReleaseEvent(widget, event);
+}
+
+/* static */
+gboolean
+scroll_event_cb (GtkWidget *widget, GdkEventScroll *event)
+{
+  nsWindow *window = get_window_for_gdk_window(event->window);
+  if (!window)
+    return FALSE;
+
+  window->OnScrollEvent(widget, event);
+
+  return TRUE;
 }
 
 // nsChildWindow class

@@ -34,14 +34,32 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBaseWidget.h"
+#include "nsIScrollbar.h"
 
 #include <gtk/gtkwidget.h>
 
-class nsScrollbar : public nsBaseWidget {
+#include "nsCommonWidget.h"
+
+class nsScrollbar : public nsCommonWidget,
+                    public nsIScrollbar {
  public:
-  nsScrollbar();
+  nsScrollbar(PRBool aIsVertical);
   virtual ~nsScrollbar();
 
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIScrollbar
+  NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
+  NS_IMETHOD GetMaxRange(PRUint32& aMaxRange);
+  NS_IMETHOD SetPosition(PRUint32 aPos);
+  NS_IMETHOD GetPosition(PRUint32& aPos);
+  NS_IMETHOD SetThumbSize(PRUint32 aSize);
+  NS_IMETHOD GetThumbSize(PRUint32& aSize);
+  NS_IMETHOD SetLineIncrement(PRUint32 aSize);
+  NS_IMETHOD GetLineIncrement(PRUint32& aSize);
+  NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
+			   PRUint32 aPosition, PRUint32 aLineIncrement);
+  
  private:
   GtkWidget *mScrollbar;
 };
