@@ -37,6 +37,7 @@
 #include "nsTime.h"
 #include "nsIElementObserver.h"
 #include "nsViewSourceHTML.h"
+#include "nsParserNode.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
