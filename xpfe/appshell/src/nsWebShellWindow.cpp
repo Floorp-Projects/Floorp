@@ -47,6 +47,7 @@
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
+#include "nsIContextMenu.h"
 
 // For JS Execution
 #include "nsIScriptContextOwner.h"
@@ -84,9 +85,11 @@ static NS_DEFINE_IID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kAppShellCID,         NS_APPSHELL_CID);
 
+#include "nsWidgetsCID.h"
 static NS_DEFINE_IID(kMenuBarCID,          NS_MENUBAR_CID);
 static NS_DEFINE_IID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_IID(kMenuItemCID,         NS_MENUITEM_CID);
+static NS_DEFINE_IID(kContextMenuCID,      NS_CONTEXTMENU_CID);
 
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -111,11 +114,12 @@ static NS_DEFINE_IID(kIDOMCharacterDataIID,   NS_IDOMCHARACTERDATA_IID);
 //static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 //static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 
-static NS_DEFINE_IID(kIMenuIID,       NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuBarIID,    NS_IMENUBAR_IID);
-static NS_DEFINE_IID(kIMenuItemIID,   NS_IMENUITEM_IID);
-static NS_DEFINE_IID(kIXULCommandIID, NS_IXULCOMMAND_IID);
-static NS_DEFINE_IID(kIContentIID,    NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIMenuIID,        NS_IMENU_IID);
+static NS_DEFINE_IID(kIMenuBarIID,     NS_IMENUBAR_IID);
+static NS_DEFINE_IID(kIMenuItemIID,    NS_IMENUITEM_IID);
+static NS_DEFINE_IID(kIContextMenuIID, NS_ICONTEXTMENU_IID);
+static NS_DEFINE_IID(kIXULCommandIID,  NS_IXULCOMMAND_IID);
+static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 #ifdef DEBUG_rods
@@ -813,6 +817,46 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 
 } // nsWebShellWindow::LoadMenus
 
+//------------------------------------------------------------------------------
+void nsWebShellWindow::DoContextMenu(
+  nsMenuEvent * aMenuEvent,
+  nsIDOMNode  * aMenuNode, 
+  nsIWidget   * aParentWindow,
+  PRInt32       aX,
+  PRInt32       aY) 
+{
+  if (aMenuNode) {
+    nsIContextMenu * pnsContextMenu;
+    nsresult rv = nsComponentManager::CreateInstance(kContextMenuCID, nsnull, kIContextMenuIID, (void**)&pnsContextMenu);
+    if (NS_SUCCEEDED(rv) && pnsContextMenu) {
+        nsISupports * supports;
+        aParentWindow->QueryInterface(kISupportsIID, (void**) &supports);
+        pnsContextMenu->Create(supports);
+        NS_RELEASE(supports);
+        pnsContextMenu->SetLocation(aX,aY);
+        // Set webshell
+        //pnsContextMenu->SetWebShell( );
+        // Set DOM node
+        pnsContextMenu->SetDOMNode( aMenuNode );
+        
+        // Construct and show menu
+        nsIMenuListener * listener;
+        pnsContextMenu->QueryInterface(kIMenuListenerIID, (void**) &listener);
+        
+        // Dynamically construct and track the menu
+        listener->MenuSelected(*aMenuEvent);
+        
+        // Destroy the menu
+        listener->MenuDeselected(*aMenuEvent); 
+        
+        // The parent owns the context menu, so we can release it	
+        NS_RELEASE(listener);	
+		NS_RELEASE(pnsContextMenu);
+    }
+  } // end if (aMenuNode)
+}
+
+//------------------------------------------------------------------------------
 NS_IMETHODIMP
 nsWebShellWindow::GetContentShellById(const nsString& aID, nsIWebShell** aChildShell)
 {
@@ -840,6 +884,7 @@ nsWebShellWindow::GetContentShellById(const nsString& aID, nsIWebShell** aChildS
   return NS_ERROR_FAILURE;
 }
 
+//------------------------------------------------------------------------------
 NS_IMETHODIMP
 nsWebShellWindow::AddWebShellInfo(const nsString& aID,
                                   nsIWebShell* aChildShell)
@@ -1160,6 +1205,14 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   {
     #ifdef XP_MAC
     LoadMenus(menubarDOMDoc, mWindow);
+    // Context Menu test
+      	  nsCOMPtr<nsIDOMElement> element;
+		  menubarDOMDoc->GetDocumentElement(getter_AddRefs(element));
+		  nsCOMPtr<nsIDOMNode> window(do_QueryInterface(element));
+
+		  int endCount = 0;
+          contextMenuTest = FindNamedDOMNode(nsAutoString("contextmenu"), window, endCount, 1);
+    // End Context Menu test
     #else
     DynamicLoadMenus(menubarDOMDoc, mWindow);
     #endif

@@ -117,6 +117,13 @@ public:
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   nsIWidget* GetWidget(void) { return mWindow; }
 
+  void DoContextMenu(
+	  nsMenuEvent * aMenuEvent,
+	  nsIDOMNode  * aMenuNode, 
+	  nsIWidget   * aParentWindow,
+	  PRInt32       aX,
+	  PRInt32       aY);
+  
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
                                  nsIURL* aURL, const char* aCommand);
@@ -251,6 +258,7 @@ protected:
   nsVoidArray* mContentShells; // Tracks an array of information about new shells that will be
                                // created as the XUL file for this window loads.
 
+  nsIDOMNode * contextMenuTest;
 private:
 
   static void * HandleModalDialogEvent(PLEvent *aEvent);
