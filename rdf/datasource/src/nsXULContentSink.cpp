@@ -628,8 +628,9 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 		        popContent = PR_FALSE;
 		}
 
-    nsIRDFResource* resource;
     if (popContent) {
+        nsIRDFResource* resource;
+
         if (NS_FAILED(PopResourceAndState(resource, mState))) {
 #ifdef PR_LOGGING
             if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
@@ -643,6 +644,8 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
             // Failure to return NS_OK causes stuff to freak out. See Bug 4433.
             return NS_OK;
         }
+
+        NS_IF_RELEASE(resource);
     }
 
     PRInt32 nestLevel = mContextStack->Count();
@@ -650,8 +653,6 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
         mState = eXULContentSinkState_InEpilog;
 
     PopNameSpaces();
-      
-    NS_IF_RELEASE(resource);
     return NS_OK;
 }
 
