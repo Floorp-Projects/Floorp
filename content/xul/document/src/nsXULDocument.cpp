@@ -3058,7 +3058,7 @@ nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement, nsIDOMNodeList** aResu
 }
 
 NS_IMETHODIMP
-nsXULDocument::Load(const nsString& aUrl, const nsString& aMimeType)
+nsXULDocument::Load(const nsString& aUrl)
 {
     NS_NOTREACHED("nsXULDocument::Load");
     return NS_ERROR_NOT_IMPLEMENTED;
