@@ -1282,6 +1282,7 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
               if (face.EqualsIgnoreCase("-moz-fixed")) {
                 font->mFlags |= NS_STYLE_FONT_USE_FIXED;
               }
+/* bug 12737
               else {
 								nsCompatibility mode;
 				        aPresContext->GetCompatibilityMode(&mode);
@@ -1289,6 +1290,7 @@ MapDeclarationFontInto(nsICSSDeclaration* aDeclaration,
                 	font->mFixedFont.name = familyList;
                 }
               }
+*/
             }
             else {
               font->mFont.name = defaultFont.name;

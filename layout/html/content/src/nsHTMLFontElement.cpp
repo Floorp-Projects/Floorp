@@ -228,6 +228,7 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           if (face.EqualsIgnoreCase("-moz-fixed")) {
             font->mFlags |= NS_STYLE_FONT_USE_FIXED;
           }
+/* bug 12737
           else {
 						nsCompatibility mode;
 		        aPresContext->GetCompatibilityMode(&mode);
@@ -235,6 +236,7 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
             	font->mFixedFont.name = familyList;
             }
           }
+*/
         }
         else {
           font->mFont.name = defaultFont.name;
