@@ -295,24 +295,22 @@ function deleteCerts()
 {
   getSelectedCerts();
   
-  var pkiParams;
-  pkiParams = Components.classes[nsPKIParamBlock].getService(nsIPKIParamBlock);
-  var dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
+  var params = Components.classes[nsDialogParamBlock].getService(nsIDialogParamBlock);
   
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var selTab = document.getElementById('certMgrTabbox').selectedTab;
   var selTabID = selTab.getAttribute('id');
   if (selTabID == 'mine_tab') 
   {
-    dialogParams.SetString(1,bundle.GetStringFromName("deleteUserCertFlag"));
+    params.SetString(1,bundle.GetStringFromName("deleteUserCertFlag"));
   } 
   else if (selTabID == "websites_tab") 
   {
-    dialogParams.SetString(1,bundle.GetStringFromName("deleteSslCertFlag"));
+    params.SetString(1,bundle.GetStringFromName("deleteSslCertFlag"));
   } 
   else if (selTabID == "ca_tab") 
   {
-    dialogParams.SetString(1,bundle.GetStringFromName("deleteCaCertFlag"));
+    params.SetString(1,bundle.GetStringFromName("deleteCaCertFlag"));
   }
   else
   {
@@ -320,15 +318,15 @@ function deleteCerts()
   }
 
   var numcerts = selected_certs.length;
-  dialogParams.SetInt(2,numcerts);
+  params.SetInt(2,numcerts);
   for (var t=0; t<numcerts; t++) 
   {
     var cert = selected_certs[t];
-    pkiParams.setISupportAtIndex(t+1, cert);  
+    params.SetString(t+3, cert.dbKey);  
   }
    
   window.openDialog('chrome://pippki/content/deletecert.xul', "",
-                'chrome,resizable=1,modal',pkiParams);
+                'chrome,resizable=1,modal',params);
  
   ReloadCerts();
 }
