@@ -2531,7 +2531,7 @@
 		};
 		F53F21F0022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencesController.m;
+			path = MVPreferencesController.mm;
 			refType = 4;
 		};
 		F53F21F1022B7C77010001CA = {
