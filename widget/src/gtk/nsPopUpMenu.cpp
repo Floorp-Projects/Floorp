@@ -59,9 +59,7 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
   mParent = aParent;
   NS_ADDREF(mParent);
 
-  GtkWidget *parentWidget = GTK_WIDGET(mParent->GetNativeData(NS_NATIVE_WINDOW));
   mMenu = gtk_menu_new();
-  /*mMenu = XmCreatePopupMenu(parentWidget, "_popup", NULL, 0); */
   return NS_OK;
 }
 
