@@ -261,7 +261,19 @@
           return this._type;
         ]]></getter>
       </property>
-      
+
+      <property name="currentIndex">
+        <getter><![CDATA[
+          return this.treeBoxObject.selection.currentIndex;
+        ]]></getter>
+      </property>
+    
+      <property name="currentResource">
+        <getter><![CDATA[
+          return this.treeBuilder.getResourceAtIndex(this.currentIndex);
+        ]]></getter>
+      </property>
+
       <method name="getRowResource">
         <parameter name="aRow"/>
         <body><![CDATA[
@@ -555,10 +567,8 @@
       <method name="searchBookmarks">
       <parameter name="aInput"/>
         <body><![CDATA[
-          this.treeBoxObject.selection.currentIndex=-1;
-          if (!aInput) {
+          if (!aInput)
             this.tree.setAttribute("ref", this.originalRef);
-          }
           else {
             if (!this.originalRef) {
               this.originalRef = this.tree.getAttribute("ref");
@@ -612,7 +622,7 @@
             this.mOuter.treeBoxObject.selection.selectAll();
             break;
           case "cmd_bm_expandfolder":
-            this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.treeBoxObject.selection.currentIndex);
+            this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
             break;
           default:
             this.mOuter.saveSelection();
