@@ -633,10 +633,10 @@ win_resolve_name(JSContext *cx, JSObject *obj, jsval id)
                                              kid->name, (int8)slot, JSVAL_NULL,
                                              NULL, NULL,
                                              JSPROP_ENUMERATE|JSPROP_READONLY))
-		{
-		    rv = JS_FALSE;
-		    goto done;
-		}
+	    {
+		rv = JS_FALSE;
+		goto done;
+	    }
             if (!JS_AliasElement(cx, window_obj, kid->name, slot)) {
 		rv = JS_FALSE;
 		goto done;
