@@ -47,6 +47,7 @@
 #include "nsTableColFrame.h"
 #include "nsTableColGroupFrame.h"
 
+class nsCellMap;
 class nsTableCellMap;
 class nsTableCellFrame;
 class nsTableColFrame;
@@ -419,7 +420,8 @@ public:
     */
   virtual PRInt32  GetEffectiveRowSpan(PRInt32                 aStartRowIndex,
                                        const nsTableCellFrame& aCell) const;
-  virtual PRInt32  GetEffectiveRowSpan(const nsTableCellFrame& aCell) const;
+  virtual PRInt32  GetEffectiveRowSpan(const nsTableCellFrame& aCell,
+                                       nsCellMap*              aCellMap = nsnull);
 
   /** return the col span of a cell, taking into account col span magic at the edge
     * of a table.
@@ -429,7 +431,8 @@ public:
     * @return  the col span, correcting for col spans that extend beyond the edge
     *          of the table.
     */
-  virtual PRInt32  GetEffectiveColSpan(const nsTableCellFrame& aCell) const;
+  virtual PRInt32  GetEffectiveColSpan(const nsTableCellFrame& aCell,
+                                       nsCellMap*              aCellMap = nsnull) const;
 
   /** return the value of the COLS attribute, adjusted for the 
     * actual number of columns in the table
