@@ -334,7 +334,9 @@ FIN
                 push @cdata, $_;
             }
             close COMMENTS;
-            $quip = "<i>" . $cdata[int(rand($#cdata + 1))] . "</i>";
+            if(@cdata) {
+                $quip = "<i>" . $cdata[int(rand(scalar(@cdata)))] . "</i>";
+            }
         }
     } 
 
