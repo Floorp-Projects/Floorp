@@ -43,7 +43,7 @@ namespace Silverstone.Manticore.Browser
   using Silverstone.Manticore.Toolkit;
   using Silverstone.Manticore.Layout;
 
-  public class BrowserWindow : Form 
+  public class BrowserWindow : ManticoreWindow 
   {
     private System.ComponentModel.Container components;
 
@@ -57,9 +57,23 @@ namespace Silverstone.Manticore.Browser
     private StatusBarPanel mStatusPanel;
     protected internal ManticoreApp mApplication;
 
-    public BrowserWindow(ManticoreApp app)
+    private String mSessionURL = "";
+
+    public BrowserWindow(ManticoreApp aApp)
     {
-      mApplication = app;
+      Init(aApp);
+    }
+
+    public BrowserWindow(ManticoreApp aApp, String aURL)
+    {
+      mSessionURL = aURL;
+      Init(aApp);
+    }
+
+    private void Init(ManticoreApp aApp)
+    {
+      mApplication = aApp;
+      mType = "Browser";
 
       // Set up UI
       InitializeComponent();
@@ -130,9 +144,6 @@ namespace Silverstone.Manticore.Browser
       get {
         return mWebBrowser.URL;
       }
-      set {
-        mWebBrowser.URL = value;
-      }
     }
 
     private void LoadStartPage(object sender, EventArgs e)
@@ -140,15 +151,15 @@ namespace Silverstone.Manticore.Browser
       int startMode = mApplication.Prefs.GetIntPref("browser.homepage.mode");
       switch (startMode) {
       case 0:
-        // Don't initialize jack
+        // Don't initialize jack.
         break;
       case 1:
         // Load the homepage
         mWebBrowser.GoHome();
         break;
       case 2:
-        // Load the last page visited.
-        // XXX todo
+        // Load the session document.
+        mWebBrowser.LoadURL(mSessionURL, false);
         break;
       }
     }
@@ -157,7 +168,7 @@ namespace Silverstone.Manticore.Browser
     // Menu Command Handlers
     public void OpenNewBrowser()
     {
-      mApplication.OpenNewBrowser();
+      mApplication.OpenBrowser();
     }
 
     public void Open()
@@ -201,8 +212,9 @@ namespace Silverstone.Manticore.Browser
 
     public Object OnNewWindow()
     {
-      BrowserWindow window = mApplication.OpenNewBrowser();
-      return window.currentLayoutEngine;
+      // BrowserWindow window = mApplication.OpenNewBrowser();
+      // return window.currentLayoutEngine;
+      return new Object();
     }
   
     public void DoCommand(String s) 

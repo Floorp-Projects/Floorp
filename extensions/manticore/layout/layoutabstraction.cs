@@ -51,12 +51,14 @@ namespace Silverstone.Manticore.Layout
 
   using Silverstone.Manticore.Browser;
 
-  public class WebBrowser : ContainerControl
+  public class WebBrowser : UserControl
   {
     private AxWebBrowser trident;
     private AxMozillaBrowser gecko;
 
     private BrowserWindow mBrowserWindow;
+
+    private bool mBlankView = false;
 
     public WebBrowser(BrowserWindow aBrowserWindow)
     {
@@ -98,7 +100,12 @@ namespace Silverstone.Manticore.Layout
 
     protected override void OnResize(EventArgs e)
     {
-      Invalidate();
+      if (mBlankView)
+        Invalidate();
+      if (gecko != null)
+        gecko.Size = new Size(this.ClientSize.Width, this.ClientSize.Height);
+      else if (trident != null)
+        trident.Size = new Size(this.ClientSize.Width, this.ClientSize.Height);
     }
 
     public void RealizeLayoutEngine()
@@ -115,7 +122,7 @@ namespace Silverstone.Manticore.Layout
     {
       AxHost host = null;
       String url = "about:blank";
-
+      
       switch (id) {
       case "trident":
         if (gecko != null) {
@@ -146,7 +153,6 @@ namespace Silverstone.Manticore.Layout
 
       if (host != null) {
         host.BeginInit();
-        host.Size = new Size(600, 200);
         host.TabIndex = 1;
         host.Dock = DockStyle.Fill;
         host.EndInit();
@@ -174,6 +180,9 @@ namespace Silverstone.Manticore.Layout
 
     public void LoadURL(String url, Boolean bypassCache)
     {
+      if (!mBlankView)
+        mBlankView = true;
+
       // XXX - neither IE nor Mozilla implement all of the
       //       load flags properly. Mozilla should at least be 
       //       made to support ignore-cache and ignore-history.

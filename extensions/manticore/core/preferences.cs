@@ -163,7 +163,7 @@ namespace Silverstone.Manticore.Core
       return elt;
     }
 
-    private XmlElement GetBranch(String aBranchName) 
+    private XmlElement GetBranchElement(String aBranchName) 
     {
       String[] names = aBranchName.Split('.');
       XmlElement elt = mPrefsDocument.DocumentElement;
@@ -193,21 +193,30 @@ namespace Silverstone.Manticore.Core
       return null;
     }
 
-    private void RemoveBranch(String aBranchName) 
+    public PrefBranch GetBranch(String aBranchName)
     {
-      XmlElement elt = GetBranch(aBranchName);
+      return new PrefBranch(aBranchName, GetBranchElement(aBranchName));
+    }
+
+    public void RemoveBranch(String aBranchName) 
+    {
+      XmlElement elt = GetBranchElement(aBranchName);
       XmlNode parent = elt.ParentNode;
       parent.RemoveChild(elt);
-      while (parent != (mPrefsDocument.DocumentElement as XmlNode)) {
-        parent.RemoveChild(elt);
-        if (!parent.HasChildNodes) 
+      while (parent != null && 
+             parent != (mPrefsDocument.DocumentElement as XmlNode)) {
+        if (!parent.HasChildNodes) {
+          parent.ParentNode.RemoveChild(parent);
           parent = parent.ParentNode;
+        }
+        else 
+          break;
       }
     }
 
     public bool GetBoolPref(String aPrefName)
     {
-      XmlElement elt = GetBranch(aPrefName);
+      XmlElement elt = GetBranchElement(aPrefName);
       return elt != null ? elt.GetAttribute("value") == "true" : false;
     }
 
@@ -225,7 +234,7 @@ namespace Silverstone.Manticore.Core
 
     public int GetIntPref(String aPrefName)
     {
-      XmlElement elt = GetBranch(aPrefName);
+      XmlElement elt = GetBranchElement(aPrefName);
       return elt != null ? Int32.Parse(elt.GetAttribute("value")) : 0;
     }
 
@@ -240,7 +249,7 @@ namespace Silverstone.Manticore.Core
 
     public String GetStringPref(String aPrefName)
     {
-      XmlElement elt = GetBranch(aPrefName);
+      XmlElement elt = GetBranchElement(aPrefName);
       return elt != null ? elt.GetAttribute("value") : "";
     }
 
@@ -250,14 +259,57 @@ namespace Silverstone.Manticore.Core
       if (elt != null)
         elt.SetAttribute("value", aPrefValue);
     }
+
+    public static String ResolvePref(XmlElement aElement)
+    {
+      String rv = aElement.LocalName;
+      XmlElement temp = aElement;
+      while (true) {
+        temp = temp.ParentNode as XmlElement;
+        if (temp == null || temp.LocalName == "preferences")
+          break;
+        rv = temp.LocalName + "." + rv;
+      }
+      return rv;
+    }
   }
 
-  public class PrefBranch 
+  public class PrefBranch : IEnumerator
   {
     //private XmlElement mRoot;
+    private String mBranchName;
+    private XmlElement mRoot;
+    private XmlElement mCurrent = null;
 
-    public PrefBranch()
+    public PrefBranch(String aPrefBranchName, XmlElement aBranchRoot)
     {
+      mBranchName = aPrefBranchName;
+      mRoot = aBranchRoot;
+    }
+
+    public Object Current
+    {
+      get {
+        return Preferences.ResolvePref(mCurrent) as Object; 
+      }
+    }
+
+    public bool MoveNext()
+    {
+      if (mCurrent != null) {
+        if (mCurrent.NextSibling != null) 
+          mCurrent = mCurrent.NextSibling as XmlElement;
+        else 
+          return false;
+      }
+      else 
+        mCurrent = mRoot.FirstChild as XmlElement;
+      return true;
+    }
+
+    public void Reset()
+    {
+      mCurrent = mRoot.FirstChild as XmlElement;
     }
   }
 }

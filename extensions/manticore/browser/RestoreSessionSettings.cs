@@ -47,11 +47,11 @@ namespace Silverstone.Manticore.Browser
 	public class RestoreSessionSettings : ManticoreDialog
 	{
     private System.Windows.Forms.Label label1;
-    private System.Windows.Forms.CheckBox checkBox1;
-    private System.Windows.Forms.CheckBox checkBox2;
     private System.Windows.Forms.CheckBox checkBox3;
     private System.Windows.Forms.Button okButton;
     private System.Windows.Forms.Button cancelButton;
+    private System.Windows.Forms.RadioButton radioButton1;
+    private System.Windows.Forms.RadioButton radioButton2;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -63,10 +63,6 @@ namespace Silverstone.Manticore.Browser
 			// Required for Windows Form Designer support
 			//
 			InitializeComponent();
-
-			//
-			// TODO: Add any constructor code after InitializeComponent call
-			//
 		}
 
 		/// <summary>
@@ -74,15 +70,34 @@ namespace Silverstone.Manticore.Browser
 		/// </summary>
 		protected override void Dispose( bool disposing )
 		{
-			if( disposing )
-			{
-				if(components != null)
-				{
-					components.Dispose();
-				}
-			}
+			if (disposing && components != null)
+        components.Dispose();
 			base.Dispose( disposing );
 		}
+    
+    public int WindowOpenMode
+    {
+      get {
+        return radioButton1.Checked ? 0 : 1;
+      }
+      set {
+        if (value == 0) 
+          radioButton1.Checked = true;
+        else 
+          radioButton2.Checked = true;
+      }
+    }
+
+    public bool SaveSessionHistory
+    {
+      get {
+        return checkBox3.Checked;
+      }
+      set {
+        checkBox3.Checked = value;
+      }
+    }
+
 
 		#region Windows Form Designer generated code
 		/// <summary>
@@ -92,11 +107,11 @@ namespace Silverstone.Manticore.Browser
 		private void InitializeComponent()
 		{
       this.checkBox3 = new System.Windows.Forms.CheckBox();
-      this.checkBox2 = new System.Windows.Forms.CheckBox();
       this.cancelButton = new System.Windows.Forms.Button();
       this.label1 = new System.Windows.Forms.Label();
       this.okButton = new System.Windows.Forms.Button();
-      this.checkBox1 = new System.Windows.Forms.CheckBox();
+      this.radioButton1 = new System.Windows.Forms.RadioButton();
+      this.radioButton2 = new System.Windows.Forms.RadioButton();
       this.SuspendLayout();
       // 
       // checkBox3
@@ -106,14 +121,6 @@ namespace Silverstone.Manticore.Browser
       this.checkBox3.Size = new System.Drawing.Size(136, 24);
       this.checkBox3.TabIndex = 3;
       this.checkBox3.Text = "Recent pages history";
-      // 
-      // checkBox2
-      // 
-      this.checkBox2.Location = new System.Drawing.Point(32, 96);
-      this.checkBox2.Name = "checkBox2";
-      this.checkBox2.Size = new System.Drawing.Size(136, 24);
-      this.checkBox2.TabIndex = 2;
-      this.checkBox2.Text = "Open windows";
       // 
       // cancelButton
       // 
@@ -140,13 +147,21 @@ namespace Silverstone.Manticore.Browser
       this.okButton.TabIndex = 4;
       this.okButton.Text = "OK";
       // 
-      // checkBox1
+      // radioButton1
       // 
-      this.checkBox1.Location = new System.Drawing.Point(32, 72);
-      this.checkBox1.Name = "checkBox1";
-      this.checkBox1.Size = new System.Drawing.Size(136, 24);
-      this.checkBox1.TabIndex = 1;
-      this.checkBox1.Text = "Last page(s) visited";
+      this.radioButton1.Location = new System.Drawing.Point(32, 72);
+      this.radioButton1.Name = "radioButton1";
+      this.radioButton1.Size = new System.Drawing.Size(144, 16);
+      this.radioButton1.TabIndex = 6;
+      this.radioButton1.Text = "Last page visited";
+      // 
+      // radioButton2
+      // 
+      this.radioButton2.Location = new System.Drawing.Point(32, 96);
+      this.radioButton2.Name = "radioButton2";
+      this.radioButton2.Size = new System.Drawing.Size(104, 16);
+      this.radioButton2.TabIndex = 7;
+      this.radioButton2.Text = "Open windows";
       // 
       // RestoreSessionSettings
       // 
@@ -156,11 +171,11 @@ namespace Silverstone.Manticore.Browser
       this.ClientSize = new System.Drawing.Size(264, 192);
       this.ControlBox = false;
       this.Controls.AddRange(new System.Windows.Forms.Control[] {
+                                                                  this.radioButton2,
+                                                                  this.radioButton1,
                                                                   this.cancelButton,
                                                                   this.okButton,
                                                                   this.checkBox3,
-                                                                  this.checkBox2,
-                                                                  this.checkBox1,
                                                                   this.label1});
       this.Name = "RestoreSessionSettings";
       this.ShowInTaskbar = false;

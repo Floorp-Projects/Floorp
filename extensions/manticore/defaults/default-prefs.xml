@@ -6,5 +6,9 @@
       <mode value="1"/>
     </homepage>
     <layoutengine value="gecko"/>
+    <session>
+      <windowmode value="1"/>
+      <savesessionhistory value="false"/>
+    </session>
   </browser>
 </preferences>

@@ -36,6 +36,9 @@ namespace Silverstone.Manticore.Browser
     /// </summary>
     private Form mOpener = null;
 
+    private int mWindowOpenMode = 1;
+    private bool mSaveSessionHistory = false;
+
     /// <summary>
     /// Construct a BrowserDisplayPanel
     /// </summary>
@@ -94,9 +97,12 @@ namespace Silverstone.Manticore.Browser
     public void OnRestoreSessionSettings(object sender, EventArgs e)
     {
       RestoreSessionSettings dlg = new RestoreSessionSettings(mParent);
-      dlg.ShowDialog();
-
-      // XXX fill in code to remember session settings here
+      dlg.WindowOpenMode = mWindowOpenMode;
+      dlg.SaveSessionHistory = mSaveSessionHistory;
+      if (dlg.ShowDialog() == DialogResult.OK) {
+        mWindowOpenMode = dlg.WindowOpenMode;
+        mSaveSessionHistory = dlg.SaveSessionHistory;
+      }
     }
 
     public void OnStartupModeRadio(object sender, EventArgs e)
@@ -108,6 +114,9 @@ namespace Silverstone.Manticore.Browser
 
     public override void Load()
     {
+      mWindowOpenMode = mPrefs.GetIntPref("browser.session.windowmode");
+      mSaveSessionHistory = mPrefs.GetBoolPref("browser.session.savesessionhistory");
+
       String homepageURL = mPrefs.GetStringPref("browser.homepage");
       textBox1.Text = homepageURL;
 
@@ -138,7 +147,8 @@ namespace Silverstone.Manticore.Browser
         mode = 0;
       mPrefs.SetIntPref("browser.homepage.mode", mode);
 
-      // XXX need to save session setting prefs when implemented.
+      mPrefs.SetIntPref("browser.session.windowmode", mWindowOpenMode);
+      mPrefs.SetBoolPref("browser.session.savesessionhistory", mSaveSessionHistory);
     }
 
 		/// <summary> 
