@@ -16,7 +16,7 @@ MOZILLA_INCLUDES = -I@MOZILLA_DIR@/include -I@NSPR_DIR@/include
 
 # Mozilla libs:
 NULL = 
-NSPR_LIBS       = -L@NSPR_DIR@/lib -lplds3 -lplc3 -lnspr3 @LIBPTHREAD@
+NSPR_LIBS       = -L@NSPR_DIR@/lib -lplds$(NSPR_VERSION) -lplc$(NSPR_VERSION) -lnspr$(NSPR_VERSION) @LIBPTHREAD@
 
 BASE_LIBS =          \
         -lmozjs \
