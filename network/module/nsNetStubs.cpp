@@ -1102,7 +1102,8 @@ NET_I_XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
 
     trans->xpFp= xpFp;
 
-    if (!PL_strcasecmp(perm,XP_FILE_READ)) {
+    if ((!PL_strcasecmp(perm,XP_FILE_READ)) ||
+        (!PL_strcasecmp(perm,XP_FILE_READ_BIN))) {
         mode = nsRead;
     } else if (!PL_strcasecmp(perm,XP_FILE_WRITE)) {
         mode = nsOverWrite;
