@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ldvector.c,v 1.1 2000/12/27 03:20:02 nelsonb%netscape.com Exp $
+ * $Id: ldvector.c,v 1.2 2001/11/30 23:21:48 relyea%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -112,7 +112,10 @@ static const struct FREEBLVectorStr vector = {
     RNG_RNGShutdown,
     PQG_ParamGen,
     PQG_ParamGenSeedLen,
-    PQG_VerifyParams
+    PQG_VerifyParams,
+    RSA_PrivateKeyOpDoubleChecked,
+    RSA_PrivateKeyCheck,
+    BL_Cleanup,
 };
 
 

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.9 2001/11/15 02:41:14 nelsonb%netscape.com Exp $
+ * $Id: blapi.h,v 1.10 2001/11/30 23:21:48 relyea%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -791,6 +791,13 @@ PQG_ParamGenSeedLen(
 extern SECStatus   PQG_VerifyParams(const PQGParams *params, 
                                     const PQGVerify *vfy, SECStatus *result);
 
+
+/*
+ * clean-up any global tables freebl may have allocated after it starts up.
+ * This function is not thread safe and should be called only after the
+ * library has been quiessed.
+ */
+extern void BL_Cleanup(void);
 
 /**************************************************************************
  *  Free the PQGParams struct and the things it points to.                *
