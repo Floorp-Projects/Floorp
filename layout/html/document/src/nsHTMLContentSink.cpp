@@ -94,6 +94,12 @@
 #include "nsITimerCallback.h"
 #include "nsDOMError.h"
 
+#ifdef ALLOW_ASYNCH_STYLE_SHEETS
+const PRBool kBlock=PR_FALSE;
+#else
+const PRBool kBlock=PR_TRUE;
+#endif
+
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
@@ -3571,7 +3577,8 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
         }
       }
 
-      PRBool blockParser = PR_FALSE;
+      PRBool blockParser = kBlock;
+
       if (-1 != linkTypes.IndexOf("important")) {
         blockParser = PR_TRUE;
       }
@@ -4342,7 +4349,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       nsAutoString  params;
       SplitMimeType(type, mimeType, params);
 
-      PRBool blockParser = PR_FALSE;  // hardwired off for now
+      PRBool blockParser = kBlock;
 
       if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) { 
 
