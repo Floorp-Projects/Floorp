@@ -116,9 +116,13 @@ spew("Completed delivering wizard");
 #-------------------------------------------------------------------------
 #   Make .xpis
 #-------------------------------------------------------------------------
+#// create a "bin" symlink in $TREETOP/dist/mozilla that points to ".".
+#// this ensures that binaries in dist/bin remain unstripped.
+symlink(".", "$TREETOP/dist/mozilla/bin");
+
 #// call pkgcp.pl
 chdir("$TREETOP/xpinstall/packager");
-system("perl pkgcp.pl -o unix -s $TREETOP/dist -d $STAGE -f $TREETOP/xpinstall/packager/packages-unix -v");
+system("perl pkgcp.pl -o unix -s $TREETOP/dist/mozilla -d $STAGE -f $TREETOP/xpinstall/packager/packages-unix -v");
 spew("Completed copying build files");
 
 #// call xptlink.pl to make big .xpt files/component
@@ -131,6 +135,8 @@ system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI");
 system("mv $TREETOP/xpinstall/packager/unix/config.ini $RAW");
 spew("Completed making .xpis");
 
+#// clean up our symlink
+unlink("$TREETOP/dist/mozilla/bin");
 
 #-------------------------------------------------------------------------
 #   Package stub and sea
