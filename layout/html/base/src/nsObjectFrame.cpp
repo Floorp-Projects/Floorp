@@ -803,13 +803,14 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
           nsIURL        *docURL = doc->GetDocumentURL();
 
           // Create an absolute URL
-          nsresult rv = NS_MakeAbsoluteURL(docURL, base, uniurl, fullurl);
+          rv = NS_MakeAbsoluteURL(docURL, base, uniurl, fullurl);
 
           NS_RELEASE(shell);
           NS_RELEASE(docURL);
           NS_RELEASE(doc);
 
-          rv = lh->OnLinkClick(mOwner, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
+          if (NS_OK == rv)
+            rv = lh->OnLinkClick(mOwner, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
 
           NS_RELEASE(lh);
         }
