@@ -652,7 +652,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
     hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
     if (hasClip || hasOverflowClip) {
-      nsRect  clipRect, overflowClipRect;
+      nsRect  clipRect;
 
       if (hasClip) {
         // Start with the 'auto' values and then factor in user specified values
@@ -661,27 +661,15 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
         if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
           if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
             clipRect.y = display->mClip.y;
-            if (clipRect.y > newSize.y) {
-              viewHasTransparentContent = PR_TRUE;
-            }
           }
           if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
             clipRect.x = display->mClip.x;
-            if (clipRect.x > newSize.x) {
-              viewHasTransparentContent = PR_TRUE;
-            }
           }
           if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
             clipRect.width = display->mClip.width;
-            if (clipRect.width < newSize.width) {
-              viewHasTransparentContent = PR_TRUE;
-            }
           }
           if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
             clipRect.height = display->mClip.height;
-            if (clipRect.height < newSize.height) {
-              viewHasTransparentContent = PR_TRUE;
-            }
           }
         }
       }
@@ -689,37 +677,42 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       if (hasOverflowClip) {
         const nsStyleBorder* borderStyle;
         const nsStylePadding* paddingStyle;
-        nsMargin              border, padding;
+        nsMargin border, padding;
 
         aFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
         aFrame->GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingStyle);
         
         // XXX We don't support the 'overflow-clip' property yet so just use the
         // content area (which is the default value) as the clip shape
-        overflowClipRect.SetRect(0, 0, frameSize.width, frameSize.height);
+        nsRect overflowClipRect(0, 0, frameSize.width, frameSize.height);
         borderStyle->GetBorder(border);
         overflowClipRect.Deflate(border);
         // XXX We need to handle percentage padding
         if (paddingStyle->GetPadding(padding)) {
           overflowClipRect.Deflate(padding);
         }
+
+        if (hasClip) {
+          // If both 'clip' and 'overflow-clip' apply then use the intersection
+          // of the two
+          clipRect.IntersectRect(clipRect, overflowClipRect);
+        } else {
+          clipRect = overflowClipRect;
+        }
       }
 
-      // If both 'clip' and 'overflow-clip' apply then use the intersection
-      // of the two
-      if (hasClip && hasOverflowClip) {
-        clipRect.IntersectRect(clipRect, overflowClipRect);
+      // If part of the view is being clipped out, then mark it transparent
+      if (clipRect.y > newSize.y
+          || clipRect.x > newSize.x
+          || clipRect.XMost() < newSize.XMost()
+          || clipRect.YMost() < newSize.YMost()) {
+        viewHasTransparentContent = PR_TRUE;
       }
 
       // Set clipping of child views.
       nsIRegion *region = CreateRegion();
       if (region != nsnull) {
-        if (hasClip) {
-          region->SetTo(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
-        } else {
-          region->SetTo(overflowClipRect.x, overflowClipRect.y,
-                        overflowClipRect.width, overflowClipRect.height);
-        }
+        region->SetTo(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
         vm->SetViewChildClipRegion(aView, region);
         NS_RELEASE(region);
       }
