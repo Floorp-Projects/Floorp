@@ -192,6 +192,19 @@ protected:
   PRBool ParseFontFaceRule(PRInt32& aErrorCode);
   PRBool ParsePageRule(PRInt32& aErrorCode);
 
+  void ParseIDSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
+                         PRInt32& aParsingStatus, PRInt32& aErrorCode);
+  void ParseClassSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
+                         PRInt32& aParsingStatus, PRInt32& aErrorCode);
+  void ParsePseudoSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
+                         PRInt32& aParsingStatus, PRInt32& aErrorCode);
+  void ParseAttributeSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
+                         PRInt32& aParsingStatus, PRInt32& aErrorCode);
+
+  void ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
+                         nsCSSSelector& aSelector,
+                         PRInt32& aParsingStatus, PRInt32& aErrorCode);
+
   PRBool ParseSelectorList(PRInt32& aErrorCode, SelectorList*& aListHead);
   PRBool ParseSelectorGroup(PRInt32& aErrorCode, SelectorList*& aListHead);
   PRBool ParseSelector(PRInt32& aErrorCode, nsCSSSelector& aSelectorResult);
@@ -1502,31 +1515,69 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
 #define SEL_MASK_PCLASS   0x20
 #define SEL_MASK_PELEM    0x40
 
-/**
- * This is the format for selectors:
- * operator? [[namespace |]? element_name]? [ ID | class | attrib | pseudo ]*
- */
-PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
-                                    nsCSSSelector& aSelector)
-{
-  PRInt32       dataMask = 0;
-  nsAutoString  buffer;
+#define SELECTOR_PARSING_ENDED_OK       1
+#define SELECTOR_PARSING_STOPPED_OK     2
+#define SELECTOR_PARSING_STOPPED_ERROR  3
 
-  if (! GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF();
-    return PR_FALSE;
+void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
+                                    nsCSSSelector& aSelector,
+                                    PRInt32& aParsingStatus,
+                                    PRInt32& aErrorCode)
+{
+  if (0 < mToken.mIdent.Length()) { // verify is legal ID
+    aDataMask |= SEL_MASK_ID;
+    aSelector.AddID(mToken.mIdent);
   }
+  else {
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING(
+      "Expected non-empty name for ID selector, but found"));
+    UngetToken();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+  aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+}
+
+void CSSParserImpl::ParseClassSelector(PRInt32&  aDataMask,
+                                        nsCSSSelector& aSelector,
+                                        PRInt32& aParsingStatus,
+                                        PRInt32& aErrorCode)
+{
+  if (! GetToken(aErrorCode, PR_FALSE)) { // get ident
+    REPORT_UNEXPECTED_EOF();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+  if (eCSSToken_Ident != mToken.mType) {  // malformed selector
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for class selector but found"));
+    UngetToken();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+  aDataMask |= SEL_MASK_CLASS;
+  aSelector.AddClass(mToken.mIdent);  // class always case sensitive
+  aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+}
+
+
+void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
+                                      nsCSSSelector& aSelector,
+                                      PRInt32& aParsingStatus,
+                                      PRInt32& aErrorCode)
+{
+  nsAutoString buffer;
   if (mToken.IsSymbol('*')) {  // universal element selector, or universal namespace
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
-      dataMask |= SEL_MASK_NSPACE;
+      aDataMask |= SEL_MASK_NSPACE;
       aSelector.SetNameSpace(kNameSpaceID_Unknown); // namespace wildcard
 
       if (! GetToken(aErrorCode, PR_FALSE)) {
         REPORT_UNEXPECTED_EOF();
-        return PR_FALSE;
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
       }
       if (eCSSToken_Ident == mToken.mType) {  // element name
-        dataMask |= SEL_MASK_ELEM;
+        aDataMask |= SEL_MASK_ELEM;
         if (mCaseSensitive) {
           aSelector.SetTag(mToken.mIdent);
         }
@@ -1536,14 +1587,15 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         }
       }
       else if (mToken.IsSymbol('*')) {  // universal selector
-        dataMask |= SEL_MASK_ELEM;
+        aDataMask |= SEL_MASK_ELEM;
         // don't set tag
       }
       else {
         REPORT_UNEXPECTED_TOKEN(
           NS_LITERAL_STRING("Expected element name or '*' but found"));
         UngetToken();
-        return PR_FALSE;
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
       }
     }
     else {  // was universal element selector
@@ -1558,18 +1610,19 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           NS_RELEASE(defaultNameSpace);
         }
       }
-      dataMask |= SEL_MASK_ELEM;
+      aDataMask |= SEL_MASK_ELEM;
       // don't set any tag in the selector
     }
     if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
-      return PR_TRUE;
+      aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
+      return;
     }
   }
   else if (eCSSToken_Ident == mToken.mType) {    // element name or namespace name
     buffer = mToken.mIdent; // hang on to ident
 
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
-      dataMask |= SEL_MASK_NSPACE;
+      aDataMask |= SEL_MASK_NSPACE;
       PRInt32 nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpace) {
         nsIAtom* prefix;
@@ -1579,18 +1632,19 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         NS_IF_RELEASE(prefix);
       } // else, no delcared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Unknown namespace prefix"));
-        return PR_FALSE;
+        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Unknown namespace prefix"));
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
       }
       aSelector.SetNameSpace(nameSpaceID);
 
       if (! GetToken(aErrorCode, PR_FALSE)) {
         REPORT_UNEXPECTED_EOF();
-        return PR_FALSE;
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
       }
       if (eCSSToken_Ident == mToken.mType) {  // element name
-        dataMask |= SEL_MASK_ELEM;
+        aDataMask |= SEL_MASK_ELEM;
         if (mCaseSensitive) {
           aSelector.SetTag(mToken.mIdent);
         }
@@ -1600,14 +1654,15 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         }
       }
       else if (mToken.IsSymbol('*')) {  // universal selector
-        dataMask |= SEL_MASK_ELEM;
+        aDataMask |= SEL_MASK_ELEM;
         // don't set tag
       }
       else {
         REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected element name or '*' but found"));
+            NS_LITERAL_STRING("Expected element name or '*' but found"));
         UngetToken();
-        return PR_FALSE;
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
       }
     }
     else {  // was element name
@@ -1629,23 +1684,25 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         buffer.ToLowerCase();
         aSelector.SetTag(buffer);
       }
-      dataMask |= SEL_MASK_ELEM;
+      aDataMask |= SEL_MASK_ELEM;
     }
     if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
-      return PR_TRUE;
+      aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
+      return;
     }
   }
   else if (mToken.IsSymbol('|')) {  // No namespace
-    dataMask |= SEL_MASK_NSPACE;
+    aDataMask |= SEL_MASK_NSPACE;
     aSelector.SetNameSpace(kNameSpaceID_None);  // explicit NO namespace
 
     // get mandatory tag
     if (! GetToken(aErrorCode, PR_FALSE)) {
       REPORT_UNEXPECTED_EOF();
-      return PR_FALSE;
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
     }
     if (eCSSToken_Ident == mToken.mType) {  // element name
-      dataMask |= SEL_MASK_ELEM;
+      aDataMask |= SEL_MASK_ELEM;
       if (mCaseSensitive) {
         aSelector.SetTag(mToken.mIdent);
       }
@@ -1655,274 +1712,333 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       }
     }
     else if (mToken.IsSymbol('*')) {  // universal selector
-      dataMask |= SEL_MASK_ELEM;
+      aDataMask |= SEL_MASK_ELEM;
       // don't set tag
     }
     else {
       REPORT_UNEXPECTED_TOKEN(
         NS_LITERAL_STRING("Expected element name or '*' but found"));
       UngetToken();
-      return PR_FALSE;
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
     }
     if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
-      return PR_TRUE;
+      aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
+      return;
     }
   }
-  for (;;) {
-    if (eCSSToken_ID == mToken.mType) {   // #id
-      if (0 < mToken.mIdent.Length()) { // verify is legal ID
-        dataMask |= SEL_MASK_ID;
-        aSelector.AddID(mToken.mIdent);
+  aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+}
+
+void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
+                                      nsCSSSelector& aSelector,
+                                      PRInt32& aParsingStatus,
+                                      PRInt32& aErrorCode)
+{
+  if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
+    REPORT_UNEXPECTED_EOF();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+
+  PRInt32 nameSpaceID = kNameSpaceID_None;
+  nsAutoString  attr;
+  if (mToken.IsSymbol('*')) { // wildcard namespace
+    nameSpaceID = kNameSpaceID_Unknown;
+    if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
+      if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+        REPORT_UNEXPECTED_EOF();
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
+      }
+      if (eCSSToken_Ident == mToken.mType) { // attr name
+        attr = mToken.mIdent;
       }
       else {
-        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING(
-          "Expected non-empty name for ID selector, but found"));
+        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
         UngetToken();
-        return PR_FALSE;
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
+       }
+    }
+    else {
+      REPORT_UNEXPECTED_TOKEN(
+          NS_LITERAL_STRING("Expected '|' but found"));
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+  }
+  else if (mToken.IsSymbol('|')) { // NO namespace
+    if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+      REPORT_UNEXPECTED_EOF();
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+    if (eCSSToken_Ident == mToken.mType) { // attr name
+      attr = mToken.mIdent;
+    }
+    else {
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
+      UngetToken();
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+  }
+  else if (eCSSToken_Ident == mToken.mType) { // attr name or namespace
+    attr = mToken.mIdent; // hang on to it
+    if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
+      nameSpaceID = kNameSpaceID_Unknown;
+      if (mNameSpace) {
+        nsIAtom* prefix;
+        attr.ToLowerCase(); // always case insensitive, since stays within CSS
+        prefix = NS_NewAtom(attr);
+        mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
+        NS_IF_RELEASE(prefix);
+      } // else, no delcared namespaces
+      if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
+        REPORT_UNEXPECTED_TOKEN(
+        NS_LITERAL_STRING("Unknown namespace prefix"));
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
       }
+      if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+        REPORT_UNEXPECTED_EOF();
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
+      }
+      if (eCSSToken_Ident == mToken.mType) { // attr name
+        attr = mToken.mIdent;
+      }
+      else {
+        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
+        UngetToken();
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
+      }
+    }
+  }
+  else {  // malformed
+    REPORT_UNEXPECTED_TOKEN(
+      NS_LITERAL_STRING("Expected attribute name or namespace but found"));
+    UngetToken();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+
+  if (! mCaseSensitive) {
+    attr.ToLowerCase();
+  }
+  if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
+    REPORT_UNEXPECTED_EOF();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+  if ((eCSSToken_Symbol == mToken.mType) ||
+      (eCSSToken_Includes == mToken.mType) ||
+      (eCSSToken_Dashmatch == mToken.mType) ||
+      (eCSSToken_Beginsmatch == mToken.mType) ||
+      (eCSSToken_Endsmatch == mToken.mType) ||
+      (eCSSToken_Containsmatch == mToken.mType)) {
+    PRUint8 func;
+    if (eCSSToken_Includes == mToken.mType) {
+      func = NS_ATTR_FUNC_INCLUDES;
+    }
+    else if (eCSSToken_Dashmatch == mToken.mType) {
+      func = NS_ATTR_FUNC_DASHMATCH;
+    }
+    else if (eCSSToken_Beginsmatch == mToken.mType) {
+      func = NS_ATTR_FUNC_BEGINSMATCH;
+    }
+    else if (eCSSToken_Endsmatch == mToken.mType) {
+      func = NS_ATTR_FUNC_ENDSMATCH;
+    }
+    else if (eCSSToken_Containsmatch == mToken.mType) {
+      func = NS_ATTR_FUNC_CONTAINSMATCH;
+    }
+    else if (']' == mToken.mSymbol) {
+      aDataMask |= SEL_MASK_ATTRIB;
+      aSelector.AddAttribute(nameSpaceID, attr);
+      func = NS_ATTR_FUNC_SET;
+    }
+    else if ('=' == mToken.mSymbol) {
+      func = NS_ATTR_FUNC_EQUALS;
+    }
+    else {
+      REPORT_UNEXPECTED_TOKEN(
+        NS_LITERAL_STRING("Unexpected token in attribute selector: "));
+      UngetToken(); // bad function
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+    if (NS_ATTR_FUNC_SET != func) { // get value
+      if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
+        REPORT_UNEXPECTED_EOF();
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
+      }
+      if ((eCSSToken_Ident == mToken.mType) || (eCSSToken_String == mToken.mType)) {
+        nsAutoString  value(mToken.mIdent);
+        if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
+          REPORT_UNEXPECTED_EOF();
+          aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+          return;
+        }
+        if (mToken.IsSymbol(']')) {
+          aDataMask |= SEL_MASK_ATTRIB;
+          aSelector.AddAttribute(nameSpaceID, attr, func, value, mCaseSensitive);
+        }
+        else {
+          REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ']' to terminate attribute selector but found"));
+          UngetToken();
+          aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+          return;
+        }
+      }
+      else {
+        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier or string for value in attribute selector but found"));
+        UngetToken();
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
+      }
+    }
+  }
+  else {
+    REPORT_UNEXPECTED_TOKEN(
+      NS_LITERAL_STRING("Unexpected token in attribute selector: "));
+    UngetToken(); // bad dog, no biscut!
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+   }
+   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+}
+
+void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
+                                      nsCSSSelector& aSelector,
+                                      PRInt32& aParsingStatus,
+                                      PRInt32& aErrorCode)
+{
+  nsAutoString buffer;
+  if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
+    REPORT_UNEXPECTED_EOF();
+    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return;
+  }
+  if (eCSSToken_Ident != mToken.mType) {  // malformed selector
+#ifdef INCLUDE_XUL
+    if (eCSSToken_Function != mToken.mType || 
+        !IsOutlinerPseudoElement(mToken.mIdent)) {
+#endif
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class selector but found"));
+      UngetToken();
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+#ifdef INCLUDE_XUL
+    }
+#endif
+  }
+  buffer.Truncate();
+  buffer.AppendWithConversion(':');
+  buffer.Append(mToken.mIdent);
+  buffer.ToLowerCase();
+  nsIAtom* pseudo = NS_NewAtom(buffer);
+  if (IsPseudoClass(pseudo)) {
+    // XXX parse lang pseudo class
+    aDataMask |= SEL_MASK_PCLASS;
+    aSelector.AddPseudoClass(pseudo);
+    NS_RELEASE(pseudo);
+  }
+  else {
+    if (0 == (aDataMask & SEL_MASK_PELEM)) {
+      aDataMask |= SEL_MASK_PELEM;
+      aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
+      NS_RELEASE(pseudo);
+
+#ifdef INCLUDE_XUL
+      if (eCSSToken_Function == mToken.mType && 
+          IsOutlinerPseudoElement(mToken.mIdent)) {
+        // We have encountered a pseudoelement of the form
+        // -moz-outliner-xxxx(a,b,c).  We parse (a,b,c) and add each
+        // item in the list to the pseudoclass list.  They will be pulled
+        // from the list later along with the pseudoelement.
+        if (!ParseOutlinerPseudoElement(aErrorCode, aSelector))
+          aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+          return;
+      }
+#endif
+
+      // ensure selector ends here, must be followed by EOF, space, '{' or ','
+      if (GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
+        if ((eCSSToken_WhiteSpace == mToken.mType) || 
+            (mToken.IsSymbol('{') || mToken.IsSymbol(','))) {
+          UngetToken();
+          aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
+          return;
+        }
+        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Found trailing token after pseudo-element, which must be the last part of a selector: "));
+        UngetToken();
+        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+        return;
+      }
+    }
+    else {  // multiple pseudo elements, not legal
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Extra pseudo-element"));
+      UngetToken();
+      NS_RELEASE(pseudo);
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
+  }
+  aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+}
+
+/**
+ * This is the format for selectors:
+ * operator? [[namespace |]? element_name]? [ ID | class | attrib | pseudo ]*
+ */
+PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
+                                nsCSSSelector& aSelector)
+{
+  PRInt32  dataMask = 0;
+  PRInt32  parsingStatus = SELECTOR_PARSING_ENDED_OK;
+
+  if (! GetToken(aErrorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF();
+    return PR_FALSE;
+  }
+
+  ParseTypeOrUniversalSelector(dataMask, aSelector, parsingStatus, aErrorCode);
+  if (SELECTOR_PARSING_STOPPED_OK == parsingStatus) {
+    return PR_TRUE;
+  }
+  else if (SELECTOR_PARSING_STOPPED_ERROR == parsingStatus) {
+    return PR_FALSE;
+  }
+
+  for (;;) {
+    parsingStatus = SELECTOR_PARSING_ENDED_OK;
+    if (eCSSToken_ID == mToken.mType) {   // #id
+      ParseIDSelector(dataMask, aSelector, parsingStatus, aErrorCode);
     }
     else if (mToken.IsSymbol('.')) {  // .class
-      if (! GetToken(aErrorCode, PR_FALSE)) { // get ident
-        REPORT_UNEXPECTED_EOF();
-        return PR_FALSE;
-      }
-      if (eCSSToken_Ident != mToken.mType) {  // malformed selector
-        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for class selector but found"));
-        UngetToken();
-        return PR_FALSE;
-      }
-      dataMask |= SEL_MASK_CLASS;
-      aSelector.AddClass(mToken.mIdent);  // class always case sensitive
+      ParseClassSelector(dataMask, aSelector, parsingStatus, aErrorCode);
     }
     else if (mToken.IsSymbol(':')) { // :pseudo
-      if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
-        REPORT_UNEXPECTED_EOF();
-        return PR_FALSE;
-      }
-      if (eCSSToken_Ident != mToken.mType) {  // malformed selector
-#ifdef INCLUDE_XUL
-        if (eCSSToken_Function != mToken.mType || 
-            !IsOutlinerPseudoElement(mToken.mIdent)) {
-#endif
-          REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class selector but found"));
-          UngetToken();
-          return PR_FALSE;
-#ifdef INCLUDE_XUL
-        }
-#endif
-      }
-      buffer.Truncate();
-      buffer.AppendWithConversion(':');
-      buffer.Append(mToken.mIdent);
-      buffer.ToLowerCase();
-      nsIAtom* pseudo = NS_NewAtom(buffer);
-      if (IsPseudoClass(pseudo)) {
-        // XXX parse lang pseudo class
-        dataMask |= SEL_MASK_PCLASS;
-        aSelector.AddPseudoClass(pseudo);
-        NS_RELEASE(pseudo);
-      }
-      else {
-        if (0 == (dataMask & SEL_MASK_PELEM)) {
-          dataMask |= SEL_MASK_PELEM;
-          aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
-          NS_RELEASE(pseudo);
-
-#ifdef INCLUDE_XUL
-          if (eCSSToken_Function == mToken.mType && 
-              IsOutlinerPseudoElement(mToken.mIdent)) {
-            // We have encountered a pseudoelement of the form
-            // -moz-outliner-xxxx(a,b,c).  We parse (a,b,c) and add each
-            // item in the list to the pseudoclass list.  They will be pulled
-            // from the list later along with the pseudoelement.
-            if (!ParseOutlinerPseudoElement(aErrorCode, aSelector))
-              return PR_FALSE;
-          }
-#endif
-
-          // ensure selector ends here, must be followed by EOF, space, '{' or ','
-          if (GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
-            if ((eCSSToken_WhiteSpace == mToken.mType) || 
-                (mToken.IsSymbol('{') || mToken.IsSymbol(','))) {
-              UngetToken();
-              return PR_TRUE;
-            }
-            REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Found trailing token after pseudo-element, which must be the last part of a selector: "));
-            UngetToken();
-            return PR_FALSE;
-          }
-        }
-        else {  // multiple pseudo elements, not legal
-          REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Extra pseudo-element"));
-          UngetToken();
-          NS_RELEASE(pseudo);
-          return PR_FALSE;
-        }
-      }
+      ParsePseudoSelector(dataMask, aSelector, parsingStatus, aErrorCode);
     }
     else if (mToken.IsSymbol('[')) {  // attribute
-      if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
-        REPORT_UNEXPECTED_EOF();
-        return PR_FALSE;
-      }
-
-      PRInt32 nameSpaceID = kNameSpaceID_None;
-      nsAutoString  attr;
-      if (mToken.IsSymbol('*')) { // wildcard namespace
-        nameSpaceID = kNameSpaceID_Unknown;
-        if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
-          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
-            REPORT_UNEXPECTED_EOF();
-            return PR_FALSE;
-          }
-          if (eCSSToken_Ident == mToken.mType) { // attr name
-            attr = mToken.mIdent;
-          }
-          else {
-            REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
-            UngetToken();
-            return PR_FALSE;
-          }
-        }
-        else {
-          REPORT_UNEXPECTED_TOKEN(
-            NS_LITERAL_STRING("Expected '|' but found"));
-          return PR_FALSE;
-        }
-      }
-      else if (mToken.IsSymbol('|')) { // NO namespace
-        if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
-          REPORT_UNEXPECTED_EOF();
-          return PR_FALSE;
-        }
-        if (eCSSToken_Ident == mToken.mType) { // attr name
-          attr = mToken.mIdent;
-        }
-        else {
-          REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
-          UngetToken();
-          return PR_FALSE;
-        }
-      }
-      else if (eCSSToken_Ident == mToken.mType) { // attr name or namespace
-        attr = mToken.mIdent; // hang on to it
-        if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
-          nameSpaceID = kNameSpaceID_Unknown;
-          if (mNameSpace) {
-            nsIAtom* prefix;
-            attr.ToLowerCase(); // always case insensitive, since stays within CSS
-            prefix = NS_NewAtom(attr);
-            mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
-            NS_IF_RELEASE(prefix);
-          } // else, no delcared namespaces
-          if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-            REPORT_UNEXPECTED_TOKEN(
-              NS_LITERAL_STRING("Unknown namespace prefix"));
-            return PR_FALSE;
-          }
-          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
-            REPORT_UNEXPECTED_EOF();
-            return PR_FALSE;
-          }
-          if (eCSSToken_Ident == mToken.mType) { // attr name
-            attr = mToken.mIdent;
-          }
-          else {
-            REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
-            UngetToken();
-            return PR_FALSE;
-          }
-        }
-      }
-      else {  // malformed
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected attribute name or namespace but found"));
-        UngetToken();
-        return PR_FALSE;
-      }
-
-      if (! mCaseSensitive) {
-        attr.ToLowerCase();
-      }
-      if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
-        REPORT_UNEXPECTED_EOF();
-        return PR_FALSE;
-      }
-      if ((eCSSToken_Symbol == mToken.mType) ||
-          (eCSSToken_Includes == mToken.mType) ||
-          (eCSSToken_Dashmatch == mToken.mType) ||
-          (eCSSToken_Beginsmatch == mToken.mType) ||
-          (eCSSToken_Endsmatch == mToken.mType) ||
-          (eCSSToken_Containsmatch == mToken.mType)) {
-        PRUint8 func;
-        if (eCSSToken_Includes == mToken.mType) {
-          func = NS_ATTR_FUNC_INCLUDES;
-        }
-        else if (eCSSToken_Dashmatch == mToken.mType) {
-          func = NS_ATTR_FUNC_DASHMATCH;
-        }
-        else if (eCSSToken_Beginsmatch == mToken.mType) {
-          func = NS_ATTR_FUNC_BEGINSMATCH;
-        }
-        else if (eCSSToken_Endsmatch == mToken.mType) {
-          func = NS_ATTR_FUNC_ENDSMATCH;
-        }
-        else if (eCSSToken_Containsmatch == mToken.mType) {
-          func = NS_ATTR_FUNC_CONTAINSMATCH;
-        }
-        else if (']' == mToken.mSymbol) {
-          dataMask |= SEL_MASK_ATTRIB;
-          aSelector.AddAttribute(nameSpaceID, attr);
-          func = NS_ATTR_FUNC_SET;
-        }
-        else if ('=' == mToken.mSymbol) {
-          func = NS_ATTR_FUNC_EQUALS;
-        }
-        else {
-          REPORT_UNEXPECTED_TOKEN(
-            NS_LITERAL_STRING("Unexpected token in attribute selector: "));
-          UngetToken(); // bad function
-          return PR_FALSE;
-        }
-        if (NS_ATTR_FUNC_SET != func) { // get value
-          if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
-            REPORT_UNEXPECTED_EOF();
-            return PR_FALSE;
-          }
-          if ((eCSSToken_Ident == mToken.mType) || (eCSSToken_String == mToken.mType)) {
-            nsAutoString  value(mToken.mIdent);
-            if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
-              REPORT_UNEXPECTED_EOF();
-              return PR_FALSE;
-            }
-            if (mToken.IsSymbol(']')) {
-              dataMask |= SEL_MASK_ATTRIB;
-              aSelector.AddAttribute(nameSpaceID, attr, func, value, mCaseSensitive);
-            }
-            else {
-              REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ']' to terminate attribute selector but found"));
-              UngetToken();
-              return PR_FALSE;
-            }
-          }
-          else {
-            REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier or string for value in attribute selector but found"));
-            UngetToken();
-            return PR_FALSE;
-          }
-        }
-      }
-      else {
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Unexpected token in attribute selector: "));
-        UngetToken(); // bad dog, no biscut!
-        return PR_FALSE;
-      }
+      ParseAttributeSelector(dataMask, aSelector, parsingStatus, aErrorCode);
     }
     else {  // not a selector token, we're done
       break;
     }
-
+    
+    if (SELECTOR_PARSING_STOPPED_OK == parsingStatus) {
+      return PR_TRUE;
+    }
+    else if (SELECTOR_PARSING_STOPPED_ERROR == parsingStatus) {
+      return PR_FALSE;
+    }
+    
     if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
       return PR_TRUE;
     }
