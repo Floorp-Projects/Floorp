@@ -10,6 +10,8 @@ replaceXPI(skinclas.xpi,bin/chrome/classic.jar,skin/classic/global/animthrob.gif
 replaceXPI(skinclas.xpi,bin/chrome/classic.jar,skin/classic/global/animthrob_single.gif,%LargeStillPath%)
 replaceXPI(browser.xpi,bin/chrome/modern.jar,skin/modern/communicator/brand/throbber-anim.gif,%LargeAnimPath%)
 replaceXPI(browser.xpi,bin/chrome/modern.jar,skin/modern/communicator/brand/throbber-single.gif,%LargeStillPath%)
+replaceXPI(browser.xpi,bin/chrome/modern.jar,skin/modern/communicator/brand/throbber16-anim.gif,%LargeAnimPath%)
+replaceXPI(browser.xpi,bin/chrome/modern.jar,skin/modern/communicator/brand/throbber16-single.gif,%LargeStillPath%)
 replaceXPI(deflenus.xpi,no.jar,bin/defaults/profile/bookmarks.html,%CustomBookmarkFile%)
 replaceXPI(regus.xpi,no.jar,bin/defaults/profile/US/bookmarks.html,%CustomBookmarkFile%)
 replaceXPI(deflenus.xpi,no.jar,bin/defaults/profile/panels.rdf,%SidebarPath%)
