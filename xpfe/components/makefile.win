@@ -21,6 +21,6 @@
 
 DEPTH=..\..
 
-DIRS= public bookmarks directory filepicker find history prefwindow search sidebar regviewer related ucth xfer shistory timebomb console autocomplete
+DIRS= public bookmarks directory filepicker find history prefwindow search sidebar regviewer related ucth xfer shistory timebomb console autocomplete urlbarhistory
 
 include <$(DEPTH)\config\rules.mak>
