@@ -901,6 +901,23 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (me->clickCount >1 )
     return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
 
+
+	// check whether style allows selection
+  // if not dont tell selection the mouse event even occured.
+	const nsStyleUserInterface* userinterface;
+	GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+	if (userinterface) {
+		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
+				// if 'user-select' isn't set for this frame, use the parent's
+				if (mParent) {
+					mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+				}
+		}
+		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+		  return NS_OK;//do not continue no selection for this frame.
+		}
+	}
+  
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
