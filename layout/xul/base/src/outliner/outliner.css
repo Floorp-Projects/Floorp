@@ -1,0 +1,20 @@
+outlinerbody {
+  background: url(file:///c|/shot43b.jpg) fixed center center no-repeat;
+  background-color: navy;
+  color: white;
+}
+
+:-moz-outliner-row
+{
+  height: 19px;
+}
+
+:-moz-outliner-cell
+{
+  
+}
+
+:-moz-outliner-cell-text
+{
+  color: inherit !important;
+}
