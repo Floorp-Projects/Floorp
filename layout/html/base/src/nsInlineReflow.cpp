@@ -834,7 +834,9 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
 
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  ");
-    pfd->mFrame->ListTag(stdout);
+    nsAutoString tmp;
+    pfd->mFrame->GetFrameName(tmp);
+    fputs(tmp, stdout);
     printf(": yTop=%d minYTop=%d yBottom=%d maxYBottom=%d\n",
            yTop, minYTop, yTop + height, maxYBottom);
     NS_ASSERTION(yTop >= -1000000, "bad yTop");

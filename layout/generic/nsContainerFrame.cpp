@@ -468,7 +468,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
       }
       top = parent;
     }
-    top->List();
+    top->List(stdout, 0, nsnull);
   }
   NS_ASSERTION((0 == childCount) && (nsnull == firstChild),
                "deleting !empty next-in-flow");
@@ -660,9 +660,12 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
 /////////////////////////////////////////////////////////////////////////////
 // Debugging
 
-NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+NS_IMETHODIMP
+nsContainerFrame::List(FILE* out, PRInt32 aIndent,
+                       nsIListFilter *aFilter) const
 {
-  // if a filter is present, only output this frame if the filter says we should
+  // if a filter is present, only output this frame if the filter says
+  // we should
   nsAutoString tagString;
   if (nsnull != mContent) {
     nsIAtom* tag;
@@ -672,15 +675,15 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
       NS_RELEASE(tag);
     }
   }
-  
-  PRBool outputMe = (PRBool)((nsnull==aFilter) || (PR_TRUE==aFilter->OutputTag(&tagString)));
-  if (PR_TRUE==outputMe)
-  {
+  PRBool outputMe = (nsnull==aFilter) || aFilter->OutputTag(&tagString);
+
+  if (outputMe) {
     // Indent
-    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+    IndentBy(out, aIndent);
 
     // Output the tag
     ListTag(out);
+
     nsIView* view;
     GetView(view);
     if (nsnull != view) {
@@ -700,8 +703,7 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
 
   // Output the children
   if (nsnull != mFirstChild) {
-    if (PR_TRUE==outputMe)
-    {
+    if (outputMe) {
       if (0 != mState) {
         fprintf(out, " [state=%08x]", mState);
       }
@@ -710,14 +712,12 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
     for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
-    if (PR_TRUE==outputMe)
-    {
-      for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+    if (outputMe) {
+      IndentBy(out, aIndent);
       fputs(">\n", out);
     }
   } else {
-    if (PR_TRUE==outputMe)
-    {
+    if (outputMe) {
       if (0 != mState) {
         fprintf(out, " [state=%08x]", mState);
       }
@@ -728,17 +728,12 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
   return NS_OK;
 }
 
-#define VERIFY_ASSERT(_expr, _msg)                \
-  if (!(_expr)) {                                 \
-    DumpTree();                       \
-  }                                               \
-  NS_ASSERTION(_expr, _msg)
-
-NS_METHOD nsContainerFrame::VerifyTree() const
+NS_IMETHODIMP
+nsContainerFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG
   NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
-  VERIFY_ASSERT(nsnull == mOverflowList, "bad overflow list");
+  NS_ASSERTION(nsnull == mOverflowList, "bad overflow list");
 #endif
   return NS_OK;
 }
@@ -791,18 +786,4 @@ PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
 
   return PR_TRUE;
 }
-
-void nsContainerFrame::DumpTree() const
-{
-  nsIFrame* root = (nsIFrame*)this;
-  nsIFrame* parent = mGeometricParent;
-
-  while (nsnull != parent) {
-    root = parent;
-    parent->GetGeometricParent(parent);
-  }
-
-  root->List();
-}
-
 #endif

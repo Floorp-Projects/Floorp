@@ -197,3 +197,9 @@ nsLegendFrame::IsInline()
 {
   return mInline;
 }
+
+NS_IMETHODIMP
+nsLegendFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("Legend", aResult);
+}

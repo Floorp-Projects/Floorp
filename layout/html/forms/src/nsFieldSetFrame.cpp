@@ -71,6 +71,11 @@ public:
   NS_METHOD Paint(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect);
+
+  NS_IMETHOD GetFrameName(nsString& aResult) const {
+    return MakeFrameName("FieldSet", aResult);
+  }
+
 protected:
 
   virtual ~nsFieldSetFrame();

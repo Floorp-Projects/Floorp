@@ -123,7 +123,7 @@ public:
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
 
-  NS_IMETHOD ListTag(FILE* out) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   NS_IMETHOD GetPosition(nsIPresContext& aCX,
                          nsIRenderingContext * aRendContext,
@@ -2058,7 +2058,9 @@ TextFrame::ComputeTotalWordWidth(nsLineLayout& aLineLayout,
       if ((NS_OK == frame->GetContent(content)) && (nsnull != content)) {
 #ifdef DEBUG_WORD_WRAPPING
         printf("  next textRun=");
-        frame->ListTag(stdout);
+        nsAutoString tmp;
+        frame->GetFrameName(tmp);
+        fputs(tmp, stdout);
         printf("\n");
 #endif
         nsITextContent* tc;
@@ -2232,10 +2234,9 @@ TextFrame::ToCString(nsString& aBuf, PRInt32& aContentLength) const
 }
 
 NS_IMETHODIMP
-TextFrame::ListTag(FILE* out) const
+TextFrame::GetFrameName(nsString& aResult) const
 {
-  fprintf(out, "Text(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Text", aResult);
 }
 
 NS_IMETHODIMP

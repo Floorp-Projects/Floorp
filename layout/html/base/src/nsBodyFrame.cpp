@@ -847,20 +847,9 @@ void nsBodyFrame::ComputeAbsoluteFrameBounds(nsIFrame*                aAnchorFra
 // Diagnostics
 
 NS_IMETHODIMP
-nsBodyFrame::ListTag(FILE* out) const
+nsBodyFrame::GetFrameName(nsString& aResult) const
 {
-  fprintf(out, "Body<");
-  if (nsnull != mContent) {
-    nsIAtom* atom;
-    mContent->GetTag(atom);
-    if (nsnull != atom) {
-      nsAutoString tmp;
-      atom->ToString(tmp);
-      fputs(tmp, out);
-    }
-  }
-  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Body", aResult);
 }
 
 NS_IMETHODIMP

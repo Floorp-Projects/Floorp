@@ -163,6 +163,7 @@ public:
     *
     */
   //virtual void ListColumnLayoutData(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   
   /** return the width of the column at aColIndex    */

@@ -49,6 +49,10 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aHint);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const {
+    return MakeFrameName("CheckboxControl", aResult);
+  }
+
   virtual const nsIID& GetCID();
 
   virtual const nsIID& GetIID();

@@ -789,4 +789,8 @@ NS_METHOD nsTableColGroupFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *
   return NS_OK;
 }
 
-
+NS_IMETHODIMP
+nsTableColGroupFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("TableColGroup", aResult);
+}

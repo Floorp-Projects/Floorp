@@ -62,6 +62,10 @@ class nsSelectControlFrame : public nsFormControlFrame {
 public:
   nsSelectControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const {
+    return MakeFrameName("SelectControl", aResult);
+  }
+
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext,

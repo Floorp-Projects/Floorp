@@ -71,6 +71,10 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const {
+    return MakeFrameName("ImageControl", aResult);
+  }
+
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }

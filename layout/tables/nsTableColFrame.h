@@ -52,6 +52,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   /** return the index of the column the col represents.  always >= 0 */
   virtual int GetColumnIndex ();
 

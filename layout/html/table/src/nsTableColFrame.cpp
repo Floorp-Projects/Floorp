@@ -142,3 +142,9 @@ NS_METHOD nsTableColFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilt
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTableColFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("TableCol", aResult);
+}

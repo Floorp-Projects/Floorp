@@ -62,7 +62,7 @@ static NS_DEFINE_IID(kIFramesetFrameIID, NS_IFRAMESETFRAME_IID);
 class nsHTMLFramesetBorderFrame : public nsLeafFrame {
 
 public:
-  NS_IMETHOD ListTag(FILE* out = stdout) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
@@ -1627,11 +1627,9 @@ nsHTMLFramesetBorderFrame::GetCursor(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLFramesetBorderFrame::ListTag(FILE* out) const
+NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsString& aResult) const
 {
-  nsLeafFrame::ListTag(out);
-  fputs(" (BORDER)", out);
-  return NS_OK;
+  return MakeFrameName("FramesetBorder", aResult);
 }
 
 /*******************************************************************************
@@ -1700,6 +1698,6 @@ NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
   fprintf(out, "%X BLANK \n", this);
-  return nsLeafFrame::List(out, aIndent);
+  return nsLeafFrame::List(out, aIndent, nsnull);
 }
 

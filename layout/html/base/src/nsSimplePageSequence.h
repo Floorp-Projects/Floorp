@@ -39,7 +39,7 @@ public:
                     const nsRect&        aDirtyRect);
 
   // Debugging
-  NS_IMETHOD  ListTag(FILE* out = stdout) const;
+  NS_IMETHOD  GetFrameName(nsString& aResult) const;
 };
 
 #endif /* nsSimplePageSequence_h___ */

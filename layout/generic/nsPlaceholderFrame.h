@@ -61,7 +61,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  NS_IMETHOD  ListTag(FILE* out = stdout) const;
+  NS_IMETHOD  GetFrameName(nsString& aResult) const;
 
 protected:
   // Constructor. Takes as arguments the content object and the Frame for

@@ -105,7 +105,7 @@ class nsHTMLFrameOuterFrame : public nsHTMLContainerFrame {
 public:
   nsHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  NS_IMETHOD ListTag(FILE* out = stdout) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -141,7 +141,7 @@ public:
 
   nsHTMLFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  NS_IMETHOD ListTag(FILE* out = stdout) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   /**
     * @see nsIFrame::Paint
@@ -288,11 +288,9 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
   }
 }
 
-NS_IMETHODIMP nsHTMLFrameOuterFrame::ListTag(FILE* out) const
+NS_IMETHODIMP nsHTMLFrameOuterFrame::GetFrameName(nsString& aResult) const
 {
-  nsHTMLContainerFrame::ListTag(out);
-  fputs(" (OUTER)", out);
-  return NS_OK;
+  return MakeFrameName("FrameOuter", aResult);
 }
 
 NS_IMETHODIMP
@@ -568,11 +566,9 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
   return marginHeight;
 }
 
-NS_IMETHODIMP nsHTMLFrameInnerFrame::ListTag(FILE* out) const
+NS_IMETHODIMP nsHTMLFrameInnerFrame::GetFrameName(nsString& aResult) const
 {
-  nsLeafFrame::ListTag(out);
-  fputs(" (INNER)", out);
-  return NS_OK;
+  return MakeFrameName("FrameInner", aResult);
 }
 
 NS_METHOD

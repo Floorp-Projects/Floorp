@@ -101,6 +101,8 @@ public:
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
+
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
   
   /** set mTallestCell to 0 in anticipation of recalculating it */
   void ResetMaxChildHeight();

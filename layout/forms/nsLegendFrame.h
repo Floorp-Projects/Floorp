@@ -50,6 +50,8 @@ public:
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   PRInt32 GetAlign();
 
   PRBool IsInline();

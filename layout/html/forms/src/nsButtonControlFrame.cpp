@@ -379,3 +379,8 @@ nsButtonControlFrame::GetCID()
   return kButtonCID;
 }
 
+NS_IMETHODIMP
+nsButtonControlFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("ButtonControl", aResult);
+}

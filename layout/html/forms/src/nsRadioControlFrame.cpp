@@ -298,3 +298,9 @@ nsRadioControlGroup::GetName(nsString& aNameResult) const
 {
   aNameResult = mName;
 }
+
+NS_IMETHODIMP
+nsRadioControlFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("RadioControl", aResult);
+}

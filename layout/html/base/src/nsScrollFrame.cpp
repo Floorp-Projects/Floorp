@@ -60,7 +60,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
 
-  NS_IMETHOD  ListTag(FILE* out = stdout) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
 protected:
   virtual PRIntn GetSkipSides() const;
@@ -434,21 +434,9 @@ nsScrollFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsScrollFrame::ListTag(FILE* out) const
+nsScrollFrame::GetFrameName(nsString& aResult) const
 {
-  fputs("*ScrollFrame<", out);
-  if (nsnull != mContent) {
-    nsIAtom* atom;
-    mContent->GetTag(atom);
-    if (nsnull != atom) {
-      nsAutoString tmp;
-      atom->ToString(tmp);
-      fputs(tmp, out);
-      NS_RELEASE(atom);
-    }
-  }
-  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Scroll", aResult);
 }
 
 //----------------------------------------------------------------------

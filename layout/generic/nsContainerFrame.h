@@ -173,8 +173,6 @@ protected:
    * Returns PR_TRUE if aChild is a child of this frame.
    */
   PRBool IsChild(const nsIFrame* aChild) const;
-
-  void DumpTree() const;
 #endif
 
   nsIFrame*   mFirstChild;

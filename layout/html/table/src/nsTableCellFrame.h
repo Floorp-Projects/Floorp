@@ -74,6 +74,8 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   void          VerticallyAlignChild(nsIPresContext* aPresContext);
 
   /** return the mapped cell's row span.  Always >= 1. */

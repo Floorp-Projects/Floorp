@@ -192,18 +192,9 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::ListTag(FILE* out) const
+nsSimplePageSequenceFrame::GetFrameName(nsString& aResult) const
 {
-  fprintf(out, "*SimplePageSequence<");
-  nsIAtom* atom;
-  mContent->GetTag(atom);
-  if (nsnull != atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    fputs(tmp, out);
-  }
-  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("SimplePageSequence", aResult);
 }
 
 NS_IMETHODIMP

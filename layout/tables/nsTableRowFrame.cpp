@@ -1486,4 +1486,8 @@ NS_METHOD nsTableRowFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilt
   return NS_OK;
 }
 
-
+NS_IMETHODIMP
+nsTableRowFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("TableRow", aResult);
+}

@@ -35,6 +35,8 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aHint);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);

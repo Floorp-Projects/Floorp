@@ -68,7 +68,7 @@ public:
     return NS_OK;
   }
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
-  NS_IMETHOD ListTag(FILE* out) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD VerifyTree() const;
 
   // nsIHTMLReflow

@@ -153,17 +153,9 @@ NS_METHOD nsPageFrame::Paint(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsPageFrame::ListTag(FILE* out) const
+NS_IMETHODIMP
+nsPageFrame::GetFrameName(nsString& aResult) const
 {
-  fprintf(out, "*Page<");
-  nsIAtom* atom;
-  mContent->GetTag(atom);
-  if (nsnull != atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    fputs(tmp, out);
-  }
-  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
-  return NS_OK;
+  return MakeFrameName("Page", aResult);
 }
 

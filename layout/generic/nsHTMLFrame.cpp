@@ -61,7 +61,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD ListTag(FILE* out) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
 protected:
   virtual PRIntn GetSkipSides() const;
@@ -264,15 +264,8 @@ RootFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-// Output the frame's tag
 NS_IMETHODIMP
-RootFrame::ListTag(FILE* out) const
+RootFrame::GetFrameName(nsString& aResult) const
 {
-  if (nsnull == mContent) {
-    fprintf(out, "*Root(-1)@%p", this);
-  } 
-  else {
-    return nsFrame::ListTag(out);
-  }
-  return NS_OK;
+  return MakeFrameName("Root", aResult);
 }
