@@ -2009,7 +2009,8 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     // See if we need to move the frame outside of the flow, and insert a
     // placeholder frame in its place
     nsIFrame* placeholder;
-    if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition, placeholder)) {
+    if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition,
+                           placeholder)) {
       // Reset the previous frame's next sibling pointer
       if (nsnull != prevFrame) {
         prevFrame->SetNextSibling(placeholder);
@@ -2018,6 +2019,16 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
       // The placeholder frame is always inline
       frame = placeholder;
       isBlock = PR_FALSE;
+    }
+    else {
+      // Wrap the frame in a view if necessary
+      nsIStyleContext* kidSC;
+      frame->GetStyleContext(&aPresContext, kidSC);
+      rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
+      NS_RELEASE(kidSC);
+      if (NS_OK != rv) {
+        return rv;
+      }
     }
 
     // If the child is an inline then add it to the lastLine (if it's
@@ -2070,14 +2081,6 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
 
     // Remember the previous frame
     prevFrame = frame;
-
-    // XXX CONSTRUCTION This needs to go somewhere...
-#if 0
-    if (NS_OK == rv) {
-      // Wrap the frame in a view if necessary
-      rv = CreateViewForFrame(aPresContext, kidFrame, kidSC, PR_FALSE);
-    }
-#endif
   }
 
   if (0 != pendingInlines) {
@@ -3649,6 +3652,15 @@ nsBlockFrame::InsertNewFrame(nsIPresContext& aPresContext,
     aNewFrame = placeholder;
     newFrameIsBlock = PR_FALSE;  // placeholder frame is always inline
   }
+  else {
+    // Wrap the frame in a view if necessary
+    nsIStyleContext* kidSC;
+    aNewFrame->GetStyleContext(&aPresContext, kidSC);
+    nsresult rv = CreateViewForFrame(aPresContext, aNewFrame, kidSC, PR_FALSE);    NS_RELEASE(kidSC);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
 
   // Insert/append the frame into flows line list at the right spot
   LineData* newLine;
@@ -4001,7 +4013,7 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
 
   // Now place the floater immediately if possible. Otherwise stash it
   // away in mPendingFloaters and place it later.
-  if (IsLeftMostChild(aPlaceholder)) {
+  if (0 == mLineLayout.GetPlacedFrames()) {
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
        ("nsBlockReflowState::AddFloater: IsLeftMostChild, placeHolder=%p",
         aPlaceholder));
@@ -4040,9 +4052,6 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
   }
 }
 
-// XXX Inline frame layout and block layout need to be more
-// coordinated; IsFirstChild in the inline code is doing much the same
-// thing as below; firstness should be well known.
 PRBool
 nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
 {
