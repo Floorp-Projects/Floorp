@@ -156,12 +156,10 @@
     </hbox>
     <separator id="keepSeparator"/>
     <hbox>
-        <spacer/>
         <button id="cancel" label="&cancel;" oncommand="notifyObserver( 'oncancel' )"/>
         <button id="pauseResume"  label="&pause;"  oncommand="window.notifyObserver( 'onpause' )"/>
         <spacer flex="1"/>
         <button id="launch" label="&launch;" disabled="true" oncommand="window.notifyObserver( 'onlaunch' )"/>
         <button id="reveal" label="&reveal;" disabled="true" oncommand="window.notifyObserver( 'onreveal' )"/>
-        <spacer/>
     </hbox>
 </window>

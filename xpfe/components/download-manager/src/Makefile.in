@@ -39,7 +39,6 @@ REQUIRES  = xpcom \
             intl \
             windowwatcher \
             webbrowserpersist \
-            appshell \
             dom \
             $(NULL)
 CPPSRCS   = \
