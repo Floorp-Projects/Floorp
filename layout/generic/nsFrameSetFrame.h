@@ -195,6 +195,7 @@ protected:
   nsHTMLFramesetBorderFrame* mDragger;
   nsPoint          mLastDragPoint;
   PRInt32          mMinDrag;
+  PRInt32          mChildCount;
 };
 
 #if 0

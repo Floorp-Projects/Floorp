@@ -59,7 +59,6 @@ nsContainerFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
   NS_PRECONDITION(nsnull == mFirstChild, "already initialized");
 
   mFirstChild = aChildList;
-  mChildCount = LengthOf(mFirstChild);
   return NS_OK;
 }
 
@@ -398,7 +397,6 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
   // Delete the next-in-flow frame and adjust its parents child count
   WillDeleteNextInFlowFrame(nextInFlow);
   nextInFlow->DeleteFrame(aPresContext);
-  parent->mChildCount--;
 
 #ifdef NS_DEBUG
   aChild->GetNextInFlow(nextInFlow);
@@ -445,10 +443,6 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling
     PRInt32   numChildren = 0;
     nsIFrame* lastChild = nsnull;
 
-#ifdef NOISY
-    ListTag(stdout);
-    printf(": pushing kids (childCount=%d)\n", mChildCount);
-#endif
     // Compute the number of children being pushed, and for each child change
     // its geometric parent. Remember the last child
     for (nsIFrame* f = aFromChild; nsnull != f; f->GetNextSibling(f)) {
@@ -473,12 +467,7 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling
     // Prepend the frames to our next-in-flow's child list
     lastChild->SetNextSibling(nextInFlow->mFirstChild);
     nextInFlow->mFirstChild = aFromChild;
-    nextInFlow->mChildCount += numChildren;
 
-#ifdef NOISY
-    ListTag(stdout);
-    printf(": push kids done (childCount=%d)\n", mChildCount);
-#endif
   } else {
     // Add the frames to our overflow list
     NS_ASSERTION(nsnull == mOverflowList, "bad overflow list");
@@ -549,7 +538,6 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
   nsIFrame* lastChild;
   for (nsIFrame* f = aChild; nsnull != f; f->GetNextSibling(f)) {
     lastChild = f;
-    mChildCount++;
 
     // Reset the geometric parent if requested
     if (aSetParent) {
@@ -642,17 +630,7 @@ NS_METHOD nsContainerFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG
   NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
-
-  // Check our child count
-  PRInt32 len = LengthOf(mFirstChild);
-  VERIFY_ASSERT(len == mChildCount, "bad child count");
-
-  nsIFrame* lastChild = LastFrame(mFirstChild);
-  if (len != 0) {
-    VERIFY_ASSERT(nsnull != lastChild, "bad last child");
-  }
   VERIFY_ASSERT(nsnull == mOverflowList, "bad overflow list");
-
 #endif
   return NS_OK;
 }

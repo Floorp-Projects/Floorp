@@ -212,12 +212,6 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
       flow->mFirstChild = nextSib;
     }
 
-    // Update flows child count and last-content-offset. Note that
-    // only the last content needs updating when a deadFrame is
-    // removed from flow (because only the children that follow the
-    // deletion need renumbering).
-    flow->mChildCount--;
-
     // Break frame out of its flow and then destroy it
     nsIFrame* nextInFlow;
     deadFrame->GetNextInFlow(nextInFlow);
