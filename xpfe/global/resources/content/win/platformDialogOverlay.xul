@@ -42,6 +42,7 @@
 	
 	<keyset id="keyset">
 		<key keycode="VK_ENTER" oncommand="doOKButton()"/>
+		<key keycode="VK_RETURN" oncommand="doOKButton()"/>
 		<key keycode="VK_ESCAPE" oncommand="doCancelButton()"/>
 	</keyset>
 
