@@ -3101,33 +3101,40 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   }
 
   if (notifyContent[0] || newHover || oldHover) { // have at least one to notify about
-    nsIDocument *document;  // this presumes content can't get/lose state if not connected to doc
+    nsCOMPtr<nsIDocument> doc1, doc2;  // this presumes content can't get/lose state if not connected to doc
     if (notifyContent[0]) {
-      notifyContent[0]->GetDocument(document);
+      notifyContent[0]->GetDocument(*getter_AddRefs(doc1));
+      if (notifyContent[1]) {
+        //For :focus this might be a different doc so check
+        notifyContent[1]->GetDocument(*getter_AddRefs(doc2));
+        if (doc1 == doc2) {
+          doc2 = nsnull;
+        }
+      }
     }
     else if (newHover) {
-      newHover->GetDocument(document);
+      newHover->GetDocument(*getter_AddRefs(doc1));
     }
     else {
-      oldHover->GetDocument(document);
+      oldHover->GetDocument(*getter_AddRefs(doc2));
     }
-    if (document) {
-      document->BeginUpdate();
+    if (doc1) {
+      doc1->BeginUpdate();
 
       //Notify all content from newHover to the commonHoverParent
       if (newHover) {
         nsCOMPtr<nsIContent> parent;
         newHover->GetParent(*getter_AddRefs(parent));
-        document->ContentStatesChanged(newHover, parent);
+        doc1->ContentStatesChanged(newHover, parent);
         while (parent && parent != commonHoverParent) {
           parent->GetParent(*getter_AddRefs(newHover));
           if (newHover && newHover != commonHoverParent) {
             newHover->GetParent(*getter_AddRefs(parent));
             if (parent == commonHoverParent) {
-              document->ContentStatesChanged(newHover, nsnull);
+              doc1->ContentStatesChanged(newHover, nsnull);
             }
             else {
-              document->ContentStatesChanged(newHover, parent);
+              doc1->ContentStatesChanged(newHover, parent);
             }
           }
           else {
@@ -3139,16 +3146,16 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       if (oldHover) {
         nsCOMPtr<nsIContent> parent;
         oldHover->GetParent(*getter_AddRefs(parent));
-        document->ContentStatesChanged(oldHover, parent);
+        doc1->ContentStatesChanged(oldHover, parent);
         while (parent && parent != commonHoverParent) {
           parent->GetParent(*getter_AddRefs(oldHover));
           if (oldHover && oldHover != commonHoverParent) {
             oldHover->GetParent(*getter_AddRefs(parent));
             if (parent == commonHoverParent) {
-              document->ContentStatesChanged(oldHover, nsnull);
+              doc1->ContentStatesChanged(oldHover, nsnull);
             }
             else {
-              document->ContentStatesChanged(oldHover, parent);
+              doc1->ContentStatesChanged(oldHover, parent);
             }
           }
           else {
@@ -3157,18 +3164,26 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
         }
       }
 
-      document->ContentStatesChanged(notifyContent[0], notifyContent[1]);
+      doc1->ContentStatesChanged(notifyContent[0], notifyContent[1]);
       if (notifyContent[2]) {  // more that two notifications are needed (should be rare)
         // XXX a further optimization here would be to group the notification pairs
         // together by parent/child, only needed if more than two content changed
         // (ie: if [0] and [2] are parent/child, then notify (0,2) (1,3))
-        document->ContentStatesChanged(notifyContent[2], notifyContent[3]);
+        doc1->ContentStatesChanged(notifyContent[2], notifyContent[3]);
         if (notifyContent[4]) {  // more that two notifications are needed (should be rare)
-          document->ContentStatesChanged(notifyContent[4], nsnull);
+          doc1->ContentStatesChanged(notifyContent[4], nsnull);
         }
       }
-      document->EndUpdate();
-      NS_RELEASE(document);
+      doc1->EndUpdate();
+
+      if (doc2) {
+        doc2->BeginUpdate();
+        doc2->ContentStatesChanged(notifyContent[1], notifyContent[2]);
+        if (notifyContent[3]) {
+          doc1->ContentStatesChanged(notifyContent[3], notifyContent[4]);
+        }
+        doc2->EndUpdate();
+      }
     }
 
     from = &(notifyContent[0]);
