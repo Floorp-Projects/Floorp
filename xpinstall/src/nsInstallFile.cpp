@@ -362,7 +362,7 @@ char* nsInstallFile::toString()
             if (mFinalFile)
                 mFinalFile->GetPath(getter_Copies(fname));
 
-            PR_snprintf( buffer, RESBUFSIZE, interimCStr, fname );
+            PR_snprintf( buffer, RESBUFSIZE, interimCStr, fname.get() );
             Recycle(interimCStr);
         }
         Recycle(rsrcVal);
