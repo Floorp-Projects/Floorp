@@ -1554,6 +1554,9 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
   if (!dest)
     return NS_ERROR_FAILURE;
 
+  if (aDX >= dest->mWidth || aDY >= dest->mHeight)
+    return NS_OK;
+
   if (mPendingUpdate)
     UpdateCachedImage();
 

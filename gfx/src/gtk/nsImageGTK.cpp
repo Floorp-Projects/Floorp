@@ -1886,6 +1886,9 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
 
   if (!dest)
     return NS_ERROR_FAILURE;
+    
+  if (aDX >= dest->mWidth || aDY >= dest->mHeight)
+    return NS_OK;
 
   PRUint8 *rgbPtr=0, *alphaPtr=0;
   PRUint32 rgbStride, alphaStride;
