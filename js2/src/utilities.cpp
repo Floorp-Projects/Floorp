@@ -98,7 +98,11 @@ static void dprintf(const char *format, ...)
 void JS::Assert(const char *s, const char *file, int line)
 {
 #if defined(XP_UNIX) || defined(XP_OS2)
+# ifdef stderr
+    fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, line);
+#else
     fprintf(std::stderr, "Assertion failure: %s, at %s:%d\n", s, file, line);
+#endif
 #endif
 #ifdef XP_MAC
     dprintf("Assertion failure: %s, at %s:%d\n", s, file, line);
