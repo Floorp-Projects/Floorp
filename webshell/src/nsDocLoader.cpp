@@ -676,6 +676,7 @@ public:
 
     // Implementation specific methods...
     void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
+    void AreAllConnectionsComplete(void);
     void SetParent(nsDocLoaderImpl* aParent);
 
 protected:
@@ -704,6 +705,12 @@ protected:
      */
     PRInt32             mForegroundURLs;
     PRInt32             mTotalURLs;
+    /*
+     * This flag indicates that the loader is loading a document.  It is set
+     * from the call to LoadDocument(...) until the OnConnectionsComplete(...)
+     * notification is fired...
+     */
+    PRBool              mIsLoadingDocument;
 };
 
 
@@ -721,6 +728,8 @@ nsDocLoaderImpl::nsDocLoaderImpl()
     mStreamObserver = nsnull;
     mForegroundURLs = 0;
     mTotalURLs      = 0;
+
+    mIsLoadingDocument = PR_FALSE;
 
     NS_NewISupportsArray(&m_LoadingDocsList);
     NS_NewLoadAttribs(&m_LoadAttrib);
@@ -866,6 +875,12 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
     mForegroundURLs = 1;
   }
   mTotalURLs = 1;
+  /*
+   * Set the flag indicating that the document loader is in the process of
+   * loading a document.  This flag will remain set until the 
+   * OnConnectionsComplete(...) notification is fired for the loader...
+   */
+  mIsLoadingDocument = PR_TRUE;
 
   m_LoadAttrib->SetReloadType(aType);
   // If we've got special loading instructions, mind them.
@@ -933,7 +948,7 @@ nsDocLoaderImpl::IsBusy(PRBool& aResult)
   /* Otherwise, check its child document loaders... */
   else {
     mChildGroupList.EnumerateForwards(nsDocLoaderImpl::IsBusyEnumerator, 
-                                      (void*)aResult);
+                                      (void*)&aResult);
   }
 
   return NS_OK;
@@ -1126,23 +1141,46 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
      * If the URL was a background URL, then ignore it...
      */
     if (PR_FALSE != bIsForegroundURL) {
-      PRBool bIsBusy;
-
-      IsBusy(bIsBusy);
-
-      if (! bIsBusy) {
-        PRInt32 count = mDocObservers.Count();
-        PRInt32 index;
-
-        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-               ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
-
-        for (index = 0; index < count; index++) {
-          nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-          observer->OnConnectionsComplete();
-        }
-      }
+      AreAllConnectionsComplete();
     }
+  }
+}
+
+void nsDocLoaderImpl::AreAllConnectionsComplete(void)
+{
+  PRBool bIsBusy = PR_TRUE;
+
+  /*
+   * Fire an OnConnectionsComplete(...) notification if the document loader 
+   * is looading a document, but all of the document URLs have been completed.
+   */
+  if (mIsLoadingDocument) {
+    IsBusy(bIsBusy);
+
+    if (!bIsBusy) {
+      PRInt32 count = mDocObservers.Count();
+      PRInt32 index;
+
+      PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+             ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
+      /* Notify all observers that all connections have been loaded... */
+      for (index = 0; index < count; index++) {
+        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+        observer->OnConnectionsComplete();
+      }
+      /*
+       * Clear the flag indicating that the document loader is still loading a 
+       * document...
+       */
+      mIsLoadingDocument = PR_FALSE;
+    }
+  }
+  /*
+   * See if the parent document loader has finished all of its connections 
+   * too..
+   */
+  if ((!bIsBusy) && (nsnull != mParent)) {
+    mParent->AreAllConnectionsComplete();
   }
 }
 
@@ -1188,15 +1226,15 @@ PRBool nsDocLoaderImpl::IsBusyEnumerator(void* aElement, void* aData)
 {
   nsresult rv;
   nsIDocumentLoader* docLoader;
-  PRBool& result = (PRBool&)aData;
+  PRBool* result = (PRBool*)aData;
     
   rv = ((nsISupports*)aElement)->QueryInterface(kIDocumentLoaderIID, (void**)&docLoader);
   if (NS_OK == rv) {
-    docLoader->IsBusy(result);
+    docLoader->IsBusy(*result);
     NS_RELEASE(docLoader);
   }
 
-  return !result;
+  return !(*result);
 }
 
 /****************************************************************************
