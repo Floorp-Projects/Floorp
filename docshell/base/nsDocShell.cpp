@@ -497,34 +497,40 @@ nsDocShell::LoadURI(nsIURI * aURI,
 #endif
 
     if (!shEntry && loadType != LOAD_NORMAL_REPLACE && mCurrentURI == nsnull) {
-        /* Check if we are in the middle of loading a subframe whose parent
-         * was originally loaded thro' Session History. ie., you were in a frameset
-         * page, went somewhere else and clicked 'back'. The loading of the root page
-         * is done and we are currently loading one of its children or sub-children.
+        /* OK. We are in the process of loading a subframe. Checkout the 
+         * parent's loadtype. If the parent was loaded thro' a history
+         * mechanism, then get the SH entry for the child from the parent.
+         * This is done to restore frameset navigation while going back/forward.
+         * If the parent was not loaded thro' any history mechanism, we don't
+         * have to  do this, since we have nothing to restore. 
          */
+
+        // get the parent
         nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
         GetSameTypeParent(getter_AddRefs(parentAsItem));
 
-        // Try to get your SHEntry from your parent
-        if (parentAsItem) {
-            nsCOMPtr<nsIDocShellHistory>
-                parent(do_QueryInterface(parentAsItem));
+        nsCOMPtr<nsIDocShell> parentDS(do_QueryInterface(parentAsItem));
+        PRUint32 parentLoadType;
 
-            // XXX: Should we care if this QI fails?
-            if (parent) {
-                parent->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
-                if (shEntry) {
-                    //Get the proper loadType from the SHEntry.
-                    PRUint32 lt;
-                    shEntry->GetLoadType(&lt);
-                    // Convert the DocShellInfoLoadType returned by the 
-                    // previous function to loadType
-                    loadType =
-                        ConvertDocShellLoadInfoToLoadType((nsDocShellInfoLoadType) lt);
-                }
-            }
-        }
-    }
+        if (parentDS) {
+            // Get the parent's load type
+            parentDS->GetLoadType(&parentLoadType);            
+
+            /* Try to get the SHEntry for this subframe from the parent, 
+             * only if the parent was loaded thro' a history mechanism, 
+             * like back/forward/go/reload
+             */
+            if (parentAsItem && (parentLoadType & LOAD_CMD_HISTORY) || (parentLoadType & LOAD_CMD_RELOAD)) {
+                nsCOMPtr<nsIDocShellHistory> parent(do_QueryInterface(parentAsItem));                
+                if (parent) {
+                    // Get the ShEntry for the child from the parent
+                    parent->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
+                    if (shEntry) 
+                        loadType = parentLoadType;
+                }  // parent
+            } 
+        } //parentDS
+    } // !shEntry
 
     if (shEntry) {
         // Load is from SH. SH does normal load only
@@ -1977,32 +1983,37 @@ nsDocShell::GetChildSHEntry(PRInt32 aChildOffset, nsISHEntry ** aResult)
     
     // A nsISHEntry for a child is *only* available when the parent is in
     // the progress of loading a document too...
-    //
+    
     if (mLSHE) {
         /* Before looking for the subframe's url, check
          * the expiration status of the parent. If the parent
          * has expired from cache, then subframes will not be 
-         * loaded from history. The whole page will be loaded
-         * fresh from the server. 
+         * loaded from history in certain situations.  
          */
         PRBool parentExpired=PR_FALSE;
         mLSHE->GetExpirationStatus(&parentExpired);
-        if (parentExpired) {
-            // The parent has expired. Return null.
-            *aResult = nsnull;
-            return rv;
-        }
+        
         /* Get the parent's Load Type so that it can be set on the child too.
          * By default give a loadHistory value
          */
         PRUint32 loadType = nsIDocShellLoadInfo::loadHistory;
-        mLSHE->GetLoadType(&loadType);    
+        mLSHE->GetLoadType(&loadType);  
         // If the user did a shift-reload on this frameset page, 
         // we don't want to load the subframes from history.         
         if (loadType == nsIDocShellLoadInfo::loadReloadBypassCache ||
             loadType == nsIDocShellLoadInfo::loadReloadBypassProxy ||
             loadType == nsIDocShellLoadInfo::loadReloadBypassProxyAndCache)
             return rv;
+        
+        /* If the user pressed reload and the parent frame has expired
+         *  from cache, we do not want to load the child frame from history.
+         */
+        if (parentExpired && (loadType == nsIDocShellLoadInfo::loadReloadNormal)) {
+            // The parent has expired. Return null.
+            *aResult = nsnull;
+            return rv;
+        }
+
         nsCOMPtr<nsISHContainer> container(do_QueryInterface(mLSHE));
         if (container) {
             // Get the child subframe from session history.
@@ -5504,13 +5515,19 @@ nsDocShell::GetLoadCookie(nsISupports ** aResult)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDocShell::SetLoadType(PRUint32 aLoadType)
 {
     mLoadType = aLoadType;
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::GetLoadType(PRUint32 * aLoadType)
+{
+    *aLoadType = mLoadType;
+    return NS_OK;
+}
 
 nsDocShellInitInfo *
 nsDocShell::InitInfo()

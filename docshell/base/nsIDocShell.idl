@@ -272,5 +272,10 @@ interface nsIDocShell : nsISupports
   const unsigned long BUSY_FLAGS_PAGE_LOADING     = 4;
 
   readonly attribute unsigned long busyFlags;
+
+  /* 
+   * attribute to access the loadtype  for the document
+   */
+  attribute unsigned long  loadType;
 };
 
