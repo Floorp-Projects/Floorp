@@ -42,6 +42,7 @@ LIBRARY_NAME=exthandlers_s
 
 CPP_OBJS =                                          \
         .\$(OBJDIR)\nsExternalHelperAppService.obj  \
+        .\$(OBJDIR)\nsExternalProtocolHandler.obj   \
         .\win\$(OBJDIR)\nsOSHelperAppService.obj  	\
         $(NULL)
 
