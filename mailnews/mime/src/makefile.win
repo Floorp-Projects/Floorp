@@ -64,7 +64,7 @@ OBJS=							\
 #
 			.\$(OBJDIR)\nsMimeFactory.obj	\
 			.\$(OBJDIR)\nsMimeObjectClassAccess.obj		\
-			.\$(OBJDIR)\nsMimeHeaderConverter.obj		\
+			.\$(OBJDIR)\nsMimeConverter.obj		\
 #
 # Code for stream converter interface to netlib...
 #

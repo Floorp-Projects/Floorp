@@ -27,7 +27,7 @@ LIBRARY_NAME=mime
 IS_COMPONENT=1
 EXPORTS =\
 		nsMimeObjectClassAccess.h		\
-		nsMimeHeaderConverter.h			\
+		nsMimeConverter.h			\
 		mimetext.h						\
 		mimeleaf.h						\
 		mimecth.h						\
@@ -47,7 +47,7 @@ EXPORTS =\
 CPPSRCS = \
 		nsMimeFactory.cpp	\
 		nsMimeObjectClassAccess.cpp		\
-		nsMimeHeaderConverter.cpp		\
+		nsMimeConverter.cpp		\
 		plugin_inst.cpp	\
 		mimecont.cpp	\
 		mimeebod.cpp	\
