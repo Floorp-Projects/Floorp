@@ -1620,8 +1620,9 @@ nsSaveMsgListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
         nsCOMPtr<nsIMsgFolder> templateFolder;
         templateFolder = do_QueryInterface(res, &rv);
         if (NS_FAILED(rv)) goto done;
-        rv = templateFolder->CopyFileMessage(m_fileSpec, nsnull,
-                                          PR_TRUE, nsnull, this);
+        nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
+        if (copyService)
+          rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull, PR_TRUE, this, nsnull);
         killSelf = PR_FALSE;
     }
   }
