@@ -60,7 +60,7 @@ Rights Reserved.
                 events="mail-search"
                 oncommandupdate="goUpdateSearchItems(this)">
       <command id="cmd_open" oncommand="goDoCommand('cmd_open')" disabled="true"/>
-      <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')" disabled="true"/>
+      <command id="button_delete" oncommand="goDoCommand('button_delete')" disabled="true"/>
       <command id="file_message_button"/>
     </commandset>
   </commands>
@@ -161,7 +161,7 @@ Rights Reserved.
 			</template>
 		</menubutton>
 
-            <button label="&deleteButton.label;" id="deleteButton" command="cmd_delete"/>
+            <button label="&deleteButton.label;" id="deleteButton" command="button_delete"/>
             <spring flex="1" />
        </box>      
     </titledbox>

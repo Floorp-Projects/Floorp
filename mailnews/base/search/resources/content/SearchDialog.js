@@ -55,8 +55,8 @@ var nsSearchResultsController =
     supportsCommand: function(command)
     {
         switch(command) {
+        case "button_delete":
         case "cmd_open":
-        case "cmd_delete":
         case "file_message_button":
             return true;
         default:
@@ -83,7 +83,7 @@ var nsSearchResultsController =
             MsgOpenSelectedMessages(gSearchView);
             return true;
 
-        case "cmd_delete":
+        case "button_delete":
             MsgDeleteSelectedMessages();
             return true;
 
@@ -415,6 +415,9 @@ nsMsgSearchCommandUpdater.prototype =
       // when the # of items in the selection has actually changed.
       document.commandDispatcher.updateCommands('mail-search');
     },
+  displayMessageChanged : function(aFolder, aSubject)
+  {
+  },
 
   QueryInterface : function(iid)
    {
