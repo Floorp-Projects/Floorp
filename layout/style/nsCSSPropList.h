@@ -355,7 +355,6 @@ CSS_PROP_FONT(font-weight, font_weight, FontWeight, Font, mWeight, eCSSType_Valu
 CSS_PROP_UIRESET(-moz-force-broken-image-icon, force_broken_image_icon, MozForceBrokenImageIcon, UserInterface, mForceBrokenImageIcon, eCSSType_Value, PR_FALSE, nsnull) // bug 58646
 CSS_PROP_POSITION(height, height, Height, Position, mHeight, eCSSType_Value, PR_TRUE, nsnull)
 CSS_PROP_LIST(-moz-image-region, image_region, MozImageRegion, List, mImageRegion, eCSSType_Rect, PR_TRUE, nsnull)
-CSS_PROP_UIRESET(-moz-key-equivalent, key_equivalent, MozKeyEquivalent, UserInterface, mKeyEquivalent, eCSSType_ValueList, PR_FALSE, kKeyEquivalentKTable) // This will need some other notification, but what? // XXX bug 3935
 CSS_PROP_POSITION(left, left, Left, Position, mOffset.mLeft, eCSSType_Value, PR_TRUE, nsnull)
 CSS_PROP_TEXT(letter-spacing, letter_spacing, LetterSpacing, Text, mLetterSpacing, eCSSType_Value, PR_TRUE, nsnull)
 CSS_PROP_TEXT(line-height, line_height, LineHeight, Text, mLineHeight, eCSSType_Value, PR_TRUE, nsnull)

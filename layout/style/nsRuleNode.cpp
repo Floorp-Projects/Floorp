@@ -2459,22 +2459,6 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData,
     ui->mUserSelect = parentUI->mUserSelect;
   }
 
-  // key-equivalent: none, enum XXX, inherit
-  nsCSSValueList*  keyEquiv = uiData.mKeyEquivalent;
-  if (keyEquiv) {
-    // XXX need to deal with multiple values
-    if (eCSSUnit_Enumerated == keyEquiv->mValue.GetUnit()) {
-      ui->mKeyEquivalent = PRUnichar(0);  // XXX To be implemented
-    }
-    else if (eCSSUnit_None == keyEquiv->mValue.GetUnit()) {
-      ui->mKeyEquivalent = PRUnichar(0);
-    }
-    else if (eCSSUnit_Inherit == keyEquiv->mValue.GetUnit()) {
-      inherited = PR_TRUE;
-      ui->mKeyEquivalent = parentUI->mKeyEquivalent;
-    }
-  }
-
   // force-broken-image-icons: integer
   if (eCSSUnit_Integer == uiData.mForceBrokenImageIcon.GetUnit()) {
     ui->mForceBrokenImageIcon = uiData.mForceBrokenImageIcon.GetIntValue();
