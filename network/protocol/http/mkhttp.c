@@ -382,6 +382,9 @@ net_check_for_company_hostname(ActiveEntry *ce)
             add_www = TRUE;
         }
 
+        PR_Free(host);
+        host = NULL;
+
         if(add_www) {
             /* no dots in hostname */
             if (goBrowsing && !PL_strchr(ce->URL_s->address, '/')) {     
