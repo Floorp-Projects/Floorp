@@ -325,7 +325,6 @@ public:
   nsCOMPtr<nsIDOMWindow>      mPrintDocDW;
   PRPackedBool                mIsIFrameSelected;
   PRPackedBool                mIsParentAFrameSet;
-  PRPackedBool                mTimerAlreadyStarted;
   PRPackedBool                mPrintingAsIsSubDoc;
   PRInt16                     mPrintFrameType;
   PRPackedBool                mOnStartSent;
@@ -579,6 +578,7 @@ public:
   NS_IMETHOD_(void) Notify(nsITimer *timer)
   {
     if (mPresContext && mDocViewer) {
+      PRPackedBool initNewTimer = PR_TRUE;
       // Check to see if we are done
       // donePrinting will be true if it completed successfully or
       // if the printing was cancelled
@@ -586,10 +586,12 @@ public:
       if (donePrinting) {
         // now clean up print or print the next webshell
         if (mDocViewer->DonePrintingPages(mPrintObj)) {
-          Stop();
+          initNewTimer = FALSE;
         }
-      } else {
-        Stop();
+      } 
+
+      Stop();
+      if (initNewTimer) {
         nsresult result = StartTimer();
         if (NS_FAILED(result)) {
           donePrinting = PR_TRUE;     // had a failure.. we are finished..
@@ -658,7 +660,7 @@ PrintData::PrintData() :
   mPrintDC(nsnull), mPrintPC(nsnull), mPrintSS(nsnull), mPrintPS(nsnull), mPrintVM(nsnull),
   mPrintView(nsnull), mFilePointer(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
   mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
-  mIsParentAFrameSet(PR_FALSE), mTimerAlreadyStarted(PR_FALSE), mPrintingAsIsSubDoc(PR_FALSE),
+  mIsParentAFrameSet(PR_FALSE), mPrintingAsIsSubDoc(PR_FALSE),
   mPrintFrameType(nsIPrintOptions::kFramesAsIs), mOnStartSent(PR_FALSE), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0)
 {
@@ -2460,15 +2462,38 @@ DocumentViewerImpl::SetClipRect(PrintObject*  aPO,
   
   PRBool doClip = aDoingSetClip;
 
-  if (aPO->mFrameType == eFrame || aPO->mFrameType == eIFrame) {
+  if (aPO->mFrameType == eFrame) {
     if (aDoingSetClip) {
       aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mClipRect.width, aPO->mClipRect.height);
-    } else {
+      clipRect = aPO->mClipRect;
+    } else if (mPrt->mPrintFrameType == nsIPrintOptions::kFramesAsIs) {
       aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mRect.width, aPO->mRect.height);
+      clipRect = aPO->mClipRect;
       doClip = PR_TRUE;
     }
-    clipRect = aPO->mClipRect;
+
+  } else if (aPO->mFrameType == eIFrame) {
+
+    if (aDoingSetClip) {
+      aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mClipRect.width, aPO->mClipRect.height);
+      clipRect = aPO->mClipRect;
+    } else {
+
+      if (mPrt->mPrintFrameType == nsIPrintOptions::kSelectedFrame) {
+        if (aPO->mParent && aPO->mParent == mPrt->mSelectedPO) {
+          aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mRect.width, aPO->mRect.height);
+          clipRect = aPO->mClipRect;
+          doClip = PR_TRUE;
+        }
+      } else {
+        aPO->mClipRect.SetRect(aOffsetX, aOffsetY, aPO->mRect.width, aPO->mRect.height);
+        clipRect = aPO->mClipRect;
+        doClip = PR_TRUE;
+      }
+    }
+
   }
+
 
   PRINT_DEBUG_MSG3("In DV::SetClipRect PO: %p (%9s) ", aPO, gFrameTypesStr[aPO->mFrameType]);
   PRINT_DEBUG_MSG5("%5d,%5d,%5d,%5d\n", aPO->mClipRect.x, aPO->mClipRect.y,aPO->mClipRect.width, aPO->mClipRect.height);
@@ -2626,25 +2651,36 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   // initialize it with the default/generic case
   nsRect adjRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
 
+  // XXX This is an arbitray height, 
+  // but reflow somethimes gets upset when using max int
+  // basically, we want to reflow a single page that is large 
+  // enough to fit any atomic object like an IFrame
+  const PRInt32 kHundredPagesHigh = 100;
+
   // now, change the value for special cases
   if (mPrt->mPrintFrameType == nsIPrintOptions::kEachFrameSep) {
     if (aPO->mFrameType == eFrame) {
       adjRect.SetRect(0, 0, width, height);
     } else if (aPO->mFrameType == eIFrame) {
-      height = pageHeight*10;
+      height = pageHeight*kHundredPagesHigh;
       adjRect.SetRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
     }
 
   } else if (mPrt->mPrintFrameType == nsIPrintOptions::kFramesAsIs) {
     if (aPO->mFrameType == eFrame || aPO->mFrameType == eIFrame) {
-      height = pageHeight*10;
+      height = pageHeight*kHundredPagesHigh;
       adjRect.SetRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
     }
 
   } else if (mPrt->mPrintFrameType == nsIPrintOptions::kSelectedFrame) {
     if (aPO->mFrameType == eIFrame) {
-      height = pageHeight*10;
-      adjRect.SetRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
+      if (aPO == mPrt->mSelectedPO) {
+        adjRect.x = 0;
+        adjRect.y = 0;
+      } else {
+        height = pageHeight*kHundredPagesHigh;
+        adjRect.SetRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
+      }
     }
   }
 
@@ -3022,8 +3058,6 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
   mPrt->mPrintDocDC = aDContext;
   mPrt->mPrintDocDW = aCurrentFocusedDOMWin;
 
-  mPrt->mTimerAlreadyStarted = PR_FALSE;
-
   // This will print the webshell document
   // when it completes asynchronously in the DonePrintingPages method
   // it will check to see if there are more webshells to be printed and 
@@ -3145,7 +3179,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
             doAddInParentsOffset   = aPO->mParent != nsnull && aPO->mParent->mFrameType == eIFrame && aPO->mParent != mPrt->mSelectedPO;
             skipSetTitle           = PR_TRUE;
           } else {
-            skipPageEjectOnly = PR_TRUE;
+            skipPageEjectOnly = aPO->mKids.Count() > 0;
           }
           break;
 
@@ -3308,16 +3342,9 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
           PRInt32 printPageDelay = 500;
           printService->GetPrintPageDelay(&printPageDelay);
 
-          // SetupToPrintContent sets mPrt->mTimerAlreadyStarted to PR_FALSE in
-          // preparation for printing. Start only happens the first time
-          // Then we must re-init it with the new mPrintPresContext 
+          // Schedule Page to Print
           PRINT_DEBUG_MSG3("Scheduling Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]);
-          if (!mPrt->mTimerAlreadyStarted) {
-            mPrt->mTimerAlreadyStarted = PR_TRUE;
-            StartPagePrintTimer(poPresContext, printService, aPO, printPageDelay);
-          } else {
-             mPagePrintTimer->Init(this, poPresContext, printService, aPO, printPageDelay);
-          }
+          StartPagePrintTimer(poPresContext, printService, aPO, printPageDelay);
         } else {
           DoProgressForAsIsFrames();
           // Print the page synchronously
