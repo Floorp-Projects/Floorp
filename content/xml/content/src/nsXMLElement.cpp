@@ -91,8 +91,6 @@ NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 
   *aInstancePtrResult = NS_STATIC_CAST(nsIXMLContent *, it);
 
-  NS_ADDREF(*aInstancePtrResult);
-
   return NS_OK;
 }
 
