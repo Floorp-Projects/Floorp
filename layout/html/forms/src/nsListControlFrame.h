@@ -22,12 +22,16 @@
 #include "nsScrollFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIListControlFrame.h"
+#include "nsISelectControlFrame.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseMotionListener.h"
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
 class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
 class nsIViewManager;
+class nsIPresContext;
 
 /**
  * Frame-based listbox.
@@ -35,7 +39,10 @@ class nsIViewManager;
 
 class nsListControlFrame : public nsScrollFrame, 
                            public nsIFormControlFrame, 
-                           public nsIListControlFrame
+                           public nsIListControlFrame,
+                           public nsIDOMMouseListener,
+                           public nsIDOMMouseMotionListener,
+                           public nsISelectControlFrame
 {
 public:
   friend nsresult NS_NewListControlFrame(nsIFrame** aNewFrame);
@@ -44,8 +51,6 @@ public:
   NS_DECL_ISUPPORTS
 
     // nsIFrame
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
-
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
@@ -99,12 +104,30 @@ public:
 
     // nsIListControlFrame
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
+  NS_IMETHOD GetSelectedIndex(PRInt32* aIndex); 
   NS_IMETHOD GetSelectedItem(nsString & aStr);
-  NS_IMETHOD GetSelectedIndex(PRInt32* aIndex);
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
+
+  // nsISelectControlFrame
+  NS_IMETHOD AddOption(PRInt32 index);
+  NS_IMETHOD RemoveOption(PRInt32 index); 
+
+  //nsIDOMEventListener
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);//{ printf("-MouseDown\n"); return NS_OK; };
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);// { printf("-MouseUp\n"); return NS_OK; };
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent)    { return NS_OK; }
+  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent)     { return NS_OK; }
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent)      { return NS_OK; }
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent)        { return NS_OK; }
+
+  //nsIDOMEventMotionListener
+  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
+  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+
 
     // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
@@ -114,6 +137,7 @@ public:
   static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
 
 protected:
+  NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
  
   nsListControlFrame();
   virtual ~nsListControlFrame();
@@ -128,16 +152,16 @@ protected:
     // Utility methods
   nsresult GetSizeAttribute(PRInt32 *aSize);
   PRInt32  GetNumberOfSelections();
+  nsIContent* GetOptionFromContent(nsIContent *aContent);
+  nsresult GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent);
+  PRInt32  GetSelectedIndexFromContent(nsIContent *aContent);
   nsIContent* GetOptionContent(PRUint32 aIndex);
   PRBool   IsContentSelected(nsIContent* aContent);
-  PRBool   IsFrameSelected(PRUint32 aIndex);
-  void     SetFrameSelected(PRUint32 aIndex, PRBool aSelected);
+  PRBool   IsContentSelectedByIndex(PRUint32 aIndex);
+  void     SetContentSelected(PRUint32 aIndex, PRBool aSelected);
   void     GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   nsresult Deselect();
   nsIFrame *GetOptionFromChild(nsIFrame* aParentFrame);
-  nsresult GetFrameForPointUsing(const nsPoint& aPoint,
-                                 nsIAtom*       aList,
-                                 nsIFrame**     aFrame);
   PRBool   IsAncestor(nsIView* aAncestor, nsIView* aChild);
   nsIView* GetViewFor(nsIWidget* aWidget);
   nsresult SyncViewWithFrame();
@@ -156,22 +180,15 @@ protected:
   void     ClearSelection();
   void     ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue);
 
-  nsresult HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
-                                       nsGUIEvent*     aEvent,
-                                       nsEventStatus&  aEventStatus);
   PRBool   HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
-  void     HandleListSelection(nsIPresContext& aPresContext, 
-                               nsGUIEvent*     aEvent,
-                               nsEventStatus&  aEventStatus);
-  nsresult HandleLikeListEvent(nsIPresContext& aPresContext, 
-                               nsGUIEvent*     aEvent,
-                               nsEventStatus&  aEventStatus);
+  void     HandleListSelection(nsIDOMEvent * aDOMEvent);
   PRInt32  GetSelectedIndexFromFrame(nsIFrame *aHitFrame);
 
   // Data Members
   nscoord      mBorderOffsetY;
   nsFormFrame* mFormFrame;
   PRInt32      mSelectedIndex;
+  PRInt32      mOldSelectedIndex;
   PRInt32      mStartExtendedIndex;
   PRInt32      mEndExtendedIndex;
   nsIFrame*    mHitFrame;
@@ -184,6 +201,9 @@ protected:
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRBool       mIsCapturingMouseEvents;
+  PRBool       mIgnoreMouseUp;             
+
+  nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
   // XXX temprary only until full system mouse capture works
   PRBool mIsScrollbarVisible;
