@@ -664,9 +664,9 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& a
 	    if ( aKeyEvent.charCode <= 26 )
 	    {
 	      if ( aKeyEvent.isShift )
-	        aKeyEvent.charCode += 'A';
+	        aKeyEvent.charCode += 'A' - 1;
 	      else
-	        aKeyEvent.charCode += 'a';
+	        aKeyEvent.charCode += 'a' - 1;
 	    }
 	  }
 	  else
