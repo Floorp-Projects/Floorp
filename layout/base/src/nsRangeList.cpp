@@ -1648,7 +1648,7 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
         return NS_ERROR_FAILURE;
     }
   }
-  if (startNode != FetchAnchorNode() || startOffset != FetchAnchorOffset())
+  if (FetchAnchorNode() != startNode.get() || startOffset != FetchAnchorOffset())
     dirty = PR_TRUE; //something has changed we are dirty no matter what
   if (dirty && *aDir != mDirection) //fixup took place but new direction all bets are off
   {
@@ -1656,7 +1656,7 @@ nsRangeList::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PRBoo
     mFixupState = PR_FALSE;
   }
   else
-    if (FetchOriginalAnchorNode() == startNode && PR_TRUE == mFixupState) //no longer a fixup
+    if (startNode.get() != FetchOriginalAnchorNode() && PR_TRUE == mFixupState) //no longer a fixup
     {
       *aFixupState = PR_TRUE;
       mFixupState = PR_FALSE;
