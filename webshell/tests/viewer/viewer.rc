@@ -141,16 +141,6 @@ VIEWER MENU DISCARDABLE
       MENUITEM "Gfx Off", VIEWER_GFX_SCROLLBARS_OFF
       MENUITEM "Gfx On", VIEWER_GFX_SCROLLBARS_ON
     }
-    POPUP "&Gfx Comboxbox Mode Pref"
-    {
-      MENUITEM "Gfx Off", VIEWER_GFX_COMBOBOX_OFF
-      MENUITEM "Gfx On", VIEWER_GFX_COMBOBOX_ON
-    }
-    POPUP "&Gfx Listbox Mode Pref"
-    {
-      MENUITEM "Gfx Off", VIEWER_GFX_LISTBOX_OFF
-      MENUITEM "Gfx On", VIEWER_GFX_LISTBOX_ON
-    }
   }
   POPUP "&URLs"
   {

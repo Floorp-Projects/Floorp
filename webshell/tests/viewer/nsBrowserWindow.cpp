@@ -932,22 +932,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     }
     break;
 
-  case VIEWER_GFX_LISTBOX_ON: 
-    SetBoolPref("nglayout.widget.gfxlistbox", PR_TRUE);
-    break;
-
-  case VIEWER_GFX_LISTBOX_OFF: 
-    SetBoolPref("nglayout.widget.gfxlistbox", PR_FALSE);
-    break;
-
-  case VIEWER_GFX_COMBOBOX_ON: 
-    SetBoolPref("nglayout.widget.gfxcombobox", PR_TRUE);
-    break;
-
-  case VIEWER_GFX_COMBOBOX_OFF: 
-    SetBoolPref("nglayout.widget.gfxcombobox", PR_FALSE);
-    break;
-
 #ifdef PURIFY
   case VIEWER_PURIFY_SHOW_NEW_LEAKS:
   case VIEWER_PURIFY_SHOW_ALL_LEAKS:
