@@ -42,7 +42,6 @@ package org.mozilla.javascript;
 
 import java.util.*;
 import java.lang.reflect.*;
-import org.mozilla.javascript.tools.shell.Global;
 
 /**
  * This is the class that implements the runtime.
@@ -1780,11 +1779,35 @@ public class ScriptRuntime {
     // Statements
     // ------------------
 
+    private static final String GLOBAL_CLASS = 
+        "org.mozilla.javascript.tools.shell.Global";
+
+    private static ScriptableObject getGlobal(Context cx) {
+        try {
+            Class globalClass = loadClassName(GLOBAL_CLASS);
+            Class[] parm = { Context.class };
+            Constructor globalClassCtor = globalClass.getConstructor(parm);
+            Object[] arg = { cx };
+            return (ScriptableObject) globalClassCtor.newInstance(arg);
+        } catch (ClassNotFoundException e) {
+            // fall through...
+        } catch (NoSuchMethodException e) {
+            // fall through...
+        } catch (InvocationTargetException e) {
+            // fall through...
+        } catch (IllegalAccessException e) {
+            // fall through...
+        } catch (InstantiationException e) {
+            // fall through...
+        }
+        return new ImporterTopLevel(cx);
+    }
+
     public static void main(String scriptClassName, String[] args)
         throws JavaScriptException
     {
         Context cx = Context.enter();
-        ScriptableObject global = new Global(cx);
+        ScriptableObject global = getGlobal(cx);
 
         // get the command line arguments and define "arguments" 
         // array in the top-level object
@@ -1858,7 +1881,7 @@ public class ScriptRuntime {
 
     public static Scriptable runScript(Script script) {
         Context cx = Context.enter();
-        ScriptableObject global = new Global(cx);
+        ScriptableObject global = getGlobal(cx);
         try {
             script.exec(cx, global);
         } catch (JavaScriptException e) {
