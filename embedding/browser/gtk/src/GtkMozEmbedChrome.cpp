@@ -120,8 +120,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowser(const PRUnichar *aName, 
-						  nsIWebBrowser **_retval)
+NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName, 
+						      nsIDocShellTreeItem **_retval)
 {
   g_print("GtkMozEmbedChrome::FindNamedBrowser\n");
   return NS_ERROR_NOT_IMPLEMENTED;
