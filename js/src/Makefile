@@ -202,7 +202,11 @@ $(OBJDIR)/jsmath.o: $(FDLIBM_LIBRARY) $(JSMATH_PRELINK)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
 else
+ifeq ($(OS_ARCH),QNX)
+	ln $(JSMATH_PRELINK) $@
+else
 	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
+endif
 endif
 
 $(JSMATH_PRELINK): jsmath.c jslibmath.h
