@@ -225,6 +225,8 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
    */
   if (content_info)
 	{
+	  // Extract any address contained in the cert.
+	  // This will be used for testing, whether the cert contains no addresses at all.
 	  content_info->GetSignerEmailAddress (getter_Copies(cert_addr));
 	}
 
@@ -283,53 +285,54 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 
   /* Now compare them --
 	 consider it a match if the address in the cert matches either the
-	 address in the From or Sender field; and if the name in the cert
-	 matches either the name in the From or Sender field.
-
-	 Consider it a match if the cert does not contain a name (address.)
-	 But do not consider it a match if the cert contains a name (address)
-	 but the message headers do not.
+	 address in the From or Sender field
    */
 
-  /* ======================================================================
-	 First check the addresses.
-   */
+  PRBool foundFrom = PR_FALSE;
+  PRBool foundSender = PR_FALSE;
 
-  /* If there is no addr in the cert, it can not match and we fail. */
+  /* If there is no addr in the cert at all, it can not match and we fail. */
   if (!cert_addr)
-	match = PR_FALSE;
-
-  /* If there is both a from and sender address, and if neither of
-	 them match, then error. */
-  else if (from_addr && *from_addr &&
-		   sender_addr && *sender_addr)
-	{
-    if (nsCRT::strcasecmp(cert_addr, from_addr) &&
-        nsCRT::strcasecmp(cert_addr, sender_addr))
-		match = PR_FALSE;
-	}
-  /* If there is a from but no sender, and it doesn't match, then error. */
-  else if (from_addr && *from_addr)
-	{
-    if (nsCRT::strcasecmp(cert_addr, from_addr))
-		match = PR_FALSE;
-	}
-  /* If there is a sender but no from, and it doesn't match, then error. */
-  else if (sender_addr && *sender_addr)
-	{
-    if (nsCRT::strcasecmp(cert_addr, sender_addr))
-		match = PR_FALSE;
-	}
-  /* Else there are no addresses at all -- error. */
+  {
+  	match = PR_FALSE;
+  }
   else
-	{
-	  match = PR_FALSE;
-	}
+  {
+    nsCOMPtr<nsIX509Cert> signerCert;
+    content_info->GetSignerCert(getter_AddRefs(signerCert));
 
+    if (signerCert)
+    {
+      if (from_addr && *from_addr)
+      {
+        NS_ConvertASCIItoUCS2 ucs2From(from_addr);
+        if (NS_FAILED(signerCert->ContainsEmailAddress(ucs2From, &foundFrom)))
+        {
+          foundFrom = PR_FALSE;
+        }
+      }
+
+      if (sender_addr && *sender_addr)
+      {
+        NS_ConvertASCIItoUCS2 ucs2Sender(sender_addr);
+        if (NS_FAILED(signerCert->ContainsEmailAddress(ucs2Sender, &foundSender)))
+        {
+          foundSender = PR_FALSE;
+        }
+      }
+    }
+
+    if (!foundSender && !foundFrom)
+    {
+		  match = PR_FALSE;
+	  }
+  }
 
   if (sender_email_addr_return) {
-    if (match && cert_addr)
-      *sender_email_addr_return = nsCRT::strdup(cert_addr);
+    if (match && foundFrom)
+      *sender_email_addr_return = nsCRT::strdup(from_addr);
+    if (match && foundSender)
+      *sender_email_addr_return = nsCRT::strdup(sender_addr);
     else if (from_addr && *from_addr)
       *sender_email_addr_return = nsCRT::strdup(from_addr);
     else if (sender_addr && *sender_addr)
