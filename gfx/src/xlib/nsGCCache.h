@@ -35,7 +35,7 @@
 #include <stdlib.h>
 
 #define countof(x) ((int)(sizeof(x) / sizeof (*x)))
-#define GC_CACHE_SIZE 16
+#define GC_CACHE_SIZE 32
 
 #ifdef DEBUG
 #define DEBUG_METER(x) x
