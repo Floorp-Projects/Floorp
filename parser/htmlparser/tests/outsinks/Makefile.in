@@ -30,19 +30,26 @@ CPPSRCS		= \
 		$(NULL)
 
 LIBS		= \
-		-lraptorhtmlpars \
 		-lxpcom \
 		$(NSPR_LIBS) \
 		$(NULL)
 
 TEST_FILES      = \
-		plainwrap.html \
+		plain.html \
+		plainwrap.out \
+		plainnowrap.out \
+		simple.html \
+		simplecopy.out \
 		entityxif.xif \
+		entityxif.out \
+		mailquote.html \
+		mailquote.out \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 install:: 
 	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
+	$(INSTALL) -m 555 TestOutSinks $(DIST)/bin
 	$(INSTALL) $(TEST_FILES) $(DIST)/bin/OutTestData
 
