@@ -159,7 +159,7 @@ protected:
 
     PRBool    mDoFormat;
     PRBool    mDoHeader;
-    PRBool    mBodyOnly;;
+    PRBool    mBodyOnly;
 
     char*     mBuffer;
     PRInt32   mBufferLength;  // The length of the data in the buffer
