@@ -38,10 +38,9 @@ LIBS := \
 	-lpref \
 	-lxmltok \
 	-lexpat \
-	$(TOOLKIT_WIDGET_LIB) \
+	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 	-lraptorgfx \
-	$(TOOLKIT_GFX_LIB) \
-	$(TOOLKIT_GFX_XLIBRGB_LIB) \
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lraptorhtmlpars \
 	-lraptorview \
 	-labouturl \
