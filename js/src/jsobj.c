@@ -1201,7 +1201,7 @@ obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                (JSPropertyOp) JSVAL_TO_OBJECT(fval), NULL,
-                               JSPROP_GETTER, NULL);
+                               JSPROP_GETTER | JSPROP_SHARED, NULL);
 }
 
 static JSBool
@@ -1233,7 +1233,7 @@ obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                NULL, (JSPropertyOp) JSVAL_TO_OBJECT(fval),
-                               JSPROP_SETTER, NULL);
+                               JSPROP_SETTER | JSPROP_SHARED, NULL);
 }
 
 static JSBool
