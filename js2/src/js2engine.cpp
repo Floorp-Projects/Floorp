@@ -740,13 +740,10 @@ namespace MetaData {
         JS2Object *obj = JS2VAL_TO_OBJECT(v);
         ASSERT(obj->kind == ClassKind);
         JS2Class *c = checked_cast<JS2Class *>(obj);
-        if (c->dynamic)
-            return OBJECT_TO_JS2VAL(new DynamicInstance(c));
+        if (c->prototype)
+            return OBJECT_TO_JS2VAL(new PrototypeInstance(c->prototype, c));
         else
-            if (c->prototype)
-                return OBJECT_TO_JS2VAL(new PrototypeInstance(c->prototype, c));
-            else
-                return OBJECT_TO_JS2VAL(new FixedInstance(c));
+            return OBJECT_TO_JS2VAL(new CallableInstance(c));
     }
 
     // Save current engine state (pc, environment top) and
@@ -855,8 +852,8 @@ namespace MetaData {
     bool ForIteratorObject::buildNameList()
     {
         DynamicPropertyMap *dMap = NULL;
-        if (obj->kind == DynamicInstanceKind)
-            dMap = &(checked_cast<DynamicInstance *>(obj))->dynamicProperties;
+        if (obj->kind == CallableInstanceKind)
+            dMap = (checked_cast<CallableInstance *>(obj))->dynamicProperties;
         else
         if (obj->kind == GlobalObjectKind)
             dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;

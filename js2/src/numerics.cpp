@@ -407,7 +407,7 @@ void JS::BigInt::allocate(uint lgGrossSize)
         FREE_DTOA_LOCK(0);
     } else {
         FREE_DTOA_LOCK(0);
-        w = static_cast<uint32 *>(STD::malloc(max(uint32(grossSize * sizeof(uint32)), uint32(sizeof(uint32 *)))));
+        w = static_cast<uint32 *>(STD::malloc(v_max(uint32(grossSize * sizeof(uint32)), uint32(sizeof(uint32 *)))));
         if (!w) {
             std::bad_alloc outOfMemory;
             throw outOfMemory;

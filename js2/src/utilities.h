@@ -82,8 +82,8 @@ namespace JavaScript
 // Mathematics
 //
 
-    template<class N> inline N min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
-    template<class N> inline N max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
+    template<class N> inline N v_min(N v1, N v2) {return v1 <= v2 ? v1 : v2;}
+    template<class N> inline N v_max(N v1, N v2) {return v1 >= v2 ? v1 : v2;}
 
     uint ceilingLog2(uint32 n);
     uint floorLog2(uint32 n);

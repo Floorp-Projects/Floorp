@@ -116,6 +116,23 @@ namespace MetaData {
         return result;
     }
 
+    js2val JS2Metadata::readEvalFile(const char *fileName)
+    {
+        String buffer;
+        int ch;
+
+        js2val result = JS2VAL_VOID;
+
+        FILE* f = fopen(fileName, "r");
+        if (f) {
+            while ((ch = getc(f)) != EOF)
+                buffer += static_cast<char>(ch);
+            fclose(f);
+            result = readEvalString(buffer, widenCString(fileName));
+        }
+        return result;
+    }
+
 
 
 /************************************************************************************
@@ -431,13 +448,13 @@ namespace MetaData {
                             && (f->attributes == NULL)) {
                         HoistedVar *v = defineHoistedVar(env, f->function.name, p);
                         // XXX Here the spec. has ???, so the following is tentative
-                        DynamicInstance *dInst = new DynamicInstance(functionClass);
+                        CallableInstance *dInst = new CallableInstance(functionClass);
                         dInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
                         f->fWrap = dInst->fWrap;
                         v->value = OBJECT_TO_JS2VAL(dInst);
                     }
                     else {
-                        FixedInstance *fInst = new FixedInstance(functionClass);
+                        CallableInstance *fInst = new CallableInstance(functionClass);
                         fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
                         f->fWrap = fInst->fWrap;
                         switch (memberMod) {
@@ -2781,6 +2798,15 @@ doUnary:
     }
 
     // Define a hoisted var in the current frame (either Global or a Function)
+    // defineHoistedVar(env, id, initialValue) defines a hoisted variable with the name id in the environment env. 
+    // Hoisted variables are hoisted to the global or enclosing function scope. Multiple hoisted variables may be 
+    // defined in the same scope, but they may not coexist with non-hoisted variables with the same name. A hoisted 
+    // variable can be defined using either a var or a function statement. If it is defined using var, then initialValue
+    // is always undefined (if the var statement has an initialiser, then the variable's value will be written later 
+    // when the var statement is executed). If it is defined using function, then initialValue must be a function 
+    // instance or open instance. According to rules inherited from ECMAScript Edition 3, if there are multiple 
+    // definitions of a hoisted variable, then the initial value of that variable is undefined if none of the definitions
+    // is a function definition; otherwise, the initial value is the last function definition.
     HoistedVar *JS2Metadata::defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p)
     {
         HoistedVar *result = NULL;
@@ -2802,14 +2828,16 @@ doUnary:
                 }
             }
         }
-        for (b = regionalFrame->staticWriteBindings.lower_bound(*id),
-                end = regionalFrame->staticWriteBindings.upper_bound(*id); (b != end); b++) {
-            if (b->second->qname == qName) {
-                if (b->second->content->kind != StaticMember::HoistedVariable)
-                    reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                else {
-                    result = checked_cast<HoistedVar *>(b->second->content);
-                    break;
+        if (result == NULL) {
+            for (b = regionalFrame->staticWriteBindings.lower_bound(*id),
+                    end = regionalFrame->staticWriteBindings.upper_bound(*id); (b != end); b++) {
+                if (b->second->qname == qName) {
+                    if (b->second->content->kind != StaticMember::HoistedVariable)
+                        reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+                    else {
+                        result = checked_cast<HoistedVar *>(b->second->content);
+                        break;
+                    }
                 }
             }
         }
@@ -2846,7 +2874,7 @@ doUnary:
 
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code)
     {
-        FixedInstance *fInst = new FixedInstance(functionClass);
+        CallableInstance *fInst = new CallableInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), code);
         writeDynamicProperty(glob, new Multiname(&world.identifiers[name], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
     }
@@ -2888,7 +2916,6 @@ doUnary:
 
 /*** ECMA 3  Global Object ***/
         // Non-function properties of the global object : 'undefined', 'NaN' and 'Infinity'
-// XXX Or are these fixed properties?
         writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
         writeDynamicProperty(glob, new Multiname(&world.identifiers["NaN"], publicNamespace), true, engine->nanValue, RunPhase);
         writeDynamicProperty(glob, new Multiname(&world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
@@ -2900,7 +2927,7 @@ doUnary:
         // Function properties of the Object prototype object
         objectClass->prototype = new PrototypeInstance(NULL, objectClass);
 // XXX Or make this a static class member?
-        FixedInstance *fInst = new FixedInstance(functionClass);
+        CallableInstance *fInst = new CallableInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
         writeDynamicProperty(objectClass->prototype, new Multiname(engine->toString_StringAtom, publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 
@@ -2983,10 +3010,10 @@ doUnary:
         case PrototypeInstanceKind: 
             return prototypeClass;
 
-        case FixedInstanceKind: 
-            return checked_cast<FixedInstance *>(obj)->type;
-        case DynamicInstanceKind:
-            return checked_cast<DynamicInstance *>(obj)->type;
+        case SimpleInstanceKind: 
+            return checked_cast<SimpleInstance *>(obj)->type;
+        case CallableInstanceKind:
+            return checked_cast<CallableInstance *>(obj)->type;
 
         case GlobalObjectKind: 
         case PackageKind:
@@ -3011,8 +3038,8 @@ doUnary:
         ASSERT(obj);
         DynamicPropertyMap *dMap = NULL;
         bool isPrototypeInstance = false;
-        if (obj->kind == DynamicInstanceKind)
-            dMap = &(checked_cast<DynamicInstance *>(obj))->dynamicProperties;
+        if (obj->kind == CallableInstanceKind)
+            dMap = (checked_cast<CallableInstance *>(obj))->dynamicProperties;
         else
         if (obj->kind == GlobalObjectKind)
             dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
@@ -3041,8 +3068,8 @@ doUnary:
         ASSERT(obj);
         DynamicPropertyMap *dMap = NULL;
         bool isPrototypeInstance = false;
-        if (obj->kind == DynamicInstanceKind)
-            dMap = &(checked_cast<DynamicInstance *>(obj))->dynamicProperties;
+        if (obj->kind == CallableInstanceKind)
+            dMap = (checked_cast<CallableInstance *>(obj))->dynamicProperties;
         else
         if (obj->kind == GlobalObjectKind)
             dMap = &(checked_cast<GlobalObject *>(obj))->dynamicProperties;
@@ -3063,7 +3090,7 @@ doUnary:
     // 
     bool JS2Metadata::readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
-        ASSERT(container && ((container->kind == DynamicInstanceKind) 
+        ASSERT(container && ((container->kind == CallableInstanceKind) 
                                 || (container->kind == GlobalObjectKind)
                                 || (container->kind == PrototypeInstanceKind)));
         if (!multiname->onList(publicNamespace))
@@ -3073,8 +3100,8 @@ doUnary:
             reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
         DynamicPropertyMap *dMap = NULL;
         bool isPrototypeInstance = false;
-        if (container->kind == DynamicInstanceKind)
-            dMap = &(checked_cast<DynamicInstance *>(container))->dynamicProperties;
+        if (container->kind == CallableInstanceKind)
+            dMap = (checked_cast<CallableInstance *>(container))->dynamicProperties;
         else
         if (container->kind == GlobalObjectKind)
             dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
@@ -3100,10 +3127,11 @@ doUnary:
         return false;   // 'None'
     }
 
-    void DynamicInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue)
+    void CallableInstance::writeProperty(JS2Metadata * /* meta */, const String *name, js2val newValue)
     {
+        ASSERT(dynamicProperties);
         const DynamicPropertyMap::value_type e(*name, newValue);
-        dynamicProperties.insert(e);
+        dynamicProperties->insert(e);
     }
 
     void ArrayInstance::writeProperty(JS2Metadata *meta, const String *name, js2val newValue)
@@ -3114,8 +3142,9 @@ doUnary:
         //
         //  ToString(ToUint32(name)) == name
         //
+        ASSERT(dynamicProperties);
         const DynamicPropertyMap::value_type e(*name, newValue);
-        dynamicProperties.insert(e);
+        dynamicProperties->insert(e);
 
         const char16 *numEnd;        
         float64 f = stringToDouble(name->data(), name->data() + name->length(), numEnd);
@@ -3131,15 +3160,15 @@ doUnary:
     // Write a value to a dynamic container - inserting into the map if not already there (if createIfMissing)
     bool JS2Metadata::writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
     {
-        ASSERT(container && ((container->kind == DynamicInstanceKind) 
+        ASSERT(container && ((container->kind == CallableInstanceKind) 
                                 || (container->kind == GlobalObjectKind)
                                 || (container->kind == PrototypeInstanceKind)));
         if (!multiname->onList(publicNamespace))
             return false;
         const String *name = multiname->name;
         DynamicPropertyMap *dMap = NULL;
-        if (container->kind == DynamicInstanceKind)
-            dMap = &(checked_cast<DynamicInstance *>(container))->dynamicProperties;
+        if (container->kind == CallableInstanceKind)
+            dMap = (checked_cast<CallableInstance *>(container))->dynamicProperties;
         else
         if (container->kind == GlobalObjectKind)
             dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
@@ -3153,8 +3182,8 @@ doUnary:
         }
         if (!createIfMissing)
             return false;
-        if (container->kind == DynamicInstanceKind) {
-            DynamicInstance *dynInst = checked_cast<DynamicInstance *>(container);
+        if (container->kind == CallableInstanceKind) {
+            CallableInstance *dynInst = checked_cast<CallableInstance *>(container);
             InstanceBinding *ib = resolveInstanceMemberName(dynInst->type, multiname, ReadAccess, phase);
             if (ib == NULL) {
                 dynInst->writeProperty(this, name, newValue);
@@ -3244,12 +3273,12 @@ doUnary:
     // the property or not. If it does, return it's value
     bool JS2Metadata::readProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
-        bool isDynamicInstance = false;
+        bool isCallableInstance = false;
         if (JS2VAL_IS_PRIMITIVE(containerVal)) {
 readClassProperty:
             JS2Class *c = objectType(containerVal);
             InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase);
-            if ((ib == NULL) && isDynamicInstance) 
+            if ((ib == NULL) && isCallableInstance) 
                 return readDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, phase, rval);
             else {
                 // XXX Spec. would have us passing a primitive here since ES4 is 'not addressing' the issue
@@ -3261,11 +3290,11 @@ readClassProperty:
         switch (container->kind) {
         case AttributeObjectKind:
         case MultinameKind:
-        case FixedInstanceKind: 
+        case SimpleInstanceKind: 
         case MethodClosureKind:
             goto readClassProperty;
-        case DynamicInstanceKind:
-            isDynamicInstance = true;
+        case CallableInstanceKind:
+            isCallableInstance = true;
             goto readClassProperty;
 
         case SystemKind:
@@ -3279,6 +3308,9 @@ readClassProperty:
         case PrototypeInstanceKind: 
             return readDynamicProperty(container, multiname, lookupKind, phase, rval);
 
+        case AlienInstanceKind:
+            return (checked_cast<AlienInstance *>(container))->readProperty(multiname, rval);
+
         default:
             ASSERT(false);
             return false;
@@ -3289,13 +3321,13 @@ readClassProperty:
     Slot *JS2Metadata::findSlot(js2val thisObjVal, InstanceVariable *id)
     {
         ASSERT(JS2VAL_IS_OBJECT(thisObjVal) 
-                    && ((JS2VAL_TO_OBJECT(thisObjVal)->kind == DynamicInstanceKind)
-                        || (JS2VAL_TO_OBJECT(thisObjVal)->kind == FixedInstanceKind)));
+                    && ((JS2VAL_TO_OBJECT(thisObjVal)->kind == CallableInstanceKind)
+                        || (JS2VAL_TO_OBJECT(thisObjVal)->kind == SimpleInstanceKind)));
         JS2Object *thisObj = JS2VAL_TO_OBJECT(thisObjVal);
-        if (thisObj->kind == DynamicInstanceKind)
-            return &checked_cast<DynamicInstance *>(thisObj)->slots[id->slotIndex];
+        if (thisObj->kind == CallableInstanceKind)
+            return &checked_cast<CallableInstance *>(thisObj)->slots[id->slotIndex];
         else
-            return &checked_cast<FixedInstance *>(thisObj)->slots[id->slotIndex];
+            return &checked_cast<SimpleInstance *>(thisObj)->slots[id->slotIndex];
     }
 
     // Read the value of an instanceMember, if valid
@@ -3382,16 +3414,16 @@ readClassProperty:
         case MethodClosureKind:
             return false;
 
-        case FixedInstanceKind:
-            c = checked_cast<FixedInstance *>(container)->type;
+        case SimpleInstanceKind:
+            c = checked_cast<SimpleInstance *>(container)->type;
             goto instanceWrite;
-        case DynamicInstanceKind:
-            c = checked_cast<DynamicInstance *>(container)->type;
+        case CallableInstanceKind:
+            c = checked_cast<CallableInstance *>(container)->type;
             goto instanceWrite;
     instanceWrite:
             {
                 InstanceBinding *ib = resolveInstanceMemberName(c, multiname, WriteAccess, phase);
-                if ((ib == NULL) && (container->kind == DynamicInstanceKind))
+                if ((ib == NULL) && (container->kind == CallableInstanceKind))
                     return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
                 else
                     return writeInstanceMember(containerVal, c, (ib) ? &ib->qname : NULL, newValue, phase); 
@@ -3484,12 +3516,12 @@ readClassProperty:
     bool JS2Metadata::deleteProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, bool *result)
     {
         ASSERT(phase == RunPhase);
-        bool isDynamicInstance = false;
+        bool isCallableInstance = false;
         if (JS2VAL_IS_PRIMITIVE(containerVal)) {
 deleteClassProperty:
             JS2Class *c = objectType(containerVal);
             InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase);
-            if ((ib == NULL) && isDynamicInstance) 
+            if ((ib == NULL) && isCallableInstance) 
                 return deleteDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, result);
             else 
                 return deleteInstanceMember(c, (ib) ? &ib->qname : NULL, result);
@@ -3498,11 +3530,11 @@ deleteClassProperty:
         switch (container->kind) {
         case AttributeObjectKind:
         case MultinameKind:
-        case FixedInstanceKind: 
+        case SimpleInstanceKind: 
         case MethodClosureKind:
             goto deleteClassProperty;
-        case DynamicInstanceKind:
-            isDynamicInstance = true;
+        case CallableInstanceKind:
+            isCallableInstance = true;
             goto deleteClassProperty;
 
         case SystemKind:
@@ -3557,15 +3589,15 @@ deleteClassProperty:
 
     bool JS2Metadata::deleteDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind * /* lookupKind */, bool *result)
     {
-        ASSERT(container && ((container->kind == DynamicInstanceKind) 
+        ASSERT(container && ((container->kind == CallableInstanceKind) 
                                 || (container->kind == GlobalObjectKind)
                                 || (container->kind == PrototypeInstanceKind)));
         if (!multiname->onList(publicNamespace))
             return false;
         const String *name = multiname->name;
         DynamicPropertyMap *dMap = NULL;
-        if (container->kind == DynamicInstanceKind)
-            dMap = &(checked_cast<DynamicInstance *>(container))->dynamicProperties;
+        if (container->kind == CallableInstanceKind)
+            dMap = (checked_cast<CallableInstance *>(container))->dynamicProperties;
         else
         if (container->kind == GlobalObjectKind)
             dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
@@ -3833,8 +3865,8 @@ deleteClassProperty:
         if (readProperty(x, &mn, &lookup, RunPhase, &result)) {
             if (JS2VAL_IS_OBJECT(result)) {
                 JS2Object *obj = JS2VAL_TO_OBJECT(result);
-                if ((obj->kind == FixedInstanceKind) && (objectType(result) == functionClass)) {
-                    FunctionWrapper *fWrap = (checked_cast<FixedInstance *>(obj))->fWrap;
+                if ((obj->kind == CallableInstanceKind) && (objectType(result) == functionClass)) {
+                    FunctionWrapper *fWrap = (checked_cast<CallableInstance *>(obj))->fWrap;
                     if (fWrap->code) {
                         result = (fWrap->code)(this, result, NULL, 0);
                         return result;
@@ -3843,7 +3875,7 @@ deleteClassProperty:
                 else
                 if (obj->kind == MethodClosureKind) {
                     MethodClosure *mc = checked_cast<MethodClosure *>(obj);
-                    FixedInstance *fInst = mc->method->fInst;
+                    CallableInstance *fInst = mc->method->fInst;
                     FunctionWrapper *fWrap = fInst->fWrap;
                     if (fWrap->code) {
                         result = (fWrap->code)(this, mc->thisObject, NULL, 0);
@@ -4003,6 +4035,31 @@ deleteClassProperty:
         delete oldData;
     }
 
+    js2val JS2Metadata::invokeFunction(const char *fname)
+    {
+        js2val retval;
+        uint8 *savePC = NULL;
+
+        CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
+        try {
+            LexicalReference rVal(&world.identifiers[widenCString(fname)], false);
+            rVal.emitReadForInvokeBytecode(bCon, 0);
+            bCon->emitOp(eCall, 0, -(0 + 2) + 1);    // pop argCount args, the base & function, and push a result
+            bCon->addShort(0);
+            bCon->emitOp(eReturn, 0);
+            savePC = engine->pc;
+            engine->pc = NULL;
+            retval = engine->interpret(RunPhase, bCon);
+        }
+        catch (Exception &x) {
+            engine->pc = savePC;
+            restoreCompilationUnit(oldData);
+            throw x;
+        }
+        engine->pc = savePC;
+        restoreCompilationUnit(oldData);
+        return retval;
+    }
 
     /*
      * Throw an exception of the specified kind, indicating the position 'pos' and
@@ -4088,21 +4145,22 @@ deleteClassProperty:
 
  /************************************************************************************
  *
- *  DynamicInstance
+ *  CallableInstance
  *
  ************************************************************************************/
 
     // Construct a dynamic instance of a class. Set the
     // initial value of all slots to uninitialized.
-    DynamicInstance::DynamicInstance(JS2Class *type) 
-        : JS2Object(DynamicInstanceKind), 
+    CallableInstance::CallableInstance(JS2Class *type) 
+        : JS2Object(CallableInstanceKind), 
             type(type), 
             fWrap(NULL),
-            call(NULL), 
-            construct(NULL), 
-            env(NULL), 
+//            call(NULL), 
+//            construct(NULL), 
+//            env(NULL), 
             typeofString(type->getName()),
-            slots(new Slot[type->slotCount])
+            slots(new Slot[type->slotCount]),
+            dynamicProperties(type->dynamic ? new DynamicPropertyMap() : NULL)
     {
         for (uint32 i = 0; i < type->slotCount; i++) {
             slots[i].value = JS2VAL_UNINITIALIZED;
@@ -4110,7 +4168,7 @@ deleteClassProperty:
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void DynamicInstance::markChildren()
+    void CallableInstance::markChildren()
     {
         GCMARKOBJECT(type)
         if (fWrap) {
@@ -4124,52 +4182,50 @@ deleteClassProperty:
                 GCMARKVALUE(slots[i].value);
             }
         }
-        for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            GCMARKVALUE(i->second);
-        }        
+        if (dynamicProperties) {
+            for (DynamicPropertyIterator i = dynamicProperties->begin(), end = dynamicProperties->end(); (i != end); i++) {
+                GCMARKVALUE(i->second);
+            }        
+        }
     }
 
 
 
 /************************************************************************************
  *
- *  FixedInstance
+ *  SimpleInstance
  *
  ************************************************************************************/
 
     
-    // Construct a fixed instance of a class. Set the
+    // Construct a Simple instance of a class. Set the
     // initial value of all slots to uninitialized.
-    FixedInstance::FixedInstance(JS2Class *type) 
-        : JS2Object(FixedInstanceKind), 
+    SimpleInstance::SimpleInstance(JS2Class *type) 
+        : JS2Object(SimpleInstanceKind), 
             type(type), 
-            fWrap(NULL),
-            call(NULL), 
-            construct(NULL), 
-            env(NULL), 
             typeofString(type->getName()),
-            slots(new Slot[type->slotCount])
+            slots(new Slot[type->slotCount]),
+            dynamicProperties(type->dynamic ? new DynamicPropertyMap() : NULL)
     {
         for (uint32 i = 0; i < type->slotCount; i++) {
             slots[i].value = JS2VAL_UNINITIALIZED;
         }
-
     }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
-    void FixedInstance::markChildren()
+    void SimpleInstance::markChildren()
     {
         GCMARKOBJECT(type)
-        if (fWrap) {
-            GCMARKOBJECT(fWrap->compileFrame);
-            if (fWrap->bCon)
-                fWrap->bCon->mark();
-        }
         if (slots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
                 GCMARKVALUE(slots[i].value);
             }
+        }
+        if (dynamicProperties) {
+            for (DynamicPropertyIterator i = dynamicProperties->begin(), end = dynamicProperties->end(); (i != end); i++) {
+                GCMARKVALUE(i->second);
+            }        
         }
     }
 

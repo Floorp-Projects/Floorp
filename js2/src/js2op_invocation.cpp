@@ -47,18 +47,11 @@
                 push(a);
             }
             else {
-                if ((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind)) {
+                if (obj->kind == CallableInstanceKind) {
                     FunctionWrapper *fWrap = NULL;
-                    if (obj->kind == FixedInstanceKind) {
-                        FixedInstance *fInst = (checked_cast<FixedInstance *>(obj));
-                        if (fInst->type == meta->functionClass)
-                            fWrap = fInst->fWrap;
-                    }
-                    else {
-                        DynamicInstance *dInst = (checked_cast<DynamicInstance *>(obj));
-                        if (dInst->type == meta->functionClass)
-                            fWrap = dInst->fWrap;
-                    }
+                    CallableInstance *dInst = (checked_cast<CallableInstance *>(obj));
+                    if (dInst->type == meta->functionClass)
+                        fWrap = dInst->fWrap;
                     if (fWrap) {
                         // XXX - I made this stuff up - extract the 'prototype' property from
                         // the function being invoked (defaulting to Object.prototype). Then 
@@ -112,13 +105,10 @@
             if (JS2VAL_IS_PRIMITIVE(b))
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
             JS2Object *fObj = JS2VAL_TO_OBJECT(b);
-            if (((fObj->kind == FixedInstanceKind) || (fObj->kind == DynamicInstanceKind))
+            if ((fObj->kind == CallableInstanceKind)
                         && (meta->objectType(b) == meta->functionClass)) {
                 FunctionWrapper *fWrap;
-                if (fObj->kind == FixedInstanceKind)
-                    fWrap = (checked_cast<FixedInstance *>(fObj))->fWrap;
-                else
-                    fWrap = (checked_cast<DynamicInstance *>(fObj))->fWrap;
+                fWrap = (checked_cast<CallableInstance *>(fObj))->fWrap;
                 js2val compileThis = fWrap->compileFrame->thisObject;
                 if (JS2VAL_IS_VOID(compileThis))
                     a = JS2VAL_VOID;
@@ -148,7 +138,7 @@
             else
             if (fObj->kind == MethodClosureKind) {  // XXX I made this up (particularly the frame push of the objectType)
                 MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
-                FixedInstance *fInst = mc->method->fInst;
+                CallableInstance *fInst = mc->method->fInst;
                 FunctionWrapper *fWrap = fInst->fWrap;
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(&meta->env);
@@ -261,11 +251,11 @@
                 case GlobalObjectKind:
                     a = STRING_TO_JS2VAL(object_StringAtom);
                     break;
-                case FixedInstanceKind:
-                    a = STRING_TO_JS2VAL(checked_cast<FixedInstance *>(obj)->typeofString);
+                case SimpleInstanceKind:
+                    a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->typeofString);
                     break;
-                case DynamicInstanceKind:
-                    a = STRING_TO_JS2VAL(checked_cast<DynamicInstance *>(obj)->typeofString);
+                case CallableInstanceKind:
+                    a = STRING_TO_JS2VAL(checked_cast<CallableInstance *>(obj)->typeofString);
                     break;
                 }
             }

@@ -346,7 +346,7 @@ void initMathObject(JS2Metadata *meta)
     meta->env.addFrame(meta->mathClass);
     PrototypeFunction *pf = &prototypeFunctions[0];
     while (pf->name) {
-        FixedInstance *fInst = new FixedInstance(meta->functionClass);
+        CallableInstance *fInst = new CallableInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
         Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
         meta->defineStaticMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);

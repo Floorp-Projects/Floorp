@@ -50,7 +50,8 @@ class Context;
 class CompoundAttribute;
 class BytecodeContainer;
 class Pond;
-class FixedInstance;
+class SimpleInstance;
+class CallableInstance;
 
 
 typedef void (Invokable)();
@@ -88,11 +89,11 @@ enum ObjectKind {
     ClassKind, 
     BlockKind, 
     PrototypeInstanceKind,
-    FixedInstanceKind,
-    DynamicInstanceKind,
+    SimpleInstanceKind,
+    CallableInstanceKind,
     MultinameKind,
     MethodClosureKind,
-
+    AlienInstanceKind,
     ForIteratorKind
 };
 
@@ -298,7 +299,7 @@ public:
 
 class HoistedVar : public StaticMember {
 public:
-    HoistedVar() : StaticMember(Member::HoistedVariable), value(JS2VAL_VOID), hasFunctionInitializer(false) { }
+    HoistedVar() : StaticMember(Member::HoistedVariable), value(JS2VAL_UNDEFINED), hasFunctionInitializer(false) { }
 
     js2val value;                   // This variable's current value
     bool hasFunctionInitializer;    // true if this variable was created by a function statement
@@ -365,10 +366,10 @@ public:
 
 class InstanceMethod : public InstanceMember {
 public:
-    InstanceMethod(FixedInstance *fInst) : InstanceMember(InstanceMethodKind, NULL, false), fInst(fInst) { }
+    InstanceMethod(CallableInstance *fInst) : InstanceMember(InstanceMethodKind, NULL, false), fInst(fInst) { }
     Signature type;         // This method's signature
-    Invokable *code;        // This method itself (a callable object); null if this method is abstract
-    FixedInstance *fInst;
+//    Invokable *code;        // This method itself (a callable object); null if this method is abstract
+    CallableInstance *fInst;
 
     virtual void mark();
 };
@@ -509,40 +510,39 @@ public:
 };
 
 
-
-// Instances of non-dynamic classes are represented as FIXEDINSTANCE records. These instances can contain only fixed properties.
-class FixedInstance : public JS2Object {
+// Instances which do not respond to the function call or new operators are represented as SIMPLEINSTANCE records
+class SimpleInstance : public JS2Object {
 public:
-    FixedInstance(JS2Class *type);
+    SimpleInstance(JS2Class *type);
 
-    JS2Class    *type;          // This instance's type
-    FunctionWrapper *fWrap;
-    Invokable   *call;          // A procedure to call when this instance is used in a call expression
-    Invokable   *construct;     // A procedure to call when this instance is used in a new expression
-    Environment *env;           // The environment to pass to the call or construct procedure
-    const String  *typeofString;  // A string to return if typeof is invoked on this instance
-    Slot        *slots;         // A set of slots that hold this instance's fixed property values
+    JS2Class    *type;                      // This instance's type
+    const String  *typeofString;            // A string to return if typeof is invoked on this instance
+    Slot        *slots;                     // A set of slots that hold this instance's fixed property values
+    DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
+
     virtual void markChildren();
-    virtual ~FixedInstance()            { }
+    virtual ~SimpleInstance()            { }
 };
 
-// Instances of dynamic classes are represented as DYNAMICINSTANCE records. These instances can contain fixed and dynamic properties.
-class DynamicInstance : public JS2Object {
+// If the instance reposnds to the function call or new operators, then that 
+// instance is a CallableInstance
+class CallableInstance : public JS2Object {
 public:
-    DynamicInstance(JS2Class *type);
+    CallableInstance(JS2Class *type);
 
-    JS2Class    *type;          // This instance's type
+    JS2Class    *type;              // This instance's type
+//    Invokable   *call;            // A procedure to call when this instance is used in a call expression
+//    Invokable   *construct;       // A procedure to call when this instance is used in a new expression
+//    Environment *env;             // The environment to pass to the call or construct procedure
     FunctionWrapper *fWrap;
-    Invokable   *call;          // A procedure to call when this instance is used in a call expression
-    Invokable   *construct;     // A procedure to call when this instance is used in a new expression
-    Environment *env;           // The environment to pass to the call or construct procedure
-    const String  *typeofString;  // A string to return if typeof is invoked on this instance
-    Slot        *slots;         // A set of slots that hold this instance's fixed property values
-    DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
+
+    const String  *typeofString;            // A string to return if typeof is invoked on this instance
+    Slot        *slots;                     // A set of slots that hold this instance's fixed property values
+    DynamicPropertyMap *dynamicProperties;  // A set of this instance's dynamic properties, or NULL if this is a fixed instance
     virtual void markChildren();
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
-    virtual ~DynamicInstance()            { }
+    virtual ~CallableInstance()            { }
 };
 
 // Prototype instances are represented as PROTOTYPE records. Prototype instances
@@ -562,20 +562,20 @@ public:
     virtual ~PrototypeInstance()            { }
 };
 
-// Date instances are fixed (not dynamic? XXX) instances created by the Date class, they have an extra field 
+// Date instances are Callable instances created by the Date class, they have an extra field 
 // that contains the millisecond count
-class DateInstance : public FixedInstance {
+class DateInstance : public CallableInstance {
 public:
-    DateInstance(JS2Class *type) : FixedInstance(type) { }
+    DateInstance(JS2Class *type) : CallableInstance(type) { }
 
     float64     ms;
 };
 
-// String instances are fixed (not dynamic? XXX) instances created by the String class, they have an extra field 
+// String instances are Callable instances created by the String class, they have an extra field 
 // that contains the string data
-class StringInstance : public FixedInstance {
+class StringInstance : public CallableInstance {
 public:
-    StringInstance(JS2Class *type) : FixedInstance(type), mValue(NULL) { }
+    StringInstance(JS2Class *type) : CallableInstance(type), mValue(NULL) { }
 
     String     *mValue;             // has been allocated by engine in the GC'able Pond
 
@@ -583,31 +583,31 @@ public:
     virtual ~StringInstance()            { }
 };
 
-// Number instances are fixed (not dynamic? XXX) instances created by the Number class, they have an extra field 
+// Number instances are Callable instances created by the Number class, they have an extra field 
 // that contains the float64 data
-class NumberInstance : public FixedInstance {
+class NumberInstance : public CallableInstance {
 public:
-    NumberInstance(JS2Class *type) : FixedInstance(type), mValue(0.0) { }
+    NumberInstance(JS2Class *type) : CallableInstance(type), mValue(0.0) { }
 
     float64     mValue;
 };
 
-// Array instances are dynamic instances created by the Array class, they 
+// Array instances are Callable instances created by the Array class, they 
 // maintain the value of the 'length' property when 'indexable' elements
 // are added.
-class ArrayInstance : public DynamicInstance {
+class ArrayInstance : public CallableInstance {
 public:
-    ArrayInstance(JS2Class *type) : DynamicInstance(type) { }
+    ArrayInstance(JS2Class *type) : CallableInstance(type) { }
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
     virtual ~ArrayInstance()            { }
 };
 
-// RegExp instances are dynamic instances created by the RegExp class, they have an extra field 
+// RegExp instances are Callable instances created by the RegExp class, they have an extra field 
 // that contains the RegExp object
-class RegExpInstance : public DynamicInstance {
+class RegExpInstance : public CallableInstance {
 public:
-    RegExpInstance(JS2Class *type) : DynamicInstance(type) { }
+    RegExpInstance(JS2Class *type) : CallableInstance(type) { }
 
     void setLastIndex(JS2Metadata *meta, js2val a);
     void setGlobal(JS2Metadata *meta, js2val a);
@@ -623,6 +623,18 @@ public:
 
     REState     *mRegExp;
     virtual ~RegExpInstance()            { }
+};
+
+// A base class for objects from another world
+// to which read & write property calls are dispatched
+class AlienInstance : public JS2Object {
+public:
+    AlienInstance(void *d) : JS2Object(AlienInstanceKind), uData(d) { }
+
+    void *uData;
+
+    virtual bool readProperty(Multiname *m, js2val *rval);      // return true/false to signal whether the property is available
+    virtual void writeProperty(Multiname *m, js2val rval);
 };
 
 // A helper class for 'for..in' statements
@@ -960,6 +972,7 @@ public:
 
     js2val readEvalString(const String &str, const String& fileName);
     js2val readEvalFile(const String& fileName);
+    js2val readEvalFile(const char *fileName);
 
 
     void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
@@ -991,6 +1004,7 @@ public:
     bool findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result);
     JS2Class *getVariableType(Variable *v, Phase phase, size_t pos);
 
+    js2val invokeFunction(const char *fname);
 
     bool readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);

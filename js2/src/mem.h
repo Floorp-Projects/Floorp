@@ -182,7 +182,7 @@ namespace JavaScript
 #ifdef __GNUC__ // why doesn't g++ support numeric_limits<T>?
         static size_type max_size() {return size_type(-1) / sizeof(T);}
 #else
-        static size_type max_size() {return std::numeric_limits<size_type>::max() / sizeof(T);}
+        static size_type max_size() {return std::numeric_limits<size_type>::v_max() / sizeof(T);}
 #endif
 
         template<class U> struct rebind {typedef ArenaAllocator<U> other;};

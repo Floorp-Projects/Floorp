@@ -126,7 +126,7 @@
             for (uint16 i = 0; i < argCount; i++) {
                 b = pop();
                 const DynamicPropertyMap::value_type e(*numberToString((argCount - 1) - i), b);
-                aInst->dynamicProperties.insert(e);
+                aInst->dynamicProperties->insert(e);
             }
             setLength(meta, aInst, argCount);
             push(baseVal);

@@ -244,11 +244,11 @@
             b = pop();
             ASSERT(JS2VAL_IS_OBJECT(b));
             JS2Object *obj = JS2VAL_TO_OBJECT(b);
-            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
-            if (obj->kind == FixedInstanceKind)
-                checked_cast<FixedInstance *>(obj)->slots[slotIndex].value = a;
+            ASSERT((obj->kind == SimpleInstanceKind) || (obj->kind == CallableInstanceKind));
+            if (obj->kind == SimpleInstanceKind)
+                checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value = a;
             else
-                checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value = a;
+                checked_cast<CallableInstance *>(obj)->slots[slotIndex].value = a;
             push(a);
         }
         break;
@@ -260,11 +260,11 @@
             b = pop();
             ASSERT(JS2VAL_IS_OBJECT(b));
             JS2Object *obj = JS2VAL_TO_OBJECT(b);
-            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
-            if (obj->kind == FixedInstanceKind)
-                push(checked_cast<FixedInstance *>(obj)->slots[slotIndex].value);
+            ASSERT((obj->kind == SimpleInstanceKind) || (obj->kind == CallableInstanceKind));
+            if (obj->kind == SimpleInstanceKind)
+                push(checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value);
             else
-                push(checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value);
+                push(checked_cast<CallableInstance *>(obj)->slots[slotIndex].value);
         }
         break;
 
@@ -275,11 +275,11 @@
             b = top();
             ASSERT(JS2VAL_IS_OBJECT(b));
             JS2Object *obj = JS2VAL_TO_OBJECT(b);
-            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
-            if (obj->kind == FixedInstanceKind)
-                push(checked_cast<FixedInstance *>(obj)->slots[slotIndex].value);
+            ASSERT((obj->kind == SimpleInstanceKind) || (obj->kind == CallableInstanceKind));
+            if (obj->kind == SimpleInstanceKind)
+                push(checked_cast<SimpleInstance *>(obj)->slots[slotIndex].value);
             else
-                push(checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value);
+                push(checked_cast<CallableInstance *>(obj)->slots[slotIndex].value);
         }
         break;
 

@@ -467,7 +467,7 @@ uint32 JS::PrettyPrinter::defaultLineWidth = 20;
 // be at the beginning of a line. Call end before destroying the Formatter;
 // otherwise the last line may not be output to f.
 JS::PrettyPrinter::PrettyPrinter(Formatter &f, uint32 lineWidth):
-        lineWidth(min(lineWidth, static_cast<uint32>(unlimitedLineWidth))),
+        lineWidth(v_min(lineWidth, static_cast<uint32>(unlimitedLineWidth))),
         outputFormatter(f),
         outputPos(0),
         lineNum(0),

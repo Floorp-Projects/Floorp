@@ -1469,7 +1469,7 @@ void initDateObject(JS2Metadata *meta)
 
     PrototypeFunction *pf = &prototypeFunctions[0];
     while (pf->name) {
-        FixedInstance *fInst = new FixedInstance(meta->functionClass);
+        CallableInstance *fInst = new CallableInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
 /*
 XXX not prototype object function properties, like ECMA3, but members of the Date class

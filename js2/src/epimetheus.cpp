@@ -266,13 +266,10 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
     if (argc) {
         if (JS2VAL_IS_OBJECT(argv[0])) {
             JS2Object *fObj = JS2VAL_TO_OBJECT(argv[0]);
-            if ((((fObj->kind == FixedInstanceKind) || (fObj->kind == DynamicInstanceKind))
+            if (((fObj->kind == CallableInstanceKind)
                         && (meta->objectType(argv[0]) == meta->functionClass))) {
                 FunctionWrapper *fWrap;
-                if (fObj->kind == FixedInstanceKind)
-                    fWrap = (checked_cast<FixedInstance *>(fObj))->fWrap;
-                else
-                    fWrap = (checked_cast<DynamicInstance *>(fObj))->fWrap;
+                fWrap = (checked_cast<CallableInstance *>(fObj))->fWrap;
                 if (fWrap->code)
                     stdOut << "<native code>\n";
                 else
