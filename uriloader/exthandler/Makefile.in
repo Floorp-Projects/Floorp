@@ -120,6 +120,11 @@ EXPORTS = \
 		$(OSDIR)/nsOSHelperAppService.h \
 			$(NULL)
 
+JAVA_XPIDLSRCS = \
+		nsIExternalHelperAppService.idl \
+		nsIHelperAppLauncherDialog.idl \
+		$(NULL)
+
 XPIDLSRCS = \
 	nsCExternalHandlerService.idl	\
 	nsIExternalProtocolService.idl \

@@ -69,11 +69,17 @@ CPPSRCS = 							\
 				nsURILoader.cpp 		\
 				nsDocLoader.cpp			\
 				$(NULL)
+
 SDK_XPIDLSRCS = 						\
 				nsIURIContentListener.idl 	\
 				nsIWebProgress.idl 	\
 				nsIWebProgressListener.idl 	\
 				$(NULL)
+
+JAVA_XPIDLSRCS = \
+				nsIDownload.idl \
+				$(NULL)
+
 XPIDLSRCS = 							\
 				nsIContentHandler.idl 		\
 				nsIURILoader.idl	 	\
@@ -81,6 +87,7 @@ XPIDLSRCS = 							\
 				nsIDownload.idl   \
 				nsIDocumentLoader.idl		\
 				$(NULL)
+
 EXPORTS = 							\
 				nsURILoader.h	 		\
 				nsDocLoader.h			\

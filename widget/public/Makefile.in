@@ -78,6 +78,11 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXPORTS       += nsWidgetAtoms.h nsWidgetAtomList.h
 endif
 
+JAVA_XPIDLSRCS = \
+		nsIAppShell.idl \
+		nsIBaseWindow.idl \
+		$(NULL)
+
 XPIDLSRCS	= \
 		nsIAppShell.idl \
 		nsIFilePicker.idl \

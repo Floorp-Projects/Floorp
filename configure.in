@@ -457,6 +457,19 @@ if test "$MACOS_SDK_DIR"; then
 fi
 
 dnl ========================================================
+dnl Java SDK support
+dnl ========================================================
+JAVA_INCLUDE_PATH=
+MOZ_ARG_WITH_STRING(java-include-path,
+[  --with-java-include-path=dir   Location of Java SDK headers],
+    JAVA_INCLUDE_PATH=$withval)
+
+JAVA_BIN_PATH=
+MOZ_ARG_WITH_STRING(java-bin-path,
+[  --with-java-bin-path=dir   Location of Java binaries (java, javac, jar)],
+    JAVA_BIN_PATH=$withval)
+
+dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
 AC_PROG_CPP
@@ -4135,6 +4148,50 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0 && test `echo "$MOZ_EXTE
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
 fi
 
+MOZ_ENABLE_JAVAXPCOM=
+JAVAC=
+JAR=
+if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
+  MOZ_ENABLE_JAVAXPCOM=1
+
+  if test -n "${JAVA_INCLUDE_PATH}"; then
+    dnl Make sure jni.h exists in the given include path.
+    if test ! -f $JAVA_INCLUDE_PATH/jni.h; then
+      AC_MSG_ERROR([jni.h was not found in given include path $JAVA_INCLUDE_PATH.])
+    fi
+  else
+    case "$target_os" in
+      darwin*)
+        dnl Default to java system location
+        JAVA_INCLUDE_PATH=/System/Library/Frameworks/JavaVM.framework/Headers
+        ;;
+      *)
+        dnl Try $JAVA_HOME
+        JAVA_INCLUDE_PATH=$JAVA_HOME/include
+        ;;
+    esac
+    if test ! -f $JAVA_INCLUDE_PATH/jni.h; then
+      AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME or use --with-java-include-path={java-include-dir}.])
+    fi
+  fi
+
+  if test -n "${JAVA_BIN_PATH}"; then
+    dnl Look for javac and jar in the specified path.
+    AC_PATH_PROG(JAVAC, javac, :, $JAVA_BIN_PATH)
+    AC_PATH_PROG(JAR, jar, :, $JAVA_BIN_PATH)
+    if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
+      AC_MSG_ERROR([The programs javac and jar were not found in given path $JAVA_BIN_PATH.])
+    fi
+  else
+    dnl No path specified, so look for javac and jar are in $JAVA_HOME & $PATH.
+    AC_PATH_PROG(JAVAC, javac, :, [$JAVA_HOME/bin:$PATH])
+    AC_PATH_PROG(JAR, jar, :, [$JAVA_HOME/bin:$PATH])
+    if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
+      AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}.])
+    fi
+  fi
+fi
+
 dnl ========================================================
 dnl Check for GSSAPI libraries and headers needed for
 dnl integrated windows authentication support (disable
@@ -5823,6 +5880,11 @@ AC_SUBST(LDAP_CFLAGS)
 AC_SUBST(LDAP_LIBS)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_STORAGE)
+
+AC_SUBST(MOZ_ENABLE_JAVAXPCOM)
+AC_SUBST(JAVA_INCLUDE_PATH)
+AC_SUBST(JAVAC)
+AC_SUBST(JAR)
 
 AC_SUBST(MOZ_PROFILESHARING)
 AC_SUBST(MOZ_PROFILELOCKING)

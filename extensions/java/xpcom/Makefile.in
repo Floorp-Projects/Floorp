@@ -46,14 +46,12 @@ include $(topsrcdir)/config/config.mk
 MODULE		= javaxpcom
 LIBRARY_NAME	= javaxpcom
 
-EMBED_JAR = mozembed.jar
-EMBED_JAR_SRC = $(patsubst %.jar,%-src.jar,$(EMBED_JAR))
-PACKAGE_NAME = org.mozilla.xpcom
-
 REQUIRES	= xpcom \
 		  string \
 		  embed_base \
 		  $(NULL)
+
+DIRS = build
 
 CPPSRCS		= \
 		nsJavaInterfaces.cpp \
@@ -63,18 +61,19 @@ CPPSRCS		= \
 		nsJavaXPCOMBindingUtils.cpp \
 		$(NULL)
 
-# Can't use JAVA_SRCS for now, since that one is referenced in config.mk
-JAVA_SRCS_ = \
+JAVA_SRCS = \
 		XPCOM.java \
 		XPCOMException.java \
 		GeckoEmbed.java \
 		$(NULL)
 
-LOCAL_INCLUDES	= \
-		-I$(JAVA_HOME)/include \
-		$(NULL)
+LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
 
-LOCAL_INCLUDES	+= -I$(JAVA_HOME)/include/linux
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/win32
+else
+LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
+endif
 
 EXTRA_DSO_LIBS = \
 	embed_base_s \
@@ -86,89 +85,8 @@ EXTRA_DSO_LDOPTS = \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
-IDL_FILES := $(filter-out nsrootidl.idl,$(wildcard $(DIST)/idl/*))
-
-JAVA_IFACES = $(addprefix $(XPIDL_GEN_DIR)/org/mozilla/xpcom/,$($(notdir $(IDL_FILES)):.idl=.java))
-JAVA_STUBS = $(patsubst %.idl,$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/%_Stub.java,$(notdir $(IDL_FILES)))
-
-_JAVA_IFACE_CLASSES = $(patsubst %.idl,org/mozilla/xpcom/%.class,$(notdir $(IDL_FILES)))
-_JAVA_STUB_CLASSES = $(patsubst %.idl,org/mozilla/xpcom/stubs/%_Stub.class,$(notdir $(IDL_FILES)))
-
-_IGNORE_IFACES = domstubs
-IGNORE_IFACES = $(patsubst %,org/mozilla/xpcom/%.class,$(_IGNORE_IFACES))
-JAVA_IFACE_CLASSES = $(filter-out $(IGNORE_IFACES),$(_JAVA_IFACE_CLASSES))
-
-_IGNORE_STUBS = domstubs gfxIFormats
-IGNORE_STUBS = $(patsubst %,org/mozilla/xpcom/stubs/%_Stub.class,$(_IGNORE_STUBS))
-JAVA_STUB_CLASSES = $(filter-out $(IGNORE_STUBS),$(_JAVA_STUB_CLASSES))
-
-GARBAGE += $(EMBED_JAR) $(EMBED_JAR_SRC)
-GARBAGE_DIRS += $(XPIDL_GEN_DIR) org
-
 include $(topsrcdir)/config/rules.mk
 
-$(XPIDL_GEN_DIR)/.done:
-	@if test ! -d $(XPIDL_GEN_DIR); then echo Creating $(XPIDL_GEN_DIR)/.done; rm -rf $(XPIDL_GEN_DIR); mkdir $(XPIDL_GEN_DIR); fi
-	@touch $@
-
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done: $(XPIDL_GEN_DIR)/.done
-	@if test ! -d $(XPIDL_GEN_DIR)/org/mozilla/xpcom; then echo Creating $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done; rm -rf $(XPIDL_GEN_DIR)/org; mkdir $(XPIDL_GEN_DIR)/org; mkdir $(XPIDL_GEN_DIR)/org/mozilla; mkdir $(XPIDL_GEN_DIR)/org/mozilla/xpcom; fi
-	@touch $@
-
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done
-	@if test ! -d $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; then echo Creating $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done; rm -rf $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; mkdir $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; fi
-	@touch $@
-
-org/mozilla/xpcom/.done:
-	@if test ! -d org/mozilla/xpcom; then echo Creating org/mozilla/xpcom/.done; rm -rf org; mkdir org; mkdir org/mozilla; mkdir org/mozilla/xpcom; fi
-	@touch $@
-
-org/mozilla/xpcom/stubs/.done: org/mozilla/xpcom/.done
-	@if test ! -d org/mozilla/xpcom/stubs; then echo Creating org/mozilla/xpcom/stubs/.done; rm -rf org/mozilla/xpcom/stubs; mkdir org/mozilla/xpcom/stubs; fi
-	@touch $@
-
-#$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/%.java: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
-#	$(ELOG) $(XPIDL_COMPILE) -m javastub -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/$* $(_VPATH_SRCS)
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done
-	@echo Making Java stub files
-	@for idl in $(IDL_FILES); do \
-		$(XPIDL_COMPILE) -m javastub -p $(PACKAGE_NAME) -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/`basename $$idl`_Stub $$idl; \
-	done
-	@touch $@
-
-#$(XPIDL_GEN_DIR)/org/mozilla/xpcom/%.java: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
-#	$(ELOG) $(XPIDL_COMPILE) -m java -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/$* $(_VPATH_SRCS)
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done $(JAVA_SRCS_)
-	@echo Making Java interface files
-	@for idl in $(IDL_FILES); do \
-		$(XPIDL_COMPILE) -m java -p $(PACKAGE_NAME) -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/`basename $$idl` $$idl; \
-	done
-	@$(INSTALL) -m 644 $(addprefix $(srcdir)/,$(JAVA_SRCS_)) $(XPIDL_GEN_DIR)/org/mozilla/xpcom
-	@touch $@
-
-#org/mozilla/xpcom/stubs/%.class: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done org/mozilla/xpcom/stubs/.done
-#	@javac -classpath org/mozilla/xpcom:org/mozilla/xpcom/stubs -sourcepath $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs -d org/mozilla/xpcom/stubs $(XPIDL_GEN_DIR)/$(patsubst %.class,%.java,$@)
-
-#org/mozilla/xpcom/%.class: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done org/mozilla/xpcom/.done
-#	@javac -classpath org/mozilla/xpcom -sourcepath $(XPIDL_GEN_DIR)/org/mozilla/xpcom -d org/mozilla/xpcom $(XPIDL_GEN_DIR)/$(patsubst %.class,%.java,$@)
-
-org/mozilla/xpcom/.class_done: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done
-	@echo Compiling Java interface classes
-	@javac -classpath . -d . $(filter-out $(addprefix $(XPIDL_GEN_DIR)/,$(IGNORE_STUBS:.class=.java)),$(wildcard $(XPIDL_GEN_DIR)/org/mozilla/xpcom/*.java))
-	@touch $@
-
-org/mozilla/xpcom/stubs/.class_done: org/mozilla/xpcom/.class_done $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done
-	@echo Compiling Java stub classes
-	@javac -classpath . -d . $(filter-out $(addprefix $(XPIDL_GEN_DIR)/,$(IGNORE_STUBS:.class=.java)),$(wildcard $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/*.java))
-	@touch $@
-
-#$(EMBED_JAR): $(JAVA_IFACE_CLASSES) $(JAVA_STUB_CLASSES)
-$(EMBED_JAR): org/mozilla/xpcom/.class_done org/mozilla/xpcom/stubs/.class_done
-	$(ZIP) $(EMBED_JAR) -qq -r org
-
-$(EMBED_JAR_SRC): $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done
-	@cd $(XPIDL_GEN_DIR); $(ZIP) ../$(EMBED_JAR_SRC) -qq -r org
-
-jar:: $(EMBED_JAR) $(EMBED_JAR_SRC)
-	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
+export::
+	@$(INSTALL) -m 644 $(addprefix $(srcdir)/,$(JAVA_SRCS)) $(JAVA_DIST_DIR)/org/mozilla/xpcom
 

@@ -130,6 +130,11 @@ MOZ_PROFILESHARING = @MOZ_PROFILESHARING@
 MOZ_PROFILELOCKING = @MOZ_PROFILELOCKING@
 MOZ_STORAGE = @MOZ_STORAGE@
 
+MOZ_ENABLE_JAVAXPCOM = @MOZ_ENABLE_JAVAXPCOM@
+JAVA_INCLUDE_PATH=@JAVA_INCLUDE_PATH@
+JAVAC=@JAVAC@
+JAR=@JAR@
+
 # The MOZ_UI_LOCALE var is used to build a particular locale. Do *not*
 # use the var to change any binary files. Do *not* use this var unless you
 # write rules for the "clean-locale" and "locale" targets.
