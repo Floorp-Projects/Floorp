@@ -3054,11 +3054,11 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
 {
     if (mDisallowPopupWindows && aWindowTarget && aWindowTarget[0] != '\0')
     {
-        nsXPIDLCString scheme;
-        nsresult rv = aURI->GetScheme(getter_Copies(scheme));
-        if (NS_SUCCEEDED(rv) &&
-            nsCRT::strcmp(scheme, "chrome") &&
-            nsCRT::strcmp(scheme, "resource"))
+        PRBool isChrome = PR_FALSE;
+        PRBool isResource = PR_FALSE;
+        if (NS_SUCCEEDED(aURI->SchemeIs(nsIURI::CHROME, &isChrome)) &&
+                NS_SUCCEEDED(aURI->SchemeIs(nsIURI::RESOURCE, &isResource)) &&
+                !isChrome && !isResource)
         {
             static const char top[] = "_top";
             if (!nsCRT::strcmp(aWindowTarget, "_blank") ||
