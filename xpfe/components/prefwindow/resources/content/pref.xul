@@ -55,8 +55,11 @@
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <hbox flex="1">
-    <!-- tree sidebar -->
-    <tree id="prefsTree" style="width: 13em;"/>
+    <vbox>
+      <label value="&categoryHeader;"/>
+      <!-- tree sidebar -->
+      <tree id="prefsTree" style="width: 13em;" flex="1"/>
+    </vbox>
     <vbox flex="1">
       <dialogheader id="header"/>
       <iframe id="panelFrame" name="panelFrame" style="width: 0px" flex="1"/>
