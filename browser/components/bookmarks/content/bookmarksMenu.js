@@ -804,6 +804,35 @@ var BookmarksMenuDNDObserver = {
 var BookmarksToolbar = 
 {
   /////////////////////////////////////////////////////////////////////////////
+  // make bookmarks toolbar act like menus
+  openedMenuButton:null,
+  autoOpenMenu: function (aEvent)
+  {
+    var target = aEvent.target;
+    if (BookmarksToolbar.openedMenuButton != target &&
+        target.nodeName == "toolbarbutton" &&
+        target.type == "menu") {
+      BookmarksToolbar.openedMenuButton.open = false;
+      target.open = true;
+    }
+  },
+  setOpenedMenu: function (aEvent)
+  {
+    if (aEvent.target.parentNode.localName == 'toolbarbutton') {
+      if (!this.openedMenuButton)
+        aEvent.currentTarget.addEventListener("mouseover", this.autoOpenMenu, true);
+      this.openedMenuButton = aEvent.target.parentNode;
+    }
+  },
+  unsetOpenedMenu: function (aEvent)
+  {
+    if (aEvent.target.parentNode.localName == 'toolbarbutton') {
+      aEvent.currentTarget.removeEventListener("mouseover", this.autoOpenMenu, true);
+      this.openedMenuButton = null;
+    }
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
   // returns the node of the last visible bookmark on the toolbar -->
   getLastVisibleBookmark: function ()
   {
