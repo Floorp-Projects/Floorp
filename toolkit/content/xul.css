@@ -634,7 +634,7 @@ label.text-link {
   -moz-user-focus: normal;
 }
 
-label[control] {
+label[control], label.radio-label, label.checkbox-label {
   -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
 }
 
