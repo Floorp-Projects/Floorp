@@ -76,38 +76,38 @@
  
      <treeitem>
        
-      <treecell><treeindentation/>Mail &amp; News</treecell>
+      <treecell name="resource://res/mailnews/preference/pref-mailnews.html"><treeindentation/>Mail &amp; News</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell><treeindentation/>Identity</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-identity.html"><treeindentation/>Identity</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Mail Servers</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-mailservers.html"><treeindentation/>Mail Servers</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>News Servers</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-newsservers.html"><treeindentation/>News Servers</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Addressing</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-addressing.html"><treeindentation/>Addressing</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Messages</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-messages.html"><treeindentation/>Messages</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Window Settings</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-winsetting.html"><treeindentation/>Window Settings</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Copies &amp; Folders</treecell>
+        <treecell name="resource://res/mailnews/preference/pref-copiesfolders.html"><treeindentation/>Copies &amp; Folders</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Formatting</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-formatting.html"><treeindentation/>Formatting</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Return Receipts</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-receipts.html"><treeindentation/>Return Receipts</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Disk Space</treecell>
+          <treecell name="resource://res/mailnews/preference/pref-diskspace.html"><treeindentation/>Disk Space</treecell>
 	    </treeitem>
       </treechildren>
     
