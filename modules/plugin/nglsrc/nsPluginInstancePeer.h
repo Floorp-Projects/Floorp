@@ -62,6 +62,9 @@ public:
 
   NS_IMETHOD
   GetJSWindow(JSObject* *outJSWindow);
+  
+  NS_IMETHOD
+  GetJSThread(PRUint32 *outThreadID);
 
   // nsIWindowlessPluginInstancePeer
 
@@ -154,6 +157,7 @@ private:
   nsIPluginInstance       *mInstance; //we don't add a ref to this
   nsIPluginInstanceOwner  *mOwner;    //we don't add a ref to this
   nsMIMEType              mMIMEType;
+  PRUint32                mThreadID;
 };
 
 #endif

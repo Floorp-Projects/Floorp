@@ -21,6 +21,7 @@
 #include "nsIPluginInstance.h"
 #include <stdio.h>
 #include "prmem.h"
+#include "prthread.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "nsIFileStream.h"
@@ -39,7 +40,7 @@
 #include "winbase.h"
 #endif
 
-nsPluginInstancePeerImpl :: nsPluginInstancePeerImpl()
+nsPluginInstancePeerImpl::nsPluginInstancePeerImpl()
 {
   NS_INIT_REFCNT();
 
@@ -48,7 +49,7 @@ nsPluginInstancePeerImpl :: nsPluginInstancePeerImpl()
   mMIMEType = nsnull;
 }
 
-nsPluginInstancePeerImpl :: ~nsPluginInstancePeerImpl()
+nsPluginInstancePeerImpl::~nsPluginInstancePeerImpl()
 {
   mInstance = nsnull;
   mOwner = nsnull;
@@ -68,7 +69,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_IMPL_ADDREF(nsPluginInstancePeerImpl);
 NS_IMPL_RELEASE(nsPluginInstancePeerImpl);
 
-nsresult nsPluginInstancePeerImpl :: QueryInterface(const nsIID& iid, void** instance)
+nsresult nsPluginInstancePeerImpl::QueryInterface(const nsIID& iid, void** instance)
 {
     if (instance == NULL)
         return NS_ERROR_NULL_POINTER;
@@ -111,13 +112,13 @@ nsresult nsPluginInstancePeerImpl :: QueryInterface(const nsIID& iid, void** ins
     return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetValue(nsPluginInstancePeerVariable variable, void *value)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetValue(nsPluginInstancePeerVariable variable, void *value)
 {
 printf("instance peer getvalue %d called\n", variable);
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMIMEType(nsMIMEType *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetMIMEType(nsMIMEType *result)
 {
   if (nsnull == mMIMEType)
     *result = "";
@@ -127,7 +128,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMIMEType(nsMIMEType *result)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMode(nsPluginMode *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetMode(nsPluginMode *result)
 {
   if (nsnull != mOwner)
     return mOwner->GetMode(result);
@@ -271,7 +272,7 @@ nsPluginStreamToFile::Close(void)
 
 // end of nsPluginStreamToFile
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: NewStream(nsMIMEType type, const char* target, nsIOutputStream* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::NewStream(nsMIMEType type, const char* target, nsIOutputStream* *result)
 {
   nsresult rv;
   nsPluginStreamToFile*  stream = new nsPluginStreamToFile(target, mOwner);
@@ -281,7 +282,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: NewStream(nsMIMEType type, const char*
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: ShowStatus(const char* message)
+NS_IMETHODIMP nsPluginInstancePeerImpl::ShowStatus(const char* message)
 {
   if (nsnull != mOwner)
     return mOwner->ShowStatus(message);
@@ -289,7 +290,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: ShowStatus(const char* message)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values)
 {
   if (nsnull != mOwner)
   {
@@ -316,7 +317,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttributes(PRUint16& n, const char*
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttribute(const char* name, const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetAttribute(const char* name, const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -340,7 +341,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttribute(const char* name, const c
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetTagType(nsPluginTagType *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetTagType(nsPluginTagType *result)
 {
   if (nsnull != mOwner)
   {
@@ -364,7 +365,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetTagType(nsPluginTagType *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetTagText(const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetTagText(const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -388,7 +389,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetTagText(const char* *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetParameters(PRUint16& n, const char*const*& names, const char*const*& values)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetParameters(PRUint16& n, const char*const*& names, const char*const*& values)
 {
   if (nsnull != mOwner)
   {
@@ -415,7 +416,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetParameters(PRUint16& n, const char*
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetParameter(const char* name, const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetParameter(const char* name, const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -439,7 +440,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetParameter(const char* name, const c
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetDocumentBase(const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetDocumentBase(const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -463,7 +464,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetDocumentBase(const char* *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetDocumentEncoding(const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetDocumentEncoding(const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -487,7 +488,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetDocumentEncoding(const char* *resul
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAlignment(const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetAlignment(const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -511,7 +512,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAlignment(const char* *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetWidth(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetWidth(PRUint32 *result)
 {
   if (nsnull != mOwner)
   {
@@ -535,7 +536,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetWidth(PRUint32 *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetHeight(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetHeight(PRUint32 *result)
 {
   if (nsnull != mOwner)
   {
@@ -559,7 +560,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetHeight(PRUint32 *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetBorderVertSpace(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetBorderVertSpace(PRUint32 *result)
 {
   if (nsnull != mOwner)
   {
@@ -583,7 +584,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetBorderVertSpace(PRUint32 *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetBorderHorizSpace(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetBorderHorizSpace(PRUint32 *result)
 {
   if (nsnull != mOwner)
   {
@@ -607,7 +608,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetBorderHorizSpace(PRUint32 *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetUniqueID(PRUint32 *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetUniqueID(PRUint32 *result)
 {
   if (nsnull != mOwner)
   {
@@ -631,7 +632,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetUniqueID(PRUint32 *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetCode(const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetCode(const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -655,7 +656,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetCode(const char* *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetCodeBase(const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetCodeBase(const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -679,7 +680,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetCodeBase(const char* *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetArchive(const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetArchive(const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -703,7 +704,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetArchive(const char* *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetName(const char* *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetName(const char* *result)
 {
   if (nsnull != mOwner)
   {
@@ -727,7 +728,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetName(const char* *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMayScript(PRBool *result)
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetMayScript(PRBool *result)
 {
   if (nsnull != mOwner)
   {
@@ -751,7 +752,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: GetMayScript(PRBool *result)
   }
 }
 
-NS_IMETHODIMP nsPluginInstancePeerImpl :: SetWindowSize(PRUint32 width, PRUint32 height)
+NS_IMETHODIMP nsPluginInstancePeerImpl::SetWindowSize(PRUint32 width, PRUint32 height)
 {
 printf("instance peer setwindowsize called\n");
   return NS_OK;
@@ -788,7 +789,13 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
 	return rv;
 }
 
-nsresult nsPluginInstancePeerImpl :: Initialize(nsIPluginInstanceOwner *aOwner,
+NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSThread(PRUint32 *outThreadID)
+{
+	*outThreadID = mThreadID;
+	return NS_OK;
+}
+
+nsresult nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
                                                 const nsMIMEType aMIMEType)
 {
   //don't add a ref to prevent circular references... MMP
@@ -805,11 +812,14 @@ nsresult nsPluginInstancePeerImpl :: Initialize(nsIPluginInstanceOwner *aOwner,
     if (nsnull != mMIMEType)
       PL_strcpy((char *)mMIMEType, aMIMEType);
   }
+  
+  // record the thread we were created in.
+  mThreadID = PRUint32(PR_GetCurrentThread());
 
   return NS_OK;
 }
 
-nsresult nsPluginInstancePeerImpl :: GetOwner(nsIPluginInstanceOwner *&aOwner)
+nsresult nsPluginInstancePeerImpl::GetOwner(nsIPluginInstanceOwner *&aOwner)
 {
   aOwner = mOwner;
   NS_IF_ADDREF(mOwner);
