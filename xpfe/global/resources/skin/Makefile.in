@@ -41,6 +41,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/formatting.css \
 		$(srcdir)/global.css \
 		$(srcdir)/menu.css \
+		$(srcdir)/splitter.css \
 		$(srcdir)/menubutton.css \
 		$(srcdir)/menulist.css \
 		$(srcdir)/radio.css \

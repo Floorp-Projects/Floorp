@@ -2,6 +2,7 @@ tasksOverlay.css
 box.css
 toolbar.css
 menu.css
+splitter.css
 global.css
 formatting.css
 textfield.css
