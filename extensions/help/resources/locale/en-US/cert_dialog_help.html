@@ -19,7 +19,7 @@
 <td class="inthissection">
 <p>In this section:</p>
 <p><a href="#Certificate_Details">Certificate Details</a></p>
-<p><a href="#Enrollment_Informatio">Enrollment Information</a></p>
+<p><a href="#Enrollment_Information">Enrollment Information</a></p>
 <p><a href="#Certificate_Renewal">Certificate Renewal</a></p>
 <p><a href="#User_Identification_Request">User Identification Request</a></p>
 <p><a href="#New_Certificate_Authority">New Certificate Authority</a></p>
@@ -34,17 +34,16 @@
 <h2>Certificate Details</h2>
 
 
-<p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. 
+<p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides suficient information. The Details tab provides complete details on the certificate's contents&151;information normally of interest to IS professionals only.
 
-<p>The top panel of the Certificate Details window displays the certificate chain, with the certificate you originally selected at the bottom. A certificate chain is a hierarchical series of certificates signed by successive certificate authorities. A CA certificate identifies a <a href="glossary.html#1020903">certificate authority (CA)</a> and is used to sign certificates issued by that authority. A CA certificate can in turn be signed by the CA certificate of a parent CA and so on up to a <a href="glossary.html#1015631">root CA</a>. 
+<p>&nbsp;</p>
+<a NAME="General_Tab"></a>
+<h3>General Tab</h3>
 
-<p>To examine information for any certificate in the certificate chain, click the its name in the top panel. The corresponding information is displayed in the bottom panel.
+<p<>When you first open the Certificate Details window, the General tab displays several kinds of information about the selected certificate: </P>
 
-
-The bottom panel shows the following information about the selected certificate: </P>
-
-<ul><LI>Whether the certificate has been verified, and if so for what uses. See <a href="glossary.html#certificate verification">certificate verification</a> for a discussion of how the Certificate Manager verifies certificates. Uses can include any of the following: </LI>
-
+<ul>
+	<li><b>This certificate has been verified for the following uses:</b> See <a href="glossary.html#certificate_verification">certificate verification</a> for a discussion of how the Certificate Manager verifies certificates. Uses can include any of the following:
 <ul>
 <LI><B>SSL Client Certificate.</B> Certificate used to identify you to web sites.</LI>
 
@@ -56,29 +55,41 @@ The bottom panel shows the following information about the selected certificate:
 
 <LI><B>Status Responder Certificate.</B> Certificate used to identify an on-line status responder that uses the Online Certificate Status Protocol (OCSP) to check the validity of certificates. For more information about OCSP, see <a href="validation_help.html">Validation Settings</a>.</LI>
 
-<LI><B>Certificate Authority Certificate.</B> Certificate used to identify a certificate authority&#151;that is, a service that issues certificates for use as identification over computer networks.</LI></ul>
-
-<LI><p><B>Common Name.</B> The name of the person or other entity that the certificate identifies.</LI>
-
-<LI><p><B>Organization.</B> The name of the organization to which the entity belongs (such as the name of a company).</LI>
-
-<LI><p><B>Organizational Unit.</B> The name of the organizational unit to which the entity belongs (such as Accounting Department).</LI>
-
-<LI><B>Issuer Name.</B> The name of the organization that issued the certificate.</LI>
-
-<LI><B>Serial Number.</B> The certificate's serial number.</LI>
-
-<LI><B>RSA Public Modulus.</B></LI>
-
-<LI><B>SHA1 Fingerprint.</B>A fingerprint is a unique number associated with a certificate. In this case the number is produced by applying a mathematical function based on the Secure Hash Algorithm (SHA1)to the contents of the certificate. A certificate's fingerprint can be used to verify that the certificate has not been tampered with.</LI>
-
-<LI><B>MD5 Fingerprint.</B>A fingerprint produced by applying a mathematical function based on the Message Digest Algorithm (MD5)to the contents of the certificate.</LI>
+<LI><B>Certificate Authority.</B> Certificate used to identify a certificate authority&#151;that is, a service that issues certificates for use as identification over computer networks.</LI>
 
 </ul>
+	<li><b>Issued To:</b> Summarizes the following information about the certificate:
+	<ul>
+	<LI><p><B>Common Name.</B> The name of the person or other entity that the certificate identifies.</LI>
 
-<p>The Details tab of the Certifiate Details window displays the complete contents of the selected certificate. This information is normally of interest to IS professionals only. </P>
+	<LI><p><B>Organization.</B> The name of the organization to which the entity belongs (such as the name of a company).</LI>
 
-<p>Certificate Manager displays basic ANSI types in human-readable form wherever possible. For fields whose contents it cannot interpret, Certificate Manager simply displays the actual values contained in the certificate.</P>
+	<LI><p><B>Organizational Unit.</B> The name of the organizational unit to which the entity belongs (such as Accounting Department).</LI>
+	<LI><B>Serial Number.</B> The certificate's serial number.</LI>
+	</UL>
+
+	<li><b>Issued By:</b> Summarizes similar information about the certificate authority (CA) that issued the  certificate.
+	<li><b>Validity:</b> Indicates the period during which the certificate is valid.
+	<li><b>Fingerprints:</b> Lists the certificate's fingerprints. A fingerprint is a unique number produced by applying a mathematical function to the certificate contents. A certificate's fingerprint can be used to verify that the certificate has not been tampered with.
+</ul>
+
+
+<p>&nbsp;</p>
+<a NAME="Details_Tab"></a>
+<h3>Details Tab</h3>
+
+<p>Click the Details tab at the top of the Certificate Details window to see more detailed information about the selected certificate. To examine information for any certificate in the Certificate Hierarchy area, select its name, select the field under Certificate Fields that you want to examine, and read the field's value under Field Value:
+
+
+<ul>
+	<li><b>Certificate Hierarchy.</b> Displays the certificate chain, with the certificate you originally selected at the bottom. A certificate chain is a hierarchical series of certificates signed by successive certificate authorities (CAs). A CA certificate identifies a <a href="glossary.html#certificate_authority_(CA)">certificate authority</a> and is used to sign certificates issued by that authority. A CA certificate can in turn be signed by the CA certificate of a parent CA and so on up to a <a href="glossary.html#root_CA">root_CA</a>.
+	<li><b>Certificate Fields.</b> Displays the fields of the certificate selected under Certificate Hierarchy.	
+	<li><b>Field Value.</b> Displays the value of the field selected under Certificate Fields.
+</ul>
+
+<p>The top panel of the Certificate Details window  
+
+<p>The Certificate Details tab displays basic ANSI types in human-readable form wherever possible. For fields whose contents the Certificate Manager cannot interpret, it displays the actual values contained in the certificate.</P>
 
 
 <p>&nbsp;</p>
@@ -111,7 +122,7 @@ The bottom panel shows the following information about the selected certificate:
 <a NAME="Encryption_Key_Copy"></a>
 <h3>Encryption Key Copy</h3>
 
-<p><a href="glossary.html#certificate authority (CA)">Certificate authorities (CAs)</a> that issue separate signing and encryption email certificates typically make backup copies of your private encryption key during the certificate enrollment process. Separate signing and encryption certificates require client software that supports <a href="glossary.html#dual key pairs">dual key pairs</a> for use in signing and encrypting email.</P>
+<p><a href="glossary.html#certificate_authority_(CA)">Certificate authorities (CAs)</a> that issue separate signing and encryption email certificates typically make backup copies of your private encryption key during the certificate enrollment process. Separate signing and encryption certificates require email software that supports <a href="glossary.html#dual_key_pairs">dual key pairs</a> for use in signing and encrypting email.</P>
 
 <p>It's important to understand that a CA that has archived a backup copy of your encryption key has the potential capability of decrypting any messages encrypted with your public key. If you trust your CA with this capability, click OK. After your CA makes a backup copy of the encryption key, you will be able to use that key to access your encrypted mail even if you lose your password or lose your own copy of the key. If no backup copy of your encryption key exists and you lose your password or the key, you will have no way of reading any of your encrypted email messages.</P></A>
 
@@ -157,7 +168,7 @@ The bottom panel shows the following information about the selected certificate:
 <h2>User Identification Request</h2>
 
 
-<P>Some web sites require that you identify yourself with a certificate rather than a name and password, because certificates provide a more reliable form of identification. This method of identifying yourself over the Internet is sometimes called <a href="glossary.html#client authentication">client authentication</a>.
+<P>Some web sites require that you identify yourself with a certificate rather than a name and password, because certificates provide a more reliable form of identification. This method of identifying yourself over the Internet is sometimes called <a href="glossary.html#client_authentication">client authentication</a>.
 
 <p>However, Certificate Manager may have more than one certificate on file that can be used for the purposes of identifying yourself to a web site. In this case, Certificate Manager presents the User Identification Request window, which allows you to select the appropriate certificate for the web site you want to visit.</P>
 
@@ -176,7 +187,7 @@ The bottom panel shows the following information about the selected certificate:
 <a NAME="New_Certificate_Authority"></a>
 <h2>New Certificate Authority</h2>
 
-<p>The certificates the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify a <a href="glossary.html#certificate authority (CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. When you decide to trust a CA, Certificate Manager files that CA's certificate and can then recognize the kinds of certificates you trust that CA to issue.</P>
+<p>The certificates the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify a <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. When you decide to trust a CA, Certificate Manager files that CA's certificate and can then recognize the kinds of certificates you trust that CA to issue.</P>
 
 <p><b>[what follows needs updating for new UI]</b>
 
@@ -208,7 +219,7 @@ The bottom panel shows the following information about the selected certificate:
 <h3>New Web Site Certificate</h3>
 
 
-<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate authority (CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays the following windows:</P>
+<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays the following windows:</P>
 
 <p><b>[following needs updating for new UI</b>
 
@@ -255,7 +266,7 @@ The bottom panel shows the following information about the selected certificate:
 <h3>Unexpected Certificate Name</h3>
 
 
-<p>A web site <a href="glossary.html#certificate">certificate</a> specifies the name of the web site in the form of the site's host name. For example, the host name for Netscape Netcenter is <FONT FACE="courier, courier new, monospace">home.netscape.com</FONT>. If the host name in a web site's certificate doesn't match the actual host name of the web site, it may be a sign that someone is attempting to intercept your communication with the web site.</P>
+<p>A web site <a href="glossary.html#certificate">certificate</a> specifies the name of the web site in the form of the site's host name. For example, the host name for the Netscape web site is <FONT FACE="courier, courier new, monospace">home.netscape.com</FONT>. If the host name in a web site's certificate doesn't match the actual host name of the web site, it may be a sign that someone is attempting to intercept your communication with the web site.</P>
 
 <p>The decision whether to trust the site anyway depends on what you intend to do at the site and what else you know about it. Most commercial sites will make sure that the host name for a web site certificate matches the web site's actual host name.</P></A>
 
@@ -265,7 +276,7 @@ The bottom panel shows the following information about the selected certificate:
 
 
 <hr>
-<p><i>5/10/2001</i></p>
+<p><i>6/15/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
