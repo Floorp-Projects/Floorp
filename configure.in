@@ -154,9 +154,6 @@ AC_PATH_PROG(ZIP, zip, :)
 
 AC_PATH_XTRA
 
-XLDFLAGS="$X_LIBS"
-XLIBS="-lX11 $X_EXTRA_LIBS"
-
 GNU_CC=
 GNU_CXX=
 if test "$GCC" = "yes"; then
@@ -535,14 +532,17 @@ MOZ_ARG_DISABLE_BOOL(dtd-debug,
   MOZ_DISABLE_DTD_DEBUG=1 
   AC_DEFINE(MOZ_DISABLE_DTD_DEBUG) )
 
+
+XLDFLAGS="$X_LIBS"
+XLIBS="$X_EXTRA_LIBS"
+
 dnl ========================================================
-
-
 dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
 if test "$no_x" != "yes"; then
+XLIBS="-lX11 $XLIBS"
 _SAVE_LDFLAGS="$LDFLAGS"
 LDFLAGS="$XLDFLAGS $LDFLAGS"
 AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
@@ -552,7 +552,7 @@ AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
 AC_CHECK_LIB(ICE, IceFlush, [XICE_LIBS="-lICE"],, $XLIBS)
 AC_CHECK_LIB(SM, SmcCloseConnection, [XSM_LIBS="-lSM"],, $XLIBS)
 AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"],
-	[MISSING_X="$MISSING_X -lXt"], $XLIBS)
+	[MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XLIBS)
 AC_CHECK_LIB(Xmu, XmuLookupString, [XMU_LIBS="-lXmu"],
 	[MISSING_X="$MISSING_X -lXmu"], $XLIBS)
 LDFLAGS="$_SAVE_LDFLAGS"
