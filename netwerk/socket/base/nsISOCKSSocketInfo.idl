@@ -37,19 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIProxy.idl"
+#include "nsISupports.idl"
 
-%{C++
-#include "prtypes.h"
-#include "prio.h"
-%}
-
-[ptr] native prNetAddr(PRNetAddr);
+[ptr] native PRNetAddrPtr(union PRNetAddr);
 
 [noscript, uuid(8f755c44-1dd2-11b2-a613-91117453fa95)]
-interface nsISOCKSSocketInfo : nsIProxy {
-  
-    attribute prNetAddr destinationAddr;
-    attribute prNetAddr externalProxyAddr;
-    attribute prNetAddr internalProxyAddr;
+interface nsISOCKSSocketInfo : nsISupports
+{
+    attribute PRNetAddrPtr destinationAddr;
+    attribute PRNetAddrPtr externalProxyAddr;
+    attribute PRNetAddrPtr internalProxyAddr;
 };
