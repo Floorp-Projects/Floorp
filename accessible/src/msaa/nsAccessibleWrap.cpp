@@ -914,7 +914,7 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
     if (hwnd) {
       IDispatch *retval = nsnull;
       AccessibleObjectFromWindow(NS_REINTERPRET_CAST(HWND, hwnd), 
-        OBJID_CLIENT, IID_IAccessible, (void **) &retval);
+        OBJID_WINDOW, IID_IAccessible, (void **) &retval);
       return retval;
     }
   }
