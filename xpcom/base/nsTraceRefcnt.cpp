@@ -1178,16 +1178,20 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
     if (--skip <= 0) {
       Dl_info info;
       int ok = dladdr((void*) pc, &info);
-      if (!ok)
-        goto unknown;
+      if (!ok) {
+        fprintf(aStream, "UNKNOWN %p\n", (void *)pc);
+        continue;
+      }
+
+      PRUint32 foff = (char*)pc - (char*)info.dli_fbase;
 
       const char * symbol = info.dli_sname;
-      if (!symbol)
-        goto unknown;
-
-      int len = strlen(symbol);
-      if (! len)
-        goto unknown;
+      int len;
+      if (!symbol || !(len = strlen(symbol))) {
+        fprintf(aStream, "UNKNOWN [%s +0x%08X]\n",
+                info.dli_fname, foff);
+        continue;
+      }
 
       char demangled[4096] = "\0";
 
@@ -1199,14 +1203,9 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
       }
 
       PRUint32 off = (char*)pc - (char*)info.dli_saddr;
-      PRUint32 foff = (char*)pc - (char*)info.dli_fbase;
       fprintf(aStream, "%s+0x%08X [%s +0x%08X]\n",
               symbol, off, info.dli_fname, foff);
-
     }
-    continue;
-  unknown:
-    fprintf(aStream, "UNKNOWN %p\n", (void *)pc);
   }
 }
 #elif defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))
