@@ -114,9 +114,8 @@ nsProfileAccess::~nsProfileAccess()
 }
 
 // A wrapper function to call the interface to get a platform file charset.
-static
 nsresult 
-GetPlatformCharset(nsAutoString& aCharset)
+GetPlatformCharset(nsString& aCharset)
 {
     nsresult rv;
 
@@ -132,9 +131,8 @@ GetPlatformCharset(nsAutoString& aCharset)
 }
 
 // Apply a charset conversion from the given charset to Unicode for input C string.
-static
 nsresult 
-ConvertStringToUnicode(nsAutoString& aCharset, const char* inString, nsAutoString& outString)
+ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAWritableString& outString)
 {
     nsresult rv;
     // convert result to unicode
