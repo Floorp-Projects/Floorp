@@ -483,8 +483,7 @@ public class IRFactory {
 
                 Node newScope = createNewLocal(new Node(Token.NEWSCOPE));
                 Node initScope = new Node(Token.SETPROP, newScope,
-                                          Node.newString(
-                                                   name.getString()),
+                                          Node.newString(name.getString()),
                                           createUseLocal(exn));
                 catchStmt.addChildToBack(new Node(Token.POP, initScope));
 
@@ -699,8 +698,7 @@ public class IRFactory {
                 //  to Delete(Bind("a"), String("a"))
                 childNode.setType(Token.BINDNAME);
                 left = childNode;
-                right = childNode.cloneNode();
-                right.setType(Token.STRING);
+                right = Node.newString(childNode.getString());
             } else if (childType == Token.GETPROP ||
                        childType == Token.GETELEM)
             {
@@ -837,17 +835,19 @@ public class IRFactory {
         Node opLeft = Node.newString(Token.NAME, s);
         if (tonumber)
             opLeft = new Node(Token.POS, opLeft);
-        if (postfix)
+        
+        if (!postfix) {
+            Node op = new Node(assignOp, opLeft, right);
+            Node lvalueLeft = Node.newString(Token.BINDNAME, s);
+            return new Node(Token.SETNAME, lvalueLeft, op);
+        } else {
             opLeft = createNewTemp(opLeft);
-        Node op = new Node(assignOp, opLeft, right);
-
-        Node lvalueLeft = Node.newString(Token.BINDNAME, s);
-        Node result = new Node(Token.SETNAME, lvalueLeft, op);
-        if (postfix) {
-            result = new Node(Token.COMMA, result,
-                              createUseTemp(opLeft));
+            Node op = new Node(assignOp, opLeft, right);
+            Node lvalueLeft = Node.newString(Token.BINDNAME, s);
+            Node result = new Node(Token.SETNAME, lvalueLeft, op);
+            result = new Node(Token.COMMA, result, createUseTemp(opLeft));
+            return result;
         }
-        return result;
     }
 
     public Node createNewTemp(Node n) {
@@ -857,13 +857,13 @@ public class IRFactory {
             // and loading from a temp
             return n;
         }
-        Node result = new Node(Token.NEWTEMP, n);
-        return result;
+        return new Node(Token.NEWTEMP, n);
     }
 
-    public Node createUseTemp(Node newTemp) {
-        int type = newTemp.getType();
-        if (type == Token.NEWTEMP) {
+    public Node createUseTemp(Node newTemp) 
+    {
+        switch (newTemp.getType()) {
+          case Token.NEWTEMP: {
             Node result = new Node(Token.USETEMP);
             result.putProp(Node.TEMP_PROP, newTemp);
             int n = newTemp.getIntProp(Node.USES_PROP, 0);
@@ -871,23 +871,25 @@ public class IRFactory {
                 newTemp.putIntProp(Node.USES_PROP, n + 1);
             }
             return result;
+          }
+          case Token.STRING:
+            return Node.newString(newTemp.getString());
+          case Token.NUMBER:
+            return Node.newNumber(newTemp.getDouble());
+          default:
+            throw Context.codeBug();
         }
-        return newTemp.cloneNode();
     }
 
     public Node createNewLocal(Node n) {
-        Node result = new Node(Token.NEWLOCAL, n);
-        return result;
+        return new Node(Token.NEWLOCAL, n);
     }
 
     public Node createUseLocal(Node newLocal) {
-        int type = newLocal.getType();
-        if (type == Token.NEWLOCAL) {
-            Node result = new Node(Token.USELOCAL);
-            result.putProp(Node.LOCAL_PROP, newLocal);
-            return result;
-        }
-        return newLocal.cloneNode();    // what's this path for ?
+        if (Token.NEWLOCAL != newLocal.getType()) Context.codeBug();
+        Node result = new Node(Token.USELOCAL);
+        result.putProp(Node.LOCAL_PROP, newLocal);
+        return result;
     }
 
     public static boolean hasSideEffects(Node exprTree) {
@@ -905,8 +907,7 @@ public class IRFactory {
                 while (child != null) {
                     if (hasSideEffects(child))
                         return true;
-                    else
-                        child = child.getNext();
+                    child = child.getNext();
                 }
                 break;
         }
@@ -954,23 +955,24 @@ public class IRFactory {
 
             opLeft = new Node(nodeType, useTmp1, useTmp2);
         } else {
-            tmp1 = obj.cloneNode();
+            tmp1 = Node.newString(Token.NAME, obj.getString());
             tmp2 = id.cloneNode();
             opLeft = new Node(nodeType, obj, id);
         }
 
         if (tonumber)
             opLeft = new Node(Token.POS, opLeft);
-        if (postfix)
+
+        if (!postfix) {
+            Node op = new Node(assignOp, opLeft, expr);
+            return new Node(type, tmp1, tmp2, op);
+        } else {
             opLeft = createNewTemp(opLeft);
-        Node op = new Node(assignOp, opLeft, expr);
-
-        Node result = new Node(type, tmp1, tmp2, op);
-        if (postfix) {
+            Node op = new Node(assignOp, opLeft, expr);
+            Node result = new Node(type, tmp1, tmp2, op);
             result = new Node(Token.COMMA, result, createUseTemp(opLeft));
+            return result;
         }
-
-        return result;
     }
 
     private Interpreter compiler;
