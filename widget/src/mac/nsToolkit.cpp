@@ -50,8 +50,6 @@ nsToolkit::nsToolkit(): LPeriodical()
  */
 nsToolkit::~nsToolkit()
 {
-	if ( GetEventQueue() )
-		PL_DestroyEventQueue( GetEventQueue() );
 	StopRepeating();
 }
 
@@ -103,8 +101,8 @@ NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
 NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 {
 	 // Create the NSPR event Queue and start the repeater
-	NS_ASSERTION( sPLEventQueue == NULL, " Leaking event queue" );
-	sPLEventQueue = PL_CreateEventQueue("toolkit", aThread);
+	if ( sPLEventQueue == NULL )
+		sPLEventQueue = PL_CreateEventQueue("toolkit", aThread);
  	StartRepeating();
 	
 	return NS_OK;
