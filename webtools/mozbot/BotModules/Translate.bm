@@ -50,8 +50,8 @@ sub Help {
     local $";
     $" = '|';
     return {
-        '' => 'The WWW module provides a web interface.',
-        'translate' => "Uses babelfish.altavista.com to translate something. Syntax: \'translate [from (@languages)] [to (@languages)] sentence\'",
+        '' => 'Uses babelfish.altavista.com to translate something.',
+        'translate' => "Syntax: \'translate [from (@languages)] [to (@languages)] sentence\'",
         'x' => 'Same as translate (which see).',
     };
 }
