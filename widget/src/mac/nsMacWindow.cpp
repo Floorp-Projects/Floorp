@@ -162,6 +162,14 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 			// set the drag action on the service so the frames know what is going on
 			SetDragActionBasedOnModifiers ( sDragService, modifiers );
 			
+			// clear out the |canDrop| property of the drag session. If it's meant to
+			// be, it will be set again.
+			nsCOMPtr<nsIDragSession> session;
+			sDragService->GetCurrentSession(getter_AddRefs(session));
+			NS_ASSERTION ( session, "If we don't have a drag session, we're fucked" );
+			if ( session )
+			  session->SetCanDrop(PR_FALSE);
+
 			// pass into gecko for handling...
 			geckoWindow->DragEvent ( NS_DRAGDROP_OVER, mouseLocGlobal, modifiers );
 			break;
