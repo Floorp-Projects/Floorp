@@ -86,6 +86,7 @@
 #include "nsDOMError.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
+#include "nsRuleData.h"
 
 #include "nsIPresState.h"
 #include "nsILayoutHistoryState.h"

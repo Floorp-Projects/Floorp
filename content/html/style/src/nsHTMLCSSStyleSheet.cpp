@@ -50,8 +50,8 @@
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsCOMPtr.h"
-
 #include "nsRuleWalker.h"
+#include "nsRuleData.h"
 
 /*
  * The CSSFirstLetterRule and CSSFirstLineRule exist so that we can fix

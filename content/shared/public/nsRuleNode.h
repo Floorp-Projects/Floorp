@@ -39,17 +39,21 @@
 #ifndef nsRuleNode_h___
 #define nsRuleNode_h___
 
-#include "nsCOMPtr.h"
-#include "nsIStyleRule.h"
-#include "nsFixedSizeAllocator.h"
 #include "nsIPresContext.h"
-#include "nsCSSStruct.h"
-#include "nsILanguageAtomService.h"
 #include "nsStyleStruct.h"
 
 class nsStyleContext;
 struct nsRuleList;
 struct PLDHashTable;
+class nsILanguageAtomService;
+struct nsRuleData;
+class nsIStyleRule;
+struct nsCSSStruct;
+// Copy of typedef that's in nsCSSStruct.h, for compilation speed.
+typedef nsCSSStruct nsRuleDataStruct;
+
+struct nsRuleDataFont;
+class nsCSSValue;
 
 typedef void (*nsPostResolveFunc)(nsStyleStruct* aStyleStruct, nsRuleData* aData);
 
@@ -235,46 +239,6 @@ struct nsCachedStyleData
   ~nsCachedStyleData() {};
 };
 
-struct nsRuleData
-{
-  nsStyleStructID mSID;
-  PRPackedBool mCanStoreInRuleTree;
-  nsIPresContext* mPresContext;
-  nsStyleContext* mStyleContext;
-  nsPostResolveFunc mPostResolveCallback;
-  nsRuleDataFont* mFontData; // Should always be stack-allocated! We don't own these structures!
-  nsRuleDataDisplay* mDisplayData;
-  nsRuleDataMargin* mMarginData;
-  nsRuleDataList* mListData;
-  nsRuleDataPosition* mPositionData;
-  nsRuleDataTable* mTableData;
-  nsRuleDataColor* mColorData;
-  nsRuleDataContent* mContentData;
-  nsRuleDataText* mTextData;
-  nsRuleDataUserInterface* mUserInterfaceData;
-  nsRuleDataXUL* mXULData;
-
-#ifdef MOZ_SVG
-  nsRuleDataSVG* mSVGData;
-#endif
-
-  nsRuleDataColumn* mColumnData;
-
-  nsRuleData(const nsStyleStructID& aSID, nsIPresContext* aContext, nsStyleContext* aStyleContext) 
-    :mSID(aSID), mPresContext(aContext), mStyleContext(aStyleContext), mPostResolveCallback(nsnull),
-     mFontData(nsnull), mDisplayData(nsnull), mMarginData(nsnull), mListData(nsnull), 
-     mPositionData(nsnull), mTableData(nsnull), mColorData(nsnull), mContentData(nsnull), mTextData(nsnull),
-     mUserInterfaceData(nsnull), mColumnData(nsnull)
-  {
-    mCanStoreInRuleTree = PR_TRUE;
-    mXULData = nsnull;
-#ifdef MOZ_SVG
-    mSVGData = nsnull;
-#endif
-  };
-  ~nsRuleData() {};
-};
-
 class nsRuleNode {
 public:
     // for purposes of the RuleDetail (and related code),
@@ -315,7 +279,7 @@ private:
                        // most specific rule matched to the least
                        // specific rule (which is the optimal order to
                        // use for lookups of style properties.
-  nsCOMPtr<nsIStyleRule> mRule; // A pointer to our specific rule.
+  nsIStyleRule* mRule; // [STRONG] A pointer to our specific rule.
 
   // The children of this node are stored in either a hashtable or list
   // that maps from rules to our nsRuleNode children.  When matching

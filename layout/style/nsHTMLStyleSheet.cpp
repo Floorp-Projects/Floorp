@@ -62,8 +62,8 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsCSSAnonBoxes.h"
-
 #include "nsRuleWalker.h"
+#include "nsRuleData.h"
 
 nsHTMLStyleSheet::HTMLColorRule::HTMLColorRule(nsHTMLStyleSheet* aSheet)
   : mSheet(aSheet)

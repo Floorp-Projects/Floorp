@@ -49,7 +49,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLParts.h"
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 #include "nsStyleContext.h"
 #include "nsIDocument.h"
 

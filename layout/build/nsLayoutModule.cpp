@@ -130,6 +130,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsStyleSet.h"
 #include "nsImageFrame.h"
+#include "nsILanguageAtomService.h"
 
 // view stuff
 #include "nsViewsCID.h"

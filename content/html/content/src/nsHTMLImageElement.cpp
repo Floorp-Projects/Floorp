@@ -73,7 +73,7 @@
 
 #include "nsILoadGroup.h"
 
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 
 #include "nsIJSContextStack.h"
 #include "nsIView.h"

@@ -44,7 +44,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 #include "nsIDocument.h"
 
 class nsHTMLTableCellElement : public nsGenericHTMLElement,

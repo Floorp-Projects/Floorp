@@ -90,7 +90,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsMutationEvent.h"
 
-#include "nsRuleNode.h"
+#include "nsRuleData.h"
 
 // input type=radio
 #include "nsIRadioControlFrame.h"
