@@ -290,7 +290,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 
   if ((nsnull != mScriptObject) && 
       (nsnull != mContext) /* &&
-      (nsnull != aDocument) */ ) {
+      (nsnull != aDocument) XXXbe why commented out? */ ) {
     JS_ClearScope((JSContext *)mContext->GetNativeContext(),
                   (JSObject *)mScriptObject);
   }
@@ -1144,10 +1144,9 @@ NS_IMETHODIMP
 GlobalWindowImpl::Focus()
 {
   nsIBrowserWindow *browser;
-  if (NS_OK == GetBrowserWindowInterface( browser))
-  {
-      browser->Show();
-      NS_RELEASE( browser);
+  if (NS_OK == GetBrowserWindowInterface(browser)) {
+    browser->Show();
+    NS_RELEASE( browser);
   }
 
   nsresult result = NS_OK;
@@ -1160,9 +1159,9 @@ GlobalWindowImpl::Focus()
     if (nsnull != docv) {
       nsIPresContext* cx = nsnull;
       docv->GetPresContext(cx);
-	    if (nsnull != cx) {
+      if (nsnull != cx) {
         nsIPresShell  *shell = nsnull;
-	      cx->GetShell(&shell);
+        cx->GetShell(&shell);
         if (nsnull != shell) {
           nsIViewManager  *vm = nsnull;
           shell->GetViewManager(&vm);
@@ -1177,12 +1176,12 @@ GlobalWindowImpl::Focus()
                 NS_RELEASE(widget);
               }
             }
-    	      NS_RELEASE(vm);
+            NS_RELEASE(vm);
           }
-  	      NS_RELEASE(shell);
+          NS_RELEASE(shell);
         }
-	      NS_RELEASE(cx);
-	    }
+        NS_RELEASE(cx);
+      }
       NS_RELEASE(docv);
     }
     NS_RELEASE(viewer);
@@ -1260,8 +1259,8 @@ GlobalWindowImpl::Home()
   }
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_FAILED(rv) || (!prefs)) {
-      return rv;
+  if (NS_FAILED(rv) || !prefs) {
+    return rv;
   }
 
   // if we get here, we know prefs is not null
@@ -1386,7 +1385,7 @@ GlobalWindowImpl::ClearTimeoutOrInterval(PRInt32 aTimerID)
   public_id = (PRUint32)aTimerID;
   if (!public_id)    /* id of zero is reserved for internal use */
     return NS_ERROR_FAILURE;
-  for (top = &mTimeouts; ((timeout = *top) != NULL); top = &timeout->next) {
+  for (top = &mTimeouts; (timeout = *top) != NULL; top = &timeout->next) {
     if (timeout->public_id == public_id) {
       if (mRunningTimeout == timeout) {
         /* We're running from inside the timeout.  Mark this
@@ -1469,15 +1468,10 @@ GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
     return;
   }
   
-  if (aContext) {
-    cx = (JSContext *)aContext->GetNativeContext();
-  }
-  else {
-    cx = (JSContext *)mContext->GetNativeContext();
-  }
+  cx = (JSContext *)(aContext ? aContext : mContext)->GetNativeContext();
   
   if (aTimeout->expr) {
-    PR_FREEIF(aTimeout->expr);
+    JS_RemoveRoot(cx, &aTimeout->expr);
   }
   else if (aTimeout->funobj) {
     JS_RemoveRoot(cx, &aTimeout->funobj);
@@ -1544,10 +1538,8 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     timer = aTimeout->timer;
     cx = (JSContext *)mContext->GetNativeContext();
 
-    /*
-     *   A native timer has gone off.  See which of our timeouts need
-     *   servicing
-     */
+    /* A native timer has gone off.  See which of our timeouts need
+       servicing */
     LL_I2L(now, PR_IntervalNow());
 
     /* The timeout list is kept in deadline order.  Discover the
@@ -1603,11 +1595,14 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
                                  timeout->filename,
                                  timeout->lineno, nsAutoString(""), &isundefined);
 #endif
-        JS_EvaluateScriptForPrincipals(cx, (JSObject *)mScriptObject, timeout->principals,
-                          timeout->expr, 
-                          PL_strlen(timeout->expr),
-                          timeout->filename, timeout->lineno, 
-                          &result);
+        JS_EvaluateUCScriptForPrincipals(cx,
+                                         (JSObject *)mScriptObject,
+                                         timeout->principals,
+                                         JS_GetStringChars(timeout->expr),
+                                         JS_GetStringLength(timeout->expr),
+                                         timeout->filename,
+                                         timeout->lineno,
+                                         &result);
       } 
       else {
         PRInt64 lateness64;
@@ -1721,9 +1716,8 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
                                        PRInt32* aReturn,
                                        PRBool aIsInterval)
 {
-  char *expr = nsnull;
+  JSString *expr = nsnull;
   JSObject *funobj = nsnull;
-  JSString *str;
   nsTimeoutImpl *timeout, **insertion_point;
   jsdouble interval;
   PRInt64 now, delta;
@@ -1733,106 +1727,110 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
     return NS_ERROR_FAILURE;
   }
 
-  if (argc >= 2) {
-    if (!JS_ValueToNumber(cx, argv[1], &interval)) {
-      JS_ReportError(cx, "Second argument to %s must be a millisecond interval",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
+  if (argc < 2) {
+    JS_ReportError(cx, "Function %s requires at least 2 parameters",
+                   aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+    return NS_ERROR_FAILURE;
+  }
 
-    switch (JS_TypeOfValue(cx, argv[0])) {
-      case JSTYPE_FUNCTION:
-        funobj = JSVAL_TO_OBJECT(argv[0]);
-        break;
-      case JSTYPE_STRING:
-      case JSTYPE_OBJECT:
-        if (!(str = JS_ValueToString(cx, argv[0])))
-            return NS_ERROR_FAILURE;
-        expr = PL_strdup(JS_GetStringBytes(str));
-        if (nsnull == expr)
-            return NS_ERROR_OUT_OF_MEMORY;
-        break;
-      default:
-        JS_ReportError(cx, "useless %s call (missing quotes around argument?)", aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+  if (!JS_ValueToNumber(cx, argv[1], &interval)) {
+    JS_ReportError(cx,
+                   "Second argument to %s must be a millisecond interval",
+                   aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  switch (JS_TypeOfValue(cx, argv[0])) {
+    case JSTYPE_FUNCTION:
+      funobj = JSVAL_TO_OBJECT(argv[0]);
+      break;
+    case JSTYPE_STRING:
+    case JSTYPE_OBJECT:
+      if (!(expr = JS_ValueToString(cx, argv[0])))
         return NS_ERROR_FAILURE;
-    }
+      if (nsnull == expr)
+        return NS_ERROR_OUT_OF_MEMORY;
+      argv[0] = STRING_TO_JSVAL(expr);
+      break;
+    default:
+      JS_ReportError(cx, "useless %s call (missing quotes around argument?)",
+                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+      return NS_ERROR_FAILURE;
+  }
 
-    timeout = PR_NEWZAP(nsTimeoutImpl);
-    if (nsnull == timeout) {
-      PR_FREEIF(expr);
+  timeout = PR_NEWZAP(nsTimeoutImpl);
+  if (nsnull == timeout)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // Initial ref_count to indicate that this timeout struct will
+  // be held as the closure of a timer.
+  timeout->ref_count = 1;
+  if (aIsInterval)
+    timeout->interval = (PRInt32)interval;
+  if (expr) {
+    if (!JS_AddNamedRoot(cx, &timeout->expr, "timeout.expr")) {
+      PR_DELETE(timeout);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    timeout->expr = expr;
+  }
+  else if (funobj) {
+    int i;
+
+    /* Leave an extra slot for a secret final argument that
+       indicates to the called function how "late" the timeout is. */
+    timeout->argv = (jsval *)PR_MALLOC((argc - 1) * sizeof(jsval));
+    if (nsnull == timeout->argv) {
+      DropTimeout(timeout);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Initial ref_count to indicate that this timeout struct will
-    // be held as the closure of a timer.
-    timeout->ref_count = 1;
-    if (aIsInterval)
-        timeout->interval = (PRInt32)interval;
-    timeout->expr = expr;
+    if (!JS_AddNamedRoot(cx, &timeout->funobj, "timeout.funobj")) {
+      DropTimeout(timeout);
+      return NS_ERROR_FAILURE;
+    }
     timeout->funobj = funobj;
-    timeout->principals = principals;
-    if (expr) {
-      timeout->argv = 0;
-      timeout->argc = 0;
-    } 
-    else {
-      int i;
-      /* Leave an extra slot for a secret final argument that
-         indicates to the called function how "late" the timeout is. */
-      timeout->argv = (jsval *)PR_MALLOC((argc - 1) * sizeof(jsval));
-      if (nsnull == timeout->argv) {
-        DropTimeout(timeout);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      if (!JS_AddNamedRoot(cx, &timeout->funobj, "timeout.funobj")) {
+          
+    timeout->argc = 0;
+    for (i = 2; (PRUint32)i < argc; i++) {
+      timeout->argv[i - 2] = argv[i];
+      if (!JS_AddNamedRoot(cx, &timeout->argv[i - 2], "timeout.argv[i]")) {
         DropTimeout(timeout);
         return NS_ERROR_FAILURE;
       }
-      
-      timeout->argc = 0;
-      for (i = 2; (PRUint32)i < argc; i++) {
-        timeout->argv[i - 2] = argv[i];
-        if (!JS_AddNamedRoot(cx, &timeout->argv[i - 2], "timeout.argv[i]")) {
-          DropTimeout(timeout);
-          return NS_ERROR_FAILURE;
-        }
-        timeout->argc++;
-      }
+      timeout->argc++;
     }
-    
-    LL_I2L(now, PR_IntervalNow());
-    LL_D2L(delta, PR_MillisecondsToInterval((PRUint32)interval));
-    LL_ADD(timeout->when, now, delta);
-
-    nsresult err = NS_NewTimer(&timeout->timer);
-    if (NS_OK != err) {
-      DropTimeout(timeout);
-      return err;
-    } 
-    
-    err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
-                               (PRInt32)interval);
-    if (NS_OK != err) {
-      DropTimeout(timeout);
-      return err;
-    } 
-
-    timeout->window = this;
-    NS_ADDREF(this);
-
-    if (mTimeoutInsertionPoint == NULL)
-        insertion_point = &mTimeouts;
-    else
-        insertion_point = mTimeoutInsertionPoint;
-
-    InsertTimeoutIntoList(insertion_point, timeout);
-    timeout->public_id = ++mTimeoutPublicIdCounter;
-    *aReturn = timeout->public_id;
   }
-  else {
-    JS_ReportError(cx, "Function %s requires at least 2 parameters", aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-    return NS_ERROR_FAILURE;
-  }
+
+  timeout->principals = principals;
+
+  LL_I2L(now, PR_IntervalNow());
+  LL_D2L(delta, PR_MillisecondsToInterval((PRUint32)interval));
+  LL_ADD(timeout->when, now, delta);
+
+  nsresult err = NS_NewTimer(&timeout->timer);
+  if (NS_OK != err) {
+    DropTimeout(timeout);
+    return err;
+  } 
+  
+  err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
+                             (PRInt32)interval);
+  if (NS_OK != err) {
+    DropTimeout(timeout);
+    return err;
+  } 
+
+  timeout->window = this;
+  NS_ADDREF(this);
+
+  insertion_point = (mTimeoutInsertionPoint == NULL)
+                    ? &mTimeouts
+                    : mTimeoutInsertionPoint;
+
+  InsertTimeoutIntoList(insertion_point, timeout);
+  timeout->public_id = ++mTimeoutPublicIdCounter;
+  *aReturn = timeout->public_id;
   
   return NS_OK;
 }
@@ -1967,7 +1965,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     windowIsNew = PR_FALSE;
     webShellContainer->FindWebShellWithName(name.GetUnicode(), newOuterShell);
     if (nsnull == newOuterShell) {
-			// No window of that name, and we are allowed to create a new one now.
+                        // No window of that name, and we are allowed to create a new one now.
       webShellContainer->NewWebShell(chromeFlags, PR_FALSE, newOuterShell);
       windowIsNew = PR_TRUE;
     }
@@ -2881,8 +2879,8 @@ NavigatorImpl::NavigatorImpl()
 
 NavigatorImpl::~NavigatorImpl()
 {
-	NS_IF_RELEASE(mMimeTypes);
-	NS_IF_RELEASE(mPlugins);
+  NS_IF_RELEASE(mMimeTypes);
+  NS_IF_RELEASE(mPlugins);
 }
 
 NS_IMPL_ADDREF(NavigatorImpl)
@@ -2939,168 +2937,168 @@ NavigatorImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 NS_IMETHODIMP
 NavigatorImpl::GetUserAgent(nsString& aUserAgent)
 {
-    nsresult res;
+  nsresult res;
 #ifndef NECKO
-    nsINetService *service = nsnull;
-    res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
+  nsINetService *service = nsnull;
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&service);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
 #endif // NECKO
 
-    if ((NS_OK == res) && (nsnull != service)) {
+  if ((NS_OK == res) && (nsnull != service)) {
 #ifndef NECKO
-        res = service->GetUserAgent(aUserAgent);
+    res = service->GetUserAgent(aUserAgent);
 #else
-        PRUnichar *ua = nsnull;
-        res = service->GetUserAgent(&ua);
-        aUserAgent = ua;
-        delete [] ua;
+    PRUnichar *ua = nsnull;
+    res = service->GetUserAgent(&ua);
+    aUserAgent = ua;
+    delete [] ua;
 #endif // NECKO
-        NS_RELEASE(service);
-    }
-    return res;
+    NS_RELEASE(service);
+  }
+  return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppCodeName(nsString& aAppCodeName)
 {
-    nsresult res;
+  nsresult res;
 #ifndef NECKO
-    nsINetService *service = nsnull;
-    res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
+  nsINetService *service = nsnull;
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&service);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
 #endif // NECKO
 
-    if ((NS_OK == res) && (nsnull != service)) {
+  if ((NS_OK == res) && (nsnull != service)) {
 #ifndef NECKO
-        res = service->GetAppCodeName(aAppCodeName);
+    res = service->GetAppCodeName(aAppCodeName);
 #else
-        PRUnichar *appName = nsnull;
-        res = service->GetAppCodeName(&appName);
-        aAppCodeName = appName;
-        delete [] appName;
+    PRUnichar *appName = nsnull;
+    res = service->GetAppCodeName(&appName);
+    aAppCodeName = appName;
+    delete [] appName;
 #endif // NECKO
-        NS_RELEASE(service);
-    }
+    NS_RELEASE(service);
+  }
 
-    return res;
+  return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppVersion(nsString& aAppVersion)
 {
-    nsresult res;
+  nsresult res;
 #ifndef NECKO
-    nsINetService *service = nsnull;
-    res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
+  nsINetService *service = nsnull;
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&service);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
 #endif // NECKO
 
-    if ((NS_OK == res) && (nsnull != service)) {
+  if ((NS_OK == res) && (nsnull != service)) {
 #ifndef NECKO
-        res = service->GetAppVersion(aAppVersion);
+    res = service->GetAppVersion(aAppVersion);
 #else
-        PRUnichar *appVer = nsnull;
-        res = service->GetAppVersion(&appVer);
-        aAppVersion = appVer;
-        delete [] appVer;
+    PRUnichar *appVer = nsnull;
+    res = service->GetAppVersion(&appVer);
+    aAppVersion = appVer;
+    delete [] appVer;
 #endif // NECKO
-        NS_RELEASE(service);
-    }
+    NS_RELEASE(service);
+  }
 
-    return res;
+  return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppName(nsString& aAppName)
 {
-    nsresult res;
+  nsresult res;
 #ifndef NECKO
-    nsINetService *service = nsnull;
-    res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
+  nsINetService *service = nsnull;
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&service);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
 #endif // NECKO
 
-    if ((NS_OK == res) && (nsnull != service)) {
+  if ((NS_OK == res) && (nsnull != service)) {
 #ifndef NECKO
-        res = service->GetAppName(aAppName);
+    res = service->GetAppName(aAppName);
 #else
-        PRUnichar *appName = nsnull;
-        res = service->GetAppName(&appName);
-        aAppName = appName;
-        delete [] appName;
+    PRUnichar *appName = nsnull;
+    res = service->GetAppName(&appName);
+    aAppName = appName;
+    delete [] appName;
 #endif // NECKO
-        NS_RELEASE(service);
-    }
+    NS_RELEASE(service);
+  }
 
-    return res;
+  return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetLanguage(nsString& aLanguage)
 {
-    nsresult res;
+  nsresult res;
 #ifndef NECKO
-    nsINetService *service = nsnull;
-    res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
+  nsINetService *service = nsnull;
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&service);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
 #endif // NECKO
 
-    if ((NS_OK == res) && (nsnull != service)) {
+  if ((NS_OK == res) && (nsnull != service)) {
 #ifndef NECKO
-        res = service->GetLanguage(aLanguage);
+    res = service->GetLanguage(aLanguage);
 #else
-        PRUnichar *lang = nsnull;
-        res = service->GetLanguage(&lang);
-        aLanguage = lang;
-        delete [] lang;
+    PRUnichar *lang = nsnull;
+    res = service->GetLanguage(&lang);
+    aLanguage = lang;
+    delete [] lang;
 #endif // NECKO
-        NS_RELEASE(service);
-    }
+    NS_RELEASE(service);
+  }
 
-    return res;
+  return res;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetPlatform(nsString& aPlatform)
 {
-    nsresult res;
+  nsresult res;
 #ifndef NECKO
-    nsINetService *service = nsnull;
-    res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
+  nsINetService *service = nsnull;
+  res = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID,
+                                     (nsISupports **)&service);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
 #endif // NECKO
 
-    if ((NS_OK == res) && (nsnull != service)) {
+  if ((NS_OK == res) && (nsnull != service)) {
 #ifndef NECKO
-        res = service->GetPlatform(aPlatform);
+    res = service->GetPlatform(aPlatform);
 #else
-        PRUnichar *plat = nsnull;
-        res = service->GetPlatform(&plat);
-        aPlatform = plat;
-        delete [] plat;
+    PRUnichar *plat = nsnull;
+    res = service->GetPlatform(&plat);
+    aPlatform = plat;
+    delete [] plat;
 #endif // NECKO
-        NS_RELEASE(service);
-    }
+    NS_RELEASE(service);
+  }
 
-    return res;
+  return res;
 }
 
 NS_IMETHODIMP
@@ -3145,13 +3143,13 @@ NavigatorImpl::JavaEnabled(PRBool* aReturn)
 
   // determine whether user has enabled java.
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_FAILED(rv) || (prefs == nsnull)) {
-      return rv;
+  if (NS_FAILED(rv) || prefs == nsnull) {
+    return rv;
   }
   
   // if pref doesn't exist, map result to false.
   if (prefs->GetBoolPref("security.enable_java", aReturn) != NS_OK)
-      *aReturn = PR_FALSE;
+    *aReturn = PR_FALSE;
 
   return rv;
 }

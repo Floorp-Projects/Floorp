@@ -228,11 +228,11 @@ protected:
   PRBool        CheckForEventListener(JSContext *aContext, nsString& aPropName);
 
   nsresult      OpenInternal(JSContext *cx, jsval *argv, PRUint32 argc, 
-                       PRBool aAttachArguments, nsIDOMWindow** aReturn);
+                             PRBool aAttachArguments, nsIDOMWindow** aReturn);
   nsresult      AttachArguments(nsIDOMWindow *aWindow, jsval *argv, PRUint32 argc);
   PRUint32      CalculateChromeFlags(char *aFeatures);
   nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures,
-                    PRBool aNewWindow);
+                                          PRBool aNewWindow);
   nsresult      ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
 
   static nsresult WebShellToDOMWindow(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
@@ -274,7 +274,7 @@ protected:
 struct nsTimeoutImpl {
   PRInt32             ref_count;      /* reference count to shared usage */
   GlobalWindowImpl    *window;        /* window for which this timeout fires */
-  char                *expr;          /* the JS expression to evaluate */
+  JSString            *expr;          /* the JS expression to evaluate */
   JSObject            *funobj;        /* or function to call, if !expr */
   nsITimer            *timer;         /* The actual timer object */
   jsval               *argv;          /* function actual arguments */
