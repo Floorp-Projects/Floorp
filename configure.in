@@ -1746,6 +1746,8 @@ dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Try for MMX support
+dnl NB - later gcc versions require -mmmx for this header to be successfully
+dnl included (or another option which implies it, such as -march=pentium-mmx)
 AC_CHECK_HEADERS(mmintrin.h)
 
 dnl Check whether the compiler supports the new-style C++ standard
@@ -2200,6 +2202,7 @@ if test "$ac_cv_func_iconv" = "yes"; then
         [for iconv() with const input],
         ac_cv_func_const_iconv,
         [AC_TRY_COMPILE([
+            #include <stdlib.h>
             #include <iconv.h>
             ],
             [
@@ -2401,36 +2404,6 @@ if test "$ac_cv_cpp_explicit" = yes ; then
    AC_DEFINE(HAVE_CPP_EXPLICIT)
 fi
 
-dnl Check for template specialization
-dnl Test code and requirement from scc@netscape.com.
-dnl Autoconf cut-and-paste job by shaver@mozilla.org.
-AC_CACHE_CHECK(for C++ template specialization support,
-               ac_cv_cpp_template_specialization,
-               [AC_TRY_COMPILE(template <class T> struct X { int a; };
-                               class Y {};
-                               struct X<Y> { double a; };,
-                               X<int> int_x;
-                               X<Y> y_x;,
-                               ac_cv_cpp_template_specialization=yes,
-                               ac_cv_cpp_template_specialization=no)])
-dnl The above test works fine for Sun's WorkShop 4.2 compiler, but
-dnl dies horribly trying to build mozilla with HAVE_CPP_SPECIALIZATION
-dnl defined.  So, even though the output above will say yes, we force
-dnl it to reconsider....  (5.0 works fine, though.)
-dnl Info and testing provided by tor@cs.brown.edu.
-case "$target" in
-  *-*-solaris*)
-	if test ! "$GNU_CC"; then
-	   if test ! -z "`${CC} -V 2>&1 | head -1 | grep '4.2'`"; then
-             ac_cv_cpp_template_specialization=no
-	   fi
-	fi
-	;;
-esac
-if test "$ac_cv_cpp_template_specialization" = yes ; then
-  AC_DEFINE(HAVE_CPP_SPECIALIZATION)
-fi
-
 dnl Check for support of modern template specialization syntax
 dnl Test code and requirement from scc@netscape.com.
 dnl Autoconf cut-and-paste job by waterson@netscape.com
@@ -2464,7 +2437,7 @@ dnl Some compilers support extern declarations of explicit template instantiatio
 AC_CACHE_CHECK(for extern explicit template instantiation,
                ac_cv_cpp_extern_instantiation,
                [AC_TRY_COMPILE(template<class T> class Foo{ T a; };
-                               extern template Foo<int>;,
+                               extern template class Foo<int>;,
                                ,
                                ac_cv_cpp_extern_instantiation=yes,
                                ac_cv_cpp_extern_instantiation=no)])
