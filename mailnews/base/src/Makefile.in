@@ -67,6 +67,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  profile \
 		  webbrwsr \
+		  exthandler \
 		  $(NULL)
 
 CPPSRCS		= \
