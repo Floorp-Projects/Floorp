@@ -307,21 +307,19 @@ NS_IMETHODIMP
 nsHTMLFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                             nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::face, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::pointSize, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::size, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::fontWeight, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::color, NS_STYLE_HINT_VISUAL },
-  };
+  if (aAttribute == nsHTMLAtoms::color) {
+    aHint = NS_STYLE_HINT_VISUAL;
+  }
+  else if ((aAttribute == nsHTMLAtoms::face) ||
+           (aAttribute == nsHTMLAtoms::pointSize) ||
+            (aAttribute == nsHTMLAtoms::size) ||
+           (aAttribute == nsHTMLAtoms::fontWeight)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
 
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap,
-  };
-
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-  
   return NS_OK;
 }
 

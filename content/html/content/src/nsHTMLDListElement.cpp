@@ -178,17 +178,12 @@ NS_IMETHODIMP
 nsHTMLDListElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                              nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::compact, NS_STYLE_HINT_CONTENT }, // handled by ua.css?
-    { nsnull, NS_STYLE_HINT_NONE },
-  };
-
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap
-  };
-
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
+  if (aAttribute == nsHTMLAtoms::compact) {
+    aHint = NS_STYLE_HINT_CONTENT; // handled by ua.css?
+  }
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
 
   return NS_OK;
 }
