@@ -34,9 +34,6 @@ SRPTS = $(SRPT1)
 LCFLAGS=-DUSE_NSREG $(LCFLAGS)
 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\locale -I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\uconv -I$(PUBLIC)\unicharutil 
-
 LLIBS= \
  $(DIST)\lib\xpcom.lib \
  $(LIBNSPR) \

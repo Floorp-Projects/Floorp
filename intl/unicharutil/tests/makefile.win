@@ -20,7 +20,7 @@
 # Contributor(s): 
 DEPTH = ..\..\..
 
-
+REQUIRES=xpcom string unicharutil uconv necko
 
 
 MAKE_OBJ_TYPE = EXE
@@ -29,8 +29,6 @@ PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG
 
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib \

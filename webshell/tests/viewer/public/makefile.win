@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 
 
-MODULE=raptor 
+MODULE=viewer
 
 EXPORTS =					\
         nsIXPBaseWindow.h			\

@@ -14,15 +14,12 @@
 
 DEPTH=..\..\..\..
 
+REQUIRES=xpcom chrome necko
 CPPSRCS		= regchrome.cpp
 
 MAKE_OBJ_TYPE   = EXE
 PROG = .\$(OBJDIR)\regchrome.exe
 PROGRAMS = $(PROG)
-
-LINCS=  \
-	-Iservices         \
-	-I$(PUBLIC)\xpcom
 
 LLIBS=  \
 	$(DIST)\lib\xpcom.lib  \

@@ -32,7 +32,7 @@
 # file under either the NPL or the GPL.
 
 DEPTH=..\..\..\..
-
+REQUIRES=xpcom string xpconnect js
 
 
 MAKE_OBJ_TYPE	= EXE
@@ -40,10 +40,6 @@ PROG1 = .\$(OBJDIR)\xpcshell.exe
 PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN
-
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\xpconnect \
-      -I$(PUBLIC)\raptor
 
 LLIBS=					\
  $(DIST)\lib\xpcom.lib		\

@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 DEPTH=..\..\..
+MODULE=unicharutil
 REQUIRES	= xpcom string uconv necko
 include <$(DEPTH)\config\config.mak>
 
@@ -60,11 +61,8 @@ CPP_OBJS= \
 !endif
 	$(NULL)
 
-MODULE=unicharutil
 LIBRARY_NAME=ucharuti
 MODULE_NAME=UcharUtil
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib		\

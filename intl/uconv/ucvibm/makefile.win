@@ -81,12 +81,6 @@ CPP_OBJS=						\
 EXPORTS=nsUCvIBMCID.h			\
 	$(NULL)
 
-LINCS=					\
-	-I$(PUBLIC)\raptor		\
-	-I$(PUBLIC)\xpcom 		\
-	-I$(PUBLIC)\uconv		\
-	$(NULL)
-
 LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)

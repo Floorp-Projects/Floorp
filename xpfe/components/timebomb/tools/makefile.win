@@ -30,13 +30,6 @@ PROGRAMS = \
            $(NULL)
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=raptor 
-
-
-LINCS=-I$(PUBLIC)\raptor                \
-	  -I$(PUBLIC)\xpcom                 \
-      -I$(PUBLIC)\base                  \
-	  $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -45,7 +38,6 @@ LCFLAGS = \
 
 # These are the libraries we need to link with to create the exe
 LLIBS=                          \
- $(DIST)\lib\xpcom.lib        \
  $(LIBNSPR)                     \
  $(NULL)
 

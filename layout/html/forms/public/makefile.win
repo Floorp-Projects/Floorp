@@ -32,7 +32,7 @@ EXPORTS=nsIFormManager.h \
   nsISelectControlFrame.h \
   nsIGfxTextControlFrame.h 
 
-MODULE=raptor 
+MODULE=layout 
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -30,16 +30,6 @@ OBJS =                          \
 	.\$(OBJDIR)\filterTest.obj    \
 	$(NULL)
 
-LINCS= \
-	-I$(PUBLIC)\raptor \
-	-I$(PUBLIC)\xpcom \
-	-I$(PUBLIC)\netlib \
-	-I$(PUBLIC)\mailnews \
-	-I$(PUBLIC)\security \
-	-I$(PUBLIC)\pref \
-	-I$(PUBLIC)\js \
-	-I$(PUBLIC)\rdf
-
 LLIBS=							\
  $(DIST)\lib\xpcom32.lib		\
  $(LIBNSPR)						\

@@ -25,14 +25,6 @@ MAKE_OBJ_TYPE	= DLL
 
 DEPTH=..\..\..\..
 
-LINCS = \
-	-I$(PUBLIC) 		\
-	-I$(DEPTH)\cmd\winfe	\
-	-I$(PUBLIC)\xpcom 	\
-	-I$(PUBLIC)\pref 	\
-	-I$(PUBLIC)\js		\
-	$(NULL)
-
 LLIBS = \
 	$(LIBNSPR)			\
 	$(DIST)\lib\xppref32.lib	\

@@ -20,7 +20,7 @@
 # Contributor(s): 
 
 
-MODULE=xuldoc
+MODULE=content_xul
 
 DEPTH=..\..\..\..
 

@@ -21,13 +21,14 @@
 
 DEPTH=..\..
 
+REQUIRES	= xpcom string gfx
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestRect.exe
 PROG2 = .\$(OBJDIR)\TestColorNames.exe
 PROG3 = .\$(OBJDIR)\DumpColors.exe
 PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
 
-LINCS=-I$(XPDIST)\public\raptor -I$(XPDIST)\public\xpcom -I..\src
+LINCS=-I..\src
 
 LLIBS=				\
  $(DIST)\lib\gkgfx.lib	\

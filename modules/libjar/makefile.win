@@ -52,15 +52,6 @@ OBJS=.\$(OBJDIR)\nsZipArchive.obj \
 
 LCFLAGS=-DZLIB_DLL=1
 
-LINCS=                         \
-    -I$(PUBLIC)\security       \
-    -I$(XPDIST)\public\nspr    \
-    -I$(XPDIST)\public\raptor  \
-    -I$(XPDIST)\public\xpcom   \
-    -I$(XPDIST)\public\zlib    \
-    -I$(XPDIST)\public\network \
-    -I$(XPDIST)\public\libjar  \
-    $(NULL)
 
 LLIBS=                        \
       $(LIBNSPR)                    \

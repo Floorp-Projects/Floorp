@@ -53,12 +53,7 @@ OBJS= \
 	$(NULL)
 
 LINCS=                                  \
-	-I$(PUBLIC)\raptor              \
-	-I$(PUBLIC)\xpcom               \
 	-I..\windows               \
-	-I$(PUBLIC)\dom                 \
-	-I$(PUBLIC)\js				\
-	-I$(PUBLIC)\network	-I$(PUBLIC)\netlib	\
 	$(NULL)
 
 LCFLAGS =                               \

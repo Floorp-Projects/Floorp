@@ -30,8 +30,6 @@ PROGRAMS = $(PROG1)
 LCFLAGS=-DUSE_NSREG
 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor
-
 LLIBS= \
  $(DIST)\lib\xpcom.lib \
  $(LIBNSPR)

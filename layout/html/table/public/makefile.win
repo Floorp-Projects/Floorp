@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 
 
-MODULE=raptor
+MODULE=layout
 
 EXPORTS =                    \
         nsITableCellLayout.h \

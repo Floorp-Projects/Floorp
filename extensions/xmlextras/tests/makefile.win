@@ -23,6 +23,8 @@
 
 DEPTH = ..\..\..
 
+REQUIRES=xpcom string xmlextras necko dom content layout widget
+
 include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE = EXE
@@ -32,12 +34,6 @@ PROGRAMS = $(PROG1) \
            $(NULL)
 
 LCFLAGS  = -DUSE_NSREG -GX
-
-REQUIRES = libreg
-
-LINCS =                   \
-        -Iservices        \
-        -I$(PUBLIC)\xpcom
 
 LLIBS =                       \
         $(DIST)\lib\xpcom.lib \

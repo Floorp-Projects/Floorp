@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..
 
+MODULE=intl
 REQUIRES	= xpcom string necko locale
 include <$(DEPTH)\config\config.mak>
 
@@ -36,17 +37,9 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsAcceptLang.obj		\
 	$(NULL)
 
-MODULE=intl
 LIBRARY_NAME=strres
 MODULE_NAME=nsStringBundleModule
 
-LINCS=\
-    -I$(PUBLIC)\xpcom \
-    -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\raptor \
-    -I$(PUBLIC)\intl \
-    -I$(PUBLIC)\locale \
-    $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \

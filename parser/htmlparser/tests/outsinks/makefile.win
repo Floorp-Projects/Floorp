@@ -54,11 +54,6 @@ TEST_FILES      = \
 		simplemail.out \
 		$(NULL)
 
-LINCS=					\
-  -I$(PUBLIC)\raptor			\
-  -I$(PUBLIC)\xpcom			\
-  -I$(PUBLIC)\netlib
-
 LLIBS=					\
  $(DIST)\lib\xpcom.lib	        \
  $(LIBNSPR)				\

@@ -20,10 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-REQUIRES=xpcom string
+MODULE		= locale
+REQUIRES=xpcom string unicharutil uconv
 include <$(DEPTH)/config/config.mak>
 
-MODULE		= nslocale
 LIBRARY_NAME	= nslocale
 MODULE_NAME	= nsLocaleModule
 
@@ -38,11 +38,6 @@ OBJS =						\
 
 LINCS= \
 		-I..\
-        -I$(PUBLIC)\locale		\
-        -I$(PUBLIC)\xpcom		\
-        -I$(PUBLIC)\unicharutil		\
-        -I$(PUBLIC)\uconv		\
-        -I$(PUBLIC)\raptor		\
         $(NULL)
 
 LCFLAGS = \

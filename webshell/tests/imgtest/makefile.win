@@ -25,7 +25,7 @@ PROGRAM = .\$(OBJDIR)\ImageTest.exe
 RESFILE = image.res
 MAPFILE = image.map
 
-LINCS=-I$(XPDIST)\public\raptor -I$(XPDIST)\public\xpcom -I..\..\src
+LINCS=-I..\..\src
 
 LLFLAGS = $(LLFLAGS) /SUBSYSTEM:CONSOLE
 

@@ -21,7 +21,7 @@
 #   Bill Law    <law@netscape.com>
 
 MODULE=appcomps
-REQUIRES=xpcom string dom windowwatcher intl raptor necko
+REQUIRES=xpcom string dom windowwatcher intl appshell necko
 DEPTH=..\..\..
 
 XPIDL_MODULE=winhooks

@@ -25,6 +25,6 @@ EXPORTS =				\
   nsISVGFrame.h \
     $(NULL)
 
-MODULE=raptor 
+MODULE=layout 
 
 include <$(DEPTH)\config\rules.mak>

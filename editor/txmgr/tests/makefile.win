@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 
-
+REQUIRES=xpcom txmgr
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestTXMgr.exe
@@ -29,11 +29,6 @@ PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG
 
-LINCS=-I$(PUBLIC)\txmgr \
-    -I$(PUBLIC)\xpcom \
-    -I$(PUBLIC)\raptor \
-    -I$(PUBLIC)\js \
-    -I$(PUBLIC)\dom
 
 LLIBS=					\
  $(DIST)\lib\xpcom.lib

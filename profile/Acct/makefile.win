@@ -44,19 +44,6 @@ MAPFILE		= $(DLLNAME).map
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 MAKE_OBJ_TYPE	= DLL
 
-LINCS = -I$(PUBLIC)/js \
-	-I$(PUBLIC)/profile \
-	-I$(PUBLIC)/pref \
-	-I$(PUBLIC)/prefm \
-	-I$(PUBLIC)/java \
-	-I$(PUBLIC)/ldap \
-	-I$(PUBLIC)/dbm \
-	-I$(PUBLIC)/security \
-	-I$(PUBLIC)/raptor \
-	-I$(PUBLIC)/xpcom \
-        -I$(DEPTH)\include \
-	-I$(PUBLIC)/libreg \
-
 LCFLAGS = -DMOZILLA_CLIENT
 
 # I'm hardcoding the directory name here to fix MOZ_LITE

@@ -52,10 +52,6 @@ C_OBJS=.\$(OBJDIR)\png.obj .\$(OBJDIR)\pngerror.obj \
     .\$(OBJDIR)\pngwio.obj .\$(OBJDIR)\pngwrite.obj \
     .\$(OBJDIR)\pngwtran.obj .\$(OBJDIR)\pngrtran.obj \
     .\$(OBJDIR)\pngwutil.obj 
-!if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\util -I$(XPDIST)\public\nspr \
-    -I$(XPDIST)\public\zlib 
-!endif
 
 include <$(DEPTH)\config\rules.mak>
 

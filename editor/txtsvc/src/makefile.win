@@ -40,12 +40,6 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsTSDNotifier.obj	\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom \
-      -I$(PUBLIC)\txtsvc \
-      -I$(PUBLIC)\editor \
-      -I$(PUBLIC)\base \
-      -I$(PUBLIC)\dom \
-      -I$(PUBLIC)\raptor
 
 LLIBS=					\
  $(DIST)\lib\xpcom.lib

@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=contentxmldoc_s 
 MODULE=content
-REQUIRES	= xpcom string js dom widget caps htmlparser necko view docshell webshell uriloader pref xpconnect uconv chardet lwbrk exthandler mimetype raptor gfx layout
+REQUIRES	= xpcom string js dom widget caps htmlparser necko view docshell webshell uriloader pref xpconnect uconv chardet lwbrk exthandler mimetype gfx layout
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -40,12 +40,10 @@ CPP_OBJS=					\
 EXPORTS = 					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\..\html\base\src -I$(PUBLIC)\dom \
+LINCS=-I..\..\..\html\base\src \
   -I..\..\..\html\document\src \
   -I..\..\..\xul\content\src -I..\..\..\xsl\document\src \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
-  -I$(PUBLIC)\expat
+  -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -29,11 +29,6 @@ OBJS =					\
 	.\$(OBJDIR)\grabpage.obj	\
 	$(NULL)
 
-LINCS=					\
-  -I$(PUBLIC)\raptor			\
-  -I$(PUBLIC)\xpcom			\
-  -I$(PUBLIC)\netlib
-
 LLIBS=					\
  $(DIST)\lib\gkparser.lib		\
  $(DIST)\lib\netlib.lib			\

@@ -21,13 +21,7 @@
 
 DEPTH=..\..\..
 
-LINCS = \
-        -I$(PUBLIC)\xpcom       \
-        -I$(PUBLIC)\libreg      \
-        $(NULL)
-
-
-
+REQUIRES=xpcom string
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\regExport.exe
 PROG2 = .\$(OBJDIR)\regxpcom.exe

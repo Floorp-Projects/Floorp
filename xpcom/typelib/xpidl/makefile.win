@@ -23,6 +23,7 @@ DEPTH=..\..\..
 
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\xpidl.exe
+REQUIRES = xpcom
 #RESFILE = xpidl.res
 
 # glib and libIDL link against the non-debug msvcrt
@@ -38,8 +39,7 @@ OBJS =  \
 	.\$(OBJDIR)\xpidl_java.obj	\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom	\
-	-I$(MOZ_TOOLS)\include	\
+LINCS=-I$(MOZ_TOOLS)\include	\
 	$(NULL)
 
 LCFLAGS = -DEXPORT_XPT_API

@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..
 
+MODULE=content
 
 EXPORTS =			    \
 	nsIEventListenerManager.h   \
@@ -32,7 +33,6 @@ EXPORTS =			    \
   nsMutationEvent.h \
         $(NULL)
 
-MODULE=raptor 
 
 include <$(DEPTH)\config\rules.mak>
 

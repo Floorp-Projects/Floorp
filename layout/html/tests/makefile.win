@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+REQUIRES	= xpcom string layout content
 include <$(DEPTH)/config/config.mak>
 
 MAKE_OBJ_TYPE	= EXE
@@ -34,10 +35,6 @@ LCFLAGS = \
         $(NULL)
 
 LINCS=				\
-  -I$(PUBLIC)\xpcom		\
-  -I$(PUBLIC)\raptor		\
-  -I$(PUBLIC)\dom		\
-  -I$(PUBLIC)\js		\
   -I..\base\src			\
   -I..\style\src		\
   -I..\..\css\layout\src	\

@@ -60,32 +60,11 @@ OBJS = .\$(OBJDIR)\jvmmgr.obj \
 #//
 #//------------------------------------------------------------------------
 
-LINCS= $(LINCS) -I_jri \
+LINCS= -I_jri
 #
 # For Win16 the following include directories are copied into 
 # ns/dist/public/win16
 #
-!if "$(MOZ_BITS)" == "32"
-		-I$(PUBLIC)/caps     \
-		-I$(PUBLIC)/js       \
-		-I$(PUBLIC)/java     \
-		-I$(PUBLIC)/libimg   \
-		-I$(PUBLIC)/nspr     \
-		-I$(PUBLIC)/dbm      \
-		-I$(PUBLIC)/security \
-		-I$(PUBLIC)/pref     \
-		-I$(PUBLIC)/xpcom    \
-		-I$(PUBLIC)/raptor   \
-		-I$(PUBLIC)/plugin   \
-		-I$(PUBLIC)/oji      \
-		-I$(PUBLIC)/plugimpl \
-		-I$(PUBLIC)/netlib \
-!endif
-		-I$(DIST)/include/private \
-		-I$(DEPTH)/lib/layout   \
-		-I$(DEPTH)/lib/libstyle \
-		-I$(DEPTH)/lib/libjar   \
-		$(NULL)
 
 
 !endif # MOZ_OJI

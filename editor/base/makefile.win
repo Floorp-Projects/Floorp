@@ -22,7 +22,7 @@
 DEPTH=..\..
 
 MODULE=editor 
-REQUIRES	= xpcom string dom locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome appcomps xuldoc windowwatcher exthandler mimetype content raptor gfx
+REQUIRES	= xpcom string dom locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome appcomps xuldoc windowwatcher exthandler mimetype content content_xul gfx
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=editor

@@ -81,10 +81,6 @@ C_OBJS=\
 		.\$(OBJDIR)\libmng_write.obj \
 		.\$(OBJDIR)\libmng_zlib.obj \
 		$(NULL)
-!if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\util -I$(XPDIST)\public\nspr \
-    -I$(XPDIST)\public\zlib -I$(XPDIST)\public\jpeg
-!endif
 
 include <$(DEPTH)\config\rules.mak>
 

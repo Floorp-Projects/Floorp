@@ -23,7 +23,7 @@
 
 DEPTH=..\..
 
-REQUIRES=string dom appcomps
+REQUIRES=xpcom string dom appcomps xpinstall
 MAKE_OBJ_TYPE   = DLL
 LIBRARY_NAME=xpistub
 DLL = .\$(OBJDIR)\xpistub.dll
@@ -36,11 +36,6 @@ OBJS =  \
 LLIBS =                        \
     $(LIBNSPR)                 \
     $(DIST)\lib\xpcom.lib      \
-    $(NULL)
-
-LINCS =                        \
-    -I$(PUBLIC)\xpcom	       \
-    -I$(PUBLIC)\xpinstall      \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

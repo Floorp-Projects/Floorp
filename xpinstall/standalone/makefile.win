@@ -35,12 +35,6 @@ LLIBS =                        \
     $(LIBNSPR)		           \
     $(NULL)
 
-LINCS =                        \
-    -I$(PUBLIC)\xpcom	       \
-    -I$(PUBLIC)\xpinstall      \
-    -I$(PUBLIC)\raptor         \
-    $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
 export:: $(PROGRAM)

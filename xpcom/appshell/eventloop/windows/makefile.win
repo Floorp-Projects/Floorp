@@ -49,7 +49,7 @@ CPP_OBJS=												\
 LLIBS=												\
         $(DIST)\lib\xpcom.lib					\
         $(LIBNSPR)
-		  
+
 LINCS=												\
 			-I..\xp										\
 			$(NULL)  

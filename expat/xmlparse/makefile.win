@@ -22,7 +22,7 @@
 #
 
 DEPTH= ..\..
-MODULE = raptor
+MODULE = expat
 EXPORTS = xmlparse.h
 LIBRARY_NAME=expat
 

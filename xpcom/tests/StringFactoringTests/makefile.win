@@ -34,9 +34,7 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom	\
-	-I$(DEPTH)\xpcom\ds	\
-	-I$(MOZ_TOOLS)\include	\
+LINCS=	-I$(MOZ_TOOLS)\include	\
 	$(NULL)
 
 LLIBS = \

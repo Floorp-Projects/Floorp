@@ -40,23 +40,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsWebShell.obj		\
  $(NULL)
 
-LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\dom -I$(PUBLIC)\js \
-      -I$(PUBLIC)\necko \
-      -I$(PUBLIC)\plugin -I$(PUBLIC)\java -I$(PUBLIC)\pref -I$(PUBLIC)\profile \
-      -I$(PUBLIC)\js -I$(DEPTH)\include -I$(PUBLIC)\jsurl \
-      -I$(PUBLIC)\editor -I$(PUBLIC)\rdf \
-      -I$(PUBLIC)\xpfe\components \
-      -I$(PUBLIC)\walletlib \
-      -I$(PUBLIC)\oji \
-      -I$(PUBLIC)\uconv \
-      -I$(PUBLIC)\strres \
-      -I$(PUBLIC)\locale \
-      -I$(PUBLIC)\lwbrk \
-      -I$(PUBLIC)\unicharutil \
-      -I$(PUBLIC)\intl \
-      -I$(PUBLIC)\caps \
-		-I..\..\docshell\base
+LINCS=-I..\public -I..\..\docshell\base
 
 !ifdef MOZ_STATIC_COMPONENT_LIBS
 MAKE_OBJ_TYPE = LIB

@@ -36,10 +36,6 @@ LLIBS =                        \
     $(LIBNSPR)		       \
     $(NULL)
 
-LINCS =                        \
-    -I$(PUBLIC)\xpcom	       \
-    $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAM)

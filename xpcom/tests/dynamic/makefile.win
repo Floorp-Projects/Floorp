@@ -27,7 +27,7 @@ MAKE_OBJ_TYPE = DLL
 
 DLL = $(OBJDIR)\TestDynamic.dll
 
-LINCS = -I.. -I$(PUBLIC)\xpcom
+LINCS = -I..
 
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\

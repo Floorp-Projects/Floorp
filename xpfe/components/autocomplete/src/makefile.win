@@ -35,10 +35,6 @@ include <$(DEPTH)/config/config.mak>
 LIBRARY_NAME=autocomplete_s
 LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
-LINCS = \
-	-I$(PUBLIC)/xpcom \
-	$(NULL)
-
 #//------------------------------------------------------------------------
 #// 
 #// Define the files necessary to build the target (ie. OBJS)
