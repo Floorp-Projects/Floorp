@@ -1456,12 +1456,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 // called when the user typed into the quicksearch field, or edits an item inline
 - (void)controlTextDidChange:(NSNotification *)aNotification
 {
-  // how can I tell if this is coming from the quicksearch field?
-  // the object seems to be the field editor in that situation
-
-  // currently, ignore all notifications coming from table views (including
-  // outline views), to avoid responding because of inline editing.
-  if (![[aNotification object] isKindOfClass:[NSTableView class]])
+  if ([aNotification object] == mSearchField)
   {
     NSString* currentText = [mSearchField stringValue];
     [self searchStringChanged:currentText];

@@ -63,8 +63,9 @@
   if (NSMouseInRect(pointInField, [[self cell] cancelButtonRectFromRect:cellFrame], NO))
   {
     [[self cell] cancelButtonClickedWithFrame:cellFrame inView:self];
-    // fake the notification
-    [self textDidChange:[NSNotification notificationWithName:NSControlTextDidChangeNotification object:self]];
+    // fake the notification as close as we can
+    [self textDidChange: [NSNotification notificationWithName: NSTextDidChangeNotification 
+                                                       object: [self currentEditor]]]; 
   }
   else if (NSMouseInRect(pointInField, [[self cell] popUpButtonRectFromRect:cellFrame], NO))
   {
@@ -146,9 +147,7 @@
 - (void)textDidChange:(NSNotification *)aNotification
 {
   [[self cell] searchSubmittedFromView:self];
-  
-  if ([[self delegate] respondsToSelector:@selector(controlTextDidChange:)])
-    [[self delegate] controlTextDidChange:aNotification];
+  [super textDidChange: aNotification];
 }
 
 - (NSString *)titleOfSelectedPopUpItem
