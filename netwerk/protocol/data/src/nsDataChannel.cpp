@@ -175,11 +175,17 @@ nsDataChannel::ParseData() {
 
     if (lBase64) {
         *base64 = 'b';
+        PRInt32 resultLen = 0;
+        if (comma[dataLen-1] == '=')
+            if (comma[dataLen-2] == '=')
+                resultLen = dataLen-2;
+            else
+                resultLen = dataLen-1;
 
         char * decodedData = PL_Base64Decode(comma+1, dataLen, nsnull);
         if (!decodedData) return NS_ERROR_OUT_OF_MEMORY;
 
-        dataToWrite->dataLen = PL_strlen(decodedData);
+        dataToWrite->dataLen = resultLen;
         dataToWrite->data = decodedData;
 
         rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataToWrite->dataLen, &wrote);
