@@ -33,13 +33,15 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebProgressListener.h"
 #include "nsTimer.h"
+#include "nsWeakReference.h"
 
 class nsBrowserWindow;
 
 class nsWebBrowserChrome : public nsIWebBrowserChrome,
                            public nsIBaseWindow,
                            public nsIWebProgressListener,
-                           public nsIInterfaceRequestor
+                           public nsIInterfaceRequestor,
+                           public nsSupportsWeakReference
 {
 friend class nsBrowserWindow;
 
