@@ -63,3 +63,7 @@
     list-style-image      : url("chrome://communicator/skin/content-small.gif");
   }  
 
+#skinsTree 
+  {
+    height                  : 80px;
+  }  

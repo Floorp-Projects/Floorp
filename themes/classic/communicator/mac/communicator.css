@@ -83,3 +83,7 @@ button.down[disabled="true"], button.down[disabled="true"]:hover:active
     list-style-image      : url("chrome://communicator/skin/content-small.gif");
   }  
 
+#skinsTree 
+  {
+    height                  : 80px;
+  }  

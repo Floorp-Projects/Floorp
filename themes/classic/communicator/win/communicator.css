@@ -61,34 +61,6 @@
     list-style-image      : url("chrome://communicator/skin/content-small.gif");
   }  
 
-/*
- comment out really bad style rules, but leave them here so future intent is
- clear
-   
-.tree-sidebar .thumb-box
-  {
-    border                : none;
-  }  
-  
-.tree-sidebar thumb
-  {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-  }  
-  
-.tree-sidebar .scrollbarbutton-box
-  {
-    border                : none;
-  }  
-  
-.tree-sidebar scrollbarbutton
-  {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
-  }
-*/
-
+#skinsTree {
+  height                  : 80px;
+}  
