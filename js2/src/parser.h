@@ -91,7 +91,7 @@ namespace JavaScript {
 
 	class Token {
 	  public:
-		enum Kind {	// Keep synchronized with kindNames and tokenBinaryOperatorInfos tables
+		enum Kind {	// Keep synchronized with kindNames, kindFlags, and tokenBinaryOperatorInfos tables
 		  // Special
 			end,						// End of token stream
 
@@ -224,9 +224,7 @@ namespace JavaScript {
 			Constructor,				// constructor
 			Get,						// get
 			Language,					// language
-			Local,						// local
 			Namespace,					// namespace
-			Override,					// override
 			Set,						// set
 			Use,						// use
 			
@@ -241,20 +239,30 @@ namespace JavaScript {
 			kindsWithCharsEnd = regExp+1// End of range of tokens for which the chars field (below) is valid
 		};
 
-#define CASE_TOKEN_NONRESERVED	\
-		 Token::Attribute:		\
-	case Token::Constructor:	\
-	case Token::Get:			\
-	case Token::Language:		\
-	case Token::Local:			\
-	case Token::Namespace:		\
-	case Token::Override:		\
-	case Token::Set:			\
-	case Token::Use:			\
+#define CASE_TOKEN_ATTRIBUTE_IDENTIFIER	\
+		 Token::Get:					\
+	case Token::Set:					\
 	case Token::identifier
+
+#define CASE_TOKEN_NONRESERVED			\
+		 Token::Attribute:				\
+	case Token::Constructor:			\
+	case Token::Get:					\
+	case Token::Language:				\
+	case Token::Namespace:				\
+	case Token::Set:					\
+	case Token::Use:					\
+	case Token::identifier
+
+		enum Flag {
+			isAttribute,				// True if this token is an attribute
+			canFollowAttribute,			// True if this token is an attribute or can follow an attribute
+			canFollowReturn				// True if this token can follow a return without an expression
+		};
 
 	  private:
 		static const char *const kindNames[kindsEnd];
+		static const uchar kindFlags[kindsEnd];
 
 	  #ifdef DEBUG
 		bool valid;						// True if this token has been initialized
@@ -272,12 +280,14 @@ namespace JavaScript {
 
 	  public:
 		static void initKeywords(World &world);
-		static bool isIdentifierKind(Kind kind) {ASSERT(nonreservedEnd == identifier && kindsEnd == identifier+1); return kind >= nonreservedBegin;}
 		static bool isSpecialKind(Kind kind) {return kind <= regExp || kind == identifier;}
 		static const char *kindName(Kind kind) {ASSERT(uint(kind) < kindsEnd); return kindNames[kind];}
 
 		Kind getKind() const {ASSERT(valid); return kind;}
 		bool hasKind(Kind k) const {ASSERT(valid); return kind == k;}
+		bool hasIdentifierKind() const {ASSERT(nonreservedEnd == identifier && kindsEnd == identifier+1); return kind >= nonreservedBegin;}
+		bool getFlag(Flag f) const {ASSERT(valid); return (kindFlags[kind] & 1<<f) != 0;}
+		
 		bool getLineBreak() const {ASSERT(valid); return lineBreak;}
 		uint32 getPos() const {ASSERT(valid); return pos;}
 		const StringAtom &getIdentifier() const {ASSERT(valid && id); return *id;}
@@ -401,26 +411,25 @@ namespace JavaScript {
 	};
 
 
+	struct ExprNode;
+	struct StmtNode;
+	
 	struct FunctionName {
 		enum Prefix {
 			normal,						// No prefix
 			Get,						// get
-			Set,						// set
-			New							// new
+			Set							// set
 		};
 		
 		Prefix prefix;					// The name's prefix, if any
-		const StringAtom *name;			// The name; nil if omitted
+		ExprNode *name;					// The name; nil if omitted
 		
 		FunctionName(): prefix(normal), name(0) {}
 	};
 	
-	struct ExprNode;
-	struct StmtNode;
-	
 	struct VariableBinding: ParseNode {
 		VariableBinding *next;			// Next binding in a linked list of variable or parameter bindings
-		const StringAtom *name;			// The variable's name; nil if omitted, which currently can only happen for ... parameters
+		ExprNode *name;					// The variable's name; nil if omitted, which currently can only happen for ... parameters
 		ExprNode *type;					// Type expression or nil if not provided
 		ExprNode *initializer;			// Initial value expression or nil if not provided
 		
@@ -442,15 +451,12 @@ namespace JavaScript {
 			identifier,					// IdentifierExprNode	<name>
 			number,						// NumberExprNode		<value>
 			string,						// StringExprNode		<str>
-			regExp,						// RegExpExprNode		/<regExp>/<flags>
+			regExp,						// RegExpExprNode		/<re>/<flags>
 			Null,						// ExprNode				null
 			True,						// ExprNode				true
 			False,						// ExprNode				false
 			This,						// ExprNode				this
 			Super,						// ExprNode				super
-			Public,						// ExprNode				public
-			Package,					// ExprNode				package
-			Private,					// ExprNode				private
 
 			parentheses,				// UnaryExprNode		(<op>)
 			numUnit,					// NumUnitExprNode		<num> "<str>"   or   <num><str>
@@ -554,8 +560,8 @@ namespace JavaScript {
 	struct IdentifierExprNode: ExprNode {
 		const StringAtom &name;			// The identifier
 
-		IdentifierExprNode(uint32 pos, Kind kind, const StringAtom &name):
-				ExprNode(pos, kind), name(name) {}
+		IdentifierExprNode(uint32 pos, Kind kind, const StringAtom &name): ExprNode(pos, kind), name(name) {}
+		explicit IdentifierExprNode(const Token &t): ExprNode(t.getPos(), identifier), name(t.getIdentifier()) {}
 
 		void print(PrettyPrinter &f) const;
 	};
@@ -564,6 +570,7 @@ namespace JavaScript {
 		float64 value;					// The number's value
 
 		NumberExprNode(uint32 pos, float64 value): ExprNode(pos, number), value(value) {}
+		explicit NumberExprNode(const Token &t): ExprNode(t.getPos(), number), value(t.getValue()) {}
 
 		void print(PrettyPrinter &f) const;
 	};
@@ -577,11 +584,11 @@ namespace JavaScript {
 	};
 	
 	struct RegExpExprNode: ExprNode {
-		const StringAtom &regExp;		// The regular expression's contents
+		const StringAtom &re;			// The regular expression's contents
 		String &flags;					// The regular expression's flags
 
-		RegExpExprNode(uint32 pos, Kind kind, const StringAtom &regExp, String &flags):
-				ExprNode(pos, kind), regExp(regExp), flags(flags) {}
+		RegExpExprNode(uint32 pos, Kind kind, const StringAtom &re, String &flags):
+				ExprNode(pos, kind), re(re), flags(flags) {}
 
 		void print(PrettyPrinter &f) const;
 	};
@@ -611,13 +618,6 @@ namespace JavaScript {
 		FunctionExprNode(uint32 pos, Kind kind): ExprNode(pos, kind) {}
 
 		void print(PrettyPrinter &f) const;
-	};
-	
-	struct ExprList: ArenaObject {
-		ExprList *next;					// Next expression in linked list
-		ExprNode *expr;					// Attribute expression; non-nil only
-		
-		explicit ExprList(ExprNode *expr): next(0), expr(expr) {ASSERT(expr);}
 	};
 	
 	struct ExprPairList: ArenaObject {
@@ -681,7 +681,7 @@ namespace JavaScript {
 			empty,						// StmtNode				;
 			expression,					// ExprStmtNode			<expr> ;
 			block,						// BlockStmtNode		<attributes> { <statements> }
-			label,						// LabelStmtNode		<label> : <stmt>
+			label,						// LabelStmtNode		<name> : <stmt>
 			If,							// UnaryStmtNode		if ( <expr> ) <stmt>
 			IfElse,						// BinaryStmtNode		if ( <expr> ) <stmt> else <stmt2>
 			Switch,						// SwitchStmtNode		switch ( <expr> ) <statements>
@@ -693,48 +693,86 @@ namespace JavaScript {
 			ForConstIn,					// ForVarInStmtNode		for ( const <binding> in <container> ) <stmt>
 			ForVarIn,					// ForVarInStmtNode		for ( var <binding> in <container> ) <stmt>
 			Case,						// ExprStmtNode			case <expr> :	or   default :	// Only occurs directly inside a Switch
-			Break,						// GoStmtNode			break ;   or   break <label> ;
-			Continue,					// GoStmtNode			continue ;   or   continue <label> ;
+			Break,						// GoStmtNode			break ;   or   break <name> ;
+			Continue,					// GoStmtNode			continue ;   or   continue <name> ;
 			Return,						// ExprStmtNode			return ;   or   return <expr> ;
 			Throw,						// ExprStmtNode			throw <expr> ;
 			Try,						// TryStmtNode			try <stmt> <catches> <finally>
+			Import,						// ImportStmtNode		import <bindings> ;
+			UseImport,					// ImportStmtNode		use import <bindings> ;
+			Use,						// UseStmtNode			use namespace <exprs> ;
+			Export,						// ExportStmtNode		<attributes> export <bindings> ;
 			Const,						// VariableStmtNode		<attributes> const <bindings> ;
 			Var,						// VariableStmtNode		<attributes> var <bindings> ;
 			Function,					// FunctionStmtNode		<attributes> function <function>
-			Class,						// ClassStmtNode		<attributes> class <name> extends <superclasses> <body>
-			Language					// LanguageStmtNode		language <language> ;
+			Constructor,				// FunctionStmtNode		<attributes> constructor <function>
+			Class,						// ClassStmtNode		<attributes> class <name> extends <superclass> implements <supers> <body>
+			Interface,					// ClassStmtNode		<attributes> interface <name> extends <supers> <body>
+			Namespace,					// NamespaceStmtNode	<attributes> namespace <name> extends <supers>
+			Language,					// LanguageStmtNode		language <language> ;
+			Package						// PackageStmtNode		package <packageName> <body>
 		};
 		
+	  private:
 		Kind kind;						// The node's kind
+	  public:
 		StmtNode *next;					// Next statement in a linked list of statements in this block
 
 		StmtNode(uint32 pos, Kind kind): ParseNode(pos), kind(kind), next(0) {}
+
+		Kind getKind() const {return kind;}
+		bool hasKind(Kind k) const {return kind == k;}
+
+		virtual void print(PrettyPrinter &f) const;
+		void printSubstatement(PrettyPrinter &f, const char *continuation = 0) const;
+		static void printStatements(PrettyPrinter &f, const StmtNode *statements);
+		static void printBlock(PrettyPrinter &f, const StmtNode *statements);
 	};
+
+	// Print s onto f.
+	inline PrettyPrinter &operator<<(PrettyPrinter &f, const StmtNode *s) {ASSERT(s); s->print(f); return f;}
+
 
 	struct ExprStmtNode: StmtNode {
 		ExprNode *expr;					// The expression statement's expression.  May be nil for default: or return-with-no-expression statements.
 
 		ExprStmtNode(uint32 pos, Kind kind, ExprNode *expr): StmtNode(pos, kind), expr(expr) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 
+	struct IdentifierList: ArenaObject {
+		IdentifierList *next;			// Next identifier in linked list
+		const StringAtom &name;			// The identifier
+		
+		explicit IdentifierList(const StringAtom &name): next(0), name(name) {}
+	};
+	
 	struct AttributeStmtNode: StmtNode {
-		ExprList *attributes;			// Linked list of block or definition's attributes
+		IdentifierList *attributes;		// Linked list of block or definition's attributes
 
-		AttributeStmtNode(uint32 pos, Kind kind, ExprList *attributes): StmtNode(pos, kind), attributes(attributes) {}
+		AttributeStmtNode(uint32 pos, Kind kind, IdentifierList *attributes): StmtNode(pos, kind), attributes(attributes) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct BlockStmtNode: AttributeStmtNode {
 		StmtNode *statements;			// Linked list of block's statements
 
-		BlockStmtNode(uint32 pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
+		BlockStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, StmtNode *statements):
+				AttributeStmtNode(pos, kind, attributes), statements(statements) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct LabelStmtNode: StmtNode {
-		const StringAtom &label;		// The label
+		const StringAtom &name;			// The label
 		StmtNode *stmt;					// Labeled statement; non-nil only
 
-		LabelStmtNode(uint32 pos, Kind kind, const StringAtom &label, StmtNode *stmt):
-				StmtNode(pos, kind), label(label), stmt(stmt) {ASSERT(stmt);}
+		LabelStmtNode(uint32 pos, const StringAtom &name, StmtNode *stmt):
+				StmtNode(pos, label), name(name), stmt(stmt) {ASSERT(stmt);}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct UnaryStmtNode: ExprStmtNode {
@@ -742,6 +780,8 @@ namespace JavaScript {
 
 		UnaryStmtNode(uint32 pos, Kind kind, ExprNode *expr, StmtNode *stmt):
 				ExprStmtNode(pos, kind, expr), stmt(stmt) {ASSERT(stmt);}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct BinaryStmtNode: UnaryStmtNode {
@@ -749,6 +789,8 @@ namespace JavaScript {
 
 		BinaryStmtNode(uint32 pos, Kind kind, ExprNode *expr, StmtNode *stmt1, StmtNode *stmt2):
 				UnaryStmtNode(pos, kind, expr, stmt1), stmt2(stmt2) {ASSERT(stmt2);}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct ForStmtNode: StmtNode {
@@ -786,14 +828,17 @@ namespace JavaScript {
 	struct SwitchStmtNode: ExprStmtNode {
 		StmtNode *statements;			// Linked list of switch block's statements, which may include Case and Default statements
 
-		SwitchStmtNode(uint32 pos, Kind kind, ExprNode *expr):
-				ExprStmtNode(pos, kind, expr) {}
+		SwitchStmtNode(uint32 pos, ExprNode *expr, StmtNode *statements): ExprStmtNode(pos, Switch, expr), statements(statements) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct GoStmtNode: StmtNode {
-		const StringAtom *label;		// The label; nil if none
+		const StringAtom *name;			// The label; nil if none
 
-		GoStmtNode(uint32 pos, Kind kind, const StringAtom *label): StmtNode(pos, kind), label(label) {}
+		GoStmtNode(uint32 pos, Kind kind, const StringAtom *name): StmtNode(pos, kind), name(name) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct CatchClause: ParseNode {
@@ -811,30 +856,91 @@ namespace JavaScript {
 		CatchClause *catches;			// Linked list of catch blocks; may be nil
 		StmtNode *finally;				// Finally block or nil if none
 
-		TryStmtNode(uint32 pos, Kind kind, StmtNode *stmt, CatchClause *catches, StmtNode *finally):
-				StmtNode(pos, kind), stmt(stmt), catches(catches), finally(finally) {ASSERT(stmt);}
+		TryStmtNode(uint32 pos, StmtNode *stmt, CatchClause *catches, StmtNode *finally):
+				StmtNode(pos, Try), stmt(stmt), catches(catches), finally(finally) {ASSERT(stmt);}
+
+		void print(PrettyPrinter &f) const;
+	};
+
+	struct PackageName: ArenaObject {	// Either idList or str may be null, but not both
+		IdentifierList *idList;			// The package name as an identifier list
+		String *str;					// The package name as a string
+		
+		explicit PackageName(IdentifierList *idList): idList(idList), str(0) {ASSERT(idList);}
+		explicit PackageName(String &str): idList(0), str(&str) {}
+	};
+	
+	struct ImportBinding: ParseNode {
+		ImportBinding *next;			// Next binding in a linked list of import bindings
+		const StringAtom *name;			// The package variable's name; nil if omitted
+		PackageName &packageName;		// The package's name
+		
+		ImportBinding(uint32 pos, const StringAtom *name, PackageName &packageName):
+				ParseNode(pos), next(0), name(name), packageName(packageName) {}
+	};
+
+	struct ImportStmtNode: StmtNode {
+		ImportBinding *bindings;		// Linked list of import bindings
+
+		ImportStmtNode(uint32 pos, Kind kind, ImportBinding *bindings): StmtNode(pos, kind), bindings(bindings) {}
+	};
+
+	struct ExprList: ArenaObject {
+		ExprList *next;					// Next expression in linked list
+		ExprNode *expr;					// Attribute expression; non-nil only
+		
+		explicit ExprList(ExprNode *expr): next(0), expr(expr) {ASSERT(expr);}
+	};
+	
+	struct UseStmtNode: StmtNode {
+		ExprList *exprs;				// Linked list of namespace expressions
+
+		UseStmtNode(uint32 pos, Kind kind, ExprList *exprs): StmtNode(pos, kind), exprs(exprs) {}
+	};
+	
+	struct ExportBinding: ParseNode {
+		ExportBinding *next;			// Next binding in a linked list of export bindings
+		FunctionName name;				// The exported variable's name
+		FunctionName *initializer;		// The original variable's name or nil if not provided
+		
+		ExportBinding(uint32 pos, FunctionName *initializer): ParseNode(pos), next(0), initializer(initializer) {}
+	};
+	
+	struct ExportStmtNode: AttributeStmtNode {
+		ExportBinding *bindings;		// Linked list of export bindings
+
+		ExportStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, ExportBinding *bindings):
+				AttributeStmtNode(pos, kind, attributes), bindings(bindings) {}
 	};
 
 	struct VariableStmtNode: AttributeStmtNode {
 		VariableBinding *bindings;		// Linked list of variable bindings
 
-		VariableStmtNode(uint32 pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
+		VariableStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, VariableBinding *bindings):
+				AttributeStmtNode(pos, kind, attributes), bindings(bindings) {}
 	};
 
 	struct FunctionStmtNode: AttributeStmtNode {
 		FunctionDefinition function;	// Function definition
 
-		FunctionStmtNode(uint32 pos, Kind kind, ExprList *attributes): AttributeStmtNode(pos, kind, attributes) {}
+		FunctionStmtNode(uint32 pos, Kind kind, IdentifierList *attributes): AttributeStmtNode(pos, kind, attributes) {}
 	};
 
-	struct ClassStmtNode: AttributeStmtNode {
-		const StringAtom &name;			// The class's name
-		ExprList *superclasses;			// Linked list of superclass expressions
-		StmtNode *body;					// The class's body; non-nil only
+	struct NamespaceStmtNode: AttributeStmtNode {
+		ExprNode *name;					// The namespace's, interfaces, or class's name; non-nil only
+		ExprList *supers;				// Linked list of supernamespace or superinterface expressions
 
-		ClassStmtNode(uint32 pos, Kind kind, ExprList *attributes, const StringAtom &name, ExprList *superclasses,
-					  StmtNode *body):
-				AttributeStmtNode(pos, kind, attributes), name(name), superclasses(superclasses), body(body) {ASSERT(body);}
+		NamespaceStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, ExprNode *name, ExprList *supers):
+			AttributeStmtNode(pos, kind, attributes), name(name), supers(supers) {ASSERT(name);}
+	};
+
+	struct ClassStmtNode: NamespaceStmtNode {
+		ExprNode *superclass;			// Superclass expression (classes only)
+		BlockStmtNode *body;			// The class's body; non-nil only
+
+		ClassStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, ExprNode *name, ExprNode *superclass, ExprList *superinterfaces,
+					  BlockStmtNode *body):
+			NamespaceStmtNode(pos, kind, attributes, name, superinterfaces), superclass(superclass), body(body) {ASSERT(body);}
 	};
 
 	struct LanguageStmtNode: StmtNode {
@@ -844,11 +950,20 @@ namespace JavaScript {
 				StmtNode(pos, kind), language(language) {}
 	};
 
+	struct PackageStmtNode: StmtNode {
+		PackageName &packageName;		// The package's name
+		BlockStmtNode *body;			// The package's body; non-nil only
+
+		PackageStmtNode(uint32 pos, Kind kind, PackageName &packageName, BlockStmtNode *body):
+				StmtNode(pos, kind), packageName(packageName), body(body) {ASSERT(body);}
+	};
+
 
 	class Parser {
 	  public:
 		Lexer lexer;
 		Arena &arena;
+		bool lineBreaksSignificant;		// If false, line breaks between tokens are treated as though they were spaces instead
 
 		Parser(World &world, Arena &arena, const String &source, const String &sourceLocation, uint32 initialLineNum = 1);
 		
@@ -862,6 +977,8 @@ namespace JavaScript {
 		const Token &require(bool preferRegExp, Token::Kind kind);
 	  private:
 		String &copyTokenChars(const Token &t);
+		bool lineBreakBefore(const Token &t) const {return lineBreaksSignificant && t.getLineBreak();}
+		bool lineBreakBefore() {return lineBreaksSignificant && lexer.peek(true).getLineBreak();}
 
 		ExprNode *parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers);
 		ExprNode *parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers);
@@ -906,6 +1023,21 @@ namespace JavaScript {
 		ExprNode *parseExpression(bool noIn, bool noAssignment = false, bool noComma = false);
 		ExprNode *parseNonAssignmentExpression(bool noIn) {return parseExpression(noIn, true, true);}
 		ExprNode *parseAssignmentExpression(bool noIn) {return parseExpression(noIn, false, true);}
+	  private:
+		ExprNode *parseParenthesizedExpression();
+		const StringAtom &parseTypedIdentifier(ExprNode *&type);
+		
+		enum SemicolonState {semiNone, semiNoninsertable, semiInsertable};
+		enum AttributeStatement {asAny, asBlock, asConstVar};
+		StmtNode *parseBlock(bool inSwitch, bool noOpenBrace, bool noCloseBrace);
+		StmtNode *parseAttributeStatement(uint32 pos, IdentifierList *attributes, const Token &t, SemicolonState &semicolonState);
+		StmtNode *parseAttributesAndStatement(const Token *t, AttributeStatement as, SemicolonState &semicolonState);
+		StmtNode *parseAnnotatedBlock();
+		StmtNode *parseTry(uint32 pos);
+	  public:
+		StmtNode *parseStatement(bool topLevel, bool inSwitch, SemicolonState &semicolonState);
+		StmtNode *parseStatementAndSemicolon(SemicolonState &semicolonState);
+		StmtNode *parseProgram() {return parseBlock(false, true, true);}
 	};
 }
 #endif
