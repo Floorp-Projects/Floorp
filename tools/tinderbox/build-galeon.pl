@@ -29,7 +29,8 @@ sub checkout {
   my $status = TinderUtils::run_shell_command("\\rm -f galeon/po/ChangeLog");
 
   # checkout galeon source
-  $ENV{CVSROOT} = ":pserver:anonymous\@anoncvs.gnome.org:/cvs/gnome";
+  #$ENV{CVSROOT} = ":pserver:anonymous\@anoncvs.gnome.org:/cvs/gnome";
+  $ENV{CVSROOT} = ":pserver:anonymous@cvs.galeon.sourceforge.net:/cvsroot/galeon";
   my $status = TinderUtils::run_shell_command("$Settings::CVS checkout galeon");
 
   # hack in the galeon prefs, if needed
