@@ -1145,7 +1145,7 @@ nsCalFormatString::nsCalFormatString()
     ms_sVEventDeclineCounterMessage = "%J%K%R%U%s%T%C%Z";
     ms_sVEventAddMessage = "%J%v%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%p%x%y%R%o%r%s%g%S%h%U%u%w%Z";
     ms_sVEventRefreshMessage = "%v%R%U%C%K%H%Z";
-    ms_sVEventReplyMessage = "%J%v%K%R%U%s%T%C%H%X%E";
+    ms_sVEventReplyMessage = "%J%v%K%R%B%U%s%T%C%H%X%E";
     // 3-31-98 no attendees in publish anymore
     ms_sVEventPublishMessage = "%J%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%p%x%y%R%o%r%s%g%S%h%U%u%w%Z";
     ms_sVEventRecurPublishMessage = "%J%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%p%x%y%o%r%s%g%S%h%U%u%w%Z";
