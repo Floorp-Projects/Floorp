@@ -436,7 +436,7 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
     PRInt32 outLength;
     rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
-      outString = NS_STATIC_CAST( PRUnichar*, nsMemory::Alloc( outLength+1 * sizeof( PRUnichar ) ) );
+      outString = NS_STATIC_CAST( PRUnichar*, nsMemory::Alloc( (outLength+1) * sizeof( PRUnichar ) ) );
       if (nsnull == outString) {
         return nsnull;
       }
