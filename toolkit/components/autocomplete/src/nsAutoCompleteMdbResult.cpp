@@ -119,7 +119,7 @@ nsAutoCompleteMdbResult::GetValueAt(PRInt32 aIndex, nsAString & _retval)
   sprintf(value, "foopy (%d)", aIndex);
   
   nsAutoString result;
-  result.AssignWithConversion(value);
+  result.AssignASCII(value);
   _retval = result;*/
 
   return NS_OK;
