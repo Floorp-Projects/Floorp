@@ -24,7 +24,6 @@
 #include "DeleteTextTxn.h"
 #include "CreateElementTxn.h"
 #include "InsertElementTxn.h"
-#include "nsInsertHTMLTxn.h"
 #include "DeleteElementTxn.h"
 #include "DeleteRangeTxn.h"
 #include "ChangeAttributeTxn.h"
@@ -55,8 +54,6 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new CreateElementTxn();
   else if (aTxnType.Equals(InsertElementTxn::GetCID()))
     *aResult = new InsertElementTxn();
-  else if (aTxnType.Equals(nsInsertHTMLTxn::GetCID()))
-    *aResult = new nsInsertHTMLTxn();
   else if (aTxnType.Equals(DeleteElementTxn::GetCID()))
     *aResult = new DeleteElementTxn();
   else if (aTxnType.Equals(DeleteRangeTxn::GetCID()))

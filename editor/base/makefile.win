@@ -22,7 +22,6 @@ include <$(DEPTH)/config/config.mak>
 LIBRARY_NAME=ender
 
 CPPSRCS =				\
-      nsInsertHTMLTxn.cpp    \
       nsEditor.cpp			     \
       nsEditorUtils.cpp      \
       nsEditorRegistration.cpp \
@@ -59,7 +58,6 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS =					\
-	.\$(OBJDIR)\nsInsertHTMLTxn.obj	    \
 	.\$(OBJDIR)\nsEditor.obj		        \
 	.\$(OBJDIR)\nsEditorUtils.obj		    \
 	.\$(OBJDIR)\nsEditorRegistration.obj    \
