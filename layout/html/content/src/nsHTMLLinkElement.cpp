@@ -376,7 +376,7 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
   }
   else {
     // Absolute URL is empty because we have no HREF.
-    aBuf = PL_strdup(""); // use a dummy empty string
+    aBuf = nsnull;
   }
 
   return NS_OK;

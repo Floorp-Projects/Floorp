@@ -32,7 +32,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocumentFragment.h"
@@ -41,6 +40,7 @@
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
 #include "nsIHTMLContent.h"
+#include "nsILink.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
@@ -1121,16 +1121,22 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
 
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
-    // If this anchor element has an HREF then it is sensitive to
-    // mouse events (otherwise ignore them).
-    nsAutoString href;
-    nsresult result = GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
-    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-      // XXXwaterson want a generic "anchor" interface here?
-      nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aOuter);
-      if (anchor) {
-        anchor->GetHref(href);
-      }
+    // If we're here, then aOuter should be an nsILink. We'll use the
+    // nsILink interface to get a canonified URL that has been
+    // correctly escaped and URL-encoded for the document's charset.
+    nsCOMPtr<nsILink> link = do_QueryInterface(aOuter);
+    NS_ASSERTION(link != nsnull, "aOuter is not an nsILink");
+    if (! link)
+      return NS_ERROR_UNEXPECTED;
+
+    nsXPIDLCString hrefCStr;
+    link->GetHrefCString(*getter_Copies(hrefCStr));
+
+    // Only bother to handle the mouse event if there was an href
+    // specified.
+    if (hrefCStr) {
+      nsAutoString href;
+      href.AssignWithConversion(hrefCStr);
 
       switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
