@@ -150,7 +150,9 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
 //   1..N of (<4 char code> <space> <mime type>).
 //
 // It is perfectly acceptable for there to be no mappings (either |inMappings|
-// is null or an emtpy string).
+// is null or an emtpy string). 
+//
+// NOTE: we make the assumption that the data is NULL terminated.
 //
 void
 nsMimeMapperMac :: ParseMappings ( const char* inMappings )
