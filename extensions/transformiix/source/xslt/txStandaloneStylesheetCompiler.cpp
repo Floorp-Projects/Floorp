@@ -119,14 +119,20 @@ TX_CompileStylesheetPath(const txParsedURL& aURL, txStylesheet** aResult)
 PR_STATIC_CALLBACK(void)
 startElement(void *aUserData, const XML_Char *aName, const XML_Char **aAtts)
 {
-    NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
+    if (!aUserData) {
+        NS_WARNING("no userData in startElement handler");
+        return;
+    }
     TX_DRIVER(aUserData)->StartElement(aName, aAtts);
 }
 
 PR_STATIC_CALLBACK(void)
 endElement(void *aUserData, const XML_Char* aName)
 {
-    NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
+    if (!aUserData) {
+        NS_WARNING("no userData in endElement handler");
+        return;
+    }
     TX_DRIVER(aUserData)->EndElement(aName);
 }
 
@@ -215,7 +221,7 @@ txDriver::getErrorString()
     return mErrorString;
 }
 
-int
+void
 txDriver::StartElement(const XML_Char *aName, const XML_Char **aAtts)
 {
     PRInt32 attcount = 0;
@@ -232,18 +238,15 @@ txDriver::StartElement(const XML_Char *aName, const XML_Char **aAtts)
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
     }
-    return XML_ERROR_NONE;
 }
 
-int
+void
 txDriver::EndElement(const XML_Char* aName)
 {
     nsresult rv = mCompiler->endElement();
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
-        return XML_ERROR_SYNTAX;
     }
-    return XML_ERROR_NONE;
 }
 
 void
