@@ -159,7 +159,8 @@ nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
 	  // paint the background
 	  nsString aString("Hello World!\n");
 	  nsIRenderingContext * rndctx = ((nsPaintEvent*)aEvent)->renderingContext;
-	  rndctx->SetColor(aEvent->widget->GetBackgroundColor());
+	  //rndctx->SetColor(aEvent->widget->GetBackgroundColor());
+	  rndctx->SetColor(NS_RGB(0, 0, 255));
 	  rndctx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
 	  
 	  nsFont font("Times", NS_FONT_STYLE_NORMAL,
