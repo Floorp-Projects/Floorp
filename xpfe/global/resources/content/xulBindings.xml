@@ -306,7 +306,7 @@
         <children/>
       </xul:box-->
 
-      <xul:arrowscrollbox flex="1" orient="vertical">
+      <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
 		  <!--xul:box class="popup-internal-box" orient="vertical"-->
 			<children/>
 		  <!--/xul:box-->
@@ -351,7 +351,7 @@
     </interface>     
   </binding>
   
-  <binding id="toolbargrippy" extends="xul:image"/>
+  <binding id="toolbargrippy" extends="xul:button"/>
 
   <binding id="toolbox">
     <content orient="vertical">
@@ -561,7 +561,7 @@
 	    <children includes="title"/>
 	  </xul:box>
 	  <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
-        <children/>
+      <children/>
 	  </xul:box>
     </content>    
   </binding>
