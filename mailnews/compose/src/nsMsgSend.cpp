@@ -2330,7 +2330,7 @@ nsMsgComposeAndSend::Init(
   //
   // Needed for mime encoding!
   //
-  PRBool strictly_mime = PR_FALSE; 
+  PRBool strictly_mime = PR_TRUE; 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
