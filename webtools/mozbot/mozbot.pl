@@ -23,6 +23,7 @@
 #
 # mozbot.pl harrison@netscape.com 10/14/98
 # "irc bot for the gang on #mozilla"
+# leaf@mozilla.org 1999/3/4 - making it grendelbotable
 #
 # features: reports tinderbox status upon request.
 # remembers urls. tells you the phase of the moon.
@@ -101,7 +102,8 @@ $port = $port                   || "6667";
 $nick = $nick                   || "mozbot";
 $channel = $channel             || "#mozilla";
 
-&debug ("mozbot $VERSION starting up");
+$botnick = $nick;
+&debug ("mozbot ($botnick) $VERSION starting up");
 
 LoadStockList();
 
@@ -611,7 +613,7 @@ sub bot_up {
 sub bot_urls {
     my ($nick, $cmd, $rest) = @_;
     if ($#urls == -1) {
-        $bot->privmsg($nick, "- mozbot has seen no URLs yet -");
+        $bot->privmsg($nick, "- $botnick has seen no URLs yet -");
     } else {
         foreach my $m (@urls) {
             $bot->privmsg($nick, $m);
