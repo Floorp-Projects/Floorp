@@ -47,6 +47,7 @@
 
 BOOL insertHashLine = FALSE;
 BOOL trySymlink = FALSE;
+BOOL recurse = FALSE;
 
 typedef WINBASEAPI BOOL (WINAPI* LPFNBackupWrite)(HANDLE, LPBYTE, DWORD, LPDWORD, BOOL, BOOL, LPVOID *);
 typedef WINBASEAPI HANDLE (WINAPI* LPFNCreateFileW)(LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
@@ -274,15 +275,8 @@ BOOL hardSymLink(LPCSTR src, LPCSTR dest)
     return TRUE;
 } 
 
-int CopyIfNecessary(const char *oldFile, const char *newFile)
+int CopyIfNecessary(char *oldFile, char *newFile)
 {
-	char   fullPathName[ MAX_PATH + 1 ];
-	LPTSTR filenamePart = NULL;
-
-	char buffer[8192];
-	DWORD bytesRead = 0;
-	DWORD bytesWritten = 0;
-
     struct stat newsb;
 	struct stat oldsb;	
 
@@ -290,6 +284,57 @@ int CopyIfNecessary(const char *oldFile, const char *newFile)
 	if (stat(oldFile, &oldsb)) {
 		return -1;
 	}
+
+    // skip directories unless recursion flag is set
+    if ( oldsb.st_mode & _S_IFDIR ) {
+        if (!recurse) {
+    	    printf("    Skipping directory %s\n", oldFile);
+            return 0;
+        }
+        else {
+            char *lastDir;
+            char *oldFileName; // points to where file name starts in oldFile
+            char *newFileName; // points to where file name starts in newFile
+            WIN32_FIND_DATA findFileData;
+
+            // weed out special "." and ".." directories
+            lastDir = strrchr(oldFile, '\\');
+            if ( lastDir )
+                ++lastDir;
+            else
+                lastDir = oldFile;
+            if ( strcmp( lastDir, "." ) == 0 || strcmp( lastDir, ".." ) == 0 )
+                return 0;
+
+            // find and process the contents of the directory
+            oldFileName = oldFile + strlen(oldFile);
+            strcpy(oldFileName, "\\*");
+            ++oldFileName;
+
+            newFileName = newFile + strlen(newFile);
+            strcpy(newFileName, "\\");
+            ++newFileName;
+
+            if( MakeDir(newFile) < 0 ) {
+                fprintf(stderr, "\n+++ makecopy: unable to create directory %s\n", newFile);
+                return 1;
+            }
+
+            HANDLE hFindFile = FindFirstFile(oldFile, &findFileData);
+            if (hFindFile != INVALID_HANDLE_VALUE) {
+                do {
+                    strcpy(oldFileName, findFileData.cFileName);
+                    strcpy(newFileName, findFileData.cFileName);
+                    CopyIfNecessary(oldFile, newFile);
+                } while (FindNextFile(hFindFile, &findFileData) != 0);
+            } else {
+                fprintf(stderr, "\n+++ makecopy: no such file: %s\n", oldFile);
+            }
+            FindClose(hFindFile);
+        }
+        // nothing more we can do with a directory
+        return 0;
+    }
 
 	if (!stat(newFile, &newsb)) {
 		// If file times are equal, don't copy
@@ -301,6 +346,13 @@ int CopyIfNecessary(const char *oldFile, const char *newFile)
 		}
 	}
 
+
+	char   fullPathName[ MAX_PATH + 1 ];
+	LPTSTR filenamePart = NULL;
+
+	char buffer[8192];
+	DWORD bytesRead = 0;
+	DWORD bytesWritten = 0;
 
 	// find out required size
 	GetFullPathName(oldFile, MAX_PATH, fullPathName, &filenamePart);
@@ -401,6 +453,7 @@ void Usage(void)
     fprintf(stderr, "makecopy: [-cisx] <file1> [file2 ... fileN] <dir-path>\n");
     fprintf(stderr, "     -c  copy [default], cancels -s\n");
     fprintf(stderr, "     -i  add #line directive\n");
+    fprintf(stderr, "     -r  recurse subdirectories\n");
     fprintf(stderr, "     -s  use symlinks on NT when possible\n");
     fprintf(stderr, "     -x  cancel -i\n");
 }
@@ -431,6 +484,9 @@ int main( int argc, char *argv[] )
                 break;
             case 'i':
                 insertHashLine = TRUE;
+                break;
+            case 'r':
+                recurse = TRUE;
                 break;
             case 's':
                 trySymlink = TRUE;
