@@ -152,7 +152,7 @@ static PRInt32          gInstanceCount = 0;
 // Profile database to remember which profile has been
 // created with UILocale and contentLocale on profileManager
 static nsHashtable *gLocaleProfiles = nsnull;
-nsCOMPtr<nsProfileDirServiceProvider> gDirServiceProvider;
+static nsProfileDirServiceProvider *gDirServiceProvider = nsnull;
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
@@ -260,7 +260,7 @@ nsProfile::~nsProfile()
         
       delete gProfileDataAccess;
       delete gLocaleProfiles;
-      gDirServiceProvider = nsnull;
+      NS_IF_RELEASE(gDirServiceProvider);
     }
 }
 
@@ -276,11 +276,10 @@ nsProfile::Init()
         gLocaleProfiles = new nsHashtable();
         if (!gLocaleProfiles)
             return NS_ERROR_OUT_OF_MEMORY;
-          
-        NS_NewProfileDirServiceProvider(PR_FALSE, getter_AddRefs(gDirServiceProvider));
-        if (!gDirServiceProvider)
-            return NS_ERROR_FAILURE;
-        rv = gDirServiceProvider->Register();
+
+        rv = NS_NewProfileDirServiceProvider(PR_FALSE, &gDirServiceProvider);
+        if (NS_SUCCEEDED(rv))
+            rv = gDirServiceProvider->Register();
     }
     return rv;
 }
