@@ -27,10 +27,15 @@ struct nsStyleColor;
 // Style utility functions
 class nsStyleUtil {
 public:
+  
+  static float GetScalingFactor(PRInt32 aScaler);
 
-  static nscoord CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize);
-  static PRInt32 FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize);
-  static PRInt32 FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize);
+  static nscoord CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize, 
+                                   float aScalingFactor);
+  static PRInt32 FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
+                                         float aScalingFactor);
+  static PRInt32 FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
+                                        float aScalingFactor);
 
   static const nsStyleColor* FindNonTransparentBackground(nsIStyleContext* aContext);
 };

@@ -589,20 +589,23 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
 
           const nsFont& normal = aPresContext->GetDefaultFont();
           const nsFont& normalFixed = aPresContext->GetDefaultFixedFont();
+          PRInt32 scaler = aPresContext->GetFontScaler();
+          float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+
           if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
               (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(value + 1, (PRInt32)normal.size);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value + 1, (PRInt32)normalFixed.size);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(value + 1, (PRInt32)normal.size, scaleFactor);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value + 1, (PRInt32)normalFixed.size, scaleFactor);
           }
           else if (NS_STYLE_FONT_SIZE_LARGER == value) {
-            PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentFont->mFont.size, (PRInt32)normal.size);
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normal.size);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normalFixed.size);
+            PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentFont->mFont.size, (PRInt32)normal.size, scaleFactor);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normal.size, scaleFactor);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normalFixed.size, scaleFactor);
           }
           else if (NS_STYLE_FONT_SIZE_SMALLER == value) {
-            PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(parentFont->mFont.size, (PRInt32)normal.size);
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normal.size);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normalFixed.size);
+            PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(parentFont->mFont.size, (PRInt32)normal.size, scaleFactor);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normal.size, scaleFactor);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)normalFixed.size, scaleFactor);
           }
           // this does NOT explicitly set font size
         }

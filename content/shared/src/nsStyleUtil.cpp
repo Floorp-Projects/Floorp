@@ -21,7 +21,41 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 
-nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize)
+#define POSITIVE_SCALE_FACTOR 1.10 /* 10% */
+#define NEGATIVE_SCALE_FACTOR .90  /* 10% */
+
+/*
+ * Return the scaling percentage given a font scaler
+ * Lifted from layutil.c
+ */
+float nsStyleUtil::GetScalingFactor(PRInt32 aScaler)
+{
+  double scale = 1.0;
+  double mult;
+  PRInt32 count;
+
+  if(aScaler < 0)   {
+    count = -aScaler;
+    mult = NEGATIVE_SCALE_FACTOR;
+  }
+  else {
+    count = aScaler;
+    mult = POSITIVE_SCALE_FACTOR;
+  }
+
+  /* use the percentage scaling factor to the power of the pref */
+  while(count--) {
+    scale *= mult;
+  }
+
+  return scale;
+}
+
+/*
+ * Lifted from winfe/cxdc.cpp
+ */
+nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
+                                       float aScalingFactor)
 { // lifted directly from Nav 5.0 code to replicate rounding errors
   double dFontSize;
 
@@ -54,23 +88,28 @@ nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize
 	default:
 		dFontSize = aBasePointSize;
 	}
+
+  dFontSize *= aScalingFactor;
+
   return (nscoord)dFontSize;
 }
 
-PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize)
+PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
+                                             float aScalingFactor)
 {
   PRInt32 index;
   for (index = 7; index > 1; index--)
-    if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize))
+    if (aFontSize > nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
       break;
   return index;
 }
 
-PRInt32 nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize)
+PRInt32 nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
+                                            float aScalingFactor)
 {
   PRInt32 index;
   for (index = 1; index < 7; index++)
-    if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize))
+    if (aFontSize < nsStyleUtil::CalcFontPointSize(index, aBasePointSize, aScalingFactor))
       break;
   return index;
 }
