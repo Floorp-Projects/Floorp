@@ -624,6 +624,8 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
+  NS_ENSURE_TRUE(mFile, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIFileURL> file(do_CreateInstance("@mozilla.org/network/standard-url;1"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
   file->SetFile(mFile);
