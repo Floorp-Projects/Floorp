@@ -41,8 +41,6 @@
 #include "nsMenuBar.h"
 #include "nsMenu.h"
 #include "nsMenuItem.h"
-#include "nsImageButton.h"
-#include "nsMenuButton.h"
 #include "nsPopUpMenu.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
@@ -69,7 +67,6 @@ static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
-static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -211,12 +208,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports* aOuter,
   }
   else if (mClassID.Equals(kCMenuItem)) {
     inst = (nsISupports*)(nsIMenuItem*) new nsMenuItem();
-  }
-  else if (mClassID.Equals(kCImageButton)) {
-    inst = (nsISupports*)(nsWindow*)new nsImageButton();
-  }
-  else if (mClassID.Equals(kCMenuButton)) {
-    inst = (nsISupports*)(nsWindow*)new nsMenuButton();
   }
   else if (mClassID.Equals(kCPopUpMenu)) {
     inst = (nsISupports*)new nsPopUpMenu();
