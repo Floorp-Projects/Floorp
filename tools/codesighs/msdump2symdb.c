@@ -540,6 +540,7 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                             const char* offsetArg = NULL;
                             const char* classArg = NULL;
                             unsigned classWords = 1;
+                            const char* symbolArg = NULL;
 
                             /*
                             **  This is an section we've seen before, and must list a symbol.
@@ -559,7 +560,17 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                                 classWords = 2;
                             }
 
-                            if(0 != strncmp(classArg, "Label", 5))
+                            symbolArg = skipToArg(classArg, 3 + (classWords - 1));
+
+                            /*
+                            **  Skip particular lines/items.
+                            */
+                            if(
+                                0 != strncmp(classArg, "Label", 5) &&
+                                0 != strncmp(symbolArg, ".bf", 3) &&
+                                0 != strncmp(symbolArg, ".lf", 3) &&
+                                0 != strncmp(symbolArg, ".ef", 3)
+                                )
                             {
                                 char* endOffsetArg = NULL;
                                 unsigned offset = 0;
@@ -581,12 +592,7 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                                     if(NULL != moved)
                                     {
                                         unsigned symIndex = 0;
-                                        const char* symbolArg = NULL;
 
-
-                                        symbolArg = skipToArg(classArg, 3 + (classWords - 1));
-
-                                        
                                         /*
                                         **  Record symbol details.
                                         **  Assumed symbols are encountered in order for their section (size calc depends on it).
