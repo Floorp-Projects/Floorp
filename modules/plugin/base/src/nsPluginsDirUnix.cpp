@@ -42,6 +42,9 @@
 
 #define PLUGIN_PATH 	"NS600_PLUGIN_PATH"	
 #define PLUGIN_DIR 	"/plugins"	
+#define MTYPE_END	'|'
+#define MTYPE_END_OLD	';'
+#define MTYPE_PART      ':'
 
 
 /* Local helper functions */
@@ -52,12 +55,44 @@ static PRUint32 CalculateVariantCount(const char* mimeTypes)
     const char* ptr = mimeTypes;
 
     while (*ptr) {
-        if (*ptr == ';') 
+        if (*ptr == MTYPE_END) 
 	    variants++;
         ++ptr; 
     }
 
     return variants;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Currently, in the MIME type info passed in by plugin, a ';' is used as the 
+// separator of two MIME types, and also the sparator of a version in one MIME 
+// type. For example: 
+// "application/x-java-applet;version1.3::java(TM) plugin;application/x-java-
+// applet...".
+// The ambiguity of ';'  causes the browser fail to parse the MIME types 
+// correctly.
+//
+// This method parses the MIME type input, and replaces the MIME type 
+// separators with '|' to eliminate the ambiguity of ';'. (The Windows version 
+// also uses '|' as the MIME type separator.)
+//
+// Input format: "...type[;version]:[extension]:[desecription];..."
+// Output format: "...type[;version]:[extension]:[desecription]|..."
+//
+static void SetMIMETypeSeparator(char *minfo)
+{
+    char *p;
+
+    p = minfo;
+    while (p) {
+	if ((p = PL_strchr(p, MTYPE_PART)) != 0) {
+	    *p++;
+	    if ((p = PL_strchr(p, MTYPE_END_OLD)) != 0) {
+	        *p = MTYPE_END;	
+		*p++;
+	    }
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -81,10 +116,7 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
     }
 
     if (pluginsDir != NULL) {
-        nsFileSpec::operator=(pluginsDir);
-        // use |nsFileSpec|s assignment operator to set the path, would
-        // be better if there was an, e.g., |nsFileSpec::SetPath( const
-        // char* )|.
+        *(nsFileSpec*)this = pluginsDir;
     }
 
 #ifdef NS_DEBUG
@@ -221,54 +253,59 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     printf("GetMIMEDescription() returned \"%s\"\n", mimedescr);
 #endif
 
-    // copy string
-    
+    // Copy MIME type input.
     mdesc = (char *)PR_Malloc(strlen(mimedescr)+1);
     strcpy(mdesc,mimedescr);
-    num = CalculateVariantCount(mimedescr)+1;
-    info.fVariantCount = num;
 
+    // Currently in MIME type input, a ';' is used as MIME type separator
+    // and a MIME type's version separator, which makes parsing difficult.
+    // To eliminate the ambiguity, set MIME type separator to '|'.
+    SetMIMETypeSeparator(mdesc);
+
+    // Get number of MIME types.
+    num = CalculateVariantCount(mdesc) + 1;
+
+    info.fVariantCount = num;
     info.fMimeTypeArray = (char **)PR_Malloc(num * sizeof(char *));
     info.fMimeDescriptionArray = (char **)PR_Malloc(num * sizeof(char *));
     info.fExtensionArray = (char **)PR_Malloc(num * sizeof(char *));
 
+    // Retrive each MIME type info.
+    // Each MIME type info stored in format, "type:extension:description"
+    // Sample: "application/x-java-applet;version=1.1::Java(tm) Plug-in;".
     start = mdesc;
     for(i = 0;i < num && *start;i++) {
-        // search start of next token (separator is ';')
-
         if(i+1 < num) {
-            if((nexttoc = PL_strchr(start, ';')) != 0)
+            if((nexttoc = PL_strchr(start, MTYPE_END)) != 0)
                 *nexttoc++=0;
             else
                 nexttoc=start+strlen(start);
-        } else 
+        } else
             nexttoc=start+strlen(start);
 
-        // split string into: mime type ':' extensions ':' description
-
         mtype = start;
-        exten = PL_strchr(start, ':');
+        exten = PL_strchr(start, MTYPE_PART);
         if(exten) {
             *exten++ = 0;
-            descr = PL_strchr(exten, ':');
+            descr = PL_strchr(exten, MTYPE_PART);
         } else
             descr = NULL;
 
         if(descr)
             *descr++=0;
 
-#ifdef NS_DEBUG
-        printf("Registering plugin for: \"%s\",\"%s\",\"%s\"\n", 
-	       mtype,descr ? descr : "null",exten ? exten : "null");
-#endif
+//#ifdef NS_DEBUG
+        printf("Registering plugin %d for: \"%s\",\"%s\",\"%s\"\n",
+               i, mtype,descr ? descr : "null",exten ? exten : "null");
+//#endif
 
         if(!*mtype && !descr && !exten) {
             i--;
             info.fVariantCount--;
         } else {
             info.fMimeTypeArray[i] = mtype ? PL_strdup(mtype) : PL_strdup("");
-            info.fMimeDescriptionArray[i] = descr ? PL_strdup(descr) : 
-						    PL_strdup("");
+            info.fMimeDescriptionArray[i] = descr ? PL_strdup(descr) :
+                                                    PL_strdup("");
             info.fExtensionArray[i] = exten ? PL_strdup(exten) : PL_strdup("");
         }
         start = nexttoc;
