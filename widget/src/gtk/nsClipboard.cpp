@@ -703,6 +703,8 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult)
 {
+  // XXX this doesn't work right.  need to fix it.
+#if 0
   *outResult = PR_FALSE;
   PRUint32 length;
   aFlavorList->Count(&length);
@@ -724,7 +726,13 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outR
 #ifdef DEBUG_CLIPBOARD
   printf("nsClipboard::HasDataMatchingFlavors() called -- returning %i\n", *outResult);
 #endif
+
+#else
+  *outResult = PR_TRUE;
+#endif
+
   return NS_OK;
+
 }
 
 
