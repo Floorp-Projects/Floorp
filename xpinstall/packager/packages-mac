@@ -125,6 +125,7 @@ viewer:Components:dom_xul.xpt
 viewer:Components:editor.xpt 
 viewer:Components:HTMLEditor.shlb 
 viewer:Components:EditorTxmgr.shlb 
+viewer:Components:EmbedBase.xpt
 viewer:Components:EmbedComponents.xpt
 viewer:Components:EmbedComponents.shlb
 viewer:Components:FindComponent.shlb 
