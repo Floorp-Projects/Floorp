@@ -1384,8 +1384,8 @@ nsNNTPArticleSet::test_member(PRBool with_cache)
 //   if (! fp) abort ();
 //   while (fgets (buf, sizeof (buf), fp))
 // 	{
-// 	  if (!strncmp (buf, "options ", 8))
-// 		fwrite (buf, 1, strlen (buf), stdout);
+// 	  if (!PL_strncmp (buf, "options ", 8))
+// 		fwrite (buf, 1, PL_strlen (buf), stdout);
 // 	  else
 // 		{
 // 		  char *sep = buf;
@@ -1405,7 +1405,7 @@ nsNNTPArticleSet::test_member(PRBool with_cache)
 // 			  if (! ((s = msg_format_newsrc_set (set))))
 // 				abort ();
 // 			  msg_free_newsrc_set (set, &allocinfo);
-// 			  fwrite (s, 1, strlen (s), stdout);
+// 			  fwrite (s, 1, PL_strlen (s), stdout);
 // 			  free (s);
 // 			  fwrite ("\n", 1, 1, stdout);
 // 			}
