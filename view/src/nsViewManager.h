@@ -88,6 +88,8 @@ public:
 
   NS_IMETHOD  SetViewZIndex(nsIView *aView, PRInt32 aZIndex);
 
+  NS_IMETHOD  SetViewAutoZIndex(nsIView *aView, PRBool aAutoZIndex);
+
   NS_IMETHOD  MoveViewAbove(nsIView *aView, nsIView *aOther);
   NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *aOther);
 
