@@ -54,6 +54,9 @@
     // the global lock icon whenever we become the primary. Value is one of
     // security enums in nsIWebProgressListener.
   unsigned long mSecureState;
+    // the title associated with this tab's url. We need to hold it so that we
+    // can set the window title whenever we become the primary. 
+  NSString* mTitle;
 
   CHBrowserView* mBrowserView;
   NSString* defaultStatus;
