@@ -31,7 +31,6 @@
 #include <Strings.h>
 #include <Aliases.h>
 
-#include "prlink_mac.h"
 #include "macdll.h"
 #include "mdmac.h"
 #endif
@@ -807,17 +806,6 @@ PR_FindLibrary(const char *name)
 
 #ifdef XP_MAC
 
-PR_IMPLEMENT(PRLibrary*) 
-PR_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName)
-{
-    PRLibSpec libSpec;
-
-    libSpec.type = PR_LibSpec_MacNamedFragment;
-    libSpec.value.mac_named_fragment.fsspec = fileSpec;
-    libSpec.value.mac_named_fragment.name = fragmentName;
-    return PR_LoadLibraryWithFlags(libSpec, 0);
-}
-
 static PRLibrary*
 pr_Mac_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName)
 {
@@ -874,17 +862,6 @@ unlock:
 	return result;
 }
 
-
-PR_EXTERN(PRLibrary*)
-PR_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
-{
-    PRLibSpec libSpec;
-
-    libSpec.type = PR_LibSpec_MacIndexedFragment;
-    libSpec.value.mac_indexed_fragment.fsspec = fileSpec;
-    libSpec.value.mac_indexed_fragment.index = fragIndex;
-    return PR_LoadLibraryWithFlags(libSpec, 0);
-}
 
 static PRLibrary*
 pr_Mac_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
