@@ -166,6 +166,9 @@ public:
     static nsresult
     Create(nsIContent* aElement, nsXULAttributes** aResult);
 
+    static void
+    Destroy(nsXULAttributes *aAttrs);
+
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
@@ -198,6 +201,10 @@ protected:
     nsClassList*           mClassList;
     nsCOMPtr<nsIStyleRule> mStyleRule;
     nsAutoVoidArray        mAttributes;
+private:
+    // Hide so that all construction and destruction use Create and Destroy.
+    static void *operator new(size_t) { };
+    static void operator delete(void *, size_t) { };
 };
 
 
