@@ -64,7 +64,7 @@ nsSplashScreenGtk::~nsSplashScreenGtk()
 
 NS_IMETHODIMP nsSplashScreenGtk::Show()
 {
-#ifdef MOZ_PHOENIX
+#ifdef MOZ_XUL_APP
   if (!splash_xpm[0])
     return NS_OK;
 #endif
