@@ -467,6 +467,16 @@ nsHTMLImageLoader::GetLoadStatus() const
   }
   return loadStatus;
 }
+  
+void
+nsHTMLImageLoader::GetIntrinsicSize(nsSize& aSize)
+{
+  if (mImageLoader) {
+    mImageLoader->GetIntrinsicSize(aSize);
+  } else {
+    aSize.SizeTo(0, 0);
+  }
+}
 
 #ifdef DEBUG
 // Note: this doesn't factor in:

@@ -393,6 +393,23 @@ nsFrameImageLoader::GetImageLoadStatus(PRUint32* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameImageLoader::GetIntrinsicSize(nsSize& aResult)
+{
+  if (mImageRequest) {
+    PRUint32  width, height;
+    float     p2t;
+
+    mImageRequest->GetNaturalDimensions(&width, &height);
+    mPresContext->GetScaledPixelsToTwips(&p2t);
+    aResult.width = NSIntPixelsToTwips(width, p2t);
+    aResult.height = NSIntPixelsToTwips(height, p2t);
+  } else {
+    aResult.SizeTo(0, 0);
+  }
+  return NS_OK;
+}
+
 void
 nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
                            nsIImage *aImage,
