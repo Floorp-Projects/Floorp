@@ -326,15 +326,20 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   // first, compute the height
   // the height can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
-  cellHeight += topInset + bottomInset;
+  // NAV4 compatibility: only add insets if cell content was not 0 height
+  if (0!=kidSize.height)
+    cellHeight += topInset + bottomInset;
   if (PR_TRUE==gsDebugNT)
     printf("  %p cellFrame height set to %d from kidSize=%d and insets %d,%d\n",
              this, cellHeight, kidSize.height, topInset, bottomInset);
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
-  cellWidth += leftInset + rightInset;    // factor in insets
+  // NAV4 compatibility: only add insets if cell content was not 0 width
+  if (0!=kidSize.width)
+    cellWidth += leftInset + rightInset;    // factor in insets
 
   // Nav4 hack for 0 width cells.  If the cell has any content, it must have a desired width of at least 1
+  // see testcase "cellHeights.html"
   /*
   if (0==cellWidth)
   {
