@@ -56,7 +56,6 @@ STRING_LCSRCS   = \
 		nsAString.cpp		     \
 		nsDependentSubstring.cpp     \
 		nsASingleFragmentString.cpp  \
-		nsReadableUtils.cpp          \
 		$(NULL)
 
 STRING_CSRCS    := $(addprefix $(topsrcdir)/string/src/, $(STRING_LCSRCS))
