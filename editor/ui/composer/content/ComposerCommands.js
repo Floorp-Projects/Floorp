@@ -1587,7 +1587,7 @@ var nsSplitTableCellCommand =
            IsSelectionInOneCell() )
       {
         var colSpan = cell.getAttribute("colspan");
-        var rowSpan = cell.getAttribute("colspan");
+        var rowSpan = cell.getAttribute("rowspan");
         if (!colSpan) colSpan = 1;
         if (!rowSpan) rowSpan = 1;
         return (colSpan > 1  || rowSpan > 1 ||
