@@ -237,6 +237,13 @@ function CookieSelected() {
   }
     
   var idx = selections[0];
+  if (idx >= cookies.length) {
+    // Something got out of synch.  See bug 119812 for details
+    dump("Outliner and viewer state are out of sync! " +
+         "Help us figure out the problem in bug 119812");
+    return;
+  }
+
   var props = [
     {id: "ifl_name", value: cookies[idx].name},
     {id: "ifl_value", value: cookies[idx].value}, 
