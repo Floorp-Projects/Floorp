@@ -1503,6 +1503,11 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
     widthToAdd = NSToCoordCeil(p2t);
   border.mWidth *= NSToCoordCeil(p2t);
   border.mLength = rowRect.height;
+  if (nsnull!=cellFrame)
+  {
+    cellFrame->SetBorderEdge(NS_SIDE_RIGHT, aRowIndex, aColIndex, &border, widthToAdd);
+  }
+  border.mWidth += widthToAdd;  // right edge of this cell get's odd pixel
   if (nsnull==rightNeighborFrame)
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
@@ -1515,12 +1520,7 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   }
   else
   {
-    border.mWidth += widthToAdd;  // right edge of this cell get's odd pixel
     rightNeighborFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, &border, 0);
-  }
-  if (nsnull!=cellFrame)
-  {
-    cellFrame->SetBorderEdge(NS_SIDE_RIGHT, aRowIndex, aColIndex, &border, widthToAdd);
   }
 }
 
@@ -1720,6 +1720,11 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
     widthToAdd = NSToCoordCeil(p2t);
   border.mWidth *= NSToCoordCeil(p2t);
   border.mLength = GetColumnWidth(aColIndex);
+  if (nsnull!=cellFrame)
+  {
+    cellFrame->SetBorderEdge(NS_SIDE_BOTTOM, aRowIndex, aColIndex, &border, widthToAdd);
+  }
+  border.mWidth += widthToAdd;  // bottom edge of this cell get's odd pixel
   if (nsnull==bottomNeighborFrame)
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
@@ -1741,12 +1746,7 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   }
   else
   {
-    border.mWidth += widthToAdd;  // bottom edge of this cell get's odd pixel
     bottomNeighborFrame->SetBorderEdge(NS_SIDE_TOP, aRowIndex, aColIndex, &border, 0);
-  }
-  if (nsnull!=cellFrame)
-  {
-    cellFrame->SetBorderEdge(NS_SIDE_BOTTOM, aRowIndex, aColIndex, &border, widthToAdd);
   }
 }
 
@@ -4330,10 +4330,10 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
   aSpacingStyle.mBorder.SetBottom(width);
   aSpacingStyle.mBorder.SetRight(width);
 
-   aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_OUTSET);
-   aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_OUTSET);
-   aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_OUTSET);
-   aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_OUTSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_OUTSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_OUTSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_OUTSET);
+  aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_OUTSET);
 
   nsIStyleContext* styleContext = mStyleContext; 
   const nsStyleColor* colorData = (const nsStyleColor*)
