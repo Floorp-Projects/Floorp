@@ -1299,13 +1299,14 @@ function BrowserSetupContextMenu( menu, event ) {
     // Open link depends on whether we're on a link.
     setContextMenuItemAttr( "context-openlink", "disabled", isNotOnLink( event ) );
 
+    // Edit link depends on whether wel're on a link.
+    setContextMenuItemAttr( "context-editlink", "disabled", isNotOnLink( event ) );
+
     // Open frame depends on whether we're in a frame.
     setContextMenuItemAttr( "context-openframe", "disabled", isNotInFrame( event ) );
 
-    // Open in composer depends on whether we're on a link.
-    setContextMenuItemAttr( "context-openlinkincomposer", "disabled", isNotOnLink( event ) );
+    //-------------------------------------------------------------------------
 
-    <!-- ------------------------------------------------------------ -->
     // Back determined by canGoBack broadcaster.
     setContextMenuItemAttrFromNode( "context-back", "disabled", "canGoBack" );
 
@@ -1317,26 +1318,38 @@ function BrowserSetupContextMenu( menu, event ) {
     // Stop determined by canStop broadcaster.
     setContextMenuItemAttrFromNode( "context-stop", "disabled", "canStop" );
 
-    <!-- ------------------------------------------------------------ -->
+    //-------------------------------------------------------------------------
 
     // View source is always OK.
+
+    // View frame source depends on whether we're in a frame.
+    setContextMenuItemAttr( "context-viewframesource", "disabled", isNotInFrame( event ) );
 
     // View Info don't work no way no how.
     setContextMenuItemAttr( "context-viewinfo", "disabled", "true" );
 
+    // View Frame Info depends on whether we're in a frame.
+    setContextMenuItemAttr( "context-viewframeinfo", "disabled", isNotInFrame( event ) );
+
     // View Image needs content element detection.
     setContextMenuItemAttr( "context-viewimage", "disabled", isNotOnImage( event ) );
 
-    <!-- ------------------------------------------------------------ -->
+    //-------------------------------------------------------------------------
 
     // Add bookmark always OK.
 
     // Send Page not working yet.
     setContextMenuItemAttr( "context-sendpage", "disabled", "true" );
 
-    <!-- ------------------------------------------------------------ -->
+    //-------------------------------------------------------------------------
 
     // Save page is always OK.
+
+    // Save frame as depends on whether we're in a frame.
+    setContextMenuItemAttr( "context-saveframe", "disabled", isNotInFrame( event ) );
+
+    // Save link depends on whether we're in a link.
+    setContextMenuItemAttr( "context-savelink", "disabled", isNotOnLink( event ) );
 
     // Save background image depends on whether there is one.
     setContextMenuItemAttr( "context-savebgimage", "disabled", isNotOnBGImage( event ) );
@@ -1344,7 +1357,9 @@ function BrowserSetupContextMenu( menu, event ) {
     // Save image not working yet.
     setContextMenuItemAttr( "context-saveimage", "disabled", "true" );
 
-    <!-- ------------------------------------------------------------ -->
+    //-------------------------------------------------------------------------
+
+    // Select All is always OK.
 
     // Copy depends on whether there is selected text.
     setContextMenuItemAttr( "context-copy", "disabled", isNoTextSelected() );
