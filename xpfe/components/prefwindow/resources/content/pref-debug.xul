@@ -21,6 +21,7 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-debug.dtd" >
 
@@ -30,12 +31,8 @@
         align="vertical" title="&window.title;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-debug' ); else parent.queuedTag = 'pref-debug';">
 
-	<box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&lHeader;"/>
-	  <spring class="header-spring" flex="1"/>
-	  <titledbutton class="right-header-text" value="&rHeader;"/>
-	</box>
-	
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  
 	<!-- Temporary hack to turn on gfx-rendered widgets -->  
 		<titledbox orient="vertical">
     	<title><text value="&widgetRendering.label;"/></title>

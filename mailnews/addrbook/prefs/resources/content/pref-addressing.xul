@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://addressbook/locale/pref-addressing.dtd">
 
@@ -9,12 +10,7 @@
         class="dialog"
 		align="vertical">
 
-	<box class="header" align="horizontal">
-		<html:div class="left-header-text">&pane.title;</html:div>
-		<spring flex="100%"/>
-		<html:div class="right-header-text">&pane.description;</html:div>
-	</box>
-
+  <box type="smallheader" title="&pane.title;" description="&pane.description;"/>
 	<titledbox orient="vertical">
 		<title>
 			<text value="&pinpoint.label;"/>

@@ -23,6 +23,7 @@
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://pref/content/fontScalingOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-fonts.dtd" >
 <window debug="false" id="fontPanel"
@@ -35,11 +36,8 @@
 
 <html:script language="javascript" src="pref-fonts.js"/>
 
-  <box class="header" align="horizontal">  
-	  <titledbutton class="left-header-text" value="&lHeader;"/>
-    <spring class="header-spring" flex="1"/>
-		<titledbutton class="right-header-text" value="&rHeader;"/>
-  </box>
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  
 		<titledbox orient="vertical">
       <title><html:div>&displayFonts;</html:div></title>
 	  <html:div  style="width: 50px; height: 50px">

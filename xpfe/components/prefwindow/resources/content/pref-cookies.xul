@@ -20,6 +20,7 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-cookies.dtd" >
 
@@ -36,11 +37,7 @@
     }
   </html:script>
         
-	<box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&lHeader;"/>
-	  <spring class="header-spring" flex="1"/>
-	  <titledbutton class="right-header-text" value="&rHeader;"/>
-	</box>
+  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
 
  	<titledbox orient="vertical">
   	<title><text value="&cookies;"/></title>  

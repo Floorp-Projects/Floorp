@@ -19,6 +19,7 @@
 -->
 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-charset.dtd" >
@@ -37,13 +38,8 @@
 
   <html:script language="javascript" src="pref-charset.js"/>
 
-    <!-- horz 1 -->
-	<box class="header" align="horizontal">  
-		<titledbutton class="left-header-text" value="&charset.customize.left.header;"/>
-		<spring class="header-spring" flex="1"/>
-		<titledbutton class="right-header-text" value="&charset.customize.right.header;"/>
-	</box>
-	<!-- horz1 -->
+    <box type="smallheader" title="&charset.customize.left.header;" description="&charset.customize.right.header;"/>
+
 
 
   <!-- The two-pane -->

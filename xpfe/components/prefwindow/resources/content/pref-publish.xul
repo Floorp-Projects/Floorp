@@ -21,6 +21,7 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-publish.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"

@@ -22,6 +22,7 @@
   -->
 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-composer.dtd" >
 
@@ -35,11 +36,7 @@
   <html:script language="JavaScript" src="chrome://pref/content/pref-editing.js"/>
 -->
 
-	<box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&lHeader;"/>
-	  <spring class="header-spring" flex="1"/>
-    <titledbutton class="right-header-text" value="&rHeader2;"/>
-	</box>
+  <box type="smallheader" title="&lHeader;" description="&rHeader2;"/>
 
 <!-- Take out Auto-Save; not supported at this time
 		<titledbox orient="vertical">

@@ -24,6 +24,7 @@
   -->
 
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
   
 
 <!DOCTYPE window [
@@ -42,11 +43,7 @@
 
 <html:script language="JavaScript" src="chrome://pref/content/pref-mousewheel.js"/>
     
-<box class="header" align="horizontal">  
-  <titledbutton class="left-header-text" value="&info.label;"/>
-	<spring class="header-spring" flex="1"/>
-	<titledbutton class="right-header-text" value=""/>
-</box>
+  <box type="smallheader" title="&title.label;" description="&info.label;"/>
 
 <titledbox orient="vertical">
   <box orient="horizontal">

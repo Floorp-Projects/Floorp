@@ -1,5 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messengercompose/locale/pref-formatting.dtd">
 
@@ -9,12 +10,7 @@
 		align="vertical"
 		class="dialog">
 
-	<box class="header" align="horizontal">
-		<html:div class="left-header-text">&pane.title;</html:div>
-		<spring flex="100%"/>
-		<html:div class="right-header-text">&pane.description;</html:div>
-	</box>
-
+  <box type="smallheader" title="&pane.title;" description="&pane.description;"/>
 	<titledbox orient="vertical">
 		<html:div class="vertical-gap">&sendMail.label;</html:div>
 		<spring class="vgap"/>
