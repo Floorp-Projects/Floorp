@@ -1,6 +1,6 @@
 #!/bin/sh
 
-dirs="core viewer_tests bugs marvin other"
+dirs="core viewer_tests bugs marvin other dom"
 
 case $1 in
   baseline|verify|clean)

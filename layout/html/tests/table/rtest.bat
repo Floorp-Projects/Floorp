@@ -15,5 +15,8 @@ call rtest.bat %1
 cd ..\other
 call rtest.bat %1
 
+cd ..\dom
+call rtest.bat %1
+
 cd ..
 
