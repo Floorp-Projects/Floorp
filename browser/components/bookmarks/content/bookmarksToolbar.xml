@@ -376,6 +376,7 @@
           element = document.createElementNS(XUL_NS, "menuitem");
           element.setAttribute("id", "openintabs-menuitem")
           element.setAttribute("label", BookmarksUtils.getLocaleString("cmd_bm_openfolder"));
+          element.setAttribute("class", "groupmark-item menuitem-iconic bookmark-item");
           element.setAttribute("accesskey", BookmarksUtils.getLocaleString("cmd_bm_openfolder_accesskey"));
           element.setAttribute("oncommand", "BookmarksUtils.loadBookmarkBrowser(event, this.parentNode.parentNode, this.database); event.preventBubble();");
           aTarget.appendChild(element);
