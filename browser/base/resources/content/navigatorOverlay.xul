@@ -26,7 +26,6 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/toolsWindowOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/platformNavigationBindings.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd" >
