@@ -37,19 +37,11 @@ package org.mozilla.javascript;
 import java.io.*;
 
 /**
- * This interface provides a means to store generated class and to
- * allow selective class loading.
- *
- * @see ClassNameHelper
- * @author Kemal Bayram
+ * @deprectated To generate class files from script sources, use
+ * {@link org.mozilla.javascript.optimizer.ClassCompiler}.
  */
 public interface ClassRepository {
-    /**
-     * @param className the name of the class.
-     * @param classBytes a byte array of the generated class.
-     * @param isTopLevel if true, represents the top-level script being compiled.
-     * @return true if the class should be loaded, false otherwise.
-     */
+
     public boolean storeClass(String className, byte[] classBytes,
                               boolean isTopLevel) throws IOException;
 }

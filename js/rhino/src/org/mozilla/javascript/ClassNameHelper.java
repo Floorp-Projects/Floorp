@@ -40,6 +40,11 @@ package org.mozilla.javascript;
 
 import java.io.*;
 
+/**
+ * @deprectated To generate class files from script sources, use
+ * {@link org.mozilla.javascript.optimizer.ClassCompiler}.
+ */
+
 public abstract class ClassNameHelper {
 
     public static ClassNameHelper get(Context cx) {
@@ -61,80 +66,24 @@ public abstract class ClassNameHelper {
         return helper;
     }
 
-    /**
-     * Get the current target class file name.
-     * <p>
-     * If nonnull, requests to compile source will result in one or
-     * more class files being generated.
-     *
-     * @since 1.5 Release 4
-     */
     public abstract String getTargetClassFileName();
 
-    /**
-     * Set the current target class file name.
-     * <p>
-     * If nonnull, requests to compile source will result in one or
-     * more class files being generated. If null, classes will only
-     * be generated in memory.
-     *
-     * @since 1.5 Release 4
-     */
     public abstract void setTargetClassFileName(String classFileName);
 
-    /**
-     * Get the current package to generate classes into.
-     */
     public abstract String getTargetPackage();
 
-    /**
-     * Set the package to generate classes into.
-     */
     public abstract void setTargetPackage(String targetPackage);
 
-    /**
-     * Set the class that the generated target will extend.
-     *
-     * @param extendsClass the class it extends
-     */
     public abstract void setTargetExtends(Class extendsClass);
 
-    /**
-     * Set the interfaces that the generated target will implement.
-     *
-     * @param implementsClasses an array of Class objects, one for each
-     *                          interface the target will extend
-     */
     public abstract void setTargetImplements(Class[] implementsClasses);
 
-    /**
-     * Get the current class repository.
-     *
-     * @see ClassRepository
-     * @since 30/10/01 tip + patch (Kemal Bayram)
-     */
     public abstract ClassRepository getClassRepository();
 
-    /**
-     * Set the current class repository.
-     *
-     * @see ClassRepository
-     * @since 30/10/01 tip + patch (Kemal Bayram)
-     */
     public abstract void setClassRepository(ClassRepository repository);
 
-    /**
-     * Get the current class name.
-     *
-     * @since 30/10/01 tip + patch (Kemal Bayram)
-     */
     public abstract String getClassName();
 
-    /**
-     * Set the current class name.
-     *
-     * @since 30/10/01 tip + patch (Kemal Bayram)
-     */
     public abstract void setClassName(String initialName);
 
     private static ClassNameHelper savedNameHelper;
