@@ -20,30 +20,24 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=related
+MODULE=appcomps
 include <$(DEPTH)/config/config.mak>
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsRelatedLinksHandler.obj  \
  $(NULL)
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME = related
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME = related_s
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-# These are the libraries we need to link with to create the DLL
-LLIBS=                          \
- $(DIST)\lib\xpcom.lib          \
- $(LIBNSPR)                     \
- $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -28,10 +28,10 @@
 #include "nsXPIDLString.h"
 
 // Interfaces Needed
-#include "nsIGenericFactory.h"
 #include "nsString.h"
 #include "nsIAutoCompleteResults.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -151,7 +151,7 @@ nsUrlbarHistory::GetCount(PRInt32 * aResult)
 
 	printf("In nsUrlbarHistory::GetCount\n");
 	nsCOMPtr<nsISimpleEnumerator>    entries;
-  	nsresult rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
+  	(void)mDataSource->GetTargets(kNC_URLBARHISTORY,
                                     kNC_CHILD,
                                     PR_TRUE,
 									getter_AddRefs(entries));

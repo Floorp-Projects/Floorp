@@ -22,9 +22,8 @@
 
 
 DEPTH         = ..\..\..
-MODULE        = tbmb
-DLL           = .\$(OBJDIR)\$(MODULE).dll
-MAKE_OBJ_TYPE = DLL
+MODULE        = appcomps
+LIBRARY_NAME=timebomb_s
 
 include <$(DEPTH)/config/config.mak>
 
@@ -43,21 +42,14 @@ LINCS =     \
 	        -I$(PUBLIC)/xpcom \
 	        $(NULL)
 
-LLIBS =     \
-	        $(LIBNSPR) \
-            $(DIST)\lib\js3250.lib \
-	        $(DIST)\lib\xpcom.lib \
-	        $(NULL)
-
-
 OBJS =							\
 	.\$(OBJDIR)\nsTimeBomb.obj	\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin\components
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-    rm -f $(DIST)\bin\components\$(MODULE).dll
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

@@ -20,7 +20,28 @@
  * Contributor(s): 
  *   Doug Turner <dougt@netscape.com>
  */
+#ifndef nstimebomb_h___
+#define nstimebomb_h___
 
 #include "nsITimeBomb.h"
+#include "nsCOMPtr.h"
+#include "nsIPref.h"
 
 #define NS_TIMEBOMB_CID { 0x141917dc, 0xe1c3, 0x11d3, {0xac, 0x71, 0x00, 0xc0, 0x4f, 0xa0, 0xd2, 0x6b}}
+
+class nsTimeBomb : public nsITimeBomb
+{
+public:
+
+	nsTimeBomb();
+	virtual ~nsTimeBomb();
+
+	NS_DECL_ISUPPORTS    
+    NS_DECL_NSITIMEBOMB
+
+protected:
+    nsCOMPtr<nsIPref> mPrefs;
+    nsresult GetInt64ForPref(const char* pref, PRInt64* time);
+};
+
+#endif // nstimebomb_h___

@@ -20,35 +20,24 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=bookmarks
-
-CPPSRCS=                                \
- nsBookmarksService.obj                 \
- $(NULL)
+MODULE=appcomps
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsBookmarksService.obj     \
  $(NULL)
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME = bookmark
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=bookmarks_s
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-# These are the libraries we need to link with to create the DLL
-LLIBS=                          \
- $(DIST)\lib\xpcom.lib          \
- $(LIBNSPR)                     \
- $(DIST)\lib\timer_s.lib	\
- $(DIST)\lib\js3250.lib        \
- $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 

@@ -33,41 +33,35 @@ IS_COMPONENT	= 1
 CPPSRCS		= nsModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libautocomplete_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libbookmarks_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/libdirectory_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/libhistory_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/librelated_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/libsearch_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/libtimebomb_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/liburlbarhistory_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/lib.$(LIB_SUFFIX) \
-        $(DIST)/lib/lib.$(LIB_SUFFIX) \
-        $(DIST)/lib/lib.$(LIB_SUFFIX) \
-        $(DIST)/lib/lib.$(LIB_SUFFIX) \
-        $(DIST)/lib/lib.$(LIB_SUFFIX) \
-
-		$(NULL)
+	$(DIST)/lib/libautocomplete_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libbookmarks_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libdirectory_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libhistory_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/librelated_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsearch_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libtimebomb_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/liburlbarhistory_s.$(LIB_SUFFIX) \
+	$(NULL)
 
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
 endif
 
 LOCAL_INCLUDES	= \
-		-I$(srcdir)/../autocomplete/src  \
-        -I$(srcdir)/../bookmarks/src     \
-        -I$(srcdir)/../directory         \
-        -I$(srcdir)/../history/src       \
-        -I$(srcdir)/../related/src       \
-        -I$(srcdir)/../search/src        \
-        -I$(srcdir)/../timebomb          \
-        -I$(srcdir)/../urlbarhistory/src \
-		$(NULL)
+	-I$(srcdir)/../autocomplete/src  \
+	-I$(srcdir)/../bookmarks/src     \
+	-I$(srcdir)/../directory         \
+	-I$(srcdir)/../history/src       \
+	-I$(srcdir)/../related/src       \
+	-I$(srcdir)/../search/src        \
+	-I$(srcdir)/../timebomb          \
+	-I$(srcdir)/../urlbarhistory/src \
+	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NULL)
+	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_JS_LIBS) \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -20,9 +20,7 @@
  * Contributor(s): 
  *  Bill Law    <law@netscape.com>
  */
-#include "nsIWindowsHooks.h"
-#include "nsIGenericFactory.h"
-
+#include "nsWindowsHooks.h"
 #include <windows.h>
 
 // Implementation utilities.
@@ -52,52 +50,7 @@ static FileTypeRegistryEntry
 static EditableFileTypeRegistryEntry
     mozillaMarkup( htmExts, "MozillaHTML", "Mozilla Hypertext Markup Language Document" );
 
-
-/* c09bc130-0a71-11d4-8076-00600811a9c3 */
-#define NS_IWINDOWSHOOKS_CID \
- { 0xc09bc130, 0x0a71, 0x11d4, {0x80, 0x76, 0x00, 0x60, 0x08, 0x11, 0xa9, 0xc3} }
-
 // Implementation of the nsIWindowsHooksSettings interface.
-class nsWindowsHooksSettings : public nsIWindowsHooksSettings {
-public:
-    // ctor/dtor
-    nsWindowsHooksSettings();
-    virtual ~nsWindowsHooksSettings();
-
-    // Declare all interface methods we must implement.
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWINDOWSHOOKSSETTINGS
-
-    // Typedef for nsIWindowsHooksSettings getter/setter member functions.
-    typedef nsresult (__stdcall nsIWindowsHooksSettings::*getter)( PRBool* );
-    typedef nsresult (__stdcall nsIWindowsHooksSettings::*setter)( PRBool );
-
-protected:
-    // General purpose getter.
-    NS_IMETHOD Get( PRBool *result, PRBool nsWindowsHooksSettings::*member );
-    // General purpose setter.
-    NS_IMETHOD Set( PRBool value, PRBool nsWindowsHooksSettings::*member );
-
-private:
-    // Internet shortcut protocols.
-    struct {
-        PRBool mHandleHTTP;
-        PRBool mHandleHTTPS;
-        PRBool mHandleFTP;
-        PRBool mHandleCHROME;
-    };
-    // File types.
-    struct {
-        PRBool mHandleHTML;
-        PRBool mHandleJPEG;
-        PRBool mHandleGIF;
-        PRBool mHandlePNG;
-        PRBool mHandleXML;
-        PRBool mHandleXUL;
-    };
-    friend class nsWindowsHooks;
-}; // nsWindowsHooksSettings
-
 // Use standard implementation of nsISupports stuff.
 NS_IMPL_ISUPPORTS1( nsWindowsHooksSettings, nsIWindowsHooksSettings );
 
@@ -150,24 +103,6 @@ DEFINE_GETTER_AND_SETTER( IsHandlingCHROME, mHandleCHROME )
 
 
 // Implementation of the nsIWindowsHooks interface.
-class nsWindowsHooks : public nsIWindowsHooks {
-public:
-    // ctor/dtor
-    nsWindowsHooks();
-    virtual ~nsWindowsHooks();
-
-    // Declare all interface methods we must implement.
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWINDOWSHOOKS
-
-protected:
-    // Internal flavor of GetPreferences.
-    NS_IMETHOD GetSettings( nsWindowsHooksSettings ** );
-
-    // Set registry according to settings.
-    NS_IMETHOD SetRegistry();
-}; // nsWindowsHooksSettings
-
 // Use standard implementation of nsISupports stuff.
 NS_IMPL_ISUPPORTS1( nsWindowsHooks, nsIWindowsHooks );
 
@@ -330,15 +265,3 @@ nsWindowsHooks::SetRegistry() {
 
     return NS_OK;
 }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
-
-nsModuleComponentInfo components[] = {
-  { NS_IWINDOWSHOOKS_CLASSNAME, 
-    NS_IWINDOWSHOOKS_CID, 
-    NS_IWINDOWSHOOKS_PROGID, 
-    nsWindowsHooksConstructor },
-};
-
-NS_IMPL_NSGETMODULE( "nsWindowsHooks", components )
-

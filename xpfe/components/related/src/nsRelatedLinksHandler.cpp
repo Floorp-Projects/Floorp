@@ -30,7 +30,6 @@
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
-#include "nsIGenericFactory.h"
 #include "nsIInputStream.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
@@ -62,6 +61,14 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 
 static const char kURINC_RelatedLinksRoot[] = "NC:RelatedLinks";
+
+nsString              RelatedLinksHandlerImpl::mRLServerURL;
+PRInt32               RelatedLinksHandlerImpl::gRefCnt;
+nsIRDFService    *RelatedLinksHandlerImpl::gRDFService;
+nsIRDFResource        *RelatedLinksHandlerImpl::kNC_RelatedLinksRoot;
+nsIRDFResource        *RelatedLinksHandlerImpl::kNC_Child;
+nsIRDFResource        *RelatedLinksHandlerImpl::kRDF_type;
+nsIRDFResource        *RelatedLinksHandlerImpl::kNC_RelatedLinksTopic;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -953,19 +960,3 @@ RelatedLinksHandlerImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 {
 	return mInner->DoCommand(aSources, aCommand, aArguments);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Component Exports
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
-
-// The list of components we register
-static nsModuleComponentInfo components[] = {
-    { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_PROGID,
-	  RelatedLinksHandlerImplConstructor
-	},
-};
-
-NS_IMPL_NSGETMODULE("nsRelatedLinksModule", components)

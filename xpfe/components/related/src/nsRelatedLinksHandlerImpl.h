@@ -61,12 +61,4 @@ public:
 	NS_DECL_NSIRDFDATASOURCE
 };
 
-nsString		RelatedLinksHandlerImpl::mRLServerURL;
-PRInt32		RelatedLinksHandlerImpl::gRefCnt;
-nsIRDFService    *RelatedLinksHandlerImpl::gRDFService;
-nsIRDFResource	*RelatedLinksHandlerImpl::kNC_RelatedLinksRoot;
-nsIRDFResource	*RelatedLinksHandlerImpl::kNC_Child;
-nsIRDFResource	*RelatedLinksHandlerImpl::kRDF_type;
-nsIRDFResource	*RelatedLinksHandlerImpl::kNC_RelatedLinksTopic;
-
 #endif // relatedlinkshandler____h____

@@ -20,7 +20,7 @@
 # Contributor(s): 
 #   Bill Law    <law@netscape.com>
 
-MODULE=winhooks
+MODULE=appcomps
 
 DEPTH=..\..\..
 
@@ -32,19 +32,7 @@ XPIDLSRCS=\
 
 include <$(DEPTH)/config/config.mak>
 
-DLLNAME		= winhooks
-DLL1NAME	= winhooks
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE = DLL
-
-LINCS = \
-	$(NULL)
-
-LLIBS	= \
-    $(DIST)\lib\xpcom.lib \
-	$(NULL)
+LIBRARY_NAME = winhooks_s
 
 OBJS =							\
 	.\$(OBJDIR)\nsWindowsHooks.obj	\
@@ -52,9 +40,9 @@ OBJS =							\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-    rm -f $(DIST)\bin\components\$(DLLNAME).dll
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 

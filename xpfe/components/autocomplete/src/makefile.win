@@ -29,36 +29,12 @@
 #//------------------------------------------------------------------------
 DEPTH = ..\..\..\..
 include <$(DEPTH)/config/config.mak>
-
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
-#//
-#//------------------------------------------------------------------------
-
-DLLNAME		= autocomp
-DLL1NAME	= autocomp
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
+MODULE=appcomps
+LIBRARY_NAME=autocomplete_s
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
 
 LINCS = \
 	-I$(PUBLIC)/xpcom \
-#	-I$(PUBLIC)/txtsvc \
-#	-I$(PUBLIC)/xpfe/components \
-#	-I$(PUBLIC)/raptor \
-#	-I$(PUBLIC)/rdf \
-#	-I$(PUBLIC)/dom \
-	$(NULL)
-
-LLIBS	= \
-	$(LIBNSPR) \
-	$(DIST)\lib\xpcom.lib \
-#	$(DIST)\lib\js3250.lib \
-!ifndef NECKO
-#	$(DIST)\lib\netlib.lib \
-!endif
 	$(NULL)
 
 #//------------------------------------------------------------------------
@@ -72,21 +48,13 @@ OBJS =							\
 
 #//------------------------------------------------------------------------
 #//
-#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
-#// (these must be defined before the common makefiles are included)
-#//
-#//------------------------------------------------------------------------
-LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
-
-#//------------------------------------------------------------------------
-#//
 #// Include the common makefile rules
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-    rm -f $(DIST)\bin\components\$(DLLNAME).dll
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
