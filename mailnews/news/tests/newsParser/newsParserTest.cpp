@@ -57,7 +57,7 @@
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
 #define PREF_DLL   "libpref.so"
-#define APPCORES_DLL  "libappcores.so"
+//#define APPCORES_DLL  "libappcores.so"
 #define APPSHELL_DLL "libnsappshell.so"
 #endif
 #endif
@@ -74,6 +74,7 @@ public:
 	nsresult RunDriver();
     nsresult GetDatabase();
     nsresult GetPath(const char *uri, nsFileSpec& aPathName);
+    nsresult AddNewHeader(const char *subject, const char *author, const char *id, PRUint32 key);
 
 protected:
     nsIMsgDatabase   *m_newsDB;
@@ -101,43 +102,60 @@ nsresult newsTestDriver::RunDriver()
     rv = GetDatabase();
 
     if (NS_SUCCEEDED(rv) && m_newsDB) {
-        nsIMsgDBHdr		*newMsgHdr = nsnull;
-
-        m_newsDB->CreateNewHdr(1, &newMsgHdr);
+        rv = AddNewHeader("praising with faint damnation","David McCusker <davidmc@netscape.com>","372A0615.F03C44C2@netscape.com", 0);
         if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("m_newsDB->CreateNewHdr() failed\n");
-#endif
             return rv;
         }
 
-        newMsgHdr->SetSubject("RedHat 6.0 available");
-        newMsgHdr->SetFlags(MSG_FLAG_READ);
-        newMsgHdr->SetAuthor("ramiro@netscape.com (Ramiro Estrugo)");
-	newMsgHdr->SetMessageId("<37295058.FED53E36@netscape.com>");
+        rv = AddNewHeader("help running M5", "Steve Clark <buster@netscape.com>", "372A8676.59838C76@netscape.com", 1);
 
-        rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
         if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("m_newsDB->AddNewHdrToDB() failed\n");
-#endif
-            return rv;           
+            return rv;
         }
         
-        newMsgHdr->Release();
-        newMsgHdr = nsnull;
-       
-	/* closing the newsDB isn't enough.  something still has
-	 * reference to it.  (need to look into this, bienvenu 
-	 * suggests nsMsgFolderInfo?)
-	 * for now, we need to Commit() to force the changes
-	 * to the disk
-	 */
+        /* closing the newsDB isn't enough.  something still has
+         * reference to it.  (need to look into this, bienvenu 
+         * suggests nsMsgFolderInfo?)
+         * for now, we need to Commit() to force the changes
+         * to the disk
+         */
         m_newsDB->Commit(kSessionCommit);
         m_newsDB->Close(PR_TRUE);
     }
 
     return rv;
+}
+
+nsresult newsTestDriver::AddNewHeader(const char *subject, const char *author, const char *id, PRUint32 key)
+{
+    nsresult rv = NS_OK;
+
+    nsIMsgDBHdr		*newMsgHdr = nsnull;
+    
+    m_newsDB->CreateNewHdr(key, &newMsgHdr);
+    if (NS_FAILED(rv)) {
+#ifdef DEBUG
+        printf("m_newsDB->CreateNewHdr() failed\n");
+#endif
+        return rv;
+    }
+
+    newMsgHdr->SetSubject(subject);
+    newMsgHdr->SetFlags(MSG_FLAG_READ);
+    newMsgHdr->SetAuthor(author);
+    newMsgHdr->SetMessageId(id);
+    
+    rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
+    if (NS_FAILED(rv)) {
+#ifdef DEBUG
+        printf("m_newsDB->AddNewHdrToDB() failed\n");
+#endif
+        return rv;           
+    }
+    
+    NS_IF_RELEASE(newMsgHdr);
+    newMsgHdr = nsnull;
+    return NS_OK;
 }
 
 nsresult newsTestDriver::GetPath(const char *uri, nsFileSpec& aPathName)
@@ -157,7 +175,7 @@ nsresult newsTestDriver::GetDatabase()
 {
     if (m_newsDB == nsnull) {
         nsNativeFileSpec path;
-		nsresult rv = GetPath("news://news.mcom.com/mcom.linux", path);
+		nsresult rv = GetPath("news://news.mozilla.org/netscape.public.mozilla.mail-news", path);
 		if (NS_FAILED(rv)) return rv;
 
         nsresult newsDBOpen = NS_OK;
