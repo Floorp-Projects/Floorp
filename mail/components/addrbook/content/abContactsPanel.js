@@ -87,7 +87,7 @@ var gAddressBookPanelAbListener = {
       // if so, select the person addressbook (it can't be removed)
       if (directory == GetAbView().directory) {
           var abPopup = document.getElementById('addressbookList');
-          abPopup.setAttribute("selectedAB", kPersonalAddressbookURI);
+          abPopup.value = kPersonalAddressbookURI;
           LoadPreviouslySelectedAB();
       } 
     }
@@ -115,6 +115,9 @@ var gAddressBookPanelAbListener = {
 function LoadPreviouslySelectedAB()
 {
   var abPopup = document.getElementById('addressbookList');
+  var value = abPopup.value || kPersonalAddressbookURI;
+  abPopup.selectedItem = null;
+  abPopup.value = value;
   ChangeDirectoryByURI(abPopup.selectedItem.id);
 }
 
@@ -133,13 +136,6 @@ function AbPanelLoad()
                   Components.interfaces.nsIAbListener.directoryRemoved | Components.interfaces.nsIAbListener.changed);
 
   gSearchInput = document.getElementById("searchInput");
-}
-
-
-function AbPanelOnChange(event)
-{
-  var abPopup = document.getElementById('addressbookList');
-  abPopup.setAttribute("selectedAB", abPopup.value);
 }
 
 function AbPanelUnload()

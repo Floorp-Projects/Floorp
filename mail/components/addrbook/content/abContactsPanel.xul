@@ -66,7 +66,7 @@
     <label value="&addressbookPicker.label;"/> 
     <hbox id="panel-bar" class="toolbar" align="center">
       <menulist id="addressbookList" 
-                oncommand="DirPaneSelectionChangeMenulist(); AbPanelOnChange(event)" flex="1"
+                oncommand="DirPaneSelectionChangeMenulist();" flex="1"
                 persist="value">
         <menupopup id="addressbookList-menupopup" 
                    datasources="rdf:addressdirectory" 

@@ -93,19 +93,11 @@ function setupDirectoriesList()
   var directoriesList = document.getElementById("directoriesList");
   var directoryServer = 
         document.getElementById("identity.directoryServer").getAttribute('value');
-  try {
-    var directoryServerString = gPrefInt.getComplexValue(directoryServer + ".description",
-                                                         Components.interfaces.nsISupportsString).data;
-  }
-  catch(ex) {}
-  if (directoryServerFlag || !directoryServerString) {
+  if (directoryServerFlag) {
     document.getElementById("identity.directoryServer").setAttribute("value", "");
     directoryServer = "";
-    var addressBookBundle = document.getElementById("bundle_addressBook");
-    directoryServerString = addressBookBundle.getString("directoriesListItemNone");
   }
   directoriesList.value = directoryServer;
-  directoriesList.label = directoryServerString;
   gFromGlobalPref = false;
 }
 
@@ -200,27 +192,11 @@ function LoadDirectories(popup)
       if (gRefresh) {  
       // gRefresh is true if user edits, removes or adds a directory.
         directoriesList =  document.getElementById("directoriesList");
-        directoryDescription = null;
-        if(directoriesList.value != "") {
-          // make sure the selected directory still exists
-          try {
-            directoryDescription = gPrefInt.
-                     getComplexValue(directoriesList.value + ".description",
-                                     Components.interfaces.nsISupportsString).data;
-          }
-          catch (ex) {}
-        }
-        if(!directoryDescription) {
-          // if selected directory doesn't exist, set it to none
+        var value = directoriesList.value;
+        directoriesList.selectedItem = null;
+        directoriesList.value = value;
+        if (!directoriesList.selectedItem)
           directoriesList.value = "";
-          addressBookBundle = document.getElementById("bundle_addressBook");
-          directoriesList.label = addressBookBundle.
-                          getString("directoriesListItemNone");
-        }
-        else {
-          directoriesList.label = directoryDescription;
-          directoriesList.value = directoriesList.value;
-        }
       }
     }
     if (popup && gFromGlobalPref) {
@@ -228,72 +204,31 @@ function LoadDirectories(popup)
       directoriesList =  document.getElementById("directoriesList");
       if (gRefresh) {
         // gRefresh is true if user edits, removes or adds a directory.
-        directoryDescription = null;
-        if(directoriesList.label != "") {
-          // make sure the selected directory still exists
-          try {
-            directoryDescription = gPrefInt.
-                     getComplexValue(directoriesList.value + ".description",
-                                     Components.interfaces.nsISupportsString).data;
-          }
-          catch (ex) {}
+        var value = directoriesList.value;
+        directoriesList.selectedItem = null;
+        directoriesList.value = value;
+        if (!directoriesList.selectedItem)
+          directoriesList.selectedIndex = 0;
+        if (!directoriesList.selectedItem) {
+          directoriesList.value = "";
+          directoriesList.disabled = true;
         }
-        if(!directoryDescription) {
-          // if selected directory doesn't exist, 
-          // set it the first one in the list of directories 
-          // if we have  atleast one directory.
-          // or else set it to ""
-          if (gAvailDirectories.length) {
-            directoriesList.label = gAvailDirectories[0].label;
-            directoriesList.value = gAvailDirectories[0].value;
-            directoriesList.removeAttribute("disabled");
-          }
-          else {
-            directoriesList.label = "";
-            directoriesList.value = null;
-            directoriesList.setAttribute("disabled", true);
-          }
-        }
-        else {
-          directoriesList.label = directoryDescription;
-          directoriesList.value = directoriesList.value;
-        }
+        else if (!gPrefInt.prefIsLocked("ldap_2.autoComplete.directoryServer"))
+          directoriesList.disabled = false;
         return;
       }
       var pref_string_title = "ldap_2.autoComplete.directoryServer";
       try {
         var directoryServer = gPrefInt.getCharPref(pref_string_title);
+        directoriesList.value = directoryServer;
+        if (!directoriesList.selectedItem)
+          directoriesList.selectedIndex = 0;
+        if (!directoriesList.selectedItem)
+          directoriesList.value = "";
       }
       catch (ex)
       {
-        directoryServer = "";
-      }
-      if (directoryServer != "")
-      {
-        pref_string_title = directoryServer + ".description";
-        try {
-          description = gPrefInt.getComplexValue(pref_string_title,
-                                                 Components.interfaces.nsISupportsString).data;
-        }
-        catch (ex) {
-          description = "";
-        } 
-      }
-      if ((directoryServer != "") && (description != ""))
-      {
-        directoriesList.label = description;
-        directoriesList.value = directoryServer;
-      }
-      else if(gAvailDirectories.length) {
-         directoriesList.label = gAvailDirectories[0].label;
-         directoriesList.value = gAvailDirectories[0].value;
-         gPrefInt.setCharPref("ldap_2.autoComplete.directoryServer", 
-                              gAvailDirectories[0].value);
-      }
-      else {
-        directoriesList.label = "";
-        directoriesList.value = null;
-        gPrefInt.setCharPref("ldap_2.autoComplete.directoryServer", "");
+        directoriesList.selectedItem = null;
       }
     }
   }
