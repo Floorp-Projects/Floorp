@@ -173,14 +173,17 @@ function enableButtons() {
     down.setAttribute('disabled', '');
   }
   // "Customize..." button
-  var customizeURL = '';
+  var customizeURL = null;
   if (index != -1) {
     var option = list.childNodes.item(index);
     customizeURL = option.getAttribute('customize');
   }
-  if (customizeURL == '') {
+  dump("customize="+customizeURL+"\n");
+  if (customizeURL == 'null') {
+    dump("...so disable it\n");
     customize.setAttribute('disabled','true');
   } else {
+    dump("...enable\n");
     customize.setAttribute('disabled','');
   }
 }
