@@ -2202,17 +2202,22 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
 {
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsISelectionController> selcon = do_QueryReferent(mSelConWeak);
+  if (selcon)
+    selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+
   nsCOMPtr<nsIDOMCharacterData> nodeAsText;
   nsCOMPtr<nsICaret> caretP; 
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   result = ps->GetCaret(getter_AddRefs(caretP));
+  
   if (NS_SUCCEEDED(result) && caretP) {
     if (aReply) {
       caretP->GetWindowRelativeCoordinates(
 		aReply->mCursorPosition,
-		aReply->mCursorIsCollapsed);
+		aReply->mCursorIsCollapsed, selection);
     }
   }
   return result;
