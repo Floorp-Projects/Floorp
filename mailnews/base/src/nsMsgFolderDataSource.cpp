@@ -574,6 +574,10 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createTotalMessagesNode(folder, target);
 	else if (peq(kNC_TotalUnreadMessages, property))
 		rv = createUnreadMessagesNode(folder, target);
+	else if (peq(kNC_Child, property))
+		rv = createFolderChildNode(folder, target);
+	else if (peq(kNC_MessageChild, property))
+		rv = createFolderMessageNode(folder, target);
  
   return rv;
 }
