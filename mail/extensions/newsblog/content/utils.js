@@ -240,3 +240,38 @@ function removeAssertions(ds, resource) {
         }
     }
 }
+
+
+// Date validator for RSS feeds
+const FZ_RFC822_RE = "^(((Mon)|(Tue)|(Wed)|(Thu)|(Fri)|(Sat)|(Sun)), *)?\\d\\d?"
++ " +((Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec))"
++ " +\\d\\d(\\d\\d)? +\\d\\d:\\d\\d(:\\d\\d)? +(([+-]?\\d\\d\\d\\d)|(UT)|(GMT)"
++ "|(EST)|(EDT)|(CST)|(CDT)|(MST)|(MDT)|(PST)|(PDT)|\\w)$";
+
+function isValidRFC822Date(pubDate){
+    var regex = new RegExp(FZ_RFC822_RE);
+    return regex.test(pubDate);
+}
+
+function dateRescue(dateString){
+  // Deal with various kinds of invalid dates
+  // Just timestamps for now.
+  if(!isNaN(parseInt(dateString))) {//It's an integer, so maybe it's a timestamp
+    var d = new Date(parseInt(dateString)*1000);
+    var now = new Date();
+    var yeardiff = now.getFullYear()-d.getFullYear();
+    debug("Rescue Timestamp date: " + d.toString() + "\nYear diff:" + yeardiff + "\n");
+    if((yeardiff >= 0) && (yeardiff<3)){
+      //it's quite likely the correct date
+      return d.toString();
+    }
+  }
+  // Can't help. Set to current time.
+  return (new Date()).toString();
+  
+}
+
+// Could be a prototype on String, but I don't know the policy on that
+function trimString(s){
+    return(s.replace(/^\s+/,'').replace(/\s+$/,''));
+}

@@ -288,6 +288,17 @@ Feed.prototype.parseAsRSS2 = function() {
     item.date = getNodeValue(itemNode.getElementsByTagName("pubDate")[0]
                              || itemNode.getElementsByTagName("date")[0])
                 || item.date;
+    
+    // If the date is invalid, users will see the beginning of the epoch
+    // unless we reset it here, so they'll see the current time instead.
+    // This is typical aggregator behavior.
+    if(item.date){
+      item.date = trimString(item.date);
+      if(!isValidRFC822Date(item.date) ){
+        // XXX Use this on the other formats as well
+        item.date = dateRescue(item.date);
+      }
+    }
 
     var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
     if (content)
