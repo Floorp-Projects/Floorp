@@ -32,7 +32,9 @@
  */
 
 /* LDAP Cert Search */
+#if 0
 #include <ldap.h>
+#endif
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -50,6 +52,7 @@ int LDAPCertSearch (const char * rcpt_address, const char * server_name,
                     const char * auth_password, const char * mail_attribs,
                     const char * cert_attribs, cert_struct * certs[])
 {
+#if 0
 	int rtnval;
 	LDAP * ld;
 
@@ -248,4 +251,7 @@ int LDAPCertSearch (const char * rcpt_address, const char * server_name,
 	ldap_msgfree(reslt);
 	ldap_unbind(ld);
 	return rtnval;
+#else
+	return 1;
+#endif
 }

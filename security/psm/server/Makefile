@@ -29,45 +29,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-ifdef MOZILLA_SECURITY_BUILD
-# LDAP library
-LDAPSDK_SNAPSHOT = 19981116D
-LDAPSDK_ROOTDIR = components/ldapsdk31
-
-# Linux 2.2 overrides
-ifeq ($(OS_ARCH), Linux)
-ifeq ($(OS_RELEASE), 2.2)
-LDAPSDK_SNAPSHOT = 19991122E
-endif
-endif
-
-# Compute LDAPSDK location
-# - To use USE_LOCAL_LDAPSDK copy the correct version to your tree
-# - This will be mozilla/security for MOZILLA_SECURITY_BUILD=1
-ifdef USE_LOCAL_LDAPSDK
-LDAPSDK_LOC = $(CORE_DEPTH)/ldapsdk
-else
-ifeq ($(OS_ARCH), WINNT)
-LDAPSDK_LOC = \\\\IRIDIUM/$(LDAPSDK_ROOTDIR)/$(LDAPSDK_SNAPSHOT)
-else
-LDAPSDK_LOC = /share/builds/$(LDAPSDK_ROOTDIR)/$(LDAPSDK_SNAPSHOT)
-endif
-endif
-
-# Compute LDAPSDK_PLATFORM
-#  - on WINNT force the platform to a WINNT directory, since that is what
-#  - is release by the ldapsdk team.  This allows an OS_TARGET of WIN95 while
-#  - building on WINNT
-ifeq ($(OS_ARCH), WINNT)
-LDAPSDK_PLATFORM = WINNT$(OS_RELEASE)$(OBJDIR_TAG).OBJ
-else
-LDAPSDK_PLATFORM = $(PLATFORM)
-endif
-
-LDAPSDKDIST = $(LDAPSDK_LOC)/$(LDAPSDK_PLATFORM)
-
-endif
-
 #Which versin of install.js do we really want?
 ifeq ($(OS_ARCH), WINNT)
 INSTALL_JS = install.js
@@ -85,7 +46,7 @@ CPLUSPLUSRUNTIME = -lC -lm
 endif
 endif
 
-INCLUDES += -I$(LDAPSDKDIST)/include -I$(CORE_DEPTH)/../dist/public/nlslayer
+INCLUDES += -I$(CORE_DEPTH)/../dist/public/nlslayer -I$(CORE_DEPTH)/../dist/include
 
 ifeq ($(OS_ARCH), SunOS)
 ifeq ($(OS_RELEASE), 5.5.1)
@@ -148,21 +109,6 @@ NSPR_DYNAMIC_LIBS = \
 
 NSPR_LIBS = $(NSPR_DYNAMIC_LIBS)
 
-I18N_COMPONENTS = \
-	$(DIST)/lib/necko.dll \
-	$(DIST)/lib/strres.dll \
-	$(DIST)/lib/ucharuti.dll \
-	$(DIST)/lib/uconv.dll \
-	$(DIST)/lib/ucvlatin.dll \
-	$(DIST)/lib/nslocale.dll \
-	$(NULL)
-
-XPCOM_LIBS = \
-	$(DIST)/lib/zlib.dll \
-	$(DIST)/lib/mozreg.dll \
-	$(DIST)/lib/xpcom.dll \
-	$(NULL)
-
 EXTRA_LIBS = \
 	$(DIST)/lib/ssl.lib \
 	$(DIST)/lib/nss.lib \
@@ -178,14 +124,12 @@ EXTRA_LIBS = \
 	$(DIST)/lib/softoken.lib \
 	$(DIST)/lib/certdb.lib \
 	$(DIST)/lib/secutil.lib \
-	$(DIST)/lib/crypto.lib \
 	$(DIST)/lib/freebl.lib \
 	$(DIST)/lib/dbm.lib \
 	$(DIST)/lib/protocol.lib \
 	$(DIST)/lib/nlslayer.lib \
 	$(DIST)/lib/xpcom.lib \
 	$(NSPR_STUB_LIBS) \
-	$(LDAPSDKDIST)/lib/nsldaps32v30.lib \
 	wsock32.lib \
 	winmm.lib \
 	advapi32.lib \
@@ -203,15 +147,6 @@ NSPR_LIBS = \
 	$(DIST)/lib/libplc4.$(DLL_SUFFIX) \
 	$(DIST)/lib/libplds4.$(DLL_SUFFIX) \
 	$(DIST)/lib/libnspr4.$(DLL_SUFFIX)
-
-I18N_COMPONENTS = \
-	$(DIST)/lib/libnecko.$(DLL_SUFFIX) \
-	$(DIST)/lib/libstrres.$(DLL_SUFFIX) \
-	$(DIST)/lib/libunicharutil.$(DLL_SUFFIX) \
-	$(DIST)/lib/libuconv.$(DLL_SUFFIX) \
-	$(DIST)/lib/libucvlatin.$(DLL_SUFFIX) \
-	$(DIST)/lib/libnslocale.$(DLL_SUFFIX) \
-	$(NULL)
 
 XPCOM_LIBS = \
 	$(DIST)/lib/libxpcom.$(DLL_SUFFIX) \
@@ -257,7 +192,6 @@ EXTRA_LIBS += \
 	$(NSPR_LINK_LIBS) \
 	$(XPCOM_LINK_LIBS) \
 	$(CPLUSPLUSRUNTIME) \
-	$(LDAPSDKDIST)/lib/libldap30.a \
 	$(NULL)
 
 endif
@@ -266,21 +200,17 @@ release_md::
 	$(NSINSTALL) -m 644 $(NSPR_LIBS) $(SOURCE_RELEASE_PREFIX)/$(SOURCE_RELEASE_BIN_DIR)
 	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm*.properties $(SOURCE_RELEASE_PREFIX)/$(SOURCE_RELEASE_BIN_DIR)/psmdata/ui
 	$(NSINSTALL) -m 644 ../doc/*.htm ../doc/*.html ../doc/*.gif $(SOURCE_RELEASE_PREFIX)/$(SOURCE_RELEASE_BIN_DIR)/psmdata/doc
-	$(NSINSTALL) -m 644 $(XPCOM_LIBS) $(SOURCE_RELEASE_PREFIX)/$(SOURCE_RELEASE_BIN_DIR)
-	$(NSINSTALL) -m 644 $(I18N_COMPONENTS) $(SOURCE_RELEASE_PREFIX)/$(SOURCE_RELEASE_BIN_DIR)/components
 ifneq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -m 775 start-psm $(SOURCE_RELEASE_PREFIX)/$(SOURCE_RELEASE_BIN_DIR)
 endif
 
 
 install::
-	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm*.properties $(PLATFORM)/psmdata/ui
-	$(NSINSTALL) -m 644 ../doc/*.gif ../doc/*.html ../doc/*.htm $(PLATFORM)/psmdata/doc
-	$(NSINSTALL) -m 644 $(XPCOM_LIBS) $(PLATFORM)
-	$(NSINSTALL) -m 644 $(I18N_COMPONENTS) $(PLATFORM)/components
-	$(NSINSTALL) -m 644 $(NSPR_LIBS) $(PLATFORM)
+	$(NSINSTALL) -m 644 ../ui/$(PLATFORM)/psm*.properties $(DIST)/bin/psmdata/ui
+	$(NSINSTALL) -m 644 ../doc/*.gif ../doc/*.html ../doc/*.htm $(DIST)/bin/psmdata/doc
+	$(NSINSTALL) -m 644 $(DIST)/lib/nssckbi.$(DLL_SUFFIX) $(DIST)/bin
 ifneq ($(OS_ARCH), WINNT)
-	$(NSINSTALL) -m 775 start-psm $(PLATFORM)
+	$(NSINSTALL) -m 775 start-psm $(DIST)/bin
 endif
 
 link:
