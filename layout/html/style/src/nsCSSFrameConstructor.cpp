@@ -3511,6 +3511,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     if (resolveStyle) {
       styleContext = aPresShell->StyleSet()->ResolveStyleFor(aDocElement,
                                                              nsnull);
+      display = styleContext->GetStyleDisplay();
     }
   }
 
@@ -7246,6 +7247,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
       if (resolveStyle) {
         styleContext = ResolveStyleContext(aPresContext, aParentFrame,
                                            aContent);
+        display = styleContext->GetStyleDisplay();
       }
 
       nsCOMPtr<nsIAtom> baseTag;
