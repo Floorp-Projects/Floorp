@@ -548,6 +548,7 @@ SWITCH: for ($::FORM{'knob'}) {
             PuntTryAgain("The bug id $::FORM{'id'} is invalid. Please reload this bug ".
                          "and try again.");
         }
+        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
         $duplicate = $num;
 
         last SWITCH;
@@ -1007,7 +1008,6 @@ The changes made were:
           CheckFormFieldDefined(\%::FORM,'comment');
         }
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
-        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $duplicate ***";
         print "<TABLE BORDER=1><TD><H2>Duplicate notation added to bug $duplicate</H2>\n";
         system("./processmail", $duplicate, $::FORM{'who'});
         print "<TD><A HREF=\"show_bug.cgi?id=$duplicate\">Go To BUG# $duplicate</A></TABLE>\n";
