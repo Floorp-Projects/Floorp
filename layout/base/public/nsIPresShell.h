@@ -81,12 +81,6 @@ class nsHTMLReflowCommand;
 #define NS_PRESSHELL_SCROLL_ANYWHERE -1
 #define NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE -2
 
-// Observer related defines
-#define NS_PRESSHELL_REFLOW_TOPIC         "REFLOW"              // Observer Topic
-#define NS_PRESSHELL_INITIAL_REFLOW       "INITIAL REFLOW"      // Observer Data
-#define NS_PRESSHELL_RESIZE_REFLOW        "RESIZE REFLOW"       // Observer Data
-#define NS_PRESSHELL_STYLE_CHANGE_REFLOW  "STYLE CHANGE REFLOW" // Observer Data
-
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON              0x01
 #define VERIFY_REFLOW_NOISY           0x02

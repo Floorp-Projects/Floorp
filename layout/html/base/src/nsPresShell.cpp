@@ -1230,11 +1230,6 @@ protected:
   void HandlePostedReflowCallbacks();
 
   void UnsuppressAndInvalidate();
-  
-  /** notify all external reflow observers that reflow of type "aData" is about
-    * to begin.
-    */
-  nsresult NotifyReflowObservers(const char *aData);
 
   nsresult ReflowCommandAdded(nsHTMLReflowCommand* aRC);
   nsresult ReflowCommandRemoved(nsHTMLReflowCommand* aRC);
@@ -2659,31 +2654,6 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   aFocusController->SetFocusedWindow(ourWin);
 }
 
-nsresult
-PresShell::NotifyReflowObservers(const char *aData)
-{
-  if (!aData) { return NS_ERROR_NULL_POINTER; }
-
-  nsresult               result = NS_OK;
-  nsCOMPtr<nsISupports>  pContainer;
-  nsCOMPtr<nsIDocShell>  pDocShell;
-
-  result = mPresContext->GetContainer( getter_AddRefs( pContainer ) );
-
-  if (NS_SUCCEEDED( result ) && pContainer) {
-    pDocShell = do_QueryInterface( pContainer,
-                                  &result );
-
-    if (NS_SUCCEEDED( result ) && pDocShell && mObserverService) {
-      result = mObserverService->NotifyObservers( pDocShell,
-                                                  NS_PRESSHELL_REFLOW_TOPIC,
-                                                  NS_ConvertASCIItoUCS2(aData).get() );
-      // notice that we don't really care what the observer service returns
-    }
-  }
-  return NS_OK;
-}
-
 static nsresult
 GetRootScrollFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame, nsIFrame** aScrollFrame) {
 
@@ -2746,8 +2716,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 #endif
 
-  // notice that we ignore the result
-  NotifyReflowObservers(NS_PRESSHELL_INITIAL_REFLOW);
   if (mCaret)
     mCaret->EraseCaret();
   
@@ -2914,8 +2882,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
   PRBool firstReflow = PR_FALSE;
 
-  // notice that we ignore the result
-  NotifyReflowObservers(NS_PRESSHELL_RESIZE_REFLOW);
   mViewManager->CacheWidgetChanges(PR_TRUE);
 
   if (mCaret)
@@ -3460,10 +3426,6 @@ static void UpdateViewProperties(nsIPresContext* aPresContext, nsIViewManager* a
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
 {
-
-  // notify any presshell observers about the reflow.
-  // notice that we ignore the result
-  NotifyReflowObservers(NS_PRESSHELL_STYLE_CHANGE_REFLOW);
 
   WillCauseReflow();
 
