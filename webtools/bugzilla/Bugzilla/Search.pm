@@ -1172,7 +1172,7 @@ sub init {
                 " LEFT JOIN bug_group_map " .
                 " ON bug_group_map.bug_id = bugs.bug_id ";
 
-    if ($user) {
+    if ($user->id) {
         if (%{$user->groups}) {
             $query .= " AND bug_group_map.group_id NOT IN (" . join(',', values(%{$user->groups})) . ") ";
         }
@@ -1183,7 +1183,7 @@ sub init {
     $query .= " WHERE " . join(' AND ', (@wherepart, @andlist)) .
               " AND ((bug_group_map.group_id IS NULL)";
 
-    if ($user) {
+    if ($user->id) {
         my $userid = $user->id;
         $query .= "    OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) " .
               "    OR (bugs.cclist_accessible = 1 AND cc.who IS NOT NULL) " .
@@ -1338,7 +1338,7 @@ sub getSQL {
 sub pronoun {
     my ($noun, $user) = (@_);
     if ($noun eq "%user%") {
-        if ($user) {
+        if ($user->id) {
             return $user->id;
         } else {
             ThrowUserError('login_required_for_pronoun');

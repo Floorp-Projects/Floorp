@@ -75,7 +75,7 @@ function normal_keypress_handler( aEvent ) {
       <text class="text-link" onclick="load_relative_url('enter_bug.cgi')" value="new [% terms.bug %]"/>
       <separator class="thin"/>
 
-[% IF user %]
+[% IF user.id %]
       <text class="text-link" onclick="load_relative_url('userprefs.cgi')" value="edit prefs"/>
   [%- IF user.groups.tweakparams %]
       <text class="text-link" onclick="load_relative_url('editparams.cgi')" value="edit params"/>

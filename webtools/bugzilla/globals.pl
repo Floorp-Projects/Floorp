@@ -482,7 +482,7 @@ sub CanEditProductId {
     my $query = "SELECT group_id FROM group_control_map " .
                 "WHERE product_id = $productid " .
                 "AND canedit != 0 "; 
-    if (defined Bugzilla->user && %{Bugzilla->user->groups}) {
+    if (%{Bugzilla->user->groups}) {
         $query .= "AND group_id NOT IN(" . 
                    join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
@@ -504,7 +504,7 @@ sub CanEnterProduct {
                 "LEFT JOIN group_control_map " .
                 "ON group_control_map.product_id = products.id " .
                 "AND group_control_map.entry != 0 ";
-    if (defined Bugzilla->user && %{Bugzilla->user->groups}) {
+    if (%{Bugzilla->user->groups}) {
         $query .= "AND group_id NOT IN(" . 
                    join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
@@ -547,7 +547,7 @@ sub GetSelectableProducts {
         $query .= "AND group_control_map.membercontrol = " .
                   CONTROLMAPMANDATORY . " ";
     }
-    if (defined Bugzilla->user && %{Bugzilla->user->groups}) {
+    if (%{Bugzilla->user->groups}) {
         $query .= "AND group_id NOT IN(" . 
                    join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
@@ -1192,7 +1192,7 @@ sub UserInGroup {
         die "UserInGroup no longer takes a second parameter.";
     }
     
-    return defined Bugzilla->user && defined Bugzilla->user->groups->{$_[0]};
+    return defined Bugzilla->user->groups->{$_[0]};
 }
 
 sub UserCanBlessGroup {

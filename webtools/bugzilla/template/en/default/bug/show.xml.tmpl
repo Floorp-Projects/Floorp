@@ -25,7 +25,7 @@
 <bugzilla version="[% VERSION %]"
           urlbase="[% Param('urlbase') %]"
           maintainer="[% Param('maintainer') FILTER xml %]"
-[% IF user %]
+[% IF user.id %]
           exporter="[% user.login FILTER xml %]"
 [% END %]
 >

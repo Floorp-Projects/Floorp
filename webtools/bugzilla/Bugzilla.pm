@@ -51,6 +51,11 @@ sub cgi {
 my $_user;
 sub user {
     my $class = shift;
+
+    if (not defined $_user) {
+        $_user = new Bugzilla::User;
+    }
+
     return $_user;
 }
 
@@ -61,12 +66,11 @@ sub login {
 
 sub logout {
     my ($class, $option) = @_;
-    if (! $_user) {
-        # If we're not logged in, go away
-        return;
-    }
-    $option = LOGOUT_CURRENT unless defined $option;
 
+    # If we're not logged in, go away
+    return unless user->id;
+
+    $option = LOGOUT_CURRENT unless defined $option;
     Bugzilla::Auth::Login::WWW->logout($_user, $option);
 }
 

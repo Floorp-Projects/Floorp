@@ -43,9 +43,7 @@ sub login {
 
     # Avoid double-logins, which may confuse the auth code
     # (double cookies, odd compat code settings, etc)
-    if (defined $user) {
-        return $user;
-    }
+    return $user if $user->id;
 
     $type = LOGIN_NORMAL unless defined $type;
 

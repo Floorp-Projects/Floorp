@@ -18,7 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
-#                 Erik Stambaugh <not_erik@dasbistro.com>
+#                 Erik Stambaugh <erik@dasbistro.com>
 #                 Bradley Baetz <bbaetz@acm.org>
 #                 Joel Peshkin <bugreport@peshkin.net> 
 
@@ -43,6 +43,9 @@ use Bugzilla::Constants;
 
 sub new {
     my $invocant = shift;
+    if (scalar @_ == 0) {
+        return $invocant->_create;
+    }
     return $invocant->_create("userid=?", @_);
 }
 
@@ -69,6 +72,16 @@ sub _create {
     my $cond = shift;
     my $val = shift;
 
+    # Allow invocation with no parameters to create a blank object
+    my $self = {
+        'id'             => 0,
+        'name'           => '',
+        'login'          => '',
+        'showmybugslink' => 0,
+    };
+    bless ($self, $class);
+    return $self unless $cond;
+
     # We're checking for validity here, so any value is OK
     trick_taint($val);
 
@@ -90,13 +103,10 @@ sub _create {
 
     return undef unless defined $id;
 
-    my $self = { id => $id,
-                 name => $name,
-                 login => $login,
-                 showmybugslink => $mybugslink,
-               };
-
-    bless ($self, $class);
+    $self->{'id'}             = $id;
+    $self->{'name'}           = $name;
+    $self->{'login'}          = $login;
+    $self->{'showmybugslink'} = $mybugslink;
 
     # Now update any old group information if needed
     my $result = $dbh->selectrow_array(q{SELECT 1
@@ -133,6 +143,8 @@ sub showmybugslink { $_[0]->{showmybugslink}; }
 sub identity {
     my $self = shift;
 
+    return "" unless $self->id;
+
     if (!defined $self->{identity}) {
         $self->{identity} = 
           $self->{name} ? "$self->{name} <$self->{login}>" : $self->{login};
@@ -143,6 +155,8 @@ sub identity {
 
 sub nick {
     my $self = shift;
+
+    return "" unless $self->id;
 
     if (!defined $self->{nick}) {
         $self->{nick} = (split(/@/, $self->{login}, 2))[0];
@@ -155,6 +169,7 @@ sub queries {
     my $self = shift;
 
     return $self->{queries} if defined $self->{queries};
+    return [] unless $self->id;
 
     my $dbh = Bugzilla->dbh;
     my $sth = $dbh->prepare(q{  SELECT name, query, linkinfooter
@@ -186,6 +201,7 @@ sub groups {
     my $self = shift;
 
     return $self->{groups} if defined $self->{groups};
+    return {} unless $self->id;
 
     my $dbh = Bugzilla->dbh;
     my $groups = $dbh->selectcol_arrayref(q{SELECT DISTINCT groups.name, group_id
@@ -209,6 +225,7 @@ sub in_group {
 
     # If we already have the info, just return it.
     return defined($self->{groups}->{$group}) if defined $self->{groups};
+    return 0 unless $self->id;
 
     # Otherwise, go check for it
 
@@ -232,6 +249,7 @@ sub in_group {
 sub visible_groups_inherited {
     my $self = shift;
     return $self->{visible_groups_inherited} if defined $self->{visible_groups_inherited};
+    return [] unless $self->id;
     my @visgroups = @{$self->visible_groups_direct};
     @visgroups = flatten_group_membership(@visgroups);
     $self->{visible_groups_inherited} = \@visgroups;
@@ -244,6 +262,7 @@ sub visible_groups_direct {
     my $self = shift;
     my @visgroups = ();
     return $self->{visible_groups_direct} if defined $self->{visible_groups_direct};
+    return [] unless $self->id;
 
     my $dbh = Bugzilla->dbh;
     my $glist = join(',',(-1,values(%{$self->groups})));
@@ -265,6 +284,7 @@ sub derive_groups {
     my ($self, $already_locked) = @_;
 
     my $id = $self->id;
+    return unless $id;
 
     my $dbh = Bugzilla->dbh;
 
@@ -352,6 +372,7 @@ sub can_bless {
     my $self = shift;
 
     return $self->{can_bless} if defined $self->{can_bless};
+    return 0 unless $self->id;
 
     my $dbh = Bugzilla->dbh;
     # First check if the user can explicitly bless a group
@@ -729,6 +750,7 @@ sub email_prefs {
     # Get or set (not implemented) the user's email notification preferences.
     
     my $self = shift;
+    return {} unless $self->id;
     
     # If the calling code is setting the email preferences, update the object
     # but don't do anything else.  This needs to write email preferences back
@@ -820,8 +842,10 @@ L<Bugzilla-E<gt>user|Bugzilla/"user">.
 
 =item C<new($userid)>
 
-Creates a new C<Bugzilla::User> object for the given user id. Returns
-C<undef> if no matching user is found.
+Creates a new C{Bugzilla::User> object for the given user id.  If no user
+id was given, a blank object is created with no user attributes.
+
+If an id was given but there was no matching user found, undef is returned.
 
 =begin undocumented
 

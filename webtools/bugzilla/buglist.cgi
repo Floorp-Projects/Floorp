@@ -195,7 +195,7 @@ sub iCalendarDateTime {
 sub LookupNamedQuery {
     my ($name) = @_;
     Bugzilla->login(LOGIN_REQUIRED);
-    my $userid = DBNameToIdAndCheck(Bugzilla->user->login);
+    my $userid = Bugzilla->user->id;
     my $qname = SqlQuote($name);
     SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
     my $result = FetchOneColumn();
@@ -318,7 +318,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
     }
     elsif ($::FORM{'remaction'} eq "forget") {
         Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = DBNameToIdAndCheck(Bugzilla->user->login);
+        my $userid = Bugzilla->user->id;
         my $qname = SqlQuote($::FORM{'namedcmd'});
         SendSQL("DELETE FROM namedqueries WHERE userid = $userid AND name = $qname");
 
@@ -338,7 +338,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
 elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     if ($::FORM{'remtype'} eq "asdefault") {
         Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = DBNameToIdAndCheck(Bugzilla->user->login);
+        my $userid = Bugzilla->user->id;
         my $qname = SqlQuote($::defaultqueryname);
         my $qbuffer = SqlQuote($::buffer);
 
@@ -361,7 +361,7 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     }
     elsif ($::FORM{'remtype'} eq "asnamed") {
         Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = DBNameToIdAndCheck(Bugzilla->user->login);
+        my $userid = Bugzilla->user->id;
 
         my $name = trim($::FORM{'newqueryname'});
         $name || ThrowUserError("query_name_missing");
@@ -850,7 +850,7 @@ $vars->{'urlquerypart'} =~ s/(order|cmdtype)=[^&]*&?//g;
 $vars->{'order'} = $order;
 
 # The user's login account name (i.e. email address).
-my $login = Bugzilla->user ? Bugzilla->user->login : "";
+my $login = Bugzilla->user->login;
 
 $vars->{'caneditbugs'} = UserInGroup('editbugs');
 

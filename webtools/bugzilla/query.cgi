@@ -62,13 +62,12 @@ if (defined $::FORM{"GoAheadAndLogIn"}) {
     Bugzilla->login();
 }
 
-my $user = Bugzilla->user;
-my $userid = $user ? $user->id : 0;
+my $userid = Bugzilla->user->id;
 
 # Backwards compatibility hack -- if there are any of the old QUERY_*
 # cookies around, and we are logged in, then move them into the database
 # and nuke the cookie. This is required for Bugzilla 2.8 and earlier.
-if ($user) {
+if ($userid) {
     my @oldquerycookies;
     foreach my $i ($cgi->cookie()) {
         if ($i =~ /^QUERY_(.*)$/) {
@@ -102,7 +101,7 @@ if ($user) {
 }
 
 if ($::FORM{'nukedefaultquery'}) {
-    if ($user) {
+    if ($userid) {
         SendSQL("DELETE FROM namedqueries " .
                 "WHERE userid = $userid AND name = '$::defaultqueryname'");
     }
@@ -110,7 +109,7 @@ if ($::FORM{'nukedefaultquery'}) {
 }
 
 my $userdefaultquery;
-if ($user) {
+if ($userid) {
     SendSQL("SELECT query FROM namedqueries " .
             "WHERE userid = $userid AND name = '$::defaultqueryname'");
     $userdefaultquery = FetchOneColumn();
@@ -363,7 +362,7 @@ for (my $chart = 0; $::FORM{"field$chart-0-0"}; $chart++) {
 $default{'charts'} = \@charts;
 
 # Named queries
-if ($user) {
+if ($userid) {
     my @namedqueries;
     SendSQL("SELECT name FROM namedqueries " .
             "WHERE userid = $userid AND name != '$::defaultqueryname' " .

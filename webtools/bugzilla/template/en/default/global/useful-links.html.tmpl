@@ -38,14 +38,14 @@
         
         <a href="report.cgi">Reports</a> 
         
-        [% IF user %]
+        [% IF user.id %]
           [% email = user.login FILTER url_quote %]
           | <a href="request.cgi?requester=[% email %]&amp;requestee=[% email %]&amp;do_union=1&amp;group=type">My Requests</a>
         [% ELSE %]
           | <a href="request.cgi">Requests</a>
         [% END %]
         
-        [% IF user && Param('usevotes') %]
+        [% IF user.id && Param('usevotes') %]
           | <a href="votes.cgi?action=show_user">My&nbsp;Votes</a>
         [% END %]      
         

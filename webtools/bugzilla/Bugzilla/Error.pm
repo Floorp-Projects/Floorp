@@ -47,7 +47,7 @@ sub _throw_error {
         $mesg .= "\n[$$] " . time2str("%D %H:%M:%S ", time());
         $mesg .= "$name $error ";
         $mesg .= "$ENV{REMOTE_ADDR} " if $ENV{REMOTE_ADDR};
-        $mesg .= Bugzilla->user->login if Bugzilla->user;
+        $mesg .= Bugzilla->user->login;
         $mesg .= "\n";
         my %params = Bugzilla->cgi->Vars;
         $Data::Dumper::Useqq = 1;

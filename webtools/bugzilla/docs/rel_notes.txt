@@ -287,7 +287,7 @@ Code Changes Which May Affect Customizations
 - Use Bugzilla->user->login in place of $::COOKIE{Bugzilla_login}
 
 - You can tell if there's a user logged in or not by checking if
-  Bugzilla->user exists rather than looking for $::userid==0
+  Bugzilla->user->id != 0  rather than looking for $::userid != 0
 
 
 Recommended Practice for the Upgrade

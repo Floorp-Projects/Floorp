@@ -126,10 +126,9 @@ sub show_user {
     
     my $name = $cgi->param('user') || Bugzilla->user->login;
     my $who = DBNameToIdAndCheck($name);
-    my $userid = Bugzilla->user ? Bugzilla->user->id : 0;
+    my $userid = Bugzilla->user->id;
     
-    my $canedit = 1 if (Bugzilla->user &&
-                        $name eq Bugzilla->user->login);
+    my $canedit = 1 if ($userid && $name eq Bugzilla->user->login);
     
     SendSQL("LOCK TABLES bugs READ, products READ, votes WRITE,
              cc READ, bug_group_map READ, user_group_map READ,
