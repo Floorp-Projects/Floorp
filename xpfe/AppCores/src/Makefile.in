@@ -37,10 +37,8 @@ CPPSRCS= \
 	nsProfileCore.cpp       \
 	nsAppCoresNameSet.cpp       \
 	nsToolkitCore.cpp	\
-	nsBrowserAppCore.cpp       \
 	nsProfileCoreFactory.cpp       \
 	nsToolkitCoreFactory.cpp	\
-	nsBrowserAppCoreFactory.cpp       \
 	nsAppCoresManager.cpp       \
 	nsAppCoresManagerFactory.cpp       \
 	nsJSBaseAppCore.cpp       \

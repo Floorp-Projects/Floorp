@@ -22,7 +22,6 @@
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManagerFactory.h"
 #include "nsProfileCoreFactory.h" 
-#include "nsBrowserAppCoreFactory.h"
 #include "nsToolkitCoreFactory.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
@@ -36,7 +35,6 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kProfileCoreCID,     NS_PROFILECORE_CID); 
 static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
-static NS_DEFINE_IID(kBrowserAppCoreCID,  NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kAppCoresManagerCID, NS_APPCORESMANAGER_CID);
 
 
@@ -57,7 +55,6 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kProfileCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE); 
     nsComponentManager::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 
     return NS_OK;
 }
@@ -70,7 +67,6 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterComponent(kAppCoresManagerCID, path);
     nsComponentManager::UnregisterComponent(kProfileCoreCID, path); 
     nsComponentManager::UnregisterComponent(kToolkitCoreCID, path);
-    nsComponentManager::UnregisterComponent(kBrowserAppCoreCID, path);
     
     return NS_OK;
 }
@@ -103,10 +99,6 @@ NSGetFactory(nsISupports* serviceMgr,
     else if ( aClass.Equals(kToolkitCoreCID) )
     {
         inst = new nsToolkitCoreFactory();
-    }
-    else if ( aClass.Equals(kBrowserAppCoreCID) )
-    {
-        inst = new nsBrowserAppCoreFactory();      
     }
     else
     {
