@@ -136,8 +136,11 @@ NS_METHOD nsMenuItemX::SetChecked(PRBool aIsEnabled)
   
   // update the content model. This will also handle unchecking our siblings
   // if we are a radiomenu
-  mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, 
-                    mIsChecked ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"), PR_TRUE);
+  if (mIsChecked)
+      mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked,
+                        NS_LITERAL_STRING("true"), PR_TRUE);
+  else
+      mContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, PR_TRUE);
 
   return NS_OK;
 }
@@ -255,7 +258,16 @@ nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
 */
 NS_METHOD nsMenuItemX::DoCommand()
 {
-  return MenuHelpersX::DispatchCommandTo(mWebShellWeakRef, mContent);
+    // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
+    if (mMenuType == nsIMenuItem::eCheckbox || (mMenuType == nsIMenuItem::eRadio && !mIsChecked)) {
+        nsAutoString value;
+        mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::autocheck, value);
+        if (!value.Equals(NS_LITERAL_STRING("false")))
+            SetChecked(!mIsChecked);
+            /* the AttributeChanged code will update all the internal state */
+    }
+
+    return MenuHelpersX::DispatchCommandTo(mWebShellWeakRef, mContent);
 }
     
    
