@@ -69,7 +69,7 @@ fail(char *format, ...)
     va_start(ap, format);
     vfprintf(stderr, format, ap);
     va_end(ap);
-    if (error)
+    if (error) {
 
 #ifdef USE_REENTRANT_LIBC
     R_STRERROR_R(errno);
@@ -77,7 +77,8 @@ fail(char *format, ...)
 #else
 	fprintf(stderr, ": %s", strerror(errno));
 #endif
-
+    }
+ 
     putc('\n', stderr);
     abort();
     exit(1);
