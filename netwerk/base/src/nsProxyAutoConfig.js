@@ -188,12 +188,13 @@ function dnsResolve(host) {
     if (host == dnsResolveCachedHost) {
         return dnsResolveCachedIp;
     }
-    dnsResolveCachedHost = host;
     try {
         dnsResolveCachedIp = dns.resolve(host);
+        dnsResolveCachedHost = host;
     }
     catch (e) {
         dnsResolveCachedIp = null;
+        dnsResolveCachedHost = null;
     }
     return dnsResolveCachedIp;
 }

@@ -1720,6 +1720,13 @@ nsDNSService::Resolve(const char *i_hostname, char **o_ip)
             
     if (index == 0)  return NS_ERROR_FAILURE;
     else {
+        // if netAddr is IPv4 mapped IPv6 address, then convert to IPv4 before
+        // serializing (see bug 191715).
+        if (PR_IsNetAddrType(&netAddr, PR_IpAddrV4Mapped)) {
+            PRUint32 v4addr = netAddr.ipv6.ip.pr_s6_addr32[3];
+            netAddr.inet.family = PR_AF_INET;
+            netAddr.inet.ip = v4addr;
+        }
         PRStatus  status = PR_NetAddrToString(&netAddr, ipBuffer, sizeof(ipBuffer));
         if (status != PR_SUCCESS)   return NS_ERROR_FAILURE;
     }
