@@ -260,7 +260,7 @@
 }
 
 /*--------------------------------------------------------------------
- * Next and Previous buttons. :TODO: Should they have hover?
+ * Next and Previous buttons.
  *-------------------------------------------------------------------*/
 
 #month-previous-button
@@ -268,9 +268,29 @@
    list-style-image     : url("chrome://calendar/skin/arrow_left.png");
 }
 
+#month-previous-button:hover
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_left_hover.png");
+}
+
+#month-previous-button:hover:active
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_left_down.png");
+}
+
 #month-next-button
 {
    list-style-image     : url("chrome://calendar/skin/arrow_right.png");
+}
+
+#month-next-button:hover
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_right_hover.png");
+}
+
+#month-next-button:hover:active
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_right_down.png");
 }
 
 #month-next-button-box
