@@ -39,6 +39,15 @@
 class nsIJVMConsole : public nsIJVMWindow {
 public:
 
+    NS_IMETHOD
+    Show(void) = 0;
+
+    NS_IMETHOD
+    Hide(void) = 0;
+
+    NS_IMETHOD
+    IsVisible(PRBool *result) = 0;
+    
     // Prints a message to the Java console. The encodingName specifies the
     // encoding of the message, and if NULL, specifies the default platform
     // encoding.
