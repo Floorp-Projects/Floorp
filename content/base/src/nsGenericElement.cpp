@@ -733,13 +733,13 @@ nsDOMEventRTTearoff::RemoveEventListener(const nsAReadableString& type,
 }
 
 NS_IMETHODIMP
-nsDOMEventRTTearoff::DispatchEvent(nsIDOMEvent *evt)
+nsDOMEventRTTearoff::DispatchEvent(nsIDOMEvent *evt, PRBool* _retval)
 {
   nsCOMPtr<nsIDOMEventReceiver> event_receiver;
   nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return event_receiver->DispatchEvent(evt);
+  return event_receiver->DispatchEvent(evt, _retval);
 }
 
 

@@ -2008,7 +2008,7 @@ nsXULElement::RemoveEventListener(const nsAReadableString& aType,
 }
 
 NS_IMETHODIMP
-nsXULElement::DispatchEvent(nsIDOMEvent* aEvent)
+nsXULElement::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
   // Obtain a presentation context
   PRInt32 count = mDocument->GetNumberOfShells();
@@ -2024,7 +2024,7 @@ nsXULElement::DispatchEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIEventStateManager> esm;
   if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
-    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIStyledContent*, this), aEvent);
+    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIStyledContent*, this), aEvent, _retval);
   }
 
   return NS_ERROR_FAILURE;
@@ -2052,7 +2052,8 @@ nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 NS_IMETHODIMP
 nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
 {
-  return DispatchEvent(aEvent);
+  PRBool noDefault;
+  return DispatchEvent(aEvent, &noDefault);
 }
 
 
@@ -4349,7 +4350,10 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModTy
         // "style" attribute anyway.
         aHint = NS_STYLE_HINT_FRAMECHANGE;
     }
-    else if (NodeInfo()->Equals(nsXULAtoms::window)) {
+    else if (NodeInfo()->Equals(nsXULAtoms::window) ||
+             NodeInfo()->Equals(nsXULAtoms::page) ||
+             NodeInfo()->Equals(nsXULAtoms::dialog) ||
+             NodeInfo()->Equals(nsXULAtoms::wizard)) {
         // Ignore 'width' and 'height' on a <window>
         if (nsXULAtoms::width == aAttribute || nsXULAtoms::height == aAttribute)
             aHint = NS_STYLE_HINT_NONE;

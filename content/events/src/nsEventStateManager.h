@@ -126,7 +126,7 @@ public:
   NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor);
 
   //Method for centralized distribution of new DOM events
-  NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent);
+  NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool *aPreventDefault);
 
   NS_IMETHOD MoveFocus(PRBool aDirection, nsIContent* aRoot);
 

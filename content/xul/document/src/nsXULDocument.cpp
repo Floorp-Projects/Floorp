@@ -3077,7 +3077,8 @@ nsXULDocument::SetTitle(const nsAReadableString& aTitle)
     CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
     if (event) {
       event->InitEvent(NS_LITERAL_STRING("DOMTitleChanged"), PR_TRUE, PR_TRUE);
-      DispatchEvent(event);
+      PRBool noDefault;
+      DispatchEvent(event, &noDefault);
     }
     
     return NS_OK;
@@ -4306,7 +4307,7 @@ nsXULDocument::RemoveEventListener(const nsAReadableString& aType,
 }
 
 NS_IMETHODIMP
-nsXULDocument::DispatchEvent(nsIDOMEvent* aEvent)
+nsXULDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
   // Obtain a presentation context
   PRInt32 count = GetNumberOfShells();
@@ -4322,7 +4323,7 @@ nsXULDocument::DispatchEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIEventStateManager> esm;
   if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
-    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIDocument*, this), aEvent);
+    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIDocument*, this), aEvent, _retval);
   }
 
   return NS_ERROR_FAILURE;
@@ -4376,7 +4377,8 @@ nsXULDocument::GetListenerManager(nsIEventListenerManager** aResult)
 NS_IMETHODIMP
 nsXULDocument::HandleEvent(nsIDOMEvent *aEvent)
 {
-  return DispatchEvent(aEvent);
+  PRBool noDefault;
+  return DispatchEvent(aEvent, &noDefault);
 }
 
 nsresult

@@ -2628,7 +2628,7 @@ nsEventListenerManager::RemoveEventListener(const nsAReadableString& aType,
 }
 
 NS_IMETHODIMP
-nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent)
+nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
   //If we don't have a target set this doesn't work.
   if (mTarget) {
@@ -2652,7 +2652,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent)
 
         nsCOMPtr<nsIEventStateManager> esm;
         if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
-          return esm->DispatchNewEvent(mTarget, aEvent);
+          return esm->DispatchNewEvent(mTarget, aEvent, _retval);
         }
       }
     }
@@ -2686,7 +2686,8 @@ nsEventListenerManager::GetListenerManager(nsIEventListenerManager** aInstancePt
 NS_IMETHODIMP 
 nsEventListenerManager::HandleEvent(nsIDOMEvent *aEvent)
 {
-  return DispatchEvent(aEvent);
+  PRBool noDefault;
+  return DispatchEvent(aEvent, &noDefault);
 }
 
 nsresult
