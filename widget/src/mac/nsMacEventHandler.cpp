@@ -119,6 +119,7 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 	// tell the old widget it is not focused
 	if (mActiveWidget)
 	{
+		mActiveWidget->ResetInputState();
 		mActiveWidget->RemoveDeleteObserver(this);
 		DispatchGuiEvent(mActiveWidget, NS_LOSTFOCUS);
 	}
