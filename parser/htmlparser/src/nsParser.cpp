@@ -1063,9 +1063,11 @@ static void DetermineHTMLParseMode(nsString& aBuffer,
       publicID.ToLowerCase();
 
       // binary search to see if we can find the correct public ID
-      PRUint32 minimum = 0;
-      PRUint32 maximum = ELEMENTS_OF(kPublicIDs) - 1;
-      PRUint32 index;
+        // These must be signed since maximum can go below zero and we'll
+        // crash if it's unsigned.
+      PRInt32 minimum = 0;
+      PRInt32 maximum = ELEMENTS_OF(kPublicIDs) - 1;
+      PRInt32 index;
       for (;;) {
         index = (minimum + maximum) / 2;
         PRInt32 comparison =
