@@ -1,5 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-    "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 
 <!--
   The contents of this file are subject to the Netscape Public License
@@ -20,122 +19,109 @@
   Contributors:
     Mark Olson <maolson@earthlink.net>
     Alexey Chernyak <alexeyc@bigfoot.com>
+    Frank Tang <ftang@netscape.com>
+    Mike Connelly <mozilla@shepherdstown.com>
+    Robert Kaiser <kairo@kairo.at>
  -->
 
 <html>
 <head>
-<title>About Plug-ins</title>
-<style type="text/css">
-  span#plugs {
-    font-size: xx-large;
-    font-weight: bold;
-  }
-  span#noplugs {
-    font-size: x-large;
-    font-weight: bold;
-  }
-  div div {
-    font-size: large;
-    font-weight: bold;
-    text-align: center;
-  }
-  table, th, td {
-    border-color: gray;
-    border-style: solid;
-    text-align: center;
-  }
-  table {
-    border-width: 2px;
-    width: 100%;
-  }
-  th, td {
-    border-width: 1px;
-    padding: 5px 0;
-  }
-  th {
-    font-size: small;
-  }
-  th.type, th.suff {
-    width: 20%;
-  }
-  th.desc {
-    width: 50%;
-  }
-</style>
+<script type="application/x-javascript">
+  var title_label = "About Plug-ins";
+  var installedplugins_label = "Installed plug-ins";
+  var nopluginsareinstalled_label = "No plug-ins are installed";
+  var findmore_label = "Find more information about browser plug-ins at";
+  var netcenter_label = "Netscape.com";
+  var filename_label = "File name:";
+  var mimetype_label = "MIME Type";
+  var description_label  = "Description";
+  var suffixes_label  = "Suffixes";
+  var enabled_label = "Enabled";
+  var yes_label = "Yes";
+  var no_label = "No";
+
+  document.writeln("<title>" + title_label + "</title>");
+</script>
+<link rel="stylesheet" type="text/css" href="chrome://communicator/skin/plugins.css">
 </head>
 <body>
-<div>
+<div id="outside">
 <script type="application/x-javascript">
 
-/* JavaScript to enumerate and display all installed plug-ins
+  /* JavaScript to enumerate and display all installed plug-ins
 
- * First, refresh plugins in case anything has been changed recently in
- * prefs: (The "false" argument tells refresh not to reload or activate
- * any plug-ins that would be active otherwise.  In contrast, one would
- * use "true" in the case of ASD instead of restarting)
- */
-navigator.plugins.refresh(false);
+   * First, refresh plugins in case anything has been changed recently in
+   * prefs: (The "false" argument tells refresh not to reload or activate
+   * any plug-ins that would be active otherwise.  In contrast, one would
+   * use "true" in the case of ASD instead of restarting)
+   */
+  navigator.plugins.refresh(false);
 
 
-var numPlugins = navigator.plugins.length;
+  var numPlugins = navigator.plugins.length;
 
-if (numPlugins > 0)
-  document.writeln("<span id=\"plugs\">Installed plug-ins<\/span><br>");
-else
-  document.writeln("<span id=\"noplugs\">No plug-ins are installed.<\/span><br>");
+  if (numPlugins > 0)
+    document.writeln("<div id=\"plugs\">" + installedplugins_label + "<\/div>");
+  else
+    document.writeln("<div id=\"noplugs\">" + nopluginsareinstalled_label + "<\/div>");
 
-document.writeln("Find more information about browser plug-ins at ");
-document.writeln("<a href=\"http://home.netscape.com/plugins/index.html\">Netscape.com<\/a>.");
-document.writeln("<p><\/p><hr>");
+  document.writeln("<div id=\"findmore\">" + findmore_label + " ");
+  document.writeln("<a href=\"http://home.netscape.com/plugins/index.html\">" + netcenter_label + "<\/a>.");
+  document.writeln("<\/div><hr>");
 
-for (var i = 0; i < numPlugins; i++)
-{
-  var plugin = navigator.plugins[i];
+  for (var i = 0; i < numPlugins; i++)
+  {
+    var plugin = navigator.plugins[i];
 
-  if (plugin) {
-    document.write("<div>");
-    document.write(plugin.name);
-    document.writeln("<\/div><br>");
-
-    document.writeln("<dl><dd>File name:");
-    document.write(plugin.filename);
-    document.write("<\/dd><dd><br>");
-    document.write(plugin.description);
-    document.writeln("<\/dd><\/dl><p><\/p>");
-
-    document.writeln("<table>");
-    document.writeln("<tr><th class=\"type\">MIME Type<\/th>");
-    document.writeln("<th class=\"desc\">Description<\/th>");
-    document.writeln("<th class=\"suff\">Suffixes<\/th>");
-    document.writeln("<th>Enabled<\/th><\/tr>");
-
-    var numTypes = plugin.length;
-    var mimetype;
-    var enabled;
-    var enabledPlugin;
-    for (var j = 0; j < numTypes; j++)
+    if (plugin)
     {
-      mimetype = plugin[j];
+      document.write("<div class=\"plugname\">");
+      document.write(plugin.name);
+      document.writeln("<\/div>");
 
-      if (mimetype)
+      document.writeln("<dl><dd><span class=\"label\">" + filename_label + "<\/span> ");
+      document.write(plugin.filename);
+      document.writeln("<\/dd><dd>");
+      document.write(plugin.description);
+      document.writeln("<\/dd><\/dl>");
+
+      document.writeln("<table class=\"contenttable\">");
+      document.writeln("<thead>");
+      document.writeln("<tr><th class=\"type\">" + mimetype_label + "<\/th>");
+      document.writeln("<th class=\"desc\">" + description_label + "<\/th>");
+      document.writeln("<th class=\"suff\">" + suffixes_label + "<\/th>");
+      document.writeln("<th class=\"enabled\">" + enabled_label + "<\/th><\/tr>");
+      document.writeln("<\/thead>");
+      document.writeln("<tbody>");
+
+      var numTypes = plugin.length;
+      var mimetype;
+      var enabled;
+      var enabledPlugin;
+      for (var j = 0; j < numTypes; j++)
       {
-        enabled = "No";
-        enabledPlugin = mimetype.enabledPlugin;
-        if (enabledPlugin && (enabledPlugin.filename == plugin.filename))
-          enabled = "Yes";
+        mimetype = plugin[j];
 
-        document.writeln("<tr>");
-        document.writeln("<td>" + mimetype.type + "<\/td>");
-        document.writeln("<td>" + mimetype.description + "<\/td>");
-        document.writeln("<td>" + mimetype.suffixes + "<\/td>");
-        document.writeln("<td>" + enabled + "<\/td>");
-        document.writeln("<\/tr>");
+        if (mimetype)
+        {
+          enabled = no_label;
+          enabledPlugin = mimetype.enabledPlugin;
+          if (enabledPlugin && (enabledPlugin.filename == plugin.filename))
+            enabled = yes_label;
+
+          document.writeln("<tr>");
+          document.writeln("<td>" + mimetype.type + "<\/td>");
+          document.writeln("<td>" + mimetype.description + "<\/td>");
+          document.writeln("<td>" + mimetype.suffixes + "<\/td>");
+          document.writeln("<td>" + enabled + "<\/td>");
+          document.writeln("<\/tr>");
+        }
       }
-    }
 
-    document.write("<\/table><p><\/p><hr><p><\/p>");
+      document.write("<\/tbody>");
+      document.write("<\/table>");
+    }
   }
-}
 </script>
 </div>
 </body>
