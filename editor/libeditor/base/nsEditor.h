@@ -131,7 +131,7 @@ public:
                        nsIDOMNode * aParent,
                        PRBool       aNodeToKeepIsFirst);
 
-  NS_IMETHOD InsertBreak(PRBool aCtrlKey);
+  NS_IMETHOD InsertBreak();
 
   NS_IMETHOD EnableUndo(PRBool aEnable);
 
@@ -152,6 +152,8 @@ public:
   NS_IMETHOD GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject);
 
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
+
+  NS_IMETHOD SelectAll();
 
 /*END nsIEditor interfaces*/
 
@@ -184,30 +186,48 @@ public:
 
 /*BEGIN private methods used by the implementations of the above functions*/
 protected:
+  /** create a transaction for setting aAttribute to aValue on aElement
+    */
   NS_IMETHOD CreateTxnForSetAttribute(nsIDOMElement *aElement, 
                                       const nsString& aAttribute, 
                                       const nsString& aValue,
                                       ChangeAttributeTxn ** aTxn);
 
+  /** create a transaction for removing aAttribute on aElement
+    */
   NS_IMETHOD CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
                                          const nsString& aAttribute,
                                          ChangeAttributeTxn ** aTxn);
 
+  /** create a transaction for creating a new child node of aParent of type aTag.
+    */
   NS_IMETHOD CreateTxnForCreateElement(const nsString& aTag,
                                        nsIDOMNode     *aParent,
                                        PRInt32         aPosition,
                                        CreateElementTxn ** aTxn);
 
+  /** create a transaction for inserting aNode as a child of aParent.
+    */
   NS_IMETHOD CreateTxnForInsertElement(nsIDOMNode * aNode,
                                        nsIDOMNode * aParent,
                                        PRInt32      aOffset,
                                        InsertElementTxn ** aTxn);
 
+  /** create a transaction for removing aElement from its parent.
+    */
   NS_IMETHOD CreateTxnForDeleteElement(nsIDOMNode * aElement,
                                        DeleteElementTxn ** aTxn);
 
+  /** create a transaction for inserting aStringToInsert into aTextNode
+    * if aTextNode is null, the string is inserted at the current selection.
+    */
   NS_IMETHOD CreateTxnForInsertText(const nsString & aStringToInsert,
+                                    nsIDOMCharacterData *aTextNode,
                                     InsertTextTxn ** aTxn);
+
+  /** insert aStringToInsert as the first text in the document
+    */
+  NS_IMETHOD DoInitialInsert(const nsString & aStringToInsert);
 
 
   NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
@@ -243,10 +263,6 @@ protected:
                            nsIDOMNode * aNodeToJoin,
                            nsIDOMNode * aParent,
                            PRBool       aNodeToKeepIsFirst);
-
-#if 0
-  NS_IMETHOD CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn);
-#endif
 
   NS_IMETHOD GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
