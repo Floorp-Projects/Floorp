@@ -20,7 +20,8 @@
 #define nsINntpUrl_h___
 
 #include "nscore.h"
-#include "nsIURL.h"
+#include "MailNewsTypes.h"
+#include "nsIMsgMailNewsUrl.h"
 
 #include "nsISupports.h"
 
@@ -43,7 +44,7 @@
 { 0x196b4b30, 0xe18c, 0x11d2,							\
     { 0x80, 0x6e, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
-class nsINntpUrl : public nsIURL
+class nsINntpUrl : public nsIMsgMailNewsUrl
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_INNTPURL_IID; return iid; }
@@ -66,15 +67,6 @@ public:
 
 	NS_IMETHOD SetNewsgroupList (nsINNTPNewsgroupList * xoverParser) = 0;
 	NS_IMETHOD GetNewsgroupList (nsINNTPNewsgroupList ** xoverParser) const = 0;
-
-	// mscott: this interface really belongs in nsIURL and I will move it there after talking
-	// it over with core netlib. This error message replaces the err_msg which was in the 
-	// old URL_struct. Also, it should probably be a nsString or a PRUnichar *. I don't know what
-	// XP_GetString is going to return in mozilla. 
-
-	NS_IMETHOD SetErrorMessage (char * errorMessage) = 0;
-	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const = 0;
 
     NS_IMETHOD SetMessageToPost (nsINNTPNewsgroupPost *post) = 0;
     NS_IMETHOD GetMessageToPost (nsINNTPNewsgroupPost **post) = 0;
