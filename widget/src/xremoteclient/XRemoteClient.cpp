@@ -38,6 +38,7 @@
 #include "prlog.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <strings.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
