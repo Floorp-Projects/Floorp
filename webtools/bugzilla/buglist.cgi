@@ -230,7 +230,7 @@ if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
 }
 
 if (defined $::FORM{'sql'}) {
-  $query .= "and (\n$::FORM('sql')\n)"
+  $query .= "and (\n$::FORM{'sql'}\n)"
 } else {
   my @legal_fields = ("bug_id", "product", "version", "rep_platform", "op_sys",
                       "bug_status", "resolution", "priority", "bug_severity",
