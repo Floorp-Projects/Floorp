@@ -176,7 +176,7 @@ nsINIParser::FindSection(char *aSection, char **aOutSecPtr)
         }
 
         // if section name matches we succeeded
-        if (strncmp(aSection, currChar, secClose - currChar) == 0)
+        if (strncmp(aSection, currChar, strlen(aSection)) == 0)
         {
             *aOutSecPtr = secClose + 1;
             mError = OK;
@@ -240,7 +240,7 @@ nsINIParser::FindKey(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize)
         }
 
         // if key matches we succeeded
-        if (strncmp(currLine, aKey, nextEq - currLine) == 0)
+        if (strncmp(currLine, aKey, strlen(aKey)) == 0)
         {
             // extract the value and return
             if (*aIOValSize < nextNL - nextEq)
