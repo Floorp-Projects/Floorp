@@ -74,7 +74,6 @@ OSHELPER	= nsOSHelperAppService.cpp
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 OSHELPER		+= nsInternetConfig.cpp \
 		nsInternetConfigService.cpp \
-		nsMacMIMEDataSource.cpp \
 			$(NULL)
 endif
 
