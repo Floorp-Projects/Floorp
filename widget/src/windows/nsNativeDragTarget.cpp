@@ -217,6 +217,11 @@ STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
   if (DRAG_DEBUG) printf("DragEnter\n");
 
 	if (mDragService) {
+
+    // tell the drag service about this drag (it may have come from an
+    // outside app).
+    mDragService->StartDragSession();
+
     // We have a new IDataObject, release the old one, if necessary and
     // keep a pointer to the new on
     NS_IF_RELEASE(mDataObj);
@@ -261,6 +266,10 @@ STDMETHODIMP nsNativeDragTarget::DragLeave() {
 
   if (DRAG_DEBUG) printf("DragLeave\n");
 	if (mDragService) {
+
+    // tell the drag service that we're done with it
+    mDragService->EndDragSession();
+
     // tell anyone interested to stop tracking drags, but only when we're
     // leaving a window, not a child widget
     nsCOMPtr<nsIWidget> parent ( dont_AddRef(mWindow->GetParent()) );
