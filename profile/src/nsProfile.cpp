@@ -443,6 +443,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     printf("Profile Manager : Command Line Options : Begin\n");
 #endif
  
+    rv = MigrateProfileInfo();
+    if (NS_FAILED(rv)) return rv;
+
     // check for command line arguments for profile manager
     //	
     // -P command line option works this way:
@@ -549,9 +552,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {		
         if (cmdResult) {
-            rv = MigrateProfileInfo();
-            if (NS_FAILED(rv)) return rv;
-
             PRInt32 num4xProfiles = 0;
             rv = Get4xProfileCount(&num4xProfiles);
             if (NS_FAILED(rv)) return rv;
@@ -1333,7 +1333,6 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 		gProfileDataAccess->GetValue(userProfileName.ToNewCString(), &aProfile);
 
-		PRInt32 length = PL_strlen(userProfileName.ToNewCString());
 		aProfile->NCProfileName = nsCRT::strdup(userProfileName.ToNewCString());
 
 		gProfileDataAccess->SetValue(aProfile);
@@ -1346,7 +1345,6 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 		gProfileDataAccess->GetValue(curProfile, &aProfile);
 
-		PRInt32 length = PL_strlen(userServiceDenial.ToNewCString());
 		aProfile->NCDeniedService = nsCRT::strdup(userServiceDenial.ToNewCString());
 
 		gProfileDataAccess->SetValue(aProfile);
