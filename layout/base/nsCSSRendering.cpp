@@ -77,11 +77,11 @@ void nsCSSRendering::FillPolygon (nsIRenderingContext& aContext,
 
     // sort the 4 points by x
     nsPoint points[4];
-    for (int i = 0; i < 4; i++) {
-      points[i] = aPoints[i];
+    for (PRInt32 pX = 0; pX < 4; pX++) {
+      points[pX] = aPoints[pX];
     }
-    for (i = 0; i < 3; i++) {
-      for (int j = i+1; j < 4; j++) { 
+    for (PRInt32 i = 0; i < 3; i++) {
+      for (PRInt32 j = i+1; j < 4; j++) { 
         if (points[j].x < points[i].x) {
           nsPoint swap = points[i];
           points[i] = points[j];
