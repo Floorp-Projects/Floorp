@@ -130,7 +130,7 @@ function checkURLSecurity(aURL)
                                       .getService(Components.interfaces.nsIStringBundleService);
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService);
-    var historyBundle = strBundleService.createBundle("chrome://communicator/locale/history/history.properties");
+    var historyBundle = strBundleService.createBundle("chrome://global/locale/history/history.properties");
     var brandBundle = strBundleService.createBundle("chrome://global/locale/brand.properties");      
     var brandStr = brandBundle.GetStringFromName("brandShortName");
     var errorStr = historyBundle.GetStringFromName("load-js-data-url-error");
