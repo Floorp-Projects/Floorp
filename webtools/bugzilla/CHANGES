@@ -9,6 +9,15 @@ query the CVS tree.  For example,
 
 will tell you what has been changed in the last week.
 
+
+
+1/15/99 The op_sys field can now be queried by (and more easily tweaked).
+To make this perform reasonably, it needs an index.  The following MySQL 
+command will create the necessary index:
+
+	alter table bugs add index (op_sys);
+
+
 12/2/98 The op_sys and rep_platform fields have been tweaked.  op_sys
 is now an enum, rather than having the legal values all hard-coded in
 perl.  rep_platform now no longer allows a value of "X-Windows".

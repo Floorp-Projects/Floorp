@@ -190,7 +190,7 @@ print "
   <TR>
     <td align=right><b><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></td>
     <TD>$platform_popup</TD>
-    <TD ALIGN=RIGHT><B>OS:</B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#op_sys\">OS:</A></B></TD>
     <TD>$opsys_popup</TD>
     <td align=right valign=top></td>
     <td rowspan=3></td>

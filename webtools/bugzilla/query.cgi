@@ -31,6 +31,7 @@ use vars @::legal_resolution,
   @::legal_bug_status,
   @::legal_priority,
   @::legal_resolution,
+  @::legal_opsys,
   @::legal_platform,
   @::legal_components,
   @::legal_versions,
@@ -125,6 +126,7 @@ print "
 <th align=left><A HREF=\"bug_status.html\">Status</a>:</th>
 <th align=left><A HREF=\"bug_status.html\">Resolution</a>:</th>
 <th align=left><A HREF=\"bug_status.html#rep_platform\">Platform</a>:</th>
+<th align=left><A HREF=\"bug_status.html#op_sys\">OpSys</a>:</th>
 <th align=left><A HREF=\"bug_status.html#priority\">Priority</a>:</th>
 <th align=left><A HREF=\"bug_status.html#severity\">Severity</a>:</th>
 </tr>
@@ -142,6 +144,11 @@ print "
 <td align=left valign=top>
 <SELECT NAME=\"rep_platform\" MULTIPLE SIZE=7>
 @{[make_options(\@::legal_platform, $default{'rep_platform'}, $type{'rep_platform'})]}
+</SELECT>
+</td>
+<td align=left valign=top>
+<SELECT NAME=\"op_sys\" MULTIPLE SIZE=7>
+@{[make_options(\@::legal_opsys, $default{'op_sys'}, $type{'op_sys'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
