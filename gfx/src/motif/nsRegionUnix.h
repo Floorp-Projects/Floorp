@@ -21,10 +21,22 @@
 
 #include "nsIRegion.h"
 
+#include "X11/Xlib.h"
+#include "X11/Xutil.h"
+
+enum nsRegionType {
+  eRegionType_empty,
+  eRegionType_rect,
+  eRegionType_poly,
+  eRegionType_complex,
+};
+
+
 class nsRegionUnix : public nsIRegion
 {
 public:
   nsRegionUnix();
+  ~nsRegionUnix();
 
   NS_DECL_ISUPPORTS
 
@@ -46,7 +58,10 @@ public:
   virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure);
 
 private:
-  ~nsRegionUnix();
+  Region    mRegion;
+  nsRegionType  mRegionType;
+
+
 };
 
 #endif  // nsRegionUnix_h___ 
