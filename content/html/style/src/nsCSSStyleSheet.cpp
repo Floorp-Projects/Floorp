@@ -3470,6 +3470,67 @@ DashMatchCompare(const nsAString& aAttributeValue,
   return result;
 }
 
+// This function is to be called once we have fetched a value for an attribute
+// whose namespace and name match those of aAttrSelector.  This function
+// performs comparisons on the value only, based on aAttrSelector->mFunction.
+static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
+                               const nsString& aValue)
+{
+  NS_PRECONDITION(aAttrSelector, "Must have an attribute selector");
+  const PRBool isCaseSensitive = aAttrSelector->mCaseSensitive;
+  switch (aAttrSelector->mFunction) {
+    case NS_ATTR_FUNC_EQUALS: 
+      if (isCaseSensitive) {
+        return aValue.Equals(aAttrSelector->mValue);
+      }
+      else {
+        return aValue.Equals(aAttrSelector->mValue,
+                             nsCaseInsensitiveStringComparator());
+      }
+    case NS_ATTR_FUNC_INCLUDES: 
+      return ValueIncludes(aValue, aAttrSelector->mValue, isCaseSensitive);
+    case NS_ATTR_FUNC_DASHMATCH: 
+      return DashMatchCompare(aValue, aAttrSelector->mValue, isCaseSensitive);
+    case NS_ATTR_FUNC_ENDSMATCH:
+      {
+        PRUint32 selLen = aAttrSelector->mValue.Length();
+        PRUint32 valLen = aValue.Length();
+        if (selLen > valLen) {
+          return PR_FALSE;
+        } else {
+          if (isCaseSensitive)
+            return Substring(aValue, valLen - selLen, selLen).
+                     Equals(aAttrSelector->mValue);
+          else
+            return Substring(aValue, valLen - selLen, selLen).
+                     Equals(aAttrSelector->mValue,
+                            nsCaseInsensitiveStringComparator());
+        }
+      }
+    case NS_ATTR_FUNC_BEGINSMATCH:
+      {
+        PRUint32 selLen = aAttrSelector->mValue.Length();
+        PRUint32 valLen = aValue.Length();
+        if (selLen > valLen) {
+          return PR_FALSE;
+        } else {
+          if (isCaseSensitive)
+            return Substring(aValue, 0, selLen).Equals(aAttrSelector->mValue);
+          else
+            return Substring(aValue, 0, selLen).
+                     Equals(aAttrSelector->mValue,
+                            nsCaseInsensitiveStringComparator());
+        }
+      }
+    case NS_ATTR_FUNC_CONTAINSMATCH:
+      return FindInReadable(aAttrSelector->mValue, aValue,
+                            nsCaseInsensitiveStringComparator());
+    default:
+      NS_NOTREACHED("Shouldn't be ending up here");
+      return PR_FALSE;
+  }
+}
+
 // NOTE:  The |aStateMask| code isn't going to work correctly anymore if
 // we start batching style changes, because if multiple states change in
 // separate notifications then we might determine the style is not
@@ -3715,7 +3776,63 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       nsAttrSelector* attr = aSelector->mAttrList;
       do {
         if (attr->mAttr == aAttribute) {
+          // XXX we should really have a namespace, not just an attr
+          // name, in HasAttributeDependentStyle!
           result = PR_TRUE;
+        }
+        else if (attr->mNameSpace == kNameSpaceID_Unknown) {
+          // Attr selector with a wildcard namespace.  We have to examine all
+          // the attributes on our content node....  This sort of selector is
+          // essentially a boolean OR, over all namespaces, of equivalent attr
+          // selectors with those namespaces.  So to evaluate whether it
+          // matches, evaluate for each namespace (the only namespaces that
+          // have a chance at matching, of course, are ones that the element
+          // actually has attributes in), short-circuiting if we ever match.
+          // Then deal with the localFalse/localTrue stuff.
+          PRInt32 attrCount;
+          data.mContent->GetAttrCount(attrCount);
+          PRInt32 nameSpaceID;
+          nsCOMPtr<nsIAtom> name;
+          nsCOMPtr<nsIAtom> prefix;
+          PRBool attrSelectorMatched = PR_FALSE;
+          for (PRInt32 i = 0; i < attrCount; ++i) {
+#ifdef DEBUG
+            nsresult attrState =
+#endif
+              data.mContent->GetAttrNameAt(i, &nameSpaceID,
+                                           getter_AddRefs(name),
+                                           getter_AddRefs(prefix));
+            NS_ASSERTION(NS_SUCCEEDED(attrState),
+                         "GetAttrCount lied or GetAttrNameAt failed");
+            if (name != attr->mAttr) {
+              continue;
+            }
+            if (attr->mFunction == NS_ATTR_FUNC_SET) {
+              attrSelectorMatched = PR_TRUE;
+            } else {
+              nsAutoString value;
+#ifdef DEBUG
+              attrState =
+#endif
+                data.mContent->GetAttr(nameSpaceID, name, value);
+              NS_ASSERTION(NS_SUCCEEDED(attrState) &&
+                           NS_CONTENT_ATTR_NOT_THERE != attrState,
+                           "GetAttrNameAt lied or GetAttr failed");
+              attrSelectorMatched = AttrMatchesValue(attr, value);
+            }
+
+            // At this point |attrSelectorMatched| has been set by us
+            // explicitly in this loop.  If it's PR_FALSE, we may still match
+            // -- the content may have another attribute with the same name but
+            // in a different namespace.  But if it's PR_TRUE, we are done (we
+            // can short-circuit the boolean OR described above).
+            if (attrSelectorMatched) {
+              break;
+            }
+          }
+          
+          // Now adjust for a possible negation
+          result = localTrue == attrSelectorMatched;
         }
         else if (!data.mContent->HasAttr(attr->mNameSpace, attr->mAttr)) {
           result = localFalse;
@@ -3729,57 +3846,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           NS_ASSERTION(NS_SUCCEEDED(attrState) &&
                        NS_CONTENT_ATTR_NOT_THERE != attrState,
                        "HasAttr lied or GetAttr failed");
-          PRBool isCaseSensitive = attr->mCaseSensitive;
-          switch (attr->mFunction) {
-            case NS_ATTR_FUNC_EQUALS: 
-              if (isCaseSensitive) {
-                result = localTrue == value.Equals(attr->mValue);
-              }
-              else {
-                result = localTrue == value.Equals(attr->mValue, nsCaseInsensitiveStringComparator());
-              }
-              break;
-            case NS_ATTR_FUNC_INCLUDES: 
-              result = localTrue == ValueIncludes(value, attr->mValue, isCaseSensitive);
-              break;
-            case NS_ATTR_FUNC_DASHMATCH: 
-              result = localTrue == DashMatchCompare(value, attr->mValue, isCaseSensitive);
-              break;
-            case NS_ATTR_FUNC_ENDSMATCH:
-              {
-                PRUint32 selLen = attr->mValue.Length();
-                PRUint32 valLen = value.Length();
-                if (selLen > valLen) {
-                  result = localFalse;
-                } else {
-                  if (isCaseSensitive)
-                    result = localTrue == Substring(value, valLen - selLen, selLen).Equals(attr->mValue, nsDefaultStringComparator());
-                  else
-                    result = localTrue == Substring(value, valLen - selLen, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator());
-                }
-              }
-              break;
-            case NS_ATTR_FUNC_BEGINSMATCH:
-              {
-                PRUint32 selLen = attr->mValue.Length();
-                PRUint32 valLen = value.Length();
-                if (selLen > valLen) {
-                  result = localFalse;
-                } else {
-                  if (isCaseSensitive)
-                    result = localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsDefaultStringComparator());
-                  else
-                    result = localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator());
-                }
-              }
-              break;
-            case NS_ATTR_FUNC_CONTAINSMATCH:
-              result = localTrue == (FindInReadable(attr->mValue, value, nsCaseInsensitiveStringComparator()));
-              break;
-          }
+          result = localTrue == AttrMatchesValue(attr, value);
         }
+        
         attr = attr->mNext;
-      } while (result && (nsnull != attr));
+      } while (attr && result);
     }
   }
   if (result && (aSelector->mIDList || aSelector->mClassList)) {
