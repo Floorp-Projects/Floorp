@@ -195,6 +195,13 @@ interface nsIXPCNativeCallContext : nsISupports
     * converted into an exception and thrown into JS as is the normal case.
     */
     attribute PRBool                                ExceptionWasThrown;
+    
+    /**
+    * Set this to indicate that the callee has directly set the return value
+    * (using RetValPtr and the JSAPI). If set then xpconnect will not attempt 
+    * to overwrite it with the converted retval from the C++ callee.
+    */
+    attribute PRBool                                ReturnValueWasSet;
 };
 
 /***************************************************************************/

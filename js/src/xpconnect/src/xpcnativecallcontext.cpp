@@ -155,4 +155,21 @@ nsXPCNativeCallContext::GetExceptionWasThrown(JSBool* threwp)
     return NS_OK;
 }        
 
+NS_IMETHODIMP 
+nsXPCNativeCallContext::SetReturnValueWasSet(JSBool retvalSet)
+{
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    mData->retvalSet = retvalSet;
+    return NS_OK;
+}        
 
+NS_IMETHODIMP 
+nsXPCNativeCallContext::GetReturnValueWasSet(JSBool* retvalSet)
+{
+    NS_ENSURE_ARG_POINTER(retvalSet);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    *retvalSet = mData->retvalSet;
+    return NS_OK;
+}        

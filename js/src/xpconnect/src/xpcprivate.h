@@ -88,6 +88,8 @@
 
 #include "nsIScriptError.h"
 
+//#define XPC_TOOLS_SUPPORT 1
+
 #ifdef XPC_TOOLS_SUPPORT
 #include "nsIXPCToolsProfiler.h"
 #include "nsIPref.h"
@@ -100,6 +102,7 @@
 #ifdef DEBUG_jband
 #define XPC_DUMP_AT_SHUTDOWN 1
 #define XPC_CHECK_WRAPPERS_AT_SHUTDOWN 1
+//#define DEBUG_stats_jband 1
 #endif
 
 /***************************************************************************/
@@ -292,14 +295,15 @@ struct NativeCallContextData
               jsval*                     aargv,
               jsval*                     aretvalp)
     {
-        this->callee  = acallee;
-        this->index   = aindex;
-        this->wrapper = awrapper;
-        this->cx      = acx;
-        this->argc    = aargc;
-        this->argv    = aargv;
-        this->retvalp = aretvalp;
-        this->threw   = JS_FALSE;
+        this->callee    = acallee;
+        this->index     = aindex;
+        this->wrapper   = awrapper;
+        this->cx        = acx;
+        this->argc      = aargc;
+        this->argv      = aargv;
+        this->retvalp   = aretvalp;
+        this->threw     = JS_FALSE;
+        this->retvalSet = JS_FALSE;
     }
 
     nsISupports*               callee;
@@ -311,6 +315,7 @@ struct NativeCallContextData
     jsval*                     argv;
     jsval*                     retvalp;
     JSBool                     threw;
+    JSBool                     retvalSet;
 };
 
 class nsXPCNativeCallContext : public nsIXPCNativeCallContext
