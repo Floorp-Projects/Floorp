@@ -3970,6 +3970,25 @@ nsPrintEngine::GetPresShellFor(nsIDocShell* aDocShell)
 }
 
 //---------------------------------------------------------------------
+void nsPrintEngine::SetIsPrinting(PRBool aIsPrinting)
+{ 
+  mIsDoingPrinting = aIsPrinting;
+  if (mDocViewerPrint) {
+    mDocViewerPrint->SetIsPrinting(aIsPrinting);
+  }
+}
+
+//---------------------------------------------------------------------
+void nsPrintEngine::SetIsPrintPreview(PRBool aIsPrintPreview) 
+{ 
+  mIsDoingPrintPreview = aIsPrintPreview; 
+
+  if (mDocViewerPrint) {
+    mDocViewerPrint->SetIsPrintPreview(aIsPrintPreview);
+  }
+}
+
+//---------------------------------------------------------------------
 void
 nsPrintEngine::CleanupDocTitleArray(PRUnichar**& aArray, PRInt32& aCount)
 {

@@ -264,9 +264,9 @@ public:
   void SetDialogParent(nsIDOMWindowInternal* aDOMWin) { mDialogParentWin = aDOMWin; }
 
   // These calls also update the DocViewer
-  void   SetIsPrinting(PRBool aIsPrinting)         { mIsDoingPrinting = aIsPrinting; }
+  void   SetIsPrinting(PRBool aIsPrinting);
   PRBool GetIsPrinting()                           { return mIsDoingPrinting; }
-  void   SetIsPrintPreview(PRBool aIsPrintPreview) { mIsDoingPrintPreview = aIsPrintPreview; }
+  void   SetIsPrintPreview(PRBool aIsPrintPreview);
   PRBool GetIsPrintPreview()                       { return mIsDoingPrintPreview; }
   void   SetIsCreatingPrintPreview(PRBool aIsCreatingPrintPreview) { mIsCreatingPrintPreview = aIsCreatingPrintPreview; }
   PRBool GetIsCreatingPrintPreview()               { return mIsCreatingPrintPreview; }

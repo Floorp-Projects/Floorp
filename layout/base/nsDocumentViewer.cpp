@@ -367,22 +367,7 @@ public:
   nsresult CallChildren(CallChildFunc aFunc, void* aClosure);
 
   // nsIDocumentViewerPrint Printing Methods
-  virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
-  virtual nsresult GetDocumentSelection(nsISelection **aSelection, nsIPresShell * aPresShell = nsnull);
-  virtual void IncrementDestroyRefCount();
-  virtual void ReturnToGalleyPresentation();
-  virtual void InstallNewPresentation();
-  virtual void OnDonePrinting();
-  virtual nsresult FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID);
-  virtual void GetPresShellAndRootContent(nsIWebShell * aWebShell, nsIPresShell** aPresShell, nsIContent** aContent);
-
-  // Printing Helpers
-  PRBool GetIsPrinting();
-  void   SetIsPrinting(PRBool aIsPrinting);
-  PRBool GetIsPrintPreview();
-  void   SetIsPrintPreview(PRBool aIsPrintPreview);
-  PRBool GetIsCreatingPrintPreview();
-  void   SetIsCreatingPrintPreview(PRBool aIsCreatingPrintPreview);
+  NS_DECL_NSIDOCUMENTVIEWERPRINT
 
   // Helpers (also used by nsPrintEngine)
   PRBool IsWebShellAFrameSet(nsIWebShell * aParent);
@@ -407,6 +392,14 @@ private:
   void PrepareToStartLoad(void);
 
   nsresult SyncParentSubDocMap();
+
+#ifdef NS_PRINTING
+  // Called when the DocViewer is notified that the state
+  // of Printing or PP has changed
+  void SetIsPrintingInDocShellTree(nsIDocShellTreeNode* aParentNode, 
+                                   PRBool               aIsPrintingOrPP, 
+                                   PRBool               aStartAtTop);
+#endif // NS_PRINTING
 
 protected:
   // IMPORTANT: The ownership implicit in the following member
@@ -3519,9 +3512,56 @@ DocumentViewerImpl::GetIsRangeSelection(PRBool *aIsRangeSelection)
 }
 
 
+#ifdef NS_PRINTING
 //----------------------------------------------------------------------------------
 // Printing/Print Preview Helpers
 //----------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------
+// Walks the document tree and tells each DocShell whether Printing/PP is happening
+void 
+DocumentViewerImpl::SetIsPrintingInDocShellTree(nsIDocShellTreeNode* aParentNode, 
+                                                PRBool               aIsPrintingOrPP, 
+                                                PRBool               aStartAtTop)
+{
+  NS_ASSERTION(aParentNode, "Parent can't be NULL!");
+
+  nsCOMPtr<nsIDocShellTreeItem> parentItem(do_QueryInterface(aParentNode));
+
+  // find top of "same parent" tree
+  if (aStartAtTop) {
+    while (parentItem) {
+      nsCOMPtr<nsIDocShellTreeItem> parent;
+      parentItem->GetSameTypeParent(getter_AddRefs(parent));
+      if (!parent) {
+        break;
+      }
+      parentItem = do_QueryInterface(parent);
+    }
+  }
+  NS_ASSERTION(parentItem, "parentItem can't be null");
+
+  // Check to see if the DocShell's ContentViewer is printing/PP
+  nsCOMPtr<nsIContentViewerContainer> viewerContainer(do_QueryInterface(parentItem));
+  if (viewerContainer) {
+    viewerContainer->SetIsPrinting(aIsPrintingOrPP);
+  }
+
+  // Traverse children to see if any of them are printing.
+  PRInt32 n;
+  aParentNode->GetChildCount(&n);
+  for (PRInt32 i=0; i < n; i++) {
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    aParentNode->GetChildAt(i, getter_AddRefs(child));
+    nsCOMPtr<nsIDocShellTreeNode> childAsNode(do_QueryInterface(child));
+    NS_ASSERTION(childAsNode, "child isn't nsIDocShellTreeNode");
+    if (childAsNode) {
+      SetIsPrintingInDocShellTree(childAsNode, aIsPrintingOrPP, PR_FALSE);
+    }
+  }
+
+}
+#endif // NS_PRINTING
 
 //------------------------------------------------------------
 PRBool
@@ -3536,17 +3576,24 @@ DocumentViewerImpl::GetIsPrinting()
 }
 
 //------------------------------------------------------------
+// Notification from the PrintEngine of the current Printing status
 void
 DocumentViewerImpl::SetIsPrinting(PRBool aIsPrinting)
 {
 #ifdef NS_PRINTING
-  if (mPrintEngine) {
-    mPrintEngine->SetIsPrinting(aIsPrinting);
+  // Set all the docShells in the docshell tree to be printing.
+  // that way if anyone of them tries to "navigate" it can't
+  if (mContainer) {
+    nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryInterface(mContainer));
+    NS_ASSERTION(docShellTreeNode, "mContainer has to be a nsIDocShellTreeNode");
+    SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrinting, PR_TRUE);
   }
 #endif
 }
 
 //------------------------------------------------------------
+// The PrintEngine holds the current value
+// this called from inside the DocViewer
 PRBool
 DocumentViewerImpl::GetIsPrintPreview()
 {
@@ -3559,17 +3606,24 @@ DocumentViewerImpl::GetIsPrintPreview()
 }
 
 //------------------------------------------------------------
+// Notification from the PrintEngine of the current PP status
 void
 DocumentViewerImpl::SetIsPrintPreview(PRBool aIsPrintPreview)
 {
 #ifdef NS_PRINTING
-  if (mPrintEngine) {
-    mPrintEngine->SetIsPrintPreview(aIsPrintPreview);
+  // Set all the docShells in the docshell tree to be printing.
+  // that way if anyone of them tries to "navigate" it can't
+  if (mContainer) {
+    nsCOMPtr<nsIDocShellTreeNode> docShellTreeNode(do_QueryInterface(mContainer));
+    NS_ASSERTION(docShellTreeNode, "mContainer has to be a nsIDocShellTreeNode");
+    SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrintPreview, PR_TRUE);
   }
 #endif
 }
 
 //------------------------------------------------------------
+// The PrintEngine holds the current value
+// this called from inside the DocViewer
 PRBool
 DocumentViewerImpl::GetIsCreatingPrintPreview()
 {
@@ -3579,17 +3633,6 @@ DocumentViewerImpl::GetIsCreatingPrintPreview()
   }
 #endif
   return PR_FALSE; 
-}
-
-//------------------------------------------------------------
-void
-DocumentViewerImpl::SetIsCreatingPrintPreview(PRBool aIsCreatingPrintPreview)
-{
-#ifdef NS_PRINTING
-  if (mPrintEngine) {
-    mPrintEngine->SetIsCreatingPrintPreview(aIsCreatingPrintPreview);
-  }
-#endif
 }
 
 //----------------------------------------------------------------------------------
