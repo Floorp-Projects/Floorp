@@ -104,7 +104,7 @@ NSGetFactory(nsISupports* serviceMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-	nsresult rv;
+	nsresult rv = NS_OK;
 
 	do {
 		if (nsnull == aFactory) {
