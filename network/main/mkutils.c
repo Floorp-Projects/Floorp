@@ -2967,8 +2967,11 @@ PUBLIC int
 NET_URL_Type (CONST char *URL)
 {
     /* Protect from SEGV */
-    if (!URL || (URL && *URL == '\0'))
+	/* Rhapsody compiler needed to break up this || statement into two if's. */
+	if (!URL)
         return(0);
+    if (URL && *URL == '\0')
+		return(0);
 
     switch(*URL) {
     case 'a':
