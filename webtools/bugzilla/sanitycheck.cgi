@@ -287,80 +287,59 @@ CrossCheck("products", "id",
 DateCheck("groups", "last_changed");
 DateCheck("profiles", "refreshed_when");
 
-
 ###########################################################################
-# Perform product specific field checks
+# Perform double field referential (cross) checks
 ###########################################################################
-
-Status("Checking version/products");
-
-SendSQL("select distinct product_id, version from bugs");
-while (@row = FetchSQLData()) {
-    my @copy = @row;
-    push(@checklist, \@copy);
-}
-
-foreach my $ref (@checklist) {
-    my ($product_id, $version) = (@$ref);
-    SendSQL("select count(*) from versions where product_id = $product_id and value = " . SqlQuote($version));
-    if (FetchOneColumn() != 1) {
-        Alert("Bug(s) found with invalid product ID/version: $product_id/$version");
+ 
+sub DoubleCrossCheck {
+    my $table = shift @_;
+    my $field1 = shift @_;
+    my $field2 = shift @_;
+ 
+    Status("Checking references to $table.$field1 / $table.$field2");
+ 
+    while (@_) {
+        my $ref = shift @_;
+        my ($refertable, $referfield1, $referfield2, $keyname) = @$ref;
+ 
+        Status("... from $refertable.$referfield1 / $refertable.$referfield2");
+        
+        SendSQL("SELECT DISTINCT $refertable.$referfield1, $refertable.$referfield2" . ($keyname ? ", $refertable.$keyname" : '') . " " .
+                "FROM   $refertable LEFT JOIN $table " .
+                "  ON   $refertable.$referfield1 = $table.$field1 " .
+                " AND   $refertable.$referfield2 = $table.$field2 " .
+                "WHERE  $table.$field1 IS NULL " .
+                "  AND  $table.$field2 IS NULL " .
+                "  AND  $refertable.$referfield1 IS NOT NULL " .
+                "  AND  $refertable.$referfield2 IS NOT NULL");
+ 
+        while (MoreSQLData()) {
+            my ($value1, $value2, $key) = FetchSQLData();
+ 
+            my $alert = "Bad values $value1, $value2 found in " .
+                "$refertable.$referfield1 / $refertable.$referfield2";
+            if ($keyname) {
+                if ($keyname eq 'bug_id') {
+                   $alert .= ' (bug ' . BugLink($key) . ')';
+                }
+                else {
+                    $alert .= " ($keyname == '$key')";
+                }
+            }
+            Alert($alert);
+        }
     }
 }
 
-# Adding check for Target Milestones / products - matthew@zeroknowledge.com
-Status("Checking milestone/products");
+DoubleCrossCheck("components", "product_id", "id",
+                 ["bugs", "product_id", "component_id", "bug_id"]);
 
-@checklist = ();
-SendSQL("select distinct product_id, target_milestone from bugs");
-while (@row = FetchSQLData()) {
-    my @copy = @row;
-    push(@checklist, \@copy);
-}
-
-foreach my $ref (@checklist) {
-    my ($product_id, $milestone) = (@$ref);
-    SendSQL("SELECT count(*) FROM milestones WHERE product_id = $product_id AND value = " . SqlQuote($milestone));
-    if(FetchOneColumn() != 1) {
-        Alert("Bug(s) found with invalid product ID/milestone: $product_id/$milestone");
-    }
-}
-
-
-Status("Checking default milestone/products");
-
-@checklist = ();
-SendSQL("select id, defaultmilestone from products");
-while (@row = FetchSQLData()) {
-    my @copy = @row;
-    push(@checklist, \@copy);
-}
-
-foreach my $ref (@checklist) {
-    my ($product_id, $milestone) = (@$ref);
-    SendSQL("SELECT count(*) FROM milestones WHERE product_id = $product_id AND value = " . SqlQuote($milestone));
-    if(FetchOneColumn() != 1) {
-        Alert("Product(s) found with invalid default milestone: $product_id/$milestone");
-    }
-}
-
-
-Status("Checking components/products");
-
-@checklist = ();
-SendSQL("select distinct product_id, component_id from bugs");
-while (@row = FetchSQLData()) {
-    my @copy = @row;
-    push(@checklist, \@copy);
-}
-
-foreach my $ref (@checklist) {
-    my ($product_id, $component_id) = (@$ref);
-    SendSQL("select count(*) from components where product_id = $product_id and id = $component_id");
-    if (FetchOneColumn() != 1) {
-        Alert(qq{Bug(s) found with invalid product/component ID: $product_id/$component_id});
-    }
-}
+DoubleCrossCheck("versions", "product_id", "value",
+                 ["bugs", "product_id", "version", "bug_id"]);
+ 
+DoubleCrossCheck("milestones", "product_id", "value",
+                 ["bugs", "product_id", "target_milestone", "bug_id"],
+                 ["products", "id", "defaultmilestone", "name"]);
 
 ###########################################################################
 # Perform login checks
