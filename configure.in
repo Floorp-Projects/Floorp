@@ -3091,7 +3091,7 @@ then
 fi
 
 MOZ_ARG_ENABLE_STRING(optimize,
-[  --enable-optimize(=val) Enable code optimizations level (val) ],
+[  --enable-optimize(=flag) Enable code optimizations (flag, ie. -O2) ],
     [ if test "$enableval" != "no"; then
 	MOZ_OPTIMIZE=1
 	if test -n "$enableval" && test "$enableval" != "yes"; then
