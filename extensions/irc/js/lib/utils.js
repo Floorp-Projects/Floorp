@@ -274,7 +274,7 @@ function ecmaUnescape(str)
 {
     function replaceEscapes(seq)
     {
-        var ary = seq.match(/([\da-f]{1,2})(.*)|u([\da-f]{1,4})/);
+        var ary = seq.match(/([\da-f]{1,2})(.*)|u([\da-f]{1,4})/i);
         if (!ary)
             return "<ERROR>";
 
