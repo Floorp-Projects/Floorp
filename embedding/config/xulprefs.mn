@@ -24,8 +24,6 @@ content/communicator/pref/pref-appearance.xul, comm/content/communicator/pref/pr
 content/communicator/pref/pref-applications.xul, comm/content/communicator/pref/pref-applications.xul
 content/communicator/pref/pref-applications.js, comm/content/communicator/pref/pref-applications.js
 content/communicator/pref/pref-applications-edit.xul, comm/content/communicator/pref/pref-applications-edit.xul
-content/communicator/pref/pref-applications-new.xul, comm/content/communicator/pref/pref-applications-new.xul
-content/communicator/pref/pref-applications-new.js, comm/content/communicator/pref/pref-applications-new.js
 content/communicator/pref/overrideHandler.js, comm/content/communicator/pref/overrideHandler.js
 content/communicator/pref/pref-cache.js, comm/content/communicator/pref/pref-cache.js
 content/communicator/pref/pref-cache.xul, comm/content/communicator/pref/pref-cache.xul

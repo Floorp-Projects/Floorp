@@ -15,8 +15,6 @@ comm.jar:
     content/communicator/pref/pref-applications.xul             (prefwindow/resources/content/pref-applications.xul)
     content/communicator/pref/pref-applications.js              (prefwindow/resources/content/pref-applications.js)
     content/communicator/pref/pref-applications-edit.xul        (prefwindow/resources/content/pref-applications-edit.xul)
-    content/communicator/pref/pref-applications-new.xul         (prefwindow/resources/content/pref-applications-new.xul)
-    content/communicator/pref/pref-applications-new.js          (prefwindow/resources/content/pref-applications-new.js)
     content/communicator/pref/overrideHandler.js                (prefwindow/resources/content/overrideHandler.js)
     content/communicator/pref/pref-cache.js                     (prefwindow/resources/content/pref-cache.js)
     content/communicator/pref/pref-cache.xul                    (prefwindow/resources/content/pref-cache.xul)
