@@ -58,10 +58,16 @@ void GetCacheSession(nsICacheSession **_retval)
 {
   if (!gSession) {
     nsCOMPtr<nsICacheService> cacheService(do_GetService("@mozilla.org/network/cache-service;1"));
-    NS_ASSERTION(cacheService, "Unable to get the cache service");
+    if (!cacheService) {
+      NS_WARNING("Unable to get the cache service");
+      return;
+    }
 
     cacheService->CreateSession("images", nsICache::NOT_STREAM_BASED, PR_FALSE, getter_AddRefs(gSession));
-    NS_ASSERTION(gSession, "Unable to create a cache session");
+    if (!gSession) {
+      NS_WARNING("Unable to create a cache session");
+      return;
+    }
   }
 
   *_retval = gSession;
@@ -83,6 +89,9 @@ PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescripto
 
   nsCOMPtr<nsICacheSession> ses;
   GetCacheSession(getter_AddRefs(ses));
+
+  if (!ses)
+    return PR_FALSE;
 
   nsXPIDLCString spec;
   aKey->GetSpec(getter_Copies(spec));
@@ -113,6 +122,9 @@ PRBool ImageCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescrip
 
   nsCOMPtr<nsICacheSession> ses;
   GetCacheSession(getter_AddRefs(ses));
+
+  if (!ses)
+    return PR_FALSE;
 
   nsXPIDLCString spec;
   aKey->GetSpec(getter_Copies(spec));
@@ -147,6 +159,9 @@ PRBool ImageCache::Remove(nsIURI *aKey)
 
   nsCOMPtr<nsICacheSession> ses;
   GetCacheSession(getter_AddRefs(ses));
+
+  if (!ses)
+    return PR_FALSE;
 
   nsXPIDLCString spec;
   aKey->GetSpec(getter_Copies(spec));
