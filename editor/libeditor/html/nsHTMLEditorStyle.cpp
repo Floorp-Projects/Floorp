@@ -36,40 +36,25 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsICaret.h"
-
-#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
 #include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
-
-#include "nsEditorEventListeners.h"
-
-#include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
-#include "nsIDocument.h"
-#include "nsIDOMEventReceiver.h" 
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
-#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
-
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIDocumentObserver.h"
-#include "nsIDocumentStateListener.h"
-
 #include "TypeInState.h"
 
 #include "nsIEnumerator.h"
@@ -77,36 +62,6 @@
 #include "nsIContentIterator.h"
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"
-#include "nsIDOMRange.h"
-#include "nsIDOMNSRange.h"
-#include "nsISupportsArray.h"
-#include "nsVoidArray.h"
-#include "nsFileSpec.h"
-#include "nsIFile.h"
-#include "nsIURL.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsWidgetsCID.h"
-#include "nsIDocumentEncoder.h"
-#include "nsIDOMDocumentFragment.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
-#include "nsIParser.h"
-#include "nsParserCIID.h"
-#include "nsIImage.h"
-#include "nsAOLCiter.h"
-#include "nsInternetCiter.h"
-#include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
-#include "InsertTextTxn.h"
-#include "ChangeCSSInlineStyleTxn.h"
-
-// Transactionas
-#include "PlaceholderTxn.h"
-#include "nsStyleSheetTxns.h"
-
-// Misc
-#include "nsEditorUtils.h"
 
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
@@ -384,8 +339,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   }
   
   // reparent the node inside inline node with appropriate {attribute,value}
-  res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
-  return res;
+  return SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
 }
 
 
@@ -406,13 +360,16 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   PRBool useCSS;
   GetIsCSSEnabled(&useCSS);
 
-  if (useCSS) {
+  if (useCSS)
+  {
     // we are in CSS mode
-    if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
+    if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute))
+    {
       // the HTML style defined by aProperty/aAttribute has a CSS equivalence
       // in this implementation for the node aNode
       nsCOMPtr<nsIDOMNode> tmp = aNode;
-      if (IsTextNode(tmp)) {
+      if (IsTextNode(tmp))
+      {
         // we are working on a text node and need to create a span container
         // that will carry the styles
         InsertContainerAbove( aNode, 
@@ -431,6 +388,29 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
       // then we add the css styles corresponding to the HTML style request
       res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count, PR_FALSE);
       if (NS_FAILED(res)) return res;
+
+      nsCOMPtr<nsIDOMNode> nextSibling, previousSibling;
+      GetNextHTMLSibling(tmp, address_of(nextSibling));
+      GetPriorHTMLSibling(tmp, address_of(previousSibling));
+      if (nextSibling || previousSibling)
+      {
+        nsCOMPtr<nsIDOMNode> mergeParent;
+        res = tmp->GetParentNode(getter_AddRefs(mergeParent));
+        if (NS_FAILED(res)) return res;
+        if (previousSibling &&
+            nsTextEditUtils::NodeIsType(previousSibling, NS_LITERAL_STRING("span")) &&
+            NodesSameType(tmp, previousSibling))
+        {
+          res = JoinNodes(previousSibling, tmp, mergeParent);
+          if (NS_FAILED(res)) return res;
+        }
+        if (nextSibling &&
+            nsTextEditUtils::NodeIsType(nextSibling, NS_LITERAL_STRING("span")) &&
+            NodesSameType(tmp, nextSibling))
+        {
+          res = JoinNodes(tmp, nextSibling, mergeParent);
+        }
+      }
       return res;
     }
   }
