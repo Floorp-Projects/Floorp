@@ -37,7 +37,6 @@
 #include "nslayout.h" 
 #include "nsIDOMEvent.h"
 
-#include "nsForwardReference.h"
 #include "nsHTMLValue.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
@@ -325,7 +324,6 @@ protected:
     static nsrefcnt             gRefCnt;
     static nsIRDFService*       gRDFService;
     static nsINameSpaceManager* gNameSpaceManager;
-    static nsIXULContentUtils*  gXULUtils;
     static PRInt32              kNameSpaceID_RDF;
     static PRInt32              kNameSpaceID_XUL;
 

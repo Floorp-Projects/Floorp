@@ -44,7 +44,7 @@
 #include "nsIXULDocument.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
-#include "nsRDFCID.h"
+#include "nsContentCID.h"
 #include "nsXPIDLString.h"
 #include "prlog.h"
 

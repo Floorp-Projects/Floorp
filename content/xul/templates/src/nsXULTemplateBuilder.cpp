@@ -90,10 +90,10 @@
 #include "nsIXPConnect.h"
 #include "nsIXULSortService.h"
 #include "nsINodeInfo.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsRDFCID.h"
 #include "nsIXULContent.h"
-#include "nsIXULContentUtils.h"
+#include "nsXULContentUtils.h"
 #include "nsRDFSort.h"
 #include "nsRuleNetwork.h"
 #include "nsString.h"
@@ -106,7 +106,6 @@
 #include "jscntxt.h"
 #include "prlog.h"
 #include "rdf.h"
-#include "rdfutil.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "pldhash.h"
@@ -129,7 +128,6 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
-static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 
 //----------------------------------------------------------------------
@@ -2740,6 +2738,9 @@ public:
     nsresult
     SetContainerAttrs(nsIContent *aElement, const Match* aMatch);
 
+    static nsresult
+    NewRDFContainer(nsIRDFContainer** aResult);
+
 #ifdef PR_LOGGING
     nsresult
     Log(const char* aOperation,
@@ -2789,7 +2790,6 @@ protected:
     static nsINameSpaceManager*   gNameSpaceManager;
     static nsIElementFactory*     gHTMLElementFactory;
     static nsIElementFactory*  gXMLElementFactory;
-    static nsIXULContentUtils*    gXULUtils;
 
     static PRInt32  kNameSpaceID_RDF;
     static PRInt32  kNameSpaceID_XUL;
@@ -2985,7 +2985,6 @@ nsIRDFService*       nsXULTemplateBuilder::gRDFService;
 nsINameSpaceManager* nsXULTemplateBuilder::gNameSpaceManager;
 nsIElementFactory*   nsXULTemplateBuilder::gHTMLElementFactory;
 nsIElementFactory*   nsXULTemplateBuilder::gXMLElementFactory;
-nsIXULContentUtils*  nsXULTemplateBuilder::gXULUtils;
 
 nsIRDFResource* nsXULTemplateBuilder::kNC_Title;
 nsIRDFResource* nsXULTemplateBuilder::kNC_child;
@@ -3427,7 +3426,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
             if (NS_FAILED(rv)) return rv;
 
             if (isRDFContainer) {
-                rv = NS_NewRDFContainer(getter_AddRefs(rdfcontainer));
+                rv = nsXULTemplateBuilder::NewRDFContainer(getter_AddRefs(rdfcontainer));
                 if (NS_FAILED(rv)) return rv;
 
                 rv = rdfcontainer->Init(mDataSource, VALUE_TO_IRDFRESOURCE(containerValue));
@@ -3903,7 +3902,7 @@ RDFContainerInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiat
             if (isRDFContainer) {
                 // It's an RDF container. Use the container utilities
                 // to deduce what's in it.
-                rv = NS_NewRDFContainer(getter_AddRefs(rdfcontainer));
+                rv = nsXULTemplateBuilder::NewRDFContainer(getter_AddRefs(rdfcontainer));
                 if (NS_FAILED(rv)) return rv;
 
                 rv = rdfcontainer->Init(mDataSource, VALUE_TO_IRDFRESOURCE(value));
@@ -4191,13 +4190,6 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
         NS_RELEASE(gNameSpaceManager);
         NS_IF_RELEASE(gHTMLElementFactory);
         NS_IF_RELEASE(gXMLElementFactory);
-
-        if (gXULUtils) {
-            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
-            gXULUtils = nsnull;
-        }
-
-        nsXULAtoms::Release();
     }
 }
 
@@ -4206,8 +4198,6 @@ nsresult
 nsXULTemplateBuilder::Init()
 {
     if (gRefCnt++ == 0) {
-        nsXULAtoms::AddRef();
-
         kTrueStr = new nsString(NS_LITERAL_STRING("true"));
         if (!kTrueStr) return NS_ERROR_OUT_OF_MEMORY;
         kFalseStr = new nsString(NS_LITERAL_STRING("false"));
@@ -4274,11 +4264,6 @@ nsXULTemplateBuilder::Init()
                                                 nsnull,
                                                 NS_GET_IID(nsIElementFactory),
                                                 (void**) &gXMLElementFactory);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = nsServiceManager::GetService(kXULContentUtilsCID,
-                                          NS_GET_IID(nsIXULContentUtils),
-                                          (nsISupports**) &gXULUtils);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -4422,7 +4407,7 @@ nsXULTemplateBuilder::OpenContainer(nsIContent* aElement)
         return NS_OK;
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
+    rv = nsXULContentUtils::GetElementRefResource(aElement, getter_AddRefs(resource));
 
     // If it has no resource, there's nothing that we need to be
     // concerned about here.
@@ -4488,7 +4473,7 @@ nsXULTemplateBuilder::CloseContainer(nsIContent* aElement)
 
         // Find the <treechildren> beneath the <treeitem>...
         nsCOMPtr<nsIContent> insertionpoint;
-        rv = gXULUtils->FindChildByTag(aElement, kNameSpaceID_XUL, nsXULAtoms::treechildren, getter_AddRefs(insertionpoint));
+        rv = nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL, nsXULAtoms::treechildren, getter_AddRefs(insertionpoint));
         if (NS_FAILED(rv)) return rv;
 
         if (insertionpoint) {
@@ -5223,7 +5208,7 @@ nsXULTemplateBuilder::SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis,
                 // substring which is the end of the string,
                 // turning this into an in-place append.
                 nsAutoString temp;
-                gXULUtils->GetTextForNode(node, temp);
+                nsXULContentUtils::GetTextForNode(node, temp);
                 c->result += temp;
             }
         }
@@ -5799,7 +5784,7 @@ nsXULTemplateBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
         ni->GetNamespaceID(nameSpaceID);
 
         nsCOMPtr<nsIRDFResource> property;
-        rv = gXULUtils->GetResource(nameSpaceID, tag, getter_AddRefs(property));
+        rv = nsXULContentUtils::GetResource(nameSpaceID, tag, getter_AddRefs(property));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFNode> target;
@@ -5933,6 +5918,7 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
 
             nsCOMPtr<nsIContent> templateNode;
             mTemplateMap.GetTemplateFor(element, getter_AddRefs(templateNode));
+
             if (! templateNode)
                 return NS_ERROR_UNEXPECTED;
 
@@ -6095,7 +6081,7 @@ nsXULTemplateBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPar
         // <template> or <rule> element in the simple syntax, or the
         // <action> element in the extended syntax.
         tmpl->GetTag(*getter_AddRefs(tag));
-    } while (tag.get() != nsXULAtoms::Template &&
+    } while (tag.get() != nsXULAtoms::templateAtom &&
              tag.get() != nsXULAtoms::rule &&
              tag.get() != nsXULAtoms::action);
 
@@ -6222,8 +6208,8 @@ nsXULTemplateBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
         CreateTemplateContents(aElement, tmpl, aContainer, aNewIndexInContainer);
 
     nsCOMPtr<nsIRDFResource> resource;
-    gXULUtils->GetElementRefResource(aElement, getter_AddRefs(resource));
-    if (resource) {
+    nsresult rv = nsXULContentUtils::GetElementRefResource(aElement, getter_AddRefs(resource));
+    if (NS_SUCCEEDED(rv)) {
         // The element has a resource; that means that it corresponds
         // to something in the graph, so we need to go to the graph to
         // create its contents.
@@ -6382,7 +6368,7 @@ nsXULTemplateBuilder::CreateTemplateContents(nsIContent* aElement,
 
     nsCOMPtr<nsIContent> element = aElement;
     while (element) {
-        rv = gXULUtils->GetElementRefResource(element, getter_AddRefs(resource));
+        rv = nsXULContentUtils::GetElementRefResource(element, getter_AddRefs(resource));
         if (NS_SUCCEEDED(rv)) break;
 
         nsCOMPtr<nsIContent> parent;
@@ -6412,7 +6398,7 @@ nsXULTemplateBuilder::EnsureElementHasGenericChild(nsIContent* parent,
 {
     nsresult rv;
 
-    rv = gXULUtils->FindChildByTag(parent, nameSpaceID, tag, result);
+    rv = nsXULContentUtils::FindChildByTag(parent, nameSpaceID, tag, result);
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_RDF_NO_VALUE) {
@@ -6564,7 +6550,7 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
             // to even check this subtree.
             nsCOMPtr<nsIAtom> tag;
             element->GetTag(*getter_AddRefs(tag));
-            if (tag.get() == nsXULAtoms::Template)
+            if (tag.get() == nsXULAtoms::templateAtom)
                 continue;
 
             // If the element is in the template map, then we
@@ -6573,7 +6559,7 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
             mTemplateMap.GetTemplateFor(child, getter_AddRefs(tmpl));
 
             if (! tmpl) {
-                // Not in the template map, so this must not have been
+                // No 'template' attribute, so this must not have been
                 // generated. We'll need to examine its kids.
                 ungenerated.AppendElement(child);
                 continue;
@@ -6873,7 +6859,7 @@ nsXULTemplateBuilder::Log(const char* aOperation,
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString targetStr;
-        rv = gXULUtils->GetTextForNode(aTarget, targetStr);
+        rv = nsXULContentUtils::GetTextForNode(aTarget, targetStr);
         if (NS_FAILED(rv)) return rv;
 
         nsCAutoString targetstrC;
@@ -6923,7 +6909,7 @@ nsXULTemplateBuilder::ContentTestNode::FilterInstantiations(InstantiationSet& aI
 
             if (consistent) {
                 nsCOMPtr<nsIRDFResource> resource;
-                gXULUtils->GetElementRefResource(content, getter_AddRefs(resource));
+                nsXULContentUtils::GetElementRefResource(content, getter_AddRefs(resource));
             
                 if (resource.get() != VALUE_TO_IRDFRESOURCE(idValue))
                     consistent = PR_FALSE;
@@ -6959,7 +6945,7 @@ nsXULTemplateBuilder::ContentTestNode::FilterInstantiations(InstantiationSet& aI
 
             if (consistent) {
                 nsCOMPtr<nsIRDFResource> resource;
-                gXULUtils->GetElementRefResource(content, getter_AddRefs(resource));
+                nsXULContentUtils::GetElementRefResource(content, getter_AddRefs(resource));
                 if (NS_FAILED(rv)) return rv;
 
                 if (resource) {
@@ -7224,7 +7210,7 @@ nsXULTemplateBuilder::CompileRules()
     //
 
     nsAutoString templateID;
-    rv = mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::Template, templateID);
+    rv = mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::templateAtom, templateID);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIContent> tmpl;
@@ -7333,7 +7319,7 @@ nsXULTemplateBuilder::CompileRules()
                 // If the <rule> has a <conditions> element, then
                 // compile it using the extended syntax.
                 nsCOMPtr<nsIContent> conditions;
-                rv = gXULUtils->FindChildByTag(rule, kNameSpaceID_XUL, nsXULAtoms::conditions,
+                rv = nsXULContentUtils::FindChildByTag(rule, kNameSpaceID_XUL, nsXULAtoms::conditions,
                                                getter_AddRefs(conditions));
 
                 if (NS_FAILED(rv)) return rv;
@@ -7476,7 +7462,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
         else {
             // It's a simple RDF test
             nsCOMPtr<nsIRDFResource> property;
-            rv = gXULUtils->GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
+            rv = nsXULContentUtils::GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
             if (NS_FAILED(rv)) return rv;
 
             // XXXwaterson this is so manky
@@ -7628,7 +7614,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
     nsresult rv;
 
     nsCOMPtr<nsIContent> conditions;
-    gXULUtils->FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::conditions,
+    nsXULContentUtils::FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::conditions,
                               getter_AddRefs(conditions));
 
     if (! conditions) {
@@ -7639,7 +7625,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
     }
 
     nsCOMPtr<nsIContent> action;
-    gXULUtils->FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::action,
+    nsXULContentUtils::FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::action,
                               getter_AddRefs(action));
 
     if (! action) {
@@ -7746,7 +7732,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
     
     // If we've got bindings, add 'em.
     nsCOMPtr<nsIContent> bindings;
-    gXULUtils->FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::bindings,
+    nsXULContentUtils::FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::bindings,
                               getter_AddRefs(bindings));
 
     if (bindings) {
@@ -8191,4 +8177,20 @@ nsXULTemplateBuilder::CanSetProperty(const nsIID * iid, const PRUnichar *propert
 {
   *_retval = PL_strdup("AllAccess");
   return NS_OK;
+}
+
+
+nsresult
+nsXULTemplateBuilder::NewRDFContainer(nsIRDFContainer** aResult)
+{
+    nsresult rv;
+
+    // XXX should cache the factory
+    nsCOMPtr<nsIRDFContainer> result =
+        do_CreateInstance("@mozilla.org/rdf/container;1", &rv);
+
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ADDREF(*aResult = result);
+    return NS_OK;
 }

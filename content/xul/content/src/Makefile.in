@@ -30,7 +30,16 @@ MODULE		= layout
 LIBRARY_NAME	= gkconxulcon_s
 REQUIRES	= xpcom widget htmlparser necko dom webshell js
 
-CPPSRCS		= nsXULAtoms.cpp nsAnonymousElement.cpp
+CPPSRCS		= \
+		nsAnonymousElement.cpp \
+		nsRDFDOMNodeList.cpp \
+		nsXULAtoms.cpp \
+		nsXULAttributeValue.cpp \
+		nsXULAttributes.cpp \
+		nsXULElement.cpp \
+		nsXULPopupListener.cpp \
+		nsXULTreeElement.cpp \
+		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
@@ -41,6 +50,8 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+= -D_IMPL_NS_HTML
 
 INCLUDES	+= \
+	-I$(srcdir) \
+	-I$(srcdir)/../../document/src \
 	-I$(srcdir)/../../../xml/content/src \
 	-I$(srcdir)/../../../base/src \
 	$(NULL)

@@ -39,13 +39,9 @@ CPP_OBJS=\
 LLIBS=\
  $(DIST)\lib\rdfbase_s.lib       \
  $(DIST)\lib\rdfutil_s.lib       \
- $(DIST)\lib\rdfcontent_s.lib    \
  $(DIST)\lib\rdfdatasource_s.lib \
  $(DIST)\lib\xpcom.lib         \
- $(DIST)\lib\gkgfxwin.lib    \
  $(DIST)\lib\timer_s.lib \
- $(DIST)\lib\jsdom.lib           \
- $(DIST)\lib\js3250.lib          \
  $(LIBNSPR)  
 
 # XXX Note dependencies on implementation dirs for factory methods.

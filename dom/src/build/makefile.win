@@ -52,6 +52,9 @@ LLIBS=							\
 	$(DIST)\lib\jsdomrange_s.lib			\
 	$(DIST)\lib\jsdomhtml_s.lib			\
 	$(DIST)\lib\jsdomcss_s.lib			\
+!ifdef MOZ_XUL
+        $(DIST)\lib\jsdomxul_s.lib                      \
+!endif
 	$(DIST)\lib\gkgfxwin.lib			\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom.lib				\

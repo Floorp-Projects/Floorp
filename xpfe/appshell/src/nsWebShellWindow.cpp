@@ -25,6 +25,7 @@
 #include "nsWebShellWindow.h"
 
 #include "nsLayoutCID.h"
+#include "nsContentCID.h"
 #include "nsIWeakReference.h"
 #include "nsIDocumentLoader.h"
 

@@ -1039,7 +1039,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 
   // Flush the style sheet cache completely.
   // XXX For now flush everything.  need a better call that only flushes style sheets.
-  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "@mozilla.org/rdf/xul-prototype-cache;1", &rv);
+  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "@mozilla.org/xul/xul-prototype-cache;1", &rv);
   if (NS_SUCCEEDED(rv) && xulCache) {
     xulCache->Flush();
   }
@@ -2181,7 +2181,7 @@ nsChromeRegistry::ReloadChrome()
 
   // Flush the cache completely.
   nsCOMPtr<nsIXULPrototypeCache> xulCache = 
-    do_GetService("@mozilla.org/rdf/xul-prototype-cache;1", &rv);
+    do_GetService("@mozilla.org/xul/xul-prototype-cache;1", &rv);
   if (NS_SUCCEEDED(rv) && xulCache) {
     rv = xulCache->Flush();
     if (NS_FAILED(rv)) return rv;

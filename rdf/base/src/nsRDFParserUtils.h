@@ -47,10 +47,6 @@ public:
     GetQuotedAttributeValue(const nsString& aSource,
                             const nsString& aAttribute,
                             nsString& aValue);
-
-
-    static PRBool
-    IsJavaScriptLanguage(const nsString& aName, const char* *aVersion);
 };
 
 

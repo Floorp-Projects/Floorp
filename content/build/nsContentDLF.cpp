@@ -37,7 +37,6 @@
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
 #include "nsIXULContentSink.h"
-#include "nsIStreamLoadableDocument.h"
 #include "nsIDocStreamLoaderFactory.h"
 
 #define VIEW_SOURCE_HTML
@@ -488,6 +487,7 @@ nsContentDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
 {
   nsresult status = NS_OK;
 
+#if 0 // XXX dead code; remove
   do
   {
     nsCOMPtr<nsIDocument> doc;
@@ -508,6 +508,7 @@ nsContentDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
     status = loader->LoadFromStream(aXULStream, aContainer, aCommand);
   }
   while (0);
+#endif
 
   return status;
 }

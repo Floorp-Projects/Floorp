@@ -22,7 +22,7 @@
 DEPTH=..\..\..
 
 
-DIRS=coreDom html events css base range
+DIRS=coreDom html events css base range xul
 
 include <$(DEPTH)\config\rules.mak>
 

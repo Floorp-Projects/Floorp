@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= rdf
 LIBRARY_NAME	= rdf
 IS_COMPONENT	= 1
-EXTRA_DSO_LIBS	= jsdom
+EXTRA_DSO_LIBS	= 
 REQUIRES	= xpcom layout htmlparser
 
 CPPSRCS		= \
@@ -43,7 +43,6 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/librdfbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/librdfcontent_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/librdfdatasource_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
 		$(NULL)
@@ -51,7 +50,6 @@ SHARED_LIBRARY_LIBS = \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \
-		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

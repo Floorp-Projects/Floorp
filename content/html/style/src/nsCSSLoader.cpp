@@ -53,7 +53,6 @@
 #include "nsIScriptSecurityManager.h"
 
 #ifdef INCLUDE_XUL
-#include "nsIXULContentUtils.h"
 #include "nsIXULPrototypeCache.h"
 #endif
 
@@ -770,10 +769,11 @@ CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
 {
 #ifdef INCLUDE_XUL
   if (IsChromeURI(aLoadData->mURL)) {
-    nsCOMPtr<nsIXULContentUtils> utils(do_GetService("@mozilla.org/rdf/xul-content-utils;1"));
-    if (utils && utils->UseXULCache()) {
-      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/rdf/xul-prototype-cache;1"));
-      if (cache) {
+    nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
+    if (cache) {
+      PRBool enabled;
+      cache->GetEnabled(&enabled);
+      if (enabled) {
         nsCOMPtr<nsICSSStyleSheet> sheet;
         cache->GetStyleSheet(aLoadData->mURL, getter_AddRefs(sheet));
         if (!sheet) {
@@ -1344,10 +1344,11 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
 #ifdef INCLUDE_XUL
     if (!sheet && IsChromeURI(aURL)) {
-      nsCOMPtr<nsIXULContentUtils> utils(do_GetService("@mozilla.org/rdf/xul-content-utils;1"));
-      if (utils && utils->UseXULCache()) {
-        nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/rdf/xul-prototype-cache;1"));
-        if (cache) {
+      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
+      if (cache) {
+        PRBool enabled;
+        cache->GetEnabled(&enabled);
+        if (enabled) {
           nsCOMPtr<nsICSSStyleSheet> cachedSheet;
           cache->GetStyleSheet(aURL, getter_AddRefs(cachedSheet));
           if (cachedSheet)
@@ -1420,10 +1421,11 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
 #ifdef INCLUDE_XUL
     if (!sheet && IsChromeURI(aURL)) {
-      nsCOMPtr<nsIXULContentUtils> utils(do_GetService("@mozilla.org/rdf/xul-content-utils;1"));
-      if (utils && utils->UseXULCache()) {
-        nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/rdf/xul-prototype-cache;1"));
-        if (cache) {
+      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
+      if (cache) {
+        PRBool enabled;
+        cache->GetEnabled(&enabled);
+        if (enabled) {
           nsCOMPtr<nsICSSStyleSheet> cachedSheet;
           cache->GetStyleSheet(aURL, getter_AddRefs(cachedSheet));
           if (cachedSheet)

@@ -22,5 +22,6 @@
 
 /* Defining the following causes NS_DOM to be defined as NS_EXPORT. */
 #define _IMPL_NS_DOM
+#define MOZ_XUL 1
 
 #include "MacSharedPrefix.h"

@@ -73,7 +73,7 @@ function doSort(sortColName, naturalOrderResource)
     }
 
     try {
-        var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
+        var isupports = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
         var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);   
     }
     catch(ex) {
@@ -121,7 +121,7 @@ function SetSortColumn(column_name)
 // actually sort given the column and direction
 function sort_column(column, direction)
 {
-    var isupports_uri = "@mozilla.org/rdf/xul-sort-service;1";
+    var isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
     var isupports = Components.classes[isupports_uri].getService();
     if (!isupports) return false;
     var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);

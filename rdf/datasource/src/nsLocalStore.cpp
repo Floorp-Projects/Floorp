@@ -57,8 +57,8 @@ protected:
     virtual ~LocalStoreImpl();
     nsresult Init();
 
-    friend nsresult
-    NS_NewLocalStore(nsILocalStore** aResult);
+    friend NS_IMETHODIMP
+    NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     nsCOMPtr<nsISupportsArray> mObservers;
 
@@ -219,9 +219,13 @@ LocalStoreImpl::~LocalStoreImpl(void)
 }
 
 
-nsresult
-NS_NewLocalStore(nsILocalStore** aResult)
+NS_IMETHODIMP
+NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
+    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
@@ -230,29 +234,26 @@ NS_NewLocalStore(nsILocalStore** aResult)
     if (! impl)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    NS_ADDREF(impl);
+
     nsresult rv;
     rv = impl->Init();
-    if (NS_FAILED(rv)) {
-        delete impl;
-        return rv;
-    }
+    if (NS_SUCCEEDED(rv)) {
+        // We need to read this synchronously.
+        rv = impl->Refresh(PR_TRUE);
 
-    // We need to read this synchronously.
-    rv = impl->Refresh(PR_TRUE);
-
-    if (NS_FAILED(rv)) {
-
+        if (NS_SUCCEEDED(rv)) {
+            rv = impl->QueryInterface(aIID, aResult);
+        }
+        else {
 #ifdef	DEBUG
 	printf("\n\nRDF: NS_NewLocalStore::Refresh() failed.\n\n");
 #endif
-
-        delete impl;
-        return rv;
+        }
     }
 
-    NS_ADDREF(impl);
-    *aResult = impl;
-    return NS_OK;
+    NS_RELEASE(impl);
+    return rv;
 }
 
 

@@ -211,9 +211,6 @@ sub InstallNonChromeResources()
     my($rdf_dir) = "$resource_dir" . "rdf:";
     BuildFolderResourceAliases(":mozilla:rdf:resources:",                               "$rdf_dir");
 
-    my($domds_dir) = "$samples_dir" . "rdf:";
-    InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",                    "$domds_dir");
-
     # Search - make copies (not aliases) of the various search files
     my($searchPlugins) = "${dist_dir}Search Plugins";
     print("--- Starting Search Plugins copying: $searchPlugins\n");
@@ -302,7 +299,6 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
-    CreateJarFromManifest(":mozilla:rdf:tests:domds:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:blue:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:communicator:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:communicator:search:mac:jar.mn", $chrome_dir, \%jars);
@@ -618,6 +614,11 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:content:xml:content:public:MANIFEST",            "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xml:document:public:MANIFEST",           "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xsl:document:src:MANIFEST_IDL",          "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:content:xul:content:public:MANIFEST",            "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:xul:document:public:MANIFEST",           "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:xul:document:public:MANIFEST_IDL",       "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:content:xul:templates:public:MANIFEST",          "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:xul:templates:public:MANIFEST_IDL",      "$distdirectory:idl:");
 
     #LAYOUT
     InstallFromManifest(":mozilla:layout:build:MANIFEST",                          "$distdirectory:layout:");
@@ -652,6 +653,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:dom:public:range:MANIFEST",                      "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:public:html:MANIFEST",                       "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:public:css:MANIFEST",                        "$distdirectory:dom:");
+    InstallFromManifest(":mozilla:dom:public:xul:MANIFEST",                        "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",                         "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:src:base:MANIFEST",                          "$distdirectory:dom:");
 
@@ -955,7 +957,6 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:layout:macbuild:layoutIDL.mcp",                       "layout");
 
     BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",                             "rdf");
-    BuildIDLProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSourceIDL.mcp",       "domds");
 
     BuildIDLProject(":mozilla:rdf:chrome:build:chromeIDL.mcp",                      "chrome");
         
@@ -1307,8 +1308,6 @@ sub BuildBrowserUtilsProjects()
     
     BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     
-    BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",      "DOMDataSource$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-
     EndBuildModule("browserutils");
 }
 
@@ -1364,7 +1363,6 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:docshell:macbuild:docshell.mcp",                  "docshell$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",              "RaptorShell$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
-    #// XXX this is here because of a very TEMPORARY dependency
     BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",                            "RDFLibrary$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);

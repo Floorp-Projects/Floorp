@@ -24,7 +24,7 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIControllers.h"
 #include "nsIEditorController.h"
-#include "nsRDFCID.h"
+#include "nsContentCID.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"

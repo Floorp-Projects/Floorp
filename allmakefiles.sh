@@ -83,6 +83,7 @@ dom/public/css/Makefile
 dom/public/events/Makefile
 dom/public/range/Makefile
 dom/public/html/Makefile
+dom/public/xul/Makefile
 dom/public/idl/Makefile
 dom/public/idl/base/Makefile
 dom/public/idl/coreDom/Makefile
@@ -90,6 +91,7 @@ dom/public/idl/css/Makefile
 dom/public/idl/events/Makefile
 dom/public/idl/html/Makefile
 dom/public/idl/range/Makefile
+dom/public/idl/xul/Makefile
 dom/src/Makefile
 dom/src/base/Makefile
 dom/src/build/Makefile
@@ -98,6 +100,7 @@ dom/src/css/Makefile
 dom/src/events/Makefile
 dom/src/range/Makefile
 dom/src/html/Makefile
+dom/src/xul/Makefile
 dom/src/jsurl/Makefile
 dom/tools/Makefile
 "
@@ -260,7 +263,13 @@ content/xml/document/public/Makefile
 content/xml/document/src/Makefile
 content/xul/Makefile
 content/xul/content/Makefile
+content/xul/content/public/Makefile
 content/xul/content/src/Makefile
+content/xul/document/Makefile
+content/xul/document/public/Makefile
+content/xul/document/src/Makefile
+content/xul/templates/public/Makefile
+content/xul/templates/src/Makefile
 content/xbl/Makefile
 content/xbl/public/Makefile
 content/xbl/src/Makefile
@@ -463,10 +472,6 @@ rdf/util/public/Makefile
 rdf/util/src/Makefile
 rdf/resources/Makefile
 rdf/build/Makefile
-rdf/content/Makefile
-rdf/content/public/Makefile
-rdf/content/public/idl/Makefile
-rdf/content/src/Makefile
 rdf/datasource/Makefile
 rdf/datasource/public/Makefile
 rdf/datasource/src/Makefile

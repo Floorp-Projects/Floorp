@@ -59,7 +59,6 @@
 #include "nsIParser.h"
 #include "nsIPresShell.h"
 #include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
 #include "nsIServiceManager.h"
@@ -68,21 +67,19 @@
 #include "nsIViewManager.h"
 #include "nsIXMLContent.h"
 #include "nsIXULContentSink.h"
-#include "nsIXULContentUtils.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsRDFCID.h"
-#include "nsRDFParserUtils.h"
+#include "nsParserUtils.h"
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "nsXPIDLString.h"
 #include "nsXULElement.h"
 #include "prlog.h"
 #include "prmem.h"
-#include "rdfutil.h"
 #include "jsapi.h"  // for JSVERSION_*, JS_VersionToString, etc.
 
 #include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
@@ -103,7 +100,6 @@ static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
 static NS_DEFINE_CID(kCSSLoaderCID,              NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
-static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
 //----------------------------------------------------------------------
@@ -146,7 +142,6 @@ protected:
     // pseudo-constants
     static nsrefcnt               gRefCnt;
     static nsINameSpaceManager*   gNameSpaceManager;
-    static nsIXULContentUtils*    gXULUtils;
     static nsIXULPrototypeCache*  gXULCache;
 
     static nsIAtom* kClassAtom;
@@ -246,7 +241,6 @@ protected:
 
 nsrefcnt XULContentSinkImpl::gRefCnt;
 nsINameSpaceManager* XULContentSinkImpl::gNameSpaceManager;
-nsIXULContentUtils* XULContentSinkImpl::gXULUtils;
 nsIXULPrototypeCache* XULContentSinkImpl::gXULCache;
 
 nsIAtom* XULContentSinkImpl::kClassAtom;
@@ -360,11 +354,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
         kStyleAtom          = NS_NewAtom("style");
         kTemplateAtom       = NS_NewAtom("template");
 
-        rv = nsServiceManager::GetService(kXULContentUtilsCID,
-                                          NS_GET_IID(nsIXULContentUtils),
-                                          (nsISupports**) &gXULUtils);
-        if (NS_FAILED(rv)) return;
-
         rv = nsServiceManager::GetService(kXULPrototypeCacheCID,
                                           NS_GET_IID(nsIXULPrototypeCache),
                                           (nsISupports**) &gXULCache);
@@ -462,11 +451,6 @@ XULContentSinkImpl::~XULContentSinkImpl()
         NS_IF_RELEASE(kStyleAtom);
         NS_IF_RELEASE(kTemplateAtom);
 
-        if (gXULUtils) {
-            nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
-            gXULUtils = nsnull;
-        }
-
         if (gXULCache) {
             nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
             gXULCache = nsnull;
@@ -522,6 +506,7 @@ XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     if (doc) {
         doc->EndLoad();
+        mDocument = nsnull;
     }
 
     // Drop our reference to the parser to get rid of a circular
@@ -902,7 +887,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     if (text.Find(kOverlayPI) == 0) {
         // Load a XUL overlay.
         nsAutoString href;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
+        rv = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
         if (NS_FAILED(rv)) return rv;
 
         // If there was an error or there's no href, we can't do
@@ -923,7 +908,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     // If it's a stylesheet PI...
     else if (text.Find(kStyleSheetPI) == 0) {
         nsAutoString href;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
+        rv = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
         if (NS_FAILED(rv)) return rv;
 
         // If there was an error or there's no href, we can't do
@@ -932,30 +917,24 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
             return NS_OK;
 
         nsAutoString type;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
-        if (NS_FAILED(rv)) return rv;
+        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
 
         nsAutoString title;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
-        if (NS_FAILED(rv)) return rv;
+        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
 
         title.CompressWhitespace();
 
         nsAutoString media;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
-        if (NS_FAILED(rv)) return rv;
+        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
 
         media.ToLowerCase();
 
         nsAutoString alternate;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
-        if (NS_FAILED(rv)) return rv;
+        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
 
-        rv = ProcessStyleLink(nsnull /* XXX need a node here */,
-                              href, alternate.EqualsWithConversion("yes"),  /* XXX ignore case? */
-                              title, type, media);
-
-        if (NS_FAILED(rv)) return rv;
+        ProcessStyleLink(nsnull /* XXX need a node here */,
+                         href, alternate.EqualsWithConversion("yes"),  /* XXX ignore case? */
+                         title, type, media);
     }
 
     return NS_OK;
@@ -977,10 +956,12 @@ XULContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
     nsAutoString text(aNode.GetText());
 
     if (aNode.GetTokenType() == eToken_entity) {
-        char buf[12];
-        text.ToCString(buf, sizeof(buf));
-        text.Truncate();
-        text.Append(nsRDFParserUtils::EntityToUnicode(buf));
+        nsAutoString tmp;
+        PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+        if (unicode < 0) {
+            text.Append(aNode.GetText());
+        }
+        else text.Append(tmp);
     }
 
     PRInt32 addLen = text.Length();
@@ -1180,7 +1161,6 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode, nsString& aID)
     for (PRInt32 i = aNode.GetAttributeCount(); i >= 0; --i) {
         if (aNode.GetKeyAt(i).Equals(NS_LITERAL_STRING("id"))) {
             aID = aNode.GetValueAt(i);
-            nsRDFParserUtils::StripAndConvert(aID);
             return NS_OK;
         }
     }
@@ -1232,7 +1212,6 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
         nsAutoString    valueStr;
         valueStr = aNode.GetValueAt(i);
 
-        nsRDFParserUtils::StripAndConvert( valueStr );
         attrs->mValue.SetValue( valueStr );
 
 #ifdef PR_LOGGING
@@ -1509,11 +1488,9 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
         nsAutoString key(aNode.GetKeyAt(i));
         if (key.EqualsIgnoreCase("src")) {
             src.Assign(aNode.GetValueAt(i));
-            nsRDFParserUtils::StripAndConvert(src);
         }
         else if (key.EqualsIgnoreCase("type")) {
             nsAutoString  type(aNode.GetValueAt(i));
-            nsRDFParserUtils::StripAndConvert(type);
             nsAutoString  mimeType;
             nsAutoString  params;
             SplitMimeType(type, mimeType, params);
@@ -1539,8 +1516,7 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
         }
         else if (key.EqualsIgnoreCase("language")) {
             nsAutoString  lang(aNode.GetValueAt(i));
-            nsRDFParserUtils::StripAndConvert(lang);
-            isJavaScript = nsRDFParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
+            isJavaScript = nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
         }
     }
   
@@ -1625,7 +1601,6 @@ XULContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
 
         // Get the attribute value (the URI for the namespace)
         nsAutoString uri(aNode.GetValueAt(i));
-        nsRDFParserUtils::StripAndConvert(uri);
 
         // Open a local namespace
         nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);

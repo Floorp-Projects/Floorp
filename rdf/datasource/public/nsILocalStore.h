@@ -29,6 +29,12 @@
 #define NS_ILOCALSTORE_IID \
 { 0xdf71c6f1, 0xec53, 0x11d2, { 0xbd, 0xca, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
+// {DF71C6F0-EC53-11d2-BDCA-000064657374}
+#define NS_LOCALSTORE_CID \
+{ 0xdf71c6f0, 0xec53, 0x11d2, { 0xbd, 0xca, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+
+#define NS_LOCALSTORE_CONTRACTID NS_RDF_DATASOURCE_CONTRACTID_PREFIX "local-store"
+
 class nsILocalStore : public nsISupports
 {
 public:
@@ -36,8 +42,8 @@ public:
 };
 
 
-PR_EXTERN(nsresult)
-NS_NewLocalStore(nsILocalStore** aResult);
+extern NS_IMETHODIMP
+NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 
 #endif // nsILocalStore_h__

@@ -29,7 +29,7 @@
 const RDFSERVICE_CONTRACTID     = "@mozilla.org/rdf/rdf-service;1";
 const DRAGSERVICE_CONTRACTID    = "@mozilla.org/widget/dragservice;1";
 const TRANSFERABLE_CONTRACTID   = "@mozilla.org/widget/transferable;1";
-const XULSORTSERVICE_CONTRACTID = "@mozilla.org/rdf/xul-sort-service;1";
+const XULSORTSERVICE_CONTRACTID = "@mozilla.org/xul/xul-sort-service;1";
 const ARRAY_CONTRACTID          = "@mozilla.org/supports-array;1";
 const WSTRING_CONTRACTID        = "@mozilla.org/supports-wstring;1";
 

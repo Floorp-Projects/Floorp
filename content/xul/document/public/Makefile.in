@@ -19,24 +19,27 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= rdf
+MODULE		= xuldoc
+
+XPIDLSRCS	= \
+		nsIController.idl \
+		nsIControllers.idl \
+		nsIControllerCommand.idl \
+		xulstubs.idl \
+		$(NULL)
 
 EXPORTS		= \
-		nsIStreamLoadableDocument.h \
 		nsIXULContentSink.h \
-		nsIXULContentUtils.h \
 		nsIXULDocument.h \
-                nsIXULPopupListener.h \
 		nsIXULPrototypeCache.h \
 		nsIXULPrototypeDocument.h \
-		nsIXULContent.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -37,6 +37,10 @@ class nsCString;
 class nsIDocument;
 class nsIXBLDocumentInfo;
 
+// {3A0A0FC1-8349-11d3-BE47-00104BDE6048}
+#define NS_XULPROTOTYPECACHE_CID \
+{ 0x3a0a0fc1, 0x8349, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
+
 // {3A0A0FC0-8349-11d3-BE47-00104BDE6048}
 #define NS_IXULPROTOTYPECACHE_IID \
 { 0x3a0a0fc0, 0x8349, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
@@ -65,6 +69,11 @@ public:
      * sheets, and scripts.
      */
     NS_IMETHOD Flush() = 0;
+
+    /**
+     * Determine if the prototype cache is enabled
+     */
+    NS_IMETHOD GetEnabled(PRBool* aIsEnabled) = 0;
 };
 
 

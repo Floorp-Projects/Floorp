@@ -46,7 +46,7 @@
 #include "nsMimeTypeArray.h"
 #include "nsNetUtil.h"
 #include "nsPluginArray.h"
-#include "nsRDFCID.h"
+#include "nsContentCID.h"
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
