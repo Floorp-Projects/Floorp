@@ -1664,23 +1664,30 @@ NS_METHOD nsTableOuterFrame::VerifyTree() const
 void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext, 
                                                nsIFrame*       aChild)
 {
+  if (!aChild) return;
   NS_PRECONDITION(mFrames.ContainsFrame(aChild), "bad geometric parent");
 
   nsIFrame* nextInFlow;
    
   aChild->GetNextInFlow(&nextInFlow);
 
-  NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
+  if (!nextInFlow) {
+    NS_ASSERTION(PR_FALSE, "null next-in-flow");
+    return;
+  }
   nsTableOuterFrame* parent;
    
   nextInFlow->GetParent((nsIFrame**)&parent);
-
+  if (!parent) {
+    NS_ASSERTION(PR_FALSE, "null parent");
+    return;
+  }
   // If the next-in-flow has a next-in-flow then delete it too (and
   // delete it first).
   nsIFrame* nextNextInFlow;
 
   nextInFlow->GetNextInFlow(&nextNextInFlow);
-  if (nsnull != nextNextInFlow) {
+  if (nextNextInFlow) {
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
 
@@ -1692,7 +1699,6 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
     nsIFrame* nextSibling;
     nextInFlow->GetNextSibling(&nextSibling);
     parent->mFrames.SetFrames(nextSibling);
-
   } else {
     nsIFrame* nextSibling;
 
