@@ -800,14 +800,6 @@ dns_driver_init(int argc, char **argv, int in_fd, int out_fd)
   }
 #endif /* RANDOMIZE_ADDRESSES */
 
-
-#if defined(NSPR) || defined(JAVA)
-#ifndef NSPR20
-  /* Hate hate hate hate!! */
-  LOG_PROC2("dns_driver_init","calling PR_Init.\n","");
-  PR_Init("dns_helper", 24, 1, 0);
-#endif
-#endif
 }
 
 
@@ -952,15 +944,6 @@ dns_driver_main_loop(int in_fd, int out_fd)
 		 to, and don't know why they don't.  (On Irix 6.2, at least.)
 		 */
 	      pid2 = waitpid(pid, 0, 0);
-#ifndef NSPR20
-		/*
-		 * nspr20 library catches the SIGCLD signal so that it can terminate the
-		 * application when an sproc terminates abnormally. Sometimes the signal
-		 * handler may be called before the call to waitpid above and in that case
-		 * waitpid will fail with a ECHILD error.
-		 */
-	      ASSERT(pid == pid2);
-#endif
 	    }
 	}
     }
