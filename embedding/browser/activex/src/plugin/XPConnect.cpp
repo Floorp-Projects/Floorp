@@ -85,11 +85,33 @@ nsScriptablePeer::~nsScriptablePeer()
 NS_IMPL_ADDREF(nsScriptablePeer)
 NS_IMPL_RELEASE(nsScriptablePeer)
 
-NS_INTERFACE_MAP_BEGIN(nsScriptablePeer)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIClassInfo)
-    NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-    NS_INTERFACE_MAP_ENTRY(nsIMozAxPlugin)
-NS_INTERFACE_MAP_END
+// Custom QueryInterface impl to deal with the IDispatch tearoff
+NS_IMETHODIMP
+nsScriptablePeer::QueryInterface(const nsIID & aIID, void **aInstancePtr)
+{
+    NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!");
+    if (!aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+    *aInstancePtr = nsnull;
+
+    nsISupports* foundInterface = nsnull;
+    if (aIID.Equals(NS_GET_IID(nsISupports)))
+        foundInterface = NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(nsIClassInfo *, this));
+    else if (aIID.Equals(NS_GET_IID(nsIClassInfo)))
+        foundInterface = NS_STATIC_CAST(nsIClassInfo*, this);
+    else if (aIID.Equals(NS_GET_IID(nsIMozAxPlugin)))
+        foundInterface = NS_STATIC_CAST(nsIMozAxPlugin*, this);
+    else if (memcmp(&aIID, &__uuidof(IDispatch), sizeof(nsID)) == 0)
+    {
+        HRESULT hr = mTearOff->QueryInterface(__uuidof(IDispatch), aInstancePtr);
+        if (SUCCEEDED(hr)) return NS_OK;
+        return E_FAIL;
+    }
+
+    NS_IF_ADDREF(foundInterface);
+    *aInstancePtr = foundInterface;
+    return (*aInstancePtr) ? NS_OK : NS_NOINTERFACE;
+}
 
 HRESULT
 nsScriptablePeer::GetIDispatch(IDispatch **pdisp)
@@ -712,7 +734,7 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
 
         // TODO Turn js return code into VARIANT
 
-        // TODO handle js exception and fill in exception info
+        // TODO handle js exception and fill in exception info (do we care?)
     }
 
     if (pExcepInfo)
@@ -861,6 +883,9 @@ CLSID xpc_GetCLSIDForType(const char *mimeType)
 nsScriptablePeer *
 xpc_GetPeerForCLSID(const CLSID &clsid)
 {
+#ifdef XPC_IDISPATCH_SUPPORT
+    return new nsScriptablePeer();
+#else
 // TODO remove me
 #ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
     if (::IsEqualCLSID(clsid, kWindowsMediaPlayer))
@@ -869,11 +894,17 @@ xpc_GetPeerForCLSID(const CLSID &clsid)
     }
 #endif
     return new nsScriptablePeer();
+#endif
 }
 
 nsIID
 xpc_GetIIDForCLSID(const CLSID &clsid)
 {
+#ifdef XPC_IDISPATCH_SUPPORT
+    nsIID iid;
+    memcpy(&iid, &_uuidof(IDispatch), sizeof(iid));
+    return iid;
+#else
 // TODO remove me
 #ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
     if (::IsEqualCLSID(clsid, kWindowsMediaPlayer))
@@ -882,6 +913,7 @@ xpc_GetIIDForCLSID(const CLSID &clsid)
     }
 #endif
     return NS_GET_IID(nsIMozAxPlugin);
+#endif
 }
 
 // Called by NPP_GetValue to provide the scripting values

@@ -113,6 +113,48 @@ NPError NewScript(const char *pluginType,
     return NPERR_GENERIC_ERROR;
 }
 
+static BOOL WillHandleCLSID(const CLSID &clsid)
+{
+    if (::IsEqualCLSID(clsid, CLSID_NULL))
+    {
+        return FALSE;
+    }
+
+    const BOOL kRestrictControls = FALSE;
+    if (!kRestrictControls)
+    {
+        return TRUE;
+    }
+
+    // Check if the CLSID belongs to a limited number the plugin is prepared to support
+    CRegKey key;
+    if (key.Open(HKEY_LOCAL_MACHINE, _T("Software\\Mozilla\\ActiveX\\CLSID"), KEY_READ) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    // Enumerate CLSIDs looking for this one
+    int i = 0;
+    do {
+        USES_CONVERSION;
+        TCHAR szCLSID[64];
+        const DWORD nLength = sizeof(szCLSID) / sizeof(szCLSID[0]);
+        if (::RegEnumKey(key, i++, szCLSID, nLength) != ERROR_SUCCESS)
+        {
+            break;
+        }
+        szCLSID[nLength - 1] = TCHAR('\0');
+        CLSID clsidToCompare = GUID_NULL;
+        if (SUCCEEDED(::CLSIDFromString(T2OLE(szCLSID), &clsidToCompare)) &&
+            ::IsEqualCLSID(clsid, clsidToCompare))
+        {
+            return TRUE;
+        }
+    } while (1);
+
+    return FALSE;
+}
+
 NPError NewControl(const char *pluginType,
                     PluginInstanceData *pData,
                     uint16 mode,
@@ -248,8 +290,8 @@ NPError NewControl(const char *pluginType,
         }
     }
 
-    // Make sure we got a CLSID
-    if (::IsEqualCLSID(clsid, CLSID_NULL))
+    // Make sure we got a CLSID we can handle
+    if (!WillHandleCLSID(clsid))
     {
         return NPERR_GENERIC_ERROR;
     }
