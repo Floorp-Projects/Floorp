@@ -4843,60 +4843,321 @@ from the network, or save to a file and then play from the file?
 
 
 ! ============================================================================
-! Fonts used for printing.
+! PostScript Fonts used for printing.
 ! ============================================================================
 !
-! psname  is the full PostScript font name
-! pscode  is the character encoding used in the PostScript font
-! pswidth is the PostScript width per character, only useful for "square"
-!         fonts such as those found in East Asia
+! psname  	is the full PostScript font name
+! pscode  	is the character encoding used in the PostScript font
+! psafmfile	is the AFM file (with full path) of the PostScript font
+! psmetric	is a short cut of specifying font metrics, only useful for
+!		fixed-width font or Asian square font.
+!		it is followed by four integers, e.g.:
+!		    1000 1000 800 -200 		which stand for
+!		width, height, ascent and descent (negative)
 
 
-! The following Latin-1 PostScript printer fonts are hard-coded into @NAME@
-! and cannot be changed.
+! The following Latin-1 PostScript printer fonts (with their metrics) are 
+! hard-coded into @NAME@ and cannot be changed.
 !
-!*documentFonts.latin1.variable.normal*psname:		Times-Roman
-!*documentFonts.latin1.variable.bold*psname:		Times-Bold
-!*documentFonts.latin1.variable.italic*psname:		Times-Italic
-!*documentFonts.latin1.variable.boldItalic*psname:	Times-BoldItalic
-!*documentFonts.latin1.fixed.normal*psname:		Courier
-!*documentFonts.latin1.fixed.bold*psname:		Courier-Bold
-!*documentFonts.latin1.fixed.italic*psname:		Courier-Oblique
-!*documentFonts.latin1.fixed.boldItalic*psname:		Courier-BoldOblique
-!*documentFonts.latin1*pscode:				iso-8859-1
-!*documentFonts.latin1*pswidth:				*
+!*documentFonts.iso-8859-1*pscode:			iso-8859-1
+!*documentFonts.iso-8859-1.variable.normal*psname:	Times-Roman
+!*documentFonts.iso-8859-1.variable.bold*psname:	Times-Bold
+!*documentFonts.iso-8859-1.variable.italic*psname:	Times-Italic
+!*documentFonts.iso-8859-1.variable.boldItalic*psname:	Times-BoldItalic
+!*documentFonts.iso-8859-1.fixed.normal*psname:		Courier
+!*documentFonts.iso-8859-1.fixed.bold*psname:		Courier-Bold
+!*documentFonts.iso-8859-1.fixed.italic*psname:		Courier-Oblique
+!*documentFonts.iso-8859-1.fixed.boldItalic*psname:	Courier-BoldOblique
 
 
-! @NAME@ does not differentiate between variable and fixed, and between
-! normal, bold, italic and boldItalic for the following East Asian fonts.
+! @NAME@ differentiates between variable and fixed, and between
+! normal, bold, italic and boldItalic for all the fonts. When a type is not
+! specified, 'variable-normal' or 'fixed-normal' is used instead. If nothing
+! is specified, default Latin-1 fonts are used.
 !
-! The charset fields are the charset names corresponding to the available
-! locales (e.g. for Japan, that would be euc-jp and shift_jis).
+! Sample entries for all encodings are listed below, just fill in your own
+! psname, psafmfile, or psmetric, and uncomment them. Any blank entries 
+! will be regarded as non-specified. 
 !
-*documentFonts.euc-jp*psname:		Ryumin-Light-RKSJ-H
-*documentFonts.euc-jp*pscode:		shift_jis
-*documentFonts.euc-jp*pswidth:		1000
-*documentFonts.euc-jp*psascent:		950
+! NOTE: There are only samples.
+!       You must specify all faces(variable, fixed).
+!       If you have fonts for each encoding, you have to
+!       download fonts to your printer, or filter with ghostscript.
+!	For more information of ghostscript, see
+!           http://www.cs.wisc.edu/~ghost
 
-*documentFonts.shift_jis*psname:	Ryumin-Light-RKSJ-H
-*documentFonts.shift_jis*pscode:	shift_jis
-*documentFonts.shift_jis*pswidth:	1000
-*documentFonts.shift_jis*psascent:	950
+! ISO-8859-2 sample:
+!   You can get latin-2 Type 1 fonts from:
+!     ftp://ftp.osb.hu/pub/misc/fonts/local/latin-2/
+!   Get l2afm005.zip and l2pfb005.zip.
+!
+*documentFonts.iso-8859-2*pscode:			iso-8859-2
+*documentFonts.iso-8859-2.variable.normal*psname:	TimesNewRomanL2
+*documentFonts.iso-8859-2.variable.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/tnrl2___.afm
+*documentFonts.iso-8859-2.variable.bold*psname:		TimesNewRomanL2-Bold
+*documentFonts.iso-8859-2.variable.bold*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/tnrl2b__.afm
+*documentFonts.iso-8859-2.variable.italic*psname:	TimesNewRomanL2-Italic
+*documentFonts.iso-8859-2.variable.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/tnrl2i__.afm
+*documentFonts.iso-8859-2.variable.boldItalic*psname:	TimesNewRomanL2-BoldItalic
+*documentFonts.iso-8859-2.variable.boldItalic*psafmfile:/usr/local/lib/mozilla/fonts/Type1/tnrl2bi_.afm
+*documentFonts.iso-8859-2.fixed.normal*psname:		CourierNewL2
+*documentFonts.iso-8859-2.fixed.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/cnl2____.afm
+*documentFonts.iso-8859-2.fixed.bold*psname:		CourierNewL2-Bold
+*documentFonts.iso-8859-2.fixed.bold*psafmfile:		/usr/local/lib/mozilla/fonts/Type1/cnl2b___.afm
+*documentFonts.iso-8859-2.fixed.italic*psname:		CourierNewL2-Italic
+*documentFonts.iso-8859-2.fixed.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/cnl2i___.afm
+*documentFonts.iso-8859-2.fixed.boldItalic*psname:	CourierNewL2-BoldItalic
+*documentFonts.iso-8859-2.fixed.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/cnl2bi__.afm
 
-*documentFonts.EUC-KR*psname:		SMgoJ
-*documentFonts.EUC-KR*pscode:		euc-kr
-*documentFonts.EUC-KR*pswidth:		1000
-*documentFonts.EUC-KR*psascent:		950
-
-!*documentFonts.gb2312*psname:		???
-!*documentFonts.gb2312*pscode:		???
-!*documentFonts.gb2312*pswidth:		???
-!*documentFonts.gb2312*psascent:	???
-
-!*documentFonts.x-euc-tw*psname:	???
-!*documentFonts.x-euc-tw*pscode:	???
-!*documentFonts.x-euc-tw*pswidth:	???
-!*documentFonts.x-euc-tw*psascent:	???
+! ISO-8859-5 sample:
+!
+!*documentFonts.iso-8859-5*pscode:			iso-8859-5
+!*documentFonts.iso-8859-5.variable.normal*psname:	Latin-5-Times-Roman-Regular
+!*documentFonts.iso-8859-5.variable.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanRegular.afm
+!*documentFonts.iso-8859-5.variable.bold*psname:	Latin-5-Times-Roman-Bold
+!*documentFonts.iso-8859-5.variable.bold*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanBold.afm
+!*documentFonts.iso-8859-5.variable.italic*psname:	Latin-5-Times-Roman-Italic
+!*documentFonts.iso-8859-5.variable.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanItalic.afm
+!*documentFonts.iso-8859-5.variable.boldItalic*psname:	Latin-5-Times-Roman-Bold-Italic
+!*documentFonts.iso-8859-5.variable.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanBoldItalic.afm
+!*documentFonts.iso-8859-5.fixed.normal*psname:		Latin-5-Courier-Regular
+!*documentFonts.iso-8859-5.fixed.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierRegular.afm
+!*documentFonts.iso-8859-5.fixed.bold*psname:		Latin-5-Courier-Bold
+!*documentFonts.iso-8859-5.fixed.bold*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierBold.afm
+!*documentFonts.iso-8859-5.fixed.italic*psname:		Latin-5-Courier-Italic
+!*documentFonts.iso-8859-5.fixed.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierItalic.afm
+!*documentFonts.iso-8859-5.fixed.boldItalic*psname:	Latin-5-Courier-Bold-Italic
+!*documentFonts.iso-8859-5.fixed.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierBoldItalic.afm
+!
+! ISO-8859-7 sample:
+!
+!*documentFonts.iso-8859-7*pscode:			iso-8859-7
+!*documentFonts.iso-8859-7.variable.normal*psname:	Latin-7-Times-Roman-Regular
+!*documentFonts.iso-8859-7.variable.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanRegular.afm
+!*documentFonts.iso-8859-7.variable.bold*psname:	Latin-7-Times-Roman-Bold
+!*documentFonts.iso-8859-7.variable.bold*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanBold.afm
+!*documentFonts.iso-8859-7.variable.italic*psname:	Latin-7-Times-Roman-Italic
+!*documentFonts.iso-8859-7.variable.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanItalic.afm
+!*documentFonts.iso-8859-7.variable.boldItalic*psname:	Latin-7-Times-Roman-Bold-Italic
+!*documentFonts.iso-8859-7.variable.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanBoldItalic.afm
+!*documentFonts.iso-8859-7.fixed.normal*psname:		Latin-7-Courier-Regular
+!*documentFonts.iso-8859-7.fixed.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierRegular.afm
+!*documentFonts.iso-8859-7.fixed.bold*psname:		Latin-7-Courier-Bold
+!*documentFonts.iso-8859-7.fixed.bold*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierBold.afm
+!*documentFonts.iso-8859-7.fixed.italic*psname:		Latin-7-Courier-Italic
+!*documentFonts.iso-8859-7.fixed.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierItalic.afm
+!*documentFonts.iso-8859-7.fixed.boldItalic*psname:	Latin-7-Courier-Bold-Italic
+!*documentFonts.iso-8859-7.fixed.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierBoldItalic.afm
+!
+! ISO-8859-9 sample:
+!
+!*documentFonts.iso-8859-9*pscode:			iso-8859-9
+!*documentFonts.iso-8859-9.variable.normal*psname:	Latin-9-Times-Roman-Regular
+!*documentFonts.iso-8859-9.variable.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanRegular.afm
+!*documentFonts.iso-8859-9.variable.bold*psname:	Latin-9-Times-Roman-Bold
+!*documentFonts.iso-8859-9.variable.bold*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanBold.afm
+!*documentFonts.iso-8859-9.variable.italic*psname:	Latin-9-Times-Roman-Italic
+!*documentFonts.iso-8859-9.variable.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanItalic.afm
+!*documentFonts.iso-8859-9.variable.boldItalic*psname:	Latin-9-Times-Roman-Bold-Italic
+!*documentFonts.iso-8859-9.variable.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanBoldItalic.afm
+!*documentFonts.iso-8859-9.fixed.normal*psname:		Latin-9-Courier-Regular
+!*documentFonts.iso-8859-9.fixed.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierRegular.afm
+!*documentFonts.iso-8859-9.fixed.bold*psname:		Latin-9-Courier-Bold
+!*documentFonts.iso-8859-9.fixed.bold*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierBold.afm
+!*documentFonts.iso-8859-9.fixed.italic*psname:		Latin-9-Courier-Italic
+!*documentFonts.iso-8859-9.fixed.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierItalic.afm
+!*documentFonts.iso-8859-9.fixed.boldItalic*psname:	Latin-9-Courier-Bold-Italic
+!*documentFonts.iso-8859-9.fixed.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierBoldItalic.afm
+!
+! KOI8-R sample:
+!
+!*documentFonts.koi8-r*pscode:				koi8-r
+!*documentFonts.koi8-r.variable.normal*psname:		Koi8-r-Times-Roman-Regular
+!*documentFonts.koi8-r.variable.normal*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanRegular.afm
+!*documentFonts.koi8-r.variable.bold*psname:		Koi8-r-Times-Roman-Bold
+!*documentFonts.koi8-r.variable.bold*psafmfile:		/usr/local/lib/mozilla/fonts/Type1/RomanBold.afm
+!*documentFonts.koi8-r.variable.italic*psname:		Koi8-r-Times-Roman-Italic
+!*documentFonts.koi8-r.variable.italic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanItalic.afm
+!*documentFonts.koi8-r.variable.boldItalic*psname:	Koi8-r-Times-Roman-Bold-Italic
+!*documentFonts.koi8-r.variable.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/RomanBoldItalic.afm
+!*documentFonts.koi8-r.fixed.normal*psname:		Koi8-r-Courier-Regular
+!*documentFonts.koi8-r.fixed.normal*psafmfile:		/usr/local/lib/mozilla/fonts/Type1/CourierRegular.afm
+!*documentFonts.koi8-r.fixed.bold*psname:		Koi8-r-Courier-Bold
+!*documentFonts.koi8-r.fixed.bold*psafmfile:		/usr/local/lib/mozilla/fonts/Type1/CourierBold.afm
+!*documentFonts.koi8-r.fixed.italic*psname:		Koi8-r-Courier-Italic
+!*documentFonts.koi8-r.fixed.italic*psafmfile:		/usr/local/lib/mozilla/fonts/Type1/CourierItalic.afm
+!*documentFonts.koi8-r.fixed.boldItalic*psname:		Koi8-r-Courier-Bold-Italic
+!*documentFonts.koi8-r.fixed.boldItalic*psafmfile:	/usr/local/lib/mozilla/fonts/Type1/CourierBoldItalic.afm
+!
+! EUC-JP sample:
+!
+! Japanese printing code should be SJIS(old behavior from Netscape 2.x)
+!
+!*documentFonts.euc-jp*pscode:				euc-jp
+*documentFonts.euc-jp*pscode:				shift_jis
+*documentFonts.euc-jp.variable.normal*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.euc-jp.variable.normal*psmetric:		1000 1000 900 -100
+*documentFonts.euc-jp.variable.bold*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.euc-jp.variable.bold*psmetric:		1000 1000 900 -100
+*documentFonts.euc-jp.variable.italic*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.euc-jp.variable.italic*psmetric:		1000 1000 900 -100
+*documentFonts.euc-jp.variable.boldItalic*psname:	Ryumin-Light-RKSJ-H
+*documentFonts.euc-jp.variable.boldItalic*psmetric:	1000 1000 900 -100
+*documentFonts.euc-jp.fixed.normal*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.euc-jp.fixed.normal*psmetric:		1000 1000 900 -100
+*documentFonts.euc-jp.fixed.bold*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.euc-jp.fixed.bold*psmetric:		1000 1000 900 -100
+*documentFonts.euc-jp.fixed.italic*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.euc-jp.fixed.italic*psmetric:		1000 1000 900 -100
+*documentFonts.euc-jp.fixed.boldItalic*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.euc-jp.fixed.boldItalic*psmetric:	1000 1000 900 -100
+!
+! SHIFT_JIS sample:
+!
+*documentFonts.shift_jis*pscode:			shift_jis
+*documentFonts.shift_jis.variable.normal*psname:	Ryumin-Light-RKSJ-H
+*documentFonts.shift_jis.variable.normal*psmetric:	1000 1000 900 -100
+*documentFonts.shift_jis.variable.bold*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.shift_jis.variable.bold*psmetric:	1000 1000 900 -100
+*documentFonts.shift_jis.variable.italic*psname:	Ryumin-Light-RKSJ-H
+*documentFonts.shift_jis.variable.italic*psmetric:	1000 1000 900 -100
+*documentFonts.shift_jis.variable.boldItalic*psname:	Ryumin-Light-RKSJ-H
+*documentFonts.shift_jis.variable.boldItalic*psmetric:	1000 1000 900 -100
+*documentFonts.shift_jis.fixed.normal*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.shift_jis.fixed.normal*psmetric:		1000 1000 900 -100
+*documentFonts.shift_jis.fixed.bold*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.shift_jis.fixed.bold*psmetric:		1000 1000 900 -100
+*documentFonts.shift_jis.fixed.italic*psname:		Ryumin-Light-RKSJ-H
+*documentFonts.shift_jis.fixed.italic*psmetric:		1000 1000 900 -100
+*documentFonts.shift_jis.fixed.boldItalic*psname:	Ryumin-Light-RKSJ-H
+*documentFonts.shift_jis.fixed.boldItalic*psmetric:	1000 1000 900 -100
+!
+! ISO-2022-JP sample:
+!
+!*documentFonts.iso-2022-jp*pscode:			iso-2022-jp
+!*documentFonts.iso-2022-jp.variable.normal*psname:	Ryumin-Regular
+!*documentFonts.iso-2022-jp.variable.normal*psmetric:	1000 1000 900 -100
+!*documentFonts.iso-2022-jp.variable.bold*psname:	Ryumin-Bold
+!*documentFonts.iso-2022-jp.variable.bold*psmetric:	1000 1000 900 -100
+!*documentFonts.iso-2022-jp.variable.italic*psname:	Ryumin-Italic
+!*documentFonts.iso-2022-jp.variable.italic*psmetric:	1000 1000 900 -100
+!*documentFonts.iso-2022-jp.variable.boldItalic*psname:	Ryumin-BoldItalic
+!*documentFonts.iso-2022-jp.variable.boldItalic*psmetric:1000 1000 900 -100
+!*documentFonts.iso-2022-jp.fixed.normal*psname:	Ryumin-Regular
+!*documentFonts.iso-2022-jp.fixed.normal*psmetric:	1000 1000 900 -100
+!*documentFonts.iso-2022-jp.fixed.bold*psname:		Ryumin-Bold
+!*documentFonts.iso-2022-jp.fixed.bold*psmetric:	1000 1000 900 -100
+!*documentFonts.iso-2022-jp.fixed.italic*psname:	Ryumin-Italic
+!*documentFonts.iso-2022-jp.fixed.italic*psmetric:	1000 1000 900 -100
+!*documentFonts.iso-2022-jp.fixed.boldItalic*psname:	Ryumin-BoldItalic
+!*documentFonts.iso-2022-jp.fixed.boldItalic*psmetric:	1000 1000 900 -100
+!
+! EUC-KR sample:
+!
+*documentFonts.EUC-KR*pscode:				EUC-KR
+*documentFonts.EUC-KR.variable.normal*psname:		Munhwa-Regular-KSC-EUC-H
+*documentFonts.EUC-KR.variable.normal*psmetric:		1000 1000 990 -10
+*documentFonts.EUC-KR.variable.bold*psname:		Munhwa-Regular-KSC-EUC-H
+*documentFonts.EUC-KR.variable.bold*psmetric:		1000 1000 990 -10
+*documentFonts.EUC-KR.variable.italic*psname:		Munhwa-Regular-KSC-EUC-H
+*documentFonts.EUC-KR.variable.italic*psmetric:		1000 1000 990 -10
+*documentFonts.EUC-KR.variable.boldItalic*psname:	Munhwa-Regular-KSC-EUC-H
+*documentFonts.EUC-KR.variable.boldItalic*psmetric:	1000 1000 990 -10
+*documentFonts.EUC-KR.fixed.normal*psname:		MunhwaGothic-Regular-KSC-EUC-H
+*documentFonts.EUC-KR.fixed.normal*psmetric:		1000 1000 990 -10
+*documentFonts.EUC-KR.fixed.bold*psname:		MunhwaGothic-Regular-KSC-EUC-H
+*documentFonts.EUC-KR.fixed.bold*psmetric:		1000 1000 990 -10
+*documentFonts.EUC-KR.fixed.italic*psname:		MunhwaGothic-Regular-KSC-EUC-H
+*documentFonts.EUC-KR.fixed.italic*psmetric:		1000 1000 990 -10
+*documentFonts.EUC-KR.fixed.boldItalic*psname:		MunhwaGothic-Regular-KSC-EUC-H
+*documentFonts.EUC-KR.fixed.boldItalic*psmetric:	1000 1000 990 -10
+!
+!
+! ISO-2022-KR sample:
+!
+! To print ISO-2022-KR, encoding is euc-kr is preferred
+!
+!*documentFonts.iso-2022-kr*pscode:			EUC-KR
+!*documentFonts.iso-2022-kr.variable.normal*psname:	Munhwa-Regular-KSC-EUC-H
+!*documentFonts.iso-2022-kr.variable.normal*psmetric:	1000 1000 990 -10
+!*documentFonts.iso-2022-kr.variable.bold*psname:	Munhwa-Regular-KSC-EUC-H
+!*documentFonts.iso-2022-kr.variable.bold*psmetric:	1000 1000 990 -10
+!*documentFonts.iso-2022-kr.variable.italic*psname:	Munhwa-Regular-KSC-EUC-H
+!*documentFonts.iso-2022-kr.variable.italic*psmetric:	1000 1000 990 -10
+!*documentFonts.iso-2022-kr.variable.boldItalic*psname:	Munhwa-Regular-KSC-EUC-H
+!*documentFonts.iso-2022-kr.variable.boldItalic*psmetric:1000 1000 990 -10
+!*documentFonts.iso-2022-kr.fixed.normal*psname:	MunhwaGothic-Regular-KSC-EUC-H
+!*documentFonts.iso-2022-kr.fixed.normal*psmetric:	1000 1000 990 -10
+!*documentFonts.iso-2022-kr.fixed.bold*psname:		MunhwaGothic-Regular-KSC-EUC-H
+!*documentFonts.iso-2022-kr.fixed.bold*psmetric:	1000 1000 990 -10
+!*documentFonts.iso-2022-kr.fixed.italic*psname:	MunhwaGothic-Regular-KSC-EUC-H
+!*documentFonts.iso-2022-kr.fixed.italic*psmetric:	1000 1000 990 -10
+!*documentFonts.iso-2022-kr.fixed.boldItalic*psname:	MunhwaGothic-Regular-KSC-EUC-H
+!*documentFonts.iso-2022-kr.fixed.boldItalic*psmetric:	1000 1000 990 -10
+!
+! GB2312 sample:
+!
+*documentFonts.gb2312*pscode:				gb2312
+*documentFonts.gb2312.variable.normal*psname:		Hei-Regular
+*documentFonts.gb2312.variable.normal*psmetric:		1000 1000 900 -100
+*documentFonts.gb2312.variable.bold*psname:		Hei-Bold
+*documentFonts.gb2312.variable.bold*psmetric:		1000 1000 900 -100
+*documentFonts.gb2312.variable.italic*psname:		Hei-Italic
+*documentFonts.gb2312.variable.italic*psmetric:		1000 1000 900 -100
+*documentFonts.gb2312.variable.boldItalic*psname:	Hei-BoldItalic
+*documentFonts.gb2312.variable.boldItalic*psmetric:	1000 1000 900 -100
+*documentFonts.gb2312.fixed.normal*psname:		Hei-Regular
+*documentFonts.gb2312.fixed.normal*psmetric:		1000 1000 900 -100
+*documentFonts.gb2312.fixed.bold*psname:		Hei-Bold
+*documentFonts.gb2312.fixed.bold*psmetric:		1000 1000 900 -100
+*documentFonts.gb2312.fixed.italic*psname:		Hei-Italic
+*documentFonts.gb2312.fixed.italic*psmetric:		1000 1000 900 -100
+*documentFonts.gb2312.fixed.boldItalic*psname:		Hei-BoldItalic
+*documentFonts.gb2312.fixed.boldItalic*psmetric:	1000 1000 900 -100
+!
+! BIG5 sample:
+!
+*documentFonts.big5*pscode:				big5
+*documentFonts.big5.variable.normal*psname:		KaiShu-Regular
+*documentFonts.big5.variable.normal*psmetric:		1000 1000 900 -100
+*documentFonts.big5.variable.bold*psname:		KaiShu-Bold
+*documentFonts.big5.variable.bold*psmetric:		1000 1000 900 -100
+*documentFonts.big5.variable.italic*psname:		KaiShu-Italic
+*documentFonts.big5.variable.italic*psmetric:		1000 1000 900 -100
+*documentFonts.big5.variable.boldItalic*psname:		KaiShu-BoldItalic
+*documentFonts.big5.variable.boldItalic*psmetric:	1000 1000 900 -100
+*documentFonts.big5.fixed.normal*psname:		KaiShu-Regular
+*documentFonts.big5.fixed.normal*psmetric:		1000 1000 900 -100
+*documentFonts.big5.fixed.bold*psname:			KaiShu-Bold
+*documentFonts.big5.fixed.bold*psmetric:		1000 1000 900 -100
+*documentFonts.big5.fixed.italic*psname:		KaiShu-Italic
+*documentFonts.big5.fixed.italic*psmetric:		1000 1000 900 -100
+*documentFonts.big5.fixed.boldItalic*psname:		KaiShu-BoldItalic
+*documentFonts.big5.fixed.boldItalic*psmetric:		1000 1000 900 -100
+!
+! X-EUC-TW sample:
+!
+!*documentFonts.x-euc-tw*pscode:			x-euc-tw
+!*documentFonts.x-euc-tw.variable.normal*psname:	KaiShu-Regular
+!*documentFonts.x-euc-tw.variable.normal*psmetric:	1000 1000 900 -100
+!*documentFonts.x-euc-tw.variable.bold*psname:		KaiShu-Bold
+!*documentFonts.x-euc-tw.variable.bold*psmetric:	1000 1000 900 -100
+!*documentFonts.x-euc-tw.variable.italic*psname:	KaiShu-Italic
+!*documentFonts.x-euc-tw.variable.italic*psmetric:	1000 1000 900 -100
+!*documentFonts.x-euc-tw.variable.boldItalic*psname:	KaiShu-BoldItalic
+!*documentFonts.x-euc-tw.variable.boldItalic*psmetric:	1000 1000 900 -100
+!*documentFonts.x-euc-tw.fixed.normal*psname:		KaiShu-Regular
+!*documentFonts.x-euc-tw.fixed.normal*psmetric:		1000 1000 900 -100
+!*documentFonts.x-euc-tw.fixed.bold*psname:		KaiShu-Bold
+!*documentFonts.x-euc-tw.fixed.bold*psmetric:		1000 1000 900 -100
+!*documentFonts.x-euc-tw.fixed.italic*psname:		KaiShu-Italic
+!*documentFonts.x-euc-tw.fixed.italic*psmetric:		1000 1000 900 -100
+!*documentFonts.x-euc-tw.fixed.boldItalic*psname:	KaiShu-BoldItalic
+!*documentFonts.x-euc-tw.fixed.boldItalic*psmetric:	1000 1000 900 -100
+!
+!====================================================
+! the end of PostScript Printer fonts specification
+!====================================================
 
 ! Unicode Pseudo Font
 ! These map a Unicode Pseudo Font 
