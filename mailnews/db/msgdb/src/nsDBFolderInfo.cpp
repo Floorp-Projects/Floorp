@@ -43,7 +43,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 {
 	m_mdbTable = NULL;
 	m_mdbRow = NULL;
-	m_version = 0;			// for upgrading...
+	m_version = 1;			// for upgrading...
 	m_sortType = 0;			// the last sort type open on this db.
 	m_csid = 0;				// default csid for these messages
 	m_IMAPHierarchySeparator = 0;	// imap path separator

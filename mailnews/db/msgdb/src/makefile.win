@@ -30,12 +30,14 @@ CPPSRCS=    nsMsgDatabase.cpp\
 			nsDBFolderInfo.cpp\
 			nsMailDatabase.cpp\
 			nsMsgHdr.cpp\
+			mdbstubs.cpp \
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj  \
 			.\$(OBJDIR)\nsDBFolderInfo.obj\
 			.\$(OBJDIR)\nsMailDatabase.obj\
 			.\$(OBJDIR)\nsMsgHdr.obj\
+			.\$(OBJDIR)\mdbstubs.obj\
 			$(NULL)
 
 

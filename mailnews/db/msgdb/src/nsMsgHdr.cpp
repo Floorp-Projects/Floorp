@@ -99,7 +99,7 @@ NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
 NS_IMETHODIMP nsMsgHdr::SetFlags(PRUint32 flags)
 {
 	m_flags = flags;
-	SetUInt32Column(m_mdb->m_flagsColumnToken, m_flags);
+	SetUInt32Column(m_flags, m_mdb->m_flagsColumnToken);
     return NS_OK;
 }
 
@@ -218,24 +218,24 @@ NS_IMETHODIMP nsMsgHdr::SetCCList(const char *ccList)
 
 NS_IMETHODIMP nsMsgHdr::SetMessageSize(PRUint32 messageSize)
 {
-	SetUInt32Column(m_mdb->m_messageSizeColumnToken, messageSize);
+	SetUInt32Column(messageSize, m_mdb->m_messageSizeColumnToken);
     return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetLineCount(PRUint32 lineCount)
 {
-	SetUInt32Column(m_mdb->m_numLinesColumnToken, lineCount);
+	SetUInt32Column(lineCount, m_mdb->m_numLinesColumnToken);
     return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetStatusOffset(PRUint32 statusOffset)
 {
-	return SetUInt32Column(m_mdb->m_statusOffsetColumnToken, statusOffset);
+	return SetUInt32Column(statusOffset, m_mdb->m_statusOffsetColumnToken);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetDate(time_t date)
 {
-    return SetUInt32Column(m_mdb->m_dateColumnToken, (PRUint32) date);
+    return SetUInt32Column((PRUint32) date, m_mdb->m_dateColumnToken);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetStatusOffset(PRUint32 *result)
@@ -259,6 +259,15 @@ NS_IMETHODIMP nsMsgHdr::GetMessageOffset(PRUint32 *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgHdr::GetMessageSize(PRUint32 *result)
+{
+	PRUint32 size;
+	nsresult res = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &size);
+
+	*result = size;
+	return res;
+}
+
 NS_IMETHODIMP nsMsgHdr::SetPriority(const char *priority)
 {
 // ### TODO
@@ -273,12 +282,20 @@ nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
 	yarn.mYarn_Size = PL_strlen((const char *) yarn.mYarn_Buf) + 1;
 	yarn.mYarn_Fill = yarn.mYarn_Size;
 	yarn.mYarn_Form = 0;
+	yarn.mYarn_Grow = NULL;
 	return m_mdbRow->AddColumn(m_mdb->GetEnv(), token, &yarn);
 }
 
 nsresult nsMsgHdr::SetUInt32Column(PRUint32 value, mdb_token token)
 {
+	char	yarnBuf[100];
+
 	struct mdbYarn yarn;
+	yarn.mYarn_Buf = (void *) yarnBuf;
+	yarn.mYarn_Size = sizeof(yarnBuf);
+	yarn.mYarn_Fill = yarn.mYarn_Size;
+	yarn.mYarn_Form = 0;
+	yarn.mYarn_Grow = NULL;
 	return m_mdbRow->AddColumn(m_mdb->GetEnv(),  token, nsMsgDatabase::UInt32ToYarn(&yarn, value));
 }
 

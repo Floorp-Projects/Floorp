@@ -206,6 +206,7 @@ nsMsgDatabase::nsMsgDatabase() : m_dbName("")
 	m_mdbStore = NULL;
 	m_mdbAllMsgHeadersTable = NULL;
 	m_mdbTokensInitialized = FALSE;
+	m_dbFolderInfo = NULL;
 }
 
 nsMsgDatabase::~nsMsgDatabase()
@@ -236,7 +237,7 @@ nsrefcnt nsMsgDatabase::Release(void)
 	if (!gMDBFactory)
 	{
 		// ### hook up class factory code when it's working
-//		gMDBFactory = new mdbFactory;
+		gMDBFactory = new mdbFactory;
 	}
 	return gMDBFactory;
 }
@@ -254,7 +255,13 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 		if (NS_SUCCEEDED(ret))
 		{
 			mdbThumb *thumb;
-			ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
+			struct stat st;
+
+			m_dbName = dbName;
+			if (stat(dbName, &st)) 
+				ret = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
+			else
+				ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
 				&thumb); 
 			if (NS_SUCCEEDED(ret))
 			{
@@ -404,6 +411,7 @@ nsresult nsMsgDatabase::InitNewDB()
 			// create the unique table for the dbFolderInfo.
 			mdb_err err = store->NewTable(GetEnv(), m_hdrRowScopeToken, 
 				m_hdrTableKindToken, PR_FALSE, &m_mdbAllMsgHeadersTable);
+			m_dbFolderInfo = dbFolderInfo;
 
 		}
 		else
@@ -420,6 +428,9 @@ nsresult nsMsgDatabase::InitExistingDB()
 	if (err == NS_OK)
 	{
 		err = GetStore()->GetTable(GetEnv(), &gAllMsgHdrsTableOID, &m_mdbAllMsgHeadersTable);
+		if (err == NS_OK)
+			m_dbFolderInfo = new nsDBFolderInfo(this);
+
 	}
 	return err;
 }
