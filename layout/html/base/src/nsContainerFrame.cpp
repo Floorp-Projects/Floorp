@@ -590,10 +590,10 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
             clipRect.x = display->mClip.x;
           }
           if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
-            clipRect.width = clipRect.x + display->mClip.width;
+            clipRect.width = display->mClip.width;
           }
           if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
-            clipRect.height = clipRect.y + display->mClip.height;
+            clipRect.height = display->mClip.height;
           }
         }
       }
