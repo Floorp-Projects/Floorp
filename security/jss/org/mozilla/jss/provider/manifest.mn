@@ -52,6 +52,7 @@ CLASSES = 											\
                     MD2RSASignature                 \
                     SHA1MessageDigest               \
                     SHA1RSASignature                \
+                    PKCS11SecureRandom              \
 			        $(NULL)
 
 JSRCS = 											     \
@@ -65,4 +66,5 @@ JSRCS = 											     \
                     MD2RSASignature.java                 \
                     SHA1MessageDigest.java               \
                     SHA1RSASignature.java                \
+                    PKCS11SecureRandom.java              \
 			        $(NULL)

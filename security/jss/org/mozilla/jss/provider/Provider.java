@@ -73,5 +73,10 @@ public class Provider extends java.security.Provider {
         put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
         put("Alg.Alias.MessageDigest.SHA", "SHA-1");
 
+        /////////////////////////////////////////////////////////////
+        // SecureRandom
+        /////////////////////////////////////////////////////////////
+        put("mozilla.pkcs11.prng",
+            "org.mozilla.jss.provider.PKCS11SecureRandom");
     }
 }

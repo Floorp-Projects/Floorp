@@ -9,11 +9,9 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the Netscape Security Services for Java.
- * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
- * Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+ * Copyright (C) 2001 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
  * Contributor(s):
@@ -30,16 +28,35 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package org.mozilla.jss.crypto;
 
-/**
- * An interface that allows providers to access CryptoManager without actually
- * knowing about CryptoManager. This is necessary to prevent cyclic
- * dependencies. CryptoManager knows about the providers, so the providers
- * can't know about CryptoManager.  Instead, CryptoManager implements
- * this interface.
- */
-public interface TokenSupplier {
-    public CryptoToken getInternalCryptoToken();
-    public JSSSecureRandom getSecureRNG();
+package org.mozilla.jss.provider;
+
+import org.mozilla.jss.crypto.TokenSupplierManager;
+import org.mozilla.jss.crypto.JSSSecureRandom;
+
+public class PKCS11SecureRandom extends java.security.SecureRandomSpi {
+
+    JSSSecureRandom engine;
+
+    PKCS11SecureRandom() {
+        super();
+        engine = TokenSupplierManager.getTokenSupplier().getSecureRNG();
+    }
+
+    protected byte[]
+    engineGenerateSeed(int numBytes) {
+        byte[] bytes = new byte[numBytes];
+        engine.nextBytes(bytes);
+        return bytes;
+    }
+
+    protected void
+    engineNextBytes(byte[] bytes) {
+        engine.nextBytes(bytes);
+    }
+
+    protected void
+    engineSetSeed(byte[] seed) {
+        engine.setSeed(seed);
+    }
 }

@@ -49,9 +49,7 @@ public class TestCryptoStore {
         try {
 
         CryptoManager.InitializationValues vals = new
-            CryptoManager.InitializationValues( args[0]+"/secmodule.db",
-                                  args[0]+"/key3.db",
-                                  args[0]+"/cert7.db" );
+            CryptoManager.InitializationValues(args[0]);
         try {
             vals.setInternalTokenDescription
                 ("TestCryptoStore Internal Token    "); // too long

@@ -1100,7 +1100,7 @@ GenerateCertRequest(JNIEnv *env,
 
 	/* der encode the request */
 	blob = SEC_ASN1EncodeItem(req->arena, &result_der, req,
-				  CERT_CertificateRequestTemplate);
+				  SEC_ASN1_GET(CERT_CertificateRequestTemplate));
 
 	/* sign the request */
 	arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);

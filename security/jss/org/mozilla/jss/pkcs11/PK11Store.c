@@ -180,19 +180,6 @@ finish:
 }
 
 /**********************************************************************
- * keyTraversalCallback
- *
- * Given a private key and vector, inserts the private key into the vector.
- *
- */
-static SECStatus
-keyTraversalCallback(SECKEYPrivateKey *key, void *arg)
-{
-    PR_ASSERT( ((TraversalCallbackInfo*)arg)->type == KEY_OBJECT);
-    return traversalCallback( (void*)key, arg);
-}
-
-/**********************************************************************
  * certTraversalCallback
  *
  * Given a certificate and vector, inserts the certificate into the vector.
@@ -214,7 +201,12 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putKeysInVector
     (JNIEnv *env, jobject this, jobject keyVector)
 {
     PK11SlotInfo *slot;
-    TraversalCallbackInfo info;
+    SECKEYPrivateKeyList *keyList = NULL;
+    SECKEYPrivateKey* keyCopy = NULL;
+    jobject object = NULL;
+    jclass vectorClass;
+    jmethodID addElement;
+    SECKEYPrivateKeyListNode *node = NULL;
 
     PR_ASSERT(env!=NULL && this!=NULL && keyVector!=NULL);
 
@@ -223,10 +215,6 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putKeysInVector
         goto finish;
     }
     PR_ASSERT(slot!=NULL);
-
-    info.env = env;
-    info.vector = keyVector;
-    info.type = KEY_OBJECT;
 
     /*
      * Most, if not all, tokens have to be logged in before they allow
@@ -237,18 +225,57 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putKeysInVector
      */
     PK11_Authenticate(slot, PR_TRUE /*load certs*/, NULL /*wincx*/);
 
-    if( PK11_TraversePrivateKeysInSlot(slot,
-                                       keyTraversalCallback,
-                                       (void*)&info) != SECSuccess)
-    {
-        if( ! (*env)->ExceptionOccurred(env) ) {
-            JSS_throwMsg(env, TOKEN_EXCEPTION,
-                "PK11_TraverseSlot returned an error");
-        }
+    /*
+     * Get the list of keys on this token
+     */
+    keyList = PK11_ListPrivateKeysInSlot(slot);
+    if( keyList == NULL ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "PK11_ListPrivateKeysInSlot "
+            "returned an error");
         goto finish;
     }
 
+    /**************************************************
+     * Get JNI ids
+     **************************************************/
+    vectorClass = (*env)->GetObjectClass(env, keyVector);
+    if(vectorClass == NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+    addElement = (*env)->GetMethodID(env,
+                                     vectorClass,
+                                     VECTOR_ADD_ELEMENT_NAME,
+                                     VECTOR_ADD_ELEMENT_SIG);
+    if(addElement == NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    for(    node = PRIVKEY_LIST_HEAD(keyList);
+            !PRIVKEY_LIST_END(node, keyList);
+            node = PRIVKEY_LIST_NEXT(node) )
+    {
+        /***************************************************
+        * Wrap the object
+        ***************************************************/
+        keyCopy = SECKEY_CopyPrivateKey(node->key);
+        object = JSS_PK11_wrapPrivKey(env, &keyCopy);
+        if(object == NULL) {
+            PR_ASSERT( (*env)->ExceptionOccurred(env) );
+            goto finish;
+        }
+
+        /***************************************************
+        * Insert the key into the vector
+        ***************************************************/
+        (*env)->CallVoidMethod(env, keyVector, addElement, object);
+    }
+
 finish:
+    if( keyList != NULL ) {
+        SECKEY_DestroyPrivateKeyList(keyList);
+    }
     return;
 }
 
@@ -260,7 +287,12 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putCertsInVector
     (JNIEnv *env, jobject this, jobject certVector)
 {
     PK11SlotInfo *slot;
-    TraversalCallbackInfo info;
+    jclass vectorClass;
+    jmethodID addElement;
+    CERTCertList *certList = NULL;
+    CERTCertificate *certCopy;
+    CERTCertListNode *node = NULL;
+    jobject object;
 
     PR_ASSERT(env!=NULL && this!=NULL && certVector!=NULL);
 
@@ -277,22 +309,54 @@ Java_org_mozilla_jss_pkcs11_PK11Store_putCertsInVector
         PK11_Authenticate(slot, PR_TRUE /*load certs*/, NULL /*wincx*/);
     }
 
-    info.env = env;
-    info.vector = certVector;
-    info.type = CERT_OBJECT;
-
-    if( PK11_TraverseCertsInSlot(slot,
-                                 certTraversalCallback,
-                                 (void*)&info) != SECSuccess)
-    {
-        if( ! (*env)->ExceptionOccurred(env) ) {
-            JSS_throwMsg(env, TOKEN_EXCEPTION,
-                "PK11_TraverseSlot returned an error");
-        }
+    certList = PK11_ListCertsInSlot(slot);
+    if( certList == NULL ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "PK11_ListCertsInSlot "
+            "returned an error");
         goto finish;
     }
 
+    /**************************************************
+     * Get JNI ids
+     **************************************************/
+    vectorClass = (*env)->GetObjectClass(env, certVector);
+    if(vectorClass == NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+    addElement = (*env)->GetMethodID(env,
+                                     vectorClass,
+                                     VECTOR_ADD_ELEMENT_NAME,
+                                     VECTOR_ADD_ELEMENT_SIG);
+    if(addElement == NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    for(    node = CERT_LIST_HEAD(certList);
+            !CERT_LIST_END(node, certList);
+            node = CERT_LIST_NEXT(node) )
+    {
+        /***************************************************
+        * Wrap the object
+        ***************************************************/
+        certCopy = CERT_DupCertificate(node->cert);
+        object = JSS_PK11_wrapCert(env, &certCopy);
+        if(object == NULL) {
+            PR_ASSERT( (*env)->ExceptionOccurred(env) );
+            goto finish;
+        }
+
+        /***************************************************
+        * Insert the cert into the vector
+        ***************************************************/
+        (*env)->CallVoidMethod(env, certVector, addElement, object);
+    }
+
 finish:
+    if( certList != NULL ) {
+        CERT_DestroyCertList(certList);
+    }
     return;
 }
 

@@ -472,7 +472,7 @@ finish:
  * SubjectPublicKeyInfo.
  */
 static jobject
-pubkFromRaw(JNIEnv *env, KeyType type, jbyteArray rawBA)
+pubkFromRaw(JNIEnv *env, CK_KEY_TYPE type, jbyteArray rawBA)
 {
     jobject pubkObj=NULL;
     SECKEYPublicKey *pubk=NULL;
@@ -480,7 +480,7 @@ pubkFromRaw(JNIEnv *env, KeyType type, jbyteArray rawBA)
     SECItem *pubkDER=NULL;
 
     /* validate args */
-    PR_ASSERT(env!=NULL && (type == rsaKey || type == dsaKey));
+    PR_ASSERT(env!=NULL && (type == CKK_RSA || type == CKK_DSA));
     if( rawBA == NULL ) {
         JSS_throw(env, NULL_POINTER_EXCEPTION);
         goto finish;
@@ -492,24 +492,8 @@ pubkFromRaw(JNIEnv *env, KeyType type, jbyteArray rawBA)
         goto finish;
     }
 
-    pubk = PR_NEW(SECKEYPublicKey);
-    if(pubk == NULL) {
-        JSS_throw(env, OUT_OF_MEMORY_ERROR);
-        goto finish;
-    }
-    pubk->arena = NULL;
-    pubk->pkcs11Slot = NULL;
-    pubk->pkcs11ID = CK_INVALID_HANDLE;
-    pubk->keyType = type;
-
-    if( type == rsaKey ) {
-        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_RSAPublicKeyTemplate,
-                                pubkDER);
-    } else {
-        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DSAPublicKeyTemplate,
-                                pubkDER);
-    }
-    if( rv != SECSuccess ) {
+    pubk = SECKEY_ImportDERPublicKey(pubkDER, type);
+    if( pubk == NULL ) {
         JSS_throw(env, INVALID_KEY_FORMAT_EXCEPTION);
         goto finish;
     }
@@ -522,11 +506,6 @@ pubkFromRaw(JNIEnv *env, KeyType type, jbyteArray rawBA)
     }
 
 finish:
-    if(pubk!=NULL) {
-        /* this will only happen if we failed the ASN1 decoding, meaning
-         * there's no data stored in the internal SECItems */
-        PR_Free(pubk);
-    }
     if(pubkDER!=NULL) {
         SECITEM_FreeItem(pubkDER, PR_TRUE /*freeit*/);
     }
@@ -541,7 +520,7 @@ JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11PubKey_RSAFromRaw
     (JNIEnv *env, jclass clazz, jbyteArray rawBA)
 {
-    return pubkFromRaw(env, rsaKey, rawBA);
+    return pubkFromRaw(env, CKK_RSA, rawBA);
 }
 
 /***********************************************************************
@@ -552,7 +531,7 @@ JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11PubKey_DSAFromRaw
     (JNIEnv *env, jclass clazz, jbyteArray rawBA)
 {
-    return pubkFromRaw(env, dsaKey, rawBA);
+    return pubkFromRaw(env, CKK_DSA, rawBA);
 }
 
 /***********************************************************************
