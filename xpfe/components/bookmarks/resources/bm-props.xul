@@ -167,7 +167,7 @@
 			<checkbox id="bookmarkIcon" value="&notification.icon.label;" />
 			<checkbox id="showAlert" value="&notification.alert.label;" />
 			<checkbox id="openWindow" value="&notification.window.label;" />
-			<checkbox id="playSound" disabled="true" value="&notification.sound.label;" />
+			<checkbox id="playSound" value="&notification.sound.label;" />
 		</titledbox>
 	</titledbox>
 </deck>

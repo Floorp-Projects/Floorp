@@ -66,7 +66,7 @@
 #include "nsITimer.h"
 #include "nsIAtom.h"
 
-//#include "nsISound.h"
+#include "nsISound.h"
 //#include "nsICommonDialogs.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
@@ -123,7 +123,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_CID(kNetSupportDialogCID,        NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kAppShellServiceCID,         NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
-
+static NS_DEFINE_IID(kSoundCID,                   NS_SOUND_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
 
@@ -2562,8 +2562,11 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			// update icon?
 			if (schedule.Find(NS_ConvertASCIItoUCS2("icon"), PR_TRUE, 0) >= 0)
 			{
+				nsAutoString		statusStr;
+				statusStr.AssignWithConversion("new");
+
 				nsCOMPtr<nsIRDFLiteral>	statusLiteral;
-				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("new").GetUnicode(), getter_AddRefs(statusLiteral))))
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(statusStr.GetUnicode(), getter_AddRefs(statusLiteral))))
 				{
 					nsCOMPtr<nsIRDFNode>	currentStatusNode;
 					if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_Status, PR_TRUE,
@@ -2582,17 +2585,15 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			// play a sound?
 			if (schedule.Find(NS_ConvertASCIItoUCS2("sound"), PR_TRUE, 0) >= 0)
 			{
-/*
 				nsCOMPtr<nsISound>	soundInterface;
 				rv = nsComponentManager::CreateInstance(kSoundCID,
 						nsnull, NS_GET_IID(nsISound),
 						getter_AddRefs(soundInterface));
 				if (NS_SUCCEEDED(rv))
 				{
-					// XXX for the moment, just beep
+					// for the moment, just beep
 					soundInterface->Beep();
 				}
-*/
 			}
 			
 			PRBool		openURLFlag = PR_FALSE;
