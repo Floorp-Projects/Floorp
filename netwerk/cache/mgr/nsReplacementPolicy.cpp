@@ -664,6 +664,10 @@ nsReplacementPolicy::Evict(PRUint32 aTargetOccupancy)
         if (!entry || entry->GetFlag(nsCachedNetData::UNEVICTABLE))
             continue;
 
+        // If the entry is not DORMANT then it cannot be evicted, so skip it..
+        if (!(entry->GetFlag(nsCachedNetData::DORMANT)))
+            continue;
+
         if (entry->GetFlag(nsCachedNetData::ALLOW_PARTIAL)) {
             rv = entry->GetRecord(getter_AddRefs(record));
             if (NS_FAILED(rv))
