@@ -507,6 +507,12 @@ void nsWindow::InitCallbacks(char * aName)
                     nsXtWidget_KeyPressMask_EventHandler,
                     this);
 
+  XtAddEventHandler(mWidget, 
+                    KeyReleaseMask,
+                    PR_FALSE, 
+                    nsXtWidget_KeyReleaseMask_EventHandler,
+                    this);
+
 
   /*XtAddEventHandler(mWidget, 
                     ResizeRedirectMask,

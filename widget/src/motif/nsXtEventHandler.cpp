@@ -805,26 +805,38 @@ void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
   }
 }
 
-void nsXtWidget_KeyPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
+void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
-  nsKeyEvent kevent;
   Modifiers modout = 0;
   KeySym res;
 
-  nsXtWidget_InitNSEvent(event, p, kevent, NS_KEY_DOWN);
+  nsXtWidget_InitNSEvent(event, p, aKeyEvent, aEventType);
 
   XKeyEvent* xKeyEvent =  (XKeyEvent*)event; 
   XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res);
-  kevent.keyCode   = nsConvertKey(res);
-  kevent.time      = xKeyEvent->time; 
-  kevent.isShift   = PR_FALSE; // modout | ShiftMask; // Fix later
-  kevent.isControl = PR_FALSE; // modout | ControlMask;
-  kevent.isAlt     = PR_FALSE; // Fix later
-printf("KEY Event %d shift %d control %d \n", kevent.keyCode, kevent.isShift, kevent.isControl);
+  aKeyEvent.keyCode   = nsConvertKey(res);
+  aKeyEvent.time      = xKeyEvent->time; 
+  aKeyEvent.isShift   = PR_FALSE; // modout | ShiftMask; // Fix later
+  aKeyEvent.isControl = PR_FALSE; // modout | ControlMask;
+  aKeyEvent.isAlt     = PR_FALSE; // Fix later
+printf("KEY Event type %d %d shift %d control %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl);
+}
 
+void nsXtWidget_KeyPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
+{
+  nsKeyEvent kevent;
+  nsXtWidget_InitNSKeyEvent(NS_KEY_DOWN, kevent, w, p, event, b);
+  nsWindow * widgetWindow = (nsWindow *) p ;
   widgetWindow->OnKey(NS_KEY_DOWN, kevent.keyCode, &kevent);
+}
 
+void nsXtWidget_KeyReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
+{
+  nsKeyEvent kevent;
+  nsXtWidget_InitNSKeyEvent(NS_KEY_UP, kevent, w, p, event, b);
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  widgetWindow->OnKey(NS_KEY_UP, kevent.keyCode, &kevent);
 }
 
 void nsXtWidget_ResetResize_Callback(XtPointer call_data)
