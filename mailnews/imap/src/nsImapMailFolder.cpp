@@ -72,6 +72,7 @@ nsImapMailFolder::nsImapMailFolder() :
     m_urlRunning(PR_FALSE), m_haveDiscoverAllFolders(PR_FALSE)
 {
 	m_pathName = nsnull;
+
 	nsresult rv;
 
     // Get current thread envent queue
@@ -716,16 +717,11 @@ NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
     else
         *userName = nsnull;
 #if 1 // for now
-	NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
-    
-    if (NS_SUCCEEDED(rv) && session) 
-    {
-      nsCOMPtr<nsIMsgIncomingServer> server;
-      rv = session->GetCurrentServer(getter_AddRefs(server));
-
-      if (NS_SUCCEEDED(rv) && server)
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	rv = GetServer(getter_AddRefs(server));
+ 
+    if (NS_SUCCEEDED(rv)) 
           rv = server->GetUserName(userName);
-    }
 #else  // **** for the future
     nsCOMPtr<nsIFolder> aFolder(do_QueryInterface((nsIMsgFolder*) this, &rv));
     if (NS_FAILED(rv)) return rv;
