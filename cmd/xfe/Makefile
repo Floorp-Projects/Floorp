@@ -1087,7 +1087,21 @@ $(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resource
 $(OBJDIR)/$(DSO_PROGNAME)-export: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
+ifdef BUILD_OFFICIAL
+	rm -rf $(OBJDIR)/objs.txt
+	@echo Creating a list of all object files ... objs.txt
+	@echo $(OBJS) > $(OBJDIR)/objs.txt
+	@echo $(EXPORT_OBJS) >> $(OBJDIR)/objs.txt
+	@echo $(DSO_EX_LIBS) >> $(OBJDIR)/objs.txt
+	@echo Creating a list of all symbols ... symbols.txt
+	$(PERL) listsymb.pl objs.txt symbols.txt
+	@echo Generating dispatch table ... dispunix.h dispunix.c cmoffset.h
+	$(PERL) gendisp.pl symbols.txt dispunix.h dispunix.c cmoffset.h
+	$(CC) -c -o $(OBJDIR)/dispunix.o -I$(DIST)/include dispunix.c
+	$(CCLD) -o $@ $(LDFLAGS) $(OBJDIR)/dispunix.o $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
+else
 	$(CCLD) -o $@ $(LDFLAGS) $(OBJS) $(EXPORT_OBJS) -L$(DIST)/bin -L$(DIST)/lib $(DSO_EX_LIBS) $(DNS_LIB)
+endif
 	@$(EXTRA_POST_LINK_CMD) $@
 
 $(OBJDIR)/$(DSO_PROGNAME)-export.mcv: $(OBJS) $(EXPORT_OBJS) $(EXPORT_DEPLIBS)
