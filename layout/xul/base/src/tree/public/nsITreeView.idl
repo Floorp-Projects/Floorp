@@ -116,7 +116,8 @@ interface nsITreeView : nsISupports
   
   /** 
    * Methods used by the tree to draw vertical lines in the tree.
-   * GetParentIndex is used to obtain the index of a parent row.
+   * getParentIndex is used to obtain the index of a parent row.
+   * If there is no parent row, getParentIndex returns -1.
    */
   long getParentIndex(in long rowIndex);
 

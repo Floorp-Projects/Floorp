@@ -238,7 +238,7 @@ function(aRow)
     if (this.mLevels[i] < baseLevel)
       return i;
   }
-  return 0;
+  return -1;
 }
 
 StyleSheetsView.prototype.hasNextSibling = 
