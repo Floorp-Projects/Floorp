@@ -598,7 +598,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
   nsRegionRectSet   onerect, *rectset;
 
 //printf("begin paint\n");
-  if (nsnull != aRootView)
+  if (aRootView && mRootView)
   {
     nscoord ox = 0, oy = 0;
 
