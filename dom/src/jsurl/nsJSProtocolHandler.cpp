@@ -178,7 +178,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsJSInputStream()
-        : mResult(nsnull), mLength(0), mReadCursor(0), mChannel(nsnull) {
+        : mChannel(nsnull), mResult(nsnull), mLength(0), mReadCursor(0) {
         NS_INIT_REFCNT();
     }
 
