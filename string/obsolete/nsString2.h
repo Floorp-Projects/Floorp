@@ -322,6 +322,8 @@ public:
 //void InsertWithConversion(char);
   void InsertWithConversion(const char*, PRUint32, PRInt32=-1);
 
+  // Takes ownership of aPtr, sets the current length to aLength if specified.
+  void Adopt( PRUnichar* aPtr, PRInt32 aLength = -1 );
 
   /**********************************************************************
     Searching methods...                

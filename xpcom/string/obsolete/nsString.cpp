@@ -864,7 +864,14 @@ void nsCString::InsertWithConversion(PRUnichar aChar,PRUint32 anOffset){
 }
 
 
-
+void nsCString::Adopt(char* aPtr, PRInt32 aLength) {
+  nsStr::Destroy(*this);
+  if (aLength == -1)
+    aLength = nsCharTraits<char>::length(aPtr);
+  // We don't know the capacity, so we'll just have to assume
+  // capacity = length.
+  nsStr::Initialize(*this, aPtr, aLength, aLength, eOneByte, PR_TRUE);
+}
 
 /**********************************************************************
   Searching methods...                
