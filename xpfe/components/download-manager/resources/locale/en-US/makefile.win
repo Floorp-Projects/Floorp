@@ -19,6 +19,6 @@
 # 
 # Contributor(s): 
 # 
-DEPTH = ..\..\..\..\..
+DEPTH = ..\..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>

@@ -77,6 +77,21 @@ function Startup()
   // Select the first item in the view, if any. 
   if (gDownloadViewChildren.hasChildNodes()) 
     gDownloadView.selectItem(gDownloadViewChildren.firstChild);
+  
+  var key;
+  if (navigator.platform.indexOf("Win") != -1)
+    key = "Win";
+  else if (navigator.platform.indexOf("Mac") != -1)
+    key = "Mac";
+  else
+    key = "Unix";
+
+  var bundle = document.getElementById("dlMgrBundle")
+  var label = bundle.getString("showInShellLabel" + key);
+  var accesskey = bundle.getString("showInShellAccesskey" + key);
+  var btn = document.getElementById("btn_showinshell");
+  btn.setAttribute("label", label);
+  btn.setAttribute("accesskey", accesskey);
 }
 
 function openPropertiesDialog()
@@ -88,7 +103,11 @@ function openPropertiesDialog()
 function onSelect(aEvent) {
   if (!gStatusBar)
     gStatusBar = document.getElementById("statusbar-text");
-  gStatusBar.label = gDownloadView.selectedItems[0].id;
+  if (gDownloadView.selectedItems.length)
+    gStatusBar.label = gDownloadView.selectedItems[0].id;
+  else
+    gStatusBar.label = "";
+
   window.updateCommands("tree-select");
 }
   
@@ -118,6 +137,9 @@ var downloadViewController = {
     var isDownloading = gDownloadManager.getDownload(gDownloadView.selectedItems[0].id);
     switch (aCommand) {
     case "cmd_openfile":
+      if (getFileForItem(gDownloadView.selectedItems[0]).isExecutable())
+        return false;
+
     case "cmd_showinshell":
       if (selectionCount != 1)
         return false;
