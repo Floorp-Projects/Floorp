@@ -900,9 +900,8 @@ function GetLocalFileURL(filterType)
   {
     fp.init(window, GetString("SelectImageFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterImages);
-    fp.appendFilters(nsIFilePicker.filterAll);
   }
-  else
+  else (filterType == "html")
   {
     fp.init(window, GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
 
@@ -910,8 +909,9 @@ function GetLocalFileURL(filterType)
     //   so we call separately to control the order of the filter list
     fp.appendFilters(nsIFilePicker.filterHTML);
     fp.appendFilters(nsIFilePicker.filterText);
-    fp.appendFilters(nsIFilePicker.filterAll);
   }
+  // Default or last filter is "All Files"
+  fp.appendFilters(nsIFilePicker.filterAll);
 
   /* doesn't handle *.shtml files */
   try {
