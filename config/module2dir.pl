@@ -84,7 +84,7 @@ my %map = (
   'java',               'sun-java/stubs js/jsd/classes js/src/liveconnect',
   'jpeg',               'jpeg',
   'jprof',              'tools/jprof',
-  'js',                 'js/src',
+  'js',                 'js/src/fdlibm js/src',
   'jsconsole',          'embedding/components/jsconsole',
   'jsdebug',            'js/jsd',
   'jsd_refl',           'js/jsd/jsdb',
