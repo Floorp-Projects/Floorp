@@ -43,6 +43,9 @@
 #include "nsIAccessibleWin32Object.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
+#include "nsIViewManager.h"
 #include "nsIDOMDocumentType.h"
 #include "nsINameSpaceManager.h"
 #include "nsITextContent.h"
@@ -51,6 +54,8 @@
 #include "nsReadableUtils.h"
 #include "nsWindow.h"
 #include "String.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
 #define _ATLBASE_IMPL
@@ -69,6 +74,16 @@ extern CComModule _Module;
 static gAccessibles = 0;
 #endif
 
+CComModule _Module;
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+PRInt32 RootAccessible::gListCount = 0;
+PRInt32 RootAccessible::gNextPos = 0;
+nsAccessibleEventMap RootAccessible::gList[MAX_LIST_SIZE];
+PRBool Accessible::gIsCacheDisabled = PR_FALSE;
+PRBool Accessible::gIsEnumVariantSupportDisabled = PR_FALSE;
+
 // {61044601-A811-4e2b-BBBA-17BFABD329D7}
 EXTERN_C GUID CDECL CLSID_Accessible =
 { 0x61044601, 0xa811, 0x4e2b, { 0xbb, 0xba, 0x17, 0xbf, 0xab, 0xd3, 0x29, 0xd7 } };
@@ -76,8 +91,6 @@ EXTERN_C GUID CDECL CLSID_Accessible =
 /*
  * Class Accessible
  */
-
-CComModule _Module;
 
 //-----------------------------------------------------
 // construction 
@@ -128,7 +141,7 @@ STDMETHODIMP Accessible::QueryInterface(REFIID iid, void** ppv)
 
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = NS_STATIC_CAST(IAccessible*, this);
-  else if (IID_IEnumVARIANT == iid) {
+  else if (IID_IEnumVARIANT == iid && !gIsEnumVariantSupportDisabled) {
     CacheMSAAChildren();
     if (mCachedChildCount > 0)  // Don't support this interface for leaf elements
       *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
@@ -620,6 +633,8 @@ Accessible::GetCachedChild(long aChildNum)
 
 void Accessible::CacheMSAAChildren()
 {
+  if (gIsCacheDisabled)
+    mCachedChildCount = -1;  // Don't use old info
   if (mCachedChildCount < 0)
     GetCachedChild(-1); // This caches the children and sets mCachedChildCount
 }
@@ -641,7 +656,8 @@ STDMETHODIMP Accessible::accNavigate(
       xpAccessibleStart->AccNavigateDown(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_FIRSTCHILD:
-      if (mCachedChildCount == -1 || xpAccessibleStart != mXPAccessible) {
+      if (mCachedChildCount == -1 || xpAccessibleStart != mXPAccessible ||
+          gIsCacheDisabled) {
         xpAccessibleStart->GetAccFirstChild(getter_AddRefs(xpAccessibleResult));
       }
       else if (mCachedFirstChild) {
@@ -655,12 +671,12 @@ STDMETHODIMP Accessible::accNavigate(
       xpAccessibleStart->AccNavigateLeft(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_NEXT:
-      if (isNavigatingFromSelf && mCachedNextSibling) {
+      if (isNavigatingFromSelf && mCachedNextSibling && !gIsCacheDisabled) {
         msaaAccessible = mCachedNextSibling;
       }
       else if (!mFlagBits.mIsLastSibling) {
         xpAccessibleStart->GetAccNextSibling(getter_AddRefs(xpAccessibleResult));
-        if (!xpAccessibleResult && isNavigatingFromSelf)
+        if (!xpAccessibleResult && isNavigatingFromSelf && !gIsCacheDisabled)
           mFlagBits.mIsLastSibling = PR_TRUE;
       }
       break;
@@ -681,14 +697,18 @@ STDMETHODIMP Accessible::accNavigate(
       if (navDir == NAVDIR_NEXT) {
         if (mCachedNextSibling)
           mCachedNextSibling->Release();
-        mCachedNextSibling = msaaAccessible;
-        msaaAccessible->AddRef(); // addref for the caching
+        if (!gIsCacheDisabled) {
+          mCachedNextSibling = msaaAccessible;
+          msaaAccessible->AddRef(); // addref for the caching
+        }
       }
       if (navDir == NAVDIR_FIRSTCHILD) {
         if (mCachedFirstChild)
           mCachedFirstChild->Release();
-        mCachedFirstChild = msaaAccessible;
-        msaaAccessible->AddRef(); // addref for the caching
+        if (!gIsCacheDisabled) {
+          mCachedFirstChild = msaaAccessible;
+          msaaAccessible->AddRef(); // addref for the caching
+        }
       }
     }
   } 
@@ -797,18 +817,19 @@ Accessible::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR* aNum
   accNavigate(NAVDIR_FIRSTCHILD, varStart, &pvar[0]);
 
   for (long childIndex = 0; pvar[*aNumElementsFetched].vt == VT_DISPATCH; ++childIndex) {
-    IAccessible *msaaAccessible = NS_STATIC_CAST(IAccessible*, pvar[*aNumElementsFetched].pdispVal);
+    PRBool wasAccessibleFetched = PR_FALSE;
+    Accessible *msaaAccessible = NS_STATIC_CAST(Accessible*, pvar[*aNumElementsFetched].pdispVal);
     if (childIndex >= mEnumVARIANTPosition) {
       if (++*aNumElementsFetched >= aNumElementsRequested)
         break;
-    }
-    else {  
-      msaaAccessible->Release(); // this accessible will not be received by the caller
+      wasAccessibleFetched = PR_TRUE;
     }
     msaaAccessible->accNavigate(NAVDIR_NEXT, varStart, &pvar[*aNumElementsFetched] );
+    if (!wasAccessibleFetched)
+      msaaAccessible->Release(); // this accessible will not be received by the caller
   }
-  mEnumVARIANTPosition = childIndex;
 
+  mEnumVARIANTPosition += *aNumElementsFetched;
   return NOERROR;
 }
 
@@ -1089,12 +1110,20 @@ RootAccessible::Release(void)
 
 RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAcc,nsnull,aWnd)
 {
-  mListCount = 0;
-  mNextPos = 0;
-
   nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mXPAccessible));
   if (r)
     r->AddAccessibleEventListener(this);
+
+  static PRBool prefsInitialized;
+
+  if (!prefsInitialized) {
+    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefCID));
+    if (prefService) {
+      prefService->GetBoolPref("accessibility.disablecache", &Accessible::gIsCacheDisabled);
+      prefService->GetBoolPref("accessibility.disableenumvariant", &Accessible::gIsEnumVariantSupportDisabled);
+    }
+    prefsInitialized = PR_TRUE;
+  }
 }
 
 RootAccessible::~RootAccessible()
@@ -1104,8 +1133,8 @@ RootAccessible::~RootAccessible()
     r->RemoveAccessibleEventListener();
 
   // free up accessibles
-  for (int i=0; i < mListCount; i++)
-    mList[i].mAccessible = nsnull;
+  for (int i=0; i < gListCount; i++)
+    gList[i].mAccessible = nsnull;
 }
 
 void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
@@ -1123,13 +1152,14 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
     }
     return;
   }
-  else if (varChild.lVal < 0) {
-    for (int i=0; i < mListCount; i++) {
-      if (varChild.lVal == mList[i].mId) {
-        aAcc = mList[i].mAccessible;
+
+  if (varChild.lVal < 0) {
+    for (int i=0; i < gListCount; i++) {
+      if (varChild.lVal == gList[i].mId) {
+        aAcc = gList[i].mAccessible;
         return;
       }
-    }    
+    }
   }
 
   Accessible::GetNSAccessibleFor(varChild, aAcc);
@@ -1177,7 +1207,7 @@ NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAcces
 #endif
 
   PRInt32 childID, worldID = OBJID_CLIENT;
-  PRUint32 role;
+  PRUint32 role = ROLE_SYSTEM_TEXT; // Default value
 
   if (NS_SUCCEEDED(aAccessible->GetAccRole(&role)) && role == ROLE_SYSTEM_CARET) {
     childID = CHILDID_SELF;
@@ -1186,13 +1216,31 @@ NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAcces
   else 
     childID = GetIdFor(aAccessible); // get the id for the accessible
 
+  if (role == ROLE_SYSTEM_PANE && aEvent == EVENT_STATE_CHANGE) {
+    // Something on the document has changed
+    // Clear out the cache in this subtree
+    if (mCachedFirstChild) {
+      mCachedFirstChild->Release();
+      mCachedFirstChild = nsnull;
+    }
+    mCachedChildCount = -1;
+  }
+
+  HWND hWnd = mWnd;
+  if (aEvent == EVENT_FOCUS) {
+    GUITHREADINFO guiInfo;
+    if (!::GetGUIThreadInfo(NULL, &guiInfo))
+      return NS_OK;
+    hWnd = guiInfo.hwndFocus;
+  }
+
   // notify the window system
-  NotifyWinEvent(aEvent, mWnd, worldID, childID);
+  NotifyWinEvent(aEvent, hWnd, worldID, childID);
   
   return NS_OK;
 }
 
-PRInt32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
+PRUint32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
 {
   // A child ID of the window is required, when we use NotifyWinEvent, so that the 3rd party application
   // can call back and get the IAccessible the event occured on.
@@ -1201,21 +1249,21 @@ PRInt32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
   PRInt32 uniqueID;
   aAccessible->GetAccId(&uniqueID);
 
-  for (PRInt32 index = 0; index < mListCount; index++)
-    if (uniqueID == mList[index].mId) {
+  for (PRInt32 index = 0; index < gListCount; index++)
+    if (uniqueID == gList[index].mId) {
       // Change old ID in list to use most recent accessible,
       // rather than create multiple entries for same accessible
-      mList[index].mAccessible = aAccessible;
+      gList[index].mAccessible = aAccessible;
       return uniqueID;
     }
 
-  mList[mNextPos].mId = uniqueID;
-  mList[mNextPos].mAccessible = aAccessible;
+  gList[gNextPos].mId = uniqueID;
+  gList[gNextPos].mAccessible = aAccessible;
 
-  if (++mNextPos >= MAX_LIST_SIZE)
-    mNextPos = 0;
-  if (mListCount < MAX_LIST_SIZE)
-    mListCount++;
+  if (++gNextPos >= MAX_LIST_SIZE)
+    gNextPos = 0;
+  if (gListCount < MAX_LIST_SIZE)
+    gListCount++;
 
   return uniqueID;
 }

@@ -220,6 +220,8 @@ protected:
   // This is what most assistive tech tends to do, so it shouldn't be a problem.
   void CacheMSAAChildren();
   IAccessible *GetCachedChild(long aChildNum);
+  static PRBool gIsCacheDisabled;
+  static PRBool gIsEnumVariantSupportDisabled;
 
 private:
   /// the accessible library and cached methods
@@ -292,15 +294,15 @@ public:
     // nsIAccessibleEventListener
     NS_DECL_NSIACCESSIBLEEVENTLISTENER
 
-    PRInt32 GetIdFor(nsIAccessible* aAccessible);
+    PRUint32 GetIdFor(nsIAccessible* aAccessible);
     virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
 
-private:
+  private:
     // list of accessible that may have had
     // events fire.
-    nsAccessibleEventMap mList[MAX_LIST_SIZE];
-    PRInt32 mListCount;
-    PRInt32 mNextPos;
+    static nsAccessibleEventMap gList[MAX_LIST_SIZE];
+    static PRInt32 gListCount;
+    static PRInt32 gNextPos;
 };
 #endif
 
