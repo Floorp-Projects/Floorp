@@ -2419,7 +2419,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, 
     else if (nsHTMLAtoms::select == aName && mSelCon)
     {
       // select all the text
-      mSelCon->SelectAll();
+      SelectAllContents();
     }
     mIsProcessing = PR_FALSE;
   }
