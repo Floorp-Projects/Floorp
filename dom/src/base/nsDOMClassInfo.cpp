@@ -4479,77 +4479,6 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
-                                  JSContext *cx, JSObject *obj,
-                                  PRUint32 enum_op, jsval *statep,
-                                  jsid *idp, PRBool *_retval)
-{
-  switch (enum_op)
-  {
-    case JSENUMERATE_INIT:
-    {
-      nsCOMPtr<nsISupports> native;
-      wrapper->GetNative(getter_AddRefs(native));
-      NS_ABORT_IF_FALSE(native, "No native!");
-
-      nsCOMPtr<nsIForm> form(do_QueryInterface(native));
-
-      if (!form) {
-        *statep = JSVAL_NULL;
-        return NS_ERROR_UNEXPECTED;
-      }
-      PRUint32 count = 0;
-      form->GetElementCount(&count);
-      *statep = INT_TO_JSVAL(0);
-      if (idp)
-        *idp = INT_TO_JSVAL(count);
-      return NS_OK;
-    }
-    case JSENUMERATE_NEXT:
-    {
-      nsCOMPtr<nsISupports> native;
-      wrapper->GetNative(getter_AddRefs(native));
-      NS_ABORT_IF_FALSE(native, "No native!");
-
-      nsCOMPtr<nsIForm> form(do_QueryInterface(native));
-      NS_ENSURE_TRUE(form, NS_ERROR_FAILURE);
-
-      PRInt32 index = (PRInt32) JSVAL_TO_INT(*statep);
-      PRUint32 count = 0;
-      form->GetElementCount(&count);
-      if ((PRUint32)index < count) {
-        nsCOMPtr<nsIFormControl> controlNode;
-        form->GetElementAt(index, getter_AddRefs(controlNode));
-        NS_ENSURE_TRUE(controlNode, NS_ERROR_FAILURE);
-
-        nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(controlNode);
-        NS_ENSURE_TRUE(domElement, NS_ERROR_FAILURE);
-
-        nsAutoString attr;
-        domElement->GetAttribute(NS_LITERAL_STRING("name"), attr);
-        if (attr.IsEmpty()) {
-          // If name is not there, use index instead
-          attr.AppendInt(index);
-        }
-        JSString *jsname = JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *, attr.get()), attr.Length());
-        NS_ENSURE_TRUE(jsname, NS_ERROR_OUT_OF_MEMORY);
-
-        JS_ValueToId(cx, STRING_TO_JSVAL(jsname), idp);
-
-        *statep = INT_TO_JSVAL(++index);
-      } else {
-        *statep = JSVAL_NULL;
-      }
-      break;
-    }
-    case JSENUMERATE_DESTROY:
-      *statep = JSVAL_NULL;
-      break;
-  }
-  return NS_OK;
-}
-
 // HTMLElement helper
 
 // static
@@ -4711,6 +4640,77 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElementSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
+                                  JSContext *cx, JSObject *obj,
+                                  PRUint32 enum_op, jsval *statep,
+                                  jsid *idp, PRBool *_retval)
+{
+  switch (enum_op)
+  {
+    case JSENUMERATE_INIT:
+    {
+      nsCOMPtr<nsISupports> native;
+      wrapper->GetNative(getter_AddRefs(native));
+      NS_ABORT_IF_FALSE(native, "No native!");
+
+      nsCOMPtr<nsIForm> form(do_QueryInterface(native));
+
+      if (!form) {
+        *statep = JSVAL_NULL;
+        return NS_ERROR_UNEXPECTED;
+      }
+      PRUint32 count = 0;
+      form->GetElementCount(&count);
+      *statep = INT_TO_JSVAL(0);
+      if (idp)
+        *idp = INT_TO_JSVAL(count);
+      return NS_OK;
+    }
+    case JSENUMERATE_NEXT:
+    {
+      nsCOMPtr<nsISupports> native;
+      wrapper->GetNative(getter_AddRefs(native));
+      NS_ABORT_IF_FALSE(native, "No native!");
+
+      nsCOMPtr<nsIForm> form(do_QueryInterface(native));
+      NS_ENSURE_TRUE(form, NS_ERROR_FAILURE);
+
+      PRInt32 index = (PRInt32) JSVAL_TO_INT(*statep);
+      PRUint32 count = 0;
+      form->GetElementCount(&count);
+      if ((PRUint32)index < count) {
+        nsCOMPtr<nsIFormControl> controlNode;
+        form->GetElementAt(index, getter_AddRefs(controlNode));
+        NS_ENSURE_TRUE(controlNode, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(controlNode);
+        NS_ENSURE_TRUE(domElement, NS_ERROR_FAILURE);
+
+        nsAutoString attr;
+        domElement->GetAttribute(NS_LITERAL_STRING("name"), attr);
+        if (attr.IsEmpty()) {
+          // If name is not there, use index instead
+          attr.AppendInt(index);
+        }
+        JSString *jsname = JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *, attr.get()), attr.Length());
+        NS_ENSURE_TRUE(jsname, NS_ERROR_OUT_OF_MEMORY);
+
+        JS_ValueToId(cx, STRING_TO_JSVAL(jsname), idp);
+
+        *statep = INT_TO_JSVAL(++index);
+      } else {
+        *statep = JSVAL_NULL;
+      }
+      break;
+    }
+    case JSENUMERATE_DESTROY:
+      *statep = JSVAL_NULL;
+      break;
+  }
   return NS_OK;
 }
 
