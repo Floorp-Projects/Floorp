@@ -652,8 +652,16 @@ input[type="submit"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
+input[type="submit"]:hover {
+   border : 2px solid black;
+}
+
 input[type="submit"][disabled] {
    border-style: solid;
+}
+
+input[type="submit"][disabled]:hover {
+  border: 2px solid rgb(156, 154, 156);
 }
 
 input[type="submit"][disabled]:active {
@@ -705,8 +713,16 @@ input[type="reset"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
+input[type="reset"]:hover {
+   border : 2px solid black;
+}
+
 input[type="reset"][disabled] {
    border-style: solid;
+}
+
+input[type="reset"][disabled]:hover {
+  border: 2px solid rgb(156, 154, 156);
 }
 
 input[type="reset"][disabled]:active {
@@ -755,8 +771,16 @@ input[type="button"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
+input[type="button"]:hover {
+   border : 2px solid black;
+}
+
 input[type="button"][disabled] {
    border-style: solid;
+}
+
+input[type="button"][disabled]:hover {
+  border: 2px solid rgb(156, 154, 156);
 }
 
 input[type="button"][disabled]:active {
@@ -803,6 +827,7 @@ button:active {
 }
 
 button:hover {
+   border : 2px solid black;
 }
 
 button:active:-moz-outline {
@@ -815,6 +840,10 @@ button:hover:-moz-outline {
 
 button[disabled] {
    border-style: solid;
+}
+
+button[disabled]:hover {
+  border: 2px solid rgb(156, 154, 156);
 }
 
 button[disabled]:active {
