@@ -34,6 +34,7 @@ var otherCasesLabel;
 var receiptArriveLabel;
 var receiptRequestLabel;
 var gIdentity;
+var gIncomingServer;
 var gMdnPrefBranch;
 
 function onInit() 
