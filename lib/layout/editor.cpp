@@ -1997,13 +1997,7 @@ void EDT_ConvertTableToText(MWContext *pMWContext)
     pEditBuffer->ConvertTableToText();
 }
 
-/* Save the character and paragraph style of selection or at caret */
-/* TODO: REMOVE AFTER CONFIRMING ITS NOT BEING USED ON ALL PLATFORMS */
-void EDT_CopyStyle(MWContext *pMWContext)
-{
-}
-
-/* TRUE if no mouse actions taken since last EDT_CopyStyle call */
+/* TRUE if there is global style data available */
 XP_Bool EDT_CanPasteStyle(MWContext *pMWContext)
 {
     GET_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer) FALSE;
