@@ -1503,15 +1503,17 @@ RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource*
 
     nsresult rv;
 
-    // Attempt to canonify the URI before we look for it in the cache.
-    nsCAutoString spec;
+    // Attempt to canonify the URI before we look for it in the
+    // cache. We won't bother doing this on `rdf:' URIs to avoid
+    // useless (and expensive) protocol handler lookups.
+    nsCAutoString spec(aURI);
 
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURI));
-    if (uri)
-        uri->GetSpec(spec);
-    else
-        spec = aURI;
+    if (Substring(spec, 0, 4) != NS_LITERAL_CSTRING("rdf:")) {
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURI));
+        if (uri)
+            uri->GetSpec(spec);
+    }
 
     // First, check the cache to see if we already have this
     // datasource loaded and initialized.
