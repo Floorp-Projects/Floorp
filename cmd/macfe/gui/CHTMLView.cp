@@ -110,6 +110,7 @@ extern "C" {
 
 #include <UDrawingState.h>
 #include <UMemoryMgr.h>
+#include <UCursor.h>
 #include <Sound.h>
 
 const Int16 FocusBox_Size		=	3;
@@ -1874,15 +1875,14 @@ void CHTMLView::AdaptToSuperFrameSize(
 	Int32					inSurrHeightDelta,
 	Boolean					inRefresh)
 {
+	UCursor::SetWatch();
+	
 	LView::AdaptToSuperFrameSize(inSurrWidthDelta, inSurrHeightDelta, inRefresh);
 
 	if (IsRootHTMLView())
 		{
 		if ((mContext != NULL) && ((inSurrWidthDelta != 0) || (inSurrHeightDelta != 0)) && (!mContext->IsViewSourceContext()))
 			{
-#if 0
-			mContext->Repaginate();
-#else
 			SDimension16	theFrameSize;
 			Rect			theFrame;
 			int32			leftMargin;
@@ -1921,9 +1921,10 @@ void CHTMLView::AdaptToSuperFrameSize(
 			
 			LO_RelayoutOnResize ( *mContext, theFrameSize.width, theFrameSize.height, leftMargin, topMargin );
 			AdjustScrollBars();
-#endif
+
 			}
 		}
+	UCursor::SetArrow();
 }
 
 void CHTMLView::ResizeFrameBy(
