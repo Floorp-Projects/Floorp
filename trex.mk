@@ -54,7 +54,7 @@ pull_platform:
 	cd $(MOZ_SRC)
 
 pull_julian:
-ifeq($(MOZ_ZULU_FREE),1)
+ifeq ($(MOZ_ZULU_FREE),1)
 	cd $(MOZ_SRC); \
 	$(CVST) ns/client.mk; \
 	cd $(MOZ_SRC)/ns/.; \
@@ -80,7 +80,7 @@ build_platform:
 
 
 build_julian:: 
-ifeq($(MOZ_ZULU_FREE),1)
+ifeq ($(MOZ_ZULU_FREE),1)
 	cd $(MOZ_SRC)/ns/modules/libnls; \
 	gmake; \
 endif
