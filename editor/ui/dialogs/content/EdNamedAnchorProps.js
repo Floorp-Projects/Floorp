@@ -24,6 +24,7 @@ var insertNew = true;
 var tagName = "anchor";
 var anchorElement = null;
 var nameInput;
+var originalName = "";
 
 // dialog initialization code
 function Startup()
@@ -35,23 +36,20 @@ function Startup()
 
   nameInput = document.getElementById("nameInput");
 
-  dump("tagName = "+tagName+"\n");
-
   // Get a single selected element of the desired type
   anchorElement = editorShell.GetSelectedElement(tagName);
 
   if (anchorElement) {
     // We found an element and don't need to insert one
     insertNew = false;
-    dump("Found existing anchor\n");
 
     // Make a copy to use for AdvancedEdit
     globalElement = anchorElement.cloneNode(false);
+    originalName = anchorElement.name;
   } else {
     insertNew = true;
     // We don't have an element selected, 
     //  so create one with default attributes
-    dump("Element not selected - calling createElementWithDefaults\n");
     anchorElement = editorShell.CreateElementWithDefaults(tagName);
     if (anchorElement) {
       // Use the current selection as suggested name
@@ -66,7 +64,6 @@ function Startup()
       // Make a copy to use for AdvancedEdit
       globalElement = anchorElement.cloneNode(false);
       globalElement.setAttribute("name",name);
-      //dump(globalElement+name+" = name"+" Get name Attribute="+globalElement.getAttribute("name")+"\n");
     }
   }
   if(!anchorElement)
@@ -92,7 +89,7 @@ function ChangeName()
   {
     // Replace spaces with "_" and strip other non-URL characters
     // Note: we could use ConvertAndEscape, but then we'd
-    //  have to UnConverAndEscape beforehand - too messy!
+    //  have to UnEscapeAndConvert beforehand - too messy!
     nameInput.value = PrepareStringForURL(nameInput.value.replace(/\s+/g, "_"));
   }
 }
@@ -114,7 +111,7 @@ function AnchorNameExists(name)
 function ValidateData()
 {
   var name = TrimString(nameInput.value);
-  if (name.length == 0)
+  if (!name)
   {
       ShowInputErrorMessage(GetString("MissingAnchorNameError"));
       SetTextfieldFocus(nameInput);
@@ -125,7 +122,7 @@ function ValidateData()
     //  have to UnConverAndEscape beforehand - too messy!
     name = PrepareStringForURL(name);
 
-    if (AnchorNameExists(name))
+    if (originalName != name && AnchorNameExists(name))
     {
       ShowInputErrorMessage(GetString("DuplicateAnchorNameError").replace(/%name%/,name));            
       SetTextfieldFocus(nameInput);
@@ -140,15 +137,18 @@ function onOK()
 {
   if (ValidateData())
   {
-    // Copy attributes to element we are changing or inserting
-    editorShell.CloneAttributes(anchorElement, globalElement);
+    if (originalName != globalElement.name)
+    {
+      // Copy attributes to element we are changing or inserting
+      editorShell.CloneAttributes(anchorElement, globalElement);
 
-    if (insertNew) {
-      // Don't delete selected text when inserting
-      try {
-        editorShell.InsertElementAtSelection(anchorElement, false);
-      } catch (e) {
-        dump("Exception occured in InsertElementAtSelection\n");
+      if (insertNew) {
+        // Don't delete selected text when inserting
+        try {
+          editorShell.InsertElementAtSelection(anchorElement, false);
+        } catch (e) {
+          dump("Exception occured in InsertElementAtSelection\n");
+        }
       }
     }
     SaveWindowLocation();
