@@ -33,10 +33,11 @@ EX_LIBS = $(DIST)/lib/libshell_s.a \
 	$(DIST)/lib/libxpcom.a	\
 	$(DIST)/lib/libreg.a	\
 	$(DIST)/lib/libraptorbase.a	\
+	$(DIST)/lib/libraptorgfx.a	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
-	$(DIST)/lib/libshell.a	\
+	$(DIST)/lib/libshell.a \
 	$(NULL)
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
@@ -51,7 +52,7 @@ $(OBJDIR)/%.o: %.cpp
 
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXt -lX11
+	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11
 
 export::
 
