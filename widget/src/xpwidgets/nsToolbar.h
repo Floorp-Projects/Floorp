@@ -29,6 +29,7 @@
 
 class ToolbarLayoutInfo;
 class nsIImageGroup;
+class nsToolbarDataModel;
 
 
 //
@@ -45,7 +46,6 @@ class nsToolbar : public nsDataModelWidget,
                   public nsIToolbar,  //*** not for long
                   public nsIContentConnector,
                   public nsIToolbarItem
-                  
 {
 public:
     nsToolbar();
@@ -117,6 +117,15 @@ public:
                                          PRInt32& aWidth,          PRInt32& aHeight);
   NS_IMETHOD CreateTab(nsIWidget *& aTab);
 
+  // Override the widget creation method
+  NS_IMETHOD Create(nsIWidget *aParent,
+                            const nsRect &aRect,
+                            EVENT_CALLBACK aHandleEventFunction,
+                            nsIDeviceContext *aContext,
+                            nsIAppShell *aAppShell,
+                            nsIToolkit *aToolkit,
+                            nsWidgetInitData *aInitData);
+
 protected:
   void GetMargins(PRInt32 &aX, PRInt32 &aY);
   void DoHorizontalLayout(const nsRect& aTBRect);
@@ -126,12 +135,16 @@ protected:
               const nsString& aDisabledURL,
               const nsString& aRollOverURL);
 
+  // General function for painting a background image.
+  void PaintBackgroundImage(nsIRenderingContext& drawCtx, 
+						  nsIImage* bgImage, const nsRect& constraintRect,
+						  int xSrcOffset = 0, int ySrcOffset = 0);
 
   //*** these should be smart pointers ***
-//nsToolbarDataModel* mDataModel;   // The data source from which everything to draw is obtained.
+  nsToolbarDataModel* mDataModel;   // The data source from which everything to draw is obtained.
   nsIImageGroup* mImageGroup;    // Used to make requests for toolbar images.
 
-  // This will be changed to a nsVoidArray or a Deque
+  //*** This will all be stored in the DOM
   ToolbarLayoutInfo ** mItems;
   PRInt32              mNumItems;
 
