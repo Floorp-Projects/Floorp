@@ -79,7 +79,7 @@ public:
    * @param aURL the URL or filename for error messages
    * @param aLineNo the starting line number of the script for error messages
    * @param aVersion the script language version to use when executing
-   * @param aRetValue the result of executing the script
+   * @param aRetValue the result of executing the script, or null for no result
    * @param aIsUndefined true if the result of executing the script is the
    *                     undefined value
    *
@@ -92,7 +92,7 @@ public:
                                   const char *aURL,
                                   PRUint32 aLineNo,
                                   const char* aVersion,
-                                  nsAString& aRetValue,
+                                  nsAString *aRetValue,
                                   PRBool* aIsUndefined) = 0;
 
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,

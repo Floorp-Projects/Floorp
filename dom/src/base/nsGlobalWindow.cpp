@@ -4993,11 +4993,10 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         NS_REINTERPRET_CAST(const PRUnichar *,
                             ::JS_GetStringChars(timeout->mExpr));
 
-      nsAutoString retval;
       PRBool is_undefined;
       mContext->EvaluateString(nsDependentString(script), mJSObject,
                                timeout->mPrincipal, timeout->mFileName,
-                               timeout->mLineNo, timeout->mVersion, retval,
+                               timeout->mLineNo, timeout->mVersion, nsnull,
                                &is_undefined);
     } else {
       PRInt64 lateness64;

@@ -746,8 +746,9 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                               aLineNo,
                                               &val);
 
-      if (aVersion)
+      if (aVersion) {
         ::JS_SetVersion(mContext, oldVersion);
+      }
 
       if (!ok) {
         // Tell XPConnect about any pending exceptions. This is needed
@@ -838,12 +839,16 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             const char *aURL,
                             PRUint32 aLineNo,
                             const char* aVersion,
-                            nsAString& aRetValue,
+                            nsAString *aRetValue,
                             PRBool* aIsUndefined)
 {
   if (!mScriptsEnabled) {
     *aIsUndefined = PR_TRUE;
-    aRetValue.Truncate();
+
+    if (aRetValue) {
+      aRetValue->Truncate();
+    }
+
     return NS_OK;
   }
 
@@ -940,14 +945,16 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   // If all went well, convert val to a string (XXXbe unless undefined?).
   if (ok) {
-    rv = JSValueToAString(mContext, val, &aRetValue, aIsUndefined);
+    rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   }
   else {
     if (aIsUndefined) {
       *aIsUndefined = PR_TRUE;
     }
 
-    aRetValue.Truncate();
+    if (aRetValue) {
+      aRetValue->Truncate();
+    }
   }
 
   ScriptEvaluated(PR_TRUE);

@@ -64,7 +64,7 @@ public:
                                   const char *aURL,
                                   PRUint32 aLineNo,
                                   const char* aVersion,
-                                  nsAString& aRetValue,
+                                  nsAString *aRetValue,
                                   PRBool* aIsUndefined);
   virtual nsresult EvaluateStringWithValue(const nsAString& aScript,
                                      void *aScopeObject,
