@@ -583,6 +583,7 @@ $MAKEFILES_libreg
 $MAKEFILES_libjar
 intl/unicharutil/public/Makefile
 intl/uconv/public/Makefile
+netwerk/base/public/Makefile
 "
 
 MAKEFILES_xpcom_tests="
