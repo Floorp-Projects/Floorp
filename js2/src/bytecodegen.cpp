@@ -369,8 +369,8 @@ ByteCodeModule::ByteCodeModule(ByteCodeGen *bcg, JSFunction *f)
 
 ByteCodeModule::~ByteCodeModule()
 {
-    delete mCodeBase;
-    delete mCodeMap;
+    delete[] mCodeBase;
+    delete[] mCodeMap;
 }
 
 size_t ByteCodeModule::getPositionForPC(uint32 pc)
