@@ -221,15 +221,22 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kStringBundleServiceCID, NULL, NULL, path,
     PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) goto done;
 
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -237,14 +244,21 @@ extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterFactory(kStringBundleServiceCID, path);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) goto done;
 
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 

@@ -27,6 +27,7 @@
 #include "nsIStreamListener.h"
 #endif
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -616,19 +617,39 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  return compMgr->RegisterComponent(kPrefCID, NULL, NULL, path, 
-                                    PR_TRUE, PR_TRUE);
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->RegisterComponent(kPrefCID, NULL, NULL, path, 
+                                  PR_TRUE, PR_TRUE);
+
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  return compMgr->UnregisterFactory(kPrefCID, path);
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->UnregisterFactory(kPrefCID, path);
+
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
 

@@ -148,7 +148,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr,
 
   *aFactory = nsnull;
 
-  nsresult rv = aServMgr->QueryInterface(nsIComponentManager::IID(), (void**)&gCompMgr);
+  nsresult rv = aServMgr->QueryInterface(nsIComponentManager::GetIID(), (void**)&gCompMgr);
   if (NS_FAILED(rv)) return rv;
 
   if (aClass.Equals(kEditorCID)) {
@@ -177,31 +177,52 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
+
   rv = compMgr->RegisterComponent(kEditorCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->RegisterComponent(kTextEditorCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->RegisterComponent(kHTMLEditorCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
-  return result;
+
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult 
 NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
   nsresult rv;
-  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
+
   rv = compMgr->UnregisterFactory(kIEditFactoryIID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterFactory(kITextEditFactoryIID, path);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
   rv = compMgr->UnregisterFactory(kIHTMLEditFactoryIID, path);
-  return result;
+
+  done:
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
 
 //END EXPORTS
