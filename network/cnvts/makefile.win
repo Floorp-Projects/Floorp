@@ -39,6 +39,9 @@ LLIBS=  \
 	$(NULL)
 MISCDEP=$(LLIBS)
 OBJS=   \
+	.\$(OBJDIR)\magic.obj	\
+	.\$(OBJDIR)\cvplugin.obj	\
+	.\$(OBJDIR)\nsNetConverterStream.obj	\
 	.\$(OBJDIR)\cvactive.obj	\
 	.\$(OBJDIR)\cvchunk.obj		\
 	.\$(OBJDIR)\cvcolor.obj		\
@@ -53,6 +56,11 @@ OBJS=   \
 !endif
 	$(NULL)
 
+CPPSRCS = \
+    magic.cpp \
+    cvplugin.cpp \
+    nsNetConverterStream.cpp \
+    $(NULL)
 
 TMP_CSRCS =	\
 	cvactive.c	\
@@ -88,9 +96,15 @@ EXPORTS= \
 	cvdisk.h 	\
 	cvmime.h 	\
 	cvpics.h 	\
+	cvplugin.h	\
 	cvsimple.h 	\
 	cvunzip.h 	\
-	cvjscfg.h 	
+	cvjscfg.h 	\
+	magic.h		\
+	magicCID.h	\
+	nsINetPlugin.h	\
+	nsINetPluginInstance.h	\
+	nsINetOStream.h	
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
@@ -109,7 +123,10 @@ LINCS= \
     -I$(PUBLIC)\softupdt	\
     -I$(PUBLIC)\network \
     -I$(PUBLIC)\mimetype \
+    -I$(PUBLIC)\plugin \
     -I$(PUBLIC)\ldap \
+    -I$(PUBLIC)\raptor \
+    -I$(PUBLIC)\xpcom \
     $(NULL)
 #!endif
 
