@@ -206,7 +206,7 @@
                  (const id string (lex-name :identifier-name))
                  (if (and (set-in id (list-set "abstract" "as" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
                                                "exclude" "export" "extends" "false" "final" "finally" "for" "function" "get" "goto" "if" "implements" "import" "in"
-                                               "include" "instanceof" "interface" "is" "named" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return"
+                                               "include" "instanceof" "interface" "is" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return"
                                                "set" "static" "super" "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use"
                                                "var" "volatile" "while" "with"))
                           (not (contains-escapes :identifier-name)))
