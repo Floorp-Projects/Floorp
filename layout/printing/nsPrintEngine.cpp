@@ -838,11 +838,10 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
           // Get the Original PixelScale incase we need to start changing it
           mPrt->mPrintDC->GetCanonicalPixelScale(mPrt->mOrigDCScale);
           // Shrink to Fit over rides and scaling values
-          double scaling = 1.0;
-          mPrt->mPrintSettings->GetScaling(&scaling);
           if (!mPrt->mShrinkToFit) {
+            double scaling;
+            mPrt->mPrintSettings->GetScaling(&scaling);
             mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
-            mPrt->mShrinkRatio = float(scaling);
           }
 
           if(webContainer) {
@@ -1230,11 +1229,10 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
         mDeviceContext->SetAltDevice(ppDC);
         if (mPrt->mPrintSettings != nsnull) {
           // Shrink to Fit over rides and scaling values
-          double scaling;
-          mPrt->mPrintSettings->GetScaling(&scaling);
           if (!mPrt->mShrinkToFit) {
+            double scaling;
+            mPrt->mPrintSettings->GetScaling(&scaling);
             mDeviceContext->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
-            mPrt->mShrinkRatio = float(scaling);
           }
         }
         ppDC->GetDeviceSurfaceDimensions(width, height);
@@ -2576,7 +2574,6 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
 
   // Here is where we set the shrinkage value into the DC
   // and this is what actually makes it shrink
-  float ratio = mPrt->mShrinkRatio;
   if (aSetPixelScale && aPO->mFrameType != eIFrame) {
     float ratio;
     if (mPrt->mPrintFrameType == nsIPrintSettings::kFramesAsIs || mPrt->mPrintFrameType == nsIPrintSettings::kNoFrames) {
@@ -2585,13 +2582,6 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
       ratio = aPO->mShrinkRatio - 0.005f; // round down
     }
     mPrt->mPrintDC->SetCanonicalPixelScale(ratio*mPrt->mOrigDCScale);
-  }
-
-  // Set ScaleFactor here so we can use later when the PresContext is created
-  if (!mPrt->mShrinkToFit || (mPrt->mShrinkToFit && aSetPixelScale)) {
-    aPO->mScaleFactor = ratio;
-  } else {
-    aPO->mScaleFactor = 0.0f;
   }
 
   // Reflow the PO
@@ -2660,10 +2650,6 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
     printcon->SetPrintSettings(mPrt->mPrintSettings);
   }
 
-  // Set up scale factor into PresContext
-  if (aPO->mScaleFactor > 0.0f) {
-    aPO->mPresContext->SetPrintScale(aPO->mScaleFactor);
-  }
 
   // set the presentation context to the value in the print settings
   PRBool printBGColors;
