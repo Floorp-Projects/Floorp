@@ -185,9 +185,7 @@ static struct pref_map pref_map[] = {
 {"editor.html_editor", FIELD_OFFSET(editor_html_editor), read_path, write_path, },
 {"editor.image_editor", FIELD_OFFSET(editor_image_editor), read_path, write_path, },
 {"editor.template_location", FIELD_OFFSET(editor_document_template), read_str, write_str},
-#ifdef HELLFREEZE
-{"editor.auto_save_delay", FIELD_OFFSET(editor_autosave_period), int32},
-#endif
+{"editor.auto_save_delay", FIELD_OFFSET(editor_autosave_period), read_int, write_int},
 {"editor.use_custom_colors", FIELD_OFFSET(editor_custom_colors), read_bool, write_bool},
 {"editor.background_color", FIELD_OFFSET(editor_background_color), read_color, write_color},
 {"editor.text_color", FIELD_OFFSET(editor_normal_color), read_color, write_color},
