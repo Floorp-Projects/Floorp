@@ -58,7 +58,6 @@
 #include "nsIHTMLContent.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
-#include "nsParserCIID.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "plstr.h"
@@ -72,8 +71,6 @@
    Not sure, if popping up dialog boxes is the right thing for such code
    (and if so, how to do it).
  */
-
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 #define TEXT_REMOVED "&lt;Text removed&gt;"
 #define TEXT_BREAKER "|"
@@ -180,22 +177,6 @@ mozSanitizingHTMLSerializer::GetPref(PRInt32 aTag, PRBool& aPref)
   return NS_OK;
 }
 
-nsresult
-mozSanitizingHTMLSerializer::GetParserService(
-                                          nsIParserService** aParserService)
-{
-  if (!mParserService) {
-    nsresult rv;
-    mParserService = do_GetService(kParserServiceCID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  *aParserService = mParserService;
-  NS_ADDREF(*aParserService);
-  return NS_OK;
-}
-
 
 /**
  * Returns true, if the id represents a container
@@ -205,8 +186,7 @@ mozSanitizingHTMLSerializer::IsContainer(PRInt32 aId)
 {
   PRBool isContainer = PR_FALSE;
 
-  nsCOMPtr<nsIParserService> parserService;
-  GetParserService(getter_AddRefs(parserService));
+  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
   if (parserService) {
     parserService->IsContainer(aId, isContainer);
   }
@@ -237,12 +217,11 @@ mozSanitizingHTMLSerializer::GetIdForContent(nsIContent* aContent,
   if (!tagname)
     return NS_ERROR_FAILURE;
   
-  nsresult rv;
-  nsCOMPtr<nsIParserService> parserService;
-  rv = GetParserService(getter_AddRefs(parserService));
-  if (NS_FAILED(rv))
-    return rv;
+  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  if (!parserService)
+    return NS_ERROR_OUT_OF_MEMORY;
 
+  nsresult rv;
   rv = parserService->HTMLAtomTagToId(tagname, aID);
   if (NS_FAILED(rv))
     return rv;
@@ -472,10 +451,10 @@ mozSanitizingHTMLSerializer::DoOpenContainer(PRInt32 aTag)
 
   if (IsAllowedTag(type))
   {
-    nsCOMPtr<nsIParserService> parserService;
-    nsresult rv = GetParserService(getter_AddRefs(parserService));
-    if (NS_FAILED(rv))
-      return rv;
+    nsIParserService* parserService =
+      nsContentUtils::GetParserServiceWeakRef();
+    if (!parserService)
+      return NS_ERROR_OUT_OF_MEMORY;
     const PRUnichar* tag_name;
     parserService->HTMLIdToStringTag(aTag, &tag_name);
     NS_ENSURE_TRUE(tag_name, NS_ERROR_INVALID_POINTER);
@@ -520,10 +499,10 @@ mozSanitizingHTMLSerializer::DoCloseContainer(PRInt32 aTag)
   eHTMLTags type = (eHTMLTags)aTag;
 
   if (IsAllowedTag(type)) {
-    nsCOMPtr<nsIParserService> parserService;
-    nsresult rv = GetParserService(getter_AddRefs(parserService));
-    if (NS_FAILED(rv))
-      return rv;
+    nsIParserService* parserService =
+      nsContentUtils::GetParserServiceWeakRef();
+    if (!parserService)
+      return NS_ERROR_OUT_OF_MEMORY;
     const PRUnichar* tag_name;
     parserService->HTMLIdToStringTag(aTag, &tag_name);
     NS_ENSURE_TRUE(tag_name, NS_ERROR_INVALID_POINTER);
@@ -701,7 +680,7 @@ mozSanitizingHTMLSerializer::IsAllowedAttribute(nsHTMLTag aTag,
    - the attributes are separated by commas.
 
    There is no way to express further restrictions, like "no text inside the
-   <head> element. This is so to considerably reduce the complexity of the
+   <head> element". This is so to considerably reduce the complexity of the
    pref and this implementation.
 
    Update: Akk told me that I might be able to use DTD classes. Later(TM)...
@@ -709,11 +688,6 @@ mozSanitizingHTMLSerializer::IsAllowedAttribute(nsHTMLTag aTag,
 nsresult
 mozSanitizingHTMLSerializer::ParsePrefs(const nsAString& aPref)
 {
-  nsCOMPtr<nsIParserService> parserService;
-  nsresult rv = GetParserService(getter_AddRefs(parserService));
-  if (NS_FAILED(rv))
-    return rv;
-
   char* pref = ToNewCString(aPref);
 #ifdef DEBUG_BenB
   printf("pref: -%s-\n", pref);
@@ -737,10 +711,9 @@ mozSanitizingHTMLSerializer::ParsePrefs(const nsAString& aPref)
 nsresult
 mozSanitizingHTMLSerializer::ParseTagPref(const nsCAutoString& tagpref)
 {
-  nsCOMPtr<nsIParserService> parserService;
-  nsresult rv = GetParserService(getter_AddRefs(parserService));
-  if (NS_FAILED(rv))
-    return rv;
+  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  if (!parserService)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Parsing tag
 #ifdef DEBUG_BenB

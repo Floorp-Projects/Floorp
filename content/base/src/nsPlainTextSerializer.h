@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsILineBreaker.h"
-#include "nsIParserService.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIHTMLToTextSink.h"
@@ -149,7 +148,6 @@ protected:
   PRBool IsInOL();
   PRBool IsCurrentNodeConverted();
   nsresult GetIdForContent(nsIContent* aContent, PRInt32* aID);
-  nsresult GetParserService(nsIParserService** aParserService);
   nsresult DoOpenContainer(PRInt32 aTag);
   nsresult DoCloseContainer(PRInt32 aTag);
   nsresult DoAddLeaf(PRInt32 aTag, const nsAString& aText);
@@ -252,7 +250,6 @@ protected:
 
   nsString                     mLineBreak;
   nsCOMPtr<nsILineBreaker>     mLineBreaker;
-  nsCOMPtr<nsIParserService>   mParserService;
 
   // Conveniance constant. It would be nice to have it as a const static
   // variable, but that causes issues with OpenBSD and module unloading.

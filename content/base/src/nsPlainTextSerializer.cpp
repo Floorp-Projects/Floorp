@@ -50,14 +50,13 @@
 #include "nsIHTMLContent.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
-#include "nsParserCIID.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
+#include "nsIParserService.h"
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 #define PREF_STRUCTS "converter.html2txt.structs"
 #define PREF_HEADER_STRATEGY "converter.html2txt.header_strategy"
@@ -1020,8 +1019,8 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     Write(aText);
   }
   else if (type == eHTMLTag_entity) {
-    nsCOMPtr<nsIParserService> parserService;
-    GetParserService(getter_AddRefs(parserService));
+    nsIParserService* parserService =
+      nsContentUtils::GetParserServiceWeakRef();
     if (parserService) {
       nsAutoString str(aText);
       PRInt32 entity;
@@ -1756,27 +1755,15 @@ nsPlainTextSerializer::GetIdForContent(nsIContent* aContent,
   nsAutoString namestr;
   tagname->ToString(namestr);
   
-  nsresult rv;
-  nsCOMPtr<nsIParserService> parserService;
-  rv = GetParserService(getter_AddRefs(parserService));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  nsIParserService* parserService =
+    nsContentUtils::GetParserServiceWeakRef();
+  if (!parserService)
+    return NS_ERROR_FAILURE;
 
+  nsresult rv;
   rv = parserService->HTMLStringTagToId(namestr, aID);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  return NS_OK;
-}
-
-nsresult
-nsPlainTextSerializer::GetParserService(nsIParserService** aParserService)
-{
-  if (!mParserService) {
-    nsresult rv;
-    mParserService = do_GetService(kParserServiceCID, &rv);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  }
-
-  CallQueryInterface(mParserService.get(), aParserService);
   return NS_OK;
 }
 
@@ -1789,8 +1776,7 @@ nsPlainTextSerializer::IsBlockLevel(PRInt32 aId)
 {
   PRBool isBlock = PR_FALSE;
 
-  nsCOMPtr<nsIParserService> parserService;
-  GetParserService(getter_AddRefs(parserService));
+  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
   if (parserService) {
     parserService->IsBlock(aId, isBlock);
   }
@@ -1806,8 +1792,7 @@ nsPlainTextSerializer::IsContainer(PRInt32 aId)
 {
   PRBool isContainer = PR_FALSE;
 
-  nsCOMPtr<nsIParserService> parserService;
-  GetParserService(getter_AddRefs(parserService));
+  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
   if (parserService) {
     parserService->IsContainer(aId, isContainer);
   }

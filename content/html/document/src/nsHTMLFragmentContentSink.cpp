@@ -40,7 +40,6 @@
 #include "nsIHTMLFragmentContentSink.h"
 #include "nsIParser.h"
 #include "nsIParserService.h"
-#include "nsParserCIID.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLAtoms.h"
@@ -67,8 +66,6 @@
 // regular nsHTMLContentSink. All of it will be factored
 // at some pointe really soon!
 //
-
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 class nsHTMLFragmentContentSink : public nsIHTMLFragmentContentSink {
 public:
@@ -535,10 +532,6 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
     nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
     nsIHTMLContent *content = nsnull;
 
-    nsCOMPtr<nsIParserService> parserService = 
-             do_GetService(kParserServiceCID, &result);
-    NS_ENSURE_SUCCESS(result, result);
-
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
     if (nodeType == eHTMLTag_userdefined) {
@@ -547,6 +540,11 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
                                       kNameSpaceID_None,
                                       *getter_AddRefs(nodeInfo));
     } else {
+      nsIParserService* parserService =
+        nsContentUtils::GetParserServiceWeakRef();
+      if (!parserService)
+        return NS_ERROR_OUT_OF_MEMORY;
+
       const PRUnichar *name = nsnull;
 
       parserService->HTMLIdToStringTag(nodeType, &name);
@@ -617,10 +615,10 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         nsCOMPtr<nsIHTMLContent> content;
         nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
-        nsCOMPtr<nsIParserService> parserService = 
-                 do_GetService(kParserServiceCID, &result);
-
-        NS_ENSURE_SUCCESS(result, result);
+        nsIParserService* parserService =
+          nsContentUtils::GetParserServiceWeakRef();
+        if (!parserService)
+          return NS_ERROR_OUT_OF_MEMORY;
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
 

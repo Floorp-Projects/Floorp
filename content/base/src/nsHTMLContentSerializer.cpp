@@ -45,7 +45,6 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsXPIDLString.h"
-#include "nsParserCIID.h"
 #include "nsIServiceManager.h"
 #include "nsIDocumentEncoder.h"
 #include "nsLayoutAtoms.h"
@@ -56,8 +55,8 @@
 #include "nsITextToSubURI.h"
 #include "nsCRT.h"
 #include "nsIHTMLContent.h"
-
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
+#include "nsIParserService.h"
+#include "nsContentUtils.h"
 
 #define kIndentStr NS_LITERAL_STRING("  ")
 #define kLessThan NS_LITERAL_STRING("<")
@@ -98,19 +97,6 @@ nsHTMLContentSerializer::~nsHTMLContentSerializer()
       mOLStateStack.RemoveElementAt(i);
     }
   }
-}
-
-nsresult
-nsHTMLContentSerializer::GetParserService(nsIParserService** aParserService)
-{
-  if (!mParserService) {
-    nsresult rv;
-    mParserService = do_GetService(kParserServiceCID, &rv);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  }
-
-  CallQueryInterface(mParserService.get(), aParserService);
-  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -574,8 +560,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   const PRUnichar* sharedName;
   name->GetUnicode(&sharedName);
 
-  nsCOMPtr<nsIParserService> parserService;
-  GetParserService(getter_AddRefs(parserService));
+  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
 
   if (parserService && (name.get() != nsHTMLAtoms::style)) {
     nsAutoString nameStr(sharedName);
@@ -827,8 +812,8 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
 
   if (aTranslateEntities && !mInCDATA) {
     if (mFlags & nsIDocumentEncoder::OutputEncodeEntities) {
-      nsCOMPtr<nsIParserService> parserService;
-      GetParserService(getter_AddRefs(parserService));
+      nsIParserService* parserService =
+        nsContentUtils::GetParserServiceWeakRef();
 
       if (!parserService) {
         NS_ERROR("Can't get parser service");
@@ -954,8 +939,8 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
     return PR_TRUE;
   }
   else {
-    nsCOMPtr<nsIParserService> parserService;
-    GetParserService(getter_AddRefs(parserService));
+    nsIParserService* parserService =
+      nsContentUtils::GetParserServiceWeakRef();
     
     if (parserService) {
       nsAutoString str;
@@ -1057,8 +1042,8 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
     return PR_TRUE;
   }
   else {
-    nsCOMPtr<nsIParserService> parserService;
-    GetParserService(getter_AddRefs(parserService));
+    nsIParserService* parserService =
+      nsContentUtils::GetParserServiceWeakRef();
     
     if (parserService) {
       nsAutoString str;
