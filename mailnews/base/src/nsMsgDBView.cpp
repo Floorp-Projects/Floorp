@@ -955,10 +955,10 @@ nsresult nsMsgDBView::ReloadMessageHelper(PRBool forceAllParts)
 {
   if (!mSuppressMsgDisplay && m_currentlyDisplayedViewIndex != nsMsgViewIndex_None)
   {
-    nsMsgKey currentMsgToReload = m_currentlyDisplayedViewIndex;
+    nsMsgViewIndex currentMsgToReload = m_currentlyDisplayedViewIndex;
     m_currentlyDisplayedMsgKey = nsMsgKey_None;
     m_currentlyDisplayedViewIndex = nsMsgViewIndex_None;
-    LoadMessageByViewIndexHelper(m_currentlyDisplayedViewIndex, forceAllParts);
+    LoadMessageByViewIndexHelper(currentMsgToReload, forceAllParts);
   }
 
   return NS_OK;
