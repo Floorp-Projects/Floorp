@@ -10,7 +10,7 @@
   XUL REPRESENTATION : <menulist>
   -->
   <binding id="menulist">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:image class="menu-icon" inherits="src"/>
       <xul:text class="menu-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
       <xul:image class="menu-dropmarker"/>
@@ -29,7 +29,7 @@
   XUL REPRESENTATION : <menulist editable="true">
   -->
   <binding id="menulist-editable">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:image class="menu-icon" inherits="src"/>
 	    <html:input event="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
       <xul:image class="menu-dropmarker"/>
@@ -44,7 +44,7 @@
   XUL REPRESENTATION : <menubutton>
   -->
   <binding id="menubutton-single-right">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:box class="menubutton-internal-box" autostretch="never">
         <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
         <xul:image class="menubutton-single-icon"/>
@@ -53,7 +53,7 @@
   </binding>
 
   <binding id="menubutton-single-left">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:box class="menubutton-internal-box" autostretch="never">
         <xul:image class="menubutton-single-icon"/>
         <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
@@ -66,7 +66,7 @@
   XUL REPRESENTATION : <menubutton class="menubutton-icon">
   -->
   <binding id="menubutton-icon">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:box class="menubutton-icon-internal-box" autostretch="never">
         <xul:image class="menubutton-icon-icon" inherits="src"/>
       </xul:box>
@@ -78,7 +78,7 @@
   XUL REPRESENTATION : <menubutton class="menubutton-dual">
   -->
   <binding id="menubutton-dual-top">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button top" allowevents="true" 
                     inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
@@ -90,7 +90,7 @@
   </binding>
 
   <binding id="menubutton-dual-left">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button left" allowevents="true" 
                     inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
@@ -102,7 +102,7 @@
   </binding>
 
   <binding id="menubutton-dual-right">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button right" allowevents="true" 
                     inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
@@ -114,7 +114,7 @@
   </binding>
 
   <binding id="menubutton-dual-bottom">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button bottom" allowevents="true" 
                     inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
@@ -126,7 +126,7 @@
   </binding>
 
   <binding id="menubutton-dual-ex" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-top">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:button class="menubutton-dual-ex-button top" allowevents="true" 
                   inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"
                   onmouseover="this.parentNode.buttonover = true;"
@@ -180,7 +180,7 @@
   XUL REPRESENTATION : menuitem
   -->  
   <binding id="menubutton-item">
-    <content autostretch="never" excludes="template,observes,menupopup">
+    <content autostretch="never" includes="menupopup">
       <xul:text class="menubutton-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
     </content>
   </binding>  

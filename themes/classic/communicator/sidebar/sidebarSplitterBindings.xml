@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="sidebar-splitter" extends="xul:splitter">
-    <content excludes="observes,template">
+    <content>
       <xul:box class="sidebar-splitter-topright-cap" orient="vertical">
         <xul:spring flex="1"/>
       </xul:box>
@@ -21,7 +21,7 @@
   </binding>
   
   <binding id="panelheader" extends="xul:button">
-    <content excludes="observes,template">
+    <content>
       <xul:box class="panelheader-box-1" flex="1">
         <xul:image class="panelheader-image" inherits="src"/>
         <xul:text class="panelheader-icon" inherits="value,crop"/>

@@ -6,7 +6,7 @@
 
   <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
     <content>
-	    <children includes="xul:tab"/>
+	    <children includes="tab"/>
 	    <xul:spring class="tabbox-spring" flex="1"/>
     </content>
   </binding>

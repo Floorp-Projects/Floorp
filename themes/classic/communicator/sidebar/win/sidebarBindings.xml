@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <binding id="panelheader" extends="xul:button">
-    <content excludes="observes,template">
+    <content>
       <xul:box class="panelheader-box-1" inherits="selected" flex="1">
         <xul:box class="panelheader-box-2" autostretch="never" flex="1">
           <xul:image class="panelheader-grippy-icon" inherits="selected"/>

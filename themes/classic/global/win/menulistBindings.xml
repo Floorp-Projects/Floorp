@@ -10,7 +10,7 @@
   XUL REPRESENTATION : <menulist>
   -->
   <binding id="menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
-    <content excludes="template,observes,menupopup">
+    <content includes="menupopup">
       <xul:box class="menulist-internal-box" flex="1">
         <xul:box class="menulist-display-box" flex="1" valign="middle" autostretch="never">
           <xul:image class="menulist-icon" inherits="src"/>
@@ -34,7 +34,7 @@
   </binding>
    
   <binding id="menulist-compact" extends="chrome://global/content/menulistBindings.xml#menulist">
-    <content excludes="template,observes,menupopup" flex="1">
+    <content includes="menupopup" flex="1">
       <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spring flex="1"/>

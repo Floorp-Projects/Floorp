@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
           
   <binding id="menubutton-toolbar-top">
-    <content excludes="observes,template,menupopup">
+    <content includes="menupopup">
 	   <xul:box class="classic-simplebutton-box" autostretch="never" flex="1">
 	      <xul:button class="classic-simplebutton" allowevents="true" flex="1"
                   inherits="value,src,accesskey,crop,disabled,oncommand=buttonaction" 
@@ -21,7 +21,7 @@
   </binding>
   
   <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content excludes="observes,template" autostretch="never">
+    <content autostretch="never">
       <xul:image class="classic-simplebutton-icon" inherits="src"/>
       <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
         <xul:text class="classic-simplebutton-text" inherits="value,accesskey,crop"/>
@@ -30,7 +30,7 @@
   </binding>
 
   <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
-    <content excludes="observes,template" orient="vertical" autostretch="never" halign="middle">
+    <content orient="vertical" autostretch="never" halign="middle">
       <xul:image class="classic-simplebutton-icon" inherits="src"/>
       <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
         <xul:text class="classic-simplebutton-text" inherits="value,accesskey,crop"/>

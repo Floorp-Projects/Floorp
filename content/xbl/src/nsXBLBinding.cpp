@@ -171,6 +171,9 @@ nsXBLJSClass::Destroy()
 // Static initialization
 PRUint32 nsXBLBinding::gRefCnt = 0;
  
+nsIAtom* nsXBLBinding::kXULTemplateAtom = nsnull;
+nsIAtom* nsXBLBinding::kXULObservesAtom = nsnull;
+
 nsIAtom* nsXBLBinding::kContentAtom = nsnull;
 nsIAtom* nsXBLBinding::kImplementationAtom = nsnull;
 nsIAtom* nsXBLBinding::kHandlersAtom = nsnull;
@@ -284,6 +287,9 @@ nsXBLBinding::nsXBLBinding(const nsCString& aDocURI, const nsCString& aID)
   if (gRefCnt == 1) {
     kPool.Init("XBL Attribute Entries", kBucketSizes, kNumBuckets, kInitialSize);
 
+    kXULTemplateAtom = NS_NewAtom("template");
+    kXULObservesAtom = NS_NewAtom("observes");
+
     kContentAtom = NS_NewAtom("content");
     kImplementationAtom = NS_NewAtom("implementation");
     kHandlersAtom = NS_NewAtom("handlers");
@@ -334,6 +340,9 @@ nsXBLBinding::~nsXBLBinding(void)
   //  printf("REF COUNT DOWN: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 0) {
+    NS_RELEASE(kXULTemplateAtom);
+    NS_RELEASE(kXULObservesAtom);
+
     NS_RELEASE(kContentAtom);
     NS_RELEASE(kImplementationAtom);
     NS_RELEASE(kHandlersAtom);
@@ -510,27 +519,30 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
   // Plan to build the content by default.
   PRBool buildContent = PR_TRUE;
 
-  // See if there's an excludes attribute.
-  nsAutoString excludes;
-  content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
-  if ( excludes != NS_LITERAL_STRING("*")) {
+  // See if there's an includes attribute.
+  nsAutoString includes;
+  content->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
+  if ( includes != NS_LITERAL_STRING("*")) {
     PRInt32 childCount;
     aBoundElement->ChildCount(childCount);
     if (childCount > 0) {
       // We'll only build content if all the explicit children are 
-      // in the excludes list.
-    
-      if (!excludes.IsEmpty()) {
+      // in the includes list.
+      if (!includes.IsEmpty()) {
         // Walk the children and ensure that all of them
-        // are in the excludes array.
+        // are in the includes array.
         for (PRInt32 i = 0; i < childCount; i++) {
           nsCOMPtr<nsIContent> child;
           aBoundElement->ChildAt(i, *getter_AddRefs(child));
           nsCOMPtr<nsIAtom> tag;
           child->GetTag(*getter_AddRefs(tag));
-          if (!IsInExcludesList(tag, excludes)) {
-            buildContent = PR_FALSE;
-            break;
+          if (!IsInExcludesList(tag, includes)) {
+            // XXX HACK! Ignore <template> and <observes>
+            if (tag.get() != kXULTemplateAtom &&
+              tag.get() != kXULObservesAtom) {
+              buildContent = PR_FALSE;
+              break;
+            }
           }
         }
       }
@@ -545,35 +557,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     buildContent = PR_TRUE;
 
   if (buildContent) {
-     // Always check the content element for potential attributes.
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-    nsCOMPtr<nsIDOMNamedNodeMap> namedMap;
-
-    node->GetAttributes(getter_AddRefs(namedMap));
-    PRUint32 length;
-    namedMap->GetLength(&length);
-
-    nsCOMPtr<nsIDOMNode> attribute;
-    for (PRUint32 i = 0; i < length; ++i)
-    {
-      namedMap->Item(i, getter_AddRefs(attribute));
-      nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
-      nsAutoString name;
-      attr->GetName(name);
-      if (name  != NS_LITERAL_STRING("excludes")) {
-        nsAutoString value;
-        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
-        element->GetAttribute(name, value);
-        if (value.IsEmpty()) {
-          nsAutoString value2;
-          attr->GetValue(value2);
-          nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(name));
-          mBoundElement->SetAttribute(kNameSpaceID_None, atom, value2, PR_FALSE);
-        }
-      }
-    }
-  
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(content);
+    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(content));
 
     nsCOMPtr<nsIDOMNode> clonedNode;
     domElement->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
@@ -581,6 +565,32 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     nsCOMPtr<nsIContent> clonedContent = do_QueryInterface(clonedNode);
     SetAnonymousContent(clonedContent);
 
+     // Always check the content element for potential attributes.
+    PRInt32 length;
+    clonedContent->GetAttributeCount(length);
+    
+    PRInt32 namespaceID;
+    nsCOMPtr<nsIAtom> name;
+    nsCOMPtr<nsIAtom> prefix;
+
+    for (PRInt32 i = 0; i < length; ++i)
+    {
+      clonedContent->GetAttributeNameAt(0, namespaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
+
+      if (name.get() != kIncludesAtom) {
+        nsAutoString value;
+        mBoundElement->GetAttribute(namespaceID, name, value);
+        if (value.IsEmpty()) {
+          nsAutoString value2;
+          clonedContent->GetAttribute(namespaceID, name, value2);
+          mBoundElement->SetAttribute(namespaceID, name, value2, PR_FALSE);
+        }
+      }
+
+      // Conserve space by wiping the attributes off the clone.
+      clonedContent->UnsetAttribute(namespaceID, name, PR_FALSE);
+    }
+  
     if (childrenElement)
       BuildInsertionTable();
   }
@@ -1477,7 +1487,7 @@ nsXBLBinding::BuildInsertionTable()
         // XXX We should use a strtok function that tokenizes PRUnichar's
         // so that we don't have to convert from Unicode to ASCII and then back
 
-        char* token = nsCRT::strtok( str, ", ", &newStr );
+        char* token = nsCRT::strtok( str, "| ", &newStr );
         while( token != NULL ) {
           // Build an atom out of this string.
           nsCOMPtr<nsIAtom> atom;
@@ -1528,13 +1538,13 @@ nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList)
   // found inside of 'blur'.
   if (indx > 0) {
     PRUnichar ch = aList[indx - 1];
-    if (! nsCRT::IsAsciiSpace(ch) && ch != PRUnichar(','))
+    if (! nsCRT::IsAsciiSpace(ch) && ch != PRUnichar('|'))
       return PR_FALSE;
   }
 
   if (indx + element.Length() < aList.Length()) {
     PRUnichar ch = aList[indx + element.Length()];
-    if (! nsCRT::IsAsciiSpace(ch) && ch != PRUnichar(','))
+    if (! nsCRT::IsAsciiSpace(ch) && ch != PRUnichar('|'))
       return PR_FALSE;
   }
 

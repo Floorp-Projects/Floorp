@@ -6,7 +6,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="treecell-header">
-    <content excludes="observes">
+    <content>
       <xul:box class="treecell-header-box" flex="1" autostretch="never" valign="middle">
         <xul:image class="tree-header-image" inherits="src"/>
         <xul:text class="tree-header-text" inherits="crop,value" flex="1" crop="right"/>

@@ -104,6 +104,9 @@ public:
 // Static members
   static PRUint32 gRefCnt;
   
+  static nsIAtom* kXULTemplateAtom;
+  static nsIAtom* kXULObservesAtom;
+
   static nsIAtom* kContentAtom;
   static nsIAtom* kImplementationAtom;
   static nsIAtom* kHandlersAtom;

@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="textdisabled" extends="xul:text">
-    <content excludes="observes,template">
+    <content>
       <xul:stack>
         <xul:text class="text-bottom" inherits="value,accesskey,crop"/>
         <xul:text class="text-top" inherits="value,accesskey,crop"/>
@@ -23,7 +23,7 @@
   </binding>
   
   <binding id="radio" extends="chrome://global/content/radioBindings.xml#radio">
-    <content excludes="observes">
+    <content>
       <xul:box flex="1" class="radio-internal-box" autostretch="never" valign="middle">
         <xul:box class="radio-checkmark-box-1" autostretch="never" inherits="disabled">
           <xul:box class="radio-checkmark-box-2" autostretch="never" flex="1">
@@ -39,7 +39,7 @@
   </binding>
 
   <binding id="checkbox" extends="chrome://global/content/xulBindings.xml#checkbox">
-    <content excludes="observes">
+    <content>
       <xul:box flex="1" class="checkbox-internal-box" autostretch="never" valign="middle">
         <xul:box class="checkbox-checkmark-box-1" autostretch="never" inherits="disabled">
           <xul:box class="checkbox-checkmark-box-2" autostretch="never" flex="1">

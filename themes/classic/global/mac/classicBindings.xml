@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="textdisabled" extends="xul:text">
-    <content excludes="observes,template">
+    <content>
       <xul:stack>
         <xul:text class="text-bottom" inherits="value,accesskey,crop"/>
         <xul:text class="text-top" inherits="value,accesskey,crop"/>
@@ -33,7 +33,7 @@
 
   
   <binding id="radio" extends="chrome://global/content/radioBindings.xml#radio">
-    <content excludes="observes">
+    <content>
       <xul:box flex="1" class="radio-internal-box" autostretch="never" valign="middle">
         <xul:box class="radio-checkmark-box-1" autostretch="never" inherits="disabled">
           <xul:box class="radio-checkmark-box-2" autostretch="never" flex="1">
@@ -49,7 +49,7 @@
   </binding>
 
   <binding id="checkbox" extends="chrome://global/content/xulBindings.xml#checkbox">
-    <content excludes="observes">
+    <content>
       <xul:box flex="1" class="checkbox-internal-box" autostretch="never" valign="middle">
         <xul:box class="checkbox-checkmark-box-1" autostretch="never" inherits="disabled">
           <xul:box class="checkbox-checkmark-box-2" autostretch="never" flex="1">
@@ -140,7 +140,7 @@
   </binding>  
   
   <binding id="menubutton-icon">
-    <content excludes="menupopup">
+    <content includes="menupopup">
       <xul:box class="menubutton-icon-box">
         <xul:image inherits="src" class="menubutton-icon-image"/>
       </xul:box>
@@ -185,14 +185,14 @@
   </binding>  
 
   <binding id="toolbarbutton-left" extends="chrome://global/content/xulBindings.xml#buttonleft">
-    <content autostretch="never" excludes="observes,template">
+    <content autostretch="never">
       <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
       <xul:text class="toolbarbutton-left-text" inherits="value,crop"/>
     </content>
   </binding>  
 
   <binding id="toolbarbutton-top" extends="chrome://global/content/xulBindings.xml#buttontop">
-    <content autostretch="never" orient="vertical" excludes="observes,template">
+    <content autostretch="never" orient="vertical">
       <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
       <xul:text class="toolbarbutton-top-text" inherits="value,crop"/>
     </content>

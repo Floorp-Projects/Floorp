@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="sidebar-splitter" extends="xul:splitter">
-    <content excludes="observes,template">
+    <content>
       <xul:box autostretch="never" halign="right">
         <xul:image class="sidebar-splitter-topright-cap"/>
       </xul:box>
