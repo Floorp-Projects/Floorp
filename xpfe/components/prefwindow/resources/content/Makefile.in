@@ -39,6 +39,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-navigator.xul \
 		$(srcdir)/pref-offline.xul \
 		$(srcdir)/pref-proxies.xul \
+		$(srcdir)/pref-proxy-manual.xul \
 		$(srcdir)/pref-publish.xul \
 		$(srcdir)/pref-select.html \
 		$(srcdir)/pref-smart_browsing.xul \

@@ -33,6 +33,7 @@ install::
 	$(MAKE_INSTALL) pref-navigator.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-offline.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-proxies.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-proxy-manual.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-publish.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-select.html  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-smart_browsing.xul  $(DIST)\bin\chrome\pref\content\default

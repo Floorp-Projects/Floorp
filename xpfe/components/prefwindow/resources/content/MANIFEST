@@ -11,6 +11,7 @@ pref-languages.xul
 pref-navigator.xul
 pref-offline.xul
 pref-proxies.xul
+pref-proxy-manual.xul
 pref-publish.xul
 pref-select.html
 pref-smart_browsing.xul

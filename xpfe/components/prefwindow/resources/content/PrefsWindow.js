@@ -104,3 +104,7 @@ function PrefCacheSelectFolder() {
         // Just a cancel, probably.
     }
 }
+
+function OpenProxyManualDialog() {
+	var dialog = window.openDialog("chrome://pref/content/pref-proxy-manual.xul", "", "chrome", {});
+}
