@@ -128,7 +128,7 @@ sub objectInit {
     $self->originalGroups({%$groups}); # a backup used to make a comparison when saving the groups
     my %rights = map {$_ => 1} @$rights;
     $self->rights(\%rights); # map a list of strings into a hash for easy access
-    $self->{'_DIRTY'}->{'properties'} = 0;
+    $self->{'_DIRTY'}->{'properties'} = not(defined($userID));
 }
 
 sub hasRight {
@@ -301,7 +301,20 @@ sub invalidateRights {
 
 sub propertySet {
     my $self = shift;
+    my($name, $value) = @_;
+    # check that we're not doing silly things like changing the user's ID
+    my $hadUndefinedID = (($name eq 'userID') and
+                          ($self->propertyExists($name)) and
+                          (not defined($self->propertyGet($name))));
     my $result = $self->SUPER::propertySet(@_);
+    if (($name eq 'userID') and (defined($value)) and ($hadUndefinedID)) {
+        # we've just aquired an ID, so propagate the change to all fields
+        foreach my $field (values(%{$self->fieldsByID})) {
+            $field->userID($value);
+        }
+        # and mark the groups as dirty too
+        $self->{'_DIRTY'}->{'groups'} = 1;
+    }
     $self->{'_DIRTY'}->{'properties'} = 1;
     return $result;
 }
@@ -335,9 +348,9 @@ sub DESTROY {
 
 sub writeProperties {
     my $self = shift;
-    $self->app->getService('dataSource.user')->setUser($self->app, $self->userID, $self->mode,
-                                                       $self->password, $self->adminMessage,
-                                                       $self->newFieldID, $self->newFieldValue, $self->newFieldKey);
+    $self->userID($self->app->getService('dataSource.user')->setUser($self->app, $self->userID, $self->mode,
+                                                                     $self->password, $self->adminMessage,
+                                                                     $self->newFieldID, $self->newFieldValue, $self->newFieldKey));
 }
 
 sub writeGroups {
