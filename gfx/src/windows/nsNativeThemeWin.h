@@ -55,6 +55,8 @@ public:
   PRBool ThemeSupportsWidget(nsIPresContext* aPresContext,
                              PRUint8 aWidgetType);
 
+  PRBool WidgetIsContainer(PRUint8 aWidgetType);
+
   nsNativeThemeWin();
   virtual ~nsNativeThemeWin();
 
@@ -80,6 +82,7 @@ private:
   HANDLE mStatusbarTheme;
   HANDLE mTabTheme;
   HANDLE mTreeViewTheme;
+  HANDLE mComboBoxTheme;
 
   nsCOMPtr<nsIAtom> mCheckedAtom;
   nsCOMPtr<nsIAtom> mDisabledAtom;

@@ -95,6 +95,7 @@
 #include "nsIScrollableView.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIWidget.h"
+#include "nsITheme.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
@@ -1572,9 +1573,13 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
 
   // Now paint the kids. Note that child elements have the opportunity to
   // override the visibility property and display even if their parent is
-  // hidden
-
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  // hidden.  Don't paint our children if the theme object is a leaf.
+  const nsStyleDisplay* display = 
+      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (!(display->mAppearance && nsBox::gTheme && 
+        gTheme->ThemeSupportsWidget(aPresContext, display->mAppearance) &&
+        !gTheme->WidgetIsContainer(display->mAppearance)))
+    PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   // see if we have to draw a selection frame around this container
   return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
