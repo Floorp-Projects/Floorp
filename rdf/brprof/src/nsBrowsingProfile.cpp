@@ -29,6 +29,7 @@
 #include "nsIRDFCursor.h"
 #include "nsHashtable.h"
 #include "prclist.h"
+#include "nsString.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -243,7 +244,7 @@ nsBrowsingProfile::GetDescription(char* *htmlResult)
 }
 
 NS_IMETHODIMP
-nsBrowsingProfile::CountPageVisit(const char* url)
+nsBrowsingProfile::CountPageVisit(const char* initialURL)
 {
     // Here's where the real work is:
     // Find the url in the directory, and get the category ID.
@@ -251,41 +252,67 @@ nsBrowsingProfile::CountPageVisit(const char* url)
     // in the vector.
     
     nsresult rv = NS_OK;
-    PRBool found = PR_FALSE;
+    PRInt32 pos;
+
+    nsAutoString urlStr(initialURL);
+    // first chop off any query part of the initialURL
+    pos = urlStr.RFind("?");
+    if (pos >= 0) {
+        urlStr.Cut(pos, urlStr.Length());
+    }
+    pos = urlStr.RFind("#");
+    if (pos >= 0) {
+        urlStr.Cut(pos, urlStr.Length());
+    }
+
+    PRBool done = PR_FALSE;
     do {
+        char* url = urlStr.ToNewCString();
+        if (url == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        
         nsIRDFResource* urlRes;
         rv = gRDFService->GetResource(url, &urlRes);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIRDFAssertionCursor* cursor;
-        rv = gCategoryDB->GetSources(gChildProperty, urlRes, PR_TRUE, &cursor);
         if (NS_SUCCEEDED(rv)) {
-            while (cursor->Advance()) {
-                nsIRDFResource* category;
-                rv = cursor->GetSubject(&category);
-                if (NS_SUCCEEDED(rv)) {
-                    // found this page in a category -- count it
-                    PRUint16 id;
-                    rv = GetCategoryID(category, &id);
-                    NS_RELEASE(category);
+            nsIRDFAssertionCursor* cursor;
+            rv = gCategoryDB->GetSources(gChildProperty, urlRes, PR_TRUE, &cursor);
+            if (NS_SUCCEEDED(rv)) {
+                while (cursor->Advance()) {
+                    nsIRDFResource* category;
+                    rv = cursor->GetSubject(&category);
                     if (NS_SUCCEEDED(rv)) {
-                        const char* catURI;
-                        rv = category->GetValue(&catURI);
+                        // found this page in a category -- count it
+                        PRUint16 id;
+                        rv = GetCategoryID(category, &id);
                         if (NS_SUCCEEDED(rv)) {
-                            rv = RecordHit(catURI, id);
+                            const char* catURI;
+                            rv = category->GetValue(&catURI);
+                            if (NS_SUCCEEDED(rv)) {
+                                rv = RecordHit(catURI, id);
+                            }
                         }
+                        NS_RELEASE(category);
+                        done = PR_TRUE;
                     }
                 }
+                NS_RELEASE(cursor);
             }
-            NS_RELEASE(cursor);
+            NS_RELEASE(urlRes);
         }
-        NS_RELEASE(urlRes);
+        delete[] url;
 
-        // we didn't find this page exactly, but see if some ancestor is there
-        if (!found) {
-            
+        // we didn't find this page exactly, but see if some parent directory 
+        // url is there
+        if (!done) {
+            pos = urlStr.RFind("/");
+            if (pos >= 0) {
+                urlStr.Cut(pos, urlStr.Length());
+            }
+            else {
+                done = PR_TRUE;
+            }
         }
-    } while (found);
+    } while (!done);
 
     return rv;
 }
