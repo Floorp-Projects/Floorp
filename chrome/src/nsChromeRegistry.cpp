@@ -1290,6 +1290,73 @@ NS_IMETHODIMP nsChromeRegistry::SelectLocale(const PRUnichar* aLocale,
   return SetProvider("locale", mSelectedLocale, aLocale, aUseProfile, PR_TRUE);
 }
 
+/* wstring getSelectedLocale (); */
+NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName, 
+                                                  PRUnichar **_retval)
+{
+
+  nsString packageStr(aPackageName);
+  nsCAutoString resourceStr("urn:mozilla:package:");
+  resourceStr += NS_ConvertUCS2toUTF8(packageStr.GetUnicode());
+
+  // Obtain the resource.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = GetResource(resourceStr, getter_AddRefs(resource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the package resource.");
+    return rv;
+  }  
+
+  // Follow the "selectedLocale" arc.
+  nsCOMPtr<nsIRDFNode> selectedProvider;
+  if (NS_FAILED(rv = mChromeDataSource->GetTarget(resource, mSelectedLocale, PR_TRUE, getter_AddRefs(selectedProvider)))) {
+    NS_ERROR("Unable to obtain the provider.");
+    return rv;
+  }
+
+  if (!selectedProvider) {
+    rv = FindProvider(NS_ConvertUCS2toUTF8(packageStr.GetUnicode()), "locale", mSelectedLocale, getter_AddRefs(selectedProvider));
+    if (!selectedProvider)
+      return rv;
+  }
+
+  resource = do_QueryInterface(selectedProvider);
+  if (!resource)
+    return NS_ERROR_FAILURE;
+
+  // selectedProvider.mURI now looks like "urn:mozilla:locale:ja-JP:navigator"
+  nsXPIDLCString uri;
+  if (NS_FAILED(rv = resource->GetValue( getter_Copies(uri) ) ))
+    return rv;
+
+  // trim down to "urn:mozilla:locale:ja-JP"
+  nsAutoString ustr = NS_ConvertUTF8toUCS2(uri);
+
+  packageStr.Insert(PRUnichar(':'), 0);
+  PRInt32 pos = ustr.RFind(packageStr);
+  nsString urn;
+  ustr.Left(urn, pos);
+
+  rv = GetResource(NS_ConvertUCS2toUTF8(urn.GetUnicode()), getter_AddRefs(resource));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Unable to obtain the provider resource.");
+    return rv;
+  }  
+
+  // From this resource, follow the "name" arc.
+  nsCAutoString lc_name; // is this i18n friendly? RDF now use UTF8 internally
+  nsChromeRegistry::FollowArc(mChromeDataSource,
+                              lc_name, 
+                              resource,
+                              mName);
+
+  // this is not i18n friendly? RDF now use UTF8 internally.
+  *_retval = nsXPIDLString::Copy(NS_ConvertASCIItoUCS2(lc_name).GetUnicode());
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsChromeRegistry::DeselectSkin(const PRUnichar* aSkin,
                                         PRBool aUseProfile)
 {

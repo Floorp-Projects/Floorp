@@ -69,6 +69,8 @@ interface nsIChromeRegistry : nsISupports
   /* Applies a skin or locale to all possible packages */
   void selectSkin(in wstring skinName, in boolean useProfile);
   void selectLocale(in wstring localeName, in boolean useProfile);
+  wstring getSelectedLocale(in wstring packageName);
+
   void deselectSkin(in wstring skinName, in boolean useProfile);
   void deselectLocale(in wstring localeName, in boolean useProfile);
 
