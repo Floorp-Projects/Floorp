@@ -87,7 +87,7 @@ nsAttrValue::Type() const
     }
     default:
     {
-      return NS_STATIC_CAST(ValueType, BaseType());
+      return NS_STATIC_CAST(ValueType, NS_STATIC_CAST(PRUint16, BaseType()));
     }
   }
 }
