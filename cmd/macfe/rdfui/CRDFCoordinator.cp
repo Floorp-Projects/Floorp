@@ -250,9 +250,14 @@ void CRDFCoordinator::HandleNotification(
 	{
 		case HT_EVENT_NODE_ADDED:
 		{
-			if ( view == mTreePane->GetHTView() ) { 
+			if ( view == mTreePane->GetHTView() ) {
+				// HT_GetNodeIndex() will return the row where this new item should go
+				// in a zero-based world. This translates, in a 1-based world of PP, to be
+				// the node after which this new row will go. Conveniently, that is what
+				// we want for InsertRows() so we don't have to add 1 like we normally do
+				// when coverting between HT and PP.
 				TableIndexT index = HT_GetNodeIndex(view, node);
-				mTreePane->InsertRows(1, index + 1, NULL, 0, true);
+				mTreePane->InsertRows(1, index, NULL, 0, true);
 				mTreePane->SyncSelectionWithHT();
 			}
 			break;
