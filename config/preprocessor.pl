@@ -4,7 +4,7 @@
 # Preprocessor
 # Version 1.0
 #
-# Copyright (c) 2002 by Ian Hickson
+# Copyright (c) 2002, 2003 by Ian Hickson
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+# Thanks to bryner and bsmedberg for suggestions.
 
 use strict;
 
@@ -411,6 +413,12 @@ sub spaces {
 sub slashslash {
     my($stack, $text) = @_;
     $text =~ s|//.*?(\n?)$|$1|gos;
+    return $text;
+}
+
+sub substitution {
+    my($stack, $text) = @_;
+    $text =~ s/@(\w+)@/$stack->get($1)/gose;
     return $text;
 }
 
