@@ -279,9 +279,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     nsAutoString type;
     GetEventType (type);
 
-    // 32 is for the space key, there must be a better way to do this
     if (type == NS_LITERAL_STRING("keypress") &&
-        mDetail == 32 &&
+        mDetail == nsIDOMKeyEvent::DOM_VK_SPACE &&
         mDetail2 == 1) {
       // get the focused element so that we can pageDown only at
       // certain times.
