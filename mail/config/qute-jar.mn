@@ -70,5 +70,10 @@ skin/classic/global/icons/Warning.png                  classic/skin/classic/glob
 #################################################################################################
 # Editor
 #################################################################################################
-skin/classic/editor,                                  classic/skin/classic/editor
+skin/classic/editor/contents.rdf,                     classic/skin/classic/editor/contents.rdf
+skin/classic/editor/EdImageMap.css,                   classic/skin/classic/editor/EdImageMap.css
+skin/classic/editor/EdImageMapPage.css,               classic/skin/classic/editor/EdImageMapPage.css
+skin/classic/editor/editor.css,                       classic/skin/classic/editor/editor.css
+skin/classic/editor/EditorDialog.css,                 classic/skin/classic/editor/EditorDialog.css
+skin/classic/editor/textEditor.css,                   classic/skin/classic/editor/textEditor.css
 skin/classic/editor/icons,                            classic/skin/classic/editor/icons
