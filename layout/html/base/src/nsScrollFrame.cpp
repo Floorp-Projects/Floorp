@@ -212,7 +212,6 @@ nsScrollFrame::CreateScrollingView()
   return rv;
 }
 
-//XXX incremental reflow pass through
 NS_IMETHODIMP
 nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
@@ -224,17 +223,35 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
                       aReflowState.maxSize.width,
                       aReflowState.maxSize.height));
 
-  // If it's out initial reflow then create a scrolling view
-  if (eReflowReason_Initial == aReflowState.reason) {
+  nsIFrame* targetFrame;
+  nsIFrame* nextFrame;
+
+  // Special handling for the initial reflow and incremental reflow
+  switch (aReflowState.reason) {
+  case eReflowReason_Initial:
+    // Create the scrolling view and the scrolled view
     CreateScrollingView();
+    break;
+
+  case eReflowReason_Incremental:
+#ifdef NS_DEBUG
+    // We should never be the target of the reflow command
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    NS_ASSERTION(targetFrame != this, "bad reflow command target-frame");
+#endif
+
+    // Get the next frame in the reflow chain, and verify that it's our
+    // child frame
+    aReflowState.reflowCommand->GetNext(nextFrame);
+    NS_ASSERTION(nextFrame == mFirstChild, "unexpected reflow command next-frame");
+    break;
   }
 
+  // Calculate the amount of space needed for borders
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)
     mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin border;
   spacing->CalcBorderFor(this, border);
-  nscoord lr = border.left + border.right;
-  nscoord tb = border.top + border.bottom;
 
   // Compute the scroll view frame's max size taking into account our
   // borders
@@ -247,7 +264,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   else {
     kidMaxSize.width = aReflowState.maxSize.width;
     if (NS_UNCONSTRAINEDSIZE != kidMaxSize.width) {
-      kidMaxSize.width -= lr;
+      kidMaxSize.width -= border.left + border.right;
     }
   }
   if (aReflowState.HaveConstrainedHeight()) {
@@ -258,7 +275,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   else {
     kidMaxSize.height = aReflowState.maxSize.height;
     if (NS_UNCONSTRAINEDSIZE != kidMaxSize.height) {
-      kidMaxSize.height -= tb;
+      kidMaxSize.height -= border.top + border.bottom;
     }
   }
 
@@ -301,15 +318,15 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   // Compute our desired size
-  aDesiredSize.width = kidMaxSize.width + lr;
+  aDesiredSize.width = kidMaxSize.width + border.left + border.right;
   if (NS_UNCONSTRAINEDSIZE == kidMaxSize.height) {
     // Use the scroll view's desired height plus any borders
-    aDesiredSize.height += tb;
+    aDesiredSize.height += border.top + border.bottom;
   } else {
     // XXX This isn't correct. If our height is fixed, then use the fixed height;
     // otherwise use the MIN of the constrained height and the scroll view's height
     // plus borders...
-    aDesiredSize.height = kidMaxSize.height + tb;
+    aDesiredSize.height = kidMaxSize.height + border.top + border.bottom;
   }
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
