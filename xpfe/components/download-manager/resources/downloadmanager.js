@@ -199,8 +199,12 @@ var downloadViewController = {
       break;
     case "cmd_remove":
       selectedItems = getSelectedItems();
-      for (i = 0; i < selectedItems.length; i++)
+      gDownloadManager.startBatchUpdate();
+      for (i = 0; i < selectedItems.length; i++) {
+        if (i == selectedItems.length - 1)
+          gDownloadManager.endBatchUpdate();
         gDownloadManager.removeDownload(selectedItems[i].id);
+      }
       window.updateCommands("tree-select");
       break;
     case "cmd_selectAll":

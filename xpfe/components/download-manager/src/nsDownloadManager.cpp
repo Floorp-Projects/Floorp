@@ -84,7 +84,8 @@ nsIRDFService* gRDFService;
 
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIDOMEventListener, nsIObserver)
 
-nsDownloadManager::nsDownloadManager() : mCurrDownloads(nsnull)
+nsDownloadManager::nsDownloadManager() : mCurrDownloads(nsnull),
+                                         mBatches(0)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -627,9 +628,26 @@ nsDownloadManager::RemoveDownload(const char* aPath)
   rv = downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
   if (NS_FAILED(rv)) return rv;
   
+  // if a mass removal is being done, we don't want to flush every time
+  if (mBatches) return rv;
+
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mDataSource);
   return remote->Flush();
 }  
+
+NS_IMETHODIMP
+nsDownloadManager::StartBatchUpdate()
+{
+  ++mBatches;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::EndBatchUpdate()
+{
+  --mBatches;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDownloadManager::Open(nsIDOMWindow* aParent)
