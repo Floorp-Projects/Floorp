@@ -113,6 +113,11 @@
   <keyset id="editorKeys">
     <keyset id="tasksKeys"/>
     <key id="showHideSidebar"/>
+    <!-- eat these tab events here to stop focus from moving -->
+    <key keycode="VK_TAB" oncommand="return true;"/>
+    <key keycode="VK_TAB" modifiers="shift" oncommand="return true;"/>
+    <key keycode="VK_TAB" modifiers="control" oncommand="return true;"/>
+    <key keycode="VK_TAB" modifiers="control,shift" oncommand="return true;"/>
   </keyset>
 
   <toolbox class="toolbox-top" id="EditorToolbox">
@@ -250,7 +255,6 @@
        -->
       <stack>
         <editor editortype="html" type="content-primary" id="content-frame"
-                onkeypress="if (event.keyCode == KeyEvent.DOM_VK_TAB) event.preventDefault();"
                 context="editorContentContext" flex="1" tooltip="aHTMLTooltip"/>
       </stack>
       <vbox>
