@@ -1,0 +1,139 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Don Cone <dcone@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "nsMargin.h"
+#include "nsFont.h"
+%}
+
+/**
+ * Native types
+ */
+  [ref] native nsNativeMarginRef(nsMargin);
+  [ref] native nsNativeFontRef(nsFont);
+  [ref] native nsNativeStringRef(nsString);
+
+/**
+ * Simplified graphics interface for JS rendering.
+ */
+[scriptable, uuid(83427530-F790-11d4-A869-00105A183419)]
+
+
+
+interface nsIPrintSettings : nsISupports
+{
+  /* Print Option Flags for Bit Field*/
+  const long kOptPrintOddPages    = 0x00000001;
+  const long kOptPrintEvenPages   = 0x00000002;
+  const long kOptPrintDocTitle    = 0x00000004;
+  const long kOptPrintDocLoc      = 0x00000008;
+  const long kOptPrintPageNums    = 0x00000010;
+  const long kOptPrintPageTotal   = 0x00000020;
+  const long kOptPrintDatePrinted = 0x00000040;
+  const long kPrintOptionsEnableSelectionRB = 0x00000080;
+
+  /* Print Range Enums */
+  const long kRangeAllPages           = 0;
+  const long kRangeSpecifiedPageRange = 1;
+  const long kRangeSelection          = 2;
+  const long kRangeFocusFrame         = 3;
+
+  /* Justification Enums */
+  const long kJustLeft   = 0;
+  const long kJustCenter = 1;
+  const long kJustRight  = 2;
+
+  /**
+   * Page Size Constants
+   */
+  const short kLetterPaperSize    = 0;
+  const short kLegalPaperSize     = 1;
+  const short kExecutivePaperSize = 2;
+  const short kA4PaperSize        = 3;
+
+  /**
+   * Print Frame Constants
+   */
+  const short kFramesAsIs    = 0;
+  const short kSelectedFrame = 1;
+  const short kEachFrameSep  = 2;
+
+
+  /**
+   * Set PrintOptions 
+   */
+  void SetPrintOptions(in PRInt32 aType, in PRBool aTurnOnOff);
+
+  /**
+   * Get PrintOptions 
+   */
+  PRBool GetPrintOptions(in PRInt32 aType);
+
+  /**
+   * Set PrintOptions Bit field
+   */
+  PRInt32 GetPrintOptionsBits();
+
+
+  /**
+   * Data Members
+   */
+  attribute long    startPageRange;    
+  attribute long    endPageRange;    
+
+  attribute boolean printReversed;
+  attribute boolean printInColor;  /* a false means grayscale */
+  attribute long    paperSize;     /*  see page size consts */
+  attribute wstring printCommand;
+  attribute boolean printToFile;
+  attribute wstring toFileName;
+
+  attribute double  marginTop;     /*  these are in inches */
+  attribute double  marginLeft;
+  attribute double  marginBottom;
+  attribute double  marginRight;
+
+  attribute long    printRange; 
+  attribute long    pageNumJust; 
+  attribute wstring title;
+  attribute wstring docURL;
+
+  attribute boolean isPrintFrame;
+  attribute long    printFrameType;
+
+  /* No Script Methods */
+
+  [noscript] void SetFontNamePointSize(in nsNativeStringRef aName, in PRInt32 aPointSize);
+
+  [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetMarginInTwips(in nsNativeMarginRef aMargin);
+
+  [noscript] void SetDefaultFont(in nsNativeFontRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetDefaultFont(in nsNativeFontRef aMargin);
+
+
+};
