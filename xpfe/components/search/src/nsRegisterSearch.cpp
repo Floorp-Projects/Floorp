@@ -31,8 +31,8 @@ static NS_DEFINE_CID(kInternetSearchServiceCID,      NS_RDFSEARCHDATASOURCE_CID)
 static NS_DEFINE_CID(kComponentManagerCID,           NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,             NS_GENERICFACTORY_CID);
 
-nsresult	NS_NewLocalSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-nsresult	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+NS_IMETHODIMP	NS_NewLocalSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 
 

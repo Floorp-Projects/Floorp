@@ -17,6 +17,6 @@
 
 DEPTH=..\..\..
 
-DIRS=datasets resources
+DIRS=datasets resources public src
 
 include <$(DEPTH)\config\rules.mak>

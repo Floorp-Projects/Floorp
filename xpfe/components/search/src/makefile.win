@@ -18,12 +18,16 @@
 DEPTH=..\..\..\..
 MODULE=search
 
-CPPSRCS=                                \
- nsSearchService.obj                    \
+CPPSRCS=                                 \
+ nsLocalSearchService.cpp                \
+ nsInternetSearchService.cpp             \
+ nsRegisterSearch.cpp                    \
  $(NULL)
 
-CPP_OBJS=                               \
- .\$(OBJDIR)\nsSearchService.obj        \
+CPP_OBJS=                                \
+ .\$(OBJDIR)\nsLocalSearchService.obj    \
+ .\$(OBJDIR)\nsInternetSearchService.obj \
+ .\$(OBJDIR)\nsRegisterSearch.obj        \
  $(NULL)
 
 MAKE_OBJ_TYPE=DLL
