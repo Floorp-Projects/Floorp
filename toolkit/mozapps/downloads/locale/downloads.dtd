@@ -27,26 +27,27 @@
 <!ENTITY downloads.title                  "Downloads">
 
 <!ENTITY cmd.pause.label                  "Pause">
-<!ENTITY cmd.pause.accesskey              "p">
+<!ENTITY cmd.pause.accesskey              "P">
 <!ENTITY cmd.resume.label                 "Resume">
-<!ENTITY cmd.resume.accesskey             "r">
+<!ENTITY cmd.resume.accesskey             "R">
 <!ENTITY cmd.cancel.label                 "Cancel">
-<!ENTITY cmd.cancel.accesskey             "c">
+<!ENTITY cmd.cancel.accesskey             "C">
 <!ENTITY cmd.show.label                   "Show">
-<!ENTITY cmd.show.accesskey               "s">
+<!ENTITY cmd.show.accesskey               "S">
 <!ENTITY cmd.show.tooltipWin              "Show this file in Explorer">
 <!ENTITY cmd.show.tooltipMac              "Show this file in Finder">
 <!ENTITY cmd.show.tooltipUnix             "Show this file in a browser window">
 <!ENTITY cmd.open.label                   "Open">
-<!ENTITY cmd.open.accesskey               "o">
+<!ENTITY cmd.open.accesskey               "O">
 <!ENTITY cmd.openWith.label               "Open With...">
 <!ENTITY cmd.openWith.accesskey           "h">
 <!ENTITY cmd.retry.label                  "Retry">
-<!ENTITY cmd.retry.accesskey              "r">
+<!ENTITY cmd.retry.accesskey              "R">
 <!ENTITY cmd.remove.label                 "Remove">
 <!ENTITY cmd.remove.accesskey             "e">
 <!ENTITY cmd.properties.label             "Properties">
 <!ENTITY cmd.properties.accesskey         "i">
+<!ENTITY cmd.info.commandKey              "i">
 
 <!ENTITY cmd.close.commandKey             "w">
 <!ENTITY cmd.cleanUp.label                "Clean Up">
@@ -54,7 +55,7 @@
 <!ENTITY cmd.cleanUp.accesskey            "a">
 
 <!ENTITY cmd.options.label                "Options">
-<!ENTITY cmd.options.accesskey            "o">
+<!ENTITY cmd.options.accesskey            "O">
 
 <!ENTITY closeWhenDone.label              "Close when downloads complete">
 <!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">

@@ -16,6 +16,10 @@
 
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/downloadProperties.js"/>
 
+  <keyset id="downloadInfoKeys">
+    <key id="key_close"   key="&cmd.close.commandKey;" oncommand="window.close()"     modifiers="accel"/>
+  </keyset>
+  
   <grid flex="1">
     <columns>
       <column/>

@@ -4,4 +4,4 @@
 <!ENTITY downloadedFrom.label   "From:">
 <!ENTITY path.label             "To:">
 <!ENTITY acceptButton.label     "Close">
-
+<!ENTITY cmd.close.commandKey   "w">
