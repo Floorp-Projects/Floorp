@@ -800,14 +800,11 @@ public:
     NS_DECL_ISUPPORTS
 
     ////////////////////////////////////////////////////////////////////////////
-    // from nsIBaseStream:
+    // from nsIInputStream:
 
     /** Close the stream. */
     NS_IMETHOD
     Close(void);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIInputStream:
 
     /** Return the number of bytes in the stream
      *  @param aLength out parameter to hold the length
