@@ -27,6 +27,7 @@ XPIDLSRCS = \
 	nsISupports.idl	\
 	nsIEnumerator.idl \
 	nsIFactory.idl \
+	nsICollection.idl	\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
