@@ -31,6 +31,7 @@
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"
 #include "nsILocalFile.h"
+#include "nsIProcess.h"
 #include "nsIPref.h"
 #include "nsHashtable.h"
 #include "nsCRT.h"
@@ -148,7 +149,13 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
       // if we were given an application to use then use it....otherwise
       // make the registry call to launch the app
       const char * strPath = path.get();
-      application->Spawn(&strPath, 1);
+      nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
+      nsresult rv;
+      if (NS_FAILED(rv = process->Init(application)))
+        return rv;
+      PRUint32 pid;
+      if (NS_FAILED(rv = process->Run(PR_FALSE, &strPath, 1, &pid)))
+        return rv;
     }    
     else
     {

@@ -1780,32 +1780,6 @@ nsLocalFile::MoveTo(nsIFile *newParentDir, const char *newName)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::Spawn(const char **args, PRUint32 count)
-{
-	OSErr err = noErr;
-	LaunchParamBlockRec	launchPB;
-	PRBool isFile;
-	nsresult rv = IsFile(&isFile);
-
-	if (NS_FAILED(rv))
-		return rv;
-
-	launchPB.launchAppSpec = &mTargetSpec;
-	launchPB.launchAppParameters = NULL;
-	launchPB.launchBlockID = extendedBlock;
-	launchPB.launchEPBLength = extendedBlockLen;
-	launchPB.launchFileFlags = NULL;
-	launchPB.launchControlFlags = launchContinue + launchNoFileFlags + launchUseMinimum;
-	launchPB.launchControlFlags += launchDontSwitch;
-
-	err = LaunchApplication(&launchPB);
-	if (err != noErr)
-		return MacErrorMapper(err);
-	
-	return NS_OK;
-}
-
-NS_IMETHODIMP  
 nsLocalFile::Load(PRLibrary * *_retval)
 {
 	PRBool isFile;

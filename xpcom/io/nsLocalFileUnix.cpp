@@ -1448,44 +1448,6 @@ nsLocalFile::GetTarget(char **_retval)
     return rv;
 }
 
-/** 
- *  Warning this method is going away 
- */
-NS_IMETHODIMP
-nsLocalFile::Spawn(const char **args, PRUint32 count)
-{
-    CHECK_mPath();
-
-    /**
-     *  make sure that when we allocate we have 1 greater than the
-     *  count since we need to null terminate the list for the argv to
-     *  pass into PR_CreateProcessDetached
-     */
-    char **my_argv = (char **)malloc(sizeof(char *) * (count + 2) );
-    if (!my_argv)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // copy the args
-    PRUint32 i;
-    for (i=0; i < count; i++)
-        my_argv[i+1] = (char *)args[i];
-
-    // we need to set argv[0] to the program name.
-    my_argv[0] = (char *)mPath.get();
-
-    // null terminate the array
-    my_argv[count+1] = nsnull;
-
-    PRStatus rv = PR_CreateProcessDetached(mPath.get(), my_argv, nsnull, nsnull);
-
-    // free up our argv
-    free(my_argv);
-
-    if (rv != PR_SUCCESS)
-        return NS_ERROR_FILE_EXECUTION_FAILED;
-    return NS_OK;
-}
-
 /* attribute PRBool followLinks; */
 NS_IMETHODIMP
 nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
