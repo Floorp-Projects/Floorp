@@ -30,7 +30,6 @@
 #include "nsImapIncomingServer.h"
 #include "nsImapService.h"
 #include "nsImapMailFolder.h"
-#include "nsImapMessage.h"
 #include "nsImapUrl.h"
 #include "nsImapProtocol.h"
 #include "nsMsgImapCID.h"
@@ -42,7 +41,6 @@ static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kCImapIncomingServer, NS_IMAPINCOMINGSERVER_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapResource, NS_IMAPRESOURCE_CID);
-static NS_DEFINE_CID(kCImapMessageResource, NS_IMAPMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 
 // private factory declarations for each component we know how to produce
@@ -53,7 +51,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapIncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMailFolder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMockChannel)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMessage)
 
 
 // Module implementation for the sample library
@@ -80,7 +77,6 @@ protected:
     nsCOMPtr<nsIGenericFactory> mImapServiceFactory;
     nsCOMPtr<nsIGenericFactory> mImapMailFolderFactory;
     nsCOMPtr<nsIGenericFactory> mImapMockChannelFactory;
-    nsCOMPtr<nsIGenericFactory> mImapMessageFactory;
 };
 
 
@@ -118,7 +114,6 @@ void nsMsgImapModule::Shutdown()
     mImapServiceFactory = null_nsCOMPtr();
     mImapMailFolderFactory = null_nsCOMPtr();
     mImapMockChannelFactory = null_nsCOMPtr();
-    mImapMessageFactory = null_nsCOMPtr();
 }
 
 // Create a factory object for creating instances of aClass.
@@ -189,12 +184,6 @@ NS_IMETHODIMP nsMsgImapModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mImapMockChannelFactory), &nsImapMockChannelConstructor);
         fact = mImapMockChannelFactory;
     }
-    else if (aClass.Equals(kCImapMessageResource)) 
-    {
-        if (!mImapMessageFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mImapMessageFactory), &nsImapMessageConstructor);
-        fact = mImapMessageFactory;
-    }
     
     
     if (fact)
@@ -231,8 +220,6 @@ static Components gComponents[] = {
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "imap"},
     { "Imap Protocol Handler", &kCImapService,
       NS_IMAPPROTOCOLINFO_PROGID},
-    { "Imap Message Resource Factory", &kCImapMessageResource,
-      NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message"}
 
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
