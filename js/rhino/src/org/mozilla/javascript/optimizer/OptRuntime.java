@@ -211,4 +211,50 @@ public final class OptRuntime extends ScriptRuntime
         }
         return new Double(num);
     }
+
+    static String encodeIntArray(int[] array)
+    {
+        // XXX: this extremely inefficient for small integers
+        if (array == null) { return null; }
+        int n = array.length;
+        char[] buffer = new char[1 + n * 2];
+        buffer[0] = 1;
+        for (int i = 0; i != n; ++i) {
+            int value = array[i];
+            int shift = 1 + i * 2;
+            buffer[shift] = (char)(value >>> 16);
+            buffer[shift + 1] = (char)value;
+        }
+        return new String(buffer);
+    }
+
+    private static int[] decodeIntArray(String str, int arraySize)
+    {
+        // XXX: this extremely inefficient for small integers
+        if (arraySize == 0) {
+            if (str != null) throw new IllegalArgumentException();
+            return null;
+        }
+        if (str.length() != 1 + arraySize * 2 && str.charAt(0) != 1) {
+            throw new IllegalArgumentException();
+        }
+        int[] array = new int[arraySize];
+        for (int i = 0; i != arraySize; ++i) {
+            int shift = 1 + i * 2;
+            array[i] = (str.charAt(shift) << 16) | str.charAt(shift + 1);
+        }
+        return array;
+    }
+
+    public static Scriptable newArrayLiteral(Object[] objects,
+                                             String encodedInts,
+                                             int skipCount,
+                                             Context cx,
+                                             Scriptable scope)
+        throws JavaScriptException
+    {
+        int[] skipIndexces = decodeIntArray(encodedInts, skipCount);
+        return newArrayLiteral(objects, skipIndexces, cx, scope);
+    }
+
 }

@@ -363,14 +363,14 @@ public class Node
     }
 
     public static final int
-        FUNCTION_PROP     =  1,
-        LOCAL_PROP        =  2,
-        LOCAL_BLOCK_PROP  =  3,
-        REGEXP_PROP       =  4,
-        CASES_PROP        =  5,
-        DEFAULT_PROP      =  6,
-        CASEARRAY_PROP    =  7,
-        SPECIAL_PROP_PROP =  8,
+        FUNCTION_PROP      =  1,
+        LOCAL_PROP         =  2,
+        LOCAL_BLOCK_PROP   =  3,
+        REGEXP_PROP        =  4,
+        CASES_PROP         =  5,
+        DEFAULT_PROP       =  6,
+        CASEARRAY_PROP     =  7,
+        SPECIAL_PROP_PROP  =  8,
     /*
         the following properties are defined and manipulated by the
         optimizer -
@@ -383,11 +383,13 @@ public class Node
                           matches.
     */
 
-        TARGETBLOCK_PROP  =  9,
-        VARIABLE_PROP     = 10,
-        ISNUMBER_PROP     = 11,
-        DIRECTCALL_PROP   = 12,
-        SPECIALCALL_PROP  = 13;
+        TARGETBLOCK_PROP   =  9,
+        VARIABLE_PROP      = 10,
+        ISNUMBER_PROP      = 11,
+        DIRECTCALL_PROP    = 12,
+        SPECIALCALL_PROP   = 13,
+        SKIP_INDEXES_PROP  = 14, // array of skipped indexes of array literal
+        OBJECT_IDS_PROP    = 15; // array of properties for object literal
 
     public static final int    // this value of the SPECIAL_PROP_PROP specifies
         SPECIAL_PROP_PROTO  = 1,
@@ -403,7 +405,8 @@ public class Node
         SPECIALCALL_EVAL = 1,
         SPECIALCALL_WITH = 2;
 
-    private static final String propToString(int propType) {
+    private static final String propToString(int propType)
+    {
         if (Token.printTrees) {
             // If Context.printTrees is false, the compiler
             // can remove all these strings.
@@ -423,6 +426,8 @@ public class Node
                 case DIRECTCALL_PROP:    return "directcall";
 
                 case SPECIALCALL_PROP:   return "specialcall";
+                case SKIP_INDEXES_PROP:  return "skip_indexes";
+                case OBJECT_IDS_PROP:    return "object_ids_prop";
 
                 default: Kit.codeBug();
             }

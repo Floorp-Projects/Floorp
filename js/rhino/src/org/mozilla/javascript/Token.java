@@ -139,57 +139,57 @@ public class Token
         ENUM_ID     = 64,
         THISFN      = 65,
         RETURN_POPV = 66, // to return result stored as popv in functions
+        ARRAYLIT    = 67, // array literal
+        OBJECTLIT   = 68, // object literal
 
-        LAST_BYTECODE_TOKEN = 66,
+        LAST_BYTECODE_TOKEN = 68,
         // End of interpreter bytecodes
 
-        TRY         = 67,
-        SEMI        = 68,  // semicolon
-        LB          = 69,  // left and right brackets
-        RB          = 70,
-        LC          = 71,  // left and right curlies (braces)
-        RC          = 72,
-        LP          = 73,  // left and right parentheses
-        RP          = 74,
-        COMMA       = 75,  // comma operator
-        ASSIGN      = 76, // simple assignment  (=)
-        ASSIGNOP    = 77, // assignment with operation (+= -= etc.)
-        HOOK        = 78, // conditional (?:)
-        COLON       = 79,
-        OR          = 80, // logical or (||)
-        AND         = 81, // logical and (&&)
-        INC         = 82, // increment/decrement (++ --)
-        DEC         = 83,
-        DOT         = 84, // member operator (.)
-        FUNCTION    = 85, // function keyword
-        EXPORT      = 86, // export keyword
-        IMPORT      = 87, // import keyword
-        IF          = 88, // if keyword
-        ELSE        = 89, // else keyword
-        SWITCH      = 90, // switch keyword
-        CASE        = 91, // case keyword
-        DEFAULT     = 92, // default keyword
-        WHILE       = 93, // while keyword
-        DO          = 94, // do keyword
-        FOR         = 95, // for keyword
-        BREAK       = 96, // break keyword
-        CONTINUE    = 97, // continue keyword
-        VAR         = 98, // var keyword
-        WITH        = 99, // with keyword
-        CATCH       = 100, // catch keyword
-        FINALLY     = 101, // finally keyword
-        VOID        = 102, // void keyword
-        RESERVED    = 103, // reserved keywords
+        TRY         = 69,
+        SEMI        = 70,  // semicolon
+        LB          = 71,  // left and right brackets
+        RB          = 72,
+        LC          = 73,  // left and right curlies (braces)
+        RC          = 74,
+        LP          = 75,  // left and right parentheses
+        RP          = 76,
+        COMMA       = 77,  // comma operator
+        ASSIGN      = 78, // simple assignment  (=)
+        ASSIGNOP    = 79, // assignment with operation (+= -= etc.)
+        HOOK        = 80, // conditional (?:)
+        COLON       = 81,
+        OR          = 82, // logical or (||)
+        AND         = 83, // logical and (&&)
+        INC         = 84, // increment/decrement (++ --)
+        DEC         = 85,
+        DOT         = 86, // member operator (.)
+        FUNCTION    = 87, // function keyword
+        EXPORT      = 88, // export keyword
+        IMPORT      = 89, // import keyword
+        IF          = 90, // if keyword
+        ELSE        = 91, // else keyword
+        SWITCH      = 92, // switch keyword
+        CASE        = 93, // case keyword
+        DEFAULT     = 94, // default keyword
+        WHILE       = 95, // while keyword
+        DO          = 96, // do keyword
+        FOR         = 97, // for keyword
+        BREAK       = 98, // break keyword
+        CONTINUE    = 99, // continue keyword
+        VAR         = 100, // var keyword
+        WITH        = 101, // with keyword
+        CATCH       = 102, // catch keyword
+        FINALLY     = 103, // finally keyword
+        VOID        = 104, // void keyword
+        RESERVED    = 105, // reserved keywords
 
-        EMPTY       = 104,
+        EMPTY       = 106,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        BLOCK       = 105, // statement block
-        ARRAYLIT    = 106, // array literal
-        OBJLIT      = 107, // object literal
+        BLOCK       = 107, // statement block
         LABEL       = 108, // label
         TARGET      = 109,
         LOOP        = 110,
@@ -271,13 +271,15 @@ public class Token
                 case GETVAR:          return "GETVAR";
                 case SETVAR:          return "SETVAR";
                 case UNDEFINED:       return "UNDEFINED";
-                case TRY:             return "TRY";
                 case CATCH_SCOPE:     return "CATCH_SCOPE";
                 case ENUM_INIT:       return "ENUM_INIT";
                 case ENUM_NEXT:       return "ENUM_NEXT";
                 case ENUM_ID:         return "ENUM_ID";
                 case THISFN:          return "THISFN";
                 case RETURN_POPV:     return "RETURN_POPV";
+                case ARRAYLIT:        return "ARRAYLIT";
+                case OBJECTLIT:       return "OBJECTLIT";
+                case TRY:             return "TRY";
                 case SEMI:            return "SEMI";
                 case LB:              return "LB";
                 case RB:              return "RB";
@@ -315,8 +317,6 @@ public class Token
                 case RESERVED:        return "RESERVED";
                 case EMPTY:           return "EMPTY";
                 case BLOCK:           return "BLOCK";
-                case ARRAYLIT:        return "ARRAYLIT";
-                case OBJLIT:          return "OBJLIT";
                 case LABEL:           return "LABEL";
                 case TARGET:          return "TARGET";
                 case LOOP:            return "LOOP";
@@ -332,6 +332,6 @@ public class Token
             }
             return "<unknown="+token+">";
         }
-        return null;
+        return String.valueOf(token);
     }
 }

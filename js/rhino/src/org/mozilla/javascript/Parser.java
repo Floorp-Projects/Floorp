@@ -1371,46 +1371,41 @@ public class Parser
 
         case Token.LB:
             {
+                ObjArray elems = new ObjArray();
+                int skipCount = 0;
                 decompiler.addToken(Token.LB);
-                pn = nf.createLeaf(Token.ARRAYLIT);
+                boolean after_lb_or_comma = true;
+                for (;;) {
+                    ts.flags |= ts.TSF_REGEXP;
+                    tt = ts.peekToken();
+                    ts.flags &= ~ts.TSF_REGEXP;
 
-                ts.flags |= ts.TSF_REGEXP;
-                boolean matched = ts.matchToken(Token.RB);
-                ts.flags &= ~ts.TSF_REGEXP;
-
-                if (!matched) {
-                    boolean first = true;
-                    do {
-                        ts.flags |= ts.TSF_REGEXP;
-                        tt = ts.peekToken();
-                        ts.flags &= ~ts.TSF_REGEXP;
-
-                        if (!first)
-                            decompiler.addToken(Token.COMMA);
-                        else
-                            first = false;
-
-                        if (tt == Token.RB) {  // to fix [,,,].length behavior...
-                            break;
-                        }
-
-                        if (tt == Token.COMMA) {
-                            nf.addChildToBack(pn,
-                                nf.createLeaf(Token.UNDEFINED));
+                    if (tt == Token.COMMA) {
+                        ts.getToken();
+                        decompiler.addToken(Token.COMMA);
+                        if (!after_lb_or_comma) {
+                            after_lb_or_comma = true;
                         } else {
-                            nf.addChildToBack(pn, assignExpr(false));
+                            elems.add(null);
+                            ++skipCount;
                         }
-
-                    } while (ts.matchToken(Token.COMMA));
-                    mustMatchToken(Token.RB, "msg.no.bracket.arg");
+                    } else if (tt == Token.RB) {
+                        ts.getToken();
+                        decompiler.addToken(Token.RB);
+                        break;
+                    } else {
+                        if (!after_lb_or_comma) {
+                            reportError("msg.no.bracket.arg");
+                        }
+                        elems.add(assignExpr(false));
+                        after_lb_or_comma = false;
+                    }
                 }
-                decompiler.addToken(Token.RB);
-                return nf.createArrayLiteral(pn);
+                return nf.createArrayLiteral(elems, skipCount);
             }
 
         case Token.LC: {
-            pn = nf.createLeaf(Token.OBJLIT);
-
+            ObjArray elems = new ObjArray();
             decompiler.addToken(Token.LC);
             if (!ts.matchToken(Token.RC)) {
 
@@ -1426,17 +1421,22 @@ public class Parser
 
                     tt = ts.getToken();
                     switch(tt) {
-                        // map NAMEs to STRINGs in object literal context.
                     case Token.NAME:
                     case Token.STRING:
+                        // map NAMEs to STRINGs in object literal context
+                        // but tell the decompiler the proper type
                         String s = ts.getString();
-                        decompiler.addName(s);
-                        property = nf.createString(ts.getString());
+                        if (tt == Token.NAME) {
+                            decompiler.addName(s);
+                        } else {
+                            decompiler.addString(s);
+                        }
+                        property = ScriptRuntime.getIndexObject(s);
                         break;
                     case Token.NUMBER:
                         double n = ts.getNumber();
                         decompiler.addNumber(n);
-                        property = nf.createNumber(n);
+                        property = ScriptRuntime.getIndexObject(n);
                         break;
                     case Token.RC:
                         // trailing comma is OK.
@@ -1450,16 +1450,15 @@ public class Parser
 
                     // OBJLIT is used as ':' in object literal for
                     // decompilation to solve spacing ambiguity.
-                    decompiler.addToken(Token.OBJLIT);
-                    nf.addChildToBack(pn, property);
-                    nf.addChildToBack(pn, assignExpr(false));
-
+                    decompiler.addToken(Token.OBJECTLIT);
+                    elems.add(property);
+                    elems.add(assignExpr(false));
                 } while (ts.matchToken(Token.COMMA));
 
                 mustMatchToken(Token.RC, "msg.no.brace.prop");
             }
             decompiler.addToken(Token.RC);
-            return nf.createObjectLiteral(pn);
+            return nf.createObjectLiteral(elems);
         }
 
         case Token.LP:

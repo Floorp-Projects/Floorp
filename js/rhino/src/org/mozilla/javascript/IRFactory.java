@@ -611,61 +611,27 @@ class IRFactory
         return result;
     }
 
-    /**
-     * Array Literal
-     * <BR>createArrayLiteral rewrites its argument as array creation
-     * plus a series of array element entries, so later compiler
-     * stages don't need to know about array literals.
-     */
-    Object createArrayLiteral(Object obj)
+    Object createArrayLiteral(ObjArray elems, int skipCount)
     {
-        Node array;
-        array = new Node(Token.NEW, Node.newString(Token.NAME, "Array"));
-        Node list = new Node(Token.INIT_LIST, array);
-
-        Node elem = null;
-        int i = 0;
-        for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
-            // Move cursor to cursor.next before elem.next can be
-            // altered in new Node constructor
-            elem = cursor;
-            cursor = cursor.getNext();
-            if (elem.getType() == Token.UNDEFINED) {
-                i++;
-                continue;
-            }
-            Node addelem = new Node(Token.SETELEM, new Node(Token.USE_STACK),
-                                    Node.newNumber(i), elem);
-            i++;
-            list.addChildToBack(addelem);
+        int length = elems.size();
+        int[] skipIndexes = null;
+        if (skipCount != 0) {
+            skipIndexes = new int[skipCount];
         }
-
-        /*
-         * If the version is 120, then new Array(4) means create a new
-         * array with 4 as the first element.  In this case, we might
-         * need to explicitly check against trailing undefined
-         * elements in the array literal, and set the length manually
-         * if these occur.  Otherwise, we can add an argument to the
-         * node specifying new Array() to provide the array length.
-         * (Which will make Array optimizations involving allocating a
-         * Java array to back the javascript array work better.)
-         */
-        if (parser.compilerEnv.languageVersion == Context.VERSION_1_2) {
-            /* When last array element is empty, we need to set the
-             * length explicitly, because we can't depend on SETELEM
-             * to do it for us - because empty [,,] array elements
-             * never set anything at all. */
-            if (elem != null && elem.getType() == Token.UNDEFINED) {
-                Node setlength = new Node(Token.SETPROP,
-                                          new Node(Token.USE_STACK),
-                                          Node.newString("length"),
-                                          Node.newNumber(i));
-                list.addChildToBack(setlength);
+        Node array = new Node(Token.ARRAYLIT);
+        for (int i = 0, j = 0; i != length; ++i) {
+            Node elem = (Node)elems.get(i);
+            if (elem != null) {
+                array.addChildToBack(elem);
+            } else {
+                skipIndexes[j] = i;
+                ++j;
             }
-        } else {
-            array.addChildToBack(Node.newNumber(i));
         }
-        return list;
+        if (skipCount != 0) {
+            array.putProp(Node.SKIP_INDEXES_PROP, skipIndexes);
+        }
+        return array;
     }
 
     /**
@@ -674,25 +640,23 @@ class IRFactory
      * creation plus object property entries, so later compiler
      * stages don't need to know about object literals.
      */
-    Object createObjectLiteral(Object obj)
+    Object createObjectLiteral(ObjArray elems)
     {
-        Node result = new Node(Token.NEW,
-                               Node.newString(Token.NAME, "Object"));
-        Node list = new Node(Token.INIT_LIST, result);
-
-        for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
-            Node n = cursor;
-            cursor = cursor.getNext();
-            int op = (n.getType() == Token.NAME)
-                   ? Token.SETPROP
-                   : Token.SETELEM;
-            // Move cursor before next.next can be altered in new Node
-            Node next = cursor;
-            cursor = cursor.getNext();
-            Node addelem = new Node(op, new Node(Token.USE_STACK), n, next);
-            list.addChildToBack(addelem);
+        int size = elems.size() / 2;
+        Node object = new Node(Token.OBJECTLIT);
+        Object[] properties;
+        if (size == 0) {
+            properties = ScriptRuntime.emptyArgs;
+        } else {
+            properties = new Object[size];
+            for (int i = 0; i != size; ++i) {
+                properties[i] = elems.get(2 * i);
+                Node value = (Node)elems.get(2 * i + 1);
+                object.addChildToBack(value);
+            }
         }
-        return list;
+        object.putProp(Node.OBJECT_IDS_PROP, properties);
+        return object;
     }
 
     /**

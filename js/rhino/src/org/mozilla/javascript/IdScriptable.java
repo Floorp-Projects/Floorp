@@ -500,9 +500,7 @@ public abstract class IdScriptable extends ScriptableObject
 
     protected final Object wrap_int(int x)
     {
-        byte b = (byte)x;
-        if (b == x) { return new Byte(b); }
-        return new Integer(x);
+        return ScriptRuntime.wrapInt(x);
     }
 
     protected final Object wrap_long(long x)

@@ -123,6 +123,8 @@ final class InterpreterData implements Serializable, DebuggableScript
 
     boolean topLevel;
 
+    Object[] literalIds;
+
     InterpreterData parentData;
 
     public boolean isTopLevel()

@@ -654,9 +654,10 @@ public class Decompiler
                 result.append(" ? ");
                 break;
 
-            case Token.OBJLIT:
-                // pun OBJLIT to mean colon in objlit property initialization.
-                // this needs to be distinct from COLON in the general case
+            case Token.OBJECTLIT:
+                // pun OBJECTLIT to mean colon in objlit property
+                // initialization.
+                // This needs to be distinct from COLON in the general case
                 // to distinguish from the colon in a ternary... which needs
                 // different spacing.
                 result.append(':');

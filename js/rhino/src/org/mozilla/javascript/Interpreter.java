@@ -271,6 +271,10 @@ public class Interpreter
         itsData.encodedSourceStart = scriptOrFn.getEncodedSourceStart();
         itsData.encodedSourceEnd = scriptOrFn.getEncodedSourceEnd();
 
+        if (itsLiteralIds.size() != 0) {
+            itsData.literalIds = itsLiteralIds.toArray();
+        }
+
         if (Token.printICode) dumpICode(itsData);
     }
 
@@ -322,7 +326,7 @@ public class Interpreter
 
     private void badTree(Node node)
     {
-        throw new RuntimeException("Un-handled node: "+node.toString());
+        throw new RuntimeException(node.toString());
     }
 
     private int generateICode(Node node, int iCodeTop)
@@ -1087,6 +1091,43 @@ public class Interpreter
                 break;
             }
 
+            case Token.ARRAYLIT: {
+                stackDelta = 1;
+                int count = 0;
+                while (child != null) {
+                    iCodeTop = generateICode(child, iCodeTop);
+                    child = child.getNext();
+                    ++count;
+                }
+                int[] skipIndexes = (int[])node.getProp(Node.SKIP_INDEXES_PROP);
+                int skipOffset = -1;
+                if (skipIndexes != null) {
+                    skipOffset = itsLiteralIds.size();
+                    itsLiteralIds.add(skipIndexes);
+                }
+                iCodeTop = addToken(Token.ARRAYLIT, iCodeTop);
+                iCodeTop = addInt(count, iCodeTop);
+                iCodeTop = addInt(skipOffset, iCodeTop);
+                stackChange(-count + 1);
+                break;
+            }
+
+            case Token.OBJECTLIT: {
+                stackDelta = 1;
+                Object[] propertyIds
+                    = (Object[])node.getProp(Node.OBJECT_IDS_PROP);
+                while (child != null) {
+                    iCodeTop = generateICode(child, iCodeTop);
+                    child = child.getNext();
+                }
+                int idsOffset = itsLiteralIds.size();
+                itsLiteralIds.add(propertyIds);
+                iCodeTop = addToken(Token.OBJECTLIT, iCodeTop);
+                iCodeTop = addInt(idsOffset, iCodeTop);
+                stackChange(-propertyIds.length + 1);
+                break;
+            }
+
             default :
                 badTree(node);
                 break;
@@ -1558,10 +1599,10 @@ public class Interpreter
                 out.flush();
                 out.print(" [" + pc + "] ");
                 int token = iCode[pc] & 0xFF;
+                int icodeLength = icodeTokenLength(token);
                 String tname = icodeToName(token);
                 int old_pc = pc;
                 ++pc;
-                int icodeLength = icodeTokenLength(token);
                 switch (token) {
                     default:
                         if (icodeLength != 1) Kit.codeBug();
@@ -1608,6 +1649,20 @@ public class Interpreter
                         Object regexp = idata.itsRegExpLiterals[i];
                         out.println(tname + " " + regexp);
                         pc += 2;
+                        break;
+                    }
+                    case Token.ARRAYLIT : {
+                        int count = getInt(iCode, pc);
+                        pc += 4;
+                        int skipOffset = getInt(iCode, pc);
+                        pc += 4;
+                        out.println(tname+" : "+count+" "+skipOffset);
+                        break;
+                    }
+                    case Token.OBJECTLIT : {
+                        int idsOffset = getInt(iCode, pc);
+                        pc += 4;
+                        out.println(tname+" : "+idsOffset);
                         break;
                     }
                     case Icode_CLOSURE : {
@@ -1705,7 +1760,8 @@ public class Interpreter
         }
     }
 
-    private static int icodeTokenLength(int icodeToken) {
+    private static int icodeTokenLength(int icodeToken)
+    {
         switch (icodeToken) {
             case Icode_SCOPE :
             case Icode_GETPROTO :
@@ -1845,7 +1901,12 @@ public class Interpreter
             case Icode_LINE :
                 // line number
                 return 1 + 2;
-
+            case Token.ARRAYLIT:
+                // number of indexes and offset of skip array
+                return 1 + 4 + 4;
+            case Token.OBJECTLIT:
+                // offset of property ids array
+                return 1 + 4;
             default:
                 Kit.codeBug(); // Bad icodeToken
                 return 0;
@@ -2998,6 +3059,14 @@ public class Interpreter
         pc += 2;
         break;
     }
+    case Token.ARRAYLIT :
+        stackTop = do_arraylit(cx, scope, idata, pc, stack, sDbl, stackTop);
+        pc += 8;
+        break;
+    case Token.OBJECTLIT :
+        stackTop = do_objectlit(cx, scope, idata, pc, stack, sDbl, stackTop);
+        pc += 4;
+        break;
     case Icode_LINE : {
         cx.interpreterLineIndex = pc + 1;
         if (debuggerFrame != null) {
@@ -3318,6 +3387,57 @@ public class Interpreter
         return stackTop;
     }
 
+    private static int do_arraylit(Context cx, Scriptable scope,
+                                   InterpreterData idata, int pc,
+                                   Object[] stack, double[] sDbl, int stackTop)
+        throws JavaScriptException
+    {
+        int count = getInt(idata.itsICode, pc + 1);
+        int skipOffset = getInt(idata.itsICode, pc + 5);
+        int[] skipIndexces = null;
+        if (skipOffset >= 0) {
+            skipIndexces = (int[])idata.literalIds[skipOffset];
+        }
+        Object[] array = new Object[count];
+        stackTop += 1  - count;
+        for (int i = 0; i != count; ++i) {
+            Object obj = stack[stackTop + i];
+            if (obj == DBL_MRK) {
+                obj = doubleWrap(sDbl[stackTop + i]);
+            } else {
+                // to help GC
+                stack[stackTop + i] = null;
+            }
+            array[i] = obj;
+        }
+        stack[stackTop] = ScriptRuntime.newArrayLiteral(array, skipIndexces, cx, scope);
+        return stackTop;
+    }
+
+    private static int do_objectlit(Context cx, Scriptable scope,
+                                    InterpreterData idata, int pc,
+                                    Object[] stack, double[] sDbl, int stackTop)
+        throws JavaScriptException
+    {
+        int idsOffset = getInt(idata.itsICode, pc + 1);
+        Object[] propertyIds = (Object[])idata.literalIds[idsOffset];
+        int count = propertyIds.length;
+        Object[] propertyValues = new Object[count];
+        stackTop += 1  - count;
+        for (int i = 0; i != count; ++i) {
+            Object obj = stack[stackTop + i];
+            if (obj == DBL_MRK) {
+                obj = doubleWrap(sDbl[stackTop + i]);
+            } else {
+                // to help GC
+                stack[stackTop + i] = null;
+            }
+            propertyValues[i] = obj;
+        }
+        stack[stackTop] = ScriptRuntime.newObjectLiteral(propertyIds, propertyValues, cx, scope);
+        return stackTop;
+    }
+
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
                                          int shift, int count)
     {
@@ -3379,6 +3499,7 @@ public class Interpreter
 // itsFixupTable[i] = (label_index << 32) | fixup_site
     private long[] itsFixupTable;
     private int itsFixupTableTop;
+    private ObjArray itsLiteralIds = new ObjArray();
 
     private int itsExceptionTableTop;
     // 5 = space for try start/end, catch begin, finally begin and with depth

@@ -1498,15 +1498,6 @@ class BodyCodegen
                 break;
               }
 
-              case Token.INIT_LIST:
-                generateCodeFromNode(child, node);
-                while (null != (child = child.getNext())) {
-                    cfw.add(ByteCode.DUP);
-                    generateCodeFromNode(child, node);
-                    cfw.add(ByteCode.POP);
-                }
-                break;
-
               case Token.CATCH_SCOPE:
                 cfw.addPush(node.getString());
                 generateCodeFromNode(child, node);
@@ -1590,6 +1581,14 @@ class BodyCodegen
 
               case Token.FINALLY:
                 visitFinally(node, child);
+                break;
+
+              case Token.ARRAYLIT:
+                visitArrayLiteral(node, child);
+                break;
+
+              case Token.OBJECTLIT:
+                visitObjectLiteral(node, child);
                 break;
 
               case Token.NOT: {
@@ -2087,6 +2086,79 @@ class BodyCodegen
         cfw.addAStore(variableObjectLocal);
     }
 
+    private void visitArrayLiteral(Node node, Node child)
+    {
+        int count = 0;
+        for (Node cursor = child; cursor != null; cursor = cursor.getNext()) {
+            ++count;
+        }
+        // load array to store array literal objects
+        addNewObjectArray(count);
+        for (int i = 0; i != count; ++i) {
+            cfw.add(ByteCode.DUP);
+            cfw.addPush(i);
+            generateCodeFromNode(child, node);
+            cfw.add(ByteCode.AASTORE);
+            child = child.getNext();
+        }
+        int[] skipIndexes = (int[])node.getProp(Node.SKIP_INDEXES_PROP);
+        if (skipIndexes == null) {
+            cfw.add(ByteCode.ACONST_NULL);
+            cfw.add(ByteCode.ICONST_0);
+        } else {
+            cfw.addPush(OptRuntime.encodeIntArray(skipIndexes));
+            cfw.addPush(skipIndexes.length);
+        }
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
+        addOptRuntimeInvoke("newArrayLiteral",
+             "([Ljava/lang/Object;"
+             +"Ljava/lang/String;"
+             +"I"
+             +"Lorg/mozilla/javascript/Context;"
+             +"Lorg/mozilla/javascript/Scriptable;"
+             +")Lorg/mozilla/javascript/Scriptable;");
+    }
+
+    private void visitObjectLiteral(Node node, Node child)
+    {
+        Object[] properties = (Object[])node.getProp(Node.OBJECT_IDS_PROP);
+        int count = properties.length;
+
+        // load array with property ids
+        addNewObjectArray(count);
+        for (int i = 0; i != count; ++i) {
+            cfw.add(ByteCode.DUP);
+            cfw.addPush(i);
+            Object id = properties[i];
+            if (id instanceof String) {
+                cfw.addPush((String)id);
+            } else {
+                cfw.addPush(((Integer)id).intValue());
+                addScriptRuntimeInvoke("wrapInt", "(I)Ljava/lang/Integer;");
+            }
+            cfw.add(ByteCode.AASTORE);
+        }
+        // load array with property values
+        addNewObjectArray(count);
+        for (int i = 0; i != count; ++i) {
+            cfw.add(ByteCode.DUP);
+            cfw.addPush(i);
+            generateCodeFromNode(child, node);
+            cfw.add(ByteCode.AASTORE);
+            child = child.getNext();
+        }
+
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
+        addScriptRuntimeInvoke("newObjectLiteral",
+             "([Ljava/lang/Object;"
+             +"[Ljava/lang/Object;"
+             +"Lorg/mozilla/javascript/Context;"
+             +"Lorg/mozilla/javascript/Scriptable;"
+             +")Lorg/mozilla/javascript/Scriptable;");
+    }
+
     private void visitCall(Node node, int type, Node child)
     {
         /*
@@ -2306,25 +2378,10 @@ class BodyCodegen
             ++argCount;
         }
         // load array object to set arguments
-        if (argCount == 0) {
-            if (itsZeroArgArray >= 0) {
-                cfw.addALoad(itsZeroArgArray);
-            } else {
-                cfw.add(ByteCode.GETSTATIC,
-                        "org/mozilla/javascript/ScriptRuntime",
-                        "emptyArgs", "[Ljava/lang/Object;");
-            }
-        } else if (argCount == 1) {
-            if (itsOneArgArray >= 0)
-                cfw.addALoad(itsOneArgArray);
-            else {
-                cfw.addPush(1);
-                cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
-            }
-        }
-        else {
-            cfw.addPush(argCount);
-            cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
+        if (argCount == 1 && itsOneArgArray >= 0) {
+            cfw.addALoad(itsOneArgArray);
+        } else {
+            addNewObjectArray(argCount);
         }
         // Copy arguments into it
         for (int i = 0; i != argCount; ++i) {
@@ -3465,6 +3522,22 @@ class BodyCodegen
     private void addObjectToDouble()
     {
         addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
+    }
+
+    private void addNewObjectArray(int size)
+    {
+        if (size == 0) {
+            if (itsZeroArgArray >= 0) {
+                cfw.addALoad(itsZeroArgArray);
+            } else {
+                cfw.add(ByteCode.GETSTATIC,
+                        "org/mozilla/javascript/ScriptRuntime",
+                        "emptyArgs", "[Ljava/lang/Object;");
+            }
+        } else {
+            cfw.addPush(size);
+            cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
+        }
     }
 
     private void addScriptRuntimeInvoke(String methodName,

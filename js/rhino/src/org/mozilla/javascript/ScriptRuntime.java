@@ -96,6 +96,11 @@ public class ScriptRuntime {
         return b ? Boolean.TRUE : Boolean.FALSE;
     }
 
+    public static Integer wrapInt(int i)
+    {
+        return new Integer(i);
+    }
+
     /**
      * Convert the value to a boolean.
      *
@@ -1018,11 +1023,12 @@ public class ScriptRuntime {
         return value;
     }
 
-    // Return -1L if str is not an index or the index value as lower 32
-    // bits of the result
-    private static long indexFromString(String str) {
-        // It must be a string.
-
+    /**
+     * Return -1L if str is not an index or the index value as lower 32
+     * bits of the result.
+     */
+    private static long indexFromString(String str)
+    {
         // The length of the decimal string representation of
         //  Integer.MAX_VALUE, 2147483647
         final int MAX_VALUE_LENGTH = 10;
@@ -1073,7 +1079,34 @@ public class ScriptRuntime {
         return -1L;
     }
 
-    static String getStringId(Object id) {
+    /**
+     * If s represents index, then return index value wrapped as Integer
+     * and othewise return s.
+     */
+    static Object getIndexObject(String s)
+    {
+        long indexTest = indexFromString(s);
+        if (indexTest >= 0) {
+            return new Integer((int)indexTest);
+        }
+        return s;
+    }
+
+    /**
+     * If d is exact int value, return its value wrapped as Integer
+     * and othewise return d converted to String.
+     */
+    static Object getIndexObject(double d)
+    {
+        int i = (int)d;
+        if ((double)i == d) {
+            return new Integer((int)i);
+        }
+        return toString(d);
+    }
+
+    static String getStringId(Object id)
+    {
         if (id instanceof Number) {
             double d = ((Number) id).doubleValue();
             int index = (int) d;
@@ -1088,7 +1121,8 @@ public class ScriptRuntime {
         return s;
     }
 
-    static int getIntId(Object id) {
+    static int getIntId(Object id)
+    {
         if (id instanceof Number) {
             double d = ((Number) id).doubleValue();
             int index = (int) d;
@@ -2072,6 +2106,61 @@ public class ScriptRuntime {
                 scope.put(name, scope, function);
             }
         }
+    }
+
+    public static Scriptable newArrayLiteral(Object[] objects,
+                                             int[] skipIndexces,
+                                             Context cx, Scriptable scope)
+        throws JavaScriptException
+    {
+        int count = objects.length;
+        int skipCount = 0;
+        if (skipIndexces != null) {
+            skipCount = skipIndexces.length;
+        }
+        int length = count + skipCount;
+        Integer lengthObj = new Integer(length);
+        Scriptable arrayObj;
+        /*
+         * If the version is 120, then new Array(4) means create a new
+         * array with 4 as the first element.  In this case, we have to
+         * set length property manually.
+         */
+        if (cx.getLanguageVersion() == Context.VERSION_1_2) {
+            arrayObj = cx.newObject(scope, "Array", ScriptRuntime.emptyArgs);
+            ScriptableObject.putProperty(arrayObj, "length", lengthObj);
+        } else {
+            arrayObj = cx.newObject(scope, "Array", new Object[] { lengthObj });
+        }
+        int skip = 0;
+        for (int i = 0, j = 0; i != length; ++i) {
+            if (skip != skipCount && skipIndexces[skip] == i) {
+                ++skip;
+                continue;
+            }
+            ScriptableObject.putProperty(arrayObj, i, objects[j]);
+            ++j;
+        }
+        return arrayObj;
+    }
+
+    public static Scriptable newObjectLiteral(Object[] propertyIds,
+                                              Object[] propertyValues,
+                                              Context cx, Scriptable scope)
+        throws JavaScriptException
+    {
+        Scriptable object = cx.newObject(scope);
+        for (int i = 0, end = propertyIds.length; i != end; ++i) {
+            Object id = propertyIds[i];
+            Object value = propertyValues[i];
+            if (id instanceof String) {
+                ScriptableObject.putProperty(object, (String)id, value);
+            } else {
+                int index = ((Integer)id).intValue();
+                ScriptableObject.putProperty(object, index, value);
+            }
+        }
+        return object;
     }
 
     static void checkDeprecated(Context cx, String name) {
