@@ -36,6 +36,10 @@
 #include "nsIPrefMigration.h"
 #include "nsVoidArray.h"
 
+#ifdef XP_MAC
+#define IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x "%s Rules" 
+#endif
+
 class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 {
     public:
@@ -97,7 +101,10 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
 
       nsresult DoSpecialUpdates(nsFileSpec profilePath);
       nsresult Rename4xFileAfterMigration(nsFileSpec profilePath, const char *oldFileName, const char *newFileName);
+#ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x
+      nsresult RenameAndMove4xImapFilterFile(nsFileSpec profilePath, const char *hostname);
       nsresult RenameAndMove4xImapFilterFiles(nsFileSpec profilePath);
+#endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
       nsresult RenameAndMove4xPopFilterFile(nsFileSpec profilePath);
   
       nsresult SetPremigratedCharPref(const char *pref_name, char *value);
