@@ -32,9 +32,10 @@
 ;   :lexer,      print lexer trace information
 ;   :lexer-code  print lexer trace information, including action code
 ;   other        print trace information
-; Return two values:
+; Return three values:
 ;   the list of action results;
-;   the list of action results' types.
+;   the list of action results' types;
+;   the list of processed tokens.
 (defun js-parse (input-string &key (lexer *ll*) (grammar *jg*) trace)
   (let ((lexer-classifier (lexer-classifier lexer))
         (lexer-metagrammar (lexer-metagrammar lexer))
