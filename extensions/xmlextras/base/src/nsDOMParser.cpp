@@ -406,12 +406,14 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
   NS_ENSURE_ARG(contentType);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIInputStream> stream;
   PRInt32 contentLength;
 
-  rv = ConvertWStringToStream(str, nsCRT::strlen(str), getter_AddRefs(stream), &contentLength);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = ConvertWStringToStream(str, nsCRT::strlen(str), getter_AddRefs(stream), &contentLength);
+  if (NS_FAILED(rv)) {
+    *_retval = nsnull;
+    return rv;
+  }
 
   return ParseFromStream(stream, "UTF-8", contentLength, contentType, _retval);
 }
@@ -429,6 +431,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   NS_ENSURE_ARG(charset);
   NS_ENSURE_ARG(contentType);
   NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
 
   nsresult rv;
   nsCOMPtr<nsIURI> baseURI;
@@ -456,7 +459,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     if (NS_SUCCEEDED(rv)) {
       rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+        nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal));
         if (codebase) {
           codebase->GetURI(getter_AddRefs(baseURI));
         }
@@ -478,11 +481,11 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   }
 
   // Get and initialize a DOMImplementation
-  nsCOMPtr<nsIDOMDOMImplementation> implementation = do_CreateInstance(kIDOMDOMImplementationCID, &rv);
+  nsCOMPtr<nsIDOMDOMImplementation> implementation(do_CreateInstance(kIDOMDOMImplementationCID, &rv));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   
   if (baseURI) {
-    nsCOMPtr<nsIPrivateDOMImplementation> privImpl = do_QueryInterface(implementation);
+    nsCOMPtr<nsIPrivateDOMImplementation> privImpl(do_QueryInterface(implementation));
     if (privImpl) {
       privImpl->Init(baseURI);
     }
@@ -509,7 +512,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   // Tell the document to start loading
   nsCOMPtr<nsIStreamListener> listener;
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
 
   if (!document) return NS_ERROR_FAILURE;
   rv = document->StartDocumentLoad(kLoadAsData, channel, 
