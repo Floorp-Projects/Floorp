@@ -111,8 +111,7 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
 
     js2val regexp = argv[0];
     
-    if ((argc == 0) || (meta->objectType(regexp) != meta->prototypeClass)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(regexp))->type != meta->regexpClass)) ) {
+    if ((argc == 0) || (meta->objectType(thisValue) != meta->regexpClass)) {        
         regexp = JS2VAL_NULL;
         regexp = RegExp_Constructor(meta, regexp, argv, 1);
     }
@@ -127,7 +126,6 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
 
 }
 
-#if 0
 /*
  * 15.5.4.10 String.prototype.match (regexp)
  * 
@@ -147,37 +145,39 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
     js2val S = STRING_TO_JS2VAL(meta->engine->toString(thisValue));
 
     js2val regexp = argv[0];
-    if ((argc == 0) || (meta->objectType(regexp) != meta->prototypeClass)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(regexp))->type != meta->regexpClass)) ) {
+    if ((argc == 0) || (meta->objectType(thisValue) != meta->regexpClass)) {        
         regexp = JS2VAL_NULL;
         regexp = RegExp_Constructor(meta, regexp, argv, 1);
     }
 
-    REState *pState = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp)))->mRegExp;
+    RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp));
+    REState *pState = thisInst->mRegExp;
     if ((pState->flags & RE_GLOBAL) == 0) {
         return RegExp_exec(meta, regexp, &S, 1);                
     }
     else {
-        js2val result = Array_Type->newInstance(cx);
-        JSArrayInstance *A = checked_cast<JSArrayInstance *>(JS2VAL_TO_OBJECT(result));
+        PrototypeInstance *A = new PrototypeInstance(meta->objectClass->prototype, meta->objectClass);
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
-            REMatchState *match = REExecute(pState, JS2VAL_TO_STRING(S)->begin(), lastIndex, (int32)JSValue::string(S)->length(), false);
+            REMatchState *match = REExecute(pState, JS2VAL_TO_STRING(S)->begin(), lastIndex, toInt32(JS2VAL_TO_STRING(S)->length()), false);
             if (match == NULL)
                 break;
             if (lastIndex == match->endIndex)
                 lastIndex++;
             else
                 lastIndex = match->endIndex;
-            String *matchStr = new String(JS2VAL_TO_STRING(S)->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));
-            A->setProperty(cx, *numberToString(index++), NULL, STRING_TO_JS2VAL(matchStr));
+            String *matchStr = new String(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
+            Multiname mname(meta->world.identifiers[*numberToString(index)], meta->publicNamespace);
+            index++;
+            meta->writeDynamicProperty(A, &mname, true, STRING_TO_JS2VAL(matchStr), RunPhase);
         }
-        JSValue::instance(regexp)->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue::newNumber((float64)lastIndex));
-        return result;
+        thisInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
+        return OBJECT_TO_JS2VAL(A);
     }
 }
 
+#if 0
 static const String interpretDollar(JS2Metadata *meta, const String *replaceStr, uint32 dollarPos, const String *searchStr, REMatchState *match, uint32 &skip)
 {
     skip = 2;

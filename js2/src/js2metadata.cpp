@@ -2079,10 +2079,7 @@ doUnary:
         if (argc > 0) {
             if (meta->objectType(argv[0]) == meta->regexpClass) {
                 if ((argc == 1) || JS2VAL_IS_UNDEFINED(argv[1])) {
-                    js2val src;
-                    QualifiedName qname(meta->publicNamespace, meta->world.identifiers["source"]);
-                    if (!meta->readInstanceMember(argv[0], meta->regexpClass, &qname, RunPhase, &src))
-                        ASSERT(false);
+                    js2val src = thisInst->getSource(meta);
                     ASSERT(JS2VAL_IS_STRING(src));
                     regexpStr = JS2VAL_TO_STRING(src);
                     REState *other = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(argv[0])))->mRegExp;
@@ -2095,46 +2092,22 @@ doUnary:
                 regexpStr = meta->engine->toString(argv[0]);
             if ((argc > 1) && !JS2VAL_IS_UNDEFINED(argv[1])) {
                 flagStr = meta->engine->toString(argv[1]);
-                if (parseFlags(flagStr->begin(), (int32)flagStr->length(), &flags) != RE_NO_ERROR) {
+                if (parseFlags(flagStr->begin(), (int32)flagStr->length(), &flags) != RE_NO_ERROR)
                     meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), *regexpStr + "/" + *flagStr);  // XXX error message?
-                }
             }
         }
         REState *pState = REParse(regexpStr->begin(), (int32)regexpStr->length(), flags, RE_VERSION_1);
         if (pState) {
             thisInst->mRegExp = pState;
-    // XXX ECMA spec says these are DONTENUM, but SpiderMonkey and test suite disagree
-    /*
-            thisInst->defineVariable(cx, cx->Source_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), String_Type, JSValue(regexpStr));
-            thisInst->defineVariable(cx, cx->Global_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (pState->flags & GLOBAL) ? kTrueValue : kFalseValue);
-            thisInst->defineVariable(cx, cx->IgnoreCase_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (pState->flags & IGNORECASE) ? kTrueValue : kFalseValue);
-            thisInst->defineVariable(cx, cx->Multiline_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (pState->flags & MULTILINE) ? kTrueValue : kFalseValue);
-            thisInst->defineVariable(cx, cx->LastIndex_StringAtom, NULL, Property::DontDelete, Number_Type, kPositiveZero);
-    */
-            {
-                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["source"]);
-                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, STRING_TO_JS2VAL(regexpStr), RunPhase)) ASSERT(false);
-            }
-            {
-                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["global"]);
-                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, BOOLEAN_TO_JS2VAL((pState->flags & RE_GLOBAL) == RE_GLOBAL), RunPhase)) ASSERT(false);
-            }
-            {
-                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["ignoreCase"]);
-                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, BOOLEAN_TO_JS2VAL((pState->flags & RE_IGNORECASE) == RE_IGNORECASE), RunPhase)) ASSERT(false);
-            }
-            {
-                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["multiline"]);
-                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, BOOLEAN_TO_JS2VAL((pState->flags & RE_MULTILINE) == RE_MULTILINE), RunPhase)) ASSERT(false);
-            }
-            {
-                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["lastIndex"]);
-                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, INT_TO_JS2VAL(0), RunPhase)) ASSERT(false);
-            }
+            // XXX ECMA spec says these are DONTENUM
+            thisInst->setSource(meta, STRING_TO_JS2VAL(regexpStr));
+            thisInst->setGlobal(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_GLOBAL) == RE_GLOBAL));
+            thisInst->setIgnoreCase(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_IGNORECASE) == RE_IGNORECASE));
+            thisInst->setLastIndex(meta, INT_TO_JS2VAL(0));
+            thisInst->setMultiline(meta, BOOLEAN_TO_JS2VAL((pState->flags & RE_MULTILINE) == RE_MULTILINE));
         }
-        else {
+        else
             meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), "/" + *regexpStr + "/" + *flagStr);  // XXX what about the RE parser error message?
-        }
         return thatValue;
     }
 

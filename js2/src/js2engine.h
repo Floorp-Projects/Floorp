@@ -227,6 +227,7 @@ public:
 
 
 String *numberToString(float64 *number);
+String *numberToString(int32 i);
 
 
 

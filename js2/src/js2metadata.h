@@ -60,6 +60,7 @@ typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
 extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 
 
 // OBJECT is the semantic domain of all possible objects and is defined as:
@@ -550,6 +551,18 @@ public:
 class RegExpInstance : public FixedInstance {
 public:
     RegExpInstance(JS2Class *type) : FixedInstance(type) { }
+
+    void setLastIndex(JS2Metadata *meta, js2val a);
+    void setGlobal(JS2Metadata *meta, js2val a);
+    void setMultiline(JS2Metadata *meta, js2val a);
+    void setIgnoreCase(JS2Metadata *meta, js2val a);
+    void setSource(JS2Metadata *meta, js2val a);
+
+    js2val getLastIndex(JS2Metadata *meta);
+    js2val getGlobal(JS2Metadata *meta);
+    js2val getMultiline(JS2Metadata *meta);
+    js2val getIgnoreCase(JS2Metadata *meta);
+    js2val getSource(JS2Metadata *meta);
 
     REState     *mRegExp;
 };
