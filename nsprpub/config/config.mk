@@ -21,6 +21,36 @@
 # Define an include-at-most-once-flag
 NSPR_CONFIG_MK	= 1
 
+#
+# The variable definitions in this file are inputs to NSPR's
+# build system.  This file, if present, is included at the
+# beginning of config.mk.
+#
+# For example:
+#
+# BUILD_OPT=1
+# USE_PTHREADS=1
+# NS_USE_GCC=
+#
+ifndef NSPR_MY_CONFIG_MK
+NSPR_MY_CONFIG_MK = $(MOD_DEPTH)/config/my_config.mk
+endif
+
+#
+# The variable definitions in this file are used to
+# override variable values set by NSPR's build system.
+# This file, if present, is included at the end of config.mk.
+#
+# For example:
+#
+# DIST=/usr/local/nspr
+#
+ifndef NSPR_MY_OVERRIDES_MK
+NSPR_MY_OVERRIDES_MK = $(MOD_DEPTH)/config/my_overrides.mk
+endif
+
+-include $(NSPR_MY_CONFIG_MK)
+
 include $(MOD_DEPTH)/config/module.df
 
 include $(MOD_DEPTH)/config/arch.mk
@@ -113,3 +143,5 @@ RELEASE_DIR = $(NSDEPTH)/dist/release/$(MOD_NAME)
 RELEASE_INCLUDE_DIR = $(RELEASE_DIR)/$(BUILD_NUMBER)/$(OBJDIR_NAME)/include
 RELEASE_BIN_DIR = $(RELEASE_DIR)/$(BUILD_NUMBER)/$(OBJDIR_NAME)/bin
 RELEASE_LIB_DIR = $(RELEASE_DIR)/$(BUILD_NUMBER)/$(OBJDIR_NAME)/lib
+
+-include $(NSPR_MY_OVERRIDES_MK)
