@@ -22,11 +22,11 @@
 
 /*
 
-@import url(chrome://global/skin/);
-
   Style rules specific to the directory listing window.
 
 */
+
+@import url(chrome://global/skin/);
 
 treecol[sortActive="true"] {
  background-color: lightgray;
