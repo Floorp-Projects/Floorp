@@ -166,7 +166,6 @@ bin/components/libsample.so
 bin/components/libsearch.so
 bin/components/necko_jar.xpt
 bin/components/necko_res.xpt
-bin/components/nsCategoryManager.js
 bin/components/nsSample.js
 bin/components/prefmigr.xpt
 bin/components/profile.xpt
