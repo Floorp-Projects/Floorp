@@ -413,10 +413,18 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         if (ctrlKey)
           mailEditor = do_QueryInterface(mEditor);
 
+        PRInt32 clipboard;
+
+#ifdef XP_OS2
+        clipboard = nsIClipboard::kGlobalClipboard;
+#else
+        clipboard = nsIClipboard::kSelectionClipboard;
+#endif
+
         if (mailEditor)
-          mailEditor->PasteAsQuotation(nsIClipboard::kSelectionClipboard);
+          mailEditor->PasteAsQuotation(clipboard);
         else
-          editor->Paste(nsIClipboard::kSelectionClipboard);
+          editor->Paste(clipboard);
 
         // Prevent the event from bubbling up to be possibly handled
         // again by the containing window:
