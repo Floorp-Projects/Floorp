@@ -216,13 +216,6 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 {
   LOG_SCOPE_WITH_PARAM(gJPEGlog, "nsJPEGDecoder::WriteFrom", "count", count);
 
-  /* We use our private extension JPEG error handler.
-   * Note that this struct must live as long as the main JPEG parameter
-   * struct, to avoid dangling-pointer problems.
-   */
-  // XXX above what is this?
-
-
   if (inStr) {
     if (!mBuffer) {
       mBuffer = (JOCTET *)PR_Malloc(count);
