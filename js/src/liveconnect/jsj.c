@@ -142,6 +142,7 @@ jmethodID njJSObject_JSObject;          /* netscape.javascript.JSObject construc
 jmethodID njJSUtil_workAroundAIXJavaBug;/* netscape.javascript.JSUtil.workAroundAIXJavaBug() */
 jmethodID njJSUtil_getStackTrace;       /* netscape.javascript.JSUtil.getStackTrace() */
 jfieldID njJSObject_internal;           /* netscape.javascript.JSObject.internal */
+jfieldID njJSObject_long_internal;      /* netscape.javascript.JSObject.long_internal */
 jfieldID njJSException_lineno;          /* netscape.javascript.JSException.lineno */
 jfieldID njJSException_tokenIndex;      /* netscape.javascript.JSException.tokenIndex */
 jfieldID njJSException_source;          /* netscape.javascript.JSException.source */

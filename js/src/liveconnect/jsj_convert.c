@@ -838,7 +838,11 @@ jsj_ConvertJavaObjectToJSValue(JSContext *cx, JNIEnv *jEnv,
      */
      if (njJSObject && (*jEnv)->IsInstanceOf(jEnv, java_obj, njJSObject)) {
 #ifdef PRESERVE_JSOBJECT_IDENTITY
+#if JS_BYTES_PER_LONG == 8
+        js_obj = (JSObject *)((*jEnv)->GetLongField(jEnv, java_obj, njJSObject_long_internal));
+#else
         js_obj = (JSObject *)((*jEnv)->GetIntField(jEnv, java_obj, njJSObject_internal));
+#endif
 #else
         js_obj = jsj_UnwrapJSObjectWrapper(jEnv, java_obj);
 #endif
