@@ -341,6 +341,53 @@ nsFSURLEncoded::Init()
   return NS_OK;
 }
 
+static void
+HandleMailtoSubject(nsCString& aPath) {
+
+  // Walk through the string and see if we have a subject already.
+  PRBool hasSubject = PR_FALSE;
+  PRBool hasParams = PR_FALSE;
+  PRInt32 paramSep = aPath.FindChar('?');
+  while (paramSep != kNotFound && paramSep < (PRInt32)aPath.Length()) {
+    hasParams = PR_TRUE;
+
+    // Get the end of the name at the = op.  If it is *after* the next &,
+    // assume that someone made a parameter without an = in it
+    PRInt32 nameEnd = aPath.FindChar('=', paramSep+1);
+    PRInt32 nextParamSep = aPath.FindChar('&', paramSep+1);
+    if (nextParamSep == kNotFound) {
+      nextParamSep = aPath.Length();
+    }
+
+    // If the = op is after the &, this parameter is a name without value.
+    // If there is no = op, same thing.
+    if (nameEnd == kNotFound || nextParamSep < nameEnd) {
+      nameEnd = nextParamSep;
+    }
+
+    if (nameEnd != kNotFound) {
+      if (Substring(aPath, paramSep+1, nameEnd-(paramSep+1)) ==
+          NS_LITERAL_CSTRING("subject")) {
+        hasSubject = PR_TRUE;
+        break;
+      }
+    }
+
+    paramSep = nextParamSep;
+  }
+
+  // If there is no subject, append a preformed subject to the mailto line
+  if (!hasSubject) {
+    if (hasParams) {
+      aPath.Append('&');
+    } else {
+      aPath.Append('?');
+    }
+
+    aPath += NS_LITERAL_CSTRING("subject=Form%20Post%20From%20Mozilla&");
+  }
+}
+
 NS_IMETHODIMP
 nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
                                      nsIInputStream** aPostDataStream)
@@ -350,32 +397,54 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
   *aPostDataStream = nsnull;
 
   if (mMethod == NS_FORM_METHOD_POST) {
-    nsCOMPtr<nsIInputStream> dataStream;
-    // XXX We *really* need to either get the string to disown its data (and
-    // not destroy it), or make a string input stream that owns the CString
-    // that is passed to it.  Right now this operation does a copy.
-    rv = NS_NewCStringInputStream(getter_AddRefs(dataStream), mQueryString);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIMIMEInputStream> mimeStream(
-      do_CreateInstance("@mozilla.org/network/mime-input-stream;1", &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool isMailto = PR_FALSE;
+    aURI->SchemeIs("mailto", &isMailto);
+    if (isMailto) {
+
+      nsCAutoString path;
+      rv = aURI->GetPath(path);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      HandleMailtoSubject(path);
+
+      // Append the body to and force-plain-text args to the mailto line
+      nsCString escapedBody;
+      escapedBody.Adopt(nsEscape(mQueryString.get(), url_XAlphas));
+
+      path += NS_LITERAL_CSTRING("&force-plain-text=Y&body=") + escapedBody;
+
+      rv = aURI->SetPath(path);
+
+    } else {
+
+      nsCOMPtr<nsIInputStream> dataStream;
+      // XXX We *really* need to either get the string to disown its data (and
+      // not destroy it), or make a string input stream that owns the CString
+      // that is passed to it.  Right now this operation does a copy.
+      rv = NS_NewCStringInputStream(getter_AddRefs(dataStream), mQueryString);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIMIMEInputStream> mimeStream(
+        do_CreateInstance("@mozilla.org/network/mime-input-stream;1", &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef SPECIFY_CHARSET_IN_CONTENT_TYPE
-    mimeStream->AddHeader("Content-Type",
-                          PromiseFlatString(
-                            "application/x-www-form-urlencoded; charset="
-                            + mCharset
-                          ).get());
+      mimeStream->AddHeader("Content-Type",
+                            PromiseFlatString(
+                              "application/x-www-form-urlencoded; charset="
+                              + mCharset
+                            ).get());
 #else
-    mimeStream->AddHeader("Content-Type",
-                          "application/x-www-form-urlencoded");
+      mimeStream->AddHeader("Content-Type",
+                            "application/x-www-form-urlencoded");
 #endif
-    mimeStream->SetAddContentLength(PR_TRUE);
-    mimeStream->SetData(dataStream);
+      mimeStream->SetAddContentLength(PR_TRUE);
+      mimeStream->SetData(dataStream);
 
-    *aPostDataStream = mimeStream;
-    NS_ADDREF(*aPostDataStream);
+      *aPostDataStream = mimeStream;
+      NS_ADDREF(*aPostDataStream);
+    }
 
   } else {
     //
@@ -877,48 +946,7 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     rv = aURI->GetPath(path);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Walk through the string and see if we have a subject already.
-    PRBool hasSubject = PR_FALSE;
-    PRBool hasParams = PR_FALSE;
-    PRInt32 paramSep = path.FindChar('?');
-    while (paramSep != kNotFound && paramSep < (PRInt32)path.Length()) {
-      hasParams = PR_TRUE;
-
-      // Get the end of the name at the = op.  If it is *after* the next &,
-      // assume that someone made a parameter without an = in it
-      PRInt32 nameEnd = path.FindChar('=', paramSep+1);
-      PRInt32 nextParamSep = path.FindChar('&', paramSep+1);
-      if (nextParamSep == kNotFound) {
-        nextParamSep = path.Length();
-      }
-
-      // If the = op is after the &, this parameter is a name without value.
-      // If there is no = op, same thing.
-      if (nameEnd == kNotFound || nextParamSep < nameEnd) {
-        nameEnd = nextParamSep;
-      }
-
-      if (nameEnd != kNotFound) {
-        if (Substring(path, paramSep+1, nameEnd-(paramSep+1)) ==
-            NS_LITERAL_CSTRING("subject")) {
-          hasSubject = PR_TRUE;
-          break;
-        }
-      }
-
-      paramSep = nextParamSep;
-    }
-
-    // If there is no subject, append a preformed subject to the mailto line
-    if (!hasSubject) {
-      if (hasParams) {
-        path.Append('&');
-      } else {
-        path.Append('?');
-      }
-
-      path += NS_LITERAL_CSTRING("subject=Form%20Post%20From%20Mozilla&");
-    }
+    HandleMailtoSubject(path);
 
     // Append the body to and force-plain-text args to the mailto line
     nsCString escapedBody;
