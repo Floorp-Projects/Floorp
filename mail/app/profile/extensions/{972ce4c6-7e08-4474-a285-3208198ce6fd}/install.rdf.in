@@ -26,7 +26,7 @@
     <!-- Front End Integration Hooks (used by Theme Manager)-->
     <!-- XXXben - preprocess this file to use different info for mac version -->
 #ifdef XP_MACOSX
-    <em:creator>Keving Gerich and Stephen Horlander</em:creator>
+    <em:creator>Kevin Gerich and Stephen Horlander</em:creator>
 #else
     <em:creator>Arvid Axelsson</em:creator>
 #endif
