@@ -272,6 +272,11 @@ lo_NewTopState(MWContext *context, char *url)
 	top_state->version = JSVERSION_UNKNOWN;
         top_state->scriptData = NULL;
 	top_state->doc_state = NULL;
+#ifdef DOM
+	top_state->top_node = NULL;
+	top_state->current_node = NULL;
+	top_state->style_db = NULL;
+#endif
 
 	if (url == NULL)
 	{
@@ -774,7 +779,11 @@ lo_InitDocState(lo_DocState *state, MWContext *context,
 		str[0] = ' ';
 		tmp_text.text = (PA_Block)str;
 		tmp_text.text_len = 1;
+#ifdef DOM
+        tmp_text.text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 		tmp_text.text_attr = state->font_stack->text_attr;
+#endif
 		FE_GetTextInfo(context, &tmp_text, &(state->text_info));
 
 		state->default_line_height = state->text_info.ascent +
@@ -4919,7 +4928,7 @@ XP_TRACE(("Initializing new doc %d\n", doc_id));
             XP_ASSERT(ELEMENT_PRIV(last_node)->ele_start);
 #endif
             ELEMENT_PRIV(last_node)->ele_end = eptr;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_old
             DumpNodeElements(last_node);
 #endif
         }

@@ -701,6 +701,11 @@ lo_DisplayElement(MWContext *context, LO_Element *tptr,
     if (bbox.right <= x )
 		return;
 
+#ifdef DOM_notyet
+    if (LO_CheckForContentHiding(state, context))
+        return;
+#endif
+
     /* Temporarily translate to new coordinate system */
     any->x += base_x;
     any->y += base_y;

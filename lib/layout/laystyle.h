@@ -159,9 +159,13 @@ LO_PopAllTagsAbove(MWContext *context,
 extern XP_Bool
 LO_ImplicitPop(MWContext *context, lo_DocState **state, PA_Tag *tag);
 
+#ifdef DOM
+extern XP_Bool
+LO_CheckForContentHiding(lo_DocState *state, MWContext *context);
+#else
 extern XP_Bool
 LO_CheckForContentHiding(lo_DocState *state);
-
+#endif
 extern void
 LO_AdjustSSUnits(SS_Number *number, char *style_type, MWContext *context, lo_DocState *state);
 

@@ -34,6 +34,9 @@
 #include "stystack.h"
 
 #include "libmocha.h"
+#ifdef DOM
+#include "domstyle.h"
+#endif
 
 #define MEMORY_ARENAS 1
 
@@ -855,6 +858,7 @@ struct lo_TopState_struct {
 #ifdef DOM
     void /*DOM_Node*/ *top_node;     /* top of the DOM_Node tree */
     void /*DOM_Node*/ *current_node; /* active node (only during tree gen) */
+    void /*DOM_StyleDatabase */ *style_db;
 #endif
 	void*	LAPIprobe;
 };
@@ -936,12 +940,55 @@ extern int32 lo_baseline_adjust(MWContext *context, lo_DocState *state, LO_Eleme
 	int32 old_baseline, int32 old_line_height);
 extern void lo_UpdateElementPosition ( lo_DocState * state, LO_Element * element );
 extern void lo_CopyTextAttr(LO_TextAttr *, LO_TextAttr *);
-extern LO_TextAttr *lo_FetchTextAttr(lo_DocState *, LO_TextAttr *);
-extern LO_TextAttr *lo_NewCopyTextAttr(lo_DocState *, LO_TextAttr *);
+
+/*
+ * Get a TextAttr that matches the one passed in, by finding an existing one
+ * in the text_attr_hash collection or creating a new one.
+ */
+extern LO_TextAttr *
+lo_FetchTextAttr(lo_DocState *, LO_TextAttr *);
+
+/*
+ * Get a new (unshared) TextAttr that's a copy of the existing one.
+ */
+extern LO_TextAttr *
+lo_NewCopyTextAttr(lo_DocState *, LO_TextAttr *);
+
+#ifdef DOM
+/*
+ * Get a TextAttr that has all the data from the font stack and Perignon.
+ */
+extern LO_TextAttr *
+lo_GetCurrentTextAttr(lo_DocState *state, MWContext *context);
+
+/*
+ * Return a TextAttr that has the Perignon data filled in.  If isMutable
+ * is true, it will alter the TextAttr in place, and always return the
+ * same pointer.  Otherwise, the return value may not be the same as
+ * the TextAttr passed in, since it will lo_FetchTextAttr the final TextAttr
+ * if mutated.  (If it hasn't changed anything, it will return tptr, so that
+ * can be used to check.)
+ */
+extern LO_TextAttr *
+lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
+                       LO_TextAttr *tptr, JSBool isMutable);
+
+/* colour parsing function for use with DOM_GetCleanAttributeData */
+extern JSBool
+lo_ColorStringToData(const char *color, uint32 *data, void *closure);
+
+extern JSBool
+lo_SSUnitsToData(const char *units, uint32 *data, void *closure);
+
+#endif /* DOM */
+
 extern void lo_FindLineMargins(MWContext *, lo_DocState *, Bool updateFE);
 extern void lo_AddMarginStack(lo_DocState *, int32, int32, int32, int32,
 				int32, int32, int32, intn);
 extern LO_AnchorData *lo_NewAnchor(lo_DocState *, PA_Block, PA_Block);
+
+/* should we underline anchors? */
+extern Bool lo_underline_anchors(void);
 extern void lo_DestroyAnchor(LO_AnchorData *anchor_data);
 extern void lo_AddToUrlList(MWContext *, lo_DocState *, LO_AnchorData *);
 extern void lo_AddEmbedData(MWContext *, void *, lo_FreeProc, int32);
@@ -973,7 +1020,10 @@ lo_InitDocState(lo_DocState *state, MWContext *context,
 
 extern lo_SavedFormListData *lo_NewDocumentFormListData(void);
 extern Bool lo_StoreTopState(int32, lo_TopState *);
+
+/* get the TopState for a given doc_id (MWContext.doc_id) */
 extern lo_TopState *lo_FetchTopState(int32);
+
 extern lo_DocState *lo_TopSubState(lo_TopState *);
 extern lo_DocState *lo_CurrentSubState(lo_DocState *);
 
@@ -1017,6 +1067,8 @@ extern char *lo_MemoryArenaAllocate(lo_TopState *, int32);
 #endif /* MEMORY_ARENAS */
 
 extern void lo_fillin_text_info(MWContext *context, lo_DocState *state);
+/* are we allowed to use page-provided font faces? */
+extern Bool lo_face_attribute(void);
 extern char *lo_FetchFontFace(MWContext *, lo_DocState *, char *);
 extern PA_Block lo_FetchParamValue(MWContext *, PA_Tag *, char *);
 extern PA_Block lo_ValueToAlpha(int32, Bool, intn *);
@@ -1177,10 +1229,16 @@ extern Bool lo_EvalTrueOrFalse(char *str, Bool default_val);
 extern intn lo_EvalAlignParam(char *str, Bool *floating);
 extern intn lo_EvalVAlignParam(char *str);
 extern void lo_EvalStyleSheetAlignment(StyleStruct *, intn *, Bool *floating);
+#ifdef DOM
+void lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
+                                     DOM_StyleDatabase *db, DOM_Node *node,
+                                     PA_Tag *tag);
+#else
 void lo_SetStyleSheetLayerProperties(MWContext *context,
 		                             lo_DocState *state,
 			                         StyleStruct *style_struct,
 				                     PA_Tag *tag);
+#endif
 char * lo_ParseStyleSheetURL(char *url_string);
 extern intn lo_EvalCellAlignParam(char *str);
 extern intn lo_EvalDivisionAlignParam(char *str);

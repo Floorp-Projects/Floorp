@@ -22,6 +22,11 @@ LIBRARY_NAME	= lay
 
 EXPORTS		= laylayer.h layout.h lo_funcs.h
 
+# XXX Perignon hack
+ifdef DOM
+EXPORTS		+= laystyle.h
+endif
+
 CSRCS		= bullet.c \
 		  clipline.c \
 		  layarena.c \

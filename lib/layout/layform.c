@@ -53,6 +53,10 @@
 #include "receipt.h"
 #endif
 
+#ifdef DOM
+#include "domstyle.h"
+#endif
+
 #ifndef XP_TRACE
 # define XP_TRACE(X) fprintf X
 #endif
@@ -775,6 +779,10 @@ new_form_element(MWContext *context, lo_DocState *state, int32 type)
 	form_element->event_handler_present = FALSE;
 #endif
 
+    /* TEXTATTR HERE */
+#ifdef DOM
+    form_element->text_attr = lo_GetCurrentTextAttr(state, context);
+#else    
 	if (state->font_stack == NULL)
 	{
 		form_element->text_attr = NULL;
@@ -782,6 +790,7 @@ new_form_element(MWContext *context, lo_DocState *state, int32 type)
 	else
 	{
 		form_element->text_attr = state->font_stack->text_attr;
+#endif
 		/*
 		 * Possibly inherit the background color attribute
 		 * of a parent table cell.
@@ -808,8 +817,44 @@ new_form_element(MWContext *context, lo_DocState *state, int32 type)
 				    up_state->current_ele->lo_subdoc.backdrop.bg_color);
 			}
 		}
-	}
+#ifdef DOM
+        {
+            LO_Color col;
+            DOM_AttributeEntry *entry;
+            JSContext *cx = context->mocha_context;
+            DOM_StyleDatabase *db = state->top_state->style_db;
+            DOM_Node *node = state->top_state->current_node;
+            
+            if (node && (cx || db)) {
+                /*
+                 * when we turn DOM on permanently, we can use it to find
+                 * the parent cell with a bgcolor property, let style
+                 * trump it in place and avoid the duplicate calls to
+                 * lo_recolor_form_element_bg.
+                 */
+                if (!DOM_StyleGetProperty(cx, db, node, "bgcolor", &entry)) {
+                    XP_FREE(form_element);
+                    return NULL;
+                }
+                if (entry) {
+                    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData,
+                                               (uint32 *)&col, NULL)) {
+                        XP_FREE(form_element);
+                        return NULL;
+                    }
+                    lo_recolor_form_element_bg(state, form_element, &col);
+                }
+            }
+        }
+#else
+    }
+#endif
 #ifdef XP_WIN
+    /* TEXTATTR HERE */
+    /*
+     * XXX DOM so, um, what does this mean when I get the text_attr from
+     * lo_GetCurrentTextAttr?
+     */
 	attr_change = FALSE;
 	attr_change = FE_CheckFormTextAttributes(context,
 			form_element->text_attr, &tmp_attr, type);
@@ -2309,7 +2354,11 @@ lo_BeginTextareaTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	char *type_str;
 #endif /*ENDER*/
 
+#ifdef DOM
+    old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 	old_attr = state->font_stack->text_attr;
+#endif
 	lo_CopyTextAttr(old_attr, &tmp_attr);
 	tmp_attr.fontmask |= LO_FONT_FIXED;
 	attr = lo_FetchTextAttr(state, &tmp_attr);
@@ -2449,7 +2498,11 @@ lo_ProcessInputTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 				LO_TextAttr *old_attr;
 				LO_TextAttr *attr;
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 				tmp_attr.fontmask |= LO_FONT_FIXED;
 				attr = lo_FetchTextAttr(state, &tmp_attr);

@@ -32,6 +32,9 @@
 #include "prefapi.h"
 #include "xlate.h"
 #include "layers.h"
+#ifdef DOM
+#include "domstyle.h"
+#endif
 
 extern int MK_OUT_OF_MEMORY;
 
@@ -327,7 +330,6 @@ lo_parse_style_RGB_functional_notation(char *rgb,
 
 	while(value && index < 3)
 	{
-		XP_Bool is_percentage = FALSE;
 		int scaled_value;
 
 		value = XP_StripLine(value);
@@ -1396,7 +1398,7 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	tag->lo_data = NULL;
 
 	/*
-	 * Assign it a properly sequencial element id.
+	 * Assign it a properly sequential element id.
 	 */
 
 	image->ele_id = NEXT_ELEMENT;
@@ -1421,6 +1423,9 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 
 	}
 
+#ifdef DOM
+        image->text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 	if (state->font_stack == NULL)
 	{
 		LO_TextAttr tmp_attr;
@@ -1437,6 +1442,7 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	{
 		image->text_attr = state->font_stack->text_attr;
 	}
+#endif
 
 	if ((image->text_attr != NULL)&&
 		(image->text_attr->attrmask & LO_ATTR_ANCHOR))
@@ -1444,6 +1450,9 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		image->image_attr->attrmask |= LO_ATTR_ANCHOR;
 	}
 
+#ifdef DOM
+        /* do we want a better way to do this USEMAP hackery? */
+#endif
 	if (image->image_attr->usemap_name != NULL)
 	{
 		LO_TextAttr tmp_attr;
@@ -1499,22 +1508,31 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 void
 lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
-	LO_ImageStruct *image;
+    LO_ImageStruct *image;
     LO_TextAttr *tptr = NULL;
-	PA_Block buff;
-	char *str;
-	int32 val;
-	/* int32 doc_width; */
-	Bool is_a_form;
+    PA_Block buff;
+    char *str;
+    int32 val;
+    /* int32 doc_width; */
+    Bool is_a_form;
     XP_ObserverList image_obs_list;   /* List of observers for an image request. */
     lo_DocLists *doc_lists;
     int32 layer_id;
+#ifdef DOM
+    JSContext *cx = context->mocha_context;
+    DOM_StyleDatabase *db = state->top_state->style_db;
+    DOM_Element *element = (DOM_Element *)state->top_state->current_node;
+    DOM_AttributeEntry *entry;
+#endif
 
     doc_lists = lo_GetCurrentDocLists(state);
     
+#ifdef DOM
+    tptr = lo_GetCurrentTextAttr(state, context);
+#else
     if (state->font_stack)
         tptr = state->font_stack->text_attr;
-
+#endif
 	/*
 	 * Fill in the image structure with default data
 	 */
@@ -1530,6 +1548,41 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	*/
 	image->anchor_href = state->current_anchor;
 
+#ifdef DOM
+#ifdef DEBUG_shaver
+        fprintf(stderr, "----GETTING IMAGE DATA----\n");
+#endif
+        if (!DOM_StyleGetProperty(cx, db, (DOM_Node *)element,
+                                  BORDERWIDTH_STYLE, &entry))
+            return;
+        if (entry) {
+            /* XXX handle borderTop/borderBottom/borderLeft/borderRight */
+            if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData,
+                                       &image->border_width, context))
+                return;
+        } else {
+            XP_ASSERT(0 && "no style value for image " BORDERWIDTH_STYLE);
+#ifdef DEBUG_shaver
+            fprintf(stderr, "no style value for IMG.border\n");
+#endif
+            image->border_width = IMAGE_DEF_BORDER;
+        }
+        if (!DOM_StyleGetProperty(cx, db, (DOM_Node *)element,
+                                  PADDING_STYLE, &entry))
+            return;
+        if (entry) {
+            /* XXX handle paddingTop/paddingBottom/paddingLeft/paddingRight */
+            if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData,
+                                       &image->border_vert_space, context))
+                return;
+            image->border_horiz_space = image->border_vert_space;
+        } else {
+            XP_ASSERT(0 && "no style value for image " PADDING_STYLE);
+            image->border_vert_space = IMAGE_DEF_VERTICAL_SPACE;
+            image->border_horiz_space = IMAGE_DEF_HORIZONTAL_SPACE;
+        }
+#else
+            
 	if (image->anchor_href != NULL)
 	{
 		image->border_width = IMAGE_DEF_ANCHOR_BORDER;
@@ -1540,6 +1593,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	}
 	image->border_vert_space = IMAGE_DEF_VERTICAL_SPACE;
 	image->border_horiz_space = IMAGE_DEF_HORIZONTAL_SPACE;
+#endif
 
 	if ((image->text_attr != NULL)&&
 		(image->text_attr->attrmask & LO_ATTR_ANCHOR))
@@ -1560,7 +1614,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	{
 		LO_TextAttr tmp_attr;
 
-        image->image_attr->layer_id = lo_CurrentLayerId(state);
+                image->image_attr->layer_id = lo_CurrentLayerId(state);
 		image->image_attr->form_id = doc_lists->current_form_num;
 		image->image_attr->attrmask |= LO_ATTR_ISFORM;
 		image->border_width = IMAGE_DEF_ANCHOR_BORDER;
@@ -2825,9 +2879,6 @@ static void
 lo_internal_image(MWContext *context, LO_ImageStruct *lo_image, int icon_number,
                   int icon_width, int icon_height)
 {
-    int bw = lo_image->border_width;
-
-
     /* Don't draw icons for mocha images. */
     if (lo_image->image_attr->attrmask & LO_ATTR_MOCHA_IMAGE)
         return;
@@ -3445,7 +3496,11 @@ void lo_LayoutInflowImage(MWContext *context, lo_DocState *state, LO_ImageStruct
 	tmp_text.text = buff;
 	tmp_text.text_len = 1;
 	tmp_text.text_attr =
-		state->font_stack->text_attr;
+#ifdef DOM
+            lo_GetCurrentTextAttr(state, context);
+#else
+            state->font_stack->text_attr;
+#endif
 	FE_GetTextInfo(context, &tmp_text, &text_info);
 	PA_FREE(buff);
 

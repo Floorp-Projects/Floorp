@@ -26,6 +26,11 @@
 #include "laystyle.h"
 #include "laytrav.h"
 
+#ifdef DOM
+#include "domstyle.h"
+#include "lm_dom.h"
+#endif
+
 /*
  * Turn this define on to get the new multibyte parsing code
 #define	FAST_MULTI
@@ -102,6 +107,7 @@ static void lo_SetupBreakState (LO_TextBlock * block );
 
 Bool lo_GrowTextBlock (LO_TextBlock * block,
                        uint32 length );
+
 typedef enum {
    kSimpleSBTextParseAttribute = 0,
    kMBTextParseAttribute,
@@ -215,7 +221,12 @@ LO_TextBlock * lo_NewTextBlock ( MWContext * context,
 	
 	if ( state->font_stack != NULL )
 		{
+          /* TEXTATTR HERE */
+#ifdef DOM
+        block->text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 		block->text_attr = state->font_stack->text_attr;
+#endif
 		}
 		
 	if (state->breakable != FALSE)
@@ -547,7 +558,12 @@ lo_fillin_text_info(MWContext *context, lo_DocState *state)
        from the state */
 	if ( state->cur_text_block == NULL )
 		{
+          /* TEXTATTR HERE */
+#ifdef DOM
+        tmp_text.text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 		tmp_text.text_attr = state->font_stack->text_attr;
+#endif
 		}
 	else
 		{
@@ -1022,13 +1038,18 @@ lo_InsertWordBreak(MWContext *context, lo_DocState *state)
 	text_ele->text_len = 0;
 	text_ele->anchor_href = state->current_anchor;
 
+    /* TEXTATTR HERE */
 	if (state->font_stack == NULL)
 	{
 		text_ele->text_attr = NULL;
 	}
 	else
 	{
-		text_ele->text_attr = state->font_stack->text_attr;
+#ifdef DOM
+      text_ele->text_attr = lo_GetCurrentTextAttr(state, context);
+#else
+      text_ele->text_attr = state->font_stack->text_attr;
+#endif
 	}
 
 	text_ele->ele_attrmask = 0;
@@ -3510,9 +3531,9 @@ lo_SetBodyTextFGColor(MWContext *context, lo_DocState *state, LO_Color *color)
         LO_TextAttr tmp_attr;
         
         if (fptr)
-            lo_CopyTextAttr(fptr->text_attr, &tmp_attr);
+          lo_CopyTextAttr(fptr->text_attr, &tmp_attr);
         else
-            lo_SetDefaultFontAttr(state, &tmp_attr, context);
+          lo_SetDefaultFontAttr(state, &tmp_attr, context);
 
         tmp_attr.fg.red =   STATE_DEFAULT_FG_RED(state);
 		tmp_attr.fg.green = STATE_DEFAULT_FG_GREEN(state);
@@ -3776,6 +3797,7 @@ lo_FormatBullet(MWContext *context, lo_DocState *state,
 		return;
 	}
 
+    /* TEXTATTR HERE */
 	tptr = bullet->text_attr;
 
 	memset (&tmp_text, 0, sizeof (tmp_text));
@@ -3874,7 +3896,9 @@ lo_PlaceBullet(MWContext *context, lo_DocState *state)
 {
 	LO_BulletStruct *bullet = NULL;
 	int32 line_height, baseline;
+#ifndef DOM
 	LO_TextAttr tmp_attr;
+#endif
 	LO_TextStruct tmp_text;
 	LO_TextInfo text_info;
 	LO_TextAttr *tptr;
@@ -3926,6 +3950,10 @@ lo_PlaceBullet(MWContext *context, lo_DocState *state)
 	bullet->sel_start = -1;
 	bullet->sel_end = -1;
 
+    /* TEXTATTR HERE */
+#ifdef DOM
+    tptr = lo_GetCurrentTextAttr(state, context);
+#else
 	if(state->font_stack)
     {
         lo_CopyTextAttr(state->font_stack->text_attr, &tmp_attr);
@@ -3935,6 +3963,7 @@ lo_PlaceBullet(MWContext *context, lo_DocState *state)
 		lo_SetDefaultFontAttr(state, &tmp_attr, context);
 	}
 	tptr = lo_FetchTextAttr(state, &tmp_attr);
+#endif
 
 	memset (&tmp_text, 0, sizeof (tmp_text));
 	buff = PA_ALLOC(1);
@@ -4132,7 +4161,12 @@ lo_PlaceBulletStr(MWContext *context, lo_DocState *state)
 	bullet_text->bullet_type = bullet_type;
 	bullet_text->text = buff;
 	bullet_text->text_len = len;
+    /* TEXTATTR HERE */
+#ifdef DOM
+    bullet_text->text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 	bullet_text->text_attr = state->font_stack->text_attr;
+#endif
 	FE_GetTextInfo(context, bullet_text, &text_info);
 	bullet_text->width = lo_correct_text_element_width(&text_info);
 	bullet_text->height = text_info.ascent + text_info.descent;
@@ -4206,6 +4240,7 @@ lo_make_quote_text(MWContext *context, lo_DocState *state, int32 margin)
 	/*
 	 * Fill in default fixed font information.
 	 */
+    /* TEXTATTR HERE -- why does this not use the font stack? */
 	lo_SetDefaultFontAttr(state, &tmp_attr, context);
 	tmp_attr.fontmask |= LO_FONT_FIXED;
 	quote_text->text_attr = lo_FetchTextAttr(state, &tmp_attr);
@@ -4271,11 +4306,16 @@ lo_make_quote_bullet(MWContext *context, lo_DocState *state, int32 margin)
 		return(NULL);
 	}
 
+    /* TEXTATTR HERE -- why does this not use font/style info? */
 	lo_SetDefaultFontAttr(state, &tmp_attr, context);
 	tmp_attr.fg.red = 0;
 	tmp_attr.fg.green = 0;
 	tmp_attr.fg.blue = 255;
+#ifdef DOM
+    tptr = lo_FillInTextStyleInfo(state, context, &tmp_attr, JS_TRUE);
+#else
 	tptr = lo_FetchTextAttr(state, &tmp_attr);
+#endif
 
 	memset (&tmp_text, 0, sizeof (tmp_text));
 	buff = PA_ALLOC(1);
@@ -4431,8 +4471,12 @@ void lo_UpdateStateAfterLineBreak( MWContext *context,
 	{
 		state->line_height = state->text_info.ascent +
 			state->text_info.descent;
-		if ((state->line_height <= 0)&&(state->font_stack != NULL)&&
-			(state->font_stack->text_attr != NULL))
+		if ((state->line_height <= 0)
+#ifndef DOM
+            &&(state->font_stack != NULL)&&
+			(state->font_stack->text_attr != NULL)
+#endif
+            )
 		{
 			lo_fillin_text_info(context, state);
 			state->line_height = state->text_info.ascent +
@@ -4585,8 +4629,12 @@ void lo_FillInLineFeed( MWContext *context,
 	{
 		linefeed->height = state->text_info.ascent +
 			state->text_info.descent;
-		if ((linefeed->height <= 0)&&(state->font_stack != NULL)&&
-			(state->font_stack->text_attr != NULL))
+		if ((linefeed->height <= 0)
+#ifndef DOM
+            &&(state->font_stack != NULL)&&
+			(state->font_stack->text_attr != NULL)
+#endif
+            )
 		{
 			lo_fillin_text_info(context, state);
 			linefeed->height = state->text_info.ascent +
@@ -4606,6 +4654,9 @@ void lo_FillInLineFeed( MWContext *context,
 	linefeed->FE_Data = NULL;
 	linefeed->anchor_href = state->current_anchor;
 
+#ifdef DOM
+    linefeed->text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 	if (state->font_stack == NULL)
 	{
 		LO_TextAttr tmp_attr;
@@ -4620,8 +4671,10 @@ void lo_FillInLineFeed( MWContext *context,
 	}
 	else
 	{
+      /* TEXTATTR HERE */
 		linefeed->text_attr = state->font_stack->text_attr;
 	}
+#endif
 
 	linefeed->baseline = state->baseline;
 
@@ -5406,7 +5459,12 @@ lo_CurrentTextBlock ( MWContext * context, lo_DocState * state )
 		
 		if ( state->font_stack != NULL )
 			{
-			textBlock->text_attr = state->font_stack->text_attr;
+              /* TEXTATTR HERE */
+#ifdef DOM
+              textBlock->text_attr = lo_GetCurrentTextAttr(state, context);
+#else
+              textBlock->text_attr = state->font_stack->text_attr;
+#endif
 			}
 			
 		if (state->breakable != FALSE)
@@ -6139,7 +6197,6 @@ static void
 lo_FlushText ( MWContext * context, lo_DocState * state )
 {
 	LO_TextBlock *	block;
-	Bool			multiByte;
 	char *			text_buf;
 	
 	block = state->cur_text_block;
@@ -8379,6 +8436,277 @@ lo_CopyTextToLineBuffer ( lo_DocState * state, uint8 * src, uint32 length )
 	
 	PA_UNLOCK(state->line_buf);
 }
+
+#ifdef DOM
+LO_TextAttr *
+lo_GetCurrentTextAttr(lo_DocState *state, MWContext *context)
+{
+  LO_TextAttr tmp_attr, *tptr, *styleptr;
+  JSBool isMutable;
+
+  if (!state->font_stack) {
+    /*
+     * XXX we should keep a text_attr with the default values around so that
+     * we can just bump the refcount instead of copying all that data and
+     * stuff.
+     */
+    lo_SetDefaultFontAttr(state, &tmp_attr, context);
+    tptr = &tmp_attr;
+    isMutable = JS_TRUE;
+  } else {
+    /*
+     * we can just dup the pointer, because lo_FillInTextStyleInfo will
+     * copy-on-write for us.
+     */
+    tptr = state->font_stack->text_attr;
+    tptr->refcnt++;
+    isMutable = JS_FALSE;
+  }
+
+  styleptr = lo_FillInTextStyleInfo(state, context, tptr, isMutable);
+  if (styleptr != tptr)
+    isMutable = JS_FALSE;       /* already fetched, so no need to refetch */
+  tptr = styleptr;
+
+  if (isMutable)
+    /* we're working on the stack-allocated text_attr, so get a heap copy */
+    tptr = lo_FetchTextAttr(state, tptr);
+
+  return tptr;
+}
+
+JSBool
+lo_ColorStringToData(const char *color, uint32 *data, void *closure)
+{
+  LO_Color col;
+  if (!LO_ParseStyleSheetRGB((char *)color, &col.red, &col.green, &col.blue))
+    return JS_FALSE;
+  *data = *(uint32 *)&col;
+  return JS_TRUE;
+}
+
+#define FONT_WEIGHT_BOLDER		0x10000
+#define FONT_WEIGHT_LIGHTER		0x20000
+
+JSBool
+lo_SSUnitsToData(const char *str, uint32 *data, void *closure)
+{
+  /* XXX NYI */
+  *data = XP_ATOI(str);
+  return JS_TRUE;
+}
+
+static JSBool
+FontWeightToData(const char *str, uint32 *data, void *closure)
+{
+  uint32 weight;
+  /* XXX use proper CSS-value parsing stuff */
+  if (!strcasecomp(str, "bolder")) {
+    weight = FONT_WEIGHT_BOLDER;
+  } else if (!strcasecomp(str, "lighter")) {
+    weight = FONT_WEIGHT_LIGHTER;
+  } else {
+    weight = XP_ATOI(str);
+    weight -= weight % 100;
+  }
+  *data = weight;
+  return JS_TRUE;
+}
+
+#define SET_ATTR_BIT_IF(style, bit)                                           \
+if (!strcasecomp(decors, style))                                              \
+    attrs |= bit;
+
+static JSBool
+TextDecorationToData(const char *decors, uint32 *data, void *closure)
+{
+  uint32 attrs = 0;
+  /* XXX handle multiple tokens */
+  SET_ATTR_BIT_IF(BLINK_STYLE, LO_ATTR_BLINK)
+    else
+  SET_ATTR_BIT_IF(STRIKEOUT_STYLE, LO_ATTR_STRIKEOUT)
+    else
+  SET_ATTR_BIT_IF(UNDERLINE_STYLE, LO_ATTR_UNDERLINE)
+    else
+  if (!strcasecomp(decors, "none"))
+    attrs = 0;
+
+  *data = attrs; 
+  return JS_TRUE;
+}
+
+#undef SET_ATTR_BIT_IF
+
+LO_TextAttr *
+lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
+                       LO_TextAttr *tptr, JSBool isMutable)
+{
+  JSContext *cx = context->mocha_context;
+  DOM_StyleDatabase *db = state->top_state->style_db;
+  DOM_AttributeEntry *entry;
+  DOM_Node *node = state->top_state->current_node;
+  LO_TextAttr text_attr, *newptr = NULL;
+  JSBool copied = JS_FALSE;
+  LO_Color col;
+
+  if (!cx || !db || !node)
+    return tptr;
+
+  if (node->type != NODE_TYPE_TEXT) {
+    if (node->type == NODE_TYPE_ELEMENT) {
+      DOM_HTMLElementPrivate *priv = node->data;
+      if (priv &&
+          (priv->tagtype == P_LIST_ITEM ||
+           priv->tagtype == P_IMAGE ||
+           priv->tagtype == P_HRULE /* layout NYI */)) {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "setting textattr on <%s>\n",
+                ((DOM_Element *)node)->tagName);
+#endif
+      } else {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "NOT setting textattr on <%s>\n",
+                ((DOM_Element *)node)->tagName);
+#endif
+        return tptr;
+      }
+    }
+  }
+
+#define COW()                                                                 \
+  if (!isMutable && !copied) {                                                \
+    lo_CopyTextAttr(tptr, &text_attr);                                        \
+    copied = JS_TRUE;                                                         \
+  }
+  
+  if (!isMutable) {
+    XP_BZERO(&text_attr, sizeof(text_attr));
+    newptr = &text_attr;
+  } else {
+    newptr = tptr;
+  }
+
+  /* check "color" property */
+  if (!DOM_StyleGetProperty(cx, db, node, COLOR_STYLE, &entry))
+    /* XXX report error? return tptr unmodified? */
+    return NULL;
+
+  if (entry) {
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, (uint32*)&col,
+                               NULL))
+      return NULL;
+    if (*(uint32 *)&col != *(uint32 *)&tptr->fg) {
+      COW();
+      newptr->fg = col;
+    }
+  }
+
+  /* check bgcolor property, including transparent */
+  if (!DOM_StyleGetProperty(cx, db, node, BG_COLOR_STYLE, &entry))
+    return NULL;
+  if (entry) {
+    COW();
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, (uint32*)&col,
+                               NULL))
+      return NULL;
+    newptr->bg = col;
+    if (!strcasecomp(entry->value, "transparent"))
+      newptr->no_background = TRUE;
+    else
+      newptr->no_background = FALSE;
+  }
+
+  /* check font-face */
+  if (lo_face_attribute()) {
+    if (!DOM_StyleGetProperty(cx, db, node, FONTFACE_STYLE, &entry))
+      return NULL;
+    if (entry) {
+      COW();
+      /* XXXshaver use GetCleanEntryData when I figure out mem mgmt */
+#if 0
+      if (newptr->font_face)
+        XP_FREE(newptr->font_face);
+#endif
+      newptr->font_face = lo_FetchFontFace(context, state,
+                                           (char *)entry->value);
+    }
+  }
+
+  /* XXX font-size requires STYLESTRUCT_StringToSSNumber-alike */
+
+  /* check font-weight */
+  if (!DOM_StyleGetProperty(cx, db, node, FONTWEIGHT_STYLE, &entry))
+    return NULL;
+  if (entry) {
+    uint32 weight;
+    /*
+     * For "bolder" and "lighter", we need to keep them dirty because they're
+     * dependent on the enclosing state, so we have to recalculate each time.
+     * OPTIMIZATION: let FontWeightToData parse them and make the data be
+     * some magic value > 0xffff, to save the strcasecomps on each pass.
+     */
+    if (!DOM_GetCleanEntryData(cx, entry, FontWeightToData, &weight, NULL))
+      return NULL;
+    if (weight) {
+      if (!newptr->font_weight) {
+        COW();
+        newptr->font_weight = 400;
+      }
+      if (weight == FONT_WEIGHT_BOLDER) {
+        weight = MAX(newptr->font_weight + 100, 100);        
+      } else if (weight == FONT_WEIGHT_LIGHTER) {
+        weight = MIN(newptr->font_weight - 100, 900);
+      }
+      if (weight != (uint32)newptr->font_weight) {
+        COW();
+        newptr->font_weight = weight;
+      }
+    }
+  }
+
+  /* font-style */
+  if (!DOM_StyleGetProperty(cx, db, node, FONTSTYLE_STYLE, &entry))
+    return NULL;
+  if (entry) {
+    if (!strcasecomp(entry->value, NORMAL_STYLE)) {
+      /* { font-style:normal} */
+      if (newptr->fontmask & LO_FONT_ITALIC) {
+        COW();
+        newptr->fontmask &= ~LO_FONT_ITALIC;
+      }
+    } else if (!strcasecomp(entry->value, ITALIC_STYLE)) {
+      /* { font-style:italic} */
+      if (!(newptr->fontmask & LO_FONT_ITALIC)) {
+        COW();
+        newptr->fontmask |= LO_FONT_ITALIC;
+      }
+    }
+    /* XXX need LO_FONT_OBLIQUE */
+  }
+
+  /* text-decoration */
+  if (!DOM_StyleGetProperty(cx, db, node, TEXTDECORATION_STYLE, &entry))
+    return NULL;
+  if (entry) {
+    uint32 attrs;
+#define ATTRMASK (LO_ATTR_BLINK | LO_ATTR_STRIKEOUT | LO_ATTR_UNDERLINE)
+    if (!DOM_GetCleanEntryData(cx, entry, TextDecorationToData, &attrs, NULL))
+      return NULL;
+    attrs = (tptr->attrmask & ~ATTRMASK) | (attrs & ATTRMASK);
+    if (attrs != tptr->attrmask) {
+      COW();
+      newptr->attrmask = attrs;
+    }
+#undef ATTRMASK
+  }
+
+#undef COW
+  if (!isMutable && copied)
+    return lo_FetchTextAttr(state, &text_attr);
+  return tptr;
+}
+
+#endif
 
 #ifdef TEST_16BIT
 #undef XP_WIN16

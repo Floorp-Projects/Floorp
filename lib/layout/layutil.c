@@ -1260,9 +1260,6 @@ lo_NewCopyTextAttr(lo_DocState *state, LO_TextAttr *old_attr)
   LO_TextAttr **text_attr_hash;
   int32 hash_index;
   
-#ifdef DEBUG_shaver
-  fprintf(stderr, "allocing new TextAttr\n");
-#endif
   hash_index = (old_attr->fontmask & old_attr->attrmask) % FONT_HASH_SIZE;
   
   XP_LOCK_BLOCK(text_attr_hash, LO_TextAttr **,
@@ -2604,14 +2601,23 @@ lo_SetNodeElement(lo_DocState *state, LO_Element *element)
     else if (node->type == NODE_TYPE_DOCUMENT)
         fprintf(stderr, "NODE_TYPE_DOCUMENT node\n");
 #endif
-    if (node && node->type != NODE_TYPE_DOCUMENT) {
-        XP_ASSERT(!ELEMENT_PRIV(node)->ele_end);
-        eptr = ELEMENT_PRIV(node)->ele_start;
-        if (!eptr) {
-            /* this the first element for this node, so mark it */
-            ELEMENT_PRIV(node)->ele_start = element;
-        }
+    if (!node || node->type == NODE_TYPE_DOCUMENT)
+        return;
+    XP_ASSERT(!ELEMENT_PRIV(node)->ele_end);
+#ifdef DEBUG_shaver
+    if (ELEMENT_PRIV(node)->ele_end) {
+        fprintf(stderr, "lo_SetNodeElement: node has end already!\n");
     }
+#endif           
+    eptr = ELEMENT_PRIV(node)->ele_start;
+    if (!eptr) {
+        /* this the first element for this node, so mark it */
+        ELEMENT_PRIV(node)->ele_start = element;
+    }
+#if 0 /* XXX waiting on proper LO_Elements for tables and cells and stuff */
+    if (!element->lo_any.node)
+        element->lo_any.node = node;
+#endif
 }
 #endif
 

@@ -368,7 +368,11 @@ static void lo_LayoutBlockSpacer(MWContext *context, lo_DocState *state, LO_Spac
 	PA_UNLOCK(buff);
 	tmp_text.text = buff;
 	tmp_text.text_len = 1;
+#ifdef DOM
+    tmp_text.text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 	tmp_text.text_attr = state->font_stack->text_attr;
+#endif
 	FE_GetTextInfo(context, &tmp_text, &text_info);
 	PA_FREE(buff);
 
@@ -653,7 +657,11 @@ lo_format_block_spacer(MWContext *context, lo_DocState *state, PA_Tag *tag, Bool
 	PA_UNLOCK(buff);
 	tmp_text.text = buff;
 	tmp_text.text_len = 1;
+#ifdef DOM
+    tmp_text.text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 	tmp_text.text_attr = state->font_stack->text_attr;
+#endif
 	FE_GetTextInfo(context, &tmp_text, &text_info);
 	PA_FREE(buff);
 

@@ -45,7 +45,6 @@ lo_FormatBuiltin (MWContext *context, lo_DocState *state, PA_Tag *tag)
 	LO_BuiltinStruct *builtin;
 	PA_Block buff;
 	char *str;
-	uint32 src_len;
 
 #ifdef DEBUG_SPENCE
 	printf ("lo_FormatBuiltin\n");
@@ -105,9 +104,6 @@ lo_FormatBuiltinObject (MWContext *context, lo_DocState* state,
 						PA_Tag* tag , LO_BuiltinStruct *builtin, Bool streamStarted,
 						uint32 param_count, char **param_names, char **param_values)
 {
-	uint32 count;
-	int32 typeIndex = -1;
-	int32 classidIndex = -1;
 
 #ifdef DEBUG_SPENCE
 	printf ("lo_FormatBuiltinObject\n");
@@ -538,6 +534,7 @@ lo_LayoutInflowBuiltin(MWContext *context,
   PA_UNLOCK(buff);
   tmp_text.text = buff;
   tmp_text.text_len = 1;
+  /* TEXTATTR HERE */
   tmp_text.text_attr =
 	state->font_stack->text_attr;
   FE_GetTextInfo(context, &tmp_text, &text_info);

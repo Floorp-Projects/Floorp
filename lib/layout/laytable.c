@@ -145,7 +145,8 @@ void LO_SetTableCellAttributes(MWContext *context, void *cell_v,
                                const char *name, const char *value)
 {
   lo_TableCell *cell = (lo_TableCell *)cell_v;
-  LO_Element *start = cell->cell->cell_list, *end = cell->cell->cell_list_end;
+  LO_Element *start = cell->cell->cell_list;
+  /* LO_Element *end = cell->cell->cell_list_end; */
   lo_DocState *state;
   lo_TopState *top = lo_FetchTopState(context->doc_id);
   if (!top)
@@ -469,6 +470,9 @@ lo_BeginCaptionSubDoc(MWContext *context, lo_DocState *state,
 
 	subdoc->anchor_href = state->current_anchor;
 
+#ifdef DOM
+    subdoc->text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 	if (state->font_stack == NULL)
 	{
 		subdoc->text_attr = NULL;
@@ -477,6 +481,7 @@ lo_BeginCaptionSubDoc(MWContext *context, lo_DocState *state,
 	{
 		subdoc->text_attr = state->font_stack->text_attr;
 	}
+#endif
 
 	subdoc->FE_Data = NULL;
 	subdoc->backdrop.bg_color = NULL;
@@ -1039,6 +1044,9 @@ lo_BeginCellSubDoc(MWContext *context,
 
 	subdoc->anchor_href = state->current_anchor;
 
+#ifdef DOM
+    subdoc->text_attr = lo_GetCurrentTextAttr(state, context);
+#else
 	if (state->font_stack == NULL)
 	{
 		subdoc->text_attr = NULL;
@@ -1047,6 +1055,7 @@ lo_BeginCellSubDoc(MWContext *context,
 	{
 		subdoc->text_attr = state->font_stack->text_attr;
 	}
+#endif
 
 	subdoc->FE_Data = NULL;
 
@@ -1613,7 +1622,11 @@ lo_BeginCellSubDoc(MWContext *context,
 		LO_TextAttr *attr;
 		LO_TextAttr tmp_attr;
 
+#ifdef DOM
+        old_attr = lo_GetCurrentTextAttr(new_state, context);
+#else
 		old_attr = new_state->font_stack->text_attr;
+#endif
 		lo_CopyTextAttr(old_attr, &tmp_attr);
 		tmp_attr.fontmask |= LO_FONT_BOLD;
 		attr = lo_FetchTextAttr(new_state, &tmp_attr);
@@ -2132,7 +2145,11 @@ lo_EndCellSubDoc(MWContext *context, lo_DocState *state, lo_DocState *old_state,
 	tmp_text.text = buff;
 	tmp_text.text_len = 1;
 	tmp_text.text_attr =
-		state->font_stack->text_attr;
+#ifdef DOM
+      lo_GetCurrentTextAttr(state, context);
+#else
+      state->font_stack->text_attr;
+#endif
 	FE_GetTextInfo(context, &tmp_text, &text_info);
 	PA_FREE(buff);
 
@@ -2939,7 +2956,11 @@ lo_RelayoutCaptionSubdoc(MWContext *context, lo_DocState *state, lo_TableCaption
 		LO_TextAttr *attr;
 		LO_TextAttr tmp_attr;
 
+#ifdef DOM
+        old_attr = lo_GetCurrentTextAttr(new_state, context);
+#else
 		old_attr = new_state->font_stack->text_attr;
+#endif
 		lo_CopyTextAttr(old_attr, &tmp_attr);
 		tmp_attr.fontmask |= LO_FONT_BOLD;
 		attr = lo_FetchTextAttr(new_state, &tmp_attr);
@@ -3362,7 +3383,11 @@ lo_RelayoutCell(MWContext *context, lo_DocState *state,
 		LO_TextAttr *attr;
 		LO_TextAttr tmp_attr;
 
+#ifdef DOM
+        old_attr = lo_GetCurrentTextAttr(new_state, context);
+#else
 		old_attr = new_state->font_stack->text_attr;
+#endif
 		lo_CopyTextAttr(old_attr, &tmp_attr);
 		tmp_attr.fontmask |= LO_FONT_BOLD;
 		attr = lo_FetchTextAttr(new_state, &tmp_attr);

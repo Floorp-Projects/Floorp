@@ -688,7 +688,7 @@ static void lo_rl_FitLayoutElements( lo_RelayoutState *relay_state, LO_Element *
 	LO_Element *lo_ele = start_ele;
 
 	/* While not end of layout element list */
-	while ( lo_ele != NULL) {
+	while (lo_ele != NULL) {
 		lo_rl_PreLayoutElement ( relay_state->context, relay_state->doc_state, lo_ele );
 		if (relay_state->doc_state->top_state->out_of_memory)
 		{

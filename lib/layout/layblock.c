@@ -27,6 +27,9 @@
 #include "libevent.h"
 #include "layers.h"
 #include "intl_csi.h"
+#ifdef DOM
+#include "domstyle.h"
+#endif
 
 /* This struct is used during the processing of a <LAYER> or <ILAYER>
  * tag, but discarded after the tag is closed. It is used to store the
@@ -641,7 +644,12 @@ lo_BeginLayerTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	char *val;
     lo_LayerDocState *layer_state;
     CL_Layer *parent_layer;
-
+#ifdef DOM
+    DOM_AttributeEntry *entry;
+    DOM_Node *node = state->top_state->current_node;
+    DOM_StyleDatabase *db = state->top_state->style_db;
+    JSContext *cx = context->mocha_context;
+#endif
 
     if (!context->compositor)
         return;
@@ -786,6 +794,17 @@ lo_BeginLayerTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
     /* Process background color (BGCOLOR) attribute, if present. */
     param->bgcolor = (char*)PA_FetchParamValue(tag, PARAM_BGCOLOR, win_csid);
 
+#ifdef DOM
+     /* if there was no bgcolor specified for the layer, find one in style */
+    if (!param->bgcolor) {
+      if (!DOM_StyleGetProperty(cx, db, node, BG_COLOR_STYLE, &entry))
+        /* what now? */
+        return NULL;
+      if (entry)
+        param->bgcolor = XP_STRDUP(entry->value);
+    }
+#endif
+
     /* Process backdrop (BACKGROUND) image attribute, if present. */
     param->bgimage = lo_ParseBackgroundAttribute(context,
                                                      state,
@@ -919,6 +938,20 @@ lo_ParseStyleCoords(MWContext *context,
 
 	return coords;
 }
+
+#ifdef DOM
+void
+lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
+                                DOM_StyleDatabase *db, DOM_Node *node,
+                                PA_Tag *tag)
+{
+  LO_BlockInitializeStruct *param;
+  DOM_AttributeEntry *entry;
+#ifdef DEBUG_shaver
+  fprintf(stderr, "setting layer data on <%s>\n", PA_TagString(tag->type));
+#endif
+}
+#else
 
 void
 lo_SetStyleSheetLayerProperties(MWContext *context,
@@ -1066,6 +1099,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context,
 	if (lo_BeginLayer(context, state, param, is_inflow))
 		lo_FreeBlockInitializeStruct(param);
 }
+#endif /* DOM */
 
 static void
 lo_expand_parent_bbox(CL_Layer *layer); /* Forward declaration */

@@ -867,7 +867,11 @@ lo_LayoutInflowJavaApp(MWContext *context,
 	tmp_text.text = buff;
 	tmp_text.text_len = 1;
 	tmp_text.text_attr =
-		state->font_stack->text_attr;
+#ifdef DOM
+      lo_GetCurrentTextAttr(state, context);
+#else
+      state->font_stack->text_attr;
+#endif
 	FE_GetTextInfo(context, &tmp_text, &text_info);
 	PA_FREE(buff);
 

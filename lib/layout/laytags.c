@@ -36,6 +36,9 @@
 /* style sheet tag stack and style struct */
 #include "stystack.h"
 #include "stystruc.h"
+#ifdef DOM
+#include "domstyle.h"
+#endif
 #include "pics.h"
 
 #include "libmocha.h"
@@ -88,7 +91,7 @@
 #define	HYPE_TAG_BECOMES	"SRC=internal-gopher-sound BORDER=0>"
 
 /* Added to encapsulate code that was previously in six different places in LO_LayoutTag()! */
-static void lo_ProcessFontTag( lo_DocState *state, PA_Tag *tag, int32 fontSpecifier, int32 attrSpecifier );
+static void lo_ProcessFontTag( lo_DocState *state, MWContext *context, PA_Tag *tag, int32 fontSpecifier, int32 attrSpecifier );
 
 static void lo_AddParam(PA_Tag* tag, char* aName, char* aValue);
 
@@ -1337,7 +1340,11 @@ lo_process_header_tag(MWContext *context, lo_DocState *state, PA_Tag *tag, int t
 		lo_SetLineBreakState ( context, state, FALSE, LO_LINEFEED_BREAK_HARD, 2, FALSE);
 		lo_OpenHeader(context, state, tag);
 
+#ifdef DOM
+        old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 		old_attr = state->font_stack->text_attr;
+#endif
 		lo_CopyTextAttr(old_attr, &tmp_attr);
 		tmp_attr.fontmask |= LO_FONT_BOLD;
 		tmp_attr.fontmask &= (~(LO_FONT_FIXED|LO_FONT_ITALIC));
@@ -1452,7 +1459,6 @@ lo_underline_pref_callback(const char *pref_name, void *closure)
     return PREF_NOERROR;
 }
 
-PRIVATE
 Bool 
 lo_underline_anchors()
 {
@@ -1494,28 +1500,44 @@ lo_make_link_color_different_than_default(lo_DocState *state, LO_TextAttr *tmp_a
 static void
 lo_process_anchor_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
-	LO_TextAttr tmp_attr;
     lo_DocLists *doc_lists;
+#ifdef DOM
+    DOM_Node *node = state->top_state->current_node;
+    DOM_Element *element = (DOM_Element *)node;
+    JSContext *cx = context->mocha_context;
+#else
+	LO_TextAttr tmp_attr;
+#endif
     
     doc_lists = lo_GetCurrentDocLists(state);
 
+#ifdef DOM
+    XP_ASSERT(node->type == NODE_TYPE_ELEMENT);
+#endif
 	/*
 	 * Opening a new anchor
 	 */
 	if (tag->is_end == FALSE)
 	{
+#ifndef DOM
 		LO_TextAttr *old_attr;
 		LO_TextAttr *attr;
+#endif
 		char *url;
 		char *full_url;
 		PA_Block buff;
 		Bool is_new;
 		PA_Block anchor;
 
+
 		/*
 		 * Get the NAME param for the name list
 		 */
+#ifdef DOM
+        buff = (PA_Block) node->name;
+#else
 		buff = lo_FetchParamValue(context, tag, PARAM_NAME);
+#endif
 		if (buff != NULL)
 		{
 		    char *name;
@@ -1591,7 +1613,7 @@ lo_process_anchor_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 
 			    if (GH_CheckGlobalHistory(url) != -1)
 			    {
-				is_new = FALSE;
+                  is_new = FALSE;
 			    }
 			}
 			else
@@ -1602,6 +1624,14 @@ lo_process_anchor_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 				state->top_state->out_of_memory = TRUE;
 			}
 			
+#ifdef DOM
+            /*
+             * A HREF is A:link if unvisited, A:visited otherwise.
+             */
+            if (!DOM_SetElementPseudo(cx, element,
+                                      is_new ? "link" : "visited"))
+              return;
+#endif
 			XP_FREE(url);
 		    }
 		    PA_UNLOCK(anchor);
@@ -1652,6 +1682,7 @@ lo_process_anchor_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 				else
 				{
 					state->top_state->out_of_memory = TRUE;
+                    return;
 				}
 			}
 
@@ -1703,12 +1734,19 @@ lo_process_anchor_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
                            doc_lists->url_list_len - 1);
 		}
 
+        /*
+         * With Perignon, none of this is necessary, because we put default
+         * rules in place for A:visited and A:link that set the colour 
+         * correctly and install a border for images.
+         * A:visited IMG { borderColor:prefsColour, borderWidth:1, etc. }, etc.
+         */
+
+#ifndef DOM
 		/*
 		 * Change the anchor attribute only for
 		 * anchors with hrefs.
 		 */
-		if (state->current_anchor != NULL)
-		{
+		if (state->current_anchor != NULL) {
             StyleStruct *style_struct = NULL;
             char *property=NULL;
 
@@ -1766,7 +1804,9 @@ lo_process_anchor_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 			attr = lo_FetchTextAttr(state, &tmp_attr);
 			lo_PushFont(state, tag->type, attr);
 		}
+#endif /* !DOM */
 	}
+
 	/*
 	 * Closing an anchor.  Anchors can't be nested, so close
 	 * ALL anchors.
@@ -2906,8 +2946,12 @@ lo_CalcCurrentLineHeight(MWContext *context, lo_DocState *state)
 			int32 new_height = state->text_info.ascent +
             						state->text_info.descent;
 
-			if ((new_height <= 0)&&(state->font_stack != NULL)&&
-				(state->font_stack->text_attr != NULL))
+			if ((new_height <= 0)
+#ifndef DOM
+                &&(state->font_stack != NULL)&&
+				(state->font_stack->text_attr != NULL)
+#endif
+                )
 			{
 				lo_fillin_text_info(context, state);
 
@@ -3156,7 +3200,7 @@ lo_SetStyleSheetFontProperties(MWContext *context,
 
 	if(state->font_stack)
     {
-        lo_CopyTextAttr(state->font_stack->text_attr, &tmp_attr);
+      lo_CopyTextAttr(state->font_stack->text_attr, &tmp_attr);
     }
     else
     {
@@ -3459,7 +3503,7 @@ lo_SetStyleSheetBoxProperties(MWContext *context,
     if(!style_struct)
         return;
 
-	/* if we get in here and the tag->type is UKNOWN then this must
+	/* if we get in here and the tag->type is UNKNOWN then this must
 	 * be a dummy tag inserted for the sake of table relayout passes
 	 * Mark it as such
 	 */
@@ -3792,7 +3836,10 @@ lo_SetStyleSheetBoxProperties(MWContext *context,
 	{
 		/* begin a table */
 		lo_DocState *prev_state;
-		LO_TextAttr tmp_attr, *attr;
+#ifndef DOM
+		LO_TextAttr tmp_attr;
+#endif
+        LO_TextAttr *attr;
 
 		SS_Number *top_padding, *bottom_padding;
 
@@ -3978,8 +4025,13 @@ lo_SetStyleSheetBoxProperties(MWContext *context,
 		 * rules  -- as far as I know we don't need to inherit any other props now
 		 */
 
+#ifdef DOM
+        attr = lo_NewCopyTextAttr(state,
+                                  lo_GetCurrentTextAttr(prev_state, context));
+#else
 		lo_CopyTextAttr(prev_state->font_stack->text_attr, &tmp_attr);
 		attr = lo_FetchTextAttr(state, &tmp_attr);
+#endif
         attr->no_background = TRUE; /* don't inherit text background colors */
         
         /* don't use the tag type since the A tag is treated special 
@@ -4086,12 +4138,41 @@ lo_SetStyleSheetRandomProperties(MWContext *context,
 	}
 }
 
+#ifdef DOM
+
+void
+lo_SetStyleSheetProperties(MWContext *context, lo_DocState *state, PA_Tag *tag)
+{
+  JSContext *cx = context->mocha_context;
+  DOM_StyleDatabase *db = state->top_state->style_db;
+  DOM_Node *node = state->top_state->current_node;
+
+  if (!db) {
+    if (!cx)
+      return;
+    db = DOM_StyleDatabaseFromContext(cx);
+    if (!db)
+      return;
+  }
+
+#ifdef DEBUG_shaver
+  fprintf(stderr, "setting style data for <%s>\n", PA_TagString(tag->type));
+#endif
+
+  /* do box properties */
+  
+  /* do layer properties (position:absolute, etc.) */
+  lo_SetStyleSheetLayerProperties(context, state, db, node, tag);
+  return;
+}
+
+#else
 
 PRIVATE
 void
 lo_SetStyleSheetProperties(MWContext *context, 
-							StyleStruct *style_struct, 
-							PA_Tag *tag)
+                           StyleStruct *style_struct, 
+                           PA_Tag *tag)
 {
 	int32 doc_id;
 	lo_TopState *top_state;
@@ -4130,7 +4211,11 @@ lo_SetStyleSheetProperties(MWContext *context,
 	 * if set then we are ignoring tags and text for the duration
 	 * of this tag span 
 	 */
-	if(LO_CheckForContentHiding(state))
+	if(LO_CheckForContentHiding(state
+#ifdef DOM
+                                , context
+#endif
+                                ))
 	{
 		state->hide_content = TRUE;
 		STYLESTRUCT_SetString(style_struct, 	
@@ -4166,6 +4251,8 @@ lo_SetStyleSheetProperties(MWContext *context,
 	lo_SetStyleSheetRandomProperties(context, state, style_struct, tag);
 
 }
+
+#endif
 
 /* return TRUE if the tag type is an empty tag. (not a container tag)
  */
@@ -4205,7 +4292,7 @@ lo_IsEmptyTag(TagType type)
 
 }
 
-static void lo_ProcessFontTag( lo_DocState *state, PA_Tag *tag, int32 fontSpecifier, int32 attrSpecifier )
+static void lo_ProcessFontTag( lo_DocState *state, MWContext *context, PA_Tag *tag, int32 fontSpecifier, int32 attrSpecifier )
 {
 	LO_TextAttr tmp_attr;
 
@@ -4214,7 +4301,11 @@ static void lo_ProcessFontTag( lo_DocState *state, PA_Tag *tag, int32 fontSpecif
 		LO_TextAttr *old_attr;
 		LO_TextAttr *attr;
 
+#ifdef DOM
+        old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 		old_attr = state->font_stack->text_attr;
+#endif
 		lo_CopyTextAttr(old_attr, &tmp_attr);
 		tmp_attr.fontmask |= fontSpecifier;
 		tmp_attr.attrmask |= attrSpecifier;
@@ -4363,7 +4454,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
 	if(!tag->is_end && lo_IsEmptyTag(tag->type))
 	{
-		lo_SetStyleSheetProperties(context, style_struct, tag);
+#ifdef DOM
+      lo_SetStyleSheetProperties(context, state, tag);
+#else
+      lo_SetStyleSheetProperties(context, style_struct, tag);
+#endif
 	}
 	
 	switch(tag->type)
@@ -4399,7 +4494,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		case P_CODE:
 		case P_SAMPLE:
 		case P_KEYBOARD:
-			lo_ProcessFontTag( state, tag, LO_FONT_FIXED, 0);
+			lo_ProcessFontTag( state, context, tag, LO_FONT_FIXED, 0);
 			break;
 
 #ifdef EDITOR
@@ -4413,7 +4508,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				state->preformatted = PRE_TEXT_YES;
 				FE_BeginPreSection(context);
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 				tmp_attr.fontmask |= LO_FONT_FIXED;
 				if( tag->type == P_SCRIPT ){
@@ -4450,7 +4549,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		 */
 		case P_BOLD:
 		case P_STRONG:
-			lo_ProcessFontTag( state, tag, LO_FONT_BOLD, 0);
+			lo_ProcessFontTag( state, context, tag, LO_FONT_BOLD, 0);
 			break;
 
 		/*
@@ -4461,7 +4560,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		case P_EMPHASIZED:
 		case P_VARIABLE:
 		case P_CITATION:
-			lo_ProcessFontTag( state, tag, LO_FONT_ITALIC, 0);
+			lo_ProcessFontTag( state, context, tag, LO_FONT_ITALIC, 0);
 			break;
 
 		/*
@@ -4869,7 +4968,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				LO_TextAttr *old_attr;
 				LO_TextAttr *attr;
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 				tmp_attr.attrmask |= LO_ATTR_BLINK;
 				attr = lo_FetchTextAttr(state, &tmp_attr);
@@ -4891,33 +4994,34 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		 */
 		case P_STRIKEOUT:
 		case P_STRIKE:
-			lo_ProcessFontTag( state, tag, 0, LO_ATTR_STRIKEOUT);			
+			lo_ProcessFontTag( state, context, tag, 0, LO_ATTR_STRIKEOUT);
 			break;
 
 		case P_SPELL:
-			lo_ProcessFontTag( state, tag, 0, LO_ATTR_SPELL);
+			lo_ProcessFontTag( state, context, tag, 0, LO_ATTR_SPELL);
 			break;
 
 
 		case P_INLINEINPUT:
-			lo_ProcessFontTag( state, tag, 0, LO_ATTR_INLINEINPUT);			
+			lo_ProcessFontTag( state, context, tag, 0, LO_ATTR_INLINEINPUT);
 			break;
 
 
 		case P_INLINEINPUTTHICK:
-			lo_ProcessFontTag( state, tag, 0, LO_ATTR_INLINEINPUTTHICK);						
+			lo_ProcessFontTag( state, context, tag, 0,
+                               LO_ATTR_INLINEINPUTTHICK);
 			break;
 
 
 		case P_INLINEINPUTDOTTED:
-			lo_ProcessFontTag( state, tag, 0, LO_ATTR_INLINEINPUTDOTTED);
+			lo_ProcessFontTag( state, context, tag, 0, LO_ATTR_INLINEINPUTDOTTED);
 			break;
 
 		/*
 		 * Another font attribute, another font on the font stack
 		 */
 		case P_UNDERLINE:
-			lo_ProcessFontTag( state, tag, 0, LO_ATTR_UNDERLINE);			
+			lo_ProcessFontTag( state, context, tag, 0, LO_ATTR_UNDERLINE);			
 			break;
 
 		/*
@@ -5028,7 +5132,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 					}
 				}
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 
 				/*
@@ -5094,7 +5202,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				state->preformatted = PRE_TEXT_YES;
 				FE_BeginPreSection(context);
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 				tmp_attr.fontmask |= LO_FONT_FIXED;
 				tmp_attr.size = DEFAULT_BASE_FONT_SIZE - 1;
@@ -5129,7 +5241,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
 				lo_SetSoftLineBreakState(context, state, FALSE, 1);
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 				tmp_attr.fontmask |= LO_FONT_ITALIC;
 				attr = lo_FetchTextAttr(state, &tmp_attr);
@@ -5164,7 +5280,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 					LO_TextAttr *attr;
 					intn new_size;
 
+#ifdef DOM
+                    old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 					old_attr = state->font_stack->text_attr;
+#endif
 					lo_CopyTextAttr(old_attr, &tmp_attr);
 					new_size = LO_ChangeFontSize(tmp_attr.size,
 								"-1");
@@ -5194,7 +5314,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				tmp_text.text = buff;
 				tmp_text.text_len = 1;
 				tmp_text.text_attr =
-					state->font_stack->text_attr;
+#ifdef DOM
+                  lo_GetCurrentTextAttr(state, context);
+#else
+                  state->font_stack->text_attr;
+#endif
 				FE_GetTextInfo(context, &tmp_text, &text_info);
 				PA_FREE(buff);
 
@@ -5221,7 +5345,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
                 if (tag->is_end == TRUE)
                   {
-					LO_TextAttr *attr = lo_PopFont(state, tag->type);
+					lo_PopFont(state, tag->type);
                   }
 
 			}
@@ -5246,7 +5370,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 					LO_TextAttr *attr;
 					intn new_size;
 
+#ifdef DOM
+                    old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 					old_attr = state->font_stack->text_attr;
+#endif
 					lo_CopyTextAttr(old_attr, &tmp_attr);
 					new_size = LO_ChangeFontSize(tmp_attr.size,
 								"-1");
@@ -5276,7 +5404,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				tmp_text.text = buff;
 				tmp_text.text_len = 1;
 				tmp_text.text_attr =
-					state->font_stack->text_attr;
+#ifdef DOM
+                  lo_GetCurrentTextAttr(state, context);
+#else
+                  state->font_stack->text_attr;
+#endif
 				FE_GetTextInfo(context, &tmp_text, &text_info);
 				PA_FREE(buff);
 
@@ -5302,7 +5434,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
                 if (tag->is_end == TRUE)
                   {
-					LO_TextAttr *attr = lo_PopFont(state, tag->type);
+					lo_PopFont(state, tag->type);
                   }
 			}
 			break;
@@ -5484,7 +5616,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 					}
 				}
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 
 				if (has_size != FALSE)
@@ -5532,7 +5668,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				LO_TextAttr *attr;
 				intn new_size;
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 				new_size = LO_ChangeFontSize(tmp_attr.size, "+1");
 				tmp_attr.size = new_size;
@@ -5558,7 +5698,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				LO_TextAttr *attr;
 				intn new_size;
 
+#ifdef DOM
+                old_attr = lo_GetCurrentTextAttr(state, context);
+#else
 				old_attr = state->font_stack->text_attr;
+#endif
 				lo_CopyTextAttr(old_attr, &tmp_attr);
 				new_size = LO_ChangeFontSize(tmp_attr.size, "-1");
 				tmp_attr.size = new_size;
@@ -5576,8 +5720,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
 		/*
 		 * Change the absolute URL that describes where this
-		 * docuemtn came from for all following
-		 * relative URLs.
+		 * document came from for all following relative URLs.
 		 */
 		case P_BASE:
 			{
@@ -5722,7 +5865,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
 		/*
 		 * Break the current line.
-		 * Optionally break furthur down to get past floating
+		 * Optionally break further down to get past floating
 		 * elements in the margins.
 		 */
 		case P_LINEBREAK:
@@ -6034,8 +6177,8 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
 		/*
 		 * The hype tag is just for fun.
-		 * It only effects the UNIX version
-		 * which can affor to have a sound file
+		 * It only affects the UNIX version
+		 * which can afford to have a sound file
 		 * compiled into the binary.
 		 */
 		case P_HYPE:
@@ -6079,8 +6222,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				     * of all allocated urls so we can free
 				     * it later.
 				     */
-				    lo_AddToUrlList(context, state,
-					hype_anchor);
+				    lo_AddToUrlList(context, state, hype_anchor);
 				    if (state->top_state->out_of_memory !=FALSE)
 				    {
 					PA_FREE(abuff);
@@ -7393,7 +7535,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 	{
 		if(!lo_IsEmptyTag(tag->type))
 		{
+#ifdef DOM
+          lo_SetStyleSheetProperties(context, state, tag);
+#else
 			lo_SetStyleSheetProperties(context, style_struct, tag);
+#endif
 		}
 		else
 		{

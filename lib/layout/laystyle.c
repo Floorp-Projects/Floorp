@@ -32,6 +32,9 @@
 #include "prefapi.h"
 #include "css.h"
 #include "intl_csi.h"
+#ifdef DOM
+#include "domstyle.h"
+#endif
 
 void
 LO_SetStyleObjectRefs(MWContext *context, void *tags, void *classes, void *ids)
@@ -76,8 +79,13 @@ lo_get_font_height(MWContext *context, lo_DocState *state)
 	int32 font_height = state->text_info.ascent +
            					state->text_info.descent;
 
-	if ((font_height <= 0)&&(state->font_stack != NULL)&&
-		(state->font_stack->text_attr != NULL))
+
+	if ((font_height <= 0)
+#ifndef DOM
+        &&(state->font_stack != NULL)&&
+		(state->font_stack->text_attr != NULL)
+#endif
+)
 	{
 		lo_fillin_text_info(context, state);
 
@@ -291,6 +299,37 @@ LO_AdjustSSUnits(SS_Number *number, char *style_type, MWContext *context, lo_Doc
 	return; /* conversion complete */
 
 }
+
+#ifdef DOM
+XP_Bool
+LO_CheckForContentHiding(lo_DocState *state, MWContext *context)
+{
+  JSContext *cx = context->mocha_context;
+  DOM_StyleDatabase *db = state->top_state->style_db;
+  DOM_Node *node = state->top_state->current_node;
+  DOM_AttributeEntry *entry;
+  
+  if (!db || !cx || !node ||
+      !DOM_StyleGetProperty(cx, db, node, DISPLAY_STYLE, &entry)) {
+#ifdef DEBUG_shaver
+    fprintf(stderr, "not suppressing display\n");
+#endif
+    return FALSE;
+  }
+
+  if (entry && !XP_STRCMP(entry->value, NONE_STYLE)) {
+#ifdef DEBUG_shaver
+    fprintf(stderr, "suppressing display\n");
+#endif
+    return TRUE;
+  }
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "not suppressing display\n");
+#endif
+  return FALSE;
+}
+#else
 /* returns TRUE if the display: none property
  * is set
  */
@@ -322,6 +361,7 @@ LO_CheckForContentHiding(lo_DocState *state)
 	
 	return hide_content;
 }
+#endif /* DOM */
 
 #define SS_ENABLED_PREF "browser.enable_style_sheets"
 Bool lo_style_sheets_enabled = TRUE;
