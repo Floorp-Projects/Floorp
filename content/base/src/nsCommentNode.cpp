@@ -426,7 +426,7 @@ nsCommentNode::SetText(const PRUnichar* aBuffer,
   nsAutoString str(aBuffer);
 
   StripCommentDelimiters(str);
-  return mInner.SetText(this, str.GetUnicode(), str.Length(), aNotify);
+  return mInner.SetText(this, str.get(), str.Length(), aNotify);
 }
 
 NS_IMETHODIMP 
@@ -436,7 +436,7 @@ nsCommentNode::SetText(const nsAReadableString& aStr,
   nsAutoString str(aStr);
 
   StripCommentDelimiters(str);
-  return mInner.SetText(this, str.GetUnicode(), str.Length(), aNotify);
+  return mInner.SetText(this, str.get(), str.Length(), aNotify);
 }
 
 NS_IMETHODIMP
@@ -447,5 +447,5 @@ nsCommentNode::SetText(const char* aBuffer,
   nsAutoString str; str.AssignWithConversion(aBuffer);
 
   StripCommentDelimiters(str);
-  return mInner.SetText(this, str.GetUnicode(), str.Length(), aNotify);
+  return mInner.SetText(this, str.get(), str.Length(), aNotify);
 }

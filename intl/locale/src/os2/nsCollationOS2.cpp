@@ -98,13 +98,13 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
         appLocale->Release();
       }
     }
   }
   else {
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
   }
 
   // Get platform locale and charset name from locale, if available
@@ -136,7 +136,7 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
       LocaleObject locObj = NULL;
       UniChar      *pmCodepage;
 
-      int  ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)mLocale.GetUnicode(), &locObj);
+      int  ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)mLocale.get(), &locObj);
       if (ret != ULS_SUCCESS) 
         return NS_ERROR_FAILURE;
         
@@ -175,7 +175,7 @@ nsresult nsCollationOS2::GetSortKeyLen(const nsCollationStrength strength,
   int ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
   if (ret != ULS_SUCCESS)
     return NS_ERROR_FAILURE;
-  int uLen = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *, stringNormalized.GetUnicode()), 0);
+  int uLen = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *, stringNormalized.get()), 0);
   if ( uLen > 0 ) {
     uLen += 5;      // Allow for the "extra" chars UniStrxfrm() will out put
                     // (overrunning the buffer if you let it...)
@@ -206,7 +206,7 @@ nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength,
     return NS_ERROR_FAILURE;
 
   res = NS_ERROR_FAILURE;               // From here on out assume failure...
-  int length = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.GetUnicode()),0);
+  int length = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.get()),0);
   if (length >= 0) {
     length += 5;                        // Allow for the "extra" chars UniStrxfrm()
                                         //  will out put (overrunning the buffer if
@@ -226,7 +226,7 @@ nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength,
       pLocalBuffer = (UniChar*) malloc(sizeof(UniChar) * iBufferLength);
     if (pLocalBuffer) {
       // Do the Xfrm
-      int uLen = UniStrxfrm(locObj, pLocalBuffer, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.GetUnicode()), iBufferLength);
+      int uLen = UniStrxfrm(locObj, pLocalBuffer, NS_REINTERPRET_CAST(const UniChar *,stringNormalized.get()), iBufferLength);
       // See how big the result really is
       uLen = UniStrlen(pLocalBuffer);
       // make sure it will fit in the output buffer...

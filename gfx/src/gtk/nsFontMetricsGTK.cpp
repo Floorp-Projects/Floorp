@@ -968,7 +968,7 @@ static PRBool
 IsASCIIFontName(const nsString& aName)
 {
   PRUint32 len = aName.Length();
-  const PRUnichar* str = aName.GetUnicode();
+  const PRUnichar* str = aName.get();
   for (PRUint32 i = 0; i < len; i++) {
     /*
      * X font names are printable ASCII, ignore others (for now)
@@ -997,7 +997,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   }
 
   nsCAutoString name;
-  name.AssignWithConversion(aFamily.GetUnicode());
+  name.AssignWithConversion(aFamily.get());
   name.ToLowerCase();
   nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) aData;
   metrics->mFonts.AppendCString(name);
@@ -2142,7 +2142,7 @@ nsFontGTKSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
   if (gFontSubConverter) {
     nsAutoString tmp(aSrc, aSrcLen);
     char* conv = nsnull;
-    res = gFontSubConverter->Convert(tmp.GetUnicode(), &conv);
+    res = gFontSubConverter->Convert(tmp.get(), &conv);
     if (NS_SUCCEEDED(res) && conv) {
       char* p = conv;
       PRUint32 i;
@@ -3332,7 +3332,7 @@ nsFontMetricsGTK::FamilyExists(const nsString& aName)
   }
 
   nsCAutoString name;
-  name.AssignWithConversion(aName.GetUnicode());
+  name.AssignWithConversion(aName.get());
   name.ToLowerCase();
   nsFontFamily* family = FindFamily(&name);
   if (family && family->mNodes.Count()) {

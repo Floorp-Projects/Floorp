@@ -189,7 +189,7 @@ InternetSearchContext::GetEngine(nsIRDFResource **node)
 NS_IMETHODIMP
 InternetSearchContext::GetHintConst(const PRUnichar **hint)
 {
-	*hint = mHint.GetUnicode();
+	*hint = mHint.get();
 	return(NS_OK);
 }
 
@@ -226,7 +226,7 @@ InternetSearchContext::AppendUnicodeBytes(const PRUnichar *buffer, PRInt32 numUn
 NS_IMETHODIMP
 InternetSearchContext::GetBufferConst(const PRUnichar **buffer)
 {
-	*buffer = mBuffer.GetUnicode();
+	*buffer = mBuffer.get();
 	return(NS_OK);
 }
 
@@ -435,7 +435,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filtersite",     &kNC_SearchCommand_FilterSite);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=clearfilters",   &kNC_SearchCommand_ClearFilters);
 
-		gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
+		gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").get(), &kTrueLiteral);
 
 		rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), getter_AddRefs(prefs));
 		if (NS_SUCCEEDED(rv) && (prefs))
@@ -810,7 +810,7 @@ InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine,
 	if (uri.Find(kURINC_SearchCategoryEngineBasenamePrefix) !=0)	return(NS_ERROR_UNEXPECTED);
 
 	nsCOMPtr<nsIRDFLiteral>	basenameLiteral;
-	if (NS_FAILED(rv = gRDFService->GetLiteral(uri.GetUnicode(),
+	if (NS_FAILED(rv = gRDFService->GetLiteral(uri.get(),
 			getter_AddRefs(basenameLiteral))))	return(rv);
 
 	nsCOMPtr<nsIRDFResource>	catSrc;
@@ -1076,7 +1076,7 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
         else if (source == kNC_SearchCommand_ClearFilters)
           name = NS_LITERAL_STRING("clearfilters");
 
-        rv = bundle->GetStringFromName(name.GetUnicode(), getter_Copies(valUni));
+        rv = bundle->GetStringFromName(name.get(), getter_Copies(valUni));
         if (NS_SUCCEEDED(rv) && valUni && *valUni) {
           *target = nsnull;
           nsCOMPtr<nsIRDFLiteral> literal;
@@ -1266,7 +1266,7 @@ InternetSearchDataSource::GetCategoryList()
 		categoryStr.AppendWithConversion(catResURI);
 
 		nsCOMPtr<nsIRDFResource>	searchCategoryRes;
-		if (NS_FAILED(rv = gRDFService->GetUnicodeResource(categoryStr.GetUnicode(),
+		if (NS_FAILED(rv = gRDFService->GetUnicodeResource(categoryStr.get(),
 			getter_AddRefs(searchCategoryRes))))	break;
 
 		nsCOMPtr<nsIRDFContainer> categoryContainer;
@@ -1860,7 +1860,7 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 
 	nsresult			rv;
 	nsCOMPtr<nsIRDFLiteral>	urlLiteral;
-	if (NS_FAILED(rv = gRDFService->GetLiteral(url.GetUnicode(), getter_AddRefs(urlLiteral)))
+	if (NS_FAILED(rv = gRDFService->GetLiteral(url.get(), getter_AddRefs(urlLiteral)))
 		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
 
 	// add aResource into a list of nodes to filter out
@@ -1937,7 +1937,7 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 
 	nsresult			rv;
 	nsCOMPtr<nsIRDFLiteral>	urlLiteral;
-	if (NS_FAILED(rv = gRDFService->GetLiteral(host.GetUnicode(), getter_AddRefs(urlLiteral)))
+	if (NS_FAILED(rv = gRDFService->GetLiteral(host.get(), getter_AddRefs(urlLiteral)))
 		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
 
 	// add aResource into a list of nodes to filter out
@@ -2107,7 +2107,7 @@ InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
 	PRBool		filterStatus = PR_FALSE;
 	nsresult	rv;
 
-	const PRUnichar	*hrefUni = hrefStr.GetUnicode();
+	const PRUnichar	*hrefUni = hrefStr.get();
 	if (!hrefUni)	return(filterStatus);
 
 	// check if this specific URL is to be filtered out
@@ -2135,7 +2135,7 @@ InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
 	host.Truncate(slashOffset2 + 1);
 
 	nsCOMPtr<nsIRDFLiteral>	urlLiteral;
-	if (NS_FAILED(rv = gRDFService->GetLiteral(host.GetUnicode(), getter_AddRefs(urlLiteral)))
+	if (NS_FAILED(rv = gRDFService->GetLiteral(host.get(), getter_AddRefs(urlLiteral)))
 		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
 
 	rv = mLocalstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral,
@@ -2312,7 +2312,7 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	if (NS_FAILED(context->GetBufferLength(&bufferLength)))	return(rv);
 	if (bufferLength < 1)	return(NS_OK);
 	
-	rv = outFile->AppendUnicode(baseName.GetUnicode());
+	rv = outFile->AppendUnicode(baseName.get());
 	if (NS_FAILED(rv)) return rv;
 	
 	// save data to file
@@ -2649,7 +2649,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
  				}
  			}
 			// remember the text of the last search
-			RememberLastSearchText(searchText.GetUnicode());
+			RememberLastSearchText(searchText.get());
 
 			// construct the search query uri
 			engineURI.InsertWithConversion("internetsearch:engine=", 0);
@@ -2683,7 +2683,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		{
 			if (engineURI.Length() > 0)
 			{
-				const PRUnichar	*uriUni = engineURI.GetUnicode();
+				const PRUnichar	*uriUni = engineURI.get();
 				nsCOMPtr<nsIRDFLiteral>	uriLiteral;
 				nsresult		temprv;
 				if ((uriUni) && (NS_SUCCEEDED(temprv = gRDFService->GetLiteral(uriUni,
@@ -2894,7 +2894,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 	ClearResultSearchSites();
 
 	// remember the last search query
-	const PRUnichar	*uriUni = uri.GetUnicode();
+	const PRUnichar	*uriUni = uri.get();
 	nsCOMPtr<nsIRDFLiteral>	uriLiteral;
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(uriUni, getter_AddRefs(uriLiteral))))
 	{
@@ -3076,10 +3076,10 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 	// save file contents
 	if (data.Length() < 1)	return(NS_ERROR_UNEXPECTED);
 
-	rv = updateDataHintsInGraph(engine, data.GetUnicode());
+	rv = updateDataHintsInGraph(engine, data.get());
 
 	nsCOMPtr<nsIRDFLiteral>	aLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(data.GetUnicode(), getter_AddRefs(aLiteral))))
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(data.get(), getter_AddRefs(aLiteral))))
 	{
 		*dataLit = aLiteral;
 		NS_IF_ADDREF(*dataLit);
@@ -3107,7 +3107,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "name", nameValue)))
 	{
 		nsCOMPtr<nsIRDFLiteral>	nameLiteral;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nameValue.GetUnicode(),
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nameValue.get(),
 				getter_AddRefs(nameLiteral))))
 		{
 			rv = updateAtom(mInner, engine, kNC_Name, nameLiteral, nsnull);
@@ -3119,7 +3119,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "description", descValue)))
 	{
 		nsCOMPtr<nsIRDFLiteral>	descLiteral;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(descValue.GetUnicode(),
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(descValue.get(),
 				getter_AddRefs(descLiteral))))
 		{
 			rv = updateAtom(mInner, engine, kNC_Description, descLiteral, nsnull);
@@ -3131,7 +3131,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "version", versionValue)))
 	{
 		nsCOMPtr<nsIRDFLiteral>	versionLiteral;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(versionValue.GetUnicode(),
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(versionValue.get(),
 				getter_AddRefs(versionLiteral))))
 		{
 			rv = updateAtom(mInner, engine, kNC_Version, versionLiteral, nsnull);
@@ -3142,7 +3142,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "actionButton", buttonValue)))
 	{
 		nsCOMPtr<nsIRDFLiteral>	buttonLiteral;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(buttonValue.GetUnicode(),
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(buttonValue.get(),
 				getter_AddRefs(buttonLiteral))))
 		{
 			rv = updateAtom(mInner, engine, kNC_actionButton, buttonLiteral, nsnull);
@@ -3153,7 +3153,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "actionBar", barValue)))
 	{
 		nsCOMPtr<nsIRDFLiteral>	barLiteral;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(barValue.GetUnicode(),
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(barValue.get(),
 				getter_AddRefs(barLiteral))))
 		{
 			rv = updateAtom(mInner, engine, kNC_actionBar, barLiteral, nsnull);
@@ -3221,7 +3221,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 		if ((updateStr.Length() > 0) && (updateCheckDaysStr.Length() > 0))
 		{
 			nsCOMPtr<nsIRDFLiteral>	updateLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateStr.GetUnicode(),
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateStr.get(),
 					getter_AddRefs(updateLiteral))))
 			{
 				rv = updateAtom(mInner, engine, kNC_Update, updateLiteral, nsnull);
@@ -3245,7 +3245,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 			if (updateIconStr.Length() > 0)
 			{
 				nsCOMPtr<nsIRDFLiteral>	updateIconLiteral;
-				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateIconStr.GetUnicode(),
+				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateIconStr.get(),
 						getter_AddRefs(updateIconLiteral))))
 				{
 					rv = updateAtom(mInner, engine, kNC_UpdateIcon, updateIconLiteral, nsnull);
@@ -3732,7 +3732,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		searchURL.AppendWithConversion(".src");
 	}
 
-	if (NS_FAILED(rv = gRDFService->GetUnicodeResource(searchURL.GetUnicode(),
+	if (NS_FAILED(rv = gRDFService->GetUnicodeResource(searchURL.get(),
 		getter_AddRefs(searchRes))))	return(rv);
 
 	// save the basename reference
@@ -3740,11 +3740,11 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	{
 		basename.InsertWithConversion(kURINC_SearchCategoryEngineBasenamePrefix, 0);
 
-		if (NS_FAILED(rv = gRDFService->GetUnicodeResource(basename.GetUnicode(),
+		if (NS_FAILED(rv = gRDFService->GetUnicodeResource(basename.get(),
 			getter_AddRefs(categoryRes))))	return(rv);
 
 		nsCOMPtr<nsIRDFLiteral>	searchLiteral;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(basename.GetUnicode(),
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(basename.get(),
 				getter_AddRefs(searchLiteral))))
 		{
 			if (file)
@@ -3770,7 +3770,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		if (iconURL.Length() > 0)
 		{
 			nsCOMPtr<nsIRDFLiteral>	iconLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(iconURL.GetUnicode(),
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(iconURL.get(),
 					getter_AddRefs(iconLiteral))))
 			{
 				updateAtom(mInner, searchRes, kNC_Icon, iconLiteral, nsnull);
@@ -3814,7 +3814,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 				nsAutoString	catList;
 				catList.AssignWithConversion(kURINC_SearchCategoryPrefix);
 				catList.AppendWithConversion(catURI);
-				gRDFService->GetUnicodeResource(catList.GetUnicode(), getter_AddRefs(catRes));
+				gRDFService->GetUnicodeResource(catList.get(), getter_AddRefs(catRes));
 			}
 
 			nsCOMPtr<nsIRDFContainer> container;
@@ -4332,7 +4332,7 @@ InternetSearchDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult
 	nsAutoString	url;
 	url.AssignWithConversion(uri);
 	nsIRDFLiteral	*literal;
-	gRDFService->GetLiteral(url.GetUnicode(), &literal);
+	gRDFService->GetLiteral(url.get(), &literal);
         *aResult = literal;
         return NS_OK;
 }
@@ -4523,7 +4523,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		nsCOMPtr<nsIRDFLiteral>	newValue;
 		if (lastModValue.Length() > 0)
 		{
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(lastModValue).GetUnicode(),
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(lastModValue).get(),
 				getter_AddRefs(newValue));
 			if (newValue)
 			{
@@ -4534,7 +4534,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		}
 		if (contentLengthValue.Length() > 0)
 		{
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(contentLengthValue).GetUnicode(),
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(contentLengthValue).get(),
 				getter_AddRefs(newValue));
 			if (newValue)
 			{
@@ -4654,7 +4654,7 @@ InternetSearchDataSource::validateEngineNow(nsIRDFResource *engine)
 
 	nsresult		rv;
 	nsCOMPtr<nsIRDFLiteral>	nowLiteral;
-	if (NS_FAILED(rv = gRDFService->GetLiteral(nowStr.GetUnicode(),
+	if (NS_FAILED(rv = gRDFService->GetLiteral(nowStr.get(),
 			getter_AddRefs(nowLiteral))))	return(rv);
 	updateAtom(mLocalstore, engine, kWEB_LastPingDate, nowLiteral, nsnull);
 
@@ -4872,7 +4872,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					htmlResults.Mid(htmlBanner, bannerStart, bannerEnd - bannerStart - 1);
 					if (htmlBanner.Length() > 0)
 					{
-						const PRUnichar	*bannerUni = htmlBanner.GetUnicode();
+						const PRUnichar	*bannerUni = htmlBanner.get();
 						if (bannerUni)
 						{
 							gRDFService->GetLiteral(bannerUni, getter_AddRefs(bannerLiteral));
@@ -5081,7 +5081,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			// save HREF attribute as URL
 			if (NS_SUCCEEDED(rv = gRDFService->GetAnonymousResource(getter_AddRefs(res))))
 			{
-				const PRUnichar	*hrefUni = hrefStr.GetUnicode();
+				const PRUnichar	*hrefUni = hrefStr.get();
 				if (hrefUni)
 				{
 					nsCOMPtr<nsIRDFLiteral>	hrefLiteral;
@@ -5095,7 +5095,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			if (NS_FAILED(rv))	continue;
 			
 			// set HTML response chunk
-			const PRUnichar	*htmlResponseUni = resultItem.GetUnicode();
+			const PRUnichar	*htmlResponseUni = resultItem.get();
 			if (htmlResponseUni)
 			{
 				nsCOMPtr<nsIRDFLiteral>	htmlResponseLiteral;
@@ -5134,7 +5134,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					}
 					if (site.Length() > 0)
 					{
-						const PRUnichar	*siteUni = site.GetUnicode();
+						const PRUnichar	*siteUni = site.get();
 						if (siteUni)
 						{
 							nsCOMPtr<nsIRDFLiteral>	siteLiteral;
@@ -5199,7 +5199,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			{
 				if (nameStr.Length() > 0)
 				{
-					const PRUnichar	*nameUni = nameStr.GetUnicode();
+					const PRUnichar	*nameUni = nameStr.get();
 					if (nameUni)
 					{
 						nsCOMPtr<nsIRDFLiteral>	nameLiteral;
@@ -5243,7 +5243,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 
 				if (dateItem.Length() > 0)
 				{
-					const PRUnichar		*dateUni = dateItem.GetUnicode();
+					const PRUnichar		*dateUni = dateItem.get();
 					nsCOMPtr<nsIRDFLiteral>	dateLiteral;
 					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(dateUni, getter_AddRefs(dateLiteral))))
 					{
@@ -5273,7 +5273,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 				if (priceItem.Length() > 0)
 				{
-					const PRUnichar		*priceUni = priceItem.GetUnicode();
+					const PRUnichar		*priceUni = priceItem.get();
 					nsCOMPtr<nsIRDFLiteral>	priceLiteral;
 					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(priceUni, getter_AddRefs(priceLiteral))))
 					{
@@ -5322,7 +5322,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 				if (availItem.Length() > 0)
 				{
-					const PRUnichar		*availUni = availItem.GetUnicode();
+					const PRUnichar		*availUni = availItem.get();
 					nsCOMPtr<nsIRDFLiteral>	availLiteral;
 					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(availUni, getter_AddRefs(availLiteral))))
 					{
@@ -5358,7 +5358,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				if (relItem.Length() > 0)
 				{
 					// save real relevance
-					const PRUnichar	*relUni = relItem.GetUnicode();
+					const PRUnichar	*relUni = relItem.get();
 					if (relUni)
 					{
 						nsAutoString	relStr(relUni);
@@ -5398,7 +5398,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					relItem.AssignWithConversion("-");
 				}
 
-				const PRUnichar *relItemUni = relItem.GetUnicode();
+				const PRUnichar *relItemUni = relItem.get();
 				nsCOMPtr<nsIRDFLiteral>	relLiteral;
 				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(relItemUni, getter_AddRefs(relLiteral))))
 				{
@@ -5421,7 +5421,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					zero.AssignWithConversion("000");
 					if (relItem.Length() < 3)
 					{
-						relItem.Insert(zero.GetUnicode(), 0, zero.Length() - relItem.Length()); 
+						relItem.Insert(zero.get(), 0, zero.Length() - relItem.Length()); 
 					}
 				}
 				else
@@ -5429,7 +5429,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					relItem.AssignWithConversion("000");
 				}
 
-				const PRUnichar	*relSortUni = relItem.GetUnicode();
+				const PRUnichar	*relSortUni = relItem.get();
 				if (relSortUni)
 				{
 					nsCOMPtr<nsIRDFLiteral>	relSortLiteral;
@@ -5452,7 +5452,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			{
 				if (engineStr.Length() > 0)
 				{
-					const PRUnichar		*engineUni = engineStr.GetUnicode();
+					const PRUnichar		*engineUni = engineStr.get();
 					nsCOMPtr<nsIRDFLiteral>	engineLiteral;
 					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(engineUni, getter_AddRefs(engineLiteral))))
 					{
@@ -5478,7 +5478,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 
 			if (iconChromeDefault.Length() > 0)
 			{
-				const PRUnichar		*iconUni = iconChromeDefault.GetUnicode();
+				const PRUnichar		*iconUni = iconChromeDefault.get();
 				nsCOMPtr<nsIRDFLiteral>	iconLiteral;
 				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(iconUni, getter_AddRefs(iconLiteral))))
 				{
@@ -5503,7 +5503,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			// set the result type
 			if (browserResultTypeStr.Length() > 0)
 			{
-				const PRUnichar		*resultTypeUni = browserResultTypeStr.GetUnicode();
+				const PRUnichar		*resultTypeUni = browserResultTypeStr.get();
 				nsCOMPtr<nsIRDFLiteral>	resultTypeLiteral;
 				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(resultTypeUni, getter_AddRefs(resultTypeLiteral))))
 				{

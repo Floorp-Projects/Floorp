@@ -217,7 +217,7 @@ nsImapIncomingServer::GetConstructedPrettyName(PRUnichar **retval)
 
     }
   }
-  rv = GetFormattedName(emailAddress.GetUnicode(), retval);
+  rv = GetFormattedName(emailAddress.get(), retval);
   return rv;
 }
 
@@ -1316,7 +1316,7 @@ NS_IMETHODIMP nsImapIncomingServer::ConvertFolderName(const char *originalName, 
   if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) 
     rv = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
   if (NS_SUCCEEDED(rv))
-    rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(originalName).GetUnicode(), convertedName);
+    rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(originalName).get(), convertedName);
 
   if (NS_SUCCEEDED(rv) && ((!*convertedName) || (!**convertedName)))
     return NS_ERROR_FAILURE;
@@ -1968,7 +1968,7 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
 		{
 			nsAutoString message(serverSaidPrefix);
 			message.Append(unicodeAlertString);
-			rv = dialog->Alert(nsnull, message.GetUnicode());
+			rv = dialog->Alert(nsnull, message.get());
 
 			PR_Free(serverSaidPrefix);
 		}
@@ -3133,7 +3133,7 @@ nsImapIncomingServer::GeneratePrettyNameForMigration(PRUnichar **aPrettyName)
     }
 
     // Format the pretty name
-    rv = GetFormattedName(constructedPrettyName.GetUnicode(), aPrettyName); 
+    rv = GetFormattedName(constructedPrettyName.get(), aPrettyName); 
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;

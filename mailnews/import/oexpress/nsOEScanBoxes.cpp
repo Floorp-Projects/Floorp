@@ -703,7 +703,7 @@ void nsOEScanBoxes::BuildMailboxList( MailboxEntry *pBox, nsIFileSpec * root, PR
 		if (NS_SUCCEEDED( rv)) {
 			pID->SetDepth( depth);
 			pID->SetIdentifier( pBox->index);
-			pID->SetDisplayName( (PRUnichar *)pBox->mailName.GetUnicode());
+			pID->SetDisplayName( (PRUnichar *)pBox->mailName.get());
 			if (pBox->fileName.Length() > 0) {
 				pID->GetFileSpec( &file);
 				file->FromFileSpec( root);

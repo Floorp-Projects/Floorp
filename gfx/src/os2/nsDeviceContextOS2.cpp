@@ -630,7 +630,7 @@ NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName
 
   char fontName[FACESIZE];
 
-  WideCharToMultiByte(0, aFontName.GetUnicode(), aFontName.Length() + 1,
+  WideCharToMultiByte(0, aFontName.get(), aFontName.Length() + 1,
     fontName, sizeof(fontName));
 
   long lWant = 0;

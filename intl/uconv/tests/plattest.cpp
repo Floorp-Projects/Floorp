@@ -47,7 +47,7 @@ main(int argc, const char** argv)
 	rv = locale_service->GetSystemLocale(getter_AddRefs(locale));
 	if (NS_FAILED(rv)) return -1;
 
-	rv = locale->GetCategory(locale_category.GetUnicode(),&category_value);
+	rv = locale->GetCategory(locale_category.get(),&category_value);
 	if (NS_FAILED(rv)) return -1;
 
 	rv = platform_charset->GetDefaultCharsetForLocale(category_value,&charset);
@@ -58,7 +58,7 @@ main(int argc, const char** argv)
 	printf("DefaultCharset for %s is %s\n",categoryAsNSString.ToNewCString(),charsetAsNSString.ToNewCString());
 
 	categoryAsNSString.AssignWithConversion("en-US");
-	rv = platform_charset->GetDefaultCharsetForLocale(categoryAsNSString.GetUnicode(),&charset);
+	rv = platform_charset->GetDefaultCharsetForLocale(categoryAsNSString.get(),&charset);
 	if (NS_FAILED(rv)) return -1;
 
 	charsetAsNSString = charset;

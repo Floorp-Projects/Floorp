@@ -314,30 +314,30 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
     if (!aPrefix.IsEmpty())
     {
       if (aHTMLEditor)
-        aEditorShell->InsertSource(aPrefix.GetUnicode());
+        aEditorShell->InsertSource(aPrefix.get());
       else
-        aEditorShell->InsertText(aPrefix.GetUnicode());
+        aEditorShell->InsertText(aPrefix.get());
     }
 
     if (!aBuf.IsEmpty())
     {
       if (!mCiteReference.IsEmpty())
-        aEditorShell->InsertAsCitedQuotation(aBuf.GetUnicode(),
-                               mCiteReference.GetUnicode(),
+        aEditorShell->InsertAsCitedQuotation(aBuf.get(),
+                               mCiteReference.get(),
                                PR_TRUE,
                                NS_LITERAL_STRING("UTF-8").get(),
                                getter_AddRefs(nodeInserted));
       else
-        aEditorShell->InsertAsQuotation(aBuf.GetUnicode(),
+        aEditorShell->InsertAsQuotation(aBuf.get(),
                                         getter_AddRefs(nodeInserted));
     }
 
     if (!aSignature.IsEmpty())
     {
       if (aHTMLEditor)
-        aEditorShell->InsertSource(aSignature.GetUnicode());
+        aEditorShell->InsertSource(aSignature.get());
       else
-        aEditorShell->InsertText(aSignature.GetUnicode());
+        aEditorShell->InsertText(aSignature.get());
     }
   }
   else
@@ -345,17 +345,17 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
     if (aHTMLEditor)
     {
       if (!aBuf.IsEmpty())
-        aEditorShell->InsertSource(aBuf.GetUnicode());
+        aEditorShell->InsertSource(aBuf.get());
       if (!aSignature.IsEmpty())
-        aEditorShell->InsertSource(aSignature.GetUnicode());
+        aEditorShell->InsertSource(aSignature.get());
     }
     else
     {
       if (!aBuf.IsEmpty())
-        aEditorShell->InsertText(aBuf.GetUnicode());
+        aEditorShell->InsertText(aBuf.get());
 
       if (!aSignature.IsEmpty())
-        aEditorShell->InsertText(aSignature.GetUnicode());
+        aEditorShell->InsertText(aSignature.get());
     }
   }
   aEditorShell->EndBatchChanges();
@@ -619,7 +619,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
         {
           // Apply entity conversion then convert to a mail charset. 
           rv = nsMsgI18NSaveAsCharset(attachment1_type, m_compFields->GetCharacterSet(), 
-                                      NS_ConvertASCIItoUCS2(bodyString).GetUnicode(), &outCString);
+                                      NS_ConvertASCIItoUCS2(bodyString).get(), &outCString);
           if (NS_SUCCEEDED(rv)) 
           {
             bodyString = outCString;
@@ -735,7 +735,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
     if(UseFormatFlowed(charset))
         flags |= nsIDocumentEncoder::OutputFormatFlowed;
     
-    rv = m_editor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
+    rv = m_editor->GetContentsAs(format.get(), flags, &bodyText);
 	  
     if (NS_SUCCEEDED(rv) && nsnull != bodyText)
     {
@@ -745,7 +745,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	    // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
 	    char *outCString = nsnull;
       rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
-                                  msgBody.GetUnicode(), &outCString);
+                                  msgBody.get(), &outCString);
 	    if (NS_SUCCEEDED(rv) && nsnull != outCString) 
 	    {
         // body contains multilingual data, confirm send to the user
@@ -858,11 +858,11 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
     // Set the charset
     nsAutoString msgCharSet;
     msgCharSet.AssignWithConversion(m_compFields->GetCharacterSet());
-    m_editor->SetDocumentCharacterSet(msgCharSet.GetUnicode());
+    m_editor->SetDocumentCharacterSet(msgCharSet.get());
 
     // Now, lets init the editor here!
     // Just get a blank editor started...
-    m_editor->LoadUrl(NS_ConvertASCIItoUCS2("about:blank").GetUnicode());
+    m_editor->LoadUrl(NS_ConvertASCIItoUCS2("about:blank").get());
 
     return NS_OK;
 } 
@@ -985,7 +985,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         replyToStr.AppendWithConversion(replyTo);
       }
       
-	    m_compFields->SetReplyTo(replyToStr.GetUnicode());
+	    m_compFields->SetReplyTo(replyToStr.get());
 	    
 	    /* Setup bcc field */
 	    PRBool  aBool;
@@ -1011,7 +1011,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 	            bccStr.Append(PRUnichar(','));
 	        bccStr.AppendWithConversion(bccList);
 	    }
-	    m_compFields->SetBcc(bccStr.GetUnicode());
+	    m_compFields->SetBcc(bccStr.get());
 	}
 
   // If we don't have an original message URI, nothing else to do...
@@ -1406,7 +1406,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           if (recipient.Length() > 0 && cc.Length() > 0)
             recipient.Append(NS_LITERAL_STRING(", "));
           recipient += cc;
-          compFields->SetCc(recipient.GetUnicode());
+          compFields->SetCc(recipient.get());
 
           needToRemoveDup = PR_TRUE;
         }
@@ -1443,7 +1443,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         
         if (! replyTo.IsEmpty())
         {
-          compFields->SetTo(replyTo.GetUnicode());
+          compFields->SetTo(replyTo.get());
           needToRemoveDup = PR_TRUE;
         }
         
@@ -1563,7 +1563,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
     PRUnichar       *u = nsnull; 
     nsAutoString    fmt; fmt.AssignWithConversion("%s");
 
-    u = nsTextFormatter::smprintf(fmt.GetUnicode(), newBuf); // this converts UTF-8 to UCS-2 
+    u = nsTextFormatter::smprintf(fmt.get(), newBuf); // this converts UTF-8 to UCS-2 
     if (u)
     {
       PRInt32   newLen = nsCRT::strlen(u);
@@ -2295,7 +2295,7 @@ nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
   // Ok, once we are here, we need to escape the data to make sure that
   // we don't do HTML stuff with plain text sigs.
   //
-  PRUnichar *escaped = nsEscapeHTML2(origBuf.GetUnicode());
+  PRUnichar *escaped = nsEscapeHTML2(origBuf.get());
   if (escaped) 
   {
     aSigData.Append(escaped);
@@ -3604,9 +3604,9 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
     editor->BeginTransaction();
     editor->EndOfDocument();
     if (m_composeHTML)
-      rv = m_editor->InsertSource(aSignature.GetUnicode());
+      rv = m_editor->InsertSource(aSignature.get());
     else
-      rv = m_editor->InsertText(aSignature.GetUnicode());
+      rv = m_editor->InsertText(aSignature.get());
     editor->EndTransaction();
   }
 

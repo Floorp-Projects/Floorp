@@ -275,7 +275,7 @@ static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_d
 // #include "nsTextFormatter.h"
 // nsString aString(""); 
 // nsAutoString fmt("%s"); 
-// PRUnichar *uniBuffer = nsTextFormatter::smprintf(fmt.GetUnicode(), aBuffer); // this converts UTF-8 to UCS-2 
+// PRUnichar *uniBuffer = nsTextFormatter::smprintf(fmt.get(), aBuffer); // this converts UTF-8 to UCS-2 
 // Do not use void* that was inherited from old libmime when it could not include C++, use PRUnichar* instead.
 PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
                                       void** uniBuffer)
@@ -286,7 +286,7 @@ PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
 	}
 
   NS_ConvertUTF8toUCS2 temp(aBuffer, aLength);
-  *uniBuffer = nsCRT::strdup(temp.GetUnicode());
+  *uniBuffer = nsCRT::strdup(temp.get());
   return (*uniBuffer) ? 0 : -1;
 }
 

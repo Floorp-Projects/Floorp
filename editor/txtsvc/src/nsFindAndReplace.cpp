@@ -356,8 +356,8 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
   if (patternLen > searchStrLen) // pattern is longer than string to search
     return -1;
 
-  const PRUnichar *searchBuf = searchStr.GetUnicode();
-  const PRUnichar *patternBuf = patternStr.GetUnicode();
+  const PRUnichar *searchBuf = searchStr.get();
+  const PRUnichar *patternBuf = patternStr.get();
 
   const PRUnichar *searchEnd = searchBuf + searchStrLen;
   const PRUnichar *patEnd = patternBuf + patternLen;

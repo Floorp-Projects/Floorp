@@ -563,7 +563,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                           owner,
                           inheritOwner,
                           stopActiveDoc,
-                          windowTarget.GetUnicode(),
+                          windowTarget.get(),
                           postStream,
                           nsnull,         // No headers stream
                           loadType,
@@ -2166,7 +2166,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
         nsXPIDLString messageStr;
         NS_ENSURE_SUCCESS(stringBundle->
                           GetStringFromName(NS_ConvertASCIItoUCS2
-                                            ("protocolNotFound").GetUnicode(),
+                                            ("protocolNotFound").get(),
                                             getter_Copies(messageStr)),
                           NS_ERROR_FAILURE);
 
@@ -3059,7 +3059,7 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
         NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
         nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
         if (shEntry)
-            shEntry->SetTitle(mTitle.GetUnicode());
+            shEntry->SetTitle(mTitle.get());
     }
 
 
@@ -4219,7 +4219,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 }
                 else {
                     nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
-                    FindItemWithName(name.GetUnicode(),
+                    FindItemWithName(name.get(),
                                      NS_STATIC_CAST(nsIInterfaceRequestor *, this),
                                      getter_AddRefs(targetTreeItem));
                     if (targetTreeItem)
@@ -4235,7 +4235,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // This may involve creating a new toplevel window - if necessary.
         //
         if (!targetDocShell) {
-            rv = FindTarget(name.GetUnicode(), &bIsNewWindow,
+            rv = FindTarget(name.get(), &bIsNewWindow,
                             getter_AddRefs(targetDocShell));
         }
 
@@ -4334,7 +4334,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
                 nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
                 if (shEntry)
-                    shEntry->SetTitle(mTitle.GetUnicode());
+                    shEntry->SetTitle(mTitle.get());
             }
 
             return NS_OK;
@@ -5432,7 +5432,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
  
       if (stringBundle && prompter) {
         nsXPIDLString messageStr;
-        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repostConfirm").GetUnicode(), 
+        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repostConfirm").get(), 
                                                       getter_Copies(messageStr));
           
         if (NS_SUCCEEDED(rv) && messageStr) {

@@ -473,7 +473,7 @@ Wallet_Localize(char* genericString) {
 
   /* localize the given string */
   nsAutoString   strtmp; strtmp.AssignWithConversion(genericString);
-  const PRUnichar *ptrtmp = strtmp.GetUnicode();
+  const PRUnichar *ptrtmp = strtmp.get();
   PRUnichar *ptrv = nsnull;
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
   if (NS_FAILED(ret)) {
@@ -514,7 +514,7 @@ Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 
   const nsAutoString message( szMessage );
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->Confirm(nsnull, message.GetUnicode(), &retval);
+  res = dialog->Confirm(nsnull, message.get(), &retval);
   return retval;
 }
 
@@ -577,7 +577,7 @@ wallet_Alert(PRUnichar * szMessage, nsIDOMWindowInternal* window)
 
   const nsAutoString message( szMessage );
   PRUnichar * title = Wallet_Localize("CaveatTitle");
-  res = dialog->Alert(title, message.GetUnicode());
+  res = dialog->Alert(title, message.get());
   Recycle(title);
   return;     // XXX should return the error
 }
@@ -588,7 +588,7 @@ wallet_Alert(PRUnichar * szMessage, nsIPrompt* dialog)
   nsresult res;  
   const nsAutoString message( szMessage );
   PRUnichar * title = Wallet_Localize("CaveatTitle");
-  res = dialog->Alert(title, message.GetUnicode());
+  res = dialog->Alert(title, message.get());
   Recycle(title);
   return;     // XXX should return the error
 }

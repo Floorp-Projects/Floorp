@@ -511,8 +511,8 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 		if (id) {
 			nsString fullName;
 			fullName.AssignWithConversion(pName);
-			id->SetFullName( fullName.GetUnicode());
-			id->SetIdentityName( fullName.GetUnicode());
+			id->SetFullName( fullName.get());
+			id->SetIdentityName( fullName.get());
 			id->SetEmail( pEmail);
 			if (pReply)
 				id->SetReplyTo( pReply);

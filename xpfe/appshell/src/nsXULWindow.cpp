@@ -868,7 +868,7 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
   do {
     keepTrying = PR_FALSE;
     nsCOMPtr<nsISimpleEnumerator> windowList;
-    wm->GetXULWindowEnumerator(windowType.GetUnicode(), getter_AddRefs(windowList));
+    wm->GetXULWindowEnumerator(windowType.get(), getter_AddRefs(windowList));
 
     if (!windowList)
       break;
@@ -949,7 +949,7 @@ NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
       return NS_OK;
 
    NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
-   mChromeTreeOwner->SetTitle(windowTitle.GetUnicode());
+   mChromeTreeOwner->SetTitle(windowTitle.get());
 
    return NS_OK;
 }
@@ -1409,7 +1409,7 @@ NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic,
    topic.AppendWithConversion(";");
    topic += aTopic;
 
-   NS_ENSURE_SUCCESS(service->Notify(removeme, topic.GetUnicode(), aData),
+   NS_ENSURE_SUCCESS(service->Notify(removeme, topic.get(), aData),
       NS_ERROR_FAILURE);
    return NS_OK;
 }

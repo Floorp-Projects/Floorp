@@ -461,7 +461,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       // use the unicode name as the "pretty" name. Set it so it won't be
       // automatically computed from the URI, which is in utf7 form.
       if (currentFolderNameStr.Length() > 0)
-        child->SetName(currentFolderNameStr.GetUnicode());
+        child->SetName(currentFolderNameStr.get());
 
     }
     PL_strfree(folderName);

@@ -1112,7 +1112,7 @@ nsRenderingContextXlib::GetWidth(const nsString& aString, nscoord& aWidth,
                                  PRInt32 *aFontID)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetWidth()\n"));
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+  return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP
@@ -1389,7 +1389,7 @@ NS_IMETHODIMP nsRenderingContextXlib::DrawString(const nsString& aString, nscoor
                                                  const nscoord* aSpacing)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawString()\n"));
-  return DrawString(aString.GetUnicode(), aString.Length(),
+  return DrawString(aString.get(), aString.Length(),
                     aX, aY, aFontID, aSpacing);
   return NS_OK;
 }

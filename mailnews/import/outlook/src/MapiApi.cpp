@@ -328,10 +328,10 @@ BOOL CGetStoreFoldersIter::HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID
 			else
 				name.Truncate();
 
-			if ((name.IsEmpty() && m_isMail) || (!ExcludeFolderClass(name.GetUnicode()))) {
+			if ((name.IsEmpty() && m_isMail) || (!ExcludeFolderClass(name.get()))) {
 				pVal = m_pApi->GetMapiProperty( pFolder, PR_DISPLAY_NAME);
 				m_pApi->GetStringFromProp( pVal, name);
-				CMapiFolder	*pNewFolder = new CMapiFolder(name.GetUnicode(), cb, pEntry, m_depth);
+				CMapiFolder	*pNewFolder = new CMapiFolder(name.get(), cb, pEntry, m_depth);
 				m_pList->AddItem( pNewFolder);
 				
 				pVal = m_pApi->GetMapiProperty( pFolder, PR_FOLDER_TYPE);
@@ -1483,7 +1483,7 @@ void CMapiFolderList::EnsureUniqueName( CMapiFolder *pFolder)
 				pCurrent->GetDisplayName( cName);
 				if (!cName.CompareWithConversion( name, PR_TRUE)) {
 					ChangeName( name);
-					pFolder->SetDisplayName(name.GetUnicode());
+					pFolder->SetDisplayName(name.get());
 					done = FALSE;
 					break;
 				}
@@ -1502,7 +1502,7 @@ void CMapiFolderList::GenerateFilePath( CMapiFolder *pFolder)
 	nsString		path;
 	if (!pFolder->GetDepth()) {
 		pFolder->GetDisplayName( name);
-		pFolder->SetFilePath(name.GetUnicode());
+		pFolder->SetFilePath(name.get());
 		return;
 	}
 
@@ -1515,13 +1515,13 @@ void CMapiFolderList::GenerateFilePath( CMapiFolder *pFolder)
 			path.AppendWithConversion(".sbd\\");
 			pFolder->GetDisplayName( name);
 			path += name;
-			pFolder->SetFilePath(path.GetUnicode());
+			pFolder->SetFilePath(path.get());
 			return;
 		}
 		i--;
 	}
 	pFolder->GetDisplayName( name);
-	pFolder->SetFilePath(name.GetUnicode());
+	pFolder->SetFilePath(name.get());
 }
 
 void CMapiFolderList::ClearAll( void)
@@ -1592,11 +1592,11 @@ CMapiFolder::CMapiFolder( const CMapiFolder *pCopyFrom)
 	m_lpEid = NULL;
 	m_cbEid = 0;
 	SetDoImport( pCopyFrom->GetDoImport());
-	SetDisplayName(pCopyFrom->m_displayName.GetUnicode());
+	SetDisplayName(pCopyFrom->m_displayName.get());
 	SetObjectType( pCopyFrom->GetObjectType());
 	SetEntryID( pCopyFrom->GetCBEntryID(), pCopyFrom->GetEntryID());
 	SetDepth( pCopyFrom->GetDepth());
-	SetFilePath(pCopyFrom->m_mailFilePath.GetUnicode());
+	SetFilePath(pCopyFrom->m_mailFilePath.get());
 }
 
 CMapiFolder::~CMapiFolder()

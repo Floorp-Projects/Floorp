@@ -192,7 +192,7 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
     nsAutoString tempStr; tempStr.AssignWithConversion(aMsgCharSet);
     nsCOMPtr<nsIMsgI18NUrl> i18nUrl (do_QueryInterface(aURL));
     if (i18nUrl)
-      i18nUrl->SetCharsetOverRide(tempStr.GetUnicode());
+      i18nUrl->SetCharsetOverRide(tempStr.get());
   }
 
   rv = nsComponentManager::CreateInstance(kMsgQuoteListenerCID, nsnull, NS_GET_IID(nsIMsgQuoteListener), getter_AddRefs(mQuoteListener));

@@ -291,7 +291,7 @@ NS_IMETHODIMP nsMsgWindow::SetMailCharacterSet(const PRUnichar * aMailCharacterS
   if (NS_SUCCEEDED(rv)) 
   {
     nsCOMPtr <nsIAtom> charsetAtom;
-    rv = ccm2->GetCharsetAtom(mMailCharacterSet.GetUnicode(), getter_AddRefs(charsetAtom));
+    rv = ccm2->GetCharsetAtom(mMailCharacterSet.get(), getter_AddRefs(charsetAtom));
     if (NS_SUCCEEDED(rv)) 
       rv = charsetAtom->ToString(mMailCharacterSet);
   }
@@ -334,7 +334,7 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
    {
       nsAutoString msgWindowCommandsWinId; 
 		  msgWindowCommandsWinId.AssignWithConversion("MsgWindowCommands");
-      piDOMWindow->GetObjectProperty(msgWindowCommandsWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+      piDOMWindow->GetObjectProperty(msgWindowCommandsWinId.get(), getter_AddRefs(xpConnectObj));
       mMsgWindowCommands = do_QueryInterface(xpConnectObj);
     }
 

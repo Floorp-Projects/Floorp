@@ -177,7 +177,7 @@ PRUnichar *nsMsgSearchAdapter::EscapeSearchUrl (const PRUnichar *nntpCommand)
 			{
 				*scratchPtr++ = '\\';
                 nsTextFormatter::snprintf(scratchPtr, 2,
-                                          NS_ConvertASCIItoUCS2("%2.2X").GetUnicode(), ch);
+                                          NS_ConvertASCIItoUCS2("%2.2X").get(), ch);
                                    /* Reviewed 4.51 safe use of sprintf */
 				scratchPtr += 2;
 			}
@@ -334,7 +334,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 	// the source. (CS_DEFAULT is an indication that the charset
 	// was undefined or unavailable.)
   // ### well, it's not really anymore. Is there an equivalent?
-  if (!nsCRT::strcmp(dstCharset.GetUnicode(), defaultCharset.GetUnicode()))
+  if (!nsCRT::strcmp(dstCharset.get(), defaultCharset.get()))
 		dstCharset = srcCharset;
 
 	PRBool forceAscii = PR_FALSE;

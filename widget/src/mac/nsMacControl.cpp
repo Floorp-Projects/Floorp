@@ -408,7 +408,7 @@ void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 	if (NS_SUCCEEDED(rv)) {
 		PRInt32 inLength = aText.Length();
 		PRInt32 outLength = 255;
-		rv = mUnicodeEncoder->Convert(aText.GetUnicode(), &inLength, (char *) &aStr255[1], &outLength);
+		rv = mUnicodeEncoder->Convert(aText.get(), &inLength, (char *) &aStr255[1], &outLength);
 		if (NS_SUCCEEDED(rv))
 			aStr255[0] = outLength;
 	}
@@ -469,7 +469,7 @@ void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString ti
 #if TARGET_CARBON
 
   // wow, it sure is nice being able to use core foundation ;)
-  CFStringRef str = CFStringCreateWithCharacters(NULL, (const UniChar*)title.GetUnicode(), title.Length());
+  CFStringRef str = CFStringCreateWithCharacters(NULL, (const UniChar*)title.get(), title.Length());
   SetControlTitleWithCFString(theControl, str);
   CFRelease(str);
 
@@ -505,7 +505,7 @@ void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString ti
 	//
 	// get the Unicode text and prepare buffers
 	//
-	unicodeText = title.GetUnicode();
+	unicodeText = title.get();
 	unicodeTextLengthInBytes = title.Length() * sizeof(PRUnichar);
 	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
 	scriptRunText = new char[scriptRunTextSizeInBytes];

@@ -887,7 +887,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
     nsString  theTopic; theTopic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
     nsCOMPtr<nsIEnumerator> theEnum;
-    result = service->EnumerateObserverList(theTopic.GetUnicode(), getter_AddRefs(theEnum));
+    result = service->EnumerateObserverList(theTopic.get(), getter_AddRefs(theEnum));
     if (NS_SUCCEEDED(result) && theEnum){
       nsCOMPtr<nsISupports> inst;
       PRBool cancelSubmit = PR_FALSE;
@@ -954,8 +954,8 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       }
 #endif
       handler->OnLinkClick(mContent, eLinkVerb_Replace,
-                           absURLSpec.GetUnicode(),
-                           target.GetUnicode(), postDataStream);
+                           absURLSpec.get(),
+                           target.get(), postDataStream);
     }
 // We need to delete the data file somewhere...
 //    if (!isURLEncoded) {
@@ -982,14 +982,14 @@ nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeE
   //This condition handle the RTL,LTR for a logical file
   if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( mCharset.EqualsIgnoreCase("windows-1256") ) ){
     bidiUtils->Conv_06_FE_WithReverse(nsString(aSrc), newBuffer,mTextDir);
-    aSrc = (PRUnichar *)newBuffer.GetUnicode();
+    aSrc = (PRUnichar *)newBuffer.get();
     aLen=newBuffer.Length();
   }
   else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL )&&( mCharset.EqualsIgnoreCase("IBM864") ) ){
     //For 864 file, When it is logical, if LTR then only convert
     //If RTL will mak a reverse for the buffer
     bidiUtils->Conv_FE_06(nsString(aSrc), newBuffer);
-    aSrc = (PRUnichar *)newBuffer.GetUnicode();
+    aSrc = (PRUnichar *)newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
     if (mTextDir == 2) { //RTL
@@ -1000,12 +1000,12 @@ nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeE
         loop--;
       }
     }
-    aSrc = (PRUnichar *)temp.GetUnicode();
+    aSrc = (PRUnichar *)temp.get();
   }
   else if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( mCharset.EqualsIgnoreCase("IBM864"))&& (mTextDir == IBMBIDI_TEXTDIRECTION_RTL) ){
 
     bidiUtils->Conv_FE_06(nsString(aSrc), newBuffer);
-    aSrc = (PRUnichar *)newBuffer.GetUnicode();
+    aSrc = (PRUnichar *)newBuffer.get();
     temp = newBuffer;
     aLen=newBuffer.Length();
     //Now we need to reverse the Buffer, it is by searshing the buffer
@@ -1014,7 +1014,7 @@ nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeE
       temp.SetCharAt((PRUnichar)aSrc[loop], z);
       loop--;
     }
-    aSrc = (PRUnichar *)temp.GetUnicode();
+    aSrc = (PRUnichar *)temp.get();
   }
 #endif
    char* res = nsnull;
@@ -1046,7 +1046,7 @@ nsFormFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder)
 {
   char* inBuf = nsnull;
   if(encoder)
-    inBuf  = UnicodeToNewBytes(aString.GetUnicode(), aString.Length(), encoder);
+    inBuf  = UnicodeToNewBytes(aString.get(), aString.Length(), encoder);
 
   if(nsnull == inBuf)
     inBuf  = aString.ToNewCString();
@@ -1420,7 +1420,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           }
 
           if(encoder) {
-              name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
+              name  = UnicodeToNewBytes(names[valueX].get(), names[valueX].Length(), encoder);
           }
    
           //use the platformencoder only for values containing file names 
@@ -1428,16 +1428,16 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           if (NS_FORM_INPUT_FILE == type) { 
             fileNameStart = GetFileNameWithinPath(valueStr);
             if(platformencoder) {
-                value  = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), platformencoder);
+                value  = UnicodeToNewBytes(valueStr.get(), valueStr.Length(), platformencoder);
 
                 // filename with the leading dirs stripped
-                fname = UnicodeToNewBytes(valueStr.GetUnicode() + fileNameStart,
+                fname = UnicodeToNewBytes(valueStr.get() + fileNameStart,
                                           valueStr.Length() - fileNameStart,
                                           platformencoder);
             }
           } else {
             if(encoder) {
-                value  = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), encoder);
+                value  = UnicodeToNewBytes(valueStr.get(), valueStr.Length(), encoder);
             }
           } 
 
@@ -1575,7 +1575,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             nsString valueStr = values[valueX];
 
             if(encoder) {
-              name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
+              name  = UnicodeToNewBytes(names[valueX].get(), names[valueX].Length(), encoder);
             }
 
             //use the platformencoder only for values containing file names 
@@ -1583,15 +1583,15 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             if (NS_FORM_INPUT_FILE == type) { 
               fileNameStart = GetFileNameWithinPath(valueStr);
               if(platformencoder) {
-                  value = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), platformencoder);
+                  value = UnicodeToNewBytes(valueStr.get(), valueStr.Length(), platformencoder);
 
                   // filename with the leading dirs stripped
-                  fname = UnicodeToNewBytes(valueStr.GetUnicode() + fileNameStart,
+                  fname = UnicodeToNewBytes(valueStr.get() + fileNameStart,
                                             valueStr.Length() - fileNameStart, platformencoder);
               }
             } else { 
               if(encoder) {
-                  value = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), encoder);
+                  value = UnicodeToNewBytes(valueStr.get(), valueStr.Length(), encoder);
               }
             }
 

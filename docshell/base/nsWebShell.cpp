@@ -596,12 +596,12 @@ nsWebShell::LoadDocument(const char* aURL,
       muDV->GetHintCharacterSetSource((PRInt32 *)(&hint));
       if( aSource > hint ) 
       {
-        muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).GetUnicode());
+        muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
         muDV->SetHintCharacterSetSource((PRInt32)aSource);
         if(eCharsetReloadRequested != mCharsetReloadState) 
         {
           mCharsetReloadState = eCharsetReloadRequested;
-          LoadURI(NS_ConvertASCIItoUCS2(aURL).GetUnicode(), LOAD_FLAGS_NONE);
+          LoadURI(NS_ConvertASCIItoUCS2(aURL).get(), LOAD_FLAGS_NONE);
         }
       }
     }
@@ -628,7 +628,7 @@ nsWebShell::ReloadDocument(const char* aCharset,
       muDV->GetHintCharacterSetSource((PRInt32 *)(&hint));
       if( aSource > hint ) 
       {
-         muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).GetUnicode());
+         muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
          muDV->SetHintCharacterSetSource((PRInt32)aSource);
          mCharsetReloadState = eCharsetReloadRequested;
          return Reload(LOAD_FLAGS_CHARSET_CHANGE);
@@ -673,8 +673,8 @@ struct OnLinkClickEvent : public PLEvent {
   ~OnLinkClickEvent();
 
   void HandleEvent() {
-    mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->GetUnicode(),
-                                   mTargetSpec->GetUnicode(), mPostDataStream,
+    mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->get(),
+                                   mTargetSpec->get(), mPostDataStream,
                                    mHeadersDataStream);
   }
 
@@ -825,7 +825,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                           nsnull,             // No onwer
                           PR_TRUE,            // Inherit owner from document
                           PR_FALSE,           // Do not stop active document
-                          target.GetUnicode(),// Window target
+                          target.get(),       // Window target
                           aPostDataStream,    // Post data stream
                           aHeadersDataStream, // Headers stream
                           LOAD_LINK,          // Load type
@@ -958,7 +958,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
         keywordSpec.Append(NS_ConvertUTF8toUCS2(host));
 
-        return LoadURI(keywordSpec.GetUnicode(), LOAD_FLAGS_NONE);
+        return LoadURI(keywordSpec.get(), LOAD_FLAGS_NONE);
       } // end keywordsEnabled
     }
 
@@ -993,7 +993,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         if (NS_FAILED(rv)) return rv;
 
         // reload the url
-        return LoadURI(NS_ConvertASCIItoUCS2(host).GetUnicode(), LOAD_FLAGS_NONE);
+        return LoadURI(NS_ConvertASCIItoUCS2(host).get(), LOAD_FLAGS_NONE);
       } // retry
     }
 
@@ -1015,7 +1015,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       }
 
       nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("dnsNotFound").GetUnicode(),
+      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("dnsNotFound").get(),
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
@@ -1047,7 +1047,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       }
 
       nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("connectionFailure").GetUnicode(),
+      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("connectionFailure").get(),
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
@@ -1079,7 +1079,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       }
 
       nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("netTimeout").GetUnicode(),
+      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("netTimeout").get(),
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
@@ -1104,7 +1104,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
  
       if (stringBundle && prompter) {
         nsXPIDLString messageStr;
-        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repost").GetUnicode(), 
+        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repost").get(), 
                                                       getter_Copies(messageStr));
           
         if (NS_SUCCEEDED(rv) && messageStr) {

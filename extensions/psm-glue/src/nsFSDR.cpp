@@ -126,7 +126,7 @@ Wallet_Localize(char* genericString) {
 
   /* localize the given string */
   nsAutoString   strtmp; strtmp.AssignWithConversion(genericString);
-  const PRUnichar *ptrtmp = strtmp.GetUnicode();
+  const PRUnichar *ptrtmp = strtmp.get();
   PRUnichar *ptrv = nsnull;
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
   NS_RELEASE(bundle);
@@ -157,7 +157,7 @@ Wallet_Confirm(PRUnichar * szMessage)
 
   const nsAutoString message(szMessage);
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->Confirm(nsnull, message.GetUnicode(), &retval);
+  res = dialog->Confirm(nsnull, message.get(), &retval);
   return retval;
 }
 

@@ -535,10 +535,10 @@ void nsImportGenericAddressBooks::SetLogs( nsString& success, nsString& error, n
 			nsCRT::free( pStr);
 			pStr = nsnull;
 			str.Append( success);
-			pSuccess->SetData( str.GetUnicode());
+			pSuccess->SetData( str.get());
 		}
 		else {
-			pSuccess->SetData( success.GetUnicode());			
+			pSuccess->SetData( success.get());			
 		}
 	}
 	if (pError) {
@@ -547,10 +547,10 @@ void nsImportGenericAddressBooks::SetLogs( nsString& success, nsString& error, n
 			str = pStr;
 			nsCRT::free( pStr);
 			str.Append( error);
-			pError->SetData( str.GetUnicode());
+			pError->SetData( str.get());
 		}
 		else {
-			pError->SetData( error.GetUnicode());			
+			pError->SetData( error.get());			
 		}
 	}	
 }
@@ -832,7 +832,7 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 				char *fileName = (*dbPath).GetLeafName();
 				PRInt32 descLength = PL_strlen(fileName);
 				NS_ConvertUTF8toUCS2 temp((const char *)fileName, descLength);
-				prefValues[1] = nsCRT::strdup(temp.GetUnicode());
+				prefValues[1] = nsCRT::strdup(temp.get());
 
 				parentDir->CreateNewDirectory((unsigned int )prefCount, (const char** )prefNames, (const PRUnichar** )prefValues);
 

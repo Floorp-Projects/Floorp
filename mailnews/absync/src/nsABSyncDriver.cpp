@@ -62,7 +62,7 @@ nsAbSyncDriver::OnStartAuthOperation(void)
     mStatus->StartMeteors();
     mStatus->ShowProgress(0);
 
-    outValue = GetString(NS_ConvertASCIItoUCS2("syncStartingAuth").GetUnicode());
+    outValue = GetString(NS_ConvertASCIItoUCS2("syncStartingAuth").get());
     
     mStatus->ShowStatusString(outValue);
     PR_FREEIF(outValue);
@@ -90,9 +90,9 @@ nsAbSyncDriver::OnStopAuthOperation(nsresult aStatus, const PRUnichar *aMsg, con
     PRUnichar   *outValue = nsnull;
 
     if (NS_SUCCEEDED(aStatus))
-      outValue = GetString(NS_ConvertASCIItoUCS2("syncAuthSuccess").GetUnicode());
+      outValue = GetString(NS_ConvertASCIItoUCS2("syncAuthSuccess").get());
     else
-      outValue = GetString(NS_ConvertASCIItoUCS2("syncAuthFailed").GetUnicode());
+      outValue = GetString(NS_ConvertASCIItoUCS2("syncAuthFailed").get());
     
     mStatus->ShowStatusString(outValue);
     PR_FREEIF(outValue);
@@ -113,7 +113,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnStartOperation(PRInt32 aTransactionID, PRUint32 
     mStatus->StartMeteors();
     mStatus->ShowProgress(50);
 
-    outValue = GetString(NS_ConvertASCIItoUCS2("syncStarting").GetUnicode());
+    outValue = GetString(NS_ConvertASCIItoUCS2("syncStarting").get());
     msgValue = nsTextFormatter::smprintf(outValue, aMsgSize);
 
     mStatus->ShowStatusString(msgValue);
@@ -133,7 +133,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnProgress(PRInt32 aTransactionID, PRUint32 aProgr
     PRUnichar   *outValue = nsnull;
     PRUnichar   *msgValue = nsnull;
 
-    outValue = GetString(NS_ConvertASCIItoUCS2("syncProgress").GetUnicode());
+    outValue = GetString(NS_ConvertASCIItoUCS2("syncProgress").get());
     msgValue = nsTextFormatter::smprintf(outValue, aProgress);
 
     mStatus->ShowStatusString(msgValue);
@@ -162,13 +162,13 @@ NS_IMETHODIMP nsAbSyncDriver::OnStopOperation(PRInt32 aTransactionID, nsresult a
     mStatus->CloseWindow();
 
     if (NS_SUCCEEDED(aStatus))
-      outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneSuccess").GetUnicode());
+      outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneSuccess").get());
     else
     {
       if (mCancelled)
-        outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneCancelled").GetUnicode());
+        outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneCancelled").get());
       else
-        outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneFailed").GetUnicode());
+        outValue = GetString(NS_ConvertASCIItoUCS2("syncDoneFailed").get());
     }
     
     mStatus->ShowStatusString(outValue);
@@ -203,7 +203,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus, nsIDOMWindow
     if (mStatus)
     {
       PRUnichar   *msgValue = nsnull;
-      msgValue = GetString(NS_ConvertASCIItoUCS2("syncStartingAuth").GetUnicode());
+      msgValue = GetString(NS_ConvertASCIItoUCS2("syncStartingAuth").get());
       mStatus->ShowStatusString(msgValue);
       PR_FREEIF(msgValue);
     }

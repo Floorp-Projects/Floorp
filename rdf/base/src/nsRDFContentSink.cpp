@@ -735,7 +735,7 @@ RDFContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
                 }
             }
         }
-        memcpy(&mText[mTextLength], text.GetUnicode() + offset,
+        memcpy(&mText[mTextLength], text.get() + offset,
                sizeof(PRUnichar) * amount);
         mTextLength += amount;
         offset += amount;
@@ -849,7 +849,7 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
                 value.Trim(" \t\n\r");
 
                 nsIRDFLiteral* literal;
-                if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(value.GetUnicode(), &literal))) {
+                if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(value.get(), &literal))) {
                     nsCOMPtr<nsIRDFContainer> container;
                     NS_NewRDFContainer(getter_AddRefs(container));
                     container->Init(mDataSource, GetContextElement(1));
@@ -864,7 +864,7 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
                 value.Trim(" \t\n\r");
 
                 nsCOMPtr<nsIRDFLiteral> target;
-                rv = gRDFService->GetLiteral(value.GetUnicode(), getter_AddRefs(target));
+                rv = gRDFService->GetLiteral(value.get(), getter_AddRefs(target));
                 if (NS_FAILED(rv)) return rv;
 
                 rv = mDataSource->Assert(GetContextElement(1), GetContextElement(0), target, PR_TRUE);
@@ -1021,7 +1021,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
 
             rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(docURI), uri);
 
-            return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
+            return gRDFService->GetUnicodeResource(uri.get(), aResource);
         }
         else if (attr.get() == kIdAtom) {
             if (aIsAnonymous)
@@ -1042,7 +1042,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             
             rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(docURI), name);
 
-            return gRDFService->GetUnicodeResource(name.GetUnicode(), aResource);
+            return gRDFService->GetUnicodeResource(name.get(), aResource);
         }
         else if (attr.get() == kAboutEachAtom) {
             // XXX we don't deal with aboutEach...
@@ -1099,7 +1099,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
             rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(documentURL), uri);
             nsCRT::free(documentURL);
 
-            return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
+            return gRDFService->GetUnicodeResource(uri.get(), aResource);
         }
     }
     return NS_ERROR_FAILURE;
@@ -1154,7 +1154,7 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
         gRDFService->GetResource(propertyStr, getter_AddRefs(property));
 
         nsCOMPtr<nsIRDFLiteral> target;
-        gRDFService->GetLiteral(v.GetUnicode(), getter_AddRefs(target));
+        gRDFService->GetLiteral(v.get(), getter_AddRefs(target));
 
         mDataSource->Assert(aSubject, property, target, PR_TRUE);
 

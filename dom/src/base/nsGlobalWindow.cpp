@@ -1608,7 +1608,7 @@ GlobalWindowImpl::Alert(const nsAReadableString& aString)
   // pending reflows.
   EnsureReflowFlushAndPaint(mDocShell);
 
-  return prompter->Alert(nsnull, str.GetUnicode());
+  return prompter->Alert(nsnull, str.get());
 }
 
 NS_IMETHODIMP
@@ -1631,7 +1631,7 @@ GlobalWindowImpl::Confirm(const nsAReadableString& aString, PRBool* aReturn)
   // pending reflows.
   EnsureReflowFlushAndPaint(mDocShell);
 
-  return prompter->Confirm(nsnull, str.GetUnicode(), aReturn);
+  return prompter->Confirm(nsnull, str.get(), aReturn);
 }
 
 NS_IMETHODIMP
@@ -1847,7 +1847,7 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
     homeURL = url;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(webNav->LoadURI(homeURL.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(webNav->LoadURI(homeURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
   return NS_OK;
 }
 
@@ -3075,7 +3075,7 @@ GlobalWindowImpl::OpenInternal(const nsAReadableString& aUrl,
     if (unescapedURL.IsASCII())
       escapedURL = unescapedURL;
     else {
-      // const PRUnichar *pt = unescapedURL.GetUnicode();
+      // const PRUnichar *pt = unescapedURL.get();
       PRUint32 len = unescapedURL.Length();
       PRUint32 nonAsciiPos = 0;
 

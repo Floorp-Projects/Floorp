@@ -114,7 +114,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   if (!JS_LookupUCProperty(cx, obj,
                            NS_REINTERPRET_CAST(const jschar *,
-                                               eventString.GetUnicode()),
+                                               eventString.get()),
                            eventString.Length(), &funval)) {
     return NS_ERROR_FAILURE;
   }

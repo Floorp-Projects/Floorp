@@ -2739,7 +2739,7 @@ nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_t
     {
         nsAutoString nameStr;
         nameStr.AssignWithConversion(name);
-        ret = CreateCollationKey(nameStr.GetUnicode(), result, len);
+        ret = CreateCollationKey(nameStr.get(), result, len);
     }
 
     return ret;

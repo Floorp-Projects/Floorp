@@ -452,7 +452,7 @@ nsHTTPIndexParser::OnFTPControlLog(PRBool server, const char *msg)
 
     nsString unicodeMsg;
     unicodeMsg.AssignWithConversion(msg);
-    JSString* jsMsgStr = JS_NewUCStringCopyZ(jscontext, (jschar*) unicodeMsg.GetUnicode());
+    JSString* jsMsgStr = JS_NewUCStringCopyZ(jscontext, (jschar*) unicodeMsg.get());
 
     params[0] = BOOLEAN_TO_JSVAL(server);
     params[1] = STRING_TO_JSVAL(jsMsgStr);
@@ -544,7 +544,7 @@ nsHTTPIndexParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     uriUnicode.AssignWithConversion(entryuriC);
 
     nsCOMPtr<nsIRDFLiteral> URLVal;
-    rv = gRDF->GetLiteral(uriUnicode.GetUnicode(), getter_AddRefs(URLVal));
+    rv = gRDF->GetLiteral(uriUnicode.get(), getter_AddRefs(URLVal));
 
     mDataSource->Assert(entry, kHTTPIndex_URL, URLVal, PR_TRUE);
     mDirectory = do_QueryInterface(entry);
@@ -595,7 +595,7 @@ nsHTTPIndexParser::OnStopRequest(nsIRequest *request,
   nsresult rv;
 
   nsCOMPtr<nsIRDFLiteral> comment;
-  rv = gRDF->GetLiteral(mComment.GetUnicode(), getter_AddRefs(comment));
+  rv = gRDF->GetLiteral(mComment.get(), getter_AddRefs(comment));
   if (NS_FAILED(rv)) return rv;
 
   rv = mDataSource->Assert(mDirectory, kHTTPIndex_Comment, comment, PR_TRUE);
@@ -964,7 +964,7 @@ nsHTTPIndexParser::ParseData(nsString* values, const char *encodingStr,
     else
       url.AssignWithConversion(entryuriC);
 
-    rv = gRDF->GetLiteral(url.GetUnicode(), getter_AddRefs(URLVal));
+    rv = gRDF->GetLiteral(url.get(), getter_AddRefs(URLVal));
 
     if (NS_SUCCEEDED(rv)) {
       mDataSource->Assert(entry, kHTTPIndex_URL, URLVal, PR_TRUE);
@@ -1030,14 +1030,14 @@ nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsI
             {
                 nsAutoString  temp(aValue);
                 temp.SetLength(len - 1);
-                rv = gRDF->GetLiteral(temp.GetUnicode(), getter_AddRefs(result));
+                rv = gRDF->GetLiteral(temp.get(), getter_AddRefs(result));
             }
         }
     }
 
     if (!result)
     {
-        rv = gRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
+        rv = gRDF->GetLiteral(aValue.get(), getter_AddRefs(result));
     }
     if (NS_FAILED(rv)) return rv;
 

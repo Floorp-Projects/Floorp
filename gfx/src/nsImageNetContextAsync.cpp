@@ -280,8 +280,8 @@ ImageConsumer::DoContent(const char * aContentType,
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString astrix; astrix.AssignWithConversion("*/*");
-    return convServ->AsyncConvertData(contentType.GetUnicode(),
-                                   astrix.GetUnicode(),
+    return convServ->AsyncConvertData(contentType.get(),
+                                   astrix.get(),
                                    NS_STATIC_CAST(nsIStreamListener*, this),
                                    nsnull /*a context?*/, aContentHandler);
   }

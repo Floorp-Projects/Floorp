@@ -116,7 +116,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
   if (NS_SUCCEEDED(rv)) {
     nsXPIDLString lc_name;
     nsAutoString tmpstr; tmpstr.AssignWithConversion("global-region");
-    rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), getter_Copies(lc_name));
+    rv = chromeRegistry->GetSelectedLocale(tmpstr.get(), getter_Copies(lc_name));
     if (NS_SUCCEEDED(rv)) {
       nsAutoString localeStr(lc_name);
       if (!localeStr.IsEmpty()) {

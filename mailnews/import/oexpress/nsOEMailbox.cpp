@@ -103,7 +103,7 @@ PRBool CImportMailbox::ImportMailbox( PRUint32 *pDone, PRBool *pAbort, nsString&
 	idxFile->FromFileSpec( inFile);
 	if (GetIndexFile( idxFile)) {
 		
-		IMPORT_LOG1( "Using index file for: %S\n", name.GetUnicode());
+		IMPORT_LOG1( "Using index file for: %S\n", name.get());
 				
 		CIndexScanner *pIdxScanner = new CIndexScanner( name, idxFile, inFile, outFile);
 		if (pIdxScanner->Initialize()) {

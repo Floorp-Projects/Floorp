@@ -4128,7 +4128,7 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
   nsAutoString path(NS_LITERAL_STRING("software/mozilla/XPCOM/classID/") + NS_ConvertASCIItoUCS2(aCID));
 
   nsRegistryKey cidKey;
-  rv = aRegistry->GetKey(nsIRegistry::Common, path.GetUnicode(), &cidKey);
+  rv = aRegistry->GetKey(nsIRegistry::Common, path.get(), &cidKey);
 
   if (NS_SUCCEEDED(rv)) {
     PRUint8* library;

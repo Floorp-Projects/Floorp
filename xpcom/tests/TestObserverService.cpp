@@ -101,32 +101,32 @@ int main(int argc, char *argv[])
         bObserver->AddRef();
             
         cout << "Adding Observer-A as observer of topic-A..." << endl;
-        rv = anObserverService->AddObserver(aObserver, topicA.GetUnicode());
+        rv = anObserverService->AddObserver(aObserver, topicA.get());
         testResult(rv);
  
         cout << "Adding Observer-B as observer of topic-A..." << endl;
-        rv = anObserverService->AddObserver(bObserver, topicA.GetUnicode());
+        rv = anObserverService->AddObserver(bObserver, topicA.get());
         testResult(rv);
  
         cout << "Adding Observer-B as observer of topic-B..." << endl;
-        rv = anObserverService->AddObserver(bObserver, topicB.GetUnicode());
+        rv = anObserverService->AddObserver(bObserver, topicB.get());
         testResult(rv);
 
         cout << "Testing Notify(observer-A, topic-A)..." << endl;
         rv = anObserverService->Notify( aObserver,
-                                   topicA.GetUnicode(),
-                                   NS_ConvertASCIItoUCS2("Testing Notify(observer-A, topic-A)").GetUnicode() );
+                                   topicA.get(),
+                                   NS_ConvertASCIItoUCS2("Testing Notify(observer-A, topic-A)").get() );
         testResult(rv);
 
         cout << "Testing Notify(observer-B, topic-B)..." << endl;
         rv = anObserverService->Notify( bObserver,
-                                   topicB.GetUnicode(),
-                                   NS_ConvertASCIItoUCS2("Testing Notify(observer-B, topic-B)").GetUnicode() );
+                                   topicB.get(),
+                                   NS_ConvertASCIItoUCS2("Testing Notify(observer-B, topic-B)").get() );
         testResult(rv);
  
         cout << "Testing EnumerateObserverList (for topic-A)..." << endl;
         nsIEnumerator* e;
-        rv = anObserverService->EnumerateObserverList(topicA.GetUnicode(), &e);
+        rv = anObserverService->EnumerateObserverList(topicA.get(), &e);
         testResult(rv);
 
         cout << "Enumerating observers of topic-A..." << endl;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
                   rv = inst->QueryInterface(NS_GET_IID(nsIObserver),(void**)&anObserver);
                   cout << "Calling observe on enumerated observer "
                         << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, inst))->mName << "..." << endl;
-                  rv = anObserver->Observe( inst, topicA.GetUnicode(), NS_ConvertASCIItoUCS2("during enumeration").GetUnicode() );
+                  rv = anObserver->Observe( inst, topicA.get(), NS_ConvertASCIItoUCS2("during enumeration").get() );
                   testResult(rv);
                 }
             }
@@ -147,15 +147,15 @@ int main(int argc, char *argv[])
         cout << "...done enumerating observers of topic-A" << endl;
 
         cout << "Removing Observer-A..." << endl;
-        rv = anObserverService->RemoveObserver(aObserver, topicA.GetUnicode());
+        rv = anObserverService->RemoveObserver(aObserver, topicA.get());
         testResult(rv);
 
 
         cout << "Removing Observer-B (topic-A)..." << endl;
-        rv = anObserverService->RemoveObserver(bObserver, topicB.GetUnicode());
+        rv = anObserverService->RemoveObserver(bObserver, topicB.get());
         testResult(rv);
         cout << "Removing Observer-B (topic-B)..." << endl;
-        rv = anObserverService->RemoveObserver(bObserver, topicA.GetUnicode());
+        rv = anObserverService->RemoveObserver(bObserver, topicA.get());
         testResult(rv);
        
     }

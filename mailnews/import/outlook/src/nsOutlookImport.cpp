@@ -252,7 +252,7 @@ NS_IMETHODIMP nsOutlookImport::GetImportInterface( const char *pImportType, nsIS
 					pGeneric->SetData( "mailInterface", pMail);
 					nsString name;
 					nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_NAME, name);
-					pGeneric->SetData( "name", (nsISupports *) name.GetUnicode());
+					pGeneric->SetData( "name", (nsISupports *) name.get());
 					rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
 				}
 			}
@@ -388,7 +388,7 @@ void ImportOutlookMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsStri
 	// load the success string
 	nsIStringBundle *pBundle = nsOutlookStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_MAILBOX_SUCCESS, pBundle);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode(), count);
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get(), count);
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOutlookStringBundle::FreeString( pFmt);
@@ -403,7 +403,7 @@ void ImportOutlookMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsStr
 	// load the error string
 	nsIStringBundle *pBundle = nsOutlookStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsOutlookStringBundle::GetStringByID( errorNum);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOutlookStringBundle::FreeString( pFmt);
@@ -465,7 +465,7 @@ NS_IMETHODIMP ImportOutlookMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *
 
 	m_bytesDone = 0;
 
-	rv = m_mail.ImportMailbox( &m_bytesDone, &abort, (PRInt32)index, name.GetUnicode(), pDestination, &msgCount);
+	rv = m_mail.ImportMailbox( &m_bytesDone, &abort, (PRInt32)index, name.get(), pDestination, &msgCount);
     
 	if (NS_SUCCEEDED( rv)) {
 		ReportSuccess( name, msgCount, &success);
@@ -595,7 +595,7 @@ NS_IMETHODIMP ImportOutlookAddressImpl::ImportAddressBook(	nsIImportABDescriptor
 	    
     nsresult rv = NS_OK;
 	
-	rv = m_address.ImportAddresses( &m_msgCount, &m_msgTotal, name.GetUnicode(), id, destination, error);
+	rv = m_address.ImportAddresses( &m_msgCount, &m_msgTotal, name.get(), id, destination, error);
     
 	if (NS_SUCCEEDED( rv) && error.IsEmpty()) {
 		ReportSuccess( name, &success);
@@ -642,7 +642,7 @@ void ImportOutlookAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 	// load the success string
 	nsIStringBundle *pBundle = nsOutlookStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_ADDRESS_SUCCESS, pBundle);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOutlookStringBundle::FreeString( pFmt);

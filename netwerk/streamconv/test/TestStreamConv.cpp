@@ -229,7 +229,7 @@ main(int argc, char* argv[])
     // unconverted data of fromType, and the final listener in the chain (in this case
     // the dataReceiver.
     nsIStreamListener *converterListener = nsnull;
-    rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(), 
+    rv = StreamConvService->AsyncConvertData(fromStr.get(), toStr.get(), 
                                              dataReceiver, nsnull, &converterListener);
     if (NS_FAILED(rv)) return rv;
     NS_RELEASE(dataReceiver);
@@ -258,7 +258,7 @@ main(int argc, char* argv[])
 #else
     // SYNCRONOUS conversion
     nsCOMPtr<nsIInputStream> convertedData;
-    rv = StreamConvService->Convert(inputData, fromStr.GetUnicode(), toStr.GetUnicode(), 
+    rv = StreamConvService->Convert(inputData, fromStr.get(), toStr.get(), 
                                     nsnull, getter_AddRefs(convertedData));
     if (NS_FAILED(rv)) return rv;
 #endif

@@ -302,7 +302,7 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
                     // us to uniquely identify the object later if we need to
                     //
 					CStrToUnicode( lpsz, uniStr);
-					keepGoing = pIter->EnumUser( uniStr.GetUnicode(), lpEID, cbEID);
+					keepGoing = pIter->EnumUser( uniStr.get(), lpEID, cbEID);
 					curCount++;
 					if (pDone) {
 						*pDone = (curCount * 100) / rowCount;
@@ -354,7 +354,7 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
                     // us to uniquely identify the object later if we need to
                     //
 					CStrToUnicode( lpsz, uniStr);
-					keepGoing = pIter->EnumList( uniStr.GetUnicode(), lpEID, cbEID);
+					keepGoing = pIter->EnumList( uniStr.get(), lpEID, cbEID);
 					curCount++;
 					if (pDone) {
 						*pDone = (curCount * 100) / rowCount;

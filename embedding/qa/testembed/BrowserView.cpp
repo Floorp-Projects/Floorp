@@ -691,7 +691,7 @@ void CBrowserView::OnFileSaveAs()
 void CBrowserView::OpenURL(const char* pUrl)
 {
     if(mWebNav)
-        mWebNav->LoadURI(NS_ConvertASCIItoUCS2(pUrl).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+        mWebNav->LoadURI(NS_ConvertASCIItoUCS2(pUrl).get(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 void CBrowserView::OpenURL(const PRUnichar* pUrl)
@@ -763,13 +763,13 @@ void CBrowserView::OnCopyLinkLocation()
 void CBrowserView::OnOpenLinkInNewWindow()
 {
 	if(mCtxMenuLinkUrl.Length())
-		OpenURLInNewWindow(mCtxMenuLinkUrl.GetUnicode());
+		OpenURLInNewWindow(mCtxMenuLinkUrl.get());
 }
 
 void CBrowserView::OnViewImageInNewWindow()
 {
 	if(mCtxMenuImgSrc.Length())
-		OpenURLInNewWindow(mCtxMenuImgSrc.GetUnicode());
+		OpenURLInNewWindow(mCtxMenuImgSrc.get());
 }
 
 void CBrowserView::OnSaveLinkAs()
@@ -928,7 +928,7 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 	{
 		nsString searchString;
 		searchString.AssignWithConversion(dlg->GetFindString().GetBuffer(0));
-		finder->SetSearchString(searchString.GetUnicode());
+		finder->SetSearchString(searchString.get());
 	
 		finder->SetMatchCase(dlg->MatchCase() ? PR_TRUE : PR_FALSE);
 		finder->SetEntireWord(dlg->MatchWholeWord() ? PR_TRUE : PR_FALSE);

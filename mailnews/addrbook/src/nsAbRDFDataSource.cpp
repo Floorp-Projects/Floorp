@@ -64,7 +64,7 @@ nsresult nsAbRDFDataSource::createNode(nsString& str, nsIRDFNode **node)
   NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
   NS_ENSURE_SUCCESS(rv, rv); // always check this before proceeding 
 	nsCOMPtr<nsIRDFLiteral> value;
-	rv = rdf->GetLiteral(str.GetUnicode(), getter_AddRefs(value));
+	rv = rdf->GetLiteral(str.get(), getter_AddRefs(value));
 	if (NS_SUCCEEDED(rv)) 
 	{
 		*node = value;

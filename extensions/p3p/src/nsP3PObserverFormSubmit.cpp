@@ -94,7 +94,7 @@ nsP3PObserverFormSubmit::~nsP3PObserverFormSubmit( ) {
 
   if (mObserverService) {
     mObserverService->RemoveObserver( this,
-                                      mObserverTopic.GetUnicode( ) );
+                                      mObserverTopic.get() );
   }
 }
 
@@ -124,7 +124,7 @@ nsP3PObserverFormSubmit::Init( ) {
   if (NS_SUCCEEDED( rv )) {
     // Register to observe form submissions
     rv = mObserverService->AddObserver( this,
-                                        mObserverTopic.GetUnicode( ) );
+                                        mObserverTopic.get() );
 
     if (NS_FAILED( rv )) {
 #ifdef DEBUG_P3P

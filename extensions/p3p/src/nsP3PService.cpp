@@ -1663,7 +1663,7 @@ nsP3PService::GetLocaleString( nsString&  aKey,
   nsXPIDLString  xsValue;
 
 
-  rv = mStringBundle->GetStringFromName( aKey.GetUnicode( ),
+  rv = mStringBundle->GetStringFromName( aKey.get(),
                                          getter_Copies( xsValue ) );
 
   if (NS_SUCCEEDED( rv )) {

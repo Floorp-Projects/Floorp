@@ -440,7 +440,7 @@ RDFContainerUtilsImpl::MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResour
 	if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIRDFLiteral> nextVal;
-	rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("1").GetUnicode(), getter_AddRefs(nextVal));
+	rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("1").get(), getter_AddRefs(nextVal));
 	if (NS_FAILED(rv)) return rv;
 
 	rv = aDataSource->Assert(aResource, kRDF_nextVal, nextVal, PR_TRUE);

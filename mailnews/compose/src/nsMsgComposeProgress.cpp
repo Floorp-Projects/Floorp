@@ -151,7 +151,7 @@ NS_IMETHODIMP nsMsgComposeProgress::RegisterListener(nsIWebProgressListener * li
       listener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, 0);
     else
     {
-      listener->OnStatusChange(nsnull, nsnull, 0, m_pendingStatus.GetUnicode());
+      listener->OnStatusChange(nsnull, nsnull, 0, m_pendingStatus.get());
       if (m_pendingStateFlags != -1)
         listener->OnStateChange(nsnull, nsnull, m_pendingStateFlags, m_pendingStateValue);
     }

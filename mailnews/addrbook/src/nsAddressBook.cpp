@@ -551,7 +551,7 @@ nsresult AddressBookParser::ParseFile()
 		nsMemory::Free(dirName);
 	}
 	else
-		parentDir->CreateDirectoryByURI(fileString.GetUnicode(), mDbUri, mMigrating);
+		parentDir->CreateDirectoryByURI(fileString.get(), mDbUri, mMigrating);
 			
     // Initialize the parser for a run...
   mLine.Truncate();

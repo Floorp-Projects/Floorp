@@ -220,8 +220,8 @@ nsresult nsEudoraCompose::CreateIdentity( void)
 	rv = accMgr->CreateIdentity( &m_pIdentity);
 	nsString	name; name.AssignWithConversion("Import Identity");
 	if (m_pIdentity) {
-		m_pIdentity->SetFullName( name.GetUnicode());
-		m_pIdentity->SetIdentityName( name.GetUnicode());
+		m_pIdentity->SetFullName( name.get());
+		m_pIdentity->SetIdentityName( name.get());
 		m_pIdentity->SetEmail( "import@import.service");
 	}
 	
@@ -597,13 +597,13 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	nsString	headerVal;
 	GetHeaderValue( m_pHeaders, m_headerLen, "From:", headerVal);
 	if (headerVal.Length())
-		m_pMsgFields->SetFrom( headerVal.GetUnicode());
+		m_pMsgFields->SetFrom( headerVal.get());
 	GetHeaderValue( m_pHeaders, m_headerLen, "To:", headerVal);
 	if (headerVal.Length())
-		m_pMsgFields->SetTo( headerVal.GetUnicode());
+		m_pMsgFields->SetTo( headerVal.get());
 	GetHeaderValue( m_pHeaders, m_headerLen, "Subject:", headerVal);
 	if (headerVal.Length())
-		m_pMsgFields->SetSubject( headerVal.GetUnicode());
+		m_pMsgFields->SetSubject( headerVal.get());
 	GetHeaderValue( m_pHeaders, m_headerLen, "Content-type:", headerVal);
 	bodyType = headerVal;
 	ExtractType( bodyType);
@@ -613,13 +613,13 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 		m_pMsgFields->SetCharacterSet( nsAutoCString(headerVal) );
 	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
 	if (headerVal.Length())
-		m_pMsgFields->SetCc( headerVal.GetUnicode());
+		m_pMsgFields->SetCc( headerVal.get());
 	GetHeaderValue( m_pHeaders, m_headerLen, "Message-ID:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetMessageId( nsAutoCString(headerVal) );
 	GetHeaderValue( m_pHeaders, m_headerLen, "Reply-To:", headerVal);
 	if (headerVal.Length())
-		m_pMsgFields->SetReplyTo( headerVal.GetUnicode());
+		m_pMsgFields->SetReplyTo( headerVal.get());
 
 	// what about all of the other headers?!?!?!?!?!?!
 	char *pMimeType = nsnull;

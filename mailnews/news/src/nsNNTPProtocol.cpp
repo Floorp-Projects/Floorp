@@ -2268,7 +2268,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
             // call nsDocShell::StopLoad(), which will eventually
             // call nsNNTPProtocol::Cancel(), which will close the socket.
             // we need to fix this, since the connection is still valid.
-            rv = m_msgWindow->DisplayHTMLInMessagePane((const PRUnichar *)titleStr, errorHtml.GetUnicode());
+            rv = m_msgWindow->DisplayHTMLInMessagePane((const PRUnichar *)titleStr, errorHtml.get());
             NS_ENSURE_SUCCESS(rv,rv);
         }
 		return MK_NNTP_SERVER_ERROR;
@@ -3237,7 +3237,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                 nsAutoString numGroupsStr;
                 numGroupsStr.AppendInt(mNumGroupsListed);
 
-                const PRUnichar *formatStrings[3] = { numGroupsStr.GetUnicode(), bytesStr.GetUnicode(), rateStr.GetUnicode() };
+                const PRUnichar *formatStrings[3] = { numGroupsStr.get(), bytesStr.get(), rateStr.get() };
                 rv = bundle->FormatStringFromName(NS_LITERAL_STRING("bytesReceived").get(),
                                                   formatStrings, 3,
                                                   getter_Copies(statusString));
@@ -3732,7 +3732,7 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
 		nsAutoString unicodeName; unicodeName.AssignWithConversion(aName);
 
 		PRUnichar *ptrv = nsnull;
-		rv = m_stringBundle->GetStringFromName(unicodeName.GetUnicode(), &ptrv);
+		rv = m_stringBundle->GetStringFromName(unicodeName.get(), &ptrv);
 
 		if (NS_FAILED(rv)) 
 		{
@@ -3927,7 +3927,7 @@ nsNNTPProtocol::SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total)
     nsAutoString thisGroupStr; thisGroupStr.AppendInt(current);
     nsAutoString totalGroupStr; totalGroupStr.AppendInt(total);
 
-    const PRUnichar *formatStrings[] = { thisGroupStr.GetUnicode(),totalGroupStr.GetUnicode() };
+    const PRUnichar *formatStrings[] = { thisGroupStr.get(),totalGroupStr.get() };
 
     rv = bundle->FormatStringFromName(NS_LITERAL_STRING("checkingForNewNews").get(),
                                                   formatStrings, 2,
@@ -5472,7 +5472,7 @@ nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
 		alertText.AppendWithConversion(text);
     }
 
-	rv = dialog->Alert(nsnull, alertText.GetUnicode());
+	rv = dialog->Alert(nsnull, alertText.get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
   

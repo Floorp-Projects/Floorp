@@ -246,7 +246,7 @@ SetOperator(OperatorData*   aOperatorData,
 #endif
   // Loop over the space-delimited list of attributes to get the name:value pairs
   aAttributes.Append(kNullCh);  // put an extra null at the end
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)aAttributes.GetUnicode();
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)aAttributes.get();
   PRUnichar* end   = start;
   while ((kNullCh != *start) && (kDashCh != *start)) {
     name.SetLength(0);

@@ -1070,7 +1070,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
       if (fileExt.IsEmpty())
         fileExt = NS_ConvertASCIItoUCS2(mTempFileExtension).get();
 
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName.GetUnicode(), fileExt.get());
+      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName.get(), fileExt.get());
     }
 
     if (NS_FAILED(rv)) 

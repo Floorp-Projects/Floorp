@@ -3053,37 +3053,37 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	err = GetStringColumn(cardRow, m_FirstNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetFirstName(tempString.GetUnicode());
+        newCard->SetFirstName(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_LastNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetLastName(tempString.GetUnicode());
+        newCard->SetLastName(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_DisplayNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetDisplayName(tempString.GetUnicode());
+        newCard->SetDisplayName(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_NickNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetNickName(tempString.GetUnicode());
+        newCard->SetNickName(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_PriEmailColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetPrimaryEmail(tempString.GetUnicode());
+        newCard->SetPrimaryEmail(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_2ndEmailColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetSecondEmail(tempString.GetUnicode());
+        newCard->SetSecondEmail(tempString.get());
 	}
 
 	PRUint32 format = nsIAbPreferMailFormat::unknown;
@@ -3094,181 +3094,181 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	err = GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWorkPhone(tempString.GetUnicode());
+        newCard->SetWorkPhone(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_HomePhoneColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetHomePhone(tempString.GetUnicode());
+        newCard->SetHomePhone(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_FaxColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetFaxNumber(tempString.GetUnicode());
+        newCard->SetFaxNumber(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_PagerColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetPagerNumber(tempString.GetUnicode());
+        newCard->SetPagerNumber(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_CellularColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetCellularNumber(tempString.GetUnicode());
+        newCard->SetCellularNumber(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeAddressColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetHomeAddress(tempString.GetUnicode());
+        newCard->SetHomeAddress(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeAddress2ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetHomeAddress2(tempString.GetUnicode());
+        newCard->SetHomeAddress2(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeCityColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetHomeCity(tempString.GetUnicode());
+        newCard->SetHomeCity(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeStateColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetHomeState(tempString.GetUnicode());
+        newCard->SetHomeState(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeZipCodeColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetHomeZipCode(tempString.GetUnicode());
+        newCard->SetHomeZipCode(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_HomeCountryColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetHomeCountry(tempString.GetUnicode());
+        newCard->SetHomeCountry(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkAddressColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWorkAddress(tempString.GetUnicode());
+        newCard->SetWorkAddress(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkAddress2ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWorkAddress2(tempString.GetUnicode());
+        newCard->SetWorkAddress2(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkCityColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWorkCity(tempString.GetUnicode());
+        newCard->SetWorkCity(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkStateColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWorkState(tempString.GetUnicode());
+        newCard->SetWorkState(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkZipCodeColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWorkZipCode(tempString.GetUnicode());
+        newCard->SetWorkZipCode(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_WorkCountryColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWorkCountry(tempString.GetUnicode());
+        newCard->SetWorkCountry(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_JobTitleColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetJobTitle(tempString.GetUnicode());
+        newCard->SetJobTitle(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_DepartmentColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetDepartment(tempString.GetUnicode());
+        newCard->SetDepartment(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_CompanyColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetCompany(tempString.GetUnicode());
+        newCard->SetCompany(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_WebPage1ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWebPage1(tempString.GetUnicode());
+        newCard->SetWebPage1(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_WebPage2ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetWebPage2(tempString.GetUnicode());
+        newCard->SetWebPage2(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_BirthYearColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetBirthYear(tempString.GetUnicode());
+        newCard->SetBirthYear(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_BirthMonthColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetBirthMonth(tempString.GetUnicode());
+        newCard->SetBirthMonth(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_BirthDayColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetBirthDay(tempString.GetUnicode());
+        newCard->SetBirthDay(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_Custom1ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetCustom1(tempString.GetUnicode());
+        newCard->SetCustom1(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_Custom2ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetCustom2(tempString.GetUnicode());
+        newCard->SetCustom2(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_Custom3ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetCustom3(tempString.GetUnicode());
+        newCard->SetCustom3(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_Custom4ColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetCustom4(tempString.GetUnicode());
+        newCard->SetCustom4(tempString.get());
 	}
 
 	err = GetStringColumn(cardRow, m_NotesColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newCard->SetNotes(tempString.GetUnicode());
+        newCard->SetNotes(tempString.get());
 	}
 	PRUint32 key = 0;
 	err = GetIntColumn(cardRow, m_RecordKeyColumnToken, &key, 0);
@@ -3293,18 +3293,18 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listR
 	err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        listCard->SetDisplayName(tempString.GetUnicode());
-        listCard->SetLastName(tempString.GetUnicode());
+        listCard->SetDisplayName(tempString.get());
+        listCard->SetLastName(tempString.get());
 	}
 	err = GetStringColumn(listRow, m_ListNickNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        listCard->SetNickName(tempString.GetUnicode());
+        listCard->SetNickName(tempString.get());
 	}
 	err = GetStringColumn(listRow, m_ListDescriptionColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        listCard->SetNotes(tempString.GetUnicode());
+        listCard->SetNotes(tempString.get());
 	}
 	PRUint32 key = 0;
 	err = GetIntColumn(listRow, m_RecordKeyColumnToken, &key, 0);
@@ -3328,17 +3328,17 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
 	err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newList->SetListName(tempString.GetUnicode());
+        newList->SetListName(tempString.get());
 	}
 	err = GetStringColumn(listRow, m_ListNickNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newList->SetListNickName(tempString.GetUnicode());
+        newList->SetListNickName(tempString.get());
 	}
 	err = GetStringColumn(listRow, m_ListDescriptionColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
-        newList->SetDescription(tempString.GetUnicode());
+        newList->SetDescription(tempString.get());
 	}
 
 	PRUint32 totalAddress = GetListAddressTotal(listRow);

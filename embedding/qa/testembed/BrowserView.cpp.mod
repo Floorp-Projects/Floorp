@@ -694,7 +694,7 @@ void CBrowserView::OnFileSaveAs()
 void CBrowserView::OpenURL(const char* pUrl)
 {
     if(mWebNav)
-        mWebNav->LoadURI(NS_ConvertASCIItoUCS2(pUrl).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+        mWebNav->LoadURI(NS_ConvertASCIItoUCS2(pUrl).get(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 void CBrowserView::OpenURL(const PRUnichar* pUrl)
@@ -766,13 +766,13 @@ void CBrowserView::OnCopyLinkLocation()
 void CBrowserView::OnOpenLinkInNewWindow()
 {
 	if(mCtxMenuLinkUrl.Length())
-		OpenURLInNewWindow(mCtxMenuLinkUrl.GetUnicode());
+		OpenURLInNewWindow(mCtxMenuLinkUrl.get());
 }
 
 void CBrowserView::OnViewImageInNewWindow()
 {
 	if(mCtxMenuImgSrc.Length())
-		OpenURLInNewWindow(mCtxMenuImgSrc.GetUnicode());
+		OpenURLInNewWindow(mCtxMenuImgSrc.get());
 }
 
 void CBrowserView::OnSaveLinkAs()
@@ -931,7 +931,7 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 	{
 		nsString searchString;
 		searchString.AssignWithConversion(dlg->GetFindString().GetBuffer(0));
-		finder->SetSearchString(searchString.GetUnicode());
+		finder->SetSearchString(searchString.get());
 	
 		finder->SetMatchCase(dlg->MatchCase() ? PR_TRUE : PR_FALSE);
 		finder->SetEntireWord(dlg->MatchWholeWord() ? PR_TRUE : PR_FALSE);
@@ -1049,7 +1049,7 @@ void CBrowserView::OnTestsChangeUrl()
 		AfxMessageBox("Begin Change URL test.");
 		WriteToOutputFile("Begin Change URL test.\r\n");
 		strcpy(theUrl, myDialog.m_urlfield);
-		mWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).GetUnicode(), 
+		mWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						nsIWebNavigation::LOAD_FLAGS_NONE);
 		WriteToOutputFile("\r\nLoadURI() method is called.");
 		WriteToOutputFile("theUrl = ");
@@ -1230,7 +1230,7 @@ void CBrowserView::OnTestsCreateprofile()
 		   WriteToOutputFile("Start Profile switch test.\r\n");
 
 		   AfxMessageBox("Retrieved profile service.");
-           rv = theProfServ->SetCurrentProfile(myDialog.m_SelectedProfile.GetUnicode());
+           rv = theProfServ->SetCurrentProfile(myDialog.m_SelectedProfile.get());
 		   if (NS_SUCCEEDED(rv))
 		      AfxMessageBox("SetCurrentProfile() passed. Profile switched.");
 		   else

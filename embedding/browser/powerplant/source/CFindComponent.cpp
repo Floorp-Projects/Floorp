@@ -529,8 +529,8 @@ CFindComponent::FindInString(const nsString &searchStr, const nsString &patternS
 	if (!wordBreaker)
 	  goodMatch = PR_TRUE;
 	
-	const PRUnichar	*searchBuf = searchStr.GetUnicode();
-	const PRUnichar	*patternBuf = patternStr.GetUnicode();
+	const PRUnichar	*searchBuf = searchStr.get();
+	const PRUnichar	*patternBuf = patternStr.get();
 
 	const PRUnichar	*searchEnd = searchBuf + searchStrLen;
 	const PRUnichar	*patEnd = patternBuf + patternLen;

@@ -80,7 +80,7 @@ nsSmtpDataSource::initGlobalObjects()
     rdf->GetResource(NC_RDF_ISSESSIONDEFAULT, getter_AddRefs(kNC_IsSessionDefaultServer));
 
     nsAutoString trueStr; trueStr.AssignWithConversion("true");
-    rdf->GetLiteral(trueStr.GetUnicode(), getter_AddRefs(kTrueLiteral));
+    rdf->GetLiteral(trueStr.get(), getter_AddRefs(kTrueLiteral));
 
     // now create cached arrays for each type we support
     rv = NS_NewISupportsArray(getter_AddRefs(mServerArcsOut));
@@ -151,7 +151,7 @@ nsSmtpDataSource::GetTarget(nsIRDFResource *aSource,
         unicodeString.AssignWithConversion((const char*)str);
         
         nsCOMPtr<nsIRDFLiteral> literalResult;
-        rv = rdf->GetLiteral(unicodeString.GetUnicode(), getter_AddRefs(literalResult));
+        rv = rdf->GetLiteral(unicodeString.get(), getter_AddRefs(literalResult));
         NS_ENSURE_SUCCESS(rv, rv);
         
         *aResult = literalResult;

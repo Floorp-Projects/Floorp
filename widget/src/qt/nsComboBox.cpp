@@ -209,7 +209,7 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
     if (aPosition >= 0 && aPosition < mNumItems) 
     {
         QString string = ((QComboBox *)mWidget)->text(aPosition);
-        anItem = NS_ConvertASCIItoUCS2(string).GetUnicode();
+        anItem = NS_ConvertASCIItoUCS2(string).get();
 
         PR_LOG(QtWidgetsLM, 
                PR_LOG_DEBUG, 
@@ -240,7 +240,7 @@ NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
            ("nsComboBox::GetSelectedItem: %s is selected\n",
             (const char *) string));
 
-    aItem = NS_ConvertASCIItoUCS2(string).GetUnicode();
+    aItem = NS_ConvertASCIItoUCS2(string).get();
     return NS_OK;
 }
 

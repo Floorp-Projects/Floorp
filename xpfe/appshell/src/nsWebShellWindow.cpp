@@ -323,7 +323,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
     nsCRT::free(tmpStr);
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(webNav->LoadURI(urlString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(webNav->LoadURI(urlString.get(), nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
   }
                      
   return rv;
@@ -1042,7 +1042,7 @@ nsWebShellWindow::GetContentShellById(const nsString& aID, nsIWebShell** aChildS
 
    nsCOMPtr<nsIDocShellTreeItem> content;
 
-   nsXULWindow::GetContentShellById(aID.GetUnicode(), getter_AddRefs(content));
+   nsXULWindow::GetContentShellById(aID.get(), getter_AddRefs(content));
    if(!content)
       return NS_ERROR_FAILURE;
    CallQueryInterface(content, aChildShell);
@@ -1358,7 +1358,7 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebS
   } else {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
     nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(mDocShell));
-    docShellAsNode->FindChildWithName(aWebShellName.GetUnicode(), 
+    docShellAsNode->FindChildWithName(aWebShellName.get(), 
       PR_TRUE, PR_FALSE, nsnull, getter_AddRefs(docShellAsItem));
     childDocShell = do_QueryInterface(docShellAsItem);
     if (!childDocShell)
@@ -1452,7 +1452,7 @@ void nsWebShellWindow::LoadContentAreas() {
           nsUnescape(urlChar);
           contentURL.AssignWithConversion(urlChar);
           nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(contentShell));
-          webNav->LoadURI(contentURL.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+          webNav->LoadURI(contentURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
           delete [] urlChar;
         }
         NS_RELEASE(contentShell);
@@ -1697,7 +1697,7 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
         nsAutoString topic; topic.AssignWithConversion(prefix);
         topic.AppendWithConversion(";");
         topic += aTopic;
-        rv = svc->Notify( (nsIWebShellWindow*)this, topic.GetUnicode(), someData.GetUnicode() );
+        rv = svc->Notify( (nsIWebShellWindow*)this, topic.get(), someData.get() );
         // Release the service.
         nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, svc );
     } else {

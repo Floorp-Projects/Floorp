@@ -180,7 +180,7 @@ nsOnStopRequestEvent::HandleEvent()
     return observer->OnStopRequest(mRequest,
                                    mContext,
                                    mStatus,
-                                   mStatusText.GetUnicode());
+                                   mStatusText.get());
 }
 
 //

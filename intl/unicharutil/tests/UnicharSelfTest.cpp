@@ -394,7 +394,7 @@ static void TestEntityConversion(PRUint32 version)
 
   // convert at once as a string
   PRUnichar *entities;
-  res = entityConv->ConvertToEntities(inString.GetUnicode(), version, &entities);
+  res = entityConv->ConvertToEntities(inString.get(), version, &entities);
   if (NS_SUCCEEDED(res) && NULL != entities) {
     for (i = 0; i < nsCRT::strlen(entities); i++) {
       cout << (char) entities[i];
@@ -436,7 +436,7 @@ static void TestSaveAsCharset()
                                  nsISaveAsCharset::attr_plainTextDefault, 
                                  nsIEntityConverter::entityNone);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
+  res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
   else {cout << outString << "\n"; nsMemory::Free(outString);}
@@ -446,7 +446,7 @@ static void TestSaveAsCharset()
                                  nsISaveAsCharset::attr_plainTextDefault,
                                  nsIEntityConverter::entityNone);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
+  res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
   else {cout << outString << "\n"; nsMemory::Free(outString);}
@@ -461,7 +461,7 @@ static void TestSaveAsCharset()
                                  nsISaveAsCharset::attr_FallbackQuestionMark,
                                  nsIEntityConverter::entityNone);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
+  res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
   else {cout << outString << "\n"; nsMemory::Free(outString);}
@@ -471,7 +471,7 @@ static void TestSaveAsCharset()
                                  nsISaveAsCharset::attr_FallbackEscapeU,
                                  nsIEntityConverter::entityNone);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
+  res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
   else {cout << outString << "\n"; nsMemory::Free(outString);}
@@ -481,7 +481,7 @@ static void TestSaveAsCharset()
                                  nsISaveAsCharset::attr_htmlTextDefault, 
                                  nsIEntityConverter::html40Latin1);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
+  res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
   else {cout << outString << "\n"; nsMemory::Free(outString);}
@@ -492,7 +492,7 @@ static void TestSaveAsCharset()
                                  nsISaveAsCharset::attr_EntityAfterCharsetConv, 
                                  nsIEntityConverter::html40Latin1);
   if (NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
-  res = saveAsCharset->Convert(inString.GetUnicode(), &outString);
+  res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {cout << "\tFailed!! return value != NS_OK\n";}
   if (NULL == outString) {cout << "\tFailed!! output null\n";}
   else {cout << outString << "\n"; nsMemory::Free(outString);}

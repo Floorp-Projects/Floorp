@@ -505,7 +505,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
     {
       // convert it to unicode
       toList.AppendWithConversion(commandString);
-      rv = MailTo(toList.GetUnicode());
+      rv = MailTo(toList.get());
     }
   }
 
@@ -664,7 +664,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow, PRBoo
   {
     rv = OpenXULWindow(navChromeURL, 0,
 		       "chrome,all,dialog=no",
-		       "_blank", newURL.GetUnicode());
+		       "_blank", newURL.get());
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
   }
@@ -838,7 +838,7 @@ NS_METHOD nsGtkMozRemoteHelper::GetLastBrowserWindow (nsIDOMWindow **_retval)
     return rv;
 
   // find the most recently used window
-  rv = windowMediator->GetMostRecentWindow(browserString.GetUnicode(), getter_AddRefs(outerWindow));
+  rv = windowMediator->GetMostRecentWindow(browserString.get(), getter_AddRefs(outerWindow));
   if (NS_FAILED(rv))
     return rv;
   nsCOMPtr<nsIDOMWindow> domwin(do_QueryInterface(outerWindow));

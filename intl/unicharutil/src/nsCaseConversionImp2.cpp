@@ -345,24 +345,24 @@ NS_IMETHODIMP nsCaseConversionImp2::ToUpper
   // Special casing - Turkish dotless I
   if((nsnull != aLocale ) && (PRUnichar('t')==aLocale[0]) && (PRUnichar('r') == aLocale[1]))
   {
-     for(PRUnichar* s=(PRUnichar*)anOut.GetUnicode(); *s ; s++)
+     for(PRUnichar* s=(PRUnichar*)anOut.get(); *s ; s++)
      {
         if(kDot_i == *s)
              *s = kDot_I;
      }
   }
 
-  ToUpper(anOut.GetUnicode(), (PRUnichar*)anOut.GetUnicode(), anOut.Length());
+  ToUpper(anOut.get(), (PRUnichar*)anOut.get(), anOut.Length());
 
   // Special casing - SS
   PRInt32 idx=0;
-  for(PRUnichar* s=(PRUnichar*)anOut.GetUnicode(); *s ; s++,idx++)
+  for(PRUnichar* s=(PRUnichar*)anOut.get(); *s ; s++,idx++)
   {
      if(k_ss == *s) {
         *s = PRUnichar('S') ; 
         anOut.Insert(PRUnichar('S'),idx);
-        // Insert may cause reallocate, so we need to GetUnicode() again
-        s = (PRUnichar*)anOut.GetUnicode() + idx;
+        // Insert may cause reallocate, so we need to get() again
+        s = (PRUnichar*)anOut.get() + idx;
         idx++;
      }
   }
@@ -376,14 +376,14 @@ NS_IMETHODIMP nsCaseConversionImp2::ToLower
   // Special casing - Turkish dotless I
   if((nsnull != aLocale ) && (PRUnichar('t')==aLocale[0]) && (PRUnichar('r') == aLocale[1]))
   {
-     for(PRUnichar* s=(PRUnichar*)anOut.GetUnicode(); *s ; s++)
+     for(PRUnichar* s=(PRUnichar*)anOut.get(); *s ; s++)
      {
         if(kDot_I == *s)
              *s = kDot_I;
      }
   }
 
-  ToLower(anOut.GetUnicode(), (PRUnichar*)anOut.GetUnicode(), anOut.Length());
+  ToLower(anOut.get(), (PRUnichar*)anOut.get(), anOut.Length());
 
   return NS_OK;
 }
@@ -396,25 +396,25 @@ NS_IMETHODIMP nsCaseConversionImp2::ToTitle
   // Special casing - Turkish dotless I
   if((nsnull != aLocale ) && (PRUnichar('t')==aLocale[0]) && (PRUnichar('r') == aLocale[1]))
   {
-     for(PRUnichar* s=(PRUnichar*)anOut.GetUnicode(); *s ; s++)
+     for(PRUnichar* s=(PRUnichar*)anOut.get(); *s ; s++)
      {
         if(kDot_i == *s)
              *s = kDot_I;
      }
   }
 
-  ToTitle(anOut.GetUnicode(), (PRUnichar*)anOut.GetUnicode(), anOut.Length(),
+  ToTitle(anOut.get(), (PRUnichar*)anOut.get(), anOut.Length(),
               aStartInWordBoundary);
 
   // Special casing - SS
   PRInt32 idx=0;
-  for(PRUnichar* s=(PRUnichar*)anOut.GetUnicode(); *s ; s++,idx++)
+  for(PRUnichar* s=(PRUnichar*)anOut.get(); *s ; s++,idx++)
   {
      if(k_ss == *s) {
         *s = PRUnichar('S') ; 
         anOut.Insert(PRUnichar('S'),idx);
-        // Insert may cause reallocate, so we need to GetUnicode() again
-        s = (PRUnichar*)anOut.GetUnicode() + idx;
+        // Insert may cause reallocate, so we need to get() again
+        s = (PRUnichar*)anOut.get() + idx;
         idx++;
      }
   }

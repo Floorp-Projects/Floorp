@@ -380,7 +380,7 @@ nsUNIXCharset::VerifyCharset(nsString &aCharset)
   // check if we recognize the charset string
   //
   nsCOMPtr <nsIAtom> charsetAtom;
-  res = charsetConverterManager->GetCharsetAtom(aCharset.GetUnicode(), 
+  res = charsetConverterManager->GetCharsetAtom(aCharset.get(), 
                                                   getter_AddRefs(charsetAtom));
   if (NS_FAILED(res)) {
     return res;

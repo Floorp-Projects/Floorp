@@ -1038,7 +1038,7 @@ nsP3PPrivacyResult::AddRDFEntry( nsString&        aName,
 
   if (aName.Length( ) > 0) {
     // Create a named resource
-    rv = mRDFService->GetUnicodeResource( aName.GetUnicode( ),
+    rv = mRDFService->GetUnicodeResource( aName.get(),
                                           aResource );
   }
   else {
@@ -1064,7 +1064,7 @@ nsP3PPrivacyResult::AddRDFEntry( nsString&        aName,
 
     if (NS_SUCCEEDED( rv ) && aTitle.Length( )) {
       // Create a literal resource to represent the attribute value
-      rv = mRDFService->GetLiteral( aTitle.GetUnicode( ),
+      rv = mRDFService->GetLiteral( aTitle.get(),
                                     getter_AddRefs( pLiteral ) );
 
       if (NS_SUCCEEDED( rv )) {
@@ -1089,7 +1089,7 @@ nsP3PPrivacyResult::AddRDFEntry( nsString&        aName,
 
     if (NS_SUCCEEDED( rv ) && aValue.Length( )) {
       // Create a literal resource to represent the attribute value
-      rv = mRDFService->GetLiteral( aValue.GetUnicode( ),
+      rv = mRDFService->GetLiteral( aValue.get(),
                                     getter_AddRefs( pLiteral ) );
 
       if (NS_SUCCEEDED( rv )) {

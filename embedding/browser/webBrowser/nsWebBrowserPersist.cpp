@@ -360,8 +360,8 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
             fileSpec,
             PR_TRUE  /* replace existing file */,
             PR_TRUE, /* save as a copy */
-            contentType.GetUnicode(),
-            charType.GetUnicode(),
+            contentType.get(),
+            charType.get(),
             0, 72);
     }
 

@@ -67,7 +67,7 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
       nsAutoString text;
       aElement->GetData(text);
       printf("InsertTextTxn: Offset to insert at = %d. Text of the node to insert into:\n", aOffset);
-      wprintf(text.GetUnicode());
+      wprintf(text.get());
       printf("\n");
 #endif
 

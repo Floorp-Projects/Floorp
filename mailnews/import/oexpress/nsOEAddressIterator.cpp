@@ -276,18 +276,18 @@ PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRo
 					if (!value.IsEmpty()) {
 						if (gMapiFields[i].multiLine == kNoMultiLine) {
 							SanitizeValue( value);
-							pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.GetUnicode());
+							pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
 						}
 						else if (gMapiFields[i].multiLine == kIsMultiLine) {
-							pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.GetUnicode());
+							pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
 						}
 						else {
 							line2.Truncate();
 							SplitString( value, line2);
 							if (!value.IsEmpty())
-								pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.GetUnicode());
+								pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.get());
 							if (!line2.IsEmpty())
-								pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].multiLine, line2.GetUnicode());
+								pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].multiLine, line2.get());
 						}
 					}
 				}

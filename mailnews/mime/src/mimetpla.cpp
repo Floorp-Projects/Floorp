@@ -309,7 +309,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     // Recognize quotes
     PRUint32 oldCiteLevel = text->mCiteLevel;
     PRUint32 logicalLineStart = 0;
-    rv = conv->CiteLevelTXT(lineSourceStr.GetUnicode(),
+    rv = conv->CiteLevelTXT(lineSourceStr.get(),
                             &logicalLineStart, &(text->mCiteLevel));
     if (NS_FAILED(rv))
       return -1;
@@ -377,7 +377,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
       // Convert to HTML
       PRUnichar* citeTagsResultUnichar = nsnull;
-      rv = conv->ScanTXT(citeTagsSource.GetUnicode(), 0 /* no recognition */,
+      rv = conv->ScanTXT(citeTagsSource.get(), 0 /* no recognition */,
                          &citeTagsResultUnichar);
       if (NS_FAILED(rv)) return -1;
 
@@ -417,7 +417,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     if (obj->options->format_out != nsMimeOutput::nsMimeMessageSaveAs ||
         !mailCharset || !nsMsgI18Nstateful_charset(mailCharset))
     {
-      rv = conv->ScanTXT(lineSourceStr.GetUnicode() + logicalLineStart,
+      rv = conv->ScanTXT(lineSourceStr.get() + logicalLineStart,
                          whattodo, &lineResultUnichar);
       if (NS_FAILED(rv)) return -1;
     }
@@ -433,7 +433,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
       if (NS_SUCCEEDED(rv))
       {
         PRUnichar *u;
-        rv = conv->ScanTXT(ustr.GetUnicode() + logicalLineStart, whattodo, &u);
+        rv = conv->ScanTXT(ustr.get() + logicalLineStart, whattodo, &u);
         if (NS_SUCCEEDED(rv))
         {
           ustr.Assign(u);

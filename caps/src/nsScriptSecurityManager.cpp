@@ -1420,7 +1420,7 @@ Localize(char *genericString, nsString &result)
     strtmp.AssignWithConversion(genericString);
 
     PRUnichar *ptrv = nsnull;
-    ret = bundle->GetStringFromName(strtmp.GetUnicode(), &ptrv);
+    ret = bundle->GetStringFromName(strtmp.get(), &ptrv);
     NS_RELEASE(bundle);
     if (NS_FAILED(ret))
         NS_WARNING("cannot get string from name\n");
@@ -1465,7 +1465,7 @@ CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *s
     if (NS_FAILED(res = Localize("Titleline", dialogTitle)))
         return PR_FALSE;
     
-    res = prompter->ConfirmEx(dialogTitle.GetUnicode(), szMessage,
+    res = prompter->ConfirmEx(dialogTitle.get(), szMessage,
                               (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                               (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
                               nsnull, nsnull, nsnull, szCheckMessage, checkValue, &buttonPressed);
@@ -1495,10 +1495,10 @@ nsScriptSecurityManager::RequestCapability(nsIPrincipal* aPrincipal,
         char *source;
         if (NS_FAILED(aPrincipal->ToUserVisibleString(&source)))
             return NS_ERROR_FAILURE;
-        PRUnichar *message = nsTextFormatter::smprintf(query.GetUnicode(), source);
+        PRUnichar *message = nsTextFormatter::smprintf(query.get(), source);
         Recycle(source);
         JSContext *cx = GetCurrentContextQuick();
-        if (CheckConfirmDialog(cx, message, check.GetUnicode(), &remember))
+        if (CheckConfirmDialog(cx, message, check.get(), &remember))
             *canEnable = nsIPrincipal::ENABLE_GRANTED;
         else
             *canEnable = nsIPrincipal::ENABLE_DENIED;

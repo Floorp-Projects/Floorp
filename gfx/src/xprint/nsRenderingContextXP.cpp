@@ -1119,7 +1119,7 @@ nsRenderingContextXp::GetWidth(const nsString& aString, nscoord& aWidth,
                                  PRInt32 *aFontID)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetWidth()\n"));
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+  return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP
@@ -1391,7 +1391,7 @@ NS_IMETHODIMP nsRenderingContextXp::DrawString(const nsString& aString, nscoord 
                                                  const nscoord* aSpacing)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::DrawString()\n"));
-  return DrawString(aString.GetUnicode(), aString.Length(),
+  return DrawString(aString.get(), aString.Length(),
                     aX, aY, aFontID, aSpacing);
 }
 

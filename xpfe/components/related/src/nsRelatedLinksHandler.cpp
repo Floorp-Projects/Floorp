@@ -244,7 +244,7 @@ RelatedLinksStreamListener::OnStartRequest(nsIRequest *request, nsISupports *ctx
 	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
 	 nsIRDFLiteral		*literal = nsnull;
 	 nsresult		rv;
-	 if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
+	 if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.get(), &literal)))
 	 {
 		 mDataSource->Assert(kNC_RelatedLinksRoot, kNC_loading, literal, PR_TRUE);
 		 NS_RELEASE(literal);
@@ -261,7 +261,7 @@ RelatedLinksStreamListener::OnStopRequest(nsIRequest *request, nsISupports *ctxt
 	 nsAutoString		trueStr; trueStr.AssignWithConversion("true");
 	 nsIRDFLiteral		*literal = nsnull;
 	 nsresult		rv;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.get(), &literal)))
 	{
 		mDataSource->Unassert(kNC_RelatedLinksRoot, kNC_loading, literal);
 		NS_RELEASE(literal);
@@ -441,7 +441,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 					{
                         Unescape(title);
 
-						const PRUnichar		*titleName = title.GetUnicode();
+						const PRUnichar		*titleName = title.get();
 						if (nsnull != titleName)
 						{
 							nsCOMPtr<nsIRDFLiteral> nameLiteral;
@@ -482,7 +482,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 #if 0
 			printf("RL: '%s'  -  '%s'\n", title.ToNewCString(), child.ToNewCString());
 #endif
-			const PRUnichar	*url = child.GetUnicode();
+			const PRUnichar	*url = child.get();
 			if (nsnull != url)
 			{
 				nsCOMPtr<nsIRDFResource>	relatedLinksChild;
@@ -494,7 +494,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ct
 					{
                         Unescape(title);
 
-						const PRUnichar	*name = title.GetUnicode();
+						const PRUnichar	*name = title.get();
 						if (nsnull != name)
 						{
 							nsCOMPtr<nsIRDFLiteral>	nameLiteral;

@@ -710,7 +710,7 @@ nsDefaultSOAPEncoder::DeserializeSupportsArray(nsIDOMElement *element,
     if (-1 != offset) {
       nsAutoString arrayType;
       attrVal.Left(arrayType, offset);
-      GetTypeForXSDType(arrayType.GetUnicode(), &type);
+      GetTypeForXSDType(arrayType.get(), &type);
     }
   }
 
@@ -812,7 +812,7 @@ nsDefaultSOAPEncoder::DeserializeParameter(nsIDOMElement *element,
 
       nsSOAPUtils::GetElementTextContent(element, text);
 
-      wstr->SetData(text.GetUnicode());     
+      wstr->SetData(text.get());     
       value = wstr;
       break;
     }
@@ -980,7 +980,7 @@ nsDefaultSOAPEncoder::ElementToParameter(nsIDOMElement *element,
       attrName.AssignWithConversion("type");
       element->GetAttributeNS(attrNS, attrName, attrVal);
       if (attrVal.Length() > 0) {
-        GetTypeForXSDType(attrVal.GetUnicode(), &type);
+        GetTypeForXSDType(attrVal.get(), &type);
       }
       // See if the element name gives us anything
       else {
@@ -991,7 +991,7 @@ nsDefaultSOAPEncoder::ElementToParameter(nsIDOMElement *element,
         // If the element namespace is the soap encoding namespace
         // map it back to a type we know
         if (ns.EqualsWithConversion(nsSOAPUtils::kSOAPEncodingURI)) {
-          GetTypeForElementName(name.GetUnicode(), &type);
+          GetTypeForElementName(name.get(), &type);
           useName = PR_FALSE;
         }
         // If we still don't know, assume that it is a string if 
@@ -1011,7 +1011,7 @@ nsDefaultSOAPEncoder::ElementToParameter(nsIDOMElement *element,
   if (NS_FAILED(rv)) return rv;
 
   if (useName) {
-    parameter->SetName(name.GetUnicode());
+    parameter->SetName(name.get());
   }
 
   *_retval = parameter;

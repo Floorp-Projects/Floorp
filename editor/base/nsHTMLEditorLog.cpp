@@ -914,7 +914,7 @@ nsHTMLEditorLog::Flush()
 nsresult
 nsHTMLEditorLog::PrintUnicode(const nsAReadableString &aString)
 {
-  //const PRUnichar *uc = aString.GetUnicode();
+  //const PRUnichar *uc = aString.get();
   char buf[10];
   nsReadingIterator <PRUnichar> beginIter,endIter;
   aString.BeginReading(beginIter);

@@ -304,7 +304,7 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
   if (rootDocShellAsNode) 
   {
     nsCOMPtr<nsIDocShellTreeItem> childAsItem;
-    nsresult rv = rootDocShellAsNode->FindChildWithName(docShellName.GetUnicode(),
+    nsresult rv = rootDocShellAsNode->FindChildWithName(docShellName.get(),
       PR_TRUE, PR_FALSE, nsnull, getter_AddRefs(childAsItem));
 
     mDocShell = do_QueryInterface(childAsItem);
@@ -344,7 +344,7 @@ nsMessenger::InitializeDisplayCharset()
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
       if (muDV) {
-        muDV->SetForceCharacterSet(aForceCharacterSet.GetUnicode());
+        muDV->SetForceCharacterSet(aForceCharacterSet.get());
       }
 
       mCharsetInitialized = PR_TRUE;
@@ -366,7 +366,7 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
         nsXPIDLString errorMessage;
 
         fileSpec.GetNativePathString(path);
-        const PRUnichar *pathFormatStrings[] = { path.GetUnicode() };
+        const PRUnichar *pathFormatStrings[] = { path.get() };
         NS_NAMED_LITERAL_STRING(fileExistsPropertyTag, "fileExists");
         const PRUnichar *fpropertyTag = fileExistsPropertyTag.get();
         if (!mStringBundle)
@@ -394,7 +394,7 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
             NS_NAMED_LITERAL_STRING(saveAttachmentTag, "Save Attachment");
             const PRUnichar *spropertyTag = saveAttachmentTag.get();
             filePicker->Init(nsnull, spropertyTag, nsIFilePicker::modeSave);
-            filePicker->SetDefaultString(path.GetUnicode());
+            filePicker->SetDefaultString(path.get());
             filePicker->AppendFilters(nsIFilePicker::filterAll);
             filePicker->Show(&dialogReturn);
             if (dialogReturn == nsIFilePicker::returnCancel)
@@ -521,7 +521,7 @@ nsMessenger::OpenURL(const char * url)
         nsAutoString urlStr; urlStr.AssignWithConversion(unescapedUrl);
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
         if(webNav)
-          webNav->LoadURI(urlStr.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+          webNav->LoadURI(urlStr.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
       }
       PL_strfree(unescapedUrl);
     }
@@ -601,7 +601,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
         nsCOMPtr<nsIStreamConverterService> streamConverterService = do_GetService(kIStreamConverterServiceCID, &rv);
         nsCOMPtr<nsISupports> channelSupport = do_QueryInterface(aListener->m_channel);
           
-        rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(APPLICATION_BINHEX).GetUnicode(),
+        rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(APPLICATION_BINHEX).get(),
                                                       NS_LITERAL_STRING("*/*").get(), 
                                                       listener,
                                                       channelSupport,
@@ -681,10 +681,10 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   {
       filePicker->Init(
           nsnull, 
-          GetString(NS_ConvertASCIItoUCS2("Save Attachment").GetUnicode()),
+          GetString(NS_ConvertASCIItoUCS2("Save Attachment").get()),
           nsIFilePicker::modeSave
           );
-      filePicker->SetDefaultString(tempStr.GetUnicode());
+      filePicker->SetDefaultString(tempStr.get());
       filePicker->AppendFilters(nsIFilePicker::filterAll);
   }      
   nsCRT::free(unescapedDisplayName);
@@ -729,7 +729,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
     if (NS_FAILED(rv)) goto done;
     filePicker->Init(
         nsnull, 
-        GetString(NS_ConvertASCIItoUCS2("Save All Attachments").GetUnicode()),
+        GetString(NS_ConvertASCIItoUCS2("Save All Attachments").get()),
         nsIFilePicker::modeGetFolder
         );
     filePicker->Show(&dialogResult);
@@ -811,11 +811,11 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
         if (NS_FAILED(rv)) goto done;
 
-        filePicker->Init(nsnull, GetString(NS_ConvertASCIItoUCS2("SaveMailAs").GetUnicode()), nsIFilePicker::modeSave);
+        filePicker->Init(nsnull, GetString(NS_ConvertASCIItoUCS2("SaveMailAs").get()), nsIFilePicker::modeSave);
 
-        filePicker->SetDefaultString(defaultFile.GetUnicode());
-        filePicker->AppendFilter(GetString(NS_ConvertASCIItoUCS2("EMLFiles").GetUnicode()),
-                                 NS_ConvertASCIItoUCS2("*.eml").GetUnicode());
+        filePicker->SetDefaultString(defaultFile.get());
+        filePicker->AppendFilter(GetString(NS_ConvertASCIItoUCS2("EMLFiles").get()),
+                                 NS_ConvertASCIItoUCS2("*.eml").get());
         filePicker->AppendFilters(nsIFilePicker::filterHTML | nsIFilePicker::filterText | nsIFilePicker::filterAll);
 
         PRInt16 dialogResult;
@@ -912,10 +912,10 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             
             channelSupport = do_QueryInterface(aListener->m_channel);
             
-            rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(MESSAGE_RFC822).GetUnicode(),
+            rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(MESSAGE_RFC822).get(),
             // RICHIE - we should be able to go RFC822 to TXT, but not until
-            // Bug #1775 is fixed. aListener->m_outputFormat.GetUnicode() 
-                                                          NS_ConvertASCIItoUCS2(TEXT_HTML).GetUnicode(), 
+            // Bug #1775 is fixed. aListener->m_outputFormat.get() 
+                                                          NS_ConvertASCIItoUCS2(TEXT_HTML).get(), 
                                                           aListener,
                                                           channelSupport,
                                                           getter_AddRefs(convertedListener));
@@ -984,7 +984,7 @@ nsMessenger::Alert(const char *stringName)
         nsCOMPtr<nsIPrompt> dialog(do_GetInterface(mDocShell));
         
         if (dialog) {
-            rv = dialog->Alert(nsnull, errorMessage.GetUnicode());
+            rv = dialog->Alert(nsnull, errorMessage.get());
         }
     }
     return rv;
@@ -1643,7 +1643,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
     {
       ConvertBufToPlainText(m_msgBuffer);
       rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, (const char *)nsAutoCString(nsMsgI18NFileSystemCharset()), 
-                                  m_msgBuffer.GetUnicode(), &conBuf); 
+                                  m_msgBuffer.get(), &conBuf); 
       if ( NS_SUCCEEDED(rv) && (conBuf) )
         conLength = nsCRT::strlen(conBuf);
     }
@@ -1756,7 +1756,7 @@ nsSaveMsgListener::OnDataAvailable(nsIRequest* request,
           PRUnichar       *u = nsnull; 
           nsAutoString    fmt; fmt.AssignWithConversion("%s");
           
-          u = nsTextFormatter::smprintf(fmt.GetUnicode(), m_dataBuffer); // this converts UTF-8 to UCS-2 
+          u = nsTextFormatter::smprintf(fmt.get(), m_dataBuffer); // this converts UTF-8 to UCS-2 
           if (u)
           {
             PRInt32   newLen = nsCRT::strlen(u);

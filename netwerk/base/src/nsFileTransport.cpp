@@ -829,7 +829,7 @@ nsFileTransport::Process(void)
             fileName.AssignWithConversion(mStreamName);
             mProgressSink->OnStatus(this, saveContext, 
                                     NS_NET_STATUS_READ_FROM, 
-                                    fileName.GetUnicode());
+                                    fileName.get());
         }
 
         break;
@@ -995,7 +995,7 @@ nsFileTransport::Process(void)
             nsAutoString fileName; fileName.AssignWithConversion(mStreamName);
             nsresult rv = mProgressSink->OnStatus(this, mContext,
                                                   NS_NET_STATUS_WROTE_TO, 
-                                              fileName.GetUnicode());
+                                              fileName.get());
             NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStatus failure");
         }
         mContext = 0;

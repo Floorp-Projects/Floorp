@@ -683,7 +683,7 @@ static PRBool
 IsASCIIFontName(const nsString &aName)
 {
   PRUint32 len = aName.Length();
-  const PRUnichar *str = aName.GetUnicode();
+  const PRUnichar *str = aName.get();
   for (PRUint32 i = 0; i < len; i++) {
     /*
      * X font names are printable ASCII, ignore others (for now)
@@ -712,7 +712,7 @@ FontEnumCallback(const nsString &aFamily,PRBool aGeneric,void *aData)
   nsCAutoString name;
   nsFontMetricsQT *metrics = (nsFontMetricsQT*)aData;
 
-  name.AssignWithConversion(aFamily.GetUnicode());
+  name.AssignWithConversion(aFamily.get());
   name.ToLowerCase();
   metrics->mFonts.AppendCString(name);
   metrics->mFontIsGeneric.AppendElement((void*)aGeneric);
@@ -1375,7 +1375,7 @@ nsFontMetricsQT::FamilyExists(const nsString &aName)
   QStringList qCharsets;
 
   nsCAutoString name;
-  name.AssignWithConversion(aName.GetUnicode());
+  name.AssignWithConversion(aName.get());
   qCharsets = qFontDB->charSets(QString((char*)name.get()),FALSE);
   if (!qCharsets.isEmpty()) {
     return NS_OK;  
@@ -1816,7 +1816,7 @@ nsFontQTSubstitute::Convert(const PRUnichar *aSrc,PRUint32 aSrcLen,
   if (gConverter) {
     nsAutoString tmp(aSrc,aSrcLen);
     char *conv = nsnull;
-    res = gConverter->Convert(tmp.GetUnicode(),&conv);
+    res = gConverter->Convert(tmp.get(),&conv);
     if (NS_SUCCEEDED(res) && conv) {
       char *p = conv;
       PRUint32 i;

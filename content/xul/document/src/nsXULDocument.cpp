@@ -2516,7 +2516,7 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
         // Now either 'change' or 'assert' based on whether there was
         // an old value.
         nsCOMPtr<nsIRDFLiteral> newvalue;
-        rv = gRDFService->GetLiteral(valuestr.GetUnicode(), getter_AddRefs(newvalue));
+        rv = gRDFService->GetLiteral(valuestr.get(), getter_AddRefs(newvalue));
         if (NS_FAILED(rv)) return rv;
 
         if (oldvalue) {
@@ -4888,7 +4888,7 @@ nsXULDocument::ResumeWalk()
                     if (NS_FAILED(rv)) return rv;
                     nsXULPrototypeText* textproto =
                         NS_REINTERPRET_CAST(nsXULPrototypeText*, childproto);
-                    rv = text->SetText(textproto->mValue.GetUnicode(),
+                    rv = text->SetText(textproto->mValue.get(),
                                        textproto->mValue.Length(),
                                        PR_FALSE);
 
@@ -5123,7 +5123,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
     if (NS_SUCCEEDED(aStatus)) {
         nsString stringStr; stringStr.AssignWithConversion(string, stringLen);
-        rv = scriptProto->Compile(stringStr.GetUnicode(), stringLen,
+        rv = scriptProto->Compile(stringStr.get(), stringLen,
                                   scriptProto->mSrcURI, 1,
                                   this, mMasterPrototype);
         aStatus = rv;

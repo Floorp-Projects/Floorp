@@ -118,7 +118,7 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
       m_lastPercent = 0;
       StartMeteors();
       nsXPIDLString loadingDocument;
-      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentLoading").GetUnicode(),
+      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentLoading").get(),
                                       getter_Copies(loadingDocument));
       if (NS_SUCCEEDED(rv))
         ShowStatusString(loadingDocument);
@@ -127,7 +127,7 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
     {
       StopMeteors();
       nsXPIDLString documentDone;
-      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentDone").GetUnicode(),
+      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentDone").get(),
                                       getter_Copies(documentDone));
       if (NS_SUCCEEDED(rv))
         ShowStatusString(documentDone);
@@ -236,7 +236,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindowI
      if (piDOMWindow)
      {
         nsAutoString msgStatusFeedbackWinId; msgStatusFeedbackWinId.AssignWithConversion("MsgStatusFeedback");
-        piDOMWindow->GetObjectProperty(msgStatusFeedbackWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+        piDOMWindow->GetObjectProperty(msgStatusFeedbackWinId.get(), getter_AddRefs(xpConnectObj));
         mStatusFeedback = do_QueryInterface(xpConnectObj);
      }
   }
@@ -263,5 +263,5 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnStatus(nsIRequest *request, nsISupports* ct
   rv = sbs->FormatStatusMessage(aStatus, aStatusArg, getter_Copies(str));
   if (NS_FAILED(rv)) return rv;
   nsAutoString msg(NS_STATIC_CAST(const PRUnichar*, str));
-  return ShowStatusString(msg.GetUnicode());
+  return ShowStatusString(msg.get());
 }

@@ -381,9 +381,9 @@ nsP3PUIService::WarningNotPrivate(nsIDOMWindowInternal * aDOMWindowInternal)
       nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
       PRBool outCheckValue = PR_TRUE;
       dialog->AlertCheck( parent,
-                          windowTitle.GetUnicode(),
-                          message.GetUnicode(),
-                          showAgain.GetUnicode(),
+                          windowTitle.get(),
+                          message.get(),
+                          showAgain.get(),
                           &outCheckValue);
 
       if (!outCheckValue) {
@@ -434,9 +434,9 @@ nsP3PUIService::WarningPartialPrivacy(nsIDOMWindowInternal * aDOMWindowInternal)
       PRBool outCheckValue = PR_TRUE;
       nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
       dialog->AlertCheck( parent,
-                          windowTitle.GetUnicode(),
-                          message.GetUnicode(),
-                          showAgain.GetUnicode(),
+                          windowTitle.get(),
+                          message.get(),
+                          showAgain.get(),
                           &outCheckValue);
 
       if (!outCheckValue) {
@@ -473,9 +473,9 @@ nsP3PUIService::WarningPostToNotPrivate(nsIDOMWindowInternal * aDOMWindowInterna
       PRBool outCheckValue = PR_TRUE;
       nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
       dialog->ConfirmCheck( aDOMWindowInternal,
-                            windowTitle.GetUnicode(),
-                            message.GetUnicode(),
-                            showAgain.GetUnicode(),
+                            windowTitle.get(),
+                            message.get(),
+                            showAgain.get(),
                             &outCheckValue,
                             aResult);
 
@@ -513,9 +513,9 @@ nsP3PUIService::WarningPostToBrokenPolicy(nsIDOMWindowInternal * aDOMWindowInter
       PRBool outCheckValue = PR_TRUE;
       nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
       dialog->ConfirmCheck( aDOMWindowInternal,
-                            windowTitle.GetUnicode(),
-                            message.GetUnicode(),
-                            showAgain.GetUnicode(),
+                            windowTitle.get(),
+                            message.get(),
+                            showAgain.get(),
                             &outCheckValue,
                             aResult);
 
@@ -553,9 +553,9 @@ nsP3PUIService::WarningPostToNoPolicy(nsIDOMWindowInternal * aDOMWindowInternal,
       PRBool outCheckValue = PR_TRUE;
       nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
       dialog->ConfirmCheck( parent,
-                            windowTitle.GetUnicode(),
-                            message.GetUnicode(),
-                            showAgain.GetUnicode(),
+                            windowTitle.get(),
+                            message.get(),
+                            showAgain.get(),
                             &outCheckValue,
                             aResult);
 

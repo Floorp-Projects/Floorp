@@ -132,7 +132,7 @@ nsPSMUIHandlerImpl::PromptForFile(const PRUnichar *prompt,
     } else {
         fp->Init(nsnull, prompt, nsIFilePicker::modeSave);
     }
-    fp->AppendFilter(NS_ConvertASCIItoUCS2(fileRegEx).GetUnicode(), NS_ConvertASCIItoUCS2(fileRegEx).GetUnicode());  
+    fp->AppendFilter(NS_ConvertASCIItoUCS2(fileRegEx).get(), NS_ConvertASCIItoUCS2(fileRegEx).get());  
     fp->AppendFilters(nsIFilePicker::filterAll);
     PRInt16 mode;
     nsresult rv = fp->Show(&mode);
@@ -403,7 +403,7 @@ char * PromptUserCallback(void *arg, char *prompt, void* clientContext, int isPa
     }
 
     if (proxyPrompt) {
-      rv = proxyPrompt->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
+      rv = proxyPrompt->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).get(),
                                        &password, nsnull, nsnull, &value);
 
     }
@@ -431,7 +431,7 @@ char * FilePathPromptCallback(void *arg, char *prompt, char *fileRegEx, CMUint32
     NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
     
     if(NS_SUCCEEDED(rv))
-	    handler->PromptForFile(NS_ConvertASCIItoUCS2(prompt).GetUnicode(), fileRegEx, (PRBool)shouldFileExist, &filePath);
+	    handler->PromptForFile(NS_ConvertASCIItoUCS2(prompt).get(), fileRegEx, (PRBool)shouldFileExist, &filePath);
 
     return filePath;
 }

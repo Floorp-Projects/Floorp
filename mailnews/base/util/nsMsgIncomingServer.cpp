@@ -754,7 +754,7 @@ nsMsgIncomingServer::StorePassword()
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString password; password.AssignWithConversion((const char *)pwd);
-    rv = walletservice->SI_StorePassword((const char *)serverUri, nsnull, password.GetUnicode());
+    rv = walletservice->SI_StorePassword((const char *)serverUri, nsnull, password.get());
     return rv;
 }
 

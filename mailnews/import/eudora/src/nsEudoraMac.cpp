@@ -329,7 +329,7 @@ nsresult nsEudoraMac::FoundMailbox( nsIFileSpec *mailFile, const char *pName, ns
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32		sz = 0;
 		mailFile->GetFileSize( &sz);	
-		desc->SetDisplayName( displayName.GetUnicode());
+		desc->SetDisplayName( displayName.get());
 		desc->SetDepth( m_depth);
 		desc->SetSize( sz);
 		nsIFileSpec *pSpec = nsnull;
@@ -371,7 +371,7 @@ nsresult nsEudoraMac::FoundMailFolder( nsIFileSpec *mailFolder, const char *pNam
 	nsresult rv = pImport->CreateNewMailboxDescriptor( getter_AddRefs( desc));
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32		sz = 0;
-		desc->SetDisplayName( displayName.GetUnicode());
+		desc->SetDisplayName( displayName.get());
 		desc->SetDepth( m_depth);
 		desc->SetSize( sz);
 		nsIFileSpec *pSpec = nsnull;
@@ -804,8 +804,8 @@ void nsEudoraMac::SetIdentities(nsIMsgAccountManager *accMgr, nsIMsgAccount *acc
 		if (pStrs[kFullNameStr]->Length()) {
 			fullName.AssignWithConversion(*(pStrs[kFullNameStr]));
 		}
-		id->SetFullName( fullName.GetUnicode());
-		id->SetIdentityName( fullName.GetUnicode());
+		id->SetFullName( fullName.get());
+		id->SetIdentityName( fullName.get());
 		if (pStrs[kReturnAddressStr]->Length()) {
 			id->SetEmail( *(pStrs[kReturnAddressStr]));
 		}
@@ -1112,7 +1112,7 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 		if (NS_SUCCEEDED( rv)) {
 			sz = 0;
 			spec->GetFileSize( &sz);	
-			desc->SetPreferredName( displayName.GetUnicode());
+			desc->SetPreferredName( displayName.get());
 			desc->SetSize( sz);
 			nsIFileSpec *pSpec = nsnull;
 			desc->GetFileSpec( &pSpec);
@@ -1186,7 +1186,7 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 						if (NS_SUCCEEDED( rv)) {
 							sz = 0;
 							spec->GetFileSize( &sz);	
-							desc->SetPreferredName( displayName.GetUnicode());
+							desc->SetPreferredName( displayName.get());
 							desc->SetSize( sz);
 							nsIFileSpec *pSpec = nsnull;
 							desc->GetFileSpec( &pSpec);

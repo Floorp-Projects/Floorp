@@ -234,7 +234,7 @@ nsFindComponent::Context::DoFind(PRBool *aDidFind)
   if (NS_FAILED(rv))
     return rv;
 
-  rv =  mTSFind->Find(mSearchString.GetUnicode(), aDidFind);
+  rv =  mTSFind->Find(mSearchString.get(), aDidFind);
 
   mTSFind->SetTsDoc(nsnull);
 
@@ -273,8 +273,8 @@ nsFindComponent::Context::DoReplace(PRBool aAllOccurrences, PRBool *aDidFind)
   if (NS_FAILED(rv))
     return rv;
 
-  rv =  mTSFind->Replace(mSearchString.GetUnicode(),
-                              mReplaceString.GetUnicode(),
+  rv =  mTSFind->Replace(mSearchString.get(),
+                              mReplaceString.get(),
                               aAllOccurrences, aDidFind);
 
   mTSFind->SetTsDoc(nsnull);

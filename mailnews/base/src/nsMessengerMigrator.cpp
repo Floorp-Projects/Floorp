@@ -351,7 +351,7 @@ nsMessengerMigrator::~nsMessengerMigrator()
     if (NS_SUCCEEDED(rv))
     {
       nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      observerService->RemoveObserver(this, topic.GetUnicode());
+      observerService->RemoveObserver(this, topic.get());
     }
   }     
 }
@@ -364,7 +364,7 @@ nsresult nsMessengerMigrator::Init()
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.GetUnicode());
+    observerService->AddObserver(this, topic.get());
   }    
 
   initializeStrings();
@@ -418,7 +418,7 @@ nsMessengerMigrator::initializeStrings()
   
   // now retrieve strings
   nsXPIDLString localFolders;
-  rv = bundle->GetStringFromName(NS_ConvertASCIItoUCS2("localFolders").GetUnicode(),
+  rv = bundle->GetStringFromName(NS_ConvertASCIItoUCS2("localFolders").get(),
                                  getter_Copies(localFolders));
   NS_ENSURE_SUCCESS(rv, rv);
   // convert to unicode and ASCII
@@ -506,7 +506,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
-  server->SetPrettyName(mLocalFoldersName.GetUnicode());
+  server->SetPrettyName(mLocalFoldersName.get());
 
   nsCOMPtr<nsINoIncomingServer> noServer;
   noServer = do_QueryInterface(server, &rv);
@@ -1087,7 +1087,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
 
   // we don't want "nobody at Local Folders" to show up in the
   // folder pane, so we set the pretty name to "Local Folders"
-  server->SetPrettyName(mLocalFoldersName.GetUnicode());
+  server->SetPrettyName(mLocalFoldersName.get());
   
   // create the directory structure for old 4.x "Local Mail"
   // under <profile dir>/Mail/Local Folders or

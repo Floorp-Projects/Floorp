@@ -129,7 +129,7 @@ static void DebugDump(nsString& aString, ostream& aStream) {
 #ifdef WIN32
   char s[512];
   int len = WideCharToMultiByte(GetACP(), 0,
-                                (LPCWSTR ) aString.GetUnicode(),  aString.Length(),
+                                (LPCWSTR ) aString.get(),  aString.Length(),
                                 s, 512, NULL,  NULL);
   s[len] = '\0';
   aStream.flush();
@@ -144,7 +144,7 @@ static void DebugDump(nsString& aString, ostream& aStream) {
   err = UpgradeScriptInfoToTextEncoding	(smSystemScript/*smCurrentScript*/, kTextLanguageDontCare, kTextRegionDontCare, NULL, &outEncoding);
   err = TECCreateConverter(&anEncodingConverter, kTextEncodingUnicodeV2_0, outEncoding);
   err = TECConvertText(anEncodingConverter,
-                       (ConstTextPtr) aString.GetUnicode(), aString.Length() * sizeof(PRUnichar), &oInputRead,
+                       (ConstTextPtr) aString.get(), aString.Length() * sizeof(PRUnichar), &oInputRead,
                        (TextPtr) oOutputStr, 512, &oOutputLen);
   err = TECDisposeConverter(anEncodingConverter);
   
@@ -363,7 +363,7 @@ static void TestSortPrintToFile(nsString *string_array, int len)
   for (int i = 0; i < len; i++) {
 #ifdef WIN32
   int len = WideCharToMultiByte(GetACP(), 0,
-                                (LPCWSTR ) string_array[i].GetUnicode(),  string_array[i].Length(),
+                                (LPCWSTR ) string_array[i].get(),  string_array[i].Length(),
                                 cstr, 512, NULL,  NULL);
   cstr[len] = '\0';
 #else
@@ -379,7 +379,7 @@ static void DebugPrintCompResult(nsString string1, nsString string2, int result)
 #ifdef WIN32
   char s[512];
   int len = WideCharToMultiByte(GetACP(), 0,
-                                (LPCWSTR ) string1.GetUnicode(),  string1.Length(),
+                                (LPCWSTR ) string1.get(),  string1.Length(),
                                 s, 512, NULL,  NULL);
   s[len] = '\0';
   printf("%s ", s);
@@ -397,7 +397,7 @@ static void DebugPrintCompResult(nsString string1, nsString string2, int result)
     }
 
   len = WideCharToMultiByte(GetACP(), 0,
-                            (LPCWSTR ) string2.GetUnicode(),  string2.Length(),
+                            (LPCWSTR ) string2.get(),  string2.Length(),
                             s, 512, NULL,  NULL);
   s[len] = '\0';
   printf(" %s\n", s);
@@ -1076,12 +1076,12 @@ int main(int argc, char** argv) {
     // print locale string
     PRUnichar *localeUnichar;
     nsString aLocaleString, aCategory("NSILOCALE_COLLATE");
-    locale->GetCategory(aCategory.GetUnicode(), &localeUnichar);
+    locale->GetCategory(aCategory.get(), &localeUnichar);
     aLocaleString.SetString(localeUnichar);
     cout << "locale setting for collation is ";
     DebugDump(aLocaleString, cout);
     aCategory.SetString("NSILOCALE_TIME");
-    locale->GetCategory(aCategory.GetUnicode(), &localeUnichar);
+    locale->GetCategory(aCategory.get(), &localeUnichar);
     aLocaleString.SetString(localeUnichar);
     cout << "locale setting for time is ";
     DebugDump(aLocaleString, cout);

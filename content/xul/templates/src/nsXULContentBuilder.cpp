@@ -690,7 +690,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                                         getter_AddRefs(content));
                 if (NS_FAILED(rv)) return rv;
 
-                rv = content->SetText(value.GetUnicode(), value.Length(), PR_FALSE);
+                rv = content->SetText(value.get(), value.Length(), PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 rv = aRealNode->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(content) ),
@@ -1638,7 +1638,7 @@ nsXULContentBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory**
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
   nsCAutoString contractID(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX);
-  contractID.AppendWithConversion(nameSpace.GetUnicode());
+  contractID.AppendWithConversion(nameSpace.get());
 
   // Retrieve the appropriate factory.
   NS_WITH_SERVICE(nsIElementFactory, elementFactory, contractID, &rv);

@@ -386,7 +386,7 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
 
   // bounding metrics
   nsAutoString errorMsg(PRUnichar(0xFFFD));
-  rv = aRenderingContext.GetBoundingMetrics(errorMsg.GetUnicode(),
+  rv = aRenderingContext.GetBoundingMetrics(errorMsg.get(),
                                             PRUint32(errorMsg.Length()),
                                             mBoundingMetrics);
   if (NS_FAILED(rv)) {
@@ -433,7 +433,7 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     aRenderingContext.SetFont(font->mFont);
 
     nsAutoString errorMsg(PRUnichar(0xFFFD));
-    aRenderingContext.DrawString(errorMsg.GetUnicode(),
+    aRenderingContext.DrawString(errorMsg.get(),
                                  PRUint32(errorMsg.Length()),
                                  mRect.x, mRect.y);
   }

@@ -643,7 +643,7 @@ nsDBFolderInfo::GetCharacterSet(nsString *result, PRBool *usedDefault)
 
 	if (NS_SUCCEEDED(rv) && result->IsEmpty())
 	{
-		result->Assign(gDefaultCharacterSet.GetUnicode());
+		result->Assign(gDefaultCharacterSet.get());
 		*usedDefault = PR_TRUE;
 	}
 

@@ -190,17 +190,17 @@ nsMsgFolder::initializeStrings()
                                      getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("inboxFolderName").GetUnicode(),
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("inboxFolderName").get(),
                               &kInboxName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("trashFolderName").GetUnicode(),
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("trashFolderName").get(),
                               &kTrashName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("sentFolderName").GetUnicode(),
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("sentFolderName").get(),
                               &kSentName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("draftsFolderName").GetUnicode(),
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("draftsFolderName").get(),
                               &kDraftsName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("templatesFolderName").GetUnicode(),
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("templatesFolderName").get(),
                               &kTemplatesName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("unsentFolderName").GetUnicode(),
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("unsentFolderName").get(),
                               &kUnsentName);
     return NS_OK;
 }
@@ -872,7 +872,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 
 			rv = folder->GetName(getter_Copies(folderName));
 			// case-insensitive compare is probably LCD across OS filesystems
-			if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(folderName, uniName.GetUnicode()) == 0)
+			if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(folderName, uniName.get()) == 0)
 			{
 				*aChild = folder;
 				NS_ADDREF(*aChild);
@@ -1180,7 +1180,7 @@ NS_IMETHODIMP nsMsgFolder::Rename(const PRUnichar *name, nsIMsgWindow *msgWindow
 {
     nsresult status = NS_OK;
 	nsAutoString unicharString(name);
-	status = SetName((PRUnichar *) unicharString.GetUnicode());
+	status = SetName((PRUnichar *) unicharString.get());
 	//After doing a SetName we need to make sure that broadcasting this message causes a
 	//new sort to happen.
 #ifdef HAVE_MASTER

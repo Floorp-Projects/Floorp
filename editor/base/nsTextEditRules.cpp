@@ -609,7 +609,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
     nsSubsumeStr subStr;
     nsString tString(*outString);
-    const PRUnichar *unicodeBuf = tString.GetUnicode();
+    const PRUnichar *unicodeBuf = tString.get();
     nsCOMPtr<nsIDOMNode> unused;
     PRInt32 pos = 0;
         

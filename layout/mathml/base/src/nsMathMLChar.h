@@ -108,8 +108,8 @@ public:
   // Sometimes we only want to pass the data to another routine,
   // this function helps to avoid copying
   const PRUnichar*
-  GetUnicode() {
-    return mData.GetUnicode();
+  get() {
+    return mData.get();
   }
 
   void

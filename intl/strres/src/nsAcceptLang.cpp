@@ -41,7 +41,7 @@ static PRUnichar *copyUnicode(const nsString str) {
 
   PRInt32   len =  str.Length()+1;
   PRUnichar *retval = (PRUnichar *) PR_Calloc(len, sizeof(PRUnichar));
-  retval = (PRUnichar *) memcpy(retval, str.GetUnicode(), sizeof(PRUnichar)*len);
+  retval = (PRUnichar *) memcpy(retval, str.get(), sizeof(PRUnichar)*len);
   retval[len-1] = '\0';
 
   return retval;
@@ -98,7 +98,7 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
 
   lc_tmp.ToLowerCase();
   lc_tmp.AppendWithConversion(sAccept);
-  if (NS_OK == (res = bundle->GetStringFromName(lc_tmp.GetUnicode(), &ptrv))) {
+  if (NS_OK == (res = bundle->GetStringFromName(lc_tmp.get(), &ptrv))) {
     nsString tmp(ptrv);
     if (tmp.EqualsWithConversion(sTrue)) {
       // valid name already
@@ -131,7 +131,7 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
   // lang always in lower case; don't convert
   *_retval = copyUnicode(lang);
   lang.AppendWithConversion(sAccept);
-  if (NS_OK == (res = bundle->GetStringFromName(lang.GetUnicode(), &ptrv))) {
+  if (NS_OK == (res = bundle->GetStringFromName(lang.get(), &ptrv))) {
 
     nsString tmp(ptrv);
     if (tmp.EqualsWithConversion(sTrue)) {
@@ -184,7 +184,7 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
                                      &bundle);
     
   PRUnichar *ptrv = nsnull;
-  if (NS_OK == (res = bundle->GetStringFromName(acceptLang.GetUnicode(), &ptrv))) {
+  if (NS_OK == (res = bundle->GetStringFromName(acceptLang.get(), &ptrv))) {
     
     // valid name already
     nsString lc_name(ptrv);

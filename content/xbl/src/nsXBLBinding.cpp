@@ -1155,7 +1155,7 @@ nsXBLBinding::InstallProperties()
         // and then define it as a property.
         if (!body.IsEmpty()) {
           void* myFunc;
-          nsCAutoString cname; cname.AssignWithConversion(name.GetUnicode());
+          nsCAutoString cname; cname.AssignWithConversion(name.get());
           nsCAutoString functionUri = classStr;
           functionUri += ".";
           functionUri += cname;
@@ -1219,7 +1219,7 @@ nsXBLBinding::InstallProperties()
           if (!getter.IsEmpty() && classObject) {
             nsCAutoString functionUri = classStr;
             functionUri += ".";
-            functionUri.AppendWithConversion(name.GetUnicode());
+            functionUri.AppendWithConversion(name.get());
             functionUri += " (getter)";
             rv = context->CompileFunction(classObject,
                                           nsCAutoString("onget"),
@@ -1257,7 +1257,7 @@ nsXBLBinding::InstallProperties()
           if (!setter.IsEmpty() && classObject) {
             nsCAutoString functionUri = classStr;
             functionUri += ".";
-            functionUri.AppendWithConversion(name.GetUnicode());
+            functionUri.AppendWithConversion(name.get());
             functionUri += " (setter)";
             rv = context->CompileFunction(classObject,
                                           nsCAutoString("onset"),
@@ -1277,7 +1277,7 @@ nsXBLBinding::InstallProperties()
             // destruction of any initial value that might be set.
             // This means we only have to worry about defining the getter
             // or setter.
-            ::JS_DefineUCProperty(cx, (JSObject*)classObject, NS_REINTERPRET_CAST(const jschar*, name.GetUnicode()), 
+            ::JS_DefineUCProperty(cx, (JSObject*)classObject, NS_REINTERPRET_CAST(const jschar*, name.get()), 
                                        name.Length(), JSVAL_VOID,
                                        (JSPropertyOp) getFunc, 
                                        (JSPropertyOp) setFunc, 
@@ -1310,7 +1310,7 @@ nsXBLBinding::InstallProperties()
               
               if (!undefined) {
                 // Define that value as a property
-                ::JS_DefineUCProperty(cx, (JSObject*)scriptObject, NS_REINTERPRET_CAST(const jschar*, name.GetUnicode()), 
+                ::JS_DefineUCProperty(cx, (JSObject*)scriptObject, NS_REINTERPRET_CAST(const jschar*, name.get()), 
                                            name.Length(), result,
                                            nsnull, nsnull,
                                            attrs); 

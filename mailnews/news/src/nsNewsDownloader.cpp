@@ -211,7 +211,7 @@ PRBool nsNewsDownloader::GetNextHdrToRetrieve()
 
     m_folder->GetPrettiestName(getter_Copies(prettiestName));
 
-    const PRUnichar *formatStrings[3] = { firstStr.GetUnicode(), totalStr.GetUnicode(), (const PRUnichar *) prettiestName };
+    const PRUnichar *formatStrings[3] = { firstStr.get(), totalStr.get(), (const PRUnichar *) prettiestName };
     rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingArticlesForOffline").get(), formatStrings, 3, getter_Copies(statusString));
     NS_ENSURE_SUCCESS(rv, rv);
     // ### TODO set status string on window?

@@ -697,7 +697,7 @@ nsViewerApp::OpenWindow()
     mCrawler->Start();
   }
   else {
-    bw->GoTo(mStartURL.GetUnicode());
+    bw->GoTo(mStartURL.get());
   }
   NS_RELEASE(bw);
 
@@ -732,12 +732,12 @@ nsViewerApp::ViewSource(nsString& aURL)
 
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
-  bw->SetTitle(NS_ConvertASCIItoUCS2("View Source").GetUnicode());
+  bw->SetTitle(NS_ConvertASCIItoUCS2("View Source").get());
   bw->SetVisibility(PR_TRUE);
 
   nsAutoString strUrl; strUrl.AppendWithConversion("view-source:");
   strUrl.Append(aURL);
-  bw->GoTo(strUrl.GetUnicode());
+  bw->GoTo(strUrl.get());
 
   NS_RELEASE(bw);
 
@@ -1341,7 +1341,7 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
         if (gWinData && loadPage && oldIndex != gTop100Pointer) {
           nsString urlStr; urlStr.AssignWithConversion(gTop100List[gTop100Pointer]);
           mSiteLabel->SetLabel(urlStr);
-          gWinData->GoTo(urlStr.GetUnicode());
+          gWinData->GoTo(urlStr.get());
         }
 
         nsAutoString str;
@@ -1543,7 +1543,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
  
   if (gWinData) {
     nsString urlStr; urlStr.AssignWithConversion(gTop100List[gTop100Pointer]);
-    gWinData->GoTo(urlStr.GetUnicode());
+    gWinData->GoTo(urlStr.get());
     mSiteLabel->SetLabel(urlStr);
   }
 

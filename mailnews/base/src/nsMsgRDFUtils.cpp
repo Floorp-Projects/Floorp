@@ -106,7 +106,7 @@ nsresult createNode(nsString& str, nsIRDFNode **node, nsIRDFService *rdfService)
 	nsresult rv; 
 	if (!rdfService) return NS_ERROR_NULL_POINTER;  
 	nsCOMPtr<nsIRDFLiteral> value;
-	rv = rdfService->GetLiteral(str.GetUnicode(), getter_AddRefs(value));
+	rv = rdfService->GetLiteral(str.get(), getter_AddRefs(value));
 	if(NS_SUCCEEDED(rv)) {
 		*node = value;
 		NS_IF_ADDREF(*node);
@@ -122,7 +122,7 @@ nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfSe
 	nsCOMPtr<nsIRDFLiteral> value;
   nsAutoString str; str.AssignWithConversion(charstr);
 
-  rv = rdfService->GetLiteral(NS_ConvertUTF8toUCS2(charstr).GetUnicode(), getter_AddRefs(value));
+  rv = rdfService->GetLiteral(NS_ConvertUTF8toUCS2(charstr).get(), getter_AddRefs(value));
   
 	if(NS_SUCCEEDED(rv)) {
 		*node = value;

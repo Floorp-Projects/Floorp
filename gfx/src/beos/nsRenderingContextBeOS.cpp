@@ -1034,7 +1034,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(PRUnichar aC, nscoord& aWidth,
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const nsString& aString,
                                 nscoord& aWidth, PRInt32* aFontID)
 {
-	return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+	return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const char* aString, nscoord& aWidth)
@@ -1185,7 +1185,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const nsString& aString,
                                   PRInt32 aFontID,
                                   const nscoord* aSpacing)
 {
-	return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
+	return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::DrawImage(nsIImage *aImage, 

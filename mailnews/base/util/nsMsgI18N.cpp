@@ -101,7 +101,7 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
       res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
       if (NS_SUCCEEDED(res)) {
 
-        const PRUnichar *originalSrcPtr = inString.GetUnicode();
+        const PRUnichar *originalSrcPtr = inString.get();
         PRUnichar *currentSrcPtr = NS_CONST_CAST(PRUnichar *, originalSrcPtr);
         PRInt32 originalUnicharLength = inString.Length();
         PRInt32 srcLength;
@@ -249,7 +249,7 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
     // get an unicode converter
     res = ccm->GetUnicodeEncoder(&convCharset, &encoder);
     if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-      PRUnichar *unichars = (PRUnichar *) inString.GetUnicode();
+      PRUnichar *unichars = (PRUnichar *) inString.get();
       PRInt32 unicharLength = inString.Length();
       PRInt32 dstLength;
       res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
@@ -439,9 +439,9 @@ PRBool nsMsgI18Nmultibyte_charset(const char *charset)
   if (NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIAtom> charsetAtom;
     nsAutoString charsetData;
-    res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).GetUnicode(), getter_AddRefs(charsetAtom));
+    res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
     if (NS_SUCCEEDED(res)) {
-      res = ccm2->GetCharsetData2(charsetAtom, NS_ConvertASCIItoUCS2(".isMultibyte").GetUnicode(), &charsetData);
+      res = ccm2->GetCharsetData2(charsetAtom, NS_ConvertASCIItoUCS2(".isMultibyte").get(), &charsetData);
       if (NS_SUCCEEDED(res)) {
         result = charsetData.EqualsWithConversion("true", PR_TRUE);
       }
@@ -513,7 +513,7 @@ PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const nsString&
     // get an unicode converter
     res = ccm->GetUnicodeEncoder(&aCharset, getter_AddRefs(encoder));
     if(NS_SUCCEEDED(res)) {
-      const PRUnichar *originalPtr = inString.GetUnicode();
+      const PRUnichar *originalPtr = inString.get();
       PRInt32 originalLen = inString.Length();
       PRUnichar *currentSrcPtr = NS_CONST_CAST(PRUnichar *, originalPtr);
       char localBuff[512];
@@ -597,7 +597,7 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
                                            NS_GET_IID(nsIEntityConverter), getter_AddRefs(entityConv));
   if(NS_SUCCEEDED(res)) {
     PRUnichar *entities = NULL;
-    res = entityConv->ConvertToEntities(inString.GetUnicode(), nsIEntityConverter::html40Latin1, &entities);
+    res = entityConv->ConvertToEntities(inString.get(), nsIEntityConverter::html40Latin1, &entities);
     if (NS_SUCCEEDED(res) && (NULL != entities)) {
       outString->Assign(entities);
       nsMemory::Free(entities);
@@ -684,7 +684,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
               nsAutoString aResult;
               res = textTransform->Change(aText, aResult);
               if (NS_SUCCEEDED(res)) {
-                return aConv->Convert(aResult.GetUnicode(), outString);
+                return aConv->Convert(aResult.get(), outString);
               }
             }
           }

@@ -1219,7 +1219,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(PRUnichar ch, nscoord &aWidth, PRI
 
 NS_IMETHODIMP nsRenderingContextMac::GetWidth(const nsString& aString, nscoord &aWidth, PRInt32 *aFontID)
 {
-	return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+	return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
 
 //------------------------------------------------------------------------
@@ -1364,7 +1364,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const nsString& aString,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
- 	return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
+ 	return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 

@@ -651,7 +651,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUni
   nsAutoString stringId;
   stringId.AssignWithConversion(aPrefName);
 
-  return bundle->GetStringFromName(stringId.GetUnicode(), return_buf);
+  return bundle->GetStringFromName(stringId.get(), return_buf);
 }
 
 const char *nsPrefBranch::getPrefName(const char *aPrefName)

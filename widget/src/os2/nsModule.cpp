@@ -377,7 +377,7 @@ char *nsWidgetModuleData::ConvertFromUcs( const nsString &aString,
                                           char *szBuffer, ULONG ulSize)
 {
    char *szRet = 0;
-   const PRUnichar *pUnicode = aString.GetUnicode();
+   const PRUnichar *pUnicode = aString.get();
 
    if( pUnicode)
       szRet = ConvertFromUcs( pUnicode, szBuffer, ulSize);
@@ -401,7 +401,7 @@ const char *nsWidgetModuleData::ConvertFromUcs( const PRUnichar *pText)
 const char *nsWidgetModuleData::ConvertFromUcs( const nsString &aString)
 {
    const char *szRet = 0;
-   const PRUnichar *pUnicode = aString.GetUnicode();
+   const PRUnichar *pUnicode = aString.get();
 
    if( pUnicode)
       szRet = ConvertFromUcs( pUnicode);

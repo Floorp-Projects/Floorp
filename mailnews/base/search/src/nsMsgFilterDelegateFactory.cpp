@@ -158,7 +158,7 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
     nsTextFormatter::smprintf_free(unicodeString);
     
     nsCOMPtr<nsIMsgFilter> filter;
-    rv = filterList->GetFilterNamed(filterString.GetUnicode(), getter_AddRefs(filter));
+    rv = filterList->GetFilterNamed(filterString.get(), getter_AddRefs(filter));
     if (NS_FAILED(rv)) return rv;
 
     *aResult = filter;

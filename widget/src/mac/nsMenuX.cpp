@@ -235,7 +235,7 @@ NS_METHOD nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
 
   nsAutoString label;
   aMenuItem->GetLabel(label);
-  CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.GetUnicode(), label.Length());
+  CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.get(), label.Length());
   ::InsertMenuItemTextWithCFString(mMacMenuHandle, labelRef, currItemIndex, 0, 0);
   ::CFRelease(labelRef);
   
@@ -305,7 +305,7 @@ NS_METHOD nsMenuX::AddMenu(nsIMenu * aMenu)
   aMenu->GetLabel(label);
   //printf("AddMenu %s \n", label.ToNewCString());
 
-  CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.GetUnicode(), label.Length());
+  CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.get(), label.Length());
   ::InsertMenuItemTextWithCFString(mMacMenuHandle, labelRef, currItemIndex, 0, 0);
   ::CFRelease(labelRef);
 
@@ -825,7 +825,7 @@ MenuHandle nsMenuX::NSStringNewMenu(short menuID, nsString& menuTitle)
   MenuRef menuRef;
   OSStatus status = ::CreateNewMenu(menuID, 0, &menuRef);
   NS_ASSERTION(status == noErr,"nsMenuX::NSStringNewMenu: NewMenu failed.");
-  CFStringRef titleRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)menuTitle.GetUnicode(), menuTitle.Length());
+  CFStringRef titleRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)menuTitle.get(), menuTitle.Length());
   NS_ASSERTION(titleRef,"nsMenuX::NSStringNewMenu: CFStringCreateWithCharacters failed.");
   if (titleRef) {
     ::SetMenuTitleWithCFString(menuRef, titleRef);
@@ -1259,7 +1259,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
     // reuse the existing menu, to avoid invalidating root menu bar.
     NS_ASSERTION(mMacMenuHandle != NULL, "nsMenuX::AttributeChanged: invalid menu handle.");
     RemoveAll();
-    CFStringRef titleRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)mLabel.GetUnicode(), mLabel.Length());
+    CFStringRef titleRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)mLabel.get(), mLabel.Length());
     NS_ASSERTION(titleRef, "nsMenuX::AttributeChanged: CFStringCreateWithCharacters failed.");
     ::SetMenuTitleWithCFString(mMacMenuHandle, titleRef);
     ::CFRelease(titleRef);

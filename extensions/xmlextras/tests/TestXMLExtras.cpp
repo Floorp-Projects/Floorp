@@ -135,7 +135,7 @@ int main (int argc, char* argv[])
 
       if (NS_SUCCEEDED( rv )) {
         nsString str; str.AssignWithConversion(argv[2]);
-        rv = pDOMParser->ParseFromString(str.GetUnicode(),"text/xml",
+        rv = pDOMParser->ParseFromString(str.get(),"text/xml",
                                           getter_AddRefs( pDOMDocument ) );
 
         if (NS_SUCCEEDED( rv )) {

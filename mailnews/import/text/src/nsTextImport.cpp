@@ -373,7 +373,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32 sz = 0;
 		pLoc->GetFileSize( &sz);	
-		desc->SetPreferredName( name.GetUnicode());
+		desc->SetPreferredName( name.get());
 		desc->SetSize( sz);
 		nsIFileSpec *pSpec = nsnull;
 		desc->GetFileSpec( &pSpec);
@@ -404,7 +404,7 @@ void ImportAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 	// load the success string
 	nsIStringBundle *pBundle = nsTextStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsTextStringBundle::GetStringByID( TEXTIMPORT_ADDRESS_SUCCESS, pBundle);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsTextStringBundle::FreeString( pFmt);
@@ -419,7 +419,7 @@ void ImportAddressImpl::ReportError( PRInt32 errorNum, nsString& name, nsString 
 	// load the error string
 	nsIStringBundle *pBundle = nsTextStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsTextStringBundle::GetStringByID( errorNum, pBundle);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsTextStringBundle::FreeString( pFmt);
@@ -510,10 +510,10 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 		// to have an .ldi extension so if it doesn't we may need to
 		// copy the file to a temp file with the correct name, then
 		// import it!
-		rv = m_text.ImportLDIF( &addrAbort, name.GetUnicode(), inFile, pDestination, error);
+		rv = m_text.ImportLDIF( &addrAbort, name.get(), inFile, pDestination, error);
 	}
 	else {	
-		rv = m_text.ImportAddresses( &addrAbort, name.GetUnicode(), inFile, pDestination, fieldMap, error, &m_bytesImported);
+		rv = m_text.ImportAddresses( &addrAbort, name.get(), inFile, pDestination, fieldMap, error, &m_bytesImported);
 		SaveFieldMap( fieldMap);
 	}
 
@@ -653,10 +653,10 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 			field.Truncate();
 		}
 
-		*pStr = nsCRT::strdup( str.GetUnicode());
+		*pStr = nsCRT::strdup( str.get());
 		*pFound = PR_TRUE;
 
-		/* IMPORT_LOG1( "Sample data: %S\n", str.GetUnicode()); */
+		/* IMPORT_LOG1( "Sample data: %S\n", str.get()); */
 	}
 	else {
 		*pFound = PR_FALSE;

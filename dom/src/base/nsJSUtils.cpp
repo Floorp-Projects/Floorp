@@ -165,7 +165,7 @@ nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext,
 {
   JSString *jsstring =
     ::JS_NewUCStringCopyN(aContext, NS_REINTERPRET_CAST(const jschar*,
-                                                        aProp.GetUnicode()),
+                                                        aProp.get()),
                           aProp.Length());
 
   // set the return value

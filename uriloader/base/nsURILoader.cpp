@@ -407,8 +407,8 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIRequest *request, const char * aS
       // the underlying stream converter which we then set to be this channelListener's
       // mNextListener. This effectively nestles the stream converter down right
       // in between the raw stream and the final listener.
-      rv = StreamConvService->AsyncConvertData(from_w.GetUnicode(), 
-                                               to_w.GetUnicode(), 
+      rv = StreamConvService->AsyncConvertData(from_w.get(), 
+                                               to_w.get(), 
                                                nextLink, 
                                                request,
                                                getter_AddRefs(m_targetStreamListener));

@@ -66,7 +66,7 @@ nsMsgRDFDataSource::Init()
                                                      &rv);
     if (NS_FAILED(rv)) return rv;
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), topic.GetUnicode());
+    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), topic.get());
     if (NS_FAILED(rv)) return rv;
 
     /* Get and keep the rdf service. Will be released by the observer */
@@ -88,7 +88,7 @@ void nsMsgRDFDataSource::Cleanup()
     if (NS_SUCCEEDED(rv)) {
         nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this),
-                                 topic.GetUnicode());
+                                 topic.get());
     }
     
     // release the window

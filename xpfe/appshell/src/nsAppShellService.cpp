@@ -895,11 +895,11 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
   if (NS_SUCCEEDED(rv)) {
     nsIObserverService *os = NS_STATIC_CAST(nsIObserverService*,glop);
     if (aRegister) {
-      os->AddObserver(weObserve, topicA.GetUnicode());
-      os->AddObserver(weObserve, topicB.GetUnicode());
+      os->AddObserver(weObserve, topicA.get());
+      os->AddObserver(weObserve, topicB.get());
     } else {
-      os->RemoveObserver(weObserve, topicA.GetUnicode());
-      os->RemoveObserver(weObserve, topicB.GetUnicode());
+      os->RemoveObserver(weObserve, topicA.get());
+      os->RemoveObserver(weObserve, topicB.get());
     }
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, glop);
   }

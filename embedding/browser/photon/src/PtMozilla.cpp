@@ -399,7 +399,7 @@ PhMozEmbedPrivate::LoadChrome(void)
   NS_ENSURE_TRUE(subShell, NS_ERROR_FAILURE);
 
   mChromeLocation.AssignWithConversion("chrome://embed/content/simple-shell.xul");
-  mChromeNav->LoadURI(mChromeLocation.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+  mChromeNav->LoadURI(mChromeLocation.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
   
   subShell->Create(0, nsnull);
   subShell->Spinup();
@@ -545,7 +545,7 @@ PhMozEmbedPrivate::OnChromeStateChange(nsIWebProgress *aWebProgress,
       {
 	nsString tmpString;
 	tmpString.AssignWithConversion(mCurrentURI);
-	mContentNav->LoadURI(tmpString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+	mContentNav->LoadURI(tmpString.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
       }
     }
   }
@@ -1429,7 +1429,7 @@ static void _mozilla_embed_load_url(PtMozillaWidget_t *moz, char *url)
 	nsString uriString;
 	uriString.AssignWithConversion(newURI);
 	if (moz->embed_private->mContentNav)
-		moz->embed_private->mContentNav->LoadURI(uriString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+		moz->embed_private->mContentNav->LoadURI(uriString.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 // realized

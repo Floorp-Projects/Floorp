@@ -3106,19 +3106,19 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
 
   // try to find a localizable string
   const PRUnichar *strings[] = {
-    term->text.GetUnicode()
+    term->text.get()
   };
   nsXPIDLString value;
 
   // first with the search text
-  rv = mBundle->FormatStringFromName(stringName.GetUnicode(),
+  rv = mBundle->FormatStringFromName(stringName.get(),
                                      strings, 1, getter_Copies(value));
 
   // ok, try it without the -<text>, to match
   // finduri-LastVisitDate-is=%S days ago
   if (NS_FAILED(rv)) {
     stringName.Truncate(preTextLength);
-    rv = mBundle->FormatStringFromName(stringName.GetUnicode(),
+    rv = mBundle->FormatStringFromName(stringName.get(),
                                        strings, 1, getter_Copies(value));
   }
 
@@ -3127,7 +3127,7 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
     rv = gRDFService->GetLiteral(value, getter_AddRefs(literal));
   } else {
     // ok, no such string, so just put the match text itself there
-    rv = gRDFService->GetLiteral(term->text.GetUnicode(),
+    rv = gRDFService->GetLiteral(term->text.get(),
                                  getter_AddRefs(literal));
   }
   if (NS_FAILED(rv)) return rv;

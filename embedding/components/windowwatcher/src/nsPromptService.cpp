@@ -319,7 +319,7 @@ nsPromptService::ConfirmEx(nsIDOMWindow *parent,
   }
   block->SetInt(eNumberButtons, numberButtons);
   
-  block->SetString(eIconClass, NS_ConvertASCIItoUCS2(kQuestionIconClass).GetUnicode());
+  block->SetString(eIconClass, NS_ConvertASCIItoUCS2(kQuestionIconClass).get());
 
   if (checkMsg && checkValue) {
     block->SetString(eCheckboxMsg, checkMsg);
@@ -569,7 +569,7 @@ nsPromptService::Select(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
   block->SetInt(eSelection, count);
   for (PRUint32 i = 2; i <= count+1; i++) {
     nsAutoString temp(selectList[i-2]);
-    const PRUnichar* text = temp.GetUnicode();
+    const PRUnichar* text = temp.get();
     block->SetString(i, text);
   }
 
@@ -626,7 +626,7 @@ nsPromptService::GetLocaleString(const char *aKey, PRUnichar **aResult)
   rv = stringService->CreateBundle(kCommonDialogsProperties, getter_AddRefs(stringBundle));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).GetUnicode(), aResult);
+  rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).get(), aResult);
 
   return rv;
 }

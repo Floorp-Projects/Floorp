@@ -178,7 +178,7 @@ nsSOAPCall::EnsureDocumentAllocated()
 
     nsAutoString docstr;
     docstr.AssignWithConversion(kEmptySOAPDocStr);
-    rv = parser->ParseFromString(docstr.GetUnicode(), "text/xml", 
+    rv = parser->ParseFromString(docstr.get(), "text/xml", 
                                  getter_AddRefs(mEnvelopeDocument));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 

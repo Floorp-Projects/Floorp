@@ -482,7 +482,7 @@ void nsFileSpec::operator = (const nsString& inNativePath)
 {
    char* tmp;                                                   
    nsresult res;                                                
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inNativePath.GetUnicode()), &tmp))) { 
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inNativePath.get()), &tmp))) { 
      *this = tmp;
      nsMemory::Free(tmp);                                    
    }                                                            
@@ -494,7 +494,7 @@ nsFileSpec nsFileSpec::operator + (const nsString& inRelativeUnixPath) const
    nsFileSpec resultSpec;
    char* tmp;                                                   
    nsresult res;                                                
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inRelativeUnixPath.get()), &tmp))) { 
      resultSpec = *this;
      resultSpec += tmp;
      nsMemory::Free(tmp);                                    
@@ -506,7 +506,7 @@ void nsFileSpec::operator += (const nsString& inRelativeUnixPath)
 {
    char* tmp;                                                   
    nsresult res;                                                
-   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inRelativeUnixPath.GetUnicode()), &tmp))) { 
+   if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((inRelativeUnixPath.get()), &tmp))) { 
      *this += tmp;
      nsMemory::Free(tmp);                                    
    }                                                            
@@ -516,17 +516,17 @@ void nsFileSpec::operator += (const nsString& inRelativeUnixPath)
 
 void nsFileSpec::SetLeafName (const nsString& inLeafName)
 {
-  VOID_SET_UCS( SetLeafName , inLeafName.GetUnicode(),"nsFileSpec::SetLeafName failed");
+  VOID_SET_UCS( SetLeafName , inLeafName.get(),"nsFileSpec::SetLeafName failed");
 }
 void nsFileSpec::MakeUnique(const nsString& inSuggestedLeafName)
 {
-  VOID_SET_UCS( MakeUnique,inSuggestedLeafName.GetUnicode(),"nsFileSpec::MakeUnique failed");
+  VOID_SET_UCS( MakeUnique,inSuggestedLeafName.get(),"nsFileSpec::MakeUnique failed");
 }
 nsresult nsFileSpec::Rename(const nsString& inNewName)
 {
-  SET_UCS( Rename , inNewName.GetUnicode());
+  SET_UCS( Rename , inNewName.get());
 }
 nsresult nsFileSpec::Execute(const nsString& args) const
 {
-  SET_UCS( Execute , args.GetUnicode());
+  SET_UCS( Execute , args.get());
 }

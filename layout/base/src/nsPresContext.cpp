@@ -513,7 +513,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
           nsAutoString charset;
           doc->AddCharSetObserver(this);
           doc->GetDocumentCharacterSet(charset);
-          UpdateCharSet(charset.GetUnicode());
+          UpdateCharSet(charset.get());
         }
       }
     }

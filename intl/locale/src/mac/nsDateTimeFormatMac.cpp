@@ -236,7 +236,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
     }
   }
   else {
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
       if (mLocale.Length() && mLocale.EqualsIgnoreCase(nsAutoString(aLocaleUnichar))) {
         nsMemory::Free(aLocaleUnichar);
@@ -258,7 +258,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
     nsILocale *appLocale;
     res = localeService->GetApplicationLocale(&appLocale);
     if (NS_SUCCEEDED(res)) {
-      res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+      res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
       if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
         mAppLocale.Assign(aLocaleUnichar); // cache app locale name
       }
@@ -273,7 +273,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   else {
     mUseDefaultLocale = false;
     nsMemory::Free(aLocaleUnichar);
-    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
   }
     
   // Get a script code and charset name from locale, if available
@@ -289,7 +289,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
-      res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
+      res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset.Assign(mappedCharset);
         nsMemory::Free(mappedCharset);
@@ -305,7 +305,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   nsCOMPtr <nsICharsetConverterManager2>  charsetConverterManager;
   charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    res = charsetConverterManager->GetCharsetAtom(mUseDefaultLocale ? mSystemCharset.GetUnicode() : mCharset.GetUnicode(), 
+    res = charsetConverterManager->GetCharsetAtom(mUseDefaultLocale ? mSystemCharset.get() : mCharset.get(), 
                                                   getter_AddRefs(charsetAtom));
     if (NS_SUCCEEDED(res)) {
       res = charsetConverterManager->GetUnicodeDecoder(charsetAtom, getter_AddRefs(mDecoder));

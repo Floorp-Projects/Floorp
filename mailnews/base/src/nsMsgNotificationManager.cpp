@@ -296,7 +296,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 		sourceString = folderDescription;
 		nsMemory::Free(folderDescription);
 	}
-	rv = rdfService->GetLiteral(sourceString.GetUnicode(), getter_AddRefs(source));
+	rv = rdfService->GetLiteral(sourceString.get(), getter_AddRefs(source));
 	if(NS_SUCCEEDED(rv))
 	{
 		ds->Assert(notificationResource, kNC_Source, source, PR_TRUE);
@@ -319,7 +319,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 		descriptionString.Append(folderName);
 	}
 
-	rv = rdfService->GetLiteral(descriptionString.GetUnicode(), getter_AddRefs(description));
+	rv = rdfService->GetLiteral(descriptionString.get(), getter_AddRefs(description));
 	if(NS_SUCCEEDED(rv))
 	{
 		ds->Assert(notificationResource, kNC_Description, description, PR_TRUE);
@@ -332,13 +332,13 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
 	timeStampString.AssignWithConversion(buffer);
 	
-	rv = rdfService->GetLiteral(timeStampString.GetUnicode(), getter_AddRefs(timeStamp));
+	rv = rdfService->GetLiteral(timeStampString.get(), getter_AddRefs(timeStamp));
 	if(NS_SUCCEEDED(rv))
 	{
 		ds->Assert(notificationResource, kNC_TimeStamp, timeStamp, PR_TRUE);
 	}
 
-	rv = rdfService->GetLiteral(urlString.GetUnicode(), getter_AddRefs(url));
+	rv = rdfService->GetLiteral(urlString.get(), getter_AddRefs(url));
 	if(NS_SUCCEEDED(rv))
 	{
 		ds->Assert(notificationResource, kNC_URL, url, PR_TRUE);

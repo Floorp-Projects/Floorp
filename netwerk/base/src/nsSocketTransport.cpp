@@ -1792,7 +1792,7 @@ nsSocketTransport::OnStatus(nsSocketRequest *req, nsISupports *ctxt, nsresult me
         return NS_ERROR_FAILURE;
 
     nsAutoString host; host.AssignWithConversion(mHostName);
-    return mProgressSink->OnStatus(req, ctxt, message, host.GetUnicode());
+    return mProgressSink->OnStatus(req, ctxt, message, host.get());
 }
 
 nsresult

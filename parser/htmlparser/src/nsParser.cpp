@@ -871,7 +871,7 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
 
   if((kNotFound!=theGTPos) && (kNotFound!=theLTPos)) {  
 
-    const PRUnichar*  theBuffer=aBuffer.GetUnicode();
+    const PRUnichar*  theBuffer=aBuffer.get();
     CWordTokenizer<PRUnichar> theTokenizer(theBuffer,theLTPos,theGTPos);
     theOffset=theTokenizer.GetNextWord();  //try to find ?xml, !doctype, etc...
 
@@ -2385,7 +2385,7 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
                 if(kNotFound != encEnd) {
                    PRInt32 count = encEnd - encStart -1;
                    if(count >0) {
-                      const PRUnichar *u = firstXbytes.GetUnicode();
+                      const PRUnichar *u = firstXbytes.get();
                       // if UTF-16, it should have been detected by now
                       // otherwise, the label must be invalid
                       if (nsCRT::strncasecmp(&u[encStart+1], NS_LITERAL_STRING("UTF-16").get(), count)) {

@@ -145,9 +145,9 @@ nsMsgAccountManager::~nsMsgAccountManager()
       if (NS_SUCCEEDED(rv))
 	  {    
       nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      observerService->RemoveObserver(this, topic.GetUnicode());
+      observerService->RemoveObserver(this, topic.get());
       topic.Assign(NS_LITERAL_STRING("network:offline-status-changed"));
-      observerService->RemoveObserver(this, topic.GetUnicode());
+      observerService->RemoveObserver(this, topic.get());
     }
   }
 }
@@ -168,11 +168,11 @@ nsresult nsMsgAccountManager::Init()
   if (NS_SUCCEEDED(rv))
   {    
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.GetUnicode());
+    observerService->AddObserver(this, topic.get());
     topic.AssignWithConversion("quit-application");
-    observerService->AddObserver(this, topic.GetUnicode());
+    observerService->AddObserver(this, topic.get());
     topic.Assign(NS_LITERAL_STRING("network:offline-status-changed"));
-    observerService->AddObserver(this, topic.GetUnicode());
+    observerService->AddObserver(this, topic.get());
   }
 
   return NS_OK;

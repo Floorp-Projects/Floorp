@@ -2003,7 +2003,7 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
 	nsXPIDLString localizedDirName;
 	nsAutoString entityName;
 	entityName.AssignWithConversion(oldPathEntityName);
-	rv = bundle->GetStringFromName(entityName.GetUnicode(), getter_Copies(localizedDirName));
+	rv = bundle->GetStringFromName(entityName.get(), getter_Copies(localizedDirName));
 	if (NS_FAILED(rv)) return rv;
 
 	rv = oldLocalFile->AppendRelativeUnicodePath((const PRUnichar *)localizedDirName);

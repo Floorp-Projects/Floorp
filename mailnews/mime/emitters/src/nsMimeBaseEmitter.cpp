@@ -202,7 +202,7 @@ nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
     PRUnichar     *ptrv = nsnull;
     nsString      uniStr; uniStr.AssignWithConversion(aHeaderName);
 
-    res = m_stringBundle->GetStringFromName(uniStr.GetUnicode(), &ptrv);
+    res = m_stringBundle->GetStringFromName(uniStr.get(), &ptrv);
     v = ptrv;
 
     if (NS_FAILED(res)) 

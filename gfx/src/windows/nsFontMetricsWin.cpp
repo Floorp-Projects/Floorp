@@ -610,14 +610,14 @@ HashKey(const void* aString)
 {
   const nsString* str = (const nsString*)aString;
   return (PLHashNumber)
-    nsCRT::HashCode(str->GetUnicode());
+    nsCRT::HashCode(str->get());
 }
 
 static PRIntn
 CompareKeys(const void* aStr1, const void* aStr2)
 {
-  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(),
-    ((const nsString*) aStr2)->GetUnicode()) == 0;
+  return nsCRT::strcmp(((const nsString*) aStr1)->get(),
+    ((const nsString*) aStr2)->get()) == 0;
 }
 
 static int
@@ -1064,7 +1064,7 @@ GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter)
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIAtom> charset;
-  rv = gCharSetManager->GetCharsetAtom(value.GetUnicode(), getter_AddRefs(charset));
+  rv = gCharSetManager->GetCharsetAtom(value.get(), getter_AddRefs(charset));
   if (NS_FAILED(rv)) return rv;
 
   rv = gCharSetManager->GetUnicodeEncoder(charset, aConverter);
@@ -1837,7 +1837,7 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
    * not supported on Windows 9X (see below) -- erik
    */
   logFont.lfFaceName[0] = 0;
-  WideCharToMultiByte(CP_ACP, 0, aName->GetUnicode(), aName->Length() + 1,
+  WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
 
   /*
@@ -2241,7 +2241,7 @@ nsFontMetricsWin::LoadSubstituteFont(HDC aDC, nsString* aName)
    * not supported on Windows 9X (see below) -- erik
    */
   logFont.lfFaceName[0] = 0;
-  WideCharToMultiByte(CP_ACP, 0, aName->GetUnicode(), aName->Length() + 1,
+  WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
 
   /*
@@ -2317,7 +2317,7 @@ HashKeyFontWeight(const void* aFontWeightEntry)
 {
   const nsString* string = &((const nsFontWeightEntry*) aFontWeightEntry)->mFontName;
   return (PLHashNumber)
-    nsCRT::HashCode(string->GetUnicode());
+    nsCRT::HashCode(string->get());
 }
 
 static PRIntn
@@ -2326,7 +2326,7 @@ CompareKeysFontWeight(const void* aFontWeightEntry1, const void* aFontWeightEntr
   const nsString* str1 = &((const nsFontWeightEntry*) aFontWeightEntry1)->mFontName;
   const nsString* str2 = &((const nsFontWeightEntry*) aFontWeightEntry2)->mFontName;
 
-  return nsCRT::strcmp(str1->GetUnicode(), str2->GetUnicode()) == 0;
+  return nsCRT::strcmp(str1->get(), str2->get()) == 0;
 }
 
 /*-----------------------
@@ -2459,7 +2459,7 @@ nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName) {
   LOGFONT logFont;
   logFont.lfCharSet = DEFAULT_CHARSET;
 
-  WideCharToMultiByte(CP_ACP, 0, aFontName->GetUnicode(), aFontName->Length() + 1,
+  WideCharToMultiByte(CP_ACP, 0, aFontName->get(), aFontName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
  
   logFont.lfPitchAndFamily = 0;
@@ -4102,7 +4102,7 @@ nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
    * not supported on Windows 9X (see below) -- erik
    */
   logFont.lfFaceName[0] = 0;
-  WideCharToMultiByte(CP_ACP, 0, aName->GetUnicode(), aName->Length() + 1,
+  WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
 
   /*

@@ -487,7 +487,7 @@ nsresult nsMsgSearchNewsEx::Encode (nsCString *ppOutEncoding)
 	nsString srcCharset, dstCharset;
 	GetSearchCharsets(srcCharset, dstCharset);
 
-	nsresult err = EncodeImap (&imapTerms, m_searchTerms, srcCharset.GetUnicode(), dstCharset.GetUnicode(), PR_TRUE /*reallyDredd*/);
+	nsresult err = EncodeImap (&imapTerms, m_searchTerms, srcCharset.get(), dstCharset.get(), PR_TRUE /*reallyDredd*/);
 #ifdef DOING_DREDD
 	if (NS_OK == err)
 	{

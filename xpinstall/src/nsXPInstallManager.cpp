@@ -240,7 +240,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
         // --- inform callbacks of error
         for (PRUint32 i = 0; i < mTriggers->Size(); i++)
         {
-            mTriggers->SendStatus( mTriggers->Get(i)->mURL.GetUnicode(),
+            mTriggers->SendStatus( mTriggers->Get(i)->mURL.get(),
                                    cbstatus );
         }
 
@@ -309,25 +309,25 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIScriptGlobalObject* aGlobalOb
             if ( mChromeType == CHROME_LOCALE )
             {
                 xpiBundle->GetStringFromName(
-                    NS_ConvertASCIItoUCS2("ApplyNowLocale").GetUnicode(),
+                    NS_ConvertASCIItoUCS2("ApplyNowLocale").get(),
                     getter_Copies(applyNowText));
                 xpiBundle->GetStringFromName(
-                    NS_ConvertASCIItoUCS2("ConfirmLocale").GetUnicode(),
+                    NS_ConvertASCIItoUCS2("ConfirmLocale").get(),
                     getter_Copies(confirmFormat));
             }
             else
             {
                 xpiBundle->GetStringFromName(
-                    NS_ConvertASCIItoUCS2("ApplyNowSkin").GetUnicode(),
+                    NS_ConvertASCIItoUCS2("ApplyNowSkin").get(),
                     getter_Copies(applyNowText));
                 xpiBundle->GetStringFromName(
-                    NS_ConvertASCIItoUCS2("ConfirmSkin").GetUnicode(),
+                    NS_ConvertASCIItoUCS2("ConfirmSkin").get(),
                     getter_Copies(confirmFormat));
             }
 
             confirmText = nsTextFormatter::smprintf(confirmFormat,
-                                                    item->mName.GetUnicode(),
-                                                    item->mURL.GetUnicode());
+                                                    item->mName.get(),
+                                                    item->mURL.get());
         }
     }
 
@@ -409,7 +409,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                 if (NS_FAILED(rv))
                 {
                     // serious problem with trigger! try to carry on
-                    mTriggers->SendStatus( mItem->mURL.GetUnicode(), 
+                    mTriggers->SendStatus( mItem->mURL.get(), 
                                            nsInstall::DOWNLOAD_ERROR );
                     mItem->mFile = 0;
                 }
@@ -446,7 +446,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
             if (NS_FAILED(rv))
             {
                 // announce failure
-                mTriggers->SendStatus( mItem->mURL.GetUnicode(), 
+                mTriggers->SendStatus( mItem->mURL.get(), 
                                        nsInstall::DOWNLOAD_ERROR );
                 mItem->mFile = 0;
                 // carry on with the next one
@@ -476,8 +476,8 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 
                     if ( mChromeType == 0 ) {
                         rv = softupdate->InstallJar(mItem->mFile,
-                                                mItem->mURL.GetUnicode(),
-                                                mItem->mArguments.GetUnicode(),
+                                                mItem->mURL.get(),
+                                                mItem->mArguments.get(),
                                                 mParentWindow,
                                                 mItem->mFlags,
                                                 this );
@@ -485,8 +485,8 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                     else {
                         rv = softupdate->InstallChrome(mChromeType,
                                                 mItem->mFile,
-                                                mItem->mURL.GetUnicode(),
-                                                mItem->mName.GetUnicode(),
+                                                mItem->mURL.get(),
+                                                mItem->mName.get(),
                                                 mSelectChrome,
                                                 this );
                     }
@@ -496,7 +496,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                         // it failed so remove it from the count
                         PR_AtomicDecrement(&mNumJars);
                         // send the error status to any trigger callback
-                        mTriggers->SendStatus( mItem->mURL.GetUnicode(),
+                        mTriggers->SendStatus( mItem->mURL.get(),
                                                nsInstall::UNEXPECTED_ERROR );
                     }
                 }
@@ -635,7 +635,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
             directoryService->Get(NS_OS_TEMP_DIR,
                                   NS_GET_IID(nsIFile), 
                                   getter_AddRefs(temp));
-            temp->AppendUnicode(leaf.GetUnicode());
+            temp->AppendUnicode(leaf.get());
             MakeUnique(temp);
             *file = temp;
             NS_IF_ADDREF(*file);
@@ -667,7 +667,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
 
                 if (NS_SUCCEEDED(rv))
                 {
-                    userChrome->AppendUnicode(leaf.GetUnicode());
+                    userChrome->AppendUnicode(leaf.get());
                     MakeUnique(userChrome);
                     *file = userChrome;
                     NS_IF_ADDREF(*file);
@@ -759,7 +759,7 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
             mItem->mFile = 0;
         }
 
-        mTriggers->SendStatus( mItem->mURL.GetUnicode(),
+        mTriggers->SendStatus( mItem->mURL.get(),
                                nsInstall::DOWNLOAD_ERROR );
     }
 
@@ -886,7 +886,7 @@ NS_IMETHODIMP
 nsXPInstallManager::InstallStarted(const PRUnichar *URL, const PRUnichar *UIPackageName)
 {
     mDlg->SetActionText(nsnull);
-    return mDlg->SetHeading( nsString(UIPackageName).GetUnicode() );
+    return mDlg->SetHeading( nsString(UIPackageName).get() );
 }
 
 NS_IMETHODIMP 
@@ -896,7 +896,7 @@ nsXPInstallManager::ItemScheduled(const PRUnichar *message)
     if (TimeToUpdate(now))
     {
         mLastUpdate = now;
-        return mDlg->SetActionText( nsString(message).GetUnicode() );
+        return mDlg->SetActionText( nsString(message).get() );
     }
     else
         return NS_OK;
@@ -913,7 +913,7 @@ nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, 
         if (mStringBundle)
         {
             nsString rsrcName; rsrcName.AssignWithConversion("FinishingInstallMsg");
-            const PRUnichar* ucRsrcName = rsrcName.GetUnicode();
+            const PRUnichar* ucRsrcName = rsrcName.get();
             PRUnichar* ucRsrcVal = nsnull;
             rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
             if (NS_SUCCEEDED(rv) && ucRsrcVal)

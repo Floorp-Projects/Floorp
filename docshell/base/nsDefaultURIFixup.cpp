@@ -68,7 +68,7 @@ NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsI
     uriString.StripChars("\r\n");
 
     // Check for if it is a file URL
-    FileURIFixup(uriString.GetUnicode(), aURI);
+    FileURIFixup(uriString.get(), aURI);
     if(*aURI)
         return NS_OK;
 
@@ -97,7 +97,7 @@ NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsI
     }
     if (fixupKeywords)
     {
-        KeywordURIFixup(uriString.GetUnicode(), aURI);
+        KeywordURIFixup(uriString.get(), aURI);
         if(*aURI)
             return NS_OK;
     }
@@ -155,7 +155,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
     }
 #elif XP_UNIX
     // Check if it starts with / or \ (UNIX)
-    const PRUnichar * up = aIn.GetUnicode();
+    const PRUnichar * up = aIn.get();
     if((PRUnichar('/') == *up) || (PRUnichar('\\') == *up))
     {
         attemptFixup = PR_TRUE;
@@ -259,11 +259,11 @@ nsresult nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn,
         getter_AddRefs(fsEncoder)), NS_ERROR_FAILURE);
 
     PRInt32 bufLen = 0;
-    NS_ENSURE_SUCCESS(fsEncoder->GetMaxLength(aIn.GetUnicode(), aIn.Length(),
+    NS_ENSURE_SUCCESS(fsEncoder->GetMaxLength(aIn.get(), aIn.Length(),
         &bufLen), NS_ERROR_FAILURE);
     aOut.SetCapacity(bufLen+1);
     PRInt32 srclen = aIn.Length();
-    NS_ENSURE_SUCCESS(fsEncoder->Convert(aIn.GetUnicode(), &srclen, 
+    NS_ENSURE_SUCCESS(fsEncoder->Convert(aIn.get(), &srclen, 
         (char*)aOut.get(), &bufLen), NS_ERROR_FAILURE);
 
     ((char*)aOut.get())[bufLen]='\0';

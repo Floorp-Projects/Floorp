@@ -447,7 +447,7 @@ CNamedEntity* nsDTDContext::GetEntity(const nsString& aName)const {
       theLen--;
     }
 
-    const PRUnichar *theBuf=aName.GetUnicode();
+    const PRUnichar *theBuf=aName.get();
     if(kQuote==theBuf[0]) {
       theBuf++;
       theLen--;
@@ -1572,7 +1572,7 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniq
       for(index=0;index<theObserversCount;index++) {
         nsIElementObserver* observer=NS_STATIC_CAST(nsIElementObserver*,theObservers->ObjectAt(index));
         if(observer) {
-          result=observer->Notify((nsISupports*)aUniqueID,theTagStr.GetUnicode(),&keys,&values);
+          result=observer->Notify((nsISupports*)aUniqueID,theTagStr.get(),&keys,&values);
           if(NS_FAILED(result)) {
             break;
           }
@@ -1658,7 +1658,7 @@ void CObserverService::RegisterObservers(const nsString& aTopic) {
                                       (nsISupports**) &theObserverService, nsnull);
   if(result == NS_OK){
     nsIEnumerator* theEnum = nsnull;
-    result = theObserverService->EnumerateObserverList(aTopic.GetUnicode(), &theEnum);
+    result = theObserverService->EnumerateObserverList(aTopic.get(), &theEnum);
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, theObserverService);
 
     if(result == NS_OK) {

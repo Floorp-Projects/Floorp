@@ -76,7 +76,7 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
   PRUint32 actualSize;
   GetText(currentText, 256, actualSize);
   nsString newText(aText);
-  currentText.Insert(newText.GetUnicode(), aStartPos, aText.Length());
+  currentText.Insert(newText.get(), aStartPos, aText.Length());
   SetText(currentText,actualSize);
   aActualSize = aText.Length();
 

@@ -83,7 +83,7 @@ nsresult StringUnicharInputStream::Read(PRUnichar* aBuf,
     *aReadCount = 0;
     return (nsresult)-1;
   }
-  const PRUnichar* us = mString->GetUnicode();
+  const PRUnichar* us = mString->get();
   NS_ASSERTION(mLen >= mPos, "unsigned madness");
   PRUint32 amount = mLen - mPos;
   if (amount > aCount) {

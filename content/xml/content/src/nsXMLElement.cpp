@@ -208,7 +208,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 
         if (!base.IsEmpty()) {
           // XXX URL escape?
-          str.AssignWithConversion(base.GetUnicode());
+          str.AssignWithConversion(base.get());
           nsXPIDLCString resolvedStr;
           rv = (*aURI)->Resolve(str, getter_Copies(resolvedStr));
           if (NS_FAILED(rv)) break;

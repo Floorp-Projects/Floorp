@@ -687,7 +687,7 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
             rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            const PRUnichar *formatStrings[2] = { numDownloadedStr.GetUnicode(), totalToDownloadStr.GetUnicode() };
+            const PRUnichar *formatStrings[2] = { numDownloadedStr.get(), totalToDownloadStr.get() };
             rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingHeaders").get(), formatStrings, 2, getter_Copies(statusString));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -781,7 +781,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
             rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            const PRUnichar *formatStrings[2] = { firstStr.GetUnicode(), lastStr.GetUnicode() };
+            const PRUnichar *formatStrings[2] = { firstStr.get(), lastStr.get() };
             rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingArticles").get(), formatStrings, 2, getter_Copies(statusString));
             NS_ENSURE_SUCCESS(rv, rv);
 

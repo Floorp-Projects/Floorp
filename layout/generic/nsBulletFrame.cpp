@@ -270,7 +270,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
       nsBidiPresUtils* bidiUtils;
       aPresContext->GetBidiUtils(&bidiUtils);
       if (bidiUtils) {
-        const PRUnichar* buffer = text.GetUnicode();
+        const PRUnichar* buffer = text.get();
         PRInt32 textLength = text.Length();
         if (eCharType_RightToLeft == charType) {
           bidiUtils->FormatUnicodeText(aPresContext, (PRUnichar*)buffer, textLength,
@@ -348,7 +348,7 @@ static void OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& re
 {
    PRUnichar diff = zeroChar - PRUnichar('0');
    DecimalToText(ordinal, result); 
-   PRUnichar* p = (PRUnichar*)result.GetUnicode();
+   PRUnichar* p = (PRUnichar*)result.get();
    for(; nsnull != *p ; p++) 
       *p += diff;
 }
@@ -356,7 +356,7 @@ static void TamilToText(PRInt32 ordinal,  nsString& result)
 {
    PRUnichar diff = 0x0BE6 - PRUnichar('0');
    DecimalToText(ordinal, result); 
-   PRUnichar* p = (PRUnichar*)result.GetUnicode();
+   PRUnichar* p = (PRUnichar*)result.get();
    for(; nsnull != *p ; p++) 
       if(*p != PRUnichar('0'))
          *p += diff;
@@ -376,7 +376,7 @@ static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, c
   nsAutoString addOn, decStr;
   decStr.AppendInt(ordinal, 10);
   PRIntn len = decStr.Length();
-  const PRUnichar* dp = decStr.GetUnicode();
+  const PRUnichar* dp = decStr.get();
   const PRUnichar* end = dp + len;
   PRIntn romanPos = len;
   PRIntn n;

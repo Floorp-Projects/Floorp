@@ -207,7 +207,7 @@ nsEventQueueImpl::NotifyObservers(const char *aTopic)
     topic.AssignWithConversion(aTopic);
     nsCOMPtr<nsIEventQueue> kungFuDeathGrip(this);
     nsCOMPtr<nsISupports> us(do_QueryInterface(kungFuDeathGrip));
-    os->Notify(us, topic.GetUnicode(), NULL);
+    os->Notify(us, topic.get(), NULL);
   }
 }
 

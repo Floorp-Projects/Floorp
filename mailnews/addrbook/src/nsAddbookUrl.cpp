@@ -128,13 +128,13 @@ nsAddbookUrl::CrackPrintURL(const char *searchPart, PRInt32 aOperation)
   if (!emailAddr.IsEmpty())
   {
     nsUnescape(NS_CONST_CAST(char*, emailAddr.get()));
-    mAbCardProperty->SetCardValue(kPriEmailColumn, NS_ConvertASCIItoUCS2(emailAddr).GetUnicode());
+    mAbCardProperty->SetCardValue(kPriEmailColumn, NS_ConvertASCIItoUCS2(emailAddr).get());
   }
 
   if (!folderName.IsEmpty())
   {
     nsUnescape(NS_CONST_CAST(char*, folderName.get()));
-    mAbCardProperty->SetCardValue(kWorkAddressBook, NS_ConvertASCIItoUCS2(folderName).GetUnicode());
+    mAbCardProperty->SetCardValue(kWorkAddressBook, NS_ConvertASCIItoUCS2(folderName).get());
   }
   
   return NS_OK;

@@ -506,7 +506,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
       // RICHIE - REMOVE THIS BEFORE SHIPPING!!!!
 #ifdef DEBUG
       PRUnichar *msgValue = nsnull;
-      msgValue = nsTextFormatter::smprintf(nsString(NS_ConvertASCIItoUCS2("Server: %s - port %d")).GetUnicode(),
+      msgValue = nsTextFormatter::smprintf(nsString(NS_ConvertASCIItoUCS2("Server: %s - port %d")).get(),
                                            mMojoSyncSpec, mMojoSyncPort);
       NotifyListenersOnStatus(mTransactionID, msgValue);
       PR_FREEIF(msgValue);

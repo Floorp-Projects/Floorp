@@ -139,7 +139,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::getAttribute(BSTR strAttributeName, LO
     {
         USES_CONVERSION;
         AttributeValue->vt = VT_BSTR;
-        AttributeValue->bstrVal = SysAllocString(W2COLE(szValue.GetUnicode()));
+        AttributeValue->bstrVal = SysAllocString(W2COLE(szValue.get()));
         return S_OK;
     }
     else
@@ -242,7 +242,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_tagName(BSTR __RPC_FAR *p)
     element->GetTagName(szTagName);
 
     USES_CONVERSION;
-    *p = SysAllocString(W2COLE(szTagName.GetUnicode()));
+    *p = SysAllocString(W2COLE(szTagName.get()));
     return S_OK;
 }
 
@@ -545,7 +545,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_innerHTML(BSTR __RPC_FAR *p)
     elementHTML->GetInnerHTML(szTagName);
 
     USES_CONVERSION;
-    *p = SysAllocString(W2COLE(szTagName.GetUnicode()));
+    *p = SysAllocString(W2COLE(szTagName.get()));
     return S_OK;
 }
 

@@ -102,7 +102,7 @@ nsP3PObserverHTML::~nsP3PObserverHTML( ) {
 
   if (mObserverService) {
     mObserverService->RemoveObserver( this,
-                                      mObserverTopic.GetUnicode( ) );
+                                      mObserverTopic.get() );
   }
 }
 
@@ -132,7 +132,7 @@ nsP3PObserverHTML::Init( ) {
   if (NS_SUCCEEDED( rv )) {
     // Register to observe HTML tags
     rv = mObserverService->AddObserver( this,
-                                        mObserverTopic.GetUnicode( ) );
+                                        mObserverTopic.get() );
 
     if (NS_FAILED( rv )) {
 #ifdef DEBUG_P3P

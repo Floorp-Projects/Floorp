@@ -230,7 +230,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 
     rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
     if (child)
-      child->SetName(currentFolderNameStr.GetUnicode());
+      child->SetName(currentFolderNameStr.get());
   }
 	return rv;
 }
@@ -819,7 +819,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 			//Now let's create the actual new folder
 			rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
 			if (child)
-				child->SetName(folderNameStr.GetUnicode());
+				child->SetName(folderNameStr.get());
             unusedDB->SetSummaryValid(PR_TRUE);
             unusedDB->Close(PR_TRUE);
         }
@@ -931,7 +931,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                     nsString folderName(idlFolderName);
                     trashFolder->SetParent(nsnull);
                     parentFolder->PropagateDelete(trashFolder, PR_TRUE);
-                    parentFolder->CreateSubfolder(folderName.GetUnicode(),nsnull);
+                    parentFolder->CreateSubfolder(folderName.get(),nsnull);
                     nsCOMPtr<nsIMsgFolder> newTrashFolder;
                     rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
                     if (NS_SUCCEEDED(rv) && newTrashFolder)
@@ -1064,7 +1064,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
     trashFolder->AddSubfolder(&folderName, getter_AddRefs(child));
     if (child) 
     {
-      child->SetName(folderName.GetUnicode());
+      child->SetName(folderName.get());
       nsCOMPtr<nsISupports> childSupports = do_QueryInterface(child);
       nsCOMPtr<nsISupports> trashSupports = do_QueryInterface(trashFolder);
       if (childSupports && trashSupports)
@@ -1221,7 +1221,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
         nsAutoString newFolderName(aNewName);
 		rv = parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
 		if (newFolder) {
-			newFolder->SetName(newFolderName.GetUnicode());
+			newFolder->SetName(newFolderName.get());
 			nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
 			NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
 		}
@@ -1867,7 +1867,7 @@ nsMsgLocalMailFolder::CopyFolderLocal( nsIMsgFolder *destFolder, nsIMsgFolder *s
 
   if (newMsgFolder) 
   {
-      newMsgFolder->SetName(folderName.GetUnicode());
+      newMsgFolder->SetName(folderName.get());
       nsCOMPtr<nsISupports> supports = do_QueryInterface(newMsgFolder);
       nsCOMPtr<nsISupports> parentSupports  = do_QueryInterface(destFolder);
 
@@ -3001,7 +3001,7 @@ nsresult nsMsgLocalMailFolder::DisplayMoveCopyStatusMsg()
       nsAutoString totalMessagesString;
       totalMessagesString.AppendInt(mCopyState->m_totalMsgCount);
 
-      const PRUnichar * stringArray[] = { numMsgSoFarString.GetUnicode(), totalMessagesString.GetUnicode(), folderName.get() };
+      const PRUnichar * stringArray[] = { numMsgSoFarString.get(), totalMessagesString.get(), folderName.get() };
       rv = mCopyState->m_stringBundle->FormatStringFromID(statusMsgId, stringArray, 3,
                                                getter_Copies(finalString));
       PRInt64 minIntervalBetweenProgress;

@@ -274,7 +274,7 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
   key.ToLowerCase(); // we lowercase the main comparison key
   if (aProp != NULL) key.Append(*aProp); // yes, this param may be NULL
 
-  res = aBundle->GetStringFromName(key.GetUnicode(), aResult);
+  res = aBundle->GetStringFromName(key.get(), aResult);
   return res;
 }
 
@@ -344,7 +344,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration(
     if (NS_FAILED(res)) goto next;
 
     fullName.AppendWithConversion(name);
-    res = GetCharsetAtom(fullName.GetUnicode(), getter_AddRefs(atom));
+    res = GetCharsetAtom(fullName.get(), getter_AddRefs(atom));
     if (NS_FAILED(res)) goto next;
 
     res = array->AppendElement(atom);
@@ -426,7 +426,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration2(
     if (aDecoder) {
       if (!strcmp(dest, "Unicode")) {
         fullName.AssignWithConversion(src);
-        res = GetCharsetAtom(fullName.GetUnicode(), getter_AddRefs(atom));
+        res = GetCharsetAtom(fullName.get(), getter_AddRefs(atom));
         if (NS_FAILED(res)) goto done1;
 
         res = array->AppendElement(atom);
@@ -435,7 +435,7 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration2(
     } else {
       if (!strcmp(src, "Unicode")) {
         fullName.AssignWithConversion(dest);
-        res = GetCharsetAtom(fullName.GetUnicode(), getter_AddRefs(atom));
+        res = GetCharsetAtom(fullName.get(), getter_AddRefs(atom));
         if (NS_FAILED(res)) goto done1;
 
         res = array->AppendElement(atom);
@@ -534,7 +534,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
   nsAutoString prop; prop.AssignWithConversion(".LangGroup");
 
   nsCOMPtr<nsIAtom> atom;
-  nsresult res = GetCharsetAtom(aCharset->GetUnicode(), getter_AddRefs(atom));
+  nsresult res = GetCharsetAtom(aCharset->get(), getter_AddRefs(atom));
   if (NS_FAILED(res)) return res;
 
   res = GetCharsetLangGroup(atom, aResult);
@@ -653,7 +653,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom2(
 {
   nsAutoString str;
   str.AssignWithConversion(aCharset);
-  return GetCharsetAtom(str.GetUnicode(), aResult);
+  return GetCharsetAtom(str.get(), aResult);
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(

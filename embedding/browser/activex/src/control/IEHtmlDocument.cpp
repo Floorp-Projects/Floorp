@@ -297,7 +297,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_title(BSTR __RPC_FAR *p)
     {
         return E_FAIL;
     }
-    *p = SysAllocString(value.GetUnicode()); 
+    *p = SysAllocString(value.get()); 
     return p ? S_OK : E_OUTOFMEMORY;
 }
 

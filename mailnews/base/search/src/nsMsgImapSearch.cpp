@@ -52,7 +52,7 @@ nsresult nsMsgSearchOnlineMail::ValidateTerms ()
       GetSearchCharsets(srcCharset, dstCharset);
 
       // do IMAP specific validation
-      err = Encode (m_encoding, m_searchTerms, dstCharset.GetUnicode());
+      err = Encode (m_encoding, m_searchTerms, dstCharset.get());
       NS_ASSERTION(NS_SUCCEEDED(err), "failed to encode imap search");
   }
   
@@ -147,13 +147,13 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
 
   nsAutoString usAsciiCharSet; usAsciiCharSet.AssignWithConversion("us-ascii");
 	// Get the optional CHARSET parameter, in case we need it.
-  char *csname = GetImapCharsetParam(asciiOnly ? usAsciiCharSet.GetUnicode() : destCharset);
+  char *csname = GetImapCharsetParam(asciiOnly ? usAsciiCharSet.get() : destCharset);
 
   // We do not need "srcCharset" since the search term in always unicode.
   // I just pass destCharset for both src and dest charset instead of removing srcCharst from the arguemnt.
   nsresult err = nsMsgSearchAdapter::EncodeImap (getter_Copies(imapTerms), searchTerms, 
-                                                 asciiOnly ?  usAsciiCharSet.GetUnicode(): destCharset, 
-                                                 asciiOnly ?  usAsciiCharSet.GetUnicode(): destCharset, PR_FALSE);
+                                                 asciiOnly ?  usAsciiCharSet.get(): destCharset, 
+                                                 asciiOnly ?  usAsciiCharSet.get(): destCharset, PR_FALSE);
   if (NS_SUCCEEDED(err))
   {
     pEncoding.Append("SEARCH");

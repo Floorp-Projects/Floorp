@@ -2508,8 +2508,8 @@ PresShell::NotifyReflowObservers(const char *aData)
       sTopic.AssignWithConversion( NS_PRESSHELL_REFLOW_TOPIC );
       sData.AssignWithConversion( aData );
       result = mObserverService->Notify( pDocShell,
-                                         sTopic.GetUnicode( ),
-                                         sData.GetUnicode( ) );
+                                         sTopic.get(),
+                                         sData.get() );
       // notice that we don't really care what the observer service returns
     }
   }

@@ -239,7 +239,7 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
                 rv = bundleService->CreateBundle( "chrome://global/locale/downloadProgress.properties",
                                                   getter_AddRefs(bundle) );
                 if ( NS_SUCCEEDED( rv ) ) {
-                    rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( "FilePickerTitle" ).GetUnicode(),
+                    rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( "FilePickerTitle" ).get(),
                                                     &pString );
                     if ( NS_SUCCEEDED( rv ) && pString ) {
                         title = pString;
@@ -248,11 +248,11 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
                 }
             }
         
-            rv = picker->Init( parent, title.GetUnicode(), nsIFilePicker::modeSave );
+            rv = picker->Init( parent, title.get(), nsIFilePicker::modeSave );
             PRInt16 rc = nsIFilePicker::returnCancel;
             if ( NS_SUCCEEDED( rv ) ) {
                 // Set default file name.
-                rv = picker->SetDefaultString( suggested.GetUnicode() );
+                rv = picker->SetDefaultString( suggested.get() );
 
                 // Set file filter mask.
                 rv = picker->AppendFilters( nsIFilePicker::filterAll );
@@ -340,7 +340,7 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
                         break;
 
                     if (!(*ptr))
-                      result = NS_ConvertASCIItoUCS2(nameFromURL).GetUnicode();
+                      result = NS_ConvertASCIItoUCS2(nameFromURL).get();
 
                     nsCRT::free( nameFromURL );
                 }

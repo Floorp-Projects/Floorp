@@ -319,7 +319,7 @@ void
 EmbedPrivate::LoadCurrentURI(void)
 {
   if (mURI.Length())
-    mNavigation->LoadURI(mURI.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    mNavigation->LoadURI(mURI.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 /* static */

@@ -148,7 +148,7 @@ nsIsIndexFrame::UpdatePromptLabel()
                                                      "IsIndexPrompt", prompt);
   }
   nsCOMPtr<nsITextContent> text = do_QueryInterface(mTextContent);
-  result = text->SetText(prompt.GetUnicode(), prompt.Length(), PR_TRUE);
+  result = text->SetText(prompt.get(), prompt.Length(), PR_TRUE);
   return result;
 }
 
@@ -466,7 +466,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     // Now pass on absolute url to the click handler
     if (handler) {
       handler->OnLinkClick(mContent, eLinkVerb_Replace,
-                           absURLSpec.GetUnicode(),
+                           absURLSpec.get(),
                            nsnull, nsnull);
     }
   }
@@ -549,7 +549,7 @@ nsIsIndexFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder, n
 {
   char* inBuf = nsnull;
   if(encoder)
-    inBuf  = UnicodeToNewBytes(aString.GetUnicode(), aString.Length(), encoder);
+    inBuf  = UnicodeToNewBytes(aString.get(), aString.Length(), encoder);
 
   if(nsnull == inBuf)
     inBuf  = aString.ToNewCString();

@@ -61,7 +61,7 @@ SplitString(nsString&    aString, // [IN/OUT]
 
   aString.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)aString.GetUnicode();
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)aString.get();
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {

@@ -159,7 +159,7 @@ nsDOMDocumentType::GetInternalSubset(nsAWritableString& aInternalSubset)
 NS_IMETHODIMP 
 nsDOMDocumentType::GetTag(nsIAtom*& aResult) const
 {
-  aResult = NS_NewAtom(mName.GetUnicode());
+  aResult = NS_NewAtom(mName.get());
 
   return NS_OK;
 }

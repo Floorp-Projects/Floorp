@@ -84,10 +84,10 @@ nsSubscribeDataSource::Init()
     rv = mRDFService->GetResource(NC_NAMESPACE_URI "ServerType",getter_AddRefs(kNC_ServerType));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),getter_AddRefs(kTrueLiteral));
+    rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").get(),getter_AddRefs(kTrueLiteral));
     NS_ENSURE_SUCCESS(rv,rv);
   
-    rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("false").GetUnicode(),getter_AddRefs(kFalseLiteral));
+    rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("false").get(),getter_AddRefs(kFalseLiteral));
     NS_ENSURE_SUCCESS(rv,rv);
 	return NS_OK;
 }
@@ -155,7 +155,7 @@ nsSubscribeDataSource::GetTarget(nsIRDFResource *source,
 
     if (property == kNC_Name.get()) {
         nsCOMPtr<nsIRDFLiteral> name;
-        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)relativePath).GetUnicode(), getter_AddRefs(name));
+        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)relativePath).get(), getter_AddRefs(name));
         NS_ENSURE_SUCCESS(rv,rv);
 
         if (!name) rv = NS_RDF_NO_VALUE;
@@ -196,7 +196,7 @@ nsSubscribeDataSource::GetTarget(nsIRDFResource *source,
         NS_ENSURE_SUCCESS(rv,rv);
 
         nsCOMPtr<nsIRDFLiteral> serverType;
-        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)serverTypeStr).GetUnicode(), getter_AddRefs(serverType));
+        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)serverTypeStr).get(), getter_AddRefs(serverType));
         NS_ENSURE_SUCCESS(rv,rv);
 
         if (!serverType) rv = NS_RDF_NO_VALUE;
@@ -324,7 +324,7 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
     }
     else if (property == kNC_Name.get()) {
         nsCOMPtr<nsIRDFLiteral> name;
-        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)relativePath).GetUnicode(), getter_AddRefs(name));
+        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)relativePath).get(), getter_AddRefs(name));
         NS_ENSURE_SUCCESS(rv,rv);
 
         nsISimpleEnumerator* result = new nsSingletonEnumerator(name);
@@ -340,7 +340,7 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
         NS_ENSURE_SUCCESS(rv,rv);
 
         nsCOMPtr<nsIRDFLiteral> serverType;
-        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)serverTypeStr).GetUnicode(), getter_AddRefs(serverType));
+        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)serverTypeStr).get(), getter_AddRefs(serverType));
         NS_ENSURE_SUCCESS(rv,rv);
 
         nsISimpleEnumerator* result = new nsSingletonEnumerator(serverType);

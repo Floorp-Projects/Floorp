@@ -84,7 +84,7 @@ CreateUtf7ConvertedString(const char * aSourceString,
       res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
       if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
       {
-        res = encoder->GetMaxLength(unicodeStr.GetUnicode(), unicodeStr.Length(), &dstLength);
+        res = encoder->GetMaxLength(unicodeStr.get(), unicodeStr.Length(), &dstLength);
         // allocale an output buffer
         dstPtr = (char *) PR_CALLOC(dstLength + 1);
         unicharLength = unicodeStr.Length();
@@ -94,7 +94,7 @@ CreateUtf7ConvertedString(const char * aSourceString,
         }
         else 
         {
-          res = encoder->Convert(unicodeStr.GetUnicode(), &unicharLength, dstPtr, &dstLength);
+          res = encoder->Convert(unicodeStr.get(), &unicharLength, dstPtr, &dstLength);
           dstPtr[dstLength] = 0;
         }
       }
@@ -132,7 +132,7 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
       res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
       if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
       {
-        res = encoder->GetMaxLength(unicodeStr.GetUnicode(), unicodeStr.Length(), &dstLength);
+        res = encoder->GetMaxLength(unicodeStr.get(), unicodeStr.Length(), &dstLength);
         // allocale an output buffer
         dstPtr = (char *) PR_CALLOC(dstLength + 1);
         unicharLength = unicodeStr.Length();
@@ -146,7 +146,7 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
 		  char finishBuffer[20];
 		  PRInt32 finishSize = sizeof(finishBuffer);
 
-          res = encoder->Convert(unicodeStr.GetUnicode(), &unicharLength, dstPtr, &dstLength);
+          res = encoder->Convert(unicodeStr.get(), &unicharLength, dstPtr, &dstLength);
 		  encoder->Finish(finishBuffer, &finishSize);
 		  finishBuffer[finishSize] = '\0';
           dstPtr[dstLength] = 0;

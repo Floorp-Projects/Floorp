@@ -105,7 +105,7 @@ nsP3PObserverLayout::~nsP3PObserverLayout( ) {
 
   if (mObserverService) {
     mObserverService->RemoveObserver( this,
-                                      mObserverTopic.GetUnicode( ) );
+                                      mObserverTopic.get() );
   }
 }
 
@@ -135,7 +135,7 @@ nsP3PObserverLayout::Init( ) {
   if (NS_SUCCEEDED( rv )) {
     // Register to observe Reflows
     rv = mObserverService->AddObserver( this,
-                                        mObserverTopic.GetUnicode( ) );
+                                        mObserverTopic.get() );
 
     if (NS_FAILED( rv )) {
 #ifdef DEBUG_P3P

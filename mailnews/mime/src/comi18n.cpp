@@ -754,7 +754,7 @@ convert_and_encode:
         nsAutoString fmt; fmt.AssignWithConversion("%s");
         char aChar = begin[len];
         begin[len] = '\0';
-        u = nsTextFormatter::smprintf(fmt.GetUnicode(), begin);
+        u = nsTextFormatter::smprintf(fmt.get(), begin);
         begin[len] = aChar;
         if (NULL == u) {
             PR_FREEIF(srcbuf);

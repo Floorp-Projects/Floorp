@@ -1096,7 +1096,7 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 	#if 0	
 	// Get the RDF literal and add it to our node 
 	nsCOMPtr<nsIRDFLiteral> windowTitleLiteral;
-	if (NS_FAILED(rv = gRDFService->GetLiteral( windowTitle.GetUnicode(), getter_AddRefs(windowTitleLiteral))))
+	if (NS_FAILED(rv = gRDFService->GetLiteral( windowTitle.get(), getter_AddRefs(windowTitleLiteral))))
 	{
 		NS_ERROR("unable to create literal for window name");
 		return rv;

@@ -95,7 +95,7 @@ PRBool TestASCIILB(nsILineBreaker *lb,
          PRBool finishThisFrag = PR_FALSE;
          for(i = 0, curr = 0; ((! finishThisFrag) && (i < 256)); i++)
          {
-            lb->Next(eng1.GetUnicode(), eng1.Length(), curr, 
+            lb->Next(eng1.get(), eng1.Length(), curr, 
                     &curr,
                     &finishThisFrag);
             res [i] = curr;
@@ -146,7 +146,7 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
                  const PRUint32* out, PRUint32 outlen)
 {
          nsAutoString eng1; eng1.AssignWithConversion(in);
-         // nsBreakState bk(eng1.GetUnicode(), eng1.Length());
+         // nsBreakState bk(eng1.get(), eng1.Length());
 
          PRUint32 i,j;
          PRUint32 res[256];
@@ -154,9 +154,9 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
          PRBool done;
          PRUint32 curr =0;
 
-         for(i = 0, lb->Next(eng1.GetUnicode(), eng1.Length(), curr, &curr, &done);
+         for(i = 0, lb->Next(eng1.get(), eng1.Length(), curr, &curr, &done);
                     (! done ) && (i < 256);
-                    lb->Next(eng1.GetUnicode(), eng1.Length(), curr, &curr, &done), i++)
+                    lb->Next(eng1.get(), eng1.Length(), curr, &curr, &done), i++)
          {
             res [i] = curr;
          }
@@ -431,11 +431,11 @@ void SamplePrintWordWithBreak()
    for(PRUint32 i = 0; i < numOfFragment; i++)
    {
       nsAutoString fragText; fragText.AssignWithConversion(wb[i]); 
-      // nsBreakState bk(fragText.GetUnicode(), fragText.Length());
+      // nsBreakState bk(fragText.get(), fragText.Length());
 
       PRUint32 cur = 0;
       PRBool done;
-      res = wbk->Next(fragText.GetUnicode(), fragText.Length(), cur, &cur, &done);
+      res = wbk->Next(fragText.get(), fragText.Length(), cur, &cur, &done);
       PRUint32 start = 0;
       for(PRUint32 j = 0; ! done ; j++)
       {
@@ -444,7 +444,7 @@ void SamplePrintWordWithBreak()
             result.Append(tmp);
             result.AppendWithConversion("^");
             start = cur;
-            wbk->Next(fragText.GetUnicode(), fragText.Length(), cur, &cur, &done);
+            wbk->Next(fragText.get(), fragText.Length(), cur, &cur, &done);
       }
 
       tmp.SetLength(0);
@@ -457,9 +457,9 @@ void SamplePrintWordWithBreak()
         nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[i+1]);
  
         PRBool canBreak = PR_TRUE;
-        res = wbk->BreakInBetween( fragText.GetUnicode(), 
+        res = wbk->BreakInBetween( fragText.get(), 
                                   fragText.Length(),
-                                  nextFragText.GetUnicode(), 
+                                  nextFragText.get(), 
                                   nextFragText.Length(),
                                   &canBreak
                                 );
@@ -493,7 +493,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
 
 
    nsAutoString result;
-   res = wbk->FindWord(fragText.GetUnicode(), fragText.Length(), 
+   res = wbk->FindWord(fragText.get(), fragText.Length(), 
                           offset, &begin, &end);
 
    PRBool canbreak;
@@ -505,16 +505,16 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
      for(PRUint32  p = fragN +1; p < numOfFragment ;p++)
      {
         nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[p]); 
-        res = wbk->BreakInBetween(curFragText.GetUnicode(), 
+        res = wbk->BreakInBetween(curFragText.get(), 
                                   curFragText.Length(),
-                                  nextFragText.GetUnicode(), 
+                                  nextFragText.get(), 
                                   nextFragText.Length(),
                                   &canbreak);
         if(canbreak)
            break;
  
         PRUint32 b, e;
-        res = wbk->FindWord(nextFragText.GetUnicode(), nextFragText.Length(), 
+        res = wbk->FindWord(nextFragText.get(), nextFragText.Length(), 
                           0, &b, &e);
 
         nsAutoString tmp;
@@ -534,16 +534,16 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
      for(PRUint32  p = fragN ; p > 0 ;p--)
      {
         nsAutoString prevFragText; prevFragText.AssignWithConversion(wb[p-1]); 
-        res = wbk->BreakInBetween(prevFragText.GetUnicode(), 
+        res = wbk->BreakInBetween(prevFragText.get(), 
                                   prevFragText.Length(),
-                                  curFragText.GetUnicode(), 
+                                  curFragText.get(), 
                                   curFragText.Length(),
                                   &canbreak);
         if(canbreak)
            break;
  
         PRUint32 b, e;
-        res = wbk->FindWord(prevFragText.GetUnicode(), prevFragText.Length(), 
+        res = wbk->FindWord(prevFragText.get(), prevFragText.Length(), 
                           prevFragText.Length(), &b, &e);
 
         nsAutoString tmp;

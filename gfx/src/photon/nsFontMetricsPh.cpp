@@ -411,11 +411,11 @@ NS_IMPL_ISUPPORTS(nsFontEnumeratorPh, NS_GET_IID(nsIFontEnumerator));
 static int gInitializedFontEnumerator = 0;
 static PLHashNumber HashKey(const void* aString) {
   const nsString* key = (const nsString*) aString;
-  return (PLHashNumber) nsCRT::HashCode(key->GetUnicode());
+  return (PLHashNumber) nsCRT::HashCode(key->get());
 	}
 
 static PRIntn CompareKeys( const void* aStr1, const void* aStr2 ) {
-  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(), ((const nsString*) aStr2)->GetUnicode()) == 0;
+  return nsCRT::strcmp(((const nsString*) aStr1)->get(), ((const nsString*) aStr2)->get()) == 0;
 	}
 
 static int InitializeFontEnumerator( void ) {

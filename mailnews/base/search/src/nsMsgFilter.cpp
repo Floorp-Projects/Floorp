@@ -462,7 +462,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 
 nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *aStream)
 {
-	nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.GetUnicode(), aStream);
+	nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.get(), aStream);
 	err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled, aStream);
 	err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description, aStream);
 	err = m_filterList->WriteIntAttr(nsIMsgFilterList::attribType, m_type, aStream);

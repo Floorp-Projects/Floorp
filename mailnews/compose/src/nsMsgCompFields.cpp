@@ -607,7 +607,7 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBool em
 					if (NS_FAILED(rv))
 						break;
 
-					rv = pAddrArray->AppendString(aRecipient.GetUnicode(), &aBool);
+					rv = pAddrArray->AppendString(aRecipient.get(), &aBool);
 					if (NS_FAILED(rv))
 						break;
 						
@@ -700,7 +700,7 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
             if (NS_FAILED(rv))
               return rv;
               
-					  rv = pAddrsArray->AppendString(aRecipient.GetUnicode(), &aBool);
+					  rv = pAddrsArray->AppendString(aRecipient.get(), &aBool);
 					  if (NS_FAILED(rv))
 						  return rv;
 					}
@@ -710,7 +710,7 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
             rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), pAddresses, aRecipient);
             if (NS_FAILED(rv))
               return rv;
-					  rv = pEmailsArray->AppendString(aRecipient.GetUnicode(), &aBool);
+					  rv = pEmailsArray->AppendString(aRecipient.get(), &aBool);
 					  if (NS_FAILED(rv))
 						  return rv;
           }
@@ -746,7 +746,7 @@ nsresult nsMsgCompFields::ConvertBodyToPlainText()
 			PR_Free(ubody);
 			rv = ConvertBufToPlainText(body, UseFormatFlowed(GetCharacterSet()));
 			if (NS_SUCCEEDED(rv))
-				rv = SetBody(body.GetUnicode());
+				rv = SetBody(body.get());
 		}
 	}
 	return rv;

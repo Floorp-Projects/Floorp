@@ -673,8 +673,8 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
       if (NS_SUCCEEDED(rv))
       {
         (void) observerService->Notify(mgr,
-            NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
-            NS_ConvertASCIItoUCS2("Unregistering native component").GetUnicode());
+            NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
+            NS_ConvertASCIItoUCS2("Unregistering native component").get());
       }
     }
 
@@ -844,8 +844,8 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
             statusMsg.Append(fileName);
             
             (void) observerService->Notify(mgr,
-                NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
-                statusMsg.GetUnicode());
+                NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get(),
+                statusMsg.get());
           }
         }
 

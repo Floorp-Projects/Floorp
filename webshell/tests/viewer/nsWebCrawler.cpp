@@ -610,7 +610,7 @@ EndsWith(const nsString& aDomain, const char* aHost, PRInt32 aHostLen)
   if (slen < aHostLen) {
     return PR_FALSE;
   }
-  const PRUnichar* uc = aDomain.GetUnicode();
+  const PRUnichar* uc = aDomain.get();
   uc += slen - aHostLen;
   const PRUnichar* end = uc + aHostLen;
   while (uc < end) {
@@ -631,7 +631,7 @@ StartsWith(const nsString& s1, const char* s2)
   if (s1len < s2len) {
     return PR_FALSE;
   }
-  const PRUnichar* uc = s1.GetUnicode();
+  const PRUnichar* uc = s1.get();
   const PRUnichar* end = uc + s2len;
   while (uc < end) {
     unsigned char uch = (unsigned char) ((*uc++) & 0xff);
@@ -833,7 +833,7 @@ nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
             mCurrentURL = *url;
             mStartLoad = PR_Now();
             nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(webShell));
-            webNav->LoadURI(url->GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+            webNav->LoadURI(url->get(), nsIWebNavigation::LOAD_FLAGS_NONE);
           }
           NS_RELEASE(webShell);
 
@@ -1077,7 +1077,7 @@ nsWebCrawler::GoToQueuedURL(const nsString& aURL)
   if (webNav) {
     mCurrentURL = aURL;
     mStartLoad = PR_Now();
-    webNav->LoadURI(aURL.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    webNav->LoadURI(aURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
     NS_RELEASE(webShell);
   }
   mQueuedLoadURLs--;

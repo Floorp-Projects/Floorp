@@ -347,7 +347,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     {
       /* This is the main TXT to HTML conversion:
 	       escaping (very important), eventually recognizing etc. */
-      rv = conv->ScanTXT(lineSource.GetUnicode(), whattodo, &wresult);
+      rv = conv->ScanTXT(lineSource.get(), whattodo, &wresult);
       if (NS_FAILED(rv)) return -1;
       lineResult = wresult;
       Recycle(wresult);
@@ -372,7 +372,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       if (NS_SUCCEEDED(rv))
       {
         PRUnichar *u;
-        rv = conv->ScanTXT(ustr.GetUnicode(), whattodo, &u);
+        rv = conv->ScanTXT(ustr.get(), whattodo, &u);
         if (NS_SUCCEEDED(rv))
         {
           ustr.Assign(u);

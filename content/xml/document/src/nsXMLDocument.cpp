@@ -598,7 +598,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                   if( NS_SUCCEEDED(rv_detect))
                   {
                     rv_detect = adp->Init(wss, cdet, (nsIDocument*)this, 
-                                     mParser, charset.GetUnicode(),aCommand);													
+                                     mParser, charset.get(),aCommand);													
                     nsIParserFilter *oldFilter = nsnull;
                     if(cdetflt)
                       oldFilter = mParser->SetParserFilter(cdetflt);

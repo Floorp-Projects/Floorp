@@ -1399,9 +1399,9 @@ mime_parse_stream_complete (nsMIMESession *stream)
         // convert from UTF-8 to UCS2
         nsString ucs2;
         if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode(nsCAutoString("UTF-8"), nsCAutoString(body), ucs2)))
-          fields->SetBody(ucs2.GetUnicode());
+          fields->SetBody(ucs2.get());
         else
-          fields->SetBody(NS_ConvertASCIItoUCS2(body).GetUnicode());
+          fields->SetBody(NS_ConvertASCIItoUCS2(body).get());
         
         PR_FREEIF(body);
       } // end if (messageBody)

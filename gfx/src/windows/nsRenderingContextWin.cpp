@@ -1737,7 +1737,7 @@ nsRenderingContextWin::GetWidth(const char *aString,
 
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+  return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
@@ -2319,7 +2319,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const nsString& aString,
                                                   PRInt32 aFontID,
                                                   const nscoord* aSpacing)
 {
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
+  return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
 #ifdef MOZ_MATHML

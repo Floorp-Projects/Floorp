@@ -233,7 +233,7 @@ void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
             NS_ASSERTION(NS_SUCCEEDED(rv), "GetBundle failed");
             if (NS_FAILED(rv)) return;
 
-            const PRUnichar * stringArray[] = { m_folderName.GetUnicode() };
+            const PRUnichar * stringArray[] = { m_folderName.get() };
             rv = bundle->FormatStringFromID(stringID, stringArray, 1,
                                                    getter_Copies(finalString));
 		}

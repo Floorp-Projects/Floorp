@@ -185,7 +185,7 @@ void nsIMEPreedit::Reset()
 
 PRUnichar*
 nsIMEPreedit::GetPreeditString() const {
-  return (PRUnichar *) mIMECompUnicode->GetUnicode();
+  return (PRUnichar *) mIMECompUnicode->get();
 }
 
 char*

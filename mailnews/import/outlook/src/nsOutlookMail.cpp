@@ -171,7 +171,7 @@ nsresult nsOutlookMail::GetMailFolders( nsISupportsArray **pArray)
 			pID->SetIdentifier( i);
 
 			pFolder->GetDisplayName( name);
-			pID->SetDisplayName(name.GetUnicode());
+			pID->SetDisplayName(name.get());
 
 			pID->SetSize( 1000);
 			rv = pID->QueryInterface( kISupportsIID, (void **) &pInterface);
@@ -273,7 +273,7 @@ nsresult nsOutlookMail::GetAddressBooks( nsISupportsArray **pArray)
 				pID->SetIdentifier( i);
 				pFolder->GetDisplayName( name);
 				MakeAddressBookNameUnique( name, list);
-				pID->SetPreferredName(name.GetUnicode());
+				pID->SetPreferredName(name.get());
 				pID->SetSize( 100);
 				rv = pID->QueryInterface( kISupportsIID, (void **) &pInterface);
 				(*pArray)->AppendElement( pInterface);
@@ -939,7 +939,7 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 					// isn't added to the database.  Candice's code in nsAddressBook
 					// never releases it but that doesn't seem right to me!
 					if (newRow) {
-						if (BuildCard( subject.GetUnicode(), pDb, newRow, lpMsg, pFieldMap)) {
+						if (BuildCard( subject.get(), pDb, newRow, lpMsg, pFieldMap)) {
 							pDb->AddCardRowToDB( newRow);
 						}
 					}
@@ -1083,18 +1083,18 @@ PRBool nsOutlookMail::BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, n
 				if (!value.IsEmpty()) {
 					if (gMapiFields[i].multiLine == kNoMultiLine) {
 						SanitizeValue( value);
-						pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.GetUnicode());
+						pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.get());
 					}
 					else if (gMapiFields[i].multiLine == kIsMultiLine) {
-						pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.GetUnicode());
+						pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.get());
 					}
 					else {
 						line2.Truncate();
 						SplitString( value, line2);
 						if (!value.IsEmpty())
-							pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.GetUnicode());
+							pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].mozField, value.get());
 						if (!line2.IsEmpty())
-							pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].multiLine, line2.GetUnicode());
+							pFieldMap->SetFieldValue( pDb, newRow, gMapiFields[i].multiLine, line2.get());
 					}
 				}
 			}

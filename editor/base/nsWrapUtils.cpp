@@ -62,7 +62,7 @@ nsWrapUtils::Rewrap(const nsAReadableString& aInString,
   // Now we either have a line breaker, or we don't.
   PRInt32 length = aInString.Length();
   nsString tString(aInString);
-  const PRUnichar* unicodeStr = tString.GetUnicode();
+  const PRUnichar* unicodeStr = tString.get();
   for (i = 0; i < length; )    // loop over lines
   {
     nsAutoString remaining(unicodeStr + i, length - i);

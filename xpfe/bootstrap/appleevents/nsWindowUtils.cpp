@@ -482,7 +482,7 @@ void LoadURLInWindow(WindowPtr wind, const char* urlString)
 	ThrowErrIfNil(webNav, paramErr);
 
 	nsAutoString		urlWString; urlWString.AssignWithConversion(urlString);	
-	webNav->LoadURI(urlWString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+	webNav->LoadURI(urlWString.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
 
 }
 

@@ -52,8 +52,8 @@ static void Check(const char* s1, const char* s2, PRIntn n)
   nsAutoString t1,t2; 
   t1.AssignWithConversion(s1);
   t2.AssignWithConversion(s2);
-  const PRUnichar* us1 = t1.GetUnicode();
-  const PRUnichar* us2 = t2.GetUnicode();
+  const PRUnichar* us1 = t1.get();
+  const PRUnichar* us2 = t2.get();
 
   PRIntn u = nsCRT::strcmp(us1, s2);
   PRIntn u_n = nsCRT::strncmp(us1, s2, n);

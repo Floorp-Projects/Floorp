@@ -250,7 +250,7 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 					pGeneric->SetData( "mailInterface", pMail);
 					nsString name;
 					nsOEStringBundle::GetStringByID( OEIMPORT_NAME, name);
-					pGeneric->SetData( "name", (nsISupports *) name.GetUnicode());
+					pGeneric->SetData( "name", (nsISupports *) name.get());
 					rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
 				}
 			}
@@ -383,7 +383,7 @@ void ImportOEMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsString *p
 	// load the success string
 	nsIStringBundle *pBundle = nsOEStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_SUCCESS, pBundle);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode(), count);
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get(), count);
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOEStringBundle::FreeString( pFmt);
@@ -398,7 +398,7 @@ void ImportOEMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsString *
 	// load the error string
 	nsIStringBundle *pBundle = nsOEStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsOEStringBundle::GetStringByID( errorNum, pBundle);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsOEStringBundle::FreeString( pFmt);
@@ -471,7 +471,7 @@ NS_IMETHODIMP ImportOEMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSour
 	PRUint32	msgCount = 0;
     nsresult rv;
 	if (nsOE5File::IsLocalMailFile( inFile)) {
-		IMPORT_LOG1( "Importing OE5 mailbox: %S!\n", name.GetUnicode());
+		IMPORT_LOG1( "Importing OE5 mailbox: %S!\n", name.get());
 		rv = nsOE5File::ImportMailbox( &m_bytesDone, &abort, name, inFile, pDestination, &msgCount);
 	}
 	else {
@@ -589,7 +589,7 @@ NS_IMETHODIMP ImportOEAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISu
 				pID->SetIdentifier( 0x4F453334);
 				pID->SetRef( 1);
 				pID->SetSize( 100);
-				pID->SetPreferredName( str.GetUnicode());
+				pID->SetPreferredName( str.get());
 				rv = pID->QueryInterface( kISupportsIID, (void **) &pInterface);
 				(*_retval)->AppendElement( pInterface);
 				pInterface->Release();

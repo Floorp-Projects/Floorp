@@ -445,7 +445,7 @@ nsresult nsEudoraWin32::FoundMailbox( nsIFileSpec *mailFile, const char *pName, 
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32		sz = 0;
 		mailFile->GetFileSize( &sz);	
-		desc->SetDisplayName( displayName.GetUnicode());
+		desc->SetDisplayName( displayName.get());
 		desc->SetDepth( m_depth);
 		desc->SetSize( sz);
 		nsIFileSpec *pSpec = nsnull;
@@ -487,7 +487,7 @@ nsresult nsEudoraWin32::FoundMailFolder( nsIFileSpec *mailFolder, const char *pN
 	nsresult rv = pImport->CreateNewMailboxDescriptor( getter_AddRefs( desc));
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32		sz = 0;
-		desc->SetDisplayName( displayName.GetUnicode());
+		desc->SetDisplayName( displayName.get());
 		desc->SetDepth( m_depth);
 		desc->SetSize( sz);
 		nsIFileSpec *pSpec = nsnull;
@@ -859,8 +859,8 @@ void nsEudoraWin32::SetIdentities(nsIMsgAccountManager *accMgr, nsIMsgAccount *a
 	if (id) {
 		nsAutoString fullName; 
 		fullName.AssignWithConversion(realName);
-		id->SetFullName( fullName.GetUnicode());
-		id->SetIdentityName( fullName.GetUnicode());
+		id->SetFullName( fullName.get());
+		id->SetIdentityName( fullName.get());
 		if (email.Length() == 0) {
 			email = userName;
 			email += "@";
@@ -1201,7 +1201,7 @@ nsresult nsEudoraWin32::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray *
 	if (NS_SUCCEEDED( rv) && exists)
 		rv = spec->IsFile( &isFile);
 	if (exists && isFile) {
-		if (NS_FAILED( rv = FoundAddressBook( spec, displayName.GetUnicode(), *ppArray, impSvc)))
+		if (NS_FAILED( rv = FoundAddressBook( spec, displayName.get(), *ppArray, impSvc)))
 			return( rv);
 	}
 	
@@ -1380,7 +1380,7 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 		nsCRT::free( pLeaf);
 		nsString	tStr;
 		name.Right( tStr, 4);
-		if (!tStr.CompareWithConversion( NS_ConvertASCIItoUCS2(".txt").GetUnicode(), PR_TRUE)) {
+		if (!tStr.CompareWithConversion( NS_ConvertASCIItoUCS2(".txt").get(), PR_TRUE)) {
 			name.Left( tStr, name.Length() - 4);
 			name = tStr;
 		}
@@ -1390,7 +1390,7 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32 sz = 0;
 		spec->GetFileSize( &sz);	
-		desc->SetPreferredName( name.GetUnicode());
+		desc->SetPreferredName( name.get());
 		desc->SetSize( sz);
 		nsIFileSpec *pSpec = nsnull;
 		desc->GetFileSpec( &pSpec);

@@ -841,7 +841,7 @@ nsPop3Protocol::Error(PRInt32 err_code)
                 message.Append(serverSaidPrefix);
                 message.Append(NS_LITERAL_STRING(" ").get());
                 message.AppendWithConversion(m_commandResponse);
-                dialog->Alert(nsnull,message.GetUnicode()); 
+                dialog->Alert(nsnull,message.get()); 
               }
             }
         }
@@ -1358,7 +1358,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
     
         const PRUnichar *formatStrings[] =
         {
-            hostNameUnicode.GetUnicode(),
+            hostNameUnicode.get(),
         };
 
         // get the strings for the format
@@ -2086,8 +2086,8 @@ nsPop3Protocol::SendRetr()
             if (bundle)
             {
               const PRUnichar *formatStrings[] = {
-                  realNewString.GetUnicode(),
-                  reallyNewMessages.GetUnicode(),
+                  realNewString.get(),
+                  reallyNewMessages.get(),
               };
 
               nsXPIDLString finalString;

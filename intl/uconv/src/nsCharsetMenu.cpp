@@ -638,7 +638,7 @@ nsresult nsCharsetMenu::SetCharsetCheckmark(nsString * aCharset,
   // set checkmark value
   nsCOMPtr<nsIRDFLiteral> checkedLiteral;
   nsAutoString checked; checked.AssignWithConversion((aValue == PR_TRUE) ? "true" : "false");
-  res = mRDFService->GetLiteral(checked.GetUnicode(), getter_AddRefs(checkedLiteral));
+  res = mRDFService->GetLiteral(checked.get(), getter_AddRefs(checkedLiteral));
   if (NS_FAILED(res)) return res;
   res = Assert(node, kNC_Checked, checkedLiteral, PR_TRUE);
   if (NS_FAILED(res)) return res;
@@ -1104,7 +1104,7 @@ nsresult nsCharsetMenu::AddMenuItemToContainer(
   res = mRDFService->GetResource(csID, getter_AddRefs(node));
   if (NS_FAILED(res)) return res;
 
-  const PRUnichar * title = aItem->mTitle.GetUnicode();
+  const PRUnichar * title = aItem->mTitle.get();
 
   // set node's title
   nsCOMPtr<nsIRDFLiteral> titleLiteral;
@@ -1409,7 +1409,7 @@ nsresult nsCharsetMenu::RemoveFlaggedCharsets(
     if (NS_FAILED(res)) continue;
 
     nsAutoString str;
-    res = mCCManager->GetCharsetData2(atom, aProp->GetUnicode(), &str);
+    res = mCCManager->GetCharsetData2(atom, aProp->get(), &str);
     if (NS_FAILED(res)) continue;
 
     res = aList->RemoveElement(atom);

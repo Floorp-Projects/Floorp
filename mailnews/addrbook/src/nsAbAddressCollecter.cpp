@@ -161,11 +161,11 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 							if (atSignIndex > 0)
 							{
 								senderFromEmail.Truncate(atSignIndex);
-								senderCard->SetDisplayName((PRUnichar*)senderFromEmail.GetUnicode());
+								senderCard->SetDisplayName((PRUnichar*)senderFromEmail.get());
 							}
 						}
 						nsAutoString email; email.AssignWithConversion(curAddress);
-						senderCard->SetPrimaryEmail((PRUnichar*)email.GetUnicode());
+						senderCard->SetPrimaryEmail((PRUnichar*)email.get());
 						senderCard->AddCardToDatabase(kCollectedAddressbookUri, getter_AddRefs (cardInstance));
 					}
 				}

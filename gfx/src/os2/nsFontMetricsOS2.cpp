@@ -244,14 +244,14 @@ HashKey(const void* aString)
 {
   const nsString* str = (const nsString*)aString;
   return (PLHashNumber)
-    nsCRT::HashCode(str->GetUnicode());
+    nsCRT::HashCode(str->get());
 }
 
 static PRIntn PR_CALLBACK
 CompareKeys(const void* aStr1, const void* aStr2)
 {
-  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(),
-    ((const nsString*) aStr2)->GetUnicode()) == 0;
+  return nsCRT::strcmp(((const nsString*) aStr1)->get(),
+    ((const nsString*) aStr2)->get()) == 0;
 }
 
 // aName is a font family name.  see if fonts of that family exist
@@ -261,7 +261,7 @@ nsFontMetricsOS2::LoadFont(HPS aPS, nsString* aName)
 { 
   nsFontOS2* font = nsnull;
   char familyname[FACESIZE];
-  WideCharToMultiByte(0, aName->GetUnicode(), aName->Length() + 1,
+  WideCharToMultiByte(0, aName->get(), aName->Length() + 1,
     familyname, sizeof(familyname));
 
   char facename[FACESIZE];

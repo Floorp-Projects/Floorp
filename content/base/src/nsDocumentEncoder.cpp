@@ -850,7 +850,7 @@ nsDocumentEncoder::EncodeToString(nsAWritableString& aOutputString)
       mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    rv = mCharsetConverterManager->GetCharsetAtom(mCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+    rv = mCharsetConverterManager->GetCharsetAtom(mCharset.get(), getter_AddRefs(charsetAtom));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   mSerializer->Init(mFlags, mWrapColumn, charsetAtom);
@@ -900,7 +900,7 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
   }
 
   nsCOMPtr<nsIAtom> charsetAtom;
-  rv = mCharsetConverterManager->GetCharsetAtom(mCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+  rv = mCharsetConverterManager->GetCharsetAtom(mCharset.get(), getter_AddRefs(charsetAtom));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mCharsetConverterManager->GetUnicodeEncoder(charsetAtom,

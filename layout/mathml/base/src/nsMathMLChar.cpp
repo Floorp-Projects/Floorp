@@ -723,7 +723,7 @@ nsGlyphTableList::Initialize()
   NS_WITH_SERVICE(nsIObserverService, obs, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    rv = obs->AddObserver(this, topic.GetUnicode());
+    rv = obs->AddObserver(this, topic.get());
   }
   return rv;
 }
@@ -737,7 +737,7 @@ nsGlyphTableList::Finalize()
   NS_WITH_SERVICE(nsIObserverService, obs, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    rv = obs->RemoveObserver(this, topic.GetUnicode());
+    rv = obs->RemoveObserver(this, topic.get());
   }
   // delete the glyph tables
   for (PRInt32 i = 0; i < Count(); i++) {
@@ -1306,7 +1306,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     SetFirstFamily(theFont, fontName);         // to force precedence on this TeX font
   }
   aRenderingContext.SetFont(theFont);
-  rv = aRenderingContext.GetBoundingMetrics(mData.GetUnicode(),
+  rv = aRenderingContext.GetBoundingMetrics(mData.get(),
                                             PRUint32(mData.Length()),
                                             mBoundingMetrics);
   if (NS_FAILED(rv)) {
@@ -1752,7 +1752,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
       fm->GetMaxAscent(fontAscent);
 //printf("Painting %04X like a normal char\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(255,0,0));
-      aRenderingContext.DrawString(mData.GetUnicode(), len, mRect.x,
+      aRenderingContext.DrawString(mData.get(), len, mRect.x,
                                    mRect.y - (fontAscent - mBoundingMetrics.ascent));
     }
     else {

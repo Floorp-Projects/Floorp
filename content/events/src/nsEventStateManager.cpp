@@ -178,7 +178,7 @@ nsEventStateManager::Init()
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    observerService->AddObserver(this, topic.GetUnicode());
+    observerService->AddObserver(this, topic.get());
   }
 
   rv = getPrefService();
@@ -241,7 +241,7 @@ nsEventStateManager::~nsEventStateManager()
     if (NS_SUCCEEDED(rv))
       {
         nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-        observerService->RemoveObserver(this, topic.GetUnicode());
+        observerService->RemoveObserver(this, topic.get());
       }
   }
   

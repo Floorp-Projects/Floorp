@@ -599,9 +599,9 @@ NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const nsString& aFontName
 
   char    fontName[LF_FACESIZE];
 
-  const PRUnichar* unicodefontname = aFontName.GetUnicode();
+  const PRUnichar* unicodefontname = aFontName.get();
 
-  int outlen = ::WideCharToMultiByte(CP_ACP, 0, aFontName.GetUnicode(), aFontName.Length(), 
+  int outlen = ::WideCharToMultiByte(CP_ACP, 0, aFontName.get(), aFontName.Length(), 
                                    fontName, LF_FACESIZE, NULL, NULL);
   if(outlen > 0)
     fontName[outlen] = '\0'; // null terminate
@@ -919,7 +919,7 @@ nsDeviceContextWin :: GetACPString(const nsString& aStr)
    if(acp)
    {
       int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
-                      aStr.GetUnicode(), aStr.Length(),
+                      aStr.get(), aStr.Length(),
                       acp, acplen, NULL, NULL);
       if ( outlen > 0)
          acp[outlen] = '\0';  // null terminate

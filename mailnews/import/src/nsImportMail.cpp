@@ -430,7 +430,7 @@ void nsImportGenericMail::GetDefaultDestination( void)
 			nsAutoString childName;
 			ConvertToUnicode(pName, childName);
 
-			rootFolder->CreateSubfolder( childName.GetUnicode(), nsnull);
+			rootFolder->CreateSubfolder( childName.get(), nsnull);
 			nsCOMPtr<nsISupports> subFolder;
 			rootFolder->GetChildNamed( pName, getter_AddRefs( subFolder));
 			nsMemory::Free(pName);
@@ -696,10 +696,10 @@ void nsImportGenericMail::SetLogs( nsString& success, nsString& error, nsISuppor
 			nsCRT::free( pStr);
 			pStr = nsnull;
 			str.Append( success);
-			pSuccess->SetData( str.GetUnicode());
+			pSuccess->SetData( str.get());
 		}
 		else {
-			pSuccess->SetData( success.GetUnicode());			
+			pSuccess->SetData( success.get());			
 		}
 	}
 	if (pError) {
@@ -708,10 +708,10 @@ void nsImportGenericMail::SetLogs( nsString& success, nsString& error, nsISuppor
 			str = pStr;
 			nsCRT::free( pStr);
 			str.Append( error);
-			pError->SetData( str.GetUnicode());
+			pError->SetData( str.get());
 		}
 		else {
-			pError->SetData( error.GetUnicode());			
+			pError->SetData( error.get());			
 		}
 	}	
 }
@@ -856,11 +856,11 @@ ImportMailThread( void *stuff)
 					rv = box->GetSize( &size);
 				rv = box->GetDepth( &newDepth);
 				if (newDepth > depth) {
-					ConvertFromUnicode(lastName.GetUnicode(), strName);
+					ConvertFromUnicode(lastName.get(), strName);
 					IMPORT_LOG1( "* Finding folder for child named: %s\n", strName.get());
 					rv = curProxy->GetChildNamed( strName.get(), getter_AddRefs( subFolder));
 					if (NS_FAILED( rv)) {
-						nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.GetUnicode(), &error);
+						nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &error);
 						pData->fatalError = PR_TRUE;
 						break;
 					}
@@ -900,7 +900,7 @@ ImportMailThread( void *stuff)
 				else
 					lastName.AssignWithConversion("Unknown!");
 				
-				ConvertFromUnicode(lastName.GetUnicode(), strName);
+				ConvertFromUnicode(lastName.get(), strName);
 				exists = PR_FALSE;
 				rv = curProxy->ContainsChildNamed( strName.get(), &exists);
 				if (exists) {
@@ -917,7 +917,7 @@ ImportMailThread( void *stuff)
 				nsAutoString newName;
 				ConvertToUnicode(strName.get(), newName);
 
-				rv = curProxy->CreateSubfolder( newName.GetUnicode(),nsnull);
+				rv = curProxy->CreateSubfolder( newName.get(),nsnull);
 				
 				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
 				if (NS_SUCCEEDED( rv)) {
@@ -936,7 +936,7 @@ ImportMailThread( void *stuff)
 				}
 				
 				if (NS_FAILED( rv)) {
-					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.GetUnicode(), &error);
+					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &error);
 				}
 
 				if (size && import && newFolder && outBox && NS_SUCCEEDED( rv)) {
@@ -1053,7 +1053,7 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	// Let's get a reasonable "pretty name" that doesn't exist yet?
 	GetUniquePrettyName( accMgr, prettyName);
 	
-	server->SetPrettyName( (PRUnichar *) prettyName.GetUnicode());
+	server->SetPrettyName( (PRUnichar *) prettyName.get());
 	// server->SetHostName( hostName);
 	// server->SetUsername( "import");  
 

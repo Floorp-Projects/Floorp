@@ -177,7 +177,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
                                       (nsISupports**)&svc );
     if (NS_SUCCEEDED(rv) && svc) {
         nsString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
-        rv = svc->AddObserver( this, topic.GetUnicode());
+        rv = svc->AddObserver( this, topic.get());
         nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, svc );
     }
 
@@ -594,7 +594,7 @@ nsSecureBrowserUIImpl::GetBundleString(const nsString& name,
 {
     if (mStringBundle && name.Length() > 0) {
         PRUnichar *ptrv = nsnull;
-        if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.GetUnicode(), &ptrv)))
+        if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.get(), &ptrv)))
             outString = ptrv;
         else
             outString.SetLength(0);;
@@ -639,9 +639,9 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsISecurityEventSink* eventSi
             GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
-            res = dialog->AlertCheck(windowTitle.GetUnicode(), 
-                                     message.GetUnicode(), 
-                                     dontShowAgain.GetUnicode(), 
+            res = dialog->AlertCheck(windowTitle.get(), 
+                                     message.get(), 
+                                     dontShowAgain.get(), 
                                      &outCheckValue);
             if (NS_FAILED(res)) 
                     return res;
@@ -676,9 +676,9 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsISecurityEventSink* eventSi
             GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
-            res = dialog->AlertCheck(windowTitle.GetUnicode(), 
-                                     message.GetUnicode(), 
-                                     dontShowAgain.GetUnicode(), 
+            res = dialog->AlertCheck(windowTitle.get(), 
+                                     message.get(), 
+                                     dontShowAgain.get(), 
                                      &outCheckValue);
             if (NS_FAILED(res)) 
                 return res;
@@ -749,9 +749,9 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink, nsIReq
 
             PRBool outCheckValue = PR_TRUE;
 
-            rv  = dialog->AlertCheck(windowTitle.GetUnicode(), 
-                                     message.GetUnicode(), 
-                                     dontShowAgain.GetUnicode(), 
+            rv  = dialog->AlertCheck(windowTitle.get(), 
+                                     message.get(), 
+                                     dontShowAgain.get(), 
                                      &outCheckValue);
             if (NS_FAILED(rv)) 
                 return rv;
@@ -823,9 +823,9 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         }
 
         PRBool outCheckValue = PR_TRUE;
-        rv  = dialog->ConfirmCheck(windowTitle.GetUnicode(), 
-                                   message.GetUnicode(), 
-                                   dontShowAgain.GetUnicode(), 
+        rv  = dialog->ConfirmCheck(windowTitle.get(), 
+                                   message.get(), 
+                                   dontShowAgain.get(), 
                                    &outCheckValue, 
                                    okayToPost);
         if (NS_FAILED(rv)) 

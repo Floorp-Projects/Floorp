@@ -80,7 +80,7 @@ nsTextFragment::nsTextFragment(const nsString& aString)
   : m1b(nsnull),
     mAllBits(0)
 {
-  SetTo(aString.GetUnicode(), aString.Length());
+  SetTo(aString.get(), aString.Length());
 }
 
 nsTextFragment&

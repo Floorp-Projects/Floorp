@@ -156,11 +156,11 @@ PRBool nsFileWidget::Show()
     PRInt32 inLength = mDefault.Length();
     PRInt32 outLength;
     NS_ASSERTION(gUnicodeEncoder, "no unicode converter");
-    rv = gUnicodeEncoder->GetMaxLength(mDefault.GetUnicode(), inLength, &outLength);
+    rv = gUnicodeEncoder->GetMaxLength(mDefault.get(), inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
       buff = new char[outLength+1];
       if (nsnull != buff) {
-        rv = gUnicodeEncoder->Convert(mDefault.GetUnicode(), &inLength, buff, &outLength);
+        rv = gUnicodeEncoder->Convert(mDefault.get(), &inLength, buff, &outLength);
         if (NS_SUCCEEDED(rv)) {
           buff[outLength] = '\0';
           gtk_file_selection_set_filename(fs, (const gchar*) buff);

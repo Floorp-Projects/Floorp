@@ -123,7 +123,7 @@ nsRegistryDataSource::Init()
         rv = gRDF->GetResource(NS_REGISTRY_NAMESPACE_URI "subkeys", &kSubkeys);
         if (NS_FAILED(rv)) return rv;
 
-        rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("[binary data]").GetUnicode(), &kBinaryLiteral);
+        rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("[binary data]").get(), &kBinaryLiteral);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -297,7 +297,7 @@ nsRegistryDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProper
                     if (NS_FAILED(rv)) return rv;
 
                     nsCOMPtr<nsIRDFLiteral> literal;
-                    rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2(value).GetUnicode(), getter_AddRefs(literal));
+                    rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2(value).get(), getter_AddRefs(literal));
                     if (NS_FAILED(rv)) return rv;
 
                     return literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) _retval);

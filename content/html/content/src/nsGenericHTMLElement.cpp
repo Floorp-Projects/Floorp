@@ -3132,7 +3132,7 @@ static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleDa
     
     nsAutoString lang;
     value.GetStringValue(lang);
-    gLangService->LookupLanguage(lang.GetUnicode(),
+    gLangService->LookupLanguage(lang.get(),
       getter_AddRefs(vis->mLanguage));
   }
 }

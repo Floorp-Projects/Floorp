@@ -1017,7 +1017,7 @@ XULContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
                 }
             }
         }
-        memcpy(&mText[mTextLength], text.GetUnicode() + offset,
+        memcpy(&mText[mTextLength], text.get() + offset,
                sizeof(PRUnichar) * amount);
         mTextLength += amount;
         offset += amount;

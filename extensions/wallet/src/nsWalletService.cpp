@@ -221,7 +221,7 @@ nsresult nsWalletlibService::Init()
   if (NS_SUCCEEDED(rv) && svc) {
     // Register as an observer of form submission
     nsAutoString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
-    svc->AddObserver(this, topic.GetUnicode());
+    svc->AddObserver(this, topic.get());
     // Register as an observer of profile changes
     svc->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
   }

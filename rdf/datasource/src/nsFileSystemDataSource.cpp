@@ -444,7 +444,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		if (property == kNC_pulse)
 		{
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), &pulseLiteral);
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").get(), &pulseLiteral);
 			*target = pulseLiteral;
 			return NS_OK;
 		}
@@ -525,14 +525,14 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 			nsAutoString	url;
 			url.AssignWithConversion(type);
 			nsCOMPtr<nsIRDFLiteral> literal;
-			gRDFService->GetLiteral(url.GetUnicode(), getter_AddRefs(literal));
+			gRDFService->GetLiteral(url.get(), getter_AddRefs(literal));
 			rv = literal->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			return(rv);
 		}
 		else if (property == kNC_pulse)
 		{
 			nsCOMPtr<nsIRDFLiteral> pulseLiteral;
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), getter_AddRefs(pulseLiteral));
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").get(), getter_AddRefs(pulseLiteral));
 			rv = pulseLiteral->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
 			return(rv);
 		}
@@ -608,7 +608,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		else if (property == kNC_pulse)
 		{
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(), &pulseLiteral);
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").get(), &pulseLiteral);
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(pulseLiteral);
 			NS_RELEASE(pulseLiteral);
 
@@ -664,7 +664,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 			url.AssignWithConversion(uri);
 
 			nsCOMPtr<nsIRDFLiteral>	literal;
-			rv = gRDFService->GetLiteral(url.GetUnicode(), getter_AddRefs(literal));
+			rv = gRDFService->GetLiteral(url.get(), getter_AddRefs(literal));
 			if (NS_FAILED(rv)) return rv;
 
 			nsISimpleEnumerator* result = new nsSingletonEnumerator(literal);
@@ -679,7 +679,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 		else if (property == kNC_pulse)
 		{
 			nsCOMPtr<nsIRDFLiteral>	pulseLiteral;
-			rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").GetUnicode(),
+			rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("12").get(),
 				getter_AddRefs(pulseLiteral));
 			if (NS_FAILED(rv)) return rv;
 
@@ -1492,7 +1492,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 	}
 #endif
 
-	gRDFService->GetLiteral(name.GetUnicode(), aResult);
+	gRDFService->GetLiteral(name.get(), aResult);
 
 	return NS_OK;
 }
@@ -1516,7 +1516,7 @@ FileSystemDataSource::GetExtension(nsIRDFResource *source, nsIRDFLiteral **aResu
     } else {
       nsAutoString extension;
       filename.Right(extension, (filename.Length() - lastDot));
-      gRDFService->GetLiteral(extension.GetUnicode(), aResult);
+      gRDFService->GetLiteral(extension.get(), aResult);
     }
 
     return NS_OK;
@@ -1573,13 +1573,13 @@ FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL
 			if (line.Find("URL=", PR_TRUE) == 0)
 			{
 				line.Cut(0, 4);
-				rv = gRDFService->GetLiteral(line.GetUnicode(), urlLiteral);
+				rv = gRDFService->GetLiteral(line.get(), urlLiteral);
 				break;
 			}
 			else if (line.Find("CDFURL=", PR_TRUE) == 0)
 			{
 				line.Cut(0, 7);
-				rv = gRDFService->GetLiteral(line.GetUnicode(), urlLiteral);
+				rv = gRDFService->GetLiteral(line.get(), urlLiteral);
 				break;
 			}
 			line.Truncate();
@@ -1630,7 +1630,7 @@ FileSystemDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 	// if we fall through to here, its not any type of bookmark
 	// stored in the platform native file system, so just set the URL
 
-	gRDFService->GetLiteral(url.GetUnicode(), aResult);
+	gRDFService->GetLiteral(url.get(), aResult);
 
 	return(NS_OK);
 }
@@ -1667,7 +1667,7 @@ FileSystemDataSource::getNetPositiveURL(nsIRDFResource *source, nsString aFileUR
 					beURLattr[len] = '\0';
 					nsAutoString	bookmarkURL;
                                         bookmarkURL.AssignWithConversion(beURLattr);
-					rv = gRDFService->GetLiteral(bookmarkURL.GetUnicode(),
+					rv = gRDFService->GetLiteral(bookmarkURL.get(),
 						urlLiteral);
 				}
 			}

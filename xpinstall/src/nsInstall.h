@@ -86,8 +86,8 @@ class nsInstallInfo
     virtual ~nsInstallInfo();
 
     nsIFile*            GetFile()               { return mFile.get(); }
-    const PRUnichar*    GetURL()                { return mURL.GetUnicode(); }
-    const PRUnichar*    GetArguments()          { return mArgs.GetUnicode(); }
+    const PRUnichar*    GetURL()                { return mURL.get(); }
+    const PRUnichar*    GetArguments()          { return mArgs.get(); }
     PRUint32            GetFlags()              { return mFlags; }
     PRUint32            GetType()               { return mType; }
     nsIXPIListener*     GetListener()           { return mListener.get(); }

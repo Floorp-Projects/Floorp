@@ -70,7 +70,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
   // necessary encodings and escaping.
   nsCAutoString spec;
 
-  if (IsAscii(aSpec.GetUnicode())) {
+  if (IsAscii(aSpec.get())) {
     // If it's ASCII, then just copy the characters
     spec.AssignWithConversion(aSpec);
   }
@@ -85,7 +85,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
          scheme.EqualsIgnoreCase(kJavaScript)) {
       char buf[6+1];	// space for \uXXXX plus a NUL at the end
       spec.Truncate(0);
-      for (const PRUnichar* uch = aSpec.GetUnicode(); *uch; ++uch) {
+      for (const PRUnichar* uch = aSpec.get(); *uch; ++uch) {
         if (!nsCRT::IsAscii(*uch)) {
           PR_snprintf(buf, sizeof(buf), "\\u%.4x", *uch);
           spec.Append(buf);
@@ -103,7 +103,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
       if ((pos == (PRInt32)(sizeof kMailToURI - 1)) &&
           (aSpec.Left(scheme, pos) != -1) &&
            scheme.EqualsIgnoreCase(kMailToURI)) {
-        spec = NS_ConvertUCS2toUTF8(aSpec.GetUnicode());
+        spec = NS_ConvertUCS2toUTF8(aSpec.get());
       }
       else {
         // Otherwise, we'll need to use aDocument to cough up a character
@@ -133,7 +133,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
           // Got the encoder: let's party.
           PRInt32 len = aSpec.Length();
           PRInt32 maxlen;
-          encoder->GetMaxLength(aSpec.GetUnicode(), len, &maxlen);
+          encoder->GetMaxLength(aSpec.get(), len, &maxlen);
 
           char buf[64], *p = buf;
           if (maxlen > sizeof(buf) - 1)
@@ -142,7 +142,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
           if (! p)
             return NS_ERROR_OUT_OF_MEMORY;
 
-          encoder->Convert(aSpec.GetUnicode(), &len, p, &maxlen);
+          encoder->Convert(aSpec.get(), &len, p, &maxlen);
           encoder->Finish(p, &len);
           p[maxlen] = 0;
 
@@ -154,7 +154,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
         else {
           // No encoder, but we've got non-ASCII data. Let's UTF-8 encode
           // by default.
-          spec = NS_ConvertUCS2toUTF8(aSpec.GetUnicode());
+          spec = NS_ConvertUCS2toUTF8(aSpec.get());
         }
 
       }

@@ -2612,12 +2612,12 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     // Only pass off the click event if the script security manager
     // says it's ok.
     if (NS_SUCCEEDED(proceed))
-      handler->OnLinkClick(this, aVerb, absURLSpec.GetUnicode(),
-                           aTargetSpec.GetUnicode());
+      handler->OnLinkClick(this, aVerb, absURLSpec.get(),
+                           aTargetSpec.get());
   }
   else {
-    handler->OnOverLink(this, absURLSpec.GetUnicode(),
-                        aTargetSpec.GetUnicode());
+    handler->OnOverLink(this, absURLSpec.get(),
+                        aTargetSpec.get());
   }
   return rv;
 }

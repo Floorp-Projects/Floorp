@@ -2163,7 +2163,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
   // If no response, then this is a problem...
   if (!aProtocolResponse)
   {
-    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncInvalidResponse").GetUnicode());
+    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncInvalidResponse").get());
     DisplayErrorMessage(outValue);
     PR_FREEIF(outValue);
     return NS_ERROR_FAILURE;
@@ -2175,7 +2175,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 
   if (ErrorFromServer(&errorString))
   {
-    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncServerError").GetUnicode());
+    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncServerError").get());
     PRUnichar   *msgValue;
 
     msgValue = nsTextFormatter::smprintf(outValue, errorString);
@@ -2702,7 +2702,7 @@ nsAbSync::AddNewUsers()
         PR_FREEIF(tLastName);
 
         // Ok, now we should add a display name...
-        newCard->SetDisplayName(tFullName.GetUnicode());
+        newCard->SetDisplayName(tFullName.get());
       }
       else
         PR_FREEIF(tDispName);
@@ -2853,15 +2853,15 @@ nsAbSync::ProcessPhoneNumbersTheyAreSpecial(nsIAbCard *aCard)
       continue;
     
     if (pType == ABSYNC_PAGER_PHONE_ID)
-      aCard->SetPagerNumber(phoneNumber.GetUnicode());
+      aCard->SetPagerNumber(phoneNumber.get());
     else if (pType == ABSYNC_HOME_PHONE_ID)
-      aCard->SetHomePhone(phoneNumber.GetUnicode());
+      aCard->SetHomePhone(phoneNumber.get());
     else if (pType == ABSYNC_WORK_PHONE_ID)
-      aCard->SetWorkPhone(phoneNumber.GetUnicode());
+      aCard->SetWorkPhone(phoneNumber.get());
     else if (pType == ABSYNC_FAX_PHONE_ID)
-      aCard->SetFaxNumber(phoneNumber.GetUnicode());
+      aCard->SetFaxNumber(phoneNumber.get());
     else if (pType == ABSYNC_CELL_PHONE_ID)
-      aCard->SetCellularNumber(phoneNumber.GetUnicode());
+      aCard->SetCellularNumber(phoneNumber.get());
   }
 
   return NS_OK;
@@ -2909,13 +2909,13 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   // this value the new nsIAbCard
   //
   if (!aTagName->CompareWithConversion(kServerFirstNameColumn))
-    aCard->SetFirstName(aTagValue->GetUnicode());
+    aCard->SetFirstName(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerLastNameColumn))
-    aCard->SetLastName(aTagValue->GetUnicode());
+    aCard->SetLastName(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerDisplayNameColumn))
-    aCard->SetDisplayName(aTagValue->GetUnicode());
+    aCard->SetDisplayName(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerNicknameColumn))
-    aCard->SetNickName(aTagValue->GetUnicode());
+    aCard->SetNickName(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerPriEmailColumn))
   {
 #ifdef DEBUG_rhp
@@ -2923,54 +2923,54 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   printf("Email: %s\n", t);
   PR_FREEIF(t);
 #endif
-    aCard->SetPrimaryEmail(aTagValue->GetUnicode());
+    aCard->SetPrimaryEmail(aTagValue->get());
   }
   else if (!aTagName->CompareWithConversion(kServer2ndEmailColumn))
-    aCard->SetSecondEmail(aTagValue->GetUnicode());
+    aCard->SetSecondEmail(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerHomeAddressColumn))
-    aCard->SetHomeAddress(aTagValue->GetUnicode());
+    aCard->SetHomeAddress(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerHomeAddress2Column))
-    aCard->SetHomeAddress2(aTagValue->GetUnicode());
+    aCard->SetHomeAddress2(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerHomeCityColumn))
-    aCard->SetHomeCity(aTagValue->GetUnicode());
+    aCard->SetHomeCity(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerHomeStateColumn))
-    aCard->SetHomeState(aTagValue->GetUnicode());
+    aCard->SetHomeState(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerHomeZipCodeColumn))
-    aCard->SetHomeZipCode(aTagValue->GetUnicode());
+    aCard->SetHomeZipCode(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerHomeCountryColumn))
-    aCard->SetHomeCountry(aTagValue->GetUnicode());
+    aCard->SetHomeCountry(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerWorkAddressColumn))
-    aCard->SetWorkAddress(aTagValue->GetUnicode());
+    aCard->SetWorkAddress(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerWorkAddress2Column))
-    aCard->SetWorkAddress2(aTagValue->GetUnicode());
+    aCard->SetWorkAddress2(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerWorkCityColumn))
-    aCard->SetWorkCity(aTagValue->GetUnicode());
+    aCard->SetWorkCity(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerWorkStateColumn))
-    aCard->SetWorkState(aTagValue->GetUnicode());
+    aCard->SetWorkState(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerWorkZipCodeColumn))
-    aCard->SetWorkZipCode(aTagValue->GetUnicode());
+    aCard->SetWorkZipCode(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerWorkCountryColumn))
-    aCard->SetWorkCountry(aTagValue->GetUnicode());
+    aCard->SetWorkCountry(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerJobTitleColumn))
-    aCard->SetJobTitle(aTagValue->GetUnicode());
+    aCard->SetJobTitle(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerNotesColumn))
-    aCard->SetNotes(aTagValue->GetUnicode());
+    aCard->SetNotes(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerWebPage1Column))
-    aCard->SetWebPage1(aTagValue->GetUnicode());
+    aCard->SetWebPage1(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerDepartmentColumn))
-    aCard->SetDepartment(aTagValue->GetUnicode());
+    aCard->SetDepartment(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerCompanyColumn))
-    aCard->SetCompany(aTagValue->GetUnicode());
+    aCard->SetCompany(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerWebPage2Column))
-    aCard->SetWebPage2(aTagValue->GetUnicode());
+    aCard->SetWebPage2(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerCustom1Column))
-    aCard->SetCustom1(aTagValue->GetUnicode());
+    aCard->SetCustom1(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerCustom2Column))
-    aCard->SetCustom2(aTagValue->GetUnicode());
+    aCard->SetCustom2(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerCustom3Column))
-    aCard->SetCustom3(aTagValue->GetUnicode());
+    aCard->SetCustom3(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerCustom4Column))
-    aCard->SetCustom4(aTagValue->GetUnicode());
+    aCard->SetCustom4(aTagValue->get());
   else if (!aTagName->CompareWithConversion(kServerPlainTextColumn))
   {
     // This is plain text pref...have to add a little logic.
@@ -3012,14 +3012,14 @@ nsAbSync::GetString(const PRUnichar *aStringName)
 }
 
 /************ UNUSED FOR NOW
-aCard->SetBirthYear(aTagValue->GetUnicode());
-aCard->SetBirthMonth(aTagValue->GetUnicode());
-aCard->SetBirthDay(aTagValue->GetUnicode());
+aCard->SetBirthYear(aTagValue->get());
+aCard->SetBirthMonth(aTagValue->get());
+aCard->SetBirthDay(aTagValue->get());
 char *kServerBirthYearColumn = "OMIT:BirthYear";
 char *kServerBirthMonthColumn = "OMIT:BirthMonth";
 char *kServerBirthDayColumn = "OMIT:BirthDay";
 **********************************************/
 
 /************* FOR MAILING LISTS
-aCard->SetIsMailList(aTagValue->GetUnicode());
+aCard->SetIsMailList(aTagValue->get());
 ************* FOR MAILING LISTS ***************/

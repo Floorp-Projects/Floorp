@@ -288,7 +288,7 @@ NS_IMETHODIMP nsEudoraImport::GetImportInterface( const char *pImportType, nsISu
 					pGeneric->SetData( "mailInterface", pMail);
 					nsString name;
 					nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_NAME, name);
-					pGeneric->SetData( "name", (nsISupports *) name.GetUnicode());
+					pGeneric->SetData( "name", (nsISupports *) name.get());
 					rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
 				}
 			}
@@ -424,7 +424,7 @@ void ImportEudoraMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsStrin
 	// load the success string
 	nsIStringBundle *pBundle = nsEudoraStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_MAILBOX_SUCCESS, pBundle);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode(), count);
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get(), count);
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsEudoraStringBundle::FreeString( pFmt);
@@ -439,7 +439,7 @@ void ImportEudoraMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsStri
 	// load the error string
 	nsIStringBundle *pBundle = nsEudoraStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsEudoraStringBundle::GetStringByID( errorNum);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsEudoraStringBundle::FreeString( pFmt);
@@ -517,7 +517,7 @@ NS_IMETHODIMP ImportEudoraMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *p
     nsresult rv = NS_OK;
 	
 	m_bytes = 0;
-	rv = m_eudora.ImportMailbox( &m_bytes, &abort, name.GetUnicode(), inFile, pDestination, &msgCount);
+	rv = m_eudora.ImportMailbox( &m_bytes, &abort, name.get(), inFile, pDestination, &msgCount);
 
     inFile->Release();
 
@@ -653,7 +653,7 @@ void ImportEudoraAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 	// load the success string
 	nsIStringBundle *pBundle = nsEudoraStringBundle::GetStringBundleProxy();
 	PRUnichar *pFmt = nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_ADDRESS_SUCCESS, pBundle);
-	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.get());
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsEudoraStringBundle::FreeString( pFmt);
@@ -722,7 +722,7 @@ NS_IMETHODIMP ImportEudoraAddressImpl::ImportAddressBook(	nsIImportABDescriptor 
     nsresult rv = NS_OK;
 	
 	m_bytes = 0;
-	rv = m_eudora.ImportAddresses( &m_bytes, &abort, name.GetUnicode(), inFile, pDestination, error);
+	rv = m_eudora.ImportAddresses( &m_bytes, &abort, name.get(), inFile, pDestination, error);
 
     inFile->Release();
 

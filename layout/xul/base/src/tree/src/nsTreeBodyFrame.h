@@ -152,7 +152,7 @@ public:
   nsIContent* GetElement() { return mColElement; };
 
   nscoord GetWidth();
-  const PRUnichar* GetID() { return mID.GetUnicode(); };
+  const PRUnichar* GetID() { return mID.get(); };
   void GetID(nsString& aID) { aID = mID; };
 
   void GetIDAtom(nsIAtom** aResult) { *aResult = mIDAtom; NS_IF_ADDREF(*aResult); };

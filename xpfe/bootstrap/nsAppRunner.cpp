@@ -459,7 +459,7 @@ LaunchApplicationWithArgs(const char *commandLineArg,
 #ifdef DEBUG_CMD_LINE
           printf("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
 #endif /* DEBUG_CMD_LINE */
-          rv = OpenWindow(chromeUrlForTask, cmdArgs.GetUnicode());
+          rv = OpenWindow(chromeUrlForTask, cmdArgs.get());
         }
         else {
 #ifdef DEBUG_CMD_LINE
@@ -753,7 +753,7 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
             if (cmdUI) {
                 nsAutoString UILocaleName;
                 UILocaleName.AssignWithConversion(cmdUI);
-                rv = chromeRegistry->SelectLocale(UILocaleName.GetUnicode(), PR_FALSE);
+                rv = chromeRegistry->SelectLocale(UILocaleName.get(), PR_FALSE);
             }
         }
         nsXPIDLCString cmdContent;
@@ -762,7 +762,7 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
             if (cmdContent) {
                 nsAutoString ContentLocaleName;
                 ContentLocaleName.AssignWithConversion(cmdContent);
-                rv = chromeRegistry->SelectLocale(ContentLocaleName.GetUnicode(), PR_FALSE);
+                rv = chromeRegistry->SelectLocale(ContentLocaleName.get(), PR_FALSE);
             }
         }
     }

@@ -240,7 +240,7 @@ nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsStrin
 	PRUint32	indexSize;
 	
 	if (!ReadIndex( inFile, &pIndex, &indexSize)) {
-		IMPORT_LOG1( "No messages found in mailbox: %S\n", name.GetUnicode());
+		IMPORT_LOG1( "No messages found in mailbox: %S\n", name.get());
 		inFile->CloseStream();
 		pDestination->CloseStream();
 		return( NS_OK);
@@ -312,7 +312,7 @@ nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsStrin
 						next = block[3];
 					}
 					else {
-						IMPORT_LOG2( "Error reading message from %S at 0x%lx\n", name.GetUnicode(), pIndex[i]);
+						IMPORT_LOG2( "Error reading message from %S at 0x%lx\n", name.get(), pIndex[i]);
 						pDestination->Write( "\x0D\x0A", 2, &written);
 						next = 0;
 						last2[0] = 13;
@@ -335,7 +335,7 @@ nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsStrin
 			}
 			else {
 				// Error reading message, should this be logged???
-				IMPORT_LOG2( "Error reading message from %S at 0x%lx\n", name.GetUnicode(), pIndex[i]);
+				IMPORT_LOG2( "Error reading message from %S at 0x%lx\n", name.get(), pIndex[i]);
 			}			
 		}
 	}

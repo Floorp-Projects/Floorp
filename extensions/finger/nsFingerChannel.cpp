@@ -371,8 +371,8 @@ nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
         nsAutoString fromStr; fromStr.AssignWithConversion("text/plain");
         nsAutoString toStr; toStr.AssignWithConversion("text/html");
 
-        rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(),
-              toStr.GetUnicode(), this, mResponseContext,
+        rv = StreamConvService->AsyncConvertData(fromStr.get(),
+              toStr.get(), this, mResponseContext,
               getter_AddRefs(converterListener));
         if (NS_FAILED(rv)) return rv;
 
@@ -382,7 +382,7 @@ nsFingerChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
           nsXPIDLCString userHost;
           rv = mUrl->GetPath(getter_Copies(userHost));
           title.AppendWithConversion(userHost);
-          converter->SetTitle(title.GetUnicode());
+          converter->SetTitle(title.get());
           converter->PreFormatHTML(PR_TRUE);
         }
 

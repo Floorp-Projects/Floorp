@@ -346,9 +346,9 @@ nsStyleUpdatingCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aT
   
   nsAutoString tagName; tagName.AssignWithConversion(aTagName);
   if (styleSet)
-    rv = aEditorShell->RemoveTextProperty(tagName.GetUnicode(), nsnull);
+    rv = aEditorShell->RemoveTextProperty(tagName.get(), nsnull);
   else
-    rv = aEditorShell->SetTextProperty(tagName.GetUnicode(), nsnull, nsnull);
+    rv = aEditorShell->SetTextProperty(tagName.get(), nsnull, nsnull);
 
   return rv;
 }
@@ -391,9 +391,9 @@ nsListCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagName)
   nsAutoString listType; listType.AssignWithConversion(mTagName);
 
   if (inList)
-    rv = aEditorShell->RemoveList(listType.GetUnicode());    
+    rv = aEditorShell->RemoveList(listType.get());    
   else
-    rv = aEditorShell->MakeOrChangeList(listType.GetUnicode(), PR_FALSE);
+    rv = aEditorShell->MakeOrChangeList(listType.get(), PR_FALSE);
     
   return rv;
 }
@@ -543,7 +543,7 @@ nsIndentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports *
   if (editorShell)
   {
     nsAutoString indentStr; indentStr.AssignWithConversion("indent");
-    rv = editorShell->Indent(indentStr.GetUnicode());
+    rv = editorShell->Indent(indentStr.get());
   }
   
   return rv;  
@@ -581,7 +581,7 @@ nsOutdentCommand::DoCommand(const nsAReadableString & aCommandName, nsISupports 
   if (editorShell && EditingHTML(editorShell))
   {
     nsAutoString indentStr; indentStr.AssignWithConversion("outdent");
-    rv = editorShell->Indent(indentStr.GetUnicode());
+    rv = editorShell->Indent(indentStr.get());
   }
   
   return rv;  
@@ -953,7 +953,7 @@ nsRemoveStylesCommand::DoCommand(const nsAReadableString & aCommandName, nsISupp
   nsresult rv = NS_OK;
   if (editorShell)
   {
-    rv = editorShell->RemoveTextProperty(NS_ConvertASCIItoUCS2("all").GetUnicode(), NS_ConvertASCIItoUCS2("").GetUnicode());
+    rv = editorShell->RemoveTextProperty(NS_ConvertASCIItoUCS2("all").get(), NS_ConvertASCIItoUCS2("").get());
     if (NS_FAILED(rv)) return rv;
     
     // now get all the style buttons to update

@@ -5118,7 +5118,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
 
       // Now get the exact bounding metrics of the text
       nsBoundingMetrics bm;
-      rv = aReflowState.rendContext->GetBoundingMetrics(aText.GetUnicode(), PRUint32(mContentLength), bm);
+      rv = aReflowState.rendContext->GetBoundingMetrics(aText.get(), PRUint32(mContentLength), bm);
       if (NS_SUCCEEDED(rv)) aMetrics.mBoundingMetrics = bm;
     }
     if (NS_FAILED(rv)) { 

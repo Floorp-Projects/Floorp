@@ -160,7 +160,7 @@ nsresult nsCollation::NormalizeString(nsString& stringInOut)
 
     if (aLength <= 64) {
       PRUnichar conversionBuf[64];
-      mCaseConversion->ToLower(stringInOut.GetUnicode(), conversionBuf, aLength);
+      mCaseConversion->ToLower(stringInOut.get(), conversionBuf, aLength);
       stringInOut.Assign(conversionBuf, aLength);
     }
     else {
@@ -169,7 +169,7 @@ nsresult nsCollation::NormalizeString(nsString& stringInOut)
       if (aBuffer == NULL) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mCaseConversion->ToLower(stringInOut.GetUnicode(), aBuffer, aLength);
+      mCaseConversion->ToLower(stringInOut.get(), aBuffer, aLength);
       stringInOut.Assign(aBuffer, aLength);
       delete [] aBuffer;
     }
@@ -188,14 +188,14 @@ nsresult nsCollation::UnicodeToChar(const nsString& src, char** dst, const nsStr
 
   if (NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIAtom>  charsetAtom;
-    res = mCharsetConverterManager->GetCharsetAtom(aCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+    res = mCharsetConverterManager->GetCharsetAtom(aCharset.get(), getter_AddRefs(charsetAtom));
     if (NS_SUCCEEDED(res)) {
       if (charsetAtom != mEncoderCharsetAtom) {
         mEncoderCharsetAtom = charsetAtom;
         res = mCharsetConverterManager->GetUnicodeEncoder(mEncoderCharsetAtom, getter_AddRefs(mEncoder));
       }
       if (NS_SUCCEEDED(res)) {
-        const PRUnichar *unichars = src.GetUnicode();
+        const PRUnichar *unichars = src.get();
         PRInt32 unicharLength = src.Length();
         PRInt32 dstLength;
         res = mEncoder->GetMaxLength(unichars, unicharLength, &dstLength);

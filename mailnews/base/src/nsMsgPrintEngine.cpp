@@ -85,7 +85,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
   if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
     if (progressStateFlags & nsIWebProgressListener::STATE_START) {
       // Tell the user we are loading...
-      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("LoadingMessageToPrint").GetUnicode());
+      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("LoadingMessageToPrint").get());
       SetStatusMessage( msg );
       if (msg) nsCRT::free(msg);
     }
@@ -95,7 +95,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
       rv = NS_ERROR_FAILURE;
 
       // Tell the user the message is loaded...
-      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("MessageLoaded").GetUnicode());
+      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("MessageLoaded").get());
       SetStatusMessage( msg );
       if (msg) nsCRT::free(msg);
 
@@ -218,7 +218,7 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
   NS_ENSURE_TRUE(rootAsNode, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeItem> childItem;
-  rootAsNode->FindChildWithName(childName.GetUnicode(), PR_TRUE, PR_FALSE, nsnull,
+  rootAsNode->FindChildWithName(childName.get(), PR_TRUE, PR_FALSE, nsnull,
     getter_AddRefs(childItem));
 
   mDocShell = do_QueryInterface(childItem);
@@ -270,7 +270,7 @@ nsMsgPrintEngine::StartNextPrintOperation()
     mWindow->Close();
 
     // Tell the user we are done...
-    PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingComplete").GetUnicode());
+    PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingComplete").get());
     SetStatusMessage( msg );
     if (msg) nsCRT::free(msg);
     
@@ -318,7 +318,7 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
   {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     if (webNav)
-      rv = webNav->LoadURI(uri->GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      rv = webNav->LoadURI(uri->get(), nsIWebNavigation::LOAD_FLAGS_NONE);
   }
 
   if (tString) nsCRT::free(tString);
@@ -339,7 +339,7 @@ nsMsgPrintEngine::InitializeDisplayCharset()
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
       if (muDV) 
       {
-        muDV->SetForceCharacterSet(aForceCharacterSet.GetUnicode());
+        muDV->SetForceCharacterSet(aForceCharacterSet.get());
       }
     }
   }

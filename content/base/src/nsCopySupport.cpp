@@ -174,11 +174,11 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       }
       
       // populate the strings
-      dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.GetUnicode()) );
+      dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.get()) );
       if (bIsHTMLCopy)
       {
-        contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.GetUnicode()) );
-        infoWrapper->SetData ( NS_CONST_CAST(PRUnichar*,info.GetUnicode()) );
+        contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.get()) );
+        infoWrapper->SetData ( NS_CONST_CAST(PRUnichar*,info.get()) );
       }
       
       // QI the data object an |nsISupports| so that when the transferable holds

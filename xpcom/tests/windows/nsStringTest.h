@@ -1461,7 +1461,7 @@ int CStringTester::TestAutoStrings(){
       //make an autostring that copies an nsString...
     nsString s0("eat icecream");
     nsCAutoString s4(s0); 
-    nsCAutoString s5(s0.GetUnicode());
+    nsCAutoString s5(s0.get());
     nsString aaa("hi there rick");
 #endif
   }

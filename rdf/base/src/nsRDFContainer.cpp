@@ -700,7 +700,7 @@ RDFContainerImpl::SetNextValue(PRInt32 aIndex)
     s.AppendInt(aIndex, 10);
 
     nsCOMPtr<nsIRDFLiteral> nextVal;
-    if (NS_FAILED(rv = gRDFService->GetLiteral(s.GetUnicode(), getter_AddRefs(nextVal)))) {
+    if (NS_FAILED(rv = gRDFService->GetLiteral(s.get(), getter_AddRefs(nextVal)))) {
         NS_ERROR("unable to get nextVal literal");
         return rv;
     }
@@ -770,7 +770,7 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
     nextValStr.Truncate();
     nextValStr.AppendInt(nextVal, 10);
 
-    rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(nextValStr).GetUnicode(), getter_AddRefs(nextValLiteral));
+    rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(nextValStr).get(), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Assert(mContainer, kRDF_nextVal, nextValLiteral, PR_TRUE);

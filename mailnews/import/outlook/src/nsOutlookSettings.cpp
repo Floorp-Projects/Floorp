@@ -470,8 +470,8 @@ void OutlookSettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *
 		if (id) {
 			nsString name;
 			name.AssignWithConversion(pName);
-			id->SetFullName( name.GetUnicode());
-			id->SetIdentityName( name.GetUnicode());
+			id->SetFullName( name.get());
+			id->SetIdentityName( name.get());
 			id->SetEmail( pEmail);
 			if (pReply)
 				id->SetReplyTo( pReply);

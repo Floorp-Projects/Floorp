@@ -1276,7 +1276,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
 
   // Ok, get the body...the DOM should have been whacked with 
   // Content ID's already
-  mEditor->GetContentsAs(format.GetUnicode(), flags, &bodyText);
+  mEditor->GetContentsAs(format.get(), flags, &bodyText);
 
  //
   // If we really didn't get a body, just return NS_OK

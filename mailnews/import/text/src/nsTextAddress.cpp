@@ -503,7 +503,7 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
 					}
 					if (newRow) {
 						ConvertToUnicode( fieldVal, uVal);
-						rv = m_fieldMap->SetFieldValue( m_database, newRow, fieldNum, uVal.GetUnicode());
+						rv = m_fieldMap->SetFieldValue( m_database, newRow, fieldNum, uVal.get());
 					}
 				}
 			}

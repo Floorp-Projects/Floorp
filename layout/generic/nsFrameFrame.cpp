@@ -950,7 +950,7 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
   nsString frameName;
   if (GetName(parentContent, frameName)) {
-    docShellAsItem->SetName(frameName.GetUnicode());
+    docShellAsItem->SetName(frameName.get());
   }
 
   // If our container is a web-shell, inform it that it has a new
@@ -1001,7 +1001,7 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
         if(parentTreeOwner)
           parentTreeOwner->ContentShellAdded(docShellAsItem, 
             value.EqualsIgnoreCase("content-primary") ? PR_TRUE : PR_FALSE, 
-            value.GetUnicode());
+            value.get());
       }
       // connect the container...
       nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mSubShell));

@@ -98,8 +98,8 @@ public:
 	void	SetSupports( const char *pSupports) { m_supports = pSupports;}
 	
 	nsCID			GetCID( void) { return( m_cid);}
-	const PRUnichar *GetName( void) { return( m_name.GetUnicode());}
-	const PRUnichar *GetDescription( void) { return( m_description.GetUnicode());}
+	const PRUnichar *GetName( void) { return( m_name.get());}
+	const PRUnichar *GetDescription( void) { return( m_description.get());}
 	const char *	GetSupports( void) { return( (const char *)m_supports);}
 	
 	nsIImportModule *	GetModule( PRBool keepLoaded = PR_FALSE); // Adds ref
@@ -274,7 +274,7 @@ NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsStrin
 		if (NS_SUCCEEDED( rv) && (nsnull != ccm2)) {
 			// get charset atom due to getting unicode converter
 			nsCOMPtr <nsIAtom> charsetAtom;
-			rv = ccm2->GetCharsetAtom(m_sysCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+			rv = ccm2->GetCharsetAtom(m_sysCharset.get(), getter_AddRefs(charsetAtom));
 
 			// get an unicode converter
 			rv = ccm2->GetUnicodeDecoder(charsetAtom, &m_pDecoder);
@@ -339,7 +339,7 @@ NS_IMETHODIMP nsImportService::SystemStringFromUnicode(const PRUnichar *uniStr, 
 		if (NS_SUCCEEDED( rv) && (nsnull != ccm2)) {
 			// get charset atom due to getting unicode converter
 			nsCOMPtr <nsIAtom> charsetAtom;
-			rv = ccm2->GetCharsetAtom(m_sysCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+			rv = ccm2->GetCharsetAtom(m_sysCharset.get(), getter_AddRefs(charsetAtom));
 
 			// get an unicode converter
 			rv = ccm2->GetUnicodeEncoder(charsetAtom, &m_pEncoder);
@@ -659,7 +659,7 @@ nsresult nsImportService::LoadModuleInfo( const char *pClsId, const char *pSuppo
 		theDescription.AssignWithConversion("Unknown description");
 	
 	// call the module to get the info we need
-	m_pModules->AddModule( clsId, pSupports, theTitle.GetUnicode(), theDescription.GetUnicode());
+	m_pModules->AddModule( clsId, pSupports, theTitle.get(), theDescription.get());
 	
 	module->Release();
 	
