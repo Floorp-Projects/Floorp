@@ -37,6 +37,7 @@ class nsISizeOfHandler;
 class nsITableLayoutStrategy
 {
 public:
+  virtual ~nsITableLayoutStrategy() {};
 
   /** call once every time any table thing changes (content, structure, or style) 
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
