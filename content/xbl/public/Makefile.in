@@ -32,7 +32,6 @@ EXPORTS		= \
     nsIBindingManager.h \
     nsIXBLBinding.h \
     nsIXBLService.h \
-    nsIXBLStreamListener.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -44,9 +44,9 @@
 #include "nsHTMLAtoms.h"
 #include "nsSupportsArray.h"
 #include "nsITextContent.h"
+#include "nsIStreamListener.h"
 
 #include "nsIXBLBinding.h"
-#include "nsIXBLStreamListener.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -80,8 +80,8 @@ public:
   NS_IMETHOD PutXBLDocument(nsIDocument* aDocument);
   NS_IMETHOD GetXBLDocument(const nsCString& aURL, nsIDocument** aResult);
 
-  NS_IMETHOD PutLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener* aListener);
-  NS_IMETHOD GetLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener** aResult);
+  NS_IMETHOD PutLoadingDocListener(const nsCString& aURL, nsIStreamListener* aListener);
+  NS_IMETHOD GetLoadingDocListener(const nsCString& aURL, nsIStreamListener** aResult);
   NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL);
 
 // MEMBER VARIABLES
@@ -322,7 +322,7 @@ nsBindingManager::GetXBLDocument(const nsCString& aURL, nsIDocument** aResult)
 }
 
 NS_IMETHODIMP
-nsBindingManager::PutLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener* aListener)
+nsBindingManager::PutLoadingDocListener(const nsCString& aURL, nsIStreamListener* aListener)
 {
   if (!mLoadingDocTable)
     mLoadingDocTable = new nsSupportsHashtable();
@@ -334,14 +334,14 @@ nsBindingManager::PutLoadingDocListener(const nsCString& aURL, nsIXBLStreamListe
 }
 
 NS_IMETHODIMP
-nsBindingManager::GetLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener** aResult)
+nsBindingManager::GetLoadingDocListener(const nsCString& aURL, nsIStreamListener** aResult)
 {
   *aResult = nsnull;
   if (!mLoadingDocTable)
     return NS_OK;
 
   nsStringKey key(aURL);
-  *aResult = NS_STATIC_CAST(nsIXBLStreamListener*, mLoadingDocTable->Get(&key)); // Addref happens here.
+  *aResult = NS_STATIC_CAST(nsIStreamListener*, mLoadingDocTable->Get(&key)); // Addref happens here.
   return NS_OK;
 }
 
