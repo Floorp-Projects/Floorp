@@ -113,10 +113,13 @@ treechildren::-moz-tree-cell-text(folderNameCol, specialFolder-Inbox, newMessage
   font-weight: bold;
 }
 
-treechildren::-moz-tree-image(folderNameCol, imapShared-true) {
+/* Disable rules for special shared folder artwork until we actually have new artwork for these icons */
+
+/* treechildren::-moz-tree-image(folderNameCol, imapShared-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-share.gif");
 }
 
+*/
 
 /* ..... Server Folders ..... */
 

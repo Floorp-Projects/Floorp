@@ -103,9 +103,11 @@ treechildren::-moz-tree-cell-text(folderNameCol, specialFolder-Inbox, newMessage
   font-weight: bold;
 }
 
+/* 
 treechildren::-moz-tree-image(folderNameCol, imapShared-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-share.png");
 }
+*/
 
 
 /* ..... Server Folders ..... */
