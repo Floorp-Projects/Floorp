@@ -547,38 +547,20 @@ nsContainerFrame::RemoveAFrame(nsIFrame* aRemovedFrame)
 NS_IMETHODIMP
 nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
 {
-  nsAutoString tagString;
-  if (nsnull != mContent) {
-    nsIAtom* tag;
-    mContent->GetTag(tag);
-    if (tag != nsnull) {
-      tag->ToString(tagString);
-      NS_RELEASE(tag);
-    }
-  }
-
-  // Indent
   IndentBy(out, aIndent);
-
-  // Output the tag
   ListTag(out);
-
   nsIView* view;
   GetView(&view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }
-
   if (nsnull != mPrevInFlow) {
     fprintf(out, " prev-in-flow=%p", mPrevInFlow);
   }
   if (nsnull != mNextInFlow) {
     fprintf(out, " next-in-flow=%p", mNextInFlow);
   }
-
-  // Output the rect
-  out << mRect;
-
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }

@@ -1345,26 +1345,12 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 NS_IMETHODIMP
 nsFrame::List(FILE* out, PRInt32 aIndent) const
 {
-  nsAutoString tagString;
-  if (nsnull != mContent) {
-    nsIAtom* tag;
-    mContent->GetTag(tag);
-    if (tag != nsnull) {
-      tag->ToString(tagString);
-      NS_RELEASE(tag);
-    }
-  }
-
-  // Indent
   IndentBy(out, aIndent);
-
-  // Output the tag and rect
   ListTag(out);
   if (nsnull != mView) {
     fprintf(out, " [view=%p]", mView);
   }
-  fputs(" ", out);
-  out << mRect;
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
