@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Morten Nilsen <morten@nilsen.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -71,11 +72,8 @@
 #define REGSELF_PRINTF(x,y)                                             \
   printf("RegSelf %s to %s converter complete\n",                       \
          x, y)                                                         
-#define UCONV_DEBUG_PRINTF(x)                                           \
-  printf(x)
 #else
 #define REGSELF_PRINTF(x,y)
-#define UCONV_DEBUG_PRINTF(x)
 #endif
 
 #define NS_IMPL_NSUCONVERTERREGSELF                                     \
@@ -136,8 +134,8 @@ _InstanceClass##UnRegSelf (nsIComponentManager *aCompMgr,             \
                            const char* registryLocation,              \
                            const nsModuleComponentInfo *info)         \
 {                                                                     \
-  UCONV_DEBUG_PRINTF("UnRegSelf " _From " to " _To "converter not implement\n"); \
-  return NS_OK;                                                       \
+  NS_WARNING("UnRegSelf " _From " to " _To "converter not implemented\n"); \
+  return NS_ERROR_NOT_IMPLEMENTED;                                    \
 }
 
 /**

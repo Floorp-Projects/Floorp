@@ -23,6 +23,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com> 
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Brian Stell <bstell@ix.netcom.com>
+ *   Morten Nilsen <morten@nilsen.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -52,6 +53,7 @@
 #include "nsISaveAsCharset.h"
 #include "nsIPref.h"
 #include "nsCOMPtr.h"
+#include "nsPrintfCString.h"
 #include "nspr.h"
 #include "nsHashtable.h"
 #include "nsReadableUtils.h"
@@ -1879,7 +1881,7 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
       if (mapper) {
         aSelf->mCCMap = MapperToCCMap(mapper);
         if (aSelf->mCCMap) {
-          DEBUG_PRINTF(("\n\ncharset = %s", atomToName(charset)));
+          NS_WARNING(nsPrintfCString("\n\ncharset = %s", atomToName(charset)).get());
   
           /*
            * We used to disable special characters like smart quotes

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Morten Nilsen <morten@nilsen.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -62,12 +63,6 @@
 
 #include "nsIStringBundle.h"
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-#ifdef NS_DEBUG
-#define DEBUG_PRINTF PR_fprintf
-#else
-#define DEBUG_PRINTF (void)
-#endif
 
 #ifdef USE_ASYNC_READ
 NS_IMPL_ISUPPORTS5(nsStreamXferOp, nsIStreamListener, nsIRequestObserver, nsIStreamTransferOperation, nsIProgressEventSink, nsIInterfaceRequestor);
@@ -145,10 +140,7 @@ nsStreamXferOp::OnError( int operation, nsresult errorCode ) {
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                  NS_ISTREAMTRANSFER_CONTRACTID ";onError",
                                  NS_ConvertASCIItoUCS2( buf ).get() );
-        if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
-                          (char*)__FILE__, (int)__LINE__, (int)rv );
-        }
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Observe failed");
     }
 
     return rv;
@@ -277,8 +269,7 @@ nsStreamXferOp::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
     nsresult rv = NS_OK;
 
 #ifdef DEBUG_law
-    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnStartRequest; request=0x%08X, context=0x%08X\n",
-                  (int)(void*)request, (int)(void*)aContext );
+    NS_WARNING(nsPrintfCString("nsStreamXferOp::OnStartRequest; request=0x%08X, context=0x%08X\n",(int)(void*)request, (int)(void*)aContext).get());
 #endif
 
 #ifdef USE_ASYNC_READ
@@ -407,10 +398,7 @@ nsStreamXferOp::OnProgress(nsIRequest *request, nsISupports* aContext,
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ISTREAMTRANSFER_CONTRACTID ";onProgress",
                                   NS_ConvertASCIItoUCS2( buf ).get() );
-        if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
-                          (char*)__FILE__, (int)__LINE__, (int)rv );
-        }
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Observe failed");
     }
 
     return rv;
@@ -436,10 +424,7 @@ nsStreamXferOp::OnStatus( nsIRequest      *request,
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ISTREAMTRANSFER_CONTRACTID ";onStatus",
                                   msg.get() );
-        if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
-                          (char*)__FILE__, (int)__LINE__, (int)rv );
-        }
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Observe failed");
     }
 
     return rv;
@@ -546,10 +531,7 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
         rv = kungFuDeathGrip->Observe( (nsIStreamTransferOperation*)this,
                                        NS_ISTREAMTRANSFER_CONTRACTID ";onCompletion",
                                        nsnull );
-        if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
-                          (char*)__FILE__, (int)__LINE__, (int)rv );
-        }
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Observe failed");
     }
 
     return rv;
