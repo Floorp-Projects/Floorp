@@ -25,11 +25,11 @@
 #include "nsIZipReader.h"
 #include "nsReadableUtils.h"
 #include "nsURLHelper.h"
+#include "nsStandardURL.h"
 
 ////////////////////////////////////////////////////////////////////////////////
  
 nsJARURI::nsJARURI()
-    : mJAREntry(nsnull)
 {
 }
  
@@ -37,7 +37,7 @@ nsJARURI::~nsJARURI()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsJARURI, nsIJARURI, nsIURI, nsISerializable)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsJARURI, nsIJARURI, nsIURL, nsIURI, nsISerializable)
 
 nsresult
 nsJARURI::Init(const char *charsetHint)
@@ -48,21 +48,57 @@ nsJARURI::Init(const char *charsetHint)
 
 #define NS_JAR_SCHEME           NS_LITERAL_CSTRING("jar:")
 #define NS_JAR_DELIMITER        NS_LITERAL_CSTRING("!/")
+#define NS_BOGUS_ENTRY_SCHEME   NS_LITERAL_CSTRING("x:///")
 
+// FormatSpec takes the entry spec (including the "x:///" at the
+// beginning) and gives us a full JAR spec.
 nsresult
-nsJARURI::FormatSpec(const nsACString &entryPath, nsACString &result,
+nsJARURI::FormatSpec(const nsACString &entrySpec, nsACString &result,
                      PRBool aIncludeScheme)
 {
+    // The entrySpec MUST start with "x:///"
+    NS_ASSERTION(StringBeginsWith(entrySpec, NS_BOGUS_ENTRY_SCHEME),
+                 "bogus entry spec");
+
     nsCAutoString fileSpec;
     nsresult rv = mJARFile->GetSpec(fileSpec);
     if (NS_FAILED(rv)) return rv;
 
     if (aIncludeScheme)
         result = NS_JAR_SCHEME;
-    result.Append(fileSpec + NS_JAR_DELIMITER + entryPath);
+    else
+        result.Truncate();
+
+    result.Append(fileSpec + NS_JAR_DELIMITER +
+                  Substring(entrySpec, 5, entrySpec.Length() - 5));
     return NS_OK;
 }
 
+nsresult
+nsJARURI::CreateEntryURL(const nsACString& entryFilename,
+                         const char* charset,
+                         nsIURL** url)
+{
+    *url = nsnull;
+    
+    nsStandardURL* stdURL = new nsStandardURL();
+    if (!stdURL) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Flatten the concatenation, just in case.  See bug 128288
+    nsCAutoString spec(NS_BOGUS_ENTRY_SCHEME + entryFilename);
+    nsresult rv = stdURL->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
+                               spec, charset, nsnull);
+    if (NS_FAILED(rv)) {
+        delete stdURL;
+        return rv;
+    }
+
+    NS_ADDREF(*url = stdURL);
+    return NS_OK;
+}
+    
 ////////////////////////////////////////////////////////////////////////////////
 // nsISerializable methods:
 
@@ -86,7 +122,9 @@ nsJARURI::Write(nsIObjectOutputStream* aStream)
 NS_IMETHODIMP
 nsJARURI::GetSpec(nsACString &aSpec)
 {
-    return FormatSpec(mJAREntry, aSpec);
+    nsCAutoString entrySpec;
+    mJAREntry->GetSpec(entrySpec);
+    return FormatSpec(entrySpec, aSpec);
 }
 
 NS_IMETHODIMP
@@ -128,10 +166,7 @@ nsJARURI::SetSpec(const nsACString &aSpec)
     while (*delim_end == '/')
         ++delim_end;
 
-    rv = net_ResolveRelativePath(Substring(delim_end, end),
-                                           NS_LITERAL_CSTRING(""),
-                                           mJAREntry);
-    return rv;
+    return SetJAREntry(Substring(delim_end, end));
 }
 
 NS_IMETHODIMP
@@ -230,7 +265,9 @@ nsJARURI::SetPort(PRInt32 aPort)
 NS_IMETHODIMP
 nsJARURI::GetPath(nsACString &aPath)
 {
-    return FormatSpec(mJAREntry, aPath, PR_FALSE);
+    nsCAutoString entrySpec;
+    mJAREntry->GetSpec(entrySpec);
+    return FormatSpec(entrySpec, aPath, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -242,6 +279,7 @@ nsJARURI::SetPath(const nsACString &aPath)
 NS_IMETHODIMP
 nsJARURI::GetAsciiSpec(nsACString &aSpec)
 {
+    // XXX Shouldn't this like... make sure it returns ASCII or something?
     return GetSpec(aSpec);
 }
 
@@ -254,7 +292,7 @@ nsJARURI::GetAsciiHost(nsACString &aHost)
 NS_IMETHODIMP
 nsJARURI::GetOriginCharset(nsACString &aOriginCharset)
 {
-    aOriginCharset.Truncate();
+    aOriginCharset = mCharsetHint;
     return NS_OK;
 }
 
@@ -285,8 +323,11 @@ nsJARURI::Equals(nsIURI *other, PRBool *result)
     rv = otherJAR->GetJAREntry(otherJAREntry);
     if (NS_FAILED(rv)) return rv;
 
-    *result = (strcmp(mJAREntry.get(), otherJAREntry.get()) == 0);
-    return NS_OK;
+    nsCAutoString ourJAREntry;
+    rv = GetJAREntry(ourJAREntry);
+    if (NS_SUCCEEDED(rv))
+        *result = (strcmp(ourJAREntry.get(), otherJAREntry.get()) == 0);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -312,14 +353,22 @@ nsJARURI::Clone(nsIURI **result)
     rv = mJARFile->Clone(getter_AddRefs(newJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    nsJARURI* uri = new nsJARURI();
-    if (uri == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIURI> newJAREntryURI;
+    rv = mJAREntry->Clone(getter_AddRefs(newJAREntryURI));
+    if (NS_FAILED(rv)) return rv;
 
-    NS_ADDREF(uri);
-    uri->mJARFile = newJARFile;
-    uri->mJAREntry = mJAREntry;
-    *result = uri;
+    nsCOMPtr<nsIURL> newJAREntry(do_QueryInterface(newJAREntryURI));
+    NS_ASSERTION(newJAREntry, "This had better QI to nsIURL!");
+    
+    nsJARURI* uri = new nsJARURI();
+    if (uri) {
+        NS_ADDREF(uri);
+        uri->mJARFile = newJARFile;
+        uri->mJAREntry = newJAREntry;
+        *result = uri;
+    } else {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    }
 
     return NS_OK;
 }
@@ -336,34 +385,220 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
         return NS_OK;
     }
 
-    nsCAutoString path(mJAREntry);
-    PRInt32 pos = 0;
+    nsCAutoString resolvedPath;
+    mJAREntry->Resolve(relativePath, resolvedPath);
+    
+    return FormatSpec(resolvedPath, result);
+}
 
-    char first = relativePath.Length() > 0 ? relativePath.First() : '#';
+////////////////////////////////////////////////////////////////////////////////
+// nsIURL methods:
 
-    switch (first) {
-    case '/':
-        path = "";
-        break;
-    case '?':
-    case '#':
-        pos = path.RFindChar(first);
-        if (pos >= 0)
-            path.Truncate(pos);
-        break;
-    default:
-        pos = path.RFindChar('/');
-        if (pos >= 0)
-            path.Truncate(pos + 1);
-        else
-            path = "";
+NS_IMETHODIMP
+nsJARURI::GetFilePath(nsACString& filePath)
+{
+    return mJAREntry->GetFilePath(filePath);
+}
+
+NS_IMETHODIMP
+nsJARURI::SetFilePath(const nsACString& filePath)
+{
+    return mJAREntry->SetFilePath(filePath);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetParam(nsACString& param)
+{
+    param.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARURI::SetParam(const nsACString& param)
+{
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsJARURI::GetQuery(nsACString& query)
+{
+    query.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARURI::SetQuery(const nsACString& query)
+{
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsJARURI::GetRef(nsACString& ref)
+{
+    return mJAREntry->GetRef(ref);
+}
+
+NS_IMETHODIMP
+nsJARURI::SetRef(const nsACString& ref)
+{
+    return mJAREntry->SetRef(ref);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetDirectory(nsACString& directory)
+{
+    return mJAREntry->GetDirectory(directory);
+}
+
+NS_IMETHODIMP
+nsJARURI::SetDirectory(const nsACString& directory)
+{
+    return mJAREntry->SetDirectory(directory);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetFileName(nsACString& fileName)
+{
+    return mJAREntry->GetFileName(fileName);
+}
+
+NS_IMETHODIMP
+nsJARURI::SetFileName(const nsACString& fileName)
+{
+    return mJAREntry->SetFileName(fileName);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetFileBaseName(nsACString& fileBaseName)
+{
+    return mJAREntry->GetFileBaseName(fileBaseName);
+}
+
+NS_IMETHODIMP
+nsJARURI::SetFileBaseName(const nsACString& fileBaseName)
+{
+    return mJAREntry->SetFileBaseName(fileBaseName);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetFileExtension(nsACString& fileExtension)
+{
+    return mJAREntry->GetFileExtension(fileExtension);
+}
+
+NS_IMETHODIMP
+nsJARURI::SetFileExtension(const nsACString& fileExtension)
+{
+    return mJAREntry->SetFileExtension(fileExtension);
+}
+
+NS_IMETHODIMP
+nsJARURI::GetCommonBaseSpec(nsIURI* uriToCompare, nsACString& commonSpec)
+{
+    commonSpec.Truncate();
+
+    NS_ENSURE_ARG_POINTER(uriToCompare);
+    
+    commonSpec.Truncate();
+    nsCOMPtr<nsIJARURI> otherJARURI(do_QueryInterface(uriToCompare));
+    if (!otherJARURI) {
+        // Nothing in common
+        return NS_OK;
     }
-    nsCAutoString resolvedEntry;
-    rv = net_ResolveRelativePath(relativePath, path,
-                                 resolvedEntry);
+
+    nsCOMPtr<nsIURI> otherJARFile;
+    nsresult rv = otherJARURI->GetJARFile(getter_AddRefs(otherJARFile));
     if (NS_FAILED(rv)) return rv;
 
-    return FormatSpec(resolvedEntry, result);
+    PRBool equal;
+    rv = mJARFile->Equals(otherJARFile, &equal);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!equal) {
+        // See what the JAR file URIs have in common
+        nsCOMPtr<nsIURL> ourJARFileURL(do_QueryInterface(mJARFile));
+        if (!ourJARFileURL) {
+            // Not a URL, so nothing in common
+            return NS_OK;
+        }
+        nsCAutoString common;
+        rv = ourJARFileURL->GetCommonBaseSpec(otherJARFile, common);
+        if (NS_FAILED(rv)) return rv;
+
+        commonSpec = NS_JAR_SCHEME + common;
+        return NS_OK;
+        
+    }
+    
+    // At this point we have the same JAR file.  Compare the JAREntrys
+    nsCAutoString otherEntry;
+    rv = otherJARURI->GetJAREntry(otherEntry);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString otherCharset;
+    rv = uriToCompare->GetOriginCharset(otherCharset);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURL> url;
+    rv = CreateEntryURL(otherEntry, otherCharset.get(), getter_AddRefs(url));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString common;
+    rv = mJAREntry->GetCommonBaseSpec(url, common);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = FormatSpec(common, commonSpec);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsJARURI::GetRelativeSpec(nsIURI* uriToCompare, nsACString& relativeSpec)
+{
+    GetSpec(relativeSpec);
+
+    NS_ENSURE_ARG_POINTER(uriToCompare);
+
+    nsCOMPtr<nsIJARURI> otherJARURI(do_QueryInterface(uriToCompare));
+    if (!otherJARURI) {
+        // Nothing in common
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> otherJARFile;
+    nsresult rv = otherJARURI->GetJARFile(getter_AddRefs(otherJARFile));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool equal;
+    rv = mJARFile->Equals(otherJARFile, &equal);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!equal) {
+        // We live in different JAR files.  Nothing in common.
+        return rv;
+    }
+
+    // Same JAR file.  Compare the JAREntrys
+    nsCAutoString otherEntry;
+    rv = otherJARURI->GetJAREntry(otherEntry);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString otherCharset;
+    rv = uriToCompare->GetOriginCharset(otherCharset);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURL> url;
+    rv = CreateEntryURL(otherEntry, otherCharset.get(), getter_AddRefs(url));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString relativeEntrySpec;
+    rv = mJAREntry->GetRelativeSpec(url, relativeEntrySpec);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!StringBeginsWith(relativeEntrySpec, NS_BOGUS_ENTRY_SCHEME)) {
+        // An actual relative spec!
+        relativeSpec = relativeEntrySpec;
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -387,22 +622,19 @@ nsJARURI::SetJARFile(nsIURI* jarFile)
 NS_IMETHODIMP
 nsJARURI::GetJAREntry(nsACString &entryPath)
 {
-    // trim off any trailing ref, query, or param
-    PRInt32 pos = mJAREntry.RFindCharInSet("#?;");
-    if (pos < 0)
-        pos = mJAREntry.Length();
-    entryPath = Substring(mJAREntry, 0, pos);
+    nsCAutoString filePath;
+    mJAREntry->GetFilePath(filePath);
+    NS_ASSERTION(filePath.Length() > 0, "path should never be empty!");
+    // Trim off the leading '/'
+    entryPath = Substring(filePath, 1, filePath.Length() - 1);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARURI::SetJAREntry(const nsACString &entryPath)
 {
-    mJAREntry.Truncate();
-
-    return net_ResolveRelativePath(entryPath,
-                                   NS_LITERAL_CSTRING(""),
-                                   mJAREntry);
+    return CreateEntryURL(entryPath, mCharsetHint.get(),
+                          getter_AddRefs(mJAREntry));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
