@@ -1,3 +1,25 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
 #include "nsISupports.idl"
 #include "nsIEventLoop.idl"
 
@@ -21,7 +43,10 @@
  {2EFB5006-4508-11d3-AEDA-00A024FFC08C} -	nsIWinEventFilter
  {2EFB5007-4508-11d3-AEDA-00A024FFC08C} -	nsIDispatchListener
  {2EFB5008-4508-11d3-AEDA-00A024FFC08C} -	nsITranslateListener
-
+ {2EFB5009-4508-11d3-AEDA-00A024FFC08C} -	nsPIEventLoop
+ {2EFB5010-4508-11d3-AEDA-00A024FFC08C} -	nsPIEventLoopListener
+ {2EFB5011-4508-11d3-AEDA-00A024FFC08C} -	nsNativeEventDataTypes
+ {2EFB5012-4508-11d3-AEDA-00A024FFC08C} -	nsNativeFilterDataTypes
  */
 
 [scriptable, uuid(2EFB5000-4508-11d3-AEDA-00A024FFC08C)]
@@ -52,7 +77,10 @@ interface nsINativeApp : nsISupports
 	void CreateEventLoop(in wstring EventLoopName, in nsEventLoopType type,
 								out nsIEventLoop eventLoop);
 
-	/*	Used to find a previously created event loop. 
+	/*	Used to find a previously created event loop.
+	
+	@return NS_OK - Event loop found and returned.
+			  NS_ERROR_INVALID_ARG - Event loop could not be found. 
 
 	*/
 	void FindEventLoop(in wstring EventLoopName, out nsIEventLoop eventLoop);

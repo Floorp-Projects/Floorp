@@ -1,3 +1,25 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
 #include "nsISupports.idl"
 #include "nsIEvent.idl"
 
@@ -16,23 +38,38 @@ interface nsITranslateListener : nsISupports
 		listener can then control if TranslateMessage() is called via the
 		return.
 
-	@param msg This is the native message that has been retrieved from the Queue
-					and awaiting dispatching.
+	@param evt This is the native message that has been retrieved from the Queue
+					and awaiting dispatching.  Each platform
+					may call GetData to get the platform specific
+					internal data of the event.  It should be noted that the
+					XP Event Loop retains ownership of this object, though it
+					it possible to addref and store the event off, it should be
+					known that the XP Event Loop may change the values of the
+					object.  To get a copy of the state that can be owned by you
+					call CloneEvent().
 
 	@return NS_OK - Indicates nsIEventLoop::TranslateMessage() should be called
 						 following the return from this function.
-			NS_FALSE - Translating went successfully, but 
+			NS_COMFALSE - Translating went successfully, but 
 						 nsIEventLoop::TranlateMessage() should not be called.
 			NS_ERROR_FAILURE - Catastrophic processing failure.  Event loop should
 						 die immediately.
 	*/
-	void PreTranslate(in nsIEvent msg);
+	void PreTranslate(in nsIEvent evt);
 
 	/*
 		Called just after the nsIEventLoop::TranslateMessage() has been called.
 
-	@param msg This is the native message that has been retrieved from the Queue
-					and awaiting dispatching.
+	@param evt This is the native message that has been retrieved from the Queue
+					and awaiting dispatching.  Each platform
+					may call GetData to get the platform specific
+					internal data of the event.  It should be noted that the
+					XP Event Loop retains ownership of this object, though it
+					it possible to addref and store the event off, it should be
+					known that the XP Event Loop may change the values of the
+					object.  To get a copy of the state that can be owned by you
+					call CloneEvent().  This will not be called if PreTranslate
+					returns NS_COMFALSE.
 
 	@param fTranslateHandled Indicates if nsIEventLoop::TranslateMessage() handled
 					the message being passed in.
@@ -41,5 +78,5 @@ interface nsITranslateListener : nsISupports
 				NS_ERROR_FAILURE - Catastrophic processing failure.  Event loop 
 				should die immediately.
 	*/
-	void PostTranslate(in nsIEvent msg, in boolean fTranslateHandled);
+	void PostTranslate(in nsIEvent evt, in boolean fTranslateHandled);
 };
