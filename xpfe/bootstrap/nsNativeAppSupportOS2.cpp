@@ -44,7 +44,6 @@
 #include "nsIWidget.h"
 #include "nsIAppShellService.h"
 #include "nsIProfileInternal.h"
-#include "rdf.h"
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -112,7 +111,7 @@ static
 nsresult
 GetMostRecentWindow(const PRUnichar* aType, nsIDOMWindowInternal** aWindow) {
     nsresult rv;
-    nsCOMPtr<nsIWindowMediator> med( do_GetService( NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator", &rv ) );
+    nsCOMPtr<nsIWindowMediator> med( do_GetService( NS_WINDOWMEDIATOR_CONTRACTID, &rv ) );
     if ( NS_FAILED( rv ) )
         return rv;
 

@@ -58,7 +58,6 @@ REQUIRES	+= \
 		  intl \
 		  profile \
 		  xpconnect \
-		  rdf \
 		  $(NULL)
 endif
 
