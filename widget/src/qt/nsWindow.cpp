@@ -18,84 +18,61 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
+#include "nsIServiceManager.h"
+#include "nsQWidget.h"
 #include "nsWindow.h"
-#include "nsIFontMetrics.h"
-#include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
-#include "nsIDeviceContext.h"
 #include "nsRect.h"
-#include "nsTransform2D.h"
 #include "nsGfxCIID.h"
-#include "nsMenuBar.h"
 
-#include "nsAppShell.h"
-#include "nsClipboard.h"
-
-#include "stdio.h"
 #include <qapplication.h>
-#include <qobjectlist.h>
 
-static bool gAppTopWindowSet = PR_FALSE;
+//JCG #define DBG_JCG = 1
+
+#ifdef DBG_JCG
+static PRInt32 gWindowCount = 0;
+static PRInt32 gWindowID = 0;
+static PRInt32 gChildCount = 0;
+static PRInt32 gChildID = 0;
+#endif
 
 // are we grabbing?
-PRBool      nsWindow::mIsGrabbing = PR_FALSE;
-nsWindow   *nsWindow::mGrabWindow = NULL;
-
-//=============================================================================
-//
-// nsQWidget class
-//
-//=============================================================================
-nsQWidget::nsQWidget(nsWidget * widget, QWidget * parent, const char * name, WFlags f)
-	     : QWidget(parent, name, f), nsQBaseWidget(widget)
-{
-}
-
-nsQWidget::~nsQWidget()
-{
-}
-
-void nsQWidget::Destroy()
-{
-  nsQBaseWidget::Destroy();
-}
+PRBool   nsWindow::mIsGrabbing = PR_FALSE;
+nsWindow *nsWindow::mGrabWindow = NULL;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 
 //-------------------------------------------------------------------------
-//
 // nsWindow constructor
-//
 //-------------------------------------------------------------------------
 nsWindow::nsWindow() 
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::nsWindow()\n"));
-    mResized = PR_FALSE;
-    mVisible = PR_FALSE;
-    mDisplayed = PR_FALSE;
-    mLowerLeft = PR_FALSE;
-    mIsDestroying = PR_FALSE;
-    mIsDialog = PR_FALSE;
-    mIsPopup = PR_FALSE;
-    mOnDestroyCalled = PR_FALSE;
-    mFont = nsnull;
-    mWindowType = eWindowType_child;
-    mBorderStyle = eBorderStyle_default;
-    mBlockFocusEvents = PR_FALSE;
+#ifdef DBG_JCG
+  gWindowCount++;
+  mWindowID = gWindowID++;
+  printf("JCG: nsWindow CTOR. (%p) ID: %d, Count: %d\n",this,mWindowID,gWindowCount);
+#endif
+  mIsDialog = PR_FALSE;
+  mIsPopup = PR_FALSE;
+  mWindowType = eWindowType_child;
+  mBorderStyle = eBorderStyle_default;
+  mBlockFocusEvents = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
-//
 // nsWindow destructor
-//
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-  PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::~nsWindow()\n"));
-
+#ifdef DBG_JCG
+  gWindowCount--;
+  printf("JCG: nsWindow DTOR. (%p) ID: %d, Count: %d\n",this,mWindowID,gWindowCount);
+#endif
   // make sure that we release the grab indicator here
   if (mGrabWindow == this) {
     mIsGrabbing = PR_FALSE;
@@ -106,366 +83,278 @@ nsWindow::~nsWindow()
 //-------------------------------------------------------------------------
 PRBool nsWindow::IsChild() const
 {
-    return PR_FALSE;
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
 void nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsWindow::ConvertToDeviceCoordinates()\n"));
 }
 
 //-------------------------------------------------------------------------
-//
 // Setup initial tooltip rectangles
-//
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
+NS_METHOD nsWindow::SetTooltips(PRUint32 aNumberOfTips,
+                                nsRect *aTooltipAreas[])
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::SetTooltips()\n"));
-    return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-//
 // Update all tooltip rectangles
-//
 //-------------------------------------------------------------------------
-
 NS_METHOD nsWindow::UpdateTooltips(nsRect* aNewTips[])
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::UpdateTooltips()\n"));
-    return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-//
 // Remove all tooltip rectangles
-//
 //-------------------------------------------------------------------------
-
 NS_METHOD nsWindow::RemoveTooltips()
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::RemoveTooltips()\n"));
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 {
-    PR_LOG(QtWidgetsLM,
-           PR_LOG_DEBUG,
-           ("nsWindow::SetFocus %s\n",
-            mWidget ? mWidget->name() : "(null)"));
-    if (mWidget) {
-        mWidget->setFocus();
-    }
-    // don't recurse  
-    if (mBlockFocusEvents) {
-      return NS_OK;
-    }
-
-    mBlockFocusEvents = PR_TRUE;
-
-    nsGUIEvent event;
-
-    event.message = NS_GOTFOCUS;
-    event.widget  = this;
-
-    event.eventStructType = NS_GUI_EVENT;
-
-    event.time = 0;
-    event.point.x = 0;
-    event.point.y = 0;
-
-    DispatchFocus(event);
- 
-    mBlockFocusEvents = PR_FALSE;
-
+  if (mWidget) {
+    mWidget->SetFocus();
+  }
+  // don't recurse  
+  if (mBlockFocusEvents) {
     return NS_OK;
+  }
+  mBlockFocusEvents = PR_TRUE;
+
+  nsGUIEvent event;
+
+  event.message = NS_GOTFOCUS;
+  event.widget  = this;
+  event.eventStructType = NS_GUI_EVENT;
+  event.time = 0;
+  event.point.x = 0;
+  event.point.y = 0;
+
+  DispatchFocus(event);
+ 
+  mBlockFocusEvents = PR_FALSE;
+  return NS_OK;
 }
 
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget()\n"));
-    if (nsnull != aInitData) {
-        SetWindowType(aInitData->mWindowType);
-        SetBorderStyle(aInitData->mBorderStyle);
-
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
+  if (nsnull != aInitData) {
+    SetWindowType(aInitData->mWindowType);
+    SetBorderStyle(aInitData->mBorderStyle);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
-//
 // Create the native widget
-//
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CreateNative(QWidget *parentWidget)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::CreateNative()\n"));
+  switch (mWindowType) {
+    case eWindowType_toplevel:
+#ifdef DBG_JCG
+      printf("JCG: Top Level Create: %p\n",this);
+#endif
+      break;
 
-    QWidget::WFlags w = 0;
+    case eWindowType_dialog:
+#ifdef DBG_JCG
+      printf("JCG: Dialog Create: %p\n",this);
+#endif
+      mIsDialog = PR_TRUE;
+      break;
 
-    if (mBorderStyle == eBorderStyle_default) {
-        w = 0;
-    }
-    else {
-        if (mBorderStyle & eBorderStyle_all) {
-            w |= 0;
-        }
-        if (mBorderStyle & eBorderStyle_border) {
-            w |= Qt::WStyle_DialogBorder;
-        }
-        if (mBorderStyle & eBorderStyle_resizeh) {
-            w |= Qt::WStyle_NormalBorder;
-        }
-        if (mBorderStyle & eBorderStyle_title) {
-            w |= Qt::WStyle_Title;
-        }
-        if (mBorderStyle & eBorderStyle_menu) {
-            w |= Qt::WStyle_SysMenu | Qt::WStyle_Title;
-        }
-        if (mBorderStyle & eBorderStyle_minimize) {
-            w |= Qt::WStyle_Minimize;
-        }
-        if (mBorderStyle & eBorderStyle_maximize) {
-            w |= Qt::WStyle_Maximize;
-        }
-        if (mBorderStyle & eBorderStyle_close) {
-            PR_LOG(QtWidgetsLM, 
-                   PR_LOG_DEBUG, 
-                   ("eBorderStyle_close isn't handled yet... please fix me\n"));
-        }
-    }
+    case eWindowType_popup:
+#ifdef DBG_JCG
+      printf("JCG: Popup Create: %p\n",this);
+#endif
+      mIsPopup = PR_TRUE;
+      break;
 
-    w |= (w) ? Qt::WStyle_Customize : 0;
+    case eWindowType_child:
+#ifdef DBG_JCG
+      printf("JCG: Child Create: %p\n",this);
+#endif
+      break;
+  }
+  mWidget = new nsQBaseWidget(this);
 
-    switch (mWindowType) {
-      case eWindowType_toplevel:
-        w |= Qt::WType_TopLevel | Qt::WDestructiveClose;
-        break;
+  if (!mWidget)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-      case eWindowType_dialog:
-    	mIsDialog = PR_TRUE;
-        w |= Qt::WType_Modal;
-        break;
-
-      case eWindowType_popup:
-    	mIsPopup = PR_TRUE;
-        w |= Qt::WType_Popup;
-        break;
-
-      case eWindowType_child:
-        break;
-    }
-    w |= Qt::WRepaintNoErase;
-    w |= Qt::WResizeNoErase;
-
-    mWidget = (QWidget*)new nsQWidget(this, parentWidget, QWidget::tr("nsWindow"), w);
-    if (!mWidget)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    if (!parentWidget) {
-        // This is a top-level window. I'm not sure what special actions need
-        // to be taken here.
-        mWidget->resize(mBounds.width, mBounds.height);
-    	mIsToplevel = PR_TRUE;
-        mListenForResizes = PR_TRUE;
-        if (!gAppTopWindowSet) {
-          qApp->setMainWidget(mWidget);
-          gAppTopWindowSet = PR_TRUE;
-        }
-    }
-    else {
-      mIsToplevel = PR_FALSE;
-    }
-    // Force cursor to default setting
-    mCursor = eCursor_select;
-    SetCursor(eCursor_standard);
-
-    return nsWidget::CreateNative(parentWidget);
+  if (!mWidget->CreateNative(parentWidget,QWidget::tr("nsWindow"),
+                             NS_GetQWFlags(mBorderStyle,mWindowType))) {
+    delete mWidget;
+    mWidget = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (!parentWidget && !mIsDialog) {
+    // This is a top-level window. I'm not sure what special actions
+    // need to be taken here.
+    mIsToplevel = PR_TRUE;
+    mListenForResizes = PR_TRUE;
+  }
+  else {
+    mIsToplevel = PR_FALSE;
+  }
+  return nsWidget::CreateNative(parentWidget);
 }
 
 
 //-------------------------------------------------------------------------
-//
 // Initialize all the Callbacks
-//
 //-------------------------------------------------------------------------
-void nsWindow::InitCallbacks(char * aName)
+void nsWindow::InitCallbacks(char *aName)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::InitCallbacks()\n"));
 }
 
 //-------------------------------------------------------------------------
-//
 // Set the colormap of the window
-//
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::SetColorMap()\n"));
-    return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-//
 // Scroll the bits of a window
-//
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
+NS_METHOD nsWindow::Scroll(PRInt32 aDx,PRInt32 aDy,nsRect *aClipRect)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Scroll: (%d,%d)\n",
-                                       aDx, aDy));
-    if (mWidget) {
-        mWidget->scroll(aDx, aDy);
-    }
-
-    return NS_OK;
+  if (mWidget) {
+    mWidget->Scroll(aDx,aDy);
+  }
+  return NS_OK;
 }
 
-NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
-{
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::SetTitle()\n"));
-    if (!mWidget) {
-        return NS_ERROR_FAILURE;
-    }
-    const char * titleStr = aTitle.ToNewCString();
-    mWidget->setCaption(QString::fromLocal8Bit(titleStr));
-    delete[] titleStr;
-    return NS_OK;
-}
-
-
-/**
- * Processes an Expose Event
- *
- **/
+/* Processes an Expose Event */
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::OnPaint()\n"));
-    nsresult result ;
-    PRInt32 x;
-    PRInt32 y;
-    PRInt32 width;
-    PRInt32 height;
+  nsresult result;
+  PRInt32 x;
+  PRInt32 y;
+  PRInt32 width;
+  PRInt32 height;
     
-
-    // call the event callback
-    if (mEventCallback) {
-
-        event.renderingContext = nsnull;
-        if (event.rect) {
-            PR_LOG(QtWidgetsLM, 
-                   PR_LOG_DEBUG, 
-                   ("nsWindow::OnPaint: this=%p, {%d,%d,%d,%d}\n",
-                   this,
-                   event.rect->x, 
-                   event.rect->y,
-                   event.rect->width, 
-                   event.rect->height));
-            x = event.rect->x;
-            y = event.rect->y;
-            width = event.rect->width;
-            height = event.rect->height;
-        }
-        else {
-            PR_LOG(QtWidgetsLM, 
-                   PR_LOG_DEBUG, 
-                   ("nsWindow::OnPaint: this=%p, NO RECT\n",
-                   this));
-            x = 0;
-            y = 0;
-            if (mWidget) {
-              width = mWidget->width();
-              height = mWidget->height();
-            }
-            else {
-              width = 0;
-              height = 0;
-            }
-        }
-        static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-        static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-        if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
-                                                        nsnull,
-                                                        kRenderingContextIID,
-                                                        (void **)&event.renderingContext)) {
-            if (mBounds.width && mBounds.height) {
-                event.renderingContext->Init(mContext, this);
-                result = DispatchWindowEvent(&event);
-                NS_RELEASE(event.renderingContext);
-                if (mWidget && mPixmap) {
-                    PR_LOG(QtWidgetsLM, 
-                           PR_LOG_DEBUG, 
-                           ("nsWindow::OnPaint: bitBlt: {%d,%d,%d,%d}\n",
-                            x, y, width, height));
-                    bitBlt(mWidget, x, y, mPixmap, x, y, width, height, Qt::CopyROP);
-                    mPixmap->fill(mWidget, 0, 0);
-                }
-            }
-        }
-        else {
-            result = PR_FALSE;
-        }
+  // call the event callback
+  if (mEventCallback) {
+    event.renderingContext = nsnull;
+    if (event.rect) {
+      x = event.rect->x;
+      y = event.rect->y;
+      width = event.rect->width;
+      height = event.rect->height;
     }
-    return result;
+    else {
+      x = 0;
+      y = 0;
+      if (mWidget) {
+        width = mWidget->Width();
+        height = mWidget->Height();
+      }
+      else {
+        width = 0;
+        height = 0;
+      }
+    }
+    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+    static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+    if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
+                                                    nsnull,
+                                                    kRenderingContextIID,
+                                                    (void **)&event.renderingContext)) {
+      if (mBounds.width && mBounds.height) {
+        event.renderingContext->Init(mContext, this);
+        result = DispatchWindowEvent(&event);
+        NS_IF_RELEASE(event.renderingContext);
+      }
+    }
+    else {
+      result = PR_FALSE;
+    }
+  }
+  return result;
 }
-
 
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::BeginResizingChildren()\n"));
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::EndResizingChildren()\n"));
-    return NS_OK;
+  return NS_OK;
 }
 
 PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::OnKey()\n"));
-    if (mEventCallback) {
-        return DispatchWindowEvent(&aEvent);
-    }
-    return PR_FALSE;
+  if (mEventCallback) {
+    return DispatchWindowEvent(&aEvent);
+  }
+  return PR_FALSE;
 }
-
 
 PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::DispatchFocus()\n"));
-    if (mEventCallback) {
-        return DispatchWindowEvent(&aEvent);
-    }
-    return PR_FALSE;
+  if (mEventCallback) {
+    return DispatchWindowEvent(&aEvent);
+  }
+  return PR_FALSE;
 }
+
+NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
+{
+  return GetBounds(aRect);
+}
+ 
+NS_METHOD nsWindow::GetBounds(nsRect &aRect)
+{
+  nsRect Rct(mWidget->BoundsX(),mWidget->BoundsX(),
+             mWidget->Width(),mWidget->Height());
+  
+  aRect = Rct;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::GetScreenBounds(nsRect &aRect)
+{
+  nsRect nBounds(0,0,mBounds.width,mBounds.height);
+
+  aRect = nBounds;
+  return NS_OK;
+}
+ 
+NS_METHOD nsWindow::GetBoundsAppUnits(nsRect &aRect, float aAppUnits)
+{
+  GetBounds(aRect);
+
+  // Convert to twips
+  aRect.x = nscoord((PRFloat64)aRect.x * aAppUnits);
+  aRect.y = nscoord((PRFloat64)aRect.y * aAppUnits);
+  aRect.width  = nscoord((PRFloat64)aRect.width * aAppUnits);
+  aRect.height = nscoord((PRFloat64)aRect.height * aAppUnits);
+  return NS_OK;
+} 
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWindow::OnScroll()\n"));
-    return PR_FALSE;
+  return PR_FALSE;
 }
 
 NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 {
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsWindow::Move %s by (%d,%d)\n",
-           mWidget ? mWidget->name() : "(null)",
-           aX, aY));
-
   if (mWidget && mParent && mWindowType == eWindowType_popup) {
     nsRect oldrect, newrect;
 
@@ -474,8 +363,8 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
     oldrect.x = aX;
     oldrect.y = aY;
-    mParent->WidgetToScreen(oldrect, newrect);
-    mWidget->move(newrect.x,newrect.y);
+    mParent->WidgetToScreen(oldrect,newrect);
+    mWidget->Move(newrect.x,newrect.y);
 
     return NS_OK;
   }
@@ -483,39 +372,40 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
     return(nsWidget::Move(aX,aY));
 }
 
-NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, 
+NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
                                             PRBool aDoCapture,
                                             PRBool aConsumeRollupEvent)
 { 
-  if (aDoCapture)
-  {
-     /* Create a pointer region */
-     mIsGrabbing = PR_TRUE;
-     mGrabWindow = this;
+  if (aDoCapture) {
+    /* Create a pointer region */
+    mIsGrabbing = PR_TRUE;
+    mGrabWindow = this;
 
-     gRollupConsumeRollupEvent = PR_TRUE;
-     gRollupListener = aListener;
-     gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
+    gRollupConsumeRollupEvent = PR_TRUE;
+    gRollupListener = aListener;
+    gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
   }
-  else
-  {
-     // make sure that the grab window is marked as released
-     if (mGrabWindow == this) {
-       mGrabWindow = NULL;
-     }
-     mIsGrabbing = PR_FALSE;
+  else {
+    // make sure that the grab window is marked as released
+    if (mGrabWindow == this) {
+      mGrabWindow = NULL;
+    }
+    mIsGrabbing = PR_FALSE;
 
-     gRollupListener = nsnull;
-     gRollupWidget = nsnull;
+    gRollupListener = nsnull;
+    gRollupWidget = nsnull;
   }
-
   return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////
-
 ChildWindow::ChildWindow()
 {
+#ifdef DBG_JCG
+  gChildCount++;
+  mChildID = gChildID++;
+  printf("JCG: nsChildWindow CTOR. (%p) ID: %d, Count: %d\n",this,mChildID,gChildCount);
+#endif
 }
 
 ChildWindow::~ChildWindow()
@@ -524,22 +414,13 @@ ChildWindow::~ChildWindow()
   IndentByDepth(stdout);
   printf("ChildWindow::~ChildWindow:%p\n", this);
 #endif
-  if (mEventHandler && mParent) {
-      ((nsWidget*)(mParent.get()))->RemoveChildEventHandler(mEventHandler);
-  }
+#ifdef DBG_JCG
+  gChildCount--;
+  printf("JCG: nsChildWindow DTOR. (%p) ID: %d, Count: %d\n",this,mChildID,gChildCount);
+#endif
 }
 
 PRBool ChildWindow::IsChild() const
 {
   return PR_TRUE;
-}
-
-NS_METHOD ChildWindow::CreateNative(QWidget *parentWidget)
-{
-  nsresult rv;
-
-  rv = nsWindow::CreateNative(parentWidget);
-  if (rv == NS_OK && mEventHandler && mParent)
-    ((nsWidget*)(mParent.get()))->AddChildEventHandler(mEventHandler);
-  return rv;
 }

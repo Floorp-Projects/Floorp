@@ -17,6 +17,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#		John C. Griggs <johng@corel.com>
 #
 
 DEPTH		= ../../..
@@ -29,7 +30,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 LIBRARY_NAME	= gfx_qt
 IS_COMPONENT    = 1
-
 
 CPPSRCS		= \
 		nsDeviceContextQT.cpp \
@@ -61,7 +61,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
                 -lgkgfx \
 		$(MOZ_JS_LIBS) \
                 $(NULL)
-#                -lraptorgfx \
 
 DEFINES		+= -D_IMPL_NS_GFXNONXP
 ifeq ($(OS_ARCH), Linux)
@@ -82,4 +81,3 @@ INCLUDES	+= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
 		$(NULL)
-

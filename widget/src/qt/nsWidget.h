@@ -18,8 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef nsWidget_h__
 #define nsWidget_h__
 
@@ -30,24 +31,10 @@
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsLookAndFeel.h"
-#include "prlog.h"
-#include <qwidget.h>
-#include <qptrdict.h>
-
-extern PRLogModuleInfo * QtWidgetsLM;
-extern PRLogModuleInfo * QtScrollingLM;
+#include "nsQWidget.h"
 
 class nsIAppShell;
 class nsIToolkit;
-class nsQWidget;
-class QPainter;
-class QPixmap;
-
-class nsQEventHandler;
-
-/**
- * Base of all QT native widgets.
- */
 
 class nsWidget : public nsBaseWidget, public nsIKBStateControl, public nsSupportsWeakReference
 {
@@ -75,6 +62,7 @@ public:
     NS_IMETHOD Destroy(void);
     nsIWidget* GetParent(void);
 
+    NS_IMETHOD SetModal(PRBool aModal);
     NS_IMETHOD Show(PRBool state);
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, 
                                    PRBool aDoCapture, 
@@ -84,10 +72,7 @@ public:
     NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
     NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-    NS_IMETHOD Resize(PRInt32 aX, 
-                      PRInt32 aY, 
-                      PRInt32 aWidth,
-                      PRInt32 aHeight, 
+    NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, 
                       PRBool aRepaint);
 
     NS_IMETHOD Enable(PRBool aState);
@@ -117,18 +102,18 @@ public:
     NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
-    // Use this to set the name of a widget for normal widgets.. not the same 
-    // as the nsWindow version
     NS_IMETHOD SetTitle(const nsString& aTitle);
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
     // the following are nsWindow specific, and just stubbed here
-
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar) { return NS_ERROR_FAILURE; }
     NS_IMETHOD ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE; }
     NS_IMETHOD CaptureMouse(PRBool aCapture) { return NS_ERROR_FAILURE; }
+    virtual PRBool OnPaint(nsPaintEvent &event) { return PR_FALSE; };
+    virtual PRBool OnKey(nsKeyEvent &aEvent) { return PR_FALSE; };
+    virtual PRBool DispatchFocus(nsGUIEvent &aEvent) { return PR_FALSE; };
 
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
@@ -138,32 +123,25 @@ public:
 
     // nsIKBStateControl
     NS_IMETHOD ResetInputState();
+    NS_IMETHOD PasswordFieldInit();
 
-    void InitEvent(nsGUIEvent& event, 
-                   PRUint32 aEventType, 
-                   nsPoint* aPoint = nsnull);
-    
-    nsQEventHandler * GetEventHandler() { return mEventHandler; }
-    const char *GetName();
-    void AddChildEventHandler(nsQEventHandler *aEHandler);
-    void RemoveChildEventHandler(nsQEventHandler *aEHandler);
+    void InitEvent(nsGUIEvent& event,PRUint32 aEventType,nsPoint* aPoint = nsnull);
 
     // Utility functions
-
-    virtual PRBool OnPaint(nsPaintEvent &event) { return PR_FALSE; }
+    const char *GetName();
     PRBool ConvertStatus(nsEventStatus aStatus);
     PRBool DispatchMouseEvent(nsMouseEvent& aEvent);
     PRBool DispatchStandardEvent(PRUint32 aMsg);
 
-    PRBool IsToplevel() const { return mIsToplevel; };
     virtual PRBool IsPopup() const { return PR_FALSE; };
     virtual PRBool IsDialog() const { return PR_FALSE; };
-    PRBool IsInDTOR() const { return mInDTOR; };
+
+    // Deal with rollup for popups
+    PRBool HandlePopup(PRInt32 inMouseX,PRInt32 inMouseY);
 
 protected:
     virtual void InitCallbacks(char * aName = nsnull);
     virtual void OnDestroy();
-    virtual void DestroyChildren();
 
     NS_IMETHOD CreateNative(QWidget *parentWindow);
 
@@ -178,46 +156,22 @@ protected:
 
     PRBool DispatchWindowEvent(nsGUIEvent* event);
 
-    // Deal with rollup for popups
-    PRBool HandlePopup(PRInt32 inMouseX,PRInt32 inMouseY);
-    PRBool IsMouseInWindow(QWidget* inWindow,PRInt32 inMouseX,PRInt32 inMouseY);
-
 protected:
-    QWidget           *mWidget;
-    QPixmap             *mPixmap;
-    QPainter            *mPainter;
+    nsQBaseWidget       *mWidget;
     nsCOMPtr<nsIWidget> mParent;
 
     // composite update area - union of all Invalidate calls
     nsCOMPtr<nsIRegion> mUpdateArea;
-    PRBool              mShown;
     PRUint32            mPreferredWidth;
     PRUint32            mPreferredHeight;
-    nsQEventHandler     *mEventHandler;
     PRBool       	mListenForResizes;
     PRBool              mIsToplevel;
-    PRBool              mInDTOR;
-    QPtrDict<nsQEventHandler> mChildEventHandlers;
+    PRUint32		mWidgetID;
 
     // this is the rollup listener variables
     static nsCOMPtr<nsIRollupListener> gRollupListener;
     static nsWeakPtr                   gRollupWidget;
     static PRBool                      gRollupConsumeRollupEvent;
-    static PRUint32		       gWidgetCount;
-};
-
-class nsQBaseWidget
-{
-public:
-    nsQBaseWidget(nsWidget * widget);
-    virtual ~nsQBaseWidget();
-
-public:
-    nsWidget * GetWidget() { return mWidget; }
-    void       Destroy();
-
-protected:
-    nsWidget * mWidget;
 };
 
 #endif /* nsWidget_h__ */

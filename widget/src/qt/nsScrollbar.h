@@ -18,88 +18,124 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef nsScrollbar_h__
 #define nsScrollbar_h__
 
 #include "nsWidget.h"
-#include "nsWindow.h"
+#include "nsQWidget.h"
 #include "nsIScrollbar.h"
 
 #include <qscrollbar.h>
-#include <qevent.h>
 
 //=============================================================================
-//
-// nsQScrollBar class
-//
+// nsQScrollBar class:
+//  Provides a "two-way" interface, allowing XPFE to access Qt Scrollbar
+//   functionality and hooking the relevant Qt Events into the XPFE Event
+//   Handling.  Inherits basic functionality from nsQBaseWidget.
 //=============================================================================
-class nsQScrollBar : public QScrollBar, public nsQBaseWidget
+class nsQBaseScrollBar : public nsQBaseWidget
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-	nsQScrollBar(nsWidget * widget,
-                 int minValue, 
-                 int maxValue, 
-                 int LineStep, 
-                 int PageStep, 
-                 int value, 
-                 Orientation orientation,
-                 QWidget * parent, 
-                 const char * name=0 );
-	~nsQScrollBar();
+  nsQBaseScrollBar(nsWidget *aWidget);
+  ~nsQBaseScrollBar();
 
-    void ScrollBarMoved(int message, int value = -1);
-    void closeEvent(QCloseEvent *ce);
+  /*** Lifecycle Management ***/
+  PRBool CreateNative(int aMinValue,int aMaxValue,
+                      int aLineStep,int aPageStep,int aValue,
+                      Orientation aOrientation,QWidget *aParent,
+                      const char *aName = 0);
+  virtual void Destroy();
+
+  /*** Interface to Qt ScrollBar functionality for XPFE ***/
+  virtual void SetModal(PRBool aState) {};
+  void SetRange(PRUint32 aMin,PRUint32 aMax) {((QScrollBar*)mQWidget)->setRange(aMin,aMax);};
+  void SetValue(PRUint32 aValue) {((QScrollBar*)mQWidget)->setValue(aValue);};
+  void SetSteps(PRUint32 aLineStep,PRUint32 aPageStep)
+  {
+    ((QScrollBar*)mQWidget)->setSteps(aLineStep,aPageStep);
+  };
+  void AddLine() {((QScrollBar*)mQWidget)->addLine();};
+  void SubtractLine() {((QScrollBar*)mQWidget)->subtractLine();};
+  void AddPage() {((QScrollBar*)mQWidget)->addPage();};
+  void SubtractPage() {((QScrollBar*)mQWidget)->subtractPage();};
+  int Value() {return(((QScrollBar*)mQWidget)->value());};
+
+  /*** Interface to XPFE Event Handling from Qt ***/
+  virtual PRBool MouseButtonEvent(QMouseEvent *aEvent,PRBool aButtonDown,
+                                  int aClickCount);
+  virtual PRBool MouseMovedEvent(QMouseEvent *aEvent);
+  virtual PRBool PaintEvent(QPaintEvent *aEvent);
+
+  void ScrollBarMoved(int aMessage,int aValue = -1);
 
 public slots:
-    void PreviousLine();
-    void NextLine();
-    void PreviousPage();
-    void NextPage();
-    void SetValue(int value);
-};
-
-
-/**
- * Native QT scrollbar wrapper.
- */
-
-class nsScrollbar : public nsWidget,
-                    public nsIScrollbar
-{
-
-public:
-    nsScrollbar(PRBool aIsVertical);
-    virtual ~nsScrollbar();
-
-    // nsISupports
-    NS_DECL_ISUPPORTS_INHERITED
-
-    // nsIScrollBar implementation
-    NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
-    NS_IMETHOD GetMaxRange(PRUint32& aMaxRange);
-    NS_IMETHOD SetPosition(PRUint32 aPos);
-    NS_IMETHOD GetPosition(PRUint32& aPos);
-    NS_IMETHOD SetThumbSize(PRUint32 aSize);
-    NS_IMETHOD GetThumbSize(PRUint32& aSize);
-    NS_IMETHOD SetLineIncrement(PRUint32 aSize);
-    NS_IMETHOD GetLineIncrement(PRUint32& aSize);
-    NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
-                             PRUint32 aPosition, PRUint32 aLineIncrement);
-    virtual PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-const char *GetName();
-
-protected:
-    NS_IMETHOD CreateNative(QWidget *parentWindow);                             
+  void ValueChanged(int aValue);
 
 private:
-    QScrollBar::Orientation     mOrientation;
-    int mMaxValue;
-    int mLineStep;
-    int mPageStep;
-    int mValue;
+  PRUint32 mQBaseSBID;
 };
 
-#endif // nsScrollbar_
+//=============================================================================
+// nsQScrollBar class:
+//  Customizes QScrollBar for use by XPFE
+//=============================================================================
+class nsQScrollBar : public QScrollBar
+{
+  Q_OBJECT
+public:
+  nsQScrollBar(int aMinValue,int aMaxValue,int aLineStep,int aPageStep,int aValue, 
+               Orientation aOrientation,QWidget *aParent,const char *aName = 0);
+  ~nsQScrollBar();
+
+  void closeEvent(QCloseEvent *aEvent);
+
+private:
+  PRUint32 mQSBID;
+};
+
+//=============================================================================
+// nsScrollBar class:
+//  the XPFE Scrollbar
+//=============================================================================
+class nsScrollbar : public nsWidget, public nsIScrollbar
+{
+public:
+  nsScrollbar(PRBool aIsVertical);
+  virtual ~nsScrollbar();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIScrollBar implementation
+  NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
+  NS_IMETHOD GetMaxRange(PRUint32& aMaxRange);
+  NS_IMETHOD SetPosition(PRUint32 aPos);
+  NS_IMETHOD GetPosition(PRUint32& aPos);
+  NS_IMETHOD SetThumbSize(PRUint32 aSize);
+  NS_IMETHOD GetThumbSize(PRUint32& aSize);
+  NS_IMETHOD SetLineIncrement(PRUint32 aSize);
+  NS_IMETHOD GetLineIncrement(PRUint32& aSize);
+  NS_IMETHOD SetParameters(PRUint32 aMaxRange,PRUint32 aThumbSize,
+                           PRUint32 aPosition,PRUint32 aLineIncrement);
+
+  virtual PRBool OnScroll(nsScrollbarEvent &aEvent,PRUint32 cPos);
+
+  virtual PRBool IsScrollBar() const { return PR_TRUE; };
+
+protected:
+  NS_IMETHOD CreateNative(QWidget *aParentWindow);                             
+
+private:
+  QScrollBar::Orientation mOrientation;
+  int mMaxValue;
+  int mLineStep;
+  int mPageStep;
+  int mValue;
+  PRUint32 mNsSBID;
+};
+
+#endif // nsScrollbar_h__

@@ -18,44 +18,47 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *      Denis Issoupov <denis@macadamian.com>
+ *
  */
-
 #ifndef nsClipboard_h__
 #define nsClipboard_h__
 
-#include "nsBaseClipboard.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+#include "nsIClipboardOwner.h"
+#include "nsCOMPtr.h"
 
-class nsITransferable;
-class nsIClipboardOwner;
-class nsIWidget;
+#include <qlist.h> 
+#include <qcstring.h> 
+#include <qmime.h> 
 
-/**
- * Native QT Clipboard wrapper
- */
-
-class nsClipboard : public nsBaseClipboard
+/* Native QT Clipboard wrapper */
+class nsClipboard : public nsIClipboard
 {
-
 public:
     nsClipboard();
     virtual ~nsClipboard();
 
     //nsISupports
-    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_ISUPPORTS
 
     // nsIClipboard  
-    NS_IMETHOD ForceDataToClipboard(PRInt32 aWhichClipboard);
+    NS_DECL_NSICLIPBOARD
 
 protected:
     NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
-    NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, PRInt32  aWhichClipboard);
+    NS_IMETHOD GetNativeClipboardData(nsITransferable *aTransferable,
+                                      PRInt32 aWhichClipboard);
+
+    inline nsITransferable *GetTransferable(PRInt32 aWhichClipboard);
 
     PRBool              mIgnoreEmptyNotification;
 
-    nsIClipboardOwner * mClipboardOwner;
-    nsITransferable   * mTransferable;
-    nsIWidget         * mWindow;
-
+    nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
+    nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
+    nsCOMPtr<nsITransferable>   mSelectionTransferable;
+    nsCOMPtr<nsITransferable>   mGlobalTransferable;
 };
 
 #endif // nsClipboard_h__

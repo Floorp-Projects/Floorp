@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #ifndef nsRegionQT_h___
@@ -61,8 +63,7 @@ private:
     virtual void SetRegionEmpty();
 
 private:
-    QRegion            mRegion;
-    nsRegionComplexity mRegionType;
+    QRegion  mRegion;
 };
 
 #endif  // nsRegionQT_h___ 

@@ -18,22 +18,79 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #ifndef nsFontMetricsQT_h__
 #define nsFontMetricsQT_h__
 
-#include "nsDeviceContextQT.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h"
-#include "nsFont.h"
-#include "nsString.h"
-#include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "nsICharRepresentable.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 
-#include <qfont.h>
+#include <qintdict.h>
+
+class nsFont;
+class nsString;
+class nsRenderingContextQT;
+class nsDrawingSurfaceQT;
+class nsFontMetricsQT;
+class nsFontQTUserDefined;
+class QString;
+class QFont;
+class QFontInfo;
+class QFontMetrics;
+class QFontDatabase;
+
+#undef FONT_HAS_GLYPH
+#define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)
+ 
+typedef struct nsFontCharSetInfo nsFontCharSetInfo;
+ 
+typedef int (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
+                                      QFontMetrics *aFontMetrics,
+                                      const PRUnichar* aSrcBuf,PRInt32 aSrcLen,
+                                      char* aDestBuf,PRInt32 aDestLen);
+
+class nsFontQT
+{
+public:
+  nsFontQT();
+  nsFontQT(QFont *aQFont);
+  virtual ~nsFontQT();
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+ 
+  virtual QFont*   GetQFont(void);
+  virtual PRBool   GetQFontIs10646(void);
+  inline int SupportsChar(PRUnichar aChar)
+    { return (mFont && FONT_HAS_GLYPH(mMap,aChar)); };
+ 
+  virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
+  virtual int DrawString(nsRenderingContextQT* aContext,
+                         nsDrawingSurfaceQT* aSurface, nscoord aX,
+                         nscoord aY, const PRUnichar* aString,
+                         PRUint32 aLength) = 0;
+#ifdef MOZ_MATHML
+  // bounding metrics for a string
+  // remember returned values are not in app units
+  // - to emulate GetWidth () above
+  virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
+                                      PRUint32           aLength,
+                                      nsBoundingMetrics& aBoundingMetrics) = 0;
+#endif
+
+  QFont*                 mFont;
+  QFontInfo*             mFontInfo;
+  QFontMetrics*          mFontMetrics;
+  nsFontCharSetInfo*     mCharSetInfo;
+  PRUint32*              mMap;
+};
 
 class nsFontMetricsQT : public nsIFontMetrics
 {
@@ -69,33 +126,74 @@ public:
     NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
     NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
-    nsCOMPtr<nsIAtom> mLangGroup;
+    virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
  
+    nsFontQT*  FindFont(PRUnichar aChar);
+    nsFontQT*  FindUserDefinedFont(PRUnichar aChar);
+    nsFontQT*  FindLocalFont(PRUnichar aChar);
+    nsFontQT*  FindGenericFont(PRUnichar aChar);
+    nsFontQT*  FindGlobalFont(PRUnichar aChar);
+    nsFontQT*  FindSubstituteFont(PRUnichar aChar); 
+
+    nsFontQT*  LookUpFontPref(nsCAutoString &aName,PRUnichar aChar);
+    nsFontQT*  LoadFont(QString &aName,PRUnichar aChar);
+    nsFontQT*  LoadFont(QString &aName,const QString &aCharSet,
+                        PRUnichar aChar);
+    QFont*     LoadQFont(QString &aName,const QString &aCharSet);
+
+    static nsresult FamilyExists(const nsString& aFontName);
+
+    nsFontQT    **mLoadedFonts;
+    PRUint16    mLoadedFontsAlloc;
+    PRUint16    mLoadedFontsCount;
+
+    nsFontQT               *mSubstituteFont;
+    nsFontQTUserDefined    *mUserDefinedFont;
+
+    nsCOMPtr<nsIAtom> mLangGroup;
+    nsCStringArray    mFonts;
+    PRUint16          mFontsIndex;
+    nsVoidArray       mFontIsGeneric;
+    nsCAutoString     mDefaultFont;
+    nsCString         *mGeneric; 
+    nsCAutoString     mUserDefined;
+
+    PRUint8 mTriedAllGenerics;
+    PRUint8 mIsUserDefined;
+
+    static QFontDatabase *GetQFontDB();
+
 protected:
     void RealizeFont();
 
-    nsIDeviceContext * mDeviceContext;
-    nsFont           * mFont;
-    QFont            * mFontHandle;
+    nsIDeviceContext *mDeviceContext;
+    nsFont           *mFont;
+    nsFontQT         *mWesternFont; 
 
-    nscoord            mLeading;
-    nscoord            mEmHeight;
-    nscoord            mEmAscent;
-    nscoord            mEmDescent;
-    nscoord            mHeight;
-    nscoord            mAscent;
-    nscoord            mDescent;
-    nscoord            mMaxHeight;
-    nscoord            mMaxAscent;
-    nscoord            mMaxDescent;
-    nscoord            mMaxAdvance;
-    nscoord            mXHeight;
-    nscoord            mSuperscriptOffset;
-    nscoord            mSubscriptOffset;
-    nscoord            mStrikeoutSize;
-    nscoord            mStrikeoutOffset;
-    nscoord            mUnderlineSize;
-    nscoord            mUnderlineOffset;
+    QString          *mQStyle;
+    PRUint16         mPixelSize;
+    PRUint16         mWeight;
+
+    QIntDict<char>   mCharSubst;
+
+    nscoord          mLeading;
+    nscoord          mEmHeight;
+    nscoord          mEmAscent;
+    nscoord          mEmDescent;
+    nscoord          mMaxHeight;
+    nscoord          mMaxAscent;
+    nscoord          mMaxDescent;
+    nscoord          mMaxAdvance;
+    nscoord          mXHeight;
+    nscoord          mSuperscriptOffset;
+    nscoord          mSubscriptOffset;
+    nscoord          mStrikeoutSize;
+    nscoord          mStrikeoutOffset;
+    nscoord          mUnderlineSize;
+    nscoord          mUnderlineOffset;
+    nscoord          mSpaceWidth;
+
+    static QFontDatabase    *mQFontDB;
 };
 
 class nsFontEnumeratorQT : public nsIFontEnumerator

@@ -18,13 +18,11 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef __nsQTEventHandler_h
 #define __nsQTEventHandler_h
-
-class nsIWidget;
-class nsIMenuItem;
 
 #include "nsWidget.h"
 
@@ -40,7 +38,7 @@ public:
     ~nsQEventHandler();
 
     void Enable(bool aEnable);
-    void Destroy(void);
+    void Destroy();
     bool eventFilter(QObject * object, QEvent * event);
 
     bool MouseButtonEvent(QMouseEvent *event,nsWidget *widget,
@@ -62,9 +60,9 @@ protected:
     PRInt32 GetNSKey(PRInt32 key, PRInt32 state);
 
 private:
-    nsWidget * mWidget;
-    bool       mEnabled;
-    bool       mDestroyed;
+    nsWidget *mWidget;
+    bool     mEnabled;
+    bool     mDestroyed;
 };
 
 #endif  // __nsQEventHandler.h

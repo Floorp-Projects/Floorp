@@ -18,82 +18,134 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
-#include "nsQApplication.h"
+//JCG #define DBG_JCG 1
 
-#ifdef DEBUG
-/* Required for x11EventFilter debugging hook */
+#include "nsQApplication.h"
+#include "nsQWidget.h"
+
+#include <qwindowsstyle.h>
+#include <qcursor.h>
+
+#ifdef DBG_JCG
+/* Required for x11EventFilter & _x_error debugging hooks */
 #include "X11/Xlib.h"
+#include <assert.h>
+
+PRInt32 gQAppID = 0;
+PRInt32 gQAppCount = 0;
+
+PRInt32 gQQueueID = 0;
+PRInt32 gQQueueCount = 0;
 #endif
 
 nsQApplication *nsQApplication::mInstance = nsnull;
 QIntDict<nsQtEventQueue> nsQApplication::mQueueDict;
 PRUint32 nsQApplication::mRefCnt = 0;
+QWidget *nsQApplication::mMasterWidget = nsnull;
 
-nsQApplication *nsQApplication::Instance(int argc, char ** argv)
+#ifdef DBG_JCG
+int _x_error(Display *display, XErrorEvent *error)
+{
+  if (error->error_code) {
+    char buf[64];
+	  
+    XGetErrorText (display, error->error_code, buf, 63);
+
+    fprintf(stderr,
+     "X-ERROR **: %s\n  serial %ld error_code %d request_code %d minor_code %d, resourceId: %ld\n",
+            buf, error->serial, error->error_code, error->request_code,
+            error->minor_code,error->resourceid);
+
+    printf("X-ERROR **: %s\n  serial %ld error_code %d request_code %d minor_code %d, resourceId: %ld\n",
+           buf, error->serial, error->error_code, error->request_code,
+           error->minor_code,error->resourceid);
+
+    assert(0);
+  }
+  return 0;
+}
+#endif  //DBG_JCG
+
+nsQApplication* nsQApplication::Instance(int argc,char** argv)
 {
   if (!mInstance)
     mInstance = new nsQApplication(argc,argv);
 
   mRefCnt++;
-  return mInstance;
-}
 
-nsQApplication *nsQApplication::Instance(Display * display)
-{
-  if (!mInstance)
-    mInstance = new nsQApplication(display);
-
-  mRefCnt++;
   return mInstance;
 }
 
 void nsQApplication::Release()
 {
   mRefCnt--;
-  if (mRefCnt <= 0)
+  if (mRefCnt <= 0) {
+    if (mMasterWidget) {
+      delete mMasterWidget;
+      mMasterWidget = nsnull;
+    }
     delete mInstance;
+    mInstance = nsnull;
+  }
 }
 
-nsQApplication::nsQApplication(int argc, char ** argv)
-	: QApplication(argc, argv)
+QWidget *nsQApplication::GetMasterWidget()
 {
-   if (mInstance)
-     NS_ASSERTION(mInstance == nsnull,"Attempt to create duplicate QApplication Object.");
-   mInstance = this;
-   setGlobalMouseTracking(true);
+  if (!mMasterWidget)
+    mMasterWidget = new QWidget();
+
+  return mMasterWidget;
 }
 
-nsQApplication::nsQApplication(Display * display)
-	: QApplication(display)
+nsQApplication::nsQApplication(int argc,char** argv)
+	: QApplication(argc,argv)
 {
-   if (mInstance)
-     NS_ASSERTION(mInstance == nsnull,"Attempt to create duplicate QApplication Object.");
-   mInstance = this;
-   setGlobalMouseTracking(true);
+#ifdef DBG_JCG
+  gQAppCount++;
+  mID = gQAppID++;
+  printf("JCG nsQApplication CTOR (%p) ID: %d, Count: %d\n",this,mID,gQAppCount);
+
+  XSetErrorHandler (_x_error);
+#endif
+  if (mInstance)
+    NS_ASSERTION(mInstance == nsnull,
+                 "Attempt to create duplicate QApplication Object.");
+  mInstance = this;
+  setGlobalMouseTracking(true);
+  setStyle(new QWindowsStyle);
+  setOverrideCursor(QCursor(ArrowCursor),PR_TRUE);
+  connect(this,SIGNAL(lastWindowClosed()),this,SLOT(quit()));
 }
 
 nsQApplication::~nsQApplication()
 {
-    setGlobalMouseTracking(false);
+#ifdef DBG_JCG
+  gQAppCount--;
+  printf("JCG nsQApplication DTOR (%p) ID: %d, Count: %d\n",this,mID,gQAppCount);
+#endif
+  setGlobalMouseTracking(false);
 }
 
-void nsQApplication::AddEventProcessorCallback(nsIEventQueue * EQueue)
+void nsQApplication::AddEventProcessorCallback(nsIEventQueue* EQueue)
 {
-  nsQtEventQueue *que = nsnull;
+  nsQtEventQueue* que = nsnull;
 
   if ((que = mQueueDict.find(EQueue->GetEventQueueSelectFD()))) {
     que->IncRefCnt();
   }
   else {
-     mQueueDict.insert(EQueue->GetEventQueueSelectFD(),new nsQtEventQueue(EQueue));
+     mQueueDict.insert(EQueue->GetEventQueueSelectFD(),
+                       new nsQtEventQueue(EQueue));
   }
 }
 
-void nsQApplication::RemoveEventProcessorCallback(nsIEventQueue * EQueue)
+void nsQApplication::RemoveEventProcessorCallback(nsIEventQueue* EQueue)
 {
-  nsQtEventQueue *que = nsnull;
+  nsQtEventQueue* que = nsnull;
 
   if ((que = mQueueDict.find(EQueue->GetEventQueueSelectFD()))) {
      que->DataReceived();
@@ -104,52 +156,256 @@ void nsQApplication::RemoveEventProcessorCallback(nsIEventQueue * EQueue)
   }
 }
 
-#ifdef DEBUG
 /* Hook for capturing X11 Events before they are processed by Qt */
-bool nsQApplication::x11EventFilter(XEvent *event)
+bool nsQApplication::x11EventFilter(XEvent* event)
 {
-  if (event->type == ButtonPress || event->type == ButtonRelease) {
-    int i;
+#ifdef DBG_JCG
+  switch (event->type) {
+    case ButtonPress:
+    case ButtonRelease:
+    {
+       XButtonPressedEvent *ptr = (XButtonPressedEvent*)event;
+       printf("JCG: ButtonPress/Release: serial %ld, Window: %ld, Root: %ld, Child: %ld\n",ptr->serial,ptr->window,ptr->root,ptr->subwindow);
+    }
+    break;
 
-    /* Break here to see Mouse Button Events */
-    i = 0;
+    case CirculateNotify:
+    {
+       XCirculateEvent *ptr = (XCirculateEvent*)event;
+       printf("JCG: CirculateNotify: serial %ld, Event: %ld, Window: %ld\n",ptr->serial,ptr->event,ptr->window);
+    }
+    break;
+
+    case CirculateRequest:
+    {
+       XCirculateRequestEvent *ptr = (XCirculateRequestEvent*)event;
+       printf("JCG: CirculateRequest: serial %ld, Parent: %ld, Window: %ld\n",ptr->serial,ptr->parent,ptr->window);
+    }
+    break;
+
+    case ClientMessage:
+    {
+       XClientMessageEvent *ptr = (XClientMessageEvent*)event;
+       printf("JCG: ClientMessage: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case ColormapNotify:
+    {
+       XColormapEvent *ptr = (XColormapEvent*)event;
+       printf("JCG: ColormapNotify: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case ConfigureNotify:
+    {
+       XConfigureEvent *ptr = (XConfigureEvent*)event;
+       printf("JCG: ConfigureNotify: serial %ld, Event: %ld, Window: %ld\n",ptr->serial,ptr->event,ptr->window);
+    }
+    break;
+
+    case ConfigureRequest:
+    {
+       XConfigureRequestEvent *ptr = (XConfigureRequestEvent*)event;
+       printf("JCG: ConfigureRequest: serial %ld, Parent: %ld, Window: %ld\n",ptr->serial,ptr->parent,ptr->window);
+    }
+    break;
+
+    case CreateNotify:
+    {
+       XCreateWindowEvent *ptr = (XCreateWindowEvent*)event;
+       printf("JCG: CreateNotify: serial %ld, Parent: %ld, Window: %ld\n",ptr->serial,ptr->parent,ptr->window);
+    }
+    break;
+
+    case DestroyNotify:
+    {
+       XDestroyWindowEvent *ptr = (XDestroyWindowEvent*)event;
+       printf("JCG: DestroyNotify: serial %ld, Event: %ld, Window: %ld\n",ptr->serial,ptr->event,ptr->window);
+    }
+    break;
+
+    case EnterNotify:
+    case LeaveNotify:
+    {
+       XCrossingEvent *ptr = (XCrossingEvent*)event;
+       printf("JCG: Enter/LeaveNotify: serial %ld, Window: %ld, Parent: %ld, Child: %ld\n",ptr->serial,ptr->window,ptr->root,ptr->subwindow);
+    }
+    break;
+
+    case Expose:
+    {
+       XExposeEvent *ptr = (XExposeEvent*)event;
+       printf("JCG: Expose: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case FocusIn:
+    case FocusOut:
+    {
+       XFocusChangeEvent *ptr = (XFocusChangeEvent*)event;
+       printf("JCG: FocusIn/Out: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case GraphicsExpose:
+    case NoExpose:
+    {
+       printf("JCG: Graphics/NoExpose\n");
+    }
+    break;
+
+    case GravityNotify:
+    {
+       XGravityEvent *ptr = (XGravityEvent*)event;
+       printf("JCG: GravityNotify: serial %ld, Event: %ld, Window: %ld\n",ptr->serial,ptr->event,ptr->window);
+    }
+    break;
+
+    case KeymapNotify:
+    {
+       XKeymapEvent *ptr = (XKeymapEvent*)event;
+       printf("JCG: KeymapNotify: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case KeyPress:
+    case KeyRelease:
+    {
+       XKeyEvent *ptr = (XKeyEvent*)event;
+       printf("JCG: KeyPress/Release: serial %ld, Window: %ld, Parent: %ld, Child: %ld\n",ptr->serial,ptr->window,ptr->root,ptr->subwindow);
+    }
+    break;
+
+    case MapNotify:
+    case UnmapNotify:
+    {
+       XMapEvent *ptr = (XMapEvent*)event;
+       printf("JCG: Map/UnmapNotify: serial %ld, Window: %ld, Event: %ld\n",ptr->serial,ptr->window,ptr->event);
+    }
+    break;
+
+    case MappingNotify:
+    {
+       XMappingEvent *ptr = (XMappingEvent*)event;
+       printf("JCG: MappingNotify: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case MapRequest:
+    {
+       XMapRequestEvent *ptr = (XMapRequestEvent*)event;
+       printf("JCG: MapRequest: serial %ld, Window: %ld, Parent: %ld\n",ptr->serial,ptr->window,ptr->parent);
+    }
+    break;
+
+    case MotionNotify:
+    {
+       XMotionEvent *ptr = (XMotionEvent*)event;
+       printf("JCG: MotionNotify: serial %ld, Window: %ld, Parent: %ld, Child: %ld\n",ptr->serial,ptr->window,ptr->root,ptr->subwindow);
+    }
+    break;
+
+    case PropertyNotify:
+    {
+       XPropertyEvent *ptr = (XPropertyEvent*)event;
+       printf("JCG: PropertyNotify: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case ReparentNotify:
+    {
+       XReparentEvent *ptr = (XReparentEvent*)event;
+       printf("JCG: ReparentNotify: serial %ld, Window: %ld, Parent: %ld, Event: %ld\n",ptr->serial,ptr->window,ptr->parent,ptr->event);
+    }
+    break;
+
+    case ResizeRequest:
+    {
+       XResizeRequestEvent *ptr = (XResizeRequestEvent*)event;
+       printf("JCG: ResizeRequest: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case SelectionClear:
+    {
+       XSelectionClearEvent *ptr = (XSelectionClearEvent*)event;
+       printf("JCG: SelectionClear: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    case SelectionNotify:
+    {
+       XSelectionEvent *ptr = (XSelectionEvent*)event;
+       printf("JCG: SelectionNotify: serial %ld, Requestor: %ld\n",ptr->serial,ptr->requestor);
+    }
+    break;
+
+    case SelectionRequest:
+    {
+       XSelectionRequestEvent *ptr = (XSelectionRequestEvent*)event;
+       printf("JCG: SelectionRequest: serial %ld, Owner: %ld, Requestor: %ld\n",ptr->serial,ptr->owner,ptr->requestor);
+    }
+    break;
+
+    case VisibilityNotify:
+    {
+       XVisibilityEvent *ptr = (XVisibilityEvent*)event;
+       printf("JCG: VisibilityNotify: serial %ld, Window: %ld\n",ptr->serial,ptr->window);
+    }
+    break;
+
+    default:
+    {
+      printf("JCG: Unknown Event: %d\n",event->type);
+    }
+    break;
   }
+#endif  //DBG_JCG
   return FALSE;
 }
-#endif
 
-nsQtEventQueue::nsQtEventQueue(nsIEventQueue * EQueue)
+nsQtEventQueue::nsQtEventQueue(nsIEventQueue* EQueue)
 {
-    mQSocket = nsnull;
-    mEventQueue = EQueue;
-    NS_IF_ADDREF(mEventQueue);
-    mRefCnt = 1;
+#ifdef DBG_JCG
+  mID = gQQueueID++;
+  gQQueueCount++;
+  printf("JCG nsQtEventQueue CTOR (%p) ID: %d, Count: %d\n",this,mID,gQQueueCount);
+#endif
+  mQSocket = nsnull;
+  mEventQueue = EQueue;
+  NS_IF_ADDREF(mEventQueue);
+  mRefCnt = 1;
 
-    mQSocket = new QSocketNotifier(mEventQueue->GetEventQueueSelectFD(),
-                                   QSocketNotifier::Read,this);
-    if (mQSocket)
-      connect(mQSocket, SIGNAL(activated(int)), this, SLOT(DataReceived()));
+  mQSocket = new QSocketNotifier(mEventQueue->GetEventQueueSelectFD(),
+                                 QSocketNotifier::Read,this);
+  if (mQSocket)
+    connect(mQSocket,SIGNAL(activated(int)),this,SLOT(DataReceived()));
 }
 
 nsQtEventQueue::~nsQtEventQueue()
 {
-    if (mQSocket)
-      delete mQSocket;
-    NS_IF_RELEASE(mEventQueue);
+#ifdef DBG_JCG
+  gQQueueCount--;
+  printf("JCG nsQtEventQueue DTOR (%p) ID: %d, Count: %d\n",this,mID,gQQueueCount);
+#endif
+  if (mQSocket)
+    delete mQSocket;
+  NS_IF_RELEASE(mEventQueue);
 }
 
 unsigned long nsQtEventQueue::IncRefCnt()
 {
-  return --mRefCnt;
+  return ++mRefCnt;
 }
 
 unsigned long nsQtEventQueue::DecRefCnt()
 {
-  return ++mRefCnt;
+  return --mRefCnt;
 }
 
 void nsQtEventQueue::DataReceived()
 {
-    if (mEventQueue)
-        mEventQueue->ProcessPendingEvents();
+  if (mEventQueue)
+    mEventQueue->ProcessPendingEvents();
 }

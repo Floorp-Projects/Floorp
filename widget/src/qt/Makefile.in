@@ -17,6 +17,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#		John C. Griggs <johng@corel.com>
 #
 
 DEPTH		= ../../..
@@ -29,51 +30,28 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= widget_qt
 IS_COMPONENT    = 1
 
-
 CPPSRCS		= \
 		$(MOCSRCS) \
 		nsQApplication.cpp \
 		nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
-		nsComboBox.cpp \
-		nsLabel.cpp \
 		nsScrollbar.cpp \
-		nsButton.cpp \
-		nsListBox.cpp \
 		nsLookAndFeel.cpp \
-		nsTextAreaWidget.cpp \
-		nsCheckButton.cpp \
-		nsMenu.cpp \
-		nsTextHelper.cpp \
-		nsMenuBar.cpp \
-	        nsFontRetrieverService.cpp \
-	        nsFontSizeIterator.cpp \
-		nsTextWidget.cpp \
-		nsFileWidget.cpp \
 		nsToolkit.cpp \
-		nsQEventHandler.cpp \
-		nsRadioButton.cpp \
-		nsPopUpMenu.cpp \
+		nsQWidget.cpp \
 		nsWidget.cpp \
 		nsWindow.cpp \
 		nsDragService.cpp \
 		nsClipboard.cpp \
 		nsWidgetFactory.cpp \
+		nsMime.cpp \
 		$(NULL)
 
 MOCSRCS		= \
 		moc_nsQApplication.cpp \
-		moc_nsComboBox.cpp \
-		moc_nsLabel.cpp \
 		moc_nsScrollbar.cpp \
-		moc_nsButton.cpp \
-		moc_nsListBox.cpp \
-		moc_nsTextAreaWidget.cpp \
-		moc_nsCheckButton.cpp \
-		moc_nsTextWidget.cpp \
-		moc_nsQEventHandler.cpp \
-		moc_nsRadioButton.cpp \
-		moc_nsWindow.cpp \
+		moc_nsQWidget.cpp \
+		moc_nsMime.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
@@ -81,9 +59,9 @@ SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 EXTRA_DSO_LDOPTS = \
                 $(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
+                -I$(topsrcdir)/gfx/src/qt \
 		$(MOZ_JS_LIBS) \
                 $(NULL)
-#                -lraptorgfx \
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += -L$(DIST)/lib $(MOZ_QT_LDFLAGS) $(MOZ_XLIB_LDFLAGS)
@@ -117,5 +95,7 @@ DEFINES         += -D_TIME_H=1
 endif
 endif
  
-INCLUDES	+= -I$(srcdir)/../xpwidgets -I$(srcdir)
-
+INCLUDES	+= -I$(srcdir)/../xpwidgets \
+		   -I$(srcdir) \
+		   -I$(topsrcdir)/gfx/src/qt \
+		   $(NULL)

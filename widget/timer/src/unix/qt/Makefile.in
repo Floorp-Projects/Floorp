@@ -17,6 +17,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#		John C. Griggs <johng@corel.com>
 #
 
 DEPTH		= ../../../../..
@@ -26,12 +27,18 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE          = timer
 LIBRARY_NAME	= timer_$(TIMER_SUFFIX)
+REQUIRES        = xpcom
 
 CPPSRCS		= \
-		moc_nsTimerEventHandler.cpp \
+                $(MOCSRCS) \
 		nsTimerEventHandler.cpp \
 		nsTimerQt.cpp \
+		$(NULL)
+
+MOCSRCS         = \
+		moc_nsTimerEventHandler.cpp \
 		$(NULL)
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
@@ -39,12 +46,7 @@ TIMER_SUFFIX	= qt
 IS_COMPONENT	= 1
 CPPSRCS		+= nsTimerQtFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_QT_LDFLAGS) $(MOZ_COMPONENT_LIBS)
-#CXXFLAGS	+= $(MOZ_QT_CFLAGS)
-#CFLAGS		+= $(MOZ_QT_CFLAGS)
 else
-#EXTRA_DSO_LDOPTS = $(TK_LIBS)
-#CXXFLAGS	+= $(TK_CFLAGS)
-#CFLAGS		+= $(TK_CFLAGS)
 TIMER_SUFFIX	= s
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
@@ -58,7 +60,3 @@ else
 CXXFLAGS        += $(TK_CFLAGS)
 INCLUDES        += $(TK_CFLAGS) -I$(srcdir)/..
 endif
-
-#INCLUDES	+= \
-#		 -I$(srcdir)/..
-

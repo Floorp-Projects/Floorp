@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #ifndef nsIDrawingSurfaceQT_h___
@@ -62,9 +64,7 @@ public:
      *         surface created
      * @return error status
      **/
-    NS_IMETHOD Init(QPainter * aGC, 
-                    PRUint32 aWidth, 
-                    PRUint32 aHeight,
+    NS_IMETHOD Init(QPainter * aGC,PRUint32 aWidth,PRUint32 aHeight,
                     PRUint32 aFlags) = 0;
 };
 

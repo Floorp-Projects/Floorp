@@ -18,25 +18,21 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
-#ifndef TOOLKIT_H      
-#define TOOLKIT_H
+#ifndef nsToolkit_h__      
+#define nsToolkit_h__
 
 #include "nsIToolkit.h"
-
-struct PLEventQueue;
-struct MethodInfo;
 
 /**
  * Wrapper around the thread running the message pump.
  * The toolkit abstraction is necessary because the message pump must
  * execute within the same thread that created the widget under Win32.
  */ 
-
 class nsToolkit : public nsIToolkit
 {
-
 public:
     nsToolkit();
     virtual ~nsToolkit();
@@ -45,4 +41,4 @@ public:
     NS_IMETHOD Init(PRThread *aThread);
 };
 
-#endif  // TOOLKIT_H
+#endif  // nsToolkit_h__

@@ -18,66 +18,50 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nscore.h"  // needed for 'nsnull'
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 #include "plevent.h"
-#include "nsWidget.h"
 
-//
 // Static thread local storage index of the Toolkit
 // object associated with a given thread...
-//
 static PRUintn gToolkitTLSIndex = 0;
 
 //-------------------------------------------------------------------------
-//
 // constructor
-//
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsToolkit::nsToolkit()\n"));
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 //-------------------------------------------------------------------------
-//
 // destructor
-//
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsToolkit::~nsToolkit()\n"));
-
-    // Remove the TLS reference to the toolkit...
-    PR_SetThreadPrivate(gToolkitTLSIndex, nsnull); 
+  // Remove the TLS reference to the toolkit...
+  PR_SetThreadPrivate(gToolkitTLSIndex, nsnull); 
 }
 
 //-------------------------------------------------------------------------
-//
 // nsISupports implementation macro
-//
 //-------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)   
  
 //-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsToolkit::Init()\n"));
-    return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-//
 // Return the nsIToolkit for the current thread.  If a toolkit does not
 // yet exist, then one will be created...
-//
 //-------------------------------------------------------------------------
 NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
 {
@@ -86,47 +70,35 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   PRStatus status;
  
   // Create the TLS index the first time through...
-  if (0 == gToolkitTLSIndex)
-  {
+  if (0 == gToolkitTLSIndex) {
     status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL);
-    if (PR_FAILURE == status)
-    {
+    if (PR_FAILURE == status) {
       rv = NS_ERROR_FAILURE;
     }
   }
- 
-  if (NS_SUCCEEDED(rv))
-  {
+  if (NS_SUCCEEDED(rv)) {
     toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex);
  
-    //
     // Create a new toolkit for this thread...
-    //
-    if (!toolkit)
-    {
+    if (!toolkit) {
       toolkit = new nsToolkit();
  
-      if (!toolkit)
-      {
+      if (!toolkit) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
-      else
-      {
+      else {
         NS_ADDREF(toolkit);
         toolkit->Init(PR_GetCurrentThread());
-        //
+
         // The reference stored in the TLS is weak.  It is removed in the
         // nsToolkit destructor...
-        //
         PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit);
        }
     }
-    else
-    {
+    else {
       NS_ADDREF(toolkit);
     }
     *aResult = toolkit;
   }
   return rv;
 }
- 

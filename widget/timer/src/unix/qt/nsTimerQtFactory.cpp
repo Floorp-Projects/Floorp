@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nsIGenericFactory.h"
@@ -42,4 +43,5 @@ static nsModuleComponentInfo components[] =
     nsTimerQtConstructor }
 };
  
-NS_IMPL_NSGETMODULE("nsQtTimerModule", components)
+NS_IMPL_NSGETMODULE("nsQtTimerModule",components) 
+ 

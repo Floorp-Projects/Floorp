@@ -34,7 +34,7 @@
 #include <qlineedit.h>
 #include <qmultilineedit.h>
 
-//JCG #define DBG 0
+#define DBG 0
 
 //-------------------------------------------------------------------------
 //

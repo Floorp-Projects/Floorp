@@ -26,7 +26,7 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 
-//JCG #define DBG 0
+#define DBG 0
 
 extern int mIsPasswordCallBacksInstalled;
 

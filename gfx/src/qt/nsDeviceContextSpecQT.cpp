@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nsDeviceContextSpecQT.h"
@@ -25,9 +27,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
- 
+#include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
+
 #include "nsIPref.h"
- 
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsIAppShellComponentImpl.h"
@@ -37,9 +40,16 @@
 
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
-#include "stdlib.h"  // getenv() on Solaris/CC
 #include <qapplication.h>
+
+//JCG #define DBG_JCG 1
+
+#ifdef DBG_JCG
+PRUint32 gDCSpecCount = 0;
+PRUint32 gDCSpecID = 0;
+#endif
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecQT
@@ -47,8 +57,12 @@ static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
  */
 nsDeviceContextSpecQT::nsDeviceContextSpecQT()
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextSpecQT::nsDeviceContextSpecQT\n"));
-    NS_INIT_REFCNT();
+#ifdef DBG_JCG
+  gDCSpecCount++;
+  mID = gDCSpecID++;
+  printf("JCG: nsDeviceContextSpecQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecCount);
+#endif
+  NS_INIT_REFCNT();
 }
 
 /** -------------------------------------------------------
@@ -57,7 +71,10 @@ nsDeviceContextSpecQT::nsDeviceContextSpecQT()
  */
 nsDeviceContextSpecQT::~nsDeviceContextSpecQT()
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextSpecQT::~nsDeviceContextSpecQT\n"));
+#ifdef DBG_JCG
+  gDCSpecCount--;
+  printf("JCG: nsDeviceContextSpecQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecCount);
+#endif
 }
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
@@ -66,39 +83,38 @@ static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
 NS_IMPL_ADDREF(nsDeviceContextSpecQT)
 NS_IMPL_RELEASE(nsDeviceContextSpecQT)
 
-NS_IMETHODIMP nsDeviceContextSpecQT::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+NS_IMETHODIMP nsDeviceContextSpecQT::QueryInterface(REFNSIID aIID,
+                                                    void** aInstancePtr)
 {
   if (nsnull == aInstancePtr)
     return NS_ERROR_NULL_POINTER;
  
-  if (aIID.Equals(kIDeviceContextSpecIID))
-  {
+  if (aIID.Equals(kIDeviceContextSpecIID)) {
     nsIDeviceContextSpec* tmp = this;
-    *aInstancePtr = (void*) tmp;
+    *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
  
-  if (aIID.Equals(kIDeviceContextSpecPSIID))
-  {
+  if (aIID.Equals(kIDeviceContextSpecPSIID)) {
     nsIDeviceContextSpecPS* tmp = this;
-    *aInstancePtr = (void*) tmp;
+    *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
  
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
  
-  if (aIID.Equals(kISupportsIID))
-  {
+  if (aIID.Equals(kISupportsIID)) {
     nsIDeviceContextSpec* tmp = this;
     nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
+    *aInstancePtr = (void*)tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
 } 
+
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecQT
  *  @update   dc 2/15/98
@@ -106,17 +122,33 @@ NS_IMETHODIMP nsDeviceContextSpecQT::QueryInterface(REFNSIID aIID, void** aInsta
  */
 NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
 {
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextSpecQT::Init\n"));
+  nsresult  rv = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPrintOptions,printService,kPrintOptionsCID,&rv);
+ 
+  // if there is a current selection then enable the "Selection" radio button
+  if (NS_SUCCEEDED(rv) && printService) {
+    PRBool isOn;
+    printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB,
+                                  &isOn);
+    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && pPrefs) {
+      (void)pPrefs->SetBoolPref("print.selection_radio_enabled",isOn);
+    }
+  }
   char *path;
-
-  PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE;
+  PRBool reversed = PR_FALSE;
+  PRBool color = PR_FALSE;
   PRBool tofile = PR_FALSE;
+  PRInt16 printRange = nsIPrintOptions::kRangeAllPages;
   PRInt32 paper_size = NS_LETTER_SIZE;
-  int ileft = 500, iright = 0, itop = 500, ibottom = 0;
-  char *command;
-  char *printfile = nsnull;
-
-  nsresult rv = NS_OK;
+  PRInt32 fromPage = 1;
+  PRInt32 toPage = 1;
+  PRUnichar *command = nsnull;
+  PRUnichar *printfile = nsnull;
+  double dleft = 0.5;
+  double dright = 0.5;
+  double dtop = 0.5;
+  double dbottom = 0.5;
   nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
 
   rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
@@ -131,23 +163,19 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
       nsCOMPtr<nsIDOMWindowInternal> mWindow;
 
       JSContext *jsContext;
-      rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow), &jsContext);
+      rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),
+                                                 &jsContext);
       if (NS_SUCCEEDED(rv)) {
         void *stackPtr;
-        jsval *argv = JS_PushArguments(jsContext,
-                                       &stackPtr,
-                                       "sss%ip",
+        jsval *argv = JS_PushArguments(jsContext,&stackPtr,"sss%ip",
                                        "chrome://global/content/printdialog.xul",
-                                       "_blank",
-                                       "chrome,modal",
-                                       (const nsIID *) (&NS_GET_IID(nsIDialogParamBlock)),
-                                       (nsISupports *) ioParamBlock);
+                                       "_blank","chrome,modal",
+                                       (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
+                                       (nsISupports*)ioParamBlock);
         if (argv) {
           nsCOMPtr<nsIDOMWindowInternal> newWindow;
 
-          rv = hiddenWindow->OpenDialog(jsContext,
-                                        argv,
-                                        4,
+          rv = hiddenWindow->OpenDialog(jsContext,argv,4,
                                         getter_AddRefs(newWindow));
 
           if (NS_SUCCEEDED(rv)) {
@@ -155,22 +183,37 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
             PRInt32 buttonPressed = 0;
             ioParamBlock->GetInt(0, &buttonPressed);
             if (buttonPressed == 0) {
-              nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-              if (NS_SUCCEEDED(rv) && pPrefs) {
-                (void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
-                (void) pPrefs->GetBoolPref("print.print_color", &color);
-                (void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
-                (void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
-                (void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
-                (void) pPrefs->GetIntPref("print.print_margin_top", &itop);
-                (void) pPrefs->GetIntPref("print.print_margin_left", &ileft);
-                (void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom);
-                (void) pPrefs->GetIntPref("print.print_margin_right", &iright);
-                (void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile);
-                (void) pPrefs->GetBoolPref("print.print_tofile", &tofile);
-                sprintf( mPrData.command, command );
-                sprintf( mPrData.path, printfile );
-              } else {
+              if (printService) {
+                printService->GetPrintReversed(&reversed);
+                printService->GetPrintInColor(&color);
+                printService->GetPaperSize(&paper_size);
+                printService->GetPrintCommand(&command);
+                printService->GetPrintRange(&printRange);
+                printService->GetToFileName(&printfile);
+                printService->GetPrintToFile(&tofile);
+                printService->GetStartPageRange(&fromPage);
+                printService->GetEndPageRange(&toPage);
+                printService->GetMarginTop(&dtop);
+                printService->GetMarginLeft(&dleft);
+                printService->GetMarginBottom(&dbottom);
+                printService->GetMarginRight(&dright);
+
+                if (command != nsnull && printfile != nsnull) {
+                  // convert Unicode strings to cstrings
+                  nsAutoString cmdStr;
+                  nsAutoString printFileStr;
+
+                  cmdStr = command;
+                  printFileStr = printfile;
+                  char *pCmdStr = cmdStr.ToNewCString();
+                  char *pPrintFileStr = printFileStr.ToNewCString();
+                  sprintf(mPrData.command,pCmdStr);
+                  sprintf(mPrData.path,pPrintFileStr);
+                  nsMemory::Free(pCmdStr);
+                  nsMemory::Free(pPrintFileStr);
+                }
+              }
+              else {
 #ifndef VMS
                 sprintf( mPrData.command, "lpr" );
 #else
@@ -179,26 +222,30 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
                 sprintf( mPrData.command, "print" );
 #endif
               }
-
-              mPrData.top = itop / 1000.0;
-              mPrData.bottom = ibottom / 1000.0;
-              mPrData.left = ileft / 1000.0;
-              mPrData.right = iright / 1000.0;
+              mPrData.top = dtop;
+              mPrData.bottom = dbottom;
+              mPrData.left = dleft;
+              mPrData.right = dright;
               mPrData.fpf = !reversed;
               mPrData.grayscale = !color;
               mPrData.size = paper_size;
               mPrData.toPrinter = !tofile;
 
               // PWD, HOME, or fail
-
               if (!printfile) {
-                if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL )
-                    if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-                            strcpy( mPrData.path, "mozilla.ps" );
-                if ( path != (char *) NULL )
-                    sprintf( mPrData.path, "%s/mozilla.ps", path );
+                if ((path = PR_GetEnv("PWD")) == (char*)NULL)
+                  if ((path = PR_GetEnv("HOME")) == (char*)NULL)
+                    strcpy(mPrData.path,"mozilla.ps");
+                if (path != (char*)NULL)
+                  sprintf(mPrData.path,"%s/mozilla.ps",path);
                 else
-                    return NS_ERROR_FAILURE;
+                  return NS_ERROR_FAILURE;
+              }
+              if (command != nsnull) {
+                nsMemory::Free(command);
+              }
+              if (printfile != nsnull) {
+                nsMemory::Free(printfile);
               }
               return NS_OK;
             }
@@ -223,7 +270,6 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetFirstPageFirst(PRBool &aFpf)
 }
  
 NS_IMETHODIMP nsDeviceContextSpecQT::GetGrayscale(PRBool &aGrayscale)
- 
 {
   aGrayscale = mPrData.grayscale;
   return NS_OK;
@@ -235,25 +281,22 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetSize(int &aSize)
   return NS_OK;
 }
  
-NS_IMETHODIMP nsDeviceContextSpecQT::GetPageDimensions(float &aWidth,float &aHeight)
+NS_IMETHODIMP nsDeviceContextSpecQT::GetPageDimensions(float &aWidth,
+                                                       float &aHeight)
 {
-    if (mPrData.size == NS_LETTER_SIZE)
-    {
+    if (mPrData.size == NS_LETTER_SIZE) {
         aWidth = 8.5;
         aHeight = 11.0;
     }
-    else if (mPrData.size == NS_LEGAL_SIZE)
-    {
+    else if (mPrData.size == NS_LEGAL_SIZE) {
         aWidth = 8.5;
         aHeight = 14.0;
     }
-    else if (mPrData.size == NS_EXECUTIVE_SIZE)
-    {
+    else if (mPrData.size == NS_EXECUTIVE_SIZE) {
         aWidth = 7.5;
         aHeight = 10.0;
     }
-    else if (mPrData.size == NS_A4_SIZE)
-    {
+    else if (mPrData.size == NS_A4_SIZE) {
         // 210mm X 297mm == 8.27in X 11.69in
         aWidth = 8.27;
         aHeight = 11.69;
@@ -309,6 +352,5 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetUserCancelled(PRBool &aCancel)
  */
 NS_IMETHODIMP nsDeviceContextSpecQT::ClosePrintManager()
 {
-    PR_LOG(QtGfxLM,PR_LOG_DEBUG,("nsDeviceContextSpecQT::ClosePrintManager\n"));
     return NS_OK;
 }

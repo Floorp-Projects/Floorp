@@ -18,8 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef nsQApplication_h__
 #define nsQApplication_h__
 
@@ -29,47 +30,49 @@
 
 class nsQtEventQueue : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-	nsQtEventQueue(nsIEventQueue *EQueue);
-	~nsQtEventQueue();
-        unsigned long IncRefCnt();
-        unsigned long DecRefCnt();
+  nsQtEventQueue(nsIEventQueue *EQueue);
+  ~nsQtEventQueue();
+  unsigned long IncRefCnt();
+  unsigned long DecRefCnt();
 
 public slots:
-    void DataReceived();
+  void DataReceived();
 
 private:
-    nsIEventQueue   *mEventQueue;
-    QSocketNotifier *mQSocket;
-    unsigned long   mRefCnt;
+  nsIEventQueue   *mEventQueue;
+  QSocketNotifier *mQSocket;
+  PRUint32        mRefCnt;
+  PRInt32         mID;
 };
 
 class nsQApplication : public QApplication
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    static nsQApplication *Instance(int argc, char ** argv);
-    static nsQApplication *Instance(Display * display);
+  static nsQApplication *Instance(int argc,char **argv);
 
-    static void Release();
+  static void Release();
 
-    static void AddEventProcessorCallback(nsIEventQueue * EQueue);
-    static void RemoveEventProcessorCallback(nsIEventQueue * EQueue);
+  static void AddEventProcessorCallback(nsIEventQueue *EQueue);
+  static void RemoveEventProcessorCallback(nsIEventQueue *EQueue);
 
-#ifdef DEBUG
-    bool x11EventFilter(XEvent *event);
-#endif
+  static QWidget *GetMasterWidget();
+
+  ///Hook for debugging X11 Events
+  bool x11EventFilter(XEvent *event);
 
 protected:
-    nsQApplication(int argc, char ** argv);
-    nsQApplication(Display * display);
-    ~nsQApplication();
+  nsQApplication(int argc,char **argv);
+  ~nsQApplication();
 
 private:
-    static QIntDict<nsQtEventQueue> mQueueDict;
-    static nsQApplication           *mInstance;
-    static PRUint32                 mRefCnt;
+  PRInt32                         mID;
+  static QIntDict<nsQtEventQueue> mQueueDict;
+  static nsQApplication           *mInstance;
+  static PRUint32                 mRefCnt;
+  static QWidget                  *mMasterWidget;
 };
 
 #endif // nsQApplication_h__

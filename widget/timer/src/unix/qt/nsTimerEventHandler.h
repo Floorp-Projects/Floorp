@@ -18,8 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *	John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef __nsTimerEventHandler_h__
 #define __nsTimerEventHandler_h__
 
@@ -31,22 +32,22 @@
 class nsTimerEventHandler : public QObject
 {
     Q_OBJECT
-
 public:
-    nsTimerEventHandler(nsITimer * aTimer,
+    nsTimerEventHandler(nsITimer *aTimer,
                         nsTimerCallbackFunc aFunc,
                         void *aClosure,
                         nsITimerCallback *aCallback);
+    ~nsTimerEventHandler();
 
 public slots:    
     void FireTimeout();
 
 private:
     nsTimerCallbackFunc mFunc;
-    void              * mClosure;
-    nsITimerCallback  * mCallback;
-    nsITimer          * mTimer;
+    void                *mClosure;
+    nsITimerCallback    *mCallback;
+    nsITimer            *mTimer;
+    PRUint32            mTimerHandlerID;
 };
 
 #endif // __nsTimerEventHandler_h__
-

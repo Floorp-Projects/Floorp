@@ -18,18 +18,20 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
+
 #include "nsILookAndFeel.h"
 #include "nsCOMPtr.h"
 
 class nsLookAndFeel: public nsILookAndFeel 
 {
+public:
     NS_DECL_ISUPPORTS
 
-public:
     nsLookAndFeel();
     virtual ~nsLookAndFeel();
 
@@ -43,9 +45,8 @@ public:
   // and font size. This is used in NavQuirks mode to see how closely
   // we match its size
   NS_IMETHOD GetNavSize(const nsMetricNavWidgetID aWidgetID,
-                        const nsMetricNavFontID   aFontID, 
-                        const PRInt32             aFontSize, 
-                        nsSize &aSize);
+                        const nsMetricNavFontID aFontID, 
+                        const PRInt32 aFontSize,nsSize &aSize);
 #endif
 
 protected:

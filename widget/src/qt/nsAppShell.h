@@ -18,21 +18,17 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
-
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
 #include "nsIEventQueue.h"
-
 #include "nsQApplication.h"
-#include <qwindowsstyle.h>
 
-/**
- * Native QT Application shell wrapper
- */
-
+/* Native QT Application shell wrapper */
 class nsAppShell : public nsIAppShell
 {
 public:
@@ -47,8 +43,8 @@ private:
     nsDispatchListener	    *mDispatchListener;
     nsCOMPtr<nsIEventQueue> mEventQueue;
     nsQApplication          *mApplication;
+    PRInt32                 mID;
     static PRBool           mRunning;
 };
 
 #endif // nsAppShell_h__
-

@@ -27,7 +27,7 @@
 #include "nsStringUtil.h"
 #include "nsIDeviceContext.h"
 
-//JCG #define DBG 0
+#define DBG 0
 
 #define INITIAL_MAX_ITEMS 128
 #define ITEMS_GROWSIZE    128

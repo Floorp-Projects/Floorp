@@ -18,14 +18,27 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *		John C. Griggs <johng@corel.com>
+ *
  */
 
 #include "nsScreenManagerQT.h"
 #include "nsScreenQT.h"
 
+//JCG #define DBG_JCG 1
+
+#ifdef DBG_JCG
+PRUint32 gSMCount = 0;
+PRUint32 gSMID = 0;
+#endif
 
 nsScreenManagerQT::nsScreenManagerQT()
 {
+#ifdef DBG_JCG
+  gSMCount++;
+  mID = gSMID++;
+  printf("JCG: nsScreenManagerQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gSMCount);
+#endif
   NS_INIT_REFCNT();
 
   // nothing else to do. I guess we could cache a bunch of information
@@ -36,13 +49,15 @@ nsScreenManagerQT::nsScreenManagerQT()
 
 nsScreenManagerQT::~nsScreenManagerQT()
 {
+#ifdef DBG_JCG
+  gSMCount--;
+  printf("JCG: nsScreenManagerQT DTOR (%p) ID: %d, Count: %d\n",this,mID,gSMCount);
+#endif
   // nothing to see here.
 }
 
-
 // addref, release, QI
 NS_IMPL_ISUPPORTS(nsScreenManagerQT, NS_GET_IID(nsIScreenManager))
-
 
 //
 // CreateNewScreenObject
@@ -55,14 +70,13 @@ NS_IMPL_ISUPPORTS(nsScreenManagerQT, NS_GET_IID(nsIScreenManager))
 nsIScreen* 
 nsScreenManagerQT::CreateNewScreenObject()
 {
-  nsIScreen* retval = nsnull;
+  nsIScreen *retval = nsnull;
   if (!mCachedMainScreen)
     mCachedMainScreen = new nsScreenQT();
   NS_IF_ADDREF(retval = mCachedMainScreen.get());
   
   return retval;
 }
-
 
 //
 // ScreenForRect 
@@ -81,7 +95,6 @@ nsScreenManagerQT::ScreenForRect(PRInt32 /*inLeft*/, PRInt32 /*inTop*/,
   return NS_OK;
 } // ScreenForRect
 
-
 //
 // GetPrimaryScreen
 //
@@ -95,7 +108,6 @@ nsScreenManagerQT::GetPrimaryScreen(nsIScreen **aPrimaryScreen)
   return NS_OK;
 } // GetPrimaryScreen
 
-
 //
 // GetNumberOfScreens
 //
@@ -107,4 +119,3 @@ nsScreenManagerQT::GetNumberOfScreens(PRUint32 *aNumberOfScreens)
   *aNumberOfScreens = 1;
   return NS_OK;
 } // GetNumberOfScreens
-
