@@ -3765,6 +3765,8 @@ nsBookmarksService::importBookmarks(nsISupportsArray *aArguments)
 	// read 'em in
 	BookmarkParser		parser;
 	parser.Init(&fileSpec, mInner, nsAutoString(), PR_TRUE);
+
+	// Note: can't Begin|EndUpdateBatch() this as notifications are required
 	parser.Parse(newBookmarkFolder, kNC_Bookmark);
 
 	return(NS_OK);
@@ -4027,7 +4029,9 @@ nsBookmarksService::ReadFavorites()
 	{
 		BookmarkParser parser;
 		parser.Init(&ieFavoritesFile, mInner, nsAutoString());
+        BeginUpdateBatch(this);
 		parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
+		EndUpdateBatch(this);
 			
 		nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
 		rv = gRDF->GetLiteral(ieTitle.get(), getter_AddRefs(ieTitleLiteral));
@@ -4136,7 +4140,9 @@ nsBookmarksService::ReadBookmarks()
 		parser.SetIEFavoritesRoot(cstringNetPositiveURL);
 #endif
 
+        BeginUpdateBatch(this);
 		parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
+        EndUpdateBatch(this);
 		mBookmarksAvailable = PR_TRUE;
 		
 		PRBool	foundPTFolder = PR_FALSE;
