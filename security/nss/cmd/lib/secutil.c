@@ -216,6 +216,7 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     char prompt[255];
     secuPWData *pwdata = arg;
     secuPWData pwnull = { PW_NONE, 0 };
+    char *pw;
 
     if (arg == NULL)
 	pwdata = &pwnull;
@@ -225,14 +226,20 @@ SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     	return NULL;
     }
 
-    sprintf(prompt, "Enter Password or Pin for \"%s\":",
-	    PK11_GetTokenName(slot));
-
     switch (pwdata->source) {
     case PW_NONE:
+	sprintf(prompt, "Enter Password or Pin for \"%s\":",
+	                 PK11_GetTokenName(slot));
 	return SECU_GetPasswordString(NULL, prompt);
     case PW_FROMFILE:
-	return SECU_FilePasswd(slot, retry, pwdata->data);
+	/* Instead of opening and closing the file every time, get the pw
+	 * once, then keep it in memory (duh).
+	 */
+	pw = SECU_FilePasswd(slot, retry, pwdata->data);
+	pwdata->source = PW_PLAINTEXT;
+	pwdata->data = PL_strdup(pw);
+	/* it's already been dup'ed */
+	return pw;
     case PW_PLAINTEXT:
 	return PL_strdup(pwdata->data);
     default:
