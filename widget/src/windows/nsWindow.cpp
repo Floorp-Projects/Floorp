@@ -1107,7 +1107,7 @@ void nsWindow::SetCursor(nsCursor aCursor)
       break;
 
     case eCursor_arrow_north_plus:
-      
+      hm = ::GetModuleHandle(DLLNAME(NS_DLLNAME));
       newCursor = ::LoadCursor(hm, MAKEINTRESOURCE(IDC_ARROWNORTHPLUS));
       break;
 
