@@ -142,7 +142,7 @@ nsresult TextEditorTest::TestTextProperties()
   nodeList->GetLength(&count);
   NS_ASSERTION(0!=count, "there are no text nodes in the document!");
   nsCOMPtr<nsIDOMNode>textNode;
-  result = nodeList->Item(0, getter_AddRefs(textNode));
+  result = nodeList->Item(1, getter_AddRefs(textNode));
   TEST_RESULT(result);
   TEST_POINTER(textNode.get());
 
