@@ -90,7 +90,7 @@ void              SetUninstallRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
 HRESULT           GetAppPath();
 DWORD             CleanupAppList();
-BOOL              ProcessAppItem(HKEY hkRootKey, LPSTR szAppItem);
+BOOL              ProcessAppItem(HKEY hkRoot, LPSTR szKeyAppList, LPSTR szAppID);
 HRESULT           GetUninstallLogPath();
 
 #endif

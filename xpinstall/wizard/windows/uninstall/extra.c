@@ -261,6 +261,7 @@ HRESULT Initialize(HINSTANCE hInstance)
 
   ugUninstall.bVerbose = FALSE;
   ugUninstall.bUninstallFiles = TRUE;
+  ugUninstall.bSharedInst = FALSE;
 
   return(0);
 }
@@ -1357,6 +1358,8 @@ DWORD CleanupAppList()
   char      *szRv = NULL;
   char      szKey[MAX_BUF];
   char      szBuf[MAX_BUF];
+  char      szDefaultApp[MAX_BUF_TINY];
+  BOOL      bFoundDefaultApp;
   HKEY      hkHandle;
   DWORD     dwIndex;
   DWORD     dwBufSize;
@@ -1364,6 +1367,8 @@ DWORD CleanupAppList()
   DWORD     dwTotalValues;
   DWORD     dwAppCount;
   FILETIME  ftLastWriteFileTime;
+
+  GetPrivateProfileString("General", "Default AppID", "", szDefaultApp, MAX_BUF_TINY, szFileIniUninstall);
 
   hkHandle = ugUninstall.hWrMainRoot;
   wsprintf(szKey, "%s\\%s\\AppList", ugUninstall.szWrMainKey, ugUninstall.szUserAgent);
@@ -1401,49 +1406,82 @@ DWORD CleanupAppList()
   siALTmp = siALHead;
   while(siALTmp != NULL)
   {
+    if(lstrcmp(siALTmp->szAppID, szDefaultApp) == 0)
+      bFoundDefaultApp = TRUE;
+
     // ProcessAppItem returns true if the App is installed
-    if(ProcessAppItem(ugUninstall.hWrMainRoot, siALTmp->szAppID))
-    {
+    if(ProcessAppItem(ugUninstall.hWrMainRoot, szKey, siALTmp->szAppID))
       dwAppCount++;
-    }
 
     siALPrev = siALTmp;
     siALTmp = siALTmp->Next;
     FreeMemory(&siALPrev);
   }
 
+  if(dwAppCount == 0)
+    RegDeleteKey(ugUninstall.hWrMainRoot, szKey);
+
+  // If the Default App is not listed in AppList, then the shared app should not be in the 
+  //   Windows Add/Remove Programs list either.
+  if(!bFoundDefaultApp)
+  {
+    wsprintf(szKey, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)",ugUninstall.szProductName, ugUninstall.szUserAgent);
+    RegDeleteKey(ugUninstall.hWrMainRoot, szKey);
+  }
+
   return(dwAppCount);
 }
 
 
+// Removes the app item if it is the app identified with the /app command-line option
 // If an app item is not installed this removes it from the app list.
 // Returns TRUE if the app item is installed, FALSE if the app is not installed.
-BOOL ProcessAppItem(HKEY hkRootKey, LPSTR szAppID)
+BOOL ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
 {
   char szBuf[MAX_BUF];
   char szKey[MAX_BUF];
+  char szUninstKey[MAX_BUF];
   char szDefaultApp[MAX_BUF_TINY];
 
-  wsprintf(szKey, "%s\\%s\\AppList\\%s", ugUninstall.szWrMainKey, ugUninstall.szUserAgent, szAppID);
   GetPrivateProfileString("General", "Default AppID", "", szDefaultApp, MAX_BUF_TINY, szFileIniUninstall);
 
+  wsprintf(szKey, "%s\\%s", szKeyAppList, szAppID);
   GetWinReg(hkRootKey, szKey, "PathToExe", szBuf, sizeof(szBuf));
-  if(FileExists(szBuf))    
-    return TRUE;
-  // The Default App does not have a PathToExe, so we have to make a special check for it.
-  //   If we are looking at the Default App in the app list but uninstalling a real app we
-  //   need to return TRUE so it gets counted as an installed app.
-  else if( (lstrcmp(szAppID, szDefaultApp) == 0) && (ugUninstall.szAppID[0] != '\0') )
-    return TRUE;
-  else
-  {
-    RegDeleteKey(hkRootKey, szKey);
 
-    wsprintf(szKey, "%s\\%s\\AppList", ugUninstall.szWrMainKey, ugUninstall.szUserAgent);
+  if(lstrcmp(szAppID, ugUninstall.szAppID) == 0)
+  {
+    // This is the app that the user said on the command-line to uninstall,
+    //   so it needs to be removed from the AppList
     RegDeleteKey(hkRootKey, szKey);
+    if(lstrcmp(szAppID, szDefaultApp) == 0)
+    {
+      wsprintf(szKey, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GRE (%s)", ugUninstall.szUserAgent);
+      RegDeleteKey(hkRootKey, szKey);
+    }
 
     return FALSE;
   }
+
+  if(FileExists(szBuf))    
+    // Any app the user is not uninstalling that is still on the machine 
+    //   should be counted.
+    return TRUE;
+
+  if(lstrcmp(szAppID, szDefaultApp) == 0)
+  {
+    // The Default App does not have any installed files registered.  An entry in 
+    // the Windows Add/Remove products list indicates that the Default App is installed,
+    // however, and needs to be counted.
+    wsprintf(szUninstKey, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)",ugUninstall.szProductName, ugUninstall.szUserAgent);
+    GetWinReg(hkRootKey, szUninstKey, "UninstallString", szBuf, sizeof(szBuf));
+
+    if(szBuf[0] != '\0')
+      return TRUE;
+  }
+
+  // The only entries left in the AppList are orphaned entries.  Remove them.
+  RegDeleteKey(hkRootKey, szKey);
+  return FALSE;
 }
 
 HRESULT GetUninstallLogPath()
@@ -1538,6 +1576,9 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
 
   lstrcpy(ugUninstall.szLogFilename, FILE_LOG_INSTALL);
 
+  GetPrivateProfileString("General", "Shared Install", "", szBuf, MAX_BUF, szFileIniUninstall);
+  ugUninstall.bSharedInst = (lstrcmpi(szBuf, "TRUE") == 0);
+
   /* get install Mode information */
   GetPrivateProfileString("General", "Run Mode", "", szBuf, MAX_BUF, szFileIniUninstall);
   SetUninstallRunMode(szBuf);
@@ -1620,12 +1661,17 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
 
   GetAppPath();
 
-  // CleanupAppList returns the number of installed apps dependant on this
-  //   shared app.
-  if(CleanupAppList() == 0)
-    ugUninstall.bUninstallFiles = TRUE;
-  else
-    ugUninstall.bUninstallFiles = FALSE;
+
+  if(ugUninstall.bSharedInst)
+  {
+    // Shared installations require a user agent.  Without one there is no way to know 
+    //   what version of GRE to clean up so we can't do anything--including CleanupAppList()
+    //   so don't change the order of the if statement.  
+    //   (We should add UI warning the user when a required UserAgent is not supplied.)
+    // CleanupAppList() returns the number of installed apps dependant on this shared app.
+    if((ugUninstall.szUserAgent[0] == '\0') || (CleanupAppList() != 0))
+      ugUninstall.bUninstallFiles = FALSE;
+  }
 
   return(GetUninstallLogPath());
 }

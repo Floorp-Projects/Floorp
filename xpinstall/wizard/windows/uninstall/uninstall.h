@@ -137,6 +137,7 @@ typedef struct uninstallStruct
   LPSTR     szAppID;
   BOOL      bVerbose;
   BOOL      bUninstallFiles;
+  BOOL      bSharedInst;
   HFONT     definedFont;
 } uninstallGen;
 
