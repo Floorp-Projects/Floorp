@@ -346,9 +346,6 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
     if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
     }
-    else if(aParserContext.mMimeType.EqualsWithConversion(kRTFTextContentType)){ 
-      result=ePrimaryDetect;
-    }
   }     
   else {
     if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {

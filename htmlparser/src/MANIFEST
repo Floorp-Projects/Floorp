@@ -15,7 +15,6 @@ nsToken.h
 nsIDTDDebug.h
 nsIDTD.h
 CNavDTD.h
-CRtfDTD.h
 nsHTMLTags.h
 nsHTMLTagList.h
 nsParserCIID.h

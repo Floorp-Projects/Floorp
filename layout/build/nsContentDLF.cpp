@@ -58,7 +58,6 @@ extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 static char* gHTMLTypes[] = {
   "text/html",
   "text/plain",
-  "text/rtf",
   "text/css",
   0
 };
