@@ -1653,35 +1653,36 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 
   // Compute the combined area of our children
-  // XXX take into account the overflow->clip property!
 // XXX_perf: This can be done incrementally
   nscoord xa = 0, ya = 0, xb = aMetrics.width, yb = aMetrics.height;
-  nsLineBox* line = mLines;
-  while (nsnull != line) {
-    // Compute min and max x/y values for the reflowed frame's
-    // combined areas
-    nscoord x = line->mCombinedArea.x;
-    nscoord y = line->mCombinedArea.y;
-    nscoord xmost = x + line->mCombinedArea.width;
-    nscoord ymost = y + line->mCombinedArea.height;
-    if (x < xa) {
-      xa = x;
+  if (NS_STYLE_OVERFLOW_HIDDEN != aReflowState.mStyleDisplay->mOverflow) {
+    nsLineBox* line = mLines;
+    while (nsnull != line) {
+      // Compute min and max x/y values for the reflowed frame's
+      // combined areas
+      nscoord x = line->mCombinedArea.x;
+      nscoord y = line->mCombinedArea.y;
+      nscoord xmost = x + line->mCombinedArea.width;
+      nscoord ymost = y + line->mCombinedArea.height;
+      if (x < xa) {
+        xa = x;
+      }
+      if (xmost > xb) {
+        xb = xmost;
+      }
+      if (y < ya) {
+        ya = y;
+      }
+      if (ymost > yb) {
+        yb = ymost;
+      }
+      line = line->mNext;
     }
-    if (xmost > xb) {
-      xb = xmost;
+    if (mBullet && !mLines) {
+      nsRect r;
+      mBullet->GetRect(r);
+      xa = r.x;
     }
-    if (y < ya) {
-      ya = y;
-    }
-    if (ymost > yb) {
-      yb = ymost;
-    }
-    line = line->mNext;
-  }
-  if (mBullet && !mLines) {
-    nsRect r;
-    mBullet->GetRect(r);
-    xa = r.x;
   }
 #ifdef NOISY_COMBINED_AREA
   IndentBy(stdout, GetDepth());
