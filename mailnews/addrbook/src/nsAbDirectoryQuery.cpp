@@ -677,10 +677,10 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
             *matchFound = PR_TRUE;
             break;
         case nsIAbBooleanConditionTypes::Contains:
-            *matchFound = value.Find (NS_STATIC_CAST(const nsString, matchValue), PR_TRUE) >= 0;
+            *matchFound = value.Find (matchValue.get(), PR_TRUE) >= 0;
             break;
         case nsIAbBooleanConditionTypes::DoesNotContain:
-            *matchFound = value.Find (NS_STATIC_CAST(const nsString, matchValue), PR_TRUE) < 0;
+            *matchFound = value.Find (matchValue.get(), PR_TRUE) < 0;
             break;
         case nsIAbBooleanConditionTypes::Is:
             *matchFound = value.CompareWithConversion (matchValue, PR_TRUE) == 0;
@@ -689,7 +689,7 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
             *matchFound = value.CompareWithConversion (matchValue, PR_TRUE) != 0;
             break;
         case nsIAbBooleanConditionTypes::BeginsWith:
-            *matchFound = value.Find (NS_STATIC_CAST(const nsString, matchValue), PR_TRUE) == 0;
+            *matchFound = value.Find (matchValue.get(), PR_TRUE) == 0;
             break;
         case nsIAbBooleanConditionTypes::LessThan:
             *matchFound = value.CompareWithConversion (matchValue, PR_TRUE) < 0;
@@ -708,7 +708,7 @@ nsresult nsAbDirectoryQuery::matchCardCondition (nsIAbCard* card,
                 break;
             }
 
-            *matchFound = value.Find (NS_STATIC_CAST(const nsString, matchValue), PR_TRUE, vl - mvl) == (vl - mvl);
+            *matchFound = value.Find (matchValue.get(), PR_TRUE, vl - mvl) == (vl - mvl);
             break;
         }
         case nsIAbBooleanConditionTypes::SoundsLike:
