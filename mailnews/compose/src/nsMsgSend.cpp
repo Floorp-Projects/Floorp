@@ -2355,7 +2355,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
             else
               (*aMailboxCount)++;              
 
-            m_attachments[newLoc].m_uri = strdup(url.get());
+            m_attachments[newLoc].m_uri = PL_strdup(url.get());
             m_attachments[newLoc].mURL = nsnull;
           }
           else
