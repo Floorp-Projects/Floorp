@@ -44,6 +44,8 @@ endif
 
 ARCH			= netbsd
 
+DLL_SUFFIX		= so.1.0
+
 DSO_CFLAGS		= -fPIC
 DSO_LDFLAGS		=
 DSO_LDOPTS		= -Bshareable
