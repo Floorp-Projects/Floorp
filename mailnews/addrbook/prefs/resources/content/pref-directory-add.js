@@ -5,6 +5,7 @@ var gCurrentDirectory = null;
 var gCurrentDirectoryString = null;
 var gPortNumber = 389;
 var gMaxHits = 100;
+var gLdapService = null;
 
 function Startup()
 {
@@ -31,14 +32,15 @@ function fillSettings()
   }
   try {
     var ldapUrl = Components.classes["@mozilla.org/network/ldap-url;1"];
-    ldapUrl = ldapUrl.getService(Components.interfaces.nsILDAPURL);
+    ldapUrl = ldapUrl.createInstance().
+              QueryInterface(Components.interfaces.nsILDAPURL);
   }
   catch (ex) {
     dump("failed to get ldap url service!\n");
     ldapUrl = null;
   }
   try{
-    var prefValue = gPrefInt.CopyCharPref(gCurrentDirectoryString +".description");
+    var prefValue = gPrefInt.CopyUnicharPref(gCurrentDirectoryString +".description");
   }
   catch(ex){
     prefValue="";
@@ -48,7 +50,7 @@ function fillSettings()
   {
     document.getElementById("description").value = prefValue;
     try{
-      prefValue = gPrefInt.CopyCharPref(gCurrentDirectoryString +".uri");
+      prefValue = gPrefInt.CopyUnicharPref(gCurrentDirectoryString +".uri");
     }
     catch(ex){
       prefValue="";
@@ -58,13 +60,27 @@ function fillSettings()
       ldapUrl.spec = prefValue;
       document.getElementById("hostname").value = ldapUrl.host;
       document.getElementById("port").value = ldapUrl.port;
-      document.getElementById("basedn").value = ldapUrl.dn;
-      document.getElementById("search").value = ldapUrl.filter;
+      try {
+        gLdapService = Components.classes[
+            "@mozilla.org/network/ldap-service;1"].
+            getService(Components.interfaces.nsILDAPService);
+      }
+      catch (ex)
+      { 
+        dump("failed to get ldapService \n");
+        gLdapService = null;
+      }
+      if (gLdapService) {
+        document.getElementById("basedn").value = gLdapService.
+                                          UTF8toUCS2(ldapUrl.dn);
+        document.getElementById("search").value = gLdapService.
+                                          UTF8toUCS2(ldapUrl.filter);
+      }
       switch(ldapUrl.scope)
       {
         case 1:
           document.getElementById("one").checked = true; break;
-        case 2:
+        default:
           document.getElementById("sub").checked = true; break;
       }
     }
@@ -125,7 +141,7 @@ function createUniqueServername()
   while (temp) {
     temp = "";
     try{ 
-      temp = gPrefInt.CopyCharPref(gPrefstring+gPref_string_desc+".description");
+      temp = gPrefInt.CopyUnicharPref(gPrefstring+gPref_string_desc+".description");
     } catch(e){}
     if (temp)
       gPref_string_desc += str[0];
@@ -173,7 +189,8 @@ function onOK()
 
   try {
     var ldapUrl = Components.classes["@mozilla.org/network/ldap-url;1"];
-    ldapUrl = ldapUrl.getService(Components.interfaces.nsILDAPURL);
+    ldapUrl = ldapUrl.createInstance().
+              QueryInterface(Components.interfaces.nsILDAPURL);
   }
   catch (ex) {
     dump("failed to get ldap url service!\n");
@@ -207,17 +224,33 @@ function onOK()
   }
 
   pref_string_title = gPref_string_desc +"." + "description";
-  gPrefInt.SetCharPref(pref_string_title, pref_string_content);
+  gPrefInt.SetUnicharPref(pref_string_title, pref_string_content);
   
   ldapUrl.host = hostname;
-  pref_string_content = document.getElementById("basedn").value;
-  ldapUrl.dn = pref_string_content;
+  if(!gLdapService) {
+    try {
+      gLdapService = Components.classes[
+          "@mozilla.org/network/ldap-service;1"].
+          getService(Components.interfaces.nsILDAPService);
+    }
+    catch (ex)
+    { 
+      dump("failed to get LdapService \n");
+      gLdapService = null;
+    }
+  }
+  if (gLdapService) {
+    pref_string_content = gLdapService.
+                          UCS2toUTF8(document.getElementById("basedn").value);
+    ldapUrl.dn = pref_string_content;
+    pref_string_content = gLdapService.
+                          UCS2toUTF8(document.getElementById("search").value);
+    ldapUrl.filter = pref_string_content;
+  }
   if (!port)
     ldapUrl.port = gPortNumber;
   else
     ldapUrl.port = port;
-  pref_string_content = document.getElementById("search").value;
-  ldapUrl.filter = pref_string_content;
   if (document.getElementById("one").checked)
   {
     ldapUrl.scope = 1;
@@ -226,7 +259,7 @@ function onOK()
       ldapUrl.scope = 2;
   }
   pref_string_title = gPref_string_desc + ".uri";
-  gPrefInt.SetCharPref(pref_string_title, ldapUrl.spec);
+  gPrefInt.SetUnicharPref(pref_string_title, ldapUrl.spec);
   pref_string_content = results;
   pref_string_title = gPref_string_desc + ".maxHits";
   if (pref_string_content != gMaxHits) {

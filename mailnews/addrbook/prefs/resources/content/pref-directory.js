@@ -66,7 +66,7 @@ function setupDirectoriesList()
   var directoryServer = 
         document.getElementById("identity.directoryServer").getAttribute('value');
   try {
-    var directoryServerString = gPrefInt.CopyCharPref(directoryServer + ".description");
+    var directoryServerString = gPrefInt.CopyUnicharPref(directoryServer + ".description");
   }
   catch(ex) {
     var addressBookBundle = document.getElementById("bundle_addressBook");
@@ -112,9 +112,22 @@ function migrate(pref_string)
   catch (ex) {
     ldapUrl = null;
   }
+  try {
+    var ldapService = Components.classes[
+        "@mozilla.org/network/ldap-service;1"].
+        getService(Components.interfaces.nsILDAPService);
+  }
+  catch (ex)
+  { 
+    dump("failed to get ldapService \n");
+    ldapService = null;
+  }
   try{
     ldapUrl.host = gPrefInt.CopyCharPref(pref_string + ".serverName");
-    ldapUrl.dn = gPrefInt.CopyCharPref(pref_string + ".searchBase");
+    if(ldapService) {
+      var base = gPrefInt.CopyUnicharPref(pref_string + ".searchBase"); 
+      ldapUrl.dn = ldapService.UCS2toUTF8(base);
+    }
   }
   catch(ex) {
   }
@@ -126,7 +139,7 @@ function migrate(pref_string)
   }
   ldapUrl.port = port;
   ldapUrl.scope = 0;
-  gPrefInt.SetCharPref(pref_string + ".uri", ldapUrl.spec);
+  gPrefInt.SetUnicharPref(pref_string + ".uri", ldapUrl.spec);
   gPrefInt.SetBoolPref("ldap_2.prefs_migrated", true);
   }
 }
@@ -173,7 +186,7 @@ function LoadDirectories(popup)
         }
         if ((position != 0) && (dirType == 1)) {
           try{
-            description = gPrefInt.CopyCharPref(arrayOfDirectories[i]+".description");
+            description = gPrefInt.CopyUnicharPref(arrayOfDirectories[i]+".description");
           }
           catch(ex){
             description="";
@@ -218,7 +231,7 @@ function LoadDirectories(popup)
       {
         pref_string_title = directoryServer + ".description";
         try {
-          description = gPrefInt.CopyCharPref(pref_string_title);
+          description = gPrefInt.CopyUnicharPref(pref_string_title);
         }
         catch (ex) {
           description = "";
