@@ -60,10 +60,17 @@ nsScrollViewFrame::nsScrollViewFrame(nsIContent* aContent, nsIFrame* aParent)
 NS_IMETHODIMP
 nsScrollViewFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
-  mFirstChild = aChildList;
 
-  // XXX Unless it's already a body frame, child frames that are containers
-  // need to be wrapped in a body frame
+  // Unless it's already a body frame, child frames that are containers
+  // need to be wrapped in a body frame.
+  // XXX Check for it a;ready being a body frame...
+  nsIFrame* wrapperFrame;
+  if (CreateWrapperFrame(aPresContext, aChildList, wrapperFrame)) {
+    mFirstChild = wrapperFrame;
+  } else {
+    mFirstChild = aChildList;
+  }
+
   return NS_OK;
 }
 
