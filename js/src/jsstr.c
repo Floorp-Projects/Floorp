@@ -1220,7 +1220,7 @@ str_match(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     mdata.base.flags = MODE_MATCH;
     mdata.base.optarg = 1;
-    mdata.arrayval = &argv[argc];
+    mdata.arrayval = &argv[2];
     *mdata.arrayval = JSVAL_NULL;
     ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval);
     if (ok && !JSVAL_IS_NULL(*mdata.arrayval))
@@ -2240,7 +2240,7 @@ static JSFunctionSpec string_methods[] = {
     {"localeCompare",       str_localeCompare,      1,0,0},
 
     /* Perl-ish methods (search is actually Python-esque). */
-    {"match",               str_match,              1,0,1},
+    {"match",               str_match,              1,0,2},
     {"search",              str_search,             1,0,0},
     {"replace",             str_replace,            2,0,0},
     {"split",               str_split,              2,0,0},
