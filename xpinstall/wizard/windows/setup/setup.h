@@ -243,7 +243,6 @@ typedef struct dlgDownloadOptions
   LPSTR szTitle;
   LPSTR szMessage0;
   LPSTR szMessage1;
-  LPSTR szMessage2;
   BOOL  bSaveInstaller;
 } diDO;
 

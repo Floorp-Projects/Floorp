@@ -1757,8 +1757,6 @@ HRESULT InitDlgDownloadOptions(diDO *diDialog)
     return(1);
   if((diDialog->szMessage1    = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->szMessage2    = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
 
   return(0);
 }
@@ -1768,7 +1766,6 @@ void DeInitDlgDownloadOptions(diDO *diDialog)
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szMessage0));
   FreeMemory(&(diDialog->szMessage1));
-  FreeMemory(&(diDialog->szMessage2));
 }
 
 HRESULT InitDlgAdvancedSettings(diAS *diDialog)
@@ -2714,6 +2711,7 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
 
 HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPSTR szPath, BOOL bCrutialMsg)
 {
+  char      szBuf0[MAX_BUF];
   char      szBuf1[MAX_BUF];
   char      szBuf2[MAX_BUF];
   char      szBuf3[MAX_BUF];
@@ -2736,19 +2734,21 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
   }
   else
   {
-    dwDlgType = MB_OKCANCEL;
+    dwDlgType = MB_OK;
     if(NS_LoadString(hSetupRscInst, IDS_DLG_DISK_SPACE_CHECK_MSG, szDlgDiskSpaceCheckMsg, MAX_BUF) != WIZ_OK)
       exit(1);
   }
 
   ParsePath(szPath, szBufRootPath, sizeof(szBufRootPath), PP_ROOT_ONLY);
   RemoveBackSlash(szBufRootPath);
+  lstrcpy(szBuf0, szPath);
+  RemoveBackSlash(szBuf0);
 
   _ui64toa(ullDSAvailable, szDSAvailable, 10);
   _ui64toa(ullDSRequired, szDSRequired, 10);
 
   lstrcpy(szBuf1, "\n\n    ");
-  lstrcat(szBuf1, szPath);
+  lstrcat(szBuf1, szBuf0);
   lstrcat(szBuf1, "\n\n    ");
   lstrcpy(szBuf2, szDSRequired);
   lstrcat(szBuf2, " K\n    ");
@@ -2841,18 +2841,18 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
     if(siCObject->dwAttributes & SIC_SELECTED)
     {
       if(*(siCObject->szDestinationPath) == '\0')
-        ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
+        lstrcpy(szBuf, sgProduct.szPath);
       else
-        ParsePath(siCObject->szDestinationPath, szBuf, sizeof(szBuf), PP_ROOT_ONLY);
+        lstrcpy(szBuf, siCObject->szDestinationPath);
 
       AppendBackSlash(szBuf, sizeof(szBuf));
       UpdatePathDiskSpaceRequired(szBuf, siCObject->ullInstallSize, dsnComponentDSRequirement);
 
-      if(*szBufSysPath != '\0')
-        UpdatePathDiskSpaceRequired(szBufSysPath, siCObject->ullInstallSizeSystem, dsnComponentDSRequirement);
+      if(*szSysPath != '\0')
+        UpdatePathDiskSpaceRequired(szSysPath, siCObject->ullInstallSizeSystem, dsnComponentDSRequirement);
 
-      if(*szBufTempPath != '\0')
-        UpdatePathDiskSpaceRequired(szBufTempPath, siCObject->ullInstallSizeArchive, dsnComponentDSRequirement);
+      if(*szTempDir != '\0')
+        UpdatePathDiskSpaceRequired(szTempDir, siCObject->ullInstallSizeArchive, dsnComponentDSRequirement);
     }
 
     ++dwIndex0;
@@ -4298,7 +4298,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Download Options",       "Title",          "", diDownloadOptions.szTitle,        MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Download Options",       "Message0",       "", diDownloadOptions.szMessage0,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Download Options",       "Message1",       "", diDownloadOptions.szMessage1,     MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Download Options",       "Message2",       "", diDownloadOptions.szMessage2,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Download Options",       "Save Installer", "", szBuf,                            MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szBuf, "TRUE") == 0)
     diDownloadOptions.bSaveInstaller = TRUE;

@@ -1777,7 +1777,6 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       SetWindowText(hDlg, diDownloadOptions.szTitle);
       SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloadOptions.szMessage0);
       SetDlgItemText(hDlg, IDC_MESSAGE1, diDownloadOptions.szMessage1);
-      SetDlgItemText(hDlg, IDC_MESSAGE2, diDownloadOptions.szMessage2);
 
       GetSaveInstallerPath(szBuf, sizeof(szBuf));
       SetDlgItemText(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, szBuf);
@@ -2432,7 +2431,7 @@ void DlgSequenceNext()
         if(hrValue == IDOK)
         {
           /* show previous visible window */
-          dwWizardState = DLG_ADVANCED_SETTINGS;
+          dwWizardState = DLG_SELECT_COMPONENTS;
           DlgSequencePrev();
           break;
         }
