@@ -22,7 +22,6 @@
  
 #include "nsISupports.idl"
 #include "nsIEnumerator.idl"
-#include "nsIRDFDataSource.idl"
 
 %{C++
 #define NS_WINDOWMEDIATOR_CID \
@@ -35,19 +34,21 @@ interface nsIDOMWindowInternal;
 
 
 [scriptable, uuid(0659cb81-faad-11d2-8e19-b206620a657c)]
-interface nsIWindowMediator: nsIRDFDataSource
+interface nsIWindowMediator: nsISupports
 {
 
 	/*
-		iterates over the windows of type inType in the order that they were created. if inType  is null
-		iterates over all windows.  This enumerator returns domWindows.
+		iterates over the windows of type inType in the order that
+		they were created. If inType is null iterates over all
+		windows.  This enumerator returns domWindows.
 	*/
 	
 	nsISimpleEnumerator getEnumerator( in wstring inType );
 
 	/*
-		iterates over the XUL windows of type inType in the order that they were created.  If 
-		inType is null iterates over all windows.  This enumerator returns xulWindows.
+		iterates over the XUL windows of type inType in the order that
+		they were created.  If inType is null iterates over all
+		windows.  This enumerator returns xulWindows.
 	*/
 
 	nsISimpleEnumerator getXULWindowEnumerator( in wstring inType); 
@@ -63,8 +64,8 @@ interface nsIWindowMediator: nsIRDFDataSource
 	nsISimpleEnumerator getZOrderXULWindowEnumerator(in wstring aWindowType, in boolean aFrontToBack);
 
 	/*
-		Returns the window of type inType ( if null return any window type ) which has the most recent
-		time stamp
+		Returns the window of type inType ( if null return any window
+		type ) which has the most recent time stamp
 	*/
 	nsIDOMWindowInternal getMostRecentWindow( in wstring inType );
 	
@@ -83,65 +84,64 @@ interface nsIWindowMediator: nsIRDFDataSource
 	[noscript] void unregisterWindow( in nsIXULWindow inWindow );
 	
 	/* Call when the window gains focus. Used to determine the most recent window */
-	[noscript] void  updateWindowTimeStamp( in nsIXULWindow inWindow );
-	
-	/* */
-	[noscript] void updateWindowTitle(in nsIXULWindow inWindow, in wstring inTitle );
+    [noscript] void updateWindowTimeStamp( in nsIXULWindow inWindow );
+			
+    /* */
+    [noscript] void updateWindowTitle(in nsIXULWindow inWindow, in wstring inTitle );
+    
+    /* z-ordering: */
+    
+    const unsigned long zLevelTop    = 1;
+    const unsigned long zLevelBottom = 2;
+    const unsigned long zLevelBelow  = 3; // below some window
+    
+    /*   A window wants to be moved in z-order. Calculate whether and how
+         it should be constrained. Note this method is advisory only:
+         it changes nothing either in WindowMediator's internal state
+         or with the window.
+         Note it compares the nsIXULWindow to nsIWidgets. A pure interface
+         would use all nsIXULWindows. But we expect this to be called from
+         callbacks originating in native window code. They are expected to
+         hand us comparison values which are pulled from general storage
+         in the native widget, and may not correspond to an nsIWidget at all.
+         For that reason this interface requires only objects one step
+         removed from the native window (nsIWidgets), and its implementation
+         must be very understanding of what may be completely invalid
+         pointers in those parameters.
+         
+         @param inWindow the window in question
+         @param inPosition requested position
+         values: zLevelTop: topmost window. zLevelBottom: bottom.
+         zLevelBelow: below ioBelow.  (the value of ioBelow will be
+         ignored for zLevelTop and Bottom.)
+         @param inBelow if inPosition==zLevelBelow, the window
+         below which inWindow wants to be placed. Otherwise this
+         variable is ignored.
+         @param outPosition constrained position, values like inPosition.
+         @param outBelow if outPosition==zLevelBelow, the window
+         below which inWindow should be placed. Otherwise this
+         this value will be null.
+         @return PR_TRUE if the position returned is different from
+         the position given.
+    */
 
-        /* z-ordering: */
-
-        const unsigned long zLevelTop    = 1;
-        const unsigned long zLevelBottom = 2;
-        const unsigned long zLevelBelow  = 3; // below some window
-
-        /*   A window wants to be moved in z-order. calculate whether and how
-           it should be constrained. Note this method is advisory only:
-           it changes nothing either in WindowMediator's internal state
-           or with the window.
-             Note it compares the nsIXULWindow to nsIWidgets. A pure interface
-           would use all nsIXULWindows. But we expect this to be called from
-           callbacks originating in native window code. They are expected to
-           hand us comparison values which are pulled from general storage
-           in the native widget, and may not correspond to an nsIWidget at all.
-           For that reason this interface requires only objects one step
-           removed from the native window (nsIWidgets), and its implementation
-           must be very understanding of what may be completely invalid
-           pointers in those parameters.
-
-           @param inWindow the window in question
-           @param inPosition requested position
-                  values: zLevelTop: topmost window. zLevelBottom: bottom.
-                  zLevelBelow: below ioBelow.  (the value of ioBelow will be
-                  ignored for zLevelTop and Bottom.)
-           @param inBelow if inPosition==zLevelBelow, the window
-                  below which inWindow wants to be placed. Otherwise this
-                  variable is ignored.
-           @param outPosition constrained position. values like inPosition.
-           @param outBelow if outPosition==zLevelBelow, the window
-                  below which inWindow should be placed. Otherwise this
-                  this value will be null.
-           @return PR_TRUE if the position returned is different from
-                   the position given.
-        */
-
-        [noscript] PRBool calculateZPosition(in nsIXULWindow inWindow,
-                            in unsigned long  inPosition,
-                            in nsIWidget      inBelow,
-                            out unsigned long outPosition,
-                            out nsIWidget     outBelow);
-
-	/* a window has been positioned behind another. Inform WindowMediator
-
-	   @param inWindow the window in question
-           @param inPosition new position
-                  values: zLevelTop: topmost window. zLevelBottom: bottom.
-                  zLevelBelow: below inBelow. (inBelow is ignored for
-                  other values of inPosition.)
-	   @param inBelow the window inWindow is behind, if zLevelBelow
-	*/
-	[noscript] void setZPosition(in nsIXULWindow inWindow,
-                          in unsigned long inPosition,
-                          in nsIXULWindow inBelow);
+    [noscript] boolean calculateZPosition(in nsIXULWindow   inWindow,
+                                          in unsigned long  inPosition,
+                                          in nsIWidget      inBelow,
+                                          out unsigned long outPosition,
+                                          out nsIWidget     outBelow);
+    
+    /* a window has been positioned behind another. Inform WindowMediator
+     @param inWindow the window in question
+     @param inPosition new position
+     values: zLevelTop: topmost window. zLevelBottom: bottom.
+           zLevelBelow: below inBelow. (inBelow is ignored for
+                        other values of inPosition.)
+     @param inBelow the window inWindow is behind, if zLevelBelow
+    */
+    [noscript] void setZPosition(in nsIXULWindow inWindow,
+                                 in unsigned long inPosition,
+                                 in nsIXULWindow inBelow);
 };
 
 %{C++

@@ -29,6 +29,8 @@
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
+#include "nsIRDFObserver.h"
+#include "nsIRDFDataSource.h"
 
 class nsAppShellWindowEnumerator;
 class nsASXULWindowEarlyToLateEnumerator;
@@ -40,7 +42,8 @@ class nsASXULWindowBackToFrontEnumerator;
 struct nsWindowInfo;
 struct PRLock;
 
-class nsWindowMediator : public nsIWindowMediator
+class nsWindowMediator : public nsIWindowMediator,
+                         public nsIRDFDataSource
 {
 friend class nsAppShellWindowEnumerator;
 friend class nsASXULWindowEarlyToLateEnumerator;
