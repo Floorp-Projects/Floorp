@@ -1006,6 +1006,7 @@
 		};
 		F50E1BA70207EB8201F281DF = {
 			children = (
+				F5EA337802EF886D01A96654,
 				F5948A48029EB9C801000102,
 				F50E1BC90207F99201F281DF,
 				F50E1BBC0207F27B01F281DF,
@@ -7332,6 +7333,55 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F5EA337802EF886D01A96654 = {
+			children = (
+				F5EA337902EF889001A96654,
+				F5EA337A02EF889001A96654,
+				F5EA337B02EF889001A96654,
+				F5EA337C02EF889001A96654,
+				F5EA337D02EF889001A96654,
+				F5EA337E02EF889001A96654,
+			);
+			isa = PBXGroup;
+			name = widget;
+			refType = 4;
+		};
+		F5EA337902EF889001A96654 = {
+			isa = PBXFileReference;
+			name = nsAppShellCocoa.mm;
+			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsAppShellCocoa.mm;
+			refType = 0;
+		};
+		F5EA337A02EF889001A96654 = {
+			isa = PBXFileReference;
+			name = nsChildView.mm;
+			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsChildView.mm;
+			refType = 0;
+		};
+		F5EA337B02EF889001A96654 = {
+			isa = PBXFileReference;
+			name = nsCocoaWindow.mm;
+			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsCocoaWindow.mm;
+			refType = 0;
+		};
+		F5EA337C02EF889001A96654 = {
+			isa = PBXFileReference;
+			name = nsDragHelperService.cpp;
+			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsDragHelperService.cpp;
+			refType = 0;
+		};
+		F5EA337D02EF889001A96654 = {
+			isa = PBXFileReference;
+			name = nsDragService.cpp;
+			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsDragService.cpp;
+			refType = 0;
+		};
+		F5EA337E02EF889001A96654 = {
+			isa = PBXFileReference;
+			name = nsToolkit.mm;
+			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsToolkit.mm;
+			refType = 0;
 		};
 		F5F14E9602A5A43A01A967F3 = {
 			isa = PBXFileReference;
