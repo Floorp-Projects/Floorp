@@ -14,6 +14,9 @@
  * The Initial Developer of the Original Code is The MITRE Corporation.
  * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
+ * Portions created by Peter Van der Beken are Copyright (C) 2000
+ * Peter Van der Beken. All Rights Reserved.
+ *
  * Contributor(s):
  * Peter Van der Beken, peter.vanderbeken@pandora.be
  *    -- original author.
@@ -24,17 +27,14 @@
 
 #include "XSLTProcessor.h"
 
-#define MITRE_XSL_PROCESSOR_PROGID \
-"component://netscape/document-transformer?type=text/xsl"
-
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(XSLTProcessor)
 
 // Component Table
 static nsModuleComponentInfo components[] = {
     { "Transformiix XSLT Processor",
-      MITRE_XSL_PROCESSOR_CID,
-      MITRE_XSL_PROCESSOR_PROGID,
+      TRANSFORMIIX_XSLT_PROCESSOR_CID,
+      TRANSFORMIIX_XSLT_PROCESSOR_PROGID,
       XSLTProcessorConstructor }
 };
 

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.1 2000/04/06 07:47:07 kvisco%ziplink.net Exp $
+ * $Id: XSLTProcessor.h,v 1.2 2000/04/07 10:34:35 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -63,8 +63,11 @@
 
 #ifdef MOZILLA
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
-#define MITRE_XSL_PROCESSOR_CID   \
+#define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
 { 0xbacd8ad0, 0x552f, 0x11d3, {0xa9, 0xf7, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
+
+#define TRANSFORMIIX_XSLT_PROCESSOR_PROGID \
+"component://netscape/document-transformer?type=text/xsl"
 
 #endif
 
@@ -72,35 +75,20 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:47:07 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/07 10:34:35 $
 **/
 class XSLTProcessor
 #ifdef MOZILLA
-: nsIDocumentTransformer
+: public nsIDocumentTransformer
 #endif
 {
 
 public:
 #ifdef MOZILLA
-    // Define a Create method to be used with a factory:
-    static NS_METHOD
-    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
-
-    /**
-     * This macro expands into a declaration of the nsISupports interface.
-     * Every XPCOM component needs to implement nsISupports, as it acts
-     * as the gateway to other interfaces this component implements.  You
-     * could manually declare QueryInterface, AddRef, and Release instead
-     * of using this macro, but why?
-     */
     // nsISupports interface
     NS_DECL_ISUPPORTS
-
-    // nsIDocumentTransformer methods
-    NS_IMETHOD TransformDocument(nsIDOMElement* aSourceDOM,
-                               nsIDOMElement* aStyleDOM,
-                               nsIDOMDocument* aOutputDoc,
-                               nsIObserver* aObserver);
+    // nsIDocumentTransformer interface
+    NS_DECL_NSIDOCUMENTTRANSFORMER
 #endif
 
     /**
