@@ -35,6 +35,8 @@
 
 #include "nsNNTPProtocol.h" // mscott - hopefully this dependency should only be temporary...
 
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+
 NS_BEGIN_EXTERN_C
 
 nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
@@ -108,7 +110,7 @@ nsMsgAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if ( aIID.Equals(nsIScriptObjectOwner::IID())) {
+  if ( aIID.Equals(kIScriptObjectOwnerIID)) {
       *aInstancePtr = (void*) ((nsIScriptObjectOwner*)this);
       AddRef();
       return NS_OK;
@@ -119,12 +121,12 @@ nsMsgAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
       return NS_OK;
   }
   else if ( aIID.Equals(nsIDOMMsgAppCore::IID()) ) {
-      *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
+      *aInstancePtr = (void*) (nsIDOMMsgAppCore*)this;
       AddRef();
       return NS_OK;
   }
   else if ( aIID.Equals(kISupportsIID) ) {
-      *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
+      *aInstancePtr = (void*)(nsISupports*) (nsIScriptObjectOwner *) this;
       AddRef();
       return NS_OK;
   }
