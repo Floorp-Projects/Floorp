@@ -312,14 +312,9 @@ var BookmarksCommand = {
                   "bm_properties"];
       break;
     case "Folder":
+    case "PersonalToolbarFolder":
       commands = ["bm_expandfolder", "bm_openfolder", "bm_managefolder", "bm_separator", 
                   "bm_newbookmark", "bm_newfolder", "bm_newseparator", "bm_separator",
-                  "cut", "copy", "paste", "bm_separator",
-                  "delete", "bm_separator",
-                  "bm_properties"];
-      break;
-    case "PersonalToolbarFolder":
-      commands = ["bm_newfolder", "bm_separator",
                   "cut", "copy", "paste", "bm_separator",
                   "delete", "bm_separator",
                   "bm_properties"];
@@ -504,7 +499,7 @@ var BookmarksCommand = {
    
     var selection = {item: items, parent:Array(items.length), length: items.length};
     BookmarksUtils.checkSelection(selection);
-    BookmarksUtils.insertAndCheckSelection("paste", selection, aTarget);
+    BookmarksUtils.insertAndCheckSelection("paste", selection, aTarget, -1);
   },
   
   deleteBookmark: function (aSelection)
@@ -519,9 +514,7 @@ var BookmarksCommand = {
                "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, null, null, "selectFolder", rv);
     if (!rv.target)
       return;
-    
-    var target = rv.target;
-    BookmarksUtils.moveSelection("move", aSelection, target);
+    BookmarksUtils.moveAndCheckSelection("move", aSelection, rv.target);
   },
 
   openBookmark: function (aSelection, aTargetBrowser, aDS) 
@@ -677,7 +670,7 @@ var BookmarksCommand = {
   createNewResource: function(aResource, aTarget, aTxnType)
   {
     var selection = BookmarksUtils.getSelectionFromResource(aResource, aTarget.parent);
-    var ok        = BookmarksUtils.insertAndCheckSelection(aTxnType, selection, aTarget);
+    var ok        = BookmarksUtils.insertAndCheckSelection(aTxnType, selection, aTarget, -1);
     if (ok && aTxnType != "newseparator") {
       ok = this.openBookmarkProperties(selection);
       if (!ok)
@@ -814,8 +807,9 @@ var BookmarksController = {
   isCommandEnabled: function (aCommand, aSelection, aTarget)
   {
     var item0, type0, junk;
-    var length = aSelection.length;
-    if (length != 0) {
+    var length = 0;
+    if (aSelection && aSelection.length != 0) {
+      length = aSelection.length;
       item0 = aSelection.item[0].Value;
       type0 = aSelection.type[0];
     }
@@ -829,7 +823,7 @@ var BookmarksController = {
     case "cmd_bm_redo":
       return BMSVC.transactionManager.numberOfRedoItems > 0;
     case "cmd_paste":
-      if (!BookmarksUtils.isValidTargetContainer(aTarget.parent))
+      if (aTarget && !BookmarksUtils.isValidTargetContainer(aTarget.parent))
         return false;
       const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
       const kClipboardIID = Components.interfaces.nsIClipboard;
@@ -883,10 +877,14 @@ var BookmarksController = {
     case "cmd_bm_newlivemark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
-      return BookmarksUtils.isValidTargetContainer(aTarget.parent);
+      return (aTarget && BookmarksUtils.isValidTargetContainer(aTarget.parent));
     case "cmd_bm_properties":
     case "cmd_bm_rename":
-      return length == 1;
+      if (length != 1 ||
+          aSelection.item[0].Value == "NC:BookmarksRoot" ||
+          BookmarksUtils.resolveType(aSelection.parent[0]) == "Livemark")
+        return false;
+      return true;
     case "cmd_bm_setpersonaltoolbarfolder":
       if (length != 1 || type0 == "Livemark")
         return false;
@@ -1157,7 +1155,7 @@ var BookmarksUtils = {
 
   isSelectionValidForDeletion: function (aSelection)
   {
-    return !aSelection.containsImmutable;
+    return !aSelection.containsImmutable && !aSelection.containsPTF;
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1167,7 +1165,7 @@ var BookmarksUtils = {
     var folder = aContainer;
     do {
       for (var i=0; i<aSelection.length; ++i) {
-        if (aSelection.isContainer[i] && aSelection.item[i] == folder)
+        if (aSelection.isContainer[i] && aSelection.item[i].Value == folder.Value)
           return true;
       }
       folder = BMSVC.getParent(folder);
@@ -1236,32 +1234,34 @@ var BookmarksUtils = {
     return true;
   },
         
-  insertAndCheckSelection: function (aAction, aSelection, aTarget)
+  insertAndCheckSelection: function (aAction, aSelection, aTarget, aTargetIndex)
   {
     isValid = BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget);
     if (!isValid) {
       SOUND.beep();
       return false;
     }
-    this.insertSelection(aAction, aSelection, aTarget);
+    this.insertSelection(aAction, aSelection, aTarget, aTargetIndex);
     BookmarksUtils.flushDataSource();
     return true;
   },
 
-  insertSelection: function (aAction, aSelection, aTarget)
+  insertSelection: function (aAction, aSelection, aTarget, aTargetIndex)
   {
     var transaction    = new BookmarkInsertTransaction(aAction);
     transaction.item   = new Array(aSelection.length);
     transaction.parent = new Array(aSelection.length);
     transaction.index  = new Array(aSelection.length);
-    var index = aTarget.index;
+    // the -1 business is a hack for 252133; it should go away once we can
+    // consistently add things after a given element.
+    var index = aTargetIndex ? aTargetIndex : aTarget.index;
     for (var i=0; i<aSelection.length; ++i) {
       var rSource = aSelection.item[i];
       if (BMSVC.isBookmarkedResource(rSource))
         rSource = BMSVC.cloneResource(rSource);
       transaction.item  [i] = rSource;
       transaction.parent[i] = aTarget.parent;
-      transaction.index [i] = index++;
+      transaction.index [i] = ((index == -1) ? -1 : index++);
     }
     BMSVC.transactionManager.doTransaction(transaction);
   },
@@ -1505,7 +1505,14 @@ BookmarkInsertTransaction.prototype =
     this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
       this.RDFC.Init(this.BMDS, this.parent[i]);
-      this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
+      // if the index is -1, we use appendElement, and then update the
+      // index so that undoTransaction can still function
+      if (this.index[i] == -1) {
+        this.RDFC.AppendElement(this.item[i]);
+        this.index[i] = this.RDFC.GetCount();
+      } else {
+        this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
+      }
     }
     this.endUpdateBatch();
   },

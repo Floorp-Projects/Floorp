@@ -26,7 +26,12 @@
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css"?>
 <?xml-stylesheet href="chrome://browser/skin/bookmarks/addBookmark.css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/bookmarks/addBookmark.dtd">
+<!DOCTYPE dialog [
+<!ENTITY % addBookmarkDTD SYSTEM "chrome://browser/locale/bookmarks/addBookmark.dtd">
+%addBookmarkDTD;
+<!ENTITY % bookmarksDTD SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd">
+%bookmarksDTD;
+]>
 
 <dialog id="addBookmarkDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -67,16 +72,20 @@
       <row align="center">
         <label id="createinlabel" value="&createin.label;" accesskey="&createin.accesskey;" control="select-menu"/>
         <menulist id="select-menu" class="folder-icon"
-                  oncommand="selectMenulistFolder(event);"
-                  datasources="rdf:bookmarks" ref="NC:LastModifiedFoldersRoot">
-          <template>
-            <rule parent="menulist">
-              <menupopup>
+                  oncommand="selectMenulistFolder(event);">
+          <menupopup datasources="rdf:bookmarks" ref="NC:LastModifiedFoldersRoot">
+            <menuitem class="menuitem-iconic folder-icon"
+                      label="&bookmarksRoot.label;"
+                      id="NC:BookmarksRoot"/>
+            <menuseparator/>
+            <template>
+              <!-- this parent="menupopup" here seems to prevent the template builder from recursing. -->
+              <rule parent="menupopup">
                 <menuitem uri="rdf:*" class="menuitem-iconic folder-icon"
                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              </menupopup>
-            </rule>
-          </template>
+              </rule>
+            </template>
+          </menupopup>
         </menulist>
         <button id="expander" class="down" oncommand="expandTree();"
                  tooltiptextdown="&expanderDown.tooltip;"

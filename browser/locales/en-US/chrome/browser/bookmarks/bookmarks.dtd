@@ -86,6 +86,8 @@
 <!ENTITY treecol.description.label      "Description">
 <!ENTITY treecol.description.accesskey  "d">
 
+<!ENTITY bookmarksRoot.label            "Bookmarks">
+
 <!ENTITY bookmarksWindowTitle.label     "Bookmark Manager">
 
 <!ENTITY search.label                   "Search:">

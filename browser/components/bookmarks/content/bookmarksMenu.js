@@ -38,7 +38,23 @@ var BookmarksMenu = {
   _selection:null,
   _target:null,
   _orientation:null,
-  
+
+  /////////////////////////////////////////////////////////////////////////////
+  // prepare the bookmarks menu for display
+  onShowMenu: function (aTarget)
+  {
+    this.showOpenInTabsMenuItem(aTarget);
+    this.showEmptyItem(aTarget);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // remove arbitary elements created in this.onShowMenu()
+  onHideMenu: function (aTarget)
+  {
+    this.hideOpenInTabsMenuItem(aTarget);
+    this.hideEmptyItem(aTarget);
+  },
+
   /////////////////////////////////////////////////////////////////////////////
   // shows the 'Open in Tabs' menu item if validOpenInTabsMenuItem is true -->
   showOpenInTabsMenuItem: function (aTarget)
@@ -112,6 +128,38 @@ var BookmarksMenu = {
       curr = curr.nextSibling;
     } while (curr);
     return false;
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // show an empty item if the menu is empty
+  showEmptyItem: function (aTarget)
+  {
+    if(aTarget.hasChildNodes())
+      return;
+
+    var EmptyMsg = BookmarksUtils.getLocaleString("emptyFolder");
+    var emptyElement = document.createElementNS(XUL_NS, "menuitem");
+    emptyElement.setAttribute("id", "empty-menuitem");
+    emptyElement.setAttribute("label", EmptyMsg);
+    emptyElement.setAttribute("disabled", "true");
+
+    aTarget.appendChild(emptyElement);
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // remove the empty element
+  hideEmptyItem: function (aTarget)
+  {
+    if (!aTarget.hasChildNodes())
+      return;
+
+    // if the user drags to the menu while it's open (i.e. on the toolbar),
+    // the bookmark gets added either before or after the Empty menu item
+    // before the menu is hidden.  So we need to test both first and last.
+    if (aTarget.firstChild.id == "empty-menuitem")
+      aTarget.removeChild(aTarget.firstChild);
+    else if (aTarget.lastChild.id == "empty-menuitem")
+      aTarget.removeChild(aTarget.lastChild);
   },
 
   //////////////////////////////////////////////////////////////////////////
@@ -531,7 +579,13 @@ var BookmarksMenuDNDObserver = {
 
     // For RTL PersonalBar bookmarks buttons, orientation should be inverted (only in drop case)
     var PBStyle = window.getComputedStyle(document.getElementById("PersonalToolbar"),'');
-    var isHorizontal = (target.localName == "toolbarbutton");    if ((PBStyle.direction == 'rtl') && isHorizontal)      if (orientation == BookmarksUtils.DROP_AFTER)        orientation = BookmarksUtils.DROP_BEFORE;      else if (orientation == BookmarksUtils.DROP_BEFORE)        orientation = BookmarksUtils.DROP_AFTER;
+    var isHorizontal = (target.localName == "toolbarbutton");
+    if ((PBStyle.direction == 'rtl') && isHorizontal) {
+      if (orientation == BookmarksUtils.DROP_AFTER)
+        orientation = BookmarksUtils.DROP_BEFORE;
+      else if (orientation == BookmarksUtils.DROP_BEFORE)
+        orientation = BookmarksUtils.DROP_AFTER;
+    }
 
     var selTarget   = BookmarksMenu.getBTTarget(target, orientation);
 
