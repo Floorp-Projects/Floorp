@@ -31,3 +31,11 @@ function GetNewMail()
 		appCore.GetNewMail();
 	}
 }
+
+function LoadMessage(messageNode)
+{
+	var uri = messageNode.getAttribute('id');
+	dump(uri);
+	OpenURL(uri);
+
+}
