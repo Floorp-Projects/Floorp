@@ -191,8 +191,10 @@ OS2_PROGRAM_RESOURCE = $(srcdir)/splashos2.rc
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
+SPLASH_XPM = $(srcdir)/splash.xpm
 CPPSRCS += nsNativeAppSupportGtk.cpp \
 	   nsNativeAppSupportBase.cpp
+DEFINES += -DSPLASH_XPM=\"$(SPLASH_XPM)\"
 LIBS += $(MOZ_GTK_LDFLAGS)
 endif
 
@@ -220,6 +222,10 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
+$(PROGRAM): $(SPLASH_XPM)
+endif
 
 ifeq ($(OS_ARCH),Darwin)
 # don't let us build with "-dynamiclib"
@@ -262,6 +268,8 @@ endif
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
+LOCAL_INCLUDES	= -I$(srcdir)
+
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 libs:: mozilla.1
 	$(INSTALL) $< $(DIST)/man/man1
@@ -280,11 +288,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 libs:: $(srcdir)/splash.bmp
-	$(INSTALL) $< $(DIST)/bin
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-libs:: $(srcdir)/splash.xpm
 	$(INSTALL) $< $(DIST)/bin
 endif
 
@@ -338,3 +341,5 @@ libs:: $(PROGRAM)
 
 endif
 
+echo_objs:
+	@echo $(OBJS)
