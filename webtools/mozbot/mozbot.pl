@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.16"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.18"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -70,7 +70,8 @@ my %pubcmds = (
                "trees" => \&bot_tinderbox,
                "(slashdot|sd|\/\.)" => \&bot_slashdot,
                "(mozillazine|zine|mz)" => \&bot_mozillazine,
-							 "debug" => \&bot_debug,
+               "(mozillaorg|mozilla|mo)" => \&bot_mozillaorg,
+               "debug" => \&bot_debug,
                );
 
 my %admincmds = (
@@ -143,6 +144,12 @@ my $mozillazine = "http://www.mozillazine.org/index.html";
 my @mozillazine;
 my $last_mozillazine = 0;
 
+
+my $mozillaorg = "http://www.mozilla.org/news.txt";
+my @mozillaorg;
+my $last_mozillaorg = 0;
+
+
 my $irc = new Net::IRC or confess "$0: duh?";
 
 my $bot = $irc->newconn
@@ -170,6 +177,7 @@ $bot->add_handler ('join',   \&on_join);
 $bot->schedule (0, \&tinderbox);
 $bot->schedule (0, \&checksourcechange);
 $bot->schedule (0, \&mozillazine);
+$bot->schedule (0, \&mozillaorg);
 $bot->schedule (0, \&slashdot);
 
 &debug ("connecting to $server $port as $nick on $channel");
@@ -351,6 +359,7 @@ sub do_unknown {
 sub saylongline {
     my ($nick, $str, $spacer) = (@_);
     my $MAXPROTOCOLLENGTH = 255;
+
     while (length ($str) > $MAXPROTOCOLLENGTH) {
         my $pos;
         $pos = rindex($str, $spacer, $MAXPROTOCOLLENGTH - length($spacer));
@@ -380,6 +389,39 @@ sub do_headlines {
     my $str = $header . ": " . join($spacer, @$ref);
     saylongline($nick, $str, $spacer);
 }
+
+sub reportDiffs {
+    my ($name, $url, $ref) = (@_);
+
+    my $firsttime = 0;
+    if (!exists $::headCache{$name}) {
+        $firsttime = 1;
+        $::headCache{$name} = {};
+    }
+    my $spacer = " ... ";
+    my $outstr = "";
+    foreach my $i (@$ref) {
+        if ($i =~ /^last update/) {
+            next;
+        }
+        if (!exists $::headCache{$name}->{$i}) {
+            $::headCache{$name}->{$i} = 1;
+            if ($outstr eq "") {
+                $outstr = "Just appeared in $name ($url): ";
+            } else {
+                $outstr .= $spacer;
+            }
+            $outstr .= $i;
+        }
+    }
+    if (!$firsttime) {
+        saylongline($channel, $outstr, $spacer);
+    }
+}
+    
+        
+
+        
     
 sub bot_debug
 	{
@@ -390,6 +432,7 @@ sub bot_debug
 		(
 		"slashdot" => $last_slashdot,
 		"mozillazine" => $last_mozillazine,
+		"mozillaorg" => $last_mozillaorg,
 		"tinderbox" => $last_tree,
 		"moon" => $last_moon,
 		);
@@ -421,6 +464,13 @@ sub bot_mozillazine{
     do_headlines($nick,
                  "Headlines from mozillaZine (http://www.mozillazine.org/)",
                  \@mozillazine);
+}
+
+sub bot_mozillaorg {
+    my ($nick, $cmd, $rest) = (@_);
+    do_headlines($nick,
+                 "Headlines from mozilla.org (http://www.mozilla.org/)",
+                 \@mozillaorg);
 }
 
 
@@ -742,7 +792,7 @@ sub slashdot
 	return if (! defined $slashdot);
 	&debug ("fetching slashdot headlines");
 
-    $bot->schedule (3600, \&slashdot);
+    $bot->schedule (60*60 + 30, \&slashdot);
     my $output = get $slashdot;
 	$last_slashdot = time;
     return if (! $output);
@@ -755,6 +805,9 @@ sub slashdot
         push @slashdot, $sd[$i+1] if ($sd[$i] eq "%%" && $i != $#sd);
     }
 	push @slashdot, "last updated: " . &logdate ($last_slashdot);
+
+    reportDiffs("SlashDot", "http://www.slashdot.org/", \@slashdot);
+
 }
 
 # fetches headlines from mozillaZine
@@ -788,8 +841,34 @@ sub mozillazine
 			}
 		}
 
-  $bot->schedule (60 * 60 * 8, \&mozillazine);
+    $bot->schedule (60 * 60 + 60, \&mozillazine);
+	push @mozillazine, "last updated: " . &logdate ($last_mozillazine);
+    reportDiffs("mozillaZine", "http://www.mozillazine.org/", \@mozillazine);
 	}
+
+sub mozillaorg
+{
+	return if (! defined $mozillaorg);
+	&debug ("fetching mozilla.org headlines");
+
+    $bot->schedule (60*60, \&mozillaorg);
+    my $output = get $mozillaorg;
+	$last_mozillaorg = time;
+    return if (! $output);
+    my @m = split /\n/, $output;
+
+    @mozillaorg = ();
+
+    foreach my $i (@m) {
+        if ($i =~ /^summary:(.*)$/) {
+            push @mozillaorg, $1;
+        }
+    }
+	push @mozillaorg, "last updated: " . &logdate ($last_mozillaorg);
+
+    reportDiffs("mozilla.org", "http://www.mozilla.org/", \@mozillaorg);
+
+}
 
 # fetch tinderbox details
 
