@@ -442,6 +442,8 @@ static CERTCertificate
 	return NULL;
     }
 
+    nssTrustDomain_AddCertsToCache(td, &c, 1);
+
     /* Build the old-fashioned nickname */
     if ((nickptr) && (co->label)) {
 	CK_ATTRIBUTE label, id;
@@ -1752,7 +1754,10 @@ done:
 
     if (c->object.cryptoContext) {
 	/* Delete the temp instance */
-	nssCertificateStore_Remove(c->object.cryptoContext->certStore, c, PR_TRUE);
+	NSSCryptoContext *cc = c->object.cryptoContext;
+	nssCertificateStore_Lock(cc->certStore);
+	nssCertificateStore_RemoveCertLOCKED(cc->certStore, c);
+	nssCertificateStore_Unlock(cc->certStore);
 	c->object.cryptoContext = NULL;
 	cert->istemp = PR_FALSE;
 	cert->isperm = PR_TRUE;

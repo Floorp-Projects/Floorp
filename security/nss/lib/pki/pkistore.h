@@ -35,7 +35,7 @@
 #define PKISTORE_H
 
 #ifdef DEBUG
-static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.3 $ $Date: 2002/09/27 21:23:00 $ $Name:  $";
+static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.4 $ $Date: 2002/11/06 18:53:54 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -86,11 +86,20 @@ nssCertificateStore_Add
 );
 
 NSS_EXTERN void
-nssCertificateStore_Remove
+nssCertificateStore_RemoveCertLOCKED
 (
   nssCertificateStore *store,
-  NSSCertificate *cert,
-  PRBool force /* described in bug 171198 */
+  NSSCertificate *cert
+);
+
+NSS_EXTERN void
+nssCertificateStore_Lock (
+  nssCertificateStore *store
+);
+
+NSS_EXTERN void
+nssCertificateStore_Unlock (
+  nssCertificateStore *store
 );
 
 NSS_EXTERN NSSCertificate **

@@ -88,8 +88,15 @@ SEC_DeletePermCertificate(CERTCertificate *cert)
     PRStatus nssrv;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
+
+    /* get rid of the token instances */
     nssrv = NSSCertificate_DeleteStoredObject(c, NULL);
-    nssTrustDomain_RemoveCertFromCache(td, c);
+
+    /* get rid of the cache entry */
+    nssTrustDomain_LockCertCache(td);
+    nssTrustDomain_RemoveCertFromCacheLOCKED(td, c);
+    nssTrustDomain_UnlockCertCache(td);
+
     return (nssrv == PR_SUCCESS) ? SECSuccess : SECFailure;
 }
 
@@ -157,7 +164,9 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 	stanNick = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
     }
     /* Delete the temp instance */
-    nssCertificateStore_Remove(context->certStore, c, PR_TRUE);
+    nssCertificateStore_Lock(context->certStore);
+    nssCertificateStore_RemoveCertLOCKED(context->certStore, c);
+    nssCertificateStore_Unlock(context->certStore);
     c->object.cryptoContext = NULL;
     /* Import the perm instance onto the internal token */
     slot = PK11_GetInternalKeySlot();
@@ -590,28 +599,6 @@ CERT_DestroyCertificate(CERTCertificate *cert)
         }
 #else
 	if (tmp) {
-	    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
-	    refCount = (int)tmp->object.refCount;
-	    /* This is a hack.  For 3.4, there are persistent references
-	     * to 4.0 certificates during the lifetime of a cert.  In the
-	     * case of a temp cert, the persistent reference is in the
-	     * cert store of the global crypto context.  For a perm cert,
-	     * the persistent reference is in the cache.  Thus, the last
-	     * external reference is really the penultimate NSS reference.
-	     * When the count drops to two, it is really one, but the
-	     * persistent reference must be explicitly deleted.  In 4.0,
-	     * this ugliness will not appear.  Crypto contexts will remove
-	     * their own cert references, and the cache will have its
-	     * own management code also.
-	     */
-	    if (refCount == 2) {
-		NSSCryptoContext *cc = tmp->object.cryptoContext;
-		if (cc != NULL) {
-		    nssCertificateStore_Remove(cc->certStore, tmp, PR_FALSE);
-		} else {
-		    nssTrustDomain_RemoveCertFromCache(td, tmp);
-		}
-	    }
 	    /* delete the NSSCertificate */
 	    NSSCertificate_Destroy(tmp);
 	} else {
