@@ -41,6 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
+#include "nsXULWindow.h"
 
 /* Forward declarations.... */
 struct PLEvent;
@@ -59,7 +60,8 @@ class nsIWidget;
 class nsIXULWindowCallbacks;
 class nsVoidArray;
 
-class nsWebShellWindow : public nsIWebShellWindow,
+class nsWebShellWindow : public nsXULWindow,
+                         public nsIWebShellWindow,
                          public nsIWebShellContainer,
                          public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
@@ -105,10 +107,6 @@ public:
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
-
-  NS_IMETHOD AddWebShellInfo(const nsString& aID,
-                         PRBool aPrimary,
-                         nsIWebShell* aChildShell);
 
   NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult);
   NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
@@ -281,7 +279,6 @@ protected:
 
   nsresult                NotifyObservers( const nsString &aTopic, const nsString &someData );
 
-  nsIWidget*              mWindow;
   nsIWebShell*            mWebShell;
   nsCOMPtr<nsIWeakReference> mParentWindow;
   nsIXULWindowCallbacks*  mCallbacks;
@@ -294,9 +291,6 @@ protected:
   PRBool                  mLoadDefaultPage;
 
   nsVoidArray mMenuDelegates;
-
-  nsVoidArray* mContentShells; // Tracks an array of information about new shells that will be
-                               // created as the XUL file for this window loads.
 
   nsIDOMNode * contextMenuTest;
 

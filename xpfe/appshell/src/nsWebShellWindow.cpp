@@ -94,6 +94,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIPresContext.h"
 
 #include "nsIBaseWindow.h"
+#include "nsIDocShellTreeItem.h"
+
 
 // HACK for M4, should be removed by M5
 #ifdef XP_MAC
@@ -165,8 +167,6 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIWebShell.h"
 
-const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
-const char * kThrobberOffStr = "resource:/res/throbber/anims00.gif";
 const char * kPrimaryContentTypeValue  = "content-primary";
 
 struct ThreadedWindowEvent {
@@ -228,7 +228,7 @@ stEventQueueStack::~stEventQueueStack() {
                         NS_STATIC_CAST(nsISupports *, mService));
 }
 
-nsWebShellWindow::nsWebShellWindow()
+nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
 {
   NS_INIT_REFCNT();
 
@@ -238,7 +238,6 @@ nsWebShellWindow::nsWebShellWindow()
   mContinueModalLoop = PR_FALSE;
   mChromeInitialized = PR_FALSE;
   mLockedUntilChromeLoad = PR_FALSE;
-  mContentShells = nsnull;
   mChromeMask = NS_CHROME_ALL_CHROME;
   mIntrinsicallySized = PR_FALSE;
   mCreatedVisible = PR_TRUE;
@@ -255,21 +254,8 @@ nsWebShellWindow::~nsWebShellWindow()
     NS_RELEASE(mWebShell);
   }
 
-  NS_IF_RELEASE(mWindow);
+  mWindow = nsnull; // Force release here.
   NS_IF_RELEASE(mCallbacks);
-
-  // Delete any remaining content shells.
-  PRInt32 count;
-  if (mContentShells && ((count = mContentShells->Count()) > 0)) {
-    for (PRInt32 i = 0; i < count; i++)
-    {
-      nsWebShellInfo* webInfo = (nsWebShellInfo*)(mContentShells->ElementAt(i));
-      delete webInfo;
-    }
-
-    delete mContentShells;
-  }
-
 }
 
 NS_IMPL_ADDREF(nsWebShellWindow);
@@ -284,6 +270,8 @@ NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
    NS_INTERFACE_MAP_ENTRY(nsINetPrompt)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+   NS_INTERFACE_MAP_ENTRY(nsIXULWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 NS_INTERFACE_MAP_END
 
 nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
@@ -345,6 +333,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   if (NS_OK != rv) {
     return rv;
   }
+  mDocShell = do_QueryInterface(mWebShell);
 
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
@@ -355,8 +344,12 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   mWebShell->SetContainer(this);
   mWebShell->SetDocLoaderObserver(this);
 
-  // The outermost web shell is always considered to be chrome.
-  mWebShell->SetWebShellType(nsWebShellChrome);
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
+
+  docShellAsItem->SetTreeOwner(mChromeTreeOwner);
+  docShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);
 
   /*
    * XXX:  How should preferences be supplied to the nsWebShellWindow?
@@ -434,13 +427,8 @@ nsWebShellWindow::Close()
   nsCOMPtr<nsIWebShellWindow> placeHolder = this;
 
   ExitModalLoop();
-  if (mWebShell) {
-    nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mWebShell));
-    shellAsWin->Destroy();
-    NS_RELEASE(mWebShell);
-  }
- 
-  NS_IF_RELEASE(mWindow);
+
+  nsXULWindow::Destroy();
 
   return rv;
 }
@@ -1099,47 +1087,19 @@ NS_IMETHODIMP
 nsWebShellWindow::GetContentShellById(const nsString& aID, nsIWebShell** aChildShell)
 {
 	// Set to null just to be certain
-  *aChildShell = nsnull;
+   *aChildShell = nsnull;
 
-  // If we don't have a content array, we just don't care.
-  if (mContentShells == nsnull)
-    return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIDocShellTreeItem> content;
 
-  // Find out if the id in question is one that we have web shell info for.
-  PRInt32 count = mContentShells->Count();
-  for (PRInt32 i = 0; i < count; i++)
-  {
-    nsWebShellInfo* webInfo = (nsWebShellInfo*)(mContentShells->ElementAt(i));
-    if (webInfo->id == aID)
-    {
-      // We have a match!
-      *aChildShell = webInfo->child;
-      NS_ADDREF(*aChildShell);
+   nsXULWindow::GetContentShellById(aID.GetUnicode(), getter_AddRefs(content));
+   if(!content)
+      return NS_ERROR_FAILURE;
+   CallQueryInterface(content, aChildShell);
 
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 //------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsWebShellWindow::AddWebShellInfo(const nsString& aID,
-                                  PRBool aPrimary,
-                                  nsIWebShell* aChildShell)
-{
-
-  nsWebShellInfo* webShellInfo = new nsWebShellInfo(aID, aPrimary,
-                                                    aChildShell);
-  
-  if (mContentShells == nsnull)
-    mContentShells = new nsVoidArray();
-
-  mContentShells->AppendElement((void*)webShellInfo);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow)
 {
@@ -1485,7 +1445,10 @@ nsWebShellWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameN
   isPrimary = value.EqualsIgnoreCase(kPrimaryContentTypeValue) ? PR_TRUE : PR_FALSE;
   frameNode->GetAttribute(kNameSpaceID_None, idAtom, value);
 
-  AddWebShellInfo(value, isPrimary, aChildShell);
+  NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShellTreeItem> childAsItem(do_QueryInterface(aChildShell));
+  mChromeTreeOwner->ContentShellAdded(childAsItem, isPrimary, value.GetUnicode());
 
   NS_RELEASE(typeAtom);
   NS_RELEASE(idAtom);
@@ -1854,34 +1817,22 @@ nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
 NS_IMETHODIMP
 nsWebShellWindow::GetContentWebShell(nsIWebShell **aResult)
 {
-  nsIWebShell  *content;
+   *aResult = nsnull;
+   nsCOMPtr<nsIDocShellTreeItem> content;
 
-  content = nsnull;
-  
-  // first, try looking in the webshell list
-  // (note this list isn't dynamic: it's set up when the webshell is added,
-  // but not updated when its attributes are poked. could be a problem...)
-  if (mContentShells) {
-    PRInt32 count = mContentShells->Count();
-    for (PRInt32 ctr = 0; ctr < count; ctr++) {
-      nsWebShellInfo* webInfo = (nsWebShellInfo*)(mContentShells->ElementAt(ctr));
-      if (webInfo->primary) {
-        content = webInfo->child;
-        break;
-      }
-    }
-  }
+   GetPrimaryContentShell(getter_AddRefs(content));
+   if(!content)
+      return NS_OK;
+   CallQueryInterface(content, aResult);
 
-  NS_IF_ADDREF(content);
-  *aResult = content;
-  return NS_OK;
+   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsWebShellWindow::GetWidget(nsIWidget *& aWidget)
 {
   aWidget = mWindow;
-  NS_IF_ADDREF(mWindow);
+  NS_IF_ADDREF(aWidget);
   return NS_OK;
 }
 
@@ -2158,28 +2109,14 @@ PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
 nsCOMPtr<nsIDOMNode>
 nsWebShellWindow::GetDOMNodeFromWebShell(nsIWebShell *aShell)
 {
-  nsCOMPtr<nsIDOMNode> node;
+   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aShell));
 
-  nsCOMPtr<nsIContentViewer> cv;
-  aShell->GetContentViewer(getter_AddRefs(cv));
-  if (cv) {
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-    if (docv) {
-      nsCOMPtr<nsIDocument> doc;
-      docv->GetDocument(*getter_AddRefs(doc));
-      if (doc) {
-        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-        if (domdoc) {
-          nsCOMPtr<nsIDOMElement> element;
-          domdoc->GetDocumentElement(getter_AddRefs(element));
-          if (element)
-            node = do_QueryInterface(element);
-        }
-      }
-    }
-  }
+   nsCOMPtr<nsIDOMElement> element;
+   GetDOMElementFromDocShell(docShell, getter_AddRefs(element));
 
-  return node;
+   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(element));
+
+   return node;
 }
 
 /**
@@ -2332,30 +2269,10 @@ void nsWebShellWindow::StoreBoundsToXUL(PRBool aPosition, PRBool aSize)
 
 void nsWebShellWindow::KillPersistentSize()
 {
-  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
-  nsCOMPtr<nsIDOMElement> webshellElement;
-  nsAutoString persistString;
-  PRInt32 index;
-  PRBool saveString;
+   PRBool persistX, persistY;
 
-  if (webshellNode)
-    webshellElement = do_QueryInterface(webshellNode);
-  if (!webshellElement) // it's hopeless
-    return;
-
-  webshellElement->GetAttribute("persist", persistString);
-
-  saveString = PR_FALSE;
-  if ((index = persistString.Find("width")) >= 0) {
-    persistString.Cut(index, 5);
-    saveString = PR_TRUE;
-  }
-  if ((index = persistString.Find("height")) >= 0) {
-    persistString.Cut(index, 6);
-    saveString = PR_TRUE;
-  }
-  if (saveString)
-    webshellElement->SetAttribute("persist", persistString);
+   GetPersistence(&persistX, &persistY, nsnull, nsnull);
+   SetPersistence(persistX, persistY, PR_FALSE, PR_FALSE);
 }
 
 
@@ -2850,7 +2767,13 @@ NS_IMETHODIMP nsWebShellWindow::GetContentBounds(nsRect& aResult)
  
 NS_IMETHODIMP nsWebShellWindow::GetWindowBounds(nsRect& aResult)
 {
-   mWindow->GetScreenBounds(aResult);
+   PRInt32 x, y, cx, cy;
+   GetPositionAndSize(&x, &y, &cx, &cy);
+
+   aResult.x = x;
+   aResult.y = y;
+   aResult.width = cx;
+   aResult.height = cy;
    return NS_OK;
 }
  
@@ -2869,56 +2792,8 @@ NS_IMETHODIMP nsWebShellWindow::GetChrome(PRUint32& aChromeMaskResult)
  
 NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
 {
-   nsIWidget *windowWidget = GetWidget();
- 	
-
-// Get window modifier
-  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
-  nsCOMPtr<nsIDOMElement> webshellElement;
-  nsString windowTitleModifier;
-  nsString titleSeparator;
-  nsString titlePreface;
-  if (webshellNode)
-    webshellElement = do_QueryInterface(webshellNode);
-  if (webshellElement )
-  {
-  	webshellElement->GetAttribute("titlemodifier", windowTitleModifier );
-  	webshellElement->GetAttribute("titlemenuseparator", titleSeparator );
-  	webshellElement->GetAttribute("titlepreface", titlePreface );
-  }
-   nsString title;
-   nsString docTitle( aTitle );
-   
-   if( docTitle.Length() > 0 ) {
-        if ( titlePreface.Length() > 0 ) {
-            // Title will be: Preface: Doc Title - Mozilla
-            title = titlePreface + docTitle;
-        } else {
-            // Title will be: Doc Title - Mozilla
-            title = docTitle;
-        }
-  	    title += titleSeparator + windowTitleModifier;
-   } else {
-        // Title will be just plain: Mozilla
-   	    title = windowTitleModifier;  
-   }
-   if (windowWidget)
-     windowWidget->SetTitle(title);
-
-     
-
-     // Tell the window mediator that a title has changed
-   #if 1 
-   {
-   	  nsIWindowMediator* service;
-  		if (NS_FAILED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
-    		return NS_OK;
-  		service->UpdateWindowTitle( this, title.GetUnicode() );
-	 		nsServiceManager::ReleaseService(kWindowMediatorCID, service);
-   }
-   #endif // Window Mediation
-   return NS_OK;
-
+   NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+   return mContentTreeOwner->SetTitle(aTitle);
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetTitle(PRUnichar** aResult)
