@@ -154,6 +154,24 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   return res;
 }
 
+nsresult
+nsJSContext::InitializeExternalClasses()
+{
+  nsresult result = NS_OK;
+
+  nsIScriptNameSetRegistry* registry;
+  result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
+                                        kIScriptNameSetRegistryIID,
+                                        (nsISupports **)&registry);
+  if (NS_OK == result) {
+    result = registry->InitializeClasses(this);
+    nsServiceManager::ReleaseService(kCScriptNameSetRegistryCID,
+                                     registry);
+  }
+
+  return result;
+}
+
 NS_IMETHODIMP
 nsJSContext::InitClasses()
 {
@@ -168,6 +186,7 @@ nsJSContext::InitClasses()
       NS_OK == NS_InitAttrClass(this, nsnull) &&
       NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
       NS_OK == NS_InitNodeListClass(this, nsnull) &&
+      NS_OK == InitializeExternalClasses() && 
       // XXX Temporarily here. This shouldn't be hardcoded.
       NS_OK == NS_InitHTMLImageElementClass(this, nsnull)) {
     res = NS_OK;
