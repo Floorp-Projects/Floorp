@@ -1,0 +1,4 @@
+#include "StringTest.Prefix"
+
+#define DEBUG 1
+#undef NDEBUG
