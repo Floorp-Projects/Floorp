@@ -271,7 +271,7 @@ nsJAR::GetInputStream(const char *aFilename, nsIInputStream **result)
 {
   if (!result)
     return NS_OK;
-  return CreateInputStream(aFilename, result);
+  return CreateInputStream(aFilename, PR_TRUE, result);
 }
 
 //-- The following #defines are used by ParseManifest()
@@ -412,20 +412,18 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal,
 //----------------------------------------------
 // nsJAR private implementation
 //----------------------------------------------
-
-nsresult
-nsJAR::CreateInputStream(const char* aFilename, nsIInputStream **is)
+nsresult nsJAR::CreateInputStream(const char* aFilename, PRBool verify,
+                                  nsIInputStream** result)
 {
   nsresult rv;
   nsJARInputStream* jis = nsnull;
   rv = nsJARInputStream::Create(nsnull, NS_GET_IID(nsIInputStream), (void**)&jis);
   if (!jis) return NS_ERROR_FAILURE;
 
-  rv = jis->Init(this, aFilename);
+  rv = jis->Init(this, aFilename, verify);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  *is = (nsIInputStream*)jis;
-  // NS_ADDREF(*is); // done by Create, above
+  *result = (nsIInputStream*)jis;
   return NS_OK;
 }
 
@@ -435,7 +433,7 @@ nsJAR::LoadEntry(const char* aFilename, char** aBuf, PRUint32* aBufLen)
   //-- Get a stream for reading the manifest file
   nsresult rv;
   nsCOMPtr<nsIInputStream> manifestStream;
-  rv = CreateInputStream(aFilename, getter_AddRefs(manifestStream));
+  rv = CreateInputStream(aFilename, PR_FALSE, getter_AddRefs(manifestStream));
   if (NS_FAILED(rv)) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
   
   //-- Read the manifest file into memory
@@ -450,7 +448,6 @@ nsJAR::LoadEntry(const char* aFilename, char** aBuf, PRUint32* aBufLen)
   if (bytesRead != len) 
     rv = NS_ERROR_FILE_CORRUPTED;
   if (NS_FAILED(rv)) return rv;
-  (void)manifestStream->Close();
   buf[len] = '\0'; //Null-terminate the buffer
   *aBuf = buf;
   if (aBufLen)

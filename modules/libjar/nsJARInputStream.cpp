@@ -64,13 +64,13 @@ nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
 NS_IMETHODIMP
 nsJARInputStream::Close()
 {
-  NS_RELEASE(mJAR);
+  NS_IF_RELEASE(mJAR);
   delete mReadInfo;
   return NS_OK;
 }
 
 nsresult 
-nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
+nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename, PRBool verify)
 {
   if (!aFilename)
     return NS_ERROR_NULL_POINTER;
@@ -83,8 +83,8 @@ nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
   if (result != ZIP_OK)
     return NS_ERROR_FAILURE;
   
-  // Pass the file (already in memory) on to the JAR parser
-  if (aJAR)
+  // Pass the file (already in memory) on to the signature verifier
+  if (verify)
     return aJAR->VerifyEntry(mEntryName, mReadInfo->mFileBuffer,
 			     mReadInfo->mItem->realsize);
   return NS_OK;

@@ -73,8 +73,6 @@ class nsJAR : public nsIZipReader
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIZIPREADER
-
-    friend class nsJARInputStream;
   
   private:
     //-- Private data members
@@ -84,7 +82,8 @@ class nsJAR : public nsIZipReader
     PRBool                   step1Complete; // True if manifest has been parsed
 
     //-- Private functions
-    nsresult CreateInputStream(const char* aFilename, nsIInputStream** is);
+    nsresult CreateInputStream(const char* aFilename, PRBool verify,
+                               nsIInputStream** result);
     nsresult LoadEntry(const char* aFilename, char** aBuf, 
                        PRUint32* aBufLen = nsnull);
     PRInt32  ReadLine(const char** src); 
