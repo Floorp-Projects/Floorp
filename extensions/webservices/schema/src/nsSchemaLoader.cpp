@@ -990,6 +990,9 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  rv = schemaInst->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsChildElementIterator iterator(aElement, 
                                   kSchemaNamespaces, kSchemaNamespacesLength);
   nsCOMPtr<nsIDOMElement> childElement;
@@ -1355,6 +1358,9 @@ nsSchemaLoader::ProcessComplexType(nsSchema* aSchema,
   }
   complexType = typeInst;
 
+  rv = typeInst->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsChildElementIterator iterator(aElement, 
                                   kSchemaNamespaces, 
                                   kSchemaNamespacesLength);
@@ -1477,6 +1483,9 @@ nsSchemaLoader::ParseDimensions(nsSchema* aSchema,
       return NS_ERROR_OUT_OF_MEMORY;
     }
     nsCOMPtr<nsISchemaComplexType> complexType = typeInst;
+
+    rv = typeInst->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISchemaType> soapArray;
     rv = GetType(NS_LITERAL_STRING("Array"),
@@ -2692,6 +2701,9 @@ nsSchemaLoader::ProcessAttributeGroup(nsSchema* aSchema,
       return NS_ERROR_OUT_OF_MEMORY;
     }
     attributeGroup = attrInst;
+
+    rv = attrInst->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsChildElementIterator iterator(aElement, 
                                     kSchemaNamespaces, 

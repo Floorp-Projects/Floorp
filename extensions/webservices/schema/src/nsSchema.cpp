@@ -75,6 +75,24 @@ nsSchema::~nsSchema()
 
 NS_IMPL_ISUPPORTS2_CI(nsSchema, nsISchema, nsISchemaComponent)
 
+nsresult
+nsSchema::Init()
+{
+  nsresult rv = mTypesHash.Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mAttributesHash.Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mElementsHash.Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mAttributeGroupsHash.Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mModelGroupsHash.Init();
+}
+
 /* readonly attribute wstring targetNamespace; */
 NS_IMETHODIMP
 nsSchema::GetTargetNamespace(nsAString& aTargetNamespace)

@@ -67,6 +67,8 @@ public:
   NS_DECL_NSISCHEMACOMPONENT
   NS_DECL_NSISCHEMA
 
+  nsresult Init();
+
   NS_IMETHOD AddType(nsISchemaType* aType);
   NS_IMETHOD AddAttribute(nsISchemaAttribute* aAttribute);
   NS_IMETHOD AddElement(nsISchemaElement* aElement);
@@ -219,6 +221,11 @@ public:
   NS_IMPL_NSISCHEMACOMPONENT_USING_BASE
   NS_DECL_NSISCHEMATYPE
   NS_DECL_NSISCHEMACOMPLEXTYPE
+
+  nsresult Init()
+  {
+    return mAttributesHash.Init();
+  }
 
   NS_IMETHOD SetContentModel(PRUint16 aContentModel);
   NS_IMETHOD SetDerivation(PRUint16 aDerivation, nsISchemaType* aBaseType);
@@ -457,7 +464,12 @@ public:
   NS_IMPL_NSISCHEMACOMPONENT_USING_BASE
   NS_DECL_NSISCHEMAATTRIBUTECOMPONENT
   NS_DECL_NSISCHEMAATTRIBUTEGROUP
-  
+
+  nsresult Init()
+  {
+    return mAttributesHash.Init();
+  }
+
   NS_IMETHOD AddAttribute(nsISchemaAttributeComponent* aAttribute);
 
 protected:
