@@ -29,7 +29,7 @@
 #include "nsXtEventHandler.h"
 
 #include "X11/Xlib.h"
-#include "Xm/Xm.h"
+#include "Xm/XmP.h"
 #include "Xm/Xm.h"
 #include "Xm/MainW.h"
 #include "Xm/Frame.h"
@@ -46,6 +46,8 @@
 #include "Xm/Form.h"
 
 #define DBG 0
+
+extern void XtMoveWindow(Widget w, Position x, Position y);
 
 Widget gFirstTopLevelWindow = 0;
 
@@ -656,6 +658,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
   XtMoveWidget(mWidget, aX, GetYCoord(aY));
+//    XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
 }
 
 //-------------------------------------------------------------------------
