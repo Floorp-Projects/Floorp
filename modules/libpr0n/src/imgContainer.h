@@ -65,9 +65,21 @@ private:
   PRUint32 mCurrentAnimationFrame;
   PRBool   mCurrentFrameIsFinishedDecoding;
   PRBool   mDoneDecoding;
+  PRBool   mAnimating;
   
-  nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<imgIContainerObserver> mObserver;
+  // GIF specific bits
+  nsCOMPtr<nsITimer> mTimer;
+  
+  // GIF animations will use the mCompositingFrame to composite images
+  // and just hand this back to the caller when it is time to draw the frame.
+  nsCOMPtr<gfxIImageFrame> mCompositingFrame;
+  
+  // Private function for doing the frame compositing of animations and in cases
+  // where there is a backgound color and single frame placed withing a larger
+  // logical screen size. Smart GIF compressors may do this to save space.
+  void DoComposite(
+    gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect, PRInt32 aPrevFrame, PRInt32 aNextFrame);
 };
 
 #endif /* __imgContainer_h__ */
