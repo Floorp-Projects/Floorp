@@ -729,7 +729,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   
   NS_LOCK_INSTANCE();
   nsresult rv = NS_OK;
-  char * nntpHostName = nsnull;
+  nsXPIDLCString nntpHostName;
   
   nsCOMPtr<nsIMsgIncomingServer> server;
   server = do_QueryInterface(nntpServer);
@@ -738,7 +738,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   // XXX - this doesn't handle QI failing very well
   if (server) {
     // load up required server information
-    server->GetHostName(&nntpHostName);
+    server->GetHostName(getter_Copies(nntpHostName));
   }
 #ifdef DEBUG_NEWS
   else {
@@ -748,7 +748,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   
 #ifdef DEBUG_NEWS
   if (nntpHostName) {
-    printf("get news from news://%s\n", nntpHostName);
+    printf("get news from news://%s\n", (const char *) nntpHostName);
   }
   else {
     printf("nntpHostName is null\n");

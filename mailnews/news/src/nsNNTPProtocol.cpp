@@ -452,7 +452,8 @@ nsNNTPProtocol::nsNNTPProtocol()
 nsNNTPProtocol::~nsNNTPProtocol()
 {
     // leaking m_hostName and m_userName?
-    m_lineStreamBuffer = nsnull;
+	PR_FREEIF(m_currentGroup);
+    delete m_lineStreamBuffer;
 }
 
 nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
@@ -561,7 +562,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
   PRBool bVal = PR_FALSE;
-  char *group = nsnull;
+  nsXPIDLCString group;
   char *commandSpecificData = nsnull;
   PRBool cancel = PR_FALSE;
   nsCOMPtr <nsINNTPNewsgroupPost> message;
@@ -597,7 +598,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
   PR_FREEIF(m_messageID);
   m_messageID = nsnull;
-  rv = ParseURL(aURL,&bVal, &group, &m_messageID, &commandSpecificData);
+  rv = ParseURL(aURL,&bVal, getter_Copies(group), &m_messageID, &commandSpecificData);
 
   // if we don't have a news host already, go get one...
   if (!m_newsHost)
@@ -836,7 +837,6 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   m_nextState = SEND_FIRST_NNTP_COMMAND;
 
  FAIL:
-  nsAllocator::Free(group);
   PR_FREEIF (commandSpecificData);
 
   if (NS_FAILED(rv))
@@ -1697,8 +1697,10 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
             (void) PR_sscanf(slash+1, "%d-%d", &m_firstArticle, &m_lastArticle);
 		}
 
+		PR_FREEIF(m_currentGroup);
         NET_SACopy (&m_currentGroup, group_name);
         NET_SACat(&command, m_currentGroup);
+		PR_FREEIF(group_name);
       }
 	else if (m_typeWanted == SEARCH_WANTED)
 	{
@@ -1729,7 +1731,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 		}
 		else
 		{
-            char *group_name;
+            nsXPIDLCString group_name;
             
 			/* for XPAT, we have to GROUP into the group before searching */
 			NET_SACopy(&command, "GROUP ");
@@ -1739,7 +1741,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 #endif
 				return -1;
 			}
-            rv = m_newsgroup->GetName(&group_name);
+            rv = m_newsgroup->GetName(getter_Copies(group_name));
             NET_SACat (&command, group_name);
 			m_nextState = NNTP_RESPONSE;
 			m_nextStateAfterResponse = NNTP_XPAT_SEND;
@@ -1861,7 +1863,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 
         /* START OF HACK TO DISPLAY THE ERROR IN THE MESSAGE PANE */
         nsresult rv = NS_OK;
-        char *group_name = nsnull;
+        nsXPIDLCString group_name ;
         char outputBuffer[OUTPUT_BUFFER_SIZE];
 
         m_tempErrorFileSpec.Delete(PR_FALSE);
@@ -1870,7 +1872,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         m_tempErrorStream = do_QueryInterface(supports);
         
         if (m_newsgroup) {
-            rv = m_newsgroup->GetName(&group_name);
+            rv = m_newsgroup->GetName(getter_Copies(group_name));
         }
 
         if (NS_SUCCEEDED(rv) && group_name && m_tempErrorStream) {
@@ -1891,10 +1893,12 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 			}
 
             if (m_userName) {
-                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s@%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_userName, (const char *)m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s@%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_userName, (const char *)m_hostName, 
+					(const char *) group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
             }
             else {
-                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+                PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, (const char *)m_hostName, 
+					(const char *) group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
             }
 #ifdef DEBUG_NEWS
             printf("%s\n",outputBuffer);
@@ -2102,7 +2106,7 @@ PRInt32 nsNNTPProtocol::BeginArticle()
 
 PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 length)
 {
-	char *line;
+	char *line = nsnull;
 	PRUint32 status = 0;
 	
 	PRBool pauseForMoreData = PR_FALSE;
@@ -2117,6 +2121,7 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 			if (inlength > 0) // broadcast our batched up ODA changes
 				m_channelListener->OnDataAvailable(this, m_channelContext, mDisplayInputStream, 0, inlength);
 			SetFlag(NNTP_PAUSE_FOR_READ);
+			PR_FREEIF(line);
 			return status;
 		}
 
@@ -2965,14 +2970,10 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (m_firstArticle > 0) 
 	{
-      char *groupName;
+      nsXPIDLCString groupName;
       
-	  rv = m_newsgroup->GetName(&groupName);
+	  rv = m_newsgroup->GetName(getter_Copies(groupName));
 
-#ifdef DEBUG_NEWS
-      printf("leaking group name?\n");
-#endif
-      
       /* XXX - parse state stored in MSG_Pane cd->pane */
       if (NS_SUCCEEDED(rv))
           rv = m_newsHost->GetNewsgroupList(groupName, getter_AddRefs(m_newsgroupList));
@@ -3001,10 +3002,10 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	}
 
 
-    char *groupName = nsnull;
+    nsXPIDLCString groupName ;
     
 	if (!m_newsgroupList) {
-	    rv = m_newsgroup->GetName(&groupName);
+	    rv = m_newsgroup->GetName(getter_Copies(groupName));
 		if (NS_SUCCEEDED(rv))
 			rv = m_newsHost->GetNewsgroupList(groupName, getter_AddRefs(m_newsgroupList));
 	}
@@ -4139,15 +4140,15 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 PRInt32 nsNNTPProtocol::ListPrettyNames()
 {
 
-    char *group_name;
+    nsXPIDLCString group_name;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	PRInt32 status = 0; 
 
-    nsresult rv = m_newsgroup->GetName(&group_name);
+    nsresult rv = m_newsgroup->GetName(getter_Copies(group_name));
 	PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
 			"LIST PRETTYNAMES %.512s" CRLF,
-            NS_SUCCEEDED(rv) ? group_name : "");
+            NS_SUCCEEDED(rv) ? (const char *) group_name : "");
     
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (mailnewsurl)
@@ -4222,17 +4223,15 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 
 PRInt32 nsNNTPProtocol::ListXActive()
 { 
-	char *group_name;
-    nsresult rv = m_newsgroup->GetName(&group_name);
+	nsXPIDLCString group_name;
+    nsresult rv = m_newsgroup->GetName(getter_Copies(group_name));
 	PRInt32 status = 0;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 
-    if (NS_FAILED(rv)) group_name=NULL;
-    
 	PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
 			"LIST XACTIVE %.512s" CRLF,
-            group_name);
+            (const char *) group_name);
 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (mailnewsurl)
@@ -4369,16 +4368,15 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 PRInt32 nsNNTPProtocol::ListGroup()
 {
     nsresult rv;
-    char *group_name;
+    nsXPIDLCString group_name;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	PRInt32 status = 0; 
-    rv = m_newsgroup->GetName(&group_name);
+    rv = m_newsgroup->GetName(getter_Copies(group_name));
     
 	PR_snprintf(outputBuffer, 
 			OUTPUT_BUFFER_SIZE, 
 			"listgroup %.512s" CRLF,
-                group_name);
-    
+                (const char *) group_name);
     rv = nsComponentManager::CreateInstance(kNNTPArticleListCID,
                                             nsnull,
                                             nsINNTPArticleList::GetIID(),

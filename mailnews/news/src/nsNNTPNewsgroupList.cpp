@@ -87,6 +87,7 @@ nsNNTPNewsgroupList::nsNNTPNewsgroupList()
 
 nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
+	CleanUp();
 }
 
 NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
@@ -992,6 +993,7 @@ nsNNTPNewsgroupList::SetProgressStatus(char *message)
                 if (printfString) {
                         nsString formattedString(printfString);
                         progressMsg = nsCRT::strdup(formattedString.GetUnicode());
+						PR_FREEIF(printfString);
                 }
                 if (feedback) {
                         feedback->ShowStatusString(progressMsg);

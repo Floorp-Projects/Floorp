@@ -46,6 +46,7 @@ nsNNTPHost::nsNNTPHost()
  
 nsNNTPHost::~nsNNTPHost()
 {
+	CleanUp();
 }
 
 nsresult nsNNTPHost::Initialize(nsINntpUrl *runningURL, const char *username, const char *hostname, PRInt32 port)
@@ -85,6 +86,10 @@ nsresult nsNNTPHost::Initialize(nsINntpUrl *runningURL, const char *username, co
     m_inhaled = PR_FALSE;
     m_uniqueId = 0;
     m_runningURL = runningURL;
+	m_block = nsnull;
+	m_groupFilePermissions = nsnull;
+	m_hostinfofilename = nsnull;
+	m_groupTreeDirty = 0;
     return NS_OK;
 }
 
@@ -277,6 +282,7 @@ nsNNTPHost::WriteNewsrc()
         line = PR_smprintf("%s%s %s" MSG_LINEBREAK,
                                  name, 
 								 isSubscribed ? ":" : "!", str);
+		PR_FREEIF(name);
 		if (!line) {
 			delete [] str;
 			status = MK_OUT_OF_MEMORY;
@@ -965,6 +971,7 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *_retval)
 			*_retval = info;
             result = NS_OK;
 		}
+		PR_FREEIF(groupname);
 	}
     return result;
 }
@@ -1390,7 +1397,8 @@ nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
             char *name;
             rv = info->GetName(&name);
 			if (NS_SUCCEEDED(rv)) {
-                *result = PL_strdup(name);
+				// don't need to dup because GetName makes a copy
+                *result = name;
                 return NS_OK;
             }
 		}
@@ -2621,7 +2629,6 @@ nsNNTPHost::DisplaySubscribedGroup(nsINNTPNewsgroup *newsgroup,
 
     rv = newsgroupList->Initialize(this, m_runningURL, newsgroup, m_username, m_hostname, name);
     PR_FREEIF(name);
-    name = nsnull;
     if (NS_FAILED(rv)) return rv;
 
     if (!m_newsgrouplists) {
