@@ -242,7 +242,12 @@ private:
   GdkGC                 *mGC;
   GdkFunction            mFunction;
   GdkLineStyle           mLineStyle;
+ // gtk+ 1.2.7 introduces an incompatible API change
+#if GTK_CHECK_VERSION(1,2,7)
   gint8                  mDashList[2];
+#else
+  gchar                  mDashList[2];
+#endif
   gint                   mDashes;
   nscolor                mCurrentColor;
   nsFontGTK             *mCurrentFont;
