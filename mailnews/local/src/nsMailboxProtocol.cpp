@@ -141,7 +141,7 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 
 	m_mailboxParser = nsnull;
 
-	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, LINEBREAK, PR_TRUE);
+	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, MSG_LINEBREAK, PR_TRUE);
 
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
@@ -477,7 +477,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 				{
 					if (line)
 						PR_Write(m_tempMessageFile,(void *) line,PL_strlen(line));
-					PR_Write(m_tempMessageFile, (void *) LINEBREAK, PL_strlen(CRLF));
+					PR_Write(m_tempMessageFile, (void *) MSG_LINEBREAK, PL_strlen(CRLF));
 				}
 			} 
 		}
