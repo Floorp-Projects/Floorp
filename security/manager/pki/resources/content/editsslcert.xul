@@ -27,7 +27,7 @@
 <!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <window id="editSSLCert" 
-        title="&certmgr.editcert.title;"
+        title="&certmgr.editsslcert.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="doLoadForSSLCert();"
 >

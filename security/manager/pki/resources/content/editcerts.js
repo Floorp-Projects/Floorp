@@ -42,8 +42,6 @@ function setWindowName()
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var windowReference = document.getElementById('editCert');
-  windowReference.setAttribute("title", 
-                             bundle.GetStringFromName("editTrustWindowTitle")); 
 
   var message1 = bundle.formatStringFromName("editTrustCA",
                                              [ cert.commonName ],
@@ -109,8 +107,6 @@ function doLoadForSSLCert()
 
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var windowReference = document.getElementById('editSSLCert');
-  windowReference.setAttribute("title", 
-                             bundle.GetStringFromName("editTrustWindowTitle")); 
 
   var message1 = bundle.formatStringFromName("editTrustSSL",
                                              [ cert.commonName ],
