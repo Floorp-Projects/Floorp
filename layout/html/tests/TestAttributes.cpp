@@ -225,7 +225,7 @@ int main(int argc, char** argv)
   nsIDOMText* txt = nsnull;
   static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
   text->QueryInterface(kIDOMTextIID, (void**) &txt);
-  nsAutoString tmp(destStr, destLen);
+  nsAutoString tmp(destStr);
   txt->AppendData(tmp);
   NS_RELEASE(txt);
 
