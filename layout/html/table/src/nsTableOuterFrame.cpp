@@ -716,9 +716,8 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*        aPresCont
   // I'm holding off on patching tables.
   FixBadReflowState(aReflowState.reflowState, innerReflowState);
 
-  // If we're supposed to update our maximum width, then ask the child to
-  // as well
-  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+  // Always request the maximum width if we are an auto layout table
+  if (((nsTableFrame*)mInnerTableFrame)->IsAutoLayout()) {
     innerSize.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
   }
   rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState,
