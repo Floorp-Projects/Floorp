@@ -6431,27 +6431,52 @@ SyncAndInvalidateView(nsIView* aView, nsIFrame* aFrame,
   aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&) color);
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
 
+  // Set the view's opacity
   aViewManager->SetViewOpacity(aView, color->mOpacity);
-  PRBool viewVisible = (NS_STYLE_VISIBILITY_VISIBLE == disp->mVisible);
-  // XXX Troy, you need to hook in the leaf node logic here.
 
-  // XXX also need to set transparency in the view
-  if (! viewVisible) {
-    nsIView* parentView = nsnull;
-    aView->GetParent(parentView);
-    if (parentView) {
-      nsRect  bounds;
-      aView->GetBounds(bounds);
-      aViewManager->UpdateView(parentView, bounds, NS_VMREFRESH_NO_SYNC);
+  // See if the view should be hidden or visible
+  PRBool  viewIsVisible = PR_TRUE;
+  PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
+            NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
+
+  if (NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible) {
+    // If it's a scroll frame, then hide the view. This means that
+    // child elements can't override their parent's visibility, but
+    // it's not practical to leave it visible in all cases because
+    // the scrollbars will be showing
+    nsIAtom*  frameType;
+    aFrame->GetFrameType(&frameType);
+
+    if (frameType == nsLayoutAtoms::scrollFrame) {
+      viewIsVisible = PR_FALSE;
+
+    } else {
+      // If it's a container element, then leave the view visible, but
+      // mark it as having transparent content. The reason we need to
+      // do this is that child elements can override their parent's
+      // hidden visibility and be visible anyway
+      nsIFrame* firstChild;
+  
+      aFrame->FirstChild(nsnull, &firstChild);
+      if (firstChild) {
+        // It's not a left frame, so the view needs to be visible, but
+        // marked as having transparent content
+        viewHasTransparentContent = PR_TRUE;
+      } else {
+        // It's a leaf frame so go ahead and hide the view
+        viewIsVisible = PR_FALSE;
+      }
     }
-    else {
-      // XXX??? how to deal with this??? Do we even have to?
-    }
-    aView->SetVisibility(nsViewVisibility_kHide); 
+    NS_IF_RELEASE(frameType);
   }
-  else {
-    aView->SetVisibility(nsViewVisibility_kShow); 
-    aViewManager->UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
+
+  // Make sure visibility is correct
+  aViewManager->SetViewVisibility(aView, viewIsVisible ? nsViewVisibility_kShow :
+                                  nsViewVisibility_kHide);
+
+  // Make sure content transparency is correct
+  if (viewIsVisible) {
+    aViewManager->SetViewContentTransparency(aView, viewHasTransparentContent);
   }
 }
 
