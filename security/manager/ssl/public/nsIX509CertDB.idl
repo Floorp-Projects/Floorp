@@ -59,30 +59,13 @@ interface nsIX509CertDB : nsISupports {
                                 in wstring aNickname);
 
   /*
-   * getCertByKeyDB
+   * getCertByDBKey
    *
    * Will find a certificate based on its dbkey
    * retrieved by getting the dbKey attribute of
    * the certificate.
    */
-  nsIX509Cert getCertByKeyDB(in string dbkey);
-
-  /*
-   * getCertificateList
-   *
-   * Obtain a list of certificates from the database.
-   *
-   * token - PKCS#11 token to get certs from (null for all tokens)
-   * type - type of certificate to obtain (see nsIX509Cert)
-   * count - number of certs in list
-   * certs - the list
-   */
-/*
-  void getCertificateList(in nsIPK11Token token,
-                          in unsigned long type,
-                          [array, size_is(count)] out nsIX509Cert certs,
-                          [retval] out unsigned long count);
-*/
+  nsIX509Cert getCertByDBKey(in string aDBkey, in nsIPK11Token aToken);
 
   /*
    * getCertNicknames
@@ -112,6 +95,13 @@ interface nsIX509CertDB : nsISupports {
                                     in unsigned long type,
                                     in unsigned long trust,
                                     in wstring nickname); 
+
+  /*
+   * deleteCertificate
+   *
+   * Remove a certificate from the database.
+   */
+  void deleteCertificate(in nsIX509Cert aCert);
 
   /*
    * setCertTrust
@@ -153,7 +143,8 @@ interface nsIX509CertDB : nsISupports {
   void exportPKCS12File(in nsIPK11Token aToken,
                         in nsILocalFile aFile,
                         in PRUint32 count,
-                        [array, size_is(count)] in wstring aCertNames);
+                        [array, size_is(count)] in nsIX509Cert aCerts);
+                        //[array, size_is(count)] in wstring aCertNames);
 
 };
 

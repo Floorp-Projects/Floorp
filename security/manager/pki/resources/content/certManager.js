@@ -40,15 +40,21 @@ var caOutlinerView = {
   setOutliner : function(outliner) {},
   getCellText : function(row, column) {
     if (row >= caCertNameList.length) return "";
-    var certname = caCertNameList[row];
-    var ti = certname.indexOf(":");
-    var tokenname = "PSM Certificate Database";
-    if (ti > 0) {
-      tokenname = certname.substring(0, ti);
-      certname = certname.substring(ti+1, certname.length);
+    var certstuff = caCertNameList[row];
+    var delim = certstuff[0];
+    var certstr = certstuff.split(delim);
+    if (certstr.length < 4) {
+      tokenname = "PSM Certificate Database";
+      certname = certstr[1];
+      certkey = certstr[2];
+    } else {
+      tokenname = certstr[1];
+      certname = certstr[2];
+      certkey = certstr[3];
     }
     if (column=="certcol") return certname;
-    else return tokenname;
+    else if (column=="tokencol") return tokenname;
+    else return certkey;
   },
   getRowProperties : function(row, prop) {},
   getColumnProperties : function(column, prop) {},
@@ -61,15 +67,21 @@ var serverOutlinerView = {
   setOutliner : function(outliner) {},
   getCellText : function(row, column) {
     if (row >= serverCertNameList.length) return "";
-    var certname = serverCertNameList[row];
-    var ti = certname.indexOf(":");
-    var tokenname = "PSM Certificate Database";
-    if (ti > 0) {
-      tokenname = certname.substring(0, ti);
-      certname = certname.substring(ti+1, certname.length);
+    var certstuff = serverCertNameList[row];
+    var delim = certstuff[0];
+    var certstr = certstuff.split(delim);
+    if (certstr.length < 4) {
+      tokenname = "PSM Certificate Database";
+      certname = certstr[1];
+      certkey = certstr[2];
+    } else {
+      tokenname = certstr[1];
+      certname = certstr[2];
+      certkey = certstr[3];
     }
     if (column=="certcol") return certname;
-    else return tokenname;
+    else if (column=="tokencol") return tokenname;
+    else return certkey;
   },
   getRowProperties : function(row, prop) {},
   getColumnProperties : function(column, prop) {},
@@ -90,8 +102,12 @@ var emailOutlinerView = {
       tokenname = certname.substring(0, ti);
       certname = certname.substring(ti+1, certname.length);
     }
+    var ki = certname.indexOf(1);
+    var keystr = certname.substring(ki+1, certname.length);
+    certname = certname.substring(0, ki);
     if (column=="certcol") return certname;
-    else return tokenname;
+    else if (column=="tokencol") return tokenname;
+    else return keystr;
   },
   getRowProperties : function(row, prop) {},
   getColumnProperties : function(column, prop) {},
@@ -105,15 +121,21 @@ var userOutlinerView = {
   setOutliner : function(outliner) {},
   getCellText : function(row, column) {
     if (row >= userCertNameList.length) return "";
-    var certname = userCertNameList[row];
-    var ti = certname.indexOf(":");
-    var tokenname = "PSM Certificate Database";
-    if (ti > 0) {
-      tokenname = certname.substring(0, ti);
-      certname = certname.substring(ti+1, certname.length);
+    var certstuff = userCertNameList[row];
+    var delim = certstuff[0];
+    var certstr = certstuff.split(delim);
+    if (certstr.length < 4) {
+      tokenname = "PSM Certificate Database";
+      certname = certstr[1];
+      certkey = certstr[2];
+    } else {
+      tokenname = certstr[1];
+      certname = certstr[2];
+      certkey = certstr[3];
     }
     if (column=="certcol") return certname;
-    else return tokenname;
+    else if (column=="tokencol") return tokenname;
+    else return certkey;
   },
   getRowProperties : function(row, prop) {},
   getColumnProperties : function(column, prop) {},
@@ -143,31 +165,10 @@ function getSelectedCerts()
       var max = o2.value;
       for (var j=min; j<=max; j++) {
         var tokenName = items.outliner.view.getCellText(j, "tokencol");
-        var certName = items.outliner.view.getCellText(j, "certcol");
-        selected_certs[selected_certs.length] = [tokenName, certName];
+        //var certName = items.outliner.view.getCellText(j, "certcol");
+        var certDBKey = items.outliner.view.getCellText(j, "certdbkeycol");
+        selected_certs[selected_certs.length] = [tokenName, certDBKey];
       }
-    }
-  }
-}
-
-function GetNameList(type, node)
-{
-  var obj1 = {};
-  var obj2 = {};
-  certdb.getCertNicknames(null, type, obj1, obj2);
-  var count = obj1.value;
-  var certNameList = obj2.value;
-  if (certNameList.length > 0) {
-    certNameList.sort();
-    for (var i=0; i<certNameList.length; i++) {
-      var certname = certNameList[i];
-      var ti = certname.indexOf(":");
-      var token = "";
-      if (ti > 0) {
-        token = certname.substring(0, ti);
-        certname = certname.substring(ti+1, certname.length);
-      }
-      AddNameWithToken(node, [certname, token], node + "_", i);
     }
   }
 }
@@ -284,13 +285,10 @@ function backupCerts()
   var certs = [];
   var windowName = "";
   for (var t=0; t<numcerts; t++) {
-    if (selected_certs[t][0] &&
-        selected_certs[t][0] != "PSM Certificate Database") { // token name
-      windowName = selected_certs[t].join(":");
-    } else {
-      windowName = selected_certs[t][1];
-    }
-    certs[t] = windowName;
+    //var token = tokendb.findTokenByName(selected_certs[t][0]);
+    var token = null;
+    if (selected_certs[t][1].length == 0) break; // workaround
+    certs[t] = certdb.getCertByDBKey(selected_certs[t][1], token);
   }
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
@@ -301,7 +299,7 @@ function backupCerts()
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK ||
       fp.show() == nsIFilePicker.returnReplace) {
-    certdb.exportPKCS12File(null, fp.file, numcerts, certs);
+    certdb.exportPKCS12File(null, fp.file, certs.length, certs);
   }
   // don't really know it was successful...
   alert(bundle.GetStringFromName("SuccessfulP12Backup"));
@@ -317,15 +315,13 @@ function backupAllCerts()
 function editCerts()
 {
   getSelectedCerts();
-  var windowName = "";
-  for (var t=0; t<selected_certs.length; t++) {
-    if (selected_certs[t][0] &&
-        selected_certs[t][0] != "PSM Certificate Database") { // token name
-      windowName = selected_certs[t].join(":");
-    } else {
-      windowName = selected_certs[t][1];
-    }
-    window.open('chrome://pippki/content/editcerts.xul', windowName,
+  var numcerts= selected_certs.length;
+  for (var t=0; t<numcerts; t++) {
+    //var token = tokendb.findTokenByName(selected_certs[t][0]);
+    var token = null;
+    var certkey = selected_certs[t][1];
+    var cert = certdb.getCertByDBKey(certkey, token);
+    window.open('chrome://pippki/content/editcerts.xul', certkey,
                 'chrome,width=500,height=400,resizable=1');
   }
 }
@@ -351,6 +347,8 @@ function restoreCerts()
 function deleteCerts()
 {
   getSelectedCerts();
+  var numcerts= selected_certs.length;
+/*
   var windowName = "";
   for (var t=0; t<selected_certs.length; t++) {
     if (selected_certs[t][0] &&
@@ -359,7 +357,12 @@ function deleteCerts()
     } else {
       windowName = selected_certs[t][1];
     }
-    alert("You want to delete \"" + windowName + "\"");
+*/
+  for (var t=0; t<numcerts; t++) {
+    //var token = tokendb.findTokenByName(selected_certs[t][0]);
+    var token = null;
+    var cert = certdb.getCertByDBKey(selected_certs[t][1], token);
+    alert("You want to delete \"" + cert.windowTitle + "\"");
 /*
     window.open('chrome://pippki/content/deleteCert.xul', windowName,
                 'chrome,width=500,height=400,resizable=1');
@@ -371,16 +374,12 @@ function deleteCerts()
 function viewCerts()
 {
   getSelectedCerts();
-  var windowName = "";
-  for (var t=0; t<selected_certs.length; t++) {
-    if (selected_certs[t][0] && 
-        selected_certs[t][0] != "PSM Certificate Database") { // token name
-      windowName = selected_certs[t].join(":");
-    } else {
-      windowName = selected_certs[t][1];
-    }
-    window.open('chrome://pippki/content/certViewer.xul', windowName,
-                'chrome');
+  var numcerts= selected_certs.length;
+  for (var t=0; t<numcerts; t++) {
+    //var token = tokendb.findTokenByName(selected_certs[t][0]);
+    var token = null;
+    var cert = certdb.getCertByDBKey(selected_certs[t][1], token);
+    cert.view();
   }
 }
 

@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
+#include "nsNSSHelper.h"
 #include "pk11func.h"
 
 class nsPK11Token : public nsIPK11Token
@@ -45,6 +46,7 @@ private:
 
   nsString mTokenName;
   PK11SlotInfo *mSlot;
+  nsCOMPtr<nsIInterfaceRequestor> mUIContext;
 };
 
 NS_IMPL_ISUPPORTS1(nsPK11Token, nsIPK11Token)
@@ -57,6 +59,8 @@ nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
   mSlot = slot;
   
   mTokenName = NS_ConvertUTF8toUCS2(PK11_GetTokenName(slot));
+
+  mUIContext = new PipUIContext();
 }
 
 nsPK11Token::~nsPK11Token()
@@ -82,6 +86,24 @@ NS_IMETHODIMP nsPK11Token::IsLoggedIn(PRBool *_retval)
   *_retval = PK11_IsLoggedIn(mSlot, 0);
 
   return rv;
+}
+
+/* void logout (in boolean force); */
+NS_IMETHODIMP 
+nsPK11Token::Login(PRBool force)
+{
+  nsresult rv;
+  PRBool test;
+  rv = this->NeedsLogin(&test);
+  if (NS_FAILED(rv)) return rv;
+  if (test || force) {
+    rv = this->Logout();
+    if (NS_FAILED(rv)) return rv;
+  }
+  rv = setPassword(mSlot, mUIContext);
+  if (NS_FAILED(rv)) return rv;
+  PK11_Authenticate(mSlot, PR_TRUE, mUIContext);
+  return NS_OK;
 }
 
 /* void logout (); */
