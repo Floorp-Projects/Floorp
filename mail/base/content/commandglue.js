@@ -807,7 +807,6 @@ function FolderPaneSelectionChange()
             gVirtualFolderTerms = null;
             gXFVirtualFolderTerms = null;
             gPrevFolderFlags = folderFlags;
-//            gSearchInput.showingSearchCriteria = false;
             gCurrentVirtualFolderUri = null;
             // don't get the db if this folder is a server
             // we're going to be display account central
@@ -840,7 +839,6 @@ function FolderPaneSelectionChange()
                       viewType = nsMsgViewType.eShowVirtualFolderResults;
                       gXFVirtualFolderTerms = CreateGroupedSearchTerms(tempFilter.searchTerms);
                       setupXFVirtualFolderSearch(srchFolderUriArray, gXFVirtualFolderTerms, searchOnline);
-                      gSearchInput.showingSearchCriteria = false;
                       // need to set things up so that reroot folder issues the search
                     }
                     else
@@ -852,10 +850,7 @@ function FolderPaneSelectionChange()
                       var realFolderRes = GetResourceFromUri(uriToLoad);
                       var realFolder = realFolderRes.QueryInterface(Components.interfaces.nsIMsgFolder);
                       msgDatabase = realFolder.getMsgDatabase(msgWindow);
-//                      dump("search term string = " + searchTermString + "\n");
-                    
                       gVirtualFolderTerms = CreateGroupedSearchTerms(tempFilter.searchTerms);
-                      gSearchInput.showingSearchCriteria = false;
                     }
                   }
                   else

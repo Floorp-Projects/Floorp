@@ -256,7 +256,7 @@ var folderListener = {
              {
                 gDefaultSearchViewTerms = null;
                 viewDebug("searching gVirtualFolderTerms\n");
-                onClearSearch(); // clear quick search bar
+                loadVirtualFolder(); 
              }
              else if (gMsgFolderSelected.flags & MSG_FOLDER_FLAG_VIRTUAL)
              {
@@ -266,7 +266,7 @@ var folderListener = {
              else if (gDefaultSearchViewTerms)
              {
                 viewDebug("searching gDefaultSearchViewTerms and rerootingFolder\n");
-               onClearSearch();
+               Search("");
              }
              else
              {

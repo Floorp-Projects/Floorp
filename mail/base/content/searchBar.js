@@ -635,6 +635,14 @@ function Search(str)
   onSearchInput(true);
 }
 
+// When the front end has finished loading a virtual folder, it calls openVirtualFolder
+// to actually perform the folder search. We use this method instead of calling Search("") directly
+// from FolderLoaded in order to avoid moving focus into the search bar.
+function loadVirtualFolder()
+{
+  onEnterInSearchBar();
+}
+
 // this notification gets generated from layout when it finishes laying out a message
 // in the message pane. 
 function onQuickSearchNewMsgLoaded()
