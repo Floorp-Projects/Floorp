@@ -132,7 +132,7 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus)
   return rv;
 }
 
-#define AB_STRING_URL       "chrome://messenger/locale/addressbook/addressBook.properties"
+#define AB_STRING_URL       "chrome://messenger/locale/addressbook/absync.properties"
 
 PRUnichar *
 nsAbSyncDriver::GetString(const PRUnichar *aStringName)
