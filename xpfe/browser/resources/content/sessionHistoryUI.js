@@ -23,6 +23,7 @@
  *  Jason Eager <jce2@po.cwru.edu>
  *  Blake Ross <BlakeR1234@aol.com>
  *  Peter Annema <disttsc@bart.nl>
+ *  Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -87,7 +88,7 @@ function FillHistoryMenu(aParent, aMenu)
             {
               entry = sessionHistory.getEntryAtIndex(j, false);
               if (entry)
-                createCheckboxMenuItem(aParent, j, entry.title, j==index);
+                createRadioMenuItem(aParent, j, entry.title, j==index);
             }
           break;
       }
@@ -277,10 +278,10 @@ function createMenuItem( aParent, aIndex, aLabel)
     aParent.appendChild( menuitem );
   }
 
-function createCheckboxMenuItem( aParent, aIndex, aLabel, aChecked)
+function createRadioMenuItem( aParent, aIndex, aLabel, aChecked)
   {
     var menuitem = document.createElement( "menuitem" );
-    menuitem.setAttribute( "type", "checkbox" );
+    menuitem.setAttribute( "type", "radio" );
     menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
     if (aChecked==true)
