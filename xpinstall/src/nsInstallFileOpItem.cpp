@@ -25,6 +25,13 @@
 #include "nsWinShortcut.h"
 #endif
 
+#ifdef XP_MAC
+#include "Aliases.h"
+#include "Gestalt.h"
+#include "Resources.h"
+#include "script.h"
+#endif
+
 /* Public Methods */
 
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
@@ -199,45 +206,49 @@ nsInstallFileOpItem::~nsInstallFileOpItem()
 
 PRInt32 nsInstallFileOpItem::Complete()
 {
-  PRInt32 aReturn = NS_OK;
+  PRInt32 aReturn = nsInstall::SUCCESS;
 
   switch(mCommand)
   {
     case NS_FOP_DIR_CREATE:
-      NativeFileOpDirCreate(mTarget);
+      aReturn = NativeFileOpDirCreate(mTarget);
       break;
     case NS_FOP_DIR_REMOVE:
-      NativeFileOpDirRemove(mTarget, mFlags);
+      aReturn = NativeFileOpDirRemove(mTarget, mFlags);
       break;
     case NS_FOP_DIR_RENAME:
-      NativeFileOpDirRename(mSrc, mStrTarget);
+      aReturn = NativeFileOpDirRename(mSrc, mStrTarget);
       break;
     case NS_FOP_FILE_COPY:
-      NativeFileOpFileCopy(mSrc, mTarget);
+      aReturn = NativeFileOpFileCopy(mSrc, mTarget);
       break;
     case NS_FOP_FILE_DELETE:
-      NativeFileOpFileDelete(mTarget, mFlags);
+      aReturn = NativeFileOpFileDelete(mTarget, mFlags);
       break;
     case NS_FOP_FILE_EXECUTE:
-      NativeFileOpFileExecute(mTarget, mParams);
+      aReturn = NativeFileOpFileExecute(mTarget, mParams);
       break;
     case NS_FOP_FILE_MOVE:
-      NativeFileOpFileMove(mSrc, mTarget);
+      aReturn = NativeFileOpFileMove(mSrc, mTarget);
       break;
     case NS_FOP_FILE_RENAME:
-      NativeFileOpFileRename(mSrc, mStrTarget);
+      aReturn = NativeFileOpFileRename(mSrc, mStrTarget);
       break;
     case NS_FOP_WIN_SHORTCUT:
-      NativeFileOpWindowsShortcut(mTarget, mShortcutPath, mDescription, mWorkingPath, mParams, mIcon, mIconId);
+      aReturn = NativeFileOpWindowsShortcut(mTarget, mShortcutPath, mDescription, mWorkingPath, mParams, mIcon, mIconId);
       break;
     case NS_FOP_MAC_ALIAS:
-      NativeFileOpMacAlias();
+      aReturn = NativeFileOpMacAlias(mSrc, mTarget);
       break;
     case NS_FOP_UNIX_LINK:
-      NativeFileOpUnixLink();
+      aReturn = NativeFileOpUnixLink();
       break;
   }
-	return aReturn;
+
+  if ( (aReturn!=NS_OK) && (aReturn < nsInstall::GESTALT_INVALID_ARGUMENT || aReturn > nsInstall::REBOOT_NEEDED) )
+    aReturn = nsInstall::UNEXPECTED_ERROR; /* translate to XPInstall error */
+  	
+  return aReturn;
 }
   
 char* nsInstallFileOpItem::toString()
@@ -245,6 +256,8 @@ char* nsInstallFileOpItem::toString()
   nsString result;
   char*    resultCString;
 
+  // XXX these hardcoded strings should be replaced by nsInstall::GetResourcedString(id)
+  
   switch(mCommand)
   {
     case NS_FOP_FILE_COPY:
@@ -294,6 +307,9 @@ char* nsInstallFileOpItem::toString()
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_MAC_ALIAS:
+      result = "Mac Alias: ";
+      result.Append(mSrc->GetCString());
+      resultCString = result.ToNewCString();
       break;
     case NS_FOP_UNIX_LINK:
       break;
@@ -337,6 +353,10 @@ nsInstallFileOpItem::RegisterPackageNode()
     return PR_FALSE;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 //
 // File operation functions begin here
 //
@@ -357,21 +377,21 @@ nsInstallFileOpItem::NativeFileOpDirRemove(nsFileSpec* aTarget, PRInt32 aFlags)
 PRInt32
 nsInstallFileOpItem::NativeFileOpDirRename(nsFileSpec* aSrc, nsString* aTarget)
 {
+  PRInt32 retval = NS_OK;
   char* szTarget = aTarget->ToNewCString();
 
-  aSrc->Rename(szTarget);
+  retval = aSrc->Rename(szTarget);
   
   if (szTarget)
     Recycle(szTarget);
 
-  return NS_OK;
+  return retval;
 }
 
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileCopy(nsFileSpec* aSrc, nsFileSpec* aTarget)
 {
-  aSrc->Copy(*aTarget);
-  return NS_OK;
+  return aSrc->Copy(*aTarget);
 }
 
 PRInt32
@@ -384,28 +404,27 @@ nsInstallFileOpItem::NativeFileOpFileDelete(nsFileSpec* aTarget, PRInt32 aFlags)
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileExecute(nsFileSpec* aTarget, nsString* aParams)
 {
-  aTarget->Execute(*aParams);
-  return NS_OK;
+  return aTarget->Execute(*aParams);
 }
 
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileMove(nsFileSpec* aSrc, nsFileSpec* aTarget)
 {
-  aSrc->Move(*aTarget);
-  return NS_OK;
+  return aSrc->Move(*aTarget);
 }
 
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget)
 {
+  PRInt32 retval = NS_OK;
   char* szTarget = aTarget->ToNewCString();
 
-  aSrc->Rename(szTarget);
+  retval = aSrc->Rename(szTarget);
   
   if (szTarget)
     Recycle(szTarget);
 
-  return NS_OK;
+  return retval;
 }
 
 PRInt32
@@ -436,8 +455,42 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcut(nsFileSpec* mTarget, nsFileSpec
 }
 
 PRInt32
-nsInstallFileOpItem::NativeFileOpMacAlias()
+nsInstallFileOpItem::NativeFileOpMacAlias(nsFileSpec* aSrc, nsFileSpec* aTarget)
 {
+
+#ifdef XP_MAC
+  // XXX gestalt to see if alias manager is around
+  
+  FSSpec		*fsPtrAlias = aTarget->GetFSSpecPtr();
+  AliasHandle   aliasH;
+  FInfo         info;
+  OSErr         err = noErr;
+  
+  err = NewAliasMinimal( aSrc->GetFSSpecPtr(), &aliasH );
+  if (err != noErr)  // bubble up Alias Manager error
+  	return err;
+  	
+  // create the alias file
+  FSpGetFInfo(aSrc->GetFSSpecPtr(), &info);
+  FSpCreateResFile(fsPtrAlias, info.fdCreator, info.fdType, smRoman);
+  short refNum = FSpOpenResFile(fsPtrAlias, fsRdWrPerm);
+  if (refNum != -1)
+  {
+    UseResFile(refNum);
+    AddResource((Handle)aliasH, rAliasType, 0, fsPtrAlias->name);
+    ReleaseResource((Handle)aliasH);
+    UpdateResFile(refNum);
+    CloseResFile(refNum);
+  }
+  else 
+    return nsInstall::UNEXPECTED_ERROR;
+  
+  // mark newly created file as an alias file
+  FSpGetFInfo(fsPtrAlias, &info);
+  info.fdFlags |= kIsAlias;
+  FSpSetFInfo(fsPtrAlias, &info);
+#endif
+
   return NS_OK;
 }
 

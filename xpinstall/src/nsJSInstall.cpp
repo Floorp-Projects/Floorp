@@ -2183,7 +2183,7 @@ InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval
 }
 
 //
-// Native method FileMacAliasCreate
+// Native method FileMacAlias
 //
 PR_STATIC_CALLBACK(JSBool)
 InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -2191,7 +2191,9 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
   nsAutoString b0;
-  PRInt32      b1;
+  nsAutoString b1;
+  nsAutoString b2;
+  nsAutoString b3;
 
   *rval = JSVAL_NULL;
 
@@ -2201,16 +2203,82 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
   }
 
-  if(argc >= 2)
+  if(argc >= 4)
   {
-    //  public int FileMacAliasCreate (String aSourceFolder,
-    //                                 Number aFlags);
-
+    // public int FileMacAlias( String aSourceFolder,
+    //                          String aSourceFileName,
+    //                          String aAliasFolder,
+    //                          String aAliasName );
+    // where
+    //      aSourceFolder -- the folder of the installed file from Get*Folder() APIs
+    //      aSourceName   -- the installed file's name
+    //      aAliasFolder  -- the folder of the new alias from Get*Folder() APIs
+    //      aAliasName    -- the actual name of the new alias
+    //      
+    //      returns SUCCESS for successful scheduling of operation
+    //              UNEXPECTED_ERROR for failure
+    
     ConvertJSValToStr(b0, cx, argv[0]);
-    b1 = JSVAL_TO_INT(argv[1]);
-    nsFileSpec fsB0(b0);
+    ConvertJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b2, cx, argv[2]);
+    ConvertJSValToStr(b3, cx, argv[3]);
 
-    if(NS_OK != nativeThis->FileOpFileMacAlias(fsB0, b1, &nativeRet))
+    b0 += b1;
+    b2 += b3;
+	
+    if(NS_OK != nativeThis->FileOpFileMacAlias(b0, b2, &nativeRet))
+    {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else if (argc >= 3)
+  {
+    // public int FileMacAlias( String aSourceFolder,
+    //                          String aSourceName,
+    //                          String aAliasFolder );
+    // where
+    //      aSourceFolder -- the folder of the installed file from Get*Folder() APIs
+    //      aSourceName   -- the installed file's name
+    //      aAliasFolder  -- the folder of the new alias from Get*Folder() APIs
+    //
+    // NOTE: 
+    //      The destination alias name is aSourceName + " alias" (Mac-like behavior). 
+    //      
+    //      returns SUCCESS for successful scheduling of operation
+    //              UNEXPECTED_ERROR for failure
+    
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b2, cx, argv[2]);
+    
+    b0 += b1;
+    b2 += b1;
+    b2 += " alias";   // XXX use GetResourcedString(id)
+    
+    if(NS_OK != nativeThis->FileOpFileMacAlias(b0, b2, &nativeRet))
+    {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else if (argc >= 2)
+  {
+    // public int FileMacAlias( String aSourcePath,
+    //                          String aAliasPath );
+    // where
+    //      aSourcePath -- the full path to the installed file 
+    //      aAliasPath  -- the full path to the new alias
+    //      
+    //      returns SUCCESS for successful scheduling of operation
+    //              UNEXPECTED_ERROR for failure
+    
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
+    
+    if(NS_OK != nativeThis->FileOpFileMacAlias(b0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -2219,7 +2287,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   else
   {
-    JS_ReportError(cx, "Function FileMacAlias requires 2 parameters");
+    JS_ReportError(cx, "Function FileMacAlias requires 2 to 4 parameters");
     return JS_FALSE;
   }
 

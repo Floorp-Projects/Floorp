@@ -44,6 +44,7 @@ class nsInstallFileOpItem : public nsInstallObject
     //   FileOpDirRemove()
     //   FileOpFileCopy()
     //   FileOpFileMove()
+    //   FileMacAlias()
     nsInstallFileOpItem(nsInstall*    installObj,
                         PRInt32       aCommand,
                         nsFileSpec&   aSrc,
@@ -120,7 +121,7 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32       NativeFileOpFileMove(nsFileSpec* aSrc, nsFileSpec* aTarget);
     PRInt32       NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget);
     PRInt32       NativeFileOpWindowsShortcut(nsFileSpec* mTarget, nsFileSpec* mShortcutPath, nsString* mDescription, nsFileSpec* mWorkingPath, nsString* mParams, nsFileSpec* mIcon, PRInt32 mIconId);
-    PRInt32       NativeFileOpMacAlias();
+    PRInt32       NativeFileOpMacAlias(nsFileSpec* aSrc, nsFileSpec* aTarget);
     PRInt32       NativeFileOpUnixLink();
 
 };
