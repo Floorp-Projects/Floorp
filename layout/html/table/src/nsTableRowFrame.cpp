@@ -493,7 +493,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
                                   &kidMaxElementSize : nsnull;
   nscoord maxCellTopMargin = 0;
   nscoord maxCellBottomMargin = 0;
-  nscoord cellSpacing = aReflowState.tableFrame->GetCellSpacing();
+  nscoord cellSpacingX = aReflowState.tableFrame->GetCellSpacingX();
   PRInt32 cellColSpan=1;  // must be defined here so it's set properly for non-cell kids
   if (PR_TRUE==gsDebug) printf("Row %p: Resize Reflow\n", this);
 
@@ -522,13 +522,13 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         for (PRInt32 colIndex=prevColIndex+1; colIndex<cellColIndex; colIndex++)
         {
           aReflowState.x += aReflowState.tableFrame->GetColumnWidth(colIndex);
-          aReflowState.x += cellSpacing;
+          aReflowState.x += cellSpacingX;
           if (PR_TRUE==gsDebug)
             printf("  Row: in loop, aReflowState.x set to %d from cellSpacing %d and col width\n", 
-                    aReflowState.x, aReflowState.tableFrame->GetColumnWidth(colIndex), cellSpacing);
+                    aReflowState.x, aReflowState.tableFrame->GetColumnWidth(colIndex), cellSpacingX);
         }
       }
-      aReflowState.x += cellSpacing;
+      aReflowState.x += cellSpacingX;
       if (PR_TRUE==gsDebug) printf("  Row: past loop, aReflowState.x set to %d\n", aReflowState.x);
 
       // at this point, we know the column widths.  
@@ -541,11 +541,11 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         availWidth += aReflowState.tableFrame->GetColumnWidth(cellColIndex+numColSpan);
         if (numColSpan != 0)
         {
-          availWidth += cellSpacing;
+          availWidth += cellSpacingX;
         }
         if (PR_TRUE==gsDebug) 
           printf("  Row: in loop, availWidth set to %d from colIndex %d width %d and cellSpacing\n", 
-                  availWidth, cellColIndex, aReflowState.tableFrame->GetColumnWidth(cellColIndex+numColSpan), cellSpacing);
+                  availWidth, cellColIndex, aReflowState.tableFrame->GetColumnWidth(cellColIndex+numColSpan), cellSpacingX);
       }
       if (PR_TRUE==gsDebug) printf("  Row: availWidth for this cell is %d\n", availWidth);
 
@@ -654,7 +654,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
     // if this was the last child, and it had a colspan>1, add in the cellSpacing for the colspan
     // if the last kid wasn't a colspan, then we still have the colspan of the last real cell
     if ((nsnull==kidFrame) && (cellColSpan>1))
-      aReflowState.x += cellSpacing;
+      aReflowState.x += cellSpacingX;
   }
 
   SetMaxChildHeight(aReflowState.maxCellHeight,maxCellTopMargin, maxCellBottomMargin);  // remember height of tallest child who doesn't have a row span
@@ -733,9 +733,9 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
 
       // get border padding values
       nsMargin borderPadding;
-      const nsStyleSpacing* cellSpacing;
-      kidFrame->GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)cellSpacing));
-      cellSpacing->CalcBorderPaddingFor(kidFrame, borderPadding);
+      const nsStyleSpacing* cellSpacingStyle;
+      kidFrame->GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)cellSpacingStyle));
+      cellSpacingStyle->CalcBorderPaddingFor(kidFrame, borderPadding);
 
       // Because we're not splittable always allow the child to be as high as
       // it wants. The default available width is also unconstrained so we can

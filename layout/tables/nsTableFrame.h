@@ -193,16 +193,19 @@ public:
   /** set the width of the column at aColIndex to aWidth    */
   virtual void SetColumnWidth(PRInt32 aColIndex, nscoord aWidth);
 
-  /** helper to get the cell spacing style value */
-  virtual nscoord GetCellSpacing();
+  /** helper to get the border collapse style value */
+  virtual PRUint8 GetBorderCollapseStyle();
 
-  /** helper to get the cell spacing style value */
+  /** helper to get the cell spacing X style value */
+  virtual nscoord GetCellSpacingX();
+
+  /** helper to get the cell spacing Y style value */
+  virtual nscoord GetCellSpacingY();
+
+  /** helper to get the cell padding style value */
   virtual nscoord GetCellPadding();
           
-  /**
-    * Calculate Layout Information
-    *
-    */
+  /** Calculate Layout Information */
   void    AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell);
   void    RecalcLayoutData();
 
@@ -632,7 +635,8 @@ private:
   ColumnInfoCache *mColCache;       // cached information about the table columns
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
   nsIFrame*    mColGroups;          // the list of colgroup frames
-  nscoord      mDefaultCellSpacing; // the default cell spacing for this table
+  nscoord      mDefaultCellSpacingX;// the default cell spacing X for this table
+  nscoord      mDefaultCellSpacingY;// the default cell spacing X for this table
   nscoord      mDefaultCellPadding; // the default cell padding for this table
 };
 
