@@ -314,14 +314,15 @@ PRMJ_Now(void)
     JSLL_I2L(gmtOffset,gmtDiff);
     JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
     JSLL_MUL(gmtOffset,gmtOffset,s2us);
-    JSLL_UI2L(dstOffset,0);
-    dstOffset = PRMJ_DSTOffset(dstOffset);
-    JSLL_SUB(gmtOffset,gmtOffset,dstOffset);
+
     /* don't adjust for DST since it sets ctime and gmtime off on the MAC */
     Microseconds((UnsignedWide*)&upTime);
     JSLL_ADD(localTime,localTime,gmtOffset);
     JSLL_ADD(localTime,localTime, dstLocalBaseMicroseconds);
     JSLL_ADD(localTime,localTime, upTime);
+
+    dstOffset = PRMJ_DSTOffset(localTime);
+    JSLL_SUB(localTime,localTime,dstOffset);
 
     return *((JSUint64 *)&localTime);
 #endif /* XP_MAC */
