@@ -150,13 +150,6 @@ tier_9_dirs += \
 		modules/libjar \
 		$(NULL)
 
-ifdef MOZ_JAVA_SUPPLEMENT
-tier_9_dirs += 			\
-  java/util			\
-  java/webclient		\
-  $(NULL)
-endif
-
 ifdef MOZ_OJI
 tier_9_dirs	+= js/src/liveconnect
 endif
