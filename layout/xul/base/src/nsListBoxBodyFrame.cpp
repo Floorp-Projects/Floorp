@@ -236,11 +236,7 @@ nsListBoxBodyFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
 
   mOnePixel = aPresContext->IntScaledPixelsToTwips(1);
   
-  nsIFrame* box = aParent->GetParent();
-  if (!box)
-    return rv;
-
-  nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(box));
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
   if (!scrollFrame)
     return rv;
 
@@ -264,7 +260,6 @@ nsListBoxBodyFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
   fm->GetHeight(mRowHeight);
 
   return rv;
-
 }
 
 NS_IMETHODIMP
@@ -344,6 +339,7 @@ nsListBoxBodyFrame::NeedsRecalc()
 {
   mStringWidth = -1;
   return nsBoxFrame::NeedsRecalc();
+  printf("*** nsListBoxBodyFrame::NeedsRecalc %p\n", this);
 }
 
 /////////// nsBox ///////////////
@@ -393,6 +389,10 @@ nsListBoxBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize
   nsresult rv = nsBoxFrame::GetPrefSize(aBoxLayoutState, aSize);
 
   PRInt32 size = GetFixedRowSize();
+  nsIBox* box = nsnull;
+  GetChildBox(&box);
+  printf("nsListBoxBodyFrame::GetPrefSize %p childbox=%p rowsize=%d height=%d newHeight=%d\n", this,
+         box, size, aSize.height, size*GetRowHeightTwips());
   if (size > -1)
     aSize.height = size*GetRowHeightTwips();
    
@@ -713,6 +713,8 @@ nsListBoxBodyFrame::GetFixedRowSize()
 void
 nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
 { 
+  printf("*** Setting rowheight on %p to %d (current %d)\n", this,
+         aRowHeight, mRowHeight);
   if (aRowHeight > mRowHeight) { 
     mRowHeight = aRowHeight;
     
@@ -737,20 +739,16 @@ nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
     // so we can create or destory rows as needed
     mRowHeightWasSet = PR_TRUE;
     PostReflowCallback();
-  } 
+  }
 }
 
 nscoord
 nsListBoxBodyFrame::GetAvailableHeight()
 {
-  nsIBox* box;
-  GetParentBox(&box);
-  if (!box)
-    return 0;
-
-  nsRect contentRect;
-  box->GetContentRect(contentRect);
-  return contentRect.height;
+  nsIScrollableFrame* scrollFrame
+    = nsLayoutUtils::GetScrollableFrameFor(this);
+  nsIScrollableView* scrollView = scrollFrame->GetScrollableView();
+  return scrollView->View()->GetBounds().height;
 }
 
 nscoord
@@ -987,18 +985,8 @@ nsListBoxBodyFrame::GetSmoother()
 void
 nsListBoxBodyFrame::VerticalScroll(PRInt32 aPosition)
 {
-  nsIBox* box;
-  GetParentBox(&box);
-  if (!box)
-    return;
-
-  box->GetParentBox(&box);
-  if (!box)
-    return;
-
-  nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(box));
-  if (!scrollFrame)
-    return;
+  nsIScrollableFrame* scrollFrame
+    = nsLayoutUtils::GetScrollableFrameFor(this);
 
   nsPoint scrollPosition = scrollFrame->GetScrollPosition();
  

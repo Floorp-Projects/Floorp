@@ -4635,18 +4635,9 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   rootFrame->Init(presContext, aDocElement, parentFrame,
                   rootPseudoStyle, nsnull);
   
-  if (!isPaginated || isPrintPreview) {
-    if (isScrollable) {
-      FinishBuildingScrollFrame(parentFrame, rootFrame);
-
-      // Don't set the root as the primary frame for aDocElement.  Its 
-      // primary frame will be set in ConstructDocElementFrame.
-    } else { // if not scrollable
-      if (!isXUL) { // if not XUL
-        parentFrame->SetInitialChildList(presContext, nsnull, rootFrame);
-      }
-    }
-  } 
+  if (isScrollable) {
+    FinishBuildingScrollFrame(parentFrame, rootFrame);
+  }
   
   if (isPaginated) { // paginated
     // Create the first page
@@ -4665,9 +4656,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   
   *aNewFrame = viewportFrame;
 
-
-
-  return NS_OK;  
+  return NS_OK;
 }
 
 nsresult
