@@ -43,7 +43,7 @@
 #include "nscore.h"
 
 #ifdef DEBUG
-#//define DEBUG_XF_NODESTATE
+//#define DEBUG_XF_NODESTATE
 #endif
 
 /** Flags used in nsXFormsNodeState */

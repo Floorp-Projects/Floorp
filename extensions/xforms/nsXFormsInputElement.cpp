@@ -272,7 +272,7 @@ nsXFormsInputElement::Refresh()
 {
   if (!mControl || !mModel)
     return NS_OK;
-  
+
   nsAutoString text;
   PRBool readonly = GetReadOnlyState();    
   if (mBoundNode) {

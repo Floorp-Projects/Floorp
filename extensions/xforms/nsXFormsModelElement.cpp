@@ -359,15 +359,18 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 
   nsAutoString type;
   aEvent->GetType(type);
+  nsresult rv = NS_OK;
 
   if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Refresh].name)) {
-    Refresh();
+    rv = Refresh();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Revalidate].name)) {
-    Revalidate();
+    rv = Revalidate();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Recalculate].name)) {
-    Recalculate();
+    rv = Recalculate();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Rebuild].name)) {
-    Rebuild();
+    rv = Rebuild();
+  } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_ModelConstructDone].name)) {
+    rv = ConstructDone();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Ready].name)) {
     Ready();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Reset].name)) {
@@ -376,6 +379,23 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
     *aHandled = PR_FALSE;
   }
 
+#ifdef DEBUG
+  if (NS_FAILED(rv))
+    printf("nsXFormsModelElement::HandleDefault() failed!\n");
+#endif
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::ConstructDone()
+{
+  InitializeControls();
+
+  /// @bug This is not entirely correct. xforms-ready should be sent when
+  /// _all_ models have initialized their controls.
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Ready);  
+  
   return NS_OK;
 }
 
@@ -427,7 +447,9 @@ nsXFormsModelElement::Rebuild()
   // TODO: Clear graph and re-attach elements
 
   // 1 . Clear graph
-  mMDG.Clear();
+  nsresult rv;
+  rv = mMDG.Clear();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // 2. Re-attach all elements
 
@@ -458,7 +480,8 @@ nsXFormsModelElement::Rebuild()
   }
 
   // 3. Rebuild graph
-  ProcessBindElements();
+  rv = ProcessBindElements();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return mMDG.Rebuild();
 }
@@ -475,37 +498,37 @@ nsXFormsModelElement::Recalculate()
 
 void
 nsXFormsModelElement::DispatchEvents(nsIXFormsControl *aControl,
-                                     nsIDOMNode       *aNode)
+                                     nsIDOMNode       *aNode,
+                                     PRBool           aInitialize)
 {
+  if (!aControl || !aNode)
+    return;
+  
   nsCOMPtr<nsIDOMElement> element;
   aControl->GetElement(getter_AddRefs(element));
-  
-  const nsXFormsNodeState* ns = mMDG.GetNodeState(aNode);
 
-  if (!element || !ns) {
-#ifdef DEBUG_beaufour
-    printf("nsXFormsModelElement::DispatchEvents(): Could not get element or node state for node!\n");
-#endif
+  const nsXFormsNodeState *ns = mMDG.GetNodeState(aNode);
+
+  if (!element || !ns)
     return;
-  }
 
-  if (ns->ShouldDispatchValid()) {
+  if (aInitialize || ns->ShouldDispatchValid()) {
     nsXFormsUtils::DispatchEvent(element,
                                  ns->IsValid() ? eEvent_Valid : eEvent_Invalid);
   }
-  if (ns->ShouldDispatchReadonly()) {
+  if (aInitialize || ns->ShouldDispatchReadonly()) {
     nsXFormsUtils::DispatchEvent(element,
                                  ns->IsReadonly() ? eEvent_Readonly : eEvent_Readwrite);
   }
-  if (ns->ShouldDispatchRequired()) {
+  if (aInitialize || ns->ShouldDispatchRequired()) {
     nsXFormsUtils::DispatchEvent(element,
                                  ns->IsRequired() ? eEvent_Required : eEvent_Optional);
   }
-  if (ns->ShouldDispatchRelevant()) {
+  if (aInitialize || ns->ShouldDispatchRelevant()) {
     nsXFormsUtils::DispatchEvent(element,
                                  ns->IsRelevant() ? eEvent_Enabled : eEvent_Disabled);
   }
-  if (ns->ShouldDispatchValueChanged()) {
+  if (aInitialize || ns->ShouldDispatchValueChanged()) {
     nsXFormsUtils::DispatchEvent(element, eEvent_ValueChanged);
   }
 }
@@ -1099,8 +1122,6 @@ nsXFormsModelElement::FinishConstruction()
 
   // we get the instance data from our instance child nodes
 
-  ProcessBindElements();
-
   // 5. dispatch xforms-rebuild, xforms-recalculate, xforms-revalidate
 
   nsXFormsUtils::DispatchEvent(mElement, eEvent_Rebuild);
@@ -1111,6 +1132,29 @@ nsXFormsModelElement::FinishConstruction()
 
   return NS_OK;
 }
+
+void
+nsXFormsModelElement::InitializeControls()
+{
+  PRInt32 controlCount = mFormControls.Count();
+  for (PRInt32 i = 0; i < controlCount; ++i) {
+    // Get control
+    nsIXFormsControl *control = NS_STATIC_CAST(nsIXFormsControl*,
+                                               mFormControls[i]);
+    if (!control)
+      continue;
+    
+    // Get bound node
+    nsCOMPtr<nsIDOMNode> boundNode;
+    control->GetBoundNode(getter_AddRefs(boundNode));
+    
+    // Dispatch events
+    DispatchEvents(control, boundNode, PR_TRUE);
+    // Refresh controls
+    control->Refresh();
+  }  
+}
+
 
 void
 nsXFormsModelElement::MaybeNotifyCompletion()
@@ -1140,7 +1184,6 @@ nsXFormsModelElement::MaybeNotifyCompletion()
     nsXFormsModelElement *model =
         NS_STATIC_CAST(nsXFormsModelElement *, models->ElementAt(i));
     nsXFormsUtils::DispatchEvent(model->mElement, eEvent_ModelConstructDone);
-    nsXFormsUtils::DispatchEvent(model->mElement, eEvent_Ready);
   }
 }
 
@@ -1187,6 +1230,9 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
                             nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                             nsnull, getter_AddRefs(result));
   if (NS_FAILED(rv)) {
+#ifdef DEBUG
+    printf("xforms-binding-exception: XPath Evaluation failed\n");
+#endif
     nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
     return rv;
   }
@@ -1296,6 +1342,9 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
     // @see http://www.w3.org/TR/xforms/slice4.html#evt-modelConstruct
     // (item 4, c)
     if (multiMIP) {
+#ifdef DEBUG
+      printf("xforms-binding-exception: Multiple MIPs on same node!");
+#endif
       nsXFormsUtils::DispatchEvent(aBindElement,
                                    eEvent_BindingException);
       return NS_ERROR_FAILURE;

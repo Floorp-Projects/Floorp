@@ -244,6 +244,16 @@ nsXFormsControlStub::HandleDefault(nsIDOMEvent *aEvent,
   NS_ENSURE_ARG(aHandled);
 
   if (aEvent) {
+    // Check that we are the target of the event
+    nsCOMPtr<nsIDOMEventTarget> target;
+    aEvent->GetTarget(getter_AddRefs(target));
+    nsCOMPtr<nsIDOMElement> targetE(do_QueryInterface(target));
+    if (targetE && targetE != mElement) {
+      *aHandled = PR_FALSE;
+      return NS_OK;
+    }
+
+    // Handle event
     nsAutoString type;
     aEvent->GetType(type);
 

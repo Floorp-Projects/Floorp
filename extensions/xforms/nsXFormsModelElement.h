@@ -65,9 +65,6 @@ class nsXFormsControl;
  * initializing the model and its controls.
  *
  * @see http://www.w3.org/TR/xforms/slice3.html#structure-model
- *
- * @todo We need to dispatch the initial (default) events to controls (XXX)
- *
  */
 class nsXFormsModelElement : public nsXFormsStubElement,
                              public nsIModelElementPrivate,
@@ -104,8 +101,12 @@ private:
   NS_HIDDEN_(void)     Ready();
   NS_HIDDEN_(void)     BackupOrRestoreInstanceData(PRBool restore);
 
+  /** Initializes the MIPs on all form controls */
+  NS_HIDDEN_(void) InitializeControls();
+
   NS_HIDDEN_(nsresult) ProcessBindElements();
   NS_HIDDEN_(nsresult) FinishConstruction();
+  NS_HIDDEN_(nsresult) ConstructDone();
   NS_HIDDEN_(void)     MaybeNotifyCompletion();
 
   NS_HIDDEN_(nsresult)   ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
@@ -119,9 +120,14 @@ private:
   /**
    * Dispatch the necessary events to a control, aControl, when the instance
    * node, aNode, it is bound to changes state.
+   *
+   * @param aControl          The event target
+   * @param aNode             The instance node
+   * @param aInitialize       Send events for all flags
    */
   NS_HIDDEN_(void)     DispatchEvents(nsIXFormsControl *aControl,
-                                      nsIDOMNode       *aNode);
+                                      nsIDOMNode       *aNode,
+                                      PRBool            aInitialize = PR_FALSE);
 
   // Returns true when all external documents have been loaded
   PRBool IsComplete() const { return (mSchemaTotal == mSchemaCount
