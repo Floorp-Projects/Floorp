@@ -4113,11 +4113,6 @@ nscoord nsTableFrame::CalcBorderBoxHeight(const nsHTMLReflowState& aState,
 
   if (eStyleUnit_Auto == aState.mStylePosition->mHeight.GetUnit()) {
     isAutoHeight = PR_TRUE;
-    if (NS_UNCONSTRAINEDSIZE != aState.availableHeight) {
-      nsMargin margin(0,0,0,0);
-      aState.mStyleSpacing->GetMargin(margin);
-      height = aState.availableHeight - margin.top - margin.bottom;
-    }
   }
   else if (((0 == height) || (NS_UNCONSTRAINEDSIZE == height)) &&
            aDoNavHack && (eStyleUnit_Percent == aState.mStylePosition->mHeight.GetUnit())) {
