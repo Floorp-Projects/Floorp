@@ -49,6 +49,7 @@
     </resources>
 
     <content>
+      <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
       <xul:tabbox onselect="if (event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:stack collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.getAttribute('label')) { this.childNodes[0].value = document.tooltipNode.getAttribute('label'); return true; } return false;">
@@ -68,7 +69,7 @@
                     onclick="if (event.button != 1 || event.target.localName != 'tab') return; this.parentNode.parentNode.parentNode.removeTab(event.target);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode); event.stopPropagation();"
                     ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode); event.stopPropagation();">
-            <xul:tab maxwidth="250" width="0" minwidth="30" flex="100000" class="tabbrowser-tab" label="(Untitled)" crop="end"/>
+            <xul:tab maxwidth="250" width="0" minwidth="30" flex="100000" class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:stack>
         <xul:tabpanels flex="1" style="margin:0px; padding:0px; border:0px;">
@@ -79,7 +80,7 @@
     </content>
     <implementation>
       <field name="mTabBox">
-        document.getAnonymousNodes(this)[0]
+        document.getAnonymousNodes(this)[1]
       </field>
       <field name="mStrip">
         this.mTabBox.firstChild
@@ -89,6 +90,9 @@
       </field>
       <field name="mPanelContainer">
         this.mTabBox.childNodes[1]
+      </field>
+      <field name="mStringBundle">
+        document.getAnonymousNodes(this)[0]
       </field>
       <field name="mCurrentTab">
         null
@@ -151,7 +155,7 @@
               if (!this.mBlank && aStateFlags & nsIWebProgressListener.STATE_START && 
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 this.mTab.setAttribute("busy", "true"); 
-                this.mTab.label = "Loading...";
+                this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.loading");
                 
                 if (this.mTabBrowser.mCurrentTab == this.mTab)
                   this.mTabBrowser.mIsBusy = true;
@@ -162,8 +166,8 @@
                   this.mBlank = false;
                 else {
                   this.mTab.removeAttribute("busy");
-                  if (this.mTab.label == "Loading...")
-                    this.mTab.label = "(Untitled)";
+                  if (this.mTab.label == this.mTabBrowser.mStringBundle.getString("tabs.loading"))
+                    this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.untitled")
                 
                   if (this.mTabBrowser.mCurrentTab == this.mTab)
                     this.mTabBrowser.mIsBusy = false;
@@ -331,6 +335,27 @@
         </body>
       </method>
 
+      <method name="setStripVisibilityTo">
+        <parameter name="aShow"/>
+        <body>
+        <![CDATA[
+          this.mStrip.collapsed = !aShow;
+          if (aShow) {
+            // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
+            document.getElementById("menu_closeWindow").hidden = false;
+            document.getElementById("menu_closeSeparator").hidden = false;
+            document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.closeTab"));
+          }
+          else {
+            // XXXdwh temporary unclean dependency on specific menu items in navigator.xul
+            document.getElementById("menu_closeWindow").hidden = true;
+            document.getElementById("menu_closeSeparator").hidden = true;
+            document.getElementById("menu_close").setAttribute("label", this.mStringBundle.getString("tabs.close"));
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="addTab">
         <parameter name="aURI"/>
         <body>
@@ -366,7 +391,7 @@
                                              "tab");
 
             if (blank)
-              t.setAttribute("label", "(Untitled)");
+              t.setAttribute("label", this.mStringBundle.getString("tabs.untitled"));
             else
               t.setAttribute("label", aURI);
             
@@ -385,10 +410,10 @@
             this.mPanelContainer.appendChild(b);
 
             b.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-
+            
             if (this.mStrip.collapsed)
-              this.mStrip.collapsed = false; 
-
+              this.setStripVisibilityTo(true);
+            
             // wire up a progress listener for the new browser object.
             var position = this.mTabContainer.childNodes.length-1;
             var tabListener = (this.mTabProgressListener)(this, t, blank);
@@ -449,7 +474,7 @@
               var pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
               var autohide = pref.getBoolPref("browser.tabs.autoHide");
               if (autohide)
-                this.mStrip.collapsed = true; // Go ahead and collapse, since we're going back to 1 tab.
+                this.setStripVisibilityTo(false);
             }
 
             var index = -1;
@@ -533,7 +558,8 @@
               var pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
               var autohide = pref.getBoolPref("browser.tabs.autoHide");
               if (!autohide) {
-                this.mStrip.collapsed = false;
+                this.setStripVisibilityTo(true);
+                
                 this.mTabbedMode = true;
                 this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
              

@@ -69,6 +69,8 @@
 <!ENTITY translateMenu.accesskey "t">
 <!ENTITY translate.commandKey "t">
 
+<!ENTITY closeWindow.label "Close Window">
+
 <!-- I'd like all this to move to an overlay or something -->
 <!ENTITY bidiMenu.label "Bidi Options">
 <!ENTITY directionBidiMenu.label "Default Direction">

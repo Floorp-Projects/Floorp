@@ -61,6 +61,7 @@
     <key id="key_editPage"       key="&editPageCmd.commandkey;" command="Browser:EditPage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
     <key id="key_close"/>
+    <key id="key_closeWindow"/>
     <key id="key_quit"/>
 
     <!-- Edit Menu -->
@@ -114,8 +115,9 @@
     <command id="cmd_printSetup" oncommand="goPageSetup();"/>
     <command id="Browser:Print" oncommand="BrowserPrint();"/>
     <command id="cmd_quit"/>
-    <command id="cmd_close" oncommand="BrowserClose()"/>
-  
+    <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
+    <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
+
     <!-- Edit Menu -->
     <command id="cmd_undo"/>
     <command id="cmd_redo"/>
@@ -182,6 +184,8 @@
         <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
         <menuseparator/>
         <menuitem id="menu_close"/>
+        <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
+        <menuseparator id="menu_closeSeparator" hidden="true"/>
         <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
         <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="savePage(gFocusedURL);" hidden="true"/>
         <menuseparator/>
