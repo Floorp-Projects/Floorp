@@ -16,6 +16,33 @@
  * Reserved.
  */
 
+///////////////////////////////////////////////////////////////////////////////
+// This is at test harness for mailbox urls. Currently the only supported
+// mailbox url is for parsing mail box folders. This will change as we add
+// more functionality to the mailbox protocol code....
+//
+// For command (1) running a parse mailbox url:
+//		You are prompted for the name of a mail box file you wish to parse
+//		CURRENTLY this file name must be in the form of a file url:
+//		i.e. "D|/mozilla/MailboxFile". We'll look into changing this after
+//		I talk to folks about deriving our own file spec classes (david b.?)
+//		Once this is done, we'll get rid of the file in the form of a url
+//		requirement.....
+//
+// Currently I use a stub mailbox parser instance (nsMsgMailboxParserStub)
+// which simply acknowledges that it is getting data from the mailbox protocol.
+// It supports the stream listener interface. When you want to hook this up to
+// a real mailbox parser simply create your mail box parser and pass it into the
+// constructor of the mailbox test driver. This line change would occurr in the main
+// when the mailbox test driver is created.
+//
+// Oh one more thing. Data is passed from the mailbox protocol to the mailbox parse
+// through calls to ::OnDataAvailable which provides the mailbox parser with the url,
+// stream and the number of bytes available to be read.
+// A call to ::OnStopBinding is a signal to the mailbox parser that you've reached
+// the end of the file.
+//////////////////////////////////////////////////////////////////////////////////
+
 #include "msgCore.h"
 #include "prprf.h"
 
@@ -95,7 +122,6 @@ NS_END_EXTERN_C
 // a transport instance. For different protocols, you'll have different url
 // functions like this one in the test harness...
 /////////////////////////////////////////////////////////////////////////////////
-
 
 nsresult NS_NewMailboxUrl(nsIMailboxUrl ** aResult, const nsString urlSpec)
 {
