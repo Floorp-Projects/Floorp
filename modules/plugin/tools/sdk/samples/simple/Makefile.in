@@ -19,50 +19,34 @@
 # Contributor(s):
 #
 
-DEPTH		= ../../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= npSDKsimple
-LIBRARY_NAME	= npSDKsimple
+XPIDL_MODULE = npsimple
+LIBRARY_NAME = npsimple
 
-REQUIRES        = java \
-                  idl \
-                  xpcom \
-                  nspr \
-                  $(NULL)
+BUILD_STATIC_LIBS = 1
 
-CPPSRCS         = nsScriptablePeer.cpp \
-		  plugin.cpp \
-                  $(NULL)
+CPPSRCS = nsScriptablePeer.cpp plugin.cpp
 
-XPIDLSRCS 	= nsISimplePlugin.idl
+XPIDLSRCS = nsISimplePlugin.idl
 
-SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libplugingate_s.$(LIB_SUFFIX) \
+SHARED_LIBRARY_LIBS = ../common/psdkplugingate_s.$(LIB_SUFFIX)
+
+ifeq ($(OS_ARCH),WINNT)
+DEFFILE = $(srcdir)/npsimple.def
+RESFILE = npsimple.res
+OS_LIBS = version.lib
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS +=  -L/usr/lib -L/usr/X11R6/lib  -rdynamic  -lXi -lXext -lX11 -lm -lXt
-
-INSTALL_PLUGIN	= $(CONFIG_TOOLS)/nsinstall -R 
-INSTALL = true
-
-ifeq ($(OS_ARCH), UNIX)
-# This needs to get defined for npapi.h on unix platforms.
-DEFINES         += -DXP_UNIX
 endif
 
-LOCAL_INCLUDES	+= -I$(srcdir)/$(XPIDL_GEN_DIR)  -I$(srcdir)/../include -I$(srcdir)/../../include
-
-install-plugin:	$(SHARED_LIBRARY)
-	$(INSTALL_PLUGIN) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/$(COMPONENTS_PATH)
-ifdef SHARED_LIBRARY
-	$(INSTALL_PLUGIN) $(SHARED_LIBRARY) $(DIST)/bin/plugins
-endif
-
-libs:: install-plugin
-
+LOCAL_INCLUDES = -I$(srcdir)/../include -I$(srcdir)/../../include
