@@ -42,7 +42,7 @@ public:
 
 protected:
    nsChromeTreeOwner();
-   ~nsChromeTreeOwner();
+   virtual ~nsChromeTreeOwner();
 
    void XULWindow(nsXULWindow* aXULWindow);
    nsXULWindow* XULWindow();
