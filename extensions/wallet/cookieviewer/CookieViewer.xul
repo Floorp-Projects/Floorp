@@ -49,7 +49,7 @@
     </tabbox>
     <tabpanel id="panel" align="horizontal" style="width: 400px;">
       <box class="tabpanel" id="system" flex="100%" align="vertical">
-        <box><html:div>&div.cookiesonsystem.label;</html:div></box>
+        <text class="label" value="&div.cookiesonsystem.label;"/>
         <spring style="height: 10px;"/>
           <tree id="cookietree" class="inset" style="height: 150px; width: 380px;" align="vertical" 
             multiple="true" onselect="ViewCookieSelected(event);"
@@ -100,22 +100,19 @@
         </html:fieldset>
         <spring flex="5%"/>
         <box align="horizontal">
-          <titledbutton id="removeCookies" class="dialog push" disabled="true"
+          <button id="removeCookies" class="dialog push" disabled="true"
                         value="&button.removecookie.label;"
                         onclick="DeleteCookieSelected();"/>
-          <titledbutton id="removeAllCookies" class="dialog push"
+          <button id="removeAllCookies" class="dialog push"
                         value="&button.removeallcookies.label;"
                         onclick="DeleteAllCookies();"/>
-          <!--  todo: <titledbutton id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
+          <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
         </box>
-        <html:label id="checkboxLabel">
-          <html:input type="checkbox" id="checkbox" />
-          &checkbox.label;
-        </html:label>
+        <checkbox id="checkbox" value="&checkbox.label;" />
       </box>
       
       <box class="tabpanel" id="servers" flex="100%" align="vertical">
-        <html:div>&div.bannedservers.label;</html:div>
+        <text class="label" value="&div.bannedservers.label;"/>
         <spring flex="5%"/>
           <tree id="permissionstree" class="inset" style="height: 280px; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
@@ -130,10 +127,10 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removePermissions" class="dialog push" disabled="true" 
+          <button id="removePermissions" class="dialog push" disabled="true" 
                         value="&removepermission.label;" 
                         onclick="DeletePermissionSelected();"/>
-          <titledbutton id="removeAllPermissions" class="dialog push"
+          <button id="removeAllPermissions" class="dialog push"
                         value="&removeallpermissions.label;" 
                         onclick="DeleteAllPermissions();"/>
         </box>
@@ -141,7 +138,7 @@
       </box>
 
       <box class="tabpanel" id="images" style="display:none" flex="100%" align="vertical">
-        <html:div>&div.bannedimages.label;</html:div>
+        <text class="label" value="&div.bannedimages.label;"/>
         <spring flex="5%"/>
           <tree id="imagestree" class="inset" style="height: 280px; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');"
@@ -156,10 +153,10 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeImages" class="dialog push" disabled="true"
+          <button id="removeImages" class="dialog push" disabled="true"
                         value="&removeimage.label;" 
                         onclick="DeleteImageSelected();"/>
-          <titledbutton id="removeAllImages" class="dialog push"
+          <button id="removeAllImages" class="dialog push"
                         value="&removeallimages.label;" 
                         onclick="DeleteAllImages();"/>
         </box>
