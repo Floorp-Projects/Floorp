@@ -602,7 +602,11 @@ nsHTTPChannel::Open(void)
 
 nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport)
 {
-    return m_pHandler->ReleaseTransport(aTransport);
+  // Null out pointers that are no longer needed...
+  mResponseContext = null_nsCOMPtr();
+  NS_IF_RELEASE(m_pResponseDataListener);
+
+  return m_pHandler->ReleaseTransport(aTransport);
 }
 
 nsresult nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
