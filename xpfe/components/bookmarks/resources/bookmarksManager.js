@@ -84,10 +84,13 @@ function fillColumnsMenu(aEvent)
     for (i = 0; i < columns.length; ++i) {
       var menuitem = document.createElement("menuitem");
       menuitem.setAttribute("label", columns[i].label);
-      menuitem.setAttribute("resource", columns[i].resource);
-      menuitem.setAttribute("id", "columnMenuItem:" + columns[i].resource);
+      menuitem.setAttribute("colid", columns[i].id);
+      menuitem.setAttribute("id", "columnMenuItem:" + columns[i].id);
       menuitem.setAttribute("type", "checkbox");
       menuitem.setAttribute("checked", columns[i].hidden != "true");
+      //Disable Name column because you cannot hide it
+      if (columns[i].id == "Name")
+        menuitem.setAttribute("disabled", "true");
       aEvent.target.appendChild(menuitem);
     }
 
@@ -95,9 +98,12 @@ function fillColumnsMenu(aEvent)
   }
   else {
     for (i = 0; i < columns.length; ++i) {
-      var element = document.getElementById("columnMenuItem:" + columns[i].resource);
-      if (element && columns[i].hidden != "true")
-        element.setAttribute("checked", "true");
+      var element = document.getElementById("columnMenuItem:" + columns[i].id);
+      if (element)
+        if (columns[i].hidden == "true")
+          element.setAttribute("checked", "false");
+        else
+          element.setAttribute("checked", "true");
     }
   }
   
@@ -106,10 +112,10 @@ function fillColumnsMenu(aEvent)
 
 function onViewMenuColumnItemSelected(aEvent)
 {
-  var resource = aEvent.target.getAttribute("resource");
-  if (resource != "") {
+  var colid = aEvent.target.getAttribute("colid");
+  if (colid != "") {
     var bookmarksView = document.getElementById("bookmarks-view");
-    bookmarksView.toggleColumnVisibility(resource);
+    bookmarksView.toggleColumnVisibility(colid);
   }  
 
   aEvent.preventBubble();

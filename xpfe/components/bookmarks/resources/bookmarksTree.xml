@@ -129,6 +129,7 @@
           while (child) {
             if (child.localName != "splitter") {
               var obj = {
+                id: child.getAttribute("id"),
                 label: child.getAttribute("label"),
                 accesskey: child.getAttribute("accesskey"),
                 hidden: child.getAttribute("hidden")
@@ -144,10 +145,10 @@
       </property>
       
       <method name="toggleColumnVisibility">
-        <parameter name="aColumnResource"/>
+        <parameter name="aColumnId"/>
         <body>
         <![CDATA[
-          var elt = document.getAnonymousElementByAttribute(this, "sort", aColumnResource);
+          var elt = document.getAnonymousElementByAttribute(this, "id", aColumnId);
           if (elt)
             elt.setAttribute("hidden", elt.getAttribute("hidden") != "true");
         ]]>
