@@ -115,7 +115,7 @@ tier_1_dirs	+= modules/zlib
 endif
 
 # Installer needs standalone libjar, hence standalone zlib
-ifneq (,$(filter Linux SunOS WINNT,$(OS_ARCH)))
+ifdef MOZ_INSTALLER
 tier_1_dirs	+= modules/zlib/standalone
 endif
 

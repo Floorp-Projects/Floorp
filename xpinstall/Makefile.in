@@ -32,7 +32,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public res src stub cleanup
 
-ifneq (,$(filter Linux SunOS WINNT,$(OS_ARCH)))
+ifdef MOZ_INSTALLER
 DIRS		+= wizard/libxpnet
 ifdef MOZ_ENABLE_GTK
 DIRS		+= wizard/unix/src2
