@@ -97,6 +97,7 @@ public:
   NS_IMETHOD ClearViewFlags(PRUint32 aFlags);
   NS_IMETHOD GetViewFlags(PRUint32 *aFlags);
   NS_IMETHOD GetScratchPoint(nsPoint **aPoint);
+  NS_IMETHOD GetExtents(nsRect *aExtents);
 
   // Helper function to get the view that's associated with a widget
   static nsIView*  GetViewFor(nsIWidget* aWidget);

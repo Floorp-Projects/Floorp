@@ -452,6 +452,14 @@ public:
    */
   NS_IMETHOD GetScratchPoint(nsPoint **aPoint) = 0;
 
+  /**
+   * Get the extents of the view tree from 'this' down.
+   * 'this' is the coordinate system origin.
+   * @param aExtents out paramemter for extents
+   * @return error status
+   */
+  NS_IMETHOD GetExtents(nsRect *aExtents) = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

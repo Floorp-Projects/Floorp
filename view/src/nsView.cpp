@@ -1371,3 +1371,37 @@ NS_IMETHODIMP nsView :: GetScratchPoint(nsPoint **aPoint)
 
   return NS_OK;
 }
+
+static void calc_extents(nsIView *view, nsRect *extents, nscoord ox, nscoord oy)
+{
+  nsIView *kid;
+  PRInt32 numkids, cnt;
+  nsRect  bounds;
+
+  view->GetChildCount(numkids);
+
+  for (cnt = 0; cnt < numkids; cnt++)
+  {
+    view->GetChild(cnt, kid);
+    kid->GetBounds(bounds);
+
+    bounds.x += ox;
+    bounds.y += oy;
+
+    extents->IntersectRect(*extents, bounds);
+
+    calc_extents(kid, extents, bounds.x, bounds.y);
+  }
+}
+
+NS_IMETHODIMP nsView :: GetExtents(nsRect *aExtents)
+{
+  GetBounds(*aExtents);
+
+  aExtents->x = 0;
+  aExtents->y = 0;
+
+  calc_extents(this, aExtents, 0, 0);
+
+  return NS_OK;
+}
