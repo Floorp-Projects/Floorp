@@ -104,7 +104,10 @@ public:
     NS_DECL_NSIFILEINPUTSTREAM
     NS_DECL_NSILINEINPUTSTREAM
     
-    nsFileInputStream() : nsFileStream() {}
+    nsFileInputStream() : nsFileStream() 
+    {
+        mLineBuffer = nsnull;
+    }
     virtual ~nsFileInputStream() 
     {
         Close();
