@@ -291,8 +291,10 @@ static PRTime
 convertSecondsToPRTime(PRUint32 aSeconds)
 {
     PRInt64 t64;
-    LL_L2I(t64, aSeconds);
-    LL_MUL(t64, t64, 1000000);
+    LL_I2L(t64, aSeconds);
+    PRInt64 mil;
+    LL_I2L(mil, 1000000);
+    LL_MUL(t64, t64, mil);
     return t64;
 }
 
@@ -612,7 +614,7 @@ nsCachedNetData::GetLastModifiedTime(PRTime *aLastModifiedTime)
     if (GetFlag(LAST_MODIFIED_KNOWN))
         *aLastModifiedTime = convertSecondsToPRTime(mLastModifiedTime);
     else
-        *aLastModifiedTime = 0;
+        *aLastModifiedTime = LL_ZERO;
     return NS_OK;
 }
 
@@ -634,7 +636,7 @@ nsCachedNetData::GetExpirationTime(PRTime *aExpirationTime)
     if (GetFlag(EXPIRATION_KNOWN))
         *aExpirationTime = convertSecondsToPRTime(mExpirationTime);
     else
-        *aExpirationTime = 0;
+        *aExpirationTime = LL_ZERO;
     return NS_OK;
 }
 
@@ -661,7 +663,7 @@ nsCachedNetData::GetStaleTime(PRTime *aStaleTime)
     if (GetFlag(STALE_TIME_KNOWN)) {
         *aStaleTime = convertSecondsToPRTime(mStaleTime);
     } else {
-        *aStaleTime = 0;
+        *aStaleTime = LL_ZERO;
     }
     return NS_OK;
 }
