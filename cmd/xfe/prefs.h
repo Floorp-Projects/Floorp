@@ -97,11 +97,10 @@
  */
 
 /* 
- * The XFE_GlobalPrefsstructure is old and going away.
+ * The XFE_GlobalPrefs structure is old and going away.
  * Please use PREF_Get/Set() commands to get/set prefs.
  * DO NOT ADD ANY NEW PREFS HERE!  -mcafee, ramiro, et. al.
  */
-
 typedef struct _XFE_GlobalPrefs 
 {
 	/* 
@@ -159,9 +158,6 @@ typedef struct _XFE_GlobalPrefs
 #ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
 	XP_Bool passive_ftp;
 #endif
-
-	XP_Bool warn_accept_cookie;
-	int accept_cookie;	          /* 0:disable, 1:enable-nowarn, else:enable-warn */
 
 	/*
 	 *  ----- Advanced/Password -----
@@ -786,6 +782,9 @@ extern void fe_SetMailNewsSortBehavior(MWContext* context, XP_Bool thread,
 
 /* Register a callback with libpref so that fe_globalPrefs will stay in sync */
 extern void FE_register_pref_callbacks(void);
+
+extern void fe_PrefReadString(char* prefName, void* field);
+extern void fe_PrefWriteString(char* prefName, void* field);
 
 XP_END_PROTOS
 
