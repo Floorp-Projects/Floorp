@@ -113,7 +113,7 @@ namespace JSTypes {
             return mProperties[name];
         }
         
-        const JSValue& getProperty(const String& name) const
+        const JSValue& getProperty(const String& name)
         {
         #ifdef XP_MAC
             JSProperties::const_iterator i = mProperties.find(name);
