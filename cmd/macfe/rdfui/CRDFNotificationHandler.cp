@@ -62,7 +62,7 @@ CRDFNotificationHandler::CreateHTPane ( const char* inURL, unsigned int inCount,
 {
 	HT_Notification notifyStruct = CreateNotificationStruct();
 	if (notifyStruct)
-		return HT_PaneFromURL ( NULL, const_cast<char*>(inURL), notifyStruct, false, inCount,
+		return HT_PaneFromURL ( NULL, const_cast<char*>(inURL), NULL, notifyStruct, false, inCount,
 									inParamNames, inParamValues );
 	else
 		return NULL;
