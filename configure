@@ -14930,14 +14930,6 @@ elif test "$OS_ARCH" = "Darwin"; then
 EOF
 
   cat >> confdefs.h <<\EOF
-#define UNIX_EMBED 1
-EOF
-
-  cat >> confdefs.h <<\EOF
-#define UNIX_LDAP 1
-EOF
-
-  cat >> confdefs.h <<\EOF
 #define UNIX_ASYNC_DNS 1
 EOF
 
