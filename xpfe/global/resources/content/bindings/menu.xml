@@ -68,7 +68,7 @@
     </content>
   </binding>
 
-  <binding id="menuitem-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
+  <binding id="menuitem-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center"
                inherits="selected,disabled,checked">
@@ -77,11 +77,16 @@
       <xul:label class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:label class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
-    
-    <implementation>
-      <property name="value" onset="this.setAttribute('value',val); return val;"
-                            onget="return this.getAttribute('value');"/>
-    </implementation>  
+  </binding>
+
+  <binding id="menuitem-iconic-noaccel" extends="chrome://global/content/bindings/menu.xml#menuitem">
+    <content>
+      <xul:hbox class="menu-iconic-left" align="center" pack="center"
+               inherits="selected,disabled,checked">
+        <xul:image class="menu-iconic-icon" inherits="validate,src"/>
+      </xul:hbox>
+      <xul:label class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
+    </content>
   </binding>
 
   <binding id="menu-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
