@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpmontg.c,v 1.10 2000/12/28 03:41:50 nelsonb%netscape.com Exp $
+ *  $Id: mpmontg.c,v 1.11 2002/04/04 00:19:43 nelsonb%netscape.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -55,6 +55,12 @@
 
 #define MAX_WINDOW_BITS 6
 #define MAX_ODD_INTS    32   /* 2 ** (WINDOW_BITS - 1) */
+
+#if defined(_WIN32_WCE)
+#define ABORT  res = MP_UNDEF; goto CLEANUP
+#else
+#define ABORT abort()
+#endif
 
 typedef struct {
   mp_int       N;	/* modulus N */
@@ -272,7 +278,7 @@ mp_err mp_exptmod_f(const mp_int *   montBase,
       } else if (smallExp & 8) {
 	SQR; MUL(smallExp/16); SQR; SQR; SQR; 
       } else {
-	abort();
+	ABORT;
       }
     } else if (window_bits == 5) {
       if (!smallExp) {
@@ -288,7 +294,7 @@ mp_err mp_exptmod_f(const mp_int *   montBase,
       } else if (smallExp & 0x10) {
 	SQR; MUL(smallExp/32); SQR; SQR; SQR; SQR;
       } else {
-	  abort();
+	ABORT;
       }
     } else if (window_bits == 6) {
       if (!smallExp) {
@@ -306,10 +312,10 @@ mp_err mp_exptmod_f(const mp_int *   montBase,
       } else if (smallExp & 0x20) {
 	SQR; MUL(smallExp/64); SQR; SQR; SQR; SQR; SQR; 
       } else {
-	abort();
+	ABORT;
       }
     } else {
-      abort();
+      ABORT;
     }
   }
 
@@ -416,7 +422,7 @@ mp_err mp_exptmod_i(const mp_int *   montBase,
 	SQR(pa1,pa2); MUL(smallExp/16,pa2,pa1); SQR(pa1,pa2); 
 	SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
       } else {
-	abort();
+	ABORT;
       }
     } else if (window_bits == 5) {
       if (!smallExp) {
@@ -438,7 +444,7 @@ mp_err mp_exptmod_i(const mp_int *   montBase,
 	SQR(pa1,pa2); MUL(smallExp/32,pa2,pa1); SQR(pa1,pa2); 
 	SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
       } else {
-	  abort();
+	ABORT;
       }
     } else if (window_bits == 6) {
       if (!smallExp) {
@@ -464,10 +470,10 @@ mp_err mp_exptmod_i(const mp_int *   montBase,
 	SQR(pa1,pa2); MUL(smallExp/64,pa2,pa1); SQR(pa1,pa2); 
 	SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
       } else {
-	abort();
+	ABORT;
       }
     } else {
-      abort();
+      ABORT;
     }
   }
 
