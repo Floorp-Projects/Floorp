@@ -16,12 +16,12 @@
  * Reserved.
  */
 #include <stdio.h>
+#include "nscore.h"
 
-#ifdef _WIN32
+#ifdef NS_WIN32
 #include "windows.h"
 #endif
 
-#include "nscore.h"
 #include "nsISupports.h"
 #include "nsIShellInstance.h"
 #include "nsShellInstance.h"
@@ -71,7 +71,7 @@ nsresult nsShellInstance::Init()
 
 nsresult nsShellInstance::Run()
 {
-#ifdef _WIN32
+#ifdef NS_WIN32
   MSG msg;
   while (GetMessage(&msg, NULL, 0, 0)) {
       TranslateMessage(&msg);
@@ -111,17 +111,15 @@ void nsShellInstance::SetApplicationShell(nsIApplicationShell * aApplicationShel
 //     XP of course.
 nsresult nsShellInstance::RegisterFactories()
 {
+  // hardcode names of dll's
   #define WIDGET_DLL "raptorwidget.dll"
+#ifdef NS_WIN32
   #define GFXWIN_DLL "raptorgfxwin.dll"
+#else
+  #define GFXWIN_DLL "raptorgfxunix.dll"
+#endif
 
-  static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
-  static NS_DEFINE_IID(kCChildWindowIID, NS_CHILD_CID);
-  static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
-
-  NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCChildWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  NSRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  
+  // register graphics classes
   static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
   static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
@@ -131,6 +129,36 @@ nsresult nsShellInstance::RegisterFactories()
   NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+
+  // register widget classes
+  static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
+  static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
+  static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
+  static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
+  static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
+  static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+  static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
+  static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
+  static NS_DEFINE_IID(kCRadioGroupCID, NS_RADIOGROUP_CID);
+  static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
+  static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
+  static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
+  static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+
+  NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCRadioGroupCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCHorzScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  
 
   return NS_OK;
 }
