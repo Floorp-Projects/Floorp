@@ -1575,12 +1575,14 @@ PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 // Set this window's title
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMacWindow::SetTitle(const nsString& aTitle)
+NS_IMETHODIMP nsMacWindow::SetTitle(const nsAString& aTitle)
 {
+  nsAString::const_iterator begin;
+  const PRUnichar *strTitle = aTitle.BeginReading(begin).get();
 #if TARGET_CARBON
   if(nsToolkit::OnMacOSX()) {
     // On MacOS X try to use the unicode friendly CFString version first
-    CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)aTitle.get(), aTitle.Length());
+    CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)strTitle, aTitle.Length());
     if(labelRef) {
       ::SetWindowTitleWithCFString(mWindowPtr, labelRef);
       ::CFRelease(labelRef);

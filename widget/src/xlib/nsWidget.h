@@ -135,7 +135,7 @@ public:
   NS_IMETHOD              GetRequestedBounds(nsRect &aRect);
 
   NS_IMETHOD              CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
-  NS_IMETHOD              SetTitle(const nsString& title);
+  NS_IMETHOD              SetTitle(const nsAString& title);
 #ifdef DEBUG
   void                    DebugPrintEvent(nsGUIEvent & aEvent,Window aWindow);
 #endif

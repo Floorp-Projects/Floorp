@@ -74,7 +74,7 @@ public:
 
 	// Mac string utilities
 	// (they really should be elsewhere but, well, only the Mac controls use them)
-	static void 		StringToStr255(const nsString& aText, Str255& aStr255);
+	static void 		StringToStr255(const nsAString& aText, Str255& aStr255);
 	static void 		Str255ToString(const Str255& aStr255, nsString& aText);
 
 protected:

@@ -140,7 +140,7 @@ public:
     virtual PRBool          OnPaint(nsPaintEvent &event);
     void                    ReportSizeEvent();
 
-		NS_IMETHOD              SetTitle(const nsString& aTitle);
+		NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
     virtual nsIFontMetrics* GetFont(void) { return nsnull; }
     NS_IMETHOD SetFont(const nsFont &aFont) { return NS_OK; }

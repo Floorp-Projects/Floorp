@@ -2512,7 +2512,7 @@ PRBool nsWindow::OnScroll()
 	return PR_FALSE;
 }
 
-NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
+NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
 {
 	const char *text = ToNewUTF8String(aTitle);
 	if(text && mView->LockLooper())

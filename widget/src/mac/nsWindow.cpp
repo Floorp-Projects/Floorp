@@ -1996,7 +1996,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
     case nsEventStatus_eConsumeNoDefault:		return(PR_TRUE);	// don't do default processing
     case nsEventStatus_eConsumeDoDefault:		return(PR_FALSE);
     default:
-      NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
+      NS_ERROR("Illegal nsEventStatus enumeration value");
       break;
   }
   return(PR_FALSE);
@@ -2509,9 +2509,9 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::SetTitle(const nsString& title)
+NS_IMETHODIMP nsWindow::SetTitle(const nsAString& title)
 {
-  NS_ASSERTION(0, "Would some Mac person please implement me? Thanks.");
+  NS_ERROR("Would some Mac person please implement me? Thanks.");
   return NS_OK;
 }
 

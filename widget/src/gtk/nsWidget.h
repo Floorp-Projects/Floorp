@@ -145,7 +145,7 @@ public:
   NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
   // Use this to set the name of a widget for normal widgets.. not the same as the nsWindow version
-  NS_IMETHOD SetTitle(const nsString& aTitle);
+  NS_IMETHOD SetTitle(const nsAString& aTitle);
 
 
   virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);

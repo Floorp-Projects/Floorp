@@ -1187,7 +1187,7 @@ NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::SetTitle(const nsString &aTitle)
+NS_IMETHODIMP nsWidget::SetTitle(const nsAString &aTitle)
 {
   gtk_widget_set_name(mWidget, "foo");
   return NS_OK;

@@ -2030,7 +2030,7 @@ NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener,
 }
 
 
-NS_IMETHODIMP nsChildView::SetTitle(const nsString& title)
+NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
 {
   // nothing to do here
   return NS_OK;

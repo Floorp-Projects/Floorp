@@ -187,7 +187,7 @@ public:
 		}
 
   // Use this to set the name of a widget for normal widgets.. not the same as the nsWindow version
-  inline NS_IMETHOD SetTitle(const nsString& aTitle) { return NS_OK; }
+  inline NS_IMETHOD SetTitle(const nsAString& aTitle) { return NS_OK; }
 
   inline void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY) { }
 

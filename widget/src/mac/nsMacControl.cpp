@@ -388,10 +388,12 @@ void nsMacControl::SetupMacControlFont()
 //
 //-------------------------------------------------------------------------
 
-void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
+void nsMacControl::StringToStr255(const nsAString& aText, Str255& aStr255)
 {
 	nsresult rv = NS_OK;
-	
+	nsAString::const_iterator begin;
+	const PRUnichar *text = aText.BeginReading(begin).get();
+
 	// get file system charset and create a unicode encoder
 	if (nsnull == mUnicodeEncoder) {
 		nsCAutoString fileSystemCharset;
@@ -411,7 +413,7 @@ void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 	if (NS_SUCCEEDED(rv)) {
 		PRInt32 inLength = aText.Length();
 		PRInt32 outLength = 255;
-		rv = mUnicodeEncoder->Convert(aText.get(), &inLength, (char *) &aStr255[1], &outLength);
+		rv = mUnicodeEncoder->Convert(text, &inLength, (char *) &aStr255[1], &outLength);
 		if (NS_SUCCEEDED(rv))
 			aStr255[0] = outLength;
 	}

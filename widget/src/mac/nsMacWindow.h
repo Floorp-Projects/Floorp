@@ -121,7 +121,7 @@ public:
     NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
 
-    NS_IMETHOD              SetTitle(const nsString& aTitle);
+    NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
     void                    UserStateForResize();
 
