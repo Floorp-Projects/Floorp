@@ -423,6 +423,14 @@ public:
    */
   NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown)=0;
 
+  /**
+   * MaintainSelection will track the current selection as being "sticky".
+   * Dragging or extending selection will never allow for a subset
+   * (or the whole) of the maintained selection to become unselected.
+   * Primary use: double click selecting then dragging on second click
+   */
+  NS_IMETHOD MaintainSelection()=0;
+
 #ifdef IBMBIDI
   /** GetPrevNextBidiLevels will return the frames and associated Bidi levels of the characters
    *   logically before and after a (collapsed) selection.

@@ -473,6 +473,7 @@ public:
   NS_IMETHOD CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel);
   NS_IMETHOD SetMouseDoubleDown(PRBool aDoubleDown);
   NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown);
+  NS_IMETHOD MaintainSelection();
 #ifdef IBMBIDI
   NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                    nsIContent *aNode,
@@ -1063,6 +1064,11 @@ NS_IMETHODIMP nsTextInputSelectionImpl::SetMouseDoubleDown(PRBool aDoubleDown)
 NS_IMETHODIMP nsTextInputSelectionImpl::GetMouseDoubleDown(PRBool *aDoubleDown)
 {
   return mFrameSelection->GetMouseDoubleDown(aDoubleDown);
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::MaintainSelection()
+{
+  return mFrameSelection->MaintainSelection();
 }
 
 NS_IMETHODIMP nsTextInputSelectionImpl::CommonPageMove(PRBool aForward, PRBool aExtend, nsIScrollableView *aScrollableView, nsIFrameSelection *aFrameSel)

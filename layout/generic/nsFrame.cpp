@@ -1549,6 +1549,9 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
+  if (startOffset != endOffset)
+    frameselection->MaintainSelection();
+
   if (isEditor && !me->isShift && (endOffset - startOffset) == 1)
   {
     // A single node is selected and we aren't extending an existing
@@ -1762,7 +1765,17 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
       return rv;
   }
   //no release 
-  return NS_OK;
+
+  // maintain selection
+  nsCOMPtr<nsIFrameSelection> frameselection = do_QueryInterface(selcon); //this MAY implement
+  if (!frameselection)
+  {
+    rv = aPresContext->GetPresShell()->GetFrameSelection(getter_AddRefs(frameselection));
+    if (NS_FAILED(rv) || !frameselection)
+      return NS_OK;   // return NS_OK; we don't care if this fails
+  }
+
+  return frameselection->MaintainSelection();
 }
 
 NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext, 
