@@ -4178,11 +4178,28 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         LRESULT lAcc = 0;
         if (mIsTopWidgetWindow && !mRootAccessible) 
           CreateRootAccessible();
-        if (lParam == OBJID_CLIENT && mRootAccessible)   // oleacc.dll will be loaded dynamically
-          lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // ref 1
-
+        if (mRootAccessible) {
+          if (lParam == OBJID_CLIENT)  // oleacc.dll will be loaded dynamically
+            lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // does an addref          
+          if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
+            VARIANT variant;
+            VariantInit(&variant);
+            variant.vt = VT_I4;
+            variant.lVal = UNIQUE_ID_CARET;
+            IDispatch *dispatch = nsnull;
+            mRootAccessible->get_accChild(variant, &dispatch);  // does an addref
+            if (dispatch) {
+              IAccessible *accessible = nsnull;
+              dispatch->QueryInterface(IID_IAccessible, (void**)&accessible); // does an addref
+              dispatch->Release();
+              if (accessible) {
+                lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, accessible); // does an addref
+                accessible->Release();
+              }
+            }
+          }
+        }
         return (*aRetValue = lAcc) != 0;
-
       } 
 #endif
       

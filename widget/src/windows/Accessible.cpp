@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "Accessible.h"
 #include "nsCOMPtr.h"
-#include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleEventReceiver.h"
@@ -590,10 +589,6 @@ STDMETHODIMP Accessible::accLocation(
     PRInt32 x,y,w,h;
     a->AccGetBounds(&x,&y,&w,&h);
 
-    POINT cpos;
-    cpos.x = x;
-    cpos.y = y;
-
     *pxLeft = x;
     *pyTop = y;
     *pcxWidth = w;
@@ -986,7 +981,16 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
   // asked for corresponds to an event target. See RootAccessible::HandleEvent to see how we provide this unique ID.
 
   aAcc = nsnull;
-  if (varChild.lVal < 0) {
+  if (varChild.lVal == UNIQUE_ID_CARET) {
+    nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+    if (accDoc) { 
+      nsCOMPtr<nsIAccessibleCaret> accessibleCaret;
+      accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
+      aAcc = do_QueryInterface(accessibleCaret);
+    }
+    return;
+  }
+  else if (varChild.lVal < 0) {
     for (int i=0; i < mListCount; i++) {
       if (varChild.lVal == mList[i].mId) {
         aAcc = mList[i].mAccessible;
@@ -1011,12 +1015,18 @@ NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAcces
     if (accessibleDoc)
       return NS_OK;
   }
+  PRInt32 childID, worldID = OBJID_CLIENT;
+  PRUint32 role;
 
-  // get the id for the accessible
-  PRInt32 id = GetIdFor(aAccessible);
+  if (NS_SUCCEEDED(aAccessible->GetAccRole(&role)) && role == ROLE_SYSTEM_CARET) {
+    childID = CHILDID_SELF;
+    worldID = OBJID_CARET;
+  }
+  else 
+    childID = GetIdFor(aAccessible); // get the id for the accessible
 
   // notify the window system
-  NotifyWinEvent(aEvent, mWnd, OBJID_CLIENT, id);
+  NotifyWinEvent(aEvent, mWnd, worldID, childID);
   
   return NS_OK;
 }

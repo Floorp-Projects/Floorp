@@ -63,7 +63,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMNSHTMLSelectElement.h"
-#include "nsIAccessibleSelectable.h"
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -76,12 +75,16 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIViewManager.h"
+#include "nsIWidget.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsXULTreeAccessible.h"
 #include "nsITreeSelection.h"
 #include "nsAccessibilityService.h"
+#include "nsISelectionPrivate.h"
+#include "nsICaret.h"
+#include "nsIAccessibleCaret.h"
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
@@ -464,6 +467,9 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     NS_ASSERTION(mWebProgress, "Could not get nsIWebProgress for nsRootAccessible");
   }
 
+  if (!mCaretAccessible && mListener)
+    mAccService->CreateCaretAccessible(mDOMNode, mListener, getter_AddRefs(mCaretAccessible));
+
   return NS_OK;
 }
 
@@ -499,6 +505,17 @@ NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener()
     mListener = nsnull;
   }
 
+  if (mCaretAccessible) {
+    mCaretAccessible->RemoveSelectionListener();
+    mCaretAccessible = nsnull;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessibleCaret **aCaretAccessible)
+{
+  *aCaretAccessible = mCaretAccessible;
+  NS_IF_ADDREF(*aCaretAccessible);
   return NS_OK;
 }
 
@@ -509,6 +526,8 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
     NS_IF_RELEASE(gLastFocusedNode);
     gLastFocusedNode = focusNode;
     NS_ADDREF(gLastFocusedNode);
+    if (mCaretAccessible)
+      mCaretAccessible->AttachNewSelectionListener(focusNode);
   }
 }
 
@@ -899,5 +918,12 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetDocShellFromPS(nsIPresShell* aPresShell, 
     }
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocAccessibleMixin::GetCaretAccessible(nsIAccessibleCaret **aCaretAccessible)
+{
+  // Caret only owned by top level window's document
+  *aCaretAccessible = nsnull;
+  return NS_OK;
 }
 

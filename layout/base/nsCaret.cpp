@@ -372,7 +372,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   outCoordinates->x = viewOffset.x;
   outCoordinates->y = viewOffset.y;
   outCoordinates->height = frameRect.height;
-  outCoordinates->width  = frameRect.width;
+  outCoordinates->width  = mCaretTwipsWidth;
   
   return NS_OK;
 }

@@ -58,6 +58,7 @@ class nsXULColorPickerAccessible : public nsXULColorPickerTileAccessible
 public:
   nsXULColorPickerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
 };
 
 #endif  

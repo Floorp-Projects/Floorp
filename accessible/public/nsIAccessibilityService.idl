@@ -27,8 +27,10 @@
 #include "nsIAtom.idl"
 #include "domstubs.idl"
 #include "nsIAccessible.idl"
+#include "nsIAccessibleCaret.idl"
 
 interface nsIWeakReference;
+interface nsIAccessibleEventListener;
 
 [scriptable, uuid(68D9720A-0984-42b6-A3F5-8237ED925727)]
 interface nsIAccessibilityService : nsISupports
@@ -36,6 +38,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createAccessible(in nsIDOMNode aNode, in nsISupports aDocument);
   nsIAccessible createIFrameAccessible(in nsIDOMNode aNode);
   nsIAccessible createRootAccessible(in nsISupports aPresContext, in nsISupports aFrame);
+  nsIAccessibleCaret createCaretAccessible(in nsIDOMNode aNode, in nsIAccessibleEventListener aListener);
 
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
