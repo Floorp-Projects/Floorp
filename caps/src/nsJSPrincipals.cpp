@@ -18,6 +18,7 @@
 #include "nsCodebasePrincipal.h"
 #include "nsJSPrincipals.h"
 #include "plstr.h"
+#include "nsXPIDLString.h"
 
 PR_STATIC_CALLBACK(void *) 
 nsGetPrincipalArray(JSContext * cx, struct JSPrincipals * prin) {
@@ -49,10 +50,10 @@ nsJSPrincipals::nsJSPrincipals() {
 
 nsresult
 nsJSPrincipals::Init(nsIPrincipal * prin) {
-    char * cb;
+    nsXPIDLCString cb;
     nsICodebasePrincipal * cbprin;
     prin->QueryInterface(NS_GET_IID(nsICodebasePrincipal),(void * *)& cbprin);
-    cbprin->GetURLString(& cb);
+    cbprin->GetURLString(getter_Copies(cb));
     nsIPrincipalPtr = prin;
     codebase = PL_strdup(cb);
     if (!codebase) 
