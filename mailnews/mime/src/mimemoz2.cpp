@@ -166,8 +166,8 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
     if ( (NS_FAILED(rv)) || (!tmp->url) )
       return NS_ERROR_OUT_OF_MEMORY;
 
-    tmp->real_type = child->content_type ? PL_strdup(child->content_type) : NULL;
-    tmp->real_encoding = child->encoding ? PL_strdup(child->encoding) : NULL;
+    tmp->real_type = child->content_type ? nsCRT::strdup(child->content_type) : NULL;
+    tmp->real_encoding = child->encoding ? nsCRT::strdup(child->encoding) : NULL;
     disp = MimeHeaders_get(child->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
 
     if (disp) 
@@ -211,7 +211,7 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
     }
 
     tmp->description = MimeHeaders_get(child->headers, HEADER_CONTENT_DESCRIPTION, PR_FALSE, PR_FALSE);
-    if (tmp->real_type && !PL_strcasecmp(tmp->real_type, MESSAGE_RFC822) && 
+    if (tmp->real_type && !nsCRT::strcasecmp(tmp->real_type, MESSAGE_RFC822) && 
        (!tmp->real_name || *tmp->real_name == 0))
     {
       mime_SACopy(&(tmp->real_name), "forward.msg");
@@ -304,7 +304,7 @@ char  *retName;
     return NULL;
   
   fs->MakeUnique(name);
-  retName = (char *)PL_strdup(fs->GetCString());
+  retName = (char *)nsCRT::strdup(fs->GetCString());
   delete fs;
   return retName;
 }
@@ -313,7 +313,7 @@ static char *
 mime_reformat_date(const char *date, void *stream_closure)
 {
   /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
-  return PL_strdup(date);
+  return nsCRT::strdup(date);
 }
 
 static char *
@@ -324,7 +324,7 @@ mime_file_type (const char *filename, void *stream_closure)
   if (!cinfo || !cinfo->type)
     return 0;
   else
-    return PL_strdup(cinfo->type);
+    return nsCRT::strdup(cinfo->type);
 #else
   return 0;
 #endif
@@ -338,7 +338,7 @@ mime_type_desc(const char *type, void *stream_closure)
   if (!cinfo || !cinfo->desc || !*cinfo->desc)
     return 0;
   else
-    return PL_strdup(cinfo->desc);
+    return nsCRT::strdup(cinfo->desc);
 #else
   return 0;
 #endif
@@ -351,20 +351,20 @@ mime_type_icon(const char *type, void *stream_closure)
 #if 0
   NET_cinfo *cinfo = NET_cinfo_find_info_by_type((char *) type);
   if (cinfo && cinfo->icon && *cinfo->icon)
-    return PL_strdup(cinfo->icon);
+    return nsCRT::strdup(cinfo->icon);
 #endif
-  if (!PL_strncasecmp(type, "text/", 5))
-    return PL_strdup("resource:/res/network/gopher-text.gif");
-  else if (!PL_strncasecmp(type, "image/", 6))
-    return PL_strdup("resource:/res/network/gopher-image.gif");
-  else if (!PL_strncasecmp(type, "audio/", 6))
-    return PL_strdup("resource:/res/network/gopher-sound.gif");
-  else if (!PL_strncasecmp(type, "video/", 6))
-    return PL_strdup("resource:/res/network/gopher-movie.gif");
-  else if (!PL_strncasecmp(type, "application/", 12))
-    return PL_strdup("resource:/res/network/gopher-binary.gif");
+  if (!nsCRT::strncasecmp(type, "text/", 5))
+    return nsCRT::strdup("resource:/res/network/gopher-text.gif");
+  else if (!nsCRT::strncasecmp(type, "image/", 6))
+    return nsCRT::strdup("resource:/res/network/gopher-image.gif");
+  else if (!nsCRT::strncasecmp(type, "audio/", 6))
+    return nsCRT::strdup("resource:/res/network/gopher-sound.gif");
+  else if (!nsCRT::strncasecmp(type, "video/", 6))
+    return nsCRT::strdup("resource:/res/network/gopher-movie.gif");
+  else if (!nsCRT::strncasecmp(type, "application/", 12))
+    return nsCRT::strdup("resource:/res/network/gopher-binary.gif");
   else
-    return PL_strdup("internal-gopher-unknown.gif");
+    return nsCRT::strdup("internal-gopher-unknown.gif");
 }
 
 static int
@@ -431,13 +431,13 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
       if ( (res != 0) || (!convertedString) )
       {
         *output_ret = converted;
-        *output_size_ret = PL_strlen(converted);
+        *output_size_ret = nsCRT::strlen(converted);
       }
       else
       {
         PR_Free(converted); 
         *output_ret = convertedString;
-        *output_size_ret = PL_strlen(convertedString);
+        *output_size_ret = nsCRT::strlen(convertedString);
       }
     }
   else
@@ -690,7 +690,7 @@ mime_image_begin(const char *image_url, const char *content_type,
   memset(mid, 0, sizeof(*mid));
   mid->msd = msd;
 
-  mid->url = (char *) PL_strdup(image_url);
+  mid->url = (char *) nsCRT::strdup(image_url);
   if (!mid->url)
   {
     PR_Free(mid);
@@ -736,15 +736,15 @@ mime_image_make_image_html(void *image_closure)
 
   /* Internal-external-reconnect only works when going to the screen. */
   if (!mid->istream)
-    return PL_strdup("<P><CENTER><IMG SRC=\"resource:/res/network/gopher-image.gif\" ALT=\"[Image]\"></CENTER><P>");
+    return nsCRT::strdup("<P><CENTER><IMG SRC=\"resource:/res/network/gopher-image.gif\" ALT=\"[Image]\"></CENTER><P>");
 
   if ( (!mid->url) || (!(*mid->url)) )
     url = "";
   else
     url = mid->url;
 
-  buf = (char *) PR_MALLOC (PL_strlen(prefix) + PL_strlen(suffix) +
-                           PL_strlen(url) + PL_strlen(makeUniqueHackString) + 20) ;
+  buf = (char *) PR_MALLOC (nsCRT::strlen(prefix) + nsCRT::strlen(suffix) +
+                           nsCRT::strlen(url) + nsCRT::strlen(makeUniqueHackString) + 20) ;
   if (!buf) 
     return 0;
   *buf = 0;
@@ -905,15 +905,15 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 							HEADER_CONTENT_DISPOSITION, 
 							PR_TRUE,
 							PR_FALSE);
-	if (disp /* && !PL_strcasecmp (disp, "attachment") */)
+	if (disp /* && !nsCRT::strcasecmp (disp, "attachment") */)
 		bRet = PR_FALSE;
-	else if (!PL_strcasecmp (firstChild->content_type, TEXT_PLAIN) ||
-			 !PL_strcasecmp (firstChild->content_type, TEXT_HTML) ||
-			 !PL_strcasecmp (firstChild->content_type, TEXT_MDL) ||
-			 !PL_strcasecmp (firstChild->content_type, MULTIPART_ALTERNATIVE) ||
-			 !PL_strcasecmp (firstChild->content_type, MULTIPART_RELATED) ||
-			 !PL_strcasecmp (firstChild->content_type, MESSAGE_NEWS) ||
-			 !PL_strcasecmp (firstChild->content_type, MESSAGE_RFC822))
+	else if (!nsCRT::strcasecmp (firstChild->content_type, TEXT_PLAIN) ||
+			 !nsCRT::strcasecmp (firstChild->content_type, TEXT_HTML) ||
+			 !nsCRT::strcasecmp (firstChild->content_type, TEXT_MDL) ||
+			 !nsCRT::strcasecmp (firstChild->content_type, MULTIPART_ALTERNATIVE) ||
+			 !nsCRT::strcasecmp (firstChild->content_type, MULTIPART_RELATED) ||
+			 !nsCRT::strcasecmp (firstChild->content_type, MESSAGE_NEWS) ||
+			 !nsCRT::strcasecmp (firstChild->content_type, MESSAGE_RFC822))
 		bRet = PR_TRUE;
 	else
 		bRet = PR_FALSE;
@@ -977,7 +977,7 @@ mime_bridge_create_display_stream(
   {
     if ((urlString) && (*urlString))
     {
-      msd->url_name = PL_strdup(urlString);
+      msd->url_name = nsCRT::strdup(urlString);
       if (!(msd->url_name))
       {
         // RICHIE_URL PR_FREEIF(msd->url);
@@ -1077,8 +1077,8 @@ mime_bridge_create_display_stream(
   }
  
   if (msd->options->headers == MimeHeadersMicro &&
-     (msd->url_name == NULL || (PL_strncmp(msd->url_name, "news:", 5) != 0 &&
-              PL_strncmp(msd->url_name, "snews:", 6) != 0)) )
+     (msd->url_name == NULL || (nsCRT::strncmp(msd->url_name, "news:", 5) != 0 &&
+              nsCRT::strncmp(msd->url_name, "snews:", 6) != 0)) )
     msd->options->headers = MimeHeadersMicroPlus;
 
   msd->options->url = msd->url_name;
@@ -1133,7 +1133,7 @@ mime_bridge_create_display_stream(
     int     length = sizeof(charset);
 
     msd->prefs->GetCharPref("mail.charset", charset, &length); 
-    msd->options->override_charset = PL_strdup(charset);
+    msd->options->override_charset = nsCRT::strdup(charset);
     ****/
   }
 
@@ -1216,7 +1216,7 @@ MimeGetStringByIDREAL(PRInt32 stringID)
   {
     if (propertyURL != MIME_URL)
       PR_FREEIF(propertyURL);
-    return PL_strdup("???");   // Don't I18N this string...failsafe return value
+    return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
   }
 
   res = pService->NewURI(propertyURL, nsnull, getter_AddRefs(pURI));
@@ -1230,7 +1230,7 @@ MimeGetStringByIDREAL(PRInt32 stringID)
 
     if (NS_FAILED(res)) 
     {
-      return PL_strdup("???");   // Don't I18N this string...failsafe return value
+      return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
     }
 
     nsAutoString v("");
@@ -1248,7 +1248,7 @@ MimeGetStringByIDREAL(PRInt32 stringID)
       char    buf[128];
 
       PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
-      return PL_strdup(buf);
+      return nsCRT::strdup(buf);
     }
 
     // Here we need to return a new copy of the string
@@ -1263,57 +1263,57 @@ MimeGetStringByIDREAL(PRInt32 stringID)
     }
   }
 
-  return PL_strdup("???");   // Don't I18N this string...failsafe return value
+  return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
 }
 
 extern "C" 
 char *
 MimeGetStringByID(PRInt32 stringID)
 {
-  if (-1000 == stringID) return PL_strdup("Application is out of memory.");
-  if (-1001 == stringID) return PL_strdup("Unable to open the temporary file\n.\n%s\nCheck your `Temporary Directory' setting and try again.");
-  if (-1002 == stringID) return PL_strdup("Error writing temporary file.");
-  if (1000 == stringID) return PL_strdup("Subject");
-  if (1001 == stringID) return PL_strdup("Resent-Comments");
-  if (1002 == stringID) return PL_strdup("Resent-Date");
-  if (1003 == stringID) return PL_strdup("Resent-Sender");
-  if (1004 == stringID) return PL_strdup("Resent-From");
-  if (1005 == stringID) return PL_strdup("Resent-To");
-  if (1006 == stringID) return PL_strdup("Resent-CC");
-  if (1007 == stringID) return PL_strdup("Date");
-  if (1008 == stringID) return PL_strdup("Sender");
-  if (1009 == stringID) return PL_strdup("From");
-  if (1010 == stringID) return PL_strdup("Reply-To");
-  if (1011 == stringID) return PL_strdup("Organization");
-  if (1012 == stringID) return PL_strdup("To");
-  if (1013 == stringID) return PL_strdup("CC");
-  if (1014 == stringID) return PL_strdup("Newsgroups");
-  if (1015 == stringID) return PL_strdup("Followup-To");
-  if (1016 == stringID) return PL_strdup("References");
-  if (1017 == stringID) return PL_strdup("Name");
-  if (1018 == stringID) return PL_strdup("Type");
-  if (1019 == stringID) return PL_strdup("Encoding");
-  if (1020 == stringID) return PL_strdup("Description");
-  if (1021 == stringID) return PL_strdup("Message-ID");
-  if (1022 == stringID) return PL_strdup("Resent-Message-ID");
-  if (1023 == stringID) return PL_strdup("BCC");
-  if (1024 == stringID) return PL_strdup("Download Status");
-  if (1025 == stringID) return PL_strdup("Not Downloaded Inline");
-  if (1026 == stringID) return PL_strdup("Link to Document");
-  if (1027 == stringID) return PL_strdup("<B>Document Info:</B>");
-  if (1028 == stringID) return PL_strdup("Attachment");
-  if (1029 == stringID) return PL_strdup("forward.msg");
-  if (1030 == stringID) return PL_strdup("Add %s to your Address Book");
-  if (1031 == stringID) return PL_strdup("<B><FONT COLOR=\042#808080\042>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Internal</FONT></B>");
-  if (1032 == stringID) return PL_strdup("In message   wrote:<P>");
-  if (1033 == stringID) return PL_strdup(" wrote:<P>");
-  if (1034 == stringID) return PL_strdup("(no headers)");
-  if (1035 == stringID) return PL_strdup("Toggle Attachment Pane");
+  if (-1000 == stringID) return nsCRT::strdup("Application is out of memory.");
+  if (-1001 == stringID) return nsCRT::strdup("Unable to open the temporary file\n.\n%s\nCheck your `Temporary Directory' setting and try again.");
+  if (-1002 == stringID) return nsCRT::strdup("Error writing temporary file.");
+  if (1000 == stringID) return nsCRT::strdup("Subject");
+  if (1001 == stringID) return nsCRT::strdup("Resent-Comments");
+  if (1002 == stringID) return nsCRT::strdup("Resent-Date");
+  if (1003 == stringID) return nsCRT::strdup("Resent-Sender");
+  if (1004 == stringID) return nsCRT::strdup("Resent-From");
+  if (1005 == stringID) return nsCRT::strdup("Resent-To");
+  if (1006 == stringID) return nsCRT::strdup("Resent-CC");
+  if (1007 == stringID) return nsCRT::strdup("Date");
+  if (1008 == stringID) return nsCRT::strdup("Sender");
+  if (1009 == stringID) return nsCRT::strdup("From");
+  if (1010 == stringID) return nsCRT::strdup("Reply-To");
+  if (1011 == stringID) return nsCRT::strdup("Organization");
+  if (1012 == stringID) return nsCRT::strdup("To");
+  if (1013 == stringID) return nsCRT::strdup("CC");
+  if (1014 == stringID) return nsCRT::strdup("Newsgroups");
+  if (1015 == stringID) return nsCRT::strdup("Followup-To");
+  if (1016 == stringID) return nsCRT::strdup("References");
+  if (1017 == stringID) return nsCRT::strdup("Name");
+  if (1018 == stringID) return nsCRT::strdup("Type");
+  if (1019 == stringID) return nsCRT::strdup("Encoding");
+  if (1020 == stringID) return nsCRT::strdup("Description");
+  if (1021 == stringID) return nsCRT::strdup("Message-ID");
+  if (1022 == stringID) return nsCRT::strdup("Resent-Message-ID");
+  if (1023 == stringID) return nsCRT::strdup("BCC");
+  if (1024 == stringID) return nsCRT::strdup("Download Status");
+  if (1025 == stringID) return nsCRT::strdup("Not Downloaded Inline");
+  if (1026 == stringID) return nsCRT::strdup("Link to Document");
+  if (1027 == stringID) return nsCRT::strdup("<B>Document Info:</B>");
+  if (1028 == stringID) return nsCRT::strdup("Attachment");
+  if (1029 == stringID) return nsCRT::strdup("forward.msg");
+  if (1030 == stringID) return nsCRT::strdup("Add %s to your Address Book");
+  if (1031 == stringID) return nsCRT::strdup("<B><FONT COLOR=\042#808080\042>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Internal</FONT></B>");
+  if (1032 == stringID) return nsCRT::strdup("In message   wrote:<P>");
+  if (1033 == stringID) return nsCRT::strdup(" wrote:<P>");
+  if (1034 == stringID) return nsCRT::strdup("(no headers)");
+  if (1035 == stringID) return nsCRT::strdup("Toggle Attachment Pane");
 
   char    buf[128];
   
   PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
-  return PL_strdup(buf);
+  return nsCRT::strdup(buf);
 }
 
 
@@ -1523,12 +1523,12 @@ mimeSetNewURL(nsMIMESession *stream, char *url)
   if (!msd)
     return NS_ERROR_FAILURE;
 
-  char *tmpPtr = PL_strdup(url);
+  char *tmpPtr = nsCRT::strdup(url);
   if (!tmpPtr)
     return NS_ERROR_FAILURE;
 
   PR_FREEIF(msd->url_name);
-  msd->url_name = PL_strdup(tmpPtr);
+  msd->url_name = nsCRT::strdup(tmpPtr);
   return NS_OK;
 }
 

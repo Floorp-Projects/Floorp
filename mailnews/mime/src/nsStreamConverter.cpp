@@ -107,7 +107,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
         if ((urlString) && (*urlString))
         {
           PR_FREEIF(msd->url_name);
-          msd->url_name = PL_strdup(urlString);
+          msd->url_name = nsCRT::strdup(urlString);
           if (!(msd->url_name))
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -175,7 +175,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
   // Do sanity checking...
   if ( (!url) || (!*url) )
   {
-    mOutputFormat = PL_strdup("text/html");
+    mOutputFormat = nsCRT::strdup("text/html");
     return NS_OK;
   }
 
@@ -192,7 +192,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
   // have to be represented via the "%2F" value
   if (format)
   {
-    format += PL_strlen("?outformat=");
+    format += nsCRT::strlen("?outformat=");
     while (*format == ' ')
       ++format;
 
@@ -200,8 +200,8 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
     {
       char *ptr;
       PR_FREEIF(mOutputFormat);
-      mOutputFormat = PL_strdup(format);
-      mOverrideFormat = PL_strdup("raw");
+      mOutputFormat = nsCRT::strdup(format);
+      mOverrideFormat = nsCRT::strdup("raw");
       ptr = mOutputFormat;
       do
       {
@@ -218,8 +218,8 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
               )
           {
             *ptr = '/';
-            memmove(ptr+1, ptr+3, PL_strlen(ptr+3));
-            *(ptr + PL_strlen(ptr+3) + 1) = '\0';
+            memmove(ptr+1, ptr+3, nsCRT::strlen(ptr+3));
+            *(ptr + nsCRT::strlen(ptr+3) + 1) = '\0';
             ptr += 3;
           }
         }
@@ -235,7 +235,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
   {
     if (header)
     {
-      PRInt32 lenOfHeader = PL_strlen("?header=");
+      PRInt32 lenOfHeader = nsCRT::strlen("?header=");
 
       char *ptr2 = PL_strcasestr ("only", (header+lenOfHeader));
       char *ptr3 = PL_strcasestr ("quote", (header+lenOfHeader));
@@ -244,25 +244,25 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       if (ptr5)
       {
         PR_FREEIF(mOutputFormat);
-        mOutputFormat = PL_strdup("text/html");
+        mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
       }
       else if (ptr2)
       {
         PR_FREEIF(mOutputFormat);
-        mOutputFormat = PL_strdup("text/xml");
+        mOutputFormat = nsCRT::strdup("text/xml");
         *aNewType = nsMimeOutput::nsMimeMessageHeaderDisplay;
       }
       else if (ptr3)
       {
         PR_FREEIF(mOutputFormat);
-        mOutputFormat = PL_strdup("text/html");
+        mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageQuoting;
       }
       else if (ptr4)
       {
         PR_FREEIF(mOutputFormat);
-        mOutputFormat = PL_strdup("text/html");
+        mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageBodyQuoting;
       }
     }
@@ -282,21 +282,21 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       if (mimeXULOutput)
       {
         PR_FREEIF(mOutputFormat);
-        mOutputFormat = PL_strdup("text/xul");
+        mOutputFormat = nsCRT::strdup("text/xul");
         *aNewType = nsMimeOutput::nsMimeMessageXULDisplay;
       }
       else
       {
         mWrapperOutput = PR_TRUE;
         PR_FREEIF(mOutputFormat);
-        mOutputFormat = PL_strdup("text/html");
+        mOutputFormat = nsCRT::strdup("text/html");
       }
     }
   }
   else // this is a part that should just come out raw!
   {
     PR_FREEIF(mOutputFormat);
-    mOutputFormat = PL_strdup("raw");
+    mOutputFormat = nsCRT::strdup("raw");
     *aNewType = nsMimeOutput::nsMimeMessageRaw;
   }
 
@@ -331,7 +331,7 @@ nsStreamConverter::nsStreamConverter()
   mWrapperOutput = PR_FALSE;
   mBridgeStream = NULL;
   mTotalRead = 0;
-  mOutputFormat = PL_strdup("text/html");
+  mOutputFormat = nsCRT::strdup("text/html");
   mDoneParsing = PR_FALSE;
   mAlreadyKnowOutputType = PR_FALSE;
   mMimeStreamConverterListener = nsnull;
@@ -397,43 +397,43 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	  {
     case nsMimeOutput::nsMimeMessageXULDisplay:
 			PR_FREEIF(mOutputFormat);
-			mOutputFormat = PL_strdup("text/xul");
+			mOutputFormat = nsCRT::strdup("text/xul");
       break;
 
 		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
 			mWrapperOutput = PR_TRUE;
 			PR_FREEIF(mOutputFormat);
-			mOutputFormat = PL_strdup("text/html");
+			mOutputFormat = nsCRT::strdup("text/html");
 			break;
 		case nsMimeOutput::nsMimeMessageHeaderDisplay:   // the split header/body display
 			PR_FREEIF(mOutputFormat);
-			mOutputFormat = PL_strdup("text/xml");
+			mOutputFormat = nsCRT::strdup("text/xml");
 			break;
 
 		case nsMimeOutput::nsMimeMessageBodyDisplay:   // the split header/body display
 			PR_FREEIF(mOutputFormat);
-			mOutputFormat = PL_strdup("text/html");
+			mOutputFormat = nsCRT::strdup("text/html");
 			break;
 
 		case nsMimeOutput::nsMimeMessageQuoting:   		// all HTML quoted output
 		case nsMimeOutput::nsMimeMessageBodyQuoting: 	// only HTML body quoted output
 			PR_FREEIF(mOutputFormat);
-			mOutputFormat = PL_strdup("text/html");
+			mOutputFormat = nsCRT::strdup("text/html");
 			break;
 
 		case nsMimeOutput::nsMimeMessageRaw:       // the raw RFC822 data (view source) and attachments
 			PR_FREEIF(mOutputFormat);
-			mOutputFormat = PL_strdup("raw");
+			mOutputFormat = nsCRT::strdup("raw");
 			break;
 
 		case nsMimeOutput::nsMimeMessageDraftOrTemplate:       // Loading drafts & templates
 			PR_FREEIF(mOutputFormat);
-			mOutputFormat = PL_strdup("message/draft");
+			mOutputFormat = nsCRT::strdup("message/draft");
 			break;
 
 		case nsMimeOutput::nsMimeMessageEditorTemplate:       // Loading templates into editor
 			PR_FREEIF(mOutputFormat);
-			mOutputFormat = PL_strdup("text/html");
+			mOutputFormat = nsCRT::strdup("text/html");
 			break;
 		default:
 			NS_ASSERTION(0, "this means I made a mistake in my assumptions");
@@ -513,8 +513,8 @@ NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
 		return NS_ERROR_NULL_POINTER;
 
 	// since this method passes a string through an IDL file we need to use nsAllocator to allocate it 
-	// and not PL_strdup!
-	if (PL_strcasecmp(mOutputFormat, "raw") == 0)
+	// and not nsCRT::strdup!
+	if (nsCRT::strcasecmp(mOutputFormat, "raw") == 0)
 		*aOutputContentType = (char *) nsAllocator::Clone(UNKNOWN_CONTENT_TYPE, nsCRT::strlen(UNKNOWN_CONTENT_TYPE) + 1);
 	else
 		*aOutputContentType = (char *) nsAllocator::Clone(mOutputFormat, nsCRT::strlen(mOutputFormat) + 1);
@@ -621,7 +621,7 @@ char *output = "\
     PR_snprintf(outBuf, sizeof(outBuf), output, url, url);
     PR_FREEIF(url);
     if (mEmitter)
-      mEmitter->Write(outBuf, PL_strlen(outBuf), &written);
+      mEmitter->Write(outBuf, nsCRT::strlen(outBuf), &written);
     mTotalRead += written;
 
     // RICHIE - will this stop the stream???? Not sure.    

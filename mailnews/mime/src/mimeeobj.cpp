@@ -24,6 +24,7 @@
 #include "nsMimeTransition.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
+#include "nsCRT.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeExternalObject, MimeExternalObjectClass,
@@ -141,7 +142,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
       }
     }
     
-    if (!PL_strcmp (id, "0"))
+    if (!nsCRT::strcmp (id, "0"))
     {
       PR_Free(id);
       id = MimeGetStringByID(MIME_MSG_ATTACHMENT);
@@ -149,7 +150,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     else
     {
       const char *p = "Part ";  /* #### i18n */
-      char *s = (char *)PR_MALLOC(PL_strlen(p) + PL_strlen(id) + 1);
+      char *s = (char *)PR_MALLOC(nsCRT::strlen(p) + nsCRT::strlen(id) + 1);
       if (!s)
       {
         PR_Free(id);

@@ -257,7 +257,7 @@ mime_SACopy (char **destination, const char *source)
   }
   else 
   {
-    *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+    *destination = (char *) PR_Malloc (nsCRT::strlen(source) + 1);
     if (*destination == NULL) 
       return(NULL);
     
@@ -275,8 +275,8 @@ mime_SACat (char **destination, const char *source)
   {
     if (*destination)
     {
-      int length = PL_strlen (*destination);
-      *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
+      int length = nsCRT::strlen (*destination);
+      *destination = (char *) PR_Realloc (*destination, length + nsCRT::strlen(source) + 1);
       if (*destination == NULL)
         return(NULL);
       
@@ -284,7 +284,7 @@ mime_SACat (char **destination, const char *source)
     }
     else
     {
-      *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+      *destination = (char *) PR_Malloc (nsCRT::strlen(source) + 1);
       if (*destination == NULL)
         return(NULL);
       

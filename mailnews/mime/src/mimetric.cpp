@@ -97,7 +97,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
 	  if (this_start >= line + length) /* blank line */
 		{
 		  PL_strcpy (*obufferP, "<BR>");
-		  return output_fn (*obufferP, PL_strlen(*obufferP), closure);
+		  return output_fn (*obufferP, nsCRT::strlen(*obufferP), closure);
 		}
 	}
 
@@ -143,18 +143,18 @@ MimeRichtextConvert (char *line, PRInt32 length,
 		break;
 	  else if (*this_start == '&')
 		{
-		  PL_strcpy (out, "&amp;"); out += PL_strlen (out);
+		  PL_strcpy (out, "&amp;"); out += nsCRT::strlen (out);
 		}
 	  else if (*this_start == '>')
 		{
-		  PL_strcpy (out, "&gt;"); out += PL_strlen (out);
+		  PL_strcpy (out, "&gt;"); out += nsCRT::strlen (out);
 		}
 	  else if (enriched_p &&
 			   this_start < data_end + 1 &&
 			   this_start[0] == '<' &&
 			   this_start[1] == '<')
 		{
-		  PL_strcpy (out, "&lt;"); out += PL_strlen (out);
+		  PL_strcpy (out, "&lt;"); out += nsCRT::strlen (out);
 		}
 	  else if (this_start != this_end)
 		{
@@ -171,117 +171,117 @@ MimeRichtextConvert (char *line, PRInt32 length,
 		  switch (*old)
 			{
 			case 'b': case 'B':
-			  if (!PL_strncasecmp ("BIGGER>", old, 7))
+			  if (!nsCRT::strncasecmp ("BIGGER>", old, 7))
 				tag_open = "<FONT SIZE=\"+1\">", tag_close = "</FONT>";
-			  else if (!PL_strncasecmp ("BLINK>", old, 5))
+			  else if (!nsCRT::strncasecmp ("BLINK>", old, 5))
 				/* Of course, both text/richtext and text/enriched must be
 				   enhanced *somehow*...  Or else what would people think. */
 				tag_open = "<BLINK>", tag_close = "</BLINK>";
-			  else if (!PL_strncasecmp ("BOLD>", old, 5))
+			  else if (!nsCRT::strncasecmp ("BOLD>", old, 5))
 				tag_open = "<B>", tag_close = "</B>";
 			  break;
 			case 'c': case 'C':
-			  if (!PL_strncasecmp ("CENTER>", old, 7))
+			  if (!nsCRT::strncasecmp ("CENTER>", old, 7))
 				tag_open = "<CENTER>", tag_close = "</CENTER>";
 			  else if (!enriched_p &&
-					   !PL_strncasecmp ("COMMENT>", old, 8))
+					   !nsCRT::strncasecmp ("COMMENT>", old, 8))
 				tag_open = "<!-- ", tag_close = " -->";
 			  break;
 			case 'e': case 'E':
-			  if (!PL_strncasecmp ("EXCERPT>", old, 8))
+			  if (!nsCRT::strncasecmp ("EXCERPT>", old, 8))
 				tag_open = "<BLOCKQUOTE>", tag_close = "</BLOCKQUOTE>";
 			  break;
 			case 'f': case 'F':
-			  if (!PL_strncasecmp ("FIXED>", old, 6))
+			  if (!nsCRT::strncasecmp ("FIXED>", old, 6))
 				tag_open = "<TT>", tag_close = "</TT>";
 			  else if (enriched_p &&
-					   !PL_strncasecmp ("FLUSHBOTH>", old, 10))
+					   !nsCRT::strncasecmp ("FLUSHBOTH>", old, 10))
 				tag_open = "<P ALIGN=LEFT>", tag_close = "</P>";
-			  else if (!PL_strncasecmp ("FLUSHLEFT>", old, 10))
+			  else if (!nsCRT::strncasecmp ("FLUSHLEFT>", old, 10))
 				tag_open = "<P ALIGN=LEFT>", tag_close = "</P>";
-			  else if (!PL_strncasecmp ("FLUSHRIGHT>", old, 11))
+			  else if (!nsCRT::strncasecmp ("FLUSHRIGHT>", old, 11))
 				tag_open = "<P ALIGN=RIGHT>", tag_close = "</P>";
 			  else if (!enriched_p &&
-					   !PL_strncasecmp ("FOOTING>", old, 8))
+					   !nsCRT::strncasecmp ("FOOTING>", old, 8))
 				tag_open = "<H6>", tag_close = "</H6>";
 			  break;
 			case 'h': case 'H':
 			  if (!enriched_p &&
-				  !PL_strncasecmp ("HEADING>", old, 8))
+				  !nsCRT::strncasecmp ("HEADING>", old, 8))
 				tag_open = "<H6>", tag_close = "</H6>";
 			  break;
 			case 'i': case 'I':
-			  if (!PL_strncasecmp ("INDENT>", old, 7))
+			  if (!nsCRT::strncasecmp ("INDENT>", old, 7))
 				tag_open = "<UL>", tag_close = "</UL>";
-			  else if (!PL_strncasecmp ("INDENTRIGHT>", old, 12))
+			  else if (!nsCRT::strncasecmp ("INDENTRIGHT>", old, 12))
 				tag_open = 0, tag_close = 0;
 /*			  else if (!enriched_p &&
-				       !PL_strncasecmp ("ISO-8859-", old, 9))
+				       !nsCRT::strncasecmp ("ISO-8859-", old, 9))
 				tag_open = 0, tag_close = 0; */
-			  else if (!PL_strncasecmp ("ITALIC>", old, 7))
+			  else if (!nsCRT::strncasecmp ("ITALIC>", old, 7))
 				tag_open = "<I>", tag_close = "</I>";
 			  break;
 			case 'l': case 'L':
 			  if (!enriched_p &&
-				  !PL_strncasecmp ("LT>", old, 3))
+				  !nsCRT::strncasecmp ("LT>", old, 3))
 				tag_open = "&lt;", tag_close = 0;
 			  break;
 			case 'n': case 'N':
 			  if (!enriched_p &&
-				  !PL_strncasecmp ("NL>", old, 3))
+				  !nsCRT::strncasecmp ("NL>", old, 3))
 				tag_open = "<BR>", tag_close = 0;
 			  if (enriched_p &&
-				  !PL_strncasecmp ("NOFILL>", old, 7))
+				  !nsCRT::strncasecmp ("NOFILL>", old, 7))
 				tag_open = "<NOBR>", tag_close = "</NOBR>";
 /*			  else if (!enriched_p &&
-				       !PL_strncasecmp ("NO-OP>", old, 6))
+				       !nsCRT::strncasecmp ("NO-OP>", old, 6))
 				tag_open = 0, tag_close = 0; */
 /*			  else if (!enriched_p &&
-				       !PL_strncasecmp ("NP>", old, 3))
+				       !nsCRT::strncasecmp ("NP>", old, 3))
 				tag_open = 0, tag_close = 0; */
 			  break;
 			case 'o': case 'O':
 			  if (!enriched_p &&
-				  !PL_strncasecmp ("OUTDENT>", old, 8))
+				  !nsCRT::strncasecmp ("OUTDENT>", old, 8))
 				tag_open = 0, tag_close = 0;
 			  else if (!enriched_p &&
-					   !PL_strncasecmp ("OUTDENTRIGHT>", old, 13))
+					   !nsCRT::strncasecmp ("OUTDENTRIGHT>", old, 13))
 				tag_open = 0, tag_close = 0;
 			  break;
 			case 'p': case 'P':
 			  if (enriched_p &&
-				  !PL_strncasecmp ("PARAM>", old, 6))
+				  !nsCRT::strncasecmp ("PARAM>", old, 6))
 				tag_open = "<!-- ", tag_close = " -->";
 			  else if (!enriched_p &&
-					   !PL_strncasecmp ("PARAGRAPH>", old, 10))
+					   !nsCRT::strncasecmp ("PARAGRAPH>", old, 10))
 				tag_open = "<P>", tag_close = 0;
 			  break;
 			case 's': case 'S':
 			  if (!enriched_p &&
-				  !PL_strncasecmp ("SAMEPAGE>", old, 9))
+				  !nsCRT::strncasecmp ("SAMEPAGE>", old, 9))
 				tag_open = 0, tag_close = 0;
 			  else if (!enriched_p &&
-					   !PL_strncasecmp ("SIGNATURE>", old, 10))
+					   !nsCRT::strncasecmp ("SIGNATURE>", old, 10))
 				tag_open = "<I><FONT SIZE=\"-1\">", tag_close = "</FONT></I>";
-			  else if (!PL_strncasecmp ("SMALLER>", old, 8))
+			  else if (!nsCRT::strncasecmp ("SMALLER>", old, 8))
 				tag_open = "<FONT SIZE=\"-1\">", tag_close = "</FONT>";
 			  else if (!enriched_p &&
-					   !PL_strncasecmp ("SUBSCRIPT>", old, 10))
+					   !nsCRT::strncasecmp ("SUBSCRIPT>", old, 10))
 				tag_open = "<SUB>", tag_close = "</SUB>";
 			  else if (!enriched_p &&
-					   !PL_strncasecmp ("SUPERSCRIPT>", old, 12))
+					   !nsCRT::strncasecmp ("SUPERSCRIPT>", old, 12))
 				tag_open = "<SUP>", tag_close = "</SUP>";
 			  break;
 			case 'u': case 'U':
-			  if (!PL_strncasecmp ("UNDERLINE>", old, 10))
+			  if (!nsCRT::strncasecmp ("UNDERLINE>", old, 10))
 				tag_open = "<U>", tag_close = "</U>";
 /*			  else if (!enriched_p &&
-					   !PL_strncasecmp ("US-ASCII>", old, 10))
+					   !nsCRT::strncasecmp ("US-ASCII>", old, 10))
 				tag_open = 0, tag_close = 0; */
 			  break;
 			case 'v': case 'V':
 			  if (enriched_p &&
-				  !PL_strncasecmp ("VERBATIM>", old, 9))
+				  !nsCRT::strncasecmp ("VERBATIM>", old, 9))
 				tag_open = "<PRE>", tag_close = "</PRE>";
 			  break;
 			}
@@ -289,12 +289,12 @@ MimeRichtextConvert (char *line, PRInt32 length,
 		  if (this_start[1] == '/')
 			{
 			  if (tag_close) PL_strcpy (out, tag_close);
-			  out += PL_strlen (out);
+			  out += nsCRT::strlen (out);
 			}
 		  else
 			{
 			  if (tag_open) PL_strcpy (out, tag_open);
-			  out += PL_strlen (out);
+			  out += nsCRT::strlen (out);
 			}
 		}
 

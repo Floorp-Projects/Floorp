@@ -207,7 +207,7 @@ escape_unescaped_percents(const char *incomingURL)
 {
 	const char *inC;
 	char *outC;
-	char *result = (char *) PR_Malloc(PL_strlen(incomingURL)*3+1);
+	char *result = (char *) PR_Malloc(nsCRT::strlen(incomingURL)*3+1);
 
 	if (result)
 	{
@@ -245,8 +245,8 @@ escape_for_mrel_subst(char *inURL)
 {
 	char *output, *inC, *outC, *temp;
 
-	/* PL_strlen asserts the presence of a string in inURL */
-	int size = PL_strlen(inURL) + 1;
+	/* nsCRT::strlen asserts the presence of a string in inURL */
+	int size = nsCRT::strlen(inURL) + 1;
 
 	for(inC = inURL; *inC; inC++)
 		if ((*inC == ' ') || (*inC == '>')) 
@@ -324,14 +324,14 @@ MimeThisIsStartPart(MimeObject *obj, MimeObject* child)
     {
       int length;
       tmp++;
-      length = PL_strlen(tmp);
+      length = nsCRT::strlen(tmp);
       if (length > 0 && tmp[length - 1] == '>') 
       {
         tmp[length - 1] = '\0';
       }
     }
 
-    rval = (!PL_strcmp(st, tmp));
+    rval = (!nsCRT::strcmp(st, tmp));
   }
 
   PR_FREEIF(st);
@@ -378,7 +378,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 				if (*tmp2 == '<') {
 					int length;
 					tmp2++;
-					length = PL_strlen(tmp2);
+					length = nsCRT::strlen(tmp2);
 					if (length > 0 && tmp2[length - 1] == '>') {
 						tmp2[length - 1] = '\0';
 					}
@@ -430,7 +430,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
                 {
                   int length;
                   tmp2++;
-                  length = PL_strlen(tmp2);
+                  length = nsCRT::strlen(tmp2);
                   if (length > 0 && tmp2[length - 1] == '>') 
                   {
                     tmp2[length - 1] = '\0';
@@ -441,7 +441,7 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
                 PR_Free(tmp);
                 if (tloc)
                 {
-                  PL_HashTableAdd(relobj->hash, tloc, PL_strdup(temp));
+                  PL_HashTableAdd(relobj->hash, tloc, nsCRT::strdup(temp));
                 }
               }
             }
@@ -731,7 +731,7 @@ flush_tag(MimeMultipartRelated* relobj)
 				/*If we found a mailbox part URL, write that out instead.*/
 				if (part_url)
 				{
-					status = real_write(relobj, part_url, PL_strlen(part_url));
+					status = real_write(relobj, part_url, nsCRT::strlen(part_url));
 					if (status < 0) return status;
 					buf = ptr2; /* skip over the cid: URL we substituted */
 				}
@@ -763,7 +763,7 @@ flush_tag(MimeMultipartRelated* relobj)
 
         if (realout)
         {
-          status = real_write(relobj, realout, PL_strlen(realout));
+          status = real_write(relobj, realout, nsCRT::strlen(realout));
 					if (status < 0) return status;
 					buf = ptr2; /* skip over the cid: URL we substituted */
         }
@@ -783,7 +783,7 @@ flush_tag(MimeMultipartRelated* relobj)
 		}
 	}
 	if (buf && *buf) {
-		status = real_write(relobj, buf, PL_strlen(buf));
+		status = real_write(relobj, buf, nsCRT::strlen(buf));
 		if (status < 0) return status;
 	}
 	relobj->curtag_length = 0;

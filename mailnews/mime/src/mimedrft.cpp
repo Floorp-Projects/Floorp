@@ -463,7 +463,7 @@ mime_draft_process_attachments(mime_draft_data *mdd)
   {
 	  if (tmpFile->type) 
     {
-		  if (PL_strcasecmp ( tmpFile->type, "text/x-vcard") == 0)
+		  if (nsCRT::strcasecmp ( tmpFile->type, "text/x-vcard") == 0)
 			  mime_SACopy (&(tmp->real_name), tmpFile->description);
 	  }
 
@@ -535,7 +535,7 @@ mime_fix_up_html_address( char **addr)
 		PRInt32 newLen = 0;
 		do 
 		{
-			newLen = PL_strlen(*addr) + 3 + 1;
+			newLen = nsCRT::strlen(*addr) + 3 + 1;
 			*addr = (char *) PR_REALLOC(*addr, newLen);
 			PR_ASSERT (*addr);
 			lt = PL_strchr(*addr, '<');
@@ -561,7 +561,7 @@ mime_intl_mimepart_2_str(char **str, char *mcharset)
     // Now do conversion to UTF-8???
     char  *newStr = NULL;
     PRInt32 newStrLen;
-    PRInt32 res = MIME_ConvertCharset(PR_TRUE, mcharset, "UTF-8", *str, PL_strlen(*str), 
+    PRInt32 res = MIME_ConvertCharset(PR_TRUE, mcharset, "UTF-8", *str, nsCRT::strlen(*str), 
                                     &newStr, &newStrLen, NULL);
 		if ( (NS_SUCCEEDED(res)) && (newStr && newStr != *str))
 		{
@@ -661,7 +661,7 @@ mime_insert_all_headers(char            **body,
 	  char *c2 = 0;
 
 	  // Hack for BSD Mailbox delimiter. 
-	  if (i == 0 && head[0] == 'F' && !PL_strncmp(head, "From ", 5))
+	  if (i == 0 && head[0] == 'F' && !nsCRT::strncmp(head, "From ", 5))
 		{
 		  colon = head + 4;
 		  contents = colon + 1;
@@ -1244,14 +1244,14 @@ mime_parse_stream_complete (nsMIMESession *stream)
     {
       char *parm = 0;
       parm = MimeHeaders_get_parameter(draftInfo, "vcard", NULL, NULL);
-      if (parm && !PL_strcmp(parm, "1"))
+      if (parm && !nsCRT::strcmp(parm, "1"))
         fields->SetBoolHeader(nsMsg_ATTACH_VCARD_BOOL_HEADER_MASK, PR_TRUE);
       else
         fields->SetBoolHeader(nsMsg_ATTACH_VCARD_BOOL_HEADER_MASK, PR_FALSE);
       
       PR_FREEIF(parm);
       parm = MimeHeaders_get_parameter(draftInfo, "receipt", NULL, NULL);
-      if (parm && !PL_strcmp(parm, "0"))
+      if (parm && !nsCRT::strcmp(parm, "0"))
         fields->SetBoolHeader(nsMsg_RETURN_RECEIPT_BOOL_HEADER_MASK, PR_FALSE); 
       else
       {
@@ -1262,7 +1262,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
       }
       PR_FREEIF(parm);
       parm = MimeHeaders_get_parameter(draftInfo, "uuencode", NULL, NULL);
-      if (parm && !PL_strcmp(parm, "1"))
+      if (parm && !nsCRT::strcmp(parm, "1"))
         fields->SetBoolHeader(nsMsg_UUENCODE_BINARY_BOOL_HEADER_MASK, PR_TRUE);
       else
         fields->SetBoolHeader(nsMsg_UUENCODE_BINARY_BOOL_HEADER_MASK, PR_FALSE);
@@ -1317,7 +1317,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
         {
           mime_insert_forwarded_message_headers(&body, mdd->headers, editorType,
                                                 mdd->mailcharset);
-          bodyLen = PL_strlen(body);
+          bodyLen = nsCRT::strlen(body);
         }
 
         //
@@ -1328,7 +1328,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
         char      *newBody = NULL;
         PRInt32   newBodyLen;
         PRInt32 res = MIME_ConvertCharset(PR_TRUE, mdd->mailcharset, "UTF-8", body, 
-                                          PL_strlen(body), &newBody, &newBodyLen, NULL);
+                                          nsCRT::strlen(body), &newBody, &newBodyLen, NULL);
 		    if ( (NS_SUCCEEDED(res)) && (newBody && newBody != body))
 		    {
 			    PR_FREEIF(body);
@@ -1567,7 +1567,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     if (contentType) 
     {
       charset = MimeHeaders_get_parameter(contentType, "charset", NULL, NULL);
-      mdd->mailcharset = PL_strdup(charset);
+      mdd->mailcharset = nsCRT::strdup(charset);
       PR_FREEIF(charset);
       PR_FREEIF(contentType);
     }
@@ -1619,9 +1619,9 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       contLoc = MimeHeaders_get( headers, HEADER_CONTENT_BASE, PR_FALSE, PR_FALSE );
 
   if ( (!contLoc) && (newAttachment->real_name) )
-    workURLSpec = PL_strdup(newAttachment->real_name);
+    workURLSpec = nsCRT::strdup(newAttachment->real_name);
   if ( (contLoc) && (!workURLSpec) )
-    workURLSpec = PL_strdup(contLoc);
+    workURLSpec = nsCRT::strdup(contLoc);
 
   PR_FREEIF(contLoc);
 
@@ -1655,7 +1655,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   // If we came up empty for description or the orig URL, we should do something about it.
   //
   if  ( ( (!newAttachment->description) || (!*newAttachment->description) ) && (workURLSpec) )
-    newAttachment->description = PL_strdup(workURLSpec);
+    newAttachment->description = nsCRT::strdup(workURLSpec);
 
   nsFileSpec *tmpSpec = nsnull;
   if (newAttachment->real_name)
@@ -1727,14 +1727,14 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     //
     if (!newAttachment->encoding || mdd->options->dexlate_p)
       ;
-    else if (!PL_strcasecmp(newAttachment->encoding, ENCODING_BASE64))
+    else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_BASE64))
       fn = &MimeB64DecoderInit;
-    else if (!PL_strcasecmp(newAttachment->encoding, ENCODING_QUOTED_PRINTABLE))
+    else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_QUOTED_PRINTABLE))
       fn = &MimeQPDecoderInit;
-    else if (!PL_strcasecmp(newAttachment->encoding, ENCODING_UUENCODE) ||
-             !PL_strcasecmp(newAttachment->encoding, ENCODING_UUENCODE2) ||
-             !PL_strcasecmp(newAttachment->encoding, ENCODING_UUENCODE3) ||
-             !PL_strcasecmp(newAttachment->encoding, ENCODING_UUENCODE4))
+    else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE) ||
+             !nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE2) ||
+             !nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE3) ||
+             !nsCRT::strcasecmp(newAttachment->encoding, ENCODING_UUENCODE4))
       fn = &MimeUUDecoderInit;
     
     if (fn) 
@@ -1830,7 +1830,7 @@ mime_bridge_create_draft_stream(
   {
     if ((urlString) && (*urlString))
     {
-      mdd->url_name = PL_strdup(urlString);
+      mdd->url_name = nsCRT::strdup(urlString);
       if (!(mdd->url_name))
       {
         PR_FREEIF(mdd);

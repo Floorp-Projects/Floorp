@@ -133,7 +133,7 @@ char* dupStr(const char *s, unsigned int size)
 {
   char *t;
   if  (size == 0) {
-    size = PL_strlen(s);
+    size = nsCRT::strlen(s);
   }
   t = (char*)PR_Malloc(size+1);
   if (t) {
@@ -394,7 +394,7 @@ VObject* isAPropertyOf(VObject *o, const char *id)
     initPropIterator(&i,o);
     while (moreIteration(&i)) {
 	VObject *each = nextVObject(&i);
-	if (!PL_strcasecmp(id,each->id))
+	if (!nsCRT::strcasecmp(id,each->id))
 	    return each;
 	}
     return (VObject*)0;
@@ -445,7 +445,7 @@ VObject* addPropValue(VObject *o, const char *p, const char *v)
 	if (v) {
 		setVObjectUStringZValue_(prop, fakeUnicode(v,0));
 		if (needsQuotedPrintable (v)) {
-			if (PL_strcasecmp (VCCardProp, vObjectName(o)) == 0) 
+			if (nsCRT::strcasecmp (VCCardProp, vObjectName(o)) == 0) 
 				addProp (prop, VCQuotedPrintableProp);
 			else
 				addProp (o, VCQuotedPrintableProp);
@@ -667,7 +667,7 @@ void unUseStr(const char *s)
     if ((t = strTbl[h]) != 0) {
 	p = t;
 	do {
-	    if (PL_strcasecmp(t->s,s) == 0) {
+	    if (nsCRT::strcasecmp(t->s,s) == 0) {
 		t->refCnt--;
 		if (t->refCnt == 0) {
 		    if (p == strTbl[h]) {
@@ -959,7 +959,7 @@ static struct PreDefProp* lookupPropInfo(const char* str)
     int i;
 	
     for (i = 0; propNames[i].name; i++) 
-	if (PL_strcasecmp(str, propNames[i].name) == 0) {
+	if (nsCRT::strcasecmp(str, propNames[i].name) == 0) {
 	    return &propNames[i];
 	    }
     
@@ -972,7 +972,7 @@ const char* lookupProp_(const char* str)
     int i;
 	
     for (i = 0; propNames[i].name; i++)
-	if (PL_strcasecmp(str, propNames[i].name) == 0) {
+	if (nsCRT::strcasecmp(str, propNames[i].name) == 0) {
 	    const char* s;
 	    s = propNames[i].alias?propNames[i].alias:propNames[i].name;
 	    return lookupStr(s);
@@ -986,7 +986,7 @@ const char* lookupProp(const char* str)
     int i;
 	
     for (i = 0; propNames[i].name; i++)
-	if (PL_strcasecmp(str, propNames[i].name) == 0) {
+	if (nsCRT::strcasecmp(str, propNames[i].name) == 0) {
 	    const char *s;
 	    fieldedProp = propNames[i].fields;
 	    s = propNames[i].alias?propNames[i].alias:propNames[i].name;
@@ -1015,7 +1015,7 @@ static void appendsOFile(OFile *fp, const char *s)
 {
     int slen;
     if (fp->fail) return;
-    slen  = PL_strlen(s);
+    slen  = nsCRT::strlen(s);
     if (fp->fp) {
 	PR_Write(fp->fp, s,slen);
 	}
@@ -1107,7 +1107,7 @@ static void appendcOFile(OFile *fp, char c)
 static void appendsOFile(OFile *fp, const char *s)
 {
     int i, slen;
-    slen  = PL_strlen (s);
+    slen  = nsCRT::strlen (s);
     for (i=0; i<slen; i++) {
 	appendcOFile(fp,s[i]);
 	}
@@ -1342,7 +1342,7 @@ static void writeAttrValue(OFile *fp, VObject *o, int* length)
 		(*length)++;
 	appendsOFile(fp,NAME_OF(o));
 	if (*length != -1)
-		(*length) += PL_strlen (NAME_OF(o));
+		(*length) += nsCRT::strlen (NAME_OF(o));
 	}
     else {
 		appendcOFile(fp,';');
@@ -1377,7 +1377,7 @@ static int inList(const char **list, const char *s)
 {
     if (list == 0) return 0;
     while (*list) {
-	if (PL_strcasecmp(*list,s) == 0) return 1;
+	if (nsCRT::strcasecmp(*list,s) == 0) return 1;
 	list++;
 	}
     return 0;
@@ -1406,7 +1406,7 @@ static void writeProp(OFile *fp, VObject *o)
 	    const char *s;
 	    VObject *eachProp = nextVObject(&t);
 	    s = NAME_OF(eachProp);
-	    if (PL_strcasecmp(VCGroupingProp,s) && !inList(fields_,s))
+	    if (nsCRT::strcasecmp(VCGroupingProp,s) && !inList(fields_,s))
 		writeAttrValue(fp,eachProp, &length);
 	    }
 	if (fields_) {
@@ -1529,7 +1529,7 @@ extern "C"
 vwchar_t* fakeUnicode(const char *ps, int *bytes)
 {
     vwchar_t *r, *pw;
-    int len = PL_strlen(ps)+1;
+    int len = nsCRT::strlen(ps)+1;
 
     pw = r = (vwchar_t*)PR_Malloc(sizeof(vwchar_t)*len);
     if (bytes)
@@ -1580,7 +1580,7 @@ const char* lookupStr(const char *s)
     unsigned int h = hashStr(s);
     if ((t = strTbl[h]) != 0) {
 	do {
-	    if (PL_strcasecmp(t->s,s) == 0) {
+	    if (nsCRT::strcasecmp(t->s,s) == 0) {
 		t->refCnt++;
 		return t->s;
 		}

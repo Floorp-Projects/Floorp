@@ -67,9 +67,9 @@ EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
   if (nsMimeHeaderDisplayTypes::MicroHeaders == dispType)
   {
     if (
-          (!PL_strcmp(header, HEADER_SUBJECT)) ||
-          (!PL_strcmp(header, HEADER_FROM)) ||
-          (!PL_strcmp(header, HEADER_DATE))
+          (!nsCRT::strcmp(header, HEADER_SUBJECT)) ||
+          (!nsCRT::strcmp(header, HEADER_FROM)) ||
+          (!nsCRT::strcmp(header, HEADER_DATE))
        )
       return PR_TRUE;
     else
@@ -79,21 +79,21 @@ EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
   if (nsMimeHeaderDisplayTypes::NormalHeaders == dispType)
   {
     if (
-        (!PL_strcmp(header, HEADER_TO)) ||
-        (!PL_strcmp(header, HEADER_SUBJECT)) ||
-        (!PL_strcmp(header, HEADER_SENDER)) ||
-        (!PL_strcmp(header, HEADER_RESENT_TO)) ||
-        (!PL_strcmp(header, HEADER_RESENT_SENDER)) ||
-        (!PL_strcmp(header, HEADER_RESENT_FROM)) ||
-        (!PL_strcmp(header, HEADER_RESENT_CC)) ||
-        (!PL_strcmp(header, HEADER_REPLY_TO)) ||
-        (!PL_strcmp(header, HEADER_REFERENCES)) ||
-        (!PL_strcmp(header, HEADER_NEWSGROUPS)) ||
-        (!PL_strcmp(header, HEADER_MESSAGE_ID)) ||
-        (!PL_strcmp(header, HEADER_FROM)) ||
-        (!PL_strcmp(header, HEADER_FOLLOWUP_TO)) ||
-        (!PL_strcmp(header, HEADER_CC)) ||
-        (!PL_strcmp(header, HEADER_BCC))
+        (!nsCRT::strcmp(header, HEADER_TO)) ||
+        (!nsCRT::strcmp(header, HEADER_SUBJECT)) ||
+        (!nsCRT::strcmp(header, HEADER_SENDER)) ||
+        (!nsCRT::strcmp(header, HEADER_RESENT_TO)) ||
+        (!nsCRT::strcmp(header, HEADER_RESENT_SENDER)) ||
+        (!nsCRT::strcmp(header, HEADER_RESENT_FROM)) ||
+        (!nsCRT::strcmp(header, HEADER_RESENT_CC)) ||
+        (!nsCRT::strcmp(header, HEADER_REPLY_TO)) ||
+        (!nsCRT::strcmp(header, HEADER_REFERENCES)) ||
+        (!nsCRT::strcmp(header, HEADER_NEWSGROUPS)) ||
+        (!nsCRT::strcmp(header, HEADER_MESSAGE_ID)) ||
+        (!nsCRT::strcmp(header, HEADER_FROM)) ||
+        (!nsCRT::strcmp(header, HEADER_FOLLOWUP_TO)) ||
+        (!nsCRT::strcmp(header, HEADER_CC)) ||
+        (!nsCRT::strcmp(header, HEADER_BCC))
        )
        return PR_TRUE;
     else

@@ -370,14 +370,14 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 										  PR_TRUE, PR_FALSE);
 		if (!encoding)
 		  ;
-		else if (!PL_strcasecmp(encoding, ENCODING_BASE64))
+		else if (!nsCRT::strcasecmp(encoding, ENCODING_BASE64))
 		  fn = &MimeB64DecoderInit;
-		else if (!PL_strcasecmp(encoding, ENCODING_QUOTED_PRINTABLE))
+		else if (!nsCRT::strcasecmp(encoding, ENCODING_QUOTED_PRINTABLE))
 		  fn = &MimeQPDecoderInit;
-		else if (!PL_strcasecmp(encoding, ENCODING_UUENCODE) ||
-				 !PL_strcasecmp(encoding, ENCODING_UUENCODE2) ||
-				 !PL_strcasecmp(encoding, ENCODING_UUENCODE3) ||
-				 !PL_strcasecmp(encoding, ENCODING_UUENCODE4))
+		else if (!nsCRT::strcasecmp(encoding, ENCODING_UUENCODE) ||
+				 !nsCRT::strcasecmp(encoding, ENCODING_UUENCODE2) ||
+				 !nsCRT::strcasecmp(encoding, ENCODING_UUENCODE3) ||
+				 !nsCRT::strcasecmp(encoding, ENCODING_UUENCODE4))
 		  fn = &MimeUUDecoderInit;
 
 		if (fn)
@@ -595,7 +595,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 					->xlation_generate_html (sig->xlation_closure));
 	  if (!html) return -1; /* MIME_OUT_OF_MEMORY? */
 
-	  status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
+	  status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
 	  PR_Free(html);
 	  if (status < 0) return status;
 
@@ -619,7 +619,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 		  obj->options->state->post_header_html_run_p = PR_TRUE;
 		  if (html)
 			{
-			  status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
+			  status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
 			  PR_Free(html);
 			  if (status < 0) return status;
 			}

@@ -40,9 +40,9 @@ EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
   if (nsMimeHeaderDisplayTypes::MicroHeaders == dispType)
   {
     if (
-          (!PL_strcmp(header, HEADER_SUBJECT)) ||
-          (!PL_strcmp(header, HEADER_FROM)) ||
-          (!PL_strcmp(header, HEADER_DATE))
+          (!nsCRT::strcmp(header, HEADER_SUBJECT)) ||
+          (!nsCRT::strcmp(header, HEADER_FROM)) ||
+          (!nsCRT::strcmp(header, HEADER_DATE))
        )
       return PR_TRUE;
     else
@@ -52,22 +52,22 @@ EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
   if (nsMimeHeaderDisplayTypes::NormalHeaders == dispType)
   {
     if (
-        (!PL_strcmp(header, HEADER_DATE)) ||
-        (!PL_strcmp(header, HEADER_TO)) ||
-        (!PL_strcmp(header, HEADER_SUBJECT)) ||
-        (!PL_strcmp(header, HEADER_SENDER)) ||
-        (!PL_strcmp(header, HEADER_RESENT_TO)) ||
-        (!PL_strcmp(header, HEADER_RESENT_SENDER)) ||
-        (!PL_strcmp(header, HEADER_RESENT_FROM)) ||
-        (!PL_strcmp(header, HEADER_RESENT_CC)) ||
-        (!PL_strcmp(header, HEADER_REPLY_TO)) ||
-        (!PL_strcmp(header, HEADER_REFERENCES)) ||
-        (!PL_strcmp(header, HEADER_NEWSGROUPS)) ||
-        (!PL_strcmp(header, HEADER_MESSAGE_ID)) ||
-        (!PL_strcmp(header, HEADER_FROM)) ||
-        (!PL_strcmp(header, HEADER_FOLLOWUP_TO)) ||
-        (!PL_strcmp(header, HEADER_CC)) ||
-        (!PL_strcmp(header, HEADER_BCC))
+        (!nsCRT::strcmp(header, HEADER_DATE)) ||
+        (!nsCRT::strcmp(header, HEADER_TO)) ||
+        (!nsCRT::strcmp(header, HEADER_SUBJECT)) ||
+        (!nsCRT::strcmp(header, HEADER_SENDER)) ||
+        (!nsCRT::strcmp(header, HEADER_RESENT_TO)) ||
+        (!nsCRT::strcmp(header, HEADER_RESENT_SENDER)) ||
+        (!nsCRT::strcmp(header, HEADER_RESENT_FROM)) ||
+        (!nsCRT::strcmp(header, HEADER_RESENT_CC)) ||
+        (!nsCRT::strcmp(header, HEADER_REPLY_TO)) ||
+        (!nsCRT::strcmp(header, HEADER_REFERENCES)) ||
+        (!nsCRT::strcmp(header, HEADER_NEWSGROUPS)) ||
+        (!nsCRT::strcmp(header, HEADER_MESSAGE_ID)) ||
+        (!nsCRT::strcmp(header, HEADER_FROM)) ||
+        (!nsCRT::strcmp(header, HEADER_FOLLOWUP_TO)) ||
+        (!nsCRT::strcmp(header, HEADER_CC)) ||
+        (!nsCRT::strcmp(header, HEADER_BCC))
        )
        return PR_TRUE;
     else
@@ -88,7 +88,7 @@ LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName)
 {
 
 
-  return PL_strdup(aDefaultName);
+  return nsCRT::strdup(aDefaultName);
 }
 
 /* This is the next generation string retrieval call */
@@ -176,7 +176,7 @@ extern "C"
 char *
 MimeGetStringByName(const char *aHeaderName)
 {
-  if (!PL_strcasecmp(aHeaderName, "From")) return PL_strdup("From");
+  if (!nsCRT::strcasecmp(aHeaderName, "From")) return nsCRT::strdup("From");
 
   return nsnull;
 }
@@ -274,9 +274,9 @@ nsMsgCreateTempFileName(char *tFileName)
   tmpSpec.MakeUnique();
 
   PR_FREEIF(tDir);
-  char *tString = (char *)PL_strdup(tmpSpec.GetNativePathCString());
+  char *tString = (char *)nsCRT::strdup(tmpSpec.GetNativePathCString());
   if (!tString)
-    return PL_strdup("mozmail.tmp");  // No need to I18N
+    return nsCRT::strdup("mozmail.tmp");  // No need to I18N
   else
     return tString;
 }
@@ -289,7 +289,7 @@ nsMimePlatformFileToURL (nsFileSpec  aFileSpec)
 
   tPtr = tURL.GetURLString();
   if (tPtr)
-    return PL_strdup(tPtr);
+    return nsCRT::strdup(tPtr);
   else
     return nsnull;
 }

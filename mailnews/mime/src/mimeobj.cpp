@@ -91,38 +91,38 @@ MimeObject_initialize (MimeObject *obj)
    */
   if (!obj->content_type)
 	;
-  else if (!PL_strcasecmp(obj->content_type, APPLICATION_UUENCODE2) ||
-		   !PL_strcasecmp(obj->content_type, APPLICATION_UUENCODE3) ||
-		   !PL_strcasecmp(obj->content_type, APPLICATION_UUENCODE4))
+  else if (!nsCRT::strcasecmp(obj->content_type, APPLICATION_UUENCODE2) ||
+		   !nsCRT::strcasecmp(obj->content_type, APPLICATION_UUENCODE3) ||
+		   !nsCRT::strcasecmp(obj->content_type, APPLICATION_UUENCODE4))
 	{
 	  PR_Free(obj->content_type);
-	  obj->content_type = PL_strdup(APPLICATION_UUENCODE);
+	  obj->content_type = nsCRT::strdup(APPLICATION_UUENCODE);
 	}
-  else if (!PL_strcasecmp(obj->content_type, IMAGE_XBM2) ||
-		   !PL_strcasecmp(obj->content_type, IMAGE_XBM3))
+  else if (!nsCRT::strcasecmp(obj->content_type, IMAGE_XBM2) ||
+		   !nsCRT::strcasecmp(obj->content_type, IMAGE_XBM3))
 	{
 	  PR_Free(obj->content_type);
-	  obj->content_type = PL_strdup(IMAGE_XBM);
+	  obj->content_type = nsCRT::strdup(IMAGE_XBM);
 	}
 
   if (!obj->encoding)
 	;
-  else if (!PL_strcasecmp(obj->encoding, ENCODING_UUENCODE2) ||
-		   !PL_strcasecmp(obj->encoding, ENCODING_UUENCODE3) ||
-		   !PL_strcasecmp(obj->encoding, ENCODING_UUENCODE4))
+  else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE2) ||
+		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE3) ||
+		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE4))
 	{
 	  PR_Free(obj->encoding);
-	  obj->encoding = PL_strdup(ENCODING_UUENCODE);
+	  obj->encoding = nsCRT::strdup(ENCODING_UUENCODE);
 	}
-  else if (!PL_strcasecmp(obj->encoding, ENCODING_COMPRESS2))
+  else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_COMPRESS2))
 	{
 	  PR_Free(obj->encoding);
-	  obj->encoding = PL_strdup(ENCODING_COMPRESS);
+	  obj->encoding = nsCRT::strdup(ENCODING_COMPRESS);
 	}
-  else if (!PL_strcasecmp(obj->encoding, ENCODING_GZIP2))
+  else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_GZIP2))
 	{
 	  PR_Free(obj->encoding);
-	  obj->encoding = PL_strdup(ENCODING_GZIP);
+	  obj->encoding = nsCRT::strdup(ENCODING_GZIP);
 	}
 
 
@@ -185,7 +185,7 @@ MimeObject_parse_begin (MimeObject *obj)
 	{
 	  char *id = mime_part_address(obj);
 	  if (!id) return MIME_OUT_OF_MEMORY;
-	  obj->output_p = !PL_strcmp(id, obj->options->part_to_load);
+	  obj->output_p = !nsCRT::strcmp(id, obj->options->part_to_load);
 	  PR_Free(id);
 	}
 

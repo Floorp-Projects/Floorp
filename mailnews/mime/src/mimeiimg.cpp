@@ -22,6 +22,7 @@
 #include "prlog.h"
 #include "nsMimeTypes.h"
 #include "nsMimeStringResources.h"
+#include "nsCRT.h"
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeInlineImage, MimeInlineImageClass,
@@ -112,7 +113,7 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 	  html = obj->options->make_image_html(img->image_data);
 	  if (!html) return MIME_OUT_OF_MEMORY;
 
-	  status = MimeObject_write(obj, html, PL_strlen(html), PR_TRUE);
+	  status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_TRUE);
 	  PR_Free(html);
 	  if (status < 0) return status;
 	}

@@ -72,36 +72,36 @@ test_file_type (const char *filename, void *stream_closure)
 	return 0;
   suf++;
 
-  if (!PL_strcasecmp(suf, "txt") ||
-	  !PL_strcasecmp(suf, "text"))
-	return PL_strdup("text/plain");
-  else if (!PL_strcasecmp(suf, "htm") ||
-		   !PL_strcasecmp(suf, "html"))
-	return PL_strdup("text/html");
-  else if (!PL_strcasecmp(suf, "gif"))
-	return PL_strdup("image/gif");
-  else if (!PL_strcasecmp(suf, "jpg") ||
-		   !PL_strcasecmp(suf, "jpeg"))
-	return PL_strdup("image/jpeg");
-  else if (!PL_strcasecmp(suf, "pjpg") ||
-		   !PL_strcasecmp(suf, "pjpeg"))
-	return PL_strdup("image/pjpeg");
-  else if (!PL_strcasecmp(suf, "xbm"))
-	return PL_strdup("image/x-xbitmap");
-  else if (!PL_strcasecmp(suf, "xpm"))
-	return PL_strdup("image/x-xpixmap");
-  else if (!PL_strcasecmp(suf, "xwd"))
-	return PL_strdup("image/x-xwindowdump");
-  else if (!PL_strcasecmp(suf, "bmp"))
-	return PL_strdup("image/x-MS-bmp");
-  else if (!PL_strcasecmp(suf, "au"))
-	return PL_strdup("audio/basic");
-  else if (!PL_strcasecmp(suf, "aif") ||
-		   !PL_strcasecmp(suf, "aiff") ||
-		   !PL_strcasecmp(suf, "aifc"))
-	return PL_strdup("audio/x-aiff");
-  else if (!PL_strcasecmp(suf, "ps"))
-	return PL_strdup("application/postscript");
+  if (!nsCRT::strcasecmp(suf, "txt") ||
+	  !nsCRT::strcasecmp(suf, "text"))
+	return nsCRT::strdup("text/plain");
+  else if (!nsCRT::strcasecmp(suf, "htm") ||
+		   !nsCRT::strcasecmp(suf, "html"))
+	return nsCRT::strdup("text/html");
+  else if (!nsCRT::strcasecmp(suf, "gif"))
+	return nsCRT::strdup("image/gif");
+  else if (!nsCRT::strcasecmp(suf, "jpg") ||
+		   !nsCRT::strcasecmp(suf, "jpeg"))
+	return nsCRT::strdup("image/jpeg");
+  else if (!nsCRT::strcasecmp(suf, "pjpg") ||
+		   !nsCRT::strcasecmp(suf, "pjpeg"))
+	return nsCRT::strdup("image/pjpeg");
+  else if (!nsCRT::strcasecmp(suf, "xbm"))
+	return nsCRT::strdup("image/x-xbitmap");
+  else if (!nsCRT::strcasecmp(suf, "xpm"))
+	return nsCRT::strdup("image/x-xpixmap");
+  else if (!nsCRT::strcasecmp(suf, "xwd"))
+	return nsCRT::strdup("image/x-xwindowdump");
+  else if (!nsCRT::strcasecmp(suf, "bmp"))
+	return nsCRT::strdup("image/x-MS-bmp");
+  else if (!nsCRT::strcasecmp(suf, "au"))
+	return nsCRT::strdup("audio/basic");
+  else if (!nsCRT::strcasecmp(suf, "aif") ||
+		   !nsCRT::strcasecmp(suf, "aiff") ||
+		   !nsCRT::strcasecmp(suf, "aifc"))
+	return nsCRT::strdup("audio/x-aiff");
+  else if (!nsCRT::strcasecmp(suf, "ps"))
+	return nsCRT::strdup("application/postscript");
   else
 	return 0;
 }
@@ -109,18 +109,18 @@ test_file_type (const char *filename, void *stream_closure)
 static char *
 test_type_icon(const char *type, void *stream_closure)
 {
-  if (!PL_strncasecmp(type, "text/", 5))
-	return PL_strdup("internal-gopher-text");
-  else if (!PL_strncasecmp(type, "image/", 6))
-	return PL_strdup("internal-gopher-image");
-  else if (!PL_strncasecmp(type, "audio/", 6))
-	return PL_strdup("internal-gopher-sound");
-  else if (!PL_strncasecmp(type, "video/", 6))
-	return PL_strdup("internal-gopher-movie");
-  else if (!PL_strncasecmp(type, "application/", 12))
-	return PL_strdup("internal-gopher-binary");
+  if (!nsCRT::strncasecmp(type, "text/", 5))
+	return nsCRT::strdup("internal-gopher-text");
+  else if (!nsCRT::strncasecmp(type, "image/", 6))
+	return nsCRT::strdup("internal-gopher-image");
+  else if (!nsCRT::strncasecmp(type, "audio/", 6))
+	return nsCRT::strdup("internal-gopher-sound");
+  else if (!nsCRT::strncasecmp(type, "video/", 6))
+	return nsCRT::strdup("internal-gopher-movie");
+  else if (!nsCRT::strncasecmp(type, "application/", 12))
+	return nsCRT::strdup("internal-gopher-binary");
   else
-	return PL_strdup("internal-gopher-unknown");
+	return nsCRT::strdup("internal-gopher-unknown");
 }
 
 static int
@@ -169,7 +169,7 @@ test_set_html_state_fn (void *stream_closure,
 		"</B></B></B></B></B></B></B></B></B></B></B></B>"
 		"</PRE></PRE></PRE></PRE></PRE></PRE></PRE></PRE>"
 		"<BASEFONT SIZE=3></SCRIPT>";
-  return test_output_fn(random_close_tags, PL_strlen(random_close_tags),
+  return test_output_fn(random_close_tags, nsCRT::strlen(random_close_tags),
 						stream_closure);
 }
 
@@ -177,7 +177,7 @@ static void *
 test_image_begin(const char *image_url, const char *content_type,
 				 void *stream_closure)
 {
-  return ((void *) PL_strdup(image_url));
+  return ((void *) nsCRT::strdup(image_url));
 }
 
 static void
@@ -202,8 +202,8 @@ test_image_make_image_html(void *image_data)
   const char *suffix = "</TD></TR></TABLE></CENTER><P>";
 #endif
   char *buf;
-  buf = (char *) PR_MALLOC (PL_strlen (prefix) + PL_strlen (suffix) +
-						   PL_strlen (url) + 20);
+  buf = (char *) PR_MALLOC (nsCRT::strlen (prefix) + nsCRT::strlen (suffix) +
+						   nsCRT::strlen (url) + 20);
   if (!buf) return 0;
   *buf = 0;
   PL_strcat (buf, prefix);
@@ -224,9 +224,9 @@ test_passwd_prompt (PK11SlotInfo *slot, void *wincx)
   fprintf(stdout, "#### Password required: ");
   s = fgets(buf, sizeof(buf)-1, stdin);
   if (!s) return s;
-  if (s[PL_strlen(s)-1] == '\r' ||
-	  s[PL_strlen(s)-1] == '\n')
-	s[PL_strlen(s)-1] = '\0';
+  if (s[nsCRT::strlen(s)-1] == '\r' ||
+	  s[nsCRT::strlen(s)-1] == '\n')
+	s[nsCRT::strlen(s)-1] = '\0';
   return s;
 }
 
@@ -401,7 +401,7 @@ main (int argc, char **argv)
   if (i < argc)
 	{
 	  if (argv[i][0] == '-')
-		url = PL_strdup("");
+		url = nsCRT::strdup("");
 	  else
 		url = argv[i++];
 	}
@@ -413,17 +413,17 @@ main (int argc, char **argv)
 
   while (i < argc)
 	{
-	  if (!PL_strcmp(argv[i], "-fancy"))
+	  if (!nsCRT::strcmp(argv[i], "-fancy"))
 		fancy_p = PR_TRUE;
-	  else if (!PL_strcmp(argv[i], "-no-fancy"))
+	  else if (!nsCRT::strcmp(argv[i], "-no-fancy"))
 		fancy_p = PR_FALSE;
-	  else if (!PL_strcmp(argv[i], "-html"))
+	  else if (!nsCRT::strcmp(argv[i], "-html"))
 		html_p = PR_TRUE;
-	  else if (!PL_strcmp(argv[i], "-raw"))
+	  else if (!nsCRT::strcmp(argv[i], "-raw"))
 		html_p = PR_FALSE;
-	  else if (!PL_strcmp(argv[i], "-outline"))
+	  else if (!nsCRT::strcmp(argv[i], "-outline"))
 		outline_p = PR_TRUE;
-	  else if (!PL_strcmp(argv[i], "-dexlate"))
+	  else if (!nsCRT::strcmp(argv[i], "-dexlate"))
 		dexlate_p = PR_TRUE;
 	  else
 		{

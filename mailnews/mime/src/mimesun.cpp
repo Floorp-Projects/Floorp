@@ -173,7 +173,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 		{ "default-app",			APPLICATION_OCTET_STREAM },
 		{ 0, 0 }};
 	  for (i = 0; sun_types[i].in; i++)
-		if (!PL_strcasecmp(sun_data_type, sun_types[i].in))
+		if (!nsCRT::strcasecmp(sun_data_type, sun_types[i].in))
 		  {
 			mime_ct = sun_types[i].out;
 			break;
@@ -193,7 +193,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 											    obj->options->stream_closure);
 		  mime_ct = mime_ct2;
 		  PR_Free(name);
-		  if (!mime_ct2 || !PL_strcasecmp (mime_ct2, UNKNOWN_CONTENT_TYPE))
+		  if (!mime_ct2 || !nsCRT::strcasecmp (mime_ct2, UNKNOWN_CONTENT_TYPE))
 			{
 			  PR_FREEIF(mime_ct2);
 			  mime_ct = APPLICATION_OCTET_STREAM;
@@ -237,7 +237,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 	 (It looks like it's created via `audioconvert -f g721'.  Why?
 	 Who knows.)
    */
-  if (sun_enc_info && !PL_strncasecmp (sun_enc_info, "adpcm-compress", 14))
+  if (sun_enc_info && !nsCRT::strncasecmp (sun_enc_info, "adpcm-compress", 14))
 	{
 	  sun_enc_info += 14;
 	  while (IS_SPACE(*sun_enc_info) || *sun_enc_info == ',')
@@ -261,13 +261,13 @@ MimeSunAttachment_create_child(MimeObject *obj)
 			;
 		  if (*prev == ',') prev++;
 
-		  if (!PL_strncasecmp (prev, "uuencode", end-prev))
+		  if (!nsCRT::strncasecmp (prev, "uuencode", end-prev))
 			mime_ct = APPLICATION_UUENCODE;
-		  else if (!PL_strncasecmp (prev, "gzip", end-prev))
+		  else if (!nsCRT::strncasecmp (prev, "gzip", end-prev))
 			mime_ct = APPLICATION_GZIP;
-		  else if (!PL_strncasecmp (prev, "compress", end-prev))
+		  else if (!nsCRT::strncasecmp (prev, "compress", end-prev))
 			mime_ct = APPLICATION_COMPRESS;
-		  else if (!PL_strncasecmp (prev, "default-compress", end-prev))
+		  else if (!nsCRT::strncasecmp (prev, "default-compress", end-prev))
 			mime_ct = APPLICATION_COMPRESS;
 		  else
 			mime_ct = APPLICATION_OCTET_STREAM;
@@ -279,9 +279,9 @@ MimeSunAttachment_create_child(MimeObject *obj)
    */
   if (!sun_enc_info || !*sun_enc_info)
 	;
-  else if (!PL_strcasecmp(sun_enc_info,"compress")) mime_cte = ENCODING_COMPRESS;
-  else if (!PL_strcasecmp(sun_enc_info,"uuencode")) mime_cte = ENCODING_UUENCODE;
-  else if (!PL_strcasecmp(sun_enc_info,"gzip"))	  mime_cte = ENCODING_GZIP;
+  else if (!nsCRT::strcasecmp(sun_enc_info,"compress")) mime_cte = ENCODING_COMPRESS;
+  else if (!nsCRT::strcasecmp(sun_enc_info,"uuencode")) mime_cte = ENCODING_UUENCODE;
+  else if (!nsCRT::strcasecmp(sun_enc_info,"gzip"))	  mime_cte = ENCODING_GZIP;
   else										mime_ct = APPLICATION_OCTET_STREAM;
 
   PR_FREEIF(sun_data_type);
@@ -304,8 +304,8 @@ MimeSunAttachment_create_child(MimeObject *obj)
   PR_FREEIF(child->content_type);
   PR_FREEIF(child->encoding);
   PR_ASSERT(mime_ct);
-  child->content_type = (mime_ct  ? PL_strdup(mime_ct)  : 0);
-  child->encoding     = (mime_cte ? PL_strdup(mime_cte) : 0);
+  child->content_type = (mime_ct  ? nsCRT::strdup(mime_ct)  : 0);
+  child->encoding     = (mime_cte ? nsCRT::strdup(mime_cte) : 0);
 
   status = ((MimeContainerClass *) obj->clazz)->add_child(obj, child);
   if (status < 0)

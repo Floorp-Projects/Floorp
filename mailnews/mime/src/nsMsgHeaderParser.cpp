@@ -117,7 +117,7 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
     char *s = *names;
     PRInt32 i, len, len_all = 0, outStrLen;
     for (i = 0; i < (PRInt32) *numAddresses; i++) {
-      len = PL_strlen(s) + 1;
+      len = nsCRT::strlen(s) + 1;
       len_all += len;
       s += len;
     }
@@ -143,7 +143,7 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
     char *s = *addresses;
     PRInt32 i, len, len_all = 0, outStrLen;
     for (i = 0; i < (PRInt32) *numAddresses; i++) {
-      len = PL_strlen(s) + 1;
+      len = nsCRT::strlen(s) + 1;
       len_all += len;
       s += len;
     }
@@ -410,7 +410,7 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
 		*names = 0;
 	if (addresses)
 		*addresses = 0;
-	line_length = PL_strlen(line);
+	line_length = nsCRT::strlen(line);
 	if (line_length == 0)
 		return 0;
 
@@ -1010,7 +1010,7 @@ msg_unquote_phrase_or_addr(const char *line, char **lineout)
 	 */
 	if (*line != '\"')
 	{
-		*lineout = PL_strdup(line);
+		*lineout = nsCRT::strdup(line);
 		if (!*lineout)
 			return -1;
 		else
@@ -1021,7 +1021,7 @@ msg_unquote_phrase_or_addr(const char *line, char **lineout)
 
 	/* Don't copy the first double quote
 	 */
-	*lineout = PL_strdup(line + 1);
+	*lineout = nsCRT::strdup(line + 1);
 	if (!*lineout)
 		return -1;
 
@@ -1063,7 +1063,7 @@ msg_extract_Header_address_mailboxes(const char *line)
 	s = addrs;
 	for (i = 0; (int) i < status; i++)
 	{
-		PRUint32 j = PL_strlen(s);
+		PRUint32 j = nsCRT::strlen(s);
 		s += j + 1;
 		size += j + 2;
 	}
@@ -1078,7 +1078,7 @@ msg_extract_Header_address_mailboxes(const char *line)
 	s = addrs;
 	for (i = 0; (int)i < status; i++)
 	{
-		PRUint32 j = PL_strlen(s);
+		PRUint32 j = nsCRT::strlen(s);
 		nsCRT::memcpy(out, s, j);
 		out += j;
 		if ((int)(i+1) < status)
@@ -1120,8 +1120,8 @@ msg_extract_Header_address_names(const char *line)
 	s2 = addrs;
 	for (i = 0; (int)i < status; i++)
 	{
-		len1 = PL_strlen(s1);
-		len2 = PL_strlen(s2);
+		len1 = nsCRT::strlen(s1);
+		len2 = nsCRT::strlen(s2);
 		s1 += len1 + 1;
 		s2 += len2 + 1;
 		size += (len1 ? len1 : len2) + 2;
@@ -1140,8 +1140,8 @@ msg_extract_Header_address_names(const char *line)
 	s2 = addrs;
 	for (i = 0; (int)i < status; i++)
 	{
-		len1 = PL_strlen(s1);
-		len2 = PL_strlen(s2);
+		len1 = nsCRT::strlen(s1);
+		len2 = nsCRT::strlen(s2);
 
 		if (len1)
 		{
@@ -1220,8 +1220,8 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 	s2 = addrs;
 	for (i = 0; (int)i < count; i++)
 	{
-		len1 = PL_strlen(s1);
-		len2 = PL_strlen(s2);
+		len1 = nsCRT::strlen(s1);
+		len2 = nsCRT::strlen(s2);
 		s1 += len1 + 1;
 		s2 += len2 + 1;
 		size += len1 + len2 + 10;
@@ -1237,8 +1237,8 @@ msg_format_Header_addresses (const char *names, const char *addrs,
 	for (i = 0; (int)i < count; i++)
 	{
 		char *o;
-		len1 = PL_strlen(s1);
-		len2 = PL_strlen(s2);
+		len1 = nsCRT::strlen(s1);
+		len2 = nsCRT::strlen(s2);
 
 		if (   wrap_lines_p && i > 0
 		    && (column + len1 + len2 + 3 + (((int)(i+1) < count) ? 2 : 0) > 76))
@@ -1337,7 +1337,7 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 	if (count1 < 0) goto FAIL;
 	if (count1 == 0)
 	{
-		result = PL_strdup("");
+		result = nsCRT::strdup("");
 		goto FAIL;
 	}
 	if (other_addrs)
@@ -1348,8 +1348,8 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 	s2 = addrs1;
 	for (i = 0; i < count1; i++)
 	{
-		PRUint32 len1 = PL_strlen(s1);
-		PRUint32 len2 = PL_strlen(s2);
+		PRUint32 len1 = nsCRT::strlen(s1);
+		PRUint32 len2 = nsCRT::strlen(s2);
 		s1 += len1 + 1;
 		s2 += len2 + 1;
 		size1 += len1 + len2 + 10;
@@ -1359,8 +1359,8 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 	s2 = addrs2;
 	for (i = 0; i < count2; i++)
 	{
-		PRUint32 len1 = PL_strlen(s1);
-		PRUint32 len2 = PL_strlen(s2);
+		PRUint32 len1 = nsCRT::strlen(s1);
+		PRUint32 len2 = nsCRT::strlen(s2);
 		s1 += len1 + 1;
 		s2 += len2 + 1;
 		size2 += len1 + len2 + 10;
@@ -1391,15 +1391,15 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 	{
 		n_array1[i] = s1;
 		a_array1[i] = s2;
-		s1 += PL_strlen(s1) + 1;
-		s2 += PL_strlen(s2) + 1;
+		s1 += nsCRT::strlen(s1) + 1;
+		s2 += nsCRT::strlen(s2) + 1;
 	}
 
 	s2 = addrs2;
 	for (i = 0; i < count2; i++)
 	{
 		a_array2[i] = s2;
-		s2 += PL_strlen(s2) + 1;
+		s2 += nsCRT::strlen(s2) + 1;
 	}
 
 	/* Iterate over all addrs in the "1" arrays.
@@ -1409,7 +1409,7 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 	{
 		PRBool found = PR_FALSE;
 		for (j = 0; j < count2; j++)
-			if (!PL_strcasecmp (a_array1[i], a_array2[j]))
+			if (!nsCRT::strcasecmp (a_array1[i], a_array2[j]))
 			{
 				found = PR_TRUE;
 				break;
@@ -1417,7 +1417,7 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 
 		if (!found)
 			for (j = 0; j < count3; j++)
-				if (!PL_strcasecmp(a_array1[i], a_array3[j]))
+				if (!nsCRT::strcasecmp(a_array1[i], a_array3[j]))
 				{
 					found = PR_TRUE;
 					break;
@@ -1435,7 +1435,7 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 		{
 			n_array3[count3] = n_array1[i];
 			a_array3[count3] = a_array1[i];
-			size3 += (PL_strlen(n_array3[count3]) + PL_strlen(a_array3[count3])	+ 10);
+			size3 += (nsCRT::strlen(n_array3[count3]) + nsCRT::strlen(a_array3[count3])	+ 10);
 			count3++;
 			NS_ASSERTION (count3 <= count1, "");
 			if (count3 > count1) break;
@@ -1451,14 +1451,14 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 	for (i = 0; i < count3; i++)
 	{
 		PL_strcpy(out, a_array3[i]);
-		out += PL_strlen(out);
+		out += nsCRT::strlen(out);
 		*out++ = 0;
 	}
 	s1 = out;
 	for (i = 0; i < count3; i++)
 	{
 		PL_strcpy(out, n_array3[i]);
-		out += PL_strlen(out);
+		out += nsCRT::strlen(out);
 		*out++ = 0;
 	}
 	result = msg_format_Header_addresses(s1, s2, count3, PR_FALSE);
@@ -1487,8 +1487,8 @@ msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
 static char *
 msg_make_full_address(const char* name, const char* addr)
 {
-	int nl = name ? PL_strlen (name) : 0;
-	int al = addr ? PL_strlen (addr) : 0;
+	int nl = name ? nsCRT::strlen (name) : 0;
+	int al = addr ? nsCRT::strlen (addr) : 0;
 	char *buf, *s;
 	int L;
 	if (al == 0)

@@ -239,7 +239,7 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
 	return MimeMultipartBoundaryTypeNone;
 
   /* This is a candidate line to be a boundary.  Check it out... */
-  blen = PL_strlen(mult->boundary);
+  blen = nsCRT::strlen(mult->boundary);
   term_p = PR_FALSE;
 
   /* strip trailing whitespace (including the newline.) */
@@ -255,7 +255,7 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
 	  length -= 2;
 	}
 
-  if (blen == length-2 && !PL_strncmp(line+2, mult->boundary, length-2))
+  if (blen == length-2 && !nsCRT::strncmp(line+2, mult->boundary, length-2))
 	return (term_p
 			? MimeMultipartBoundaryTypeTerminator
 			: MimeMultipartBoundaryTypeSeparator);
@@ -400,7 +400,7 @@ document.getElementById(\"attach%ld\").style.display = \"\";\n\
               (long) obj->options->attachment_icon_layer_id,
 							(long) obj->options->attachment_icon_layer_id);
 			  if (tmp) {
-				status = MimeObject_write(obj, tmp, PL_strlen(tmp), PR_TRUE);
+				status = MimeObject_write(obj, tmp, nsCRT::strlen(tmp), PR_TRUE);
 				PR_Free(tmp);
 				if (status < 0)
 					return status;

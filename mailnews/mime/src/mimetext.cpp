@@ -21,6 +21,7 @@
 
 #include "prmem.h"
 #include "plstr.h"
+#include "nsCRT.h"
 
 
 #define MIME_SUPERCLASS mimeLeafClass
@@ -65,7 +66,7 @@ MimeInlineText_initialize (MimeObject *obj)
   {
     if (obj->options && obj->options->override_charset)
     {
-      text->charset = PL_strdup(obj->options->override_charset);
+      text->charset = nsCRT::strdup(obj->options->override_charset);
     }
     else
     {
@@ -91,9 +92,9 @@ MimeInlineText_initialize (MimeObject *obj)
       if (!text->charset)
       {
         if (obj->options && obj->options->default_charset)
-          text->charset = PL_strdup(obj->options->default_charset);
+          text->charset = nsCRT::strdup(obj->options->default_charset);
         else
-          text->charset = PL_strdup("");
+          text->charset = nsCRT::strdup("");
       }
     }
   }

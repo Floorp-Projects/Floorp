@@ -24,6 +24,7 @@
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 #include "net.h"                /* for APPLICATION_APPLEFILE */
+#include "nsCRT.h"                
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartAppleDouble, MimeMultipartAppleDoubleClass,
@@ -122,7 +123,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 			}
 		}
 
-	  if (!PL_strcmp (id, "0"))
+	  if (!nsCRT::strcmp (id, "0"))
 		{
 		  PR_Free(id);
 		  id = MimeGetStringByID(MIME_MSG_ATTACHMENT);
@@ -130,7 +131,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	  else
 		{
 		  const char *p = "Part ";  /* #### i18n */
-		  char *s = (char *)PR_MALLOC(PL_strlen(p) + PL_strlen(id) + 1);
+		  char *s = (char *)PR_MALLOC(nsCRT::strlen(p) + nsCRT::strlen(id) + 1);
 		  if (!s)
 			{
 			  PR_Free(id);
@@ -198,7 +199,7 @@ MimeMultipartAppleDouble_output_child_p(MimeObject *obj, MimeObject *child)
 	  cont->nchildren >= 1 &&
 	  cont->children[0] == child &&
 	  child->content_type &&
-	  !PL_strcasecmp(child->content_type, APPLICATION_APPLEFILE))
+	  !nsCRT::strcasecmp(child->content_type, APPLICATION_APPLEFILE))
 	return PR_FALSE;
   else
 	return PR_TRUE;

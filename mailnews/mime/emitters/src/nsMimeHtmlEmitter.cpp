@@ -159,10 +159,10 @@ nsMimeHtmlEmitter::ProcessContentType(const char *ct)
   
   char *slash = PL_strchr(ct, '/');
   if (!slash)
-    mAttachContentType = PL_strdup(ct);
+    mAttachContentType = nsCRT::strdup(ct);
   else
   {
-    PRInt32 size = (PL_strlen(ct) + 4 + 1);
+    PRInt32 size = (nsCRT::strlen(ct) + 4 + 1);
     mAttachContentType = (char *)PR_MALLOC( size );
     if (!mAttachContentType)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -230,7 +230,7 @@ nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
     return NS_OK;
 
   char  *newValue = nsEscapeHTML(value);
-  PRBool  linkIt = (!PL_strcmp(HEADER_X_MOZILLA_PART_URL, field));
+  PRBool  linkIt = (!nsCRT::strcmp(HEADER_X_MOZILLA_PART_URL, field));
 
   //
   // For now, let's not output the long URL field, but when prefs are

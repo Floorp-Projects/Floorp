@@ -278,7 +278,7 @@ HG09091
 													   msg->hdrs);
 		  if (html)
 			{
-			  lstatus = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
+			  lstatus = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
 			  PR_Free(html);
 			  if (lstatus < 0) return lstatus;
 			}
@@ -298,7 +298,7 @@ HG09091
 		   the Content-Type header.  If the MIME-Version header is not
 		   present, we must treat this message as untyped.
 		 */
-		ok = (mv && !PL_strcmp(mv, "1.0"));
+		ok = (mv && !nsCRT::strcmp(mv, "1.0"));
 #else
 		/* #### actually, we didn't check this in Mozilla 2.0, and checking
 		   it now could cause some compatibility nonsense, so for now, let's
@@ -322,7 +322,7 @@ HG09091
 			   MimeInlineTextPlain rather than MimeUntypedText.)
 			 */
 			if (mv && !ct)
-			  ct = PL_strdup(TEXT_PLAIN);
+			  ct = nsCRT::strdup(TEXT_PLAIN);
 		  }
 
 		PR_FREEIF(mv);  /* done with this now. */
@@ -466,7 +466,7 @@ MimeMessage_parse_eof (MimeObject *obj, PRBool abort_p)
 											   msg->hdrs);
 	  if (html)
 		{
-		  int lstatus = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
+		  int lstatus = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
 		  PR_Free(html);
 		  if (lstatus < 0) return lstatus;
 		}
@@ -612,7 +612,7 @@ MimeMessage_write_headers_html (MimeObject *obj)
       obj->options->state->post_header_html_run_p = PR_TRUE;
       if (html)
       {
-        status = MimeObject_write(obj, html, PL_strlen(html), PR_FALSE);
+        status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
         PR_Free(html);
         if (status < 0) 
         {

@@ -23,6 +23,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "nsMimeStringResources.h"
+#include "nsCRT.h"
 
 #define MIME_SUPERCLASS mimeObjectClass
 MimeDefClass(MimeLeaf, MimeLeafClass, mimeLeafClass, &MIME_SUPERCLASS);
@@ -99,14 +100,14 @@ MimeLeaf_parse_begin (MimeObject *obj)
    */
   if (!obj->encoding)
 	;
-  else if (!PL_strcasecmp(obj->encoding, ENCODING_BASE64))
+  else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_BASE64))
 	fn = &MimeB64DecoderInit;
-  else if (!PL_strcasecmp(obj->encoding, ENCODING_QUOTED_PRINTABLE))
+  else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_QUOTED_PRINTABLE))
 	fn = &MimeQPDecoderInit;
-  else if (!PL_strcasecmp(obj->encoding, ENCODING_UUENCODE) ||
-		   !PL_strcasecmp(obj->encoding, ENCODING_UUENCODE2) ||
-		   !PL_strcasecmp(obj->encoding, ENCODING_UUENCODE3) ||
-		   !PL_strcasecmp(obj->encoding, ENCODING_UUENCODE4))
+  else if (!nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE) ||
+		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE2) ||
+		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE3) ||
+		   !nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE4))
 	fn = &MimeUUDecoderInit;
 
   if (fn)

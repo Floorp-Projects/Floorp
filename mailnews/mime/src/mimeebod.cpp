@@ -115,7 +115,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	 subsequent lines get tacked onto the body. */
   if (bod->body)
 	{
-	  int L = PL_strlen(bod->body);
+	  int L = nsCRT::strlen(bod->body);
 	  char *new_str = (char *)PR_Realloc(bod->body, L + length + 1);
 	  if (!new_str) return MIME_OUT_OF_MEMORY;
 	  bod->body = new_str;
@@ -141,7 +141,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
    */
   if (*line == CR || *line == LF)
 	{
-	  bod->body = PL_strdup("");
+	  bod->body = nsCRT::strdup("");
 	  if (!bod->body) return MIME_OUT_OF_MEMORY;
 	}
 
@@ -161,30 +161,30 @@ MimeExternalBody_make_url(const char *ct,
     {
 	  return 0;
     }
-  else if (!PL_strcasecmp(at, "ftp") || !PL_strcasecmp(at, "anon-ftp"))
+  else if (!nsCRT::strcasecmp(at, "ftp") || !nsCRT::strcasecmp(at, "anon-ftp"))
 	{
 	  if (!site || !name)
 		return 0;
-	  s = (char *) PR_MALLOC(PL_strlen(name) + PL_strlen(site) +
-							(dir  ? PL_strlen(dir) : 0) + 20);
+	  s = (char *) PR_MALLOC(nsCRT::strlen(name) + nsCRT::strlen(site) +
+							(dir  ? nsCRT::strlen(dir) : 0) + 20);
 	  if (!s) return 0;
 	  PL_strcpy(s, "ftp://");
 	  PL_strcat(s, site);
 	  PL_strcat(s, "/");
 	  if (dir) PL_strcat(s, (dir[0] == '/' ? dir+1 : dir));
-	  if (s[PL_strlen(s)-1] != '/')
+	  if (s[nsCRT::strlen(s)-1] != '/')
 		PL_strcat(s, "/");
 	  PL_strcat(s, name);
 	  return s;
 	}
-  else if (!PL_strcasecmp(at, "local-file") || !PL_strcasecmp(at, "afs"))
+  else if (!nsCRT::strcasecmp(at, "local-file") || !nsCRT::strcasecmp(at, "afs"))
 	{
 	  char *s2;
 	  if (!name)
 		return 0;
 
 #ifdef XP_UNIX
-	  if (!PL_strcasecmp(at, "afs"))   /* only if there is a /afs/ directory */
+	  if (!nsCRT::strcasecmp(at, "afs"))   /* only if there is a /afs/ directory */
 		{
       nsFileSpec    fs("/afs/.");
       
@@ -195,7 +195,7 @@ MimeExternalBody_make_url(const char *ct,
 	  return 0;						/* never, if not Unix. */
 #endif /* !XP_UNIX */
 
-	  s = (char *) PR_MALLOC(PL_strlen(name)*3 + 20);
+	  s = (char *) PR_MALLOC(nsCRT::strlen(name)*3 + 20);
 	  if (!s) return 0;
 	  PL_strcpy(s, "file:");
 
@@ -207,14 +207,14 @@ MimeExternalBody_make_url(const char *ct,
 	  }
 	  return s;
 	}
-  else if (!PL_strcasecmp(at, "mail-server"))
+  else if (!nsCRT::strcasecmp(at, "mail-server"))
 	{
 	  char *s2;
 	  if (!svr)
 		return 0;
-	  s = (char *) PR_MALLOC(PL_strlen(svr)*4 +
-							(subj ? PL_strlen(subj)*4 : 0) +
-							(body ? PL_strlen(body)*4 : 0) + 20);
+	  s = (char *) PR_MALLOC(nsCRT::strlen(svr)*4 +
+							(subj ? nsCRT::strlen(subj)*4 : 0) +
+							(body ? nsCRT::strlen(body)*4 : 0) + 20);
 	  if (!s) return 0;
 	  PL_strcpy(s, "mailto:");
 
@@ -247,10 +247,10 @@ MimeExternalBody_make_url(const char *ct,
 		}
 	  return s;
 	}
-  else if (!PL_strcasecmp(at, "url"))	    /* RFC 2017 */
+  else if (!nsCRT::strcasecmp(at, "url"))	    /* RFC 2017 */
 	{
 	  if (url)
-		return PL_strdup(url);		   /* it's already quoted and everything */
+		return nsCRT::strdup(url);		   /* it's already quoted and everything */
 	  else
 		return 0;
 	}
@@ -317,17 +317,17 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  ct = MimeHeaders_get(bod->hdrs, HEADER_CONTENT_TYPE,
 						   PR_TRUE, PR_FALSE);
 
-	  h = (char *) PR_MALLOC((at ? PL_strlen(at) : 0) +
-							(lexp ? PL_strlen(lexp) : 0) +
-							(size ? PL_strlen(size) : 0) +
-							(perm ? PL_strlen(perm) : 0) +
-							(dir ? PL_strlen(dir) : 0) +
-							(mode ? PL_strlen(mode) : 0) +
-							(name ? PL_strlen(name) : 0) +
-							(site ? PL_strlen(site) : 0) +
-							(svr ? PL_strlen(svr) : 0) +
-							(subj ? PL_strlen(subj) : 0) +
-							(url ? PL_strlen(url) : 0) + 100);
+	  h = (char *) PR_MALLOC((at ? nsCRT::strlen(at) : 0) +
+							(lexp ? nsCRT::strlen(lexp) : 0) +
+							(size ? nsCRT::strlen(size) : 0) +
+							(perm ? nsCRT::strlen(perm) : 0) +
+							(dir ? nsCRT::strlen(dir) : 0) +
+							(mode ? nsCRT::strlen(mode) : 0) +
+							(name ? nsCRT::strlen(name) : 0) +
+							(site ? nsCRT::strlen(site) : 0) +
+							(svr ? nsCRT::strlen(svr) : 0) +
+							(subj ? nsCRT::strlen(subj) : 0) +
+							(url ? nsCRT::strlen(url) : 0) + 100);
 	  if (!h)
 		{
 		  status = MIME_OUT_OF_MEMORY;
@@ -362,7 +362,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 		  PL_strcpy(h, STR ": "); \
 		  PL_strcat(h, VAR); \
 		  PL_strcat(h, MSG_LINEBREAK); \
-		  status = MimeHeaders_parse_line(h, PL_strlen(h), hdrs); \
+		  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), hdrs); \
 		  if (status < 0) goto FAIL; \
 		}
 	  FROB("Access-Type",	at);
@@ -379,7 +379,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  FROB("Subject",		subj);
 # undef FROB
 	  PL_strcpy(h, MSG_LINEBREAK);
-	  status = MimeHeaders_parse_line(h, PL_strlen(h), hdrs);
+	  status = MimeHeaders_parse_line(h, nsCRT::strlen(h), hdrs);
 	  if (status < 0) goto FAIL;
 
 	  lurl = MimeExternalBody_make_url(ct, at, lexp, size, perm, dir, mode,
@@ -406,12 +406,12 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 			  const char *pre = "<P><PRE>";
 			  const char *suf = "</PRE>";
 			  PRInt32 i;
-			  for(i = PL_strlen(s)-1; i >= 0 && IS_SPACE(s[i]); i--)
+			  for(i = nsCRT::strlen(s)-1; i >= 0 && IS_SPACE(s[i]); i--)
 				s[i] = 0;
  			  s2 = nsEscapeHTML(s);
 			  if (!s2) goto FAIL;
-			  body = (char *) PR_MALLOC(PL_strlen(pre) + PL_strlen(s2) +
-									   PL_strlen(suf) + 1);
+			  body = (char *) PR_MALLOC(nsCRT::strlen(pre) + nsCRT::strlen(s2) +
+									   nsCRT::strlen(suf) + 1);
 			  if (!body)
 				{
 				  nsCRT::free(s2);
@@ -524,14 +524,14 @@ MimeExternalBody_displayable_inline_p (MimeObjectClass *clazz,
 
   if (!at)
 	;
-  else if (!PL_strcasecmp(at, "ftp") ||
-		   !PL_strcasecmp(at, "anon-ftp") ||
-		   !PL_strcasecmp(at, "local-file") ||
-		   !PL_strcasecmp(at, "mail-server") ||
-		   !PL_strcasecmp(at, "url"))
+  else if (!nsCRT::strcasecmp(at, "ftp") ||
+		   !nsCRT::strcasecmp(at, "anon-ftp") ||
+		   !nsCRT::strcasecmp(at, "local-file") ||
+		   !nsCRT::strcasecmp(at, "mail-server") ||
+		   !nsCRT::strcasecmp(at, "url"))
 	inline_p = PR_TRUE;
 #ifdef XP_UNIX
-  else if (!PL_strcasecmp(at, "afs"))   /* only if there is a /afs/ directory */
+  else if (!nsCRT::strcasecmp(at, "afs"))   /* only if there is a /afs/ directory */
 	{
     nsFileSpec    fs("/afs/.");
     if  (!fs.Exists())

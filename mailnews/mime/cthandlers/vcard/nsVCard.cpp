@@ -495,10 +495,10 @@ static void enterAttr(const char *s1, const char *s2)
 	}
     else
 	addProp(curProp,p1);
-    if (PL_strcasecmp(p1,VCBase64Prop) == 0 || (s2 && PL_strcasecmp(p2,VCBase64Prop)==0))
+    if (nsCRT::strcasecmp(p1,VCBase64Prop) == 0 || (s2 && nsCRT::strcasecmp(p2,VCBase64Prop)==0))
 	lexPushMode(L_BASE64);
-    else if (PL_strcasecmp(p1,VCQuotedPrintableProp) == 0
-	    || (s2 && PL_strcasecmp(p2,VCQuotedPrintableProp)==0))
+    else if (nsCRT::strcasecmp(p1,VCQuotedPrintableProp) == 0
+	    || (s2 && nsCRT::strcasecmp(p2,VCQuotedPrintableProp)==0))
 	lexPushMode(L_QUOTED_PRINTABLE);
     deleteStr(s1); deleteStr(s2);
     }
@@ -681,7 +681,7 @@ static char* lexGetWord() {
 #if 0
 static void lexPushLookahead(char *s, int len) {
     int putptr;
-    if (len == 0) len = PL_strlen(s);
+    if (len == 0) len = nsCRT::strlen(s);
     putptr = lexBuf.getPtr - len;
     /* this function assumes that length of word to push back
      /  is not greater than MAX_LEX_LOOKAHEAD.
@@ -823,10 +823,10 @@ static int match_begin_name(int end) {
     char *n = lexLookaheadWord();
     int token = ID;
     if (n) {
-	if (!PL_strcasecmp(n,"vcard")) token = end?END_VCARD:BEGIN_VCARD;
-	else if (!PL_strcasecmp(n,"vcalendar")) token = end?END_VCAL:BEGIN_VCAL;
-	else if (!PL_strcasecmp(n,"vevent")) token = end?END_VEVENT:BEGIN_VEVENT;
-	else if (!PL_strcasecmp(n,"vtodo")) token = end?END_VTODO:BEGIN_VTODO;
+	if (!nsCRT::strcasecmp(n,"vcard")) token = end?END_VCARD:BEGIN_VCARD;
+	else if (!nsCRT::strcasecmp(n,"vcalendar")) token = end?END_VCAL:BEGIN_VCAL;
+	else if (!nsCRT::strcasecmp(n,"vevent")) token = end?END_VEVENT:BEGIN_VEVENT;
+	else if (!nsCRT::strcasecmp(n,"vtodo")) token = end?END_VTODO:BEGIN_VTODO;
 	deleteStr(n);
 	return token;
 	}
@@ -1147,10 +1147,10 @@ static int yylex() {
 		    if (IS_ALPHA(c)) {
 			char *t = lexGetWord();
 			yylval.str = t;
-			if (!PL_strcasecmp(t, "BEGIN")) {
+			if (!nsCRT::strcasecmp(t, "BEGIN")) {
 			    return match_begin_end_name(0);
 			    }
-			else if (!PL_strcasecmp(t,"END")) {
+			else if (!nsCRT::strcasecmp(t,"END")) {
 			    return match_begin_end_name(1);
 			    }
 		        else {

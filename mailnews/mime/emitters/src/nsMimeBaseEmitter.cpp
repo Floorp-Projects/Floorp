@@ -43,6 +43,10 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
 {
   NS_INIT_REFCNT(); 
 
+#ifdef DEBUG_rhp
+  mLogFile = nsnull;
+#endif
+
   mBufferMgr = NULL;
   mTotalWritten = 0;
   mTotalRead = 0;
@@ -237,7 +241,7 @@ nsMimeBaseEmitter::EndBody()
 NS_IMETHODIMP
 nsMimeBaseEmitter::UtilityWrite(const char *buf)
 {
-  PRInt32     tmpLen = PL_strlen(buf);
+  PRInt32     tmpLen = nsCRT::strlen(buf);
   PRUint32    written;
 
   Write(buf, tmpLen, &written);
@@ -248,7 +252,7 @@ nsMimeBaseEmitter::UtilityWrite(const char *buf)
 NS_IMETHODIMP
 nsMimeBaseEmitter::UtilityWriteCRLF(const char *buf)
 {
-  PRInt32     tmpLen = PL_strlen(buf);
+  PRInt32     tmpLen = nsCRT::strlen(buf);
   PRUint32    written;
 
   Write(buf, tmpLen, &written);

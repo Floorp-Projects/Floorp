@@ -198,12 +198,12 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
     return -1;
 
   // from to identical
-  if (!PL_strcasecmp(from_charset, to_charset))
+  if (!nsCRT::strcasecmp(from_charset, to_charset))
     return -1;
 
   // us-ascii is a subset of utf-8
-  if ((!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(to_charset, "utf-8")) ||
-      (!PL_strcasecmp(from_charset, "utf-8") && !PL_strcasecmp(to_charset, "us-ascii")))
+  if ((!nsCRT::strcasecmp(from_charset, "us-ascii") && !nsCRT::strcasecmp(to_charset, "utf-8")) ||
+      (!nsCRT::strcasecmp(from_charset, "utf-8") && !nsCRT::strcasecmp(to_charset, "us-ascii")))
     return -1;
 
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
@@ -276,7 +276,7 @@ MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
 
 	if (!clazz->vCardString) return 0;
 
-	v = Parse_MIME(clazz->vCardString, PL_strlen(clazz->vCardString));
+	v = Parse_MIME(clazz->vCardString, nsCRT::strlen(clazz->vCardString));
 
 	if (clazz->vCardString) {
 		PR_Free ((char*) clazz->vCardString);
@@ -308,14 +308,14 @@ static int WriteEachLineToStream (MimeObject *obj, const char *line)
 {
 	int status = 0;
 	char *htmlLine;
-	int htmlLen = PL_strlen(line) + 1;
+	int htmlLen = nsCRT::strlen(line) + 1;
 
 	htmlLine = (char *) PR_MALLOC (htmlLen);
 	if (htmlLine)
 	{
 		htmlLine[0] = '\0';
 		PL_strcat (htmlLine, line);
-	    status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+	    status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
 		PR_Free ((void*) htmlLine);
 	}
 	else
@@ -335,15 +335,15 @@ static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *c
 	}
 	else
 	{
-		int htmlLen = PL_strlen("<TABLE>") + 1;
+		int htmlLen = nsCRT::strlen("<TABLE>") + 1;
 		if (border)
-			htmlLen += PL_strlen (" BORDER");
+			htmlLen += nsCRT::strlen (" BORDER");
 		if (cellspacing)
-			htmlLen += PL_strlen(" CELLSPACING=") + PL_strlen(cellspacing);
+			htmlLen += nsCRT::strlen(" CELLSPACING=") + nsCRT::strlen(cellspacing);
 		if (cellpadding)
-			htmlLen += PL_strlen(" CELLPADDING=") + PL_strlen(cellpadding);
+			htmlLen += nsCRT::strlen(" CELLPADDING=") + nsCRT::strlen(cellpadding);
 		if (bgcolor)
-			htmlLen += PL_strlen(" BGCOLOR=") + PL_strlen(bgcolor);
+			htmlLen += nsCRT::strlen(" BGCOLOR=") + nsCRT::strlen(bgcolor);
 		if (border || cellspacing || cellpadding || bgcolor)
 			htmlLen++;
 
@@ -375,7 +375,7 @@ static int OutputTable (MimeObject *obj, PRBool endTable, PRBool border, char *c
 
 			PL_strcat (htmlLine, ">");
 
-			status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+			status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -399,15 +399,15 @@ static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow,
 			status = WriteEachLineToStream (obj, "</TD>");
 	else
 	{
-		int htmlLen = PL_strlen("<TR>") + 1;
+		int htmlLen = nsCRT::strlen("<TR>") + 1;
 		if (align)
-			htmlLen += PL_strlen(" ALIGN=") + PL_strlen(align);
+			htmlLen += nsCRT::strlen(" ALIGN=") + nsCRT::strlen(align);
 		if (colspan)
-			htmlLen += PL_strlen(" COLSPAN=") + PL_strlen(colspan);
+			htmlLen += nsCRT::strlen(" COLSPAN=") + nsCRT::strlen(colspan);
 		if (width)
-			htmlLen += PL_strlen(" WIDTH=") + PL_strlen(width);
+			htmlLen += nsCRT::strlen(" WIDTH=") + nsCRT::strlen(width);
 		if (valign)
-			htmlLen += PL_strlen(" VALIGN=") + PL_strlen(valign);
+			htmlLen += nsCRT::strlen(" VALIGN=") + nsCRT::strlen(valign);
 		if (align || valign || colspan || width)
 			htmlLen++;
 
@@ -444,7 +444,7 @@ static int OutputTableRowOrData(MimeObject *obj, PRBool outputRow,
 
 			PL_strcat (htmlLine, ">");
 
-			status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+			status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -464,11 +464,11 @@ static int OutputFont(MimeObject *obj, PRBool endFont, char * size, char* color)
 		status = WriteEachLineToStream (obj, "</FONT>");
 	else
 	{
-		int htmlLen = PL_strlen("<FONT>") + 1;
+		int htmlLen = nsCRT::strlen("<FONT>") + 1;
 		if (size)
-			htmlLen += PL_strlen(" SIZE=") + PL_strlen(size);
+			htmlLen += nsCRT::strlen(" SIZE=") + nsCRT::strlen(size);
 		if (color)
-			htmlLen += PL_strlen(" COLOR=") + PL_strlen(color);
+			htmlLen += nsCRT::strlen(" COLOR=") + nsCRT::strlen(color);
 		if (size || color)
 			htmlLen++;
 
@@ -492,7 +492,7 @@ static int OutputFont(MimeObject *obj, PRBool endFont, char * size, char* color)
 
 			PL_strcat (htmlLine, ">");
 
-			status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+			status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
 			PR_Free ((void*) htmlLine);
 		}
 		else
@@ -516,7 +516,7 @@ static int OutputVcardAttribute(MimeObject *obj, VObject *v, const char* id)
 				string = fakeCString (vObjectUStringZValue(prop));
 			else
 			{
-				string = (char *)PR_MALLOC(PL_strlen((char *) vObjectAnyValue(prop)) + 1);
+				string = (char *)PR_MALLOC(nsCRT::strlen((char *) vObjectAnyValue(prop)) + 1);
 				if (string)
 					PL_strcpy(string, (char *) vObjectAnyValue(prop));
 			}
@@ -560,7 +560,7 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 				namestring  = fakeCString (vObjectUStringZValue(prop));
 			else
 			{
-				namestring = (char *)PR_MALLOC(PL_strlen((char *) vObjectAnyValue(prop)) + 1);
+				namestring = (char *)PR_MALLOC(nsCRT::strlen((char *) vObjectAnyValue(prop)) + 1);
 				if (namestring)
 					PL_strcpy(namestring, (char *) vObjectAnyValue(prop));
 			}
@@ -704,7 +704,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 				namestring  = fakeCString (vObjectUStringZValue(prop));
 			else
 			{
-				namestring = (char *)PR_MALLOC(PL_strlen((char *) vObjectAnyValue(prop)) + 1);
+				namestring = (char *)PR_MALLOC(nsCRT::strlen((char *) vObjectAnyValue(prop)) + 1);
 				if (namestring)
 					PL_strcpy(namestring, (char *) vObjectAnyValue(prop));
 			}
@@ -819,7 +819,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 			{
 				namestring  = fakeCString (vObjectUStringZValue(prop));
 				if (namestring)
-					if (PL_strcasecmp (namestring, "PR_TRUE") == 0)
+					if (nsCRT::strcasecmp (namestring, "PR_TRUE") == 0)
 					{
 						PR_FREEIF (namestring);
 						status = OutputFont(obj, PR_FALSE, "-1", NULL);
@@ -897,16 +897,16 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 			if (VALUE_TYPE(prop2)) {
 				namestring  = fakeCString (vObjectUStringZValue(prop2));
         char *tString1 = NULL;
-				if (PL_strcmp (namestring, "0") == 0)
+				if (nsCRT::strcmp (namestring, "0") == 0)
         {
           tString1 = VCardGetStringByID(VCARD_ADDR_DEFAULT_DLS);
         }
 				else 
         {
-					if (PL_strcmp (namestring, "1") == 0)
+					if (nsCRT::strcmp (namestring, "1") == 0)
 						tString1 = VCardGetStringByID(VCARD_ADDR_SPECIFIC_DLS);
 					else
-						if (PL_strcmp (namestring, "2") == 0)
+						if (nsCRT::strcmp (namestring, "2") == 0)
 							tString1 = VCardGetStringByID(VCARD_ADDR_HOSTNAMEIP);
 				}
 
@@ -1020,7 +1020,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_COMPLETE_VCARD);
 
 		// convert from the resource charset. 
-    res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+    res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, nsCRT::strlen(rsrcString), 
                               &converted, &converted_length);
     if ( (res != 0) || (converted == NULL) )
 			converted = rsrcString;
@@ -1031,7 +1031,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	else 
 	{
 		rsrcString = VCardGetStringByID(VCARD_ADDR_VIEW_CONDENSED_VCARD);
-    res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+    res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, nsCRT::strlen(rsrcString), 
                               &converted, &converted_length);
     if ( (res != 0) || (converted == NULL) )
 			converted = rsrcString;
@@ -1051,7 +1051,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 
 	rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
 
-  res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+  res = INTL_ConvertCharset(charset, "UTF-8", rsrcString, nsCRT::strlen(rsrcString), 
                             &converted, &converted_length);
   if ( (res != 0) || (converted == NULL) )
 		converted = rsrcString;
@@ -1260,7 +1260,7 @@ static int EndVCard (MimeObject *obj)
 	/* Scribble HTML-ending stuff into the stream */
 	char htmlFooters[32];
 	PR_snprintf (htmlFooters, sizeof(htmlFooters), "</BODY>%s</HTML>%s", MSG_LINEBREAK, MSG_LINEBREAK);
-	status = COM_MimeObject_write(obj, htmlFooters, PL_strlen(htmlFooters), PR_FALSE);
+	status = COM_MimeObject_write(obj, htmlFooters, nsCRT::strlen(htmlFooters), PR_FALSE);
 
 	if (status < 0) return status;
 
@@ -1292,7 +1292,7 @@ static int BeginVCard (MimeObject *obj)
     
 	s_unique++;
 	PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", LINEBREAK, LINEBREAK);
-    status = COM_MimeObject_write(obj, htmlHeaders, PL_strlen(htmlHeaders), PR_TRUE);
+    status = COM_MimeObject_write(obj, htmlHeaders, nsCRT::strlen(htmlHeaders), PR_TRUE);
 
 	if (status < 0) return status;
 
@@ -1497,7 +1497,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 
 	if (vObjectName(o)) 
 	{
-		if (PL_strcasecmp (VCTelephoneProp, vObjectName(o)) == 0) 
+		if (nsCRT::strcasecmp (VCTelephoneProp, vObjectName(o)) == 0) 
 		{
 			if (VALUE_TYPE(o)) 
 			{
@@ -1564,7 +1564,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 
 	if (vObjectName(o)) {
 
-		if (PL_strcasecmp (VCPhotoProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCPhotoProp, vObjectName(o)) == 0) {
 			VObject* urlProp = isAPropertyOf(o, VCURLProp);
 			if (urlProp) {
 				attribName = VCardGetStringByID(VCARD_LDAP_PHOTOGRAPH);
@@ -1578,7 +1578,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCBirthDateProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCBirthDateProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_BIRTHDAY);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1586,14 +1586,14 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCDeliveryLabelProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCDeliveryLabelProp, vObjectName(o)) == 0) {
 			attribName = VCardGetStringByID(VCARD_LDAP_LABEL);
 			GetAddressProperties(o, &attribName);
 			value = fakeCString (vObjectUStringZValue(o));
 			goto DOWRITE;
 		}
 
-		if (PL_strcasecmp (VCEmailAddressProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCEmailAddressProp, vObjectName(o)) == 0) {
 			if ((*numEmail) != 1)
 			{
 				if (VALUE_TYPE(o)) {
@@ -1606,7 +1606,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCFamilyNameProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCFamilyNameProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_SURNAME);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1614,7 +1614,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCGivenNameProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCGivenNameProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_GIVEN_NAME);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1622,7 +1622,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCNamePrefixesProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCNamePrefixesProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_NAME_PREFIX);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1630,7 +1630,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCNameSuffixesProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCNameSuffixesProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_NAME_SUFFIX);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1638,7 +1638,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCAdditionalNamesProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCAdditionalNamesProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_MIDDLE_NAME);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1646,7 +1646,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCMailerProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCMailerProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_MAILER);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1654,7 +1654,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCTimeZoneProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCTimeZoneProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_TZ);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1662,7 +1662,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCGeoProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCGeoProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_GEO);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1670,7 +1670,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCBusinessRoleProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCBusinessRoleProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_ROLE);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1678,7 +1678,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCLogoProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCLogoProp, vObjectName(o)) == 0) {
 			VObject* urlProp = isAPropertyOf(o, VCURLProp);
 			if (urlProp) {
 				attribName = VCardGetStringByID(VCARD_LDAP_LOGO);
@@ -1691,12 +1691,12 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCAgentProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCAgentProp, vObjectName(o)) == 0) {
 			attribName = VCardGetStringByID(VCARD_LDAP_SECRETARY);
 			goto DOWRITE;
 		}
 
-		if (PL_strcasecmp (VCLastRevisedProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCLastRevisedProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_REVISION);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1704,7 +1704,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 			}
 		}
 
-		if (PL_strcasecmp (VCPronunciationProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCPronunciationProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_SOUND);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1713,7 +1713,7 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
 		}
 
 
-		if (PL_strcasecmp (VCVersionProp, vObjectName(o)) == 0) {
+		if (nsCRT::strcasecmp (VCVersionProp, vObjectName(o)) == 0) {
 			if (VALUE_TYPE(o)) {
 				attribName = VCardGetStringByID(VCARD_LDAP_VERSION);
 				value = fakeCString (vObjectUStringZValue(o));
@@ -1789,14 +1789,14 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
     charset = "ISO-8859-1";
 
   // convert from the resource charset. 
-  res = INTL_ConvertCharset(charset, "UTF-8", line, PL_strlen(line), 
+  res = INTL_ConvertCharset(charset, "UTF-8", line, nsCRT::strlen(line), 
                             &converted, &converted_length);
   if ( (res != 0) || (converted == NULL) )
     converted = (char *)line;
   else
     converted[converted_length] = '\0';
 
-  htmlLen = PL_strlen(converted) + PL_strlen("<DT></DT>") + 1;;
+  htmlLen = nsCRT::strlen(converted) + nsCRT::strlen("<DT></DT>") + 1;;
 
 	htmlLine = (char *) PR_MALLOC (htmlLen);
 	if (htmlLine)
@@ -1805,7 +1805,7 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
     PL_strcat (htmlLine, "<DT>");
     PL_strcat (htmlLine, converted);
     PL_strcat (htmlLine, "</DT>");
-    status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+    status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
     PR_Free ((void*) htmlLine);
 	}
 	else
@@ -1890,7 +1890,7 @@ vCard_SACopy (char **destination, const char *source)
   }
   else 
   {
-    *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+    *destination = (char *) PR_Malloc (nsCRT::strlen(source) + 1);
     if (*destination == NULL) 
       return(NULL);
     
@@ -1908,8 +1908,8 @@ vCard_SACat (char **destination, const char *source)
   {
     if (*destination)
     {
-      int length = PL_strlen (*destination);
-      *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
+      int length = nsCRT::strlen (*destination);
+      *destination = (char *) PR_Realloc (*destination, length + nsCRT::strlen(source) + 1);
       if (*destination == NULL)
         return(NULL);
       
@@ -1917,7 +1917,7 @@ vCard_SACat (char **destination, const char *source)
     }
     else
     {
-      *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+      *destination = (char *) PR_Malloc (nsCRT::strlen(source) + 1);
       if (*destination == NULL)
         return(NULL);
       
@@ -1956,7 +1956,7 @@ VCardGetStringByID(PRInt32 stringID)
   {
     if (propertyURL != VCARD_URL)
       PR_FREEIF(propertyURL);
-    return PL_strdup("???");   // Don't I18N this string...failsafe return value
+    return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
   }
 
   res = pService->NewURI(propertyURL, nsnull, getter_AddRefs(pURI));
@@ -1964,7 +1964,7 @@ VCardGetStringByID(PRInt32 stringID)
   {
     if (propertyURL != VCARD_URL)
       PR_FREEIF(propertyURL);
-    return PL_strdup("???");   // Don't I18N this string...failsafe return value
+    return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
   }
 
   if (propertyURL != VCARD_URL)
@@ -1984,7 +1984,7 @@ VCardGetStringByID(PRInt32 stringID)
    res = pNetService->CreateURL(&url, nsString(VCARD_URL), nsnull, nsnull, nsnull);
     if (NS_FAILED(res)) 
     {
-      return PL_strdup("???");   // Don't I18N this string...failsafe return value
+      return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
     }
 
     nsIStringBundle* sBundle = nsnull;
@@ -1993,7 +1993,7 @@ VCardGetStringByID(PRInt32 stringID)
 
     if (NS_FAILED(res)) 
     {
-      return PL_strdup("???");   // Don't I18N this string...failsafe return value
+      return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
     }
 
     nsAutoString v("");
@@ -2010,7 +2010,7 @@ VCardGetStringByID(PRInt32 stringID)
       char    buf[128];
 
       PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
-      return PL_strdup(buf);
+      return nsCRT::strdup(buf);
     }
 
     // Here we need to return a new copy of the string
@@ -2025,79 +2025,79 @@ VCardGetStringByID(PRInt32 stringID)
     }
   }
 
-  return PL_strdup("???");   // Don't I18N this string...failsafe return value
+  return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
 }
 
 extern "C" 
 char *
 VCardGetStringByIDHACK(PRInt32 stringID)
 {
-  if (-1000 == stringID) return PL_strdup("Application is out of memory.");
-  if (1001 == stringID) return PL_strdup("State");
-  if (1002 == stringID) return PL_strdup("Domestic");
-  if (1003 == stringID) return PL_strdup("International");
-  if (1004 == stringID) return PL_strdup("Postal");
-  if (1005 == stringID) return PL_strdup("Parcel");
-  if (1006 == stringID) return PL_strdup("Work");
-  if (1007 == stringID) return PL_strdup("Home");
-  if (1008 == stringID) return PL_strdup("Preferred");
-  if (1009 == stringID) return PL_strdup("Voice");
-  if (1010 == stringID) return PL_strdup("Fax");
-  if (1011 == stringID) return PL_strdup("Message");
-  if (1012 == stringID) return PL_strdup("Cellular");
-  if (1013 == stringID) return PL_strdup("Pager");
-  if (1014 == stringID) return PL_strdup("BBS");
-  if (1015 == stringID) return PL_strdup("Modem");
-  if (1016 == stringID) return PL_strdup("Car");
-  if (1017 == stringID) return PL_strdup("ISDN");
-  if (1018 == stringID) return PL_strdup("Video");
-  if (1019 == stringID) return PL_strdup("AOL");
-  if (1020 == stringID) return PL_strdup("Applelink");
-  if (1021 == stringID) return PL_strdup("AT&T Mail");
-  if (1022 == stringID) return PL_strdup("Compuserve");
-  if (1023 == stringID) return PL_strdup("eWorld");
-  if (1024 == stringID) return PL_strdup("Internet");
-  if (1025 == stringID) return PL_strdup("IBM Mail");
-  if (1026 == stringID) return PL_strdup("MCI Mail");
-  if (1027 == stringID) return PL_strdup("Powershare");
-  if (1028 == stringID) return PL_strdup("Prodigy");
-  if (1029 == stringID) return PL_strdup("Telex");
-  if (1030 == stringID) return PL_strdup("Additional Name");
-  if (1031 == stringID) return PL_strdup("Prefix");
-  if (1032 == stringID) return PL_strdup("Suffix");
-  if (1033 == stringID) return PL_strdup("Time Zone");
-  if (1034 == stringID) return PL_strdup("Geographic Position");
-  if (1035 == stringID) return PL_strdup("Sound");
-  if (1036 == stringID) return PL_strdup("Revision");
-  if (1037 == stringID) return PL_strdup("Version");
-  if (1038 == stringID) return PL_strdup("Public Key");
-  if (1039 == stringID) return PL_strdup("Logo");
-  if (1040 == stringID) return PL_strdup("Birthday");
-  if (1041 == stringID) return PL_strdup("X400");
-  if (1042 == stringID) return PL_strdup("Address");
-  if (1043 == stringID) return PL_strdup("Label");
-  if (1044 == stringID) return PL_strdup("Mailer");
-  if (1045 == stringID) return PL_strdup("Role");
-  if (1046 == stringID) return PL_strdup("Update From");
-  if (1047 == stringID) return PL_strdup("Conference Address");
-  if (1048 == stringID) return PL_strdup("HTML Mail");
-  if (1049 == stringID) return PL_strdup("Add to Personal Address Book");
-  if (1050 == stringID) return PL_strdup("Additional Information:");
-  if (1051 == stringID) return PL_strdup("View Complete Card");
-  if (1052 == stringID) return PL_strdup("View Condensed Card");
-  if (1053 == stringID) return PL_strdup("Conference Address");
-  if (1054 == stringID) return PL_strdup("Default Directory Server");
-  if (1055 == stringID) return PL_strdup("Specific Directory Server");
-  if (1056 == stringID) return PL_strdup("Hostname or IP Address");
-  if (1057 == stringID) return PL_strdup("Phone Number");
-  if (1058 == stringID) return PL_strdup("Photograph");
-  if (1059 == stringID) return PL_strdup("Email");
-  if (1060 == stringID) return PL_strdup("Last Name");
-  if (1061 == stringID) return PL_strdup("First Name");
-  if (1062 == stringID) return PL_strdup("Administrative Assistant");
+  if (-1000 == stringID) return nsCRT::strdup("Application is out of memory.");
+  if (1001 == stringID) return nsCRT::strdup("State");
+  if (1002 == stringID) return nsCRT::strdup("Domestic");
+  if (1003 == stringID) return nsCRT::strdup("International");
+  if (1004 == stringID) return nsCRT::strdup("Postal");
+  if (1005 == stringID) return nsCRT::strdup("Parcel");
+  if (1006 == stringID) return nsCRT::strdup("Work");
+  if (1007 == stringID) return nsCRT::strdup("Home");
+  if (1008 == stringID) return nsCRT::strdup("Preferred");
+  if (1009 == stringID) return nsCRT::strdup("Voice");
+  if (1010 == stringID) return nsCRT::strdup("Fax");
+  if (1011 == stringID) return nsCRT::strdup("Message");
+  if (1012 == stringID) return nsCRT::strdup("Cellular");
+  if (1013 == stringID) return nsCRT::strdup("Pager");
+  if (1014 == stringID) return nsCRT::strdup("BBS");
+  if (1015 == stringID) return nsCRT::strdup("Modem");
+  if (1016 == stringID) return nsCRT::strdup("Car");
+  if (1017 == stringID) return nsCRT::strdup("ISDN");
+  if (1018 == stringID) return nsCRT::strdup("Video");
+  if (1019 == stringID) return nsCRT::strdup("AOL");
+  if (1020 == stringID) return nsCRT::strdup("Applelink");
+  if (1021 == stringID) return nsCRT::strdup("AT&T Mail");
+  if (1022 == stringID) return nsCRT::strdup("Compuserve");
+  if (1023 == stringID) return nsCRT::strdup("eWorld");
+  if (1024 == stringID) return nsCRT::strdup("Internet");
+  if (1025 == stringID) return nsCRT::strdup("IBM Mail");
+  if (1026 == stringID) return nsCRT::strdup("MCI Mail");
+  if (1027 == stringID) return nsCRT::strdup("Powershare");
+  if (1028 == stringID) return nsCRT::strdup("Prodigy");
+  if (1029 == stringID) return nsCRT::strdup("Telex");
+  if (1030 == stringID) return nsCRT::strdup("Additional Name");
+  if (1031 == stringID) return nsCRT::strdup("Prefix");
+  if (1032 == stringID) return nsCRT::strdup("Suffix");
+  if (1033 == stringID) return nsCRT::strdup("Time Zone");
+  if (1034 == stringID) return nsCRT::strdup("Geographic Position");
+  if (1035 == stringID) return nsCRT::strdup("Sound");
+  if (1036 == stringID) return nsCRT::strdup("Revision");
+  if (1037 == stringID) return nsCRT::strdup("Version");
+  if (1038 == stringID) return nsCRT::strdup("Public Key");
+  if (1039 == stringID) return nsCRT::strdup("Logo");
+  if (1040 == stringID) return nsCRT::strdup("Birthday");
+  if (1041 == stringID) return nsCRT::strdup("X400");
+  if (1042 == stringID) return nsCRT::strdup("Address");
+  if (1043 == stringID) return nsCRT::strdup("Label");
+  if (1044 == stringID) return nsCRT::strdup("Mailer");
+  if (1045 == stringID) return nsCRT::strdup("Role");
+  if (1046 == stringID) return nsCRT::strdup("Update From");
+  if (1047 == stringID) return nsCRT::strdup("Conference Address");
+  if (1048 == stringID) return nsCRT::strdup("HTML Mail");
+  if (1049 == stringID) return nsCRT::strdup("Add to Personal Address Book");
+  if (1050 == stringID) return nsCRT::strdup("Additional Information:");
+  if (1051 == stringID) return nsCRT::strdup("View Complete Card");
+  if (1052 == stringID) return nsCRT::strdup("View Condensed Card");
+  if (1053 == stringID) return nsCRT::strdup("Conference Address");
+  if (1054 == stringID) return nsCRT::strdup("Default Directory Server");
+  if (1055 == stringID) return nsCRT::strdup("Specific Directory Server");
+  if (1056 == stringID) return nsCRT::strdup("Hostname or IP Address");
+  if (1057 == stringID) return nsCRT::strdup("Phone Number");
+  if (1058 == stringID) return nsCRT::strdup("Photograph");
+  if (1059 == stringID) return nsCRT::strdup("Email");
+  if (1060 == stringID) return nsCRT::strdup("Last Name");
+  if (1061 == stringID) return nsCRT::strdup("First Name");
+  if (1062 == stringID) return nsCRT::strdup("Administrative Assistant");
 
   char    buf[128];
   
   PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
-  return PL_strdup(buf);
+  return nsCRT::strdup(buf);
 }

@@ -36,6 +36,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStringCharsetDetector.h"
 #include "nsIPref.h"
+#include "mimebuf.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -208,8 +209,8 @@ xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
 				if (pfix) OUTPUTSTR(pfix);
 				continue;
 			}
-			byteWidth = PL_strlen((const char *) in);
-			columnWidth = PL_strlen((const char *) in);
+			byteWidth = nsCRT::strlen((const char *) in);
+			columnWidth = nsCRT::strlen((const char *) in);
 			if (currentColumn + columnWidth > (maxColumn +
 				(((*in == ' ') || (*in == '\t')) ? 1 : 0)))
 			{
@@ -261,21 +262,6 @@ xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*	Very similar to strdup except it free's too
- */
-inline char* StrAllocCopy(char** dest, const char* src) {
-  if (*dest) {
-    PR_Free(*dest);
-    *dest = NULL;
-  }
-  if (!src)
-    *dest = NULL;
-  else
-    *dest = PL_strdup(src);
-
-  return *dest;
-}
-
 // The default setting of 'B' or 'Q' is the same as 4.5.
 //
 const char kMsgHeaderBEncoding[] = "B";
@@ -283,16 +269,16 @@ const char kMsgHeaderQEncoding[] = "Q";
 static const char * intl_message_header_encoding(const char* charset)
 {
   //TODO: make this overridable.
-  if (!PL_strcasecmp(charset, "iso-2022-jp") || 
-      !PL_strcasecmp(charset, "iso-2022-kr") ||
-      !PL_strcasecmp(charset, "hz-gb-2312") ||
-      !PL_strcasecmp(charset, "shift_jis") ||
-      !PL_strcasecmp(charset, "euc-jp") ||
-      !PL_strcasecmp(charset, "big5") ||
-      !PL_strcasecmp(charset, "gb2312") ||
-      !PL_strcasecmp(charset, "euc-kr") ||
-      !PL_strcasecmp(charset, "utf-7") ||
-      !PL_strcasecmp(charset, "utf-8")) {
+  if (!nsCRT::strcasecmp(charset, "iso-2022-jp") || 
+      !nsCRT::strcasecmp(charset, "iso-2022-kr") ||
+      !nsCRT::strcasecmp(charset, "hz-gb-2312") ||
+      !nsCRT::strcasecmp(charset, "shift_jis") ||
+      !nsCRT::strcasecmp(charset, "euc-jp") ||
+      !nsCRT::strcasecmp(charset, "big5") ||
+      !nsCRT::strcasecmp(charset, "gb2312") ||
+      !nsCRT::strcasecmp(charset, "euc-kr") ||
+      !nsCRT::strcasecmp(charset, "utf-7") ||
+      !nsCRT::strcasecmp(charset, "utf-8")) {
     return kMsgHeaderBEncoding;
   }
 
@@ -301,7 +287,7 @@ static const char * intl_message_header_encoding(const char* charset)
 
 static PRBool stateful_encoding(const char* charset)
 {
-  if (!PL_strcasecmp(charset, "iso-2022-jp"))
+  if (!nsCRT::strcasecmp(charset, "iso-2022-jp"))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -459,11 +445,11 @@ static char *intlmime_decode_base64_buf(char *subject)
   char *pSrc, *pDest ;
   int i ;
 
-  StrAllocCopy(&output, subject); /* Assume converted text are always less than source text */
+  mime_SACopy(&output, subject); /* Assume converted text are always less than source text */
 
   pSrc = subject;
   pDest = output ;
-  for (i = PL_strlen(subject); i > 3; i -= 4)
+  for (i = nsCRT::strlen(subject); i > 3; i -= 4)
   {
     if (intlmime_decode_base64(pSrc, pDest) == 0)
     {
@@ -489,7 +475,7 @@ static char *intlmime_encode_qp_buf(char *subject)
 
   if (subject == NULL || *subject == '\0')
     return NULL;
-  len = PL_strlen(subject);
+  len = nsCRT::strlen(subject);
   output = (char *) PR_Malloc(len * 3 + 1);
   if (output == NULL)
     return NULL;
@@ -571,7 +557,7 @@ static unsigned char * utf8_nextchar(unsigned char *str)
   if (*str < 128) {
     return (str+1);
   }
-  int len = PL_strlen((char *) str);
+  int len = nsCRT::strlen((char *) str);
   // RFC 2279 defines more than 3 bytes sequences (0xF0, 0xF8, 0xFC),
   // but I think we won't encounter those cases as long as we're supporting UCS-2 and no surrogate.
   if ((len >= 3) && (*str >= 0xE0)) {
@@ -626,19 +612,19 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
     return NULL;
 
   /* make a copy, so don't need touch original buffer */
-  srcbuf = PL_strdup(src);
+  srcbuf = nsCRT::strdup(src);
   if (srcbuf == NULL)
     return NULL;
   begin = srcbuf;
 
-  default_iThreshold = iEffectLen = ( maxLineLen - PL_strlen(charset) - 7 ) * 3 / 4;
+  default_iThreshold = iEffectLen = ( maxLineLen - nsCRT::strlen(charset) - 7 ) * 3 / 4;
   iThreshold = default_iThreshold;
 
 
   /* allocate enough buffer for conversion, this way it can avoid
      do another memory allocation which is expensive
    */
-  retbufsize = PL_strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
+  retbufsize = nsCRT::strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
   retbuf =  (char *) PR_Malloc(retbufsize);
   if (retbuf == NULL) {  /* Give up if not enough memory */
     PR_Free(srcbuf);
@@ -649,7 +635,7 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
 
   // loop for separating encoded words by the separators
   // the input string is utf-8 at this point
-  srclen = PL_strlen(srcbuf);
+  srclen = nsCRT::strlen(srcbuf);
 
 convert_and_encode:
 
@@ -660,7 +646,7 @@ convert_and_encode:
     int len, newsize, convlen, retbuflen;
     PRBool non_ascii;
 
-    retbuflen = PL_strlen(retbuf);
+    retbuflen = nsCRT::strlen(retbuf);
     end = NULL;
 
     /* scan for separator, conversion (and encode) happens on 8bit word between separators
@@ -711,7 +697,7 @@ convert_and_encode:
 
     // convert utf-8 to mail charset
     /* get the to_be_converted_buffer's len */
-    len = PL_strlen(begin);
+    len = nsCRT::strlen(begin);
 
     if ( !intlmime_only_ascii_str(begin) )
     {
@@ -746,7 +732,7 @@ convert_and_encode:
          name - such as "iso-2022-jp", the encoding name, MUST be shorter than 23 bytes
          7    - is the "=?:?:?=" 
        */
-      iEffectLen = ( maxLineLen - line_len - PL_strlen(charset) - 7 ) * 3 / 4;
+      iEffectLen = ( maxLineLen - line_len - nsCRT::strlen(charset) - 7 ) * 3 / 4;
       while ( PR_TRUE ) {
         int iBufLen;    /* converted buffer's length, not BASE64 */
         if ( len > iThreshold )
@@ -770,14 +756,14 @@ convert_and_encode:
           return NULL;
         }
         // utf-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
-        if (MIME_ConvertCharset(PR_FALSE, "utf-8", !PL_strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
+        if (MIME_ConvertCharset(PR_FALSE, "utf-8", !nsCRT::strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
                                 (const char*) begin, (const PRInt32) len, &buf1, (PRInt32 *) &iBufLen, NULL)) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);
           return NULL; //error
         }
 //        buf1 = (char *) cvtfunc(obj, (unsigned char *)begin, len);
-//        iBufLen = PL_strlen( buf1 );
+//        iBufLen = nsCRT::strlen( buf1 );
         if (iBufLen <= 0) {
           if (NULL == end) {
             PR_FREEIF(srcbuf);
@@ -820,10 +806,10 @@ convert_and_encode:
 
       // converted to mail charset, now apply MIME encode
       const char *msgHeaderEncoding = intl_message_header_encoding((const char *) charset);
-      if (!PL_strcasecmp(msgHeaderEncoding, kMsgHeaderBEncoding))
+      if (!nsCRT::strcasecmp(msgHeaderEncoding, kMsgHeaderBEncoding))
       {
         /* converts to Base64 Encoding */
-        buf2 = (char *)intlmime_encode_base64_buf(buf1, PL_strlen(buf1));
+        buf2 = (char *)intlmime_encode_base64_buf(buf1, nsCRT::strlen(buf1));
       }
       else
       {
@@ -844,7 +830,7 @@ convert_and_encode:
 
       /* realloc memory for retbuff if necessary,
          7: =?...?B?..?=, 3: CR LF TAB */
-      convlen = PL_strlen(buf2) + PL_strlen(charset) + 7;
+      convlen = nsCRT::strlen(buf2) + nsCRT::strlen(charset) + 7;
       newsize = convlen + retbuflen + 3 + 2;  /* 2:SEP '\0', 3:CRLFTAB */
 
       if (newsize > retbufsize)
@@ -878,7 +864,7 @@ convert_and_encode:
       /* Add encoding tag for base64 and QP */
       PL_strcat(buf1, "=?");
       PL_strcat(buf1, charset );
-      if (!PL_strcasecmp(msgHeaderEncoding, kMsgHeaderBEncoding))
+      if (!nsCRT::strcasecmp(msgHeaderEncoding, kMsgHeaderBEncoding))
         PL_strcat(buf1, "?B?");
       else
         PL_strcat(buf1, "?Q?");
@@ -928,7 +914,7 @@ convert_and_encode:
       line_len += len + 1;  /* 1: SEP */
     }
 
-    buf1 = buf1 + PL_strlen(buf1);
+    buf1 = buf1 + nsCRT::strlen(buf1);
     if (sep == CR || sep == LF || sep == TAB) /* strip CR,LF,TAB */
       *buf1 = '\0';
     else
@@ -970,7 +956,7 @@ char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLe
   if (subject == NULL)
     return NULL;
 
-  iSrcLen = PL_strlen(subject);
+  iSrcLen = nsCRT::strlen(subject);
 
   /* check to see if subject are all ascii or not */
   if((*subject == '\0') ||
@@ -980,7 +966,7 @@ char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLe
   /* If we are sending JIS then check the pref setting and
    * decide if we should convert hankaku (1byte) to zenkaku (2byte) kana.
    */
-  if (!PL_strcasecmp(charset, "iso-2022-jp")) {
+  if (!nsCRT::strcasecmp(charset, "iso-2022-jp")) {
     ;
   }
 
@@ -997,11 +983,11 @@ static char *intlmime_decode_qp(char *in)
   char token[3];
   char *out, *dest = 0;
 
-  out = dest = (char *)PR_Malloc(PL_strlen(in)+1);
+  out = dest = (char *)PR_Malloc(nsCRT::strlen(in)+1);
   if (dest == NULL)
     return NULL;
-  memset(out, 0, PL_strlen(in)+1);
-  length = PL_strlen(in);
+  memset(out, 0, nsCRT::strlen(in)+1);
+  length = nsCRT::strlen(in);
   while (length > 0 || i != 0)
   {
     while (i < 3 && length > 0)
@@ -1124,8 +1110,8 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
   if (charset)
     charset[0] = '\0';
 
-  StrAllocCopy(&work_buf, header);  /* temporary buffer */
-  StrAllocCopy(&retbuff, header);
+  mime_SACopy(&work_buf, header);  /* temporary buffer */
+  mime_SACopy(&retbuff, header);
 
   if (work_buf == NULL || retbuff == NULL)
     return NULL;
@@ -1154,7 +1140,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
             break;                          /* exit the loop because there are no charset info */
     *q++ = '\0';
     if (charset)
-      PL_strcpy(charset, PL_strcasecmp(p, "us-ascii") ? p : "iso-8859-1");
+      PL_strcpy(charset, nsCRT::strcasecmp(p, "us-ascii") ? p : "iso-8859-1");
 
     if (*(q+1) == '?' &&
         (*q == 'Q' || *q == 'q' || *q == 'B' || *q == 'b'))
@@ -1170,7 +1156,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
     else
       break;                          /* exit the loop because we don't know the encoding method */
 
-    begin = (p != NULL) ? p + 2 : (q + PL_strlen(q));
+    begin = (p != NULL) ? p + 2 : (q + nsCRT::strlen(q));
 
     if (decoded_text == NULL)
       break;                          /* exit the loop because we have problem to decode */
@@ -1181,7 +1167,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 
     PR_ASSERT(output_text != NULL);
     PL_strcpy(output_p, (char *)output_text);
-    output_p += PL_strlen(output_text);
+    output_p += nsCRT::strlen(output_text);
 
     if (output_text != decoded_text)
       PR_Free(output_text);
@@ -1200,7 +1186,7 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
   {
     PR_Free(retbuff);
     PL_strcpy(charset, "us-ascii");       /* charset was not encoded, put us-ascii */
-    return PL_strdup(header);             /* nothing to decode */
+    return nsCRT::strdup(header);             /* nothing to decode */
   }
 }
 
@@ -1530,12 +1516,12 @@ extern "C" {
 PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, PRInt16 wincsid, PRBool dontConvert)
 {
 // Obsolescent
-  return PL_strdup(header);
+  return nsCRT::strdup(header);
 }
 PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, PRInt16 wincsid, PRBool bUseMime)
 {
 // Obsolescent
-  return PL_strdup(subject);
+  return nsCRT::strdup(subject);
 }
 /*  This is a routine used to re-encode subject lines for use in the summary file.
     The reason why we specify a different length here is because we are not encoding
@@ -1544,7 +1530,7 @@ PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, PRInt16 wincsid, PRBool bUs
 PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, PRInt16 wincsid, PRBool bUseMime, int encodedWordSize)
 {
 // Obsolescent
-  return PL_strdup(subject);
+  return nsCRT::strdup(subject);
 }
 
 PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
@@ -1552,7 +1538,7 @@ PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
 {
   PRInt32 outLength;
   return MIME_ConvertCharset(PR_FALSE, from_charset, to_charset, 
-                             inCstring, PL_strlen(inCstring), outCstring, &outLength, NULL);
+                             inCstring, nsCRT::strlen(inCstring), outCstring, &outLength, NULL);
 }
 
 PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset, const char* to_charset,
@@ -1566,8 +1552,8 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
   // commenting out per Naoki's instructions.
 //  srcCharset[0] = '\0';
 //  dstCharset[0] = '\0';
-//  PL_strcpy(srcCharset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
-//  PL_strcpy(dstCharset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
+//  PL_strcpy(srcCharset, nsCRT::strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
+//  PL_strcpy(dstCharset, nsCRT::strcasecmp(from_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
 
   res = aMimeCharsetConverterClass.Initialize(from_charset, to_charset, autoDetection, -1);
 
@@ -1584,8 +1570,8 @@ PRInt32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
   char charset[kMAX_CSNAME+1];
   // Since we don't have a converter for us-ascii and the manager does not map, 
   // so we do the mapping here.
-  PL_strcpy(charset, PL_strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
-  return INTL_ConvertToUnicode(charset, inCstring, PL_strlen(inCstring), uniBuffer, uniLength);
+  PL_strcpy(charset, nsCRT::strcasecmp(from_charset, "us-ascii") ? (char *) from_charset : "iso-8859-1");
+  return INTL_ConvertToUnicode(charset, inCstring, nsCRT::strlen(inCstring), uniBuffer, uniLength);
 }
 
 PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
@@ -1594,7 +1580,7 @@ PRInt32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, c
   char charset[kMAX_CSNAME+1];
   // Since we don't have a converter for us-ascii and the manager does not map, 
   // so we do the mapping here.
-  PL_strcpy(charset, PL_strcasecmp(to_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
+  PL_strcpy(charset, nsCRT::strcasecmp(to_charset, "us-ascii") ? (char *) to_charset : "iso-8859-1");
   return INTL_ConvertFromUnicode(charset, uniBuffer, uniLength, outCstring);
 }
 
@@ -1613,7 +1599,7 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
     // no charset name is specified then assume it's us-ascii and dup the input
     // later change the caller to avoid the duplication
     PL_strcpy(charset, "us-ascii");
-    return PL_strdup(header); 
+    return nsCRT::strdup(header); 
   }
 
   return result;
@@ -1643,7 +1629,7 @@ main()
 kMIME_ENCODED_WORD_SIZE);
         printf("%s\n", encoded);
         decoded = intl_DecodeMimePartIIStr((const char *) encoded,
-PL_strlen(encoded), PR_TRUE);
+nsCRT::strlen(encoded), PR_TRUE);
 
         return 0;
 }

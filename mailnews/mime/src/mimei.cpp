@@ -101,7 +101,7 @@ EnumFunction(void* aElement, void *aData)
   if ( (!aElement) || (!aData) )
     return PR_TRUE;
 
-  if (PL_strcasecmp(ctPtr, ptr->content_type) == 0)
+  if (nsCRT::strcasecmp(ctPtr, ptr->content_type) == 0)
   {
     foundIt = PR_TRUE;
     force_display = ptr->force_inline_display;
@@ -220,7 +220,7 @@ mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
   int status;
 
   /* Some assertions to verify that this isn't random junk memory... */
-  PR_ASSERT(clazz->class_name && PL_strlen(clazz->class_name) > 0);
+  PR_ASSERT(clazz->class_name && nsCRT::strlen(clazz->class_name) > 0);
   PR_ASSERT(size > 0 && size < 1000);
 
   if (!clazz->class_initialized)
@@ -246,7 +246,7 @@ mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
   object->showAttachmentIcon = PR_FALSE; /* initialize ricardob's new member. */
 
   if (override_content_type && *override_content_type)
-	object->content_type = PL_strdup(override_content_type);
+	object->content_type = nsCRT::strdup(override_content_type);
 
   status = clazz->initialize(object);
   if (status < 0)
@@ -299,20 +299,20 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   else
   {
     if (!content_type || !*content_type ||
-      !PL_strcasecmp(content_type, "text"))  /* with no / in the type */
+      !nsCRT::strcasecmp(content_type, "text"))  /* with no / in the type */
       clazz = (MimeObjectClass *)&mimeUntypedTextClass;
     
       /* Subtypes of text...
     */
-    else if (!PL_strncasecmp(content_type,			"text/", 5))
+    else if (!nsCRT::strncasecmp(content_type,			"text/", 5))
     {
-      if      (!PL_strcasecmp(content_type+5,		"html"))
+      if      (!nsCRT::strcasecmp(content_type+5,		"html"))
         clazz = (MimeObjectClass *)&mimeInlineTextHTMLClass;
-      else if (!PL_strcasecmp(content_type+5,		"enriched"))
+      else if (!nsCRT::strcasecmp(content_type+5,		"enriched"))
         clazz = (MimeObjectClass *)&mimeInlineTextEnrichedClass;
-      else if (!PL_strcasecmp(content_type+5,		"richtext"))
+      else if (!nsCRT::strcasecmp(content_type+5,		"richtext"))
         clazz = (MimeObjectClass *)&mimeInlineTextRichtextClass;
-      else if (!PL_strcasecmp(content_type+5,		"plain"))
+      else if (!nsCRT::strcasecmp(content_type+5,		"plain"))
         clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
       else if (!exact_match_p)
         clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
@@ -320,23 +320,23 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
     
     /* Subtypes of multipart...
     */
-    else if (!PL_strncasecmp(content_type,			"multipart/", 10))
+    else if (!nsCRT::strncasecmp(content_type,			"multipart/", 10))
     {
-      if      (!PL_strcasecmp(content_type+10,	"alternative"))
+      if      (!nsCRT::strcasecmp(content_type+10,	"alternative"))
         clazz = (MimeObjectClass *)&mimeMultipartAlternativeClass;
-      else if (!PL_strcasecmp(content_type+10,	"related"))
+      else if (!nsCRT::strcasecmp(content_type+10,	"related"))
         clazz = (MimeObjectClass *)&mimeMultipartRelatedClass;
-      else if (!PL_strcasecmp(content_type+10,	"digest"))
+      else if (!nsCRT::strcasecmp(content_type+10,	"digest"))
         clazz = (MimeObjectClass *)&mimeMultipartDigestClass;
-      else if (!PL_strcasecmp(content_type+10,	"appledouble") ||
-        !PL_strcasecmp(content_type+10,	"header-set"))
+      else if (!nsCRT::strcasecmp(content_type+10,	"appledouble") ||
+        !nsCRT::strcasecmp(content_type+10,	"header-set"))
         clazz = (MimeObjectClass *)&mimeMultipartAppleDoubleClass;
-      else if (!PL_strcasecmp(content_type+10,	"parallel"))
+      else if (!nsCRT::strcasecmp(content_type+10,	"parallel"))
         clazz = (MimeObjectClass *)&mimeMultipartParallelClass;
-      else if (!PL_strcasecmp(content_type+10,	"mixed"))
+      else if (!nsCRT::strcasecmp(content_type+10,	"mixed"))
         clazz = (MimeObjectClass *)&mimeMultipartMixedClass;
       
-      else if (!PL_strcasecmp(content_type+10,	"signed"))
+      else if (!nsCRT::strcasecmp(content_type+10,	"signed"))
       {
       /* Check that the "protocol" and "micalg" parameters are ones we
         know about. */
@@ -367,14 +367,14 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
     
     /* Subtypes of message...
     */
-    else if (!PL_strncasecmp(content_type,			"message/", 8))
+    else if (!nsCRT::strncasecmp(content_type,			"message/", 8))
     {
-      if      (!PL_strcasecmp(content_type+8,		"rfc822") ||
-        !PL_strcasecmp(content_type+8,		"news"))
+      if      (!nsCRT::strcasecmp(content_type+8,		"rfc822") ||
+        !nsCRT::strcasecmp(content_type+8,		"news"))
         clazz = (MimeObjectClass *)&mimeMessageClass;
-      else if (!PL_strcasecmp(content_type+8,		"external-body"))
+      else if (!nsCRT::strcasecmp(content_type+8,		"external-body"))
         clazz = (MimeObjectClass *)&mimeExternalBodyClass;
-      else if (!PL_strcasecmp(content_type+8,		"partial"))
+      else if (!nsCRT::strcasecmp(content_type+8,		"partial"))
         /* I guess these are most useful as externals, for now... */
         clazz = (MimeObjectClass *)&mimeExternalObjectClass;
       else if (!exact_match_p)
@@ -384,13 +384,13 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
     
     /* The magic image types which we are able to display internally...
     */
-    else if (!PL_strcasecmp(content_type,			IMAGE_GIF)  ||
-      !PL_strcasecmp(content_type,			IMAGE_JPG) ||
-      !PL_strcasecmp(content_type,			IMAGE_PJPG) ||
-      !PL_strcasecmp(content_type,			IMAGE_PNG) ||
-      !PL_strcasecmp(content_type,			IMAGE_XBM)  ||
-      !PL_strcasecmp(content_type,			IMAGE_XBM2) ||
-      !PL_strcasecmp(content_type,			IMAGE_XBM3))
+    else if (!nsCRT::strcasecmp(content_type,			IMAGE_GIF)  ||
+      !nsCRT::strcasecmp(content_type,			IMAGE_JPG) ||
+      !nsCRT::strcasecmp(content_type,			IMAGE_PJPG) ||
+      !nsCRT::strcasecmp(content_type,			IMAGE_PNG) ||
+      !nsCRT::strcasecmp(content_type,			IMAGE_XBM)  ||
+      !nsCRT::strcasecmp(content_type,			IMAGE_XBM2) ||
+      !nsCRT::strcasecmp(content_type,			IMAGE_XBM3))
       clazz = (MimeObjectClass *)&mimeInlineImageClass;
     
 #ifdef MOZ_SECURITY
@@ -400,11 +400,11 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
     /* A few types which occur in the real world and which we would otherwise
     treat as non-text types (which would be bad) without this special-case...
     */
-    else if (!PL_strcasecmp(content_type,			APPLICATION_PGP) ||
-    !PL_strcasecmp(content_type,			APPLICATION_PGP2))
+    else if (!nsCRT::strcasecmp(content_type,			APPLICATION_PGP) ||
+    !nsCRT::strcasecmp(content_type,			APPLICATION_PGP2))
     clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
     
-    else if (!PL_strcasecmp(content_type,			SUN_ATTACHMENT))
+    else if (!nsCRT::strcasecmp(content_type,			SUN_ATTACHMENT))
       clazz = (MimeObjectClass *)&mimeSunAttachmentClass;
     
       /* Everything else gets represented as a clickable link.
@@ -526,12 +526,12 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   if (hdrs && opts && opts->file_type_fn &&
 
 	  /* ### mwelch - don't override AppleSingle */
-	  (content_type ? PL_strcasecmp(content_type, APPLICATION_APPLEFILE) : PR_TRUE) &&
+	  (content_type ? nsCRT::strcasecmp(content_type, APPLICATION_APPLEFILE) : PR_TRUE) &&
 	  /* ## davidm Apple double shouldn't use this #$%& either. */
-	  (content_type ? PL_strcasecmp(content_type, MULTIPART_APPLEDOUBLE) : PR_TRUE) &&
+	  (content_type ? nsCRT::strcasecmp(content_type, MULTIPART_APPLEDOUBLE) : PR_TRUE) &&
 	  (!content_type ||
-	   !PL_strcasecmp(content_type, APPLICATION_OCTET_STREAM) ||
-	   !PL_strcasecmp(content_type, UNKNOWN_CONTENT_TYPE) ||
+	   !nsCRT::strcasecmp(content_type, APPLICATION_OCTET_STREAM) ||
+	   !nsCRT::strcasecmp(content_type, UNKNOWN_CONTENT_TYPE) ||
 	   (reverse_lookup
 #if 0
 	    && !NET_cinfo_find_info_by_type((char*)content_type))))
@@ -547,7 +547,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 		  PR_FREEIF(name);
 
 		  if (override_content_type &&
-			  !PL_strcasecmp(override_content_type, UNKNOWN_CONTENT_TYPE))
+			  !nsCRT::strcasecmp(override_content_type, UNKNOWN_CONTENT_TYPE))
 			PR_FREEIF(override_content_type);
 
 		  if (override_content_type)
@@ -588,7 +588,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 							   : 0);
   }
 
-  if (!content_disposition || !PL_strcasecmp(content_disposition, "inline"))
+  if (!content_disposition || !nsCRT::strcasecmp(content_disposition, "inline"))
     ;	/* Use the class we've got. */
   else
     clazz = (MimeObjectClass *)&mimeExternalObjectClass;
@@ -694,7 +694,7 @@ char *
 mime_part_address(MimeObject *obj)
 {
   if (!obj->parent)
-	return PL_strdup("0");
+	return nsCRT::strdup("0");
   else
 	{
 	  /* Find this object in its parent. */
@@ -724,10 +724,10 @@ mime_part_address(MimeObject *obj)
 		}
 
 	  if (!higher)
-		return PL_strdup(buf);
+		return nsCRT::strdup(buf);
 	  else
 		{
-		  char *s = (char *)PR_MALLOC(PL_strlen(higher) + PL_strlen(buf) + 3);
+		  char *s = (char *)PR_MALLOC(nsCRT::strlen(higher) + nsCRT::strlen(buf) + 3);
 		  if (!s)
 			{
 			  PR_Free(higher);
@@ -785,10 +785,10 @@ mime_set_url_part(const char *url, char *part, PRBool append_p)
 	  if (*s == '?')
 		{
 		  got_q = PR_TRUE;
-		  if (!PL_strncasecmp(s, "?part=", 6))
+		  if (!nsCRT::strncasecmp(s, "?part=", 6))
 			part_begin = (s += 6);
 		}
-	  else if (got_q && *s == '&' && !PL_strncasecmp(s, "&part=", 6))
+	  else if (got_q && *s == '&' && !nsCRT::strncasecmp(s, "&part=", 6))
 		part_begin = (s += 6);
 
 	  if (part_begin)
@@ -800,7 +800,7 @@ mime_set_url_part(const char *url, char *part, PRBool append_p)
 		}
 	}
 
-  result = (char *) PR_MALLOC(PL_strlen(url) + PL_strlen(part) + 10);
+  result = (char *) PR_MALLOC(nsCRT::strlen(url) + nsCRT::strlen(part) + 10);
   if (!result) return 0;
 
   if (part_begin)
@@ -833,10 +833,10 @@ mime_set_url_part(const char *url, char *part, PRBool append_p)
 
   /* Semi-broken kludge to omit a trailing "?part=0". */
   {
-	int L = PL_strlen(result);
+	int L = nsCRT::strlen(result);
 	if (L > 6 &&
 		(result[L-7] == '?' || result[L-7] == '&') &&
-		!PL_strcmp("part=0", result + L - 6))
+		!nsCRT::strcmp("part=0", result + L - 6))
 	  result[L-7] = 0;
   }
 
@@ -858,7 +858,7 @@ mime_set_url_imap_part(const char *url, char *imappart, char *libmimepart)
 	  *whereCurrent = 0;
   }
 	
-  result = (char *) PR_MALLOC(PL_strlen(url) + PL_strlen(imappart) + PL_strlen(libmimepart) + 17);
+  result = (char *) PR_MALLOC(nsCRT::strlen(url) + nsCRT::strlen(imappart) + nsCRT::strlen(libmimepart) + 17);
   if (!result) return 0;
 
   PL_strcpy(result, url);
@@ -866,7 +866,7 @@ mime_set_url_imap_part(const char *url, char *imappart, char *libmimepart)
   PL_strcat(result, imappart);
   PL_strcat(result, "&part=");
   PL_strcat(result, libmimepart);
-  result[PL_strlen(result)] = 0;
+  result[nsCRT::strlen(result)] = 0;
 
   if (whereCurrent)
 	  *whereCurrent = '/';
@@ -895,7 +895,7 @@ mime_address_to_part(const char *part, MimeObject *obj)
 	{
 	  char *part2 = mime_part_address(obj);
 	  if (!part2) return 0;  /* MIME_OUT_OF_MEMORY */
-	  match = !PL_strcmp(part, part2);
+	  match = !nsCRT::strcmp(part, part2);
 	  PR_Free(part2);
 	}
 
@@ -997,7 +997,7 @@ mime_find_suggested_name_of_part(const char *part, MimeObject *obj)
    */
   if (result && obj->encoding && *obj->encoding)
 	{
-	  PRInt32 L = PL_strlen(result);
+	  PRInt32 L = nsCRT::strlen(result);
 	  const char **exts = 0;
 
 	  /*
@@ -1010,7 +1010,7 @@ mime_find_suggested_name_of_part(const char *part, MimeObject *obj)
 
 		 Note that it's special-cased in a similar way in libmsg/compose.c.
 	   */
-	  if (!PL_strcasecmp(obj->encoding, ENCODING_UUENCODE))
+	  if (!nsCRT::strcasecmp(obj->encoding, ENCODING_UUENCODE))
 		{
 		  static const char *uue_exts[] = { "uu", "uue", 0 };
 		  exts = uue_exts;
@@ -1019,10 +1019,10 @@ mime_find_suggested_name_of_part(const char *part, MimeObject *obj)
 	  while (exts && *exts)
 		{
 		  const char *ext = *exts;
-		  PRInt32 L2 = PL_strlen(ext);
+		  PRInt32 L2 = nsCRT::strlen(ext);
 		  if (L > L2 + 1 &&							/* long enough */
 			  result[L - L2 - 1] == '.' &&			/* '.' in right place*/
-			  !PL_strcasecmp(ext, result + (L - L2)))	/* ext matches */
+			  !nsCRT::strcasecmp(ext, result + (L - L2)))	/* ext matches */
 			{
 			  result[L - L2 - 1] = 0;		/* truncate at '.' and stop. */
 			  break;
@@ -1063,26 +1063,26 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 	  if (value < end) value++;
 	  if (name_end <= q)
 		;
-	  else if (!PL_strncasecmp ("headers", q, name_end - q))
+	  else if (!nsCRT::strncasecmp ("headers", q, name_end - q))
 		{
-      if (end > value && !PL_strncasecmp ("only", value, end-value))
+      if (end > value && !nsCRT::strncasecmp ("only", value, end-value))
         options->headers = MimeHeadersOnly;
-      else if (end > value && !PL_strncasecmp ("none", value, end-value))
+      else if (end > value && !nsCRT::strncasecmp ("none", value, end-value))
         options->headers = MimeHeadersNone;      
-      else if (end > value && !PL_strncasecmp ("all", value, end - value))
+      else if (end > value && !nsCRT::strncasecmp ("all", value, end - value))
         options->headers = MimeHeadersAll;
-      else if (end > value && !PL_strncasecmp ("some", value, end - value))
+      else if (end > value && !nsCRT::strncasecmp ("some", value, end - value))
         options->headers = MimeHeadersSome;
-      else if (end > value && !PL_strncasecmp ("micro", value, end - value))
+      else if (end > value && !nsCRT::strncasecmp ("micro", value, end - value))
         options->headers = MimeHeadersMicro;
-      else if (end > value && !PL_strncasecmp ("cite", value, end - value))
+      else if (end > value && !nsCRT::strncasecmp ("cite", value, end - value))
         options->headers = MimeHeadersCitation;
-      else if (end > value && !PL_strncasecmp ("citation", value, end-value))
+      else if (end > value && !nsCRT::strncasecmp ("citation", value, end-value))
         options->headers = MimeHeadersCitation;
       else
         options->headers = default_headers;
 		}
-	  else if (!PL_strncasecmp ("part", q, name_end - q))
+	  else if (!nsCRT::strncasecmp ("part", q, name_end - q))
 		{
 		  PR_FREEIF (options->part_to_load);
 		  if (end > value)
@@ -1094,16 +1094,16 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 			  options->part_to_load[end-value] = 0;
 			}
 		}
-	  else if (!PL_strncasecmp ("rot13", q, name_end - q))
+	  else if (!nsCRT::strncasecmp ("rot13", q, name_end - q))
 		{
-		  if (end <= value || !PL_strncasecmp ("true", value, end - value))
+		  if (end <= value || !nsCRT::strncasecmp ("true", value, end - value))
 			options->rot13_p = PR_TRUE;
 		  else
 			options->rot13_p = PR_FALSE;
 		}
-	  else if (!PL_strncasecmp ("inline", q, name_end - q))
+	  else if (!nsCRT::strncasecmp ("inline", q, name_end - q))
 		{
-		  if (end <= value || !PL_strncasecmp ("true", value, end - value))
+		  if (end <= value || !nsCRT::strncasecmp ("true", value, end - value))
 			options->no_inline_p = PR_FALSE;
 		  else
 			options->no_inline_p = PR_TRUE;
@@ -1178,18 +1178,18 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
   if (options->part_to_load &&
 	  !PL_strchr(options->part_to_load, '.'))		/* doesn't contain a dot */
 	{
-	  if (!PL_strcmp(options->part_to_load, "0"))		/* 0 */
+	  if (!nsCRT::strcmp(options->part_to_load, "0"))		/* 0 */
 		{
 		  PR_Free(options->part_to_load);
-		  options->part_to_load = PL_strdup("1");
+		  options->part_to_load = nsCRT::strdup("1");
 		  if (!options->part_to_load)
 			return MIME_OUT_OF_MEMORY;
 		}
-	  else if (PL_strcmp(options->part_to_load, "1"))	/* not 1 */
+	  else if (nsCRT::strcmp(options->part_to_load, "1"))	/* not 1 */
 		{
 		  const char *prefix = "1.";
-		  char *s = (char *) PR_MALLOC(PL_strlen(options->part_to_load) +
-									  PL_strlen(prefix) + 1);
+		  char *s = (char *) PR_MALLOC(nsCRT::strlen(options->part_to_load) +
+									  nsCRT::strlen(prefix) + 1);
 		  if (!s) return MIME_OUT_OF_MEMORY;
 		  PL_strcpy(s, prefix);
 		  PL_strcat(s, options->part_to_load);
@@ -1228,7 +1228,7 @@ MimeOptions_write(MimeDisplayOptions *opt, char *data, PRInt32 length,
 	  else
 		{
 		  char sep[] = "<HR WIDTH=\"90%\" SIZE=4>";
-		  int lstatus = opt->output_fn(sep, PL_strlen(sep), closure);
+		  int lstatus = opt->output_fn(sep, nsCRT::strlen(sep), closure);
 		  opt->state->separator_suppressed_p = PR_FALSE;
 		  if (lstatus < 0) return lstatus;
 		}

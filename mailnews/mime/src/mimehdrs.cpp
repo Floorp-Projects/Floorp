@@ -59,7 +59,7 @@ MimeHeaders_convert_header_value(MimeDisplayOptions *opt, char **value)
   if ((!value) || (!*value))
     return *value;
 
-  PRInt32 contents_length = PL_strlen(*value);
+  PRInt32 contents_length = nsCRT::strlen(*value);
   int     status = MimeHeaders_convert_rfc1522(opt, *value, contents_length,
 					                          				   &converted, &converted_length);
   if (status == 0) 
@@ -336,7 +336,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 	  return 0;
 	}
 
-  name_length = PL_strlen(header_name);
+  name_length = nsCRT::strlen(header_name);
 
   for (i = 0; i < hdrs->heads_size; i++)
 	{
@@ -350,7 +350,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 	  if (!head) continue;
 
 	  /* Quick hack to skip over BSD Mailbox delimiter. */
-	  if (i == 0 && head[0] == 'F' && !PL_strncmp(head, "From ", 5))
+	  if (i == 0 && head[0] == 'F' && !nsCRT::strncmp(head, "From ", 5))
 		continue;
 
 	  /* Find the colon. */
@@ -369,7 +369,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		continue;
 
 	  /* If the strings differ, it doesn't match. */
-	  if (PL_strncasecmp(header_name, head, name_length))
+	  if (nsCRT::strncasecmp(header_name, head, name_length))
 		continue;
 
 	  /* Otherwise, we've got a match. */
@@ -407,7 +407,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		  }
 		else
 		  {
-			PRInt32 L = PL_strlen(result);
+			PRInt32 L = nsCRT::strlen(result);
 			s = (char *) PR_Realloc(result, (L + (end - contents + 10)));
 			if (!s)
 			  {
@@ -477,7 +477,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
   if (language) *language = NULL;
 
   str = header_value;
-  parm_len = PL_strlen(parm_name);
+  parm_len = nsCRT::strlen(parm_name);
 
   /* Skip forward to first ';' */
   for (; *str && *str != ';' && *str != ','; str++)
@@ -538,7 +538,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 		 If so, copy it and return.
 	   */
 	  if (token_end - token_start == parm_len &&
-		  !PL_strncasecmp(token_start, parm_name, parm_len))
+		  !nsCRT::strncasecmp(token_start, parm_name, parm_len))
 		{
 		  s = (char *) PR_MALLOC ((value_end - value_start) + 1);
 		  if (! s) return 0;  /* MIME_OUT_OF_MEMORY */
@@ -550,7 +550,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 		  return s;
 		}
 	  else if (token_end - token_start > parm_len &&
-			   !PL_strncasecmp(token_start, parm_name, parm_len) &&
+			   !nsCRT::strncasecmp(token_start, parm_name, parm_len) &&
 			   *(token_start+parm_len) == '*')
 	  {
 		  /* RFC2231 - The legitimate parm format can be:
@@ -614,7 +614,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 			  char *ns = NULL;
 			  if (s)
 			  {
-				  len = PL_strlen(s);
+				  len = nsCRT::strlen(s);
 				  ns = (char *) PR_Realloc(s, len+(value_end-value_start)+1);
 				  if (!ns)
                     {
@@ -660,8 +660,8 @@ MimeHeaders_default_news_link_generator (const char *dest, void *closure,
 	 generate_reference_url_fn. */
   char *prefix = "news:";
   char *new_dest = nsEscape(dest, url_XAlphas);
-  char *result = (char *) PR_MALLOC (PL_strlen (new_dest) +
-									PL_strlen (prefix) + 1);
+  char *result = (char *) PR_MALLOC (nsCRT::strlen (new_dest) +
+									nsCRT::strlen (prefix) + 1);
   if (result)
 	{
 	  PL_strcpy (result, prefix);
@@ -674,7 +674,7 @@ MimeHeaders_default_news_link_generator (const char *dest, void *closure,
 static char *mime_escape_quotes (char *src)
 {
 	/* Make sure quotes are escaped with a backslash */
-	char *dst = (char *)PR_MALLOC((2 * PL_strlen(src)) + 1);
+	char *dst = (char *)PR_MALLOC((2 * nsCRT::strlen(src)) + 1);
 	if (dst)
 	{
 		char *walkDst = dst;
@@ -722,8 +722,8 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
   PR_ASSERT(num >= 1);
   for (j=0 ; j<num ; j++) {
 	if (addr) {
-	  addr = addr + PL_strlen(addr) + 1;
-	  name = name + PL_strlen(name) + 1;
+	  addr = addr + nsCRT::strlen(addr) + 1;
+	  name = name + nsCRT::strlen(name) + 1;
 	} else {
 	  addr = addresses;
 	  name = names;
@@ -848,47 +848,47 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
 static char *
 MimeHeaders_localize_header_name(char *name, MimeDisplayOptions *opt)
 {
-  if (!PL_strcasecmp(name,HEADER_BCC))
+  if (!nsCRT::strcasecmp(name,HEADER_BCC))
     return MimeGetStringByID(MIME_MHTML_BCC);
-  if (!PL_strcasecmp(name,HEADER_CC))
+  if (!nsCRT::strcasecmp(name,HEADER_CC))
     return MimeGetStringByID(MIME_MHTML_CC);
-  if (!PL_strcasecmp(name,HEADER_DATE))
+  if (!nsCRT::strcasecmp(name,HEADER_DATE))
     return MimeGetStringByID(MIME_MHTML_DATE);
-  if (!PL_strcasecmp(name,HEADER_FOLLOWUP_TO))
+  if (!nsCRT::strcasecmp(name,HEADER_FOLLOWUP_TO))
     return MimeGetStringByID(MIME_MHTML_FOLLOWUP_TO);
-  if (!PL_strcasecmp(name,HEADER_FROM))
+  if (!nsCRT::strcasecmp(name,HEADER_FROM))
     return MimeGetStringByID(MIME_MHTML_FROM);
-  if (!PL_strcasecmp(name,HEADER_MESSAGE_ID))
+  if (!nsCRT::strcasecmp(name,HEADER_MESSAGE_ID))
     return MimeGetStringByID(MIME_MHTML_MESSAGE_ID);
-  if (!PL_strcasecmp(name,HEADER_NEWSGROUPS))
+  if (!nsCRT::strcasecmp(name,HEADER_NEWSGROUPS))
     return MimeGetStringByID(MIME_MHTML_NEWSGROUPS);
-  if (!PL_strcasecmp(name,HEADER_ORGANIZATION))
+  if (!nsCRT::strcasecmp(name,HEADER_ORGANIZATION))
     return MimeGetStringByID(MIME_MHTML_ORGANIZATION);
-  if (!PL_strcasecmp(name,HEADER_REFERENCES))
+  if (!nsCRT::strcasecmp(name,HEADER_REFERENCES))
     return MimeGetStringByID(MIME_MHTML_REFERENCES);
-  if (!PL_strcasecmp(name,HEADER_REPLY_TO))
+  if (!nsCRT::strcasecmp(name,HEADER_REPLY_TO))
     return MimeGetStringByID(MIME_MHTML_REPLY_TO);
-  if (!PL_strcasecmp(name,HEADER_RESENT_CC))
+  if (!nsCRT::strcasecmp(name,HEADER_RESENT_CC))
     return MimeGetStringByID(MIME_MHTML_RESENT_CC);
-  if (!PL_strcasecmp(name,HEADER_RESENT_COMMENTS))
+  if (!nsCRT::strcasecmp(name,HEADER_RESENT_COMMENTS))
     return MimeGetStringByID(MIME_MHTML_RESENT_COMMENTS);
-  if (!PL_strcasecmp(name,HEADER_RESENT_DATE))
+  if (!nsCRT::strcasecmp(name,HEADER_RESENT_DATE))
     return MimeGetStringByID(MIME_MHTML_RESENT_DATE);
-  if (!PL_strcasecmp(name,HEADER_RESENT_FROM))
+  if (!nsCRT::strcasecmp(name,HEADER_RESENT_FROM))
     return MimeGetStringByID(MIME_MHTML_RESENT_FROM);
-  if (!PL_strcasecmp(name,HEADER_RESENT_MESSAGE_ID))
+  if (!nsCRT::strcasecmp(name,HEADER_RESENT_MESSAGE_ID))
     return MimeGetStringByID(MIME_MHTML_RESENT_MESSAGE_ID);
-  if (!PL_strcasecmp(name,HEADER_RESENT_SENDER))
+  if (!nsCRT::strcasecmp(name,HEADER_RESENT_SENDER))
     return MimeGetStringByID(MIME_MHTML_RESENT_SENDER);
-  if (!PL_strcasecmp(name,HEADER_RESENT_TO))
+  if (!nsCRT::strcasecmp(name,HEADER_RESENT_TO))
     return MimeGetStringByID(MIME_MHTML_RESENT_TO);
-  if (!PL_strcasecmp(name,HEADER_SENDER))
+  if (!nsCRT::strcasecmp(name,HEADER_SENDER))
     return MimeGetStringByID(MIME_MHTML_SENDER);
-  if (!PL_strcasecmp(name,HEADER_SUBJECT))
+  if (!nsCRT::strcasecmp(name,HEADER_SUBJECT))
     return MimeGetStringByID(MIME_MHTML_SUBJECT);
-  if (!PL_strcasecmp(name,HEADER_TO))
+  if (!nsCRT::strcasecmp(name,HEADER_TO))
     return MimeGetStringByID(MIME_MHTML_TO);
-  if (!PL_strcasecmp(name,HEADER_SUBJECT))
+  if (!nsCRT::strcasecmp(name,HEADER_SUBJECT))
     return MimeGetStringByID(MIME_MHTML_SUBJECT);
 
   return NULL;  
@@ -932,7 +932,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     char *c2 = 0;
     
     /* Hack for BSD Mailbox delimiter. */
-    if (i == 0 && head[0] == 'F' && !PL_strncmp(head, "From ", 5))
+    if (i == 0 && head[0] == 'F' && !nsCRT::strncmp(head, "From ", 5))
     {
       /* For now, we don't really want this header to be output so
          we are going to just continue */
@@ -1139,12 +1139,12 @@ mime_decode_filename(char *name)
 	/* Seriously ugly hack. If the first three characters of the filename 
 	   are <ESC>$B, then we know the filename is in JIS and should be 
 	   converted to either SJIS or EUC-JP. */ 
-	if ((PL_strlen(returnVal) > 3) && 
+	if ((nsCRT::strlen(returnVal) > 3) && 
 		(returnVal[0] == 0x1B) && (returnVal[1] == '$') && (returnVal[2] == 'B')) 
 	  { 
 		PRInt16 dest_csid = INTL_DocToWinCharSetID(CS_JIS); 
 		
-		cvt = (char *) INTL_ConvertLineWithoutAutoDetect(CS_JIS, dest_csid, (unsigned char *)returnVal, PL_strlen(returnVal)); 
+		cvt = (char *) INTL_ConvertLineWithoutAutoDetect(CS_JIS, dest_csid, (unsigned char *)returnVal, nsCRT::strlen(returnVal)); 
 		if (cvt && cvt != returnVal) 
 		  { 
 			if (returnVal != name) PR_Free(returnVal); 
@@ -1232,7 +1232,7 @@ MimeHeaders_do_unix_display_hook_hack(MimeHeaders *hdrs)
     if (!cmd)
       cmd = "";
     else
-      cmd = PL_strdup(cmd);
+      cmd = nsCRT::strdup(cmd);
   }
   
   /* Invoke "cmd" at the end of a pipe, and give it the headers on stdin.
@@ -1292,7 +1292,7 @@ MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
 									 hdrs->all_headers_fp);
 		  if (status < 0) return status;
 		}
-	  status = MimeHeaders_write(opt, nl, PL_strlen(nl));
+	  status = MimeHeaders_write(opt, nl, nsCRT::strlen(nl));
 	  if (status < 0) return status;
 	}
   else if (hdrs)
@@ -1309,7 +1309,7 @@ MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
 		  if (!head) continue;
 
 		  /* Don't write out any Content- header. */
-		  if (!PL_strncasecmp(head, "Content-", 8))
+		  if (!nsCRT::strncasecmp(head, "Content-", 8))
 			continue;
 
 		  /* Write out this (possibly multi-line) header. */

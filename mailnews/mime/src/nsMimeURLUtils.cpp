@@ -118,7 +118,7 @@ FindAmbitiousMailToTag(const char *line, PRInt32 line_size)
     return NULL;
   }
 
-  char *retVal = PL_strdup(ptr);
+  char *retVal = nsCRT::strdup(ptr);
   PR_FREEIF(workLine);
   return retVal;
 }
@@ -128,7 +128,7 @@ AmbitiousURLType(const char *URL, PRInt32  *retType, const char *newURLTag)
 {
   *retType = 0;
 
-  if (!PL_strncasecmp(URL, newURLTag, PL_strlen(newURLTag))) 
+  if (!nsCRT::strncasecmp(URL, newURLTag, nsCRT::strlen(newURLTag))) 
   {
     *retType = MAILTO_TYPE_URL;
   }
@@ -149,17 +149,17 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
   switch(*URL) {
   case 'a':
   case 'A':
-    if(!PL_strncasecmp(URL,"about:security", 14))
+    if(!nsCRT::strncasecmp(URL,"about:security", 14))
     {
 		    *retType = SECURITY_TYPE_URL;
         return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"about:",6))
+    else if(!nsCRT::strncasecmp(URL,"about:",6))
     {
 		    *retType = ABOUT_TYPE_URL;
         return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,NSCP_CHK,4))
+    else if(!nsCRT::strncasecmp(URL,NSCP_CHK,4))
     {
         *retType = NSCP_URL;
         return NS_OK;
@@ -167,13 +167,13 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'f':
   case 'F':
-    if ( (!PL_strncasecmp(URL,"ftp:",4)) ||
-         (!PL_strncasecmp(URL,"ftp.",4)) )
+    if ( (!nsCRT::strncasecmp(URL,"ftp:",4)) ||
+         (!nsCRT::strncasecmp(URL,"ftp.",4)) )
     {
 		    *retType = FTP_TYPE_URL;
         return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"file:",5))
+    else if(!nsCRT::strncasecmp(URL,"file:",5))
     {
 		    *retType = FILE_TYPE_URL;
         return NS_OK;
@@ -181,7 +181,7 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'g':
   case 'G':
-    if(!PL_strncasecmp(URL,"gopher:",7)) 
+    if(!nsCRT::strncasecmp(URL,"gopher:",7)) 
     {
       *retType = GOPHER_TYPE_URL;
       return NS_OK;
@@ -189,12 +189,12 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'h':
   case 'H':
-    if(!PL_strncasecmp(URL,"http:",5))
+    if(!nsCRT::strncasecmp(URL,"http:",5))
     {
 		    *retType = HTTP_TYPE_URL;
         return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"https:",6))
+    else if(!nsCRT::strncasecmp(URL,"https:",6))
     {
 		    *retType = SECURE_HTTP_TYPE_URL;
         return NS_OK;
@@ -202,42 +202,42 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'i':
   case 'I':
-    if(!PL_strncasecmp(URL,"internal-gopher-",16))
+    if(!nsCRT::strncasecmp(URL,"internal-gopher-",16))
     {
       *retType = INTERNAL_IMAGE_TYPE_URL;
       return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"internal-news-",14))
+    else if(!nsCRT::strncasecmp(URL,"internal-news-",14))
     {
       *retType = INTERNAL_IMAGE_TYPE_URL;
       return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"internal-edit-",14))
+    else if(!nsCRT::strncasecmp(URL,"internal-edit-",14))
     {
       *retType = INTERNAL_IMAGE_TYPE_URL;
       return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"internal-attachment-",20))
+    else if(!nsCRT::strncasecmp(URL,"internal-attachment-",20))
     {
       *retType = INTERNAL_IMAGE_TYPE_URL;
       return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"internal-dialog-handler",23))
+    else if(!nsCRT::strncasecmp(URL,"internal-dialog-handler",23))
     {
       *retType = HTML_DIALOG_HANDLER_TYPE_URL;
       return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"internal-panel-handler",22))
+    else if(!nsCRT::strncasecmp(URL,"internal-panel-handler",22))
     {
       *retType = HTML_PANEL_HANDLER_TYPE_URL;
       return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"internal-security-",18))
+    else if(!nsCRT::strncasecmp(URL,"internal-security-",18))
     {
       *retType = INTERNAL_SECLIB_TYPE_URL;
       return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"IMAP:",5))
+    else if(!nsCRT::strncasecmp(URL,"IMAP:",5))
     {
     	*retType = IMAP_TYPE_URL;
       return NS_OK;
@@ -245,7 +245,7 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'j':
   case 'J':
-    if(!PL_strncasecmp(URL, "javascript:",11))
+    if(!nsCRT::strncasecmp(URL, "javascript:",11))
     {
 		    *retType = MOCHA_TYPE_URL;
         return NS_OK;
@@ -253,7 +253,7 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'l':
   case 'L':
-    if(!PL_strncasecmp(URL, "livescript:",11))
+    if(!nsCRT::strncasecmp(URL, "livescript:",11))
     {
 		    *retType = MOCHA_TYPE_URL;
         return NS_OK;
@@ -261,17 +261,17 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'm':
   case 'M':
-    if(!PL_strncasecmp(URL,"mailto:",7)) 
+    if(!nsCRT::strncasecmp(URL,"mailto:",7)) 
     {
 		    *retType = MAILTO_TYPE_URL;
         return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"mailbox:",8))
+    else if(!nsCRT::strncasecmp(URL,"mailbox:",8))
     {
 		    *retType = MAILBOX_TYPE_URL;
         return NS_OK;
     }
-    else if(!PL_strncasecmp(URL, "mocha:",6))
+    else if(!nsCRT::strncasecmp(URL, "mocha:",6))
     {
 		    *retType = MOCHA_TYPE_URL;
         return NS_OK;
@@ -279,7 +279,7 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'n':
   case 'N':
-    if(!PL_strncasecmp(URL,"news:",5))
+    if(!nsCRT::strncasecmp(URL,"news:",5))
     {
 		    *retType = NEWS_TYPE_URL;
         return NS_OK;
@@ -287,7 +287,7 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'p':
   case 'P':
-    if(!PL_strncasecmp(URL,"pop3:",5))
+    if(!nsCRT::strncasecmp(URL,"pop3:",5))
     {
 		    *retType = POP3_TYPE_URL;
         return NS_OK;
@@ -295,7 +295,7 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'r':
   case 'R':
-    if(!PL_strncasecmp(URL,"rlogin:",7))
+    if(!nsCRT::strncasecmp(URL,"rlogin:",7))
     {
         *retType = RLOGIN_TYPE_URL;
         return NS_OK;
@@ -303,19 +303,19 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 's':
   case 'S':
-    if(!PL_strncasecmp(URL,"snews:",6))
+    if(!nsCRT::strncasecmp(URL,"snews:",6))
     {
 		    *retType = NEWS_TYPE_URL;
         return NS_OK;
     }
   case 't':
   case 'T':
-    if(!PL_strncasecmp(URL,"telnet:",7))
+    if(!nsCRT::strncasecmp(URL,"telnet:",7))
     {
 		    *retType = TELNET_TYPE_URL;
         return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"tn3270:",7))
+    else if(!nsCRT::strncasecmp(URL,"tn3270:",7))
     {
 		    *retType = TN3270_TYPE_URL;
         return NS_OK;
@@ -323,7 +323,7 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'v':
   case 'V':
-    if(!PL_strncasecmp(URL, VIEW_SOURCE_URL_PREFIX, 
+    if(!nsCRT::strncasecmp(URL, VIEW_SOURCE_URL_PREFIX, 
       sizeof(VIEW_SOURCE_URL_PREFIX)-1))
     {
 		    *retType = VIEW_SOURCE_TYPE_URL;
@@ -332,12 +332,12 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'w':
   case 'W':
-    if(!PL_strncasecmp(URL,"wais:",5))
+    if(!nsCRT::strncasecmp(URL,"wais:",5))
     {
 		    *retType = WAIS_TYPE_URL;
         return NS_OK;
     }
-    else if(!PL_strncasecmp(URL,"www.",4))
+    else if(!nsCRT::strncasecmp(URL,"www.",4))
     {
 		    *retType = HTTP_TYPE_URL;
         return NS_OK;
@@ -345,7 +345,7 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
     break;
   case 'u':
   case 'U':
-    if(!PL_strncasecmp(URL,"URN:",4))
+    if(!nsCRT::strncasecmp(URL,"URN:",4))
     {
 		    *retType = URN_TYPE_URL;
         return NS_OK;
@@ -365,12 +365,12 @@ ItMatches(const char *line, PRInt32 lineLen, const char *rep)
   if ( (!rep) || (!*rep) || (!line) || (!*line) )
     return PR_FALSE;
 
-  PRInt32 compLen = PL_strlen(rep);
+  PRInt32 compLen = nsCRT::strlen(rep);
 
   if (lineLen < compLen)
     return PR_FALSE;
 
-  if (!PL_strncasecmp(line, rep, compLen))
+  if (!nsCRT::strncasecmp(line, rep, compLen))
     return PR_TRUE;
 
   return PR_FALSE;
@@ -382,7 +382,7 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
 
   if ( ItMatches(line, line_size, ":-)") || ItMatches(line, line_size, ":)") ) 
   {
-    *outputHTML = PL_strdup("<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>");
+    *outputHTML = nsCRT::strdup("<img SRC=\"chrome://messenger/skin/smile.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
       return PR_FALSE;
     *glyphTextLen = 3;
@@ -390,7 +390,7 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
   }  
   else if ( ItMatches(line, line_size, ":-(") || ItMatches(line, line_size, ":(") ) 
   {
-    *outputHTML = PL_strdup("<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>");
+    *outputHTML = nsCRT::strdup("<img SRC=\"chrome://messenger/skin/frown.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
       return PR_FALSE;
     *glyphTextLen = 3;
@@ -398,7 +398,7 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
   }
   else if (ItMatches(line, line_size, ";-)"))
   {
-    *outputHTML = PL_strdup("<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>");
+    *outputHTML = nsCRT::strdup("<img SRC=\"chrome://messenger/skin/wink.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
       return PR_FALSE;
     *glyphTextLen = 3;
@@ -406,7 +406,7 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
   }
   else if (ItMatches(line, line_size, ";-P"))
   {
-    *outputHTML = PL_strdup("<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>");
+    *outputHTML = nsCRT::strdup("<img SRC=\"chrome://messenger/skin/sick.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
       return PR_FALSE;
     *glyphTextLen = 3;
@@ -419,21 +419,21 @@ GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphT
 PRBool
 IsThisAnAmbitiousLinkType(char *link, char *mailToTag, char **linkPrefix)
 {
-  if (!PL_strncasecmp(link, "www.", 4))
+  if (!nsCRT::strncasecmp(link, "www.", 4))
   {
-    *linkPrefix = PL_strdup("http://");
+    *linkPrefix = nsCRT::strdup("http://");
     return PR_TRUE;
   }  
-  else if (!PL_strncasecmp(link, "ftp.", 4))
+  else if (!nsCRT::strncasecmp(link, "ftp.", 4))
   {
-    *linkPrefix = PL_strdup("ftp://");
+    *linkPrefix = nsCRT::strdup("ftp://");
     return PR_TRUE;
   }
   else if (mailToTag && *mailToTag)
   {
-    if (!PL_strncasecmp(link, mailToTag, PL_strlen(mailToTag)))
+    if (!nsCRT::strncasecmp(link, mailToTag, nsCRT::strlen(mailToTag)))
     {
-      *linkPrefix = PL_strdup("mailto:");
+      *linkPrefix = nsCRT::strdup("mailto:");
       return PR_TRUE;
     }
   }
@@ -536,23 +536,23 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 	  if (s >= end)
 		;
 	  else if (input_size >= 6 && *s == '>' &&
-			   !PL_strncmp (input, ">From ", 6))	/* #$%^ing sendmail... */
+			   !nsCRT::strncmp (input, ">From ", 6))	/* #$%^ing sendmail... */
 		;
 	  else if (*s == '>' || *s == ']')
 		{
 		  line_is_citation = PR_TRUE;
 		  PL_strcpy(output_ptr, cite_open1);
-		  output_ptr += PL_strlen(cite_open1);
+		  output_ptr += nsCRT::strlen(cite_open1);
 		  PL_strcpy(output_ptr, cite_open2);
-		  output_ptr += PL_strlen(cite_open2);
+		  output_ptr += nsCRT::strlen(cite_open2);
 		  if (color &&
-			  output_ptr + PL_strlen(color) + 20 < end_of_buffer) {
+			  output_ptr + nsCRT::strlen(color) + 20 < end_of_buffer) {
 			PL_strcpy(output_ptr, "<FONT COLOR=");
-			output_ptr += PL_strlen(output_ptr);
+			output_ptr += nsCRT::strlen(output_ptr);
 			PL_strcpy(output_ptr, color);
-			output_ptr += PL_strlen(output_ptr);
+			output_ptr += nsCRT::strlen(output_ptr);
 			PL_strcpy(output_ptr, ">");
-			output_ptr += PL_strlen(output_ptr);
+			output_ptr += nsCRT::strlen(output_ptr);
 		  }
 		}
 	}
@@ -591,7 +591,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
     {
       PRInt32   size_available = output_size - (output_ptr-output);
       PR_snprintf(output_ptr, size_available, glyphHTML);
-      output_ptr += PL_strlen(glyphHTML);
+      output_ptr += nsCRT::strlen(glyphHTML);
       cp += glyphTextLen-1;
       PR_FREEIF(glyphHTML);
       continue;
@@ -645,12 +645,12 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
       PRBool invalidHit = PR_FALSE;
 
       if ( (cp2 > cp && cp2[-1] == ':') ||
-			      !PL_strncmp(cp, "internal-", 9) )
+			      !nsCRT::strncmp(cp, "internal-", 9) )
         invalidHit = PR_TRUE;
 
       if (!invalidHit)
       {
-        if ((ambitiousHit) && ((cp2-cp) < (PRInt32)PL_strlen(mailToTag)))
+        if ((ambitiousHit) && ((cp2-cp) < (PRInt32)nsCRT::strlen(mailToTag)))
           invalidHit = PR_TRUE;
         if ( (!ambitiousHit) && (cp2-cp < 7) )
           invalidHit = PR_TRUE;
@@ -691,10 +691,10 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 						    quoted_url,
 						    quoted_url);
 
-			  output_ptr += PL_strlen(output_ptr);
+			  output_ptr += nsCRT::strlen(output_ptr);
 			  nsCRT::free(quoted_url);
         PR_FREEIF(linkPrefix);
-			  output_ptr += PL_strlen(output_ptr);
+			  output_ptr += nsCRT::strlen(output_ptr);
 			}
 
 		  cp = cp2-1;  /* go to next word */
@@ -738,13 +738,13 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 	{
 	  if (color) {
 		PL_strcpy(output_ptr, "</FONT>");
-		output_ptr += PL_strlen(output_ptr);
+		output_ptr += nsCRT::strlen(output_ptr);
 	  }
 
 	  PL_strcpy(output_ptr, cite_close2);
-	  output_ptr += PL_strlen (cite_close2);
+	  output_ptr += nsCRT::strlen (cite_close2);
 	  PL_strcpy(output_ptr, cite_close1);
-	  output_ptr += PL_strlen (cite_close1);
+	  output_ptr += nsCRT::strlen (cite_close1);
 	}
 
   PR_FREEIF(mailToTag);
@@ -878,28 +878,28 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, const char * relative_url, 
     switch(*relative_url) 
     {
 		  case 'i':
-        if(!PL_strncmp(relative_url,"internal-icon-", 14)
-          || !PL_strncmp(relative_url,"internal-external-reconnect:", 28)
-          || !PL_strcmp(relative_url,"internal-external-plugin"))
+        if(!nsCRT::strncmp(relative_url,"internal-icon-", 14)
+          || !nsCRT::strncmp(relative_url,"internal-external-reconnect:", 28)
+          || !nsCRT::strcmp(relative_url,"internal-external-plugin"))
           url_type = INTERNAL_IMAGE_TYPE_URL;
         break;
       case '/':
-        if(!PL_strncasecmp(relative_url, "/mc-icons/", 10) ||
-          !PL_strncasecmp(relative_url, "/ns-icons/", 10))
+        if(!nsCRT::strncasecmp(relative_url, "/mc-icons/", 10) ||
+          !nsCRT::strncasecmp(relative_url, "/ns-icons/", 10))
         {
-          if(!PL_strcmp(relative_url+10, "menu.gif"))
+          if(!nsCRT::strcmp(relative_url+10, "menu.gif"))
             url_type = INTERNAL_IMAGE_TYPE_URL;
-          else if(!PL_strcmp(relative_url+10, "unknown.gif"))
+          else if(!nsCRT::strcmp(relative_url+10, "unknown.gif"))
             url_type = INTERNAL_IMAGE_TYPE_URL;
-          else if(!PL_strcmp(relative_url+10, "text.gif"))
+          else if(!nsCRT::strcmp(relative_url+10, "text.gif"))
             url_type = INTERNAL_IMAGE_TYPE_URL;
-          else if(!PL_strcmp(relative_url+10, "image.gif"))
+          else if(!nsCRT::strcmp(relative_url+10, "image.gif"))
             url_type = INTERNAL_IMAGE_TYPE_URL;
-          else if(!PL_strcmp(relative_url+10, "sound.gif"))
+          else if(!nsCRT::strcmp(relative_url+10, "sound.gif"))
             url_type = INTERNAL_IMAGE_TYPE_URL;
-          else if(!PL_strcmp(relative_url+10, "binary.gif"))
+          else if(!nsCRT::strcmp(relative_url+10, "binary.gif"))
             url_type = INTERNAL_IMAGE_TYPE_URL;
-          else if(!PL_strcmp(relative_url+10, "movie.gif"))
+          else if(!nsCRT::strcmp(relative_url+10, "movie.gif"))
             url_type = INTERNAL_IMAGE_TYPE_URL;
         }
         break;
@@ -908,12 +908,12 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, const char * relative_url, 
   else if(url_type == ABOUT_TYPE_URL)
   {
     /* don't allow about:cache in a document */
-    if(!PL_strncasecmp(relative_url, "about:cache", 11)
-      || !PL_strncasecmp(relative_url, "about:global", 12)
-      || !PL_strncasecmp(relative_url, "about:image-cache", 17)
-      || !PL_strncasecmp(relative_url, "about:memory-cache", 18))
+    if(!nsCRT::strncasecmp(relative_url, "about:cache", 11)
+      || !nsCRT::strncasecmp(relative_url, "about:global", 12)
+      || !nsCRT::strncasecmp(relative_url, "about:image-cache", 17)
+      || !nsCRT::strncasecmp(relative_url, "about:memory-cache", 18))
 		  {
-      *retURL = PL_strdup("");
+      *retURL = nsCRT::strdup("");
       return NS_OK;
 		  }
   }
@@ -1008,7 +1008,7 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, const char * relative_url, 
     *relative_url != '#' &&
     *relative_url != '?')
   {
-    *retURL = PL_strdup("");
+    *retURL = nsCRT::strdup("");
     return NS_OK;
   }
   
@@ -1053,7 +1053,7 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, const char * relative_url, 
         {
 				    /* if there isn't another slash then the cat point is the very end
           */
-          cat_point = &absolute_url[PL_strlen(absolute_url)];
+          cat_point = &absolute_url[nsCRT::strlen(absolute_url)];
         }
       }
       else
@@ -1106,7 +1106,7 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, const char * relative_url, 
 		  }
     else
 		  {
-      cat_point = &absolute_url[PL_strlen(absolute_url)]; /* the end of the URL */
+      cat_point = &absolute_url[nsCRT::strlen(absolute_url)]; /* the end of the URL */
 		  }
   }
   else
@@ -1147,7 +1147,7 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, const char * relative_url, 
   {
     cat_point_char = *cat_point;  /* save the value */
     *cat_point = '\0';
-    new_length = PL_strlen(absolute_url) + PL_strlen(relative_url) + 1;
+    new_length = nsCRT::strlen(absolute_url) + nsCRT::strlen(relative_url) + 1;
     ret_url = (char *) PR_MALLOC(new_length);
     if(!ret_url)
     {
@@ -1204,7 +1204,7 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
       *retBuf = NULL;
       return NS_OK;
     }
-    inputlength = PL_strlen(input);
+    inputlength = nsCRT::strlen(input);
 
     output_max = inputlength + 1024; /* 1024 bytes ought to be enough to quote
                                         several URLs, which ought to be as many
@@ -1252,7 +1252,7 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
                                 tmpbuf, tmpbuf_max, TRUE) != NS_OK) {
                     goto FAIL;
                 }
-                length = PL_strlen(tmpbuf);
+                length = nsCRT::strlen(tmpbuf);
                 Append(&output, &output_max, &curoutput, tmpbuf, length);
                 if (!output) 
                   goto FAIL;
@@ -1422,7 +1422,7 @@ nsMimeURLUtils::ParseURL(const char *url, int parts_requested, char **returnVal)
         /* limit hostnames to within MAXHOSTNAMELEN characters to keep
         * from crashing
         */
-        if(PL_strlen(host) > MAXHOSTNAMELEN)
+        if(nsCRT::strlen(host) > MAXHOSTNAMELEN)
         {
           char * cp;
           char old_char;
