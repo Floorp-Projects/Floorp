@@ -169,6 +169,48 @@ XULBroadcastListenerGetBroadcaster(JSContext *cx, JSObject *obj, uintN argc, jsv
 }
 
 
+//
+// Native method SetBroadcaster
+//
+PR_STATIC_CALLBACK(JSBool)
+XULBroadcastListenerSetBroadcaster(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULBroadcastListener *nativeThis = (nsIDOMXULBroadcastListener*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNodePtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SetBroadcaster(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setBroadcaster requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for XULBroadcastListener
@@ -202,6 +244,7 @@ static JSPropertySpec XULBroadcastListenerProperties[] =
 static JSFunctionSpec XULBroadcastListenerMethods[] = 
 {
   {"getBroadcaster",          XULBroadcastListenerGetBroadcaster,     1},
+  {"setBroadcaster",          XULBroadcastListenerSetBroadcaster,     1},
   {0}
 };
 
