@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsISupportsArray.idl" 
 
 interface nsIAbCard;
 interface nsIAbDirectory;
@@ -68,4 +69,5 @@ interface nsIAbView : nsISupports
     nsIAbCard getCardFromRow(in long row);
     void selectAll();
     void deleteSelectedCards();
+	readonly attribute nsISupportsArray selectedAddresses; 
 };

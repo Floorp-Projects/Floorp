@@ -48,12 +48,15 @@
 #include "nsCollationCID.h"
 #include "nsIAddrBookSession.h"
 #include "nsAbBaseCID.h"
+#include "nsISupportsPrimitives.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 
 #include "nsIAddrDatabase.h" // for kPriEmailColumn
+
+#include "rdf.h"
 
 #define CARD_NOT_FOUND -1
 #define ALL_ROWS -1
@@ -1154,3 +1157,74 @@ nsresult nsAbView::GetSelectedCards(nsISupportsArray **selectedCards)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAbView::GetSelectedAddresses(nsISupportsArray **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+ 
+  nsCOMPtr<nsISupportsArray> selectedCards;
+  nsresult rv = GetSelectedCards(getter_AddRefs(selectedCards));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsISupportsArray> addresses(do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID));
+  PRUint32 count;
+  selectedCards->Count(&count);
+
+  for (PRUint32 i = 0; i < count; i++) {
+    nsCOMPtr<nsISupports> supports;
+    selectedCards->GetElementAt(i, getter_AddRefs(supports));
+    nsCOMPtr<nsIAbCard> card = do_QueryInterface(supports, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool isMailList;
+    card->GetIsMailList(&isMailList);
+    nsXPIDLString primaryEmail;
+    if (isMailList) {
+      nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsXPIDLCString mailListURI;
+      card->GetMailListURI(getter_Copies(mailListURI));
+      nsCOMPtr<nsIRDFResource> resource;
+      rv = rdfService->GetResource(mailListURI, getter_AddRefs(resource));
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      nsCOMPtr<nsIAbDirectory> mailList = do_QueryInterface(resource, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      nsCOMPtr<nsISupportsArray> mailListAddresses;
+      rv = mailList->GetAddressLists(getter_AddRefs(mailListAddresses));
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      PRUint32 mailListCount = 0;
+      mailListAddresses->Count(&mailListCount);	
+
+      for (PRUint32 j = 0; j < mailListCount; j++) {
+        nsCOMPtr<nsISupports> item = getter_AddRefs(mailListAddresses->ElementAt(j));
+        nsCOMPtr<nsIAbCard> mailListCard = do_QueryInterface(item, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = mailListCard->GetPrimaryEmail(getter_Copies(primaryEmail));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        if (!primaryEmail.IsEmpty()) {
+          nsCOMPtr<nsISupportsString> supportsEmail(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+          supportsEmail->SetDataWithLength(primaryEmail.Length(), ToNewCString(primaryEmail));
+          addresses->AppendElement(supportsEmail);
+        }
+      }
+    }
+    else {
+      rv = card->GetPrimaryEmail(getter_Copies(primaryEmail));
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      if (!primaryEmail.IsEmpty()) {
+        nsCOMPtr<nsISupportsString> supportsEmail(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+        supportsEmail->SetDataWithLength(primaryEmail.Length(), ToNewCString(primaryEmail));
+        addresses->AppendElement(supportsEmail);
+      }
+    }    
+  }
+
+  NS_IF_ADDREF(*_retval = addresses);
+
+  return NS_OK;
+}

@@ -498,21 +498,35 @@ function GetSelectedRows()
 
 function GetSelectedAbCards()
 {
-  if (!gAbView)
+  var abView = gAbView;
+
+  // if sidebar is open, and addressbook panel is open and focused,
+  // then use the ab view from sidebar (gCurFrame is from sidebarOverlay.js)
+  const abPanelUrl = "chrome://messenger/content/addressbook/addressbook-panel.xul";
+  if (document.getElementById("sidebar-box")) {
+    if (gCurFrame && 
+        gCurFrame.getAttribute("src") == abPanelUrl &&
+        document.commandDispatcher.focusedWindow == gCurFrame.contentDocument.defaultView) 
+    {
+      abView = gCurFrame.contentDocument.defaultView.gAbView;
+    }
+  }
+
+  if (!abView)
     return null;
 
-  var cards = new Array(gAbView.selection.count);
+  var cards = new Array(abView.selection.count);
   var i,j;
-  var count = gAbView.selection.getRangeCount();
+  var count = abView.selection.getRangeCount();
 
   var current = 0;
 
   for (i=0; i < count; i++) {
     var start = new Object;
     var end = new Object;
-    gAbView.selection.getRangeAt(i,start,end);
+    abView.selection.getRangeAt(i,start,end);
     for (j=start.value;j<=end.value;j++) {
-      cards[current] = gAbView.getCardFromRow(j);
+      cards[current] = abView.getCardFromRow(j);
       current++;
     }
   }

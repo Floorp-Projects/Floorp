@@ -154,6 +154,13 @@ function ComposeMessage(type, format, folder, messageArray)
 	if (type == msgComposeType.New) //new message
 	{
 		//dump("OpenComposeWindow with " + identity + "\n");
+
+    // if the addressbook sidebar panel is open and has focus, get
+    // the selected addresses from it
+    if (document.commandDispatcher.focusedWindow.document.documentElement.hasAttribute("selectedaddresses"))
+      return NewMessageToSelectedAddresses(type, format, identity);
+
+
 		msgComposeService.OpenComposeWindow(null, null, type, format, identity, msgWindow);
 		return;
 	}
@@ -199,6 +206,32 @@ function ComposeMessage(type, format, folder, messageArray)
 	else
 		dump("### nodeList is invalid\n");
 }
+
+function NewMessageToSelectedAddresses(type, format, identity) {
+  var abSidebarPanel = document.commandDispatcher.focusedWindow;
+  var abResultsTree = abSidebarPanel.document.getElementById("abResultsTree");
+  var abResultsBoxObject = abResultsTree.treeBoxObject;
+  var abView = abResultsBoxObject.view;
+  abView = abView.QueryInterface(Components.interfaces.nsIAbView);
+  var addresses = abView.selectedAddresses;
+  var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
+  if (params) {
+    params.type = type;
+    params.format = format;
+    params.identity = identity;
+    var composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
+    if (composeFields) {
+      var addressList = "";
+      for (var i = 0; i < addresses.Count(); i++) {
+        addressList = addressList + (i > 0 ? ",":"") + addresses.GetElementAt(i).QueryInterface(Components.interfaces.nsISupportsString).data;
+      }
+      composeFields.to = addressList;
+      params.composeFields = composeFields;
+      msgComposeService.OpenComposeWindowWithParams(null, params);
+    }
+  }
+}
+ 
 
 function CreateNewSubfolder(chromeWindowURL, preselectedMsgFolder,
                             dualUseFolders, callBackFunctionName)

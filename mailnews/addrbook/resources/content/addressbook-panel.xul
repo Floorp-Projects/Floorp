@@ -42,7 +42,8 @@
       onload="AbPanelLoad();"
       onunload="AbPanelUnload();"
       xmlns:nc="http://home.netscape.com/NC-rdf#"
-      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      selectedaddresses="true">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
