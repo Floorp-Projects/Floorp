@@ -105,6 +105,7 @@ nsDocShell::nsDocShell() :
   mUseExternalProtocolHandler (PR_FALSE),
   mParent(nsnull),
   mTreeOwner(nsnull),
+  mURIResultedInDocument(PR_FALSE),
   mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
@@ -2357,8 +2358,7 @@ NS_IMETHODIMP
 nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
                           PRInt32 aStateFlags, nsresult aStatus)
 {
-  // Clear the LSHE reference to indicate document loading has finished
-  // one way or another.
+
   if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK)) {
     LSHE = nsnull;
   }
@@ -2439,6 +2439,10 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
    if(NS_FAILED(NewContentViewerObj(aContentType, aOpenedChannel, loadGroup, 
       aContentHandler, getter_AddRefs(viewer))))
       return NS_ERROR_FAILURE;
+
+   // we've created a new document so go ahead and call OnLoadingSite
+   mURIResultedInDocument = PR_TRUE;
+   OnLoadingSite(aOpenedChannel);
 
    // let's try resetting the load group if we need to...
    nsCOMPtr<nsILoadGroup> currentLoadGroup;
@@ -2683,6 +2687,7 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsDocShellInfoLoadType aLoadType)
 #endif
 {
+  mURIResultedInDocument = PR_FALSE; // reset the clock...
     // Check to see if the new URI is an anchor in the existing document.
   if (aLoadType == nsIDocShellLoadInfo::loadNormal ||
     aLoadType == nsIDocShellLoadInfo::loadNormalReplace ||
@@ -2694,7 +2699,9 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
         if(wasAnchor)
         {
             mLoadType = aLoadType;
+            mURIResultedInDocument = PR_TRUE;
             OnNewURI(aURI, nsnull, mLoadType);
+
 		    /* Clear out LSHE so that further anchor visits get
 			 * recorded in SH and SH won't misbehave. i think this is  
 			 * sufficient for now to take care of any Sh mis-behaviors.
@@ -3314,7 +3321,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
 
   if (updateHistory) { // Page load not from SH
     // Update session history if necessary...
-    if (!LSHE && (mItemType == typeContent)) {
+    if (!LSHE && (mItemType == typeContent) && mURIResultedInDocument) {
       /* This is  a fresh page getting loaded for the first time
        *.Create a Entry for it and add it to SH, if this is the
        * rootDocShell
@@ -3500,7 +3507,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
     mSessionHistory->GetIndex(&index);
     mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
   }
-
+  
   // Create a new entry if necessary.
   if(!entry) {
     entry = do_CreateInstance(NS_SHENTRY_PROGID);
@@ -3509,7 +3516,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-
+  
   // Get the post data
   nsCOMPtr<nsIInputStream> inputStream;
   if (aChannel) {
@@ -3526,9 +3533,8 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
                 nsnull,         // DOMDocument
                 inputStream,    // Post data stream
                 nsnull);        // LayoutHistory state
-  //
-  // Add the new entry to session history.
-  //
+
+
   // If no Session History component is available in the parent DocShell
   // heirarchy, then AddChildSHEntry(...) will fail and the new entry
   // will be deleted when it loses scope...
@@ -3918,6 +3924,12 @@ nsresult nsDocShell::GetLoadCookie(nsISupports **aResult)
   *aResult = mLoadCookie;
   NS_IF_ADDREF(*aResult);
 
+  return NS_OK;
+}
+
+nsresult nsDocShell::SetLoadType(nsDocShellInfoLoadType aLoadType)
+{
+  mLoadType = aLoadType;
   return NS_OK;
 }
 
