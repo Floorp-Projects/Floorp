@@ -181,10 +181,6 @@ public:
     // nsIDOMNSDocument
     NS_IMETHOD GetContentType(nsAString& aContentType);
 
-    // nsIHTMLContentContainer interface
-    NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
-    NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
-
 protected:
     // Implementation methods
     friend nsresult
