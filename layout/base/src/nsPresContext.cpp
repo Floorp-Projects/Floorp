@@ -1211,17 +1211,6 @@ nsPresContext::SysColorChanged()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPresContext::FindFrameBackground(nsIFrame* aFrame,
-                                   const nsStyleBackground** aBackground,
-                                   PRBool* aIsCanvas,
-                                   PRBool* aFoundBackground)
-{
-  *aFoundBackground = nsCSSRendering::FindBackground(this, aFrame,
-                                                     aBackground, aIsCanvas);
-  return NS_OK;
-}
-
 #ifdef MOZ_REFLOW_PERF
 NS_IMETHODIMP
 nsPresContext::CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame)

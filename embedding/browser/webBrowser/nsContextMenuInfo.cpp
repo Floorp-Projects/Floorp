@@ -19,21 +19,27 @@
  * Contributor(s):
  *   Chris Saari <saari@netscape.com>
  *   Conrad Carlen <ccarlen@netscape.com>
+ *   Pierre Chanial <p_ch@verizon.net>
  */
 
 #include "nsContextMenuInfo.h"
 
-#include "nsIDocument.h"
-#include "nsIFrame.h"
 #include "nsIImageLoadingContent.h"
-#include "imgIRequest.h"
-#include "nsICanvasFrame.h"
+#include "imgILoader.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsIDOMHTMLHtmlElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLinkElement.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMViewCSS.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSValue.h"
+#include "nsIDOMCSSPrimitiveValue.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 
@@ -43,8 +49,7 @@
 
 NS_IMPL_ISUPPORTS1(nsContextMenuInfo, nsIContextMenuInfo)
 
-nsContextMenuInfo::nsContextMenuInfo() :
-  mCachedBGImageRequestNode(nsnull)
+nsContextMenuInfo::nsContextMenuInfo()
 {
 }
 
@@ -210,13 +215,13 @@ nsContextMenuInfo::GetBackgroundImageSrc(nsIURI **aURI)
 //*****************************************************************************
 
 nsresult
-nsContextMenuInfo::GetImageRequest(nsIDOMNode * aDOMNode, imgIRequest ** aRequest)
+nsContextMenuInfo::GetImageRequest(nsIDOMNode *aDOMNode, imgIRequest **aRequest)
 {
   NS_ENSURE_ARG(aDOMNode);
   NS_ENSURE_ARG_POINTER(aRequest);
 
   // Get content
-  nsCOMPtr<nsIImageLoadingContent> content = do_QueryInterface(aDOMNode);
+  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(aDOMNode));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   return content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
@@ -235,153 +240,104 @@ nsContextMenuInfo::HasBackgroundImage(nsIDOMNode * aDOMNode)
 }
 
 nsresult
-nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest ** aRequest)
+nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode *aDOMNode, imgIRequest **aRequest)
 {
-  nsresult rv = NS_ERROR_FAILURE;
 
   NS_ENSURE_ARG(aDOMNode);
   NS_ENSURE_ARG_POINTER(aRequest);
 
-  if (mCachedBGImageRequest && (aDOMNode == mCachedBGImageRequestNode)) {
-    *aRequest = mCachedBGImageRequest;
-    NS_ADDREF(*aRequest);
-    return NS_OK;
-  }
+  nsCOMPtr<nsIDOMNode> domNode = aDOMNode;
 
-  // Get content
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  // special case for the <html> element: if it has no background-image
+  // we'll defer to <body>
+  nsCOMPtr<nsIDOMHTMLHtmlElement> htmlElement = do_QueryInterface(domNode);
+  if (htmlElement) {
+    nsAutoString nameSpace;
+    htmlElement->GetNamespaceURI(nameSpace);
+    if (nameSpace.IsEmpty()) {
+      nsresult rv = GetBackgroundImageRequestInternal(domNode, aRequest);
+      if (NS_SUCCEEDED(rv) && *aRequest)
+        return NS_OK;
 
-  // Get Document
-  nsCOMPtr<nsIDocument> document = content->GetDocument();
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
-  
-  // Get shell
-  nsIPresShell *presShell = document->GetShellAt(0);
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+      // no background-image found
+      nsCOMPtr<nsIDOMDocument> document;
+      domNode->GetOwnerDocument(getter_AddRefs(document));
+      nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(document));
+      NS_ENSURE_TRUE(htmlDocument, NS_ERROR_FAILURE);
 
-  // Get PresContext
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-   
-  const nsStyleBackground* bg;
-  nsIFrame* frame = nsnull;
-  rv = presShell->GetPrimaryFrameFor(content, &frame);
-  if (NS_SUCCEEDED(rv) && frame)
-  {
-    // look for a background image on the element
-    do {
-      bg = frame->GetStyleBackground();
-      frame = frame->GetParent();
-    } while (!bg->mBackgroundImage && frame);
-     
-    if (bg->mBackgroundImage)
-    {
-      nsIFrame *pBGFrame = nsnull;
-      rv = GetFrameForBackgroundUpdate(presContext, frame, &pBGFrame);
-      if (NS_SUCCEEDED(rv) &&  pBGFrame)
-      {
-        // Lookup the background image
-        mCachedBGImageRequestNode = aDOMNode;
-        rv = presContext->LoadImage(bg->mBackgroundImage, pBGFrame, getter_AddRefs(mCachedBGImageRequest));
-        *aRequest = mCachedBGImageRequest;
-        NS_IF_ADDREF(*aRequest);
-        return rv;
-      }
-    } 
-  } // if (NS_SUCCEEDED(rv) && frame)
-
-  // nothing on the element or its parent style contexts, fall back to canvas frame for the whole page
-  rv = NS_ERROR_FAILURE;
-  nsIContent *rootContent = document->GetRootContent();
-  NS_ENSURE_TRUE(rootContent, NS_ERROR_FAILURE);
- 
-  presShell->GetPrimaryFrameFor(rootContent, &frame);
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  frame = frame->GetParent();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  
-  nsICanvasFrame* canvasFrame;
-  if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsICanvasFrame), (void**)&canvasFrame))) {
-    PRBool isCanvas;
-    PRBool foundBackground;
-    presContext->FindFrameBackground(frame, &bg, &isCanvas, &foundBackground);
-    if (bg && bg->mBackgroundImage)
-    {
-      nsIFrame *pBGFrame = nsnull;
-      rv = GetFrameForBackgroundUpdate(presContext, frame, &pBGFrame);
-      if (NS_SUCCEEDED(rv) &&  pBGFrame)
-      {
-        // Lookup the background image
-        mCachedBGImageRequestNode = aDOMNode;
-        rv = presContext->LoadImage(bg->mBackgroundImage, pBGFrame, getter_AddRefs(mCachedBGImageRequest));
-        *aRequest = mCachedBGImageRequest;
-        NS_IF_ADDREF(*aRequest);
-        return rv;
-      }
+      nsCOMPtr<nsIDOMHTMLElement> body;
+      htmlDocument->GetBody(getter_AddRefs(body));
+      domNode = do_QueryInterface(body);
     }
   }
-  
-  return rv;
+  return GetBackgroundImageRequestInternal(domNode, aRequest);
 }
 
-////////
-// Everything following this is copied from nsCSSRendering.cpp. The methods were not publically available,
-// Perhaps there is a better, pubically supported way to get the same thing done?
-////////
-
-// XXXbz THIS IS SO TOTALLY BROKEN.  IT WAS BROKEN IN nsCSSRendering,
-// AND IT'S EVEN MORE BROKEN HERE.  WHY IS THIS CODE ACTUALLY CHANGING
-// WHAT BACKGROUNDS THE PAGE SHOWS?????
-
-// method GetFrameForBackgroundUpdate
-//
-// If the frame (aFrame) is the HTML or BODY frame then find the canvas frame and set the
-// aBGFrame param to that. This is used when we need a frame to invalidate after an asynch
-// image load for the background.
-// 
-// The check is a bit expensive, however until the canvas frame is somehow cached on the 
-// body frame, or the root element, we need to walk the frames up until we find the canvas
-//
 nsresult
-nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,
-                                               nsIFrame *aFrame,
-                                               nsIFrame **aBGFrame)
+nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIRequest **aRequest)
 {
-  NS_ASSERTION(aFrame && aBGFrame, "illegal null parameter");
 
-  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMNode> domNode = aDOMNode;
+  nsCOMPtr<nsIDOMNode> parentNode;
 
-  if (aFrame && aBGFrame) {
-    *aBGFrame = aFrame; // default to the frame passed in
+  nsCOMPtr<nsIDOMDocument> document;
+  domNode->GetOwnerDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(document));
+  NS_ENSURE_TRUE(docView, NS_ERROR_FAILURE);
 
-    nsIContent* pContent = aFrame->GetContent();
-    if (pContent) {
-       // make sure that this is the HTML or BODY element
-      nsIAtom *tag = pContent->Tag();
+  nsCOMPtr<nsIDOMAbstractView> defaultView;
+  docView->GetDefaultView(getter_AddRefs(defaultView));
+  nsCOMPtr<nsIDOMViewCSS> defaultCSSView(do_QueryInterface(defaultView));
+  NS_ENSURE_TRUE(defaultCSSView, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIAtom> tag_html = do_GetAtom("html");
-      nsCOMPtr<nsIAtom> tag_body = do_GetAtom("body");
-      if (tag &&
-          tag == tag_html ||
-          tag == tag_body) {
-        // the frame is the body frame, so we provide the canvas frame
-        nsIFrame *pCanvasFrame = aFrame->GetParent();
-        while (pCanvasFrame) {
-          nsCOMPtr<nsIAtom> mTag_canvasFrame = do_GetAtom("CanvasFrame");
-          if (pCanvasFrame->GetType() == mTag_canvasFrame) {
-            *aBGFrame = pCanvasFrame;
-            break;
-          }
-          pCanvasFrame = pCanvasFrame->GetParent();
+  nsCOMPtr<nsIDOMCSSPrimitiveValue> primitiveValue;
+  nsAutoString bgStringValue;
+
+  while (PR_TRUE) {
+    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(domNode));
+    // bail for the parent node of the root element or null argument
+    if (!domElement)
+      break;
+    
+    nsCOMPtr<nsIDOMCSSStyleDeclaration> computedStyle;
+    defaultCSSView->GetComputedStyle(domElement, EmptyString(),
+                                     getter_AddRefs(computedStyle));
+    if (computedStyle) {
+      nsCOMPtr<nsIDOMCSSValue> cssValue;
+      computedStyle->GetPropertyCSSValue(NS_LITERAL_STRING("background-image"),
+                                         getter_AddRefs(cssValue));
+      primitiveValue = do_QueryInterface(cssValue);
+      if (primitiveValue) {
+        primitiveValue->GetStringValue(bgStringValue);
+        if (!bgStringValue.Equals(NS_LITERAL_STRING("none"))) {
+          nsCOMPtr<nsIURI> bgUri;
+          NS_NewURI(getter_AddRefs(bgUri), bgStringValue);
+          NS_ENSURE_TRUE(bgUri, NS_ERROR_FAILURE);
+
+          nsCOMPtr<imgILoader> il(do_GetService(
+                                    "@mozilla.org/image/loader;1"));
+          NS_ENSURE_TRUE(il, NS_ERROR_FAILURE);
+
+          return il->LoadImage(bgUri, nsnull, nsnull, nsnull, nsnull, nsnull,
+                               nsIRequest::LOAD_NORMAL, nsnull, nsnull,
+                               aRequest);
         }
-      }// if tag == html or body
+      }
+
+      // bail if we encounter non-transparent background-color
+      computedStyle->GetPropertyCSSValue(NS_LITERAL_STRING("background-color"),
+                                         getter_AddRefs(cssValue));
+      primitiveValue = do_QueryInterface(cssValue);
+      if (primitiveValue) {
+        primitiveValue->GetStringValue(bgStringValue);
+        if (!bgStringValue.Equals(NS_LITERAL_STRING("transparent")))
+          return NS_ERROR_FAILURE;
+      }
     }
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
+
+    domNode->GetParentNode(getter_AddRefs(parentNode));
+    domNode = parentNode;
   }
 
-  return rv;
+  return NS_ERROR_FAILURE;
 }

@@ -502,16 +502,6 @@ public:
    */
   NS_IMETHOD SysColorChanged() = 0;
 
-  /*
-   * Fill in an nsStyleBackground to be used to paint the background for an
-   * element.  This applies the rules for propagating backgrounds between
-   * BODY, the root element, and the canvas.
-   */
-  NS_IMETHOD FindFrameBackground(nsIFrame* aFrame,
-                                 const nsStyleBackground** aBackground,
-                                 PRBool* aIsCanavs,
-                                 PRBool* aFoundBackground) = 0;
-
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;
   NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRendingContext, nsIFrame * aFrame, PRUint32 aColor) = 0;

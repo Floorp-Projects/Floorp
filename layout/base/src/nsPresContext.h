@@ -124,10 +124,6 @@ public:
   NS_IMETHOD GetTheme(nsITheme** aResult);
   NS_IMETHOD ThemeChanged();
   NS_IMETHOD SysColorChanged();
-  NS_IMETHOD FindFrameBackground(nsIFrame* aFrame,
-                                 const nsStyleBackground** aBackground,
-                                 PRBool* aIsCanvas,
-                                 PRBool* aFoundBackground);
 
 protected:
   nsPresContext();
