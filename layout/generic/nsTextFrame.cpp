@@ -4789,6 +4789,24 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
             } else {
               aReflowState.rendContext->GetTextDimensions(bp2, wordLen, dimensions);
             }
+#ifdef MOZ_MATHML
+            // If GetBoundingMetrics is available, use the exact glyph metrics
+            // for ::first-letter
+            // XXX remove the #ifdef if GetBoundingMetrics becomes mainstream
+            if (justDidFirstLetter) {
+              nsresult res;
+              nsBoundingMetrics bm;
+              if (aTx.TransformedTextIsAscii()) {
+                res = aReflowState.rendContext->GetBoundingMetrics(bp1, wordLen, bm);
+              } else {
+                res = aReflowState.rendContext->GetBoundingMetrics(bp2, wordLen, bm);
+              }
+              if (NS_SUCCEEDED(res)) {
+                aTextData.mAscent = dimensions.ascent = bm.ascent;
+                aTextData.mDescent = dimensions.descent = bm.descent;
+              }
+            }
+#endif
             if (aTs.mLetterSpacing) {
               dimensions.width += aTs.mLetterSpacing * wordLen;
             }

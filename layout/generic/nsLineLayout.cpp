@@ -2052,6 +2052,14 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       nsHTMLReflowState::CalcLineHeight(mPresContext, rc, spanFrame);
     nscoord contentHeight = spanFramePFD->mBounds.height -
       spanFramePFD->mBorderPadding.top - spanFramePFD->mBorderPadding.bottom;
+
+    // Special-case for a ::first-letter frame, set the line height to
+    // the frame height if the user has left line-height == normal 
+    if (spanFramePFD->GetFlag(PFD_ISLETTERFRAME) && !spanPrevInFlow &&
+        spanFrame->GetStyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal) {
+      logicalHeight = spanFramePFD->mBounds.height;
+    }
+
     nscoord leading = logicalHeight - contentHeight;
     psd->mTopLeading = leading / 2;
     psd->mBottomLeading = leading - psd->mTopLeading;
