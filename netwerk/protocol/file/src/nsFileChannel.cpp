@@ -419,7 +419,7 @@ nsFileChannel::GetContentType(char * *aContentType)
             NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
             if (NS_FAILED(rv)) return rv;
 
-            rv = MIMEService->GetTypeFromURI(mURI, aContentType);
+            rv = MIMEService->GetTypeFromFile(mFile, aContentType);
             if (NS_SUCCEEDED(rv)) {
                 mContentType = *aContentType;
                 return rv;
