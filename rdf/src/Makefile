@@ -26,6 +26,11 @@ LIBRARY_NAME	= rdf
 
 REQUIRES	= nspr xpcom netlib raptor
 
+LOCAL_INCLUDES  = \
+	-I(PUBLIC)/rdf		\
+	-I(PUBLIC)/xpcom	\
+	-I(PUBLIC)/netlib	\
+
 CSRCS		= \
 		  vocab.c 	\
 		  core.c 	\

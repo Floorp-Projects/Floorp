@@ -35,6 +35,8 @@ class rdfCursorWrapper;
 class rdfServiceWrapper;
 class rdfServiceFactory;
 
+static nsIRDFService* gRDFServiceSingleton = 0;
+
 class rdfDatabaseWrapper : public nsIRDFDataBase {
 public:
   NS_DECL_ISUPPORTS
@@ -635,4 +637,21 @@ rdfServiceFactory::LockFactory(PRBool lock)
 {
   PR_ASSERT( PR_FALSE );
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult NS_GetRDFService(nsIRDFService **s)
+{
+  PR_ASSERT( s );
+  if( 0 == s )
+    return NS_ERROR_NULL_POINTER;
+
+  *s = 0;
+
+  if( 0 == gRDFServiceSingleton ) {
+    gRDFServiceSingleton = new rdfServiceWrapper(); // XXX use factory, check for errors
+  }
+
+  *s = gRDFServiceSingleton;
+
+  return NS_OK;
 }
