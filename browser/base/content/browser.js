@@ -4132,8 +4132,11 @@ var contentAreaDNDObserver = {
     {
       var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
 
-      // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
-      if (!url || !url.length || url.indexOf(" ", 0) != -1) 
+      // valid urls don't contain spaces ' '; if we have a space it
+      // isn't a valid url, or if it's a javascript: or data: url,
+      // bail out
+      if (!url || !url.length || url.indexOf(" ", 0) != -1 ||
+          /^\s*(javascript|data):/.test(url))
         return;
 
       switch (document.firstChild.getAttribute('windowtype')) {
