@@ -26,6 +26,8 @@
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
+#include "nsResChannel.h"
+#include "nsIFileChannel.h"
 #include "prenv.h"
 #include "prmem.h"
 #include "prprf.h"
@@ -33,30 +35,16 @@
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetCID.h"
-#include "nsResURL.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-nsResProtocolHandler *nsResProtocolHandler::mGlobalInstance = nsnull;
 
 nsResProtocolHandler::nsResProtocolHandler()
     : mLock(nsnull), mSubstitutions(32)
 {
     NS_INIT_REFCNT();
-
-    NS_ASSERTION(!mGlobalInstance, "res handler already created!");
-    mGlobalInstance = this;
-}
-
-nsResProtocolHandler::~nsResProtocolHandler()
-{
-    if (mLock)
-        PR_DestroyLock(mLock);
-
-    mGlobalInstance = nsnull;
 }
 
 nsresult
@@ -67,8 +55,14 @@ nsResProtocolHandler::SetSpecialDir(const char* rootName, const char* sysDir)
     rv = NS_GetSpecialDirectory(sysDir, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance(kStandardURLCID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = fileURL->SetFile(file);
+    if (NS_FAILED(rv)) return rv;
+
     nsXPIDLCString spec;
-    rv = file->GetURL(getter_Copies(spec));
+    rv = fileURL->GetSpec(getter_Copies(spec));
     if (NS_FAILED(rv)) return rv;
 
     return AppendSubstitution(rootName, spec);
@@ -78,9 +72,6 @@ nsresult
 nsResProtocolHandler::Init()
 {
     nsresult rv;
-
-    mIOService = do_GetService(kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
 
     mLock = PR_NewLock();
     if (mLock == nsnull)
@@ -128,6 +119,12 @@ nsResProtocolHandler::Init()
     if (NS_FAILED(rv)) return rv;
 
     return rv;
+}
+
+nsResProtocolHandler::~nsResProtocolHandler()
+{
+    if (mLock)
+        PR_DestroyLock(mLock);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsResProtocolHandler, nsIResProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference)
@@ -182,31 +179,23 @@ nsResProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 {
     nsresult rv;
 
-    nsCOMPtr<nsIURI> uri(do_CreateInstance(kStandardURLCID, &rv));
+    nsCOMPtr<nsIURI> url(do_CreateInstance(kStandardURLCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     if (aBaseURI) {
         nsXPIDLCString aResolvedURI;
         rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
         if (NS_FAILED(rv)) return rv;
-        rv = uri->SetSpec(aResolvedURI);
+        rv = url->SetSpec(aResolvedURI);
     } else {
-        rv = uri->SetSpec((char*)aSpec);
+        rv = url->SetSpec((char*)aSpec);
     }
 
     if (NS_FAILED(rv))
         return rv;
 
-    nsResURL *resURL;
-    NS_NEWXPCOM(resURL, nsResURL);
-    if (!resURL)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(resURL);
-
-    rv = resURL->Init(uri);
-    if (NS_SUCCEEDED(rv))
-        rv = CallQueryInterface(resURL, result);
-    NS_RELEASE(resURL);
+    *result = url;
+    NS_ADDREF(*result);
     return rv;
 }
 
@@ -214,15 +203,19 @@ NS_IMETHODIMP
 nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
-    nsXPIDLCString spec;
-
-    rv = ResolveURI(uri, getter_Copies(spec));
+    
+    nsResChannel* channel;
+    rv = nsResChannel::Create(nsnull, NS_GET_IID(nsIResChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mIOService->NewChannel(spec, nsnull, result);
-    if (NS_FAILED(rv)) return rv;
+    rv = channel->Init(this, uri);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(channel);
+        return rv;
+    }
 
-    return (*result)->SetOriginalURI(uri);
+    *result = (nsIChannel*)(nsIResChannel*)channel;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -240,8 +233,10 @@ nsResProtocolHandler::PrependSubstitution(const char *root, const char *urlStr)
     nsresult rv;
     nsAutoLock lock(mLock);
 
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService(&rv);
+    if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIURI> url;
-    rv = mIOService->NewURI(urlStr, nsnull, getter_AddRefs(url));
+    rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
     nsCStringKey key(root);
@@ -275,8 +270,10 @@ nsResProtocolHandler::AppendSubstitution(const char *root, const char *urlStr)
     nsresult rv;
     nsAutoLock lock(mLock);
 
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService(&rv);
+    if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIURI> url;
-    rv = mIOService->NewURI(urlStr, nsnull, getter_AddRefs(url));
+    rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
     nsCStringKey key(root);
@@ -329,8 +326,10 @@ nsResProtocolHandler::RemoveSubstitution(const char *root, const char *urlStr)
     nsresult rv;
     nsAutoLock lock(mLock);
 
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService(&rv);
+    if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIURI> url;
-    rv = mIOService->NewURI(urlStr, nsnull, getter_AddRefs(url));
+    rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
     nsCStringKey key(root);
@@ -381,31 +380,6 @@ nsResProtocolHandler::HasSubstitutions(const char *root, PRBool *result)
     nsCStringKey key(root);
     *result = mSubstitutions.Exists(&key);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsResProtocolHandler::ResolveURI(nsIURI *uri, char **result)
-{
-    nsresult rv;
-    nsXPIDLCString host, path;
-
-    rv = uri->GetHost(getter_Copies(host));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = uri->GetPath(getter_Copies(path));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupportsArray> substitutions;
-    rv = GetSubstitutions(host.get() ?
-                          host.get() : "", getter_AddRefs(substitutions));
-    if (NS_FAILED(rv)) return rv;
-
-    // always use the first substitution
-    nsCOMPtr<nsIURI> substURI;
-    rv = substitutions->GetElementAt(0, getter_AddRefs(substURI));
-    if (NS_FAILED(rv)) return rv;
-
-    return substURI->Resolve(path[0] == '/' ? path.get()+1 : path.get(), result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

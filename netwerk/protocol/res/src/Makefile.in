@@ -31,7 +31,7 @@ LIBRARY_NAME	= nkres_s
 REQUIRES	= xpcom string
 
 CPPSRCS		=			 \
-		nsResURL.cpp	 \
+		nsResChannel.cpp	 \
 		nsResProtocolHandler.cpp \
 		$(NULL)
 
