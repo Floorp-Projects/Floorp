@@ -266,11 +266,11 @@ ifeq ($(OS_ARCH), IRIX)
             else
                 LDOPTS += -32
             endif
-        endif
 
-        ifeq ($(USE_PTHREADS), 1)
-            ifeq ($(OS_RELEASE), 6.2)
-                LDOPTS += -Wl,-woff,85
+            ifeq ($(USE_PTHREADS), 1)
+                ifeq ($(OS_RELEASE), 6.2)
+                    LDOPTS += -Wl,-woff,85
+                endif
             endif
         endif
     endif
