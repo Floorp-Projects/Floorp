@@ -1179,14 +1179,14 @@
             
             this.mBoxObject.invalidateRow(aRow);
             
-            if (aRow != null)
+            if (aRow != null) {
               this.mBoxObject.ensureRowIsVisible(aRow);
-
-            // Fire select event on xul:tree so that accessibility API 
-            // support layer can fire appropriate accessibility events.
-            var event = document.createEvent('Events');
-            event.initEvent("select", true, true);
-            this.mTree.element.dispatchEvent(event);
+              // Fire select event on xul:tree so that accessibility API 
+              // support layer can fire appropriate accessibility events.
+              var event = document.createEvent('Events');
+              event.initEvent("select", true, true);
+              this.mTree.element.dispatchEvent(event);
+            }
           },
           
           get selectedIndex()
