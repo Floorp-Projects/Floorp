@@ -39,7 +39,7 @@
 //  The first character after a period must be alphabetic.
 
 pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
-pref("browser.chromeURL","chrome://navigator/content/navigator.xul");
+pref("browser.chromeURL","chrome://browser/content/");
 
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
 
