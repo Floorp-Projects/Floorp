@@ -2596,6 +2596,8 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			if (HT_IsContainer(node))		return(false);
 			if (HT_IsSeparator(node))		return(false);
 			if (resourceType(node->node) == LFS_RT)	return(false);
+			if (resourceType(node->node) == COOKIE_RT)
+								return(false);
 			break;
 
 			case	HT_CMD_OPEN_COMPOSER:
@@ -2626,6 +2628,8 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			if (node == NULL)			return(false);
 			if (!HT_IsContainer(node))		return(false);
 			if (htIsOpLocked(node, gNavCenter->RDF_CopyLock))
+								return(false);
+			if (resourceType(node->node) == COOKIE_RT)
 								return(false);
 			break;
 
@@ -2708,10 +2712,14 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			if (HT_IsContainer(node))
 			{
 				if (node->node == bmFolder)	return(false);
+				if (resourceType(node->node) == COOKIE_RT)
+								return(false);
 			}
 			else
 			{
 				if (node->parent->node == bmFolder)
+								return(false);
+				if (resourceType(node->parent->node) == COOKIE_RT)
 								return(false);
 			}
 			if (htIsOpLocked(node, gNavCenter->RDF_CopyLock))
@@ -2729,6 +2737,8 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			if (node == NULL)			return(false);
 			if (HT_IsContainer(node))		return(false);
 			if (HT_IsSeparator(node))		return(false);
+			if (resourceType(node->node) == COOKIE_RT)
+								return(false);
 			break;
 
 			case	HT_CMD_SET_TOOLBAR_FOLDER:
@@ -2791,7 +2801,8 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			if (node->parent == NULL)		return(false);
 			if (node->parent->node == NULL)		return(false);
 			if ((resourceType(node->parent->node) != RDF_RT) &&
-				(resourceType(node->parent->node) != HISTORY_RT))
+				(resourceType(node->parent->node) != HISTORY_RT) &&
+				(resourceType(node->parent->node) != COOKIE_RT))
 								return(false);
 			if (HT_IsContainer(node))
 			{
@@ -5487,6 +5498,9 @@ HT_Properties (HT_Resource node)
 		showPermissions = false;
 		dynStr = constructHTML(dynStr, node, (void *)gCoreVocab->RDF_name, HT_COLUMN_STRING);
 		dynStr = constructHTML(dynStr, node, (void *)gWebData->RDF_URL, HT_COLUMN_STRING);
+		break;
+
+		case	COOKIE_RT:
 		break;
 
 		case    SEARCH_RT:

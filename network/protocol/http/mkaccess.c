@@ -1790,12 +1790,16 @@ net_IntSetCookieString(MWContext * context,
 		while((tmp_cookie_ptr = (net_CookieStruct *) XP_ListNextObject(list_ptr))!=0) { 
 			if(new_len > PL_strlen(tmp_cookie_ptr->path)) {
 				XP_ListInsertObject(net_cookie_list, tmp_cookie_ptr, prev_cookie);
+                RDF_AddCookieResource(tmp_cookie_ptr->name, tmp_cookie_ptr->path, 
+                                      tmp_cookie_ptr->host, tmp_cookie_ptr->expires) ;
 				net_unlock_cookie_list();
 				cookies_changed = TRUE;
 				return;
 			  }
 		  }
-		/* no shorter strings found in list */	
+		/* no shorter strings found in list */
+        RDF_AddCookieResource(prev_cookie->name, prev_cookie->path, 
+                              prev_cookie->host, prev_cookie->expires);		
 		XP_ListAddObjectToEnd(net_cookie_list, prev_cookie);
 	  }
 
@@ -2065,6 +2069,18 @@ NET_SaveCookies(char * filename)
     return(0);
 }
 
+PUBLIC void
+NET_InitRDFCookieResources (void) {
+  XP_List *tmpList = net_cookie_list;
+  net_CookieStruct * item=NULL;
+  net_lock_cookie_list();
+  while ( (item=XP_ListNextObject(tmpList)) ) {
+    RDF_AddCookieResource(item->name, item->path, item->host, item->expires) ;
+  }
+  net_unlock_cookie_list();
+}
+    
+
 
 /* reads HTTP cookies from disk
  *
@@ -2214,6 +2230,8 @@ NET_ReadCookies(char * filename)
 
     return(0);
 }
+
+
 
 
 

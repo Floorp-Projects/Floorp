@@ -75,6 +75,7 @@
 #define CACHE_RT 11
 #define	ATALK_RT 12
 #define	ATALKVIRTUAL_RT 13
+#define COOKIE_RT       14
 #define WILDCARD_RT 15
 
 
@@ -367,6 +368,7 @@ PRBool remoteStoreHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* 
 void* remoteStoreGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PRBool inversep,  PRBool tv) ;
 RDF_Cursor remoteStoreGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv) ;
 RDF_Cursor remoteStoreGetSlotValuesInt (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv) ;
+RDF_Resource createSeparator(void);
 
 void* remoteStoreNextValue (RDFT mcf, RDF_Cursor c) ;
 RDF_Error remoteStoreDisposeCursor (RDFT mcf, RDF_Cursor c) ;

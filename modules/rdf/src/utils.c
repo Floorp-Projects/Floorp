@@ -312,7 +312,7 @@ urlEquals (const char* url1, const char* url2)
 PRBool
 isSeparator (RDF_Resource r)
 {
-  return startsWith("separator", resourceID(r));
+  return (startsWith("separator", resourceID(r))) ;
 }
 
 
@@ -519,99 +519,169 @@ RDFUtil_SetDefaultSelectedView(RDF_Resource container)
 
 RDFT gCookieStore = 0;
 
+PUBLIC void
+NET_InitRDFCookieResources (void) ;
 
-
-void
-AddCookieResource(char* name, char* path, char* host, char* expires)
-{
+PR_PUBLIC_API(void)
+RDF_AddCookieResource(char* name, char* path, char* host, char* expires) {
   char* url = getMem(strlen(name) + strlen(host));
   RDF_Resource ru;
-  sprintf(url, "%s [%s]", host, name);
+  RDF_Resource hostUnit = RDF_GetResource(NULL, host, 0);
+  if (!hostUnit) {
+    hostUnit = RDF_GetResource(NULL, host, 1);
+    setContainerp(hostUnit, 1);
+    setResourceType(hostUnit, COOKIE_RT);
+    remoteStoreAdd(gCookieStore, hostUnit, gCoreVocab->RDF_parent, gNavCenter->RDF_Cookies, 
+                   RDF_RESOURCE_TYPE, 1);  
+  }
+  sprintf(url, "[%s]%s",path,  name);
   ru = RDF_GetResource(NULL, url, 1);
-  remoteStoreAdd(gCookieStore, ru, gCoreVocab->RDF_parent, gNavCenter->RDF_Cookies, RDF_RESOURCE_TYPE, 1);  
+  setResourceType(ru, COOKIE_RT);
+  remoteStoreAdd(gCookieStore, ru, gCoreVocab->RDF_parent, hostUnit, RDF_RESOURCE_TYPE, 1);  
 }
 
-#define LINE_BUFFER_SIZE 4096
+PRBool
+CookieUnassert (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type) {
+  if (resourceType(u) == COOKIE_RT) {
+    /*    delete the cookie */
+    remoteStoreRemove(r, u, s, v, type);
+    return 1;
+  } else return 0;
+}
 
-void
-RDF_ReadCookies(char * filename)
+RDF_Cursor
+CookieGetSlotValues(RDFT rdf, RDF_Resource u, RDF_Resource s,
+	RDF_ValueType type, PRBool inversep, PRBool tv)
 {
-    XP_File fp;
-	char buffer[LINE_BUFFER_SIZE];
-	char *host, *is_domain, *path, *secure, *expires, *name, *cookie;
-	Bool added_to_list;
+	RDF_Cursor	c = NULL;
 
-    if(!(fp = XP_FileOpen(filename, xpHTTPCookie, XP_FILE_READ)))
-        return;
-
-
-    /* format is:
-     *
-     * host \t is_domain \t path \t secure \t expires \t name \t cookie
-     *
-	 * if this format isn't respected we move onto the next line in the file.
-     * is_domain is TRUE or FALSE	-- defaulting to FALSE
-     * secure is TRUE or FALSE   -- should default to TRUE
-     * expires is a time_t integer
-     * cookie can have tabs
-     */
-    while(XP_FileReadLine(buffer, LINE_BUFFER_SIZE, fp))
-      {
-		added_to_list = FALSE;
-
-		if (*buffer == '#' || *buffer == '\n' || *buffer == '\r' || *buffer == 0)
-		  continue;
-
-		host = buffer;
-		
-		if( !(is_domain = XP_STRCHR(host, '\t')) )
-			continue;
-		*is_domain++ = '\0';
-		if(*is_domain == CR || *is_domain == LF || *is_domain == 0)
-			continue;
-		
-		if( !(path = XP_STRCHR(is_domain, '\t')) )
-			continue;
-		*path++ = '\0';
-		if(*path == '\n' || *path == '\r' || *path == 0)
-			continue;
-
-		if( !(secure = XP_STRCHR(path, '\t')) )
-			continue;
-		*secure++ = '\0';
-		if(*secure == CR || *secure == LF || *secure == 0)
-			continue;
-
-		if( !(expires = XP_STRCHR(secure, '\t')) )
-			continue;
-		*expires++ = '\0';
-		if(*expires == '\r' || *expires == '\n' || *expires == 0)
-			continue;
-
-        if( !(name = XP_STRCHR(expires, '\t')) )
-			continue;
-		*name++ = '\0';
-		if(*name == CR || *name == LF || *name == 0)
-			continue;
-
-        if( !(cookie = XP_STRCHR(name, '\t')) )
-			continue;
-		*cookie++ = '\0';
-		if(*cookie == CR || *cookie == LF || *cookie == 0)
-			continue;
-
-		/* remove the '\n' from the end of the cookie 
-		XP_StripLine(cookie); */
-
-        /* construct a new cookie resource
-         */
-        AddCookieResource(name, path, host, expires);
-      }
-    XP_FileClose(fp);
-
+	if ((resourceType(u) == COOKIE_RT) &&
+		(s == gNavCenter->RDF_Command) &&
+		(type == RDF_RESOURCE_TYPE) && (tv))
+	{
+		if ((c = (RDF_Cursor)getMem(sizeof(struct RDF_CursorStruct))) != NULL)
+		{
+			c->u = u;
+			c->s = s;
+			c->type = type;
+			c->inversep = inversep;
+			c->tv = tv;
+			c->count = 0;
+			c->pdata = NULL;
+		}
+		return(c);
+	}
+	else
+	{
+		c = remoteStoreGetSlotValues(rdf, u, s, type, inversep, tv);
+	}
+	return(c);
 }
 
+#define	COOKIE_CMD_PREFIX	"CookieCommand:"
+#define	COOKIE_CMD_HOSTS	"CookieCommand:TBD"	/* actual cmd name */
 
+void *
+CookieGetNextValue(RDFT rdf, RDF_Cursor c)
+{
+
+	void		*data = NULL;
+
+	if (c != NULL)
+	{
+		if ((resourceType(c->u) == COOKIE_RT) &&
+			(c->s == gNavCenter->RDF_Command) &&
+			(c->type == RDF_RESOURCE_TYPE))
+		{
+			/* return cookie commands here */
+			switch(c->count)
+			{
+				case	0:
+				if (containerp(c->u))
+				{
+					data = (void *)RDF_GetResource(NULL,
+						COOKIE_CMD_HOSTS, true);
+				}
+				break;
+			}
+            c->count++;
+		}
+		else
+		{
+			data = remoteStoreNextValue(rdf, c);
+		}
+	}
+	return(data);
+}
+
+RDF_Error
+CookieDisposeCursor(RDFT rdf, RDF_Cursor c)
+{
+	RDF_Error	err;
+
+	if (c != NULL)
+	{
+		if ((c->s == gNavCenter->RDF_Command) &&
+			(c->type == RDF_RESOURCE_TYPE))
+		{
+			if (c->pdata != NULL)
+			{
+				/* free private data */
+			}
+			freeMem(c);
+			err = 0;
+		}
+		else
+		{
+			err = remoteStoreDisposeCursor(rdf, c);
+		}
+	}
+	return(err);
+}
+
+PRBool
+CookieAssert(RDFT rdf, RDF_Resource u, RDF_Resource s, void *v,
+		RDF_ValueType type, PRBool tv)
+{
+	PRBool		retVal = false;
+
+	if ((resourceType(u) == COOKIE_RT) &&
+		(s == gNavCenter->RDF_Command) &&
+		(type == RDF_RESOURCE_TYPE) &&
+		(v != NULL) && (tv))
+	{
+       RDF_Resource vu = (RDF_Resource)v;
+		retVal = true;
+		/* handle command in 'v' on 'u' */
+		if (startsWith(COOKIE_CMD_PREFIX, resourceID(vu)))
+		{
+			if (!XP_STRCMP(resourceID(vu), COOKIE_CMD_HOSTS))
+			{
+				/* do whatever is appropriate for the cmd */
+			}
+		}
+	}
+	return(retVal);
+}
+
+void *
+CookieGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s,
+	RDF_ValueType type, PRBool inversep, PRBool tv)
+{
+	void		*data = NULL;
+
+	if ((startsWith(COOKIE_CMD_PREFIX, resourceID(u))) &&
+		(s == gCoreVocab->RDF_name) &&
+		(type == RDF_STRING_TYPE) && (!inversep) && (tv))
+	{
+		data = copyString(resourceID(u) + strlen(COOKIE_CMD_PREFIX));
+	}
+	else
+	{
+		data = remoteStoreGetSlotValue(rdf, u, s, type, inversep, tv);
+	}
+	return(data);
+}
 
 RDFT
 MakeCookieStore (char* url)
@@ -619,16 +689,16 @@ MakeCookieStore (char* url)
   if (startsWith("rdf:CookieStore", url)) {
     if (gCookieStore == 0) {
       RDFT ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
-      ntr->assert = NULL;
-      ntr->unassert = NULL;
-      ntr->getSlotValue = remoteStoreGetSlotValue;
-      ntr->getSlotValues = remoteStoreGetSlotValues;
+      ntr->assert = CookieAssert;
+      ntr->unassert = CookieUnassert;
+      ntr->getSlotValue = CookieGetSlotValue;
+      ntr->getSlotValues = CookieGetSlotValues;
       ntr->hasAssertion = remoteStoreHasAssertion;
-      ntr->nextValue = remoteStoreNextValue;
-      ntr->disposeCursor = remoteStoreDisposeCursor;
+      ntr->nextValue = CookieGetNextValue;
+      ntr->disposeCursor = CookieDisposeCursor;
       gCookieStore = ntr;
       ntr->url = copyString(url);
-      RDF_ReadCookies("");
+      NET_InitRDFCookieResources (    ) ;
       return ntr;
     } else return gCookieStore;
   } else return NULL;

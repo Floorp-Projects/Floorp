@@ -484,6 +484,7 @@ PR_PUBLIC_API(char *) HT_HTMLPaneHeight(HT_View htView);
 PR_PUBLIC_API(void) HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name);
 PR_PUBLIC_API(void) HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl);
 PR_PUBLIC_API(void) HT_ExitPage(HT_Pane htPane, char *pUrl);
+PR_PUBLIC_API(void) RDF_AddCookieResource(char* name, char* path, char* host, char* expires) ;
 
 NSPR_END_EXTERN_C
 

@@ -69,6 +69,13 @@ char *		resourceID(RDF_Resource r);
 char *		makeResourceName (RDF_Resource node);
 void		AddCookieResource(char* name, char* path, char* host, char* expires);
 void		RDF_ReadCookies(char * filename);
+PRBool		CookieUnassert (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
+
+RDF_Cursor	CookieGetSlotValues(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PRBool inversep, PRBool tv);
+void *		CookieGetNextValue(RDFT rdf, RDF_Cursor c);
+RDF_Error	CookieDisposeCursor(RDFT rdf, RDF_Cursor c);
+PRBool		CookieAssert(RDFT rdf, RDF_Resource u, RDF_Resource s, void *v, RDF_ValueType type, PRBool tv);
+void *		CookieGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PRBool inversep, PRBool tv);
 
 XP_END_PROTOS
 

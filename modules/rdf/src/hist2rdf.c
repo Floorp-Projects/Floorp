@@ -349,11 +349,11 @@ updateNewHistItem (DBT *key, DBT *data)
     COPY_INT32(&first, (time_t *)((char *)data->data + 4));
     COPY_INT32(&numaccess, (time_t *)((char *)data->data + 8));
     
-    if (hostHash) collateOneHist(grdf, gNavCenter->RDF_HistoryBySite, 
+    if (hostHash) collateOneHist(grdf, gNavCenter->RDF_History, 
 				 (char*)key->data,                        /* url */
 				 ((char*)data->data + 16),                /* title */
 				 last, first, numaccess, 0);
-    if (ByDateOpened) collateOneHist(grdf, gNavCenter->RDF_HistoryByDate, 
+    if (ByDateOpened) collateOneHist(grdf, gNavCenter->RDF_History, 
 				     (char*)key->data,                        /* url */
 				     ((char*)data->data + 16),                /* title */
 				     last, first, numaccess, 1);
@@ -423,7 +423,7 @@ HistCreate (char* url, PRBool createp)
   }
 }
 
-
+PRBool bySite = 0;
 
 Assertion
 histAddParent (RDF_Resource child, RDF_Resource parent)
@@ -448,23 +448,33 @@ histAddParent (RDF_Resource child, RDF_Resource parent)
     parent->rarg2 = newAs;
   } else {
     PRBool added = 0;
+    if (bySite) {
+      while (nextAs && !isSeparator(nextAs->u)) {
+        prevAs = nextAs;
+        nextAs = nextAs->invNext;
+      }
+	  if (nextAs) {
+		prevAs = nextAs;
+		nextAs = nextAs->invNext;
+	  }
+    }
     while (nextAs != null) {
 		char* nid =  resourceID(nextAs->u);
-      if (strcmp( resourceID(child),  resourceID(nextAs->u)) > 0) {
-	if (prevAs == nextAs) {
-	  newAs->invNext = prevAs;
-	  parent->rarg2  = newAs;
-	  added = 1;
-	  break;
-	  } else {
-	    newAs->invNext = nextAs;	    
-	    prevAs->invNext = newAs;
-	    added = 1;
-	    break;
-	  }
-      } 
-      prevAs = nextAs;
-      nextAs = nextAs->invNext;
+        if (strcmp(resourceID(child),  resourceID(nextAs->u)) > 0) {
+          if (prevAs == nextAs) {
+            newAs->invNext = prevAs;
+            parent->rarg2  = newAs;
+            added = 1;
+            break;
+          } else {
+            newAs->invNext = nextAs;	    
+            prevAs->invNext = newAs;
+            added = 1;
+            break;
+          }
+        } 
+        prevAs = nextAs;
+        nextAs = nextAs->invNext;
     }
     if (!added) prevAs->invNext = newAs;
   }
@@ -513,7 +523,7 @@ HistPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inverse
 {
   if ((s ==  gCoreVocab->RDF_parent) && inversep && (rdf == gHistoryStore) &&
       ((u == gNavCenter->RDF_HistoryByDate) ||  (u ==  gNavCenter->RDF_HistoryBySite))) {
-    collateHistory(rdf, u, (u == gNavCenter->RDF_HistoryByDate));
+    /* collateHistory(rdf, gNavCenter->RDF_History, (u == gNavCenter->RDF_HistoryByDate)); */
   } 
 }
 
@@ -525,6 +535,7 @@ MakeHistoryStore (char* url)
   if (startsWith("rdf:history", url)) {
     if (gHistoryStore == 0) {
       RDFT ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
+      RDF_Resource sep = createSeparator();
       ntr->assert = NULL;
       ntr->unassert = historyUnassert;
       ntr->getSlotValue = remoteStoreGetSlotValue;
@@ -535,6 +546,10 @@ MakeHistoryStore (char* url)
       ntr->possiblyAccessFile = HistPossiblyAccessFile;
       gHistoryStore = ntr;
       ntr->url = copyString(url);
+      collateHistory(ntr, gNavCenter->RDF_History, 1);
+      remoteStoreAdd(ntr, sep, gCoreVocab->RDF_parent, gNavCenter->RDF_History, RDF_RESOURCE_TYPE, 1);
+      bySite = 1;
+      collateHistory(ntr, gNavCenter->RDF_History, 0);
       return ntr;
     } else return gHistoryStore;
   } else return NULL;
