@@ -95,7 +95,7 @@ private:
     nsSpecialSystemDirectory::SystemDirectories sdKey; // sd for SystemDirectories
 };
 
-static PRBool DeleteSystemDirKeys(nsHashKey *aKey, void *aData, void* closure)
+PR_STATIC_CALLBACK(PRBool) DeleteSystemDirKeys(nsHashKey *aKey, void *aData, void* closure)
 {
     delete ((nsFileSpec *)aData);
     return PR_TRUE;
