@@ -131,29 +131,35 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   if (doc == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsCOMPtr<nsIDOMDocument> kungFuDeathGrip(doc);
+
   rv = doc->Reset(nsnull, nsnull);
-  if (NS_FAILED(rv)) {
-    delete doc;
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   doc->SetDocumentURL(aBaseURI);
 
   if (aDoctype) {
     nsCOMPtr<nsIDOMNode> tmpNode;
-    doc->AppendChild(aDoctype, getter_AddRefs(tmpNode));
+    rv = doc->AppendChild(aDoctype, getter_AddRefs(tmpNode));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   
   if (aQualifiedName.Length() > 0) {
     nsCOMPtr<nsIDOMElement> root;
-    rv = doc->CreateElementNS(aNamespaceURI, aQualifiedName, getter_AddRefs(root));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(root);
-      doc->SetRootContent(content);
-    }
+    rv = doc->CreateElementNS(aNamespaceURI, aQualifiedName,
+                              getter_AddRefs(root));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMNode> tmpNode;
+
+    rv = doc->AppendChild(root, getter_AddRefs(tmpNode));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return doc->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) aInstancePtrResult);
+  *aInstancePtrResult = doc;
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
