@@ -4854,38 +4854,36 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   // When the last item is removed from a select, 
   // we need to add a pseudo frame so select gets sized as the best it can
   // so here we see if it is a select and then we get the number of options
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-
   nsresult result = NS_ERROR_FAILURE;
-  if (aContainer) {
+  if (aContainer && nsnull != childFrame) {
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
     result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
                                                (void**)getter_AddRefs(selectElement));
-  }
-  if (NS_SUCCEEDED(result) && selectElement) {
-    PRUint32 numOptions = 0;
-    result = selectElement->GetLength(&numOptions);
-    // For "select" add the pseudo frame after the last item is deleted
-    nsIFrame* parentFrame = nsnull;
-    childFrame->GetParent(&parentFrame);
-    if (NS_SUCCEEDED(result) && shell && parentFrame && 1 == numOptions) { 
+    if (NS_SUCCEEDED(result) && selectElement) {
+      PRUint32 numOptions = 0;
+      result = selectElement->GetLength(&numOptions);
+      // For "select" add the pseudo frame after the last item is deleted
+      nsIFrame* parentFrame = nsnull;
+      childFrame->GetParent(&parentFrame);
+      if (NS_SUCCEEDED(result) && shell && parentFrame && 1 == numOptions) { 
   
-      nsCOMPtr<nsIFrameManager> frameManager;
-      nsIStyleContext*          styleContext   = nsnull; 
-      nsIFrame*                 generatedFrame = nsnull; 
-      nsFrameConstructorState   state(aPresContext, nsnull, nsnull, nsnull);
+        nsCOMPtr<nsIFrameManager> frameManager;
+        nsIStyleContext*          styleContext   = nsnull; 
+        nsIFrame*                 generatedFrame = nsnull; 
+        nsFrameConstructorState   state(aPresContext, nsnull, nsnull, nsnull);
 
-      //shell->GetPrimaryFrameFor(aContainer, &contentFrame);
-      parentFrame->GetStyleContext(&styleContext); 
-      if (CreateGeneratedContentFrame(aPresContext, state, parentFrame, aContainer, 
-                                      styleContext, nsLayoutAtoms::dummyOptionPseudo, 
-                                      PR_FALSE, PR_FALSE, &generatedFrame)) { 
-        // Add the generated frame to the child list 
-        shell->GetFrameManager(getter_AddRefs(frameManager));
-        frameManager->AppendFrames(*aPresContext, *shell, parentFrame, nsnull, generatedFrame);
-      }
+        //shell->GetPrimaryFrameFor(aContainer, &contentFrame);
+        parentFrame->GetStyleContext(&styleContext); 
+        if (CreateGeneratedContentFrame(aPresContext, state, parentFrame, aContainer, 
+                                        styleContext, nsLayoutAtoms::dummyOptionPseudo, 
+                                        PR_FALSE, PR_FALSE, &generatedFrame)) { 
+          // Add the generated frame to the child list 
+          shell->GetFrameManager(getter_AddRefs(frameManager));
+          frameManager->AppendFrames(*aPresContext, *shell, parentFrame, nsnull, generatedFrame);
+        }
+      } 
     } 
-  } 
-
+  }
 
 #ifdef INCLUDE_XUL
   if (aContainer) {
