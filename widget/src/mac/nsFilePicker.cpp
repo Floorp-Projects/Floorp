@@ -382,7 +382,7 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, /* filter list here later *
                                   eventProc,
                                   NULL, //  NavPreviewUPP
                                   mFilters.Count() ? filterProc : NULL,
-                                  NULL, //  inClientData
+                                  this, //  inClientData
                                   &dialog);
   if (anErr == noErr) {
     nsWatchTask::GetTask().Suspend();  
@@ -472,7 +472,7 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
                                         &dialogCreateOptions,
                                         eventProc,
                                         NULL, // filter proc
-                                        NULL, // inClientData
+                                        this, // inClientData
                                         &dialog);
 
   if (anErr == noErr) {
@@ -749,7 +749,7 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, FSSpec* outSpec)
 					&dialogOptions,
 					eventProc,
 					NULL, // filter proc
-					NULL); // callbackUD	
+					this); // callbackUD	
     nsWatchTask::GetTask().Resume();  
 	
 		// See if the user has selected save
