@@ -1410,7 +1410,8 @@ struct PRLock {
 #if defined(_PR_PTHREADS)
     pthread_mutex_t mutex;          /* the underlying lock */
     _PT_Notified notified;          /* array of conditions notified */
-    pthread_t owner;                /* current lock owner */
+    PRBool locked;                  /* whether the mutex is locked */
+    pthread_t owner;                /* if locked, current lock owner */
 #elif defined(_PR_BTHREADS)
     sem_id	semaphoreID;	    /* the underlying lock */
     int32	benaphoreCount;	    /* number of people in lock */
@@ -1447,8 +1448,8 @@ struct PRCondVar {
 struct PRMonitor {
     const char* name;           /* monitor name for debugging */
 #if defined(_PR_PTHREADS)
-    PRLock lock;                /* the lock struture structure */
-    pthread_t owner;            /* the owner of the lock or zero */
+    PRLock lock;                /* the lock structure */
+    PRThread *owner;            /* the owner of the lock or NULL */
     PRCondVar *cvar;            /* condition variable queue */
 #else  /* defined(_PR_PTHREADS) */
     PRCondVar *cvar;            /* associated lock and condition variable queue */
