@@ -3055,110 +3055,101 @@ class BodyCodegen
                                  int trueGOTO, int falseGOTO)
     {
         if (trueGOTO == -1 || falseGOTO == -1) throw Codegen.badTree();
-        int type = node.getType();
-        Node rightChild = child.getNext();
-        boolean isStrict = type == Token.SHEQ ||
-                           type == Token.SHNE;
 
-        if (rightChild.getType() == Token.NULL) {
-            if (type != Token.EQ && type != Token.SHEQ) {
-                // invert true and false.
-                int temp = trueGOTO;
-                trueGOTO = falseGOTO;
-                falseGOTO = temp;
+        short stackInitial = cfw.getStackTop();
+        int type = node.getType();
+        Node rChild = child.getNext();
+
+        // Optimize if one of operands is null
+        if (child.getType() == Token.NULL || rChild.getType() == Token.NULL) {
+            // eq is symmetric in this case
+            if (child.getType() == Token.NULL) {
+                child = rChild;
+            }
+            generateCodeFromNode(child, node);
+            if (type == Token.SHEQ || type == Token.SHNE) {
+                byte testCode = (type == Token.SHEQ)
+                                ? ByteCode.IFNULL : ByteCode.IFNONNULL;
+                cfw.add(testCode, trueGOTO);
+            } else {
+                if (type != Token.EQ) {
+                    // swap false/true targets for !=
+                    if (type != Token.NE) throw Codegen.badTree();
+                    int tmp = trueGOTO;
+                    trueGOTO = falseGOTO;
+                    falseGOTO = tmp;
+                }
+                cfw.add(ByteCode.DUP);
+                int undefCheckLabel = cfw.acquireLabel();
+                cfw.add(ByteCode.IFNONNULL, undefCheckLabel);
+                short stack = cfw.getStackTop();
+                cfw.add(ByteCode.POP);
+                cfw.add(ByteCode.GOTO, trueGOTO);
+                cfw.markLabel(undefCheckLabel, stack);
+                Codegen.pushUndefined(cfw);
+                cfw.add(ByteCode.IF_ACMPEQ, trueGOTO);
+            }
+            cfw.add(ByteCode.GOTO, falseGOTO);
+        } else {
+            int child_dcp_register = nodeIsDirectCallParameter(child);
+            if (child_dcp_register != -1
+                && rChild.getType() == Optimizer.TO_OBJECT)
+            {
+                Node convertChild = rChild.getFirstChild();
+                if (convertChild.getType() == Token.NUMBER) {
+                    cfw.addALoad(child_dcp_register);
+                    cfw.add(ByteCode.GETSTATIC,
+                            "java/lang/Void",
+                            "TYPE",
+                            "Ljava/lang/Class;");
+                    int notNumbersLabel = cfw.acquireLabel();
+                    cfw.add(ByteCode.IF_ACMPNE, notNumbersLabel);
+                    cfw.addDLoad(child_dcp_register + 1);
+                    cfw.addPush(convertChild.getDouble());
+                    cfw.add(ByteCode.DCMPL);
+                    if (type == Token.EQ)
+                        cfw.add(ByteCode.IFEQ, trueGOTO);
+                    else
+                        cfw.add(ByteCode.IFNE, trueGOTO);
+                    cfw.add(ByteCode.GOTO, falseGOTO);
+                    cfw.markLabel(notNumbersLabel);
+                    // fall thru into generic handling
+                }
             }
 
             generateCodeFromNode(child, node);
-            if (isStrict) {
-                cfw.add(ByteCode.IFNULL, trueGOTO);
-                cfw.add(ByteCode.GOTO, falseGOTO);
-                return;
+            generateCodeFromNode(rChild, node);
+
+            String name;
+            byte testCode;
+            switch (type) {
+              case Token.EQ:
+                name = "eq";
+                testCode = ByteCode.IFNE;
+                break;
+              case Token.NE:
+                name = "eq";
+                testCode = ByteCode.IFEQ;
+                break;
+              case Token.SHEQ:
+                name = "shallowEq";
+                testCode = ByteCode.IFNE;
+                break;
+              case Token.SHNE:
+                name = "shallowEq";
+                testCode = ByteCode.IFEQ;
+                break;
+              default:
+                throw Codegen.badTree();
             }
-            /*
-                since we have to test for null && undefined we end up
-                having to push the operand twice and so have to GOTO to
-                a pop site if the first test passes.
-                We can avoid that for operands that are 'simple', i.e.
-                don't generate a lot of code and don't have side-effects.
-                For now, 'simple' means GETVAR
-            */
-            boolean simpleChild = (child.getType() == Token.GETVAR);
-            if (!simpleChild) cfw.add(ByteCode.DUP);
-            int popGOTO = cfw.acquireLabel();
-            cfw.add(ByteCode.IFNULL,
-                            (simpleChild) ? trueGOTO : popGOTO);
-            short popStack = cfw.getStackTop();
-            if (simpleChild) generateCodeFromNode(child, node);
-            Codegen.pushUndefined(cfw);
-            cfw.add(ByteCode.IF_ACMPEQ, trueGOTO);
+            addScriptRuntimeInvoke(name,
+                                   "(Ljava/lang/Object;"
+                                   +"Ljava/lang/Object;"
+                                   +")Z");
+            cfw.add(testCode, trueGOTO);
             cfw.add(ByteCode.GOTO, falseGOTO);
-            if (!simpleChild) {
-                cfw.markLabel(popGOTO, popStack);
-                cfw.add(ByteCode.POP);
-                cfw.add(ByteCode.GOTO, trueGOTO);
-            }
-            return;
         }
-
-        Node rChild = child.getNext();
-
-        int child_dcp_register = nodeIsDirectCallParameter(child);
-        if (child_dcp_register != -1
-            && rChild.getType() == Optimizer.TO_OBJECT)
-        {
-            Node convertChild = rChild.getFirstChild();
-            if (convertChild.getType() == Token.NUMBER) {
-                cfw.addALoad(child_dcp_register);
-                cfw.add(ByteCode.GETSTATIC,
-                        "java/lang/Void",
-                        "TYPE",
-                        "Ljava/lang/Class;");
-                int notNumbersLabel = cfw.acquireLabel();
-                cfw.add(ByteCode.IF_ACMPNE, notNumbersLabel);
-                cfw.addDLoad(child_dcp_register + 1);
-                cfw.addPush(convertChild.getDouble());
-                cfw.add(ByteCode.DCMPL);
-                if (type == Token.EQ)
-                    cfw.add(ByteCode.IFEQ, trueGOTO);
-                else
-                    cfw.add(ByteCode.IFNE, trueGOTO);
-                cfw.add(ByteCode.GOTO, falseGOTO);
-                cfw.markLabel(notNumbersLabel);
-                // fall thru into generic handling
-            }
-        }
-
-        generateCodeFromNode(child, node);
-        generateCodeFromNode(rChild, node);
-
-        String name;
-        byte testCode;
-        switch (type) {
-          case Token.EQ:
-            name = "eq";
-            testCode = ByteCode.IFNE;
-            break;
-          case Token.NE:
-            name = "eq";
-            testCode = ByteCode.IFEQ;
-            break;
-          case Token.SHEQ:
-            name = "shallowEq";
-            testCode = ByteCode.IFNE;
-            break;
-          case Token.SHNE:
-            name = "shallowEq";
-            testCode = ByteCode.IFEQ;
-            break;
-          default:
-            throw Codegen.badTree();
-        }
-        addScriptRuntimeInvoke(name,
-                               "(Ljava/lang/Object;"
-                               +"Ljava/lang/Object;"
-                               +")Z");
-        cfw.add(testCode, trueGOTO);
-        cfw.add(ByteCode.GOTO, falseGOTO);
+        if (stackInitial != cfw.getStackTop()) throw Codegen.badTree();
     }
 
     private void visitLiteral(Node node)
@@ -3299,7 +3290,7 @@ class BodyCodegen
                     int isNumberLabel = cfw.acquireLabel();
                     int beyond = cfw.acquireLabel();
                     cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
-					short stack = cfw.getStackTop();
+                    short stack = cfw.getStackTop();
                     addDoubleWrap();
                     cfw.addAStore(lVar.getJRegister());
                     cfw.add(ByteCode.GOTO, beyond);
