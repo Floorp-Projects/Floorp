@@ -274,6 +274,12 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetToPrinter(PRBool &aToPrinter)
   aToPrinter = mPrData.toPrinter;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsDeviceContextSpecQT::GetPrinter (char **aPrinter)
+{
+   *aPrinter = &mPrData.printer[0];
+   return NS_OK;
+}
  
 NS_IMETHODIMP nsDeviceContextSpecQT::GetFirstPageFirst(PRBool &aFpf)
 {
