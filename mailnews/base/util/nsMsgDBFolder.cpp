@@ -1182,20 +1182,8 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   {
     PRBool updatingFolder = PR_FALSE;
     if (NS_SUCCEEDED(mailUrl->GetUpdatingFolder(&updatingFolder)) && updatingFolder)
-    {
       NotifyFolderEvent(mFolderLoadedAtom);
       
-      //GGGG			 check for new mail here and call SetNewMessages...?? -- ONE OF THE 2 PLACES
-      if(mDatabase)
-      {
-        nsresult rv;
-        PRBool hasNewMessages;
-        
-        rv = mDatabase->HasNew(&hasNewMessages);
-        SetHasNewMessages(hasNewMessages);
-      }
-    }
-    
     // be sure to remove ourselves as a url listener
     mailUrl->UnRegisterListener(this);
   }

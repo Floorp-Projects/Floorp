@@ -116,7 +116,8 @@ extern void KillPopData(char* data);
 nsLocalMailCopyState::nsLocalMailCopyState() :
   m_fileStream(nsnull), m_curDstKey(0xffffffff), m_curCopyIndex(0),
   m_totalMsgCount(0), m_dataBufferSize(0), m_leftOver(0),
-  m_isMove(PR_FALSE), m_dummyEnvelopeNeeded(PR_FALSE), m_fromLineSeen(PR_FALSE), m_writeFailed(PR_FALSE)
+  m_isMove(PR_FALSE), m_dummyEnvelopeNeeded(PR_FALSE), m_fromLineSeen(PR_FALSE), m_writeFailed(PR_FALSE),
+  m_notifyFolderLoaded(PR_FALSE)
 {
 }
 
@@ -362,7 +363,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
     AcquireSemaphore(supports);
   else
   {
-    delete parser;
     NS_ASSERTION(PR_FALSE, "Could not get folder lock");
     return NS_MSG_FOLDER_BUSY;
   }
@@ -605,7 +605,12 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
         if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
         {
           if (rv == NS_MSG_FOLDER_BUSY)
+          {
+            mDatabase->RemoveListener(this);  //we need to null out the db so that parsing gets kicked off again.
+            mAddListener = PR_FALSE;
+            mDatabase = nsnull;
             ThrowAlertMsg("parsingFolderFailed", aMsgWindow);
+          }
           return rv;
         }
         else
@@ -635,13 +640,16 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
   {
     PRBool valid;
     rv = mDatabase->GetSummaryValid(&valid);
-    // don't notify folder loaded or try compaction if db isn't valid (we're probably reparsing it)
+    // don't notify folder loaded or try compaction if db isn't valid
+    // (we're probably reparsing or copying msgs to it)
     if (NS_SUCCEEDED(rv) && valid)
     {
       NotifyFolderEvent(mFolderLoadedAtom);
       rv = AutoCompact(aWindow);
       NS_ENSURE_SUCCESS(rv,rv);
     }
+    else if (mCopyState)
+      mCopyState->m_notifyFolderLoaded = PR_TRUE; //defer folder loaded notification
   }
   return rv;
 }
@@ -1706,6 +1714,9 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 nsresult
 nsMsgLocalMailFolder::OnCopyCompleted(nsISupports *srcSupport, PRBool moveCopySucceeded)
 {
+  if (mCopyState && mCopyState->m_notifyFolderLoaded)
+    NotifyFolderEvent(mFolderLoadedAtom);
+
   delete mCopyState;
   mCopyState = nsnull;
     

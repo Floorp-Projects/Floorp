@@ -91,6 +91,7 @@ struct nsLocalMailCopyState
   PRPackedBool m_fromLineSeen;
   PRPackedBool m_allowUndo;
   PRPackedBool m_writeFailed;
+  PRPackedBool m_notifyFolderLoaded;
 };
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,
