@@ -1478,7 +1478,11 @@ var BookmarksUtils = {
       return PREF.getBoolPref("browser.tabs.opentabfor.middleclick")? "tab":"window"
     else if (aEvent.shiftKey)      
       return "window";
+#ifdef XP_MACOSX
+    else if (aEvent.metaKey)
+#else
     else if (aEvent.ctrlKey)
+#endif
       return "tab";
     else if (aEvent.altKey)
       return "save"
