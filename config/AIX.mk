@@ -34,7 +34,7 @@ MOTIF			=
 MOTIFLIB		= -lXm
 OS_LIBS			= -lm -lbsd
 
-PLATFORM_FLAGS		= -qarch=com -qmaxmem=65536 -DAIX -Daix -DAIX$(subst .,_,$(OS_RELEASE))
+PLATFORM_FLAGS		= $(COMPILER_FLAGS) -DAIX -Daix -DAIX$(subst .,_,$(OS_RELEASE))
 MOVEMAIL_FLAGS		=
 PORT_FLAGS		= -DSYSV -DNEED_CDEFS_H -DNEED_SELECT_H -DNEED_IOCTL_H -DSYS_MACHINE_H -DUSE_NODL_TABS -DHAVE_SIGNED_CHAR -DHAVE_SYS_SELECT_H -DNEED_SYS_WAIT_H -DHAVE_INT32_T -DNEED_H_ERRNO
 PDJAVA_FLAGS		=
@@ -60,10 +60,14 @@ I2_LOCALE		= iso88592
 # Version-specific stuff
 ######################################################################
 
+COMPILER_FLAGS		= -qarch=com -qmaxmem=65536
+
 ifeq ($(OS_RELEASE),3.2)
-PLATFORM_FLAGS		+= -qtune=601 -DAIXV3 -DAIX3_2_5
+PLATFORM_FLAGS		+= -DAIXV3 -DAIX3_2_5
+COMPILER_FLAGS		+= -qtune=601
 else
-PLATFORM_FLAGS		+= -qtune=604 -qnosom -DAIXV4
+PLATFORM_FLAGS		+= -DAIXV4
+COMPILER_FLAGS		+= -qtune=604 -qnosom
 endif
 ifeq ($(OS_RELEASE),4.1)
 OS_LIBS			+= -lsvld 
@@ -106,7 +110,10 @@ UNZIP_PROG		= $(CONTRIB_BIN)unzip
 ZIP_PROG		= $(CONTRIB_BIN)zip
 else
 ifdef NETSCAPE_HIERARCHY
+CC			= gcc
+CCC			= g++
 PERL			= perl5
+COMPILER_FLAGS		= -Wall
 endif
 endif
 
