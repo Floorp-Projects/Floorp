@@ -599,7 +599,7 @@ void nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, ns
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
 	::SetClip(mMainRegion);
 	::MoveTo(aX0, aY0);
 	::LineTo(aX1, aY1);
@@ -630,7 +630,8 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 	::SetRect(&therect,x,y,x+w,y+h);
 	::FrameRect(&therect);
@@ -657,7 +658,9 @@ Rect		therect;
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-	SetPort(mRenderingSurface);
+
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
 	::SetRect(&therect,aX,aY,aX+aWidth,aY+aHeight);
 	::PaintRect(&therect);
   
@@ -698,7 +701,8 @@ PRUint32 		i ;
 PolyHandle	thepoly;
 PRInt32			x,y;
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
 	thepoly = ::OpenPoly();
 	
 	x = aPoints[0].x;
@@ -712,7 +716,7 @@ PRInt32			x,y;
 		mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 		}
-	ClosePoly();
+	::ClosePoly();
 	
 	::PaintPoly(thepoly);
 }
@@ -736,9 +740,10 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-  SetRect(&therect,x,y,x+w,x+h);
+  ::SetRect(&therect,x,y,x+w,x+h);
   ::FrameOval(&therect);
 }
 
@@ -761,9 +766,10 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-  SetRect(&therect,x,y,x+w,x+h);
+  ::SetRect(&therect,x,y,x+w,x+h);
   ::PaintOval(&therect);
 }
 
@@ -788,9 +794,10 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-  SetRect(&therect,x,y,x+w,x+h);
+  ::SetRect(&therect,x,y,x+w,x+h);
   ::FrameArc(&therect,aStartAngle,aEndAngle);
 
 }
@@ -816,9 +823,10 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-  SetRect(&therect,x,y,x+w,x+h);
+  ::SetRect(&therect,x,y,x+w,x+h);
   ::PaintArc(&therect,aStartAngle,aEndAngle);
 }
 
@@ -831,7 +839,9 @@ void nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
 PRInt32 x = aX;
 PRInt32 y = aY;
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
+
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
   	{
@@ -843,7 +853,7 @@ PRInt32 y = aY;
   mTMatrix->TransformCoord(&x,&y);
 	
 	::MoveTo(x,y);
-	DrawText(aString,0,aLength);
+	::DrawText(aString,0,aLength);
 
   if (mFontMetrics)
   	{
@@ -885,7 +895,8 @@ void nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLen
 PRInt32 x = aX;
 PRInt32 y = aY;
 
-	SetPort(mRenderingSurface);
+	::SetPort(mRenderingSurface);
+	::SetClip(mMainRegion);
 	
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
@@ -898,7 +909,7 @@ PRInt32 y = aY;
 
 
 	::MoveTo(x,y);
-	DrawText(aString,0,2*aLength);
+	::DrawText(aString,0,2*aLength);
 
   if (mFontMetrics)
   {
