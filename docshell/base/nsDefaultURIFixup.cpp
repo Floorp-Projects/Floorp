@@ -32,9 +32,6 @@
 #include "nsIURIFixup.h"
 #include "nsDefaultURIFixup.h"
 
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsDefaultURIFixup, nsIURIFixup)
 
@@ -110,8 +107,19 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
 #endif
     }
 
+    // For these protocols, use system charset instead of the default UTF-8,
+    // if the URI is non ASCII.
+    PRBool bAsciiURI = IsASCII(uriString);
+    PRBool bUseNonDefaultCharsetForURI =
+                        !bAsciiURI &&
+                        (uriString.FindChar(':') == kNotFound ||
+                        uriString.EqualsIgnoreCase("http:", 5) ||
+                        uriString.EqualsIgnoreCase("https:", 6) ||
+                        uriString.EqualsIgnoreCase("ftp:", 4) ||
+                        uriString.EqualsIgnoreCase("file:", 5));
+
     // Just try to create an URL out of it
-    NS_NewURI(aURI, uriString, nsnull);
+    NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
     if(*aURI) {
         if (aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI)
             MakeAlternateURI(*aURI);
@@ -179,9 +187,13 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
             uriString.Assign(NS_LITERAL_STRING("ftp://") + uriString);
         else 
             uriString.Assign(NS_LITERAL_STRING("http://") + uriString);
+
+        // For ftp & http, we want to use system charset.
+        if (!bAsciiURI)
+          bUseNonDefaultCharsetForURI = PR_TRUE;
     } // end if checkprotocol
 
-    nsresult rv = NS_NewURI(aURI, uriString, nsnull);
+    nsresult rv = NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
 
     // Did the caller want us to try an alternative URI?
     // If so, attempt to fixup http://foo into http://www.foo.com
@@ -369,27 +381,53 @@ PRBool nsDefaultURIFixup::PossiblyByteExpandedFileName(nsString& aIn)
   return PR_FALSE;
 }
 
+const char * nsDefaultURIFixup::GetFileSystemCharset()
+{
+  if (mFsCharset.IsEmpty())
+  {
+    nsresult rv;
+    nsAutoString charset;
+    nsCOMPtr<nsIPlatformCharset> plat(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv))
+      rv = plat->GetCharset(kPlatformCharsetSel_FileName, charset);
+
+    if (charset.IsEmpty())
+      mFsCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+    else
+      mFsCharset.Assign(NS_LossyConvertUCS2toASCII(charset));
+  }
+
+  return mFsCharset.get();
+}
+
+const char * nsDefaultURIFixup::GetCharsetForUrlBar()
+{
+  const char *charset = GetFileSystemCharset();
+#ifdef XP_MAC
+  // check for "x-mac-" prefix
+  if ((strlen(charset) >= 6) && charset[0] == 'x' && charset[2] == 'm')
+  {
+    if (!strcmp("x-mac-roman", charset))
+      return "ISO-8859-1";
+    // we can do more x-mac-xxxx mapping here
+    // or somewhere in intl code like nsIPlatformCharset.
+  }
+#endif
+  return charset;
+}
+
 nsresult nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn, 
                                                           nsCString& aOut)
 {
     aOut = "";
-    // for file url, we need to convert the nsString to the file system
-    // charset before we pass to NS_NewURI
-    static nsAutoString fsCharset;
-    // find out the file system charset first
-    if(0 == fsCharset.Length())
-    {
-        fsCharset.Assign(NS_LITERAL_STRING("ISO-8859-1")); // set the fallback first.
-        nsCOMPtr<nsIPlatformCharset> plat(do_GetService(kPlatformCharsetCID));
-        NS_ENSURE_TRUE(plat, NS_ERROR_FAILURE);
-        NS_ENSURE_SUCCESS(plat->GetCharset(kPlatformCharsetSel_FileName, fsCharset),
-            NS_ERROR_FAILURE);
-    }
     // We probably should cache ccm here.
     // get a charset converter from the manager
-    nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(kCharsetConverterManagerCID));
+    nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID));
     NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
    
+    // for file url, we need to convert the nsString to the file system
+    // charset before we pass to NS_NewURI
+    NS_ConvertASCIItoUCS2 fsCharset(GetFileSystemCharset());
     nsCOMPtr<nsIUnicodeEncoder> fsEncoder;
     NS_ENSURE_SUCCESS(ccm->GetUnicodeEncoder(&fsCharset, 
         getter_AddRefs(fsEncoder)), NS_ERROR_FAILURE);
