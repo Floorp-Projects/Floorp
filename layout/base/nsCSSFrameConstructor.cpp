@@ -3873,7 +3873,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsISupportsArray> anonymousItems;
-    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems));
+    nsCOMPtr<nsIContent> childElement;
+    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement));
     
     if (!anonymousItems)
       return NS_OK;
@@ -3992,8 +3993,9 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
     xblService->LoadBindings(aParent, ui->mBehavior);
   
     // Retrieve the anonymous content that we should build.
+    nsCOMPtr<nsIContent> childElement;
     nsCOMPtr<nsISupportsArray> anonymousItems;
-    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems));
+    xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement));
     
     if (!anonymousItems)
       return NS_OK;

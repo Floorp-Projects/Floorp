@@ -35,6 +35,12 @@ public:
                               const nsPoint& aPoint, 
                               nsIFrame**     aFrame);
 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+                                      nsGUIEvent* aEvent,
+                                      nsEventStatus* aEventStatus);
+
+  virtual void MouseClicked (nsIPresContext* aPresContext);
+
 
 }; // class nsXULButtonFrame
 

@@ -96,7 +96,7 @@ class nsXBLService: public nsIXBLService
 
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult);
+  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement);
 
   // Gets the object's base class type.  
   NS_IMETHOD GetBaseTag(nsIContent* aContent, nsIAtom** aResult);
@@ -157,7 +157,8 @@ protected:
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 
   // XBL Atoms
-  static nsIAtom* kExtendsAtom;              
+  static nsIAtom* kExtendsAtom; 
+  static nsIAtom* kHasChildrenAtom;
 };
 
 
@@ -169,6 +170,7 @@ nsSupportsHashtable* nsXBLService::mBindingTable = nsnull;
 nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
 
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
+nsIAtom* nsXBLService::kHasChildrenAtom = nsnull;
 
 PRInt32 nsXBLService::kNameSpaceID_XBL;
 
@@ -202,6 +204,7 @@ nsXBLService::nsXBLService(void)
 
     // Create our atoms
     kExtendsAtom = NS_NewAtom("extends");
+    kHasChildrenAtom = NS_NewAtom("haschildren");
   }
 }
 
@@ -214,6 +217,7 @@ nsXBLService::~nsXBLService(void)
     
     // Release our atoms
     NS_RELEASE(kExtendsAtom);
+    NS_RELEASE(kHasChildrenAtom);
   }
 }
 
@@ -256,11 +260,12 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
 // For a given element, returns a flat list of all the anonymous children that need
 // frames built.
 NS_IMETHODIMP
-nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
+nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aParent)
 { 
   // Iterate over all of the bindings one by one and build up an array
   // of anonymous items.
   *aResult = nsnull;
+  *aParent = nsnull;
   nsCOMPtr<nsIBindableContent> bindable = do_QueryInterface(aContent);
   if (!bindable)
     return NS_ERROR_FAILURE;
@@ -282,6 +287,10 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
 
         (*aResult)->AppendElement(anonymousChild);
       }
+
+      nsCOMPtr<nsIContent> bindingElement;
+      binding->GetBindingElement(getter_AddRefs(bindingElement));
+
       return NS_OK;
     }
 
