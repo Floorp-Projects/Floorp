@@ -926,6 +926,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libi18n\autocvt.c
 	$(DEPTH)\lib\libi18n\b52cns.c
 	$(DEPTH)\lib\libi18n\cns2b5.c
+	$(DEPTH)\lib\libi18n\country.c
 	$(DEPTH)\lib\libi18n\cvchcode.c
 	$(DEPTH)\lib\libi18n\euc2jis.c
 	$(DEPTH)\lib\libi18n\euc2sjis.c
@@ -1037,6 +1038,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmocha\lm_dom.c
 !endif
 	$(DEPTH)\lib\libmocha\lm_embed.c
+ 	$(DEPTH)\lib\libmocha\lm_env.c
 	$(DEPTH)\lib\libmocha\lm_event.c
 	$(DEPTH)\lib\libmocha\lm_form.c
 	$(DEPTH)\lib\libmocha\lm_hardw.c
