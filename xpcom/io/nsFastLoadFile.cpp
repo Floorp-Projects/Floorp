@@ -1256,8 +1256,13 @@ struct nsDocumentMapWriteEntry : public nsDocumentMapEntry {
 };
 
 // Fast mapping from URI object pointer back to spec-indexed document info.
+// We also may need the slow mapping from mURISpec to nsDocumentMapWriteEntry,
+// because the writer's mDocumentMap double hash table may grow "behind the
+// back of" each mURIMap entry's mDocMapEntry member.
 struct nsURIMapWriteEntry : public nsObjectMapEntry {
     nsDocumentMapWriteEntry* mDocMapEntry;
+    PRUint32                 mGeneration;
+    const char*              mURISpec;
 };
 
 NS_IMETHODIMP
@@ -1266,12 +1271,10 @@ nsFastLoadFileWriter::StartMuxedDocument(nsISupports* aURI,
 {
     // Save mDocumentMap table generation and mCurrentDocumentMapEntry key in
     // case the hash table grows during the PL_DHASH_ADD operation.
-    PRUint32 saveGeneration = 0;
-    const char* saveURISpec = nsnull;
-    if (mCurrentDocumentMapEntry) {
-        saveGeneration = mDocumentMap.generation;
-        saveURISpec = mCurrentDocumentMapEntry->mString;
-    }
+    PRUint32 saveGeneration = mDocumentMap.generation;
+    const char* saveURISpec = mCurrentDocumentMapEntry
+                              ? mCurrentDocumentMapEntry->mString
+                              : nsnull;
 
     nsDocumentMapWriteEntry* docMapEntry =
         NS_STATIC_CAST(nsDocumentMapWriteEntry*,
@@ -1288,6 +1291,9 @@ nsFastLoadFileWriter::StartMuxedDocument(nsISupports* aURI,
                                                 PL_DHASH_LOOKUP));
         NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(mCurrentDocumentMapEntry),
                      "mCurrentDocumentMapEntry lost during table growth?!");
+
+        // Refresh saveGeneration for use below when initializing uriMapEntry.
+        saveGeneration = mDocumentMap.generation;
     }
 
     NS_ASSERTION(docMapEntry->mString == nsnull,
@@ -1315,6 +1321,8 @@ nsFastLoadFileWriter::StartMuxedDocument(nsISupports* aURI,
     uriMapEntry->mObject = key;
     NS_ADDREF(uriMapEntry->mObject);
     uriMapEntry->mDocMapEntry = docMapEntry;
+    uriMapEntry->mGeneration = saveGeneration;
+    uriMapEntry->mURISpec = NS_REINTERPRET_CAST(const char*, spec);
     TRACE_MUX(('w', "start %p (%p) %s\n", aURI, key.get(), aURISpec));
     return NS_OK;
 }
@@ -1342,7 +1350,23 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI)
     if (PL_DHASH_ENTRY_IS_FREE(uriMapEntry))
         return NS_ERROR_UNEXPECTED;
 
+    // Beware that uriMapEntry->mDocMapEntry may be stale, if an mDocumentMap
+    // addition caused that table to grow.  We save the mDocumentMap generation
+    // in each uriMapEntry and compare it to the current generation, rehashing
+    // uriMapEntry->mURISpec if necessary.
+
     nsDocumentMapWriteEntry* docMapEntry = uriMapEntry->mDocMapEntry;
+    if (uriMapEntry->mGeneration != mDocumentMap.generation) {
+        docMapEntry =
+            NS_STATIC_CAST(nsDocumentMapWriteEntry*,
+                           PL_DHashTableOperate(&mDocumentMap,
+                                                uriMapEntry->mURISpec,
+                                                PL_DHASH_LOOKUP));
+        NS_ASSERTION(PL_DHASH_ENTRY_IS_BUSY(docMapEntry), "lost mDocMapEntry!?");
+        uriMapEntry->mDocMapEntry = docMapEntry;
+        uriMapEntry->mGeneration = mDocumentMap.generation;
+    }
+    docMapEntry = uriMapEntry->mDocMapEntry;
 
     // If there is a muxed document segment open, close it now by setting its
     // length, stored in the second PRUint32 of the segment.

@@ -246,7 +246,6 @@ class NS_COM nsFastLoadFileReader
       public nsIFastLoadFileReader
 {
   public:
-
     nsFastLoadFileReader(nsIInputStream *aStream)
       : nsBinaryInputStream(aStream),
         mCurrentDocumentMapEntry(nsnull) {
