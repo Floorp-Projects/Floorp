@@ -1456,7 +1456,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp,
   if (NS_FAILED(rv)) return rv;
 
   // So we can open and close windows during startup
-  appShell->SetQuitOnLastWindowClosing(PR_FALSE);
+  appShell->EnterLastWindowClosingSurvivalArea();
 
   // Initialize Profile Service here.
   NS_TIMELINE_ENTER("InitializeProfileService");
@@ -1499,8 +1499,9 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp,
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
 
-  // From this point on, should be true
-  appShell->SetQuitOnLastWindowClosing(PR_TRUE);	
+#if !defined(XP_MAC) && !defined(XP_MACOSX)
+  appShell->ExitLastWindowClosingSurvivalArea();
+#endif
 
 #ifdef MOZ_ENABLE_XREMOTE
   // if we have X remote support and we have our one window up and
