@@ -34,6 +34,7 @@
 #include "prefapi.h"
 #include "fe_proto.h"
 #include "libevent.h" /* Temporary, for FE_CheckConfirm straw-man. */
+#include "proto.h"
 
 #ifdef DEBUG_dfm
 #define D(x) x
@@ -312,8 +313,19 @@ PUBLIC void
 PRVCY_ToggleAnonymous() {
     if (anonymous) {
 	 NET_UnanonymizeCookies();
+	 SI_UnanonymizeSignons();
+	 /*
+	  * Global history changes are not complete yet.  Need to modify
+	  * lib/libmisc/glhist.c so it uses a different file when in
+	  * anonymous mode.  The change is to intruduce an xpGlobalHistory2
+	  * that is used in place of xpGlobalHistory when in anonymous mode
+	  */
+	 GH_SaveGlobalHistory();
     } else {
 	 NET_AnonymizeCookies();
+	 SI_AnonymizeSignons();
+	 GH_SaveGlobalHistory();
+	 GH_FreeGlobalHistory();
     }
     anonymous = !anonymous;
 }
@@ -341,4 +353,3 @@ XP_Bool FE_CheckConfirm (
     return result;
 }
 /* end of temporary UI */
-
