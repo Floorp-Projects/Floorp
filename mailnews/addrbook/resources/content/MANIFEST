@@ -19,6 +19,7 @@
 addressbook.xul
 addressbook.js
 dirPane.xul
+resultPane.xul
 cardviewPane.xul
 addresspanes.html
 editcard.xul
