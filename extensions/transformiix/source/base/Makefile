@@ -2,8 +2,9 @@ target: make_base
 
 CC := $(CC) -g
 
-BASE_OBJS = CommandLineUtils.o \
-	        Double.o \
+BASE_OBJS = ArrayList.o \
+            CommandLineUtils.o \
+			Double.o \
             HashTable.o \
             Integer.o \
             List.o \
@@ -16,6 +17,9 @@ BASE_OBJS = CommandLineUtils.o \
             Tokenizer.o
 
 make_base: $(BASE_OBJS)
+
+ArrayList.o: ArrayList.h ArrayList.cpp
+	$(CC) -c ArrayList.cpp
 
 CommandLineUtils.o: CommandLineUtils.h CommandLineUtils.cpp
 	$(CC) -c CommandLineUtils.cpp 
