@@ -647,9 +647,10 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
       return result;
 
     PRBool displaySelection;
-    result = shell->GetDisplayNonTextSelection(&displaySelection);
-    if (NS_FAILED(result))
-      return result;
+    //result = shell->GetDisplayNonTextSelection(&displaySelection);
+    //if (NS_FAILED(result))
+      //return result;
+    displaySelection = PR_TRUE;
     if (!displaySelection)
       return NS_OK;
     if (mContent) {
