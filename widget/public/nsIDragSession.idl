@@ -1,19 +1,23 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corp.  Portions created by Netscape are Copyright (C) 1999 Netscape 
+ * Communications Corp.  All Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Mike Pinkerton
  */
 
 #include "nsISupports.idl"
@@ -34,23 +38,23 @@ interface nsIDragSession : nsISupports
     * Set the current state of the drag whether it can be dropped or not.
     * usually the target "frame" sets this so the native system can render the correct feedback
     */
-  attribute boolean CanDrop;
+  attribute boolean canDrop;
   
   /**
     * Sets the action (copy, move, link, et.c) for the current drag 
     */ 
-  attribute unsigned long DragAction;
+  attribute unsigned long dragAction;
   
   /**
     * Sets the current width and height if the drag target area. 
     * It will contain the current size of the Frame that the drag is currently in
     */  
-  attribute nsSize TargetSize;
+  attribute nsSize targetSize;
  
   /**
     * Get the number items that were dropped
     */
-  readonly attribute unsigned long NumDropItems;
+  readonly attribute unsigned long numDropItems;
 
   /**
     * Get data from a Drag&Drop. Can be called while the drag is in process
@@ -59,14 +63,14 @@ interface nsIDragSession : nsISupports
     * @param  aTransferable the transferable for the data to be put into
     * @param  aItemIndex which of multiple drag items, zero-based
     */
-  void GetData ( in nsITransferable aTransferable, in unsigned long aItemIndex ) ;
+  void getData ( in nsITransferable aTransferable, in unsigned long aItemIndex ) ;
 
    /**
     * Check to set if ant of the native data on the clipboard matches this data flavor
     *
     * @result NS_OK if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
     */
-  boolean IsDataFlavorSupported ( in string aDataFlavor ) ;
+  boolean isDataFlavorSupported ( in string aDataFlavor ) ;
   
 };
 
