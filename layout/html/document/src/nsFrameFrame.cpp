@@ -422,7 +422,7 @@ PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
   aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::src, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::src, value))) {
       if (eHTMLUnit_String == value.GetUnit()) {
         value.GetStringValue(aResult);
         if (aResult.Length() > 0) {
@@ -445,7 +445,7 @@ PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
   aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::name, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::name, value))) {
       if (eHTMLUnit_String == value.GetUnit()) {
         value.GetStringValue(aResult);
         result = PR_TRUE;
@@ -465,7 +465,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStanda
   aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::scrolling, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::scrolling, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
         PRInt32 returnValue;
         PRInt32 intValue;
@@ -499,7 +499,7 @@ nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder(PRBool aStandardMode)
   mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::frameborder, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::frameborder, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
         PRInt32 intValue;
         intValue = value.GetIntValue();
@@ -536,7 +536,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIC
     float p2t;
     aPresContext->GetScaledPixelsToTwips(p2t);
     nsHTMLValue value;
-    content->GetAttribute(nsHTMLAtoms::marginwidth, value);
+    content->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) { 
       marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       if (marginWidth < 0) {
@@ -556,7 +556,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
     float p2t;
     aPresContext->GetScaledPixelsToTwips(p2t);
     nsHTMLValue value;
-    content->GetAttribute(nsHTMLAtoms::marginheight, value);
+    content->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) { 
       marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       if (marginHeight < 0) {
@@ -615,8 +615,8 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   }
 
   nsAutoString base;
-  if (NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttribute(NS_HTML_BASE_HREF, base)) {
-    base = ""; 
+  if (NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base)) {
+    base.Truncate(); 
   }
   nsresult rv = NS_MakeAbsoluteURL(docURL, base, aRelURL, aAbsURL);
   NS_IF_RELEASE(docURL);

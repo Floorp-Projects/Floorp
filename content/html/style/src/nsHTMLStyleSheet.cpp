@@ -43,6 +43,7 @@
 #include "nsIXMLDocument.h"
 #include "nsIWebShell.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsINameSpaceManager.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -63,7 +64,7 @@ public:
   NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   // Strength is an out-of-band weighting, always 0 here
-  NS_IMETHOD GetStrength(PRInt32& aStrength);
+  NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
@@ -109,7 +110,7 @@ HTMLAnchorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 
 // Strength is an out-of-band weighting, always 0 here
 NS_IMETHODIMP
-HTMLAnchorRule::GetStrength(PRInt32& aStrength)
+HTMLAnchorRule::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 0;
   return NS_OK;
@@ -254,10 +255,6 @@ public:
   // Attribute management methods, aAttributes is an in/out param
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
                               nsIHTMLAttributes*& aAttributes);
-  NS_IMETHOD SetIDFor(nsIAtom* aID, nsIHTMLContent* aContent, 
-                      nsIHTMLAttributes*& aAttributes);
-  NS_IMETHOD SetClassFor(nsIAtom* aClass, nsIHTMLContent* aContent, 
-                         nsIHTMLAttributes*& aAttributes);
   NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, 
                              nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes);
@@ -394,9 +391,6 @@ protected:
 
   nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
                         nsIContent* aContent);
-
-  PRBool AttributeRequiresRepaint(nsIAtom* aAttribute);
-  PRBool AttributeRequiresReflow (nsIAtom* aAttribute);
 
 protected:
   PRUint32 mInHeap : 1;
@@ -536,7 +530,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
             (nsnull != linkHandler)) {
           nsAutoString base, href;  // XXX base??
-          nsresult attrState = htmlContent->GetAttribute("href", href);
+          nsresult attrState = htmlContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
 
           if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
             nsIURL* docURL = nsnull;
@@ -761,49 +755,6 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributesFor(nsIHTMLContent* aContent, nsI
 
   return NS_OK;
 }
-
-NS_IMETHODIMP HTMLStyleSheetImpl::SetIDFor(nsIAtom* aID, nsIHTMLContent* aContent, nsIHTMLAttributes*& aAttributes)
-{
-  nsresult            result = NS_OK;
-  nsIHTMLAttributes*  attrs;
-  PRBool              hasValue = PRBool(nsnull != aID);
-  nsMapAttributesFunc mapFunc;
-
-  aContent->GetAttributeMappingFunction(mapFunc);
-
-  result = EnsureSingleAttributes(aAttributes, mapFunc, hasValue, attrs);
-
-  if ((NS_OK == result) && (nsnull != attrs)) {
-    PRInt32 count;
-    attrs->SetID(aID, count);
-
-    result = UniqueAttributes(attrs, mapFunc, count, aAttributes);
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP HTMLStyleSheetImpl::SetClassFor(nsIAtom* aClass, nsIHTMLContent* aContent, nsIHTMLAttributes*& aAttributes)
-{
-  nsresult            result = NS_OK;
-  nsIHTMLAttributes*  attrs;
-  PRBool              hasValue = PRBool(nsnull != aClass);
-  nsMapAttributesFunc mapFunc;
-
-  aContent->GetAttributeMappingFunction(mapFunc);
-
-  result = EnsureSingleAttributes(aAttributes, mapFunc, hasValue, attrs);
-
-  if ((NS_OK == result) && (nsnull != attrs)) {
-    PRInt32 count;
-    attrs->SetClass(aClass, count);
-
-    result = UniqueAttributes(attrs, mapFunc, count, aAttributes);
-  }
-
-  return result;
-}
-
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
                                                   const nsString& aValue,
@@ -1033,7 +984,7 @@ HTMLStyleSheetImpl::CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame)
 
   // Figure out which type of input frame to create
   nsAutoString  val;
-  if (NS_OK == aContent->GetAttribute(nsAutoString("type"), val)) {
+  if (NS_OK == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, val)) {
     if (val.EqualsIgnoreCase("submit")) {
       rv = NS_NewButtonControlFrame(aFrame);
     }
@@ -2562,7 +2513,7 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
   
       if (NS_OK == result) { 
         // Get style hint from HTML content object. 
-        htmlContent->GetStyleHintForAttributeChange(aContent, aAttribute, &aHint);
+        htmlContent->GetStyleHintForAttributeChange(aAttribute, &aHint);
         NS_RELEASE(htmlContent); 
       } 
     } 

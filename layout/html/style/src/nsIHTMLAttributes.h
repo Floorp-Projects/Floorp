@@ -37,34 +37,32 @@ class nsIHTMLStyleSheet;
 class nsIHTMLAttributes : public nsISupports {
 public:
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                          PRInt32& aCount) = 0;
+                          PRInt32& aAttrCount) = 0;
   // this string value version lets you avoid an extra string copy, 
   // the value is still stored in a nsHTMLValue
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRInt32& aCount) = 0;
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRInt32& aCount) = 0;
+                          PRInt32& aAttrCount) = 0;
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRInt32& aAttrCount) = 0;
 
   NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
                           nsHTMLValue& aValue) const = 0;
 
-  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
-                                  PRInt32& aCount) const = 0;
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                nsIAtom*& aName) const = 0;
 
-  NS_IMETHOD Count(PRInt32& aCount) const = 0;
+  NS_IMETHOD GetAttributeCount(PRInt32& aAttrCount) const = 0;
   NS_IMETHOD Equals(const nsIHTMLAttributes* aAttributes, PRBool& aResult) const = 0;
   NS_IMETHOD HashValue(PRUint32& aValue) const = 0;
 
-  NS_IMETHOD SetID(nsIAtom* aID, PRInt32& aCount) = 0;
   NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
-
-  NS_IMETHOD SetClass(nsIAtom* aClass, PRInt32& aCount) = 0;  // XXX this will have to change for CSS2
-  NS_IMETHOD GetClass(nsIAtom*& aResult) const = 0;  // XXX this will have to change for CSS2
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const = 0;
+  NS_IMETHOD HasClass(nsIAtom* aClass) const = 0;
 
   NS_IMETHOD AddContentRef(void) = 0;
   NS_IMETHOD ReleaseContentRef(void) = 0;
-  NS_IMETHOD GetContentRefCount(PRInt32& aCount) = 0;
+  NS_IMETHOD GetContentRefCount(PRInt32& aCount) const = 0;
 
-  NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) = 0;
+  NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) const = 0;
   NS_IMETHOD Reset(void) = 0;
   NS_IMETHOD SetMappingFunction(nsMapAttributesFunc aMapFunc) = 0;
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet) = 0;

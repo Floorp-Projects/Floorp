@@ -169,7 +169,7 @@ PRInt32 nsLegendFrame::GetAlign()
   mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
   if (nsnull != content) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::align, value))) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::align, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
         intValue = value.GetIntValue();
       }

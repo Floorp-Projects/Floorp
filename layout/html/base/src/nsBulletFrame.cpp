@@ -171,7 +171,7 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal)
   nsIHTMLContent* hc;
   if (NS_OK == parentContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
     if (NS_CONTENT_ATTR_HAS_VALUE ==
-        hc->GetAttribute(nsHTMLAtoms::value, value)) {
+        hc->GetHTMLAttribute(nsHTMLAtoms::value, value)) {
       if (eHTMLUnit_Integer == value.GetUnit()) {
         // Use ordinal specified by the value attribute
         mOrdinal = value.GetIntValue();

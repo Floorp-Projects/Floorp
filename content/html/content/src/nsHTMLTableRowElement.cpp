@@ -526,7 +526,7 @@ nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLTableRowElement::AttributeToString(nsIAtom* aAttribute,
-                                  nsHTMLValue& aValue,
+                                  const nsHTMLValue& aValue,
                                   nsString& aResult) const
 {
   /* ignore these attributes, stored already as strings
@@ -615,11 +615,10 @@ nsHTMLTableRowElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLTableRowElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, 
+  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, 
     aAttribute, aHint)) {
     // Do nothing
   }

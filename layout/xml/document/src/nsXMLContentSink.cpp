@@ -405,35 +405,38 @@ GetAttributeValueAt(const nsIParserNode& aNode,
 }
 
 // XXX Code copied from nsHTMLContentSink. It should be shared.
-static nsresult
-AddAttributes(const nsIParserNode& aNode,
-              nsIContent* aContent,
-              PRBool aIsHTML)
+nsresult
+nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
+                                nsIContent* aContent,
+                                PRBool aIsHTML)
 {
   // Add tag attributes to the content attributes
-  nsAutoString k, v;
+  nsAutoString name, v;
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
     const nsString& key = aNode.GetKeyAt(i);
-    k.Truncate();
-    k.Append(key);
+    name.Truncate();
+    name.Append(key);
     if (aIsHTML) {
-      k.ToUpperCase();
+      name.ToUpperCase();
     }
 
-    // XXX TODO Currently we don't look for namespace identifiers
-    // in the attribute name
+    nsIAtom* nameSpacePrefix = CutNameSpacePrefix(name);
+    nsIAtom* nameAtom = NS_NewAtom(name);
+    PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
 
     nsAutoString value;
     if (NS_CONTENT_ATTR_NOT_THERE == 
-        aContent->GetAttribute(k, value)) {
+        aContent->GetAttribute(nameSpaceID, nameAtom, value)) {
       // Get value and remove mandatory quotes
       GetAttributeValueAt(aNode, i, v);
 
       // Add attribute to content
-      aContent->SetAttribute(k, v, PR_FALSE);
+      aContent->SetAttribute(nameSpaceID, nameAtom, v, PR_FALSE);
     }
+    NS_RELEASE(nameAtom);
+    NS_IF_RELEASE(nameSpacePrefix);
   }
   return NS_OK;
 }
@@ -1058,6 +1061,9 @@ nsXMLContentSink::AddEntityReference(const nsIParserNode& aNode)
 PRInt32 
 nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
 {
+  if (nsnull == aPrefix) {
+    return kNameSpaceID_None;
+  }
   PRInt32 id = kNameSpaceID_Unknown;
   if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
     PRInt32 index = mNameSpaceStack->Count() - 1;

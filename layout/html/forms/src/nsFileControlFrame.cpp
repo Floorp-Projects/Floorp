@@ -34,8 +34,8 @@
 #include "nsIView.h"
 #include "nsHTMLParts.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsHTMLParts.h"
 #include "nsIFormControl.h"
+#include "nsINameSpaceManager.h"
 
 // XXX make this pixels
 #define CONTROL_SPACING 40  
@@ -176,16 +176,6 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
 }
 
 
-void SetType(nsIHTMLContent* aElement, nsString& aValue)
-{
-  nsIHTMLContent* iContent = nsnull;
-  nsresult result = aElement->QueryInterface(kIHTMLContentIID, (void**)&iContent);
-  if ((NS_OK == result) && iContent) {
-    iContent->SetAttribute("type", aValue, PR_FALSE);
-    NS_RELEASE(iContent);
-  }
-}
-
 NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
                                          const nsHTMLReflowState& aReflowState, 
@@ -201,9 +191,9 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     nsIHTMLContent* text = nsnull;
     nsIAtom* tag = NS_NewAtom("text");
     NS_NewHTMLInputElement(&text, tag);
-    text->SetAttribute("type", "text", PR_FALSE);
+    text->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, nsAutoString("text"), PR_FALSE);
     if (disabled) {
-      text->SetAttribute("disabled", "1", PR_FALSE);
+      text->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX this should use an "empty" bool value
     }
     NS_NewTextControlFrame(childFrame);
     childFrame->Init(aPresContext, text, this, mStyleContext);
@@ -213,9 +203,9 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     nsIHTMLContent* browse = nsnull;
     tag = NS_NewAtom("browse");
     NS_NewHTMLInputElement(&browse, tag);
-    browse->SetAttribute("type", "browse", PR_FALSE);
+    browse->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, nsAutoString("browse"), PR_FALSE);
     if (disabled) {
-      browse->SetAttribute("disabled", "1", PR_FALSE);
+      browse->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX should be "empty"
     }
     NS_NewButtonControlFrame(childFrame);
     ((nsButtonControlFrame*)childFrame)->SetFileControlFrame(this);
@@ -282,7 +272,7 @@ nsFileControlFrame::GetName(nsString* aResult)
     result = mContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
     if ((NS_OK == result) && formControl) {
       nsHTMLValue value;
-      result = formControl->GetAttribute(nsHTMLAtoms::name, value);
+      result = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
       if (NS_CONTENT_ATTR_HAS_VALUE == result) {
         if (eHTMLUnit_String == value.GetUnit()) {
           value.GetStringValue(*aResult);

@@ -184,7 +184,7 @@ NS_IMETHODIMP
 nsHTMLOptionElement::GetSelected(PRBool *aSelected)
 {
   nsHTMLValue val;
-  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::selected, val);
+  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::selected, val);
   *aSelected = NS_CONTENT_ATTR_NOT_THERE != rv;
   return NS_OK;
 }
@@ -213,7 +213,7 @@ nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLOptionElement::AttributeToString(nsIAtom* aAttribute,
-                                nsHTMLValue& aValue,
+                                const nsHTMLValue& aValue,
                                 nsString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
@@ -267,10 +267,9 @@ nsHTMLOptionElement::GetText(nsString& aText)
 
 NS_IMETHODIMP
 nsHTMLOptionElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

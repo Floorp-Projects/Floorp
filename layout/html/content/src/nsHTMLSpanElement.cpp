@@ -121,7 +121,7 @@ nsHTMLSpanElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLSpanElement::AttributeToString(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue,
+                                     const nsHTMLValue& aValue,
                                      nsString& aResult) const
 {
   // XXX write me
@@ -158,10 +158,9 @@ nsHTMLSpanElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLSpanElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

@@ -91,6 +91,9 @@ protected:
   nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                      PRBool* aDidFlush=nsnull);
 
+  nsresult AddAttributes(const nsIParserNode& aNode,
+                         nsIContent* aContent,
+                         PRBool aIsHTML);
   nsresult AddContentAsLeaf(nsIContent *aContent);
   void    PushNameSpacesFrom(const nsIParserNode& aNode);
   nsIAtom*  CutNameSpacePrefix(nsString& aString);

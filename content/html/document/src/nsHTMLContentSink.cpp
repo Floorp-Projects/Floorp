@@ -53,6 +53,7 @@
 
 #include "nsIWebShell.h"
 #include "nsIHTMLDocument.h"
+#include "nsINameSpaceManager.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -462,12 +463,12 @@ AddAttributes(const nsIParserNode& aNode,
     nsHTMLValue value;
     
     if (NS_CONTENT_ATTR_NOT_THERE == 
-        aContent->GetAttribute(keyAtom, value)) {
+        aContent->GetHTMLAttribute(keyAtom, value)) {
       // Get value and remove mandatory quotes
       GetAttributeValueAt(aNode, i, v, aScriptContextOwner);
 
       // Add attribute to content
-      aContent->SetAttribute(keyAtom, v, PR_FALSE);
+      aContent->SetAttribute(kNameSpaceID_HTML, keyAtom, v, PR_FALSE);
     }
     NS_RELEASE(keyAtom);
   }
@@ -1982,12 +1983,10 @@ void
 HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 {
   if (mBaseHREF.Length() > 0) {
-    nsHTMLValue value(mBaseHREF);
-    aContent->SetAttribute(nsHTMLAtoms::_baseHref, value, PR_FALSE);
+    aContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
   }
   if (mBaseTarget.Length() > 0) {
-    nsHTMLValue value(mBaseTarget);
-    aContent->SetAttribute(nsHTMLAtoms::_baseTarget, value, PR_FALSE);
+    aContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
   }
 }
 
@@ -1998,7 +1997,7 @@ HTMLContentSink::ProcessATag(const nsIParserNode& aNode,
   AddBaseTagInfo(aContent);
   if ((nsnull != mRef) && (nsnull == mRefContent)) {
     nsHTMLValue value;
-    aContent->GetAttribute(nsHTMLAtoms::name, value);
+    aContent->GetHTMLAttribute(nsHTMLAtoms::name, value);
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString tmp;
       value.GetStringValue(tmp);
@@ -2249,10 +2248,10 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
       rv = mDocumentURL->QueryInterface(kIHTTPURLIID, (void **)&httpUrl);
       if (NS_OK == rv) {
         nsAutoString header;
-        it->GetAttribute(nsHTMLAtoms::httpEquiv, header);
+        it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
         if (header.Length() > 0) {
           nsAutoString result;
-          it->GetAttribute(nsHTMLAtoms::content, result);
+          it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
           if (result.Length() > 0) {
             char* value = result.ToNewCString(), *csHeader;
             if (!value) {

@@ -137,12 +137,24 @@ struct nsGenericDOMDataNode {
     aResult = nsnull;
     return NS_OK;
   }
-  nsresult SetAttribute(const nsString& aName, const nsString& aValue,
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsString& aValue,
                         PRBool aNotify) {
     return NS_OK;
   }
-  nsresult GetAttribute(const nsString& aName, nsString& aResult) const {
+  nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) {
+    return NS_OK;
+  }
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsString &aResult) const {
     return NS_CONTENT_ATTR_NOT_THERE;
+  }
+  nsresult GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
+                              nsIAtom*& aName) const {
+    aName = nsnull;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  nsresult GetAttributeCount(PRInt32& aResult) const {
+    aResult = 0;
+    return NS_OK;
   }
   nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult HandleDOMEvent(nsIPresContext& aPresContext,
@@ -156,45 +168,22 @@ struct nsGenericDOMDataNode {
 
   // Implementation for nsIHTMLContent
   nsresult Compact();
-  nsresult SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+  nsresult SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
                         PRBool aNotify) {
     return NS_OK;
   }
-  nsresult SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                        PRBool aNotify) {
-    return NS_OK;
-  }
-  nsresult UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {
-    return NS_OK;
-  }
-  nsresult GetAttribute(nsIAtom *aAttribute, nsString &aResult) const {
+  nsresult GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const {
     return NS_CONTENT_ATTR_NOT_THERE;
-  }
-  nsresult GetAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const {
-    return NS_CONTENT_ATTR_NOT_THERE;
-  }
-  nsresult GetAllAttributeNames(nsISupportsArray* aArray,
-                                PRInt32& aCount) const {
-    aCount = 0;
-    return NS_OK;
-  }
-  nsresult GetAttributeCount(PRInt32& aResult) const {
-    aResult = 0;
-    return NS_OK;
-  }
-  nsresult SetID(nsIAtom* aID) {
-    return NS_OK;
   }
   nsresult GetID(nsIAtom*& aResult) const {
     aResult = nsnull;
     return NS_OK;
   }
-  nsresult SetClass(nsIAtom* aClass) {
+  nsresult GetClasses(nsVoidArray& aArray) const {
     return NS_OK;
   }
-  nsresult GetClass(nsIAtom*& aResult) const {
-    aResult = nsnull;
-    return NS_OK;
+  NS_IMETHOD HasClass(nsIAtom* aClass) const {
+    return NS_COMFALSE;
   }
   nsresult GetContentStyleRule(nsIStyleRule*& aResult) {
     aResult = nsnull;
@@ -440,13 +429,25 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
   }                                                                        \
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue,   \
-                          PRBool aNotify) {                                \
-    return _g.SetAttribute(aName, aValue, aNotify);                        \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,       \
+                          nsString &aResult) const {                       \
+    return _g.GetAttribute(aNameSpaceID, aAttribute, aResult);             \
   }                                                                        \
-  NS_IMETHOD GetAttribute(const nsString& aName,                           \
-                          nsString& aResult) const {                       \
-    return _g.GetAttribute(aName, aResult);                                \
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,       \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);     \
+  }                                                                        \
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
+                            PRBool aNotify) {                              \
+    return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
+  }                                                                        \
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
+                                PRInt32& aNameSpaceID,                     \
+                                nsIAtom*& aName) const {                   \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
+  }                                                                        \
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
+    return _g.GetAttributeCount(aResult);                                  \
   }                                                                        \
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;                       \
   NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
@@ -482,43 +483,22 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD Compact() {                                               \
     return _g.Compact();                                               \
   }                                                                    \
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue, \
-                          PRBool aNotify) {                            \
-    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
+  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,                     \
+                              const nsHTMLValue& aValue, PRBool aNotify) { \
+    return _g.SetHTMLAttribute(aAttribute, aValue, aNotify);           \
   }                                                                    \
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,                         \
-                          const nsHTMLValue& aValue, PRBool aNotify) { \
-    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
-  }                                                                    \
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {     \
-    return _g.UnsetAttribute(aAttribute, aNotify);                     \
-  }                                                                    \
-  NS_IMETHOD GetAttribute(nsIAtom *aAttribute,                         \
-                          nsString &aResult) const {                   \
-    return _g.GetAttribute(aAttribute, aResult);                       \
-  }                                                                    \
-  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,                         \
+  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,                     \
                           nsHTMLValue& aValue) const {                 \
-    return _g.GetAttribute(aAttribute, aValue);                        \
-  }                                                                    \
-  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,            \
-                                  PRInt32& aResult) const {            \
-    return _g.GetAllAttributeNames(aArray, aResult);                   \
-  }                                                                    \
-  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {               \
-    return _g.GetAttributeCount(aResult);                              \
-  }                                                                    \
-  NS_IMETHOD  SetID(nsIAtom* aID) {                                    \
-    return _g.SetID(aID);                                              \
+    return _g.GetHTMLAttribute(aAttribute, aValue);                    \
   }                                                                    \
   NS_IMETHOD GetID(nsIAtom*& aResult) const {                          \
     return _g.GetID(aResult);                                          \
   }                                                                    \
-  NS_IMETHOD SetClass(nsIAtom* aClass) {                               \
-    return _g.SetClass(aClass);                                        \
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const {                   \
+    return _g.GetClasses(aArray);                                      \
   }                                                                    \
-  NS_IMETHOD GetClass(nsIAtom*& aResult) const {                       \
-    return _g.GetClass(aResult);                                       \
+  NS_IMETHOD HasClass(nsIAtom* aClass) const {                         \
+    return _g.HasClass(aClass);                                        \
   }                                                                    \
   NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) {             \
     return _g.GetContentStyleRule(aResult);                            \
@@ -534,7 +514,7 @@ struct nsGenericDOMDataNode {
     return NS_CONTENT_ATTR_NOT_THERE;                                  \
   }                                                                    \
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
-                               nsHTMLValue& aValue,                    \
+                               const nsHTMLValue& aValue,              \
                                nsString& aResult) const {              \
     return NS_CONTENT_ATTR_NOT_THERE;                                  \
   }                                                                    \
@@ -544,7 +524,6 @@ struct nsGenericDOMDataNode {
     return NS_OK;                                                      \
   }                                                                    \
   NS_IMETHOD GetStyleHintForAttributeChange(                           \
-    const nsIContent *aNode,                                           \
     const nsIAtom* aAttribute,                                         \
     PRInt32 *aHint) const                                              \
   {                                                                    \

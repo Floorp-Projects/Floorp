@@ -313,8 +313,8 @@ nsImageDocument::CreateSyntheticDocument()
   mDocumentURL->ToString(&src);
   nsHTMLValue val(src);
   delete src;
-  image->SetAttribute(nsHTMLAtoms::src, val, PR_FALSE);
-  image->SetAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
+  image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
+  image->SetHTMLAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
 
   root->AppendChildTo(body, PR_FALSE);
   center->AppendChildTo(image, PR_FALSE);

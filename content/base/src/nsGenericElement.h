@@ -45,7 +45,6 @@ class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
-class nsIHTMLAttributes;
 
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttr and nsIDOMNode and
@@ -297,12 +296,16 @@ public:
   nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
 
   // Remainder of nsIContent
-  nsresult SetAttribute(const nsString& aName, const nsString& aValue,
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                        const nsString& aValue,
                         PRBool aNotify);
-  nsresult GetAttribute(const nsString& aName, nsString& aResult) const;
-  nsresult UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify);
-  nsresult GetAllAttributeNames(nsISupportsArray* aArray,
-                                PRInt32& aCount) const;
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                        nsString& aResult) const;
+  nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+                          PRBool aNotify);
+  nsresult GetAttributeNameAt(PRInt32 aIndex,
+                              PRInt32& aNameSpaceID, 
+                              nsIAtom*& aName) const;
   nsresult GetAttributeCount(PRInt32& aResult) const;
   nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult SizeOf(nsISizeOfHandler* aHandler) const;
@@ -320,7 +323,7 @@ public:
 
   void ListAttributes(FILE* out) const;
 
-  nsIHTMLAttributes* mAttributes;
+  nsVoidArray* mAttributes;
   nsVoidArray mChildren;
 };
 
@@ -495,20 +498,22 @@ public:
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
   }                                                                        \
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue,   \
-                          PRBool aNotify) {                                \
-    return _g.SetAttribute(aName, aValue, aNotify);                        \
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
-  NS_IMETHOD GetAttribute(const nsString& aName,                           \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           nsString& aResult) const {                       \
-    return _g.GetAttribute(aName, aResult);                                \
+    return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {         \
-    return _g.UnsetAttribute(aAttribute, aNotify);                         \
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
+                            PRBool aNotify) {                              \
+    return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
   }                                                                        \
-  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,                \
-                                  PRInt32& aResult) const {                \
-    return _g.GetAllAttributeNames(aArray, aResult);                       \
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
+                                PRInt32& aNameSpaceID,                     \
+                                nsIAtom*& aName) const {                   \
+    return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName);             \
   }                                                                        \
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \

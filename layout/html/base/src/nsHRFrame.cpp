@@ -324,7 +324,7 @@ HRuleFrame::GetThickness()
     // should be.
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE ==
-        hc->GetAttribute(nsHTMLAtoms::size, value)) {
+        hc->GetHTMLAttribute(nsHTMLAtoms::size, value)) {
       if (value.GetUnit() == eHTMLUnit_Pixel) {
         PRInt32 pixels = value.GetPixelValue();
         switch (pixels) {

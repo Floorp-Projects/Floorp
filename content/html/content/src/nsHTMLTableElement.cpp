@@ -917,7 +917,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
-                               nsHTMLValue& aValue,
+                               const nsHTMLValue& aValue,
                                nsString& aResult) const
 {
   /* ignore summary, just a string */
@@ -1230,11 +1230,10 @@ nsHTMLTableElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetStyleHintForAttributeChange(
-    const nsIContent* aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, 
+  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, 
     aAttribute, aHint)) {
     // Do nothing
   }

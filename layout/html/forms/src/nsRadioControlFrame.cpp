@@ -37,6 +37,7 @@
 #include "nsStyleUtil.h"
 #include "nsFormFrame.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsINameSpaceManager.h"
 
 static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -152,7 +153,7 @@ nsRadioControlFrame::GetChecked(PRBool aGetInitialValue)
       nsresult result = mContent->QueryInterface(kIHTMLContentIID, (void**)&iContent);
       if ((NS_OK == result) && iContent) {
         nsHTMLValue value;
-        result = iContent->GetAttribute(nsHTMLAtoms::checked, value);
+        result = iContent->GetHTMLAttribute(nsHTMLAtoms::checked, value);
         if (NS_CONTENT_ATTR_HAS_VALUE == result) {
           return PR_TRUE;
         }
@@ -178,9 +179,9 @@ nsRadioControlFrame::SetChecked(PRBool aValue, PRBool aSetInitialValue)
 {
   if (aSetInitialValue) {
     if (aValue) {
-      mContent->SetAttribute("checked", "1", PR_FALSE);
+      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, nsAutoString("1"), PR_FALSE); // XXX should be "empty" value
     } else {
-      mContent->SetAttribute("checked", "0", PR_FALSE);
+      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, nsAutoString("0"), PR_FALSE);
     }
   }
   nsIRadioButton* radio = nsnull;

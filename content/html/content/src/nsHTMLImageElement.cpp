@@ -212,7 +212,7 @@ nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLImageElement::AttributeToString(nsIAtom* aAttribute,
-                                      nsHTMLValue& aValue,
+                                      const nsHTMLValue& aValue,
                                       nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
@@ -351,13 +351,12 @@ nsHTMLImageElement::Finalize(JSContext *aContext)
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
   if (aAttribute == nsHTMLAtoms::src)
     *aHint = NS_STYLE_HINT_CONTENT;
   else
-    nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+    nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

@@ -154,7 +154,7 @@ nsHTMLDirectoryElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLDirectoryElement::AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
+                                          const nsHTMLValue& aValue,
                                           nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
@@ -211,10 +211,9 @@ nsHTMLDirectoryElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLDirectoryElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

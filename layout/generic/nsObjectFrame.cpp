@@ -40,6 +40,7 @@
 #include "nsIJVMPluginTagInfo.h"
 #include "nsIWebShell.h"
 #include "nsIBrowserWindow.h"
+#include "nsINameSpaceManager.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -389,10 +390,10 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
               buf = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
               PL_strcpy(buf, "application/x-java-vm");
 
-              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("CODE", src)) {
+              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) {
                 SetURL(src);
 
-                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("CODEBASE", base))
+                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, base))
                   SetBaseHREF(base);
 
                 nsIPresShell  *shell = aPresContext.GetShell();
@@ -410,7 +411,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
               }
             }
             else {
-              mContent->GetAttribute(nsString("type"), type);
+              mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
 
               buflen = type.Length();
 
@@ -423,10 +424,10 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
               //stream in the object source if there is one...
 
-              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) {
+              if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) {
                 SetURL(src);
 
-                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(NS_HTML_BASE_HREF, base))
+                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base))
                   SetBaseHREF(base);
 
                 nsIPresShell  *shell = aPresContext.GetShell();
@@ -818,90 +819,77 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetAttributes(PRUint16& n,
                                                      const char*const*& names,
                                                      const char*const*& values)
 {
-  nsresult          rv;
-  nsIHTMLContent    *content;
-  nsIContent        *icontent;
+  nsresult    rv;
+  nsIContent* iContent;
 
-  if ((nsnull == mAttrNames) && (nsnull != mOwner))
-  {
-    rv = mOwner->GetContent(icontent);
+  if ((nsnull == mAttrNames) && (nsnull != mOwner)) {
+    rv = mOwner->GetContent(iContent);
 
-    if (rv == NS_OK)
-    {
-      rv = icontent->QueryInterface(kIHTMLContentIID, (void **)&content);
+    if (NS_SUCCEEDED(rv)) {
+      PRInt32 count;
 
-      if (NS_OK == rv)
-      {
-        nsISupportsArray  *array;
+      if (NS_SUCCEEDED(iContent->GetAttributeCount(count))) {
+        PRInt32 index;
+        mAttrNames = (char **)PR_Calloc(sizeof(char *) * count, 1);
+        mAttrVals = (char **)PR_Calloc(sizeof(char *) * count, 1);
+        mNumAttrs = 0;
 
-        rv = NS_NewISupportsArray(&array);
+        if ((nsnull != mAttrNames) && (nsnull != mAttrVals)) {
+          for (index = 0; index < count; index++) {
+            PRInt32 nameSpaceID;
+            nsIAtom* atom;
+            iContent->GetAttributeNameAt(index, nameSpaceID, atom);
+            nsAutoString  value;
+            if (NS_CONTENT_ATTR_HAS_VALUE == iContent->GetAttribute(nameSpaceID, atom, value)) {
+              nsAutoString  name;
+              atom->ToString(name);
 
-        if (NS_OK == rv)
-        {
-          PRInt32 cnt, numattrs;
+              mAttrNames[mNumAttrs] = (char *)PR_Malloc(name.Length() + 1);
+              mAttrVals[mNumAttrs] = (char *)PR_Malloc(value.Length() + 1);
 
-          if ((NS_OK == content->GetAllAttributeNames(array, numattrs)) && (numattrs > 0))
-          {
-            mAttrNames = (char **)PR_Calloc(sizeof(char *) * numattrs, 1);
-            mAttrVals = (char **)PR_Calloc(sizeof(char *) * numattrs, 1);
-
-            if ((nsnull != mAttrNames) && (nsnull != mAttrVals))
-            {
-              for (cnt = 0; cnt < numattrs; cnt++)
+              if ((nsnull != mAttrNames[mNumAttrs]) &&
+                  (nsnull != mAttrVals[mNumAttrs]))
               {
-                nsIAtom       *atom = (nsIAtom *)array->ElementAt(cnt);
-                nsAutoString  name, val;
+                name.ToCString(mAttrNames[mNumAttrs], name.Length() + 1);
+                value.ToCString(mAttrVals[mNumAttrs], value.Length() + 1);
 
-                if (nsnull != atom)
+                mNumAttrs++;
+              }
+              else
+              {
+                if (nsnull != mAttrNames[mNumAttrs])
                 {
-                  atom->ToString(name);
-
-                  if (NS_CONTENT_ATTR_HAS_VALUE == icontent->GetAttribute(name, val))
-                  {
-                    mAttrNames[mNumAttrs] = (char *)PR_Malloc(name.Length() + 1);
-                    mAttrVals[mNumAttrs] = (char *)PR_Malloc(val.Length() + 1);
-
-                    if ((nsnull != mAttrNames[mNumAttrs]) &&
-                        (nsnull != mAttrVals[mNumAttrs]))
-                    {
-                      name.ToCString(mAttrNames[mNumAttrs], name.Length() + 1);
-                      val.ToCString(mAttrVals[mNumAttrs], val.Length() + 1);
-
-                      mNumAttrs++;
-                    }
-                    else
-                    {
-                      if (nsnull != mAttrNames[mNumAttrs])
-                      {
-                        PR_Free(mAttrNames[mNumAttrs]);
-                        mAttrNames[mNumAttrs] = nsnull;
-                      }
-
-                      if (nsnull != mAttrVals[mNumAttrs])
-                      {
-                        PR_Free(mAttrVals[mNumAttrs]);
-                        mAttrVals[mNumAttrs] = nsnull;
-                      }
-                    }
-                  }
-
-                  NS_RELEASE(atom);
+                  PR_Free(mAttrNames[mNumAttrs]);
+                  mAttrNames[mNumAttrs] = nsnull;
+                }
+                if (nsnull != mAttrVals[mNumAttrs])
+                {
+                  PR_Free(mAttrVals[mNumAttrs]);
+                  mAttrVals[mNumAttrs] = nsnull;
                 }
               }
             }
+            NS_RELEASE(atom);
           }
-
-          NS_RELEASE(array);
         }
-
-        NS_RELEASE(content);
+        else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          if (nsnull != mAttrVals) {
+            PR_Free(mAttrVals);
+            mAttrVals = nsnull;
+          }
+          if (nsnull != mAttrNames) {
+            PR_Free(mAttrNames);
+            mAttrNames = nsnull;
+          }
+        }
       }
-
-      NS_RELEASE(icontent);
+      NS_RELEASE(iContent);
     }
   }
-  else
+  else {
     rv = NS_OK;
+  }
 
   n = mNumAttrs;
   names = (const char **)mAttrNames;
@@ -1187,8 +1175,8 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetParameters(PRUint16& n, const char*con
 
                     //add param to list...
 
-                    if ((NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute("NAME", name)) &&
-                        (NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute("VALUE", val)))
+                    if ((NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name)) &&
+                        (NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, val)))
                     {
                       mParamNames[mNumParams] = (char *)PR_Malloc(name.Length() + 1);
                       mParamVals[mNumParams] = (char *)PR_Malloc(val.Length() + 1);

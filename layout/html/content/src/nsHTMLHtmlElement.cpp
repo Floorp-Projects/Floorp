@@ -140,7 +140,7 @@ nsHTMLHtmlElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLHtmlElement::AttributeToString(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue,
+                                     const nsHTMLValue& aValue,
                                      nsString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
@@ -178,10 +178,9 @@ nsHTMLHtmlElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsHTMLHtmlElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }

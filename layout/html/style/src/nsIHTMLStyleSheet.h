@@ -43,10 +43,6 @@ public:
   // Attribute management methods
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
                               nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetIDFor(nsIAtom* aID, nsIHTMLContent* aContent, 
-                      nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetClassFor(nsIAtom* aClass, nsIHTMLContent* aContent, 
-                         nsIHTMLAttributes*& aAttributes) = 0;
   NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, 
                              nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes) = 0;

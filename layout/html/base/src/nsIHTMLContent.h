@@ -48,34 +48,23 @@ public:
    */
   NS_IMETHOD Compact() = 0;
 
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue,
-                          PRBool aNotify) = 0;
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRBool aNotify) = 0;
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,
-                          const nsHTMLValue& aValue,
-                          PRBool aNotify) = 0;
+  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,
+                              const nsHTMLValue& aValue,
+                              PRBool aNotify) = 0;
 
-  NS_IMETHOD GetAttribute(const nsString& aName, 
-                          nsString& aResult) const = 0;
-  NS_IMETHOD GetAttribute(nsIAtom *aAttribute,
-                          nsString &aResult) const = 0;
-  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
-                          nsHTMLValue& aValue) const = 0;
+  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,
+                              nsHTMLValue& aValue) const = 0;
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const = 0;
 
-  NS_IMETHOD SetID(nsIAtom* aID) = 0;
   NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
-  // XXX this will have to change for CSS2
-  NS_IMETHOD SetClass(nsIAtom* aClass) = 0;
-  // XXX this will have to change for CSS2
-  NS_IMETHOD GetClass(nsIAtom*& aResult) const = 0;
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const = 0;
+  NS_IMETHOD HasClass(nsIAtom* aClass) const = 0;
 
   NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult) = 0;
   NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) = 0;
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               nsHTMLValue& aValue,
+                               const nsHTMLValue& aValue,
                                nsString& aResult) const = 0;
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
@@ -99,7 +88,6 @@ public:
    * an attribute on this node changes.
    */
   NS_IMETHOD GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const = 0;
 

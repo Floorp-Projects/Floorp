@@ -192,7 +192,7 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
-                                  nsHTMLValue& aValue,
+                                  const nsHTMLValue& aValue,
                                   nsString& aResult) const
 {
   /* ignore these attributes, stored already as strings
@@ -317,11 +317,10 @@ NS_METHOD nsHTMLTableColElement::GetSpanValue(PRInt32* aSpan)
 
 NS_IMETHODIMP
 nsHTMLTableColElement::GetStyleHintForAttributeChange(
-    const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, 
+  if (PR_TRUE == nsGenericHTMLElement::SetStyleHintForCommonAttributes(this, 
     aAttribute, aHint)) {
     // Do nothing
   }
