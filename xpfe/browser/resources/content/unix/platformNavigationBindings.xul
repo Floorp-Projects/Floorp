@@ -14,6 +14,7 @@
          we live and learn.  -->
     <key key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
     <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
+    <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
 
     <!-- Specific keybinding for Sun keyboard -->
     <key keycode="&findOnCmd.commandkey2;" command="Browser:Find"/>
