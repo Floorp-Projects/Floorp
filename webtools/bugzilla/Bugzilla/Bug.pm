@@ -372,7 +372,7 @@ sub qa_contact () {
     return $self->{'qa_contact'} if exists $self->{'qa_contact'};
 
     if (Param('useqacontact') && $self->{'qa_contact_id'} > 0) {
-        $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact'});
+        $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact_id'});
     } else {
         # XXX - This is somewhat inconsistent with the assignee/reporter 
         # methods, which will return an empty User if they get a 0. 
@@ -512,7 +512,7 @@ sub user {
     my $canedit = $unknown_privileges
                   || Bugzilla->user->id == $self->{assigned_to_id}
                   || (Param('useqacontact')
-                      && $self->qa_contact
+                      && $self->{'qa_contact_id'}
                       && Bugzilla->user->id == $self->{qa_contact_id});
     my $canconfirm = $unknown_privileges
                      || Bugzilla->user->in_group("canconfirm");
