@@ -271,10 +271,11 @@ nsGREDirServiceProvider::GetXPCOMPath()
 {
   char* grePath = GetGREDirectoryPath();
   if (!grePath) {
-    grePath = PR_GetEnv("MOZILLA_FIVE_HOME");
-    if (!grePath) {
+    char* greEnv = PR_GetEnv("MOZILLA_FIVE_HOME");
+    if (!greEnv) {
       return nsnull;
     }
+    grePath = strdup(greEnv);
   }
 
   int len = strlen(grePath);
