@@ -146,7 +146,7 @@ nsTypeAheadFind::nsTypeAheadFind():
   mLinksOnlyManuallySet(PR_FALSE), mIsFindingText(PR_FALSE),
   mIsMenuBarActive(PR_FALSE), mIsMenuPopupActive(PR_FALSE),
   mIsFirstVisiblePreferred(PR_FALSE), mIsIMETypeAheadActive(PR_FALSE),
-  mBadKeysSinceMatch(0),
+  mBadKeysSinceMatch(0), mLastBadChar(0),
   mRepeatingMode(eRepeatingNone), mTimeoutLength(0)
 {
   NS_INIT_ISUPPORTS();
@@ -611,21 +611,26 @@ nsTypeAheadFind::HandleBackspace()
 
   // ---------- Multiple chars in string ----------
   PRBool findBackwards = PR_FALSE;
-  if (mBadKeysSinceMatch > 0) {
-    // Nothing to remove when a backspace is hit after a bad key
-    // because bad keys aren't added to the buffer
-    mBadKeysSinceMatch = 0;
-  }
-  else if (mRepeatingMode == eRepeatingChar ||
+  if (mRepeatingMode == eRepeatingChar ||
            mRepeatingMode == eRepeatingCharReverse) {
     // Backspace in repeating char mode is like 
     mRepeatingMode = eRepeatingCharReverse;
     findBackwards = PR_TRUE;
   }
-  else {
+  else if (!mLastBadChar) {
     mTypeAheadBuffer.Truncate(mTypeAheadBuffer.Length() - 1);
   }
 
+  mLastBadChar = 0;
+
+  if (mBadKeysSinceMatch > 1) {
+    --mBadKeysSinceMatch;
+    DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
+    SaveFind();
+    return PR_TRUE;
+  }
+
+  mBadKeysSinceMatch = 0;
   mDontTryExactMatch = PR_FALSE;
 
   // ---------- Get new find start ------------------
@@ -815,6 +820,7 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
   // ---------Handle success or failure ---------------
   mIsFindingText = PR_FALSE;
   if (NS_SUCCEEDED(rv)) {
+    mLastBadChar = 0;
     if (mTypeAheadBuffer.Length() == 1) {
       // If first letter, store where the first find succeeded
       // (mStartFindRange)
@@ -829,6 +835,17 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     }
   }
   else {
+    PRUint32 length = mTypeAheadBuffer.Length();
+    if (mLastBadChar && length >= 1) {
+      // We have to do this to put the exact typed string in the status 
+      // Otherwise, it will be missing mLastBadChar, which had been removed
+      // so that the user could avoid pressing backspace
+      nsAutoString lastTwoCharsTyped(mLastBadChar);
+      lastTwoCharsTyped += mTypeAheadBuffer.CharAt(length - 1);
+      mTypeAheadBuffer.Truncate(length - 1);
+      mTypeAheadBuffer += lastTwoCharsTyped;
+      ++length;
+    }
     DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
     mRepeatingMode = eRepeatingNone;
 
@@ -842,8 +859,9 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     }
     // Remove bad character from buffer, so we can continue typing from
     // last matched character
-    if (mTypeAheadBuffer.Length() >= 1) {
-      mTypeAheadBuffer.Truncate(mTypeAheadBuffer.Length() - 1);
+    if (length >= 1) {
+      mLastBadChar = mTypeAheadBuffer.CharAt(length - 1);
+      mTypeAheadBuffer.Truncate(length - 1);
     }
   }
 
@@ -858,6 +876,9 @@ nsTypeAheadFind::SaveFind()
 {
   // Store find string for find-next
   mFindNextBuffer = mTypeAheadBuffer;
+  if (mLastBadChar) {
+    mFindNextBuffer.Append(mLastBadChar);
+  }
 
   nsCOMPtr<nsIWebBrowserFind> webBrowserFind;
   GetWebBrowserFind(mFocusedWindow, getter_AddRefs(webBrowserFind));
@@ -869,7 +890,7 @@ nsTypeAheadFind::SaveFind()
     mFindService = do_GetService("@mozilla.org/find/find_service;1");
   }
   if (mFindService) {
-    mFindService->SetSearchString(mTypeAheadBuffer);
+    mFindService->SetSearchString(mFindNextBuffer);
   }
 
   // --- If accessibility.typeaheadfind.timeout is set,
@@ -1781,6 +1802,7 @@ nsTypeAheadFind::CancelFind()
   mDontTryExactMatch = PR_FALSE;
   mStartFindRange = nsnull;
   mBadKeysSinceMatch = 0;
+  mLastBadChar = 0;
 
   nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(mFocusedWindow));
   if (mManualFindWindows->IndexOf(windowSupports) >= 0) {

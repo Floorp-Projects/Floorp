@@ -205,6 +205,7 @@ protected:
   PRInt32 mBadKeysSinceMatch;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
+  PRUnichar mLastBadChar; // if taf automatically overwrites an unfound character
 
   static PRInt32 sAccelKey;  // magic value of -1 indicates unitialized state
 
