@@ -289,7 +289,7 @@ pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
 pref("intl.collationKeyAsCodePoint",        false);
 
 pref("intl.charsetmenu.browser.static",    "iso-8859-1");
-pref("intl.charsetmenu.mailedit",          "iso-8859-1, iso-8859-2, iso-8859-3, iso-8859-4, iso-8859-9, iso-8859-10, iso-8859-14, iso-8859-15, iso-2022-jp, big5, gb2312, euc-kr, utf-8, koi8-r, windows-1251, koi8-u, iso-8859-7, viscii, tis-620, armscii-8");
+pref("intl.charsetmenu.mailedit",          "iso-8859-1, iso-8859-15, armscii-8, iso-8859-4, iso-8859-14, iso-8859-2, gb2312, big5, koi8-r, windows-1251, koi8-u, iso-8859-7, iso-2022-jp, euc-kr, iso-8859-10, iso-8859-3, tis-620, iso-8859-9, utf-8, viscii");
 pref("intl.charsetmenu.cache",             "");
 pref("intl.charset.detector",              "");
 
