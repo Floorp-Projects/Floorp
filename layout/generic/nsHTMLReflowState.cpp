@@ -591,7 +591,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // Check for a percentage based width and an unconstrained containing
     // block width
     if (eStyleUnit_Percent == widthUnit) {
-      if (NS_UNCONSTRAINEDSIZE == cbrs->computedWidth) {
+      if (NS_UNCONSTRAINEDSIZE == containingBlockWidth) {
         // Interpret the width like 'auto'
         widthUnit = eStyleUnit_Auto;
       }
@@ -599,7 +599,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // Check for a percentage based height and a containing block height
     // that depends on the content height
     if (eStyleUnit_Percent == heightUnit) {
-      if (NS_AUTOHEIGHT == cbrs->computedHeight) {
+      if (NS_AUTOHEIGHT == containingBlockHeight) {
         // Interpret the height like 'auto'
         heightUnit = eStyleUnit_Auto;
       }
