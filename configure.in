@@ -867,6 +867,11 @@ case "$target" in
     AC_DEFINE(_POSIX_SOURCE)
     AC_DEFINE(_SVID_SOURCE)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+    MOZ_DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb,
+                                      # and that combo is not yet good at
+                                      # debugging inlined functions (even
+                                      # when using DWARF2 as the debugging
+                                      # format)    
 
     case "${target_cpu}" in
     alpha*)
