@@ -52,6 +52,18 @@
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
 
+#include "nsIComponentRegistrar.h"
+#include "nsComponentManagerUtils.h"
+#include "nsAutoPtr.h"
+#include <gtk/gtk.h>
+
+/* from nsFilePicker.js */
+#define XULFILEPICKER_CID \
+  { 0x54ae32f8, 0x1dd2, 0x11b2, \
+    { 0xa2, 0x09, 0xdf, 0x7c, 0x50, 0x53, 0x70, 0xf8} }
+static NS_DEFINE_CID(kXULFilePickerCID, XULFILEPICKER_CID);
+static NS_DEFINE_CID(kNativeFilePickerCID, NS_FILEPICKER_CID);
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
@@ -63,8 +75,78 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+
+static NS_IMETHODIMP
+nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
+                        void **aResult)
+{
+  *aResult = nsnull;
+  if (aOuter != nsnull) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
+  nsCOMPtr<nsIFilePicker> picker;
+  if (gtk_check_version(2,4,0) == NULL) {
+    picker = new nsFilePicker;
+  } else {
+    picker = do_CreateInstance(kXULFilePickerCID);
+  }
+
+  if (!picker) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return picker->QueryInterface(aIID, aResult);
+}
+
+static NS_IMETHODIMP
+nsFilePickerRegisterSelf(nsIComponentManager *aCompMgr,
+                         nsIFile *aPath,
+                         const char *aLoaderStr,
+                         const char *aType,
+                         const nsModuleComponentInfo *aInfo)
+{
+  static PRBool been_here;
+  if (!been_here) {
+    been_here = PR_TRUE;
+
+    // Make sure we re-register this so it gets picked up after the XUL picker.
+    return NS_ERROR_FACTORY_REGISTER_AGAIN;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIComponentRegistrar> compReg = do_QueryInterface(aCompMgr, &rv);
+
+  if (NS_SUCCEEDED(rv) && compReg) {
+    rv = compReg->RegisterFactoryLocation(kNativeFilePickerCID,
+                                          "Gtk2 File Picker",
+                                          "@mozilla.org/filepicker;1",
+                                          aPath, aLoaderStr, aType);
+  }
+
+  return rv;
+}
+
+static NS_IMETHODIMP
+nsFilePickerUnregisterSelf(nsIComponentManager *aCompMgr,
+                           nsIFile *aPath,
+                           const char *aLoaderStr,
+                           const nsModuleComponentInfo *aInfo)
+{
+  nsFilePicker::Shutdown();
+
+  nsresult rv;
+  nsCOMPtr<nsIComponentRegistrar> compReg = do_QueryInterface(aCompMgr, &rv);
+
+  if (NS_SUCCEEDED(rv) && compReg) {
+    rv = compReg->UnregisterFactoryLocation(kNativeFilePickerCID,
+                                            aPath);
+  }
+
+  return rv;
+}
+
 
 static const nsModuleComponentInfo components[] =
 {
@@ -87,7 +169,9 @@ static const nsModuleComponentInfo components[] =
     { "Gtk2 File Picker",
       NS_FILEPICKER_CID,
       "@mozilla.org/filepicker;1",
-      nsFilePickerConstructor },
+      nsFilePickerConstructor,
+      nsFilePickerRegisterSelf,
+      nsFilePickerUnregisterSelf },
     { "Gtk2 Sound",
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
