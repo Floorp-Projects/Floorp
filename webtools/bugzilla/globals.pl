@@ -98,7 +98,7 @@ $::SIG{TERM} = 'IGNORE';
 $::SIG{PIPE} = 'IGNORE';
 
 # Contains the version string for the current running Bugzilla.
-$::param{'version'} = '2.15';
+$::param{'version'} = '2.16rc1';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
