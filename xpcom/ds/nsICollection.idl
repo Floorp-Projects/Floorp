@@ -23,7 +23,9 @@
 interface nsICollection : nsISupports
 {
 
-  [noscript, notxpcom] unsigned long Count();
+  unsigned long Count();
+  nsISupports GetElementAt(in unsigned long index);
+  void SetElementAt(in unsigned long index, in nsISupports item);
   void AppendElement(in nsISupports item);
   void RemoveElement(in nsISupports item);
 
