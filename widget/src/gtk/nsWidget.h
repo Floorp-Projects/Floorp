@@ -192,6 +192,8 @@ public:
   PRBool   OnInput(nsInputEvent &aEvent);
 protected:
 
+  virtual void UpdateDragContext(GtkWidget *aWidget, GdkDragContext *aGdkDragContext, guint aTime);
+
   virtual void InitCallbacks(char * aName = nsnull);
 
   NS_IMETHOD CreateNative(GtkObject *parentWindow) { return NS_OK; }
@@ -241,6 +243,7 @@ protected:
   void InstallDragLeaveSignal(GtkWidget * aWidget);
   void InstallDragBeginSignal(GtkWidget * aWidget);
   void InstallDragDropSignal(GtkWidget * aWidget);
+  void InstallDragDataReceived(GtkWidget * aWidget);
 
   void InstallEnterNotifySignal(GtkWidget * aWidget);
 
@@ -279,10 +282,18 @@ protected:
   virtual void OnDragLeaveSignal(GdkDragContext   *context,
                                  guint             time);
   virtual void OnDragBeginSignal(GdkDragContext *aGdkDragContext);
-  virtual void OnDragDropSignal(GdkDragContext *aGdkDragContext,
+  virtual void OnDragDropSignal(GtkWidget      *aWidget,
+                                GdkDragContext *aGdkDragContext,
                                 gint            x,
                                 gint            y,
                                 guint           time);
+  virtual void OnDragDataReceivedSignal(GtkWidget         *aWidget,
+                                        GdkDragContext    *context,
+                                        gint               x,
+                                        gint               y,
+                                        GtkSelectionData  *selection_data,
+                                        guint              info,
+                                        guint32            time);
   virtual void OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
   virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
@@ -345,7 +356,14 @@ protected:
                              guint            time,
                              void             *data);
 
-
+  static void DragDataReceivedSignal(GtkWidget         *aWidget,
+                                     GdkDragContext    *context,
+                                     gint               x,
+                                     gint               y,
+                                     GtkSelectionData  *selection_data,
+                                     guint              info,
+                                     guint32            time,
+                                     gpointer           data);
 
   static gint EnterNotifySignal(GtkWidget *        aWidget, 
                                 GdkEventCrossing * aGdkCrossingEvent, 
