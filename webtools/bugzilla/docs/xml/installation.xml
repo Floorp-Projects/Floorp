@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.85 2004/12/18 11:52:20 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.86 2005/01/10 06:31:33 travis%sedsystems.ca Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -639,8 +639,8 @@
         <para>
           By default, MySQL will limit the size of a table to 4GB.
           This limit is present even if the underlying filesystem
-          has no such limit or if you are using RAID.  To set a higher
-          limit, follow these instructions.
+          has no such limit.  To set a higher limit, follow these
+          instructions.
         </para>
 
         <para>
@@ -795,20 +795,82 @@
       <section id="http-iis">
         <title>Microsoft <productname>Internet Information Services</productname></title>
 
-        <para>If you need, or for some reason even want, to use Microsoft's
-        <productname>Internet Information Services</productname> or
-        <productname>Personal Web Server</productname> you should be able
-        to. You will need to configure them to know how to run CGI scripts.
-        This is described in Microsoft Knowledge Base article
-        <ulink url="http://support.microsoft.com/support/kb/articles/Q245/2/25.asp">Q245225</ulink>
-        for <productname>Internet Information Services</productname> and
-        <ulink url="http://support.microsoft.com/support/kb/articles/Q231/9/98.asp">Q231998</ulink>          
-        for <productname>Personal Web Server</productname>.
+        <para>
+          If you are running Bugzilla on Windows and choose to use
+          Microsoft's <productname>Internet Information Services</productname>
+          or <productname>Personal Web Server</productname> you will need
+          to perform a number of other configuration steps as explained below.
+          You may also want to refer to the following Microsoft Knowledge
+          Base articles: 
+          <ulink url="http://support.microsoft.com/default.aspx?scid=kb;en-us;245225">245225</ulink> 
+          <quote>HOW TO: Configure and Test a PERL Script with IIS 4.0,
+          5.0, and 5.1</quote> (for <productname>Internet Information
+          Services</productname>) and 
+          <ulink url="http://support.microsoft.com/default.aspx?scid=kb;en-us;231998">231998</ulink>          
+          <quote>HOW TO: FP2000: How to Use Perl with Microsoft Personal Web
+          Server on Windows 95/98</quote> (for <productname>Personal Web
+          Server</productname>).
         </para>
 
-        <para>Also, and this can't be stressed enough, make sure that files such as
-        <filename>localconfig</filename> and your <filename class="directory">data</filename>
-        directory are secured as described in <xref linkend="security-webserver-access"/>.
+        <para>
+          You will need to create a virtual directory for the Bugzilla
+          install.  Put the Bugzilla files in a directory that is named
+          something <emphasis>other</emphasis> than what you want your
+          end-users accessing.  That is, if you want your users to access
+          your Bugzilla installation through 
+          <quote>http://&lt;yourdomainname&gt;/Bugzilla</quote>, then do
+          <emphasis>not</emphasis> put your Bugzilla files in a directory
+          named <quote>Bugzilla</quote>.  Instead, place them in a different
+          location, and then use the IIS Administration tool to create a
+          Virtual Directory named "Bugzilla" that acts as an alias for the
+          actual location of the files.  When creating that virtual directory,
+          make sure you add the <quote>Execute (such as ISAPI applications or
+          CGI)</quote> access permission.
+        </para>
+
+        <para>
+          You will also need to tell IIS how to handle Bugzilla's
+          .cgi files. Using the IIS Administration tool again, open up
+          the properties for the new virtual directory and select the
+          Configuration option to access the Script Mappings. Create an
+          entry mapping .cgi to:
+        </para>
+
+        <programlisting>
+&lt;full path to perl.exe &gt;\perl.exe -x&lt;full path to Bugzilla&gt; -wT "%s" %s
+        </programlisting>
+
+        <para>
+          For example:
+        </para>
+
+        <programlisting>
+c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
+        </programlisting>
+
+        <note>
+          <para>
+            The ActiveState install may have already created an entry for
+            .pl files that is limited to <quote>GET,HEAD,POST</quote>. If
+            so, this mapping should be <emphasis>removed</emphasis> as
+            Bugzilla's .pl files are not designed to be run via a webserver.
+          </para>
+        </note>
+
+        <para>
+          IIS will also need to know that the index.cgi should be treated
+          as a default document.  On the Documents tab page of the virtual
+          directory properties, you need to add index.cgi as a default
+          document type.  If you  wish, you may remove the other default
+          document types for this particular virtual directory, since Bugzilla 
+          doesn't use any of them.
+        </para>
+
+        <para>
+          Also, and this can't be stressed enough, make sure that files
+          such as <filename>localconfig</filename> and your
+          <filename class="directory">data</filename> directory are
+          secured as described in <xref linkend="security-webserver-access"/>.
         </para>
 
       </section>
@@ -946,8 +1008,19 @@
       
       <programlisting>5 0 * * * cd &lt;your-bugzilla-directory&gt; ; ./collectstats.pl</programlisting>
 
-      <para>After two days have passed you'll be able to view bug graphs from
-      the Reports page.</para>
+      <para>
+        After two days have passed you'll be able to view bug graphs from
+        the Reports page.
+      </para>
+
+      <para>
+        <note>
+          Windows does not have 'cron', but it does have the Task
+          Scheduler, which performs the same duties. There are also
+          third-party tools that can be used to implement cron, such as
+          <ulink url="http://www.nncron.ru/">nncron</ulink>.
+        </note>
+      </para>
     </section>
 
     <section>
@@ -1007,14 +1080,21 @@
       which leave their bugs in the NEW or REOPENED state without triaging them.
       </para>
       <para>
-      
-      This can be done by
-      adding the following command as a daily crontab entry, in the same manner
-      as explained above for bug graphs. This example runs it at 12.55am. 
+        This can be done by adding the following command as a daily
+        crontab entry, in the same manner as explained above for bug
+        graphs. This example runs it at 12.55am. 
       </para>
 
       <programlisting>55 0 * * * cd &lt;your-bugzilla-directory&gt; ; ./whineatnews.pl</programlisting>
-      
+
+      <para>
+        <note>
+          Windows does not have 'cron', but it does have the Task
+          Scheduler, which performs the same duties. There are also
+          third-party tools that can be used to implement cron, such as
+          <ulink url="http://www.nncron.ru/">nncron</ulink>.
+        </note>
+      </para>
     </section>
 
     <section id="patch-viewer">
@@ -1205,25 +1285,26 @@ AddType text/xml .rdf</screen>
 
     <section id="os-win32">
       <title>Microsoft Windows</title>
-
-      <para>Making Bugzilla work on Windows is still a painful processes.
-      The Bugzilla Team is working to make it easier, but that goal is not
-      considered a top priority. If you wish to run Bugzilla, we still
-      recommend doing so on a Unix based system such as GNU/Linux. As of this
-      writing, all members of the Bugzilla team and all known large installations
-      run on Unix based systems.
+      <para>
+        Making Bugzilla work on Windows is more difficult than making it
+        work on Unix.  For that reason, we still recommend doing so on a Unix 
+        based system such as GNU/Linux.  That said, if you do want to get
+        Bugzilla running on Windows, you will need to make the following
+        adjustments.
       </para>
 
-     <para>If after hearing all that, you have enough pain tolerance to attempt
-     installing Bugzilla on Win32, here are some pointers.
-     <![%bz-devel;[
-       Because this is a development version of the guide, these instructions
-       are subject to change without notice. In fact, the Bugzilla Team hopes
-       to have Bugzilla reasonably close to "out of
-       the box" compatibility with Windows by the 2.18 release.
-      ]]>
-      </para>
-
+      <section id="win32-perl">
+        <title>Win32 Perl</title>
+        <para>
+          Perl for Windows can be obtained from 
+          <ulink url="http://www.activestate.com/">ActiveState</ulink>.
+           You should be able to find a compiled binary at <ulink 
+           url="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/" />.
+           The following instructions assume that you are using version
+           5.8.1 of ActiveState.
+          </para>
+        </section>
+  
       <section id="win32-perl">
         <title>Win32 Perl</title>
 
@@ -1237,47 +1318,60 @@ AddType text/xml .rdf</screen>
       <section id="win32-perlmodules">
         <title>Perl Modules on Win32</title>
 
-        <para>Bugzilla on Windows requires the same perl modules found in
-        <xref linkend="install-perlmodules"/>. The main difference is that
-        windows uses <glossterm linkend="gloss-ppm">PPM</glossterm> instead of
-        CPAN.
+        <para>
+          Bugzilla on Windows requires the same perl modules found in
+          <xref linkend="install-perlmodules"/>. The main difference is that
+          windows uses <glossterm linkend="gloss-ppm">PPM</glossterm> instead
+          of CPAN.
         </para>
 
         <programlisting>
 C:\perl&gt; <command>ppm install &lt;module name&gt;</command>
         </programlisting>
 
+        <para>
+          The best source for the Windows PPM modules needed for Bugzilla
+          is probably the the Bugzilla Test Server (aka 'Landfill'), so 
+          you should add the Landfill package repository as follows:
+        </para>
+
+        <programlisting>
+<command>ppm repository add landfill http://www.landfill.bugzilla.org/ppm/</command>
+        </programlisting>
+
         <note>
-          <para>The above syntax should work for all modules with the exception
-          of Template Toolkit. The <ulink
-          url="http://tt2.org/download.html#win32">Template Toolkit website</ulink>
-          suggests using the instructions on <ulink
-          url="http://openinteract.sourceforge.net/">OpenInteract's website</ulink>.
+          <para>
+            The PPM repository stores modules in 'packages' that may have
+            a slightly different name than the module.  If retrieving these
+            modules from there, you will need to pay attention to the information
+            provided when you run <command>checksetup.pl</command> as it will
+            tell you what package you'll need to install.
           </para>
-  
-          <para>The following commands will install the required packages
-          missing from the ActivePerl default installation:
-          </para>
-
-          <programlisting>
-<command>ppm repository add oi http://openinteract.sourceforge.net/ppmpackages</command>
-<command>ppm install DBD-mysql</command>
-<command>ppm install Template-Toolkit</command>
-<command>ppm install TimeDate</command>
-          </programlisting>
-
         </note>
-      </section>
 
+        <para>
+          <tip>
+            If you are behind a corporate firewall, you will need to let the
+            ActiveState PPM utility know how to get through it to acccess
+            the repositories by setting the HTTP_proxy system environmental
+            variable. For more information on setting that variable, see
+            the ActiveState documentation.
+          </tip>
+        </para>
+      </section>
+  
       <section id="win32-code-changes">
         <title>Code changes required to run on win32</title>
 
-        <para>Bugzilla on win32 is mostly supported out of the box; one remaining issue is
-        related to bug email. To make bug email work on Win32 (until
-        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=84876">bug
-        84876</ulink> lands), the
-        simplest way is to have the Net::SMTP Perl module installed and 
-        change this line in the file Bugzilla/Bugmail.pm:</para>
+        <para>
+          Bugzilla on win32 is mostly supported out of the box; one
+          remaining issue is related to bug email. To make bug email
+          work on Win32 (until
+          <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=49893">bug
+          49893</ulink> lands), the
+          simplest way is to have the Net::SMTP Perl module installed and 
+          change this line in the file Bugzilla/Bugmail.pm:
+        </para>
 
         <programlisting>
 open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
@@ -1286,7 +1380,11 @@ open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
 print SENDMAIL trim($msg) . "\n";
 close SENDMAIL;
         </programlisting>
-        <para>to</para>
+
+        <para>
+          to
+        </para>
+
         <programlisting>
 use Net::SMTP;
 my $smtp_server = 'smtp.mycompany.com';  # change this
@@ -1304,28 +1402,33 @@ $smtp->dataend();
 $smtp->quit;
         </programlisting>
 
-        <para>Don't forget to change the name of your SMTP server and the
-        domain of the sending email address (after the '@') in the above
-        lines of code.</para>
+        <para>
+          Don't forget to change the name of your SMTP server and the
+          domain of the sending email address (after the '@') in the
+          above lines of code.
+        </para>
       </section>
 
       <section id="win32-http">
         <title>Serving the web pages</title>
 
-        <para>As is the case on Unix based systems, any web server should be
-        able to handle Bugzilla; however, the Bugzilla Team still recommends
-        Apache whenever asked. No matter what web server you choose, be sure
-        to pay attention to the security notes in <xref linkend="security-webserver-access"/>.
-        More information on configuring specific web servers can be found in
-        <xref linkend="http"/>.
+        <para>
+          As is the case on Unix based systems, any web server should
+          be able to handle Bugzilla; however, the Bugzilla Team still
+          recommends Apache whenever asked. No matter what web server
+          you choose, be sure to pay attention to the security notes
+          in <xref linkend="security-webserver-access"/>. More
+          information on configuring specific web servers can be found
+          in <xref linkend="http"/>.
         </para>
 
         <note>
-          <para>If using Apache on windows, you can set the <ulink
-          url="http://httpd.apache.org/docs-2.0/mod/core.html#scriptinterpretersource">ScriptInterpreterSource</ulink>
-          directive in your Apache config to avoid having
-          to modify the first line of every script to contain your path to
-          perl instead of <filename>/usr/bin/perl</filename>.
+          <para>
+            If using Apache on windows, you can set the <ulink
+            url="http://httpd.apache.org/docs-2.0/mod/core.html#scriptinterpretersource">ScriptInterpreterSource</ulink>
+            directive in your Apache config to avoid having to modify
+            the first line of every script to contain your path to perl 
+            perl instead of <filename>/usr/bin/perl</filename>.
           </para>
         </note>
 
