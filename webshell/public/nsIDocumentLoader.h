@@ -73,7 +73,7 @@ public:
                             nsIPostData* aPostData = nsnull,
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
-                            PRInt32 type = 0,
+                            nsURLReloadType type = nsURLReload,
                             const PRUint32 aLocalIP = 0) = 0;
 
     NS_IMETHOD Stop(void) = 0;
