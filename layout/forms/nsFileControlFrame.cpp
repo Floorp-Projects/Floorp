@@ -132,6 +132,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     // because our frame is the only one who references them.
     reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
   }
+  NS_IF_RELEASE(browse);
 
   nsString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
