@@ -993,6 +993,7 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
 
   // make the caret be either at the very beginning (0) or the very end
   PRInt32 offset = 0;
+  HINT hint = HINTLEFT;
   if (aForward)
   {
     parentDIV->ChildCount(offset);
@@ -1009,12 +1010,15 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
         nsCOMPtr<nsIAtom> tagName;
         result = child->GetTag(*getter_AddRefs(tagName));
         if (NS_SUCCEEDED(result) && tagName.get() == nsHTMLAtoms::br)
+        {
           --offset;
+          hint = HINTRIGHT; // for Bug 106855
+        }
       }
     }
   }
 
-  result = mFrameSelection->HandleClick(parentDIV, offset, offset, aExtend, PR_FALSE, aExtend);
+  result = mFrameSelection->HandleClick(parentDIV, offset, offset, aExtend, PR_FALSE, hint);
 
   // if we got this far, attempt to scroll no matter what the above result is
   return CompleteScroll(aForward);
