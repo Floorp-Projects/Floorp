@@ -460,20 +460,23 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP nsXULWindow::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
    PRInt32* cy)
 {
-   nsRect      rect;
+  nsRect rect;
 
-   mWindow->GetScreenBounds(rect);
+  if (!mWindow)
+    return NS_ERROR_FAILURE;
 
-   if(x)
-      *x = rect.x;
-   if(y)
-      *y = rect.y;
-   if(cx)
-      *cx = rect.width;
-   if(cy)
-      *cy = rect.height;
+  mWindow->GetScreenBounds(rect);
 
-   return NS_OK;
+  if(x)
+    *x = rect.x;
+  if(y)
+    *y = rect.y;
+  if(cx)
+    *cx = rect.width;
+  if(cy)
+    *cy = rect.height;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBool aAlert) {
@@ -502,13 +505,23 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBoo
   if (aRelative) {
     nsCOMPtr<nsIBaseWindow> base(do_QueryInterface(aRelative, &result));
     if (base) {
-      base->GetPositionAndSize(&left, &top, &width, &height);
-      if (aScreen)
-        screenmgr->ScreenForRect(left, top, width, height, getter_AddRefs(screen));
-      else
-        windowCoordinates = PR_TRUE;
+      // get window rect
+      result = base->GetPositionAndSize(&left, &top, &width, &height);
+      if (NS_SUCCEEDED(result)) {
+        // if centering on screen, convert that to the corresponding screen
+        if (aScreen)
+          screenmgr->ScreenForRect(left, top, width, height, getter_AddRefs(screen));
+        else
+          windowCoordinates = PR_TRUE;
+      } else {
+        // something's wrong with the reference window.
+        // fall back to the primary screen
+        aRelative = 0;
+        aScreen = PR_TRUE;
+      }
     }
-  } else
+  }
+  if (!aRelative)
     screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
 
   if (aScreen && screen) {
