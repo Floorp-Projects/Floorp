@@ -19,6 +19,7 @@
 #ifndef nsPluginsDir_h___
 #define nsPluginsDir_h___
 
+#include "nsError.h"
 #include "nsFileSpec.h"
 
 /**
@@ -38,7 +39,7 @@ public:
 	/**
 	 * Determines whether or not the given file is actually a plugin file.
 	 */
-	bool IsPluginFile(const nsNativeFileSpec& fileSpec);
+	PRBool IsPluginFile(const nsNativeFileSpec& fileSpec);
 };
 
 struct PRLibrary;
