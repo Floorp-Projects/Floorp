@@ -261,7 +261,7 @@ PRBool nsCacheObject::IsExpired(void) const
 inline 
 PRBool nsCacheObject::IsPartial(void) const
 {
-    return (nsCacheObject::PARTIAL==m_State);
+    return (m_ContentLength != m_Size) ? PR_TRUE : PR_FALSE;
 };
 
 inline 

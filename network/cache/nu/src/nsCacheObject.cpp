@@ -420,7 +420,11 @@ PRBool nsCacheObject::Info(void* i_data)
     char* cur_ptr = (char*) i_data;
 
     //Reset the m_pInfo;
-    PR_FREEIF(m_pInfo);
+    if (m_pInfo)
+    {
+        PR_Free(m_pInfo);
+        m_pInfo = 0;
+    }
 
     //Reset all strings
     if (m_Charset)
@@ -504,6 +508,7 @@ PRUint32 nsCacheObject::InfoSize(void) const
 
 void nsCacheObject::Init() 
 {
+    m_Size = 0;
     m_Expires = PR_IntervalNow() + DEFAULT_EXPIRES;
     m_Hits = 0;
 }
@@ -585,6 +590,7 @@ const char* nsCacheObject::Trace() const
 
 PRUint32 nsCacheObject::Write(const char* i_Buffer, const PRUint32 len)
 {
+    PRUint32 amountWritten = 0;
     if (!m_pStream)
     {
         PR_ASSERT(m_Module >=0);
@@ -594,11 +600,15 @@ PRUint32 nsCacheObject::Write(const char* i_Buffer, const PRUint32 len)
             if (pModule)
             {   
                 m_pStream = pModule->GetStreamFor(this);
-                if (m_pStream)
-                    return m_pStream->Write(i_Buffer, len);
+                PR_ASSERT(m_pStream);
+                if (!m_pStream)
+                    return 0;
             }
         }
-        return 0;
+        else
+            return 0;
     }
-    return m_pStream->Write(i_Buffer, len);
+    amountWritten = m_pStream->Write(i_Buffer, len);
+    m_Size += amountWritten;
+    return amountWritten;
 }
