@@ -219,14 +219,13 @@ NS_IMETHODIMP
 nsAppShellService::CreateHiddenWindow()
 {
   nsresult rv;
+  PRInt32 initialHeight = 100, initialWidth = 100;
 #if XP_MAC
   const char* hiddenWindowURL = "chrome://global/content/hiddenWindow.xul";
   PRUint32    chromeMask = 0;
-  PRInt32     initialHeight = 0, initialWidth = 0;
 #else
   const char* hiddenWindowURL = "about:blank";
   PRUint32    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;
-  PRInt32     initialHeight = 100, initialWidth = 100;
 #endif
 
   nsCOMPtr<nsIURI> url;
@@ -236,9 +235,21 @@ nsAppShellService::CreateHiddenWindow()
     nsCOMPtr<nsIXULWindow> newWindow;
     rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
                         chromeMask, initialWidth, initialHeight,
-                        getter_AddRefs(newWindow));
+                        PR_TRUE, getter_AddRefs(newWindow));
     if (NS_SUCCEEDED(rv)) {
       mHiddenWindow = newWindow;
+
+#if XP_MAC
+      // hide the hidden window by launching it into outer space. This
+      // way, we can keep it visible and let the OS send it activates
+      // to keep menus happy. This will cause it to show up in window
+      // lists under osx, but I think that's ok.
+      nsCOMPtr<nsIBaseWindow> base ( do_QueryInterface(newWindow) );
+      if ( base ) {
+        base->SetPosition ( -32000, -32000 );
+        base->SetVisibility ( PR_TRUE );
+      }
+#endif
       
       // Set XPConnect's fallback JSContext (used for JS Components)
       // to the DOM JSContext for this thread, so that DOM-to-XPConnect
@@ -253,12 +264,15 @@ nsAppShellService::CreateHiddenWindow()
   return(rv);
 }
 
- NS_IMETHODIMP  nsAppShellService::EnumerateAndInitializeComponents(void)
- {
- 	 // Initialize each registered component.
- 	 EnumerateComponents( &nsAppShellService::InitializeComponent );
- 	 return NS_OK;
- }
+
+NS_IMETHODIMP  nsAppShellService::EnumerateAndInitializeComponents(void)
+{
+  // Initialize each registered component.
+  EnumerateComponents( &nsAppShellService::InitializeComponent );
+  return NS_OK;
+}
+
+
 // Apply function (Initialize/Shutdown) to each app shell component.
 void
 nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
@@ -541,7 +555,7 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
 
   rv = JustCreateTopWindow(aParent, aUrl, aShowWindow, aLoadDefaultPage,
                                  aChromeMask, aInitialWidth, aInitialHeight,
-                                 aResult);
+                                 PR_FALSE, aResult);
 
   if (NS_SUCCEEDED(rv))
     // the addref resulting from this is the owning addref for this window
@@ -560,7 +574,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
                                  PRUint32 aChromeMask,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                 nsIXULWindow **aResult)
+                                 PRBool aIsHiddenWindow, nsIXULWindow **aResult)
 {
   nsresult rv;
   nsWebShellWindow* window;
@@ -640,7 +654,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 
     rv = window->Initialize(aParent, mAppShell, aUrl,
                             aShowWindow, aLoadDefaultPage, zlevel,
-                            aInitialWidth, aInitialHeight, widgetInitData);
+                            aInitialWidth, aInitialHeight, aIsHiddenWindow, widgetInitData);
       
     if (NS_SUCCEEDED(rv)) {
 
@@ -780,21 +794,13 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
   if (0 == cnt)
   {
   #if XP_MAC
+	 // if no hidden window is available (perhaps due to initial
+	 // Profile Manager window being cancelled), then just quit. We don't have
+	 // to worry about focussing the hidden window, because it will get activated
+	 // by the OS since it is visible (but waaaay offscreen).
    nsCOMPtr<nsIBaseWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-  	if (hiddenWin)
-  	{
-	  	// Given hidden window the focus so it puts up the menu
-      nsCOMPtr<nsIWidget> widget;
-	 	hiddenWin->GetMainWidget(getter_AddRefs(widget));
-	 	if(widget)
-	 		widget->SetFocus();
-	}
-	else
-	{
-		// if no hidden window is available (perhaps due to initial
-		// Profile Manager window being cancelled), then just quit
-		Quit();
-	}
+	 if (!hiddenWin)
+		 Quit();
   #else
   	  Quit();
   #endif 

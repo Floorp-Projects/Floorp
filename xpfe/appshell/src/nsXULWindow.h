@@ -118,6 +118,7 @@ protected:
    PRInt32                 mSizeMode;
    PRBool                  mIntrinsicallySized; 
    PRBool                  mCenterAfterLoad;
+   PRBool                  mIsHiddenWindow;
    PRBool                  mHadChildWindow;
    unsigned long           mZlevel;
 };

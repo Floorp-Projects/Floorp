@@ -53,7 +53,7 @@ protected:
                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
                                  PRUint32 aChromeMask,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                 nsIXULWindow **aResult);
+                                 PRBool aIsHiddenWindow, nsIXULWindow **aResult);
   void InitializeComponent( const nsCID &aComponentCID );
   void ShutdownComponent( const nsCID &aComponentCID );
   typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
