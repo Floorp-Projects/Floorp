@@ -326,7 +326,7 @@ sub InsertNewUser {
     for (my $i=0 ; $i<8 ; $i++) {
         $password .= substr("abcdefghijklmnopqrstuvwxyz", int(rand(26)), 1);
     }
-    SendSQL("insert into profiles (login_name, password, cryptpassword) values (@{[SqlQuote($username)]}, '$password', encrypt('$password')");
+    SendSQL("insert into profiles (login_name, password, cryptpassword) values (@{[SqlQuote($username)]}, '$password', encrypt('$password'))");
     return $password;
 }
 
