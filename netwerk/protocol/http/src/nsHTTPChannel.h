@@ -70,7 +70,8 @@ public:
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult);
     nsresult            ResponseCompleted(nsIChannel* aTransport, 
-                                          nsresult aStatus);
+                                          nsresult aStatus,
+                                          const PRUnichar* aMsg);
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
     nsresult            SetContentLength(PRInt32 aContentLength);

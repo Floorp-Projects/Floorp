@@ -229,20 +229,10 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
         }
     }
 
-    // Pass the notification out to the consumer...
-    if (mConsumer) {
-        rv = mConsumer->OnStopRequest(mConnection, mResponseContext, i_Status, i_pMsg);
-        if (NS_FAILED(rv)) {
-            PR_LOG(gHTTPLog, PR_LOG_ERROR, 
-                   ("\tOnStopRequest [this=%x]. Consumer failed!"
-                    "Status: %x\n", this, rv));
-        }
-    }
-
     // Notify the HTTPChannel that the response has completed...
     NS_ASSERTION(mConnection, "HTTPChannel is null.");
     if (mConnection) {
-        mConnection->ResponseCompleted(channel, i_Status);
+        mConnection->ResponseCompleted(channel, i_Status, i_pMsg);
     }
 
     // The Consumer is no longer needed...

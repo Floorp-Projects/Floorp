@@ -649,8 +649,11 @@ nsHTTPChannel::Open(void)
         mState = HS_WAITING_FOR_OPEN;
         return NS_OK;
     }
-    if (NS_FAILED(rv)) return rv;
-
+    if (NS_FAILED(rv)) {
+      // Unable to create a transport...  End the request...
+      (void) ResponseCompleted(nsnull, rv, nsnull);
+      return rv;
+    }
     // Check for any modules that want to set headers before we
     // send out a request.
     NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
@@ -799,9 +802,24 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
 
 
 nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport, 
-                                          nsresult aStatus)
+                                          nsresult aStatus,
+                                          const PRUnichar* aMsg)
 {
   nsresult rv = NS_OK;
+
+  // Call the consumer OnStopRequest(...) to end the request...
+  if (mResponseDataListener) {
+    rv = mResponseDataListener->OnStopRequest(this, 
+                                              mResponseContext, 
+                                              aStatus, 
+                                              aMsg);
+    if (NS_FAILED(rv)) {
+      PR_LOG(gHTTPLog, PR_LOG_ERROR, 
+             ("nsHTTPChannel::ResponseCompleted(...) [this=%x]."
+              "\tOnStopRequest to consumer failed! Status:%x\n",
+             this, rv));
+    }
+  }
 
   // Null out pointers that are no longer needed...
   mResponseContext = null_nsCOMPtr();

@@ -449,24 +449,14 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
     //
     // An error occurred when trying to write the request to the server!
     //
-    // Call the consumer OnStopRequest(...) to end the request...
-    //
     else {
-        nsCOMPtr<nsIStreamListener> consumer;
-        nsCOMPtr<nsISupports> consumerContext;
-
         PR_LOG(gHTTPLog, PR_LOG_ERROR, 
                ("nsHTTPRequest [this=%x]. Error writing request to server."
                 "\tStatus: %x\n", 
                 this, iStatus));
 
-        (void) mConnection->GetResponseContext(getter_AddRefs(consumerContext));
-        rv = mConnection->GetResponseDataListener(getter_AddRefs(consumer));
-        if (consumer) {
-            consumer->OnStopRequest(mConnection, consumerContext, iStatus, i_Msg);
-        }
-        // Notify the channel that the request has finished
-        mConnection->ResponseCompleted(mTransport, iStatus);
+        // Notify the HTTPChannel that the request has finished
+        mConnection->ResponseCompleted(mTransport, iStatus, i_Msg);
         mTransport = null_nsCOMPtr();
 
         rv = iStatus;
