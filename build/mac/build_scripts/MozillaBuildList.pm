@@ -349,10 +349,6 @@ sub ProcessJarManifests()
     {
       CreateJarFromManifest(":mozilla:extensions:inspector:jar.mn", $chrome_dir, \%jars);
     }
-    if ($main::options{p3p})
-    {
-      CreateJarFromManifest(":mozilla:extensions:p3p:resources:jar.mn", $chrome_dir, \%jars);
-    }
     if ($main::options{jsd} && $main::options{venkman})
     {
       CreateJarFromManifest(":mozilla:extensions:venkman:resources:jar.mn", $chrome_dir, \%jars);
@@ -908,7 +904,8 @@ sub BuildClientDist()
     #P3P
     if ($main::options{p3p})
     {
-        InstallFromManifest(":mozilla:extensions:p3p:public:MANIFEST", "$distdirectory:idl:");
+        InstallFromManifest(":mozilla:extensions:p3p:public:MANIFEST_IDL", "$distdirectory:idl:");
+        InstallFromManifest(":mozilla:extensions:p3p:public:MANIFEST",     "$distdirectory:p3p:");
     }
 
     #JS DEBUGGER

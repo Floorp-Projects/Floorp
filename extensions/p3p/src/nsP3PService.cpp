@@ -140,7 +140,7 @@ nsP3PService::ProcessResponseHeader(nsIHttpChannel* aHttpChannel)
       }
 
       nsXPIDLCString spec;
-      uri->GetSpec(getter_Copies(spec));
+      uri->GetSpec(spec);
 
       result = mCompactPolicy->OnHeaderAvailable(p3pHeader,spec);
     }
@@ -206,7 +206,7 @@ nsP3PService::GetConsent(const char* aURI,
     
     if (uri) {
       nsXPIDLCString spec;
-      uri->GetSpec(getter_Copies(spec));
+      uri->GetSpec(spec);
 
       if (aURI) {
         NS_ASSERTION(nsCRT::strcmp(aURI,spec) == 0,"URIs don't match");
