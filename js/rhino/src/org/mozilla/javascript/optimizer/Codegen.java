@@ -96,7 +96,7 @@ public class Codegen extends Interpreter {
                     onlySave = true;
                 }
             } catch (IOException iox) {
-                throw Context.throwAsUncheckedException(iox);
+                throw Context.throwAsScriptRuntimeEx(iox);
             }
 
             if (!isPrimary) {
@@ -124,7 +124,7 @@ public class Codegen extends Interpreter {
                         onlySave = true;
                     }
                 } catch (IOException iox) {
-                    throw Context.throwAsUncheckedException(iox);
+                    throw Context.throwAsScriptRuntimeEx(iox);
                 }
             }
         }

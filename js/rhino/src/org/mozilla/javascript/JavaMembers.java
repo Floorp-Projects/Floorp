@@ -102,7 +102,7 @@ class JavaMembers
                 type = field.getType();
             }
         } catch (Exception ex) {
-            throw Context.throwAsUncheckedException(ex);
+            throw Context.throwAsScriptRuntimeEx(ex);
         }
         // Need to wrap the object before we return it.
         scope = ScriptableObject.getTopLevelScope(scope);
@@ -137,7 +137,7 @@ class JavaMembers
             try {
                 bp.setter.invoke(javaObject, args);
             } catch (Exception ex) {
-                throw Context.throwAsUncheckedException(ex);
+                throw Context.throwAsScriptRuntimeEx(ex);
             }
         }
         else {

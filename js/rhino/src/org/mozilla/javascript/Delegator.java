@@ -87,7 +87,7 @@ public class Delegator implements Function {
         try {
             return (Delegator)this.getClass().newInstance();
         } catch (Exception ex) {
-            throw Context.throwAsUncheckedException(ex);
+            throw Context.throwAsScriptRuntimeEx(ex);
         }
     }
 

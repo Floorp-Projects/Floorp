@@ -471,7 +471,7 @@ public class FunctionObject extends BaseFunction
         try {
             result = (Scriptable) member.getDeclaringClass().newInstance();
         } catch (Exception ex) {
-            throw Context.throwAsUncheckedException(ex);
+            throw Context.throwAsScriptRuntimeEx(ex);
         }
 
         result.setPrototype(getClassPrototype());

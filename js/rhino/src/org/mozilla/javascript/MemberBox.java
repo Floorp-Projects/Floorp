@@ -163,7 +163,7 @@ final class MemberBox implements Serializable
             try {
                 return invoker.invoke(target, args);
             } catch (Exception ex) {
-                throw Context.throwAsUncheckedException(ex);
+                throw Context.throwAsScriptRuntimeEx(ex);
             } catch (LinkageError ex) {
                 invoker = null;
             }
@@ -179,16 +179,16 @@ final class MemberBox implements Serializable
                     method = accessible;
                 } else {
                     if (!tryToMakeAccessible(method)) {
-                        throw Context.throwAsUncheckedException(ex);
+                        throw Context.throwAsScriptRuntimeEx(ex);
                     }
                 }
                 // Retry after recovery
                 return method.invoke(target, args);
             }
         } catch (IllegalAccessException ex) {
-            throw Context.throwAsUncheckedException(ex);
+            throw Context.throwAsScriptRuntimeEx(ex);
         } catch (InvocationTargetException ex) {
-            throw Context.throwAsUncheckedException(ex);
+            throw Context.throwAsScriptRuntimeEx(ex);
         }
     }
 
@@ -200,16 +200,16 @@ final class MemberBox implements Serializable
                 return ctor.newInstance(args);
             } catch (IllegalAccessException ex) {
                 if (!tryToMakeAccessible(ctor)) {
-                    throw Context.throwAsUncheckedException(ex);
+                    throw Context.throwAsScriptRuntimeEx(ex);
                 }
             }
             return ctor.newInstance(args);
         } catch (IllegalAccessException ex) {
-            throw Context.throwAsUncheckedException(ex);
+            throw Context.throwAsScriptRuntimeEx(ex);
         } catch (InvocationTargetException ex) {
-            throw Context.throwAsUncheckedException(ex);
+            throw Context.throwAsScriptRuntimeEx(ex);
         } catch (InstantiationException ex) {
-            throw Context.throwAsUncheckedException(ex);
+            throw Context.throwAsScriptRuntimeEx(ex);
         }
     }
 

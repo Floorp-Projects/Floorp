@@ -1446,29 +1446,26 @@ public class Context
     }
 
     /**
-     * Convinient method to rethrow the exception as unchecked exception.
-     * The exception will be wrapped as {@link WrappedException} unless
-     * it is an instance of {@link EvaluatorExceptions},
-     * {@link EcmaError} or java.lang.Error which are rethrown as-is.
-     * <p>
-     * Instances of java.lang.reflect.InvocationTargetExceptions are treated
-     * specially. They are unwrapped and throwAsUncheckedException  is applied
-     * recursively to its target.
+     * Rethrow the exception wrapping it as the script runtime exception.
+     * Unless the exception is instance of {@link EcmaError} or
+     * {@link EvaluatorException} it will be wrapped as
+     * {@link WrappedException}, a subclass of {@link EvaluatorException}.
+     * The resulting exception object always contains
+     * source name and line number of script that triggered exception.
      * <p>
      * This method always throws an exception, its return value is provided
      * only for convenience to allow a usage like:
      * <pre>
-     * throw Context.throwAsUncheckedException(ex);
+     * throw Context.throwAsScriptRuntimeEx(ex);
      * </pre>
      * to indicate that code after the method is unreachable.
+     * @throws EvaluatorException
+     * @throws EcmaError
      */
-    public static RuntimeException throwAsUncheckedException(Throwable e)
+    public static RuntimeException throwAsScriptRuntimeEx(Throwable e)
     {
         while ((e instanceof InvocationTargetException)) {
             e = ((InvocationTargetException) e).getTargetException();
-        }
-        if (e instanceof Error) {
-            throw (Error)e;
         }
         if (e instanceof EvaluatorException) {
             throw (EvaluatorException)e;
