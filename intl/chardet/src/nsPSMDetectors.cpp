@@ -374,8 +374,10 @@ NS_IMETHODIMP nsXPCOMDetectorFactory::CreateInstance(
   {
     case eJaDetector:
       inst = new nsXPCOMJaDetector();
+      break;
     case eJaStringDetector:
       inst = new nsXPCOMJaStringDetector();
+      break;
     default:
        return NS_ERROR_NOT_IMPLEMENTED;
   } 
