@@ -704,7 +704,7 @@ extern "C" void fe_showConference(Widget w, char *email,
 	// Assume that conference is located at the same directory as netscape
 	XP_ASSERT(w);
 
-	char execu[32];
+	char execu[1024];
 	XP_STRCPY(execu, fe_conference_path);
 
 #if defined(IRIX)
