@@ -61,6 +61,7 @@ NS_INTERFACE_MAP_END
 
 nsSmtpServer::nsSmtpServer()
 {
+  m_logonFailed = PR_FALSE;
 }
 
 nsSmtpServer::~nsSmtpServer()
@@ -318,7 +319,7 @@ NS_IMETHODIMP
 nsSmtpServer::GetPassword(char * *aPassword)
 {
     NS_ENSURE_ARG_POINTER(aPassword);
-    if (m_password.IsEmpty())
+    if (m_password.IsEmpty() && !m_logonFailed)
     {
       // try to avoid prompting the user for another password. If the user has set
       // the appropriate pref, we'll use the password from an incoming server, if 
@@ -445,8 +446,14 @@ nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
             rv = GetServerURI(getter_Copies(serverUri));
             if (NS_FAILED(rv))
                 return rv;
+            nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+            PRBool passwordProtectLocalCache = PR_FALSE;
+
+            (void) prefBranch->GetBoolPref( "mail.password_protect_local_cache", &passwordProtectLocalCache);
+
+            PRUint32 savePasswordType = (passwordProtectLocalCache) ? nsIAuthPrompt::SAVE_PASSWORD_FOR_SESSION : nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY;
             rv = aDialog->PromptPassword(aPromptTitle, aPromptMessage, 
-                    NS_ConvertASCIItoUCS2(serverUri).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+                    NS_ConvertASCIItoUCS2(serverUri).get(), savePasswordType,
                     getter_Copies(uniPassword), &okayValue);
             if (NS_FAILED(rv))
                 return rv;
@@ -552,6 +559,7 @@ nsSmtpServer::ForgetPassword()
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = SetPassword("");
+    m_logonFailed = PR_TRUE;
     return rv;
 }
 
