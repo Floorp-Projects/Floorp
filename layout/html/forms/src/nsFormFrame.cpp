@@ -15,7 +15,15 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#define NS_IMPL_IDS
+#include "nsICharsetConverterManager.h"
+#undef NS_IMPL_IDS 
+
 #include "nsCOMPtr.h"
+
+#include "nsID.h"
+
+
 #include "nsFormFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsFormControlFrame.h"
@@ -56,11 +64,16 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
 
+#include "nsIUnicodeEncoder.h"
+
+
 #include "net.h"
 #include "xp_file.h"
 #include "prio.h"
 #include "prmem.h"
 #include "prenv.h"
+
+#define SPECIFY_CHARSET_IN_CONTENT_TYPE
 
 #if defined(ClientWallet) || defined(SingleSignon) || defined(CookieManagement)
 #include "nsIServiceManager.h"
@@ -588,15 +601,53 @@ void URLEncode(char* aInString, char* aOutString)
   *outChar = 0;  // terminate the string
 }
 
+
+
 PRIVATE
-nsString* URLEncode(nsString& aString) 
+char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder)
+{
+   char* res = nsnull;
+   if(NS_SUCCEEDED(encoder->Reset()))
+   {
+      nsresult rv = NS_OK;
+      PRInt32 maxByteLen = 0;
+      if(NS_SUCCEEDED(encoder->GetMaxLength(aSrc, (PRInt32) aLen, &maxByteLen))) 
+      {
+          res = new char[maxByteLen+1];
+          if(nsnull != res) 
+          {
+             PRInt32 reslen = maxByteLen;
+             PRInt32 reslen2 ;
+             PRInt32 srclen = aLen;
+             encoder->Convert(aSrc, &srclen, res, &reslen);
+             reslen2 = maxByteLen-reslen;
+             encoder->Finish(res+reslen, &reslen2);
+             res[reslen+reslen2] = '\0';
+          }
+      }
+
+   }
+   return res;
+}
+
+
+PRIVATE
+nsString* URLEncode(nsString& aString, nsIUnicodeEncoder* encoder) 
 {  
-  char* inBuf  = aString.ToNewCString();
-	char* outBuf = new char[ (strlen(inBuf) * 3) + 1 ];
+  
+  char* inBuf = nsnull;
+  if(encoder)
+     inBuf  = UnicodeToNewBytes(aString.GetUnicode(), aString.Length(), encoder);
+
+  if(nsnull == inBuf)
+     inBuf  = aString.ToNewCString();
+
+  char* outBuf = new char[ (strlen(inBuf) * 3) + 1 ];
+        
 	URLEncode(inBuf, outBuf);
 	nsString* result = new nsString(outBuf);
-	delete [] outBuf;
-	delete [] inBuf;
+	   delete [] outBuf;
+	   delete [] inBuf;
 	return result;
 }
 
@@ -638,12 +689,50 @@ nsFormFrame::GetParentHTMLFrameDocument(nsIDocument* doc) {
   return parentDocument;
 }
 
+void nsFormFrame::GetSubmitCharset(nsString& oCharset)
+{
+  oCharset = "UTF-8"; // default to utf-8
+  nsresult rv;
+  // XXX
+  // We may want to get it from the HTML 4 Accept-Charset attribute first
+  // see 17.3 The FORM element in HTML 4 for details
+
+  // Get the charset from document
+  nsIDocument* doc = nsnull;
+  mContent->GetDocument(doc);
+  if( nsnull != doc ) {
+    rv = doc->GetDocumentCharacterSet(oCharset);
+    NS_RELEASE(doc);
+  }
+
+}
+NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
+{
+  *encoder = nsnull;
+  nsAutoString charset;
+  nsIDocument* doc = nsnull;
+  nsresult rv = NS_OK;
+  GetSubmitCharset(charset);
+  
+  // Get Charset, get the encoder.
+  nsICharsetConverterManager * ccm = nsnull;
+  rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
+                                    kICharsetConverterManagerIID,
+                                    (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
+     rv = ccm->GetUnicodeEncoder(&charset, encoder);
+     nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
+     rv = (*encoder)->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
+  }
+  return NS_OK;
+}
 #define CRLF "\015\012"   
 void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
 {
   nsString buf;
   PRBool firstTime = PR_TRUE;
   PRUint32 numChildren = mFormControls.Count();
+
 
 #if defined(ClientWallet) || defined(SingleSignon)
   /* get url name as ascii string */
@@ -701,6 +790,10 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
   }
 #endif
 
+  nsIUnicodeEncoder *encoder = nsnull;
+  if(NS_FAILED( GetEncoder(&encoder) ) )
+     encoder = nsnull;
+
   // collect and encode the data from the children controls
   for (PRUint32 childX = 0; childX < numChildren; childX++) {
 	  nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
@@ -749,11 +842,11 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 				  } else {
 				    buf += "&";
 				  }
-					nsString* convName = URLEncode(names[valueX]);
+					nsString* convName = URLEncode(names[valueX], encoder);
 				  buf += *convName;
 					delete convName;
 					buf += "=";
-					nsString* convValue = URLEncode(values[valueX]);
+					nsString* convValue = URLEncode(values[valueX], encoder);
 					buf += *convValue;
 					delete convValue;
 				}
@@ -762,6 +855,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 			delete [] values;
 		}
 	}
+  NS_IF_RELEASE(encoder);
 
 #ifdef SingleSignon
   nsIWalletService *service;
@@ -792,6 +886,12 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
     char size[16];
     sprintf(size, "%d", buf.Length());
     aData = "Content-type: application/x-www-form-urlencoded";
+#ifdef SPECIFY_CHARSET_IN_CONTENT_TYPE
+    nsString charset;
+    GetSubmitCharset(charset);
+    aData += "; charset=";
+    aData += charset;
+#endif
     aData += CRLF;
     aData += "Content-Length: ";
     aData += size;

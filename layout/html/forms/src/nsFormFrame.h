@@ -34,6 +34,7 @@ class  nsIDOMHTMLFormElement;
 class nsIDocument;
 class nsIPresContext;
 class nsFormFrame;
+class nsIUnicodeEncoder;
 
 class nsFormFrame : public nsLeafFrame, 
                     public nsIFormManager
@@ -96,6 +97,9 @@ protected:
 
   // XXX Hack to get document from parent html frame.  Should Document do this?
   nsIDocument* GetParentHTMLFrameDocument(nsIDocument* doc);
+  
+  NS_IMETHOD GetEncoder(nsIUnicodeEncoder** encoder);
+  void GetSubmitCharset(nsString& oCharset);
 
   nsVoidArray          mFormControls;
   nsVoidArray          mRadioGroups;
