@@ -597,6 +597,43 @@ titledbutton[class~=plain][disabled]:active {
 /* special class for borderless buttons */
 /* titled button on toolbars are automatically set to be borderless (see below) */
 
+titledbutton[class~=borderless] {
+  border: 1px solid transparent;
+}
+ 
+titledbutton[class~=borderless]:hover {
+  border: 1px outset white;
+  color:#333366;
+  text-decoration: underline;
+}
+  
+titledbutton[class~=borderless]:hover:-moz-outline {
+  border : 1px solid black;
+}
+
+titledbutton[class~=borderless]:active {
+  text-decoration:none;
+  border: 1px inset;
+}
+ 
+titledbutton[class~=borderless]:active:-moz-outline {
+  border : 1px solid black;
+}
+ 
+titledbutton[class~=borderless][disabled] {
+  border: 1px solid transparent;
+}
+
+titledbutton[class~=borderless][disabled]:hover {
+  border: 1px solid transparent;
+}
+
+titledbutton[class~=borderless][disabled]:active {
+  border: 1px solid transparent;
+  padding: 2px;
+}
+
+
 treecell.image > titledbutton {
   border: 1px solid transparent;
   text-decoration: none;
