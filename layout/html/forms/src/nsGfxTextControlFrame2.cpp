@@ -3324,7 +3324,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAString& aValue)
       }
     }
 
-    mEditor->OutputToString(aValue, NS_LITERAL_STRING("text/plain"), flags);
+    mEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags, aValue);
   }
   else
   {

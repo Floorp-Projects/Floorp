@@ -120,12 +120,12 @@ static nsresult PrintEditorOutput(nsIEditor* editor, PRInt32 aCommandID)
       case VIEWER_DISPLAYTEXT:
         formatString.Assign(NS_LITERAL_STRING("text/plain"));
         flags = nsIDocumentEncoder::OutputFormatted;
-        editor->OutputToString(outString, formatString, flags);
+        editor->OutputToString(formatString, flags, outString);
         break;
         
       case VIEWER_DISPLAYHTML:
         formatString.Assign(NS_LITERAL_STRING("text/html"));
-        editor->OutputToString(outString, formatString, flags);
+        editor->OutputToString(formatString, flags, outString);
         break;
 	}
 

@@ -1706,9 +1706,9 @@ nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
 #pragma mark -
 #endif
 
-NS_IMETHODIMP nsEditor::OutputToString(nsAString& aOutputString,
-                                       const nsAString& aFormatType,
-                                       PRUint32 aFlags)
+NS_IMETHODIMP nsEditor::OutputToString(const nsAString& aFormatType,
+                                       PRUint32 aFlags,
+                                       nsAString& aOutputString)
 {
   // these should be implemented by derived classes.
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -3373,7 +3373,6 @@ nsCOMPtr<nsIDOMNode>
 nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, PRBool bNoBlockCrossing)
 {
   if (!aCurrentNode) return nsnull;
-  nsresult result = NS_OK;
   nsCOMPtr<nsIDOMNode> resultNode, temp=aCurrentNode;
   PRBool hasChildren;
   aCurrentNode->HasChildNodes(&hasChildren);
@@ -3398,7 +3397,6 @@ nsCOMPtr<nsIDOMNode>
 nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, PRBool bNoBlockCrossing)
 {
   if (!aCurrentNode) return nsnull;
-  nsresult result = NS_OK;
   nsCOMPtr<nsIDOMNode> resultNode, temp=aCurrentNode;
   PRBool hasChildren;
   aCurrentNode->HasChildNodes(&hasChildren);

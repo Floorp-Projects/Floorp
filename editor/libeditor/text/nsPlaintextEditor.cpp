@@ -1515,9 +1515,9 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
 
 
 NS_IMETHODIMP 
-nsPlaintextEditor::OutputToString(nsAString& aOutputString,
-                                  const nsAString& aFormatType,
-                                  PRUint32 aFlags)
+nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
+                                  PRUint32 aFlags,
+                                  nsAString& aOutputString)
 {
   PRBool cancel, handled;
   nsString resultString;
@@ -1772,9 +1772,10 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
 
   if (isCollapsed)    // rewrap the whole document
   {
-    rv = OutputToString(current, format,
+    rv = OutputToString(format,
                         nsIDocumentEncoder::OutputFormatted
-                        | nsIDocumentEncoder::OutputLFLineBreak);
+                        | nsIDocumentEncoder::OutputLFLineBreak,
+                        current);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
@@ -1791,10 +1792,11 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
   }
   else                // rewrap only the selection
   {
-    rv = OutputToString(current, format,
+    rv = OutputToString(format,
                         nsIDocumentEncoder::OutputFormatted
                         | nsIDocumentEncoder::OutputLFLineBreak
-                        | nsIDocumentEncoder::OutputSelectionOnly);
+                        | nsIDocumentEncoder::OutputSelectionOnly,
+                        current);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
@@ -1835,8 +1837,7 @@ nsPlaintextEditor::StripCites()
 
   if (isCollapsed)    // rewrap the whole document
   {
-    rv = OutputToString(current, format,
-                               nsIDocumentEncoder::OutputFormatted);
+    rv = OutputToString(format, nsIDocumentEncoder::OutputFormatted, current);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
@@ -1853,9 +1854,10 @@ nsPlaintextEditor::StripCites()
   }
   else                // rewrap only the selection
   {
-    rv = OutputToString(current, format,
-                               nsIDocumentEncoder::OutputFormatted
-                                | nsIDocumentEncoder::OutputSelectionOnly);
+    rv = OutputToString(format,
+                        nsIDocumentEncoder::OutputFormatted
+                        | nsIDocumentEncoder::OutputSelectionOnly,
+                        current);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
