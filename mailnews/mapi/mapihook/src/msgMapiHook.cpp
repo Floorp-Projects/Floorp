@@ -546,6 +546,7 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
 
             PRBool bExist ;
             rv = pFile->Exists(&bExist) ;
+            PR_LOG(MAPI, PR_LOG_DEBUG, ("nsMapiHook::HandleAttachments: filename: %s path: %s exists = %s \n", (const char*)aFiles[i].lpszFileName, (const char*)aFiles[i].lpszPathName, bExist ? "true" : "false"));
             if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
 
             //Temp Directory
@@ -578,6 +579,20 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
             else 
               pFile->GetLeafName (leafName);
 
+             nsCOMPtr <nsIFile> pTempFile;
+             rv = pTempDir->Clone(getter_AddRefs(pTempFile));
+             if (NS_FAILED(rv) || (!pTempFile) ) 
+               return rv;
+ 
+             pTempFile->Append(leafName);
+             pTempFile->Exists(&bExist);
+             if (bExist)
+             {
+               rv = pTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0777);
+               NS_ENSURE_SUCCESS(rv, rv);
+               pTempFile->GetLeafName(leafName);
+               pTempFile->Remove(PR_FALSE); // remove so we can copy over it.
+             }
             // copy the file to its new location and file name
             pFile->CopyTo(pTempDir, leafName);
             // point pFile to the new location of the attachment
@@ -596,6 +611,8 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
 
             // add the attachment
             rv = aCompFields->AddAttachment (attachment);
+            if (NS_FAILED(rv))
+              PR_LOG(MAPI, PR_LOG_DEBUG, ("nsMapiHook::HandleAttachments: AddAttachment rv =  %lx\n", rv));
         }
     }
     return rv ;
