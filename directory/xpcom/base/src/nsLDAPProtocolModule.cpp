@@ -56,16 +56,18 @@ static nsModuleComponentInfo components[] =
     { "LDAP Protocol Handler", NS_LDAPPROTOCOLHANDLER_CID, 
 	  NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ldap", 
 	  nsLDAPProtocolHandlerConstructor },	
-    { "LDAP Service", NS_LDAPSERVICE_CID, "mozilla.network.ldapservice", 
-	  nsLDAPServiceConstructor },
+    { "LDAP Service", NS_LDAPSERVICE_CID, 
+	  "@mozilla.org/network/ldap-service;1", nsLDAPServiceConstructor },
     { "LDAP Connection", NS_LDAPCONNECTION_CID,
-	  "mozilla.network.ldapconnection", nsLDAPConnectionConstructor },
+	  "@mozilla.org/network/ldap-connection;1", 
+	  nsLDAPConnectionConstructor },
     { "LDAP Operation", NS_LDAPOPERATION_CID,
-	  "mozilla.network.ldapoperation", nsLDAPOperationConstructor },
+	  "@mozilla.org/network/ldap-operation;1", 
+	  nsLDAPOperationConstructor },
     { "LDAP Message", NS_LDAPMESSAGE_CID,
-	  "mozilla.network.ldapmessage", nsLDAPMessageConstructor },
+	  "@mozilla.org/network/ldap-message;1", nsLDAPMessageConstructor },
     { "LDAP URL", NS_LDAPURL_CID,
-          "mozilla.network.ldapurl", nsLDAPURLConstructor }
+          "@mozilla.org/network/ldap-url;1", nsLDAPURLConstructor }
 };
 
 // implement the NSGetModule() exported function
