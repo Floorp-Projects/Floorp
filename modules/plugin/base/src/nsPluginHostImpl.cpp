@@ -2239,36 +2239,23 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   
   mSetUpListener = PR_TRUE;
   
-  // set seekability
+  // set seekability (seekable if the stream has a known length and if the
+  // http server accepts byte ranges).
   PRBool bSeekable = PR_FALSE;
-  if (httpChannel)
+  PRUint32 length = -1;
+  mPluginStreamInfo->GetLength(&length);
+  if ((length != -1) && httpChannel)
   {
     nsXPIDLCString range;
     if(NS_SUCCEEDED(httpChannel->GetResponseHeader("accept-ranges", getter_Copies(range))))
     {
-      if (0 == PL_strcmp(range.get(), "bytes"))
+      if (0 == PL_strcasecmp(range.get(), "bytes"))
         bSeekable = PR_TRUE;
     }
   }
-
   mPluginStreamInfo->SetSeekable(bSeekable);
- 
-  PRUint32 length = -1;
-  mPluginStreamInfo->GetLength(&length);
-  if (bSeekable && length == -1 && httpChannel) {
-    nsXPIDLCString tmp;
-  httpChannel->GetResponseHeader("Content-Length", getter_Copies(tmp));
-    if (tmp.get()) {
-        PRInt32 ignore;
-        nsCString lenString (tmp.get());
-      length = lenString.ToInteger(&ignore);
-      mPluginStreamInfo->SetLength(length);
-    }
-  }
-  if (length == -1)
-  mPluginStreamInfo->SetSeekable(PR_FALSE);
 
-    // we require a content len
+  // we require a content len
   // get Last-Modified header for plugin info
   if (httpChannel) 
   {
