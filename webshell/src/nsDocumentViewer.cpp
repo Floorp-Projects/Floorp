@@ -562,7 +562,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         NS_RELEASE(vm);
         NS_RELEASE(ss);
         NS_RELEASE(newdx);
-        NS_RELEASE(prefs);
+        NS_IF_RELEASE(prefs); // XXX why is the prefs null??
       }
 
       NS_RELEASE(dx);
