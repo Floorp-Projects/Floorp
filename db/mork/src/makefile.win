@@ -44,6 +44,7 @@ CPPSRCS=    orkinCell.cpp\
 			morkBlob.cpp\
 			morkBuilder.cpp\
 			morkCellObject.cpp\
+			morkConfig.cpp\
 			morkCursor.cpp \
 			morkDeque.cpp\
 			morkEnv.cpp\
@@ -90,6 +91,7 @@ CPP_OBJS=   .\$(OBJDIR)\orkinCell.obj\
 			.\$(OBJDIR)\morkBlob.obj\
 			.\$(OBJDIR)\morkBuilder.obj\
 			.\$(OBJDIR)\morkCellObject.obj\
+			.\$(OBJDIR)\morkConfig.obj\
 			.\$(OBJDIR)\morkCursor.obj\
 			.\$(OBJDIR)\morkDeque.obj\
 			.\$(OBJDIR)\morkEnv.obj\
