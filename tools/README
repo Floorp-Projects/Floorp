@@ -1,0 +1,34 @@
+mozilla/tools
+=============
+
+This directory is for miscellaneous tools associated with mozilla.
+
+Table of Contents
+=================
+
+* trees.pl (a.k.a moz)
+    A perl script to navigate mozilla source trees.
+    Run trees -h for usage. You will probably need to copy 'trees' into
+    your home directory somewhere (Just be careful to keep it up to date).
+    You wrap 'trees' in a shell alias called 'moz' to let you do things like,
+      moz gecko webshell   - cd to webshell directory in gecko tree
+      moz gecko2           - cd to same directory in gecko2 tree
+      moz /                - cd to the root of the tree
+      moz -o               - cd to the same subdir in the object directory
+
+
+* mozilla/tools/build
+    This directory is for tools that facilitate the building of the
+    mozilla source code (the browser, the sdks, etc.).
+
+* mozilla/tools/project-editor
+    CGI interface to Machintosh Project Editor
+
+* mozilla/tools/tests
+    <synopsis: write me>
+
+* mozilla/tools/tinderbox
+    Scripts associated with the client-side of tinderbox.
+    (scripts to checkout, build, and report the status of the tree to a
+     tinderbox server.)
+
