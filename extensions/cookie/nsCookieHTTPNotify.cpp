@@ -19,7 +19,9 @@
 #include <stdio.h>
 #include "nsCookieHTTPNotify.h"
 #include "nsIHTTPChannel.h"
+#include "nsIHTTPResponse.h"
 #include "nsCookie.h"
+#include "nsIURL.h"
 #include "nsCRT.h"
 
 
@@ -78,15 +80,52 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     if (NS_FAILED(rv))
         return rv; 
 
-    const char* cookie = "testCookieVal";
-    rv = pHTTPConnection->SetRequestHeader("Cookie", cookie);
-
+    nsIURI* pURL;
+    rv = pHTTPConnection->GetURI(&pURL);
     if (NS_FAILED(rv)) {
         NS_RELEASE(pHTTPConnection);
         return rv;
     }
+    char *url;
+    if (pURL == nsnull) {
+        NS_RELEASE(pHTTPConnection);
+        return rv;
+    }
 
+    rv = pURL->GetSpec(&url);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(pURL);
+        NS_RELEASE(pHTTPConnection);
+        return rv;
+    }
+
+    if (url == nsnull) {
+        NS_RELEASE(pURL);
+        NS_RELEASE(pHTTPConnection);
+        return rv;
+    }
+
+
+    const char* cookie = ::NET_GetCookie(url);
+
+    if (cookie == nsnull) {
+        NS_RELEASE(pURL);
+        NS_RELEASE(pHTTPConnection);
+        nsCRT::free(url);
+        return rv;
+    }
+    rv = pHTTPConnection->SetRequestHeader("Cookie", cookie);
+
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(pURL);
+        NS_RELEASE(pHTTPConnection);
+        nsCRT::free(url);
+        return rv;
+    }
+
+    NS_RELEASE(pURL);
     NS_RELEASE(pHTTPConnection);
+    nsCRT::free(url);
 
     return NS_OK;
 }
@@ -108,7 +147,7 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
         return rv; 
 
     
-    char* cookie = "testCookieVal";
+    char* cookie;
     rv = pHTTPConnection->GetResponseHeader("Set-Cookie", &cookie);
 
     if (NS_FAILED(rv)) {
@@ -118,6 +157,49 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
 
     if (cookie) {
         printf("\nRecieving ... %s\n", cookie);
+        nsIURI* pURL;
+        rv = pHTTPConnection->GetURI(&pURL);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(pHTTPConnection);
+            nsCRT::free(cookie);
+            return rv;
+        }
+        char *url;
+        if (pURL == nsnull) {
+            NS_RELEASE(pHTTPConnection);
+            nsCRT::free(cookie);
+            return rv;
+        }
+
+        rv = pURL->GetSpec(&url);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(pURL);
+            NS_RELEASE(pHTTPConnection);
+            nsCRT::free(cookie);
+            return rv;
+        }
+
+        if (url == nsnull) {
+            NS_RELEASE(pURL);
+            NS_RELEASE(pHTTPConnection);
+            nsCRT::free(cookie);
+            return rv;
+        }
+
+        nsIHTTPResponse *pHTTPResponse; 
+        rv = pHTTPConnection->QueryInterface(nsIHTTPResponse::GetIID(), (void **)&pHTTPResponse); 
+        if (NS_SUCCEEDED(rv) && nsnull != pHTTPResponse) {
+            char *pDate;
+            if(pDate) {
+                pHTTPResponse->GetDate(&pDate); 
+                NET_SetCookieStringFromHttp(url, cookie, pDate);
+                NS_RELEASE(pHTTPResponse);
+                nsCRT::free(pDate);
+            }
+        }
+       
+        NS_RELEASE(pURL);
+        nsCRT::free(url);
         nsCRT::free(cookie);
     }
     

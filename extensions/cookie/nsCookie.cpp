@@ -29,19 +29,13 @@
 
 #define alphabetize 1
 #include "nsString.h"
-//#include "nsINetService.h"
-//#include "nsINetService.h"
 #include "nsIServiceManager.h"
-//#include "nsIStringBundle.h"
 #include "nsFileStream.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 
 extern "C" {
 #include "xp.h"
-//#include "mkprefs.h"
-//#include "netutils.h"
-//#include "httpauth.h"
 #include "prefapi.h"
 #include "prmon.h"
 }
@@ -54,12 +48,8 @@ extern "C" {
 }
 
 extern "C" {
-//#include "cookies.h"
 #include "sechash.h"
 #include "rosetta.h"
-#include "libevent.h"
-//#include "mkparse.h"
-//#include "net_xp_file.h"
 }
 
 extern "C" {
@@ -71,8 +61,6 @@ extern int MK_ACCESS_COOKIES_WISHES_MODIFY;
 extern int MK_ACCESS_COOKIES_REMEMBER;
 }
 /*
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);*/
@@ -97,6 +85,11 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 MODULE_PRIVATE time_t 
 NET_ParseDate(char *date_string);
+
+PRBool
+ET_PostCheckConfirmBox(char* szMainMessage, char* szCheckMessage,
+	                    char* szOKMessage, char* szCancelMessage,
+	                    XP_Bool *bChecked);
 
 PRIVATE Bool cookies_changed = FALSE;
 PRIVATE Bool cookie_permissions_changed = FALSE;
@@ -132,7 +125,6 @@ typedef struct _net_CookiePermissionStruct {
 } net_CookiePermissionStruct;
 
 typedef struct _net_DeferCookieStruct {
-    MWContext * context;
     char * cur_url;
     char * set_cookie_header;
     time_t timeToExpire;
@@ -1100,12 +1092,10 @@ PRBool net_IntSetCookieStringInUse = FALSE;
 
 PRIVATE void
 net_DeferCookie(
-		MWContext * context,
 		char * cur_url,
 		char * set_cookie_header,
 		time_t timeToExpire) {
 	net_DeferCookieStruct * defer_cookie = PR_NEW(net_DeferCookieStruct);
-//	defer_cookie->context = context;
 	defer_cookie->cur_url = NULL;
 	StrAllocCopy(defer_cookie->cur_url, cur_url);
 	defer_cookie->set_cookie_header = NULL;
@@ -1123,10 +1113,9 @@ net_DeferCookie(
 	XP_ListAddObject(net_defer_cookie_list, defer_cookie);
 	net_unlock_defer_cookie_list();
 }
-
+           
 PRIVATE void
-net_IntSetCookieString(MWContext * context,
-					char * cur_url,
+net_IntSetCookieString(char * cur_url,
 					char * set_cookie_header,
 					time_t timeToExpire );
 
@@ -1140,8 +1129,8 @@ net_UndeferCookies() {
 	}
 	defer_cookie = (net_DeferCookieStruct*)XP_ListRemoveEndObject(net_defer_cookie_list);
 	net_unlock_defer_cookie_list();
-	net_IntSetCookieString (
-		defer_cookie->context,
+
+    net_IntSetCookieString (
 		defer_cookie->cur_url,
 		defer_cookie->set_cookie_header,
 		defer_cookie->timeToExpire);
@@ -1153,10 +1142,14 @@ net_UndeferCookies() {
 /* Java script is calling NET_SetCookieString, netlib is calling 
 ** this via NET_SetCookieStringFromHttp.
 */
-
+/*
 PRIVATE void
 net_IntSetCookieString(MWContext * context,
 					char * cur_url,
+					char * set_cookie_header,
+					time_t timeToExpire )*/
+PRIVATE void
+net_IntSetCookieString(char * cur_url,
 					char * set_cookie_header,
 					time_t timeToExpire )
 {
@@ -1169,18 +1162,13 @@ net_IntSetCookieString(MWContext * context,
 	char *cur_host = NET_ParseURL(cur_url, GET_HOST_PART);
 	char *semi_colon, *ptr, *equal;
 	PRBool HG83744 is_domain=FALSE, accept=FALSE;
-	MWContextType type;
+//	MWContextType type;
 	Bool bCookieAdded;
-
-	if(!context) {
-		PR_Free(cur_path);
-		PR_Free(cur_host);
-		return;
-	}
 
 	/* Only allow cookies to be set in the listed contexts. We
 	 * don't want cookies being set in html mail. 
 	 */
+    /* We need to come back and work on this - Neeti 
 	type = context->type;
 	if(!( (type == MWContextBrowser)
 		|| (type == MWContextHTMLHelp)
@@ -1189,7 +1177,7 @@ net_IntSetCookieString(MWContext * context,
 		PR_Free(cur_host);
 		return;
 	}
-	
+*/	
 	if(NET_GetCookieBehaviorPref() == NET_DontUse) {
 		PR_Free(cur_path);
 		PR_Free(cur_host);
@@ -1203,7 +1191,7 @@ net_IntSetCookieString(MWContext * context,
 	if (net_IntSetCookieStringInUse) {
 		PR_Free(cur_path);
 		PR_Free(cur_host);
-		net_DeferCookie(context, cur_url, set_cookie_header, timeToExpire);
+        net_DeferCookie(cur_url, set_cookie_header, timeToExpire);
 		return;
 	}
 	net_IntSetCookieStringInUse = TRUE;
@@ -1502,9 +1490,8 @@ net_IntSetCookieString(MWContext * context,
 
 	    {
 		Bool old_cookie_remember_checked = cookie_remember_checked;
- 		XP_Bool userHasAccepted = ET_PostCheckConfirmBox
-		    (context,
-		     new_string,
+        PRBool userHasAccepted = ET_PostCheckConfirmBox
+		    (new_string,
 		     remember_string,
 		     0,0,
 		     &cookie_remember_checked);
@@ -1648,10 +1635,9 @@ net_IntSetCookieString(MWContext * context,
 }
 
 PUBLIC void
-NET_SetCookieString(MWContext * context, 
-					char * cur_url,
+NET_SetCookieString(char * cur_url,
 					char * set_cookie_header) {
-    net_IntSetCookieString(context, cur_url, set_cookie_header, 0);
+    net_IntSetCookieString(cur_url, set_cookie_header, 0);
 }
 
 /* Determines whether the inlineHost is in the same domain as the currentHost. For use with rfc 2109
@@ -1701,12 +1687,10 @@ NET_SameDomain(char * currentHost, char * inlineHost)
 ** This routine does not need to worry about the cookie lock since all of
 **   the work is handled by sub-routines
 */
+
 PUBLIC void
-NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
-							URL_Struct * URL_s,
-							MWContext * context, 
-							char * cur_url,
-							char * set_cookie_header)
+NET_SetCookieStringFromHttp(char * cur_url,
+							char * set_cookie_header, char * server_date)
 {
 	/* If the outputFormat is not PRESENT (the url is not going to the screen), and not
 	*  SAVE AS (shift-click) then 
@@ -1714,13 +1698,14 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 	*  to based on his preference to deal with foreign cookies. If it's not inline, just set
 	*  the cookie. */
 	char *ptr=NULL, *date=NULL;
-	time_t gmtCookieExpires=0, expires=0;
+	time_t gmtCookieExpires=0, expires=0, sDate;
 
+    /* We need to come back and fix this.  - Neeti
 	if(CLEAR_CACHE_BIT(outputFormat) != FO_PRESENT && CLEAR_CACHE_BIT(outputFormat) != FO_SAVE_AS)
 	{
 		if (NET_GetCookieBehaviorPref() == NET_DontAcceptForeign)
 		{
-			/* the user doesn't want foreign cookies, check to see if its foreign */
+			// the user doesn't want foreign cookies, check to see if its foreign 
 			char * curSessionHistHost = 0;
 			char * theColon = 0;
 			char * curHost = NET_ParseURL(cur_url, GET_HOST_PART);
@@ -1735,7 +1720,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 				return;
 			}
 
-			/* strip ports */
+			// strip ports 
 			theColon = PL_strchr(curHost, ':');
 			if(theColon)
 			   *theColon = '\0';
@@ -1743,7 +1728,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 			if(theColon)
 				*theColon = '\0';
 
-			/* if it's foreign, get out of here after a little clean up */
+			// if it's foreign, get out of here after a little clean up 
 			if(!NET_SameDomain(curHost, curSessionHistHost))
 			{
 				PR_FREEIF(curHost);	
@@ -1754,7 +1739,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 			PR_FREEIF(curSessionHistHost);
 		}
 	}
-
+    */
 	/* Determine when the cookie should expire. This is done by taking the difference between 
 	   the server time and the time the server wants the cookie to expire, and adding that 
 	   difference to the client time. This localizes the client time regardless of whether or
@@ -1776,22 +1761,23 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 		expires = NET_ParseDate(date);
 		*ptr=origLast;
 	}
-	if( URL_s->server_date && expires )
+    sDate = NET_ParseDate(server_date);
+	if( sDate && expires )
 	{
-		if( expires < URL_s->server_date )
+		if( expires < sDate )
 		{
 			gmtCookieExpires=1;
 		}
 		else
 		{
-			gmtCookieExpires = expires - URL_s->server_date + time(NULL);
-			/* if overflow */
+			gmtCookieExpires = expires - sDate + time(NULL);
+			// if overflow 
 			if( gmtCookieExpires < time(NULL) )
-				gmtCookieExpires = (((unsigned) (~0) << 1) >> 1); /* max int */
+				gmtCookieExpires = (((unsigned) (~0) << 1) >> 1); // max int 
 		}
 	}
 
-	net_IntSetCookieString(context, cur_url, set_cookie_header, gmtCookieExpires);
+    net_IntSetCookieString(cur_url, set_cookie_header, gmtCookieExpires);
 }
 
 #ifndef XP_MAC
@@ -3385,9 +3371,9 @@ NET_ParseURL (const char *url, int parts_requested)
     return rv;
 }
 
-JSBool
-ET_PostCheckConfirmBox(MWContext* context,
-	char* szMainMessage, char* szCheckMessage,
+
+PRBool
+ET_PostCheckConfirmBox(char* szMainMessage, char* szCheckMessage,
 	char* szOKMessage, char* szCancelMessage,
 	XP_Bool *bChecked)
 {
@@ -3398,11 +3384,11 @@ ET_PostCheckConfirmBox(MWContext* context,
     for (;;) {
 	c = getchar();
         if (tolower(c) == 'y') {
-	    result = JS_TRUE;
+	    result = PR_TRUE;
 	    break;
 	}
         if (tolower(c) == 'n') {
-	    result = JS_FALSE;
+	    result = PR_FALSE;
 	    break;
 	}
     }
@@ -3410,11 +3396,11 @@ ET_PostCheckConfirmBox(MWContext* context,
     for (;;) {
 	c = getchar();
         if (tolower(c) == 'y') {
-	    *bChecked = TRUE;
+	    *bChecked = PR_TRUE;
 	    break;
 	}
         if (tolower(c) == 'n') {
-	    *bChecked = FALSE;
+	    *bChecked = PR_FALSE;
 	    break;
 	}
     }

@@ -20,6 +20,8 @@
 #define nsICookieService_h__
 
 #include "nsISupports.h"
+#include "nsIURI.h"
+#include "nsString.h"
 
 // {AB397772-12D3-11d3-8AD1-00105A1B8860}
 #define NS_ICOOKIESERVICE_IID \
@@ -33,8 +35,34 @@
 
 class nsICookieService : public nsISupports {
 public:
-    
-  NS_IMETHOD Init() = 0;
+  
+    static const nsIID& GetIID() { static nsIID iid = NS_ICOOKIESERVICE_IID; return iid; }
+
+    /**
+     * Get the complete cookie string associated with the URL
+     *
+     * @param aURL The URL for which to get the cookie string
+     * @param aCookie The string object which will hold the result
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie)=0;
+
+
+   /**
+     * Set the cookie string associated with the URL
+     *
+     * @param aURL The URL for which to set the cookie string
+     * @param aCookie The string to set
+     * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie)=0;
+
+
+    NS_IMETHOD Cookie_DisplayCookieInfoAsHTML()=0;
+    NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results)=0;
+    NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList)=0;
+    NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList)=0;
+ 
 };
 
 
