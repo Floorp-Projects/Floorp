@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.31 $';
+$Version = '$Revision: 1.32 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -216,6 +216,12 @@ sub SetupEnv {
 	}
     }
 
+    if ( $OS eq 'UnixWare' ) {
+	$ENV{'PATH'} = '/usr/local/bin:/usr/ccs/bin:' . $ENV{'PATH'} . ':/usr/ucb';
+	$ConfigureArgs .= '--x-includes=/usr/X/include --x-libraries=/usr/X/lib';
+	$NSPRArgs .= 'NS_USE_NATIVE=1';
+    }
+
     $Path = $ENV{PATH};
     print "Path After: $Path\n";
 }
@@ -261,6 +267,9 @@ sub FinalizeLDLibPath {
 	    }
 	}
     }
+    if ( $OS eq 'UnixWare' ) {
+	$ENV{'LPATH'} = '/usr/ucblib:/usr/X/lib:' . $ENV{'LD_LIBRARY_PATH'};
+    }
 }
 
 ##########################################################################
@@ -286,12 +295,9 @@ sub GetSystemInfo {
 	$OSVer = $osAltVer . "." . $OSVer;
     }
 
-    if ( $OS eq 'BSD/OS' ) {
-	$OS = 'BSD_OS';
-    }
-
-    if ( $OS eq 'IRIX64' ) {
+    if ( $OS eq 'IRIX64' || $OS eq 'IRIX' ) {
 	$OS = 'IRIX';
+	$OSVerMajor = substr($OSVer, 0, 1);
     }
 
     if ( $OS eq 'QNX' ) {
@@ -309,20 +315,23 @@ sub GetSystemInfo {
 	$OS = 'SINIX';
     }
 
+    if ( $OS eq 'UNIX_SV' || $OS eq 'UnixWare' ) {
+	$OS = 'UnixWare';
+	$OSVer = `uname -v`;
+	chop($OSVer);
+    }
+
     if ( "$host" ne "" ) {
 	$BuildName = $host . ' ' . $OS . ' ' . $OSVer;
     }
 
-    if ( $OS eq 'BSD_OS' ) {
-	$BuildName = $host . ' BSD/OS ' . $OSVer;
+    # This is deliberate.  We want BuildName to use BSD/OS, but everything else should use BSD_OS.
+    if ( $OS eq 'BSD/OS' ) {
+	$OS = 'BSD_OS';
     }
 
-    if ( $OS eq 'FreeBSD' ) {
+    if ( $OS eq 'FreeBSD' || $OS eq 'OpenBSD' ) {
 	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
-    }
-
-    if ( $OS eq 'IRIX' ) {
-	$OSVerMajor = substr($OSVer, 0, 1);
     }
 
     if ( $OS eq 'Linux' ) {
@@ -348,10 +357,6 @@ sub GetSystemInfo {
 	} else {
 	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
 	}
-    }
-
-    if ( $OS eq 'OpenBSD' ) {
-	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer;
     }
 
     if ( $OS eq 'SINIX' ) {
@@ -687,7 +692,6 @@ sub StartBuild {
 	} else {
 	    print LOG "tinderbox: build: $BuildName $fe\n";
 	}
-	print LOG "tinderbox: build: $BuildName $fe\n";
 	print LOG "tinderbox: errorparser: unix\n";
 	print LOG "tinderbox: buildfamily: unix\n";
 	print LOG "tinderbox: END\n";
