@@ -602,7 +602,7 @@
       </handler>
       <handler event="mousedown">
         <![CDATA[
-          if (this.isLink(event.originalTarget))
+          if (this.getAttribute("autoscroll") == "false" || this.isLink(event.originalTarget))
             return;
 
           if (!this._isScrolling) {
