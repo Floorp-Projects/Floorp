@@ -870,7 +870,10 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(
 
     default:
         // Generic read/write error message.
-        msgId = aIsReadError ? NS_LITERAL_STRING("readError") : NS_LITERAL_STRING("writeError");
+        if (aIsReadError)
+            msgId = NS_LITERAL_STRING("readError");
+        else
+            msgId = NS_LITERAL_STRING("writeError");
         break;
     }
     // Get properties file bundle and extract status string.
