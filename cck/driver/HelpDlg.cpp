@@ -37,7 +37,7 @@ BOOL CHelpDlg::OnInitDialog()
 
 	CString Helptext = CString(iniFilePath) + "\\" + iniTracker;
 //	ThatWind.MessageBox(Helptext,"something",MB_OK);
-	if( !( fPtr = fopen(Helptext, "r") ) )
+	if( !( fPtr = fopen(Helptext, "rb") ) )
 	{
 	    CWnd myWnd;
 	

@@ -103,7 +103,7 @@ BOOL CWizHelp::OnInitDialog()
 //CWnd newwindow;
 //newwindow.MessageBox(HelpEdit,Helptext,MB_OK);
 	//	ThatWind.MessageBox(Helptext,"something",MB_OK);
-	if( !( fPtr2 = fopen(Helptext, "r") ) )
+	if( !( fPtr2 = fopen(Helptext, "rb") ) )
 	{
 	    CWnd myWnd;
 	
