@@ -286,6 +286,7 @@ static nsresult GetMIMEInfoFromRegistry( LPBYTE fileType, nsIMIMEInfo *pInfo )
             }
             delete [] pDesc;
         }
+        ::RegCloseKey(fileTypeKey);
     }
     else
     {
@@ -322,6 +323,7 @@ static PRBool typeFromExtEquals(const char *aExt, const char *aType)
        eq = strcmp((const char *)pBytes, aType) == 0;
        delete[] pBytes;
      }
+     ::RegCloseKey(hKey);
   }
   return eq;
 }
