@@ -101,7 +101,7 @@ private:
 //----------------------------------------------------------------------------
 // short cut resolver
 //----------------------------------------------------------------------------
-
+#ifndef WINCE
 class ShortcutResolver
 {
 public:
@@ -209,6 +209,7 @@ static void NS_DestroyShortcutResolver()
     delete gResolver;
     gResolver = nsnull;
 }
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -468,6 +469,7 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 nsresult
 nsLocalFile::ResolveShortcut()
 {
+#ifndef WINCE
     // we can't do anything without the resolver
     if (!gResolver)
         return NS_ERROR_FAILURE;
@@ -486,6 +488,9 @@ nsLocalFile::ResolveShortcut()
     mResolvedPath.SetLength(len);
 
     return rv;
+#else
+    return NS_OK;
+#endif
 }
 
 // Resolve any shortcuts and stat the resolved path. After a successful return
@@ -592,15 +597,21 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
     PRInt32 pathLen = 0;
 
     if ( ( (secondChar == ':') && !FindCharInReadable('/', begin, end) ) ||  // normal path
-         ( (firstChar == '\\') && (secondChar == '\\') ) )  // network path
+#ifdef WINCE
+         ( (firstChar == '\\') )   // wince absolute path or network path
+#else
+         ( (firstChar == '\\') && (secondChar == '\\') )   // network path
+#endif
+         )
     {
         // This is a native path
         path = ToNewCString(filePath);
         pathLen = filePath.Length();
     }
 
-    if (path == nsnull)
+    if (path == nsnull) {
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+    }
 
     // kill any trailing '\' provided it isn't the second char of DBCS
     PRInt32 len = pathLen - 1;
@@ -671,13 +682,18 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     // '\\machine\volume\' segment for the second form.
 
     const unsigned char* path = (const unsigned char*) mResolvedPath.get();
+
     if (path[0] == '\\' && path[1] == '\\')
     {
+#ifdef WINCE
+        ++path;
+#else
         // dealing with a UNC path here; skip past '\\machine\'
         path = _mbschr(path + 2, '\\');
         if (!path)
             return NS_ERROR_FILE_INVALID_PATH;
         ++path;
+#endif
     }
 
     // search for first slash after the drive (or volume) name
@@ -755,6 +771,7 @@ nsLocalFile::AppendNativeInternal(const nsAFlatCString &node, PRBool multipleCom
         || node.Equals(".."))                                   // can't be ..
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
+#ifndef WINCE  // who cares?
     if (multipleComponents)
     {
         // can't contain .. as a path component. Ensure that the valid components 
@@ -773,6 +790,7 @@ nsLocalFile::AppendNativeInternal(const nsAFlatCString &node, PRBool multipleCom
     }
     else if (_mbschr(nodePath, '\\'))   // single components can't contain '\'
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+#endif
 
     MakeDirty();
     
@@ -784,6 +802,7 @@ nsLocalFile::AppendNativeInternal(const nsAFlatCString &node, PRBool multipleCom
 NS_IMETHODIMP
 nsLocalFile::Normalize()
 {
+#ifndef WINCE
     // XXX See bug 187957 comment 18 for possible problems with this implementation.
     
     if (mWorkingPath.IsEmpty())
@@ -914,7 +933,9 @@ nsLocalFile::Normalize()
     
     NS_CopyUnicodeToNative(normal, mWorkingPath);
     MakeDirty();
-
+#else // WINCE
+    // WINCE FIX
+#endif 
     return NS_OK;
 }
 
@@ -1343,7 +1364,6 @@ nsLocalFile::Load(PRLibrary * *_retval)
 
     if (*_retval)
         return NS_OK;
-
     return NS_ERROR_NULL_POINTER;
 }
 
@@ -1504,6 +1524,7 @@ nsLocalFile::SetModDate(PRInt64 aLastModifiedTime, const char *filePath)
                              OPEN_EXISTING,     // how to create
                              0,                 // file attributes
                              NULL);
+
     if (file == INVALID_HANDLE_VALUE)
     {
         return ConvertWinError(GetLastError());
@@ -1691,7 +1712,7 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
     return rv;
 }
 
-typedef BOOL (WINAPI *fpGetDiskFreeSpaceExA)(LPCTSTR lpDirectoryName,
+typedef BOOL (WINAPI *fpGetDiskFreeSpaceExA)(LPCSTR lpDirectoryName,
                                              PULARGE_INTEGER lpFreeBytesAvailableToCaller,
                                              PULARGE_INTEGER lpTotalNumberOfBytes,
                                              PULARGE_INTEGER lpTotalNumberOfFreeBytes);
@@ -1699,6 +1720,7 @@ typedef BOOL (WINAPI *fpGetDiskFreeSpaceExA)(LPCTSTR lpDirectoryName,
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 {
+#ifndef WINCE
     NS_ENSURE_ARG(aDiskSpaceAvailable);
 
     ResolveAndStat();
@@ -1715,8 +1737,10 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     if (pGetDiskFreeSpaceExA)
     {
         ULARGE_INTEGER liFreeBytesAvailableToCaller, liTotalNumberOfBytes;
-        if (pGetDiskFreeSpaceExA(mResolvedPath.get(), &liFreeBytesAvailableToCaller, 
-            &liTotalNumberOfBytes, NULL))
+        if (pGetDiskFreeSpaceExA(mResolvedPath.get(), 
+                                 &liFreeBytesAvailableToCaller, 
+                                 &liTotalNumberOfBytes, 
+                                 NULL))
         {
             *aDiskSpaceAvailable = liFreeBytesAvailableToCaller.QuadPart;
             return NS_OK;
@@ -1729,6 +1753,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     strcat(aDrive, "\\");
 
     DWORD dwSecPerClus, dwBytesPerSec, dwFreeClus, dwTotalClus;
+
     if (GetDiskFreeSpace(aDrive, &dwSecPerClus, &dwBytesPerSec, &dwFreeClus, &dwTotalClus))
     {
         __int64 bytes = dwFreeClus;
@@ -1738,8 +1763,10 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
         *aDiskSpaceAvailable = bytes;
         return NS_OK;
     }
-
-    return NS_ERROR_FAILURE;
+#endif
+    // WINCE FIX
+    *aDiskSpaceAvailable = 0;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1862,7 +1889,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         // Convert extension to lower case.
         for( unsigned char *p = (unsigned char *)ext; *p; p++ )
             *p = _mbctolower( *p );
-
+        
         // Search for any of the set of executable extensions.
         const char * const executableExts[] = {
             ".ad",
@@ -2141,6 +2168,7 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
+#ifndef WINCE
     // make sure mResolvedPath is set
     nsresult rv = ResolveAndStat();
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
@@ -2166,9 +2194,9 @@ nsLocalFile::Reveal()
     explorerParams.Append(mResolvedPath);
     explorerParams.Append('\"');
 
-    if (::ShellExecute(NULL, "open", explorerPath.get(), explorerParams.get(), 
-            NULL, SW_SHOWNORMAL) <= (HINSTANCE) 32)
+    if (::ShellExecute(NULL, "open", explorerPath.get(), explorerParams.get(), NULL, SW_SHOWNORMAL) <= (HINSTANCE) 32)
         return NS_ERROR_FAILURE;
+#endif
  
     return NS_OK;
 }
@@ -2177,6 +2205,7 @@ nsLocalFile::Reveal()
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
+#ifndef WINCE
     const nsCString &path = mWorkingPath;
 
     // use the app registry name to launch a shell execute....
@@ -2217,6 +2246,7 @@ nsLocalFile::Launch()
             return NS_ERROR_FILE_EXECUTION_FAILED;
         }
     }
+#endif
     return NS_OK;
 }
 
@@ -2378,14 +2408,18 @@ NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result
 void
 nsLocalFile::GlobalInit()
 {
+#ifndef WINCE
     nsresult rv = NS_CreateShortcutResolver();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Shortcut resolver could not be created");
+#endif
 }
 
 void
 nsLocalFile::GlobalShutdown()
 {
+#ifndef WINCE
     NS_DestroyShortcutResolver();
+#endif
 }
 
 NS_IMPL_ISUPPORTS1(nsDriveEnumerator, nsISimpleEnumerator)
@@ -2401,6 +2435,9 @@ nsDriveEnumerator::~nsDriveEnumerator()
 
 nsresult nsDriveEnumerator::Init()
 {
+#ifdef WINCE
+    return NS_OK;
+#else
     /* If the length passed to GetLogicalDriveStrings is smaller
      * than the length of the string it would return, it returns
      * the length required for the string. */
@@ -2411,16 +2448,26 @@ nsresult nsDriveEnumerator::Init()
         return NS_ERROR_FAILURE;
     mLetter = mDrives.get();
     return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP nsDriveEnumerator::HasMoreElements(PRBool *aHasMore)
 {
+#ifdef WINCE
+    *aHasMore = FALSE;
+#else
     *aHasMore = *mLetter != '\0';
+#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP nsDriveEnumerator::GetNext(nsISupports **aNext)
 {
+#ifdef WINCE
+    nsILocalFile *file;
+    nsresult rv = NS_NewNativeLocalFile(nsDependentCString("\\"), PR_FALSE, &file);
+    *aNext = file;
+#else
     /* GetLogicalDrives stored in mLetter is a concatenation
      * of null terminated strings, followed by a null terminator. */
     if (!*mLetter) {
@@ -2434,5 +2481,6 @@ NS_IMETHODIMP nsDriveEnumerator::GetNext(nsISupports **aNext)
         NS_NewNativeLocalFile(nsDependentCString(drive), PR_FALSE, &file);
 
     *aNext = file;
+#endif
     return rv;
 }

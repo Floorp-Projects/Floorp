@@ -152,8 +152,10 @@ static char* MakeUpperCase(char* aPath)
 {
   // check if the Windows is DBCSEnabled once.
   if (PR_FALSE == gGlobalOSInitialized) {
+#ifndef WINCE
     if (GetSystemMetrics(SM_DBCSENABLED))
       gGlobalDBCSEnabledOS = PR_TRUE;
+#endif
     gGlobalOSInitialized = PR_TRUE;
   }
 
@@ -485,7 +487,11 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 
             
         case OS_TemporaryDirectory:
-#if defined (XP_WIN)
+#if defined (WINCE)
+            {
+                *this = "\\TEMP";
+            }
+#elif defined (XP_WIN)
         {
             char path[_MAX_PATH];
             DWORD len = GetTempPath(_MAX_PATH, path);
@@ -873,6 +879,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             GetWindowsFolder(CSIDL_TEMPLATES, *this);
             break;
         }
+#ifndef WINCE
         case Win_Common_Startmenu:
         {
             GetWindowsFolder(CSIDL_COMMON_STARTMENU, *this);
@@ -893,11 +900,6 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             GetWindowsFolder(CSIDL_COMMON_DESKTOPDIRECTORY, *this);
             break;
         }
-        case Win_Appdata:
-        {
-            GetWindowsFolder(CSIDL_APPDATA, *this);
-            break;
-        }
         case Win_Printhood:
         {
             GetWindowsFolder(CSIDL_PRINTHOOD, *this);
@@ -906,6 +908,13 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case Win_Cookies:
         {
             GetWindowsFolder(CSIDL_COOKIES, *this);
+            break;
+        }
+#endif // WINCE
+
+        case Win_Appdata:
+        {
+            GetWindowsFolder(CSIDL_APPDATA, *this);
             break;
         }
 #endif  // XP_WIN

@@ -1124,9 +1124,12 @@ static PRBool _md_IsInputPending(WORD qstatus)
 
     /* Is there anything other than a QS_MOUSEMOVE pending? */
     if ((qstatus & QS_MOUSEBUTTON) ||
-        (qstatus & QS_KEY) ||
-        (qstatus & QS_HOTKEY)) {
-        return PR_TRUE;
+        (qstatus & QS_KEY) 
+#ifndef WINCE
+          || (qstatus & QS_HOTKEY)
+#endif 
+        ) {
+      return PR_TRUE;
     }
 
     /*
@@ -1416,46 +1419,6 @@ PL_IsQueueNative(PLEventQueue *queue)
     return queue->type == EventQueueIsNative ? PR_TRUE : PR_FALSE;
 }
 
-#if defined(_WIN32)
-/*
-** Global Instance handle...
-** In Win32 this is the module handle of the DLL.
-**
-*/
-HINSTANCE _pr_hInstance;
-#endif
-
-
-#if defined(_WIN32) && !defined(MOZ_ENABLE_LIBXUL)
-
-/*
-** Initialization routine for the DLL...
-*/
-
-BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
-{
-    switch (dwReason)
-    {
-      case DLL_PROCESS_ATTACH:
-        _pr_hInstance = hDLL;
-        break;
-
-      case DLL_THREAD_ATTACH:
-        break;
-
-      case DLL_THREAD_DETACH:
-        break;
-
-      case DLL_PROCESS_DETACH:
-        _pr_hInstance = NULL;
-        break;
-    }
-
-    return TRUE;
-}
-#endif
-
-
 #if defined(_WIN32) || defined(XP_OS2)
 #ifdef XP_OS2
 MRESULT EXPENTRY
@@ -1506,6 +1469,7 @@ static PRStatus InitEventLib( void )
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
     WNDCLASS wc;
+    HANDLE h = GetModuleHandle(NULL);
 
     /*
     ** If this is the first call to PL_InitializeEventsLib(),
@@ -1521,12 +1485,12 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     _pr_PostEventMsgId = RegisterWindowMessage("XPCOM_PostEvent");
 
     /* Register the class for the event receiver window */
-    if (!GetClassInfo(_pr_hInstance, _pr_eventWindowClass, &wc)) {
+    if (!GetClassInfo(h, _pr_eventWindowClass, &wc)) {
         wc.style         = 0;
         wc.lpfnWndProc   = _md_EventReceiverProc;
         wc.cbClsExtra    = 0;
         wc.cbWndExtra    = 0;
-        wc.hInstance     = _pr_hInstance;
+        wc.hInstance     = h;
         wc.hIcon         = NULL;
         wc.hCursor       = NULL;
         wc.hbrBackground = (HBRUSH) NULL;
@@ -1539,7 +1503,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     eventQueue->eventReceiverWindow = CreateWindow(_pr_eventWindowClass,
                                         "XPCOM:EventReceiver",
                                             0, 0, 0, 10, 10,
-                                            NULL, NULL, _pr_hInstance,
+                                            NULL, NULL, h,
                                             NULL);
     PR_ASSERT(eventQueue->eventReceiverWindow);
     /* Set a property which can be used to retrieve the event queue

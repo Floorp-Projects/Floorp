@@ -43,7 +43,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-DIRS		= xpt xpidl
+DIRS		= xpt 
+
+ifndef WINCE
+DIRS        += xpidl
+endif
 
 ifdef MOZ_ENABLE_JAVAXPCOM
 DIRS += $(DEPTH)/extensions/java/xpcom/tools/xpidl

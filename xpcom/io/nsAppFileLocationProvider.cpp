@@ -85,7 +85,7 @@
 #endif
 
 // define default product directory
-#ifdef XP_MAC
+#if defined (XP_MAC) || defined (WINCE)
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING("Mozilla")
 #else
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(MOZ_USER_DIR)
@@ -364,6 +364,9 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     if (NS_FAILED(rv)) return rv;
     rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
+#elif defined(WINCE)
+    rv = NS_NewNativeLocalFile(nsDependentCString("\\Windows"), PR_TRUE, getter_AddRefs(localDir));
+    if (NS_FAILED(rv)) return rv;
 #elif defined(XP_WIN)
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
@@ -399,8 +402,10 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     rv = localDir->AppendRelativeNativePath(DEFAULT_PRODUCT_DIR);
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
+
     if (NS_SUCCEEDED(rv) && !exists)
         rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+
     if (NS_FAILED(rv)) return rv;
 
     *aLocalFile = localDir;

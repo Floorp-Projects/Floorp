@@ -131,6 +131,7 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
         }
 
         xpcomLib = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY|PR_LD_GLOBAL);
+
         if (!xpcomLib)
             return NS_ERROR_FAILURE;
 
@@ -468,6 +469,10 @@ static char* spEnvString = 0;
 void
 GRE_AddGREToEnvironment()
 {
+#ifdef WINCE
+    return;
+#else
+
   const char* grePath = GRE_GetGREPath();
   if (!grePath)
     return;
@@ -499,16 +504,17 @@ GRE_AddGREToEnvironment()
       }
   }
                  
-#if XP_WIN32
+#ifdef XP_WIN32
   // On windows, the current directory is searched before the 
   // PATH environment variable.  This is a very bad thing 
   // since libraries in the cwd will be picked up before
   // any that are in either the application or GRE directory.
 
   if (grePath) {
-    SetCurrentDirectory(grePath);
+      SetCurrentDirectory(grePath);
   }
-#endif
+#endif // XP_WIN32
+#endif // WINCE
 }
 
 

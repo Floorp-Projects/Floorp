@@ -96,6 +96,10 @@ NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef WINCE
+#undef NS_BUILD_REFCNT_LOGGING
+#endif
+
 #ifdef NS_BUILD_REFCNT_LOGGING
 #include "plhash.h"
 #include "prmem.h"
@@ -848,7 +852,7 @@ static void InitTraceLog(void)
 
 #endif
 
-#if defined(_WIN32) && defined(_M_IX86) // WIN32 x86 stack walking code
+#if defined(_WIN32) && defined(_M_IX86) && !defined(WINCE) // WIN32 x86 stack walking code
 #include "nsStackFrameWin.h"
 void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)

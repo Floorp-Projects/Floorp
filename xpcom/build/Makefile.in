@@ -46,9 +46,11 @@ include $(srcdir)/../glue/objs.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom_core
-ifneq ($(OS_ARCH),WINNT)
+
+ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 SHORT_LIBNAME	= xpcomcor
 endif
+
 LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = xpcom.pkg
@@ -77,6 +79,10 @@ CPPSRCS		= \
 		$(NULL)
 
 ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
+CPPSRCS		+= dlldeps.cpp
+endif
+
+ifeq ($(OS_ARCH),WINCE)
 CPPSRCS		+= dlldeps.cpp
 endif
 
