@@ -138,6 +138,7 @@ public:
   NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
                    const char* aCommand,
                    nsISupports* aExtraInfo);
+  NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
 
   // nsIWebShell
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
@@ -155,7 +156,6 @@ public:
   NS_IMETHOD RemoveFocus();
   NS_IMETHOD Repaint(PRBool aForce);
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
-  NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
@@ -237,6 +237,8 @@ public:
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
 
   // nsIDocumentLoaderObserver
+  NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+                            nsIContentViewer* aViewer);
   NS_IMETHOD OnConnectionsComplete();
 
   // nsIRefreshURL interface methods...
@@ -443,6 +445,7 @@ nsWebShell::~nsWebShell()
   if (nsnull != mDocLoader) {
     mDocLoader->Stop();
     mDocLoader->RemoveObserver((nsIDocumentLoaderObserver*)this);
+    mDocLoader->SetContainer(nsnull);
     NS_RELEASE(mDocLoader);
   }
   // Cancel any timers that were set for this loader.
@@ -647,6 +650,20 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
 }
 
 NS_IMETHODIMP
+nsWebShell::GetContentViewer(nsIContentViewer** aResult)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    *aResult = mContentViewer;
+    NS_IF_ADDREF(mContentViewer);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
 nsWebShell::Init(nsNativeWidget aNativeParent,
                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                  nsScrollPreference aScrolling,
@@ -711,6 +728,10 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   if (NS_FAILED(rv)) {
     goto done;
   }
+
+  // Set the webshell as the default IContentViewerContainer for the loader...
+  mDocLoader->SetContainer(this);
+
   //Register ourselves as an observer for the new doc loader
   mDocLoader->AddObserver((nsIDocumentLoaderObserver*)this);
 
@@ -756,6 +777,10 @@ nsWebShell::Destroy()
 
   SetContainer(nsnull);
   SetObserver(nsnull);
+
+  if (nsnull != mDocLoader) {
+    mDocLoader->SetContainer(nsnull);
+  }
 
   NS_IF_RELEASE(mContentViewer);
 
@@ -896,14 +921,6 @@ nsWebShell::SetContentViewer(nsIContentViewer* aViewer)
   NS_IF_RELEASE(mContentViewer);
   mContentViewer = aViewer;
   NS_IF_ADDREF(aViewer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetContentViewer(nsIContentViewer*& aResult)
-{
-  aResult = mContentViewer;
-  NS_IF_ADDREF(mContentViewer);
   return NS_OK;
 }
 
@@ -1873,6 +1890,14 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
   NS_IF_RELEASE(aContext);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsWebShell::OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+                           nsIContentViewer* aViewer)
+{
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsWebShell::OnConnectionsComplete()

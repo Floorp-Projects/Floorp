@@ -678,6 +678,9 @@ public:
     NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver);
     NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver);
 
+    NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
+    NS_IMETHOD GetContainer(nsIContentViewerContainer** aResult);
+
     // nsIURLGroup interface...
     NS_IMETHOD CreateURL(nsIURL** aInstancePtrResult, 
                          nsIURL* aBaseURL,
@@ -695,6 +698,8 @@ public:
 
     // Implementation specific methods...
     void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
+    void LoadURLStarted(nsIURL* aURL, const char* aContentType, 
+                        nsIContentViewer* aViewer);
     void AreAllConnectionsComplete(void);
     void SetParent(nsDocLoaderImpl* aParent);
 
@@ -710,26 +715,27 @@ public:
     nsIDocumentLoaderFactory* m_DocFactory;
 
 protected:
-    nsISupportsArray*   m_LoadingDocsList;
+    nsISupportsArray*          m_LoadingDocsList;
 
-    nsVoidArray         mChildGroupList;
-    nsVoidArray         mDocObservers;
-    nsILoadAttribs*     m_LoadAttrib;
-    nsIStreamObserver*  mStreamObserver;
+    nsVoidArray                mChildGroupList;
+    nsVoidArray                mDocObservers;
+    nsILoadAttribs*            m_LoadAttrib;
+    nsIStreamObserver*         mStreamObserver;
+    nsIContentViewerContainer* mContainer;
 
-    nsDocLoaderImpl*    mParent;
+    nsDocLoaderImpl*           mParent;
     /*
      * The following counts are for the current document loader only.  They
      * do not take into account URLs being loaded by child document loaders.
      */
-    PRInt32             mForegroundURLs;
-    PRInt32             mTotalURLs;
+    PRInt32 mForegroundURLs;
+    PRInt32 mTotalURLs;
     /*
      * This flag indicates that the loader is loading a document.  It is set
      * from the call to LoadDocument(...) until the OnConnectionsComplete(...)
      * notification is fired...
      */
-    PRBool              mIsLoadingDocument;
+    PRBool mIsLoadingDocument;
 };
 
 
@@ -745,6 +751,7 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 
     mParent         = nsnull;
     mStreamObserver = nsnull;
+    mContainer      = nsnull;
     mForegroundURLs = 0;
     mTotalURLs      = 0;
 
@@ -774,6 +781,7 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
   NS_IF_RELEASE(m_DocFactory);
   NS_IF_RELEASE(m_LoadAttrib);
   NS_IF_RELEASE(mStreamObserver);
+  NS_IF_RELEASE(mContainer);
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader - DocLoader [%p] deleted.\n", this));
@@ -998,6 +1006,29 @@ nsDocLoaderImpl::RemoveObserver(nsIDocumentLoaderObserver* aObserver)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsDocLoaderImpl::SetContainer(nsIContentViewerContainer* aContainer)
+{
+  NS_IF_RELEASE(mContainer);
+  mContainer = aContainer;
+  NS_IF_ADDREF(mContainer);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocLoaderImpl::GetContainer(nsIContentViewerContainer** aResult)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    *aResult = mContainer;
+    NS_IF_ADDREF(mContainer);
+  }
+  return rv;
+}
 
 NS_IMETHODIMP
 nsDocLoaderImpl::CreateURL(nsIURL** aInstancePtrResult, 
@@ -1043,7 +1074,7 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
   }
   loader->Init(this,              // DocLoader
                nsnull,            // Command
-               nsnull,            // Viewer Container
+               mContainer,        // Viewer Container
                nsnull,            // Extra Info
                mStreamObserver);  // Observer
 
@@ -1121,6 +1152,28 @@ nsDocLoaderImpl::RemoveChildGroup(nsIURLGroup* aGroup)
   return rv;
 }
 
+
+void nsDocLoaderImpl::LoadURLStarted(nsIURL* aURL, const char* aContentType, 
+                                     nsIContentViewer* aViewer)
+{
+  PRInt32 count = mDocObservers.Count();
+  PRInt32 index;
+
+  /*
+   * First notify any observers that the URL load has begun...
+   */
+  for (index = 0; index < count; index++) {
+    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+    observer->OnStartURLLoad(aURL, aContentType, aViewer);
+  }
+
+  /*
+   * Finally notify the parent...
+   */
+  if (nsnull != mParent) {
+    mParent->LoadURLStarted(aURL, aContentType, aViewer);
+  }
+}
 
 
 void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
@@ -1565,6 +1618,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
         if (NS_OK != rv) {
             goto done;
         }
+
     }
 
     /*
@@ -1574,6 +1628,14 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnStartBinding(aURL, aContentType);
     }
+
+    /*
+     * Notify the DocumentLoadObserver(s) 
+     */
+    if ((nsnull == viewer) && (nsnull != m_Container)) {
+      m_Container->GetContentViewer(&viewer);
+    }
+    m_DocLoader->LoadURLStarted(m_Url, aContentType, viewer);
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
