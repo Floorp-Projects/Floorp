@@ -521,13 +521,15 @@
       
       <handler event="keypress" keycode="vk_left">
       <![CDATA[
-        this.parentNode.advanceSelectedTab(-1);
+        var direction = window.getComputedStyle(this.parentNode, null).direction;
+        this.parentNode.advanceSelectedTab(direction == 'ltr' ? -1 : 1);
       ]]>
       </handler>
       
       <handler event="keypress" keycode="vk_right">
       <![CDATA[
-        this.parentNode.advanceSelectedTab(1);
+        var direction = window.getComputedStyle(this.parentNode, null).direction;
+        this.parentNode.advanceSelectedTab(direction == 'ltr' ? 1 : -1);
       ]]>
       </handler>
       
