@@ -128,7 +128,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   OnPaint(pevent);
   Release();
   // XXX will this leak?
-  //delete pevent.rect;
+  delete pevent.rect;
   return NS_OK;
 }
 
