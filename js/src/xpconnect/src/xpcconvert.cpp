@@ -1689,7 +1689,8 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
 #define POPULATE(_mode, _t)                                                  \
     PR_BEGIN_MACRO                                                           \
         cleanupMode = _mode;                                                 \
-        if(nsnull == (array = nsMemory::Alloc(capacity * sizeof(_t))))       \
+        size_t size_ = capacity * sizeof(_t);                                \
+        if (size_ < capacity || nsnull == (array = nsMemory::Alloc(size_)))  \
         {                                                                    \
             if(pErr)                                                         \
                 *pErr = NS_ERROR_OUT_OF_MEMORY;                              \
