@@ -108,7 +108,7 @@ class nsIShutdownListener : public nsISupports {
 public:
 
     NS_IMETHOD
-    OnShutdown(nsISupports* service) = 0;
+    OnShutdown(const nsCID& aClass, nsISupports* service) = 0;
 
 };
 

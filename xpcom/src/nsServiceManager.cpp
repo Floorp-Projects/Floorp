@@ -46,20 +46,21 @@ public:
 class nsServiceEntry {
 public:
 
-    nsServiceEntry(nsISupports* service);
+    nsServiceEntry(const nsCID& cid, nsISupports* service);
     ~nsServiceEntry();
 
     nsresult AddListener(nsIShutdownListener* listener);
     nsresult RemoveListener(nsIShutdownListener* listener);
     nsresult NotifyListeners(void);
 
+    const nsCID& mClassID;
     nsISupports* mService;
     nsVector* mListeners;        // nsVector<nsIShutdownListener>
 
 };
 
-nsServiceEntry::nsServiceEntry(nsISupports* service)
-    : mService(service), mListeners(NULL)
+nsServiceEntry::nsServiceEntry(const nsCID& cid, nsISupports* service)
+    : mClassID(cid), mService(service), mListeners(NULL)
 {
 }
 
@@ -118,7 +119,7 @@ nsServiceEntry::NotifyListeners(void)
         PRUint32 size = mListeners->GetSize();
         for (PRUint32 i = 0; i < size; i++) {
             nsIShutdownListener* listener = (nsIShutdownListener*)(*mListeners)[0];
-            nsresult err = listener->OnShutdown(mService);
+            nsresult err = listener->OnShutdown(mClassID, mService);
             if (err) return err;
             listener->Release();
             mListeners->Remove(0);
@@ -227,7 +228,7 @@ nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
         nsISupports* service;
         err = NSRepository::CreateInstance(aClass, NULL, aIID, (void**)&service);
         if (err == NS_OK) {
-            entry = new nsServiceEntry(service);
+            entry = new nsServiceEntry(aClass, service);
             if (entry == NULL) {
                 service->Release();
                 err = NS_ERROR_OUT_OF_MEMORY;
