@@ -181,7 +181,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
                                   &jsBoolResult, returnResult);
 
   if (argv != &arg) {
-    ::JS_PopArguments(cx, &stackPtr);
+    ::JS_PopArguments(cx, stackPtr);
   }
 
   if (NS_FAILED(rv)) {
