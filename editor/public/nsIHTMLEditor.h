@@ -99,7 +99,6 @@ public:
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
   NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation)=0;
 
-
   NS_IMETHOD InsertHTML(const nsString &aInputString)=0;
 
   /**
@@ -186,6 +185,9 @@ public:
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
   NS_IMETHOD SelectElement(nsIDOMElement* aElement)=0;
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement)=0;
+
+// MHTML helper methods
+  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray* aNodeList)=0;
 
 // Table editing Methods
   NS_IMETHOD InsertTable()=0;
