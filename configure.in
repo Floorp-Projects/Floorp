@@ -618,6 +618,7 @@ case "$target" in
     DSO_LDOPTS='-nostart -Wl,-h -Wl,$@'
     TK_LIBS='-lbe -lroot'
     LIBS="$LIBS -lbe"
+    AC_CHECK_LIB(bind,main,LIBS="$LIBS -lbind")
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar -Wno-ctor-dtor-privacy"
     ;;
