@@ -22,6 +22,7 @@ IMAGETEST MENU DISCARDABLE
   POPUP "File"
   {
     MENUITEM "Open...", TIMER_OPEN
+    MENUITEM "Open Blend Image...",OPENBLD
     MENUITEM "Exit", TIMER_EXIT
   }
 
@@ -29,8 +30,9 @@ IMAGETEST MENU DISCARDABLE
   POPUP "TEST"
   {
     MENUITEM "Read Mask", RDMSK
-    MENUITEM "Composit Interactive",COMPINT
-    MENUITEM "Composit Test", COMPTST
+    MENUITEM "Reset Composite", COMPRESET
+    MENUITEM "Composite Interactive",COMPINT
+    MENUITEM "Composite Test", COMPTST
     MENUITEM "Composite Speed", COMPTSTSPEED
     MENUITEM "Blit Speed",BSTNOOPT
     MENUITEM "Blit Speed, Optimzed.",BSTOPT

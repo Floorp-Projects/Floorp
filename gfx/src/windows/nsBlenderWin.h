@@ -42,11 +42,17 @@ public:
   virtual void CleanUp();
   virtual void Blend(nsDrawingSurface aSrc,
                      PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
-                     nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity);
+                     nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea);
+
+  nsDrawingSurface GetSrcDS() {return(mSrcDC);}
+  nsDrawingSurface GetDstDS() {return(mDstDC);}
+
+  PRBool  RestoreImage(nsDrawingSurface aDst);
 
  private:
- PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,nsPoint *ASrcUL,
+  PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,nsPoint *ASrcUL,
                               BITMAP  *aMapInfo,nsPoint *aMaskUL,
+                              PRInt32 aWidth,PRInt32 aHeight,
                               PRInt32 *aNumlines,
                               PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
                               PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
@@ -81,9 +87,10 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
+                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
 
   /** 
    * Blend two 24 bit image arrays using a passed in blend value
@@ -96,9 +103,10 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality);
+                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
 
 
     /** 
@@ -112,9 +120,10 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
+                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
 
   /** 
    * Blend two 8 bit image arrays using a passed in blend value
@@ -127,16 +136,27 @@ public:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   * @param aSaveBlendArea informs routine if the area affected area will be save first
    */
   void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality);
+                PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
+
 
 
   private:
   LPBITMAPINFOHEADER  mDstbinfo,mSrcbinfo;
-  PRUint8             *mSrcBytes,*mDstBytes;
+  PRUint8             *mSrcBytes;
+  PRUint8             *mDstBytes;
   BITMAP              mSrcInfo,mDstInfo;
   HBITMAP             mTempB1,mTempB2;
+  HDC                 mSrcDC,mDstDC;
+
+  PRInt32             mSaveLS;
+  PRInt32             mSaveNumLines;
+  PRInt32             mSaveNumBytes;
+  PRUint8             *mSaveBytes;    // place to save bits
+  PRUint8             *mRestorePtr;   // starting area of save dst
+  PRUint32            mResLS;         // line span for restore area
 
 };
 
