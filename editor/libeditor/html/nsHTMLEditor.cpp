@@ -2974,7 +2974,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
             rv = NS_ERROR_NOT_IMPLEMENTED; // for now give error code
           }
         }
-
+        delete [] bestFlavor;
       }
     }
   }
