@@ -32,6 +32,8 @@
 #include "nsDeviceContextWin.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
+#include "nsICharRepresentable.h"
+#include "nsCompressedCharMap.h"
 
 #ifdef FONT_HAS_GLYPH
 #undef FONT_HAS_GLYPH
@@ -60,7 +62,7 @@ struct nsGlobalFont
 {
   nsString      name;
   LOGFONT       logFont;
-  PRUint32*     map;
+  PRUint16*     ccmap;
   FONTSIGNATURE signature;
   eFontType     fonttype;
   PRUint32      flags;
@@ -79,7 +81,7 @@ class nsFontWin
 public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap);
+  nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap);
   virtual ~nsFontWin();
 
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
@@ -89,6 +91,7 @@ public:
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength) = 0;
 
+  virtual PRBool HasGlyph(PRUnichar ch) {return CCMAP_HAS_CHAR(mCCMap, ch);};
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
@@ -102,13 +105,44 @@ public:
 
   char            mName[LF_FACESIZE];
   HFONT           mFont;
-  PRUint32*       mMap;
+  PRUint16*       mCCMap;
 #ifdef MOZ_MATHML
   nsCharacterMap* mCMAP;
 #endif
 
   nscoord         mMaxAscent;
   nscoord         mMaxDescent;
+};
+
+// A "substitute font" to deal with missing glyphs -- see bug 6585
+// We now use transliteration+fallback to the REPLACEMENT CHAR + 
+// HEX representation to handle this issue.
+class nsFontWinSubstitute : public nsFontWin
+{
+public:
+  nsFontWinSubstitute(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap, PRBool aDisplayUnicode);
+  virtual ~nsFontWinSubstitute();
+
+  virtual PRBool HasGlyph(PRUnichar ch) {return IS_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual void SetRepresentable(PRUnichar ch) {SET_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength);
+  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+                          const PRUnichar* aString, PRUint32 aLength);
+#ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC,
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#ifdef NS_DEBUG
+  virtual void DumpFontInfo();
+#endif // NS_DEBUG
+#endif
+private:
+  PRBool mDisplayUnicode;
+
+  //We need to have a easily operatable charmap for substitute font
+  PRUint32 mRepresentableCharMap[UCS2_MAP_LEN];
 };
 
 /**
@@ -211,7 +245,7 @@ public:
   PRBool              mTriedAllGenerics;
   PRBool              mIsUserDefined;
 
-  static PRUint32*    gEmptyMap;
+  static PRUint16*    gEmptyCCMap;
   static PLHashTable* gFontMaps;
   static PLHashTable* gFamilyNames;
   static PLHashTable* gFontWeights;
@@ -222,7 +256,8 @@ public:
   static void SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable);
   static PRBool IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeightTable);
 
-  static PRUint32* GetCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset);
+  static PRUint16* GetFontCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset);
+  static PRUint16* GetCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset);
 
   static int SameAsPreviousMap(int aIndex);
 
@@ -331,13 +366,14 @@ public:
 class nsFontWinA : public nsFontWin
 {
 public:
-  nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap);
+  nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap);
   virtual ~nsFontWinA();
 
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
                            PRUint32 aLength);
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength);
+  virtual nsFontSubset* FindSubset(HDC aDC, PRUnichar aChar, nsFontMetricsWinA* aFontMetrics);
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
@@ -355,6 +391,21 @@ public:
   nsFontSubset** mSubsets;
   PRUint16       mSubsetsCount;
 };
+
+class nsFontWinSubstituteA : public nsFontWinA
+{
+public:
+  nsFontWinSubstituteA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap);
+  virtual ~nsFontWinSubstituteA();
+
+  virtual PRBool HasGlyph(PRUnichar ch) {return IS_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual void SetRepresentable(PRUnichar ch) {SET_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual nsFontSubset* FindSubset(HDC aDC, PRUnichar aChar, nsFontMetricsWinA* aFontMetrics) {return mSubsets[0];};
+
+  //We need to have a easily operatable charmap for substitute font
+  PRUint32 mRepresentableCharMap[UCS2_MAP_LEN];
+};
+
 
 class nsFontMetricsWinA : public nsFontMetricsWin
 {

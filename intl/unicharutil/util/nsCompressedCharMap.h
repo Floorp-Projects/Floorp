@@ -63,9 +63,11 @@
 
 class nsICharRepresentable;
 
+extern PRUint16* CreateEmptyCCMap();
 extern PRUint16* MapToCCMap(PRUint32* aMap);
 extern PRUint16* MapperToCCMap(nsICharRepresentable *aMapper);
 extern void FreeCCMap(PRUint16* &aMap);
+extern PRBool IsSameCCMap(PRUint16* ccmap1, PRUint16* ccmap2);
 
 // 
 // nsCompressedCharMap
