@@ -155,7 +155,45 @@ nsXBLEventHandler::BindingAttached()
 NS_IMETHODIMP
 nsXBLEventHandler::BindingDetached()
 {
-  // XXX Write me!!!!
+  nsresult ret;
+  if (mEventName == NS_LITERAL_STRING("bindingdetached")) {
+    nsMouseEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_MENU_ACTION;
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.isMeta = PR_FALSE;
+    event.clickCount = 0;
+    event.widget = nsnull;
+
+    nsCOMPtr<nsIEventListenerManager> listenerManager;
+    if (NS_FAILED(ret = mEventReceiver->GetListenerManager(getter_AddRefs(listenerManager)))) {
+      NS_ERROR("Unable to instantiate a listener manager on this event.");
+      return ret;
+    }
+    nsAutoString empty;
+
+    nsCOMPtr<nsIDOMEvent> domEvent;
+    if (NS_FAILED(ret = listenerManager->CreateEvent(nsnull, &event, empty, getter_AddRefs(domEvent)))) {
+      NS_ERROR("The binding attach handler will fail without the ability to create the event early.");
+      return ret;
+    }
+  
+    // We need to explicitly set the target here, because the
+    // DOM implementation will try to compute the target from
+    // the frame. If we don't have a frame then that breaks.
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+    if (privateEvent) {
+      privateEvent->SetTarget(mEventReceiver);
+    }
+
+    ExecuteHandler(mEventName, domEvent);
+  }
+
+  if (mNextHandler)
+    return mNextHandler->BindingAttached();
+  
   return NS_OK;
 }
 

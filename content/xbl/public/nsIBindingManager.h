@@ -70,6 +70,8 @@ public:
   NS_IMETHOD ClearAttachedQueue()=0;
   NS_IMETHOD ProcessAttachedQueue()=0;
 
+  NS_IMETHOD ExecuteDetachedHandlers()=0;
+
   NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)=0;
   NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)=0;
 

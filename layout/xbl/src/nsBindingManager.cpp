@@ -205,6 +205,8 @@ public:
   NS_IMETHOD ClearAttachedQueue();
   NS_IMETHOD ProcessAttachedQueue();
 
+  NS_IMETHOD ExecuteDetachedHandlers();
+
   NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
   NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult);
 
@@ -480,6 +482,23 @@ nsBindingManager::ProcessAttachedQueue()
   }
 
   ClearAttachedQueue();
+  return NS_OK;
+}
+
+PRBool PR_CALLBACK ExecuteDetachedHandler(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsIXBLBinding* binding = (nsIXBLBinding*)aData;
+  binding->ExecuteDetachedHandler();
+  return PR_TRUE;
+}
+
+
+NS_IMETHODIMP
+nsBindingManager::ExecuteDetachedHandlers()
+{
+  // Walk our hashtable of bindings.
+  if (mBindingTable)
+    mBindingTable->Enumerate(ExecuteDetachedHandler);
   return NS_OK;
 }
 

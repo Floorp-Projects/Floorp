@@ -127,6 +127,7 @@ public:
   static nsIAtom* kReadOnlyAtom;
   static nsIAtom* kAttachToAtom;
   static nsIAtom* kBindingAttachedAtom;
+  static nsIAtom* kBindingDetachedAtom;
   static nsIAtom* kInheritStyleAtom;
 
   static nsIXBLService* gXBLService;
