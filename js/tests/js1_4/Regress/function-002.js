@@ -20,7 +20,7 @@
  * 
  */
 /**
- *  File Name:          function-001.js
+ *  File Name:          function-002.js
  *  Description:
  *
  * http://scopus.mcom.com/bugsplat/show_bug.cgi?id=330462
@@ -29,8 +29,22 @@
  * causes an an assert on a null 'sprop' in the 'Variables' function in
  * jsparse.c This will crash non-debug build.
  *
- *  Author:             christine@netscape.com
- *  Date:               11 August 1998
+ *  Author:      christine@netscape.com
+ *  Date:           11 August 1998
+ *  REVISED:   04 February 2001
+ *  (changed  the comma expressions from trivial to  non-trivial)
+ *  Author:      pschwartau@netscape.com 
+ *
+ * Brendan: "The test seemed to require something that ECMA does not 
+ * guarantee, and that JS1.4 didn't either. For example, given
+ *
+ *             dec2 = "function f2(){1,2}";
+ *
+ * the engine is free to decompile a function object compiled from this source,
+ * via Function.prototype.toString(), into some other string that compiles to   
+ * an equivalent function. The engine now eliminates the useless comma expression   
+ * 1,2, giving function f2(){}. This should be legal by the testsuite's lights."
+ *
  */
     var SECTION = "function-002.js";
     var VERSION = "JS1_4";
@@ -43,21 +57,20 @@
 
     var testcases = new Array();
 
-    dec1 = "function f1(){var x; x = \"a\",\"b\";}";
-    dec2 = "function f2(){1,2}";
+    dec1 = "function f1(x,y){++x, --y}"; 
+    dec2 = "function f2(){var y; f1(1,2), y=function g(x){return Math.exp(x);}; print(y.toString())}";
 
     eval(dec1);
     eval(dec2);
 
     testcases[tc++] = new TestCase(
         SECTION,
-        "dec1 = \"function f1(){var x; x = \"a\",\"b\";};\" "+
-        "dec2 = \"function f2() {1,2}\"; typeof f1",
+         "typeof f1",
         "function",
         typeof f1 );
 
-    // force a function decompilation
 
+    // force a function decompilation
     testcases[tc++] = new TestCase(
         SECTION,
         "f1.toString() == dec1",
