@@ -776,29 +776,20 @@ nsHttpChannel::ProcessNormal()
     return rv;
 }
 
-nsresult
+void
 nsHttpChannel::GetCallback(const nsIID &aIID, void **aResult)
 {
-    NS_ASSERTION(aResult, "Invalid argument in GetCallback!");
-    nsresult rv;
+    NS_ASSERTION(aResult && !*aResult, "invalid argument in GetCallback");
+
     if (mCallbacks)
-        rv = mCallbacks->GetInterface(aIID, aResult);
-    else
-        rv = NS_ERROR_NO_INTERFACE;
-    if (NS_FAILED(rv)) {
-        if (mLoadGroup) {
-            nsCOMPtr<nsIInterfaceRequestor> cbs;
-            rv = mLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
-            if (NS_SUCCEEDED(rv))
-                rv = cbs->GetInterface(aIID, aResult);
-        }
+        mCallbacks->GetInterface(aIID, aResult);
+
+    if (!*aResult && mLoadGroup) {
+        nsCOMPtr<nsIInterfaceRequestor> cbs;
+        mLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+        if (cbs)
+            cbs->GetInterface(aIID, aResult);
     }
-
-    // defend against bad nsIInterfaceRequestor implementations.
-    if (NS_SUCCEEDED(rv) && !*aResult)
-        return NS_ERROR_NO_INTERFACE;
-
-    return rv;
 }
 
 nsresult
@@ -815,12 +806,15 @@ nsHttpChannel::PromptTempRedirect()
 
     nsXPIDLString messageString;
     rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("RepostFormData").get(), getter_Copies(messageString));
-    //GetStringFromName can return NS_OK and NULL messageString.
+    // GetStringFromName can return NS_OK and NULL messageString.
     if (NS_SUCCEEDED(rv) && messageString) {
         PRBool repost = PR_FALSE;
+
         nsCOMPtr<nsIPrompt> prompt;
-        rv = GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
-        if (NS_FAILED(rv)) return rv;
+        GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+        if (!prompt)
+            return NS_ERROR_NO_INTERFACE;
+
         prompt->Confirm(nsnull, messageString, &repost);
         if (!repost)
             return NS_ERROR_FAILURE;
@@ -2228,10 +2222,10 @@ nsHttpChannel::PromptForIdentity(const char *host,
 
     // XXX i18n: IDN not supported.
 
-    nsresult rv;
     nsCOMPtr<nsIAuthPrompt> authPrompt;
-    rv = GetCallback(NS_GET_IID(nsIAuthPrompt), getter_AddRefs(authPrompt));
-    if (NS_FAILED(rv)) return rv;
+    GetCallback(NS_GET_IID(nsIAuthPrompt), getter_AddRefs(authPrompt));
+    if (!authPrompt)
+        return NS_ERROR_NO_INTERFACE;
 
     //
     // construct the single signon key
@@ -2247,6 +2241,8 @@ nsHttpChannel::PromptForIdentity(const char *host,
     key.AppendWithConversion(" (");
     key.AppendWithConversion(realm);
     key.Append(PRUnichar(')'));
+
+    nsresult rv;
 
     // construct the message string
     nsCOMPtr<nsIStringBundleService> bundleSvc =
