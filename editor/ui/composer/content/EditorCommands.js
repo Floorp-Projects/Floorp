@@ -565,6 +565,12 @@ function EditorTestSelection()
       }
     }
   }
+  
+  dump("Selection as text\n");
+  dump(window.editorShell.selectionAsText + "\n\n");
+
+  dump("Selection as HTML\n");
+  dump(window.editorShell.selectionAsHTML + "\n\n");
 }
 
 function EditorUnitTests()
