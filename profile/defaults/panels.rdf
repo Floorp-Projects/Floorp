@@ -11,6 +11,7 @@
 
   <RDF:Seq about="urn:sidebar:current-panel-list">
     <RDF:li resource="urn:sidebar:panel:whats-related" />
+    <RDF:li resource="urn:sidebar:panel:search" />
     <RDF:li resource="urn:sidebar:panel:tinderbox" />
     <RDF:li resource="urn:sidebar:panel:bookmarks" />
   </RDF:Seq>
