@@ -4442,6 +4442,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         nsXPIDLString forceCharset;
         nsXPIDLString hintCharset;
         PRInt32 hintCharsetSource;
+        nsXPIDLString prevDocCharset;
 
         nsCOMPtr<nsIMarkupDocumentViewer>
             newMUDV(do_QueryInterface(aNewViewer));
@@ -4459,6 +4460,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             NS_ENSURE_SUCCESS(oldMUDV->
                               GetHintCharacterSetSource(&hintCharsetSource),
                               NS_ERROR_FAILURE);
+            NS_ENSURE_SUCCESS(oldMUDV->
+                              GetPrevDocCharacterSet(getter_Copies(prevDocCharset)),
+                              NS_ERROR_FAILURE);
 
             // set the old state onto the new content viewer
             NS_ENSURE_SUCCESS(newMUDV->SetDefaultCharacterSet(defaultCharset),
@@ -4469,6 +4473,8 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                               NS_ERROR_FAILURE);
             NS_ENSURE_SUCCESS(newMUDV->
                               SetHintCharacterSetSource(hintCharsetSource),
+                              NS_ERROR_FAILURE);
+            NS_ENSURE_SUCCESS(newMUDV->SetPrevDocCharacterSet(prevDocCharset),
                               NS_ERROR_FAILURE);
         }
     }

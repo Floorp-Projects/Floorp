@@ -151,6 +151,7 @@
 #include "nsLayoutCID.h"
 #include "nsIFrameManager.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIDocShellTreeItem.h"
 
 
 #include "nsEscape.h"
@@ -5117,6 +5118,40 @@ HTMLContentSink::FlushPendingNotifications()
 NS_IMETHODIMP 
 HTMLContentSink::SetDocumentCharset(nsAString& aCharset)
 {
+  if (mWebShell) {
+    // the following logic to get muCV is copied from 
+    // nsHTMLDocument::StartDocumentLoad
+    // We need to call muCV->SetPrevDocCharacterSet here in case
+    // the charset is detected by parser DetectMetaTag
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    nsCOMPtr<nsIMarkupDocumentViewer> muCV;
+    nsCOMPtr<nsIContentViewer> cv;
+    docShell->GetContentViewer(getter_AddRefs(cv));
+    if (cv) {
+       muCV = do_QueryInterface(cv);            
+    } else {
+      // in this block of code, if we get an error result, we return it
+      // but if we get a null pointer, that's perfectly legal for parent and parentContentViewer
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+      NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+    
+      nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+      docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
+
+      nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
+      if (parent) {
+        nsCOMPtr<nsIContentViewer> parentContentViewer;
+        nsresult rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
+        if (NS_SUCCEEDED(rv) && parentContentViewer) {
+          muCV = do_QueryInterface(parentContentViewer);
+        }
+      }
+    }
+    if (muCV) {
+      muCV->SetPrevDocCharacterSet(PromiseFlatString(aCharset).get());
+    }
+  }
+
   if (mDocument) {
     return mDocument->SetDocumentCharacterSet(aCharset);
   }

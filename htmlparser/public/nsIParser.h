@@ -102,13 +102,14 @@ enum eParserDocType {
 #define kCharsetFromParentFrame         5
 #define kCharsetFromBookmarks           6
 #define kCharsetFromAutoDetection       7
-#define kCharsetFromMetaTag             8
-#define kCharsetFromByteOrderMark       9
-#define kCharsetFromChannel            10 
-#define kCharsetFromParentForced       11
-#define kCharsetFromUserForced         12
-#define kCharsetFromOtherComponent     13
-#define kCharsetFromPreviousLoading    14
+#define kCharsetFromHintPrevDoc         8
+#define kCharsetFromMetaTag             9
+#define kCharsetFromByteOrderMark      10
+#define kCharsetFromChannel            11 
+#define kCharsetFromParentForced       12
+#define kCharsetFromUserForced         13
+#define kCharsetFromOtherComponent     14
+#define kCharsetFromPreviousLoading    15
 
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 
