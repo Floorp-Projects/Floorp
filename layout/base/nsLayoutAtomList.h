@@ -82,6 +82,7 @@ LAYOUT_ATOM(editorDisplayList, "EditorDisplay-List")
 LAYOUT_ATOM(fixedList, "Fixed-list")
 LAYOUT_ATOM(floatList, "Float-list")
 LAYOUT_ATOM(overflowList, "Overflow-list")
+LAYOUT_ATOM(overflowOutOfFlowList, "OverflowOutOfFlow-list")
 LAYOUT_ATOM(popupList, "Popup-list")
 
 LAYOUT_ATOM(commentTagName, "__moz_comment")
@@ -139,6 +140,7 @@ LAYOUT_ATOM(maxElementWidthProperty, "MaxElementWidthProperty")  // nscoord*
 LAYOUT_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
 LAYOUT_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*
 LAYOUT_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
+LAYOUT_ATOM(overflowOutOfFlowsProperty, "OverflowOutOfFlowsProperty")      // nsFrameList*
 LAYOUT_ATOM(overflowPlaceholdersProperty, "OverflowPlaceholdersProperty")  // nsPlaceholder*
 LAYOUT_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
 LAYOUT_ATOM(spaceManagerProperty, "SpaceManagerProperty")      // the space manager for a block
