@@ -3111,10 +3111,19 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   nsSize maxElementSize;
   lineLayout->VerticalAlignFrames(aLine->mBounds, maxElementSize);
 #ifdef DEBUG
-  if (CRAZY_HEIGHT(aLine->mBounds.y)) {
-    nsFrame::ListTag(stdout);
-    printf(": line=%p y=%d line.bounds.height=%d\n",
-           aLine, aLine->mBounds.y, aLine->mBounds.height);
+	{
+		static nscoord lastHeight = 0;
+	  if (CRAZY_HEIGHT(aLine->mBounds.y)) {
+	  	lastHeight = aLine->mBounds.y;
+	  	if (abs(aLine->mBounds.y - lastHeight) > CRAZY_H/10) {
+		    nsFrame::ListTag(stdout);
+		    printf(": line=%p y=%d line.bounds.height=%d\n",
+		           aLine, aLine->mBounds.y, aLine->mBounds.height);
+	    }
+	  }
+	  else {
+	  	lastHeight = 0;
+	  }
   }
 #endif
 
