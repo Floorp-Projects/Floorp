@@ -1414,8 +1414,8 @@ NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& a
 	mGS->mTMatrix.TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
 	mGS->mTMatrix.TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
 
-	nsresult result =  aImage->Draw(*this,mPort,sr.x,sr.y,sr.width,sr.height,
-									dr.x,dr.y,dr.width,dr.height);
+	nsresult result =  aImage->Draw(*this, mCurrentSurface, sr.x, sr.y, sr.width, sr.height,
+									dr.x, dr.y, dr.width, dr.height);
 
 	EndDraw();
 	return result;
@@ -1430,7 +1430,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& a
 	nsRect tr = aRect;
 	mGS->mTMatrix.TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
   
-	nsresult result = aImage->Draw(*this,mPort,tr.x,tr.y,tr.width,tr.height);
+	nsresult result = aImage->Draw(*this, mCurrentSurface, tr.x, tr.y, tr.width, tr.height);
 
 	EndDraw();
 	return result;
