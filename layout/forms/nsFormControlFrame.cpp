@@ -74,6 +74,7 @@
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIEventStateManager.h"
 #include "nsIScrollableView.h"
+#include "nsILookAndFeel.h"
 
 #ifdef DEBUG_evaughan
 //#define DEBUG_rods
@@ -964,18 +965,26 @@ nsresult
 nsFormControlFrame::GetScreenHeight(nsIPresContext* aPresContext, nscoord& aHeight)
 {
   aHeight = 0;
-  nsIDeviceContext* context;
-  aPresContext->GetDeviceContext( &context );
-	if ( nsnull != context ) {
-		PRInt32 height;
-    PRInt32 width;
-		context->GetDeviceSurfaceDimensions(width, height);
-		float devUnits;
- 		context->GetDevUnitsToAppUnits(devUnits);
-		aHeight = NSToIntRound(float( height) / devUnits );
-		NS_RELEASE( context );
-		return NS_OK;
-	}
+  nsCOMPtr<nsIDeviceContext> context;
+  aPresContext->GetDeviceContext( getter_AddRefs(context) );
+  if ( context ) {
+    nsRect screen;
+
+    PRBool dropdownCanOverlapOSBar = PR_FALSE;
+    nsCOMPtr<nsILookAndFeel> lookAndFeel;
+    aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
+    if ( lookAndFeel )
+      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, dropdownCanOverlapOSBar);
+    if ( dropdownCanOverlapOSBar )
+      context->GetRect ( screen );
+    else
+      context->GetClientRect(screen);
+      
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+    aHeight = NSToIntRound(float(screen.height) / devUnits );
+    return NS_OK;
+  }
 
   return NS_ERROR_FAILURE;
 }
