@@ -460,13 +460,12 @@ nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
   // Tell the printer what size paper it should use
   fprintf(f,
     "/setpagedevice where\n"			// Test for the feature
-    "{ pop\n"
-    "  <<\n"
-    "  /PageSize [ %s %s ]\n"			// Paper dimensions
-    "  /Policies <<\n"
-    "  /PageSize 3\n"				// Select the nearest page size to fit
-    "  >>\n"
-    "  >> setpagedevice\n"				// Install settings
+    "{ pop 2 dict\n"
+    "  dup /PageSize [ %s %s ] put\n"		// Paper dimensions
+    "  dup /Policies 1 dict\n"
+    "    dup /PageSize 3 put\n"			// Select the nearest page size to fit
+    "  put\n"
+    "  setpagedevice\n"				// Install settings
     "} if\n", 
     fpCString(NSTwipsToFloatPoints(paper_width)).get(),
     fpCString(NSTwipsToFloatPoints(paper_height)).get());
