@@ -36,16 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsReadableUtils.h"
+#include "ProcessorState.h"
 #include "txXSLTPatterns.h"
 #include "txNodeSetContext.h"
 #include "txForwardContext.h"
+#include "XMLUtils.h"
 #include "XSLTFunctions.h"
-#include "ProcessorState.h"
 #ifndef TX_EXE
-#include "nsReadableUtils.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
-#include "XMLUtils.h"
 #endif
 
 /*
@@ -320,9 +320,6 @@ void txRootPattern::toString(nsAString& aDest)
  */
 txIdPattern::txIdPattern(const nsAString& aString)
 {
-#ifdef TX_EXE
-    mIds = aString;
-#else
     nsAString::const_iterator pos, begin, end;
     aString.BeginReading(begin);
     aString.EndReading(end);
@@ -331,13 +328,11 @@ txIdPattern::txIdPattern(const nsAString& aString)
         while (pos != end && XMLUtils::isWhitespace(*pos))
             ++pos;
         begin = pos;
-        if (!mIds.IsEmpty())
-            mIds += PRUnichar(' ');
         while (pos != end && !XMLUtils::isWhitespace(*pos))
             ++pos;
-        mIds += Substring(begin, pos);
+        // this can fail, XXX move to a Init(aString) method
+        mIds.AppendString(Substring(begin, pos));
     }
-#endif
 }
 
 txIdPattern::~txIdPattern()
@@ -346,15 +341,16 @@ txIdPattern::~txIdPattern()
 
 MBool txIdPattern::matches(Node* aNode, txIMatchContext* aContext)
 {
-#ifdef TX_EXE
-    return MB_FALSE; // not implemented
-#else
     if (aNode->getNodeType() != Node::ELEMENT_NODE) {
         return MB_FALSE;
     }
 
     // Get a ID attribute, if there is
-
+    nsAutoString value;
+#ifdef TX_EXE
+    if (!((Element*)aNode)->getIDValue(value))
+        return MB_FALSE;
+#else
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode->getNSObj());
     NS_ASSERTION(content, "a Element without nsIContent");
     if (!content) {
@@ -370,31 +366,12 @@ MBool txIdPattern::matches(Node* aNode, txIMatchContext* aContext)
     if (!idAttr) {
         return MB_FALSE; // no ID for this element defined, can't match
     }
-    nsAutoString value;
     nsresult rv = content->GetAttr(kNameSpaceID_None, idAttr, value);
     if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
         return MB_FALSE; // no ID attribute given
     }
-    nsAString::const_iterator pos, begin, end;
-    mIds.BeginReading(begin);
-    mIds.EndReading(end);
-    pos = begin;
-    const PRUnichar space = PRUnichar(' ');
-    PRBool found = FindCharInReadable(space, pos, end);
-
-    while (found) {
-        if (value.Equals(Substring(begin, pos))) {
-            return MB_TRUE;
-        }
-        ++pos; // skip ' '
-        begin = pos;
-        found = FindCharInReadable(PRUnichar(' '), pos, end);
-    }
-    if (value.Equals(Substring(begin, pos))) {
-        return MB_TRUE;
-    }
-    return MB_FALSE;
 #endif // TX_EXE
+    return mIds.IndexOf(value) > -1;
 }
 
 double txIdPattern::getDefaultPriority()
@@ -408,7 +385,12 @@ void txIdPattern::toString(nsAString& aDest)
     aDest.Append(NS_LITERAL_STRING("txIdPattern{"));
 #endif
     aDest.Append(NS_LITERAL_STRING("id('"));
-    aDest.Append(mIds);
+    PRUint32 k, count = mIds.Count() - 1;
+    for (k = 0; k < count; ++k) {
+        aDest.Append(*mIds[k]);
+        aDest.Append(PRUnichar(' '));
+    }
+    aDest.Append(*mIds[count]);
     aDest.Append(NS_LITERAL_STRING("')"));
 #ifdef DEBUG
     aDest.Append(PRUnichar('}'));

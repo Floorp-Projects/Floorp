@@ -41,6 +41,7 @@
 #include "List.h"
 #include "nsIAtom.h"
 #include "baseutils.h"
+#include "nsDoubleHashtable.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 
@@ -359,6 +360,29 @@ class DocumentFragment : public NodeDefinition
 //
 //Definition and Implementation of a Document.
 //
+
+/**
+ * nsDoubleHashtable definitions for IDs
+ *
+ * It may be possible to share the key value with the element,
+ * but that may leave entries without keys, as the entries
+ * are constructed from the key value and the setting of mElement
+ * happens late. As pldhash.h ain't clear on this, we store the
+ * key by inheriting from PLDHashStringEntry.
+ */
+class txIDEntry : public PLDHashStringEntry
+{
+public:
+    txIDEntry(const void* aKey) : PLDHashStringEntry(aKey), mElement(nsnull)
+    {
+    }
+    ~txIDEntry()
+    {
+    }
+    Element* mElement;
+};
+DECL_DHASH_WRAPPER(txIDMap, txIDEntry, const nsAString&)
+
 class Document : public NodeDefinition
 {
   public:
@@ -393,10 +417,14 @@ class Document : public NodeDefinition
     void namespaceIDToURI(PRInt32 aNamespaceID, nsAString& aNamespaceURI);
 
   private:
+    PRBool setElementID(const nsAString& aID, Element* aElement);
+
     Element* documentElement;
 
     // This class is friend to be able to set the documentBaseURI
-    friend class XMLParser;
+    // and IDs.
+    friend class txXMLParser;
+    txIDMap mIDMap;
     nsString documentBaseURI;
 };
 
@@ -424,13 +452,18 @@ class Element : public NodeDefinition
     MBool getAttr(nsIAtom* aLocalName, PRInt32 aNSID, nsAString& aValue);
     MBool hasAttr(nsIAtom* aLocalName, PRInt32 aNSID);
 
+    // ID getter
+    PRBool getIDValue(nsAString& aValue);
+
   private:
     friend class Document;
+    void setIDValue(const nsAString& aValue);
     Element(const nsAString& tagName, Document* owner);
     Element(const nsAString& aNamespaceURI, const nsAString& aTagName,
             Document* aOwner);
 
     AttrMap mAttributes;
+    nsString mIDValue;
     nsCOMPtr<nsIAtom> mLocalName;
     PRInt32 mNamespaceID;
 };

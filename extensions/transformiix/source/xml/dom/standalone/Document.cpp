@@ -39,6 +39,7 @@
 //
 Document::Document() : NodeDefinition(Node::DOCUMENT_NODE, nsString(), NULL)
 {
+  mIDMap.Init(0);
   documentElement = nsnull;
 }
 
@@ -118,13 +119,30 @@ ProcessingInstruction*
 //
 //Return an Element by ID, introduced by DOM2
 //
+DHASH_WRAPPER(txIDMap, txIDEntry, const nsAString&)
+
 Element* Document::getElementById(const nsAString& aID)
 {
-  /* This would need knowledge of the DTD, and we don't have it.
-   * If we knew that we deal with HTML4 or XHTML1 we could check
-   * for the "id" attribute, but we don't, so return NULL 
-   */
+  txIDEntry* entry = mIDMap.GetEntry(aID);
+  if (entry)
+    return entry->mElement;
   return nsnull;
+}
+
+/**
+ * private setter for element ID
+ */
+PRBool
+Document::setElementID(const nsAString& aID, Element* aElement)
+{
+  txIDEntry* id = mIDMap.AddEntry(aID);
+  // make sure IDs are unique
+  if (id->mElement) {
+    return PR_FALSE;
+  }
+  id->mElement = aElement;
+  id->mElement->setIDValue(aID);
+  return PR_TRUE;
 }
 
 Node* Document::appendChild(Node* newChild)

@@ -254,3 +254,22 @@ MBool Element::hasAttr(nsIAtom* aLocalName, PRInt32 aNSID)
   }
   return MB_FALSE;
 }
+
+/**
+ * ID accessors. Getter used for id() patterns, private setter for parser
+ */
+PRBool
+Element::getIDValue(nsAString& aValue)
+{
+  if (mIDValue.IsEmpty()) {
+    return PR_FALSE;
+  }
+  aValue = mIDValue;
+  return PR_TRUE;
+}
+
+void
+Element::setIDValue(const nsAString& aValue)
+{
+  mIDValue = aValue;
+}
