@@ -6,8 +6,3 @@
 		NSUnregisterSelf;
    local: *;
 };
-~
-~
-
-~
-
