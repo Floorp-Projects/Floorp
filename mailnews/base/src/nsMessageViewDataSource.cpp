@@ -22,6 +22,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsMsgRDFUtils.h"
+#include "nsMsgUtils.h"
 
 
 #include "plstr.h"
@@ -195,7 +196,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 				rv = folder->GetThreads(&threads);
 				if (NS_FAILED(rv)) return rv;
 				nsMessageViewThreadEnumerator * threadEnumerator = 
-					new nsMessageViewThreadEnumerator(threads);
+					new nsMessageViewThreadEnumerator(threads, folder);
 				if(!threadEnumerator)
 					return NS_ERROR_OUT_OF_MEMORY;
 				nsAdapterEnumerator* cursor =
@@ -235,7 +236,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 		if(NS_SUCCEEDED(property->EqualsResource(kNC_MessageChild, &equal)) && equal)
 		{
 			nsIMsgFolder *folder;
-			rv = nsGetFolderFromMessage(message, &folder);
+			rv = message->GetMsgFolder(&folder);
 			if(NS_SUCCEEDED(rv))
 			{
 				nsIMsgThread *thread;
@@ -246,13 +247,16 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 					nsMsgKey msgKey;
 					message->GetMessageKey(&msgKey);
 					thread->EnumerateMessages(msgKey, &messages);
+					nsMessageFromMsgHdrEnumerator *converter = nsnull;
+					NS_NewMessageFromMsgHdrEnumerator(messages, folder, &converter);
 					nsMessageViewMessageEnumerator * messageEnumerator = 
-						new nsMessageViewMessageEnumerator(messages, mShowStatus);
+						new nsMessageViewMessageEnumerator(converter, mShowStatus);
 					if(!messageEnumerator)
 						return NS_ERROR_OUT_OF_MEMORY;
 					nsAdapterEnumerator* cursor =
 						new nsAdapterEnumerator(messageEnumerator);
 					NS_IF_RELEASE(messages);
+					NS_IF_RELEASE(converter);
 					if (cursor == nsnull)
 						return NS_ERROR_OUT_OF_MEMORY;
 					NS_ADDREF(cursor);
@@ -355,7 +359,7 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 		arcs->AppendElement(kNC_Status);
 
 		nsIMsgFolder *folder;
-		rv = nsGetFolderFromMessage(message, &folder);
+		rv = message->GetMsgFolder(&folder);
 		if(NS_SUCCEEDED(rv))
 		{
 			nsIMsgThread *thread;
@@ -366,13 +370,19 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 				nsMsgKey msgKey;
 				message->GetMessageKey(&msgKey);
 				thread->EnumerateMessages(msgKey, &messages);
+				nsMessageFromMsgHdrEnumerator *converter = nsnull;
+				NS_NewMessageFromMsgHdrEnumerator(messages, folder, &converter);
 				nsMessageViewMessageEnumerator * messageEnumerator = 
-					new nsMessageViewMessageEnumerator(messages, VIEW_SHOW_ALL);
+					new nsMessageViewMessageEnumerator(converter, VIEW_SHOW_ALL);
 				if(!messageEnumerator)
 					return NS_ERROR_OUT_OF_MEMORY;
+				NS_ADDREF(messageEnumerator);
 				if(NS_SUCCEEDED(messageEnumerator->First()))
 					arcs->AppendElement(kNC_MessageChild);
 				NS_IF_RELEASE(thread);
+				NS_IF_RELEASE(converter);
+				NS_IF_RELEASE(messages);
+				NS_IF_RELEASE(messageEnumerator);
 			}
 			NS_IF_RELEASE(folder);
 		}
@@ -657,11 +667,14 @@ nsresult nsMessageViewMessageEnumerator::MeetsCriteria(nsIMessage *message, PRBo
 
 NS_IMPL_ISUPPORTS(nsMessageViewThreadEnumerator, nsIEnumerator::GetIID())
 
-nsMessageViewThreadEnumerator::nsMessageViewThreadEnumerator(nsIEnumerator *threads)
+nsMessageViewThreadEnumerator::nsMessageViewThreadEnumerator(nsIEnumerator *threads,
+															 nsIMsgFolder *srcFolder)
 {
 	NS_INIT_REFCNT();	
 	mThreads = threads;
 	NS_ADDREF(mThreads);
+	mFolder = srcFolder;
+	NS_ADDREF(mFolder);
 	mMessages = nsnull;
 
 }
@@ -669,6 +682,7 @@ nsMessageViewThreadEnumerator::nsMessageViewThreadEnumerator(nsIEnumerator *thre
 nsMessageViewThreadEnumerator::~nsMessageViewThreadEnumerator()
 {
 	NS_IF_RELEASE(mThreads);
+	NS_IF_RELEASE(mFolder);
 	NS_IF_RELEASE(mMessages);
 }
 
@@ -737,10 +751,15 @@ nsresult nsMessageViewThreadEnumerator::GetMessagesForCurrentThread()
 		if(NS_SUCCEEDED(rv = currentItem->QueryInterface(nsIMsgThread::GetIID(), (void**)&thread)))
 		{
 			NS_IF_RELEASE(mMessages);
-			rv = thread->EnumerateMessages(nsMsgKey_None, &mMessages);
+			nsIEnumerator *msgHdrs;
+			rv = thread->EnumerateMessages(nsMsgKey_None, &msgHdrs);
+			nsMessageFromMsgHdrEnumerator* messages;
+			NS_NewMessageFromMsgHdrEnumerator(msgHdrs, mFolder, &messages);
+			mMessages = messages;
 			if(NS_SUCCEEDED(rv))
 				rv = mMessages->First();
 			NS_IF_RELEASE(thread);
+			NS_IF_RELEASE(msgHdrs);
 		}
 		NS_IF_RELEASE(currentItem);
 	}

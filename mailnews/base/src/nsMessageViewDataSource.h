@@ -202,7 +202,7 @@ public:
 
 	NS_DECL_ISUPPORTS
 
-	nsMessageViewThreadEnumerator(nsIEnumerator *srcEnumerator);
+	nsMessageViewThreadEnumerator(nsIEnumerator *srcEnumerator, nsIMsgFolder *srcFolder);
 	virtual ~nsMessageViewThreadEnumerator();
 
 	//nsIEnumerator interface	
@@ -231,6 +231,7 @@ protected:
 
 	nsIEnumerator *mThreads;
 	nsIEnumerator *mMessages;
+	nsIMsgFolder *mFolder;
 
 };
 #endif
