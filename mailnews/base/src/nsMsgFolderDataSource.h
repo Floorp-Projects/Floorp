@@ -200,6 +200,8 @@ protected:
 	nsresult OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
 	nsresult OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
   nsresult NotifyFolderTreeNameChanged(nsIMsgFolder *folder, PRInt32 aUnreadMessages);
+  nsresult NotifyFolderTreeSimpleNameChanged(nsIMsgFolder *folder);
+  nsresult NotifyFolderNameChanged(nsIMsgFolder *folder);
 
 	nsresult GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node);
 

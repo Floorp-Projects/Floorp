@@ -811,7 +811,7 @@ Rights Reserved.
                               accesskey="&getNewMsgForCmd.accesskey;"
                               sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
                               sortDirection="ascending"
-                              datasources="rdf:msgaccountmanager"
+                              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                               containment="http://home.netscape.com/NC-rdf#child"
                               ref="msgaccounts:/"
                               observes="cmd_getNewMessages">
@@ -822,7 +822,7 @@ Rights Reserved.
                                 <menuseparator/>
                             </menupopup>
                             <template>
-                                <rule nc:CanGetMessages="true">
+                                <rule nc:IsServer="true" nc:CanGetMessages="true">
                                     <menupopup>
                                         <menuitem uri="..." 
                                                   value="..." 
@@ -1231,7 +1231,7 @@ Rights Reserved.
                      sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
                      sortDirection="ascending"
                      tooltiptext="&getMsgButton.tooltip;" 
-                     observes="button_getNewMessages" datasources="rdf:msgaccountmanager" 
+                     observes="button_getNewMessages" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
                      oncommand="goDoCommand('cmd_getNewMessages')" 
                      containment="http://home.netscape.com/NC-rdf#child" 
                      ref="msgaccounts:/">
@@ -1241,7 +1241,7 @@ Rights Reserved.
               <menuseparator/>
           </menupopup>
           <template>
-              <rule nc:CanGetMessages="true">
+              <rule nc:IsServer="true" nc:CanGetMessages="true">
                   <menupopup>
                       <menuitem uri="..." 
                                 value="..." 
