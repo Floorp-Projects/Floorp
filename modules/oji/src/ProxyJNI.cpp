@@ -237,14 +237,7 @@ private:
     jvalue* mArgs;
 };
 
-inline jvalue getErrorValue()
-{
-    jvalue errorValue;
-    errorValue.d = 0;
-    return errorValue;
-}
-
-static const jvalue kErrorValue(getErrorValue());
+static const jvalue kErrorValue;
 
 class ProxyJNIEnv : public JNIEnv {
 private:
