@@ -168,12 +168,7 @@ public:
   
   static void SuperWinFilter(GdkSuperWin *superwin, XEvent *event, gpointer p);
   
-  void HandleXlibExposeEvent(XEvent *event);
   void HandleXlibConfigureNotifyEvent(XEvent *event);
-  void HandleXlibButtonEvent(XButtonEvent *aButtonEvent);
-  void HandleXlibMotionNotifyEvent(XMotionEvent *aMotionEvent);
-  void HandleXlibCrossingEvent(XCrossingEvent * aCrossingEvent);
- 
   // Return the GtkMozArea that is the nearest parent of this widget
   GtkWidget *GetMozArea();
 
