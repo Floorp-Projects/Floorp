@@ -505,7 +505,9 @@ function hasDefaultAccount()
 		var AccountManager = AccountManagerService.QueryInterface(Components.interfaces.nsIMsgAccountManager);
 		var DefaultAccount = AccountManager.defaultAccount;
 		var DefaultIncomingServer = DefaultAccount.incomingServer;
-		if (DefaultIncomingServer.hostName == "Local Folders")
+		emailStringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+      var LocalFolders = emailStringBundle.GetStringFromName( "localFolders" );
+      if (DefaultIncomingServer.hostName == LocalFolders)
 		{
 			return(false);
 		}
