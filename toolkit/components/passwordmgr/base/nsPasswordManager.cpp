@@ -348,7 +348,12 @@ nsPasswordManager::AddUser(const nsACString& aHost,
                            const nsAString& aUser,
                            const nsAString& aPassword)
 {
-  // First check for an existing entry for this host + user
+  // Silently ignore an empty username/password entry.
+  // There's no point in taking up space in the signon file with this.
+  if (aUser.IsEmpty() && aPassword.IsEmpty())
+    return NS_OK;
+
+  // Check for an existing entry for this host + user
   if (!aHost.IsEmpty()) {
     SignonHashEntry *hashEnt;
     if (mSignonTable.Get(aHost, &hashEnt)) {
@@ -387,7 +392,8 @@ nsPasswordManager::RemoveUser(const nsACString& aHost, const nsAString& aUser)
   for (entry = hashEnt->head; entry; prevEntry = entry, entry = entry->next) {
 
     nsAutoString ptUser;
-    if (NS_FAILED(DecryptData(entry->userValue, ptUser)))
+    if (!entry->userValue.IsEmpty() &&
+        NS_FAILED(DecryptData(entry->userValue, ptUser)))
       break;
 
     if (ptUser.Equals(aUser)) {
@@ -581,7 +587,12 @@ nsPasswordManager::AddUserFull(const nsACString& aHost,
                                const nsAString& aUserFieldName,
                                const nsAString& aPassFieldName)
 {
-  // First check for an existing entry for this host + user
+  // Silently ignore an empty username/password entry.
+  // There's no point in taking up space in the signon file with this.
+  if (aUser.IsEmpty() && aPassword.IsEmpty())
+    return NS_OK;
+
+  // Check for an existing entry for this host + user
   if (!aHost.IsEmpty()) {
     SignonHashEntry *hashEnt;
     if (mSignonTable.Get(aHost, &hashEnt)) {
@@ -644,6 +655,7 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
 
   nsCAutoString realm;
   SignonDataEntry* entry = nsnull;
+  PRBool writeOnFinish = PR_FALSE;
 
   do {
     rv = lineStream->ReadLine(buffer, &moreData);
@@ -667,8 +679,16 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
     case STATE_USERFIELD:
 
       // Commit any completed entry
-      if (entry)
-        AddSignonData(realm, entry);
+      if (entry) {
+        // Weed out empty username+password entries from corrupted signon files
+        if (entry->userValue.IsEmpty() && entry->passValue.IsEmpty()) {
+          NS_WARNING("Discarding empty password entry");
+          writeOnFinish = PR_TRUE; // so we won't get this on the next startup
+          delete entry;
+        } else {
+          AddSignonData(realm, entry);
+        }
+      }
 
       // If the line is a ., we've reached the end of this realm's entries.
       if (buffer.Equals(NS_LITERAL_STRING("."))) {
@@ -711,6 +731,11 @@ nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
 
   // Don't leak if the file ended unexpectedly
   delete entry;
+
+  if (writeOnFinish) {
+    fileStream->Close();
+    WriteSignonFile();
+  }
 
   return NS_OK;
 }
