@@ -831,6 +831,7 @@ do_accepts(
     )
 {
     PRNetAddr   addr;
+    PRErrorCode  perr;
 
     VLOG(("selfserv: do_accepts: starting"));
     PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
@@ -842,7 +843,12 @@ do_accepts(
 	FPRINTF(stderr, "\n\n\nselfserv: About to call accept.\n");
 	tcp_sock = PR_Accept(listen_sock, &addr, PR_INTERVAL_NO_TIMEOUT);
 	if (tcp_sock == NULL) {
+    	    perr      = PR_GetError();
 	    errWarn("PR_Accept");
+	    if (perr == PR_CONNECT_RESET_ERROR) {
+		FPRINTF(stderr, "Ignoring PR_CONNECT_RESET_ERROR error - continue\n");
+		continue;
+	    }
 	    break;
 	}
 
