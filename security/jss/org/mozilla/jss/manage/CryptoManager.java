@@ -51,7 +51,7 @@ import org.mozilla.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.4 $ $Date: 2001/03/23 19:50:02 $ 
+ * @version $Revision: 1.5 $ $Date: 2001/04/03 04:08:19 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -110,37 +110,23 @@ public final class CryptoManager implements TokenSupplier
             public static final FIPSMode UNCHANGED = new FIPSMode();
 		}
 
-        /**
-         * Creates a new set of CryptoManager initialization values.
-         * These values should be passed into
-         * <code>CryptoManager.initialize()</code>.  All the values have
-         * defaults, except for modDBName, keyDBName, and certDBName,
-         * which are passed in as parameters.  All the values can be
-         * modified after this constructor has been called.
-         */
-        public InitializationValues( String modDBName,
-                                     String keyDBName,
-                                     String certDBName )
-        {
-            this.modDBName = modDBName;
-            this.keyDBName = keyDBName;
-            this.certDBName = certDBName;
+        public InitializationValues(String configDir) {
+            this.configDir = configDir;
         }
 
-        /**
-         * The path of the security module database (secmod[ule].db).
-         */
-        public String modDBName;
+        public InitializationValues(String configDir, String certPrefix,
+            String keyPrefix, String secmodName)
+        {
+            this.configDir = configDir;
+            this.certPrefix = certPrefix;
+            this.keyPrefix = keyPrefix;
+            this.secmodName = secmodName;
+        }
 
-        /**
-         * The path of the key database (key3.db).
-         */
-        public String keyDBName;
-
-        /**
-         * The path of the certificate database (cert7.db).
-         */
-        public String certDBName;
+        public String configDir = null;
+        public String certPrefix = null;
+        public String keyPrefix = null;
+        public String secmodName = null;
 
         /**
          * The password callback to be used by JSS whenever a password
@@ -743,28 +729,19 @@ public final class CryptoManager implements TokenSupplier
      * an exception. It is OK to call them after calling
      * <code>initialize()</code>.
      *
-     * @param modDBName The full path, relative or absolute, of the security
-     *      module database.
-     * @param keyDBName The full path, relative or absolute, of the key
-     *      database.
-     * @param certDBName The full path, relative or absolute, of the
-     *      certificate database.
+     * @param configDir The directory containing the security databases.
      * @exception org.mozilla.jss.util.KeyDatabaseException Unable to open
      *  the key database, or it was currupted.
      * @exception org.mozilla.jss.util.CertDatabaseException Unable
      *  to open the certificate database, or it was currupted.
      **/
-    public static synchronized void initialize( String modDBName,
-                                                String keyDBName,
-                                                String certDBName )
+    public static synchronized void initialize( String configDir )
         throws  KeyDatabaseException,
                 CertDatabaseException,
                 AlreadyInitializedException,
                 GeneralSecurityException
     {
-        InitializationValues vals =
-            new InitializationValues( modDBName, keyDBName, certDBName );
-        initialize( vals );
+        initialize( new InitializationValues(configDir) );
     }
 
     /**
@@ -798,9 +775,10 @@ public final class CryptoManager implements TokenSupplier
 					"Must set ocspResponderCertNickname");
 			}
 		}
-        initializeAllNative(values.modDBName,
-                            values.keyDBName,
-                            values.certDBName,
+        initializeAllNative(values.configDir,
+                            values.certPrefix,
+                            values.keyPrefix,
+                            values.secmodName,
                             values.readOnly,
                             values.getManufacturerID(),
                             values.getLibraryDescription(),
@@ -839,9 +817,10 @@ public final class CryptoManager implements TokenSupplier
     }
 
     private static native void
-    initializeAllNative(String modDBName,
-                        String keyDBName,
-                        String certDBName,
+    initializeAllNative(String configDir,
+                        String certPrefix,
+                        String keyPrefix,
+                        String secmodName,
                         boolean readOnly,
                         String manufacturerID,
                         String libraryDescription,
@@ -1264,4 +1243,52 @@ public final class CryptoManager implements TokenSupplier
     public static final int DOMESTIC_POLICY=1;
     public static final int EXPORT_POLICY=2;
     public static final int FRANCE_POLICY=3;
+
+
+    /********************************************************************/
+    /* The following VERSION Strings should be updated in the following */
+    /* files everytime a new release of JSS is generated:               */
+    /*                                                                  */
+    /*     jss.jar:  ns/ninja/org/mozilla/jss/manage/CryptoManager.java */
+    /*     jss.dll:  ns/ninja/org/mozilla/jss/manage/CryptoManager.c    */
+    /*                                                                  */
+    /********************************************************************/
+
+    public static final String
+    JAR_JSS_VERSION     = "JSS_VERSION = JSS_3_0";
+    public static final String
+    JAR_JDK_VERSION     = "JDK_VERSION = JDK 1.2.2";
+    public static final String
+    JAR_NSS_VERSION     = "NSS_VERSION = NSS_3_2_RTM";
+    public static final String
+    JAR_DBM_VERSION     = "DBM_VERSION = NSS_3_1_1_RTM";
+    public static final String
+    JAR_NSPR_VERSION    = "NSPR_VERSION = NSPRPUB_RELEASE_4_1";
+
+    /**
+     * Loads the JSS dynamic library if necessary.
+     * The system property "jss.load" will be set to "no" by jssjava
+     * because it is statically linked to the jss libraries. If this
+     * property is not set, that means we are not running jssjava
+     * and need to dynamically load the library.
+     * <p>This method is idempotent.
+     */
+    synchronized static void loadNativeLibraries()
+    {
+        if( ! mNativeLibrariesLoaded &&
+            ! ("no").equals(System.getProperty("jss.load")) )
+        {
+            try {
+                Debug.trace(Debug.VERBOSE, "about to load jss library");
+                System.loadLibrary("jss3");
+                Debug.trace(Debug.VERBOSE, "jss library loaded");
+            } catch( UnsatisfiedLinkError e) {
+                Debug.trace(Debug.ERROR, "ERROR: Unable to load jss library");
+                throw e;
+            }
+            mNativeLibrariesLoaded = true;
+        }
+    }
+    static private boolean mNativeLibrariesLoaded = false;
+
 }

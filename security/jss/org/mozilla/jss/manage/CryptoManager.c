@@ -69,20 +69,20 @@ struct CERTCertDBHandleStr {
     PZMonitor *dbMon;
 };
 
-/*
-** NOTE:  We must declare a function "prototype" for the following function
-**        since it is defined in the "private" NSPR 2.0 header files,
-**        specifically "ns/nspr20/pr/include/private/pprthred.h".
-**
-** Get this thread's affinity mask.  The affinity mask is a 32 bit quantity
-** marking a bit for each processor this process is allowed to run on.
-** The processor mask is returned in the mask argument.
-** The least-significant-bit represents processor 0.
-**
-** Returns 0 on success, -1 on failure.
-*/
-PRInt32
-PR_GetThreadAffinityMask(PRThread *thread, PRUint32 *mask);
+/********************************************************************/
+/* The following VERSION Strings should be updated in the following */
+/* files everytime a new release of JSS is generated:               */
+/*                                                                  */
+/*     jss.jar:  ns/ninja/org/mozilla/jss/manage/CryptoManager.java */
+/*     jss.dll:  ns/ninja/org/mozilla/jss/manage/CryptoManager.c    */
+/*                                                                  */
+/********************************************************************/
+
+static const char* DLL_JSS_VERSION     = "JSS_VERSION = JSS_3_0";
+static const char* DLL_JDK_VERSION     = "JDK_VERSION = JDK 1.2.2";
+static const char* DLL_NSS_VERSION     = "NSS_VERSION = NSS_3_2_RTM";
+static const char* DLL_DBM_VERSION     = "DBM_VERSION = NSS_3_1_1_RTM";
+static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = NSPRPUB_RELEASE_4_1";
 
 static jobject
 makePWCBInfo(JNIEnv *env, PK11SlotInfo *slot);
@@ -396,9 +396,10 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative
  */
 void
 JSS_completeInitialize(JNIEnv *env,
-        jstring modDBName,
-        jstring keyDBName,
-        jstring certDBName,
+        jstring configDir,
+        jstring certPrefix,
+        jstring keyPrefix,
+        jstring secmodName,
         jboolean readOnly,
         jstring manuString,
         jstring libraryString,
@@ -412,13 +413,13 @@ JSS_completeInitialize(JNIEnv *env,
 		jstring ocspResponderURL,
 		jstring ocspResponderCertNickname )
 {
-    CERTCertDBHandle *cdb_handle=NULL;
-    SECKEYKeyDBHandle *kdb_handle=NULL;
     SECStatus rv = SECFailure;
-    PRStatus status = PR_FAILURE;
     JavaVM *VMs[5];
     jint numVMs;
-    char *szDBName = NULL; /* C string version of a database filename */
+    char *szConfigDir = NULL;
+    char *szCertPrefix = NULL;
+    char *szKeyPrefix = NULL;
+    char *szSecmodName = NULL;
     char *manuChars=NULL;
     char *libraryChars=NULL;
     char *tokChars=NULL;
@@ -427,74 +428,15 @@ JSS_completeInitialize(JNIEnv *env,
     char *keySlotChars=NULL;
     char *fipsChars=NULL;
     char *fipsKeyChars=NULL;
+    PRUint32 initFlags;
 
     /* This is thread-safe because initialize is synchronized */
     static PRBool initialized=PR_FALSE;
-
-    /*
-     * Initialize NSPR and the RNG
-     */
-    if( simpleInitialize(env) != PR_SUCCESS ) {
-        PR_ASSERT((*env)->ExceptionOccurred(env));
-        return;
-    }
-
-
-    PR_ASSERT(env!=NULL && modDBName!=NULL && certDBName!=NULL
-        && keyDBName!=NULL);
 
     /* Make sure initialize() completes only once */
     if(initialized) {
         JSS_throw(env, ALREADY_INITIALIZED_EXCEPTION);
         return;
-    }
-
-    /*
-     * Initialize the private key database.
-     */
-    szDBName = (char*) (*env)->GetStringUTFChars(env, keyDBName, NULL);
-    PR_ASSERT(szDBName != NULL);
-    /* Bug #299899: OpenKeyDBFilename is broken. */
-    kdb_handle = SECKEY_OpenKeyDB(  readOnly,
-                                    keyDBNameCallback,
-                                    (void*) szDBName);
-    (*env)->ReleaseStringUTFChars(env, keyDBName, szDBName);
-    if (kdb_handle != NULL) {
-        SECKEY_SetDefaultKeyDB(kdb_handle);
-    } else {
-        char *err;
-        PR_smprintf(err, "Unable to open key database %s", szDBName);
-        JSS_nativeThrowMsg(env, KEY_DATABASE_EXCEPTION, err);
-        PR_smprintf_free(err);
-        goto finish;
-    }
-
-    /*
-     * Initialize the certificate database.
-     */
-    cdb_handle = PR_NEWZAP(CERTCertDBHandle);
-    if(cdb_handle == NULL) {
-        JSS_nativeThrowMsg(env,
-			OUT_OF_MEMORY_ERROR,
-            "creating certificate database handle");
-        goto finish;
-    }
-
-    szDBName = (char*) (*env)->GetStringUTFChars(env, certDBName, NULL);
-    PR_ASSERT(szDBName != NULL);
-    /* Bug #299899: OpenCertDBFilename is broken. */
-    rv = CERT_OpenCertDB(cdb_handle, readOnly,
-            certDBNameCallback, szDBName);
-    (*env)->ReleaseStringUTFChars(env, certDBName, szDBName);
-
-    if (rv == SECSuccess) {
-        CERT_SetDefaultCertDB(cdb_handle);
-    } else {
-        char *err;
-        PR_smprintf(err, "Unable to open certificate database %s", szDBName);
-        JSS_nativeThrowMsg(env, CERT_DATABASE_EXCEPTION, err);
-        PR_smprintf_free(err);
-        goto finish;
     }
 
     /*
@@ -532,14 +474,30 @@ JSS_completeInitialize(JNIEnv *env,
                             PR_FALSE /* password required */
                         );
 
+
     /*
-     * Open the PKCS #11 Module database
+     * Set up arguments to NSS_Initialize
      */
-    szDBName = (char *) (*env)->GetStringUTFChars(env, modDBName, NULL);
-    PR_ASSERT(szDBName != NULL);
-    SECMOD_init(szDBName);  	
-    /* !!! SECMOD_init doesn't return an error code: Bug #262562 */
-    (*env)->ReleaseStringUTFChars(env, modDBName, szDBName);
+    szConfigDir = (char*) (*env)->GetStringUTFChars(env, configDir, NULL);
+    szCertPrefix = (char*) (*env)->GetStringUTFChars(env, certPrefix, NULL);
+    szKeyPrefix = (char*) (*env)->GetStringUTFChars(env, keyPrefix, NULL);
+    szSecmodName = (char*) (*env)->GetStringUTFChars(env, secmodName, NULL);
+    initFlags = 0;
+    if( readOnly ) {
+        initFlags |= NSS_INIT_READONLY;
+    }
+
+    /*
+     * Initialize NSS.
+     */
+    rv = NSS_Initialize(szConfigDir, szCertPrefix, szKeyPrefix, szSecmodName,
+            initFlags);
+    if( rv != SECSuccess ) {
+        JSS_throwMsg(env, SECURITY_EXCEPTION,
+            "Unable to initialize security library");
+        goto finish;
+    }
+        
 
 	/*
 	 * Set default password callback.  This is the only place this
@@ -587,27 +545,16 @@ JSS_completeInitialize(JNIEnv *env,
 
     initialized = PR_TRUE;
 
-    status = PR_SUCCESS;
-
 finish:
-    if(status == PR_FAILURE) {
-        if(cdb_handle) {
-            if(CERT_GetDefaultCertDB() == cdb_handle) {
-                CERT_SetDefaultCertDB(NULL);
-            }
-            CERT_ClosePermCertDB(cdb_handle);
-            PR_Free(cdb_handle);
-        }
-        if(kdb_handle) {
-            if(SECKEY_GetDefaultKeyDB() == kdb_handle) {
-                SECKEY_SetDefaultKeyDB(NULL);
-            }
-            SECKEY_CloseKeyDB(kdb_handle);
-            /* CloseKeyDB also frees the handle */
-        }
-    }
-
     /* LET'S BE CAREFUL.  Unbraced if statements ahead. */
+    if(szConfigDir)
+        (*env)->ReleaseStringUTFChars(env, configDir, szConfigDir);
+    if(szCertPrefix)
+        (*env)->ReleaseStringUTFChars(env, certPrefix, szCertPrefix);
+    if(szKeyPrefix)
+        (*env)->ReleaseStringUTFChars(env, keyPrefix, szKeyPrefix);
+    if(szSecmodName)
+        (*env)->ReleaseStringUTFChars(env, secmodName, szSecmodName);
     if(manuChars)
         (*env)->ReleaseStringUTFChars(env, manuString, manuChars);
     if(libraryChars)

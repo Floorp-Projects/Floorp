@@ -43,7 +43,6 @@ PACKAGE =       org/mozilla/jss
 JNI_GEN =                                           \
             org.mozilla.jss.DatabaseCloser         \
             org.mozilla.jss.CryptoManager			\
-            org.mozilla.jss.NSSInit                \
             $(NULL)
 
 CLASSES = 											\
@@ -52,7 +51,6 @@ CLASSES = 											\
 			CryptoManager							\
             KeyDatabaseException                    \
             NoSuchTokenException                    \
-            NSSInit                                 \
             DatabaseCloser                          \
 			$(NULL)
 
@@ -62,14 +60,12 @@ JSRCS = 											\
 			CryptoManager.java						\
             KeyDatabaseException.java               \
             NoSuchTokenException.java               \
-            NSSInit.java                            \
             DatabaseCloser.java                     \
 			$(NULL)
 
 CSRCS =                             \
             CryptoManager.c         \
             PK11Finder.c            \
-            NSSInit.c               \
             $(NULL)
 
 
