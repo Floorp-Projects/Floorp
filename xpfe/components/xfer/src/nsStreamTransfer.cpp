@@ -22,7 +22,6 @@
  */
 #include "nsIStreamTransfer.h"
 
-#include "nsIAppShellComponentImpl.h"
 #include "nsStreamXferOp.h"
 #include "nsIFilePicker.h"
 #include "nsILocalFile.h"
@@ -36,13 +35,15 @@
 #include "nsIAllocator.h"
 #include "nsIFileStream.h"
 
+#include "nsIGenericFactory.h"
+
+
 // {BEBA91C0-070F-11d3-8068-00600811A9C3}
 #define NS_STREAMTRANSFER_CID \
     { 0xbeba91c0, 0x70f, 0x11d3, { 0x80, 0x68, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
 
 // Implementation of the stream transfer component interface.
-class nsStreamTransfer : public nsIStreamTransfer,
-                         public nsAppShellComponentImpl {
+class nsStreamTransfer : public nsIStreamTransfer {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_STREAMTRANSFER_CID );
 
@@ -55,9 +56,6 @@ public:
 
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
-
-    // This class implements the nsIAppShellComponent interface functions.
-    NS_DECL_NSIAPPSHELLCOMPONENT
 
     // This class implements the nsIStreamTransfer interface functions.
     NS_DECL_NSISTREAMTRANSFER
@@ -74,9 +72,9 @@ private:
     NS_IMETHOD SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **result, const nsString &suggested );
     nsString  SuggestNameFor( nsIChannel *aChannel, char const *suggestedName );
 
-    // Objects of this class are counted to manage library unloading...
-    nsInstanceCounter instanceCounter;
 }; // nsStreamTransfer
+
+NS_IMPL_ISUPPORTS1(nsStreamTransfer, nsIStreamTransfer)
 
 // Get content type and suggested name from input channel in this case.
 NS_IMETHODIMP
@@ -149,20 +147,10 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
             NS_ADDREF(p);
             rv = p->OpenDialog( parent );
             NS_RELEASE(p);
-            if ( NS_FAILED( rv ) ) {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d : Error opening dialog, rv=0x%08X\n",
-                              (char *)__FILE__, (int)__LINE__, (int)rv );
-            }
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Error opening dialog");
         } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d : Unable to create nsStreamXferOp\n",
-                          (char *)__FILE__, (int)__LINE__ );
+          NS_ASSERTION(0, "Unable to create nsStreamXferOp");
             rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-    } else {
-        if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "Failed to select file, rv=0x%X\n", (int)rv );
-        } else {
-            // User cancelled.
         }
     }
 
@@ -210,10 +198,10 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
             // Transfer channel to output file chosen by user.
             rv = this->SelectFileAndTransferLocation( channel, parent, contentType, suggestedName );
         } else {
-            DEBUG_PRINTF( PR_STDOUT, "Failed to open URI, rv=0x%X\n", (int)rv );
+          NS_ASSERTION(0,"Failed to open URI");
         }
     } else {
-        DEBUG_PRINTF( PR_STDOUT, "Failed to create URI, rv=0x%X\n", (int)rv );
+      NS_WARNING("Failed to create URI");
     }
 
     return rv;
@@ -369,8 +357,17 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
     return result;
 }
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamTransfer)
+
+static nsModuleComponentInfo components[] = {
+  { NS_ISTREAMTRANSFER_CLASSNAME,
+    NS_STREAMTRANSFER_CID,
+    NS_ISTREAMTRANSFER_CONTRACTID,
+    nsStreamTransferConstructor}
+};
+
 // Generate base nsIAppShellComponent implementation.
-NS_IMPL_IAPPSHELLCOMPONENT( nsStreamTransfer,
-                            nsIStreamTransfer,
-                            NS_ISTREAMTRANSFER_CONTRACTID,
-                            0 )
+//NS_IMPL_IAPPSHELLCOMPONENT( nsStreamTransfer,
+//                            nsIStreamTransfer,
+//                            NS_ISTREAMTRANSFER_CONTRACTID,
+//                            0 )
