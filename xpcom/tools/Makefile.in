@@ -45,9 +45,5 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 DIRS		= registry
 
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= windows
-endif
-
 include $(topsrcdir)/config/rules.mk
 

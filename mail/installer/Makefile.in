@@ -57,7 +57,6 @@ NO_PKG_FILES = \
 	msmap* \
 	nm2tsv* \
 	nsinstall* \
-	rebasedlls* \
 	regchrome* \
 	regxpcom* \
 	res/samples \

@@ -607,7 +607,6 @@ xpcom/sample/Makefile
 xpcom/threads/Makefile
 xpcom/tools/Makefile
 xpcom/tools/registry/Makefile
-xpcom/tools/windows/Makefile
 xpcom/windbgdlg/Makefile
 $MAKEFILES_libreg
 $MAKEFILES_libjar
