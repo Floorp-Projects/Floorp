@@ -302,7 +302,7 @@ public:
   NS_IMETHOD ClearPath()=0;
   NS_IMETHOD ClearCachedData(nsIStyleRule* aRule)=0;
   NS_IMETHOD ClearCachedDataInSubtree(nsIStyleRule* aRule)=0;
-
+  
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID, 
                                             nsIStyleContext* aContext)=0;
 };
