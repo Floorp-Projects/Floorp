@@ -314,6 +314,16 @@ sub print_table_row {
       }
     }
 
+    # Leak/Bloat
+    #
+    if (defined $bloat_by_log->{$logfile}) {
+      my $leaks, $bloat;
+      ($leaks, $bloat) = @{ $bloat_by_log->{$logfile} };
+      printf "<br>%+.2f<br>%+.2f", $leaks, $bloat;
+    }
+
+    # Binary
+    #
     if ($br->{binaryname} ne '') {
       $binfile = "$buildtree/bin/$buildtime/$br->{buildname}/"
                 ."$br->{binaryname}";
