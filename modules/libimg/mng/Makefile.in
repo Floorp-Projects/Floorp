@@ -1,0 +1,63 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= mng
+LIBRARY_NAME	= mng
+
+CSRCS		= \
+		mng_callback_xs.c \
+		mng_chunk_io.c \
+		mng_chunk_prc.c \
+		mng_chunk_xs.c \
+		mng_cms.c \
+		mng_display.c \
+		mng_dither.c \
+		mng_error.c \
+		mng_filter.c \
+		mng_hlapi.c \
+		mng_jpeg.c \
+		mng_object_prc.c \
+		mng_pixels.c \
+		mng_prop_xs.c \
+		mng_read.c \
+		mng_trace.c \
+		mng_write.c \
+		mng_zlib.c \
+		$(NULL)
+
+EXPORTS		= libmng.h mng_conf.h mng_types.h
+
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
+LOCAL_INCLUDES	= -I$(srcdir)
+
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
+
+include $(topsrcdir)/config/rules.mk
+
