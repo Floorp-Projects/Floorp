@@ -151,7 +151,7 @@ private:
                                      PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize,
                                      nsITransport** o_pTrans);
 
-    void KillControlConnnection();
+    void KillControlConnection();
     nsresult StopProcessing();
     nsresult EstablishControlConnection();
     nsresult SendFTPCommand(nsCString& command);
