@@ -251,7 +251,7 @@ function onDownloadCancel(aEvent)
   var f = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
   f.initWithPath(aEvent.target.id);
   if (f.exists()) 
-    f.remove(true);
+    f.remove(false);
 
   gDownloadViewController.onCommandUpdate();
 }

@@ -547,26 +547,6 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   // yet (it's being downloaded) and persistentDescriptor fails on MacOSX for 
   // non-existent files. 
 
-  // XXXben - This is not really ideal. If the download is to be handled by a 
-  //          helper application, then we want to see if there is a duplicate file
-  //          in place in the temp folder and remove it _NOW_ before the External
-  //          Helper App Service gets a chance to make a unique clone. If we don't,
-  //          the EHAS will create a unique version of the name which will muck
-  //          with our RDF datasource. We can't create a unique name here either,
-  //          because the EHAS isn't smart enough to know that we're fooling with
-  //          it... 
-  nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
-  if (aMIMEInfo) {
-    aMIMEInfo->GetPreferredAction(&action);
-    if (action == nsIMIMEInfo::useHelperApp || 
-      action == nsIMIMEInfo::useSystemDefault) {
-      PRBool fileExists;
-      targetFile->Exists(&fileExists);
-      if (fileExists)
-        targetFile->Remove(PR_TRUE);
-    }
-  }
-
   nsAutoString path;
   rv = targetFile->GetPath(path);
   if (NS_FAILED(rv)) return rv;
