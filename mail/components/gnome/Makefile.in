@@ -51,6 +51,7 @@ REQUIRES = \
 	string \
 	mozgnome \
 	msgbase \
+	appcomps \
 	appshell \
 	intl \
 	windowwatcher \
