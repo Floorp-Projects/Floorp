@@ -184,10 +184,15 @@ nsMsgNewsFolder::GetReadSetStr(char **setStr)
 {
     nsresult rv;
     nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
 
     rv = db->GetReadSetStr(setStr);
-    return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (!*setStr) return NS_ERROR_FAILURE;
+    if (!*setStr[0]) return NS_ERROR_FAILURE;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -195,10 +200,10 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
 {
 	nsresult rv = NS_OK;
 
-	if (!child) return NS_ERROR_NULL_POINTER;
-    if (!setStr) return NS_ERROR_NULL_POINTER;
-    if (!name) return NS_ERROR_NULL_POINTER;
-  
+    NS_ENSURE_ARG_POINTER(child);
+    NS_ENSURE_ARG_POINTER(setStr);
+    NS_ENSURE_ARG_POINTER(name);
+
 #ifdef DEBUG_NEWS
     printf("AddNewsgroup(%s,??,%s)\n",name,setStr);
 #endif
@@ -214,7 +219,7 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
 	if (NS_FAILED(rv)) return rv;
 	if (!rdf) return NS_ERROR_FAILURE;
 
-	nsCString uri(mURI);
+	nsCAutoString uri(mURI);
 	uri.Append('/');
 	uri.Append(name);
 
@@ -655,7 +660,7 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
   if (!prettyName)
 		return NS_ERROR_NULL_POINTER;
   
-  nsString name(*prettyName);
+  nsAutoString name(*prettyName);
   PRInt32 totalwords = 0; // total no. of words
 
   // get the total no. of words
@@ -681,7 +686,7 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
     return NS_OK; // nothing to abbreviate
   
   // build the ellipsis
-  nsString out;
+  nsAutoString out;
   
   out += name[0];
   
@@ -1436,7 +1441,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       }
 
       // we got a password back...so remember it
-      nsCString aCStr; aCStr.AssignWithConversion(uniGroupPassword);
+      nsCAutoString aCStr; aCStr.AssignWithConversion(uniGroupPassword);
       rv = SetGroupPassword((const char *) aCStr);
       if (NS_FAILED(rv)) return rv;
 
@@ -1503,7 +1508,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             }
 
             // we got a username back, remember it
-            nsCString aCStr; aCStr.AssignWithConversion(uniGroupUsername);
+            nsCAutoString aCStr; aCStr.AssignWithConversion(uniGroupUsername);
             rv = SetGroupUsername((const char *) aCStr);
             if (NS_FAILED(rv)) return rv;
 
@@ -1537,13 +1542,11 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
 	newsrcLineStr = (const char *)newsgroupname;
     newsrcLineStr += ":";
 
-    char *setStr = nsnull;
-    rv = GetReadSetStr(&setStr);
-    if (NS_SUCCEEDED(rv) && setStr) { 
+    nsXPIDLCString setStr;
+    rv = GetReadSetStr(getter_Copies(setStr));
+    if (NS_SUCCEEDED(rv)) {
         newsrcLineStr += " ";
         newsrcLineStr += setStr;
-        delete [] setStr;
-        setStr = nsnull;
         newsrcLineStr += MSG_LINEBREAK;
     }
     else {
