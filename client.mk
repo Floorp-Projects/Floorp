@@ -412,7 +412,7 @@ endif
 # checkout last, because if you check it out first, there is a sticky
 # tag left over from checking out the LDAP SDK, which causes files in
 # the root directory to be missed.
-MOZ_MODULE_LIST := $(sort $(filter-out SeaMonkeyAll,$(MOZ_MODULE_LIST))) $(filter SeaMonkeyAll,$(MOZ_MODULE_LIST))
+MOZ_MODULE_LIST := $(sort $(filter-out SeaMonkeyAll,$(MOZ_MODULE_LIST))) $(firstword $(filter SeaMonkeyAll,$(MOZ_MODULE_LIST)))
 
 MODULES_CO_FLAGS := -P
 ifdef MOZ_CO_FLAGS
