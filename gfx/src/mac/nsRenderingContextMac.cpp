@@ -361,14 +361,22 @@ NS_IMETHODIMP nsRenderingContextMac::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
                                                           void **aBits, PRInt32 *aStride,
                                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-	return NS_OK;
+  PushState();
+
+  return mCurrentSurface->Lock(aX, aY, aWidth, aHeight,
+  			aBits, aStride, aWidthBytes, aFlags);
 }
 
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac::UnlockDrawingSurface(void)
 {
-	return NS_OK;
+  PRBool  clipstate;
+  PopState(clipstate);
+
+  mCurrentSurface->Unlock();
+  
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------
