@@ -22,6 +22,7 @@
  */
 
 
+#include <math.h>
 #include "nsVerifier.h"
 //---- for verifiers
 #include "nsSJISVerifier.h"
@@ -95,7 +96,140 @@ NS_DEFINE_CID(kCJKStringPSMDetectorCID,  NS_CJK_STRING_PSMDETECTOR_CID);
 
 
 #define DETECTOR_DEBUG
+typedef struct {
+  float mFirstByteFreq[94];
+  float mFirstByteStdDev;
+  float mFirstByteMean;
+  float mFirstByteWeight;
+  float mSecoundByteFreq[94];
+  float mSecoundByteStdDev;
+  float mSecoundByteMean;
+  float mSecoundByteWeight;
+} nsEUCStatistics;
 
+static nsEUCStatistics gBig5Statistics = 
+#include "Big5Statistics.h"
+// end of UECTWStatistics.h include
+
+static nsEUCStatistics gEUCTWStatistics = 
+#include "EUCTWStatistics.h"
+// end of UECTWStatistics.h include
+
+static nsEUCStatistics gGB2312Statistics = 
+#include "GB2312Statistics.h"
+// end of GB2312Statistics.h include
+
+static nsEUCStatistics gEUCJPStatistics = 
+#include "EUCJPStatistics.h"
+// end of EUCJPStatistics.h include
+
+static nsEUCStatistics gEUCKRStatistics = 
+#include "EUCKRStatistics.h"
+// end of EUCKRStatistics.h include
+
+class nsEUCSampler {
+  public:
+    nsEUCSampler() {
+      mTotal =0;
+      mThreshold = 2000;
+	  mState = 0;
+      PRInt32 i;
+      for(i=0;i<94;i++)
+          mFirstByteCnt[i] = mSecondByteCnt[i]=0;
+    }
+    PRBool EnoughData()  { return mTotal > mThreshold; }
+    PRBool GetSomeData() { return mTotal > 1; }
+    PRBool Sample(const char* aIn, PRUint32 aLen);
+    void   CalFreq();
+    float   GetScore(const float* aFirstByteFreq, float aFirstByteWeight,
+                     const float* aSecondByteFreq, float aSecondByteWeight);
+    float   GetScore(const float* array1, const float* array2);
+  private:
+    PRUint32 mTotal;
+    PRUint32 mThreshold;
+    PRInt8 mState;
+    PRUint32 mFirstByteCnt[94];
+    PRUint32 mSecondByteCnt[94];
+    float mFirstByteFreq[94];
+    float mSecondByteFreq[94];
+   
+};
+PRBool nsEUCSampler::Sample(const char* aIn, PRUint32 aLen)
+{
+    if(mState == 1)
+        return PR_FALSE;
+    const unsigned char* p = (const unsigned char*) aIn;
+    if(aLen + mTotal > 0x80000000) 
+       aLen = 0x80000000 - mTotal;
+
+     PRUint32 i;
+     for(i=0; (i<aLen) && (1 != mState) ;i++,p++)
+     {
+        switch(mState) {
+           case 0:
+             if( *p & 0x0080)  
+             {
+                if((0x00ff == *p) || ( 0x00a1 > *p)) {
+                   mState = 1;
+                } else {
+                   mTotal++;
+                   mFirstByteCnt[*p - 0x00a1]++;
+                   mState = 2;
+                }
+             }
+             break;
+           case 1:
+             break;
+           case 2:
+             if( *p & 0x0080)  
+             {
+                if((0x00ff == *p) || ( 0x00a1 > *p)) {
+                   mState = 1;
+                } else {
+                   mTotal++;
+                   mSecondByteCnt[*p - 0x00a1]++;
+                   mState = 0;
+                }
+             } else {
+                mState = 1;
+             }
+             break;
+           default:
+             mState = 1;
+        }
+     }
+   return (1 != mState  );
+}
+float nsEUCSampler::GetScore(const float* aFirstByteFreq, float aFirstByteWeight,
+                     const float* aSecondByteFreq, float aSecondByteWeight)
+{
+   return GetScore(aFirstByteFreq, mFirstByteFreq) ;
+/*
+   return aFirstByteWeight * GetScore(aFirstByteFreq, mFirstByteFreq) +
+          aSecondByteWeight * GetScore(aSecondByteFreq, mSecondByteFreq);
+*/
+}
+
+float nsEUCSampler::GetScore(const float* array1, const float* array2)
+{
+   float s;
+   float sum=0.0;
+   PRUint16 i;
+   for(i=0;i<94;i++) {
+     s = array1[i] - array2[i];
+     sum += s * s;
+   }
+   return (float)sqrt((double)sum) / 94.0f;
+}
+
+void nsEUCSampler::CalFreq()
+{
+   PRUint32 i;
+   for(i = 0 ; i < 94; i++) {
+      mFirstByteFreq[i] = (float)mFirstByteCnt[i] / (float)mTotal;
+      mSecondByteFreq[i] = (float)mSecondByteCnt[i] / (float)mTotal;
+   }
+}
 /*
  In the current design, we know the following combination of verifiers 
  are not good-
@@ -114,7 +248,7 @@ NS_DEFINE_CID(kCJKStringPSMDetectorCID,  NS_CJK_STRING_PSMDETECTOR_CID);
 #define MAX_VERIFIERS 16
 class nsPSMDetector {
 public :
-   nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet);
+   nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet, nsEUCStatistics** aStatisticsSet);
    virtual ~nsPSMDetector() {};
 
    virtual PRBool HandleData(const char* aBuf, PRUint32 aLen);
@@ -127,18 +261,25 @@ protected:
    PRUint8 mState[MAX_VERIFIERS];
    PRUint8 mItemIdx[MAX_VERIFIERS];
    nsVerifier** mVerifier;
+   nsEUCStatistics** mStatisticsData;
    PRBool mDone;
 
+   PRBool mRunSampler;
+protected:
+   void Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance=PR_FALSE);
 private:
 #ifdef DETECTOR_DEBUG
    PRUint32 mDbgTest;
    PRUint32 mDbgLen;
 #endif
+   nsEUCSampler mSampler;
 
 };
 //----------------------------------------------------------
-nsPSMDetector::nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet)
+nsPSMDetector::nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet, nsEUCStatistics** aStatisticsSet)
 {
+  mRunSampler = (nsnull != aStatisticsSet);
+  mStatisticsData = aStatisticsSet;
   mDone= PR_FALSE;
   mItems = aItems;
   NS_ASSERTION(MAX_VERIFIERS >= aItems , "MAX_VERIFIERS is too small!");
@@ -156,6 +297,8 @@ nsPSMDetector::nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet)
 //----------------------------------------------------------
 void nsPSMDetector::DataEnd()
 {
+  if(mRunSampler)
+     Sample(nsnull, 0, PR_TRUE);
 }
 //----------------------------------------------------------
 
@@ -251,12 +394,76 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
         }
      }
   }
+  if(mRunSampler)
+     Sample(aBuf, aLen);
+
 #ifdef DETECTOR_DEBUG
   mDbgLen += aLen;
 #endif
   return PR_FALSE;
 }
 
+void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
+{
+     PRInt32 nonUCS2Num=0;
+     PRInt32 j;
+     PRInt32 eucNum=0;
+     for(j = 0; j < mItems; j++) {
+        if(nsnull != mStatisticsData[mItemIdx[j]]) 
+             eucNum++;
+        if(((&nsUCS2BEVerifier) != mVerifier[mItemIdx[j]]) &&
+                ((&nsUCS2LEVerifier) != mVerifier[mItemIdx[j]])) {
+                  nonUCS2Num++;
+        }
+     }
+     mRunSampler = (eucNum > 1);
+     if(mRunSampler) {
+        mRunSampler = mSampler.Sample(aBuf, aLen);
+        if(((aLastChance && mSampler.GetSomeData()) || 
+            mSampler.EnoughData())
+           && (eucNum == nonUCS2Num)) {
+          mSampler.CalFreq();
+#ifdef DETECTOR_DEBUG
+          printf("We cannot figure out charset from the encoding, "
+                 "All EUC based charset share the same encoding structure.\n"
+                 "Detect based on statistics"); 
+          if(aLastChance) {
+             printf(" after we receive all the data.\n"); 
+          } else {
+             printf(" after we receive enough data.\n");
+          }
+#endif
+          PRInt32 bestIdx;
+          PRInt32 eucCnt=0;
+          float bestScore = 0.0f;
+          for(j = 0; j < mItems; j++) {
+             if(nsnull != mStatisticsData[mItemIdx[j]]) 
+             {
+                float score = mSampler.GetScore(
+                   mStatisticsData[mItemIdx[j]]->mFirstByteFreq,
+                   mStatisticsData[mItemIdx[j]]->mFirstByteWeight,
+                   mStatisticsData[mItemIdx[j]]->mSecoundByteFreq,
+                   mStatisticsData[mItemIdx[j]]->mSecoundByteWeight );
+#ifdef DETECTOR_DEBUG
+                printf("Differences between %s and this data is %2.8f\n",
+                       mVerifier[mItemIdx[j]]->charset,
+                       score);
+#endif
+                if(( 0 == eucCnt++) || (bestScore > score )) {
+                   bestScore = score;
+                   bestIdx = j;
+                } // if(( 0 == eucCnt++) || (bestScore > score )) 
+            } // if(nsnull != ...)
+         } // for
+#ifdef DETECTOR_DEBUG
+         printf("Based on the statistic, we decide it is %s",
+          mVerifier[mItemIdx[bestIdx]]->charset);
+#endif
+         Report( mVerifier[mItemIdx[bestIdx]]->charset);
+         mDone = PR_TRUE;
+       } // if (eucNum == nonUCS2Num)
+     } // if(mRunSampler)
+}
 //==========================================================
 /*
    This class won't detect x-euc-tw for now. It can  only 
@@ -276,6 +483,15 @@ static nsVerifier *gZhTwVerifierSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
       &nsCP1252Verifier,
       &nsUCS2BEVerifier,
       &nsUCS2LEVerifier
+};
+static nsEUCStatistics *gZhTwStatisticsSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
+      nsnull,
+      &gBig5Statistics,
+      nsnull,
+      &gEUCTWStatistics,
+      nsnull,
+      nsnull,
+      nsnull
 };
 //==========================================================
 #define KO_DETECTOR_NUM_VERIFIERS 6
@@ -322,6 +538,17 @@ static nsVerifier *gZhVerifierSet[ZH_DETECTOR_NUM_VERIFIERS] = {
       &nsUCS2BEVerifier,
       &nsUCS2LEVerifier
 };
+static nsEUCStatistics *gZhStatisticsSet[ZH_DETECTOR_NUM_VERIFIERS] = {
+      nsnull,
+      &gGB2312Statistics,
+      &gBig5Statistics,
+      nsnull,
+      nsnull,
+      &gEUCTWStatistics,
+      nsnull,
+      nsnull,
+      nsnull
+};
 //==========================================================
 #define CJK_DETECTOR_NUM_VERIFIERS 14
 static nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
@@ -340,6 +567,22 @@ static nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
       &nsUCS2BEVerifier,
       &nsUCS2LEVerifier
 };
+static nsEUCStatistics *gCJKStatisticsSet[CJK_DETECTOR_NUM_VERIFIERS] = {
+      nsnull,
+      nsnull,
+      &gEUCJPStatistics,
+      nsnull,
+      &gEUCKRStatistics,
+      nsnull,
+      &gBig5Statistics,
+      &gEUCTWStatistics,
+      &gGB2312Statistics,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull
+};
 //==========================================================
 class nsXPCOMDetector : 
       private nsPSMDetector,
@@ -347,7 +590,7 @@ class nsXPCOMDetector :
 {
   NS_DECL_ISUPPORTS
 public:
-    nsXPCOMDetector(PRUint8 aItems, nsVerifier** aVer);
+    nsXPCOMDetector(PRUint8 aItems, nsVerifier** aVer, nsEUCStatistics** aStatisticsSet);
     virtual ~nsXPCOMDetector();
   NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
   NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool* oDontFeedMe);
@@ -360,8 +603,8 @@ private:
   nsICharsetDetectionObserver* mObserver;
 };
 //----------------------------------------------------------
-nsXPCOMDetector::nsXPCOMDetector(PRUint8 aItems, nsVerifier **aVer)
-   : nsPSMDetector( aItems, aVer)
+nsXPCOMDetector::nsXPCOMDetector(PRUint8 aItems, nsVerifier **aVer, nsEUCStatistics** aStatisticsSet)
+   : nsPSMDetector( aItems, aVer, aStatisticsSet)
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
@@ -404,6 +647,7 @@ NS_IMETHODIMP nsXPCOMDetector::DoIt(
 NS_IMETHODIMP nsXPCOMDetector::Done()
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
+  this->DataEnd();
   return NS_OK;
 }
 //----------------------------------------------------------
@@ -418,7 +662,7 @@ class nsXPCOMStringDetector :
 {
   NS_DECL_ISUPPORTS
 public:
-    nsXPCOMStringDetector(PRUint8 aItems, nsVerifier** aVer);
+    nsXPCOMStringDetector(PRUint8 aItems, nsVerifier** aVer, nsEUCStatistics** aStatisticsSet);
     virtual ~nsXPCOMStringDetector();
     NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, 
                    const char** oCharset, 
@@ -429,8 +673,8 @@ private:
   const char* mResult;
 };
 //----------------------------------------------------------
-nsXPCOMStringDetector::nsXPCOMStringDetector(PRUint8 aItems, nsVerifier** aVer)
-   : nsPSMDetector( aItems, aVer)
+nsXPCOMStringDetector::nsXPCOMStringDetector(PRUint8 aItems, nsVerifier** aVer, nsEUCStatistics** aStatisticsSet)
+   : nsPSMDetector( aItems, aVer, aStatisticsSet)
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
@@ -515,29 +759,29 @@ NS_IMETHODIMP nsXPCOMDetectorFactory::CreateInstance(
   nsXPCOMStringDetector *inst2 = nsnull;
  
   if (mCID.Equals(kJAPSMDetectorCID)) {
-      inst1 = new nsXPCOMDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet);
+      inst1 = new nsXPCOMDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet, nsnull);
   } else if (mCID.Equals(kKOPSMDetectorCID)) {
-      inst1 = new nsXPCOMDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet);
+      inst1 = new nsXPCOMDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet, nsnull);
   } else if (mCID.Equals(kZHCNPSMDetectorCID)) {
-      inst1 = new nsXPCOMDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet);
+      inst1 = new nsXPCOMDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet, nsnull);
   } else if (mCID.Equals(kZHTWPSMDetectorCID)) {
-      inst1 = new nsXPCOMDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet);
+      inst1 = new nsXPCOMDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet, gZhTwStatisticsSet);
   } else if (mCID.Equals(kZHPSMDetectorCID)) {
-      inst1 = new nsXPCOMDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet);
+      inst1 = new nsXPCOMDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet, gZhStatisticsSet);
   } else if (mCID.Equals(kCJKPSMDetectorCID)) {
-      inst1 = new nsXPCOMDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet);
+      inst1 = new nsXPCOMDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet, gCJKStatisticsSet);
   } else if (mCID.Equals(kJAStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(JA_DETECTOR_NUM_VERIFIERS - 3, gJaVerifierSet);
+      inst2 = new nsXPCOMStringDetector(JA_DETECTOR_NUM_VERIFIERS - 3, gJaVerifierSet, nsnull);
   } else if (mCID.Equals(kKOStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(KO_DETECTOR_NUM_VERIFIERS - 3, gKoVerifierSet);
+      inst2 = new nsXPCOMStringDetector(KO_DETECTOR_NUM_VERIFIERS - 3, gKoVerifierSet, nsnull);
   } else if (mCID.Equals(kZHCNStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(ZHCN_DETECTOR_NUM_VERIFIERS - 3, gZhCnVerifierSet);
+      inst2 = new nsXPCOMStringDetector(ZHCN_DETECTOR_NUM_VERIFIERS - 3, gZhCnVerifierSet, nsnull);
   } else if (mCID.Equals(kZHTWStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(ZHTW_DETECTOR_NUM_VERIFIERS - 3, gZhTwVerifierSet);
+      inst2 = new nsXPCOMStringDetector(ZHTW_DETECTOR_NUM_VERIFIERS - 3, gZhTwVerifierSet, gZhTwStatisticsSet);
   } else if (mCID.Equals(kZHStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(ZH_DETECTOR_NUM_VERIFIERS - 3, gZhVerifierSet);
+      inst2 = new nsXPCOMStringDetector(ZH_DETECTOR_NUM_VERIFIERS - 3, gZhVerifierSet, gZhStatisticsSet);
   } else if (mCID.Equals(kCJKStringPSMDetectorCID)) {
-      inst2 = new nsXPCOMStringDetector(CJK_DETECTOR_NUM_VERIFIERS - 3, gCJKVerifierSet);
+      inst2 = new nsXPCOMStringDetector(CJK_DETECTOR_NUM_VERIFIERS - 3, gCJKVerifierSet, gCJKStatisticsSet);
   }
   if((NULL == inst1) && (NULL == inst2)) {
     return NS_ERROR_OUT_OF_MEMORY;
