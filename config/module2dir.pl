@@ -81,6 +81,7 @@ my %map = (
   'nkcache',            'netwerk/cache',
   'oji',                'modules/oji',
   'plugin',             'modules/plugin',
+  'png',                'modules/libimg/png',
   'pref',               'modules/libpref',
   'prefmigr',           'profile/pref-migrator',
   'profile',            'profile',
