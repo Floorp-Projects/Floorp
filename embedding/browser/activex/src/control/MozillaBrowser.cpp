@@ -1619,7 +1619,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 		rv = mPrefs->GetLocalizedUnicharPref(c_szPrefsHomePage, getter_Copies(szBuffer));
 		if (rv == NS_OK)
 		{
-			sUrl.AssignWithConversion(NS_ConvertUCS2toUTF8(szBuffer));
+			sUrl.Assign(szBuffer);
 		}
 	}
 	// Navigate to the home page
