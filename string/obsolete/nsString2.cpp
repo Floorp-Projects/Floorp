@@ -180,6 +180,21 @@ PRUnichar* nsString::GetWritableFragment( nsWritableFragment<PRUnichar>& aFragme
   }
 }
 
+
+void
+nsString::do_AppendFromElement( PRUnichar inChar )
+  {
+    PRUnichar buf[2] = { 0, 0 };
+    buf[0] = inChar;
+    
+    nsStr temp;
+    nsStr::Initialize(temp, eTwoByte);
+    temp.mUStr = buf;
+    temp.mLength = 1;
+    StrAppend(*this, temp, 0, 1);
+  }
+
+
 nsString::nsString( const nsAReadableString& aReadable ) {
   Initialize(*this,eTwoByte);
   Assign(aReadable);

@@ -505,6 +505,8 @@ public:
   void AppendWithConversion(const char*, PRInt32=-1);
   void AppendWithConversion(char);
 
+  virtual void do_AppendFromElement( PRUnichar );
+
 #ifndef NEW_STRING_APIS
   /*
    *  Appends n characters from given string to this,
