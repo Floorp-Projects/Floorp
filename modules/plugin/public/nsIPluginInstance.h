@@ -167,6 +167,16 @@ public:
     URLNotify(const char* url, const char* target,
               nsPluginReason reason, void* notifyData) = 0;
 
+    /**
+     * Returns the value of a variable associated with the plugin instance.
+     *
+     * @param variable - the plugin instance variable to get
+     * @param value - the address of where to store the resulting value
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetValue(nsPluginInstanceVariable variable, void *value) = 0;
+
 };
 
 #define NS_IPLUGININSTANCE_IID                       \

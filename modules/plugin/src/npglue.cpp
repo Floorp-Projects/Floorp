@@ -1602,6 +1602,67 @@ npn_getvalue(NPP npp, NPNVariable variable, void *r_value)
 	return(ret);
 }
 
+NPError
+npn_SetWindowless(np_instance* instance, PRBool windowed)
+{
+    /* 
+     * XXX On the Mac, a window has already been allocated by the time NPP_New
+     * has been called - which is fine, since we'll still use the window. 
+     * Unfortunately, we can't use the window's presence to determine whether
+     * it's too late to set the windowed property.
+     */
+#ifndef XP_MAC
+    /* 
+     * If the window has already been allocated, it's too late
+     * to tell us.
+     */
+    if (!instance->app->wdata->window)
+        instance->windowed = windowed;
+    else
+        return NPERR_INVALID_PARAM;
+#else
+    instance->windowed = windowed;
+#endif
+    return NPERR_NO_ERROR;
+}
+
+NPError
+npn_SetTransparent(np_instance* instance, PRBool transparent)
+{
+    instance->transparent = transparent;
+#ifdef LAYERS
+    if (instance->layer && 
+        (instance->transparent != !(CL_GetLayerFlags(instance->layer) & CL_OPAQUE)))
+    {
+        XP_Rect bbox;
+            	
+        /* Get the bbox and convert it into its own coordinate space */
+        CL_GetLayerBbox(instance->layer, &bbox);
+            	
+        CL_ChangeLayerFlag(instance->layer, CL_OPAQUE, (PRBool)!instance->transparent);
+        CL_ChangeLayerFlag(instance->layer, 
+                           CL_PREFER_DRAW_OFFSCREEN,
+                           (PRBool)instance->transparent);
+
+        /* Force drawing of the entire transparent plug-in. */
+        CL_UpdateLayerRect(CL_GetLayerCompositor(instance->layer),
+                           instance->layer, &bbox, PR_FALSE);
+    }
+#endif /* LAYERS */            
+    return NPERR_NO_ERROR;
+}
+
+NPError
+npn_SetWindowSize(np_instance* instance, NPSize* pnpsz)
+{
+    np_data * ndata = (np_data *)instance->app->np_data;
+    LO_EmbedStruct * pes = ndata->lo_struct;
+
+    LO_SetEmbedSize(instance->cx, pes, pnpsz->width, pnpsz->height);
+    LO_RelayoutFromElement(instance->cx, (LO_Element *)pes);
+    return NPERR_NO_ERROR;
+}
+
 NPError NP_EXPORT
 npn_setvalue(NPP npp, NPPVariable variable, void *r_value)
 {
@@ -1616,65 +1677,24 @@ npn_setvalue(NPP npp, NPPVariable variable, void *r_value)
         return NPERR_INVALID_INSTANCE_ERROR;
     
     switch(variable) {
-        case NPPVpluginWindowBool:
-        /* 
-         * XXX On the Mac, a window has already been allocated by the time NPP_New
-         * has been called - which is fine, since we'll still use the window. 
-         * Unfortunately, we can't use the window's presence to determine whether
-         * it's too late to set the windowed property.
-         */
-#ifndef XP_MAC
-            /* 
-             * If the window has already been allocated, it's too late
-             * to tell us.
-             */
-            if (!instance->app->wdata->window)
-                instance->windowed = (0 != r_value);
-            else
-                ret = NPERR_INVALID_PARAM;
-#else
-			instance->windowed = (0 != r_value);
-#endif 
-            break;
-        case NPPVpluginTransparentBool:
-            instance->transparent = (0 != r_value);
-#ifdef LAYERS
-            if (instance->layer && 
-            	(instance->transparent != !(CL_GetLayerFlags(instance->layer) & CL_OPAQUE)))
-            {
-            	XP_Rect bbox;
-            	
-            	/* Get the bbox and convert it into its own coordinate space */
-            	CL_GetLayerBbox(instance->layer, &bbox);
-            	
-                CL_ChangeLayerFlag(instance->layer, CL_OPAQUE, (PRBool)!instance->transparent);
-                CL_ChangeLayerFlag(instance->layer, 
-                                   CL_PREFER_DRAW_OFFSCREEN,
-                                   (PRBool)instance->transparent);
+      case NPPVpluginWindowBool:
+        ret = npn_SetWindowless(instance, (PRBool)(0 != r_value));
+        break;
 
-				/* Force drawing of the entire transparent plug-in. */
-                CL_UpdateLayerRect(CL_GetLayerCompositor(instance->layer),
-                				   instance->layer, &bbox, PR_FALSE);
-             }
-#endif /* LAYERS */            
-            break;
+      case NPPVpluginTransparentBool:
+        ret = npn_SetTransparent(instance, (PRBool)(0 != r_value));
+        break;
             
-        case NPPVpluginTimerInterval:
-        	np_SetTimerInterval(npp, *(uint32*)r_value);
-        	break; 
+      case NPPVpluginTimerInterval:
+        np_SetTimerInterval(npp, *(uint32*)r_value);
+        break; 
 
-        case NPPVpluginWindowSize:
-        {
-          NPSize * pnpsz = (NPSize *)r_value;
-          np_data * ndata = (np_data *)instance->app->np_data;
-          LO_EmbedStruct * pes = ndata->lo_struct;
+      case NPPVpluginWindowSize:
+        ret = npn_SetWindowSize(instance, (NPSize *)r_value);
+        break;
 
-          LO_SetEmbedSize(instance->cx, pes, pnpsz->width, pnpsz->height);
-          LO_RelayoutFromElement(instance->cx, (LO_Element *)pes);
-          break;
-        }
-	    default:
-		  break;
+      default:
+        break;
     }
 
     return(ret);
@@ -2807,6 +2827,18 @@ np_newinstance(np_handle *handle, MWContext *cx, NPEmbeddedApp *app,
                         npp->pdata = peerInst;
                         ndata->sdata = (NPSavedData*)pluginInst;
                         err = NPERR_NO_ERROR;
+
+                        // This used to be done by the NPN_SetValue call. The user was required 
+                        // to call them during NPP_New:
+                        extern nsresult fromNPError[];
+                        void* value;
+                        // It's an abomination that we don't pass the address of value here:
+                        err3 = pluginInst->GetValue(nsPluginInstanceVariable_WindowlessBool, value);
+                        if (err3 == NS_OK) 
+                            (void)npn_SetWindowless(instance, (PRBool)value);
+                        err3 = pluginInst->GetValue(nsPluginInstanceVariable_TransparentBool, value);
+                        if (err3 == NS_OK)
+                            (void)npn_SetTransparent(instance, (PRBool)value);
                     }
                     else {
                         // this will release the plugin instance.

@@ -272,6 +272,8 @@ npn_getJavaPeer(NPP npp);
 #pragma pointers_in_A0
 #endif
 
+extern NPError
+npn_SetWindowSize(np_instance* instance, NPSize* pnpsz);
 
 /* End of function prototypes */
 
@@ -290,9 +292,6 @@ public:
 
     NS_IMETHOD
     GetValue(nsPluginManagerVariable variable, void *value);
-
-    NS_IMETHOD
-    SetValue(nsPluginManagerVariable variable, void *value);
 
     // (Corresponds to NPN_ReloadPlugins.)
     NS_IMETHOD
@@ -446,9 +445,6 @@ public:
     NS_IMETHOD
     GetValue(nsPluginInstancePeerVariable variable, void *value);
 
-    NS_IMETHOD
-    SetValue(nsPluginInstancePeerVariable variable, void *value);
-
     // (Corresponds to NPP_New's MIMEType argument.)
     NS_IMETHOD
     GetMIMEType(nsMIMEType *result);
@@ -464,6 +460,9 @@ public:
     // (Corresponds to NPN_Status.)
     NS_IMETHOD
     ShowStatus(const char* message);
+
+    NS_IMETHOD
+    SetWindowSize(PRUint32 width, PRUint32 height);
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIJRILiveConnectPluginInstancePeer:

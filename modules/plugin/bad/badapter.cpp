@@ -213,12 +213,9 @@ public:
     NS_IMETHOD
     ShowStatus(const char* message);
 
-    // XXX - Where did this go?
     NS_IMETHOD
-    Version(int* plugin_major, int* plugin_minor,
-                      int* netscape_major, int* netscape_minor);
+    SetWindowSize(PRUint32 width, PRUint32 height);
 
-	
 	nsIPluginInstance* GetInstance(void) { return mInstance; }
 	NPP GetNPPInstance(void) { return npp; }
 	
@@ -1274,22 +1271,6 @@ CPluginInstancePeer::GetAttribute(const char* name, const char* *result)
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
-// Version:
-//
-// XXX - Where did this go in the new API?
-//
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginInstancePeer::Version(int* plugin_major, int* plugin_minor,
-                             int* netscape_major, int* netscape_minor)
-{
-    NPN_Version(plugin_major, plugin_minor, netscape_major, netscape_minor);
-	return NS_OK;
-}
-
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
 // NewStream:
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 NS_METHOD
@@ -1329,6 +1310,16 @@ CPluginInstancePeer::ShowStatus(const char* message)
 	return NS_OK;
 }
 
+NS_METHOD
+CPluginInstancePeer::SetWindowSize(PRUint32 width, PRUint32 height)
+{
+    NPError err;
+    NPSize size;
+    size.width = width;
+    size.height = height;
+    err = NPN_SetValue(npp, NPPVpluginWindowSize, &size);
+    return fromNPError[err];
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 // nsISupports functions

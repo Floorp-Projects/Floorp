@@ -31,7 +31,7 @@ OBJS = .\$(OBJDIR)\npsimple.obj \
 
 JDIRS = .
 
-JRI_GEN =		       \
+xJRI_GEN =		       \
 	Simple		       \
         java.lang.Object       \
 	netscape.plugin.Plugin \
@@ -76,7 +76,7 @@ GARBAGE	= $(GARBAGE) _gen
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-LINCS=$(LINCS) -I$(PUBLIC)\plugin -I$(PUBLIC)\xpcom -I$(PUBLIC)\java -I$(PUBLIC)\plugimpl -I$(PUBLIC)\raptor
+LINCS=$(LINCS) -I$(PUBLIC)\plugin -I$(PUBLIC)\xpcom -I$(PUBLIC)\java -I$(PUBLIC)\plugimpl -I$(PUBLIC)\raptor -I_jri
 
 install:: $(DLL)
         $(MAKE_INSTALL) $(XPDIST)\classes11\Simple.class $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\plugins\simple

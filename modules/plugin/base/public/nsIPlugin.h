@@ -106,19 +106,6 @@ public:
      */
     NS_IMETHOD
     GetValue(nsPluginVariable variable, void *value) = 0;
-
-    /**
-     * Sets the value of a variable associated with the plugin.
-     *
-     * (Corresponds to NPP_SetValue.)
-     *
-     * @param variable - the plugin variable to get
-     * @param value - the address of the value to store
-     * @result - NS_OK if this operation was successful
-     */
-    NS_IMETHOD
-    SetValue(nsPluginVariable variable, void *value) = 0;
-
 };
 
 #define NS_IPLUGIN_IID                               \
