@@ -586,6 +586,12 @@ nsSchemaLoader::Load(const nsAReadableString& schemaURI,
     return rv;
   }
 
+  // Force the mimetype of the returned stream to be xml.
+  rv = request->OverrideMimeType("text/xml");
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   rv = request->Send(nsnull);
   if (NS_FAILED(rv)) {
     return rv;
@@ -632,6 +638,12 @@ nsSchemaLoader::LoadAsync(const nsAReadableString& schemaURI,
   rv = request->OpenRequest("GET",
                             spec.get(),
                             PR_TRUE, nsnull, nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Force the mimetype of the returned stream to be xml.
+  rv = request->OverrideMimeType("text/xml");
   if (NS_FAILED(rv)) {
     return rv;
   }

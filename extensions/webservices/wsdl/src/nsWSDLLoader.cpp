@@ -326,6 +326,12 @@ nsWSDLLoadRequest::LoadDefinition(const nsAReadableString& aURI)
     return rv;
   }
 
+  // Force the mimetype of the returned stream to be xml.
+  rv = mRequest->OverrideMimeType("text/xml");
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   if (!mIsSync) {
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mRequest));
     if (!target) {

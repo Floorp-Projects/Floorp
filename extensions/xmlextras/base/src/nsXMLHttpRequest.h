@@ -161,6 +161,7 @@ protected:
 
   PRInt32 mStatus;
   PRBool mAsync;
+  nsCString mOverrideMimeType;
 };
 
 #endif

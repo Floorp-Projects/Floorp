@@ -814,6 +814,14 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mReadRequest = request;
   mContext = ctxt;
   ChangeState(XML_HTTP_REQUEST_LOADED);
+  if (!mOverrideMimeType.IsEmpty()) {
+    nsresult status;
+    request->GetStatus(&status);
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    if (channel && NS_SUCCEEDED(status)) {
+      channel->SetContentType(mOverrideMimeType.get());
+    }
+  }
   return mXMLParserStreamListener->OnStartRequest(request,ctxt);
 }
 
@@ -1211,6 +1219,15 @@ nsXMLHttpRequest::GetReadyState(PRInt32 *aState)
       *aState = mStatus;
       break;
   }
+  return NS_OK;
+}
+
+/* void   overrideMimeType(in string mimetype); */
+NS_IMETHODIMP
+nsXMLHttpRequest::OverrideMimeType(const char* aMimeType)
+{
+  // XXX Should we do some validation here?
+  mOverrideMimeType.Assign(aMimeType);
   return NS_OK;
 }
 

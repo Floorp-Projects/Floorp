@@ -224,6 +224,17 @@ interface nsIXMLHttpRequest : nsISupports {
    *   4 COMPLETED     Finished with all operations.
    */
    readonly attribute long readyState;
+
+  /**
+   * Override the mime type returned by the server (if any). This may
+   * be used, for example, to force a stream to be treated and parsed
+   * as text/xml, even if the server does not report it as such. This
+   * must be done before the <code>send</code> method is invoked.
+   *
+   * @param mimetype The type used to override that returned by the server
+   *                 (if any).
+   */
+   void   overrideMimeType(in string mimetype);
 };
 
 
