@@ -33,6 +33,8 @@
 #define MESSAGE3 "Only one child attachment can be XmNalwaysVisible."
 #define MESSAGE4 "The descendant for XfePaneAddDragDescendant() is invalid."
 #define MESSAGE5 "Cannot find a valid ancestor attachment for '%s'."
+#define MESSAGE6 "XmNpaneChildType can only change for XmNchildOne or XmNchildTwo."
+#define MESSAGE7 "XmNpaneChildType can only change to XmPANE_CHILD_WORK_AREA_ONE or XmPANE_CHILD_WORK_AREA_TWO."
 
 #define DEFAULT_SASH_POSITION 300
 
@@ -922,16 +924,38 @@ static Boolean
 ConstraintSetValues(Widget oc,Widget rc,Widget nc,ArgList av,Cardinal * ac)
 {
 	Widget					w = XtParent(nc);
-/*     XfePanePart *			sp = _XfePanePart(w); */
+	XfePanePart *			sp = _XfePanePart(w);
  	XfePaneConstraintPart *	ncp = _XfePaneConstraintPart(nc);
  	XfePaneConstraintPart *	ocp = _XfePaneConstraintPart(oc);
 
-	/* pane_child_type */
+	/* XmNpaneChildType */
 	if (ncp->pane_child_type != ocp->pane_child_type)
 	{
-		ncp->pane_child_type = ocp->pane_child_type;
-
-		_XfeWarning(nc,MESSAGE2);
+		/*
+		 * XmNpaneChildType can only change for child_one or child_two.  It
+		 * cannot change for the attachments.
+		 */
+		if ((nc != sp->child_one) && (nc != sp->child_two))
+		{
+			ncp->pane_child_type = ocp->pane_child_type;
+			
+			_XfeWarning(nc,MESSAGE6);
+		}
+		/* Make sure the new types are XmPANE_CHILD_WORK_AREA_{ONE,TWO} */
+		else if ((ncp->pane_child_type != XmPANE_CHILD_WORK_AREA_ONE) &&
+				 (ncp->pane_child_type != XmPANE_CHILD_WORK_AREA_TWO))
+		{
+			ncp->pane_child_type = ocp->pane_child_type;
+			
+			_XfeWarning(nc,MESSAGE7);
+		}
+		/* Otherwise we need to swap the work area childs */
+		else
+		{
+			_XfeSwap(sp->child_one,sp->child_two,Widget);
+			
+			_XfemConfigFlags(w) |= XfeConfigLayout;
+		}
 	}
 
 	/* pane_minimum */
@@ -1015,8 +1039,8 @@ AcceptChild(Widget child)
 #if 0
 	printf("AcceptChild(%-10s , %-25s , %s)\n",
 		   XtName(child),
-		   XfeDebugRepTypeValueName(XmRPaneChildType,cp->pane_child_type),
-		   XfeDebugRepTypeValueName(XmRPaneChildAttachment,cp->pane_child_attachment));
+		   XfeDebugRepTypeValueToName(XmRPaneChildType,cp->pane_child_type),
+		   XfeDebugRepTypeValueToName(XmRPaneChildAttachment,cp->pane_child_attachment));
 #endif
 
 	/* Child one */
@@ -1060,8 +1084,8 @@ InsertChild(Widget child)
 #if 0
 	printf("InsertChild(%-10s , %-25s , %s)\n",
 		   XtName(child),
-		   XfeDebugRepTypeValueName(XmRPaneChildType,cp->pane_child_type),
-		   XfeDebugRepTypeValueName(XmRPaneChildAttachment,cp->pane_child_attachment));
+		   XfeDebugRepTypeValueToName(XmRPaneChildType,cp->pane_child_type),
+		   XfeDebugRepTypeValueToName(XmRPaneChildAttachment,cp->pane_child_attachment));
 #endif
 
 	/* Child one */
@@ -1606,7 +1630,7 @@ ChildLayout(Widget				child,
 		width -= _XfeWidth(right);
 	}
 
-#ifdef DEBUG_ramiro
+#ifdef 0
 	/* Child */
 	if (child == sp->child_two)
 		printf("child_two(new y pos = %d\n",y);
