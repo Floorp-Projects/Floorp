@@ -23,16 +23,20 @@
 #include "nsIGlobalHistory.h"
 #include "nsIDOMXPConnectFactory.h"
 #include "nsAppShellCIDs.h"
-#include "nsIFileLocator.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIEditor.h"
-#include "nsFileLocations.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+
+#include "nsFileSpec.h"
+#include "nsFileLocations.h"
+#include "nsIFileLocator.h"
 
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMBrowserAppCore.h"
 #include "nsIDOMEditorAppCore.h"
+
 
 static NS_DEFINE_IID(kIAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
@@ -85,9 +89,18 @@ nsresult NS_AutoregisterComponents()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsSpecialFileSpec sysdir(nsSpecialFileSpec::App_ComponentsDirectory);
-  nsprPath componentsDir(sysdir);
+  NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
 
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsFileSpec sysdir;
+  rv = locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &sysdir);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsprPath componentsDir(sysdir);
   const char *componentsDirPath = (const char *) componentsDir;
   if (componentsDirPath != NULL)
   {
@@ -111,8 +124,6 @@ nsresult NS_AutoregisterComponents()
 extern "C" void
 NS_SetupRegistry_1()
 {
-  NS_AutoregisterComponents();
-
   /*
    * Call the standard NS_SetupRegistry() implemented in 
    * webshell/tests/viewer/nsSetupregistry.cpp
@@ -139,6 +150,14 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
+
+  // After we have Registered all the app specific components, install all the dynamic
+  // components. This has to happen after all the above registrations as nsIFileLocator
+  // is required in looking for files.
+  NS_AutoregisterComponents();
+
 }
+
+
 
 
