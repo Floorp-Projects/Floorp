@@ -800,7 +800,6 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
 {
     nsresult rv = NS_ERROR_FAILURE;
     nsIMsgMessageService* messageService = nsnull;
-    nsAutoString defaultFile(NS_ConvertASCIItoUCS2("mail"));
     nsCOMPtr<nsIUrlListener> urlListener;
     nsSaveMsgListener *aListener = nsnull;
     nsCOMPtr<nsIURI> aURL;
@@ -830,7 +829,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
 
         filePicker->Init(nsnull, GetString(NS_ConvertASCIItoUCS2("SaveMailAs").get()), nsIFilePicker::modeSave);
 
-        filePicker->SetDefaultString(defaultFile.get());
+        filePicker->SetDefaultString(GetString(NS_LITERAL_STRING("defaultSaveMessageAsFileName").get()));
         filePicker->AppendFilter(GetString(NS_ConvertASCIItoUCS2("EMLFiles").get()),
                                  NS_ConvertASCIItoUCS2("*.eml").get());
         filePicker->AppendFilters(nsIFilePicker::filterHTML | nsIFilePicker::filterText | nsIFilePicker::filterAll);
