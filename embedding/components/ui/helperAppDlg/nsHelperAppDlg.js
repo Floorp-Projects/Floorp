@@ -189,7 +189,7 @@ nsHelperAppDialog.prototype = {
          // Add special debug hook.
          if ( this.debug ) {
              var prompt = this.dialogElement( "prompt" );
-             prompt.setAttribute( "onclick", "dialog.dumpInfo()" );
+             prompt.setAttribute( "onclick", "dialog.doDebug()" );
          }
 
          // Put explanation into text box.
@@ -415,39 +415,51 @@ nsHelperAppDialog.prototype = {
                     .getService( Components.interfaces.nsIRDFService );
         // Now ask if it knows about this mime type.
         var exists = false;
+        var fileLocator = Components.classes[ "@mozilla.org/file/directory_service;1" ]
+                            .getService( Components.interfaces.nsIProperties );
+        var file        = fileLocator.get( "UMimTyp", Components.interfaces.nsIFile );
+        var file_url    = Components.classes[ "@mozilla.org/network/standard-url;1" ]
+                            .createInstance( Components.interfaces.nsIFileURL );
+        file_url.file = file;
+
+        // We must try creating a fresh remote DS in order to avoid accidentally
+        // having GetDataSource trigger an asych load.
+        var ds = Components.classes[ "@mozilla.org/rdf/datasource;1?name=xml-datasource" ].createInstance( Components.interfaces.nsIRDFDataSource );
         try {
-            var mimeRes = rdf.GetResource( "urn:mimetype:" + this.mLauncher.MIMEInfo.MIMEType );
-            var fileLocator = Components.classes[ "@mozilla.org/file/directory_service;1" ].getService( Components.interfaces.nsIProperties );
-            var file = fileLocator.get( "UMimTyp", Components.interfaces.nsIFile );
-            var file_url = Components.classes[ "@mozilla.org/network/standard-url;1" ].createInstance( Components.interfaces.nsIFileURL );
-            if ( file_url ) {
-                file_url.file = file;
-            }
-            var ds = rdf.GetDataSource( file_url.spec ).QueryInterface( Components.interfaces.nsIRDFDataSource );
-            // The next line will produce "blocking load requested when async load pending" and an NS_ERROR_FAILURE
-            //ds.QueryInterface( Components.interfaces.nsIRDFRemoteDataSource.Refresh( true );
-            var valueProperty = rdf.GetResource( "http://home.netscape.com/NC-rdf#value" );
-            var mimeLiteral = rdf.GetLiteral( this.mLauncher.MIMEInfo.MIMEType );
-            exists =  ds.HasAssertion( mimeRes, valueProperty, mimeLiteral, true );
+            // Initialize it.  This will fail if the uriloader (or anybody else)
+            // has already loaded/registered this data source.
+            var remoteDS = ds.QueryInterface( Components.interfaces.nsIRDFRemoteDataSource );
+            remoteDS.Init( file_url.spec );
+            remoteDS.Refresh( true );
         } catch ( all ) {
-this.dump( "Exception testing if mime type entry exists: " + all + "\n" );
+            // OK then, presume it was already registered; get it.
+            ds = rdf.GetDataSource( file_url.spec );
         }
 
+        // Now check if this mimetype is really in there;
+        // This is done by seeing if there's a "value" arc from the mimetype resource
+        // to the mimetype literal string.
+        var mimeRes       = rdf.GetResource( "urn:mimetype:" + this.mLauncher.MIMEInfo.MIMEType );
+        var valueProperty = rdf.GetResource( "http://home.netscape.com/NC-rdf#value" );
+        var mimeLiteral   = rdf.GetLiteral( this.mLauncher.MIMEInfo.MIMEType );
+        exists =  ds.HasAssertion( mimeRes, valueProperty, mimeLiteral, true );
+
+        var dlgUrl;
         if ( exists ) {
             // Open "edit mime type" dialog.
-            this.mDialog.openDialog( "chrome://communicator/content/pref/pref-applications-edit.xul",
-                                     "appEdit",
-                                     "chrome,modal=yes,resizable=no",
-                                     this );
+            dlgUrl = "chrome://communicator/content/pref/pref-applications-edit.xul";
         } else {
             // Open "add mime type" dialog.
-            this.mDialog.openDialog( "chrome://communicator/content/pref/pref-applications-new.xul",
-                                     "appEdit",
-                                     "chrome,modal=yes,resizable=no",
-                                     this );
+            dlgUrl = "chrome://communicator/content/pref/pref-applications-new.xul";
         }
 
-        // Refresh dialog with updated info.
+        // Open whichever dialog is appropriate, passing this dialog object as argument.
+        this.mDialog.openDialog( dlgUrl,
+                                 "_blank",
+                                 "chrome,modal=yes,resizable=no",
+                                 this );
+
+        // Refresh dialog with updated info about the default action.
         this.initIntro();
         this.initExplanation();
     },
@@ -456,49 +468,18 @@ this.dump( "Exception testing if mime type entry exists: " + all + "\n" );
     //                  presses OK.  Take the updated MIMEInfo and have the helper app service
     //                  "write" it back out to the RDF datasource.
     updateMIMEInfo: function() {
-         this.dump( "updateMIMEInfo called...\n" );
-         this.dumpObjectProperties( "\tMIMEInfo", this.mLauncher.MIMEInfo );
+        this.dump( "updateMIMEInfo called...\n" );
+        this.dumpObjectProperties( "\tMIMEInfo", this.mLauncher.MIMEInfo );
     },
 
     // dumpInfo:
-    dumpInfo: function() {
-        this.dumpObj( "mLauncher" );
-        this.dumpObj( "mLauncher.source.spec" );
-        this.dumpObj( "mLauncher.MIMEInfo" );
-        this.dumpObj( "mLauncher.MIMEInfo.MIMEType" );
-        this.dumpObj( "mLauncher.MIMEInfo.Description" );
-        this.dumpObj( "mLauncher.MIMEInfo.preferredApplicationHandler.unicodePath" );
-        this.dumpObj( "mLauncher.MIMEInfo.applicationDescription" );
-        this.dumpObj( "mLauncher.MIMEInfo.preferredAction" );
-        this.dumpObj( "mLauncher.MIMEInfo.alwaysAskBeforeHandling" );
-
-        var svc = Components.classes[ "@mozilla.org/uriloader/external-helper-app-service;1" ]
-                    .getService( Components.interfaces.nsPIUserAgentHelperAppService );
-        try {
-           this.dump( "\nnumber of user-agent defined helper apps=" + svc.count + "\n\n" );
-        } catch ( all ) {
-            // Get datasource.
-            var ds = svc.datasource;
-            var list = ds.GetAllResources();
-            while( list.hasMoreElements() ) {
-                var res = list.getNext().QueryInterface( Components.interfaces.nsIRDFResource );
-                this.dump( "res=" + res + " value=" + res.Value + "\n" );
-                var arcs = ds.ArcLabelsOut( res )
-                while( arcs.hasMoreElements() ) {
-                    var arc = arcs.getNext();
-                    for ( arcType in { nsIRDFResource:0, nsIRDFLiteral:0, nsIRDFInt:0, nsIRDFNode:0 } ) {
-                        try {
-                            var x = arc.QueryInterface( Components.interfaces[ arcType ] )
-                            break;
-                        } catch ( all ) {
-                        }
-                    }
-                    arc = arc.QueryInterface( Components.interfaces[ arcType ] );
-                    this.dump( "\tarc=" + arc + " value = " + arc.Value + "\n" );
-                }
-            }
-        }
-
+    doDebug: function() {
+        const nsIProgressDialog = Components.interfaces.nsIProgressDialog;
+        // Open new progress dialog.
+        var progress = Components.classes[ "@mozilla.org/progressdialog;1" ]
+                         .createInstance( nsIProgressDialog );
+        // Show it.
+        progress.open( this.mDialog );
     },
 
     // dumpObj:
