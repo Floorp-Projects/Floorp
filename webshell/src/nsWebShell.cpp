@@ -79,6 +79,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsCURILoader.h"
 
 #include "nsILocaleService.h"
@@ -428,7 +429,8 @@ protected:
   nsIDocumentLoader* mDocLoader;
   nsIDocumentLoaderObserver* mDocLoaderObserver;
 
-  nsIDocShellTreeItem*     mParent;
+  nsIDocShellTreeItem*     mParent;   // Weak Reference
+  nsIDocShellTreeOwner*    mTreeOwner; // Weak Reference
   nsVoidArray mChildren;
   nsString mName;
   nsString mDefaultCharacterSet;
@@ -649,6 +651,7 @@ nsWebShell::nsWebShell()
   mHistoryState = nsnull;
   mParentContentListener = nsnull;
   mParent = nsnull;
+  mTreeOwner = nsnull;
 }
 
 nsWebShell::~nsWebShell()
@@ -1446,8 +1449,8 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
 {
    nsCOMPtr<nsIDocShellTreeItem> treeItem;
 
-   NS_ENSURE_SUCCESS(FindChildWithName(aName1, getter_AddRefs(treeItem)),
-      NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(FindChildWithName(aName1, PR_TRUE, nsnull, 
+      getter_AddRefs(treeItem)), NS_ERROR_FAILURE);
 
    if(treeItem)
       CallQueryInterface(treeItem.get(), &aResult);
@@ -2431,9 +2434,17 @@ nsWebShell::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent,
 NS_IMETHODIMP
 nsWebShell::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 {
-  if (nsnull != mContainer) {
-    return mContainer->FindWebShellWithName(aName, aResult);
-  }
+   // First we try the new system
+   nsCOMPtr<nsIDocShellTreeItem> treeItem;
+
+   NS_ENSURE_SUCCESS(FindItemWithName(aName, nsnull, 
+      getter_AddRefs(treeItem)), NS_ERROR_FAILURE);
+
+   if(treeItem)
+      CallQueryInterface(treeItem.get(), &aResult);
+   else if(mContainer) // Then fall back to the old.
+      return mContainer->FindWebShellWithName(aName, aResult);
+  
   return NS_OK;
 }
 
@@ -4505,19 +4516,76 @@ NS_IMETHODIMP nsWebShell::GetSameTypeRootTreeItem(nsIDocShellTreeItem** aRootTre
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebShell::FindItemWithName(const PRUnichar *aName, 
+   nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem **_retval)
+{
+   NS_ENSURE_ARG(aName);
+   NS_ENSURE_ARG_POINTER(_retval);
+  
+   *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
+
+   // First we check our children making sure not to ask a child if it
+   // is the aRequestor.
+   NS_ENSURE_SUCCESS(FindChildWithName(aName, PR_TRUE, aRequestor, _retval), 
+      NS_ERROR_FAILURE);
+   if(*_retval)
+      return NS_OK;
+
+   // Second if we have a parent and it isn't the requestor then we should ask
+   // it to do the search.  If it is the requestor we should just stop here
+   // and let the parent do the rest.
+   // If we don't have a parent, then we should ask the docShellTreeOwner to do
+   // the search.
+   if(mParent)
+      {
+      if(mParent == aRequestor)
+         return NS_OK;
+
+      PRInt32 parentType;
+      mParent->GetItemType(&parentType);
+      if(parentType == mItemType)
+         {
+         NS_ENSURE_SUCCESS(mParent->FindItemWithName(aName,
+            NS_STATIC_CAST(nsIDocShellTreeItem*, this), _retval), 
+            NS_ERROR_FAILURE);
+         return NS_OK;
+         }
+      // If the parent isn't of the same type fall through and ask tree owner.
+      }
+
+   if(mTreeOwner)
+      {
+      NS_ENSURE_SUCCESS(mTreeOwner->FindItemWithName(aName, 
+         NS_STATIC_CAST(nsIDocShellTreeItem*, this), _retval),
+         NS_ERROR_FAILURE);
+      }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWebShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
 {
    NS_ENSURE_ARG_POINTER(aTreeOwner);
 
-   //XXXIMPL Implement this!
-   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
+   *aTreeOwner = mTreeOwner;
+   NS_IF_ADDREF(*aTreeOwner);
    return NS_OK;
 }
 
 NS_IMETHODIMP nsWebShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 {
-   //XXXIMPL Implement this!
-   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
+   mTreeOwner = aTreeOwner; // Weak reference per API
+
+   PRInt32 i, n = mChildren.Count();
+   for(i = 0; i < n; i++)
+      {
+      nsIDocShellTreeItem* child = (nsIDocShellTreeItem*) mChildren.ElementAt(i); // doesn't addref the result
+      NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
+      PRInt32 childType = ~mItemType; // Set it to not us in case the get fails
+      child->GetItemType(&childType); // We don't care if this fails, if it does we won't set the owner
+      if(childType == mItemType)
+         child->SetTreeOwner(aTreeOwner);
+      }
 
    return NS_OK;
 }
@@ -4602,17 +4670,19 @@ NS_IMETHODIMP nsWebShell::GetChildAt(PRInt32 aIndex, nsIDocShellTreeItem** aChil
    return NS_OK;
 }
 
-/* depth-first search for a child shell with aName */
-NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, nsIDocShellTreeItem **_retval)
+NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, 
+   PRBool aRecurse, nsIDocShellTreeItem* aRequestor, 
+   nsIDocShellTreeItem **_retval)
 {
    NS_ENSURE_ARG(aName);
    NS_ENSURE_ARG_POINTER(_retval);
   
    *_retval = nsnull;  // if we don't find one, we return NS_OK and a null result 
+
    nsAutoString name(aName);
    nsXPIDLString childName;
    PRInt32 i, n = mChildren.Count();
-   for (i = 0; i < n; i++) 
+   for(i = 0; i < n; i++) 
       {
       nsIDocShellTreeItem* child = (nsIDocShellTreeItem*) mChildren.ElementAt(i); // doesn't addref the result
       NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
@@ -4623,22 +4693,28 @@ NS_IMETHODIMP nsWebShell::FindChildWithName(const PRUnichar *aName, nsIDocShellT
          NS_ADDREF(child);
          break;
          }
-      PRInt32 childType;
-      child->GetItemType(&childType);
 
-      if(childType == mItemType) //Only ask it to check children if it is same type
+      if(aRecurse && (aRequestor != child)) // Only ask the child if it isn't the requestor
          {
-         // See if child contains the shell with the given name
-         nsCOMPtr<nsIDocShellTreeNode> childAsNode = do_QueryInterface(child);
-         if(child)
+         PRInt32 childType;
+         child->GetItemType(&childType);
+
+         if(childType == mItemType) //Only ask it to check children if it is same type
             {
-            NS_ENSURE_SUCCESS(childAsNode->FindChildWithName(name.GetUnicode(), _retval), NS_ERROR_FAILURE);
+            // See if child contains the shell with the given name
+            nsCOMPtr<nsIDocShellTreeNode> childAsNode(do_QueryInterface(child));
+            if(child)
+               {
+               NS_ENSURE_SUCCESS(childAsNode->FindChildWithName(aName, PR_TRUE,
+                  NS_STATIC_CAST(nsIDocShellTreeItem*, this), _retval),
+                  NS_ERROR_FAILURE);
+               }
             }
          }
-      if (*_retval)   // found it
-         break;
+      if(*_retval)   // found it
+         return NS_OK;
       }
-  return NS_OK;
+   return NS_OK;
 }
 
 //*****************************************************************************
