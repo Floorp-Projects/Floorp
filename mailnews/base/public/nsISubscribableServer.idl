@@ -40,10 +40,16 @@ interface nsISubscribeListener : nsISupports {
 	void OnDonePopulating();
 };
 
+[scriptable, uuid(f0e703ba-1dd1-11b2-9dfd-d5be7140b673)]
+interface nsISubscribeDumpListener : nsISupports {
+    void startDumping();
+    void dumpItem(in string name);
+    void doneDumping();
+};
+
 [scriptable, uuid(6f9d2e82-1dd2-11b2-bbed-bbea41ca33a7)]
 interface nsISubscribableServer : nsISupports {
 	attribute nsISubscribeListener subscribeListener;
-
 	attribute char delimiter;
 
 	void startPopulating(in nsIMsgWindow aMsgWindow, in boolean forceToServer);
@@ -77,5 +83,9 @@ interface nsISubscribableServer : nsISupports {
     void getChildren(in string path, in nsISupportsArray array);
     // if path is null, use the root
     void getFirstChildURI(in string path, out string result);
+
+    // used for writing out the SubscribeTree
+    void setDumpListener(in nsISubscribeDumpListener dumpListener);
+    void dumpTree();
 };
 

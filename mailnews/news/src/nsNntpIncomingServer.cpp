@@ -29,7 +29,6 @@
 #include "nsIMsgNewsFolder.h"
 #include "nsIFolder.h"
 #include "nsIFileSpec.h"
-#include "nsFileStream.h"
 #include "nsCOMPtr.h"
 #include "nsINntpService.h"
 #include "nsINNTPProtocol.h"
@@ -38,18 +37,13 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 
+#define INVALID_VERSION         0
 #define VALID_VERSION			1
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 #define HOSTINFO_FILE_NAME		 "hostinfo.dat"
 
-#define OLD_PERCENT_INITIAL_VALUE 0
-#define PERCENT_CHANGE_THRESHHOLD 10
-
 #define NEWS_DELIMITER   '.'
-
-#define HOSTINFO_COUNT_MAX 200 /* number of groups to process at a time when reading the list from the hostinfo.dat file */
-#define HOSTINFO_TIMEOUT 5   /* uSec to wait until doing more */
 
 // this platform specific junk is so the newsrc filenames we create 
 // will resemble the migrated newsrc filenames.
@@ -77,7 +71,7 @@ NS_INTERFACE_MAP_BEGIN(nsNntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsINntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsIUrlListener)
     NS_INTERFACE_MAP_ENTRY(nsISubscribableServer)
-	NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+    NS_INTERFACE_MAP_ENTRY(nsISubscribeDumpListener)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
@@ -87,16 +81,17 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mNewsrcHasChanged = PR_FALSE;
   mGroupsEnumerator = nsnull;
   NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
+
   mHostInfoLoaded = PR_FALSE;
   mHostInfoHasChanged = PR_FALSE;
+  mVersion = INVALID_VERSION;
+
+  mHostInfoStream = nsnull;
+
   mLastGroupDate = 0;
   mUniqueId = 0;
   mPushAuth = PR_FALSE;
   mHasSeenBeginGroups = PR_FALSE;
-  mVersion = 0;
-  mGroupsOnServerIndex = 0;
-  mOldPercent = OLD_PERCENT_INITIAL_VALUE;
-  mGroupsOnServerCount = 0;
   SetupNewsrcSaveTimer();
 }
 
@@ -109,14 +104,15 @@ nsNntpIncomingServer::~nsNntpIncomingServer()
         mGroupsEnumerator = nsnull;
     }
 
-    if (mUpdateTimer) {
-        mUpdateTimer->Cancel();
-        mUpdateTimer = nsnull;
-    }
-
     if (mNewsrcSaveTimer) {
         mNewsrcSaveTimer->Cancel();
         mNewsrcSaveTimer = nsnull;
+    }
+
+    if (mHostInfoStream) {
+        mHostInfoStream->close();
+        delete mHostInfoStream;
+        mHostInfoStream = nsnull;
     }
 
     rv = ClearInner();
@@ -273,9 +269,10 @@ nsresult nsNntpIncomingServer::SetupNewsrcSaveTimer()
 	{
 		mNewsrcSaveTimer->Cancel();
 	}
-  mNewsrcSaveTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mNewsrcSaveTimer = do_CreateInstance("@mozilla.org/timer;1");
 	mNewsrcSaveTimer->Init(OnNewsrcSaveTimer, (void*)this, timeInMSUint32, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
-  return NS_OK;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -428,10 +425,8 @@ nsNntpIncomingServer::CloseCachedConnections()
   rv = WriteNewsrcFile();
   if (NS_FAILED(rv)) return rv;
 
-  if (mHostInfoHasChanged) {
-  	rv = WriteHostInfoFile(); 
-  	if (NS_FAILED(rv)) return rv;
-  }
+  rv = WriteHostInfoFile(); 
+  if (NS_FAILED(rv)) return rv;
 	
   return NS_OK;
 }
@@ -756,24 +751,45 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	return NS_OK;
 }
 
-PRBool
-writeGroupToHostInfo(nsCString &aElement, void *aData)
-{
-	nsIOFileStream *stream;
-	stream = (nsIOFileStream *)aData;
-	
-    // ",,1,0,0" is a temporary hack
-	*stream << (const char *)aElement << ",,1,0,0" << MSG_LINEBREAK;
-
-	return PR_TRUE;
-}
-
 nsresult
 nsNntpIncomingServer::WriteHostInfoFile()
 {
-	nsresult rv;
+    nsresult rv = NS_OK;
+
 #ifdef DEBUG_NEWS
 	printf("WriteHostInfoFile()\n");
+#endif
+
+    if (!mHostInfoHasChanged) {
+#ifdef DEBUG_NEWS
+        printf("don't write out the hostinfo file\n");
+#endif
+        return NS_OK;
+    }
+#ifdef DEBUG_NEWS
+    else {
+        printf("write out the hostinfo file\n");
+    }
+#endif
+
+    rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mInner->SetDumpListener(this);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mInner->DumpTree();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::StartDumping()
+{
+	nsresult rv;
+#ifdef DEBUG_NEWS
+    printf("start dumping\n");
 #endif
 
 	PRInt32 firstnewdate;
@@ -782,36 +798,67 @@ nsNntpIncomingServer::WriteHostInfoFile()
 
 	nsXPIDLCString hostname;
 	rv = GetHostName(getter_Copies(hostname));
-	if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
 	
-
     nsFileSpec hostinfoFileSpec;
     rv = mHostInfoFile->GetFileSpec(&hostinfoFileSpec);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    nsIOFileStream hostinfoStream(hostinfoFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
+    if (mHostInfoStream) {
+        mHostInfoStream->close();
+        delete mHostInfoStream;
+        mHostInfoStream = nsnull;
+    }
+
+    mHostInfoStream = new nsIOFileStream(hostinfoFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
+    NS_ASSERTION(mHostInfoStream, "no stream!");
+
+    // todo, missing some formatting, see the 4.x code
+    *mHostInfoStream << "# News host information file." << MSG_LINEBREAK;
+	*mHostInfoStream << "# This is a generated file!  Do not edit." << MSG_LINEBREAK;
+	*mHostInfoStream << "" << MSG_LINEBREAK;
+	*mHostInfoStream << "version=" << VALID_VERSION << MSG_LINEBREAK;
+	*mHostInfoStream << "newsrcname=" << (const char*)hostname << MSG_LINEBREAK;
+	*mHostInfoStream << "lastgroupdate=" << mLastGroupDate << MSG_LINEBREAK;
+	*mHostInfoStream << "firstnewdate=" << firstnewdate << MSG_LINEBREAK;
+	*mHostInfoStream << "uniqueid=" << mUniqueId << MSG_LINEBREAK;
+	*mHostInfoStream << "pushauth=" << mPushAuth << MSG_LINEBREAK;
+	*mHostInfoStream << "" << MSG_LINEBREAK;
+	*mHostInfoStream << "begingroups" << MSG_LINEBREAK;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::DumpItem(const char *name)
+{
+    NS_ASSERTION(mHostInfoStream, "no stream!");
+    // todo ",,1,0,0" is a temporary hack, fix it
+    *mHostInfoStream << name << ",,1,0,0" << MSG_LINEBREAK;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::DoneDumping()
+{
+    nsresult rv;
 
 #ifdef DEBUG_NEWS
-	printf("xxx todo missing some formatting, need to fix this, see nsNNTPHost.cpp\n");
+    printf("done dumping\n");
 #endif
 
-    hostinfoStream << "# News host information file." << MSG_LINEBREAK;
-	hostinfoStream << "# This is a generated file!  Do not edit." << MSG_LINEBREAK;
-	hostinfoStream << "" << MSG_LINEBREAK;
-	hostinfoStream << "version=1" << MSG_LINEBREAK;
-	hostinfoStream << "newsrcname=" << (const char*)hostname << MSG_LINEBREAK;
-	hostinfoStream << "lastgroupdate=" << mLastGroupDate << MSG_LINEBREAK;
-	hostinfoStream << "firstnewdate=" << firstnewdate << MSG_LINEBREAK;
-	hostinfoStream << "uniqueid=" << mUniqueId << MSG_LINEBREAK;
-	hostinfoStream << "pushauth=" << mPushAuth << MSG_LINEBREAK;
-	hostinfoStream << "" << MSG_LINEBREAK;
-	hostinfoStream << "begingroups" << MSG_LINEBREAK;
-
-	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)writeGroupToHostInfo, (void *)&hostinfoStream);
+    NS_ASSERTION(mHostInfoStream, "no stream!");
+    mHostInfoStream->close();
+    delete mHostInfoStream;
+    mHostInfoStream = nsnull;
 
 	mHostInfoHasChanged = PR_FALSE;
 
-    hostinfoStream.close();
+    rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mInner->SetDumpListener(nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
+
 	return NS_OK;
 }
 
@@ -820,6 +867,9 @@ nsNntpIncomingServer::LoadHostInfoFile()
 {
 	nsresult rv;
 	
+    // we haven't loaded it yet
+    mHostInfoLoaded = PR_FALSE;
+
 	rv = GetLocalPath(getter_AddRefs(mHostInfoFile));
 	if (NS_FAILED(rv)) return rv;
 	if (!mHostInfoFile) return NS_ERROR_FAILURE;
@@ -858,91 +908,14 @@ nsNntpIncomingServer::LoadHostInfoFile()
   	}
 
   	hostinfoStream.close();
+    
+	rv = UpdateSubscribed();
+	if (NS_FAILED(rv)) return rv;
 
-	mHostInfoLoaded = PR_TRUE;
-	return NS_OK;
-}
-
-nsresult
-nsNntpIncomingServer::StartPopulatingFromHostInfo()
-{
-	nsresult rv;
-#ifdef DEBUG_NEWS
-	printf("StartPopulatingFromHostInfo()\n");
-#endif
-
-	mGroupsOnServerCount = mGroupsOnServer.Count();
-    mOldPercent = OLD_PERCENT_INITIAL_VALUE;
-	nsCString currentGroup;
-
-	while (mGroupsOnServerIndex < mGroupsOnServerCount) {
-		mGroupsOnServer.CStringAt(mGroupsOnServerIndex, currentGroup);
-		rv = AddTo((const char *)currentGroup, PR_FALSE, PR_TRUE);
-		if (NS_FAILED(rv)) return rv;
-#ifdef DEBUG_NEWS
-		printf("%d = %s\n",mGroupsOnServerIndex,(const char *)currentGroup);
-#endif
-
-		mGroupsOnServerIndex++;
-		if ((mGroupsOnServerIndex % HOSTINFO_COUNT_MAX) == 0) break;
-	}
-
-
-	if (mMsgWindow) {
-		nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
-
-		rv = mMsgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
-		if (NS_FAILED(rv)) return rv;
-
-		if (mGroupsOnServerCount != 0) {
-            // only poke the front end if the percentage has grown by at least PERCENT_CHANGE_THRESHHOLD
-            PRInt32 newPercent = (mGroupsOnServerIndex * 100) / mGroupsOnServerCount;
-            if (newPercent > (mOldPercent + PERCENT_CHANGE_THRESHHOLD)) {
-			    rv = msgStatusFeedback->ShowProgress(newPercent);
-            }
-            mOldPercent = newPercent;
-		}
-		if (NS_FAILED(rv)) return rv;
-	}
-
-	if (mGroupsOnServerIndex < mGroupsOnServerCount) {
-#ifdef DEBUG_NEWS
-		printf("there is more to do...\n");
-#endif
-		if (mUpdateTimer) {
-			mUpdateTimer->Cancel();
-			mUpdateTimer = nsnull;
-		}
-
-    	mUpdateTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    	NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
-    	if (NS_FAILED(rv)) return rv;
-
-		const PRUint32 kUpdateTimerDelay = HOSTINFO_TIMEOUT;
-        rv = mUpdateTimer->Init(NS_STATIC_CAST(nsITimerCallback*,this), kUpdateTimerDelay);
-        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to init timer");
-        if (NS_FAILED(rv)) return rv;
-	}
-	else {
-#ifdef DEBUG_NEWS
-		printf("we are done\n");
-#endif
-		rv = UpdateSubscribed();
-		if (NS_FAILED(rv)) return rv;
-
-		rv = StopPopulating(mMsgWindow);
-		if (NS_FAILED(rv)) return rv;
-	}
+	rv = StopPopulating(mMsgWindow);
+	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
-}
-
-void
-nsNntpIncomingServer::Notify(nsITimer *timer)
-{
-  NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
-  mUpdateTimer = nsnull;    // release my hold  
-  StartPopulatingFromHostInfo();
 }
 
 NS_IMETHODIMP
@@ -979,6 +952,8 @@ nsNntpIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToS
 {
   nsresult rv;
 
+  mMsgWindow = aMsgWindow;
+
   rv = EnsureInner();
   NS_ENSURE_SUCCESS(rv,rv);
   rv = mInner->StartPopulating(aMsgWindow, aForceToServer);
@@ -994,30 +969,22 @@ nsNntpIncomingServer::StartPopulating(nsIMsgWindow *aMsgWindow, PRBool aForceToS
   if (NS_FAILED(rv)) return rv;
   if (!nntpService) return NS_ERROR_FAILURE; 
 
-  if (!aForceToServer && !mHostInfoLoaded) {
-	// will set mHostInfoLoaded, if we were able to load the hostinfo.dat file
-	rv = LoadHostInfoFile();	
+  mHostInfoLoaded = PR_FALSE;
+  mVersion = INVALID_VERSION;
 
+  if (!aForceToServer) {
+	rv = LoadHostInfoFile();	
   	if (NS_FAILED(rv)) return rv;
   }
 
-  // it is possible for the hostinfo.dat file to be empty or be non-empty but have no groups.  
-  // in this case, mGroupsOnServer.Count() will be zero.  If so, treat it like we didn't
-  // load the hostinfo.dat file, so that we will contact the server.
-  if (!aForceToServer && mHostInfoLoaded && mGroupsOnServer.Count() && (mVersion == VALID_VERSION)) {
-	mGroupsOnServerIndex = 0;
-	mGroupsOnServerCount = mGroupsOnServer.Count();
-	mMsgWindow = aMsgWindow;
-
-	rv = StartPopulatingFromHostInfo();
-	if (NS_FAILED(rv)) return rv;
-  }
-  else {
-	// xxx todo move this somewhere else
+  // mHostInfoLoaded can be false if we failed to load anything
+  if (!mHostInfoLoaded || (mVersion != VALID_VERSION)) {
+    // set these to true, so when we call WriteHostInfoFile() 
+    // we write it out to disk
 	mHostInfoHasChanged = PR_TRUE;
-	mVersion = 1;
-	mHostInfoLoaded = PR_TRUE;
-	mGroupsOnServer.Clear();
+	mVersion = VALID_VERSION;
+
+    // todo, make sure inner has been freed before we start?
 
 	rv = nntpService->GetListOfGroupsOnServer(this, aMsgWindow);
 	if (NS_FAILED(rv)) return rv;
@@ -1030,9 +997,6 @@ NS_IMETHODIMP
 nsNntpIncomingServer::AddNewsgroupToList(const char *aName)
 {
 	nsresult rv;
-
-	// since this comes from the server, append it to the list
-	mGroupsOnServer.AppendCString(nsCAutoString(aName));
 
 	rv = AddTo(aName, PR_FALSE, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
@@ -1165,6 +1129,9 @@ nsNntpIncomingServer::StopPopulating(nsIMsgWindow *aMsgWindow)
 	rv = mInner->StopPopulating(aMsgWindow);
     NS_ENSURE_SUCCESS(rv,rv);
 
+    rv = WriteHostInfoFile();
+    if (NS_FAILED(rv)) return rv;
+
 	//xxx todo when do I set this to null?
 	//rv = ClearInner();
     //NS_ENSURE_SUCCESS(rv,rv);
@@ -1242,12 +1209,14 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 	if (mHasSeenBeginGroups) {
 		char *commaPos = PL_strchr(line,',');
 		if (commaPos) *commaPos = 0;
-		nsCString str(line);
-		mGroupsOnServer.AppendCString(str);
+
+		nsresult rv = AddTo(line, PR_FALSE, PR_TRUE);
+	    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add the group");
+        // since we've seen one group, we can claim we've loaded the hostinfo file
+        mHostInfoLoaded = PR_TRUE;
 	}
 	else {
 		if (nsCRT::strncmp(line,"begingroups", 11) == 0) {
-			mGroupsOnServer.Clear();
 			mHasSeenBeginGroups = PR_TRUE;
 		}
 		char*equalPos = PL_strchr(line, '=');	
@@ -1344,4 +1313,20 @@ nsNntpIncomingServer::CommitSubscribeChanges()
     NS_ENSURE_SUCCESS(rv,rv);
 
     return WriteNewsrcFile();
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::DumpTree()
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->DumpTree();
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetDumpListener(nsISubscribeDumpListener *dumpListener)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->SetDumpListener(dumpListener);
 }

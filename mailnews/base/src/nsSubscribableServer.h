@@ -46,9 +46,7 @@ typedef struct _subscribeTreeNode {
 #ifdef HAVE_SUBSCRIBE_MESSAGES
   PRUint32 messages;
 #endif
-#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
   PRBool isSubscribable;
-#endif
 } SubscribeTreeNode;
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
@@ -82,6 +80,8 @@ private:
 
   nsCOMPtr <nsIRDFService>       mRDFService;
 
+  nsCOMPtr <nsISubscribeDumpListener> mDumpListener;
+
   SubscribeTreeNode *mTreeRoot;
   nsresult FreeSubtree(SubscribeTreeNode *node);
   nsresult CreateNode(SubscribeTreeNode *parent, const char *name, SubscribeTreeNode **result);
@@ -90,9 +90,11 @@ private:
   nsresult NotifyAssert(SubscribeTreeNode *subjectNode, nsIRDFResource *property, SubscribeTreeNode *objectNode);
   nsresult NotifyChange(SubscribeTreeNode *subjectNode, nsIRDFResource *property, PRBool value);
   nsresult Notify(nsIRDFResource *subject, nsIRDFResource *property, nsIRDFNode *object, PRBool isAssert, PRBool isChange);
-  void BuildURIFromNode(SubscribeTreeNode *node, nsCString &uri);
+  void BuildURIFromNode(SubscribeTreeNode *node, nsCAutoString &uri);
+  void BuildPathFromNode(SubscribeTreeNode *node, nsCAutoString &uri);
   nsresult EnsureSubscribeDS();
   nsresult EnsureRDFService();
+  nsresult DumpSubtree(struct SubscribeTreeNode *);
 };
 
 #endif // nsSubscribableServer_h__

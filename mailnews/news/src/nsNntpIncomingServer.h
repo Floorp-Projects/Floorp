@@ -39,7 +39,7 @@
 #include "nsMsgLineBuffer.h"
 #include "nsVoidArray.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
+#include "nsFileStream.h"
 
 class nsINntpUrl;
 class nsIMsgMailNewsUrl;
@@ -49,7 +49,7 @@ class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer,
 			     public nsIUrlListener,
 			     public nsISubscribableServer,
-				 public nsITimerCallback,
+                 public nsISubscribeDumpListener,
 				 public nsMsgLineBuffer
 							 
 {
@@ -58,9 +58,7 @@ public:
     NS_DECL_NSINNTPINCOMINGSERVER
     NS_DECL_NSIURLLISTENER
     NS_DECL_NSISUBSCRIBABLESERVER
-
-	// nsITimerCallback interfaces
- 	NS_IMETHOD_(void) Notify(nsITimer *timer);
+    NS_DECL_NSISUBSCRIBEDUMPLISTENER
 
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
@@ -85,16 +83,11 @@ protected:
     static void OnNewsrcSaveTimer(nsITimer *timer, void *voidIncomingServer);
 
 private:
-	PRInt32 mGroupsOnServerIndex;
-	PRInt32 mGroupsOnServerCount;
-    PRInt32 mOldPercent;
-	nsCStringArray mGroupsOnServer;
 	nsCStringArray mSubscribedNewsgroups;
 
 	PRBool   mHasSeenBeginGroups;
 	nsresult WriteHostInfoFile();
 	nsresult LoadHostInfoFile();
-	nsresult StartPopulatingFromHostInfo();
 	
     PRBool mNewsrcHasChanged;
 	nsAdapterEnumerator *mGroupsEnumerator;
@@ -109,12 +102,13 @@ private:
 	PRInt32 mVersion;
 
     nsCOMPtr<nsITimer> mNewsrcSaveTimer;
-	nsCOMPtr <nsITimer> mUpdateTimer;
 	nsCOMPtr <nsIMsgWindow> mMsgWindow;
 
 	nsCOMPtr <nsISubscribableServer> mInner;
     nsresult EnsureInner();
     nsresult ClearInner();
+    
+    nsIOFileStream *mHostInfoStream;
 };
 
 #endif

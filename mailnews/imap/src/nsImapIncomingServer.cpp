@@ -2549,3 +2549,19 @@ nsImapIncomingServer::CommitSubscribeChanges()
 {
     return ReDiscoverAllFolders();
 }
+
+NS_IMETHODIMP
+nsImapIncomingServer::DumpTree()
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->DumpTree();
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetDumpListener(nsISubscribeDumpListener *dumpListener)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->SetDumpListener(dumpListener);
+}

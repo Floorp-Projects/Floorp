@@ -78,7 +78,7 @@ nsSubscribableServer::~nsSubscribableServer(void)
 {
     nsresult rv = NS_OK;
 #ifdef DEBUG_seth
-    printf("XXX free subscribe tree\n");
+    printf("free subscribe tree\n");
 #endif
     rv = FreeSubtree(mTreeRoot);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to free tree");
@@ -122,9 +122,7 @@ nsSubscribableServer::SetAsSubscribed(const char *path)
     NS_ASSERTION(node,"didn't find the node");
     if (!node) return NS_ERROR_FAILURE;
 
-#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
     node->isSubscribable = PR_TRUE;
-#endif
     node->isSubscribed = PR_TRUE;
 
     rv = NotifyChange(node, kNC_Subscribed, node->isSubscribed);
@@ -192,6 +190,9 @@ nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool ch
     }
 
     SubscribeTreeNode *node = nsnull;
+
+    // todo, shouldn't we pass in addAsSubscribed, for the 
+    // default value if we create it?
     rv = FindAndCreateNode(aName, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
@@ -202,18 +203,9 @@ nsSubscribableServer::AddTo(const char *aName, PRBool addAsSubscribed, PRBool ch
         node->isSubscribed = addAsSubscribed;
         rv = NotifyChange(node, kNC_Subscribed, node->isSubscribed);
         NS_ENSURE_SUCCESS(rv,rv);
-
-#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
-        // todo: we know for sure that if we add as subscribed
-        // that we are subscribable, but it is possible
-        // to be added as unsubscribed and still be subscribable
-        // take care of that later.
-        if (addAsSubscribed) {
-            node->isSubscribable = PR_TRUE;
-        }
-#endif
     }
-    
+
+    node->isSubscribable = PR_TRUE;
     return rv;
 }
 
@@ -224,6 +216,8 @@ nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChan
     NS_ASSERTION(path && stateChanged, "no path or stateChanged");
     if (!path || !stateChanged) return NS_ERROR_NULL_POINTER;
 
+    *stateChanged = PR_FALSE;
+
     SubscribeTreeNode *node = nsnull;
     rv = FindAndCreateNode(path, &node);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -231,11 +225,13 @@ nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChan
     NS_ASSERTION(node,"didn't find the node");
     if (!node) return NS_ERROR_FAILURE;
 
-#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
-    // todo check that node->isSubscribable is PR_TRUE?
-#endif
+    NS_ASSERTION(node->isSubscribable, "fix this");
+    if (!node->isSubscribable) {
+        return NS_OK;
+    }
+
     if (node->isSubscribed == state) {
-        *stateChanged = PR_FALSE;
+        return NS_OK;
     }
     else {
         node->isSubscribed = state;
@@ -248,7 +244,23 @@ nsSubscribableServer::SetState(const char *path, PRBool state, PRBool *stateChan
 }
 
 void
-nsSubscribableServer::BuildURIFromNode(SubscribeTreeNode *node, nsCString &uri)
+nsSubscribableServer::BuildPathFromNode(SubscribeTreeNode *node, nsCAutoString &path)
+{
+    if (node == mTreeRoot) return;
+
+    if (node->parent) {
+        BuildPathFromNode(node->parent, path);
+        if (node->parent != mTreeRoot) {
+            path += mDelimiter;
+        }
+    }
+
+    path += node->name;
+    return;
+}
+
+void
+nsSubscribableServer::BuildURIFromNode(SubscribeTreeNode *node, nsCAutoString &uri)
 {
     if (node->parent) {
         BuildURIFromNode(node->parent, uri);
@@ -279,12 +291,12 @@ nsSubscribableServer::NotifyAssert(SubscribeTreeNode *subjectNode, nsIRDFResourc
         return NS_OK;
     }
     
-    nsCString subjectUri;
+    nsCAutoString subjectUri;
     BuildURIFromNode(subjectNode, subjectUri);
 
     // we could optimize this, since we know that objectUri == subjectUri + mDelimiter + object->name
     // is it worth it?
-    nsCString objectUri;
+    nsCAutoString objectUri;
     BuildURIFromNode(objectNode, objectUri);
 
     nsCOMPtr <nsIRDFResource> subject;
@@ -333,7 +345,7 @@ nsSubscribableServer::NotifyChange(SubscribeTreeNode *subjectNode, nsIRDFResourc
         return NS_OK;
     }
 
-    nsCString subjectUri;
+    nsCAutoString subjectUri;
     BuildURIFromNode(subjectNode, subjectUri);
 
     rv = EnsureRDFService();
@@ -472,6 +484,43 @@ nsSubscribableServer::SetShowFullName(PRBool showFullName)
 	return NS_OK;
 }
 
+nsresult
+nsSubscribableServer::DumpSubtree(SubscribeTreeNode *node)
+{
+    nsresult rv = NS_OK;
+
+    if (node) {
+        NS_ASSERTION(mDumpListener, "calling DumpTree(), no listener");
+        if (mDumpListener) {
+            if (node->isSubscribable) {
+                nsCAutoString path;
+                BuildPathFromNode(node, path);
+                rv = mDumpListener->DumpItem((const char *)path);
+                NS_ENSURE_SUCCESS(rv,rv);
+            }
+#ifdef DEBUG_seth
+            else {
+                printf("skipping %s, it is not subscribable\n",node->name);
+            }
+#endif
+        }
+
+        // recursively dump the children
+        if (node->lastChild) {
+            rv = DumpSubtree(node->lastChild);
+            NS_ENSURE_SUCCESS(rv,rv);
+        }
+
+        // recursively dump the siblings
+        if (node->prevSibling) {
+            rv = DumpSubtree(node->prevSibling);
+            NS_ENSURE_SUCCESS(rv,rv);
+        }
+    }
+
+    return NS_OK;
+}
+
 nsresult 
 nsSubscribableServer::FreeSubtree(SubscribeTreeNode *node)
 {
@@ -529,9 +578,7 @@ nsSubscribableServer::CreateNode(SubscribeTreeNode *parent, const char *name, Su
     (*result)->firstChild = nsnull;
     (*result)->lastChild = nsnull;
     (*result)->isSubscribed = PR_FALSE;
-#ifdef HAVE_SUBSCRIBE_ISSUBSCRIBABLE
     (*result)->isSubscribable = PR_FALSE;
-#endif
 #ifdef HAVE_SUBSCRIBE_DESCRIPTION
     (*result)->description = nsnull;
 #endif
@@ -780,7 +827,7 @@ nsSubscribableServer::GetFirstChildURI(const char * path, char **aResult)
     // no children
     if (!node->firstChild) return NS_ERROR_FAILURE;
     
-    nsCString uri;
+    nsCAutoString uri;
     BuildURIFromNode(node->firstChild, uri);
 
     *aResult = nsCRT::strdup((const char *)uri);
@@ -801,7 +848,7 @@ nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
     NS_ASSERTION(node,"didn't find the node");
     if (!node) return NS_ERROR_FAILURE;
 
-    nsCString uriPrefix;
+    nsCAutoString uriPrefix;
     NS_ASSERTION(mTreeRoot, "no tree root!");
     if (!mTreeRoot) return NS_ERROR_UNEXPECTED;
     uriPrefix = mTreeRoot->name; // the root's name is the server uri
@@ -819,7 +866,7 @@ nsSubscribableServer::GetChildren(const char *path, nsISupportsArray *array)
     if (!current) return NS_ERROR_FAILURE;  
 
     while (current) {
-        nsCString uri;
+        nsCAutoString uri;
         uri = uriPrefix;
         NS_ASSERTION(current->name, "no name");
         if (!current->name) return NS_ERROR_FAILURE;
@@ -844,4 +891,26 @@ nsSubscribableServer::CommitSubscribeChanges()
 {
 	NS_ASSERTION(PR_FALSE,"override this.");
 	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::DumpTree()
+{
+    nsresult rv;
+
+    NS_ASSERTION(mDumpListener, "calling DumpTree(), no listener");
+    if (mDumpListener) {
+        mDumpListener->StartDumping();
+        rv = DumpSubtree(mTreeRoot);
+        NS_ENSURE_SUCCESS(rv,rv);
+        mDumpListener->DoneDumping();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::SetDumpListener(nsISubscribeDumpListener *dumpListener)
+{
+    mDumpListener = dumpListener;
+    return NS_OK;
 }
