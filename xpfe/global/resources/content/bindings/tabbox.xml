@@ -262,6 +262,7 @@
           tab.setAttribute("label", label);
           tab.setAttribute("value", value);
           this.appendChild(tab);
+          return tab;
         ]]>
         </body>
       </method>
@@ -281,6 +282,7 @@
             this.insertBefore(tab, before);
           else
             this.appendChild(tab);
+          return tab;
         ]]>
         </body>
       </method>
@@ -292,6 +294,7 @@
           var remove = this.childNodes[index];
           if (remove)
             this.removeChild(remove);
+          return remove;
         ]]>
         </body>
       </method>
@@ -301,8 +304,14 @@
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation>
-      <property name="selectedIndex"
-                onget="return this.getAttribute('selectedIndex');">
+      <property name="selectedIndex">
+        <getter>
+        <![CDATA[
+          var indexStr = this.getAttribute("selectedIndex");
+          return indexStr ? parseInt(indexStr) : -1;
+        ]]>
+        </getter>
+                        
         <setter>
         <![CDATA[
           if (this.selectedIndex == val)
