@@ -278,12 +278,6 @@ int ap_encode_next(
 			break;
 
 		case kDoneDataPortion:
-#if 0
-			status = write_stream(p_ap_encode_obj,
-									"\n-----\n\n",
-									8);
-			if (status == noErr)
-#endif
 				status = errDone;		/* we are really done.					*/
 
 			break;
