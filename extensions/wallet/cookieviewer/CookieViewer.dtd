@@ -14,8 +14,8 @@
 <!ENTITY     props.value.label              "Data Stored in Cookie:">
 <!ENTITY     props.domain.label             "Host:">
 <!ENTITY     props.path.label               "Path:">
-<!ENTITY     props.secure.label             "Is Cookie secure?">
-<!ENTITY     props.expires.label            "Cookie will expire on:">
+<!ENTITY     props.secure.label             "Secure server?">
+<!ENTITY     props.expires.label            "Expires:">
 
 <!ENTITY     treehead.sitename.label        "Site">
 <!ENTITY     treehead.status.label          "Status">
