@@ -4121,7 +4121,7 @@ if (!GroupDoesExist('bz_canusewhines')) {
                                        'other users');
     $dbh->do("INSERT IGNORE INTO group_group_map " .
              "(member_id, grantor_id, grant_type) " .
-             "VALUES (${whine_group}, ${whineatothers_group}, " .
+             "VALUES (${whineatothers_group}, ${whine_group}, " .
              GROUP_MEMBERSHIP . ")");
 }
 
