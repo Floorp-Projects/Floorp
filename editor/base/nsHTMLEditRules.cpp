@@ -246,19 +246,18 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   
   if (!mActionNesting)
   {
-    nsresult rv;
     nsCOMPtr<nsIDOMNSRange> nsrange;
     if(mDocChangeRange)
     {
       nsrange = do_QueryInterface(mDocChangeRange);
-      if (NS_FAILED(rv) || !nsrange) 
+      if (!nsrange)
         return NS_ERROR_FAILURE;
       nsrange->NSDetach();  // clear out our accounting of what changed
     }
     if(mUtilRange)
     {
       nsrange = do_QueryInterface(mUtilRange);
-      if (NS_FAILED(rv) || !nsrange) 
+      if (!nsrange)
         return NS_ERROR_FAILURE;
       nsrange->NSDetach();  // ditto for mUtilRange.  
     }
