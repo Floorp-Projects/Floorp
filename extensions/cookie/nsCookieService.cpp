@@ -22,48 +22,19 @@
 
 #define NS_IMPL_IDS
 
-#include "nsCOMPtr.h"
-#include "nsIFactory.h"
 #include "nsIServiceManager.h"
-#include "nsICookieService.h"
+#include "nsCookieService.h"
 #include "nsCookieHTTPNotify.h"
 #include "nsIEventQueueService.h"
 #include "nsCRT.h"
 #include "nsCookie.h"
-#include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsXPIDLString.h"
 
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsCookieService : public nsICookieService {
-public:
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
-  NS_IMETHOD GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsString& aCookie);
-  NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie);
-  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, const char *aCookie, const char *aExpires);
-  NS_IMETHOD Cookie_RemoveAllCookies(void);
-  NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);
-  NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList);
-  NS_IMETHOD Cookie_GetPermissionListForViewer(nsString& aPermissionList);
-  NS_IMETHOD CookieEnabled(PRBool* aEnabled);
-
-  nsCookieService();
-  virtual ~nsCookieService(void);
-  nsresult Init();
-  
-protected:
-  PRBool   mInitted;
-  
-private:
-  nsCOMPtr<nsIHTTPNotify> mCookieHTTPNotify;
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsCookieService Implementation
@@ -96,9 +67,9 @@ nsresult nsCookieService::Init()
   rv = eventQService->CreateThreadEventQueue();
   if (NS_FAILED(rv)) return rv;
   
-  if (NS_FAILED(rv = NS_NewCookieHTTPNotify(getter_AddRefs(mCookieHTTPNotify)))) {
-    return rv;
-  }
+  // Make sure there exists the cookie http notify service
+  nsCOMPtr<nsIHTTPNotify> cookieNotifier = do_GetService(NS_COOKIEHTTPNOTIFY_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   COOKIE_RegisterCookiePrefCallbacks();
   COOKIE_ReadCookies();
@@ -198,12 +169,9 @@ NS_IMETHODIMP nsCookieService::CookieEnabled(PRBool* aEnabled)
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
-//
-// NOTE: This creates an instance of objects by using the default constructor
-//
-// NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookieService)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieHTTPNotify, Init)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -213,6 +181,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieService, Init)
 static nsModuleComponentInfo components[] = {
     { "CookieService", NS_COOKIESERVICE_CID,
       NS_COOKIESERVICE_PROGID, nsCookieServiceConstructor, },	// XXX Singleton
+    { NS_COOKIEHTTPNOTIFY_CLASSNAME,
+      NS_COOKIEHTTPNOTIFY_CID,
+      NS_COOKIEHTTPNOTIFY_PROGID,
+      nsCookieHTTPNotifyConstructor, },
 };
 
 ////////////////////////////////////////////////////////////////////////

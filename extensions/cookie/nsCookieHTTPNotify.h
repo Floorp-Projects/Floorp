@@ -24,14 +24,16 @@
 #define nsCookieHTTPNotify_h___
 
 #include "nsIHttpNotify.h"
-#include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsICookieService.h"
+#include "nsIComponentManager.h"
 
 // {6BC1F522-1F45-11d3-8AD4-00105A1B8860}
 #define NS_COOKIEHTTPNOTIFY_CID \
 { 0x6bc1f522, 0x1f45, 0x11d3, { 0x8a, 0xd4, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
 
+#define NS_COOKIEHTTPNOTIFY_PROGID "component://netscape/cookie-notifier"
+#define NS_COOKIEHTTPNOTIFY_CLASSNAME "Cookie Notifier"
 
 class nsCookieHTTPNotify : public nsIHTTPNotify {
 public:
@@ -50,19 +52,21 @@ public:
   nsCookieHTTPNotify();
   virtual ~nsCookieHTTPNotify();
 
+  static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static nsresult RegisterProc(nsIComponentManager *aCompMgr,
+                               nsIFileSpec *aPath,
+                               const char *registryLocation,
+                               const char *componentType);
+  static nsresult UnregisterProc(nsIComponentManager *aCompMgr,
+                                 nsIFileSpec *aPath,
+                                 const char *registryLocation);
+
 private:
     nsCOMPtr<nsIAtom> mCookieHeader;
     nsCOMPtr<nsIAtom> mSetCookieHeader;
     nsCOMPtr<nsIAtom> mExpiresHeader;
-
-    // we can't have an owning reference to the cookie service! the cookie service
-    // owns us so we are introducing a circular reference count!
-    // the good news is, if mCookieService ever goes away, we'll be going away too.
-    nsICookieService * mCookieService;
+    nsCOMPtr<nsICookieService> mCookieService;
 
     NS_IMETHOD SetupCookieService();
 };
-
-extern NS_EXPORT nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify);
-
 #endif /* nsCookieHTTPNotify_h___ */

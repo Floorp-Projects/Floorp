@@ -32,6 +32,7 @@
 #include "nsIAllocator.h"
 #include "nsINetModuleMgr.h" 
 #include "nsILoadGroup.h"
+#include "nsICategoryManager.h"
 
 static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);
 
@@ -45,15 +46,49 @@ NS_IMPL_ISUPPORTS2(nsCookieHTTPNotify, nsIHTTPNotify, nsINetNotify);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieHTTPNotify, Init)
 
-NS_COOKIE nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify)
+nsresult nsCookieHTTPNotify::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    return nsCookieHTTPNotifyConstructor(nsnull, NS_GET_IID(nsIHTTPNotify), (void **) aHTTPNotify);
+    return nsCookieHTTPNotifyConstructor(aOuter, aIID, aResult);
 }
 
-nsCookieHTTPNotify::nsCookieHTTPNotify()
+nsresult nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
+                                                   nsIFileSpec *aPath,
+                                                   const char *registryLocation,
+                                                   const char *componentType)
 {
-    NS_INIT_REFCNT();
-    mCookieService = nsnull;
+    // Register ourselves into the NS_CATEGORY_HTTP_STARTUP
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCID cid = NS_COOKIEHTTPNOTIFY_CID;
+    char *cidString = cid.ToString();
+    nsXPIDLCString prevEntry;
+    rv = catman->AddCategoryEntry("http-startup-category", cidString, "Http Cookie Notify",
+                                  PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
+    nsAllocator::Free(cidString);
+
+    return NS_OK;
+
+}
+
+nsresult nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
+                                                     nsIFileSpec *aPath,
+                                                     const char *registryLocation)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCID cid = NS_COOKIEHTTPNOTIFY_CID;
+    char *cidString = cid.ToString();
+    nsXPIDLCString prevEntry;
+    rv = catman->DeleteCategoryEntry("http-startup-category", cidString, PR_TRUE,
+                                     getter_Copies(prevEntry));
+    nsAllocator::Free(cidString);
+
+    // Return value is not used from this function.
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -67,7 +102,7 @@ nsCookieHTTPNotify::Init()
     if (!mExpiresHeader) return NS_ERROR_OUT_OF_MEMORY;
 
     // Register to handing http requests and responses
-    nsresult rv;
+    nsresult rv = NS_OK;
     nsCOMPtr<nsINetModuleMgr> pNetModuleMgr = do_GetService(kINetModuleMgrCID, &rv); 
     if (NS_FAILED(rv)) return rv;
     rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID,
@@ -76,9 +111,13 @@ nsCookieHTTPNotify::Init()
 
     rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID,
                                        (nsIHTTPNotify *)this);
-    if (NS_FAILED(rv)) return rv;
+    return rv;
+}
 
-    return NS_OK;
+nsCookieHTTPNotify::nsCookieHTTPNotify()
+{
+    NS_INIT_REFCNT();
+    mCookieService = nsnull;
 }
 
 nsCookieHTTPNotify::~nsCookieHTTPNotify()
@@ -91,9 +130,7 @@ nsCookieHTTPNotify::SetupCookieService()
     nsresult rv = NS_OK;
     if (!mCookieService)
     {
-      nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
-      // we want a NON-owning reference to the cookie service
-      mCookieService = cookieService;
+      mCookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
     }
     return rv;
 }
