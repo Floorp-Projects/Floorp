@@ -260,10 +260,10 @@ NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 nsresult
 NS_NewTableCellFrame(nsIPresShell* aPresShell, PRBool aIsBorderCollapse, nsIFrame** aResult);
 
-// XXX passing aWebShell into this is wrong
 nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
-                      nsIDocument* aDoc, nsIURI* aURL, nsIWebShell* aWebShell,
+                      nsIDocument* aDoc, nsIURI* aURL,
+                      nsISupports* aContainer, // e.g. docshell
                       nsIChannel* aChannel);
 nsresult
 NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aInstancePtrResult);
