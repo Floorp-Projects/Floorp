@@ -429,8 +429,8 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
           mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_RIGHT;
         }
       }
-      mMolecule.margin.top = NS_POINTS_TO_TWIPS_INT(2);
-      mMolecule.margin.bottom = NS_POINTS_TO_TWIPS_INT(2);
+//      mMolecule.margin.top = NS_POINTS_TO_TWIPS_INT(2);
+//      mMolecule.margin.bottom = NS_POINTS_TO_TWIPS_INT(2);
     } else if (buf.EqualsIgnoreCase("BODY")) {
       float p2t = aPresContext->GetPixelsToTwips();
 //      mColor.mBackgroundColor = NS_RGB(255, 255, 255);
