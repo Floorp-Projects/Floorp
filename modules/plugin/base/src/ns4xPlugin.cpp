@@ -427,20 +427,18 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
   if(error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
 
-  ::UseResFile(appRefNum);
-
   if ((callbacks.version >> 8) < NP_VERSION_MAJOR)
     return NS_ERROR_FAILURE;
 
   // create the new plugin handler
   ns4xPlugin* plugin = new ns4xPlugin(&callbacks, aLibrary, (NP_PLUGINSHUTDOWN)pfnShutdown, aServiceMgr);
 #else // not carbon
-  ::UseResFile(appRefNum);
   ns4xPlugin* plugin = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
 #endif
   if(plugin == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  ::UseResFile(appRefNum);
   *aResult = plugin;
 
   NS_ADDREF(*aResult);
