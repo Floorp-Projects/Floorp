@@ -97,9 +97,7 @@
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 
-#if defined(DEBUG_warren) || defined(DEBUG_waterson) || defined(DEBUG_alecf) || defined(DEBUG_bienvenu) || defined(DEBUG_mscott)
 #define RDF_USE_HAS_ARC_OUT 1
-#endif
 
 // Return values for EnsureElementHasGenericChild()
 #define NS_RDF_ELEMENT_GOT_CREATED NS_RDF_NO_VALUE
