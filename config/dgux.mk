@@ -68,7 +68,12 @@ I2_LOCALE		= i2
 
 EMACS			= /bin/true
 PERL			= /usr/bin/perl
+ifdef BUILD_OPT
+OPTIMIZER		= -O2
+else
+# -g would produce a huge executable.
 OPTIMIZER		=
+endif
 
 ######################################################################
 # Other
