@@ -2374,15 +2374,18 @@ void CGenericFrame::OnToggleJavaConsole()
 void CGenericFrame::OnUpdateJavaConsole(CCmdUI* pCmdUI)
 {   
 #ifdef OJI
-    if (JVM_IsJVMAvailable()) 
+    nsJVMStatus status = JVM_GetJVMStatus();    
+    if (status != nsJVMStatus_Disabled && status != nsJVMStatus_Failed) {
+        pCmdUI->Enable(TRUE);
         pCmdUI->SetCheck(JVM_IsConsoleVisible());
+    }
     else
         pCmdUI->Enable(FALSE);
 #else
     if (LJJavaStatus_Failed != LJ_GetJavaStatus()) {
-	pCmdUI->SetCheck( LJ_IsConsoleShowing() );
+        pCmdUI->SetCheck( LJ_IsConsoleShowing() );
     } else {
-	pCmdUI->Enable(FALSE);
+        pCmdUI->Enable(FALSE);
     }
 #endif
 }

@@ -23,21 +23,12 @@
 
 #ifndef _NP2_H
 #define _NP2_H
-#include "jni.h"
-#include "prthread.h"
 
-struct np_instance;
-struct nsIPlugin;
-struct nsIPluginInstance;
-struct nsIPluginInstancePeer;
-struct nsISupports;
-PR_EXTERN(struct nsIPluginInstance*) NPL_GetOJIPluginInstance(NPEmbeddedApp *embed);
-PR_EXTERN(const char *) NPL_GetText(struct nsIPluginInstance *);
-PR_EXTERN(jobject) NPL_GetJavaObject(struct nsIPluginInstance *);
-PR_EXTERN(void ) NPL_Release(struct nsISupports *);
-PR_EXTERN(XP_Bool) NPL_IsJVMAndMochaPrefsEnabled(void);
-PR_EXTERN(PRBool)NPL_JSJInit(void);
-PR_EXTERN(JNIEnv *)NPL_EnsureJNIExecEnv(PRThread* thread);
+#include "jni.h"
+#include "lo_ele.h"
+
+PR_EXTERN(const char *) NPL_GetText(LO_CommonPluginStruct* embed);
+PR_EXTERN(jobject) NPL_GetJavaObject(LO_CommonPluginStruct* embed);
 
 #endif /* _NP2_H */
 

@@ -586,6 +586,9 @@ LM_JamSourceIntoJSDebug( const char *filename,
 
 #endif
 
+extern JSContext*
+LM_GetCrippledContext(void);
+
 NSPR_END_EXTERN_C
 
 #endif /* libmocha_h___ */

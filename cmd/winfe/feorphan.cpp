@@ -653,13 +653,8 @@ BOOL fe_ShutdownJava()
 	BOOL bRetval = TRUE;
 
 #if defined(OJI)
-
-    nsJVMMgr* jvmMgr = JVM_GetJVMMgr();
-    if (jvmMgr == NULL) 
-        return FALSE;
-    bRetval = (jvmMgr->ShutdownJVM() == nsJVMStatus_Enabled);
-    // XXX suspend all java threads
-    jvmMgr->Release();
+    (void)JVM_ShutdownJVM();
+    // XXX set pCmdUI->Enable(FALSE);
 
 #elif defined(JAVA)
 
