@@ -60,11 +60,13 @@
 #include "nsIComponentManager.h"
 
 #include "nsSound.h"
+#include "nsTimerMac.h"
 
 // NOTE the following does not match MAC_STATIC actually used below in this file!
 #define MACSTATIC
 
 static NS_DEFINE_CID(kCWindow,        NS_WINDOW_CID);
+static NS_DEFINE_IID(kCTimer,         NS_TIMER_CID);
 static NS_DEFINE_CID(kCPopUp,         NS_POPUP_CID);
 static NS_DEFINE_CID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_CID(kCButton,        NS_BUTTON_CID);
@@ -165,7 +167,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
 
     nsISupports *inst = nsnull;
-    if (mClassID.Equals(kCWindow)) {
+
+    if (mClassID.Equals(kCTimer)) {
+        inst = (nsISupports*)new nsTimerImpl();
+    }
+    else if (mClassID.Equals(kCWindow)) {
         inst = (nsISupports*)(nsBaseWidget*)new nsMacWindow();
     }
     else if (mClassID.Equals(kCPopUp)) {
