@@ -29,6 +29,8 @@ public:
 
   void SetSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
   void ClearSelection(nsIPresContext& presContext);
+  void ToggleSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
+  void RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame);
 
 protected:
   nsTreeFrame();
