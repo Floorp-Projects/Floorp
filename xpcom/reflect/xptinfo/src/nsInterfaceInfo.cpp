@@ -31,23 +31,22 @@ static NS_DEFINE_IID(kIInterfaceInfoIID, NS_IINTERFACEINFO_IID);
 NS_IMPL_ISUPPORTS(nsInterfaceInfo, kIInterfaceInfoIID);
 
 nsInterfaceInfo::nsInterfaceInfo(XPTInterfaceDirectoryEntry* entry,
-                                     nsInterfaceInfo *parent)
+                                 nsInterfaceInfo *parent)
     :   mEntry(entry),
         mParent(parent)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-    if(mParent)
+    if(mParent != NULL) {
         NS_ADDREF(mParent);
-    if(mParent) {
         mMethodBaseIndex =
             mParent->mMethodBaseIndex + mParent->mMethodCount;
         mConstantBaseIndex =
             mParent->mConstantBaseIndex + mParent->mConstantCount;
-    }
-    else
+    } else {
         mMethodBaseIndex = mConstantBaseIndex = 0;
+    }
 
     mMethodCount   = mEntry->interface_descriptor->num_methods;
     mConstantCount = mEntry->interface_descriptor->num_constants;
@@ -55,7 +54,7 @@ nsInterfaceInfo::nsInterfaceInfo(XPTInterfaceDirectoryEntry* entry,
 
 nsInterfaceInfo::~nsInterfaceInfo()
 {
-    if(mParent)
+    if(mParent != NULL)
         NS_RELEASE(mParent);
 }
 
@@ -134,11 +133,10 @@ NS_IMETHODIMP
 nsInterfaceInfo::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
 {
     NS_PRECONDITION(info, "bad param");
-    if(index < mMethodBaseIndex)
+    if (index < mMethodBaseIndex)
         return mParent->GetMethodInfo(index, info);
 
-    if(index >= mMethodBaseIndex + mMethodCount)
-    {
+    if (index >= mMethodBaseIndex + mMethodCount) {
         NS_PRECONDITION(0, "bad param");
         *info = NULL;
         return NS_ERROR_INVALID_ARG;
@@ -146,8 +144,8 @@ nsInterfaceInfo::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
 
     // else...
     *info = NS_REINTERPRET_CAST(nsXPTMethodInfo*,
-                           &mEntry->interface_descriptor->
-                           method_descriptors[index - mMethodBaseIndex]);
+                                &mEntry->interface_descriptor->
+                                method_descriptors[index - mMethodBaseIndex]);
     return NS_OK;
 }
 
@@ -155,11 +153,10 @@ NS_IMETHODIMP
 nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
 {
     NS_PRECONDITION(constant, "bad param");
-    if(index < mConstantBaseIndex)
+    if (index < mConstantBaseIndex)
         return mParent->GetConstant(index, constant);
 
-    if(index >= mConstantBaseIndex + mConstantCount)
-    {
+    if (index >= mConstantBaseIndex + mConstantCount) {
         NS_PRECONDITION(0, "bad param");
         *constant = NULL;
         return NS_ERROR_INVALID_ARG;
@@ -167,7 +164,23 @@ nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
 
     // else...
     *constant = NS_REINTERPRET_CAST(nsXPTConstant*,
-                               &mEntry->interface_descriptor->
-                               const_descriptors[index-mConstantBaseIndex]);
+                                    &mEntry->interface_descriptor->
+                                    const_descriptors[index-mConstantBaseIndex]);
     return NS_OK;
 }
+
+#ifdef DEBUG
+#include <stdio.h>
+void
+nsInterfaceInfo::print(FILE *fd)
+{
+    fprintf(fd, "iid: %s name: %s name_space: %s\n",
+            mEntry->iid.ToString(),
+            mEntry->name,
+            mEntry->name_space);
+    if (mParent != NULL) {
+        fprintf(fd, "parent:\n\t");
+        mParent->print(fd);
+    }
+}
+#endif
