@@ -4135,8 +4135,8 @@ NS_IMETHODIMP nsWebShell::SetTitle(const PRUnichar* aTitle)
    // Oh this hack sucks. But there isn't any other way that I can
    // reliably get the title text. Sorry.
    nsCOMPtr<nsIGlobalHistory> globalHistory(do_GetService("component://netscape/browser/global-history"));
-   NS_ENSURE_TRUE(globalHistory, NS_ERROR_FAILURE);
-   globalHistory->SetPageTitle(nsCAutoString(mURL), aTitle);
+   if (globalHistory)
+       globalHistory->SetPageTitle(nsCAutoString(mURL), aTitle);
 
    return NS_OK;
 }
