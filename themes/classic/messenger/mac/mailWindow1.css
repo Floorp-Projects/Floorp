@@ -114,3 +114,7 @@ splitter
     border-left            : 1px solid #999999;
   }  
 
+#searchBox 
+  {
+    border-left            : 1px solid ThreeDShadow;
+  }

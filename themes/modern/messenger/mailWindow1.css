@@ -195,3 +195,21 @@ statusbarpanel,
   border-bottom: 1px solid #C7D0D9;
   border-left: 1px solid #000000;
 }
+
+/* ..... quicksearch box left border ..... */
+
+#searchBox {
+  border-left-style: ridge;
+  border-left-width: 2px;
+}
+
+/* ..... quicksearch box border ..... */
+
+#searchBox {
+  border-left-style: ridge;
+  border-bottom-style: ridge;
+  border-bottom-width: 1px;
+  border-left-width: 2px;
+}
+
+
