@@ -251,13 +251,18 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRI
   nsIDeviceContextSpecPS *psSpec;
   nsresult res;
   float width, height;
+  float top,left,right,bottom;
 
   if ( nsnull != mSpec ) {
     res = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
     if ( res == NS_OK ) {
       psSpec->GetPageDimensions( width, height );
-      aWidth = NSToIntRound((72.0f*width) * mDevUnitsToAppUnits); 
-      aHeight = NSToIntRound((72.0f*height) * mDevUnitsToAppUnits); 
+      psSpec->GetTopMargin(top);
+      psSpec->GetRightMargin(right);
+      psSpec->GetLeftMargin(left);
+      psSpec->GetBottomMargin(bottom);
+      aWidth = NSToIntRound((72.0f*(width-(right+left))) * mDevUnitsToAppUnits); 
+      aHeight = NSToIntRound((72.0f*(height-(bottom+top))) * mDevUnitsToAppUnits); 
       return NS_OK;
     }
   }

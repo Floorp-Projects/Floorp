@@ -134,6 +134,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
       aSpec->GetLeftMargin( left );
       aSpec->GetRightMargin( right );
 
+printf("\nPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n");
 printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
       aSpec->GetFirstPageFirst( isFirstPageFirst );
       if ( isFirstPageFirst == PR_FALSE )
@@ -173,6 +174,8 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
     aSpec->GetPageDimensions( fwidth, fheight );
     mPrintSetup->width = (int)(fwidth * mPrintSetup->dpi);
     mPrintSetup->height = (int)(fheight * mPrintSetup->dpi);
+    printf("\nPreWidth = %f PreHeight = %f\n",fwidth,fheight);
+    printf("\nWidth = %d Height = %d\n",mPrintSetup->width,mPrintSetup->height);
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
     mPrintSetup->sizes = NULL;
@@ -567,8 +570,10 @@ nsPostScriptObj::moveto(int x, int y)
   y -= mPrintContext->prInfo->page_topy;
 
   // invert y
-  y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
+ // y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
 
+  y = (mPrintContext->prInfo->page_height - y - 1);
+  
   XP_FilePrintf(mPrintContext->prSetup->out, "%g %g moveto\n",
 		PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
   XL_RESTORE_NUMERIC_LOCALE();
@@ -604,7 +609,8 @@ nsPostScriptObj::lineto( int aX1, int aY1)
   XL_SET_NUMERIC_LOCALE();
 
   aY1 -= mPrintContext->prInfo->page_topy;
-  aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
+  //aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
+  aY1 = (mPrintContext->prInfo->page_height - aY1 - 1)  ;
 
   XP_FilePrintf(mPrintContext->prSetup->out, "%g %g lineto\n",
 		PAGE_TO_POINT_F(aX1), PAGE_TO_POINT_F(aY1));
@@ -749,9 +755,11 @@ nsPostScriptObj::line( int aX1, int aY1, int aX2, int aY2, int aThick)
   XP_FilePrintf(mPrintContext->prSetup->out, "gsave %g setlinewidth\n ",PAGE_TO_POINT_F(aThick));
 
   aY1 -= mPrintContext->prInfo->page_topy;
-  aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
+ // aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) + mPrintContext->prSetup->bottom;
+  aY1 = (mPrintContext->prInfo->page_height - aY1 - 1) ;
   aY2 -= mPrintContext->prInfo->page_topy;
-  aY2 = (mPrintContext->prInfo->page_height - aY2 - 1) + mPrintContext->prSetup->bottom;
+ // aY2 = (mPrintContext->prInfo->page_height - aY2 - 1) + mPrintContext->prSetup->bottom;
+  aY2 = (mPrintContext->prInfo->page_height - aY2 - 1) ;
 
   XP_FilePrintf(mPrintContext->prSetup->out, "%g %g moveto %g %g lineto\n",
 		    PAGE_TO_POINT_F(aX1), PAGE_TO_POINT_F(aY1),
@@ -812,7 +820,8 @@ nsPostScriptObj::translate(int x, int y)
     XL_SET_NUMERIC_LOCALE();
     y -= mPrintContext->prInfo->page_topy;
     // Y inversion
-    y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
+    //y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
+    y = (mPrintContext->prInfo->page_height - y - 1) ;
 
     XP_FilePrintf(mPrintContext->prSetup->out, "%g %g translate\n", PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
     XL_RESTORE_NUMERIC_LOCALE();
