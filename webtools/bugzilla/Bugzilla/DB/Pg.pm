@@ -42,7 +42,6 @@ package Bugzilla::DB::Pg;
 use strict;
 
 use Bugzilla::Error;
-use Carp;
 
 # This module extends the DB interface via inheritance
 use base qw(Bugzilla::DB);
@@ -146,7 +145,6 @@ sub bz_lock_tables {
    
     # Check first if there was no lock before
     if ($self->{private_bz_tables_locked}) {
-        carp("Tables already locked");
         ThrowCodeError("already_locked");
     } else {
         my %read_tables;
@@ -173,6 +171,7 @@ sub bz_lock_tables {
                           ' IN ROW SHARE MODE') if keys %read_tables;
         Bugzilla->dbh->do('LOCK TABLE ' . join(', ', keys %write_tables) .
                           ' IN ROW EXCLUSIVE MODE') if keys %write_tables;
+        $self->{private_bz_tables_locked} = 1;
     }
 }
 
@@ -183,10 +182,9 @@ sub bz_unlock_tables {
     if (!$self->{private_bz_tables_locked}) {
         # Abort is allowed even without previous lock for error handling
         return if $abort;
-
-        carp("No matching lock");
         ThrowCodeError("no_matching_lock");
     } else {
+        $self->{private_bz_tables_locked} = 0;
         # End transaction, tables will be unlocked automatically
         if ($abort) {
             $self->bz_rollback_transaction();

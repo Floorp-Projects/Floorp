@@ -478,12 +478,11 @@ sub bz_start_transaction {
     my ($self) = @_;
 
     if ($self->{private_bz_in_transaction}) {
-        carp("Can't start transaction within another transaction");
         ThrowCodeError("nested_transaction");
     } else {
         # Turn AutoCommit off and start a new transaction
         $self->begin_work();
-        $self->{privateprivate_bz_in_transaction} = 1;
+        $self->{private_bz_in_transaction} = 1;
     }
 }
 
@@ -491,7 +490,6 @@ sub bz_commit_transaction {
     my ($self) = @_;
 
     if (!$self->{private_bz_in_transaction}) {
-        carp("Can't commit without a transaction");
         ThrowCodeError("not_in_transaction");
     } else {
         $self->commit();
@@ -504,7 +502,6 @@ sub bz_rollback_transaction {
     my ($self) = @_;
 
     if (!$self->{private_bz_in_transaction}) {
-        carp("Can't rollback without a transaction");
         ThrowCodeError("not_in_transaction");
     } else {
         $self->rollback();

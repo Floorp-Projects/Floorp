@@ -42,7 +42,6 @@ package Bugzilla::DB::Mysql;
 use strict;
 
 use Bugzilla::Error;
-use Carp;
 
 # This module extends the DB interface via inheritance
 use base qw(Bugzilla::DB);
@@ -149,7 +148,6 @@ sub bz_lock_tables {
 
     # Check first if there was no lock before
     if ($self->{private_bz_tables_locked}) {
-        carp("Tables already locked");
         ThrowCodeError("already_locked");
     } else {
         $self->do('LOCK TABLE ' . join(', ', @tables)); 
@@ -165,7 +163,6 @@ sub bz_unlock_tables {
     if (!$self->{private_bz_tables_locked}) {
         # Abort is allowed even without previous lock for error handling
         return if $abort;
-        carp("No matching lock");
         ThrowCodeError("no_matching_lock");
     } else {
         $self->do("UNLOCK TABLES");
