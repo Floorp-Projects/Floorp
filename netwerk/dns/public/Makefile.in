@@ -25,10 +25,10 @@ VPATH		= @srcdir@
 
 XPIDL_MODULE = netwerk_dns
 
-XPIDLSRCS =		     \
-        .\nsIDNSListener.idl \
-        .\nsIDNSService.idl  \
-        $(NULL)
+XPIDLSRCS =			\
+	nsIDNSListener.idl	\
+	nsIDNSService.idl	\
+	$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
 
