@@ -325,6 +325,11 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     nsCOMPtr<nsIURI> aURI;
     channel->GetURI(getter_AddRefs(aURI));
 
+    // Sometimes URI is null, so ignore.
+    if (aURI == nsnull) {
+      return NS_OK;
+    }
+
     nsXPIDLCString temp;
     aURI->GetSpec(getter_Copies(temp));
 
