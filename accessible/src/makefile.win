@@ -28,6 +28,11 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRootAccessible.obj    \
         .\$(OBJDIR)\nsMutableAccessible.obj    \
         .\$(OBJDIR)\nsAccessibilityService.obj    \
+        .\$(OBJDIR)\nsSelectAccessible.obj    \
+	$(NULL)
+
+LINCS=                                  \
+	-I..\..\layout\html\forms\public \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
