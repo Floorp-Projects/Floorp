@@ -52,6 +52,7 @@
 #include "nsIPresState.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
+#include "nsIXMLContent.h"
 
 // Class IID's
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -1393,11 +1394,20 @@ NS_IMETHODIMP
 FrameManager::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
                                     PRBool &aAffects)
 {
-  if (aAttribute == nsHTMLAtoms::style) {
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
+  if (xml) {
+    rv = mStyleSet->AttributeAffectsStyle(aAttribute, aContent, aAffects);
+  } else {
+    // not an XML element, so assume it is an HTML element and further assume that
+    // any attribute may affect style
+    // NOTE: we could list all of the presentation-hint attributes and check them,
+    //       but there are a lot of them and this is safer.
     aAffects = PR_TRUE;
-    return NS_OK;
+    rv = NS_OK;
   }
-  return mStyleSet->AttributeAffectsStyle(aAttribute, aContent, aAffects);
+  return rv;
 }
 
 static nsresult
