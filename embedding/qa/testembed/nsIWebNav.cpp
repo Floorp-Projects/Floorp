@@ -147,6 +147,10 @@ void CNsIWebNav::RunAllTests()
 	   return;
    }
 
+   // load a couple of URLs to get things going
+	LoadUriTest("http://www.netscape.com", nsIWebNavigation::LOAD_FLAGS_NONE);
+	LoadUriTest("www.google.com", nsIWebNavigation::LOAD_FLAGS_NONE);
+	
    // canGoBack attribute test
    CanGoBackTest();
 

@@ -154,6 +154,10 @@ SOURCE=.\nsIWebBrow.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\nsIWebBrowFind.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsIWebNav.cpp
 # End Source File
 # Begin Source File
@@ -271,6 +275,10 @@ SOURCE=.\nsIRequest.h
 # Begin Source File
 
 SOURCE=.\nsIWebBrow.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsIWebBrowFind.h
 # End Source File
 # Begin Source File
 

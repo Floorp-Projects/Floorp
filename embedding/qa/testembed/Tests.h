@@ -144,6 +144,7 @@ protected:
 	afx_msg void OnInterfacesNsiobserverservice();
 	afx_msg void OnInterfacesNsiwebbrowser();
 	afx_msg void OnInterfacesNsiwebprogress();
+	afx_msg void OnInterfacesNsiwebbrowfind();
 
 	//}}AFX_MSG
 
