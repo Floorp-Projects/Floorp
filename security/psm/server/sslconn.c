@@ -1901,12 +1901,6 @@ SECStatus SSM_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
 	goto done;
 noCert:
-    /* we display the no cert dialog only if the app is UI-capable */
-    if (SSMCONTROLCONNECTION(conn)->m_doesUI) {
-        if (SSM_SSLMakeBadClientAuthDialog(conn) != SSM_SUCCESS) {
-            SSM_DEBUG("client auth failure UI display failed.\n");
-        }
-    }
 loser:
     if (rv == SECSuccess) {
         rv = SECFailure;

@@ -86,19 +86,6 @@ SSMStatus SSM_FormatCert(CERTCertificate* cert, char* fmt,
 SSMStatus SSM_HTTPBadClientAuthButtonHandler(HTTPRequest* req);
 
 /*
- * Function: SSMStatus SSM_SSLMakeBadClientAuthDialog()
- * Purpose: make "no cert" dialog by sending the "no cert" UI event
- * Arguments and return values:
- * - conn: SSL connection object
- * - returns: SSM_SUCCESS if successful; error code otherwise
- *
- * Note: URL: ".../get?baseRef=bad_client_auth&target=(conn ID)"
- *       blocks until the dialog is complete
- */
-SSMStatus SSM_SSLMakeBadClientAuthDialog(SSMSSLDataConnection* conn);
-
-
-/*
  * Function: SSMStatus SSM_SSLMakeClientAuthDialog()
  * Purpose: generates the client auth cert selection dialog and receives
  *          a chosen cert nickname from the user

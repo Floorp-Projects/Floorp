@@ -65,38 +65,6 @@ SSMStatus ssm_http_server_auth_handle_cancel_button(HTTPRequest* req);
 SSMStatus ssm_http_unknown_issuer_step1_handle_next_button(HTTPRequest* req);
 
 
-SSMStatus SSM_SSLMakeBadClientAuthDialog(SSMSSLDataConnection* conn)
-{
-    SSMStatus rv;
-
-    SSM_DEBUG("Client authentication failed.\n");
-
-    PR_ASSERT(conn != NULL);
-
-    SSM_LockResource(SSMRESOURCE(conn));
-    conn->m_UIInfo.UICompleted = PR_FALSE;
-
-    /* fire up the UI */
-    rv = SSMControlConnection_SendUIEvent(SSMCONTROLCONNECTION(conn), "get", 
-					  "bad_client_auth", 
-					  SSMRESOURCE(conn), NULL,
-                      &SSMRESOURCE(conn)->m_clientContext, PR_TRUE);
-    if (rv != SSM_SUCCESS) {
-	goto loser;
-    }
-
-    /* wait until the UI event is complete */
-    while (!conn->m_UIInfo.UICompleted) {
-	SSM_WaitResource(SSMRESOURCE(conn), PR_INTERVAL_NO_TIMEOUT);
-    }
-
-loser:
-    conn->m_UIInfo.UICompleted = PR_FALSE;
-    SSM_UnlockResource(SSMRESOURCE(conn));
-
-    return rv;
-}
-
 SSMStatus SSM_FormatCert(CERTCertificate* cert, char* fmt, 
                          char** result)
 {
