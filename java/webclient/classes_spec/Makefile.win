@@ -50,6 +50,15 @@ JAR_WEBCLIENT_CLASSES = \
 	org\mozilla\webclient\wrapper_native \
 	org\mozilla\webclient\wrapper_native\win32 \
 	org\mozilla\webclient\test \
+	$(NULL)
+
+!ifdef WEBCLIENT_ICE
+JAR_WEBCLIENT_CLASSES = \
+	$(JAR_WEBCLIENT_CLASSES) \
+	org\mozilla\webclient\wrapper_nonnative \
+	org\mozilla\webclient\test_nonnative \
+	$(NULL)
+!endif
 
 
 #	org\mozilla\webclient\test  org\mozilla\webclient\win32 org\mozilla\webclient\test\swing
