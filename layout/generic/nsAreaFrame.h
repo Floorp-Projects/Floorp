@@ -45,6 +45,11 @@ public:
   friend nsresult NS_NewAreaFrame(nsIFrame*& aResult, PRUint32 aFlags);
   
   // nsIFrame
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext);
+
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
