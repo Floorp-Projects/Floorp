@@ -240,7 +240,6 @@ private:
 	static nsIRDFResource	*kRDF_Seq;
 
 	static PRInt32		kNameSpaceID_XUL;
-	static PRInt32		kNameSpaceID_RDF;
 
 	static nsIRDFService	*gRDFService;
 	static nsIXULContentUtils   *gXULUtils;
@@ -319,7 +318,6 @@ nsIRDFResource		*XULSortServiceImpl::kRDF_instanceOf;
 nsIRDFResource		*XULSortServiceImpl::kRDF_Seq;
 
 PRInt32  XULSortServiceImpl::kNameSpaceID_XUL;
-PRInt32  XULSortServiceImpl::kNameSpaceID_RDF;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -416,9 +414,6 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 
 			rv = mgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
 			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
-
-			rv = mgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kRDFNameSpaceURI), kNameSpaceID_RDF);
-			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
 
 			NS_RELEASE(mgr);
 		}
@@ -632,7 +627,7 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortRes
 			{
 				nsAutoString	value;
 
-				if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_RDF, kResourceAtom, value))
+				if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kResourceAtom, value))
 					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 				{
 					PRBool		setFlag = PR_FALSE;
@@ -646,7 +641,7 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString &sortRes
 							setFlag = PR_TRUE;
 
 							// secondary sort info is optional
-							if (NS_FAILED(rv = child->GetAttribute(kNameSpaceID_RDF, kResource2Atom,
+							if (NS_FAILED(rv = child->GetAttribute(kNameSpaceID_None, kResource2Atom,
 								sortResource2)) || (rv != NS_CONTENT_ATTR_HAS_VALUE))
 							{
 								sortResource2.Truncate();
@@ -692,18 +687,18 @@ XULSortServiceImpl::SetSortHints(nsIContent *tree, const nsString &sortResource,
 		// set hints on tree root node
 		tree->SetAttribute(kNameSpaceID_None, kSortActiveAtom, trueStr, PR_FALSE);
 		tree->SetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection, PR_FALSE);
-		tree->SetAttribute(kNameSpaceID_RDF, kResourceAtom, sortResource, PR_FALSE);
+		tree->SetAttribute(kNameSpaceID_None, kResourceAtom, sortResource, PR_FALSE);
 
 		if (sortResource2.Length() > 0)
-			tree->SetAttribute(kNameSpaceID_RDF, kResource2Atom, sortResource2, PR_FALSE);
-		else	tree->UnsetAttribute(kNameSpaceID_RDF, kResource2Atom, PR_FALSE);
+			tree->SetAttribute(kNameSpaceID_None, kResource2Atom, sortResource2, PR_FALSE);
+		else	tree->UnsetAttribute(kNameSpaceID_None, kResource2Atom, PR_FALSE);
 	}
 	else
 	{
 		tree->UnsetAttribute(kNameSpaceID_None, kSortActiveAtom, PR_FALSE);
 		tree->UnsetAttribute(kNameSpaceID_None, kSortDirectionAtom, PR_FALSE);
-		tree->UnsetAttribute(kNameSpaceID_RDF, kResourceAtom, PR_FALSE);
-		tree->UnsetAttribute(kNameSpaceID_RDF, kResource2Atom, PR_FALSE);
+		tree->UnsetAttribute(kNameSpaceID_None, kResourceAtom, PR_FALSE);
+		tree->UnsetAttribute(kNameSpaceID_None, kResource2Atom, PR_FALSE);
 	}
 
 	// optional hint
@@ -731,7 +726,7 @@ XULSortServiceImpl::NodeHasSortInfo(nsIContent *child, nsString &sortResource, n
 	{
 		if (value.EqualsIgnoreCase(trueStr))
 		{
-			if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_RDF, kResourceAtom,
+			if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kResourceAtom,
 				sortResource)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 			{
 				if (NS_SUCCEEDED(rv = child->GetAttribute(kNameSpaceID_None, kSortDirectionAtom,
@@ -750,7 +745,7 @@ XULSortServiceImpl::NodeHasSortInfo(nsIContent *child, nsString &sortResource, n
 					}
 
 					// secondary sort info is optional
-					if (NS_FAILED(rv = child->GetAttribute(kNameSpaceID_RDF, kResource2Atom,
+					if (NS_FAILED(rv = child->GetAttribute(kNameSpaceID_None, kResource2Atom,
 						sortResource2)) || (rv != NS_CONTENT_ATTR_HAS_VALUE))
 					{
 						sortResource2.Truncate();
@@ -2341,7 +2336,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_SUCCEEDED(rv = treeNode->GetAttribute(kNameSpaceID_None, kSortActiveAtom, value))
 		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(trueStr)))
 	{
-		if (NS_SUCCEEDED(rv = treeNode->GetAttribute(kNameSpaceID_RDF, kResourceAtom,
+		if (NS_SUCCEEDED(rv = treeNode->GetAttribute(kNameSpaceID_None, kResourceAtom,
 			value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(sortResource)))
 		{
 			if (NS_SUCCEEDED(rv = treeNode->GetAttribute(kNameSpaceID_None, kSortDirectionAtom,
@@ -2360,8 +2355,8 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	treeNode->UnsetAttribute(kNameSpaceID_None, kSortActiveAtom, PR_FALSE);
 	treeNode->UnsetAttribute(kNameSpaceID_None, kSortDirectionAtom, PR_FALSE);
 	treeNode->UnsetAttribute(kNameSpaceID_None, kSortSeparatorsAtom, PR_FALSE);
-	treeNode->UnsetAttribute(kNameSpaceID_RDF, kResourceAtom, PR_FALSE);
-	treeNode->UnsetAttribute(kNameSpaceID_RDF, kResource2Atom, PR_FALSE);
+	treeNode->UnsetAttribute(kNameSpaceID_None, kResourceAtom, PR_FALSE);
+	treeNode->UnsetAttribute(kNameSpaceID_None, kResource2Atom, PR_FALSE);
 
 	nsCOMPtr<nsIRDFCompositeDataSource>	cds;
 	if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))

@@ -89,11 +89,9 @@ interface NSDocument {
 
      readonly attribute DOMString characterSet;
      readonly attribute PluginArray plugins;
-	      attribute  jsval location;
-// XXX This should be removed, the new createElementNS should be used in stead
-     Element                   createElementWithNameSpace(in DOMString tagName,
-                                                          in DOMString nameSpace)
-                                                          raises(DOMException);
+
+	      attribute jsval location;
+
 	 Range                     createRange();
 	 void                      load(in DOMString url);
 };

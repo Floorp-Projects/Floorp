@@ -357,8 +357,7 @@ public:
     NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpeceID) const;
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
     NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;
-    NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr, nsIAtom*& aName, PRInt32& aNameSpaceID);
-    NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, nsIAtom*& aPrefix);
+    NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr, nsINodeInfo*& aNodeInfo);
     NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue, PRBool aNotify);
     NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue, PRBool aNotify);
     NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aResult) const;

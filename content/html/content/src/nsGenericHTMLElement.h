@@ -108,11 +108,8 @@ public:
   // Implementation for nsIContent
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
-  nsresult ParseAttributeString(const nsAReadableString& aStr, 
-                                nsIAtom*& aName,
-                                PRInt32& aNameSpaceID);
-  nsresult GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                    nsIAtom*& aPrefix);
+  nsresult NormalizeAttributeString(const nsAReadableString& aStr,
+                                    nsINodeInfo*& aNodeInfo);
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue,
                         PRBool aNotify);
   nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,

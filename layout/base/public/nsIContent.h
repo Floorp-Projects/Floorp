@@ -95,30 +95,17 @@ public:
   NS_IMETHOD IsSynthetic(PRBool& aResult) = 0;
 
   /**
-   * Parses an attribute string into an atom that represents the
-   * attribute name and an identifier that represents the namespace
-   * of the attribute. The namespace identifier may be computed
-   * from a namespace prefix that must be interpreted in the context
-   * of the content itself.
+   * Normalizes an attribute string into an atom that represents the
+   * qualified attribute name of the attribute. This method is intended
+   * for character case conversion if the content object is case
+   * insensitive (e.g. HTML).
    *
    * @param aStr the unparsed attribute string
-   * @param aName out parameter representing the name of the attribute
-   * @param aNameSpaceID out parameter reprsenting the namespace 
-   *                     of the attribute
+   * @param aName out parameter representing the complete name of the
+   * attribute
    */
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr, 
-                                  nsIAtom*& aName,
-                                  PRInt32& aNameSpaceID) = 0;
-
-  /**
-   * Returns the prefix for the specified name space identifier in 
-   * the context of the content element itself.
-   *
-   * @param aNameSpaceID identifier of the namespace
-   * @param aPrefix out parameter representing the prefix for the namespace
-   */
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                      nsIAtom*& aPrefix) = 0;
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr, 
+                                      nsINodeInfo*& aNodeInfo) = 0;
 
   /**
    * Set attribute values. All attribute values are assumed to have a

@@ -5614,8 +5614,13 @@ nsXULTemplateBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
 
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> tag;
-        rv = aTemplateNode->ParseAttributeString(attribute, *getter_AddRefs(tag), nameSpaceID);
+        nsCOMPtr<nsINodeInfo> ni;
+        rv = aTemplateNode->NormalizeAttributeString(attribute,
+                                                     *getter_AddRefs(ni));
         if (NS_FAILED(rv)) return rv;
+
+        ni->GetNameAtom(*getter_AddRefs(tag));
+        ni->GetNamespaceID(nameSpaceID);
 
         nsCOMPtr<nsIRDFResource> property;
         rv = gXULUtils->GetResource(nameSpaceID, tag, getter_AddRefs(property));

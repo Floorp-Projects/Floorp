@@ -336,6 +336,8 @@ public:
   }
 
   // Remainder of nsIContent
+  nsresult NormalizeAttributeString(const nsAReadableString& aStr,
+                                    nsINodeInfo*& aNodeInfo);
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
                         const nsAReadableString& aValue,
                         PRBool aNotify);
@@ -611,14 +613,9 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
-                                  nsIAtom*& aName,                         \
-                                  PRInt32& aNameSpaceID) {                 \
-    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
-  }                                                                        \
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
-                                nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,       \
+                                      nsINodeInfo*& aNodeInfo) {           \
+    return _g.NormalizeAttributeString(aStr, aNodeInfo);                   \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           const nsAReadableString& aValue, PRBool aNotify) {        \
@@ -750,25 +747,20 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
-                                  nsIAtom*& aName,                         \
-                                  PRInt32& aNameSpaceID) {                 \
-    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
-  }                                                                        \
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
-                                nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,       \
+                                      nsINodeInfo*& aNodeInfo) {           \
+    return _g.NormalizeAttributeString(aStr, aNodeInfo);                   \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsAWritableString& aResult) const {                       \
+                          nsAWritableString& aResult) const {              \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
@@ -889,25 +881,20 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
-                                  nsIAtom*& aName,                         \
-                                  PRInt32& aNameSpaceID) {                 \
-    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
-  }                                                                        \
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
-                                nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,       \
+                                      nsINodeInfo*& aNodeInfo) {           \
+    return _g.NormalizeAttributeString(aStr, aNodeInfo);                   \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsAWritableString& aResult) const {                       \
+                          nsAWritableString& aResult) const {              \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
@@ -1026,25 +1013,20 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
-                                  nsIAtom*& aName,                         \
-                                  PRInt32& aNameSpaceID) {                 \
-    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
-  }                                                                        \
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
-                                nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,       \
+                                      nsINodeInfo*& aNodeInfo) {           \
+    return _g.NormalizeAttributeString(aStr, aNodeInfo);                   \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsAWritableString& aResult) const {                       \
+                          nsAWritableString& aResult) const {              \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
@@ -1167,25 +1149,20 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
-                                  nsIAtom*& aName,                         \
-                                  PRInt32& aNameSpaceID) {                 \
-    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
-  }                                                                        \
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
-                                nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,       \
+                                      nsINodeInfo*& aNodeInfo) {           \
+    return _g.NormalizeAttributeString(aStr, aNodeInfo);                   \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsAWritableString& aResult) const {                       \
+                          nsAWritableString& aResult) const {              \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
@@ -1300,25 +1277,20 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
-                                  nsIAtom*& aName,                         \
-                                  PRInt32& aNameSpaceID) {                 \
-    return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
-  }                                                                        \
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
-                                nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,       \
+                                      nsINodeInfo*& aName) {               \
+    return _g.NormalizeAttributeString(aStr, aName);                       \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsAWritableString& aResult) const {                       \
+                          nsAWritableString& aResult) const {              \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \

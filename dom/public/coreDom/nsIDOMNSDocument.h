@@ -29,7 +29,6 @@
 #include "nsIScriptContext.h"
 #include "jsapi.h"
 
-class nsIDOMElement;
 class nsIDOMPluginArray;
 class nsIDOMRange;
 
@@ -48,8 +47,6 @@ public:
   NS_IMETHOD    GetLocation(jsval* aLocation)=0;
   NS_IMETHOD    SetLocation(jsval aLocation)=0;
 
-  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, const nsAReadableString& aNameSpace, nsIDOMElement** aReturn)=0;
-
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn)=0;
 
   NS_IMETHOD    Load(const nsAReadableString& aUrl)=0;
@@ -61,7 +58,6 @@ public:
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);  \
   NS_IMETHOD    GetLocation(jsval* aLocation);  \
   NS_IMETHOD    SetLocation(jsval aLocation);  \
-  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, const nsAReadableString& aNameSpace, nsIDOMElement** aReturn);  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);  \
   NS_IMETHOD    Load(const nsAReadableString& aUrl);  \
 
@@ -72,7 +68,6 @@ public:
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins) { return _to GetPlugins(aPlugins); } \
   NS_IMETHOD    GetLocation(jsval* aLocation) { return _to GetLocation(aLocation); } \
   NS_IMETHOD    SetLocation(jsval aLocation) { return _to SetLocation(aLocation); } \
-  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, const nsAReadableString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn) { return _to CreateRange(aReturn); }  \
   NS_IMETHOD    Load(const nsAReadableString& aUrl) { return _to Load(aUrl); }  \
 

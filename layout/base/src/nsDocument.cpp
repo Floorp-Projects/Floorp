@@ -2315,15 +2315,6 @@ nsDocument::GetCharacterSet(nsAWritableString& aCharacterSet)
   return GetDocumentCharacterSet(aCharacterSet);
 }
 
-NS_IMETHODIMP    
-nsDocument::CreateElementWithNameSpace(const nsAReadableString& aTagName, 
-                                       const nsAReadableString& aNameSpace, 
-                                       nsIDOMElement** aReturn)
-{
-  *aReturn = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP
 nsDocument::ImportNode(nsIDOMNode* aImportedNode,
                        PRBool aDeep,

@@ -696,7 +696,6 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   nsresult result = NS_OK;
   nsAutoString tag;
   nsCOMPtr<nsIAtom> nameSpacePrefix;
-  PRInt32 nameSpaceID = kNameSpaceID_Unknown;
   PRBool isHTML = PR_FALSE;
   PRBool pushContent = PR_TRUE;
   nsCOMPtr<nsIContent> content;
@@ -720,7 +719,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   // list.
   PushNameSpacesFrom(aNode);
 
-  nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+  PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
@@ -809,7 +808,6 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   nsresult result = NS_OK;
   nsAutoString tag;
   nsCOMPtr<nsIAtom> nameSpacePrefix;
-  PRInt32 nameSpaceID = kNameSpaceID_Unknown;
   PRBool isHTML = PR_FALSE;
   PRBool popContent = PR_TRUE;
 
@@ -821,7 +819,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   tag.Assign(aNode.GetText());
 
   nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
-  nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+  PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
   isHTML = IsHTMLNameSpace(nameSpaceID);
 
   if (!mInScript) {

@@ -394,9 +394,6 @@ public:
   NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode,
                            PRBool aDeep,
                            nsIDOMNode** aReturn);
-  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, 
-                                           const nsAReadableString& aNameSpace, 
-                                           nsIDOMElement** aReturn);
   NS_IMETHOD    GetLocation(jsval* aLocation);
   NS_IMETHOD    SetLocation(jsval aLocation);
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);

@@ -397,26 +397,10 @@ static int gGenericHTMLElementCount = 0;
 static nsILanguageAtomService* gLangService = nsnull;
 
 
-static PRBool kStrictDOMLevel2 = PR_FALSE; // Only used for temp DOM hack
-
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
   mAttributes = nsnull;
   gGenericHTMLElementCount++;
-
-  static PRInt32 been_here = 0;
-
-// Temporary hack that tells if some new DOM Level 2 features are on or off
-  if (!been_here) {
-    kStrictDOMLevel2 = PR_FALSE; // Default in case of failure
-    nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
-    }
-    been_here = 1;
-  }
-// End of temp hack.
 }
 
 nsGenericHTMLElement::~nsGenericHTMLElement()
@@ -479,41 +463,21 @@ nsGenericHTMLElement::GetTagName(nsAWritableString& aTagName)
 nsresult
 nsGenericHTMLElement::GetNodeName(nsAWritableString& aNodeName)
 {
-  if (kStrictDOMLevel2) {
-    mNodeInfo->GetPrefix(aNodeName);
-    if (aNodeName.Length()) {
-      aNodeName.Append(PRUnichar(':'));
-    }
-
-    nsAutoString tmp;
-    mNodeInfo->GetName(tmp);
-
-    PRInt32 id;
-    if (NS_SUCCEEDED(mNodeInfo->GetNamespaceID(id)) && id == kNameSpaceID_None) {
-      // Only fold to uppercase if the HTML element has no namespace, i.e.,
-		  // it was created as part of an HTML document.
-      tmp.ToUpperCase();
-		}
-
-    aNodeName.Append(tmp);
-  } else {
-    mNodeInfo->GetName(aNodeName);
-
-    PRInt32 id;
-    if (NS_SUCCEEDED(mNodeInfo->GetNamespaceID(id)) && id == kNameSpaceID_None) {
-      // Only fold to uppercase if the HTML element has no namespace, i.e.,
-      // it was created as part of an HTML document.
-      ToUpperCase(aNodeName);
-    }
+  mNodeInfo->GetPrefix(aNodeName);
+  if (aNodeName.Length()) {
+    aNodeName.Append(PRUnichar(':'));
   }
 
-  if (kStrictDOMLevel2) {
-    PRInt32 pos = aNodeName.FindChar(':');
-    if (pos >= 0) {
-      nsCAutoString tmp; tmp.Assign(NS_ConvertUCS2toUTF8(aNodeName));
-      printf ("Possible DOM Error: .nodeName or .tagName requested on the HTML element '%s', is this OK?\n", (const char *)tmp);
-    }
+  nsAutoString tmp;
+  mNodeInfo->GetName(tmp);
+
+  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
+    // Only fold to uppercase if the HTML element has no namespace, i.e.,
+    // it was created as part of an HTML document.
+    tmp.ToUpperCase();
   }
+
+  aNodeName.Append(tmp);
 
   return NS_OK;
 }
@@ -1252,25 +1216,18 @@ nsGenericHTMLElement::GetNameSpaceID(PRInt32& aID) const
 }
 
 nsresult 
-nsGenericHTMLElement::ParseAttributeString(const nsAReadableString& aStr, 
-                                           nsIAtom*& aName,
-                                           PRInt32& aNameSpaceID)
+nsGenericHTMLElement::NormalizeAttributeString(const nsAReadableString& aStr, 
+                                               nsINodeInfo*& aNodeInfo)
 {
   // XXX need to validate/strip namespace prefix
   nsAutoString  lower(aStr);
-  lower.ToLowerCase();  
-  aName = NS_NewAtom(lower);
-  aNameSpaceID = kNameSpaceID_None;
-  
-  return NS_OK;
-}
+  lower.ToLowerCase();
 
-nsresult 
-nsGenericHTMLElement::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                               nsIAtom*& aPrefix)
-{
-  aPrefix = nsnull;
-  return NS_OK;
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
+
+  return nimgr->GetNodeInfo(lower, nsnull, kNameSpaceID_None, aNodeInfo);
 }
 
 nsresult

@@ -79,6 +79,7 @@ public:
   NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult);
   NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult);
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
+  NS_IMETHOD_(PRBool) Equals(nsINodeInfo *aNodeInfo);
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom);
   NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName);
 
@@ -93,6 +94,8 @@ public:
                              PRInt32 aNamespaceID);
   NS_IMETHOD_(PRBool) NamespaceEquals(PRInt32 aNamespaceID);
   NS_IMETHOD_(PRBool) NamespaceEquals(const nsAReadableString& aNamespaceURI);
+  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsAReadableString& aQualifiedName);
+
   NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo*& aResult);
   NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult);
 

@@ -264,8 +264,8 @@ NameSpaceImpl::FindNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID) const
       return NS_OK;
     }
     nameSpace = nameSpace->mParent;
-  }
-  while (nsnull != nameSpace);
+  } while (nsnull != nameSpace);
+
   if (nsnull == aPrefix) {
     aNameSpaceID = kNameSpaceID_None;
   }

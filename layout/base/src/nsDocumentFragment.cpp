@@ -106,18 +106,11 @@ public:
   NS_IMETHOD SetScriptObject(void* aScriptObject);
 
   // interface nsIContent
-  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr, 
-                                  nsIAtom*& aName,
-                                  PRInt32& aNameSpaceID)
-    { aName = nsnull;
-      aNameSpaceID = kNameSpaceID_None;
-      return NS_OK; 
-    }
-  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
-                                      nsIAtom*& aPrefix)
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr, 
+                                      nsINodeInfo*& aNodeInfo)
     {
-      aPrefix = nsnull;
-      return NS_OK;
+      aNodeInfo = nsnull;
+      return NS_OK; 
     }
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const
     { return mInner.GetDocument(aResult); }

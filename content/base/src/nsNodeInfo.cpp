@@ -27,29 +27,11 @@
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 
-#include "nsIServiceManager.h"
-#include "nsIPref.h" // Used by the temp pref, should be removed!
-static PRBool kStrictDOMLevel2 = PR_FALSE;
 
 nsNodeInfo::nsNodeInfo()
   : mInner(), mOwnerManager(nsnull)
 {
-  NS_INIT_REFCNT();  
-
-  static PRInt32 been_here = 0;
-
-// Temporary hack that tells if some new DOM Level 2 features are on or off
-  if (!been_here) {
-    kStrictDOMLevel2 = PR_FALSE; // Default in case of failure
-    nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      prefs->GetBoolPref("temp.DOMLevel2update.enabled", &kStrictDOMLevel2);
-    }
-    been_here = 1;
-  }
-// End of temp hack.
-
+  NS_INIT_REFCNT();
 }
 
 
@@ -122,7 +104,7 @@ nsNodeInfo::GetQualifiedName(nsAWritableString& aQualifiedName)
 {
   NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
 
-  if (mInner.mPrefix && kStrictDOMLevel2) {
+  if (mInner.mPrefix) {
     mInner.mPrefix->ToString(aQualifiedName);
 
     aQualifiedName.Append(PRUnichar(':'));
@@ -132,11 +114,6 @@ nsNodeInfo::GetQualifiedName(nsAWritableString& aQualifiedName)
   mInner.mName->GetUnicode(&name);
 
   aQualifiedName.Append(name);
-
-  if (kStrictDOMLevel2 && mInner.mPrefix) {
-    nsCAutoString tmp; tmp.Assign(NS_ConvertUCS2toUTF8(aQualifiedName));
-    printf ("Possible DOM Error: .name, .nodeName or .tagName requested on a namespace element/attribute with the qulaified name '%s', is this OK?\n", (const char *)tmp);
-  }
 
   return NS_OK;
 }
@@ -244,6 +221,15 @@ nsNodeInfo::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager)
   NS_ADDREF(aNodeInfoManager);
 
   return NS_OK;
+}
+
+
+NS_IMETHODIMP_(PRBool)
+nsNodeInfo::Equals(nsINodeInfo *aNodeInfo)
+{
+  NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  return aNodeInfo->Equals(mInner.mName, mInner.mPrefix, mInner.mNamespaceID);
 }
 
 
@@ -356,6 +342,36 @@ nsNodeInfo::NamespaceEquals(const nsAReadableString& aNamespaceURI)
   return mInner.mNamespaceID == nsid;
 }
 
+
+NS_IMETHODIMP_(PRBool)
+nsNodeInfo::QualifiedNameEquals(const nsAReadableString& aQualifiedName)
+{
+  const PRUnichar *qname = nsPromiseFlatString(aQualifiedName);
+  PRUint32 i = 0;
+
+  if (mInner.mPrefix) {
+    const PRUnichar *prefix;
+    mInner.mPrefix->GetUnicode(&prefix);
+
+    i = nsCRT::strlen(prefix);
+
+    if (nsCRT::strncmp(qname, prefix, i))
+      return PR_FALSE;
+
+    if (*(qname + i) != PRUnichar(':'))
+      return PR_FALSE;
+
+    i++;
+  }
+
+  const PRUnichar *name;
+  mInner.mName->GetUnicode(&name);
+
+  if (nsCRT::strcmp(qname + i, name))
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
 
 NS_IMETHODIMP
 nsNodeInfo::NameChanged(nsIAtom *aName, nsINodeInfo*& aResult)
