@@ -328,6 +328,9 @@ ol {
 li {
   display: list-item;
   list-style-position: inside; 
+  float-edge: margin-box;
+  /* make li's float around floaters in a compatible manner */
+  -moz-compat-floater-margin: 40px;
 }
 
 /* restore outside position for lists inside li's */
@@ -337,8 +340,10 @@ li ul, li ol, li dir, li menu {
 
 /* undo previous two rules for properly nested lists */
 ul li, dir li, menu li, ol li,
-ul ul, ul dir, ul menu, ul ol, dir ul, dir dir, dir menu, dir ol, menu ul, menu 
-dir, menu menu, menu ol, ol ul, ol dir, ol menu, ol ol {
+ul ul, ul dir, ul menu, ul ol,
+dir ul, dir dir, dir menu, dir ol,
+menu ul, menu dir, menu menu, menu ol,
+ol ul, ol dir, ol menu, ol ol {
   list-style-position: inherit;
 }
 
