@@ -222,6 +222,7 @@ pref("network.http.version", "1.1");	// comment this out in case of problems
 // default eventually. Nevertheless it'll work with some older 1.0 servers
 // pref("network.http.keep-alive", true);
 // pref("network.http.keep-alive.timeout", 120);
+// pref("network.http.max-connections", 8);
 // Enable http compression: comment this out in case of problems with 1.1
 pref("network.http.accept-encoding", "gzip,deflate,compress,identity");
 
