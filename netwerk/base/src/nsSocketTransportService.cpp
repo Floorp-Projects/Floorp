@@ -174,7 +174,7 @@ nsresult nsSocketTransportService::Init(void)
 
 nsresult nsSocketTransportService::AddToWorkQ(nsSocketTransport* aTransport)
 {
-  PRStatus status;
+  PRStatus status = PR_SUCCESS;
   PRBool bFireEvent = PR_FALSE;
   nsresult rv = NS_OK;
   PRCList* qp;
