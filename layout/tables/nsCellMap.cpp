@@ -1390,8 +1390,9 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
                                         PRBool          aInsert)
 {
   // copy the old cell map into a new array
-  PRInt32 numOrigRows = mRows.Count();
-  PRInt32 numOrigCols = aMap.GetColCount();
+  PRInt32 mRowCountOrig = mRowCount;
+  PRInt32 numOrigRows   = mRows.Count();
+  PRInt32 numOrigCols   = aMap.GetColCount();
   void** origRows = new void*[numOrigRows];
   if (!origRows) return;
   PRInt32 rowX;
@@ -1402,6 +1403,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
   // reinitialize data members
   mRows.Clear();
   mRowCount = 0;
+  
   Grow(aMap, numOrigRows);
 
   PRInt32 numNewCells = (aCellFrames) ? aCellFrames->Count() : 0;
@@ -1428,6 +1430,12 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
         AppendCell(aMap, *data->GetCellFrame(), rowX, PR_FALSE);
       }
     }
+  }
+
+  // For for cell deletion, since the row is not being deleted, 
+  // keep mRowCount the same as before. 
+  if (!aInsert) {
+    mRowCount = mRowCountOrig;
   }
 
   // delete the old cell map
@@ -1471,29 +1479,8 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
     GetEffectiveColSpan(aMap, aRowIndex, startColIndex, isZeroColSpan) - 1;
   // record whether removing the cells is going to cause complications due 
   // to existing row spans, col spans or table sizing. 
-  PRBool spansCauseRebuild = PR_FALSE;
-
-  // check if removing the cell will cause the table to reduce the number of rows
-  if (endRowIndex == numRows) {
-    spansCauseRebuild = PR_TRUE;
-    for (PRInt32 rowX = aRowIndex; rowX <= endRowIndex; rowX++) {
-      for (PRInt32 colX = 0; colX < numCols; colX++) {
-        if ((colX < startColIndex) || (colX > endColIndex)) {
-          CellData* data = GetMapCellAt(aMap, rowX, colX, PR_TRUE);
-          if (data) {
-            // there is either an originating or spanned cell in a row of the cell 
-            spansCauseRebuild = PR_FALSE;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  if (!spansCauseRebuild) {
-    spansCauseRebuild = CellsSpanInOrOut(aMap, aRowIndex, aRowIndex + rowSpan - 1, 
-                                         startColIndex, numCols - 1);
-  }
+  PRBool spansCauseRebuild = CellsSpanInOrOut(aMap, aRowIndex, aRowIndex + rowSpan - 1, 
+                                              startColIndex, numCols - 1);
 
   if (spansCauseRebuild) {
     RebuildConsideringCells(aMap, nsnull, aRowIndex, startColIndex, PR_FALSE);
