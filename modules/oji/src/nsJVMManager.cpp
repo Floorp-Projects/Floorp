@@ -185,7 +185,7 @@ NS_METHOD
 nsJVMManager::CreateThread(PRUint32* outThreadID, nsIRunnable* runnable)
 {
 	PRThread* thread = PR_CreateThread(PR_USER_THREAD, &thread_starter, (void*) runnable,
-									PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+									PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 	*outThreadID = (PRUint32) thread;
 	return (thread != NULL ?  NS_OK : NS_ERROR_FAILURE);
 }
