@@ -1,36 +1,44 @@
 <?xml version="1.0"?> 
-<!-- OS/2 version of platformBrowserBindings.xul -->
+<!-- ps2 version of platformBrowserBindings.xul -->
 
 <keybinding id="platformBrowserBindings"
 	 xmlns:html="http://www.w3.org/1999/xhtml"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- change the xul key for Unix -->
-<keyset id="globalKeySet" xulkey="alt">
+<!-- xul key for OS/2 -->
+<keyset id="globalKeySet" xulkey="ctrl">
 
-<!-- Add the Windows/Mac cut, copy, paste, undo and redo keys -->
-<key id="emCutKey" key="x" control="true" shift="false"
+<!-- other keybindings for cut/copy/paste -->
+<key id="os2AlternativeCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
     controller.doCommand('cmd_cut');"/>
-<key id="emCopyKey" key="c" control="true" shift="false"
+<key id="os2AlternateCopy2Key" keycode="VK_DELETE" shift="false" control="true" alt="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
     controller.doCommand('cmd_copy');"/>
-<key id="emPasteKey" key="v" control="true" shift="false"
+<key id="os2AlternativeCopyKey" keycode="VK_INSERT" control="true"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+    controller.doCommand('cmd_copy');"/>
+<key id="os2AlternativePasteKey" keycode="VK_INSERT" shift="true"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
     controller.doCommand('cmd_paste');"/>
-<key id="emUndoKey" key="z" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
-    controller.doCommand('cmd_undo');"/>
-<key id="emRedoKey" key="r" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
-    controller.doCommand('cmd_redo');"/>
-
+    
+<key id="key_homectrlshift" keycode="VK_HOME" shift="true" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_selectTop');
+        controller.doCommand('cmd_selectTop');"/>
+<key id="key_endctrlshift" keycode="VK_END" shift="true" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
+        controller.doCommand('cmd_selectBottom');"/>
 </keyset>
+
+<!-- End OS/2-specific keybindings -->
 
 </keybinding>
 
