@@ -2976,7 +2976,12 @@ PresShell::WordMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::LineMove(PRBool aForward, PRBool aExtend)
 {
-  return mSelection->LineMove(aForward, aExtend);  
+  nsresult result = mSelection->LineMove(aForward, aExtend);  
+// if we cant go down/up any more we must then move caret completely to 
+// end/beginning respectively.
+  if (NS_FAILED(result)) 
+    result = CompleteMove(aForward,aExtend);
+  return result;
 }
 
 NS_IMETHODIMP 
@@ -3105,9 +3110,9 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   if (!doc) 
     return NS_ERROR_FAILURE;
   nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  if (NS_FAILED(result) ||!nodeList)
+    return result?result:NS_ERROR_FAILURE;
 
-  if (NS_FAILED(result) || !nodeList)
-    return result?result:NS_ERROR_NULL_POINTER;
 
   PRUint32 count; 
   nodeList->GetLength(&count);
@@ -3128,12 +3133,53 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
       nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyElement);
       if (bodyContent)
       {
-        PRInt32 offset = 0;
-        if (aForward)
+        nsIFrame *frame = nsnull;
+        result = GetPrimaryFrameFor(bodyContent, &frame);
+        if (frame)
         {
-          bodyContent->ChildCount(offset);
+          PRInt32 offset;
+          PRInt32 offsetend;
+          PRBool  beginFrameContent;
+          PRInt8  outsideLimit = -1;//search from beginning
+          nsPeekOffsetStruct pos;
+          pos.mAmount = eSelectLine;
+          pos.mTracker = this;
+          pos.mContentOffset = 0;
+          pos.mContentOffsetEnd = 0;
+          if (aForward)
+          {
+            outsideLimit = 1;//search from end
+            nsRect rect;
+            frame->GetRect(rect);
+            pos.mDesiredX = rect.width * 2;//search way off to right of line
+            pos.mDirection = eDirPrevious; //seach backwards from the end
+          }
+          else
+          {
+            pos.mDesiredX = -1; //start before line
+            pos.mDirection = eDirNext; //search forwards from before beginning
+          }
+
+          do
+          {
+            result = nsFrame::GetNextPrevLineFromeBlockFrame(mPresContext,
+                                        &pos,
+                                        frame, 
+                                        0, //irrelavent since we set outsidelimit 
+                                        outsideLimit
+                                        );
+            if (NS_OK != result || !pos.mResultFrame ) //NS_COMFALSE should ALSO break
+              return result?result:NS_ERROR_FAILURE;
+            nsCOMPtr<nsILineIteratorNavigator> newIt; 
+            //check to see if this is ANOTHER blockframe inside the other one if so then call into its lines
+            result = pos.mResultFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(newIt));
+            if (NS_SUCCEEDED(result) && newIt)
+              frame = pos.mResultFrame;
+          }
+          while (NS_SUCCEEDED(result));//end 'do'
+          
+          result = mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffsetEnd ,aExtend, PR_FALSE, pos.mPreferLeft);
         }
-        result = mSelection->HandleClick(bodyContent,offset,offset,aExtend, PR_FALSE,aExtend);
         // if we got this far, attempt to scroll no matter what the above result is
         CompleteScroll(aForward);
       }

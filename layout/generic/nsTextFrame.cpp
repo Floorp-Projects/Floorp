@@ -1864,10 +1864,7 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIC
   nsresult rv = GetParent(&parent);
   if (NS_SUCCEEDED(rv) && parent)
   {
-    nsFrameState  parentFrameState;
-
-    parent->GetFrameState(&parentFrameState);
-    if ((parentFrameState & NS_FRAME_GENERATED_CONTENT) != 0)//parent is generated so so are we.
+    if ((mState & NS_FRAME_GENERATED_CONTENT) != 0)//parent is generated so so are we.
     {
       //we COULD check the previous sibling but I dont think that is reliable
       rv = parent->GetContent(aContent);
