@@ -221,7 +221,6 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	nsresult				res;
 	TextRangeArray*			hiliteRangePtr;
 
-#if !TARGET_CARBON
 
 	//
 	// refcon stores the nsMacEventHandler
@@ -250,7 +249,15 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	if (err!=noErr) 
 		return err;
 	
+#if TARGET_CARBON
+	ScriptLanguageRecord scriptLangRec;
+	err = AEGetDescData(&slr, (void *) &scriptLangRec, sizeof(ScriptLanguageRecord));
+	if (err!=noErr) 
+		return err;
+	textScript = scriptLangRec.fScript;
+#else
 	textScript = ((ScriptLanguageRecord *)(*(slr.dataHandle)))->fScript;
+#endif
 	NS_ASSERTION( (textScript < smUninterp), "Illegal script code");
 	
 	NS_ASSERTION(textScript == (ScriptCode)::GetScriptManagerVariable(smKeyScript) , "wrong script code");
@@ -271,15 +278,35 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
   	if (err==errAEDescNotFound) {
   		hiliteRangePtr=NULL;
   	} else if (err==noErr) { 
+#if TARGET_CARBON
+		Size hiliteRangeSize = ::AEGetDescDataSize(&hiliteRangeArray);
+		hiliteRangePtr = (TextRangeArray *) NewPtr(hiliteRangeSize);
+		if(!hiliteRangePtr)
+			return MemError();
+		err = AEGetDescData(&hiliteRangeArray, (void *) hiliteRangePtr, hiliteRangeSize);
+		if (err!=noErr) {
+			DisposePtr((Ptr) hiliteRangePtr);
+			return err;
+		}
+#else
   		::HLock(hiliteRangeArray.dataHandle); 
   		hiliteRangePtr=(TextRangeArray*)*(hiliteRangeArray.dataHandle);
+#endif
   	} else { 
   		return err;
   	}
-  	
+
 #if TARGET_CARBON
-	// еее Fix Me! Can't access |text.dataHandle| under Carbon!!!!!
- 	res = eventHandler->HandleUpdateInputArea((char*)textPtr,textScript,fixLength,hiliteRangePtr);
+	nsCAutoString mbcsText;
+	Size text_size = ::AEGetDescDataSize(&text);
+	mbcsText.SetCapacity(text_size+1);
+	char* mbcsTextPtr = (char*)mbcsText.get();
+	err = AEGetDescData(&text, (void *) mbcsTextPtr, text_size);
+	if (err!=noErr) {
+		DisposePtr((Ptr) hiliteRangePtr);
+		return err;
+	}
+	mbcsTextPtr[text_size]=0;
 #else
 	nsCAutoString mbcsText;
 	Size text_size = ::GetHandleSize(text.dataHandle);
@@ -287,28 +314,30 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	char* mbcsTextPtr = (char*)mbcsText.get();
 	strncpy(mbcsTextPtr,*(text.dataHandle),text_size);
 	mbcsTextPtr[text_size]=0;
+#endif
 	
 	//
 	// must pass HandleUpdateInputArea a null-terminated multibyte string, the text size must include the terminator
 	//
 	res = eventHandler->HandleUpdateInputArea(mbcsTextPtr,text_size,textScript,fixLength,hiliteRangePtr);
 
-#endif
 	NS_ASSERTION(NS_SUCCEEDED(res),"nsMacMessagePump::UpdateHandler: HandleUpdated failed.");
-	if (NS_FAILED(res)) 
-		return paramErr;
+	if (NS_FAILED(res))
+		err = paramErr;
 	
 	//
 	// clean up
 	//
-#if !TARGET_CARBON
-    // Can't access |hiliteRangeArray.dataHandle| under Carbon!!!!!
+#if TARGET_CARBON
+	if(hiliteRangePtr)
+		DisposePtr((Ptr) hiliteRangePtr);
+#else
 	if(hiliteRangePtr)
 		::HUnlock(hiliteRangeArray.dataHandle);
 #endif
 
 	(void)AEDisposeDesc(&text);
 	(void)AEDisposeDesc(&hiliteRangeArray);
-#endif
+
 	return noErr;
 }
