@@ -893,12 +893,13 @@ function loadStartFolder(initialUri)
 
         SelectFolder(startFolder.URI);        
 
-        // only do this on startup, when we pass in null
-        if (!initialUri && isLoginAtStartUpEnabled && gLoadStartFolder)
-        {
-            // Perform biff on the server to check for new mail
-            defaultServer.PerformBiff(msgWindow);        
-        }
+        // Perform biff on the server to check for new mail, except for imap
+        // or a pop3 account that is deferred or deferred to,
+        // or the case where initialUri is non-null (non-startup)
+        if (!initialUri && isLoginAtStartUpEnabled && gLoadStartFolder
+            && defaultServer.type != "imap" && !defaultServer.isDeferredTo &&
+            defaultServer.msgFolder == defaultServer.rootMsgFolder)
+          defaultServer.PerformBiff(msgWindow);        
 
 
         // because the "open" state persists, we'll call
@@ -947,14 +948,6 @@ function loadStartFolder(initialUri)
         }
       }
     }
-}
-
-function TriggerGetMessages(server)
-{
-    // downloadMessagesAtStartup for a given server type indicates whether 
-    // or not there is a need to Trigger GetMessages action
-    if (server.downloadMessagesAtStartup)
-        MsgGetMessage();
 }
 
 function AddToSession()
