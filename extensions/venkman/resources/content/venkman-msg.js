@@ -94,12 +94,6 @@ const exceptionMsgNames = ["err.notimplemented",
 const MSG_ERR_NO_STACK    = getMsg("msg.err.nostack");
 const MSG_ERR_NO_SOURCE   = getMsg("msg.err.nosource");
 
-const MSG_TYPE_NATIVE     = getMsg("msg.type.native");
-const MSG_TYPE_PRIMITIVE  = getMsg("msg.type.primitive");
-const MSG_TYPE_CLASS      = getMsg("msg.type.class");
-const MSG_TYPE_LINE       = getMsg("msg.type.line");
-const MSG_TYPE_PROPERTIES = getMsg("msg.type.properties");
-
 const MSG_TYPE_BOOLEAN    = getMsg("msg.type.boolean");
 const MSG_TYPE_DOUBLE     = getMsg("msg.type.double");
 const MSG_TYPE_FUNCTION   = getMsg("msg.type.function");
@@ -116,11 +110,20 @@ const MSG_WORD_DEBUGGER    = getMsg("msg.val.debugger");
 const MSG_WORD_THROW       = getMsg("msg.val.throw");
 const MSG_WORD_SCOPE       = getMsg("msg.val.scope");
 
+const MSG_COMMASP          = getMsg("msg.val.commasp", " ");
 const MSG_VAL_CONSOLE      = getMsg("msg.val.console");
 const MSG_VAL_UNKNOWN      = getMsg("msg.val.unknown");
 const MSG_VAL_NA           = getMsg("msg.val.na");
 const MSG_VAL_OBJECT       = getMsg("msg.val.object");
 const MSG_VAL_EXPR         = getMsg("msg.val.expression");
+
+const MSG_VF_ENUMERABLE    = getMsg("vf.enumerable");
+const MSG_VF_READONLY      = getMsg("vf.readonly");
+const MSG_VF_PERMANENT     = getMsg("vf.permanent");
+const MSG_VF_ALIAS         = getMsg("vf.alias");
+const MSG_VF_ARGUMENT      = getMsg("vf.argument");
+const MSG_VF_VARIABLE      = getMsg("vf.variable");
+const MSG_VF_HINTED        = getMsg("vf.hinted");
 
 const MSG_HELLO            = getMsg("msg.hello");
 
@@ -188,6 +191,15 @@ const MSN_ERR_BP_NOINDEX     = "msg.err.bp.noindex";
 const MSN_ERR_REQUIRED_PARAM = "err.required.param"; /* also used as exception */
 const MSN_ERR_INVALID_PARAM  = "err.invalid.param";  /* also used as exception */
 const MSN_ERR_SOURCE_LOAD_FAILED = "msg.err.source.load.failed";
+
+const MSN_FMT_ARGUMENT       = "fmt.argument";
+const MSN_FMT_PROPERTY       = "fmt.property";
+const MSN_FMT_SCRIPT         = "fmt.script";
+const MSN_FMT_FRAME          = "fmt.frame";
+const MSN_FMT_VALUE_LONG     = "fmt.value.long";
+const MSN_FMT_VALUE_MED      = "fmt.value.med";
+const MSN_FMT_VALUE_SHORT    = "fmt.value.short";
+const MSN_FMT_OBJECT         = "fmt.object";
 
 const MSN_NO_PROPERTIES      = "msg.noproperties";
 const MSN_NO_CMDMATCH        = "msg.no-commandmatch";
