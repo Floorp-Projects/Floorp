@@ -99,6 +99,9 @@
 #define MULTIPART_PARALLEL                  "multipart/parallel"
 #define MULTIPART_SIGNED                    "multipart/signed"
 #define MULTIPART_RELATED                   "multipart/related"
+#define MULTIPART_MIXED_REPLACE             "multipart/x-mixed-replace"
+#define MULTIPART_BYTERANGES                "multipart/byteranges"
+
 #define SUN_ATTACHMENT                      "x-sun-attachment"
 
 #define TEXT_ENRICHED                       "text/enriched"

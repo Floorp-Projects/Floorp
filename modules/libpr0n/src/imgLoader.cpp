@@ -42,6 +42,9 @@
 
 #include "ImageLogging.h"
 
+#include "nsMimeTypes.h"
+
+
 NS_IMPL_ISUPPORTS1(imgLoader, imgILoader)
 
 imgLoader::imgLoader()
@@ -341,14 +344,14 @@ NS_IMETHODIMP ProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *c
         in the pipeline to handle the content and pass it along to our
         original listener.
       */
-      if (NS_LITERAL_CSTRING("multipart/x-mixed-replace").Equals(contentType)) {
+      if (NS_LITERAL_CSTRING(MULTIPART_MIXED_REPLACE).Equals(contentType)) {
 
         nsCOMPtr<nsIStreamConverterService> convServ(do_GetService("@mozilla.org/streamConverters;1", &rv));
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsIStreamListener> toListener(mDestListener);
           nsCOMPtr<nsIStreamListener> fromListener;
 
-          rv = convServ->AsyncConvertData(NS_LITERAL_STRING("multipart/x-mixed-replace").get(),
+          rv = convServ->AsyncConvertData(NS_LITERAL_STRING(MULTIPART_MIXED_REPLACE).get(),
                                           NS_LITERAL_STRING("*/*").get(),
                                           toListener,
                                           nsnull,

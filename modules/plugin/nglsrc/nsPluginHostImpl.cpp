@@ -83,6 +83,7 @@
 #include "nsICookieService.h"
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeType.h"
+#include "nsMimeTypes.h"
 #include "prprf.h"
 
 #if defined(XP_PC) && !defined(XP_OS2)
@@ -1158,7 +1159,7 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
     if (NS_FAILED(rv))
         return rv;
   
-    rv = serv->AsyncConvertData(NS_LITERAL_STRING("multipart/byteranges").get(),
+    rv = serv->AsyncConvertData(NS_LITERAL_STRING(MULTIPART_BYTERANGES).get(),
                                 NS_LITERAL_STRING("*/*").get(),
                                 mPluginStreamListenerPeer,
                                 nsnull,

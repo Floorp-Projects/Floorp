@@ -18,6 +18,7 @@ nsISocketTransportService.idl
 nsIStreamIO.idl
 nsIStreamIOChannel.idl
 nsIStreamListener.idl
+nsIFileStreams.idl
 nsITransport.idl
 nsIStreamLoader.idl
 nsIDownloader.idl
