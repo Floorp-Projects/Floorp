@@ -106,6 +106,10 @@ PRUnichar * nsMsgDBView::kRepliedString = nsnull;
 PRUnichar * nsMsgDBView::kForwardedString = nsnull;
 PRUnichar * nsMsgDBView::kNewString = nsnull;
 
+nsDateFormatSelector  nsMsgDBView::m_dateFormatDefault = kDateFormatShort;
+nsDateFormatSelector  nsMsgDBView::m_dateFormatThisWeek = kDateFormatShort;
+nsDateFormatSelector  nsMsgDBView::m_dateFormatToday = kDateFormatNone;
+
 NS_IMPL_ADDREF(nsMsgDBView)
 NS_IMPL_RELEASE(nsMsgDBView)
 
@@ -145,6 +149,7 @@ nsMsgDBView::nsMsgDBView()
   if (gInstanceCount == 0) 
   {
     InitializeAtomsAndLiterals();
+    InitDisplayFormats();
   }
   
   AddLabelPrefObservers();
@@ -553,31 +558,57 @@ nsresult nsMsgDBView::FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString)
   // if the message is from today, don't show the date, only the time. (i.e. 3:15 pm)
   // if the message is from the last week, show the day of the week.   (i.e. Mon 3:15 pm)
   // in all other cases, show the full date (03/19/01 3:15 pm)
-  nsDateFormatSelector dateFormat = kDateFormatShort;
+
+  nsDateFormatSelector dateFormat = m_dateFormatDefault;
   if (explodedCurrentTime.tm_year == explodedMsgTime.tm_year &&
       explodedCurrentTime.tm_month == explodedMsgTime.tm_month &&
       explodedCurrentTime.tm_mday == explodedMsgTime.tm_mday)
   {
     // same day...
-    dateFormat = kDateFormatNone;
+    dateFormat = m_dateFormatToday;
   } 
   // the following chunk of code causes us to show a day instead of a number if the message was received
-  // within the last 7 days. i.e. Mon 5:10pm. We need to add a preference so folks to can enable this behavior
-  // if they want it. 
-/*
+  // within the last 7 days. i.e. Mon 5:10pm.
+  // The concrete format used is dependent on a preference setting (see InitDisplayFormats), but the default
+  // is the format described above.
   else if (LL_CMP(currentTime, >, dateOfMsg))
   {
-    PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDays;
-	  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-    LL_UI2L(secondsInDays, 60 * 60 * 24 * 7); // how many seconds in 7 days.....
-	  LL_MUL(microSecondsInDays, secondsInDays, microSecondsPerSecond); // turn that into microseconds
+    // some constants for calculation
+    static PRInt64 microSecondsPerSecond;
+    static PRInt64 secondsPerDay;
+    static PRInt64 microSecondsPerDay;
+    static PRInt64 microSecondsPer6Days;
 
-    PRInt64 diff;
-    LL_SUB(diff, currentTime, dateOfMsg);
-    if (LL_CMP(diff, <=, microSecondsInDays)) // within the same week 
-      dateFormat = kDateFormatWeekday;
+    static PRBool bGotConstants = PR_FALSE;
+    if ( !bGotConstants )
+    {
+      // seeds
+      LL_I2L  ( microSecondsPerSecond,  PR_USEC_PER_SEC );
+      LL_UI2L ( secondsPerDay,          60 * 60 * 24 );
+    
+      // derivees
+      LL_MUL( microSecondsPerDay,   secondsPerDay,      microSecondsPerSecond );
+      LL_MUL( microSecondsPer6Days, microSecondsPerDay, 6 );
+
+      bGotConstants = PR_TRUE;
+    }
+
+    // the most recent midnight, counting from current time
+    PRInt64 todaysMicroSeconds, mostRecentMidnight;
+    LL_MOD( todaysMicroSeconds, currentTime, microSecondsPerDay );
+    LL_SUB( mostRecentMidnight, currentTime, todaysMicroSeconds );
+
+    // most recent midnight minus 6 days
+    PRInt64 mostRecentWeek;
+    LL_SUB( mostRecentWeek, mostRecentMidnight, microSecondsPer6Days );
+
+    // was the message sent during the last week?
+    if ( LL_CMP( dateOfMsg, >=, mostRecentWeek ) )
+    { // yes ....
+      dateFormat = m_dateFormatThisWeek;
+    }
   }
-*/
+
   if (NS_SUCCEEDED(rv)) 
     rv = mDateFormater->FormatPRTime(nsnull /* nsILocale* locale */,
                                       dateFormat,
@@ -5487,4 +5518,38 @@ nsMsgDBView::GetSupportsThreading(PRBool *aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = PR_FALSE;
   return NS_OK;
+}
+ 
+static void getDateFormatPref( const nsCOMPtr<nsIPrefBranch>& _prefBranch, const char* _prefLocalName, nsDateFormatSelector& _format )
+{
+  // read
+  PRInt32 nFormatSetting( 0 );
+  nsresult result = _prefBranch->GetIntPref( _prefLocalName, &nFormatSetting );
+  if ( NS_SUCCEEDED( result ) )
+  {
+    // translate
+    nsDateFormatSelector res( nFormatSetting );
+    // transfer if valid
+    if ( ( res >= kDateFormatNone ) && ( res <= kDateFormatWeekday ) )
+      _format = res;
+  }
+}
+
+nsresult nsMsgDBView::InitDisplayFormats()
+{
+  m_dateFormatDefault   = kDateFormatShort;
+  m_dateFormatThisWeek  = kDateFormatShort;
+  m_dateFormatToday     = kDateFormatNone;
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIPrefBranch> dateFormatPrefs;
+  rv = prefs->GetBranch("mail.ui.display.dateformat.", getter_AddRefs(dateFormatPrefs));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  getDateFormatPref( dateFormatPrefs, "default", m_dateFormatDefault );
+  getDateFormatPref( dateFormatPrefs, "thisweek", m_dateFormatThisWeek );
+  getDateFormatPref( dateFormatPrefs, "today", m_dateFormatToday );
+  return rv;
 }

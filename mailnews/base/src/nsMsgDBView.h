@@ -368,6 +368,14 @@ protected:
   //
   nsCString mLastJunkUriInBatch;
   PRUint8 mOutstandingJunkBatches;
+
+protected:
+  static nsresult   InitDisplayFormats();
+
+private:
+  static nsDateFormatSelector  m_dateFormatDefault;
+  static nsDateFormatSelector  m_dateFormatThisWeek;
+  static nsDateFormatSelector  m_dateFormatToday;
 };
 
 #endif
