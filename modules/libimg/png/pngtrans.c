@@ -1,9 +1,9 @@
 
 /* pngtrans.c - transforms the data in a row (used by both readers and writers)
  *
- * libpng 1.2.5 - October 2, 2002
+ * libpng  1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2002 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -100,7 +100,7 @@ png_set_filler(png_structp png_ptr, png_uint_32 filler, int filler_loc)
    else
       png_ptr->flags &= ~PNG_FLAG_FILLER_AFTER;
 
-   /* This should probably go in the "do_filler" routine.
+   /* This should probably go in the "do_read_filler" routine.
     * I attempted to do that in libpng-1.0.1a but that caused problems
     * so I restored it in libpng-1.0.2a
    */
@@ -118,6 +118,18 @@ png_set_filler(png_structp png_ptr, png_uint_32 filler, int filler_loc)
       png_ptr->usr_channels = 2;
    }
 }
+
+#if !defined(PNG_1_0_X)
+/* Added to libpng-1.2.7 */
+void PNGAPI
+png_set_add_alpha(png_structp png_ptr, png_uint_32 filler, int filler_loc)
+{
+   png_debug(1, "in png_set_add_alpha\n");
+   png_set_filler(png_ptr, filler, filler_loc);
+   png_ptr->transformations |= PNG_ADD_ALPHA;
+}
+#endif
+
 #endif
 
 #if defined(PNG_READ_SWAP_ALPHA_SUPPORTED) || \
@@ -375,16 +387,13 @@ png_do_strip_filler(png_row_infop row_info, png_bytep row, png_uint_32 flags)
    if (row != NULL && row_info != NULL)
 #endif
    {
-/*
-      if (row_info->color_type == PNG_COLOR_TYPE_RGB ||
-          row_info->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-*/
       png_bytep sp=row;
       png_bytep dp=row;
       png_uint_32 row_width=row_info->width;
       png_uint_32 i;
 
-      if (row_info->channels == 4)
+      if (row_info->color_type == PNG_COLOR_TYPE_RGB &&
+         row_info->channels == 4)
       {
          if (row_info->bit_depth == 8)
          {
@@ -461,13 +470,9 @@ png_do_strip_filler(png_row_infop row_info, png_bytep row, png_uint_32 flags)
             row_info->rowbytes = row_width * 6;
          }
          row_info->channels = 3;
-         row_info->color_type &= ~PNG_COLOR_MASK_ALPHA;
       }
-/*
-      else if (row_info->color_type == PNG_COLOR_TYPE_GRAY ||
-               row_info->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-*/
-      else if (row_info->channels == 2)
+      else if (row_info->color_type == PNG_COLOR_TYPE_GRAY &&
+          row_info->channels == 2)
       {
          if (row_info->bit_depth == 8)
          {
@@ -519,7 +524,6 @@ png_do_strip_filler(png_row_infop row_info, png_bytep row, png_uint_32 flags)
             row_info->rowbytes = row_width * 2;
          }
          row_info->channels = 1;
-         row_info->color_type &= ~PNG_COLOR_MASK_ALPHA;
       }
    }
 }

@@ -81,6 +81,8 @@
 #define PNG_NO_ERROR_NUMBERS
 #define PNG_NO_EASY_ACCESS
 
+#define PNG_NO_SEQUENTIAL_READ_SUPPORTED
+
 /* Mangle names of exported libpng functions so different libpng versions
    can coexist. It is recommended that if you do this, you give your
    library a different name such as "mozlibpng" instead of "libpng". */
@@ -136,15 +138,18 @@
 #define png_create_write_struct_2       MOZ_PNG_cr_write_str_2
 #define png_data_freer                  MOZ_PNG_data_freer
 #define png_decompress_chunk            MOZ_PNG_decomp_chunk
+#define png_default_error               MOZ_PNG_def_error
 #define png_default_flush               MOZ_PNG_def_flush
 #define png_default_read                MOZ_PNG_def_read
 #define png_default_read_data           MOZ_PNG_def_read_data
+#define png_default_warning             MOZ_PNG_def_warning
 #define png_default_write               MOZ_PNG_def_write
 #define png_destroy_info_struct         MOZ_PNG_dest_info_str
 #define png_destroy_read_struct         MOZ_PNG_dest_read_str
 #define png_destroy_struct              MOZ_PNG_dest_str
 #define png_destroy_struct_2            MOZ_PNG_dest_str_2
 #define png_destroy_write_struct        MOZ_PNG_dest_write_str
+#define png_digit                       MOZ_PNG_digit
 #define png_do_background               MOZ_PNG_do_back
 #define png_do_bgr                      MOZ_PNG_do_bgr
 #define png_do_chop                     MOZ_PNG_do_chop
@@ -167,9 +172,11 @@
 #define png_do_unpack                   MOZ_PNG_do_unpack
 #define png_do_unshift                  MOZ_PNG_do_unshift
 #define png_error                       MOZ_PNG_error
+#define png_format_buffer               MOZ_PNG_format_buf
 #define png_free                        MOZ_PNG_free
 #define png_free_data                   MOZ_PNG_free_data
 #define png_free_default                MOZ_PNG_free_def
+#define png_gamma_shift                 MOZ_PNG_gamma_shift
 #define png_get_IHDR                    MOZ_PNG_get_IHDR
 #define png_get_PLTE                    MOZ_PNG_get_PLTE
 #define png_get_asm_flagmask            MOZ_PNG_get_asm_mask
@@ -252,8 +259,6 @@
 #define png_handle_unknown              MOZ_PNG_handle_unknown
 #define png_handle_zTXt                 MOZ_PNG_handle_zTXt
 #define png_info_destroy                MOZ_PNG_info_dest
-#define png_info_init                   MOZ_PNG_info_init
-#define png_info_init                   MOZ_PNG_info_init
 #define png_info_init_3                 MOZ_PNG_info_init_3
 #define png_init_io                     MOZ_PNG_init_io
 #define png_init_mmx_flags              MOZ_PNG_init_mmx_flags
@@ -292,8 +297,6 @@
 #define png_read_finish_row             MOZ_PNG_read_finish_row
 #define png_read_image                  MOZ_PNG_read_image
 #define png_read_info                   MOZ_PNG_read_info
-#define png_read_init                   MOZ_PNG_read_init
-#define png_read_init                   MOZ_PNG_read_init
 #define png_read_init_2                 MOZ_PNG_read_init_2
 #define png_read_init_3                 MOZ_PNG_read_init_3
 #define png_read_png                    MOZ_PNG_read_png
@@ -397,5 +400,15 @@
 #define png_write_rows                  MOZ_PNG_write_rows
 #define png_zalloc                      MOZ_PNG_zalloc
 #define png_zfree                       MOZ_PNG_zfree
+
+/* libpng-1.2.6 additions */
+#define png_convert_size                MOZ_PNG_convert_size
+#define png_get_uint_31                 MOZ_PNG_get_uint_31
+#define png_get_user_height_max         MOZ_PNG_get_user_height_max
+#define png_get_user_width_max          MOZ_PNG_get_user_width_max
+#define png_set_user_limits             MOZ_PNG_set_user_limits
+
+/* libpng-1.2.7 addition */
+#define png_set_add_alpha               MOZ_PNG_set_add_alpha
 
 #endif

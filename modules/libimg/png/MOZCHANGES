@@ -1,19 +1,6 @@
 
 Changes made to pristine png source by mozilla.org developers.
 
-2002/10/03  -- Synced with libpng-1.2.5 tree
+2004/10/07  -- Synced with libpng-1.2.7 tree
 
-2002/10/06  -- OS/2 bustage fix.  IBM compiler defines __IBMCPP__ instead
-               of IBMCPP__ (pngconf.h).
-
-2003/06/11  -- add mozpngconf.h (bug 208607)
-
-2003/07/03  -- enable PNG_NO_WRITE_SUPPORTED in mozpngconf.h (bug 208607)
-
-2003/07/29  -- Add "MOZ_" decoration on exported symbols (bug 181936).  Set
-               "PNG_NO_GLOBAL_ARRAYS" to reduce number of exported symbols.
-               Remove some legacy (1.0.x) code from png.c and pngread.c
-
-2004/05/07  -- out-of-bounds read in error processing (bug 242915)
-
-2004/06/30  -- enable more PNG_NO_*_SUPPORTED in mozpngconf.h (bug 208607)
+2004/10/07  -- add mozpngconf.h (bug 208607)

@@ -1,9 +1,9 @@
 
 /* pngpread.c - read a png file in push mode
  *
- * libpng 1.2.5 - October 2, 2002
+ * libpng version 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2002 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -208,7 +208,7 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
       }
 
       png_push_fill_buffer(png_ptr, chunk_length, 4);
-      png_ptr->push_length = png_get_uint_32(chunk_length);
+      png_ptr->push_length = png_get_uint_31(png_ptr,chunk_length);
       png_reset_crc(png_ptr);
       png_crc_read(png_ptr, png_ptr->chunk_name, 4);
       png_ptr->mode |= PNG_HAVE_CHUNK_HEADER;
@@ -223,6 +223,41 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
       }
       png_handle_IHDR(png_ptr, info_ptr, png_ptr->push_length);
    }
+   else if (!png_memcmp(png_ptr->chunk_name, png_IEND, 4))
+   {
+      if (png_ptr->push_length + 4 > png_ptr->buffer_size)
+      {
+         png_push_save_buffer(png_ptr);
+         return;
+      }
+      png_handle_IEND(png_ptr, info_ptr, png_ptr->push_length);
+
+      png_ptr->process_mode = PNG_READ_DONE_MODE;
+      png_push_have_end(png_ptr, info_ptr);
+   }
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
+   else if (png_handle_as_unknown(png_ptr, png_ptr->chunk_name))
+   {
+      if (png_ptr->push_length + 4 > png_ptr->buffer_size)
+      {
+         png_push_save_buffer(png_ptr);
+         return;
+      }
+      if (!png_memcmp(png_ptr->chunk_name, png_IDAT, 4))
+         png_ptr->mode |= PNG_HAVE_IDAT;
+      png_handle_unknown(png_ptr, info_ptr, png_ptr->push_length);
+      if (!png_memcmp(png_ptr->chunk_name, png_PLTE, 4))
+         png_ptr->mode |= PNG_HAVE_PLTE;
+      else if (!png_memcmp(png_ptr->chunk_name, png_IDAT, 4))
+      {
+         if (!(png_ptr->mode & PNG_HAVE_IHDR))
+            png_error(png_ptr, "Missing IHDR before IDAT");
+         else if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE &&
+                  !(png_ptr->mode & PNG_HAVE_PLTE))
+            png_error(png_ptr, "Missing PLTE before IDAT");
+      }
+   }
+#endif
    else if (!png_memcmp(png_ptr->chunk_name, png_PLTE, 4))
    {
       if (png_ptr->push_length + 4 > png_ptr->buffer_size)
@@ -260,18 +295,6 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
       png_ptr->zstream.avail_out = (uInt)png_ptr->irowbytes;
       png_ptr->zstream.next_out = png_ptr->row_buf;
       return;
-   }
-   else if (!png_memcmp(png_ptr->chunk_name, png_IEND, 4))
-   {
-      if (png_ptr->push_length + 4 > png_ptr->buffer_size)
-      {
-         png_push_save_buffer(png_ptr);
-         return;
-      }
-      png_handle_IEND(png_ptr, info_ptr, png_ptr->push_length);
-
-      png_ptr->process_mode = PNG_READ_DONE_MODE;
-      png_push_have_end(png_ptr, info_ptr);
    }
 #if defined(PNG_READ_gAMA_SUPPORTED)
    else if (!png_memcmp(png_ptr->chunk_name, png_gAMA, 4))
@@ -591,6 +614,11 @@ png_push_save_buffer(png_structp png_ptr)
       png_size_t new_max;
       png_bytep old_buffer;
 
+      if (png_ptr->save_buffer_size > PNG_SIZE_MAX - 
+         (png_ptr->current_buffer_size + 256))
+      {
+        png_error(png_ptr, "Potential overflow of save_buffer");
+      }
       new_max = png_ptr->save_buffer_size + png_ptr->current_buffer_size + 256;
       old_buffer = png_ptr->save_buffer;
       png_ptr->save_buffer = (png_bytep)png_malloc(png_ptr,
@@ -637,8 +665,7 @@ png_push_read_IDAT(png_structp png_ptr)
       }
 
       png_push_fill_buffer(png_ptr, chunk_length, 4);
-      png_ptr->push_length = png_get_uint_32(chunk_length);
-
+      png_ptr->push_length = png_get_uint_31(png_ptr,chunk_length);
       png_reset_crc(png_ptr);
       png_crc_read(png_ptr, png_ptr->chunk_name, 4);
       png_ptr->mode |= PNG_HAVE_CHUNK_HEADER;
@@ -753,7 +780,7 @@ png_process_IDAT_data(png_structp png_ptr, png_bytep buffer,
              png_ptr->interlaced && png_ptr->pass > 6) ||
              (!png_ptr->interlaced &&
 #endif
-             png_ptr->row_number == png_ptr->num_rows-1))
+             png_ptr->row_number == png_ptr->num_rows))
          {
            if (png_ptr->zstream.avail_in)
              png_warning(png_ptr, "Too much data in IDAT chunks");
@@ -778,8 +805,8 @@ png_push_process_row(png_structp png_ptr)
    png_ptr->row_info.bit_depth = png_ptr->bit_depth;
    png_ptr->row_info.pixel_depth = png_ptr->pixel_depth;
 
-   png_ptr->row_info.rowbytes = ((png_ptr->row_info.width *
-      (png_uint_32)png_ptr->row_info.pixel_depth + 7) >> 3);
+   png_ptr->row_info.rowbytes = PNG_ROWBYTES(png_ptr->row_info.pixel_depth,
+       png_ptr->row_info.width);
 
    png_read_filter_row(png_ptr, &(png_ptr->row_info),
       png_ptr->row_buf + 1, png_ptr->prev_row + 1,
@@ -1004,8 +1031,8 @@ png_read_push_finish_row(png_structp png_ptr)
             png_pass_start[png_ptr->pass]) /
             png_pass_inc[png_ptr->pass];
 
-         png_ptr->irowbytes = ((png_ptr->iwidth *
-            png_ptr->pixel_depth + 7) >> 3) + 1;
+         png_ptr->irowbytes = PNG_ROWBYTES(png_ptr->pixel_depth,
+            png_ptr->iwidth) + 1;
 
          if (png_ptr->transformations & PNG_INTERLACE)
             break;
@@ -1094,7 +1121,8 @@ png_push_read_tEXt(png_structp png_ptr, png_infop info_ptr)
       if (text != key + png_ptr->current_text_size)
          text++;
 
-      text_ptr = (png_textp)png_malloc(png_ptr, (png_uint_32)sizeof(png_text));
+      text_ptr = (png_textp)png_malloc(png_ptr,
+         (png_uint_32)png_sizeof(png_text));
       text_ptr->compression = PNG_TEXT_COMPRESSION_NONE;
       text_ptr->key = key;
 #ifdef PNG_iTXt_SUPPORTED
@@ -1287,7 +1315,8 @@ png_push_read_zTXt(png_structp png_ptr, png_infop info_ptr)
       key = text;
       text += key_size;
 
-      text_ptr = (png_textp)png_malloc(png_ptr, (png_uint_32)sizeof(png_text));
+      text_ptr = (png_textp)png_malloc(png_ptr,
+          (png_uint_32)png_sizeof(png_text));
       text_ptr->compression = PNG_TEXT_COMPRESSION_zTXt;
       text_ptr->key = key;
 #ifdef PNG_iTXt_SUPPORTED
@@ -1399,7 +1428,8 @@ png_push_read_iTXt(png_structp png_ptr, png_infop info_ptr)
       if (text != key + png_ptr->current_text_size)
          text++;
 
-      text_ptr = (png_textp)png_malloc(png_ptr, (png_uint_32)sizeof(png_text));
+      text_ptr = (png_textp)png_malloc(png_ptr,
+         (png_uint_32)png_sizeof(png_text));
       text_ptr->compression = comp_flag + 2;
       text_ptr->key = key;
       text_ptr->lang = lang;
@@ -1434,7 +1464,7 @@ png_push_handle_unknown(png_structp png_ptr, png_infop info_ptr, png_uint_32
    {
 #if defined(PNG_READ_UNKNOWN_CHUNKS_SUPPORTED)
       if(png_handle_as_unknown(png_ptr, png_ptr->chunk_name) !=
-           HANDLE_CHUNK_ALWAYS
+           PNG_HANDLE_CHUNK_ALWAYS
 #if defined(PNG_READ_USER_CHUNKS_SUPPORTED)
            && png_ptr->read_user_chunk_fn == NULL
 #endif
@@ -1473,7 +1503,7 @@ png_push_handle_unknown(png_structp png_ptr, png_infop info_ptr, png_uint_32
           {
              if (!(png_ptr->chunk_name[0] & 0x20))
                 if(png_handle_as_unknown(png_ptr, png_ptr->chunk_name) !=
-                     HANDLE_CHUNK_ALWAYS)
+                     PNG_HANDLE_CHUNK_ALWAYS)
                    png_chunk_error(png_ptr, "unknown critical chunk");
           }
              png_set_unknown_chunks(png_ptr, info_ptr, &chunk, 1);

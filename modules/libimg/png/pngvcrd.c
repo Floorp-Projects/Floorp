@@ -2,9 +2,9 @@
  *
  * For Intel x86 CPU and Microsoft Visual C++ compiler
  *
- * libpng version 1.2.5 - October 2, 2002
+ * libpng version 1.2.7 - September 12, 2004
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2002 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2004 Glenn Randers-Pehrson
  * Copyright (c) 1998, Intel Corporation
  *
  * Contributed by Nirav Chhatrapati, Intel Corporation, 1998
@@ -115,15 +115,18 @@ png_combine_row(png_structp png_ptr, png_bytep row, int mask)
    png_debug(1,"in png_combine_row_asm\n");
 
    if (mmx_supported == 2) {
+#if !defined(PNG_1_0_X)
        /* this should have happened in png_init_mmx_flags() already */
        png_warning(png_ptr, "asm_flags may not have been initialized");
+#endif
        png_mmx_support();
    }
 
    if (mask == 0xff)
    {
       png_memcpy(row, png_ptr->row_buf + 1,
-       (png_size_t)((png_ptr->width * png_ptr->row_info.pixel_depth + 7) >> 3));
+       (png_size_t)PNG_ROWBYTES(png_ptr->row_info.pixel_depth,
+       png_ptr->width));
    }
    /* GRR:  add "else if (mask == 0)" case?
     *       or does png_combine_row() not even get called in that case? */
@@ -307,8 +310,12 @@ png_combine_row(png_structp png_ptr, png_bytep row, int mask)
 
             __int64 mask0=0x0102040810204080;
 
+#if !defined(PNG_1_0_X)
             if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_COMBINE_ROW)
                 /* && mmx_supported */ )
+#else
+            if (mmx_supported)
+#endif
             {
                srcptr = png_ptr->row_buf + 1;
                dstptr = row;
@@ -408,8 +415,12 @@ end8:
             __int64 mask1=0x0101020204040808,
                     mask0=0x1010202040408080;
 
+#if !defined(PNG_1_0_X)
             if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_COMBINE_ROW)
                 /* && mmx_supported */ )
+#else
+            if (mmx_supported)
+#endif
             {
                srcptr = png_ptr->row_buf + 1;
                dstptr = row;
@@ -529,8 +540,12 @@ end16:
             len     = (png_ptr->width)&~7;
             diff = (png_ptr->width)&7;
 
+#if !defined(PNG_1_0_X)
             if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_COMBINE_ROW)
                 /* && mmx_supported */ )
+#else
+            if (mmx_supported)
+#endif
             {
                _asm
                {
@@ -661,8 +676,12 @@ end24:
             len     = (png_ptr->width)&~7;
             diff = (png_ptr->width)&7;
 
+#if !defined(PNG_1_0_X)
             if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_COMBINE_ROW)
                 /* && mmx_supported */ )
+#else
+            if (mmx_supported)
+#endif
             {
                _asm
                {
@@ -796,8 +815,12 @@ end32:
                     mask1=0x2020202040404040,
                     mask0=0x4040808080808080;
 
+#if !defined(PNG_1_0_X)
             if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_COMBINE_ROW)
                 /* && mmx_supported */ )
+#else
+            if (mmx_supported)
+#endif
             {
                srcptr = png_ptr->row_buf + 1;
                dstptr = row;
@@ -987,8 +1010,10 @@ png_do_read_interlace(png_structp png_ptr)
    png_debug(1,"in png_do_read_interlace\n");
 
    if (mmx_supported == 2) {
+#if !defined(PNG_1_0_X)
        /* this should have happened in png_init_mmx_flags() already */
        png_warning(png_ptr, "asm_flags may not have been initialized");
+#endif
        png_mmx_support();
    }
 
@@ -1189,8 +1214,12 @@ png_do_read_interlace(png_structp png_ptr)
             // NOTE:  there is NO MMX code for 48-bit and 64-bit images
 
             // use MMX routine if machine supports it
+#if !defined(PNG_1_0_X)
             if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_INTERLACE)
                 /* && mmx_supported */ )
+#else
+            if (mmx_supported)
+#endif
             {
                if (pixel_bytes == 3)
                {
@@ -1874,8 +1903,8 @@ loop4_pass4:
       } /* end switch (row_info->pixel_depth) */
 
       row_info->width = final_width;
-      row_info->rowbytes = ((final_width *
-         (png_uint_32)row_info->pixel_depth + 7) >> 3);
+
+      row_info->rowbytes = PNG_ROWBYTES(row_info->pixel_depth,final_width);
    }
 
 }
@@ -3652,8 +3681,10 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
 #endif
 
    if (mmx_supported == 2) {
+#if !defined(PNG_1_0_X)
        /* this should have happened in png_init_mmx_flags() already */
        png_warning(png_ptr, "asm_flags may not have been initialized");
+#endif
        png_mmx_support();
    }
 
@@ -3663,6 +3694,7 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
    {
       case 0: sprintf(filnm, "none");
          break;
+#if !defined(PNG_1_0_X)
       case 1: sprintf(filnm, "sub-%s",
         (png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_FILTER_SUB)? "MMX" : "x86");
          break;
@@ -3675,6 +3707,16 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
       case 4: sprintf(filnm, "Paeth-%s",
         (png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_FILTER_PAETH)? "MMX":"x86");
          break;
+#else
+      case 1: sprintf(filnm, "sub");
+         break;
+      case 2: sprintf(filnm, "up");
+         break;
+      case 3: sprintf(filnm, "avg");
+         break;
+      case 4: sprintf(filnm, "Paeth");
+         break;
+#endif
       default: sprintf(filnm, "unknw");
          break;
    }
@@ -3691,9 +3733,13 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
 
       case PNG_FILTER_VALUE_SUB:
       {
+#if !defined(PNG_1_0_X)
          if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_FILTER_SUB) &&
              (row_info->pixel_depth >= png_ptr->mmx_bitdepth_threshold) &&
              (row_info->rowbytes >= png_ptr->mmx_rowbytes_threshold))
+#else
+         if (mmx_supported)
+#endif
          {
             png_read_filter_row_mmx_sub(row_info, row);
          }
@@ -3716,9 +3762,13 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
 
       case PNG_FILTER_VALUE_UP:
       {
+#if !defined(PNG_1_0_X)
          if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_FILTER_UP) &&
              (row_info->pixel_depth >= png_ptr->mmx_bitdepth_threshold) &&
              (row_info->rowbytes >= png_ptr->mmx_rowbytes_threshold))
+#else
+         if (mmx_supported)
+#endif
          {
             png_read_filter_row_mmx_up(row_info, row, prev_row);
          }
@@ -3740,9 +3790,13 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
 
       case PNG_FILTER_VALUE_AVG:
       {
+#if !defined(PNG_1_0_X)
          if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_FILTER_AVG) &&
              (row_info->pixel_depth >= png_ptr->mmx_bitdepth_threshold) &&
              (row_info->rowbytes >= png_ptr->mmx_rowbytes_threshold))
+#else
+         if (mmx_supported)
+#endif
          {
             png_read_filter_row_mmx_avg(row_info, row, prev_row);
          }
@@ -3774,9 +3828,13 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
 
       case PNG_FILTER_VALUE_PAETH:
       {
+#if !defined(PNG_1_0_X)
          if ((png_ptr->asm_flags & PNG_ASM_FLAG_MMX_READ_FILTER_PAETH) &&
              (row_info->pixel_depth >= png_ptr->mmx_bitdepth_threshold) &&
              (row_info->rowbytes >= png_ptr->mmx_rowbytes_threshold))
+#else
+         if (mmx_supported)
+#endif
          {
             png_read_filter_row_mmx_paeth(row_info, row, prev_row);
          }

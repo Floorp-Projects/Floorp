@@ -1,9 +1,9 @@
 libpng.txt - A description on how to use and modify libpng
 
- libpng version 1.2.5 - October 2, 2002
+ libpng version 1.2.7 - September 12, 2004
  Updated and distributed by Glenn Randers-Pehrson
- <randeg@alum.rpi.edu>
- Copyright (c) 1998-2002 Glenn Randers-Pehrson
+ <glennrp@users.sourceforge.net>
+ Copyright (c) 1998-2004 Glenn Randers-Pehrson
  For conditions of distribution and use, see copyright
  notice in png.h.
 
@@ -37,19 +37,23 @@ Libpng was written as a companion to the PNG specification, as a way
 of reducing the amount of time and effort it takes to support the PNG
 file format in application programs.
 
-The PNG-1.2 specification is available at <http://www.libpng.org/pub/png>
-and at <ftp://ftp.uu.net/graphics/png/documents/>.
+The PNG specification (second edition), November 2003, is available as
+a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2003 (E)) at
+<http://www.w3.org/TR/2003/REC-PNG-20031110/
+The W3C and ISO documents have identical technical content.
+
+The PNG-1.2 specification is available at
+<http://www.libpng.org/pub/png/documents/>
 
 The PNG-1.0 specification is available
-as RFC 2083 <ftp://ftp.uu.net/graphics/png/documents/> and as a
+as RFC 2083 <http://www.libpng.org/pub/png/documents/> and as a
 W3C Recommendation <http://www.w3.org/TR/REC.png.html>. Some
 additional chunks are described in the special-purpose public chunks
-documents at <ftp://ftp.uu.net/graphics/png/documents/>.
+documents at <http://www.libpng.org/pub/png/documents/>.
 
 Other information
 about PNG, and the latest version of libpng, can be found at the PNG home
-page, <http://www.libpng.org/pub/png/>
-and at <ftp://ftp.uu.net/graphics/png/>.
+page, <http://www.libpng.org/pub/png/>.
 
 Most users will not have to modify the library significantly; advanced
 users may want to modify it more.  All attempts were made to make it as
@@ -81,7 +85,6 @@ Libpng does not protect itself against two threads using the
 same instance of a structure.  Note: thread safety may be defeated
 by use of some of the MMX assembler code in pnggccrd.c, which is only
 compiled when the user defines PNG_THREAD_UNSAFE_OK.
-
 
 II. Structures
 
@@ -300,6 +303,28 @@ To inform libpng about your function, use
 
     png_set_read_status_fn(png_ptr, read_row_callback);
 
+Width and height limits
+
+The PNG specification allows the width and height of an image to be as
+large as 2^31-1 (0x7fffffff), or about 2.147 billion rows and columns.
+Since very few applications really need to process such large images,
+we have imposed an arbitrary 1-million limit on rows and columns.
+Larger images will be rejected immediately with a png_error() call. If
+you wish to override this limit, you can use
+
+   png_set_user_limits(png_ptr, width_max, height_max);
+
+to set your own limits, or use width_max = height_max = 0x7fffffffL
+to allow all valid dimensions (libpng may reject some very large images
+anyway because of potential buffer overflow conditions).
+
+You should put this statement after you create the PNG structure and
+before calling png_read_info(), png_read_png(), or png_process_data().
+If you need to retrieve the limits that are being applied, use
+
+   width_max = png_get_user_width_max(png_ptr);
+   height_max = png_get_user_height_max(png_ptr);
+
 Unknown-chunk handling
 
 Now you get to set the way the library processes unknown chunks in the
@@ -308,23 +333,31 @@ behavior is that known chunks will be parsed into information in
 various info_ptr members; unknown chunks will be discarded. To change
 this, you can call:
 
-    png_set_keep_unknown_chunks(png_ptr, info_ptr, keep,
+    png_set_keep_unknown_chunks(png_ptr, keep,
         chunk_list, num_chunks);
-    keep       - 0: do not keep
-                 1: keep only if safe-to-copy
-                 2: keep even if unsafe-to-copy
+    keep       - 0: do not handle as unknown
+                 1: do not keep
+                 2: keep only if safe-to-copy
+                 3: keep even if unsafe-to-copy
+               You can use these definitions:
+                 PNG_HANDLE_CHUNK_AS_DEFAULT   0
+                 PNG_HANDLE_CHUNK_NEVER        1
+                 PNG_HANDLE_CHUNK_IF_SAFE      2
+                 PNG_HANDLE_CHUNK_ALWAYS       3
     chunk_list - list of chunks affected (a byte string,
                  five bytes per chunk, NULL or '\0' if
                  num_chunks is 0)
     num_chunks - number of chunks affected; if 0, all
-                 unknown chunks are affected
+                 unknown chunks are affected.  If nonzero,
+                 only the chunks in the list are affected
 
 Unknown chunks declared in this way will be saved as raw data onto a
 list of png_unknown_chunk structures.  If a chunk that is normally
 known to libpng is named in the list, it will be handled as unknown,
 according to the "keep" directive.  If a chunk is named in successive
 instances of png_set_keep_unknown_chunks(), the final instance will
-take precedence.
+take precedence.  The IHDR and IEND chunks should not be named in
+chunk_list; if they are, libpng will process them normally anyway.
 
 The high-level read interface
 
@@ -367,6 +400,9 @@ then png_read_image(), and finally png_read_end().
 (The final parameter of this call is not yet used.  Someday it might point
 to transformation parameters required by some future input transform.)
 
+You must use png_transforms and not call any png_set_transform() functions
+when you use png_read_png().
+
 After you have called png_read_png(), you can retrieve the image data
 with
 
@@ -379,8 +415,14 @@ where row_pointers is an array of pointers to the pixel data for each row:
 If you know your image size and pixel size ahead of time, you can allocate
 row_pointers prior to calling png_read_png() with
 
+   if (height > PNG_UINT_32_MAX/png_sizeof(png_byte))
+      png_error (png_ptr,
+         "Image is too tall to process in memory");
+   if (width > PNG_UINT_32_MAX/pixel_size)
+      png_error (png_ptr,
+         "Image is too wide to process in memory");
    row_pointers = png_malloc(png_ptr,
-      height*sizeof(png_bytep));
+      height*png_sizeof(png_bytep));
    for (int i=0; i<height, i++)
       row_pointers[i]=png_malloc(png_ptr,
          width*pixel_size);
@@ -725,14 +767,14 @@ unless the library has been told to transform it into another format.
 For example, 4 bit/pixel paletted or grayscale data will be returned
 2 pixels/byte with the leftmost pixel in the high-order bits of the
 byte, unless png_set_packing() is called.  8-bit RGB data will be stored
-in RGB RGB RGB format unless png_set_filler() is called to insert filler
-bytes, either before or after each RGB triplet.  16-bit RGB data will
-be returned RRGGBB RRGGBB, with the most significant byte of the color
-value first, unless png_set_strip_16() is called to transform it to
-regular RGB RGB triplets, or png_set_filler() is called to insert
-filler bytes, either before or after each RRGGBB triplet.  Similarly,
-8-bit or 16-bit grayscale data can be modified with png_set_filler()
-or png_set_strip_16().
+in RGB RGB RGB format unless png_set_filler() or png_set_add_alpha()
+is called to insert filler bytes, either before or after each RGB triplet.
+16-bit RGB data will be returned RRGGBB RRGGBB, with the most significant
+byte of the color value first, unless png_set_strip_16() is called to
+transform it to regular RGB RGB triplets, or png_set_filler|add alpha()
+is called to insert filler bytes, either before or after each RRGGBB
+triplet.  Similarly, 8-bit or 16-bit grayscale data can be modified with
+png_set_filler(), png_set_add_alpha(), or png_set_strip_16().
 
 The following code transforms grayscale images of less than 8 to 8 bits,
 changes paletted images to RGB, and adds a full alpha channel if there is
@@ -816,6 +858,16 @@ you want the filler before the RGB or after.  This transformation
 does not affect images that already have full alpha channels.  To add an
 opaque alpha channel, use filler=0xff or 0xffff and PNG_FILLER_AFTER which
 will generate RGBA pixels.
+
+Note that png_set_filler() does not change the color type.  If you want
+to do that, you can add a true alpha channel with
+
+    if (color_type == PNG_COLOR_TYPE_RGB ||
+           color_type == PNG_COLOR_TYPE_GRAY)
+    png_set_add_alpha(png_ptr, filler, PNG_FILLER_AFTER);
+
+where "filler" contains the alpha value to assign to each pixel.
+This function became available in libpng-1.2.7.
 
 If you are reading an image with an alpha channel, and you need the
 data as ARGB instead of the normal PNG format RGBA:
@@ -1961,6 +2013,9 @@ then png_write_image(), and finally png_write_end().
 (The final parameter of this call is not yet used.  Someday it might point
 to transformation parameters required by some future output transform.)
 
+You must use png_transforms and not call any png_set_transform() functions
+when you use png_write_png().
+
 The low-level write interface
 
 If you are going the low-level route instead, you are now ready to
@@ -2310,7 +2365,6 @@ functions must be modified in the library at compile time.  If you prefer
 to use a different method of allocating and freeing data, you can use
 png_create_read_struct_2() or png_create_write_struct_2() to register
 your own functions as described above.
-
 These functions also provide a void pointer that can be retrieved via
 
     mem_ptr=png_get_mem_ptr(png_ptr);
@@ -2321,9 +2375,9 @@ Your replacement memory functions must have prototypes as follows:
        png_size_t size);
     void free_fn(png_structp png_ptr, png_voidp ptr);
 
-Your malloc_fn() should return NULL in case of failure.  The png_malloc()
-function will call png_error() if it receives a NULL from the system
-memory allocator or from your replacement malloc_fn().
+Your malloc_fn() must return NULL in case of failure.  The png_malloc()
+function will normally call png_error() if it receives a NULL from the
+system memory allocator or from your replacement malloc_fn().
 
 Input/Output in libpng is done through png_read() and png_write(),
 which currently just call fread() and fwrite().  The FILE * is stored in
@@ -2773,7 +2827,6 @@ For more extensive examples of runtime querying, enabling and disabling
 of optimized features, see contrib/gregbook/readpng2.c in the libpng
 source-code distribution.
 
-
 VII.  MNG support
 
 The MNG specification (available at http://www.libpng.org/pub/mng) allows
@@ -2787,7 +2840,7 @@ png_permit_mng_features() function:
         PNG_FLAG_MNG_EMPTY_PLTE
         PNG_FLAG_MNG_FILTER_64
         PNG_ALL_MNG_FEATURES
-   feature_set is a png_32_uint that is the logical AND of
+   feature_set is a png_uint_32 that is the logical AND of
       your mask with the set of MNG features that is
       supported by the version of libpng that you are using.
 
@@ -2850,13 +2903,13 @@ application:
 
 IX. Y2K Compliance in libpng
 
-October 2, 2002
+September 12, 2004
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.2.5 are Y2K compliant.  It is my belief that earlier
+upward through 1.2.7 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has three year fields.  One is a 2-byte unsigned integer that
