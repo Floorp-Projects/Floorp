@@ -1648,6 +1648,8 @@ nsDocument::ContentReplaced(nsIContent* aContainer,
                             nsIContent* aNewChild,
                             PRInt32 aIndexInContainer)
 {
+  NS_ABORT_IF_FALSE(aOldChild && aNewChild, "Null old or new child child!");
+
   PRInt32 i;
   // Get new value of count for every iteration in case
   // observers remove themselves during the loop.
@@ -1669,7 +1671,7 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
                            nsIContent* aChild,
                            PRInt32 aIndexInContainer)
 {
-  NS_ABORT_IF_FALSE(aContainer && aChild, "Null container or child!");
+  NS_ABORT_IF_FALSE(aChild, "Null child!");
 
   PRInt32 i;
   // Get new value of count for every iteration in case
