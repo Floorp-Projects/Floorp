@@ -96,19 +96,12 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  /**
-   * Update internal state when a given attribute changes. Does not reload the
-   * image.
-   * @return Whether the size of the image (possibly) changed
-   */
-  PRBool UpdateAttributes(nsIAtom* aAttribute);
-
   /** 
-   * Load the image to which mURI points, or throw away the current image if
-   * mURI is nsnull. Usually, this is preceded by a call to GetImageSource.
-   * @return PR_TRUE if the image is (possibly) of a different size
+   * Update mUseSrcAttr from appropriate content attributes or from
+   * style, throw away the current image, and load the appropriate
+   * image.
    * */
-  PRBool UpdateImage();
+  void UpdateImage();
 
   /**
    * Update mLoadFlags from content attributes. Does not attempt to reload the
@@ -141,12 +134,6 @@ protected:
   nsImageBoxFrame(nsIPresShell* aShell);
 
   /**
-   * Update mURI and mUseSrcAttr from appropriate content attributes or from
-   * style. Does not reload the image.
-   */
-  void GetImageSource();
-
-  /**
    * Get the load group for the current document, that should be used for
    * network requests.
    */
@@ -159,11 +146,7 @@ private:
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mListener;
 
-  nsCOMPtr<nsIURI> mURI; ///< The URI of the image.
-
   PRPackedBool mUseSrcAttr; ///< Whether or not the image src comes from an attribute.
-  PRPackedBool mSizeFrozen;
-  PRPackedBool mHasImage;
   PRPackedBool mSuppressStyleCheck;
   
   nsRect mSubRect; ///< If set, indicates that only the portion of the image specified by the rect should be used.

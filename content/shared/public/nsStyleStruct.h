@@ -578,7 +578,7 @@ struct nsStyleList : public nsStyleStruct {
   
   PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
   PRUint8   mListStylePosition;         // [inherited] 
-  nsCOMPtr<nsIURI> mListStyleImage;     // [inherited]
+  nsCOMPtr<imgIRequest> mListStyleImage; // [inherited]
   nsRect        mImageRegion;           // [inherited] the rect to use within an image  
 };
 
