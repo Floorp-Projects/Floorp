@@ -19,13 +19,120 @@
 #	Axel Hecht <axel@pike.org>
 # 
 
-DEPTH           = ..
+DEPTH           = ../../..
 topsrcdir       = @top_srcdir@
 srcdir          = @srcdir@
 VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = junksss
+MODULE		= transformiix
+LIBRARY_NAME	= transformiix
+SHORT_LIBNAME	= t8iix
+REQUIRES	= xpcom raptor
+IS_COMPONENT	= 1
+
+
+CPPSRCS = XSLTProcessorModule.cpp
+OBJS =../source/base/ArrayList.o \
+  ../source/base/CommandLineUtils.o \
+  ../source/base/DefaultStringComparator.o \
+  ../source/base/Double.o \
+  ../source/base/HashTable.o \
+  ../source/base/Integer.o \
+  ../source/base/List.o \
+  ../source/base/MITREObjectWrapper.o \
+  ../source/base/Map.o \
+  ../source/base/NamedMap.o \
+  ../source/base/SimpleErrorObserver.o \
+  ../source/base/Stack.o \
+  ../source/base/StringComparator.o \
+  ../source/base/StringList.o \
+  ../source/base/Tokenizer.o \
+  ../source/base/TxString.o \
+  ../source/net/URIUtils.o \
+  ../source/xml/dom/mozImpl/MozillaAttr.o \
+  ../source/xml/dom/mozImpl/MozillaCDATASection.o \
+  ../source/xml/dom/mozImpl/MozillaCharacterData.o \
+  ../source/xml/dom/mozImpl/MozillaComment.o \
+  ../source/xml/dom/mozImpl/MozillaDOMImplementation.o \
+  ../source/xml/dom/mozImpl/MozillaDocument.o \
+  ../source/xml/dom/mozImpl/MozillaDocumentFragment.o \
+  ../source/xml/dom/mozImpl/MozillaDocumentType.o \
+  ../source/xml/dom/mozImpl/MozillaElement.o \
+  ../source/xml/dom/mozImpl/MozillaEntity.o \
+  ../source/xml/dom/mozImpl/MozillaEntityReference.o \
+  ../source/xml/dom/mozImpl/MozillaNamedNodeMap.o \
+  ../source/xml/dom/mozImpl/MozillaNode.o \
+  ../source/xml/dom/mozImpl/MozillaNodeList.o \
+  ../source/xml/dom/mozImpl/MozillaNotation.o \
+  ../source/xml/dom/mozImpl/MozillaProcInstruction.o \
+  ../source/xml/dom/mozImpl/MozillaText.o \
+  ../source/xpath/AdditiveExpr.o \
+  ../source/xpath/AttributeExpr.o \
+  ../source/xpath/AttributeValueTemplate.o \
+  ../source/xpath/BasicNodeExpr.o \
+  ../source/xpath/BooleanExpr.o \
+  ../source/xpath/BooleanFunctionCall.o \
+  ../source/xpath/BooleanResult.o \
+  ../source/xpath/ElementExpr.o \
+  ../source/xpath/ErrorFunctionCall.o \
+  ../source/xpath/ExprLexer.o \
+  ../source/xpath/ExprParser.o \
+  ../source/xpath/ExtensionFunctionCall.o \
+  ../source/xpath/FilterExpr.o \
+  ../source/xpath/FunctionCall.o \
+  ../source/xpath/IdentityExpr.o \
+  ../source/xpath/LocationStep.o \
+  ../source/xpath/MultiplicativeExpr.o \
+  ../source/xpath/NodeSet.o \
+  ../source/xpath/NodeSetFunctionCall.o \
+  ../source/xpath/NumberExpr.o \
+  ../source/xpath/NumberFunctionCall.o \
+  ../source/xpath/NumberResult.o \
+  ../source/xpath/ParentExpr.o \
+  ../source/xpath/PathExpr.o \
+  ../source/xpath/PredicateList.o \
+  ../source/xpath/RelationalExpr.o \
+  ../source/xpath/RootExpr.o \
+  ../source/xpath/StringExpr.o \
+  ../source/xpath/StringFunctionCall.o \
+  ../source/xpath/StringResult.o \
+  ../source/xpath/TextExpr.o \
+  ../source/xpath/UnionExpr.o \
+  ../source/xpath/VariableRefExpr.o \
+  ../source/xpath/WildCardExpr.o \
+  ../source/xpath/XPathNames.o \
+  ../source/xml/XMLUtils.o \
+  ../source/xml/XMLDOMUtils.o \
+  ../source/xml/util/DOMHelper.o \
+  ../source/xml/parser/XMLParser.o \
+  ../source/xml/parser/hashtable.o \
+  ../source/xml/parser/xmlrole.o \
+  ../source/xml/parser/xmlparse.o \
+  ../source/xml/parser/xmltok.o \
+  ../source/xml/printer/XMLPrinter.o \
+  ../source/xml/printer/HTMLPrinter.o \
+  ../source/xslt/OutputFormat.o \
+  ../source/xslt/Names.o \
+  ../source/xslt/Numbering.o \
+  ../source/xslt/ProcessorState.o \
+  ../source/xslt/VariableBinding.o \
+  ../source/xslt/XSLTProcessor.o \
+  ../source/xslt/functions/DocumentFunctionCall.o \
+  ../source/xslt/functions/GenerateIdFunctionCall.o \
+  ../source/xslt/util/NodeSorter.o \
+  ../source/xslt/util/NodeStack.o \
+  XSLTProcessorModule.o
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DMOZILLA
+
+INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
+  -I$(srcdir)/../source/net \
+  -I$(srcdir)/../source/xml -I$(srcdir)/../source/xml/dom \
+  -I$(srcdir)/../source/xml/util \
+  -I$(srcdir)/../source/xml/parser -I$(srcdir)/../source/xml/parser/xmlparse \
+  -I$(srcdir)/../source/xml/printer -I$(srcdir)/../source/xpath \
+  -I$(srcdir)/../source/xslt/util -I$(srcdir)/../source/xslt/functions

@@ -28,4 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS            = source
 
+ifdef MOZ_XSL
+DIRS += build
+endif
+
 include $(topsrcdir)/config/rules.mk
