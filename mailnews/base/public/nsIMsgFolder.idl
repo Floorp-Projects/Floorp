@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIFolder.idl"
 #include "nsIMsgThread.idl"
+#include "nsIMsgIncomingServer.idl"
 
 %{ C++
 #include "nsFileSpec.h"
@@ -51,6 +52,8 @@ interface nsIMsgFolder : nsIFolder {
 
 	readonly attribute boolean deleteIsMoveToTrash;
 	readonly attribute boolean showDeletedMessages;
+
+  readonly attribute nsIMsgIncomingServer server;
   
 	void OnCloseFolder ();
 	void Delete ();

@@ -7,16 +7,13 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgThread.h" /* interface nsIMsgThread */
+#include "nsIMsgIncomingServer.h" /* interface nsIMsgIncomingServer */
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIFolder.h" /* interface nsIFolder */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 #include "nsFileSpec.h"
 #include "nsISupportsArray.h"
 #include "nsIMessage.h"
@@ -72,6 +69,9 @@ class nsIMsgFolder : public nsIFolder {
 
   /* readonly attribute boolean showDeletedMessages; */
   NS_IMETHOD GetShowDeletedMessages(PRBool *aShowDeletedMessages) = 0;
+
+  /* readonly attribute nsIMsgIncomingServer server; */
+  NS_IMETHOD GetServer(nsIMsgIncomingServer * *aServer) = 0;
 
   /* void OnCloseFolder (); */
   NS_IMETHOD OnCloseFolder() = 0;
@@ -211,11 +211,6 @@ class nsIMsgFolder : public nsIFolder {
 
   /* void GetNewMessages (); */
   NS_IMETHOD GetNewMessages() = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgFolder *priv);
-#endif
 };
 
 /* starting interface:    nsIMsgLocalMailFolder */
@@ -229,11 +224,6 @@ class nsIMsgFolder : public nsIFolder {
 class nsIMsgLocalMailFolder : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGLOCALMAILFOLDER_IID)
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgLocalMailFolder *priv);
-#endif
 };
 
 /* starting interface:    nsIMsgNewsFolder */
@@ -247,11 +237,6 @@ class nsIMsgLocalMailFolder : public nsISupports {
 class nsIMsgNewsFolder : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGNEWSFOLDER_IID)
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgNewsFolder *priv);
-#endif
 };
 
 /* starting interface:    nsIMsgImapMailFolder */
@@ -265,11 +250,6 @@ class nsIMsgNewsFolder : public nsISupports {
 class nsIMsgImapMailFolder : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGIMAPMAILFOLDER_IID)
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgImapMailFolder *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgFolder_h__ */
