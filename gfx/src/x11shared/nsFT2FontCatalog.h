@@ -97,7 +97,7 @@ typedef struct {
   FT_Long       mStyleFlags;
   FT_Long       mCodePageRange1;
   FT_Long       mCodePageRange2;
-  const char    mVendorID[5];
+  char          mVendorID[5];
   const char   *mFoundryName;
   int           mNumEmbeddedBitmaps;
   int          *mEmbeddedBitmapHeights;
