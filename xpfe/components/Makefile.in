@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef MOZ_THUNDERBIRD
 DIRS	= \
 			directory \
 			filepicker \
@@ -54,15 +55,42 @@ DIRS += \
 		$(NULL)
 endif
 
-ifdef MOZ_ENABLE_XREMOTE
-DIRS		+= xremote
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= winhooks urlwidget alerts
 endif
 
+else
+
+DIRS    = \
+          intl \
+	  find \
+          download-manager \
+          autocomplete \
+          windowds \
+          prefwindow \
+          console \
+          sidebar/public \
+          history/public \
+          shistory/public \
+          bookmarks/public \
+          timebomb \
+          $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+DIRS    += alerts winhooks
+endif
+
+endif
+
+ifdef MOZ_ENABLE_XREMOTE
+DIRS		+= xremote
+endif
+
+ifndef MOZ_THUNDERBIRD
 DIRS		+= build
+else
+DIRS	        += build2
+endif
 
 include $(topsrcdir)/config/rules.mk
 
