@@ -22,8 +22,6 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-#MODULE=nntp
-
 DIRS = nntp newsParser
 
 include $(topsrcdir)/config/config.mk

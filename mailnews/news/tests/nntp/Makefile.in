@@ -64,6 +64,9 @@ LIBS = \
 	-limg	\
 	-lpng	\
 	-ljpeg	\
+	-lgfxgtk 	\
+	-lraptorgfx 	\
+	-lgfxps		\
 	-lmozutil	\
 	-lmsgbaseutil \
 	$(ZLIB_LIBS) \
