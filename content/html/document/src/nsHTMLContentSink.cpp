@@ -1067,13 +1067,15 @@ nsresult HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
   nsICSSParser* parser;
   nsresult rv = NS_NewCSSParser(&parser);
   if (NS_OK == rv) {
-    PRInt32 ec;
     if (nsnull != mStyleSheet) {
       parser->SetStyleSheet(mStyleSheet);
       // XXX we do probably need to trigger a style change reflow
       // when we are finished if this is adding data to the same sheet
     }
-    nsIStyleSheet* sheet = parser->Parse(&ec, aUIN, mDocumentURL);
+    nsIStyleSheet* sheet = nsnull;
+    // XXX note: we are ignoring rv until the error code stuff in the
+    // input routines is converted to use nsresult's
+    parser->Parse(aUIN, mDocumentURL, sheet);
     if (nsnull != sheet) {
       if (nsnull == mStyleSheet) {
         // Add in the sheet the first time; if we update the sheet
