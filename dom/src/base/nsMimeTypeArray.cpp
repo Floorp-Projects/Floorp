@@ -135,8 +135,8 @@ MimeTypeArrayImpl::NamedItem(const nsAString& aName,
   nsCOMPtr<nsIMIMEService> mimeSrv = do_GetService("@mozilla.org/mime;1");
   if (mimeSrv) {
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
-    mimeSrv->GetFromMIMEType(NS_ConvertUCS2toUTF8(aName).get(),
-                             getter_AddRefs(mimeInfo));
+    mimeSrv->GetFromTypeAndExtension(NS_ConvertUCS2toUTF8(aName).get(), nsnull,
+                                     getter_AddRefs(mimeInfo));
     if (mimeInfo) {
       // Now we check whether we can really claim to support this type
       nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;

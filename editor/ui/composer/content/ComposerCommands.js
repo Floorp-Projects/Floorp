@@ -766,7 +766,7 @@ function GetExtensionBasedOnMimeType(aMIMEType)
     mimeService = Components.classes["@mozilla.org/mime;1"].getService();
     mimeService = mimeService.QueryInterface(Components.interfaces.nsIMIMEService);
 
-    var mimeInfo = mimeService.GetFromMIMEType(aMIMEType);
+    var mimeInfo = mimeService.GetFromTypeAndExtension(aMIMEType, null);
     if (!mimeInfo) return "";
 
     var fileExtension = mimeInfo.primaryExtension;

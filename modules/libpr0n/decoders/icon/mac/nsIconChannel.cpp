@@ -330,16 +330,11 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
 
     // if we were given an explicit content type, use it....
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
-    if (mimeService)
+    if (mimeService && (!contentType.IsEmpty() || !fileExtension.IsEmpty()))
     {
-      if (!contentType.IsEmpty())
-      {
-        mimeService->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeInfo));
-      }
-      if (!mimeInfo) // try to grab an extension for the dummy file in the url.
-      {
-        mimeService->GetFromExtension(fileExtension.get(), getter_AddRefs(mimeInfo));  
-      }
+      mimeService->GetFromTypeAndExtension(contentType.get(),
+                                           fileExtension.get(),
+                                           getter_AddRefs(mimeInfo));
     }
 
     // if we don't have enough info to fetch an application icon, bail

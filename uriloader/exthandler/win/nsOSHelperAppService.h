@@ -45,8 +45,7 @@ public:
   NS_IMETHOD LoadUrl(nsIURI * aURL);
 
   // method overrides for windows registry look up steps....
-  nsresult GetMIMEInfoForExtensionFromOS(const char *aFileExt, nsIMIMEInfo **_retval);
-  nsresult GetMIMEInfoForMimeTypeFromOS(const char *aMIMEType, nsIMIMEInfo ** _retval);
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt);
 
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 
@@ -55,6 +54,8 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
   
 protected:
+  // Lookup a mime info by extension, using an optional type hint
+  already_AddRefed<nsIMIMEInfo> GetByExtension(const char *aFileExt, const char *aTypeHint = nsnull);
   nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);
 };
 

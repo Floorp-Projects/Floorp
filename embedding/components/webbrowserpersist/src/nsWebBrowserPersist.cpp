@@ -1285,7 +1285,7 @@ nsWebBrowserPersist::GetExtensionForContentType(const PRUnichar *aContentType, P
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
     nsCAutoString contentType;
     contentType.AssignWithConversion(aContentType);
-    mMIMEService->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeInfo));
+    mMIMEService->GetFromTypeAndExtension(contentType.get(), nsnull, getter_AddRefs(mimeInfo));
     if (mimeInfo)
     {
         nsXPIDLCString ext;
@@ -2058,8 +2058,8 @@ nsWebBrowserPersist::CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChanne
     if (!contentType.IsEmpty())
     {
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
-        mMIMEService->GetFromMIMEType(
-            contentType.get(), getter_AddRefs(mimeInfo));
+        mMIMEService->GetFromTypeAndExtension(
+            contentType.get(), nsnull, getter_AddRefs(mimeInfo));
 
         nsCOMPtr<nsILocalFile> localFile;
         GetLocalFileFromURI(aURI, getter_AddRefs(localFile));

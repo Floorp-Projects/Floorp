@@ -91,6 +91,15 @@
 #include "nsCRT.h"
 #include "plstr.h"
 
+#ifdef PR_LOGGING
+PRLogModuleInfo* nsExternalHelperAppService::mLog = nsnull;
+#endif
+
+// Using level 3 here because the OSHelperAppServices use a log level
+// of PR_LOG_DEBUG (4), and we want less detailed output here
+// Using 3 instead of PR_LOG_WARN because we don't output warnings
+#define LOG(args) PR_LOG(mLog, 3, args)
+
 static const char NEVER_ASK_PREF_BRANCH[] = "browser.helperApps.neverAsk.";
 static const char NEVER_ASK_FOR_SAVE_TO_DISK_PREF[] = "saveToDisk";
 static const char NEVER_ASK_FOR_OPEN_FILE_PREF[]    = "openFile";
@@ -203,6 +212,14 @@ nsresult nsExternalHelperAppService::Init()
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef PR_LOGGING
+  if (!mLog) {
+    mLog = PR_NewLogModule("HelperAppService");
+    if (!mLog)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+#endif
+
   return obs->AddObserver(this, "profile-before-change", PR_TRUE);
 }
 
@@ -279,80 +296,46 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
                                                     nsIStreamListener ** aStreamListener)
 {
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  nsCAutoString fileExtension, query;
+  nsCAutoString fileExtension;
 
-  // (1) Try to find a mime object by looking the mime type
-  GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
-  
   // Get some stuff we will need later
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
   nsCOMPtr<nsIURL> url;
   PRBool methodIsPost = PR_FALSE;
   if (channel) {
-    nsCOMPtr<nsIURI> uri;
-    channel->GetURI(getter_AddRefs(uri));
-    url = do_QueryInterface(uri);
-
     nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(channel);
     if (httpChan) {
       nsCAutoString requestMethod;
       httpChan->GetRequestMethod(requestMethod);
       methodIsPost = requestMethod.Equals("POST");
     }
+
+    nsCOMPtr<nsIURI> uri;
+    channel->GetURI(getter_AddRefs(uri));
+
+    // If the method is post, don't bother getting the file extension;
+    // it will belong to a CGI script anyway
+    if (uri && !methodIsPost) {
+      url = do_QueryInterface(uri);
+
+      if (url) {
+        nsCAutoString query;
+        url->GetQuery(query);
+        // Only get the extension if the query is empty; if it isn't, then the
+        // extension likely belongs to a cgi script and isn't helpful
+        if (query.IsEmpty())
+          url->GetFileExtension(fileExtension);
+      }
+    }
   }
 
-  if (url)
-  {
-    if (!mimeInfo)
-    {
-      // if we couldn't find one, don't give up yet! Try and see if there is an extension in the 
-      // url itself...
-      // See if this URL specifies the output from a cgi script.
-      // If so, then the extension in the URL doesn't tell us
-      // anything about the content of the data, so don't try
-      // to find a handler based on that.
-      // Same if it's the result of POSTed data
-      url->GetQuery(query);
-      if (query.IsEmpty() && !methodIsPost) {
-        url->GetFileExtension(fileExtension);    
-        GetFromExtension(fileExtension.get(), getter_AddRefs(mimeInfo));
-        // only over write mimeInfo if we got a non-null mime info object.
-        if (mimeInfo)
-        {
-          // The OS might have thought this extension was a different mime type.
-          // We must reset this to match the actual mime type.  Otherwise, we
-          // won't use this MIMEInfo when we see the real mime type next time.
-          mimeInfo->SetMIMEType(aMimeContentType);
-        }
-      }
-    }
-    else
-    {
-      // Get default app/description.
-      PRBool        hasDefaultApp = PR_FALSE;
-      nsXPIDLString defaultDescription;
-      mimeInfo->GetHasDefaultHandler(&hasDefaultApp);
-      mimeInfo->GetDefaultDescription(getter_Copies(defaultDescription));
-      // If neither description nor app are specified, then we try to get
-      // these from the per-platform OS settings based on the file extension.
-      if (defaultDescription.IsEmpty() && !hasDefaultApp)
-      {
-        nsCOMPtr<nsIMIMEInfo> osInfo;
-        url->GetFileExtension(fileExtension);
-        if (NS_SUCCEEDED(GetMIMEInfoForExtensionFromOS(fileExtension.get(), getter_AddRefs(osInfo))))
-        {
-          // Extract default application and default description.
-          nsCOMPtr<nsIFile> defaultApp;
-          osInfo->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
-          osInfo->GetDefaultDescription(getter_Copies(defaultDescription));
-          // Copy to result mime info object.
-          mimeInfo->SetDefaultApplicationHandler(defaultApp);
-          mimeInfo->SetDefaultDescription(defaultDescription.get());
-        }
-      }
-    }
-  }
+  LOG(("HelperAppService::DoContent: mime '%s', extension '%s'\n",
+       aMimeContentType, fileExtension.get()));
+
+  // (1) Try to find a mime object by looking at the mime type/extension
+  GetFromTypeAndExtension(aMimeContentType, fileExtension.get(), getter_AddRefs(mimeInfo));
+  LOG(("Type/Ext lookup found 0x%p\n", mimeInfo.get()));
 
   // (2) if we don't have a match yet, see if this type is in our list of extras.
   if (!mimeInfo)
@@ -365,12 +348,10 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
      * right; any info we get from extras on this type is pretty much
      * useless....
      */
-    if (PL_strcasecmp(aMimeContentType, APPLICATION_OCTET_STREAM) != 0) {
+    if (PL_strcasecmp(aMimeContentType, APPLICATION_OCTET_STREAM) != 0)
 #endif
       GetMIMEInfoForMimeTypeFromExtras(aMimeContentType, getter_AddRefs(mimeInfo));
-#ifdef XP_WIN
-    }
-#endif
+    LOG(("Searched extras, found 0x%p\n", mimeInfo.get()));
   }
 
   // (3) if we STILL don't have a mime object for this content type then give up
@@ -387,6 +368,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     mimeInfo->SetFileExtensions(fileExtension.get());
     mimeInfo->SetMIMEType(aMimeContentType);
     // we may need to add a new method to nsIMIMEService so we can add this mime info object to our mime service.
+    LOG(("Gave up, created new mimeinfo 0x%p\n", mimeInfo.get()));
   }
 
   *aStreamListener = nsnull;
@@ -395,17 +377,11 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   // set it as the primary extension.  In either case, fileExtension
   // should be the primary extension once we are doen.
   // Ignore URL extension if data is output from a cgi script.
-  if (!methodIsPost && fileExtension.IsEmpty() && url) {
-    url->GetQuery(query);
-    if (query.IsEmpty()) {
-      url->GetFileExtension(fileExtension);
-    }
-  }
-
   PRBool matches = PR_FALSE;
   if (!fileExtension.IsEmpty()) {
     mimeInfo->ExtensionExists(fileExtension.get(), &matches);
   }
+  LOG(("Extension '%s' matches mime info: '%s'\n", fileExtension.get(), matches? "yes" : "no"));
   if (matches) {
     mimeInfo->SetPrimaryExtension(fileExtension.get());
   } else {
@@ -413,7 +389,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     mimeInfo->GetPrimaryExtension(getter_Copies(buf));
     fileExtension = buf;
   }
-  
+
   // this code is incomplete and just here to get things started..
   nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension.get(), aWindowContext);
   if (!handler)
@@ -758,20 +734,10 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * 
   return rv;
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromOS(const char * aContentType, nsIMIMEInfo ** aMIMEInfo)
+already_AddRefed<nsIMIMEInfo> nsExternalHelperAppService::GetMIMEInfoFromOS(const char * aContentType, const char * aFileExt)
 {
-  NS_PRECONDITION(aMIMEInfo, "Null out param");
-  *aMIMEInfo = nsnull;
-  // Should be implemented by per-platform derived classes.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromOS(const char * aFileExtension, nsIMIMEInfo ** aMIMEInfo)
-{
-  NS_PRECONDITION(aMIMEInfo, "Null out param");
-  *aMIMEInfo = nsnull;
-  // Should be implemented by per-platform derived classes.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_NOTREACHED("Should be implemented by per-platform derived classes");
+  return nsnull;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2107,89 +2073,101 @@ nsExternalAppHandler::SetLoadCookie(nsISupports * aLoadCookie)
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// nsIMIMEService methods
-NS_IMETHODIMP nsExternalHelperAppService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) 
+// Copies the user settings from one mime info to another
+// Note: the mime types are assumed to be already equal, as are the mac type & creator codes!
+static void CopyUserSettings(nsIMIMEInfo* aSource, nsIMIMEInfo* aDest)
 {
-  nsresult rv = NS_OK;
-  nsCAutoString fileExt(aFileExt);
-  if (fileExt.IsEmpty()) return NS_ERROR_FAILURE;
+  // First, copy the extension list
+  // let's not clear the extension list.
 
-  ToLowerCase(fileExt);
-  // if the file extension contains a '.', our hash key doesn't include the '.'
-  // so skip over it...
-  if (fileExt.First() == '.') 
-    fileExt.Cut(0, 1); // cut the '.'
- 
-  // Query the user provided data source
-  rv = GetMIMEInfoForExtensionFromDS(aFileExt, _retval);
-
-  // if we don't have a match in mimeTypes.rdf, then try the per-platform OS settings
-  if (!*_retval)
-  {
-    rv = GetMIMEInfoForExtensionFromOS(aFileExt, _retval);
-  }
-  else
-  {
-    // Get OS settings so we can fill the "default" fields in the MIMEInfo we got
-    // from mimeTypes.rdf.
-    nsCOMPtr<nsIMIMEInfo> osInfo;
-    if (NS_SUCCEEDED(GetMIMEInfoForExtensionFromOS(aFileExt, getter_AddRefs(osInfo))))
-    {
-      // Extract default application and default description.
-      nsCOMPtr<nsIFile> defaultApp;
-      nsXPIDLString     defaultDescription;
-      osInfo->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
-      osInfo->GetDefaultDescription(getter_Copies(defaultDescription));
-      // Copy to result mime info object.
-      (*_retval)->SetDefaultApplicationHandler(defaultApp);
-      (*_retval)->SetDefaultDescription(defaultDescription.get());
+  nsCOMPtr<nsIUTF8StringEnumerator> enumer;
+  aSource->GetFileExtensions(getter_AddRefs(enumer));
+  if (enumer) {
+    nsCAutoString ext;
+    PRBool hasMore;
+    while (NS_SUCCEEDED(enumer->HasMore(&hasMore)) && hasMore) {
+      enumer->GetNext(ext);
+      aDest->AppendExtension(ext.get());
     }
   }
 
-  // if we still don't have a match, then we give up, we don't know
-  // anything about it...  return an error.
+  nsXPIDLCString primaryExt;
+  aSource->GetPrimaryExtension(getter_Copies(primaryExt));
+  if (!primaryExt.IsEmpty())
+    aDest->SetPrimaryExtension(primaryExt);
 
-  if (!*_retval) rv = NS_ERROR_FAILURE;
-  return rv;
+  // description
+  nsXPIDLString desc;
+  aSource->GetDescription(getter_Copies(desc));
+  aDest->SetDescription(desc.get());
+
+  // Preferred application handler & desc
+  nsCOMPtr<nsIFile> prefer;
+  aSource->GetPreferredApplicationHandler(getter_AddRefs(prefer));
+  aDest->SetPreferredApplicationHandler(prefer);
+
+  aSource->GetApplicationDescription(getter_Copies(desc));
+  aDest->SetApplicationDescription(desc.get());
+
+  // Preferred action & always ask
+  nsMIMEInfoHandleAction action;
+  aSource->GetPreferredAction(&action);
+  aDest->SetPreferredAction(action);
+
+  PRBool alwaysAsk = PR_TRUE;
+  aSource->GetAlwaysAskBeforeHandling(&alwaysAsk);
+  aDest->SetAlwaysAskBeforeHandling(alwaysAsk);
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval) 
+// nsIMIMEService methods
+NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aMIMEType, const char *aFileExt, nsIMIMEInfo **_retval) 
 {
-  nsresult rv = NS_OK;
-  nsCAutoString MIMEType(aMIMEType);
-  ToLowerCase(MIMEType);
+  NS_PRECONDITION((aMIMEType && *aMIMEType) ||
+                  (aFileExt && *aFileExt), 
+                  "Give me something to work with");
+  LOG(("Getting mimeinfo from type '%s' ext '%s'\n", aMIMEType, aFileExt));
 
-  // Query the user provided data source
-  rv = GetMIMEInfoForMimeTypeFromDS(aMIMEType, _retval);
+  *_retval = nsnull;
+  // Ask the OS for a mime info
+  *_retval = GetMIMEInfoFromOS(aMIMEType, aFileExt).get();
+  LOG(("OS gave back 0x%p\n", *_retval));
 
-  // if we don't have a match in mimeTypes.rdf, then try the per-platform OS settings
-  if (!*_retval)
-  {
-    rv = GetMIMEInfoForMimeTypeFromOS(aMIMEType, _retval);
+  // Now, let's see if we can find something in our datasource
+  nsCOMPtr<nsIMIMEInfo> dsInfoType;
+  if (aMIMEType && *aMIMEType)
+    GetMIMEInfoForMimeTypeFromDS(aMIMEType, getter_AddRefs(dsInfoType));
+
+  LOG(("Data source: Via type 0x%p\n", dsInfoType.get()));
+
+  // Copy user settings over to our retval if we found a type,
+  // otherwise just give back what we found in the DS
+  if (dsInfoType) {
+    if (!*_retval)
+      dsInfoType.swap(*_retval);
+    else
+      CopyUserSettings(dsInfoType, *_retval);
   }
-  else
-  {
-    // Get OS settings so we can fill the "default" fields in the MIMEInfo we got
-    // from mimeTypes.rdf.
-    nsCOMPtr<nsIMIMEInfo> osInfo;
-    if (NS_SUCCEEDED(GetMIMEInfoForMimeTypeFromOS(aMIMEType, getter_AddRefs(osInfo))))
-    {
-      // Extract default application and default description.
-      nsCOMPtr<nsIFile> defaultApp;
-      nsXPIDLString     defaultDescription;
-      osInfo->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
-      osInfo->GetDefaultDescription(getter_Copies(defaultDescription));
-      // Copy to result mime info object.
-      (*_retval)->SetDefaultApplicationHandler(defaultApp);
-      (*_retval)->SetDefaultDescription(defaultDescription.get());
+  else {
+    // No type match, try extension match
+    nsCOMPtr<nsIMIMEInfo> dsInfoExt;
+    if (aFileExt && *aFileExt) {
+      GetMIMEInfoForExtensionFromDS(aFileExt, getter_AddRefs(dsInfoExt));
+      LOG(("Data source: Via ext 0x%p\n", dsInfoExt.get()));
+    }
+    if (dsInfoExt) {
+      if (!*_retval)
+        dsInfoExt.swap(*_retval);
+      else
+        CopyUserSettings(dsInfoExt, *_retval);
     }
   }
 
-  // if we still don't have a match, then we give up, we don't know anything about it...
-  // return an error. 
+  // if we don't have a match, then we give up, we don't know
+  // anything about it...  return an error.
 
-  if (!*_retval) rv = NS_ERROR_FAILURE;
-  return rv;
+  if (!*_retval) return NS_ERROR_FAILURE;
+  return NS_OK;
+
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFileExt, char **aContentType) 
@@ -2205,7 +2183,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMIMEInfo> info;
-  rv = GetFromExtension(aFileExt, getter_AddRefs(info));
+  rv = GetFromTypeAndExtension(nsnull, aFileExt, getter_AddRefs(info));
   if (NS_FAILED(rv)) {
     // Try the plugins
     const char* mimeType;
