@@ -279,6 +279,7 @@ if test "$CC" != "icc"; then
 fi
 
 GNU_AS=
+GNU_LD=
 GNU_CC=
 GNU_CXX=
 if test "$GCC" = "yes"; then
@@ -290,9 +291,13 @@ fi
 if test "`echo | $AS -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_AS=1
 fi
+if test "`echo | $LD -v 2>&1 | grep -c GNU`" != "0"; then
+    GNU_LD=1
+fi
 rm -f a.out
 
 AC_SUBST(GNU_AS)
+AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
@@ -3050,8 +3055,12 @@ dnl = Enable function reordering. Off by default
 dnl ========================================================
 MOZ_REORDER=
 MOZ_ARG_ENABLE_BOOL(reorder,
-[  --enable-reorder        Enable function reordering ],
-    MOZ_REORDER=1)
+[  --enable-reorder        Enable function reordering (requires GNU ld) ],
+[ if test -z "$GNU_LD"; then
+    AC_MSG_WARN([Reordering only works with GNU ld. Not reordering.])
+else
+    MOZ_REORDER=1
+fi])
 
 dnl ========================================================
 dnl = dnl This will enable logging of addref, release, ctor, dtor.
