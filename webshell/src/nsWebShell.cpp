@@ -41,6 +41,8 @@
 #include "nsPluginsCID.h"
 #include "nsIPref.h"
 #include "nsIBrowserWindow.h"
+#include "nsIRefreshUrl.h"
+#include "nsITimer.h"
 
 #include "prlog.h"
 
@@ -91,7 +93,8 @@ class nsWebShell : public nsIWebShell,
                    public nsIWebShellContainer,
                    public nsILinkHandler,
                    public nsIScriptContextOwner,
-                   public nsIDocumentLoaderObserver
+                   public nsIDocumentLoaderObserver,
+                   public nsIRefreshUrl
 {
 public:
   nsWebShell();
@@ -193,6 +196,11 @@ public:
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnConnectionsComplete();
 
+  // nsIRefreshURL interface methods...
+  NS_IMETHOD RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat);
+  NS_IMETHOD CancelRefreshURLTimers(void);
+
+
   // nsWebShell
   void HandleLinkClickEvent(const PRUnichar* aURLSpec,
                             const PRUnichar* aTargetSpec,
@@ -201,6 +209,8 @@ public:
   void ShowHistory();
 
   nsIWebShell* GetTarget(const PRUnichar* aName);
+
+  static void RefreshURLCallback(nsITimer* aTimer, void* aClosure);
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
@@ -234,6 +244,7 @@ protected:
   nsScrollPreference mScrollPref;
   PRInt32 mMarginWidth;
   PRInt32 mMarginHeight;
+  nsVoidArray mRefreshments;
 
   void ReleaseChildren();
 
@@ -267,6 +278,7 @@ static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
@@ -317,11 +329,11 @@ nsWebShell::~nsWebShell()
   // Stop any pending document loads and destroy the loader...
   if (nsnull != mDocLoader) {
     mDocLoader->Stop();
-    // Cancel any timers that were set for this loader.
-    mDocLoader->CancelLoadURLTimer();
     mDocLoader->RemoveObserver((nsIDocumentLoaderObserver*)this);
     NS_RELEASE(mDocLoader);
   }
+  // Cancel any timers that were set for this loader.
+  CancelRefreshURLTimers();
 
   NS_IF_RELEASE(mInnerWindow);
 
@@ -395,6 +407,11 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShell*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kRefreshURLIID)) {
+    *aInstancePtr = (void*)(nsIRefreshUrl*)this;
     AddRef();
     return NS_OK;
   }
@@ -560,7 +577,7 @@ nsWebShell::Destroy()
   mDocLoader->Stop();
 
   // Cancel any timers that were set for this loader.
-  mDocLoader->CancelLoadURLTimer();
+  CancelRefreshURLTimers();
 
   SetContainer(nsnull);
   SetObserver(nsnull);
@@ -991,12 +1008,17 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   Stop();
 
+  // Cancel any timers that were set for this loader.
+  CancelRefreshURLTimers();
+
   rv = mDocLoader->LoadURL(urlSpec,       // URL string
                            nsnull,         // Command
                            this,           // Container
                            aPostData,      // Post Data
                            nsnull,         // Extra Info...
-                           mObserver);     // Observer
+                           mObserver);      // Observer
+
+
   return rv;
 }
 
@@ -1007,7 +1029,7 @@ NS_IMETHODIMP nsWebShell::Stop(void)
     mDocLoader->Stop();
     
     // Cancel any timers that were set for this loader.
-    mDocLoader->CancelLoadURLTimer();
+    CancelRefreshURLTimers();
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1084,14 +1106,14 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     mDocLoader->Stop();
 
     // Cancel any timers that were set for this loader.
-    mDocLoader->CancelLoadURLTimer();
+    CancelRefreshURLTimers();
 
     rv = mDocLoader->LoadURL(urlSpec,        // URL string
                              nsnull,         // Command
                              this,           // Container
                              nsnull,         // Post Data
                              nsnull,         // Extra Info...
-                             mObserver);     // Observer
+                             mObserver);      // Observer
   }
   return rv;
 }
@@ -1500,6 +1522,77 @@ nsWebShell::OnConnectionsComplete()
     }
   }
   return ret;
+}
+
+/* For use with redirect/refresh url api */
+class refreshData {
+    public:
+    nsIWebShell* shell;
+    nsString* aUrlSpec;
+    PRBool repeat;
+    PRInt32 delay;
+};
+
+NS_IMETHODIMP
+nsWebShell::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
+{
+    NS_PRECONDITION((aURL != nsnull), "Null pointer");
+
+    refreshData *data= new refreshData();
+    nsITimer *timer=nsnull;
+
+    NS_PRECONDITION((nsnull != data), "Null pointer");
+    
+    data->shell = this;
+    NS_ADDREF(data->shell);
+    data->aUrlSpec = new nsString(aURL->GetSpec());
+    data->delay = millis;
+    data->repeat = repeat;
+
+    /* Create the timer. */
+    if (NS_OK == NS_NewTimer(&timer)) {
+        /* Add the timer to our array. */
+        mRefreshments.AppendElement(timer);
+        timer->Init(nsWebShell::RefreshURLCallback, data, millis);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::CancelRefreshURLTimers(void) {
+    PRInt32 count = mRefreshments.Count();
+    PRInt32 tmp=0;
+    nsITimer* timer;
+    refreshData* data = nsnull;
+
+    /* Right now all we can do is cancel all the timers for this webshell. */
+    while (tmp < count) {
+        timer=(nsITimer*)mRefreshments.ElementAt(tmp);
+        /* ditch the mem allocated in/to data */
+        data = (refreshData*)timer->GetClosure();
+        if (data) {
+            NS_RELEASE(data->shell);
+            if (data->aUrlSpec)
+                delete data->aUrlSpec;
+        }
+        delete data;
+
+        mRefreshments.RemoveElementAt(tmp);
+        if (timer) {
+            timer->Cancel();
+            timer->Release();
+        }
+        tmp++;
+    }
+
+    return NS_OK;
+}
+
+void nsWebShell::RefreshURLCallback(nsITimer* aTimer, void* aClosure) {
+    refreshData *data=(refreshData*)aClosure;
+    NS_PRECONDITION((data != nsnull), "Null pointer...");
+    data->shell->LoadURL(*data->aUrlSpec, nsnull, PR_TRUE);
 }
 
 //----------------------------------------------------------------------
