@@ -52,7 +52,6 @@ NET_LIBS	= -lneckoutil_s
 endif
 
 LIBS		= \
-		-lpref \
 		-lmozutil \
 		-limg \
 		-lxpcom \

@@ -26,7 +26,6 @@ PROGRAM		= rdfcat
 CPPSRCS		= rdfcat.cpp
 
 BASE_LIBS	= \
-		-lpref \
 		$(ZLIB_LIBS) \
 		-lmozreg \
 		-lmozjs \

@@ -34,7 +34,6 @@ endif
 
 ifndef NECKO
 LIBS		= \
-		-lpref \
 		-lxp \
 		-lnetlib \
 		-lftpurl \
@@ -56,8 +55,6 @@ LIBS		= \
 		-lmozreg \
 		$(TIMER_LIBS) \
 		$(TK_LIBS) \
-		$(ZLIB_LIBS) \
-		$(NSPR_LIBS) \
 		$(NULL)
 
 # Needed to resolve __yylex (?)
