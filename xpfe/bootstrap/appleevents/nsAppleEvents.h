@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#define MOZILLA_FIVE
+
 /*--------------------------------------------------------------------------*/
 /*			----  Resource and Command Code Base IDs  ----					*/
 /*		In Communicator 4.x, this was cmd/macfe/include/resae.h				*/
@@ -58,28 +60,35 @@ enum	{
 //	----  World Wide Web / Spyglass Suite
 //----------------------------------------------------------------------------------------
 enum	{
-	AE_OpenURL = kSpyGlass_CmdBase, // OpenURL								WWW! OURL
-	AE_RegisterViewer,				// RegisterViewer						WWW! RGVW
-	AE_UnregisterViewer,			// UnregisterViewer						WWW! UNRV
-	AE_ShowFile,					// ShowFile								WWW! SHWF
-	AE_ParseAnchor,					// ParseAnchor							WWW! PRSA
-	AE_RegisterURLEcho,				// Register URL echo					WWW! RGUE
-	AE_UnregisterURLEcho,			// Unregister URL echo					WWW! UNRU
-	AE_SpyActivate,					// Activate								WWW! ACTV
-	AE_SpyListWindows,				// ListWindows							WWW! LSTW
-	AE_GetWindowInfo,				// GetWindowInfo						WWW! WNFO
-	AE_RegisterWinClose,			// RegisterWindowClose					WWW! RGWC
-	AE_UnregisterWinClose,			// UnregisterWindowClose				WWW! UNRC
-	AE_RegisterProtocol,			// RegisterProtocol						WWW! RGPR
-	AE_UnregisterProtocol,			// UnregisterProtocol					WWW! UNRP
-	AE_CancelProgress,				// Cancel download						WWW! CNCL
-	AE_FindURL						// Find the URL for the file			WWW! FURL
+	AE_OpenURL = kSpyGlass_CmdBase // OpenURL								WWW! OURL
+
+#ifndef MOZILLA_FIVE
+,	AE_RegisterViewer				// RegisterViewer						WWW! RGVW
+,	AE_UnregisterViewer				// UnregisterViewer						WWW! UNRV
+,	AE_ShowFile						// ShowFile								WWW! SHWF
+,	AE_ParseAnchor					// ParseAnchor							WWW! PRSA
+,	AE_RegisterURLEcho				// Register URL echo					WWW! RGUE
+,	AE_UnregisterURLEcho			// Unregister URL echo					WWW! UNRU
+,	AE_SpyActivate					// Activate								WWW! ACTV
+,	AE_SpyListWindows				// ListWindows							WWW! LSTW
+,	AE_GetWindowInfo				// GetWindowInfo						WWW! WNFO
+,	AE_RegisterWinClose				// RegisterWindowClose					WWW! RGWC
+,	AE_UnregisterWinClose			// UnregisterWindowClose				WWW! UNRC
+,	AE_RegisterProtocol				// RegisterProtocol						WWW! RGPR
+,	AE_UnregisterProtocol			// UnregisterProtocol					WWW! UNRP
+,	AE_CancelProgress				// Cancel download						WWW! CNCL
+,	AE_FindURL						// Find the URL for the file			WWW! FURL
+#endif // MOZILLA_FIVE
 };
 
 //	----  Netscape Experimental Suite and Macintosh URL suite
 //----------------------------------------------------------------------------------------
 enum	{
 
+#ifdef MOZILLA_FIVE
+	AE_GetURL = kURLSuite_CmdBase	// GetURL								GURL GURL
+,	AE_DoJavascript					// Do Javascript						MOSS jscr
+#else
 	AE_GetWD = kURLSuite_CmdBase	// Get working directory of app  		MOSS WURL
 ,	AE_OpenBookmark					// Open bookmarks						MOSS book
 ,	AE_ReadHelpFile					// Read help file						MOSS help
@@ -92,6 +101,7 @@ enum	{
 ,	AE_HandleCommand				// Handle a command ae					MOSS ncmd
 ,	AE_GetProfileImportData			// Handle a request from import module	MOSS Impt
 ,	AE_OpenGuestMode				// Open in guest (roaming) kiosk mode	MOSS gues
+#endif // MOZILLA_FIVE
 };
 
 
@@ -131,6 +141,9 @@ enum	{
 // Event codes
 #define AE_www_suite 					'MOSS'
 
+#define AE_www_doJavaScript				'jscr'  // Execute a javascript string
+
+#ifndef MOZILLA_FIVE
 #define AE_www_workingURL				'wurl'	// Get working URL
 
 #define AE_www_go	 					'gogo'	// keyDirectObject HWIN, direction 'dire'
@@ -170,6 +183,7 @@ enum	{
 
 // Handle request from an external import module for relevant data
 #define AE_www_getImportData			'Impt'
+#endif // MOZILLA_FIVE
 
 // Objects
 #define AE_www_typeWindow				'HWIN'
@@ -180,6 +194,8 @@ enum	{
 // application properties
 #define AE_www_typeApplicationAlert 	'ALAP'
 #define AE_www_typeKioskMode			'KOSK'	// Kiosk mode
+
+
 /*********************************************************************************
  * URL suite
  * Standard Mac "GetURL suite, as defined by John Norstad and others
@@ -294,9 +310,13 @@ enum	{
 
 // ****************** OpenURL
 #define AE_spy_openURL		'OURL'	// typeChar OpenURL
-#define AE_spy_openURL_into 'INTO'	// typeFSS into
-#define AE_spy_openURL_wind	'WIND'	// typeLongInteger windowID
+
 #define AE_spy_openURL_flag 'FLGS'	// typeLongInteger flags
+#define AE_spy_openURL_wind	'WIND'	// typeLongInteger windowID
+
+#if 0 // Not supported in Mozilla
+
+#define AE_spy_openURL_into 'INTO'	// typeFSS into
 #define AE_spy_openURL_post	'POST'	// typeWildCard post data
 #define AE_spy_openURL_mime 'MIME'	// typeChar MIME type
 #define AE_spy_openURL_prog 'PROG'	// typePSN Progress app
@@ -400,6 +420,7 @@ enum	{
 #define AE_spy_winClosed			'WNDC'	// typeLong windowID
 #define AE_spy_winClosedExiting		'EXIT'	// typeBoolean are we quitting?
 
+#endif // 0 - not supported in Mozilla.
 
 /*--------------------------------------------------------------------------*/
 /*					---- Eudora Suite  ----									*/
