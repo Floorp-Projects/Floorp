@@ -1761,6 +1761,7 @@ struct ListEnumData {
   PRInt32 mIndent;
 };
 
+#if 0
 static PRBool ListCascade(nsHashKey* aKey, void* aValue, void* aClosure)
 {
   AtomKey* key = (AtomKey*)aKey;
@@ -1776,6 +1777,7 @@ static PRBool ListCascade(nsHashKey* aKey, void* aValue, void* aClosure)
   ListRules(cascade->mWeightedRules, data->mOut, data->mIndent);
   return PR_TRUE;
 }
+#endif
 
 
 void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
