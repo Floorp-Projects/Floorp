@@ -2114,18 +2114,32 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
         return NS_OK;
     const nsACString &parentCS = doc->GetDocumentCharacterSet();
 
-    // set the child's parentCharset
-    nsCOMPtr<nsIAtom> parentCSAtom(do_GetAtom(parentCS));
-    res = dcInfo->SetParentCharset(parentCSAtom);
-    if (NS_FAILED(res))
-        return NS_OK;
+    PRBool isWyciwyg = PR_FALSE;
 
-    PRInt32 charsetSource = doc->GetDocumentCharacterSetSource();
+    if (mCurrentURI) {
+        // Check if the url is wyciwyg
+        mCurrentURI->SchemeIs("wyciwyg", &isWyciwyg);      
+    }
 
-    // set the child's parentCharset
-    res = dcInfo->SetParentCharsetSource(charsetSource);
-    if (NS_FAILED(res))
-        return NS_OK;
+    if (!isWyciwyg) {
+        // If this docshell is loaded from a wyciwyg: URI, don't
+        // advertise our charset since it does not in any way reflect
+        // the actual source charset, which is what we're trying to
+        // expose here.
+
+        // set the child's parentCharset
+        nsCOMPtr<nsIAtom> parentCSAtom(do_GetAtom(parentCS));
+        res = dcInfo->SetParentCharset(parentCSAtom);
+        if (NS_FAILED(res))
+            return NS_OK;
+
+        PRInt32 charsetSource = doc->GetDocumentCharacterSetSource();
+
+        // set the child's parentCharset
+        res = dcInfo->SetParentCharsetSource(charsetSource);
+        if (NS_FAILED(res))
+            return NS_OK;
+    }
 
     // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", NS_LossyConvertUCS2toASCII(parentCS).get(), mItemType);
 
