@@ -150,12 +150,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     if (aResult == NULL) {  
         return NS_ERROR_NULL_POINTER;  
     }  
-
     *aResult = NULL;  
-  
-    if (nsnull != aOuter && !aIID.Equals(kISupportsIID)) {
-        // aggregation with IID != nsISupports
-        return NS_ERROR_ILLEGAL_VALUE;
+    if (nsnull != aOuter) {
+        return NS_ERROR_NO_AGGREGATION;
     }
 
     nsISupports *inst = nsnull;
