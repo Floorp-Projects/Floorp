@@ -87,6 +87,11 @@
 
   <binding id="browser">
     <handlers>
+      <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift" command="cmd_selectPageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift" command="cmd_selectPageDown"/>
+
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cut"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_deleteWordForward"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
