@@ -399,7 +399,9 @@ void JS::BigInt::move(BigInt &b)
 {
 	recycle();
 	lgGrossSize = b.lgGrossSize;
+	negative = b.negative;
 	grossSize = b.grossSize;
+	size = b.size;
 	words = b.words;
 	b.words = 0;
 }
