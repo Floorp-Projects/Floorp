@@ -159,17 +159,11 @@ nsLayoutModule::nsLayoutModule()
   : mInitialized(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
-#ifdef DEBUG_kipp
-  printf("*** Creating layout module %p\n", this);
-#endif
 }
 
 nsLayoutModule::~nsLayoutModule()
 {
   Shutdown();
-#ifdef DEBUG_kipp
-  printf("*** Destroying layout module %p\n", this);
-#endif
 }
 
 NS_IMPL_ISUPPORTS(nsLayoutModule, kIModuleIID)
