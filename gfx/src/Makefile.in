@@ -90,6 +90,13 @@ CPPSRCS		= \
 		nsPrintOptionsImpl.cpp \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS += \
+		nsRegion.cpp \
+		nsRegionImpl.cpp \
+		$(NULL)
+endif
+
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libimg_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \

@@ -735,7 +735,7 @@ NS_IMETHODIMP nsRenderingContextOS2::GetClipRegion( nsIRegion **aRegion)
       HRGN hrgnDummy = 0;
       PRUint32 ulHeight = mSurface->GetHeight ();
 
-      pRegion->Init( hrgnClip, ulHeight, mPS);
+      pRegion->InitWithHRGN (hrgnClip, ulHeight, mPS);
       GFX (::GpiSetClipRegion (mPS, hrgnClip, &hrgnDummy), RGN_ERROR);
    }
    else
