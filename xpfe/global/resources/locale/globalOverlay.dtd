@@ -4,6 +4,16 @@
 
 <!ENTITY fileMenu.label					"File"> 
 <!ENTITY fileMenu.accesskey				"f">
+<!ENTITY newMenu.label						"New">
+<!ENTITY newMenu.accesskey					"e">
+<!ENTITY newNavigatorCmd.label				"Navigator Window">
+<!ENTITY newNavigatorCmd.key				"N">
+<!ENTITY newNavigatorCmd.accesskey			"n">
+<!ENTITY newMessageCmd.label				"Message">
+<!ENTITY newMessageCmd.key					"M">
+<!ENTITY newMessageCmd.accesskey			"m">
+<!ENTITY newCardCmd.label					"Address Book Card">
+<!ENTITY newCardCmd.accesskey				"a">
 
 <!ENTITY pageSetupCmd.label					".Page Setup...">  
 
@@ -11,21 +21,31 @@
 <!ENTITY editMenu.accesskey				"e"> 
 <!ENTITY undoCmd.label						"Undo">  
 <!ENTITY undoCmd.key						"Z">  
+<!ENTITY undoCmd.accesskey					"u"> 
 <!ENTITY cutCmd.label						"Cut">  
 <!ENTITY cutCmd.key							"X">  
+<!ENTITY cutCmd.accesskey					"t"> 
 <!ENTITY copyCmd.label						"Copy">  
 <!ENTITY copyCmd.key						"C">  
+<!ENTITY copyCmd.accesskey					"c"> 
 <!ENTITY pasteCmd.label						"Paste">  
 <!ENTITY pasteCmd.key						"V">  
+<!ENTITY pasteCmd.accesskey					"p"> 
 <!ENTITY deleteCmd.label					"Delete">  
 <!ENTITY deleteCmd.key						"D">  
+<!ENTITY deleteCmd.accesskey				"d"> 
 <!ENTITY selectAllCmd.label					"Select All">  
 <!ENTITY selectAllCmd.key					"A">  
-<!ENTITY preferencesCmd.label					"Preferences...">
+<!ENTITY selectAllCmd.accesskey				"a"> 
+<!ENTITY preferencesCmd.label				"Preferences...">
+<!ENTITY preferencesCmd.key					"E">  
+<!ENTITY preferencesCmd.accesskey			"f"> 
 
 <!ENTITY viewMenu.label					"View"> 
+<!ENTITY viewMenu.accesskey				"v"> 
 
 <!ENTITY helpMenu.label					"Help"> 
+<!ENTITY helpMenu.accesskey				"h"> 
 <!ENTITY helpContentCmd.label				"Help Contents">  
 <!ENTITY referenceLibraryCmd.label			".Reference Library">  
 <!ENTITY releaseNotesCmd.label				".Release Notes">  

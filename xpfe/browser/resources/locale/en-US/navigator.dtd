@@ -11,14 +11,8 @@
 <!ENTITY defaultHomepage.url "www.mozilla.org" >
 
 <!-- LOCALIZATION NOTE  fileMenu.label: Localize all the menu labels with accesskeys but not commandkeys. e.g.  "File" -> "XXXX(F)" in Japanese -->
-<!ENTITY browserCmd.label "New Browser Window">
+<!ENTITY browserCmd.label "New Navigator Window">
 <!ENTITY browserCmd.accesskey "n">
-<!ENTITY browserCmd.commandkey "n">
-<!ENTITY newMenu.label "New">
-<!ENTITY newMenu.accesskey "e">
-<!ENTITY newMailCmd.label "Mail Message">
-<!ENTITY newMailCmd.accesskey "m">
-<!ENTITY newMailCmd.commandkey "m">
 <!ENTITY newBlankPageCmd.label "Blank Window">
 <!ENTITY newBlankPageCmd.accesskey "b" >
 <!ENTITY newBlankPageCmd.commandkey "n" >
