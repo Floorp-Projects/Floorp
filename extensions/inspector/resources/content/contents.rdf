@@ -12,7 +12,7 @@
         chrome:displayName="Document Inspector"
         chrome:author="Joe Hewitt"
         chrome:name="inspector"
-        chrome:localeVersion="1.3b"
+        chrome:localeVersion="1.4a"
         chrome:skinVersion="1.2">
   </RDF:Description>
 
