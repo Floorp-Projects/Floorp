@@ -210,8 +210,7 @@ char *XpuEmumerateXpAttributeValue( char *value, void **context )
 {
     /* BUG: This does not work for quoted attribute values
      * A good example is the enumeration of supported paper sizes: 
-     * "{'' {na-letter False {6.3500 209.5500 6.3500 273.0500}} {executive False {6.3500 177.7500 6.3500 260.3500}} {na-legal False {6.3500 209.5500 6.3500 349.2500}} {iso-a4 False {6.3500 203.6500 6.3500 290.6500}} {iso-designated-long False {6.3500 103.6500 6.3500 213.6500}} {na-number-10-envelope False {6.3500 98.4500 6.3500 234.9500}} }" 
-      {'' 
+     * "{'' {na-letter False {6.3500 209.5500 6.3500 273.0500}} {executive False {6.3500 177.7500 6.3500 260.3500}} {na-legal False {6.3500 209.5500 6.3500 349.2500}} {iso-a4 False {6.3500 203.6500 6.3500 290.6500}} {iso-a3 False {6.3500 290.6500 6.3500 413.6500}} {iso-designated-long False {6.3500 103.6500 6.3500 213.6500}} {na-number-10-envelope False {6.3500 98.4500 6.3500 234.9500}} }"       {'' 
          {  
            na-letter 
            False 
@@ -232,6 +231,11 @@ char *XpuEmumerateXpAttributeValue( char *value, void **context )
            False 
            {6.3500 203.6500 6.3500 290.6500}
          } 
+         {
+           iso-a3
+           False
+           {6.3500 290.6500 6.3500 413.6500}
+         }
          {
            iso-designated-long 
            False 
