@@ -40,7 +40,7 @@
             b = pop();
             
             JS2Class *limit = meta->objectType(b);
-            if (!limit->read(meta, b, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &b, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(a);
         }
@@ -85,7 +85,7 @@
             pc += sizeof(short);
             b = pop();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->read(meta, b, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &b, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(b);
             push(a);
@@ -154,7 +154,7 @@
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, b, limit, &mn, RunPhase, &a))
+            if (!limit->bracketRead(meta, &b, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -207,7 +207,7 @@
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, b, limit, &mn, RunPhase, &a))
+            if (!limit->bracketRead(meta, &b, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -225,7 +225,7 @@
             push(STRING_TO_JS2VAL(astr));
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketRead(meta, b, limit, &mn, RunPhase, &a))
+            if (!limit->bracketRead(meta, &b, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;

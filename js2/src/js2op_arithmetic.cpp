@@ -952,7 +952,7 @@
             pc += sizeof(short);
             baseVal = pop();
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->read(meta, baseVal, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             if (!limit->write(meta, baseVal, limit, mn, &lookup, true, allocNumber(num + 1.0)))
@@ -968,7 +968,7 @@
             pc += sizeof(short);
             baseVal = pop();
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->read(meta, baseVal, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             if (!limit->write(meta, baseVal, limit, mn, &lookup, true, allocNumber(num - 1.0)))
@@ -984,7 +984,7 @@
             pc += sizeof(short);
             baseVal = pop();
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->read(meta, baseVal, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
@@ -1000,7 +1000,7 @@
             pc += sizeof(short);
             baseVal = pop();
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->read(meta, baseVal, limit, mn, &lookup, RunPhase, &a))
+            if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
@@ -1018,7 +1018,7 @@
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->bracketRead(meta, baseVal, limit, &mn, RunPhase, &a))
+            if (!limit->bracketRead(meta, &baseVal, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
             if (!limit->bracketWrite(meta, baseVal, limit, &mn, allocNumber(num + 1.0)))
@@ -1037,7 +1037,7 @@
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->bracketRead(meta, baseVal, limit, &mn, RunPhase, &a))
+            if (!limit->bracketRead(meta, &baseVal, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
             if (!limit->bracketWrite(meta, baseVal, limit, &mn, allocNumber(num - 1.0)))
@@ -1056,7 +1056,7 @@
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->bracketRead(meta, baseVal, limit, &mn, RunPhase, &a))
+            if (!limit->bracketRead(meta, &baseVal, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
@@ -1075,7 +1075,7 @@
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(baseVal);
-            if (!limit->bracketRead(meta, baseVal, limit, &mn, RunPhase, &a))
+            if (!limit->bracketRead(meta, &baseVal, limit, &mn, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);

@@ -2436,7 +2436,8 @@ doUnary:
             case PackageKind:
                 {
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    result = limit->read(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, &lookup, phase, rval);
+                    js2val frame = OBJECT_TO_JS2VAL(*fi);
+                    result = limit->read(meta, &frame, limit, multiname, &lookup, phase, rval);
                 }
                 break;
             case SystemKind:
@@ -2452,8 +2453,9 @@ doUnary:
                 {
                     WithFrame *wf = checked_cast<WithFrame *>(*fi);
                     // XXX uninitialized 'with' object?
-                    JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    result = limit->read(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, &lookup, phase, rval);
+                    js2val withVal = OBJECT_TO_JS2VAL(wf->obj);
+                    JS2Class *limit = meta->objectType(withVal);
+                    result = limit->read(meta, &withVal, limit, multiname, &lookup, phase, rval);
                 }
                 break;
             }
@@ -3009,9 +3011,9 @@ rescan:
                 reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
             else {
                 if ((bindingResult->accesses != ReadWriteAccess)
-                        || (bindingResult->content->kind != LocalMember::DynamicVariableKind)
-                        || !checked_cast<DynamicVariable *>(bindingResult->content)->sealed)
+                        || (bindingResult->content->kind != LocalMember::DynamicVariableKind))
                     reportError(Exception::definitionError, "Illegal redefinition of {0}", p->pos, id);
+                result = checked_cast<DynamicVariable *>(bindingResult->content);
             }
             // At this point a hoisted binding of the same var already exists, so there is no need to create another one
         }
@@ -3361,6 +3363,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 /*** ECMA 3  Array Class ***/
         MAKEBUILTINCLASS(arrayClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Array"]), JS2VAL_NULL);
+        arrayClass->write = arrayWriteProperty;
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initArrayObject(this);
@@ -3568,12 +3571,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
     }
 
-    Member *JS2Metadata::findCommonMember(js2val base, Multiname *multiname, Access access, bool flat)
+    Member *JS2Metadata::findCommonMember(js2val *base, Multiname *multiname, Access access, bool flat)
     {
         Member *m = NULL;
-        if (JS2VAL_IS_PRIMITIVE(base))  
-            return NULL;                    // XXX call toObject() for E3 compatibility...
-        JS2Object *baseObj = JS2VAL_TO_OBJECT(base);
+        if (JS2VAL_IS_PRIMITIVE(*base))  {
+            *base = toObject(*base);      // XXX E3 compatibility...
+        }
+        JS2Object *baseObj = JS2VAL_TO_OBJECT(*base);
         switch (baseObj->kind) {
         case SimpleInstanceKind:
             m = findLocalMember(baseObj, multiname, access);
@@ -3592,8 +3596,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (m)
             return m;
         js2val superVal = getSuperObject(baseObj);
-        if (!JS2VAL_IS_NULL(superVal)) {
-            m = findCommonMember(superVal, multiname, access, flat);
+        if (!JS2VAL_IS_NULL(superVal) && !JS2VAL_IS_UNDEFINED(superVal)) {
+            m = findCommonMember(&superVal, multiname, access, flat);
             if ((m != NULL) && flat && (m->kind == Member::DynamicVariableKind))
                 m = NULL;
         }
@@ -3710,227 +3714,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         Multiname *mn = new Multiname(name, publicNamespace);
         RootKeeper rk(&mn);
-        return (findCommonMember(OBJECT_TO_JS2VAL(obj), mn, ReadWriteAccess, true) != NULL);
-    }
-
-    bool defaultReadProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
-    {
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, ReadAccess);
-        if (mBase)
-            return meta->readInstanceMember(base, limit, mBase, phase, rval);
-        if (limit != meta->objectType(base))
-            return false;
-
-        Member *m = meta->findCommonMember(base, multiname, ReadAccess, false);
-        if (m == NULL) {
-            if (lookupKind->isPropertyLookup() && JS2VAL_IS_OBJECT(base) 
-                    && ( (JS2VAL_TO_OBJECT(base)->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(base))->sealed)
-                        || ( (JS2VAL_TO_OBJECT(base)->kind == PackageKind) && !checked_cast<Package *>(JS2VAL_TO_OBJECT(base))->sealed) ) {
-                if (phase == CompilePhase)
-                    meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
-                else {
-                    *rval = JS2VAL_UNDEFINED;
-                    return true;
-                }
-            }
-            else
-                return false;
-        }
-        switch (m->kind) {
-        case Member::Forbidden:
-        case Member::DynamicVariableKind:
-        case Member::Variable:
-        case Member::ConstructorMethod:
-        case Member::Setter:
-        case Member::Getter:
-            return meta->readLocalMember(checked_cast<LocalMember *>(m), phase, rval);
-        case Member::InstanceVariableKind:
-        case Member::InstanceMethodKind:
-        case Member::InstanceGetterKind:
-        case Member::InstanceSetterKind:
-            if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind))
-                    || lookupKind->isPropertyLookup())
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            if (JS2VAL_IS_VOID(lookupKind->thisObject))
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            if (JS2VAL_IS_UNINITIALIZED(lookupKind->thisObject))
-                meta->reportError(Exception::compileExpressionError, "Inappropriate compile time expression", meta->engine->errorPos());
-            return meta->readInstanceMember(lookupKind->thisObject, meta->objectType(lookupKind->thisObject), checked_cast<InstanceMember *>(m), phase, rval);
-        default:
-            NOT_REACHED("bad member kind");
-            return false;
-        }
-    }
-
-    bool defaultReadPublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, Phase phase, js2val *rval)
-    {
-        // XXX could speed up by pushing knowledge of single namespace?
-        LookupKind lookup(false, JS2VAL_NULL);
-        Multiname *mn = new Multiname(name, meta->publicNamespace);
-        RootKeeper rk(&mn);
-        return defaultReadProperty(meta, base, limit, mn, &lookup, phase, rval);
-    }
-
-    bool defaultBracketRead(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval)
-    {
-        LookupKind lookup(false, JS2VAL_NULL);
-        return limit->read(meta, base, limit, multiname, &lookup, phase, rval);
-    }
-
-    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue)
-    {
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
-        if (mBase) {
-            meta->writeInstanceMember(base, limit, mBase, newValue);
-            return true;
-        }
-        if (limit != meta->objectType(base))
-            return false;
-
-        Member *m = meta->findCommonMember(base, multiname, WriteAccess, true);
-        if (m == NULL) {
-            if (createIfMissing 
-                    && JS2VAL_IS_OBJECT(base) 
-                    && ( (JS2VAL_TO_OBJECT(base)->kind == SimpleInstanceKind) && !checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(base))->sealed)
-                        || ( (JS2VAL_TO_OBJECT(base)->kind == PackageKind) && !checked_cast<Package *>(JS2VAL_TO_OBJECT(base))->sealed) ) {
-                QualifiedName qName = multiname->selectPrimaryName(meta);
-                Multiname *mn = new Multiname(qName);
-                RootKeeper rk(&mn);
-                if ( (meta->findBaseInstanceMember(limit, mn, ReadAccess) == NULL)
-                        && (meta->findCommonMember(base, mn, ReadAccess, true) == NULL) ) {
-                    meta->createDynamicProperty(JS2VAL_TO_OBJECT(base), &qName, newValue, ReadWriteAccess, false, true);
-                    return true;
-                }
-            }
-            return false;
-        }
-        switch (m->kind) {
-        case Member::Forbidden:
-        case Member::DynamicVariableKind:
-        case Member::Variable:
-        case Member::ConstructorMethod:
-        case Member::Setter:
-        case Member::Getter:
-            return meta->writeLocalMember(checked_cast<LocalMember *>(m), newValue, false);
-        case Member::InstanceVariableKind:
-        case Member::InstanceMethodKind:
-        case Member::InstanceGetterKind:
-        case Member::InstanceSetterKind:
-            if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind))
-                    || lookupKind->isPropertyLookup())
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            if (JS2VAL_IS_VOID(lookupKind->thisObject))
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            meta->writeInstanceMember(lookupKind->thisObject, meta->objectType(lookupKind->thisObject), checked_cast<InstanceMember *>(m), newValue);
-            return true;
-        default:
-            NOT_REACHED("bad member kind");
-            return false;
-        }
-    }
-
-    bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue)
-    {
-        // XXX could speed up by pushing knowledge of single namespace?
-        LookupKind lookup(false, JS2VAL_NULL);
-        Multiname *mn = new Multiname(name, meta->publicNamespace);
-        RootKeeper rk(&mn);
-        return defaultWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue);
-    }
-
-    bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue)
-    {
-        LookupKind lookup(false, JS2VAL_NULL);
-        return limit->write(meta, base, limit, multiname, &lookup, true, newValue);
-    }
-
-    bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result)
-    {
-        InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
-        if (mBase) {
-            *result = false;
-            return true;
-        }
-        if (limit != meta->objectType(base))
-            return false;
-
-        Member *m = meta->findCommonMember(base, multiname, WriteAccess, false);
-        if (m == NULL)
-            return false;
-        switch (m->kind) {
-        case Member::Forbidden:
-            meta->reportError(Exception::propertyAccessError, "It is forbidden", meta->engine->errorPos());
-            return false;
-        case Member::DynamicVariableKind:
-            {
-                if (checked_cast<DynamicVariable *>(m)->sealed) {
-                    *result = false;
-                    return true;
-                }
-                // XXX if findCommonMember returned the Binding instead, we wouldn't have to rediscover it here...
-                JS2Object *container = JS2VAL_TO_OBJECT(meta->toObject(base));
-                LocalBindingMap *lMap;
-                if (container->kind == SimpleInstanceKind)
-                    lMap = &checked_cast<SimpleInstance *>(container)->localBindings;
-                else
-                    lMap = &checked_cast<NonWithFrame *>(container)->localBindings;
-
-                LocalBindingEntry **lbeP = (*lMap)[*multiname->name];
-                if (lbeP) {
-                    while (true) {
-                        bool deletedOne = false;
-                        for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
-                            LocalBindingEntry::NamespaceBinding &ns = *i;
-                            if (multiname->listContains(ns.first)) {
-                                (*lbeP)->bindingList.erase(i);
-                                deletedOne = true;
-                                break;
-                            }
-                        }
-                        if (!deletedOne)
-                            break;
-                    }
-                }
-                *result = true;
-                return true;
-            }
-        case Member::Variable:
-        case Member::ConstructorMethod:
-        case Member::Setter:
-        case Member::Getter:
-            *result = false;
-            return true;
-        case Member::InstanceVariableKind:
-        case Member::InstanceMethodKind:
-        case Member::InstanceGetterKind:
-        case Member::InstanceSetterKind:
-            if ( (JS2VAL_IS_OBJECT(base) && (JS2VAL_TO_OBJECT(base)->kind != ClassKind)) || lookupKind->isPropertyLookup()) {
-                *result = false;
-                return true;
-            }
-            if (JS2VAL_IS_VOID(lookupKind->thisObject))
-                meta->reportError(Exception::propertyAccessError, "Illegal access to instance member", meta->engine->errorPos());
-            *result = false;
-            return true;
-        default:
-            NOT_REACHED("bad member kind");
-            return false;
-        }
-    }
-
-    bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result)
-    {
-        // XXX could speed up by pushing knowledge of single namespace & lookup?
-        LookupKind lookup(false, JS2VAL_NULL);
-        Multiname *mn = new Multiname(name, meta->publicNamespace);
-        RootKeeper rk(&mn);
-        return defaultDeleteProperty(meta, base, limit, mn, &lookup, result);
-    }
-
-    bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result)
-    {
-        LookupKind lookup(false, JS2VAL_NULL);
-        return limit->deleteProperty(meta, base, limit, multiname, &lookup, result);
+        js2val val = OBJECT_TO_JS2VAL(obj);
+        return (findCommonMember(&val, mn, ReadWriteAccess, true) != NULL);
     }
 
     // The caller must make sure that the created property does not already exist and does not conflict with any other property.
@@ -4332,7 +4117,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  ************************************************************************************/
 
     FunctionInstance::FunctionInstance(JS2Metadata *meta, js2val parent, JS2Class *type)
-     : SimpleInstance(meta, parent, type), fWrap(NULL) 
+     : SimpleInstance(meta, parent, type) 
     {
         // Add prototype property
         meta->createDynamicProperty(this, meta->engine->prototype_StringAtom, OBJECT_TO_JS2VAL(parent), ReadWriteAccess, false, true);
@@ -4462,7 +4247,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
                 (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
             }
-            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->numberToString(i), true, argBase[i]);
+            mn->name = meta->engine->numberToString(i);
+            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, mn->name, true, argBase[i]);
         }
         setLength(meta, argsObj, i);
         meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, &meta->world.identifiers["callee"], true, argBase[i]);

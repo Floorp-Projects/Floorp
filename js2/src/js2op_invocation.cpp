@@ -69,7 +69,7 @@
                                                             // fail if 'prototype' hasn't been defined
                                                             // XXX (prototype should always exist for functions)
                     JS2Class *limit = meta->objectType(a);
-                    if (limit->read(meta, a, limit, &mn, &lookup, RunPhase, &protoVal)) {
+                    if (limit->read(meta, &a, limit, &mn, &lookup, RunPhase, &protoVal)) {
                         if (!JS2VAL_IS_OBJECT(protoVal))
                             meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
                     }
@@ -270,7 +270,7 @@
                                                             // fail if 'prototype' hasn't been defined
                                                             // XXX (prototype should always exist for functions)
                     JS2Class *limit = meta->objectType(b);
-                    if (limit->read(meta, b, limit, &mn, &lookup, RunPhase, &b_protoVal)) {
+                    if (limit->read(meta, &b, limit, &mn, &lookup, RunPhase, &b_protoVal)) {
                         if (!JS2VAL_IS_OBJECT(b_protoVal))
                             meta->reportError(Exception::typeError, "Non-object prototype value in instanceOf", errorPos());
                     }

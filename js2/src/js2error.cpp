@@ -106,12 +106,13 @@ js2val UriError_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2va
 
 js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
+    js2val thatValue = thisValue;
     js2val result;
     LookupKind lookup(false, JS2VAL_NULL);
     Multiname mn(&meta->world.identifiers["message"], meta->publicNamespace);
 
-    JS2Class *c = meta->objectType(thisValue);
-    if (c->readPublic(meta, thisValue, c, &meta->world.identifiers["message"], RunPhase, &result)) {
+    JS2Class *c = meta->objectType(thatValue);
+    if (c->readPublic(meta, &thatValue, c, &meta->world.identifiers["message"], RunPhase, &result)) {
         if (JS2VAL_IS_STRING(result))
             return result;
         else

@@ -61,7 +61,8 @@ uint32 getLength(JS2Metadata *meta, JS2Object *obj)
     uint32 length = 0;
     js2val result;
     JS2Class *c = meta->objectType(obj);
-    if (c->readPublic(meta, OBJECT_TO_JS2VAL(obj), c, meta->engine->length_StringAtom, RunPhase, &result))
+    js2val val = OBJECT_TO_JS2VAL(obj);
+    if (c->readPublic(meta, &val, c, meta->engine->length_StringAtom, RunPhase, &result))
         length = toUInt32(meta->toInteger(result));
     return length;
 }
@@ -69,22 +70,27 @@ uint32 getLength(JS2Metadata *meta, JS2Object *obj)
 js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
 {
     js2val result = meta->engine->allocNumber(newLength);
+    // XXX maybe should have setArrayLength as a specialization
     if ((obj->kind == SimpleInstanceKind)
-            || (checked_cast<SimpleInstance *>(obj)->type == meta->arrayClass)) {
+            && (checked_cast<SimpleInstance *>(obj)->type == meta->arrayClass)) {
         uint32 length = getLength(meta, obj);
         if (newLength < length) {
             // need to delete all the elements above the new length
-            // XXX (But only for array instances, maybe should have setArrayLength as a specialization)
             bool deleteResult;
             JS2Class *c = meta->objectType(obj);
             for (uint32 i = newLength; i < length; i++) {
                 c->deletePublic(meta, OBJECT_TO_JS2VAL(obj), c, meta->engine->numberToString(i), &deleteResult);
             }
         }
+        Multiname *mn = new Multiname(meta->engine->length_StringAtom, meta->publicNamespace);
+        RootKeeper rk(&mn);
+        LookupKind lookup(false, JS2VAL_NULL);
+        defaultWriteProperty(meta, OBJECT_TO_JS2VAL(obj), meta->arrayClass, mn, &lookup, true, result);
     }
-    // XXX if obj is an ArrayInstance, is this necessary? 
-    JS2Class *c = meta->objectType(obj);
-    c->writePublic(meta, OBJECT_TO_JS2VAL(obj), c, meta->engine->length_StringAtom, true, result);
+    else {
+        JS2Class *c = meta->objectType(obj);
+        c->writePublic(meta, OBJECT_TO_JS2VAL(obj), c, meta->engine->length_StringAtom, true, result);
+    }
     return result;
 }
 
@@ -119,22 +125,22 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
 
 static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (!JS2VAL_IS_OBJECT(thisValue) 
-            || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
-            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->arrayClass))
+    js2val thatValue = thisValue;
+    if (!JS2VAL_IS_OBJECT(thatValue) 
+            || (JS2VAL_TO_OBJECT(thatValue)->kind != SimpleInstanceKind)
+            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thatValue)))->type != meta->arrayClass))
         meta->reportError(Exception::typeError, "Array.prototype.toString called on a non Array", meta->engine->errorPos());
 
-    ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thisValue));
+    ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thatValue));
     uint32 length = getLength(meta, arrInst);
 
     if (length == 0)
         return STRING_TO_JS2VAL(meta->engine->allocString(meta->engine->Empty_StringAtom));
     else {
-        LookupKind lookup(false, JS2VAL_NULL);
         js2val result;
         String *s = new String();
         for (uint32 i = 0; i < length; i++) {
-            if (meta->arrayClass->readPublic(meta, thisValue, meta->arrayClass, meta->engine->numberToString(i), RunPhase, &result)
+            if (meta->arrayClass->readPublic(meta, &thatValue, meta->arrayClass, meta->engine->numberToString(i), RunPhase, &result)
                     && !JS2VAL_IS_UNDEFINED(result)
                     && !JS2VAL_IS_NULL(result) )
                 s->append(*meta->toString(result));
@@ -150,22 +156,22 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
 
 static js2val Array_toSource(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (!JS2VAL_IS_OBJECT(thisValue) 
-            || (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
-            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->arrayClass))
+    js2val thatValue = thisValue;
+    if (!JS2VAL_IS_OBJECT(thatValue) 
+            || (JS2VAL_TO_OBJECT(thatValue)->kind != SimpleInstanceKind)
+            || ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thatValue)))->type != meta->arrayClass))
         meta->reportError(Exception::typeError, "Array.prototype.toString called on a non Array", meta->engine->errorPos());
 
-    ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thisValue));
+    ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thatValue));
     uint32 length = getLength(meta, arrInst);
 
     if (length == 0)
         return meta->engine->allocString("[]");
     else {
-        LookupKind lookup(false, JS2VAL_NULL);
         js2val result;
         String *s = new String();
         for (uint32 i = 0; i < length; i++) {
-            if (meta->arrayClass->readPublic(meta, thisValue, meta->arrayClass, meta->engine->numberToString(i), RunPhase, &result)
+            if (meta->arrayClass->readPublic(meta, &thatValue, meta->arrayClass, meta->engine->numberToString(i), RunPhase, &result)
                     && !JS2VAL_IS_UNDEFINED(result))
                 s->append(*meta->toString(result));
             if (i < (length - 1))
@@ -194,16 +200,17 @@ static js2val Array_push(JS2Metadata *meta, const js2val thisValue, js2val *argv
               
 static js2val Array_pop(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(JS2VAL_IS_OBJECT(thisValue));
-    JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
+    js2val thatValue = thisValue;
+    ASSERT(JS2VAL_IS_OBJECT(thatValue));
+    JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
     uint32 length = getLength(meta, thisObj);
 
     if (length > 0) {
         js2val result = JS2VAL_UNDEFINED;
         bool deleteResult;
         JS2Class *c = meta->objectType(thisObj);
-        c->readPublic(meta, thisValue, c, meta->engine->numberToString(length - 1), RunPhase, &result);
-        c->deletePublic(meta, thisValue, c, meta->engine->numberToString(length - 1), &deleteResult);
+        c->readPublic(meta, &thatValue, c, meta->engine->numberToString(length - 1), RunPhase, &result);
+        c->deletePublic(meta, thatValue, c, meta->engine->numberToString(length - 1), &deleteResult);
         setLength(meta, thisObj, length - 1);
         return result;
     }
@@ -231,7 +238,7 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
             JS2Class *c = meta->objectType(arrObj);
             for (uint32 k = 0; k < length; k++) {
                 js2val rval = JS2VAL_UNDEFINED;
-                c->readPublic(meta, E, c, meta->engine->numberToString(k), RunPhase, &rval);                
+                c->readPublic(meta, &E, c, meta->engine->numberToString(k), RunPhase, &rval);                
                 meta->arrayClass->writePublic(meta, result, meta->arrayClass, meta->engine->numberToString(n++), true, rval);
             }
         }
@@ -243,8 +250,9 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
 
 static js2val Array_join(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    ASSERT(JS2VAL_IS_OBJECT(thisValue));
-    JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
+    js2val thatValue = thisValue;
+    ASSERT(JS2VAL_IS_OBJECT(thatValue));
+    JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
     uint32 length = getLength(meta, thisObj);
 
     const String *separator;
@@ -258,7 +266,7 @@ static js2val Array_join(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
     for (uint32 k = 0; k < length; k++) {
         js2val result = JS2VAL_UNDEFINED;
-        c->readPublic(meta, thisValue, c, meta->engine->numberToString(k), RunPhase, &result);                
+        c->readPublic(meta, &thatValue, c, meta->engine->numberToString(k), RunPhase, &result);                
         if (!JS2VAL_IS_UNDEFINED(result) && !JS2VAL_IS_NULL(result))
             *S += *meta->toString(result);
 
@@ -271,8 +279,9 @@ static js2val Array_join(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
 static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(JS2VAL_IS_OBJECT(thisValue));
-    JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
+    js2val thatValue = thisValue;
+    ASSERT(JS2VAL_IS_OBJECT(thatValue));
+    JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
     uint32 length = getLength(meta, thisObj);
     uint32 halfway = length / 2;
 
@@ -293,37 +302,38 @@ static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * 
 
         if (meta->hasOwnProperty(thisObj, mn1->name)) {
             if (meta->hasOwnProperty(thisObj, mn2->name)) {
-                c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &result1);                
-                c->readPublic(meta, thisValue, c, mn2->name, RunPhase, &result2);                
-                c->writePublic(meta, thisValue, c, mn1->name, true, result2);                
-                c->writePublic(meta, thisValue, c, mn2->name, true, result1);                
+                c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &result1);                
+                c->readPublic(meta, &thatValue, c, mn2->name, RunPhase, &result2);                
+                c->writePublic(meta, thatValue, c, mn1->name, true, result2);                
+                c->writePublic(meta, thatValue, c, mn2->name, true, result1);                
             }
             else {
-                c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &result1);                
-                c->writePublic(meta, thisValue, c, mn2->name, true, result1);
-                c->deletePublic(meta, thisValue, c, mn1->name, &deleteResult);
+                c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &result1);                
+                c->writePublic(meta, thatValue, c, mn2->name, true, result1);
+                c->deletePublic(meta, thatValue, c, mn1->name, &deleteResult);
             }
         }
         else {
             if (meta->hasOwnProperty(thisObj, mn2->name)) {
-                c->readPublic(meta, thisValue, c, mn2->name, RunPhase, &result2);                
-                c->writePublic(meta, thisValue, c, mn1->name, true, result2);
-                c->deletePublic(meta, thisValue, c, mn2->name, &deleteResult);
+                c->readPublic(meta, &thatValue, c, mn2->name, RunPhase, &result2);                
+                c->writePublic(meta, thatValue, c, mn1->name, true, result2);
+                c->deletePublic(meta, thatValue, c, mn2->name, &deleteResult);
             }
             else {
-                c->deletePublic(meta, thisValue, c, mn1->name, &deleteResult);
-                c->deletePublic(meta, thisValue, c, mn2->name, &deleteResult);
+                c->deletePublic(meta, thatValue, c, mn1->name, &deleteResult);
+                c->deletePublic(meta, thatValue, c, mn2->name, &deleteResult);
             }
         }
     }
     
-    return thisValue;
+    return thatValue;
 }
 
 static js2val Array_shift(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(JS2VAL_IS_OBJECT(thisValue));
-    JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
+    js2val thatValue = thisValue;
+    ASSERT(JS2VAL_IS_OBJECT(thatValue));
+    JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
     uint32 length = getLength(meta, thisObj);
 
     if (length == 0) {
@@ -341,30 +351,31 @@ static js2val Array_shift(JS2Metadata *meta, const js2val thisValue, js2val * /*
     js2val result;
     bool deleteResult;
     mn1->name = meta->engine->numberToString((int32)0);
-    c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &result);                
+    c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &result);                
 
     for (uint32 k = 1; k < length; k++) {
         mn1->name = meta->engine->numberToString(k);
         mn2->name = meta->engine->numberToString(k - 1);
 
         if (meta->hasOwnProperty(thisObj, mn1->name)) {
-            c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &result);                
-            c->writePublic(meta, thisValue, c, mn2->name, true, result);
+            c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &result);                
+            c->writePublic(meta, thatValue, c, mn2->name, true, result);
         }
         else
-            c->deletePublic(meta, thisValue, c, mn2->name, &deleteResult);
+            c->deletePublic(meta, thatValue, c, mn2->name, &deleteResult);
     }
 
     mn2->name = meta->engine->numberToString(length - 1);
-    c->deletePublic(meta, thisValue, c, mn2->name, &deleteResult);
+    c->deletePublic(meta, thatValue, c, mn2->name, &deleteResult);
     setLength(meta, thisObj, length - 1);
     return result;
 }
 
 static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    ASSERT(JS2VAL_IS_OBJECT(thisValue));
-    JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
+    js2val thatValue = thisValue;
+    ASSERT(JS2VAL_IS_OBJECT(thatValue));
+    JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
 
     js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
@@ -422,7 +433,7 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
         if (meta->hasOwnProperty(thisObj, mn1->name)) {
             js2val rval;
             mn2->name = meta->engine->numberToString(n);
-            c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &rval);                
+            c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &rval);                
             meta->arrayClass->writePublic(meta, result, meta->arrayClass, mn2->name, true, rval);
         }
         n++;
@@ -548,6 +559,7 @@ static int32 sort_compare(js2val *a, js2val *b, CompareArgs *arg)
 
 static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
+    js2val thatValue = thisValue;
     CompareArgs ca;
     ca.meta = meta;
     ca.target = NULL;
@@ -561,8 +573,8 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
         }
     }
 
-    ASSERT(JS2VAL_IS_OBJECT(thisValue));
-    JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
+    ASSERT(JS2VAL_IS_OBJECT(thatValue));
+    JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
     uint32 length = getLength(meta, thisObj);
 
     if (length > 0) {
@@ -575,17 +587,17 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
         RootKeeper rk1(&mn1);
         for (i = 0; i < length; i++) {
             mn1->name = meta->engine->numberToString(i);
-            c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &vec[i]);                
+            c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &vec[i]);                
         }
 
         js_qsort(vec, length, &ca);
 
         for (i = 0; i < length; i++) {
             mn1->name = meta->engine->numberToString(i);
-            c->writePublic(meta, thisValue, c, mn1->name, true, vec[i]);
+            c->writePublic(meta, thatValue, c, mn1->name, true, vec[i]);
         }
     }
-    return thisValue;
+    return thatValue;
 }
 
 static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
@@ -593,8 +605,9 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
     if (argc > 1) {
         uint32 k;
 
-        ASSERT(JS2VAL_IS_OBJECT(thisValue));
-        JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
+        js2val thatValue = thisValue;
+        ASSERT(JS2VAL_IS_OBJECT(thatValue));
+        JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
         uint32 length = getLength(meta, thisObj);
 
         js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
@@ -638,7 +651,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
             if (meta->hasOwnProperty(thisObj, mn1->name)) {
                 js2val rval;
                 mn2->name = meta->engine->numberToString(k);
-                c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &rval);                
+                c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &rval);                
                 meta->arrayClass->writePublic(meta, result, meta->arrayClass, mn2->name, true, rval);
             }
         }
@@ -652,15 +665,15 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
                 mn2->name = meta->engine->numberToString(k + newItemCount);
                 if (meta->hasOwnProperty(thisObj, mn1->name)) {
                     js2val rval;
-                    c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &rval);                
+                    c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &rval);                
                     meta->arrayClass->writePublic(meta, result, meta->arrayClass, mn2->name, true, rval);
                 }
                 else
-                    c->deletePublic(meta, thisValue, c, mn2->name, &deleteResult);                
+                    c->deletePublic(meta, thatValue, c, mn2->name, &deleteResult);                
             }
             for (k = length; k > (length - deleteCount + newItemCount); k--) {
                 mn1->name = meta->engine->numberToString(k - 1);
-                c->deletePublic(meta, thisValue, c, mn1->name, &deleteResult);                
+                c->deletePublic(meta, thatValue, c, mn1->name, &deleteResult);                
             }
         }
         else {
@@ -671,11 +684,11 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
                     mn2->name = meta->engine->numberToString(k + newItemCount - 1);
                     if (meta->hasOwnProperty(thisObj, meta->mn1->name)) {
                         js2val rval;
-                        c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &rval);                
+                        c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &rval);                
                         meta->arrayClass->writePublic(meta, result, meta->arrayClass, mn2->name, true, rval);
                     }
                     else
-                        c->deletePublic(meta, thisValue, c, mn2->name, &deleteResult);                
+                        c->deletePublic(meta, thatValue, c, mn2->name, &deleteResult);                
                 }
             }
         }
@@ -692,8 +705,9 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
 static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    ASSERT(JS2VAL_IS_OBJECT(thisValue));
-    JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
+    js2val thatValue = thisValue;
+    ASSERT(JS2VAL_IS_OBJECT(thatValue));
+    JS2Object *thisObj = JS2VAL_TO_OBJECT(thatValue);
 
     uint32 length = getLength(meta, thisObj);
     uint32 k;
@@ -711,20 +725,20 @@ static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *a
         mn2->name = meta->engine->numberToString(k + argc - 1);
         if (meta->hasOwnProperty(thisObj, mn1->name)) {
             js2val rval;
-            c->readPublic(meta, thisValue, c, mn1->name, RunPhase, &rval);                
-            c->writePublic(meta, thisValue, c, mn2->name, true, rval);
+            c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &rval);                
+            c->writePublic(meta, thatValue, c, mn2->name, true, rval);
         }
         else
-            c->deletePublic(meta, thisValue, c, mn2->name, &deleteResult);
+            c->deletePublic(meta, thatValue, c, mn2->name, &deleteResult);
     }
 
     for (k = 0; k < argc; k++) {
         mn1->name = meta->engine->numberToString(k);
-        c->writePublic(meta, thisValue, c, mn1->name, true, argv[k]);
+        c->writePublic(meta, thatValue, c, mn1->name, true, argv[k]);
     }
     setLength(meta, thisObj, (length + argc));
 
-    return thisValue;
+    return thatValue;
 }
 
 

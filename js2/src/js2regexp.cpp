@@ -84,35 +84,40 @@ namespace MetaData {
     js2val RegExpInstance::getLastIndex(JS2Metadata *meta)
     {
         js2val r;
-        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["lastIndex"], RunPhase, &r))
+        js2val thisVal = OBJECT_TO_JS2VAL(this);
+        if (meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, &meta->world.identifiers["lastIndex"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getGlobal(JS2Metadata *meta)
     {
         js2val r;
-        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["global"], RunPhase, &r))
+        js2val thisVal = OBJECT_TO_JS2VAL(this);
+        if (meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, &meta->world.identifiers["global"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getMultiline(JS2Metadata *meta)
     {
         js2val r;
-        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["multiline"], RunPhase, &r))
+        js2val thisVal = OBJECT_TO_JS2VAL(this);
+        if (meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, &meta->world.identifiers["multiline"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getIgnoreCase(JS2Metadata *meta)
     {
         js2val r;
-        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["ignoreCase"], RunPhase, &r))
+        js2val thisVal = OBJECT_TO_JS2VAL(this);
+        if (meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, &meta->world.identifiers["ignoreCase"], RunPhase, &r))
             ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getSource(JS2Metadata *meta)
     {
         js2val r;
-        if (meta->regexpClass->readPublic(meta, OBJECT_TO_JS2VAL(this), meta->regexpClass, &meta->world.identifiers["source"], RunPhase, &r))
+        js2val thisVal = OBJECT_TO_JS2VAL(this);
+        if (meta->regexpClass->readPublic(meta, &thisVal, meta->regexpClass, &meta->world.identifiers["source"], RunPhase, &r))
             ASSERT(false);
         return r;
     }

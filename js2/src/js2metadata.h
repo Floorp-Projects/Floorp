@@ -59,15 +59,28 @@ typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
-typedef bool (Read)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-typedef bool (ReadPublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
+typedef bool (Read)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+typedef bool (ReadPublic)(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
 typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
 typedef bool (WritePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
 typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
 typedef bool (DeletePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
-typedef bool (BracketRead)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
+typedef bool (BracketRead)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
 typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
 typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
+
+bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+bool defaultReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
+bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
+bool arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
+bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
+bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
+bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
+bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
+bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
+bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
+
+
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
@@ -760,8 +773,6 @@ class FunctionInstance : public SimpleInstance {
 public:
     FunctionInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
 
-    FunctionWrapper *fWrap;
-
     virtual void markChildren();
     virtual ~FunctionInstance()          { }
 };
@@ -1163,7 +1174,7 @@ public:
     InstanceMember *getDerivedInstanceMember(JS2Class *c, InstanceMember *mBase, Access access);
     InstanceMember *findBaseInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
     InstanceMember *findLocalInstanceMember(JS2Class *limit, Multiname *multiname, Access access);
-    Member *findCommonMember(js2val base, Multiname *multiname, Access access, bool flat);
+    Member *findCommonMember(js2val *base, Multiname *multiname, Access access, bool flat);
 
     js2val invokeFunction(const char *fname);
     bool invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result);
