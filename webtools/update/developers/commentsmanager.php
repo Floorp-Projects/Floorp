@@ -16,6 +16,11 @@ if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
 <TITLE>Mozilla Update :: Developer Control Panel :: Comments Manager</TITLE>
 <?php
 include"$page_header";
+
+if ($function=="flaggedcomments") {
+    $skipcomments = true;
+}
+
 include"inc_sidebar.php";
 ?>
 <?php

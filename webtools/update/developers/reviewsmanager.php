@@ -11,7 +11,15 @@ $function = $_GET["function"];
 include"$page_header";
 include"inc_sidebar.php";
 ?>
-
+<?php
+if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
+    echo"<h1>Access Denied</h1>\n";
+    echo"You do not have access to the Editor Reviews Manager";
+    include"$page_footer";
+    echo"</body></html>\n";
+    exit;
+}
+?>
 <?php
 if (!$function) {
 $typearray = array("E"=>"Extensions","T"=>"Themes");

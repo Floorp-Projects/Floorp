@@ -5,7 +5,7 @@ session_start();
 
 if ($_SESSION["logoncheck"] !=="YES" && strpos($_SERVER["SCRIPT_NAME"],"login.php")===false && strpos($_SERVER["SCRIPT_NAME"],"index.php")===false) {
 $return_path="developers/index.php";
-header("Location: http://$sitehostname/$return_path");
+header("Location: http://$_SERVER[SERVER_NAME]/$return_path");
 exit;
 }
 ?>
