@@ -50,7 +50,7 @@ var PrintUtils = {
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                      .getService(Components.interfaces.nsIPrintingPromptService);
       PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
-      this.savePrintSettings();
+      this.savePrintSettings(printSettings);
 
     } catch (e) {
       dump("showPageSetup "+e+"\n");
