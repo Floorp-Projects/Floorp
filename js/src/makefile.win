@@ -78,9 +78,6 @@ FDLIBM_LIBRARY	=	fdlibm\$(OBJDIR)\fdlibm.lib
 
 LLIBS=$(LIBNSPR) $(FDLIBM_LIBRARY)
 LCFLAGS= $(LCFLAGS) -DEXPORT_JS_API
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
 
 #//------------------------------------------------------------------------
 #// 

@@ -28,9 +28,6 @@ PROG1 = .\$(OBJDIR)\rebasedlls.exe
 PROGRAMS = $(PROG1)
 
 WIN_LIBS= imagehlp.lib
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
 
 include <$(DEPTH)\config\rules.mak>
 

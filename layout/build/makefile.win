@@ -91,9 +91,6 @@ LLIBS=					\
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\jsdom.lib		        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
-!if defined(MOZ_DEBUG) && defined(GLOWCODE) && "$(MOZ_BITS)"=="32"
- $(GLOWDIR)\glowcode.lib                \
-!endif
 !if defined(MOZ_PERF)
  $(DIST)\lib\util.lib		        \
 !endif

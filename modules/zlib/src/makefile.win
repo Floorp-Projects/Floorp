@@ -93,10 +93,6 @@ LINCS=$(LINCS) -I. -I_gen
 # clobber and clobber_all will remove the following garbage:
 GARBAGE	= $(GARBAGE) _gen
 
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
-
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
