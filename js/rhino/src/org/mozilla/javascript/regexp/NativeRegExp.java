@@ -1516,7 +1516,7 @@ System.out.println();
         int parenContent;
         RECapture s = x.parens[parenIndex];
         if (s.index == -1)
-            return x;
+            return null;
 
         len = s.length;
         if ((x.cp + len) > gData.cpend)
