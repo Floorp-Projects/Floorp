@@ -67,6 +67,8 @@
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLEmbedElement.h"
+#include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLDocument.h"
 
 #include "ftpCore.h"
@@ -1947,6 +1949,20 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
         return NS_OK;
     }
     
+    nsCOMPtr<nsIDOMHTMLEmbedElement> nodeAsEmbed = do_QueryInterface(aNode);
+    if (nodeAsEmbed)
+    {
+        StoreURIAttribute(aNode, "src");
+        return NS_OK;
+    }
+    
+    nsCOMPtr<nsIDOMHTMLObjectElement> nodeAsObject = do_QueryInterface(aNode);
+    if (nodeAsObject)
+    {
+        StoreURIAttribute(aNode, "data");
+        return NS_OK;
+    }
+    
     nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNode);
     if (nodeAsLink)
     {
@@ -2088,6 +2104,28 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         return rv;
     }
     
+    nsCOMPtr<nsIDOMHTMLEmbedElement> nodeAsEmbed = do_QueryInterface(aNodeIn);
+    if (nodeAsEmbed)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "src");
+        }
+        return rv;
+    }
+    
+    nsCOMPtr<nsIDOMHTMLObjectElement> nodeAsObject = do_QueryInterface(aNodeIn);
+    if (nodeAsObject)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            FixupNodeAttribute(*aNodeOut, "data");
+        }
+        return rv;
+    }
+
     nsCOMPtr<nsIDOMHTMLLinkElement> nodeAsLink = do_QueryInterface(aNodeIn);
     if (nodeAsLink)
     {
