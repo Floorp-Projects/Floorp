@@ -33,10 +33,10 @@
                                 (($default-action $default-action)))
                (:non-terminator-or-slash (- :non-terminator (#\/)) ())
                (:non-terminator-or-asterisk-or-slash (- :non-terminator (#\* #\/)) ())
-               (:ordinary-initial-identifier-character (+ :unicode-initial-alphabetic (#\$ #\_))
-                                                       (($default-action $default-action)))
-               (:ordinary-continuing-identifier-character (+ :unicode-alphanumeric (#\$ #\_))
-                                                          (($default-action $default-action)))
+               (:initial-identifier-character (+ :unicode-initial-alphabetic (#\$ #\_))
+                                              (($default-action $default-action)))
+               (:continuing-identifier-character (+ :unicode-alphanumeric (#\$ #\_))
+                                                 (($default-action $default-action)))
                (:a-s-c-i-i-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
                                  (($default-action $default-action)
                                   (decimal-value $digit-value)))
@@ -72,7 +72,7 @@
               (:character-literal #\/) " should be interpreted as a regular expression; and "
               (:grammar-symbol (:next-token div)) " if the previous token was not a number and a "
               (:character-literal #\/) " should be interpreted as a division or division-assignment operator.")
-
+       
        (deftype semantic-exception (oneof syntax-error))
        
        (%section "Unicode Character Classes")
@@ -138,7 +138,7 @@
            (token (token :token)))
          (production (:next-token div) (:white-space (:token div)) next-token-div
            (token (token :token)))
-         (production (:next-token unit) ((:- :ordinary-continuing-identifier-character #\\) :white-space (:token div)) next-token-unit-normal
+         (production (:next-token unit) ((:- :continuing-identifier-character #\\) :white-space (:token div)) next-token-unit-normal
            (token (token :token)))
          (production (:next-token unit) ((:- #\_) :identifier-name) next-token-unit-name
            (token (oneof string (name :identifier-name))))
@@ -189,50 +189,50 @@
        
        (rule :identifier-name
              ((name string) (contains-escapes boolean))
-         (production :identifier-name (:initial-identifier-character) identifier-name-initial
-           (name (vector (character-value :initial-identifier-character)))
-           (contains-escapes (contains-escapes :initial-identifier-character)))
-         (production :identifier-name (:null-escapes :initial-identifier-character) identifier-name-initial-null-escapes
-           (name (vector (character-value :initial-identifier-character)))
+         (production :identifier-name (:initial-identifier-character-or-escape) identifier-name-initial
+           (name (vector (character-value :initial-identifier-character-or-escape)))
+           (contains-escapes (contains-escapes :initial-identifier-character-or-escape)))
+         (production :identifier-name (:null-escapes :initial-identifier-character-or-escape) identifier-name-initial-null-escapes
+           (name (vector (character-value :initial-identifier-character-or-escape)))
            (contains-escapes true))
-         (production :identifier-name (:identifier-name :continuing-identifier-character) identifier-name-continuing
-           (name (append (name :identifier-name) (vector (character-value :continuing-identifier-character))))
+         (production :identifier-name (:identifier-name :continuing-identifier-character-or-escape) identifier-name-continuing
+           (name (append (name :identifier-name) (vector (character-value :continuing-identifier-character-or-escape))))
            (contains-escapes (or (contains-escapes :identifier-name)
-                                 (contains-escapes :continuing-identifier-character))))
+                                 (contains-escapes :continuing-identifier-character-or-escape))))
          (production :identifier-name (:identifier-name :null-escape) identifier-name-null-escape
            (name (name :identifier-name))
            (contains-escapes true)))
-
+       
        (production :null-escapes (:null-escape) null-escapes-one)
        (production :null-escapes (:null-escapes :null-escape) null-escapes-more)
        
        (production :null-escape (#\\ #\Q) null-escape-q)
-
-       (rule :initial-identifier-character
+       
+       (rule :initial-identifier-character-or-escape
              ((character-value character) (contains-escapes boolean))
-         (production :initial-identifier-character (:ordinary-initial-identifier-character) initial-identifier-character-ordinary
-           (character-value ($default-action :ordinary-initial-identifier-character))
+         (production :initial-identifier-character-or-escape (:initial-identifier-character) initial-identifier-character-or-escape-ordinary
+           (character-value ($default-action :initial-identifier-character))
            (contains-escapes false))
-         (production :initial-identifier-character (#\\ :hex-escape) initial-identifier-character-escape
-           (character-value (if (is-ordinary-initial-identifier-character (character-value :hex-escape))
+         (production :initial-identifier-character-or-escape (#\\ :hex-escape) initial-identifier-character-or-escape-escape
+           (character-value (if (is-initial-identifier-character (character-value :hex-escape))
                               (character-value :hex-escape)
                               (throw (oneof syntax-error))))
            (contains-escapes true)))
        
-       (%charclass :ordinary-initial-identifier-character)
+       (%charclass :initial-identifier-character)
        
-       (rule :continuing-identifier-character
+       (rule :continuing-identifier-character-or-escape
              ((character-value character) (contains-escapes boolean))
-         (production :continuing-identifier-character (:ordinary-continuing-identifier-character) continuing-identifier-character-ordinary
-           (character-value ($default-action :ordinary-continuing-identifier-character))
+         (production :continuing-identifier-character-or-escape (:continuing-identifier-character) continuing-identifier-character-or-escape-ordinary
+           (character-value ($default-action :continuing-identifier-character))
            (contains-escapes false))
-         (production :continuing-identifier-character (#\\ :hex-escape) continuing-identifier-character-escape
-           (character-value (if (is-ordinary-continuing-identifier-character (character-value :hex-escape))
+         (production :continuing-identifier-character-or-escape (#\\ :hex-escape) continuing-identifier-character-or-escape-escape
+           (character-value (if (is-continuing-identifier-character (character-value :hex-escape))
                               (character-value :hex-escape)
                               (throw (oneof syntax-error))))
            (contains-escapes true)))
        
-       (%charclass :ordinary-continuing-identifier-character)
+       (%charclass :continuing-identifier-character)
        (%print-actions)
        
        (define reserved-words (vector string)
@@ -473,7 +473,7 @@
                                                         (* 256 (hex-value :hex-digit 2)))
                                                      (* 16 (hex-value :hex-digit 3)))
                                                   (hex-value :hex-digit 4))))))
-
+       
        (%print-actions)
        
        (%section "Regular expression literals")
@@ -485,8 +485,8 @@
        (rule :reg-exp-flags ((r-e-flags string))
          (production :reg-exp-flags () reg-exp-flags-none
            (r-e-flags ""))
-         (production :reg-exp-flags (:reg-exp-flags :continuing-identifier-character) reg-exp-flags-more
-           (r-e-flags (append (r-e-flags :reg-exp-flags) (vector (character-value :continuing-identifier-character)))))
+         (production :reg-exp-flags (:reg-exp-flags :continuing-identifier-character-or-escape) reg-exp-flags-more
+           (r-e-flags (append (r-e-flags :reg-exp-flags) (vector (character-value :continuing-identifier-character-or-escape)))))
          (production :reg-exp-flags (:reg-exp-flags :null-escape) reg-exp-flags-null-escape
            (r-e-flags (r-e-flags :reg-exp-flags))))
        
@@ -529,7 +529,7 @@
        (depict rtf-stream "Grammar"))
      (depict-grammar rtf-stream *lg*)))
 
-(progn
+(values
   (depict-rtf-to-local-file
    "JS20/LexerGrammar.rtf"
    "JavaScript 2 Lexer Grammar"
@@ -541,7 +541,7 @@
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw*))))
 
-(progn
+(values
   (depict-html-to-local-file
    "JS20/LexerGrammar.html"
    "JavaScript 2 Lexer Grammar"

@@ -204,14 +204,14 @@
 (define-character-set 'initial-alpha '((#\A #\Z) (#\a #\z)))
 (define-character-set 'alphanumeric '((#\0 #\9) (#\A #\Z) (#\a #\z)))
 
-(define-character-set '*ordinary-initial-identifier-character* '(#\$ #\_ (#\A #\Z) (#\a #\z)))
-(define-character-set '*ordinary-continuing-identifier-character* '(#\$ #\_ (#\0 #\9) (#\A #\Z) (#\a #\z)))
+(define-character-set '*initial-identifier-character* '(#\$ #\_ (#\A #\Z) (#\a #\z)))
+(define-character-set '*continuing-identifier-character* '(#\$ #\_ (#\0 #\9) (#\A #\Z) (#\a #\z)))
 
-(defun ordinary-initial-identifier-character? (char)
-  (char-in-charset? (predefined-character-set '*ordinary-initial-identifier-character*) char))
+(defun initial-identifier-character? (char)
+  (char-in-charset? (predefined-character-set '*initial-identifier-character*) char))
 
-(defun ordinary-continuing-identifier-character? (char)
-  (char-in-charset? (predefined-character-set '*ordinary-continuing-identifier-character*) char))
+(defun continuing-identifier-character? (char)
+  (char-in-charset? (predefined-character-set '*continuing-identifier-character*) char))
 
 
 ;;; ------------------------------------------------------------------------------------------------------

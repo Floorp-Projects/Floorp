@@ -569,13 +569,15 @@
 ; Return the grammar with the given name in the world
 (defun world-grammar (world name)
   (let ((grammar-info (world-grammar-info world name)))
-    (and grammar-info (grammar-info-grammar grammar-info))))
+    (assert-non-null
+     (and grammar-info (grammar-info-grammar grammar-info)))))
 
 
 ; Return the lexer with the given name in the world
 (defun world-lexer (world name)
   (let ((grammar-info (world-grammar-info world name)))
-    (and grammar-info (grammar-info-lexer grammar-info))))
+    (assert-non-null
+     (and grammar-info (grammar-info-lexer grammar-info)))))
 
 
 ; Return a list of highlights allowed in this world.
@@ -2612,8 +2614,8 @@
     (character-set= (-> (character-set character-set) boolean) #'intset= :infix "=" t %relational% %term% %term%)
     
     (digit-value (-> (character) integer) #'digit-char-36)
-    (is-ordinary-initial-identifier-character (-> (character) boolean) #'ordinary-initial-identifier-character?)
-    (is-ordinary-continuing-identifier-character (-> (character) boolean) #'ordinary-continuing-identifier-character?)))
+    (is-initial-identifier-character (-> (character) boolean) #'initial-identifier-character?)
+    (is-continuing-identifier-character (-> (character) boolean) #'continuing-identifier-character?)))
 
 
 ;;; Partial order of primitives for deciding when to depict parentheses.
