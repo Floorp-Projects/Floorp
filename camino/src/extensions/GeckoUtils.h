@@ -95,9 +95,9 @@ public:
           if (!parentNode)
             node = nsnull;
           else {
-            nsCOMPtr<nsIDOMNode> nextSibling;
-            parentNode->GetNextSibling(getter_AddRefs(nextSibling));
-            node = nextSibling;
+            nsCOMPtr<nsIDOMNode> nextSibling2;
+            parentNode->GetNextSibling(getter_AddRefs(nextSibling2));
+            node = nextSibling2;
             depth--;
           }
         }

@@ -20,8 +20,7 @@
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
-*   David Haas <haasd@cae.wisc.edu>
-*
+*    Simon Fraser <sfraser@netscape.com>
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,29 +36,50 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#import <Appkit/Appkit.h>
+
+#import <AppKit/AppKit.h>
+
+@class BookmarkViewController;
+@class BrowserWindowController;
+@class ExtendedOutlineView;
 
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-// this category is here just to quiet some warnings when using the 10.2 SDK
-@interface NSTableView(CaminoNSTableViewPantherAdditions)
-
-- (void)setGridStyleMask:(unsigned int)gridType;
-- (unsigned int)gridStyleMask;
-
-- (void)setUsesAlternatingRowBackgroundColors:(BOOL)useAlternatingRowColors;
-- (BOOL)usesAlternatingRowBackgroundColors;
-
-@end
-
-#endif
-
-@interface ExtendedTableView : NSTableView
+// delegate for the history outliner. we use a different delegate from the bookmarks outliner
+// to keep the outline view delegate methods simpler.
+@interface HistoryOutlineViewDelegate : NSObject
 {
-  SEL mDeleteAction;
+  IBOutlet ExtendedOutlineView*     mHistoryOutlineView;
+  IBOutlet NSMenu*                  mOutlinerContextMenu;
+  
+  IBOutlet NSMenu*                  mHistorySortMenu;
+  IBOutlet BookmarkViewController*  mBookmarksViewController;
+
+  BrowserWindowController*          mBrowserWindowController;
+  BOOL                              mUpdatesDisabled;
+  BOOL                              mHistoryLoaded;
 }
 
--(void)setDeleteAction: (SEL)deleteAction;
--(SEL)deleteAction;
+- (void)setBrowserWindowController:(BrowserWindowController*)bwController;
+
+- (void)historyViewMadeVisible:(BOOL)visible;
+
+- (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag;
+- (void)clearSearchResults;
+
+- (IBAction)openHistoryItem:(id)sender;
+- (IBAction)openHistoryItemInNewWindow:(id)aSender;
+- (IBAction)openHistoryItemInNewTab:(id)aSender;
+
+- (IBAction)deleteHistoryItems:(id)sender;
+
+- (IBAction)groupByDate:(id)sender;
+- (IBAction)groupBySite:(id)sender;
+- (IBAction)setNoGrouping:(id)sender;
+
+- (IBAction)sortBy:(id)sender;
+
+- (IBAction)sortAscending:(id)sender;
+- (IBAction)sortDescending:(id)sender;
+
 
 @end

@@ -52,8 +52,8 @@
 @end
 
 // Notification of URL load
-NSString *URLLoadNotification = @"url_load";
-NSString *URLLoadSuccessKey = @"url_bool";
+NSString* const URLLoadNotification   = @"url_load";
+NSString* const URLLoadSuccessKey     = @"url_bool";
 
 @implementation Bookmark
 
@@ -213,6 +213,23 @@ NSString *URLLoadSuccessKey = @"url_bool";
     if ([[[note userInfo] objectForKey:URLLoadSuccessKey] unsignedIntValue] == kBookmarkOKStatus) 
       [self setNumberOfVisits:([self numberOfVisits]+1)];
   }
+}
+
+// rather than overriding this, it might be better to have a stub for
+// -url in the base class
+-(BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag
+{
+  switch (tag)
+  {
+    case eBookmarksSearchFieldAll:
+      return (([[self url] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound) ||
+              [super matchesString:searchString inFieldWithTag:tag]);
+    
+    case eBookmarksSearchFieldURL:
+      return ([[self url] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound);
+  }
+
+  return [super matchesString:searchString inFieldWithTag:tag];
 }
 
 #pragma mark -

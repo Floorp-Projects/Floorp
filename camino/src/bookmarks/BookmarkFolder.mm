@@ -43,11 +43,11 @@
 #import "NSString+Utils.h"
 
 // Notification definitions
-NSString* BookmarkFolderAdditionNotification = @"bf_add";
-NSString* BookmarkFolderDeletionNotification = @"bf_del";
-NSString* BookmarkFolderChildKey = @"bf_ck";
-NSString* BookmarkFolderChildIndexKey = @"bf_ik";
-NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
+NSString* const BookmarkFolderAdditionNotification      = @"bf_add";
+NSString* const BookmarkFolderDeletionNotification      = @"bf_del";
+NSString* const BookmarkFolderChildKey                  = @"bf_ck";
+NSString* const BookmarkFolderChildIndexKey             = @"bf_ik";
+NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 @interface BookmarkFolder (Private)
 // status stuff
@@ -71,7 +71,6 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // aids in searching
 - (NSString*) expandKeyword:(NSString*)keyword inString:(NSString*)location;
 - (NSArray *) folderItemWithClass:(Class)theClass;
-- (BOOL) isString:(NSString *)searchString inBookmarkItem:(BookmarkItem *)anItem;
 
 @end
 
@@ -710,44 +709,28 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   return location;
 }
 
--(NSSet *) bookmarksWithString:(NSString *)searchString
+- (NSSet*)bookmarksWithString:(NSString *)searchString inFieldWithTag:(int)tag
 {
   NSMutableSet *foundSet = [NSMutableSet set];
-  // see if we match
-  if ([self isString:searchString inBookmarkItem:self])
-    [foundSet addObject:self];
+  
   // see if our kids match
   NSEnumerator *enumerator = [[self childArray] objectEnumerator];
-  id aKid;
-  while ((aKid = [enumerator nextObject])) {
-    if ([aKid isKindOfClass:[Bookmark class]]) {
-      if ([self isString:searchString inBookmarkItem:aKid])
-        [foundSet addObject:aKid];
-    } else if ([aKid isKindOfClass:[BookmarkFolder class]]) {
-      NSSet *childFoundSet = [aKid bookmarksWithString:searchString];
-      if ([childFoundSet count] > 0) {
-        NSEnumerator *kidEnumerator = [childFoundSet objectEnumerator];
-        id aKidThing;
-        while ((aKidThing = [kidEnumerator nextObject]))
-          [foundSet addObject:aKidThing];
-      }
+  id childItem;
+  while ((childItem = [enumerator nextObject]))
+  {
+    if ([childItem isKindOfClass:[Bookmark class]])
+    {
+      if ([childItem matchesString:searchString inFieldWithTag:tag])
+        [foundSet addObject:childItem];
+    }
+    else if ([childItem isKindOfClass:[BookmarkFolder class]])
+    {
+      // recurse, adding found items to the existing set
+      NSSet *childFoundSet = [childItem bookmarksWithString:searchString inFieldWithTag:tag];
+      [foundSet unionSet:childFoundSet];
     }
   }
   return foundSet;
-}
-
--(BOOL) isString:(NSString *)searchString inBookmarkItem:(BookmarkItem *)anItem
-{
-  BOOL stringFound = NO;
-  if (([[anItem title] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound) ||
-      ([[anItem keyword] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound) ||
-      ([[anItem description] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound))
-    stringFound = YES;
-  if (!stringFound && [anItem isKindOfClass:[Bookmark class]]) {
-    if ([[(Bookmark *)anItem url] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound)
-      stringFound = YES;
-  }
-  return stringFound;
 }
 
 //
@@ -1057,26 +1040,22 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // all the insert, add, remove, replace methods for the 3 sets of items in a bookmark array
 -(void) insertInChildArray:(BookmarkItem *)aItem atIndex:(unsigned)aIndex
 {
-  NSLog(@"insert child array item = %@, index = %i",[aItem title],aIndex);
   [self insertChild:aItem atIndex:aIndex isMove:NO];
 }
 
 -(void) addInChildArray:(BookmarkItem *)aItem
 {
-  NSLog(@"add child array item = %@",[aItem title]);
   [self insertChild:aItem];
 }
 
 -(void) removeFromChildArrayAtIndex:(unsigned)aIndex
 {
-  NSLog(@"remove child array item = %i",aIndex);
   BookmarkItem* aKid = [[self childArray] objectAtIndex:aIndex];
   [self deleteChild:aKid];
 }
 
 -(void)replaceInChildArray:(BookmarkItem *)aItem atIndex:(unsigned)aIndex
 {
-  NSLog(@"replace child array item = %@, index = %i",[aItem title],aIndex);
   [self removeFromChildArrayAtIndex:aIndex];
   [self insertChild:aItem atIndex:aIndex isMove:NO];
 }
@@ -1085,7 +1064,6 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 //
 -(void) insertInChildBookmarks:(Bookmark *)aItem atIndex:(unsigned)aIndex
 {
-  NSLog(@"in insert bookmarks title = %@, index = %i",[aItem title], aIndex);
   NSArray *bookmarkArray = [self childBookmarks];
   Bookmark *aBookmark;
   unsigned realIndex;
@@ -1101,7 +1079,6 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void) addInChildBookmarks:(Bookmark *)aItem
 {
-  NSLog(@"in add bookmark title = %@",[aItem title]);
   NSArray *bookmarkArray = [self childBookmarks];
   Bookmark *aBookmark = [bookmarkArray lastObject];
   unsigned index = [[self childArray] indexOfObject:aBookmark];
@@ -1110,14 +1087,12 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void) removeFromChildBookmarksAtIndex:(unsigned)aIndex
 {
-  NSLog(@"in remove bookmark taking index = %i",aIndex);
   Bookmark* aKid = [[self childBookmarks] objectAtIndex:aIndex];
   [self deleteChild:aKid];
 }
 
 -(void)replaceInChildBookmarks:(Bookmark *)aItem atIndex:(unsigned)aIndex
 {
-  NSLog(@"in replace bookmark title = %@, index = %i",[aItem title],aIndex);
   [self removeFromChildBookmarksAtIndex:aIndex];
   [self insertInChildBookmarks:aItem atIndex:aIndex];
 }
@@ -1126,8 +1101,6 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 //
 -(void) insertInChildFolders:(BookmarkFolder *)aItem atIndex:(unsigned)aIndex
 {
-  NSLog(@"in insert folder title = %@, index = %i",[aItem title], aIndex);
-
   NSArray *folderArray = [self childFolders];
   BookmarkFolder *aFolder;
   unsigned realIndex;
@@ -1143,8 +1116,6 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void) addInChildFolders:(BookmarkFolder *)aItem
 {
-  NSLog(@"in add folder title = %@",[aItem title]);
-
   NSArray *folderArray = [self childFolders];
   BookmarkFolder *aFolder = [folderArray lastObject];
   unsigned index = [[self childArray] indexOfObject:aFolder];
@@ -1153,14 +1124,12 @@ NSString* BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void) removeFromChildFoldersAtIndex:(unsigned)aIndex
 {
-  NSLog(@"in remove folder taking index = %i",aIndex);
   BookmarkFolder* aKid = [[self childFolders] objectAtIndex:aIndex];
   [self deleteChild:aKid];
 }
 
 -(void)replaceInChildFolders:(BookmarkFolder *)aItem atIndex:(unsigned)aIndex
 {
-  NSLog(@"in replace folder title = %@, index = %i",[aItem title],aIndex);
   [self removeFromChildFoldersAtIndex:aIndex];
   [self insertInChildFolders:aItem atIndex:aIndex];
 }

@@ -48,17 +48,18 @@
 
 // Notification keys
 // defined in Bookmark.h
-extern NSString *URLLoadNotification; //object is NSString of URL, userinfo has NSNum of success/fail
-extern NSString *URLLoadSuccessKey;   //key for bool of load success/fail
-// defined in BookmarkFolder.h
-extern NSString* BookmarkFolderAdditionNotification; //self is obj, userinfo has added item/index
-extern NSString* BookmarkFolderDeletionNotification; //self is obj, userinfo dict has removed item
-extern NSString* BookmarkFolderChildKey;//key for added/removed object in userinfo dict
-extern NSString* BookmarkFolderChildIndexKey; // key for added object index in userinfo dict
-extern NSString* BookmarkFolderDockMenuChangeNotificaton; //self is NEW dock menu OR nil
-// Defined in BookmarkItem.h
-extern NSString *BookmarkItemChangedNotification; //no userinfo, self is object
-extern NSString *BookmarkIconChangedNotification; //no userinfo, self is object
+extern NSString* const URLLoadNotification;                     // object is NSString of URL, userinfo has NSNum of success/fail
+extern NSString* const URLLoadSuccessKey;                       // key for bool of load success/fail
 
+// defined in BookmarkFolder.h
+extern NSString* const BookmarkFolderAdditionNotification;      // self is obj, userinfo has added item/index
+extern NSString* const BookmarkFolderDeletionNotification;      // self is obj, userinfo dict has removed item
+extern NSString* const BookmarkFolderChildKey;                  // key for added/removed object in userinfo dict
+extern NSString* const BookmarkFolderChildIndexKey;             // key for added object index in userinfo dict
+extern NSString* const BookmarkFolderDockMenuChangeNotificaton; // self is NEW dock menu OR nil
+
+// Defined in BookmarkItem.h
+extern NSString* const BookmarkItemChangedNotification;         // no userinfo, self is object
+extern NSString* const BookmarkIconChangedNotification;         // no userinfo, self is object
 
 

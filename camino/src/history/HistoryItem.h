@@ -20,8 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger <ben@netscape.com> (Original Author)
- *   Simon Woodside <sbwoodside@yahoo.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,36 +36,73 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Appkit/Appkit.h>
+#import <AppKit/AppKit.h>
 
-#import "RDFItem.h"
+class nsIHistoryItem;
 
-// YES if you want to have history flattened
-// eliminates the per-site folders that nsGlobalHistory returns
-// and also sorts the resulting flat list by date
-const bool kFlattenHistory = YES;
+// HistoryItem is the base class for every object in the history outliner
 
-// URIs for RDF properties
-#define NC_NAME_KEY @"http://home.netscape.com/NC-rdf#Name"
-#define NC_URL_KEY @"http://home.netscape.com/NC-rdf#URL"
-#define NC_DATE_KEY @"http://home.netscape.com/NC-rdf#Date"
-  
-// HistoryItem's are the rows of the history outline view
-// extends RDFItem to support flattened history list
-@interface HistoryItem : RDFItem
+@interface HistoryItem : NSObject
 {
-  NSArray * mGrandChildNodes;
 }
 
-- (void)deleteFromGecko;
+- (NSString*)title;
+- (BOOL)isSiteItem;
+- (NSImage*)icon;
 
-- (void)buildGrandChildCache;
-
-- (HistoryItem*)childAtIndex:(int)index;
-
-// RDF properties
-- (NSString*)name;
 - (NSString*)url;
-- (NSString*)date;
+- (NSDate*)firstVisit;
+- (NSDate*)lastVisit;
+- (NSString*)hostname;
+- (NSString*)identifier;
+
+- (NSMutableArray*)children;
+- (int)numberOfChildren;
+- (HistoryItem*)childAtIndex:(int)inIndex;
+
+- (BOOL)isSiteItem;
+
+// we put sort comparators on the base class for convenience
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem;
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem;
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem;
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem;
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem;
+
+@end
+
+// a history category item (a folder in the outliner)
+@interface HistoryCategoryItem : HistoryItem
+{
+  NSString*         mTitle;
+  NSDate*           mStartDate;
+  NSMutableArray*   mChildren;    // array of HistoryItems (may be heterogeneous)
+}
+
+- (id)initWithTitle:(NSString*)title childCapacity:(int)capacity;
+- (NSString*)title;
+// start date only valid when grouping by date
+- (NSDate*)startDate;
+- (void)setStartDate:(NSDate*)date;
+
+@end
+
+
+// a specific history entry
+@interface HistorySiteItem : HistoryItem
+{
+  NSString*         mItemIdentifier;
+  NSString*         mURL;
+  NSString*         mTitle;
+  NSString*         mHostname;
+  NSDate*           mFirstVisitDate;
+  NSDate*           mLastVisitDate;
+}
+
+- (id)initWith_nsIHistoryItem:(nsIHistoryItem*)inItem;
+// return YES if anything changed
+- (BOOL)updateWith_nsIHistoryItem:(nsIHistoryItem*)inItem;
+
+- (BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag;
 
 @end

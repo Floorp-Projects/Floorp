@@ -179,7 +179,7 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
     prefs->GetBranch("browser.download.", getter_AddRefs(dirBranch));
     PRInt32 filterIndex = eSaveFormatHTMLComplete;
     if (dirBranch) {
-        nsresult rv = dirBranch->GetIntPref("save_converter_index", &filterIndex);
+        rv = dirBranch->GetIntPref("save_converter_index", &filterIndex);
         if (NS_FAILED(rv))
             filterIndex = eSaveFormatHTMLComplete;
     }

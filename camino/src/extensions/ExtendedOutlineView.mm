@@ -41,15 +41,27 @@
 
 #import "ExtendedOutlineView.h"
 
+
+static NSString* const kAutosaveSortColumnIdentifierKey = @"sortcolumn_id";
+static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
+
 @interface ExtendedOutlineView (Private)
+
 - (void)_updateToolTipRect;
+
+- (void)updateTableHeaderToMatchCurrentSort;
+- (void)loadAutosaveSort;
+- (void)saveAutosaveSort;
+- (NSString*)autosaveDefaultsKey;
+
 @end
 
 @implementation ExtendedOutlineView
 
 - (id)initWithFrame:(NSRect)frame
 {
-  if ( (self = [super initWithFrame:frame]) ) {
+  if ( (self = [super initWithFrame:frame]) )
+  {
     mDeleteAction = nil;
     mAllowsEditing = YES;
     mRowToBeEdited = mColumnToBeEdited = 0;
@@ -67,6 +79,18 @@
   [self _updateToolTipRect];
 }
 
+- (void)dealloc
+{
+  [self saveAutosaveSort];    // is this too late?
+
+  [mAscendingSortingImage release];
+  [mDescendingSortingImage release];
+
+  [mSortColumnIdentifier release];
+
+  [super dealloc];
+}
+
 -(void)setDeleteAction: (SEL)aDeleteAction
 {
   mDeleteAction = aDeleteAction;
@@ -82,7 +106,6 @@
   [super setDelegate:anObject];
   mDelegateTooltipStringForItem = [anObject respondsToSelector:@selector(outlineView:tooltipStringForItem:)];
 }
-
 
 -(void)keyDown:(NSEvent*)aEvent
 {
@@ -143,13 +166,13 @@
 /*
  * Intercept changes to the window frame so we can update our tooltip rects
  */
-- (void)setFrameOrigin:(NSPoint)newOrigin;
+- (void)setFrameOrigin:(NSPoint)newOrigin
 {
   [super setFrameOrigin:newOrigin];
   [self _updateToolTipRect];
 }
 
-- (void)setFrameSize:(NSSize)newSize;
+- (void)setFrameSize:(NSSize)newSize
 {
   [super setFrameSize:newSize];
   [self _updateToolTipRect];
@@ -199,9 +222,12 @@
     if (item) {
       id delegate = [self delegate];
       // Make sure the item is the only selected one
-      if (![delegate respondsToSelector:@selector(outlineView:shouldSelectItem:)]
-          || [delegate outlineView:self shouldSelectItem:item]) {
-        [self deselectAll:self]; // we don't want anything but what was right-clicked selected
+      if (![delegate respondsToSelector:@selector(outlineView:shouldSelectItem:)] ||
+           [delegate outlineView:self shouldSelectItem:item]) {
+        // we don't want anything but what was right-clicked selected
+        // XXX sure we do. I should be able to context-click on a bunch of selected bookmarks
+        // and say 'open in tabs'.
+        [self deselectAll:self];
         [self selectRow:rowIndex byExtendingSelection:NO];
       }
       
@@ -357,15 +383,153 @@
   }
 }
 
--(void)setAllowsEditing:(BOOL)inAllow
+- (void)setAllowsEditing:(BOOL)inAllow
 {
   mAllowsEditing = inAllow;
 }
 
-@end
+#pragma mark -
 
+- (void)updateTableHeaderToMatchCurrentSort
+{
+  if (!mAscendingSortingImage)
+  {
+    // magic image names
+    mAscendingSortingImage  = [[NSImage imageNamed:@"NSAscendingSortIndicator"] retain];
+    mDescendingSortingImage = [[NSImage imageNamed:@"NSDescendingSortIndicator"] retain];
+  }
 
-@implementation ExtendedOutlineView (Private)
+  NSArray*        columns     = [self tableColumns];
+  NSTableColumn*  sortColumn  = [self tableColumnWithIdentifier:mSortColumnIdentifier];
+  unsigned int    i, numCols  = [columns count];
+
+  for (i = 0; i < numCols; i ++)
+    [self setIndicatorImage:nil inTableColumn:[columns objectAtIndex:i]];
+
+  if (sortColumn)
+  {
+    [self setIndicatorImage:(mDescendingSort ? mDescendingSortingImage : mAscendingSortingImage) inTableColumn:sortColumn];
+    [self setHighlightedTableColumn:sortColumn];
+  }
+  else
+  {
+    [self setHighlightedTableColumn:nil];
+  }
+}
+
+- (NSString*)sortColumnIdentifier
+{
+  return mSortColumnIdentifier;
+}
+
+- (void)setSortColumnIdentifier:(NSString*)inColumnIdentifier
+{
+  [mSortColumnIdentifier autorelease];
+  mSortColumnIdentifier = [inColumnIdentifier retain];
+  
+  // forward to the data source
+  // this assumes that this data source is only used for this outliner,
+  // and not others (breaks clean model/view separation)
+  if ([[self dataSource] respondsToSelector:@selector(setSortColumnIdentifier:)])
+    [[self dataSource] setSortColumnIdentifier:mSortColumnIdentifier];
+
+  [self updateTableHeaderToMatchCurrentSort];
+}
+
+- (BOOL)sortDescending
+{
+  return mDescendingSort;
+}
+
+- (void)setSortDescending:(BOOL)inDescending
+{
+  mDescendingSort = inDescending;
+
+  // forward to the data source.
+  // this assumes that this data source is only used for this outliner,
+  // and not others (breaks clean model/view separation)
+  if ([[self dataSource] respondsToSelector:@selector(setSortDescending:)])
+    [[self dataSource] setSortDescending:mDescendingSort];
+
+  [self updateTableHeaderToMatchCurrentSort];
+}
+
+- (void)setAutosaveTableSort:(BOOL)autosave
+{
+  if (autosave != mAutosaveSort)
+  {
+    mAutosaveSort = autosave;
+    if (mAutosaveSort)
+      [self loadAutosaveSort];
+  }
+}
+
+- (BOOL)autosaveTableSort
+{
+  return mAutosaveSort;
+}
+
+- (void)loadAutosaveSort
+{
+  NSString* defaultsKey = [self autosaveDefaultsKey];
+  if (!defaultsKey) return;
+  NSDictionary* prefs = [[NSUserDefaults standardUserDefaults] dictionaryForKey:defaultsKey];
+  if (prefs)
+  {
+    NSString* sortCol = [prefs objectForKey:kAutosaveSortColumnIdentifierKey];
+    if (sortCol && [self columnWithIdentifier:sortCol] != -1)
+      [self setSortColumnIdentifier:sortCol];
+  
+    BOOL descending = [[prefs objectForKey:kAutosaveSortDirectionKey] boolValue];
+    [self setSortDescending:descending];
+  }
+}
+
+- (void)saveAutosaveSort
+{
+  NSString* defaultsKey = [self autosaveDefaultsKey];
+  if (!defaultsKey) return;
+  if (![self sortColumnIdentifier]) return;
+
+  NSDictionary* prefs = [NSDictionary dictionaryWithObjectsAndKeys:
+                         [self sortColumnIdentifier], kAutosaveSortColumnIdentifierKey,
+     [NSNumber numberWithBool:[self sortDescending]], kAutosaveSortDirectionKey,
+                                                      nil];
+
+  [[NSUserDefaults standardUserDefaults] setObject:prefs forKey:defaultsKey];
+}
+
+- (NSString*)autosaveDefaultsKey
+{
+  NSString* asName = [self autosaveName];
+  if (!asName) return nil;
+  
+  return [@"ExtendedOutlineView Sort " stringByAppendingString:asName];
+}
+
+- (void)viewWillMoveToWindow:(NSWindow *)newWindow
+{
+  if (!newWindow)
+  {
+    // view is leaving window: save sort
+    [self saveAutosaveSort];
+  }
+  [super viewWillMoveToWindow:newWindow];
+}
+
+// on jaguar, delegates of NSOutlineView don't receive outlineView:didClickTableColumn messages,
+// so we work around this by overriding an internal NSTableView method
+- (void)_sendDelegateDidClickColumn:(int)column
+{
+  if ([self delegate] != nil && [[self delegate] respondsToSelector:@selector(outlineView:didClickTableColumn:)])
+  {
+    [[self delegate] outlineView:self didClickTableColumn:[[self tableColumns] objectAtIndex:column]];
+  }
+  else
+  {  
+    [super _sendDelegateDidClickColumn:column];
+  }
+}
 
 /*
  * Set up tooltip rects for every row, but only if the frame size or

@@ -151,4 +151,27 @@ static void RedistributeSpace(int resizeMask, float newWidth, /* in out */ float
   }
 }
 
+- (NSView*)swapFirstSubview:(NSView*)newSubview
+{
+  NSView* existingSubview = [self firstSubview];
+  if (existingSubview == newSubview)
+    return nil;
+
+  [existingSubview retain];
+  [existingSubview removeFromSuperview];
+  
+  [self addSubview:newSubview];
+  [newSubview setFrame:[self bounds]];
+
+  return [existingSubview autorelease];
+}
+
+- (NSView*)firstSubview
+{
+  NSArray* subviews = [self subviews];
+  if ([subviews count] > 0)
+    return [[self subviews] objectAtIndex:0];
+  return 0;
+}
+
 @end

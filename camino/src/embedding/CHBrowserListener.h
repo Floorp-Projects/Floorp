@@ -51,6 +51,7 @@ public:
     
   void AddListener(id <CHBrowserListener> aListener);
   void RemoveListener(id <CHBrowserListener> aListener);
+
   void SetContainer(id <CHBrowserContainer> aContainer);
 
 private:

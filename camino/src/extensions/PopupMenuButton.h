@@ -20,8 +20,7 @@
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
-*   David Haas <haasd@cae.wisc.edu>
-*
+* 	Simon Fraser <smfr@smfr.org> (Original Author)
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,29 +36,14 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
-#import <Appkit/Appkit.h>
+#import <AppKit/AppKit.h>
 
+extern NSString* const PopupMenuButtonWillDisplayMenu;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
-// this category is here just to quiet some warnings when using the 10.2 SDK
-@interface NSTableView(CaminoNSTableViewPantherAdditions)
-
-- (void)setGridStyleMask:(unsigned int)gridType;
-- (unsigned int)gridStyleMask;
-
-- (void)setUsesAlternatingRowBackgroundColors:(BOOL)useAlternatingRowColors;
-- (BOOL)usesAlternatingRowBackgroundColors;
-
-@end
-
-#endif
-
-@interface ExtendedTableView : NSTableView
+@interface PopupMenuButton : NSButton
 {
-  SEL mDeleteAction;
 }
 
--(void)setDeleteAction: (SEL)deleteAction;
--(SEL)deleteAction;
+- (void)setIsSmall:(BOOL)small;
 
 @end

@@ -66,7 +66,7 @@
  |  _________________________________________________________________
     | BrowserContentView                                            |
     | ____________________________________________________________  |
-    | | BookmarkToolbar                                          | |
+    | | BookmarkToolbar                                           | |
     | |___________________________________________________________| |
     |                                                               |
     | ____________________________________________________________  |
@@ -185,6 +185,7 @@
   // visible.
   [self addSubview:newView];
   [newView setFrame:[mCurrentContentView frame]];
+  [self setNextKeyView:newView];
   [newView release];
   mCurrentContentView = newView;
   
@@ -198,8 +199,20 @@
 //
 - (BOOL) isBookmarkManagerVisible
 {
-  return mCurrentContentView == mBookmarkManagerView;
+  return (mCurrentContentView == mBookmarkManagerView);
 }
+
+
+//
+// -setBookmarkManagerView
+//
+// Supply the bookmark manager view (which may have come from another nib file)
+//
+- (void)setBookmarkManagerView:(NSView*)bmView
+{
+  mBookmarkManagerView = bmView;
+}
+
 
 @end
 

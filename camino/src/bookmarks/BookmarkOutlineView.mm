@@ -39,6 +39,7 @@
 *
 * ***** END LICENSE BLOCK ***** */
 
+#import "BookmarkViewController.h"
 #import "BookmarkOutlineView.h"
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
@@ -56,7 +57,7 @@
 -(NSMenu*)menu
 {
   BookmarkManager *bm = [BookmarkManager sharedBookmarkManager];
-  BookmarkFolder *activeCollection = [[self delegate] activeCollection];
+  BookmarkFolder *activeCollection = [(BookmarkViewController*)[self delegate] activeCollection];
   // only give a default menu if its the bookmark menu or toolbar
   if ((activeCollection == [bm bookmarkMenuFolder]) || (activeCollection == [bm toolbarFolder])) {
     // set up default menu

@@ -70,6 +70,7 @@
       return;
     }
   }
+
   [super keyDown: aEvent];
 }
 

@@ -35,48 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Foundation/Foundation.h>
-#import "nscore.h"
+#import <AppKit/AppKit.h>
 
-class nsAString;
-class nsACString;
+@interface NSMenu(ChimeraMenuUtils)
 
-typedef enum
-{
-  kTruncateAtStart,
-  kTruncateAtMiddle,
-  kTruncateAtEnd
-} ETruncationType;
+// check one item on a menu, optionally unchecking all the others
+- (void)checkItemWithTag:(int)tag uncheckingOtherItems:(BOOL)uncheckOthers;
 
+// treat a set of items each sharing the same tagMask as a radio group,
+// turning on the one with the given unmasked tag value.
+- (void)checkItemWithTag:(int)unmaskedTag inGroupWithMask:(int)tagMask;
 
-// a category to extend NSString
-@interface NSString (ChimeraStringUtils)
-
-+ (id)ellipsisString;
-+ (id)escapedURLString:(NSString *)unescapedString;
-+ (NSString*)unescapedURLString:(NSString*)escapedString;
-+ (id)stringWithPRUnichars:(const PRUnichar*)inString;
-+ (id)stringWith_nsAString:(const nsAString&)inString;
-+ (id)stringWith_nsACString:(const nsACString&)inString;    // assumes nsACString is UTF-8
-- (void)assignTo_nsAString:(nsAString&)ioString;
-
-- (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
-- (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
-- (NSString *)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType;
-- (NSString *)stringByTrimmingWhitespace;
-- (NSString *)stringByRemovingAmpEscapes;
-- (NSString *)stringByAddingAmpEscapes;
-- (NSString *)stringByRemovingWindowsShortcutAmpersand;
-- (NSString *)stripWWW;
-
-// allocate a new unicode buffer with the contents of the current string. Caller
-// is responsible for freeing the buffer.
-- (PRUnichar*)createNewUnicodeBuffer;
 @end
 
-@interface NSMutableString (ChimeraMutableStringUtils)
 
-- (void)truncateTo:(unsigned)maxCharacters at:(ETruncationType)truncationType;
-- (void)truncateToWidth:(float)maxWidth at:(ETruncationType)truncationType withAttributes:(NSDictionary *)attributes;
+@interface NSMenuItem(ChimeraMenuItemUtils)
+
+- (int)tagRemovingMask:(int)tagMask;
 
 @end

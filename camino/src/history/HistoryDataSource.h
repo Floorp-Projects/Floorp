@@ -37,45 +37,71 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "RDFOutlineViewDataSource.h"
-
-class nsAString;
-class HistoryRDFObserver;
+#import <AppKit/AppKit.h>
 
 @class BrowserWindowController;
 @class HistoryItem;
+@class HistorySiteItem;
 
-@interface HistoryDataSource : RDFOutlineViewDataSource
+class nsIBrowserHistory;
+class nsHistoryObserver;
+
+extern NSString* const kHistoryViewByDate;
+extern NSString* const kHistoryViewBySite;
+extern NSString* const kHistoryViewFlat;
+
+// notification object is the data source.
+extern NSString* const kNotificationNameHistoryDataSourceChanged;
+// if not nil, this userInfo object is the changed item
+extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItem;
+// if true, this indicates that just the item changed, not its children (it's an NSNumber with bool)
+extern NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemOnly;
+
+@class HistoryTreeBuilder;
+
+@interface HistoryDataSource : NSObject
 {
-  HistoryRDFObserver* mObserver;   // STRONG ref, should be nsCOMPtr but can't
-  IBOutlet BrowserWindowController* mBrowserWindowController;
-  BOOL mUpdatesEnabled;
-  BOOL mNeedsRefresh;
-  bool mLoaded;
+  nsIBrowserHistory*      mGlobalHistory;     // owned (would be an nsCOMPtr)
+  nsHistoryObserver*      mHistoryObserver;   // owned
+  
+  NSString*               mCurrentViewIdentifier;
+  
+  NSString*               mSortColumn;
+  BOOL                    mSortDescending;
 
-  HistoryItem * mRootHistoryItem;
+  NSMutableArray*         mHistoryItems;              // this array owns all the history items
+  NSMutableDictionary*    mHistoryItemsDictionary;    // history items indexed by id
+
+  NSMutableArray*         mSearchResultsArray;
+
+  // the tree builder encapsulates the logic to build and update different history views
+  // (e.g. by date, by site etc), and supply the root object.  
+  HistoryTreeBuilder*     mTreeBuilder;
+ 
+  NSString*               mSearchString;
+  int                     mSearchFieldTag;
+  
+  NSTimer*                mRefreshTimer;
+  int                     mLastDayOfCommonEra;
 }
 
-- (HistoryItem *)rootRDFItem;
-- (void)setRootRDFItem:(HistoryItem *)item;
+- (void)setHistoryView:(NSString*)inView;
+- (NSString*)historyView;
 
-- (void)enableObserver;
-- (void)disableObserver;
+// XXX remove?
+- (void)loadLazily;
 
-- (void)setNeedsRefresh:(BOOL)needsRefresh;
-- (BOOL)needsRefresh;
-- (void)refresh;
+// ideally sorting would be on the view, not the data source, but this keeps thing simpler
+- (void)setSortColumnIdentifier:(NSString*)sortColumnIdentifier;
+- (NSString*)sortColumnIdentifier;
 
-- (IBAction)openHistoryItem: (id)aSender;
-- (IBAction)deleteHistoryItems: (id)aSender;
-- (IBAction)openHistoryItemInNewWindow:(id)aSender;
-- (IBAction)openHistoryItemInNewTab:(id)aSender;
+- (BOOL)sortDescending;
+- (void)setSortDescending:(BOOL)inDescending;
 
-  // NSOutlineViewDataSource protocol
-- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard;
-- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)anItem;
-- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)inCell forTableColumn:(NSTableColumn *)tableColumn item:(id)item;
-- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item;
+// quicksearch support
+- (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag;
+- (void)clearSearchResults;
 
+- (void)removeItem:(HistorySiteItem*)item;
 
 @end

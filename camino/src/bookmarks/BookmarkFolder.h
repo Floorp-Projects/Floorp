@@ -42,11 +42,11 @@
 
 //Special flags
 enum {
-  kBookmarkFolder = 0,
-  kBookmarkFolderGroup = 1 << 0,
-  kBookmarkRootFolder = 1 << 1,
-  kBookmarkToolbarFolder = 1 << 2,
-  kBookmarkSmartFolder = 1 << 3,
+  kBookmarkFolder         = 0,
+  kBookmarkFolderGroup    = 1 << 0,
+  kBookmarkRootFolder     = 1 << 1,
+  kBookmarkToolbarFolder  = 1 << 2,
+  kBookmarkSmartFolder    = 1 << 3,
   kBookmarkDockMenuFolder = 1 << 4
 };
 
@@ -111,7 +111,7 @@ enum {
 
 // searching
 -(NSArray *) resolveKeyword:(NSString *)aString;
--(NSSet *) bookmarksWithString:(NSString *)searchString;
+-(NSSet *) bookmarksWithString:(NSString *)searchString inFieldWithTag:(int)tag;
 
 //Scripting - should be a protocol we could use for these
 //two, but i'm not sure which one, so we'll declare them here

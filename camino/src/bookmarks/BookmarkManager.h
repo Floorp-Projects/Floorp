@@ -86,7 +86,7 @@ enum {
 
 // Informational things
 -(NSArray *)resolveBookmarksKeyword:(NSString *)keyword;
--(NSArray *)searchBookmarksForString:(NSString *)searchString;
+-(NSArray *)searchBookmarksContainer:(BookmarkFolder*)container forString:(NSString *)searchString inFieldWithTag:(int)tag;
 -(unsigned) firstUserCollection;
 -(BOOL) isDropValid:(NSArray *)items toFolder:(BookmarkFolder *)parent;
 -(NSMenu *)contextMenuForItem:(id)item fromView:(BookmarkOutlineView *)outlineView target:(id)target;

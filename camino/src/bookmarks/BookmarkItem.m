@@ -40,47 +40,47 @@
 #import "BookmarkItem.h"
 
 // Notifications
-NSString *BookmarkItemChangedNotification = @"bi_cg";
-NSString *BookmarkIconChangedNotification = @"bicon_cg";
+NSString* const BookmarkItemChangedNotification = @"bi_cg";
+NSString* const BookmarkIconChangedNotification = @"bicon_cg";
 
 // all our saving/loading keys
 // Safari & Camino plist keys
-NSString *BMTitleKey = @"Title";
-NSString *BMChildrenKey = @"Children";
+NSString* const BMTitleKey = @"Title";
+NSString* const BMChildrenKey = @"Children";
 
 // Camino plist keys
-NSString *BMFolderDescKey = @"FolderDescription";
-NSString *BMFolderTypeKey = @"FolderType";
-NSString *BMFolderKeywordKey = @"FolderKeyword";
-NSString *BMDescKey = @"Description";
-NSString *BMStatusKey = @"Status";
-NSString *BMURLKey = @"URL";
-NSString *BMKeywordKey = @"Keyword";
-NSString *BMLastVisitKey = @"LastVisitedDate";
-NSString *BMNumberVisitsKey = @"VisitCount";
+NSString* const BMFolderDescKey = @"FolderDescription";
+NSString* const BMFolderTypeKey = @"FolderType";
+NSString* const BMFolderKeywordKey = @"FolderKeyword";
+NSString* const BMDescKey = @"Description";
+NSString* const BMStatusKey = @"Status";
+NSString* const BMURLKey = @"URL";
+NSString* const BMKeywordKey = @"Keyword";
+NSString* const BMLastVisitKey = @"LastVisitedDate";
+NSString* const BMNumberVisitsKey = @"VisitCount";
 
 // safari keys
-NSString *SafariTypeKey = @"WebBookmarkType";
-NSString *SafariLeaf = @"WebBookmarkTypeLeaf";
-NSString *SafariList = @"WebBookmarkTypeList";
-NSString *SafariAutoTab = @"WebBookmarkAutoTab";
-NSString *SafariUUIDKey = @"WebBookmarkUUID";
-NSString *SafariURIDictKey = @"URIDictionary";
-NSString *SafariBookmarkTitleKey = @"title";
-NSString *SafariURLStringKey = @"URLString";
+NSString* const SafariTypeKey = @"WebBookmarkType";
+NSString* const SafariLeaf = @"WebBookmarkTypeLeaf";
+NSString* const SafariList = @"WebBookmarkTypeList";
+NSString* const SafariAutoTab = @"WebBookmarkAutoTab";
+NSString* const SafariUUIDKey = @"WebBookmarkUUID";
+NSString* const SafariURIDictKey = @"URIDictionary";
+NSString* const SafariBookmarkTitleKey = @"title";
+NSString* const SafariURLStringKey = @"URLString";
 
 // camino XML keys
-NSString *CaminoNameKey = @"name";
-NSString *CaminoDescKey = @"description";
-NSString *CaminoTypeKey = @"type";
-NSString *CaminoKeywordKey = @"id";
-NSString *CaminoURLKey = @"href";
-NSString *CaminoToolbarKey = @"toolbar";
-NSString *CaminoDockMenuKey = @"dockmenu";
-NSString *CaminoGroupKey = @"group";
-NSString *CaminoBookmarkKey = @"bookmark";
-NSString *CaminoFolderKey = @"folder";
-NSString *CaminoTrueKey = @"true";
+NSString* const CaminoNameKey = @"name";
+NSString* const CaminoDescKey = @"description";
+NSString* const CaminoTypeKey = @"type";
+NSString* const CaminoKeywordKey = @"id";
+NSString* const CaminoURLKey = @"href";
+NSString* const CaminoToolbarKey = @"toolbar";
+NSString* const CaminoDockMenuKey = @"dockmenu";
+NSString* const CaminoGroupKey = @"group";
+NSString* const CaminoBookmarkKey = @"bookmark";
+NSString* const CaminoFolderKey = @"folder";
+NSString* const CaminoTrueKey = @"true";
 
 
 @implementation BookmarkItem
@@ -231,6 +231,30 @@ static BOOL gSuppressAllUpdates = NO;
                                                        object:self userInfo:nil];
   [[NSNotificationCenter defaultCenter] postNotification:note];
 }
+
+-(BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag
+{
+  switch (tag)
+  {
+    case eBookmarksSearchFieldAll:
+      return (([[self title]        rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound) ||
+              ([[self keyword]      rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound) ||
+              ([[self description]  rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound));
+    
+    case eBookmarksSearchFieldTitle:
+      return ([[self title]        rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound);
+    
+    // case eBookmarksSearchFieldURL: // Bookmark subclass has to check this
+    case eBookmarksSearchFieldKeyword:
+      return ([[self keyword]      rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound);
+
+    case eBookmarksSearchFieldDescription:
+      return ([[self description]  rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound);
+  }
+
+  return NO;
+}
+
 
 // Prevents all NSNotification posting from any BookmarkItem.
 // Useful for suppressing all the pointless notifications during load.

@@ -54,12 +54,12 @@
 @class NSNetServiceBrowser;
 
 // client notifications
-NSString *NetworkServicesAvailableServicesChanged = @"netserv_asc";
-NSString *NetworkServicesResolutionSuccess = @"netserv_resok";
-NSString *NetworkServicesClientKey = @"netserv_clikey";
-NSString *NetworkServicesResolvedURLKey = @"netserv_urlkey";
-NSString *NetworkServicesResolutionFailure = @"netserv_resbad";
-NSString *NetworkServicesServiceKey = @"netserv_srvkey";
+NSString* const NetworkServicesAvailableServicesChanged = @"netserv_asc";
+NSString* const NetworkServicesResolutionSuccess        = @"netserv_resok";
+NSString* const NetworkServicesClientKey                = @"netserv_clikey";
+NSString* const NetworkServicesResolvedURLKey           = @"netserv_urlkey";
+NSString* const NetworkServicesResolutionFailure        = @"netserv_resbad";
+NSString* const NetworkServicesServiceKey               = @"netserv_srvkey";
 
 
 @interface NetworkServices(Private)

@@ -43,6 +43,17 @@
 #include "nsIPref.h"
 #include "CHBrowserService.h"
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
+// fix warnings
+@interface NSToolbar(CaminoNSToolbarPantherAdditions)
+- (void)setSelectedItemIdentifier:(NSString *)itemIdentifier;
+- (NSString *)selectedItemIdentifier;
+- (void)setSizeMode:(NSToolbarSizeMode)sizeMode;
+- (NSToolbarSizeMode)sizeMode;
+@end
+#endif
+
+
 static MVPreferencesController *sharedInstance = nil;
 
 NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";

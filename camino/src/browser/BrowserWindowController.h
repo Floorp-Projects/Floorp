@@ -110,8 +110,7 @@ typedef enum
   IBOutlet PageProxyIcon*     mProxyIcon;
   IBOutlet BrowserContentView*  mContentView;
   
-  IBOutlet BookmarkViewController* mBookmarkViewController;
-  IBOutlet BookmarkToolbar*    mPersonalToolbar;
+  IBOutlet BookmarkToolbar*     mPersonalToolbar;
   IBOutlet HistoryDataSource*   mHistoryDataSource;
   IBOutlet NSWindow*            mAddBookmarkSheetWindow;
   IBOutlet NSTextField*         mAddBookmarkTitleField;
@@ -143,7 +142,9 @@ typedef enum
   NSToolbarItem*                mBookmarkToolbarItem;
 
   BOOL mInitialized;
-  BOOL mBookmarkViewControllerInitialized;       // have we fully set up the bookmarks view, done lazily
+
+  BookmarkViewController*       mBookmarkViewController;
+
   NSString* mPendingURL;
   NSString* mPendingReferrer;
   BOOL mPendingActivate;
@@ -156,7 +157,6 @@ typedef enum
 
   BOOL mShouldAutosave;
   BOOL mShouldLoadHomePage;
-
 
   unsigned int mChromeMask; // Indicates which parts of the window to show (e.g., don't show toolbars)
 

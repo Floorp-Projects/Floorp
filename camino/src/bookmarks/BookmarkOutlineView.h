@@ -41,6 +41,7 @@
 #import <AppKit/AppKit.h>
 #import "ExtendedOutlineView.h"
 
+// subclassed to override some drag and drop methods
 @interface BookmarkOutlineView : ExtendedOutlineView
 {
 }

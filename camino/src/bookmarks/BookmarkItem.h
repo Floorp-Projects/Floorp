@@ -71,7 +71,21 @@
 // Status checks
 -(BOOL) isChildOfItem:(BookmarkItem *)anItem;
 
-// Notificaiton of Change
+// Searching
+
+// search field tags, used in search field context menu item tags
+enum
+{
+  eBookmarksSearchFieldAll = 1,
+  eBookmarksSearchFieldTitle,
+  eBookmarksSearchFieldURL,
+  eBookmarksSearchFieldKeyword,
+  eBookmarksSearchFieldDescription
+};
+
+-(BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag;
+
+// Notification of Change
 +(void) setSuppressAllUpdateNotifications:(BOOL)suppressUpdates;
 +(BOOL) allowNotifications;
 -(void) setAccumulateUpdateNotifications:(BOOL)suppressUpdates;
@@ -94,39 +108,39 @@
 // Bunch of Keys for reading/writing dictionaries.
 
 // Safari & Camino plist keys
-extern NSString *BMTitleKey;
-extern NSString *BMChildrenKey;
+extern NSString* const BMTitleKey;
+extern NSString* const BMChildrenKey;
 
 // Camino plist keys
-extern NSString *BMFolderDescKey;
-extern NSString *BMFolderTypeKey;
-extern NSString *BMFolderKeywordKey;
-extern NSString *BMDescKey;
-extern NSString *BMStatusKey;
-extern NSString *BMURLKey;
-extern NSString *BMKeywordKey;
-extern NSString *BMLastVisitKey;
-extern NSString *BMNumberVisitsKey;
+extern NSString* const BMFolderDescKey;
+extern NSString* const BMFolderTypeKey;
+extern NSString* const BMFolderKeywordKey;
+extern NSString* const BMDescKey;
+extern NSString* const BMStatusKey;
+extern NSString* const BMURLKey;
+extern NSString* const BMKeywordKey;
+extern NSString* const BMLastVisitKey;
+extern NSString* const BMNumberVisitsKey;
 
 // safari keys
-extern NSString *SafariTypeKey;
-extern NSString *SafariLeaf;
-extern NSString *SafariList;
-extern NSString *SafariAutoTab;
-extern NSString *SafariUUIDKey;
-extern NSString *SafariURIDictKey;
-extern NSString *SafariBookmarkTitleKey;
-extern NSString *SafariURLStringKey;
+extern NSString* const SafariTypeKey;
+extern NSString* const SafariLeaf;
+extern NSString* const SafariList;
+extern NSString* const SafariAutoTab;
+extern NSString* const SafariUUIDKey;
+extern NSString* const SafariURIDictKey;
+extern NSString* const SafariBookmarkTitleKey;
+extern NSString* const SafariURLStringKey;
 
 // camino XML keys
-extern NSString *CaminoNameKey;
-extern NSString *CaminoDescKey;
-extern NSString *CaminoTypeKey;
-extern NSString *CaminoKeywordKey;
-extern NSString *CaminoURLKey;
-extern NSString *CaminoToolbarKey;
-extern NSString *CaminoDockMenuKey;
-extern NSString *CaminoGroupKey;
-extern NSString *CaminoBookmarkKey;
-extern NSString *CaminoFolderKey;
-extern NSString *CaminoTrueKey;
+extern NSString* const CaminoNameKey;
+extern NSString* const CaminoDescKey;
+extern NSString* const CaminoTypeKey;
+extern NSString* const CaminoKeywordKey;
+extern NSString* const CaminoURLKey;
+extern NSString* const CaminoToolbarKey;
+extern NSString* const CaminoDockMenuKey;
+extern NSString* const CaminoGroupKey;
+extern NSString* const CaminoBookmarkKey;
+extern NSString* const CaminoFolderKey;
+extern NSString* const CaminoTrueKey;

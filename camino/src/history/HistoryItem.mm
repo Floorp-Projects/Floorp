@@ -20,8 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger <ben@netscape.com> (Original Author)
- *   Simon Woodside <sbwoodside@yahoo.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,207 +36,438 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// these objects add an additional grand child cache
-// why? because we flatten the list by skipping the children RDFItems
-// and just returning the full list of grandchildren as our children
+#import "NSString+Utils.h"
+#import "NSDate+Utils.h"
 
 #import "HistoryItem.h"
 
-#include "nsIRDFService.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFResource.h"
-#include "nsIBrowserHistory.h"
-#include "nsIServiceManager.h"
-
-#include "nsXPIDLString.h"
-#include "nsString.h"
-#include "nsNetUtil.h"
-
-#include "nsComponentManagerUtils.h"
+#import "nsString.h"
+#import "nsIHistoryItems.h"
 
 
-@interface HistoryItem (Private)
-- (HistoryItem*)newChild;
-- (void)invalidateGrandChildCache;
+// search field tags, used in search field context menu item tags
+enum
+{
+  eHistorySearchFieldAll = 1,
+  eHistorySearchFieldTitle,
+  eHistorySearchFieldURL
+};
 
-@end
-
-#pragma mark -
 
 @implementation HistoryItem
 
 - (id)init
 {
-  if( (self = [super init]) ) {
-    mGrandChildNodes = nil;
+  if ((self = [super init]))
+  {
   }
   return self;
 }
 
 - (void)dealloc
 {
-  [mGrandChildNodes autorelease];
   [super dealloc];
 }
 
-- (HistoryItem*)newChild;
+- (NSString*)title
 {
-  return [HistoryItem alloc];
+  return @"";   // subclasses override
 }
 
-
-- (void)deleteFromGecko;
+- (BOOL)isSiteItem
 {
-  nsCOMPtr<nsIBrowserHistory> historyService = do_GetService("@mozilla.org/browser/global-history;2");
-  if( !historyService )
-    return;
-
-  nsCOMPtr<nsIRDFDataSource> histDataSource = do_QueryInterface(historyService);
-  if( !histDataSource )
-    return;
-  
-  histDataSource->BeginUpdateBatch();
-  if( ![self isExpandable] ) {
-    NSString* urlString = [self url];
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), [urlString UTF8String]);
-    if (uri)
-      historyService->RemovePage(uri);
-  }
-  else {
-    // delete a folder by iterating over each of its children and deleting them. There
-    // should be a better way, but the history api's don't really support them. Expand
-    // the folder before we delete it otherwise we don't get any child nodes to delete.
-    //TODO what if the children have children?
-    int numChilds = [self numChildren];
-    for( int i = 0; i < numChilds; i++ ) {
-      HistoryItem * deleteChild = [self childAtIndex:i];
-      [deleteChild deleteFromGecko];
-    }
-  }
-  histDataSource->EndUpdateBatch();
-}
-
-// Explicitly call to superclass
-// to avoid recursive loops
-- (bool)nativeIsExpandable;
-{   return [super isExpandable]; }
-- (int)nativeNumChildren;
-{   return [super numChildren]; }
-- (id)nativeChildAtIndex:(int)index;
-{   return [super childAtIndex:index]; }
-- (void)nativeBuildChildCache;
-{   [super buildChildCache]; }
-
-// should we return grandchildren nodes instead of the children nodes?
-// this determines if we flatten the RDF at this "level"
-- (bool)shouldUseGrandChildNodes;
-{
-  if( !kFlattenHistory )
-    return NO;
-  if( ![self nativeIsExpandable] )
-    return NO;
-  
-  if( !mChildNodes ) [self nativeBuildChildCache];
-  
-  if ( [mChildNodes count] ) {
-    HistoryItem * firstChild = [mChildNodes objectAtIndex:0];
-    if( [firstChild nativeIsExpandable] ) {
-      HistoryItem * grandChild = [firstChild nativeChildAtIndex:0];
-      //is it a leaf node?
-      if( ![grandChild nativeIsExpandable] )
-        return YES;
-    }
-  }
   return NO;
 }
 
-- (HistoryItem*)childAtIndex:(int)index;
+- (NSImage*)icon
 {
-  if ( !kFlattenHistory )
-    return [super childAtIndex:index];
-  if ( ![self shouldUseGrandChildNodes] )
-    return [super childAtIndex:index];
-  if ( !mGrandChildNodes )
-    [self buildGrandChildCache];
-  HistoryItem* child = nil;
-  if (index < [mGrandChildNodes count])
-    child = [mGrandChildNodes objectAtIndex:index];
-  return child;
+  return nil;
 }
 
-- (int)numChildren;
+- (NSString*)url
 {
-  if( !kFlattenHistory )
-    return [super numChildren];
-  if( ![self shouldUseGrandChildNodes] )
-    return [super numChildren];
-  if( !mGrandChildNodes )
-    [self buildGrandChildCache];
-  int result = [mGrandChildNodes count];
-  return result;
+  return @"";
 }
 
-- (NSComparisonResult)historyItemDateCompare:(HistoryItem *)aItem;
+- (NSDate*)firstVisit
 {
-  //backwards for reverse order
-  NSComparisonResult result = [[aItem date] caseInsensitiveCompare:[self date]];
-  return result;
+  return nil;
 }
 
-
-- (void)buildGrandChildCache;
+- (NSDate*)lastVisit
 {
-  if( !kFlattenHistory )
-    return;
-  if( ![self shouldUseGrandChildNodes] )
-    return;
-//  NSLog(@"Building grandChildNodes list for name=%@", [self name]);
-  NSMutableArray * grandChildNodes = [[NSMutableArray alloc] init];
-  int childCount = [mChildNodes count];
-  for( int i=0; i < childCount; i++ ) {
-    HistoryItem * curChild = [mChildNodes objectAtIndex:i];
-    int grandChildCount = [curChild nativeNumChildren];
-    for( int j=0; j < grandChildCount; j++ ) {
-      HistoryItem * curGrandChild = [curChild nativeChildAtIndex:j];
-      if (curGrandChild)
-        [grandChildNodes addObject:curGrandChild];
+  return nil;
+}
+
+- (NSString*)hostname
+{
+  return @"";
+}
+
+- (NSString*)identifier
+{
+  return @"";
+}
+
+- (NSMutableArray*)children
+{
+  return nil;
+}
+
+- (int)numberOfChildren
+{
+  return 0;
+}
+
+- (HistoryItem*)childAtIndex:(int)inIndex
+{
+  return nil;
+}
+
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem
+{
+  return NSOrderedSame;
+}
+
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem
+{
+  return NSOrderedSame;
+}
+
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem
+{
+  return NSOrderedSame;
+}
+
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem
+{
+  return NSOrderedSame;
+}
+
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem
+{
+  return NSOrderedSame;
+}
+
+@end
+
+#pragma mark -
+
+@implementation HistoryCategoryItem
+
+- (id)initWithTitle:(NSString*)title childCapacity:(int)capacity
+{
+  if ((self = [super init]))
+  {
+    mTitle = [title retain];
+    mChildren = [[NSMutableArray alloc] initWithCapacity:capacity];
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mTitle release];
+  [mChildren release];
+  [super dealloc];
+}
+
+- (NSString*)title
+{
+  return mTitle;
+}
+
+- (NSDate*)startDate
+{
+  return mStartDate;
+}
+
+- (void)setStartDate:(NSDate*)date
+{
+  NSDate* oldDate = mStartDate;
+  mStartDate = [date retain];
+  [oldDate release];
+}
+
+- (NSString*)url
+{
+  return @"";
+}
+
+- (NSDate*)firstVisit
+{
+  return nil;
+}
+
+- (NSDate*)lastVisit
+{
+  return nil;
+}
+
+- (NSString*)hostname
+{
+  return @"";
+}
+
+- (NSImage*)icon
+{
+  return [NSImage imageNamed:@"folder"];
+}
+
+- (NSMutableArray*)children
+{
+  return mChildren;
+}
+
+- (int)numberOfChildren
+{
+  return [mChildren count];
+}
+
+- (HistoryItem*)childAtIndex:(int)inIndex
+{
+  if (inIndex >= 0 && inIndex < [mChildren count])
+    return [mChildren objectAtIndex:inIndex];
+    
+  return nil;
+}
+
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistorySiteItem class]])
+    return NSOrderedAscending;
+
+  // sort on title
+  return [self compareTitle:aItem];
+}
+
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistorySiteItem class]])
+    return NSOrderedAscending;
+
+  // if we have dates, they override other sorts
+  if ([self startDate] && [aItem startDate])
+    return [[self startDate] compare:[aItem startDate]];
+  else
+    return [mTitle compare:[aItem title] options:NSCaseInsensitiveSearch];
+}
+
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistorySiteItem class]])
+    return NSOrderedAscending;
+
+  // sort on title
+  return [self compareTitle:aItem];
+}
+
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistorySiteItem class]])
+    return NSOrderedAscending;
+
+  // sort on title
+  return [self compareTitle:aItem];
+}
+
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistorySiteItem class]])
+    return NSOrderedAscending;
+
+  // sort on title
+  return [self compareTitle:aItem];
+}
+
+@end
+
+#pragma mark -
+
+@implementation HistorySiteItem
+
+- (id)initWith_nsIHistoryItem:(nsIHistoryItem*)inItem
+{
+  if ((self = [super init]))
+  {
+    nsCString identifier;
+    if (NS_SUCCEEDED(inItem->GetID(identifier)))
+      mItemIdentifier = [[NSString stringWith_nsACString:identifier] retain];
+
+    nsCString url;
+    if (NS_SUCCEEDED(inItem->GetURL(url)))
+      mURL = [[NSString stringWith_nsACString:url] retain];
+    
+    nsString title;
+    if (NS_SUCCEEDED(inItem->GetTitle(title)))
+      mTitle = [[NSString stringWith_nsAString:title] retain];
+
+    nsCString hostname;
+    if (NS_SUCCEEDED(inItem->GetHostname(hostname)))
+      mHostname = [[NSString stringWith_nsACString:hostname] retain];
+
+    PRTime firstVisit;
+    if (NS_SUCCEEDED(inItem->GetFirstVisitDate(&firstVisit)))
+      mFirstVisitDate = [[NSDate dateWithPRTime:firstVisit] retain];
+
+    PRTime lastVisit;
+    if (NS_SUCCEEDED(inItem->GetLastVisitDate(&lastVisit)))
+      mLastVisitDate = [[NSDate dateWithPRTime:lastVisit] retain];
+  }
+  return self;
+}
+
+- (BOOL)updateWith_nsIHistoryItem:(nsIHistoryItem*)inItem
+{
+  // only the title and last visit date can change
+  BOOL somethingChanged = NO;
+
+  nsString title;
+  if (NS_SUCCEEDED(inItem->GetTitle(title)))
+  {
+    NSString* newTitle = [NSString stringWith_nsAString:title];
+    if (!mTitle || ![mTitle isEqualToString:newTitle])
+    {
+      [mTitle release];
+      mTitle = [newTitle retain];
+      somethingChanged = YES;
     }
   }
-  NSArray * sorted = [grandChildNodes sortedArrayUsingSelector:@selector(historyItemDateCompare:)];
-  mGrandChildNodes = [sorted retain];
+  
+  PRTime lastVisit;
+  if (NS_SUCCEEDED(inItem->GetLastVisitDate(&lastVisit)))
+  {
+    NSDate* newDate = [NSDate dateWithPRTime:lastVisit];
+    if (![mLastVisitDate isEqual:newDate])
+    {
+      [mLastVisitDate release];
+      mLastVisitDate = [newDate retain];
+      somethingChanged = YES;
+    }
+  }
+  
+  return somethingChanged;
 }
 
-- (void)invalidateGrandChildCache;
+- (void)dealloc
 {
-  [mGrandChildNodes autorelease];
-  mGrandChildNodes = nil;
+  [mItemIdentifier release];
+  [mURL release];
+  [mTitle release];
+  [mHostname release];
+  [mFirstVisitDate release];
+  [mLastVisitDate release];
+  [super dealloc];
 }
 
-// override superclass, because we need to also invalidate the
-// grandchildren cache of our parent (the caller's grandparent)
-- (void)deleteChildFromCache:(HistoryItem*)child;
+- (NSString*)url
 {
-  [super deleteChildFromCache:child];
-  if( [self parent] )
-    [(HistoryItem*)[self parent] invalidateGrandChildCache];
+  return mURL;
 }
 
-
-// RDF Properties
-- (NSString*)name;
+- (NSString*)title
 {
-  return [self getStringForRDFPropertyURI:NC_NAME_KEY];
+  return mTitle;
 }
 
-- (NSString*)url;
+- (NSDate*)firstVisit
 {
-  return [self getStringForRDFPropertyURI:NC_URL_KEY];
+  return mFirstVisitDate;
 }
 
-- (NSString*)date;
+- (NSDate*)lastVisit
 {
-  return [self getStringForRDFPropertyURI:NC_DATE_KEY];
+  return mLastVisitDate;
 }
+
+- (NSString*)hostname
+{
+  return mHostname;
+}
+
+- (NSString*)identifier
+{
+  return mItemIdentifier;
+}
+
+- (BOOL)isSiteItem
+{
+  return YES;
+}
+
+- (NSImage*)icon
+{
+  // XXX todo: site icons
+  return [NSImage imageNamed:@"smallbookmark"];
+}
+
+- (NSComparisonResult)compareURL:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistoryCategoryItem class]])
+    return NSOrderedDescending;
+
+  return [mURL compare:[aItem url] options:NSCaseInsensitiveSearch];
+}
+
+- (NSComparisonResult)compareTitle:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistoryCategoryItem class]])
+    return NSOrderedDescending;
+
+  return [mTitle compare:[aItem title] options:NSCaseInsensitiveSearch];
+}
+
+- (NSComparisonResult)compareFirstVisitDate:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistoryCategoryItem class]])
+    return NSOrderedDescending;
+
+  return [mFirstVisitDate compare:[aItem firstVisit]];
+}
+
+- (NSComparisonResult)compareLastVisitDate:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistoryCategoryItem class]])
+    return NSOrderedDescending;
+
+  return [mLastVisitDate compare:[aItem lastVisit]];
+}
+
+- (NSComparisonResult)compareHostname:(HistoryItem *)aItem
+{
+  // sort categories before sites
+  if ([aItem isKindOfClass:[HistoryCategoryItem class]])
+    return NSOrderedDescending;
+
+  return [mHostname compare:[aItem hostname] options:NSCaseInsensitiveSearch];
+}
+
+- (BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag
+{
+  switch (tag)
+  {
+    case eHistorySearchFieldAll:
+      return (([[self title] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound) ||
+              ([[self url]   rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound));
+
+    case eHistorySearchFieldTitle:
+      return ([[self title] rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound);
+
+    case eHistorySearchFieldURL:
+      return ([[self url]   rangeOfString:searchString options:NSCaseInsensitiveSearch].location != NSNotFound);
+  }
+
+  return NO;    
+}
+
 
 @end

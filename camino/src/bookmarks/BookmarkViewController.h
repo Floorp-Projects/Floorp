@@ -41,43 +41,76 @@
 * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
+
 #import "BookmarksClient.h"
 
-@class HistoryDataSource;
+
 @class ExtendedTableView;
+@class ExtendedOutlineView;
+
+@class HistoryDataSource;
+@class HistoryOutlineViewDelegate;
+
 @class BrowserWindowController;
 @class BookmarkOutlineView;
 @class BookmarkFolder;
 
+@class SearchTextField;
 
-@interface BookmarkViewController : NSObject {
-  IBOutlet NSButton* mAddCollectionButton;
-  IBOutlet NSButton* mAddBookmarkButton;
-  IBOutlet NSButton* mAddFolderButton;
-  IBOutlet NSButton* mAddSeparatorButton;
-  IBOutlet NSButton* mInfoButton;
-  IBOutlet NSButton* mSearchButton;
-  IBOutlet NSTextField *mSearchField;
+@interface BookmarkViewController : NSObject
+{
+  IBOutlet NSView*          mBookmarksEditingView;
 
-  IBOutlet NSSplitView* mContainersSplit;       // vertical split
-  IBOutlet NSSplitView* mItemSearchSplit;       // horizontal split
+  IBOutlet NSButton*        mAddCollectionButton;
 
-  IBOutlet BrowserWindowController* mBrowserWindowController;
-  IBOutlet ExtendedTableView* mContainerPane;
-  IBOutlet BookmarkOutlineView* mItemPane;
-  IBOutlet NSTableView* mSearchPane;            // shows search results, can be hidden
-    
-  IBOutlet HistoryDataSource* mHistorySource; // can swap to this for history data
+  IBOutlet NSButton*        mAddButton;
+  IBOutlet NSButton*        mActionButton;
+  IBOutlet NSButton*        mSortButton;
 
-  BOOL mSetupComplete;                      // have we been fully initialized?
-  BOOL mSplittersRestored;                  // splitters can only be positioned after we resize to fit the window
-  NSMutableDictionary *mExpandedStatus;
-  NSString* mCachedHref;
-  BookmarkFolder *mActiveRootCollection;
-  BookmarkFolder *mRootBookmarks;
-  NSArray *mSearchResultArray;
-  int  mOpenActionFlag;
+  IBOutlet NSMenu*          mActionMenuBookmarks;
+  IBOutlet NSMenu*          mActionMenuHistory;
+
+  IBOutlet NSMenu*          mSortMenuBookmarks;
+  IBOutlet NSMenu*          mSortMenuHistory;
+
+  IBOutlet NSMenu*          mQuickSearchMenuBookmarks;
+  IBOutlet NSMenu*          mQuickSearchMenuHistory;
+  
+  IBOutlet SearchTextField* mSearchField;
+
+  IBOutlet NSSplitView*     mContainersSplit;
+
+  IBOutlet ExtendedTableView*     mContainersTableView;
+  
+  // the bookmarks and history outliners are swapped in and out of this container
+  IBOutlet NSView*                mOutlinerHostView;
+
+  // hosting views for the outlinres
+  IBOutlet NSView*                mBookmarksHostView;
+  IBOutlet NSView*                mHistoryHostView;
+
+  IBOutlet BookmarkOutlineView*   mBookmarksOutlineView;
+
+  IBOutlet ExtendedOutlineView*   mHistoryOutlineView;
+
+  IBOutlet HistoryOutlineViewDelegate*   mHistoryOutlineViewDelegate;
+
+  BrowserWindowController*  mBrowserWindowController; // not retained
+
+  BOOL                    mSetupComplete;       // have we been fully initialized?
+  BOOL                    mSplittersRestored;   // splitters can only be positioned after we resize to fit the window
+  
+  NSMutableDictionary*    mExpandedStatus;
+  NSString*               mCachedHref;
+  BookmarkFolder*         mActiveRootCollection;
+  BookmarkFolder*         mRootBookmarks;
+  NSArray*                mSearchResultArray;
+  int                     mOpenActionFlag;
 }
+
++ (NSAttributedString*)greyStringWithItemCount:(int)itemCount;
+
+- (id)initWithBrowserWindowController:(BrowserWindowController*)bwController;
 
 //
 // IBActions
@@ -92,9 +125,12 @@
 -(IBAction) openBookmarkInNewWindow:(id)aSender;
 -(IBAction) deleteBookmarks:(id)aSender;
 -(IBAction) showBookmarkInfo:(id)aSender;
--(IBAction) startSearch:(id)aSender;
 -(IBAction) locateBookmark:(id)aSender;
 
+-(IBAction) quicksearchPopupChanged:(id)aSender;
+- (void)resetSearchField;
+
+-(NSView*)bookmarksEditingView;
 
 -(int) containerCount;
 -(void) selectContainer:(int)inRowIndex;
@@ -113,8 +149,8 @@
 -(void)endAddBookmark: (int)aCode;
 
 -(void)deleteCollection:(id)aSender;
--(void) focus;
--(void) completeSetup;
--(void) ensureBookmarks;
+-(void)focus;
+-(void)completeSetup;
+-(void)ensureBookmarks;
 
 @end

@@ -38,6 +38,7 @@
 
 #import "NSString+Utils.h"
 #import "NSPasteboard+Utils.h"
+#import "NSDate+Utils.h"
 
 #import "BrowserWindowController.h"
 #import "HistoryDataSource.h"
@@ -46,426 +47,1007 @@
 #import "PreferenceManager.h"
 #import "HistoryItem.h"
 
-#include "nsIRDFService.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFResource.h"
+#import "BookmarkViewController.h"    // only for +greyStringWithItemCount
+
+#import "nsCOMPtr.h"
+
 #include "nsIBrowserHistory.h"
 #include "nsIServiceManager.h"
+#include "nsIHistoryItems.h"
+#include "nsIHistoryObserver.h"
+#include "nsISimpleEnumerator.h"
 
+#include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 
 #include "nsComponentManagerUtils.h"
 
-//
-// Uses the Gecko RDF data source for history,
-// and presents a Cocoa API through the NSOutlineViewDataSource protocol
-//
+NSString* const kHistoryViewByDate    = @"date";
+NSString* const kHistoryViewBySite    = @"site";
+NSString* const kHistoryViewFlat      = @"flat";
 
-class HistoryRDFObserver : public nsIRDFObserver
+
+NSString* const kNotificationNameHistoryDataSourceChanged                     = @"history_changed";
+NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItem      = @"changed_item";
+NSString* const kNotificationHistoryDataSourceChangedUserInfoChangedItemOnly  = @"item_only";
+
+struct SortData
 {
-public:
-  HistoryRDFObserver(HistoryDataSource* dataSource)
-  : mHistoryDataSource(dataSource)
-  { 
-  }
-  virtual ~HistoryRDFObserver() { }
-  
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD OnAssert(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*);
-  NS_IMETHOD OnUnassert(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*);
-
-  NS_IMETHOD OnMove(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*) 
-    { return NS_OK; }
-
-  NS_IMETHOD OnChange(nsIRDFDataSource*, nsIRDFResource*, nsIRDFResource*, nsIRDFNode*, nsIRDFNode*);
-
-  NS_IMETHOD OnBeginUpdateBatch(nsIRDFDataSource*) { return NS_OK; }
-  NS_IMETHOD OnEndUpdateBatch(nsIRDFDataSource*)   { return NS_OK; }
-
-private:
-
-  HistoryDataSource* mHistoryDataSource;
+  SEL   mSortSelector;
+  BOOL  mReverseSort;
 };
 
-NS_IMPL_ISUPPORTS1(HistoryRDFObserver, nsIRDFObserver)
-
-
-//
-// OnAssert
-//
-// Catches newly added items to the history, for surfing while the drawer is
-// open.
-//
-NS_IMETHODIMP
-HistoryRDFObserver::OnAssert(nsIRDFDataSource*, nsIRDFResource*,
-                             nsIRDFResource* aProperty, nsIRDFNode*)
+static int HistoryItemSort(id firstItem, id secondItem, void* context)
 {
-  const char* p;
-  aProperty->GetValueConst(&p);
-  if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
-    [mHistoryDataSource setNeedsRefresh:YES];
-
-  return NS_OK;
+  SortData* sortData = (SortData*)context;
+  int comp = (int)[firstItem performSelector:sortData->mSortSelector withObject:secondItem];
+  if (sortData->mReverseSort)
+    comp *= -1;
+  return comp;
 }
 
-//
-// OnUnassert
-//
-// This gets called on redirects, when nsGlobalHistory::RemovePage is called.
-//
-NS_IMETHODIMP
-HistoryRDFObserver::OnUnassert(nsIRDFDataSource*, nsIRDFResource*,
-                               nsIRDFResource* aProperty, nsIRDFNode*)
-{
-  const char* p;
-  aProperty->GetValueConst(&p);
-  if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
-    [mHistoryDataSource setNeedsRefresh:YES];
+#pragma mark -
 
-  return NS_OK;
+// base class for a 'builder' object. This one just builds a flat list
+@interface HistoryTreeBuilder : NSObject
+{
+  HistoryItem*    mRootItem;
+  SEL             mSortSelector;
+  BOOL            mSortDescending;
 }
 
-//
-// OnChange
-//
-// Catches items that are already in history, but need to be moved because you're
-// visiting them and they change date
-//
-NS_IMETHODIMP
-HistoryRDFObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*, 
-                                      nsIRDFResource* aProperty, nsIRDFNode*, nsIRDFNode*)
-{
-  const char* p;
-  aProperty->GetValueConst(&p);
-  if (strcmp("http://home.netscape.com/NC-rdf#Date", p) == 0)
-    [mHistoryDataSource setNeedsRefresh:YES];
+// sets up the tree and sorts it
+- (id)initWithItems:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending;
 
-  return NS_OK;
+- (HistoryItem*)rootItem;
+- (HistoryItem*)addItem:(HistorySiteItem*)item;
+- (HistoryItem*)removeItem:(HistorySiteItem*)item;
+
+- (HistoryItem*)parentOfItem:(HistorySiteItem*)item;
+
+- (void)resortWithSelector:(SEL)sortSelector descending:(BOOL)descending;
+
+// for internal use
+- (void)buildTreeWithItems:(NSArray*)items;
+- (void)resortFromItem:(HistoryItem*)item;
+
+@end
+
+#pragma mark -
+
+@interface HistoryBySiteTreeBuilder : HistoryTreeBuilder
+{
+  NSMutableDictionary*    mSiteDictionary;
 }
 
+- (void)addSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname;
+- (void)removeSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname;
 
+@end
 
+#pragma mark -
 
+@interface HistoryByDateTreeBuilder : HistoryTreeBuilder
+{
+  NSMutableArray*         mDateCategories;      // array of HistoryCategoryItems ordered recent -> old
+}
+
+- (void)setupDateCategories;
+- (HistoryCategoryItem*)categoryItemForDate:(NSDate*)date;
+
+@end
 
 #pragma mark -
 
 @interface HistoryDataSource(Private)
 
 - (void)cleanupHistory;
-- (void)cleanupDataSource;
-- (void)removeItemFromGeckoHistory:(id)anItem withService:(nsIBrowserHistory*)inHistService;
+- (void)rebuildHistory;
+
+- (void)startBatching;
+- (void)endBatching;
+
+- (void)itemAdded:(HistorySiteItem*)item;
+- (void)itemRemoved:(HistorySiteItem*)item;
+- (void)itemChanged:(HistorySiteItem*)item;
+
+- (void)notifyChanged:(HistoryItem*)changeRoot itemOnly:(BOOL)itemOnly;
+- (SEL)selectorForSortColumn;
+
+- (void)rebuildSearchResults;
+- (void)sortSearchResults;
+
+- (HistorySiteItem*)itemWithIdentifier:(NSString*)identifier;
+- (NSString*)relativeDataStringForDate:(NSDate*)date;
+
+- (void)refreshTimerFired:(NSTimer*)timer;
+
+@end
+
+#pragma mark -
+#pragma mark --HistoryTreeBuilder--
+
+@implementation HistoryTreeBuilder
+
+- (id)initWithItems:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending
+{
+  if ((self = [super init]))
+  {
+    mSortSelector = sortSelector;
+    mSortDescending = descending;
+
+    [self buildTreeWithItems:items];
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mRootItem release];
+  [super dealloc];
+}
+
+- (HistoryItem*)rootItem
+{
+  return mRootItem;
+}
+
+- (HistoryItem*)parentOfItem:(HistorySiteItem*)item
+{
+  return mRootItem;
+}
+
+- (HistoryItem*)addItem:(HistorySiteItem*)item
+{
+  [[mRootItem children] addObject:item];
+  [self resortFromItem:mRootItem];
+  return mRootItem;
+}
+
+- (HistoryItem*)removeItem:(HistorySiteItem*)item
+{
+  [[mRootItem children] removeObject:item];
+  // no need to resort
+  return mRootItem;
+}
+
+- (void)buildTreeWithItems:(NSArray*)items
+{
+  mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:[items count]];
+
+  [[mRootItem children] addObjectsFromArray:items];
+  [self resortFromItem:mRootItem];
+}
+
+- (void)resortWithSelector:(SEL)sortSelector descending:(BOOL)descending
+{
+  mSortSelector = sortSelector;
+  mSortDescending = descending;
+  [self resortFromItem:nil];
+}
+
+// recursive sort
+- (void)resortFromItem:(HistoryItem*)item
+{
+  SortData sortData = { mSortSelector, mSortDescending };
+  if (!item)
+    item = mRootItem;
+    
+  NSMutableArray* itemChildren = [item children];
+  [itemChildren sortUsingFunction:HistoryItemSort context:&sortData];
+
+  unsigned int numChildren = [itemChildren count];
+  for (unsigned int i = 0; i < numChildren; i ++)
+  {
+    HistoryItem* curItem = [itemChildren objectAtIndex:i];
+    if ([curItem isKindOfClass:[HistoryCategoryItem class]])
+      [self resortFromItem:curItem];
+  }
+}
+
+@end
+
+#pragma mark -
+#pragma mark --HistoryBySiteTreeBuilder--
+
+@implementation HistoryBySiteTreeBuilder
+
+- (void)dealloc
+{
+  [mSiteDictionary release];
+  [super dealloc];
+}
+
+- (HistoryItem*)parentOfItem:(HistorySiteItem*)item
+{
+  return [mSiteDictionary objectForKey:[item hostname]];
+}
+
+- (void)addSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname
+{
+  [mSiteDictionary setObject:item forKey:hostname];
+  [[mRootItem children] addObject:item];
+}
+
+- (void)removeSiteCategory:(HistoryCategoryItem*)item forHostname:(NSString*)hostname
+{
+  [mSiteDictionary removeObjectForKey:hostname];
+  [[mRootItem children] removeObject:item];
+}
+
+- (HistoryItem*)addItem:(HistorySiteItem*)item
+{
+  BOOL newHost = NO;
+  NSString* itemHostname = [item hostname];
+  HistoryCategoryItem* hostCategory = [mSiteDictionary objectForKey:itemHostname];
+  if (!hostCategory)
+  {
+    hostCategory = [[HistoryCategoryItem alloc] initWithTitle:itemHostname childCapacity:10];
+    [self addSiteCategory:hostCategory forHostname:itemHostname];
+    [hostCategory release];
+    newHost = YES;
+  }
+  [[hostCategory children] addObject:item];
+
+  [self resortFromItem:newHost ? mRootItem : hostCategory];
+  return hostCategory;
+}
+
+- (HistoryItem*)removeItem:(HistorySiteItem*)item
+{
+  NSString* itemHostname = [item hostname];
+  HistoryCategoryItem* hostCategory = [mSiteDictionary objectForKey:itemHostname];
+  [[hostCategory children] removeObject:item];
+
+  // is the category is now empty, remove it
+  if ([hostCategory numberOfChildren] == 0)
+  {
+    [self removeSiteCategory:hostCategory forHostname:itemHostname];
+    return mRootItem;
+  }
+  
+  return hostCategory;
+}
+
+- (void)buildTreeWithItems:(NSArray*)items
+{
+  if (!mSiteDictionary)
+    mSiteDictionary = [[NSMutableDictionary alloc] initWithCapacity:100];
+  else
+    [mSiteDictionary removeAllObjects];
+  
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  HistorySiteItem* item;
+  while ((item = [itemsEnum nextObject]))
+  {
+    NSString* itemHostname = [item hostname];
+    HistoryCategoryItem* hostCategory = [mSiteDictionary objectForKey:itemHostname];
+    if (!hostCategory)
+    {
+      hostCategory = [[HistoryCategoryItem alloc] initWithTitle:itemHostname childCapacity:10];
+      [mSiteDictionary setObject:hostCategory forKey:itemHostname];
+      [hostCategory release];
+    }
+    [[hostCategory children] addObject:item];
+  }
+
+  mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:[mSiteDictionary count]];
+  [[mRootItem children] addObjectsFromArray:[mSiteDictionary allValues]];
+
+  [self resortFromItem:mRootItem];
+}
+
+@end
+
+#pragma mark -
+#pragma mark --HistoryByDateTreeBuilder--
+
+@implementation HistoryByDateTreeBuilder
+
+- (id)initWithItems:(NSArray*)items sortSelector:(SEL)sortSelector descending:(BOOL)descending
+{
+  if ((self = [super init]))
+  {
+    mSortSelector = sortSelector;
+    mSortDescending = descending;
+
+    [self setupDateCategories];
+    [self buildTreeWithItems:items];
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mDateCategories release];
+  [super dealloc];
+}
+
+- (void)setupDateCategories
+{
+  if (!mDateCategories)
+    mDateCategories =  [[NSMutableArray alloc] initWithCapacity:9];
+  else
+    [mDateCategories removeAllObjects];  
+
+  NSCalendarDate* nowDate = [NSCalendarDate calendarDate];
+
+  NSCalendarDate* lastMidnight = [NSCalendarDate dateWithYear:[nowDate yearOfCommonEra]
+                                                    month:[nowDate monthOfYear]
+                                                      day:[nowDate dayOfMonth]
+                                                     hour:0
+                                                   minute:0
+                                                   second:0
+                                                 timeZone:[nowDate timeZone]];
+  HistoryCategoryItem* todayItem = [[HistoryCategoryItem alloc] initWithTitle:NSLocalizedString(@"Today", @"") childCapacity:10];
+  [todayItem setStartDate:lastMidnight];
+  [mDateCategories addObject:todayItem];
+  [todayItem release];
+  
+  NSCalendarDate* startYesterday = [lastMidnight dateByAddingYears:0
+                                                   months:0
+                                                     days:-1
+                                                    hours:0
+                                                  minutes:0
+                                                  seconds:0];
+  HistoryCategoryItem* yesterdayItem = [[HistoryCategoryItem alloc] initWithTitle:NSLocalizedString(@"Yesterday", @"") childCapacity:10];
+  [yesterdayItem setStartDate:startYesterday];
+  [mDateCategories addObject:yesterdayItem];
+  [yesterdayItem release];
+
+  NSCalendarDate* curDayStart = startYesterday;
+
+  // do previous 6 days
+  for (int i = 0; i < 6; i ++)
+  {
+    curDayStart = [curDayStart dateByAddingYears:0
+                                          months:0
+                                            days:-1
+                                           hours:0
+                                         minutes:0
+                                         seconds:0];
+
+    HistoryCategoryItem* dayItem = [[HistoryCategoryItem alloc] initWithTitle:[curDayStart descriptionWithCalendarFormat:@"%A %B %d"] childCapacity:10];
+    [dayItem setStartDate:curDayStart];
+    [mDateCategories addObject:dayItem];
+    [dayItem release];
+  }
+  
+  // do "older"
+  NSDate* oldDate = [NSDate distantPast];
+  HistoryCategoryItem* olderItem = [[HistoryCategoryItem alloc] initWithTitle:NSLocalizedString(@"HistoryMoreThanAWeek", @"") childCapacity:100];
+  [olderItem setStartDate:oldDate];
+  [mDateCategories addObject:olderItem];
+  [olderItem release];
+}
+
+- (HistoryCategoryItem*)categoryItemForDate:(NSDate*)date
+{
+  // find the first category whose start date is older  
+  unsigned int numDateCategories = [mDateCategories count];
+  for (unsigned int i = 0; i < numDateCategories; i ++)
+  {
+    HistoryCategoryItem* curItem = [mDateCategories objectAtIndex:i];
+    NSComparisonResult comp = [date compare:[curItem startDate]];
+    if (comp == NSOrderedDescending)
+      return curItem;
+  }
+  
+  // in theory we should never get here, because the last item has a date of 'distant past'
+  return nil;
+}
+
+- (HistoryItem*)parentOfItem:(HistorySiteItem*)item
+{
+  return [self categoryItemForDate:[item lastVisit]];
+}
+
+- (HistoryItem*)addItem:(HistorySiteItem*)item
+{
+  HistoryCategoryItem* dateCategory = [self categoryItemForDate:[item lastVisit]];
+  [[dateCategory children] addObject:item];
+
+  [self resortFromItem:dateCategory];
+  return dateCategory;
+}
+
+- (HistoryItem*)removeItem:(HistorySiteItem*)item
+{
+  HistoryCategoryItem* dateCategory = [self categoryItemForDate:[item lastVisit]];
+  [[dateCategory children] removeObject:item];
+  // no need to resort
+  return dateCategory;
+}
+
+- (void)buildTreeWithItems:(NSArray*)items
+{
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  HistorySiteItem* item;
+  while ((item = [itemsEnum nextObject]))
+  {
+    HistoryCategoryItem* dateCategory = [self categoryItemForDate:[item lastVisit]];
+    [[dateCategory children] addObject:item];
+  }
+
+  mRootItem = [[HistoryCategoryItem alloc] initWithTitle:@"" childCapacity:[mDateCategories count]];
+  [[mRootItem children] addObjectsFromArray:mDateCategories];
+
+  [self resortFromItem:mRootItem];
+}
 
 @end
 
 #pragma mark -
 
+class nsHistoryObserver : public nsIHistoryObserver
+{
+public:
+
+  nsHistoryObserver(HistoryDataSource* inDataSource)
+  : mDataSource(inDataSource)
+  {
+  }
+  
+  virtual ~nsHistoryObserver()
+  {
+  }
+
+protected:
+
+  HistorySiteItem* HistoryItemFromItem(nsIHistoryItem* inItem)
+  {
+    nsCString identifier;
+    if (NS_SUCCEEDED(inItem->GetID(identifier)))
+      return [mDataSource itemWithIdentifier:[NSString stringWith_nsACString:identifier]];
+  
+    return nil;
+  }
+    
+public:
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD HistoryLoaded()
+  {
+  
+    return NS_OK;
+  }
+
+  NS_IMETHOD ItemLoaded(nsIHistoryItem* inHistoryItem, PRBool inFirstVisit)
+  {
+    NS_DURING // make sure we don't throw out into gecko
+
+      // The logic here is slightly odd, because even when inFirstVisit is false,
+      // we can still get an item that we haven't seen before. This can happen
+      // when loading a URL that was typed: it was added first as a typed url,
+      // then is 'converted' when the page loads, at which point we get notified.
+      HistorySiteItem* item = nil;
+      if (!inFirstVisit)
+        item = HistoryItemFromItem(inHistoryItem);
+        
+      if (item)
+      {
+        if ([item updateWith_nsIHistoryItem:inHistoryItem])
+          [mDataSource itemChanged:item];
+      }      
+      else
+      {
+        item = [[HistorySiteItem alloc] initWith_nsIHistoryItem:inHistoryItem];
+        [mDataSource itemAdded:item];
+      }
+    NS_HANDLER
+      NSLog(@"Exception caught in ItemLoaded: %@", localException);
+    NS_ENDHANDLER
+    
+    return NS_OK;
+  }
+
+  NS_IMETHOD ItemRemoved(nsIHistoryItem* inHistoryItem)
+  {
+    NS_DURING // make sure we don't throw out into gecko
+      HistorySiteItem* item = HistoryItemFromItem(inHistoryItem);
+      if (item)
+        [mDataSource itemRemoved:item];
+    NS_HANDLER
+      NSLog(@"Exception caught in ItemRemoved: %@", localException);
+    NS_ENDHANDLER
+    return NS_OK;
+  }
+
+  NS_IMETHOD ItemTitleChanged(nsIHistoryItem* inHistoryItem)
+  {
+    HistorySiteItem* item = HistoryItemFromItem(inHistoryItem);
+    if (!item) return NS_OK;
+
+    NS_DURING // make sure we don't throw out into gecko
+      if ([item updateWith_nsIHistoryItem:inHistoryItem])
+        [mDataSource itemChanged:item];
+    NS_HANDLER
+      NSLog(@"Exception caught in ItemTitleChanged: %@", localException);
+    NS_ENDHANDLER
+    return NS_OK;
+  }
+
+  NS_IMETHOD StartBatchChanges()
+  {
+    [mDataSource startBatching];
+    return NS_OK;
+  }
+  
+  NS_IMETHOD EndBatchChanges()
+  {
+    [mDataSource endBatching];
+    return NS_OK;
+  }
+
+protected:
+
+  HistoryDataSource*    mDataSource;
+};
+
+NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
+
+#pragma mark -
+
 @implementation HistoryDataSource
 
-- (void) dealloc
+- (id)init
+{
+  if ((self = [super init]))
+  {
+    nsCOMPtr<nsIBrowserHistory> globalHist = do_GetService("@mozilla.org/browser/global-history;2");
+    mGlobalHistory = globalHist;
+    if (!mGlobalHistory)
+    {
+      [self autorelease];
+      return nil;
+    }
+    NS_IF_ADDREF(mGlobalHistory);
+    
+    mHistoryObserver = new nsHistoryObserver(self);
+    NS_ADDREF(mHistoryObserver);
+    
+    nsCOMPtr<nsIHistoryItems> historyItems = do_QueryInterface(mGlobalHistory);
+    if (historyItems)
+      historyItems->AddObserver(mHistoryObserver);
+      
+    mCurrentViewIdentifier = [kHistoryViewByDate retain];
+    
+    mSortColumn = [[NSString stringWithString:@"last_visit"] retain];    // save last settings in prefs?
+    mSortDescending = YES;
+
+    mSearchString = nil;
+    
+    mLastDayOfCommonEra = [[NSCalendarDate calendarDate] dayOfCommonEra];
+    
+    // Set up a timer to fire every 30 secs, to refresh the dates when midnight rolls around.
+    // You might think it would be better to set up a timer to fire just after midnight,
+    // but that might not be robust to clock adjustments.
+    mRefreshTimer = [[NSTimer scheduledTimerWithTimeInterval:30.0
+                                                      target:self
+                                                    selector:@selector(refreshTimerFired:)
+                                                    userInfo:nil
+                                                     repeats:YES] retain];
+  }
+
+  return self;
+}
+
+- (void)dealloc
 {
   [self cleanupHistory];
+  
+  [mCurrentViewIdentifier release];
+  [mSearchString release];
+
   [super dealloc];
 }
 
-// "non-virtual" cleanup method -- safe to call from dealloc.
 - (void)cleanupHistory
 {
-  if (mRDFDataSource && mObserver) {
-    mRDFDataSource->RemoveObserver(mObserver);
-    NS_RELEASE(mObserver);		// nulls it
+  if (mHistoryObserver)
+  {
+    nsCOMPtr<nsIHistoryItems> historyItems = do_QueryInterface(mGlobalHistory);
+    if (historyItems)
+      historyItems->RemoveObserver(mHistoryObserver);
+    NS_RELEASE(mHistoryObserver);
   }
-}
 
-// "virtual" method; called from superclass
-- (void)cleanupDataSource;
-{
-  [self cleanupHistory];
-  [super cleanupDataSource];
-}
-
--(bool) loaded;
-{
-  return mLoaded;
-}
-
-- (HistoryItem *)rootRDFItem;
-{
-  return mRootHistoryItem;
-}
-
-- (void)setRootRDFItem:(HistoryItem *)item;
-{
-  [mRootHistoryItem autorelease];
-  mRootHistoryItem = [item retain];
-}
-
-//
-// loadLazily
-//
-// Called when the history panel is selected or brought into view. Inits all
-// the RDF-fu to make history go. We defer loading everything because it's 
-// sorta slow and we don't want to take the hit when the user creates new windows
-// or just opens the bookmarks panel.
-//
-// in addition currently we don't get any gecko updates after we load so this
-// will make sure it's up-to-date
-//
-- (void) loadLazily;
-{
-  [super loadLazily];
+  NS_IF_RELEASE(mGlobalHistory);
   
-  NS_ASSERTION(mRDFService, "Uh oh, RDF service not loaded in parent class");
-  
-  if( !mRDFDataSource ) {
-    // Get the Global History DataSource
-    mRDFService->GetDataSource("rdf:history", &mRDFDataSource);
-    // Get the Date Folder Root
-    nsIRDFResource* aRDFRootResource;
-    mRDFService->GetResource(nsDependentCString("NC:HistoryByDate"), &aRDFRootResource);
-    HistoryItem * newRoot = [HistoryItem alloc];
-    [newRoot initWithRDFResource:aRDFRootResource RDFDataSource:mRDFDataSource parent:nil];
-    [self setRootRDFItem:newRoot];
+  [mHistoryItems release];
+  mHistoryItems = nil;
 
-
-    // identifiers: title url description keyword
+  [mHistoryItemsDictionary release];
+  mHistoryItemsDictionary = nil;
   
-    mObserver = new HistoryRDFObserver(self);
-    if ( mObserver ) {
-      NS_ADDREF(mObserver);
-      mRDFDataSource->AddObserver(mObserver);
-    }
-    [mOutlineView reloadData];
-  }
+  [mSearchResultsArray release];
+  mSearchResultsArray = nil;
+  
+  [mTreeBuilder release];
+  mTreeBuilder = nil;
+  
+  [mRefreshTimer invalidate];
+  [mRefreshTimer release];
+  mRefreshTimer = nil;
+}
+
+- (void)rebuildHistory
+{
+  [mTreeBuilder release];
+  mTreeBuilder = nil;
+
+  if ([mCurrentViewIdentifier isEqualToString:kHistoryViewFlat])
+    mTreeBuilder = [[HistoryTreeBuilder alloc] initWithItems:mHistoryItems sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+  else if ([mCurrentViewIdentifier isEqualToString:kHistoryViewBySite])
+    mTreeBuilder = [[HistoryBySiteTreeBuilder alloc] initWithItems:mHistoryItems  sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+  else    // default to by date
+    mTreeBuilder = [[HistoryByDateTreeBuilder alloc] initWithItems:mHistoryItems  sortSelector:[self selectorForSortColumn] descending:mSortDescending];
+  
+  [self notifyChanged:nil itemOnly:NO];
+}
+
+- (void)itemAdded:(HistorySiteItem*)item
+{
+  [mHistoryItems addObject:item];
+  [mHistoryItemsDictionary setObject:item forKey:[item identifier]];
+
+  HistoryItem* parentCategory = [mTreeBuilder addItem:item];
+
+  [self rebuildSearchResults];
+  [self notifyChanged:parentCategory itemOnly:NO];
+}
+
+- (void)itemRemoved:(HistorySiteItem*)item
+{
+  HistoryItem* parentCategory = [mTreeBuilder removeItem:item];
+  [mHistoryItems removeObject:item];
+  [mHistoryItemsDictionary removeObjectForKey:[item identifier]];
+
+  [self rebuildSearchResults];
+  [self notifyChanged:parentCategory itemOnly:NO];
+}
+
+- (void)itemChanged:(HistorySiteItem*)item
+{
+  // we remove then re-add it
+  HistoryItem* oldParent = [mTreeBuilder removeItem:item];
+  HistoryItem* newParent = [mTreeBuilder addItem:item];
+  
+  [self rebuildSearchResults];
+
+  [self notifyChanged:oldParent itemOnly:NO];
+  if (oldParent != newParent)
+    [self notifyChanged:newParent itemOnly:NO];
+}
+
+- (void)loadLazily
+{
+  nsCOMPtr<nsIHistoryItems> historyItems = do_QueryInterface(mGlobalHistory);
+  if (!historyItems) return;
+
+  PRUint32 maxItems;
+  if (NS_FAILED(historyItems->GetMaxItemCount(&maxItems)))
+    maxItems = 100;
+
+  if (!mHistoryItems)
+    mHistoryItems = [[NSMutableArray alloc] initWithCapacity:maxItems];
   else
-  {
-    // everything is loaded, but we have to refresh our tree otherwise
-    // changes that took place while the drawer was closed won't be noticed
-    [mOutlineView reloadData];
-  }
+    [mHistoryItems removeAllObjects];
   
-  NS_ASSERTION(mRDFDataSource, "Uh oh, History RDF Data source not created");
-}
+  if (!mHistoryItemsDictionary)
+    mHistoryItemsDictionary = [[NSMutableDictionary alloc] initWithCapacity:maxItems];
+  else
+    [mHistoryItemsDictionary removeAllObjects];
+    
+  nsCOMPtr<nsISimpleEnumerator> historyEnumerator;
+  historyItems->GetItemEnumerator(getter_AddRefs(historyEnumerator));
+  if (!historyEnumerator) return;
 
-- (void)enableObserver
-{
-  mUpdatesEnabled = YES;
-}
-
--(void)disableObserver
-{
-  mUpdatesEnabled = NO;
-}
-
-- (void)setNeedsRefresh:(BOOL)needsRefresh
-{
-  mNeedsRefresh = needsRefresh;
-}
-
-- (BOOL)needsRefresh
-{
-  return mNeedsRefresh;
-}
-
-- (void)refresh
-{
-  if (mNeedsRefresh)
+  PRBool hasMore;
+  while (PR_TRUE)
   {
-    [self invalidateCachedItems];
-    if (mUpdatesEnabled)
+    historyEnumerator->HasMoreElements(&hasMore);
+    if (!hasMore) break;
+    
+    // addref's each entry as it enters 'array'
+    nsCOMPtr<nsISupports> thisEntry;
+    historyEnumerator->GetNext(getter_AddRefs(thisEntry));
+
+    nsCOMPtr<nsIHistoryItem> thisItem = do_QueryInterface(thisEntry);
+    if (thisItem)
     {
-      [self reloadDataForItem:nil reloadChildren:NO];
+      HistorySiteItem* item = [[HistorySiteItem alloc] initWith_nsIHistoryItem:thisItem];
+      [mHistoryItems addObject:item];
+      [mHistoryItemsDictionary setObject:item forKey:[item identifier]];
+      [item release];
     }
-    mNeedsRefresh = NO; 
   }
+
+  [self rebuildHistory];
 }
 
-// this should only come from a context menu
-// ... because we use [aSender representedObject] apparently...
--(IBAction)openHistoryItemInNewTab:(id)aSender
+- (void)notifyChanged:(HistoryItem*)changeRoot itemOnly:(BOOL)itemOnly
 {
-  NSString *url = [aSender representedObject];
-  if ([url isKindOfClass:[NSString class]]) {
-    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-    [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground: loadInBackground allowPopups:NO];
+  // if we are displaying search results, make sure that updates
+  // display any new results
+  if (mSearchResultsArray)
+  {
+    changeRoot = nil;
+    itemOnly = NO;
   }
-}
 
-// this should only come from a context menu
-// ... because we use [aSender representedObject] apparently...
--(IBAction)openHistoryItemInNewWindow:(id)aSender
-{
-  NSString *url = [aSender representedObject];
-  if ([url isKindOfClass:[NSString class]]) {
-    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-    [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground: loadInBackground allowPopups:NO];  
+  if (changeRoot == [mTreeBuilder rootItem])
+  {
+    changeRoot = nil;
+    itemOnly = NO;
   }
-}
-
-- (IBAction)openHistoryItem:(id)aSender
-{
-  int index = [mOutlineView selectedRow];
-  if (index == -1)
-    return;
-  id item = [mOutlineView itemAtRow: index];
-  if (!item)
-    return;
-  if ([mOutlineView isExpandable: item]) { //TODO [item class]
-    if ([mOutlineView isItemExpanded: item])
-      [mOutlineView collapseItem: item];
-    else
-      [mOutlineView expandItem: item];
-  }
-  else {
-    // The history view obeys the app preference for cmd-click -> open in new window or tab
-    if (![item isKindOfClass: [HistoryItem class]])
-      return;
-    NSString* url = [item url];
-    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-    if (GetCurrentKeyModifiers() & cmdKey) {
-      if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
-        [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground:loadInBackground allowPopups:NO];
-      else
-        [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground:loadInBackground allowPopups:NO];  
-    }
-    else
-      [[mBrowserWindowController getBrowserWrapper] loadURI:url referrer:nil flags:NSLoadFlagsNone activate:YES allowPopups:NO];
-  }
-}
-
-// Walks the selection removing the selected items from the global history
-// in batch-mode, then reload the outline.
-- (IBAction)deleteHistoryItems:(id)aSender
-{
-  int index = [mOutlineView selectedRow];
-  if (index == -1)
-    return;
-
-  // If just 1 row was selected, keep it so the user can delete again immediately
-  BOOL clearSelectionWhenDone = ([mOutlineView numberOfSelectedRows] > 1);
   
-  // row numbers will stay in sync until table is invalidated
-  // removing children of removed items will fail silently (harmless)
-  NSEnumerator* rowEnum = [mOutlineView selectedRowEnumerator];
-  int currentRow;
-  while( (currentRow = [[rowEnum nextObject] intValue]) ) {
-    HistoryItem * item = [mOutlineView itemAtRow:currentRow];
-    if( [item isKindOfClass:[RDFItem class]] ) {
-      [(HistoryItem*)item deleteFromGecko];
-      [[item parent] deleteChildFromCache:item];
-    }
+  NSDictionary* userInfoDict = nil;
+  if (changeRoot || itemOnly)
+  {
+    userInfoDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                             changeRoot, kNotificationHistoryDataSourceChangedUserInfoChangedItem,
+     [NSNumber numberWithBool:itemOnly], kNotificationHistoryDataSourceChangedUserInfoChangedItemOnly,
+                                         nil];
   }
-  if ( clearSelectionWhenDone )
-    [mOutlineView deselectAll:self];
-  [mOutlineView reloadData];     // tell outline view the data source has changed
+  
+  [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationNameHistoryDataSourceChanged
+        object:self
+        userInfo:userInfoDict];
 }
 
+- (void)setHistoryView:(NSString*)inView
+{
+  if (![mCurrentViewIdentifier isEqualToString:inView])
+  {
+    [mCurrentViewIdentifier release];
+    mCurrentViewIdentifier = [inView retain];
+    [self rebuildHistory];
+  } 
+}
+
+- (NSString*)historyView
+{
+  return mCurrentViewIdentifier;
+}
+
+- (void)setSortColumnIdentifier:(NSString*)sortColumnIdentifier
+{
+  NSString* oldSortColumn = mSortColumn;
+  mSortColumn = [sortColumnIdentifier retain];
+  [oldSortColumn release];
+
+  [mTreeBuilder resortWithSelector:[self selectorForSortColumn] descending:mSortDescending];
+  [self sortSearchResults];
+  
+  [self notifyChanged:nil itemOnly:NO];
+}
+
+- (NSString*)sortColumnIdentifier
+{
+  return mSortColumn;
+}
+
+- (BOOL)sortDescending
+{
+  return mSortDescending;
+}
+
+- (void)setSortDescending:(BOOL)inDescending
+{
+  if (inDescending != mSortDescending)
+  {
+    mSortDescending = inDescending;
+    [mTreeBuilder resortWithSelector:[self selectorForSortColumn] descending:mSortDescending];
+    [self sortSearchResults];
+
+    [self notifyChanged:nil itemOnly:NO];
+  }
+}
+
+- (SEL)selectorForSortColumn
+{
+  if ([mSortColumn isEqualToString:@"url"])
+    return @selector(compareURL:);
+
+  if ([mSortColumn isEqualToString:@"title"])
+    return @selector(compareTitle:);
+
+  if ([mSortColumn isEqualToString:@"first_visit"])
+    return @selector(compareFirstVisitDate:);
+
+  if ([mSortColumn isEqualToString:@"last_visit"])
+    return @selector(compareLastVisitDate:);
+
+  if ([mSortColumn isEqualToString:@"hostname"])
+    return @selector(compareHostname:);
+
+  return @selector(compareLastVisitDate:);
+}
+
+- (HistorySiteItem*)itemWithIdentifier:(NSString*)identifier
+{
+  return [mHistoryItemsDictionary objectForKey:identifier];
+}
+
+- (NSString*)relativeDataStringForDate:(NSDate*)date
+{
+  NSCalendarDate* calendarDate = [date dateWithCalendarFormat:nil timeZone:nil];
+  return [calendarDate relativeDateDescription];
+}
+
+- (void)refreshTimerFired:(NSTimer*)timer
+{
+  int curDayOfCommonEra = [[NSCalendarDate calendarDate] dayOfCommonEra];
+  // it's a brand new day...
+  if (curDayOfCommonEra != mLastDayOfCommonEra)
+  {
+    [self rebuildHistory];
+    mLastDayOfCommonEra = curDayOfCommonEra;
+  }
+}
+
+- (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag
+{
+  [mSearchString autorelease];
+  mSearchString = [searchString retain];
+
+  mSearchFieldTag = tag;
+
+  if (!mSearchResultsArray)
+    mSearchResultsArray = [[NSMutableArray alloc] initWithCapacity:100];
+
+  [self rebuildSearchResults];
+}
+
+- (void)rebuildSearchResults
+{
+  // if mSearchResultsArray is null, we're not showing search results
+  if (!mSearchResultsArray) return;
+  
+  [mSearchResultsArray removeAllObjects];
+
+  NSEnumerator* itemsEnumerator = [mHistoryItems objectEnumerator];
+  id obj;
+  while ((obj = [itemsEnumerator nextObject]))
+  {
+    if ([obj matchesString:mSearchString inFieldWithTag:mSearchFieldTag])
+      [mSearchResultsArray addObject:obj];
+  }
+  
+  [self sortSearchResults];
+}
+
+- (void)sortSearchResults
+{
+  if (!mSearchResultsArray) return;
+
+  SortData sortData = {
+    [self selectorForSortColumn],
+    mSortDescending
+  };
+
+  [mSearchResultsArray sortUsingFunction:HistoryItemSort context:&sortData];
+}
+
+- (void)clearSearchResults
+{
+  [mSearchResultsArray release];
+  mSearchResultsArray = nil;
+  [mSearchString release];
+  mSearchString = nil;
+}
+
+- (void)removeItem:(HistorySiteItem*)item
+{
+  nsCOMPtr<nsIURI> doomedURI;
+  NS_NewURI(getter_AddRefs(doomedURI), [[item url] UTF8String]);
+  if (doomedURI)
+  {
+    mGlobalHistory->RemovePage(doomedURI);
+    [self itemRemoved:item];
+  }
+}
 
 #pragma mark -
 
 // Implementation of NSOutlineViewDataSource protocol
 
-// identifiers: title url description keyword
-- (id)outlineView:(NSOutlineView*)aOutlineView objectValueForTableColumn:(NSTableColumn*)aTableColumn byItem:(id)aItem
+- (id)outlineView:(NSOutlineView*)aOutlineView child:(int)aIndex ofItem:(id)item
 {
-  if (!mRDFDataSource || !aItem)
+  if (mSearchResultsArray)
+  {
+    if (!item)
+      return [mSearchResultsArray objectAtIndex:aIndex];
     return nil;
-  // use the table column identifier as a key
-  if( [[aTableColumn identifier] isEqualToString:@"title"] )
-    return [aItem name];
-  else if( [[aTableColumn identifier] isEqualToString:@"url"] )
-    return [aItem url];
-//  else if( [[aTableColumn identifier] isEqualToString:@"description"] )
-//    return [aItem date];
-  return nil;
+  }
+
+  if (!item)
+    item = [mTreeBuilder rootItem];
+  return [item childAtIndex:aIndex];
+}
+
+- (int)outlineView:(NSOutlineView*)outlineView numberOfChildrenOfItem:(id)item
+{
+  if (mSearchResultsArray)
+  {
+    if (!item)
+      return [mSearchResultsArray count];
+    return 0;
+  }
+
+  if (!item)
+    item = [mTreeBuilder rootItem];
+  return [item numberOfChildren];
+}
+
+- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item
+{
+  return [item isKindOfClass:[HistoryCategoryItem class]];
+}
+
+// identifiers: title url description keyword
+- (id)outlineView:(NSOutlineView*)outlineView objectValueForTableColumn:(NSTableColumn*)aTableColumn byItem:(id)item
+{
+  if ([[aTableColumn identifier] isEqualToString:@"title"])
+    return [item title];
+
+  if ([item isKindOfClass:[HistorySiteItem class]])
+  {
+    if ([[aTableColumn identifier] isEqualToString:@"url"])
+      return [item url];
+
+    if ([[aTableColumn identifier] isEqualToString:@"last_visit"])
+      return [self relativeDataStringForDate:[item lastVisit]];
+
+    if ([[aTableColumn identifier] isEqualToString:@"first_visit"])
+      return [self relativeDataStringForDate:[item firstVisit]];
+  }
+
+  if ([item isKindOfClass:[HistoryCategoryItem class]])
+  {
+    if ([[aTableColumn identifier] isEqualToString:@"url"])
+      return [BookmarkViewController greyStringWithItemCount:[item numberOfChildren]];
+  }
+  
+  return @"";
+
 // TODO truncate string
 //  - (void)truncateToWidth:(float)maxWidth at:kTruncateAtMiddle withAttributes:(NSDictionary *)attributes
 }
 
-- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard;
+- (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard
 {
   //Need to filter out folders from the list, only allow the urls to be dragged
   NSMutableArray* toDrag = [[[NSMutableArray alloc] init] autorelease];
   NSEnumerator *enumerator = [items objectEnumerator];
   id obj;
-  while( (obj = [enumerator nextObject]) ) {
-    if( ![obj isExpandable] )
+  while ((obj = [enumerator nextObject]))
+  {
+    if ([obj isSiteItem])
       [toDrag addObject:obj];
   }
   
   int count = [toDrag count];
-  if (count == 1) {
+  if (count == 1)
+  {
     id item = [toDrag objectAtIndex: 0];
     // if we have just one item, we add some more flavours
     NSString* title = [item name];
-    NSString *cleanedTitle
-      = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
+    NSString *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
     [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
     [pboard setDataForURL:[item url] title:cleanedTitle];
     return YES;
   }
-  if( count > 1 ) {
+
+  if ( count > 1 ) {
     // not sure what to do for multiple drag. just cancel for now.
+    // add serialized NSArray?
     return NO;
   }
   return NO;
-}
-
-// Only show a tooltip if we're not a folder. For items, use name\nurl as the format.
-- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)anItem;
-{
-  if( ![anItem isExpandable] ) {
-    NSString* pageTitle = [anItem name];
-    NSString* url = [anItem url];
-    return [NSString stringWithFormat:@"%@\n%@", pageTitle, [url stringByTruncatingTo:80 at:kTruncateAtEnd]];
-  }
-  return nil;
-}
-
-// TODO site icons
-- (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)inCell forTableColumn:(NSTableColumn *)tableColumn item:(id)item;
-{
-  // set the image on the name column. the url column doesn't have an image.
- if ([[tableColumn identifier] isEqualToString:@"title"]) {
-    if ( [outlineView isExpandable:item] )
-      [inCell setImage:[NSImage imageNamed:@"folder"]];
-    else
-      [inCell setImage:[NSImage imageNamed:@"smallbookmark"]];
-  }
-}
-
-- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item;
-{
-  if (nil == item || [mOutlineView isExpandable: item])
-    return nil;
-
-  // get item's URL, prep context menu
-  NSString *nulString = [NSString string];
-  NSMenu *contextMenu = [[[NSMenu alloc] initWithTitle:@"snookums"] autorelease];
-
-  // open in new window
-  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Window",@"") action:@selector(openHistoryItemInNewWindow:) keyEquivalent:nulString];
-  [menuItem setTarget:self];
-  [menuItem setRepresentedObject:[item url]];
-  [contextMenu addItem:menuItem];
-  [menuItem release];
-
-  // open in new tab
-  menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in New Tab",@"") action:@selector(openHistoryItemInNewTab:) keyEquivalent:nulString];
-  [menuItem setTarget:self];
-  [menuItem setRepresentedObject:[item url]];
-  [contextMenu addItem:menuItem];
-  [menuItem release];
-
-  [contextMenu addItem:[NSMenuItem separatorItem]];
-
-  // delete
-  menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete",@"") action:@selector(deleteHistoryItems:) keyEquivalent:nulString];
-  [menuItem setTarget:self];
-  [contextMenu addItem:menuItem];
-  [menuItem release];
-  return contextMenu;
 }
 
 @end

@@ -71,7 +71,7 @@
 
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
-const NSString* kOfflineNotificationName = @"offlineModeChanged";
+static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 @interface BrowserWrapper(Private)
 

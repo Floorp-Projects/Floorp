@@ -20,8 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger <ben@netscape.com> (Original Author)
- *   Simon Woodside <sbwoodside@yahoo.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,42 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Appkit/Appkit.h>
 
-class nsIRDFDataSource;
-class nsIRDFContainer;
-class nsIRDFContainerUtils;
-class nsIRDFService;
+#import <Foundation/Foundation.h>
 
-@class ExtendedOutlineView;
-@class RDFItem;
+#import "prtime.h"
 
-@interface RDFOutlineViewDataSource : NSObject
-{
-  RDFItem * mRootRDFItem;
-  IBOutlet ExtendedOutlineView* mOutlineView; 
+@interface NSDate(ChimeraDateUtils)
 
-  nsIRDFDataSource*       mRDFDataSource;
-  nsIRDFContainer*        mRDFContainer;
-  nsIRDFContainerUtils*   mRDFContainerUtils;
-  nsIRDFService*          mRDFService;
-}
++ (id)dateWithPRTime:(PRTime)microseconds;
 
-- (RDFItem *)rootRDFItem;
-- (void)setRootRDFItem:(RDFItem*)item;
+@end
 
-// Initialization Methods
-- (void) loadLazily;
-- (void) cleanupDataSource;
+@interface NSCalendarDate(ChimeraCalendarDateUtils)
 
-- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
-- (void)invalidateCachedItems;
-
-  // Outline View Data Source methods
-- (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item;
-- (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item;
-- (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item;
-- (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item;
-- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)anItem;
+- (NSString*)relativeDateDescription;
 
 @end

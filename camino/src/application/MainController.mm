@@ -1345,7 +1345,7 @@ const int kReuseWindowOnAE = 2;
     
     // close all windows
     NSArray *windows = [NSApp orderedWindows];
-    for (int i = 0; i < [windows count]; i++) {
+    for (unsigned int i = 0; i < [windows count]; i++) {
       [[windows objectAtIndex:i] performClose:self];
     }
     

@@ -56,6 +56,13 @@
 #include "CHBrowserListener.h"
 
 
+// informal protocol of methods that our embedding window might support
+@interface NSWindow(BrowserWindow)
+
+- (BOOL)suppressMakeKeyFront;
+
+@end
+
 CHBrowserListener::CHBrowserListener(CHBrowserView* aView)
   : mView(aView), mContainer(nsnull), mIsModal(PR_FALSE), mChromeFlags(0)
 {
@@ -405,7 +412,7 @@ CHBrowserListener::SetFocus()
   {
     BOOL suppressed = NO;
     if ([window respondsToSelector:@selector(suppressMakeKeyFront)])
-      suppressed = (BOOL)[window suppressMakeKeyFront];
+      suppressed = [window suppressMakeKeyFront];
   
     if (!suppressed)
       [window makeKeyAndOrderFront:window];

@@ -481,7 +481,10 @@ static KeychainDenyList *sDenyListInstance = nil;
 - (void) writeToDisk
 {
   if ( mIsDirty )
+  {
+    // XXX erm, why not save it in a format that mortals can read (like a plist???)
     [NSArchiver archiveRootObject:mDenyList toFile:[self pathToDenyListFile]];
+  }
   mIsDirty = NO;
 }
 

@@ -45,6 +45,7 @@
 @class BookmarkFolder;
 @class BookmarkManager;
 
+// KindaSmart? How smart? What does it do?
 @interface KindaSmartFolderManager : NSObject {
   BookmarkFolder* mUpdatedBookmarkFolder;
   BookmarkFolder* mTop10Folder;

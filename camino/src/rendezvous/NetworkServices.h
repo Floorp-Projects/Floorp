@@ -76,11 +76,11 @@
 - (NSEnumerator*)serviceEnumerator;
 
 // Notifications
-  extern NSString *NetworkServicesAvailableServicesChanged;
-  extern NSString *NetworkServicesResolutionSuccess;
-  extern NSString *NetworkServicesResolutionFailure;
-  extern NSString *NetworkServicesClientKey;
-  extern NSString *NetworkServicesResolvedURLKey;
-  extern NSString *NetworkServicesServiceKey;
+extern NSString* const NetworkServicesAvailableServicesChanged;
+extern NSString* const NetworkServicesResolutionSuccess;
+extern NSString* const NetworkServicesResolutionFailure;
+extern NSString* const NetworkServicesClientKey;
+extern NSString* const NetworkServicesResolvedURLKey;
+extern NSString* const NetworkServicesServiceKey;
 
 @end

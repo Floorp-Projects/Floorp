@@ -49,7 +49,7 @@
   NSMenuItem *aMenuItem;
 
   [super addItemWithTitle:itemTitle];
-  aMenuItem = [self itemWithTitle:itemTitle];
+  aMenuItem = (NSMenuItem*)[self itemWithTitle:itemTitle];
   [aMenuItem setTarget:self];
   [aMenuItem setAction:@selector(_searchTextFieldPopUpCellButtonSelectionChanged:)];
 }
@@ -64,7 +64,7 @@
   [super addItemsWithTitles:itemTitles];
 
   while ((anItemTitle = [itemTitleEnumerator nextObject])) {
-    aMenuItem = [self itemWithTitle:anItemTitle];
+    aMenuItem = (NSMenuItem*)[self itemWithTitle:anItemTitle];
     [aMenuItem setTarget:self];
     [aMenuItem setAction:@selector(_searchTextFieldPopUpCellButtonSelectionChanged:)];
   }

@@ -236,7 +236,7 @@
     if (tabVisibilityChanged) {
       // tell the tabs that visibility changed
       NSArray* tabViewItems = [self tabViewItems];
-      for (unsigned int i = 0; i < numItems; i ++) {
+      for (int i = 0; i < numItems; i ++) {
         NSTabViewItem* tabItem = [tabViewItems objectAtIndex:i];
         if ([tabItem isMemberOfClass:[BrowserTabViewItem class]])
           [(BrowserTabViewItem*)tabItem updateTabVisibility:tabsVisible];

@@ -209,8 +209,8 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 - (void)availableServicesChanged:(NSNotification *)note
 {
   // empty the rendezvous folder
-  unsigned i, count = [mRendezvousFolder count];
-  for (i=0; i < count; i++)
+  unsigned int i, count = [mRendezvousFolder count];
+  for (i = 0; i < count; i++)
     [mRendezvousFolder deleteChild:[mRendezvousFolder objectAtIndex:0]];
   NetworkServices *netserv = [note object];
   NSEnumerator* keysEnumerator = [netserv serviceEnumerator];
@@ -227,8 +227,8 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   if ([servicesArray count] != 0) {
     // sort on protocol, then name
     [servicesArray sortUsingFunction:SortByProtocolAndName context:NULL];
-    unsigned count = [servicesArray count];
-    for (unsigned int i = 0; i < count; i ++)
+    unsigned int numServices = [servicesArray count];
+    for (i = 0; i < numServices; i ++)
     {
       NSDictionary* serviceDict = [servicesArray objectAtIndex:i];
       NSString* itemName = [[serviceDict objectForKey:@"name"] stringByAppendingString:NSLocalizedString([serviceDict objectForKey:@"protocol"], @"")];

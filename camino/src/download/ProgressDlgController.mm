@@ -171,7 +171,7 @@ static id gSharedProgressController = nil;
 // remove all inactive instances
 -(IBAction)cleanUpDownloads:(id)sender
 {
-  for (int i = 0; i < [mProgressViewControllers count]; i++) {
+  for (unsigned int i = 0; i < [mProgressViewControllers count]; i++) {
     if ((![[mProgressViewControllers objectAtIndex:i] isActive]) || [[mProgressViewControllers objectAtIndex:i] isCanceled]) {
 	    [self removeDownload:[mProgressViewControllers objectAtIndex:i]]; // remove the download
 	    i--; // leave index at the same position because the dl there got removed
@@ -217,7 +217,7 @@ static id gSharedProgressController = nil;
   else if (lastMod == kCommandKey) {
     if (![sender isSelected]) {
       // if this was at the pivot index set the pivot index to -1
-      if ([mProgressViewControllers indexOfObject:[sender getController]] == mSelectionPivotIndex) {
+      if ([mProgressViewControllers indexOfObject:[sender getController]] == (unsigned int)mSelectionPivotIndex) {
         mSelectionPivotIndex = -1;
       }
     }
@@ -264,7 +264,7 @@ static id gSharedProgressController = nil;
     if (key == NSUpArrowFunctionKey) { // was it the up arrow key that got pressed?
       // find the first selected item
       int i; // we use this outside the loop so declare it here
-      for (i = 0; i < [mProgressViewControllers count]; i++) {
+      for (i = 0; i < (int)[mProgressViewControllers count]; i++) {
         if ([[mProgressViewControllers objectAtIndex:i] isSelected]) {
           break;
         }
@@ -273,7 +273,7 @@ static id gSharedProgressController = nil;
       if (!(mods & NSShiftKeyMask)) {
         [self deselectDLInstancesInArray:[self getSelectedProgressViewControllers]];
       }
-      if (i == [mProgressViewControllers count]) { // if nothing was selected select the first item
+      if (i == (int)[mProgressViewControllers count]) { // if nothing was selected select the first item
         instanceToSelect = 0;
       }
       else if (i == 0) { // if selection was already at the top leave it there
@@ -293,7 +293,6 @@ static id gSharedProgressController = nil;
     }
     else if (key == NSDownArrowFunctionKey) { // was it the down arrow key that got pressed?
       // find the last selected item
-      int instanceToSelect = -1;
       int i; // we use this outside the coming loop so declare it here
       for (i = [mProgressViewControllers count] - 1; i >= 0 ; i--) {
         if ([[mProgressViewControllers objectAtIndex:i] isSelected]) {

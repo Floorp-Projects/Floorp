@@ -41,6 +41,7 @@
 
 @interface SearchTextField : NSTextField
 {
+  IBOutlet NSMenu*        mPopupMenu;
 }
 
 + (Class)cellClass;
@@ -53,6 +54,10 @@
 - (BOOL)becomeFirstResponder;
 - (void)selectText:(id)sender;
 
+- (void)setIsSmall:(BOOL)small;
+- (BOOL)hasPopUpButton;
+- (void)setHasPopUpButton:(BOOL)aBoolean;
+
 - (NSString *)titleOfSelectedPopUpItem;
 
   // Use this method to add menu items to the list
@@ -62,5 +67,12 @@
   //  IT IS A BLANK ITEM REQUIRED SO THAT THE MENU
   //  DISPLAYS CORRECTLY
 - (void)addPopUpMenuItemsWithTitles:(NSArray *)itemTitles;
+
+// note that the first menu item is ignored
+- (void)setPopupMenu:(NSMenu*)menu;
+- (NSMenu*)popupMenu;
+
+- (void)selectPopupMenuItem:(NSMenuItem*)menuItem;
+- (NSMenuItem*)selectedPopupMenuItem;
 
 @end

@@ -365,18 +365,16 @@ static unsigned gFirstUserCollection = 0;
   return [NSArray arrayWithObject:keyword];
 }
 
--(NSArray *)searchBookmarksForString:(NSString *)searchString
+// a null container indicates to search all bookmarks
+-(NSArray *)searchBookmarksContainer:(BookmarkFolder*)container forString:(NSString *)searchString inFieldWithTag:(int)tag
 {
-  NSMutableArray *matchingArray = nil;
-  if ((searchString) && ![searchString isEqualToString:@""]) {
-    NSSet *matchingSet = [[self rootBookmarks] bookmarksWithString:searchString];
-    NSEnumerator *enumerator = [matchingSet objectEnumerator];
-    id aThingy;
-    matchingArray = [NSMutableArray array];
-    while ((aThingy = [enumerator nextObject]))
-      [matchingArray addObject:aThingy];
+  if ((searchString) && [searchString length] > 0)
+  {
+    BookmarkFolder* searchContainer = container ? container : [self rootBookmarks];
+    NSSet *matchingSet = [searchContainer bookmarksWithString:searchString inFieldWithTag:tag];
+    return [matchingSet allObjects];
   }
-  return matchingArray;
+  return nil;
 }
 
 //
@@ -414,7 +412,6 @@ static unsigned gFirstUserCollection = 0;
   if (!item)
     return nil;
   
-  NSString * nulString = [NSString string];
   NSMenu * contextMenu = [[[NSMenu alloc] initWithTitle:@"notitle"] autorelease];
   BOOL isFolder = [item isKindOfClass:[BookmarkFolder class]];
   NSString * menuTitle;
@@ -424,7 +421,7 @@ static unsigned gFirstUserCollection = 0;
     menuTitle = NSLocalizedString(@"Open Tabs in New Window", @"");
   else
     menuTitle = NSLocalizedString(@"Open in New Window", @"");
-  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:nulString];
+  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:@""];
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
   
@@ -433,21 +430,21 @@ static unsigned gFirstUserCollection = 0;
     menuTitle = NSLocalizedString(@"Open in New Tabs", @"");
   else
     menuTitle = NSLocalizedString(@"Open in New Tab", @"");
-  menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:nulString];
+  menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:@""];
   [menuItem setTarget:target];
   [contextMenu addItem:menuItem];
   
   if (!outlineView || ([outlineView numberOfSelectedRows] == 1)) {
     [contextMenu addItem:[NSMenuItem separatorItem]];
     menuTitle = NSLocalizedString(@"Get Info", @"");
-    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:nulString];
+    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:@""];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
   
   if ([item isKindOfClass:[BookmarkFolder class]]) {
     menuTitle = NSLocalizedString(@"Use as Dock Menu", @"");
-    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(makeDockMenu:) keyEquivalent:nulString];
+    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(makeDockMenu:) keyEquivalent:@""];
     [menuItem setTarget:item];
     [contextMenu addItem:menuItem];
   }
@@ -463,7 +460,7 @@ static unsigned gFirstUserCollection = 0;
     [contextMenu addItem:[NSMenuItem separatorItem]];
     // create new folder
     menuTitle = NSLocalizedString(@"Create New Folder...", @"");
-    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addFolder:) keyEquivalent:nulString];
+    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addFolder:) keyEquivalent:@""];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }
@@ -477,7 +474,7 @@ static unsigned gFirstUserCollection = 0;
     [contextMenu addItem:[NSMenuItem separatorItem]];
     // delete
     menuTitle = NSLocalizedString(@"Delete", @"");
-    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteBookmarks:) keyEquivalent:nulString];
+    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteBookmarks:) keyEquivalent:@""];
     [menuItem setTarget:target];
     [contextMenu addItem:menuItem];
   }

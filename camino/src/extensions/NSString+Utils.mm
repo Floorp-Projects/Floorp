@@ -86,6 +86,12 @@
   return [self stringWithCharacters:flatString.get() length:flatString.Length()];
 }
 
++ (id)stringWith_nsACString:(const nsACString&)inString
+{
+  nsPromiseFlatCString flatString = PromiseFlatCString(inString);
+  return [self stringWithUTF8String:flatString.get()];
+}
+
 #define ASSIGN_STACK_BUFFER_CHARACTERS  256
 
 - (void)assignTo_nsAString:(nsAString&)ioString

@@ -62,6 +62,7 @@
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
 #include "nsIHistoryEntry.h"
+#include "nsIHistoryItems.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMLocation.h"
@@ -83,7 +84,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIRDFRemoteDataSource.h"
 #include "nsIURI.h"
 #include "nsIURIFixup.h"
 #include "nsIBrowserHistory.h"
@@ -389,7 +389,6 @@ enum BWCOpenDest {
     mBookmarkToolbarItem = nil;
     mSidebarToolbarItem = nil;
     mSavedTitle = nil;
-    mBookmarkViewControllerInitialized = NO;
   
     // register for services
     NSArray* sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
@@ -499,9 +498,9 @@ enum BWCOpenDest {
   [mURLBar clearResults];
 
   { // scope...
-    nsCOMPtr<nsIRDFRemoteDataSource> dataSource ( do_QueryInterface(mGlobalHistory) );
-    if (dataSource)
-      dataSource->Flush();
+    nsCOMPtr<nsIHistoryItems> history(do_QueryInterface(mGlobalHistory));
+    if (history)
+      history->Flush();
     NS_IF_RELEASE(mGlobalHistory);
     NS_IF_RELEASE(mURIFixer);
   } // matters
@@ -570,7 +569,9 @@ enum BWCOpenDest {
   [self stopThrobber];
   [mThrobberImages release];
   [mURLFieldEditor release];
-  
+
+  [mBookmarkViewController release];
+
   [super dealloc];
 }
 
@@ -1217,7 +1218,6 @@ enum BWCOpenDest {
 - (void)loadingDone
 {
   [self stopThrobber];
-  [mHistoryDataSource refresh];
 }
 
 - (void)performAppropriateLocationAction
@@ -3099,9 +3099,8 @@ enum BWCOpenDest {
 - (void)toggleBookmarkManager:(id)sender
 {
   // lazily init the setup of the view's controller
-  if (!mBookmarkViewControllerInitialized) {
-    [mBookmarkViewController completeSetup];
-    mBookmarkViewControllerInitialized = YES;
+  if (!mBookmarkViewController) {
+    mBookmarkViewController = [[BookmarkViewController alloc] initWithBrowserWindowController:self];
   }
   
   // deactivate any gecko view that might think it has focus
@@ -3114,6 +3113,7 @@ enum BWCOpenDest {
   }
   
   // swap out between content and bookmarks.
+  [mContentView setBookmarkManagerView:[mBookmarkViewController bookmarksEditingView]];
   [mContentView toggleBookmarkManager:sender];
     
   // if we're now showing the bm manager, force it to have focus,
@@ -3139,7 +3139,6 @@ enum BWCOpenDest {
     // when it was out of the hierarchy
     [mTabBrowser setVisible:YES];
   }
-  
 
   // we have to manually update the bookmarks menu items, because we
   // turn autoenabling off for that menu

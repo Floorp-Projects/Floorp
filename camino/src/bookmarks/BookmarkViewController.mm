@@ -42,24 +42,38 @@
 * ***** END LICENSE BLOCK ***** */
 
 #import "BookmarkViewController.h"
+
 #import "NSString+Utils.h"
 #import "NSArray+Utils.h"
 #import "NSPasteboard+Utils.h"
 #import "NSSplitView+Utils.h"
+#import "NSView+Utils.h"
+
 #import "BookmarkManager.h"
 #import "BookmarkInfoController.h"
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
+
 #import "MainController.h"
+
 #import "BrowserWindowController.h"
 #import "PreferenceManager.h"
 #import "ImageAndTextCell.h"
+#import "SearchTextField.h"
 #import "ExtendedTableView.h"
+#import "ExtendedOutlineView.h"
 #import "BookmarkOutlineView.h"
+#import "PopupMenuButton.h"
+
+#import "HistoryOutlineViewDelegate.h"
 #import "HistoryDataSource.h"
+#import "HistoryItem.h"
+
 #import "BookmarksClient.h"
 #import "NetworkServices.h"
 #import "UserDefaults.h"
+
+
 
 #define kNoOpenAction 0
 #define kOpenBookmarkAction 1
@@ -75,46 +89,94 @@ const long kMinSearchPaneHeight = 80;
 // The actual constant defined in 10.3.x and greater headers is NSTableViewSolidVerticalGridLineMask.
 // In order to compile with 10.2.x, the value has just been extracted and put here.
 // It is extremely unlikely that Apple will change it.
-static unsigned int TableViewSolidVerticalGridLineMask = 1;
+static const unsigned int TableViewSolidVerticalGridLineMask = 1;
+
+static const int kDisabledQuicksearchPopupItemTag = 9999;
+
+#pragma mark -
 
 @interface BookmarkViewController (Private) <BookmarksClient, NetworkServicesClient>
--(void) setSearchResultArray:(NSArray *)anArray;
--(void) displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem;
--(BOOL) doDrop:(id <NSDraggingInfo>)info intoFolder:(BookmarkFolder *)dropFolder index:(int)index;
+
+- (void)completeSetup;
+- (void)setupAppearanceOfTableView:(NSTableView*)tableView;
+
+- (void)setSearchResultArray:(NSArray *)anArray;
+- (void)displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem;
+- (BOOL)doDrop:(id <NSDraggingInfo>)info intoFolder:(BookmarkFolder *)dropFolder index:(int)index;
+
+- (void)searchStringChanged:(NSString*)searchString;
+- (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag;
+- (void)clearSearchResults;
+
+- (void)selectItems:(NSArray*)items expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll;
+- (void)selectItem:(BookmarkItem*)item expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll byExtendingSelection:(BOOL)extendSelection;
+
+- (id)itemTreeRootContainer;   // something that responds to NSArray-like selectors
+
+- (NSOutlineView*)activeOutlineView;    // return the outline view of the visible tab
+- (void)setActiveOutlineView:(NSOutlineView*)outlineView;
+
+- (void)actionButtonWillDisplay:(NSNotification *)notification;
+
 @end
+
+
+
+#pragma mark -
 
 @implementation BookmarkViewController
 
-- (id)init
+
++ (NSAttributedString*)greyStringWithItemCount:(int)itemCount
 {
-  if (self = [super init]) {
-    mCachedHref = nil;
-    mRootBookmarks = nil;
-    mActiveRootCollection = nil;
-    mExpandedStatus = nil;
-    mSearchResultArray = nil;
-    mOpenActionFlag = 0;
-    mSplittersRestored = NO;
-    
+  NSString* itemCountStr = [NSString stringWithFormat:NSLocalizedString(@"Contains Items", @"%u Items"), itemCount];
+  NSDictionary* colorAttributes = [NSDictionary dictionaryWithObject:[NSColor disabledControlTextColor] forKey:NSForegroundColorAttributeName];
+  return [[[NSAttributedString alloc] initWithString:itemCountStr attributes:colorAttributes] autorelease];
+}
+
+- (id)initWithBrowserWindowController:(BrowserWindowController*)bwController
+{
+  if ((self = [super init]))
+  {
+    mBrowserWindowController = bwController;  // not retained
+
     // wait for |-completeSetup| to be called to lazily complete our setup
     mSetupComplete = NO;
+    
+    // load our nib
+    [NSBundle loadNibNamed:@"BookmarksEditing" owner:self];
   }
   return self;
 }
 
 - (void)dealloc
 {
-  // save the splitter width of the conatiner view
+  // save the splitter width of the container view
   float width = [mContainersSplit leftWidth]; 
   [[NSUserDefaults standardUserDefaults] setFloat: width forKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+
   [mCachedHref release];
   [mExpandedStatus release];
   [mActiveRootCollection release];
   [mRootBookmarks release];
   [mSearchResultArray release];
+
+  [mBookmarksHostView release];
+  [mHistoryHostView release];
+  
   [super dealloc];
+}
+
+// called when our nib has loaded
+- (void)awakeFromNib
+{
+  // retain views that we remove from the hierarchy  
+  [mBookmarksHostView retain];
+  [mHistoryHostView retain];
+
+  [self completeSetup];
 }
 
 //
@@ -130,83 +192,86 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 }
 
 - (void)completeSetup
-{
-  [self setSearchResultArray:[NSMutableArray array]];
-  // the standard table item doesn't handle text and icons. Replace it
-  // with a custom cell that does.
-  ImageAndTextCell* imageAndTextCell = [[[ImageAndTextCell alloc] init] autorelease];
-  [imageAndTextCell setEditable: YES];
-  [imageAndTextCell setWraps: NO];
-  NSTableColumn* itemNameColumn = [mItemPane tableColumnWithIdentifier: @"title"];
-  [itemNameColumn setDataCell:imageAndTextCell];
-  NSTableColumn* containerNameColumn = [mContainerPane tableColumnWithIdentifier: @"title"];
-  [containerNameColumn setDataCell:imageAndTextCell];
-  NSTableColumn* searchNameColumn = [mSearchPane tableColumnWithIdentifier: @"title"];
-  [searchNameColumn setDataCell:imageAndTextCell];
-
+{  
   // set up the table appearance for item and search views
-  if ([mItemPane respondsToSelector:@selector(setUsesAlternatingRowBackgroundColors:)]) {
-    [mItemPane setUsesAlternatingRowBackgroundColors:YES];
-    [mSearchPane setUsesAlternatingRowBackgroundColors:YES];
-    // if it responds to the above selector, then it will respond to this too...
-    [mItemPane setGridStyleMask:TableViewSolidVerticalGridLineMask];
-    [mSearchPane setGridStyleMask:TableViewSolidVerticalGridLineMask];
-  }
-  
-  // set up the font on the item & search views to be smaller
-  // also don't let the cells draw their backgrounds
-  NSArray* columns = [mItemPane tableColumns];
-  if (columns) {
-    int numColumns = [columns count];
-    NSFont* smallerFont = [NSFont systemFontOfSize:11];
-    for (int i = 0; i < numColumns; i++) {
-      [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
-      [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
-    }
-  }
-  columns = [mSearchPane tableColumns];
-  if (columns) {
-    int numColumns = [columns count];
-    NSFont* smallerFont = [NSFont systemFontOfSize:11];
-    for (int i = 0; i < numColumns; i++) {
-      [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
-      [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
-    }
-  }
+  [self setupAppearanceOfTableView:mContainersTableView];
+  [self setupAppearanceOfTableView:mBookmarksOutlineView];
+  [self setupAppearanceOfTableView:mHistoryOutlineView];
 
+  // set up history outliner
+  [mHistoryOutlineViewDelegate setBrowserWindowController:mBrowserWindowController];
+  [mHistoryOutlineView setTarget:mHistoryOutlineViewDelegate];
+  [mHistoryOutlineView setDoubleAction:@selector(openHistoryItem:)];
+  [mHistoryOutlineView setDeleteAction:@selector(deleteHistoryItems:)];
+  
   // Generic notifications for Bookmark Client
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-  [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
+  [nc addObserver:self selector:@selector(bookmarkAdded:)   name:BookmarkFolderAdditionNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
   [nc addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
 
+  // get notified when the action button pops up, to set its menu
+  [nc addObserver:self selector:@selector(actionButtonWillDisplay:) name:PopupMenuButtonWillDisplayMenu object:mActionButton];
+
   // register for notifications of when the BM manager starts up. Since it does it on a separate thread,
   // it can be created after we are and if we don't update ourselves, the bar will be blank. This
   // happens most notably when the app is launched with a 'odoc' or 'GURL' appleEvent.
   [nc addObserver:self selector:@selector(managerStarted:) name:[BookmarkManager managerStartedNotification] object:nil];
-
+  
   // register for dragged types
-  [mContainerPane registerForDraggedTypes:[NSArray arrayWithObjects:@"MozBookmarkType",@"MozURLType", NSURLPboardType, NSStringPboardType, nil]];
+  [mContainersTableView registerForDraggedTypes:[NSArray arrayWithObjects:@"MozBookmarkType", @"MozURLType", NSURLPboardType, NSStringPboardType, nil]];
 
-  [mSearchButton setEnabled:NO];
   [self ensureBookmarks];
 
   // these should be settable in the nib.  however, whenever
   // I try, they disappear as soon as I've saved.  Very annoying.
-  [mItemPane setAutosaveName:@"BMOutlineView"];
-  [mSearchPane setAutosaveName:@"BMSearchView"];
-  [mContainerPane setAutosaveName:@"BMContainerView"];
-  [mItemPane setAutosaveTableColumns:YES];
-  [mSearchPane setAutosaveTableColumns:YES];
-  [mContainerPane setAutosaveTableColumns:YES];
+  [mContainersTableView setAutosaveName:@"BMContainerView"];
+  [mContainersTableView setAutosaveTableColumns:YES];
 
-  // if we're on 10.2+, set the search field to be rounded
-  if ([mSearchField respondsToSelector:@selector(setBezelStyle:)])
-    [mSearchField setBezelStyle:NSTextFieldRoundedBezel];
+  [mBookmarksOutlineView setAutosaveName:@"BMOutlineView"];
+  [mBookmarksOutlineView setAutosaveTableColumns:YES];
+
+  [mHistoryOutlineView setAutosaveName:@"HistoryOutlineView"];
+  [mHistoryOutlineView setAutosaveTableColumns:YES];
+  [mHistoryOutlineView setAutosaveTableSort:YES];
+
+  [mSearchField setIsSmall:YES];
   
   mSetupComplete = YES;
+}
+
+- (void)setupAppearanceOfTableView:(NSTableView*)tableView
+{
+  // the standard table item doesn't handle text and icons. Replace it
+  // with a custom cell that does.
+  ImageAndTextCell* imageAndTextCell = [[[ImageAndTextCell alloc] init] autorelease];
+  [imageAndTextCell setEditable: YES];
+  [imageAndTextCell setWraps: NO];
+
+  NSTableColumn* itemNameColumn = [tableView tableColumnWithIdentifier: @"title"];
+  [itemNameColumn setDataCell:imageAndTextCell];
+
+  if ([tableView respondsToSelector:@selector(setUsesAlternatingRowBackgroundColors:)]) {
+    [tableView setUsesAlternatingRowBackgroundColors:YES];
+    // if it responds to the above selector, then it will respond to this too...
+    [tableView setGridStyleMask:TableViewSolidVerticalGridLineMask];
+  }
+  
+  // set up the font on the item & search views to be smaller
+  // also don't let the cells draw their backgrounds
+  NSArray* columns = [tableView tableColumns];
+  if (columns)
+  {
+    int numColumns = [columns count];
+    NSFont* smallerFont = [NSFont systemFontOfSize:11];
+    for (int i = 0; i < numColumns; i++)
+    {
+      [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
+      [[[columns objectAtIndex:i] dataCell] setDrawsBackground:NO];
+    }
+  }
 }
 
 //
@@ -218,21 +283,23 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 -(void)ensureBookmarks
 {
-  if (!mRootBookmarks) {
+  if (!mRootBookmarks)
+  {
     BookmarkFolder* manager = [[BookmarkManager sharedBookmarkManager] rootBookmarks];
     if (![manager count])     // not initialized yet, try again later (from start notifiation)
       return;
 
     mRootBookmarks = [manager retain];
-    [mContainerPane setTarget:self];
-    [mContainerPane setDeleteAction:@selector(deleteCollection:)];
-    [mContainerPane reloadData];
-    [mItemPane setTarget: self];
-    [mItemPane setDoubleAction: @selector(openBookmark:)];
-    [mItemPane setDeleteAction: @selector(deleteBookmarks:)];
-    [mItemPane reloadData];
-    [mSearchPane setTarget: self];
-    [mSearchPane setDoubleAction: @selector(openBookmark:)];
+
+    [mContainersTableView setTarget:self];
+    [mContainersTableView setDeleteAction:@selector(deleteCollection:)];
+    [mContainersTableView reloadData];
+
+    [mBookmarksOutlineView setTarget: self];
+    [mBookmarksOutlineView setDoubleAction: @selector(openBookmark:)];
+    [mBookmarksOutlineView setDeleteAction: @selector(deleteBookmarks:)];
+    [mBookmarksOutlineView reloadData];
+
     [self restoreFolderExpandedStates];
   }
 }
@@ -242,7 +309,6 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   [anArray retain];
   [mSearchResultArray release];
   mSearchResultArray = anArray;
-  [mSearchPane reloadData];
 }
 
 //
@@ -251,9 +317,9 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (IBAction) setAsDockMenuFolder:(id)aSender
 {
-  int rowIndex = [mContainerPane selectedRow];
+  int rowIndex = [mContainersTableView selectedRow];
   if (rowIndex >= 0) {
-    BookmarkFolder *aFolder = [mRootBookmarks objectAtIndex:[mContainerPane selectedRow]];
+    BookmarkFolder *aFolder = [mRootBookmarks objectAtIndex:[mContainersTableView selectedRow]];
     [aFolder setIsDockMenu:YES];
   }
 }
@@ -272,21 +338,24 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   BookmarkFolder *aFolder = [mRootBookmarks addBookmarkFolder];
   [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder",@"New Folder")];
-  unsigned index = [mRootBookmarks indexOfObjectIdenticalTo:aFolder];
+  unsigned int index = [mRootBookmarks indexOfObjectIdenticalTo:aFolder];
   [self selectContainer:index];
-  [mContainerPane editColumn:0 row:index withEvent:nil select:YES];
+  [mContainersTableView editColumn:0 row:index withEvent:nil select:YES];
 }
 
--(IBAction)addSeparator:(id)aSender;
+-(IBAction)addSeparator:(id)aSender
 {
   Bookmark *aBookmark = [[Bookmark alloc] init];
   [aBookmark setIsSeparator:YES];
+
   BookmarkFolder *parentFolder = nil;
-  unsigned index = 0;
-  if ([mItemPane numberOfSelectedRows] == 1){
-    int row = [mItemPane selectedRow];
-    BookmarkItem *item = [mItemPane itemAtRow:row];
-    if ([item respondsToSelector:@selector(parent)]) {
+  unsigned int index = 0;
+  if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
+  {
+    int row = [mBookmarksOutlineView selectedRow];
+    BookmarkItem *item = [mBookmarksOutlineView itemAtRow:row];
+    if ([item respondsToSelector:@selector(parent)])
+    {
       parentFolder = [item parent];
       index = [parentFolder indexOfObject:item] + 1;
     }
@@ -296,6 +365,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     index = [parentFolder count];
   }
   [parentFolder insertChild:aBookmark atIndex:index isMove:NO];  
+  [self selectItem:aBookmark expandingContainers:YES scrollIntoView:YES byExtendingSelection:NO];
 }
 
 -(void)addItem:(id)aSender isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
@@ -303,17 +373,22 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   // We ALWAYS use the selected item to determine the parent.
   BookmarkFolder *parentFolder = nil;
   BookmarkItem* item = nil;
-  if ([mItemPane numberOfSelectedRows] == 1) {
+  if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
+  {
     // There is only one selected row.  If it is a folder, use it as our parent.
     // Otherwise, use selected row's parent.
-    int index = [mItemPane selectedRow];
-    item = [mItemPane itemAtRow: index];
+    int index = [mBookmarksOutlineView selectedRow];
+    item = [mBookmarksOutlineView itemAtRow: index];
     if ([item isKindOfClass:[BookmarkFolder class]])
       parentFolder = item;
     else if ([item respondsToSelector:@selector(parent)])    // history items have no parent, for example
       parentFolder = [item parent];
-  } else
+  }
+  else
+  {
     parentFolder = [self activeCollection];
+  }
+
   [self addItem:aSender withParent:parentFolder isFolder:aIsFolder URL:aURL title:aTitle];
 }
 
@@ -395,36 +470,42 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     isGroup = YES;
   }
 
-  NSString* titleString = [[mBrowserWindowController getAddBookmarkTitle] stringValue];
-  NSPopUpButton* popup = [mBrowserWindowController getAddBookmarkFolder];
-  NSMenuItem* selectedItem = [popup selectedItem];
-  BookmarkFolder *parentFolder = [selectedItem representedObject];
+  NSString*       titleString = [[mBrowserWindowController getAddBookmarkTitle] stringValue];
+  NSPopUpButton*  popup = [mBrowserWindowController getAddBookmarkFolder];
+  NSMenuItem*     selectedItem = [popup selectedItem];
+  BookmarkFolder* parentFolder = [selectedItem representedObject];
+  BookmarkItem*   newBM = nil;
 
   if (isGroup)
   {
-    BookmarkFolder *newGroup = [parentFolder addBookmarkFolder:titleString inPosition:[parentFolder count] isGroup:YES];
+    BookmarkFolder* newGroup = [parentFolder addBookmarkFolder:titleString inPosition:[parentFolder count] isGroup:YES];
     id tabBrowser = [mBrowserWindowController getTabBrowser];
     int count     = [tabBrowser numberOfTabViewItems];
     for (int i = 0; i < count; i++)
     {
       BrowserWrapper* browserWrapper = (BrowserWrapper*)[[tabBrowser tabViewItemAtIndex: i] view];
-      NSString* titleString = nil;
+      NSString* curTitleString = nil;
       NSString* hrefString = nil;
-      [browserWrapper getTitle:&titleString andHref:&hrefString];
-      [newGroup addBookmark:titleString url:hrefString inPosition:i isSeparator:NO];
+      [browserWrapper getTitle:&curTitleString andHref:&hrefString];
+      newBM = [newGroup addBookmark:curTitleString url:hrefString inPosition:i isSeparator:NO];
     }
   }
   else
   {
     if (mCachedHref)
     {
-      [parentFolder addBookmark:titleString url:mCachedHref inPosition:[parentFolder count] isSeparator:NO];
+      newBM = [parentFolder addBookmark:titleString url:mCachedHref inPosition:[parentFolder count] isSeparator:NO];
       [mCachedHref release];
       mCachedHref = nil;
     }
     else
-      [parentFolder addBookmarkFolder:titleString inPosition:[parentFolder count] isGroup:NO];
+    {
+      newBM = [parentFolder addBookmarkFolder:titleString inPosition:[parentFolder count] isGroup:NO];
+    }
   }
+
+  // if (!newBM)
+  //  [self selectItem:newBM expandingContainers:YES scrollInfoView:YES byExtendingSelection:NO];
 
   // if we're NOT visible, set the selection to this bookmark's new parent folder
   // to ensure a selection exists. The next time we use the UI to add a bookmark, it will
@@ -432,18 +513,19 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   // container (bookmark menu, toolbar bookmarks, etc), clear the item panel's selection entirely,
   // which will fall back to checking the selected container panel's selection. If 
   // the manager is visible, don't muck with the selection.
-  if (![mBrowserWindowController bookmarkManagerIsVisible]) {
+  if (![mBrowserWindowController bookmarkManagerIsVisible])
+  {
     [self displayBookmarkInOutlineView:parentFolder];
-    long parentRow = [mItemPane rowForItem:parentFolder];   // will be -1 if top-level container
+    long parentRow = [mBookmarksOutlineView rowForItem:parentFolder];   // will be -1 if top-level container
     if (parentRow >= 0)
-      [mItemPane selectRow:parentRow byExtendingSelection:NO];
+      [mBookmarksOutlineView selectRow:parentRow byExtendingSelection:NO];
     else {
       // clear selection, next 'add bookmark' will subsequently use the container
       // panel's selection.
-      NSEnumerator* iter = [mItemPane selectedRowEnumerator];
+      NSEnumerator* iter = [mBookmarksOutlineView selectedRowEnumerator];
       NSNumber* row = nil;
       while ( (row = [iter nextObject]) )
-        [mItemPane deselectRow:[row intValue]];
+        [mBookmarksOutlineView deselectRow:[row intValue]];
     }
   }
 }
@@ -451,7 +533,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 -(IBAction)deleteCollection:(id)aSender
 {
   BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
-  int index = [mContainerPane selectedRow];
+  int index = [mContainersTableView selectedRow];
   if (index < (int)[manager firstUserCollection])
     return;
   [self selectContainer:(index - 1)];
@@ -460,7 +542,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 -(IBAction)deleteBookmarks: (id)aSender
 {
-  int index = [mItemPane selectedRow];
+  int index = [mBookmarksOutlineView selectedRow];
   if (index == -1)
     return;
 
@@ -473,12 +555,12 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   NSEnumerator* selRows;
   while (!allCollapsed) {
     allCollapsed = YES;
-    selRows = [mItemPane selectedRowEnumerator];
+    selRows = [mBookmarksOutlineView selectedRowEnumerator];
     while (allCollapsed && (doomedItem = [selRows nextObject])) {
-      doomedItem = [mItemPane itemAtRow:[doomedItem intValue]];
-      if ([mItemPane isItemExpanded:doomedItem]) {
+      doomedItem = [mBookmarksOutlineView itemAtRow:[doomedItem intValue]];
+      if ([mBookmarksOutlineView isItemExpanded:doomedItem]) {
         allCollapsed = NO;
-        [mItemPane collapseItem:doomedItem];
+        [mBookmarksOutlineView collapseItem:doomedItem];
       }
     }
   }
@@ -486,12 +568,12 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   // create array of items we need to delete. Deleting items out of of the
   // selection array is problematic for some reason.
   NSMutableArray *itemsToDelete = [[NSMutableArray alloc] init];
-  selRows = [mItemPane selectedRowEnumerator];
+  selRows = [mBookmarksOutlineView selectedRowEnumerator];
   for (NSNumber* currIndex = [selRows nextObject];
        currIndex != nil;
        currIndex = [selRows nextObject]) {
     index = [currIndex intValue];
-    BookmarkItem* item = [mItemPane itemAtRow: index];
+    BookmarkItem* item = [mBookmarksOutlineView itemAtRow: index];
     [itemsToDelete addObject: item];
   }
 
@@ -504,25 +586,20 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   [itemsToDelete release];
 
   // restore selection to location near last item deleted or last item
-  int total = [mItemPane numberOfRows];
+  int total = [mBookmarksOutlineView numberOfRows];
   if (index >= total)
     index = total - 1;
-  [mItemPane selectRow: index byExtendingSelection: NO];
+  [mBookmarksOutlineView selectRow: index byExtendingSelection: NO];
 }
 
 -(IBAction)openBookmark: (id)aSender
 {
   id item = nil;
-  if (aSender == mItemPane)  {
-    int index = [mItemPane selectedRow];
+  if (aSender == mBookmarksOutlineView)  {
+    int index = [mBookmarksOutlineView selectedRow];
     if (index == -1)
       return;
-    item = [mItemPane itemAtRow: index];
-  } else if (aSender == mSearchPane) {
-    int index = [mSearchPane selectedRow];
-    if (index == -1)
-      return;
-    item = [mSearchResultArray objectAtIndex:index];
+    item = [mBookmarksOutlineView itemAtRow: index];
   } else if ([aSender isKindOfClass:[BookmarkItem class]])
     item = aSender;
 
@@ -541,10 +618,10 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   {
     if (![item isGroup])
     {
-      if ([mItemPane isItemExpanded:item])
-        [mItemPane collapseItem: item];
+      if ([mBookmarksOutlineView isItemExpanded:item])
+        [mBookmarksOutlineView collapseItem: item];
       else
-        [mItemPane expandItem: item];
+        [mBookmarksOutlineView expandItem: item];
       return;
     }
   }
@@ -558,11 +635,11 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   id item = nil;
 
   if (![aSender isKindOfClass:[BookmarkItem class]]) {
-    int index = [mItemPane selectedRow];
+    int index = [mBookmarksOutlineView selectedRow];
     if (index == -1)
       return;
-    if ([mItemPane numberOfSelectedRows] == 1)
-      item = [mItemPane itemAtRow:index];
+    if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
+      item = [mBookmarksOutlineView itemAtRow:index];
   } else
     item = aSender;
 
@@ -584,11 +661,11 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   id item = nil;
   if (![aSender isKindOfClass:[BookmarkItem class]]) {
-    int index = [mItemPane selectedRow];
+    int index = [mBookmarksOutlineView selectedRow];
     if (index == -1)
       return;
-    if ([mItemPane numberOfSelectedRows] == 1)
-      item = [mItemPane itemAtRow:index];
+    if ([mBookmarksOutlineView numberOfSelectedRows] == 1)
+      item = [mBookmarksOutlineView itemAtRow:index];
   } else
     item = aSender;
   if (!item)
@@ -610,65 +687,69 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
   BookmarkItem* item = nil;
-  if ([[mItemPane window] firstResponder] == mSearchPane) {
-    int index = [mSearchPane selectedRow];
-    item = [mSearchResultArray objectAtIndex:index];
-  } else {
-    int index = [mItemPane selectedRow];
-    item = [mItemPane itemAtRow: index];
-  }
+
+  int index = [mBookmarksOutlineView selectedRow];
+  item = [mBookmarksOutlineView itemAtRow: index];
+
   [bic setBookmark:item];
   [bic showWindow:bic];
 }
 
--(IBAction)startSearch:(id)aSender
-{
-  NSString *searchString = [mSearchField stringValue];
-  if ([searchString length] > 0) {
-    [self setSearchResultArray:[[BookmarkManager sharedBookmarkManager] searchBookmarksForString:searchString]];
-    // display if it's hidden
-    NSArray *subviews = [mItemSearchSplit subviews];
-    NSRect bookmarkFrame = [[subviews objectAtIndex:0] frame];
-    NSRect searchFrame = [[subviews objectAtIndex:1] frame];
-    if (searchFrame.size.height < kMinSearchPaneHeight) {
-      searchFrame.size.height = kMinSearchPaneHeight;
-      bookmarkFrame.size.height -= kMinSearchPaneHeight;
-      [[subviews objectAtIndex:0] setFrame:bookmarkFrame];
-      [[subviews objectAtIndex:1] setFrame:searchFrame];
-      [mItemSearchSplit adjustSubviews];
-      [mItemSearchSplit setNeedsDisplay:YES];
-    }
-  }
-}
-
 -(IBAction) locateBookmark:(id)aSender
 {
+  // XXX use to go from quicksort to tree view?
+#if 0
   int index = [mSearchPane selectedRow];
   if (index == -1)
     return;
-  BookmarkItem *item = [mSearchResultArray objectAtIndex:index];
+#endif 
+  BookmarkItem *item = nil; //  = [mSearchResultArray objectAtIndex:index];
   [self displayBookmarkInOutlineView:item];
-  [mItemPane selectRow:[mItemPane rowForItem:item] byExtendingSelection:NO];
+  [mBookmarksOutlineView selectRow:[mBookmarksOutlineView rowForItem:item] byExtendingSelection:NO];
+}
+
+-(IBAction)quicksearchPopupChanged:(id)aSender
+{
+  // do the search again (we'll pick up the new popup item tag)
+  NSString* currentText = [mSearchField stringValue];
+  [self searchStringChanged:currentText];
+}
+
+- (void)resetSearchField
+{
+  [mSearchField selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
+  [mSearchField setStringValue:@""];
+}
+
+-(void)setBrowserWindowController:(BrowserWindowController*)bwController
+{
+  // don't retain
+  mBrowserWindowController = bwController;
 }
 
 -(void) displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem
 {
+  if (!aBookmarkItem) return;   // avoid recursion
   BookmarkItem *parent = [aBookmarkItem parent];
   if (parent != mRootBookmarks)
     [self displayBookmarkInOutlineView:parent];
   else {
     int index = [mRootBookmarks indexOfObject:aBookmarkItem];
-    [mContainerPane selectRow:index byExtendingSelection:NO];
+    [mContainersTableView selectRow:index byExtendingSelection:NO];
     [self selectContainer:index];
     return;
   }
-  [mItemPane expandItem:aBookmarkItem];
+  [mBookmarksOutlineView expandItem:aBookmarkItem];
 }
 
+-(NSView*)bookmarksEditingView
+{
+  return mBookmarksEditingView;
+}
 
 - (void) focus
 {
-  [[mItemPane window] makeFirstResponder:mItemPane];
+  [[mBookmarksOutlineView window] makeFirstResponder:mBookmarksOutlineView];
   
   // restore splitters to their saved positions. We have to do this here
   // (rather than in |-completeSetup| because only at this point is the
@@ -687,12 +768,12 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (void) setCanEditSelectedContainerContents:(BOOL)inCanEdit
 {
-  [mItemPane setAllowsEditing:inCanEdit];
-  // update buttons
-  [mAddBookmarkButton setEnabled:inCanEdit];
-  [mAddFolderButton setEnabled:inCanEdit];
+  [mBookmarksOutlineView setAllowsEditing:inCanEdit];
+  // XXX update buttons
+//  [mAddBookmarkButton setEnabled:inCanEdit];
+//  [mAddFolderButton setEnabled:inCanEdit];
   // if editable and something is selected, then enable get info button, otherwise disable it
-  [mInfoButton setEnabled:(inCanEdit && ([mItemPane numberOfSelectedRows] == 1))];
+  //[mInfoButton setEnabled:(inCanEdit && ([mBookmarksOutlineView numberOfSelectedRows] == 1))];
 }
 
 -(void) setActiveCollection:(BookmarkFolder *)aFolder
@@ -730,15 +811,15 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)restoreFolderExpandedStates
 {
   int curRow = 0;
-  while (curRow < [mItemPane numberOfRows])
+  while (curRow < [mBookmarksOutlineView numberOfRows])
   {
-    id item = [mItemPane itemAtRow:curRow];
+    id item = [mBookmarksOutlineView itemAtRow:curRow];
     if ([item isKindOfClass:[BookmarkFolder class]])
     {
       if ([self isExpanded:item])
-        [mItemPane expandItem: item];
+        [mBookmarksOutlineView expandItem: item];
       else
-        [mItemPane collapseItem: item];
+        [mBookmarksOutlineView collapseItem: item];
     }
     curRow ++;
   }
@@ -769,18 +850,22 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     // added sequentially, so use reverse object enumerator to preserve order.
     NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
     id aKid;
-    while ((aKid = [enumerator nextObject])) {
+    while ((aKid = [enumerator nextObject]))
+    {
       if (isCopy)
         [[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
       else
         [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+
+      [self selectItems:draggedItems expandingContainers:NO scrollIntoView:NO];
     }
     return YES;
   }
   else if ([types containsObject: @"MozURLType"])
   {
     NSDictionary* proxy = [[info draggingPasteboard] propertyListForType: @"MozURLType"];
-    [dropFolder addBookmark:[proxy objectForKey:@"title"] url:[proxy objectForKey:@"url"] inPosition:index isSeparator:NO];
+    Bookmark* newBookmark = [dropFolder addBookmark:[proxy objectForKey:@"title"] url:[proxy objectForKey:@"url"] inPosition:index isSeparator:NO];
+    [self selectItem:newBookmark expandingContainers:NO scrollIntoView:NO byExtendingSelection:NO];
     return YES;
   }
   else if ([types containsObject: NSURLPboardType])
@@ -789,7 +874,8 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     NSString* urlTitle = nil;
     if ([types containsObject:kCorePasteboardFlavorType_urld])
       urlTitle = [[info draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
-    [dropFolder addBookmark:(urlTitle ? urlTitle : [urlData absoluteString]) url:[urlData absoluteString] inPosition:index isSeparator:NO];
+    Bookmark* newBookmark = [dropFolder addBookmark:(urlTitle ? urlTitle : [urlData absoluteString]) url:[urlData absoluteString] inPosition:index isSeparator:NO];
+    [self selectItem:newBookmark expandingContainers:NO scrollIntoView:NO byExtendingSelection:NO];
     return YES;
   }
   else if ([types containsObject: NSStringPboardType])
@@ -799,8 +885,10 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     NSString* urlTitle = nil;
     if ([types containsObject:kCorePasteboardFlavorType_urld])
       urlTitle = [[info draggingPasteboard] stringForType:kCorePasteboardFlavorType_urld];
-    if (testURL) {
-      [dropFolder addBookmark:(urlTitle ? urlTitle : draggedText) url:draggedText inPosition:index isSeparator:NO];
+    if (testURL)
+    {
+      Bookmark* newBookmark = [dropFolder addBookmark:(urlTitle ? urlTitle : draggedText) url:draggedText inPosition:index isSeparator:NO];
+      [self selectItem:newBookmark expandingContainers:NO scrollIntoView:NO byExtendingSelection:NO];
       return YES;
     }
   }
@@ -812,62 +900,69 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 // table view things
 //
-- (int) containerCount
+- (int)containerCount
 {
   return [mRootBookmarks count];
 }
 
-- (void) selectContainer:(int)inRowIndex
+- (void)selectContainer:(int)inRowIndex
 {
-  [mContainerPane selectRow:inRowIndex byExtendingSelection:NO];
-  BookmarkFolder *activeCollection = [mRootBookmarks objectAtIndex:inRowIndex];
-  BOOL enableSeparator = YES;
-  if ([activeCollection isRoot] || [activeCollection isSmartFolder]) {
-    enableSeparator = NO;
-  }
-  [mAddSeparatorButton setEnabled:enableSeparator];
-  if (inRowIndex == kHistoryContainerIndex) {
-    [mItemPane setDataSource:mHistorySource];
-    [mItemPane setDelegate:mHistorySource];
-    [mHistorySource loadLazily];
-    [self setCanEditSelectedContainerContents:NO];
-    [mItemPane setTarget:mHistorySource];
-    [mItemPane setDoubleAction: @selector(openHistoryItem:)];
-    [mItemPane setDeleteAction: @selector(deleteHistoryItems:)];
+  [mContainersTableView selectRow:inRowIndex byExtendingSelection:NO];
+  
+  if (inRowIndex == kHistoryContainerIndex)
+  {
+    [self setActiveOutlineView:mHistoryOutlineView];
+
+    [mHistoryOutlineViewDelegate historyViewMadeVisible:YES];
+    
+    [mActionButton setMenu:mActionMenuHistory];
+    [mSortButton   setMenu:mSortMenuHistory];
+    [mSearchField setPopupMenu:mQuickSearchMenuHistory];
+    [self resetSearchField];
   } 
-  else {
-    [mItemPane setDataSource:self];
-    [mItemPane setDelegate:self];
+  else
+  {
+    [self setActiveOutlineView:mBookmarksOutlineView];
+
+    [mHistoryOutlineViewDelegate historyViewMadeVisible:NO];
+
+    BookmarkFolder *activeCollection = [mRootBookmarks objectAtIndex:inRowIndex];
     [self setActiveCollection:activeCollection];
     [self restoreFolderExpandedStates];
-    [mItemPane setTarget:self];
-    [mItemPane setDoubleAction: @selector(openBookmark:)];
+
     if ([activeCollection isSmartFolder])
       [self setCanEditSelectedContainerContents:NO];
     else
       [self setCanEditSelectedContainerContents:YES];
+
     // if its a smart folder, but not the history folder
-    if ([[self activeCollection] isSmartFolder] && (inRowIndex != kHistoryContainerIndex))
-      [mItemPane setDeleteAction:nil];
+    if ([[self activeCollection] isSmartFolder])
+      [mBookmarksOutlineView setDeleteAction:nil];
     else
-      [mItemPane setDeleteAction:@selector(deleteBookmarks:)];
+      [mBookmarksOutlineView setDeleteAction:@selector(deleteBookmarks:)];
+
+    [mActionButton setMenu:mActionMenuBookmarks];
+    [mSortButton   setMenu:mSortMenuBookmarks];
+    [mSearchField setPopupMenu:mQuickSearchMenuBookmarks];
+    [self resetSearchField];
+
+    // this reload ensures that we display the newly selected activeCollection 
+    [mBookmarksOutlineView reloadData];
   }
-  [mItemPane reloadData];
 }
 
-- (void) selectLastContainer
+- (void)selectLastContainer
 {
-  int curRow = [mContainerPane selectedRow];
+  int curRow = [mContainersTableView selectedRow];
   curRow = (curRow != -1) ? curRow : 0;
   [self selectContainer:curRow];
 }
 
 - (int)numberOfRowsInTableView:(NSTableView *)tableView
 {
-  if ( tableView == mContainerPane )
+  if ( tableView == mContainersTableView )
     return [mRootBookmarks count];
-  else if ( tableView == mSearchPane )
-    return [mSearchResultArray count];
+
   return 0;
 }
 
@@ -875,10 +970,10 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   id retValue = nil;
   id item = nil;
-  if ( tableView == mContainerPane ) 
+
+  if ( tableView == mContainersTableView ) 
     item = [mRootBookmarks objectAtIndex:row];
-  else if (tableView == mSearchPane )
-    item = [mSearchResultArray objectAtIndex:row];
+
   NS_DURING
     retValue = [item valueForKey:[tableColumn identifier]];
   NS_HANDLER
@@ -889,18 +984,15 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (void)tableView:(NSTableView *)inTableView willDisplayCell:(id)inCell forTableColumn:(NSTableColumn *)inTableColumn row:(int)inRowIndex
 {
-  if ( inTableView == mContainerPane ) {
+  if ( inTableView == mContainersTableView ) {
     BookmarkFolder *aFolder = [mRootBookmarks objectAtIndex:inRowIndex];
     [inCell setImage:[aFolder icon]];
-  } else if (inTableView == mSearchPane && [[inTableColumn identifier] isEqualToString:@"title"]) {
-    BookmarkItem *anItem = [mSearchResultArray objectAtIndex:inRowIndex];
-    [inCell setImage:[anItem icon]];
   }
 }
 
 - (BOOL)tableView:(NSTableView *)aTableView shouldEditTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex
 {
-  if (aTableView == mContainerPane) {
+  if (aTableView == mContainersTableView) {
     if (rowIndex >= (int)[[BookmarkManager sharedBookmarkManager] firstUserCollection])
       return YES;
     return NO;
@@ -908,9 +1000,9 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   return NO;
 }
 
-- (void)tableView:(NSTableView *)tableView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn row:(int)row;
+- (void)tableView:(NSTableView *)tableView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn row:(int)row
 {
-  if (tableView == mContainerPane) {
+  if (tableView == mContainersTableView) {
     BookmarkFolder *aFolder = [mRootBookmarks objectAtIndex:row];
     [aFolder setTitle:object];
   }
@@ -951,7 +1043,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 - (NSDragOperation)tableView:(NSTableView*)tv validateDrop:(id <NSDraggingInfo>)info proposedRow:(int)row proposedDropOperation:(NSTableViewDropOperation)op
 {
-  if (tv == mContainerPane) {
+  if (tv == mContainersTableView) {
     NSArray* types = [[info draggingPasteboard] types];
     // figure out where we want to drop. |dropFolder| will either be a container or
     // the top-level bookmarks root if we're to create a new container.
@@ -991,7 +1083,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (BOOL)tableView:(NSTableView*)tv acceptDrop:(id <NSDraggingInfo>)info row:(int)row dropOperation:(NSTableViewDropOperation)op
 {
-  if (tv != mContainerPane)
+  if (tv != mContainersTableView)
     return NO;
   // get info
   BookmarkFolder *dropFolder;
@@ -1003,31 +1095,21 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
     dropLocation = [dropFolder count];
   }
   BOOL result = [self doDrop:info intoFolder:dropFolder index:dropLocation];
-  [self selectContainer:[mContainerPane selectedRow]];
+  [self selectContainer:[mContainersTableView selectedRow]];
   return result;
 }
 
 -(void)tableViewSelectionDidChange:(NSNotification *)note
 {
   NSTableView *aView = [note object];
-  if (aView == mContainerPane) {
+  if (aView == mContainersTableView) {
     [self selectContainer:[aView selectedRow]];
-  }
-  else if (aView == mSearchPane) {
-    BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
-    int index = [mSearchPane selectedRow];
-    if (index != -1)
-      [mSearchButton setEnabled:YES];
-    else
-      [mSearchButton setEnabled:NO];
-    if ([[bic window] isVisible])
-      [bic setBookmark:[mSearchResultArray objectAtIndex:index]];
   }
 }
 
 -(NSMenu *)tableView:(NSTableView *)aTableView contextMenuForRow:(int)rowIndex
 {
-  if (aTableView == mContainerPane) {
+  if (aTableView == mContainersTableView) {
     NSMenu *contextMenu = [[[aTableView menu] copy] autorelease];
     if ([aTableView numberOfSelectedRows] > 0) {
       [contextMenu addItem:[NSMenuItem separatorItem]];
@@ -1036,7 +1118,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
       [contextMenu addItem:useAsDockItem];
       [useAsDockItem release];
       if (rowIndex >= (int)[[BookmarkManager sharedBookmarkManager] firstUserCollection]) {
-        NSMenuItem *deleteItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete",@"Delete") action:@selector(deleteCollection:) keyEquivalent:[NSString string]];
+        NSMenuItem *deleteItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete", @"Delete") action:@selector(deleteCollection:) keyEquivalent:[NSString string]];
         [deleteItem setTarget:self];
         [contextMenu addItem:deleteItem];
         [deleteItem release];
@@ -1048,6 +1130,15 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 }
 
 #pragma mark -
+
+- (void)outlineView:(NSOutlineView *)outlineView didClickTableColumn:(NSTableColumn *)tableColumn
+{
+  if (outlineView == mBookmarksOutlineView)
+  {
+    // XXX impl bookmarks sorting
+    
+  }
+}
 
 //
 // outlineView:shouldEditTableColumn:item: (delegate method)
@@ -1063,9 +1154,9 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item
 {
-  if (item)
+  if (item) // it's a BookmarkFolder
     return [item objectAtIndex:index];
-  return [[self activeCollection] objectAtIndex:index];
+  return [[self itemTreeRootContainer] objectAtIndex:index];
 }
 
 - (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item
@@ -1077,27 +1168,27 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
 - (int)outlineView:(NSOutlineView *)outlineView numberOfChildrenOfItem:(id)item
 {
-  if (item)
+  if (item) // it's a BookmarkFolder
     return [item count];
-  return [[self activeCollection] count];
+  return [[self itemTreeRootContainer] count];
 }
 
 - (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
 {
   id retValue = nil;
+  // XXX lame and slow to rely on exceptions here
   NS_DURING
     retValue = [item valueForKey:[tableColumn identifier]];
   NS_HANDLER
-    if ([item isKindOfClass:[BookmarkFolder class]] && [[tableColumn identifier] isEqualToString:@"url"]) {
-      NSString* itemCountStr = [NSString stringWithFormat:NSLocalizedString(@"Contains Items", @"%u Items"),[item count]];
-      NSDictionary* colorAttributes = [NSDictionary dictionaryWithObject:[NSColor disabledControlTextColor] forKey:NSForegroundColorAttributeName];
-      retValue = [[[NSAttributedString alloc] initWithString:itemCountStr attributes:colorAttributes] autorelease];
-    } else
+    if ([item isKindOfClass:[BookmarkFolder class]] && [[tableColumn identifier] isEqualToString:@"url"])
+      retValue = [BookmarkViewController greyStringWithItemCount:[item count]];
+    else
       retValue = nil;
   NS_ENDHANDLER
   return retValue;
 }
 
+// this is a delegate, not a data source method
 - (void)outlineView:(NSOutlineView *)outlineView willDisplayCell:(NSCell *)cell forTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
   // set the image on the name column. the url column doesn't have an image.
@@ -1114,7 +1205,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   NS_ENDHANDLER
 }
 
-- (BOOL)outlineView:(NSOutlineView *)ov writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard
+- (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard
 {
   int count = [items count];
   if ((count == 0) || [mActiveRootCollection isSmartFolder])
@@ -1138,7 +1229,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   return YES;
 }
 
-- (NSDragOperation)outlineView:(NSOutlineView*)ov validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index
+- (NSDragOperation)outlineView:(NSOutlineView*)outlineView validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index
 {
   NSArray* types = [[info draggingPasteboard] types];
 
@@ -1148,7 +1239,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 
   if ([types containsObject: @"MozBookmarkType"]) {
     NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-    BookmarkFolder* parent = (item) ? item : [self activeCollection];
+    BookmarkFolder* parent = (item) ? item : [self itemTreeRootContainer];
     BOOL isOK = [[BookmarkManager sharedBookmarkManager] isDropValid:draggedItems toFolder:parent];
     return (isOK) ? NSDragOperationGeneric : NSDragOperationNone;
   }
@@ -1165,14 +1256,14 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   return NSDragOperationNone;
 }
 
-- (BOOL)outlineView:(NSOutlineView*)ov acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index
+- (BOOL)outlineView:(NSOutlineView*)outlineView acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index
 {
-  BookmarkFolder *parent = (item) ? item : [self activeCollection];
+  BookmarkFolder *parent = (item) ? item : [self itemTreeRootContainer];
   BOOL retVal = [self doDrop:info intoFolder:parent index:index];
-  [ov deselectAll:self];
   return retVal;
 }
 
+// implementing this makes NSOutlineView updates much slower (because of all the hover region maintenance)
 - (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)item
 {
   if ([item isKindOfClass:[Bookmark class]]) {
@@ -1199,41 +1290,87 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
 {
   if (!item)
-    [mItemPane reloadData];
+    [mBookmarksOutlineView reloadData];
   else
-    [mItemPane reloadItem: item reloadChildren: aReloadChildren];
+    [mBookmarksOutlineView reloadItem: item reloadChildren: aReloadChildren];
 }
 
-- (int)numberOfSelectedRows {
-  return [mItemPane numberOfSelectedRows];
+- (int)numberOfSelectedRows
+{
+  return [mBookmarksOutlineView numberOfSelectedRows];
 }
 
 - (BOOL)haveSelectedRow
 {
-  return ([mItemPane selectedRow] != -1);
+  return ([mBookmarksOutlineView selectedRow] != -1);
 }
 
 -(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
 {
   BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController];
-  if ([mItemPane numberOfSelectedRows] == 1) {
-    [mInfoButton setEnabled:YES];
+  if ([mBookmarksOutlineView numberOfSelectedRows] == 1) {
+    //[mInfoButton setEnabled:YES];
     if ([[bic window] isVisible]) {
-      [bic setBookmark:[mItemPane itemAtRow:[mItemPane selectedRow]]];
+      [bic setBookmark:[mBookmarksOutlineView itemAtRow:[mBookmarksOutlineView selectedRow]]];
     }
   }
   else {
-    [mInfoButton setEnabled:NO];
+    //[mInfoButton setEnabled:NO];
     [bic close];
   }
 }
 
+- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem
+{
+  SEL action = [menuItem action];
+
+  if ([self activeOutlineView] == mBookmarksOutlineView)
+  {
+    if (action == @selector(addSeparator:))
+    {
+      BookmarkFolder *activeCollection = [self activeCollection];
+      return (![activeCollection isRoot] && ![activeCollection isSmartFolder]);
+    }
+
+    BookmarkItem* selItem = [mBookmarksOutlineView itemAtRow:[mBookmarksOutlineView selectedRow]];
+
+    if (action == @selector(openBookmark:))
+      return (selItem != nil);
+
+    if (action == @selector(openBookmarkInNewTab:))
+      return (selItem != nil);
+
+    if (action == @selector(openBookmarkInNewWindow:))
+      return (selItem != nil);
+
+    if (action == @selector(deleteBookmarks:))
+      return (selItem != nil);
+
+    if (action == @selector(showBookmarkInfo:))
+      return (selItem != nil);
+  }
+  else    // history visible
+  {
+    if (action == @selector(addBookmark:))
+      return NO;
+
+    if (action == @selector(addFolder:))
+      return NO;
+
+    if (action == @selector(addSeparator:))
+      return NO;
+  
+  }
+  return YES;
+}
+
+
 /*
 -(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
-  int  index = [mItemPane selectedRow];
+  int  index = [mBookmarksOutlineView selectedRow];
   BOOL haveSelection = (index != -1);
-  BOOL multiSelection = ([mItemPane numberOfSelectedRows] > 1);
+  BOOL multiSelection = ([mBookmarksOutlineView numberOfSelectedRows] > 1);
   BOOL isBookmark = NO;
   BOOL isToolbar = NO;
   BOOL isGroup = NO;
@@ -1241,7 +1378,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   id item = nil;
 
   if (haveSelection)
-    item = [mItemPane itemAtRow: index];
+    item = [mBookmarksOutlineView itemAtRow: index];
   if ([item isKindOfClass:[Bookmark class]])
     isBookmark = YES;
   else if ([item isKindOfClass:[BookmarkFolder class]]) {
@@ -1282,6 +1419,140 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 }
 
 #pragma mark -
+
+// called when the user typed into the quicksearch field
+- (void)controlTextDidChange:(NSNotification *)aNotification
+{
+  // NSTextView *fieldEditor = [[aNotification userInfo] objectForKey:@"NSFieldEditor"];
+  NSString* currentText = [mSearchField stringValue];
+
+  [self searchStringChanged:currentText];
+}
+
+- (void)searchStringChanged:(NSString*)searchString
+{
+  if ([searchString length] == 0)
+  {
+    [self clearSearchResults];
+    [[self activeOutlineView] reloadData];
+  }
+  else
+  {
+    [self searchFor:searchString inFieldWithTag:[[mSearchField selectedPopupMenuItem] tag]];
+    [[self activeOutlineView] reloadData];
+  }
+}
+
+- (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag
+{
+  if ([self activeOutlineView] == mHistoryOutlineView)
+    [mHistoryOutlineViewDelegate searchFor:searchString inFieldWithTag:tag];
+  else
+  {
+    BookmarkFolder* searchRoot = [self activeCollection];
+    NSArray* searchResults = [[BookmarkManager sharedBookmarkManager] searchBookmarksContainer:searchRoot forString:searchString inFieldWithTag:tag];
+    [self setSearchResultArray:searchResults];
+  }
+}
+
+- (void)clearSearchResults
+{
+  if ([self activeOutlineView] == mHistoryOutlineView)
+  {
+    [mHistoryOutlineViewDelegate clearSearchResults];
+  }
+  else
+  {
+    [mSearchResultArray release];
+    mSearchResultArray = nil;
+  }
+}
+
+- (void)selectItems:(NSArray*)items expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll
+{
+  NSEnumerator* itemsEnum = [items objectEnumerator];
+  [mBookmarksOutlineView deselectAll:nil];
+  BookmarkItem* item;
+  while ((item = [itemsEnum nextObject]))
+  {
+    [self selectItem:item expandingContainers:expandContainers scrollIntoView:scroll byExtendingSelection:YES];
+  }
+}
+
+- (void)selectItem:(BookmarkItem*)item expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll byExtendingSelection:(BOOL)extendSelection
+{
+  int itemRow = [mBookmarksOutlineView rowForItem:item];
+  if (itemRow == -1)
+  {
+    if (!expandContainers)
+      return;
+    
+    // expanding isn't implemented yet
+    return;
+  }
+
+  [mBookmarksOutlineView selectRow:itemRow byExtendingSelection:extendSelection];
+  if (scroll)
+    [mBookmarksOutlineView scrollRowToVisible:itemRow];
+}
+
+- (id)itemTreeRootContainer
+{
+  if (mSearchResultArray)
+    return mSearchResultArray;
+  
+  return [self activeCollection];
+}
+
+- (void)setActiveOutlineView:(NSOutlineView*)outlineView
+{
+  if (outlineView == mBookmarksOutlineView)
+  {
+    [mOutlinerHostView swapFirstSubview:mBookmarksHostView];
+    [mAddCollectionButton setNextKeyView:mBookmarksOutlineView];
+    [mBookmarksOutlineView setNextKeyView:mAddButton];
+  }
+  else
+  {
+    [mOutlinerHostView swapFirstSubview:mHistoryHostView];
+    [mAddCollectionButton setNextKeyView:mHistoryOutlineView];
+    [mHistoryOutlineView setNextKeyView:mAddButton];
+  }
+}
+
+- (NSOutlineView*)activeOutlineView
+{
+  if ([mOutlinerHostView firstSubview] == mBookmarksHostView)
+    return mBookmarksOutlineView;
+
+  if ([mOutlinerHostView firstSubview] == mHistoryHostView)
+    return mHistoryOutlineView;
+
+  return nil;
+}
+
+- (void)actionButtonWillDisplay:(NSNotification *)notification
+{
+  NSMenu* actionMenu = nil;
+  if ([self activeOutlineView] == mHistoryOutlineView)
+  {
+    actionMenu = mActionMenuHistory;
+  }
+  else
+  {
+    int index = [mBookmarksOutlineView selectedRow];
+    BookmarkItem* item = [mBookmarksOutlineView itemAtRow:index];
+    if (item)
+      actionMenu = [[BookmarkManager sharedBookmarkManager] contextMenuForItem:item fromView:mBookmarksOutlineView target:self];
+    else
+      actionMenu = mActionMenuBookmarks;
+  }
+  
+  [mActionButton setMenu:actionMenu];
+}
+
+#pragma mark -
+
 //
 // Network services protocol
 //
@@ -1322,7 +1593,6 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 }
 
 
-
 #pragma mark -
 //
 // BookmarksClient protocol
@@ -1332,7 +1602,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   BookmarkFolder *aFolder = [note object];
   if ((aFolder == [[BookmarkManager sharedBookmarkManager] rootBookmarks]))
   {
-    [mContainerPane reloadData];
+    [mContainersTableView reloadData];
     BookmarkFolder *updatedFolder = [[note userInfo] objectForKey:BookmarkFolderChildKey];
     [self selectContainer:[aFolder indexOfObjectIdenticalTo:updatedFolder]];
     return;
@@ -1346,7 +1616,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 {
   BookmarkFolder *aFolder = [note object];
   if ((aFolder == [[BookmarkManager sharedBookmarkManager] rootBookmarks])) {
-    [mContainerPane reloadData];
+    [mContainersTableView reloadData];
     return;
   } else if (aFolder == mActiveRootCollection)
     aFolder = nil;
@@ -1368,21 +1638,15 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 - (BOOL)splitView:(NSSplitView *)sender canCollapseSubview:(NSView *)subview
 {
-  BOOL retVal = NO;
-  // subview will be a NSScrollView, so we have to get the superview of the
-  // search pane for comparison.
-  if ( sender == mItemSearchSplit && subview == [mSearchPane superview] )
-    retVal = YES;
-  return retVal;
+  return NO;
 }
-
 
 - (float)splitView:(NSSplitView *)sender constrainMinCoordinate:(float)proposedCoord ofSubviewAt:(int)offset
 {
   if ( sender == mContainersSplit )
     return kMinContainerSplitWidth;  // minimum size of collections pane
-  else
-    return proposedCoord;
+
+  return proposedCoord;
 }
 
 @end

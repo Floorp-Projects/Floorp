@@ -22,7 +22,7 @@
 * Contributor(s):
 *   David Hyatt <hyatt@mozilla.org> (Original Author)
 *   Max Horn <max@quendi.de> (Context menu & tooltip code)
-*
+*   Simon Fraser <smfr@smfr.org>
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,14 +42,23 @@
 
 @interface ExtendedOutlineView : NSOutlineView
 {
-  SEL mDeleteAction;
+  SEL           mDeleteAction;
 
-  NSRect mOldFrameRect;
-  int mOldRows;
-  BOOL mDelegateTooltipStringForItem;
+  NSRect        mOldFrameRect;
+  int           mOldRows;
+  BOOL          mDelegateTooltipStringForItem;
 
-  int mRowToBeEdited, mColumnToBeEdited;
-  BOOL mAllowsEditing;
+  int           mRowToBeEdited, mColumnToBeEdited;
+  BOOL          mAllowsEditing;
+  
+  // sorting support
+  NSImage*      mAscendingSortingImage;
+  NSImage*      mDescendingSortingImage;
+  
+  NSString*     mSortColumnIdentifier;
+  BOOL          mDescendingSort;
+  
+  BOOL          mAutosaveSort;
 }
 
 -(void)setAllowsEditing:(BOOL)inAllow;
@@ -61,6 +70,16 @@
 
 -(void)_editItem:(id)item;
 -(void)_cancelEditItem;
+
+// note that setting these just affect the outline state, they don't alter the data source
+- (NSString*)sortColumnIdentifier;
+- (void)setSortColumnIdentifier:(NSString*)inColumnIdentifier;
+
+- (BOOL)sortDescending;
+- (void)setSortDescending:(BOOL)inDescending;
+
+- (void)setAutosaveTableSort:(BOOL)autosave;
+- (BOOL)autosaveTableSort;
 
 @end
 

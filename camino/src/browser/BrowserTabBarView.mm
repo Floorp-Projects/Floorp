@@ -190,11 +190,10 @@ static const int kOverflowButtonMargin = 1;
 // returns the tab at the specified point
 -(TabButtonCell*)buttonAtPoint:(NSPoint)clickPoint
 {
-  NSEnumerator *buttonEnumerator = nil;
   BrowserTabViewItem *tab = nil;
   NSArray *tabItems = [mTabView tabViewItems];
   NSEnumerator *tabEnumerator = [tabItems objectEnumerator];
-  while (tab = [tabEnumerator nextObject]) {
+  while ((tab = [tabEnumerator nextObject])) {
     TabButtonCell *button = [tab tabButtonCell];
     if (NSPointInRect(clickPoint,[button frame]))
       return button;
@@ -278,7 +277,7 @@ static const int kOverflowButtonMargin = 1;
     local = [self convertPoint:local fromView:nil];
     
     BrowserTabViewItem *tab = nil;
-    while (tab = [tabEnumerator nextObject]) {
+    while ((tab = [tabEnumerator nextObject])) {
       TabButtonCell * tabButton = [tab tabButtonCell];
       if (tabButton) {
         [mTrackingCells addObject:tabButton];
@@ -297,7 +296,7 @@ static const int kOverflowButtonMargin = 1;
   if (mTrackingCells) {
     NSEnumerator *tabEnumerator = [mTrackingCells objectEnumerator];
     TabButtonCell *tab = nil;
-    while (tab = (TabButtonCell *)[tabEnumerator nextObject])
+    while ((tab = (TabButtonCell *)[tabEnumerator nextObject]))
       [tab removeTrackingRectFromView: self];
     [mTrackingCells release];
     mTrackingCells = nil;

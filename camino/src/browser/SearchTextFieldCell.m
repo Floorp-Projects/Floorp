@@ -93,11 +93,12 @@ const float STFSymbolYOffset = 4.0;
 {
   [super initTextCell:aString];
 
-  _leftImage = [[SearchTextFieldCell cachedLeftImage] copy];
-  _middleImage = [[SearchTextFieldCell cachedMiddleImage] copy];
-  _rightImage = [[SearchTextFieldCell cachedRightImage] copy];
-  _popUpImage = [[SearchTextFieldCell cachedPopUpImage] copy];
-  _cancelImage = [[SearchTextFieldCell cachedCancelImage] copy];
+  // why do expensive copies rather than just retaining?
+  _leftImage    = [[SearchTextFieldCell cachedLeftImage] copy];
+  _middleImage  = [[SearchTextFieldCell cachedMiddleImage] copy];
+  _rightImage   = [[SearchTextFieldCell cachedRightImage] copy];
+  _popUpImage   = [[SearchTextFieldCell cachedPopUpImage] copy];
+  _cancelImage  = [[SearchTextFieldCell cachedCancelImage] copy];
 
   hasPopUpButton = YES;
   _shouldShowCancelButton = NO;
@@ -143,10 +144,7 @@ const float STFSymbolYOffset = 4.0;
 
 - (STFPopUpButtonCell *)popUpButtonCell
 {
-  if (hasPopUpButton)
-    return popUpButtonCell;
-  else
-    return nil;
+  return popUpButtonCell;
 }
 
 

@@ -50,6 +50,8 @@
 - (void)awakeFromNib
 {
   [self setCell:[[[SearchTextFieldCell alloc] initTextCell:@""] autorelease]];
+  if (mPopupMenu)
+    [self setPopupMenu:mPopupMenu];
 }
 
 
@@ -59,9 +61,16 @@
   NSRect cellFrame = [self convertRect:[self frame] fromView:[self superview]];
   
   if (NSMouseInRect(pointInField, [[self cell] cancelButtonRectFromRect:cellFrame], NO))
+  {
     [[self cell] cancelButtonClickedWithFrame:cellFrame inView:self];
+    // fake the notification
+    [self textDidChange:[NSNotification notificationWithName:NSControlTextDidChangeNotification object:self]];
+  }
   else if (NSMouseInRect(pointInField, [[self cell] popUpButtonRectFromRect:cellFrame], NO))
+  {
     [[self cell] popUpButtonClickedWithFrame:cellFrame inView:self];
+    // send the notification?
+  }
 }
 
 
@@ -107,12 +116,40 @@
   [super selectText:sender];  
 }
 
+- (void)setIsSmall:(BOOL)small
+{
+  // XXX we need to provide smaller icons to make the small variant look better
+  if (small)
+  {
+    NSFont* smallFont = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+    [[self cell] setFont:smallFont];
+    [[[self cell] popUpButtonCell] setFont:smallFont];
+  }
+  else
+  {
+    NSFont* normalFont = [NSFont systemFontOfSize:[NSFont systemFontSize]];
+    [[self cell] setFont:normalFont];
+    [[[self cell] popUpButtonCell] setFont:normalFont];
+  }
+}
+
+- (BOOL)hasPopUpButton
+{
+  return [[self cell] hasPopUpButton];
+}
+
+- (void)setHasPopUpButton:(BOOL)aBoolean
+{
+  [[self cell] setHasPopUpButton:aBoolean];
+}
 
 - (void)textDidChange:(NSNotification *)aNotification
 {
   [[self cell] searchSubmittedFromView:self];
+  
+  if ([[self delegate] respondsToSelector:@selector(controlTextDidChange:)])
+    [[self delegate] controlTextDidChange:aNotification];
 }
-
 
 - (NSString *)titleOfSelectedPopUpItem
 {
@@ -214,6 +251,26 @@
 - (void)addPopUpMenuItemsWithTitles:(NSArray *)itemTitles
 {
   [[[self cell] popUpButtonCell] addItemsWithTitles:itemTitles];
+}
+
+- (void)setPopupMenu:(NSMenu*)menu
+{
+  [[[self cell] popUpButtonCell] setMenu:menu];
+}
+
+- (NSMenu*)popupMenu
+{
+  return [[[self cell] popUpButtonCell] menu];
+}
+
+- (void)selectPopupMenuItem:(NSMenuItem*)menuItem
+{
+  [[[self cell] popUpButtonCell] selectItem:menuItem];
+}
+
+- (NSMenuItem*)selectedPopupMenuItem
+{
+  return [[[self cell] popUpButtonCell] selectedItem];
 }
 
 @end

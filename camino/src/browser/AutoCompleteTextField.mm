@@ -210,6 +210,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [mPopupWin setHasShadow:YES];
   [mPopupWin setAlphaValue:0.9];
 
+// XXX set as child window
+
   // construct and configure the view
   mTableView = [[[NSTableView alloc] initWithFrame:NSMakeRect(0,0,0,0)] autorelease];
   [mTableView setIntercellSpacing:NSMakeSize(1, 2)];

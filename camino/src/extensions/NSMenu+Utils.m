@@ -35,48 +35,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Foundation/Foundation.h>
-#import "nscore.h"
+#import "NSMenu+Utils.h"
 
-class nsAString;
-class nsACString;
 
-typedef enum
+@implementation NSMenu(ChimeraMenuUtils)
+
+- (void)checkItemWithTag:(int)tag uncheckingOtherItems:(BOOL)uncheckOthers
 {
-  kTruncateAtStart,
-  kTruncateAtMiddle,
-  kTruncateAtEnd
-} ETruncationType;
+  if (uncheckOthers)
+  {
+    NSEnumerator* itemsEnum = [[self itemArray] objectEnumerator];
+    NSMenuItem* curItem;
+    while ((curItem = (NSMenuItem*)[itemsEnum nextObject]))
+      [curItem setState:NSOffState];
+  }
+  [[self itemWithTag:tag] setState:NSOnState];
+}
 
+- (void)checkItemWithTag:(int)unmaskedTag inGroupWithMask:(int)tagMask
+{
+  NSEnumerator* itemsEnum = [[self itemArray] objectEnumerator];
+  NSMenuItem* curItem;
+  while ((curItem = (NSMenuItem*)[itemsEnum nextObject]))
+  {
+    int itemTag = [curItem tag];
+    if ((itemTag & tagMask) == tagMask)
+    {
+      int rawTag = (itemTag & ~tagMask);
+      [curItem setState:(rawTag == unmaskedTag) ? NSOnState : NSOffState];
+    }
+  }
+}
 
-// a category to extend NSString
-@interface NSString (ChimeraStringUtils)
-
-+ (id)ellipsisString;
-+ (id)escapedURLString:(NSString *)unescapedString;
-+ (NSString*)unescapedURLString:(NSString*)escapedString;
-+ (id)stringWithPRUnichars:(const PRUnichar*)inString;
-+ (id)stringWith_nsAString:(const nsAString&)inString;
-+ (id)stringWith_nsACString:(const nsACString&)inString;    // assumes nsACString is UTF-8
-- (void)assignTo_nsAString:(nsAString&)ioString;
-
-- (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
-- (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
-- (NSString *)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType;
-- (NSString *)stringByTrimmingWhitespace;
-- (NSString *)stringByRemovingAmpEscapes;
-- (NSString *)stringByAddingAmpEscapes;
-- (NSString *)stringByRemovingWindowsShortcutAmpersand;
-- (NSString *)stripWWW;
-
-// allocate a new unicode buffer with the contents of the current string. Caller
-// is responsible for freeing the buffer.
-- (PRUnichar*)createNewUnicodeBuffer;
 @end
 
-@interface NSMutableString (ChimeraMutableStringUtils)
 
-- (void)truncateTo:(unsigned)maxCharacters at:(ETruncationType)truncationType;
-- (void)truncateToWidth:(float)maxWidth at:(ETruncationType)truncationType withAttributes:(NSDictionary *)attributes;
+@implementation NSMenuItem(ChimeraMenuItemUtils)
+
+- (int)tagRemovingMask:(int)tagMask
+{
+  return ([self tag] & ~tagMask);
+}
 
 @end

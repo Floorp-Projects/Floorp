@@ -20,8 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger <ben@netscape.com> (Original Author)
- *   Simon Woodside <sbwoodside@yahoo.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,39 +36,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Appkit/Appkit.h>
+#import "NSDate+Utils.h"
 
-class nsIRDFDataSource;
-class nsIRDFContainer;
-class nsIRDFContainerUtils;
-class nsIRDFResource;
-class nsIRDFService;
+@implementation NSDate(ChimeraDateUtils)
 
-
-// RDFItems make up rows of an RDF outline view
-@interface RDFItem : NSObject
++ (id)dateWithPRTime:(PRTime)microseconds
 {
-  NSMutableArray* mChildNodes;      // array of RDFItem
-  RDFItem* mParent;
-  NSMutableDictionary * mPropertyCache;
-
-  nsIRDFResource*         mRDFResource;
-  nsIRDFDataSource*       mRDFDataSource;
-  nsIRDFContainer*        mRDFContainer;
-  nsIRDFContainerUtils*   mRDFContainerUtils;
-  nsIRDFService*          mRDFService;
+  // assume we have 64-bit math
+  return [NSDate dateWithTimeIntervalSince1970:(double)(microseconds / 1000000LL)];
 }
 
-- (id)initWithRDFResource:(nsIRDFResource*)aRDFResource RDFDataSource:(nsIRDFDataSource*)aRDFDataSource parent:(RDFItem*)newparent;
-- (NSString*)getStringForRDFPropertyURI:(NSString*)aPropertyURI;
-- (BOOL)isExpandable;
-- (RDFItem*)childAtIndex:(int)index;
-- (int)numChildren;
-- (RDFItem*)parent;
+@end
 
-- (void)deleteChildFromCache:(RDFItem*)child;
 
-- (void)buildChildCache;
-- (void)invalidateCache;
+@implementation NSCalendarDate(ChimeraCalendarDateUtils)
+
+// XXX this sucks pretty badly, mostly because of cocoa.
+// Cocoa does not follow the system prefs for the preferred date format, so
+// we hardcode some formats for now. This should be improved.
+- (NSString*)relativeDateDescription
+{
+	int todayDayOfEra = [[NSCalendarDate calendarDate] dayOfCommonEra];
+  NSString* result;
+
+	int myDayOfEra = [self dayOfCommonEra];
+	if (myDayOfEra == todayDayOfEra)
+	{
+	  NSString* dayString = NSLocalizedString(@"Today", @"");
+		result = [dayString stringByAppendingString:[self descriptionWithCalendarFormat:@" %I:%M %p"]];
+	}
+	else if (myDayOfEra == (todayDayOfEra - 1))
+	{
+	  NSString* dayString = NSLocalizedString(@"Yesterday", @"");
+		result = [dayString stringByAppendingString:[self descriptionWithCalendarFormat:@" %I:%M %p"]];
+	}
+	else if (myDayOfEra == (todayDayOfEra + 1))
+	{
+	  NSString* dayString = NSLocalizedString(@"Tomorrow", @"");
+		result = [dayString stringByAppendingString:[self descriptionWithCalendarFormat:@" %I:%M %p"]];
+	}
+	else if (myDayOfEra >= (todayDayOfEra - 7))
+	{
+    // up to a week ago, show the time
+    result = [self descriptionWithCalendarFormat:@"%a %b %d %Y %I:%M %p" locale:nil];
+  }
+  else
+  {
+    // older than a week, just show the date
+    result = [self descriptionWithCalendarFormat:@"%b %d %Y %I:%M %p" locale:nil];
+  }
+
+  return result;
+}
 
 @end

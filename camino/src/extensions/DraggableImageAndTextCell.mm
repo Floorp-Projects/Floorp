@@ -75,7 +75,7 @@
   [super dealloc];
 }
 
-- copyWithZone:(NSZone *)zone
+- (id)copyWithZone:(NSZone *)zone
 {
     DraggableImageAndTextCell *cell = (DraggableImageAndTextCell *)[super copyWithZone:zone];
     cell->mImage = [mImage retain];
