@@ -1700,7 +1700,12 @@ nsXULElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
         nsCOMPtr<nsIContent> docroot
             = dont_AddRef( mDocument->GetRootContent() );
 
-        if (docroot) {
+        // Wow! Nasty cast to get an unambiguous, non-const
+        // nsISupports pointer. We want to make sure that we're not
+        // the docroot (this would otherwise spin off into infinity).
+        nsISupports* me = NS_STATIC_CAST(nsIStyledContent*, NS_CONST_CAST(nsXULElement*, this));
+
+        if (docroot && !::SameCOMIdentity(docroot, me)) {
             nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(docroot) );
             if (xml)
                 return xml->GetContainingNameSpace(aNameSpace);
