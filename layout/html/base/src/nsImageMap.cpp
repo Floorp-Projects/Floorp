@@ -73,7 +73,7 @@ static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 class Area {
 public:
-  Area(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL);
+  Area(nsIContent* aArea, PRBool aHasURL);
   virtual ~Area();
 
   virtual void ParseCoords(const nsString& aSpec);
@@ -89,7 +89,6 @@ public:
   void GetHREF(nsString& aHref) const;
   void GetTarget(nsString& aTarget) const;
   void GetAltText(nsString& aAltText) const;
-  PRBool GetSuppress() const { return mSuppressFeedback; }
   PRBool GetHasURL() const { return mHasURL; }
   void GetArea(nsIContent** aArea) const;
 
@@ -100,16 +99,14 @@ public:
   nsCOMPtr<nsIContent> mArea;
   nscoord* mCoords;
   PRInt32 mNumCoords;
-  PRPackedBool mSuppressFeedback;
   PRPackedBool mHasURL;
   PRPackedBool mHasFocus;
 };
 
 MOZ_DECL_CTOR_COUNTER(Area)
 
-Area::Area(nsIContent* aArea,
-           PRBool aSuppress, PRBool aHasURL)
-  : mArea(aArea), mSuppressFeedback(aSuppress), mHasURL(aHasURL)
+Area::Area(nsIContent* aArea, PRBool aHasURL)
+  : mArea(aArea), mHasURL(aHasURL)
 {
   MOZ_COUNT_CTOR(Area);
   mCoords = nsnull;
@@ -354,7 +351,7 @@ void Area::HasFocus(PRBool aHasFocus)
 
 class DefaultArea : public Area {
 public:
-  DefaultArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL);
+  DefaultArea(nsIContent* aArea, PRBool aHasURL);
   ~DefaultArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
@@ -364,8 +361,8 @@ public:
   virtual void GetShapeName(nsString& aResult) const;
 };
 
-DefaultArea::DefaultArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL)
-  : Area(aArea, aSuppress, aHasURL)
+DefaultArea::DefaultArea(nsIContent* aArea, PRBool aHasURL)
+  : Area(aArea, aHasURL)
 {
 }
 
@@ -395,7 +392,7 @@ void DefaultArea::GetShapeName(nsString& aResult) const
 
 class RectArea : public Area {
 public:
-  RectArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL);
+  RectArea(nsIContent* aArea, PRBool aHasURL);
   ~RectArea();
 
   virtual void ParseCoords(const nsString& aSpec);
@@ -406,8 +403,8 @@ public:
   virtual void GetShapeName(nsString& aResult) const;
 };
 
-RectArea::RectArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL)
-  : Area(aArea, aSuppress, aHasURL)
+RectArea::RectArea(nsIContent* aArea, PRBool aHasURL)
+  : Area(aArea, aHasURL)
 {
 }
 
@@ -566,7 +563,7 @@ void RectArea::GetShapeName(nsString& aResult) const
 
 class PolyArea : public Area {
 public:
-  PolyArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL);
+  PolyArea(nsIContent* aArea, PRBool aHasURL);
   ~PolyArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
@@ -576,8 +573,8 @@ public:
   virtual void GetShapeName(nsString& aResult) const;
 };
 
-PolyArea::PolyArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL)
-  : Area(aArea, aSuppress, aHasURL)
+PolyArea::PolyArea(nsIContent* aArea, PRBool aHasURL)
+  : Area(aArea, aHasURL)
 {
 }
 
@@ -701,7 +698,7 @@ void PolyArea::GetShapeName(nsString& aResult) const
 
 class CircleArea : public Area {
 public:
-  CircleArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL);
+  CircleArea(nsIContent* aArea, PRBool aHasURL);
   ~CircleArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
@@ -711,8 +708,8 @@ public:
   virtual void GetShapeName(nsString& aResult) const;
 };
 
-CircleArea::CircleArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL)
-  : Area(aArea, aSuppress, aHasURL)
+CircleArea::CircleArea(nsIContent* aArea, PRBool aHasURL)
+  : Area(aArea, aHasURL)
 {
 }
 
@@ -983,7 +980,6 @@ nsImageMap::AddArea(nsIContent* aArea)
   aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::shape, shape);
   aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::coords, coords);
   PRBool hasURL = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE != aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::nohref, noHref));
-  PRBool suppress = PR_FALSE;/* XXX */
 
   //Add focus listener to track area focus changes
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aArea));
@@ -999,18 +995,18 @@ nsImageMap::AddArea(nsIContent* aArea)
   if ((0 == shape.Length()) ||
       shape.EqualsIgnoreCase("rect") ||
       shape.EqualsIgnoreCase("rectangle")) {
-    area = new RectArea(aArea, suppress, hasURL);
+    area = new RectArea(aArea, hasURL);
   }
   else if (shape.EqualsIgnoreCase("poly") ||
            shape.EqualsIgnoreCase("polygon")) {
-    area = new PolyArea(aArea, suppress, hasURL);
+    area = new PolyArea(aArea, hasURL);
   }
   else if (shape.EqualsIgnoreCase("circle") ||
            shape.EqualsIgnoreCase("circ")) {
-    area = new CircleArea(aArea, suppress, hasURL);
+    area = new CircleArea(aArea, hasURL);
   }
   else if (shape.EqualsIgnoreCase("default")) {
-    area = new DefaultArea(aArea, suppress, hasURL);
+    area = new DefaultArea(aArea, hasURL);
   }
   else {
     // Unknown area type; bail
@@ -1028,8 +1024,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
                      nsIContent** aContent,
                      nsString& aAbsURL,
                      nsString& aTarget,
-                     nsString& aAltText,
-                     PRBool* aSuppress)
+                     nsString& aAltText)
 {
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
@@ -1074,7 +1069,6 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
       }
 
       area->GetAltText(aAltText);
-      *aSuppress = area->mSuppressFeedback;
 
       area->GetArea(aContent);
 
