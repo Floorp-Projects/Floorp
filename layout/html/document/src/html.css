@@ -922,7 +922,7 @@ input[type=text] {
   margin-top:    1px;
   margin-bottom: 1px;
   margin-left:   0px;
-  margin-rigth:  0px;
+  margin-right:  0px;
 } 
 
 input[type=text][disabled] {
@@ -1280,7 +1280,7 @@ textarea {
   margin-top:    1px;
   margin-bottom: 1px;
   margin-left:   0px;
-  margin-rigth:  0px;
+  margin-right:  0px;
 }
 
 textarea[disabled] {
