@@ -207,7 +207,7 @@ LAYOUT_ATOM(onDOMCharacterDataModified, "onDOMCharacterDataModified")
 
   // Alphabetical list of languages for lang-specific transforms
 LAYOUT_ATOM(Japanese, "ja")
-LAYOUT_ATOM(Korean, "ko")
+LAYOUT_ATOM(Unicode, "x-unicode")
 
   // other
 LAYOUT_ATOM(wildcard, "*")

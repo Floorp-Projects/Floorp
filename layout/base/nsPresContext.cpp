@@ -521,6 +521,10 @@ nsPresContext::GetUserPreferences()
   mUseDocumentFonts =
     nsContentUtils::GetIntPref("browser.display.use_document_fonts") != 0;
 
+  // * replace backslashes with Yen signs? (bug 245770)
+  mEnableJapaneseTransform =
+    nsContentUtils::GetBoolPref("layout.enable_japanese_specific_transform");
+
   GetFontPreferences();
 
   // * image animation
@@ -726,19 +730,23 @@ nsPresContext::UpdateCharSet(const char* aCharSet)
   if (mLangService) {
     NS_IF_RELEASE(mLangGroup);
     mLangGroup = mLangService->LookupCharSet(aCharSet).get();  // addrefs
-    GetFontPreferences();
-    if (mLangGroup == nsLayoutAtoms::Japanese) {
+
+    if (mLangGroup == nsLayoutAtoms::Japanese && mEnableJapaneseTransform) {
       mLanguageSpecificTransformType =
         eLanguageSpecificTransformType_Japanese;
-    }
-    else if (mLangGroup == nsLayoutAtoms::Korean) {
-      mLanguageSpecificTransformType =
-        eLanguageSpecificTransformType_Korean;
     }
     else {
       mLanguageSpecificTransformType =
         eLanguageSpecificTransformType_None;
     }
+    // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
+#if !defined(XP_BEOS) 
+    if (mLangGroup == nsLayoutAtoms::Unicode) {
+      NS_RELEASE(mLangGroup);
+      NS_IF_ADDREF(mLangGroup = mLangService->GetLocaleLanguageGroup()); 
+    }
+#endif
+    GetFontPreferences();
   }
 #ifdef IBMBIDI
   //ahmed
