@@ -235,6 +235,11 @@ public:
                                PRUint16 aMinTwips, 
                                nsRectVisibility *aRectVisibility);
 
+  /* Determine if invalidates are being batched through the use
+   * of BeginUpdateViewBatch
+   * @returns PR_TRUE if current batching updates, PR_FALSE otherwise
+   */
+  PRBool IsBatchingUpdates(void);
 protected:
   virtual ~nsViewManager();
   void ProcessPendingUpdates(nsView *aView);
