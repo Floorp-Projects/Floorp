@@ -34,6 +34,12 @@ struct nsStylePosition;
  */
 #define NS_BODY_FRAME_ABSOLUTE_LIST_INDEX   (NS_BLOCK_FRAME_LAST_LIST_INDEX + 1)
 
+/**
+ * The body frame has an additional named child list:
+ * - "Absolute-list" which contains the absolutely positioned frames
+ *
+ * @see nsLayoutAtoms::absoluteList
+ */
 class nsBodyFrame : public nsBlockFrame,
                     public nsIAbsoluteItems
 {

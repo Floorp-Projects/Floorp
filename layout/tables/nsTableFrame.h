@@ -56,7 +56,7 @@ struct nsStyleSpacing;
   * named child list:
   * - "ColGroup-list" which contains the col group frames
   *
-  * @author  sclark
+  * @see nsLayoutAtoms::colGroupList
   *
   * TODO: make methods virtual so nsTableFrame can be used as a base class in the future.
   */

@@ -34,10 +34,9 @@
 #include "nsIWebShell.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLParts.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-
-nsIAtom* nsBodyFrame::gAbsoluteAtom;
 
 nsresult
 NS_NewBodyFrame(nsIFrame*& aResult, PRUint32 aFlags)
@@ -55,10 +54,6 @@ nsBodyFrame::nsBodyFrame()
 {
   mSpaceManager = new nsSpaceManager(this);
   NS_ADDREF(mSpaceManager);
-  // XXX for now this is a memory leak
-  if (nsnull == gAbsoluteAtom) {
-    gAbsoluteAtom = NS_NewAtom("Absolute-list");
-  }
 }
 
 nsBodyFrame::~nsBodyFrame()
@@ -104,7 +99,7 @@ nsBodyFrame::GetAdditionalChildListName(PRInt32   aIndex,
   
   nsIAtom* atom = nsnull;
   if (NS_BODY_FRAME_ABSOLUTE_LIST_INDEX == aIndex) {
-    atom = gAbsoluteAtom;
+    atom = nsLayoutAtoms::absoluteList;
     NS_ADDREF(atom);
   }
   aListName = atom;
@@ -114,7 +109,7 @@ nsBodyFrame::GetAdditionalChildListName(PRInt32   aIndex,
 NS_IMETHODIMP
 nsBodyFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 {
-  if (aListName == gAbsoluteAtom) {
+  if (aListName == nsLayoutAtoms::absoluteList) {
     aFirstChild = mAbsoluteFrames;
     return NS_OK;
   }

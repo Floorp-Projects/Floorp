@@ -30,6 +30,11 @@ nsIAtom* nsLayoutAtoms::screen;
 nsIAtom* nsLayoutAtoms::tty;
 nsIAtom* nsLayoutAtoms::tv;
 
+nsIAtom* nsLayoutAtoms::absoluteList;
+nsIAtom* nsLayoutAtoms::colGroupList;
+nsIAtom* nsLayoutAtoms::floaterList;
+nsIAtom* nsLayoutAtoms::bulletList;
+
 static nsrefcnt gRefCnt;
 
 void nsLayoutAtoms::AddrefAtoms()
@@ -45,6 +50,11 @@ void nsLayoutAtoms::AddrefAtoms()
     screen = NS_NewAtom("SCREEN");
     tty = NS_NewAtom("TTY");
     tv = NS_NewAtom("TV");
+
+    absoluteList = NS_NewAtom("Absolute-list");
+    colGroupList = NS_NewAtom("ColGroup-list");
+    floaterList = NS_NewAtom("Floater-list");
+    bulletList = NS_NewAtom("Bullet-list");
   }
   ++gRefCnt;
 }
@@ -63,6 +73,11 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(screen);
     NS_RELEASE(tty);
     NS_RELEASE(tv);
+
+    NS_RELEASE(absoluteList);
+    NS_RELEASE(colGroupList);
+    NS_RELEASE(floaterList);
+    NS_RELEASE(bulletList);
   }
 }
 
