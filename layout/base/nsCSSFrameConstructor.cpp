@@ -10540,6 +10540,23 @@ nsCSSFrameConstructor::AttributeChanged(nsPresContext* aPresContext,
     // this notification, so it's not that big a deal.
   }
 
+  // Menus and such can't deal with asynchronous changes of display when the
+  // menugenerated attribute changes, so make sure to process that immediately
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsXULAtoms::menugenerated) {
+    PRInt32 namespaceID;
+    nsCOMPtr<nsIAtom> tag;
+    mDocument->GetBindingManager()->ResolveTag(aContent, &namespaceID,
+                                               getter_AddRefs(tag));
+
+    if (namespaceID == kNameSpaceID_XUL &&
+        (tag == nsXULAtoms::menupopup || tag == nsXULAtoms::popup ||
+         tag == nsXULAtoms::tooltip)) {
+      ProcessOneRestyle(shell, aPresContext, aContent, rshint, hint);
+      return result;
+    }
+  }
+
   PostRestyleEvent(aContent, rshint, hint);
 
   return result;
@@ -13736,11 +13753,45 @@ CollectRestyles(nsISupports* aContent,
 }
 
 void
+nsCSSFrameConstructor::ProcessOneRestyle(nsIPresShell* aShell,
+                                         nsPresContext* aContext,
+                                         nsIContent* aContent,
+                                         nsReStyleHint aRestyleHint,
+                                         nsChangeHint aChangeHint)
+{
+  NS_PRECONDITION(aShell, "Must have presshell");
+  NS_PRECONDITION(aContext, "Must have prescontext");
+  NS_PRECONDITION(aContent, "Must have content node");
+  
+  if (!aContent->IsInDoc() ||
+      aContent->GetCurrentDoc() != mDocument) {
+    // Content node has been removed from our document; nothing else
+    // to do here
+    return;
+  }
+  
+  nsIFrame* primaryFrame = nsnull;
+  aShell->GetPrimaryFrameFor(aContent, &primaryFrame);
+  if (aRestyleHint & eReStyle_Self) {
+    RestyleElement(aContext, aContent, primaryFrame, aChangeHint);
+  } else if (aChangeHint &&
+               (primaryFrame ||
+                (aChangeHint & nsChangeHint_ReconstructFrame))) {
+    // Don't need to recompute style; just apply the hint
+    nsStyleChangeList changeList;
+    changeList.AppendChange(primaryFrame, aContent, aChangeHint);
+    ProcessRestyledFrames(changeList, aContext);
+  }
+
+  if (aRestyleHint & eReStyle_LaterSiblings) {
+    RestyleLaterSiblings(aContext, aContent);
+  }
+}
+
+void
 nsCSSFrameConstructor::ProcessPendingRestyles()
 {
   NS_PRECONDITION(mDocument, "No document?  Pshaw!\n");
-  nsIPresShell* shell = mDocument->GetShellAt(0);
-  nsPresContext* context = shell->GetPresContext();
 
   nsCSSFrameConstructor::RestyleEnumerateData* restylesToProcess =
     new nsCSSFrameConstructor::RestyleEnumerateData[mPendingRestyles.Count()];
@@ -13759,39 +13810,16 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // already processing, sending us into an infinite loop.
   mPendingRestyles.Clear();
 
+  // XXXbz we should really have a pointer to our presshell
+  nsIPresShell* shell = mDocument->GetShellAt(0);
+  nsPresContext* context = shell->GetPresContext();
   for (nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
          restylesToProcess;
        currentRestyle != lastRestyle;
        ++currentRestyle) {
-    nsIContent* content = currentRestyle->mContent;
-
-    if (!content->GetDocument() ||
-        content->GetDocument() != context->GetDocument()) {
-      // Content node has been removed from our document; nothing else
-      // to do here
-      continue;
-    }
-  
-    nsChangeHint changeHint = currentRestyle->mChangeHint;
-    nsReStyleHint restyleHint = currentRestyle->mRestyleHint;
-
-    nsIFrame* primaryFrame = nsnull;
-    shell->GetPrimaryFrameFor(content, &primaryFrame);
-    if (restyleHint & eReStyle_Self) {
-      shell->FrameConstructor()->RestyleElement(context, content, primaryFrame,
-                                                currentRestyle->mChangeHint);
-    } else if (changeHint &&
-               (primaryFrame ||
-                (changeHint & nsChangeHint_ReconstructFrame))) {
-      // Don't need to recompute style; just apply the hint
-      nsStyleChangeList changeList;
-      changeList.AppendChange(primaryFrame, content, changeHint);
-      shell->FrameConstructor()->ProcessRestyledFrames(changeList, context);
-    }
-
-    if (restyleHint & eReStyle_LaterSiblings) {
-      shell->FrameConstructor()->RestyleLaterSiblings(context, content);
-    }
+    ProcessOneRestyle(shell, context, currentRestyle->mContent,
+                      currentRestyle->mRestyleHint,
+                      currentRestyle->mChangeHint);
   }
 
   delete [] restylesToProcess;
@@ -13836,9 +13864,8 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
 void nsCSSFrameConstructor::RestyleEvent::HandleEvent() {
   nsCSSFrameConstructor* constructor =
     NS_STATIC_CAST(nsCSSFrameConstructor*, owner);
-  nsIPresShell* shell = constructor->mDocument->GetShellAt(0);
-  nsPresContext* context = shell->GetPresContext();
-  nsIViewManager* viewManager = context->GetViewManager();
+  nsIViewManager* viewManager =
+    constructor->mDocument->GetShellAt(0)->GetPresContext()->GetViewManager();
   NS_ASSERTION(viewManager, "Must have view manager for update");
 
   viewManager->BeginUpdateViewBatch();
