@@ -495,15 +495,30 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
 
     const char* currLine = lines.get();
     while (*currLine) {
-        const char* eol = strchr(currLine, nsCRT::LF);
-        if (!eol) {
-            mControlReadCarryOverBuf.Assign(currLine);
-            break;
-        }
+       PRInt32 eolLength = strcspn(currLine, CRLF);
+
+       if (eolLength == 0 && currLine[0] == '\0')
+           break;
+
+       PRInt32 currLineLength = strlen(currLine);
+
+       if (eolLength == currLineLength) {
+           mControlReadCarryOverBuf.Assign(currLine);
+           break;
+       }
 
         // Append the current segment, including the LF
         nsCAutoString line;
-        line.Assign(currLine, eol - currLine + 1);
+        PRInt32 crlfLength = 0;
+
+        if ((currLineLength > eolLength) &&
+            (currLine[eolLength] == nsCRT::CR) &&
+            (currLine[eolLength+1] == nsCRT::LF))
+            crlfLength = 2; // CR +LF 
+        else 
+            crlfLength = 1; // + LF or CR
+
+        line.Assign(currLine, eolLength + crlfLength);
         
         // Does this start with a response code?
         PRBool startNum = (line.Length() >= 3 &&
@@ -542,7 +557,7 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
             if (NS_FAILED(rv)) return rv;
         }
 
-        currLine = eol+1;   // +LF 
+        currLine = currLine + eolLength + crlfLength;
     }
 
     return NS_OK;
@@ -691,8 +706,10 @@ nsFtpState::Process()
               break;
           
           case FTP_ERROR: // xx needs more work to handle dropped control connection cases
-              if (mTryingCachedControl && mResponseCode == 530 &&
-                  mInternalError == NS_ERROR_FTP_PASV) {
+              if ((mTryingCachedControl && mResponseCode == 530 &&
+                  mInternalError == NS_ERROR_FTP_PASV) ||
+                  (mResponseCode == 425 &&
+                  mInternalError == NS_ERROR_FTP_PASV)) {
                   // The user was logged out during an pasv operation
                   // we want to restart this request with a new control
                   // channel.
