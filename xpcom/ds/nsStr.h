@@ -334,7 +334,7 @@ struct NS_COM nsStr {
   * @param  aSrcOffset tells us where in source to start copying
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Truncate(nsStr& aDest,PRUint32 aDestOffset);
+  static void StrTruncate(nsStr& aDest,PRUint32 aDestOffset);
 
  /**
   * This method is used to perform a case conversion on the given string

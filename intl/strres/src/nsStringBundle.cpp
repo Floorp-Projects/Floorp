@@ -1121,7 +1121,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
 
   // format the arguments:
   nsAutoString args(aStatusArg);
-  argCount = args.CountChar('\n') + 1;
+  argCount = args.CountChar(PRUnichar('\n')) + 1;
   NS_ENSURE_ARG(argCount <= 10); // enforce 10-parameter limit
   PRUnichar* argArray[10];
 

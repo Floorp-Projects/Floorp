@@ -56,7 +56,7 @@ static void Subsume(nsStr& aDest,nsStr& aSource){
       nsStr::StrAssign(aDest,aSource,0,aSource.mLength);
     }
   } 
-  else nsStr::Truncate(aDest,0);
+  else nsStr::StrTruncate(aDest,0);
 }
 
 
@@ -188,7 +188,7 @@ void nsString::SetLength(PRUint32 anIndex) {
     SetCapacity(anIndex);
     // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAWritableString.h),
     //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
-  nsStr::Truncate(*this,anIndex);
+  nsStr::StrTruncate(*this,anIndex);
 }
 
 
@@ -491,25 +491,6 @@ nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue){
       }
     }
   }
-}
-
-/**
- *  This method is used to replace all occurances of the
- *  given source char with the given dest char
- *  
- *  @param  
- *  @return *this 
- */
-PRInt32 nsString::CountChar(PRUnichar aChar) const {
-  PRInt32 theIndex=0;
-  PRInt32 theCount=0;
-  PRInt32 theLen=(PRInt32)mLength;
-  for(theIndex=0;theIndex<theLen;theIndex++){
-    PRUnichar theChar=GetCharAt(*this,theIndex);
-    if(theChar==aChar)
-      theCount++;
-  }
-  return theCount;
 }
 
 /**
@@ -827,14 +808,14 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
  * @return  this
  */
 void nsString::AssignWithConversion(const char* aCString,PRInt32 aCount) {
-  nsStr::Truncate(*this,0);
+  nsStr::StrTruncate(*this,0);
   if(aCString){
     AppendWithConversion(aCString,aCount);
   }
 }
 
 void nsString::AssignWithConversion(const char* aCString) {
-  nsStr::Truncate(*this,0);
+  nsStr::StrTruncate(*this,0);
   if(aCString){
     AppendWithConversion(aCString);
   }
@@ -848,7 +829,7 @@ void nsString::AssignWithConversion(const char* aCString) {
  * @return  this
  */
 void nsString::AssignWithConversion(char aChar) {
-  nsStr::Truncate(*this,0);
+  nsStr::StrTruncate(*this,0);
   AppendWithConversion(aChar);
 }
 
@@ -957,57 +938,6 @@ void nsString::AppendFloat(double aFloat){
   //PR_snprintf(buf, sizeof(buf), "%g", aFloat);
   sprintf(buf,"%g",aFloat);
   AppendWithConversion(buf);
-}
-
-
-
-/*
- *  Copies n characters from this left of this string to given string,
- *  
- *  @update  gess 4/1/98
- *  @param   aDest -- Receiving string
- *  @param   aCount -- number of chars to copy
- *  @return  number of chars copied
- */
-PRUint32 nsString::Left(nsString& aDest,PRInt32 aCount) const{
-
-  if(aCount<0)
-    aCount=mLength;
-  else aCount=MinInt(aCount,mLength);
-  nsStr::StrAssign(aDest,*this,0,aCount);
-
-  return aDest.mLength;
-}
-
-/*
- *  Copies n characters from this string to from given offset
- *  
- *  @update  gess 4/1/98
- *  @param   aDest -- Receiving string
- *  @param   anOffset -- where copying should begin
- *  @param   aCount -- number of chars to copy
- *  @return  number of chars copied
- */
-PRUint32 nsString::Mid(nsString& aDest,PRUint32 anOffset,PRInt32 aCount) const{
-  if(aCount<0)
-    aCount=mLength;
-  else aCount=MinInt(aCount,mLength);
-  nsStr::StrAssign(aDest,*this,anOffset,aCount);
-
-  return aDest.mLength;
-}
-
-/*
- *  Copies last n characters from this string to given string,
- *  
- *  @update gess 4/1/98
- *  @param  aDest -- Receiving string
- *  @param  aCount -- number of chars to copy
- *  @return number of chars copied
- */
-PRUint32 nsString::Right(nsString& aDest,PRInt32 aCount) const{
-  PRInt32 offset=MaxInt(mLength-aCount,0);
-  return Mid(aDest,offset,aCount);
 }
 
 
