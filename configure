@@ -8929,7 +8929,7 @@ rm -f conftest*
 fi
 
 echo "$ac_t""$ac_cv_cpp_modern_specialize_template_syntax" 1>&6
-if test "$ac_cv_cpp_template_specialization" = yes ; then
+if test "$ac_cv_cpp_modern_specialize_template_syntax" = yes ; then
   cat >> confdefs.h <<\EOF
 #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX 1
 EOF
