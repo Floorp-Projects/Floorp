@@ -275,6 +275,13 @@ LOOP_OVER_DIRS = \
         $(UPDATE_TITLE) \
         $(MAKE) -C $$d $@; \
     done
+
+LOOP_OVER_MOZ_DIRS = \
+    @$(EXIT_ON_ERROR) \
+    for d in $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do \
+        $(UPDATE_TITLE) \
+        $(MAKE) -C $$d $@; \
+    done
 endif
 
 #
@@ -1374,7 +1381,7 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 	@echo "EXTRA_DSO_LDOPTS    = $(EXTRA_DSO_LDOPTS)"
 	@echo --------------------------------------------------------------------------------
 endif
-	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_MOZ_DIRS)
 
 showbuild:
 	@echo "MOZ_BUILD_ROOT     = $(MOZ_BUILD_ROOT)"
@@ -1427,4 +1434,4 @@ zipmakes:
 ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
 	zip $(DEPTH)/makefiles $(subst $(topsrcdir),$(MOZ_SRC)/mozilla,$(srcdir)/Makefile.in)
 endif
-	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_MOZ_DIRS)
