@@ -29,6 +29,7 @@ MODULE		= xremoteservice
 LIBRARY_NAME	= xremoteservice
 EXPORT_LIBRARY	= 1
 IS_COMPONENT    = 1
+MODULE_NAME	= XRemoteServiceModule
 REQUIRES	= xpcom \
 		  string \
 		  dom \
