@@ -116,7 +116,7 @@ pull_client_source_product:
     @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
     cd $(MOZ_SRC)\.
     -cvs -q co $(DBM_BRANCH)      $(MOZ_TOP)/dbm
-    -cvs -q co $(CVS_BRANCH)      ClientSourceProductWin
+    -cvs -q co $(CVS_BRANCH)      MozillaSourceWin
     -cvs -q co $(MOZ_JAVAVER)     JavaStubWin
 
 
