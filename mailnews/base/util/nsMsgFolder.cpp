@@ -65,6 +65,7 @@ PRUnichar *nsMsgFolder::kTrashName = 0;
 PRUnichar *nsMsgFolder::kSentName = 0;
 PRUnichar *nsMsgFolder::kDraftsName = 0;
 PRUnichar *nsMsgFolder::kTemplatesName = 0;
+PRUnichar *nsMsgFolder::kUnsentName = 0;
 
 nsIAtom * nsMsgFolder::kTotalMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kBiffStateAtom	= nsnull;
@@ -159,6 +160,7 @@ nsMsgFolder::~nsMsgFolder(void)
       CRTFREEIF(kSentName);
       CRTFREEIF(kDraftsName);
       CRTFREEIF(kTemplatesName);
+      CRTFREEIF(kUnsentName);
 
 #ifdef MSG_FASTER_URI_PARSING
       mParsingURL = nsnull;
@@ -198,6 +200,8 @@ nsMsgFolder::initializeStrings()
                               &kDraftsName);
     bundle->GetStringFromName(NS_ConvertASCIItoUCS2("templatesFolderName").GetUnicode(),
                               &kTemplatesName);
+    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("unsentFolderName").GetUnicode(),
+                              &kUnsentName);
     return NS_OK;
 }
   

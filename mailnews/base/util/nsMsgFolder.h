@@ -278,6 +278,7 @@ protected:
   static PRUnichar *kSentName;
   static PRUnichar *kDraftsName;
   static PRUnichar *kTemplatesName;
+  static PRUnichar *kUnsentName;
   
   static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;
