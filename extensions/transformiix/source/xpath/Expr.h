@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TransforMiiX XSLT processor.
+ * The Original Code is TransforMiiX XSLT processor code.
  *
  * The Initial Developer of the Original Code is
  * The MITRE Corporation.
@@ -21,15 +20,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Keith Visco, kvisco@ziplink.net
- *   -- original author.
- *   Larry Fitzpatick, OpenText, lef@opentext.com
- *   -- 19990806
- *   - changed constant short declarations in many of the classes
- *   with enumerations, commented with //--LF
- *   Jonas Sicking, sicking@bigfoot.com
- *   -- removal of Patterns and some restructuring
- *   in the class set
+ *   Keith Visco <kvisco@ziplink.net> (Original Author)
+ *   Larry Fitzpatick, OpenText <lef@opentext.com>
+ *   Jonas Sicking <sicking@bigfoot.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +37,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
 
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
