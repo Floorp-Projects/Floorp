@@ -140,7 +140,9 @@ void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque) {
  * @return  ptr to recycler (or null)
  */
 nsITokenRecycler* nsHTMLTokenizer::GetTokenRecycler(void) {
-  gTokenRecycler=new CTokenRecycler();
+  if (! gTokenRecycler) {
+    gTokenRecycler=new CTokenRecycler();
+  }
   return gTokenRecycler;
 }
 
