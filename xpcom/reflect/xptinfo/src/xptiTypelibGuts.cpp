@@ -24,10 +24,14 @@
 
 #include "xptiprivate.h"
 
+MOZ_DECL_CTOR_COUNTER(xptiTypelibGuts);
+
 xptiTypelibGuts::xptiTypelibGuts(XPTHeader* aHeader)
      :  mHeader(aHeader), 
         mInfoArray(nsnull)
 {
+    MOZ_COUNT_CTOR(xptiTypelibGuts);
+
     NS_ASSERTION(mHeader, "bad param");
 
     if(mHeader->num_interfaces)
@@ -42,6 +46,8 @@ xptiTypelibGuts::xptiTypelibGuts(XPTHeader* aHeader)
 
 xptiTypelibGuts::~xptiTypelibGuts()
 {
+    MOZ_COUNT_DTOR(xptiTypelibGuts);
+
     if(mHeader && mInfoArray)
         for(PRUint16 i = 0; i < GetInfoCount(); ++i)
             NS_IF_RELEASE(mInfoArray[i]);

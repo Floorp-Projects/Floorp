@@ -54,10 +54,14 @@ xptiFileType::Type xptiFileType::GetType(const char* name)
 
 /***************************************************************************/
 
+MOZ_DECL_CTOR_COUNTER(xptiAutoLog);
+
 xptiAutoLog::xptiAutoLog(xptiInterfaceInfoManager* mgr, 
                          nsILocalFile* logfile, PRBool append)
     : mMgr(nsnull), mOldFileDesc(nsnull)
 {
+    MOZ_COUNT_CTOR(xptiAutoLog);
+
     if(mgr && logfile)
     {
         PRFileDesc* fd;
@@ -87,6 +91,8 @@ xptiAutoLog::xptiAutoLog(xptiInterfaceInfoManager* mgr,
 
 xptiAutoLog::~xptiAutoLog()
 {
+    MOZ_COUNT_DTOR(xptiAutoLog);
+
     if(mMgr)
     {
         PRFileDesc* fd = mMgr->SetOpenLogFile(mOldFileDesc);
