@@ -15,23 +15,26 @@
 # Reserved.
 #
 
-DEPTH	= ../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE	= mkdepend
-PROGRAM	= mkdepend
+MODULE		= mkdepend
+PROGRAM		= mkdepend
 
-CSRCS	= cppsetup.c \
-	  ifparser.c \
-	  include.c \
-	  main.c \
-	  parse.c \
-	  pr.c
+CSRCS		= \
+		cppsetup.c \
+		ifparser.c \
+		include.c \
+		main.c \
+		parse.c \
+		pr.c \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES	+= -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
+DEFINES		+= -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
+
