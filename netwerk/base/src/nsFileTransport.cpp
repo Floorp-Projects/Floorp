@@ -31,9 +31,9 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 // nsFileTransport methods:
 
 nsFileTransport::nsFileTransport()
-    : mPath(nsnull), mContext(nsnull), mListener(nsnull), mState(STARTING),
-      mFileStream(nsnull), mBufferStream(nsnull), mStatus(NS_OK),
-      mService(nsnull)
+    : mPath(nsnull), mContext(nsnull), mListener(nsnull), mState(ENDED),
+      mSuspended(PR_FALSE), mFileStream(nsnull), mBufferStream(nsnull), 
+      mStatus(NS_OK), mService(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -67,15 +67,22 @@ nsFileTransport::Init(nsISupports* context,
                       nsIStreamListener* listener,
                       State state)
 {
-    mContext = context;
-    NS_IF_ADDREF(mContext);
+    nsresult rv = NS_OK;
+    PR_CEnterMonitor(this);
 
-    mListener = listener;
-    NS_ADDREF(mListener);
+    if (mState != ENDED)
+        rv = NS_ERROR_FAILURE;
+    else {
+        mContext = context;
+        NS_IF_ADDREF(mContext);
 
-    mState = state;
+        mListener = listener;
+        NS_ADDREF(mListener);
 
-    return NS_OK;
+        mState = state;
+    }
+    PR_CExitMonitor(this);
+    return rv;
 }
 
 NS_IMPL_ADDREF(nsFileTransport);
@@ -111,17 +118,10 @@ nsFileTransport::Cancel(void)
     nsresult rv = NS_OK;
     PR_CEnterMonitor(this);
     mStatus = NS_BINDING_ABORTED;
-    switch (mState) {
-      case RUNNING:
-        mState = ENDING;
-        break;
-      case SUSPENDED:
-        rv = Resume();
-        break;
-      default:
-        rv = NS_ERROR_FAILURE;
-        break;
+    if (mSuspended) {
+        Resume();
     }
+    mState = ENDING;
     PR_CExitMonitor(this);
     return rv;
 }
@@ -131,16 +131,10 @@ nsFileTransport::Suspend(void)
 {
     nsresult rv = NS_OK;
     PR_CEnterMonitor(this);
-    switch (mState) {
-      case RUNNING:
+    if (!mSuspended) {
         // XXX close the stream here?
         mStatus = mService->Suspend(this);
-
-        mState = SUSPENDED;
-        break;
-      default:
-        rv = NS_ERROR_FAILURE;
-        break;
+        mSuspended = PR_TRUE;
     }
     PR_CExitMonitor(this);
     return rv;
@@ -151,16 +145,10 @@ nsFileTransport::Resume(void)
 {
     nsresult rv = NS_OK;
     PR_CEnterMonitor(this);
-    switch (mState) {
-      case SUSPENDED:
+    if (!mSuspended) {
         // XXX re-open the stream and seek here?
         mStatus = mService->Resume(this);
-
-        mState = RUNNING;
-        break;
-      default:
-        rv = NS_ERROR_FAILURE;
-        break;
+        mSuspended = PR_FALSE;
     }
     PR_CExitMonitor(this);
     return rv;
@@ -180,7 +168,7 @@ nsFileTransport::AsyncRead(nsISupports* context,
     rv = NS_NewAsyncStreamListener(&asyncListener, appEventQueue, listener);
     if (NS_FAILED(rv)) return rv;
 
-    rv = Init(context, asyncListener, STARTING);
+    rv = Init(context, asyncListener, START_READ);
     NS_RELEASE(asyncListener);
 
     rv = mService->DispatchRequest(this);
@@ -208,7 +196,7 @@ nsFileTransport::OpenInputStream(nsIInputStream* *result)
     rv = NS_NewSyncStreamListener(&syncListener, &inStr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = Init(nsnull, syncListener, STARTING);
+    rv = Init(nsnull, syncListener, START_READ);
     NS_RELEASE(syncListener);
     if (NS_FAILED(rv)) {
         NS_RELEASE(inStr);
@@ -238,7 +226,7 @@ nsFileTransport::Continue(void)
 {
     PR_CEnterMonitor(this);
     switch (mState) {
-      case STARTING: {
+      case START_READ: {
           nsISupports* fs;
           nsFileSpec spec(mPath);
 
@@ -255,14 +243,14 @@ nsFileTransport::Continue(void)
           mStatus = NS_NewByteBufferInputStream(&mBufferStream, PR_FALSE, NS_FILE_TRANSPORT_BUFFER_SIZE);
           if (NS_FAILED(mStatus)) goto error;
 
-          mState = RUNNING;
+          mState = READING;
           break;
       }
-      case RUNNING: {
+      case READING: {
           if (NS_FAILED(mStatus)) goto error;
 
           PRUint32 amt;
-          mStatus = mBufferStream->Fill(mFileStream, &amt);
+          mStatus = mBufferStream->Fill(NS_STATIC_CAST(nsIInputStream*, mFileStream), &amt);
           if (mStatus == NS_BASE_STREAM_EOF) goto error; 
           if (NS_FAILED(mStatus)) goto error;
 
@@ -270,11 +258,30 @@ nsFileTransport::Continue(void)
           mStatus = mListener->OnDataAvailable(mContext, mBufferStream, amt);      // XXX maybe amt should be mBufferStream->GetLength()
           if (NS_FAILED(mStatus)) goto error;
           
-          // stay in the RUNNING state
+          // stay in the READING state
           break;
       }
-      case SUSPENDED: {
-          NS_NOTREACHED("trying to continue a suspended file transfer");
+      case START_WRITE: {
+          nsISupports* fs;
+          nsFileSpec spec(mPath);
+
+          mStatus = mListener->OnStartBinding(mContext);  // always send the start notification
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = NS_NewTypicalOutputFileStream(&fs, spec);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = fs->QueryInterface(nsIOutputStream::GetIID(), (void**)&mFileStream);
+          NS_RELEASE(fs);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mStatus = NS_NewByteBufferInputStream(&mBufferStream, PR_FALSE, NS_FILE_TRANSPORT_BUFFER_SIZE);
+          if (NS_FAILED(mStatus)) goto error;
+
+          mState = WRITING;
+          break;
+      }
+      case WRITING: {
           break;
       }
       case ENDING: {
@@ -308,7 +315,7 @@ nsFileTransport::Continue(void)
 NS_IMETHODIMP
 nsFileTransport::Run(void)
 {
-    while (mState != ENDED && mState != SUSPENDED) {
+    while (mState != ENDED && !mSuspended) {
         Continue();
     }
     return NS_OK;
