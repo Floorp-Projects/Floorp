@@ -460,6 +460,11 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       nsHTMLTagContent::SetAttribute(aAttribute, val);
       return;
     }
+    if (aAttribute == nsHTMLAtoms::text) {
+      ParseColor(aValue, val);
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return;
+    }
   }
 
   // Use default attribute catching code
@@ -751,6 +756,12 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
     }
     else if (mTag == nsHTMLAtoms::body) {
       MapBackgroundAttributesInto(aContext, aPresContext);
+      GetAttribute(nsHTMLAtoms::text, value);
+      if (eHTMLUnit_Color == value.GetUnit()) {
+        nsStyleColor* color = (nsStyleColor*)
+          aContext->GetMutableStyleData(eStyleStruct_Color);
+        color->mColor = value.GetColorValue();
+      }
     }
   }
 }
