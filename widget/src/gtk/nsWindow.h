@@ -222,6 +222,7 @@ private:
 
 protected:
   GtkWidget *mWidget;
+  GtkWidget *mVBox;
   GdkGC *mGC;
 };
 
