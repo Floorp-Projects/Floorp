@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.13 2002/03/05 19:19:04 alecf%netscape.com Exp $
+## $Id: mozilla,v 1.14 2002/03/06 03:55:24 seawood%netscape.com Exp $
 ## 
 ## Usage:
 ##
@@ -45,28 +45,33 @@ else
   found=0
   progname=$0
   curdir=`dirname $progname`
-  here=`/bin/pwd`
-  until [ $found != 0 -a ! -L "$progname" ]; do    
-    run_moz="$curdir/run-mozilla.sh"
-    if [ -x $run_moz ]; then
-      dist_bin=$curdir
-      found=1
-    else
-      bn=`basename "$progname"`
-      cd `dirname "$progname"`
-      progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
-      if [ ! -x "$progname" ]; then
-        break
+  run_moz="$curdir/run-mozilla.sh"
+  if test -x $run_moz; then
+    dist_bin=$curdir
+    found=1
+  else
+    here=`/bin/pwd`
+    until test $found != 0 -o ! -L "$progname" ; do
+      run_moz="$curdir/run-mozilla.sh"
+      if [ -x $run_moz ]; then
+        dist_bin=$curdir
+        found=1
+      else
+        bn=`basename "$progname"`
+        cd `dirname "$progname"`
+        progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
+        if [ ! -x "$progname" ]; then
+          break
+        fi
+        curdir=`dirname $progname`
       fi
-      curdir=`dirname $progname`
-    fi
-  done
-  cd $here
+    done
+    cd $here
+  fi
   if [ $found = 0 ]; then
     echo "Cannot find mozilla runtime directory. Exiting."
     exit 1
   fi
-
 fi
 
 script_args=""
