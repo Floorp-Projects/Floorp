@@ -46,6 +46,9 @@
 <!ENTITY extensionItem.toBeEnabled.label      "This item will be enabled after you restart &brandShortName;.">
 <!ENTITY extensionItem.toBeInstalled.label    "This item will be installed after you restart &brandShortName;.">
 <!ENTITY extensionItem.toBeUninstalled.label  "This item will be uninstalled after you restart &brandShortName;.">
+<!ENTITY extensionItem.done.label             "Install Success">
+<!ENTITY extensionItem.waiting.label          "Waiting...">
+<!ENTITY extensionItem.installing.label       "Installing...">
 
 <!ENTITY getMoreExtensions.label          "Get More Extensions">
 <!ENTITY getMoreExtensions.tooltip        "Get More Extensions from update.mozilla.org">

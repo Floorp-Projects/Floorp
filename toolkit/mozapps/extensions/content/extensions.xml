@@ -189,6 +189,111 @@
     </implementation>
   </binding>
 
+  <binding id="extension-waiting" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:description class="extension-item-description">
+            &extensionItem.waiting.label;
+          </xul:description>
+          <xul:label value=" "/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
+  <binding id="extension-downloading" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:progressmeter class="extension-item-progress" xbl:inherits="value=progress"/>
+          <xul:label class="extension-item-status" xbl:inherits="value=status"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
+  <binding id="extension-installing" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:description class="extension-item-description">
+            &extensionItem.installing.label;
+          </xul:description>
+          <xul:label value=" "/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+  
+  <binding id="extension-done" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:label class="extension-item-description" xbl:inherits="value=error"
+                     value="&extensionItem.done.label;"/>
+          <xul:label value=" "/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
   <binding id="theme" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
     <resources>
       <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
@@ -205,6 +310,102 @@
             <xul:label class="extension-item-version" xbl:inherits="value=version"/>
           </xul:hbox>
           <xul:label class="extension-item-creator" xbl:inherits="value=creator" crop="right"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+  
+  <binding id="theme-waiting" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:label class="extension-item-status" crop="right">&extensionItem.waiting.label;</xul:label>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
+  <binding id="theme-downloading" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:progressmeter class="extension-item-progress" xbl:inherits="value=progress"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+
+  <binding id="theme-installing" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:label class="extension-item-status" crop="right">&extensionItem.installing.label;</xul:label>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+    </implementation>
+  </binding>
+  
+  <binding id="theme-done" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="extension-icon" xbl:inherits="src=image"
+                     style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;"/>
+        </xul:vbox>
+        <xul:vbox pack="start" flex="1">
+          <xul:hbox>
+            <xul:label class="extension-item-name" xbl:inherits="value=name" crop="center"/>
+            <xul:label class="extension-item-version" xbl:inherits="value=version"/>
+          </xul:hbox>
+          <xul:label class="extension-item-status" crop="right">&extensionItem.done.label;</xul:label>
         </xul:vbox>
       </xul:hbox>
     </content>  

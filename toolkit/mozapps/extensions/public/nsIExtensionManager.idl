@@ -42,6 +42,14 @@ interface nsIFile;
 interface nsIRDFDataSource;
 interface nsIUpdateItem;
 
+[scriptable, uuid(9048223f-ec50-49e5-9866-80ee8f26179d)]
+interface nsIExtensionDownloadProgressListener : nsISupports
+{
+  void onStateChange(in wstring aURL, in short aState, in long aValue);
+
+  void onProgress(in wstring aURL, in unsigned long aValue, in unsigned long aMaxValue);
+};
+
 [scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
 interface nsIExtensionManager : nsISupports
 {
@@ -52,6 +60,12 @@ interface nsIExtensionManager : nsISupports
   void uninstallExtension(in string aExtensionID);
   void enableExtension(in string aExtensionID);
   void disableExtension(in string aExtensionID);
+
+  void addDownloads([array, size_is(aItemCount)] in nsIUpdateItem aItems,
+                    in unsigned long aItemCount);
+  void removeDownload(in wstring aURL, in unsigned short aType);
+  long addDownloadObserver(in nsIExtensionDownloadProgressListener aObserver);
+  void removeDownloadObserverAt(in long aIndex);
 
   void installTheme(in nsIFile aJARFile, in unsigned long aFlags);
   void uninstallTheme(in string aThemeID);

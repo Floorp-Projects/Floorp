@@ -8,16 +8,20 @@ extension {
   -moz-box-orient: vertical;
 }
 
-extension[install-state="pending"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-pending");
+extension[state="waiting"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-waiting");
 }
 
-extension[install-state="downloading"] {
+extension[state="downloading"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-downloading");
 }
 
-extension[install-state="installing"] {
+extension[state="installing"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-installing");
+}
+
+extension[state="done"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-done");
 }
 
 extension[toBeDisabled="true"] {
@@ -36,8 +40,26 @@ extension[toBeUninstalled="true"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-tobeuninstalled");
 }
 
+
+
 extension[itemType="theme"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#theme");
+}
+
+extension[itemType="theme"][state="waiting"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#theme-waiting");
+}
+
+extension[itemType="theme"][state="downloading"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#theme-downloading");
+}
+
+extension[itemType="theme"][state="installing"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#theme-installing");
+}
+
+extension[itemType="theme"][state="done"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#theme-done");
 }
 
 .themePreviewArea {
