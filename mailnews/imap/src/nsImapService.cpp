@@ -286,8 +286,8 @@ nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder 
 	rv = nsParseImapMessageURI(aMessageURI, folderURI, &msgKey);
 	if (NS_SUCCEEDED(rv))
 	{
-		nsIRDFResource* res;
-		rv = rdf->GetResource(folderURI, &res);
+		nsCOMPtr<nsIRDFResource> res;
+		rv = rdf->GetResource(folderURI, getter_AddRefs(res));
 		if (NS_FAILED(rv))	return rv;
         rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
         // convert the message key into a string
