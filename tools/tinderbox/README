@@ -16,4 +16,33 @@ Table of Contents
    A perl script to drive the client side of tinderbox (unix variants).
    usage:
       perl build-moz-smoke.pl [--clobber | --depend] -t TreeName
-		
+
+* bloatdiff.pl
+    Script used to process leak data in the logs.
+
+* build-grendel.pl
+    Old?  Not used?
+
+* build-moz-ports.pl
+    Old classic way of building.
+
+* build-seamonkey-util.pl
+    Meat of the unix tinderbox stuff.
+
+* build-seamonkey.pl
+    Wrapper for build-seamonkey-util.pl
+
+* build-embed-util.pl
+    Meat of the unix embed tinderbox stuff.
+
+* build-embed.pl
+    Wrapper for build-embed-util.pl
+
+* build-seamonkey-win32.pl
+    Win32 tinderbox stuff.
+
+* tinder-defaults.pl
+    Default script variables.
+
+* tinderbox
+    Wrapper script to start unix builds.
