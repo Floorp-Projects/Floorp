@@ -2847,7 +2847,7 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
           if (NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID, (void **)&domDoc)))
           { //returns an addreffed domdocument
             nsIEditor *editor;
-            if (NS_SUCCEEDED(nsRepository::CreateInstance(kIEditFactoryIID, nsnull, kIEditorIID, (void **)editor)))
+            if (NS_SUCCEEDED(nsRepository::CreateInstance(kIEditFactoryIID, nsnull, kIEditorIID, (void **)&editor)))
             {
               editor->Init(domDoc);
               AddEditor(editor); //new call to set the editor interface this will addref
