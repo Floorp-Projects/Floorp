@@ -88,7 +88,7 @@ struct StyleColorImpl: public nsStyleColor {
   {
     mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
     mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT;
-    mBackgroundRepeat = NS_STYLE_BG_REPEAT_OFF;
+    mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
 
     mBackgroundColor = NS_RGB(192,192,192);
     mCursor = NS_STYLE_CURSOR_INHERIT;
