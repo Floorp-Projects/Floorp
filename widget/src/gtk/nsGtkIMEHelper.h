@@ -139,6 +139,7 @@ class nsIMEGtkIC {
   static nsIMEStatus *gStatus;
   nsWindow *mClientWindow;
   nsWindow *mFocusWindow;
+  static nsWindow *gGlobalFocusWindow;
   nsIMEGtkIC(nsWindow*, GdkFont*, GdkFont*);
   nsIMEGtkIC(nsWindow*, GdkFont*);
   GdkICPrivate *mIC;
@@ -152,6 +153,7 @@ class nsIMEGtkIC {
   static nsIMEGtkIC *GetXIC(nsWindow*, GdkFont*);
   void SetFocusWindow(nsWindow * aFocusWindow);
   nsWindow* GetFocusWindow();
+  nsWindow* GetGlobalFocusWindow();
   static void UnsetFocusWindow();
   static GdkIMStyle GetInputStyle();
 

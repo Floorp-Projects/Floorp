@@ -54,6 +54,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsIMEStatus *nsIMEGtkIC::gStatus = 0;
+nsWindow *nsIMEGtkIC::gGlobalFocusWindow = 0;
 #endif // USE_XIM 
 
 nsGtkIMEHelper* nsGtkIMEHelper::gSingleton = nsnull;
@@ -987,6 +988,12 @@ nsIMEGtkIC::GetFocusWindow()
   return mFocusWindow;
 }
 
+nsWindow *
+nsIMEGtkIC::GetGlobalFocusWindow()
+{
+  return gGlobalFocusWindow;
+}
+
 // workaround for kinput2/over-the-spot/ic-per-shell
 //   http://bugzilla.mozilla.org/show_bug.cgi?id=28022
 //
@@ -1010,6 +1017,8 @@ void
 nsIMEGtkIC::SetFocusWindow(nsWindow * aFocusWindow)
 {
   mFocusWindow = aFocusWindow;
+  gGlobalFocusWindow = aFocusWindow;
+
   GdkWindow *gdkWindow = (GdkWindow*)aFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
   if (!gdkWindow) return;
 
