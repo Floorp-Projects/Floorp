@@ -449,8 +449,8 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepain
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-	Move(aX, aY);
-	Resize(aWidth, aHeight, aRepaint);
+	nsWindow::Move(aX, aY);
+	nsWindow::Resize(aWidth, aHeight, aRepaint);
 	return NS_OK;
 }
 
@@ -499,6 +499,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	if (!mWindowPtr)
 		return NS_OK;
 
+#if 0	// We don't want to draw synchronously on Mac: it makes the xpfe apps much slower
 	static PRBool	reentrant = PR_FALSE;
 	if (aIsSynchronous && !reentrant)
 	{
@@ -507,6 +508,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 		reentrant = PR_FALSE;
 	}
 	else
+#endif
 	{
 		nsRect wRect = aRect;
 		Rect macRect;
@@ -529,7 +531,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-	Invalidate(mBounds, aIsSynchronous);
+	nsWindow::Invalidate(mBounds, aIsSynchronous);
 	return NS_OK;
 }
 
