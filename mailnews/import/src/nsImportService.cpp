@@ -656,7 +656,7 @@ PRBool ImportModuleDesc::SupportsThings( const char *pThings)
 	if (!(*pThings))
 		return( PR_TRUE);
 
-	nsCString	thing = pThings;
+	nsCString	thing(pThings);
 	nsCString	item;
 	PRInt32		idx;
 	

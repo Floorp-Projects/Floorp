@@ -104,9 +104,9 @@ public:
   nsString(const nsString& aString);   
 
 #ifdef NEW_STRING_APIS
-  nsString(const nsAReadableString&);
+  explicit nsString(const nsAReadableString&);
 
-  nsString(const PRUnichar*);
+  explicit nsString(const PRUnichar*);
   nsString(const PRUnichar*, PRInt32);
 #else
   /**
@@ -924,11 +924,11 @@ public:
     virtual ~nsAutoString();
     nsAutoString();
     nsAutoString(const nsAutoString& aString);
-    nsAutoString(const nsString& aString);
-    nsAutoString(const PRUnichar* aString);
+    explicit nsAutoString(const nsString& aString);
+    explicit nsAutoString(const PRUnichar* aString);
     nsAutoString(const PRUnichar* aString,PRInt32 aLength);
-    nsAutoString(PRUnichar aChar);
-    nsAutoString(const CBufDescriptor& aBuffer);    
+    explicit nsAutoString(PRUnichar aChar);
+    explicit nsAutoString(const CBufDescriptor& aBuffer);    
 
 #ifndef NEW_STRING_APIS
 //  nsAutoString(const char* aCString,PRInt32 aLength=-1);
@@ -979,15 +979,15 @@ class NS_COM NS_ConvertASCIItoUCS2
     */
   {
     public:
-      NS_ConvertASCIItoUCS2( const char* );
+      explicit NS_ConvertASCIItoUCS2( const char* );
       NS_ConvertASCIItoUCS2( const char*, PRUint32 );
-      NS_ConvertASCIItoUCS2( char );
+      explicit NS_ConvertASCIItoUCS2( char );
 #if 0
 #ifdef NEW_STRING_APIS
-      NS_ConvertASCIItoUCS2( const nsAReadableCString& );
+      explicit NS_ConvertASCIItoUCS2( const nsAReadableCString& );
 #else
       class nsCString;
-      NS_ConvertASCIItoUCS2( const nsCString& );
+      explicit NS_ConvertASCIItoUCS2( const nsCString& );
 #endif
 #endif
 
@@ -997,6 +997,7 @@ class NS_COM NS_ConvertASCIItoUCS2
           return GetUnicode();
         }
 
+        // is this really a good idea?  I'm getting very paranoid about automatic conversions
       operator nsLiteralString() const
         {
           return nsLiteralString(mUStr, mLength);
@@ -1035,6 +1036,7 @@ class NS_COM NS_ConvertUTF8toUCS2
       : public nsAutoString
   {
     public:
+      explicit
       NS_ConvertUTF8toUCS2( const char* aCString )
         {
           Init( aCString, ~PRUint32(0) /* MAXINT */ );
@@ -1045,6 +1047,7 @@ class NS_COM NS_ConvertUTF8toUCS2
           Init( aCString, aLength );
         }
 
+      explicit
       NS_ConvertUTF8toUCS2( char aChar )
         {
           Init( &aChar, 1 );
@@ -1078,7 +1081,7 @@ class NS_COM NS_ConvertUTF8toUCS2
 class NS_COM nsSubsumeStr : public nsString {
 public:
   nsSubsumeStr();
-  nsSubsumeStr(nsStr& aString);
+  explicit nsSubsumeStr(nsStr& aString);
   nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   int Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);

@@ -2822,7 +2822,7 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   tValue = aTagValue->ToNewCString();
   if (tValue)
   {
-    rv = nsMsgI18NConvertToUnicode(nsCString("UTF-8"), nsCString(tValue), outValue);
+    rv = nsMsgI18NConvertToUnicode(nsCAutoString("UTF-8"), nsCAutoString(tValue), outValue);
     if (NS_SUCCEEDED(rv))
       aTagValue->Assign(outValue);
     PR_FREEIF(tValue);

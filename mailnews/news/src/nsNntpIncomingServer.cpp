@@ -1235,6 +1235,6 @@ NS_IMETHODIMP
 nsNntpIncomingServer::RemoveNewsgroup(const char *name)
 {
 	// handle duplicates?
-	mSubscribedNewsgroups.RemoveCString(nsCString(name));
+	mSubscribedNewsgroups.RemoveCString(nsCAutoString(name));
 	return NS_OK;
 }
