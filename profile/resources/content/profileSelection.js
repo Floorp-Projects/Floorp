@@ -19,7 +19,7 @@
  * 
  * Contributor(s): 
  *   Ben Goodger (28/10/99)
- *   Seth Spitzer
+ *   Seth Spitzer (28/10/99)
  */
 
 var selected    = null;
@@ -145,8 +145,9 @@ function showSelection(node)
 {
 	// (see tree's onclick definition)
 	// Tree events originate in the smallest clickable object which is the cell.  The object 
-	// originating the event is available as event.target.  We want the cell's row, so we go 
-	// one further and get event.target.parentNode.
+	// originating the event is available as event.target.  
+	// We want the item in the
+	// cell's row, so we got passed event.target.parentNode.parentNode
 	selected = node;
   var tree = document.getElementById("profiles");
   if(tree.selectedItems.length > 0)
