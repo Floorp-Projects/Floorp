@@ -162,27 +162,33 @@ PushPopupControlState(PopupControlState aState, PRBool aForce);
 
 void
 PopPopupControlState(PopupControlState aState);
+
+#define NS_AUTO_POPUP_STATE_PUSHER nsAutoPopupStatePusherInternal
+#else
+#define NS_AUTO_POPUP_STATE_PUSHER nsAutoPopupStatePusherExternal
 #endif
 
-// Helper chass that helps with pushing and poping popup control
+// Helper class that helps with pushing and poping popup control
 // state. Note that this class looks different from within code that's
 // part of the layout library than it does in code outside the layout
-// library.
-class nsAutoPopupStatePusher
+// library.  We give the two object layouts different names so the symbols
+// don't conflict, but code should always use the name
+// |nsAutoPopupStatePusher|.
+class NS_AUTO_POPUP_STATE_PUSHER
 {
 public:
 #ifdef _IMPL_NS_LAYOUT
-  nsAutoPopupStatePusher(PopupControlState aState, PRBool aForce = PR_FALSE)
+  NS_AUTO_POPUP_STATE_PUSHER(PopupControlState aState, PRBool aForce = PR_FALSE)
     : mOldState(::PushPopupControlState(aState, aForce))
   {
   }
 
-  ~nsAutoPopupStatePusher()
+  ~NS_AUTO_POPUP_STATE_PUSHER()
   {
     PopPopupControlState(mOldState);
   }
 #else
-  nsAutoPopupStatePusher(nsPIDOMWindow *aWindow, PopupControlState aState)
+  NS_AUTO_POPUP_STATE_PUSHER(nsPIDOMWindow *aWindow, PopupControlState aState)
     : mWindow(aWindow), mOldState(openAbused)
   {
     if (aWindow) {
@@ -190,7 +196,7 @@ public:
     }
   }
 
-  ~nsAutoPopupStatePusher()
+  ~NS_AUTO_POPUP_STATE_PUSHER()
   {
     if (mWindow) {
       mWindow->PopPopupControlState(mOldState);
@@ -209,5 +215,7 @@ private:
   static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nsnull; }
   static void operator delete(void* /*memory*/) {}
 };
+
+#define nsAutoPopupStatePusher NS_AUTO_POPUP_STATE_PUSHER
 
 #endif // nsPIDOMWindow_h__
