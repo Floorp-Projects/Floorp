@@ -1313,12 +1313,13 @@ const int kReuseWindowOnAE = 2;
 - (void) updatePrebinding
 {
   // For MacOS 10.2 and higher, don't do anything, since
-  // the OS updates our prebinding automatically.
+  // the OS updates our prebinding automatically, except on 10.3 where
+  // they screwed up and it doesn't work.
   struct utsname u;
   uname(&u);
 
   float osVersion = atof(u.release);
-  if (osVersion >= 6.0)   // MacOS 10.2 is based on Darwin 6.0
+  if (osVersion >= 6.0 && osVersion < 7.0)   // Only bail for 10.2.x
     return;
 
   // Check our prebinding status.  If we didn't launch prebound,
