@@ -59,7 +59,11 @@ tree  {
 
 /* HTML ELEMENTS */
 /* Force all rows to line up cell contents at the top */
-tr, TR { vertical-align: top }
+tr { vertical-align: top }
+
+tr[show=0] { display: none }
+tr[show=1] { display: table-row }
+
 
 /* FOR DEBUG PURPOSE -- use border-width: 1px */
 /* BORDER STYLE NOT WORKING 5/12/99 */
@@ -109,6 +113,7 @@ button.spaced {
 }
 
 button.ChooseFile {
+  margin-left: 5px;
   margin-bottom: 3px;
   margin-right: 5px;
 }

@@ -4,7 +4,7 @@
 <!DOCTYPE window>
 
 <!-- dialog containing a control requiring initial setup -->
-<xul:window width="380" height="205" title="Image Properties"
+<xul:window width="380" height="405" title="Image Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()">
@@ -19,23 +19,43 @@
 
   <table>
     <tr>
-      <td>
+      <td colspan="2">
         <fieldset><legend align="left">Image Information </legend>
           <p class="smallmargin">Enter a remote URL or local file: </p>
-          <input type="file" size="50" length="50" maxlength="255" id="image.Src" style="{background-color: #CCCCCC; font-family: Sans-Serif; font-size: 8pt;}" />
+          <input type="text" size="20" length="20" id="image.srcInput" />
+          <button class="ChooseFile" id="ChooseFile" onclick="chooseFile()">Choose File...</button>
           <br/>
           <p class="smallmargin">Alternative Text</p>
-          <input type="text" size="30" length="30" maxlength="255" id="image.AltText" />
+          <input type="text" size="30" length="30" id="image.altTextInput" />
+        </fieldset>
+      </td>
+      <td/>
+    </tr>
+    <tr>
+      <td>
+        <button class="spaced" id="AdvancedButton" onclick="onAdvanced()" width="50">Advanced</button>  
+      </td>
+      <td/>
+    </tr>
+    <tr id="AdvancedRow">
+      <td height="60">
+        <fieldset><legend align="left">Dimensions </legend>
+          Put size controls here
+        </fieldset>
+      </td>
+      <td height="60">
+        <fieldset><legend align="left">Spacing </legend>
+          Put spacing controls here
         </fieldset>
       </td>
     </tr>
     <tr>
-    <td  align = "right">
+    <td colspan="2" align = "right">
       <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
       <button class="spaced" id="Preview" onclick="applyChanges()" width="50">Preview</button>
-      <button class="spaced" id="Undo" onclick="onUndo()" width="50">Undo</button>  
       <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
     </td>
+    <td/>
   </tr>
 </table>
 </xul:window>

@@ -8,6 +8,8 @@
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()">
 
+  <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  </script>
   <script language="JavaScript" src="chrome://editordlgs/content/EdSpellCheck.js">
   </script>
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->

@@ -41,7 +41,8 @@
 #include "nsFileSpec.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-
+#include "nsIFileWidget.h" // for GetLocalFileURL stuff
+#include "nsWidgetsCID.h"
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
@@ -59,6 +60,7 @@ static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
+static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -154,6 +156,48 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction
 NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 {
   return nsTextEditor::InsertText(aStringToInsert);
+}
+
+NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
+{
+  nsresult result;
+  NS_ASSERTION(mDoc, "Missing Editor DOM Document");
+  
+  // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
+  // For initial testing, just set the background on the BODY tag (the document's background)
+
+  // Set the background color attribute on the body tag
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  result = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_SUCCEEDED(result) && bodyElement)
+  {
+    result = nsEditor::BeginTransaction();
+    if (NS_FAILED(result)) { return result; }
+    bodyElement->SetAttribute("bgcolor", aColor);
+    nsEditor::EndTransaction();
+  }
+  return result;
+}
+
+NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const nsString& aValue)
+{
+  nsresult result;
+  // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
+
+  NS_ASSERTION(mDoc, "Missing Editor DOM Document");
+  
+  // Set the background color attribute on the body tag
+  nsCOMPtr<nsIDOMElement> bodyElement;
+
+  result = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_SUCCEEDED(result) && bodyElement)
+  {
+    result = nsEditor::BeginTransaction();
+    if (NS_FAILED(result)) { return result; }
+    bodyElement->SetAttribute(aAttribute, aValue);
+    nsEditor::EndTransaction();
+  }
+  return result;
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertBreak()
@@ -1170,7 +1214,7 @@ nsHTMLEditor::RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRan
   return result;
 }
 
-
+// TODO: Implement "outdent"
 NS_IMETHODIMP
 nsHTMLEditor::Indent(const nsString& aIndent)
 {
@@ -1287,6 +1331,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   return NS_OK;
 }
 
+//TODO: IMPLEMENT ALIGNMENT!
 
 NS_IMETHODIMP
 nsHTMLEditor::Align(const nsString& aAlignType)
@@ -1688,24 +1733,56 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
 
               // The "A" tag is a pain,
               //  used for both link(href is set) and "Named Anchor"
-              if (aTagName == "href" || (aTagName == "anchor"))
+              if (TagName == "href" || (TagName == "anchor"))
               {
                 // We could use GetAttribute, but might as well use anchor element directly
                 nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(selectedElement);
                 if (anchor)
                 {
                   nsString tmpText;
-                  if( aTagName == "href")
+                  if( TagName == "href")
                   {
                     if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                       bNodeFound = PR_TRUE;
-                  } else if (aTagName == "anchor")
+                  } else if (TagName == "anchor")
                   {
                     if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                       bNodeFound = PR_TRUE;
                   }
+                } else if (TagName == "href")
+                {
+                  // Check for a single image is inside a link
+                  // It is usually the immediate parent, but lets be sure
+                  //  by walking up the parents until we find an "A" tag
+                  nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(selectedElement);
+                  if (image)
+                  {
+                    nsCOMPtr<nsIDOMNode> parent;
+                    nsCOMPtr<nsIDOMNode> current = selectedElement; 
+                    PRBool notDone = PR_TRUE;
+                    do {
+                      result = current->GetParentNode(getter_AddRefs(parent));
+                      notDone = NS_SUCCEEDED(result) && parent != nsnull;
+                      if(notDone)
+                      {
+                        nsString tmpText;
+                        nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(parent);
+                        if (anchor && NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
+                        {
+                          
+                          nsCOMPtr<nsIDOMElement> link = do_QueryInterface(parent);
+                          if (link)
+                          {
+                            *aReturn =link;
+                          }
+                          return NS_OK;
+                        }
+                      }
+                      current = parent;
+                    } while (notDone);
+                  }
                 }
-              } else if (aTagName == domTagName) { // All other tag names are handled here
+              } else if (TagName == domTagName) { // All other tag names are handled here
                 bNodeFound = PR_TRUE;
               }
               if (!bNodeFound)
@@ -1714,12 +1791,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                 break;
               }
             }
-            
             iter->Next();
-          }
-          if (!bNodeFound) {
-            char TagBuf[50] = "";
-            printf("No nodes of tag name = %s were found in selection\n", aTagName.ToCString(TagBuf, 50));
           }
         }
       } else {
@@ -1782,7 +1854,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
 
   if (NS_SUCCEEDED(result))
   {
-    *aReturn = newElement; //do_QueryInterface(newElement);
+    *aReturn = newElement;
   }
 
   return result;
@@ -1816,23 +1888,8 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
       selection->ClearSelection();    
     }
   }
-  nsAutoString tagName;
-
-  // MAJOR KLUDGE -- CONVERT THE PLATFORM-SPECIFIC FORMAT INTO URL FORMAT
-  // This should be done by the file-picker widget
-  nsCOMPtr<nsIDOMHTMLImageElement> image = (do_QueryInterface(aElement));
-  
-  if (image)
-  {
-    printf("INSERTING AN IMAGE\n");
-    nsAutoString src;
-    image->GetSrc(src);
-    nsFileSpec fileSpec(src);
-    nsFileURL fileURL(fileSpec);
-  }
 
   DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
-  
   if (NS_SUCCEEDED(result))
   {
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
@@ -1842,29 +1899,23 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
   }
   (void)nsEditor::EndTransaction();
   
-// XXXX: Horrible hack! We are doing this because
-// of an error in Gecko which is not rendering the
-// document after a change via the DOM - gpk 2/13/99
-  // BEGIN HACK!!!
-  // HACKForceRedraw();
-  // END HACK
-
   return result;
 }
 
 NS_IMETHODIMP
 nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
-  nsresult result=NS_ERROR_UNEXPECTED;
+  nsresult result=NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMSelection> selection;
 
+  // DON'T RETURN EXCEPT AT THE END -- WE NEED TO RELEASE THE aAnchorElement
   if (!aAnchorElement)
-    return NS_ERROR_NULL_POINTER;
+    goto DELETE_ANCHOR;
 
   // We must have a real selection
-  nsCOMPtr<nsIDOMSelection> selection;
   result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result) || !selection)
-    return result;
+    goto DELETE_ANCHOR;
 
   PRBool isCollapsed;
   result = selection->GetIsCollapsed(&isCollapsed);
@@ -1874,26 +1925,123 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   if (isCollapsed)
   {
     printf("InsertLinkAroundSelection called but there is no selection!!!\n");     
-    return NS_OK;
-  }
+    result = NS_OK;
+  } else {
   
-  // Be sure we were given an anchor element
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aAnchorElement);
-  if (anchor)
-  {
-    nsAutoString href;
-    if (NS_SUCCEEDED(anchor->GetHref(href)) && href.GetUnicode() && href.Length() > 0)      
+    // Be sure we were given an anchor element
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aAnchorElement);
+    if (anchor)
     {
-      result = nsEditor::BeginTransaction();
-      if (NS_SUCCEEDED(result))
+      nsAutoString href;
+      if (NS_SUCCEEDED(anchor->GetHref(href)) && href.GetUnicode() && href.Length() > 0)      
       {
-        const nsString attribute("href");
-        SetTextProperty(nsIEditProperty::a, &attribute, &href);
-        //TODO: Enumerate through other properties of the anchor tag
-        // and set those as well. 
-        // Optimization: Modify SetTextProperty to set all attributes at once?
+        result = nsEditor::BeginTransaction();
+        if (NS_SUCCEEDED(result))
+        {
+          const nsString attribute("href");
+          SetTextProperty(nsIEditProperty::a, &attribute, &href);
+          //TODO: Enumerate through other properties of the anchor tag
+          // and set those as well. 
+          // Optimization: Modify SetTextProperty to set all attributes at once?
+        }
+        (void)nsEditor::EndTransaction();
       }
-      (void)nsEditor::EndTransaction();
+    }
+  }
+DELETE_ANCHOR:
+  // We don't insert the element created in CreateElementWithDefaults 
+  //   into the document like we do in InsertElement,
+  //   so shouldn't we have to do this here?
+  //  It crashes in JavaScript if we do this!
+  //NS_RELEASE(aAnchorElement);
+  return result;
+}
+
+PRBool nsHTMLEditor::IsElementInBody(nsIDOMElement* aElement)
+{
+  if ( aElement )
+  {
+    nsIDOMElement* bodyElement = nsnull;
+    nsresult result = nsEditor::GetBodyElement(&bodyElement);
+    if (NS_SUCCEEDED(result) && bodyElement)
+    {
+      nsCOMPtr<nsIDOMNode> parent;
+      nsCOMPtr<nsIDOMNode> currentElement = do_QueryInterface(aElement);
+      if (currentElement)
+      {
+        do {
+          currentElement->GetParentNode(getter_AddRefs(parent));
+          if (parent)
+          {
+            if (parent == bodyElement)
+              return PR_TRUE;
+
+            currentElement = parent;
+          }
+        } while(parent);
+      }
+    }  
+  }
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+
+  // Must be sure that element is contained in the document body
+  if (IsElementInBody(aElement))
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = nsEditor::GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result) && selection)
+    {
+      nsCOMPtr<nsIDOMNode>parent;
+      result = aElement->GetParentNode(getter_AddRefs(parent));
+      if (NS_SUCCEEDED(result) && parent)
+      {
+        PRInt32 offsetInParent;
+        result = GetChildOffset(aElement, parent, offsetInParent);
+
+        if (NS_SUCCEEDED(result))
+        {
+          // Collapse selection to just before desired element,
+          selection->Collapse(parent, offsetInParent);
+          //  then extend it to just after
+          selection->Extend(parent, offsetInParent+1);
+        }
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+
+  // Must be sure that element is contained in the document body
+  if (IsElementInBody(aElement))
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = nsEditor::GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result) && selection)
+    {
+      nsCOMPtr<nsIDOMNode>parent;
+      result = aElement->GetParentNode(getter_AddRefs(parent));
+      if (NS_SUCCEEDED(result) && parent)
+      {
+        PRInt32 offsetInParent;
+        result = GetChildOffset(aElement, parent, offsetInParent);
+
+        if (NS_SUCCEEDED(result))
+        {
+          // Collapse selection to just after desired element,
+          selection->Collapse(parent, offsetInParent+1);
+        }
+      }
     }
   }
   return result;
@@ -2018,4 +2166,63 @@ NS_IMETHODIMP nsHTMLEditor::EndComposition(void)
 NS_IMETHODIMP nsHTMLEditor::SetCompositionString(const nsString& aCompositionString)
 {
 	return nsTextEditor::SetCompositionString(aCompositionString);
+}
+
+// Call the platform-specific file picker and convert it to URL format
+NS_IMETHODIMP nsHTMLEditor::GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn)
+{
+  PRBool htmlFilter = aFilterType.EqualsIgnoreCase("html");
+  PRBool imgFilter = aFilterType.EqualsIgnoreCase("img");
+
+  aReturn = "";
+
+  // TODO: DON'T ACCEPT NULL PARENT AFTER WIDGET IS FIXED
+  if (/*!aParent||*/ !(htmlFilter || imgFilter))
+    return NS_ERROR_NOT_INITIALIZED;
+
+
+  nsCOMPtr<nsIFileWidget>  fileWidget;
+  // TODO: WHERE TO WE PUT GLOBAL STRINGS TO BE LOCALIZED?
+  nsString title(htmlFilter ? "Open HTML file" : "Select Image File");
+  nsFileSpec fileSpec;
+  // TODO: GET THE DEFAULT DIRECTORY FOR DIFFERENT TYPES FROM PREFERENCES
+  nsFileSpec aDisplayDirectory;
+
+  nsresult result = nsComponentManager::CreateInstance(kFileWidgetCID,
+					     nsnull,
+					     nsIFileWidget::GetIID(),
+					     (void**)&fileWidget);
+
+  if (NS_SUCCEEDED(result))
+  {
+    nsFileDlgResults dialogResult;
+    if (htmlFilter)
+    {
+      nsAutoString titles[] = {"HTML Files"};
+      nsAutoString filters[] = {"*.htm; *.html; *.shtml"};
+      fileWidget->SetFilterList(1, titles, filters);
+      dialogResult = fileWidget->GetFile(nsnull, title, fileSpec);
+    } else {
+      nsAutoString titles[] = {"Image Files"};
+      nsAutoString filters[] = {"*.gif; *.jpg; *.jpeg; *.png"};
+      fileWidget->SetFilterList(1, titles, filters);
+      dialogResult = fileWidget->GetFile(nsnull, title, fileSpec);
+    }
+    // Do this after we get this from preferences
+    //fileWidget->SetDisplayDirectory(aDisplayDirectory);
+    // First param should be Parent window, but type is nsIWidget*
+    // Bug is filed to change this to a more suitable window type
+    if (dialogResult != nsFileDlgResults_Cancel) 
+    {
+      // Get the platform-specific format
+      // Convert it to the string version of the URL format
+      // NOTE: THIS CRASHES IF fileSpec is empty
+      nsFileURL url(fileSpec);
+      aReturn = url.GetURLString();
+    }
+    // TODO: SAVE THIS TO THE PREFS?
+    fileWidget->GetDisplayDirectory(aDisplayDirectory);
+  }
+
+  return result;
 }

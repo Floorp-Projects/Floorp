@@ -29,7 +29,7 @@
       <td>
         <fieldset><legend align="left">Link to </legend>
           <p class="smallmargin">Enter a web page location or local file: 
-          <button class="ChooseFile" id="ChooseFile" align="top">Choose File</button></p>
+          <button class="ChooseFile" id="ChooseFile" onclick="ChooseFile()">Choose File...</button></p>
           <input type="text" size="25" length="25" id="hrefInput"></input>
         </fieldset>
       </td>
@@ -38,7 +38,6 @@
       <td  align = "right">
         <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
         <button class="spaced" id="Preview" onclick="applyChanges()" width="50">Preview</button>
-        <button class="spaced" id="Undo" onclick="onUndo()" width="50">Undo</button>  
         <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
       </td>
     </tr>

@@ -2,7 +2,6 @@
 // applyChanges() must be implemented here
 
 var appCore;
-var toolkitCore;
 var anchorElement = null;
 var insertNew = true;
 var needLinkText = false;
@@ -18,26 +17,14 @@ var dialog;
 // dialog initialization code
 function Startup() {
   dump("Doing Startup...\n");
-  toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-  if (!toolkitCore) {
-    toolkitCore = new ToolkitCore();
-    if (toolkitCore)
-      toolkitCore.Init("ToolkitCore");
-  }
-  if(!toolkitCore) {
-    dump("toolkitCore not found!!! And we can't close the dialog!\n");
-  }
 
   // NEVER create an appcore here - we must find parent editor's
-
-  // temporary while this window is opend with ShowWindowWithArgs
-  dump("Getting parent appcore\n");
-  var editorName = document.getElementById("args").getAttribute("value");
+  var editorName = window.arguments[0];
   dump("Got editorAppCore called " + editorName + "\n");
   appCore = XPAppCoresManager.Find(editorName);  
-  if(!appCore || !toolkitCore) {
+  if(!appCore) {
     dump("EditorAppCore not found!!!\n");
-    toolkitCore.CloseWindow(window);
+    window.close();
     return;  
   }
   dump("EditorAppCore found for Link Properties dialog\n");
@@ -105,7 +92,7 @@ function initDialog() {
   if(!anchorElement)
   {
     dump("Failed to get selected element or create a new one!\n");
-    toolkitCore.CloseWindow(window);
+    window.close();
   } else if (!insertNew) {
       dump("Need to get selected text\n");
 
@@ -127,6 +114,32 @@ function initDialog() {
     insertLinkAroundSelection = true;
     dump("insertLinkAroundSelection is TRUE\n");
   }
+}
+
+function chooseFile()
+{
+  // Get a local file, converted into URL format
+  fileName = appCore.getLocalFileURL(window, "html");
+  if (fileName != "") {
+    dialog.hrefInput.value = fileName;
+  }
+  // Put focus into the input field
+  dialog.hrefInput.focus();
+}
+
+function onOK() {
+  if (applyChanges()) {
+    window.close();
+  }
+}
+
+function onCancel() {
+  // Undo all actions performed within the dialog
+  // TODO: We need to suppress reflow/redraw untill all levels are undone
+  while (undoCount > 0) {
+    onUndo();
+  }
+  window.close();
 }
 
 function applyChanges()
@@ -159,4 +172,7 @@ function applyChanges()
 
   // Reinitialize dialog data
   initDialog();
+  
+  // TODO: Return false if any data validation tests fail
+  return true;
 }

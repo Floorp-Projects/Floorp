@@ -27,13 +27,14 @@
 
 #include "nsIEditor.h"
 #include "nscore.h"
-#include "nsIDOMDocumentFragment.h"
+//#include "nsIDOMDocumentFragment.h"
 
 class nsIEditorCallback;
 class nsISupportsArray;
 class nsStringArray;
 class nsIAtom;
 class nsIOutputStream;
+class nsIDOMWindow;
 
 /**
  * The HTML editor interface. 
@@ -97,7 +98,17 @@ public:
   NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
   NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
 
+  NS_IMETHOD GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn)=0;
+
 // Miscellaneous Methods
+  /** Set the background color of the selected table cell, row, columne, or table,
+    * or the document background if not in a table
+   */
+  NS_IMETHOD SetBackgroundColor(const nsString& aColor)=0;
+  /** Set any BODY element attribute
+   */
+  NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue)=0;
+
   /*
   NS_IMETHOD CheckSpelling()=0;
   NS_IMETHOD SpellingLanguage(nsIAtom *aLanguage)=0;
@@ -156,6 +167,8 @@ public:
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)=0;
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)=0;
+  NS_IMETHOD SelectElement(nsIDOMElement* aElement)=0;
+  NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement)=0;
 
 // Table editing Methods
   NS_IMETHOD InsertTable()=0;

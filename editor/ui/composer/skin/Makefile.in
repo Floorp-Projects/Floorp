@@ -35,7 +35,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/images/ED_ClearStyle.gif \
 	$(srcdir)/images/ED_Copy.gif \
 	$(srcdir)/images/ED_Cut.gif \
-	$(srcdir)/images/ED_Dedent.gif \
+	$(srcdir)/images/ED_Outdent.gif \
 	$(srcdir)/images/ED_Find.gif \
 	$(srcdir)/images/ED_HLine.gif \
 	$(srcdir)/images/ED_Image.gif \
@@ -52,6 +52,10 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/images/ED_Target.gif \
 	$(srcdir)/images/ED_Underline.gif \
 	$(srcdir)/images/ED_Undo.gif \
+	$(srcdir)/images/ED_TextColor.gif \
+	$(srcdir)/images/ED_BackColor.gif \
+	$(srcdir)/images/ED_AlignPopup.gif \
+	$(srcdir)/images/ED_ObjectPopup.gif \
 	$(NULL)
 
 install:: 
