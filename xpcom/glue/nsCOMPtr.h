@@ -32,6 +32,11 @@
   // for |nsresult|, |NS_ADDREF|, et al
 #endif
 
+#ifndef __gen_nsIWeakReference_h__
+#include "nsIWeakReference.h"
+	// for |nsIWeakReference|
+#endif
+
 /*
   Public things defined in this file:
 
@@ -168,8 +173,6 @@
   #define NSCAP_ADDREF(ptr)    (ptr)->AddRef()
   #define NSCAP_RELEASE(ptr)   (ptr)->Release()
 #endif
-
-class nsIWeakReference;
 
   /*
     WARNING:
