@@ -53,6 +53,11 @@ my $component = trim($::FORM{"component"});
 my $product = trim($::FORM{"product"});
 my $description = trim($::FORM{"description"});
 my $initialowner = trim($::FORM{"initialowner"});
+
+if (!defined $::FORM{"initialqacontact"}) {
+    # May not be defined if we're not using this field.
+    $::FORM{'initialqacontact'} = "";
+}
 my $initialqacontact = trim($::FORM{"initialqacontact"});
 
 if ($component eq "") {
