@@ -20,10 +20,10 @@
 function go( msg )
 {
 	parent.parent.globals.debug( "compwrap go" );
-	parent.parent.globals.debug( compare.ispRadio );
 	
 	if ( compare.ispRadio != null && compare.ispRadio != "" )
 	{
+		parent.parent.globals.debug( compare.ispRadio );
 		parent.parent.globals.selectedISP = compare.ispRadio;
 		return true;
 	}
