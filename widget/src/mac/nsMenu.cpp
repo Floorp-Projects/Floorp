@@ -1030,7 +1030,8 @@ NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
   // Otherwise we're working with a single "golden child" menu shared by all hierarchicals
   // so if we touch it, it will affect the display of every other hierarchical spawnded from
   // this menu (which would be bad).
-  if ( gCurrentMenuDepth < 2 ) {
+  if ( gCurrentMenuDepth < 2 &&
+       (mMacMenuID > 5 || mMacMenuID < 2)) {
     if ( aIsEnabled )
       ::EnableMenuItem(mMacMenuHandle, 0);
     else
