@@ -89,6 +89,7 @@ pref("browser.display.focus_ring_width",     1);
 pref("browser.display.focus_ring_on_anything", false);
 
 pref("browser.new_find", true);  // temporary
+pref("editor.new_find", false);  // temporary
 
 pref("browser.urlbar.autoFill", false);
 pref("browser.urlbar.showPopup", true);
