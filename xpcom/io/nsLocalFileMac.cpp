@@ -1210,6 +1210,8 @@ NS_IMETHODIMP
 nsLocalFile::SetLeafName(const char * aLeafName)
 {
 	NS_ENSURE_ARG_POINTER(aLeafName);
+
+  MakeDirty();
 	
 	switch (mInitType)
 	{
@@ -1669,7 +1671,10 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 		case eInitWithFSSpec:
 		{
 			rv = ResolveAndStat(PR_TRUE);
-			if (NS_FAILED(rv)) return rv;
+
+      //if the file does not exist, does not mean that the parent does not.
+			if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
+          return rv;
  
 			FSSpec      parentFolderSpec;		  
 			CInfoPBRec 	pBlock = {0};

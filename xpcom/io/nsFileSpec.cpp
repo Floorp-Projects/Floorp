@@ -679,9 +679,7 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
 #ifdef XP_PC
-    if (!mPath.IsEmpty()) {
-        NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
-    }
+    NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 }
@@ -1148,7 +1146,7 @@ void nsFileSpec::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.AssignWithConversion("ISO-8859-1");
+		  aCharset.Assign("ISO-8859-1");
   }
   fileSystemCharset = aCharset;
 }
@@ -1200,7 +1198,7 @@ void nsFileSpec::GetNativePathString(nsString &nativePathString)
 {
   const char *path = GetCString();
   if (nsnull == path) {
-    nativePathString.SetLength(0);
+    nativePathString.Assign("");
     return;
   }
   else {
@@ -1210,7 +1208,7 @@ void nsFileSpec::GetNativePathString(nsString &nativePathString)
       delete [] converted;
     }
     else
-      nativePathString.AssignWithConversion(path);
+      nativePathString.Assign(path);
   }
 }
  
@@ -1221,7 +1219,7 @@ void nsFileSpec::GetLeafName(nsString &nativePathString)
 {
   char * path = GetLeafName();
   if (nsnull == path) {
-    nativePathString.SetLength(0);
+    nativePathString.Assign("");
     return;
   } else {
     PRUnichar *converted = ConvertFromFileSystemCharset(path);
@@ -1230,7 +1228,7 @@ void nsFileSpec::GetLeafName(nsString &nativePathString)
       delete [] converted;
     }
     else
-      nativePathString.AssignWithConversion(path);
+      nativePathString.Assign(path);
 
     nsCRT::free(path);
   }
@@ -1389,3 +1387,35 @@ nsNSPRPath::~nsNSPRPath()
         nsCRT::free(modifiedNSPRPath);
 #endif
 }
+
+
+nsresult 
+NS_FileSpecToIFile(nsFileSpec* fileSpec, nsILocalFile* *result)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_PROGID));
+
+    if (!file) return NS_ERROR_FAILURE;
+
+#if defined(XP_MAC) || defined(RHAPSODY)
+    {
+        FSSpec spec  = fileSpec->GetFSSpec();
+        nsCOMPtr<nsILocalFileMac> psmAppMacFile = do_QueryInterface(file, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = psmAppMacFile->InitWithFSSpec(&spec);
+        if (NS_FAILED(rv)) return rv;
+        file = do_QueryInterface(psmAppMacFile, &rv);
+    }
+#else
+    rv = file->InitWithPath(fileSpec->GetNativePathCString());
+#endif
+    if (NS_FAILED(rv)) return rv;
+
+    *result = file;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+
+
