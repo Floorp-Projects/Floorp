@@ -2047,7 +2047,8 @@ NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
           return folder->SetBiffState(aBiffState);
       }
 
-      server->SetBiffState(aBiffState);
+      if (server)
+        server->SetBiffState(aBiffState);
       nsCOMPtr<nsISupports> supports;
       if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
         NotifyPropertyFlagChanged(supports, kBiffStateAtom, oldBiffState, aBiffState);
