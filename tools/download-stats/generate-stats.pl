@@ -7,6 +7,10 @@ use strict;
 
 my $VERBOSE = 1;
 
+use Getopt::Long;
+my $VERBOSE = 0;
+GetOptions("verbose" => \$VERBOSE);
+
 # Establish a database connection.
 my $dsn = "DBI:mysql:host=mecha.mozilla.org;database=downloadstats;port=3306";
 my $dbh = DBI->connect($dsn,
