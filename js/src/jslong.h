@@ -76,7 +76,7 @@ extern JS_PUBLIC_API(JSInt64) JSLL_Zero(void);
 
 #if JS_BYTES_PER_LONG == 8
 #define JSLL_INIT(hi, lo)  ((hi ## L << 32) + lo ## L)
-#elif defined(WIN32) || defined(WIN16)
+#elif (defined(WIN32) || defined(WIN16)) && !defined(__GNUC__)
 #define JSLL_INIT(hi, lo)  ((hi ## i64 << 32) + lo ## i64)
 #else
 #define JSLL_INIT(hi, lo)  ((hi ## LL << 32) + lo ## LL)
