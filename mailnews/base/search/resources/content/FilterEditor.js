@@ -125,7 +125,9 @@ function initializeDialog(filter)
 
     var scope = getScope(filter);
     setSearchScope(scope);
-    initializeSearchRows(scope, filter.searchTerms)
+    initializeSearchRows(scope, filter.searchTerms);
+	if (filter.searchTerms.Count() > 1)
+		gSearchLessButton.removeAttribute("disabled", "false");
 }
 
 
