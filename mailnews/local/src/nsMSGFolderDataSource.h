@@ -97,12 +97,13 @@ public:
 
   NS_IMETHOD Flush();
 
-  NS_IMETHOD IsCommandEnabled(const char* aCommand,
-                              nsIRDFResource* aCommandTarget,
-                              PRBool* aResult);
+  NS_IMETHOD GetEnabledCommands(nsISupportsArray* aSources,
+                                nsISupportsArray* aArguments,
+                                nsIEnumerator**   aResult);
 
-  NS_IMETHOD DoCommand(const char* aCommand,
-                       nsIRDFResource* aCommandTarget);
+  NS_IMETHOD DoCommand(nsISupportsArray* aSources,
+                       nsIRDFResource*   aCommand,
+                       nsISupportsArray* aArguments);
 
   NS_IMETHOD OnItemAdded(nsIFolder *parentFolder, nsISupports *item);
 
@@ -128,6 +129,10 @@ protected:
   static nsIRDFResource* kNC_Sender;
   static nsIRDFResource* kNC_Date;
 
+  // commands
+  static nsIRDFResource* kNC_Delete;
+  static nsIRDFResource* kNC_Reply;
+  static nsIRDFResource* kNC_Forward;
 
 };
 

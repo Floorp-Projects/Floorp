@@ -63,6 +63,11 @@ nsIRDFResource* nsMSGFolderDataSource::kNC_Subject;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Sender;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Date;
 
+// commands
+nsIRDFResource* nsMSGFolderDataSource::kNC_Delete;
+nsIRDFResource* nsMSGFolderDataSource::kNC_Reply;
+nsIRDFResource* nsMSGFolderDataSource::kNC_Forward;
+
 static const char kURINC_MSGFolderRoot[]  = "mailbox:/";
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
@@ -74,6 +79,10 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Date);
+
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Delete);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Reply);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Forward);
 
 ////////////////////////////////////////////////////////////////////////
 // The RDF service manager. Cached in the address book data source's
@@ -175,6 +184,10 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_Sender, refcnt);
   NS_RELEASE2(kNC_Date, refcnt);
 
+  NS_RELEASE2(kNC_Delete, refcnt);
+  NS_RELEASE2(kNC_Reply, refcnt);
+  NS_RELEASE2(kNC_Forward, refcnt);
+
   nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService); // XXX probably need shutdown listener here
   gRDFService = nsnull;
 }
@@ -228,6 +241,10 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
     gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
     gRDFService->GetResource(kURINC_Sender, &kNC_Sender);
     gRDFService->GetResource(kURINC_Date, &kNC_Date);
+
+    gRDFService->GetResource(kURINC_Delete, &kNC_Delete);
+    gRDFService->GetResource(kURINC_Reply, &kNC_Reply);
+    gRDFService->GetResource(kURINC_Forward, &kNC_Forward);
   }
 #if 0
   //create the folder for the root folder
@@ -401,7 +418,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
                                                 nsIRDFAssertionCursor** targets)
 {
   nsresult rv = NS_ERROR_FAILURE;
-
 
   nsIMsgFolder* folder;
   nsIMessage* message;
@@ -611,19 +627,103 @@ NS_IMETHODIMP nsMSGFolderDataSource::Flush()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMSGFolderDataSource::IsCommandEnabled(const char* aCommand,
-                                                      nsIRDFResource* aCommandTarget,
-                                                      PRBool* aResult)
+NS_IMETHODIMP
+nsMSGFolderDataSource::GetEnabledCommands(nsISupportsArray* aSources,
+                                          nsISupportsArray* aArguments,
+                                          nsIEnumerator**   aResult)
 {
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIEnumerator> commands;
+  PRBool haveFolderCmds = PR_FALSE;
+  PRBool haveMessageCmds = PR_FALSE;
+
+  PRUint32 cnt = aSources->Count();
+  for (PRUint32 i = 0; i < cnt; i++) {
+    nsISupports* source = (*aSources)[i];
+    nsIMsgFolder* folder;
+    nsIMessage* message;
+
+    nsISupportsArray* cmds;
+
+    if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
+      NS_RELEASE(folder);       // release now that we know it's a folder
+      if (!haveFolderCmds) {
+        rv = NS_NewISupportsArray(&cmds);
+        if (NS_FAILED(rv)) return rv;
+        cmds->AppendElement(kNC_Delete);
+        haveFolderCmds = PR_TRUE;
+      }
+    }
+    else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
+      NS_RELEASE(message);       // release now that we know it's a message
+      if (!haveMessageCmds) {
+        rv = NS_NewISupportsArray(&cmds);
+        if (NS_FAILED(rv)) return rv;
+        cmds->AppendElement(kNC_Delete);
+        cmds->AppendElement(kNC_Reply);
+        cmds->AppendElement(kNC_Forward);
+        haveMessageCmds = PR_TRUE;
+      }
+    }
+
+    if (cmds) {
+      nsIEnumerator* cmdEnum;
+      rv = cmds->Enumerate(&cmdEnum);
+      if (NS_FAILED(rv)) return rv;
+
+      if (commands == nsnull)
+        commands = dont_QueryInterface(cmdEnum);
+      else {
+        nsIEnumerator* unionCmds;
+        rv = NS_NewUnionEnumerator(commands, cmdEnum, &unionCmds);
+        if (NS_FAILED(rv)) return rv;
+        commands = dont_QueryInterface(unionCmds);
+      }
+    }
+  }
+
+  *aResult = commands;
+  return rv;
 }
 
-NS_IMETHODIMP nsMSGFolderDataSource::DoCommand(const char* aCommand,
-                         nsIRDFResource* aCommandTarget)
+NS_IMETHODIMP
+nsMSGFolderDataSource::DoCommand(nsISupportsArray* aSources,
+                                 nsIRDFResource*   aCommand,
+                                 nsISupportsArray* aArguments)
 {
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+
+  // XXX need to handle batching of command applied to all sources
+
+  PRUint32 cnt = aSources->Count();
+  for (PRUint32 i = 0; i < cnt; i++) {
+    nsISupports* source = (*aSources)[i];
+    nsIMsgFolder* folder;
+    nsIMessage* message;
+    if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
+
+      if (peq(aCommand, kNC_Delete)) {
+        // XXX delete folder
+      }
+
+      NS_RELEASE(folder);
+    }
+    else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
+
+      if (peq(aCommand, kNC_Delete)) {
+        // XXX delete message
+      }
+      else if (peq(aCommand, kNC_Reply)) {
+        // XXX reply to message
+      }
+      else if (peq(aCommand, kNC_Forward)) {
+        // XXX forward message
+      }
+
+      NS_RELEASE(message);
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMSGFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
