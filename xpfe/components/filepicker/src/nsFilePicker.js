@@ -55,11 +55,14 @@ const nsIDOMWindow          = Components.interfaces.nsIDOMWindow;
 const nsILocaleService      = Components.interfaces.nsILocaleService;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
 
-const bundle                = srGetStrBundle("chrome://global/locale/filepicker.properties");
+var   bundle                = null;
 var   lastDirectory         = null;
 
 function nsFilePicker()
 {
+  if (!bundle)
+    bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
+
   /* attributes */
   this.mDefaultString = "";
   if (lastDirectory) {
