@@ -153,4 +153,15 @@
 #define IDC_SITE_NAME           40402
 #define ID_EXIT                 40404
 
+#define VIEWER_PURIFY_SHOW_NEW_LEAKS            40910
+#define VIEWER_PURIFY_SHOW_ALL_LEAKS            40911
+#define VIEWER_PURIFY_CLEAR_ALL_LEAKS           40912
+#define VIEWER_PURIFY_SHOW_ALL_HANDLES_IN_USE   40913
+#define VIEWER_PURIFY_SHOW_NEW_IN_USE           40914
+#define VIEWER_PURIFY_SHOW_ALL_IN_USE           40915
+#define VIEWER_PURIFY_CLEAR_ALL_IN_USE          40916
+#define VIEWER_PURIFY_HEAP_VALIDATE             40917
+
 #endif /* resources_h___ */
+
+

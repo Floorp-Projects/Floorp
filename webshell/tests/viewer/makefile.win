@@ -28,6 +28,11 @@ RESFILE = viewer.res
 RCFLAGS=/d_DEBUG
 !endif
 
+# define PURIFY in your environment, and put pure.h and pure_api.c in this directory
+!ifdef PURIFY
+RCFLAGS=/dPURIFY
+LCFLAGS=-DPURIFY
+!endif
 
 OBJS =                                      \
 	.\$(OBJDIR)\nsBaseDialog.obj     \
@@ -44,6 +49,9 @@ OBJS =                                      \
 	.\$(OBJDIR)\nsWebCrawler.obj        \
 	.\$(OBJDIR)\nsWinMain.obj           \
 	.\$(OBJDIR)\JSConsole.obj           \
+!ifdef PURIFY
+	.\$(OBJDIR)\pure_api.obj            \
+!endif
 	$(NULL)
 
 LINCS=  \
