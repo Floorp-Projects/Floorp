@@ -79,6 +79,8 @@ install:: $(DLL)
 	$(MAKE_INSTALL) navigator.xul $(DISTRES)
 	$(MAKE_INSTALL) navigator.js $(DISTRES)
 	$(MAKE_INSTALL) viewSource.xul $(DISTRES)
+	$(MAKE_INSTALL) openLocation.js $(DISTRES)
+	$(MAKE_INSTALL) openLocation.xul $(DISTRES)
 	$(MAKE_INSTALL) viewsource.js $(DISTRES)
 	$(MAKE_INSTALL) unknownContent.xul $(DISTRES)
 	$(MAKE_INSTALL) NetSupportUserPassword.xul $(DISTRES)
@@ -103,6 +105,8 @@ clobber::
 	rm -f $(DISTRES)\navigator.xul
 	rm -f $(DISTRES)\viewSource.xul
     rm -f $(DISTRES)\viewsource.js
+	rm -f $(DISTRES)\openLocation.xul
+    rm -f $(DISTRES)\openLocation.js
 	rm -f $(DISTRES)\unknownContent.xul
 	rm -f $(DISTRES)\downloadProgress.xul
 	rm -f $(DISTRES)\downloadProgress.css
