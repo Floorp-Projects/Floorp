@@ -656,10 +656,13 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
 
 function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, displayName, useShortView)
 {
-  if (useShortView && displayName)
-    emailAddressNode.setAttribute("label", displayName);  
-  else
-    emailAddressNode.setAttribute("label", fullAddress);    
+  if (useShortView && displayName) {
+    emailAddressNode.setAttribute("label", displayName);
+    emailAddressNode.setAttribute("tooltiptext", emailAddress);
+  } else {
+    emailAddressNode.setAttribute("label", fullAddress);
+    emailAddressNode.removeAttribute("tooltiptext");
+  }
   emailAddressNode.setTextAttribute("emailAddress", emailAddress);
   emailAddressNode.setTextAttribute("fullAddress", fullAddress);  
   emailAddressNode.setTextAttribute("displayName", displayName);  
