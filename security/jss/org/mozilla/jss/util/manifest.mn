@@ -51,6 +51,7 @@ PRIVATE_EXPORTS =   jssutil.h               \
 CSRCS =     jssutil.c                    \
             jssver.c                     \
             errstrings.c                 \
+            NativeErrcodes.c            \
             $(NULL)
 
 LIBRARY_NAME = jssutil

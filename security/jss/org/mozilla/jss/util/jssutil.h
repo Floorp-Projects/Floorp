@@ -278,6 +278,30 @@ JSS_throwMsgPrErrArg(JNIEnv *env, char *throwableClassName, char *message,
 #define JSS_throwMsgPrErr(e, cn, m) \
     JSS_throwMsgPrErrArg((e), (cn), (m), PR_GetError())
 
+/************************************************************************
+**
+** J S S _ i n i t E r r c o d e T r a n s l a t i o n T a b l e.
+**
+** Initializes the error code translation table. This should be called
+** by CryptoManager.initialize(), and must be called before any calls to
+** JSS_ConvertNativeErrcodeToJava.
+**
+*/
+void JSS_initErrcodeTranslationTable();
+
+/************************************************************************
+**
+** J S S _ C o n v e r t N a t i v e E r r c o d e T o J a v a
+**
+** Converts an NSPR or NSS error code to a Java error code.
+** (defined in the class o.m.util.NativeErrcodes)
+**
+** Returns
+**  The Java error code, or -1 if a corresponding Java error code could
+**  not be found.
+*/
+int JSS_ConvertNativeErrcodeToJava(int nativeErrcode);
+
 PR_END_EXTERN_C
 
 #endif

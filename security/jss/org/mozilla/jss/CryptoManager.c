@@ -330,6 +330,11 @@ Java_org_mozilla_jss_CryptoManager_initializeAllNative2
     }
 
     /*
+     * Initialize the errcode translation table.
+     */
+    JSS_initErrcodeTranslationTable();
+
+    /*
      * The rest of the initialization (the NSS stuff) is skipped if
      * the initializeJavaOnly flag is set.
      */

@@ -131,4 +131,7 @@ JSS_SSL_processExceptions(JNIEnv *env, PRFilePrivate *priv);
         JSS_SSL_processExceptions(env, sock->jsockPriv); \
     }
 
+
+void JSSL_throwSSLSocketException(JNIEnv *env, char *message);
+
 #endif
