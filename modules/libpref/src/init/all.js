@@ -175,6 +175,7 @@ pref("browser.forms.submit.backwards_compatible", true);
 
 // Tab browser preferences.
 pref("browser.tabs.autoHide", true);
+pref("browser.tabs.forceHide", false);
 pref("browser.tabs.loadInBackground", false);
 pref("browser.tabs.opentabfor.middleclick", false);
 pref("browser.tabs.opentabfor.urlbar", false);

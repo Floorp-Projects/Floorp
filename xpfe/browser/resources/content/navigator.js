@@ -104,8 +104,10 @@ const gTabStripPrefListener =
       return;
 
     var stripVisibility = !pref.getBoolPref(prefName);
-    if (gBrowser.mTabContainer.childNodes.length == 1)
+    if (gBrowser.mTabContainer.childNodes.length == 1) {
       gBrowser.setStripVisibilityTo(stripVisibility);
+      pref.setBoolPref("browser.tabs.forceHide", false);
+    }
   }
 };
 
@@ -1703,29 +1705,45 @@ function updateComponentBarBroadcaster()
 
 function updateToolbarStates(toolbarMenuElt)
 {
-  if (gHaveUpdatedToolbarState) {
-    updateComponentBarBroadcaster();
-    return;
-  }
-  var mainWindow = document.getElementById("main-window");
-  if (mainWindow.hasAttribute("chromehidden")) {
-    gHaveUpdatedToolbarState = true;
-    var i;
-    for (i = 0; i < toolbarMenuElt.childNodes.length; ++i)
-      document.getElementById(toolbarMenuElt.childNodes[i].getAttribute("observes")).removeAttribute("checked");
-    var toolbars = document.getElementsByTagName("toolbar");
-    for (i = 0; i < toolbars.length; ++i) {
-      if (toolbars[i].getAttribute("class").indexOf("chromeclass") != -1)
-        toolbars[i].setAttribute("hidden", "true");
+  if (!gHaveUpdatedToolbarState) {
+    var mainWindow = document.getElementById("main-window");
+    if (mainWindow.hasAttribute("chromehidden")) {
+      gHaveUpdatedToolbarState = true;
+      var i;
+      for (i = 0; i < toolbarMenuElt.childNodes.length; ++i)
+        document.getElementById(toolbarMenuElt.childNodes[i].getAttribute("observes")).removeAttribute("checked");
+      var toolbars = document.getElementsByTagName("toolbar");
+      for (i = 0; i < toolbars.length; ++i) {
+        if (toolbars[i].getAttribute("class").indexOf("chromeclass") != -1)
+          toolbars[i].setAttribute("hidden", "true");
+      }
+      var statusbars = document.getElementsByTagName("statusbar");
+      for (i = 0; i < statusbars.length; ++i) {
+        if (statusbars[i].getAttribute("class").indexOf("chromeclass") != -1)
+          statusbars[i].setAttribute("hidden", "true");
+      }
+      mainWindow.removeAttribute("chromehidden");
     }
-    var statusbars = document.getElementsByTagName("statusbar");
-    for (i = 0; i < statusbars.length; ++i) {
-      if (statusbars[i].getAttribute("class").indexOf("chromeclass") != -1)
-        statusbars[i].setAttribute("hidden", "true");
-    }
-    mainWindow.removeAttribute("chromehidden");
   }
   updateComponentBarBroadcaster();
+
+  const tabbarMenuItem = document.getElementById("menuitem_showhide_tabbar");
+  // Make show/hide menu item reflect current state
+  const visibility = gBrowser.getStripVisibility();
+  tabbarMenuItem.setAttribute("checked", visibility);
+
+  // Don't allow the tab bar to be shown/hidden when more than one tab is open
+  // or when we have 1 tab and the autoHide pref is set
+  const disabled = gBrowser.browsers.length > 1 ||
+                   pref.getBoolPref("browser.tabs.autoHide");
+  tabbarMenuItem.setAttribute("disabled", disabled);
+}
+
+function showHideTabbar()
+{
+  const visibility = gBrowser.getStripVisibility();
+  pref.setBoolPref("browser.tabs.forceHide", visibility);
+  gBrowser.setStripVisibilityTo(!visibility);
 }
 
 // Fill in tooltips for personal toolbar
