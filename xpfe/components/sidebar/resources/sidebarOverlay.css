@@ -105,7 +105,7 @@
 
 #sidebar-panels {
     min-width: 1px;
-    min-height: 1px;
+    min-height: 10px;
     margin-top: 1px;
 }
 
@@ -119,6 +119,7 @@
 
 .iframe-panel {
     min-width: 1px;
+    min-height: 1px;
 }
 
 /*
@@ -139,6 +140,7 @@ sidebarheader[type="splitter"] {
     border: 0px !important;
     padding-left: 4px;
     min-width: 1px;
+    min-height: 1px;
 }
 .sidebarheader-main > text {
     font-weight: bold;
