@@ -407,10 +407,10 @@ function con_iscope ()
         return false;
     }
     
-    if (console.frames[console.currentFrameIndex].scope.propertyCount == 0)
+    if (getCurrentFrame().scope.propertyCount == 0)
         display (getMsg (MSN_NO_PROPERTIES, MSG_WORD_SCOPE + " 0"));
     else
-        displayProperties (console.frames[console.currentFrameIndex].scope);
+        displayProperties (getCurrentFrame().scope);
     
     return true;
 }
