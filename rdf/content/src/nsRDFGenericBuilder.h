@@ -39,6 +39,7 @@ class nsIContent;
 class nsIRDFNode;
 class nsIAtom;
 class nsIRDFService;
+class nsIHTMLElementFactory;
 
 class RDFGenericBuilderImpl : public nsIRDFContentModelBuilder,
                               public nsIRDFObserver,
@@ -241,9 +242,10 @@ protected:
 
     // pseudo-constants
     static nsrefcnt gRefCnt;
-    static nsIRDFService*        gRDFService;
-    static nsIRDFContainerUtils* gRDFContainerUtils;
-    static nsINameSpaceManager* gNameSpaceManager;
+    static nsIRDFService*         gRDFService;
+    static nsIRDFContainerUtils*  gRDFContainerUtils;
+    static nsINameSpaceManager*   gNameSpaceManager;
+    static nsIHTMLElementFactory* gHTMLElementFactory;
 
     static nsIAtom* kContainerAtom;
     static nsIAtom* kLazyContentAtom;
