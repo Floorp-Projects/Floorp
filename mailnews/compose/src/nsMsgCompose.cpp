@@ -2324,8 +2324,9 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       {
         if (!fieldsFCC.IsEmpty())
         {
-          if (fieldsFCC.Equals(NS_LITERAL_STRING("nocopy://"),
-                               nsCaseInsensitiveStringComparator()))
+          if (Compare(nsDependentString(fieldsFCC),
+                      NS_LITERAL_STRING("nocopy://"),
+                      nsCaseInsensitiveStringComparator()) == 0)
           {
             compose->NotifyStateListeners(eComposeProcessDone, NS_OK);
             if (progress)
@@ -3800,8 +3801,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
           if (NS_SUCCEEDED(pItem->GetNodeValue(typeValue)))
           {
             typeValue.StripChars("\"");
-            if (typeValue.Equals(NS_LITERAL_STRING("cite"),
-                                 nsCaseInsensitiveStringComparator()))
+            if (!Compare(typeValue, NS_LITERAL_STRING("cite"), nsCaseInsensitiveStringComparator()))
               *_retval = nsIMsgCompConvertible::Plain;
           }
         }

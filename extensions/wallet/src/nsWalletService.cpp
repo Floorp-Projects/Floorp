@@ -429,7 +429,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                         nsAutoString type;
                         rv = inputElement->GetType(type);
                         if (NS_SUCCEEDED(rv)) {
-                          if (type.Equals(NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator())) {
+                          if (Compare(type, NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator()) == 0) {
                             passwordCount++;
                           }
                         }
@@ -449,11 +449,8 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                         nsAutoString type;
                         rv = inputElement->GetType(type);
                         if (NS_SUCCEEDED(rv)) {
-                          if (type.IsEmpty() ||
-                              type.Equals(NS_LITERAL_STRING("text"),
-                                          nsCaseInsensitiveStringComparator()) ||
-                              type.Equals(NS_LITERAL_STRING("password"),
-                                          nsCaseInsensitiveStringComparator())) {
+                          if ((type.IsEmpty()) || (Compare(type, NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()) == 0) ||
+                            (Compare(type, NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator()) == 0)) {
                             nsAutoString field;
                             rv = inputElement->GetName(field);
                             if (NS_SUCCEEDED(rv)) {

@@ -2816,20 +2816,15 @@ nsAbSync::GetTypeOfPhoneNumber(nsString tagName)
         continue;
       
       phoneType.Cut(0, loc+1);
-      if (phoneType.Equals(NS_LITERAL_STRING(ABSYNC_HOME_PHONE_TYPE),
-                           nsCaseInsensitiveStringComparator()))
+      if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_HOME_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_HOME_PHONE_ID;
-      else if (phoneType.Equals(NS_LITERAL_STRING(ABSYNC_WORK_PHONE_TYPE),
-                                nsCaseInsensitiveStringComparator()))
+      else if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_WORK_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_WORK_PHONE_ID;
-      else if (phoneType.Equals(NS_LITERAL_STRING(ABSYNC_FAX_PHONE_TYPE),
-                                nsCaseInsensitiveStringComparator()))
+      else if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_FAX_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_FAX_PHONE_ID;
-      else if (phoneType.Equals(NS_LITERAL_STRING(ABSYNC_PAGER_PHONE_TYPE),
-                                nsCaseInsensitiveStringComparator()))
+      else if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_PAGER_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_PAGER_PHONE_ID;
-      else if (phoneType.Equals(NS_LITERAL_STRING(ABSYNC_CELL_PHONE_TYPE),
-                                nsCaseInsensitiveStringComparator()))
+      else if (!Compare(phoneType, NS_LITERAL_STRING(ABSYNC_CELL_PHONE_TYPE), nsCaseInsensitiveStringComparator()))
         return ABSYNC_CELL_PHONE_ID;
     }
   }
@@ -2919,8 +2914,7 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
     PR_FREEIF(tValue);
   }
 
-  if (Substring(*aTagName, 0, 5).Equals(NS_LITERAL_STRING("phone"),
-                                        nsCaseInsensitiveStringComparator()))
+  if (!Compare(Substring(*aTagName, 0, 5), NS_LITERAL_STRING("phone"), nsCaseInsensitiveStringComparator()))
   {
     nsString      tempVal;
     tempVal.Append(*aTagName +

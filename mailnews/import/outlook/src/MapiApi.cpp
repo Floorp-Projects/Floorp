@@ -306,25 +306,24 @@ CGetStoreFoldersIter::CGetStoreFoldersIter( CMapiApi *pApi, CMapiFolderList& fol
 BOOL CGetStoreFoldersIter::ExcludeFolderClass( const PRUnichar *pName)
 {
 	BOOL bResult;
-    nsDependentString pNameStr(pName);
 	if (m_isMail) {
 		bResult = FALSE;
-        if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Appointment")))
+        if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.Appointment")))
 			bResult = TRUE;
-		else if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Contact")))
+		else if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.Contact")))
 			bResult = TRUE;
-		else if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Journal")))
+		else if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.Journal")))
 			bResult = TRUE;
-        else if (pNameStr.Equals(NS_LITERAL_STRING("IPF.StickyNote")))
+        else if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.StickyNote")))
 			bResult = TRUE;
-		else if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Task")))
+		else if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.Task")))
 			bResult = TRUE;
 		// else if (!stricmp( pName, "IPF.Note"))
 		//	bResult = TRUE;
 	}
 	else {
 		bResult = TRUE;
-		if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Contact")))
+		if (!Compare( nsDependentString(pName), NS_LITERAL_STRING("IPF.Contact")))
 			bResult = FALSE;
 	}
 

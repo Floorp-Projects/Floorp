@@ -938,9 +938,8 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 
 			rv = folder->GetName(getter_Copies(folderName));
 			// case-insensitive compare is probably LCD across OS filesystems
-			if (NS_SUCCEEDED(rv) &&
-          folderName.Equals(uniName,
-                            nsCaseInsensitiveStringComparator()))
+			if (NS_SUCCEEDED(rv) && Compare(folderName, uniName,
+                                      nsCaseInsensitiveStringComparator()) == 0)
 			{
 				*aChild = folder;
 				NS_ADDREF(*aChild);

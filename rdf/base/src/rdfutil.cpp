@@ -92,8 +92,8 @@ rdf_RequiresAbsoluteURI(const nsString& uri)
     // cheap shot at figuring out if this requires an absolute url translation
     if (Substring(uri, 0, 4).Equals(NS_LITERAL_STRING("urn:")) ||
         Substring(uri, 0, 9).Equals(NS_LITERAL_STRING("chrome:")) ||
-        Substring(uri, 0, 3).Equals(NS_LITERAL_STRING("nc:"),
-                                    nsCaseInsensitiveStringComparator())) {
+        !Compare(Substring(uri, 0, 3), NS_LITERAL_STRING("nc:"),
+                 nsCaseInsensitiveStringComparator())) {
         return PR_FALSE;
      }
      return PR_TRUE;

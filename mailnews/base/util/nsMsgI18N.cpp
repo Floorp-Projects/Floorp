@@ -438,8 +438,7 @@ PRBool nsMsgI18Nmultibyte_charset(const char *charset)
     if (NS_SUCCEEDED(res)) {
       res = ccm2->GetCharsetData2(charsetAtom, NS_LITERAL_STRING(".isMultibyte").get(), &charsetData);
       if (NS_SUCCEEDED(res)) {
-        result = charsetData.Equals(NS_LITERAL_STRING("true"),
-                                    nsCaseInsensitiveStringComparator());
+        result = !Compare(charsetData, NS_LITERAL_STRING("true"), nsCaseInsensitiveStringComparator());
       }
     }
   }

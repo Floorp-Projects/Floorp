@@ -94,8 +94,8 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                      const PRUnichar* nameArray[], 
                      const PRUnichar* valueArray[])
 {
-    if(!nsDependentString(aTag).Equals(NS_LITERAL_STRING("?XML"),
-                                       nsCaseInsensitiveStringComparator())) 
+    if(0 != Compare(nsDependentString(aTag), NS_LITERAL_STRING("?XML"),
+                    nsCaseInsensitiveStringComparator())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
@@ -143,8 +143,8 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
          } else if(0==nsCRT::strcmp(nameArray[i], NS_LITERAL_STRING("charsetSource").get())) {
            bGotCurrentCharsetSource = PR_TRUE;
            charsetSourceStr = valueArray[i];
-         } else if(nsDependentString(nameArray[i]).Equals(NS_LITERAL_STRING("encoding"),
-                                                          nsCaseInsensitiveStringComparator())) { 
+         } else if(0==Compare(nsDependentString(nameArray[i]), NS_LITERAL_STRING("encoding"),
+                              nsCaseInsensitiveStringComparator())) { 
            bGotEncoding = PR_TRUE;
            encoding = valueArray[i];
          }

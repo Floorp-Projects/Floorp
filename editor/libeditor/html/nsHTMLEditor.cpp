@@ -2461,7 +2461,7 @@ nsHTMLEditor::RemoveList(const nsAReadableString& aListType)
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveList);
-  if (aListType.Equals(NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()))
+  if (!Compare(aListType,NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()))
     ruleInfo.bOrdered = PR_TRUE;
   else  ruleInfo.bOrdered = PR_FALSE;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -2584,7 +2584,7 @@ nsHTMLEditor::Indent(const nsAReadableString& aIndent)
   PRBool cancel, handled;
   PRInt32 theAction = nsTextEditRules::kIndent;
   PRInt32 opID = kOpIndent;
-  if (aIndent.Equals(NS_LITERAL_STRING("outdent"),nsCaseInsensitiveStringComparator()))
+  if (!Compare(aIndent,NS_LITERAL_STRING("outdent"),nsCaseInsensitiveStringComparator()))
   {
     theAction = nsTextEditRules::kOutdent;
     opID = kOpOutdent;
@@ -3571,8 +3571,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
           {
             nsAutoString href;
             if (NS_SUCCEEDED(anchor->GetHref(href)))
-              if (Substring(href, 0, 5).Equals(NS_LITERAL_STRING("file:"),
-                                               nsCaseInsensitiveStringComparator()))
+              if (Compare(Substring(href, 0, 5), NS_LITERAL_STRING("file:"), nsCaseInsensitiveStringComparator()) == 0)
                 (*aNodeList)->AppendElement(node);
           }
         }
@@ -3864,20 +3863,20 @@ PRBool
 nsHTMLEditor::TagCanContainTag(const nsAReadableString& aParentTag, const nsAReadableString& aChildTag)  
 {
   // COtherDTD gives some unwanted results.  We override them here.
-  if (aParentTag.Equals(NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
-      aParentTag.Equals(NS_LITERAL_STRING("ul"),nsCaseInsensitiveStringComparator()))
+  if (!Compare(aParentTag,NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
+    !Compare(aParentTag,NS_LITERAL_STRING("ul"),nsCaseInsensitiveStringComparator()))
   {
     // if parent is a list and tag is also a list, say "yes".
     // This is because the editor does sublists illegally for now. 
-      if (aChildTag.Equals(NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
-          aChildTag.Equals(NS_LITERAL_STRING("ul"),nsCaseInsensitiveStringComparator()))
+      if (!Compare(aChildTag,NS_LITERAL_STRING("ol"),nsCaseInsensitiveStringComparator()) ||
+        !Compare(aChildTag,NS_LITERAL_STRING("ul"),nsCaseInsensitiveStringComparator()))
       return PR_TRUE;
   }
 
-  if (aParentTag.Equals(NS_LITERAL_STRING("li"),nsCaseInsensitiveStringComparator()))
+  if (!Compare(aParentTag,NS_LITERAL_STRING("li"),nsCaseInsensitiveStringComparator()))
   {
     // list items cant contain list items
-    if (aChildTag.Equals(NS_LITERAL_STRING("li"),nsCaseInsensitiveStringComparator()))
+    if (!Compare(aChildTag,NS_LITERAL_STRING("li"),nsCaseInsensitiveStringComparator()))
       return PR_FALSE;
   }
 

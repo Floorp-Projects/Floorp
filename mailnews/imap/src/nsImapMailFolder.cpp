@@ -710,12 +710,12 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsI
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!folderName) return rv;
 
-    if ( nsDependentString(folderName).Equals(NS_LITERAL_STRING("Trash"),nsCaseInsensitiveStringComparator()) )   // Trash , a special folder
+    if ( Compare(nsDependentString(folderName),NS_LITERAL_STRING("Trash"),nsCaseInsensitiveStringComparator()) == 0 )   // Trash , a special folder
     {
         AlertSpecialFolderExists(msgWindow);
         return NS_MSG_FOLDER_EXISTS;
     }
-    else if ( nsDependentString(folderName).Equals(NS_LITERAL_STRING("Inbox"),nsCaseInsensitiveStringComparator()) )  // Inbox, a special folder
+    else if ( Compare(nsDependentString(folderName),NS_LITERAL_STRING("Inbox"),nsCaseInsensitiveStringComparator()) == 0 )  // Inbox, a special folder
     {
         AlertSpecialFolderExists(msgWindow);
         return NS_MSG_FOLDER_EXISTS;
@@ -3923,8 +3923,9 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
         {
           nsXPIDLString folderName;
           GetName(getter_Copies(folderName));
-          if (Substring(folderName,0,convertedName.Length()).Equals(convertedName,
-                                                                    nsCaseInsensitiveStringComparator()))
+          if (!Compare(Substring(folderName,0,convertedName.Length()),
+                       convertedName,
+                       nsCaseInsensitiveStringComparator()))
             showDeleted = PR_TRUE;
         }
       }

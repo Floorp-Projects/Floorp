@@ -304,10 +304,8 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
   //
   // If the buffer begins with a mailbox delimiter then it is not HTML
   //
-  else if (Substring(str, 0, 5).Equals(NS_LITERAL_CSTRING("From "),
-                                       nsCaseInsensitiveCStringComparator()) ||
-           Substring(str, 0, 6).Equals(NS_LITERAL_CSTRING(">From "),
-                                       nsCaseInsensitiveCStringComparator())) {
+  else if (!Compare(Substring(str, 0, 5), NS_LITERAL_CSTRING("From "), nsCaseInsensitiveCStringComparator()) || 
+           !Compare(Substring(str, 0, 6), NS_LITERAL_CSTRING(">From "), nsCaseInsensitiveCStringComparator())) {
     mContentType = TEXT_PLAIN;
   }
   //

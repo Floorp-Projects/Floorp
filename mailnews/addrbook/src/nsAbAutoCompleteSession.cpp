@@ -100,8 +100,8 @@ PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCom
                         rv = resultItem->GetValue(valueStr);
                         if (NS_SUCCEEDED(rv) && !valueStr.IsEmpty())
                         {
-                          if (nsDependentString(fullAddrStr).Equals(valueStr,
-                                                                    nsCaseInsensitiveStringComparator()))
+                          if (Compare(nsDependentString(fullAddrStr), valueStr,
+                                      nsCaseInsensitiveStringComparator())==0)
                             return PR_TRUE;
                         }
                     }
@@ -266,9 +266,9 @@ static PRBool CommonPrefix(const PRUnichar *aString, const PRUnichar *aSubstr, P
   if (!aSubstrLen || (nsCRT::strlen(aString) < NS_STATIC_CAST(PRUint32, aSubstrLen)))
     return PR_FALSE;
 
-  return (Substring(aString,
-                    aString+aSubstrLen).Equals(Substring(aSubstr, aSubstr+aSubstrLen),
-                                               nsCaseInsensitiveStringComparator()));
+  return (Compare(Substring(aString, aString+aSubstrLen),
+                  Substring(aSubstr, aSubstr+aSubstrLen),
+                  nsCaseInsensitiveStringComparator()) == 0);
 }
 
 
@@ -295,48 +295,46 @@ nsAbAutoCompleteSession::CheckEntry(nsAbAutoCompleteSearchString* searchStr,
     fullStringLen = searchStr->mFullStringLen;
   }
 
-  nsDependentString fullStringStr(fullString, fullStringLen);
-  
   // First check for a Nickname exact match
-  if (nickName &&
-      fullStringStr.Equals(nsDependentString(nickName),
-                           nsCaseInsensitiveStringComparator()))
+  if (nickName && Compare(nsDependentString(fullString),
+                          nsDependentString(nickName),
+                          nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = NICKNAME_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a display Name exact match
-  if (displayName &&
-      fullStringStr.Equals(nsDependentString(displayName),
-                           nsCaseInsensitiveStringComparator()))
+  if (displayName && Compare(nsDependentString(fullString),
+                             nsDependentString(displayName),
+                             nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = NAME_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a fisrt Name exact match
-  if (firstName &&
-      fullStringStr.Equals(nsDependentString(firstName),
-                           nsCaseInsensitiveStringComparator()))
+  if (firstName && Compare(nsDependentString(fullString),
+                           nsDependentString(firstName),
+                           nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = NAME_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a last Name exact match
-  if (lastName &&
-      fullStringStr.Equals(nsDependentString(lastName),
-                           nsCaseInsensitiveStringComparator()))
+  if (lastName && Compare(nsDependentString(fullString),
+                          nsDependentString(lastName),
+                          nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = NAME_EXACT_MATCH;
     return PR_TRUE;
   }
 
   // Then check for a Email exact match
-  if (emailAddress &&
-      fullStringStr.Equals(nsDependentString(emailAddress),
-                           nsCaseInsensitiveStringComparator()))
+  if (emailAddress && Compare(nsDependentString(fullString),
+                              nsDependentString(emailAddress),
+                              nsCaseInsensitiveStringComparator()) == 0)
   {
     *matchType = EMAIL_EXACT_MATCH;
     return PR_TRUE;
