@@ -129,7 +129,7 @@ private:
 
 public:
   nsXBLJSClass(const nsCString& aClassName);
-  ~nsXBLJSClass() { nsMemory::Free(name); }
+  ~nsXBLJSClass() { nsMemory::Free((void*) name); }
 
   nsrefcnt Hold() { return ++mRefCnt; }
   nsrefcnt Drop() { return --mRefCnt ? mRefCnt : Destroy(); }

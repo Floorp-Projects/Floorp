@@ -1283,7 +1283,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
         (nsXBLService::gClassTable)->Remove(&oldKey);
 
         // Change the class name and we're done.
-        nsMemory::Free(c->name);
+        nsMemory::Free((void*) c->name);
         c->name = nsXPIDLCString::Copy(aClassName);
       }
 
