@@ -28,6 +28,7 @@ IS_COMPONENT = 1
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS =			  \
+	nsDirectoryIndexStream.cpp\
         nsFileChannel.cpp	  \
         nsFileProtocolHandler.cpp \
         nsFileProtocolFactory.cpp \

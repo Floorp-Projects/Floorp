@@ -37,6 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryIndexStream.h"
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
 #include "prlog.h"
@@ -496,11 +497,17 @@ nsFileChannel::GetContentType(char * *aContentType)
 	}
 #endif
 
-    NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (mSpec.IsDirectory()) {
+        *aContentType = nsCRT::strdup("application/http-index-format");
+        return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    rv = MIMEService->GetTypeFromURI(mURI, aContentType);
-    if (NS_SUCCEEDED(rv)) return rv;
+        rv = MIMEService->GetTypeFromURI(mURI, aContentType);
+        if (NS_SUCCEEDED(rv)) return rv;
+    }
 
     // if all else fails treat it as text/html?
     *aContentType = nsCRT::strdup(DUMMY_TYPE);
@@ -567,7 +574,12 @@ nsFileChannel::Process(void)
               if (NS_FAILED(mStatus)) goto error;
           }
 
-          mStatus = NS_NewTypicalInputFileStream(&fs, mSpec);
+          if (mSpec.IsDirectory()) {
+              mStatus = nsDirectoryIndexStream::Create(mSpec, &fs);
+          }
+          else {
+              mStatus = NS_NewTypicalInputFileStream(&fs, mSpec);
+          }
           if (NS_FAILED(mStatus)) goto error;
 
 		  if (mSourceOffset > 0) // if we need to set a starting offset, QI for the nsIRandomAccessStore and set it
