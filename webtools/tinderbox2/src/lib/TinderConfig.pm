@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.10 $ 
-# $Date: 2000/10/17 23:51:05 $ 
+# $Revision: 1.11 $ 
+# $Date: 2000/11/09 19:40:51 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -50,7 +50,17 @@ $URL_HTML = "http://tinderbox.mozilla.org/";
 # the full path name tinderbox will use to access the tinderbox
 # servers root data directory where the html will be written.
 
-$TINDERBOX_DIR = "/usr/apache/cgibin/webtools/tinderbox";
+$TINDERBOX_HTML_DIR = "/usr/apache/cgibin/webtools/tinderbox";
+
+# the full path name tinderbox will use to access the tinderbox
+# servers root data directory where the data will be written.  For
+# debugging you may wish to make this the same as the
+# $TINDERBOX_HTML_DIR and set Persistence::Storable.  This setting
+# will allow a browser can look at the internal data structures. For
+# production use it is more secure to keep internal tinderbox data
+# outside of the HTML tree.
+
+$TINDERBOX_DATA_DIR = "/usr/apache/cgibin/webtools/tinderbox";
 
 # The top level tinderbox index file. Change this if you wish to
 # provide your own index file for tinderboxs web pages.
@@ -139,9 +149,6 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 	       # control system.
 	       
 	       'TinderHeader::TreeState',
-	       
-	       # this is not implemented yet
-	       #'TinderHeader::Image,
 	      );
 
 # Each of the TinderHeader method appears on the left side of this
@@ -155,7 +162,6 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 			
                         'Build' => "",
                         'IgnoreBuilds' => "",
-                        'Image' => "",
                         'MOTD' => "",
                         'TreeState' => "Open",
 			
