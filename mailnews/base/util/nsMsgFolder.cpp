@@ -2591,7 +2591,7 @@ NS_IMETHODIMP nsMsgFolder::GenerateMessageURI(nsMsgKey msgKey, char **aURI)
 nsresult nsMsgFolder::WarnAndDisableFilter(nsIMsgWindow *msgWindow)
 {
   nsresult rv = NS_OK;
-  PRBool changed;
+  PRBool changed =PR_FALSE;
   rv = ChangeFilterDestination(nsnull, PR_FALSE, &changed);
   if (msgWindow && changed) 
   {
