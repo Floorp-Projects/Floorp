@@ -797,8 +797,9 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       nsCOMPtr<nsIDOMNode> newRowNode(do_QueryInterface(newRow));
       nsCOMPtr<nsIDOMNode> retChild;
 
-      // the index is greater than the number of rows, so just append
-      if ((0 <= aIndex) && (PRInt32(rowCount) <= aIndex)) {
+      // If index is -1 or equal to the number of rows, the new row
+      // is appended.
+      if (aIndex == -1 || PRUint32(aIndex) == rowCount) {
         rv = parent->AppendChild(newRowNode, getter_AddRefs(retChild));
       }
       else
