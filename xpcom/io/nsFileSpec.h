@@ -340,10 +340,8 @@ class NS_COM nsFileSpec
                                     short vRefNum,
                                     long parID,
                                     ConstStr255Param name);
-                                nsFileSpec(const FSSpec& inSpec)
-                                    : mSpec(inSpec), mError(NS_OK) {}
-        void                    operator = (const FSSpec& inSpec)
-                                    { mSpec = inSpec; mError = NS_OK; }
+                                nsFileSpec(const FSSpec& inSpec);
+        void                    operator = (const FSSpec& inSpec);
 
                                 operator FSSpec* () { return &mSpec; }
                                 operator const FSSpec* const () { return &mSpec; }
@@ -715,6 +713,8 @@ class NS_COM nsDirectoryIterator
 #elif defined(XP_PC)
         PRDir*                  mDir; // XXX why not use PRDir for Unix too?
 #elif defined(XP_MAC)
+	    short					mVRefNum;
+	    long					mParID;
 	    short                   mIndex;
 	    short                   mMaxIndex;
 #endif

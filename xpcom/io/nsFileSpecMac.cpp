@@ -598,6 +598,26 @@ nsFileSpec::nsFileSpec()
 }
 
 //----------------------------------------------------------------------------------------
+nsFileSpec::nsFileSpec(const FSSpec& inSpec)
+//----------------------------------------------------------------------------------------
+: mSpec(inSpec)
+, mError(NS_OK)
+{
+    PRBool dummy;
+    ResolveAlias(dummy);
+}
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::operator = (const FSSpec& inSpec)
+//----------------------------------------------------------------------------------------
+{
+	mSpec = inSpec;
+	mError = NS_OK;
+    PRBool dummy;
+    ResolveAlias(dummy);
+}
+
+//----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 :    mSpec(inSpec.mSpec)
@@ -618,6 +638,8 @@ nsFileSpec::nsFileSpec(const char* inNativePathString, PRBool inCreateDirs)
             mSpec, inCreateDirs));
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
+    PRBool dummy;
+    ResolveAlias(dummy);
 } // nsFileSpec::nsFileSpec
 
 //----------------------------------------------------------------------------------------
@@ -633,6 +655,8 @@ nsFileSpec::nsFileSpec(const nsString& inNativePathString, PRBool inCreateDirs)
             mSpec, inCreateDirs));
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
+    PRBool dummy;
+    ResolveAlias(dummy);
 } // nsFileSpec::nsFileSpec
 
 //----------------------------------------------------------------------------------------
@@ -642,6 +666,8 @@ nsFileSpec::nsFileSpec(short vRefNum, long parID, ConstStr255Param name)
     mError = NS_FILE_RESULT(::FSMakeFSSpec(vRefNum, parID, name, &mSpec));
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
+    PRBool dummy;
+    ResolveAlias(dummy);
 }
 
 //----------------------------------------------------------------------------------------
@@ -664,6 +690,8 @@ void nsFileSpec::operator = (const char* inString)
         MacFileHelpers::FSSpecFromPathname(inString, mSpec, true));
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
+    PRBool dummy;
+    ResolveAlias(dummy);
 } // nsFileSpec::operator =
 
 //----------------------------------------------------------------------------------------
@@ -835,6 +863,8 @@ void nsFileSpec::operator += (const char* inRelativePath)
     }
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
+    PRBool dummy;
+    ResolveAlias(dummy);
 } // nsFileSpec::operator +=
 
 //----------------------------------------------------------------------------------------
@@ -1012,7 +1042,7 @@ static void AssignFromPath(nsFilePath& ioPath, const char* inString, PRBool inCr
         inString,
         spec,
         false,
-        false,
+        true, // resolve alias
         true,
         inCreateDirs);
     // Now we have a spec,
@@ -1093,7 +1123,7 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
         inString + kFileURLPrefixLength,
         mFileSpec.mSpec,
         true, // need to decode
-        false, // don't resolve alias
+        true, // resolve alias
         false, // must be a full path
         inCreateDirs));
     if (mFileSpec.mError == NS_FILE_RESULT(fnfErr))
@@ -1113,7 +1143,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
         cstring + kFileURLPrefixLength,
         mFileSpec.mSpec,
         true, // need to decode
-        false, // don't resolve alias
+        true, // resolve alias
         false, // must be a full path
         inCreateDirs));
     if (mFileSpec.mError == NS_FILE_RESULT(fnfErr))
@@ -1166,7 +1196,7 @@ void nsFileURL::operator = (const char* inString)
         inString + kFileURLPrefixLength,
         mFileSpec.mSpec,
         true, // need to decode
-        false, // don't resolve alias
+        true, // resolve alias
         false, // must be a full path
         false)); // don't create dirs.
     if (mFileSpec.mError == NS_FILE_RESULT(fnfErr))
@@ -1195,8 +1225,8 @@ nsDirectoryIterator::nsDirectoryIterator(
         return;
     // Sorry about this, there seems to be a bug in CWPro 4:
     FSSpec& currentSpec = mCurrent.nsFileSpec::operator FSSpec&();
-    currentSpec.vRefNum = currentSpec.vRefNum;
-    currentSpec.parID = dipb->ioDrDirID;
+    mVRefNum = currentSpec.vRefNum;
+    mParID = dipb->ioDrDirID;
     mMaxIndex = pb.dirInfo.ioDrNmFls;
     if (inIterateDirection > 0)
     {
@@ -1221,14 +1251,14 @@ OSErr nsDirectoryIterator::SetToIndex()
     dipb->ioFDirIndex = mIndex;
     // Sorry about this, there seems to be a bug in CWPro 4:
     FSSpec& currentSpec = mCurrent.nsFileSpec::operator FSSpec&();
-    dipb->ioVRefNum = currentSpec.vRefNum; /* Might need to use vRefNum, not sure*/
-    dipb->ioDrDirID = currentSpec.parID;
+    dipb->ioVRefNum = mVRefNum; /* Might need to use vRefNum, not sure*/
+    dipb->ioDrDirID = mParID;
     dipb->ioNamePtr = objectName;
     OSErr err = PBGetCatInfoSync(&cipb);
     FSSpec temp;
     if (err == noErr)
-        err = FSMakeFSSpec(currentSpec.vRefNum, currentSpec.parID, objectName, &temp);
-    currentSpec = temp; // use the operator: it clears the string cache etc.
+        err = FSMakeFSSpec(mVRefNum, mParID, objectName, &temp);
+    mCurrent = temp; // use the operator: it clears the string cache and resolves the alias.
     mExists = err == noErr;
     return err;
 } // nsDirectoryIterator::SetToIndex()
