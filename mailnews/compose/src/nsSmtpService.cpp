@@ -125,7 +125,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
   if (aSenderIdentity) {
       nsXPIDLCString smtpServerKey;
       rv = aSenderIdentity->GetSmtpServerKey(getter_Copies(smtpServerKey));
-      if (NS_SUCCEEDED(rv) && (const char *)smtpServerKey)
+      if (NS_SUCCEEDED(rv) && !(smtpServerKey.IsEmpty()))
           rv = GetServerByKey(smtpServerKey,
                                            getter_AddRefs(smtpServer));
   }
