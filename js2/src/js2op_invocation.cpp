@@ -279,6 +279,8 @@
                     a = STRING_TO_JS2VAL(Function_StringAtom); 
                     break;
                 case PrototypeInstanceKind:
+                    a = STRING_TO_JS2VAL(checked_cast<PrototypeInstance *>(obj)->type->getName());
+                    break;
                 case PackageKind:
                 case GlobalObjectKind:
                     a = STRING_TO_JS2VAL(object_StringAtom);
