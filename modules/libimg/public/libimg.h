@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 3.2 1998/07/27 16:09:09 hardts%netscape.com Exp $
+ *  $Id: libimg.h,v 3.3 1999/05/27 22:39:08 pnunn%netscape.com Exp $
  */
 
 
@@ -30,17 +30,8 @@
 
 #include "dummy_nc.h"
 
-#ifdef STANDALONE_IMAGE_LIB
 #include "ilISystemServices.h"
 #include "ilIImageRenderer.h"
-#else
-#include "MIMGCBIF.h"           /* JMC generated callback interface. */
-#include "MIMGCB.h"				/* JMC generated callback interface
-                                   implementation. */
-#include "MPSIMGCB.h"           /* JMC generated callback interface
-                                   implementation for PostScript Front End. */
-#endif /* STANDALONE_IMAGE_LIB */
-
 
 /*********************** Observers and Observables ***************************/
 
@@ -63,13 +54,8 @@ PR_BEGIN_EXTERN_C
    - Initialize internal state.
    - Scan image plug-in directory.
    - Register individual image decoders with the netlib. */
-#ifdef STANDALONE_IMAGE_LIB
 IL_EXTERN(int)
 IL_Init(ilISystemServices *ss);
-#else
-IL_EXTERN(int)
-IL_Init(void);
-#endif /* STANDALONE_IMAGE_LIB */
 
 /* Used when exiting the client, this code frees all imagelib data structures.
    This is done for two reasons:
@@ -90,15 +76,9 @@ IL_Shutdown(void);
 
    The display_context argument is opaque to the image library and is
    passed back to all of the callbacks in IMGCBIF interface. */
-#ifdef STANDALONE_IMAGE_LIB
 IL_EXTERN(IL_GroupContext *)
 IL_NewGroupContext(void *display_context, 
                    ilIImageRenderer *image_render);
-#else
-IL_EXTERN(IL_GroupContext *)
-IL_NewGroupContext(void *display_context, 
-                   IMGCBIF *image_callbacks);
-#endif /* STANDALONE_IMAGE_LIB */
 
 /* Free an image context.  IL_DestroyGroupContext will make a call
    to the IMGCBIF_Release callback function of the JMC interface prior to
@@ -316,13 +296,6 @@ IL_GetCacheSize(void);
    in a DocInfo window.  The caller may dispose of the string using XP_FREE. */
 IL_EXTERN(char *)
 IL_HTMLImageInfo(char *url_address);
-
-#ifndef STANDALONE_IMAGE_LIB 
-/* Wacky netlib callback designed to give precedence to streams that block
-   layout. */
-IL_EXTERN(PRBool)
-IL_PreferredStream(URL_Struct *urls);
-#endif
 
 /* This is a legacy "safety-valve" routine, called each time a new HTML page
    is loaded.  It causes remaining references to images in the given group

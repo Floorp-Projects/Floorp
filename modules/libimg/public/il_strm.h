@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_strm.h --- Stream converters for the image library.
- *  $Id: il_strm.h,v 3.2 1998/07/27 16:09:06 hardts%netscape.com Exp $
+ *  $Id: il_strm.h,v 3.3 1999/05/27 22:37:43 pnunn%netscape.com Exp $
  */
 
 
@@ -41,30 +41,4 @@
 #endif /* IL_INTERNAL */
 
 
-#ifndef STANDALONE_IMAGE_LIB
-XP_BEGIN_PROTOS
 
-/********************** Image Library stream converters. *********************/
-extern int IL_DisplayMemCacheInfoAsHTML(FO_Present_Types format_out,
-                                        URL_Struct *urls,
-                                        OPAQUE_CONTEXT *net_cx);
-
-/********************** Image Library stream converters. *********************/
-
-/* The standard converter for all types of images which are part of an HTML
-   document. */
-extern NET_StreamClass * IL_NewStream (FO_Present_Types format_out,
-                                       void *data_obj,
-                                       URL_Struct *urls,
-                                       OPAQUE_CONTEXT *cx);
-
-/* The converter used to handle images which are viewed by themselves e.g.
-   http://home.netscape.com/foo.gif.  This generates a fake
-   HTML document, and ships it off to the parser. */
-extern NET_StreamClass * IL_ViewStream (FO_Present_Types format_out,
-                                        void *data_obj,
-                                        URL_Struct *urls,
-                                        OPAQUE_CONTEXT *cx);
-XP_END_PROTOS
-
-#endif /* STANDALONE_IMAGE_LIB */
