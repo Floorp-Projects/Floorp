@@ -138,9 +138,13 @@ public:
   nsIBox* mScrollCornerBox;
   nscoord mOnePixel;
   nsGfxScrollFrame* mOuter;
-  nsIScrollableView* mScrollableView;
   nscoord mMaxElementWidth;
 
+  // The last dir value we saw in AddHorizontalScrollbar.  Use PRInt16
+  // so we can fit all the possible values of a PRUint8 and have a -1
+  // value that indicates "not set")
+  PRInt16     mLastDir;
+  
   PRPackedBool mNeverHasVerticalScrollbar;   
   PRPackedBool mNeverHasHorizontalScrollbar; 
 
@@ -901,14 +905,15 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter)
     mScrollAreaBox(nsnull),
     mScrollCornerBox(nsnull),
     mOnePixel(20),
+    mOuter(aOuter),
+    mMaxElementWidth(0),
+    mLastDir(-1),
+    mNeverHasVerticalScrollbar(PR_FALSE),
+    mNeverHasHorizontalScrollbar(PR_FALSE),
     mHasVerticalScrollbar(PR_FALSE), 
-    mHasHorizontalScrollbar(PR_FALSE)
+    mHasHorizontalScrollbar(PR_FALSE),
+    mFirstPass(PR_FALSE)
 {
-   mOuter = aOuter;
-   mMaxElementWidth = 0;
-   mFirstPass = PR_FALSE;
-   mNeverHasVerticalScrollbar   = PR_FALSE;     
-   mNeverHasHorizontalScrollbar = PR_FALSE; 
 }
 
 NS_IMETHODIMP
@@ -1099,16 +1104,29 @@ nsGfxScrollFrameInner::AddHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& 
     return PR_TRUE;
 
 #ifdef IBMBIDI
-  PRInt32 dir = GetIntegerAttribute(mHScrollbarBox, nsXULAtoms::dir, -1);
   const nsStyleVisibility* vis = mOuter->GetStyleVisibility();
 
-  // when creating the scrollbar for the first time, or whenever 
-  // display direction is changed, scroll the view horizontally
-  if (dir != vis->mDirection) {
+  // Scroll the view horizontally if:
+  // 1)  We are creating the scrollbar for the first time and the
+  //     horizontal scroll position of the view is 0 or
+  // 2)  The display direction is changed
+  PRBool needScroll;
+  if (mLastDir == -1) {
+    // Creating the scrollbar the first time
+    nscoord curPosX = 0, curPosY = 0;      
+    nsIScrollableView* s = GetScrollableView(mOuter->mPresContext);
+    if (s) {
+      s->GetScrollPosition(curPosX, curPosY);
+    }
+    needScroll = (curPosX == 0);
+  } else {
+    needScroll = (mLastDir != vis->mDirection);
+  }
+  if (needScroll) {
     SetAttribute(mHScrollbarBox, nsXULAtoms::curpos,
                  (NS_STYLE_DIRECTION_LTR == vis->mDirection) ? 0 : 0x7FFFFFFF);
-    SetAttribute(mHScrollbarBox, nsXULAtoms::dir, vis->mDirection * mOnePixel);
   }
+  mLastDir = vis->mDirection;
 #endif // IBMBIDI
   
   return AddRemoveScrollbar(aState, aScrollAreaSize, aOnTop, PR_TRUE, PR_TRUE);
