@@ -139,6 +139,7 @@ struct JSRuntime {
     PRCondVar           *gcDone;
     PRCondVar           *requestDone;
     uint32              requestCount;
+    jsword              gcThread;
 
     /* Lock and owning thread pointer for JS_LOCK_RUNTIME. */
     PRLock              *rtLock;
@@ -224,10 +225,10 @@ struct JSContext {
 #ifdef JS_THREADSAFE
     jsword              thread;
     jsrefcount          requestDepth;
-    JSPackedBool        gcActive;
+    JSPackedBool        destroying;
 #endif
 
-    /* Exception state (NB: throwing is packed with gcActive above). */
+    /* Exception state (NB: throwing is packed with destroying above). */
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exceptin */
 

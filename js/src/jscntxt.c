@@ -174,7 +174,11 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     js_FreeRegExpStatics(cx, &cx->regExpStatics);
 #endif
 
-    /* XXXbe this deadlocks with a GC waiting for this request to end */
+    /* Used to avoid deadlock with a GC waiting for this request to end. */
+#ifdef JS_THREADSAFE
+    cx->destroying = JS_TRUE;
+#endif
+
     if (gcmode == JS_FORCE_GC)
         js_ForceGC(cx);
     else if (gcmode == JS_MAYBE_GC)
