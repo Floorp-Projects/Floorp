@@ -26,13 +26,15 @@
 /*----------------------------------------------------------------------*/
 
 #include "RDFTreeView.h"
+
 #include "Command.h"
-#include "xfe2_extern.h"
-#include "xpgetstr.h"
+#include "PopupMenu.h"
 #include "RDFImage.h"
+#include "RDFUtils.h"
 
 #include "felocale.h"		// fe_ConvertToXmString()
-#include "RDFUtils.h"
+#include "xfe2_extern.h"
+#include "xpgetstr.h"
 
 
 
@@ -298,15 +300,7 @@ XFE_RDFTreeView::activate_row(int row)
 {
   HT_Resource node = HT_GetNthItem(_ht_view, row);
 
-  if (!node) return;
-
-  if (!HT_IsContainer(node) && !HT_IsSeparator(node)) {
-      // Dispatch in new window
-      char *s = HT_GetNodeURL (node);
-      URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-      //url->window_target = XP_STRDUP("_rdf_target");
-      fe_reuseBrowser (m_contextData, url);
-  }
+  XFE_RDFUtils::launchEntry(m_contextData, node);
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -932,31 +926,6 @@ XFE_RDFTreeView::doPopup(XEvent * event)
 	_popup->show();
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_RDFPopupMenu::XFE_RDFPopupMenu(String name, Widget parent,
-                                   HT_View view, 
-                                   Boolean isWorkspace, Boolean isBackground)
-    : XFE_SimplePopupMenu(name, parent)
-{
-    m_pane = HT_GetPane(view);
-
-    HT_Cursor cursor = HT_NewContextualMenuCursor(view, isWorkspace, isBackground);
-    HT_MenuCmd command;
-    while(HT_NextContextMenuItem(cursor, &command))
-    {
-        if (command == HT_CMD_SEPARATOR)
-            addSeparator();
-        else
-            addPushButton(HT_GetMenuCmdName(command), (XtPointer)command,
-                          HT_IsMenuCmdEnabled(m_pane, command));
-    }
-}
-
-void
-XFE_RDFPopupMenu::PushButtonActivate(Widget /* w */, XtPointer userData)
-{
-    HT_DoMenuCmd(m_pane, (HT_MenuCmd)(int)userData);
-}
-//////////////////////////////////////////////////////////////////////////
 //
 // Toggle the stand alone state
 //
@@ -1210,11 +1179,3 @@ extern "C" {
     }
 
 };   /* extern C  */
-
-
-
-
-
-
-
-
