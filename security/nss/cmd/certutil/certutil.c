@@ -849,10 +849,10 @@ secu_PrintKeyFromCert(CERTCertificate *cert, void *data)
 {
     FILE *out;
     char *name;
-    SECKEYPublicKey *key;
+    SECKEYPrivateKey *key;
 
     out = (FILE *)data;
-    key = CERT_ExtractPublicKey(cert);
+    key = PK11_FindPrivateKeyFromCert(PK11_GetInternalKeySlot(), cert, NULL);
     if (!key) {
 	fprintf(out, "XXX could not extract key for %s.\n", cert->nickname);
 	return SECFailure;
@@ -2595,6 +2595,7 @@ main(int argc, char **argv)
 	    SECU_PrintError(progName, "unable to generate key(s)\n");
 	    return -1;
 	}
+	privkey->wincx = &pwdata;
 	PORT_Assert(pubkey != NULL);
 
 	/*  If all that was needed was keygen, exit.  */
