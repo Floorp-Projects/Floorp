@@ -168,13 +168,20 @@ box.texttab.sidebar-tab {
     padding: 0px;
     margin: 0px;
 }
+box.texttab.sidebar-tab[top-panel="true"],
+box.texttab.sidebar-tab[first-panel-after-selected="true"] {
+    background-color: white;
+}
+
 box.texttab.sidebar-tab > .remain-space {
     width: 30px;
     min-width: 1px;
 }
-box.texttab.sidebar-tab[top-panel="true"],
-box.texttab.sidebar-tab[first-panel-after-selected="true"] {
-    background-color: white;
+box.texttab.sidebar-tab[last-panel="true"] > .remain-space {
+  border-bottom: none;
+}
+box.texttab.sidebar-tab[last-panel="true"][selected="true"] > .remain-space {
+  border-bottom: 1px solid black;
 }
 
 *[hidden="true"] {
