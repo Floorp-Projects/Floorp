@@ -943,8 +943,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
   if (NS_FAILED(rv)) return rv;
 
-  aStatus = state.mReflowStatus;
- 
   // Put continued floaters at the beginning of the first overflow line. If the first line 
   // is a block then create a new line as the first line and put the floaters there. If there 
   // are no overflow lines, then create one and put the floaters in it.
@@ -979,13 +977,13 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       nsLineList::iterator nextToLastLine = ----end_lines();
       PushLines(state, nextToLastLine);
     }
-    aStatus = NS_FRAME_NOT_COMPLETE;
+    state.mReflowStatus = NS_FRAME_NOT_COMPLETE;
     state.mOverflowFloaters.SetFrames(nsnull);
   }
 
-  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+  if (NS_FRAME_IS_NOT_COMPLETE(state.mReflowStatus)) {
     if (NS_STYLE_OVERFLOW_HIDDEN == aReflowState.mStyleDisplay->mOverflow) {
-      aStatus = NS_FRAME_COMPLETE;
+      state.mReflowStatus = NS_FRAME_COMPLETE;
     }
     else {
 #ifdef DEBUG_kipp
@@ -1076,6 +1074,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // space manager.
   if (NS_BLOCK_SPACE_MGR & mState)
     state.mSpaceManager = nsnull;
+
+  aStatus = state.mReflowStatus;
 
 #ifdef DEBUG
   if (gNoisy) {
@@ -1223,8 +1223,8 @@ IsPercentageAwareChild(const nsIFrame* aFrame)
 
 void
 nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
-                               nsBlockReflowState& aState,
-                               nsHTMLReflowMetrics& aMetrics)
+                               nsBlockReflowState&      aState,
+                               nsHTMLReflowMetrics&     aMetrics)
 {
   const nsMargin& borderPadding = aState.BorderPadding();
 #ifdef NOISY_FINAL_SIZE
@@ -1362,9 +1362,36 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
   // Compute final height
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-    // Use style defined height
-    aMetrics.height = borderPadding.top + aReflowState.mComputedHeight +
-      borderPadding.bottom;
+    if (NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
+      // Calculate the total unconstrained height including borders and padding. A continuation 
+      // will have the same value as the first-in-flow, since the reflow state logic is based on
+      // style and doesn't alter mComputedHeight based on prev-in-flows.
+      aMetrics.height = borderPadding.top + aReflowState.mComputedHeight + borderPadding.bottom;
+      if (mPrevInFlow) {
+        // Reduce the height by the height of prev-in-flows. The last-in-flow will automatically
+        // pick up the bottom border/padding, since it was part of the original aMetrics.height.
+        for (nsIFrame* prev = mPrevInFlow; prev; prev->GetPrevInFlow(&prev)) {
+          nsRect rect;
+          prev->GetRect(rect);
+          aMetrics.height -= rect.height;
+          // XXX: All block level next-in-flows have borderPadding.top applied to them (bug 174688). 
+          // The following should be removed when this gets fixed. bug 174688 prevents us from honoring 
+          // a style height (exactly) and this hack at least compensates by increasing the height by the
+          // excessive borderPadding.top.
+          aMetrics.height += borderPadding.top;
+        }
+        aMetrics.height = PR_MAX(0, aMetrics.height);
+      }
+      if (aMetrics.height > aReflowState.availableHeight) {
+        // Take up the available height; continuations will take up the rest.
+        aMetrics.height = aReflowState.availableHeight;
+        aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+      }
+    }
+    else {
+      // Use the current height; continuations will take up the rest.
+      aMetrics.height = aState.mY;
+    }
 
     // When style defines the height use it for the max-element-size
     // because we can't shrink any smaller.

@@ -250,8 +250,8 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   virtual void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
-                                nsBlockReflowState&  aState,
-                                nsHTMLReflowMetrics& aMetrics);
+                                nsBlockReflowState&      aState,
+                                nsHTMLReflowMetrics&     aMetrics);
 
   void ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
                            nsHTMLReflowMetrics& aMetrics);
