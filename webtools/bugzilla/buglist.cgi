@@ -63,7 +63,7 @@ if (!defined $::FORM{'cmdtype'}) {
 CMD: for ($::FORM{'cmdtype'}) {
     /^runnamed$/ && do {
         $::buffer = $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
-        ProcessFormFields $::buffer;
+        ProcessFormFields($::buffer);
         last CMD;
     };
     /^editnamed$/ && do {
