@@ -60,14 +60,6 @@ int     UnicodeToCodepage( const nsAString& inString, char **outText);
 #define MAXTITLELTH 31
 #define TITLESEPARATOR (L' ')
 
-// from Toolkit45's unidef.h
-#ifndef CT_ALNUM
-extern "C" {
-  #define CT_ALNUM  0x0200
-  int _System UniQueryChar( PRUnichar uc, ULONG attr);
-}
-#endif
-
 #ifndef DC_PREPAREITEM
 #define DC_PREPAREITEM 0x0040;
 #endif

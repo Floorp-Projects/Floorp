@@ -56,8 +56,4 @@ EXPORTS		= nsUCvIBMCID.h
 
 LOCAL_INCLUDES = -I$(srcdir)/../util
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-OS_LIBS += -llibuni
-endif
-
 include $(topsrcdir)/config/rules.mk

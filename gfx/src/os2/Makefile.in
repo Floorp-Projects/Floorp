@@ -75,8 +75,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-OS_LIBS += -luconv -los2386
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(topsrcdir)/gfx/src -I$(topsrcdir)/gfx/src/shared

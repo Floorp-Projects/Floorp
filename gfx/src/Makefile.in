@@ -128,7 +128,6 @@ EXPORTS += \
         os2/nsOS2Uni.h \
         os2/nsPaletteOS2.h \
         $(NULL)
-OS_LIBS += -luconv
 endif
 
 EXTRA_DSO_LDOPTS = \
