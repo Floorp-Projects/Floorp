@@ -282,6 +282,7 @@ struct LO_TextAttr_struct {
     void *FE_Data;     /* For the front end to store font IDs */
     struct LO_TextAttr_struct *next; /* to chain in hash table */
     int16 charset;
+    uint32 refcnt;
 };
  
 /*
