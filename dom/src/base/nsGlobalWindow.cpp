@@ -86,6 +86,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMPkcs11.h"
+#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventStateManager.h"
 #include "nsIHttpProtocolHandler.h"
@@ -1876,32 +1877,18 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
 
 NS_IMETHODIMP GlobalWindowImpl::Blur()
 {
-  nsCOMPtr<nsIDocShellTreeItem>
-    docShellAsItem(do_QueryInterface(mDocShell));
-  if (docShellAsItem) {
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    // Parent regardless of chrome or content boundary
-    docShellAsItem->GetParent(getter_AddRefs(parent));
+  nsresult rv = NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIBaseWindow> newFocusWin;
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  GetTreeOwner(getter_AddRefs(treeOwner));
+  nsCOMPtr<nsIEmbeddingSiteWindow2> siteWindow(do_QueryInterface(treeOwner));
+  if (siteWindow)
+    rv = siteWindow->Blur();
 
-    if (parent)
-      newFocusWin = do_QueryInterface(parent);
-    else {
-      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
-      newFocusWin = do_QueryInterface(treeOwner);
-    }
-
-    if (newFocusWin)
-      newFocusWin->SetFocus();
-  }
-
-  if (mDocShell) {
+  if (NS_SUCCEEDED(rv))
     mDocShell->SetHasFocus(PR_FALSE);
-  }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Back()
