@@ -881,18 +881,20 @@ WriteBitmap(nsString& aPath, gfxIImageFrame* aImage)
 
   // write the bitmap headers and rgb pixel data to the file
   nsresult rv = NS_ERROR_FAILURE;
-  PRUint32 written;
-  stream->Write((const char*)&bf, sizeof(BITMAPFILEHEADER), &written);
-  if (written == sizeof(BITMAPFILEHEADER)) {
-    stream->Write((const char*)bmi, sizeof(BITMAPINFOHEADER), &written);
-    if (written == sizeof(BITMAPINFOHEADER)) {
-      stream->Write((const char*)bits, length, &written);
-      if (written == length)
-        rv = NS_OK;
+  if (stream) {
+    PRUint32 written;
+    stream->Write((const char*)&bf, sizeof(BITMAPFILEHEADER), &written);
+    if (written == sizeof(BITMAPFILEHEADER)) {
+      stream->Write((const char*)bmi, sizeof(BITMAPINFOHEADER), &written);
+      if (written == sizeof(BITMAPINFOHEADER)) {
+        stream->Write((const char*)bits, length, &written);
+        if (written == length)
+          rv = NS_OK;
+      }
     }
-  }
   
-  stream->Close();
+    stream->Close();
+  }
   
   return rv;
 }
