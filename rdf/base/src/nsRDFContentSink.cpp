@@ -408,7 +408,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
             PopNameSpaces();
     }
     if (mContextStack) {
-        PR_LOG(gLog, PR_LOG_ALWAYS,
+        PR_LOG(gLog, PR_LOG_WARNING,
                ("rdfxml: warning! unclosed tag"));
 
         // XXX we should never need to do this, but, we'll write the
@@ -428,7 +428,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
             if (resource) {
                 nsXPIDLCString uri;
                 resource->GetValue(getter_Copies(uri));
-                PR_LOG(gLog, PR_LOG_ALWAYS,
+                PR_LOG(gLog, PR_LOG_NOTICE,
                        ("rdfxml:   uri=%s", (const char*) uri));
             }
 #endif
@@ -533,7 +533,7 @@ RDFContentSinkImpl::HandleStartElement(const PRUnichar *aName,
       break;
 
   case eRDFContentSinkState_InEpilog:
-      PR_LOG(gLog, PR_LOG_ALWAYS,
+      PR_LOG(gLog, PR_LOG_WARNING,
              ("rdfxml: unexpected content in epilog at line %d",
               aLineNumber));
       break;
@@ -551,13 +551,13 @@ RDFContentSinkImpl::HandleEndElement(const PRUnichar *aName)
   if (NS_FAILED(PopContext(resource, mState, mParseMode))) {
       // XXX parser didn't catch unmatched tags?
 #ifdef PR_LOGGING
-      if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+      if (PR_LOG_TEST(gLog, PR_LOG_WARNING)) {
           nsAutoString tagStr(aName);
           char* tagCStr = ToNewCString(tagStr);
 
-          PR_LOG(gLog, PR_LOG_ALWAYS,
+          PR_LogPrint
                  ("rdfxml: extra close tag '%s' at line %d",
-                  tagCStr, 0/*XXX fix me */));
+                  tagCStr, 0/*XXX fix me */);
 
           nsCRT::free(tagCStr);
       }
@@ -984,7 +984,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
         }
         else if (attr.get() == kAboutEachAtom) {
             // XXX we don't deal with aboutEach...
-            //PR_LOG(gLog, PR_LOG_ALWAYS,
+            //PR_LOG(gLog, PR_LOG_WARNING,
             //       ("rdfxml: ignoring aboutEach at line %d",
             //        aNode.GetSourceLineNumber()));
         }
@@ -1157,7 +1157,7 @@ RDFContentSinkImpl::OpenRDF(const PRUnichar* aName)
 
     if ((nameSpaceURI && 0 != PL_strcmp(nameSpaceURI, kRDFNameSpaceURI))
         || (tag.get() != kRDFAtom)) {
-       // PR_LOG(gLog, PR_LOG_ALWAYS,
+       // PR_LOG(gLog, PR_LOG_WARNING,
        //        ("rdfxml: expected RDF:RDF at line %d",
        //         aNode.GetSourceLineNumber()));
 
@@ -1349,7 +1349,7 @@ RDFContentSinkImpl::OpenMember(const PRUnichar* aName,
     ParseTagString(aName, &nameSpaceURI, getter_AddRefs(tag));
 
     if ((0 != PL_strcmp(nameSpaceURI, kRDFNameSpaceURI)) || (tag.get() != kLiAtom)) {
-        PR_LOG(gLog, PR_LOG_ALWAYS,
+        PR_LOG(gLog, PR_LOG_WARNING,
                ("rdfxml: expected RDF:li at line %d",
                 -1)); // XXX pass in line number
 
@@ -1443,14 +1443,14 @@ RDFContentSinkImpl::GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI
     *aNameSpaceURI = nsnull;
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+    if (PR_LOG_TEST(gLog, PR_LOG_WARNING)) {
         const char* prefixStr;
         if (aPrefix)
             aPrefix->GetUTF8String(&prefixStr);
 
-        PR_LOG(gLog, PR_LOG_ALWAYS,
+        PR_LogPrint
                ("rdfxml: undeclared namespace prefix '%s'",
-                prefixStr));
+                prefixStr);
 
     }
 #endif
