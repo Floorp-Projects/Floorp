@@ -214,6 +214,7 @@ protected:
     static nsIAtom* kURIAtom;
     static nsIAtom* kContainmentAtom;
     static nsIAtom* kIgnoreAtom;
+    static nsIAtom* kRefAtom;
 
     static nsIAtom* kSubcontainmentAtom;
     static nsIAtom* kRootcontainmentAtom;
@@ -232,6 +233,8 @@ protected:
     static nsIRDFResource* kNC_Column;
     static nsIRDFResource* kNC_Folder;
     static nsIRDFResource* kRDF_child;
+    static nsIRDFResource* kRDF_instanceOf;
+    static nsIRDFResource* kXUL_element;
 
     static nsIXULSortService	*XULSortService;
 };

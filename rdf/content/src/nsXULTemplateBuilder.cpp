@@ -107,6 +107,10 @@ static NS_DEFINE_CID(kIHTMLElementFactoryIID, NS_IHTML_ELEMENT_FACTORY_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
+#define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+
+////////////////////////////////////////////////////////////////////////
+
 nsrefcnt		RDFGenericBuilderImpl::gRefCnt = 0;
 nsIXULSortService*	RDFGenericBuilderImpl::XULSortService = nsnull;
 
@@ -121,6 +125,7 @@ nsIAtom* RDFGenericBuilderImpl::kURIAtom;
 nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
 nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
+nsIAtom* RDFGenericBuilderImpl::kRefAtom;
 
 nsIAtom* RDFGenericBuilderImpl::kSubcontainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kRootcontainmentAtom;
@@ -143,6 +148,8 @@ nsIRDFResource* RDFGenericBuilderImpl::kNC_child;
 nsIRDFResource* RDFGenericBuilderImpl::kNC_Column;
 nsIRDFResource* RDFGenericBuilderImpl::kNC_Folder;
 nsIRDFResource* RDFGenericBuilderImpl::kRDF_child;
+nsIRDFResource* RDFGenericBuilderImpl::kRDF_instanceOf;
+nsIRDFResource* RDFGenericBuilderImpl::kXUL_element;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -169,6 +176,7 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
 		kURIAtom             = NS_NewAtom("uri");
         kContainmentAtom     = NS_NewAtom("containment");
         kIgnoreAtom          = NS_NewAtom("ignore");
+        kRefAtom             = NS_NewAtom("ref");
         kNaturalOrderPosAtom = NS_NewAtom("pos");
 
         kSubcontainmentAtom  = NS_NewAtom("subcontainment");
@@ -219,6 +227,8 @@ static const char kRDFNameSpaceURI[]
             gRDFService->GetResource(NC_NAMESPACE_URI "Column",  &kNC_Column);
             gRDFService->GetResource(NC_NAMESPACE_URI "Folder",  &kNC_Folder);
             gRDFService->GetResource(RDF_NAMESPACE_URI "child",  &kRDF_child);
+            gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
+            gRDFService->GetResource(XUL_NAMESPACE_URI "element",    &kXUL_element);
         }
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
@@ -255,6 +265,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 		NS_RELEASE(kURIAtom);
         NS_RELEASE(kContainmentAtom);
         NS_RELEASE(kIgnoreAtom);
+        NS_RELEASE(kRefAtom);
         NS_RELEASE(kNaturalOrderPosAtom);
 
         NS_RELEASE(kSubcontainmentAtom);
@@ -267,7 +278,12 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kInstanceOfAtom);
 
         NS_RELEASE(kNC_Title);
+        NS_RELEASE(kNC_child);
         NS_RELEASE(kNC_Column);
+        NS_RELEASE(kNC_Folder);
+        NS_RELEASE(kRDF_child);
+        NS_RELEASE(kRDF_instanceOf);
+        NS_RELEASE(kXUL_element);
 
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
         nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
@@ -1945,6 +1961,12 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
 
         return NS_OK;
     }
+    else if ((attrNameSpaceID == kNameSpaceID_None) &&
+             (attrNameAtom.get() == kRefAtom)) {
+        // Ignore changes to the 'ref=' attribute; the XUL builder
+        // will take care of that for us.
+        return NS_OK;
+    }
 
     // If we get here, it's a "vanilla" property: push its value into the graph.
     if (kNameSpaceID_Unknown == attrNameSpaceID) {
@@ -2047,6 +2069,11 @@ RDFGenericBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString
             NS_ERROR("unable to close widget item");
             return rv;
         }
+    }
+    else if ((attrNameSpaceID == kNameSpaceID_None) &&
+             (attrNameAtom.get() == kRefAtom)) {
+        // Ignore changes to the 'ref=' attribute; the XUL builder
+        // will take care of that for us.
     }
     else {
         // It's a "vanilla" property: push its value into the graph.
@@ -2513,14 +2540,42 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving parent node for removal");
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIRDFDataSource> ds;
+    rv = mDocument->GetDocumentDataSource(getter_AddRefs(ds));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get document datasource");
+    if (NS_FAILED(rv)) return rv;
+
     PRInt32 count;
     rv = parentNode->ChildCount(count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get count of the parent's children");
     if (NS_FAILED(rv)) return rv;
 
     while (--count >= 0) {
+        nsCOMPtr<nsIContent> child;
+        rv = parentNode->ChildAt(count, *getter_AddRefs(child));
+        if (NS_FAILED(rv)) return rv;
+
         rv = parentNode->RemoveChildAt(count, PR_TRUE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
+
+        do {
+            // If it's _not_ a XUL element, then we want to blow it and
+            // all of its kids out of the XUL document's
+            // resource-to-element map.
+            nsCOMPtr<nsIRDFResource> resource;
+            rv = nsRDFContentUtils::GetElementResource(child, getter_AddRefs(resource));
+            if (NS_FAILED(rv)) break;
+
+            PRBool isXULElement;
+            rv = mDB->HasAssertion(resource, kRDF_instanceOf, kXUL_element, PR_TRUE, &isXULElement);
+            if (NS_FAILED(rv)) break;
+
+            if (! isXULElement)
+                break;
+            
+            rv = child->SetDocument(nsnull, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+        } while (0);
     }
 
     // Clear the contents-generated attribute so that the next time we

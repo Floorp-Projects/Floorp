@@ -3496,7 +3496,36 @@ XULDocumentImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 PRBool
 XULDocumentImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
-    NS_NOTYETIMPLEMENTED("write me");
+    nsresult rv;
+
+    if (JSVAL_IS_STRING(aID)) {
+        char* s = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+        if (PL_strcmp("title", s) == 0) {
+            nsAutoString title("get me out of aVp somehow");
+            for (PRInt32 i = mPresShells.Count() - 1; i >= 0; --i) {
+                nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+                nsCOMPtr<nsIPresContext> context;
+                rv = shell->GetPresContext(getter_AddRefs(context));
+                if (NS_FAILED(rv)) return PR_FALSE;
+
+                nsCOMPtr<nsISupports> container;
+                rv = context->GetContainer(getter_AddRefs(container));
+                if (NS_FAILED(rv)) return PR_FALSE;
+
+                if (! container) continue;
+
+                nsCOMPtr<nsIWebShell> webshell = do_QueryInterface(container);
+                if (! webshell) continue;
+
+                rv = webshell->SetTitle(title.GetUnicode());
+                if (NS_FAILED(rv)) return PR_FALSE;
+            }
+        }
+        else if (PL_strcmp("location", s) == 0) {
+            NS_NOTYETIMPLEMENTED("write me");
+            return PR_FALSE;
+        }
+    }
     return PR_TRUE;
 }
 
