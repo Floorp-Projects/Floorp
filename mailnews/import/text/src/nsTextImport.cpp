@@ -25,6 +25,11 @@
   Text import addressbook interfaces
 
 */
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
@@ -50,8 +55,7 @@
 #include "TextDebugLog.h"
 
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kPrefServiceCID,		NS_PREF_CID);
-
+PRLogModuleInfo* TEXTIMPORTLOGMODULE;
 
 class ImportAddressImpl : public nsIImportAddressBooks
 {
@@ -126,6 +130,9 @@ nsTextImport::nsTextImport()
 {
     NS_INIT_ISUPPORTS();
 
+  // Init logging module.
+  if (!TEXTIMPORTLOGMODULE)
+    TEXTIMPORTLOGMODULE = PR_NewLogModule("IMPORT");
 	IMPORT_LOG0( "nsTextImport Module Created\n");
 
 	nsTextStringBundle::GetStringBundle();
@@ -489,12 +496,9 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
     	return( NS_ERROR_FAILURE);
     }
 
-#ifdef IMPORT_DEBUG
-	char *pPath;
-	inFile->GetNativePath( &pPath);    
-	IMPORT_LOG1( "Import address book: %s\n", pPath);
-	nsCRT::free( pPath);
-#endif
+  nsXPIDLCString pPath; 
+  inFile->GetNativePath(getter_Copies(pPath));
+	IMPORT_LOG1( "Importing address book: %s\n", pPath.get());
 	
     nsresult rv = NS_OK;
 	PRBool	isLDIF = PR_FALSE;
@@ -695,7 +699,7 @@ NS_IMETHODIMP ImportAddressImpl::InitFieldMap(nsIFileSpec *location, nsIImportFi
 	// from the same file format.
 	
 	nsresult rv;
-	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+	nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	prefStr;
 		rv = prefs->CopyCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
@@ -774,7 +778,7 @@ void ImportAddressImpl::SaveFieldMap( nsIImportFieldMap *pMap)
 	PRBool	done = PR_FALSE;
 	nsresult rv;
 	// NS_WITH_PROXIED_SERVICE( nsIPref, prefs, kPrefServiceCID, NS_UI_THREAD_EVENTQ, &rv);
-	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
 
 	if (NS_SUCCEEDED( rv)) {
 		nsXPIDLCString	prefStr;

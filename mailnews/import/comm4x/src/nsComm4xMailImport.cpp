@@ -41,6 +41,10 @@
   Comm4xMail import mail interface
 
 */
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
 
 #include "nscore.h"
 #include "nsCRT.h"
@@ -74,6 +78,7 @@ static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 
 #define COMM4XMAIL_MSGS_URL   "chrome://messenger/locale/comm4xMailImportMsgs.properties"
 
+PRLogModuleInfo *COMM4XLOGMODULE = nsnull;
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -82,6 +87,10 @@ static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 nsComm4xMailImport::nsComm4xMailImport()
 {
     NS_INIT_ISUPPORTS();
+
+    // Init logging module.
+    if (!COMM4XLOGMODULE)
+      COMM4XLOGMODULE = PR_NewLogModule("IMPORT");
 
     IMPORT_LOG0("nsComm4xMailImport Module Created\n");
 
@@ -314,12 +323,10 @@ NS_IMETHODIMP ImportComm4xMailImpl::ImportMailbox(nsIImportMailboxDescriptor *pS
         return NS_ERROR_FAILURE;
     }
 
-#ifdef IMPORT_DEBUG
-    char *pPath;
-    inFile->GetNativePath(&pPath);    
-    IMPORT_LOG1("Import mailbox: %s\n", pPath);
-    nsCRT::free(pPath);
-#endif
+    nsXPIDLCString pSrcPath, pDestPath;;
+    inFile->GetNativePath(getter_Copies(pSrcPath));
+    pDestination ->GetNativePath(getter_Copies(pDestPath));
+    IMPORT_LOG2("ImportComm4xMailImpl::ImportMailbox: Copying folder from '%s' to '%s'.", pSrcPath.get(), pDestPath.get());
 
     nsCOMPtr <nsIFileSpec> parent;
     if (NS_FAILED (pDestination->GetParent(getter_AddRefs(parent))))

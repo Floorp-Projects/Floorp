@@ -207,18 +207,12 @@ nsresult nsComm4xMail::FoundMailbox(nsIFileSpec *mailFile, nsAutoString *pName, 
 {
     nsCOMPtr<nsIImportMailboxDescriptor>    desc;
 
-#ifdef IMPORT_DEBUG
-    char *pPath = nsnull;
-    mailFile->GetNativePath(&pPath);
-    if (pPath) {
-        IMPORT_LOG2("Found comm4x mailbox, %s: %s\n", pPath, pName->get());
-        nsCRT::free(pPath);
-    }
-    else {
-        IMPORT_LOG1("Found comm4x mailbox, %s\n", pName->get());
-    }
-    IMPORT_LOG1("\tm_depth = %d\n", (int)m_depth);
-#endif
+    nsXPIDLCString pPath;
+    mailFile->GetNativePath(getter_Copies(pPath));
+    if (!pPath.IsEmpty())
+      IMPORT_LOG2("Found comm4x mailbox: %s, m_depth = %d\n", pPath.get(), m_depth);
+    else
+      IMPORT_LOG2("Can't get native path but found comm4x mailbox: %s, m_depth = %d\n", NS_ConvertUCS2toUTF8(*pName).get(), m_depth);
 
     nsresult rv = pImport->CreateNewMailboxDescriptor(getter_AddRefs(desc));
     if (NS_SUCCEEDED(rv)) {

@@ -42,22 +42,14 @@
 #define IMPORT_DEBUG	1
 #endif
 
-#ifdef IMPORT_DEBUG
-#include <stdio.h>
+// Use PR_LOG for logging.
+#include "prlog.h"
+extern PRLogModuleInfo *OUTLOOKLOGMODULE;  // Logging module
 
-#define	IMPORT_LOG0( x)	printf( x)
-#define	IMPORT_LOG1( x, y)	printf( x, y)
-#define	IMPORT_LOG2( x, y, z)	printf( x, y, z)
-#define	IMPORT_LOG3( a, b, c, d)	printf( a, b, c, d)
-
-#else
-
-#define	IMPORT_LOG0( x)
-#define	IMPORT_LOG1( x, y)
-#define	IMPORT_LOG2( x, y, z)
-#define	IMPORT_LOG3( a, b, c, d)
-
-#endif
+#define IMPORT_LOG0(x)          PR_LOG(OUTLOOKLOGMODULE, PR_LOG_DEBUG, (x))
+#define IMPORT_LOG1(x, y)       PR_LOG(OUTLOOKLOGMODULE, PR_LOG_DEBUG, (x, y))
+#define IMPORT_LOG2(x, y, z)    PR_LOG(OUTLOOKLOGMODULE, PR_LOG_DEBUG, (x, y, z))
+#define IMPORT_LOG3(a, b, c, d) PR_LOG(OUTLOOKLOGMODULE, PR_LOG_DEBUG, (a, b, c, d))
 
 
 

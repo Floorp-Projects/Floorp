@@ -38,28 +38,14 @@
 #ifndef OEDebugLog_h___
 #define OEDebugLog_h___
 
-/*
-#ifdef NS_DEBUG
-#define IMPORT_DEBUG	1
-#endif
-*/
+// Use PR_LOG for logging.
+#include "prlog.h"
+extern PRLogModuleInfo *OELOGMODULE;  // Logging module
 
-#ifdef IMPORT_DEBUG
-#include <stdio.h>
-
-#define	IMPORT_LOG0( x)	printf( x)
-#define	IMPORT_LOG1( x, y)	printf( x, y)
-#define	IMPORT_LOG2( x, y, z)	printf( x, y, z)
-#define	IMPORT_LOG3( a, b, c, d)	printf( a, b, c, d)
-
-#else
-
-#define	IMPORT_LOG0( x)
-#define	IMPORT_LOG1( x, y)
-#define	IMPORT_LOG2( x, y, z)
-#define	IMPORT_LOG3( a, b, c, d)
-
-#endif
+#define IMPORT_LOG0(x)          PR_LOG(OELOGMODULE, PR_LOG_DEBUG, (x))
+#define IMPORT_LOG1(x, y)       PR_LOG(OELOGMODULE, PR_LOG_DEBUG, (x, y))
+#define IMPORT_LOG2(x, y, z)    PR_LOG(OELOGMODULE, PR_LOG_DEBUG, (x, y, z))
+#define IMPORT_LOG3(a, b, c, d) PR_LOG(OELOGMODULE, PR_LOG_DEBUG, (a, b, c, d))
 
 
 

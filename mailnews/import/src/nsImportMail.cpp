@@ -39,6 +39,10 @@
 /*
 */
 
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
 
 #include "prthread.h"
 #include "prprf.h"
@@ -209,6 +213,9 @@ nsImportGenericMail::nsImportGenericMail()
 	m_deleteDestFolder = PR_FALSE;
 	m_createdFolder = PR_FALSE;
 
+  // Init logging module.
+  if (!IMPORTLOGMODULE)
+    IMPORTLOGMODULE = PR_NewLogModule("IMPORT");
 }
 
 
@@ -393,7 +400,7 @@ void nsImportGenericMail::GetDefaultDestination( void)
 		m_createdFolder = PR_TRUE;
 		return;
 	}
-	IMPORT_LOG0( "*** FAILED to create a default import destination\n");
+  IMPORT_LOG0("*** GetDefaultDestination: Failed to create a default import destination folder.");
 }
 
 NS_IMETHODIMP nsImportGenericMail::WantsProgress(PRBool *_retval)
@@ -484,7 +491,7 @@ NS_IMETHODIMP nsImportGenericMail::BeginImport(nsISupportsString *successLog, ns
 	}
 	
 	if (!m_pInterface || !m_pMailboxes) {
-		IMPORT_LOG0( "*** Something is not set properly, interface, mailboxes, or destination.\n");
+    IMPORT_LOG0( "*** BeginImport: Either the interface or source mailbox is not set properly.");
 		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOTINITIALIZED, error);
 		SetLogs( success, error, successLog, errorLog);
 		*_retval = PR_FALSE;
@@ -492,7 +499,7 @@ NS_IMETHODIMP nsImportGenericMail::BeginImport(nsISupportsString *successLog, ns
 	}
 	
 	if (!m_pDestFolder) {
-		IMPORT_LOG0( "*** No import destination.\n");
+    IMPORT_LOG0( "*** BeginImport: The destination mailbox is not set properly.");
 		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NODESTFOLDER, error);
 		SetLogs( success, error, successLog, errorLog);
 		*_retval = PR_FALSE;
@@ -710,11 +717,9 @@ void ImportThreadData::DriverAbort()
 PR_STATIC_CALLBACK( void)
 ImportMailThread( void *stuff)
 {
-	IMPORT_LOG0( "In Begin ImporMailThread\n");
-
 	ImportThreadData *pData = (ImportThreadData *)stuff;
 	
-	IMPORT_LOG0( "In ImportMailThread!!!!!!!\n");
+  IMPORT_LOG0("ImportMailThread: Starting...");
 		
 	nsresult rv = NS_OK;
 
@@ -753,18 +758,20 @@ ImportMailThread( void *stuff)
 		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
 										curFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 
-		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", (long) rv);
 		if (NS_SUCCEEDED(rv))
 			// GetSubfolders() will initialize folders if they are not already initialized.
 			curProxy->GetSubFolders(getter_AddRefs(enumerator));
+    else
+      IMPORT_LOG1( "*** ImportMailThread: Can't get the destination root folder proxy. rv=(0x%lx)", (long) rv);
 	}
 	else {
-		IMPORT_LOG0( "Unable to obtain proxy service to do import\n");
+    IMPORT_LOG0("*** ImportMailThread: Unable to obtain proxy service to do the import.");
 		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
 		pData->abort = PR_TRUE;
 	}
 
-	IMPORT_LOG1( "Total number of mailboxes: %d\n", (int) count);
+
+  IMPORT_LOG1("ImportMailThread: Total number of folders to import = %d.", count);
 
   // Note that the front-end js script only displays one import result string so 
   // we combine both good and bad import status into one string (in var 'success').
@@ -784,9 +791,10 @@ ImportMailThread( void *stuff)
 			if (newDepth > depth) {
           // OK, we are going to add a subfolder under the last/previous folder we processed, so
           // find this folder (stored in 'lastName') who is going to be the new parent folder.
-				IMPORT_LOG1( "* Finding folder for child named: %s\n", lastName.get());
+        IMPORT_LOG1("ImportMailThread: Processing child folder '%s'.", NS_ConvertUCS2toUTF8(lastName).get());
 				rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
 				if (NS_FAILED( rv)) {
+          IMPORT_LOG1("*** ImportMailThread: Failed to get the interface for child folder '%s'.", NS_ConvertUCS2toUTF8(lastName).get());
 					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &success);
 					pData->fatalError = PR_TRUE;
 					break;
@@ -795,6 +803,7 @@ ImportMailThread( void *stuff)
 				rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder), 
 												subFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 				if (NS_FAILED( rv)) {
+          IMPORT_LOG1("*** ImportMailThread: Failed to get the proxy interface for child folder '%s'.", NS_ConvertUCS2toUTF8(lastName).get());
 					nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
 					pData->fatalError = PR_TRUE;
 					break;
@@ -802,19 +811,25 @@ ImportMailThread( void *stuff)
 
 				// Make sure this new parent folder obj has the correct subfolder list so far.
 				rv = curProxy->GetSubFolders(getter_AddRefs(enumerator));
-
-				IMPORT_LOG1( "Created proxy for new subFolder: 0x%lx\n", (long) rv);
 			}
 			else if (newDepth < depth) {
 				rv = NS_OK;
 				while ((newDepth < depth) && NS_SUCCEEDED( rv)) {
 					nsCOMPtr<nsIFolder> parFolder;
-					curProxy->GetParent( getter_AddRefs( parFolder));
+					rv = curProxy->GetParent( getter_AddRefs( parFolder));
+          if (NS_FAILED( rv)) {
+            IMPORT_LOG1("*** ImportMailThread: Failed to get the interface for parent folder '%s'.", lastName.get());
+					  nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &success);
+					  pData->fatalError = PR_TRUE;
+					  break;
+				  }
+
 					rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
 													parFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
 					depth--;
 				}
 				if (NS_FAILED( rv)) {
+          IMPORT_LOG1("*** ImportMailThread: Failed to get the proxy interface for parent folder '%s'.", lastName.get());
 					nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
 					pData->fatalError = PR_TRUE;
 					break;
@@ -839,25 +854,26 @@ ImportMailThread( void *stuff)
 					lastName.Assign(subName);
 			}
 				
-			IMPORT_LOG1( "* Creating new import folder: %s\n", lastName.get());
+      IMPORT_LOG1("ImportMailThread: Creating new import folder '%s'.", NS_ConvertUCS2toUTF8(lastName).get());
 
 			rv = curProxy->CreateSubfolder( lastName.get(),nsnull);
 				
-			IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
 			if (NS_SUCCEEDED( rv)) {
 				rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
-				IMPORT_LOG1( "GetChildNamed for new folder returned rv: 0x%lx\n", (long) rv);
 				if (NS_SUCCEEDED( rv)) {
 					newFolder = do_QueryInterface( subFolder);
 					if (newFolder) {
 						newFolder->GetPath( getter_AddRefs( outBox));
-						IMPORT_LOG0( "Got path for newly created folder\n");
 					}
 					else {
-						IMPORT_LOG0( "Newly created folder not found\n");
+            IMPORT_LOG1("*** ImportMailThread: Failed to locate subfolder interface '%s'.", lastName.get());
 					}
 				}
+        else
+          IMPORT_LOG1("*** ImportMailThread: Failed to locate subfolder '%s' after it's been created.", lastName.get());
 			}
+      else
+        IMPORT_LOG1("*** ImportMailThread: Failed to create subfolder '%s'.", lastName.get());
 				
 			if (NS_FAILED( rv)) {
 				nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &success);
@@ -890,7 +906,7 @@ ImportMailThread( void *stuff)
 				newFolder->ForceDBClosed();
 
 				if (fatalError) {
-					IMPORT_LOG1( "*** ImportMailbox returned fatalError, mailbox #%d\n", (int) i);
+					IMPORT_LOG1( "*** ImportMailThread: ImportMailbox returned fatalError, mailbox #%d\n", (int) i);
 					pData->fatalError = PR_TRUE;
 					break;
 				}
@@ -908,7 +924,7 @@ ImportMailThread( void *stuff)
 	nsImportGenericMail::SetLogs( success, error, pData->successLog, pData->errorLog);
 
 	if (pData->abort || pData->fatalError) {
-		IMPORT_LOG0( "Abort or fatalError set\n");
+		IMPORT_LOG0( "*** ImportMailThread: Abort or fatalError flag was set\n");
 		if (pData->ownsDestRoot) {
 			IMPORT_LOG0( "Calling destRoot->RecursiveDelete\n");
 
@@ -1000,7 +1016,7 @@ PRBool nsImportGenericMail::CreateFolder( nsIMsgFolder **ppFolder)
             return PR_FALSE;
           }
         }
-        IMPORT_LOG1( "* Creating folder for importing mail: %s\n", folderName.get());
+        IMPORT_LOG1( "Creating folder for importing mail: '%s'\n", NS_ConvertUCS2toUTF8(folderName).get());
         rv = localRootFolder->CreateSubfolder(folderName.get(), nsnull);
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsISupports> subFolder;
@@ -1008,7 +1024,7 @@ PRBool nsImportGenericMail::CreateFolder( nsIMsgFolder **ppFolder)
           if (subFolder) {
             subFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) ppFolder);
             if (*ppFolder) {
-              IMPORT_LOG0("****** CREATED NEW FOLDER FOR IMPORT\n");
+              IMPORT_LOG1("Folder '%s' created successfully\n", NS_ConvertUCS2toUTF8(folderName).get());
               return PR_TRUE;
             }
           } // if subFolder

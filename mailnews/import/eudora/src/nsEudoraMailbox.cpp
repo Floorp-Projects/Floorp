@@ -351,6 +351,7 @@ nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIF
 {
 	PRUint32	mailSize = m_mailSize;
 	PRUint32	tocSize = 0;
+  PRUint32	msgCount = 0;
 	nsresult	rv;
 
 	rv = pToc->GetFileSize( &tocSize);
@@ -416,7 +417,7 @@ nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIF
 				return( rv);
 		}
 		
-		IMPORT_LOG0( ".");
+		IMPORT_LOG1( "  Message #%d processed.", ++msgCount);
 
 		tocOffset += kMsgHeaderSize;
 	}

@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
 
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
@@ -63,6 +67,7 @@
 #include "prmem.h"
 #include "ImportDebug.h"
 
+PRLogModuleInfo *IMPORTLOGMODULE = nsnull;
 
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -188,7 +193,10 @@ nsImportService::nsImportService() : m_pModules( nsnull)
 {
     NS_INIT_ISUPPORTS();
 
-	IMPORT_LOG0( "* nsImport Service Created\n");
+	// Init logging module.
+  if (!IMPORTLOGMODULE)
+    IMPORTLOGMODULE = PR_NewLogModule("IMPORT");
+  IMPORT_LOG0( "* nsImport Service Created\n");
 
 	m_didDiscovery = PR_FALSE;
 	m_pDecoder = nsnull;

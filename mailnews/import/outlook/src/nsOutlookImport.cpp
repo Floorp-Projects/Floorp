@@ -42,6 +42,11 @@
   Outlook Express (Win32) import mail and addressbook interfaces
 
 */
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
@@ -73,6 +78,7 @@
 #include "MapiApi.h"
 
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
+PRLogModuleInfo *OUTLOOKLOGMODULE = nsnull;
 
 class ImportOutlookMailImpl : public nsIImportMail
 {
@@ -178,7 +184,11 @@ private:
 
 nsOutlookImport::nsOutlookImport()
 {
-    NS_INIT_ISUPPORTS();
+  NS_INIT_ISUPPORTS();
+
+  // Init logging module.
+  if (!OUTLOOKLOGMODULE)
+    OUTLOOKLOGMODULE = PR_NewLogModule("IMPORT");
 
 	IMPORT_LOG0( "nsOutlookImport Module Created\n");
 

@@ -25,6 +25,11 @@
   Eudora import mail and addressbook interfaces
 
 */
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
@@ -62,6 +67,7 @@
 #include "EudoraDebugLog.h"
 
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
+PRLogModuleInfo *EUDORALOGMODULE = nsnull;
 
 class ImportEudoraMailImpl : public nsIImportMail
 {
@@ -199,6 +205,9 @@ nsEudoraImport::nsEudoraImport()
 {
     NS_INIT_ISUPPORTS();
 
+  // Init logging module.
+  if (!EUDORALOGMODULE)
+    EUDORALOGMODULE = PR_NewLogModule("IMPORT");
 	IMPORT_LOG0( "nsEudoraImport Module Created\n");
 
 	nsEudoraStringBundle::GetStringBundle();
