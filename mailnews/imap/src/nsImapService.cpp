@@ -1453,12 +1453,14 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             urlSpec.Append(hierarchySeparator);
             urlSpec.Append(folderName.GetBuffer());
             urlSpec.Append('>');
+            urlSpec.Append(hierarchySeparator);
             PRInt32 leafNameStart = 
                 folderName.RFindChar('/'); // ** troublesome hierarchyseparator
             if (leafNameStart != -1)
+            {
                 folderName.SetLength(leafNameStart+1);
-            urlSpec.Append(hierarchySeparator);
-            urlSpec.Append(folderName.GetBuffer());
+                urlSpec.Append(folderName.GetBuffer());
+            }
             urlSpec.Append(newLeafName);
             nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl, &rv);
             if (NS_SUCCEEDED(rv) && uri)

@@ -617,6 +617,9 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
 NS_IMETHODIMP nsImapMailFolder::Rename (const char *newName)
 {
     nsresult rv = NS_ERROR_FAILURE;
+    NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = imapService->RenameLeaf(m_eventQueue, this, newName, this, nsnull);
     return rv;
 }
 
@@ -1416,6 +1419,7 @@ NS_IMETHODIMP nsImapMailFolder::OnlineFolderRename(
     nsresult rv = NS_ERROR_FAILURE;
     if (aStruct && aStruct->fNewName && *aStruct->fNewName)
     {
+        Delete();
         nsCOMPtr<nsIMsgFolder> rootFolder;
         rv = GetRootFolder(getter_AddRefs(rootFolder));
         if (NS_SUCCEEDED(rv))
