@@ -2261,6 +2261,19 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // before calling PropagateFloaterDamage.
     if (needToRecoverState &&
         (line->IsDirty() || line->IsPreviousMarginDirty())) {
+
+      // If the previous line had a 'clear' in it, we need to do the
+      // same thing that we do in |PlaceLine|.
+      --line;
+      if (line->IsInline()) {
+        PRUint8 breakType = line->GetBreakType();
+        if (breakType == NS_STYLE_CLEAR_LEFT ||
+            breakType == NS_STYLE_CLEAR_RIGHT ||
+            breakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT)
+          aState.ClearFloaters(aState.mY, breakType);
+      }
+      ++line;
+
       // We need to reconstruct the bottom margin only if we didn't
       // reflow the previous line and we do need to reflow (or repair
       // the top position of) the next line.
@@ -2274,10 +2287,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // If there's float damage we might end up doing this work twice,
       // but whatever...
       if (line->IsBlock()) {
-        // XXXPerf We could actually make this faster by stealing code
-        // from the top of nsBlockFrame::ReflowBlockFrame, but it's an
-        // edge case that will generally happen at most once in a given
-        // reflow (insertion of a new line before a block)
+        // We could actually make this faster by stealing code from the
+        // top of nsBlockFrame::ReflowBlockFrame, but it's an edge case
+        // that will generally happen at most once per reflow.
         line->MarkDirty();
       } else {
         deltaY = aState.mY + aState.mPrevBottomMargin.get() - line->mBounds.y;
@@ -4431,6 +4443,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
 
   // Apply break-after clearing if necessary
+  // This must stay in sync with |ReflowDirtyLines|.
   PRUint8 breakType = aLine->GetBreakType();
   switch (breakType) {
   case NS_STYLE_CLEAR_LEFT:
