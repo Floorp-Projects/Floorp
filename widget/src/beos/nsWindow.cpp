@@ -303,7 +303,7 @@ PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 
 PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
 {
-	nsGUIEvent event(aMsg, this)
+	nsGUIEvent event(aMsg, this);
 	InitEvent(event);
 
 	PRBool result = DispatchWindowEvent(&event);
