@@ -214,17 +214,25 @@ pref("network.ftp.passive",		    true);
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 
-// ruslan:
-pref("network.http.version", "1.1");	// comment this out in case of problems
-// pref("network.http.version", "1.0");
-// pref("network.http.version", "0.9"); // it'll work too if you're crazy
-// keep-alive option is effectively obsolete, as we want to use http/1.1 by
-// default eventually. Nevertheless it'll work with some older 1.0 servers
-// pref("network.http.keep-alive", true);
-// pref("network.http.keep-alive.timeout", 120);
-// pref("network.http.max-connections", 8);
+// <ruslan>
+// pref("network.http.version", "1.1");	  // default
+// pref("network.http.version", "1.0");   // uncomment this out in case of problems
+// pref("network.http.version", "0.9");   // it'll work too if you're crazy
+// keep-alive option is effectively obsolete. Nevertheless it'll work with
+// some older 1.0 servers:
+
+// pref("network.http.keep-alive", true); // set it to false in case of problems
+// pref("network.http.proxy.keep-alive", true );
+// pref("network.http.keep-alive.timeout", 300);
+
+// pref("network.http.max-connections",  8);
+
 // Enable http compression: comment this out in case of problems with 1.1
-pref("network.http.accept-encoding", "gzip,deflate,compress,identity");
+// pref("network.http.accept-encoding" ,"gzip,deflate,compress,identity");
+
+// pref("network.http.pipelining"      , false);
+// pref("network.http.proxy.pipelining", false);
+// </ruslan>
 
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
