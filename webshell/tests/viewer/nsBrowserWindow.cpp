@@ -97,13 +97,13 @@
 #include "nsIServiceManager.h"
 #endif
 
-#if defined(CookieManagement) || defined(SingleSignon)
+#ifdef CookieManagement
 #include "nsINetService.h"
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #endif
 
-#ifdef ClientWallet
+#if defined(ClientWallet) || defined(SingleSignon)
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -473,12 +473,14 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
 #if defined(CookieManagement) || defined(SingleSignon) || defined(ClientWallet)
   nsresult res;
-#if defined(CookieManagement) || defined(SingleSignon)
+#ifdef CookieManagement
   nsINetService *netservice;
+#endif
+#if defined(ClientWallet) || defined(SingleSignon)
+  nsIWalletService *walletservice;
 #endif
 #ifdef ClientWallet
 #define WALLET_EDITOR_URL "file:///y|/walleted.html"
-  nsIWalletService *walletservice;
   nsAutoString urlString(WALLET_EDITOR_URL);
 #endif
 #endif
@@ -682,12 +684,12 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 #if defined(SingleSignon)
   case PRVCY_DISPLAY_SIGNONS:
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&netservice);
-  if ((NS_OK == res) && (nsnull != netservice)) {
-    res = netservice->SI_DisplaySignonInfoAsHTML();
-    NS_RELEASE(netservice);
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->SI_DisplaySignonInfoAsHTML();
+    NS_RELEASE(walletservice);
   }
   break;
 #endif
