@@ -213,7 +213,9 @@ ToolbarSpec XFE_ComposeFrame::toolbar_spec[] = {
   { xfeCmdSpellCheck,		PUSHBUTTON, &MNC_SpellCheck_group },
   { xfeCmdSaveDraft,		PUSHBUTTON, &MNC_Save_group },
   TOOLBAR_SEPARATOR,
+#ifdef MOZ_MAIL_NEWS
   HG82981
+#endif
   { xfeCmdStopLoading,		PUSHBUTTON, &TB_Stop_group },
   { NULL }
 };

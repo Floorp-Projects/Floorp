@@ -2331,8 +2331,6 @@ fe_mailto_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
 			  0, /* attachment */
 			  0, /* newspost_url */
 			  0, /* body */
-			  FALSE, /* encrypt_p */
-			  FALSE, /* sign_p */
 			  FALSE, /* force_plain_text */
 			  0 /* html_part */
 			  );

@@ -439,8 +439,6 @@ void MSG_CompositionPane::NotifyPrefsChange(NotifyCode) {
 }
 
 
-HG02070
-
 
 char*
 MSG_CompositionPane::FigureBcc(XP_Bool newsBcc)
@@ -802,9 +800,6 @@ MSG_CompositionPane::InitializeHeaders(MWContext* old_context,
 	} else {
 		m_replyType = MSG_MailNew;
 	}
-
-
-HG00729
 
 
 	if (!*m_fields->GetOrganization()) {
@@ -2043,7 +2038,6 @@ MSG_CompositionPane::SanityCheck(int skippast)
 	if (skippast == MK_MSG_DOUBLE_INCLUDE) goto AFTER_DOUBLE_INCLUDE;
 	if (skippast == MK_MSG_EMPTY_MESSAGE) goto AFTER_EMPTY_MESSAGE;
 	if (skippast == MK_MSG_MISSING_SUBJECT) goto AFTER_MISSING_SUBJECT;
-	HG60283
 
 	// Check if they have quoted a document and not edited it, and also
 	// attached the same document.
@@ -2074,7 +2068,6 @@ AFTER_EMPTY_MESSAGE:
 	}
 
 AFTER_MISSING_SUBJECT:
-HG60207
 	return 0;
 
 }
@@ -2247,8 +2240,6 @@ MSG_CompositionPane::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 			return -1;
 		}
 	}
-
-	HG42440
 
 	const char* body = m_fields->GetBody();
 	uint32 body_length = XP_STRLEN(body);
@@ -2547,7 +2538,6 @@ MSG_CompositionPane::GetCompositionMessageID()
   return m_messageId;
 }
 
-HG20026
 
 
 int 

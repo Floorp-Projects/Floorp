@@ -100,12 +100,12 @@ MenuSpec XFE_EditorFrame::file_menu_spec[] = {
   MENU_SEPARATOR,
   { xfeCmdSave,         PUSHBUTTON },
   { xfeCmdSaveAs,	    PUSHBUTTON },
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   { "publishMenu",      CASCADEBUTTON,
     (MenuSpec*)&XFE_EditorFrame::publish_submenu_spec },
-#else /* MOZ_MAIL_NEWS */
+#else /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
   { xfeCmdPublish,      PUSHBUTTON },
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
   MENU_SEPARATOR,
   { xfeCmdSendPage,		PUSHBUTTON },
   { xfeCmdBrowsePage,	PUSHBUTTON },
@@ -376,13 +376,13 @@ MenuSpec XFE_EditorFrame::save_submenu_spec[] = {
 	{ NULL }
 };
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 MenuSpec XFE_EditorFrame::publish_submenu_spec[] = {
 	MENU_PUSHBUTTON(xfeCmdPublish),
 	MENU_PUSHBUTTON(xfeCmdSendPage),
 	{ NULL }
 };
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 static ToolbarSpec editor_file_toolbar_spec[] = {
 	{ 
@@ -411,21 +411,21 @@ static ToolbarSpec editor_file_toolbar_spec[] = {
 	},
 	{ xfeCmdBrowsePage,	PUSHBUTTON,           &ed_browse_group  },
 	{ 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 		"publishMenu",
 		CASCADEBUTTON,
 		&ed_publish_group, NULL, NULL, NULL,				// Icons
 		(MenuSpec*) &XFE_EditorFrame::publish_submenu_spec,	// Submenu spec
 		NULL , NULL, 										// Generate proc
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
-#else /* MOZ_MAIL_NEWS */
+#else /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 		xfeCmdPublish,
 		PUSHBUTTON,
 		&ed_publish_group, NULL, NULL, NULL,				// Icons
 		NULL,												// Submenu spec
 		NULL , NULL, 										// Generate proc
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 	},
 	TOOLBAR_SEPARATOR,
 	{ xfeCmdPrint,      PUSHBUTTON,           &ed_print_group   }, 
@@ -717,6 +717,8 @@ fe_editor_create_plugin_menu(MenuSpec* static_spec)
 		menu_spec[nstatics+category_index].submenu = category_spec;
 		category_index++;
 	}
+
+    category_index++;
 	menu_spec[nstatics+category_index].menuItemName = NULL; // delimit paranoia
 
 	return menu_spec;

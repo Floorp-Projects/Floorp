@@ -1479,7 +1479,9 @@ XDEBUG(	printf ("Do Command: %s \n", Command::getString(command));)
   {
 	  toggleAddressArea();
   }
+#ifdef ROSETTA_DOES_DECLARATIONS
   HG81210
+#endif /* ROSETTA_DOES_DECLARATIONS */
   else if (command == xfeCmdDeleteItem) {
 	  if ( m_focusW ) {
 		  if ( m_focusW != m_addrTypeW ) {

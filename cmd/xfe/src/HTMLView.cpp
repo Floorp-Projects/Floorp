@@ -585,9 +585,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
 									NULL,      // other_random_headers
 									NULL,      // priority
 									NULL,      // attachment
-									NULL,      // newspost_url
-									FALSE,     // xxx_p
-									FALSE);    // xxx2_p
+									NULL);     // newspost_url
 
       // Since they are only sending the link,
       // I am guessing that they want a plaintext editor.
@@ -598,7 +596,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
       getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
       return;
     }
-#endif  // MOZ_MAIL_NEWS
+#endif  /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
   else if (IS_CMD(xfeCmdCut))
     {
 		MWContext *context = fe_GetFocusGridOfContext(m_contextData);

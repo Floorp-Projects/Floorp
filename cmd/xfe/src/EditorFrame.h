@@ -79,7 +79,7 @@ public:
 
   static MenuSpec new_submenu_spec[];
   static MenuSpec save_submenu_spec[];
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   static MenuSpec publish_submenu_spec[];
 #endif
 

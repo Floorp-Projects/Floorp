@@ -81,14 +81,18 @@ ICONS += $(wildcard images/hidecolumn*.gif images/showcolumn*.gif) \
 ICONS += $(wildcard images/M_*.gif)
 
 MAIL_OR_COMPOSE_ICONS = $(wildcard images/MNC*.gif \
-								   images/MNTB_Next*.gif \
-								   images/MNTB_Forward*.gif \
-								   images/MNAB_NewPerson*.gif \
-								   images/MN_*)
+			   images/MNTB_Next*.gif \
+			   images/MNTB_Forward*.gif \
+			   images/MNAB_NewPerson*.gif \
+			   images/MN_Draft*.gif \
+			   images/MN_Collect*.gif \
+			   images/MN_MailAttach.gif \
+			   images/MN_P*.gif \
+			   images/MN_Template*.gif )
 
 ifdef MOZ_MAIL_NEWS
 ICONS += $(MAIL_OR_COMPOSE_ICONS) \
-    $(wildcard images/MNTB*.gif images/MNAB*.gif) \
+    $(wildcard images/MNTB*.gif images/MNAB*.gif images/MN_*.gif) \
 	images/threadoff.gif \
 	images/threadon.gif
 	images/Desk_Address.gif \

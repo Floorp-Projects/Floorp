@@ -37,7 +37,6 @@
 #include "msgprefs.h"
 #include "msgmast.h"
 #include "msgcpane.h"
-#include  HG02902
 #include "msgcflds.h"
 #include "prefapi.h"
 #include "abdefn.h"
@@ -2438,8 +2437,6 @@ int MSG_SendMimeDeliveryState::GatherMimeAttachments ()
   status = toppart->Write();
   if (status < 0) goto FAIL;
 
-  HG75442
-
   if (m_msg_file)
 	XP_FileClose (m_msg_file);
   m_msg_file = 0;
@@ -2507,8 +2504,6 @@ int MSG_SendMimeDeliveryState::GatherMimeAttachments ()
 	in_file = NULL;
   }
 
-  HG59731
-
   if (status < 0)
 	{
 	  m_status = status;
@@ -2549,16 +2544,6 @@ FAILMEM:
 #pragma optimization_level 4
 #endif // XP_MAC && DEBUG
 
-static void FROB (const char *src, char *dest)
-{
-    if (src && *src && dest)
-    {
-        if (*dest) XP_STRCAT(dest, ",");
-        XP_STRCAT(dest, src);
-    }
-}
-
-HG53784
 
 #if defined(XP_MAC) && defined(DEBUG)
 #pragma global_optimizer reset
@@ -2569,7 +2554,6 @@ int
 mime_write_message_body (MSG_SendMimeDeliveryState *state,
 						 char *buf, int32 size)
 {
-    HG56898
 	{
 	  if (int32(XP_FileWrite (buf, size, state->m_msg_file)) < size)
 	  {
@@ -3358,8 +3342,7 @@ MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 
   fields = MSG_CreateCompositionFields(from, 0, to, cc, 0, 0, 0, 0,
 									   FE_UsersOrganization(), 0, 0,
-									   extra_headers, 0, 0, 0
-									   HG15448);
+									   extra_headers, 0, 0, 0);
   if (!fields)
   {
 	  status = MK_OUT_OF_MEMORY;

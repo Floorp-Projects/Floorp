@@ -397,10 +397,6 @@ MSG_MailDocumentURL (MWContext *old_context,const char *url)
 	MSG_CompositionFields* fields = new MSG_CompositionFields();
 	if (!fields) return NULL;	// Out of memory.
 
-	/* It's so cool that there are half a dozen entrypoints to
-	   composition-window-creation. */
-	HG62239
-
   /* If url is not specified, grab current history entry. */
   if (!url) {
 	  History_entry *h =
@@ -447,10 +443,6 @@ MSG_Mail (MWContext *old_context)
 	MSG_CompositionFields* fields = new MSG_CompositionFields();
 	if (!fields) return NULL;	// Out of memory.
 
-	/* It's so cool that there are half a dozen entrypoints to
-	   composition-window-creation. */
-	HG42933
-
 	XP_Bool prefBool = FALSE;
 	PREF_GetBoolPref("mail.attach_vcard",&prefBool);
 	fields->SetAttachVCard(prefBool);
@@ -490,7 +482,6 @@ MSG_CreateCompositionFields (
 					const char *priority,
 					const char *attachment,
 					const char *newspost_url
-					HG66663
 					)
 {
 	MSG_CompositionFields* fields = new MSG_CompositionFields();
@@ -510,7 +501,6 @@ MSG_CreateCompositionFields (
 	fields->SetAttachments(attachment);
 	fields->SetNewspostUrl(newspost_url);
 	fields->SetPriority(priority);
-	HG65243
 	return fields;
 }
 
@@ -572,7 +562,6 @@ MSG_ComposeMessage (MWContext *old_context,
 					const char *attachment,
 					const char *newspost_url,
 					const char *body,
-					HG00282
 					XP_Bool force_plain_text,
 					const char* html_part
 					)
@@ -584,15 +573,12 @@ MSG_ComposeMessage (MWContext *old_context,
 		return NULL;
 	
 
-	HG02872
-
-
 	MSG_CompositionFields* fields =
 		MSG_CreateCompositionFields(from, reply_to, to, cc, bcc,
 									fcc, newsgroups, followup_to,
 									organization, subject, references,
 									other_random_headers, priority, attachment,
-									newspost_url HG65241);
+									newspost_url);
 
 	fields->SetForcePlainText(force_plain_text);
 	fields->SetHTMLPart(html_part);

@@ -375,8 +375,7 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 	mime_intl_mimepart_2_str(&subj, mdd->mailcsid);
 
 	fields = MSG_CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
-										  org, subj, refs, 0, priority, 0, news_host,
-										  altform_p, sign_p);
+										  org, subj, refs, 0, priority, 0, news_host);
 
 	draftInfo = MimeHeaders_get(mdd->headers, HEADER_X_MOZILLA_DRAFT_INFO, FALSE, FALSE);
 	if (draftInfo && fields) {
@@ -506,9 +505,7 @@ mime_parse_stream_complete (NET_StreamClass *stream)
   else
   {
 	  fields = MSG_CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
-											org, subj, refs, 0, priority, 0, news_host,
-											HG09843, 
-											HG09844 );
+											org, subj, refs, 0, priority, 0, news_host );
 	  if (fields)
 		  cpane = FE_CreateCompositionPane(mdd->context, fields, NULL, MSG_DEFAULT);
   }

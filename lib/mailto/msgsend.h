@@ -93,7 +93,6 @@ public:
   void	Clear();
 
   // Callback from msgsendp.cpp into msgsend.cpp.
-  HG89377
   MWContext *GetContext() { return m_pane->GetContext(); }
 
   int SetMimeHeader(MSG_HEADER_SET header, const char *value);

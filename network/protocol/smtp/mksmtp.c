@@ -1305,7 +1305,7 @@ HG61365
 									newsgroups, followup_to, organization,
 									subject, references, other_random_headers,
 									priority, attachment, newspost_url, body,
-									encrypt_p, sign_p, force_plain_text,
+									force_plain_text,
 									html_part);
 
 #ifdef MOZ_MAIL_NEWS

@@ -390,8 +390,8 @@ extern void fe_DrawShadows (MWContext *cx, fe_Drawable *drawable, int x, int y,
 extern void fe_HistoryDialog (MWContext *context);
 extern void fe_RegenerateHistoryMenu (MWContext *context);
 extern void fe_HistoryItemAction (Widget, XEvent *, String *, Cardinal *);
-extern MWContext * fe_findcommand_context();
-extern void fe_unset_findcommand_context();
+extern MWContext * fe_findcommand_context(void);
+extern void fe_unset_findcommand_context(void);
 extern void fe_FindDialog (MWContext *context, Boolean really_do_it_p);
 extern void fe_FindAndReplaceDialog (MWContext *context,
                                      Boolean really_do_it_p);

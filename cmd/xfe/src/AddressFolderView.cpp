@@ -961,7 +961,7 @@ XFE_AddressFolderView::setupIcons()
 		     MN_People.mask_bits, FALSE);
 
 
-
+#ifdef MOZ_MAIL_NEWS
 	// News 
         fe_NewMakeIcon(getToplevel()->getBaseWidget(),
                      BlackPixelOfScreen(XtScreen(base)), // umm. fix me
@@ -972,8 +972,8 @@ XFE_AddressFolderView::setupIcons()
                      MN_Newsgroup.mono_bits, MN_Newsgroup.color_bits, 
 		     MN_Newsgroup.mask_bits, FALSE);
 
-
 	HG82687
+#endif /* MOZ_MAIL_NEWS */
   }
 }
 

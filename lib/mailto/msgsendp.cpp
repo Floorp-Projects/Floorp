@@ -540,12 +540,6 @@ int MSG_SendPart::Write()
 			  message_headers = 0;
 			}
 
-		  if (!m_parent)
-			{
-              HG78478
-			  if (status < 0) goto FAIL;
-			}
-		  
 		  /* Now make sure there's a Content-Type header.
 		   */
 		  if (!content_type_header)

@@ -150,7 +150,7 @@ public:
 	virtual XP_Bool     isSelected(XFE_Frame*, XFE_CommandInfo*);
 	virtual XP_Bool     isDeterminate(XFE_Frame*, XFE_CommandInfo*);
 
-	XFE_CommandParameters* getParameters(XFE_Frame*);
+	virtual XFE_CommandParameters* getParameters(XFE_Frame*);
 	virtual int         getParameterIndex(XFE_Frame*);
 	virtual void        setParameterIndex(XFE_Frame*, unsigned);
 	virtual char*       getLabel(XFE_Frame*, XFE_CommandInfo*);

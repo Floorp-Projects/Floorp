@@ -2810,7 +2810,6 @@ extern MSG_Pane* MSG_ComposeMessage(MWContext *old_context,
 									const char *attachment,
 									const char *newspost_url,
 									const char *body,
-									HG00282
 									XP_Bool force_plain_text,
 									const char* html_part);
 
@@ -2829,8 +2828,7 @@ extern MSG_CompositionFields* MSG_CreateCompositionFields(
 									const char *other_random_headers,
 									const char *priority,
 									const char *attachment,
-									const char *newspost_url
-									HG66663);
+									const char *newspost_url);
 
 extern void MSG_DestroyCompositionFields(MSG_CompositionFields *fields);
 
