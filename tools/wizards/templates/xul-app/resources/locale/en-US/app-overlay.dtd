@@ -1,0 +1,3 @@
+${license_xml}
+
+<!ENTITY ${app_name_short}Cmd.label				        "${app_name_menu}">
