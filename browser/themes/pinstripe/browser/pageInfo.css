@@ -71,5 +71,5 @@ textbox.header {
 }
 
 textbox[disabled] {
-        text-syle: italic;
+	font-syle: italic;
 }
