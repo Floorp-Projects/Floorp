@@ -90,6 +90,10 @@ int main()
 {
     InvokeTestTarget *test = new InvokeTestTarget();
 
+    /* here we make the global 'check for alloc failure' checker happy */
+    if(!test)
+        return 1;
+
     PRInt32 out, tmp32 = 0;
     PRInt64 out64;
     printf("calling direct:\n");
