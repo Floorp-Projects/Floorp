@@ -85,9 +85,10 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, PRBool *_retval)
           *_retval = mozQuote.LowerCaseEqualsLiteral("true");            
         }
 
-        nsAutoString className;
-        if (NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, mClassAtom, className))) {
-          *_retval = className.EqualsLiteral("moz-signature");
+        if (!*_retval) {
+          nsAutoString className;
+          if (NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, mClassAtom, className))) 
+            *_retval = className.EqualsLiteral("moz-signature");
         }
       }         
     } else if (tag == mScriptAtom ||
