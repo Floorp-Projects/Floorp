@@ -2,7 +2,6 @@ box#sidebarbox
 {
   height: 200px; 
   width: 200px;
-  overflow: auto
 }
 
 splitter#sidebarsplitter
@@ -19,6 +18,7 @@ splitter#sidebarsplitter[hidden="true"] {
 
 box#sidebarpanels
 {
+  overflow: auto
 }
 
 iframe.panelframe {

@@ -108,7 +108,7 @@ function sidebarOverlayInit(usersidebar)
   sb_datasource     = sb_datasource.QueryInterface(containder)
   sb_datasource.Init(registry, RDF.GetResource(sidebar.resource))
   
-  var mypanelsbox = document.getElementById('sidebarbox')
+  var mypanelsbox = document.getElementById('sidebarpanels')
 
   // Now enumerate all of the flash datasources.
   var enumerator = sb_datasource.GetElements()
@@ -225,6 +225,39 @@ function sidebarShowHide() {
     //dump("Hiding the sidebar\n")
     sidebar.setAttribute('hidden','true')
     sidebar_splitter.setAttribute('hidden','true')
+	}
+}
+
+function sidebarSaveState(splitter) {
+  var sidebarbox = splitter.previousSibling
+  sidebarbox.setAttribute('style','');
+  return;
+  dump('========== saving width\n')
+  var style = sidebarbox.getAttribute('style')
+  var visibility = style.match('visibility:([^;]*)')
+  if (visibility) {
+    visibility = visibility[1]
+  }
+  dump('splitter attrs\n')
+  dumpAttributes(splitter)
+  dump('sidebarbox attrs\n')
+  dumpAttributes(sidebarbox)
+  dump('sidebarbox.width='+sidebarbox.getAttribute('width')+'\n')
+  dump('sidebarbox.collapsed='+sidebarbox.getAttribute('collapsed')+'\n')
+  dump('sidebarbox.visibility='+sidebarbox.getAttribute('visibility')+'\n')
+	dump("style="+style+"\n")
+	dump("visibility="+visibility+"\n")
+}
+
+function dumpAttributes(node) {
+  var attributes = node.attributes
+
+  if (!attributes || attributes.length == 0) {
+    dump("no attributes")
+	}
+  for (var ii=0; ii < attributes.length; ii++) {
+    var attr = attributes.item(ii)
+    dump("attr "+ii+": "+ attr.name +"="+attr.value+"\n")
 	}
 }
 
