@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= layout
 LIBRARY_NAME = gkmathmlcon_s
-REQUIRES	= xpcom string necko content
+REQUIRES	= xpcom string necko content gfx
 
 include $(topsrcdir)/config/config.mk
 

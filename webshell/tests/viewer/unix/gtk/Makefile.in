@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webshell_tests
 LIBRARY_NAME	= viewer_gtk_s
-REQUIRES	= xpcom string webbrwsr widget timer dom layout docshell uriloader webshell necko util
+REQUIRES	= xpcom string webbrwsr widget timer dom gfx docshell uriloader webshell necko util
 
 CPPSRCS		= \
 		nsGtkMain.cpp \

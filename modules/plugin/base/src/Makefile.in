@@ -32,7 +32,7 @@ LIBRARY_NAME	= gkplugin
 EXPORT_LIBRARY = 1
 IS_COMPONENT    = 1
 MODULE_NAME	= nsPluginModule
-REQUIRES	= xpcom string java pref necko gtkxtbin webshell caps intl dom layout content widget cookie mimetype oji exthandler docshell webbrwsr timer windowwatcher
+REQUIRES	= xpcom string java pref necko gtkxtbin webshell caps intl dom gfx layout content widget cookie mimetype oji exthandler docshell webbrwsr timer windowwatcher
 # for xlib port
 REQUIRES	+= xlibrgb
 

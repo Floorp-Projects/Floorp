@@ -30,7 +30,7 @@ LIBRARY_NAME	= nsgif
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGIFModule
-REQUIRES	= xpcom string img layout content util
+REQUIRES	= xpcom string img gfx layout content util
 
 CPPSRCS		= \
 		gif.cpp \

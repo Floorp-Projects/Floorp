@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= uriloader
 LIBRARY_NAME	= uriloaderbase_s
-REQUIRES	= xpcom string necko dom exthandler js docshell layout content widget caps intl webshell xpconnect
+REQUIRES	= xpcom string necko dom exthandler js docshell gfx layout content widget caps intl webshell xpconnect
 
 CPPSRCS = 							\
 				nsURILoader.cpp 		\

@@ -30,7 +30,7 @@ MODULE = inspector
 LIBRARY_NAME = inspector
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME = inspectr
-REQUIRES = xpcom string layout content dom widget rdf rdfutil locale gfx2 timer necko imglib2
+REQUIRES = xpcom string gfx layout content dom widget rdf rdfutil locale gfx2 timer necko imglib2
 IS_COMPONENT = 1
 MODULE_NAME	= nsInspectorModule
 

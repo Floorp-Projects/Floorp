@@ -31,7 +31,7 @@ LIBRARY_NAME	= mozbrwsr
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsBrowserModule
-REQUIRES	= xpcom string webshell necko shistory widget layout content docshell appshell dom timer uriloader pref editor appcomps rdf webbrwsr uconv chardet windowwatcher
+REQUIRES	= xpcom string webshell necko shistory widget gfx layout content docshell appshell dom timer uriloader pref editor appcomps rdf webbrwsr uconv chardet windowwatcher
 
 CPPSRCS		= nsBrowserInstance.cpp
 

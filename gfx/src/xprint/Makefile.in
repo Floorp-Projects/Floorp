@@ -27,7 +27,7 @@ VPATH		= @srcdir@:@srcdir@/../xlib
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= layout
+MODULE		= gfx
 LIBRARY_NAME	= gfxxprint
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1

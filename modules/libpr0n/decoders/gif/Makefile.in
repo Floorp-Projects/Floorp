@@ -32,7 +32,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGIFModule2
 
-REQUIRES	= xpcom necko layout gfx2 imglib2
+REQUIRES	= xpcom necko gfx gfx2 imglib2
 
 CPPSRCS		= GIF2.cpp nsGIFDecoder2.cpp nsGIFModule.cpp
 

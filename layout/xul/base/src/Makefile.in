@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkxulbase_s
-REQUIRES	= xpcom string dom locale content widget view timer docshell necko editor htmlparser webshell pref intl gfx2 imglib2 unicharutil
+REQUIRES	= xpcom string dom locale content gfx widget view timer docshell necko editor htmlparser webshell pref intl gfx2 imglib2 unicharutil
 
 CPPSRCS		= \
        nsScrollBoxObject.cpp \
