@@ -29,7 +29,6 @@
 static NS_DEFINE_IID(kPopUpMenuIID, NS_IPOPUPMENU_IID);
 NS_IMPL_ISUPPORTS(nsPopUpMenu, kPopUpMenuIID)
 
-
 //-------------------------------------------------------------------------
 //
 // nsPopUpMenu constructor
@@ -67,11 +66,8 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
   NS_ADDREF(mParent);
 
   Widget parentWidget = (Widget) mParent->GetNativeData(NS_NATIVE_WINDOW);
-
   mMenu = XmCreatePopupMenu(parentWidget, "_popup", NULL, 0);
-    
   return NS_OK;
-
 }
 
 
@@ -84,7 +80,6 @@ NS_METHOD nsPopUpMenu::AddItem(const nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddItem(nsIMenuItem * aMenuItem)
 {
-
   return NS_OK;
 }
 
@@ -92,7 +87,6 @@ NS_METHOD nsPopUpMenu::AddItem(nsIMenuItem * aMenuItem)
 NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 {
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------

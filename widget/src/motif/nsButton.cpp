@@ -177,13 +177,12 @@ PRBool nsButton::OnMove(PRInt32, PRInt32)
 
 PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 {
-  //printf("** nsButton::OnPaint **\n");
   return PR_FALSE;
 }
 
 PRBool nsButton::OnResize(nsSizeEvent &aEvent)
 {
-    return PR_FALSE;
+  return PR_FALSE;
 }
 
 

@@ -29,7 +29,6 @@
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsString.h"
-#include "nsObject.h"
 
 #include "Xm/Xm.h"
 
@@ -133,26 +132,24 @@ public:
 
     virtual PRBool IsChild() { return(PR_FALSE); };
 
-
      // Utility methods
-    void SetBounds(const nsRect &aRect);
-    PRBool ConvertStatus(nsEventStatus aStatus);
-    virtual PRBool OnPaint(nsPaintEvent &event);
-    void OnDestroy();
-    PRBool OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
-    PRBool DispatchFocus(nsGUIEvent &aEvent);
-    virtual PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    void SetIgnoreResize(PRBool aIgnore);
-    PRBool IgnoreResize();
+    void     SetBounds(const nsRect &aRect);
+    PRBool   ConvertStatus(nsEventStatus aStatus);
+    virtual  PRBool OnPaint(nsPaintEvent &event);
+    virtual  void   OnDestroy();
+    PRBool   OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
+    PRBool   DispatchFocus(nsGUIEvent &aEvent);
+    virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
+    void     SetIgnoreResize(PRBool aIgnore);
+    PRBool   IgnoreResize();
     PRUint32 GetYCoord(PRUint32 aNewY);
-    PRBool DispatchMouseEvent(nsMouseEvent& aEvent);
-    virtual PRBool OnResize(nsSizeEvent &aEvent);
-
+    PRBool   DispatchMouseEvent(nsMouseEvent& aEvent);
+    virtual  PRBool OnResize(nsSizeEvent &aEvent);
    
      // Resize event management
-    void SetResizeRect(nsRect& aRect);
-    void SetResized(PRBool aResized);
-    void GetResizeRect(nsRect* aRect);
+    void   SetResizeRect(nsRect& aRect);
+    void   SetResized(PRBool aResized);
+    void   GetResizeRect(nsRect* aRect);
     PRBool GetResized();
 
     char gInstanceClassName[256];
@@ -216,11 +213,8 @@ protected:
 
   // XXX Temporary, should not be caching the font
   nsFont *    mFont;
-
   PRInt32     mPreferredWidth;
   PRInt32     mPreferredHeight;
-
-
 
   // Resize event management
   nsRect mResizeRect;

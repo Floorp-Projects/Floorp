@@ -117,12 +117,8 @@ NS_METHOD nsMenu::Create(nsIMenuBar *aParent, const nsString &aLabel)
 {
   mMenuBarParent = aParent;
   NS_ADDREF(mMenuBarParent);
-
   Create(GetNativeParent(), aLabel);
-
-
   aParent->AddMenu(this);
-    
   return NS_OK;
 }
 
@@ -131,17 +127,14 @@ NS_METHOD nsMenu::Create(nsIMenu *aParent, const nsString &aLabel)
 {
   mMenuParent = aParent;
   NS_ADDREF(mMenuParent);
-
   Create(GetNativeParent(), aLabel);
   aParent->AddMenu(this);
-
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::GetParent(nsISupports*& aParent)
 {
-
   aParent = nsnull;
   if (nsnull != mMenuParent) {
     return mMenuParent->QueryInterface(kISupportsIID,(void**)&aParent);
@@ -169,7 +162,6 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
 NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
 {
   // XXX add aMenuItem to internal data structor list
-
   return NS_OK;
 }
 
@@ -178,7 +170,6 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
 
   // XXX add aMenu to internal data structor list
-
   return NS_OK;
 
 }

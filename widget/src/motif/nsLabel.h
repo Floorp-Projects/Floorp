@@ -19,7 +19,6 @@
 #ifndef nsLabel_h__
 #define nsLabel_h__
 
-//#include "nsdefs.h"
 #include "nsWindow.h"
 #include "nsILabel.h"
 
@@ -45,7 +44,7 @@ public:
   NS_IMETHOD GetLabel(nsString &aBuffer);
   NS_IMETHOD SetAlignment(nsLabelAlignment aAlignment);
 
-  NS_IMETHOD   PreCreateWidget(nsWidgetInitData *aInitData);
+  NS_IMETHOD PreCreateWidget(nsWidgetInitData *aInitData);
 
   NS_IMETHOD Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -67,7 +66,7 @@ public:
   virtual PRBool OnResize(nsSizeEvent &aEvent);
 
 protected:
-  unsigned char nsLabel::GetNativeAlignment();
+  unsigned char GetNativeAlignment();
   nsLabelAlignment mAlignment;
 
 };

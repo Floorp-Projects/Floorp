@@ -97,11 +97,6 @@ NS_METHOD nsCheckButton::Create(nsIWidget *aParent,
 
   InitCallbacks();
 
-  /*XtAddCallback(mWidget,
-                XmNvalueChangedCallback,
-                nsXtWidget_Toggle_Callback,
-                this);*/
-
   XtAddCallback(mWidget,
                 XmNarmCallback,
                 nsXtWidget_Toggle_ArmCallback,
@@ -266,13 +261,12 @@ PRBool nsCheckButton::OnMove(PRInt32, PRInt32)
 
 PRBool nsCheckButton::OnPaint(nsPaintEvent &aEvent)
 {
-  //printf("** nsCheckButton::OnPaint **\n");
   return PR_FALSE;
 }
 
 PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
 {
-    return PR_FALSE;
+  return PR_FALSE;
 }
 
 

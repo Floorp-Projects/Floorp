@@ -30,8 +30,6 @@ NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID);
 nsLookAndFeel::nsLookAndFeel()
 {
   NS_INIT_REFCNT();
-
- // mRefCnt = 0;
 }
 
 nsLookAndFeel::~nsLookAndFeel()

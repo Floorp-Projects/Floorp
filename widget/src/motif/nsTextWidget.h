@@ -66,7 +66,7 @@ public:
   NS_IMETHOD SetPassword(PRBool aIsPassword);
 
 protected:
-    PRBool        mIsPasswordCallBacksInstalled;
+  PRBool mIsPasswordCallBacksInstalled;
 
 private:
   PRBool mMakeReadOnly;

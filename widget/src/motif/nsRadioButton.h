@@ -30,7 +30,7 @@ class nsRadioButton : public nsWindow,
 {
 
 public:
-                            nsRadioButton();
+                          nsRadioButton();
   virtual                 ~nsRadioButton();
 
   // nsISupports

@@ -58,15 +58,15 @@ public:
   NS_IMETHOD GetNativeData(void*& aData);
 
 protected:
-  void   Create(Widget aParent, const nsString &aLabel);
-  Widget GetNativeParent();
+  void       Create(Widget aParent, const nsString &aLabel);
+  Widget     GetNativeParent();
 
-  nsString     mLabel;
-  PRUint32     mNumMenuItems;
-  Widget       mMenu;
+  nsString   mLabel;
+  PRUint32   mNumMenuItems;
+  Widget     mMenu;
 
-  nsIMenu    * mMenuParent;
-  nsIMenuBar * mMenuBarParent;
+  nsIMenu    *mMenuParent;
+  nsIMenuBar *mMenuBarParent;
 
 };
 

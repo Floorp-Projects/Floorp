@@ -87,7 +87,6 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
 		                    XmNx, aRect.x,
 		                    XmNy, aRect.y, 
                                     nsnull);
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;

@@ -32,13 +32,13 @@ class nsListBox :   public nsWindow,
 {
 
 public:
-  nsListBox();
-  virtual ~nsListBox();
+    nsListBox();
+    virtual ~nsListBox();
 
-  // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 
     NS_IMETHOD Create(nsIWidget *aParent,

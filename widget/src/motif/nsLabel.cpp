@@ -201,7 +201,6 @@ NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
 
   XmStringFree(str);
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------

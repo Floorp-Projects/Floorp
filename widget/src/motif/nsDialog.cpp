@@ -73,9 +73,9 @@ NS_METHOD nsDialog::Create(nsIWidget *aParent,
 		                    XmNy, aRect.y, 
                                     nsnull);
 
-  // Initially used xmDrawingAreaWidgetClass instead of
-  // newManageClass. Drawing area will spontaneously resize
-  // to fit it's contents.
+  // Must use newManageClass instead of xmDrawingAreaWidgetClass 
+  // Drawing area will spontaneously resize to fit it's contents
+  // which is undesirable.
 
   mWidget = ::XtVaCreateManagedWidget("drawingArea",
                                     newManageClass,

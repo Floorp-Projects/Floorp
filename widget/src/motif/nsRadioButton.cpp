@@ -107,8 +107,6 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
                          XmNmarginWidth, 0,
                          XmNadjustMargin, False,
                          XmNspacing, 0,
-//                         XmNentryAlignment, XmALIGNMENT_CENTER,
-//                         XmNentryVerticalAlignment, XmALIGNMENT_CENTER,
                          XmNisAligned, False,
                          XmNentryBorder, 0,
                          XmNorientation, XmVERTICAL,
@@ -150,13 +148,6 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
                 XmNdisarmCallback,
                 nsXtWidget_RadioButton_DisArmCallback,
                 this);
-
-  /*XtAddCallback(mRadioBtn,
-                XmNvalueChangedCallback,
-                nsXtWidget_Toggle_ValueChangedCallback,
-                this);*/
-
-
 
   return NS_OK;
 }
@@ -274,7 +265,6 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
   }
   XmStringFree(str);
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------

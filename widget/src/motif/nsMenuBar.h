@@ -55,10 +55,8 @@ public:
 protected:
   PRUint32    mNumMenus;
   Widget      mMenu;
-  nsIWidget * mParent;
-
+  nsIWidget  *mParent;
   PRBool      mIsMenuBarAdded;
-
 };
 
 #endif // nsMenuBar_h__

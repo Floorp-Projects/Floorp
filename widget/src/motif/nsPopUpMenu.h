@@ -60,7 +60,6 @@ public:
 protected:
 
   PRUint32    mNumMenuItems;
-
   nsIWidget * mParent;
   Widget      mMenu;
 };

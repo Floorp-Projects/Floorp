@@ -90,7 +90,6 @@ NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
     char * buf = new char[aText.Length()+1];
     memset(buf, '*', aText.Length());
     buf[aText.Length()] = 0;
-    //printf("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
     XmTextSetString(mWidget, buf);
     data->mIgnore = False;
   }
@@ -115,7 +114,6 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
     char * buf = new char[data->mPassword.Length()+1];
     memset(buf, '*', data->mPassword.Length());
     buf[data->mPassword.Length()] = 0;
-    //printf("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
     XmTextInsert(mWidget, aStartPos, buf);
     data->mIgnore = False;
   }
@@ -143,12 +141,11 @@ NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyFlag)
 {
-  NS_ASSERTION(mWidget != nsnull, 
+  NS_ASSERTION(nsnull != mWidget, 
                "SetReadOnly - Widget is NULL, Create may not have been called!");
   aOldReadOnlyFlag = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
   XmTextSetEditable(mWidget, aReadOnlyFlag?False:True);
-
   return NS_OK;
 }
 

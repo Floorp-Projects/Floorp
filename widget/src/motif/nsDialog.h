@@ -19,7 +19,6 @@
 #ifndef nsDialog_h__
 #define nsDialog_h__
 
-//#include "nsdefs.h"
 #include "nsWindow.h"
 #include "nsIDialog.h"
 

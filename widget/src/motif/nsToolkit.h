@@ -38,7 +38,6 @@ public:
   virtual                 ~nsToolkit();
   
   NS_DECL_ISUPPORTS
-    
   NS_IMETHOD            Init(PRThread *aThread);
   
 public:

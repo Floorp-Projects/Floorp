@@ -56,19 +56,17 @@ public:
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
 
-
 protected:
   void Create(nsIWidget * aMBParent, Widget aParent,
               const nsString &aLabel, PRUint32 aCommand);
   nsIWidget * GetMenuBarParent(nsISupports * aParentSupports);
   Widget GetNativeParent();
 
-  nsString   mLabel;
-  PRUint32   mCommand;
-
-  nsIMenu      * mMenuParent;
-  nsIPopUpMenu * mPopUpParent;
-  nsIWidget    * mTarget;
+  nsString      mLabel;
+  PRUint32      mCommand;
+  nsIMenu      *mMenuParent;
+  nsIPopUpMenu *mPopUpParent;
+  nsIWidget    *mTarget;
 
   Widget mMenu; // native cascade widget
 

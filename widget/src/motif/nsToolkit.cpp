@@ -18,11 +18,7 @@
 
 #include "nsToolkit.h"
 #include "nsWindow.h"
-//#include "prmon.h"
-//#include "prtime.h"
 #include "nsGUIEvent.h"
-
-
 
 void RunPump(void* arg)
 {
@@ -53,10 +49,9 @@ int nsToolkitErrorHandler (Display * mydisplay, XErrorEvent * myerr)
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit() 
 {
-    XSetErrorHandler (nsToolkitErrorHandler) ; 
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
+  XSetErrorHandler(nsToolkitErrorHandler); 
 }
-
 
 //-------------------------------------------------------------------------
 //
