@@ -69,7 +69,7 @@ static PRUint32 CalculateVariantCount(char* mimeTypes)
 
 /* nsPluginsDir implementation */
 
-nsPluginsDir::nsPluginsDir()
+nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
   // this is somewhat lacking, in that it doesn't fall back to any other directories.
   // then again, I'm not sure we should be falling back at all.  plugins have been (and probably
