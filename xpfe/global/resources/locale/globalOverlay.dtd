@@ -1,5 +1,7 @@
 <!-- extracted from globalOverlay.xul -->
 
+<!-- LOCALIZATION NOTE  fileMenu.label: Localize all the menu labels with accesskeys but not commandkeys. e.g.  "File" -> "XXXX(F)" in Japanese -->
+
 <!ENTITY fileMenu.label					"File"> 
 <!ENTITY fileMenu.accesskey				"f">
 
