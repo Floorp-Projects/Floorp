@@ -206,7 +206,7 @@ namespace MetaData {
             retval = INT_TO_JS2VAL(i);
         else {
             if (JSDOUBLE_IS_NaN(x))
-                return nan;
+                return nanValue;
             retval = DOUBLE_TO_JS2VAL(newDoubleValue(x));
         }
         return retval;
