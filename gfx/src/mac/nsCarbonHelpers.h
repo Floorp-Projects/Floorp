@@ -60,8 +60,17 @@ inline void SetControlPopupMenuStuff ( ControlHandle control, MenuHandle menu, s
 
 inline void GetPortHiliteColor ( GrafPtr port, RGBColor* color )
 {
-	GrafVars** grafVars = (GrafVars**)((CGrafPtr)port)->grafVars;
-	*color = (*grafVars)->rgbHiliteColor;
+	// is this really a color grafport?
+	if (port->portBits.rowBytes & 0xC000)
+	{
+		GrafVars** grafVars = (GrafVars**)((CGrafPtr)port)->grafVars;
+		*color = (*grafVars)->rgbHiliteColor;
+	}
+	else
+	{
+		RGBColor fakeColor = { 0x0000, 0x0000, 0x0000};
+		*color = fakeColor;
+	}
 }
 
 inline void DisposeAEEventHandlerUPP ( RoutineDescriptor* proc )
