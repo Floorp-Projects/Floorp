@@ -103,7 +103,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mPipeliningAllowed (PR_TRUE),
     mPipelinedRequest (nsnull),
     mApplyConversion(PR_TRUE),
-    mNotificationProxiesBuilt (PR_FALSE),
     mOpenInputStreamHasEventQueue (PR_TRUE)
 {
     NS_INIT_REFCNT();
@@ -613,11 +612,6 @@ nsresult
 nsHTTPChannel::BuildNotificationProxies ()
 {
     nsresult rv = NS_OK;
-
-    if (mNotificationProxiesBuilt)
-        return rv;
-
-    mNotificationProxiesBuilt = PR_TRUE;
 
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
     

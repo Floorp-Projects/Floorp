@@ -201,7 +201,6 @@ protected:
     // Stream as file
     nsCOMPtr<nsISupportsArray>						mStreamAsFileObserverArray;
     PRBool                              mApplyConversion;
-    PRBool                              mNotificationProxiesBuilt;
     PRBool                              mOpenInputStreamHasEventQueue;
 };
 
