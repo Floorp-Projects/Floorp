@@ -496,7 +496,8 @@ NS_IMETHODIMP
 nsToolkitProfileService::SetSelectedProfile(nsIToolkitProfile* aProfile)
 {
     if (mChosen != aProfile) {
-        mChosen = aProfile;
+        // XXXbz Why is this cast OK?
+        mChosen = NS_STATIC_CAST(nsToolkitProfile*, aProfile);
         mDirty = PR_TRUE;
     }
     return NS_OK;
