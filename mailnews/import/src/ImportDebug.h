@@ -28,7 +28,7 @@
 #endif
 
 #ifdef IMPORT_DEBUG
-#include "stdio.h"
+#include <stdio.h>
 
 #define	IMPORT_LOG0( x)	printf( x)
 #define	IMPORT_LOG1( x, y)	printf( x, y)
