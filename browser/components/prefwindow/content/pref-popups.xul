@@ -94,6 +94,9 @@ var permissionsTreeView = {
  };
 var permissionsTree;
 
+var permissions           = [];
+var deletedPermissions   = [];
+
 function Permission(number, host, rawHost, type, capability) {
   this.number = number;
   this.host = host;
@@ -105,6 +108,99 @@ function Permission(number, host, rawHost, type, capability) {
 var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
 permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
   
+function DeleteAllFromTree
+    (tree, view, table, deletedTable, removeButton, removeAllButton) {
+
+  // remove all items from table and place in deleted table
+  for (var i=0; i<table.length; i++) {
+    deletedTable[deletedTable.length] = table[i];
+  }
+  table.length = 0;
+
+  // clear out selections
+  tree.treeBoxObject.view.selection.select(-1); 
+
+  // redisplay
+  view.rowCount = 0;
+  tree.treeBoxObject.invalidate();
+
+
+  // disable buttons
+  document.getElementById(removeButton).setAttribute("disabled", "true")
+  document.getElementById(removeAllButton).setAttribute("disabled","true");
+}
+
+function DeleteSelectedItemFromTree
+    (tree, view, table, deletedTable, removeButton, removeAllButton) {
+
+  // remove selected items from list (by setting them to null) and place in deleted list
+  var selections = GetTreeSelections(tree);
+  for (var s=selections.length-1; s>= 0; s--) {
+    var i = selections[s];
+    deletedTable[deletedTable.length] = table[i];
+    table[i] = null;
+  }
+
+  // collapse list by removing all the null entries
+  for (var j=0; j<table.length; j++) {
+    if (table[j] == null) {
+      var k = j;
+      while ((k < table.length) && (table[k] == null)) {
+        k++;
+      }
+      table.splice(j, k-j);
+    }
+  }
+
+  // redisplay
+  var box = tree.treeBoxObject;
+  var firstRow = box.getFirstVisibleRow();
+  if (firstRow > (table.length-1) ) {
+    firstRow = table.length-1;
+  }
+  view.rowCount = table.length;
+  box.rowCountChanged(0, table.length);
+  box.scrollToRow(firstRow)
+
+  // update selection and/or buttons
+  if (table.length) {
+
+    // update selection
+    // note: we need to deselect before reselecting in order to trigger ...Selected method
+    var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
+    tree.treeBoxObject.view.selection.select(-1); 
+    tree.treeBoxObject.view.selection.select(nextSelection);
+
+  } else {
+
+    // disable buttons
+    document.getElementById(removeButton).setAttribute("disabled", "true")
+    document.getElementById(removeAllButton).setAttribute("disabled","true");
+
+    // clear out selections
+    tree.treeBoxObject.view.selection.select(-1); 
+  }
+}
+
+function GetTreeSelections(tree) {
+  var selections = [];
+  var select = tree.treeBoxObject.selection;
+  if (select) {
+    var count = select.getRangeCount();
+    var min = new Object();
+    var max = new Object();
+    for (var i=0; i<count; i++) {
+      select.getRangeAt(i, min, max);
+      for (var k=min.value; k<=max.value; k++) {
+        if (k != -1) {
+          selections[selections.length] = k;
+        }
+      }
+    }
+  }
+  return selections;
+}
+
 function loadPermissions() {
   // load permissions into a table
   if (!permissionsTree)
