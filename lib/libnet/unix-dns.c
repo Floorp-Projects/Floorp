@@ -572,6 +572,13 @@ cancel_lookup(long id, int out_fd)
       if (obj->pid)
 	{
 	  pid_t pid2;
+
+      /*
+       * SIGKILL causes the browser to hang if the user clicks on the stop
+       * button while a long/bogus dns lookup is in progress.  According
+       * to signal guru asharma, we should use SIGQUIT instead. -re
+       */
+/* 	  kill(obj->pid, SIGKILL); */
 	  kill(obj->pid, SIGQUIT);
 	  pid2 = waitpid(obj->pid, 0, 0);
 	  ASSERT(obj->pid == pid2);
