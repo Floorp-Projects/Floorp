@@ -29,11 +29,6 @@ class nsTableColFrame;
 class nsTableCellFrame;
 class nsIPresContext;
 
-// XXX the collapsing row and col data structures need to be moved 
-// into nsTableFrame. Collapsing cols are broken due to the recent
-// incremental cell map methods which don't attempt to update 
-// collapsing col info here.
-
 struct nsColInfo
 {
   PRInt32 mNumCellsOrig; // number of cells originating in the col
@@ -108,16 +103,6 @@ public:
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
-  PRInt32 GetNumCollapsedRows() const;
-  PRBool IsRowCollapsedAt(PRInt32 aRowIndex) const;
-  void SetRowCollapsedAt(PRInt32 aRowIndex, 
-                         PRBool  aValue);
-
-  PRInt32 GetNumCollapsedCols() const;
-  PRBool IsColCollapsedAt(PRInt32 aColIndex) const;
-  void SetColCollapsedAt(PRInt32 aColIndex, 
-                         PRBool aValue);
-
   /** return the total number of columns in the table represented by this CellMap */
   PRInt32 GetColCount() const;
 
@@ -154,11 +139,6 @@ protected:
   /** set the CellMap to (aNumRows x aNumColumns) */
   void Grow(PRInt32 aNumMapRows, 
             PRInt32 aNumCols);
-
-	/**  insert a new entry into the mIsCollapsedRows */
-	void InsertIntoCollapsedRows(PRInt32 aRow);
-	/** remove an entry from mIsCollapsedRows */
-  void RemoveFromCollapsedRows(PRInt32 aRow);
 
   /** assign aCellData to the cell at (aRow,aColumn) */
   void SetMapCellAt(CellData& aCellData, 
@@ -210,16 +190,6 @@ protected:
   /** an array of nsColInfo indexed by col and giving the number of 
     * cells originating and spanning each col. */
   nsVoidArray mCols;
-
-  // an array of booleans where the ith element indicates if the ith row is collapsed
-  PRPackedBool* mIsCollapsedRows;
-	PRInt32				mIsCollapsedRowsSize;
-  PRInt32       mNumCollapsedRows;
-
-
-  // an array of booleans where the ith element indicates if the ith col is collapsed
-  PRPackedBool* mIsCollapsedCols;
-  PRInt32       mNumCollapsedCols;
 
   /** the number of rows in the table which is <= the number of rows in the cell map
     * due to row spans extending beyond the end of the table (dead rows) */

@@ -656,7 +656,7 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
     childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay) {
       nsTableColFrame *col = (nsTableColFrame *)childFrame;
-      count += col->GetSpan();
+      count++;
       if (aColIndex<=count) {
         result = col;
       }

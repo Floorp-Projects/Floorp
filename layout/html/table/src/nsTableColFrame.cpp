@@ -30,11 +30,15 @@
 #include "nsHTMLAtoms.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutAtoms.h"
+#include "nsIContent.h"
+#include "nsIDOMHTMLTableColElement.h"
 
 #define COL_TYPE_CONTENT              0x0
 #define COL_TYPE_ANONYMOUS_COL        0x1
 #define COL_TYPE_ANONYMOUS_COLGROUP   0x2
 #define COL_TYPE_ANONYMOUS_CELL       0x3
+
+static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
 
 nsTableColFrame::nsTableColFrame()
   : nsFrame(), 
@@ -145,6 +149,7 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
 
 PRInt32 nsTableColFrame::GetSpan()
 {  
+  PRInt32 span = 1;
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   return tableStyle->mSpan;
