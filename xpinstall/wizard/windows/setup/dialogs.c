@@ -90,7 +90,7 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diWelcome.szTitle);
 
-      wsprintf(szBuf, diWelcome.szMessage0, sgProduct.szProductName);
+      wsprintf(szBuf, diWelcome.szMessage0, sgProduct.szProductName, sgProduct.szProductName);
       SetDlgItemText(hDlg, IDC_STATIC0, szBuf);
       SetDlgItemText(hDlg, IDC_STATIC1, diWelcome.szMessage1);
       SetDlgItemText(hDlg, IDC_STATIC2, diWelcome.szMessage2);
