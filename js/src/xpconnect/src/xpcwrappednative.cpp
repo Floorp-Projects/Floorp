@@ -940,11 +940,11 @@ XPCWrappedNative::SystemIsBeingShutDown(XPCCallContext& ccx)
             {
                 JS_SetPrivate(ccx, to->GetJSObject(), nsnull);
                 to->SetJSObject(nsnull);
-                // We leak the tearoff mNative
-                // (for the same reason we leak mIdentity - see above).
-                to->SetNative(nsnull);
-                to->SetInterface(nsnull);
             }
+            // We leak the tearoff mNative
+            // (for the same reason we leak mIdentity - see above).
+            to->SetNative(nsnull);
+            to->SetInterface(nsnull);
         }
     }
 

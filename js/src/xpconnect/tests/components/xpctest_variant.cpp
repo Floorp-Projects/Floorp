@@ -225,8 +225,19 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         break;
     }
         break;
-    case nsIDataType::VTYPE_ARRAY:   
-        return NS_ERROR_NOT_IMPLEMENTED;
+    case nsIDataType::VTYPE_ARRAY:
+        rv = inVar->GetAsArray(&du.u.array.mArrayType,
+                               &du.u.array.mArrayInterfaceID,
+                               &du.u.array.mArrayCount,
+                               &du.u.array.mArrayValue);
+        if(NS_FAILED(rv)) return rv;
+        du.mType = type;
+        rv = outVar->SetAsArray(du.u.array.mArrayType,
+                                &du.u.array.mArrayInterfaceID,
+                                du.u.array.mArrayCount,
+                                du.u.array.mArrayValue);
+        NS_ENSURE_SUCCESS(rv,rv);
+        break;
     case nsIDataType::VTYPE_EMPTY:
         if(inVarType != nsIDataType::VTYPE_EMPTY)
             return NS_ERROR_CANNOT_CONVERT_DATA;
