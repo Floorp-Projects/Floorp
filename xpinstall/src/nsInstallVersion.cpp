@@ -215,9 +215,12 @@ nsInstallVersion::CompareTo(nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
 
 
 NS_IMETHODIMP    
-nsInstallVersion::CompareTo(const nsString& aAString, PRInt32* aReturn)
+nsInstallVersion::CompareTo(const nsString& aString, PRInt32* aReturn)
 {
-    return NS_OK;
+    nsInstallVersion inVersion;
+    inVersion.Init(aString);
+
+    return CompareTo(&inVersion, aReturn);
 }
 
 NS_IMETHODIMP    

@@ -688,7 +688,20 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         VR_UninstallCreateNode( (char*)(const char*) nsAutoCString(mRegistryPackageName), 
                                 (char*)(const char*) nsAutoCString(mUIName));
     }
-      
+
+    // Install the Component into the Version Registry.
+    if (mVersionInfo)
+    {
+        nsString versionString;
+
+        mVersionInfo->ToString(versionString);
+
+        VR_Install( (char*)(const char*)nsAutoCString(mRegistryPackageName), 
+                    nsnull,  
+                    (char*)(const char*)nsAutoCString(versionString), 
+                    PR_FALSE );
+    }
+
     PRInt32 result;
     nsInstallObject* ie = nsnull;
 
@@ -770,8 +783,6 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
     char*       componentCString;
     char        dir[MAXREGPATHLEN];
     nsFileSpec  nsfsDir;
-
-// FIX: aSubdirectory is not processed at all in this function.
 
     *aFolder = nsnull;
 
