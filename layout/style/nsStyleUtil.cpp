@@ -416,7 +416,7 @@ nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
   PRInt32 indexMax;
   float relativePosition;
   nscoord smallerSize;
-  nscoord indexFontSize;
+  nscoord indexFontSize = aFontSize; // XXX initialize to quell a spurious gcc3.2 warning
   nscoord smallestIndexFontSize;
   nscoord largestIndexFontSize;
   nscoord smallerIndexFontSize;
@@ -484,7 +484,7 @@ nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
   PRInt32 indexMax;
   float relativePosition;
   nscoord largerSize;
-  nscoord indexFontSize;
+  nscoord indexFontSize = aFontSize; // XXX initialize to quell a spurious gcc3.2 warning
   nscoord smallestIndexFontSize;
   nscoord largestIndexFontSize;
   nscoord smallerIndexFontSize;
