@@ -72,10 +72,10 @@ Contributor(s): ______________________________________. -->
 <!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
 <popupset>
   <popup id="aTooltip" 
-    oncreate="return FillInTooltip(document.tooltipElement);">
+    oncreate="return FillInTooltip(document.tooltipNode);">
     style="border: thin solid black;"> 
    <titledbutton id="replaceMe" align="left" crop="right" class="borderless"
-     value="" />
+     value="<Empty Tooltip>" />
  </popup>
 </popupset>
 
