@@ -403,6 +403,20 @@ BEGIN
             MENUITEM "SelectNone",                  ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTNONE
 
         END
+        POPUP "nsIObserverService"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "AddObservers",                ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS
+
+            MENUITEM "EnumerateObservers",          ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS
+
+            MENUITEM "NotifyObservers",             ID_INTERFACES_NSIOBSERVERSERVICE_NOTIFYOBSERVERS
+
+            MENUITEM "RemoveObservers",             ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS
+
+        END
         POPUP "CallBacks"
         BEGIN
             MENUITEM "nsIStreamListener",           ID_INTERFACES_CALLBACKS_NSISTREAMLISTENER

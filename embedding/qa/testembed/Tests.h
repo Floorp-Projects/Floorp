@@ -142,6 +142,7 @@ protected:
 	afx_msg void OnTestsRemovehistorylistener();
 	afx_msg void OnInterfacesNsiwebnav();
 	afx_msg void OnInterfacesNsiclipboardcommands();
+	afx_msg void OnInterfacesNsiobserverservice();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
