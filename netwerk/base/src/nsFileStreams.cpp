@@ -35,11 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// file truncation support
-#if defined(__linux)
-#define _BSD_SOURCE 1
-#endif
-
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
 #elif defined(XP_MAC)
