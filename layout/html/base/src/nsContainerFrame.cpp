@@ -851,6 +851,15 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
 
+#ifdef IBMBIDI
+  nsIFrame* nextBidi;
+  aChild->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
+                          (void**) &nextBidi);
+  if (nextBidi == nextInFlow) {
+    return;
+  }
+#endif // IBMBIDI
+
   // Disconnect the next-in-flow from the flow list
   nsSplittableFrame::BreakFromPrevFlow(nextInFlow);
 

@@ -122,12 +122,18 @@ nsInlineFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIFrame* aFrameList)
 {
   if (nsnull != aListName) {
+#ifdef IBMBIDI
+    if (aListName != nsLayoutAtoms::nextBidi)
+#endif
     return NS_ERROR_INVALID_ARG;
   }
   if (aFrameList) {
     // Insert frames after aPrevFrame
     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
 
+#ifdef IBMBIDI
+    if (nsnull == aListName)
+#endif
     // Ask the parent frame to reflow me.
     ReflowDirtyChild(&aPresShell, nsnull);
   }
@@ -141,6 +147,9 @@ nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIFrame* aOldFrame)
 {
   if (nsnull != aListName) {
+#ifdef IBMBIDI
+    if (nsLayoutAtoms::nextBidi != aListName)
+#endif
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -151,6 +160,9 @@ nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
     aOldFrame->GetParent(&oldFrameParent);
     nsInlineFrame* parent = (nsInlineFrame*) oldFrameParent;
     while (nsnull != aOldFrame) {
+#ifdef IBMBIDI
+      if (nsLayoutAtoms::nextBidi != aListName) {
+#endif
       // If the frame being removed has zero size then don't bother
       // generating a reflow command, otherwise make sure we do.
       nsRect bbox;
@@ -158,6 +170,9 @@ nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
       if (bbox.width || bbox.height) {
         generateReflowCommand = PR_TRUE;
       }
+#ifdef IBMBIDI
+      }
+#endif
 
       // When the parent is an inline frame we have a simple task - just
       // remove the frame from its parents list and generate a reflow

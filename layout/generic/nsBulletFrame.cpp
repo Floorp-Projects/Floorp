@@ -37,6 +37,9 @@
 #include "nsLayoutAtoms.h"
 #include "prprf.h"
 #include "nsIImage.h"
+#ifdef IBMBIDI
+#include "nsBidiPresUtils.h"
+#endif // IBMBIDI
 
 nsBulletFrame::nsBulletFrame()
 {
@@ -145,6 +148,14 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     nsCOMPtr<nsIFontMetrics> fm;
     aRenderingContext.SetColor(myColor->mColor);
 
+#ifdef IBMBIDI
+    nsCharType charType = eCharType_LeftToRight;
+    PRUint8 level = 0;
+    PRBool isBidiSystem = PR_FALSE;
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+    PRUint32 hints = 0;
+#endif // IBMBIDI
+
     nsAutoString text;
     switch (listStyleType) {
     case NS_STYLE_LIST_STYLE_NONE:
@@ -173,6 +184,33 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     case NS_STYLE_LIST_STYLE_DECIMAL:
     case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
+#ifdef IBMBIDI
+      GetListItemText(aCX, *myList, text);
+      charType = eCharType_EuropeanNumber;
+      break;
+
+    case NS_STYLE_LIST_STYLE_ARABIC_INDIC:
+      GetListItemText(aCX, *myList, text);
+      charType = eCharType_ArabicNumber;
+      break;
+
+    case NS_STYLE_LIST_STYLE_HEBREW:
+      aRenderingContext.GetHints(hints);
+      isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+      if (!isBidiSystem) {
+        charType = eCharType_RightToLeft;
+        level = 1;
+        GetListItemText(aCX, *myList, text);
+
+        if (NS_STYLE_DIRECTION_RTL == disp->mDirection) {
+          nsStr::Delete(text, 0, 1);
+          text.AppendWithConversion(".");
+        }
+        break;
+      }
+      // else fall through
+#endif // IBMBIDI
+
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
@@ -182,7 +220,9 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
     case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
     case NS_STYLE_LIST_STYLE_LOWER_GREEK:
+#ifndef IBMBIDI
     case NS_STYLE_LIST_STYLE_HEBREW:
+#endif
     case NS_STYLE_LIST_STYLE_ARMENIAN:
     case NS_STYLE_LIST_STYLE_GEORGIAN:
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
@@ -198,7 +238,9 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL: 
     case NS_STYLE_LIST_STYLE_CJK_HEAVENLY_STEM:
     case NS_STYLE_LIST_STYLE_CJK_EARTHLY_BRANCH:
+#ifndef IBMBIDI
     case NS_STYLE_LIST_STYLE_ARABIC_INDIC:
+#endif
     case NS_STYLE_LIST_STYLE_PERSIAN:
     case NS_STYLE_LIST_STYLE_URDU:
     case NS_STYLE_LIST_STYLE_DEVANAGARI:
@@ -220,6 +262,31 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
       aRenderingContext.DrawString(text, mPadding.left, mPadding.top);
       break;
     }
+#ifdef IBMBIDI
+    if (charType != eCharType_LeftToRight) {
+      aCX->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
+      aRenderingContext.SetFont(fm);
+
+      nsBidiPresUtils* bidiUtils;
+      aCX->GetBidiUtils(&bidiUtils);
+      if (bidiUtils) {
+        const PRUnichar* buffer = text.GetUnicode();
+        PRInt32 textLength = text.Length();
+        if (eCharType_RightToLeft == charType) {
+          bidiUtils->FormatUnicodeText(aCX, (PRUnichar*)buffer, textLength,
+                                       charType, level, PR_FALSE);
+        }
+        else {
+//Mohamed
+          aRenderingContext.GetHints(hints);
+          isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
+          bidiUtils->FormatUnicodeText(aCX, (PRUnichar*)buffer, textLength,
+                                       charType, level, isBidiSystem);//Mohamed
+        }
+      }
+      aRenderingContext.DrawString(text, mPadding.left, mPadding.top);
+    }   
+#endif // IBMBIDI
   }
   return NS_OK;
 }
@@ -590,12 +657,21 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
 {
   PRBool outputSep = PR_FALSE;
   PRUnichar buf[NUM_BUF_SIZE];
+#ifdef IBMBIDI
+  // Changes: 1) don't reverse the text; 2) don't insert geresh/gershayim.
+  PRInt32 idx = 0;
+#else
   PRInt32 idx = NUM_BUF_SIZE;
+#endif // IBMBIDI
   PRUnichar digit;
   do {
     PRInt32 n3 = ordinal % 1000;
     if(outputSep)
+#ifdef IBMBIDI
+      buf[idx++] = HEBREW_THROSAND_SEP; // output thousand seperator
+#else
       buf[--idx] = HEBREW_THROSAND_SEP; // output thousand seperator
+#endif // IBMBIDI
     outputSep = ( n3 > 0); // request to output thousand seperator next time.
 
     PRInt32 d = 0; // we need to keep track of digit got output per 3 digits,
@@ -611,10 +687,17 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
         digit = gHebrewDigit[(n1/100)-1+18];
         if( n3 > 0)
         {
+#ifdef IBMBIDI
+          buf[idx++] = digit;
+#else
           buf[--idx] = digit;
+#endif // IBMBIDI
           d++;
         } else { 
           // if this is the last digit
+#ifdef IBMBIDI
+          buf[idx++] = digit;
+#else
           if (d > 0)
           {
             buf[--idx] = HEBREW_GERSHAYIM; 
@@ -623,6 +706,7 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
             buf[--idx] = digit;    
             buf[--idx] = HEBREW_GERESH;
           } // if
+#endif // IBMBIDI
         } // if
       } else {
         n1 -= 100;
@@ -648,10 +732,17 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
       n3 -= n2;
 
       if( n3  > 0) {
+#ifdef IBMBIDI
+        buf[idx++] = digit;
+#else
         buf[--idx] = digit;
+#endif // IBMBIDI
         d++;
       } else {
         // if this is the last digit
+#ifdef IBMBIDI
+        buf[idx++] = digit;
+#else
         if (d > 0)
         {
           buf[--idx] = HEBREW_GERSHAYIM;  
@@ -660,6 +751,7 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
           buf[--idx] = digit;    
           buf[--idx] = HEBREW_GERESH;
         } // if
+#endif // IBMBIDI
       } // if
     } // if
   
@@ -668,6 +760,9 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
     {
       digit = gHebrewDigit[n3-1];
       // must be the last digit
+#ifdef IBMBIDI
+      buf[idx++] = digit;
+#else
       if (d > 0)
       {
         buf[--idx] = HEBREW_GERSHAYIM; 
@@ -676,10 +771,15 @@ static void HebrewToText(PRInt32 ordinal, nsString& result)
         buf[--idx] = digit;    
         buf[--idx] = HEBREW_GERESH;
       } // if
+#endif // IBMBIDI
     } // if
     ordinal /= 1000;
   } while (ordinal >= 1);
+#ifdef IBMBIDI
+  result.Append(buf, idx);
+#else
   result.Append(buf+idx,NUM_BUF_SIZE-idx);
+#endif // IBMBIDI
 }
 
 
@@ -747,6 +847,14 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
                                const nsStyleList& aListStyle,
                                nsString& result)
 {
+#ifdef IBMBIDI
+  const nsStyleDisplay* display;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+    result.AppendWithConversion(".");
+  }
+#endif // IBMBIDI
+
   switch (aListStyle.mListStyleType) {
     case NS_STYLE_LIST_STYLE_DECIMAL:
     case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
@@ -904,6 +1012,9 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
       CharListToText(mOrdinal, result, gCJKEarthlyBranchChars, CJK_EARTHLY_BRANCH_CHARS_SIZE);
       break;
   }
+#ifdef IBMBIDI
+  if (NS_STYLE_DIRECTION_RTL != display->mDirection)
+#endif // IBMBIDI
   result.AppendWithConversion(".");
 }
 

@@ -135,6 +135,10 @@
 // SubShell map
 #include "nsDST.h"
 
+#ifdef IBMBIDI
+#include "nsIBidiKeyboard.h"
+#endif // IBMBIDI
+
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kStyleSetCID, NS_STYLESET_CID);
@@ -886,6 +890,12 @@ public:
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
 
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
+#ifdef IBMBIDI
+  NS_IMETHOD SetCursorBidiLevel(PRUint8 aLevel);
+  NS_IMETHOD GetCursorBidiLevel(PRUint8 *aOutLevel);
+  NS_IMETHOD UndefineCursorBidiLevel();
+  NS_IMETHOD BidiStyleChangeReflow();
+#endif
 
   //nsIViewObserver interface
 
@@ -1022,6 +1032,10 @@ protected:
   PRBool IsDragInProgress ( ) const ;
 
   PRBool	mCaretEnabled;
+#ifdef IBMBIDI
+  PRUint8   mBidiLevel; // The Bidi level of the cursor
+  nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;
+#endif // IBMBIDI
 #ifdef NS_DEBUG
   PRBool VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
@@ -1245,6 +1259,9 @@ PresShell::PresShell():mAnonymousContentTable(nsnull),
   mReflowCountMgr = new ReflowCountMgr();
   mReflowCountMgr->SetPresContext(mPresContext);
   mReflowCountMgr->SetPresShell(this);
+#endif
+#ifdef IBMBIDI
+  mBidiLevel = BIDI_LEVEL_UNDEFINED;
 #endif
 }
 
@@ -1479,6 +1496,9 @@ PresShell::Init(nsIDocument* aDocument,
   // cache the drag service so we can check it during reflows
   mDragService = do_GetService("@mozilla.org/widget/dragservice;1");
 
+#ifdef IBMBIDI
+  mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
+#endif
   // setup the preference style rules up (no forced reflow)
   SetPreferenceStyleRules(PR_FALSE);
 
@@ -4535,6 +4555,55 @@ PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
 
   return rv;
 }
+#ifdef IBMBIDI
+NS_IMETHODIMP
+PresShell::SetCursorBidiLevel(PRUint8 aLevel)
+{
+  // If the current level is undefined, we have just inserted new text.
+  // In this case, we don't want to reset the keyboard language
+  PRBool afterInsert = mBidiLevel & BIDI_LEVEL_UNDEFINED;
+  mBidiLevel = aLevel;
+
+//  PRBool parityChange = ((mBidiLevel ^ aLevel) & 1); // is the parity of the new level different from the current level?
+//  if (parityChange)                                  // if so, change the keyboard language
+  if (mBidiKeyboard && !afterInsert)
+    mBidiKeyboard->SetLangFromBidiLevel(aLevel);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::GetCursorBidiLevel(PRUint8 *aOutLevel)
+{
+  if (!aOutLevel) { return NS_ERROR_INVALID_ARG; }
+  *aOutLevel = mBidiLevel;
+  return NS_OK;    
+}
+
+NS_IMETHODIMP
+PresShell::UndefineCursorBidiLevel()
+{
+  mBidiLevel |= BIDI_LEVEL_UNDEFINED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::BidiStyleChangeReflow()
+{
+  // Have the root frame's style context remap its style
+  nsIFrame* rootFrame;
+  mFrameManager->GetRootFrame(&rootFrame);
+
+  if (rootFrame) {
+    nsIStyleContext*  rootStyleContext;
+    rootFrame->GetStyleContext(&rootStyleContext);
+    rootStyleContext->RemapStyle(mPresContext.get() );
+    NS_RELEASE(rootStyleContext);
+
+    ReconstructFrames();
+  }
+  return NS_OK;
+}
+#endif // IBMBIDI
 
 //nsIViewObserver
 

@@ -66,6 +66,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   mLineLayout = nsnull;
   isTopOfPage = PR_FALSE;
   Init(aPresContext);
+#ifdef IBMBIDI
+  mRightEdge = NS_UNCONSTRAINEDSIZE;
+#endif
 }
 
 // Initialize a <b>root</b> reflow state for an <b>incremental</b>
@@ -90,6 +93,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   mLineLayout = nsnull;
   isTopOfPage = PR_FALSE;
   Init(aPresContext);
+#ifdef IBMBIDI
+  mRightEdge = NS_UNCONSTRAINEDSIZE;
+#endif // IBMBIDI
 }
 
 // Initialize a reflow state for a child frames reflow. Some state
@@ -117,6 +123,10 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   isTopOfPage = aParentReflowState.isTopOfPage;
 
   Init(aPresContext);
+
+#ifdef IBMBIDI
+  mRightEdge = aParentReflowState.mRightEdge;
+#endif // IBMBIDI
 }
 
 // Same as the previous except that the reason is taken from the
@@ -140,6 +150,10 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   isTopOfPage = aParentReflowState.isTopOfPage;
 
   Init(aPresContext);
+
+#ifdef IBMBIDI
+  mRightEdge = aParentReflowState.mRightEdge;
+#endif // IBMBIDI
 }
 
 // Version that species the containing block width and height
@@ -164,6 +178,10 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   isTopOfPage = aParentReflowState.isTopOfPage;
 
   Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
+
+#ifdef IBMBIDI
+  mRightEdge = aParentReflowState.mRightEdge;
+#endif // IBMBIDI
 }
 
 void
@@ -1832,6 +1850,18 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
     }
 
     AdjustComputedWidth(); 
+
+#ifdef IBMBIDI
+    // See what edge the width applies to (the default is the content
+    // edge)
+    if (mComputedWidth != NS_UNCONSTRAINEDSIZE) {
+      if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+        mComputedWidth -= mComputedPadding.left + mComputedPadding.right;
+      } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+        mComputedWidth -= mComputedBorderPadding.left + mComputedBorderPadding.right;
+      }
+    }
+#endif // IBMBIDI
 
     // Now that we have the computed-width, compute the side margins
     CalculateBlockSideMargins(cbrs->mComputedWidth, mComputedWidth);

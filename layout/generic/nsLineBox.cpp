@@ -653,9 +653,125 @@ nsLineIterator::FindLineAt(nscoord aY,
   return NS_OK;
 }
 
+#ifdef IBMBIDI
+NS_IMETHODIMP
+nsLineIterator::CheckLineOrder(PRInt32                  aLine,
+                               PRBool                   *aIsReordered,
+                               nsIFrame                 **aFirstVisual,
+                               nsIFrame                 **aLastVisual)
+{
+  nsRect    checkRect;
+  PRInt32   currentLine, saveLine, testLine;
+  nscoord   saveX;
+  nsIFrame  *checkFrame;
+  nsIFrame  *firstFrame;
+  nsIFrame  *leftmostFrame;
+  nsIFrame  *rightmostFrame;
+  nscoord   minX, maxX;
+  PRInt32   lineFrameCount;
+  PRUint32  lineFlags;
+
+  nsresult  result;
+
+  // an RTL paragraph is always considered as reordered
+  // in an LTR paragraph, find out by examining the coordinates of each frame in the line
+  if (mRightToLeft)
+    *aIsReordered = PR_TRUE;
+  else {
+    *aIsReordered = PR_FALSE;
+
+    // Check the preceding and following line, since we might be moving into them
+    for (currentLine = PR_MAX(0, aLine-1); currentLine < aLine+1; currentLine++) {
+
+      nsLineBox* line = mLines[currentLine];
+      if (!line)
+        break;
+
+      checkFrame = line->mFirstChild;
+
+      checkFrame->GetRect(checkRect);
+      result = FindLineContaining(checkFrame, &saveLine);
+      if (NS_FAILED(result))
+        return result;
+      saveX = checkRect.x;
+      lineFrameCount = line->GetChildCount();
+
+      for (; checkFrame; result = checkFrame->GetNextSibling(&checkFrame)) {
+        if (NS_FAILED(result))
+          break;
+        result = FindLineContaining(checkFrame, &testLine);
+        if (NS_FAILED(result))
+          return result;
+        if (testLine != saveLine) {
+          *aIsReordered = PR_TRUE;
+          break;
+        }
+
+        checkFrame->GetRect(checkRect);
+        // If the origin of any frame is less than the previous frame, the line is reordered
+        if (checkRect.x < saveX) {
+          *aIsReordered = PR_TRUE;
+          break;
+        }
+        saveX = checkRect.x;
+        lineFrameCount--;
+        if (0 == lineFrameCount)
+          break;
+      }
+      if (*aIsReordered)
+        break;
+    }
+  }
+
+  // If the line is reordered, identify the first and last frames on the line
+  if (*aIsReordered) {
+    nsRect nonUsedRect;
+    result = GetLine(aLine, &firstFrame, &lineFrameCount, nonUsedRect, &lineFlags);
+    if (NS_FAILED(result))
+      return result;
+
+    leftmostFrame = rightmostFrame = firstFrame;
+    firstFrame->GetRect(checkRect);
+    maxX = checkRect.x;
+    minX = checkRect.x;
+
+    for (;lineFrameCount > 1;lineFrameCount--) {
+      result = firstFrame->GetNextSibling(&firstFrame);
+
+      if (NS_FAILED(result)){
+        NS_ASSERTION(0,"should not be reached nsLineBox\n");
+        return NS_ERROR_FAILURE;
+      }
+
+      firstFrame->GetRect(checkRect);
+      if (checkRect.x > maxX) {
+        maxX = checkRect.x;
+        rightmostFrame = firstFrame;
+      }
+      if (checkRect.x < minX) {
+        minX = checkRect.x;
+        leftmostFrame = firstFrame;
+      }
+    }
+    if (mRightToLeft) {
+      *aFirstVisual = rightmostFrame;
+      *aLastVisual = leftmostFrame;
+    }
+    else {
+      *aFirstVisual = leftmostFrame;
+      *aLastVisual = rightmostFrame;
+    }
+  }
+  return result;
+}
+#endif // IBMBIDI
+
 NS_IMETHODIMP
 nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
                             nscoord aX,
+#ifdef IBMBIDI
+                            PRBool aCouldBeReordered,
+#endif // IBMBIDI
                             nsIFrame** aFrameFound,
                             PRBool* aXIsBeforeFirstFrame,
                             PRBool* aXIsAfterLastFrame)
@@ -709,13 +825,51 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
   // when checking.
   *aXIsBeforeFirstFrame = PR_FALSE;
   *aXIsAfterLastFrame = PR_FALSE;
+#ifdef IBMBIDI
+  PRBool isReordered = PR_FALSE;
+  nsIFrame *firstVisual, *lastVisual;
+  if (aCouldBeReordered)
+    CheckLineOrder(aLineNumber, &isReordered, &firstVisual, &lastVisual);
+#endif
   nsRect r1, r2;
   nsIFrame* frame = line->mFirstChild;
+#ifdef IBMBIDI
+  if (isReordered)
+    frame = firstVisual;
+#endif // IBMBIDI
   PRInt32 n = line->GetChildCount();
   if (mRightToLeft) {
     while (--n >= 0) {
       nsIFrame* nextFrame;
-      frame->GetNextSibling(&nextFrame);
+#ifdef IBMBIDI
+      if (isReordered) {
+        nscoord maxX, limX;
+        PRInt32 testLine;
+        nsRect tempRect;
+        nsIFrame* tempFrame;
+
+        maxX = -0x7fffffff;
+        frame->GetRect(tempRect);
+
+        limX = tempRect.x;
+        tempFrame = line->mFirstChild;
+        nextFrame = nsnull;
+
+        while (tempFrame) {
+          if (NS_SUCCEEDED(FindLineContaining(tempFrame, &testLine))
+              && testLine == aLineNumber) {
+            tempFrame->GetRect(tempRect);
+            if (tempRect.x > maxX && tempRect.x < limX) { // we are looking for the highest value less than the current one
+              maxX = tempRect.x;
+              nextFrame = tempFrame;
+            }
+          }
+          tempFrame->GetNextSibling(&tempFrame);
+        }
+      }
+      else
+#endif // IBMBIDI
+        frame->GetNextSibling(&nextFrame);
       frame->GetRect(r1);
       if (aX > r1.x) {
         break;
@@ -740,6 +894,34 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
   else {
     while (--n >= 0) {
       nsIFrame* nextFrame;
+#ifdef IBMBIDI
+      if (isReordered) {
+        nsRect tempRect;
+        nsIFrame* tempFrame;
+        PRInt64 minX, limX;
+        PRInt32 testLine;
+
+        minX = 0x7fffffff;
+        frame->GetRect(tempRect);
+
+        limX = tempRect.x;
+        tempFrame = line->mFirstChild;
+        nextFrame = nsnull;
+
+        while (tempFrame) {
+          if (NS_SUCCEEDED(FindLineContaining(tempFrame, &testLine))
+              && testLine == aLineNumber) {
+            tempFrame->GetRect(tempRect);
+            if (tempRect.x < minX && tempRect.x > limX) { // we are looking for the lowest value greater than the current one
+              minX = tempRect.x;
+              nextFrame = tempFrame;
+            }
+          }
+          tempFrame->GetNextSibling(&tempFrame);
+        }
+      }
+      else
+#endif // IBMBIDI
       frame->GetNextSibling(&nextFrame);
       frame->GetRect(r1);
       if (aX < r1.XMost()) {
