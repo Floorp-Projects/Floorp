@@ -42,6 +42,7 @@ Notes to self:
 #include "nsISupportsPrimitives.h"
 #include "nsMemory.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsXPIDLString.h"
  
 #include "nsIFileSpec.h"
 #include "nsIOutputStream.h"
@@ -561,10 +562,10 @@ nsTransferable :: FlavorsTransferableCanImport(nsISupportsArray **_retval)
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 
         nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface (genericFlavor) );
-        char* aDataFlavor;
-        flavorWrapper->GetData (&aDataFlavor);
+        nsXPIDLCString flavorStr;
+        flavorWrapper->ToString( getter_Copies(flavorStr) );
 
-        if (!GetDataForFlavor (mDataArray, aDataFlavor))    // Don't append if already in intrinsic list
+        if (!GetDataForFlavor (mDataArray, flavorStr.get()))    // Don't append if already in intrinsic list
           (*_retval)->AppendElement (genericFlavor);
       } // foreach flavor that can be converted to
     }
@@ -605,10 +606,10 @@ nsTransferable :: FlavorsTransferableCanExport(nsISupportsArray **_retval)
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 
         nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface (genericFlavor) );
-        char* aDataFlavor;
-        flavorWrapper->GetData (&aDataFlavor);
+        nsXPIDLCString flavorStr;
+        flavorWrapper->ToString( getter_Copies(flavorStr) );
 
-        if (!GetDataForFlavor (mDataArray, aDataFlavor))    // Don't append if already in intrinsic list
+        if (!GetDataForFlavor (mDataArray, flavorStr.get()))    // Don't append if already in intrinsic list
           (*_retval)->AppendElement (genericFlavor);
       } // foreach flavor that can be converted to
     }
