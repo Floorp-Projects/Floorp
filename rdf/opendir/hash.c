@@ -35,7 +35,7 @@ typedef struct _HashTableStruct {
     HashEntry*         buckets;      /* vector of hash buckets */
 } HashTableStruct;
 
-typedef HashTableStruct* HashTable;
+
 
 int 
 hashKey (HashTable ht, char* key) {
@@ -89,9 +89,9 @@ HashAdd (HashTable ht, char* key, void* value) {
     he->value = value;
     he->key   = key;
     if (prev) {
-	prev->next = he;
+      prev->next = he;
     } else {
-	ht->buckets[offset] = he;
+      ht->buckets[offset] = he;
     }
 }
 

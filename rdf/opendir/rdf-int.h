@@ -44,7 +44,7 @@ typedef struct _RDF_ResourceStruct {
   struct _RDF_AssertionStruct* rarg2;
 } RDF_ResourceStruct ;
 
-typedef RDF_ResourceStruct* RDF_Resource;
+
 
 
 typedef enum {
@@ -69,7 +69,7 @@ typedef struct _RDF_FileStruct {
   struct _RDF_AssertionStruct** assertionList;
 } RDF_FileStruct;
 
-typedef RDF_FileStruct* RDFT;
+
 
 typedef struct _RDF_CursorStruct {
   RDF_Resource u; 
@@ -83,7 +83,7 @@ typedef struct _RDF_CursorStruct {
   QueryType queryType;
 } RDF_CursorStruct;
 
-typedef RDF_CursorStruct* RDF_Cursor;
+
 
 typedef struct _RDF_AssertionStruct {
   RDF_Resource u;
@@ -103,7 +103,7 @@ HashTable  NewHashTable(int size) ;
 void* HashLookup(HashTable ht, char* key) ;
 void HashAdd (HashTable ht, char* key, void* value) ;
 
-
+void readRDFFile (char* file) ;
 RDF_Resource getResource(char* url, int createp);
 char* getMem(size_t n);
 char* fgetMem (size_t size) ;

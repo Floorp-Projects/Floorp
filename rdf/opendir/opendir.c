@@ -19,8 +19,8 @@
 #include "ONEiiop.h"
 #include "rdf.h"
 
-#if !defined(WIN32) && !defined(HPUX) && !defined(OSF1)
-extern "C" int gethostname(char *name, int namelen);
+#if !defined(WIN32) 
+extern "C" int gethostname(char *name, int namelen); 
 #endif
 
 void
@@ -37,7 +37,7 @@ void AnswerOpenDirQuery(WriteClientProc callBack, void* obj, char* query);
 long
 Run(ServerSession_t obj)
 {
-	char* query = malloc(300);
+	char* query = (char*) malloc(300);
 	WAIgetRequestInfo(obj, "QUERY",  &query);
 
 	//WAIsetResponseContentLength(obj, 10000);
@@ -115,6 +115,7 @@ int main(int argc, char **argv)
 #endif
 	WAIregisterService(obj, host);
         RDF_Initialize();
+        printf("RDF Initialized!\n");
         RDF_ReadFile("excite.rdf");
  
         printf("done");
