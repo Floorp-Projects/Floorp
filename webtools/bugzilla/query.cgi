@@ -76,7 +76,7 @@ if ($userid) {
         }
     }
     if (defined $cgi->cookie('DEFAULTQUERY')) {
-        push(@oldquerycookies, [$::defaultqueryname, 'DEFAULTQUERY',
+        push(@oldquerycookies, [DEFAULT_QUERY_NAME, 'DEFAULTQUERY',
                                 $cgi->cookie('DEFAULTQUERY')]);
     }
     if (@oldquerycookies) {
@@ -104,7 +104,7 @@ if ($userid) {
 if ($::FORM{'nukedefaultquery'}) {
     if ($userid) {
         SendSQL("DELETE FROM namedqueries " .
-                "WHERE userid = $userid AND name = '$::defaultqueryname'");
+                "WHERE userid = $userid AND name = " . SqlQuote(DEFAULT_QUERY_NAME));
     }
     $::buffer = "";
 }
@@ -112,7 +112,7 @@ if ($::FORM{'nukedefaultquery'}) {
 my $userdefaultquery;
 if ($userid) {
     SendSQL("SELECT query FROM namedqueries " .
-            "WHERE userid = $userid AND name = '$::defaultqueryname'");
+            "WHERE userid = $userid AND name = " . SqlQuote(DEFAULT_QUERY_NAME));
     $userdefaultquery = FetchOneColumn();
 }
 
@@ -391,7 +391,7 @@ $default{'charts'} = \@charts;
 if ($userid) {
     my @namedqueries;
     SendSQL("SELECT name FROM namedqueries " .
-            "WHERE userid = $userid AND name != '$::defaultqueryname' " .
+            "WHERE userid = $userid AND name != " . SqlQuote(DEFAULT_QUERY_NAME) .
             "ORDER BY name");
     while (MoreSQLData()) {
         push(@namedqueries, FetchOneColumn());

@@ -63,6 +63,7 @@ use base qw(Exporter);
     GROUP_VISIBLE
 
     DEFAULT_COLUMN_LIST
+    DEFAULT_QUERY_NAME
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -206,5 +207,9 @@ use constant DEFAULT_COLUMN_LIST => (
     "bug_severity", "priority", "rep_platform","assigned_to",
     "bug_status", "resolution", "short_short_desc"
 );
+
+# Used by query.cgi and buglist.cgi as the named-query name
+# for the default settings.
+use constant DEFAULT_QUERY_NAME => '(Default query)';
 
 1;

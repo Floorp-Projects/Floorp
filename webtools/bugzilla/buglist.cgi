@@ -44,7 +44,6 @@ require "CGI.pl";
 
 use vars qw($db_name
             @components
-            $defaultqueryname
             @legal_keywords
             @legal_platform
             @legal_priority
@@ -340,7 +339,7 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     if ($::FORM{'remtype'} eq "asdefault") {
         Bugzilla->login(LOGIN_REQUIRED);
         my $userid = Bugzilla->user->id;
-        my $qname = SqlQuote($::defaultqueryname);
+        my $qname = SqlQuote(DEFAULT_QUERY_NAME);
         my $qbuffer = SqlQuote($::buffer);
 
         SendSQL("LOCK TABLES namedqueries WRITE");

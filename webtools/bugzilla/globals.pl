@@ -41,7 +41,6 @@ use Bugzilla::BugMail;
 sub globals_pl_sillyness {
     my $zz;
     $zz = @main::default_column_list;
-    $zz = $main::defaultqueryname;
     $zz = @main::enterable_products;
     $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
@@ -95,7 +94,6 @@ $::ENV{'PATH'} = '';
 $::SIG{TERM} = 'IGNORE';
 $::SIG{PIPE} = 'IGNORE';
 
-$::defaultqueryname = "(Default query)"; # This string not exposed in UI
 $::unconfirmedstate = "UNCONFIRMED";
 
 # The following subroutine is for debugging purposes only.
