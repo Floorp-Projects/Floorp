@@ -2122,7 +2122,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 {
   nsresult rv = NS_OK;
   PRBool keepGoing = PR_TRUE;
-  PRBool repositionViews = PR_FALSE; // should we really need this?
 
 #ifdef DEBUG
   if (gNoisyReflow) {
@@ -2278,8 +2277,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     } else {
       if (deltaY != 0)
         SlideLine(aState, line, deltaY);
-      else
-        repositionViews = PR_TRUE;
 
       // XXX EVIL O(N^2) EVIL
       aState.RecoverStateFrom(line, deltaY);
@@ -2314,10 +2311,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // walking |GetNextSibling|.
     aState.mPrevChild = line.prev()->LastChild();
   }
-
-  // Should we really have to do this?
-  if (repositionViews)
-    ::PlaceFrameView(aState.mPresContext, this);
 
   // Pull data from a next-in-flow if there's still room for more
   // content here.
