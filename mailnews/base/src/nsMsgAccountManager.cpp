@@ -315,7 +315,7 @@ nsMsgAccountManager::LoadAccounts()
                                     (nsISupports**)&m_prefs);
   if (NS_FAILED(rv)) return rv;
   
-  char *accountList;
+  char *accountList = nsnull;
   rv = m_prefs->CopyCharPref("mail.accountmanager.accounts", &accountList);
 
   if (NS_FAILED(rv) || !accountList || !accountList[0]) {
@@ -324,7 +324,7 @@ nsMsgAccountManager::LoadAccounts()
     upgradePrefs();
   }
 
-  char *accountKey;
+  char *accountKey = nsnull;
 
   /* XXX todo: parse accountList and run loadAccount on each string,
    * probably comma-separated */
