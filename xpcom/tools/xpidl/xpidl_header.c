@@ -346,13 +346,24 @@ xpcom_param(TreeState *state)
     IDL_tree param = state->tree;
     state->tree = IDL_PARAM_DCL(param).param_type_spec;
 
+    /* in string and in wstring are const */
+    if (IDL_PARAM_DCL(param).attr == IDL_PARAM_IN &&
+        (IDL_NODE_TYPE(state->tree) == IDLN_TYPE_STRING ||
+         IDL_NODE_TYPE(state->tree) == IDLN_TYPE_WIDE_STRING))
+        fputs("const ", state->file);
+
     if (!xpcom_type(state))
         return FALSE;
-    fprintf(state->file, "%s%s",
-            STARRED_TYPE(state->tree)  ? "" : " ",
-            IDL_PARAM_DCL(param).attr == IDL_PARAM_IN ? "" : "*");
-    fprintf(state->file, "%s",
-            IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
+
+    /* unless the type ended in a *, add a space */
+    if (!STARRED_TYPE(state->tree))
+        fputc(' ', state->file);
+
+    /* out and inout params get a bonus *! */
+    if (IDL_PARAM_DCL(param).attr != IDL_PARAM_IN)
+        fputc('*', state->file);
+
+    fputs(IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str, state->file);
     return TRUE;
 }
 
