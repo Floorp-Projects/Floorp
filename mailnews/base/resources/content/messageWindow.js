@@ -524,13 +524,13 @@ var MessageWindowController =
       case "cmd_getMsgsForAuthAccounts":
 				return IsGetNewMessagesEnabled();
 			case "cmd_getNextNMessages":
-				return IsGetNextNMessagesEnabled();
-			case "cmd_synchronizeOffline":
+				return IsGetNextNMessagesEnabled();		
 			case "cmd_downloadFlagged":
 			case "cmd_downloadSelected":
                 return true;
+            case "cmd_synchronizeOffline":
 			case "cmd_settingsOffline":
-                return IsOfflineSettingsEnabled();
+                return IsAccountOfflineEnabled();
 			case "cmd_close":
 			case "cmd_nextMsg":
       case "button_next":

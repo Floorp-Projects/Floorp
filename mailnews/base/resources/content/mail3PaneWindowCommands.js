@@ -408,9 +408,9 @@ var DefaultController =
       case "cmd_downloadSelected":
         return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline() && GetNumSelectedMessages() > 0);
       case "cmd_synchronizeOffline":
-        return true;
+        return IsAccountOfflineEnabled();       
       case "cmd_settingsOffline":
-        return (MailAreaHasFocus() && IsOfflineSettingsEnabled());
+        return (MailAreaHasFocus() && IsAccountOfflineEnabled());
       case "cmd_selectFlagged":
         // disable select flagged until I finish the code in nsMsgDBView.cpp
         return false;
@@ -1100,3 +1100,4 @@ function isCommandEnabled(cmd)
     return folder.isCommandEnabled(cmd);
 
 }
+

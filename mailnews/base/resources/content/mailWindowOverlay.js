@@ -1191,7 +1191,7 @@ function SpaceHit()
   }
 }
 
-function IsOfflineSettingsEnabled()
+function IsAccountOfflineEnabled()
 {
   var selectedFolders = GetSelectedMsgFolders();
 
