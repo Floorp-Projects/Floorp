@@ -39,36 +39,23 @@
 
 #repeat-box,
 #repeat-end-box,
-#alarm-box,
-#end-event-time-box,
-#start-event-time-box,
-#start-date-box
-{
-   -moz-box-align : center;
-   -moz-box-pack : start;
+#alarm-box {
+  -moz-box-align : center;
+  -moz-box-pack  : start;
 }
 
-#dialog-box
-{
-   min-width    : 453px;
-   /*min-height   : 460px;*/
+#categories-field {
+  margin-left  : 4px;
+  margin-right : 4px;
 }
 
-#category-field
-{
-   margin-left    : 4px;
-   margin-right   : 4px;
+.proper-align {
+  min-width : 120px;
 }
 
-.proper-align
-{
-	min-width		: 120px;
-}
-
-.field-label-box-class
-{
-   text-align              : right;
-   margin-right            : 3px;
+.field-label-box-class {
+  text-align   : right;
+  margin-right : 3px;
 }
 
 /* line up all the check boxes on the left with the other boxes */
@@ -84,138 +71,35 @@
 #alarm-email-checkbox, 
 #alarm-email-checkbox > .internal-box > .checkmark-box,
 #invite-checkbox,
-#invite-checkbox > .internal-box > .checkmark-box
-{
-   margin-left   : 1px;
+#invite-checkbox > .internal-box > .checkmark-box {
+  margin-left : 1px;
 }
 
-#all-day-event-checkbox
-{
-   margin-left    : 2px;
+#repeat-length-units {
+  min-width : 98px;
 }
 
-#repeat-length-units
-{
-   min-width   : 98px;
-}
-
-#alarm-spacer
-{
-   min-width   : 52px;
-}
-
-#radio-spacer
-{
-   min-width   : 38px;
-}
-
-#until-spacer
-{
-   min-width   : 8px;
-}
-
-#invite-spacer
-{
-  	min-width	: 54px;
+#until-spacer {
+  min-width : 8px;
 }
 
 #repeat-length-field,
-#repeat-numberoftimes-textbox
-{
-   max-width               : 3em;
+#repeat-numberoftimes-textbox {
+  max-width : 3em;
 }
 
-#alarm-length-field
-{
-   max-width               : 3em;
+#alarm-length-field {
+  max-width : 3em;
 }
 
-#invite-email-field
-{
- 	max-width					: 50em;
+#alarm-email-field {
+  max-width : 50em;
 }
 
-#alarm-email-field
-{
-  	max-width					: 50em;
+#invite-email-field {
+  max-width : 50em;
 }
 
-.date-text-class
-{
-   -moz-user-focus			: ignore !important;
-   max-width               : 10em;
-}
-
-#start-time-text
-{
-   max-width               : 10em;
-}
-
-#end-time-text
-{
-   max-width               : 10em;
-}
-
-#due-time-text
-{
-   max-width               : 10em;
-}
-
-#repeat-end-date-text
-{
-   max-width               : 10em;
-}
-
-
-/*--------------------------------------------------------------------
- *   Start and End date button
- *-------------------------------------------------------------------*/
-
-.event-date-button-class
-  {
-    margin-left             : 3px;
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.gif");
-  }
-.event-date-button-class[disabled="true"],
-.event-date-button-class[disabled="true"]:hover,
-.event-date-button-class[disabled="true"]:hover:active
-  {
-   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.gif");
-  }
-.event-date-button-class:hover
-  {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.gif");
-  }
-.event-date-button-class:hover:active
-  {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.gif");
-  }
-
-/*--------------------------------------------------------------------
- *   Start and End time button
- *-------------------------------------------------------------------*/
-
-.event-time-button-class
-  {
-    margin-left             : 3px;
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.gif");
-  }
-.event-time-button-class[disabled="true"],
-.event-time-button-class[disabled="true"]:hover,
-.event-time-button-class[disabled="true"]:hover:active
-  {
-   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.gif");
-  }
-.event-time-button-class:hover
-  {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.gif");
-  }
-.event-time-button-class:hover:active
-  {
-    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.gif");
-  }
-
-.warning-text-class
-{
-   color       : red;
+.warning-text-class {
+  color : red;
 }
