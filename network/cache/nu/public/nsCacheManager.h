@@ -77,6 +77,8 @@ public:
     nsMemModule*            GetMemModule() const;
     nsDiskModule*           GetDiskModule() const;
 
+    void                    InfoAsHTML(char* o_Buffer) const;
+
     PRBool                  IsOffline(void) const;
 
     void                    Offline(PRBool bSet);

@@ -23,6 +23,7 @@
 
 #include "prtypes.h"
 #include "prinrval.h"
+#include "plstr.h"
 
 #include "nsCacheManager.h"
 #include "nsCacheTrace.h"
@@ -34,6 +35,8 @@
 
 /* TODO move this to InitNetLib */
 static nsCacheManager TheManager;
+
+PRUint32 NumberOfObjects(void);
 
 nsCacheManager::nsCacheManager(): m_pFirstModule(0), m_bOffline(PR_FALSE)
 {
@@ -183,6 +186,21 @@ nsCacheManager::GetModule(PRInt16 i_index) const
     return pModule;
 }
 
+void
+nsCacheManager::InfoAsHTML(char* o_Buffer) const
+{
+    MonitorLocker ml((nsMonitorable*)this);
+    char tmpbuffer[256];
+
+    /* TODO - make this cool */
+    sprintf(tmpbuffer, "<HTML><h2>Your cache has %d modules</h2> \
+        It has a total of %d cache objects. Hang in there for the details. </HTML>\0", 
+        Entries(),
+        NumberOfObjects());
+    
+    PL_strncpyz(o_Buffer, tmpbuffer, PL_strlen(tmpbuffer)+1);
+}
+
 void 
 nsCacheManager::Init() 
 {
@@ -247,4 +265,15 @@ nsCacheManager::WorstCaseTime(void) const
         PR_ASSERT(0);
     }
     return PR_IntervalToMicroseconds(PR_IntervalNow() - start);
+}
+
+PRUint32
+NumberOfObjects(void)
+{
+    PRUint32 objs = 0;
+    for (int i = TheManager.Entries()-1; i-- ; i>=0)
+    {
+        objs += TheManager.GetModule(i)->Entries();
+    }
+    return objs;
 }

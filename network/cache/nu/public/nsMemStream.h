@@ -40,6 +40,7 @@ public:
     NS_IMETHOD_(nsrefcnt)   Release(void);
 */
     PRInt32     Read(void* o_Buffer, PRUint32 i_Len);
+    void        Reset(void);
     PRInt32     Write(const void* i_Buffer, PRUint32 i_Len);
 
 protected:

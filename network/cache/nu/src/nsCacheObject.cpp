@@ -546,6 +546,13 @@ PRUint32 nsCacheObject::Read(char* o_Buffer, PRUint32 len)
     return m_pStream->Read(o_Buffer, len);
 }
 
+void nsCacheObject::Reset()
+{
+    if (m_pStream)
+        m_pStream->Reset();
+    // TODO change states too.
+}
+
 #if 0
 /* Caller must free returned string */
 // TODO  change to use PR_stuff...

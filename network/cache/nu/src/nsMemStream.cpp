@@ -76,6 +76,11 @@ PRInt32 nsMemStream::Read(void* o_Buffer, PRUint32 i_Len)
     return 0;
 }
 
+void nsMemStream::Reset()
+{
+    m_ReadOffset = 0;
+}
+
 PRInt32 nsMemStream::Write(const void* i_Buffer, PRUint32 i_Len)
 {
     if (!m_pStart)

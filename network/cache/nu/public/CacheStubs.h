@@ -48,6 +48,7 @@ PR_BEGIN_EXTERN_C
     extern PRBool           CacheManager_Contains(const char* i_url);
     extern PRInt16          CacheManager_Entries(void);
     extern void*            CacheManager_GetObject(const char* i_url);
+    extern void             CacheManager_InfoAsHTML(char* o_Buffer);
     extern PRBool           CacheManager_IsOffline(void);
     extern void             CacheManager_Offline(PRBool bSet);
     extern PRBool           CacheManager_Remove(const char* i_url);
@@ -76,6 +77,7 @@ PR_BEGIN_EXTERN_C
     extern PRBool           CacheObject_IsExpired(const void* pThis);
     extern PRBool           CacheObject_IsPartial(const void* pThis);
     extern PRUint32         CacheObject_Read(const void* pThis, char* o_Destination, PRUint32 i_Len);
+    extern void             CacheObject_Reset(void* pThis);
     extern void             CacheObject_SetAddress(void* pThis, const char* i_Address);
     extern void             CacheObject_SetCharset(void* pThis, const char* i_CharSet);
     extern void             CacheObject_SetContentEncoding(void* pThis, const char* i_Encoding);
