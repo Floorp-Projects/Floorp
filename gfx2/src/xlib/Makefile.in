@@ -33,7 +33,8 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= \
 		nsGfxFactory.cpp \
-		nsImage.cpp \
+		nsImageContainer.cpp \
+		nsImageFrame.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libgfx_base.a
