@@ -54,6 +54,9 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsInt64.h"
 #include "nsMsgUtils.h"
+#include "nsIPrompt.h"
+#include "nsIStringBundle.h"
+#include "nntpCore.h"
 
 #define INVALID_VERSION         0
 #define VALID_VERSION           1
@@ -1562,11 +1565,52 @@ nsNntpIncomingServer::SetGroupNeedsExtraInfo(const char *name, PRBool needsExtra
 
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GroupNotFound(const char *name, PRBool opening)
+nsNntpIncomingServer::GroupNotFound(nsIMsgWindow *aMsgWindow, const char *aName, PRBool aOpening)
 {
-  NS_ENSURE_ARG_POINTER(name);
-  printf("alert, asking if the user wants to auto unsubscribe from %s\n", name);
-  return NS_OK;
+  NS_ENSURE_ARG_POINTER(aName);
+  NS_ENSURE_ARG_POINTER(aMsgWindow);
+
+  nsresult rv;
+
+  nsCOMPtr <nsIPrompt> prompt;
+  rv = aMsgWindow->GetPromptDialog(getter_AddRefs(prompt));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID,&rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr <nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsAutoString groupStr;
+  groupStr.AssignWithConversion(aName);
+
+  nsXPIDLCString hostname;
+  rv = GetHostName(getter_Copies(hostname));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsAutoString hostStr;
+  hostStr.AssignWithConversion(hostname.get());
+
+  const PRUnichar *formatStrings[2] = { groupStr.get(), hostStr.get() };
+  nsXPIDLString confirmText;
+  rv = bundle->FormatStringFromName(
+                    NS_LITERAL_STRING("autoUnsubscribeText").get(),
+                    formatStrings, 2,
+                    getter_Copies(confirmText));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRBool confirmResult = PR_FALSE;
+  rv = prompt->Confirm(nsnull, confirmText, &confirmResult);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (confirmResult) {
+    rv = Unsubscribe(groupStr.get());
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP

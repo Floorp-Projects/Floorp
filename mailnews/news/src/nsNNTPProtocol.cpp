@@ -2161,7 +2161,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
             PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group (%s) not found, so unset m_currentGroup",this,(const char *)group_name));
             m_currentGroup = "";
 
-            m_nntpServer->GroupNotFound((const char *)group_name, PR_TRUE /* opening */);
+            m_nntpServer->GroupNotFound(m_msgWindow, group_name.get(), PR_TRUE /* opening */);
         }
 
         /* if the server returned a 400 error then it is an expected
@@ -2522,6 +2522,8 @@ nsresult nsNNTPProtocol::MarkCurrentMsgRead()
       msgHdr->GetIsRead(&isRead);
       if (!isRead)
         msgHdr->MarkRead(PR_TRUE);
+
+      printf("do work here\n");
     }
   }
   return rv;
@@ -4088,7 +4090,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
           rv = m_newsFolder->GetAsciiName(getter_Copies(name));
 
           if (NS_SUCCEEDED(rv)) {
-            m_nntpServer->GroupNotFound((const char *)name, PR_FALSE);
+            m_nntpServer->GroupNotFound(m_msgWindow, name.get(), PR_FALSE);
           }
 
           PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) NO_GROUP, so unset m_currentGroup", this));
