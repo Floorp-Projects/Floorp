@@ -1073,6 +1073,21 @@ NS_IMETHODIMP nsDeviceContextWin :: EndDocument(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextWin :: AbortDocument(void)
+{
+  if (NULL != mDC)
+  {
+    if (::AbortDoc(mDC) > 0) {
+      return NS_OK;
+    } else {
+      DISPLAY_LAST_ERROR
+      return NS_ERROR_ABORT;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextWin :: BeginPage(void)
 {
   if (NULL != mDC)

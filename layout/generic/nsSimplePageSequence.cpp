@@ -144,6 +144,7 @@ NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsSimplePageSequenceFrame::nsSimplePageSequenceFrame() :
   mIsPrintingSelection(PR_FALSE),
+  mTotalPages(-1),
   mSelectionHeight(-1),
   mYSelOffset(0)
 {
@@ -395,13 +396,24 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     nsHTMLReflowMetrics kidSize(nsnull);
     for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
       // Reflow the page
+      // The availableHeight always comes in NS_UNCONSTRAINEDSIZE, so we need to check
+      // the "adjusted rect" to see if that is being reflowed NS_UNCONSTRAINEDSIZE or not
+      // When it is NS_UNCONSTRAINEDSIZE it means we are reflowing a single page
+      // to print selection. So this means we want to use NS_UNCONSTRAINEDSIZE without altering it
+      nsRect actualRect;
+      nsRect adjRect;
+      aPresContext->GetPageDim(&actualRect, &adjRect);
+      nscoord avHeight;
+      if (adjRect.height == NS_UNCONSTRAINEDSIZE) {
+        avHeight = NS_UNCONSTRAINEDSIZE;
+      } else {
+        avHeight = pageSize.height+deadSpaceMargin.top+deadSpaceMargin.bottom+shadowSize.height+extraMargin.top+extraMargin.bottom;
+      }
       nsSize availSize(pageSize.width+deadSpaceMargin.right+deadSpaceMargin.left+shadowSize.width+extraMargin.right+extraMargin.left, 
-                       pageSize.height+deadSpaceMargin.top+deadSpaceMargin.bottom+shadowSize.height+extraMargin.top+extraMargin.bottom);
+                       avHeight);
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                        availSize, reflowReason);
       nsReflowStatus  status;
-      kidReflowState.availableWidth  = availSize.width;
-      kidReflowState.availableHeight = availSize.height;
 
       kidReflowState.mComputedWidth  = kidReflowState.availableWidth;
       //kidReflowState.mComputedHeight = kidReflowState.availableHeight;
@@ -599,7 +611,7 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
 
 }
 
-static nsIRegion* CreateRegion()
+nsIRegion* nsSimplePageSequenceFrame::CreateRegion()
 {
   nsIRegion* region;
   nsresult rv = nsComponentManager::CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
@@ -743,9 +755,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
     }
 
     // adjust total number of pages
-    if (nsIPrintSettings::kRangeSelection == mPrintRangeType) {
-      totalPages = mToPageNum - mFromPageNum + 1;
-    } else {
+    if (nsIPrintSettings::kRangeSelection != mPrintRangeType) {
       totalPages = pageNum - 1;
     }
   }
@@ -782,8 +792,11 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
 
   mPageNum          = 1;
   mPrintedPageNum   = 1;
-  mTotalPages       = totalPages;
   mCurrentPageFrame = mFrames.FirstChild();
+
+  if (mTotalPages == -1) {
+    mTotalPages = totalPages;
+  }
 
   return rv;
 }
@@ -854,14 +867,6 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
   }
 
   if (mPrintThisPage) {
-    if (!mSkipPageBegin) {
-      PRINT_DEBUG_MSG1("\n***************** BeginPage *****************\n");
-      rv = dc->BeginPage();
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-
     // XXX This is temporary fix for printing more than one page of a selection
     // This does a poor man's "dump" pagination (see Bug 89353)
     // It has laid out as one long page and now we are just moving or view up/down 
@@ -873,6 +878,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
     PRInt32 width, height;
     dc->GetDeviceSurfaceDimensions(width, height);
     nsRect clipRect(0, 0, width, height);
+    nsRect slidingRect(-1, -1, -1, -1);
     height -= mMargin.top + mMargin.bottom;
     width  -= mMargin.left + mMargin.right;
     nscoord selectionY = height;
@@ -886,25 +892,31 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
       NS_ASSERTION(containerView != nsnull, "Container view can't be null!");
       containerView->GetBounds(containerRect);
       containerRect.y -= mYSelOffset;
-      containerRect.height = height-mYSelOffset;
+      slidingRect.SetRect(0,mYSelOffset,width,height);
       
       vm->MoveViewTo(containerView, containerRect.x, containerRect.y);
       nsRect r(0, 0, containerRect.width, containerRect.height);
       vm->ResizeView(containerView, r, PR_FALSE);
       clipRect.SetRect(mMargin.left, mMargin.right, width, height);
-
-      nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, childFrame);
-      nsRect nullClipRect(-1,-1,-1,-1);
-      pf->SetClipRect(&nullClipRect);
     }
 
     while (continuePrinting) {
+      if (!mSkipPageBegin) {
+        PRINT_DEBUG_MSG1("\n***************** BeginPage *****************\n");
+        rv = dc->BeginPage();
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+      }
 
       // cast the frame to be a page frame
       nsPageFrame * pf = NS_STATIC_CAST(nsPageFrame*, mCurrentPageFrame);
       if (pf != nsnull) {
         pf->SetPageNumInfo(mPrintedPageNum, mTotalPages);
         pf->SetSharedPageData(mPageData);
+        if (mSelectionHeight > -1) {
+          pf->SetClipRect(&slidingRect);
+        }
       }
 
       // Print the page
@@ -946,6 +958,10 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
         vm->MoveViewTo(containerView, containerRect.x, containerRect.y);
         nsRect r(0, 0, containerRect.width, containerRect.height);
         vm->ResizeView(containerView, r, PR_FALSE);
+        if (pf != nsnull) {
+          slidingRect.y += height;
+        }
+
       } else {
         continuePrinting = PR_FALSE;
       }

@@ -136,6 +136,8 @@ public:
 
   NS_IMETHOD GetPaletteInfo(nsPaletteInfo& aPaletteInfo);
 
+  NS_IMETHOD AbortDocument(void) { return NS_OK; }
+
 #ifdef NS_PRINT_PREVIEW
   NS_IMETHOD SetAltDevice(nsIDeviceContext* aAltDC);
   NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC) { *aAltDC = mAltDC.get(); NS_IF_ADDREF(*aAltDC); return NS_OK;}

@@ -91,6 +91,7 @@ public:
   NS_IMETHOD SetOffsets(nscoord aStartOffset, nscoord aEndOffset);
   NS_IMETHOD SetPageNo(PRInt32 aPageNo) { return NS_OK;}
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
+  NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) { mTotalPages = aTotal; return NS_OK; }
 
   // Async Printing
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
@@ -111,6 +112,9 @@ public:
   NS_IMETHOD  SizeTo(nsIPresContext* aPresContext,
                      nscoord         aWidth,
                      nscoord         aHeight);
+
+  static nsIRegion* CreateRegion();
+
 #ifdef NS_DEBUG
   // Debugging
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;

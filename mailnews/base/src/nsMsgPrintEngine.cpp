@@ -189,6 +189,10 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
           StartNextPrintOperation();
           rv = NS_OK;
         }
+      } 
+      else 
+      {
+        mWindow->Close();
       }
     }
   }

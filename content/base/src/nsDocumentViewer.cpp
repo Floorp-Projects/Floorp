@@ -344,6 +344,8 @@ public:
   nsRect           mClipRect;
 
   PRUint16         mImgAnimationMode;
+  PRUnichar*       mDocTitle;
+  PRUnichar*       mDocURL;
 
 private:
   PrintObject& operator=(const PrintObject& aOther); // not implemented
@@ -391,6 +393,7 @@ public:
   PRPackedBool                mPrintingAsIsSubDoc;
   PRInt16                     mPrintFrameType;
   PRPackedBool                mOnStartSent;
+  PRPackedBool                mIsAborted;
   PRInt32                     mNumPrintableDocs;
   PRInt32                     mNumDocsPrinted;
   PRInt32                     mNumPrintablePages;
@@ -457,11 +460,20 @@ public:
   nsresult CallChildren(CallChildFunc aFunc, void* aClosure);
 
   // Printing Methods
-  PRBool   PrintPage(nsIPresContext* aPresContext,nsIPrintSettings* aPrintSettings,PrintObject* aPOect);
+  PRBool   PrintPage(nsIPresContext* aPresContext,nsIPrintSettings* aPrintSettings,PrintObject* aPOect, PRBool& aInRange);
   PRBool   DonePrintingPages(PrintObject* aPO);
   
   // helper method
-  static void GetWebShellTitleAndURL(nsIWebShell * aWebShell, nsIPrintSettings* aPrintSettings, PRUnichar** aTitle, PRUnichar** aURLStr);
+  static void GetWebShellTitleAndURL(nsIWebShell * aWebShell, PRUnichar** aTitle, PRUnichar** aURLStr);
+
+  // This enum tells indicates what the default should be for the title
+  // if the title from the document is null
+  enum eDocTitleDefault {eDocTitleDefNone, eDocTitleDefBlank, eDocTitleDefDocument, eDocTitleDefURLDoc};
+  static void GetDisplayTitleAndURL(PrintObject*      aPO, 
+                                    nsIPrintSettings* aPrintSettings, 
+                                    PRUnichar**       aTitle, 
+                                    PRUnichar**       aURLStr,
+                                    eDocTitleDefault  aDefType = eDocTitleDefNone);
 
 protected:
   virtual ~DocumentViewerImpl();
@@ -515,7 +527,7 @@ private:
   void DoProgressForAsIsFrames();
   void DoProgressForSeparateFrames();
   void DoPrintProgress(PRBool aIsForPrinting);
-  void SetDocAndURLIntoProgress(nsIWebShell* aWebShell, nsIPrintProgressParams* aParams);
+  void SetDocAndURLIntoProgress(PrintObject* aPO, nsIPrintProgressParams* aParams);
   nsresult CheckForPrinters(nsIPrintOptions*  aPrintOptions,
                             nsIPrintSettings* aPrintSettings,
                             PRUint32          aErrorCode,
@@ -658,14 +670,14 @@ public:
   }
 
 
-  nsresult StartTimer()
+  nsresult StartTimer(PRBool aUseDelay = PR_TRUE)
   {
     nsresult result;
     mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
     if (NS_FAILED(result)) {
       NS_WARNING("unable to start the timer");
     } else {
-      mTimer->Init(this, mDelay, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT);
+      mTimer->Init(this, aUseDelay?mDelay:0, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT);
     } 
     return result;
   }
@@ -680,7 +692,8 @@ public:
       // Check to see if we are done
       // donePrinting will be true if it completed successfully or
       // if the printing was cancelled
-      PRBool donePrinting = mDocViewer->PrintPage(mPresContext, mPrintSettings, mPrintObj);
+      PRBool inRange;
+      PRBool donePrinting = mDocViewer->PrintPage(mPresContext, mPrintSettings, mPrintObj, inRange);
       if (donePrinting) {
         // now clean up print or print the next webshell
         if (mDocViewer->DonePrintingPages(mPrintObj)) {
@@ -690,7 +703,7 @@ public:
 
       Stop();
       if (initNewTimer) {
-        nsresult result = StartTimer();
+        nsresult result = StartTimer(inRange);
         if (NS_FAILED(result)) {
           donePrinting = PR_TRUE;     // had a failure.. we are finished..
           DocumentViewerImpl::mIsDoingPrinting = PR_FALSE;
@@ -722,7 +735,7 @@ public:
                  PRUint32            aDelay) 
   {
     Init(aDocViewerImpl, aPresContext, aPrintSettings, aPO, aDelay);
-    return StartTimer();
+    return StartTimer(PR_FALSE);
   }
 
 
@@ -771,7 +784,9 @@ PrintData::PrintData() :
   mShowProgressDialog(PR_TRUE), mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
   mIsParentAFrameSet(PR_FALSE), mPrintingAsIsSubDoc(PR_FALSE),
   mPrintFrameType(nsIPrintSettings::kFramesAsIs), mOnStartSent(PR_FALSE),
-  mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0)
+  mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
+  mIsAborted(PR_FALSE)
+
 {
 #ifdef DEBUG_PRINTING
   mDebugFD = fopen("printing.log", "w");
@@ -789,9 +804,17 @@ PrintData::~PrintData()
 #ifdef DEBUG_PRINTING
     fprintf(mDebugFD, "****************** End Document ************************\n");
 #endif
-    nsresult rv = mPrintDC->EndDocument();
+    PRBool isCancelled = PR_FALSE;
+    mPrintSettings->GetIsCancelled(&isCancelled);
+
+    nsresult rv = NS_OK;
+    if (!isCancelled && !mIsAborted) {
+      rv = mPrintDC->EndDocument();
+    } else {
+      rv = mPrintDC->AbortDocument();  
+    }
     if (NS_FAILED(rv)) {
-      DocumentViewerImpl::ShowPrintErrorDialog(rv, PR_TRUE);
+      DocumentViewerImpl::ShowPrintErrorDialog(rv);
     }
   }
 
@@ -842,6 +865,8 @@ PrintData::DoOnProgressChange(nsVoidArray& aListeners,
                               PRBool       aDoStartStop,
                               PRInt32      aFlag)
 {
+  if (aProgess == 0) return;
+
   for (PRInt32 i=0;i<aListeners.Count();i++) {
     nsIWebProgressListener* wpl = NS_STATIC_CAST(nsIWebProgressListener*, aListeners.ElementAt(i));
     NS_ASSERTION(wpl, "nsIWebProgressListener is NULL!");
@@ -864,7 +889,9 @@ PrintObject::PrintObject() :
   mParent(nsnull), mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE),
   mPrintAsIs(PR_FALSE), mSkippedPageEject(PR_FALSE), mSharedPresShell(PR_FALSE),
   mClipRect(-1,-1, -1, -1),
-  mImgAnimationMode(imgIContainer::kNormalAnimMode)
+  mImgAnimationMode(imgIContainer::kNormalAnimMode),
+  mDocTitle(nsnull),
+  mDocURL(nsnull)
 {
 }
 
@@ -879,8 +906,14 @@ PrintObject::~PrintObject()
     NS_ASSERTION(po, "PrintObject can't be null!");
     delete po;
   } 
-  if (mPresShell && !mSharedPresShell)
+
+  if (mPresShell && !mSharedPresShell) {
     mPresShell->Destroy();
+  }
+
+  if (mDocTitle) nsMemory::Free(mDocTitle);
+  if (mDocURL) nsMemory::Free(mDocURL);
+
 }
 
 //------------------------------------------------------------------
@@ -1963,22 +1996,12 @@ static void DumpPrintObjectsTree(PrintObject * aPO, int aLevel= 0, FILE* aFD = n
  
 static void GetDocTitleAndURL(PrintObject* aPO, char *& aDocStr, char *& aURLStr)
 {
-  PRUnichar * docTitleStr;
-  PRUnichar * docURLStr;
-  nsAutoString strDocTitle;
-  nsAutoString strURL;
-  DocumentViewerImpl::GetWebShellTitleAndURL(aPO->mWebShell, nsnull, &docTitleStr, &docURLStr); 
-
-  if (!docTitleStr) {
-    if (docURLStr) {
-      docTitleStr = docURLStr;
-      docURLStr   = nsnull;
-    } else {
-      docTitleStr = ToNewUnicode(NS_LITERAL_STRING("Document"));
-    }
-  }
   aDocStr = nsnull;
   aURLStr = nsnull;
+
+  PRUnichar * docTitleStr;
+  PRUnichar * docURLStr;
+  DocumentViewerImpl::GetDisplayTitleAndURL(aPO, nsnull, &docTitleStr, &docURLStr, DocumentViewerImpl::eDocTitleDefURLDoc); 
 
   if (docTitleStr) {
     nsAutoString strDocTitle(docTitleStr);
@@ -2364,7 +2387,6 @@ DocumentViewerImpl::IsWebShellAFrameSet(nsIWebShell * aWebShell)
 //-------------------------------------------------------
 void
 DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell, 
-                                           nsIPrintSettings* aPrintSettings,
                                            PRUnichar**   aTitle, 
                                            PRUnichar**   aURLStr)
 {
@@ -2375,58 +2397,106 @@ DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell,
   *aTitle  = nsnull;
   *aURLStr = nsnull;
 
+  // now get the actual values if the PrintSettings didn't have any
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
+  if (!docShell) return;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell) return;
+
+  nsCOMPtr<nsIDocument> doc;
+  presShell->GetDocument(getter_AddRefs(doc));
+  if (!doc) return;
+
+  const nsString* docTitle = doc->GetDocumentTitle();
+  if (docTitle && !docTitle->IsEmpty()) {
+    *aTitle = ToNewUnicode(*docTitle);
+  }
+
+  nsCOMPtr<nsIURI> url;
+  doc->GetDocumentURL(getter_AddRefs(url));
+  if (!url) return;
+
+  nsXPIDLCString urlCStr;
+  url->GetSpec(getter_Copies(urlCStr));
+  if (urlCStr.get()) {
+    *aURLStr = ToNewUnicode(urlCStr);
+  }
+}
+
+//-------------------------------------------------------
+// This will first use a Title and/or URL from the PrintSettings
+// if one isn't set then it uses the one from the document
+// then if not title is there we will make sure we send something back
+// depending on the situation.
+void
+DocumentViewerImpl::GetDisplayTitleAndURL(PrintObject* aPO,
+                                          nsIPrintSettings* aPrintSettings,
+                                          PRUnichar**       aTitle, 
+                                          PRUnichar**       aURLStr,
+                                          eDocTitleDefault  aDefType)
+{
+  NS_ASSERTION(aPO, "Pointer is null!");
+  NS_ASSERTION(aTitle, "Pointer is null!");
+  NS_ASSERTION(aURLStr, "Pointer is null!");
+
+  *aTitle  = nsnull;
+  *aURLStr = nsnull;
+
   // First check to see if the PrintSettings has defined an alternate title
   // and use that if it did
   PRUnichar * docTitleStrPS = nsnull;
   PRUnichar * docURLStrPS   = nsnull;
-  if (aPrintSettings != nsnull) {
+  if (aPrintSettings) {
     aPrintSettings->GetTitle(&docTitleStrPS);
     aPrintSettings->GetDocURL(&docURLStrPS);
 
-    if (docTitleStrPS != nsnull && nsCRT::strlen(docTitleStrPS) > 0) {
+    if (docTitleStrPS && nsCRT::strlen(docTitleStrPS) > 0) {
       *aTitle  = docTitleStrPS;
     }
 
-    if (docURLStrPS != nsnull && nsCRT::strlen(docURLStrPS) > 0) {
+    if (docURLStrPS && nsCRT::strlen(docURLStrPS) > 0) {
       *aURLStr  = docURLStrPS;
     }
 
     // short circut
-    if (docTitleStrPS != nsnull && docURLStrPS != nsnull) {
+    if (docTitleStrPS && docURLStrPS) {
       return;
     }
   }
 
-  // now get the actual values if the PrintSettings didn't have any
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aWebShell));
-  if (docShell) {
-    nsCOMPtr<nsIPresShell> presShell;
-    docShell->GetPresShell(getter_AddRefs(presShell));
-    if (presShell) {
-      nsCOMPtr<nsIDocument> doc;
-      presShell->GetDocument(getter_AddRefs(doc));
-      if (doc) {
-        if (docTitleStrPS == nsnull) {
-          const nsString* docTitle = doc->GetDocumentTitle();
-          if (docTitle && !docTitle->IsEmpty()) {
-            *aTitle = ToNewUnicode(*docTitle);
-          }
-        }
-
-        if (docURLStrPS == nsnull) {
-          nsCOMPtr<nsIURI> url;
-          doc->GetDocumentURL(getter_AddRefs(url));
-          if (url) {
-            nsXPIDLCString urlCStr;
-            url->GetSpec(getter_Copies(urlCStr));
-            if (urlCStr.get()) {
-              *aURLStr = ToNewUnicode(urlCStr);
-            }
-          }
-        }
-      }
+  if (!docURLStrPS) {
+    if (aPO->mDocURL) {
+      *aURLStr = nsCRT::strdup(aPO->mDocURL);
     }
   }
+
+  if (!docTitleStrPS) {
+    if (aPO->mDocTitle) {
+      *aTitle = nsCRT::strdup(aPO->mDocTitle);
+    } else {
+      switch (aDefType) {
+        case eDocTitleDefBlank: *aTitle = ToNewUnicode(NS_LITERAL_STRING(""));
+          break;
+
+        case eDocTitleDefDocument: *aTitle = ToNewUnicode(NS_LITERAL_STRING("Mozilla Document"));
+          break;
+
+        case eDocTitleDefURLDoc: 
+          if (*aURLStr) {
+            *aTitle = nsCRT::strdup(*aURLStr);
+          } else {
+            *aTitle = ToNewUnicode(NS_LITERAL_STRING("Mozilla Document"));
+          }
+          break;
+
+        default:
+          break;
+      } // switch
+    }
+  }
+
 }
 
 
@@ -2463,7 +2533,8 @@ DocumentViewerImpl::DonePrintingPages(PrintObject* aPO)
 PRBool
 DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
                               nsIPrintSettings* aPrintSettings,
-                              PrintObject*      aPO)
+                              PrintObject*      aPO,
+                              PRBool&           aInRange)
 {
   NS_ASSERTION(aPresContext, "Pointer is null!");
   NS_ASSERTION(aPrintSettings, "Pointer is null!");
@@ -2472,23 +2543,24 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
   PRINT_DEBUG_MSG1("-----------------------------------\n");
   PRINT_DEBUG_MSG3("------ In DV::PrintPage PO: %p (%s)\n", aPO, gFrameTypesStr[aPO->mFrameType]);
 
-  if (aPrintSettings != nsnull) {
-    PRBool isCancelled;
-    aPrintSettings->GetIsCancelled(&isCancelled);
-    // DO NOT allow the print job to be cancelled if it is Print FrameAsIs
-    // because it is only printing one page.
-    if (isCancelled && mPrt->mPrintFrameType != nsIPrintSettings::kFramesAsIs) {
-      aPrintSettings->SetIsCancelled(PR_FALSE);
-      return PR_TRUE;
+  PRBool isCancelled = PR_FALSE;
+
+  // Check setting to see if someone request it be cancelled (programatically)
+  aPrintSettings->GetIsCancelled(&isCancelled);
+  if (!isCancelled) {
+    // If not, see if the user has cancelled it
+    if (mPrt->mPrintProgress) {
+      mPrt->mPrintProgress->GetProcessCanceledByUser(&isCancelled);
     }
   }
-  if (mPrt->mPrintProgress) {
-    PRBool isCancelled;
-    mPrt->mPrintProgress->GetProcessCanceledByUser(&isCancelled);
-    // DO NOT allow the print job to be cancelled if it is Print FrameAsIs
-    // because it is only printing one page.
-    if (isCancelled && mPrt->mPrintFrameType != nsIPrintSettings::kFramesAsIs) {
+
+  // DO NOT allow the print job to be cancelled if it is Print FrameAsIs
+  // because it is only printing one page.
+  if (isCancelled) {
+    if (mPrt->mPrintFrameType == nsIPrintSettings::kFramesAsIs) {
       aPrintSettings->SetIsCancelled(PR_FALSE);
+    } else {
+      aPrintSettings->SetIsCancelled(PR_TRUE);
       return PR_TRUE;
     }
   }
@@ -2517,8 +2589,10 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
     PRINT_DEBUG_MSG4("****** Printing Page %d printing from %d to page %d\n", pageNum, fromPage, toPage);
 
     donePrinting = pageNum >= toPage;
-    curPage = pageNum - fromPage;
-    endPage = toPage - fromPage;
+    aInRange = pageNum >= fromPage && pageNum <= toPage;
+    PRInt32 pageInc = pageNum - fromPage + 1;
+    curPage = pageInc >= 0?pageInc+1:0;
+    endPage = (toPage - fromPage)+1;
   } else {
     PRInt32 numPages;
     mPageSeqFrame->GetNumPages(&numPages);
@@ -2526,8 +2600,9 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
     PRINT_DEBUG_MSG3("****** Printing Page %d of %d page(s)\n", pageNum, numPages);
 
     donePrinting = pageNum >= numPages;
-    curPage = pageNum;
+    curPage = pageNum+1;
     endPage = numPages;
+    aInRange = PR_TRUE;
   }
 
   // NOTE: mPrt->mPrintFrameType gets set to  "kFramesAsIs" when a
@@ -2537,7 +2612,7 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
 
   } else if (mPrt->mPrintFrameType != nsIPrintSettings::kFramesAsIs || 
              mPrt->mPrintObject->mFrameType == eDoc && aPO == mPrt->mPrintObject) {
-    PrintData::DoOnProgressChange(mPrt->mPrintProgressListeners, curPage+1, endPage);
+    PrintData::DoOnProgressChange(mPrt->mPrintProgressListeners, curPage, endPage);
   }
 
   // Set Clip when Printing "AsIs" or 
@@ -2568,6 +2643,9 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
   } //switch 
 
   if (setClip) {
+    // Always set the clip x,y to zero because it isn't going to have any margins
+    aPO->mClipRect.x = 0;
+    aPO->mClipRect.y = 0;
     mPageSeqFrame->SetClipRect(aPO->mPresContext, &aPO->mClipRect);
   }
 
@@ -2575,9 +2653,15 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
   // if a print job was cancelled externally, an EndPage or BeginPage may
   // fail and the failure is passed back here.
   // Returning PR_TRUE means we are done printing.
+  //
+  // When rv == NS_ERROR_ABORT, it means we want out of the 
+  // print job without displaying any error messages
   nsresult rv = mPageSeqFrame->PrintNextPage(aPresContext);
   if (NS_FAILED(rv)) {
-    ShowPrintErrorDialog(rv, PR_TRUE);
+    if (rv != NS_ERROR_ABORT) {
+      ShowPrintErrorDialog(rv);
+      mPrt->mIsAborted = PR_TRUE;
+    }
     return PR_TRUE;
   }                
 
@@ -2652,6 +2736,9 @@ DocumentViewerImpl::BuildDocTree(nsIDocShellTreeNode * aParentNode,
   NS_ASSERTION(aParentNode, "Pointer is null!");
   NS_ASSERTION(aDocList, "Pointer is null!");
   NS_ASSERTION(aPO, "Pointer is null!");
+
+  // Get the Doc and Title String
+  GetWebShellTitleAndURL(aPO->mWebShell, &aPO->mDocTitle, &aPO->mDocURL); 
 
   PRInt32 childWebshellCount;
   aParentNode->GetChildCount(&childWebshellCount);
@@ -3123,7 +3210,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
 
 
   if (printRangeType == nsIPrintSettings::kRangeSelection && IsThereARangeSelection(domWinIntl)) {
-    height = 0x0FFFFFFF;
+    height = NS_UNCONSTRAINEDSIZE;
   }
   nsRect tbounds = nsRect(0, 0, width, height);
 
@@ -3630,40 +3717,8 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
   // it will check to see if there are more webshells to be printed and 
   // then PrintDocContent will be called again.
 
-  nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
-  PRUnichar * docTitleStr;
-  PRUnichar * docURLStr;
-  GetWebShellTitleAndURL(webContainer, mPrt->mPrintSettings, &docTitleStr, &docURLStr); 
-
-  if (!docTitleStr) {
-    if (docURLStr) {
-      docTitleStr = docURLStr;
-      docURLStr   = nsnull;
-    } else {
-      docTitleStr = ToNewUnicode(NS_LITERAL_STRING("Document"));
-    }
-  }
-
   nsresult rv = NS_OK;
   if (mIsDoingPrinting) {
-    // BeginDocument may pass back a FAILURE code
-    // i.e. On Windows, if you are printing to a file and hit "Cancel" 
-    //      to the "File Name" dialog, this comes back as an error
-    // Don't start printing when regression test are executed  
-    rv = mPrt->mDebugFilePtr ? NS_OK: mPrt->mPrintDC->BeginDocument(docTitleStr);
-    PRINT_DEBUG_MSG1("****************** Begin Document ************************\n");
-
-    if (docTitleStr != nsnull) {
-      nsMemory::Free(docTitleStr);
-    }
-    if (docURLStr != nsnull) {
-      nsMemory::Free(docURLStr);
-    }
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
     PrintDocContent(mPrt->mPrintObject, rv); // ignore return value
   }
 
@@ -3688,7 +3743,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
   NS_ASSERTION(webShell, "The WebShell can't be NULL!");
 
   if (mPrt->mPrintProgressParams) {
-    SetDocAndURLIntoProgress(aPO->mWebShell, mPrt->mPrintProgressParams);
+    SetDocAndURLIntoProgress(aPO, mPrt->mPrintProgressParams);
   }
 
   if (webShell != nsnull) {
@@ -3835,12 +3890,10 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
         if (!skipSetTitle) {
           PRUnichar * docTitleStr;
           PRUnichar * docURLStr;
-          GetWebShellTitleAndURL(webShell, mPrt->mPrintSettings, &docTitleStr, &docURLStr); 
+          GetDisplayTitleAndURL(aPO, mPrt->mPrintSettings, &docTitleStr, &docURLStr, eDocTitleDefBlank); 
 
-          if (!docTitleStr) {
-            docTitleStr = ToNewUnicode(NS_LITERAL_STRING(""));
-          }
-
+          // Set them down into the PrintOptions so 
+          // they can used by the DeviceContext
           if (docTitleStr) {
             mPrt->mPrintOptions->SetTitle(docTitleStr);
             nsMemory::Free(docTitleStr);
@@ -3892,12 +3945,25 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
               nsRect areaRect;
               nsIFrame * areaFrame = FindFrameByType(poPresContext, startFrame, nsHTMLAtoms::body, rect, areaRect);
               if (areaFrame) {
-                startRect.y -= margin.top;
+                nsRect areaRect;
+                areaFrame->GetRect(areaRect);
+                startRect.y -= margin.top+areaRect.y;
                 endRect.y   -= margin.top;
                 areaRect.y -= startRect.y;
                 areaRect.x -= margin.left;
                 // XXX This is temporary fix for printing more than one page of a selection
                 pageSequence->SetSelectionHeight(startRect.y, endRect.y+endRect.height-startRect.y);
+
+                // calc total pages by getting calculating the selection's height
+                // and then dividing it by how page content frames will fit.
+                nscoord selectionHgt = endRect.y + endRect.height - startRect.y;
+                PRInt32 pageWidth, pageHeight;
+                mPrt->mPrintDocDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
+                nsMargin margin(0,0,0,0);
+                mPrt->mPrintSettings->GetMarginInTwips(margin);
+                pageHeight -= margin.top + margin.bottom;
+                PRInt32 totalPages = PRInt32((float(selectionHgt) / float(pageHeight))+0.99);
+                pageSequence->SetTotalNumPages(totalPages);
               }
             }
           }
@@ -3941,7 +4007,8 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
             DoProgressForAsIsFrames();
             // Print the page synchronously
             PRINT_DEBUG_MSG3("Async Print of PO: %p (%s) \n", aPO, gFrameTypesStr[aPO->mFrameType]);
-            aDonePrinting = PrintPage(poPresContext, mPrt->mPrintSettings, aPO);
+            PRBool inRange;
+            aDonePrinting = PrintPage(poPresContext, mPrt->mPrintSettings, aPO, inRange);
           }
         }
       } else {
@@ -5261,7 +5328,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
     /* cleanup done, let's fire-up an error dialog to notify the user
      * what went wrong... 
      */   
-    ShowPrintErrorDialog(rv);
+    ShowPrintErrorDialog(rv, PR_FALSE);
     TurnScriptingOn(PR_TRUE);
     mIsCreatingPrintPreview = PR_FALSE;
     mIsDoingPrintPreview    = PR_FALSE;
@@ -5287,22 +5354,22 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 
 
 void
-DocumentViewerImpl::SetDocAndURLIntoProgress(nsIWebShell* aWebShell,
-                                             nsIPrintProgressParams* aParams)
+DocumentViewerImpl::SetDocAndURLIntoProgress(PrintObject* aPO, nsIPrintProgressParams* aParams)
 {
-  NS_ASSERTION(aWebShell, "Must have vaild nsIWebShell");
+  NS_ASSERTION(aPO, "Must have vaild PrintObject");
   NS_ASSERTION(aParams, "Must have vaild nsIPrintProgressParams");
-  if (aWebShell == nsnull || aParams == nsnull) {
+
+  if (!aPO || !aPO->mWebShell || !aParams) {
     return;
   }
   const PRInt32 kTitleLength = 64;
 
   PRUnichar * docTitleStr;
   PRUnichar * docURLStr;
-  GetWebShellTitleAndURL(aWebShell, mPrt->mPrintSettings, &docTitleStr, &docURLStr);
+  GetDisplayTitleAndURL(aPO, mPrt->mPrintSettings, &docTitleStr, &docURLStr, eDocTitleDefDocument);
 
   // Make sure the URLS don't get too long for the progress dialog
-  if (docURLStr != nsnull && nsCRT::strlen(docURLStr) > kTitleLength) {
+  if (docURLStr && nsCRT::strlen(docURLStr) > kTitleLength) {
     PRUnichar * ptr = &docURLStr[nsCRT::strlen(docURLStr)-kTitleLength+3];
     nsAutoString newURLStr;
     newURLStr.AppendWithConversion("...");
@@ -5342,7 +5409,7 @@ DocumentViewerImpl::DoPrintProgress(PRBool aIsForPrinting)
       nsCOMPtr<nsIPrintProgressParams> params;
       rv = prtProgressParams->QueryInterface(NS_GET_IID(nsIPrintProgressParams), (void**)getter_AddRefs(mPrt->mPrintProgressParams));
       if (NS_SUCCEEDED(rv) && mPrt->mPrintProgressParams) {
-        SetDocAndURLIntoProgress(mPrt->mPrintObject->mWebShell, mPrt->mPrintProgressParams);
+        SetDocAndURLIntoProgress(mPrt->mPrintObject, mPrt->mPrintProgressParams);
 
         nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
         if (wwatch) {
@@ -5452,6 +5519,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       return NS_ERROR_FAILURE;
     }
   }
+  mPrt->mPrintSettings->SetIsCancelled(PR_FALSE);
 
   // Let's print ...
   mIsDoingPrinting = PR_TRUE;
@@ -5688,28 +5756,41 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
               }
             }
 
-            DoPrintProgress(PR_TRUE);
+            PRUnichar * docTitleStr;
+            PRUnichar * docURLStr;
+            GetDisplayTitleAndURL(mPrt->mPrintObject, mPrt->mPrintSettings, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
 
-            // Print listener setup...
-            if (mPrt != nsnull) {
-              mPrt->OnStartPrinting();    
-            }
+            // BeginDocument may pass back a FAILURE code
+            // i.e. On Windows, if you are printing to a file and hit "Cancel" 
+            //      to the "File Name" dialog, this comes back as an error
+            // Don't start printing when regression test are executed  
+            rv = mPrt->mDebugFilePtr ? NS_OK: mPrt->mPrintDC->BeginDocument(docTitleStr);
+            PRINT_DEBUG_MSG1("****************** Begin Document ************************\n");
 
-            //
-            // The mIsPrinting flag is set when the ImageGroup observer is
-            // notified that images must be loaded as a result of the 
-            // InitialReflow...
-            //
-            if(!mIsPrinting  || (mPrt->mDebugFilePtr != nsnull)) {
-              rv = DocumentReadyForPrinting();
-#ifdef DEBUG_dcone
-            printf("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
-#endif
-            } else {
-              // use the observer mechanism to finish the printing
-#ifdef DEBUG_dcone
-              printf("PRINTING OBSERVER STARTED\n");
-#endif
+            if (docTitleStr) nsMemory::Free(docTitleStr);
+            if (docURLStr) nsMemory::Free(docURLStr);
+
+            if (NS_SUCCEEDED(rv)) {
+
+              DoPrintProgress(PR_TRUE);
+
+              // Print listener setup...
+              if (mPrt != nsnull) {
+                mPrt->OnStartPrinting();    
+              }
+
+              //
+              // The mIsPrinting flag is set when the ImageGroup observer is
+              // notified that images must be loaded as a result of the 
+              // InitialReflow...
+              //
+              if(!mIsPrinting  || mPrt->mDebugFilePtr) {
+                rv = DocumentReadyForPrinting();
+                PRINT_DEBUG_MSG1("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
+              } else {
+                // use the observer mechanism to finish the printing
+                PRINT_DEBUG_MSG1("PRINTING OBSERVER STARTED\n");
+              }
             }
           }
         }
@@ -5737,6 +5818,9 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
     /* cleanup done, let's fire-up an error dialog to notify the user
      * what went wrong... 
+     * 
+     * When rv == NS_ERROR_ABORT, it means we want out of the 
+     * print job without displaying any error messages
      */
     if (rv != NS_ERROR_ABORT) {
       ShowPrintErrorDialog(rv);
@@ -6747,7 +6831,7 @@ DocumentViewerImpl::EnumerateDocumentNames(PRUint32* aCount,
     NS_ASSERTION(po, "PrintObject can't be null!");
     PRUnichar * docTitleStr;
     PRUnichar * docURLStr;
-    GetWebShellTitleAndURL(po->mWebShell, nsnull, &docTitleStr, &docURLStr);
+    GetWebShellTitleAndURL(po->mWebShell, &docTitleStr, &docURLStr);
 
     // Use the URL if the doc is empty
     if (!docTitleStr || !*docTitleStr) {

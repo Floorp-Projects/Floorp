@@ -302,6 +302,14 @@ NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  */
+NS_IMETHODIMP nsDeviceContextXp::AbortDocument(void)
+{
+  return EndDocument();
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ */
 NS_IMETHODIMP nsDeviceContextXp::BeginPage(void)
 {
   nsresult  rv = NS_OK;
