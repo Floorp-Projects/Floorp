@@ -23,6 +23,7 @@
   !!! HEED THE WARNING.
 */
 
+#if !defined(XP_MAC)
 #if defined (JAVA) || defined(OJI)
 #define IMPLEMENT_netscape_javascript_JSObject
 #define IMPLEMENT_netscape_javascript_JSException
@@ -40,3 +41,4 @@
 void _java_javascript_init(void) { }
 
 #endif /* defined (JAVA) */
+#endif /* !defined(XP_MAC) */

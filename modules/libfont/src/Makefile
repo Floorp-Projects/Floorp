@@ -19,7 +19,7 @@ DEPTH		= ../../..
 
 include $(DEPTH)/config/config.mk
 
-ifndef JAVA_OR_OJI
+ifndef JAVA_OR_NSJVM
 LOCAL_JMC_SUBDIR =  ../jmcgen/include
 LOCAL_JMC_SRC_SUBDIR =  ../jmcgen/src
 endif
@@ -64,7 +64,7 @@ SDK_TARGET	= producer-sdk
 SDK_NAME	= FontProducer-sdk-v1.0
 SDK_DIR		= $(OBJDIR)/$(SDK_TARGET)
 
-ifndef JAVA_OR_OJI
+ifndef JAVA_OR_NSJVM
 export:: 
 	@echo "Copying JMC src files from $(LOCAL_JMC_SRC_SUBDIR)/*.c to cwd"
 	@for FILE in $(LOCAL_JMC_SRC_SUBDIR)/*.c ;\

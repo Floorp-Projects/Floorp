@@ -751,13 +751,14 @@ et_reflect_handler(Reflect_Event * e)
 
     switch(e->type) {
     case LM_APPLETS:
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
+
 	LM_ReflectApplet(e->ce.context, (LO_JavaAppStruct *) e->lo_ele, 
 	                 e->pa_tag, e->layer_id, e->index);
 #endif
 	    break;
     case LM_EMBEDS:
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 	LM_ReflectEmbed(e->ce.context, e->lo_ele, e->pa_tag, 
                         e->layer_id, e->index);
 #endif
@@ -2193,7 +2194,13 @@ et_FinishMochaHandler(JSEvent * e)
 	lm_crippled_decoder = 0;
     }
 
-#ifdef JAVA
+#if defined(OJI)
+    /*
+    =-= sudu Ask scott about this.
+PR_PUBLIC_API(void)
+JSJ_DisconnectFromJavaVM(JSJavaVM *);
+*/
+#elif defined (JAVA)
     JSJ_Finish();
 #endif
 #ifdef DEBUG
@@ -2286,7 +2293,11 @@ et_SubEventLoop(QueueStackElement * qse)
 	/* can't be interrupted yet */
 	lm_InterruptCurrentOp = JS_FALSE;
 
+#ifdef OJI
+        LM_LockJS(NULL);
+#else
         LM_LockJS();
+#endif
 	/* need to interlock the getting of an event with ET_Interrupt */
         PR_EnterMonitor(lm_queue_monitor);
         pEvent = PR_GetEvent(qse->queue);

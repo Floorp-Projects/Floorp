@@ -36,6 +36,7 @@ CSRCS		=	        \
 		jpermission.c                   \
 		nsUserTarget.c                  \
 		admin.c                         \
+		nsCaps.c                        \
 		$(NULL)
 
 include $(DEPTH)/config/rules.mk

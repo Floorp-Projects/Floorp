@@ -20,6 +20,16 @@ IGNORE_MANIFEST=1
 # 
 
 DEPTH=..\..\.. 
+
+!ifdef NSJVM
+
 DIRS=netscape 
+
+!else
+
+export::
+        
+
+!endif
 
 include <$(DEPTH)\config\rules.mak>

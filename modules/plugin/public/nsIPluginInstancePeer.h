@@ -35,34 +35,98 @@
 #define nsIPluginInstancePeer_h___
 
 #include "nsplugindefs.h"
+#include "nsISupports.h"
+
+class nsIOutputStream;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Instance Peer Interface
 
-enum nsPluginTagType {
-    nsPluginTagType_Unknown,
-    nsPluginTagType_Embed,
-    nsPluginTagType_Object,
-    nsPluginTagType_Applet
-};
-
+/**
+ * The nsIPluginInstancePeer interface is the set of operations implemented
+ * by the browser to support a plugin instance. When a plugin instance is 
+ * constructed, a nsIPluginInstancePeer is passed to its initializer 
+ * representing the instantiation of the plugin on the page. 
+ *
+ * Other interfaces may be obtained from nsIPluginInstancePeer by calling
+ * QueryInterface, e.g. nsIPluginTagInfo.
+ */
 class nsIPluginInstancePeer : public nsISupports {
 public:
 
-    // (Corresponds to NPP_New's MIMEType argument.)
-    NS_IMETHOD_(nsMIMEType)
-    GetMIMEType(void) = 0;
+    /**
+     * Returns the value of a variable associated with the plugin manager.
+     *
+     * (Corresponds to NPN_GetValue.)
+     *
+     * @param variable - the plugin manager variable to get
+     * @param value - the address of where to store the resulting value
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetValue(nsPluginInstancePeerVariable variable, void *value) = 0;
 
-    // (Corresponds to NPP_New's mode argument.)
-    NS_IMETHOD_(nsPluginType)
-    GetMode(void) = 0;
+    /**
+     * Sets the value of a variable associated with the plugin manager.
+     *
+     * (Corresponds to NPN_SetValue.)
+     *
+     * @param variable - the plugin manager variable to get
+     * @param value - the address of the value to store
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    SetValue(nsPluginInstancePeerVariable variable, void *value) = 0;
 
-    // (Corresponds to NPN_NewStream.)
-    NS_IMETHOD_(nsPluginError)
+    /**
+     * Returns the MIME type of the plugin instance. 
+     *
+     * (Corresponds to NPP_New's MIMEType argument.)
+     *
+     * @param result - resulting MIME type
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetMIMEType(nsMIMEType *result) = 0;
+
+    /**
+     * Returns the mode of the plugin instance, i.e. whether the plugin is
+     * embedded in the html, or full page. 
+     *
+     * (Corresponds to NPP_New's mode argument.)
+     *
+     * @param result - the resulting mode
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetMode(nsPluginMode *result) = 0;
+
+    /**
+     * This operation is called by the plugin instance when it wishes to send
+     * a stream of data to the browser. It constructs a new output stream to which
+     * the plugin may send the data. When complete, the Close and Release methods
+     * should be called on the output stream.
+     *
+     * (Corresponds to NPN_NewStream.)
+     *
+     * @param type - type MIME type of the stream to create
+     * @param target - the target window name to receive the data
+     * @param result - the resulting output stream
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
     NewStream(nsMIMEType type, const char* target, nsIOutputStream* *result) = 0;
 
-    // (Corresponds to NPN_Status.)
-    NS_IMETHOD_(void)
+    /**
+     * This operation causes status information to be displayed on the window
+     * associated with the plugin instance. 
+     *
+     * (Corresponds to NPN_Status.)
+     *
+     * @param message - the status message to display
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
     ShowStatus(const char* message) = 0;
 
 };

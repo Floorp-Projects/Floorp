@@ -23,7 +23,7 @@ MODULE		= mocha
 LIBRARY_NAME	= mocha
 
 REQUIRES	= lay parse img js style layer applet dbm nspr security \
-		  htmldlgs util jtools pref java libreg softupdt jsdebug netcache network httpurl
+		  htmldlgs util jtools pref caps java libreg softupdt jsdebug netcache network httpurl plugin plugimpl
 
 ifdef MOZ_SECURITY
 REQUIRES       += jar
@@ -68,14 +68,13 @@ include $(DEPTH)/config/rules.mk
 
 DEFINES		+= -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
-EMBED_CFLAGS	= $(CFLAGS) -I$(DEPTH)/lib/plugin
 TAINT_CFLAGS	= $(CFLAGS) -I$(DEPTH)/lib/libjar -I$(DEPTH)/sun-java/netscape/security/_jri \
 		-I$(DEPTH)/dist/public/security
 
 ifneq ($(OS_ARCH),OS2)
 $(OBJDIR)/lm_embed.o: lm_embed.c
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -c $(EMBED_CFLAGS) $<
+	$(CC) -o $@ -c $(CFLAGS) $<
 
 $(OBJDIR)/lm_taint.o: lm_taint.c
 	@$(MAKE_OBJDIR)
@@ -84,7 +83,7 @@ $(OBJDIR)/lm_taint.o: lm_taint.c
 else
 $(OBJDIR)/lm_embed.o: lm_embed.c
 	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ -c $(EMBED_CFLAGS) $<
+	$(CC) -Fo$@ -c $(CFLAGS) $<
 
 $(OBJDIR)/lm_taint.o: lm_taint.c
 	@$(MAKE_OBJDIR)

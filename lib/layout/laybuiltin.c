@@ -39,6 +39,20 @@ void lo_FillInBuiltinGeometry(lo_DocState *state, LO_BuiltinStruct *builtin,
 void lo_UpdateStateAfterBuiltinLayout (lo_DocState *state, LO_BuiltinStruct *builtin,
 									   int32 line_inc, int32 baseline_inc);
 
+/**
+ * Some accessor macros, to manage the OJI changes.
+ */
+
+#if defined(OJI)
+#define BUILTIN_ATTRIBUTE_COUNT(builtin) (builtin)->attributes.n
+#define BUILTIN_ATTRIBUTE_NAMES(builtin) (builtin)->attributes.names
+#define BUILTIN_ATTRIBUTE_VALUES(builtin) (builtin)->attributes.values
+#else
+#define BUILTIN_ATTRIBUTE_COUNT(builtin) (builtin)->attribute_cnt
+#define BUILTIN_ATTRIBUTE_NAMES(builtin) (builtin)->attribute_list
+#define BUILTIN_ATTRIBUTE_VALUES(builtin) (builtin)->value_list
+#endif
+
 void
 lo_FormatBuiltin (MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
@@ -74,12 +88,13 @@ lo_FormatBuiltin (MWContext *context, lo_DocState *state, PA_Tag *tag)
 	builtin->height = 0;
 	builtin->next = NULL;
 	builtin->prev = NULL;
-	builtin->attribute_cnt = 0;
-	builtin->attribute_list = NULL;
-	builtin->value_list = NULL;
-
-	builtin->attribute_cnt = PA_FetchAllNameValues (tag,
-		&(builtin->attribute_list), &(builtin->value_list), CS_FE_ASCII);
+	
+	BUILTIN_ATTRIBUTE_COUNT(builtin) = 0;
+	BUILTIN_ATTRIBUTE_NAMES(builtin) = NULL;
+	BUILTIN_ATTRIBUTE_VALUES(builtin) = NULL;
+	
+	BUILTIN_ATTRIBUTE_COUNT(builtin) = PA_FetchAllNameValues (tag,
+		&BUILTIN_ATTRIBUTE_NAMES(builtin), &BUILTIN_ATTRIBUTE_VALUES(builtin), CS_FE_ASCII);
 
 	lo_FormatBuiltinInternal (context, state, tag, builtin, FALSE, FALSE);
 }				  
@@ -87,18 +102,18 @@ lo_FormatBuiltin (MWContext *context, lo_DocState *state, PA_Tag *tag)
 void
 lo_appendParams (LO_BuiltinStruct *builtin,  uint32 param_count, 
                  char **param_names, char **param_values) {
-  int32 newcount =  builtin->attribute_cnt + param_count;
-  int32 n =   builtin->attribute_cnt;
-  builtin->attribute_list = (char**)XP_REALLOC(builtin->attribute_list, 
+  int32 newcount =  BUILTIN_ATTRIBUTE_COUNT(builtin) + param_count;
+  int32 n =   BUILTIN_ATTRIBUTE_COUNT(builtin);
+  BUILTIN_ATTRIBUTE_NAMES(builtin) = (char**)XP_REALLOC(BUILTIN_ATTRIBUTE_NAMES(builtin), 
                                               newcount * sizeof(char*));
-  builtin->value_list = (char**)XP_REALLOC(builtin->value_list, 
+  BUILTIN_ATTRIBUTE_VALUES(builtin) = (char**)XP_REALLOC(BUILTIN_ATTRIBUTE_VALUES(builtin), 
                                               newcount * sizeof(char*));
   while (n < newcount) {
-    *(builtin->attribute_list + n) = XP_STRDUP(*(param_names + n -   builtin->attribute_cnt));
-    *(builtin->value_list + n) = XP_STRDUP(*(param_values + n -   builtin->attribute_cnt));
+    *(BUILTIN_ATTRIBUTE_NAMES(builtin) + n) = XP_STRDUP(*(param_names + n - BUILTIN_ATTRIBUTE_COUNT(builtin)));
+    *(BUILTIN_ATTRIBUTE_VALUES(builtin) + n) = XP_STRDUP(*(param_values + n -   BUILTIN_ATTRIBUTE_COUNT(builtin)));
     n++;
   }
-  builtin->attribute_cnt = builtin->attribute_cnt + param_count;
+  BUILTIN_ATTRIBUTE_COUNT(builtin) = BUILTIN_ATTRIBUTE_COUNT(builtin) + param_count;
 }
     
 
@@ -115,12 +130,12 @@ lo_FormatBuiltinObject (MWContext *context, lo_DocState* state,
 	printf ("lo_FormatBuiltinObject\n");
 #endif
 
-	builtin->attribute_cnt = 0;
-	builtin->attribute_list = NULL;
-	builtin->value_list = NULL;
+	BUILTIN_ATTRIBUTE_COUNT(builtin) = 0;
+	BUILTIN_ATTRIBUTE_NAMES(builtin) = NULL;
+	BUILTIN_ATTRIBUTE_VALUES(builtin) = NULL;
 
-	builtin->attribute_cnt = PA_FetchAllNameValues (tag,
-		&(builtin->attribute_list), &(builtin->value_list), CS_FE_ASCII);
+	BUILTIN_ATTRIBUTE_COUNT(builtin) = PA_FetchAllNameValues (tag,
+		&(BUILTIN_ATTRIBUTE_NAMES(builtin)), &(BUILTIN_ATTRIBUTE_VALUES(builtin)), CS_FE_ASCII);
 
     if (param_count > 0) lo_appendParams(builtin, param_count, param_names, param_values);
 	lo_FormatBuiltinInternal (context, state, tag, builtin, TRUE, streamStarted);
@@ -206,7 +221,7 @@ lo_FormatBuiltinInternal (MWContext *context, lo_DocState *state, PA_Tag *tag,
 		builtin->ele_attrmask |= LO_ELE_STREAM_STARTED;
 
 	/* Convert any js in the values */
-	lo_ConvertAllValues (context, builtin->value_list, builtin->attribute_cnt,
+	lo_ConvertAllValues (context, BUILTIN_ATTRIBUTE_VALUES(builtin), BUILTIN_ATTRIBUTE_COUNT(builtin),
 						 tag->newline_count);
 
 	/* double-counting builtins? XXX */

@@ -25,13 +25,18 @@
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "lm.h"
 
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 
 #include "xp.h"
 #include "layout.h"
 #include "np.h"
 #include "nppriv.h"
+#ifdef OJI
+#include "jni.h"
+#include "np2.h"
+#else
 #include "jri.h"
+#endif
 #include "jsjava.h"
 #include "jsobj.h"
 #include "prlog.h"
@@ -177,6 +182,8 @@ lm_GetEmbedArray(MochaDecoder *decoder, JSObject *document)
     return obj;
 }
 
+
+
 /* this calls MozillaEmbedContext to reflect the embed by
  * calling into mocha... yow! */
 static JSObject *
@@ -213,13 +220,26 @@ lm_ReallyReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
         }
     }
 
+#ifdef OJI
+    {
+      PRBool  jvmMochaPrefsEnabled = PR_FALSE;
+      if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
+          jvmMochaPrefsEnabled = PR_TRUE;
+      }
+      if (jvmMochaPrefsEnabled == PR_FALSE) {
+          PR_LOG(Moja, debug, ("reflected embed 0x%x as null\n",
+                               lo_embed));
+          return lo_embed->objTag.mocha_object = lm_DummyObject;
+      }
+    }
+#else
     /* set the element to something bad if we can't get the java obj */
     if (!JSJ_IsEnabled()) {
         PR_LOG(Moja, debug, ("reflected embed 0x%x as null\n",
                              lo_embed));
         return lo_embed->objTag.mocha_object = lm_DummyObject;
     }
-
+#endif /* !OJI */
     embed = (NPEmbeddedApp*) lo_embed->objTag.FE_Data;
     if (embed) {
         np_data *ndata = (np_data*) embed->np_data;
@@ -235,11 +255,28 @@ lm_ReallyReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
             return NULL;
         }
         instance = ndata->instance;
-	if (!instance) return NULL;
+	       if (!instance) return NULL;
         jembed = npn_getJavaPeer(instance->npp);
 
+#ifdef OJI
+        {
+#if 0
+          JNIEnv *jniEnv = NULL;
+          jniEnv = NPL_EnsureJNIExecEnv(NULL);
+          obj = JSJ_WrapJavaObject(decoder->js_context,
+                                   jniEnv,
+                                   jembed,
+                                   (*jniEnv)->GetObjectClass(jniEnv, jembed));
+#else
+          jsval val;
+          if (JSJ_ConvertJavaObjectToJSValue(decoder->js_context, jembed, &val))
+              obj = JSVAL_TO_OBJECT(val);
+#endif
+        }
+#else
         obj = js_ReflectJObjectToJSObject(decoder->js_context,
 				          (HObject *)jembed);
+#endif /* !OJI */
         PR_LOG(Moja, debug, ("reflected embed 0x%x (java 0x%x) to 0x%x ok\n",
                              lo_embed, jembed, obj));
 
@@ -293,7 +330,7 @@ LM_ReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
             break;
         }
     }
-#endif
+#endif /* !OJI */
 
     /* Get the document object that will hold this applet */
     document = lm_GetDocumentFromLayerId(decoder, layer_id);
@@ -347,4 +384,4 @@ LM_ReflectNamedEmbed(MWContext *context, lo_NameList *name_rec,
     return NULL;
 }
 
-#endif /* JAVA */
+#endif /* JAVA || OJI */

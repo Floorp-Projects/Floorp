@@ -300,11 +300,11 @@ GetChar(JSTokenStream *ts)
     int32 c;
     ptrdiff_t len, olen;
     jschar *nl;
-    
+
     if (ts->ungetpos != 0) {
 	c = ts->ungetbuf[--ts->ungetpos];
     } else {
-	if (ts->linebuf.ptr == ts->linebuf.limit) {                                                                                                         
+	if (ts->linebuf.ptr == ts->linebuf.limit) {
 	    len = PTRDIFF(ts->userbuf.limit, ts->userbuf.ptr, jschar);
 	    if (len <= 0) {
 #ifdef JSFILE

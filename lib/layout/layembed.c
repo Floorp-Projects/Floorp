@@ -23,6 +23,7 @@
 #include "layout.h"
 #include "laylayer.h"
 #include "np.h"
+#include "np2.h"
 #include "laystyle.h"
 #include "layers.h"
 
@@ -290,7 +291,13 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 #endif
 
 #ifdef OJI
-    /* XXX */
+ 	for (count = 0; count < (uint32)embed->attributes.n; count++)
+  	{
+     if (  (XP_STRCASECMP(embed->attributes.names[count], PARAM_MAYSCRIPT) == 0) 
+            &&(embed->attributes.values[count] == NULL) ) {
+           StrAllocCopy(embed->attributes.values[count], "true");
+     }
+   }
 #else
 	/*
 	 * Look through the parameters and replace "id"
@@ -755,57 +762,70 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	}
 
     /*
-     * Put the embed onto the embed list for later
-     * possible reflection.
+     * Put embed onto the embed list and applets into applet list
+     * for later possible reflection.
      */
-    doc_lists = lo_GetCurrentDocLists(state);
-    if (state->in_relayout) {
-        int32 i, count;
-        LO_EmbedStruct *prev_embed, *cur_embed;
+    {
+       int32 i, count, *pDoclistCount;
+       LO_EmbedStruct *prev_embed, *cur_embed;
+       LO_CommonPluginStruct **ppDoclistList;
+       doc_lists = lo_GetCurrentDocLists(state);
+       if( embed->objTag.sub_type == LO_JAVA )
+       {
+          cur_embed       = (LO_EmbedStruct *)doc_lists->applet_list;
+          pDoclistCount   = &doc_lists->applet_list_count;
+          ppDoclistList   = (LO_CommonPluginStruct **)&doc_lists->applet_list;
+       }
+       else
+       {
+          cur_embed       = doc_lists->embed_list;
+          pDoclistCount   = &doc_lists->embed_list_count;
+          ppDoclistList   = (LO_CommonPluginStruct **)&doc_lists->embed_list;
+       }
+       if (state->in_relayout) {
         
-        /*
-         * In the interest of changing as little as possible, I'm not
-         * going to change the embed_list to be in the order of layout
-         * (it is currently in reverse order). Instead, we do what 
-         * everybody else does - iterate till the end of the list to get
-         * find an element with the correct index.
-         * If we're in table relayout, we need to replace the element
-         * of the same index in this list with the new layout element
-         * to prevent multiple reflection.
-         */
-        count = 0;
-        cur_embed = doc_lists->embed_list;
-        while (cur_embed) {
-            cur_embed = cur_embed->nextEmbed;
-            count++;
-        }
+           /*
+            * In the interest of changing as little as possible, I'm not
+            * going to change the embed_list to be in the order of layout
+            * (it is currently in reverse order). Instead, we do what 
+            * everybody else does - iterate till the end of the list to get
+            * find an element with the correct index.
+            * If we're in table relayout, we need to replace the element
+            * of the same index in this list with the new layout element
+            * to prevent multiple reflection.
+            */
+           count = 0;
         
-        /* reverse order... */
-        prev_embed = NULL;
-        cur_embed = doc_lists->embed_list;
-        for (i = count-1; i >= 0; i--) {
-            if (i == doc_lists->embed_list_count) {
-                /* Copy over the mocha object (it might not exist) */
-                embed->objTag.mocha_object = cur_embed->objTag.mocha_object;
+           /* reverse order... */
+           prev_embed = NULL;
+           while (cur_embed) {
+               cur_embed = cur_embed->nextEmbed;
+               count++;
+           }
+           for (i = count-1; i >= 0; i--) {
+               if (i == *pDoclistCount) {
+                   /* Copy over the mocha object (it might not exist) */
+                   embed->objTag.mocha_object = cur_embed->objTag.mocha_object;
 
-                embed->nextEmbed = cur_embed->nextEmbed;
+                   embed->nextEmbed = cur_embed->nextEmbed;
                 
-                /* Replace the old embed with the new one */
-                if (prev_embed == NULL)
-                    doc_lists->embed_list = embed;
-                else
-                    prev_embed->nextEmbed = embed;
-                doc_lists->embed_list_count++;
-                break;
-            }
-            prev_embed = cur_embed;
-            cur_embed = cur_embed->nextEmbed;
-        }
-    }
-    else {
-        embed->nextEmbed = doc_lists->embed_list;
-        doc_lists->embed_list = embed;
-        doc_lists->embed_list_count++;
+                   /* Replace the old embed with the new one */
+                   if (prev_embed == NULL)
+                       *ppDoclistList = (LO_CommonPluginStruct *)embed;
+                   else
+                       prev_embed->nextEmbed = embed;
+                   (*pDoclistCount)++;
+                   break;
+               }
+               prev_embed = cur_embed;
+               cur_embed = cur_embed->nextEmbed;
+           }
+       }
+       else {
+           embed->nextEmbed = (LO_EmbedStruct *)*ppDoclistList;
+           *ppDoclistList = (LO_CommonPluginStruct *)embed;
+           (*pDoclistCount)++;
+       }
     }
 
 	/*

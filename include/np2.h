@@ -18,7 +18,6 @@
 
 
 /*
- *  np2.h $Revision: 3.1 $
  *  Prototypes for functions exported by OJI based libplugin and called by the FEs or other XP libs.
  */
 
@@ -37,7 +36,7 @@ PR_EXTERN(const char *) NPL_GetText(struct nsIPluginInstance *);
 PR_EXTERN(jobject) NPL_GetJavaObject(struct nsIPluginInstance *);
 PR_EXTERN(void ) NPL_Release(struct nsISupports *);
 PR_EXTERN(XP_Bool) NPL_IsJVMAndMochaPrefsEnabled(void);
-PR_EXTERN(void)NPL_JSJInit(void);
+PR_EXTERN(PRBool)NPL_JSJInit(void);
 PR_EXTERN(JNIEnv *)NPL_EnsureJNIExecEnv(PRThread* thread);
 
 #endif /* _NP2_H */

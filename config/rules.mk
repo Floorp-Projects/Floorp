@@ -59,6 +59,9 @@
 #	JRI_GEN	-- files to run through javah to generate headers and stubs
 #			(output goes into the _jri sub-dir)
 # j)
+#	JNI_GEN	-- files to run through javah to generate headers and stubs
+#			(output goes into the _jni sub-dir)
+# k)
 #	JMC_GEN	-- files to run through jmc to generate headers and stubs
 #			(output goes into the _jmc sub-dir)
 #
@@ -167,7 +170,7 @@ ifndef PACKAGE
 PACKAGE			= .
 endif
 
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) $(JDK_HEADER_CFILES) $(JDK_STUB_CFILES) \
 			  $(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
@@ -182,13 +185,13 @@ ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
 			  _gen _stubs $(wildcard gts_tmp_*)
 endif
 
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 ifdef JDIRS
 ALL_TRASH		+= $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
 endif
 endif
 
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 JMC_SUBDIR              = _jmc
 else
 JMC_SUBDIR              = $(LOCAL_JMC_SUBDIR)
@@ -198,11 +201,13 @@ ifdef NSBUILDROOT
 JDK_GEN_DIR		= $(XPDIST)/_gen
 JMC_GEN_DIR		= $(XPDIST)/$(JMC_SUBDIR)
 JRI_GEN_DIR		= $(XPDIST)/_jri
+JNI_GEN_DIR		= $(XPDIST)/_jni
 JDK_STUB_DIR		= $(XPDIST)/_stubs
 else
 JDK_GEN_DIR		= _gen
 JMC_GEN_DIR		= $(JMC_SUBDIR)
 JRI_GEN_DIR		= _jri
+JNI_GEN_DIR		= _jni
 JDK_STUB_DIR		= _stubs
 endif
 
@@ -483,7 +488,7 @@ $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE) $(JMCSRCDIR)::
 ### JSRCS -- for compiling java files
 
 ifneq ($(JSRCS),)
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 	list=`$(PERL) $(DEPTH)/config/outofdate.pl $(PERLARG)	\
 		    -d $(JAVA_DESTPATH)/$(PACKAGE) $(JSRCS)`;	\
@@ -508,7 +513,7 @@ endif
 # some builds to run out of memory
 #
 ifdef JDIRS
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 	@for d in $(JDIRS); do							\
 		if test -d $$d; then						\
@@ -536,7 +541,7 @@ endif
 # Generate JDK Headers and Stubs into the '_gen' and '_stubs' directory
 #
 ifneq ($(JDK_GEN),)
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 ifdef NSBUILDROOT
 INCLUDES		+= -I$(JDK_GEN_DIR) -I$(XPDIST)
 else
@@ -568,7 +573,7 @@ ifdef MOZ_GENMAC
 	@echo Generating/Updating JDK stubs for the Mac
 	$(JAVAH) -mac -stubs -d $(DEPTH)/lib/mac/Java/_stubs $(JDK_PACKAGE_CLASSES)
 endif
-endif # JAVA_OR_OJI
+endif # JAVA_OR_NSJVM
 endif
 
 #
@@ -577,7 +582,7 @@ endif
 # Generate JRI Headers and Stubs into the 'jri' directory
 #
 ifneq ($(JRI_GEN),)
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 ifdef NSBUILDROOT
 INCLUDES		+= -I$(JRI_GEN_DIR) -I$(XPDIST)
 else
@@ -609,14 +614,53 @@ ifdef MOZ_GENMAC
 	@echo Generating/Updating JRI stubs for the Mac
 	$(JAVAH) -jri -mac -stubs -d $(DEPTH)/lib/mac/Java/_jri $(JRI_PACKAGE_CLASSES)
 endif
-endif # JAVA_OR_OJI
+endif # JAVA_OR_NSJVM
 endif
+
+
+
+#
+# JNI_GEN -- for generating JNI native methods
+#
+# Generate JNI Headers and Stubs into the 'jni' directory
+#
+ifneq ($(JNI_GEN),)
+ifdef JAVA_OR_NSJVM
+ifdef NSBUILDROOT
+INCLUDES		+= -I$(JNI_GEN_DIR) -I$(XPDIST)
+else
+INCLUDES		+= -I$(JNI_GEN_DIR)
+endif
+JNI_PACKAGE_CLASSES	= $(JNI_GEN)
+JNI_PATH_CLASSES	= $(subst .,/,$(JNI_PACKAGE_CLASSES))
+JNI_HEADER_CLASSFILES	= $(patsubst %,$(JAVA_DESTPATH)/%.class,$(JNI_PATH_CLASSES))
+JNI_HEADER_CFILES	= $(patsubst %,$(JNI_GEN_DIR)/%.h,$(JNI_GEN))
+JNI_STUB_CFILES		= $(patsubst %,$(JNI_GEN_DIR)/%.c,$(JNI_GEN))
+
+$(JNI_HEADER_CFILES): $(JNI_HEADER_CLASSFILES)
+
+export::
+	@echo Generating/Updating JNI headers
+	$(JAVAH) -jni -d $(JNI_GEN_DIR) $(JNI_PACKAGE_CLASSES)
+ifdef MOZ_GENMAC
+	@if test ! -d $(DEPTH)/lib/mac/Java/; then						\
+		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
+		echo "!!! This allows us to automatically update generated files for the mac.";	\
+		echo "!!! If you see any modified files there, please check them in.";		\
+	fi
+	@echo Generating/Updating JNI headers for the Mac
+	$(JAVAH) -jni -mac -d $(DEPTH)/lib/mac/Java/_jni $(JNI_PACKAGE_CLASSES)
+endif
+endif # JAVA_OR_NSJVM
+endif # JNI_GEN
+
+
 
 #
 # JMC_EXPORT -- for declaring which java classes are to be exported for jmc
 #
 ifneq ($(JMC_EXPORT),)
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 JMC_EXPORT_PATHS	= $(subst .,/,$(JMC_EXPORT))
 JMC_EXPORT_FILES	= $(patsubst %,$(JAVA_DESTPATH)/$(PACKAGE)/%.class,$(JMC_EXPORT_PATHS))
 
@@ -627,7 +671,7 @@ JMC_EXPORT_FILES	= $(patsubst %,$(JAVA_DESTPATH)/$(PACKAGE)/%.class,$(JMC_EXPORT
 #
 export:: $(JMC_EXPORT_FILES) $(JMCSRCDIR)
 	$(NSINSTALL) -t -m 444 $(JMC_EXPORT_FILES) $(JMCSRCDIR)
-endif # JAVA_OR_OJI
+endif # JAVA_OR_NSJVM
 endif
 
 #
@@ -637,7 +681,7 @@ endif
 #
 ifneq ($(JMC_GEN),)
 INCLUDES		+= -I$(JMC_GEN_DIR) -I.
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM
 JMC_HEADERS		= $(patsubst %,$(JMC_GEN_DIR)/%.h,$(JMC_GEN))
 JMC_STUBS		= $(patsubst %,$(JMC_GEN_DIR)/%.c,$(JMC_GEN))
 JMC_OBJS		= $(patsubst %,$(OBJDIR)/%.o,$(JMC_GEN))
@@ -657,7 +701,7 @@ else
 endif
 
 export:: $(JMC_HEADERS) $(JMC_STUBS)
-endif # JAVA_OR_OJI
+endif # JAVA_OR_NSJVM
 endif
 
 #
@@ -790,4 +834,15 @@ endif
 # name already exists.
 #
 .PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs realclean $(OBJDIR) $(DIRS)
+
+envirocheck::
+	@echo -----------------------------------
+	@echo "Enviro-Check (tm)"
+	@echo -----------------------------------
+	@echo "MOZILLA_CLIENT = $(MOZILLA_CLIENT)"
+	@echo "NO_MDUPDATE    = $(NO_MDUPDATE)"
+	@echo "BUILD_OPT      = $(BUILD_OPT)"
+	@echo "MOZ_LITE       = $(MOZ_LITE)"
+	@echo "MOZ_MEDIUM     = $(MOZ_MEDIUM)"
+	@echo -----------------------------------
 

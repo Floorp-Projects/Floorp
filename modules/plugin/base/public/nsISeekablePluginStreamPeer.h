@@ -35,6 +35,7 @@
 #define nsISeekablePluginStreamPeer_h___
 
 #include "nsplugindefs.h"
+#include "nsISupports.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Seekable Plugin Stream Peer Interface
@@ -49,7 +50,7 @@ public:
     // seekable argument.
 
     // (Corresponds to NPN_RequestRead.)
-    NS_IMETHOD_(nsPluginError)
+    NS_IMETHOD
     RequestRead(nsByteRange* rangeList) = 0;
 
 };

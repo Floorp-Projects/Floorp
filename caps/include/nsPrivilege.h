@@ -20,33 +20,12 @@
 #define _NS_PRIVILEGE_H_
 
 #include "prtypes.h"
-#include "nsCom.h"
-
-
-/**
- * number of possible permissions (allowed, forbidden, or blank)
- */
-typedef enum nsPermissionState {
-    nsPermissionState_Forbidden = 0, 
-    nsPermissionState_Allowed,
-    nsPermissionState_Blank,
-    nsPermissionState_NumberOfPermissions
-} nsPermissionState;
-
-
-/**
- * number of possible durations (scope, session, or forever)
- */
-typedef enum nsDurationState {
-    nsDurationState_Scope=0, 
-    nsDurationState_Session,
-    nsDurationState_Forever, 
-    nsDurationState_NumberOfDurations
-} nsDurationState;
+#include "nsCaps.h"
+#include "nsCapsEnums.h"
 
 PRBool nsPrivilegeInitialize(void);
 
-class nsPrivilege {
+struct nsPrivilege {
 
 public:
 	/* Public Field Accessors */

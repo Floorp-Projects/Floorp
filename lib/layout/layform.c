@@ -2885,7 +2885,7 @@ lo_get_form_element_data(MWContext *context,
 			type = (uint8)form_data->type;
 		    }
 			break;
-#ifdef JAVA
+#if defined(JAVA ) || defined(OJI)
 		case FORM_TYPE_OBJECT:
 		    {
 			lo_FormElementObjectData *form_data;
@@ -2897,7 +2897,27 @@ lo_get_form_element_data(MWContext *context,
 				char *vstr;
 
 				name = lo_dup_block(form_data->name);
+#ifdef OJI
+    {
+#include "np.h"
+#include "np2.h"
 
+      NPEmbeddedApp *embed   = (NPEmbeddedApp*) form_data->object->objTag.FE_Data;
+      if (embed) {
+            struct nsIPluginInstance *pNPI = NPL_GetOJIPluginInstance(embed);
+            object_value = NPL_GetText(pNPI);
+            NPL_Release((struct nsISupports *)pNPI);
+      }
+    }
+				if (object_value != NULL)
+				{
+				 value = PA_ALLOC(XP_STRLEN(object_value) + 1);
+					PA_LOCK(vstr, char *, value);
+					XP_STRCPY(vstr, object_value);
+					PA_UNLOCK(value);
+				 XP_FREE(object_value);
+				}
+#else
 				object_value = LJ_Applet_GetText(form_data->object->objTag.session_data);
 				value = PA_ALLOC(XP_STRLEN(object_value) + 1);
 				if (value != NULL)
@@ -2907,6 +2927,7 @@ lo_get_form_element_data(MWContext *context,
 					PA_UNLOCK(value);
 				}
 				XP_FREE(object_value);
+#endif
 
 				type = (uint8)form_data->type;
 			}

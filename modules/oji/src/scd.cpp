@@ -23,11 +23,11 @@
 #include "jvmmgr.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kISymantecDebugManagerIID, NP_ISYMANTECDEBUGMANAGER_IID);
+static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
 
 NS_IMPL_AGGREGATED(nsSymantecDebugManager);
 
-nsSymantecDebugManager::nsSymantecDebugManager(nsISupports* outer, JVMMgr* jvmMgr)
+nsSymantecDebugManager::nsSymantecDebugManager(nsISupports* outer, nsJVMMgr* jvmMgr)
     : fJVMMgr(jvmMgr)
 {
     NS_INIT_AGGREGATED(outer);
@@ -50,7 +50,7 @@ nsSymantecDebugManager::AggregatedQueryInterface(const nsIID& aIID, void** aInst
 
 NS_METHOD
 nsSymantecDebugManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr, 
-                               JVMMgr* jvmMgr)
+                               nsJVMMgr* jvmMgr)
 {
     if (outer && !aIID.Equals(kISupportsIID))
         return NS_NOINTERFACE;   // XXX right error?
@@ -66,7 +66,7 @@ nsSymantecDebugManager::Create(nsISupports* outer, const nsIID& aIID, void* *aIn
 extern "C" HWND FindNavigatorHiddenWindow(void);
 #endif
 
-NS_METHOD_(PRBool)
+NS_METHOD
 nsSymantecDebugManager::SetDebugAgentPassword(PRInt32 pwd)
 {
 #if defined(XP_PC) && defined(_WIN32)
@@ -86,9 +86,9 @@ nsSymantecDebugManager::SetDebugAgentPassword(PRInt32 pwd)
         ReleaseSemaphore(sem, 1, NULL);
         CloseHandle(sem);
     }
-    return PR_TRUE;
+    return NS_OK;
 #else
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 #endif
 }
 

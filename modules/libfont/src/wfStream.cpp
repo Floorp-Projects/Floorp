@@ -80,7 +80,7 @@ extern "C" int
 wfWrite(NET_StreamClass *stream, const unsigned char *str, int32 len)
 {
 	struct stream_data *data = (struct stream_data *) stream->data_object;	
-	return ((int)nfstrm_Write((nfstrm *)data->fpStream, (char *)str, (jint)len, NULL));
+	return ((int)nfstrm_Write((nfstrm *)data->fpStream, (jbyte *)str, (jint)len, NULL));
 }
 
 #ifndef XP_OS2

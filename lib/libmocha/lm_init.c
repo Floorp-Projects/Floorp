@@ -35,11 +35,16 @@
 #include "private/pprthred.h"
 #endif
 
+#if defined (JAVA)
 #include "jri.h"
 #include "jriext.h"
-#ifdef JAVA
 #include "java.h"
+#elif defined (OJI)
+#include "jni.h"
+#include "np2.h"
+#include "jsjava.h"
 #endif
+
 #include "prefapi.h"
 #include "libi18n.h"
 #include "intl_csi.h"
@@ -123,7 +128,11 @@ MochaDecoder    *lm_crippled_decoder;
 JSContext       *lm_crippled_context;   /* exported to jsStubs.c */
 
 PRThread        *lm_InterpretThread;    /* interpreter now in its own thread */
+#ifdef OJI
+JNIEnv          *lm_JSEnv;              /* Java env for lm_InterpretThread */
+#elif defined(JAVA)
 JRIEnv          *lm_JSEnv;              /* Java env for lm_InterpretThread */
+#endif /* ! (OJI || JAVA) */
 PREventQueue    *lm_InterpretQueue;     /* for "normal" event messages */
 PREventQueue    *lm_PriorityQueue;      /* for stop and death messages */
 
@@ -531,7 +540,7 @@ lm_new_decoder(JSRuntime *rt, JSClass *clasp)
         XP_DELETE(decoder);
         return NULL;
     }
-
+    
     decoder->forw_count = 1;
     decoder->js_context = cx;
     JS_SetBranchCallback(cx, lm_BranchCallback);
@@ -655,10 +664,6 @@ lm_PrefChangedFunc(const char *pref, void *data)
 
 static JSBool mochaInited = JS_FALSE;
 
-/* nix, where is this */
-extern void 
-JSJ_InitContext(JSContext *context, JSObject *obj); 
-
 /*
  * create the mocha thread, event queues, and stream converters
  */
@@ -687,7 +692,19 @@ lm_ReallyInitMocha(void)
     lm_crippled_decoder = lm_new_decoder(lm_runtime, &lm_dummy_class);
     lm_crippled_context = lm_crippled_decoder->js_context;
 
-#ifdef JAVA
+#ifdef OJI
+    {
+      PRBool  jvmMochaPrefsEnabled = PR_FALSE;
+      if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
+          jvmMochaPrefsEnabled = NPL_JSJInit();
+      }
+
+      if (jvmMochaPrefsEnabled == PR_TRUE)
+      {
+        JSJ_InitJSContext(lm_crippled_context, JS_GetGlobalObject(lm_crippled_context), NULL);
+      }
+    }
+#elif defined (JAVA)
     LJ_JSJ_Init();
 
     /* 
@@ -819,8 +836,16 @@ LM_InitMoja()
      * called on the moz thread we can do it the easy way */
     if (lm_moja_initialized != LM_MOJA_UNINITIALIZED)
         return lm_moja_initialized;
+#if defined(OJI)
+    lm_JSEnv = NPL_EnsureJNIExecEnv(lm_InterpretThread);
+    if (lm_JSEnv == NULL) {
+        lm_moja_initialized = LM_MOJA_JAVA_FAILED;
+        return lm_moja_initialized;
+    }
 
-#ifdef JAVA
+    lm_moja_initialized = LM_MOJA_OK;
+
+#elif defined(JAVA)
     /* initialize the java env associated with the mocha thread */
     lm_JSEnv = LJ_EnsureJavaEnv(lm_InterpretThread);
     if (lm_JSEnv == NULL) {
@@ -908,8 +933,13 @@ LM_WaitForJSLock(void)
 /*
  * Wait until we get the JSLock
  */
+#ifdef OJI
+JSBool PR_CALLBACK
+LM_LockJS(char **errp)
+#else
 void PR_CALLBACK
 LM_LockJS()
+#endif
 {
     PRThread *t = PR_CurrentThread();
 
@@ -942,6 +972,9 @@ LM_LockJS()
     }
     lm_owner_count++;
     PR_ExitMonitor(lm_owner_mon);
+#ifdef OJI
+    return( PR_TRUE );
+#endif
 }
 
 /*

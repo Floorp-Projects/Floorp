@@ -34,11 +34,18 @@
 #ifndef nsIPluginTagInfo2_h___
 #define nsIPluginTagInfo2_h___
 
-#include "nsplugindefs.h"
+#include "nsIPluginTagInfo.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Tag Info Interface
 // These extensions to nsIPluginTagInfo are only available in Communicator 5.0.
+
+enum nsPluginTagType {
+    nsPluginTagType_Unknown,
+    nsPluginTagType_Embed,
+    nsPluginTagType_Object,
+    nsPluginTagType_Applet
+};
 
 class nsIPluginTagInfo2 : public nsIPluginTagInfo {
 public:
@@ -47,53 +54,56 @@ public:
 
     // Get the type of the HTML tag that was used ot instantiate this
     // plugin.  Currently supported tags are EMBED, OBJECT and APPLET.
-    NS_IMETHOD_(nsPluginTagType) 
-    GetTagType(void) = 0;
+    NS_IMETHOD
+    GetTagType(nsPluginTagType *result) = 0;
 
     // Get the complete text of the HTML tag that was
     // used to instantiate this plugin
-    NS_IMETHOD_(const char *)
-    GetTagText(void) = 0;
+    NS_IMETHOD
+    GetTagText(const char* *result) = 0;
 
     // Get a ptr to the paired list of parameter names and values,
     // returns the length of the array.
     //
     // Each name or value is a null-terminated string.
-    NS_IMETHOD_(nsPluginError)
+    NS_IMETHOD
     GetParameters(PRUint16& n, const char*const*& names, const char*const*& values) = 0;
 
     // Get the value for the named parameter.  Returns null
     // if the parameter was not set.
-    NS_IMETHOD_(const char*)
-    GetParameter(const char* name) = 0;
+    // @result - NS_OK if this operation was successful, NS_ERROR_FAILURE if
+    // this operation failed. result is set to NULL if the attribute is not found
+    // else to the found value.
+    NS_IMETHOD
+    GetParameter(const char* name, const char* *result) = 0;
     
-    NS_IMETHOD_(const char*)
-    GetDocumentBase(void) = 0;
+    NS_IMETHOD
+    GetDocumentBase(const char* *result) = 0;
     
     // Return an encoding whose name is specified in:
     // http://java.sun.com/products/jdk/1.1/docs/guide/intl/intl.doc.html#25303
-    NS_IMETHOD_(const char*)
-    GetDocumentEncoding(void) = 0;
+    NS_IMETHOD
+    GetDocumentEncoding(const char* *result) = 0;
     
-    NS_IMETHOD_(const char*)
-    GetAlignment(void) = 0;
+    NS_IMETHOD
+    GetAlignment(const char* *result) = 0;
     
-    NS_IMETHOD_(PRUint32)
-    GetWidth(void) = 0;
+    NS_IMETHOD
+    GetWidth(PRUint32 *result) = 0;
     
-    NS_IMETHOD_(PRUint32)
-    GetHeight(void) = 0;
+    NS_IMETHOD
+    GetHeight(PRUint32 *result) = 0;
     
-    NS_IMETHOD_(PRUint32)
-    GetBorderVertSpace(void) = 0;
+    NS_IMETHOD
+    GetBorderVertSpace(PRUint32 *result) = 0;
     
-    NS_IMETHOD_(PRUint32)
-    GetBorderHorizSpace(void) = 0;
+    NS_IMETHOD
+    GetBorderHorizSpace(PRUint32 *result) = 0;
 
     // Returns a unique id for the current document on which the
     // plugin is displayed.
-    NS_IMETHOD_(PRUint32)
-    GetUniqueID(void) = 0;
+    NS_IMETHOD
+    GetUniqueID(PRUint32 *result) = 0;
 
 };
 

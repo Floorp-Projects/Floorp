@@ -27,6 +27,7 @@
 #include "net.h"
 #include "structs.h"
 #include "prthread.h"
+#include "prtypes.h"
 #include "prmem.h"
 #include "ds.h"		/* XXX required by htmldlgs.h */
 #include "htmldlgs.h"
@@ -2883,7 +2884,7 @@ typedef struct {
     char* prin;
     char* target;
     char* risk;
-    int isCert;
+    PRBool isCert;
 } MozillaEvent_signedAppletPrivileges;
 
 PR_STATIC_CALLBACK(void)
@@ -2904,7 +2905,7 @@ et_DestroyEvent_signedAppletPrivileges(MozillaEvent_signedAppletPrivileges* e)
 
 void
 ET_PostSignedAppletPrivileges
-    (MWContext* context, char* prin, char* target, char* risk, int isCert)
+    (MWContext* context, char* prin, char* target, char* risk, PRBool isCert)
 {
     MozillaEvent_signedAppletPrivileges* event =
 	PR_NEW(MozillaEvent_signedAppletPrivileges);

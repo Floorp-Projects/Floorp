@@ -34,7 +34,7 @@
 #ifndef nsIPluginStreamPeer2_h___
 #define nsIPluginStreamPeer2_h___
 
-#include "nsplugindefs.h"
+#include "nsIPluginStreamPeer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Stream Peer Interface
@@ -43,17 +43,17 @@
 class nsIPluginStreamPeer2 : public nsIPluginStreamPeer {
 public:
 
-    NS_IMETHOD_(PRUint32)
-    GetContentLength(void) = 0;
+    NS_IMETHOD
+    GetContentLength(PRUint32 *result) = 0;
 
-    NS_IMETHOD_(PRUint32)
-    GetHeaderFieldCount(void) = 0;
+    NS_IMETHOD
+    GetHeaderFieldCount(PRUint32 *result) = 0;
 
-    NS_IMETHOD_(const char*)
-    GetHeaderFieldKey(PRUint32 index) = 0;
+    NS_IMETHOD
+    GetHeaderFieldKey(PRUint32 index, const char* *result) = 0;
 
-    NS_IMETHOD_(const char*)
-    GetHeaderField(PRUint32 index) = 0;
+    NS_IMETHOD
+    GetHeaderField(PRUint32 index, const char* *result) = 0;
 
 };
 

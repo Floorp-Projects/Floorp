@@ -19,7 +19,7 @@ DEPTH	= ../../..
 
 include $(DEPTH)/config/config.mk
 
-ifndef JAVA_OR_OJI
+ifndef JAVA_OR_NSJVM
 LOCAL_JMC_SUBDIR =  ../jmcgen/include
 endif
 

@@ -38,8 +38,11 @@
 #include "libstyle.h"
 #include "prthread.h"
 #include "np.h"
-#ifdef JAVA
+#if defined (JAVA)
 #include "jsjava.h"
+#elif defined (OJI)
+#include "jsjava.h"
+#include "np2.h"
 #endif
 
 #ifndef DOM
@@ -233,7 +236,7 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
 
       case DOC_APPLETS:
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
         if (LM_MOJA_OK != ET_InitMoja(context)) {
             LO_UnlockLayout();
             return JS_FALSE;
@@ -252,7 +255,7 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 #endif
 
       case DOC_EMBEDS:
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
         if (LM_MOJA_OK != ET_InitMoja(context)) {
             LO_UnlockLayout();
             return JS_FALSE;
@@ -623,7 +626,7 @@ doc_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return doc_getProperty(cx, obj, id, vp);
 }
 
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 static void 
 lm_reflect_stuff_eagerly(MWContext * context, int32 layer_id)
 {
@@ -677,13 +680,12 @@ lm_reflect_stuff_eagerly(MWContext * context, int32 layer_id)
 
     LO_UnlockLayout();
 }
-#endif /* JAVA */
+#endif /* JAVA || OJI*/
 
 PR_STATIC_CALLBACK(JSBool)
 doc_list_properties(JSContext *cx, JSObject *obj)
 {
-#ifdef JAVA
-
+#if defined(JAVA) || defined(OJI)
     /* reflect applets eagerly, anything else? */
     JSDocument *doc;
     MWContext *context;
@@ -726,11 +728,24 @@ doc_list_properties(JSContext *cx, JSObject *obj)
     if(bDoInitMoja) {
         if (LM_MOJA_OK != ET_InitMoja(context))
             return JS_FALSE;
+
+#ifdef OJI
+        {
+           PRBool  jvmMochaPrefsEnabled = PR_FALSE;
+           if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
+               jvmMochaPrefsEnabled = PR_TRUE;
+           }
+           if (jvmMochaPrefsEnabled == PR_FALSE) {
+               return JS_TRUE;
+           }
+           lm_reflect_stuff_eagerly(context, doc->layer_id);
+        }
+#else
         if (JSJ_IsEnabled())
             lm_reflect_stuff_eagerly(context, doc->layer_id);
+#endif /* !OJI */
     }
-
-#endif
+#endif /* JAVA || OJI */
     return JS_TRUE;
 }
 

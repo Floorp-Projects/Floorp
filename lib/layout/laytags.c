@@ -6794,7 +6794,6 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 					if(buff)
 					{
 						PA_LOCK(str, char *, buff);
-						lo_AddParam(tag, "DATA", str);
 						lo_AddParam(tag, "TYPE", JAVA_PLUGIN_MIMETYPE);
 
 						PA_UNLOCK(buff);

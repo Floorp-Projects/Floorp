@@ -144,7 +144,7 @@ nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len)
   init(type, key, key_len);
 }
 
-nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, nsZig *zigObject)
+nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, void *zigObject)
 {
   init(type, key, key_len);
   itsZig = zigObject;
@@ -158,9 +158,9 @@ nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, cha
 
 nsPrincipal::~nsPrincipal(void)
 {
-#ifdef DEBUG_RAMAN
+#ifdef DEBUG_raman
   fprintf(stderr, "Deleting principal %s\n", itsKey);
-#endif /* DEBUG_RAMAN */
+#endif /* DEBUG_raman */
   if (itsKey) {
     delete []itsKey;
   }
@@ -214,6 +214,29 @@ char * nsPrincipal::getVendor(void)
     return itsKey;
   }
 }
+
+// XXX copyied from ns/lib/libjar/zig.h
+#ifndef ZIG_C_COMPANY
+#define ZIG_C_COMPANY   1
+#endif
+#ifndef ZIG_C_CA
+#define ZIG_C_CA        2
+#endif
+#ifndef ZIG_C_SERIAL
+#define ZIG_C_SERIAL    3
+#endif
+#ifndef ZIG_C_EXPIRES
+#define ZIG_C_EXPIRES   4
+#endif
+#ifndef ZIG_C_NICKNAME
+#define ZIG_C_NICKNAME  5
+#endif
+#ifndef ZIG_C_FP
+#define ZIG_C_FP        6
+#endif
+#ifndef ZIG_C_JAVA
+#define ZIG_C_JAVA      100
+#endif
 
 char * nsPrincipal::getCompanyName(void)
 {
@@ -434,9 +457,9 @@ void nsPrincipal::init(nsPrincipalType type, void * key, PRUint32 key_len)
   itsKey = new char[key_len+1];
   memcpy(itsKey, key, key_len);
   itsKey[key_len] = '\0';
-#ifdef DEBUG_RAMAN
+#ifdef DEBUG_raman
   fprintf(stderr, "Creating principal %d, %s\n", type, itsKey);
-#endif /* DEBUG_RAMAN */
+#endif /* DEBUG_raman */
   itsKeyLen = key_len;
   itsHashCode = computeHashCode();
   itsZig = NULL;
@@ -484,7 +507,7 @@ char * nsPrincipal::saveCert(void)
     return NULL;
   }
 
-  result = SOB_stash_cert((ZIG *)itsZig->GetZig(), itsKeyLen, itsKey);
+  result = SOB_stash_cert((ZIG *)itsZig, itsKeyLen, itsKey);
   if (result < 0) {
     return SOB_get_error(result);
   }
@@ -501,7 +524,7 @@ nsPrincipal::getCertAttribute(int attrib)
     ZIG *zig = NULL;
 
     if (itsZig != NULL) {
-      zig = (ZIG *)itsZig->GetZig();
+      zig = (ZIG *)itsZig;
     }
     
     if (SOB_cert_attribute(attrib, zig, 

@@ -18,7 +18,7 @@
 
 
 /*
- *  np.h $Revision: 3.3 $
+ *  np.h $Revision: 3.4 $
  *  Prototypes for functions exported by libplugin and called by the FEs or other XP libs.
  *  Prototypes for functions exported by the FEs and called by libplugin are in nppg.h.
  */
@@ -129,7 +129,17 @@ extern NPError			NPL_RegisterAppletType(NPMIMEType type);
 #endif /* ANTHRAX */
 
 PR_EXTERN(void)         NPL_SetPluginWindow(void *data);
-PR_EXTERN(struct NPIPlugin*) NPL_LoadPluginByType(const char* typeAttribute);
+PR_EXTERN(struct nsIPlugin*) NPL_LoadPluginByType(const char* typeAttribute);
+
+/*
+ * This callback is installed by the FE to handle the nsIPluginManager2::ProcessNextEvent
+ * operation. The result parameter should return PR_TRUE if called on the mozilla thread
+ * (unlike the old nsn_TickleHookProcPtr which returned false (I think)).
+ */
+typedef PRBool (PR_CALLBACK* NPL_ProcessNextEventProc)(void* data);
+
+PR_EXTERN(void) 
+NPL_InstallProcessNextEventProc(NPL_ProcessNextEventProc proc, void* data);
 
 XP_END_PROTOS
 

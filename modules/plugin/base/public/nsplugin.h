@@ -70,6 +70,7 @@
  *  +---------------------+                                        
  *  | nsIPluginManager    |                                        
  *  | nsIPluginManager2   |                                        
+ *  | nsINetworkManager   |                                        
  *  | nsIFileUtilities    |                                        
  *  | nsIPref             |                                        
  *  | nsICacheManager ... |                            
@@ -140,6 +141,12 @@
 #include "nsIPluginManager.h"
 
 /**
+ * The network manager provides access to the network for URL get
+ * and post operations.
+ */
+#include "nsINetworkManager.h"
+
+/**
  * A plugin instance peer gets created by the browser and associated with each
  * plugin instance to represent tag information and other callbacks needed by
  * the plugin instance.
@@ -160,11 +167,7 @@
  *
  * To obtain: QueryInterface on nsIPluginInstancePeer
  */
-#ifdef XP_MAC
-/*#include "nsIWindowlessPlugInstPeer.h"*/
-#else
-#include "nsIWindowlessPluginInstancePeer.h"
-#endif
+#include "nsIWindowlessPlugInstPeer.h"
 
 /**
  * A plugin stream peer gets create by the browser and associated with each
@@ -204,14 +207,6 @@
 #include "nsIFileUtilities.h"
 
 /**
- * The nsIPluginInstancePeer2 interface provides additional plugin instance
- * peer features only available in Communicator 5.0.
- *
- * To obtain: QueryInterface on nsIPluginInstancePeer
- */
-#include "nsIPluginInstancePeer2.h"
-
-/**
  * The nsILiveConnectPluginInstancePeer allows plugins to be manipulated
  * by JavaScript, providing basic scriptability.
  *
@@ -220,11 +215,7 @@
  *
  * To obtain: QueryInterface on nsIPluginInstancePeer
  */
-#ifdef XP_MAC
-/*#include "nsILiveConnectPlugInstPeer.h"*/
-#else
-#include "nsILiveConnectPluginInstancePeer.h"
-#endif
+#include "nsILiveConnectPlugInstPeer.h"
 
 /**
  * The nsIPluginStreamPeer2 interface provides additional plugin stream

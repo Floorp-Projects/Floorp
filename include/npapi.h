@@ -18,7 +18,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.2 $
+ *  npapi.h $Revision: 3.3 $
  *  Netscape client plug-in API spec
  */
 
@@ -133,22 +133,29 @@ RCDATA NP_INFO_ProductName       { "NPAVI32 Dynamic Link Library\0" }
 #ifndef _UINT16
 typedef unsigned short uint16;
 #endif
+
 #ifndef _UINT32
-#if defined(__alpha)
+#  ifndef NSPR20
+#    if defined(__alpha)
 typedef unsigned int uint32;
-#else /* __alpha */
+#    else  /* __alpha */
 typedef unsigned long uint32;
-#endif /* __alpha */
+#    endif /* __alpha */
+#  endif /* NSPR20 */
 #endif
+
 #ifndef _INT16
 typedef short int16;
 #endif
+
 #ifndef _INT32
-#if defined(__alpha)
+#  ifndef NSPR20
+#    if defined(__alpha)
 typedef int int32;
-#else /* __alpha */
+#    else  /* __alpha */
 typedef long int32;
-#endif /* __alpha */
+#    endif /* __alpha */
+#  endif /* NSPR20 */
 #endif
 
 #ifndef FALSE
@@ -513,11 +520,11 @@ void	    NP_LOADDS	NPP_Print(NPP instance, NPPrint* platformPrint);
 int16       NP_LOADDS	NPP_HandleEvent(NPP instance, void* event);
 void	    NP_LOADDS	NPP_URLNotify(NPP instance, const char* url,
 									  NPReason reason, void* notifyData);
-jref	    NP_LOADDS			NPP_GetJavaClass(void);
-NPError			NP_LOADDS	NPP_GetValue(void *instance, NPPVariable variable,
-									 void *value);
-NPError			NP_LOADDS	NPP_SetValue(void *instance, NPNVariable variable,
-									 void *value);
+jref	    NP_LOADDS	NPP_GetJavaClass(void);
+NPError		NP_LOADDS	NPP_GetValue(NPP instance, NPPVariable variable,
+                                     void *value);
+NPError		NP_LOADDS	NPP_SetValue(NPP instance, NPNVariable variable,
+                                     void *value);
 
 /*
  * NPN_* functions are provided by the navigator and called by the plugin.

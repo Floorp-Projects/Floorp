@@ -6,3 +6,4 @@ plarenas.h
 plarena.h
 plevent.h
 plhash.h
+plvector.h

@@ -34,7 +34,7 @@
 #ifndef nsIJRILiveConnectPlugin_h__
 #define nsIJRILiveConnectPlugin_h__
 
-#include "nsplugindefs.h"
+#include "nsIPlugin.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // JRI-Based LiveConnect Classes
@@ -47,20 +47,31 @@
 // Warning: Don't use this anymore, unless you're sure that you have to!
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "jri.h"        // ancient
+#include "jri.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// JRILiveConnect Plugin Interface
-// This interface defines additional entry points that a plugin developer needs
-// to implement in order for the plugin to support JRI-based LiveConnect,
-// i.e. be scriptable by Java or JavaScript.
-
+/** 
+ * The nsIJRILiveConnectPlugin interface defines additional entry points that a
+ * plugin developer needs to implement in order for the plugin to support 
+ * JRI-based LiveConnect, as opposed to the standard JNI-based LiveConnect
+ * (which new in 5.0).
+ *
+ * Plugin developers requiring this capability should implement this interface
+ * in addition to the basic nsIPlugin interface.
+ */
 class nsIJRILiveConnectPlugin : public nsIPlugin {
 public:
 
-    // (Corresponds to NPP_GetJavaClass.)
-    NS_IMETHOD_(jref)
-    GetJavaClass(void) = 0;
+    /**
+     * Returns the class of the Java instance to be associated with the
+     * plugin.
+     *
+     * (Corresponds to NPP_GetJavaClass.)
+     *
+     * @param resultingClass - a resulting reference to the Java class
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetJavaClass(jref *resultingClass) = 0;
 
 };
 

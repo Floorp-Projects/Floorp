@@ -30,8 +30,10 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "jscntxt.h"  /* XXX - needed for charSetName */
-#include "zip.h"
+#include "nsZip.h"
 #include "zig.h"
+#include "nsLoadZig.h"
+#include "nsCaps.h"
 #include "jri.h"
 #include "jsjava.h"
 #ifdef JAVA
@@ -41,27 +43,10 @@
 #include "jsatom.h"
 #include "jsscope.h"
 
-#ifdef JAVA
-/* Needed to access private method; making method public would be
-   security hole */
-#define IMPLEMENT_netscape_security_PrivilegeManager
-
-#include "netscape_security_Principal.h"
-#include "netscape_security_Zig.h"
-#ifdef XP_MAC
-    #include "n_security_PrivilegeManager.h"
-    #include "n_security_PrivilegeTable.h"
-#else
-    #include "netscape_security_PrivilegeManager.h"
-    #include "netscape_security_PrivilegeTable.h"
-#endif /* XP_MAC */
-#include "netscape_security_Privilege.h"
-#include "netscape_security_Target.h"
-#endif
+#include "nsCaps.h"
 
 extern JRIEnv * LJ_JSJ_CurrentEnv(JSContext * cx);
 extern char *LJ_GetAppletScriptOrigin(JRIEnv *env);
-extern struct java_lang_String *makeJavaString(const char *, int);
 
 char lm_unknown_origin_str[] = "[unknown origin]";
 
@@ -74,6 +59,84 @@ static char container_error_message[] =
 
 #define FILE_URL_PREFIX_LEN     (sizeof file_url_prefix - 1)
 #define WYSIWYG_TYPE_LEN        10      /* wysiwyg:// */
+
+/* XXX: raman: We should set this when JS console is ready */
+PRBool lm_console_is_ready = PR_FALSE;
+
+static void lm_PrintToConsole(const char *data);
+static void setupJSCapsCallbacks();
+
+static void
+lm_PrintToConsole(const char *data) 
+{
+	if (lm_console_is_ready) {
+        /* XXX: raman: We should write to JS console when it is ready */
+	    /* JS_PrintToConsole(data); */
+	} else {
+	    MWContext* someRandomContext = XP_FindSomeContext();
+		FE_Alert(someRandomContext, data);
+	}
+}
+
+PR_PUBLIC_API(int)
+LM_PrintZigError(int status, void *zigPtr, const char *metafile, 
+                 char *pathname, char *errortext)
+{
+    ZIG *zig = (ZIG *) zigPtr;
+    char* data;
+	char* error_fmt = "# Error: %s (%d)\n#\tjar file: %s\n#\tpath:     %s\n";
+    char* zig_name = NULL;
+    int len;
+
+	PR_ASSERT(errortext);
+
+    if (zig) {
+        zig_name = SOB_get_url(zig);
+    }
+        
+    if (!zig_name) {
+        zig_name = "unknown";
+    }
+
+    if (!pathname) {
+        pathname = "";
+    }
+
+    /* Add 16 slop bytes */
+	len = strlen(error_fmt) + strlen(zig_name) + strlen(pathname) + 
+		  strlen(errortext) + 32;
+
+    if ((data = malloc(len)) == 0) {
+	    return 0;
+    }
+	sprintf(data, error_fmt, errortext, status, zig_name, pathname);
+
+    lm_PrintToConsole(data);
+	XP_FREE(data);
+
+	return 0;
+}
+
+PR_PUBLIC_API(char *)
+LM_LoadFromZipFile(void *zip, char *fn) 
+{
+    struct stat st;
+    char* data;
+ 
+    if (!ns_zip_stat((ns_zip_t *)zip, fn, &st)) {
+	    return NULL;
+    }
+    if ((data = malloc((size_t)st.st_size + 1)) == 0) {
+	    return NULL;
+    }
+    if (!ns_zip_get((ns_zip_t *)zip, fn, data, st.st_size)) {
+	    XP_FREE(data);
+	    return NULL;
+    }
+    data[st.st_size] = '\0';
+    return data;
+}
+
 
 const char *
 LM_StripWysiwygURLPrefix(const char *url_string)
@@ -388,6 +451,8 @@ lm_GetPrincipalsFromStackFrame(JSContext *cx)
         }
     }
 #ifdef JAVA
+    /* =-= sudu: What do we do here for OJI? Ask raman.
+    */
     if (JSJ_IsCalledFromJava(cx)) {
         return LM_GetJSPrincipalsFromJavaCaller(cx, 0);
     }
@@ -449,69 +514,42 @@ lm_GetSubjectOriginURL(JSContext *cx)
  * them is so expensive.
  */
 typedef struct SharedZig {
-#ifdef JAVA
     ZIG *zig;
-#endif
     int32 refCount;
-    JRIGlobalRef zigObjectRef;
 } SharedZig;
 
 static SharedZig *
-newSharedZig(JRIEnv *env, zip_t *zip)
+newSharedZig(ns_zip_t *zip)
 {
-#ifdef JAVA
     ZIG *zig;
     SharedZig *result;
-    struct netscape_security_Zig *zigObject = NULL;
-    JRIGlobalRef zigObjectRef;
 
-    zig = LJ_InitializeZig(zip);
+    zig = nsInitializeZig(zip, 
+                          (int (*) (int, ZIG *, const char *, 
+                                    char *, char *)) LM_PrintZigError);
     if (zig == NULL)
         return NULL;
 
-    zigObject = ns_createZigObject(env, zig);
-    if (zigObject == NULL) {
-        SOB_destroy(zig);
-        return NULL;
-    }
-
-    /* 
-     * From this point on, Java will call SOB_destroy, when java ref 
-     * count goes to zero.
-     */
-    zigObjectRef = JRI_NewGlobalRef(env, zigObject);
-    if (zigObjectRef == NULL) {
-        return NULL;
-    }
-
     result = (SharedZig *) XP_ALLOC(sizeof(SharedZig));
     if (result == NULL) {
-        JRI_DisposeGlobalRef(env, zigObjectRef);
+        SOB_destroy(zig);
         return NULL;
     }
     result->zig = zig;
     result->refCount = 0;
-    result->zigObjectRef = zigObjectRef;
     return result;
-#else
-    return NULL;
-#endif
 }
 
 static void
-destroySharedZig(JRIEnv *env, SharedZig *sharedZig)
+destroySharedZig(SharedZig *sharedZig)
 {
-#ifdef JAVA
-    /* ZigObject will call SOB_destroy when java reference count goes to zero */
-    JRI_DisposeGlobalRef(env, sharedZig->zigObjectRef);
+    SOB_destroy(sharedZig->zig);
     XP_FREE(sharedZig);
-#endif
 }
 
 static SharedZig *
-holdZig(JRIEnv *env, SharedZig *sharedZig)
+holdZig(SharedZig *sharedZig)
 {
-#ifdef JAVA
     if (sharedZig) {
         XP_ASSERT(sharedZig->refCount >= 0);
         /* XXX: Why are you checking this again */
@@ -519,22 +557,17 @@ holdZig(JRIEnv *env, SharedZig *sharedZig)
             sharedZig->refCount++;
     }
     return sharedZig;
-#else
-    return NULL;
-#endif
 }
 
 static void
-dropZig(JRIEnv *env, SharedZig *sharedZig)
+dropZig(SharedZig *sharedZig)
 {
-#ifdef JAVA
     if (sharedZig) {
         XP_ASSERT(sharedZig->refCount > 0);
         if (--sharedZig->refCount == 0) {
-            destroySharedZig(env, sharedZig);
+            destroySharedZig(sharedZig);
         }
     }
-#endif
 }
 
 struct JSPrincipalsList {
@@ -570,7 +603,7 @@ typedef struct JSPrincipalsData {
     JRIGlobalRef principalsArrayRef;
     URL_Struct *url_struct;
     char *name;
-    zip_t *zip;
+    ns_zip_t *zip;
     uint32 externalCapturePrincipalsCount;
     char *untransformed;
     char *transformed;
@@ -593,9 +626,6 @@ getPrincipalArray(JSContext *cx, struct JSPrincipals *principals);
 
 PR_STATIC_CALLBACK(JSBool)
 globalPrivilegesEnabled(JSContext *cx, JSPrincipals *principals);
-
-static struct netscape_security_PrivilegeManager *
-getPrivilegeManager(JRIEnv *env);
 
 static JSPrincipalsData unknownPrincipals = {
     {
@@ -652,7 +682,9 @@ LM_NewJSPrincipals(URL_Struct *archive, char *id, const char *codebase)
 {
     JSPrincipalsData *result;
     JSBool needUnlock = JS_FALSE;
-    zip_t *zip = NULL;
+    ns_zip_t *zip = NULL;
+
+    setupJSCapsCallbacks();
 
     if (archive) {
         char *fn = NULL;
@@ -670,22 +702,18 @@ LM_NewJSPrincipals(URL_Struct *archive, char *id, const char *codebase)
         if (fn) {
 #ifdef XP_MAC
             /*
-             * Unfortunately, zip_open wants a Unix-style name. Convert Mac path
+             * Unfortunately, ns_zip_open wants a Unix-style name. Convert Mac path
              * to a Unix-style path. This code is copied from appletStubs.c.
              */
             OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
             char *unixPath = NULL;
 
             if (ConvertMacPathToUnixPath(fn, &unixPath) == 0) {
-                zip = zip_open(unixPath);
+                zip = ns_zip_open(unixPath);
             }
             XP_FREEIF(unixPath);
 #else
-#ifdef OJI      // XXX hack
-            zip = NULL;
-#else
-            zip = zip_open(fn);
-#endif
+            zip = ns_zip_open(fn);
 #endif
             XP_FREE(fn);
         }
@@ -733,33 +761,23 @@ destroyJSPrincipals(JSContext *cx, JSPrincipals *principals)
         principals != (JSPrincipals *) &unknownPrincipals)
     {
         JSPrincipalsData *data = (JSPrincipalsData *) principals;
-#ifdef JAVA
-        JRIEnv *env = NULL;
-        if (data->sharedZig || data->principalsArrayRef) {
-            /* Avoid starting Java if "env" not needed */
-            env = LJ_JSJ_CurrentEnv(cx);
-        }
-#endif /* JAVA */
 
 #ifdef DEBUG_norris
         XP_TRACE(("JSPrincipals #%.4d released\n", data->serial));
 #endif
         XP_FREEIF(principals->codebase);
-#ifdef JAVA
-        if (env && data->sharedZig) {
-            dropZig(env, data->sharedZig);
+        if (data->sharedZig) {
+            dropZig(data->sharedZig);
         }
-        if (env && (data->principalsArrayRef != NULL)) {
-            JRI_DisposeGlobalRef(env, data->principalsArrayRef);
+        if (data->principalsArrayRef != NULL) {
+            /* XXX: raman: Should we free up the principals that are in that array also? */
+            nsCapsFreePrincipalArray(data->principalsArrayRef);
         }
-#endif /* JAVA */
         XP_FREEIF(data->name);
         XP_FREEIF(data->untransformed);
         XP_FREEIF(data->transformed);
-#ifndef OJI      // XXX hack
         if (data->zip)
-            zip_close(data->zip);
-#endif
+            ns_zip_close(data->zip);
         if (data->needUnlock)
             NET_ChangeCacheFileLock(data->url_struct, FALSE);
         if (data->url_struct)
@@ -781,68 +799,45 @@ globalPrivilegesEnabled(JSContext *cx, JSPrincipals *principals)
 static void
 printPrincipalsToConsole(JSContext *cx, JSPrincipals *principals)
 {
-#ifdef JAVA
-    JRIEnv *env;
-    jobjectArray principalsArray;
-    struct netscape_security_Principal *principal;
-    struct java_lang_String *javaString;
+    void *principalsArray;
+    struct nsPrincipal *principal;
+    const char *vendor;
     uint32 i, count;
     static char emptyStr[] = "<empty>\n";
-
-    env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        return;
-    }
 
     principalsArray = principals->getPrincipalArray(cx, principals);
 
     if (principalsArray == NULL) {
-        PrintToConsole(emptyStr);
+        lm_PrintToConsole(emptyStr);
         return;
     }
 
-    PrintToConsole("[\n");
-    count = JRI_GetObjectArrayLength(env, principalsArray);
+    lm_PrintToConsole("[\n");
+    count = nsCapsGetPrincipalArraySize(principalsArray);
     for (i = 0; i < count; i++) {
-        principal = JRI_GetObjectArrayElement(env, principalsArray, i);
-        javaString = netscape_security_Principal_getVendor(env, principal);
-        if (javaString) {
-            const char *s = JRI_GetStringPlatformChars(env, javaString,
-                                                       NULL, 0);
-
-    /* XXX - temporarily replace arguments so we can compile
-       (const jbyte *) cx->charSetName,
-       (jint) cx->charSetNameLength);
-    */
-            if (s == NULL) {
-                JS_ReportOutOfMemory(cx);
-                return;
-            }
-            PrintToConsole(s);
+        principal = nsCapsGetPrincipalArrayElement(principalsArray, i);
+        vendor = nsCapsPrincipalGetVendor(principal);
+        if (vendor == NULL) {
+            JS_ReportOutOfMemory(cx);
+            return;
         }
-        PrintToConsole(",\n");
+        lm_PrintToConsole(vendor);
+        lm_PrintToConsole(",\n");
     }
-    PrintToConsole("]\n");
-#endif /* JAVA */
+    lm_PrintToConsole("]\n");
 }
 
 extern void
 lm_InvalidateCertPrincipals(MochaDecoder *decoder, JSPrincipals *principals)
 {
     JSPrincipalsData *data = (JSPrincipalsData *) principals;
-#ifdef JAVA
-    JRIEnv *env;
 
     if (data->principalsArrayRef) {
-        PrintToConsole("Invalidating certificate principals in ");
+        lm_PrintToConsole("Invalidating certificate principals in ");
         printPrincipalsToConsole(decoder->js_context, principals);
-        env = LJ_JSJ_CurrentEnv(decoder->js_context);
-        if (env != NULL) {
-            JRI_DisposeGlobalRef(env, data->principalsArrayRef);
-        }
+        nsCapsFreePrincipalArray(data->principalsArrayRef);
         data->principalsArrayRef = NULL;
     }
-#endif /* JAVA */
     data->signedness = HAS_UNSIGNED_SCRIPTS;
 }
 
@@ -864,16 +859,10 @@ lm_SetDocumentDomain(JSContext *cx, JSPrincipals *principals,
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-#ifdef JAVA
     if (data->principalsArrayRef != NULL) {
-        JRIEnv *env = LJ_JSJ_CurrentEnv(cx);
-        if (env == NULL) {
-            return JS_FALSE;
-        }
-        JRI_DisposeGlobalRef(env, data->principalsArrayRef);
+        nsCapsFreePrincipalArray(data->principalsArrayRef);
         data->principalsArrayRef = NULL;
     }
-#endif /* JAVA */
     return JS_TRUE;
 }
 
@@ -967,29 +956,14 @@ JSBool lm_CheckSetParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 canExtendTrust(JSContext *cx, void *from, void *to)
 {
-#ifdef JAVA
-    JRIEnv *env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        return JS_FALSE;
-    }
     if (from == NULL || to == NULL) {
         return JS_FALSE;
     }
-    return (from == to) ||
-            (JSBool)netscape_security_PrivilegeManager_canExtendTrust(
-                    env,
-                    getPrivilegeManager(env),
-                    from,
-                    to);
-#else
-    /* should never be called without signed scripts */
-    XP_ASSERT(0);
-    return JS_FALSE;
-#endif /* JAVA */
+    return (from == to) || (JSBool)nsCapsCanExtendTrust(from, to);
 }
 
 static JSPrincipals *
-newJSPrincipalsFromArray(JSContext *cx, jobjectArray principalsArray);
+newJSPrincipalsFromArray(JSContext *cx, void *principalsArray);
 
 extern JSBool
 lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
@@ -997,7 +971,6 @@ lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
 {
     JSPrincipals *principals;
     JSPrincipalsData *data;
-    JRIEnv *env;
     JSStackFrame *fp;
     JSScript *script;
     JSPrincipals *subjPrincipals;
@@ -1007,7 +980,7 @@ lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
     if(decoder->principals)  {
         principals = lm_GetInnermostPrincipals(decoder->js_context, obj, NULL);
     }  else  {
-	principals = NULL;
+        principals = NULL;
     }
 
     if (principals == NULL) {
@@ -1066,18 +1039,6 @@ lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
          * We have signed scripts. Must check that the object principals are
          * a subset of the the subject principals.
          */
-#ifdef OJI      // XXX hack
-        env = NULL;
-#else
-#ifdef JAVA
-        env = LJ_JSJ_CurrentEnv(cx);
-#else
-		env = NULL;
-#endif
-#endif
-        if (env == NULL) {
-            return JS_FALSE;
-        }
         fp = NULL;
         fp = JS_FrameIterator(cx, &fp);
         if (fp == NULL || (script = JS_GetFrameScript(cx, fp)) == NULL) {
@@ -1095,16 +1056,12 @@ lm_CheckContainerAccess(JSContext *cx, JSObject *obj, MochaDecoder *decoder,
         fn = lm_GetSubjectOriginURL(cx);
         if (!fn)
             return JS_FALSE;
-#ifndef OJI     // XXX hack
-#ifdef JAVA
         if (subjPrincipals && principals) {
-            PrintToConsole("Principals of script: ");
+            lm_PrintToConsole("Principals of script: ");
             printPrincipalsToConsole(cx, subjPrincipals);
-            PrintToConsole("Principals of signed container: ");
+            lm_PrintToConsole("Principals of signed container: ");
             printPrincipalsToConsole(cx, principals);
         }
-#endif /* JAVA */
-#endif /* !OJI */
         JS_ReportError(cx, container_error_message, fn);
         return JS_FALSE;
     }
@@ -1130,8 +1087,8 @@ checkEarlyAccess(MochaDecoder *decoder, JSPrincipals *principals)
     for (p = (JSPrincipalsList *) decoder->early_access_list; p; p = p->next) {
         if (data->signedness == HAS_SIGNED_SCRIPTS) {
             if (!canExtendTrust(cx,
-		                principals->getPrincipalArray(cx, principals),
-			        p->principals->getPrincipalArray(cx,
+                                principals->getPrincipalArray(cx, principals),
+                                p->principals->getPrincipalArray(cx,
                                                                  p->principals)))
             {
                 JS_ReportError(cx, container_error_message,
@@ -1141,14 +1098,14 @@ checkEarlyAccess(MochaDecoder *decoder, JSPrincipals *principals)
             }
         } else {
             if (!sameOrigins(cx, p->principals->codebase,
-		             principals->codebase))
+                             principals->codebase))
             {
                 /*
                  * Check to see if early access violated the cross-origin
                  * container check.
                  */
                 JS_ReportError(cx, access_error_message,
-		               p->principals->codebase);
+                               p->principals->codebase);
                 ok = JS_FALSE;
                 break;
             }
@@ -1170,12 +1127,8 @@ intersectPrincipals(MochaDecoder *decoder, JSPrincipals *principals,
     JSPrincipalsData *data = (JSPrincipalsData *) principals;
     JSPrincipalsData *newData = (JSPrincipalsData *) newPrincipals;
     JSContext *cx;
-#ifdef JAVA
-    JRIEnv *env;
-    struct netscape_security_PrivilegeManager *privilegeManager;
-    jobjectArray principalArray, newPrincipalArray;
-    JRIGlobalRef principalsArrayRef;
-#endif /* JAVA */
+    void *principalArray;
+    void *newPrincipalArray;
 
     XP_ASSERT(data->signedness != HAS_NO_SCRIPTS);
     XP_ASSERT(newData->signedness != HAS_NO_SCRIPTS);
@@ -1199,69 +1152,45 @@ intersectPrincipals(MochaDecoder *decoder, JSPrincipals *principals,
         lm_InvalidateCertPrincipals(decoder, principals);
         return JS_TRUE;
     }
-#ifdef JAVA 
     /* Compute the intersection. */
-    env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        lm_InvalidateCertPrincipals(decoder, principals);
-        return globalPrivilegesEnabled(cx, principals);
-    }
-    privilegeManager = getPrivilegeManager(env);
     principalArray = getPrincipalArray(cx, principals);
     newPrincipalArray = getPrincipalArray(cx, newPrincipals);
-    if (privilegeManager == NULL || principalArray == NULL
+    if (principalArray == NULL
         || newPrincipalArray == NULL)
     {
         lm_InvalidateCertPrincipals(decoder, principals);
         return JS_TRUE;
     }
 
-    principalArray = netscape_security_PrivilegeManager_intersectPrincipalArray(
-        env, privilegeManager, principalArray, newPrincipalArray);
-    principalsArrayRef = JRI_NewGlobalRef(env, principalArray);
+    principalArray = nsCapsIntersectPrincipalArray(
+        principalArray, newPrincipalArray);
 
     if (principalArray == NULL) {
         lm_InvalidateCertPrincipals(decoder, principals);
         return JS_TRUE;
     }
 
-    JRI_DisposeGlobalRef(env, data->principalsArrayRef);
-    data->principalsArrayRef = principalsArrayRef;
+    data->principalsArrayRef = principalArray;
     return JS_TRUE;
-#else
-    XP_ASSERT(0); /* should never get here without signed scripts */
-    return JS_FALSE;
-#endif /* JAVA */
 }
 
 static uint32
 getPrincipalsCount(JSContext *cx, JSPrincipals *principals)
 {
-#ifdef JAVA
-    JRIEnv *env;
-    jref principalArray;
-
-    env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        return 0;
-    }
+    void *principalArray;
 
     /* Get array of principals */
     principalArray = getPrincipalArray(cx, principals);
 
-    return principalArray ? JRI_GetObjectArrayLength(env, principalArray) : 0;
-#else
-    return 0;
-#endif /* JAVA */
+    return principalArray ? nsCapsGetPrincipalArraySize(principalArray) : 0;
 }
 
 static JSBool
 principalsEqual(JSContext *cx, JSPrincipals *a, JSPrincipals *b)
 {
-#ifdef JAVA
     JSPrincipalsData *dataA, *dataB;
-    jobjectArray arrayA, arrayB;
-    JRIEnv *env;
+    void *arrayA;
+    void *arrayB;
 
     if (a == b)
         return JS_TRUE;
@@ -1275,46 +1204,29 @@ principalsEqual(JSContext *cx, JSPrincipals *a, JSPrincipals *b)
     arrayA = getPrincipalArray(cx, a);
     arrayB = getPrincipalArray(cx, b);
 
-    env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        return JS_FALSE;
-    }
-
-    return (JSBool)(netscape_security_PrivilegeManager_comparePrincipalArray(env,
-                    getPrivilegeManager(env),
-                    arrayA,
-                    arrayB)
-                == netscape_security_PrivilegeManager_EQUAL);
-#else
-    /* Shouldn't get here without signed scripts */
-    XP_ASSERT(0);
-    return JS_FALSE;
-#endif /* JAVA */
+    return (JSBool)(nsCapsComparePrincipalArray(arrayA, arrayB)
+                == nsSetComparisonType_Equal);
 }
 
 /*
  * createPrincipalsArray takes ZIG file information and returns a
- * reference to a Java array of Java Principal objects.
- * It also registers the principals with the PrivilegeManager.
+ * pointer to an array of nsPrincipal objects.
+ * It also registers the principals with the nsPrivilegeManager.
  */
 static jref
-createPrincipalsArray(JRIEnv *env,
-                      struct netscape_security_PrivilegeManager *privilegeManager,
-                      JSPrincipals *principals)
+createPrincipalsArray(JSPrincipals *principals)
 {
-#ifdef JAVA 
     JSPrincipalsData *data = (JSPrincipalsData *) principals;
     JSBool hasCodebase;
     SOBITEM *item;
     int i;
     ZIG *zig;
-    struct java_lang_Class *principalClass;
     unsigned count;
-    jref result;
-    jref byteArray;
-    struct netscape_security_Principal *principal;
+    void *result;
+    struct nsPrincipal *principal;
     ZIG_Context * zig_cx = NULL;
-    void *zigObj;
+
+    setupJSCapsCallbacks();
 
     if (principals == (JSPrincipals *) &unknownPrincipals)
         return NULL;
@@ -1349,8 +1261,7 @@ createPrincipalsArray(JRIEnv *env,
     }
 
     /* Now allocate the array */
-    principalClass = class_netscape_security_Principal(env);
-    result = JRI_NewObjectArray(env, count, principalClass, NULL);
+    result = nsCapsNewPrincipalArray(count);
     if (result == NULL) {
         return NULL;
     }
@@ -1360,28 +1271,18 @@ createPrincipalsArray(JRIEnv *env,
     }
 
     i = 0;
-    if (zig) {
-        zigObj = JRI_GetGlobalRef(env, data->sharedZig->zigObjectRef);
-    }
     while (zig && SOB_find_next(zig_cx, &item) >= 0) {
         FINGERZIG *fingPrint;
 
         fingPrint = (FINGERZIG *) item->data;
 
-        /* call java: new Principal(CERT_KEY, fingPrint->key) */
-        byteArray = JRI_NewByteArray(env, fingPrint->length,
-                                     fingPrint->key);
-
-        principal = netscape_security_Principal_new_5(env,
-            principalClass,
-            netscape_security_Principal_CERT_KEY,
-            byteArray,
-            (struct netscape_security_Zig *)zigObj);
-
-        netscape_security_PrivilegeManager_registerPrincipal(env,
-            privilegeManager, principal);
-
-        JRI_SetObjectArrayElement(env, result, i++, principal);
+        /* create a  new nsPrincipal(CERT_KEY, fingPrint->key) */
+        principal = nsCapsNewPrincipal(nsPrincipalType_CertKey, 
+                                       fingPrint->key, 
+                                       fingPrint->length,
+                                       zig);
+        nsCapsRegisterPrincipal(principal);
+        nsCapsSetPrincipalArrayElement(result, i++, principal);
     }
     if (zig) {
          SOB_find_end(zig_cx);
@@ -1393,27 +1294,18 @@ createPrincipalsArray(JRIEnv *env,
         javaCodebase = getJavaCodebaseFromOrigin(principals->codebase);
         if (javaCodebase == NULL)
             return NULL;
-        byteArray = JRI_NewByteArray(env,
-                                     XP_STRLEN(javaCodebase),
-                                     javaCodebase);
-        principal = netscape_security_Principal_new_3(env,
-            principalClass,
-            netscape_security_Principal_CODEBASE_EXACT,
-            byteArray);
-        netscape_security_PrivilegeManager_registerPrincipal(env,
-            privilegeManager, principal);
-        JRI_SetObjectArrayElement(env, result, i++, principal);
+        principal = nsCapsNewPrincipal(nsPrincipalType_CodebaseExact,
+                                       javaCodebase, 
+                                       XP_STRLEN(javaCodebase),
+                                       NULL);
+        nsCapsRegisterPrincipal(principal);
+        nsCapsSetPrincipalArrayElement(result, i++, principal);
         XP_FREE(javaCodebase);
     }
 
-    data->principalsArrayRef = JRI_NewGlobalRef(env, result);
+    data->principalsArrayRef = result;
 
     return result;
-#else
-    /* This should never be called without signed scripts. */
-    XP_ASSERT(0);
-    return NULL;
-#endif /* JAVA */
 }
 
 static JSBool
@@ -1471,18 +1363,6 @@ static char *targetStrings[] = {
     /* See Target.java for more targets */
 };
 
-/* get PrivilegeManager object: call static PrivilegeManager.getPrivilegeManager() */
-static struct netscape_security_PrivilegeManager *
-getPrivilegeManager(JRIEnv *env)
-{
-#ifdef JAVA
-    return netscape_security_PrivilegeManager_getPrivilegeManager(env,
-        JRI_FindClass(env,
-            classname_netscape_security_PrivilegeManager));
-#else
-    return NULL;
-#endif
-}
 
 /*
 ** If given principals can access the given target, return true. Otherwise return false.
@@ -1491,32 +1371,20 @@ getPrivilegeManager(JRIEnv *env)
 static JSBool
 principalsCanAccessTarget(JSContext *cx, JSTarget target)
 {
-#ifdef JAVA
-    JRIEnv *env;
-    struct netscape_security_PrivilegeManager *privilegeManager;
-    struct netscape_security_PrivilegeTable *annotation;
-    struct netscape_security_Privilege *privilege;
-    struct netscape_security_Target *javaTarget;
-    struct java_lang_String *javaString;
-    struct java_lang_Class *targetClass;
-    jint perm;
+    struct nsPrivilegeTable *annotation;
+    struct nsPrivilege *privilege;
+    struct nsTarget *capsTarget;
+    nsPermissionState perm;
     JSStackFrame *fp;
-    jglobal annotationRef;
+    void *annotationRef;
     void *principalArray = NULL;
 
-    env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        return JS_FALSE;
-    }
+    setupJSCapsCallbacks();
 
-    privilegeManager = getPrivilegeManager(env);
-
-    /* Map JSTarget to netscape_security_Target */
+    /* Map JSTarget to nsTarget */
     XP_ASSERT(target >= 0);
     XP_ASSERT(target < sizeof(targetStrings)/sizeof(targetStrings[0]));
-    targetClass = JRI_FindClass(env, classname_netscape_security_Target);
-    javaString = makeJavaString(targetStrings[target], strlen(targetStrings[target]));
-    javaTarget = netscape_security_Target_findTarget(env, targetClass, javaString);
+    capsTarget = nsCapsFindTarget(targetStrings[target]);
 
     /* Find annotation */
     annotationRef = NULL;
@@ -1530,97 +1398,81 @@ principalsCanAccessTarget(JSContext *cx, JSTarget target)
         if (current == NULL) {
             return JS_FALSE;
         }
-        annotationRef = (jglobal) JS_GetFrameAnnotation(cx, fp);
+        annotationRef = (void *) JS_GetFrameAnnotation(cx, fp);
         if (annotationRef) {
             if (principalArray &&
-                !netscape_security_PrivilegeManager_canExtendTrust(
-                    env, privilegeManager, current, principalArray))
+                !nsCapsCanExtendTrust(current, principalArray))
             {
                 return JS_FALSE;
             }
             break;
         }
         principalArray = principalArray
-            ? netscape_security_PrivilegeManager_intersectPrincipalArray(
-                env, privilegeManager, principalArray, current)
+            ? nsCapsIntersectPrincipalArray(principalArray, current)
             : current;
     }
 
     if (annotationRef) {
-        annotation = (struct netscape_security_PrivilegeTable *)
-            JRI_GetGlobalRef(env, annotationRef);
-    } else if (JSJ_IsCalledFromJava(cx)) {
-        /*
-         * Call from Java into JS. Just call the Java routine for checking
-         * privileges.
-         */
-        if (principalArray) {
-            /*
-             * Must check that the principals that signed the Java applet are
-             * a subset of the principals that signed this script.
-             */
-            jobjectArray javaPrincipals;
-
-            javaPrincipals =
-                netscape_security_PrivilegeManager_getClassPrincipalsFromStack(
-                    env,
-                    privilegeManager,
-                    0);
-            if (!canExtendTrust(cx, javaPrincipals, principalArray)) {
-                return JS_FALSE;
-            }
-        }
-        return (JSBool)netscape_security_PrivilegeManager_isPrivilegeEnabled(
-            env, privilegeManager, javaTarget, 0);
+        annotation = (struct nsPrivilegeTable *)annotationRef;
     } else {
+#ifdef JAVA
+        if (JSJ_IsCalledFromJava(cx)) {
+            /*
+             * Call from Java into JS. Just call the Java routine for checking
+             * privileges.
+             */
+            if (principalArray) {
+                /*
+                 * Must check that the principals that signed the Java applet are
+                 * a subset of the principals that signed this script.
+                 */
+                void *javaPrincipals = NULL;
+
+                /* XXX: The following is a LiveConnect call. We need to find
+                 * out from the VM who the principal is (may be get the
+                 * certificate from VM and create a principal from it).
+                 * Pass that principal to canExtendTrust call. Until this is 
+                 * fixed deny the privileged operations from Java to JS.
+                 */ 
+                /* XXX: raman: We need to fix this with LiveConnect integration.
+                 *  javaPrincipals = nsCapsGetClassPrincipalsFromStack(0);
+                 */
+                if (!canExtendTrust(cx, javaPrincipals, principalArray)) {
+                    return JS_FALSE;
+                }
+            }
+            return (JSBool)nsCapsIsPrivilegeEnabled(capsTarget, 0);
+        } 
+#endif /* JAVA */
         /* No annotation in stack */
         return JS_FALSE;
     }
 
    /* Now find permission for (annotation, target) pair. */
-    privilege = netscape_security_PrivilegeTable_get_1(env,
-                                     annotation,
-                                     (struct java_lang_Object *)javaTarget);
-    if (JRI_ExceptionOccurred(env)) {
+    privilege = nsCapsGetPrivilege(annotation, capsTarget);
+    if (privilege == NULL) {
         return JS_FALSE;
     }
     XP_ASSERT(privilege);
-    perm = netscape_security_Privilege_getPermission(env,
-                                               privilege);
-    XP_ASSERT(!JRI_ExceptionOccurred(env));
+    perm = nsCapsGetPermission(privilege);
 
-    return (JSBool)(perm == netscape_security_Privilege_ALLOWED);
-#else
-    return JS_FALSE;
-#endif /* JAVA */
+    return (JSBool)(perm == nsPermissionState_Allowed);
 }
 
 
 PR_STATIC_CALLBACK(void *)
 getPrincipalArray(JSContext *cx, struct JSPrincipals *principals)
 {
-#ifdef JAVA
     JSPrincipalsData *data = (JSPrincipalsData *) principals;
-    struct netscape_security_PrivilegeManager *privilegeManager;
-    JRIEnv *env;
-
-    env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        return NULL;
-    }
 
     /* Get array of principals */
 
     if (data->principalsArrayRef == NULL) {
-        privilegeManager = getPrivilegeManager(env);
-        if (createPrincipalsArray(env, privilegeManager, principals) == NULL)
+        if (createPrincipalsArray(principals) == NULL)
             return NULL;
     }
 
-    return JRI_GetGlobalRef(env, data->principalsArrayRef);
-#else
-    return NULL;
-#endif
+    return data->principalsArrayRef;
 }
 
 
@@ -1631,11 +1483,7 @@ LM_ExtractFromPrincipalsArchive(JSPrincipals *principals, char *name,
     JSPrincipalsData *data = (JSPrincipalsData *) principals;
     char *result = NULL;
 
-#ifndef OJI      // XXX hack
-#ifdef JAVA
-    result = LJ_LoadFromZipFile(data->zip, name);
-#endif
-#endif
+    result = LM_LoadFromZipFile(data->zip, name);
     *length = result ? XP_STRLEN(result) : 0;
 
     return result;
@@ -1660,70 +1508,44 @@ LM_SetUntransformedSource(JSPrincipals *principals, char *original,
 JSPrincipals * PR_CALLBACK
 LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, int callerDepth)
 {
-#ifdef JAVA
-    JRIEnv *env;
-    jobjectArray principalsArray;
+    void *principalsArray;
 
-    env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        return NULL;
-    }
+    setupJSCapsCallbacks();
 
-    principalsArray = native_netscape_security_PrivilegeManager_getClassPrincipalsFromStackUnsafe(
-        env,
-        getPrivilegeManager(env),
-        callerDepth);
+    principalsArray = nsCapsGetClassPrincipalsFromStack(callerDepth);
 
     if (principalsArray == NULL)
         return NULL;
 
     return newJSPrincipalsFromArray(cx, principalsArray);
-#else
-    return NULL;
-#endif
 }
 
 static JSPrincipals *
-newJSPrincipalsFromArray(JSContext *cx, jobjectArray principalsArray)
+newJSPrincipalsFromArray(JSContext *cx, void *principalsArray)
 {
-#ifdef JAVA
-    JRIEnv *env;
     JSPrincipals *result;
-    struct netscape_security_Principal *principal;
-    struct java_lang_String *javaString;
+    struct nsPrincipal *principal;
     const char *codebase;
     JSPrincipalsData *data;
     uint32 i, count;
 
-    env = LJ_JSJ_CurrentEnv(cx);
-    if (env == NULL) {
-        return NULL;
-    }
+    setupJSCapsCallbacks();
 
-    count = JRI_GetObjectArrayLength(env, principalsArray);
+    count = nsCapsGetPrincipalArraySize(principalsArray);
     if (count == 0) {
         JS_ReportError(cx, "No principals found for Java caller");
         return NULL;
     }
 
-    javaString = NULL;
+    codebase = NULL;
     for (i = count; i > 0; i--) {
-        principal = JRI_GetObjectArrayElement(env, principalsArray, i-1);
-        if (netscape_security_Principal_isCodebaseExact(env, principal)) {
-            javaString = netscape_security_Principal_toString(env, principal);
+        principal = nsCapsGetPrincipalArrayElement(principalsArray, i-1);
+        if (nsCapsIsCodebaseExact(principal)) {
+            codebase = nsCapsPrincipalToString(principal);
             break;
         }
     }
 
-    codebase = javaString
-        ? JRI_GetStringPlatformChars(env, javaString,
-                                     NULL, 0)
-
-    /* XXX - temporarily replace arguments so we can compile
-       (const jbyte *) cx->charSetName,
-       (jint) cx->charSetNameLength);
-    */
-        : NULL;
     result = LM_NewJSPrincipals(NULL, NULL, (char *) codebase);
     if (result == NULL) {
         JS_ReportOutOfMemory(cx);
@@ -1731,17 +1553,12 @@ newJSPrincipalsFromArray(JSContext *cx, jobjectArray principalsArray)
     }
 
     data = (JSPrincipalsData *) result;
-    data->principalsArrayRef = JRI_NewGlobalRef(env, principalsArray);
+    data->principalsArrayRef = principalsArray;
     data->signedness = count == 1 && codebase
                        ? HAS_UNSIGNED_SCRIPTS
                        : HAS_SIGNED_SCRIPTS;
 
     return result;
-#else
-    /* Should not get here without signed scripts */
-    XP_ASSERT(0);
-    return NULL;
-#endif /* JAVA */
 }
 
 static JSBool
@@ -1749,18 +1566,16 @@ verifyPrincipals(MochaDecoder *decoder, JSPrincipals *containerPrincipals,
                  JSPrincipals *principals, char *name, char *src,
                  uint srcSize, JSBool implicitName)
 {
-#ifdef JAVA
     JSPrincipalsData *data = (JSPrincipalsData *) principals;
     ZIG *zig;
     DIGESTS *dig = NULL;
     JSBool sameName = JS_FALSE;
     int ret;
     JSPrincipalsData *containerData;
-    zip_t *containerZip;
+    ns_zip_t *containerZip;
     JSBool verified;
     SOBITEM *item;
     ZIG_Context * zig_cx;
-    JRIEnv *env;
 
     if (data->signedness == HAS_UNSIGNED_SCRIPTS)
         return JS_FALSE;
@@ -1788,29 +1603,23 @@ verifyPrincipals(MochaDecoder *decoder, JSPrincipals *containerPrincipals,
      */
     verified = JS_FALSE;
 
-    /* Start Java since errors may need to be printed to the console. */
-    env = LJ_JSJ_CurrentEnv(decoder->js_context);
-    if (env == NULL) {
-        return JS_FALSE;
-    }
-
     if (containerData == NULL) {
         /* First script seen; initialize zig. */
-        data->sharedZig = holdZig(env, newSharedZig(env, data->zip));
+        data->sharedZig = holdZig(newSharedZig(data->zip));
     } else if (data == containerData) {
         /* Already have a zig if there is one; nothing more to do. */
     } else if (data->zip == NULL) {
         /* "Inherit" data->sharedZig from container data. */
-        data->sharedZig = holdZig(env, containerData->sharedZig);
+        data->sharedZig = holdZig(containerData->sharedZig);
     } else if (containerData->url_struct &&
                XP_STRCMP(data->url_struct->address,
                          containerData->url_struct->address) == 0)
     {
         /* Two identical zips. Share the zigs. */
-        data->sharedZig = holdZig(env, containerData->sharedZig);
+        data->sharedZig = holdZig(containerData->sharedZig);
     } else {
         /* Different zips. Must create a new zig. */
-        data->sharedZig = holdZig(env, newSharedZig(env, data->zip));
+        data->sharedZig = holdZig(newSharedZig(data->zip));
     }
 
     if (data->sharedZig == NULL)
@@ -1835,15 +1644,12 @@ verifyPrincipals(MochaDecoder *decoder, JSPrincipals *containerPrincipals,
                 return JS_FALSE;
         }
     } else if (!implicitName || ret != ZIG_ERR_PNF) {
-        LJ_PrintZigError(ret, zig, "", name, SOB_get_error(ret));
+        LM_PrintZigError(ret, zig, "", name, SOB_get_error(ret));
     }
     if (zig_cx) {
         SOB_find_end(zig_cx);
     }
     return verified;
-#else
-    return JS_FALSE;
-#endif /* JAVA */
 }
 
 
@@ -2016,25 +1822,17 @@ LM_RegisterPrincipals(MochaDecoder *decoder, JSPrincipals *principals,
              * Intersect principals and container principals,
              * modifying the container principals.
              */
-#ifndef OJI     // XXX hack
-#ifdef JAVA
-            PrintToConsole("Intersecting principals ");
+            lm_PrintToConsole("Intersecting principals ");
             printPrincipalsToConsole(cx, containerPrincipals);
-            PrintToConsole("with ");
+            lm_PrintToConsole("with ");
             printPrincipalsToConsole(cx, principals);
-#endif
-#endif
             if (!intersectPrincipals(decoder, containerPrincipals,
                                      principals))
             {
                 return NULL;
             }
-#ifndef OJI     // XXX hack
-#ifdef JAVA
-            PrintToConsole("yielding ");
+            lm_PrintToConsole("yielding ");
             printPrincipalsToConsole(cx, containerPrincipals);
-#endif
-#endif
         } else {
             /*
              * Store the disjoint set of principals in the
@@ -2046,5 +1844,223 @@ LM_RegisterPrincipals(MochaDecoder *decoder, JSPrincipals *principals,
 
     }
     return containerPrincipals;
+}
+
+
+/*******************************************************************************
+ * Glue code for JS stack crawling callbacks
+ ******************************************************************************/
+
+typedef struct JSFrameIterator {
+    JSStackFrame *fp;
+    JSContext *cx;
+    JRIEnv *env;
+    void *intersect;
+    PRBool sawEmptyPrincipals;
+} JSFrameIterator;
+
+static JSFrameIterator *
+lm_NewJSFrameIterator() 
+{
+    JSContext *cx = NULL;
+    char *errorString;
+    JSFrameIterator *result;
+    void *array;
+    JRIEnv *env = NULL;
+    
+    result = XP_ALLOC(sizeof(JSFrameIterator));
+    if (result == NULL) {
+        return NULL;
+    }
+
+	/* XXX: raman: Is this correct? How do we get the Context?? */
+#ifdef JAVA    
+    env = JRI_GetCurrentEnv();
+    cx = JSJ_CurrentContext(env, &errorString);
+#endif /* JAVA */
+    if (cx == NULL) {
+        return NULL;
+    }
+
+    result->env = env;
+    result->fp = NULL;
+    result->cx = cx;
+    result->fp = JS_FrameIterator(cx, &result->fp);
+    array = result->fp
+        ? JS_GetFramePrincipalArray(cx, result->fp)
+        : NULL;
+    result->intersect = array;
+    result->sawEmptyPrincipals = 
+        (result->intersect == NULL && result->fp && 
+         JS_GetFrameScript(cx, result->fp))
+        ? PR_TRUE : PR_FALSE;
+
+    return result;
+}
+
+
+static PRBool
+lm_NextJSJavaFrame(struct JSFrameIterator *iterator)
+{
+    void *current;
+    void *previous;
+
+	if (iterator->fp == 0) {
+		return PR_FALSE;
+	}
+
+    current = JS_GetFramePrincipalArray(iterator->cx, iterator->fp);
+    if (current == NULL) {
+        if (JS_GetFrameScript(iterator->cx, iterator->fp))
+            iterator->sawEmptyPrincipals = PR_TRUE;
+    } else {
+        if (iterator->intersect) {
+            previous = iterator->intersect;
+            current = nsCapsIntersectPrincipalArray(current, previous);
+            /* XXX: raman: should we do a free the previous principal Array */
+            nsCapsFreePrincipalArray(iterator->intersect);
+        }
+        iterator->intersect = current;
+    }
+    iterator->fp = JS_FrameIterator(iterator->cx, &iterator->fp);
+    return iterator->fp != NULL;
+}
+
+static PRBool 
+nextJSFrame(struct JSFrameIterator **iteratorp)
+{
+    JSFrameIterator *iterator = *iteratorp;
+    PRBool result = lm_NextJSJavaFrame(iterator);
+    if (!result) {
+        if (iterator->intersect)
+            nsCapsFreePrincipalArray(iterator->intersect);
+        XP_FREE(iterator);
+        *iteratorp = NULL;
+    }
+    return result;
+}
+
+/* 
+ *
+ *  CALLBACKS to walk the stack 
+ *
+ */
+
+typedef struct NSJSJavaFrameWrapper {
+    struct JSFrameIterator *iterator;
+} NSJSJavaFrameWrapper;
+
+struct NSJSJavaFrameWrapper *
+lm_NewNSJSJavaFrameWrapperCB(void) 
+{
+    struct NSJSJavaFrameWrapper *result;
+    JRIEnv *env;
+
+    result = (struct NSJSJavaFrameWrapper *)PR_CALLOC(sizeof(struct NSJSJavaFrameWrapper));
+    if (result == NULL) {
+        return NULL;
+    }
+
+    result->iterator = lm_NewJSFrameIterator();
+    return result;
+}
+
+void lm_FreeNSJSJavaFrameWrapperCB(struct NSJSJavaFrameWrapper *wrapper)
+{
+    PR_FREEIF(wrapper);
+}
+
+void lm_GetStartFrameCB(struct NSJSJavaFrameWrapper *wrapper)
+{
+}
+
+PRBool lm_IsEndOfFrameCB(struct NSJSJavaFrameWrapper *wrapper)
+{
+    if ((wrapper == NULL) || (wrapper->iterator == NULL))
+        return PR_TRUE;
+    return PR_FALSE;
+}
+
+PRBool lm_IsValidFrameCB(struct NSJSJavaFrameWrapper *wrapper)
+{
+    if (wrapper->iterator == NULL) {
+        return PR_FALSE;
+    } else {
+        return PR_TRUE; 
+    }
+}
+
+void *lm_GetNextFrameCB(struct NSJSJavaFrameWrapper *wrapper, int *depth) 
+{
+    if ((wrapper->iterator == NULL) ||
+        (!nextJSFrame(&(wrapper->iterator)))) {
+        return NULL;
+    }
+    (*depth)++;
+    return wrapper->iterator;
+}
+
+void * lm_GetPrincipalArrayCB(struct NSJSJavaFrameWrapper *wrapper)
+{
+    JSFrameIterator *iterator;
+    if (wrapper->iterator == NULL)
+        return NULL;
+    iterator = wrapper->iterator;
+    return JS_GetFramePrincipalArray(iterator->cx, iterator->fp);
+}
+
+void * lm_GetAnnotationCB(struct NSJSJavaFrameWrapper *wrapper)
+{
+    JSFrameIterator *iterator;
+    void *annotaion;
+    void *current;
+
+    if (wrapper->iterator == NULL) {
+        return NULL;
+    }
+    iterator = wrapper->iterator;
+
+    annotaion = JS_GetFrameAnnotation(iterator->cx, iterator->fp);
+    if (annotaion == NULL)
+        return NULL;
+
+    current = JS_GetFramePrincipalArray(iterator->cx, iterator->fp);
+
+    if (iterator->sawEmptyPrincipals || current == NULL ||
+        (iterator->intersect &&
+         !canExtendTrust(iterator->cx, current, iterator->intersect)))
+        return NULL;
+    
+    return annotaion;
+}
+
+void * lm_SetAnnotationCB(struct NSJSJavaFrameWrapper *wrapper, void *privTable)
+{
+    if (wrapper->iterator) {
+        JSFrameIterator *iterator = wrapper->iterator;
+        JS_SetFrameAnnotation(iterator->cx, iterator->fp, privTable);
+    } 
+    return privTable;
+}
+
+/* End of Callbacks */
+
+static PRBool privManagerInited = PR_FALSE;
+
+static void
+setupJSCapsCallbacks()
+{
+    if (privManagerInited) return;
+    privManagerInited = TRUE;
+
+    setNewNSJSJavaFrameWrapperCallback(lm_NewNSJSJavaFrameWrapperCB);
+    setFreeNSJSJavaFrameWrapperCallback(lm_FreeNSJSJavaFrameWrapperCB);
+    setGetStartFrameCallback(lm_GetStartFrameCB);
+    setIsEndOfFrameCallback(lm_IsEndOfFrameCB);
+    setIsValidFrameCallback(lm_IsValidFrameCB);
+    setGetNextFrameCallback(lm_GetNextFrameCB);
+    setOJIGetPrincipalArrayCallback(lm_GetPrincipalArrayCB);
+    setOJIGetAnnotationCallback(lm_GetAnnotationCB);
+    setOJISetAnnotationCallback(lm_SetAnnotationCB);
 }
 

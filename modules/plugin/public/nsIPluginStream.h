@@ -37,18 +37,37 @@
 #include "nsplugindefs.h"
 #include "nsIOutputStream.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// Plugin Stream Interface
-
+/**
+ * The nsIPluginStream interface specifies the minimal set of operations that
+ * must be implemented by a plugin stream in order to receive data from the
+ * browser. When a nsIPluginManager::FetchURL request is made, a subsequent
+ * nsIPluginInstance::NewStream request will be made to instruct the plugin
+ * instance to construct a new stream to receive the data. 
+ */
 class nsIPluginStream : public nsIOutputStream {
 public:
 
-    // (Corresponds to NPP_NewStream's stype return parameter.)
-    NS_IMETHOD_(NPStreamType)
-    GetStreamType(void) = 0;
+    /**
+     * Returns the stream type of a stream. 
+     *
+     * (Corresponds to NPP_NewStream's stype return parameter.)
+     *
+     * @param result - the resulting stream type
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetStreamType(nsPluginStreamType *result) = 0;
 
-    // (Corresponds to NPP_StreamAsFile.)
-    NS_IMETHOD_(void)
+    /**
+     * This operation passes to the plugin the name of the file which
+     * contains the stream data.
+     *
+     * (Corresponds to NPP_StreamAsFile.)
+     *
+     * @param fname - the file name
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
     AsFile(const char* fname) = 0;
 
 };

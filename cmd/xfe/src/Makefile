@@ -53,10 +53,17 @@ REQUIRES	=\
 			rdf \
 			progress \
 			xpcom \
+			plugin \
+			plugimpl \
+			raptor \
 			netcnvts \
 			msg \
-			progress \
-			plug
+			progress 
+
+ifdef OJI
+REQUIRES +=	  oji \
+		  ojiimpl
+endif
 
 CPPSRCS		= \
 		  plugin.cpp \

@@ -20,20 +20,20 @@ DEPTH		= ..
 
 include $(DEPTH)/config/config.mk
 
-DIRS		= \
+DIRS = \
 	libhook \
-    libreg \
+	libreg \
 	libpref \
 	libutil \
 	libimg \
 	libfont \
-	libreg \
 	rdf \
 	xml \
 	schedulr \
-    zlib \
-    li \
-    progress \
+	zlib \
+	li \
+	progress \
+	plugin \
 	$(NULL)
 
 ifndef MOZ_SECURITY
@@ -50,9 +50,9 @@ endif
 
 ifdef EDITOR
 
-ifdef JAVA_OR_OJI
+ifdef JAVA_OR_NSJVM	# change later to JAVA_OR_OJI
 DIRS            += edtplug
-endif # JAVA_OR_OJI
+endif # JAVA_OR_NSJVM
 
 DIRS		+= spellchk
 endif # EDITOR

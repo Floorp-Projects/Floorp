@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 DEPTH=..\..\.. 
 !include $(DEPTH)\config\config.mak
 
-!ifndef JAVA_OR_OJI
+!ifndef JAVA_OR_NSJVM
 LOCAL_JMC_SUBDIR =  ..\jmcgen\include
 !endif
 
@@ -32,7 +32,7 @@ EXPORTS=$(JMC_GEN_DIR)\Mnfdoer.h $(JMC_GEN_DIR)\Mnff.h \
 	$(JMC_GEN_DIR)\Mnffbu.h $(JMC_GEN_DIR)\Mnffmi.h \
 	$(JMC_GEN_DIR)\Mnffp.h $(JMC_GEN_DIR)\Mnfrc.h $(JMC_GEN_DIR)\Mnfrf.h \
 	$(JMC_GEN_DIR)\Mnfstrm.h $(JMC_GEN_DIR)\Mnfdlm.h
-!if !defined(JAVA_OR_OJI)
+!if !defined(JAVA_OR_NSJVM)
 EXPORTS=$(EXPORTS) $(JMC_GEN_DIR)\Mwinfp.h
 !endif
 

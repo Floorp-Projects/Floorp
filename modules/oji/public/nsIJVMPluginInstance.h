@@ -39,15 +39,11 @@ public:
 
     // This method is called when LiveConnect wants to find the Java object
     // associated with this plugin instance, e.g. the Applet or JavaBean object.
-    NS_IMETHOD_(jobject) 
-    GetJavaObject(void) = 0;
+    NS_IMETHOD
+    GetJavaObject(jobject *result) = 0;
 
-    /* =-= sudu: Ask Eric Bina, what is GetText used for in layform.c
-                 Check to see if this should be more general api applicaple to
-                 applets/beans and plugins.
-    */
-    NS_IMETHOD_(const char*)
-    GetText(void) = 0;
+    NS_IMETHOD
+    GetText(const char* *result) = 0;
 };
 
 #define NS_IJVMPLUGININSTANCE_IID                    \

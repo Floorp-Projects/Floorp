@@ -24,6 +24,7 @@ CPPSRCS		= nsDebug.cpp \
 		  nsID.cpp \
 		  nsSupportsArray.cpp \
 		  nsRepository.cpp \
+		  nsMalloc.cpp \
 		  $(NULL)
 
 EXPORTS		= nsCom.h \
@@ -38,6 +39,9 @@ EXPORTS		= nsCom.h \
 		  nsISupportsArray.h \
 		  nsRepository.h \
 		  nsIEnumerator.h \
+		  nsIMalloc.h \
+		  nsMalloc.h \
+		  nsVector.h \
 		  $(NULL)
 
 LCFLAGS		= -D_IMPL_NS_COM -DUSE_NSREG

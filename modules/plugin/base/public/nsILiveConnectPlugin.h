@@ -34,21 +34,31 @@
 #ifndef nsILiveConnectPlugin_h__
 #define nsILiveConnectPlugin_h__
 
-#include "nsplugindefs.h"
+#include "nsIPlugin.h"
 #include "jni.h"        // standard JVM API
 
-////////////////////////////////////////////////////////////////////////////////
-// LiveConnect Plugin Interface
-// This interface defines additional entry points that a plugin developer needs
-// to implement in order for the plugin to support JNI-based LiveConnect,
-// i.e. be scriptable by Java or JavaScript.
-
+/** 
+ * The nsILiveConnectPlugin interface defines additional entry points that a
+ * plugin developer needs to implement in order for the plugin to support 
+ * JNI-based LiveConnect (new in 5.0).
+ *
+ * Plugin developers requiring this capability should implement this interface
+ * in addition to the basic nsIPlugin interface.
+ */
 class nsILiveConnectPlugin : public nsIPlugin {
 public:
 
-    // (New JNI-based entry point, roughly corresponds to NPP_GetJavaClass.)
-    NS_IMETHOD_(jclass)
-    GetJavaClass(void) = 0;
+    /**
+     * Returns the class of the Java instance to be associated with the
+     * plugin.
+     *
+     * (New JNI-based entry point, roughly corresponds to NPP_GetJavaClass.)
+     *
+     * @param resultingClass - a resulting reference to the Java class
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetJavaClass(jclass *resultingClass) = 0;
 
 };
 

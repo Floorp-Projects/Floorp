@@ -1915,7 +1915,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines)
             }
             if (atom == NULL)
                 break;
-            js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));            
+            js_printf(jp, (i > 0 ? ", %s" : "%s"), ATOM_BYTES(atom));
         }
     }
     js_puts(jp, ") {\n");

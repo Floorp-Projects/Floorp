@@ -23,10 +23,11 @@
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "lm.h"
 
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 
 #include "xp.h"
 #include "layout.h"
+#if defined(JAVA)
 #include "java.h"
 #include "lj.h"		/* for LJ_InvokeMethod */
 #define IMPLEMENT_netscape_applet_MozillaAppletContext
@@ -38,6 +39,10 @@
 #include "netscape_applet_MozillaAppletContext.h"
 #include "netscape_applet_EmbeddedObjectNatives.h"
 #endif
+#elif defined(OJI) 
+#include "np2.h"
+#include "jni.h"
+#endif /* OJI */
 #include "jsjava.h"
 #include "jsobj.h"
 #include "prlog.h"
@@ -192,6 +197,7 @@ lm_GetAppletArray(MochaDecoder *decoder, JSObject *document)
     return obj;
 }
 
+
 static JSObject *
 lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
                        int32 layer_id, uint32 index)
@@ -199,10 +205,17 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
     JSObject *obj;
     MochaDecoder *decoder;
     JSContext *cx;
+#ifdef JAVA
     LJAppletData *ad;
-    jref japplet;
+    jref javaobject;
+#endif
     lo_TopState *top_state;
     PRHashTable *map;
+#ifdef OJI
+    NPEmbeddedApp* embed;
+    LO_CommonPluginStruct *lo_embed = (LO_CommonPluginStruct *)lo_applet;
+    jobject javaobject;
+#endif /* OJI */
 
     PR_LOG(Moja, debug, ("really reflect applet 0x%x\n", lo_applet));
 
@@ -212,7 +225,7 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
 
     decoder = LM_GetMochaDecoder(context);
     if (!decoder)
-	return NULL;
+ 	return NULL;
     cx = decoder->js_context;
 
     top_state = lo_GetMochaTopState(context);
@@ -228,6 +241,35 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
         }
     }
 
+#ifdef OJI
+    {
+      if (! NPL_IsJVMAndMochaPrefsEnabled()) {
+          return lo_embed->mocha_object = lm_DummyObject;
+      }
+
+      embed = (NPEmbeddedApp*) lo_embed->FE_Data;
+      if (embed) {
+          struct nsIPluginInstance *pNPI = NULL;
+          JNIEnv *jniEnv = NULL;
+          jsval val;
+          
+          pNPI = NPL_GetOJIPluginInstance(embed);
+          javaobject = NPL_GetJavaObject(pNPI);
+          NPL_Release((struct nsISupports *)pNPI);
+
+#if 0
+          jniEnv = NPL_EnsureJNIExecEnv(NULL);
+          obj = JSJ_WrapJavaObject(decoder->js_context,
+                                   jniEnv,
+                                   javaobject,
+                                   (*jniEnv)->GetObjectClass(jniEnv, javaobject));
+#else
+          if (JSJ_ConvertJavaObjectToJSValue(decoder->js_context, javaobject, &val))
+              obj = JSVAL_TO_OBJECT(val);
+#endif
+      }
+    }
+#else
     /* set the element to something bad if we can't get the java obj */
     if (!JSJ_IsEnabled()) {
         PR_LOG(Moja, debug, ("reflected applet 0x%x as null\n",
@@ -241,43 +283,62 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
         /* MozillaAppletContext.reflectApplet gets the java applet
          * object out of a hash table given the AppletData pointer
          * as an integer */
-	if (ad->selector_type != LO_JAVA_SELECTOR_APPLET)
-	    japplet = LJ_InvokeMethod(classEmbeddedObjectNatives,
-		methodID_netscape_applet_EmbeddedObjectNatives_reflectObject,
-		ad->docID, ad);
-	else
-	    japplet = LJ_InvokeMethod(classMozillaAppletContext,
-		methodID_netscape_applet_MozillaAppletContext_reflectApplet_1,
-		ad->docID, ad);
+	        if (ad->selector_type != LO_JAVA_SELECTOR_APPLET)
+	            javaobject = LJ_InvokeMethod(classEmbeddedObjectNatives,
+		        methodID_netscape_applet_EmbeddedObjectNatives_reflectObject,
+		        ad->docID, ad);
+	        else
+	            javaobject = LJ_InvokeMethod(classMozillaAppletContext,
+		        methodID_netscape_applet_MozillaAppletContext_reflectApplet_1,
+		        ad->docID, ad);
+          obj = js_ReflectJObjectToJSObject(decoder->js_context,
+                                              (HObject *)javaobject);
+    }
+#endif /* !OJI */
 
-        obj = js_ReflectJObjectToJSObject(decoder->js_context,
-                                            (HObject *)japplet);
-
-        map = lm_GetIdToObjectMap(decoder);
-        if (map)
-            PR_HashTableAdd(map, 
-                            LM_GET_MAPPING_KEY(LM_APPLETS, layer_id, index),
-                            obj);
-
-        /*
-          lj_mozilla_ee->js_context = saved_context;
-          */
-
-        PR_LOG(Moja, debug, ("reflected applet 0x%x (java 0x%x) to 0x%x ok\n",
-                             lo_applet, japplet, obj));
-
-        if (obj)
-	    lm_java_clasp = JS_GetClass(obj);
-	return lo_applet->objTag.mocha_object = obj;
-    } else {
+    if( obj == NULL )
+    {
         PR_LOG(Moja, warn, ("failed to reflect applet 0x%x\n", lo_applet));
         return NULL;
     }
+    map = lm_GetIdToObjectMap(decoder);
+    if (map)
+        PR_HashTableAdd(map, 
+                        LM_GET_MAPPING_KEY(LM_APPLETS, layer_id, index),
+                        obj);
+
+    /*
+      lj_mozilla_ee->js_context = saved_context;
+      */
+
+    PR_LOG(Moja, debug, ("reflected applet 0x%x (java 0x%x) to 0x%x ok\n",
+                         lo_applet, javaobject, obj));
+
+    if (obj)
+      	lm_java_clasp = JS_GetClass(obj);
+	    return lo_applet->objTag.mocha_object = obj;
 }
 
 
 /* XXX what happens if this is called before java starts up?
  * or if java is disabled? */
+
+#if defined(OJI)
+
+static char* getValue(struct lo_NVList* nvlist, const char* name)
+{
+	int i;
+	char** names = nvlist->names;
+	char** values = nvlist->values;
+	
+	for (i = nvlist->n - 1; i >= 0; --i)
+		if (XP_STRCASECMP(names[i], name) == 0)
+			return values[i];
+	
+	return NULL;
+}
+
+#endif
 
 JSObject *
 LM_ReflectApplet(MWContext *context, LO_JavaAppStruct *applet_data,
@@ -287,6 +348,9 @@ LM_ReflectApplet(MWContext *context, LO_JavaAppStruct *applet_data,
     MochaDecoder *decoder;
     JSContext *cx;
     char *name;
+#ifdef OJI
+	LO_EmbedStruct *embed = (LO_EmbedStruct *)applet_data;
+#endif
 
     obj = applet_data->objTag.mocha_object;
     if (obj)
@@ -297,12 +361,19 @@ LM_ReflectApplet(MWContext *context, LO_JavaAppStruct *applet_data,
         return NULL;
     cx = decoder->js_context;
 
+#ifdef OJI
+	/* this is really skanky, but we don't really have a LO_JavaAppStruct, but instead a LO_EmbedStruct. */
+	name = getValue(&embed->attributes, "NAME");
+	if (name != NULL)
+		name = JS_strdup(cx, name);
+#else
     /* get the name */
     if (applet_data->attr_name) {
         name = JS_strdup(cx, (char *) applet_data->attr_name);
     } else {
         name = 0;
     }
+#endif
 
     /* Get the document object that will hold this applet */
     document = lm_GetDocumentFromLayerId(decoder, layer_id);
@@ -364,4 +435,4 @@ LM_ReflectNamedApplet(MWContext *context, lo_NameList *name_rec,
 
 void *lm_java_clasp = NULL;
 
-#endif /* JAVA */
+#endif /* !JAVA && !OJI */

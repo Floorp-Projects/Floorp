@@ -374,7 +374,7 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
             return NULL;
         }
     } 
-#ifndef OJI
+#if !defined(OJI) && !defined(XP_MAC)
     else {
         /* No Java VM supplied, so create our own */
         JDK1_1InitArgs vm_args;

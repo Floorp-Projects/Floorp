@@ -213,7 +213,12 @@ typedef void
 (PR_CALLBACK *JSLockReleaseFunc)(void * data);
 
 
+#ifdef OJI
+extern JSBool PR_CALLBACK LM_LockJS(char **errp);
+#else
 extern void PR_CALLBACK LM_LockJS(void);
+#endif
+
 extern void PR_CALLBACK LM_UnlockJS(void);
 extern JSBool PR_CALLBACK LM_AttemptLockJS(JSLockReleaseFunc fn, void * data);
 extern JSBool PR_CALLBACK LM_ClearAttemptLockJS(JSLockReleaseFunc fn, void * data);

@@ -22,23 +22,13 @@
 #include "prtypes.h"
 #include "nsHashtable.h"
 #include "nsVector.h"
-#include "nsZig.h"
-#include "nsCom.h"
-
-/* The following should match what is in nsJVM plugin's java security code */
-typedef enum nsPrincipalType {
-  nsPrincipalType_Unknown=-1, 
-  nsPrincipalType_CodebaseExact=10,
-  nsPrincipalType_CodebaseRegexp,
-  nsPrincipalType_Cert,
-  nsPrincipalType_CertFingerPrint,
-  nsPrincipalType_CertKey
-} nsPrincipalType;
+#include "nsCaps.h"
+#include "nsCapsEnums.h"
 
 
 typedef nsVector nsPrincipalArray;
 
-class nsPrincipal {
+struct nsPrincipal {
 
 public:
 
@@ -48,7 +38,7 @@ public:
 	nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len);
 	nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, char *stringRep);
 	virtual ~nsPrincipal();
-	nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, nsZig *zigObject);
+	nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, void *zigObject);
 
 	PRBool equals(nsPrincipal *principal);
 
@@ -97,7 +87,7 @@ private:
 	/* Private Field Accessors */
 	nsPrincipalType itsType;
 
-	nsZig * itsZig;
+	void * itsZig;
 
 	char * itsKey;
 

@@ -17,23 +17,21 @@
 
 DEPTH		= ../../..
 
-MODULE		= plug
+MODULE		= plugimpl
 LIBRARY_NAME	= plug
 
 CSRCS		= npassoc.c
 
-CPPSRCS		= nsplugin.cpp
+CPPSRCS		= nsplugin.cpp npglue.cpp
 
 EXPORTS		= nppg.h npglue.h nppriv.h
 
-REQUIRES	= lay layer js style applet nspr dbm img util java pref xpcom netcnvts oji ojiimpl
+REQUIRES	= lay layer js style applet nspr dbm img util java pref xpcom raptor netcnvts plugin oji ojiimpl
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2) 
 CPPSRCS		= npwplat.cpp
 REQUIRES	+= xp libfont os2font jtools
 endif
-
-CPPSRCS		+= npglue.cpp
 
 include $(DEPTH)/config/rules.mk
 

@@ -64,12 +64,11 @@ private:
   static nsHashtable *factories;
   static PRMonitor *monitor;
 
-  static nsresult checkInitialized();
+  static nsresult checkInitialized(void);
   static nsresult loadFactory(FactoryEntry *aEntry, nsIFactory **aFactory);
 
 public:
-  static nsresult Initialize();
-
+  static nsresult Initialize(void);
   // Finds a factory for a specific class ID
   static nsresult FindFactory(const nsCID &aClass,
                               nsIFactory **aFactory);
@@ -107,7 +106,7 @@ public:
                                     const char *aLibrary);
 
   // Unload dynamically loaded factories that are not in use
-  static nsresult FreeLibraries();
+  static nsresult FreeLibraries(void);
 };
 
 #endif

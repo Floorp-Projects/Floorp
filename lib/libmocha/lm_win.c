@@ -39,7 +39,10 @@
 #include "libimg.h"             /* Image Library public API. */
 #include "prthread.h"
 
-#ifdef JAVA
+#if defined(JAVA)
+#include "jsjava.h"
+#elif defined (OJI)
+#include "np2.h"
 #include "jsjava.h"
 #endif
 
@@ -3222,7 +3225,20 @@ lm_InitWindowContent(MochaDecoder *decoder)
     if (!JS_InitStandardClasses(cx, obj))
         return JS_FALSE;
 
-#ifdef JAVA
+#if defined(OJI)
+    {
+      PRBool  jvmMochaPrefsEnabled = PR_FALSE;
+      if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
+          jvmMochaPrefsEnabled = NPL_JSJInit();
+      }
+      if (  (jvmMochaPrefsEnabled == PR_TRUE)
+          &&(!JSJ_InitJSContext(cx, obj, NULL))
+         ) 
+      {
+          return JS_FALSE;
+      }
+    }
+#elif defined(JAVA)
     if (JSJ_IsEnabled() && !JSJ_InitContext(cx, obj))
         return JS_FALSE;
 #endif

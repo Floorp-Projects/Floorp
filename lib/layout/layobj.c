@@ -55,6 +55,7 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 	LO_ObjectStruct* object;
 	PA_Block buff;
 	int16 type = LO_NONE;
+	int16 sub_type = LO_NONE;
 	char* str;
 	char* pluginName;
 
@@ -191,7 +192,10 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 			/* It's a Java class */
 #ifdef OJI
 			if (type == LO_NONE)
-				type = LO_EMBED;
+   {
+				 type = LO_EMBED;
+     sub_type = LO_JAVA;
+   }
 			else if (type != LO_EMBED) /* XXX */
 #else
 			if (type == LO_NONE)
@@ -229,10 +233,19 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 		PA_LOCK(str, char *, buff);
 		if ((pluginName = NPL_FindPluginEnabledForType(str)) != NULL)
 		{
-			XP_FREE(pluginName);
+		XP_FREE(pluginName);
 			/* It's a plug-in */
 			if (type == LO_NONE)
+   {
 				type = LO_EMBED;
+#ifdef OJI
+#define JAVA_PLUGIN_MIMETYPE "application/x-java-vm"
+			 if (XP_STRCMP(JAVA_PLUGIN_MIMETYPE, str)==0)
+    {
+      sub_type = LO_JAVA;
+    }
+#endif
+   }
 			else if (type != LO_EMBED)
 				type = LO_UNKNOWN;
 		}
@@ -328,6 +341,10 @@ lo_FormatObject(MWContext* context, lo_DocState* state, PA_Tag* tag)
 	if (type == LO_EMBED)
 	{
 		object->lo_element.lo_plugin.type = LO_EMBED;
+  if(sub_type == LO_JAVA)
+  {
+    object->lo_element.lo_plugin.sub_type = LO_JAVA;
+  }
 	}
 	else if (type == LO_BUILTIN)
 	{
@@ -883,20 +900,20 @@ lo_ProcessObjectTag(MWContext* context, lo_DocState* state, PA_Tag* tag, XP_Bool
 					if (object->lo_element.lo_plugin.type == LO_EMBED)
 					{
 						lo_FormatEmbedObject(context,
-                                                                     state,
-                                                                     top->clone_tag,
-                                                                     (LO_EmbedStruct*) object,
-                                                                     FALSE, /* Stream not started */
+                           state,
+                           top->clone_tag,
+                           (LO_EmbedStruct*) object,
+                           FALSE, /* Stream not started */
 #ifdef OJI
-                                                                     top->parameters.n,
-                                                                     top->parameters.names,
-                                                                     top->parameters.values);
-						top->formatted_object = TRUE;
-                                                LO_NVList_Init( &top->parameters );
+                           top->parameters.n,
+                           top->parameters.names,
+                           top->parameters.values);
+             top->formatted_object = TRUE;
+             LO_NVList_Init( &top->parameters );
 #else
-                                                                     top->param_count,
-                                                                     top->param_names,
-                                                                     top->param_values);
+                           top->param_count,
+                           top->param_names,
+                           top->param_values);
 						top->formatted_object = TRUE;
 						top->param_count = 0;
 						top->param_names = NULL;

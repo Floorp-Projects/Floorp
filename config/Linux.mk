@@ -104,6 +104,7 @@ PORT_FLAGS		+= -DNO_INT64_T
 PLATFORM_FLAGS		+= -DLINUX2_0
 BUILD_UNIX_PLUGINS	= 1
 MKSHLIB			= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
+DSO_BIND_REFERENCES	= -Wl,-Bsymbolic
 ifdef BUILD_OPT
 OPTIMIZER		= -O2
 endif

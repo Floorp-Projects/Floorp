@@ -34,22 +34,27 @@
 #ifndef nsplugindefs_h___
 #define nsplugindefs_h___
 
+#ifndef prtypes_h___
+#include "prtypes.h"
+#endif
+
 #ifdef __OS2__
 #pragma pack(1)
 #endif
 
 #ifdef XP_MAC
-	#include <Quickdraw.h>
-	#include <Events.h>
+#   include <Quickdraw.h>
+#   include <Events.h>
+#   include <MacWindows.h>
 #endif
 
 #ifdef XP_UNIX
-	#include <X11/Xlib.h>
-	#include <X11/Xutil.h>
+#   include <X11/Xlib.h>
+#   include <X11/Xutil.h>
 #endif
 
 #ifdef XP_PC
-	#include <windef.h>
+#   include <windef.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +121,7 @@ struct nsByteRange {
     struct nsByteRange* next;
 };
 
-struct nsRect {
+struct nsPluginRect {
     PRUint16            top;
     PRUint16            left;
     PRUint16            bottom;
@@ -161,47 +166,44 @@ struct nsPluginPrintCallbackStruct {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// List of variable names for which NPP_GetValue shall be implemented
+// List of variables which should be implmented by the plugin
 enum nsPluginVariable {
-    nsPluginVariable_NameString = 1,
-    nsPluginVariable_DescriptionString,
-    nsPluginVariable_WindowBool,        // XXX go away
-    nsPluginVariable_TransparentBool,   // XXX go away?
-    nsPluginVariable_JavaClass,         // XXX go away
-    nsPluginVariable_WindowSize,
-    nsPluginVariable_TimerInterval
-    // XXX add MIMEDescription (for unix) (but GetValue is on the instance, not the class)
+    nsPluginVariable_NameString                         = 1,
+    nsPluginVariable_DescriptionString                  = 2
 };
 
-// List of variable names for which NPN_GetValue is implemented by Mozilla
+// List of variables which are implemented by the browser
 enum nsPluginManagerVariable {
-    nsPluginManagerVariable_XDisplay = 1,
-    nsPluginManagerVariable_XtAppContext,
-    nsPluginManagerVariable_NetscapeWindow,
-    nsPluginManagerVariable_JavascriptEnabledBool,      // XXX prefs accessor api
-    nsPluginManagerVariable_ASDEnabledBool,             // XXX prefs accessor api
-    nsPluginManagerVariable_IsOfflineBool               // XXX prefs accessor api
+    nsPluginManagerVariable_XDisplay                    = 1,
+    nsPluginManagerVariable_XtAppContext                = 2,
+    nsPluginManagerVariable_NetscapeWindow              = 3
+};
+
+enum nsPluginInstancePeerVariable {
+    nsPluginInstancePeerVariable_WindowBool             = 3,
+    nsPluginInstancePeerVariable_TransparentBool        = 4,
+    nsPluginInstancePeerVariable_JavaClass              = 5,
+    nsPluginInstancePeerVariable_WindowSize             = 6,
+    nsPluginInstancePeerVariable_TimerInterval          = 7
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum nsPluginType {
-    nsPluginType_Embedded = 1,
-    nsPluginType_Full
+enum nsPluginMode {
+    nsPluginMode_Embedded = 1,
+    nsPluginMode_Full
 };
 
 // XXX this can go away now
-enum NPStreamType {
-    NPStreamType_Normal = 1,
-    NPStreamType_Seek,
-    NPStreamType_AsFile,
-    NPStreamType_AsFileOnly
+enum nsPluginStreamType {
+    nsPluginStreamType_Normal = 1,
+    nsPluginStreamType_Seek,
+    nsPluginStreamType_AsFile,
+    nsPluginStreamType_AsFileOnly
 };
 
-#define NP_STREAM_MAXREADY	(((unsigned)(~0)<<1)>>1)
-
 /*
- * The type of a NPWindow - it specifies the type of the data structure
+ * The type of a nsPluginWindow - it specifies the type of the data structure
  * returned in the window field.
  */
 enum nsPluginWindowType {
@@ -209,18 +211,48 @@ enum nsPluginWindowType {
     nsPluginWindowType_Drawable
 };
 
+#ifdef XP_MAC
+
+struct nsPluginPort {
+    CGrafPtr    port;   /* Grafport */
+    PRInt32     portx;  /* position inside the topmost window */
+    PRInt32     porty;
+};
+typedef RgnHandle       nsPluginRegion;
+typedef WindowRef       nsPluginPlatformWindowRef;
+
+#elif defined(XP_PC)
+
+struct nsPluginPort;
+typedef HRGN            nsPluginRegion;
+typedef HWND            nsPluginPlatformWindowRef;
+
+#elif defined(XP_UNIX)
+
+struct nsPluginPort;
+typedef Region          nsPluginRegion;
+typedef Drawable        nsPluginPlatformWindowRef;
+
+#else
+
+struct nsPluginPort;
+typedef void*           nsPluginRegion;
+typedef void*           nsPluginPlatformWindowRef;
+
+#endif
+
 struct nsPluginWindow {
-    void*       window;         /* Platform specific window handle */
+    nsPluginPort* window;       /* Platform specific window handle */
                                 /* OS/2: x - Position of bottom left corner  */
                                 /* OS/2: y - relative to visible netscape window */
-    PRUint32    x;              /* Position of top left corner relative */
-    PRUint32    y;              /*	to a netscape page.					*/
-    PRUint32    width;          /* Maximum window size */
-    PRUint32    height;
-    nsRect      clipRect;       /* Clipping rectangle in port coordinates */
+    PRUint32      x;            /* Position of top left corner relative */
+    PRUint32      y;            /*	to a netscape page.					*/
+    PRUint32      width;        /* Maximum window size */
+    PRUint32      height;
+    nsPluginRect  clipRect;     /* Clipping rectangle in port coordinates */
                                 /* Used by MAC only.			  */
 #ifdef XP_UNIX
-    void*       ws_info;        /* Platform-dependent additonal data */
+    void*         ws_info;      /* Platform-dependent additonal data */
 #endif /* XP_UNIX */
     nsPluginWindowType type;    /* Is this a window or a drawable? */
 };
@@ -235,23 +267,23 @@ struct nsPluginFullPrint {
 
 struct nsPluginEmbedPrint {
     nsPluginWindow    window;
-    void*       platformPrint;	/* Platform-specific printing info */
+    void*             platformPrint;	/* Platform-specific printing info */
 };
 
 struct nsPluginPrint {
-    nsPluginType      mode;     /* NP_FULL or nsPluginType_Embedded */
+    nsPluginMode      mode;     /* nsPluginMode_Full or nsPluginMode_Embedded */
     union
     {
-        nsPluginFullPrint     fullPrint;	/* if mode is NP_FULL */
-        nsPluginEmbedPrint    embedPrint;	/* if mode is nsPluginType_Embedded */
+        nsPluginFullPrint     fullPrint;	/* if mode is nsPluginMode_Full */
+        nsPluginEmbedPrint    embedPrint;	/* if mode is nsPluginMode_Embedded */
     } print;
 };
 
 struct nsPluginEvent {
 
 #if defined(XP_MAC)
-    EventRecord* event;
-    void*       window;
+    EventRecord*                event;
+    nsPluginPlatformWindowRef   window;
 
 #elif defined(XP_PC)
     uint16      event;
@@ -269,59 +301,20 @@ struct nsPluginEvent {
 #endif
 };
 
-#ifdef XP_MAC
-typedef RgnHandle nsRegion;
-#elif defined(XP_PC)
-typedef HRGN nsRegion;
-#elif defined(XP_UNIX)
-typedef Region nsRegion;
-#else
-typedef void *nsRegion;
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-// Mac-specific structures and definitions.
-
-#ifdef XP_MAC
-
-struct NPPort {
-    CGrafPtr    port;   /* Grafport */
-    PRInt32     portx;  /* position inside the topmost window */
-    PRInt32     porty;
-};
-
 /*
  *  Non-standard event types that can be passed to HandleEvent
  */
-#define getFocusEvent           (osEvt + 16)
-#define loseFocusEvent          (osEvt + 17)
-#define adjustCursorEvent       (osEvt + 18)
-#define menuCommandEvent		(osEvt + 19)
-
+enum nsPluginEventType {
+#ifdef XP_MAC
+    nsPluginEventType_GetFocusEvent        = (osEvt + 16),
+    nsPluginEventType_LoseFocusEvent       = (osEvt + 17),
+    nsPluginEventType_AdjustCursorEvent    = (osEvt + 18),
+    nsPluginEventType_MenuCommandEvent     = (osEvt + 19),
 #endif /* XP_MAC */
-
-////////////////////////////////////////////////////////////////////////////////
-// Error and Reason Code definitions
-
-enum nsPluginError {
-    nsPluginError_Base = 0,
-    nsPluginError_NoError = 0,
-    nsPluginError_GenericError,
-    nsPluginError_InvalidInstanceError,
-    nsPluginError_InvalidFunctableError,
-    nsPluginError_ModuleLoadFailedError,
-    nsPluginError_OutOfMemoryError,
-    nsPluginError_InvalidPluginError,
-    nsPluginError_InvalidPluginDirError,
-    nsPluginError_IncompatibleVersionError,
-    nsPluginError_InvalidParam,
-    nsPluginError_InvalidUrl,
-    nsPluginError_FileNotFound,
-    nsPluginError_NoData,
-    nsPluginError_StreamNotSeekable
+    nsPluginEventType_Idle                 = 0
 };
 
-#define NPCallFailed( code ) ((code) != nsPluginError_NoError)
+////////////////////////////////////////////////////////////////////////////////
 
 enum nsPluginReason {
     nsPluginReason_Base = 0,
@@ -332,12 +325,28 @@ enum nsPluginReason {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// Version Numbers for Structs
+
+// These version number are for structures whose fields may evolve over time.
+// When fields are added to the end of the struct, the minor version will be
+// incremented. When the struct changes in an incompatible way the major version
+// will be incremented. 
+
+#define nsMajorVersion(v)       (((PRInt32)(v) >> 16) & 0xffff)
+#define nsMinorVersion(v)       ((PRInt32)(v) & 0xffff)
+
+#define nsVersionOK(suppliedV, requiredV)                   \
+    (nsMajorVersion(suppliedV) == nsMajorVersion(requiredV) \
+     && nsMinorVersion(suppliedV) >= nsMinorVersion(requiredV))
+
+////////////////////////////////////////////////////////////////////////////////
 // Classes
 ////////////////////////////////////////////////////////////////////////////////
 
 // Classes that must be implemented by the plugin DLL:
 struct nsIPlugin;                       // plugin class (MIME-type handler)
 class nsILiveConnectPlugin;             // subclass of nsIPlugin
+class nsIEventHandler;                  // event handler interface
 class nsIPluginInstance;                // plugin instance
 class nsIPluginStream;                  // stream to receive data from the browser
 

@@ -38,11 +38,17 @@
 // to implement in order to implement a Java virtual machine plugin. 
 
 struct nsJVMInitArgs {
-    jint version;
+    PRUint32    version;
     const char* classpathAdditions;     // appended to the JVM's classpath
+    // other fields may be added here for version numbers beyond 0x00010000
 };
 
-#define nsJVMInitArgs_Version   0x00010000 
+/**
+ * nsJVMInitArgs_Version is the current version number for the nsJVMInitArgs
+ * struct specified above. The nsVersionOk macro should be used when comparing
+ * a supplied nsJVMInitArgs struct against this version.
+ */
+#define nsJVMInitArgs_Version   0x00010000L
 
 class nsIJVMPlugin : public nsIPlugin {
 public:
@@ -52,43 +58,43 @@ public:
     // Note that calling this method is distinctly separate from 
     // initializing the nsIJVMPlugin object (done by the Initialize
     // method).
-    NS_IMETHOD_(nsJVMError)
+    NS_IMETHOD
     StartupJVM(nsJVMInitArgs* initargs) = 0;
 
     // This method us used to stop the Java virtual machine.
     // It tears down any global state necessary to host Java programs.
     // The fullShutdown flag specifies whether the browser is quitting
     // (PR_TRUE) or simply whether the JVM is being shut down (PR_FALSE).
-    NS_IMETHOD_(nsJVMError)
-    ShutdownJVM(PRBool fullShutdown) = 0;
+    NS_IMETHOD
+    ShutdownJVM(PRBool fullShutdown = PR_FALSE) = 0;
 
     // Causes the JVM to append a new directory to its classpath.
     // If the JVM doesn't support this operation, an error is returned.
-    NS_IMETHOD_(nsJVMError)
+    NS_IMETHOD
     AddToClassPath(const char* dirPath) = 0;
 
     // Causes the JVM to remove a directory from its classpath.
     // If the JVM doesn't support this operation, an error is returned.
-    NS_IMETHOD_(nsJVMError)
+    NS_IMETHOD
     RemoveFromClassPath(const char* dirPath) = 0;
 
     // Returns the current classpath in use by the JVM.
-    NS_IMETHOD_(const char*)
-    GetClassPath(void) = 0;
+    NS_IMETHOD
+    GetClassPath(const char* *result) = 0;
     
-    NS_IMETHOD_(nsIPluginInstance*)
-    GetPluginInstance(jobject javaObject) = 0;
+    NS_IMETHOD
+    GetPluginInstance(jobject javaObject, nsIPluginInstance* *result) = 0;
 
-    NS_IMETHOD_(nsIPluginInstance*)
-    GetPluginInstance(JNIEnv* jenv) = 0;
+    NS_IMETHOD
+    GetPluginInstance(JNIEnv* jenv, nsIPluginInstance* *result) = 0;
 
-    NS_IMETHOD_(JavaVM *)
-    GetJavaVM(void) = 0;
+    NS_IMETHOD
+    GetJavaVM(JavaVM* *result) = 0;
 
     // Find or create a JNIEnv for the current thread.
     // Returns NULL if an error occurs.
-    NS_IMETHOD_(JNIEnv*)
-    GetJNIEnv(void) = 0;
+    NS_IMETHOD_(nsrefcnt)
+    GetJNIEnv(JNIEnv* *result) = 0;
 
     // This method must be called when the caller is done using the JNIEnv.
     // This decrements a refcount associated with it may free it.

@@ -16,7 +16,10 @@
 DEPTH=..
 
 DIRS=src \
-	jsj
+!ifdef MOZ_JAVA
+  	jsj \
+!endif
+$(NULL)
 
 
 include <$(DEPTH)\config\rules.mak>

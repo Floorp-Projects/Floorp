@@ -28,6 +28,8 @@ extern "C" {
 
 #include "jpermission.h"
 
+static PRBool displayUI=PR_FALSE;
+
 static nsPermState 
 displayPermissionDialog(char *prinStr, char *targetStr, char *riskStr, PRBool isCert)
 {
@@ -60,10 +62,12 @@ nsPrivilege * nsUserTarget::enablePrivilege(nsPrincipal *prin, void *data)
   PRBool isCert = (prin->isCodebase()) ? PR_FALSE : PR_TRUE;
   nsPermState permState = nsPermState_AllowedSession;
 
-  nsCaps_lock();
-  /* comment the above line, uncomment the following line to disable UI */
-  permState = displayPermissionDialog(prinStr, targetStr, riskStr, isCert);
-  nsCaps_unlock();
+  /* set displayUI to TRUE, to enable UI */
+  if (displayUI) {
+    nsCaps_lock();
+    permState = displayPermissionDialog(prinStr, targetStr, riskStr, isCert); 
+    nsCaps_unlock();
+  }
 
   nsPermissionState permVal; 
   nsDurationState durationVal;

@@ -16,6 +16,9 @@
 # 
 
 DEPTH	= ../../..
+ifdef JAVA_OR_NSJVM
 DIRS	= netscape
+else
+endif
 
 include $(DEPTH)/config/rules.mk

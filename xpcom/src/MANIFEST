@@ -2,15 +2,18 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
-nsAgg.h
 nsCom.h
+nsAgg.h
 nsDebug.h
 nsError.h
 nsHashtable.h
 nsID.h
 nsIFactory.h
-nsIPtr.h
 nsISupports.h
+nsIPtr.h
 nsISupportsArray.h
 nsRepository.h
 nsIEnumerator.h
+nsIMalloc.h
+nsMalloc.h
+nsVector.h

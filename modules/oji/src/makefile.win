@@ -35,7 +35,6 @@ PDBFILE=$(LIBNAME).pdb
 #//------------------------------------------------------------------------
 
 OBJS = .\$(OBJDIR)\jvmmgr.obj \
-       .\$(OBJDIR)\jvmpeer.obj \
        .\$(OBJDIR)\scd.obj
 
 #//------------------------------------------------------------------------
@@ -54,7 +53,7 @@ LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 #//
 #//------------------------------------------------------------------------
 
-LINCS= $(LINCS) -I_jri -I$(DEPTH)/lib/plugin \
+LINCS= $(LINCS) -I_jri \
 #
 # For Win16 the following include directories are copied into 
 # ns/dist/public/win16
@@ -68,22 +67,24 @@ LINCS= $(LINCS) -I_jri -I$(DEPTH)/lib/plugin \
 		-I$(PUBLIC)/security \
 		-I$(PUBLIC)/pref     \
 		-I$(PUBLIC)/xpcom    \
+		-I$(PUBLIC)/raptor   \
+		-I$(PUBLIC)/plugin   \
+		-I$(PUBLIC)/oji      \
+		-I$(PUBLIC)/plugimpl \
 !endif
 		-I$(DEPTH)/lib/layout   \
 		-I$(DEPTH)/lib/libstyle \
 		-I$(DEPTH)/lib/libjar   \
-		-I$(DEPTH)/lib/plugin   \
 		$(NULL)
 
 CSRCS = jvmmgr.cpp \
-        jvmpeer.cpp \
         scd.cpp
 
 !endif # MOZ_OJI
 
-MODULE = oji
+MODULE = ojiimpl
 
-EXPORTS = nsjvm.h jvmmgr.h nsscd.h
+EXPORTS = jvmmgr.h
 
 #//------------------------------------------------------------------------
 #//
@@ -96,14 +97,12 @@ LCFLAGS=$(LCFLAGS) ^
 	$(JAVA_DEFINES) 
 
 !if "$(MOZ_BITS)" == "32"
-PUBLIC_HEADER_DIR=$(PUBLIC)\oji
+PUBLIC_HEADER_DIR=$(PUBLIC)\ojiimpl
 !else
 PUBLIC_HEADER_DIR=$(PUBLIC)\win16
 !endif
 
 export::
-    $(MAKE_INSTALL) nsjvm.h $(PUBLIC_HEADER_DIR)
-    $(MAKE_INSTALL) nsscd.h $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) jvmmgr.h $(PUBLIC_HEADER_DIR)
 
 !ifdef MOZ_OJI

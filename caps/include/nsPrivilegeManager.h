@@ -25,18 +25,13 @@
 #include "nsHashtable.h"
 
 #include "nsVector.h"
+#include "nsCaps.h"
 #include "nsTarget.h"
 #include "nsPrincipal.h"
 #include "nsPrivilege.h"
 #include "nsPrivilegeTable.h"
 #include "nsSystemPrivilegeTable.h"
-#include "nsCom.h"
-
-typedef enum nsSetComparisonType {
-  nsSetComparisonType_ProperSubset=-1,
-  nsSetComparisonType_Equal=0,
-  nsSetComparisonType_NoSubset=1
-} nsSetComparisonType;
+#include "nsCapsEnums.h"
 
 extern PRBool nsCaps_lock(void);
 extern void nsCaps_unlock(void);
@@ -45,39 +40,9 @@ PR_BEGIN_EXTERN_C
 PRBool CMGetBoolPref(char * pref_name);
 PR_END_EXTERN_C
 
-struct NSJSJavaFrameWrapper;
-
-void 
-setNewNSJSJavaFrameWrapperCallback(struct NSJSJavaFrameWrapper * (*fp)(void));
-
-void 
-setFreeNSJSJavaFrameWrapperCallback(void (*fp)(struct NSJSJavaFrameWrapper *));
-
-void 
-setGetStartFrameCallback(void (*fp)(struct NSJSJavaFrameWrapper *));
-
-void 
-setIsEndOfFrameCallback(PRBool (*fp)(struct NSJSJavaFrameWrapper *));
-
-void 
-setIsValidFrameCallback(PRBool (*fp)(struct NSJSJavaFrameWrapper *));
-
-void 
-setGetNextFrameCallback(void * (*fp)(struct NSJSJavaFrameWrapper *, int *));
-
-void 
-setOJIGetPrincipalArrayCallback(void * (*fp)(struct NSJSJavaFrameWrapper *));
-
-void 
-setOJIGetAnnotationCallback(void * (*fp)(struct NSJSJavaFrameWrapper *));
-
-void 
-setOJISetAnnotationCallback(void * (*fp)(struct NSJSJavaFrameWrapper *, void *));
-
-
 PRBool nsPrivilegeManagerInitialize(void);
 
-class nsPrivilegeManager {
+struct nsPrivilegeManager {
 
 public:
 	/* Public Methods */

@@ -27,7 +27,7 @@
 #include "prmem.h"
 #include "nsAgg.h"
 
-class NS_COM nsMalloc : nsIMalloc {
+class nsMalloc : nsIMalloc {
 public:
 
     /**
@@ -92,7 +92,7 @@ public:
 
     NS_DECL_AGGREGATED
 
-    static NS_METHOD
+    static NS_COM NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 };

@@ -25,3 +25,6 @@ nsIJVMManager.h
 nsIJVMPlugin.h
 nsIJVMPluginInstance.h
 nsIJVMPluginTagInfo.h
+nsISymantecDebugger.h
+nsISymantecDebugManager.h
+nsjvm.h

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -924,28 +924,40 @@ FE_LoadPlugin(void *pdesc, NPNetscapeFuncs *funcs, np_handle* handle)
             return NULL;
         }
 
-	NP_CREATEPLUGIN npCreatePlugin =
-#ifndef NSPR20
-	    (NP_CREATEPLUGIN)PR_FindSymbol("NP_CreatePlugin", plugin->dlopen_obj);
-#else
-            (NP_CREATEPLUGIN)PR_FindSymbol(plugin->dlopen_obj, "NP_CreatePlugin");
-#endif
-	if (npCreatePlugin != NULL) {
+	nsFactoryProc nsGetFactory =
+          (nsFactoryProc)PR_FindSymbol(plugin->dlopen_obj, "NSGetFactory");
+
+	if (nsGetFactory != NULL) {
+            // XXX Figure out where this should go: this seems a
+            // little late in the game to be creating the plugin
+            // manager...
 	    if (thePluginManager == NULL) {
-                static NS_DEFINE_IID(kIPluginManagerIID, NP_IPLUGINMANAGER_IID);
+                static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
                 if (nsPluginManager::Create(NULL, kIPluginManagerIID, (void**)&thePluginManager) != NS_OK)
                     return NULL;
 	    }
-	    NPIPlugin* userPlugin = NULL;
-	    NPPluginError err = npCreatePlugin(thePluginManager, &userPlugin);
+
+            PR_ASSERT(thePluginManager != NULL);
+
+            static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
+	    nsIPlugin* userPlugin = NULL;
+	    nsresult err = nsGetFactory(kIPluginIID, (nsIFactory**)&userPlugin);
+
 	    handle->userPlugin = userPlugin;
 	    plugin->handle = handle;
-	    if (err != NPPluginError_NoError || userPlugin == NULL) {
-		int err = PR_UnloadLibrary(plugin->dlopen_obj);
-		PR_ASSERT(err == 0);
+
+	    if ((err != NS_OK)
+                || (userPlugin == NULL)
+                || (userPlugin->Initialize((nsIPluginManager*)thePluginManager) != NS_OK)) {
+		PR_UnloadLibrary(plugin->dlopen_obj);
 		plugin->dlopen_obj = NULL;
 		return NULL;
 	    }
+
+#ifdef LATER // XXX coming soon...
+            // add the plugin directory if successful
+            JVM_AddToClassPathRecursively(csPluginDir);
+#endif
 	}
 	else {
 #ifndef NSPR20
@@ -998,7 +1010,10 @@ FE_UnloadPlugin(void *pdesc, struct _np_handle* handle)
 
     if (plugin->handle) {
 	if (plugin->handle->userPlugin) {
-	    NPIPlugin* userPlugin = (NPIPlugin*)plugin->handle->userPlugin;
+	    nsIPlugin* userPlugin = (nsIPlugin*)plugin->handle->userPlugin;
+            // XXX We should be calling userPlugin->Shutdown() here,
+            // and then we should ping the lib's NSCanUnload()
+            // function before actually unloading the library.
 	    XP_VERIFY(userPlugin->Release() == 0);
 	    plugin->handle = NULL;
 	}
