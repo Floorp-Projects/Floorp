@@ -337,14 +337,12 @@ Rights Reserved.
 					<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
 						<observes element="Messenger:LoadingProgress" attribute="mode"/>
 						<observes element="Messenger:LoadingProgress" attribute="value"/>
-						<observes element="Messenger:Throbber" attribute="busy" onbroadcast="onProgress()"/>
+						<observes element="Messenger:Throbber" attribute="busy"/>
 					</progressmeter>
 					<spring flex="100%"/>
 				</box>
 
-				<titledbutton id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;">
-					<observes element="Messenger:Status" attribute="value" onbroadcast="onStatus()"/>         
-				</titledbutton>
+				<titledbutton id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>       
 				<titledbutton value="&unreadCountText.label;"/>
 				<titledbutton id="unreadMessageCount" style="min-width: 5px"/>
 				<titledbutton value="&totalCountText.label;"/>
