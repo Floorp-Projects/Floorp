@@ -2366,8 +2366,8 @@ nsPoint       thePath[MAXPATHSIZE];
 PRInt16       np;
 nsMargin      border;
 nscoord       twipsPerPixel,qtwips;
-float         p2t,x,y;
-nsTransform2D *theTransform;
+float         p2t;
+
 
   aBorderStyle.CalcBorderFor(aForFrame, border);
   if ((0 == border.left) && (0 == border.right) &&
