@@ -2215,7 +2215,8 @@ static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   "chrome://global/locale/layout_errors.properties",
   "chrome://global/locale/layout/HtmlForm.properties",
   "chrome://global/locale/printing.properties",
-  "chrome://global/locale/dom/dom.properties"
+  "chrome://global/locale/dom/dom.properties",
+  "chrome://branding/locale/brand.properties"
 };
 
 /* static */ nsresult
