@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include <windows.h>
-#include "nsINativeAppSupportWin.h"
+#include "nsNativeAppSupportWin.h"
 
 1 24 "MozillaSunbird.exe.manifest"
 
