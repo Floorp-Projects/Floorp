@@ -65,6 +65,11 @@ public:
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
    
+  NS_IMETHOD SetShortcutChar(const nsString &aText);
+  NS_IMETHOD GetShortcutChar(nsString &aText);
+  NS_IMETHOD SetModifiers(PRUint8 aModifiers);
+  NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
+  
   // nsIMenuListener interface
   nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
