@@ -35,6 +35,7 @@ CPPSRCS		= \
                   nsUnicodeDecodeUtil.cpp \
                   nsUnicodeEncodeHelper.cpp \
                   nsUNIXCharset.cpp \
+                  nsCharsetAliasImp.cpp \
                   nsUConvDll.cpp \
 		  $(NULL)
 
