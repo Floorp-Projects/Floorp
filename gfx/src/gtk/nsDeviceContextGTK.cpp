@@ -887,6 +887,5 @@ nsSystemFontsGTK::GetSystemFontInfo(GdkFont* iFont, nsFont* aFont, float aPixels
       fontName.AppendWithConversion(",");
     }
   }
-
   return NS_OK;
 }
