@@ -839,6 +839,8 @@ JSString *nsDOMClassInfo::sOpen_id            = nsnull;
 JSString *nsDOMClassInfo::sItem_id            = nsnull;
 JSString *nsDOMClassInfo::sEnumerate_id       = nsnull;
 JSString *nsDOMClassInfo::sNavigator_id       = nsnull;
+JSString *nsDOMClassInfo::sDocument_id        = nsnull;
+JSString *nsDOMClassInfo::sWindow_id          = nsnull;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
@@ -913,6 +915,8 @@ nsDOMClassInfo::DefineStaticJSStrings(JSContext *cx)
   sItem_id           = ::JS_InternString(cx, "item");
   sEnumerate_id      = ::JS_InternString(cx, "enumerateProperties");
   sNavigator_id      = ::JS_InternString(cx, "navigator");
+  sDocument_id       = ::JS_InternString(cx, "document");
+  sWindow_id         = ::JS_InternString(cx, "window");
 
   return NS_OK;
 }
@@ -2666,6 +2670,8 @@ nsDOMClassInfo::ShutDown()
   sItem_id            = jsnullstring;
   sEnumerate_id       = jsnullstring;
   sNavigator_id       = jsnullstring;
+  sDocument_id        = jsnullstring;
+  sWindow_id          = jsnullstring;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -2769,10 +2775,13 @@ nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
     return NS_OK;
   }
 
-  // Don't check when getting the Components property,
-  // since we check its properties anyway. This will help performance.
+  // Don't check when getting the document, window, or Components
+  // property, since we check its properties anyway. This will help
+  // performance.
   if (accessMode == nsIXPCSecurityManager::ACCESS_GET_PROPERTY &&
-      id == STRING_TO_JSVAL(sComponents_id)) {
+      (id == STRING_TO_JSVAL(sDocument_id) ||
+       id == STRING_TO_JSVAL(sWindow_id) ||
+       id == STRING_TO_JSVAL(sComponents_id))) {
     return NS_OK;
   }
 
@@ -2977,8 +2986,9 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsresult rv = doCheckPropertyAccess(cx, obj, id, wrapper,
-                                      nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+  nsresult rv =
+    doCheckPropertyAccess(cx, obj, id, wrapper,
+                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 
   if (NS_FAILED(rv)) {
     // Security check failed. The security manager set a JS
@@ -2996,8 +3006,9 @@ nsWindowSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         PRBool *_retval)
 {
 
-  nsresult rv = doCheckPropertyAccess(cx, obj, id, wrapper,
-                               nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+  nsresult rv =
+    doCheckPropertyAccess(cx, obj, id, wrapper,
+                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 
   if (NS_FAILED(rv)) {
     // Security check failed. The security manager set a JS
@@ -3565,6 +3576,31 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
   return rv;
 }
 
+// static
+nsresult
+nsWindowSH::CacheDocumentProperty(JSContext *cx, JSObject *obj,
+                                  nsIDOMWindow *window)
+{
+  nsCOMPtr<nsIDOMDocument> document;
+  nsresult rv = window->GetDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  jsval v;
+  rv = WrapNative(cx, obj, document, NS_GET_IID(nsIDOMDocument), &v);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_NAMED_LITERAL_STRING(doc_str, "document");
+
+  if (!::JS_DefineUCProperty(cx, obj, NS_REINTERPRET_CAST(const jschar *,
+                                                          doc_str.get()),
+                             doc_str.Length(), v, nsnull,
+                             nsnull, JSPROP_READONLY)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsval id, PRUint32 flags,
@@ -3770,6 +3806,34 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                    ::JS_GetStringLength(str), v, nsnull,
                                    nsnull, 0)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        *objp = obj;
+
+        return NS_OK;
+      }
+
+      if (str == sDocument_id) {
+        nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(native));
+        NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
+
+        rv = CacheDocumentProperty(cx, obj, window);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        *objp = obj;
+
+        return NS_OK;
+      }
+
+      if (str == sWindow_id) {
+        jsval v;
+        rv = WrapNative(cx, obj, native, NS_GET_IID(nsIDOMWindow), &v);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                   ::JS_GetStringLength(str), v, nsnull,
+                                   nsnull, JSPROP_READONLY)) {
           return NS_ERROR_FAILURE;
         }
 

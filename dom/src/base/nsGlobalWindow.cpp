@@ -479,7 +479,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 //      not doing this unless there's a new document prevents a closed window's
 //      JS properties from going away (that's good) and causes everything,
 //      and I mean everything, to be leaked (that's bad)
-          ::JS_ClearScope((JSContext *)mContext->GetNativeContext(), mJSObject);
+
+          ::JS_ClearScope((JSContext *)mContext->GetNativeContext(),
+                          mJSObject);
 
           mIsScopeClear = PR_TRUE;
         }
@@ -498,8 +500,19 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
   mDocument = aDocument;
 
-  if (mDocument && mContext && mIsScopeClear) {
-    mContext->InitContext(this);
+  if (mDocument && mContext) {
+    if (mIsScopeClear) {
+      mContext->InitContext(this);
+    } else if (mJSObject) {
+      // If we didn't clear the scope (i.e. the old document was
+      // about:blank) then we need to update the cached document
+      // property on the window to reflect the new document and not
+      // the old one.
+
+      JSContext *cx = (JSContext *)mContext->GetNativeContext();
+
+      nsWindowSH::CacheDocumentProperty(cx, mJSObject, this);
+    }
   }
 
   // Clear our mutation bitfield.

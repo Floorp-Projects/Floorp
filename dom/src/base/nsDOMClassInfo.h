@@ -45,6 +45,7 @@
 #include "jsapi.h"
 #include "nsIScriptSecurityManager.h"
 
+class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
 class nsIPluginInstance;
 class nsIForm;
@@ -233,6 +234,8 @@ protected:
   static JSString *sItem_id;
   static JSString *sEnumerate_id;
   static JSString *sNavigator_id;
+  static JSString *sDocument_id;
+  static JSString *sWindow_id;
 
 
   static const JSClass *sObjectClass;
@@ -322,6 +325,9 @@ public:
                         JSObject **objp, PRBool *_retval);
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
+
+  static nsresult CacheDocumentProperty(JSContext *cx, JSObject *obj,
+                                        nsIDOMWindow *window);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
