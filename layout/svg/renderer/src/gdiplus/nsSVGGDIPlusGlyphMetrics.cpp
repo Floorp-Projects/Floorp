@@ -157,7 +157,7 @@ public:
 //----------------------------------------------------------------------
 // implementation:
 
-nsDataHashtable<nsStringHashKey,nsDependentString*>
+nsDataHashtable<nsStringHashKey,const nsDependentString*>
 nsSVGGDIPlusGlyphMetrics::sFontAliases;
 
 nsSVGGDIPlusGlyphMetrics::nsSVGGDIPlusGlyphMetrics(nsISVGGlyphMetricsSource *src)
