@@ -1107,22 +1107,27 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
 NS_IMETHODIMP
 nsWebShellWindow::Show(PRBool aShow)
 {
-   return nsXULWindow::SetVisibility(aShow);
+  return nsXULWindow::SetVisibility(aShow);
 }
 
 NS_IMETHODIMP
 nsWebShellWindow::ShowModal()
 {
-  nsresult  rv;
-  rv = ShowModalInternal();
+  nsresult                    rv;
+  nsCOMPtr<nsIWebShellWindow> parentWindow;
+  nsCOMPtr<nsIWidget>         parentWidget;
+
+  parentWindow = do_QueryReferent(mParentWindow);
+  if (parentWindow)
+    parentWindow->GetWidget(*getter_AddRefs(parentWidget));
+  if (parentWidget)
+    parentWidget->Enable(PR_FALSE);
+  rv = nsXULWindow::ShowModal();
+  if (parentWidget) {
+    parentWidget->Enable(PR_TRUE);
+    parentWindow->Show(PR_TRUE); // bring to front
+  }
   return rv;
-}
-
-
-NS_IMETHODIMP
-nsWebShellWindow::ShowModalInternal()
-{
-   return nsXULWindow::ShowModal();
 }
 
 
@@ -1209,7 +1214,7 @@ nsWebShellWindow::HandleModalDialogEvent(PLEvent *aEvent)
 {
   ThreadedWindowEvent *event = (ThreadedWindowEvent *) aEvent;
 
-  event->window->ShowModalInternal();
+  event->window->ShowModal();
   return 0;
 }
 

@@ -247,7 +247,6 @@ protected:
   virtual ~nsWebShellWindow();
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
-  NS_IMETHODIMP           ShowModalInternal();
 
   nsresult                NotifyObservers( const nsString &aTopic, const nsString &someData );
 
