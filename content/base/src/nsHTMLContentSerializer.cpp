@@ -442,6 +442,7 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
       // old line break and find the end of the next old line.
       if (indx == oldLineEnd) {
         oldLineEnd = aStr.FindChar(PRUnichar('\n'), indx+1);
+        AppendToString(NS_LITERAL_STRING(" "), aOutputStr);
       }
       
       if (addLineBreak) {
