@@ -1,0 +1,238 @@
+<html>
+<head>
+
+<script LANGUAGE="JavaScript">
+<!-- 
+
+function ClearForm(form)
+{
+	form.id.value = "";
+	form.url.value = "";
+	form.script.value = "";
+
+	form.state.value = "";
+	form.next_byte.value = "";
+	form.outFile.value = "";
+	form.errorMsg.value = "";
+}
+
+function DisplayTask(form)
+{
+	var task = SilentDownloadManager.Find(form.id.value);
+
+	if (task==null)
+	{
+		ClearForm(form);
+	}
+	else
+	{
+		form.id.value = task.id;
+		form.url.value = task.url;
+		form.script.value = task.script;
+		
+		if (task.state == SilentDownloadTask.SDL_NOT_INITED)
+		{
+			form.state.value = "SDL_NOT_INITED";
+		}
+		else if (task.state == SilentDownloadTask.SDL_NOT_ADDED)
+		{
+			form.state.value = "SDL_NOT_ADDED";
+		}
+		else if (task.state == SilentDownloadTask.SDL_STARTED)
+		{
+			form.state.value = "SDL_STARTED";
+		}
+		else if (task.state == SilentDownloadTask.SDL_SUSPENDED)
+		{
+			form.state.value = "SDL_SUSPENDED";
+		}
+		else if (task.state == SilentDownloadTask.SDL_COMPLETED)
+		{
+			form.state.value = "SDL_COMPLETED";
+		}
+		else if (task.state == SilentDownloadTask.SDL_DOWNLOADING_NOW)
+		{
+			form.state.value = "SDL_DOWNLOADING_NOW";
+		}
+		else if (task.state == SilentDownloadTask.SDL_ERROR)
+		{
+			form.state.value = "SDL_ERROR";
+		}
+
+		form.next_byte.value = task.nextByte;
+		form.outFile.value = task.outFile;
+		form.errorMsg.value = task.errorMsg;
+	}
+
+	
+}
+
+function AddTask(form) 
+{
+
+	task = new SilentDownloadTask();
+
+	task.Init(	form.id.value, 
+				form.url.value, 
+				form.script.value);
+		
+	     
+//	SilentDownloadManager.Add(task);
+
+	FindTask(form);
+}
+
+function FindTask(form) 
+{
+	var task = SilentDownloadManager.Find(form.id.value);
+
+	if (task==null)
+	{
+		ClearForm(form);
+		alert("\nTask Not Found.");
+	}
+	else
+	{
+		DisplayTask(form);
+	}
+}
+
+function RemoveTask(form) 
+{
+	var task = SilentDownloadManager.Find(form.id.value);
+
+	if (task==null)
+	{
+		alert("\nTask Not Found.");
+	}
+	else
+	{
+		task.Remove();
+//		SilentDownloadManager.Remove(task);
+		ClearForm(form);
+	}
+}
+
+
+function SuspendTask(form) 
+{
+	var task = SilentDownloadManager.Find(form.id.value);
+
+	if (task==null)
+	{
+		alert("\nTask Not Found.");
+	}
+	else
+	{
+		task.Suspend();
+		DisplayTask(form);
+	}
+}
+
+function ResumeTask(form) 
+{
+	var task = SilentDownloadManager.Find(form.id.value);
+
+	if (task==null)
+	{
+		alert("\nTask Not Found.");
+	}
+	else
+	{
+		task.Resume();
+		DisplayTask(form);
+	}
+}
+
+function DownloadloadTaskNow(form) 
+{
+	var task = SilentDownloadManager.Find(form.id.value);
+
+	if (task==null)
+	{
+		alert("\nTask Not Found.");
+	}
+	else
+	{
+		task.DownloadNow();
+		DisplayTask(form);
+	}
+}
+
+
+// End -->
+</script>
+
+
+</head>
+<body>
+<center>
+<p><form ENCTYPE="text/plain" onSubmit="return submitForms()"></center>
+
+<center><table BORDER=2>
+<tr>
+<td ALIGN=CENTER><b>ID:</b></td>
+<td ALIGN=CENTER><input TYPE="text" NAME="id"   SIZE=60 MAXLENGTH=120 ></td>
+</tr>
+
+<tr>
+<td ALIGN=CENTER><b>URL:</b></td>
+<td ALIGN=CENTER><input TYPE="text" NAME="url"   SIZE=60 MAXLENGTH=120 ></td>
+</tr>
+
+<tr>
+<td ALIGN=CENTER><b>Script:</b></td>
+<td ALIGN=CENTER><input TYPE="text" NAME="script" SIZE=60 MAXLENGTH=120></td>
+</tr>
+
+</table>
+
+
+<center><table BORDER=2>
+
+<tr>
+<td ALIGN=CENTER><b>State:</b></td>
+<td ALIGN=CENTER><input TYPE="text" NAME="state" SIZE=60 MAXLENGTH=120></td>
+</tr>
+
+<tr>
+<td ALIGN=CENTER><b>Next Byte:</b></td>
+<td ALIGN=CENTER><input TYPE="text" NAME="next_byte" SIZE=60 MAXLENGTH=120></td>
+</tr>
+
+<tr>
+<td ALIGN=CENTER><b>Out File:</b></td>
+<td ALIGN=CENTER><input TYPE="text" NAME="outFile" SIZE=60 MAXLENGTH=120></td>
+</tr>
+
+<tr>
+<td ALIGN=CENTER><b>Error Message:</b></td>
+<td ALIGN=CENTER><input TYPE="text" NAME="errorMsg" SIZE=60 MAXLENGTH=120></td>
+</tr>
+
+</table></center>
+
+<center>
+
+<p>
+
+<table BORDER=0>
+<td ALIGN=CENTER><input TYPE=BUTTON VALUE="Add Task " onClick="AddTask(this.form)"></td>
+<td ALIGN=CENTER><input TYPE=BUTTON VALUE="Find Task" onClick="FindTask(this.form)"></td>
+<td ALIGN=CENTER><input TYPE=BUTTON VALUE="Remove Task" onClick="RemoveTask(this.form)"</td>
+</table>
+
+<table BORDER=0>
+<td ALIGN=CENTER><input TYPE=BUTTON VALUE="Suspend Task "     onClick="SuspendTask(this.form)"></td>
+<td ALIGN=CENTER><input TYPE=BUTTON VALUE="Resume Task"       onClick="ResumeTask(this.form)"></td>
+<td ALIGN=CENTER><input TYPE=BUTTON VALUE="Download Task Now" onClick="DownloadloadTaskNow(this.form)"</td>
+</table>
+
+
+<BR><input TYPE=BUTTON VALUE="Clear Form"  onClick="ClearForm(this.form)">
+
+</form>
+</center>
+
+</body>
+</html>
