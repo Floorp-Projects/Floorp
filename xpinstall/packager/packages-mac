@@ -184,8 +184,10 @@ viewer:Components:xmlextras.xpt
 viewer:Components:xmlextras.shlb
 
 viewer:Components:Necko.shlb 
-viewer:Components:Necko2.shlb 
+viewer:Components:Necko2.shlb
 viewer:Components:necko.xpt 
+viewer:Components:Cache.shlb 
+viewer:Components:cache.xpt
 
 viewer:chrome:comm.jar
 viewer:chrome:toolkit.jar
