@@ -25,11 +25,15 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mailbxurl
 LIBRARY_NAME	= mailbxurl
 
+include $(topsrcdir)/config/config.mk
+
 CSRCS		= \
 	mkmailbx.c	\
 	$(NULL)
 
 EXPORTS= $(srcdir)/mkmailbx.h
+
+LOCAL_INCLUDES := -I$(topsrcdir)/network/protocol/imap4
 
 REQUIRES	= imap4url netcache network dbm util pref js java fileurl \
 	security layer img httpurl mimetype htmldlgs
