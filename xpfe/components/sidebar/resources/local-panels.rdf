@@ -37,13 +37,16 @@
   <rdf:Description about="urn:sidebar:panel:whats-related">
     <nc:title>&sidebar.whats-related.label;</nc:title>
     <nc:content>chrome://communicator/content/related/related-panel.xul</nc:content>
+    <nc:tooltip>&sidebar.whats-related.tooltip;</nc:title>
   </rdf:Description>
   <rdf:Description about="urn:sidebar:panel:search">
     <nc:title>&sidebar.search.label;</nc:title>
     <nc:content>chrome://communicator/content/search/search-panel.xul</nc:content>
+    <nc:tooltip>&sidebar.search.tooltip;</nc:tooltip>
   </rdf:Description>
   <rdf:Description about="urn:sidebar:panel:bookmarks">
     <nc:title>&sidebar.bookmarks.label;</nc:title>
     <nc:content>chrome://communicator/content/bookmarks/bm-panel.xul</nc:content>
+    <nc:tooltip>&sidebar.bookmarks.tooltip;</nc:tooltip>
   </rdf:Description>
 </rdf:RDF>
