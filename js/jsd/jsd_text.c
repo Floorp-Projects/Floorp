@@ -24,6 +24,7 @@
  * JavaScript Debugging support - Source Text functions
  */
 
+#include <ctype.h>
 #include "jsd.h"
 
 #ifdef DEBUG
