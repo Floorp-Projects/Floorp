@@ -38,7 +38,6 @@ typedef unsigned long       nsrefcnt ;
 typedef unsigned long       nsresult ;
 
 [ptr]         native voidStar(void);
-[ref]         native voidRef(void);
 
 [ref, nsid]   native nsIDRef(nsID);
 [ref, nsid]   native nsIIDRef(nsIID);
