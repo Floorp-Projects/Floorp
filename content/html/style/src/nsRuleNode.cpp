@@ -892,7 +892,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID& aSID, nsIStyleContext* aContext,
     detail = eRulePartialMixed; // Treat as though some data is specified to avoid
                                 // the optimizations and force data computation.
 
-  if (detail == eRuleNone && startStruct) {
+  if (detail == eRuleNone && startStruct && !aRuleData->mPostResolveCallback) {
     // We specified absolutely no rule information, but a parent rule in the tree
     // specified all the rule information.  We set a bit along the branch from our
     // node in the tree to the node that specified the data that tells nodes on that

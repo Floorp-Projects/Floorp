@@ -669,6 +669,8 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
 {
   NS_INIT_REFCNT();
   mTableTHRule = new TableTHRule(this);
+  mDocumentColorRule = new HTMLDocumentColorRule(this);
+  NS_ADDREF(mDocumentColorRule);
   NS_ADDREF(mTableTHRule);
 }
 
@@ -1117,13 +1119,6 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetDocumentForegroundColor(nscolor aColor)
 {
-  if (nsnull == mDocumentColorRule) {
-    mDocumentColorRule = new HTMLDocumentColorRule(this);
-    if (nsnull == mDocumentColorRule) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mDocumentColorRule);
-  }
   mDocumentColorRule->mColor = aColor;
   mDocumentColorRule->mForegroundSet = PR_TRUE;
   return NS_OK;
@@ -1131,13 +1126,6 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetDocumentForegroundColor(nscolor aColor)
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetDocumentBackgroundColor(nscolor aColor)
 {
-  if (nsnull == mDocumentColorRule) {
-    mDocumentColorRule = new HTMLDocumentColorRule(this);
-    if (nsnull == mDocumentColorRule) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mDocumentColorRule);
-  }
   mDocumentColorRule->mBackgroundColor = aColor;
   mDocumentColorRule->mBackgroundSet = PR_TRUE;
   return NS_OK;
