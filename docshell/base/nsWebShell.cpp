@@ -43,7 +43,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsIChromeEventHandler.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -216,7 +215,6 @@ public:
                                nsIWebShell*& aResult);
 
   NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType);
-  NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType);
 
   NS_IMETHOD GetScrolling(PRInt32& aScrolling);
   NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE);
@@ -415,7 +413,6 @@ protected:
   nsIGlobalHistory* mHistoryService;
   nsISessionHistory * mSHist;
 
-  nsString mTitle;
   nsString mURL;
   nsString mReferrer;
 
@@ -431,8 +428,6 @@ protected:
   nsVoidArray mRefreshments;
 
   eCharsetReloadState mCharsetReloadState;
-
-  nsIChromeEventHandler* mChromeEventHandler; //Weak Reference
 
   nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
@@ -466,10 +461,6 @@ protected:
   
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
-
-  // the parent content listener has a life time longer than our own...
-  // so we should not have an owning ref on this variable
-  nsIURIContentListener * mParentContentListener;
 
   MOZ_TIMER_DECLARE(mTotalTime)
 
@@ -607,7 +598,6 @@ nsWebShell::nsWebShell() : nsDocShell()
   mThreadEventQueue = nsnull;
   InitFrameData(PR_TRUE);
   mItemType = typeContent;
-  mChromeEventHandler = nsnull;
   mSHist = nsnull;
   mIsInSHist = PR_FALSE;
   mFailedToLoadHistoryService = PR_FALSE;
@@ -617,9 +607,6 @@ nsWebShell::nsWebShell() : nsDocShell()
   mViewSource=PR_FALSE;
   mHistoryService = nsnull;
   mHistoryState = nsnull;
-  mParentContentListener = nsnull;
-  mParent = nsnull;
-  mTreeOwner = nsnull;
 }
 
 nsWebShell::~nsWebShell()
@@ -1374,29 +1361,6 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
 }
 
 NS_IMETHODIMP
-nsWebShell::GetWebShellType(nsWebShellType& aWebShellType)
-{
-   PRInt32 treeItemType;
-   GetItemType(&treeItemType);
-
-   switch(treeItemType)
-      {
-      case typeContent:
-         aWebShellType = nsWebShellContent;
-         break;
-
-      case typeChrome:
-         aWebShellType = nsWebShellChrome;
-         break;
-
-      default:
-         NS_ERROR("Switch is out of date");
-      }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWebShell::SetWebShellType(nsWebShellType aWebShellType)
 {
    PRInt32 treeItemType;
@@ -1700,11 +1664,9 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 NS_IMETHODIMP
 nsWebShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
 {
-  // ask our parent if they want to use a particular handler...
-  if (mParentContentListener)
-    return mParentContentListener->GetProtocolHandler(aURI, aProtocolHandler);
-  else
-    return NS_OK;
+   // Farm this off to our content listener
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+   return mContentListener->GetProtocolHandler(aURI, aProtocolHandler);
 }
 
 NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
@@ -3807,8 +3769,7 @@ nsWebShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, PRBool* aTookFocus)
 
 NS_IMETHODIMP nsWebShell::GetTitle(PRUnichar** aTitle)
 {
-  *aTitle = mTitle.ToNewUnicode();
-  return NS_OK;
+   return nsDocShell::GetTitle(aTitle);
 }
 
 NS_IMETHODIMP nsWebShell::SetTitle(const PRUnichar* aTitle)
@@ -3817,9 +3778,9 @@ NS_IMETHODIMP nsWebShell::SetTitle(const PRUnichar* aTitle)
   mTitle = aTitle;
 
   // Title's set on the top level web-shell are passed ont to the container
-  nsIWebShell* parent;
-  GetParent(parent);
-  if (nsnull == parent) {
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  GetSameTypeParent(getter_AddRefs(parent));
+  if (!parent) {
     nsIBrowserWindow *browserWindow = GetBrowserWindow();
     if (nsnull != browserWindow) {
       browserWindow->SetTitle(aTitle);
@@ -3848,51 +3809,23 @@ NS_IMETHODIMP nsWebShell::SetTitle(const PRUnichar* aTitle)
 NS_IMETHODIMP nsWebShell::LoadURI(nsIURI* aUri, 
    nsIPresContext* presContext)
 {
-   //NS_ENSURE_ARG(aUri);  // Done in LoadURIVia for us.
-
-   return LoadURIVia(aUri, presContext, 0);
+   return nsDocShell::LoadURI(aUri, presContext);
 }
 
 NS_IMETHODIMP nsWebShell::LoadURIVia(nsIURI* aUri, 
    nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
 {
-   NS_ENSURE_ARG(aUri);
-   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
-   return NS_ERROR_FAILURE;
-
-/*   nsCOMPtr<nsIURILoader> uriLoader = do_CreateInstance(NS_URI_LOADER_PROGID);
-   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(uriLoader->OpenURI(aUri, nsnull, nsnull, this,
-      nsnull, nsnull, getter_AddRefs(mLoadCookie)), NS_ERROR_FAILURE); */
-
-   return NS_OK;
+   return nsDocShell::LoadURIVia(aUri, aPresContext, aAdapterBinding);
 }
 
 NS_IMETHODIMP nsWebShell::GetDocument(nsIDOMDocument** aDocument)
 {
-  NS_ENSURE_ARG_POINTER(aDocument);
-  NS_ENSURE_STATE(mContentViewer);
-
-  nsCOMPtr<nsIPresShell> presShell;
-  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocument>doc;
-  NS_ENSURE_SUCCESS(presShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
-
-  // the result's addref comes from this QueryInterface call
-  NS_ENSURE_SUCCESS(CallQueryInterface(doc.get(), aDocument), NS_ERROR_FAILURE);
-
-  return NS_OK;
+   return nsDocShell::GetDocument(aDocument);
 }
 
 NS_IMETHODIMP nsWebShell::GetCurrentURI(nsIURI** aURI)
 {
-   NS_ENSURE_ARG_POINTER(aURI);
-
-   NS_WARN_IF_FALSE(PR_FALSE, "Not yet implemented");
-   return NS_ERROR_FAILURE;
+   return nsDocShell::GetCurrentURI(aURI);
 }
 
 NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc, 
@@ -4005,69 +3938,41 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
 
 NS_IMETHODIMP nsWebShell::GetPresContext(nsIPresContext** aPresContext)
 {
-   NS_ENSURE_ARG_POINTER(aPresContext);
-
-   NS_WARN_IF_FALSE(PR_FALSE, "Not yet implemented");
-   return NS_ERROR_FAILURE;
+   return nsDocShell::GetPresContext(aPresContext);
 }
 
 NS_IMETHODIMP nsWebShell::GetPresShell(nsIPresShell** aPresShell)
 {
-   NS_ENSURE_ARG_POINTER(aPresShell);
-
-   NS_WARN_IF_FALSE(PR_FALSE, "Not yet implemented");
-   return NS_ERROR_FAILURE;
+   return nsDocShell::GetPresShell(aPresShell);
 }
 
 NS_IMETHODIMP nsWebShell::GetContentViewer(nsIContentViewer** aContentViewer)
 {
-   NS_ENSURE_ARG_POINTER(aContentViewer);
-
-   *aContentViewer = mContentViewer;
-   NS_IF_ADDREF(*aContentViewer);
-   return NS_OK;
+   return nsDocShell::GetContentViewer(aContentViewer);
 }
 
 NS_IMETHODIMP
 nsWebShell::GetChromeEventHandler(nsIChromeEventHandler** aChromeEventHandler)
 {
-    NS_ENSURE_ARG_POINTER(aChromeEventHandler);
-
-    NS_IF_ADDREF(mChromeEventHandler);
-    *aChromeEventHandler = mChromeEventHandler;
-    return NS_OK;
+   return nsDocShell::GetChromeEventHandler(aChromeEventHandler);
 }
 
 NS_IMETHODIMP
 nsWebShell::SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler)
 {
-   // Weak reference. Don't addref.
-   mChromeEventHandler = aChromeEventHandler;
-   return NS_OK;
+   return nsDocShell::SetChromeEventHandler(aChromeEventHandler);
 }
 
 NS_IMETHODIMP nsWebShell::GetParentURIContentListener(nsIURIContentListener**
    aParent)
 {
-   NS_ENSURE_ARG_POINTER(aParent);
-
-  nsresult rv = NS_OK;
-  if (mParentContentListener)
-  {
-    *aParent = mParentContentListener;
-    NS_ADDREF(*aParent);
-  }
-  else
-    rv = NS_ERROR_NULL_POINTER;
-
-  return rv;
+   return nsDocShell::GetParentURIContentListener(aParent);
 }
 
 NS_IMETHODIMP nsWebShell::SetParentURIContentListener(nsIURIContentListener*
    aParent)
 {
-  mParentContentListener = aParent;
-  return NS_OK;
+   return nsDocShell::SetParentURIContentListener(aParent);
 }
 
 NS_IMETHODIMP nsWebShell::GetPrefs(nsIPref** aPrefs)
