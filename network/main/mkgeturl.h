@@ -34,6 +34,14 @@
 MODULE_PRIVATE int PR_CALLBACK 
 NET_PrefChangedFunc(const char *pref, void *data);
 
+PUBLIC void NET_DisableGetURL(void);
+MODULE_PRIVATE void
+net_CallExitRoutine(Net_GetUrlExitFunc *exit_routine,
+					URL_Struct                 *URL_s,
+					int                 status,
+					FO_Present_Types        format_out,
+					MWContext          *window_id);
+
 /* Debugging routine prints an URL (and string "header")
  */
 PR_BEGIN_EXTERN_C
@@ -143,6 +151,9 @@ NET_RegisterProtocolImplementation(NET_ProtoImpl *impl, int for_url_type);
  * and has a non-empty trust list */
 extern XP_List * NET_GetTrustList( char *TargetURL );
 #endif
+
+NET_ProtoImpl * net_get_protocol_impl(int for_url_type);
+MODULE_PRIVATE int32 net_MailtoLoad (ActiveEntry * cur_entry);
 
 PR_END_EXTERN_C
 #endif /* not MKGetURL_H */
