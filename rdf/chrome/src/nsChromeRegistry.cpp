@@ -151,7 +151,7 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
   if (NS_FAILED(rv))
     return NS_OK;
 
-  nsCAutoString str(valueStr);
+  nsCAutoString str; str.AssignWithConversion(valueStr);
   url->SetSpec(str);
   
   nsCOMPtr<nsISupports> sup;
@@ -658,7 +658,7 @@ nsChromeRegistry::FollowArc(nsIRDFDataSource *aDataSource,
   if (literal) {
     nsXPIDLString s;
     literal->GetValue( getter_Copies(s) );
-    aResult = s;
+    aResult.AssignWithConversion(s);
   }
   else {
     // This should _never_ happen.
@@ -783,8 +783,8 @@ nsChromeRegistry::ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocu
   PRBool doneLoading;
   nsresult rv = aLoader->LoadStyleLink(nsnull, // anElement
                                        aURL,
-                                       "", // aTitle
-                                       "", // aMedia
+                                       nsAutoString(), // aTitle
+                                       nsAutoString(), // aMedia
                                        kNameSpaceID_Unknown,
                                        aDocument->GetNumberOfStyleSheets(),
                                        nsnull,
@@ -808,7 +808,7 @@ NS_IMETHODIMP nsChromeRegistry::ReallyRemoveOverlayFromDataSource(const PRUnicha
   if (NS_FAILED(rv))
     return NS_OK;
 
-  nsCAutoString str(aDocURI);
+  nsCAutoString str; str.AssignWithConversion(aDocURI);
   url->SetSpec(str);
   nsCOMPtr<nsIRDFDataSource> dataSource;
   GetOverlayDataSource(url, getter_AddRefs(dataSource));
@@ -817,7 +817,8 @@ NS_IMETHODIMP nsChromeRegistry::ReallyRemoveOverlayFromDataSource(const PRUnicha
     return NS_OK;
 
   nsCOMPtr<nsIRDFResource> resource;
-  rv = GetResource(aDocURI, getter_AddRefs(resource));
+  nsCAutoString aDocURIString; aDocURIString.AssignWithConversion(aDocURI);
+  rv = GetResource(aDocURIString, getter_AddRefs(resource));
 
   if (NS_FAILED(rv))
     return NS_OK;
@@ -834,7 +835,7 @@ NS_IMETHODIMP nsChromeRegistry::ReallyRemoveOverlayFromDataSource(const PRUnicha
   if (NS_FAILED(container->Init(dataSource, resource)))
     return NS_ERROR_FAILURE;
 
-  nsAutoString unistr(aOverlayURI);
+  nsAutoString unistr; unistr.AssignWithConversion(aOverlayURI);
   nsCOMPtr<nsIRDFLiteral> literal;
   mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(literal));
 
@@ -965,7 +966,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCAutoString& aProvider,
   nsCAutoString resourceStr = "urn:mozilla:";
   resourceStr += aProvider;
   resourceStr += ":";
-  resourceStr.Append(aProviderName);
+  resourceStr.AppendWithConversion(aProviderName);
 
   // Obtain the provider resource.
   nsresult rv = NS_OK;
@@ -1090,7 +1091,7 @@ NS_IMETHODIMP nsChromeRegistry::SelectSkinForPackage(const PRUnichar *aSkin,
                                                   const PRUnichar *aPackageName,
                                                   PRBool aUseProfile)
 {
-  nsAutoString provider("skin");
+  nsCAutoString provider("skin");
   return SelectProviderForPackage(provider, aSkin, aPackageName, mSelectedSkin, aUseProfile, PR_TRUE);
 }
 
@@ -1098,7 +1099,7 @@ NS_IMETHODIMP nsChromeRegistry::SelectLocaleForPackage(const PRUnichar *aLocale,
                                                     const PRUnichar *aPackageName,
                                                     PRBool aUseProfile)
 {
-  nsAutoString provider("locale");
+  nsCAutoString provider("locale");
   return SelectProviderForPackage(provider, aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_TRUE);
 }
 
@@ -1106,7 +1107,7 @@ NS_IMETHODIMP nsChromeRegistry::DeselectSkinForPackage(const PRUnichar *aSkin,
                                                   const PRUnichar *aPackageName,
                                                   PRBool aUseProfile)
 {
-  nsAutoString provider("skin");
+  nsCAutoString provider("skin");
   return SelectProviderForPackage(provider, aSkin, aPackageName, mSelectedSkin, aUseProfile, PR_FALSE);
 }
 
@@ -1114,7 +1115,7 @@ NS_IMETHODIMP nsChromeRegistry::DeselectLocaleForPackage(const PRUnichar *aLocal
                                                     const PRUnichar *aPackageName,
                                                     PRBool aUseProfile)
 {
-  nsAutoString provider("skin");
+  nsCAutoString provider("skin");
   return SelectProviderForPackage(provider, aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_FALSE);
 }
 
@@ -1125,14 +1126,14 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCAutoString& aP
                                         PRBool aUseProfile, PRBool aIsAdding)
 {
   nsCAutoString package = "urn:mozilla:package:";
-  package.Append(aPackageName);
+  package.AppendWithConversion(aPackageName);
 
   nsCAutoString provider = "urn:mozilla:";
   provider += aProviderType;
   provider += ":";
-  provider.Append(aProviderName);
+  provider.AppendWithConversion(aProviderName);
   provider += ":";
-  provider.Append(aPackageName);
+  provider.AppendWithConversion(aPackageName);
 
   // Obtain the package resource.
   nsresult rv = NS_OK;
@@ -1546,7 +1547,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
   if (aUseProfile) {
     // Profiles take precedence.  Load them first.
     nsCOMPtr<nsIRDFDataSource> dataSource;
-    nsAutoString name = "user-skins.rdf";
+    nsCAutoString name("user-skins.rdf");
     LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE);
     mChromeDataSource->AddDataSource(dataSource);
 
@@ -1569,7 +1570,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 
   // Always load the install dir datasources
   nsCOMPtr<nsIRDFDataSource> dataSource;
-  nsAutoString name = "user-skins.rdf";
+  nsCAutoString name = "user-skins.rdf";
   LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE);
   mChromeDataSource->AddDataSource(dataSource);
 
