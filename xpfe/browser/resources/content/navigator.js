@@ -428,21 +428,24 @@
 	var url = node.getAttribute('id');
 	try
 	{
-		// first try asking RDF's graph for the URL
-		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
-		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-		if (rdf)
+		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
+		if (url.indexOf("file://") == 0)
 		{
-			var Bookmarks = rdf.GetDataSource("rdf:bookmarks");
-			if (Bookmarks)
+			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+			if (rdf)
 			{
-				var src = rdf.GetResource(url, true);
-				var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-				var target = Bookmarks.GetTarget(src, prop, true);
-				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-				if (target)	target = target.Value;
-				if (target)	url = target;
-				
+				var fileSys = rdf.GetDataSource("rdf:files");
+				if (fileSys)
+				{
+					var src = rdf.GetResource(url, true);
+					var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+					var target = fileSys.GetTarget(src, prop, true);
+					if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+					if (target)	target = target.Value;
+					if (target)	url = target;
+					
+				}
 			}
 		}
 	}
