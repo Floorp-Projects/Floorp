@@ -40,10 +40,12 @@ use PLIF::Exception;
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
-    my($handle, $database, $executed) = @_;
+    my($handle, $database, $execute, @values) = @_;
     $self->handle($handle);
     $self->database($database);
-    $self->executed($executed);
+    if ($execute) {
+        $self->reexecute(@values);
+    }
 }
 
 sub lastError {
@@ -108,10 +110,22 @@ sub rows {
 sub reexecute {
     my $self = shift;
     my(@values) = @_;
+    # untaint the statement and values... (XXX?)
+    foreach my $value (@values) {
+        if (defined($value)) {
+            $value =~ /^(.*)$/os;
+            $value = $1;
+        } else {
+            $value = undef; # used to be '' # XXX ?
+        }
+    }
     if ($self->handle->execute(@values)) {
         $self->executed(1);
         return $self;
     } else {
+        if ($self->lastError) {
+            $self->raiseError();
+        }
         return undef;
     }
 }

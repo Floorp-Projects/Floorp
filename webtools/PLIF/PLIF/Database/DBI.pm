@@ -122,20 +122,12 @@ sub createResultsFrame {
     my $self = shift;
     my($statement, $execute, @values) = @_;
     $self->assert($self->handle, 1, 'No database handle: '.(defined($self->errstr) ? $self->errstr : 'unknown error'));
-    # untaint the statement and values... (XXX?)
-    foreach my $value ($statement, @values) {
-        if (defined($value)) {
-            $value =~ /^(.*)$/os;
-            $value = $1;
-        } else {
-            $value = '';
-        }
-    }
-    my $handle = $self->handle->prepare($statement);
-    if ($handle and (not $execute or $handle->execute(@values))) {
-        return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute);
+    $statement =~ /^(.*)$/os; # untaint # (XXX?)
+    my $handle = $self->handle->prepare($1);
+    if ($handle) {
+        return PLIF::Database::ResultsFrame::DBI->create($handle, $self, $execute, @values);
     } else {
-        raise PLIF::Exception::Database ('message' => $handle->errstr);
+        raise PLIF::Exception::Database;
     }
 }
 
