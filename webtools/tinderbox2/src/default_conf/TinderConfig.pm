@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.36 $ 
-# $Date: 2002/05/03 02:32:06 $ 
+# $Revision: 1.37 $ 
+# $Date: 2002/05/03 03:28:18 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -226,16 +226,26 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
 	       'TinderHeader::Build',
 	       'TinderHeader::IgnoreBuilds',
 	       'TinderHeader::MOTD',
-	       
-	       # TinderDB::VC_Bonsai provides a
-	       # TinderHeader::TreeState implementation,
-	       # so comment out the TreeSTate if using
-	       # VC_Bonsai. Most VC implementations will
-	       # not have a State file in the version
-	       # control system.
-	       
+
+	       # Specify how we set/view a global development
+	       # state. Only uncomment one TinderHeader::TreeState.
+
+               # Most VC implementations will not have a State file in
+               # the version control system so use the generic version
+               # if you do not use bonsai.
+
 #	       'TinderHeader::TreeState',
+
+               # Get states from Bonsai tool and set the Bosai states via
+               # Tinderbox admin page.
+
 #	       'TinderHeader::TreeState_Bonsai',
+
+               # Get states from bonsai tool, do not set Bonsai states
+               # via Tinderbox, but also allow new states which are
+               # known only to Tinderbox which can be set on our pages
+               # and which override Bonsai for Tinderboxes use.
+
 	       'TinderHeader::TreeState_Bonsai_Plus',
 
 	      );
