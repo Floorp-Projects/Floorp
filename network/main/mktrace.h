@@ -28,7 +28,6 @@ extern void NET_ToggleTrace(void);
 #if defined(DEBUG) || defined(NETLIB_TRACE_ON)
 
 extern PRLogModuleInfo* NETLIB;
-#define out PR_LOG_ALWAYS
 
 #ifdef TRACEMSG
 #undef TRACEMSG
