@@ -420,3 +420,4 @@ pref("mailnews.send_plaintext_flowed", true); // RFC 2646=======
 pref("news.cancel.confirm",true);
 pref("news.cancel.alert_on_success",true);
 pref("mail.SpellCheckBeforeSend",false);
+pref("mail.enable_autocomplete",true);
