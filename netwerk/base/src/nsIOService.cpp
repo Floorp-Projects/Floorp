@@ -107,6 +107,8 @@ static nsresult
 GetScheme(const char* inURI, char* *scheme)
 {
     // search for something up to a colon, and call it the scheme
+    NS_ASSERTION(inURI, "null pointer");
+    if (!inURI) return NS_ERROR_NULL_POINTER;
     char c;
     const char* URI = inURI;
     PRUint32 i = 0;
