@@ -304,22 +304,19 @@ enum XPTTypeDescriptorTags {
     TD_INTERFACE_TYPE    = 18,
     TD_INTERFACE_IS_TYPE = 19,
     TD_ARRAY             = 20,
-    TD_ARRAY_WITH_LENGTH = 21
+    TD_PSTRING_SIZE_IS   = 21,
+    TD_PWSTRING_SIZE_IS  = 22
 };
 
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
-    PRUint8 argnum;
-    PRUint8 argnum2;
-    union {
-        PRUint16 interface;
-        PRUint16 additional_type;
+    PRUint8 argnum;                 /* used for iid_is and size_is */
+    PRUint8 argnum2;                /* used for length_is */
+    union {                         
+        PRUint16 interface;         /* used for TD_INTERFACE_TYPE */
+        PRUint16 additional_type;   /* used for TD_ARRAY */
     } type;
 };
-
-/* this is bogus
-#define XPT_TYPEDESCRIPTOR_SIZE (1 + 2)
-*/
 
 #define XPT_COPY_TYPE(to, from)                                               \
   (to).prefix.flags = (from).prefix.flags;                                    \

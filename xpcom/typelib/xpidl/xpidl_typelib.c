@@ -568,6 +568,8 @@ find_arg_with_name(TreeState *state, const char *name, int16 *argnum)
                 IDL_PARAM_DCL(IDL_LIST(params).data).simple_declarator).str;
         if (!strcmp(cur_name, name)) {
             /* XXX ought to verify that this is the right type here */
+            /* XXX for iid_is this must be an iid */
+            /* XXX for size_is and length_is this must be a uint32 */
             *argnum = count;
             return TRUE;
         }
@@ -575,10 +577,55 @@ find_arg_with_name(TreeState *state, const char *name, int16 *argnum)
     return FALSE;
 }
 
+/* return value is for success or failure */
+static gboolean
+get_size_and_length(TreeState *state, IDL_tree type, 
+                    int16 *size_is_argnum, int16 *length_is_argnum,
+                    gboolean *has_size_is, gboolean *has_length_is)
+{
+    *has_size_is = FALSE;
+    *has_length_is = FALSE;
+
+    if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL) {
+        IDL_tree sd = IDL_PARAM_DCL(state->tree).simple_declarator;
+        const char *size_is;
+        const char *length_is;
+
+        /* only if size_is is found does any of this matter */
+        size_is = IDL_tree_property_get(sd, "size_is");
+        if (!size_is)
+            return TRUE;
+
+        if (!find_arg_with_name(state, size_is, size_is_argnum)) {
+            IDL_tree_error(type, "can't find matching argument for "
+                           "[size_is(%s)]\n", size_is);
+            return FALSE;
+        }
+        *has_size_is = TRUE;
+
+        /* length_is is optional */
+        length_is = IDL_tree_property_get(sd, "length_is");
+        if (length_is) {
+            *has_length_is = TRUE;
+            if (!find_arg_with_name(state, length_is, length_is_argnum)) {
+                IDL_tree_error(type, "can't find matching argument for "
+                               "[length_is(%s)]\n", length_is);
+                return FALSE;
+            }
+        }
+    }
+    return TRUE;
+}
+
 static gboolean
 fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
 {
     IDL_tree up;
+    int16 size_is_argnum;
+    int16 length_is_argnum;
+    gboolean has_size_is;
+    gboolean has_length_is;
+    gboolean is_array = FALSE;
 
     if (type) {
 
@@ -587,40 +634,29 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
         if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL) {
             IDL_tree sd = IDL_PARAM_DCL(state->tree).simple_declarator;
             if(IDL_tree_property_get(sd, "array")) {
-                const char *size_is;
-                const char *length_is;
-                int16 size_is_argnum;
-                int16 length_is_argnum;
+
+                is_array = TRUE;
 
                 /* size_is is required! */
-                size_is = IDL_tree_property_get(sd, "size_is");
-                if (!size_is) {
-                    IDL_tree_error(type, "[array] requires [size_is()]\n");
+                if (!get_size_and_length(state, type, 
+                                         &size_is_argnum, &length_is_argnum,
+                                         &has_size_is, &has_length_is)) {
+                    /* error was reported by helper function */
                     return FALSE;
                 }
 
-                if (!find_arg_with_name(state, size_is, &size_is_argnum)) {
-                    IDL_tree_error(type, "can't find matching argument for "
-                                   "[size_is(%s)]\n", size_is);
+                if (!has_size_is) {
+                   IDL_tree_error(type, "[array] requires [size_is()]\n");
                     return FALSE;
                 }
 
-                /* length_is is optional */
-                length_is = IDL_tree_property_get(sd, "length_is");
-                if (length_is &&
-                    !find_arg_with_name(state, length_is, &length_is_argnum)) {
-                    IDL_tree_error(type, "can't find matching argument for "
-                                   "[length_is(%s)]\n", length_is);
-                    return FALSE;
-                }
-
+                td->prefix.flags = TD_ARRAY | XPT_TDP_POINTER;
                 td->argnum = size_is_argnum;
-                if (length_is) {
-                    td->prefix.flags = TD_ARRAY_WITH_LENGTH | XPT_TDP_POINTER;
+
+                if (has_length_is)
                     td->argnum2 = length_is_argnum;
-                } else {
-                    td->prefix.flags = TD_ARRAY | XPT_TDP_POINTER;
-                }
+                else
+                    td->argnum2 = size_is_argnum;
 
                 /* 
                 * XXX - NOTE - this will be broken for multidimensional 
@@ -664,11 +700,48 @@ handle_typedef:
             td->prefix.flags = TD_WCHAR;
             break;
           case IDLN_TYPE_STRING:
-            /* XXXshaver string-type? */
-            td->prefix.flags = TD_PSTRING | XPT_TDP_POINTER;
+            if (is_array) {
+                td->prefix.flags = TD_PSTRING | XPT_TDP_POINTER;
+            } else {
+                if (!get_size_and_length(state, type, 
+                                         &size_is_argnum, &length_is_argnum,
+                                         &has_size_is, &has_length_is)) {
+                    /* error was reported by helper function */
+                    return FALSE;
+                }
+                if (has_size_is) {
+                    td->prefix.flags = TD_PSTRING_SIZE_IS | XPT_TDP_POINTER;
+                    td->argnum = size_is_argnum;
+                    if (has_length_is)
+                        td->argnum2 = length_is_argnum;
+                    else
+                        td->argnum2 = size_is_argnum;
+                } else {
+                    td->prefix.flags = TD_PSTRING | XPT_TDP_POINTER;
+                }
+            }
             break;
           case IDLN_TYPE_WIDE_STRING:
-            td->prefix.flags = TD_PWSTRING | XPT_TDP_POINTER;
+            if (is_array) {
+                td->prefix.flags = TD_PWSTRING | XPT_TDP_POINTER;
+            } else {
+                if (!get_size_and_length(state, type, 
+                                         &size_is_argnum, &length_is_argnum,
+                                         &has_size_is, &has_length_is)) {
+                    /* error was reported by helper function */
+                    return FALSE;
+                }
+                if (has_size_is) {
+                    td->prefix.flags = TD_PWSTRING_SIZE_IS | XPT_TDP_POINTER;
+                    td->argnum = size_is_argnum;
+                    if (has_length_is)
+                        td->argnum2 = length_is_argnum;
+                    else
+                        td->argnum2 = size_is_argnum;
+                } else {
+                    td->prefix.flags = TD_PWSTRING | XPT_TDP_POINTER;
+                }
+            }
             break;
           case IDLN_TYPE_BOOLEAN:
             td->prefix.flags = TD_BOOL;

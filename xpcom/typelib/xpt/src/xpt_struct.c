@@ -419,16 +419,28 @@ XPT_PUBLIC_API(PRUint32)
 XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td, XPTInterfaceDescriptor *id)
 {
     PRUint32 size = 1; /* prefix */
-    if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE)
+
+    switch (XPT_TDP_TAG(td->prefix)) {
+      case TD_INTERFACE_TYPE:
         size += 2; /* interface_index */
-    else if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE)
-        size += 1; /* arg_num */
-    else if (XPT_TDP_TAG(td->prefix) == TD_ARRAY)
-        size += 1 + XPT_SizeOfTypeDescriptor(
-                        &id->additional_types[td->type.additional_type], id);
-    else if (XPT_TDP_TAG(td->prefix) == TD_ARRAY_WITH_LENGTH)
+        break;
+      case TD_INTERFACE_IS_TYPE:
+        size += 1; /* argnum */
+        break;
+      case TD_ARRAY:
         size += 2 + XPT_SizeOfTypeDescriptor(
                         &id->additional_types[td->type.additional_type], id);
+        break;
+      case TD_PSTRING_SIZE_IS:
+        size += 2; /* argnum + argnum2 */
+        break;
+      case TD_PWSTRING_SIZE_IS:
+        size += 2; /* argnum + argnum2 */
+        break;
+      default:
+        /* nothing special */
+        break;
+    }
     return size;
 }
 
@@ -736,34 +748,42 @@ DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td,
         goto error;
     }
     
-    if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
+    switch (XPT_TDP_TAG(td->prefix)) {
+      case TD_INTERFACE_TYPE:
         if (!XPT_Do16(cursor, &td->type.interface))
             goto error;
-    } 
-    else if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE) {
+        break;
+      case TD_INTERFACE_IS_TYPE:
         if (!XPT_Do8(cursor, &td->argnum))
             goto error;
-    }
-    else if (XPT_TDP_TAG(td->prefix) == TD_ARRAY ||
-             XPT_TDP_TAG(td->prefix) == TD_ARRAY_WITH_LENGTH) {
-        if (!XPT_Do8(cursor, &td->argnum))
+        break;
+      case TD_ARRAY:
+        if (!XPT_Do8(cursor, &td->argnum) ||
+            !XPT_Do8(cursor, &td->argnum2))
             goto error;
-
-        if (XPT_TDP_TAG(td->prefix) == TD_ARRAY_WITH_LENGTH)
-            if (!XPT_Do8(cursor, &td->argnum2))
-                goto error;
 
         if (cursor->state->mode == XPT_DECODE) {
             if(!XPT_InterfaceDescriptorAddTypes(id, 1))
                 goto error;
             td->type.additional_type = id->num_additional_types - 1;
         }
+
         if (!DoTypeDescriptor(cursor, 
                               &id->additional_types[td->type.additional_type], 
                               id))
             goto error;
-    }
+        break;
+      case TD_PSTRING_SIZE_IS:
+      case TD_PWSTRING_SIZE_IS:
+        if (!XPT_Do8(cursor, &td->argnum) ||
+            !XPT_Do8(cursor, &td->argnum2))
+            goto error;
+        break;
 
+      default:
+        /* nothing special */
+        break;
+    }
     return PR_TRUE;
     
     XPT_ERROR_HANDLE(td);    

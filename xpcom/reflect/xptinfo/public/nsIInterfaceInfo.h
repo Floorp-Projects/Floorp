@@ -80,6 +80,11 @@ public:
                                             const nsXPTParamInfo* param,
                                             uint16 dimension,
                                             uint8* argnum) = 0;
+
+    NS_IMETHOD GetInterfaceIsArgNumberForParam(uint16 methodIndex, 
+                                               const nsXPTParamInfo* param,
+                                               uint8* argnum) = 0;
+
 };
 
 #endif /* nsIInterfaceInfo_h___ */
