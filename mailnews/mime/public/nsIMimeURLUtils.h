@@ -30,18 +30,18 @@
 // {9C4DA768-07EB-11d3-8EE5-00A024669799}
 #define NS_IMIME_URLUTILS_IID \
     { 0x9c4da768, 0x7eb, 0x11d3,              \
-    { 0x8e, 0xe5, 0x0, 0xa0, 0x24, 0x66, 0x97, 0x99 } };
+    { 0x8e, 0xe5, 0x0, 0xa0, 0x24, 0x66, 0x97, 0x99 } }
 
 // {9C4DA772-07EB-11d3-8EE5-00A024669799}
 #define NS_IMIME_URLUTILS_CID \
     { 0x9c4da772, 0x7eb, 0x11d3, \
-    { 0x8e, 0xe5, 0x0, 0xa0, 0x24, 0x66, 0x97, 0x99 } };
+    { 0x8e, 0xe5, 0x0, 0xa0, 0x24, 0x66, 0x97, 0x99 } }
 
 
 class nsIMimeURLUtils : public nsISupports {
 public: 
 
-  static const nsIID& IID(void) { static nsIID iid = NS_IMIME_URLUTILS_IID; return iid; }
+  static const nsIID& GetIID(void) { static nsIID iid = NS_IMIME_URLUTILS_IID; return iid; }
 
   NS_IMETHOD    URLType(const char *URL, PRInt32  *retType) = 0;
 
@@ -51,6 +51,8 @@ public:
                         char *output, int output_size, PRBool urls_only) = 0;
 
   NS_IMETHOD    MakeAbsoluteURL(char * absolute_url, char * relative_url, char **retURL) = 0;
+
+  NS_IMETHOD    ScanHTMLForURLs(const char* input, char **retBuf) = 0;
 }; 
 
 #endif /* _nsIMimeURLUtils_h__ */
