@@ -538,6 +538,7 @@ gtk_layout_remove (GtkContainer *container,
       child = tmp_list->data;
       if (child->widget == widget)
 	break;
+      tmp_list=tmp_list->next;
     }
 
   if (tmp_list)
