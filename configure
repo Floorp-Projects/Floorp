@@ -101,9 +101,9 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-tests         Do not build tests libraries & programs"
 ac_help="$ac_help
-  --disable-bidi           Disable bi-directional support"
+  --disable-bidi          Disable bi-directional support"
 ac_help="$ac_help
-  --disable-accessibility           Disable accessibility support"
+  --disable-accessibility Disable accessibility support"
 ac_help="$ac_help
   --enable-monolithic-toolkit
                           Link the toolkit into the app"
