@@ -85,7 +85,7 @@
                     <spring id="textCW" class="color-well"/>
                   </box>
                 </stack>
-                <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value"/>
+                <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value" wsm_attributes="value"/>
               </row>
               <row valign="middle" autostretch="never">
                 <text class="label" id="Link" value="&linkText.label;&colon.character;" />
@@ -96,7 +96,7 @@
                     <spring id="linkCW" class="color-well"/>
                   </box>
                 </stack>
-                <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value"/>
+                <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value" wsm_attributes="value"/>
               </row>
               <row valign="middle" autostretch="never">
                 <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
@@ -107,7 +107,7 @@
                     <spring id="activeCW" class="color-well"/>
                   </box>
                 </stack>
-                <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value"/>
+                <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
               </row>
               <row valign="middle" autostretch="never">
                 <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
@@ -117,7 +117,7 @@
                     <spring class="smallspacer"/>
                     <spring id="visitedCW" class="color-well"/>
                   </box>
-                  <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value"/>
+                  <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
                 </stack>
               </row>
               <row valign="middle" autostretch="never">
@@ -129,7 +129,7 @@
                     <spring id="backgroundCW" class="color-well"/>
                   </box>
                 </stack>
-                <data id="backgroundColorData" pref="true" preftype="color" prefstring="editor.background_color" prefattribute="value"/>
+                <data id="backgroundColorData" pref="true" preftype="color" prefstring="editor.background_color" prefattribute="value" wsm_attributes="value"/>
               </row>
             </rows>
           </grid>
@@ -148,7 +148,7 @@
         <spring flex="1"/>
       </box>
     </box>
-    <spring class="spacer"/>
+    <spring class="spacer"/> 
     <separator class="thin"/>
 
     <text class="label" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
