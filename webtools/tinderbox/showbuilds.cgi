@@ -90,6 +90,9 @@ else {
     if( $form{'express'} ) {
         &do_express;
     }
+    elsif( $form{'panel'} ) {
+        &do_panel;
+    }
     else {
         &load_data;
         &load_javascript;
@@ -400,7 +403,7 @@ sub display_continue_row {
       print '<td></td>';
     } else {
       print '<td bgcolor="'.$last_color{$bn}
-            .'" background="cont.gif">&nbsp</td>';
+            .'" background="continue.gif">&nbsp</td>';
     }
     $bn++;
   }
@@ -725,46 +728,16 @@ sub do_express {
     my %build;
     my %times;
 
-    { 
-      use Backwards;
-    
-      my ($bw) = Backwards->new("$form{tree}/build.dat") or die;
+    my $treename = $form{tree};
 
-      my $latest_time=0;
-      my $tooearly = 0;
-      while( $_ = $bw->readline ) {
-	chop;
-	($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile) = 
-	  split( /\|/ );
-	if( $buildstatus eq 'success' or $buildstatus eq 'busted' ) {
-	  if ($latest_time == 0) {
-	    $latest_time = $buildtime;
-	  }
-	  # Ignore stuff in the future.
-	  next if $buildtime > $maxdate;
-	  # Ignore stuff more than 12 hours old
-	  if ($buildtime < $latest_time - 12*60*60) {
-            # Occasionally, a build might show up with a bogus time.  So,
-            # we won't judge ourselves as having hit the end until we
-            # hit a full 20 lines in a row that are too early.
-            if ($tooearly++ > 20) {
-              last;
-            }
-            next;
-          }
-	  next if defined $build{$buildname};
-	  
-	  $build{$buildname} = $buildstatus;
-	  $times{$buildname} = $buildtime;
-	}
-      }
-    }
+    loadquickparseinfo($treename, \%build, \%times);
 
-    @keys = sort keys %build;
-    $keycount = @keys;
-    $treename = $form{tree};
-    $tm = &print_time(time);
-    print "<table border=1 align=center><tr><th colspan=$keycount><a href=showbuilds.cgi?tree=$treename";
+    my @keys = sort keys %build;
+    my $keycount = @keys;
+    my $tm = &print_time(time);
+    print "<table border=1 cellpadding=1 cellspacing=1><tr>";
+    print "<th align=left colspan=$keycount>";
+    print "<a href=showbuilds.cgi?tree=$treename";
     print "&hours=$form{'hours'}" if $form{'hours'};
     print "&nocrap=1" if $form{'nocrap'};
     print ">$tree as of $tm</a></tr>"
@@ -786,43 +759,71 @@ sub do_express {
     print "</tr></table>\n";
 }
 
+# This is essentially do_express but it outputs a different format
+sub do_panel {
+    my $bonsai_tree = '';
+    require "$tree/treedata.pl";
+    if ($bonsai_tree ne "") {
+      print "The tree is", tree_open() ? "OPEN" : "CLOSED", "<br>\n";
+    }
+
+    my %build, %times;
+    loadquickparseinfo($form{tree}, \%build, \%times);
+
+    my @keys = sort keys %build;
+    my $keycount = @keys;
+    my $tm = &print_time(time);
+
+    print "<a href=showbuilds.cgi?tree=$form{tree}";
+    print "&hours=$form{'hours'}" if $form{'hours'};
+    print "&nocrap=1" if $form{'nocrap'};
+    print ">$tree as of $tm</a><br>";
+    print "<table border=0 cellpadding=1 cellspacing=1>";
+    for $buildname (@keys) {
+      print "<tr><td bgcolor='";
+      print $build{$buildname} eq 'success' ? '00ff00' : 'FF0000';
+      print "'>$buildname</td></tr>";
+    }
+    print "</table>\n";
+}
 
 sub loadquickparseinfo {
-    my ($t, $build, $times) = (@_);
-    open(BUILDLOG, "<$t/build.dat" ) || die "Bad treename $t";
-    while( <BUILDLOG> ){
-        chop;
-        my ($mailtime, $buildtime, $buildname, $errorparser,
-            $buildstatus, $logfile) = split( /\|/ );
-        if( $buildstatus eq 'success' || $buildstatus eq 'busted'){
-            $build->{$buildname} = $buildstatus;
-            $times->{$buildname} = $buildtime;
-        }
-    }
-    close( BUILDLOG );
+  my ($tree, $build, $times) = (@_);
+
+  do "$tree/ignorebuilds.pl";
     
-    if( -r "$t/ignorebuilds.pl" ){
-        require "$t/ignorebuilds.pl";
-        foreach my $z (keys(%$ignore_builds)) {
-            delete $build->{$z}; # We're supposed to ignore this
-                                # build entirely.
-        }
-    }
-    my @keys = sort keys %build;
+  use Backwards;
     
-    my $maxtime = 0;
-    for my $buildname (@keys) {
-        if ($maxtime < $times->{$buildname}) {
-            $maxtime = $times->{$buildname};
-        }
+  my ($bw) = Backwards->new("$form{tree}/build.dat") or die;
+    
+  my $latest_time = 0;
+  my $tooearly = 0;
+  while( $_ = $bw->readline ) {
+    chop;
+    my ($buildtime, $buildname, $buildstatus) = (split /\|/)[1,2,4];
+    
+    if ($buildstatus =~ /^success|busted$/) {
+
+      # Ignore stuff in the future.
+      next if $buildtime > $maxdate;
+
+      $latest_time = $buildtime if $buildtime > $latest_time;
+
+      # Ignore stuff more than 12 hours old
+      if ($buildtime < $latest_time - 12*60*60) {
+        # Hack: A build may give a bogus time. To compensate, we will
+        # not stop until we hit a 20 lines that are too early.
+
+        last if $tooearly++ > 20;
+        next;
+      }
+      next if exists $build->{$buildname};
+      next if exists $ignore_builds->{$buildname};
+      
+      $build->{$buildname} = $buildstatus;
+      $times->{$buildname} = $buildtime;
     }
-    for my $buildname (@keys ){
-        if ($times->{$buildname} < $maxtime - 12*60*60) {
-            # This build is more than 12 hours old.  Ignore it.
-            delete $times->{$buildname};
-            delete $build->{$buildname};
-        }
-    }
+  }
 }
 
 sub do_quickparse {
