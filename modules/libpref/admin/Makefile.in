@@ -23,7 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef POLARIS
-SHARED_LIBRARY	= $(OBJDIR)/libAutoAdmin.so
+SHARED_LIBRARY	= libAutoAdmin.so
 endif
 
 XFEDIR		= $(DEPTH)/cmd/xfe
@@ -34,7 +34,7 @@ REQUIRES	= dbm ldap js pref
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(DEPTH)/cmd/xfe/icons/$(OBJDIR)
+INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(DEPTH)/cmd/xfe/icons
 DEFINES		+= -DPOLARIS
 GARBAGE		+= icondata.c
 
@@ -52,4 +52,4 @@ polaris: $(SHARED_LIBRARY)
 icondata.c:
 	@rm -f icondata.c $(NOSUCHFILE)
 	@cd $(XFEDIR)/icons; $(MAKE)
-	@ln -s $(XFEDIR)/icons/$(OBJDIR)/icondata.c $@
+	@ln -s $(XFEDIR)/icons/icondata.c $@

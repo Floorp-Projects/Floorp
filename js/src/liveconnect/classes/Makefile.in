@@ -63,7 +63,7 @@ natives_list:: FORCE
 
 check_natives:: natives_list
 	rm -f found_natives
-	nm -B	../$(OBJDIR)/*.o \
+	nm -B	../*.o \
 	    | egrep "Java.*_stub" | awk '{ print $$3; }' | sort > found_natives
 	diff found_natives natives_list
 

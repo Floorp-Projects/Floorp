@@ -185,14 +185,7 @@ endif
 #
 # Default command macros; can be overridden in <arch>.mk.
 #
-ifdef USE_AUTOCONF
 CCC		= $(CXX)
-else
-AS		= $(CC)
-ASFLAGS		= $(CFLAGS)
-CC		= gcc
-CCC		= g++
-endif
 CCF		= $(CC) $(CFLAGS)
 LINK_EXE	= $(LINK) $(OS_LFLAGS) $(LFLAGS)
 LINK_DLL	= $(LINK) $(OS_DLLFLAGS) $(DLLFLAGS)
@@ -244,9 +237,6 @@ INSTALL		= $(NSINSTALL)
 JAVA_PROG	= java
 else
 PATH_SEPARATOR	:= :
-ifndef USE_AUTOCONF
-DLL_SUFFIX	= so
-endif
 LIB_SUFFIX	= a
 ifeq ($(AWT_11),1)
 JAVA_PROG	= $(NS_BIN)java
@@ -266,71 +256,15 @@ ifeq ($(OS_ARCH),OpenVMS)
 include $(topsrcdir)/config/$(OS_ARCH).mk
 endif
 
-ifdef USE_AUTOCONF
 OPTIMIZER	=
 ifndef MOZ_DEBUG
 DEFINES		+= -UDEBUG -DNDEBUG -DTRIMMED
 endif
 XBCFLAGS	=
-else
-
-#
-# Debug by default.
-#
-OBJDIR_TAG	= _DBG
-OPTIMIZER	= -g
-JAVA_OPTIMIZER	= -g
-XBCFLAGS	= -FR$*
-XCFLAGS		= $(LCFLAGS)
-XLFLAGS		= $(LLFLAGS)
-
-ifeq ($(OS_ARCH),OS2)
-OPTIMIZER	= -Ti+
-XLFLAGS		+= -DEBUG
-ifdef BUILD_PROFILE
-OPTIMIZER	+= -Gh+ 
-OBJDIR_TAG	= _PRF
-else
-OPTIMIZER	+= -DDEBUG
-ifdef BUILD_MEMDBG
-OPTIMIZER	+= -Tm+ -DXP_OS2_MEMDEBUG=1
-OBJDIR_TAG	= _MEM
-endif
-endif
-else
-ifeq ($(OS_ARCH),WINNT)
-OPTIMIZER	= -Od -Z7
-JAVA_OPTIMIZER	= $(OPTIMIZER)
-XLFLAGS		+= -DEBUG
-else
-DEFINES		= -DDEBUG -UNDEBUG -DDEBUG_$(shell $(WHOAMI)) -DTRACING
-endif
-endif
-
-ifdef BUILD_OPT
-OBJDIR_TAG	= _OPT
-XBCFLAGS	=
-ifeq ($(OS_ARCH),OS2)
-OPTIMIZER	= -O+ -Oi -DNDEBUG
-else
-ifeq ($(OS_ARCH),WINNT)
-OPTIMIZER	= -O2
-else
-OPTIMIZER	= -O
-DEFINES		= -UDEBUG -DNDEBUG -DTRIMMED
-endif
-endif
-endif
-endif # !USE_AUTOCONF
 
 ifdef MOZ_DEBUG
-ifdef USE_AUTOCONF
 OPTIMIZER	=
 DEFINES		+= -DDEBUG -UNDEBUG -DDEBUG_$(shell $(WHOAMI)) -DTRACING
-else
-OPTIMIZER	= -g
-DEFINES		= -DDEBUG -UNDEBUG -DDEBUG_$(shell $(WHOAMI)) -DTRACING
-endif
 JAVA_OPTIMIZER	= -g
 XBCFLAGS	= -FR$*
 endif
@@ -388,15 +322,6 @@ endif
 #
 # Name of the binary code directories
 #
-ifndef USE_AUTOCONF
-ifeq ($(OS_ARCH)_$(PROCESSOR_ARCHITECTURE),WINNT_x86)
-OBJDIR_NAME	= $(OS_CONFIG)$(OS_VERSION)$(OBJDIR_TAG).OBJ
-else
-OBJDIR_NAME	= $(OS_CONFIG)$(OS_VERSION)$(PROCESSOR_ARCHITECTURE)$(COMPILER)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
-endif
-
-else
-# We're autoconf freaks here
 # Override defaults
 EMACS			= $(ACEMACS)
 PERL			= $(ACPERL)
@@ -404,12 +329,9 @@ RANLIB			= $(ACRANLIB)
 UNZIP_PROG		= $(ACUNZIP)
 WHOAMI			= $(ACWHOAMI)
 ZIP_PROG		= $(ACZIP)
-endif
 
-BUILD		= $(OBJDIR_NAME)
-OBJDIR		= $(OBJDIR_NAME)
 XPDIST		= $(DEPTH)/dist
-DIST		= $(DEPTH)/dist/$(OBJDIR_NAME)
+DIST		= $(DEPTH)/dist
 
 # We need to know where to find the libraries we
 # put on the link line for binaries, and should
@@ -419,12 +341,7 @@ LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 # all public include files go in subdirectories of PUBLIC:
 PUBLIC		= $(XPDIST)/include
 
-ifdef USE_AUTOCONF
 DEPENDENCIES	= .md
-else
-VPATH		= $(OBJDIR)
-DEPENDENCIES	= $(OBJDIR)/.md
-endif
 
 ifneq ($(OS_ARCH),WINNT)
 
@@ -436,10 +353,10 @@ MKDEPEND_DIR	=
 MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND) -Y -w 3000
 else
 MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
-MKDEPEND	= $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
+MKDEPEND	= $(MKDEPEND_DIR)/mkdepend
 endif
 
-MKDEPENDENCIES	= $(OBJDIR)/depend.mk
+MKDEPENDENCIES	= depend.mk
 
 endif
 
@@ -466,25 +383,6 @@ else
 MOZILLA_CLIENT	= 1
 MOZ_JSD		= 1
 endif
-
-ifndef USE_AUTOCONF
-ifdef MOZ_LITE
-NO_UNIX_LDAP	= 1
-MOZ_NAV_BUILD_PREFIX	= 1
-else
-DEFINES		+= -DMOZ_COMMUNICATOR_IIDS
-MOZ_COMMUNICATOR_IIDS	= 1
-MOZ_COMMUNICATOR_CONFIG_JS	= 1
-MOZ_COPY_ALL_JARS	= 1
-MOZ_EDITOR	= 1
-endif
-
-ifdef MOZ_MEDIUM
-ifndef MODULAR_NETLIB
-MOZ_MAIL_COMPOSE	= 1
-endif
-endif
-endif # ! USE_AUTOCONF
 
 ifdef MOZ_MAIL_COMPOSE
 DEFINES		+= -DMOZ_MAIL_COMPOSE
@@ -542,12 +440,6 @@ endif
 # Platform dependent switching off of JAVA
 #
 
-ifndef MOZ_JAVA
-ifndef USE_AUTOCONF
-MOZ_OJI		= 1	# on by default now
-endif
-endif
-
 ifdef MOZ_LIBTEST
 DEFINES		+= -DLAYPROBE_API
 MOZ_LIBTEST	= 1
@@ -603,13 +495,6 @@ PROF_FLAGS	= $(OS_GPROF_FLAGS) -DMOZILLA_GPROF
 endif
 endif
 
-# This compiles in heap dumping utilities and other good stuff 
-# for developers -- maybe we only want it in for a special SDK 
-# nspr/java runtime(?):
-ifndef USE_AUTOCONF
-DEFINES		+= -DDEVELOPER_DEBUG
-endif
-
 ifndef MOZ_FE
 MOZ_FE		= x
 endif
@@ -623,7 +508,7 @@ SDK		= $(DEPTH)/dist/sdk
 endif
 
 ifneq ($(OS_ARCH),WINNT)
-NSINSTALL	= $(DEPTH)/config/$(OBJDIR_NAME)/nsinstall
+NSINSTALL	= $(DEPTH)/config/nsinstall
 
 ifeq ($(NSDISTMODE),copy)
 # copy files, but preserve source mtime
@@ -708,12 +593,3 @@ else
 JAVA_DEFINES	+= -DAWT_102
 endif
 
-# I don't believe this is still true -cls
-ifndef USE_AUTOCONF
-
-# From nsprpub/config/config.mk, mozilla/jpeg needs to know
-# about USE_PTHREADS.  This fixes platforms like SparcLinux. -mcafee
-ifeq ($(USE_PTHREADS), 1)
-DEFINES += -D_PR_PTHREADS -UHAVE_CVAR_BUILT_ON_SEM
-endif
-endif #!USE_AUTOCONF

@@ -63,24 +63,17 @@ INCLUDES	+= -I$(srcdir)/../nsprpub/pr/include/md
 endif
 
 ifeq ($(OS_ARCH)$(OS_RELEASE),IRIX5)
-TARGETS		+= $(OBJDIR)/gtscc$(BIN_SUFFIX)
+TARGETS		+= gtscc$(BIN_SUFFIX)
 endif
-
-# Redefine MAKE_OBJDIR for just this directory
-define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); else true; fi
-endef
 
 export:: $(TARGETS)
 
-$(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
-	@$(MAKE_OBJDIR)
+gtscc$(BIN_SUFFIX):	gtscc.o
 	$(CC) $(LDFLAGS) -o $@ $< -lelf
 	$(INSTALL) -m 444 $@ $(DIST)/bin
 
 #update build number from within make script
 $(DEPTH)/build/build_number: FORCE
-	@$(MAKE_OBJDIR)
 	$(RM) $@
 	$(PERL) $(srcdir)/bdate.pl > $@
 	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/locale/en-US/navigator.dtd $@
@@ -89,8 +82,7 @@ $(DEPTH)/build/build_number: FORCE
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
 	$(PERL) $(srcdir)/set-timebomb.pl 0 30
 
-$(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
-	@$(MAKE_OBJDIR)
+bdate$(BIN_SUFFIX): bdate.o
 	$(CC) $(LDFLAGS) -o $@ $<
 	$(INSTALL) -m 444 $@ $(DIST)/bin
 
@@ -106,8 +98,3 @@ clean clobber realclean clobber_all::
 	cd $(MOZILLA_DETECT_DIR); $(MAKE) $@
 endif
 
-# For the continuous build scripts.
-show_objname:
-	@echo $(OBJDIR)
-
-.PHONY: show_objname
