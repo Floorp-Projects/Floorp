@@ -18,6 +18,7 @@
 
 
 /*
+ *  npapi.h $Revision: 3.5 $
  *  Netscape client plug-in API spec
  */
 
@@ -134,13 +135,11 @@ typedef unsigned short uint16;
 #endif
 
 #ifndef _UINT32
-#  ifndef NSPR20
 #    if defined(__alpha)
 typedef unsigned int uint32;
 #    else  /* __alpha */
 typedef unsigned long uint32;
 #    endif /* __alpha */
-#  endif /* NSPR20 */
 #endif
 
 #ifndef _INT16
@@ -148,13 +147,11 @@ typedef short int16;
 #endif
 
 #ifndef _INT32
-#  ifndef NSPR20
 #    if defined(__alpha)
 typedef int int32;
 #    else  /* __alpha */
 typedef long int32;
 #    endif /* __alpha */
-#  endif /* NSPR20 */
 #endif
 
 #ifndef FALSE
