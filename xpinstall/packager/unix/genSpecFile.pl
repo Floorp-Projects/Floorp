@@ -58,8 +58,8 @@ sub print_package_desc
   my $this_key;
   my $retval;
 
-  my $default_desc = { 'browser' => 'Mozilla browser',
-		       'installer' => 'Mozilla XP installer',
+  my $default_desc = { 'browser' => 'Mozilla Browser',
+		       'xpcom' => 'Mozilla XPCOM',
 		       'mail' => 'Mozilla Mail/News' };
   
   foreach $this_key (keys %{$modules})

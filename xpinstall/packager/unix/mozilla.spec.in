@@ -48,10 +48,10 @@ cp %{SOURCE1} $RPM_BUILD_ROOT/%{prefix}/bin/mozilla
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post install
+%post xpcom
 /sbin/ldconfig
 
-%postun install
+%postun xpcom
 /sbin/ldconfig
 
 %post browser
