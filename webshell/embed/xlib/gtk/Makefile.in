@@ -25,29 +25,22 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= embed_xlib_into_gtk
 
 CPPSRCS		= \
-			nsEmbedXlibIntoGtk.cpp \
-			nsSetupRegistry.cpp \
-			$(NULL)
-
-BASE_LIBS	= \
-			-lmozjs \
-			-lxpcom \
-			$(NULL)
-
-GECKO_LIBS		= \
-			-lraptorgfx \
-			$(MOZ_TIMER_LIBS) \
-			$(NULL)
+		nsEmbedXlibIntoGtk.cpp \
+		nsSetupRegistry.cpp \
+		$(NULL)
 
 LIBS		= \
-			$(GECKO_LIBS) \
-			$(NETLIB_LIBS) \
-			$(BASE_LIBS) \
-			$(JSJ_LIB) \
-			$(NSPR_LIBS) \
-			$(MOZ_GTK_LDFLAGS) -lxlibrgb \
-			$(NULL)
+		-lraptorgfx \
+		$(MOZ_TIMER_LIBS) \
+		$(NETLIB_LIBS) \
+		-lmozjs \
+		-lxpcom \
+		$(JSJ_LIB) \
+		$(NSPR_LIBS) \
+		$(MOZ_GTK_LDFLAGS) -lxlibrgb \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS	+=	$(MOZ_GTK_CFLAGS)
+CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
+

@@ -24,32 +24,23 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= embed_xlib_into_motif
 
+CSRCS		= EmbedMozilla.c
+
 CPPSRCS		= \
-			nsEmbedXlibIntoMotif.cpp \
-			nsSetupRegistry.cpp \
-			$(NULL)
-
-CSRCS		= \
-			EmbedMozilla.c \
-			$(NULL)
-
-BASE_LIBS	= \
-			-lmozjs \
-			-lxpcom \
-			$(NULL)
-
-GECKO_LIBS		= \
-			-lraptorgfx \
-			$(MOZ_TIMER_LIBS) \
-			$(NULL)
+		nsEmbedXlibIntoMotif.cpp \
+		nsSetupRegistry.cpp \
+		$(NULL)
 
 LIBS		= \
-			$(GECKO_LIBS) \
-			$(NETLIB_LIBS) \
-			$(BASE_LIBS) \
-			$(JSJ_LIB) \
-			$(NSPR_LIBS) \
-			$(MOZ_MOTIF_LDFLAGS) -lxlibrgb \
-			$(NULL)
+		-lraptorgfx \
+		$(MOZ_TIMER_LIBS) \
+		$(NETLIB_LIBS) \
+		-lmozjs \
+		-lxpcom \
+		$(JSJ_LIB) \
+		$(NSPR_LIBS) \
+		$(MOZ_MOTIF_LDFLAGS) -lxlibrgb \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
