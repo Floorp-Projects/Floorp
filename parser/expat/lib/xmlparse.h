@@ -1,6 +1,6 @@
 /*
 The contents of this file are subject to the Mozilla Public License
-Version 1.0 (the "License"); you may not use this file except in
+Version 1.1 (the "License"); you may not use this file except in
 compliance with the License. You may obtain a copy of the License at
 http://www.mozilla.org/MPL/
 
@@ -12,10 +12,20 @@ under the License.
 The Original Code is expat.
 
 The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998
+Portions created by James Clark are Copyright (C) 1998, 1999
 James Clark. All Rights Reserved.
 
 Contributor(s):
+
+Alternatively, the contents of this file may be used under the terms
+of the GNU General Public License (the "GPL"), in which case the
+provisions of the GPL are applicable instead of those above.  If you
+wish to allow use of your version of this file only under the terms of
+the GPL and not to allow others to use your version of this file under
+the MPL, indicate your decision by deleting the provisions above and
+replace them with the notice and other provisions required by the
+GPL. If you do not delete the provisions above, a recipient may use
+your version of this file under either the MPL or the GPL.
 */
 
 #ifndef XmlParse_INCLUDED
@@ -107,13 +117,6 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 /* data is 0 terminated */
 typedef void (*XML_CommentHandler)(void *userData, const XML_Char *data);
 
-/* #define EXTERNAL_ENTITY_SUPPORT */
-#ifdef EXTERNAL_ENTITY_SUPPORT
-typedef int (*XML_ExternalDTDLoader)(const XML_Char * base, 
-                                     const XML_Char * systemId,
-                                     char ** data);
-#endif
-
 typedef void (*XML_StartCdataSectionHandler)(void *userData);
 typedef void (*XML_EndCdataSectionHandler)(void *userData);
 
@@ -168,6 +171,14 @@ typedef void (*XML_StartNamespaceDeclHandler)(void *userData,
 
 typedef void (*XML_EndNamespaceDeclHandler)(void *userData,
 					    const XML_Char *prefix);
+
+/* This is called if the document is not standalone (it has an
+external subset or a reference to a parameter entity, but does not
+have standalone="yes"). If this handler returns 0, then processing
+will not continue, and the parser will return a
+XML_ERROR_NOT_STANDALONE error. */
+
+typedef int (*XML_NotStandaloneHandler)(void *userData);
 
 /* This is called for a reference to an external parsed general entity.
 The referenced entity is not automatically parsed.
@@ -278,13 +289,6 @@ void XMLPARSEAPI
 XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler);
 
-
-#ifdef EXTERNAL_ENTITY_SUPPORT
-void XMLPARSEAPI
-XML_SetExternalDTDLoader(XML_Parser parser,
-                         XML_ExternalDTDLoader loader);
-#endif
-
 void XMLPARSEAPI
 XML_SetCdataSectionHandler(XML_Parser parser,
 			   XML_StartCdataSectionHandler start,
@@ -316,6 +320,10 @@ void XMLPARSEAPI
 XML_SetNamespaceDeclHandler(XML_Parser parser,
 			    XML_StartNamespaceDeclHandler start,
 			    XML_EndNamespaceDeclHandler end);
+
+void XMLPARSEAPI
+XML_SetNotStandaloneHandler(XML_Parser parser,
+			    XML_NotStandaloneHandler handler);
 
 void XMLPARSEAPI
 XML_SetExternalEntityRefHandler(XML_Parser parser,
@@ -371,6 +379,12 @@ XML_SetBase(XML_Parser parser, const XML_Char *base);
 const XML_Char XMLPARSEAPI *
 XML_GetBase(XML_Parser parser);
 
+/* Returns the number of the attributes passed in last call to the
+XML_StartElementHandler that were specified in the start-tag rather
+than defaulted. */
+
+int XMLPARSEAPI XML_GetSpecifiedAttributeCount(XML_Parser parser);
+
 /* Parses some input. Returns 0 if a fatal error is detected.
 The last call to XML_Parse must have isFinal true;
 len may be zero for this call (or any other). */
@@ -396,10 +410,44 @@ so longer as the parser has not yet been freed.
 The new parser is completely independent and may safely be used in a separate thread.
 The handlers and userData are initialized from the parser argument.
 Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
+
+#if 0
+#define XML_DTD
+#endif /* 0 */
+
 XML_Parser XMLPARSEAPI
 XML_ExternalEntityParserCreate(XML_Parser parser,
 			       const XML_Char *context,
 			       const XML_Char *encoding);
+
+enum XML_ParamEntityParsing {
+  XML_PARAM_ENTITY_PARSING_NEVER,
+  XML_PARAM_ENTITY_PARSING_UNLESS_STANDALONE,
+  XML_PARAM_ENTITY_PARSING_ALWAYS
+};
+
+/* Controls parsing of parameter entities (including the external DTD
+subset). If parsing of parameter entities is enabled, then references
+to external parameter entities (including the external DTD subset)
+will be passed to the handler set with
+XML_SetExternalEntityRefHandler.  The context passed will be 0.
+Unlike external general entities, external parameter entities can only
+be parsed synchronously.  If the external parameter entity is to be
+parsed, it must be parsed during the call to the external entity ref
+handler: the complete sequence of XML_ExternalEntityParserCreate,
+XML_Parse/XML_ParseBuffer and XML_ParserFree calls must be made during
+this call.  After XML_ExternalEntityParserCreate has been called to
+create the parser for the external parameter entity (context must be 0
+for this call), it is illegal to make any calls on the old parser
+until XML_ParserFree has been called on the newly created parser.  If
+the library has been compiled without support for parameter entity
+parsing (ie without XML_DTD being defined), then
+XML_SetParamEntityParsing will return 0 if parsing of parameter
+entities is requested; otherwise it will return non-zero. */
+
+int XMLPARSEAPI
+XML_SetParamEntityParsing(XML_Parser parser,
+			  enum XML_ParamEntityParsing parsing);
 
 enum XML_Error {
   XML_ERROR_NONE,
@@ -423,7 +471,8 @@ enum XML_Error {
   XML_ERROR_UNKNOWN_ENCODING,
   XML_ERROR_INCORRECT_ENCODING,
   XML_ERROR_UNCLOSED_CDATA_SECTION,
-  XML_ERROR_EXTERNAL_ENTITY_HANDLING
+  XML_ERROR_EXTERNAL_ENTITY_HANDLING,
+  XML_ERROR_NOT_STANDALONE
 };
 
 /* If XML_Parse or XML_ParseBuffer have returned 0, then XML_GetErrorCode
@@ -442,6 +491,11 @@ of the sequence of characters that generated the event. */
 int XMLPARSEAPI XML_GetCurrentLineNumber(XML_Parser parser);
 int XMLPARSEAPI XML_GetCurrentColumnNumber(XML_Parser parser);
 long XMLPARSEAPI XML_GetCurrentByteIndex(XML_Parser parser);
+
+/* Return the number of bytes in the current event.
+Returns 0 if the event is in an internal entity. */
+
+int XMLPARSEAPI XML_GetCurrentByteCount(XML_Parser parser);
 
 /* For backwards compatibility with previous versions. */
 #define XML_GetErrorLineNumber XML_GetCurrentLineNumber
