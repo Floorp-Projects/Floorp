@@ -3866,7 +3866,7 @@ if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
 # 2004-12-13 Nick.Barnes@pobox.com bug 262268
 # Check flag type names for spaces and commas, and rename them.
 if (TableExists("flagtypes")) {
-    print "Checking flag type names for spaces and commas...\n";
+    print "Checking flag type names for spaces and commas...\n" unless $silent;
     
     # Get names and IDs which are broken.
     $sth = $dbh->prepare("SELECT name, id FROM flagtypes");
@@ -3893,8 +3893,8 @@ if (TableExists("flagtypes")) {
                 if (length($tryflagname) > 50) {
                     my $lastchanceflagname = (substr $tryflagname, 0, 47) . '...';
                     if (defined($flagtypes{$lastchanceflagname})) {
-                        print "  ... last attempt as \"$lastchanceflagname\" still failed.'\n";
-                        print "Rename the flag by hand and run checksetup.pl again.\n";
+                        print "  ... last attempt as \"$lastchanceflagname\" still failed.'\n",
+                              "Rename the flag by hand and run checksetup.pl again.\n";
                         die("Bad flag type name $flagname");
                     }
                     $tryflagname = $lastchanceflagname;
@@ -3907,7 +3907,7 @@ if (TableExists("flagtypes")) {
         }
         print "... done.\n";
     } else {
-        print "... all flag type names are good.\n";
+        print "... all flag type names are good.\n" unless $silent;
     }
 }
 
