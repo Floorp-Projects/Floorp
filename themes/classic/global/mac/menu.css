@@ -59,6 +59,15 @@ popup > menuitem[menuactive="true"]
     background-color      : -moz-mac-menuselect;
   	color				  : -moz-mac-menutextselect;
   }
+  
+menupopup > menu,
+menupopup > menuitem,
+popup > menu,
+popup > menuitem
+  {
+       max-width             : 42em; /* should move to content */ 
+  }  
+  
 
 /*Mac menu's don't highlight disabled items at all*/
 menupopup > menu[menuactive="true"][disabled="true"],
