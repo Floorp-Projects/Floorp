@@ -72,18 +72,24 @@ ExprResult* txKeyFunctionCall::evaluate(Node* aContext, ContextState* aCs)
     if (!exprResult)
         return res;
 
+    Document* contextDoc;
+    if (aContext->getNodeType() == Node::DOCUMENT_NODE)
+        contextDoc = (Document*)aContext;
+    else
+        contextDoc = aContext->getOwnerDocument();
+
     if (exprResult->getResultType() == ExprResult::NODESET) {
         NodeSet* nodeSet = (NodeSet*) exprResult;
         for (int i=0; i<nodeSet->size(); i++) {
             String val;
             XMLDOMUtils::getNodeValue(nodeSet->get(i), &val);
-            key->getNodes(val,aContext->getOwnerDocument())->copyInto(*res);
+            key->getNodes(val,contextDoc)->copyInto(*res);
         }
     }
     else {
         String val;
         exprResult->stringValue(val);
-        key->getNodes(val,aContext->getOwnerDocument())->copyInto(*res);
+        key->getNodes(val,contextDoc)->copyInto(*res);
     }
     delete exprResult;
     return res;
@@ -124,6 +130,10 @@ txXSLKey::~txXSLKey()
  */
 const NodeSet* txXSLKey::getNodes(String& aKeyValue, Document* aDoc)
 {
+    NS_ASSERTION(aDoc, "missing document");
+    if (!aDoc)
+        return &mEmptyNodeset;
+
     NamedMap* map = (NamedMap*)mMaps.get(aDoc);
     if (!map) {
         map = addDocument(aDoc);
