@@ -1083,68 +1083,6 @@ function OpenSearch(tabName, searchStr)
       
   }
 
-  function WalletEditor()
-  {
-  	window.openDialog("chrome://wallet/content/WalletEditor.xul","walletEditor","modal,chrome,height=504,width=436"); 
-    
-  }
-
-  function WalletSafeFillin()
-  {
-    if (appCore != null) {
-      dump("Wallet Safe Fillin\n");
-      appCore.walletPreview(window, window.content);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function WalletChangePassword()
-  {
-    if (appCore != null) {
-      dump("Wallet Change Password\n");
-      appCore.walletChangePassword();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-
-  function WalletQuickFillin()
-  {
-    if (appCore != null) {
-      dump("Wallet Quick Fillin\n");
-      appCore.walletQuickFillin(window.content);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function WalletRequestToCapture()
-  {
-    if (appCore != null) {
-      dump("Wallet Request To Capture\n");
-      appCore.walletRequestToCapture(window.content);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
-
-  function WalletSamples()
-  {
-    window.content.location.href= 'http://people.netscape.com/morse/wallet/samples/';
-  }
-
-  function SignonViewer()
-  {
-      window.openDialog("chrome://wallet/content/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
-  }
-
-  function CookieViewer()
-  {
-   window.openDialog("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
-  }
-
   function OpenMessenger()
   {
 	window.open("chrome://messenger/content/", "_blank", "chrome,menubar,toolbar,resizable");
