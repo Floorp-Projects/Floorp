@@ -222,11 +222,11 @@ PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRo
 		else {
 			displayName = firstName;
 			if (!middleName.IsEmpty()) {
-				displayName.Append( ' ');
+				displayName.AppendWithConversion( ' ');
 				displayName.Append( middleName);
 			}
 			if (!lastName.IsEmpty()) {
-				displayName.Append( ' ');
+				displayName.AppendWithConversion( ' ');
 				displayName.Append( lastName);
 			}
 		}
