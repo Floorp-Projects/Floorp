@@ -70,8 +70,10 @@
  * version uses a global mutex_t to implement the atomic routines
  * in solaris.c, which is actually equivalent to the default
  * implementation.
+ *
+ * 64-bit Solaris requires sparc v9, which has atomic instructions.
  */
-#if defined(i386) || defined(_PR_GLOBAL_THREADS_ONLY)
+#if defined(i386) || defined(_PR_GLOBAL_THREADS_ONLY) || defined(IS_64)
 #define _PR_HAVE_ATOMIC_OPS
 #endif
 
