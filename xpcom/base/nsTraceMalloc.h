@@ -158,6 +158,16 @@ PR_EXTERN(void) NS_TraceMallocCloseLogFD(int fd);
  */
 PR_EXTERN(void) NS_TraceMallocLogTimestamp(const char *caption);
 
+/**
+ * Dump a human-readable listing of current allocations and their compressed
+ * stack backtraces to the file named by pathname.  Beware this file may have
+ * very long lines.
+ *
+ * Return -1 on error with errno set by the system, 0 on success.
+ */
+PR_EXTERN(int)
+NS_TraceMallocDumpAllocations(const char *pathname);
+
 PR_END_EXTERN_C
 
 #endif /* nsTraceMalloc_h___ */

@@ -1088,14 +1088,32 @@ TraceMallocLogTimestamp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_TRUE;
 }
 
+static JSBool
+TraceMallocDumpAllocations(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    const char *pathname;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    pathname = JS_GetStringBytes(str);
+    if (NS_TraceMallocDumpAllocations(pathname) < 0) {
+        JS_ReportError(cx, "can't dump to %s: %s", pathname, strerror(errno));
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
 static JSFunctionSpec TraceMallocFunctions[] = {
-    {"TraceMallocDisable",        TraceMallocDisable,       0, 0, 0},
-    {"TraceMallocEnable",         TraceMallocEnable,        0, 0, 0},
-    {"TraceMallocOpenLogFile",    TraceMallocOpenLogFile,   1, 0, 0},
-    {"TraceMallocChangeLogFD",    TraceMallocChangeLogFD,   1, 0, 0},
-    {"TraceMallocCloseLogFD",     TraceMallocCloseLogFD,    1, 0, 0},
-    {"TraceMallocLogTimestamp",   TraceMallocLogTimestamp,  1, 0, 0},
-    {NULL,                        NULL,                     0, 0, 0}
+    {"TraceMallocDisable",         TraceMallocDisable,         0, 0, 0},
+    {"TraceMallocEnable",          TraceMallocEnable,          0, 0, 0},
+    {"TraceMallocOpenLogFile",     TraceMallocOpenLogFile,     1, 0, 0},
+    {"TraceMallocChangeLogFD",     TraceMallocChangeLogFD,     1, 0, 0},
+    {"TraceMallocCloseLogFD",      TraceMallocCloseLogFD,      1, 0, 0},
+    {"TraceMallocLogTimestamp",    TraceMallocLogTimestamp,    1, 0, 0},
+    {"TraceMallocDumpAllocations", TraceMallocDumpAllocations, 1, 0, 0},
+    {NULL,                         NULL,                       0, 0, 0}
 };
 
 #endif /* NS_TRACE_MALLOC */

@@ -44,6 +44,7 @@
  */
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
@@ -374,6 +375,7 @@ struct callsite {
     uint32      serial;
     lfd_set     lfdset;
     char        *name;
+    int         offset;
     callsite    *parent;
     callsite    *siblings;
     callsite    *kids;
@@ -387,7 +389,7 @@ static uint32   callsite_serial_generator = 0;
 static uint32   tmstats_serial_generator = 0;
 
 /* Root of the tree of callsites, the sum of all (cycle-compressed) stacks. */
-static callsite calltree_root = {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, NULL, NULL, NULL};
+static callsite calltree_root = {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, 0, NULL, NULL, NULL};
 
 /* Basic instrumentation. */
 static nsTMStats tmstats = NS_TMSTATS_STATIC_INITIALIZER;
@@ -693,6 +695,7 @@ static callsite *calltree(uint32 *bp)
             site->serial = ++callsite_serial_generator;
             LFD_ZERO(&site->lfdset);
             site->name = method;
+            site->offset = offset;
             site->parent = parent;
             site->siblings = parent->kids;
             parent->kids = site;
@@ -1257,6 +1260,42 @@ NS_TraceMallocLogTimestamp(const char *caption)
 
     if (tmmon)
         PR_ExitMonitor(tmmon);
+}
+
+static PRIntn
+allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
+{
+    allocation *alloc = (allocation*) he;
+    FILE *ofp = (FILE*) arg;
+    callsite *site = (callsite*) he->value;
+
+    fprintf(ofp, "%8p %9lu ", he->key, (unsigned long) alloc->size);
+    while (site) {
+        if (site->name || site->parent)
+            fprintf(ofp, " %s+%d", site->name, site->offset);
+        site = site->parent;
+        if (site)
+            fputc(';', ofp);
+    }
+    fputc('\n', ofp);
+    return HT_ENUMERATE_NEXT;
+}
+
+PR_IMPLEMENT(int)
+NS_TraceMallocDumpAllocations(const char *pathname)
+{
+    FILE *ofp;
+    int rv;
+
+    ofp = fopen(pathname, "w");
+    if (!ofp)
+        return -1;
+    fprintf(ofp, "Address        size  stack\n");
+    if (allocations)
+        PL_HashTableEnumerateEntries(allocations, allocation_enumerator, ofp);
+    rv = ferror(ofp) ? -1 : 0;
+    fclose(ofp);
+    return rv;
 }
 
 #endif /* NS_TRACE_MALLOC */
