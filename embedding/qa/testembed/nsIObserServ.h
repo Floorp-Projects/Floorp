@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   David Epstein <depstein@netscape.com> 
+ *   Ashish Bhatt <ashishbhatt@netscape.com> 
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -58,12 +59,14 @@ public:
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIOBSERVER
 
+	//nsCOMPtr<nsIWebBrowser> qaWebBrowser ;
 
 	void RunAllTests();
 	void AddObserversTest();
 	void RemoveObserversTest();
 	void NotifyObserversTest();
 	void EnumerateObserversTest();
+	void OnStartTests(UINT nMenuID);
 
 };
 

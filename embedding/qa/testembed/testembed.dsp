@@ -142,6 +142,10 @@ SOURCE=.\nsiHistory.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\nsIObserServ.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsIRequest.cpp
 # End Source File
 # Begin Source File
@@ -243,6 +247,10 @@ SOURCE=.\nsiDirServ.h
 # Begin Source File
 
 SOURCE=.\nsiHistory.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsIObserServ.h
 # End Source File
 # Begin Source File
 
