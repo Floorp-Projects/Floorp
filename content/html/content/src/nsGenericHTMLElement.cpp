@@ -4708,8 +4708,10 @@ nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  // XXX is escapedQuery really ASCII or UTF8
-  CopyASCIItoUCS2(NS_LITERAL_CSTRING("?") + search, aSearch);
+  if (!search.IsEmpty()) {
+    // XXX is escapedQuery really ASCII or UTF8
+    CopyASCIItoUCS2(NS_LITERAL_CSTRING("?") + search, aSearch);
+  }
 
   return NS_OK;
 
@@ -4764,8 +4766,9 @@ nsGenericHTMLElement::GetHashFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  aHash.Assign(PRUnichar('#'));
-  aHash.Append(NS_ConvertASCIItoUCS2(ref));
+  if (!ref.IsEmpty()) {
+    CopyASCIItoUCS2(NS_LITERAL_CSTRING("#") + ref, aHash);
+  }
 
   return NS_OK;
 }
