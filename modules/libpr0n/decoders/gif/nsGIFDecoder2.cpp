@@ -177,9 +177,9 @@ nsGIFDecoder2::FlushImageData()
     break;
   
     case 1: {  // one pass on - need to handle bottom & top rects
-      nsRect r(0, 0, width, mCurrentRow);
+      nsRect r(0, 0, width, mCurrentRow+1);
       mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
-      nsRect r2(0, mLastFlushedRow+1, width, height-mLastFlushedRow);
+      nsRect r2(0, mLastFlushedRow+1, width, height-mLastFlushedRow-1);
       mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r2);
     }
     break;
