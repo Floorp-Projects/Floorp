@@ -191,6 +191,8 @@ bin/components/filepicker.xpt
 bin/components/mozldap.xpt
 bin/components/typeaheadfind.xpt
 bin/components/nsCloseAllWindows.js
+bin/components/extensions.xpt
+bin/components/nsExtensionManager.js
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar

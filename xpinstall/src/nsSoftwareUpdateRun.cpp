@@ -71,6 +71,8 @@
 #include "nsIJAR.h"
 #include "nsIPrincipal.h"
 
+#include "nsIExtensionManager.h"
+
 #ifndef MOZ_XUL_APP
 #include "nsIChromeRegistrySea.h"
 #endif
@@ -89,6 +91,8 @@ extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *gl
 // Defined in this file:
 PR_STATIC_CALLBACK(void) XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal, char** scriptBuffer, PRUint32 *scriptLength);
+static PRInt32  CanInstallFromExtensionManifest(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal);
+
 static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, 
                                     PRUint32 flags, nsIXULChromeRegistry* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
@@ -242,6 +246,51 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Function name    : CanInstallFromExtensionManifest
+// Description      : Returns a stream to an extension manifest file from a passed jar file.
+// Return type      : PRInt32
+// Argument         : nsIZipReader* hZip       - the zip reader
+// Argument         : nsIFile* jarFile         - the .xpi file
+// Argument         : nsIPrincipal* aPrincipal - a principal, if any, displayed to the user 
+//                    regarding the cert used to sign this install
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+static PRInt32
+CanInstallFromExtensionManifest(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal)
+{
+    PRInt32 result = NS_OK;
+
+    nsIFile* jFile;
+    nsresult rv =jarFile->Clone(&jFile);
+    if (NS_SUCCEEDED(rv))
+        rv = hZip->Init(jFile);
+
+    if (NS_FAILED(rv))
+        return nsInstall::CANT_READ_ARCHIVE;
+
+    rv = hZip->Open();
+    if (NS_FAILED(rv))
+        return nsInstall::CANT_READ_ARCHIVE;
+ 
+    // CRC check the integrity of all items in this archive
+    rv = hZip->Test(nsnull);
+    if (NS_FAILED(rv))
+    {
+        NS_ASSERTION(0, "CRC check of archive failed!");
+        return nsInstall::CANT_READ_ARCHIVE;
+    }
+
+    rv = VerifySigning(hZip, aPrincipal);
+    if (NS_FAILED(rv))
+    {
+        NS_ASSERTION(0, "Signing check of archive failed!");
+        return nsInstall::INVALID_SIGNATURE;
+    }
+ 
+    // Verify that install.rdf exists
+    return hZip->Test("install.rdf");
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -478,94 +527,110 @@ extern "C" void RunInstallOnThread(void *data)
 
     if (NS_SUCCEEDED(rv))
     {
-        finalStatus = GetInstallScriptFromJarfile( hZip,
-                                                   jarpath,
-                                                   installInfo->mPrincipal,
-                                                   &scriptBuffer,
-                                                   &scriptLength);
-
-        if ( finalStatus == NS_OK && scriptBuffer )
+        PRBool installed = PR_FALSE;
+        finalStatus = CanInstallFromExtensionManifest( hZip,
+                                                       jarpath,
+                                                       installInfo->mPrincipal);
+        if (NS_SUCCEEDED(finalStatus)) 
         {
-            PRBool ownRuntime = PR_FALSE;
-
-            nsCOMPtr<nsIJSRuntimeService> rtsvc =
-                     do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
-            if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
+            nsIExtensionManager* em = installInfo->GetExtensionManager();
+            if (em) 
             {
-                // service not available (wizard context?)
-                // create our own runtime
-                ownRuntime = PR_TRUE;
-                rt = JS_Init(4L * 1024L * 1024L);
+                rv = em->InstallExtension(jarpath, nsIExtensionManager::FLAG_INSTALL_PROFILE);
+                if (NS_SUCCEEDED(rv))
+                    installed = PR_TRUE;
             }
-
-            rv = SetupInstallContext( hZip, jarpath,
-                                      installInfo->GetURL(),
-                                      installInfo->GetArguments(),
-                                      installInfo->GetFlags(),
-                                      installInfo->GetChromeRegistry(),
-                                      rt, &cx, &glob);
-
-            if (NS_SUCCEEDED(rv))
+        }
+        
+        if (!installed)
+        {
+            finalStatus = GetInstallScriptFromJarfile( hZip,
+                                                       jarpath,
+                                                       installInfo->mPrincipal,
+                                                       &scriptBuffer,
+                                                       &scriptLength);
+            if ( finalStatus == NS_OK && scriptBuffer )
             {
-                // Go ahead and run!!
-                jsval rval;
-                jsval installedFiles;
-                JS_BeginRequest(cx); //Increment JS thread counter associated
-                                     //with this context
-                PRBool ok = JS_EvaluateScript(  cx,
-                                                glob,
-                                                scriptBuffer,
-                                                scriptLength,
-                                                nsnull,
-                                                0,
-                                                &rval);
+                PRBool ownRuntime = PR_FALSE;
 
-
-                if(!ok)
+                nsCOMPtr<nsIJSRuntimeService> rtsvc =
+                        do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
+                if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
                 {
-                    // problem compiling or running script -- a true SCRIPT_ERROR
-                    if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
-                       JSVAL_TO_BOOLEAN(installedFiles))
-                    {
-                        nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
-                        a->InternalAbort(nsInstall::SCRIPT_ERROR);
-                    }
+                    // service not available (wizard context?)
+                    // create our own runtime
+                    ownRuntime = PR_TRUE;
+                    rt = JS_Init(4L * 1024L * 1024L);
+                }
 
-                    finalStatus = nsInstall::SCRIPT_ERROR;
+                rv = SetupInstallContext( hZip, jarpath,
+                                          installInfo->GetURL(),
+                                          installInfo->GetArguments(),
+                                          installInfo->GetFlags(),
+                                          installInfo->GetChromeRegistry(),
+                                          rt, &cx, &glob);
+
+                if (NS_SUCCEEDED(rv))
+                {
+                    // Go ahead and run!!
+                    jsval rval;
+                    jsval installedFiles;
+                    JS_BeginRequest(cx); //Increment JS thread counter associated
+                                        //with this context
+                    PRBool ok = JS_EvaluateScript(  cx,
+                                                    glob,
+                                                    scriptBuffer,
+                                                    scriptLength,
+                                                    nsnull,
+                                                    0,
+                                                    &rval);
+
+
+                    if(!ok)
+                    {
+                        // problem compiling or running script -- a true SCRIPT_ERROR
+                        if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
+                          JSVAL_TO_BOOLEAN(installedFiles))
+                        {
+                            nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
+                            a->InternalAbort(nsInstall::SCRIPT_ERROR);
+                        }
+
+                        finalStatus = nsInstall::SCRIPT_ERROR;
+                    }
+                    else
+                    {
+                        // check to make sure the script sent back a status -- if
+                        // not the install may have been syntactically correct but
+                        // left the init/(perform|cancel) transaction open
+
+                        if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
+                          JSVAL_TO_BOOLEAN(installedFiles))
+                        {
+                            // install items remain in queue, must clean up!
+                            nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
+                            a->InternalAbort(nsInstall::MALFORMED_INSTALL);
+                        }
+
+                        jsval sent;
+                        if ( JS_GetProperty( cx, glob, "_finalStatus", &sent ) )
+                            finalStatus = JSVAL_TO_INT(sent);
+                        else
+                            finalStatus = nsInstall::UNEXPECTED_ERROR;
+                    }
+                    JS_EndRequest(cx); //Decrement JS thread counter
+                    JS_DestroyContextMaybeGC(cx);
                 }
                 else
                 {
-                    // check to make sure the script sent back a status -- if
-                    // not the install may have been syntactically correct but
-                    // left the init/(perform|cancel) transaction open
-
-                    if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
-                       JSVAL_TO_BOOLEAN(installedFiles))
-                    {
-                        // install items remain in queue, must clean up!
-                        nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
-                        a->InternalAbort(nsInstall::MALFORMED_INSTALL);
-                    }
-
-                    jsval sent;
-                    if ( JS_GetProperty( cx, glob, "_finalStatus", &sent ) )
-                        finalStatus = JSVAL_TO_INT(sent);
-                    else
-                        finalStatus = nsInstall::UNEXPECTED_ERROR;
+                    // couldn't initialize install context
+                    finalStatus = nsInstall::UNEXPECTED_ERROR;
                 }
-                JS_EndRequest(cx); //Decrement JS thread counter
-                JS_DestroyContextMaybeGC(cx);
-            }
-            else
-            {
-                // couldn't initialize install context
-                finalStatus = nsInstall::UNEXPECTED_ERROR;
-            }
 
-            // clean up Runtime if we created it ourselves
-            if ( ownRuntime )
-                JS_DestroyRuntime(rt);
-        }
+                // clean up Runtime if we created it ourselves
+                if ( ownRuntime )
+                    JS_DestroyRuntime(rt);
+            }
         // force zip archive closed before other cleanup
         hZip = 0;
     }
@@ -639,14 +704,48 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
             if ( isSkin )
             {
-              rv = reg->InstallSkin(spec.get(), PR_TRUE, PR_FALSE);
+                PRBool installed = PR_FALSE;
 
+                // Look for a theme manifest
+
+                static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
+                static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
+                nsresult rv;
+                nsCOMPtr<nsIZipReader> hZip = do_CreateInstance(kZipReaderCID, &rv);
+                if (hZip)
+                    rv = hZip->Init(info->GetFile());
+                if (NS_SUCCEEDED(rv))
+                {
+                    hZip->Open();
+
+                    nsIExtensionManager* em = info->GetExtensionManager();
+                    rv = hZip->Test("install.rdf");
+                    if (NS_SUCCEEDED(rv) && em)
+                    {
+                        rv = em->InstallTheme(info->GetFile(), nsIExtensionManager::FLAG_INSTALL_PROFILE);
+                        if (NS_SUCCEEDED(rv))
+                            installed = PR_TRUE;
+                    }
+    
+                    hZip->Close();
+                    // Extension Manager copies the theme .jar file to 
+                    // a different location, so remove the temporary file.
+                    info->GetFile()->Remove(PR_FALSE);
+                }
+                
+                // We either have an old-style theme with no theme.rdf 
+                // manifest, OR we have a new style theme and InstallTheme
+                // returned an error (e.g. it's not implemented in Seamonkey, 
+                // or something else went wrong)
+                if (!installed)
+                    rv = reg->InstallSkin(spec.get(), PR_TRUE, PR_FALSE);
+                
 #ifndef MOZ_XUL_APP
-              if (NS_SUCCEEDED(rv) && selected && cr)
-              {
-                  NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
-                  cr->SelectSkin(utf8Args, PR_TRUE);
-              }
+                if (NS_SUCCEEDED(rv) && selected)
+                {
+                    NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
+                    rv = reg->SelectSkin(utf8Args, PR_TRUE);
+                }
 #endif
             }
 
@@ -655,10 +754,10 @@ extern "C" void RunChromeInstallOnThread(void *data)
                 rv = reg->InstallLocale(spec.get(), PR_TRUE);
 
 #ifndef MOZ_XUL_APP
-                if (NS_SUCCEEDED(rv) && selected && cr)
+                if (NS_SUCCEEDED(rv) && selected)
                 {
                     NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
-                    cr->SelectLocale(utf8Args, PR_TRUE);
+                    rv = cr->SelectLocale(utf8Args, PR_TRUE);
                 }
 #endif
             }

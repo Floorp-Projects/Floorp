@@ -1,4 +1,3 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,11 +20,11 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Daniel Veditz <dveditz@netscape.com>
- *   Douglas Turner <dougt@netscape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Sean Su <ssu@netscape.com>
- *   Samir Gehani <sgehani@netscape.com>
+ *     Daniel Veditz <dveditz@netscape.com>
+ *     Douglas Turner <dougt@netscape.com>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
+ *     Sean Su <ssu@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,8 +39,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-
 
 #include "nscore.h"
 #include "nsIFactory.h"
@@ -160,7 +157,8 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
                              nsIPrincipal*      aPrincipal,
                              PRUint32           flags,
                              nsIXPIListener*    aListener,
-                             nsIXULChromeRegistry* aChromeRegistry)
+                             nsIXULChromeRegistry* aChromeRegistry,
+                             nsIExtensionManager* aExtensionManager)
 : mPrincipal(aPrincipal),
   mError(0),
   mType(aInstallType),
@@ -169,7 +167,8 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
   mArgs(aArgs),
   mFile(aFile),
   mListener(aListener),
-  mChromeRegistry(aChromeRegistry)
+  mChromeRegistry(aChromeRegistry),
+  mExtensionManager(aExtensionManager)
 {
     MOZ_COUNT_CTOR(nsInstallInfo);
 }
@@ -1163,7 +1162,7 @@ PRInt32
 nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn)
 {
     *aReturn = JSVAL_NULL;
-
+ 
     if (SanityCheck() != nsInstall::SUCCESS)
     {
         return NS_OK;
@@ -1620,7 +1619,7 @@ nsInstall::FileOpDirGetParent(nsInstallFolder& aTarget, nsInstallFolder** thePar
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-      folder->Init(parent,EmptyString());
+      folder->Init(parent, EmptyString());
       *theParentFolder = folder;
   }
   else
@@ -2675,10 +2674,10 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
         if (asd)
             decodeErr = asd->Decode();
 
-        delete asd;
-
         if (decodeErr != noErr)
         {
+            if (asd)
+                delete asd;
             return EXTRACTION_FAILED;
         }
 

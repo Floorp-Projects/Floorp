@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +11,8 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 #include "nsSoftwareUpdate.h"
 #include "nsXPInstallManager.h"
 #include "nsInstallTrigger.h"
@@ -56,6 +57,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
+#include "nsIObserverService.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -152,16 +154,25 @@ nsInstallTrigger::HandleContent(const char * aContentType,
     nsCOMPtr<nsIURI> referringURI;
     nsCOMPtr<nsIProperties> channelprops(do_QueryInterface(channel));
 
-    if (channelprops && 
-        NS_SUCCEEDED(channelprops->Has(kReferrerProperty, &useReferrer)) &&
-        useReferrer)
+    if (channelprops)
     {
-        // channel may have the property but set to null. In that case we know
-        // it was a typed URL or bookmark and can bypass site whitelisting, as
-        // opposed to not knowing the origin and going with the fallback plan.
-        channelprops->Get(kReferrerProperty,
-                          NS_GET_IID(nsIURI),
-                          getter_AddRefs(referringURI));
+        // Get the referrer from the channel properties if we can (not all
+        // channels support our internal-referrer property).
+        //
+        // It's possible docshell explicitly set a null referrer in the case
+        // of typed, pasted, or bookmarked URLs and the like. In this null
+        // referrer case we get NS_ERROR_NO_INTERFACE rather than the usual
+        // NS_ERROR_FAILURE that indicates the property was not set at all.
+        //
+        // A null referrer is automatically whitelisted as an explicit user
+        // action (though they'll still get the confirmation dialog). For a
+        // missing referrer we go to our fall-back plan of using the XPI
+        // location for whitelisting purposes.
+        rv = channelprops->Get(kReferrerProperty,
+                               NS_GET_IID(nsIURI),
+                               getter_AddRefs(referringURI));
+        if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NO_INTERFACE)
+            useReferrer = PR_TRUE;
     }
 
     // Cancel the current request. nsXPInstallManager restarts the download
@@ -170,7 +181,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
 
 
     // Get the global object of the target window for StartSoftwareUpdate
-    nsIScriptGlobalObject* globalObject = nsnull;
+    nsIScriptGlobalObject* globalObject;
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner = 
                                          do_QueryInterface(aWindowContext);
     if ( globalObjectOwner )
@@ -244,10 +255,15 @@ nsInstallTrigger::HandleContent(const char * aContentType,
     }
     else
     {
-        // TODO: fire event signaling blocked Install attempt
+        nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+        if (os) {
+            os->NotifyObservers(globalObject->GetDocShell(), 
+                                "xpinstall-install-blocked", 
+                                NS_LITERAL_STRING("install-chrome").get());
+        }
         rv = NS_ERROR_ABORT;
     }
-
+    
     return rv;
 }
 
@@ -392,7 +408,6 @@ nsInstallTrigger::UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUs
 
     return NS_OK;
 }
-
 
 
 NS_IMETHODIMP
