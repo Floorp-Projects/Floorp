@@ -13,12 +13,12 @@
         <xul:text class="box-smallheader-right" inherits="value=description"/>
       </xul:box>
     </content>
-    <interface>
+    <implementation>
       <property name="title" onset="this.setAttribute('title',val); return val;"
                              onget="return this.getAttribute('title');"/>
       <property name="description" onset="this.setAttribute('description',val); return val;"
                              onget="return this.getAttribute('description');"/>
-    </interface>
+    </implementation>
   </binding>
 
   <binding id="largeheader">
