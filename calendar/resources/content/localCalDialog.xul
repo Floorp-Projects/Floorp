@@ -59,7 +59,7 @@
    onload="loadCalendarServerDialog()"
    persist="screenX screenY"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   width="600"
+   width="500"
    xmlns:nc="http://home.netscape.com/NC-rdf#">
     
    <!-- width 600 for long path names; height set by onload sizeToContent() -->
@@ -111,7 +111,6 @@
                     </row>
                     
                      <!-- Color -->  
-                    //added by Dallas
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <description>&calendar.server.dialog.color.label;</description>
@@ -124,18 +123,15 @@
 						</hbox>
                     </row>
 
-                    <!-- File Picker Button -->    
                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end"/>
-                        <hbox flex="1"> 
-                           <description flex="1">&calendar.local.calendar.dialog.help.label;</description>
-                        </hbox>
+                        <separator class="groove" orient="horizontal" flex="1"/>
+                        <separator class="groove" orient="horizontal" flex="1"/>
                     </row>
-						  
-						  <!-- Location -->    
+
+                    <!-- Local Calendar File Location -->
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.server.dialog.location.label;</description>
+                            <description>&calendar.server.dialog.local.location.label;</description>
                         </hbox>
                         <hbox>
                            <textbox id="server-path-textbox" flex="1" /> 
@@ -143,31 +139,44 @@
                                    label="&calendar.server.dialog.browse.label;"/>
                         </hbox>
                     </row>
-                    
-                    <!-- Explain the following form elements -->
-						  <row align="center">
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end"/>
+                        <hbox flex="1"> 
+                           <description flex="1">&calendar.local.calendar.dialog.help.label;</description>
+                        </hbox>
+                    </row>
+
+                    <row align="center">
+                        <separator class="groove" orient="horizontal" flex="1"/>
+                        <separator class="groove" orient="horizontal" flex="1"/>
+                    </row>
+
+                    <!-- Remote Calendar File Location -->
+                    <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
                         <hbox flex="1"> 
                            <description flex="1">&calendar.local.calendar.dialog.optional.label;</description>
                         </hbox>
                     </row>
-						  
-						  <!-- Remote File Location -->    
+
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <description>&calendar.server.dialog.location.label;</description>
                         </hbox>
                         <textbox id="server-remotepath-textbox" flex="1" /> 
-                           
                     </row>
-						  
-						  <!-- Publish Automatically -->    
+
                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end"/>
-                        <hbox>
-									<checkbox id="server-publish-checkbox"/>
-									<description flex="1">&calendar.server.dialog.publish.label;</description>
-								</hbox>
+                        <separator flex="1"/>
+                        <separator flex="1"/>
+                    </row>
+
+                    <!-- Auto-Publish Checkbox -->
+                    <row align="center">
+                        <hbox class="field-label-box-class" align="end" pack="end">
+                            <checkbox id="server-publish-checkbox"/>
+                        </hbox>
+                        <description flex="1">&calendar.server.dialog.publish.label;</description>
                     </row>
                   </rows>
                </grid> 

@@ -166,7 +166,7 @@ calendarManager.prototype.launchNewOrOpenCalendarFileDialog = function calMan_la
    args.CalendarObject = ThisCalendarObject;
 
    // open the dialog modally
-   openDialog("chrome://calendar/content/localCalDialog.xul", "caAddServer", "chrome,modal", args );
+   openDialog("chrome://calendar/content/localCalDialog.xul", "caAddServer", "chrome,titlebar,modal", args );
 }
 
 /*
@@ -203,7 +203,7 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
    args.CalendarObject = ThisCalendarObject;
 
    // open the dialog modally
-   openDialog("chrome://calendar/content/localCalDialog.xul", "caEditServer", "chrome,modal", args );
+   openDialog("chrome://calendar/content/localCalDialog.xul", "caEditServer", "chrome,titlebar,modal", args );
 }
 
 
@@ -235,7 +235,7 @@ calendarManager.prototype.launchAddRemoteCalendarDialog = function calMan_launch
    args.CalendarObject = ThisCalendarObject;
 
    // open the dialog modally
-   openDialog("chrome://calendar/content/serverDialog.xul", "caAddServer", "chrome,modal", args );
+   openDialog("chrome://calendar/content/serverDialog.xul", "caAddServer", "chrome,titlebar,modal", args );
 
 }
 
@@ -272,7 +272,7 @@ calendarManager.prototype.launchEditRemoteCalendarDialog = function calMan_launc
    args.CalendarObject = ThisCalendarObject;
 
    // open the dialog modally
-   openDialog("chrome://calendar/content/serverDialog.xul", "caEditServer", "chrome,modal", args );
+   openDialog("chrome://calendar/content/serverDialog.xul", "caEditServer", "chrome,titlebar,modal", args );
 }
 
 
