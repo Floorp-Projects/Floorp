@@ -386,11 +386,11 @@ function onAccept()
     gPrintSettings.shrinkToFit   = gDialog.shrinkToFit.checked;
 
     var scaling = document.getElementById("scalingInput").value;
-    if (scaling < 50.0) {
-      scaling = 50.0;
+    if (scaling < 10.0) {
+      scaling = 10.0;
     }
-    if (scaling > 100.0) {
-      scaling = 100.0;
+    if (scaling > 500.0) {
+      scaling = 500.0;
     }
     scaling /= 100.0;
     gPrintSettings.scaling = scaling;
