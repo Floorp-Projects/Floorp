@@ -407,8 +407,8 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 	if (exists)
 	{
 		if (leafLength >= 2) 
-			mangledLeaf.SetCharAt(leafLength - 2, 'A');
-		mangledLeaf.SetCharAt(leafLength - 1, 'A');	// leafLength must be at least 1
+			mangledLeaf.SetCharAt('A', leafLength - 2);
+		mangledLeaf.SetCharAt('A', leafLength - 1);	// leafLength must be at least 1
 	}
 
 	while (!nameSpaceExhausted && path.Exists())
@@ -416,19 +416,19 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 		if (leafLength >= 2)
 		{
 			PRUnichar lastChar = mangledLeaf.CharAt(leafLength - 1);
-			mangledLeaf.SetCharAt(leafLength - 1, ++lastChar);
+			mangledLeaf.SetCharAt(++lastChar,leafLength - 1);
 			if (lastChar > 'Z')
 			{
-				mangledLeaf.SetCharAt(leafLength - 1,'A');
+				mangledLeaf.SetCharAt('A',leafLength - 1);
 				PRUnichar nextToLastChar = mangledLeaf.CharAt(leafLength - 2);
-				mangledLeaf.SetCharAt(leafLength - 2, nextToLastChar + 1);
+				mangledLeaf.SetCharAt(nextToLastChar + 1, leafLength - 2);
 				nameSpaceExhausted = (nextToLastChar == 'Z');
 			}
 		}
 		else
 		{
 			PRUnichar lastChar = mangledLeaf.CharAt(leafLength - 1);
-			mangledLeaf.SetCharAt(leafLength - 1, ++lastChar);
+			mangledLeaf.SetCharAt(++lastChar, leafLength - 1);
 			nameSpaceExhausted = (lastChar == 'Z');
 		}
 	}
