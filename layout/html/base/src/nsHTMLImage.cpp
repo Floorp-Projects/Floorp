@@ -419,13 +419,16 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
       inner.height = nscoord(p2t * image->GetHeight());
     }
     aRenderingContext.DrawImage(image, inner);
-  }
 
-  if (GetShowFrameBorders()) {
-    nsIImageMap* map = GetImageMap();
-    if (nsnull != map) {
-      aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-      map->Draw(aPresContext, aRenderingContext);
+    if (GetShowFrameBorders()) {
+      nsIImageMap* map = GetImageMap();
+      if (nsnull != map) {
+        aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+        aRenderingContext.PushState();
+        aRenderingContext.Translate(inner.x, inner.y);
+          map->Draw(aPresContext, aRenderingContext);
+          aRenderingContext.PopState();
+      }
     }
   }
 
@@ -506,24 +509,31 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
         NS_RELEASE(doc);
       }
 
-      // Translate coordinates to pixels
-      float t2p = aPresContext.GetTwipsToPixels();
-      nscoord x = nscoord(t2p * aEvent->point.x);
-      nscoord y = nscoord(t2p * aEvent->point.y);
-
       // Ask map if the x,y coordinates are in a clickable area
+      float t2p = aPresContext.GetTwipsToPixels();
       nsAutoString absURL, target, altText;
       PRBool suppress;
       if (nsnull != map) {
+        // Subtract out border and padding here so that we are looking
+        // at the right coordinates. Hit detection against area tags
+        // is done after the mouse wanders over the image, not over
+        // the image's borders.
+        nsRect inner;
+        GetInnerArea(&aPresContext, inner);
+        nscoord x = nscoord(t2p * (aEvent->point.x - inner.x));
+        nscoord y = nscoord(t2p * (aEvent->point.y - inner.y));
         nsresult r = map->IsInside(x, y, docURL, absURL, target, altText,
                                    &suppress);
         NS_IF_RELEASE(docURL);
         NS_RELEASE(map);
         if (NS_OK == r) {
           // We hit a clickable area. Time to go somewhere...
-          TriggerLink(aPresContext, absURL, target,
-                      aEvent->message == NS_MOUSE_LEFT_BUTTON_UP);
-          aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          PRBool clicked = PR_FALSE;
+          if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+            clicked = PR_TRUE;
+          }
+          TriggerLink(aPresContext, absURL, target, clicked);
         }
       }
       else {
@@ -535,12 +545,20 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
           src.Append(*srcp);
         }
         NS_MakeAbsoluteURL(docURL, baseURL, src, absURL);
+
+        // Note: We don't subtract out the border/padding here to remain
+        // compatible with navigator. [ick]
+        nscoord x = nscoord(t2p * aEvent->point.x);
+        nscoord y = nscoord(t2p * aEvent->point.y);
         char cbuf[50];
         PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", x, y);
         absURL.Append(cbuf);
-        TriggerLink(aPresContext, absURL, target,
-                    aEvent->message == NS_MOUSE_LEFT_BUTTON_UP);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        PRBool clicked = PR_FALSE;
+        if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+          aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          clicked = PR_TRUE;
+        }
+        TriggerLink(aPresContext, absURL, target, clicked);
       }
       break;
     }
@@ -572,10 +590,12 @@ ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
 
   nsIImageMap* map = GetImageMap();
   if (nsnull != map) {
+    nsRect inner;
+    GetInnerArea(&aPresContext, inner);
     aCursor = NS_STYLE_CURSOR_DEFAULT;
     float t2p = aPresContext.GetTwipsToPixels();
-    nscoord x = nscoord(t2p * aPoint.x);
-    nscoord y = nscoord(t2p * aPoint.y);
+    nscoord x = nscoord(t2p * (aPoint.x - inner.x));
+    nscoord y = nscoord(t2p * (aPoint.y - inner.y));
     if (NS_OK == map->IsInside(x, y)) {
       aCursor = NS_STYLE_CURSOR_HAND;
     }
