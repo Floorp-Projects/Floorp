@@ -17,7 +17,7 @@
 #
 
 DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
+topsrcdir		= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
@@ -40,19 +40,20 @@ CPPSRCS		= \
 		nsLocaleModule.cpp \
 		$(NULL)
 
+EXTRA_DSO_LIBS = nslocale_s 
+
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(NULL)
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-EXTRA_DSO_LDOPTS += libuls.lib
-SHARED_LIBRARY_LIBS += ../libnslocale_s.lib
+OS_LIBS += libuls.lib
 else
-SHARED_LIBRARY_LIBS += -llibuni -L.. -lnslocale_s
+OS_LIBS += -llibuni
 endif
 
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/..
-
 
