@@ -843,7 +843,9 @@ getPSMCertType(const char * aContentType)
 }
 
 
-NS_IMPL_ISUPPORTS(CertContentListener, NS_GET_IID(nsIURIContentListener)); 
+NS_IMPL_ISUPPORTS2(CertContentListener,
+                   nsIURIContentListener,
+                   nsISupportsWeakReference); 
 
 CertContentListener::CertContentListener()
 {
