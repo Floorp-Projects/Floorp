@@ -638,7 +638,7 @@ nsresult nsTreeWalker::IndexOf(nsIDOMNode* aParent,
 
         if (possibleIndex >= 0) {
             nsCOMPtr<nsIContent> tmp;
-            contParent->ChildAt(possibleIndex, *getter_AddRefs(tmp));
+            docParent->ChildAt(possibleIndex, *getter_AddRefs(tmp));
             if (tmp == child) {
                 *_childNum = possibleIndex;
                 return NS_OK;
