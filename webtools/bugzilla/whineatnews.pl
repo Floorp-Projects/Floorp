@@ -25,7 +25,7 @@
 # This is a script suitable for running once a day from a cron job.  It 
 # looks at all the bugs, and sends whiny mail to anyone who has a bug 
 # assigned to them that has status NEW or REOPENED that has not been 
-# touched for more than 7 days.
+# touched for more than the number of days specified in the whinedays param.
 
 use strict;
 
