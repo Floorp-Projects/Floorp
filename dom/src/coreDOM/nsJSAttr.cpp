@@ -34,12 +34,14 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
 
 //
@@ -48,7 +50,8 @@ static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
 enum Attr_slots {
   ATTR_NAME = -1,
   ATTR_SPECIFIED = -2,
-  ATTR_VALUE = -3
+  ATTR_VALUE = -3,
+  ATTR_OWNERELEMENT = -4
 };
 
 /***********************************************************************/
@@ -103,6 +106,19 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetValue(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case ATTR_OWNERELEMENT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ATTR_OWNERELEMENT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMElement* prop;
+          rv = a->GetOwnerElement(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -224,6 +240,7 @@ static JSPropertySpec AttrProperties[] =
   {"name",    ATTR_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"specified",    ATTR_SPECIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"value",    ATTR_VALUE,    JSPROP_ENUMERATE},
+  {"ownerElement",    ATTR_OWNERELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

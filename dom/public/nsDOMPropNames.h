@@ -36,6 +36,7 @@
     "appcoresmanager.shutdown", \
     "appcoresmanager.startup", \
     "attr.name", \
+    "attr.ownerelement", \
     "attr.specified", \
     "attr.value", \
     "barprop.visible", \

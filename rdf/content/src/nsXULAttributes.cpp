@@ -489,6 +489,15 @@ nsXULAttribute::SetValue(const nsString& aValue)
     }
 }
 
+NS_IMETHODIMP
+nsXULAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
+{
+  NS_ENSURE_ARG_POINTER(aOwnerElement);
+
+  return mContent->QueryInterface(NS_GET_IID(nsIDOMElement),
+                                  (void **)aOwnerElement);
+}
+
 
 // nsIScriptObjectOwner interface
 
