@@ -781,7 +781,7 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 	if(max_number_of_connections < 1)
 		max_number_of_connections = 1;
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 	signal(SIGPIPE, SIG_IGN);
 #endif
 	

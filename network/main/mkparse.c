@@ -1260,7 +1260,7 @@ int NET_MakeRelativeURL( char *base_url,
 
     /* Test if drive is different */
     if ( base_ptr && url_ptr &&
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
         /* Case-sensitive for UNIX */
         *(url_ptr-1) != *(base_ptr-1) )
 #else
@@ -1287,7 +1287,7 @@ int NET_MakeRelativeURL( char *base_url,
 
     /*Find first mismatched character */
     while ( 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
             /* Case-sensitive for UNIX */
             *base_ptr == *url_ptr && 
 #else
