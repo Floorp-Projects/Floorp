@@ -443,7 +443,15 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  nsAutoString charset; charset.AssignWithConversion("ISO-8859-1"); // fallback value in case webShell return error
+  nsAutoString charset; charset.Assign(NS_LITERAL_STRING("ISO-8859-1")); // fallback value in case webShell return error
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  if (prefs) {
+    nsXPIDLString defCharset;
+    rv = prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
+    if (NS_SUCCEEDED(rv)) {
+      charset.Assign(defCharset);
+    }
+  }
   nsCharsetSource charsetSource = kCharsetFromWeakDocTypeDefault;
 
   nsCOMPtr<nsIURI> aURL;
