@@ -188,10 +188,13 @@
     "cssrule.sheet", \
     "cssrule.type", \
     "cssstyledeclaration.csstext", \
+    "cssstyledeclaration.getpropertycssvalue", \
     "cssstyledeclaration.getpropertypriority", \
     "cssstyledeclaration.getpropertyvalue", \
     "cssstyledeclaration.item", \
     "cssstyledeclaration.length", \
+    "cssstyledeclaration.parentrule", \
+    "cssstyledeclaration.removeproperty", \
     "cssstyledeclaration.setproperty", \
     "cssstylerule.selectortext", \
     "cssstylerule.style", \
@@ -205,6 +208,8 @@
     "cssstylesheet.owningnode", \
     "cssstylesheet.parentstylesheet", \
     "cssstylesheet.title", \
+    "cssvalue.csstext", \
+    "cssvalue.valuetype", \
     "document.createattribute", \
     "document.createattributens", \
     "document.createcdatasection", \

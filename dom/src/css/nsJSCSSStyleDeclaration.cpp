@@ -34,20 +34,25 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSValue.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kICSSRuleIID, NS_IDOMCSSRULE_IID);
 static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
+static NS_DEFINE_IID(kICSSValueIID, NS_IDOMCSSVALUE_IID);
 
 //
 // CSSStyleDeclaration property ids
 //
 enum CSSStyleDeclaration_slots {
   CSSSTYLEDECLARATION_CSSTEXT = -1,
-  CSSSTYLEDECLARATION_LENGTH = -2
+  CSSSTYLEDECLARATION_LENGTH = -2,
+  CSSSTYLEDECLARATION_PARENTRULE = -3
 };
 
 /***********************************************************************/
@@ -90,6 +95,19 @@ GetCSSStyleDeclarationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           rv = a->GetLength(&prop);
           if (NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
+          }
+        }
+        break;
+      }
+      case CSSSTYLEDECLARATION_PARENTRULE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_PARENTRULE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMCSSRule* prop;
+          rv = a->GetParentRule(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -220,6 +238,90 @@ CSSStyleDeclarationGetPropertyValue(JSContext *cx, JSObject *obj, uintN argc, js
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     result = nativeThis->GetPropertyValue(b0, nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetPropertyCSSValue
+//
+PR_STATIC_CALLBACK(JSBool)
+CSSStyleDeclarationGetPropertyCSSValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMCSSValue* nativeRet;
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_GETPROPERTYCSSVALUE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->GetPropertyCSSValue(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method RemoveProperty
+//
+PR_STATIC_CALLBACK(JSBool)
+CSSStyleDeclarationRemoveProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMCSSStyleDeclaration *nativeThis = (nsIDOMCSSStyleDeclaration*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString nativeRet;
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSSTYLEDECLARATION_REMOVEPROPERTY, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->RemoveProperty(b0, nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -389,6 +491,7 @@ static JSPropertySpec CSSStyleDeclarationProperties[] =
 {
   {"cssText",    CSSSTYLEDECLARATION_CSSTEXT,    JSPROP_ENUMERATE},
   {"length",    CSSSTYLEDECLARATION_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentRule",    CSSSTYLEDECLARATION_PARENTRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -399,6 +502,8 @@ static JSPropertySpec CSSStyleDeclarationProperties[] =
 static JSFunctionSpec CSSStyleDeclarationMethods[] = 
 {
   {"getPropertyValue",          CSSStyleDeclarationGetPropertyValue,     1},
+  {"getPropertyCSSValue",          CSSStyleDeclarationGetPropertyCSSValue,     1},
+  {"removeProperty",          CSSStyleDeclarationRemoveProperty,     1},
   {"getPropertyPriority",          CSSStyleDeclarationGetPropertyPriority,     1},
   {"setProperty",          CSSStyleDeclarationSetProperty,     3},
   {"item",          CSSStyleDeclarationItem,     1},

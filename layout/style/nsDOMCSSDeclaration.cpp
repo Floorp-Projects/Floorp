@@ -21,10 +21,12 @@
  */
 
 #include "nsDOMCSSDeclaration.h"
+#include "nsIDOMCSSRule.h"
 #include "nsICSSParser.h"
 #include "nsIStyleRule.h"
 #include "nsICSSDeclaration.h"
 #include "nsCSSProps.h"
+#include "nsCOMPtr.h"
 #include "nsIURL.h"
 
 nsDOMCSSDeclaration::nsDOMCSSDeclaration()
@@ -88,9 +90,9 @@ nsDOMCSSDeclaration::GetScriptObject(nsIScriptContext* aContext,
   nsresult res = NS_OK;
 
   if (nsnull == mScriptObject) {
-    nsISupports *parent = nsnull;
+    nsCOMPtr<nsISupports> parent;
 
-    res = GetParent(&parent);
+    res = GetParent(getter_AddRefs(parent));
     if (NS_OK == res) {
       nsISupports *supports = (nsISupports *)(nsIDOMCSS2Properties *)this;
       // XXX Should be done through factory
@@ -98,7 +100,6 @@ nsDOMCSSDeclaration::GetScriptObject(nsIScriptContext* aContext,
                                        supports,
                                        parent, 
                                        (void**)&mScriptObject);
-      NS_RELEASE(parent);
     }
   }
   *aScriptObject = mScriptObject;
@@ -106,28 +107,29 @@ nsDOMCSSDeclaration::GetScriptObject(nsIScriptContext* aContext,
   return res;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsDOMCSSDeclaration::SetScriptObject(void* aScriptObject)
 {
   mScriptObject = aScriptObject;
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsDOMCSSDeclaration::GetCssText(nsString& aCssText)
 {
+  aCssText.Truncate();
   // XXX TBI
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsDOMCSSDeclaration::SetCssText(const nsString& aCssText)
 {
   // XXX TBI
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsDOMCSSDeclaration::GetLength(PRUint32* aLength)
 {
   nsICSSDeclaration *decl;
@@ -142,7 +144,36 @@ nsDOMCSSDeclaration::GetLength(PRUint32* aLength)
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
+nsDOMCSSDeclaration::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  nsCOMPtr<nsISupports> parent;
+
+  GetParent(getter_AddRefs(parent));
+
+  if (parent) {
+    parent->QueryInterface(NS_GET_IID(nsIDOMCSSRule), (void **)aParentRule);
+  } else {
+    NS_ENSURE_ARG_POINTER(aParentRule);
+    *aParentRule = nsnull;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMCSSDeclaration::GetPropertyCSSValue(const nsString& aPropertyName,
+                                         nsIDOMCSSValue** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  // We don't support CSSValue yet so we'll just return null...
+  *aReturn = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsString& aReturn)
 {
   nsICSSDeclaration *decl;

@@ -38,7 +38,22 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_IDOMCSSSTYLEDECLARATION
+  // NS_DECL_IDOMCSSSTYLEDECLARATION
+  NS_IMETHOD    GetCssText(nsString& aCssText);
+  NS_IMETHOD    SetCssText(const nsString& aCssText);
+  NS_IMETHOD    GetLength(PRUint32* aLength);
+  NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule);
+  NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName,
+                                 nsString& aReturn);
+  NS_IMETHOD    GetPropertyCSSValue(const nsString& aPropertyName,
+                                    nsIDOMCSSValue** aReturn);
+  NS_IMETHOD    RemoveProperty(const nsString& aPropertyName,
+                               nsString& aReturn) = 0;
+  NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName,
+                                    nsString& aReturn);
+  NS_IMETHOD    SetProperty(const nsString& aPropertyName,
+                            const nsString& aValue, const nsString& aPriority);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn);
 
   NS_DECL_IDOMCSS2PROPERTIES
   

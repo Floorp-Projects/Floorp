@@ -40,6 +40,7 @@ IDLSRCS		= \
 		CSSStyleRuleCollection.idl \
 		CSSStyleSheet.idl \
 		CSSUnknownRule.idl \
+		CSSValue.idl \
 		$(NULL)
 
 include $(DEPTH)/config/rules.mk
