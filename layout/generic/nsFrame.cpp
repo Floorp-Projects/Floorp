@@ -102,7 +102,7 @@ NS_LAYOUT PRBool nsIFrame::GetShowFrameBorders()
  * Note: the log module is created during library initialization which
  * means that you cannot perform logging before then.
  */
-PRLogModuleInfo* nsIFrame::gLogModule = PR_NewLogModule("frame");
+static PRLogModuleInfo* gLogModule;
 
 static PRLogModuleInfo* gFrameVerifyTreeLogModuleInfo;
 
@@ -133,6 +133,9 @@ nsIFrame::SetVerifyTreeEnable(PRBool aEnabled)
 NS_LAYOUT PRLogModuleInfo*
 nsIFrame::GetLogModuleInfo()
 {
+  if (nsnull == gLogModule) {
+    gLogModule = PR_NewLogModule("frame");
+  }
   return gLogModule;
 }
 
@@ -158,10 +161,16 @@ NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult)
 
 void* nsFrame::operator new(size_t size)
 {
-  void* result = new char[size];
-
-  nsCRT::zero(result, size);
+  void* result = ::operator new(size);
+  if (result) {
+    nsCRT::zero(result, size);
+  }
   return result;
+}
+
+void nsFrame::operator delete(void* ptr, size_t size)
+{
+  ::operator delete(ptr);
 }
 
 nsFrame::nsFrame()
