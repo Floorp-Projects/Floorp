@@ -34,7 +34,7 @@ var FolderPaneController =
 		{
 			case "cmd_delete":
 			case "button_delete":
-			case "cmd_selectAll":
+			//case "cmd_selectAll": the folder pane currently only handles single selection
 			case "cmd_cut":
 			case "cmd_copy":
 			case "cmd_paste":
@@ -52,15 +52,6 @@ var FolderPaneController =
 
 		switch ( command )
 		{
-			case "cmd_selectAll":
-                                // the folder pane (currently)
-                                // only handles single selection
-                                // so we forward cmd_selectAll to the thread pane
-                                // if there is no gDBView,
-                                // don't bother sending the command to the thread pane
-                                // this can happen when we've selected a server
-                                // and account central is displayed
-                                return (gDBView != null);
 			case "cmd_cut":
 			case "cmd_copy":
 			case "cmd_paste":
@@ -119,12 +110,6 @@ var FolderPaneController =
 			case "button_delete":
 				MsgDeleteFolder();
 				break;
-			case "cmd_selectAll":
-                                // the folder pane (currently)
-                                // only handles single selection
-                                // so we forward select all to the thread pane
-                                SendCommandToThreadPane(command);
-                                break;
 		}
 	},
 	
@@ -135,67 +120,6 @@ var FolderPaneController =
         {
 			goSetMenuValue('cmd_delete', 'valueDefault');
         }
-	}
-};
-
-
-// Controller object for thread pane
-var ThreadPaneController =
-{
-   supportsCommand: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_selectAll":
-			case "cmd_cut":
-			case "cmd_copy":
-			case "cmd_paste":
-				return true;
-				
-			default:
-				return false;
-		}
-	},
-
-	isCommandEnabled: function(command)
-	{
-		switch ( command )
-		{
-			case "cmd_selectAll":
-				return true;
-			
-			case "cmd_cut":
-			case "cmd_copy":
-			case "cmd_paste":
-				return false;
-
-			default:
-				return false;
-		}
-	},
-
-	doCommand: function(command)
-	{
-    // if the user invoked a key short cut then it is possible that we got here for a command which is
-    // really disabled. kick out if the command should be disabled.
-    if (!this.isCommandEnabled(command)) return;
-    if (!gDBView) return;
-
-		switch ( command )
-		{
-			case "cmd_selectAll":
-                // if in threaded mode, the view will expand all before selecting all
-                gDBView.doCommand(nsMsgViewCommandType.selectAll)
-                if (gDBView.numSelected != 1) {
-                    setTitleFromFolder(gDBView.msgFolder,null);
-                    ClearMessagePane();
-                }
-                break;
-		}
-	},
-	
-	onEvent: function(event)
-	{
 	}
 };
 
@@ -281,6 +205,7 @@ var DefaultController =
 			case "cmd_sortByThread":
   	  case "cmd_settingsOffline":
       case "cmd_close":
+      case "cmd_selectAll":
       case "cmd_selectThread":
 				return true;
       case "cmd_downloadFlagged":
@@ -407,6 +332,8 @@ var DefaultController =
         break;
       case "cmd_search":
         return IsCanSearchMessagesEnabled();
+      case "cmd_selectAll":
+        return gDBView != null;
       // these are enabled on when we are in threaded mode
       case "cmd_selectThread":
         if (GetNumSelectedMessages() <= 0) return false;
@@ -678,6 +605,16 @@ var DefaultController =
             case "cmd_settingsOffline":
                 MsgSettingsOffline();
                 break;
+            case "cmd_selectAll":
+                // move the focus so the user can delete the newly selected messages, not the folder
+                SetFocusThreadPane();
+                // if in threaded mode, the view will expand all before selecting all
+                gDBView.doCommand(nsMsgViewCommandType.selectAll)
+                if (gDBView.numSelected != 1) {
+                    setTitleFromFolder(gDBView.msgFolder,null);
+                    ClearMessagePane();
+                }
+                break;
             case "cmd_selectThread":
                 gDBView.doCommand(nsMsgViewCommandType.selectThread);
                 break;
@@ -795,11 +732,6 @@ function SetupCommandUpdateHandlers()
 	if ( widget )
 		widget.controllers.appendController(FolderPaneController);
 	
-	// thread pane
-	widget = GetThreadTree();
-	if ( widget )
-        widget.controllers.appendController(ThreadPaneController);
-		
 	top.controllers.insertControllerAt(0, DefaultController);
 }
 
@@ -1145,14 +1077,5 @@ function IsFakeAccount() {
   catch(ex) {
   }
   return false;
-}
-
-function SendCommandToThreadPane(command)
-{
-  ThreadPaneController.doCommand(command);
-
-  // if we are sending the command so the thread pane
-  // we should focus the thread pane
-  SetFocusThreadPane();
 }
 
