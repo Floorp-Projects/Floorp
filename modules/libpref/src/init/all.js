@@ -861,6 +861,12 @@ pref("browser.popups.showPopupBlocker", true);
 // See http://bugzilla.mozilla.org/show_bug.cgi?id=169483 for further details...
 pref("viewmanager.do_doublebuffering", true);
 
+// which files will be selected for roaming by default.
+// See sroaming/content/prefs/all.js
+pref("roaming.default.files", "bookmarks.html,abook.mab,cookies.txt");
+// display some general warning to the user about making backups, security etc.
+pref("roaming.showInitialWarning", true);
+
 pref("dom.disable_open_during_load",              false);
 pref("privacy.popups.first_popup",                true);
 pref("privacy.popups.sound_enabled",              false);
