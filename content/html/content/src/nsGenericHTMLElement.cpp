@@ -2249,8 +2249,13 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
     // value
     nsAutoString value;
     GetAttr(nameSpaceID, attr, value);
-    buffer.Append(NS_LITERAL_STRING("="));
+    buffer.Append(NS_LITERAL_STRING("=\""));
+    for (int i = value.Length(); i >= 0; --i) {
+      if (value[i] == PRUnichar('"'))
+        value.Insert(PRUnichar('\\'), PRUint32(i));
+    }
     buffer.Append(value);
+    buffer.Append(NS_LITERAL_STRING("\""));
 
     fputs(" ", out);
     fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
