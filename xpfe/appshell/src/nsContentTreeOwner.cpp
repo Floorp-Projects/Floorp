@@ -44,7 +44,8 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 //*****************************************************************************
 
 nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull), 
-   mPrimary(fPrimary), mChromeMask(nsIWebBrowserChrome::allChrome)
+   mPrimary(fPrimary), mContentTitleSetting(PR_FALSE), 
+   mChromeMask(nsIWebBrowserChrome::allChrome)
 {
 	NS_INIT_REFCNT();
 }
@@ -389,51 +390,30 @@ NS_IMETHODIMP nsContentTreeOwner::GetTitle(PRUnichar** aTitle)
 NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
 {
    // We only allow the title to be set from the primary content shell
-   if(!mPrimary)
+   if(!mPrimary || !mContentTitleSetting)
       return NS_OK;
-
-   // Get the window title modifiers
-   nsCOMPtr<nsIDOMElement> docShellElement;
-   mXULWindow->GetDOMElementFromDocShell(mXULWindow->mDocShell, 
-      getter_AddRefs(docShellElement));
-
-   nsAutoString   windowTitleModifier;
-   nsAutoString   titleSeparator;
-   nsAutoString   titlePreface;
-
-   if(docShellElement)
-      {
-      docShellElement->GetAttribute("titlemodifier", windowTitleModifier);
-      docShellElement->GetAttribute("titlemenuseparator", titleSeparator);
-      docShellElement->GetAttribute("titlepreface", titlePreface);
-      }
-   else
-      {
-      NS_ERROR("This condition should never happen.  If it does, "
-         "we just won't get a modifier, but it still shouldn't happen.");
-      }
 
    nsAutoString   title;
    nsAutoString   docTitle(aTitle);
 
    if(docTitle.Length() > 0)
       {
-      if(titlePreface.Length() > 0)
+      if(mTitlePreface.Length() > 0)
          {
          // Title will be: "Preface: Doc Title - Mozilla"
-         title = titlePreface + docTitle;
+         title = mTitlePreface + docTitle;
          }
       else 
          {
          // Title will be: "Doc Title - Mozilla"
          title = docTitle;
          }
-      title += titleSeparator + windowTitleModifier;
+      title += mTitleSeparator + mWindowTitleModifier;
       }
    else 
       { 
       // Title will just be plain: Mozilla
-      title = windowTitleModifier;
+      title = mWindowTitleModifier;
       }
 
    // XXX Don't need to fully qualify this once I remove nsWebShellWindow::SetTitle
@@ -538,6 +518,32 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeMask()
 void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
 {
    mXULWindow = aXULWindow;
+   if(mXULWindow && mPrimary)
+      {
+      // Get the window title modifiers
+      nsCOMPtr<nsIDOMElement> docShellElement;
+      mXULWindow->GetDOMElementFromDocShell(mXULWindow->mDocShell, 
+         getter_AddRefs(docShellElement));
+
+      nsAutoString   contentTitleSetting;
+
+      if(docShellElement)  
+         {
+         docShellElement->GetAttribute("contenttitlesettting", contentTitleSetting);
+         if(contentTitleSetting.Equals("true"))
+            {
+            mContentTitleSetting = PR_TRUE;
+            docShellElement->GetAttribute("titlemodifier", mWindowTitleModifier);
+            docShellElement->GetAttribute("titlemenuseparator", mTitleSeparator);
+            docShellElement->GetAttribute("titlepreface", mTitlePreface);
+            }
+         }
+      else
+         {
+         NS_ERROR("This condition should never happen.  If it does, "
+            "we just won't get a modifier, but it still shouldn't happen.");
+         }
+      }
 }
 
 nsXULWindow* nsContentTreeOwner::XULWindow()

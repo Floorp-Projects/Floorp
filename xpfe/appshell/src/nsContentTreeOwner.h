@@ -62,8 +62,13 @@ protected:
 protected:
    nsXULWindow*      mXULWindow;
    PRBool            mPrimary;
+   PRBool            mContentTitleSetting;
    PRUint32          mChromeMask;
    nsString          mDefaultStatus;
+   nsString          mWindowTitleModifier;
+   nsString          mTitleSeparator;
+   nsString          mTitlePreface;
+
 };
 
 #endif /* nsContentTreeOwner_h__ */
