@@ -1433,6 +1433,9 @@ function EditorOpenUrl(url)
   {
     if (PageIsEmptyAndUntouched())
     {
+      if (IsInHTMLSourceMode())
+        FinishHTMLSource(); 
+
       window.editorShell.LoadUrl(url);
     }
     else
