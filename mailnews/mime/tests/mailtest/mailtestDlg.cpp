@@ -11,11 +11,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// 
-// External includes necessary for test application
-//
-#include "net.h"
-
 //
 // Necessary variables...
 //
@@ -113,10 +108,6 @@ END_MESSAGE_MAP()
 BOOL CMailtestDlg::OnInitDialog()
 {
 void    FixURL(char *tmpBuf);
-extern NET_StreamClass *MIME_VCardConverter(int format_out, void *closure, 
-											  URL_Struct *url, MWContext *context);
-extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
-											  URL_Struct *url, MWContext *context);
 
 	CDialog::OnInitDialog();
 
@@ -173,22 +164,6 @@ extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure,
     sprintf(url, "%s\\Mailbox", dirName);
     ProcessMailbox(url);
   }
-
-	//
-	// Network code for stream handler...
-	//
-	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_NGLAYOUT, NULL, MIME_MessageConverter);
-	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_CACHE_AND_NGLAYOUT, NULL, MIME_MessageConverter);
-
-  /* Decoders from mimehtml.c for message/rfc822 */
-  NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_PRINT, NULL, MIME_MessageConverter);
-  NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_EMBED, NULL, MIME_MessageConverter);
-  NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_QUOTE_MESSAGE, NULL, MIME_MessageConverter);
-  NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_QUOTE_HTML_MESSAGE, NULL, MIME_MessageConverter);
-  NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_SAVE_AS, NULL, MIME_MessageConverter);
-  NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_SAVE_AS_TEXT, NULL, MIME_MessageConverter);
-  NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_INTERNAL_IMAGE, NULL, MIME_MessageConverter);
-  NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_FONT, NULL, MIME_MessageConverter);
 
   return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -311,7 +286,7 @@ void
 FixURL(char *tmpBuf)
 {
   // Translate '\' to '/'
-  for (uint i = 0; i < strlen(tmpBuf); i++) {
+  for (unsigned int i = 0; i < strlen(tmpBuf); i++) {
     if (tmpBuf[i] == '\\') {
       tmpBuf[i] = '/';
     }
