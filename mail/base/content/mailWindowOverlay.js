@@ -2202,6 +2202,16 @@ var gMessageNotificationBar =
   // aUrl is the nsIURI for the message currently loaded in the message pane
   setPhishingMsg: function(aUrl)
   {
+    var msgURI = GetLoadedMessage();
+    if (msgURI && !(/type=x-message-display/.test(msgURI)))
+    {
+      var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+      // if we've explicitly marked this message as not being an email scam, then don't
+      // bother checking it with the phishing detector.
+      if (msgHdr && msgHdr.getUint32Property("notAPhishMessage"))
+        return; 
+    }
+
     // The Junk message takes precedence over the phishing message...so skip this step
     // if the message is already marked as junk
     if (this.mMsgNotificationBar.selectedIndex != kMsgNotificationJunkBar && isMsgEmailScam(aUrl))
@@ -2240,6 +2250,26 @@ function LoadMsgWithRemoteContent()
     if (msgHdr)
     {
       msgHdr.setUint32Property("remoteContentPolicy", kAllowRemoteContent); 
+      MsgReload();
+    }
+  }
+}
+
+function MsgIsNotAScam()
+{
+  // we want to get the msg hdr for the currently selected message
+  // change the "isPhishingMsg" property on it
+  // then reload the message
+
+  var msgURI = GetLoadedMessage();
+  var msgHdr = null;
+    
+  if (msgURI && !(/type=x-message-display/.test(msgURI)))
+  {
+    msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    if (msgHdr)
+    {
+      msgHdr.setUint32Property("notAPhishMessage", 1); 
       MsgReload();
     }
   }

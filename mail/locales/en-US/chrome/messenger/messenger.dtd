@@ -598,11 +598,12 @@
 <!ENTITY junkInfoButton.label "?">
 
 <!-- Remote Content Bar -->
-<!ENTITY remoteContentMessage.label "To protect your privacy, &brandShortName; has blocked remote images in this message." >
+<!ENTITY remoteContentMessage.label "To protect your privacy, &brandShortName; has blocked remote images in this message.">
 <!ENTITY loadRemoteContentButton.label "Show Images">
 
 <!-- Phshing bar Bar -->
-<!ENTITY phishingBarMessage.label "&brandShortName; thinks this message might be an email scam." >
+<!ENTITY phishingBarMessage.label "&brandShortName; thinks this message might be an email scam.">
+<!ENTITY removePhishingBarButton.label "Not a Scam">
 
 <!-- Search Bar -->
 <!ENTITY quickSearchCmd.key "k">
