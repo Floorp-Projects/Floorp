@@ -11,11 +11,11 @@
       border-top          : 1px solid threedshadow;
       border-right        : 1px solid threedhighlight;
       border-bottom       : 1px solid threedhighlight;
-      font                : field;
-      color               : windowtext;
+      font                : dialog;
+      color               : #000000;
       padding             : 0px;
-      margin              : 1px 3px 2px 4px;
-      background-color    : white;
+      margin              : 1px 5px 2px 5px;
+      background-color    : #FFFFFF;
       cursor              : text;
     }
     
@@ -40,6 +40,10 @@
   
   .textarea-internal-box
     {
+      border-left         : 1px solid threeddarkshadow;
+      border-top          : 1px solid threeddarkshadow;
+      border-right        : 1px solid threedface;
+      border-bottom       : 1px solid threedface;
       padding             : 0px 0px 0px 2px;
     }
   
@@ -50,12 +54,14 @@
       margin              : 0px;
       font                : inherit;
       background-color    : inherit;
+      color               : inherit;
     }
 
   textfield[disabled="true"] 
     {
       cursor              : default ! important;
       background-color    : threedface;
+      color               : graytext;
     } 
     
 /** plain atomic textfields, class="plain" **/
@@ -67,3 +73,30 @@
       margin              : 0px !important;
       border              : none !important;
     }
+
+  .autocomplete-icon
+    {
+      border              : none;
+      margin              : 0px;
+    }
+
+  .autocomplete-icon > .autocomplete-icon-internal-box
+    {
+      border              : none;
+      padding             : 0px;
+      margin              : 0px;
+    }  
+    
+  .autocomplete-icon-icon
+    {
+      margin              : 2px 3px 2px 3px;
+      list-style-image    : inherit;
+      cursor              : default !important;
+    }
+    
+  .autocomplete-icon-input
+    {
+      border              : none !important;
+    }    
+
+

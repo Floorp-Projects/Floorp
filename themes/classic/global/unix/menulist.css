@@ -1,4 +1,3 @@
-
 /* NEW WIDGET LANDING: <menulist> popup */
 
 /* outer frame */
@@ -9,8 +8,8 @@
       border-top          : 1px solid threedshadow;
       border-right        : 1px solid threedhighlight;
       border-bottom       : 1px solid threedhighlight;
-      background-color    : window;
-      color               : menutext;
+      background-color    : #FFFFFF;
+      color               : #000000;
       font                : pull-down-menu;
       margin              : 1px 5px 2px 5px;
     }
@@ -27,15 +26,16 @@
       border-top          : 1px solid threeddarkshadow;
       border-right        : 1px solid threedface;
       border-bottom       : 1px solid threedface;
+      -moz-user-focus     : ignore;
     }  
 
   .menulist-display-box,
   menulist[open="true"]:focus > .menulist-internal-box > .menulist-display-box
     {
-      border              : 1px solid window;
+      border              : 1px solid #FFFFFF;
       margin              : 1px;
-      background-color    : window;
-      color               : menutext;
+      background-color    : #FFFFFF;
+      color               : #000000;
     }     
     
   menulist:focus > .menulist-internal-box > .menulist-display-box
@@ -49,7 +49,7 @@
   .menulist-text 
     {
       padding             : 0px 2px 0px 2px;
-      margin:             : 0px;
+      margin              : 0px;
     }
     
 /* drop marker display frame */
@@ -97,17 +97,17 @@
   menulist > menupopup 
     {
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulistpopup");
-      background-color    : window;
+      background-color    : #FFFFFF;
       border              : 1px solid #000000;
       min-width           : 0px;
     }
 
   menulist > menupopup > menuitem 
     {
-      padding             : 0px 1px !important;
+      padding             : 0px 7px !important;
       min-width           : 0px;  /* should be in content*/
       max-width           : none; /* should be in content*/
-      border              : 1px solid window;
+      border              : 1px solid #FFFFFF;
     }
 
   menulist > menupopup > menuitem[menuactive="true"],
@@ -123,3 +123,36 @@
       width               : 0px;
       border              : none;
     }
+
+/**
+ * <menulist>s for things like mailnews addressing widget
+ **/    
+  .menulist-compact
+    {
+      -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulist-compact");
+      -moz-user-focus     : ignore;  /* we don't take focus */
+      border-left         : 1px solid threedhighlight;
+      border-top          : 1px solid threedhighlight;
+      border-right        : 1px solid threeddarkshadow;
+      border-bottom       : 1px solid threeddarkshadow;
+    }    
+    
+  .menulist-compact-text
+    {
+      margin-right        : 3px;
+    }  
+    
+  .menulist-compact-internal-box
+    {
+      border-right        : 1px solid threedshadow;
+      border-bottom       : 1px solid threedshadow;
+      background-color    : threedface;
+    }
+    
+  .menulist-compact-dropmarker
+    {
+      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+      margin-left         : 2px;
+    }
+    
+    

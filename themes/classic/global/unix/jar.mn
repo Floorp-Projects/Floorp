@@ -1,30 +1,23 @@
 classic.jar:
-    skin/classic/global/box.css
-    skin/classic/global/button.css
-    skin/classic/global/checkbox.css
-    skin/classic/global/commonDialog.css
-    skin/classic/global/console.css
-    skin/classic/global/filepicker.css
-    skin/classic/global/formatting.css
-    skin/classic/global/global.css
-    skin/classic/global/menu.css
-    skin/classic/global/menubutton.css
-    skin/classic/global/menulist.css
-    skin/classic/global/radio.css
-    skin/classic/global/scrollbars.css
-    skin/classic/global/splitter.css
-    skin/classic/global/tabcontrol.css
-    skin/classic/global/textfield.css
-    skin/classic/global/toolbar.css
-    skin/classic/global/tree.css
-    skin/classic/global/wizardOverlay.css
-    skin/classic/global/buttonBindings.xml
-    skin/classic/global/classicBindings.xml
-    skin/classic/global/menulistBindings.xml
-    skin/classic/global/treeBindings.xml
-    skin/classic/global/scrollbar-slider-bg.gif
-    skin/classic/global/error-icon.gif
-    skin/classic/global/message-icon.gif
-    skin/classic/global/question-icon.gif
-    skin/classic/global/alert-icon.gif
-    skin/classic/global/dialogOverlay.css
++   skin/classic/global/menulist.css
++   skin/classic/global/textfield.css
++   skin/classic/global/tree.css
++   skin/classic/global/radio.css
++   skin/classic/global/checkbox.css
+
+
+# Note: Unix uses the Windows classic skin, however there are a few
+# cases in which the classic skin must differ to accomodate it. 
+# This is one of those cases. We are forcing the background colour
+# of windows, trees and similar widgets to be white, rather than
+# 'window', as on linux this is grey, which is ugly and not the
+# intent. This file exists to specify the CSS files in which
+# the unix classic skin differs, and these files clobber the
+# css files jarred by the windows directory.
+#
+# This is not ideal, but ideally in the future unix will have its
+# own version of the Classic skin
+#
+# - Ben Goodger (09/21/2000) <ben@netscape.com>
+
+

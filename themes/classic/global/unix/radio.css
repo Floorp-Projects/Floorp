@@ -14,7 +14,7 @@
       border-left         : 1px solid threedshadow;
       border-right        : 1px solid threedhighlight;
       border-bottom       : 1px solid threedhighlight;
-      background-color    : #FFFFFF;
+      background-color    : window;
       -moz-border-radius  : 50%;
       margin              : 2px 2px 0px 0px;
       width               : 12px;
@@ -76,10 +76,13 @@
       color               : graytext;
     }
   
-  radio:focus > .radio-internal-box > .radio-text
+  radio[focused="true"] > .radio-internal-box > .radio-text
     { 
       border              : 1px dotted threeddarkshadow;
       padding             : 0px;
     }
     
-    
+  .radio-internal-box
+    {
+      -moz-user-focus     : ignore;
+    }    

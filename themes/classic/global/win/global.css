@@ -58,6 +58,9 @@
       padding             : 0px;
       font-family         : sans-serif;
       font                : dialog;
+      user-focus          : ignore;
+      font-family         : sans-serif;
+      font                : dialog;
       -moz-user-focus     : ignore;
     }
   

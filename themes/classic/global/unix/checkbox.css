@@ -14,10 +14,11 @@
       border-left         : 1px solid threedshadow;
       border-right        : 1px solid threedhighlight;
       border-bottom       : 1px solid threedhighlight;
-      background-color    : #FFFFFF;
+      background-color    : window;
       margin              : 2px 2px 0px 0px;
       width               : 13px;
       height              : 13px;
+      -moz-user-focus     : ignore;
     }
 
   .checkbox-checkmark-box-1[disabled="true"]
@@ -80,4 +81,7 @@
       padding             : 0px;
     }
     
-    
+  .checkbox-internal-box
+    {
+      -moz-user-focus     : none;
+    }
