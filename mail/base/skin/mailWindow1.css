@@ -39,19 +39,12 @@ treechildren::-moz-tree-image(folderNameCol) {
 
 
 treechildren::-moz-tree-image(folderNameCol, selected, open) {
-
   list-style-image: url("chrome://messenger/skin/icons/folder-open.png");
-
 }
-
-
 
 treechildren::-moz-tree-image(folderNameCol, selected, open, newMessages-true) {
-
   list-style-image: url("chrome://messenger/skin/icons/folder-new-open.png");
-
 }
-
 
 treechildren::-moz-tree-image(folderNameCol, newMessages-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-new-closed.png");
@@ -135,14 +128,9 @@ treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-imap, isS
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.png");
 }
 
-
-
 treechildren::-moz-tree-image(folderNameCol, biffState-NewMail, isServer-true, isSecure-true) {
-
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock-new.png");
-
 }
-
 
 treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-none) {
   list-style-image: url("chrome://messenger/skin/icons/server-local.png");
@@ -248,9 +236,7 @@ treechildren::-moz-tree-image(threadCol, container, hasUnread, open) {
 
 treecol.readColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/readcol.png");
-
   padding-right: 5px;
-
   padding-bottom: 5px;
 }
 
@@ -266,7 +252,6 @@ treechildren::-moz-tree-image(unreadButtonColHeader, unread) {
 
 treecol.attachmentColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/attachment-col.png");
-
   padding-right: 5px; 
 }
 
@@ -278,7 +263,6 @@ treechildren::-moz-tree-image(attachmentCol, attach) {
 
 treecol.flagColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/flag-col.png");
-
   padding-right: 5px; 
 }
 
@@ -294,7 +278,6 @@ treechildren::-moz-tree-image(flaggedCol, flagged) {
 
 treecol.junkStatusHeader {
   list-style-image: url("chrome://messenger/skin/icons/junk-col.png");
-
   padding-right: 5px; 
 }
 
@@ -320,38 +303,24 @@ treechildren::-moz-tree-image(subjectCol) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail.png ");
 }
 
-
 treechildren::-moz-tree-image(subjectCol, read) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-mail-read.png");
-
 }
-
 
 treechildren::-moz-tree-image(subjectCol, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-new.png");
 }
 
 treechildren::-moz-tree-image(subjectCol, forwarded) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-mail-forwarded.png");
-
 }
-
-
 
 treechildren::-moz-tree-image(subjectCol, forwarded, read) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-mail-forwarded-read.png");
-
 }
 
-
-
 treechildren::-moz-tree-image(subjectCol, replied) {
-
   list-style-image: url("chrome://messenger/skin/icons/message-mail-replied.png");
-
 }
 
 treechildren::-moz-tree-image(subjectCol, replied, read) {
@@ -979,7 +948,6 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 #folderPaneHeader {
   height: 27px;
   border-bottom: none;
-  border-left: 1px solid ThreeDHighlight;
   border-top: none;
 }
 
