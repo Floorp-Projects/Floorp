@@ -59,13 +59,13 @@ xmlns:html="http://www.w3.org/1999/xhtml"
         
                   <spring flex="100%"/>
 
-            <button src="resource:/res/throbber/anims00.gif" align="right"/>
+            <button src="resource:/res/throbber/anims00.gif"/>
     
         </toolbar>
 
         <toolbar>
-          <button align="right" src="resource:/res/toolbar/location.gif" label="Mozilla" />
-          <button align="right" src="resource:/res/toolbar/location.gif" label="ABC News"/>
+          <button src="resource:/res/toolbar/location.gif" label="Mozilla" />
+          <button src="resource:/res/toolbar/location.gif" label="ABC News"/>
         </toolbar>
       </toolbox>
 

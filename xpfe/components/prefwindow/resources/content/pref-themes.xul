@@ -86,15 +86,15 @@
   <hbox flex="1">
     <vbox flex="1">
       <text class="label header" id="displayName" value=""/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <text class="label" value="&author.label;"/>
         <text class="label" id="author"/>
       </hbox>
       <html id="description" flex="1"/>
     </vbox>
-    <vbox align="top">
+    <vbox>
       <button id="applySkin" label="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="applySkin();"/>
-    <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
+      <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
     </vbox>
   </hbox>
   

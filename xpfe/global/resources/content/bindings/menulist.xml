@@ -163,12 +163,12 @@
 
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content>
-      <xul:box flex="1" class="menulist-editable-box">
+      <xul:hbox flex="1" class="menulist-editable-box" align="center">
         <xul:image class="menu-icon" inherits="src"/>
         <html:input type="text" flex="1" class="menulist-editable-text" allowevents="true"
                     inherits="value=label,disabled"/>
         <xul:image class="menu-dropmarker"/>
-      </xul:box>
+      </xul:hbox>
     
       <children includes="menupopup"/>
     </content>

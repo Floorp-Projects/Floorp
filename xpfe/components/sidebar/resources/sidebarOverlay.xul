@@ -100,7 +100,7 @@
       <vbox id="sidebar-panels"
         datasources="rdf:null"
         ref="urn:sidebar:current-panel-list" 
-        persist='last-selected-panel height collapsed' flex="1*"
+        persist="last-selected-panel height collapsed" flex="1*"
         onclick="return contentAreaClick(event);"
         ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
         <template id="sidebar-template">
@@ -121,12 +121,12 @@
             </bindings>
             <action>
               <hbox uri="?panel" class="box-texttab texttab-sidebar"
-                oncommand="SidebarSelectPanel(this,false,false)" align="left"
+                oncommand="SidebarSelectPanel(this,false,false)"
                 hidden="true" label="?title" exclude="?exclude" context="sidebarPopup" />
-              <vbox uri="?panel" flex='1*' hidden="true"
+              <vbox uri="?panel" flex="1*" hidden="true"
                 loadstate="never loaded">
-                <vbox flex='1' class="iframe-panel loadarea">
-                  <hbox flex="1" autostretch="never">
+                <vbox flex="1" class="iframe-panel loadarea">
+                  <hbox flex="1" align="center">
                     <image class="image-panel-loading"/>
                     <text class="text-panel-loading"
                       value="&sidebar.loading.label;"/>
@@ -135,9 +135,9 @@
                   </hbox>
                   <spring flex="100%"/>
                 </vbox>
-                <iframe class="iframe-panel" flex='1*' src="about:blank"
+                <iframe class="iframe-panel" flex="1*" src="about:blank"
                   hidden="true" collapsed="true" content="?content"/>
-                <iframe class="iframe-panel" flex='1*' src="about:blank"
+                <iframe class="iframe-panel" flex="1*" src="about:blank"
                   hidden="true" collapsed="true" content="?content" type="content" context="contentAreaContextMenu"/>
               </vbox>
             </action>
@@ -156,7 +156,7 @@
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden"
-    class="chromeclass-extrachrome sidebar-splitter" autostretch="never"
+    class="chromeclass-extrachrome sidebar-splitter" align="center"
     orient="vertical"
     onmouseup="SidebarFinishClick();">
     <grippy class="sidebar-splitter-grippy"

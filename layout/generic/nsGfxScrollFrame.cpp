@@ -411,7 +411,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIContent> content;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align,
+  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::orient,
                         NS_LITERAL_STRING("horizontal"), PR_FALSE);
 
   content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
@@ -422,7 +422,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   // create vertical scrollbar
   content = nsnull;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align,
+  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::orient,
                         NS_LITERAL_STRING("vertical"), PR_FALSE);
 
   content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,

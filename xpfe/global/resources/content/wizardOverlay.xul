@@ -12,8 +12,8 @@
     <spring flex="100%"/>
     <button class="dialog" id="wiz-cancel-button" label="&cancelButton.label;" oncommand="wizardManager.onCancel();" />
     <spring flex="20%"/>
-    <button class="dialog" id="wiz-back-button" label="&backButton.label;" oncommand="wizardManager.onBack();" align="left" />
-    <button class="dialog right" id="wiz-next-button" label="&nextButton.label;" oncommand="wizardManager.onNext();" align="right" />
+    <button class="dialog" id="wiz-back-button" label="&backButton.label;" oncommand="wizardManager.onBack();"/>
+    <button class="dialog right" id="wiz-next-button" label="&nextButton.label;" oncommand="wizardManager.onNext();"/>
     <spring flex="5%"/>
     <button class="dialog" id="wiz-finish-button" label="&finishButton.label;" oncommand="wizardManager.onFinish();" />
     <spring flex="5%"/>

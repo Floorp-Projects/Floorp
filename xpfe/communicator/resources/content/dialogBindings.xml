@@ -7,7 +7,7 @@
 
   <binding id="smallheader">
     <content>
-      <xul:box class="box-smallheader-box toolbar-primary" autostretch="never" flex="1">
+      <xul:box class="box-smallheader-box toolbar-primary" align="center" flex="1">
         <xul:text class="box-smallheader-left" inherits="value=title"/>
         <xul:spring flex="1"/>
         <xul:text class="box-smallheader-right" inherits="value=description"/>
@@ -23,11 +23,11 @@
 
   <binding id="largeheader">
     <content>
-      <xul:box class="box-header-header toolbar-primary" flex="1" autostretch="never">
-        <xul:box class="box-header-circle-box" autostretch="never">
+      <xul:box class="box-header-header toolbar-primary" flex="1" align="center">
+        <xul:box class="box-header-circle-box" align="center">
           <xul:image inherits="src" class="box-header-circle"/>
         </xul:box>
-        <xul:box autostretch="never" class="box-header-text-box">
+        <xul:box align="center" class="box-header-text-box">
           <xul:text class="box-header-text" inherits="value"/>
         </xul:box>
         <xul:spring flex="1"/>

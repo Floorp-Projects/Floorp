@@ -136,7 +136,7 @@ Contributor(s): ______________________________________. -->
     <menubar id="main-menubar" persist="collapsed"/>
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
-             tbautostretch="always">
+             tbalign="stretch">
       <hbox id="nav-bar-buttons">
         <menubutton id="back-button" label="&backButton.label;" tooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
@@ -196,7 +196,7 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menubutton>
 
-      <hbox id="throbber-box" autostretch="never">
+      <hbox id="throbber-box" align="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
       </hbox>
     </toolbar>
@@ -206,7 +206,7 @@ Contributor(s): ______________________________________. -->
              ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
-             tbautostretch="always">
+             tbalign="stretch">
 
       <button class="button-toolbar bookmark-item" id="home-button" label="&homeButton.label;"
               tooltip="aTooltip" persist="hidden"

@@ -60,7 +60,7 @@
     <grid>
       <columns><column/><column/><column flex="1"/></columns>
       <rows>
-        <row valign="middle" autostretch="never">
+        <row align="center">
           <text class = "label" 
             for   = "srcInput"
             value = "&locationEditField.label;"
@@ -73,7 +73,7 @@
           <!-- from EdDialogOverlay.xul -->
           <button id="ChooseFile"/>
         </row>
-        <row valign="middle" autostretch="never">
+        <row align="center">
           <text class = "label"
             id      = "altTextLabel" 
             for     = "altTextInput"
@@ -89,17 +89,16 @@
     <spring class="spacer"/>
   </groupbox>
   <spring class="spacer"/>
-  <hbox valign="middle" autostretch="never"> 
+  <hbox align="center"> 
     <button 
       class   = "dialog" 
       id      = "MoreFewerButton" 
-      align   = "left" 
       oncommand = "onMoreFewer()" 
       tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
     <spring class="spacer"/>
     <groupbox style="padding: 4px">
-      <hbox id="preview-image-box" valign="middle" autostretch="never">
+      <hbox id="preview-image-box" align="center">
         <spring flex="1"/>
         <html id="preview-image-holder"/>
         <spring flex="1"/>
@@ -162,7 +161,7 @@
             <columns><column/><column/><column flex="1"/></columns>
             <rows>
               <!--//////  IMAGE WIDTH  //////-->
-              <row valign="middle" autostretch="never">
+              <row align="center">
                 <text class = "label" 
                   id    = "widthLabel"
                   for   = "widthInput"
@@ -177,7 +176,7 @@
                 <!-- contents are appended by JS -->
               </row>
               <!--////// IMAGE HEIGHT //////-->
-              <row valign="middle" autostretch="never">
+              <row align="center">
                 <text class = "label" 
                   id    = "heightLabel"
                   for   = "heightInput"
@@ -228,7 +227,7 @@
           <label id="alignLabel" value="&alignment.label;"/>
           <spring class="spacer"/>
           <menulist id="alignTypeSelect" class="align-menu">
-            <menupopup valign="middle">
+            <menupopup>
               <menuitem class="align-menu" value="top" label="&topPopup.value;"/>
               <menuitem class="align-menu" value="center" label="&centerPopup.value;"/>
               <menuitem class="align-menu" value="bottom" label="&bottomPopup.value;"/>
@@ -245,7 +244,7 @@
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>
-              <row valign="middle" autostretch="never">
+              <row align="center">
                 <text 
                   class = "label align-right" 
                   id    = "leftrightLabel"
@@ -259,7 +258,7 @@
                   id    = "leftrighttypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
-              <row valign="middle" autostretch="never">
+              <row align="center">
                 <text 
                   class = "label align-right" 
                   id    = "topbottomLabel"
@@ -273,7 +272,7 @@
                   id    = "topbottomtypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
-              <row valign="middle" autostretch="never">
+              <row align="center">
                 <text class = "label align-right" 
                   id    = "borderLabel"
                   value = "&borderEditField.label;"/>

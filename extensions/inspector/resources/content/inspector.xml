@@ -164,7 +164,7 @@
   <binding id="panel" extends="chrome://inspector/content/inspector.xml#base">
     <content orient="vertical">
       <xul:toolbox class="viewer-pane-toolbox" inherits="disabled">
-        <xul:toolbar class="viewer-pane-header" tbautostretch="never" inherits="disabled">
+        <xul:toolbar class="viewer-pane-header" tbalign="center" inherits="disabled">
           <xul:menubutton anonid="viewer-list" class="viewer-list button-toolbar" disabled="true"/>
           <xul:text anonid="viewer-title" class="viewer-title label toolbar" flex="1"/>
           <xul:menubutton anonid="viewer-menu" class="viewer-menu button-toolbar" disabled="true"/>

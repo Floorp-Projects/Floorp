@@ -12,14 +12,14 @@
   
   <binding id="wizard" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <content width="500" height="380" persist="x y width height">
-      <xul:box class="wizard-header" anonid="Header"/>
+      <xul:hbox class="wizard-header" anonid="Header"/>
       
       <xul:deck class="wizard-page-box" deck="true" flex="1" anonid="Deck">
         <children includes="wizardpage"/>
       </xul:deck>
       <children/>
       
-      <xul:box class="wizard-buttons" anonid="Buttons" inherits="pagestep,firstpage,lastpage"/>
+      <xul:hbox class="wizard-buttons" anonid="Buttons" inherits="pagestep,firstpage,lastpage"/>
     </content>
     
     <implementation>
@@ -428,9 +428,9 @@
         <xul:hbox class="wizard-buttons-btm">
           <xul:spring flex="1"/>
           <xul:button class="wizard-button wizard-nav-button" wizardbutton="back"/>
-          <xul:box class="wizard-label-box" autostretch="never">
+          <xul:hbox class="wizard-label-box" align="center">
             <xul:text class="wizard-page-label" inherits="value=pagestep"/>
-          </xul:box>
+          </xul:hbox>
           <xul:button class="wizard-button wizard-nav-button" wizardbutton="next" default="true" inherits="disabled=lastpage"/> 
         </xul:hbox>
       </xul:vbox>

@@ -50,16 +50,16 @@
  
   <vbox flex="1">
     <vbox class="box-padded outset-top-bottom">
-      <hbox autostretch="never">
+      <hbox align="center">
         <textbox id="sidebar-search-text" flex="1"
                    onkeypress="if (event.keyCode == 13) doSearch();"
                    oninput="doEnabling();" />
         <button id="searchButton" label="&search.button.label;"
                 disabled="true" oncommand="doSearch();"/>
       </hbox>
-      <vbox autostretch="never">
+      <vbox align="start">
         <vbox id="basicBox">
-          <hbox autostretch="never">
+          <hbox align="center">
             <text class="label" value="&using.label;" />
             <menulist id="basicEngineMenu"
                       ref="NC:SearchEngineRoot"
@@ -77,8 +77,8 @@
             </menulist>
           </hbox>
         </vbox>
-        <vbox id="categoryBox" autostretch="never">
-          <hbox autostretch="never">
+        <vbox id="categoryBox" align="start">
+          <hbox align="center">
             <text class="label" value="&within.label;" />
             <menulist id="categoryList" ref="NC:SearchCategoryRoot"
                       datasources="rdf:null" oncommand="switchTab(1);" >
@@ -183,7 +183,7 @@
               <treechildren>
                 <treeitem uri="...">
                   <treerow>
-                    <treecell autostretch="never" flex="1">
+                    <treecell align="center" flex="1">
                       <checkbox oncommand="saveEngines();" allowevents="true"
                                 loading="rdf:http://home.netscape.com/NC-rdf#loading"
                                 src="rdf:http://home.netscape.com/NC-rdf#Icon"

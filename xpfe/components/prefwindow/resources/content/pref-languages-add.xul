@@ -53,7 +53,7 @@
     <treechildren id="available_languages_root" flex="1"/>
   </tree>
 
-  <hbox autostretch="never">
+  <hbox align="center">
     <text class="label" value="&languages.customize.others.label;" for="languages.other"/>
     <textbox id="languages.other" size="6" />
     <text class="label" value="&languages.customize.others.examples;" for="languages.other"/>

@@ -65,7 +65,7 @@
       <column flex="1"/>
     </columns>
     <rows>
-      <row autostretch="never">
+      <row align="center">
         <text class="label" value="&name.label;" accesskey="&name.accesskey;" for="name"/>
         <textbox id="name"/>
         <spring/>
@@ -75,7 +75,7 @@
         <separator class="thin"/>
         <spring/>
       </row>
-      <row autostretch="never">
+      <row align="center">
         <text class="label" value="&url.label;" accesskey="&url.accesskey;" for="url"/>
         <textbox id="url" oninput="onLocationInput();"/>
         <spring/>

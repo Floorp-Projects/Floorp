@@ -51,7 +51,7 @@
       
     <separator class="thin"/>
       
-    <hbox align="center" autostretch="never" valign="middle">
+    <hbox align="center" align="center">
       <textbox id="horizSize" size="5"/>
       <menulist id="units" persist="value">
         <menupopup>

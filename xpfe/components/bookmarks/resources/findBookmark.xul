@@ -48,7 +48,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/findBookmark.js"/>
 
   <text class="label" value="&search.for.label;"/>
-  <hbox autostretch="never" valign="middle">
+  <hbox align="center">
     <menulist id="matchList" class="menulist-toolbar">
       <menupopup>
         <menuitem value="http://home.netscape.com/NC-rdf#Name" label="&search.name.label;"/>

@@ -54,7 +54,7 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
 <hbox style="margin-top: 1em;">
   <spring flex="100%"/>
-  <button id="ok" label="&okButton.label;" default="true" align="right" onclick="doOKButton()"/>
+  <button id="ok" label="&okButton.label;" default="true" onclick="doOKButton()"/>
 </hbox>
 
 </vbox>

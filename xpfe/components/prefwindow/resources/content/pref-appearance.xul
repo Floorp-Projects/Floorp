@@ -81,22 +81,20 @@
           
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox id="generalStartupPreferences" orient="vertical" autostretch="never">
+  <groupbox id="generalStartupPreferences" orient="vertical" align="start">
     <label value="&onStartLegend.label;"/>
-    
     <!-- XXX remove when navigator overlays.rdf works -->
     <checkbox id="generalStartupBrowser" wsm_persist="true"
               label="&navCheck.label;" accesskey="&navCheck.accesskey;"
               pref="true" preftype="bool" prefstring="general.startup.browser"
               prefattribute="checked"/>
     <!-- XXX -->
-    
   </groupbox>
   
   <!-- displaying none for beta -->
   <groupbox id="toolbarStyleBox" orient="vertical" style="display: none;">
     <label value="&showToolsLegend.label;"/>
-    <radiogroup id="toolbarStyle" orient="vertical" autostretch="never"
+    <radiogroup id="toolbarStyle" orient="vertical" align="start"
                 pref="true" preftype="int" prefstring="browser.chrome.toolbar_style"
                 prefattribute="value" wsm_persist="true">
       <radio group="toolbarStyle" value="2" label="&picsNtextRadio.label;" accesskey="&picsNtextRadio.accesskey;"/>
@@ -105,7 +103,7 @@
     </radiogroup>
   </groupbox>
 
-  <vbox class="box-padded" autostretch="never">
+  <vbox class="box-padded" align="start">
     <separator class="thin" />
 
     <checkbox id="showHideTooltips" label="&showHideTooltips.label;"

@@ -173,11 +173,11 @@
   <!-- inline editable buttons -->
   <binding id="buttonleft-ile" extends="chrome://global/content/bindings/general.xml#inline-edit-base">
     <content>
-      <xul:hbox class="button-internal-box" autostretch="never" flex="1">
+      <xul:hbox class="button-internal-box" align="center" flex="1">
         <xul:image class="button-icon" inherits="src"/>
-        <xul:vbox class="button-text-container" autostretch="never" flex="1" ileattr="text-container">
+        <xul:hbox class="button-text-container" pack="center" flex="1" ileattr="text-container">
           <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top" ileattr="text" rootcontent="button"/>
-        </xul:vbox>
+        </xul:hbox>
       </xul:hbox>
       <children includes="menupopup"/>
     </content>
@@ -210,9 +210,11 @@
   </binding>
 
   <binding id="statusbar-panel" extends="xul:button">
-    <content autostretch="never" valign="middle">
-      <xul:image class="statusbar-panel-icon" inherits="src"/>
-      <xul:text class="statusbar-panel-text" inherits="value=label,crop" crop="right" flex="1"/>
+    <content>
+      <xul:hbox align="center" flex="1">
+        <xul:image class="statusbar-panel-icon" inherits="src"/>
+        <xul:text class="statusbar-panel-text" inherits="value=label,crop" crop="right" flex="1"/>
+      </xul:hbox>
     </content>
 
     <implementation>

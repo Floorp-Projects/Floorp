@@ -230,7 +230,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar id="command-toolbar" tbautostretch="always" grippy="false">
+    <toolbar id="command-toolbar" tbalign="stretch" grippy="false">
       <button class="button-toolbar" id="newfolder" label="&command.newFolder.label;" 
               command="cmd_newfolder"/>
       <button class="button-toolbar" id="newseparator" label="&command.newSeparator.label;" 
@@ -266,14 +266,16 @@
           <treeitem uri="rdf:*"
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell autostretch="never"><treeindentation/>
-                        <separator class="groove" flex="1"/></treecell>
-              <treecell autostretch="never"><separator class="groove" flex="1"/></treecell>
-              <treecell autostretch="never"><separator class="groove" flex="1"/></treecell>
-              <treecell autostretch="never"><separator class="groove" flex="1"/></treecell>
-              <treecell autostretch="never"><separator class="groove" flex="1"/></treecell>
-              <treecell autostretch="never"><separator class="groove" flex="1"/></treecell>
-              <treecell autostretch="never"><separator class="groove" flex="1"/></treecell>
+              <treecell align="center">
+                <treeindentation/>
+                <separator class="groove" flex="1"/>
+              </treecell>
+              <treecell align="center"><separator class="groove" flex="1"/></treecell>
+              <treecell align="center"><separator class="groove" flex="1"/></treecell>
+              <treecell align="center"><separator class="groove" flex="1"/></treecell>
+              <treecell align="center"><separator class="groove" flex="1"/></treecell>
+              <treecell align="center"><separator class="groove" flex="1"/></treecell>
+              <treecell align="center"><separator class="groove" flex="1"/></treecell>
             </treerow>
           </treeitem>     
         </treechildren>
@@ -381,7 +383,7 @@
                   onclick="return TriStateColumnSort('LastModifiedDate');" 
                   observes="LastModifiedDate" />
         <treecell class="treecell-header" allowevents="true" id="popupCell">
-          <menu class="treecell-popupcell-menu" autostretch="never">
+          <menu class="treecell-popupcell-menu" align="center" pack="center">
             <menupopup popupanchor="bottomright" popupalign="topright"
                       oncreate="BuildTreePopup(document.getElementById('theColumns'), 
                                                document.getElementById('headRow'), this,

@@ -12,15 +12,15 @@
 
   <binding id="checkbox-baseline" extends="chrome://global/content/bindings/general.xml#basetext">
     <content>
-      <xul:box flex="1" class="internal-box" autostretch="never" valign="top">
-        <xul:box class="checkmark-box" autostretch="never">
+      <xul:hbox flex="1" class="internal-box" align="center">
+        <xul:hbox class="checkmark-box" align="center">
           <xul:image class="checkbox-check"/>
-        </xul:box>
+        </xul:hbox>
         <xul:image class="checkbox-icon" inherits="src"/>
         <xul:html class="checkbox-label" inherits="value=label,accesskey,crop" flex="1">
           <children/>
         </xul:html>
-      </xul:box>
+      </xul:hbox>
     </content>
     
     <implementation>

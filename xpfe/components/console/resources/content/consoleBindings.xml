@@ -10,7 +10,7 @@
     <content>  
       <xul:stringbundle src="chrome://global/locale/console.properties" role="string-bundle"/>
       <xul:box class="console-box-internal" flex="1">
-        <xul:box class="console-rows" orient="vertical" flex="1" role="console-rows"/>
+        <xul:vbox class="console-rows" flex="1" role="console-rows"/>
       </xul:box>
     </content>
   
@@ -344,11 +344,11 @@
   <binding id="error" extends="xul:box">
     <content>
       <xul:box class="console-row-internal-box" flex="1">
-        <xul:box class="console-row-icon" autostretch="never" inherits="selected">
+        <xul:box class="console-row-icon" align="center" inherits="selected">
           <xul:image class="console-icon" inherits="src,type"/>
         </xul:box>
-        <xul:box class="console-row-content" inherits="selected" orient="vertical" flex="1">
-          <xul:box class="console-row-msg" autostretch="never" valign="top">
+        <xul:vbox class="console-row-content" inherits="selected" flex="1">
+          <xul:box class="console-row-msg" align="start">
             <xul:text class="label" inherits="value=typetext"/>
             <xul:html class="console-error-msg" inherits="value=msg" flex="1"/>
           </xul:box>
@@ -359,15 +359,15 @@
             <xul:text class="label" value="&errLine.label;"/>
             <xul:text class="label" inherits="value=line" flex="1"/>
           </xul:box>
-          <xul:box class="console-row-code" inherits="selected,hidden=hideCode" orient="vertical">
+          <xul:vbox class="console-row-code" inherits="selected,hidden=hideCode">
             <xul:text class="monospace console-code" inherits="value=code"/>
             <xul:box inherits="hidden=hideCaret">
               <xul:text class="monospace console-dots" inherits="value=errorDots"/>
               <xul:text class="monospace console-caret" inherits="value=errorCaret"/>
               <xul:spring flex="1"/>
             </xul:box>
-          </xul:box>
-        </xul:box>
+          </xul:vbox>
+        </xul:vbox>
       </xul:box>
     </content>
 
@@ -403,14 +403,14 @@
   <binding id="message" extends="xul:box">
     <content>
       <xul:box class="console-internal-box" flex="1">
-        <xul:box class="console-row-icon" autostretch="never">
+        <xul:box class="console-row-icon" align="center">
           <xul:image class="console-icon" inherits="src,type"/>
         </xul:box>
-        <xul:box class="console-row-content" inherits="selected" orient="vertical" flex="1">
-          <xul:box class="console-row-msg" orient="vertical" flex="1">
+        <xul:vbox class="console-row-content" inherits="selected" flex="1">
+          <xul:vbox class="console-row-msg" flex="1">
             <xul:html class="console-msg-text" inherits="value=msg" flex="1"/>
-          </xul:box>
-        </xul:box>
+          </xul:vbox>
+        </xul:vbox>
       </xul:box>
     </content>
 

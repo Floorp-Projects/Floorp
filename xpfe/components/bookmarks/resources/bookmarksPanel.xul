@@ -91,8 +91,10 @@
           <treeitem uri="rdf:*"
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell autostretch="never"><treeindentation/>
-                        <separator class="groove" flex="1"/></treecell>
+              <treecell align="center">
+                <treeindentation/>
+                <separator class="groove" flex="1"/>
+              </treecell>
             </treerow>
           </treeitem>     
         </treechildren>

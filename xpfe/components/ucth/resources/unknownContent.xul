@@ -23,7 +23,7 @@
 
   <hbox>
     <separator orient="vertical" class="thin"/>
-    <vbox autostretch="never" valign="top">
+    <vbox align="start">
       <image class="message-icon" id="fileIcon"/>
     </vbox>
     <separator orient="vertical" class="thin"/>
@@ -36,7 +36,7 @@
     
   <separator class="groove"/>
     
-  <hbox autostretch="never">
+  <hbox align="center">
     <button class="dialog" id="dialog.more" label="&dialogMore.label;" oncommand="more()"/>
     <spring flex="1"/>
     <hbox id="okCancelButtons"/>

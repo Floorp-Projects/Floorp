@@ -140,7 +140,7 @@
     <separator/>
 
     <!-- Misc -->
-    <hbox autostretch="never">
+    <hbox align="center">
         <checkbox id="showDialog" label="&showDialog.label;" accesskey="&showDialog.accesskey;"/>     
     </hbox>
     <spring flex="1"/>

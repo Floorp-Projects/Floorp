@@ -12,48 +12,48 @@
 
   <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-internal-box" autostretch="never" flex="1">
+      <xul:hbox class="button-internal-box" align="center" flex="1">
         <xul:image class="button-icon" inherits="src"/>
-        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+        <xul:hbox class="button-text-container" align="center" flex="1">
           <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        </xul:box>
-      </xul:box>
+        </xul:hbox>
+      </xul:hbox>
       <children includes="menupopup"/>
     </content>
   </binding>
 
   <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+      <xul:vbox class="button-internal-box" align="center" flex="1">
         <xul:image class="button-icon" inherits="src"/>
-        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+        <xul:hbox class="button-text-container" align="center" pack="center" flex="1">
           <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        </xul:box>
-      </xul:box>
+        </xul:hbox>
+      </xul:vbox>
       <children includes="menupopup"/>
     </content>
   </binding>
   
   <binding id="buttonright" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-internal-box" inherits="orient" autostretch="never" flex="1">
-        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+      <xul:hbox class="button-internal-box" align="center" flex="1">
+        <xul:hbox class="button-text-container" align="center" pack="center" flex="1">
           <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        </xul:box>
+        </xul:hbox>
         <xul:image class="button-icon" inherits="src"/>
-      </xul:box>
+      </xul:hbox>
       <children includes="menupopup"/>
     </content>
   </binding>
 
   <binding id="buttonbottom" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
-        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+      <xul:vbox class="button-internal-box" align="center" flex="1">
+        <xul:hbox class="button-text-container" align="center" pack="center" flex="1">
           <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        </xul:box>
+        </xul:hbox>
         <xul:image class="button-icon" inherits="src"/>
-      </xul:box>
+      </xul:vbox>
       <children includes="menupopup"/>
     </content>
   </binding>

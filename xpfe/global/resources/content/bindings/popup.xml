@@ -99,9 +99,15 @@
 
   <binding id="tooltips" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
-      <xul:box class="popup-internal-box" orient="vertical" flex="1">
+      <xul:vbox class="popup-internal-box" flex="1">
         <children/>
-      </xul:box>
+      </xul:vbox>
+    </content>
+  </binding>
+  
+  <binding id="titletip" extends="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:text inherits="value=label"/>
     </content>
   </binding>
   
@@ -172,7 +178,7 @@
   <!-- Right horizontal resizer -->
   <binding id="r-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
-      <xul:box class="b-resizer-box" flex="1"/>
+      <xul:hbox class="b-resizer-box" flex="1"/>
     </content>
     <!--
     <implementation>
@@ -206,7 +212,7 @@
   <!-- Bottom vertical resizer -->
   <binding id="b-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
-      <xul:box class="b-resizer-box" flex="1"/>
+      <xul:hbox class="b-resizer-box" flex="1"/>
     </content>
     <!--
     <implementation>
@@ -240,9 +246,9 @@
   <!-- Right/Bottom diagonal resizer -->
   <binding id="rb-resizer" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
-      <xul:box class="rb-resizer-box" autostretch="never" flex="1">
+      <xul:hbox class="rb-resizer-box" align="center" flex="1">
         <xul:image class="rb-resizer-image"/>
-      </xul:box>
+      </xul:hbox>
     </content>
     <!--
     <implementation>
@@ -280,12 +286,12 @@
   
   <binding id="titlebar" extends="xul:box"> <!-- extends="chrome://global/content/bindings/popup.xml#resizerbase"> -->
     <content>
-      <xul:box class="titlebar-box" flex="1">
-        <xul:box class="titlebar-title-box" flex="1"  tooltip="aTooltip" tooltiptext="Click and drag to float">
+      <xul:hbox class="titlebar-box" flex="1">
+        <xul:hbox class="titlebar-title-box" flex="1" tooltip="aTooltip" tooltiptext="Click and drag to float">
           <xul:text class="titlebar-title" inherits="value=title" flex="1" crop="right"/>
-        </xul:box>
+        </xul:hbox>
         <xul:button class="popupClose" tooltip="aTooltip" tooltiptext="Close"/>
-      </xul:box>
+      </xul:hbox>
     </content>
     <!--
     <implementation>
@@ -504,43 +510,45 @@
   </binding>
 
   <binding id="floater-normal" extends="chrome://global/content/bindings/popup.xml#floater-base">
-    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
-      <box class="floater-box" orient="vertical" flex="1">
+    <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
+      <vbox class="floater-box" flex="1">
         <box class="floater-box-top">
           <titlebar flex="1" inherits="title"/>
         </box>
         <box class="floater-box-center" flex="1">
           <box class="floater-children" flex="1"> 
-            <xbl:children/>
+            <children/>
           </box>
         </box>
         <box class="floater-box-bottom">
           <resizer direction="bottom" flex="1"/>
           <resizer direction="bottomright" tooltip="aTooltip" tooltiptext="Click and drag to resize"/>
         </box>
-      </box>
-    </xbl:content>
+      </vbox>
+    </content>
   </binding>
 
   <binding id="floater-dock-left" extends="chrome://global/content/bindings/popup.xml#floater-base">
-    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
-      <box class="floater-box" orient="vertical" flex="1">
+    <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
+      <vbox class="floater-box" flex="1">
         <box class="floater-box-top">
           <titlebar flex="1" inherits="title"/>
         </box>
         <box class="floater-box-center" flex="1">
           <box class="floater-children" flex="1"> 
-            <xbl:children/>
+            <children/>
           </box>
           <resizer direction="right" tooltip="aTooltip" tooltiptext="Click and drag to resize"/>
         </box>
-      </box>
-    </xbl:content>
+      </vbox>
+    </content>
   </binding>  
   
   <binding id="close-button" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content autostretch="never">
-      <xul:image class="close-button-x"/>
+    <content>
+      <xul:hbox align="center" flex="1">
+        <xul:image class="close-button-x"/>
+      </xul:hbox>
     </content>
   </binding>
 

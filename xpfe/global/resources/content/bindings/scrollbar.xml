@@ -6,13 +6,13 @@
   
   <binding id="scrollbar">
     <content>
-      <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" inherits="sborient=align"/>
-      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" collapsed="true" inherits="sborient=align"/>
-      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,align">
-        <xul:thumb sbattr="scrollbar-thumb" inherits="align,src" flex="1"/>
+      <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" inherits="sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" collapsed="true" inherits="sborient=orient"/>
+      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,orient">
+        <xul:thumb sbattr="scrollbar-thumb" inherits="orient,src" flex="1"/>
       </xul:slider>
-      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" collapsed="true" inherits="sborient=align"/>
-      <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" inherits="sborient=align"/>
+      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" collapsed="true" inherits="sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" inherits="sborient=orient"/>
     </content>
     
     <implementation>
@@ -86,11 +86,11 @@
 
   <binding id="slider">
     <content>
-      <xul:thumb inherits="align,src" flex="1"/>
+      <xul:thumb inherits="orient,src" flex="1"/>
     </content>
   </binding>
 
-  <binding id="thumb" extends="xul:box">
+  <binding id="thumb">
     <content>
       <xul:spring flex="1"/>
       <xul:image inherits="src"/>
@@ -100,9 +100,9 @@
 
   <binding id="scrollbarbutton">
     <content>
-      <xul:box class="scrollbarbutton-box" flex="1">
+      <xul:hbox class="scrollbarbutton-box" flex="1">
         <xul:image class="scrollbarbutton-icon" inherits="src"/>
-      </xul:box>
+      </xul:hbox>
     </content>
   </binding>
 </bindings>

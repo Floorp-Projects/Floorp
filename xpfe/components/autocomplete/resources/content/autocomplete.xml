@@ -18,22 +18,22 @@
     </resources>
 
     <content>
-      <xul:box class="autocomplete-internal-box textbox-internal-box" flex="1">
-        <xul:box class="autocomplete-icon-box" autostretch="never" inherits="userAction">
+      <xul:hbox class="autocomplete-internal-box textbox-internal-box" flex="1">
+        <xul:hbox class="autocomplete-icon-box" align="center" inherits="userAction">
           <children includes="image">
             <xul:image class="autocomplete-icon" allowevents="true"/>
           </children>
-        </xul:box>
+        </xul:hbox>
 
-        <xul:box class="autocomplete-textbox-container" autostretch="never" flex="1" allowevents="true">
+        <xul:hbox class="autocomplete-textbox-container" align="center" flex="1" allowevents="true">
           <html:input anonid="textbox" class="autocomplete-textbox textbox-input" flex="1"
                       inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
-        </xul:box>
+        </xul:hbox>
                             
-        <xul:box class="autocomplete-history-button" inherits="open,hidden=hideHistory">
+        <xul:hbox class="autocomplete-history-button" inherits="open,hidden=hideHistory">
           <xul:image class="autocomplete-history-image"/>
-        </xul:box>
-      </xul:box>
+        </xul:hbox>
+      </xul:hbox>
 
       <xul:popupset anonid="popupset" ignorekeys="true">
         <xul:popup anonid="popup" class="autocomplete-result-popup" inherits="for=id,nomatch"/>
@@ -1078,11 +1078,11 @@
     </resources>
 
     <content>
-      <xul:box class="autocomplete-result-box" flex="1">
+      <xul:hbox class="autocomplete-result-box" flex="1">
         <xul:outliner anonid="outliner" class="autocomplete-outliner" flex="1">
           <xul:outlinerbody anonid="outlinerbody" class="autocomplete-outlinerbody" flex="1"/>
         </xul:outliner>
-      </xul:box>
+      </xul:hbox>
     </content>
     
     <implementation>
@@ -1239,13 +1239,15 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content orient="vertical">
-      <xul:box class="autocomplete-outliner-cols">
-        <children includes="outlinercol"/>
-      </xul:box>
-      <xul:outlinerrows class="autocomplete-outlinerrows outliner-rows" inherits="hidescrollbar" flex="1">
-        <children/>
-      </xul:outlinerrows>
+    <content>
+      <xul:vbox flex="1">
+        <xul:hbox class="autocomplete-outliner-cols">
+          <children includes="outlinercol"/>
+        </xul:hbox>
+        <xul:outlinerrows class="autocomplete-outlinerrows outliner-rows" inherits="hidescrollbar" flex="1">
+          <children/>
+        </xul:outlinerrows>
+      </xul:vbox>
     </content>
 
     <implementation>
@@ -1296,17 +1298,17 @@
     </handlers>
   </binding>
 
-  <binding id="autocomplete-outlinerrows" extends="xul:box">
+  <binding id="autocomplete-outlinerrows">
     <resources>
       <stylesheet src="chrome://global/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
     <content onmousedown="event.preventDefault()">
-      <xul:box flex="1" class="outliner-bodybox">
+      <xul:hbox flex="1" class="outliner-bodybox">
         <children/>
-      </xul:box>
-      <xul:scrollbar inherits="hidescrollbar" align="vertical" class="outliner-scrollbar"/>
+      </xul:hbox>
+      <xul:scrollbar inherits="hidescrollbar" orient="vertical" class="outliner-scrollbar"/>
     </content>
   </binding>
 
@@ -1324,9 +1326,9 @@
     </resources>
 
     <content>
-      <xul:box class="autocomplete-result-box autocomplete-history-box" orient="vertical" flex="1">
+      <xul:vbox class="autocomplete-result-box autocomplete-history-box" flex="1">
         <children/>
-      </xul:box>
+      </xul:vbox>
     </content>
   </binding>
 

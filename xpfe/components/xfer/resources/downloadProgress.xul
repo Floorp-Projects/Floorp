@@ -68,35 +68,35 @@ Contributor(s):
       
       <rows>
         <row>
-          <hbox autostretch="never" halign="right">
+          <hbox align="center" pack="end">
             <text class="label" value="&location;"/>
           </hbox>
           <textbox id="dialog.location" class="scrollfield" readonly="" flex="1"/>
         </row>
         <separator class="thin"/>
         <row>
-          <hbox autostretch="never" halign="right">
+          <hbox align="center" pack="end">
             <text class="label" value="&saving;"/>
           </hbox>
           <textbox id="dialog.fileName" class="scrollfield" readonly="" flex="1"/>
         </row>
         <separator class="thin"/>
         <row>
-          <hbox autostretch="never" halign="right">
+          <hbox align="center" pack="end">
             <text class="label" value="&status;"/>
           </hbox>
           <text class="label" id="dialog.status" value="&#160;" flex="1"/>
         </row>
         <separator class="thin"/>
         <row>
-          <hbox autostretch="never" halign="right">
+          <hbox align="center" pack="end">
             <text class="label" value="&timeLeft;"/>
           </hbox>
           <text class="label" id="dialog.timeLeft" value="&#160;"/>
         </row>
         <separator class="thin"/>
         <row>
-          <hbox autostretch="never" halign="right">
+          <hbox align="center" pack="end">
             <text class="label" value="&timeElapsed;"/>
           </hbox>
           <text class="label" id="dialog.timeElapsed" value="&#160;"/>

@@ -4,25 +4,25 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="progressmeter" extends="xul:box">
+  <binding id="progressmeter">
     <resources>
       <stylesheet src="chrome://global/skin/progressmeter.css"/>
     </resources>
 
     <content>
-      <xul:box class="progressmeter-internal-box" flex="1">
+      <xul:hbox class="progressmeter-internal-box" flex="1">
         <xul:stack class="progressmeter-stack" flex="1">
           <xul:progressbar class="progressmeter-progressbar" inherits="value,statusbar">
-            <xul:box class="progress-bar"/>
-            <xul:box class="progress-remainder"/>
+            <xul:spring class="progress-bar"/>
+            <xul:spring class="progress-remainder"/>
           </xul:progressbar>
-          <xul:box>
+          <xul:hbox>
             <xul:spring flex="1"/>
             <xul:text class="progress-text" inherits="value=label"/>
             <xul:spring flex="1"/>
-          </xul:box>
+          </xul:hbox>
         </xul:stack>
-      </xul:box>
+      </xul:hbox>
     </content>
     
     <implementation>

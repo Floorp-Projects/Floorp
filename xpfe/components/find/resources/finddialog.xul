@@ -55,12 +55,12 @@ Contributor(s):
     </columns>
     <rows>
       <row>
-        <vbox valign="middle">   <!-- we should use 'baseline' here -->
-          <text class="label" value="&findField.label;" valign="bottom"/>
-        </vbox>
-        <vbox valign="middle">
+        <hbox align="center">
+          <text class="label" value="&findField.label;"/>
+        </hbox>
+        <hbox align="center">
           <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
-        </vbox>
+        </hbox>
       </row>
       <row>
         <spring/>

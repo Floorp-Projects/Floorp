@@ -13,10 +13,10 @@
 
   <binding id="outliner" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content orient="vertical">
-      <xul:box class="outliner-columns">
+      <xul:hbox class="outliner-columns">
         <children includes="outlinercol|splitter"/>
         <xul:outlinercol class="outliner-columnpicker" fixed="true"/>
-      </xul:box>
+      </xul:hbox>
       <xul:outlinerrows class="outliner-rows" flex="1">
         <children/>
       </xul:outlinerrows>
@@ -412,10 +412,10 @@
     </resources>
 
     <content>
-      <xul:box flex="1" class="outliner-bodybox">
+      <xul:hbox flex="1" class="outliner-bodybox">
         <children/>
-      </xul:box>
-      <xul:scrollbar align="vertical" class="outliner-scrollbar"/>
+      </xul:hbox>
+      <xul:scrollbar orient="vertical" class="outliner-scrollbar"/>
     </content>
   </binding>
 
@@ -517,11 +517,11 @@
 
   <binding id="outlinercol" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
-      <xul:box class="outlinercol-box" flex="1" autostretch="never">
+      <xul:hbox class="outlinercol-box" flex="1" align="center">
         <xul:image class="outliner-image" inherits="src"/>
         <xul:text class="outlinercol-text" inherits="crop,value=label" flex="1" crop="right"/>
         <xul:image class="outlinercol-sortdirection"/>
-      </xul:box>
+      </xul:hbox>
     </content>
     <handlers>
       <handler event="click" button="0" action="if (event.originalTarget == this) { this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this); }"/>
@@ -530,9 +530,9 @@
 
   <binding id="outlinercol-image" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
-      <xul:box class="outlinercol-image-box" flex="1" autostretch="never">
+      <xul:hbox class="outlinercol-image-box" flex="1" align="center">
         <xul:image class="outlinercol-icon" inherits="src"/>
-      </xul:box>
+      </xul:hbox>
     </content>
     <handlers>
       <handler event="click" button="0" action="this.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this)"/>
@@ -541,7 +541,7 @@
 
   <binding id="columnpicker" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
-      <xul:menu class="outliner-colpicker-menu" autostretch="never" allowevents="true">
+      <xul:menu class="outliner-colpicker-menu" align="center" allowevents="true">
         <xul:image class="outliner-colpicker-icon"/>
         <xul:menupopup popupanchor="bottomright" popupalign="topright"
                   oncreate="this.parentNode.parentNode.buildPopup(this);"/>

@@ -57,7 +57,7 @@
         <treechildren id="available_charsets_root" flex="1"/>
       </tree> 
       <separator class="thin"/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <button id="add_button" oncommand="AddAvailableCharset();" class="dialog"
                 label="&charset.customize.add.label;" disabled="true"/>
       </hbox>
@@ -76,7 +76,7 @@
         <treechildren id="active_charsets_root" flex="1"/>
       </tree>
       <separator class="thin"/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <button id="remove_button" oncommand="RemoveActiveCharset();"
                 class="dialog" disabled="true"
                 label="&charset.customize.remove.label;"/>

@@ -87,14 +87,10 @@
 
   <hbox class="box-smallheader" title="&title.label;"/>
 
-    <vbox>
-      <hbox valign="bottom" autostretch="never">
-        <vbox>
-          <text class="label" value="&mouseWheelPanel.label;" accesskey="&mouseWheelPanel.accesskey;" 
-                for="mouseWheelMode"/>
-        </vbox>
-      </hbox>
-    </vbox>
+    <hbox align="center">
+      <text class="label" value="&mouseWheelPanel.label;" accesskey="&mouseWheelPanel.accesskey;" 
+            for="mouseWheelMode"/>
+    </hbox>
 
     <separator class="thin"/>
   
@@ -117,13 +113,13 @@
     <deck id="modifierDeck" class="indent">
       
       <!-- no key modifiers -->
-      <radiogroup id="mousewheelWithNoKeyAction" orient="vertical" autostretch="never"
+      <radiogroup id="mousewheelWithNoKeyAction" orient="vertical" align="start"
                   pref="true" preftype="int" prefstring="mousewheel.withnokey.action" 
                   prefattribute="value">
-        <hbox autostretch="never" valign="top">
+        <hbox align="start">
           <radio group="mousewheelWithNoKeyAction" value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
-          <vbox autostretch="never">
-            <hbox autostretch="never">
+          <vbox align="start">
+            <hbox align="center">
               <textbox id="mousewheelWithNoKeyNumlines" size="3" 
                          pref="true" preftype="int" prefstring="mousewheel.withnokey.numlines"
                          prefattribute="value"/>
@@ -140,13 +136,13 @@
       </radiogroup>
         
       <!-- alt modifiers -->
-      <radiogroup id="mousewheelWithAltKeyAction" orient="vertical" autostretch="never" 
+      <radiogroup id="mousewheelWithAltKeyAction" orient="vertical" align="start" 
                   pref="true" preftype="int" prefstring="mousewheel.withaltkey.action" 
                   prefattribute="value">
-        <hbox autostretch="never" valign="top">
+        <hbox align="start">
           <radio group="mousewheelWithAltKeyAction" value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
-          <vbox autostretch="never">
-            <hbox autostretch="never">
+          <vbox align="start">
+            <hbox align="center">
               <textbox id="mousewheelWithAltKeyNumlines" size="3" 
                          pref="true" preftype="int" prefstring="mousewheel.withaltkey.numlines"
                          prefattribute="value"/>
@@ -163,13 +159,13 @@
       </radiogroup>
   
       <!-- ctrl modifiers -->
-      <radiogroup id="mousewheelWithCtrlKeyAction" orient="vertical" autostretch="never"
+      <radiogroup id="mousewheelWithCtrlKeyAction" orient="vertical" align="start"
                   pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.action" 
                   prefattribute="value">
-        <hbox autostretch="never" valign="top">
+        <hbox align="start">
           <radio group="mousewheelWithCtrlKeyAction" value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
-          <vbox autostretch="never">
-            <hbox autostretch="never">
+          <vbox align="start">
+            <hbox align="center">
               <textbox id="mousewheelWithCtrlKeyNumlines" size="3" 
                          pref="true" preftype="int" prefstring="mousewheel.withcontrolkey.numlines"
                          prefattribute="value"/>
@@ -186,13 +182,13 @@
       </radiogroup>
   
       <!-- shift modifiers -->
-      <radiogroup id="mousewheelWithShiftKeyAction" orient="vertical" autostretch="never"
+      <radiogroup id="mousewheelWithShiftKeyAction" orient="vertical" align="start"
                   pref="true" preftype="int" prefstring="mousewheel.withshiftkey.action" 
                   prefattribute="value">
-        <hbox autostretch="never" valign="top">
+        <hbox align="start">
           <radio group="mousewheelWithShiftKeyAction" value="0" label="&scroll.label;" accesskey="&scroll.accesskey;"/>
-          <vbox autostretch="never">
-            <hbox autostretch="never">
+          <vbox align="start">
+            <hbox align="center">
               <textbox id="mousewheelWithShiftKeyNumlines" size="3" 
                          pref="true" preftype="int" prefstring="mousewheel.withshiftkey.numlines"
                          prefattribute="value"/>

@@ -107,7 +107,7 @@
   <groupbox orient="vertical">
     <label value="&header3.label;"/>
     <html>&historyPages.label;</html>
-    <hbox autostretch="never">
+    <hbox align="center">
       <text class="label" value="&pageHis.label;" accesskey="&pageHis.accesskey;" for="histDay"/>
       <textbox id="histDay" size="3" wsm_persist="true"
                  pref="true" preftype="int" prefstring="browser.history_expire_days"
@@ -124,9 +124,9 @@
   <!-- no honey, I haven't been viewing porn, honest! -->
   <groupbox orient="vertical">
     <label value="&locationBarHistory.label;"/>
-    <hbox autostretch="never">
+    <hbox align="center">
       <html flex="1">&clearLocationBar.label;</html>
-      <hbox autostretch="never" halign="right">
+      <hbox align="center" pack="end">
         <button class="dialog" id="ClearUrlBarHistoryButton" label="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
          oncommand="prefClearUrlbarHistory();"
          pref="true" preftype="bool"
@@ -140,7 +140,7 @@
   <groupbox orient="vertical">
     <label value="&shistory.label;"/>
     <html>&shistoryDescription1.label;</html>
-    <hbox autostretch="never">
+    <hbox align="center">
       <text class="label" value="&shistoryDescription2.label;" accesskey="&shistory.accesskey;" for="shistMax"/>
       <textbox id="shistMax" size="3" wsm_persist="true"
                   pref="true" preftype="int" prefstring="browser.sessionhistory.max_entries"
