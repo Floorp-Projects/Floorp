@@ -218,5 +218,31 @@ public:
   const nsString& GetString() const;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// nsOpaqueKey: Where keys are opaque byte-array blobs
+
+#include "nsString.h"
+
+class NS_COM nsOpaqueKey : public nsHashKey {
+protected:
+  const char* mOpaqueKey;         // Byte array of opaque data
+  PRUint32    mKeyLength;         // Length, in bytes, of mOpaqueKey
+
+public:
+  // Note opaque keys are not copied by this constructor.  If you want a private
+  // copy in each hash key, you must create one and pass it in to this function.
+  nsOpaqueKey(const char* aOpaqueKey, PRUint32 aKeyLength);
+
+  ~nsOpaqueKey(void);
+
+  PRUint32 HashValue(void) const;
+  PRBool Equals(const nsHashKey* aKey) const;
+  nsHashKey* Clone() const;
+
+  // For when the owner of the hashtable wants to peek at the actual
+  // opaque array in the key. No copy is made, so be careful.
+  const char* GetKey() const;
+  PRUint32 GetKeyLength() const;
+};
 
 #endif

@@ -63,7 +63,7 @@ struct nsHashEnumClosure
     void                         *Data;
 };
 
-nsresult
+extern "C" NS_COM nsresult
 NS_NewHashtableEnumerator (nsHashtable *aHash, 
                            NS_HASH_ENUMERATOR_CONVERTER aConverter,
                            void *aData, nsIEnumerator **retval)
@@ -185,14 +185,13 @@ nsHashtableEnumerator::Last ()
 NS_IMETHODIMP
 nsHashtableEnumerator::Prev ()
 {
-    if (!mElements || (mCount == 0) || (mCurrent == 0))
+    if (!mElements || (mCount == 0) || (mCurrent == 0)) {
+        mDoneFlag = PR_TRUE;
         return NS_ERROR_FAILURE;
+    }
 
     mCurrent--;
-    if (mCurrent == 0)
-        mDoneFlag = PR_TRUE;
-    else
-        mDoneFlag = PR_FALSE;
+    mDoneFlag = PR_FALSE;
 
     return NS_OK;
     
@@ -201,17 +200,15 @@ nsHashtableEnumerator::Prev ()
 NS_IMETHODIMP
 nsHashtableEnumerator::Next ()
 {
-    if (!mElements || (mCount == 0) || (mCurrent == mCount - 1))
+    if (!mElements || (mCount == 0) || (mCurrent == mCount - 1)) {
+        mDoneFlag = PR_TRUE;
         return NS_ERROR_FAILURE;
+    }
 
     mCurrent++;
-    if (mCurrent == mCount - 1)
-        mDoneFlag = PR_TRUE;
-    else
-        mDoneFlag = PR_FALSE;
+    mDoneFlag = PR_FALSE;
     
     return NS_OK;
-    
 }
 
 NS_IMETHODIMP
@@ -244,8 +241,7 @@ nsHashtableEnumerator::IsDone ()
 {
 
     if ((!mElements) || (mCount == 0) || (mDoneFlag))
-        return NS_ERROR_FAILURE;
+        return NS_OK;
 
-    return NS_OK;
-
+    return NS_COMFALSE;
 }
