@@ -253,16 +253,6 @@ nsListControlFrame::~nsListControlFrame()
   REFLOW_COUNTER_DUMP("nsLCF");
   nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
-  // if list is dropped down 
-  // make sure it gets rolled up
-  if (IsInDropDownMode()) {
-    PRBool isDown;
-    mComboboxFrame->IsDroppedDown(&isDown);
-    if (isDown) {
-      mComboboxFrame->ShowDropDown(PR_FALSE);
-    }
-  }
-
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
 
   // we shouldn't have to unregister this listener because when
@@ -755,8 +745,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // for the list frame and use that as the max/minimum size for the contents
   if (visibleHeight == 0) {
     nsCOMPtr<nsIFontMetrics> fontMet;
-    nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
-    if (NS_SUCCEEDED(res) && fontMet) {
+    nsresult rvv = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+    if (NS_SUCCEEDED(rvv) && fontMet) {
       aReflowState.rendContext->SetFont(fontMet);
       fontMet->GetHeight(visibleHeight);
       mMaxHeight = visibleHeight;
@@ -1795,7 +1785,7 @@ nsListControlFrame::Reset(nsIPresContext* aPresContext)
 
     nsCOMPtr<nsISupportsPRInt32> thisVal;
     PRInt32 j=0;
-    for (PRUint32 i=0; i<count; i++) {
+    for (i=0; i<count; i++) {
       nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
       thisVal = do_QueryInterface(suppval);
       if (thisVal) {
@@ -2824,6 +2814,17 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     return NS_ERROR_FAILURE;
   }
 
+  /*nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
+  nsCOMPtr<nsIDOMNode> node;
+  mouseEvent->GetTarget(getter_AddRefs(node));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  nsIFrame * frame;
+  nsresult result = presShell->GetPrimaryFrameFor(content, &frame);
+  printf("Target Frame: %p  this: %p\n", frame, this);
+  printf("-->\n");
+  */
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIEventStateManager> stateManager;
   if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
@@ -2834,9 +2835,11 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     if (optionContent) {
       aOldIndex = aCurIndex;
       aCurIndex = GetSelectedIndexFromContent(optionContent);
+      //printf("--> Old: %d  New: %d\n", aOldIndex, aCurIndex);
       rv = NS_OK;
     }
   }
+  //printf("--> bailing\n");
   return rv;
 }
 
@@ -2865,6 +2868,9 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   // only allow selection with the left button
   if (!IsLeftButton(aMouseEvent)) {
+    aMouseEvent->PreventDefault();
+    aMouseEvent->PreventCapture();
+    aMouseEvent->PreventBubble();
     return NS_ERROR_FAILURE; // means consume event
   }
 
@@ -2955,6 +2961,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         if (isDroppedDown) {
           CaptureMouseEvents(mPresContext, PR_FALSE);
         }
+        return NS_OK;
       }
     }
   }
