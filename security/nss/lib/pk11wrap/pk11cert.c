@@ -88,6 +88,7 @@ static PRStatus convert_cert(NSSCertificate *c, void *arg)
     CERTCertificate *nss3cert;
     SECStatus secrv;
     struct nss3_cert_cbstr *nss3cb = (struct nss3_cert_cbstr *)arg;
+    /* 'c' is not adopted. caller will free it */
     nss3cert = STAN_GetCERTCertificate(c);
     if (!nss3cert) return PR_FAILURE;
     secrv = (*nss3cb->callback)(nss3cert, nss3cb->arg);
@@ -300,7 +301,7 @@ static CERTCertificate
 	id.ulValueLen = c->id.size;
 	*nickptr = pk11_buildNickname(slot, &label, privateLabel, &id);
     }
-    return STAN_GetCERTCertificate(c);
+    return STAN_GetCERTCertificateOrRelease(c);
 }
 
 /*
@@ -575,8 +576,7 @@ transfer_token_certs_to_collection(nssList *certList, NSSToken *token,
 	    }
 	    nssTokenArray_Destroy(tokens);
 	}
-	/* *must* be a valid CERTCertificate, came from cache */
-	CERT_DestroyCertificate(STAN_GetCERTCertificate(certs[i]));
+	CERT_DestroyCertificate(STAN_GetCERTCertificateOrRelease(certs[i]));
     }
     nss_ZFreeIf(certs);
 }
@@ -687,7 +687,7 @@ PK11_FindCertFromNickname(char *nickname, void *wincx)
 	    cert = nssCertificateArray_FindBestCertificate(certs, NULL, 
 	                                                   &usage, NULL);
 	    if (cert) {
-		rvCert = STAN_GetCERTCertificate(cert);
+		rvCert = STAN_GetCERTCertificateOrRelease(cert);
 	    }
 	    nssCertificateArray_Destroy(certs);
 	}
@@ -812,8 +812,10 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 	PRTime now = PR_Now();
 	certList = CERT_NewCertList();
 	for (i=0, c = *foundCerts; c; c = foundCerts[++i]) {
-	    CERTCertificate *certCert = STAN_GetCERTCertificate(c);
+	    CERTCertificate *certCert = STAN_GetCERTCertificateOrRelease(c);
+	    /* c may be invalid after this, don't reference it */
 	    if (certCert) {
+	        /* CERT_AddCertToListSorted adopts certCert  */
 		CERT_AddCertToListSorted(certList, certCert,
 			CERT_SortCBValidity, &now);
 	    }
@@ -822,6 +824,7 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 	    CERT_DestroyCertList(certList);
 	    certList = NULL;
 	}
+	/* all the certs have been adopted or freed, free the  raw array */
 	nss_ZFreeIf(foundCerts);
     }
     return certList;
@@ -1416,6 +1419,7 @@ PK11_FindCertByIssuerAndSNOnToken(PK11SlotInfo *slot,
     }
     object = NULL; /* adopted by the previous call */
     nssTrustDomain_AddCertsToCache(td, &cert,1);
+    /* on failure, cert is freed below */
     rvCert = STAN_GetCERTCertificate(cert);
     if (!rvCert) {
 	goto loser;
@@ -1759,22 +1763,34 @@ PK11_FindCertByIssuerAndSN(PK11SlotInfo **slotPtr, CERTIssuerAndSN *issuerSN,
                                                                 &serial);
     if (cert) {
 	SECITEM_FreeItem(derSerial, PR_TRUE);
-	return STAN_GetCERTCertificate(cert);
+	return STAN_GetCERTCertificateOrRelease(cert);
     }
-retry:
-    cert = NSSTrustDomain_FindCertificateByIssuerAndSerialNumber(
+
+    do {
+	/* free the old cert on retry. Associated slot was not present */
+	if (rvCert) {
+	    CERT_DestroyCertificate(rvCert);
+	    rvCert = NULL;
+ 	}
+
+	cert = NSSTrustDomain_FindCertificateByIssuerAndSerialNumber(
                                                   STAN_GetDefaultTrustDomain(),
                                                   &issuer,
                                                   &serial);
-    if (cert) {
-	rvCert = STAN_GetCERTCertificate(cert);
-	/* Check to see if the cert's token is still there */
-	if (!PK11_IsPresent(rvCert->slot)) {
-	    CERT_DestroyCertificate(rvCert);
-	    goto retry;
+	if (!cert) {
+	    break;
 	}
-	if (slotPtr) *slotPtr = PK11_ReferenceSlot(rvCert->slot);
-    }
+
+	rvCert = STAN_GetCERTCertificateOrRelease(cert);
+	if (rvCert == NULL) {
+	   break;
+	}
+
+	/* Check to see if the cert's token is still there */
+    } while (!PK11_IsPresent(rvCert->slot));
+
+    if (rvCert && slotPtr) *slotPtr = PK11_ReferenceSlot(rvCert->slot);
+
     SECITEM_FreeItem(derSerial, PR_TRUE);
     return rvCert;
 #endif
@@ -1912,7 +1928,7 @@ PK11_TraverseCertsForSubject(CERTCertificate *cert,
 							PR_FALSE,PR_TRUE,NULL);
 	PK11SlotListElement *le;
 
-	/* loop through all the fortezza tokens */
+	/* loop through all the tokens */
 	for (le = list->head; le; le = le->next) {
 	    PK11_TraverseCertsForSubjectInSlot(cert,le->slot,callback,arg);
 	}
@@ -1997,6 +2013,9 @@ PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert, PK11SlotInfo *slot,
 	NSSCertificate **cp;
 	for (cp = certs; *cp; cp++) {
 	    oldie = STAN_GetCERTCertificate(*cp);
+	    if (!oldie) {
+		continue;
+	    }
 	    if ((*callback)(oldie, arg) != SECSuccess) {
 		nssrv = PR_FAILURE;
 		break;
@@ -2094,6 +2113,9 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
 	NSSCertificate **cp;
 	for (cp = certs; *cp; cp++) {
 	    oldie = STAN_GetCERTCertificate(*cp);
+	    if (!oldie) {
+		continue;
+	    }
 	    if ((*callback)(oldie, arg) != SECSuccess) {
 		nssrv = PR_FAILURE;
 		break;
@@ -2183,6 +2205,9 @@ PK11_TraverseCertsInSlot(PK11SlotInfo *slot,
 	NSSCertificate **cp;
 	for (cp = certs; *cp; cp++) {
 	    oldie = STAN_GetCERTCertificate(*cp);
+	    if (!oldie) {
+		continue;
+	    }
 	    if ((*callback)(oldie, arg) != SECSuccess) {
 		nssrv = PR_FAILURE;
 		break;
@@ -2242,10 +2267,7 @@ PK11_FindCertFromDERCertItem(PK11SlotInfo *slot, SECItem *inDerCert,
 	    nssTokenArray_Destroy(tokens);
 	}
     }
-    if (c) {
-	rvCert = STAN_GetCERTCertificate(c);
-    }
-    return rvCert;
+    return c ? STAN_GetCERTCertificateOrRelease(c) : NULL;
 } 
 
 /* mcgreer 3.4 -- nobody uses this, ignoring */
@@ -2575,6 +2597,7 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
 	return PR_SUCCESS;
     }
 
+    /* caller still owns the reference to 'c' */
     newCert = STAN_GetCERTCertificate(c);
     if (!newCert) {
 	return PR_SUCCESS;
