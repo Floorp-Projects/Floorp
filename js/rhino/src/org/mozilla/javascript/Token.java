@@ -142,71 +142,72 @@ public class Token
         OBJECTLIT   = 68, // object literal
         GET_REF     = 69, // *reference
         SET_REF     = 70, // *reference = something
+        REF_CALL    = 71, // f(args) = something or f(args)++
 
-        LAST_BYTECODE_TOKEN = 70,
+        LAST_BYTECODE_TOKEN = 71,
         // End of interpreter bytecodes
 
-        TRY         = 71,
-        SEMI        = 72,  // semicolon
-        LB          = 73,  // left and right brackets
-        RB          = 74,
-        LC          = 75,  // left and right curlies (braces)
-        RC          = 76,
-        LP          = 77,  // left and right parentheses
-        RP          = 78,
-        COMMA       = 79,  // comma operator
-        ASSIGN      = 80, // simple assignment  (=)
-        ASSIGNOP    = 81, // assignment with operation (+= -= etc.)
-        HOOK        = 82, // conditional (?:)
-        COLON       = 83,
-        OR          = 84, // logical or (||)
-        AND         = 85, // logical and (&&)
-        INC         = 86, // increment/decrement (++ --)
-        DEC         = 87,
-        DOT         = 88, // member operator (.)
-        FUNCTION    = 89, // function keyword
-        EXPORT      = 90, // export keyword
-        IMPORT      = 91, // import keyword
-        IF          = 92, // if keyword
-        ELSE        = 93, // else keyword
-        SWITCH      = 94, // switch keyword
-        CASE        = 95, // case keyword
-        DEFAULT     = 96, // default keyword
-        WHILE       = 97, // while keyword
-        DO          = 98, // do keyword
-        FOR         = 99, // for keyword
-        BREAK       = 100, // break keyword
-        CONTINUE    = 101, // continue keyword
-        VAR         = 102, // var keyword
-        WITH        = 103, // with keyword
-        CATCH       = 104, // catch keyword
-        FINALLY     = 105, // finally keyword
-        VOID        = 106, // void keyword
-        RESERVED    = 107, // reserved keywords
+        TRY         = 72,
+        SEMI        = 73,  // semicolon
+        LB          = 74,  // left and right brackets
+        RB          = 75,
+        LC          = 76,  // left and right curlies (braces)
+        RC          = 77,
+        LP          = 78,  // left and right parentheses
+        RP          = 79,
+        COMMA       = 80,  // comma operator
+        ASSIGN      = 81, // simple assignment  (=)
+        ASSIGNOP    = 82, // assignment with operation (+= -= etc.)
+        HOOK        = 83, // conditional (?:)
+        COLON       = 84,
+        OR          = 85, // logical or (||)
+        AND         = 86, // logical and (&&)
+        INC         = 87, // increment/decrement (++ --)
+        DEC         = 88,
+        DOT         = 89, // member operator (.)
+        FUNCTION    = 90, // function keyword
+        EXPORT      = 91, // export keyword
+        IMPORT      = 92, // import keyword
+        IF          = 93, // if keyword
+        ELSE        = 94, // else keyword
+        SWITCH      = 95, // switch keyword
+        CASE        = 96, // case keyword
+        DEFAULT     = 97, // default keyword
+        WHILE       = 98, // while keyword
+        DO          = 99, // do keyword
+        FOR         = 100, // for keyword
+        BREAK       = 101, // break keyword
+        CONTINUE    = 102, // continue keyword
+        VAR         = 103, // var keyword
+        WITH        = 104, // with keyword
+        CATCH       = 105, // catch keyword
+        FINALLY     = 106, // finally keyword
+        VOID        = 107, // void keyword
+        RESERVED    = 108, // reserved keywords
 
-        EMPTY       = 108,
+        EMPTY       = 109,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        BLOCK       = 109, // statement block
-        LABEL       = 110, // label
-        TARGET      = 111,
-        LOOP        = 112,
-        EXPRSTMT    = 113,
-        JSR         = 114,
-        SCRIPT      = 115,   // top-level node for entire script
-        TYPEOFNAME  = 116,  // for typeof(simple-name)
-        USE_STACK   = 117,
-        SETPROP_OP  = 118, // x.y op= something
-        SETELEM_OP  = 119, // x[y] op= something
-        INIT_LIST   = 120,
-        LOCAL_BLOCK = 121,
-        SET_REF_OP  = 122, // *reference op= something
-        SPECIAL_REF = 123, // reference for special properties like __proto
+        BLOCK       = 110, // statement block
+        LABEL       = 111, // label
+        TARGET      = 112,
+        LOOP        = 113,
+        EXPRSTMT    = 114,
+        JSR         = 115,
+        SCRIPT      = 116,   // top-level node for entire script
+        TYPEOFNAME  = 117,  // for typeof(simple-name)
+        USE_STACK   = 118,
+        SETPROP_OP  = 119, // x.y op= something
+        SETELEM_OP  = 120, // x[y] op= something
+        INIT_LIST   = 121,
+        LOCAL_BLOCK = 122,
+        SET_REF_OP  = 123, // *reference op= something
+        SPECIAL_REF = 124, // reference for special properties like __proto
 
-        LAST_TOKEN  = 123;
+        LAST_TOKEN  = 124;
 
     public static String name(int token)
     {
@@ -291,6 +292,7 @@ public class Token
           case OBJECTLIT:       return "OBJECTLIT";
           case GET_REF:         return "GET_REF";
           case SET_REF:         return "SET_REF";
+          case REF_CALL:        return "REF_CALL";
           case TRY:             return "TRY";
           case SEMI:            return "SEMI";
           case LB:              return "LB";

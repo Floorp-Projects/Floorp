@@ -817,17 +817,17 @@ class IRFactory
         return node;
     }
 
-    Object createIncDec(int nodeType, boolean post, Object child)
+    Object createIncDec(int nodeType, boolean post, Object childObj)
     {
-        Node childNode = (Node)child;
-        int childType = childNode.getType();
+        Node child = (Node)childObj;
+        int childType = child.getType();
 
-        if (childType == Token.NAME
-            || childType == Token.GETPROP
-            || childType == Token.GETELEM
-            || childType == Token.GET_REF)
-        {
-            Node n = new Node(nodeType, childNode);
+        switch (childType) {
+          case Token.NAME:
+          case Token.GETPROP:
+          case Token.GETELEM:
+          case Token.GET_REF: {
+            Node n = new Node(nodeType, child);
             int incrDecrMask = 0;
             if (nodeType == Token.DEC) {
                 incrDecrMask |= Node.DECR_FLAG;
@@ -837,6 +837,13 @@ class IRFactory
             }
             n.putIntProp(Node.INCRDECR_PROP, incrDecrMask);
             return n;
+          }
+          case Token.CALL: {
+            // Turn call into reference_call and recurse
+            child.setType(Token.REF_CALL);
+            Node ref = new Node(Token.GET_REF, child);
+            return createIncDec(nodeType, post, ref);
+          }
         }
         // TODO: This should be a ReferenceError--but that's a runtime
         //  exception. Should we compile an exception into the code?
@@ -1047,6 +1054,10 @@ class IRFactory
             Node ref = left.getFirstChild();
             return new Node(Token.SET_REF, ref, right);
           }
+          case Token.CALL: {
+            left.setType(Token.REF_CALL);
+            return new Node(Token.SET_REF, left, right);
+          }
 
           default:
             // TODO: This should be a ReferenceError--but that's a runtime
@@ -1088,10 +1099,15 @@ class IRFactory
 
           case Token.GET_REF: {
             Node ref = left.getFirstChild();
-
             Node opLeft = new Node(Token.USE_STACK);
             Node op = new Node(assignOp, opLeft, right);
             return new Node(Token.SET_REF_OP, ref, op);
+          }
+          case Token.CALL: {
+            // Turn call into reference_call and recurse
+            left.setType(Token.REF_CALL);
+            Node ref = new Node(Token.GET_REF, left);
+            return createAssignmentOp(assignOp, ref, right);
           }
 
           default:

@@ -1533,6 +1533,36 @@ public class ScriptRuntime {
     }
 
     /**
+     * Perform function call in reference context. Should always
+     * return value that can be passed to
+     * {@link #getReference(Object)} or @link #setReference(Object, Object)}
+     * arbitrary number of times.
+     * The args array reference should not be stored in any object that is
+     * can be GC-reachable after this method returns. If this is necessary,
+     * store args.clone(), not args array itself.
+     */
+    public static Object referenceCall(Object fun, Object thisArg,
+                                       Object[] args,
+                                       Context cx, Scriptable scope)
+        throws JavaScriptException
+    {
+        if (!(fun instanceof Function)) {
+            throw typeError1("msg.isnt.function", toString(fun));
+        }
+        Function function = (Function)fun;
+        Scriptable thisObj;
+        if (thisArg instanceof Scriptable || thisArg == null) {
+            thisObj = (Scriptable) thisArg;
+        } else {
+            thisObj = ScriptRuntime.toObject(cx, scope, thisArg);
+        }
+        // No runtime support for now
+        String msg = getMessage1("msg.no.ref.from.function",
+                                 toString(getProp(fun, "name", scope)));
+        throw constructError("ReferenceError", msg);
+    }
+
+    /**
      * Operator new.
      *
      * See ECMA 11.2.2
@@ -1733,7 +1763,8 @@ public class ScriptRuntime {
                 }
                 target = target.getPrototype();
             } while (target != null);
-            return Undefined.instance;
+            start.put(id, start, NaNobj);
+            return NaNobj;
         }
         return doScriptableIncrDecr(target, id, start, value,
                                     incrDecrMask);
@@ -1774,8 +1805,6 @@ public class ScriptRuntime {
                                       Scriptable scope, int incrDecrMask)
     {
         Object value = getElem(obj, index, scope);
-        if (value == Undefined.instance)
-            return value;
         boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
@@ -1804,8 +1833,6 @@ public class ScriptRuntime {
     public static Object referenceIncrDecr(Object obj, int incrDecrMask)
     {
         Object value = getReference(obj);
-        if (value == Undefined.instance)
-            return value;
         boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {

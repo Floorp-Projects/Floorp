@@ -1410,9 +1410,13 @@ class BodyCodegen
                 visitName(node);
                 break;
 
-              case Token.NEW:
               case Token.CALL:
+              case Token.NEW:
                 visitCall(node, type, child);
+                break;
+
+              case Token.REF_CALL:
+                visitRefCall(node, type, child);
                 break;
 
               case Token.NUMBER:
@@ -2326,6 +2330,23 @@ class BodyCodegen
         if (target != null) {
             cfw.markLabel(beyond);
         }
+    }
+
+    private void visitRefCall(Node node, int type, Node child)
+    {
+        generateFunctionAndThisObj(child, node);
+        // stack: ... functionObj thisObj
+        child = child.getNext();
+        generateCallArgArray(node, child, false);
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
+        addScriptRuntimeInvoke("referenceCall",
+                               "(Ljava/lang/Object;"
+                               +"Ljava/lang/Object;"
+                               +"[Ljava/lang/Object;"
+                               +"Lorg/mozilla/javascript/Context;"
+                               +"Lorg/mozilla/javascript/Scriptable;"
+                               +")Ljava/lang/Object;");
     }
 
     private void generateCallArgArray(Node node, Node argChild, boolean directCall)

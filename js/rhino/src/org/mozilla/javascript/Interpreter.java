@@ -551,8 +551,9 @@ public class Interpreter
                 markTargetLabel((Node.Target)node, iCodeTop);
                 break;
 
+            case Token.CALL :
             case Token.NEW :
-            case Token.CALL : {
+            case Token.REF_CALL : {
                 stackDelta = 1;
                 if (type == Token.NEW) {
                     iCodeTop = generateICode(child, iCodeTop);
@@ -1719,8 +1720,9 @@ public class Interpreter
               case Icode_CLOSURE :
                 out.println(tname+" "+idata.itsNestedFunctions[indexReg]);
                 break;
-              case Token.NEW :
               case Token.CALL :
+              case Token.NEW :
+              case Token.REF_CALL :
                 out.println(tname+' '+indexReg);
                 pc += 2;
                 break;
@@ -1847,6 +1849,7 @@ public class Interpreter
 
             case Token.CALL :
             case Token.NEW :
+            case Token.REF_CALL :
                 // index of potential function name for debugging
                 return 1 + 2;
 
@@ -2643,6 +2646,27 @@ switch (op) {
             if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
             throw notAFunction(lhs, idata, pc);
         }
+        pc += 2;
+        continue Loop;
+    }
+    case Token.REF_CALL : {
+        if (instructionCounting) {
+            cx.instructionCount += INVOCATION_COST;
+        }
+        // indexReg: number of arguments
+        stackTop -= indexReg;
+        int calleeArgShft = stackTop + 1;
+        Object rhs = stack[stackTop];
+        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
+        --stackTop;
+        Object lhs = stack[stackTop];
+        Scriptable calleeScope = scope;
+        if (idata.itsNeedsActivation) {
+            calleeScope = ScriptableObject.getTopLevelScope(scope);
+        }
+        Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, indexReg);
+        stack[stackTop] = ScriptRuntime.referenceCall(lhs, rhs, outArgs,
+                                                      cx, calleeScope);
         pc += 2;
         continue Loop;
     }
