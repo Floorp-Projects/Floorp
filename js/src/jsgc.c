@@ -1087,7 +1087,6 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
         vp = obj->slots;
         if (!vp) {
             /* If obj->slots is null, obj must be a newborn. */
-            JS_ASSERT(!obj->map);
             goto out;
         }
 
