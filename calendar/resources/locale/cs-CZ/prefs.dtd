@@ -138,8 +138,6 @@
 
 <!ENTITY pref.publish.caption        "Nastavení publikování">
 <!ENTITY pref.publish.path.label     "Výchozí vzdálený soubor">
-<!ENTITY pref.publish.username.label "Jméno">
-<!ENTITY pref.publish.password.label "Heslo">
 
 <!ENTITY pref.minutes.label "minut">
 

@@ -136,8 +136,6 @@
 
 <!ENTITY pref.publish.caption        "Ustawienia publikowania">
 <!ENTITY pref.publish.path.label     "Domyślna nazwa zdalnego pliku">
-<!ENTITY pref.publish.username.label "Użytkownik">
-<!ENTITY pref.publish.password.label "Hasło">
 
 <!ENTITY pref.minutes.label "Minuty">
 

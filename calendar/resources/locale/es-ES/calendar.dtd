@@ -379,8 +379,6 @@
 <!ENTITY calendar.server.dialog.title.new           "Añadir nuevo calendario">
 <!ENTITY calendar.server.dialog.title.edit          "Editar calendario">
 <!ENTITY calendar.server.dialog.name.label          "Nombre">
-<!ENTITY calendar.server.dialog.username.label      "Usuario">
-<!ENTITY calendar.server.dialog.password.label      "Contraseña">
 <!ENTITY calendar.server.dialog.publish.label       "¿Publicar cambios automáticamente? Para calendarios remotos, esto descargará una nueva versión antes de que añada, edite o borre un evento. Se realizará la acción, y se descargará al servidor el nuevo fichero.">
 <!ENTITY calendar.server.dialog.location.label      "Lugar">
 <!ENTITY calendar.server.dialog.local.location.label "Lugar del fichero local">
@@ -396,10 +394,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publicar calendario">
 <!ENTITY calendar.publish.url.label                 "URL de publicación">
-<!ENTITY calendar.publish.username.label            "Usuario">
-<!ENTITY calendar.publish.password.label            "Contraseña">
-<!ENTITY calendar.publish.username.description      "(Opcional) El usuario para descargar al servidor.">
-<!ENTITY calendar.publish.password.description      "(Opcional) La contraseña para descargar al servidor.">
 <!ENTITY calendar.publish.publish.button      "Publicar">
 <!ENTITY calendar.publish.close.button      "Cerrar">
 

@@ -383,8 +383,6 @@
 <!ENTITY calendar.server.dialog.title.new           "Naujas kalendorius">
 <!ENTITY calendar.server.dialog.title.edit          "Kalendoriaus aprašo taisa">
 <!ENTITY calendar.server.dialog.name.label          "Vardas:">
-<!ENTITY calendar.server.dialog.username.label      "Abonento vardas:">
-<!ENTITY calendar.server.dialog.password.label      "Slaptažodis:">
 <!ENTITY calendar.server.dialog.publish.label       "Automatiškai publikuoti pakeitimus. (Tai reiškia, kad dirbant su nuotoliniais kalendoriais, prieš pridedant, taisant arba šalinant įvykį, pirma bus atsiųsta jo naujausia versija, po to atliktas Jūsų veiksmas su įvykiais ir tik tada kalendoriaus byla bus išsiųsta į žiniatinklį.)">
 <!ENTITY calendar.server.dialog.location.label      "Adresas:">
 <!ENTITY calendar.server.dialog.local.location.label "Vietinė byla">
@@ -400,10 +398,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Kalendoriaus publikavimas">
 <!ENTITY calendar.publish.url.label                 "URL:">
-<!ENTITY calendar.publish.username.label            "Abonento vardas:">
-<!ENTITY calendar.publish.password.label            "Slaptažodis:">
-<!ENTITY calendar.publish.username.description      "Publikavimo serveryje abonento vardas (nebūtina).">
-<!ENTITY calendar.publish.password.description      "Publikavimo serveryje slaptažodis (nebūtina).">
 <!ENTITY calendar.publish.publish.button      "Publikuoti">
 <!ENTITY calendar.publish.close.button      "Užverti">
 

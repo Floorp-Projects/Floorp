@@ -139,8 +139,6 @@
 
 <!ENTITY pref.publish.caption        "Publiceringsinställningar">
 <!ENTITY pref.publish.path.label     "Standardfilnamn På Länkat Objekt">
-<!ENTITY pref.publish.username.label "Användarnamn">
-<!ENTITY pref.publish.password.label "Lösenord">
 
 <!ENTITY pref.minutes.label "Minuter">
 

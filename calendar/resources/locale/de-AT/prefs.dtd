@@ -137,8 +137,6 @@
 
 <!ENTITY pref.publish.caption        "Publizierungseinstellungen">
 <!ENTITY pref.publish.path.label     "Standardname für entfernte Datei">
-<!ENTITY pref.publish.username.label "Benutzername">
-<!ENTITY pref.publish.password.label "Passwort">
 
 <!ENTITY pref.minutes.label "Minuten">
 

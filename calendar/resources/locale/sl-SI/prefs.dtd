@@ -138,8 +138,6 @@
 
 <!ENTITY pref.publish.caption        "Nastavitve objave">
 <!ENTITY pref.publish.path.label     "Privzeto ime za oddaljeno datoteko">
-<!ENTITY pref.publish.username.label "Uporabniško ime">
-<!ENTITY pref.publish.password.label "Geslo">
 
 <!ENTITY pref.minutes.label "minut">
 

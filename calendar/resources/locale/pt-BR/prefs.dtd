@@ -139,8 +139,6 @@
 
 <!ENTITY pref.publish.caption        "Op&#xE7;&#xF5;es de Publica&#xE7;&#xE3;o">
 <!ENTITY pref.publish.path.label     "Nome padr&#xE3;o do Arquivo Remoto">
-<!ENTITY pref.publish.username.label "Usu&#xE1;rio">
-<!ENTITY pref.publish.password.label "Senha">
 
 <!ENTITY pref.minutes.label "Minutos">
 

@@ -138,8 +138,6 @@
 
 <!ENTITY pref.publish.caption        "Réglage pour la publication">
 <!ENTITY pref.publish.path.label     "Nom par défaut du fichier distant">
-<!ENTITY pref.publish.username.label "Nom d'utilisateur">
-<!ENTITY pref.publish.password.label "Mot de passe">
 
 <!ENTITY pref.minutes.label "Minutes">
 

@@ -383,8 +383,6 @@
 <!ENTITY calendar.server.dialog.title.new           "Přidat nový kalendář">
 <!ENTITY calendar.server.dialog.title.edit          "Upravit kalendář">
 <!ENTITY calendar.server.dialog.name.label          "Název">
-<!ENTITY calendar.server.dialog.username.label      "Jméno">
-<!ENTITY calendar.server.dialog.password.label      "Heslo">
 <!ENTITY calendar.server.dialog.publish.label       "Publikovat změny automaticky? Pro vzdálené kalendáře to znamená, že bude stažena jeho aktuální verze před přidáním, editací či vymazáním události. Následně se provede nahrání nového souboru na server.">
 <!ENTITY calendar.server.dialog.location.label      "Umístění">
 <!ENTITY calendar.server.dialog.local.location.label "Umístění souboru">
@@ -400,10 +398,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publikovat kalendář">
 <!ENTITY calendar.publish.url.label                 "Adresa URL">
-<!ENTITY calendar.publish.username.label            "Jméno">
-<!ENTITY calendar.publish.password.label            "Heslo">
-<!ENTITY calendar.publish.username.description      "(Doporučeno) Jméno potřebné k uploadu na tento server.">
-<!ENTITY calendar.publish.password.description      "(Doporučeno) Heslo potřebné k uploadu na tento server.">
 <!ENTITY calendar.publish.publish.button      "Publikovat">
 <!ENTITY calendar.publish.close.button      "Zavřít">
 

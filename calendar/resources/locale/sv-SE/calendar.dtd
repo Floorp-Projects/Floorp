@@ -384,8 +384,6 @@
 <!ENTITY calendar.server.dialog.title.new           "Lägg Till Ny Kalender">
 <!ENTITY calendar.server.dialog.title.edit          "Redigera Kalender">
 <!ENTITY calendar.server.dialog.name.label          "Namn">
-<!ENTITY calendar.server.dialog.username.label      "Användarnamn">
-<!ENTITY calendar.server.dialog.password.label      "Lösenord">
 <!ENTITY calendar.server.dialog.publish.label       "Publicera ändringar automatiskt? För länkade kalendrar betyder detta att en ny version kommer att laddas ner innan du skapar, redigerar eller raderar en händelse. Den kommer sedan att utföra dina förändringar och ladda upp den nya filen till servern.">
 <!ENTITY calendar.server.dialog.location.label      "Plats">
 <!ENTITY calendar.server.dialog.local.location.label "Plats För Lokal Fil">
@@ -401,10 +399,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publicera Kalender">
 <!ENTITY calendar.publish.url.label                 "Publicerings URL">
-<!ENTITY calendar.publish.username.label            "Användarnamn">
-<!ENTITY calendar.publish.password.label            "Läsenord">
-<!ENTITY calendar.publish.username.description      "(Valfritt) Användarnamnet för att ladda upp till servern.">
-<!ENTITY calendar.publish.password.description      "(Valfritt) Lösenordet för att ladda upp till servern.">
 <!ENTITY calendar.publish.publish.button      "Publicera">
 <!ENTITY calendar.publish.close.button      "Stäng">
 

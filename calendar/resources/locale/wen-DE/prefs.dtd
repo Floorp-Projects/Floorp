@@ -138,8 +138,6 @@
 
 <!ENTITY pref.publish.caption        "Publikowanske nastajenja" >
 <!ENTITY pref.publish.path.label     "Šćežka k serverej" >
-<!ENTITY pref.publish.username.label "Wužiwarske mjeno" >
-<!ENTITY pref.publish.password.label "Tajne hesło" >
 
 <!ENTITY pref.minutes.label "mjeńšin">
 

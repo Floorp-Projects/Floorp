@@ -138,8 +138,6 @@
 
 <!ENTITY pref.publish.caption        "Publikavimo nuostatos">
 <!ENTITY pref.publish.path.label     "Nuotolinės bylos vardas:">
-<!ENTITY pref.publish.username.label "Abonento vardas:">
-<!ENTITY pref.publish.password.label "Slaptažodis:">
 
 <!ENTITY pref.minutes.label "min.">
 

@@ -383,8 +383,6 @@
 <!ENTITY calendar.server.dialog.title.new           "Nowu protyku přidać">
 <!ENTITY calendar.server.dialog.title.edit          "Protyku wobdźěłać">
 <!ENTITY calendar.server.dialog.name.label          "Mjeno">
-<!ENTITY calendar.server.dialog.username.label      "Wužiwarske mjeno">
-<!ENTITY calendar.server.dialog.password.label      "Tajne hesło">
 <!ENTITY calendar.server.dialog.publish.label       "Změny awtomatisce publikować? Za nazdalne protyki budźe to nowu wersiju sćahnyć, prjedy hač podawk přidaće, wobdźěłaće abo wotstroniće. Budźe so potom waša akcija wuwjesć a nowa dataja na server pósłać.">
 <!ENTITY calendar.server.dialog.location.label      "Městno (opciske)">
 <!ENTITY calendar.server.dialog.local.location.label "Městno lokalneje dataje">
@@ -400,10 +398,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Protyku publikować">
 <!ENTITY calendar.publish.url.label                 "Publikowanska URL">
-<!ENTITY calendar.publish.username.label            "Wužiwarske mjeno">
-<!ENTITY calendar.publish.password.label            "Tajne hesło">
-<!ENTITY calendar.publish.username.description      "(Opciske) Wužiwarske mjeno za słanje na tutón server.">
-<!ENTITY calendar.publish.password.description      "(Opciske) Tajne hesło za słanje na tutón server.">
 <!ENTITY calendar.publish.publish.button      "Publikować">
 <!ENTITY calendar.publish.close.button      "Začinić">
 

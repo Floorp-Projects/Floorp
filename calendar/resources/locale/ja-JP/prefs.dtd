@@ -141,8 +141,6 @@
 
 <!ENTITY pref.publish.caption        "公開設定">
 <!ENTITY pref.publish.path.label     "サーバファイル名(デフォルト)">
-<!ENTITY pref.publish.username.label "ユーザ名">
-<!ENTITY pref.publish.password.label "パスワード">
 
 <!ENTITY pref.minutes.label "分">
 

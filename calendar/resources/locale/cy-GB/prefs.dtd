@@ -138,8 +138,6 @@
 
 <!ENTITY pref.publish.caption        "Gosodiadau Cyhoeddi">
 <!ENTITY pref.publish.path.label     "Enw Ffeil Pell Rhagosodedig">
-<!ENTITY pref.publish.username.label "Enw Defnyddiwr">
-<!ENTITY pref.publish.password.label "Cyflwyno eich prif gyfrinair">
 
 <!ENTITY pref.minutes.label "Munud">
 

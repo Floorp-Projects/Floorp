@@ -136,8 +136,6 @@
 
 <!ENTITY pref.publish.caption        "Opciones de publicación">
 <!ENTITY pref.publish.path.label     "Nombre de fichero predeterminado">
-<!ENTITY pref.publish.username.label "Usuario">
-<!ENTITY pref.publish.password.label "Contraseña">
 
 <!ENTITY pref.minutes.label "Minutos">
 

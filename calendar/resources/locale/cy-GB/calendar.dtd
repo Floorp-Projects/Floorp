@@ -383,8 +383,6 @@
 <!ENTITY calendar.server.dialog.title.new           "Ychwanegu Calendr Newydd">
 <!ENTITY calendar.server.dialog.title.edit          "Golygu'r Calendr">
 <!ENTITY calendar.server.dialog.name.label          "Enw">
-<!ENTITY calendar.server.dialog.username.label      "Enw Defnyddiwr">
-<!ENTITY calendar.server.dialog.password.label      "Cyflwyno eich prif gyfrinair">
 <!ENTITY calendar.server.dialog.publish.label       "Cyhoeddi newidiadau'n awtomatig? Ar gyfer calendrau pell, bydd hyn yn llwytho fersiwn newydd cyn i chi ychwanegu, golygu neu ddileu digwyddiad. Yna bydd yn cyflawni eich gweithred, a llwytho'r ffeil i fyny i'r gwasanaethwr.">
 <!ENTITY calendar.server.dialog.location.label      "Lleoliad (URL)">
 <!ENTITY calendar.server.dialog.local.location.label "Lleoliad Ffeil Lleol">
@@ -400,10 +398,6 @@
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Cyhoeddi'r Calendr">
 <!ENTITY calendar.publish.url.label                 "Cyhoeddi'r URL">
-<!ENTITY calendar.publish.username.label            "Enw Defnyddiwr">
-<!ENTITY calendar.publish.password.label            "Cyflwyno eich prif gyfrinair">
-<!ENTITY calendar.publish.username.description      "(Dewisol) Yr enw defnyddiwr i'w lwytho i fyny i'r gwasanaethwr hwn.">
-<!ENTITY calendar.publish.password.description      "(Dewisol) Y gyfrinair i'w llwytho i fyny i'r gwasanaethwr hwn.">
 <!ENTITY calendar.publish.publish.button      "Cyhoeddi">
 <!ENTITY calendar.publish.close.button      "Cau">
 
