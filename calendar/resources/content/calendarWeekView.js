@@ -185,7 +185,6 @@ WeekView.prototype.refreshEvents = function( )
             }
             SortedOtherSpotArray = new Array();
             SortedOtherSpotArray = calendarEventDisplay.OtherSpotArray.sort( gCalendarWindow.compareNumbers);
-            alert( SortedOtherSpotArray.length );
             LowestNumber = this.calendarWindow.getLowestElementNotInArray( SortedOtherSpotArray );
             
             //this is the actual spot (0 -> n) that the event will go in on the day view.
