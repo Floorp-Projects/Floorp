@@ -488,19 +488,18 @@ namespace MetaData {
                                 // XXX getter/setter --> ????
                             }
                             else {
-
-                            }
-                            if (unchecked 
-                                    && (f->attributes == NULL)
-                                    && ((topFrame->kind == GlobalObjectKind)
-                                                    || (topFrame->kind == BlockKind)
-                                                    || (topFrame->kind == ParameterKind)) ) {
-                                HoistedVar *v = defineHoistedVar(env, f->function.name, p);
-                                v->value = OBJECT_TO_JS2VAL(fInst);
-                            }
-                            else {
-                                Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
-                                defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                if (unchecked 
+                                        && (f->attributes == NULL)
+                                        && ((topFrame->kind == GlobalObjectKind)
+                                                        || (topFrame->kind == BlockKind)
+                                                        || (topFrame->kind == ParameterKind)) ) {
+                                    HoistedVar *v = defineHoistedVar(env, f->function.name, p);
+                                    v->value = OBJECT_TO_JS2VAL(fInst);
+                                }
+                                else {
+                                    Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
+                                    defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                }
                             }
                         }
                         break;
