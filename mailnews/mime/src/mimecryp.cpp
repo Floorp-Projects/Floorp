@@ -1,38 +1,37 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp..
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *   David Drinan <ddrinan@netscape.com>
+ * Contributor(s): David Drinan <ddrinan@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -103,7 +102,6 @@ MimeEncrypted_parse_begin (MimeObject *obj)
   MimeEncrypted *enc = (MimeEncrypted *) obj;
   MimeDecoderData *(*fn) (nsresult (*) (const char*, PRInt32, void*), void*) = 0;
 
-  PR_ASSERT(!enc->crypto_closure);
   if (enc->crypto_closure)
 	return -1;
 
@@ -151,7 +149,6 @@ MimeEncrypted_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
 
   MimeEncrypted *enc = (MimeEncrypted *) obj;
 
-  PR_ASSERT(!obj->closed_p);
   if (obj->closed_p) return -1;
 
   /* Don't consult output_p here, since at this point we're behaving as a
@@ -261,17 +258,6 @@ MimeEncrypted_parse_end (MimeObject *obj, PRBool abort_p)
 {
   MimeEncrypted *enc = (MimeEncrypted *) obj;
 
-  /* Don't free these yet -- keep them around for the lifetime of the
-	 MIME object, so that we can get at the security info of sub-parts
-	 of the currently-displayed message. */
-#if 0
-  if (enc->crypto_closure)
-	{
-	  ((MimeEncryptedClass *) obj->class)->crypto_free (enc->crypto_closure);
-	  enc->crypto_closure = 0;
-	}
-#endif /* 0 */
-
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_end (obj, abort_p);
 }
 
@@ -358,7 +344,6 @@ MimeHandleDecryptedOutputLine (char *line, PRInt32 length, MimeObject *obj)
   MimeEncrypted *enc = (MimeEncrypted *) obj;
   int status = 0;
 
-  PR_ASSERT(line && *line);
   if (!line || !*line) return -1;
 
   /* If we're supposed to write this object, but aren't supposed to convert
@@ -406,7 +391,6 @@ MimeEncrypted_close_headers (MimeObject *obj)
 {
   MimeEncrypted *enc = (MimeEncrypted *) obj;
 
-  PR_ASSERT(!enc->part_buffer);
   if (enc->part_buffer) return -1;
   enc->part_buffer = MimePartBufferCreate();
   if (!enc->part_buffer)
@@ -420,11 +404,9 @@ static int
 MimeEncrypted_add_child (MimeObject *parent, MimeObject *child)
 {
   MimeContainer *cont = (MimeContainer *) parent;
-  PR_ASSERT(parent && child);
   if (!parent || !child) return -1;
 
   /* Encryption containers can only have one child. */
-  PR_ASSERT(cont->nchildren == 0);
   if (cont->nchildren != 0) return -1;
 
   return ((MimeContainerClass*)&MIME_SUPERCLASS)->add_child (parent, child);

@@ -43,63 +43,63 @@
 #include "modmimee.h"
 
 /* The MimeMultipartSigned class implements the multipart/signed MIME
-   container, which provides a general method of associating a xlationgraphic
+   container, which provides a general method of associating a cryptographic
    signature to an arbitrary MIME object.
 
    The MimeMultipartSigned class provides the following methods:
 
-   void *xlation_init (MimeObject *multipart_object)
+   void *crypto_init (MimeObject *multipart_object)
 
      This is called with the object, the object->headers of which should be
 	 used to initialize the dexlateion engine.  NULL indicates failure;
 	 otherwise, an opaque closure object should be returned.
 
-   int xlation_data_hash (char *data, PRInt32 data_size, 
-						 void *xlation_closure)
+   int crypto_data_hash (char *data, PRInt32 data_size, 
+						 void *crypto_closure)
 
      This is called with the raw data, for which a signature has been computed.
-	 The xlation module should examine this, and compute a signature for it.
+	 The crypto module should examine this, and compute a signature for it.
 
-   int xlation_data_eof (void *xlation_closure, PRBool abort_p)
+   int crypto_data_eof (void *crypto_closure, PRBool abort_p)
 
      This is called when no more data remains.  If `abort_p' is true, then the
-	 xlation module may choose to discard any data rather than processing it,
+	 crypto module may choose to discard any data rather than processing it,
 	 as we're terminating abnormally.
 
-   int xlation_signature_init (void *xlation_closure,
+   int crypto_signature_init (void *crypto_closure,
                               MimeObject *multipart_object,
 							  MimeHeaders *signature_hdrs)
 
-     This is called after xlation_data_eof() and just before the first call to
-	 xlation_signature_hash().  The xlation module may wish to do some
+     This is called after crypto_data_eof() and just before the first call to
+	 crypto_signature_hash().  The crypto module may wish to do some
 	 initialization here, or may wish to examine the actual headers of the
 	 signature object itself.
 
-   int xlation_signature_hash (char *data, PRInt32 data_size,
-							  void *xlation_closure)
+   int crypto_signature_hash (char *data, PRInt32 data_size,
+							  void *crypto_closure)
 
      This is called with the raw data of the detached signature block.  It will
-	 be called after xlation_data_eof() has been called to signify the end of
+	 be called after crypto_data_eof() has been called to signify the end of
 	 the data which is signed.  This data is the data of the signature itself.
 
-   int xlation_signature_eof (void *xlation_closure, PRBool abort_p)
+   int crypto_signature_eof (void *crypto_closure, PRBool abort_p)
 
      This is called when no more signature data remains.  If `abort_p' is true,
-	 then the xlation module may choose to discard any data rather than
+	 then the crypto module may choose to discard any data rather than
 	 processing it, as we're terminating abnormally.
 
-   char * xlation_generate_html (void *xlation_closure)
+   char * crypto_generate_html (void *crypto_closure)
 
-     This is called after `xlation_signature_eof' but before `xlation_free'.
-	 The xlation module should return a newly-allocated string of HTML code
+     This is called after `crypto_signature_eof' but before `crypto_free'.
+	 The crypto module should return a newly-allocated string of HTML code
 	 which explains the status of the dexlateion to the user (whether the
 	 signature checks out, etc.)
 
-   void xlation_free (void *xlation_closure)
+   void crypto_free (void *crypto_closure)
 
-     This will be called when we're all done, after `xlation_signature_eof' and
-	 `xlation_emit_html'.  It is intended to free any data represented by the
-	 xlation_closure.
+     This will be called when we're all done, after `crypto_signature_eof' and
+	 `crypto_emit_html'.  It is intended to free any data represented by the
+	 crypto_closure.
  */
 
 typedef struct MimeMultipartSignedClass MimeMultipartSignedClass;
@@ -121,23 +121,23 @@ struct MimeMultipartSignedClass {
   MimeMultipartClass multipart;
 
   /* Callbacks used by dexlateion (really, signature verification) module. */
-  void * (*xlation_init) (MimeObject *multipart_object);
+  void * (*crypto_init) (MimeObject *multipart_object);
 
-  int (*xlation_data_hash)      (char *data, PRInt32 data_size,
-								void *xlation_closure);
-  int (*xlation_signature_hash) (char *data, PRInt32 data_size,
-								void *xlation_closure);
+  int (*crypto_data_hash)      (char *data, PRInt32 data_size,
+								void *crypto_closure);
+  int (*crypto_signature_hash) (char *data, PRInt32 data_size,
+								void *crypto_closure);
 
-  int (*xlation_data_eof)      (void *xlation_closure, PRBool abort_p);
-  int (*xlation_signature_eof) (void *xlation_closure, PRBool abort_p);
+  int (*crypto_data_eof)      (void *crypto_closure, PRBool abort_p);
+  int (*crypto_signature_eof) (void *crypto_closure, PRBool abort_p);
 
-  int (*xlation_signature_init) (void *xlation_closure,
+  int (*crypto_signature_init) (void *crypto_closure,
 								MimeObject *multipart_object,
 								MimeHeaders *signature_hdrs);
 
-  char * (*xlation_generate_html) (void *xlation_closure);
+  char * (*crypto_generate_html) (void *crypto_closure);
 
-  void (*xlation_free) (void *xlation_closure);
+  void (*crypto_free) (void *crypto_closure);
 };
 
 extern "C" MimeMultipartSignedClass mimeMultipartSignedClass;
@@ -146,7 +146,7 @@ struct MimeMultipartSigned {
   MimeMultipart multipart;
   MimeMultipartSignedParseState state;	/* State of parser */
 
-  void *xlation_closure;				 	/* Opaque data used by signature
+  void *crypto_closure;				 	/* Opaque data used by signature
 											verification module. */
 
   MimeHeaders *body_hdrs;				/* The headers of the signed object. */

@@ -220,6 +220,10 @@
 typedef struct MimeObject      MimeObject;
 typedef struct MimeObjectClass MimeObjectClass;
 
+#ifdef ENABLE_SMIME
+class nsICMSMessage;
+#endif // ENABLE_SMIME
+
 /* (I don't pretend to understand this.) */
 #define cpp_stringify_noop_helper(x)#x
 #define cpp_stringify(x) cpp_stringify_noop_helper(x)
@@ -312,17 +316,52 @@ extern char *mime_find_suggested_name_of_part(const char *part,
  */
 extern char *mime_find_content_type_of_part(const char *part, MimeObject *obj);
 
-#ifdef MOZ_SECURITY
-HG23957
-#endif /* MOZ_SECURITY */
-
 /* Parse the various "?" options off the URL and into the options struct.
  */
 extern int mime_parse_url_options(const char *url, MimeDisplayOptions *);
 
-#ifdef MOZ_SECURITY
-HG22990
-#endif
+#ifdef ENABLE_SMIME
+/* Given a part ID, looks through the MimeObject tree for a sub-part whose ID
+   number matches; if one is found, and if it represents a PKCS7-encrypted
+   object, returns information about the security status of that object.
+
+   `part' is not a URL -- it's of the form "1.3.5" and is interpreted relative
+   to the `obj' argument.
+ */
+extern void mime_find_security_info_of_part(const char *part, MimeObject *obj,
+									  nsICMSMessage **cms_encrypt_content_info_return,
+									     nsICMSMessage **cms_sign_content_info_return,
+											char **sender_email_addr_return,
+											PRInt32 *decode_error_return,
+											PRInt32 *verify_error_return);
+
+
+/* Asks whether the given object is one of the cryptographically signed
+   or encrypted objects that we know about.  (MimeMessageClass uses this
+   to decide if the headers need to be presented differently.)
+ */
+extern PRBool mime_crypto_object_p(MimeHeaders *, PRBool clearsigned_counts);
+
+/* Tells whether the given MimeObject is a message which has been encrypted
+   or signed.  (Helper for MIME_GetMessageCryptoState()). 
+ */
+extern void mime_get_crypto_state (MimeObject *obj,
+								   PRBool *signed_p, PRBool *encrypted_p,
+								   PRBool *signed_ok, PRBool *encrypted_ok);
+
+
+/* Whether the given object has written out the HTML version of its headers
+   in such a way that it will have a "crypto stamp" next to the headers.  If
+   this is true, then the child must write out its HTML slightly differently
+   to take this into account...
+ */
+extern PRBool mime_crypto_stamped_p(MimeObject *obj);
+
+/* How the crypto code tells the MimeMessage object what the crypto stamp
+   on it says. */
+extern void mime_set_crypto_stamp(MimeObject *obj,
+								  PRBool signed_p, PRBool encrypted_p);
+#endif // ENABLE_SMIME
 
 struct MimeParseStateObject {
 
@@ -348,7 +387,7 @@ struct MimeParseStateObject {
   PRBool first_data_written_p;	/* State used for Mozilla lazy-stream-
 								   creation evilness. */
 
-  PRBool xlated_p;			/* If options->dexlate_p is true, then this
+  PRBool decrypted_p;			/* If options->dexlate_p is true, then this
 								   will be set to indicate whether any
 								   dexlateion did in fact occur.
 								 */

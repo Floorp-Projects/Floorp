@@ -196,7 +196,7 @@ public:
 
   PRBool write_html_p;		/* Whether the output should be HTML, or raw. */
 
-  PRBool dexlate_p;		/* Whether all traces of xlateion should be
+  PRBool decrypt_p;		/* Whether all traces of xlateion should be
 							   eradicated -- this is only meaningful when
 							   write_html_p is PR_FALSE; we set this when
 							   attaching a message for forwarding, since

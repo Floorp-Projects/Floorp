@@ -1,38 +1,37 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp..
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *   David Drinan <ddrinan@netscape.com>
+ * Contributor(s): 
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -130,10 +129,8 @@ MimeCMS_content_callback (void *arg, const char *buf, unsigned long length)
 {
   int status;
   MimeCMSdata *data = (MimeCMSdata *) arg;
-  PR_ASSERT(data);
   if (!data) return;
 
-  PR_ASSERT(data->output_fn);
   if (!data->output_fn)
 	return;
 
@@ -152,7 +149,6 @@ MimeEncryptedCMS_encrypted_p (MimeObject *obj)
 {
   PRBool encrypted;
 
-  PR_ASSERT(obj);
   if (!obj) return PR_FALSE;
   if (mime_typep(obj, (MimeObjectClass *) &mimeEncryptedCMSClass))
 	{
@@ -180,21 +176,20 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 							  char **sender_email_addr_return)
 {
   MimeHeaders *msg_headers = 0;
-  char *from_addr = 0;
-  char *from_name = 0;
-  char *sender_addr = 0;
-  char *sender_name = 0;
-  char *cert_name = 0;
-  char *cert_addr = 0;
+  nsXPIDLCString from_addr;
+  nsXPIDLCString from_name;
+  nsXPIDLCString sender_addr;
+  nsXPIDLCString sender_name;
+  nsXPIDLCString cert_name;
+  nsXPIDLCString cert_addr;
   PRBool match = PR_TRUE;
 
   /* Find the name and address in the cert.
    */
-  PR_ASSERT(content_info);
   if (content_info)
 	{
-	  content_info->GetSignerCommonName (&cert_name);
-	  content_info->GetSignerEmailAddress (&cert_addr);
+	  content_info->GetSignerCommonName (getter_Copies(cert_name));
+	  content_info->GetSignerEmailAddress (getter_Copies(cert_addr));
 	}
   if (!cert_name && !cert_addr) goto DONE;
 
@@ -213,7 +208,6 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	  }
   }
 
-  PR_ASSERT(msg_headers);
   if (!msg_headers) goto DONE;
 
   /* Find the names and addresses in the From and/or Sender fields.
@@ -225,8 +219,7 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	s = MimeHeaders_get(msg_headers, HEADER_FROM, PR_FALSE, PR_FALSE);
 	if (s)
 	  {
-		int n = ParseRFC822Addresses(s, &from_name, &from_addr);
-		PR_ASSERT(n <= 1);
+		int n = ParseRFC822Addresses(s, getter_Copies(from_name), getter_Copies(from_addr));
 		PR_FREEIF(s);
 	  }
 
@@ -234,8 +227,7 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	s = MimeHeaders_get(msg_headers, HEADER_SENDER, PR_FALSE, PR_FALSE);
 	if (s)
 	  {
-		int n = ParseRFC822Addresses(s, &sender_name, &sender_addr);
-		PR_ASSERT(n <= 1);
+		int n = ParseRFC822Addresses(s, getter_Copies(sender_name), getter_Copies(sender_addr));
 		PR_FREEIF(s);
 	  }
   }
@@ -250,10 +242,6 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	 but the message headers do not.
    */
 
-  PR_ASSERT(match == PR_TRUE);
-  match = PR_TRUE;
-
-
   /* ======================================================================
 	 First check the addresses.
    */
@@ -267,20 +255,20 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
   else if (from_addr && *from_addr &&
 		   sender_addr && *sender_addr)
 	{
-    if (!!nsCRT::strcasecmp(cert_addr, from_addr) &&
-      !!nsCRT::strcasecmp(cert_addr, sender_addr))
+    if (nsCRT::strcasecmp(cert_addr, from_addr) &&
+        nsCRT::strcasecmp(cert_addr, sender_addr))
 		match = PR_FALSE;
 	}
   /* If there is a from but no sender, and it doesn't match, then error. */
   else if (from_addr && *from_addr)
 	{
-    if (!!nsCRT::strcasecmp(cert_addr, from_addr))
+    if (nsCRT::strcasecmp(cert_addr, from_addr))
 		match = PR_FALSE;
 	}
   /* If there is a sender but no from, and it doesn't match, then error. */
   else if (sender_addr && *sender_addr)
 	{
-    if (!!nsCRT::strcasecmp(cert_addr, sender_addr))
+    if (nsCRT::strcasecmp(cert_addr, sender_addr))
 		match = PR_FALSE;
 	}
   /* Else there are no addresses at all -- error. */
@@ -290,64 +278,18 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	}
 
 
-  if (sender_email_addr_return)
-	{
-	  if (match && cert_addr)
+  if (sender_email_addr_return) {
+    if (match && cert_addr)
       *sender_email_addr_return = nsCRT::strdup(cert_addr);
-	  else if (from_addr && *from_addr)
+    else if (from_addr && *from_addr)
       *sender_email_addr_return = nsCRT::strdup(from_addr);
-	  else if (sender_addr && *sender_addr)
+    else if (sender_addr && *sender_addr)
       *sender_email_addr_return = nsCRT::strdup(sender_addr);
-	  else
-		*sender_email_addr_return = 0;
-	}
-
-
-  /* ======================================================================
-     Next, check the names.
-   */
-#if 0
-  /* No, don't check the names, that's a nightmare that just won't end. */
-
-  if (match == PR_FALSE)
-	;  /* nevermind */
-
-  /* If there is no name in the cert, then consider it a match. */
-  else if (!cert_name)
-	match = PR_TRUE;
-  /* If there is both a from and sender name, and if neither of
-	 them match, then error. */
-  else if (from_name && *from_name &&
-		   sender_name && *sender_name)
-	{
-	  if (!!strcasecomp(cert_name, from_name) &&
-		  !!strcasecomp(cert_name, sender_name))
-		match = PR_FALSE;
-	}
-  /* If there is a from but no sender, and it doesn't match, then error. */
-  else if (from_name && *from_name)
-	{
-	  if (!!strcasecomp(cert_name, from_name))
-		match = PR_FALSE;
-	}
-  /* If there is a sender but no from, and it doesn't match, then error. */
-  else if (sender_name && *sender_name)
-	{
-    if (!!strcasecomp(cert_name, sender_name))
-    match = PR_FALSE;
+    else
+      *sender_email_addr_return = 0;
   }
-  /* Else there are no names at all -- consider that a match. */
-#endif /* 0 */
-
 
  DONE:
-  PR_FREEIF(from_addr);
-  PR_FREEIF(from_name);
-  PR_FREEIF(sender_addr);
-  PR_FREEIF(sender_name);
-  PR_FREEIF(cert_addr);
-  PR_FREEIF(cert_name);
-
   return match;
 }
 
@@ -361,7 +303,6 @@ MimeCMS_init(MimeObject *obj,
   MimeDisplayOptions *opts;
   nsresult rv;
 
-  PR_ASSERT(obj && obj->options && output_fn);
   if (!(obj && obj->options && output_fn)) return 0;
 
   opts = obj->options;
@@ -381,7 +322,6 @@ MimeCMS_init(MimeObject *obj,
   if (NS_FAILED(rv)) return 0;
 
   // XXX Fix later XXX //
-#if 0 
   data->parent_holds_stamp_p =
 	(obj->parent &&
 	 (mime_crypto_stamped_p(obj->parent) ||
@@ -399,7 +339,6 @@ MimeCMS_init(MimeObject *obj,
 	  obj->parent && obj->parent->parent)
 	data->parent_holds_stamp_p =
 	  mime_crypto_stamped_p (obj->parent->parent);
-#endif
 
   return data;
 }
@@ -410,7 +349,6 @@ MimeCMS_write (const char *buf, PRInt32 buf_size, void *closure)
   MimeCMSdata *data = (MimeCMSdata *) closure;
   nsresult rv;
 
-  PR_ASSERT(data && data->output_fn && data->decoder_context);
   if (!data || !data->output_fn || !data->decoder_context) return -1;
 
   PR_SetError(0, 0);
@@ -431,7 +369,6 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   nsCOMPtr<nsIPrompt> prompter;
   wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
 
-  PR_ASSERT(data && data->output_fn && data->decoder_context);
   if (!data || !data->output_fn || !data->decoder_context)
 	return -1;
 
@@ -441,6 +378,9 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
 
 	 We save away the value returned and will use it later to emit a
 	 blurb about whether the signature validation was cool.
+
+   NOTE: We currently put up a dialog box to alert the user. This will go away
+         very soon
    */
 
   PR_SetError(0, 0);
@@ -467,10 +407,7 @@ static void
 MimeCMS_free (void *crypto_closure)
 {
   MimeCMSdata *data = (MimeCMSdata *) crypto_closure;
-  PR_ASSERT(data);
   if (!data) return;
-
-  PR_ASSERT(!data->decoder_context);
 
   PR_FREEIF(data->sender_addr);
 
@@ -559,7 +496,6 @@ MimeCMS_generate (void *crypto_closure)
   PRBool good_p = PR_TRUE;
   PRBool unverified_p = PR_FALSE;
 
-  PR_ASSERT(data && data->output_fn);
   if (!data || !data->output_fn) return 0;
 
   if (data->content_info)
@@ -572,16 +508,10 @@ MimeCMS_generate (void *crypto_closure)
 		{
 		  PR_SetError(0, 0);
       good_p = data->content_info->VerifySignature();
-#if 0 // XXX Fix this XXX //
-		  good_p = SEC_PKCS7VerifySignature(data->content_info,
-											0, /*certUsageEmailSigner */ /* #### */
-											PR_TRUE);  /* #### keepcerts */
-#endif
 		  if (!good_p)
 			{
 			  if (!data->verify_error)
 				data->verify_error = PR_GetError();
-			  PR_ASSERT(data->verify_error < 0);
 			  if (data->verify_error >= 0)
 				data->verify_error = -1;
 			}
@@ -623,9 +553,8 @@ MimeCMS_generate (void *crypto_closure)
 
   unverified_p = data->self->options->missing_parts;
 
-  PR_ASSERT(data->self);
   if (data->self && data->self->parent)
-	// mime_set_crypto_stamp(data->self->parent, self_signed_p, self_encrypted_p); XXX Fix later XXX //
+	  mime_set_crypto_stamp(data->self->parent, self_signed_p, self_encrypted_p);
 
 
   {
@@ -639,7 +568,6 @@ MimeCMS_generate (void *crypto_closure)
 			stamp_url = MimeCMS_MakeSAURL(data->self);
 	}
 
-#if 0 // XXX Fix this later XXX //
 	result =
 	  MimeHeaders_make_crypto_stamp (union_encrypted_p,
 									 self_signed_p,
@@ -647,7 +575,6 @@ MimeCMS_generate (void *crypto_closure)
 									 unverified_p,
 									 data->parent_holds_stamp_p,
 									 stamp_url);
-#endif
 	PR_FREEIF(stamp_url);
 	return result;
   }

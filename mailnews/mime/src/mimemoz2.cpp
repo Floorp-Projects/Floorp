@@ -1266,7 +1266,7 @@ MimeDisplayOptions::MimeDisplayOptions()
 
   write_html_p = PR_FALSE;
 
-  dexlate_p = PR_FALSE;
+  decrypt_p = PR_FALSE;
 
   nice_html_only_p = PR_FALSE;
 
@@ -1528,7 +1528,7 @@ mime_bridge_create_display_stream(
   msd->obj = obj;
   
   /* Both of these better not be true at the same time. */
-  PR_ASSERT(! (obj->options->dexlate_p && obj->options->write_html_p));
+  PR_ASSERT(! (obj->options->decrypt_p && obj->options->write_html_p));
   
   stream = PR_NEW(nsMIMESession);
   if (!stream)

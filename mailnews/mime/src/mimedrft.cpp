@@ -1189,7 +1189,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
     status = mdd->obj->clazz->parse_eof ( mdd->obj, PR_FALSE );
     mdd->obj->clazz->parse_end( mdd->obj, status < 0 ? PR_TRUE : PR_FALSE );
     
-    xlate_p = mdd->options->dexlate_p;
+    xlate_p = mdd->options->decrypt_p;
     sign_p = mdd->options->signed_p;
     
     // RICHIE
@@ -1845,7 +1845,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     //
     // Initialize a decoder if necessary.
     //
-    if (!newAttachment->encoding || mdd->options->dexlate_p)
+    if (!newAttachment->encoding || mdd->options->decrypt_p)
       ;
     else if (!nsCRT::strcasecmp(newAttachment->encoding, ENCODING_BASE64))
       fn = &MimeB64DecoderInit;

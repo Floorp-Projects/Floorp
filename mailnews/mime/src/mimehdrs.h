@@ -84,9 +84,23 @@ extern int MimeHeaders_write_raw_headers (MimeHeaders *hdrs,
 										  PRBool dont_write_content_type);
 
 
-#ifdef MOZ_SECURITY
-HG77761
-#endif
+/* Some crypto-related HTML-generated utility routines.
+ * XXX This may not be needed. XXX 
+ */
+extern char *MimeHeaders_open_crypto_stamp(void);
+extern char *MimeHeaders_finish_open_crypto_stamp(void);
+extern char *MimeHeaders_close_crypto_stamp(void);
+extern char *MimeHeaders_make_crypto_stamp(PRBool encrypted_p,
+
+   PRBool signed_p,
+
+   PRBool good_p,
+
+   PRBool unverified_p,
+
+   PRBool close_parent_stamp_p,
+
+   const char *stamp_url);
 
 /* Does all the heuristic silliness to find the filename in the given headers.
  */

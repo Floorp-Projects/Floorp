@@ -1,38 +1,37 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
- * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp..
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *   David Drinan <ddrinan@netscape.com>
+ * Contributor(s): 
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the NPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the NPL, the GPL or the LGPL.
+ * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -185,9 +184,6 @@ MimeMultCMS_init (MimeObject *obj)
   data->self = obj;
   data->hash_type = hash_type;
 
-  PR_ASSERT(!data->data_hash_context);
-  PR_ASSERT(!data->sig_decoder_context);
-
   data->data_hash_context = do_CreateInstance(NS_HASH_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return 0;
 
@@ -229,15 +225,15 @@ static int
 MimeMultCMS_data_hash (char *buf, PRInt32 size, void *crypto_closure)
 {
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
-  PR_ASSERT(data && data->data_hash_context);
-  if (!data || !data->data_hash_context) return -1;
-
-  PR_ASSERT(!data->sig_decoder_context);
+  if (!data || !data->data_hash_context) {
+    return -1;
+  }
 
   PR_SetError(0, 0);
   data->data_hash_context->Update((unsigned char *) buf, size);
-  if (!data->verify_error)
-	data->verify_error = PR_GetError();
+  if (!data->verify_error) {
+  	data->verify_error = PR_GetError();
+  }
 
   return 0;
 }
@@ -246,10 +242,9 @@ static int
 MimeMultCMS_data_eof (void *crypto_closure, PRBool abort_p)
 {
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
-  PR_ASSERT(data && data->data_hash_context);
-  if (!data || !data->data_hash_context) return -1;
-
-  PR_ASSERT(!data->sig_decoder_context);
+  if (!data || !data->data_hash_context) {
+    return -1;
+  }
 
   data->data_hash_context->ResultLen(data->hash_type, &data->item_len);
   data->item_data = (unsigned char *) PR_MALLOC(data->item_len);
@@ -257,8 +252,9 @@ MimeMultCMS_data_eof (void *crypto_closure, PRBool abort_p)
 
   PR_SetError(0, 0);
   data->data_hash_context->End(data->item_data, &data->item_len, data->item_len);
-  if (!data->verify_error)
-	data->verify_error = PR_GetError();
+  if (!data->verify_error) {
+	  data->verify_error = PR_GetError();
+  }
 
   // Release our reference to nsIHash //
   data->data_hash_context = 0;
@@ -282,11 +278,9 @@ MimeMultCMS_sig_init (void *crypto_closure,
   int status = 0;
   nsresult rv;
 
-  PR_ASSERT(!data->data_hash_context);
-  PR_ASSERT(!data->sig_decoder_context);
-
-  PR_ASSERT(signature_hdrs);
-  if (!signature_hdrs) return -1;
+  if (!signature_hdrs) {
+    return -1;
+  }
 
   ct = MimeHeaders_get (signature_hdrs, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
 
@@ -303,7 +297,6 @@ MimeMultCMS_sig_init (void *crypto_closure,
   rv = data->sig_decoder_context->Start(nsnull, nsnull);
   if (NS_FAILED(rv)) {
 	  status = PR_GetError();
-	  PR_ASSERT(status < 0);
 	  if (status >= 0) status = -1;
 	}
   return status;
@@ -316,16 +309,14 @@ MimeMultCMS_sig_hash (char *buf, PRInt32 size, void *crypto_closure)
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
   nsresult rv;
 
-  PR_ASSERT(data && data->sig_decoder_context);
-  if (!data || !data->sig_decoder_context) return -1;
-
-  PR_ASSERT(!data->data_hash_context);
+  if (!data || !data->sig_decoder_context) {
+    return -1;
+  }
 
   rv = data->sig_decoder_context->Update(buf, size);
   if (NS_FAILED(rv)) {
 	  if (!data->verify_error)
 		data->verify_error = PR_GetError();
-	  PR_ASSERT(data->verify_error < 0);
 	  if (data->verify_error >= 0)
 		data->verify_error = -1;
 	}
@@ -338,9 +329,9 @@ MimeMultCMS_sig_eof (void *crypto_closure, PRBool abort_p)
 {
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
 
-  if (!data) return -1;
-
-  PR_ASSERT(!data->data_hash_context);
+  if (!data) {
+    return -1;
+  }
 
   /* Hand an EOF to the crypto library.
 
@@ -348,21 +339,16 @@ MimeMultCMS_sig_eof (void *crypto_closure, PRBool abort_p)
 	 blurb about whether the signature validation was cool.
    */
 
-  PR_ASSERT(!data->content_info);
-
-  if (data->sig_decoder_context)
-	{
+  if (data->sig_decoder_context) {
 	  data->sig_decoder_context->Finish(getter_AddRefs(data->content_info));
 
     // Release our reference to nsICMSDecoder //
 	  data->sig_decoder_context = 0;
 
-	  if (!data->content_info && !data->verify_error)
-		data->verify_error = PR_GetError();
-
-	  PR_ASSERT(data->content_info ||
-				data->verify_error || data->decode_error);
-	}
+    if (!data->content_info && !data->verify_error) {
+      data->verify_error = PR_GetError();
+    }
+  }
 
   return 0;
 }
@@ -371,7 +357,6 @@ static void
 MimeMultCMS_free (void *crypto_closure)
 {
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
-  PR_ASSERT(data);
   if (!data) return;
 
   PR_FREEIF(data->sender_addr);
@@ -412,7 +397,6 @@ MimeMultCMS_generate (void *crypto_closure)
   nsCOMPtr<nsIPrompt> prompter;
   wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
 
-  PR_ASSERT(data);
   if (!data) return 0;
   encrypted_p = data->parent_is_encrypted_p;
 
@@ -422,7 +406,6 @@ MimeMultCMS_generate (void *crypto_closure)
 	  if (NS_FAILED(rv)) {
       if (!data->verify_error)
         data->verify_error = PR_GetError();
-      PR_ASSERT(data->verify_error < 0);
       if (data->verify_error >= 0)
         data->verify_error = -1;
     } else {
@@ -471,7 +454,6 @@ MimeMultCMS_generate (void *crypto_closure)
 
   unverified_p = data->self->options->missing_parts; 
 
-  PR_ASSERT(data->self);
   if (data->self && data->self->parent)
 	mime_set_crypto_stamp(data->self->parent, signed_p, encrypted_p);
 

@@ -1,4 +1,4 @@
- #
+#
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -26,6 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef BUILD_SMIME
+DEFINES		+= -DENABLE_SMIME
+endif
+
 MODULE		= mime
 LIBRARY_NAME	= mime_s
 META_COMPONENT = mail
@@ -51,6 +55,8 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  uriloader \
 		  xpconnect \
+		  pipnss \
+		  windowwatcher \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -93,6 +99,15 @@ CPPSRCS		= \
 		nsStreamConverter.cpp \
 		mimedrft.cpp \
 		nsMimeHeaders.cpp \
+                mimecryp.cpp
+
+ifdef BUILD_SMIME
+CPPSRCS += \
+                mimecms.cpp \
+                mimemcms.cpp
+endif
+
+CPPSRCS += \
 		$(NULL)
 
 EXPORTS		= \

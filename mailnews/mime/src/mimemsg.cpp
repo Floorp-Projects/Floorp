@@ -205,7 +205,7 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		   ! obj->options->is_multipart_msg &&
 		   obj->options->decompose_file_output_fn )
 		{
-		  if (!obj->options->dexlate_p) {
+		  if (!obj->options->decrypt_p) {
 			  status = obj->options->decompose_file_output_fn (line,
 															   length,
 													 obj->options->stream_closure);
@@ -411,7 +411,7 @@ HG09091
 		  status = MimeObject_write(obj, "", 0, PR_FALSE);  /* initialize */
 		  if (status < 0) return status;
 		  status = MimeHeaders_write_raw_headers(msg->hdrs, obj->options,
-												 obj->options->dexlate_p);
+												 obj->options->decrypt_p);
 		  if (status < 0) return status;
 		}
 
@@ -738,7 +738,7 @@ MimeMessage_write_headers_html (MimeObject *obj)
     return status;
   }
 
-  if (msg->xlation_stamped_p)
+  if (msg->crypto_stamped_p)
   {
 #ifdef MOZ_SECURITY
     HG11995

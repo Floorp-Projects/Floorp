@@ -117,9 +117,13 @@ MimeMultipartSigned_cleanup (MimeObject *obj, PRBool finalizing_p)
   mult->state = MimeMultipartEpilogue;  /* #58075.  Fix suggested by jwz */
   sig->state = MimeMultipartSignedEpilogue;
 
-#ifdef MOZ_SECURITY
-HG09003
-#endif /* MOZ_SECURITY */
+  if (finalizing_p && sig->crypto_closure) {
+    /* Don't free these until this object is really going away -- keep them
+       around for the lifetime of the MIME object, so that we can get at the
+       security info of sub-parts of the currently-displayed message. */
+    ((MimeMultipartSignedClass *) obj->clazz)->crypto_free (sig->crypto_closure);
+     sig->crypto_closure = 0;
+  }
 
   if (sig->sig_decoder_data)
 	{
@@ -127,7 +131,6 @@ HG09003
 	  sig->sig_decoder_data = 0;
 	}
 }
-
 
 static int
 MimeMultipartSigned_parse_eof (MimeObject *obj, PRBool abort_p)
@@ -144,9 +147,8 @@ MimeMultipartSigned_parse_eof (MimeObject *obj, PRBool abort_p)
 	  sig->state == MimeMultipartSignedSignatureLine ||
 	  sig->state == MimeMultipartSignedEpilogue)
 	{
-#ifdef MOZ_SECURITY
-    HG77782
-#endif /* MOZ_SECURITY */
+    status = (((MimeMultipartSignedClass *) obj->clazz)->crypto_signature_eof) (sig->crypto_closure, abort_p);
+    if (status < 0) return status;
 	}
 
   if (!abort_p)
@@ -286,14 +288,14 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	case MimeMultipartSignedBodyHeaders:
 	case MimeMultipartSignedBodyLine:
 
-	  if (!sig->xlation_closure)
+	  if (!sig->crypto_closure)
 		{
 		  /* Set error change */
 		  PR_SetError(0, 0);
 		  /* Initialize the signature verification library. */
-		  sig->xlation_closure = (((MimeMultipartSignedClass *) obj->clazz)
-								 ->xlation_init) (obj);
-		  if (!sig->xlation_closure)
+		  sig->crypto_closure = (((MimeMultipartSignedClass *) obj->clazz)
+								 ->crypto_init) (obj);
+		  if (!sig->crypto_closure)
 			{
 			  status = PR_GetError();
 			  PR_ASSERT(status < 0);
@@ -324,7 +326,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 			 of after, except for the first line, which is not preceeded by a
 			 newline.
 
-			 For purposes of xlationgraphic hashing, we always hash line
+			 For purposes of cryptographic hashing, we always hash line
 			 breaks as CRLF -- the canonical, on-the-wire linebreaks, since
 			 we have no idea of knowing what line breaks were used on the
 			 originating system (SMTP rightly destroys that information.)
@@ -334,28 +336,28 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		  if (length > 0 && line[length-1] == nsCRT::LF) length--;
 		  if (length > 0 && line[length-1] == nsCRT::CR) length--;
 
-		  PR_ASSERT(sig->xlation_closure);
+		  PR_ASSERT(sig->crypto_closure);
 
 		  if (!first_line_p)
 			{
 			  /* Push out a preceeding newline... */
 			  char nl[] = CRLF;
 			  status = (((MimeMultipartSignedClass *) obj->clazz)
-						->xlation_data_hash (nl, 2, sig->xlation_closure));
+						->crypto_data_hash (nl, 2, sig->crypto_closure));
 			  if (status < 0) return status;
 			}
 
 		  /* Now push out the line sans trailing newline. */
 		  if (length > 0)
 			status = (((MimeMultipartSignedClass *) obj->clazz)
-					  ->xlation_data_hash (line,length, sig->xlation_closure));
+					  ->crypto_data_hash (line,length, sig->crypto_closure));
 		  if (status < 0) return status;
 		}
 	  break;
 
 	case MimeMultipartSignedSignatureHeaders:
 
-	  if (sig->xlation_closure &&
+	  if (sig->crypto_closure &&
 		  old_state != mult->state)
 		{
 		  /* We have just moved out of the MimeMultipartSignedBodyLine
@@ -363,7 +365,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 			 reached the end of the signed data.
 		   */
 		  status = (((MimeMultipartSignedClass *) obj->clazz)
-					->xlation_data_eof) (sig->xlation_closure, PR_FALSE);
+					->crypto_data_eof) (sig->crypto_closure, PR_FALSE);
 		  if (status < 0) return status;
 		}
 	  break;
@@ -403,18 +405,18 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 			sig->sig_decoder_data =
 			  fn (((nsresult (*) (const char *, PRInt32, void *))
 				   (((MimeMultipartSignedClass *) obj->clazz)
-					->xlation_signature_hash)),
-				  sig->xlation_closure);
+					->crypto_signature_hash)),
+				  sig->crypto_closure);
 			if (!sig->sig_decoder_data)
 			  return MIME_OUT_OF_MEMORY;
 		  }
 	  }
 
-	  /* Show these headers to the xlation module. */
+	  /* Show these headers to the crypto module. */
 	  if (hash_line_p)
 		{
 		  status = (((MimeMultipartSignedClass *) obj->clazz)
-					->xlation_signature_init) (sig->xlation_closure,
+					->crypto_signature_init) (sig->crypto_closure,
 											  obj, sig->sig_hdrs);
 		  if (status < 0) return status;
 		}
@@ -430,8 +432,8 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 			status = MimeDecoderWrite (sig->sig_decoder_data, line, length);
 		  else
 			status = (((MimeMultipartSignedClass *) obj->clazz)
-					  ->xlation_signature_hash (line, length,
-											   sig->xlation_closure));
+					  ->crypto_signature_hash (line, length,
+											   sig->crypto_closure));
 		  if (status < 0) return status;
 		}
 	  break;
@@ -597,7 +599,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
   int status = 0;
   MimeObject *body;
 
-  PR_ASSERT(sig->xlation_closure);
+  PR_ASSERT(sig->crypto_closure);
 
   /* Emit some HTML saying whether the signature was cool.
 	 But don't emit anything if in FO_QUOTE_MESSAGE mode.
@@ -607,17 +609,19 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 	  obj->options->write_html_p &&
 	  obj->options->output_fn &&
 	  obj->options->headers != MimeHeadersCitation &&
-	  sig->xlation_closure)
+	  sig->crypto_closure)
 	{
 	  char *html = (((MimeMultipartSignedClass *) obj->clazz)
-					->xlation_generate_html (sig->xlation_closure));
+					->crypto_generate_html (sig->crypto_closure));
+#if 0 // XXX For the moment, no HTML output. Fix this XXX //
 	  if (!html) return -1; /* MIME_OUT_OF_MEMORY? */
 
 	  status = MimeObject_write(obj, html, nsCRT::strlen(html), PR_FALSE);
 	  PR_Free(html);
 	  if (status < 0) return status;
+#endif
 
-	  /* Now that we have written out the xlation stamp, the outermost header
+	  /* Now that we have written out the crypto stamp, the outermost header
 		 block is well and truly closed.  If this is in fact the outermost
 		 message, then run the post_header_html_fn now.
 	   */

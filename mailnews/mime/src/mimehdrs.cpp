@@ -1031,3 +1031,33 @@ MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
 
   return 0;
 }
+
+// XXX Fix this XXX //
+char *
+MimeHeaders_open_crypto_stamp(void)
+{
+  return nsnull;
+}
+
+char *
+MimeHeaders_finish_open_crypto_stamp(void)
+{
+  return nsnull;
+}
+
+char *
+MimeHeaders_close_crypto_stamp(void)
+{
+  return nsnull;
+}
+
+char *
+MimeHeaders_make_crypto_stamp(PRBool encrypted_p,
+                              PRBool signed_p,
+                              PRBool good_p,
+                              PRBool unverified_p,
+                              PRBool close_parent_stamp_p,
+                              const char *stamp_url)
+{
+  return nsnull;
+}
