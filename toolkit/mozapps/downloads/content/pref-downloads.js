@@ -49,7 +49,7 @@ var gEditFileHandler, gRemoveFileHandler, gHandlersList;
 var downloadDirPref = "browser.download.dir"; 
 var downloadModePref = "browser.download.folderList";
 const nsILocalFile = Components.interfaces.nsILocalFile;
-    
+
 function selectFolder()
 { 
   const nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -200,13 +200,15 @@ function updateSaveToFolder()
   // user chooses to have all files auto-download to a specific folder.
   if (data.askOnSave.value == "true") {
     var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-
+    var bundle = document.getElementById("strings");
+    var description = bundle.getString("myDownloads");
     var targetFolder = null;
+
     switch (parseInt(data.downloadFolderList.value)) {
     case 1:
       targetFolder = fileLocator.get(parent.hPrefWindow.getSpecialFolderKey("Documents"), 
                                      Components.interfaces.nsIFile);
-      targetFolder.append("My Downloads"); // XXXben localize
+      targetFolder.append(description);
       break;
     case 2:
       targetFolder = prefs.getComplexValue(downloadDirPref, 
@@ -300,8 +302,10 @@ function getDownloadsFolder(aFolder)
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
 
   var dir = fileLocator.get(getSpecialFolderKey(aFolder), Components.interfaces.nsILocalFile);
+  var bundle = document.getElementById("strings");
+  var description = bundle.getString("myDownloads");
   if (aFolder != "Desktop")
-    dir.append("My Downloads"); // XXXben localize
+    dir.append(description);
     
   return dir;
 }
@@ -342,9 +346,10 @@ function removeFileHandler()
   const nsIPS = Components.interfaces.nsIPromptService;
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPS);
   
-  // XXXben LOCALIZE!
-  var title = "Remove Actions";
-  var msg = "The selected Actions will no longer be performed when files of the affected types are downloaded. Are you sure you want to remove these Actions?";
+  var bundle = document.getElementById("strings");
+  var title = bundle.getString("removeActions");
+  var msg = bundle.getString("removeActionsMsg");
+
   var buttons = (nsIPS.BUTTON_TITLE_YES * nsIPS.BUTTON_POS_0) + (nsIPS.BUTTON_TITLE_NO * nsIPS.BUTTON_POS_1);
 
   if (ps.confirmEx(window, title, msg, buttons, "", "", "", "", { }) == 1) 
