@@ -59,6 +59,7 @@ typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
+extern void initMathObject(JS2Metadata *meta);
 extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 

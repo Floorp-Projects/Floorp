@@ -346,6 +346,11 @@ namespace MetaData {
                             defineInstanceMember(c, cxt, *f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
                         }
                         break;
+                    case Attribute::Constructor:
+                        {
+                            // XXX 
+                        }
+                        break;
                     }
                 }
             }
@@ -1290,6 +1295,25 @@ doAssignBinary:
             op = eNotEqual;
             goto doBinary;
 
+        case ExprNode::leftShift:
+            op = eLeftShift;
+            goto doBinary;
+        case ExprNode::rightShift:
+            op = eRightShift;
+            goto doBinary;
+        case ExprNode::logicalRightShift:
+            op = eUShiftRight;
+            goto doBinary;
+        case ExprNode::bitwiseAnd:
+            op = BitAnd;
+            goto doBinary;
+        case ExprNode::bitwiseXor:
+            op = BitXor;
+            goto doBinary;
+        case ExprNode::bitwiseOr:
+            op = BitOr;
+            goto doBinary;
+
         case ExprNode::add:
             op = eAdd;
             goto doBinary;
@@ -2145,12 +2169,14 @@ doUnary:
         forbiddenMember = new StaticMember(Member::Forbidden);
 
         // Non-function properties of the global object : 'undefined', 'NaN' and 'Infinity'
+// XXX Or are these fixed properties?
         writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
         writeDynamicProperty(glob, new Multiname(world.identifiers["NaN"], publicNamespace), true, engine->nanValue, RunPhase);
         writeDynamicProperty(glob, new Multiname(world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
 
         // Function properties of the Object prototype object
         objectClass->prototype = new PrototypeInstance(NULL, objectClass);
+// XXX Or make this a static class members?
         FixedInstance *fInst = new FixedInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
         writeDynamicProperty(objectClass->prototype, new Multiname(world.identifiers["toString"], publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
@@ -2162,7 +2188,7 @@ doUnary:
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, world.identifiers["Date"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(dateClass), true);
         defineStaticMember(&env, world.identifiers["Date"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        dateClass->prototype = new PrototypeInstance(NULL, dateClass);
+ //       dateClass->prototype = new PrototypeInstance(NULL, dateClass);
         initDateObject(this);
 
         MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, world.identifiers["RegExp"]);
@@ -2170,11 +2196,16 @@ doUnary:
         defineStaticMember(&env, world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         regexpClass->construct = RegExp_Constructor;
 
-
         v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
         defineStaticMember(&env, world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        stringClass->prototype = new PrototypeInstance(NULL, stringClass);
+//        stringClass->prototype = new PrototypeInstance(NULL, stringClass);
         initStringObject(this);
+
+        MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, world.identifiers["Math"]);
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
+        defineStaticMember(&env, world.identifiers["Math"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        initMathObject(this);
+
 
     }
 
