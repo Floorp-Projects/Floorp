@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= raptor 
+MODULE		= raptor
 LIBRARY_NAME	= raptorview
 
 CPPSRCS		= \
@@ -34,9 +34,7 @@ CPPSRCS		= \
 
 REQUIRES	= raptor xpcom
 
-EXTRA_DSO_LDOPTS =\
-				$(MOZ_TIMER_LIBS) \
-				$(NULL)
+EXTRA_DSO_LDOPTS = $(MOZ_TIMER_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
