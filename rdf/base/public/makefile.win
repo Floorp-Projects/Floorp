@@ -24,6 +24,8 @@ DEPTH=..\..\..
 EXPORTS=\
         rdf.h                           \
 	nsIRDFCompositeDataSource.h     \
+        nsIRDFContainer.h               \
+        nsIRDFContainerUtils.h          \
         nsIRDFContentSink.h             \
 	nsIRDFDataSource.h              \
         nsIRDFNode.h                    \
