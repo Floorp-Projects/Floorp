@@ -773,28 +773,31 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     my $difftext = "";
     my $diffheader = "";
     my $add_diff;
+
     foreach my $diff (@diffparts) {
-        
         $add_diff = 0;
         
-        if ($diff->{'fieldname'} eq 'estimated_time' ||
-            $diff->{'fieldname'} eq 'remaining_time' ||
-            $diff->{'fieldname'} eq 'work_time') {
+        if (exists($diff->{'fieldname'}) && 
+         ($diff->{'fieldname'} eq 'estimated_time' ||
+         $diff->{'fieldname'} eq 'remaining_time' ||
+         $diff->{'fieldname'} eq 'work_time')) {
             if (UserInGroup(Param("timetrackinggroup"), $userid)) {
                 $add_diff = 1;
             }
         } else {
             $add_diff = 1;
         }
+
         if ($add_diff) {
-            if ($diffheader ne $diff->{'header'}) {
+            if (exists($diff->{'header'}) && 
+             ($diffheader ne $diff->{'header'})) {
                 $diffheader = $diff->{'header'};
                 $difftext .= $diffheader;
             }
             $difftext .= $diff->{'text'};
         }
     }
-    
+ 
     if ($difftext eq "" && $newcomments eq "") {
       # Whoops, no differences!
       return;
