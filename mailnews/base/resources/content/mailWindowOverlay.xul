@@ -302,6 +302,9 @@ Rights Reserved.
   <key id="key_selectThread" key="&selectThreadCmd.key;"             oncommand="goDoCommand('cmd_selectThread');" modifiers="accel, shift"/>
   
   <key id="key_toggleRead" key="&markAsReadCmd.key;"                 oncommand="goDoCommand('cmd_markAsRead');"/>
+  <key id="key_markJunk" key="&markAsJunkCmd.key;"                   oncommand="goDoCommand('cmd_markAsJunk');"/>
+  <key id="key_markNotJunk" key="&markAsNotJunkCmd.key;"             oncommand="goDoCommand('cmd_markAsNotJunk');"
+       modifiers="shift"/>
   <key id="key_markAllRead" key="&markAllReadCmd.key;"               oncommand="goDoCommand('cmd_markAllRead');" modifiers="accel, shift"/>
   <key id="key_markThreadAsRead" key="&markThreadAsReadCmd.key;"     oncommand="goDoCommand('cmd_markThreadAsRead')"/>
   <key id="key_markReadByDate" key="&markReadByDateCmd.key;"         oncommand="goDoCommand('cmd_markReadByDate')"/>
@@ -599,9 +602,11 @@ Rights Reserved.
                   observes="cmd_markAsFlagged"/>
         <menuseparator/>
         <menuitem label="&markAsJunkCmd.label;"
+                  key="key_markJunk"
                   accesskey="&markAsJunkCmd.accesskey;"
                   observes="cmd_markAsJunk"/>
         <menuitem label="&markAsNotJunkCmd.label;"
+                  key="key_markNotJunk"
                   accesskey="&markAsNotJunkCmd.accesskey;"
                   observes="cmd_markAsNotJunk"/>
       </menupopup>
@@ -941,9 +946,11 @@ Rights Reserved.
                   observes="cmd_markAsFlagged"/>
         <menuseparator/>
         <menuitem label="&markAsJunkCmd.label;" 
+                  key="key_markJunk"
                   accesskey="&markAsJunkCmd.accesskey;" 
                   observes="cmd_markAsJunk"/>
         <menuitem label="&markAsNotJunkCmd.label;" 
+                  key="key_markNotJunk"
                   accesskey="&markAsNotJunkCmd.accesskey;" 
                   observes="cmd_markAsNotJunk"/>
       </menupopup>
@@ -1532,9 +1539,11 @@ Rights Reserved.
                   observes="cmd_markAsFlagged"/>
         <menuseparator/>
         <menuitem label="&markAsJunkCmd.label;" 
+                  key="key_markJunk"
                   accesskey="&markAsJunkCmd.accesskey;" 
                   observes="cmd_markAsJunk"/>
         <menuitem label="&markAsNotJunkCmd.label;" 
+                  key="key_markNotJunk"
                   accesskey="&markAsNotJunkCmd.accesskey;" 
                   observes="cmd_markAsNotJunk"/>
       </menupopup>
