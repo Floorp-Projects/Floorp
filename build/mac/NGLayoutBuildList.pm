@@ -396,6 +396,24 @@ sub BuildDist()
    InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
    InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
 
+	# MAILNEWS
+   if ($main::build{mailnews})
+   {
+	   InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
+	   InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
+	}
+
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
 }
@@ -642,6 +660,18 @@ sub MakeResouceAliases()
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
 	MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
+	
+   if ($main::build{mailnews})
+   {
+		my($messenger_dir) = "$resource_dir" . "mailnews:messenger:";
+		BuildFolderResourceAliases(":mozilla:mailnews:ui:messenger:resources:",				"$messenger_dir");	
+		
+		my($compose_dir) = "$resource_dir" . "mailnews:compose:";
+		BuildFolderResourceAliases(":mozilla:mailnews:ui:compose:resources:",				"$compose_dir");	
+
+		my($msgpref_dir) = "$resource_dir" . "mailnews:preference:";
+		BuildFolderResourceAliases(":mozilla:mailnews:ui:preference:resources:",			"$msgpref_dir");
+	}	
 
 	my($chrome_dir) = "$dist_dir" . "chrome:";
 	BuildFolderResourceAliases(":mozilla:rdf:chrome:build:",			"$chrome_dir");
@@ -778,6 +808,35 @@ sub BuildXPAppProjects()
 
 
 #//--------------------------------------------------------------------------------------------------
+#// Build MailNews Projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildMailNewsProjects()
+{
+	unless( $main::build{mailnews} ) { return; }
+	_assertRightDirectory();
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	BuildOneProject(":mozilla:mailnews:base:util:macbuild:msgUtil.mcp",			"MsgUtil$D.lib", "MsgUtil.toc", 0, 0, 0);
+
+	BuildOneProject(":mozilla:mailnews:base:macbuild:msgCore.mcp",				"mailnews$D.shlb", "mailnews.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:compose:macbuild:msgCompose.mcp",		"MsgCompose$D.shlb", "MsgCompose.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",					"MsgDB$D.shlb", "MsgDB.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",			"MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",					"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+}
+
+
+
+#//--------------------------------------------------------------------------------------------------
 #// Build everything
 #//--------------------------------------------------------------------------------------------------
 
@@ -793,4 +852,5 @@ sub BuildProjects()
 	MakeResouceAliases();
 	BuildViewerProjects();
 	BuildXPAppProjects();
+	BuildMailNewsProjects();
 }
