@@ -756,12 +756,10 @@ nsXULDocument::GetDocumentURL() const
     return result;
 }
 
-nsIPrincipal*
-nsXULDocument::GetDocumentPrincipal()
+NS_IMETHODIMP
+nsXULDocument::GetPrincipal(nsIPrincipal **aPrincipal)
 {
-    nsIPrincipal* principal = nsnull;
-    mMasterPrototype->GetDocumentPrincipal(&principal);
-    return principal;
+    return mMasterPrototype->GetDocumentPrincipal(aPrincipal);
 }
 
 

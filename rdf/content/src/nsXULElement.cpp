@@ -4113,8 +4113,9 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
     // Use the enclosing document's principal
     // XXX is this right? or should we use the protodoc's?
-    nsCOMPtr<nsIPrincipal> principal =
-        dont_AddRef(aDocument->GetDocumentPrincipal());
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = aDocument->GetPrincipal(getter_AddRefs(principal));
+    if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString urlspec;
     aURI->GetSpec(getter_Copies(urlspec));

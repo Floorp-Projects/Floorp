@@ -710,6 +710,12 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(nsIScriptObjectPrincipal::GetIID())) {
+    nsIScriptObjectPrincipal* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kIDOMEventReceiverIID)) {
     nsIDOMEventReceiver* tmp = this;
     *aInstancePtr = (void*) tmp;
@@ -862,20 +868,22 @@ nsIURI* nsDocument::GetDocumentURL() const
   return mDocumentURL;
 }
 
-nsIPrincipal* nsDocument::GetDocumentPrincipal()
+NS_IMETHODIMP
+nsDocument::GetPrincipal(nsIPrincipal **aPrincipal)
 {
   if (!mPrincipal) {
     nsresult rv;
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) 
-        return nsnull;
-    if (NS_FAILED(securityManager->GetCodebasePrincipal(mDocumentURL, 
-                                                        &mPrincipal)))
-        return nsnull;
+        return rv;
+    if (NS_FAILED(rv = securityManager->GetCodebasePrincipal(mDocumentURL, 
+                                                             &mPrincipal)))
+        return rv;
   }
-  NS_ADDREF(mPrincipal);
-  return mPrincipal;
+  *aPrincipal = mPrincipal;
+  NS_ADDREF(*aPrincipal);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 

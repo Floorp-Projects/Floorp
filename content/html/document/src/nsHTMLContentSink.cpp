@@ -3891,8 +3891,9 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
       NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIPrincipal> principal;
-    principal = getter_AddRefs(mDocument->GetDocumentPrincipal());
-    NS_ASSERTION(principal, "principal expected for document");
+    rv = mDocument->GetPrincipal(getter_AddRefs(principal));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "principal expected for document");
+    if (NS_FAILED(rv)) return rv;
     
     nsAutoString ret;
     nsIURI* docURL = mDocument->GetDocumentURL();

@@ -117,7 +117,7 @@ public:
 
     virtual nsIURI* GetDocumentURL() const;
 
-    virtual nsIPrincipal* GetDocumentPrincipal();
+    NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
 
     NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
 

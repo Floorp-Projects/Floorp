@@ -235,8 +235,8 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsIScriptGlobalObjectData))) {
-    *aInstancePtrResult = (void*) ((nsIScriptGlobalObjectData*)this);
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectPrincipal))) {
+    *aInstancePtrResult = (void*) ((nsIScriptObjectPrincipal*)this);
     AddRef();
     return NS_OK;
   }
@@ -3377,16 +3377,10 @@ GlobalWindowImpl::DisableExternalCapture()
 NS_IMETHODIMP
 GlobalWindowImpl::GetPrincipal(nsIPrincipal **result) 
 {
-  nsCOMPtr<nsIDocument> doc;
-  if (!mDocument || NS_FAILED(mDocument->QueryInterface(kIDocumentIID, 
-                                                        (void **) getter_AddRefs(doc))))
-  {
-    return NS_ERROR_FAILURE;
-  }
-  *result = doc->GetDocumentPrincipal();
-  if (!*result)
-    return NS_ERROR_FAILURE;
-  return NS_OK;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+  if (doc)
+      return doc->GetPrincipal(result);
+  return NS_ERROR_FAILURE;
 }
 
 extern "C" NS_DOM nsresult

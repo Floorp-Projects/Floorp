@@ -27,18 +27,17 @@
 #include "nsITimerCallback.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectData.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
+#include "nsIPrincipal.h"
 
 #include "nsGfxAutoTextControlFrame.h"
 
 
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
 
 //extern nsresult NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
@@ -270,7 +269,7 @@ nsresult nsGfxAutoTextControlFrame::SetEventHandlers(PRInt32 handlerID)
 nsresult nsGfxAutoTextControlFrame::AddScriptEventHandler(PRInt32 handlerID, const char* handlerName, const nsString& aFunc, nsIDocument* aDocument)
 {
 	nsresult ret = NS_OK;
-   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal;
 
 	if (nsnull != aDocument)
 	{
@@ -302,32 +301,26 @@ nsresult nsGfxAutoTextControlFrame::BuildScriptEventHandler(nsIScriptContext* aC
                                 const char *aName, const nsString& aFunc, JSObject **mScriptObject)
 {
 	nsIScriptGlobalObject *global;
-	nsIScriptGlobalObjectData *globalData;
-	nsIPrincipal * prin = nsnull;
+    nsCOMPtr<nsIPrincipal> prin;
 	*mScriptObject = nsnull;
 	global = aContext->GetGlobalObject();
-	if (global && NS_SUCCEEDED(global->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)))
-	{
-		if (NS_FAILED(globalData->GetPrincipal(& prin)))
-		{
-			NS_RELEASE(global);
-			NS_RELEASE(globalData);
-			return NS_ERROR_FAILURE;
-		}
-    
-		NS_RELEASE(globalData);
-	}
-	NS_IF_RELEASE(global);
+    if (!global)
+        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIScriptObjectPrincipal> objPrin = do_QueryInterface(global);
+    if (!objPrin || NS_FAILED(objPrin->GetPrincipal(getter_AddRefs(prin)))) {
+	    NS_RELEASE(global);
+        return NS_ERROR_FAILURE;
+    }
+	NS_RELEASE(global);
 	JSPrincipals *jsprin;
 	prin->GetJSPrincipals(&jsprin);
 	JSContext* mJSContext = (JSContext*)aContext->GetNativeContext();
 	if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)mScriptObject))
 	{
-		if (nsnull != aName)
-		{
+		if (nsnull != aName) {
 			JS_CompileUCFunctionForPrincipals(mJSContext, *mScriptObject, jsprin, aName,
-		           0, nsnull, (jschar*)aFunc.GetUnicode(), aFunc.Length(),
-		           nsnull, 0);
+		                                      0, nsnull, (jschar*)aFunc.GetUnicode(), 
+                                              aFunc.Length(), nsnull, 0);
 			JSPRINCIPALS_DROP(mJSContext, jsprin);
 			return NS_OK;
 		}
