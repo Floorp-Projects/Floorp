@@ -55,3 +55,7 @@ background-color: grey
   height : 326;
 }
 
+/* need rule for outset shape */
+menu.colorpicker {
+  border: 1px outset #CCCCCC;
+}
