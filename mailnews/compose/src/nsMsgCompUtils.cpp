@@ -1610,10 +1610,12 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   {
     if (PL_strstr(aSpec, "://") == nsnull)
     {
-	  rv = pNetService->NewURI(NS_LITERAL_CSTRING("http://") + nsDependentCString(aSpec), nsnull, nsnull, aInstancePtrResult);
-  	}
-  	else
-	  rv = pNetService->NewURI(nsDependentCString(aSpec), nsnull, nsnull, aInstancePtrResult);
+      //XXXjag Temporary fix for bug 139362 until the real problem(bug 70083) get fixed
+      nsCAutoString uri(NS_LITERAL_CSTRING("http://") + nsDependentCString(aSpec));
+      rv = pNetService->NewURI(uri, nsnull, nsnull, aInstancePtrResult);
+    }
+    else
+      rv = pNetService->NewURI(nsDependentCString(aSpec), nsnull, nsnull, aInstancePtrResult);
   }
   return rv;
 }
