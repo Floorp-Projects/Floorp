@@ -1399,7 +1399,7 @@ PSFE_GetFormElementInfo(MWContext *cx, LO_FormElementStruct *form)
 				PSFE_GetTextInfo(cx, temp_text_array->text[0], &temp_info);				
 				if ((form->element_data->type == FORM_TYPE_TEXTAREA)
 #ifdef ENDER
-                    || (form->element_data->type == FORM_TYPE_HTMLAREA
+                    || (form->element_data->type == FORM_TYPE_HTMLAREA)
 #endif /*ENDER*/
                     ) {
 					lo_FormElementTextareaData *data = &form->element_data->ele_textarea;
