@@ -26,12 +26,14 @@
 #include <Pt.h>
 
 #include "nsIFontMetrics.h"
+#include "nsIFontEnumerator.h"
 #include "nsFont.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "nsRenderingContextPh.h"
 #include "nsDeviceContextPh.h"
 
 class nsFontMetricsPh : public nsIFontMetrics
@@ -84,6 +86,14 @@ protected:
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
   nsCOMPtr<nsIAtom>   mLangGroup;
+};
+
+class nsFontEnumeratorPh : public nsIFontEnumerator
+{
+public:
+  nsFontEnumeratorPh();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFONTENUMERATOR
 };
 
 #endif
