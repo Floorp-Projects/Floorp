@@ -1461,9 +1461,14 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
     NS_ENSURE_ARG_POINTER(unknownOther);
     NS_PRECONDITION(result, "null pointer");
 
-    nsRefPtr<nsStandardURL> other;
+    nsRefPtr<nsStandardURL> otherPtr;
     nsresult rv = unknownOther->QueryInterface(kThisImplCID,
-                                               getter_AddRefs(other));
+                                               getter_AddRefs(otherPtr));
+
+    // Hack around issue with MSVC++ not allowing the nsDerivedSafe to access
+    // the private members and not doing the implicit conversion to a raw
+    // pointer.
+    nsStandardURL* other = otherPtr;
     if (NS_FAILED(rv)) {
         *result = PR_FALSE;
         return NS_OK;
