@@ -61,7 +61,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
+	$(MAKE_INSTALL) ..\resources\LocalStore.rdf $(DIST)\bin\res\rdf\
 
 
 

@@ -439,7 +439,7 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
 
         nsresult rv;
 
-        if (NS_FAILED(factory->CreateResource(uri, &result)))
+        if (NS_FAILED(rv = factory->CreateResource(uri, &result)))
             return rv;
 
         const char* uri;
@@ -550,8 +550,18 @@ ServiceImpl::GetNamedDataSource(const char* uri, nsIRDFDataSource** dataSource)
     nsIRDFDataSource* ds =
         NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
 
-    if (! ds)
-        return NS_ERROR_ILLEGAL_VALUE;
+    if (! ds) {
+		size_t len = strlen(uri);
+		if ((len > 4) && (strcmp(&uri[len-4], ".rdf") == 0)) {
+            extern nsresult NS_NewRDFStreamDataSource(nsIRDFDataSource** result);
+            if (NS_OK != NS_NewRDFStreamDataSource(&ds)) {
+                return NS_ERROR_ILLEGAL_VALUE;
+            } else {
+                ds->Init(uri);
+                RegisterNamedDataSource(uri, ds);
+            }
+        } else return NS_ERROR_ILLEGAL_VALUE;
+    }
 
     NS_ADDREF(ds);
     *dataSource = ds;
@@ -645,7 +655,7 @@ ServiceImpl::RegisterBuiltInNamedDataSources(void)
 
     static DataSourceTable gTable[] = {
         "rdf:bookmarks",      NS_NewRDFBookmarkDataSource,
-        "rdf:mail",           NS_NewRDFMailDataSource,
+        "rdf:mail",           NS_NewRDFMailDataSource, 
 #if 0
         "rdf:history",        NS_NewRDFHistoryDataSource,
         "rdf:lfs",            NS_NewRDFLocalFileSystemDataSource,

@@ -743,8 +743,8 @@ nsRDFContentSink::GetIdAboutAttribute(const nsIParserNode& aNode,
         const nsString& key = aNode.GetKeyAt(i);
         SplitQualifiedName(key, nameSpaceID, attr);
 
-        if (nameSpaceID != mRDFNameSpaceID)
-            continue;
+       // if (nameSpaceID != mRDFNameSpaceID)
+         //   continue;
 
         // XXX you can't specify both, but we'll just pick up the
         // first thing that was specified and ignore the other.
@@ -799,8 +799,8 @@ nsRDFContentSink::GetResourceAttribute(const nsIParserNode& aNode,
         const nsString& key = aNode.GetKeyAt(i);
         SplitQualifiedName(key, nameSpaceID, attr);
 
-        if (nameSpaceID != mRDFNameSpaceID)
-            continue;
+      //  if (nameSpaceID != mRDFNameSpaceID)
+        //    continue;
 
         // XXX you can't specify both, but we'll just pick up the
         // first thing that was specified and ignore the other.
@@ -833,7 +833,7 @@ nsRDFContentSink::AddProperties(const nsIParserNode& aNode,
         // skip rdf:about, rdf:ID, and rdf:resource attributes; these
         // are all "special" and should've been dealt with by the
         // caller.
-        if ((nameSpaceID == mRDFNameSpaceID) &&
+        if ( //(nameSpaceID == mRDFNameSpaceID) &&
             (attr.Equals(kTagRDF_about) ||
              attr.Equals(kTagRDF_ID) ||
              attr.Equals(kTagRDF_resource)))
@@ -866,8 +866,8 @@ nsRDFContentSink::OpenRDF(const nsIParserNode& aNode)
     
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
-    if (nameSpaceID != mRDFNameSpaceID)
-        return NS_ERROR_UNEXPECTED;
+  //  if (nameSpaceID != mRDFNameSpaceID)
+    //    return NS_ERROR_UNEXPECTED;
 
     if (! tag.Equals(kTagRDF_RDF))
         return NS_ERROR_UNEXPECTED;
@@ -927,7 +927,7 @@ nsRDFContentSink::OpenObject(const nsIParserNode& aNode)
     // description or a container.
     PRBool isaTypedNode = PR_TRUE;
 
-    if (nameSpaceID == mRDFNameSpaceID) {
+    if (1 || (nameSpaceID == mRDFNameSpaceID)) {
         isaTypedNode = PR_FALSE;
 
         if (tag.Equals(kTagRDF_Description)) {
@@ -1011,8 +1011,8 @@ nsRDFContentSink::OpenProperty(const nsIParserNode& aNode)
                 rv = rdf_Assert(mRDFService,
                                 mDataSource,
                                 GetContextElement(0),
-                                rdfProperty,
-                                rdfResource);
+                                ns,
+                                resourceURI);
             }
         }
 
@@ -1045,8 +1045,8 @@ nsRDFContentSink::OpenMember(const nsIParserNode& aNode)
 
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
-    if (nameSpaceID != mRDFNameSpaceID)
-        return NS_ERROR_UNEXPECTED;
+    //if (nameSpaceID != mRDFNameSpaceID)
+      //  return NS_ERROR_UNEXPECTED;
 
     if (! tag.Equals(kTagRDF_li))
         return NS_ERROR_UNEXPECTED;
