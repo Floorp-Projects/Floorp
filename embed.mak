@@ -47,7 +47,6 @@ DIRS = \
 !if defined(BUILD_PSM)
   security \
 !endif
-  widget\timer \
   js \
   modules\libjar \
   modules\libimg \

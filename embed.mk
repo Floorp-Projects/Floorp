@@ -37,7 +37,6 @@ EMBEDDING_EXPORTS = \
 	js/src/xpconnect \
 	js/src/liveconnect \
 	modules/zlib \
-	widget/timer \
 	include \
 	modules/libutil \
 	netwerk \
