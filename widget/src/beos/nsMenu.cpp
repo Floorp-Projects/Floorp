@@ -162,6 +162,18 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::GetAccessKey(nsString &aText)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddItem(nsISupports * aItem)
 {
   if(aItem)
