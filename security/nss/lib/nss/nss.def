@@ -660,3 +660,20 @@ nss_DumpCertificateCacheInfo;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.5 { 	# cert creation APIs used by certutil
+CERT_AddExtension
+CERT_CopyRDN
+CERT_CreateCertificate
+CERT_CreateValidity
+CERT_DestroyValidity
+CERT_EncodeAndAddBitStrExtension
+CERT_EncodeAuthKeyID
+CERT_EncodeBasicConstraintValue
+CERT_EncodeCRLDistributionPoints
+CERT_FinishExtensions
+CERT_StartCertExtensions
+DER_AsciiToTime
+PK11_ImportCert
+;+    local:
+;+       *;
+;+};
