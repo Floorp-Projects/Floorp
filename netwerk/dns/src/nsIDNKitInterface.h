@@ -189,4 +189,4 @@ idn_nameprep_isvalidbidi(idn_nameprep_t handle, const unsigned long *str,
 }
 #endif /* __cplusplus */
 
-#endif //nsIDNKitWrapper_h__
+#endif /* nsIDNKitWrapper_h__ */

@@ -143,7 +143,7 @@ int nm2tsv(Options* inOptions)
 */
 {
     int retval = 0;
-    char lineBuffer[4096];  // yes, the are some very large symbols
+    char lineBuffer[4096];  /* yes, the are some very large symbols */
     char* module = NULL;
     char* size = NULL;
     char* type = NULL;
