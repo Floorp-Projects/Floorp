@@ -213,7 +213,7 @@ NS_COM PRBool FindInReadable( const nsACString& aPattern, nsACString::const_iter
 
 /* sometimes we don't care about where the string was, just that we
  * found it or not */
-inline PRBool FindInReadable( const nsAString& aPattern, nsAString& aSource, const nsStringComparator& compare = nsDefaultStringComparator() )
+inline PRBool FindInReadable( const nsAString& aPattern, const nsAString& aSource, const nsStringComparator& compare = nsDefaultStringComparator() )
 {
   nsAString::const_iterator start, end;
   aSource.BeginReading(start);
@@ -221,7 +221,7 @@ inline PRBool FindInReadable( const nsAString& aPattern, nsAString& aSource, con
   return FindInReadable(aPattern, start, end, compare);
 }
 
-inline PRBool FindInReadable( const nsACString& aPattern, nsACString& aSource, const nsCStringComparator& compare = nsDefaultCStringComparator() )
+inline PRBool FindInReadable( const nsACString& aPattern, const nsACString& aSource, const nsCStringComparator& compare = nsDefaultCStringComparator() )
 {
   nsACString::const_iterator start, end;
   aSource.BeginReading(start);
