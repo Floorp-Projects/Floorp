@@ -49,6 +49,11 @@
 #include "nsIWindowWatcher.h"
 #include "nsReadableUtils.h"
 
+/* for OnStateChange error codes */
+#include "nsError.h"
+#include "nsIDNSService.h"
+#include "nsISocketTransportService.h"
+
 CWebBrowserContainer::CWebBrowserContainer(PtWidget_t *pOwner)
 {
 	NS_INIT_REFCNT();
@@ -56,7 +61,7 @@ CWebBrowserContainer::CWebBrowserContainer(PtWidget_t *pOwner)
 	m_pCurrentURI = nsnull;
 	mDoingStream = PR_FALSE;
 	mOffset = 0;
-	mSkipOnState = 0;
+	mSkipOnState = mDownloadDocument = 0;
 }
 
 
@@ -131,6 +136,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
 	NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+	NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
     NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
     NS_INTERFACE_MAP_ENTRY(nsICommandHandler)
 		NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -272,34 +278,90 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
 	PtMozillaWidget_t 		*moz = (PtMozillaWidget_t *) m_pOwner;
 	PtCallbackList_t 		*cb = NULL;
 	PtCallbackInfo_t 		cbinfo;
+	PRUnichar *url;
 	PtMozillaNetStateCb_t   state;
 
-	if( mSkipOnState ) return NS_OK;
+/* ATENTIE printf( "CWebBrowserContainer::OnStateChange progressStateFlags=0x%x aStatus=0x%x (%d %d)\n\n\n", progressStateFlags, aStatus,
+progressStateFlags & STATE_IS_NETWORK, NS_FAILED( aStatus ) ); */
+
+	if( mSkipOnState ) {
+		if( moz->download_dest && !moz->MyBrowser->app_launcher ) {
+			if( progressStateFlags == (STATE_IS_REQUEST|STATE_IS_BROKEN) ) {
+				mDownloadDocument = 1;
+				}
+			else if( ( progressStateFlags & STATE_IS_NETWORK ) && ( progressStateFlags & STATE_STOP ) ) {
+				/* a request for Pt_ARG_MOZ_DOWNLOAD is done by trying to call LoadURI(). If the nsUnknownContentHandler
+				pops up, then moz->MyBrowser->app_launcher will be not null and we will use it to save the document ( old code ).
+				If the page loaded successfully, then use the nsIWebBrowserPersist to save the document */
+				if( mDownloadDocument ) {
+					mSkipOnState = 0;
+					mDownloadDocument = 0;
+					}
+				}
+			}
+		if( mSkipOnState ) return NS_OK;
+		}
+	
+	aRequest->GetName( &url );
+	nsString surl( url );
+
+	if( ( progressStateFlags & STATE_IS_NETWORK ) && NS_FAILED( aStatus ) ) {
+		PtWebErrorCallback_t cbw;
+
+		/* invoke the Pt_CB_WEB_ERROR in the client */
+		cb = moz->web_error_cb;
+		memset(&cbinfo, 0, sizeof(cbinfo));
+		cbinfo.reason = Pt_CB_MOZ_ERROR;
+		cbinfo.cbdata = &cbw;
+
+		memset( &cbw, 0, sizeof( PtWebErrorCallback_t ) );
+		char *s = ToNewCString(surl);
+		strcpy( cbw.url, s );
+		free( s );
+
+
+		cbw.type = WWW_ERROR_TOPVIEW;
+		switch( aStatus ) {
+			case NS_ERROR_UNKNOWN_HOST:				cbw.reason = -12; break;
+			case NS_ERROR_NET_TIMEOUT: 				cbw.reason = -408; break;
+			case NS_ERROR_NO_CONTENT:					cbw.reason = -8; break;
+			case NS_ERROR_FILE_NOT_FOUND:			cbw.reason = -404; break;
+			case NS_ERROR_CONNECTION_REFUSED:	cbw.reason = -13; break;
+
+			/* these will not cause the web error */
+			case NS_BINDING_ABORTED:					break;
+
+			default:													cbw.reason = -1; break;
+			}
+		if( cbw.reason ) PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
+		/* let it check for STATE_STOP */
+		}
 
 	memset(&cbinfo, 0, sizeof(cbinfo));
-    if (progressStateFlags & STATE_IS_NETWORK)
-    {
-    	if (progressStateFlags & STATE_START)
-	    {
+
+	if( progressStateFlags & STATE_IS_NETWORK /* STATE_IS_REQUEST STATE_IS_DOCUMENT */ ) 
+	{
+    if( progressStateFlags & STATE_START ) {
 			cbinfo.reason = Pt_CB_MOZ_START;
 			if( ( cb = moz->start_cb ) )
 				PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
     	}
-    	else if (progressStateFlags & STATE_STOP)
-			{
+    else if( progressStateFlags & STATE_STOP ) {
+			PtWebCompleteCallback_t cbcomplete;
 
 			/* if the mozilla was saving a file as a result of Pt_ARG_MOZ_DOWNLOAD or Pt_ARG_MOZ_UNKNOWN_RESP, move the temporary file into the desired destination ( moz->download_dest ) */
-			if( moz->MyBrowser->app_launcher && moz->download_dest ) {
-				nsCOMPtr<nsIURI> aSourceUrl;
-				PRInt64 dummy;
-				nsCOMPtr<nsIFile> tempFile;
-				moz->MyBrowser->app_launcher->GetDownloadInfo( getter_AddRefs(aSourceUrl), &dummy, getter_AddRefs( tempFile ) );
+			if( moz->download_dest ) {
+				if( moz->MyBrowser->app_launcher ) {
+					nsCOMPtr<nsIURI> aSourceUrl;
+					PRInt64 dummy;
+					nsCOMPtr<nsIFile> tempFile;
+					moz->MyBrowser->app_launcher->GetDownloadInfo( getter_AddRefs(aSourceUrl), &dummy, getter_AddRefs( tempFile ) );
 
-				if( tempFile ) {
+					if( tempFile ) {
 						nsresult rv;
 						nsCOMPtr<nsILocalFile> fileToUse = do_CreateInstance( NS_LOCAL_FILE_CONTRACTID, &rv );
 						fileToUse->InitWithPath( moz->download_dest );
-
+	
 						PRBool equalToTempFile = PR_FALSE;
 						PRBool filetoUseAlreadyExists = PR_FALSE;
 						fileToUse->Equals( tempFile, &equalToTempFile );
@@ -314,57 +376,58 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
 						fileToUse->GetParent(getter_AddRefs(directoryLocation));
 						if( directoryLocation ) rv = tempFile->MoveTo(directoryLocation, fileName);
 						}
+
+					moz->MyBrowser->app_launcher = NULL;
+					}
+				else {
+					MozSavePageAs( m_pOwner, moz->download_dest, Pt_MOZ_SAVEAS_HTML );
+					}
 				}
 
 			cbinfo.reason = Pt_CB_MOZ_COMPLETE;
+			cbinfo.cbdata = &cbcomplete;
+			memset( &cbcomplete, 0, sizeof( PtWebCompleteCallback_t ) );
+			char *s = ToNewCString(surl);
+			strcpy( cbcomplete.url, s );
+			free( s );
+
 			if( ( cb = moz->complete_cb ) )
 				PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
     	}
-    	else
-    	{
-			cbinfo.reason = Pt_CB_MOZ_NET_STATE;
-			cbinfo.cbdata = &state;
-			state.flags = progressStateFlags;
-			state.status = aStatus;
-			PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
-			cbinfo.cbdata = NULL;
-			{
-				PRInt32 flags = progressStateFlags;
-				char *statusMessage = "none";
-				int status = aStatus;
-				if (flags & GTK_MOZ_EMBED_FLAG_IS_REQUEST) 
-				{
-				  if (flags & GTK_MOZ_EMBED_FLAG_REDIRECTING)
-				 statusMessage = "Redirecting to site...";
-				  else if (flags & GTK_MOZ_EMBED_FLAG_TRANSFERRING)
-				  statusMessage = "Transferring data from site...";
-				  else if (flags & GTK_MOZ_EMBED_FLAG_NEGOTIATING)
-				  statusMessage = "Waiting for authorization...";
-				}
+	}
 
-				if (status == GTK_MOZ_EMBED_STATUS_FAILED_DNS)
-				  statusMessage = "Site not found.";
-				else if (status == GTK_MOZ_EMBED_STATUS_FAILED_CONNECT)
-				  statusMessage = "Failed to connect to site.";
-				else if (status == GTK_MOZ_EMBED_STATUS_FAILED_TIMEOUT)
-				  statusMessage = "Failed due to connection timeout.";
-				else if (status == GTK_MOZ_EMBED_STATUS_FAILED_USERCANCELED)
-				  statusMessage = "User canceled connecting to site.";
+	// invoke the raw status callbacks for page load status
+	cbinfo.reason = Pt_CB_MOZ_NET_STATE;
+	cbinfo.cbdata = &state;
+	state.flags = progressStateFlags;
+	state.status = aStatus;
+	state.url = (char *)ToNewCString(surl);
+	char *statusMessage = "";
+	PRInt32 flags = progressStateFlags;
 
-				if (flags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) 
-				{
-				  if (flags & GTK_MOZ_EMBED_FLAG_START)
-					statusMessage = "Loading site...";
-				  else if (flags & GTK_MOZ_EMBED_FLAG_STOP)
-					statusMessage = "Done.";
-				}
-				printf("NET CHANGE: %s\n", statusMessage);
-			}
-		}
-    }
+	if (flags & STATE_IS_REQUEST) 
+	{
+	  if (flags & STATE_REDIRECTING)
+		statusMessage = "Redirecting to site:";
+	  else if (flags & STATE_TRANSFERRING)
+		statusMessage = "Receiving Data:";
+	  else if (flags & STATE_NEGOTIATING)
+	  statusMessage = "Waiting for authorization:";
+	}
 
-    return NS_OK;
-}
+	if (flags & STATE_IS_DOCUMENT) 
+	{
+	  if (flags & STATE_START)
+		statusMessage = "Loading site:";
+	  else if (flags & STATE_STOP)
+		statusMessage = "Finishing:";
+	}
+	state.message = statusMessage;
+	if( ( cb = moz->net_state_cb ) && statusMessage[0])
+		PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
+
+	return NS_OK;
+	}
 
 
 
@@ -398,8 +461,20 @@ CWebBrowserContainer::OnStatusChange(nsIWebProgress* aWebProgress,
                                      nsresult aStatus,
                                      const PRUnichar* aMessage)
 {
-	
-    return NS_OK;
+	PtMozillaWidget_t     *moz = (PtMozillaWidget_t *) m_pOwner;
+
+	/* mozilla was saving a file as a result of Pt_ARG_MOZ_DOWNLOAD or Pt_ARG_MOZ_UNKNOWN_RESP */
+	if( moz->MyBrowser->app_launcher && moz->download_dest ) {
+		return Pt_CONTINUE;
+		}
+
+	if( aMessage ) {
+		nsString pp(aMessage);
+		char *message = ToNewCString(pp);
+		InvokeInfoCallback( Pt_MOZ_INFO_CONNECT, (unsigned int) 0, message );
+		delete [] message;
+		}
+	return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -427,6 +502,56 @@ CWebBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// nsIDNSListener
+
+/* void OnStartLookup (in nsISupports ctxt, in string hostname); */
+NS_IMETHODIMP CWebBrowserContainer::OnStartLookup(nsISupports *ctxt, const char *hostname)
+{	
+	PtMozillaWidget_t       *moz = (PtMozillaWidget_t *) m_pOwner;
+	PtCallbackList_t        *cb = NULL;
+	PtCallbackInfo_t        cbinfo;
+	PtMozillaNetStateCb_t   state;
+
+	cbinfo.reason = Pt_CB_MOZ_NET_STATE;
+	cbinfo.cbdata = &state;
+	state.flags = 0;
+	state.status = 0;
+	state.url = (char *)hostname;
+	char *statusMessage = "Resolving host name:";
+	state.message = statusMessage;
+	if( ( cb = moz->net_state_cb ) )
+    	PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
+
+    return NS_OK;
+}
+
+/* [noscript] void OnFound (in nsISupports ctxt, in string hostname, in nsHostEntStar entry); */
+NS_IMETHODIMP CWebBrowserContainer::OnFound(nsISupports *ctxt, const char *hostname, nsHostEnt * entry)
+{
+	PtMozillaWidget_t       *moz = (PtMozillaWidget_t *) m_pOwner;
+	PtCallbackList_t        *cb = NULL;
+	PtCallbackInfo_t        cbinfo;
+	PtMozillaNetStateCb_t   state;
+
+	cbinfo.reason = Pt_CB_MOZ_NET_STATE;
+	cbinfo.cbdata = &state;
+	state.flags = 0;
+	state.status = 0;
+	state.url = (char *)hostname;
+	char *statusMessage = "Opening connection:";
+	state.message = statusMessage;
+	if( ( cb = moz->net_state_cb ) )
+    	PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
+
+    return NS_OK;
+}
+
+/* void OnStopLookup (in nsISupports ctxt, in string hostname, in nsresult status); */
+NS_IMETHODIMP CWebBrowserContainer::OnStopLookup(nsISupports *ctxt, const char *hostname, nsresult status)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIURIContentListener
@@ -467,7 +592,7 @@ NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, PRBool a
 
 
 /* boolean isPreferred (in string aContentType, out string aDesiredContentType); */
-NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *aCanHandleContent)
+NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *aCanHandleContent)
 {
 
   if (aContentType &&
@@ -951,6 +1076,7 @@ CWebBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP
 CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
 {
+/* ATENTIE */ printf( "CreateBrowserWindow!!!!!!!!!!!\n\n\n" );
 	return NS_ERROR_FAILURE;
 }
 
@@ -958,6 +1084,7 @@ CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRI
 NS_IMETHODIMP
 CWebBrowserContainer::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
+/* ATENTIE */ printf( "SizeBrowserTo!!!!!!!!!!!\n\n\n" );
 	return NS_ERROR_FAILURE;
 }
 
@@ -1004,6 +1131,7 @@ CWebBrowserContainer::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
 NS_IMETHODIMP
 CWebBrowserContainer::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+/* ATENTIE */ printf("!!!!!!!!!!!!! OnStartRequest\n\n\n" );
 	return NS_OK;
 }
 
@@ -1011,6 +1139,7 @@ CWebBrowserContainer::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP
 CWebBrowserContainer::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
 {
+/* ATENTIE */ printf("!!!!!!!!!!!!! OnStopRequest\n\n\n" );
 	return NS_OK;
 }
 

@@ -100,7 +100,7 @@ CWebBrowserContainer *CPromptService::GetWebBrowser(nsIDOMWindow *aWindow)
       wwatch->GetActiveWindow(getter_AddRefs(fosterParent));
       aWindow = fosterParent;
     }
-    nsresult rv = wwatch->GetChromeForWindow(aWindow, getter_AddRefs(chrome));
+    wwatch->GetChromeForWindow(aWindow, getter_AddRefs(chrome));
   }
 
   if (chrome) {
@@ -240,6 +240,9 @@ NS_IMETHODIMP CPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
     else
     	*_retval = PR_FALSE;
 
+	free( auth.title );
+	free( auth.realm );
+
 	return NS_OK;
 }
 
@@ -276,7 +279,11 @@ NS_IMETHODIMP CPromptService::ConfirmEx(nsIDOMWindow *parent,
                                         PRBool *checkValue,
                                         PRInt32 *buttonPressed)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+	if (checkValue)
+		*checkValue = PR_FALSE;
+	if (buttonPressed)
+		*buttonPressed = 0;
+	return NS_OK;
 }
  
 //*****************************************************************************

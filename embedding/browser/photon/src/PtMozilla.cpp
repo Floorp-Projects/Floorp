@@ -23,9 +23,6 @@
 #include <stdlib.h>
 #include "PtMozilla.h"
 
-#include <photon/PtWebClient.h>
-#include <photon/PpProto.h>
-
 #include "nsCWebBrowser.h"
 #include "nsFileSpec.h"
 #include "nsILocalFile.h"
@@ -72,6 +69,12 @@
 
 #include "nsUnknownContentTypeHandler.h"
 
+#ifdef _BUILD_STATIC_BIN
+#include "nsStaticComponent.h"
+nsresult PR_CALLBACK
+apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#endif
+
 // Macro for converting from nscolor to PtColor_t
 // Photon RGB values are stored as 00 RR GG BB
 // nscolor RGB values are 00 BB GG RR
@@ -98,6 +101,7 @@ static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 
 static void mozilla_set_pref( PtWidget_t *widget, char *option, char *value );
 static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value );
+static void mozilla_set_default_pref( PtWidget_t *widget );
 
 PtWidgetClass_t *PtCreateMozillaClass( void );
 #ifndef _PHSLIB
@@ -208,49 +212,20 @@ void MozSetPreference(PtWidget_t *widget, int type, char *pref, void *data)
 	}
 }
 
-
 int MozSavePageAs(PtWidget_t *widget, char *fname, int type)
 {
-	// Get the current DOM document
-	nsIDOMDocument* pDocument = nsnull;
 	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
 
 	if (!fname || !widget)
 		return (-1);
 
-	// Get the DOM window from the webbrowser
-	nsCOMPtr<nsIDOMWindow> window;
-	moz->MyBrowser->WebBrowser->GetContentDOMWindow(getter_AddRefs(window));
-	if (window)
+	nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(moz->MyBrowser->WebBrowser));
+	if (persist)
 	{
-		if (NS_SUCCEEDED(window->GetDocument(&pDocument)))
-		{
-			// Get an nsIDiskDocument interface to the DOM document
-			nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(pDocument);
-			if (!diskDoc)
-				return (-1);
-
-			// Create an nsFilelSpec from the selected file path.
-			nsFileSpec fileSpec(fname, PR_FALSE);
-
-			// Figure out the mime type from the selection
-			nsAutoString mimeType;
-			switch (type)
-			{
-				case Pt_MOZ_SAVEAS_HTML:
-					mimeType.AssignWithConversion("text/html");
-					break;
-				case Pt_MOZ_SAVEAS_TEXT:
-				default:
-					mimeType.AssignWithConversion("text/plain");
-					break;
-			}
-
-			// Save the file.
-			nsAutoString useDocCharset;
-//			diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, mimeType, useDocCharset, 0);
-			return (0);
-		}
+#if _094_
+		persist->SaveDocument(nsnull, fname, nsnull);
+#endif
+		return (0);
 	}
 
 	return (-1);
@@ -292,6 +267,8 @@ static void mozilla_defaults( PtWidget_t *widget )
 			Pt_BOTTOM_ANCHORED_TOP | Pt_RIGHT_ANCHORED_LEFT | Pt_ANCHORS_INVALID;
 
 	cntr->flags |= Pt_CHILD_GETTING_FOCUS;
+
+	mozilla_set_default_pref( widget );
 }
 
 static void mozilla_destroy( PtWidget_t *widget ) {
@@ -549,8 +526,7 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 		case Pt_ARG_MOZ_ENCODING: {
  			moz->MyBrowser->mPrefs->SetUnicharPref(
  				"intl.charset.default",
- 				NS_ConvertASCIItoUCS2((char*)argt->value).get()
- 			);
+ 				NS_ConvertASCIItoUCS2((char*)argt->value).get());
 			}
 			break;
 
@@ -877,15 +853,15 @@ static void mozilla_set_pref( PtWidget_t *widget, char *option, char *value ) {
 
 /* Disk-cache options */
 	else if( !strcmp( option, "main_cache_kb_size" ) )
-		moz->MyBrowser->mPrefs->SetIntPref( "browser.cache.disk_cache_size", atoi( value ) );
+		moz->MyBrowser->mPrefs->SetIntPref( "browser.cache.disk.capacity", atoi( value ) );
 	else if( !strcmp( option, "enable_disk_cache" ) )
 		moz->MyBrowser->mPrefs->SetBoolPref( "browser.cache.disk.enable", !stricmp( value, "TRUE" ) ? PR_TRUE : PR_FALSE );
 	else if( !strcmp( option, "dcache_verify_policy" ) ) {
-		int n = atoi( value ), moz_value;
+		int n = atoi( value ), moz_value=3;
 		if( n == 0 ) moz_value = 2; /* never */
 		else if( n == 1 ) moz_value = 0; /* once */
 		else moz_value = 1; /* always */
-		moz->MyBrowser->mPrefs->SetIntPref( "browser.cache.check_doc_frequency", atoi( value ) );
+		moz->MyBrowser->mPrefs->SetIntPref( "browser.cache.check_doc_frequency", moz_value );
 		}
 	else if( !strcmp( option, "main_cache_dir" ) ) 		; /* not used */
 	else if( !strcmp( option, "main_index_file" ) ) 		; /* not used */
@@ -964,6 +940,37 @@ static void mozilla_set_pref( PtWidget_t *widget, char *option, char *value ) {
 	else if( !strcmp( option, "Use_Explicit_Accept_Headers" ) ) 		; /* not used */
 	else if( !strcmp( option, "Visitation_Horizon" ) ) 		; /* not used */
 	}
+
+
+static void mozilla_set_default_pref( PtWidget_t *widget ) {
+	static int already_set = 0;
+	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) widget;
+
+	if( already_set ) return;
+	already_set = 1;
+
+/* HTML Options */
+		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.visited_color", NS_ConvertASCIItoUCS2("#008080").get() );
+		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUCS2("#0000ff").get() );
+		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.display.foreground_color", NS_ConvertASCIItoUCS2("#000000").get() );
+		moz->MyBrowser->mPrefs->SetUnicharPref( "browser.display.background_color", NS_ConvertASCIItoUCS2("#ffffff").get() );
+
+		moz->MyBrowser->mPrefs->SetBoolPref( "browser.display.use_document_colors", PR_TRUE );
+		moz->MyBrowser->mPrefs->SetBoolPref( "browser.underline_anchors", PR_TRUE );
+		moz->MyBrowser->mPrefs->SetIntPref( "font.size.variable.x-western", VOYAGER_TEXTSIZE2 );
+		moz->MyBrowser->mPrefs->SetIntPref( "browser.history_expire_days", 4 );
+		moz->MyBrowser->mPrefs->SetIntPref( "browser.sessionhistory.max_entries", 50 );
+		moz->MyBrowser->mPrefs->SetIntPref( "browser.cache.check_doc_frequency", 2 );
+		moz->MyBrowser->mPrefs->SetBoolPref( "browser.cache.disk.enable", PR_TRUE );
+		moz->MyBrowser->mPrefs->SetIntPref( "browser.cache.disk.capacity", 5000 );
+		moz->MyBrowser->mPrefs->SetIntPref( "network.http.connect.timeout", 2400 );
+		moz->MyBrowser->mPrefs->SetIntPref( "network.http.max-connections", 4 );
+		moz->MyBrowser->mPrefs->SetCharPref( "network.proxy.http_port", "80" );
+		moz->MyBrowser->mPrefs->SetCharPref( "network.proxy.ftp_port", "80" );
+		moz->MyBrowser->mPrefs->SetCharPref( "network.proxy.gopher_port", "80" );
+	}
+
+
 
 static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) widget;
@@ -1093,7 +1100,7 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 /* Disk-cache options */
   else if( !strcmp( option, "main_cache_kb_size" ) ) {
 		int n;
-		moz->MyBrowser->mPrefs->GetIntPref( "browser.cache.disk_cache_size", &n );
+		moz->MyBrowser->mPrefs->GetIntPref( "browser.cache.disk.capacity", &n );
 		sprintf( value, "%d", n );
 		}
   else if( !strcmp( option, "enable_disk_cache" ) ) {
@@ -1102,7 +1109,7 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		sprintf( value, "%s", val == PR_TRUE ? "TRUE" : "FALSE" );
 		}
   else if( !strcmp( option, "dcache_verify_policy" ) ) {
-		int n, voyager_value;
+		int n, voyager_value = 0;
 		moz->MyBrowser->mPrefs->GetIntPref( "browser.cache.check_doc_frequency", &n );
 		if( n == 0 ) voyager_value = 1;
 		else if( n == 1 ) voyager_value = 2;
@@ -1178,7 +1185,11 @@ static int event_processor_callback(int fd, void *data, unsigned mode)
 {
   nsIEventQueue *eventQueue = (nsIEventQueue*)data;
   if (eventQueue)
-    eventQueue->ProcessPendingEvents();
+  {
+	PtHold();
+    	eventQueue->ProcessPendingEvents();
+	PtRelease();
+ }
 
   return Pt_CONTINUE;
 }
@@ -1202,6 +1213,7 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 		{ Pt_ARG_MOZ_WEB_DATA,         	mozilla_modify, Pt_QUERY_PREVENT },
 		{ Pt_ARG_MOZ_UNKNOWN_RESP,      mozilla_modify,	Pt_QUERY_PREVENT },
 		{ Pt_ARG_MOZ_DOWNLOAD,					mozilla_modify,	Pt_QUERY_PREVENT },
+		{ Pt_ARG_MOZ_AUTH_CTRL,					NULL, NULL, Pt_ARG_IS_POINTER( PtMozillaWidget_t, moz_auth_ctrl ) },
 		{ Pt_CB_MOZ_INFO,				NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, info_cb) },
 		{ Pt_CB_MOZ_START,				NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, start_cb) },
 		{ Pt_CB_MOZ_COMPLETE,			NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, complete_cb) },
@@ -1221,6 +1233,7 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 		{ Pt_CB_MOZ_PRINT_STATUS,		NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, print_status_cb) },
 		{ Pt_CB_MOZ_WEB_DATA_REQ,		NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, web_data_req_cb) },
 		{ Pt_CB_MOZ_UNKNOWN,				NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, web_unknown_cb) },
+		{ Pt_CB_MOZ_ERROR,					NULL, NULL, Pt_ARG_IS_CALLBACK_LIST(PtMozillaWidget_t, web_error_cb) },
 	};
 
 	static const PtClassRawCallback_t callback = { Ph_EV_INFO, mozilla_ev_info };
@@ -1247,6 +1260,11 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 
 	PtMozilla->wclass = PtCreateWidgetClass(PtContainer, 0, sizeof(args)/sizeof(args[0]), args);
 
+#ifdef _BUILD_STATIC_BIN
+  // Initialize XPCOM's module info table
+  NSGetStaticModuleInfo = apprunner_getModuleInfo;
+#endif
+
 	// initialize embedding
 	NS_InitEmbedding(nsnull, nsnull);
 
@@ -1261,7 +1279,7 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 	if (!eventQueue) 
 		exit(-1);
 
-	PtAppAddFdPri(NULL, eventQueue->GetEventQueueSelectFD(), (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN), event_processor_callback,eventQueue, getprio( 0 ) + 1 );
+	PtAppAddFd( NULL, eventQueue->GetEventQueueSelectFD(), (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN), event_processor_callback,eventQueue );
 	printf("Event Queue added\n");
 #else
 	// create an app shell for event handling
