@@ -270,17 +270,6 @@ Contributor(s): ______________________________________. -->
 <!ENTITY  buildId.label "Build ID: 1999070614">
 <!ENTITY  security-button.label "Secure Conn">
 
-<!-- taskbar -->
-<!ENTITY  webButton.label "Web">
-<!ENTITY  mailButton.label "Mail">
-<!ENTITY  dayplannerButton.label "DayPlanner">
-<!ENTITY  shoppingButton.label "Shopping">
-<!ENTITY  myDeskButton.label "My Desk">
-<!ENTITY  openWinButton.label "Open Windows">
-
-
-
-
 ]> 
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -790,39 +779,6 @@ Contributor(s): ______________________________________. -->
   </box>
 
   <toolbox>
-	  <toolbar id="taskbar" chromeclass="status">
-		  <popup id="samplePopup">
-		    <menu><menuitem name="Sample Item One"/><menuitem name="Sample Item Two"/></menu>
-		  </popup>
-		  
-		
-		  
-	  	  <box align="horizontal">
-  	 	     <titledbutton align="left" class="button"
-			   popupanchor="topleft" popupalign="bottomleft" value="&webButton.label;" />
-  	 	     <titledbutton align="left" class="button"  
-			   popupanchor="topleft" popupalign="bottomleft" value="&mailButton.label;" />
-		  </box>
-		  <spring flex="100%"/>
-	 	  <box align="horizontal">
-  	 		<titledbutton align="left"  class="popup" popup="samplePopup" tooltip="aTooltip" tooltiptext="This is a toolbar"
-			   popupanchor="topleft" popupalign="bottomleft" value="&dayplannerButton.label;" />
-  	 		
-  	 		<titledbutton align="left"  class="popup" popup="samplePopup"
-			   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
-  	 		
-  	 		<titledbutton align="left"  class="popup" popup="samplePopup" 
-			   popupanchor="topleft" popupalign="bottomleft" 
-			   value="&myDeskButton.label;" />
-          </box>
-		  <spring flex="100%"/>
-	   	  <box align="horizontal">
-  			<titledbutton align="left" class="popup" value="&openWinButton.label;" />
-  	 		<titledbutton align="left" id="mini-nav" value="" />
-  	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
-  	 		<titledbutton align="left" id="mini-addr" value="" onclick="OpenAddressbook()"/>
-  	 		<titledbutton align="left" id="mini-comp" value="" />
-	      </box>
-	  </toolbar>
+	  <toolbar id="taskbar" />
 	</toolbox>
 </window>
