@@ -72,8 +72,10 @@ function isPrefix(s1, s2) {
 }
 
 function member(s, l) {
-    return (l.length > 0)
-    && ((s == l[0]) || member(s, l.slice(1)));
+    for (var i=0; i<l.length; i++) {
+        if (l[i] == s) return true;
+    }
+    return false;
 }
 
 function add(s, l) {
