@@ -27,7 +27,12 @@
 #include "nsIURI.h"
 #include "nsString2.h"
 #include "nsIEventQueue.h"
+#include "nsIBufferOutputStream.h"
+#include "nsIBufferInputStream.h"
+#include "nsILoadGroup.h"
+
 #include "nsCOMPtr.h"
+
 
 class nsIEventSinkGetter;
 class nsIProgressEventSink;
@@ -97,8 +102,20 @@ protected:
 
     PRBool                  mConnected;
     nsIStreamListener*      mListener;
+    nsISupports*            mContext;
     PRUint32                mLoadAttributes;
+
+    nsIBufferInputStream*   mBufferInputStream;
+    nsIBufferOutputStream*  mBufferOutputStream;
+    PRUint32                mSourceOffset;
+    PRInt32                 mAmount;
     nsILoadGroup*           mLoadGroup;
+    nsString2               mContentType;
+
 };
+
+#define NS_FTP_SEGMENT_SIZE   (4*1024)
+#define NS_FTP_BUFFER_SIZE    (8*1024)
+
 
 #endif /* nsFTPChannel_h___ */
