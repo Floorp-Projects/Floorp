@@ -212,6 +212,8 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
   }
   printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
   printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
+  mBounds.width = aWidth;
+  mBounds.height = aHeight;
   XMoveResizeWindow(gDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
   return NS_OK;
 }
