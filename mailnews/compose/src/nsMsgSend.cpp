@@ -2634,8 +2634,10 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		if (!PL_strcasecmp(m_attachment1_encoding, ENCODING_QUOTED_PRINTABLE)) {
 			m_attachment1_encoder_data =
 			MIME_QPEncoderInit(mime_encoder_output_fn, this);
+#if 0
 			if (!m_attachment1_encoder_data)
-;//JFD				goto FAILMEM;
+				goto FAILMEM;
+#endif
 		}
 
 	// ### mwelch

@@ -1366,7 +1366,7 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 					: 0));
 
 /*JFD
-	if (XP_Stat(m_print->filename, &stat, xpTemporary) == 0) */{
+	if (XP_Stat(m_print->filename, &stat, xpTemporary) == 0) */ {
 		m_quotedText = (char*) PR_Malloc(stat.st_size + 1 + extra);
 		
 		/* Insert two line break at the begining of the quoted text */
