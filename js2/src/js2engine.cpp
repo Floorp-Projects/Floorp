@@ -1102,11 +1102,13 @@ namespace MetaData {
                     a = allocString("attribute"); 
                     break;
                 case ClassKind:
-                    a = STRING_TO_JS2VAL(Function_StringAtom); 
+                    // typeof returns lower-case 'function', whereas the [[class]] value
+                    // has upper-case 'Function'
+                    a = allocString("function"); //a = STRING_TO_JS2VAL(Function_StringAtom); 
                     break;
                 case SimpleInstanceKind:
                     if (checked_cast<SimpleInstance *>(obj)->type == meta->functionClass)
-                        a = STRING_TO_JS2VAL(Function_StringAtom);
+                        a = allocString("function"); //STRING_TO_JS2VAL(Function_StringAtom);
                     else
                         a = STRING_TO_JS2VAL(object_StringAtom);
 //                    a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());

@@ -650,14 +650,14 @@ namespace MetaData {
             case StmtNode::Package:
                 {
                     PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
-	            String packageName = getPackageName(ps->packageIdList);
-	            Package *package = new Package(packageName, new Namespace(&world.identifiers["internal"]));
+                    String packageName = getPackageName(ps->packageIdList);
+                    Package *package = new Package(packageName, new Namespace(&world.identifiers["internal"]));
 
                     Variable *v = new Variable(packageClass, OBJECT_TO_JS2VAL(package), true);
                     defineLocalMember(env, &packageName, NULL, Attribute::NoOverride, false, ReadAccess, v, 0, true);
                     
                     package->status = Package::InTransit;
-	            packages.push_back(package);
+                    packages.push_back(package);
                     env->addFrame(package);
                     ValidateStmt(cxt, env, pl, ps->body);
                     env->removeTopFrame();
@@ -667,9 +667,9 @@ namespace MetaData {
             case StmtNode::Import:
                 {
                     ImportStmtNode *i = checked_cast<ImportStmtNode *>(p);
-	            String packageName;
-	            if (i->packageIdList)
-		        packageName = getPackageName(i->packageIdList);
+                    String packageName;
+                    if (i->packageIdList)
+                    packageName = getPackageName(i->packageIdList);
                     else
                         packageName = *i->packageString;
 
@@ -733,10 +733,10 @@ namespace MetaData {
         String packagePath;
         IdentifierList *idList = packageIdList;
         while (idList) {
-	    packagePath += idList->name;
-	    idList = idList->next;
-	    if (idList)
-	        packagePath += '/'; // XXX how to get path separator for OS?
+            packagePath += idList->name;
+            idList = idList->next;
+            if (idList)
+                packagePath += '/'; // XXX how to get path separator for OS?
         }
         return packagePath;
     }
@@ -992,13 +992,18 @@ namespace MetaData {
 */
             {
                 SwitchStmtNode *sw = checked_cast<SwitchStmtNode *>(p);
-                uint16 swVarIndex = (checked_cast<NonWithFrame *>(env->getTopFrame()))->allocateSlot();
+                FrameListIterator fi = env->getRegionalFrame();
+                NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*fi);
+                if (regionalFrame->kind == ParameterFrameKind)
+                    regionalFrame = checked_cast<NonWithFrame *>(*--fi);
+                FrameVariable *frV = makeFrameVariable(regionalFrame);
+                ASSERT(frV->kind != FrameVariable::Parameter);
                 BytecodeContainer::LabelID defaultLabel = NotALabel;
 
                 Reference *r = SetupExprNode(env, phase, sw->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eFrameSlotWrite, p->pos);
-                bCon->addShort(swVarIndex);
+                bCon->addShort(frV->frameSlot);
 
                 // First time through, generate the conditional waterfall 
                 StmtNode *s = sw->statements;
@@ -1007,7 +1012,7 @@ namespace MetaData {
                         ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
                         if (c->expr) {
                             bCon->emitOp(eFrameSlotRead, c->pos);
-                            bCon->addShort(swVarIndex);
+                            bCon->addShort(frV->frameSlot);
                             Reference *r = SetupExprNode(env, phase, c->expr, &exprType);
                             if (r) r->emitReadBytecode(bCon, c->pos);
                             bCon->emitOp(eEqual, c->pos);
@@ -2645,6 +2650,7 @@ doUnary:
 
 
     // Returns the most specific regional frame.
+    // Returns the iterator value for that frame so that the frames neighbors can be accessed
     FrameListIterator Environment::getRegionalFrame()
     {
         FrameListIterator fi = getRegionalEnvironment();
@@ -3229,6 +3235,24 @@ doUnary:
         return mOverridden;
     }
 
+    FrameVariable *JS2Metadata::makeFrameVariable(NonWithFrame *regionalFrame)
+    {
+        FrameVariable *result = NULL;
+        switch (regionalFrame->kind) {
+        case PackageKind:
+            result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Package);
+            break;
+        case ParameterFrameKind:
+            result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Parameter);
+            break;
+        case BlockFrameKind:
+            result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Local);
+            break;
+        default:
+            NOT_REACHED("Bad frame kind");
+        }
+        return result;
+    }
 
     // Define a hoisted var in the current frame (either Package or a Function)
     // defineHoistedVar(env, id, initialValue) defines a hoisted variable with the name id in the environment env. 
@@ -3282,19 +3306,7 @@ rescan:
             }
             else
                 lbe = *lbeP;
-            switch (regionalFrame->kind) {
-            case PackageKind:
-                result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Package);
-                break;
-            case ParameterFrameKind:
-                result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Parameter);
-                break;
-            case BlockFrameKind:
-                result = new FrameVariable(regionalFrame->allocateSlot(), FrameVariable::Local);
-                break;
-            default:
-                NOT_REACHED("Bad frame kind");
-            }
+            result = makeFrameVariable(regionalFrame);
             (*regionalFrame->slots)[checked_cast<FrameVariable *>(result)->frameSlot] = initVal;
             LocalBinding *sb = new LocalBinding(ReadWriteAccess, result, true);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));

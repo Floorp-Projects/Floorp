@@ -467,7 +467,7 @@ public:
     FrameVariable(uint16 frameSlot, FrameVariableKind kind) : LocalMember(Member::FrameVariableMember), frameSlot(frameSlot), kind(kind), sealed(false) { } 
 
     uint16 frameSlot;
-    FrameVariableKind kind;               // true if the variable is in a package frame
+    FrameVariableKind kind;         // the kind of frame this variable is in
 
     bool sealed;                    // true if this variable cannot be deleted using the delete operator
     virtual LocalMember *clone()       { return new FrameVariable(frameSlot, kind); }
@@ -1357,6 +1357,7 @@ public:
     LocalMember *findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
+    FrameVariable *makeFrameVariable(NonWithFrame *regionalFrame);
     LocalMember *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar, js2val initVal);
     Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
     InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList &namespaces, 
