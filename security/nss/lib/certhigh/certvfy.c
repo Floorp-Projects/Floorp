@@ -165,64 +165,6 @@ CERT_VerifySignedData(CERTSignedData *sd, CERTCertificate *cert,
 }
 
 
-/*
- * This must only be called on a cert that is known to have an issuer
- * with an invalid time
- */
-CERTCertificate *
-CERT_FindExpiredIssuer(CERTCertDBHandle *handle, CERTCertificate *cert)
-{
-    CERTCertificate *issuerCert = NULL;
-    CERTCertificate *subjectCert;
-    int              count;
-    SECStatus        rv;
-    SECComparison    rvCompare;
-    
-    subjectCert = CERT_DupCertificate(cert);
-    if ( subjectCert == NULL ) {
-	goto loser;
-    }
-    
-    for ( count = 0; count < CERT_MAX_CERT_CHAIN; count++ ) {
-	/* find the certificate of the issuer */
-	issuerCert = CERT_FindCertByName(handle, &subjectCert->derIssuer);
-    
-	if ( ! issuerCert ) {
-	    goto loser;
-	}
-
-	rv = CERT_CertTimesValid(issuerCert);
-	if ( rv == SECFailure ) {
-	    /* this is the invalid issuer */
-	    CERT_DestroyCertificate(subjectCert);
-	    return(issuerCert);
-	}
-
-	/* make sure that the issuer is not self signed.  If it is, then
-	 * stop here to prevent looping.
-	 */
-	rvCompare = SECITEM_CompareItem(&issuerCert->derSubject,
-				 &issuerCert->derIssuer);
-	if (rvCompare == SECEqual) {
-	    PORT_Assert(0);		/* No expired issuer! */
-	    goto loser;
-	}
-	CERT_DestroyCertificate(subjectCert);
-	subjectCert = issuerCert;
-    }
-
-loser:
-    if ( issuerCert ) {
-	CERT_DestroyCertificate(issuerCert);
-    }
-    
-    if ( subjectCert ) {
-	CERT_DestroyCertificate(subjectCert);
-    }
-    
-    return(NULL);
-}
-
 /* Software FORTEZZA installation hack. The software fortezza installer does
  * not have access to the krl and cert.db file. Accept FORTEZZA Certs without
  * KRL's in this case. 
@@ -978,11 +920,11 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 
 	CERT_DestroyCertificate(subjectCert);
 	subjectCert = issuerCert;
+	issuerCert = NULL;
     }
 
-    subjectCert = NULL;
     PORT_SetError(SEC_ERROR_UNKNOWN_ISSUER);
-    LOG_ERROR(log,issuerCert,count,0);
+    LOG_ERROR(log,subjectCert,count,0);
 loser:
     rv = SECFailure;
 done:
