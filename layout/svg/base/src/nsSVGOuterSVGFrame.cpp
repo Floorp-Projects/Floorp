@@ -1048,8 +1048,8 @@ void nsSVGOuterSVGFrame::InitiateReflow()
   mNeedsReflow = PR_FALSE;
   
   // Generate a reflow command to reflow ourselves
-  nsCOMPtr<nsHTMLReflowCommand> reflowCmd;
-  NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this, eReflowType_ReflowDirty);
+  nsHTMLReflowCommand *reflowCmd;
+  NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
   if (!reflowCmd) {
     NS_ERROR("error creating reflow command object");
     return;
