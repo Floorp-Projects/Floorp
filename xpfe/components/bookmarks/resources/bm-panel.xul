@@ -58,31 +58,12 @@
             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
                           align="right" />
           </treecell>
-          <treecell>
-            <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL"
-                          align="right" style="list-style-image: none;" />
-          </treecell>
         </treerow>
       </treeitem>
     </rule>
   </template>
 
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-
-  <treehead>
-    <treerow>
-      <treecell onclick="return doSort('NameColumn');">
-        <observes element="NameColumn" attribute="sortActive"/>
-        <observes element="NameColumn" attribute="sortDirection"/>
-        Name</treecell>
-      <treecell onclick="return doSort('URLColumn');">
-        <observes element="URLColumn" attribute="sortActive"/>
-        <observes element="URLColumn" attribute="sortDirection"/>
-        URL</treecell>
-    </treerow>
-  </treehead>
-
   <treechildren id="NC:BookmarksRoot" open="true" />
 </tree>
 
