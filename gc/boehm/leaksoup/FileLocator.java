@@ -41,9 +41,12 @@ public class FileLocator {
 	static boolean USE_BLAME = false;
 	static boolean ASSIGN_BLAME = false;
 
-	static final String MOZILLA_BASE = "mozilla/";
+	static final String MOZILLA_BASE = "/mozilla/";
 	static final String LXR_BASE = "http://lxr.mozilla.org/seamonkey/source/";
 	static final String BONSAI_BASE = "http://bonsai.mozilla.org/cvsblame.cgi?file=";
+
+	static final String NS_BASE = "/ns/";
+	static final String NS_BONSAI_URL = "http://warp.mcom.com/webtools/bonsai/cvsblame.cgi?root=/m/src&file=";
 
 	static final Hashtable fileTables = new Hashtable();
 	static final RevisionTable revisionTable = new RevisionTable();
@@ -80,7 +83,7 @@ public class FileLocator {
 		String locationURL = null, blameInfo = "";
 		if (mozillaIndex > -1) {
 			// if using blame, hilite the line number of the call, and include the revision.
-			String mozillaPath = fullPath.substring(mozillaIndex);
+			String mozillaPath = fullPath.substring(mozillaIndex + 1);
 			String revision = revisionTable.getRevision(fullPath);
 			String bonsaiPath = mozillaPath + (revision.length() > 0 ? "&rev=" + revision : "");
 			if (USE_BLAME) {
@@ -93,9 +96,23 @@ public class FileLocator {
 			if (ASSIGN_BLAME)
 				blameInfo = " (" + blameTable.getBlame(bonsaiPath, lineNumber) + ")";
 		} else {
-			locationURL = "file://" + fullPath;
+			int nsIndex = fullPath.indexOf(NS_BASE);
+			if (nsIndex > -1 && USE_BLAME) {
+				// if using blame, hilite the line number of the call, and include the revision.
+				String nsPath = fullPath.substring(nsIndex + 1);
+				String revision = revisionTable.getRevision(fullPath);
+				String bonsaiPath = nsPath + (revision.length() > 0 ? "&rev=" + revision : "");
+				locationURL = NS_BONSAI_URL + bonsaiPath + "&mark=" + lineNumber;
+				if (lineAnchor > 10)
+					lineAnchor -= 10;
+				if (ASSIGN_BLAME)
+					blameInfo = " (" + blameTable.getBlame(bonsaiPath, lineNumber) + ")";
+			} else {
+				locationURL = "file://" + fullPath;
+			}
 		}
 		
 		return "<A HREF=\"" + locationURL + "#" + lineAnchor + "\"TARGET=\"SOURCE\">" + line.substring(0, leftBracket) + "</A>" + blameInfo;
 	}
 }
+
