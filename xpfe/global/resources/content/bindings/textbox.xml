@@ -124,7 +124,6 @@
             this.inputField.value = val;
             if (this._timer)
               clearTimeout(this._timer);
-            this._fireCommand(this);
             return val;
           ]]>
         </setter>
