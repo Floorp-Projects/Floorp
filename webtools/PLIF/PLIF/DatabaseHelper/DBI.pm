@@ -46,7 +46,7 @@ sub tableExists {
 sub columnExists {
     my $self = shift;
     my($app, $database, $table, $columnName) = @_;
-    $self->assert($table !~ /`/o, 1, 'Internal error: An invalid table name was passed to columnExists (it contained "`" character)');
+    $self->assert($table !~ /`/o, 1, 'Internal error: An invalid table name was passed to columnExists (it contained a \'`\' character)'); #'); # reset font-lock
     my $columns = $database->execute("SHOW COLUMNS FROM `$table`");
     while (my @columnDefinition = $columns->row) {
         if ($columnDefinition[0] eq $columnName) {
@@ -54,6 +54,50 @@ sub columnExists {
         }
     }
     return undef;
+}
+
+# some routines used during setup to actually add the database
+sub setupDatabaseName {
+    # XXX MySQL specific -- should we create a MySQL specific DatabaseHelper?
+    return 'mysql';
+}
+
+sub setupVerifyVersion {
+    my $self = shift;
+    my($app, $database) = @_;
+    # check version and call $self->error(1, ''); if it is too low.
+    # XXX currently we do not check version numbers (do nothing)
+    #
+    # my $version = $database->execute("SELECT VERSION()")->row;
+    # $version will have the form major.minor.revision-log, where
+    # major, minor and revision are decimal numbers, and '-log' is
+    # present if logging in enabled.
+    #
+    # For MySQL, we should probably require 3.23.41... because that's
+    # what I'm using to develop with.
+}
+
+sub setupCreateUser {
+    my $self = shift;
+    my($app, $database, $username, $password, $hostname, $name) = @_;
+    # all done below in the setupSetRights() method
+}
+
+sub setupCreateDatabase {
+    my $self = shift;
+    my($app, $database, $name) = @_;
+    $self->assert($name !~ /`/o, 1, 'Internal error: An invalid database name was passed to setupCreateDatabase (it contained a \'`\' character)'); #'); # reset font-lock
+    $database->execute("CREATE DATABASE IF NOT EXISTS `$name`");
+}
+
+sub setupSetRights {
+    my $self = shift;
+    my($app, $database, $username, $password, $hostname, $name) = @_;
+    # XXX MySQL specific -- should we create a MySQL specific DatabaseHelper?
+    $self->assert($name !~ /`/o, 1, 'Internal error: An invalid database name was passed to setupSetRights (it contained a \'`\' character)'); #'); # reset font-lock
+    $self->assert($username !~ /`/o, 1, 'Internal error: An invalid username was passed to setupSetRights (it contained a \'`\' character)'); #'); # reset font-lock
+    $self->assert($hostname !~ /`/o, 1, 'Internal error: An invalid hostname was passed to setupSetRights (it contained a \'`\' character)'); #'); # reset font-lock
+    $database->execute("GRANT ALTER, INDEX, SELECT, CREATE, INSERT, DELETE, UPDATE, DROP, REFERENCES ON `$name`.* TO `$username`\@`$hostname` IDENTIFIED BY ?", $password);
 }
 
 
