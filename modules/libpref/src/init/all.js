@@ -671,7 +671,7 @@ pref("bidi.texttype", 1);
 //  Controls Text Mode
 // ------------------
 // 1 = logicalcontrolstextmodeBidiCmd
-// 2 = visiualcontrolstextmodeBidi
+// 2 = visualcontrolstextmodeBidi <-- NO LONGER SUPPORTED
 // 3 = containercontrolstextmodeBidi *
 pref("bidi.controlstextmode", 1);
 // ------------------

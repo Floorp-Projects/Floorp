@@ -248,7 +248,8 @@ struct nsHTMLReflowState {
                                      // percent height frames inside cells which may not have computed heights
     PRUint16 mIsTopOfPage:1;         // is the current context at the top of a page?
     PRUint16 mBlinks:1;              // Keep track of text-decoration: blink
-    PRUint16 mUnused:13;             // for future use             
+    PRUint16 mVisualBidiFormControl:1; // Keep track of descendants of form controls on Visual Bidi pages
+    PRUint16 mUnused:12;             // for future use             
   } mFlags;
 
 #ifdef IBMBIDI
@@ -441,6 +442,18 @@ protected:
   //   the width/height and it is removed due to box sizing) then it is driven to 0
   void AdjustComputedHeight(void);
   void AdjustComputedWidth(void);
+
+#ifdef IBMBIDI
+  /**
+   * Test whether the frame is a form control in a visual Bidi page.
+   * This is necessary for backwards-compatibility, because most visual
+   * pages use logical order for form controls so that they will
+   * display correctly on native widgets in OSs with Bidi support
+   * @param aPresContext the pres context
+   * @return whether the frame is a BIDI form control
+   */
+  PRBool IsBidiFormControl(nsIPresContext* aPresContext);
+#endif
 };
 
 #endif /* nsHTMLReflowState_h___ */

@@ -51,6 +51,9 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIPercentHeightObserver.h"
+#ifdef IBMBIDI
+#include "nsBidiUtils.h"
+#endif
 
 #define IS_TABLE_CELL(frameType)\
 ((nsLayoutAtoms::tableCellFrame == frameType) || (nsLayoutAtoms::bcTableCellFrame == frameType))
@@ -133,6 +136,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
 #ifdef IBMBIDI
+  mFlags.mVisualBidiFormControl = IsBidiFormControl(aPresContext);
   mRightEdge = NS_UNCONSTRAINEDSIZE;
 #endif
 }
@@ -163,6 +167,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
 #ifdef IBMBIDI
+  mFlags.mVisualBidiFormControl = IsBidiFormControl(aPresContext);
   mRightEdge = NS_UNCONSTRAINEDSIZE;
 #endif // IBMBIDI
 }
@@ -209,6 +214,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   }
 
 #ifdef IBMBIDI
+  mFlags.mVisualBidiFormControl = (aParentReflowState.mFlags.mVisualBidiFormControl) ?
+                                  PR_TRUE : IsBidiFormControl(aPresContext);
   mRightEdge = aParentReflowState.mRightEdge;
 #endif // IBMBIDI
 }
@@ -250,6 +257,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   Init(aPresContext);
 
 #ifdef IBMBIDI
+  mFlags.mVisualBidiFormControl = (aParentReflowState.mFlags.mVisualBidiFormControl) ?
+                                   PR_TRUE : IsBidiFormControl(aPresContext);
   mRightEdge = aParentReflowState.mRightEdge;
 #endif // IBMBIDI
 }
@@ -293,6 +302,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
 
 #ifdef IBMBIDI
+  mFlags.mVisualBidiFormControl = (aParentReflowState.mFlags.mVisualBidiFormControl) ?
+                                   PR_TRUE : IsBidiFormControl(aPresContext);
   mRightEdge = aParentReflowState.mRightEdge;
 #endif // IBMBIDI
 }
@@ -2745,3 +2756,57 @@ void nsHTMLReflowState::AdjustComputedWidth(void)
     if(mComputedWidth<0) mComputedWidth = 0;
   }
 }
+#ifdef IBMBIDI
+PRBool
+nsHTMLReflowState::IsBidiFormControl(nsIPresContext* aPresContext)
+{
+  // This check is only necessary on visual bidi pages, because most
+  // visual pages use logical order for form controls so that they will
+  // display correctly on native widgets in OSs with Bidi support.
+  // So bail out if the page is not Bidi, or not visual, or if the pref is
+  // set to use visual order on forms in visual pages
+  PRBool bidiEnabled;
+  aPresContext->GetBidiEnabled(&bidiEnabled);
+  if (!bidiEnabled) {
+    return PR_FALSE;
+  }
+
+  PRBool isVisual;
+  aPresContext->IsVisualMode(isVisual);
+  if (!isVisual) {
+    return PR_FALSE;
+  }
+
+  PRUint32 options;
+  aPresContext->GetBidi(&options);
+  if (IBMBIDI_CONTROLSTEXTMODE_LOGICAL != GET_BIDI_OPTION_CONTROLSTEXTMODE(options)) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIContent> content, parent;
+  nsresult rv = frame->GetContent(getter_AddRefs(content) );
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
+  if (!content) {
+    return PR_FALSE;
+  }
+
+  // If this is a root reflow, we have to walk up the content tree to
+  // find out if the reflow root is a descendant of a form control.
+  // Otherwise, just test this content node
+  if (mReflowDepth == 0) {
+    while (content) {
+      if  (content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+        return PR_TRUE;
+      }
+      content->GetParent(*getter_AddRefs(parent));
+      content = parent;
+    }
+  } else {
+    return (content->IsContentOfType(nsIContent::eHTML_FORM_CONTROL));
+  }
+  
+  return PR_FALSE;
+}
+#endif
