@@ -33,7 +33,7 @@ AC_PREREQ(2.12)
 AC_INIT(config/config.mk)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
-dnl AC_PREFIX_DEFAULT(\${DEPTH}/dist)
+AC_PREFIX_DEFAULT(`pwd`/dist)
 dnl ========================================================
 dnl Pick an option...any option.
 dnl Caveat: random options will override cmdline options.
@@ -126,12 +126,6 @@ AC_ARG_ENABLE(cross-compile,
 	CROSS_COMPILE=
      fi], CROSS_COMPILE=)
 
-dnl Set this define to make fixes w/o breaking anything else.
-AC_DEFINE(USE_AUTOCONF)
-
-dnl Always set this for mozilla.
-AC_DEFINE(MOZILLA_CLIENT)
-
 TARGET_CPU="${target_cpu}"
 TARGET_OS="${target_os}"
 
@@ -143,6 +137,7 @@ dnl = CFLAGS="-foo" ./configure
 dnl =
 dnl ========================================================
 CFLAGS="${CFLAGS=}"
+CPPFLAGS="${CPPFLAGS=}"
 CXXFLAGS="${CXXFLAGS=}"
 LDFLAGS="${LDFLAGS=}"
 HOST_CFLAGS="${HOST_CFLAGS=}"
@@ -157,6 +152,7 @@ dnl ========================================================
 _SUBDIR_CC="$CC"
 _SUBDIR_CXX="$CXX"
 _SUBDIR_CFLAGS="$CFLAGS"
+_SUBDIR_CPPFLAGS="$CPPFLAGS"
 _SUBDIR_CXXFLAGS="$CFLAGS"
 _SUBDIR_LDFLAGS="$LDFLAGS"
 _SUBDIR_HOST_CC="$HOST_CC"
@@ -451,7 +447,7 @@ if test "$GNU_CC"; then
     _PEDANTIC=1
     _IGNORE_LONG_LONG_WARNINGS=1
 
-    _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
+    _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
@@ -459,7 +455,7 @@ else
     DSO_LDOPTS='-shared -h $@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-KPIC'
-    _DEFINES_CFLAGS='$(ACDEFINES)'
+    _DEFINES_CFLAGS='$(ACDEFINES) -DMOZILLA_CLIENT'
 fi
 
 if test "$GNU_CXX"; then
@@ -3244,10 +3240,13 @@ EOF
   fi
 fi
 
+AC_SUBST(MOZ_DEFINES)
+
 if test "$_INCREMENTAL_MAKEFILES"; then
   MAKEFILES="
     Makefile
     xpinstall/packager/Makefile
+    build/unix/mozilla-config
     build/unix/nspr_my_config.mk
     build/unix/nspr_my_overrides.mk
     build/package/rpm/mozilla.spec
@@ -3318,6 +3317,7 @@ dnl ========================================================
 CC="$_SUBDIR_CC" 
 CXX="$_SUBDIR_CXX" 
 CFLAGS="$_SUBDIR_CFLAGS" 
+CPPFLAGS="$_SUBDIR_CPPFLAGS"
 CXXFLAGS="$_SUBDIR_CXXFLAGS"
 LDFLAGS="$_SUBDIR_LDFLAGS"
 HOST_CC="$_SUBDIR_HOST_CC" 
