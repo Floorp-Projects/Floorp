@@ -44,7 +44,8 @@ Rights Reserved.
 
 		<text value="&name.label;" />
 		<textfield tabindex="0" id="name" />
-	
+	    <separator/>
+		<text value="&newDialogDescription.label;"/>
 		<box align="horizontal">
 			<menu id="msgNewFolderPicker"/>
         		<spring flex="100%"/>

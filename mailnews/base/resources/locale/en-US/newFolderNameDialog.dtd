@@ -21,3 +21,4 @@ Rights Reserved.
 <!-- Labels -->
 <!ENTITY name.label			"Name:">
 <!ENTITY rename.label		"Enter the new name for your folder:">
+<!ENTITY newDialogDescription.label		"Create as a subfolder of:">
