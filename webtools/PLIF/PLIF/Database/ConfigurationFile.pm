@@ -33,12 +33,6 @@ use PLIF::Database;
 @ISA = qw(PLIF::Database);
 1;
 
-# WARNING XXX
-# Reading without create a file first will FAIL!
-#
-# You must run the equivalent of an installer program to ensure the
-# configuration file exists
-
 sub init {
     my $self = shift;
     my($app) = @_;
