@@ -71,6 +71,7 @@
 #include "nsGUIEvent.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIPresShell.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -2009,6 +2010,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   scrollable->SetLineHeight(fontHeight);
 
   if (mVScrollbarBox) {
+    SetScrollbarEnabled(mVScrollbarBox, maxY);
     SetAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY);
     SetAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(scrollAreaRect.height - fontHeight));
     SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight);
@@ -2023,6 +2025,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   }
     
   if (mHScrollbarBox) {
+    SetScrollbarEnabled(mHScrollbarBox, maxX);
     SetAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX);
     SetAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(scrollAreaRect.width)*0.8));
     SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel);
@@ -2105,6 +2108,20 @@ nsGfxScrollFrameInner::ScrollbarChanged(nsPresContext* aPresContext, nscoord aX,
   nsIScrollableView* scrollable = GetScrollableView();
   scrollable->ScrollTo(aX, aY, aFlags);
  // printf("scrolling to: %d, %d\n", aX, aY);
+}
+
+void
+nsGfxScrollFrameInner::SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos, PRBool aReflow)
+{
+  nsIFrame* frame;
+  aBox->GetFrame(&frame);
+  mOuter->GetPresContext()->PresShell()->PostAttributeChange(
+    frame->GetContent(),
+    kNameSpaceID_None,
+    nsHTMLAtoms::disabled,
+    NS_LITERAL_STRING("true"),
+    aReflow,
+    aMaxPos ? eChangeType_Remove : eChangeType_Set);
 }
 
 /**

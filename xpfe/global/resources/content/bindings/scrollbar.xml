@@ -23,14 +23,14 @@
   
   <binding id="scrollbar" extends="chrome://global/content/bindings/scrollbar.xml#scrollbar-base">
     <content>
-      <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="sborient=orient"/>
-      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" hidden="true" xbl:inherits="sborient=orient"/>
-      <xul:slider flex="1" xbl:inherits="curpos,maxpos,pageincrement,increment,orient,sborient=orient">
-        <xul:thumb sbattr="scrollbar-thumb" xbl:inherits="orient,sborient=orient" 
+      <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="disabled,sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" hidden="true" xbl:inherits="disabled,sborient=orient"/>
+      <xul:slider flex="1" xbl:inherits="disabled,curpos,maxpos,pageincrement,increment,orient,sborient=orient">
+        <xul:thumb sbattr="scrollbar-thumb" xbl:inherits="orient,sborient=orient,collapsed=disabled" 
                    align="center" pack="center" flex="1"/>
       </xul:slider>
-      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" hidden="true" xbl:inherits="sborient=orient"/>
-      <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" xbl:inherits="sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" hidden="true" xbl:inherits="disabled,sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" xbl:inherits="disabled,sborient=orient"/>
     </content>
     
     <implementation>
