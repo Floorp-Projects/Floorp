@@ -589,6 +589,13 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_RECONVERSION_QUERY) || \
         ((evnt)->message == NS_COMPOSITION_QUERY))
 
+#define NS_IS_FOCUS_EVENT(evnt) \
+       (((evnt)->message == NS_GOTFOCUS) ||  \
+        ((evnt)->message == NS_LOSTFOCUS) ||  \
+        ((evnt)->message == NS_ACTIVATE) || \
+        ((evnt)->message == NS_DEACTIVATE) || \
+        ((evnt)->message == NS_PLUGIN_ACTIVATE))
+
 /*
  * Virtual key bindings for keyboard events.
  * These come from nsIDOMKeyEvent.h, which is generated from MouseKeyEvent.idl.

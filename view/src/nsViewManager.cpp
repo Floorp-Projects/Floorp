@@ -2021,7 +2021,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
 
   // accessibility events and key events are dispatched directly to the focused view
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT || aEvent->message == NS_CONTEXTMENU_KEY
-      || NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent)) {
+      || NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) || NS_IS_FOCUS_EVENT(aEvent)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     if (obs) {
        PRBool handled;
