@@ -2660,7 +2660,7 @@ nsGenericElement::isSelfOrAncestor(nsIContent *aNode,
     return PR_TRUE;
 
   /*
-   * If aChild doesn't have children it can't be our ancestor
+   * If aPossibleAncestor doesn't have children it can't be our ancestor
    */
   if (aPossibleAncestor->GetChildCount() == 0) {
     return PR_FALSE;
