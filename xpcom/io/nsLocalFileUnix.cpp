@@ -86,24 +86,31 @@ nsLocalFile::Create(nsISupports *outer, const nsIID &aIID, void **aInstancePtr)
     return inst->QueryInterface(aIID, aInstancePtr);
 }
 
-NS_IMETHODIMP
-nsLocalFile::InitWithKey(const char *fileKey)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
-nsLocalFile::InitWithFile(nsIFile *file)
+nsLocalFile::Clone(nsIFile **file)
 {
     NS_ENSURE_ARG(file);
     
-    invalidateCache();
-    if (NS_FAILED(file->GetPath(nsIFile::NATIVE_PATH, getter_Copies(mPath))))
-        return NS_ERROR_FAILURE;
-    
-    if ((const char *)mPath == 0)
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+    *file = nsnull;
 
+    nsCOMPtr<nsILocalFile> localFile;
+    nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                                     nsnull, 
+                                                     nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                                     getter_AddRefs(localFile));
+    
+    if (NS_FAILED(rv)) 
+        return rv;
+    
+    rv = localfile->InitWithPath(mPath);
+    
+    if (NS_FAILED(rv)) 
+        return rv;
+
+    *file = localFile;
+    NS_ADDREF(*file);
+    
     return NS_OK;
 }
 
@@ -126,6 +133,22 @@ nsLocalFile::createAllParentDirectories(PRUint32 permissions)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+NS_IMETHODIMP  
+nsLocalFile::Open(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
+{
+    CHECK_mPath();
+   
+    *_retval = PR_Open(mPath, flags, mode);
+    
+    if (*_retval)
+        return NS_OK;
+
+    return NS_ERROR_FAILURE;
+}
+
+
 
 NS_IMETHODIMP
 nsLocalFile::Create(PRUint32 type, PRUint32 permissions)

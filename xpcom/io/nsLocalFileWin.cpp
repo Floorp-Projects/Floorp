@@ -168,24 +168,14 @@ class nsDirEnumerator : public nsISimpleEnumerator
                     return NS_OK;
                 }
 
-                nsCOMPtr<nsILocalFile> file;
+                nsCOMPtr<nsIFile> file;
+                mParent->Clone(getter_AddRefs(file));
 
-                rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
-                                                        nsnull, 
-                                                        nsCOMTypeInfo<nsILocalFile>::GetIID(), 
-                                                        getter_AddRefs(file));
-                if (NS_FAILED(rv)) 
-                    return rv;
-        
-                rv = file->InitWithFile(mParent);
-                if (NS_FAILED(rv)) 
-                    return rv;
-            
                 rv = file->AppendPath(entry->name);
                 if (NS_FAILED(rv)) 
                     return rv;
             
-                mNext = file;
+                mNext = do_QueryInterface(file);
             }
             *result = mNext != nsnull;
             return NS_OK;
@@ -514,27 +504,32 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::InitWithKey(const char *fileKey)
+nsLocalFile::Clone(nsIFile **file)
 {
-    MakeDirty();
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP  
-nsLocalFile::InitWithFile(nsIFile *file)
-{
-    MakeDirty();
     NS_ENSURE_ARG(file);
+    *file = nsnull;
 
+    nsCOMPtr<nsILocalFile> localFile;
+    nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                                     nsnull, 
+                                                     nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                                     getter_AddRefs(localFile));
+    if (NS_FAILED(rv)) 
+        return rv;
+    
     char* aFilePath;
-    file->GetPath(&aFilePath);
+    GetPath(&aFilePath);
 
-    if (aFilePath == nsnull)
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-
-    mWorkingPath.SetString(aFilePath);
-
+    rv = localFile->InitWithPath(aFilePath);
+    
     nsAllocator::Free(aFilePath);
+    
+    if (NS_FAILED(rv)) 
+        return rv;
+    
+    *file = localFile;
+    NS_ADDREF(*file);
+    
     return NS_OK;
 }
 
@@ -569,6 +564,22 @@ nsLocalFile::InitWithPath(const char *filePath)
     nsAllocator::Free( nativeFilePath );
     return NS_OK;
 }
+
+NS_IMETHODIMP  
+nsLocalFile::Open(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
+{
+    nsresult rv = ResolveAndStat(PR_TRUE);
+    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
+        return rv; 
+   
+    *_retval = PR_Open(mResolvedPath, flags, mode);
+    
+    if (*_retval)
+        return NS_OK;
+
+    return NS_ERROR_FAILURE;
+}
+
 
 
 NS_IMETHODIMP  
@@ -828,16 +839,9 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
     else
     {
         // create a new target destination in the new parentDir;
-        nsCOMPtr<nsILocalFile> target;
-
-        rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
-                                                nsnull, 
-                                                nsCOMTypeInfo<nsILocalFile>::GetIID(), 
-                                                getter_AddRefs(target));
-        if (NS_FAILED(rv)) 
-            return rv;
-
-        rv = target->InitWithFile(newParentDir);
+        nsCOMPtr<nsIFile> target;
+        rv = newParentDir->Clone(getter_AddRefs(target));
+        
         if (NS_FAILED(rv)) 
             return rv;
         
@@ -919,20 +923,30 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool followS
     // If we moved, we want to adjust this.
     if (move)
     {
+        MakeDirty();
+        
+        char* newParentPath;
+        newParentDir->GetPath(&newParentPath);
+        
+        if (newParentPath == nsnull)
+            return NS_ERROR_FAILURE;
+
+        InitWithPath(newParentPath);
+
         if (newName == nsnull)
         {
             char *aFileName;
             GetLeafName(&aFileName);
-            InitWithFile(newParentDir);
+            
             AppendPath(aFileName); 
             nsAllocator::Free(aFileName);
         }
         else
         {
-            InitWithFile(newParentDir);
             AppendPath(newName);
         }
-        MakeDirty();
+        
+        nsAllocator::Free(newParentPath);
     }
         
     return NS_OK;

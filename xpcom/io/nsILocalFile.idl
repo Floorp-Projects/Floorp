@@ -25,42 +25,15 @@
 
 #include "nsIFile.idl"
 
+%{C++
+#include "prio.h"
+%}
+
+[ptr] native PRFileDescStar(PRFileDesc);
+
 [scriptable, uuid(aa610f20-a889-11d3-8c81-000064657374)]
 interface nsILocalFile : nsIFile
 {
-
-    /**
-      * initWithKey
-      *
-      * This function will initialize the nsIFile object to the
-      * location of a well known place.  The location is specified
-      * by a string which will be looked up in the registry.  If
-      * the string is not found, NS_ERROR_FILE_UNRECONGNIZED_PATH
-      * will be returned         
-      * 
-      *   @param fileKey
-      *          A string which represents a special system directory
-      *          or a directory which has been registered.
-      *
-      */
-       
-       void initWithKey( [const] in string fileKey);
-
-
-    /**
-      * initWithFile
-      *
-      * This function will initialize the nsIFile object to the
-      * exact location of the passed nsIFile.             // what errors can this return?
-      * 
-      *   @param file
-      *          A nsIFile which this object will be initialize
-      *          with.
-      *
-      */
-       
-       void initWithFile(in nsIFile file);
-
     /**
       * initWithPath
       *
@@ -83,7 +56,8 @@ interface nsILocalFile : nsIFile
       */
       
        void initWithPath([const] in string filePath );
-
+       
+       [noscript] PRFileDescStar open(in long flags, in long mode);
 
        readonly attribute PRInt64 diskSpaceAvailable;  // maybe we should put this somewhere else.
 
