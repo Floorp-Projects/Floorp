@@ -30,6 +30,8 @@
 #include <stdio.h>
 #endif
 
+#include "plarena.h"
+
 /**
  * Function-like object used when enumerating the nodes of the DST
  */  
@@ -53,6 +55,16 @@ public:
  */
 class nsDST {
 public:
+  class NodeArena;
+  friend class NodeArena;
+
+private:
+  class LeafNode;
+  class TwoNode;
+  friend class LeafNode;
+  friend class TwoNode;
+
+public:
   typedef unsigned long PtrBits;
 
   // Memory arena pool used for fast allocation and deallocation of DST nodes.
@@ -60,7 +72,34 @@ public:
   // Node arenas can be shared across DST objects (they don't lock when allocating
   // and freeing memory, so don't share them across threads). The DST object(s)
   // own the node arena, and you just hold a weak reference.
-  class NodeArena;
+  class NodeArena {
+  public:
+    NodeArena(PRUint32 aArenaSize);
+    ~NodeArena();
+
+    // Memory management functions
+    void*     AllocLeafNode();
+    void*     AllocTwoNode();
+    void      FreeNode(LeafNode*);
+    void      FreeNode(TwoNode*);
+    void      FreeArenaPool();
+
+    // Lifetime management functions
+    void      AddRef() {mRefCnt++;}
+    void      Release();
+    PRBool    IsShared() const {return mRefCnt > 1;}
+
+  #ifdef NS_DEBUG
+    int       NumArenas() const;
+    PRUint32  ArenaSize() const {return mPool.arenasize;}
+  #endif
+
+  private:
+    PLArenaPool mPool;
+    LeafNode*   mLeafNodeFreeList;
+    TwoNode*    mTwoNodeFreeList;
+    PRUint32    mRefCnt;
+  };
 
   // Create a DST. You specify the node arena to use; this allows the arena to
   // be shared.
@@ -85,11 +124,67 @@ public:
   static NodeArena*  NewMemoryArena(PRUint32 aArenaSize = 512);
 
 private:
-  class LeafNode;
-  class TwoNode;
-  friend class LeafNode;
-  friend class TwoNode;
-  friend class NodeArena;  // needs access to structs LeafNode and TwoNode
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Classes that represents nodes in the DST
+
+  // To reduce the amount of memory we use there are two types of nodes:
+  // - leaf nodes
+  // - two nodes (left and right child)
+  //
+  // We distinguish the two types of nodes by looking at the low-order
+  // bit of the key. If it is 0, then the node is a leaf node. If it is
+  // 1, then the node is a two node. Use function Key() when retrieving
+  // the key, and function IsLeaf() to tell what type of node it is
+  //
+  // It's an invariant of the tree that a two node can not have both child links
+  // NULL. In that case it must be converted back to a leaf node
+  //
+  // NOTE: This code was originally put into nsDST.cpp to reduce size
+  //       and to hide the implementation - See Troy's 1.10 revision.
+  //       However the AIX xlC 3.6.4.0 compiler does not allow this.
+
+  class LeafNode {
+  public:
+    void* mKey;
+    void* mValue;
+
+    // Constructors
+    LeafNode(void* aKey, void* aValue);
+    LeafNode(const LeafNode& aLeafNode);
+
+    // Accessor for getting the key. Clears the bit used to tell if the
+    // node is a leaf. This function can be safely used on any node without
+    // knowing whether it's a leaf or a two node
+    void*   Key() const {return (void*)(PtrBits(mKey) & ~0x1);}
+
+    // Helper function that returns TRUE if the node is a leaf
+    int     IsLeaf() const {return 0 == (PtrBits(mKey) & 0x1);}
+
+    // Overloaded placement operator for allocating from an arena
+    void* operator new(size_t aSize, NodeArena* aArena) {return aArena->AllocLeafNode();}
+  };
+
+  // Definition of TwoNode class
+  class TwoNode : public LeafNode {
+  public:
+    LeafNode* mLeft;   // left subtree
+    LeafNode* mRight;  // right subtree
+
+    TwoNode(const LeafNode& aLeafNode);
+
+    void    SetKeyAndValue(void* aKey, void* aValue) {
+      mKey = (void*)(PtrBits(aKey) | 0x01);
+      mValue = aValue;
+    }
+
+    // Overloaded placement operator for allocating from an arena
+    void* operator new(size_t aSize, NodeArena* aArena) {return aArena->AllocTwoNode();}
+
+  private:
+    TwoNode(const TwoNode&);        // no implementation
+    void operator=(const TwoNode&); // no implementation
+  };
 
   LeafNode*   mRoot;  // root node of the tree
   NodeArena*  mArena;
