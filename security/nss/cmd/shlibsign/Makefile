@@ -54,6 +54,7 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
@@ -71,3 +72,41 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 
 include ../platrules.mk
+
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+    IS_WINDOWS="YES"
+else
+    IS_WINDOWS="NO"
+endif
+
+
+
+%.chk: %.$(DLL_SUFFIX) 
+	@sh ./sign.sh $(DIST) $(OBJDIR) $(IS_WINDOWS) $<
+
+#
+# we really should have this driven from a list file made during the normal
+# NSS build prodecure.
+#
+ifndef USE_64
+ifeq ($(OS_TARGET), HP-UX)
+   ifneq ($(OS_TEST), ia64)
+     LOADABLE_FREEBL= 1
+   endif
+endif
+ifeq ($(OS_TARGET), SunOS)
+   ifeq ($(CPU_ARCH), sparc)
+     LOADABLE_FREEBL = 1 
+   endif
+endif
+endif
+
+ifdef LOADABLE_FREEBL
+    CHECKFILES += freebl_pure32_3.chk freebl_hybrid_3.chk
+endif
+
+CHECKLOC=$(addprefix $(DIST)/lib/$(LIB_PREFIX), $(CHECKFILES))
+
+ALL_TRASH += $(CHECKLOC)
+libs install :: $(CHECKLOC)
+
