@@ -55,10 +55,15 @@ Rights Reserved.
 <hbox id="msgHeaderView" persist="state">
 
 <grid id="collapsedHeaderView" class="header-part1" flex="1" collapsed="true">
+  <rows>
+    <row flex="1"/>
+  </rows>
   <columns>
-    <column class="collapsedToggleHdrBox" align="top" pack="center">
-      <image id="toggleHeaderView" class="collapsedHeaderViewButton"
+    <column class="collapsedToggleHdrBox" pack="center">
+      <vbox pack="center" flex="1">
+        <image id="toggleHeaderView" class="collapsedHeaderViewButton"
           onclick="ToggleHeaderView();"/>
+      </vbox>
     </column>
       
     <column id="collapsedsubjectBox" collapsed="true" crop="right" flex="1">
