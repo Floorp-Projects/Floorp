@@ -156,17 +156,17 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 case Id_decodeURI:
                 case Id_decodeURIComponent: {
                     String str = ScriptRuntime.toString(args, 0);
-                    return decode(cx, str, methodId == Id_decodeURI);
+                    return decode(str, methodId == Id_decodeURI);
                 }
 
                 case Id_encodeURI:
                 case Id_encodeURIComponent: {
                     String str = ScriptRuntime.toString(args, 0);
-                    return encode(cx, str, methodId == Id_encodeURI);
+                    return encode(str, methodId == Id_encodeURI);
                 }
 
                 case Id_escape:
-                    return js_escape(cx, args);
+                    return js_escape(args);
 
                 case Id_eval:
                     return js_eval(cx, scope, args);
@@ -190,13 +190,13 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 }
 
                 case Id_parseFloat:
-                    return js_parseFloat(cx, args);
+                    return js_parseFloat(args);
 
                 case Id_parseInt:
-                    return js_parseInt(cx, args);
+                    return js_parseInt(args);
 
                 case Id_unescape:
-                    return js_unescape(cx, args);
+                    return js_unescape(args);
 
                 case Id_uneval: {
                     Object value = (args.length != 0)
@@ -216,7 +216,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
     /**
      * The global method parseInt, as per ECMA-262 15.1.2.2.
      */
-    private Object js_parseInt(Context cx, Object[] args) {
+    private Object js_parseInt(Object[] args) {
         String s = ScriptRuntime.toString(args, 0);
         int radix = ScriptRuntime.toInt32(args, 1);
 
@@ -274,35 +274,48 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
      * @param args the arguments to parseFloat, ignoring args[>=1]
      * @param funObj unused
      */
-    private Object js_parseFloat(Context cx, Object[] args) {
+    private Object js_parseFloat(Object[] args)
+    {
         if (args.length < 1)
             return ScriptRuntime.NaNobj;
+
         String s = ScriptRuntime.toString(args[0]);
         int len = s.length();
-        if (len == 0)
-            return ScriptRuntime.NaNobj;
-
-        int i;
+        int start = 0;
+        // Scan forward to skip whitespace
         char c;
-        // Scan forward to the first digit or .
-        for (i=0; TokenStream.isJSSpace(c = s.charAt(i)) && i+1 < len; i++)
-            /* empty */
-            ;
+        for (;;) {
+            if (start == len) {
+                return ScriptRuntime.NaNobj;
+            }
+            c = s.charAt(start);
+            if (!TokenStream.isJSSpace(c)) {
+                break;
+            }
+            ++start;
+        }
 
-        int start = i;
-
-        if (c == '+' || c == '-')
-            c = s.charAt(++i);
+        int i = start;
+        if (c == '+' || c == '-') {
+            ++i;
+            if (i == len) {
+                return ScriptRuntime.NaNobj;
+            }
+            c = s.charAt(i);
+        }
 
         if (c == 'I') {
             // check for "Infinity"
-            double d;
-            if (i+8 <= len && s.substring(i, i+8).equals("Infinity"))
-                d = s.charAt(start) == '-' ? Double.NEGATIVE_INFINITY
-                                           : Double.POSITIVE_INFINITY;
-            else
-                return ScriptRuntime.NaNobj;
-            return new Double(d);
+            if (i+8 <= len && s.regionMatches(i, "Infinity", 0, 8)) {
+                double d;
+                if (s.charAt(start) == '-') {
+                    d = Double.NEGATIVE_INFINITY;
+                } else {
+                    d = Double.POSITIVE_INFINITY;
+                }
+                return new Double(d);
+            }
+            return ScriptRuntime.NaNobj;
         }
 
         // Find the end of the legal bit
@@ -356,7 +369,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
      * for the strange constant names should be directed there.
      */
 
-    private Object js_escape(Context cx, Object[] args) {
+    private Object js_escape(Object[] args) {
         final int
             URL_XALPHAS = 1,
             URL_XPALPHAS = 2,
@@ -423,7 +436,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
      * The global unescape method, as per ECMA-262 15.1.2.5.
      */
 
-    private Object js_unescape(Context cx, Object[] args)
+    private Object js_unescape(Object[] args)
     {
         String s = ScriptRuntime.toString(args, 0);
         int firstEscapePos = s.indexOf('%');
@@ -518,7 +531,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
     *   given in the ECMA specification for the hidden functions
     *   'Encode' and 'Decode'.
     */
-    private static String encode(Context cx, String str, boolean fullUri) {
+    private static String encode(String str, boolean fullUri) {
         byte[] utf8buf = null;
         StringBuffer sb = null;
 
@@ -536,7 +549,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                     utf8buf = new byte[6];
                 }
                 if (0xDC00 <= C && C <= 0xDFFF) {
-                    throw cx.reportRuntimeError0("msg.bad.uri");
+                    throw Context.reportRuntimeError0("msg.bad.uri");
                 }
                 int V;
                 if (C < 0xD800 || 0xDBFF < C) {
@@ -544,11 +557,11 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 } else {
                     k++;
                     if (k == length) {
-                        throw cx.reportRuntimeError0("msg.bad.uri");
+                        throw Context.reportRuntimeError0("msg.bad.uri");
                     }
                     char C2 = str.charAt(k);
                     if (!(0xDC00 <= C2 && C2 <= 0xDFFF)) {
-                        throw cx.reportRuntimeError0("msg.bad.uri");
+                        throw Context.reportRuntimeError0("msg.bad.uri");
                     }
                     V = ((C - 0xD800) << 10) + (C2 - 0xDC00) + 0x10000;
                 }
@@ -590,7 +603,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         return -1;
     }
 
-    private static String decode(Context cx, String str, boolean fullUri) {
+    private static String decode(String str, boolean fullUri) {
         char[] buf = null;
         int bufTop = 0;
 
@@ -611,9 +624,9 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 }
                 int start = k;
                 if (k + 3 > length)
-                    throw cx.reportRuntimeError0("msg.bad.uri");
+                    throw Context.reportRuntimeError0("msg.bad.uri");
                 int B = unHex(str.charAt(k + 1), str.charAt(k + 2));
-                if (B < 0) throw cx.reportRuntimeError0("msg.bad.uri");
+                if (B < 0) throw Context.reportRuntimeError0("msg.bad.uri");
                 k += 3;
                 if ((B & 0x80) == 0) {
                     C = (char)B;
@@ -623,7 +636,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                     int utf8Tail, ucs4Char, minUcs4Char;
                     if ((B & 0xC0) == 0x80) {
                         // First  UTF-8 should be ouside 0x80..0xBF
-                        throw cx.reportRuntimeError0("msg.bad.uri");
+                        throw Context.reportRuntimeError0("msg.bad.uri");
                     } else if ((B & 0x20) == 0) {
                         utf8Tail = 1; ucs4Char = B & 0x1F;
                         minUcs4Char = 0x80;
@@ -641,16 +654,16 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                         minUcs4Char = 0x4000000;
                     } else {
                         // First UTF-8 can not be 0xFF or 0xFE
-                        throw cx.reportRuntimeError0("msg.bad.uri");
+                        throw Context.reportRuntimeError0("msg.bad.uri");
                     }
                     if (k + 3 * utf8Tail > length)
-                        throw cx.reportRuntimeError0("msg.bad.uri");
+                        throw Context.reportRuntimeError0("msg.bad.uri");
                     for (int j = 0; j != utf8Tail; j++) {
                         if (str.charAt(k) != '%')
-                            throw cx.reportRuntimeError0("msg.bad.uri");
+                            throw Context.reportRuntimeError0("msg.bad.uri");
                         B = unHex(str.charAt(k + 1), str.charAt(k + 2));
                         if (B < 0 || (B & 0xC0) != 0x80)
-                            throw cx.reportRuntimeError0("msg.bad.uri");
+                            throw Context.reportRuntimeError0("msg.bad.uri");
                         ucs4Char = (ucs4Char << 6) | (B & 0x3F);
                         k += 3;
                     }
@@ -663,7 +676,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                     if (ucs4Char >= 0x10000) {
                         ucs4Char -= 0x10000;
                         if (ucs4Char > 0xFFFFF)
-                            throw cx.reportRuntimeError0("msg.bad.uri");
+                            throw Context.reportRuntimeError0("msg.bad.uri");
                         char H = (char)((ucs4Char >>> 10) + 0xD800);
                         C = (char)((ucs4Char & 0x3FF) + 0xDC00);
                         buf[bufTop++] = H;
