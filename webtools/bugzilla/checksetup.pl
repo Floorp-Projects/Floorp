@@ -741,8 +741,20 @@ END
 # Just to be sure ...
 unlink "data/versioncache";
 
-
-
+# Remove parameters from the data/params file that no longer exist in Bugzilla.
+if (-e "data/params") {
+    require "data/params";
+    require "defparams.pl";
+    use vars @::param_list;
+    foreach my $item (keys %::param) {
+        if (!grep($_ eq $item, @::param_list) && $item ne "version") {
+            print "The $item parameter is no longer used in Bugzilla\n" . 
+                  "and has been removed from your parameters file.\n";
+            delete $::param{$item};
+        }
+    }
+    WriteParams();
+}
 
 
 ###########################################################################
@@ -862,6 +874,7 @@ EOF
     fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $webservergid, 027);
     fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/params', $<, $webservergid, 017);
     fixPerms('*', $<, $webservergid, 027);
     fixPerms('template', $<, $webservergid, 027, 1);
     fixPerms('css', $<, $webservergid, 027, 1);
@@ -875,6 +888,7 @@ EOF
     fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
     fixPerms('data/.htaccess', $<, $gid, 022);
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
+    fixPerms('data/params', $<, $gid, 011);
     fixPerms('*', $<, $gid, 022);
     fixPerms('template', $<, $gid, 022, 1);
     fixPerms('css', $<, $gid, 022, 1);
@@ -2740,18 +2754,5 @@ if (GetFieldDef("logincookies", "hostname")) {
 # Final checks...
 
 unlink "data/versioncache";
-
-# Remove parameters from the data/params file that no longer exist in Bugzilla.
-require "data/params";
-require "defparams.pl";
-use vars @::param_list;
-foreach my $item (keys %::param) {
-    if (!grep($_ eq $item, @::param_list) && $item ne "version") {
-        print "The $item parameter is no longer used in Bugzilla\n" . 
-              "and has been removed from your parameters file.\n";
-        delete $::param{$item};
-    }
-}
-WriteParams();
 
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";
