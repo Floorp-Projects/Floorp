@@ -31,6 +31,7 @@
 #include "nsReflowCommand.h"
 #include "nsIFontMetrics.h"
 #include "nsHTMLFrame.h"
+#include "nsScrollFrame.h"
 
 #undef NOISY_REFLOW
 
@@ -699,20 +700,41 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
       negTopMargin = 0;
       posTopMargin = kidMargin.top;
     }
-    nscoord maxPos =
-      PR_MAX(mBlockReflowState.mPrevPosBottomMargin, posTopMargin);
-    nscoord maxNeg =
-      PR_MAX(mBlockReflowState.mPrevNegBottomMargin, negTopMargin);
-    nscoord topMargin = maxPos - maxNeg;
 
-    // Save away bottom margin information for later
-    if (kidMargin.bottom < 0) {
-      mBlockReflowState.mPrevNegBottomMargin = -kidMargin.bottom;
-      mBlockReflowState.mPrevPosBottomMargin = 0;
-    } else {
-      mBlockReflowState.mPrevNegBottomMargin = 0;
-      mBlockReflowState.mPrevPosBottomMargin = kidMargin.bottom;
+    // XXX if (nav4_compatability)
+    // Calculate the previous margin's positive and negative value.
+    // If the current top margin is not defined by css then just use
+    // what is cached in the block reflow state. Otherwise if the top
+    // margin is defined by css then wipe out any synthetic margin.
+    nscoord prevPos = mBlockReflowState.mPrevPosBottomMargin;
+    nscoord prevNeg = mBlockReflowState.mPrevNegBottomMargin;
+    if (eStyleUnit_Null != kidSpacing->mMargin.GetTopUnit()) {
+      if (mBlockReflowState.mPrevMarginSynthetic) {
+        prevPos = 0;
+        prevNeg = 0;
+      }
     }
+    else {
+      // When our top margin is not specified by css...act like
+      // ebina's engine.
+      if ((nsnull != mLine->mPrevLine) && !mLine->mPrevLine->mIsBlock) {
+        // Supply a default top margin
+        nsIStyleContext* blockSC;
+        mBlock->GetStyleContext(mPresContext, blockSC);
+        nsStyleFont* styleFont = (nsStyleFont*)
+          blockSC->GetData(eStyleStruct_Font);
+        nsIFontMetrics* fm = mPresContext->GetMetricsFor(styleFont->mFont);
+        mBlockReflowState.mPrevNegBottomMargin = 0;
+        mBlockReflowState.mPrevPosBottomMargin = fm->GetHeight();
+        mBlockReflowState.mPrevMarginSynthetic = PR_TRUE;
+        NS_RELEASE(fm);
+        NS_RELEASE(blockSC);
+      }
+    }
+
+    nscoord maxPos = PR_MAX(prevPos, posTopMargin);
+    nscoord maxNeg = PR_MAX(prevNeg, negTopMargin);
+    nscoord topMargin = maxPos - maxNeg;
 
     // This is no longer a break point
     mSavedState.mKidFrame = nsnull;
@@ -730,6 +752,43 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
                                   mSpaceManager, kidMetrics, kidReflowState,
                                   kidRect, kidReflowStatus);
     mSpaceManager->Translate(-dx, -mY);
+
+    if ((0 == kidRect.width) && (0 == kidRect.height)) {
+      // When a block child collapses into nothingness we don't apply
+      // it's margins.
+      mY -= topMargin;
+      mBlockReflowState.mY -= topMargin;
+    }
+    else {
+      // XXX if (nav4_compatability)
+      // If the block frame we just reflowed has no bottom margin as
+      // specified by css, then we supply our own.
+      if (eStyleUnit_Null == kidSpacing->mMargin.GetBottomUnit()) {
+        // ebina's engine uses the height of the font for the bottom margin.
+        nsIStyleContext* blockSC;
+        mBlock->GetStyleContext(mPresContext, blockSC);
+        nsStyleFont* styleFont = (nsStyleFont*)
+          blockSC->GetData(eStyleStruct_Font);
+        nsIFontMetrics* fm = mPresContext->GetMetricsFor(styleFont->mFont);
+        mBlockReflowState.mPrevNegBottomMargin = 0;
+        mBlockReflowState.mPrevPosBottomMargin = fm->GetHeight();
+        mBlockReflowState.mPrevMarginSynthetic = PR_TRUE;
+        NS_RELEASE(fm);
+        NS_RELEASE(blockSC);
+      }
+      else {
+        // Save away bottom margin information for later
+        if (kidMargin.bottom < 0) {
+          mBlockReflowState.mPrevNegBottomMargin = -kidMargin.bottom;
+          mBlockReflowState.mPrevPosBottomMargin = 0;
+        } else {
+          mBlockReflowState.mPrevNegBottomMargin = 0;
+          mBlockReflowState.mPrevPosBottomMargin = kidMargin.bottom;
+        }
+        mBlockReflowState.mPrevMarginSynthetic = PR_FALSE;
+      }
+    }
+
     kidRect.x = dx;
     kidRect.y = mY;
     kidMetrics.width = kidRect.width;
@@ -1364,12 +1423,21 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
     if (NS_OK == rv) {
       kidFrame->SetStyleContext(mPresContext, kidSC);
     }
-  } else if (NS_STYLE_FLOAT_NONE != kidDisplay->mFloats) {
+  }
+  else if (NS_STYLE_FLOAT_NONE != kidDisplay->mFloats) {
     rv = nsPlaceholderFrame::NewFrame(&kidFrame, aKid, mBlock);
     if (NS_OK == rv) {
       kidFrame->SetStyleContext(mPresContext, kidSC);
     }
-  } else if (nsnull == mKidPrevInFlow) {
+  }
+  else if ((NS_STYLE_OVERFLOW_SCROLL == kidDisplay->mOverflow) ||
+           (NS_STYLE_OVERFLOW_AUTO == kidDisplay->mOverflow)) {
+    rv = NS_NewScrollFrame(&kidFrame, aKid, mBlock);
+    if (NS_OK == rv) {
+      kidFrame->SetStyleContext(mPresContext, kidSC);
+    }
+  }
+  else if (nsnull == mKidPrevInFlow) {
     // Create initial frame for the child
     nsIContentDelegate* kidDel;
     switch (kidDisplay->mDisplay) {
@@ -1576,17 +1644,16 @@ nsLineLayout::AlignChildren()
   // Block lines don't require (or allow!) alignment
   if (mLine->mIsBlock) {
     mLineHeight = mState.mMaxAscent + mState.mMaxDescent;
-    return;
   }
-
-  // Avoid alignment when we didn't actually reflow any frames and we
-  // also didn't change the number of frames we had (which means the
-  // pullup code didn't pull anything up). When this happens it means
-  // that nothing changed which means that we can avoid the alignment
-  // work.
-  if ((0 == mFramesReflowed) && (mOldChildCount == mLine->mChildCount)) {
-    mLineHeight = mLine->mBounds.height;
-    return;
+  else {
+    // Avoid alignment when we didn't actually reflow any frames and we
+    // also didn't change the number of frames we had (which means the
+    // pullup code didn't pull anything up). When this happens it means
+    // that nothing changed which means that we can avoid the alignment
+    // work.
+    if ((0 == mFramesReflowed) && (mOldChildCount == mLine->mChildCount)) {
+      mLineHeight = mLine->mBounds.height;
+    }
   }
 
   nsIStyleContextPtr blockSC;
@@ -1600,12 +1667,14 @@ nsLineLayout::AlignChildren()
 
   // First vertically align the children on the line; this will
   // compute the actual line height for us.
-  mLineHeight =
-    nsCSSLayout::VerticallyAlignChildren(mPresContext, mBlock, blockFont,
-                                         mY,
-                                         mLine->mFirstChild,
-                                         mLine->mChildCount,
-                                         mAscents, mState.mMaxAscent); 
+  if (!mLine->mIsBlock) {
+    mLineHeight =
+      nsCSSLayout::VerticallyAlignChildren(mPresContext, mBlock, blockFont,
+                                           mY,
+                                           mLine->mFirstChild,
+                                           mLine->mChildCount,
+                                           mAscents, mState.mMaxAscent); 
+  }
 
   // Now horizontally place the children
   nsCSSLayout::HorizontallyPlaceChildren(mPresContext, mBlock,
