@@ -43,7 +43,6 @@
 
 #include "nsTopProgressNotifier.h"
 #include "nsLoggingProgressNotifier.h"
-#include "nsInstallProgressDialog.h"
 
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
