@@ -55,10 +55,10 @@
  *
  * In the unlikely event that SpiderMonkey ever implements JavaScript 2.0, or
  * ECMA-262 Edition 4 (JS2 without certain extensions), the version number to
- * use would be 200 or greater.
+ * use would be near 200, or greater.
  *
  * The JS_VERSION_ECMA_3 version is the minimal configuration conforming to
- * the ECMA-262 Edition3 specification.  Use it for minimal embeddings, where
+ * the ECMA-262 Edition 3 specification.  Use it for minimal embeddings, where
  * you're sure you don't need any of the extensions disabled in this version.
  * In order to facilitate testing, JS_HAS_OBJ_PROTO_PROP is defined as part of
  * the JS_VERSION_ECMA_3_TEST version.
