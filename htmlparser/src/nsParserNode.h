@@ -43,7 +43,8 @@
 //class nsParser;
 
 class nsCParserNode :  public nsIParserNode {
-            
+  enum {eMaxAttr=20};
+  
   public:
 
     /**
@@ -158,7 +159,7 @@ class nsCParserNode :  public nsIParserNode {
     PRInt32   mAttributeCount;    
     PRInt32   mLineNumber;
     CToken*   mToken;
-    CToken*   mAttributes[20]; // XXX Ack! This needs to be dynamic! 
+    CToken*   mAttributes[eMaxAttr]; // XXX Ack! This needs to be dynamic! 
     // nsAutoString  mName;
 
     static const nsAutoString  mEmptyString;

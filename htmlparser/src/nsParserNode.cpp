@@ -61,8 +61,11 @@ nsCParserNode::~nsCParserNode() {
 void nsCParserNode::AddAttribute(CToken* aToken) {
   NS_PRECONDITION(mAttributeCount<PRInt32(sizeof(mAttributes)), "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
-  if(aToken) {
-    mAttributes[mAttributeCount++]=aToken;
+
+  if(mAttributeCount<eMaxAttr) {
+    if(aToken) {
+      mAttributes[mAttributeCount++]=aToken;
+    }
   }
 }
 
@@ -177,9 +180,11 @@ PRInt32 nsCParserNode::GetAttributeCount(void) const{
  *  @return  string rep of given attribute text key
  */
 const nsString& nsCParserNode::GetKeyAt(PRInt32 anIndex) const {
-  NS_PRECONDITION(anIndex<mAttributeCount, "Bad attr index");
-  CAttributeToken* tkn=(CAttributeToken*)(mAttributes[anIndex]);
-  return tkn->GetKey();
+  if(anIndex<mAttributeCount) {
+    CAttributeToken* tkn=(CAttributeToken*)(mAttributes[anIndex]);
+    return tkn->GetKey();
+  }
+  return mEmptyString;
 }
 
 
@@ -192,7 +197,10 @@ const nsString& nsCParserNode::GetKeyAt(PRInt32 anIndex) const {
  */
 const nsString& nsCParserNode::GetValueAt(PRInt32 anIndex) const {
   NS_PRECONDITION(anIndex<mAttributeCount, "Bad attr index");
-  return (mAttributes[anIndex])->GetStringValueXXX();
+  if(anIndex<mAttributeCount){
+    return (mAttributes[anIndex])->GetStringValueXXX();
+  }
+  return mEmptyString;
 }
 
 

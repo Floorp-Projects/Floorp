@@ -27,8 +27,9 @@
 #include "plstr.h"
 #include <fstream.h>
 #include "nsIParserFilter.h"
-#include "nsIDTDDebug.h"
 #include "nshtmlpars.h"
+
+#include "nsHTMLTokens.h"
 
 #undef rickgdebug
 #ifdef  rickgdebug
@@ -44,6 +45,7 @@ static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static const char* kNullURL = "Error: Null URL given";
 static nsString    kUnknownFilename("unknown");
+static nsString    kEmptyString("unknown");
 
 static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 
@@ -137,11 +139,11 @@ CSharedParserObjects gSharedParserObjects;
  */
 nsParser::nsParser() {
   NS_INIT_REFCNT();
-  mDTDDebug = 0;
   mParserFilter = 0;
   mObserver = 0;
   mSink=0;
   mParserContext=0;
+  mDTDVerification=PR_FALSE;
 }
 
 
@@ -154,7 +156,6 @@ nsParser::nsParser() {
  */
 nsParser::~nsParser() {
   NS_IF_RELEASE(mObserver);
-//  NS_IF_RELEASE(mDTDDebug);
   NS_RELEASE(mSink);
 
   //don't forget to add code here to delete 
@@ -450,15 +451,11 @@ CParserContext* nsParser::PopContext() {
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug * aDTDDebug) {
+PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled) {
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   PRInt32 status=kBadURL;
-
-/* Disable DTD Debug for now...
-  mDTDDebug = aDTDDebug;
-  NS_IF_ADDREF(mDTDDebug);
-*/
+  mDTDVerification=aVerifyEnabled;
  
   if(aURL) {
     nsAutoString theName(aURL->GetSpec());
@@ -476,9 +473,10 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::Parse(fstream& aStream){
+PRInt32 nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
 
   PRInt32 status=kNoError;
+  mDTDVerification=aVerifyEnabled;
   
   //ok, time to create our tokenizer and begin the process
   CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
@@ -509,8 +507,9 @@ PRInt32 nsParser::Parse(fstream& aStream){
  * @param   anHTMLString tells us whether we should assume the content is HTML (usually true)
  * @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString){
+PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVerifyEnabled){
   PRInt32 result=kNoError;
+  mDTDVerification=aVerifyEnabled;
 
   CParserContext* pc=new CParserContext(new CScanner(aSourceBuffer),&aSourceBuffer,0);
 
@@ -597,7 +596,8 @@ PRInt32 nsParser::BuildModel() {
     theMarkPos=*mParserContext->mCurrentPos;
     
     result=theRootDTD->HandleToken(theToken);
-//    result=mParserContext->mDTD->HandleToken(theToken);
+    if(mDTDVerification)
+      theRootDTD->Verify(kEmptyString);
     ++(*mParserContext->mCurrentPos);
   }
 

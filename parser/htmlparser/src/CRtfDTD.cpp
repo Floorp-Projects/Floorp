@@ -440,12 +440,25 @@ nsresult CRtfDTD::WillInterruptParse(void){
 }
 
 /**
- * 
- * @update	jevering6/23/98
+ * Called by the parser to initiate dtd verification of the
+ * internal context stack.
+ * @update	gess 7/23/98
  * @param 
  * @return
  */
-void CRtfDTD::SetDTDDebug(nsIDTDDebug * aDTDDebug) {
+PRBool CRtfDTD::Verify(nsString& aURLRef){
+  PRBool result=PR_TRUE;
+  return result;
+}
+
+/**
+ * Called by the parser to enable/disable dtd verification of the
+ * internal context stack.
+ * @update	gess 7/23/98
+ * @param 
+ * @return
+ */
+void CRtfDTD::SetVerification(PRBool aEnabled){
 }
 
 /**

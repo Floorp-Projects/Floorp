@@ -233,14 +233,23 @@ class nsXIFDTD : public nsIDTD {
     virtual PRBool CanContain(PRInt32 aParent, PRInt32 aChild);
 
 
-    
     /**
-     * 
-     * @update	jevering6/23/98
+     * Called by the parser to initiate dtd verification of the
+     * internal context stack.
+     * @update	gess 7/23/98
      * @param 
      * @return
      */
-	virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
+    virtual PRBool Verify(nsString& aURLRef);
+
+    /**
+     * Set this to TRUE if you want the DTD to verify its
+     * context stack.
+     * @update	gess 7/23/98
+     * @param 
+     * @return
+     */
+    virtual void SetVerification(PRBool aEnable);
 
   /**
      * Select given content sink into parser for parser output
@@ -327,15 +336,7 @@ class nsXIFDTD : public nsIDTD {
      */
     virtual PRBool VerifyContextVector(void) const;
 
-    /**
-     * 
-     * @update	gpk 06/18/98
-     * @param 
-     * @return
-     */
-    virtual PRBool Verify(const char* anOutputDir,PRBool aRecordStats);
-
-
+   
     /**
      * 
      * @update	gpk 06/18/98
