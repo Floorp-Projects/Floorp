@@ -147,8 +147,13 @@ const int kDisableAllCookies = 2;
     while ( hasMoreElements ) {
       nsCOMPtr<nsISupports> curr;
       permEnum->GetNext(getter_AddRefs(curr));
-      mCachedPermissions->AppendElement(curr);
-      
+      nsCOMPtr<nsIPermission> currPerm(do_QueryInterface(curr));
+      if ( currPerm ) {
+        PRUint32 type = nsIPermissionManager::COOKIE_TYPE;
+        currPerm->GetType(&type);
+        if ( type == nsIPermissionManager::COOKIE_TYPE )
+          mCachedPermissions->AppendElement(curr);
+      }
       permEnum->HasMoreElements(&hasMoreElements);
     }
   }
@@ -199,7 +204,7 @@ const int kDisableAllCookies = 2;
     if ( perm ) {
       nsCAutoString host;
       perm->GetHost(host);
-      mManager->Remove(host, 0);           // could this api _be_ any worse? Come on!
+      mManager->Remove(host, nsIPermissionManager::COOKIE_TYPE);           // could this api _be_ any worse? Come on!
       
       mCachedPermissions->RemoveElementAt(row);
     }

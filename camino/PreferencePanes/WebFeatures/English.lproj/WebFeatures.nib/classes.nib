@@ -14,18 +14,29 @@
         }, 
         {
             ACTIONS = {
+                addWhitelistSite = id; 
+                clickEnableAnnoyanceBlocker = id; 
                 clickEnableJS = id; 
                 clickEnableJava = id; 
                 clickEnablePlugins = id; 
                 clickEnablePopupBlocking = id; 
+                editWhitelist = id; 
+                editWhitelistDone = id; 
+                removeWhitelistSite = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferenceWebFeatures; 
             LANGUAGE = ObjC; 
             OUTLETS = {
+                mAddField = NSTextField; 
+                mEditWhitelist = NSButton; 
+                mEnableAnnoyanceBlocker = NSButton; 
                 mEnableJS = NSButton; 
                 mEnableJava = NSButton; 
                 mEnablePlugins = NSButton; 
                 mEnablePopupBlocking = NSButton; 
+                mProtocol = NSPopUpButton; 
+                mWhitelistPanel = id; 
+                mWhitelistTable = NSTableView; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 

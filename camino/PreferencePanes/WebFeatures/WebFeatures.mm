@@ -2,13 +2,19 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManagerUtils.h"
+#include "nsIPermissionManager.h"
+#include "nsIPermission.h"
 #include "nsIPref.h"
-
+#include "nsISupportsArray.h"
+#include "nsString.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 
 @implementation OrgMozillaChimeraPreferenceWebFeatures
 
 - (void) dealloc
 {
+  NS_IF_RELEASE(mManager);
   [super dealloc];
 }
 
@@ -17,25 +23,35 @@
 {
   if ( !mPrefService )
     return;
+
+  BOOL gotPref = NO;
     
   // Set initial value on Java/JavaScript checkboxes
-  
-  PRBool jsEnabled = PR_TRUE;
-  mPrefService->GetBoolPref("javascript.enabled", &jsEnabled);
-  [mEnableJS setState:(jsEnabled ? NSOnState : NSOffState)];
+  BOOL jsEnabled = [self getStringPref:"javascript.enabled" withSuccess:&gotPref] && gotPref;
+  [mEnableJS setState:jsEnabled];
+  BOOL javaEnabled = [self getStringPref:"security.enable_java" withSuccess:&gotPref] && gotPref;
+  [mEnableJava setState:javaEnabled];
+  BOOL pluginsEnabled = [self getStringPref:"chimera.enable_plugins" withSuccess:&gotPref] && gotPref;
+  [mEnablePlugins setState:pluginsEnabled];
 
-  PRBool javaEnabled = PR_TRUE;
-  mPrefService->GetBoolPref("security.enable_java", &javaEnabled);
-  [mEnableJava setState:(javaEnabled ? NSOnState : NSOffState)];
-
-  PRBool pluginsEnabled = PR_TRUE;
-  mPrefService->GetBoolPref("chimera.enable_plugins", &pluginsEnabled);
-  [mEnablePlugins setState:(pluginsEnabled ? NSOnState : NSOffState)];
-
-  // set initial value on popup blocking checkbox
-  BOOL gotPref = NO;
+  // set initial value on popup blocking checkbox and disable the whitelist
+  // button if it's off
   BOOL enablePopupBlocking = [self getBooleanPref:"dom.disable_open_during_load" withSuccess:&gotPref] && gotPref;  
   [mEnablePopupBlocking setState:enablePopupBlocking];
+  [mEditWhitelist setEnabled:enablePopupBlocking];
+  
+  // set initial value on annoyance blocker checkbox. out of all the prefs,
+  // if the "status" capability is turned off, we use that as an indicator
+  // to turn them all off.
+  NSString* val = [self getStringPref:"capability.policy.default.Window.status" withSuccess:&gotPref];
+  BOOL enableAnnoyanceBlocker = [val isEqualToString:@"noAccess"] && gotPref;
+  [mEnableAnnoyanceBlocker setState:enableAnnoyanceBlocker];
+  
+  // store permission manager service and cache the enumerator.
+  nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
+  mManager = pm.get();
+  NS_IF_ADDREF(mManager);
+
 }
 
 
@@ -85,7 +101,195 @@
     [self setPref:"dom.disable_open_during_load" toBoolean: NO];
     [self setPref:"dom.disable_open_click_delay" toInt: 0];
   }
+  [mEditWhitelist setEnabled:[sender state]];
+}
+
+//
+// populatePermissionCache:
+//
+// walks the permission list for popups building up a cache that
+// we can quickly refer to later.
+//
+-(void) populatePermissionCache:(nsISupportsArray*)inPermissions
+{
+  nsCOMPtr<nsISimpleEnumerator> permEnum;
+  if ( mManager ) 
+    mManager->GetEnumerator(getter_AddRefs(permEnum));
+
+  if ( inPermissions && permEnum ) {
+    PRBool hasMoreElements = PR_FALSE;
+    permEnum->HasMoreElements(&hasMoreElements);
+    while ( hasMoreElements ) {
+      nsCOMPtr<nsISupports> curr;
+      permEnum->GetNext(getter_AddRefs(curr));
+      nsCOMPtr<nsIPermission> currPerm(do_QueryInterface(curr));
+      if ( currPerm ) {
+        PRUint32 type = nsIPermissionManager::POPUP_TYPE;
+        currPerm->GetType(&type);
+        if ( type == nsIPermissionManager::POPUP_TYPE )
+          inPermissions->AppendElement(curr);
+      }
+      permEnum->HasMoreElements(&hasMoreElements);
+    }
+  }
+}
+
+//
+// editWhitelist:
+//
+// put up a sheet to allow people to edit the popup blocker whitelist
+//
+-(IBAction) editWhitelist:(id)sender
+{
+  // build parallel permission list for speed with a lot of blocked sites
+  NS_NewISupportsArray(&mCachedPermissions);     // ADDREFs
+  [self populatePermissionCache:mCachedPermissions];
+  
+	[NSApp beginSheet:mWhitelistPanel
+        modalForWindow:[mEditWhitelist window]   // any old window accessor
+        modalDelegate:self
+        didEndSelector:@selector(editWhitelistSheetDidEnd:returnCode:contextInfo:)
+        contextInfo:NULL];
+        
+  // ensure a row is selected (cocoa doesn't do this for us, but will keep
+  // us from unselecting a row once one is set; go figure).
+  [mWhitelistTable selectRow:0 byExtendingSelection:NO];
+  
+  // we shouldn't need to do this, but the scrollbar won't enable unless we
+  // force the table to reload its data. Oddly it gets the number of rows correct,
+  // it just forgets to tell the scrollbar. *shrug*
+  [mWhitelistTable reloadData];
+}
+
+// whitelist sheet methods
+-(IBAction) editWhitelistDone:(id)aSender
+{
+  // save stuff??
+  
+  [mWhitelistPanel orderOut:self];
+  [NSApp endSheet:mWhitelistPanel];
+  
+  NS_IF_RELEASE(mCachedPermissions);
+}
+
+-(IBAction) removeWhitelistSite:(id)aSender
+{
+  if ( mCachedPermissions && mManager ) {
+    // remove from parallel array and cookie permissions list
+    int row = [mWhitelistTable selectedRow];
+    
+    // remove from permission manager (which is done by host, not by row), then 
+    // remove it from our parallel array (which is done by row). Since we keep a
+    // parallel array, removing multiple items by row is very difficult since after 
+    // deleting, the array is out of sync with the next cocoa row we're told to remove. Punt!
+    nsCOMPtr<nsISupports> rowItem = dont_AddRef(mCachedPermissions->ElementAt(row));
+    nsCOMPtr<nsIPermission> perm ( do_QueryInterface(rowItem) );
+    if ( perm ) {
+      nsCAutoString host;
+      perm->GetHost(host);
+      mManager->Remove(host, nsIPermissionManager::POPUP_TYPE);           // could this api _be_ any worse? Come on!
+      
+      mCachedPermissions->RemoveElementAt(row);
+    }
+    [mWhitelistTable reloadData];
+  }
+}
+
+//
+// addWhitelistSite:
+//
+// adds a new site to the permission manager whitelist for popups
+//
+-(IBAction) addWhitelistSite:(id)sender
+{
+  if ( mCachedPermissions && mManager ) {
+    // ensure url has a http:// on the front or NS_NewURI will fail. The PM
+    // really doesn't care what the protocol is, we just need to have something
+    NSString* url = [[mAddField stringValue] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if ( ![url rangeOfString:@"http://"].length && ![url rangeOfString:@"https://"].length )
+      url = [NSString stringWithFormat:@"http://%@", url];
+    
+    const char* siteURL = [url cString];
+    nsCOMPtr<nsIURI> newURI;
+    NS_NewURI(getter_AddRefs(newURI), siteURL);
+    if ( newURI ) {
+      mManager->Add(newURI, nsIPermissionManager::POPUP_TYPE, nsIPermissionManager::ALLOW_ACTION);
+      mCachedPermissions->Clear();
+      [self populatePermissionCache:mCachedPermissions];
+
+      [mAddField setStringValue:@""];      
+      [mWhitelistTable reloadData];
+    }
+  }
+}
+
+- (void) editWhitelistSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo
+{
 
 }
 
+// data source informal protocol (NSTableDataSource)
+- (int)numberOfRowsInTableView:(NSTableView *)aTableView
+{
+  PRUint32 numRows = 0;
+  if ( mCachedPermissions )
+    mCachedPermissions->Count(&numRows);
+
+  return (int) numRows;
+}
+
+- (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex
+{
+  NSString* retVal = nil;
+  if ( mCachedPermissions ) {
+    nsCOMPtr<nsISupports> rowItem = dont_AddRef(mCachedPermissions->ElementAt(rowIndex));
+    nsCOMPtr<nsIPermission> perm ( do_QueryInterface(rowItem) );
+    if ( perm ) {
+      // only 1 column and it's the website url column
+      nsCAutoString host;
+      perm->GetHost(host);
+      retVal = [NSString stringWithCString:host.get()];
+    }
+  }
+  
+  return retVal;
+}
+
+//
+// clickEnableAnnoyanceBlocker:
+//
+// Enable and disable prefs for allowing webpages to be annoying and move/resize the
+// window or tweak the status bar and make it unusable.
+//
+-(IBAction) clickEnableAnnoyanceBlocker:(id)sender
+{
+  if ( [sender state] ) 
+    [self setAnnoyingWindowPrefsTo:@"noAccess"];
+  else
+    [self setAnnoyingWindowPrefsTo:@"allAccess"];
+}
+
+//
+// setAnnoyingWindowPrefsTo:
+//
+// Set all the prefs that allow webpages to muck with the status bar and window position
+// (ie, be really annoying) to the given value
+//
+-(void) setAnnoyingWindowPrefsTo:(NSString*)inValue
+{
+  [self setPref:"capability.policy.default.Window.defaultStatus" toString:inValue];
+  [self setPref:"capability.policy.default.Window.status" toString:inValue];
+  [self setPref:"capability.policy.default.Window.focus" toString:inValue];
+  [self setPref:"capability.policy.default.Window.innerHeight.set" toString:inValue];
+  [self setPref:"capability.policy.default.Window.innerWidth.set" toString:inValue];
+  [self setPref:"capability.policy.default.Window.moveBy" toString:inValue];
+  [self setPref:"capability.policy.default.Window.moveTo" toString:inValue];
+  [self setPref:"capability.policy.default.Window.outerHeight.set" toString:inValue];
+  [self setPref:"capability.policy.default.Window.outerWidth.set" toString:inValue];
+  [self setPref:"capability.policy.default.Window.resizeBy" toString:inValue];
+  [self setPref:"capability.policy.default.Window.resizeTo" toString:inValue];
+  [self setPref:"capability.policy.default.Window.screenX.set" toString:inValue];
+  [self setPref:"capability.policy.default.Window.screenY.set" toString:inValue];
+  [self setPref:"capability.policy.default.Window.sizeToContent" toString:inValue];
+}
 @end
