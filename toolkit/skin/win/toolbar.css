@@ -35,8 +35,8 @@ toolbox {
   border-left: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;
-}
-
+} 
+  
 /* ::::: toolbar & menubar ::::: */
 
 toolbar,
@@ -47,13 +47,12 @@ menubar {
   border-top: 1px solid ThreeDHighlight;
   border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
-}  
+}
 
 /* ::::: toolbar decorations ::::: */
 
 toolbarseparator {
-  margin : 2px 0.2em 2px 0.2em;
-  border-right : 1px solid ThreeDHighlight; 
+  margin : 2px 0.2em 0 0.2em;
   border-left : 1px solid ThreeDShadow;
   width : 2px;
 }
