@@ -1,4 +1,3 @@
-#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -19,26 +18,27 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..\..
-include <$(DEPTH)\config\config.mak>
+DEPTH = ../../../../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
-MAKE_OBJ_TYPE	= LIB
-LIBRARY_NAME = plugingate
-LIB=.\$(OBJDIR)\$(LIBRARY_NAME).lib
+include $(DEPTH)/config/autoconf.mk
 
-CFLAGS = $(CFLAGS) -I..\include -I..\..\include
+XPIDL_MODULE = npbasic
+LIBRARY_NAME = npbasic
 
-OBJS = \
-  .\$(OBJDIR)\npn_gate.obj \
-  .\$(OBJDIR)\npp_gate.obj \
-  .\$(OBJDIR)\np_entry.obj \
-  $(NULL)
+NO_DIST_INSTALL = 1
 
-include <$(DEPTH)\config\rules.mak>
+CPPSRCS = plugin.cpp
 
-# it will export the lib to the dist/lib dir, so do not forget to remove it
-libs:: $(LIB)
-  $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
+SHARED_LIBRARY_LIBS = ../../common/plugingate_s.$(LIB_SUFFIX)
 
-clobber::
-	$(RM) *.sbr
+DEFFILE = basic.def
+RESFILE = basic.res
+
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES = -I$(srcdir)/../../include \
+                 -I$(srcdir)/../../../include \
+                 $(NULL)
