@@ -148,6 +148,8 @@ LCFLAGS = \
 	$(NULL)
 !endif
 
+NO_DIST_INSTALL=1
+
 include <$(DEPTH)\config\rules.mak>
 #!CMDSWITCHES -S
 
@@ -166,7 +168,7 @@ buildRunems:
 !endif
 !endif
 
-install:: $(DLL) buildRunems 
+libs:: $(DLL) buildRunems 
 
 
 clobber_all:: clobber

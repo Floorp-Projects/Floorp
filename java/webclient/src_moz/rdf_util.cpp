@@ -167,7 +167,8 @@ nsresult rdf_InitRDFUtils()
         }
     }
 
-    rdf_inited = PR_TRUE;
+    rv = gBookmarks->ReadBookmarks(&rdf_inited);
+
     return rv;
 }
 
@@ -223,7 +224,7 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
             
         PR_ASSERT(gComponentManager);
         // get a container in order to recurr
-        rv = gComponentManager->
+        rv = nsComponentManager::
             CreateInstance(kRDFContainerCID,
                            nsnull,
                            NS_GET_IID(nsIRDFContainer),
@@ -471,7 +472,7 @@ nsresult rdf_getChildAt(int index, nsIRDFResource *theParent,
 
     PR_ASSERT(gComponentManager);
 
-    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
                                            nsnull,
                                            NS_GET_IID(nsIRDFContainer),
                                            getter_AddRefs(container));
@@ -539,7 +540,7 @@ nsresult rdf_getChildCount(nsIRDFResource *theParent, PRInt32 *count)
         return NS_OK;
     }
     PR_ASSERT(gComponentManager);
-    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
                                            nsnull,
                                            NS_GET_IID(nsIRDFContainer),
                                            getter_AddRefs(container));
@@ -584,7 +585,7 @@ nsresult rdf_getIndexOfChild(nsIRDFResource *theParent,
         return NS_OK;
     }
     PR_ASSERT(gComponentManager);
-    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
                                            nsnull,
                                            NS_GET_IID(nsIRDFContainer),
                                            getter_AddRefs(container));
