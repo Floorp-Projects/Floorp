@@ -19,7 +19,7 @@
 	<hbox>
         <spacer style="width:10px" />
                 <label value="&webpage.label;"/>
-		<textbox id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
+		<textbox id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" class="uri-element"/>
         <spacer style="width:10px" />
 	</hbox>
 	

@@ -29,6 +29,6 @@
   <vbox>
     <label value="&localPath.label;"/>
     <textbox wsm_persist="true" size="60" id="server.localPath" datatype="nsIFileSpec"
-             prefstring="mail.server.%serverkey%.directory"/>
+             prefstring="mail.server.%serverkey%.directory" class="uri-element"/>
   </vbox>
 </page>

@@ -103,7 +103,7 @@ Rights Reserved.
           <row>
             <hbox align="center">
               <label class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
-              <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
+              <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6" class="uri-element"/>
               <label id="postEmailText"/>
             </hbox>
           </row>
@@ -137,7 +137,7 @@ Rights Reserved.
           <description>&incomingServerNameDesc.label;</description>
           <hbox align="center" class="serverDataBox">
             <label class="label, serverLabel" value="&incomingServerLabel.label;" for="incomingServer"/>
-            <textbox wsm_persist="true" id="incomingServer" flex="1"/>
+            <textbox wsm_persist="true" id="incomingServer" flex="1" class="uri-element"/>
           </hbox>
         </vbox>
 
@@ -147,7 +147,7 @@ Rights Reserved.
           <description>&smtpServerDesc.label;</description>
           <hbox align="center" class="serverDataBox">
             <label class="label, serverLabel" value="&smtpServerLabel.label;" for="smtphostname"/>
-            <textbox id="smtphostname" wsm_persist="true" flex="1"/>
+            <textbox id="smtphostname" wsm_persist="true" flex="1" class="uri-element"/>
           </hbox>
         </vbox>
 
@@ -183,7 +183,7 @@ Rights Reserved.
       <separator class="thin"/>
       <hbox align="center">
         <label control="hostname" value="&newsServerLabel.label;" style="width: 8em;"/>
-        <textbox id="newsServer" wsm_persist="true" flex="1"/>
+        <textbox id="newsServer" wsm_persist="true" flex="1" class="uri-element"/>
       </hbox>
     </vbox>
   </wizardpage>

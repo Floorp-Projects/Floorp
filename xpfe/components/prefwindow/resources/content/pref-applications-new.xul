@@ -56,18 +56,18 @@
       <row align="center">
         <label value="&newExtensions.label;" accesskey="&newExtensions.accesskey;"
                control="extensions"/>
-        <textbox id="extensions" flex="1"/>
+        <textbox id="extensions" flex="1" class="uri-element"/>
       </row>
       <row align="center">
         <label value="&newMIME.label;" accesskey="&newMIME.accesskey;"
                control="mimeType"/>
-        <textbox id="mimeType" flex="1"/>
+        <textbox id="mimeType" flex="1" class="uri-element"/>
       </row>
       <row align="center">
         <label value="&newAppPath.label;" accesskey="&newAppPath.accesskey;"
                control="appPath"/>
         <hbox align="center">
-          <textbox id="appPath" flex="1"/>
+          <textbox id="appPath" flex="1" class="uri-element"/>
           <button label="&browse.label;" accesskey="&browse.accesskey;" 
                   oncommand="chooseApp();"/>
         </hbox>

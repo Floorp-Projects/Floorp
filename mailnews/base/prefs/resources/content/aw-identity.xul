@@ -58,7 +58,7 @@ Rights Reserved.
         <row>
           <hbox align="center">
             <label class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
-            <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
+            <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6" class="uri-element"/>
             <label id="postEmailText"/>
           </hbox>
         </row>

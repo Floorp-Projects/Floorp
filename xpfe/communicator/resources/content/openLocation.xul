@@ -59,7 +59,7 @@
       <hbox align="center">
         <textbox id="dialog.input" flex="1" type="autocomplete"
                   searchSessions="history" timeout="50" maxrows="6"
-                  disablehistory="false"
+                  disablehistory="false" class="uri-element"
                   oninput="doEnabling();">
           <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                      popupalign="topleft" popupanchor="bottomleft"

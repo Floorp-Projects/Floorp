@@ -158,7 +158,7 @@ Contributor(s):
       </hbox>
  
       <hbox id="nav-bar-inner" flex="1">
-        <textbox id="urlbar" class="chromeclass-location" flex="1"
+        <textbox id="urlbar" class="chromeclass-location uri-element" flex="1"
                  type="autocomplete" searchSessions="history" 
                  timeout="50" maxrows="6" alwaysopenpopup="true"
                  disablehistory="false" accesskey="d"

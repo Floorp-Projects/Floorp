@@ -71,7 +71,7 @@
                      <row align="center">
                          <label value="&directoryHostname.label;" accesskey="&directoryHostname.accesskey;"
                                 control="hostname"/>
-                         <textbox id="hostname" flex="1" disableiflocked="true"/>
+                         <textbox id="hostname" flex="1" disableiflocked="true" class="uri-element"/>
                          <spacer flex="1"/>
                      </row>
                      <row align="center">
@@ -79,7 +79,7 @@
                                 accesskey="&directoryBaseDN.accesskey;"
                                 control="basedn"/>
                          <vbox>
-                           <textbox id="basedn" disableiflocked="true"/>
+                           <textbox id="basedn" disableiflocked="true" class="uri-element"/>
                          </vbox>
                          <button label="&findButton.label;" 
                                  accesskey="&findButton.accesskey;" disabled="true"/>
@@ -96,7 +96,7 @@
                          <label value="&directoryLogin.label;"
                                 accesskey="&directoryLogin.accesskey;"
                                 control="login"/>
-                         <textbox id="login" flex="1"/>
+                         <textbox id="login" flex="1" class="uri-element"/>
                      </row>
                  </rows>
              </grid>

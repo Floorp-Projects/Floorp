@@ -82,7 +82,7 @@
             <row align="center">
               <label value="&filename.label;"/>
               <textbox id="FilenameInput"
-                tooltiptext="&filename.tooltip;" class="minWidth15"/>
+                tooltiptext="&filename.tooltip;" class="minWidth15 uri-element"/>
               <label value="&filenameExample.label;"/>
             </row>
           </rows>
@@ -91,7 +91,7 @@
         <label value="&docDirList.label;"/>
         <hbox align="center">
           <!-- Contents filled in at runtime -->
-          <menulist id="DocDirList" class="minWidth20" editable="true"  flex="1"
+          <menulist id="DocDirList" class="minWidth20 uri-element" editable="true"  flex="1"
                     oninput="onInputSettings();"/>
 <!-- 
           <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.DocDirList);" disabled="true"/>
@@ -121,7 +121,7 @@
             <spacer class="checkbox-spacer"/>
             <spacer class="radio-spacer"/>
             <!-- Contents filled in at runtime -->
-            <menulist id="OtherDirList" class="minWidth20" editable="true" flex="1"
+            <menulist id="OtherDirList" class="minWidth20 uri-element" editable="true" flex="1"
               tooltiptext="&useSubdir.tooltip;" oninput="onInputSettings();"/>
 <!-- 
             <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>

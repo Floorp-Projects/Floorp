@@ -120,7 +120,7 @@
   <label control="BackgroundImageInput"
          value="&backgroundImage.label;"
          accesskey="&backgroundImage.accessKey;"/>
-  <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage()"
+  <textbox id="BackgroundImageInput" class="uri-element" oninput="ChangeBackgroundImage()"
    tooltiptext="&backgroundImage.tooltip;" flex="1"/>
   <hbox align="center">
     <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->

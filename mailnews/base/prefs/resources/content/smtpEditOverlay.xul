@@ -42,6 +42,7 @@
           <label value="&serverName.label;"/>
           <textbox id="smtp.hostname" flex="1"
                    preftype="string"
+                   class="uri-element"
                    prefstring="mail.smtpserver.%serverkey%.hostname"/>
         </row>
         <row align="center">

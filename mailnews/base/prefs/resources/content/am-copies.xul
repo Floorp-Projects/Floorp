@@ -94,7 +94,7 @@
                 prefstring="mail.identity.%identitykey%.bcc_other"/>
 
       <textbox wsm_persist="true" id="identity.bccList" flex="1"
-               prefstring="mail.identity.%identitykey%.bcc_other_list"/>
+               prefstring="mail.identity.%identitykey%.bcc_other_list" class="uri-element"/>
     </hbox>
 
   </groupbox>

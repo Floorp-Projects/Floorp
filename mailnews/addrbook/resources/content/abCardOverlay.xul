@@ -91,14 +91,14 @@ Rights Reserved.
 							<spacer flex="1"/>
                                                         <label control="PrimaryEmail" value="&PrimaryEmail.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
-							<textbox id="PrimaryEmail" flex="1" disableforreadonly="true"/>
+							<textbox id="PrimaryEmail" flex="1" disableforreadonly="true" class="uri-element"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
                                                         <label control="SecondEmail" value="&SecondEmail.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
-							<textbox id="SecondEmail" flex="1" disableforreadonly="true"/>
+							<textbox id="SecondEmail" flex="1" disableforreadonly="true" class="uri-element"/>
 							</hbox>
 						</hbox>
 						<hbox>
@@ -216,7 +216,7 @@ Rights Reserved.
 							<spacer flex="1"/>
                                                         <label control="WebPage2" value="&HomeWebPage.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
-								<textbox id="WebPage2" flex="1" disableforreadonly="true"/>
+								<textbox id="WebPage2" flex="1" disableforreadonly="true" class="uri-element"/>
 							</hbox>
 						</hbox>
 					</vbox>
@@ -290,7 +290,7 @@ Rights Reserved.
 							<spacer flex="1"/>
                                                         <label control="WebPage1" value="&WorkWebPage.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
-								<textbox id="WebPage1" flex="1" disableforreadonly="true"/>
+								<textbox id="WebPage1" flex="1" disableforreadonly="true" class="uri-element"/>
 							</hbox>
 						</hbox>
 					</vbox>

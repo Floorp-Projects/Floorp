@@ -60,7 +60,7 @@ Contributors:
         <hbox iscontrolcontainer="true" align="center">
             <label id="fixedServerName" collapsed="true" use="server.realHostName"/>
             <textbox wsm_persist="true" size="25" id="server.realHostName"
-                     prefstring="mail.server.%serverkey%.realhostname"/>
+                     prefstring="mail.server.%serverkey%.realhostname" class="uri-element"/>
         </hbox>
       </row>
       <row align="center">
@@ -221,7 +221,7 @@ Contributors:
     <label value="&newsrcFilePath.label;" control="nntp.newsrcFilePath"/>
     <textbox hidable="true" hidefor="imap,pop3" wsm_persist="true" id="nntp.newsrcFilePath"
                datatype="nsIFileSpec"
-               prefstring="mail.server.%serverkey%.newsrc.file"/>
+               prefstring="mail.server.%serverkey%.newsrc.file" class="uri-element"/>
   </vbox>
   </vbox>
   </groupbox>
@@ -230,6 +230,7 @@ Contributors:
     <label value="&localPath.label;" control="server.localPath"/>
     <textbox wsm_persist="true" id="server.localPath"
             datatype="nsIFileSpec"
+            class="uri-element"
             prefstring="mail.server.%serverkey%.directory"/>
     </vbox>
 </page>

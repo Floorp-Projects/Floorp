@@ -56,7 +56,7 @@ Rights Reserved.
       </listcell>
       
       <listcell class="addressingWidgetCell">
-        <textbox id="addressCol2#1" class="plain textbox-addressingWidget"
+        <textbox id="addressCol2#1" class="plain textbox-addressingWidget uri-element"
                  type="autocomplete" flex="1"
                  searchSessions="addrbook" timeout="300" maxrows="4" 
                  autoFill="true" autoFillAfterMatch="true" forceComplete="true"

@@ -43,7 +43,7 @@
       accesskey="&locationEditField.accessKey;"
       tooltiptext="&locationEditField.tooltip;"
       />
-    <textbox id="srcInput" oninput="ChangeImageSrc();" tabindex="1"/>
+    <textbox id="srcInput" oninput="ChangeImageSrc();" tabindex="1" class="uri-element"/>
     <hbox>
       <checkbox 
         id  = "MakeRelativeCheckbox"

@@ -79,7 +79,7 @@ Contributor(s):
                control="mailnewsStartPageUrl"/>
         <textbox id="mailnewsStartPageUrl" flex="1" preftype="localizedstring"
                  type="autocomplete" prefstring="mailnews.start_page.url"
-                 searchSessions="history" timeout="50" maxrows="6"/>
+                 searchSessions="history" timeout="50" maxrows="6" class="uri-element"/>
       </hbox>
 
     <hbox pack="end">

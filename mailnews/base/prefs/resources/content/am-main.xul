@@ -42,12 +42,12 @@
           <row align="center">
             <label value="&email.label;" control="identity.email"/>
             <textbox wsm_persist="true" id="identity.email" 
-                     prefstring="mail.identity.%identitykey%.useremail"/>
+                     prefstring="mail.identity.%identitykey%.useremail" class="uri-element"/>
           </row>
           <row align="center">
             <label value="&replyTo.label;" control="identity.replyTo"/>
             <textbox wsm_persist="true" id="identity.replyTo"
-                     prefstring="mail.identity.%identitykey%.reply_to"/>
+                     prefstring="mail.identity.%identitykey%.reply_to" class="uri-element"/>
           </row>
           <row align="center">
             <label value="&organization.label;" control="identity.organization"/>
@@ -66,7 +66,7 @@
       <hbox align="center" class="indent">
         <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"
                  observes="broadcaster_attachSignature"
-                 prefstring="mail.identity.%identitykey%.sig_file"/>
+                 prefstring="mail.identity.%identitykey%.sig_file" class="uri-element"/>
         <button class="push" name="browse" label="&choose.label;"  
                 oncommand="selectFile()"
                 observes="broadcaster_attachSignature"

@@ -54,7 +54,7 @@ Rights Reserved.
       <separator class="thin"/>
       <hbox align="center">
         <label style="width: 8em;" value="&incomingServerLabel.label;" control="hostname"/>
-        <textbox wsm_persist="true" id="hostname" flex="1"/>
+        <textbox wsm_persist="true" id="hostname" flex="1" class="uri-element"/>
       </hbox>
     </groupbox>
 
@@ -64,7 +64,7 @@ Rights Reserved.
       <separator class="thin"/>
       <hbox align="center">
         <label value="&smtpServerLabel.label;" control="smtphostname" style="width: 8em;"/>
-        <textbox id="smtphostname" wsm_persist="true" flex="1"/>
+        <textbox id="smtphostname" wsm_persist="true" flex="1" class="uri-element"/>
       </hbox>
     </groupbox>
 
