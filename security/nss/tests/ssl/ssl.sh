@@ -258,10 +258,10 @@ ssl_stress()
           cparam=`echo $cparam | sed -e 's;_; ;g'`
           start_selfserv
 
-          echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose \\"
+          echo "strsclnt -q -p ${PORT} -d . -w nss $cparam $verbose \\"
           echo "         ${HOSTADDR}"
           echo "strsclnt started at `date`"
-          strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOSTADDR}
+          strsclnt -q -p ${PORT} -d . -w nss $cparam $verbose ${HOSTADDR}
           ret=$?
           echo "strsclnt completed at `date`"
 
