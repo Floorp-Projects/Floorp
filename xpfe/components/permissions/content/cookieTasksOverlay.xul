@@ -34,8 +34,6 @@
 
     /******* THE FOLLOWING IS FOR THE STATUSBAR OVERLAY *******/
 
-    var gObserverService;
-    var gPref;
     var gButtonPressed;
 
     var cookieIconObserver = {
@@ -68,10 +66,8 @@
     };
 
     function viewP3PDialog() {
-      if (!gObserverService) {
-        gObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-      }
-      gObserverService.notifyObservers(null, "cookieIcon", "off");
+      var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+      observerService.notifyObservers(null, "cookieIcon", "off");
 
       window.openDialog
         ("chrome://cookie/content/p3pDialog.xul","_blank","modal=yes,chrome,resizable=no", this);
@@ -82,28 +78,31 @@
       }
     }
 
-    // determine if p3p pref is set
-    gPref = Components.classes['@mozilla.org/preferences-service;1'];
-    gPref = gPref.getService();
-    gPref = gPref.QueryInterface(Components.interfaces.nsIPrefBranch);
-    if (gPref.getIntPref("network.cookie.cookieBehavior") == 3) {
+    function CookieTasksStartup() {
+      // determine if p3p pref is set
+      var pref = Components.classes['@mozilla.org/preferences-service;1'].
+                     getService(Components.interfaces.nsIPrefBranch);
+      if (pref.getIntPref("network.cookie.cookieBehavior") == 3) {
 
-      // make sure p3p dll exists, else we can't keep pref set
-      if (!("@mozilla.org/cookie-consent;1" in Components.classes)) {
-        gPref.setIntPref("network.cookie.cookieBehavior", 0);
+        // make sure p3p dll exists, else we can't keep pref set
+        if (!("@mozilla.org/cookie-consent;1" in Components.classes)) {
+          pref.setIntPref("network.cookie.cookieBehavior", 0);
+        }
+      }
+
+      if ("@mozilla.org/cookie-consent;1" in Components.classes) {
+
+        // p3p dll exists so create an observer for changes in visibility of cookie icon
+        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+        observerService.addObserver(cookieIconObserver, "cookieIcon", false);
+
+        // determine whether or not cookie icon in this new window should be displayed
+        // we need to wait until window is created before displaying icon
+        addEventListener("load", listener, false);
       }
     }
 
-    if ("@mozilla.org/cookie-consent;1" in Components.classes) {
-
-      // p3p dll exists so create an observer for changes in visibility of cookie icon
-      var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-      observerService.addObserver(cookieIconObserver, "cookieIcon", false);
-
-      // determine whether or not cookie icon in this new window should be displayed
-      // we need to wait until window is created before displaying icon
-      addEventListener("load", listener, false);
-    }
+    CookieTasksStartup();
 
   ]]>
   </script>         
