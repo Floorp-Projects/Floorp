@@ -5,7 +5,6 @@
 nsIClipboard.h
 nsIDragTarget.h
 nsIDragSource.h
-nsITextDataFlavor.h
 nsIDataFlavor.h
 nsITransferable.h
 nsIDragService.h

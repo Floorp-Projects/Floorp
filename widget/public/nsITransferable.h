@@ -62,7 +62,7 @@ class nsITransferable : public nsISupports {
     * @param  aFlavor the flavor of data to retrieve
     * @param  aData the data
     */
-    NS_IMETHOD SetTransferData(nsString & aStr) = 0;
+    NS_IMETHOD SetTransferData(const nsString & aStr) = 0;
 
   /**
     * Initializes the data flavor 
@@ -78,6 +78,12 @@ class nsITransferable : public nsISupports {
     * @param  aData the native data to be put on the clipboard
     */
     NS_IMETHOD GetNativeData(void ** aData) = 0;
+
+  /**
+    * Tells the transferrable, that now is the time to set the data on the native clipboard
+    *
+    */
+    NS_IMETHOD SetNativeClipboard() = 0;
 
   /**
     * Sets Native data 
