@@ -241,10 +241,10 @@ js_FreeAtomState(JSContext *cx, JSAtomState *state);
  * Atom garbage collection hooks.
  */
 typedef void
-(*JSGCThingMarker)(JSRuntime *rt, void *thing);
+(*JSGCThingMarker)(void *thing, void *data);
 
 extern void
-js_MarkAtomState(JSAtomState *state, JSGCThingMarker mark);
+js_MarkAtomState(JSAtomState *state, JSGCThingMarker mark, void *data);
 
 extern void
 js_SweepAtomState(JSAtomState *state, uintN gcflags);

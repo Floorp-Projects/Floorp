@@ -561,7 +561,9 @@ JSObjectOps JavaClass_ops = {
     JavaClass_hasInstance,      /* hasInstance */
     NULL,                       /* setProto */
     NULL,                       /* setParent */
-    0,0,0,0                     /* spare */
+    NULL,                       /* mark */
+    NULL,                       /* clear */
+    0,0                         /* spare */
 };
 
 static JSObjectOps *
@@ -582,7 +584,8 @@ JSClass JavaClass_class = {
     NULL,
     NULL,
     NULL,
-    {0, 0},
+    NULL,
+    0,
 };
 
 static JSObject *

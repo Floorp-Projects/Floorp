@@ -424,7 +424,9 @@ JSObjectOps JavaArray_ops = {
     NULL,                       /* hasInstance */
     NULL,                       /* setProto */
     NULL,                       /* setParent */
-    0,0,0,0                     /* spare */
+    NULL,                       /* mark */
+    NULL,                       /* clear */
+    0,0                         /* spare */
 };
 
 static JSObjectOps *
@@ -445,7 +447,8 @@ JSClass JavaArray_class = {
     NULL,
     NULL,
     NULL,
-    {0, 0},
+    NULL,
+    0,
 };
 
 extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;

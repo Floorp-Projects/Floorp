@@ -53,7 +53,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
-#include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jslock.h"
@@ -204,6 +203,7 @@ js_AllocGCThing(JSContext *cx, uintN flags)
 
     rt = cx->runtime;
     JS_LOCK_GC(rt);
+    JS_ASSERT(rt->gcLevel == 0);
     METER(rt->gcStats.alloc++);
 retry:
     thing = rt->gcFreeList;
@@ -413,15 +413,6 @@ js_UnlockGCThing(JSContext *cx, void *thing)
 JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
 JS_EXPORT_DATA(void *) js_LiveThingToFind;
 
-typedef struct GCMarkNode GCMarkNode;
-
-struct GCMarkNode {
-    void        *thing;
-    char        *name;
-    GCMarkNode  *next;
-    GCMarkNode  *prev;
-};
-
 #ifdef HAVE_XPCONNECT
 #include "dump_xpc.h"
 #endif
@@ -500,50 +491,21 @@ gc_dump_thing(JSRuntime* rt, JSGCThing *thing, uint8 flags, GCMarkNode *prev,
     free(path);
 }
 
-static void
-gc_mark_node(JSRuntime *rt, void *thing, GCMarkNode *prev);
-
-#define GC_MARK(_rt, _thing, _name, _prev)                                    \
-    JS_BEGIN_MACRO                                                            \
-	GCMarkNode _node;                                                     \
-	_node.thing = _thing;                                                 \
-	_node.name  = _name;                                                  \
-	_node.next  = NULL;                                                   \
-	_node.prev  = _prev;                                                  \
-	if (_prev) ((GCMarkNode *)(_prev))->next = &_node;                    \
-	gc_mark_node(_rt, _thing, &_node);                                    \
-    JS_END_MACRO
-
-static void
-gc_mark(JSRuntime *rt, void *thing)
-{
-    GC_MARK(rt, thing, "atom", NULL);
-}
-
-#define GC_MARK_ATOM(rt, atom, prev)     gc_mark_atom(rt, atom, prev)
-#define GC_MARK_SCRIPT(rt, script, prev) gc_mark_script(rt, script, prev)
-
-#else  /* !GC_MARK_DEBUG */
-
-#define GC_MARK(rt, thing, name, prev)   gc_mark(rt, thing)
-#define GC_MARK_ATOM(rt, atom, prev)     gc_mark_atom(rt, atom)
-#define GC_MARK_SCRIPT(rt, script, prev) gc_mark_script(rt, script)
-
-static void
-gc_mark(JSRuntime *rt, void *thing);
-
 #endif /* !GC_MARK_DEBUG */
 
 static void
-gc_mark_atom(JSRuntime *rt, JSAtom *atom
-#ifdef GC_MARK_DEBUG
-  , GCMarkNode *prev
-#endif
-)
+gc_mark_atom_key_thing(void *thing, void *arg)
+{
+    JSContext *cx = (JSContext *) arg;
+    GC_MARK(cx, thing, "atom", NULL);
+}
+
+void
+js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg)
 {
     jsval key;
 
-    if (!atom || atom->flags & ATOM_MARK)
+    if (atom->flags & ATOM_MARK)
 	return;
     atom->flags |= ATOM_MARK;
     key = ATOM_KEY(atom);
@@ -558,47 +520,26 @@ gc_mark_atom(JSRuntime *rt, JSAtom *atom
 	    JS_snprintf(name, sizeof name, "<%x>", key);
 	}
 #endif
-	GC_MARK(rt, JSVAL_TO_GCTHING(key), name, prev);
+	GC_MARK(cx, JSVAL_TO_GCTHING(key), name, arg);
     }
 }
 
-static void
-gc_mark_script(JSRuntime *rt, JSScript *script
-#ifdef GC_MARK_DEBUG
-  , GCMarkNode *prev
-#endif
-)
+void
+js_MarkGCThing(JSContext *cx, void *thing, void *arg)
 {
-    JSAtomMap *map;
-    uintN i, length;
-    JSAtom **vector;
-
-    map = &script->atomMap;
-    length = map->length;
-    vector = map->vector;
-    for (i = 0; i < length; i++)
-	GC_MARK_ATOM(rt, vector[i], prev);
-}
-
-static void
-#ifdef GC_MARK_DEBUG
-gc_mark_node(JSRuntime *rt, void *thing, GCMarkNode *prev)
-#else
-gc_mark(JSRuntime *rt, void *thing)
-#endif
-{
+    JSRuntime *rt;
     uint8 flags, *flagp;
     JSObject *obj;
+    uint32 nslots;
     jsval v, *vp, *end;
+#ifdef GC_MARK_DEBUG
     JSScope *scope;
-    JSClass *clasp;
-    JSScript *script;
-    JSFunction *fun;
     JSScopeProperty *sprop;
-    JSSymbol *sym;
+#endif
 
     if (!thing)
 	return;
+    rt = cx->runtime;
     flagp = gc_find_flags(rt, thing);
     if (!flagp)
 	return;
@@ -627,134 +568,65 @@ gc_mark(JSRuntime *rt, void *thing)
     if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
 	obj = (JSObject *) thing;
 	vp = obj->slots;
-	if (vp) {
-	    scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
-	    if (scope) {
-		clasp = (JSClass *) JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
-
-		if (clasp == &js_ScriptClass) {
-		    v = vp[JSSLOT_PRIVATE];
-		    if (!JSVAL_IS_VOID(v)) {
-			script = (JSScript *) JSVAL_TO_PRIVATE(v);
-			if (script)
-			    GC_MARK_SCRIPT(rt, script, prev);
-		    }
-		}
-
-		if (clasp == &js_FunctionClass) {
-		    v = vp[JSSLOT_PRIVATE];
-		    if (!JSVAL_IS_VOID(v)) {
-			fun = (JSFunction *) JSVAL_TO_PRIVATE(v);
-			if (fun) {
-			    if (fun->atom)
-				GC_MARK_ATOM(rt, fun->atom, prev);
-			    if (fun->script)
-				GC_MARK_SCRIPT(rt, fun->script, prev);
-			}
-		    }
-		}
-
-		for (sprop = scope->props; sprop; sprop = sprop->next) {
-		    for (sym = sprop->symbols; sym; sym = sym->next) {
-			if (JSVAL_IS_INT(sym_id(sym)))
-			    continue;
-			GC_MARK_ATOM(rt, sym_atom(sym), prev);
-		    }
-#if JS_HAS_GETTER_SETTER
-                    if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        nslots = (obj->map->ops->mark)
+                 ? obj->map->ops->mark(cx, obj, arg)
+                 : obj->map->freeslot;
 #ifdef GC_MARK_DEBUG
-                        char buf[64];
-                        JSAtom *atom = sym_atom(sprop->symbols);
-                        const char *id = (atom && ATOM_IS_STRING(atom))
-                                       ? JS_GetStringBytes(ATOM_TO_STRING(atom))
-                                       : "unknown";
+        scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
 #endif
-
-                        if (sprop->attrs & JSPROP_GETTER) {
+        for (end = vp + nslots; vp < end; vp++) {
+            v = *vp;
+            if (JSVAL_IS_GCTHING(v)) {
 #ifdef GC_MARK_DEBUG
-                            JS_snprintf(buf, sizeof buf, "%s %s",
-                                        id, js_getter_str);
-#endif
-                            GC_MARK(rt,
-                                    JSVAL_TO_GCTHING((jsval)
-                                        SPROP_GETTER_SCOPE(sprop, scope)),
-                                    buf,
-                                    prev);
+                char name[32];
+
+                if (scope) {
+                    uint32 slot;
+                    jsval nval;
+
+                    slot = vp - obj->slots;
+                    for (sprop = scope->props; ; sprop = sprop->next) {
+                        if (!sprop) {
+                            switch (slot) {
+                              case JSSLOT_PROTO:
+                                strcpy(name, "__proto__");
+                                break;
+                              case JSSLOT_PARENT:
+                                strcpy(name, "__parent__");
+                                break;
+                              case JSSLOT_PRIVATE:
+                                strcpy(name, "__private__");
+                                break;
+                              default:
+                                JS_snprintf(name, sizeof name,
+                                            "**UNKNOWN SLOT %ld**",
+                                            (long)slot);
+                                break;
+                            }
+                            break;
                         }
-                        if (sprop->attrs & JSPROP_SETTER) {
-#ifdef GC_MARK_DEBUG
-                            JS_snprintf(buf, sizeof buf, "%s %s",
-                                        id, js_setter_str);
-#endif
-                            GC_MARK(rt,
-                                    JSVAL_TO_GCTHING((jsval)
-                                        SPROP_SETTER_SCOPE(sprop, scope)),
-                                    buf,
-                                    prev);
+                        if (sprop->slot == slot) {
+                            nval = sprop->symbols
+                                   ? js_IdToValue(sym_id(sprop->symbols))
+                                   : sprop->id;
+                            if (JSVAL_IS_INT(nval)) {
+                                JS_snprintf(name, sizeof name, "%ld",
+                                            (long)JSVAL_TO_INT(nval));
+                            } else if (JSVAL_IS_STRING(nval)) {
+                                JS_snprintf(name, sizeof name, "%s",
+                                  JS_GetStringBytes(JSVAL_TO_STRING(nval)));
+                            } else {
+                                strcpy(name, "**FINALIZED ATOM KEY**");
+                            }
+                            break;
                         }
                     }
-#endif /* JS_HAS_GETTER_SETTER */
-		}
-	    }
-	    if (!scope || scope->object == obj)
-		end = vp + obj->map->freeslot;
-	    else
-		end = vp + JS_INITIAL_NSLOTS;
-	    for (; vp < end; vp++) {
-		v = *vp;
-		if (JSVAL_IS_GCTHING(v)) {
-#ifdef GC_MARK_DEBUG
-		    char name[32];
-
-		    if (scope) {
-			uint32 slot;
-			jsval nval;
-
-			slot = vp - obj->slots;
-			for (sprop = scope->props; ; sprop = sprop->next) {
-			    if (!sprop) {
-				switch (slot) {
-				  case JSSLOT_PROTO:
-				    strcpy(name, "__proto__");
-				    break;
-				  case JSSLOT_PARENT:
-				    strcpy(name, "__parent__");
-				    break;
-				  case JSSLOT_PRIVATE:
-				    strcpy(name, "__private__");
-				    break;
-				  default:
-				    JS_snprintf(name, sizeof name,
-						"**UNKNOWN SLOT %ld**",
-						(long)slot);
-				    break;
-				}
-				break;
-			    }
-			    if (sprop->slot == slot) {
-				nval = sprop->symbols
-				       ? js_IdToValue(sym_id(sprop->symbols))
-				       : sprop->id;
-				if (JSVAL_IS_INT(nval)) {
-				    JS_snprintf(name, sizeof name, "%ld",
-						(long)JSVAL_TO_INT(nval));
-				} else if (JSVAL_IS_STRING(nval)) {
-				    JS_snprintf(name, sizeof name, "%s",
-				      JS_GetStringBytes(JSVAL_TO_STRING(nval)));
-				} else {
-				    strcpy(name, "**FINALIZED ATOM KEY**");
-				}
-				break;
-			    }
-			}
-		    }
+                }
 #endif
-		    GC_MARK(rt, JSVAL_TO_GCTHING(v), name, prev);
-		}
-	    }
-	}
+                GC_MARK(cx, JSVAL_TO_GCTHING(v), name, arg);
+            }
+        }
     }
-
     METER(rt->gcStats.depth--);
 }
 
@@ -774,13 +646,13 @@ gc_root_marker(JSHashEntry *he, intN i, void *arg)
 
     /* Ignore null object and scalar values. */
     if (!JSVAL_IS_NULL(v) && JSVAL_IS_GCTHING(v)) {
-        JSRuntime *rt = (JSRuntime *)arg;
+        JSContext *cx = (JSContext *)arg;
 #ifdef DEBUG
         JSArena *a;
         JSBool root_points_to_gcArenaPool = JS_FALSE;
 	void *thing = JSVAL_TO_GCTHING(v);
 
-        for (a = rt->gcArenaPool.first.next; a; a = a->next) {
+        for (a = cx->runtime->gcArenaPool.first.next; a; a = a->next) {
 	    if (JS_UPTRDIFF(thing, a->base) < a->avail - a->base) {
                 root_points_to_gcArenaPool = JS_TRUE;
                 break;
@@ -796,7 +668,7 @@ gc_root_marker(JSHashEntry *he, intN i, void *arg)
         JS_ASSERT(root_points_to_gcArenaPool);
 #endif
 
-        GC_MARK(rt, JSVAL_TO_GCTHING(v), he->value ? he->value : "root", NULL);
+        GC_MARK(cx, JSVAL_TO_GCTHING(v), he->value ? he->value : "root", NULL);
     }
     return HT_ENUMERATE_NEXT;
 }
@@ -805,9 +677,9 @@ JS_STATIC_DLL_CALLBACK(intN)
 gc_lock_marker(JSHashEntry *he, intN i, void *arg)
 {
     void *thing = (void *)he->key;
-    JSRuntime *rt = (JSRuntime *)arg;
+    JSContext *cx = (JSContext *)arg;
 
-    GC_MARK(rt, thing, "locked object", NULL);
+    GC_MARK(cx, thing, "locked object", NULL);
     return HT_ENUMERATE_NEXT;
 }
 
@@ -961,10 +833,10 @@ restart:
     /*
      * Mark phase.
      */
-    JS_HashTableEnumerateEntries(rt->gcRootsHash, gc_root_marker, rt);
+    JS_HashTableEnumerateEntries(rt->gcRootsHash, gc_root_marker, cx);
     if (rt->gcLocksHash)
-        JS_HashTableEnumerateEntries(rt->gcLocksHash, gc_lock_marker, rt);
-    js_MarkAtomState(&rt->atomState, gc_mark);
+        JS_HashTableEnumerateEntries(rt->gcLocksHash, gc_lock_marker, cx);
+    js_MarkAtomState(&rt->atomState, gc_mark_atom_key_thing, cx);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
 	/*
@@ -1010,25 +882,25 @@ restart:
 		    for (vp = (jsval *)begin; vp < (jsval *)end; vp++) {
 			v = *vp;
 			if (JSVAL_IS_GCTHING(v))
-			    GC_MARK(rt, JSVAL_TO_GCTHING(v), "stack", NULL);
+			    GC_MARK(cx, JSVAL_TO_GCTHING(v), "stack", NULL);
 		    }
 		    if (end == (jsuword)sp)
 			break;
 		}
 	    }
 	    do {
-		GC_MARK(rt, fp->scopeChain, "scope chain", NULL);
-		GC_MARK(rt, fp->thisp, "this", NULL);
+		GC_MARK(cx, fp->scopeChain, "scope chain", NULL);
+		GC_MARK(cx, fp->thisp, "this", NULL);
 		if (JSVAL_IS_GCTHING(fp->rval))
-		    GC_MARK(rt, JSVAL_TO_GCTHING(fp->rval), "rval", NULL);
+		    GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval", NULL);
 		if (fp->callobj)
-		    GC_MARK(rt, fp->callobj, "call object", NULL);
+		    GC_MARK(cx, fp->callobj, "call object", NULL);
 		if (fp->argsobj)
-		    GC_MARK(rt, fp->argsobj, "arguments object", NULL);
+		    GC_MARK(cx, fp->argsobj, "arguments object", NULL);
 		if (fp->script)
-		    GC_MARK_SCRIPT(rt, fp->script, NULL);
+		    js_MarkScript(cx, fp->script, NULL);
 		if (fp->sharpArray)
-		    GC_MARK(rt, fp->sharpArray, "sharp array", NULL);
+		    GC_MARK(cx, fp->sharpArray, "sharp array", NULL);
 	    } while ((fp = fp->down) != NULL);
 	}
 
@@ -1037,13 +909,13 @@ restart:
 	    acx->fp->dormantNext = NULL;
 
         /* Mark other roots-by-definition in acx. */
-	GC_MARK(rt, acx->globalObject, "global object", NULL);
-	GC_MARK(rt, acx->newborn[GCX_OBJECT], "newborn object", NULL);
-	GC_MARK(rt, acx->newborn[GCX_STRING], "newborn string", NULL);
-	GC_MARK(rt, acx->newborn[GCX_DOUBLE], "newborn double", NULL);
+	GC_MARK(cx, acx->globalObject, "global object", NULL);
+	GC_MARK(cx, acx->newborn[GCX_OBJECT], "newborn object", NULL);
+	GC_MARK(cx, acx->newborn[GCX_STRING], "newborn string", NULL);
+	GC_MARK(cx, acx->newborn[GCX_DOUBLE], "newborn double", NULL);
 #if JS_HAS_EXCEPTIONS
 	if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
-	    GC_MARK(rt, JSVAL_TO_GCTHING(acx->exception), "exception", NULL);
+	    GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception", NULL);
 #endif
     }
 

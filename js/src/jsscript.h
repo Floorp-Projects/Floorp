@@ -70,6 +70,20 @@ struct JSScript {
     JSObject     *object;       /* optional Script-class object wrapper */
 };
 
+#define JSSCRIPT_FIND_CATCH_START(script, pc, catchpc)                        \
+    JS_BEGIN_MACRO                                                            \
+        JSTryNote *_tn = (script)->trynotes;                                  \
+        jsbytecode *_catchpc = NULL;                                          \
+        if (_tn) {                                                            \
+            ptrdiff_t _offset = PTRDIFF(pc, (script)->main, jsbytecode);      \
+            while (JS_UPTRDIFF(_offset, _tn->start) >= (jsuword)_tn->length)  \
+                _tn++;                                                        \
+            if (_tn->catchStart)                                              \
+                _catchpc = (script)->main + _tn->catchStart;                  \
+        }                                                                     \
+        catchpc = _catchpc;                                                   \
+    JS_END_MACRO
+
 extern JS_FRIEND_DATA(JSClass) js_ScriptClass;
 
 extern JSObject *
@@ -90,6 +104,9 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun);
 
 extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
+
+extern void
+js_MarkScript(JSContext *cx, JSScript *script, void *arg);
 
 extern jssrcnote *
 js_GetSrcNote(JSScript *script, jsbytecode *pc);

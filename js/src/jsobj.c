@@ -91,7 +91,8 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_Call,                js_Construct,
     NULL,                   js_HasInstance,
     js_SetProtoOrParent,    js_SetProtoOrParent,
-    0,0,0,0
+    js_Mark,                js_Clear,
+    0,                      0
 };
 
 #ifdef XP_MAC
@@ -1268,7 +1269,8 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     NULL,                   NULL,
     NULL,                   NULL,
     js_SetProtoOrParent,    js_SetProtoOrParent,
-    0,0,0,0
+    js_Mark,                js_Clear,
+    0,                      0
 };
 
 static JSObjectOps *
@@ -1283,7 +1285,7 @@ JSClass js_WithClass = {
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     with_getObjectOps,
-    0,0,0,0,0,{0,0}
+    0,0,0,0,0,0,0
 };
 
 #if JS_HAS_OBJ_PROTO_PROP
@@ -3010,6 +3012,85 @@ out:
 
 #endif /* JS_HAS_XDR */
 
+uint32
+js_Mark(JSContext *cx, JSObject *obj, void *arg)
+{
+    JSScope *scope;
+    JSScopeProperty *sprop;
+    JSSymbol *sym;
+    JSClass *clasp;
+
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    scope = OBJ_SCOPE(obj);
+
+    for (sprop = scope->props; sprop; sprop = sprop->next) {
+        for (sym = sprop->symbols; sym; sym = sym->next) {
+            if (JSVAL_IS_INT(sym_id(sym)))
+                continue;
+            js_MarkAtom(cx, sym_atom(sym), arg);
+        }
+#if JS_HAS_GETTER_SETTER
+        if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+#ifdef GC_MARK_DEBUG
+            char buf[64];
+            JSAtom *atom = sym_atom(sprop->symbols);
+            const char *id = (atom && ATOM_IS_STRING(atom))
+                             ? JS_GetStringBytes(ATOM_TO_STRING(atom))
+                             : "unknown";
+#endif
+
+            if (sprop->attrs & JSPROP_GETTER) {
+#ifdef GC_MARK_DEBUG
+                JS_snprintf(buf, sizeof buf, "%s %s",
+                            id, js_getter_str);
+#endif
+                GC_MARK(cx,
+                        JSVAL_TO_GCTHING((jsval)
+                            SPROP_GETTER_SCOPE(sprop, scope)),
+                        buf,
+                        arg);
+            }
+            if (sprop->attrs & JSPROP_SETTER) {
+#ifdef GC_MARK_DEBUG
+                JS_snprintf(buf, sizeof buf, "%s %s",
+                            id, js_setter_str);
+#endif
+                GC_MARK(cx,
+                        JSVAL_TO_GCTHING((jsval)
+                            SPROP_SETTER_SCOPE(sprop, scope)),
+                        buf,
+                        arg);
+            }
+        }
+#endif /* JS_HAS_GETTER_SETTER */
+    }
+
+    /* No one runs while the GC is running, so we can use LOCKED_... here. */
+    clasp = LOCKED_OBJ_GET_CLASS(obj);
+    if (clasp->mark)
+        (void) clasp->mark(cx, obj, arg);
+    return (scope->object == obj) ? obj->map->freeslot : JS_INITIAL_NSLOTS;
+}
+
+void
+js_Clear(JSContext *cx, JSObject *obj)
+{
+    JSScope *scope;
+    uint32 i, n;
+
+    /* Clear our scope of all symbols and properties. */
+    JS_LOCK_OBJ(cx, obj);
+    scope = OBJ_SCOPE(obj);
+    scope->ops->clear(cx, scope);
+
+    /* Clear slot values and reset freeslot so we're consistent. */
+    i = scope->map.nslots;
+    n = JSSLOT_FREE(LOCKED_OBJ_GET_CLASS(obj));
+    while (--i >= n)
+        obj->slots[i] = JSVAL_VOID;
+    scope->map.freeslot = n;
+    JS_UNLOCK_OBJ(cx, obj);
+}
 
 #ifdef DEBUG
 

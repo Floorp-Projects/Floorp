@@ -165,7 +165,8 @@ JSClass JavaMember_class = {
     NULL, /* construct */
     NULL, /* xdrObject */
     NULL, /* hasInstance */
-    {0, 0}, /* spare */
+    NULL, /* mark */
+    0,    /* spare */
 };
 
 JSBool

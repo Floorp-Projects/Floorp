@@ -622,13 +622,24 @@ script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 }
 
+static uint32
+script_mark(JSContext *cx, JSObject *obj, void *arg)
+{
+    JSScript *script;
+
+    script = (JSScript *) JS_GetPrivate(cx, obj);
+    if (script)
+        js_MarkScript(cx, script, arg);
+    return 0;
+}
+
 JS_FRIEND_DATA(JSClass) js_ScriptClass = {
     js_Script_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   script_finalize,
     NULL,             NULL,             script_call,      NULL,/*XXXbe xdr*/
-    0,0,{0,0}
+    NULL,             NULL,             script_mark,      0
 };
 
 #if JS_HAS_SCRIPT_OBJECT
@@ -781,6 +792,20 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     if (script->principals)
 	JSPRINCIPALS_DROP(cx, script->principals);
     JS_free(cx, script);
+}
+
+void
+js_MarkScript(JSContext *cx, JSScript *script, void *arg)
+{
+    JSAtomMap *map;
+    uintN i, length;
+    JSAtom **vector;
+
+    map = &script->atomMap;
+    length = map->length;
+    vector = map->vector;
+    for (i = 0; i < length; i++)
+        js_MarkAtom(cx, vector[i], arg);
 }
 
 jssrcnote *

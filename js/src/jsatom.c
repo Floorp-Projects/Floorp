@@ -306,8 +306,8 @@ js_FreeAtomState(JSContext *cx, JSAtomState *state)
 }
 
 typedef struct MarkArgs {
-    JSRuntime       *runtime;
     JSGCThingMarker mark;
+    void            *data;
 } MarkArgs;
 
 JS_STATIC_DLL_CALLBACK(intN)
@@ -323,19 +323,19 @@ js_atom_marker(JSHashEntry *he, intN i, void *arg)
 	key = ATOM_KEY(atom);
 	if (JSVAL_IS_GCTHING(key)) {
 	    args = (MarkArgs *) arg;
-	    args->mark(args->runtime, JSVAL_TO_GCTHING(key));
+	    args->mark(JSVAL_TO_GCTHING(key), args->data);
 	}
     }
     return HT_ENUMERATE_NEXT;
 }
 
 void
-js_MarkAtomState(JSAtomState *state, JSGCThingMarker mark)
+js_MarkAtomState(JSAtomState *state, JSGCThingMarker mark, void *data)
 {
     MarkArgs args;
 
-    args.runtime = state->runtime;
     args.mark = mark;
+    args.data = data;
     JS_HashTableEnumerateEntries(state->table, js_atom_marker, &args);
 }
 
