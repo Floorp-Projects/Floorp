@@ -21,6 +21,9 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMLocation;
+
+
 [scriptable, uuid(a6cf90c5-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNSHTMLDocument : nsISupports
 {
@@ -35,12 +38,14 @@ interface nsIDOMNSHTMLDocument : nsISupports
 
   readonly attribute nsIDOMHTMLCollection embeds;
 
+  // location is settable too but when set it's always set to a string
+  // so we can't express that in XPIDL.
+  readonly attribute nsIDOMLocation       location;
+
   DOMString                 getSelection();
   nsISupports               namedItem(in DOMString name);
 
-  void                      open(/* ... */);
-  void                      write(in DOMString data /*, ... */);
-  void                      writeln(in DOMString data /*, ... */);
+  nsIDOMDocument            open(/* ... */);
   void                      clear();
 
   void                      captureEvents(in long eventFlags);
