@@ -271,13 +271,6 @@ NS_IMETHODIMP nsContentTreeOwner::CreateBrowserWindow(PRUint32 aChromeFlags,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::FindNamedBrowserItem(const PRUnichar* aName,
-   nsIDocShellTreeItem** aBrowserItem)
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsContentTreeOwner::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
    NS_ERROR("Haven't Implemented this yet");

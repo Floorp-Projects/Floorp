@@ -391,10 +391,11 @@ NS_IMETHODIMP PhMozEmbedChrome::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP PhMozEmbedChrome::CreateBrowserWindow(PRUint32 chromeMask, 
      PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::GetNewBrowser\n"));
-  return NS_ERROR_FAILURE;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("PhMozEmbedChrome::CreateBrowserWindow\n"));
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#if 0
 NS_IMETHODIMP PhMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName, 
 						      nsIDocShellTreeItem **_retval)
 {
@@ -421,6 +422,7 @@ NS_IMETHODIMP PhMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName,
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP PhMozEmbedChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {

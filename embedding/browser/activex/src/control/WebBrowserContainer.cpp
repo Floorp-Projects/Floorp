@@ -665,13 +665,6 @@ CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRI
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::FindNamedBrowserItem(const PRUnichar *aName, nsIDocShellTreeItem **_retval)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
 CWebBrowserContainer::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
 	return NS_ERROR_FAILURE;

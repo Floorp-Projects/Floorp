@@ -432,10 +432,16 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP GtkMozEmbedChrome::CreateBrowserWindow(PRUint32 chromeMask, 
      PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetNewBrowser\n"));
-  return NS_ERROR_FAILURE;
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::CreateBrowserWindow\n"));
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#if 0
+/* Just commenting out for now because it looks like somebody went to
+   a lot of work here. This method has been removed from nsIWebBrowserChrome
+   per the 5 Feb 01 API review, to be handled one level further down
+   in nsDocShellTreeOwner.
+*/
 NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName, 
 						      nsIDocShellTreeItem **_retval)
 {
@@ -462,6 +468,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName,
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP GtkMozEmbedChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
