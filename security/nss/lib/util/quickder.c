@@ -254,6 +254,8 @@ static SECStatus MatchComponentType(const SEC_ASN1Template* templateEntry,
         /* this is only to help debugging of the decoder in case of problems */
         unsigned char tagclass = tag & SEC_ASN1_CLASS_MASK;
         unsigned char expectedclass = (unsigned char)kind & SEC_ASN1_CLASS_MASK;
+        tagclass = tagclass;
+        expectedclass = expectedclass;
 #endif
         *match = PR_FALSE;
         return SECSuccess;
