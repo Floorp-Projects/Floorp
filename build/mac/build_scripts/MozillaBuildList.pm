@@ -1311,7 +1311,7 @@ sub BuildDist()
     mkpath([ ":mozilla:dist:viewer:Plug-ins", ":mozilla:dist:viewer_debug:Plug-ins"]);
     #mkpath([ ":mozilla:dist:client:Plugins", ":mozilla:dist:client_debug:Plugins"]);
     
-    UpdateGeneratedChromeFile();
+    UpdateGeneratedChromeFiles();
 
     BuildRuntimeDist();
     
