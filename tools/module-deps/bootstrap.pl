@@ -129,8 +129,12 @@ sub FindMakefiles
 	
 	if($_ eq "Makefile.in") {
 	  #print "$File::Find::dir $_\n";
-      #strip off the ".in"
-	  $_ =~ s/.in//;
+      
+	  $_ =~ s/.in//;  # Strip off the ".in"
+
+      $File::Find::dir =~ s/mozilla\///;  # Strip off mozilla/
+      
+	  #$_ =~ s/mozilla//;
 	  push(@foundMakefiles, "$File::Find::dir/$_");
 	} else {
 	  #print "  $File::Find::dir $_\n";
@@ -251,7 +255,10 @@ sub FindMakefiles
     print ALLMAKEFILES "$_\n";
   }
 
-  print ALLMAKEFILES "\"";
+  print ALLMAKEFILES "\"\n\n";
+
+  print ALLMAKEFILES "add_makefiles \"\$MAKEFILES_bootstrap\"";
+
   close ALLMAKEFILES;
 
   #print "Configuring nspr ... \n";
@@ -265,10 +272,10 @@ sub FindMakefiles
   my $configure_cmd = "./configure --enable-standalone-modules=$root_modules";
   $rv = run_shell_command("$configure_cmd");
 
-  unless($rv) {
-    print "Building ... \n";
-    $rv = run_shell_command("gmake");
-  } else {
-    print "Error: skipping build.\n";
-  }
+  #unless($rv) {
+  print "Building ... \n";
+  $rv = run_shell_command("gmake");
+  #} else {
+  #  print "Error: skipping build.\n";
+  #}
 }
