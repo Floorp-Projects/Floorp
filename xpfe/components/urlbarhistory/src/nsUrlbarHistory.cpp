@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -33,10 +33,14 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsIRDFService.h"
+#include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kRDFCUtilsCID, NS_RDFCONTAINERUTILS_CID);
 
 static char * ignoreArray[] = {
 		"http://",
@@ -57,6 +61,7 @@ static char * ignoreArray[] = {
 static nsIRDFResource * kNC_CHILD;
 static nsIRDFResource * kNC_URLBARHISTORY;
 static nsIRDFService * gRDFService;
+static nsIRDFContainerUtils * gRDFCUtils;
 
 static nsIPref * gPrefs;
 #define PREF_AUTOCOMPLETE_ENABLED "browser.urlbar.autocomplete.enabled"
@@ -76,9 +81,10 @@ nsUrlbarHistory::nsUrlbarHistory():mLength(0)
    
    nsresult res;
 
-   //nsIRDFService* rdfService;
    res = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService),
 	                                            (nsISupports **)&gRDFService);
+   res = nsServiceManager::GetService(kRDFCUtilsCID, NS_GET_IID(nsIRDFContainerUtils),
+	                                            (nsISupports **)&gRDFCUtils);
    if (gRDFService) {
 	   //printf("$$$$ Got RDF SERVICE $$$$\n");
      res = gRDFService->GetDataSource("rdf:localstore", getter_AddRefs(mDataSource));
@@ -139,56 +145,47 @@ NS_INTERFACE_MAP_END
 	NS_IMETHODIMP
 nsUrlbarHistory::ClearHistory()
 {
-     nsCOMPtr<nsISimpleEnumerator>    entries;
-  	 nsresult rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
-                                    kNC_CHILD,
-                                    PR_TRUE,
-									getter_AddRefs(entries));
-     NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
+  /* Get the elements in the data source through the container
+   */
+  nsCOMPtr<nsIRDFContainer> container;
+  gRDFCUtils->MakeSeq(mDataSource,
+                      kNC_URLBARHISTORY,
+                      getter_AddRefs(container));
+ 
+  NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
 
-	 PRBool moreElements = PR_FALSE;
+  /* Remove all the elements, back to front, to avoid O(n^2) updates
+   * from RDF.
+   */
+  PRInt32 count = 0;
+  container->GetCount(&count);
+  for (PRInt32 i = count; i >= 1; --i) {
+    nsCOMPtr<nsIRDFNode> dummy;
+    container->RemoveElementAt(i, PR_TRUE, getter_AddRefs(dummy));
+  }
 
-     while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && (moreElements == PR_TRUE)) {	  
-       nsCOMPtr<nsISupports> baseNode;
-	   nsCOMPtr<nsIRDFNode> node;
-    
-	   entries->GetNext(getter_AddRefs(baseNode));
-       if (baseNode) {		 
-         node = do_QueryInterface(baseNode);
-		 if (node) {
-		    rv = mDataSource->Unassert(kNC_URLBARHISTORY,
-			                        kNC_CHILD,
-									node);
+#ifdef DEBUG
+  container->GetCount(&count);
+  NS_ASSERTION(count == 0, "count != 0 after clearing history");
+#endif
+
+  return NS_OK;
 }
-   }
-	 } // while
-	   return NS_OK;
-   }
 
 
 /* Get size of the history list */
 NS_IMETHODIMP
 nsUrlbarHistory::GetCount(PRInt32 * aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
-	PRInt32   ubhCount = 0;
-	nsCOMPtr<nsISimpleEnumerator>    entries;
-  	(void)mDataSource->GetTargets(kNC_URLBARHISTORY,
-                                    kNC_CHILD,
-                                    PR_TRUE,
-									getter_AddRefs(entries));
-    NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aResult);
 
-	PRBool moreElements = PR_FALSE;
+  nsCOMPtr<nsIRDFContainer> container;
+  gRDFCUtils->MakeSeq(mDataSource, 
+                      kNC_URLBARHISTORY,
+                      getter_AddRefs(container));
 
-    while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && (moreElements == PR_TRUE)) {
-		nsCOMPtr<nsISupports>   entry;
-		entries->GetNext(getter_AddRefs(entry));
-		ubhCount ++;
-	 }  // while
-
-	*aResult = ubhCount;
-    return NS_OK;
+  NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
+  return container->GetCount(aResult);
 }
 
 
@@ -371,18 +368,27 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 {
     nsresult rv = NS_OK;
 	nsCOMPtr<nsISimpleEnumerator>  entries;
-    PRUnichar * rdfValue = nsnull;
+    const PRUnichar * rdfValue = nsnull;
     nsAutoString searchAutoStr(searchStr);
 	PRUnichar * match = nsnull;
 	PRInt32 index = -1;
 	   
-	if (!gRDFService || !kNC_URLBARHISTORY || !kNC_CHILD || !mDataSource)
+	if (!gRDFCUtils || !kNC_URLBARHISTORY)
 		return NS_ERROR_FAILURE;
 
-	rv = mDataSource->GetTargets(kNC_URLBARHISTORY,
-                                 kNC_CHILD,
-                                 PR_TRUE,
-								 getter_AddRefs(entries));
+	 nsCOMPtr<nsIRDFContainer> container;
+	 /* Get the elements in the  data source
+      * through the container
+      */
+	 rv = gRDFCUtils->MakeSeq(mDataSource,
+                                       kNC_URLBARHISTORY,
+									   getter_AddRefs(container));
+
+     NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
+ 
+     //Get the elements from the container
+	 container->GetElements(getter_AddRefs(entries));
+
      NS_ENSURE_TRUE(entries, NS_ERROR_FAILURE);
 
 	 PRBool moreElements = PR_FALSE;
@@ -395,7 +401,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 		rv = entries->GetNext(getter_AddRefs(entry));
 		if (entry) {
            literal = do_QueryInterface(entry);
-           literal->GetValue(&rdfValue);
+           literal->GetValueConst(&rdfValue);
 		}
 		if (rdfValue) {
 		    rdfAStr = (rdfValue);
@@ -447,7 +453,6 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
                 array->AppendElement((nsISupports*)newItem);
 		   }		  
 	   }
-	   Recycle(rdfValue);
 	   Recycle(match);
 	}  //while
 
