@@ -968,6 +968,23 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
     return result;
   }
 
+  result = range->GetIsCollapsed(&isCollapsed);
+
+  if (NS_FAILED(result))
+  {
+    UNLOCK_DOC(this);
+    return result;
+  }
+
+  if (isCollapsed)
+  {
+    // If we get here, the range is collapsed because there is nothing before
+    // the current selection! Just return NS_OK;
+
+    UNLOCK_DOC(this);
+    return NS_OK;
+  }
+
   result = CreateContentIterator(range, getter_AddRefs(iter));
 
   if (NS_FAILED(result))
@@ -1456,6 +1473,23 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
   {
     UNLOCK_DOC(this);
     return result;
+  }
+
+  result = range->GetIsCollapsed(&isCollapsed);
+
+  if (NS_FAILED(result))
+  {
+    UNLOCK_DOC(this);
+    return result;
+  }
+
+  if (isCollapsed)
+  {
+    // If we get here, the range is collapsed because there is nothing after
+    // the current selection! Just return NS_OK;
+
+    UNLOCK_DOC(this);
+    return NS_OK;
   }
 
   result = CreateContentIterator(range, getter_AddRefs(iter));
