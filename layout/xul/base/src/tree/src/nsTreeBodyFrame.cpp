@@ -2083,18 +2083,6 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
     if (!mView)
       return NS_OK;
 
-    if (mDropAllowed && (mDropOrient == nsITreeView::inDropBefore ||
-        mDropOrient == nsITreeView::inDropAfter)) {
-      nsRect feedbackRect(mInnerBox.x, mInnerBox.y+mRowHeight*(mDropRow-mTopRowIndex), mInnerBox.width, mRowHeight);
-      if (mDropOrient == nsITreeView::inDropAfter)
-        feedbackRect.y += mRowHeight;
-
-      nsRect dirtyRect;
-      if (dirtyRect.IntersectRect(aDirtyRect, feedbackRect)) {
-        PaintDropFeedback(feedbackRect, aPresContext, aRenderingContext, aDirtyRect);
-      }
-    }
-
     PRBool clipState = PR_FALSE;
   
     // Update our available height and our page count.
@@ -2151,6 +2139,18 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
 
         if (clip)
           aRenderingContext.PopState(clipState);
+      }
+    }
+
+    if (mDropAllowed && (mDropOrient == nsITreeView::inDropBefore ||
+        mDropOrient == nsITreeView::inDropAfter)) {
+      nsRect feedbackRect(mInnerBox.x, mInnerBox.y+mRowHeight*(mDropRow-mTopRowIndex), mInnerBox.width, mRowHeight);
+      if (mDropOrient == nsITreeView::inDropAfter)
+        feedbackRect.y += mRowHeight;
+
+      nsRect dirtyRect;
+      if (dirtyRect.IntersectRect(aDirtyRect, feedbackRect)) {
+        PaintDropFeedback(feedbackRect, aPresContext, aRenderingContext, aDirtyRect);
       }
     }
   }
