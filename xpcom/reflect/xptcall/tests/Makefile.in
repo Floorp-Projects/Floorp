@@ -41,6 +41,7 @@ LIBS		= 		\
 	-lxptcmd \
 	-lxptinfo \
 	-lreg       \
+	-lraptorbase \
 	-l$(MOZ_LIB_UTIL_PREFIX)util    \
 	$(NSPR_LIBS) 	\
 	$(NULL)
