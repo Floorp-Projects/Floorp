@@ -76,10 +76,6 @@ public class ContextFactory
      * execution thread. <tt>makeContext()</tt> is allowed to call
      * {@link Context#seal(Object)} on the result to prevent
      * {@link Context} changes by hostile scripts or applets.
-     * <p>
-     * The method must call {@link Context#Context(ContextFactory)}
-     * constructor using <tt>this</tt> as ContextFactory argument
-     * when creating Context instances or its subclasses.
      */
     protected Context makeContext()
     {
