@@ -56,18 +56,17 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIRequest.h"
 #include "nsIObserver.h"
+#include "nsIStringBundle.h"
  
 class nsDownloadManager : public nsIDownloadManager,
-                          public nsIRDFDataSource,
-                          public nsIRDFRemoteDataSource,
-                          public nsIDOMEventListener
+                          public nsIDOMEventListener,
+                          public nsIObserver
 {
 public:
-  NS_DECL_NSIRDFDATASOURCE
-  NS_DECL_NSIRDFREMOTEDATASOURCE
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADMANAGER
   NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSIOBSERVER
 
   nsresult Init();
 
@@ -79,15 +78,16 @@ protected:
   nsresult GetProfileDownloadsFileURL(char** aDownloadsFileURL);
   nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult AssertProgressInfo();
-  nsresult AssertProgressInfoFor(const char* aKey);
-  nsresult DownloadEnded(const char* aKey);
+  nsresult AssertProgressInfoFor(const char* aPersistentDescriptor);
+  nsresult DownloadEnded(const char* aPersistentDescriptor, const PRUnichar* aMessage);
   PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
 
 private:
-  nsCOMPtr<nsIRDFDataSource> mInner;
+  nsCOMPtr<nsIRDFDataSource> mDataSource;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
+  nsCOMPtr<nsIStringBundle> mBundle;
   nsHashtable* mCurrDownloadItems;
 
   friend class DownloadItem;
@@ -107,7 +107,6 @@ protected:
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
   nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
   nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
-
 private:
   nsDownloadManager* mDownloadManager;
 

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
  /*
   * nsIDownloadItem implements nsIWebProgressListener and acts as a "master
   * listener" for the ongoing transfer. If clients provide a persist object,

@@ -37,39 +37,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Keeps track of ongoing downloads, in the form of nsIDownloadItems. 
+// Keeps track of ongoing downloads, in the form of nsIDownloadItem's. 
 
 #include "nsISupports.idl"
-#include "nsIWebProgressListener.idl"
 
 interface nsIDOMWindow;
+interface nsIURI;
+interface nsILocalFile;
 interface nsIDownloadItem;
+interface nsIWebBrowserPersist;
 
 [scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
 interface nsIDownloadManager : nsISupports {
-
-  /**
-  * createDownload
-  * Creates a download item that can be managed.  Set the proper attributes
-  * on the nsIDownloadItem returned by this method, and then call addDownload to
-  * add it to the manager.
-  */
- 
-  nsIDownloadItem createDownload();
 
   /**
   * addDownload
   * Adds a download to be managed by the download manager.
   */
   
-  void addDownload(in nsIDownloadItem item);
+  nsIDownloadItem addDownload(in nsIURI aURI,
+                              in nsILocalFile aTarget,
+                              in wstring aDisplayName,
+                              in nsIWebBrowserPersist aPersist);
 
   /**
   * getDownload
   * Used to retrieve a download managed by the download manager.
   */
 
-  nsIDownloadItem getDownload(in string key);
+  nsIDownloadItem getDownload(in string persistentDescriptor);
 
   /**
   * cancelDownload
@@ -80,7 +76,7 @@ interface nsIDownloadManager : nsISupports {
   * the download.
   */
 
-  void cancelDownload(in string key);
+  void cancelDownload(in string persistentDescriptor);
 
   /**
   * removeDownload
@@ -103,7 +99,7 @@ interface nsIDownloadManager : nsISupports {
   * Opens an individual progress dialog displaying progress for the download.
   */
 
-  void openProgressDialogFor(in string key, in nsIDOMWindow aParent);
+  void openProgressDialogFor(in string persistentDescriptor, in nsIDOMWindow aParent);
 
   /**
   * onClose
