@@ -140,7 +140,9 @@ public:
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 
   // reparent the style contexts of this frame sub tree to live under the
-  // new given parent style context
+  // new given parent style context.  The StyleContextParent of aFrame
+  // should be changed _before_ this method is called, so that style tree
+  // verification can take place correctly.
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
                                   nsStyleContext* aNewParentContext) = 0;
 

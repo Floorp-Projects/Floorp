@@ -158,8 +158,8 @@ nsFirstLetterFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                         nsIFrame*       aChildList)
 {
   mFrames.SetFrames(aChildList);
-  if (aChildList) {
-    aPresContext->ReParentStyleContext(aChildList, mStyleContext);
+  for (nsIFrame* frame = aChildList; frame; frame = frame->GetNextSibling()) {
+    aPresContext->ReParentStyleContext(frame, mStyleContext);
   }
   return NS_OK;
 }

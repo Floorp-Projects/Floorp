@@ -993,8 +993,8 @@ nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
     if (prevOverflowFrames) {
       nsFrameList frames(prevOverflowFrames);
       
-      ReParentChildListStyle(aPresContext, mStyleContext, frames);
       mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
+      ReParentChildListStyle(aPresContext, mStyleContext, frames);
     }
   }
 
@@ -1004,8 +1004,8 @@ nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
     nsFrameList frames(overflowFrames);
 
-    ReParentChildListStyle(aPresContext, mStyleContext, frames);
     mFrames.AppendFrames(nsnull, overflowFrames);
+    ReParentChildListStyle(aPresContext, mStyleContext, frames);
   }
 
   // Set our own reflow state (additional state above and beyond
