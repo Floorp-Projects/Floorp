@@ -22,7 +22,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #ifndef kMIME_ENCODED_WORD_SIZE
-#define kMIME_ENCODED_WORD_SIZE 72
+#define kMIME_ENCODED_WORD_SIZE 75
 #endif 
 
 #ifndef kMAX_CSNAME
@@ -64,27 +64,24 @@ char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, cons
  *
  * @param from_charset[IN] A charset name in C string.
  * @param to_charset  [IN] A charset name in C string.
- * @param inBuffer    [IN] Input buffer to convert.
- * @param inLength    [IN] Input buffer length.
- * @param outBuffer   [OUT] Converted buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
+ * @param inCstring   [IN] Input buffer (in C string) to convert.
+ * @param outCstring  [OUT] Converted buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
  * @return            nsresult, 0 is success, otherwise error.
  */
 PRUint32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
-                             const char* inBuffer, const PRInt32 inLength,
-                             char** outBuffer);
+                             const char* inCstring, char** outCstring);
 
 /**
  * Convert an input buffer with a charset into unicode.
  *
  *
  * @param from_charset [IN] A charset name in C string.
- * @param aBuffer      [IN] Input buffer to convert.
- * @param aLength      [IN] Input buffer length.
+ * @param inCstring    [IN] Input buffer (in C string) to convert.
  * @param uniBuffer    [OUT] Output unicode buffer is set. Allocated buffer should be freed by PR_FREE.
  * @param uniLength    [OUT] Output unicode buffer character length is set.
  * @return             nsresult, 0 is success, otherwise error.
  */
-PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
+PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
                                void** uniBuffer, PRInt32* uniLength);
 
 /**
@@ -94,11 +91,11 @@ PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* aBuffer, co
  * @param to_charset   [IN] A charset name in C string.
  * @param uniBuffer    [IN] Input unicode buffer to convert.
  * @param uniLength    [IN] Input unicode buffer character length.
- * @param aBuffer      [OUT] Output buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
+ * @param outCstring   [OUT] Output buffer (in C string) is set. Allocated buffer should be freed by PR_FREE.
  * @return             nsresult, 0 is success, otherwise error.
  */
 PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
-                                 char** aBuffer);
+                                 char** outCstring);
 
 
 /*

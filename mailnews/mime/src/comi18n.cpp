@@ -420,7 +420,6 @@ char * intlmime_encode_mail_address(char *name, const char *src,
   int iThreshold;         /* how many bytes we can convert from the src */
   int iEffectLen;         /* the maximum length we can convert from the src */
   PRBool bChop = PR_FALSE;
-  PRBool is_being_used_in_email_summary_file = (maxLineLen > 120);
   CCCFunc cvtfunc = NULL;
 
   if (obj)
@@ -463,62 +462,58 @@ char * intlmime_encode_mail_address(char *name, const char *src,
 
     retbuflen = PL_strlen(retbuf);
     end = NULL;
-    //naoki: I think this check is not needed for iso-2022-jp because it will be B encoded.
-    if (stateful_encoding((const char *) name) || is_being_used_in_email_summary_file) {
-    } else {
+
     /* scan for separator, conversion happens on 8bit
        word between separators
+       we need to exclude RFC822 special characters from encoded word 
+       regardless of the encoding method ('B' or 'Q').
      */
-      if (IS_MAIL_SEPARATOR(begin))
-      {   /*  skip white spaces and separator */
-              q = begin;
-              while ( IS_MAIL_SEPARATOR(q) )
-                      q ++ ;
-              sep = *(q - 1);
-              sep_p = (q - 1);
-              *(q - 1) = '\0';
-              end = q - 1;
-      }
-      else
+    if (IS_MAIL_SEPARATOR(begin))
+    {   /*  skip white spaces and separator */
+        q = begin;
+        while ( IS_MAIL_SEPARATOR(q) )
+                q ++ ;
+        sep = *(q - 1);
+        sep_p = (q - 1);
+        *(q - 1) = '\0';
+        end = q - 1;
+    }
+    else
+    {
+      sep = '\0';
+      /* scan for next separator */
+      non_ascii = PR_FALSE;
+      for (q = begin; *q;)
       {
-        sep = '\0';
-        /* scan for next separator */
-        non_ascii = PR_FALSE;
-        for (q = begin; *q;)
+        if ((unsigned char) *q > 0x7F)
+                non_ascii = PR_TRUE;
+        if ( IS_MAIL_SEPARATOR(q) )
         {
-          if ((unsigned char) *q > 0x7F)
-                  non_ascii = PR_TRUE;
-          if ( IS_MAIL_SEPARATOR(q) )
+          if ((*q == ' ') && (non_ascii == PR_TRUE))
           {
-            if ((*q == ' ') && (non_ascii == PR_TRUE))
+            while ((p = intlmime_encode_next8bitword(wincsid, q)) != NULL)
             {
-              while ((p = intlmime_encode_next8bitword(wincsid, q)) != NULL)
-              {
-                if (p == NULL)
-                  break;
-                q = p;
-                if (*p != ' ')
-                   break;
-              }
+              if (p == NULL)
+                break;
+              q = p;
+              if (*p != ' ')
+                 break;
             }
-            sep = *q;
-            sep_p = q;
-            *q = '\0';
-            end = q;
-            break;
           }
-          q = INTL_NextChar(wincsid, q);
+          sep = *q;
+          sep_p = q;
+          *q = '\0';
+          end = q;
+          break;
         }
+        q = INTL_NextChar(wincsid, q);
       }
     }
 
     /* get the to_be_converted_buffer's len */
     len = PL_strlen(begin);
 
-    //naoki: I changed the code to skip this for iso-2022-jp.
-    // TODO: However, this part also dealing with a truncation. The code should be rewritten in order to
-    // do the truncation correctly.
-    if ( stateful_encoding((const char *) name) || !intlmime_only_ascii_str(begin) )
+    if ( !intlmime_only_ascii_str(begin) )
     {
       if (obj && cvtfunc)
       {
@@ -582,8 +577,8 @@ char * intlmime_encode_mail_address(char *name, const char *src,
             */
             bChop = PR_TRUE;           /* append CRLFTAB */
             if (buf1 && (buf1 != begin)){
-                    PR_Free(buf1);
-                    buf1 = NULL;
+              PR_Free(buf1);
+              buf1 = NULL;
             }
           } else {
             end = begin + len - 1;
@@ -608,9 +603,9 @@ char * intlmime_encode_mail_address(char *name, const char *src,
         buf1 = (char *) PR_Malloc(len + 1);
         if (!buf1)
         {
-                PR_Free(srcbuf);
-                PR_Free(retbuf);
-                return NULL;
+          PR_Free(srcbuf);
+          PR_Free(retbuf);
+          return NULL;
         }
         XP_MEMCPY(buf1, begin, len);
         *(buf1 + len) = '\0';
@@ -1382,22 +1377,26 @@ encodedWordSize);
 }
 
 PRUint32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
-                             const char* inBuffer, const PRInt32 inLength,
-                             char** outBuffer)
+                             const char* inCstring, char** outCstring)
 {
-  return INTL_ConvertCharset(from_charset, to_charset, inBuffer, inLength, outBuffer);
+  // optimization for the special case
+  if (!PL_strcasecmp(from_charset, "us-ascii") && !PL_strcasecmp(from_charset, "utf-8")) {
+    *outCstring = PL_strdup(inCstring);
+    return 0;
+  }
+  return INTL_ConvertCharset(from_charset, to_charset, inCstring, PL_strlen(inCstring), outCstring);
 }
 
-PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
+PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* inCstring,
                                void** uniBuffer, PRInt32* uniLength)
 {
-  return INTL_ConvertToUnicode(from_charset, aBuffer, aLength, uniBuffer, uniLength);
+  return INTL_ConvertToUnicode(from_charset, inCstring, PL_strlen(inCstring), uniBuffer, uniLength);
 }
 
 PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
-                                 char** aBuffer)
+                                 char** outCstring)
 {
-  return INTL_ConvertFromUnicode(to_charset, uniBuffer, uniLength, aBuffer);
+  return INTL_ConvertFromUnicode(to_charset, uniBuffer, uniLength, outCstring);
 }
 
 extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
