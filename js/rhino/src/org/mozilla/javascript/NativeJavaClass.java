@@ -105,19 +105,16 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         if (members.has(name, true)) {
             result = members.get(this, name, javaObject, true);
         } else {
-            // experimental:  look for nested classes by appending $name to current class' name.
-            try {
-                String nestedName = getClassObject().getName() + '$' + name;
-                Class nestedClass = ScriptRuntime.loadClassName(nestedName);
-                NativeJavaClass nestedValue = new NativeJavaClass
-                    (ScriptableObject.getTopLevelScope(this), nestedClass);
-                nestedValue.setParentScope(this);
-                result = nestedValue;
-            } catch (ClassNotFoundException ex) {
-                throw members.reportMemberNotFound(name);
-            } catch (IllegalArgumentException e) {
+            // experimental:  look for nested classes by appending $name to
+            // current class' name.
+            Class nestedClass = findNestedClass(getClassObject(), name);
+            if (nestedClass == null) {
                 throw members.reportMemberNotFound(name);
             }
+            NativeJavaClass nestedValue = new NativeJavaClass
+                (ScriptableObject.getTopLevelScope(this), nestedClass);
+            nestedValue.setParentScope(this);
+            result = nestedValue;
         }
 
         return result;
@@ -272,6 +269,28 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
         // value wasn't something we understand
         return false;
+    }
+
+    private static Class findNestedClass(Class parentClass, String name) {
+        String nestedClassName = parentClass.getName() + '$' + name;
+        ClassLoader loader = parentClass.getClassLoader();
+        try {
+            if (loader != null) {
+                return loader.loadClass(nestedClassName);
+            } else {
+                // ALERT: if loader is null, nested class should be loaded
+                // via system class loader which can be different from the
+                // loader that brought Rhino classes that Class.forName() would
+                // use, but ClassLoader.getSystemClassLoader() is Java 2 only
+                return Class.forName(nestedClassName);
+            }
+        } catch (ClassNotFoundException ex) {
+        } catch (SecurityException ex) {
+        } catch (IllegalArgumentException e) {
+            // Can be thrown if name has characters that a class name
+            // can not contain
+        }
+        return null;
     }
 
     private Hashtable staticFieldAndMethods;
