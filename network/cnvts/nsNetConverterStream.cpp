@@ -47,8 +47,10 @@ NS_IMPL_RELEASE(nsNetConverterStream);
 nsresult nsNetConverterStream :: QueryInterface(const nsIID& aIID,
 				              void** aInstancePtrResult)
 {
-  if (nsnull == aInstancePtrResult)
+  if (!aInstancePtrResult)
+  {
     return NS_ERROR_NULL_POINTER;
+  }
 
   if (aIID.Equals(kISupportsIID))
   {
