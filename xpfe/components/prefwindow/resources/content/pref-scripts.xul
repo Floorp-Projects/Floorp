@@ -52,8 +52,6 @@
                          "allowWindowFlip",
                          "allowWindowStatusChange",
                          "allowImageSrcChange",
-                         "allowDocumentCookieSet",
-                         "allowDocumentCookieGet",
                          "allowHideStatusBar"];
     ]]>
   </script>
@@ -75,8 +73,6 @@
       <listitem type="checkbox" id="allowHideStatusBar" label="&allowHideStatusBar.label;"/>          
       <listitem type="checkbox" id="allowWindowStatusChange" label="&allowWindowStatusChange.label;"/>   
       <listitem type="checkbox" id="allowImageSrcChange" label="&allowWindowImageSrcChange.label;"/>     
-      <listitem type="checkbox" id="allowDocumentCookieSet" label="&allowDocumentCookieSet.label;"/>          
-      <listitem type="checkbox" id="allowDocumentCookieGet" label="&allowDocumentCookieGet.label;"/>          
     </listbox>
   </groupbox>
 

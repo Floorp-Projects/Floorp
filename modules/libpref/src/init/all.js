@@ -454,8 +454,6 @@ pref("capability.policy.default.Clipboard.paste", "noAccess");
 
 // Scripts & Windows prefs
 pref("browser.block.target_new_window",     false);
-pref("dom.disable_cookie_get",              false);
-pref("dom.disable_cookie_set",              false);
 pref("dom.disable_image_src_set",           false);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);

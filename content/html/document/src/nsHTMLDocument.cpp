@@ -2205,22 +2205,8 @@ nsHTMLDocument::GetCookie(nsAString& aCookie)
   aCookie.Truncate(); // clear current cookie in case service fails;
                       // no cookie isn't an error condition.
 
-  // If caller is not chrome and dom.disable_cookie_get is true,
-  // prevent getting cookies by exiting early
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs) {
-    PRBool disableCookieGet = PR_FALSE;
-    prefs->GetBoolPref("dom.disable_cookie_get", &disableCookieGet);
-
-    if (disableCookieGet && !nsContentUtils::IsCallerChrome()) {
-      return NS_OK;
-    }
-  }
-
-  nsresult rv = NS_OK;
-  nsAutoString str;
-
-  nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID, &rv);
+  // not having a cookie service isn't an error
+  nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID);
   if (service) {
     // Get a URI from the document principal. We use the original
     // codebase in case the codebase was changed by SetDomain
@@ -2235,29 +2221,18 @@ nsHTMLDocument::GetCookie(nsAString& aCookie)
     }
 
     nsXPIDLCString cookie;
-      rv = service->GetCookieString(codebaseURI, mChannel, getter_Copies(cookie));
-    if (NS_SUCCEEDED(rv) && cookie)
-      CopyASCIItoUCS2(nsDependentCString(cookie), aCookie);
+    service->GetCookieString(codebaseURI, mChannel, getter_Copies(cookie));
+    CopyASCIItoUTF16(cookie, aCookie);
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::SetCookie(const nsAString& aCookie)
 {
-  // If caller is not chrome and dom.disable_cookie_get is true,
-  // prevent setting cookies by exiting early
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs) {
-    PRBool disableCookieSet = PR_FALSE;
-    prefs->GetBoolPref("dom.disable_cookie_set", &disableCookieSet);
-    if (disableCookieSet && !nsContentUtils::IsCallerChrome()) {
-      return NS_OK;
-    }
-  }
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID, &rv);
+  // not having a cookie service isn't an error
+  nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID);
   if (service && mDocumentURL) {
     nsCOMPtr<nsIPrompt> prompt;
     nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(GetScriptGlobalObject()));
@@ -2275,14 +2250,11 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
       return NS_OK;
     }
 
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    char* cookie = ToNewCString(aCookie);
-    if (cookie) {
-      rv = service->SetCookieString(codebaseURI, prompt, cookie, mChannel);
-      nsCRT::free(cookie);
-    }
+    NS_LossyConvertUTF16toASCII cookie(aCookie);
+    service->SetCookieString(codebaseURI, prompt, cookie.get(), mChannel);
   }
-  return rv;
+
+  return NS_OK;
 }
 
 // static
