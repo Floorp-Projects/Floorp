@@ -452,10 +452,6 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
   if (selection) {
     selection->RemoveAllRanges();
     selection->AddRange(aRange);
-    // Scroll if necessary to make the selection visible:
-    selCon->ScrollSelectionIntoView
-      (nsISelectionController::SELECTION_NORMAL,
-       nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 
     if (tcFrame) {
       FocusElementButNotDocument(doc, content);
@@ -467,6 +463,12 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
       presContext->EventStateManager()->
         MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
     }
+
+    // Scroll if necessary to make the selection visible:
+    // Must be the last thing to do - bug 242056
+    selCon->ScrollSelectionIntoView
+      (nsISelectionController::SELECTION_NORMAL,
+       nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
   }
 }
 
