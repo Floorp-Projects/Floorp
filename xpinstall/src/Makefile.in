@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  js \
 		  pref \
 		  widget \
-		  layout \
 		  content \
 		  uriloader \
 		  xpconnect \

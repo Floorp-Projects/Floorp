@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  js \
-		  layout \
 		  content \
 		  widget \
 		  caps \

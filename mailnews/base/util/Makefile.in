@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webshell \
 		  wallet \
-		  dom \
 		  uriloader \
 		  appshell \
 		  msgimap \

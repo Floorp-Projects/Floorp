@@ -35,9 +35,6 @@ REQUIRES	= xpcom \
 		  content \
 		  dom \
 		  pref \
-		  docshell \
-		  view \
-		  intl \
 		  locale \
 		  necko \
 		  htmlparser \

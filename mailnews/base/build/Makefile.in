@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  docshell \
 		  widget \
-		  gfx \
 		  layout \
 		  webshell \
 		  mime \

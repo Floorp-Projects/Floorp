@@ -36,7 +36,6 @@ MODULE_NAME	= nsGfxXprintModule
 EXTRA_DSO_LIBS	= gkgfx
 REQUIRES	= xpcom \
 		  string \
-		  xlibrgb \
 		  widget \
 		  view \
 		  pref \

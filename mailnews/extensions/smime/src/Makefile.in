@@ -31,40 +31,11 @@ LIBRARY_NAME	= msgsmime_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
 		  string \
-		  dom \
-		  editor \
-		  uriloader \
 		  msgbase \
-		  mailnews \
-		  necko \
 		  mime \
-		  pref \
-		  intl \
-		  locale \
-		  unicharutil \
-		  layout \
-		  content \
-		  msgbaseutil \
-		  msgdb \
-		  rdf \
-		  appshell \
-		  msgimap \
-		  msgnews \
-		  uconv \
-		  docshell \
-		  webshell \
-		  addrbook \
-		  widget \
-		  htmlparser \
-		  txmgr \
-		  exthandler \
-		  mork \
-		  wallet \
-		  nkcache \
 		  mimetype \
-		  windowwatcher \
 		  pipnss \
-                  msgcompose \
+		  msgcompose \
 		  $(NULL)
 
 CPPSRCS		= \

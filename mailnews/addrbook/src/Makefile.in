@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  rdfutil \
 		  appshell \
 		  dom \
-		  gfx \
 		  layout \
 		  content \
 		  widget \

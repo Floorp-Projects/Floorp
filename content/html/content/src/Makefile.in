@@ -51,7 +51,6 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  mimetype \
 		  exthandler \
-		  unicharutil \
 		  uconv \
 		  $(NULL)
 

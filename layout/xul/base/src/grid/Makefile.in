@@ -30,18 +30,12 @@ MODULE		= layout
 LIBRARY_NAME	= gkxulgrid_s
 REQUIRES	= xpcom \
 		  string \
-		  dom \
 		  content \
 		  gfx \
 		  widget \
-		  timer \
 		  locale \
 		  view \
-		  xultmpl \
-		  rdf \
 		  necko \
-		  gfx2 \
-		  imglib2 \
 		  $(NULL)
 
 CPPSRCS	= \
