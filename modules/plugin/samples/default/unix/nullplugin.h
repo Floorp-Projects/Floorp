@@ -43,8 +43,10 @@
 #define PLUGINSPAGE_URL     "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi" /* XXX Branding: make configurable via .properties or prefs */
 #define OK_BUTTON           "OK"
 #define CANCEL_BUTTON       "CANCEL"
-#ifdef HPUX
+#if defined(HPUX)
 #define JVM_SMARTUPDATE_URL "http://www.hp.com/go/java"
+#elif defined(VMS)
+#define JVM_SMARTUPDATE_URL "http://www.openvms.compaq.com/openvms/products/ips/mozilla_relnotes.html#java"
 #else 
 #define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html" /* XXX Branding: see above */
 #endif /* HPUX */
