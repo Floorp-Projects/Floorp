@@ -39,7 +39,7 @@ public:												// set to one folder to playback one folder only
   NS_DECL_NSIURLLISTENER
 	virtual nsresult		ProcessNextOperation(); // this kicks off playback
 	
-	PRInt32		GetCurrentUIDValidity() { return mCurrentUIDValidity; }
+	PRInt32		GetCurrentUIDValidity();
 	void		SetCurrentUIDValidity(PRInt32 uidvalidity) { mCurrentUIDValidity = uidvalidity; }
 	
 	void		SetPseudoOffline(PRBool pseudoOffline) {m_pseudoOffline = pseudoOffline;}

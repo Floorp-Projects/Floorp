@@ -30,6 +30,7 @@
 #include "nsRDFCID.h"
 #include "nsIMsgAccountManager.h"
 #include "nsINntpIncomingServer.h"
+#include "nsIStreamObserver.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -41,6 +42,10 @@ nsImapOfflineSync::nsImapOfflineSync(nsIMsgWindow *window, nsIUrlListener *liste
   NS_INIT_REFCNT();
   m_singleFolderToUpdate = singleFolderOnly;
   m_window = window;
+  // not the perfect place for this, but I think it will work.
+  if (m_window)
+    m_window->SetStopped(PR_FALSE);
+
   mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kFlagsChanged;
   m_mailboxupdatesStarted = PR_FALSE;
   m_createdOfflineFolders = PR_FALSE;
@@ -68,6 +73,14 @@ NS_IMETHODIMP
 nsImapOfflineSync::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
   nsresult rv = exitCode;
+
+  // where do we make sure this gets cleared when we start running urls?
+  PRBool stopped = PR_FALSE;
+  if (m_window)
+    m_window->GetStopped(&stopped);
+  if (stopped)
+    exitCode = NS_BINDING_ABORTED;
+
   if (NS_SUCCEEDED(exitCode))
     rv = ProcessNextOperation();
   else if (m_listener)  // notify main observer.
@@ -474,6 +487,24 @@ PRBool nsImapOfflineSync::CreateOfflineFolder(nsIMsgFolder *folder)
       mailnewsUrl->RegisterListener(this);
   }
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;	// this is asynch, we have to return and be called again by the OfflineOpExitFunction
+}
+
+PRInt32 nsImapOfflineSync::GetCurrentUIDValidity()
+{
+  PRUint32 uidValidity;
+   uid_validity_info uidStruct;
+
+  if (m_currentFolder)
+  {
+    nsCOMPtr <nsIImapMiscellaneousSink> miscellaneousSink = do_QueryInterface(m_currentFolder);
+    if (miscellaneousSink)
+    {
+      uidStruct.returnValidity = kUidUnknown;
+      miscellaneousSink->GetStoredUIDValidity(nsnull, &uidStruct);
+      mCurrentUIDValidity = uidStruct.returnValidity;    
+    }
+  }
+  return mCurrentUIDValidity; 
 }
 
 // Playing back offline operations is one giant state machine that runs through ProcessNextOperation.
