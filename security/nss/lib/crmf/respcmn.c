@@ -125,7 +125,7 @@ SECStatus
 crmf_create_prtime(SECItem *src, PRTime **dest)
 {
    *dest = PORT_ZNew(PRTime);
-    return DER_UTCTimeToTime(*dest, src);
+    return DER_DecodeTimeChoice(*dest, src);
 }
 
 CRMFCertExtension*

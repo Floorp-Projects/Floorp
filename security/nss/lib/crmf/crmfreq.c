@@ -236,22 +236,6 @@ crmf_template_add_issuer (PRArenaPool *poolp, CERTName **dest,
 
 
 static SECStatus
-crmf_encode_utctime(PRArenaPool *poolp, SECItem *destTime, PRTime time)
-{
-    SECItem   tmpItem;
-    SECStatus rv;
-
-
-    rv = DER_TimeToUTCTime (&tmpItem, time);
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    rv = SECITEM_CopyItem(poolp, destTime, &tmpItem);
-    PORT_Free(tmpItem.data);
-    return rv;
-}
-
-static SECStatus
 crmf_template_add_validity (PRArenaPool *poolp, CRMFOptionalValidity **dest,
 			    CRMFValidityCreationInfo *info)
 {
@@ -270,14 +254,14 @@ crmf_template_add_validity (PRArenaPool *poolp, CRMFOptionalValidity **dest,
     }
 
     if (info->notBefore) {
-        rv = crmf_encode_utctime (poolp, &myValidity->notBefore, 
+        rv = DER_EncodeTimeChoice (poolp, &myValidity->notBefore, 
 				  *info->notBefore);
 	if (rv != SECSuccess) {
 	    goto loser;
 	}
     }
     if (info->notAfter) {
-        rv = crmf_encode_utctime (poolp, &myValidity->notAfter,
+        rv = DER_EncodeTimeChoice (poolp, &myValidity->notAfter,
 				  *info->notAfter);
 	if (rv != SECSuccess) {
 	    goto loser;
