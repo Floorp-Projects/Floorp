@@ -79,8 +79,10 @@
   if (mozPath)
     [self tryAddImportFromBrowser:@"Netscape/Mozilla" withBookmarkPath:mozPath];
   
-  // Try Firefox from the new ~/Library/Firefox location, then ~/Library/Phoenix if that fails
-  mozPath = [self getSaltedBookmarkPathForProfile:@"~/Library/Firefox/Profiles/default/"];
+  // Try Firefox from different locations in the reverse order of their introduction
+  mozPath = [self getSaltedBookmarkPathForProfile:@"~/Library/Application Support/Firefox/Profiles/"];
+  if (!mozPath)
+    mozPath = [self getSaltedBookmarkPathForProfile:@"~/Library/Firefox/Profiles/default/"];
   if (!mozPath)
     mozPath = [self getSaltedBookmarkPathForProfile:@"~/Library/Phoenix/Profiles/default/"];
   if (mozPath)
