@@ -59,7 +59,6 @@ CPPSRCS		= \
 		winEmbed.cpp \
 		WebBrowserChrome.cpp \
 		WindowCreator.cpp \
-		StdAfx.cpp \
 		$(NULL)
 
 EXTRA_DSO_LIBS	= embed_base_s gkgfx

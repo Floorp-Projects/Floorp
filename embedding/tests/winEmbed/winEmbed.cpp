@@ -31,12 +31,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
-#include "stdafx.h"
+
+// C RunTime Header Files
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
 
 // Win32 header files
-#include "windows.h"
-#include "commctrl.h"
-#include "commdlg.h"
+#include <windows.h>
+#include <commctrl.h>
+#include <commdlg.h>
 
 // Mozilla header files
 #include "nsEmbedAPI.h"
