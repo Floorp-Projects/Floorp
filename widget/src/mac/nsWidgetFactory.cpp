@@ -82,7 +82,6 @@
 #include "nsIComponentManager.h"
 
 #include "nsSound.h"
-#include "nsTimerMac.h"
 
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
@@ -90,7 +89,6 @@
 
 #include "nsIGenericFactory.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
@@ -124,10 +122,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 
 static nsModuleComponentInfo components[] =
 {
-	{	"Timer",
-		NS_TIMER_CID,
-		"@mozilla.org/timer;1",
-		nsTimerImplConstructor },
 	{	"nsWindow",
 		NS_WINDOW_CID,
 		"@mozilla.org/widgets/window/mac;1",

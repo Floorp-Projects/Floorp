@@ -42,14 +42,18 @@ CPPSRCS		= \
 		nsEventQueue.cpp \
 		nsEventQueueService.cpp \
 		nsThread.cpp \
+		nsTimerImpl.cpp \
 		nsProcessCommon.cpp \
+		TimerThread.cpp \
 		$(NULL)
 
 EXPORTS		= \
 		nsAutoLock.h \
 		plevent.h \
 		nsProcess.h \
-		$(NULL)			
+		nsITimer.h \
+		nsITimerCallback.h \
+		$(NULL)
 
 XPIDLSRCS	= \
 		nsIThread.idl \

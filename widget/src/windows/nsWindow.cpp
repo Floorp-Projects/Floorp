@@ -95,7 +95,6 @@
 #include "nsWidgetsCID.h"
 
 #include "nsITimer.h"
-#include "nsITimerQueue.h"
 
 // For SetIcon
 #include "nsSpecialSystemDirectory.h"
@@ -114,7 +113,6 @@
 
 static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 // When we build we are currently (11/27/01) setting the WINVER to 0x0400
 // Which means we do not compile in the system resource for the HAND cursor
@@ -3096,28 +3094,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_DISPLAYCHANGE:
           DispatchStandardEvent(NS_DISPLAYCHANGED);
         break;
-
-        case WM_ENTERIDLE:
-          {
-          nsresult rv;
-          nsCOMPtr<nsITimerQueue> queue = 
-                   do_GetService(kTimerManagerCID, &rv);
-          if (NS_SUCCEEDED(rv)) {
-
-            if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
-
-              MSG wmsg;
-              do {
-#ifdef DEBUG
-                //printf("fire\n");
-#endif
-                queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
-              } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-                  !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE));
-            }
-          }
-          }
-          break;
         
         case WM_NOTIFY:
             // TAB change

@@ -71,6 +71,9 @@
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
 
+#include "nsTimerImpl.h"
+#include "TimerThread.h"
+
 #include "nsThread.h"
 #include "nsProcess.h"
 
@@ -127,6 +130,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsInterfacePointerImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerImpl);
     
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant);
 
@@ -235,6 +239,8 @@ static nsModuleComponentInfo components[] = {
 
 #define NS_XPCOMPROXY_CID NS_PROXYEVENT_MANAGER_CID
     COMPONENT(XPCOMPROXY, nsProxyObjectManager::Create),
+
+    COMPONENT(TIMER, nsTimerImplConstructor),
 
 #define COMPONENT_SUPPORTS(TYPE, Type)                                         \
   COMPONENT(SUPPORTS_##TYPE, nsSupports##Type##ImplConstructor)
@@ -551,6 +557,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Shutdown nsLocalFile string conversion
     NS_ShutdownLocalFile();
+
+    // Shutdown the timer thread and all timers that might still be alive before
+    // shutting down the component manager
+    nsTimerImpl::Shutdown();
 
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.

@@ -30,33 +30,6 @@
 
 #ifdef MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
 
-#include "nsWidgetsCID.h"
-#include "nsITimer.h"
-#include "nsITimerQueue.h"
-
-static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
-
-nsresult NS_DoIdleEmbeddingStuff()
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    nsCOMPtr<nsITimerQueue> timerQueue(do_GetService(kTimerManagerCID, &rv));
-    if (NS_FAILED(rv))
-    {
-        return NS_ERROR_FAILURE;
-    }
-
-    if (timerQueue->HasReadyTimers(NS_PRIORITY_LOWEST))
-    {
-        MSG wmsg;
-        do
-        {
-          timerQueue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
-        } while (timerQueue->HasReadyTimers(NS_PRIORITY_LOWEST) &&
-                 !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE));
-    }
-    return NS_OK;
-}
-
 nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled)
 {
     aWasHandled = PR_FALSE;

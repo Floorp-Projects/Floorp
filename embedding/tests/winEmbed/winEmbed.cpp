@@ -1387,8 +1387,6 @@ PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
     }
 
     // Do idle stuff
-    ::NS_DoIdleEmbeddingStuff();
-
     ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 100, QS_ALLEVENTS);
   }
   ::CloseHandle(hFakeEvent);

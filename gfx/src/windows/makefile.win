@@ -82,7 +82,6 @@ LLIBS = \
         $(DIST)\lib\gkgfx.lib                   \
         $(DIST)\lib\xpcom.lib	                \
         $(DIST)\lib\util.lib                    \
-        $(DIST)\lib\timer_s.lib                 \
 !if defined(NGLAYOUT_DDRAW)
         $(NGLAYOUT_DDRAW)\lib\ddraw.lib         \
 !endif

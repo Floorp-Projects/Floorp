@@ -33,6 +33,8 @@ EXPORTS =                      \
         nsAutoLock.h           \
         plevent.h              \
         nsProcess.h              \
+        nsITimer.h             \
+        nsITimerCallback.h     \
         $(NULL)			
 
 NO_XPT_GEN=1
@@ -62,8 +64,10 @@ CPP_OBJS =                                  \
         .\$(OBJDIR)\nsAutoLock.obj          \
         .\$(OBJDIR)\nsEventQueue.obj        \
         .\$(OBJDIR)\nsEventQueueService.obj \
+        .\$(OBJDIR)\nsTimerImpl.obj          \
         .\$(OBJDIR)\nsThread.obj            \
         .\$(OBJDIR)\nsProcessCommon.obj     \
+        .\$(OBJDIR)\TimerThread.obj     \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

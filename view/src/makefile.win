@@ -56,7 +56,6 @@ LCFLAGS = \
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\gkgfx.lib	\
- $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\util.lib \
  $(LIBNSPR)  
 

@@ -43,14 +43,11 @@
 #include "nsIServiceManager.h"
 #include <windows.h>
 #include "nsWidgetsCID.h"
-#include "nsITimer.h"
-#include "nsITimerQueue.h"
 #ifdef MOZ_AIMM
 #include "aimm.h"
 #endif
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell) 
 
@@ -97,10 +94,6 @@ NS_METHOD nsAppShell::Run(void)
   NS_ADDREF_THIS();
   MSG  msg;
   int  keepGoing = 1;
-  
-  nsresult rv;
-  nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
-  if (NS_FAILED(rv)) return rv;
 
   gKeepGoing = 1;
   // Process messages
@@ -122,15 +115,6 @@ NS_METHOD nsAppShell::Run(void)
         if (mDispatchListener)
           mDispatchListener->AfterDispatch();
       }
-
-    // process timer queue.
-    } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
-
-      do {
-        queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
-      } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-                !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
-      
     } else {
       if (!gKeepGoing) {
         // In this situation, PostQuitMessage() was called, but the WM_QUIT
@@ -165,10 +149,6 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
   BOOL gotMessage = false;
 
-  nsresult rv;
-  nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
-  if (NS_FAILED(rv)) return rv;
-
   do {
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
@@ -177,15 +157,6 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
         ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
       gotMessage = true;
-
-    // process timer queue.
-    } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
-
-      do {
-        queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
-      } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-                !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
-
     } else {
        // Block and wait for any posted application message
       ::WaitMessage();

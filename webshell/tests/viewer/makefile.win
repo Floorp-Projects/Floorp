@@ -88,7 +88,6 @@ OBJS =                                      \
 
 LLIBS=                         \
  $(DIST)\lib\gkgfx.lib   \
- $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\util.lib \
  $(DIST)\lib\raptornativewidgets_s.lib     \
  $(DIST)\lib\raptorbasewidget_s.lib     \

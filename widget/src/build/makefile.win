@@ -31,7 +31,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  gfx \
 		  dom \
-		  timer \
 		  accessibility \
 		  $(NULL)
 
@@ -66,7 +65,6 @@ WIN_LIBS=                               \
 SUB_LIBRARIES= \
 	$(DIST)\lib\raptorbasewidget_s.lib \
 	$(DIST)\lib\raptorwidget_s.lib \
-	$(DIST)\lib\timer_s.lib \
 	$(NULL)
 
 LLIBS= \
