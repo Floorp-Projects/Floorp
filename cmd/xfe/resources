@@ -1256,6 +1256,7 @@ Change character encoding of the current page
 *armscii-8EncCmdString:			Armenian (ArmSCII-8)
 *iso-8859-7EncCmdString:		Greek (ISO-8859-7)
 *windows-1253EncCmdString:		Greek (Windows-1253)
+*tis-620EncCmdString:			Thai (TIS-620)
 *iso-8859-9EncCmdString:		Turkish (ISO-8859-9)
 *UTF-8EncCmdString:			Unicode (UTF-8)
 *UTF-7EncCmdString:			Unicode (UTF-7)
@@ -4651,6 +4652,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charsetlang*windows-1251:		Cyrillic
 *documentFonts.charsetlang*koi8-u:			Ukrainian
 *documentFonts.charsetlang*ks_c_5601-1987:		Korean
+*documentFonts.charsetlang*tis-620:			Thai
 *documentFonts.charsetlang*x-cns11643-1110:		Traditional Chinese
 *documentFonts.charsetlang*x-cns11643-1:		Traditional Chinese
 *documentFonts.charsetlang*x-cns11643-2:		Traditional Chinese
@@ -4795,8 +4797,11 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charset*sunolglyph-1:				x-ignore
 *documentFonts.charset*symbol.adobe-fontspecific:		x-ignore
 *documentFonts.charset*symbol.sun-fontspecific:			x-ignore
-*documentFonts.charset*tis620.2533-1:				x-ignore
-*documentFonts.charset*tis620.2529-1:				x-tis620
+*documentFonts.charset*tis620-0:					tis-620
+*documentFonts.charset*tis620-1:					tis-620
+*documentFonts.charset*tis620-2:					tis-620
+*documentFonts.charset*tis620.2533-0:				tis-620
+*documentFonts.charset*tis620.2529-1:				tis-620
 *documentFonts.charset*ucs2.cjk-rest:				x-ignore
 *documentFonts.charset*ucs2.cns11643.1986-1:			x-ignore
 *documentFonts.charset*ucs2.cns11643.1986-2:			x-ignore
