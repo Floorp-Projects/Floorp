@@ -170,6 +170,8 @@
 <!ENTITY preferencesCmd.label "Options...">
 <!ENTITY preferencesCmd.key "O">
 <!ENTITY preferencesCmd.accesskey "O">
+<!ENTITY preferencesCmdUnix.label       "Preferences">
+<!ENTITY preferencesCmdUnix.accesskey   "P"> 
 
 <!--  Mac OS X Window Menu -->
 <!ENTITY minimizeWindow.key "m">

@@ -121,6 +121,8 @@
 <!ENTITY preferencesCmd.label                           "Options...">
 <!ENTITY preferencesCmd.key                             "O">
 <!ENTITY preferencesCmd.accesskey                       "O">
+<!ENTITY preferencesCmdUnix.label                       "Preferences">
+<!ENTITY preferencesCmdUnix.accesskey                   "P"> 
 
 <!-- Help Menu -->
 <!ENTITY helpMenu.label                                 "Help">

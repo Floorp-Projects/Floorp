@@ -169,9 +169,20 @@
   <!-- broadcaster id="cmd_preferences"/ -->
 
   <menuitem id="menu_preferences"
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+            label="&preferencesCmdUnix.label;"
+            accesskey="&preferencesCmdUnix.accesskey;"/>  
+#else
             label="&preferencesCmd.label;"
             key="key_preferences"
             accesskey="&preferencesCmd.accesskey;"/>
+#endif
+#else
+            label="&preferencesCmd.label;"
+            key="key_preferences"
+            accesskey="&preferencesCmd.accesskey;"/>
+#endif
 
   <!-- View Menu -->
   <menu id="menu_View"

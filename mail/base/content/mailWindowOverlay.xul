@@ -1171,6 +1171,12 @@
       <menuitem id="menu_properties" label="&folderPropsCmd.label;"
                 accesskey="&folderPropsCmd.accesskey;"
                 observes="cmd_properties"/>
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+      <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager(null);"/>
+      <menuitem id="menu_preferences" oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
+#endif
+#endif
       </menupopup>
     </menu>
 
@@ -1634,9 +1640,17 @@
                   accesskey="&importCmd.accesskey;" 
                   oncommand="toImport();"/>
         <menuitem id="javaScriptConsole" label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
-        <menuseparator/>
+#ifndef XP_UNIX
+        <menuseparator id="prefSep"/>
         <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager(null);"/>
         <menuitem id="menu_preferences" oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
+#else
+#ifdef XP_MACOSX
+        <menuseparator id="prefSep"/>
+        <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager(null);"/>
+        <menuitem id="menu_preferences" oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
+#endif
+#endif
        </menupopup>
       </menu>    
 

@@ -321,6 +321,14 @@
           <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      command="cmd_find"/>
           <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" command="cmd_findNext"/>
           <menuitem label="&findPrevCmd.label;"  key="key_findPrev" accesskey="&findPrevCmd.accesskey;"  command="cmd_findPrev"/>
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+          <menuseparator id="prefSep"/>
+          <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
+          <menuitem id="menu_preferences" label="&preferencesCmdUnix.label;" accesskey="&preferencesCmdUnix.accesskey;"
+                    oncommand="openOptionsDialog('mailcomposepref', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
+#endif
+#endif
         </menupopup>
       </menu>
 
@@ -465,11 +473,20 @@
 #ifndef XP_MACOSX
             <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
             <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" oncommand="toAddressBook();" id="tasksMenuAddressBook" class="menuitem-iconic icon-addressbook16 menu-iconic"/>
-            <menuseparator/>
 #endif
+
+#ifndef XP_UNIX
+            <menuseparator id="prefSep"/>
             <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
             <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
                       oncommand="openOptionsDialog('mailcomposepref', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
+#else
+#ifdef XP_MACOSX
+            <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
+            <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
+                      oncommand="openOptionsDialog('mailcomposepref', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
+#endif
+#endif
          </menupopup>
       </menu>
 

@@ -44,10 +44,11 @@ comm.jar:
 *   content/help/contents.rdf                       (content/help.rdf)
     content/help/contextHelp.js                     (content/contextHelp.js)
 *+  content/communicator/contentAreaClick.js        (content/contentAreaClick.js)
+*+  content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
 
 toolkit.jar:
 *+  content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
 *+  content/global/customizeToolbar.js              (content/customizeToolbar.js)
 *+  content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
 +   content/communicator/tasksOverlay.xul           (content/tasksOverlay.xul)
-+   content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
+*+  content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
