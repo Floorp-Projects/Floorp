@@ -86,7 +86,8 @@ function validateEmail() {
 function onInit()
 {
   checkForDomain();
-  
+  checkForFullName(); 
+  checkForEmail(); 
 }
 
 // retrieve the current domain from the parent wizard window,
@@ -109,4 +110,30 @@ function checkForDomain()
     postEmailText.appendChild(document.createTextNode(domainText));
   }
 
+}
+
+function checkForFullName() {
+    var name = document.getElementById("fullName");
+    if (name.value=="") {
+        try {
+            var userInfo = Components.classes["component://netscape/userinfo"].getService(Components.interfaces.nsIUserInfo);
+            name.value = userInfo.fullname;
+        }
+        catch (ex) {
+            // dump ("checkForFullName failed: " + ex + "\n");
+        }
+    }
+}
+
+function checkForEmail() {
+    var email = document.getElementById("email");
+    if (email.value=="") {
+        try {
+            var userInfo = Components.classes["component://netscape/userinfo"].getService(Components.interfaces.nsIUserInfo);
+            email.value = userInfo.emailAddress;
+        }
+        catch (ex) {
+            // dump ("checkForEmail failed: " + ex + "\n"); 
+        }
+    }
 }
