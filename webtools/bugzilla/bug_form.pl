@@ -38,7 +38,6 @@ sub bug_form_pl_sillyness {
     $zz = @::legal_keywords;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
-    $zz = @::legal_product;
     $zz = @::legal_priority;
     $zz = @::settable_resolution;
     $zz = @::legal_severity;
@@ -149,6 +148,49 @@ if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
     $URL = "<B>URL:</B>";
 }
 
+#
+# Make a list of products the user has access to
+#
+
+my (@prodlist, $product_popup);
+foreach my $p (sort(keys %::versions)) {
+    if ($p eq $bug{'product'}) {
+        # if it's the product the bug is already in, it's ALWAYS in
+        # the popup, period, whether the user can see it or not, and
+        # regardless of the disallownew setting.
+        push(@prodlist, $p);
+        next;
+    }
+    if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
+        # Special hack.  If we stuffed a "0" into proddesc, that means
+        # that disallownew was set for this bug, and so we don't want
+        # to allow people to specify that product here.
+        next;
+    }
+    if(Param("usebuggroupsentry")
+        && GroupExists($p)
+        && !UserInGroup($p))
+    {
+        # If we're using bug groups to restrict entry on products, and
+        # this product has a bug group, and the user is not in that
+        # group, we don't want to include that product in this list.
+        next;
+    }
+    push(@prodlist, $p);
+}
+
+# If the user has access to multiple products, display a popup, otherwise 
+# display the current product.
+
+if (1 < @prodlist) {
+    $product_popup = "<SELECT NAME=product>" .
+        make_options(\@prodlist, $bug{'product'}) .
+        "</SELECT>";
+}
+else {
+    $product_popup = $bug{'product'};
+}
+
 print "
 <INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
 <INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
@@ -162,9 +204,7 @@ print "
     <TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
 </TR><TR>
     <TD ALIGN=RIGHT><B>Product:</B></TD>
-    <TD><SELECT NAME=product>" .
-    make_options(\@::legal_product, $bug{'product'}) .
-    "</SELECT></TD>
+    <TD>$product_popup</TD>
   <TD>&nbsp;</TD>
     <TD ALIGN=RIGHT><B>OS:</B></TD>
     <TD><SELECT NAME=op_sys>" .
