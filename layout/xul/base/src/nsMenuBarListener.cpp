@@ -121,11 +121,15 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
   if (theChar == NS_VK_ALT) {
     // The ALT key just went down. Track this.
     mAltKeyDown = PR_TRUE;
+    return NS_OK;
   }
-  else if (theChar == NS_VK_LEFT ||
-           theChar == NS_VK_RIGHT ||
-           theChar == NS_VK_UP ||
-           theChar == NS_VK_DOWN) {
+  
+  mAltKeyDown = PR_FALSE;
+
+  if (theChar == NS_VK_LEFT ||
+      theChar == NS_VK_RIGHT ||
+      theChar == NS_VK_UP ||
+      theChar == NS_VK_DOWN) {
     // The arrow keys were pressed. User is moving around within
     // the menus.
     if (active) 
