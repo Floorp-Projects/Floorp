@@ -400,6 +400,17 @@ void testICG(World &world)
                 icg.endDefaultStatement();
         icg.endSwitchStatement();
 
+        // for ( ; i; i + 1 ) j = 99;
+        icg.beginForStatement(pos);
+            r1 = icg.loadVariable(0);
+            icg.forCondition(r1);
+            icg.saveVariable(0, icg.op(ADD, icg.loadVariable(0), icg.loadImmediate(1)));
+            icg.forIncrement();
+            icg.saveVariable(0, icg.loadImmediate(99));
+        icg.endForStatement();
+
+
+
         InstructionStream *iCode = icg.complete();
 
         std::cout << icg;
