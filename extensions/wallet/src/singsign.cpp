@@ -3345,5 +3345,13 @@ SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
 {
 }
 
+PRBool
+SI_GetBoolPref(char * prefname, PRBool defaultvalue) {
+}
+
+void
+SI_SetBoolPref(char * prefname, PRBool prefvalue) {
+}
+
 }
 #endif
