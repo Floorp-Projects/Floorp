@@ -86,9 +86,11 @@ nsRenderingContextXp::Init(nsIDeviceContext* aContext)
    * does not make use of them, see bug 124761 ("RFE: Make use of "offpaper"
    * drawing surfaces in some printing APIs")) =:-) ...
    * We just feed the nsXPContext object here directly - this is the only
-   * "surface" the Mozilla printer API can "draw" on ...  
+   * "surface" the Mozilla printer API can "draw" on ...
+   * |mOffscreenSurface| is just set for bug 251136 ("nsRenderingContextGTK
+   * uses mSurface after it's been freed")
    */
-  mSurface = mPrintContext; 
+  mOffscreenSurface = mSurface = mPrintContext; 
   UpdateGC(); /* Fill |mGC| */
   mPrintContext->SetGC(mGC);
 
