@@ -1608,9 +1608,7 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   rv = server->SetDefaultLocalPath(mailDir);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return rv;
-  
+  rv = mailDir->Exists(&dirExists);  
   if (!dirExists) {
     mailDir->CreateDir();
   }
@@ -1627,9 +1625,7 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
     
   rv = mailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return rv;
-  
-  if (!dirExists) {
+ if (!dirExists) {
     mailDir->CreateDir();
   }
   
@@ -1725,8 +1721,6 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
 
   rv = mailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return rv;
-  
   if (!dirExists) {
     mailDir->CreateDir();
   }
@@ -1741,8 +1735,6 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
     
   rv = mailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return rv;
-  
   if (!dirExists) {
     mailDir->CreateDir();
   }
@@ -1916,8 +1908,6 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   if (NS_FAILED(rv)) return rv;
    
   rv = imapMailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return rv;
-  
   if (!dirExists) {
     imapMailDir->CreateDir();
   }
@@ -2260,8 +2250,6 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
     if (NS_FAILED(rv)) return rv;
     
 	rv = newsDir->Exists(&dirExists);
-	if (NS_FAILED(rv)) return rv;
-    	
 	if (!dirExists) {
 		newsDir->CreateDir();
 	}
