@@ -24,6 +24,7 @@ DISTBROWSER=$(DIST)\bin\chrome\global\skin\default
 
 install::
 	$(MAKE_INSTALL) dialogs.css $(DISTBROWSER)
+	$(MAKE_INSTALL) tasksOverlay.css $(DISTBROWSER)
 	$(MAKE_INSTALL) xul.css $(DISTBROWSER)
 	$(MAKE_INSTALL) lessCols.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) lessCols_mo.gif $(DISTBROWSER)
