@@ -48,13 +48,53 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSampleImpl)
 // information like the function to create an instance, progid, and
 // class name.
 //
+// The Registration and Unregistration proc are optional in the structure.
+//
+static NS_METHOD nsSampleRegistrationProc(nsIComponentManager *aCompMgr,
+                                          nsIFile *aPath,
+                                          const char *registryLocation,
+                                          const char *componentType)
+{
+    // Do any registration specific activity like adding yourself to a
+    // category. The Generic Module will take care of registering your
+    // component with xpcom. You dont need to do that. Only any component
+    // specific additional activity needs to be done here.
+
+    // This functions is optional. If you dont need it, dont add it to the structure.
+
+    return NS_OK;
+}
+
+static NS_METHOD nsSampleUnregistrationProc(nsIComponentManager *aCompMgr,
+                                            nsIFile *aPath,
+                                            const char *registryLocation)
+{
+    // Undo any component specific registration like adding yourself to a
+    // category here. The Generic Module will take care of unregistering your
+    // component from xpcom. You dont need to do that. Only any component
+    // specific additional activity needs to be done here.
+
+    // This functions is optional. If you dont need it, dont add it to the structure.
+
+    // Return value is not used from this function.
+    return NS_OK;
+}
+
 static nsModuleComponentInfo components[] =
 {
-  { "Sample Component", NS_SAMPLE_CID, NS_SAMPLE_PROGID, nsSampleImplConstructor }
+  { "Sample Component", NS_SAMPLE_CID, NS_SAMPLE_PROGID, nsSampleImplConstructor,
+    nsSampleRegistrationProc /* NULL if you dont need one */,
+    nsSampleUnregistrationProc /* NULL if you dont need one */
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////
 // Implement the NSGetModule() exported function for your module
 // and the entire implementation of the module object.
+//
+// NOTE: If you want to use the module shutdown to release any
+//		module specific resources, use the macro
+//		NS_IMPL_NSGETMODULE_WITH_DTOR() instead of the vanilla
+//		NS_IMPL_NSGETMODULE()
 //
 NS_IMPL_NSGETMODULE("nsSampleModule", components)
