@@ -21,10 +21,14 @@
 #include "nsITimerCallback.h"
 #include "nsVoidArray.h"
 #include "plstr.h"
-#include "nsIWebWidget.h"
+#include "nsRepository.h"
+#include "nsIDocumentLoader.h"
 #include "resources.h"
 #include "nsString.h"
 #include "nsViewer.h"
+
+static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
+static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
 /* 
   This class loads creates and loads URLs until finished.
@@ -33,17 +37,18 @@
 
 */
 
-nsDocLoader::nsDocLoader(nsIWebWidget* aWebWidget, nsViewer* aViewer, PRInt32 aSeconds, PRBool aPostExit)
+nsDocLoader::nsDocLoader(nsIViewerContainer* aContainer, nsViewer* aViewer, PRInt32 aSeconds, PRBool aPostExit)
 {
   mStart = PR_FALSE;
   mDelay = aSeconds;
   mPostExit = aPostExit;
   mDocNum = 0;
-  mWebWidget = aWebWidget;
-
+  mContainer = aContainer;
   mViewer = aViewer;
   mTimers = new nsVoidArray();
   mURLList = new nsVoidArray();
+
+  NSRepository::CreateInstance(kCDocumentLoaderCID, nsnull, kIDocumentLoaderIID, (void**)&mDocLoader);
 }
 
 nsDocLoader::~nsDocLoader()
@@ -66,6 +71,7 @@ nsDocLoader::~nsDocLoader()
     mTimers = nsnull;
   }
 
+  NS_RELEASE(mDocLoader);
 }
   
 // Set the delay (by default, the timer is set to one second)
@@ -196,7 +202,13 @@ void nsDocLoader::DoAction(PRInt32 aDocNum)
   {
     nsString* url = (nsString*)mURLList->ElementAt(aDocNum);
     if (url)
-      mWebWidget->LoadURL(*url, nsnull);
+///   mWebWidget->LoadURL(*url, nsnull);
+      mDocLoader->LoadURL(*url,            // URL string
+                          nsnull,          // Command
+                          mContainer,      // Container
+                          nsnull,          // Post Data
+                          nsnull,          // Extra Info...
+                          nsnull);         // Observer
   }
 }
 

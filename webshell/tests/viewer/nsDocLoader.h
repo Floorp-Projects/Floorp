@@ -22,7 +22,8 @@
 #include "nsISupports.h"
 
 
-class nsIWebWidget;
+class nsIViewerContainer;
+class nsIDocumentLoader;
 class nsITimer;
 class nsVoidArray;
 class nsString;
@@ -37,7 +38,7 @@ class nsViewer;
 class nsDocLoader
 {
   public:
-    nsDocLoader(nsIWebWidget* aWebWidget, nsViewer* aViewer, PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
+    nsDocLoader(nsIViewerContainer* aContainer, nsViewer* aViewer, PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
     virtual ~nsDocLoader();
     
     // Add a URL to the doc loader
@@ -84,7 +85,8 @@ class nsDocLoader
     PRBool        mStart;
     PRInt32       mDelay;
     PRBool        mPostExit;
-    nsIWebWidget* mWebWidget;
+    nsIViewerContainer* mContainer;
+    nsIDocumentLoader*  mDocLoader;
     nsViewer*     mViewer;
 
     nsVoidArray*  mURLList;
