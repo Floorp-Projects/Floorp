@@ -87,6 +87,11 @@ INCLUDES	+=	\
 		-I$(DIST)/private/security \
 		$(NULL)
 
+ifeq ($(OS_ARCH),OpenVMS)
+# OpenVMS wants the link libs in EXTRA_DSO_LDOPTS, with no dups
+EXTRA_DSO_LDOPTS += $(sort $(EXTRA_LIBS))
+endif
+
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
