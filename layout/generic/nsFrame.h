@@ -189,18 +189,21 @@ public:
   NS_IMETHOD  GetReflowMetrics(nsIPresContext&      aPresContext,
                                nsHTMLReflowMetrics& aMetrics);
 
-    // Selection Methods
+  // Selection Methods
+  // XXX Doc me...
+  // XXX If these are selection specific, then the name should imply selection
+  // rather than generic event processing, e.g., SelectionHandlePress...
   NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus);
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus);
 
   NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus);
+                        nsGUIEvent *    aEvent,
+                        nsEventStatus&  aEventStatus);
 
   NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
-                   nsGUIEvent *    aEvent,
-                   nsEventStatus&  aEventStatus);
+                           nsGUIEvent *    aEvent,
+                           nsEventStatus&  aEventStatus);
 
   NS_IMETHOD GetPosition(nsIPresContext&       aPresContext,
                          nsIRenderingContext * aRendContext,
