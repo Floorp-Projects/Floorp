@@ -112,7 +112,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
      PRInt32 nCount = g_duplicateList->Count();
      if (nCount > 0)
      {
-        for (PRInt32 n = 0; n < nCount; n++)
+        for (PRInt32 n = 0; n < nCount; ++n)
         {
            nsString * pstr = (nsString *)g_duplicateList->ElementAt(n);
            if (pstr->Equals(aURLSpec)) {
@@ -127,7 +127,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
      str.Truncate();
      nsString(aURLSpec).Left(str,5);
      if (str.Equals(NS_LITERAL_STRING("http:"))) {
-        g_iProcessed++;
+        ++g_iProcessed;
         if (g_iProcessed == (g_iMaxProcess > 0 ? g_iMaxProcess-1 : 0))
            g_bHitTop = PR_TRUE;
         g_workList->AppendElement(new nsString(aURLSpec));

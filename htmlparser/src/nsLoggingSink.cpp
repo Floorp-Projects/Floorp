@@ -133,7 +133,7 @@ nsLoggingSink::SetOutputStream(PRFileDesc *aStream,PRBool autoDeleteOutput) {
 static
 void WriteTabs(PRFileDesc * out,int aTabCount) {
   int tabs;
-  for(tabs=0;tabs<aTabCount;tabs++)
+  for(tabs=0;tabs<aTabCount;++tabs)
     PR_fprintf(out, "  ");
 }
 
@@ -581,7 +581,7 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
   WriteTabs(mOutput,1+mLevel);
   nsAutoString tmp;
   PRInt32 ac = aNode.GetAttributeCount();
-  for (PRInt32 i = 0; i < ac; i++) {
+  for (PRInt32 i = 0; i < ac; ++i) {
     char* key=nsnull;
     char* value=nsnull;
     const nsAString& k = aNode.GetKeyAt(i);

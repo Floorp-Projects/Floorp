@@ -144,7 +144,7 @@ RobotSink::~RobotSink()
 {
   NS_IF_RELEASE(mDocumentURL);
   PRInt32 i, n = mObservers.Count();
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < n; ++i) {
     nsIRobotSinkObserver* cop = (nsIRobotSinkObserver*)mObservers.ElementAt(i);
     NS_RELEASE(cop);
   }
@@ -249,7 +249,7 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
   if (tmp.Equals(NS_LITERAL_STRING("a"))) {
     nsAutoString k, v;
     PRInt32 ac = aNode.GetAttributeCount();
-    for (PRInt32 i = 0; i < ac; i++) {
+    for (PRInt32 i = 0; i < ac; ++i) {
       // Get upper-cased key
       const nsAString& key = aNode.GetKeyAt(i);
       k.Assign(key);
@@ -388,7 +388,7 @@ void RobotSink::ProcessLink(const nsString& aLink)
 
   // Now give link to robot observers
   PRInt32 i, n = mObservers.Count();
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < n; ++i) {
     nsIRobotSinkObserver* cop = (nsIRobotSinkObserver*)mObservers.ElementAt(i);
     cop->ProcessLink(absURLSpec);
   }

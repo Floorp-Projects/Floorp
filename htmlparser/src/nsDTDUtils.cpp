@@ -139,7 +139,7 @@ void nsEntryStack::EnsureCapacityFor(PRInt32 aNewMax,PRInt32 aShiftOffset) {
 
     if(temp){ 
       PRInt32 index=0; 
-      for(index=0;index<mCount;index++) {
+      for(index=0;index<mCount;++index) {
         temp[aShiftOffset+index]=mEntries[index];
       }
       if(mEntries) delete [] mEntries;
@@ -199,7 +199,7 @@ void nsEntryStack::PushFront(const nsCParserNode* aNode,nsEntryStack* aStyleStac
     
     mEntries[0].mParent=aStyleStack;
     mEntries[0].mStyles=0;
-    mCount++;
+    ++mCount;
   }
 }
 
@@ -215,7 +215,7 @@ void nsEntryStack::Append(nsEntryStack *aStack) {
     EnsureCapacityFor(mCount+aStack->mCount,0);
 
     PRInt32 theIndex=0;
-    for(theIndex=0;theIndex<theCount;theIndex++){
+    for(theIndex=0;theIndex<theCount;++theIndex){
       mEntries[mCount]=aStack->mEntries[theIndex];
       mEntries[mCount++].mParent=0;
     }
@@ -245,7 +245,7 @@ nsCParserNode* nsEntryStack::Remove(PRInt32 anIndex,eHTMLTags aTag) {
 
     PRInt32 theIndex=0;
     mCount-=1;
-    for(theIndex=anIndex;theIndex<mCount;theIndex++){
+    for(theIndex=anIndex;theIndex<mCount;++theIndex){
       mEntries[theIndex]=mEntries[theIndex+1];
     }
 
@@ -261,12 +261,12 @@ nsCParserNode* nsEntryStack::Remove(PRInt32 anIndex,eHTMLTags aTag) {
       PRUint32 sindex=0;
 
       nsTagEntry *theStyleEntry=theStyleStack->mEntries;
-      for(sindex=scount-1;sindex>0;sindex--){            
+      for(sindex=scount-1;sindex>0;--sindex){            
         if(theStyleEntry->mTag==aTag) {
           theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
           break;
         }
-        theStyleEntry++;
+        ++theStyleEntry;
       } //for
     }
   }
@@ -299,12 +299,12 @@ nsCParserNode* nsEntryStack::Pop(void) {
       PRUint32 sindex=0;
 
       nsTagEntry *theStyleEntry=theStyleStack->mEntries;
-      for(sindex=scount-1;sindex>0;sindex--){            
+      for(sindex=scount-1;sindex>0;--sindex){            
         if(theStyleEntry->mTag==mEntries[mCount].mTag) {
           theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
           break;
         }
-        theStyleEntry++;
+        ++theStyleEntry;
       } //for
     }
   }
@@ -465,12 +465,12 @@ CNamedEntity* nsDTDContext::GetEntity(const nsAString& aName)const {
 
     // skip past leading and trailing quotes/etc
     if(kQuote==*start) {
-      start++;
+      ++start;
     }
     
     if(kSemicolon==theChar ||
        kQuote == theChar) {
-      end--;
+      --end;
     }
     
   
@@ -478,7 +478,7 @@ CNamedEntity* nsDTDContext::GetEntity(const nsAString& aName)const {
     
     PRInt32 theCount=mEntities.GetSize();
     PRInt32 theIndex=0;
-    for(theIndex=0;theIndex<theCount;theIndex++) {
+    for(theIndex=0;theIndex<theCount;++theIndex) {
       CNamedEntity *theResult=(CNamedEntity*)mEntities.ObjectAt(theIndex);
       if(theResult &&
          theResult->mName.Equals(entityName,
@@ -592,7 +592,7 @@ public:
     while(next<=aValue)	{	// scale up in baseN; exceed current value.
 		  root=next;
 		  next*=base;
-		  expn++;
+		  ++expn;
 	  }
 		    
 	  while(expn--) {
@@ -735,7 +735,7 @@ public:
     int digitPos=0;
     int n=0;
 
-	  for(digitPos=0;digitPos<len;digitPos++) {
+	  for(digitPos=0;digitPos<len;++digitPos) {
 		  romanPos--;
 		  switch(decStr[digitPos]) {
 			  case	'0':	break;
@@ -747,7 +747,7 @@ public:
 			  case 	'5':	case	'6':
 			  case	'7':	case 	'8':	
           aString.Append(digitsB[romanPos]);
-					for(n=0;n<(decStr[digitPos]-'5');n++)
+					for(n=0;n<(decStr[digitPos]-'5');++n)
             aString.Append(digitsA[romanPos]);
 				  break;
 			  case	'9':	          
@@ -795,7 +795,7 @@ public:
 	  repCount=((aValue-1)/seriesLen);
 	  modChar=aValue-(repCount*seriesLen);
 	  
-    for(count=0;count<=repCount;count++) {
+    for(count=0;count<=repCount;++count) {
       aString.Append(PRUnichar(kFootnoteSet[modChar]));
     }
   }
@@ -854,7 +854,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
 
   CAbacus::eNumFormat  theNumFormat=CAbacus::eDecimal;
 
-  for(theIndex=0;theIndex<theCount;theIndex++){
+  for(theIndex=0;theIndex<theCount;++theIndex){
     const nsAString& theKey=aNode.GetKeyAt(theIndex);
     const nsAString& theValue=aNode.GetValueAt(theIndex);
 
@@ -1051,7 +1051,7 @@ void nsDTDContext::PushStyle(const nsCParserNode* aNode){
     }
     if(theStack) {
       theStack->Push(aNode);
-      mResidualStyleCount++;
+      ++mResidualStyleCount;
     }
   } //if
 }
@@ -1076,10 +1076,10 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
         PRUint32 sindex=0;
 
         theEntry=aStyles->mEntries;
-        for(sindex=0;sindex<scount;sindex++){            
+        for(sindex=0;sindex<scount;++sindex){            
           theEntry->mParent=0;  //this tells us that the style is not open at any level
-          theEntry++;
-          mResidualStyleCount++;
+          ++theEntry;
+          ++mResidualStyleCount;
         } //for
 
       }
@@ -1202,7 +1202,7 @@ nsTokenAllocator::nsTokenAllocator() {
 
 #ifdef NS_DEBUG
   int i=0;
-  for(i=0;i<eToken_last-1;i++) {
+  for(i=0;i<eToken_last-1;++i) {
     mTotals[i]=0;
   }
 #endif
@@ -1319,7 +1319,7 @@ static int gAllNodeCount=0;
 
 int FindNode(nsCParserNode *aNode) {
   int theIndex=0;
-  for(theIndex=0;theIndex<gAllNodeCount;theIndex++) {
+  for(theIndex=0;theIndex<gAllNodeCount;++theIndex) {
     if(gAllNodes[theIndex]==aNode) {
       return theIndex;
     }
@@ -1402,7 +1402,7 @@ nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,
   else{
     result=nsCParserNode::Create(aToken, aTokenAllocator,this);
 #ifdef DEBUG_TRACK_NODES
-    mCount++;
+    ++mCount;
     AddNode(NS_STATIC_CAST(nsCParserNode*,result));
 #endif
     IF_HOLD(result);
@@ -1427,13 +1427,13 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
   out << "==================================================";
   int i,j=0;
   int written;
-  for(i=1;i<eHTMLTag_text;i++){
+  for(i=1;i<eHTMLTag_text;++i){
     const char* tag=nsHTMLTags::GetCStringValue((eHTMLTags)i);
     out << endl << endl << "Tag: <" << tag << ">" << endl;
     out << prefix;
     written=0;
     if(theDTD.IsContainer(i)) {
-      for(j=1;j<eHTMLTag_text;j++){
+      for(j=1;j<eHTMLTag_text;++j){
         if(15==written) {
           out << endl << prefix;
           written=0;
@@ -1442,7 +1442,7 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
           tag=nsHTMLTags::GetCStringValue((eHTMLTags)j);
           if(tag) {
             out<< tag << ", ";
-            written++;
+            ++written;
           }
         }
       }//for
@@ -1509,10 +1509,10 @@ nsObserverEntry::nsObserverEntry(const nsAString& aTopic) : mTopic(aTopic)
 }
 
 nsObserverEntry::~nsObserverEntry() {
-  for (PRInt32 i = 0; i <= NS_HTML_TAG_MAX; i++){
+  for (PRInt32 i = 0; i <= NS_HTML_TAG_MAX; ++i){
     if (mObservers[i]) {
       PRInt32 count = mObservers[i]->Count();
-      for (PRInt32 j = 0; j < count; j++) {
+      for (PRInt32 j = 0; j < count; ++j) {
         nsISupports* obs = (nsISupports*)mObservers[i]->ElementAt(j);
         NS_IF_RELEASE(obs);
       }
@@ -1550,7 +1550,7 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
         // least 2 allocations for mImpl, usually more, plus at least 1 per
         // string (total = 2*(keys+3) + 2(or more) array allocations )).
         PRInt32 index;
-        for (index = 0; index < theAttrCount; index++) {
+        for (index = 0; index < theAttrCount; ++index) {
           keys.AppendString(aNode->GetKeyAt(index));
           values.AppendString(aNode->GetValueAt(index));
         } 
@@ -1570,7 +1570,7 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
         nsCOMPtr<nsIChannel> channel;
         aParser->GetChannel(getter_AddRefs(channel));
 
-        for (index=0;index<theObserversCount;index++) {
+        for (index=0;index<theObserversCount;++index) {
           nsIElementObserver* observer = NS_STATIC_CAST(nsIElementObserver*,theObservers->ElementAt(index));
           if (observer) {
             result = observer->Notify(aWebShell, channel,
@@ -1613,7 +1613,7 @@ nsObserverEntry::AddObserver(nsIElementObserver *aObserver,
 void 
 nsObserverEntry::RemoveObserver(nsIElementObserver *aObserver)
 {
-  for (PRInt32 i=0; i <= NS_HTML_TAG_MAX; i++){
+  for (PRInt32 i=0; i <= NS_HTML_TAG_MAX; ++i){
     if (mObservers[i]) {
       nsISupports* obs = aObserver;
       PRBool removed = mObservers[i]->RemoveElement(obs);

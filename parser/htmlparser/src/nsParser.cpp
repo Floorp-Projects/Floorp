@@ -629,7 +629,7 @@ public:
           case kQuote:
             target=*cp;
             if (aSkipQuotes) {
-              cp++;
+              ++cp;
             }
             done=PR_TRUE;
             break;
@@ -650,13 +650,13 @@ public:
         const CharT *firstcp=cp; //hang onto this...      
         PRInt32 theDashCount=2;
 
-        cp++; //just skip first letter to simplify processing...
+        ++cp; //just skip first letter to simplify processing...
 
         //ok, now find end of this word
         while(cp++<mEndBuffer) {
           if(kQuote==target) {
             if(kQuote==*cp) {
-              cp++;
+              ++cp;
               break; //we found our end...
             }
           }
@@ -664,7 +664,7 @@ public:
             //then let's look for SGML comments
             if(kMinus==*cp) {
               if(4==++theDashCount) {
-                cp++;
+                ++cp;
                 break;
               }
             }
@@ -721,7 +721,7 @@ static PRInt32 ParsePS(const nsString& aBuffer, PRInt32 aIndex)
     PRUnichar ch = aBuffer.CharAt(aIndex);
     if ((ch == PRUnichar(' ')) || (ch == PRUnichar('\t')) ||
         (ch == PRUnichar('\n')) || (ch == PRUnichar('\r'))) {
-      aIndex++;
+      ++aIndex;
     } else if (ch == PRUnichar('-')) {
       PRInt32 tmpIndex;
       if (aBuffer.CharAt(aIndex+1) == PRUnichar('-') &&
@@ -2022,7 +2022,7 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
        // <?xml
        PRInt32 i;
        PRBool versionFound = PR_FALSE, encodingFound = PR_FALSE;
-       for (i=6; i < aLen && !encodingFound; i++) {
+       for (i=6; i < aLen && !encodingFound; ++i) {
          // end of XML declaration?
          if ((((char*)aBytes)[i] == '?') && 
            ((i+1) < aLen) &&
@@ -2041,7 +2041,7 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
              (0 == PL_strncmp("versio", (char*)(aBytes+i-6), 6 ))) {
              // Fast forward through version
              char q = 0;
-             for (++i; i < aLen; i++) {
+             for (++i; i < aLen; ++i) {
                char qi = ((char*)aBytes)[i];
                if (qi == '\'' || qi == '"') {
                  if (q && q == qi) {
@@ -2067,7 +2067,7 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
              (0 == PL_strncmp("encodin", (char*)(aBytes+i-7), 7 ))) {
              PRInt32 encStart = 0;
              char q = 0;
-             for (++i; i < aLen; i++) {
+             for (++i; i < aLen; ++i) {
                char qi = ((char*)aBytes)[i];
                if (qi == '\'' || qi == '"') {
                  if (q && q == qi) {
@@ -2580,7 +2580,7 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
     if(mTokenObserver) {
       PRInt32 theCount=theTokenizer->GetCount();
       PRInt32 theIndex;
-      for(theIndex=0;theIndex<theCount;theIndex++){
+      for(theIndex=0;theIndex<theCount;++theIndex){
         if((*mTokenObserver)(theTokenizer->GetTokenAt(theIndex))){
           //add code here to pull unwanted tokens out of the stack...
         }

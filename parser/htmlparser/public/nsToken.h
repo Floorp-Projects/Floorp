@@ -153,7 +153,7 @@ class CToken {
      * Make a note on number of times you have been referenced
      * @update	harishd 08/02/00
      */
-    void AddRef() { mUseCount++; }
+    void AddRef() { ++mUseCount; }
     
     /**
      * Free yourself if no one is holding you.

@@ -86,7 +86,7 @@ nsCParserNode::nsCParserNode(CToken* aToken,
   MOZ_COUNT_CTOR(nsCParserNode);
 
   static int theNodeCount=0;
-  theNodeCount++;
+  ++theNodeCount;
   mAttributes=0;
   mToken=aToken;
   IF_HOLD(mToken);
@@ -327,7 +327,7 @@ void nsCParserNode::GetSource(nsString& aString) {
   }
   if(mAttributes) {
     int           index=0;
-    for(index=0;index<mAttributes->GetSize();index++) {
+    for(index=0;index<mAttributes->GetSize();++index) {
       CAttributeToken *theToken=(CAttributeToken*)mAttributes->ObjectAt(index);
       if(theToken) {
         theToken->AppendSourceTo(aString);

@@ -581,7 +581,7 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         if(theNextToken)  {
           eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
           if(eToken_newline==theType){
-            mLineNumber++;
+            ++mLineNumber;
             mTokenizer->PopToken();  //skip 1st newline inside PRE and LISTING
           }//if
         }//if
@@ -599,7 +599,7 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
 
         if(theCount) {
           PRInt32 theIndex=0;
-          for(theIndex=0;theIndex<theCount;theIndex++){
+          for(theIndex=0;theIndex<theCount;++theIndex){
             const nsAString& theKey = aNode.GetKeyAt(theIndex);
             if(theKey.Equals(NS_LITERAL_STRING("ENTITY"), nsCaseInsensitiveStringComparator())) {
               const nsAString& theName=aNode.GetValueAt(theIndex);
@@ -662,7 +662,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNo
 
     switch(aTag) {
       case eHTMLTag_newline:
-        mLineNumber++;
+        ++mLineNumber;
         break;
       default:
         break; 
@@ -815,7 +815,7 @@ nsresult COtherDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt3
   if(aCount<=theAvailTokenCount) {
     //gElementTable->mElements[aTag]->GetSkipTarget();
     CToken* theToken=0; 
-    for(attr=0;attr<aCount;attr++){  
+    for(attr=0;attr<aCount;++attr){  
       theToken=mTokenizer->PopToken(); 
       if(theToken)  {
         // Sanitize the key for it might contain some non-alpha-non-digit characters
