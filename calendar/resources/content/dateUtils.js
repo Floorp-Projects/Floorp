@@ -168,8 +168,11 @@ function DateFormater( )
   this.alphaMonths = null;
   this.probeSucceeded = false;
   
-  // Allow formats such as 2002Y03M04D as well as 2002-03-04
-  var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)\D?\s*$/; //digits&nonDigits
+  // SHORT NUMERIC DATE, such as 2002-03-04, 4/3/2002, or CE2002Y03M04D.
+  // Made of digits & nonDigits.  [^\d\W]* is letters-only optional prefix 
+  // for era, as in CE2002Y03M04D, used in chinese short dates to distinguish 
+  // western Common-Era year from year in chinese calendar.
+  var parseShortDateRegex = /^\s*[^\d\W]*(\d+)\D(\d+)\D(\d+)\D?\s*$/;
   var probeDate = new Date(2002,3-1,4); // month is 0-based
   var probeString = this.getShortFormatedDate(probeDate);
 
@@ -188,9 +191,9 @@ function DateFormater( )
     //All three indexes are set (not -1) at this point.
     this.probeSucceeded = true;
   } else {
-    // Alphabetic month format, such as "dd MMM yy" or "MMMM dd, yyyy"
+    // SHORT DATE WITH ALPHABETIC MONTH, such as "dd MMM yy" or "MMMM dd, yyyy"
     // (\d+|[^\d\W]) is digits or letters, not both together.
-    // Allows 31dec1999 (no delimiters between parts) if OS does (windows does not).
+    // Allows 31dec1999 (no delimiters between parts) if OS does (w2k does not).
     // Allows Dec 31, 1999 (comma and space between parts)
     parseShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\s*$/;
     probeArray = parseShortDateRegex.exec(probeString);
@@ -352,8 +355,11 @@ DateFormater.prototype.parseShortDate = function ( dateString )
 
   var year = Number.MIN_VALUE; var month = -1; var day = -1; var timeString = null;
   if (this.alphaMonths == null) {
-    // NUMERIC DATE
-    var parseNumShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)(.*)?$/;//digits & nonDigits
+    // SHORT NUMERIC DATE, such as 2002-03-04, 4/3/2002, or CE2002Y03M04D.
+    // Made of digits & nonDigits.  [^\d\W]* is letters-only optional prefix
+    // for era, as in CE2002Y03M04D, used in chinese short dates to distinguish
+    // western Common-Era year from year in chinese calendar.
+    var parseNumShortDateRegex = /^\s*[^\d\W]*(\d+)\D(\d+)\D(\d+)(.*)?$/;
     var dateNumbersArray = parseNumShortDateRegex.exec(dateString);
     if (dateNumbersArray != null) {
       year = Number(dateNumbersArray[this.yearIndex]);
@@ -362,8 +368,11 @@ DateFormater.prototype.parseShortDate = function ( dateString )
       timeString = dateNumbersArray[4];
     }
   } else {
-    // DATE WITH ALPHABETIC MONTH
-    var parseAlphShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)(.*)?$/;//digits & nonDigits
+    // SHORT DATE WITH ALPHABETIC MONTH, such as "dd MMM yy" or "MMMM dd, yyyy"
+    // (\d+|[^\d\W]) is digits or letters, not both together.
+    // Allows 31dec1999 (no delimiters between parts) if OS does (w2k does not).
+    // Allows Dec 31, 1999 (comma and space between parts)
+    var parseAlphShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)(.*)?$/;
     var datePartsArray = parseAlphShortDateRegex.exec(dateString);
     if (datePartsArray != null) {
       year = Number(datePartsArray[this.yearIndex]);
