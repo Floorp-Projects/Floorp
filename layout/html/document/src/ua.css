@@ -26,6 +26,10 @@ BODY {
   padding: 8px;
 }
 
+:BULLET {
+  display: inline;
+}
+
 // Blocks
 
 P {
