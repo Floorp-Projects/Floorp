@@ -63,7 +63,16 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aView,aContext));}
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aWidget,aContext));}
-
+#ifdef NOT_NOW
+  /* Xprint API supports offscreen surfaces but Mozilla does not make use of
+   * them, see bug 124761 ("RFE: Make use of "offpaper" drawing surfaces in
+   * some printing APIs"))
+   */
+  NS_IMETHOD  CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aSurface, aContext));}
+#else
+  NS_IMETHOD  CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext) {return NS_ERROR_NOT_IMPLEMENTED;}
+#endif /* NOT_NOW */
+  NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;

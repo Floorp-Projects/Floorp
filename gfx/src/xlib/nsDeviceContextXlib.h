@@ -56,6 +56,10 @@ public:
     {return (DeviceContextImpl::CreateRenderingContext(aView, aContext)); }
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext)
     {return (DeviceContextImpl::CreateRenderingContext(aWidget, aContext)); }
+  NS_IMETHOD  CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext) 
+    {return (DeviceContextImpl::CreateRenderingContext(aSurface, aContext));}
+  NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext);
+
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;

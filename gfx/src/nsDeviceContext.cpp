@@ -162,8 +162,6 @@ NS_IMETHODIMP DeviceContextImpl::SetCanonicalPixelScale(float aScale)
   return NS_OK;
 }
 
-static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-
 NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)
 {
 #ifdef NS_PRINT_PREVIEW
@@ -173,12 +171,13 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIView *aView, nsIRende
   }
 #endif
 
-  nsresult   rv;
-  nsIWidget *win;
-  aView->GetWidget(win);
+  nsresult            rv;
+  nsCOMPtr<nsIWidget> win;
+  aView->GetWidget(*getter_AddRefs(win));
 
   aContext = nsnull;
-  nsCOMPtr<nsIRenderingContext> pContext = do_CreateInstance(kRenderingContextCID, &rv);
+  nsCOMPtr<nsIRenderingContext> pContext;
+  rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
   if (NS_SUCCEEDED(rv)) {
     rv = InitRenderingContext(pContext, win);
     if (NS_SUCCEEDED(rv)) {
@@ -187,7 +186,31 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIView *aView, nsIRende
     }
   }
   
-  NS_IF_RELEASE(win);
+  return rv;
+}
+
+NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext)
+{
+#ifdef NS_PRINT_PREVIEW
+  // AltDC NEVER use widgets to create their DCs
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATERC_PAINT)) {
+    return mAltDC->CreateRenderingContext(aContext);
+  }
+#endif /* NS_PRINT_PREVIEW */
+
+  nsresult rv;
+
+  aContext = nsnull;
+  nsCOMPtr<nsIRenderingContext> pContext;
+  rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
+  if (NS_SUCCEEDED(rv)) {
+    rv = InitRenderingContext(pContext, aSurface);
+    if (NS_SUCCEEDED(rv)) {
+      aContext = pContext;
+      NS_ADDREF(aContext);
+    }
+  }
+  
   return rv;
 }
 
@@ -205,7 +228,8 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIWidget *aWidget, nsIR
 #endif
 
   aContext = nsnull;
-  nsCOMPtr<nsIRenderingContext> pContext = do_CreateInstance(kRenderingContextCID, &rv);
+  nsCOMPtr<nsIRenderingContext> pContext;
+  rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
   if (NS_SUCCEEDED(rv)) {
     rv = InitRenderingContext(pContext, aWidget);
     if (NS_SUCCEEDED(rv)) {
@@ -217,7 +241,20 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIWidget *aWidget, nsIR
   return rv;
 }
 
-NS_IMETHODIMP DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
+NS_IMETHODIMP DeviceContextImpl::CreateRenderingContextInstance(nsIRenderingContext *&aContext)
+{
+  static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+
+  nsresult rv;
+  nsCOMPtr<nsIRenderingContext> pContext = do_CreateInstance(kRenderingContextCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    aContext = pContext;
+    NS_ADDREF(aContext);
+  }
+  return rv;
+}
+
+nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
 #ifdef NS_PRINT_PREVIEW
   // there are a couple of cases where the kUseAltDCFor_CREATERC_xxx flag has been turned off
@@ -230,6 +267,21 @@ NS_IMETHODIMP DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aCont
 #else
   return aContext->Init(this, aWin);
 #endif
+}
+
+nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsDrawingSurface aSurface)
+{
+#ifdef NS_PRINT_PREVIEW
+  // there are a couple of cases where the kUseAltDCFor_CREATERC_xxx flag has been turned off
+  // but we still need to initialize with the Alt DC
+  if (mAltDC) {
+    return aContext->Init(mAltDC, aSurface);
+  } else {
+    return aContext->Init(this, aSurface);
+  }
+#else
+  return aContext->Init(this, aSurface);
+#endif /* NS_PRINT_PREVIEW */
 }
 
 NS_IMETHODIMP DeviceContextImpl::CreateFontCache()

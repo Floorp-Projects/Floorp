@@ -353,6 +353,18 @@ NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&a
   return rv;
 }
 
+NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContextInstance(nsIRenderingContext *&aContext)
+{
+  nsCOMPtr<nsIRenderingContext> renderingContext = new nsRenderingContextGTK();
+  if (!renderingContext)
+    return NS_ERROR_OUT_OF_MEMORY;
+         
+  aContext = renderingContext;
+  NS_ADDREF(aContext);
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
   //XXX it is very critical that this not lie!! MMP

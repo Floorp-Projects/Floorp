@@ -20,9 +20,10 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Contributor(s):  Patrick C. Beard <beard@netscape.com>
- *                  Kevin McCluskey  <kmcclusk@netscape.com>
- *                  Robert O'Callahan <roc+@cs.cmu.edu>
+ *   Patrick C. Beard <beard@netscape.com>
+ *   Kevin McCluskey  <kmcclusk@netscape.com>
+ *   Robert O'Callahan <roc+@cs.cmu.edu>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -311,6 +312,7 @@ nsViewManager::nsViewManager()
   }
  
   if (gCleanupContext == nsnull) {
+    /* XXX: This should use a device to create a matching |nsIRenderingContext| object */
     nsComponentManager::CreateInstance(kRenderingContextCID, 
                                        nsnull, NS_GET_IID(nsIRenderingContext), (void**)&gCleanupContext);
     NS_ASSERTION(gCleanupContext != nsnull, "Wasn't able to create a graphics context for cleanup");
@@ -1297,14 +1299,10 @@ inline PRInt32 nextPowerOf2(PRInt32 value)
 static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsDrawingSurface surface,
                                     const nsSize& size, nsIRenderingContext* *aResult)
 {
-  nsresult rv;
-  nsIRenderingContext* context;
-  rv = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
-                                          NS_GET_IID(nsIRenderingContext),
-                                          (void **)&context);
-  if (NS_FAILED(rv))
-    return rv;
-  rv = context->Init(deviceContext, surface);
+  nsresult             rv;
+  nsIRenderingContext *context = nsnull;
+
+  rv = deviceContext->CreateRenderingContext(surface, context);
   if (NS_FAILED(rv))
     return rv;
 

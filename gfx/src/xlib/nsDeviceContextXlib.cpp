@@ -234,6 +234,18 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
   return rv;
 }
 
+NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContextInstance(nsIRenderingContext *&aContext)
+{
+  nsCOMPtr<nsIRenderingContext> renderingContext = new nsRenderingContextXlib();
+  if (!renderingContext)
+    return NS_ERROR_OUT_OF_MEMORY;
+         
+  aContext = renderingContext;
+  NS_ADDREF(aContext);
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextXlib::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::SupportsNativeWidgets()\n"));
