@@ -278,8 +278,24 @@ function HideImage() {
   element.setAttribute("disabled","true" );
 }
 
+function HideEncryptOrObscure() {
+  var elementOn, elementOff;
+  if (this.pref.GetBoolPref("wallet.crypto")) {
+    elementOn = document.getElementById("obscure");
+    elementOff = document.getElementById("encrypt");
+  } else {
+    elementOn = document.getElementById("encrypt");
+    elementOff = document.getElementById("obscure");
+  }
+  elementOn.setAttribute("disabled","false");
+  elementOff.setAttribute("disabled","true");
+}
+
 function CheckForWalletAndImage()
 {
+  // remove either encrypt or obscure depending on pref setting
+  HideEncryptOrObscure();
+
   // remove wallet functions if not in browser
   try {
     if (!appCore) {
@@ -321,6 +337,15 @@ function WalletAction( action )
       wallet.WALLET_ChangePassword();
     } else if (action == "expire") {
       wallet.WALLET_ExpirePassword();
+    }
+    return;
+  }
+
+  if (action == "encrypt" || action == "obscure") {
+    if (action == "encrypt") {
+      this.pref.SetBoolPref("wallet.crypto", true);
+    } else if (action == "obscure") {
+      this.pref.SetBoolPref("wallet.crypto", false);
     }
     return;
   }
