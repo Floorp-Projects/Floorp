@@ -29,7 +29,6 @@
 		<menuseparator/>
 		<menuitem value="&addressBookCmd.label;" oncommand="toAddressBook()"/>
 		<menuitem value="&newsgroupsCmd.label;" disabled="true" oncommand="toNewsgroups()"/>
-		<menuitem value="&ircCmd.label;" oncommand="toIRC()"/>
 		<menuseparator/>
 		<menu value="&walletMenu.label;" id="walletMenu">
       <menupopup oncreate="CheckForWallet()"> 
