@@ -122,23 +122,49 @@ function nsExtensionManager()
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
   os.addObserver(this, "profile-after-change", false);
+  os.addObserver(this, "profile-do-change", false);
 }
 
 nsExtensionManager.prototype = {
-
-  // goats
-  
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
-  // XXXben this can go away once appstartup/runner code calls us. 
   observe: function (aSubject, aTopic, aData)
   {
-    if (aTopic == "profile-after-change") {
+    switch (aTopic) {
+    case "profile-after-change":
       var os = Components.classes["@mozilla.org/observer-service;1"]
-                        .getService(Components.interfaces.nsIObserverService);
+                         .getService(Components.interfaces.nsIObserverService);
       os.removeObserver(this, "profile-after-change");
       
+      // XXXben this can go away once appstartup/runner code calls us. 
       this.checkForMismatches();
+      break;
+    case "profile-do-change":
+      var os = Components.classes["@mozilla.org/observer-service;1"]
+                         .getService(Components.interfaces.nsIObserverService);
+      os.removeObserver(this, "profile-do-change");
+    
+      var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                  .getService(Components.interfaces.nsIProperties);
+      var autoregFile = fileLocator.get("ProfD", Components.interfaces.nsIFile);
+      autoregFile.append(".autoreg");
+      if (autoregFile.exists()) {
+        // An existing autoreg file is an indication that something major has 
+        // happened to the extensions datasource (install/uninstall/enable/disable)
+        // and as such we must load it now and see what needs to happen.
+        this._ensureDS();
+        
+        // Look for extensions that need to be enabled
+        
+        // Look for extensions that need to be disabled
+        
+        // Look for extensions that need to be removed
+        
+        // Now that we've finalized the EM operation, remove the autoreg file so
+        // we don't do this every time we start.
+        autoregFile.remove(false);
+      }
+      break;
     }
   },
   
@@ -180,11 +206,68 @@ nsExtensionManager.prototype = {
     
     // Now update the last app version so we don't do this checking 
     // again.
-    // pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+    pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
     
     return rv;
   },
   
+  _writeAutoReg: function ()
+  {
+    // When an operation is performed that requires a component re-registration
+    // (extension enabled/disabled, installed, uninstalled), we must write the
+    // set of registry-relative paths of components to register to an .autoreg 
+    // file which lives in the profile folder. 
+    //
+    // To do this we must enumerate all installed extensions and write data 
+    // about all valid items to the file. 
+    
+    this._ensureDS();
+    
+    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                .getService(Components.interfaces.nsIProperties);
+    var profileDir = fileLocator.get("ProfD", Components.interfaces.nsIFile);
+    var globalDir = fileLocator.get("ProfD", Components.interfaces.nsIFile); // XXXben - XCurProcDir
+    
+    // Open the .autoreg file for writing.
+    
+    var autoregFile = profileDir.clone();
+    autoregFile.append(".autoreg");
+    var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                        .createInstance(Components.interfaces.nsIFileOutputStream);
+    const MODE_WRONLY   = 0x02;
+    const MODE_CREATE   = 0x08;
+    const MODE_TRUNCATE = 0x20;
+    fos.init(autoregFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
+
+    var extensions = this.getItemList(null, Components.interfaces.nsIUpdateItem.TYPE_EXTENSION, { });
+    for (var i = 0; i < extensions.length; ++i) {
+      var extension = extensions[i];
+      
+      var valid = this._ds.getExtensionProperty(extension.id, "toBeDisabled") != "true";
+      valid = this._ds.getExtensionProperty(extension.id, "toBeUninstalled") != "true";
+      
+      if (valid) continue;
+      
+      // Now locate this extension within the extensions folder
+      // First, where is it installed - profile or global?
+      var location = this._ds.getExtensionProperty(extension.id, "installLocation");
+      var dir = location == "profile" ? profileDir : globalDir;
+      
+      // Now synthesize the components dir for the extension
+      var componentsDir = dir.clone();
+      componentsDir.append("extensions");
+      componentsDir.append(extension.id);
+      componentsDir.append("components");
+      if (componentsDir.exists()) {
+        // write the relative path of the components dir
+        var line = "reg:extensions/" + extension.id + "/components/\n";
+        fos.write(line, line.length);
+      }
+    }
+    fos.close();
+  },
+
+  /////////////////////////////////////////////////////////////////////////////  
   // nsIExtensionManager
   installExtensionFromStream: function (aStream, aUseProfile)
   {
@@ -207,23 +290,28 @@ nsExtensionManager.prototype = {
     this._ensureDS();
     
     this._ds.installExtension(ds, aUseProfile);
+    this._writeAutoReg();
   },
       
   uninstallExtension: function (aExtensionID)
   {
     this._ds.uninstallExtension(aExtensionID);
+    this._writeAutoReg();
   },
   
   enableExtension: function (aExtensionID)
   {
     this._ds.enableExtension(aExtensionID);
+    this._writeAutoReg();
   },
   
   disableExtension: function (aExtensionID)
   {
     this._ds.disableExtension(aExtensionID);
+    this._writeAutoReg();
   },
   
+  // XXXben - handle the case where the item provides its own update url. 
   update: function (aItems, aItemCount)
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -264,8 +352,11 @@ nsExtensionManager.prototype = {
   
   //
   _ds: null,
-    
+
+  /////////////////////////////////////////////////////////////////////////////    
   // Other
+  
+  // This should NOT be called until after the window is shown! 
   _ensureDS: function ()
   {
     if (!this._ds) {
@@ -476,14 +567,18 @@ nsExtensionsDataSource.prototype = {
   getExtensionProperty: function (aExtensionID, aProperty)
   {
     var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
-    return this.GetTarget(extension, this._emR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    try {
+      return this.GetTarget(extension, this._emR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    }
+    catch (e) {}
+    return "";
   },
   
   _setExtensionProperty: function (aExtensionID, aPropertyArc, aPropertyValue)
   {
     var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
     var installLocation = this.GetTarget(extension, this._emR("installLocation"), true);
-    var isProfile = installLocation.EqualsNode(this._emR("profile"));
+    var isProfile = installLocation.EqualsNode(this._emL("profile"));
     var ds = isProfile ? this._profileExtensions : this._appExtensions;
     
     this._setProperty(ds, extension, aPropertyArc, aPropertyValue);
