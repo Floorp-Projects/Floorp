@@ -19,6 +19,7 @@
 #define nsIReflowCommand_h___
 
 #include "nsISupports.h"
+#include <stdio.h>
 
 class  nsIAtom;
 class  nsIFrame;
@@ -152,6 +153,11 @@ public:
    * This is used for FrameInserted reflow commands.
    */
   NS_IMETHOD GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const = 0;
+
+  /**
+   * Dump out the reflow-command to out
+   */
+  NS_IMETHOD List(FILE* out) const = 0;
 };
 
 #endif /* nsIReflowCommand_h___ */
