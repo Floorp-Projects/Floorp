@@ -91,6 +91,7 @@ float t2d, a2d;
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
+
   return  NS_OK;
 }
 

@@ -39,6 +39,7 @@ CPPSRCS = \
 	nsFontMetricsPS.cpp \
 	nsRenderingContextPS.cpp \
 	nsPostScriptObj.cpp \
+	nsAFMObject.cpp \
 
 CSRCS = \
 	font_metrics.c \

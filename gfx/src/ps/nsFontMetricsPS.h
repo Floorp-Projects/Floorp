@@ -19,11 +19,8 @@
 #ifndef nsFontMetricsPS_h__
 #define nsFontMetricsPS_h__
 
-#ifdef XP_WIN
-#include <windows.h>
-#endif
-
 #include "nsIFontMetrics.h"
+#include "nsAFMObject.h"
 #include "nsFont.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
@@ -38,7 +35,11 @@ public:
   nsFontMetricsPS();
   virtual ~nsFontMetricsPS();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+  void* operator new(size_t sz) {
+    void* rv = new char[sz];
+    nsCRT::zero(rv, sz);
+    return rv;
+  }
 
   NS_DECL_ISUPPORTS
 
@@ -58,6 +59,8 @@ public:
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
+  NS_IMETHOD  GetStringWidth(const char *String,nscoord &aWidth,nscoord aLength);
+  NS_IMETHOD  GetStringWidth(const PRUnichar *aString,nscoord &aWidth,nscoord aLength);
 
 protected:
   void RealizeFont();
@@ -78,9 +81,7 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
-#ifdef XP_WIN
-  HFONT               mFontHandle;
-#endif
+  nsAFMObject         *mAFMInfo;
 };
 
 #endif

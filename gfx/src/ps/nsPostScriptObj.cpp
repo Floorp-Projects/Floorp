@@ -717,6 +717,7 @@ nsPostScriptObj::translate(int x, int y)
 
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
+ *  Special notes, this on window will blow up since we can not get the bits in a DDB
  *	@update 2/1/99 dwc
  */
 void 

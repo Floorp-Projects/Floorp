@@ -19,14 +19,6 @@
 #ifndef nsDeviceContextPS_h___
 #define nsDeviceContextPS_h___
 
-#ifdef XP_PC
-#define WINTEST
-#endif
-
-#ifdef WINTEST
-#include <windows.h>
-#endif
-
 #include "nsDeviceContext.h"
 #include "nsUnitConversion.h"
 #include "nsIWidget.h"
@@ -49,11 +41,7 @@ public:
    * with a NativeWidget.
    * @update 12/21/98 dwc
    */
-#ifdef WINTEST
-  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext, HDC aTheDC); 
-#else
-  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext);  
-#endif
+  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext); 
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
@@ -93,15 +81,8 @@ protected:
   nsPostScriptObj       *mPSObj;
 
 public:
-  //static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
   nsPostScriptObj*    GetPrintContext() { return mPSObj; }
 
-#ifdef WINTEST
-public:
-  HDC           mDC;               // this is temporary!!!
-#endif
-
-//friend nsDeviceContextWin;         // need to be a friend of the class using us.
 };
 
 #endif /* nsDeviceContextPS_h___ */
