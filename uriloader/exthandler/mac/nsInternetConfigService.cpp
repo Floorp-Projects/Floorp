@@ -291,7 +291,15 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     if (entry.MIMEType[0])
       info->SetMIMEType(mimetype.get());
     else
-      info->SetMIMEType(APPLICATION_OCTET_STREAM);
+    { // The IC mappings seem to not be very agressive about determining the mime type if
+      // all we have is a type or creator code.  This is a bandaid approach for when we
+      // get a file of type 'TEXT' with no mime type mapping so that we'll display the
+      // file rather than trying to download it.
+      if (entry.fileType == 'TEXT')
+        info->SetMIMEType(TEXT_PLAIN);
+      else
+        info->SetMIMEType(APPLICATION_OCTET_STREAM);
+    }
     
     // convert entry.extension which is a Str255 
     // don't forget to remove the '.' in front of the file extension....
