@@ -26,7 +26,7 @@
       </xul:hbox>
                           
       <xul:dropmarker class="autocomplete-history-dropmarker" allowevents="true"
-                      inherits="open,hidden=disablehistory"/>
+                      inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
         <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" inherits="for=id,nomatch"/>
@@ -240,7 +240,7 @@
         </getter>
         <setter>
           <![CDATA[
-            var historyPopup = this.getElementsByTagName("menupopup").item(0);
+            var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
             if (val) {
               this.setAttribute('open',true); 
               historyPopup.showPopup();
@@ -862,8 +862,8 @@
               if (!aEvent.altKey)
                 break;
             case KeyEvent.DOM_VK_F4:
-              if (!aEvent.ctrlKey && !aEvent.shiftKey && !this.hideHistory) {
-                var historyPopup = this.getElementsByTagName("menupopup").item(0);
+              if (!aEvent.ctrlKey && !aEvent.shiftKey && this.getAttribute("disablehistory") != "true") {
+                var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
                 if (historyPopup)
                   historyPopup.showPopup();
                 else
