@@ -1,0 +1,25 @@
+
+datepicker {
+	-moz-binding: url("datepicker.xml#datepicker");
+	max-height: 200px;
+}
+
+menu.datepicker-button {
+	background-image : url( "chrome://calendar/skin/ca-event-dialog/calendar_up.gif" );
+   background-repeat   : no-repeat;
+}
+
+.datepicker-button:hover {
+	//background-image : url( "chrome://calendar/skin/ca-event-dialog/calendar_hover.gif" );
+   //background-repeat   : no-repeat;
+}
+
+.datepicker-button[open="true"] {
+   //background-image : url( "chrome://calendar/skin/ca-event-dialog/calendar_down.gif" );
+   //background-repeat   : no-repeat;
+}
+
+.menu-right
+{
+   visibility        : hidden;
+}

@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+
+<bindings id="xulCalendar"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+<binding id="calendar" extends="xul:box">
+    
+    <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
+    <content>
+
+	    <xul:vbox class="cal-mainbox" >
+		  <xul:hbox class="cal-month-box" flex="1">
+			<xul:image class="cal-navbtn" dir="-1"/>
+			<xul:spacer flex="1"/>
+			<xul:text id="month-name" 
+				class="cal-month-name" value="Month"/>
+			<xul:spacer flex="1"/>
+			<xul:image class="cal-navbtn" dir="1"/>
+		  </xul:hbox>
+		  <xul:vbox class="cal-cal-box" flex="1">
+			<xul:hbox class="cal-row-head" flex="1">
+				<xul:text class="cal-header" value="S"/>
+				<xul:text class="cal-header" value="M"/>
+				<xul:text class="cal-header" value="T"/>
+				<xul:text class="cal-header" value="W"/>
+				<xul:text class="cal-header" value="T"/>
+				<xul:text class="cal-header" value="F"/>
+				<xul:text class="cal-header" value="S"/>
+			</xul:hbox>
+			<xul:hbox class="cal-row-body"  flex="1">
+				<xul:text class="cal-day" />
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+			</xul:hbox>
+			<xul:hbox class="cal-row-body"  flex="1">
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+			</xul:hbox>
+			<xul:hbox class="cal-row-body"  flex="1">
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+			</xul:hbox>
+			<xul:hbox class="cal-row-body"  flex="1">
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+			</xul:hbox>
+			<xul:hbox class="cal-row-body"  flex="1">
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+			</xul:hbox>
+			<xul:hbox class="cal-row-body"  flex="1">
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+				<xul:text class="cal-day"/>
+			</xul:hbox>
+		</xul:vbox>
+	</xul:vbox>
+	</content>
+		
+	<!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
+		<implementation>
+
+		<property name="value"
+			onget="return this.mValue"
+			onset="this.update(val)"/>
+			
+		<property name="onchange"/>
+		
+		<constructor>
+			<![CDATA[
+        if (!this.mInitialized) {
+          this.mInitialized = true;
+
+          // save references for convenience
+          var monthbox = document.getAnonymousNodes(this)[0].childNodes[0];
+          this.mLeftBtn = monthbox.childNodes[0];
+          this.mLeftBtn.mCalendar = this;
+          this.mRightBtn = monthbox.childNodes[4];
+          this.mRightBtn.mCalendar = this;
+          this.mMonthCell = monthbox.childNodes[2];
+
+          var val = this.parentNode.parentNode.parentNode.parentNode.value;
+          if (val) this.mValue = new Date(val);
+          else this.mValue = new Date();
+          var change = this.getAttribute("onchange");
+          if (change) this.onchange = new Function(change);
+
+          this.showMonth(this.mValue);
+        }
+			]]>
+		</constructor>
+		
+		<method name="showMonth">
+			<parameter name="aDate"/>
+			<body><![CDATA[
+        if (!aDate) {
+          aDate = new Date();
+        } else {
+          aDate = new Date(aDate.toString());
+         aDate.setDate(1);
+        }
+        this.mEditorDate = aDate;
+        
+        if (this.mSelected) {
+          this.mSelected.setAttribute("selected", "");
+          this.mSelected = null;
+        }
+        
+        //-------- Update the month title
+        var mon = this.getMonthName(aDate) + " " + aDate.getFullYear();
+
+        this.mMonthCell.setAttribute("value", mon);
+        
+        //-------- Update the calendar
+        var calbox = document.getAnonymousNodes(this)[0].childNodes[1];
+        
+        var daytime = 86400000; // milliseconds in a day
+        var firstWeekday = aDate.getDay();
+        var date = new Date((aDate.getTime() - (firstWeekday*daytime)));
+        
+        for (var k = 1; k < calbox.childNodes.length; k++) {
+          var row = calbox.childNodes[k];
+
+
+          for (var i = 0; i < 7; i++) {
+            var day = row.childNodes[i];
+            
+            if (aDate.getMonth() != date.getMonth()) {
+              day.setAttribute("othermonth", "true");
+            } else {
+              day.setAttribute("othermonth", "");
+            }
+            
+            // highlight the current date
+            var val = this.value;
+            if (val) {
+              if ((val.getYear() == date.getYear()) &&
+                (val.getMonth() == date.getMonth()) &&
+                (val.getDate() == date.getDate()))
+              {
+                this.mSelected = day;
+                day.setAttribute("selected", "true");
+              }
+            }
+	         day.date = date;
+	         day.calendar = this;
+	         day.setAttribute("value", date.getDate());
+	         date = new Date(date.getTime()+daytime);
+          }
+        }
+			]]></body>
+		</method>
+
+		<method name="advanceMonth">
+			<parameter name="aDir"/>
+			<body><![CDATA[
+	
+        var ad = this.mEditorDate.getMonth()+aDir;
+        this.mEditorDate.setMonth(ad);
+        
+        this.showMonth(this.mEditorDate);
+	
+			]]></body>
+		</method>
+		
+		<method name="dayClicked">
+			<parameter name="aDay"/>
+			<body><![CDATA[
+
+        if (this.mSelected) {
+          this.mSelected.setAttribute("selected", "");
+        }
+        
+        this.mSelected = aDay;
+        aDay.setAttribute("selected", "true");
+        
+        this.value = aDay.date;
+
+        if (this.onchange) this.onchange();
+
+			]]></body>
+		</method>
+
+		<method name="update">
+			<parameter name="aValue"/>
+			<body><![CDATA[
+
+	         this.mValue = aValue;
+	         this.showMonth(aValue);
+
+			]]></body>
+		</method>		
+
+		<method name="getMonthName">
+			<parameter name="aDate"/>
+			<body><![CDATA[
+
+            var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    
+            var midx = aDate.getMonth();
+            
+            return monthNames[midx];
+	
+			]]></body>
+		</method>		
+
+		</implementation>
+		
+	<!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
+
+		<handlers>
+			<handler event="bindingattached" action="this.initialize();"/>
+		</handlers>
+	
+	</binding>
+
+	<binding id="cal-navbtn" inherits="dir">
+		<handlers>
+			<handler event="click"><![CDATA[
+      	this.mCalendar.advanceMonth(parseInt(this.getAttribute('dir')));
+			]]></handler>
+		</handlers>
+		
+		<implementation/>
+	</binding>
+
+	<binding id="cal-day" extends="xul:text">
+		<handlers>
+			<handler event="click" action="this.calendar.dayClicked(this)"/>
+		</handlers>
+		
+		<implementation/>
+	</binding>
+
+</bindings>

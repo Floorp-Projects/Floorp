@@ -1,0 +1,113 @@
+
+calendar {
+	-moz-binding: url("calendar.xml#calendar");
+}
+/*
+.cal-menu { 
+	font-family: Arial;
+	font-size: 14px;
+	color: #ffffff;
+	border: 1px outset #ffffff;
+}
+
+.cal-menu:hover { 
+	font-family: Arial;
+	font-size: 14px;
+	color: #ffffff;
+	border: 2px outset #ffffff;
+}
+
+.cal-popup {
+	min-width: 130px;
+	background-color: #ffffff;
+	border: 1px outset #ffffff;
+	padding: 0px;
+}
+*/
+
+.cal-mainbox {
+	min-width: 130px;
+	background-color: #ffffff;
+	border: 1px outset #ffffff;
+	padding: 0px;
+}
+
+.cal-month-box {
+	background-color: #D2B48C;
+	border: 1px outset #D2B48C;
+}
+
+.cal-month-name {
+	font-family: Arial;
+	font-size: 16px;
+	font-weight: bold;
+	color: #000000;
+	text-align: center;
+}
+
+.cal-navbtn {
+	min-width: 10px;
+	-moz-binding: url("calendar.xml#cal-navbtn");
+}
+
+.cal-navbtn[dir="-1"] {
+	background: url("image/left-arrow.gif") no-repeat 50% 50%;
+}
+
+.cal-navbtn[dir="1"] {
+	background: url("image/right-arrow.gif") no-repeat 50% 50%;
+}
+
+.cal-navbtn[dir="-1"]:hover {
+	background: url("image/left-arrow-hover.gif") no-repeat 50% 50%;
+}
+
+.cal-navbtn[dir="1"]:hover {
+	background: url("image/right-arrow-hover.gif") no-repeat 50% 50%;
+}
+
+.cal-navbtn:active {
+	left: 2px;
+	top: 2px;
+}
+
+.cal-cal-box {
+}
+
+.cal-header {
+	width: 25px;
+	height: 20px;
+	font-family: Arial;
+	color: blue;
+}
+
+.cal-row-body {
+}
+
+.cal-day {
+	width: 25px;
+	height: 20px;
+	font-family: Arial;
+	color: #000000;
+	border: 1px solid transparent;
+	-moz-binding: url("calendar.xml#cal-day");
+}
+
+.cal-day[othermonth="true"] {
+	color: #d2d2d2;
+}
+
+.cal-day[selected="true"] {
+	background-color: #778899;
+	color: #ffffff;
+}
+
+.cal-day:hover {
+	color: #ff0000;
+	border: 1px solid #d2d2d2;
+}
+
+.cal-day:active {
+	background-color: #d2d2d2;
+}
+

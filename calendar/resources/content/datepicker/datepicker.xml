@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+
+<bindings id="xulDatePicker"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  	<binding id="datepicker" extends="xul:box" inherits="value,disabled">
+		<!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
+		<content id="content">
+		<xul:hbox flex="1" id="hbox">
+			<xul:textbox id="textbox" xbl:inherits="disabled" 
+				onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.update(new Date(this.value));"
+				onblur="this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value));"/>
+			
+			<xul:menu class="datepicker-button">
+				<xul:menupopup popupanchor="bottomright" popupalign="topright" oncreate="this.parentNode.parentNode.parentNode.parentNode.openPopup()">
+					<xul:calendar onchange="this.parentNode.hidePopup(); this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value)); "/>
+				</xul:menupopup>
+			</xul:menu>
+			
+		</xul:hbox>
+		</content>
+	
+	<!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
+		<implementation>
+		<property name="value" 
+			onset="this.update(val)"
+			onget="return this.mValue"/>
+         
+      <property name="callback" 
+			onset="this.callbackFunction = val;"
+			/>
+
+		<constructor>
+			<![CDATA[
+				this.mTextBox = document.getAnonymousNodes(this)[0].childNodes[0];
+				this.mPopup = document.getAnonymousNodes(this)[0].childNodes[1].childNodes[0];
+				
+				var val = this.getAttribute("value");
+
+				if (val) this.value = val;
+				else this.value = new Date();
+		
+			]]>
+		</constructor>
+		
+		<method name="update">
+		<parameter name="aValue"/>
+			<body><![CDATA[
+            if (!aValue || aValue.toString() == "Invalid Date") {
+					this.mTextBox.setAttribute("value", this.getPrettyDate(this.mValue));
+				} else {
+					this.mValue = aValue;
+               this.mTextBox.setAttribute("value", this.getPrettyDate(this.mValue));
+				}
+            if( this.callback )
+                this.callbackFunction();    
+			]]></body>
+		</method>
+
+		<method name="getPrettyDate">
+		<parameter name="aValue"/>
+			<body><![CDATA[
+				return (aValue.getMonth()+1) + "/" + aValue.getDate() + "/" + aValue.getFullYear();
+			]]></body>
+		</method>
+
+		<method name="openPopup">
+			<body><![CDATA[
+				var cal = this.mPopup.childNodes[0];
+				cal.update( this.mValue );
+			]]></body>
+		</method>
+
+		</implementation>
+
+	<!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
+
+		<handlers>
+			<handler event="bindingattached" action="this.initialize();"/>
+		</handlers>
+
+	</binding>
+
+</bindings>
+
