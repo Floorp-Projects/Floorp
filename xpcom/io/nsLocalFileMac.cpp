@@ -1590,7 +1590,7 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 
 
 // Handy dandy utility create routine for something or the other
-NS_COM nsresult 
+nsresult 
 NS_NewLocalFile(const char* path, nsILocalFile* *result)
 {
 	nsLocalFile* file = new nsLocalFile();

@@ -1780,7 +1780,7 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 }
 
 
-NS_COM nsresult 
+nsresult 
 NS_NewLocalFile(const char* path, nsILocalFile* *result)
 {
     nsLocalFile* file = new nsLocalFile();

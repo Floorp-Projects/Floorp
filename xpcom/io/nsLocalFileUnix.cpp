@@ -1088,7 +1088,7 @@ nsLocalFile::Load(PRLibrary **_retval)
     return NS_OK;
 }
 
-NS_COM nsresult 
+nsresult 
 NS_NewLocalFile(const char* path, nsILocalFile* *result)
 {
     nsLocalFile* file = new nsLocalFile();

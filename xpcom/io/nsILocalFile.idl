@@ -70,7 +70,7 @@ interface nsILocalFile : nsIFile
 #define NS_LOCAL_FILE_PROGID "component://mozilla/file/local"
 #define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
 
-extern NS_COM nsresult
+extern "C" NS_EXPORT nsresult
 NS_NewLocalFile(const char* path, nsILocalFile* *result);
 
 %}
