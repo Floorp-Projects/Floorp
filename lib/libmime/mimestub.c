@@ -32,7 +32,7 @@
    lib/xp/xp_str.o, and lib/libmsg/addr.o, because those files *actually
    stand on their own*!
 
-   Life kinda s#$%s, but oh well.
+   Life kinda sucks, but oh well.
  */
 
 #include "xp.h"
@@ -636,40 +636,6 @@ NET_Escape (const char * str, int mask)
 }
 
 
-/* from libmsg/msgutils.c */
-int
-msg_GrowBuffer (uint32 desired_size, uint32 element_size, uint32 quantum,
-				char **buffer, uint32 *size)
-{
-  if (*size <= desired_size)
-	{
-	  char *new_buf;
-	  uint32 increment = desired_size - *size;
-	  if (increment < quantum) /* always grow by a minimum of N bytes */
-		increment = quantum;
-
-#ifdef TESTFORWIN16
-	  if (((*size + increment) * (element_size / sizeof(char))) >= 64000)
-		{
-		  /* Make sure we don't choke on WIN16 */
-		  XP_ASSERT(0);
-		  return MK_OUT_OF_MEMORY;
-		}
-#endif /* DEBUG */
-
-	  new_buf = (*buffer
-				 ? (char *) XP_REALLOC (*buffer, (*size + increment)
-										* (element_size / sizeof(char)))
-				 : (char *) XP_ALLOC ((*size + increment)
-									  * (element_size / sizeof(char))));
-	  if (! new_buf)
-		return MK_OUT_OF_MEMORY;
-	  *buffer = new_buf;
-	  *size += increment;
-	}
-  return 0;
-}
-
 
 XP_List * ExternalURLTypeList=0;
 
@@ -1145,100 +1111,4 @@ msg_convert_and_send_buffer(char* buf, int length, XP_Bool convert_newlines_p,
 #endif
 
   return (*per_line_fn)(buf, length, closure);
-}
-
-
-/* from libmsg/msgutils.c */
-int
-msg_LineBuffer (const char *net_buffer, int32 net_buffer_size,
-				char **bufferP, uint32 *buffer_sizeP, uint32 *buffer_fpP,
-				XP_Bool convert_newlines_p,
-				int32 (*per_line_fn) (char *line, uint32 line_length,
-									  void *closure),
-				void *closure)
-{
-  int status = 0;
-  if (*buffer_fpP > 0 && *bufferP && (*bufferP)[*buffer_fpP - 1] == CR &&
-	  net_buffer_size > 0 && net_buffer[0] != LF) {
-	/* The last buffer ended with a CR.  The new buffer does not start
-	   with a LF.  This old buffer should be shipped out and discarded. */
-	XP_ASSERT(*buffer_sizeP > *buffer_fpP);
-	if (*buffer_sizeP <= *buffer_fpP) return -1;
-	status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
-										 convert_newlines_p,
-										 per_line_fn, closure);
-	if (status < 0) return status;
-	*buffer_fpP = 0;
-  }
-  while (net_buffer_size > 0)
-	{
-	  const char *net_buffer_end = net_buffer + net_buffer_size;
-	  const char *newline = 0;
-	  const char *s;
-
-
-	  for (s = net_buffer; s < net_buffer_end; s++)
-		{
-		  /* Move forward in the buffer until the first newline.
-			 Stop when we see CRLF, CR, or LF, or the end of the buffer.
-			 *But*, if we see a lone CR at the *very end* of the buffer,
-			 treat this as if we had reached the end of the buffer without
-			 seeing a line terminator.  This is to catch the case of the
-			 buffers splitting a CRLF pair, as in "FOO\r\nBAR\r" "\nBAZ\r\n".
-		   */
-		  if (*s == CR || *s == LF)
-			{
-			  newline = s;
-			  if (newline[0] == CR)
-				{
-				  if (s == net_buffer_end - 1)
-					{
-					  /* CR at end - wait for the next character. */
-					  newline = 0;
-					  break;
-					}
-				  else if (newline[1] == LF)
-					/* CRLF seen; swallow both. */
-					newline++;
-				}
-			  newline++;
-			  break;
-			}
-		}
-
-	  /* Ensure room in the net_buffer and append some or all of the current
-		 chunk of data to it. */
-	  {
-		const char *end = (newline ? newline : net_buffer_end);
-		uint32 desired_size = (end - net_buffer) + (*buffer_fpP) + 1;
-
-		if (desired_size >= (*buffer_sizeP))
-		  {
-			status = msg_GrowBuffer (desired_size, sizeof(char), 1024,
-									 bufferP, buffer_sizeP);
-			if (status < 0) return status;
-		  }
-		XP_MEMCPY ((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
-		(*buffer_fpP) += (end - net_buffer);
-	  }
-
-	  /* Now *bufferP contains either a complete line, or as complete
-		 a line as we have read so far.
-
-		 If we have a line, process it, and then remove it from `*bufferP'.
-		 Then go around the loop again, until we drain the incoming data.
-	   */
-	  if (!newline)
-		return 0;
-
-	  status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
-										   convert_newlines_p,
-										   per_line_fn, closure);
-	  if (status < 0) return status;
-
-	  net_buffer_size -= (newline - net_buffer);
-	  net_buffer = newline;
-	  (*buffer_fpP) = 0;
-	}
-  return 0;
 }

@@ -41,6 +41,7 @@ CSRCS		= \
 		  xp_wrap.c \
 		  xpassert.c \
 		  xplocale.c \
+		  xp_linebuf.c \
 		  $(NULL)
 else
 CSRCS =		  xp_stub.c 
@@ -52,6 +53,9 @@ CSRCS +=          \
 		  xp_hash.c \
 		  allxpstr.c \
 		  $(NULL)
+
+EXPORTS=xp_linebuf.h
+
 
 REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf privacy
 
