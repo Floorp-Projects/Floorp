@@ -23,13 +23,14 @@
 #include "nsOSHelperAppService.h"
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
-{}
+{
+}
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {}
 
 
-NS_IMETHODIMP nsExternalHelperAppService::CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool * aCanHandleContent)
+NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool * aCanHandleContent)
 {
   // once we have user over ride stuff working, we need to first call up to our base class
   // and ask the base class if we can handle the content. This will take care of looking for user specified 
@@ -42,7 +43,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CanHandleContent(const char *aMimeCont
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
+NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
   // look up the content type and get a platform specific handle to the app we want to use for this 

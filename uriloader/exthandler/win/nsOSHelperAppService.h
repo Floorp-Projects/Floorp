@@ -28,6 +28,7 @@
 // in addition to launching those applications.
 
 #include "nsExternalHelperAppService.h"
+#include "nsCExternalHelperApp.h"
 #include "nsCOMPtr.h"
 
 class nsOSHelperAppService : public nsExternalHelperAppService
@@ -37,7 +38,7 @@ public:
   virtual ~nsOSHelperAppService();
 
   // override nsIExternalHelperAppService methods....
-  NS_IMETHOD CanHandleContent(const char *aMimeContentType, PRBool *_retval);
+  NS_IMETHOD CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool *_retval);
   NS_IMETHOD DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, PRBool *aAbortProcess, nsIStreamListener **_retval);
 
 protected:
