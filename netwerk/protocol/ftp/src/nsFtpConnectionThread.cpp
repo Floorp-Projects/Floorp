@@ -1065,11 +1065,11 @@ nsFtpConnectionThread::R_pwd() {
             nsCAutoString tmpPath;
             mResponseMsg.Mid(tmpPath, beginQ+1, (endQ-beginQ-1));
 
-            if (tmpPath.Length() <= 1)
+            nsCAutoString   modPath(mPath);
+            if ((modPath.Length() > 0) && (!modPath.Equals("/")))
             {
-                tmpPath = "";
+                tmpPath = modPath;
             }
-            tmpPath.Append(mPath);
 
             mResponseMsg = tmpPath;
             mURL->SetPath(tmpPath);
