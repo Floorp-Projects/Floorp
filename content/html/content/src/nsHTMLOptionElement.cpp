@@ -80,7 +80,7 @@ class nsHTMLOptionElement : public nsGenericHTMLElement,
                             public nsIOptionElement
 {
 public:
-  nsHTMLOptionElement();
+  nsHTMLOptionElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLOptionElement();
 
   // nsISupports
@@ -152,11 +152,8 @@ protected:
 };
 
 nsresult
-NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
-                        nsINodeInfo *aNodeInfo)
+NS_NewHTMLOptionElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
   /*
    * nsHTMLOptionElement's will be created without a nsINodeInfo passed in
    * if someone says "var opt = new Option();" in JavaScript, in a case like
@@ -178,29 +175,20 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsIHTMLContent* it = new nsHTMLOptionElement();
-
+  nsIHTMLContent* it = new nsHTMLOptionElement(nodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(nodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ADDREF(*aResult = it);
 
   return NS_OK;
 }
 
 
-nsHTMLOptionElement::nsHTMLOptionElement()
-  : mIsInitialized(PR_FALSE),
+nsHTMLOptionElement::nsHTMLOptionElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo),
+    mIsInitialized(PR_FALSE),
     mIsSelected(PR_FALSE)
 {
 }
@@ -226,33 +214,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptionElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLOptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+NS_IMPL_HTML_DOM_CLONENODE(Option)
 
-  nsHTMLOptionElement* it = new nsHTMLOptionElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)

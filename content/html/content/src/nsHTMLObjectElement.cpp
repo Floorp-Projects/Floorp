@@ -52,7 +52,7 @@ class nsHTMLObjectElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLObjectElement
 {
 public:
-  nsHTMLObjectElement();
+  nsHTMLObjectElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLObjectElement();
 
   // nsISupports
@@ -88,34 +88,12 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
 
-nsresult
-NS_NewHTMLObjectElement(nsIHTMLContent** aInstancePtrResult,
-                        nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLObjectElement* it = new nsHTMLObjectElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Object)
 
 
-nsHTMLObjectElement::nsHTMLObjectElement()
+nsHTMLObjectElement::nsHTMLObjectElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLFormElement(aNodeInfo)
 {
 }
 
@@ -137,33 +115,10 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 // nsIDOMHTMLObjectElement
-nsresult
-nsHTMLObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
 
-  nsHTMLObjectElement* it = new nsHTMLObjectElement();
 
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+NS_IMPL_HTML_DOM_CLONENODE(Object)
 
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)

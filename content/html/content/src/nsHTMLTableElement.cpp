@@ -64,7 +64,7 @@ class nsHTMLTableElement :  public nsGenericHTMLElement,
                             public nsIDOMHTMLTableElement
 {
 public:
-  nsHTMLTableElement();
+  nsHTMLTableElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTableElement();
 
   // nsISupports
@@ -302,34 +302,12 @@ TableRowsCollection::ParentDestroyed()
 /* -------------------------- nsHTMLTableElement --------------------------- */
 // the class declaration is at the top of this file
 
-nsresult
-NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult,
-                       nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLTableElement* it = new nsHTMLTableElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
 
 
-nsHTMLTableElement::nsHTMLTableElement()
+nsHTMLTableElement::nsHTMLTableElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
   mRows=nsnull;
 }
@@ -358,33 +336,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLTableElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsHTMLTableElement* it = new nsHTMLTableElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_HTML_DOM_CLONENODE(Table)
 
 
 // the DOM spec says border, cellpadding, cellSpacing are all "wstring"

@@ -92,7 +92,7 @@ class nsHTMLBodyElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLBodyElement
 {
 public:
-  nsHTMLBodyElement();
+  nsHTMLBodyElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLBodyElement();
 
   // nsISupports
@@ -288,35 +288,12 @@ BodyRule::List(FILE* out, PRInt32 aIndent) const
 
 //----------------------------------------------------------------------
 
-nsresult
-NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult,
-                      nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLBodyElement* it = new nsHTMLBodyElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Body)
 
 
-nsHTMLBodyElement::nsHTMLBodyElement()
-  : nsGenericHTMLElement(),
+nsHTMLBodyElement::nsHTMLBodyElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo),
     mContentStyleRule(nsnull)
 {
 }
@@ -341,33 +318,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBodyElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsHTMLBodyElement* it = new nsHTMLBodyElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_HTML_DOM_CLONENODE(Body)
 
 
 NS_IMPL_URI_ATTR(nsHTMLBodyElement, Background, background)

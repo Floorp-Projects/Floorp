@@ -48,7 +48,7 @@ class nsSVGGElement : public nsSVGGElementBase,
 protected:
   friend nsresult NS_NewSVGGElement(nsIContent **aResult,
                                     nsINodeInfo *aNodeInfo);
-  nsSVGGElement();
+  nsSVGGElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGGElement();
   
 public:
@@ -70,25 +70,9 @@ protected:
 ////////////////////////////////////////////////////////////////////////
 // implementation
 
-nsresult NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGGElement* it = new nsSVGGElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
+NS_IMPL_NS_NEW_SVG_ELEMENT(G)
 
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -107,7 +91,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGElement::nsSVGGElement()
+nsSVGGElement::nsSVGGElement(nsINodeInfo *aNodeInfo)
+  : nsSVGGElementBase(aNodeInfo)
 {
 
 }
@@ -120,33 +105,9 @@ nsSVGGElement::~nsSVGGElement()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGGElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGGElement* it = new nsSVGGElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
+NS_IMPL_SVG_DOM_CLONENODE(G)
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
 
 //----------------------------------------------------------------------
 // nsIStyledContent methods

@@ -58,7 +58,7 @@ class nsHTMLLabelElement : public nsGenericHTMLFormElement,
                            public nsIDOMHTMLLabelElement
 {
 public:
-  nsHTMLLabelElement();
+  nsHTMLLabelElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLLabelElement();
 
   // nsISupports
@@ -110,35 +110,14 @@ protected:
 };
 
 // construction, destruction
-nsresult
-NS_NewHTMLLabelElement(nsIHTMLContent** aInstancePtrResult,
-                       nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
-  nsHTMLLabelElement* it = new nsHTMLLabelElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
 
 
-nsHTMLLabelElement::nsHTMLLabelElement()
-  : mHandlingEvent(PR_FALSE)
+NS_IMPL_NS_NEW_HTML_ELEMENT(Label)
+
+
+nsHTMLLabelElement::nsHTMLLabelElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLFormElement(aNodeInfo),
+    mHandlingEvent(PR_FALSE)
 {
 }
 
@@ -163,33 +142,9 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 // nsIDOMHTMLLabelElement
 
-nsresult
-nsHTMLLabelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
 
-  nsHTMLLabelElement* it = new nsHTMLLabelElement();
+NS_IMPL_HTML_DOM_CLONENODE(Label)
 
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)

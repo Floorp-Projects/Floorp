@@ -141,7 +141,7 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsIPhonetic
 {
 public:
-  nsHTMLInputElement(PRBool aFromParser);
+  nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
   virtual ~nsHTMLInputElement();
 
   // nsISupports
@@ -342,39 +342,28 @@ protected:
 //
 
 nsresult
-NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
-                       nsINodeInfo *aNodeInfo,
+NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
                        PRBool aFromParser)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
-  nsHTMLInputElement* it = new nsHTMLInputElement(aFromParser);
+  nsHTMLInputElement* it = new nsHTMLInputElement(aNodeInfo, aFromParser);
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ADDREF(*aResult = it);
 
   return NS_OK;
 }
 
-
-nsHTMLInputElement::nsHTMLInputElement(PRBool aFromParser)
+nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo,
+                                       PRBool aFromParser)
+  : nsGenericHTMLFormElement(aNodeInfo),
+    mType(NS_FORM_INPUT_TEXT), // default value
+    mBitField(0),
+    mValue(nsnull)
 {
-  mType = NS_FORM_INPUT_TEXT; // default value
-  mBitField = 0;
   SET_BOOLBIT(mBitField, BF_PARSER_CREATING, aFromParser);
-  mValue = nsnull;
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
@@ -410,21 +399,14 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 nsresult
 nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLInputElement* it = new nsHTMLInputElement(PR_FALSE);
-
+  nsHTMLInputElement* it = new nsHTMLInputElement(mNodeInfo, PR_FALSE);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
 
   CopyInnerTo(it, aDeep);
 
@@ -455,10 +437,7 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
       break;
   }
           
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
+  kungFuDeathGrip.swap(*aReturn);
 
   return NS_OK;
 }

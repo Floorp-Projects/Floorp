@@ -78,9 +78,10 @@ struct nsSize;
 class nsGenericHTMLElement : public nsGenericElement
 {
 public:
-#ifdef GATHER_ELEMENT_USEAGE_STATISTICS
-  nsresult Init(nsINodeInfo *aNodeInfo);
-#endif
+  nsGenericHTMLElement(nsINodeInfo *aNodeInfo)
+    : nsGenericElement(aNodeInfo)
+  {
+  }
 
   /** Call on shutdown to release globals */
   static void Shutdown();
@@ -827,7 +828,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement,
                                  public nsIFormControl
 {
 public:
-  nsGenericHTMLFormElement();
+  nsGenericHTMLFormElement(nsINodeInfo *aNodeInfo);
   virtual ~nsGenericHTMLFormElement();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -890,7 +891,10 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIFrameLoaderOwner
 {
 public:
-  nsGenericHTMLFrameElement();
+  nsGenericHTMLFrameElement(nsINodeInfo *aNodeInfo)
+    : nsGenericHTMLElement(aNodeInfo)
+  {
+  }
   virtual ~nsGenericHTMLFrameElement();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -929,6 +933,49 @@ protected:
 };
 
 //----------------------------------------------------------------------
+
+/**
+ * A macro to implement the NS_NewHTMLXXXElement() functions.
+ */
+#define NS_IMPL_NS_NEW_HTML_ELEMENT(_elementName)                            \
+nsresult                                                                     \
+NS_NewHTML##_elementName##Element(nsIHTMLContent **aResult,                  \
+                                  nsINodeInfo *aNodeInfo)                    \
+{                                                                            \
+  nsIHTMLContent *it = new nsHTML##_elementName##Element(aNodeInfo);         \
+  if (!it) {                                                                 \
+    return NS_ERROR_OUT_OF_MEMORY;                                           \
+  }                                                                          \
+                                                                             \
+  NS_ADDREF(*aResult = it);                                                  \
+                                                                             \
+  return NS_OK;                                                              \
+}
+
+/**
+ * A macro to implement the nsHTMLXXXElement::CloneNode().
+ */
+#define NS_IMPL_HTML_DOM_CLONENODE(_elementName)                             \
+nsresult                                                                     \
+nsHTML##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn) \
+{                                                                            \
+  *aReturn = nsnull;                                                         \
+                                                                             \
+  nsHTML##_elementName##Element* it =                                        \
+    new nsHTML##_elementName##Element(mNodeInfo);                            \
+  if (!it) {                                                                 \
+    return NS_ERROR_OUT_OF_MEMORY;                                           \
+  }                                                                          \
+                                                                             \
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);                                  \
+                                                                             \
+  CopyInnerTo(it, aDeep);                                                    \
+                                                                             \
+  kungFuDeathGrip.swap(*aReturn);                                            \
+                                                                             \
+  return NS_OK;                                                              \
+}
+
 
 /**
  * A macro to implement the getter and setter for a given string

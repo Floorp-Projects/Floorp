@@ -48,7 +48,7 @@ class nsHTMLFrameElement : public nsGenericHTMLFrameElement,
                            public nsIDOMHTMLFrameElement
 {
 public:
-  nsHTMLFrameElement();
+  nsHTMLFrameElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLFrameElement();
 
   // nsISupports
@@ -78,34 +78,12 @@ public:
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
-nsresult
-NS_NewHTMLFrameElement(nsIHTMLContent** aInstancePtrResult,
-                       nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLFrameElement* it = new nsHTMLFrameElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Frame)
 
 
-nsHTMLFrameElement::nsHTMLFrameElement()
+nsHTMLFrameElement::nsHTMLFrameElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLFrameElement(aNodeInfo)
 {
 }
 
@@ -119,39 +97,14 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFrameElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFrameElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement, nsGenericHTMLFrameElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement,
+                                    nsGenericHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFrameElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsHTMLFrameElement* it = new nsHTMLFrameElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_HTML_DOM_CLONENODE(Frame)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLFrameElement, FrameBorder, frameborder)

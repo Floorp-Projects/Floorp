@@ -57,11 +57,16 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGStylableElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-nsSVGStylableElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGStylableElement::nsSVGStylableElement(nsINodeInfo *aNodeInfo)
+  : nsSVGStylableElementBase(aNodeInfo)
 {
-  nsresult rv = nsSVGStylableElementBase::Init(aNodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+}
+
+nsresult
+nsSVGStylableElement::Init()
+{
+  nsresult rv;
 
   // Create mapped properties:
 
@@ -74,8 +79,8 @@ nsSVGStylableElement::Init(nsINodeInfo* aNodeInfo)
 			   kNameSpaceID_None);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
-  return NS_OK;
+
+  return rv;
 }
 
 //----------------------------------------------------------------------

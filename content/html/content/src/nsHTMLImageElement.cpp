@@ -87,7 +87,7 @@ class nsHTMLImageElement : public nsGenericHTMLElement,
                            public nsIJSNativeInitializer
 {
 public:
-  nsHTMLImageElement();
+  nsHTMLImageElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLImageElement();
 
   // nsISupports
@@ -154,11 +154,8 @@ protected:
 };
 
 nsresult
-NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
-                       nsINodeInfo *aNodeInfo)
+NS_NewHTMLImageElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
   /*
    * nsHTMLImageElement's will be created without a nsINodeInfo passed in
    * if someone says "var img = new Image();" in JavaScript, in a case like
@@ -180,28 +177,19 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsHTMLImageElement* it = new nsHTMLImageElement();
-
+  nsHTMLImageElement* it = new nsHTMLImageElement(aNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = it->Init(nodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ADDREF(*aResult = it);
 
   return NS_OK;
 }
 
 
-nsHTMLImageElement::nsHTMLImageElement()
+nsHTMLImageElement::nsHTMLImageElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -225,33 +213,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLImageElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLImageElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsHTMLImageElement* it = new nsHTMLImageElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_HTML_DOM_CLONENODE(Image)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Name, name)

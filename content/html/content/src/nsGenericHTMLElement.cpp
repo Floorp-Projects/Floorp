@@ -3150,7 +3150,8 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
 
 //----------------------------------------------------------------------
 
-nsGenericHTMLFormElement::nsGenericHTMLFormElement()
+nsGenericHTMLFormElement::nsGenericHTMLFormElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
   mForm = nsnull;
 }
@@ -3355,10 +3356,6 @@ nsGenericHTMLFormElement::FindAndSetForm()
 }
 
 //----------------------------------------------------------------------
-
-nsGenericHTMLFrameElement::nsGenericHTMLFrameElement()
-{
-}
 
 nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
 {

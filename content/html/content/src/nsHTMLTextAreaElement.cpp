@@ -80,7 +80,7 @@ class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsITextAreaElement
 {
 public:
-  nsHTMLTextAreaElement();
+  nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTextAreaElement();
 
   // nsISupports
@@ -164,35 +164,13 @@ protected:
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 };
 
-nsresult
-NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult,
-                          nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLTextAreaElement* it = new nsHTMLTextAreaElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(TextArea)
 
 
-nsHTMLTextAreaElement::nsHTMLTextAreaElement()
-  : mValue(nsnull),
+nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLFormElement(aNodeInfo),
+    mValue(nsnull),
     mValueChanged(PR_FALSE),
     mHandlingSelect(PR_FALSE)
 {
@@ -223,33 +201,9 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 // nsIDOMHTMLTextAreaElement
 
-nsresult
-nsHTMLTextAreaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
 
-  nsHTMLTextAreaElement* it = new nsHTMLTextAreaElement();
+NS_IMPL_HTML_DOM_CLONENODE(TextArea)
 
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)

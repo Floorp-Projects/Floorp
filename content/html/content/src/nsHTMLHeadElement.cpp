@@ -47,7 +47,7 @@ class nsHTMLHeadElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLHeadElement
 {
 public:
-  nsHTMLHeadElement();
+  nsHTMLHeadElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLHeadElement();
 
   // nsISupports
@@ -66,34 +66,12 @@ public:
   NS_DECL_NSIDOMHTMLHEADELEMENT
 };
 
-nsresult
-NS_NewHTMLHeadElement(nsIHTMLContent** aInstancePtrResult,
-                      nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLHeadElement* it = new nsHTMLHeadElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Head)
 
 
-nsHTMLHeadElement::nsHTMLHeadElement()
+nsHTMLHeadElement::nsHTMLHeadElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -113,33 +91,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLHeadElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLHeadElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsHTMLHeadElement* it = new nsHTMLHeadElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_HTML_DOM_CLONENODE(Head)
 
 
 NS_IMPL_URI_ATTR(nsHTMLHeadElement, Profile, profile)

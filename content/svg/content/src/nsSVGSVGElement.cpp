@@ -74,9 +74,9 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
 protected:
   friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
                                       nsINodeInfo *aNodeInfo);
-  nsSVGSVGElement();
+  nsSVGSVGElement(nsINodeInfo* aNodeInfo);
   virtual ~nsSVGSVGElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
   
 public:
   // interfaces:
@@ -119,25 +119,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGSVGElement* it = new nsSVGSVGElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(SVG)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -159,8 +142,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGSVGElement::nsSVGSVGElement()
-    : mRedrawSuspendCount(0)
+nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo)
+  : nsSVGSVGElementBase(aNodeInfo), mRedrawSuspendCount(0)
 {
 }
 
@@ -176,9 +159,9 @@ nsSVGSVGElement::~nsSVGSVGElement()
 
   
 nsresult
-nsSVGSVGElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGSVGElement::Init()
 {
-  nsresult rv = nsSVGSVGElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGSVGElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // parent viewport. this will be initialized properly by our frame.
@@ -324,40 +307,15 @@ nsSVGSVGElement::Init(nsINodeInfo* aNodeInfo)
   // add observers -------------------------- :
   NS_ADD_SVGVALUE_OBSERVER(mViewport);
   NS_ADD_SVGVALUE_OBSERVER(mViewBox);
-  
-  return NS_OK;
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGSVGElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGSVGElement* it = new nsSVGSVGElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
+NS_IMPL_SVG_DOM_CLONENODE(SVG)
 
 
 //----------------------------------------------------------------------

@@ -51,7 +51,7 @@ class nsSVGStyleElement : public nsSVGStyleElementBase,
 protected:
   friend nsresult NS_NewSVGStyleElement(nsIContent **aResult,
                                         nsINodeInfo *aNodeInfo);
-  nsSVGStyleElement();
+  nsSVGStyleElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGStyleElement();
   
 public:
@@ -82,6 +82,14 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 protected:
+  // Dummy init method to make the NS_IMPL_NS_NEW_SVG_ELEMENT and
+  // NS_IMPL_SVG_DOM_CLONENODE usable with this class. This should be
+  // completely optimized away.
+  inline nsresult Init()
+  {
+    return NS_OK;
+  }
+
   // nsStyleLinkElement overrides
   void GetStyleSheetURL(PRBool* aIsInline,
                         nsIURI** aURI);
@@ -91,25 +99,8 @@ protected:
                          PRBool* aIsAlternate);
 };
 
-nsresult NS_NewSVGStyleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGStyleElement* it = new nsSVGStyleElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_SVG_ELEMENT(Style)
 
 
 //----------------------------------------------------------------------
@@ -131,8 +122,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGStyleElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGStyleElement::nsSVGStyleElement()
+nsSVGStyleElement::nsSVGStyleElement(nsINodeInfo *aNodeInfo)
+  : nsSVGStyleElementBase(aNodeInfo)
 {
+
 }
 
 nsSVGStyleElement::~nsSVGStyleElement()
@@ -142,33 +135,8 @@ nsSVGStyleElement::~nsSVGStyleElement()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGStyleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGStyleElement* it = new nsSVGStyleElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aReturn = it;
-
-  return NS_OK; 
-}
+NS_IMPL_SVG_DOM_CLONENODE(Style)
 
 
 //----------------------------------------------------------------------

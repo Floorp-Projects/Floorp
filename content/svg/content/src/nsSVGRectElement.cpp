@@ -55,9 +55,9 @@ class nsSVGRectElement : public nsSVGRectElementBase,
 protected:
   friend nsresult NS_NewSVGRectElement(nsIContent **aResult,
                                        nsINodeInfo *aNodeInfo);
-  nsSVGRectElement();
+  nsSVGRectElement(nsINodeInfo* aNodeInfo);
   virtual ~nsSVGRectElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
 
 public:
   // interfaces:
@@ -85,25 +85,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGRectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGRectElement* it = new nsSVGRectElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(Rect)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -122,7 +105,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGRectElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGRectElement::nsSVGRectElement()
+nsSVGRectElement::nsSVGRectElement(nsINodeInfo *aNodeInfo)
+  : nsSVGRectElementBase(aNodeInfo)
 {
 
 }
@@ -133,9 +117,9 @@ nsSVGRectElement::~nsSVGRectElement()
 
 
 nsresult
-nsSVGRectElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGRectElement::Init()
 {
-  nsresult rv = nsSVGRectElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGRectElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -215,40 +199,15 @@ nsSVGRectElement::Init(nsINodeInfo* aNodeInfo)
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGRectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGRectElement* it = new nsSVGRectElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
+NS_IMPL_SVG_DOM_CLONENODE(Rect)
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  *aReturn = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGRectElement methods

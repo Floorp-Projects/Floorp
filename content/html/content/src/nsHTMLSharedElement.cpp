@@ -68,7 +68,7 @@ class nsHTMLSharedElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLBaseFontElement
 {
 public:
-  nsHTMLSharedElement();
+  nsHTMLSharedElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLSharedElement();
 
   // nsISupports
@@ -123,34 +123,12 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
 
-nsresult
-NS_NewHTMLSharedElement(nsIHTMLContent** aInstancePtrResult,
-                        nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLSharedElement* it = new nsHTMLSharedElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 
 
-nsHTMLSharedElement::nsHTMLSharedElement()
+nsHTMLSharedElement::nsHTMLSharedElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -192,28 +170,23 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedElement,
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLBaseFontElement, basefont)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
+
 nsresult
 nsHTMLSharedElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsRefPtr<nsHTMLSharedElement> it = new nsHTMLSharedElement();
-
+  nsHTMLSharedElement *it = new nsHTMLSharedElement(mNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip =
+    NS_STATIC_CAST(nsIDOMHTMLParamElement *, this);
 
   CopyInnerTo(it, aDeep);
 
-  *aReturn = NS_STATIC_CAST(nsIDOMHTMLEmbedElement *, it);
-
-  NS_ADDREF(*aReturn);
+  kungFuDeathGrip.swap(*aReturn);
 
   return NS_OK;
 }

@@ -54,7 +54,7 @@ class nsXMLElement : public nsGenericElement,
                      public nsIDOMElement
 {
 public:
-  nsXMLElement();
+  nsXMLElement(nsINodeInfo *aNodeInfo);
   virtual ~nsXMLElement();
 
   // nsISupports

@@ -312,7 +312,7 @@ class nsHTMLScriptElement : public nsGenericHTMLElement,
                             public nsIScriptElement
 {
 public:
-  nsHTMLScriptElement();
+  nsHTMLScriptElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLScriptElement();
 
   // nsISupports
@@ -382,34 +382,12 @@ protected:
   void MaybeProcessScript();
 };
 
-nsresult
-NS_NewHTMLScriptElement(nsIHTMLContent** aInstancePtrResult,
-                        nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLScriptElement* it = new nsHTMLScriptElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Script)
 
 
-nsHTMLScriptElement::nsHTMLScriptElement()
+nsHTMLScriptElement::nsHTMLScriptElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
   mLineNumber = 0;
   mIsEvaluated = PR_FALSE;
@@ -498,21 +476,14 @@ nsHTMLScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 nsresult
 nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLScriptElement* it = new nsHTMLScriptElement();
-
+  nsHTMLScriptElement* it = new nsHTMLScriptElement(mNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
 
   CopyInnerTo(it, aDeep);
 
@@ -521,10 +492,8 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   // script clones the node.
   it->mIsEvaluated = mIsEvaluated || mEvaluating;
   it->mLineNumber = mLineNumber;
-  
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
-  NS_ADDREF(*aReturn);
+  kungFuDeathGrip.swap(*aReturn);
 
   return NS_OK;
 }

@@ -97,19 +97,10 @@ class nsHTMLFormElement : public nsGenericHTMLElement,
                           public nsIRadioGroupContainer
 {
 public:
-  nsHTMLFormElement() :
-    mGeneratingSubmit(PR_FALSE),
-    mGeneratingReset(PR_FALSE),
-    mIsSubmitting(PR_FALSE),
-    mDeferSubmission(PR_FALSE),
-    mPendingSubmission(nsnull),
-    mSubmittingRequest(nsnull)
-  {
-  }
-
+  nsHTMLFormElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLFormElement();
 
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -410,15 +401,12 @@ nsresult
 NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
                       nsINodeInfo *aNodeInfo)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
-  nsHTMLFormElement* it = new nsHTMLFormElement();
-
+  nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->Init(aNodeInfo);
+  nsresult rv = it->Init();
 
   if (NS_FAILED(rv)) {
     delete it;
@@ -426,25 +414,42 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
     return rv;
   }
 
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
 
-  return NS_OK;
+  return rv;
 }
 
 
-nsresult
-nsHTMLFormElement::Init(nsINodeInfo *aNodeInfo)
+nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo),
+    mGeneratingSubmit(PR_FALSE),
+    mGeneratingReset(PR_FALSE),
+    mIsSubmitting(PR_FALSE),
+    mDeferSubmission(PR_FALSE),
+    mPendingSubmission(nsnull),
+    mSubmittingRequest(nsnull)
 {
-  nsresult rv = nsGenericHTMLElement::Init(aNodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
+}
 
+nsHTMLFormElement::~nsHTMLFormElement()
+{
+  if (mControls) {
+    mControls->Clear();
+    mControls->SetForm(nsnull);
+
+    NS_RELEASE(mControls);
+  }
+}
+
+nsresult
+nsHTMLFormElement::Init()
+{
   mControls = new nsFormControlList(this);
   if (!mControls) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  rv = mControls->Init();
+  nsresult rv = mControls->Init();
   
   if (NS_FAILED(rv))
   {
@@ -459,16 +464,6 @@ nsHTMLFormElement::Init(nsINodeInfo *aNodeInfo)
                  NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
-}
-
-nsHTMLFormElement::~nsHTMLFormElement()
-{
-  if (mControls) {
-    mControls->Clear();
-    mControls->SetForm(nsnull);
-
-    NS_RELEASE(mControls);
-  }
 }
 
 
@@ -495,25 +490,21 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 nsresult
 nsHTMLFormElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLFormElement* it = new nsHTMLFormElement();
-
+  nsHTMLFormElement* it = new nsHTMLFormElement(mNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
 
-  nsresult rv = it->Init(mNodeInfo);
+  nsresult rv = it->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   CopyInnerTo(it, aDeep);
 
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
+  kungFuDeathGrip.swap(*aReturn);
 
   return NS_OK;
 }
@@ -1434,7 +1425,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::GetCurrentRadioButton(const nsAString& aName,
                                          nsIDOMHTMLInputElement** aRadio)
 {
-  mSelectedRadioButtons.Get(aName,aRadio);
+  mSelectedRadioButtons.Get(aName, aRadio);
 
   return NS_OK;
 }
@@ -1620,6 +1611,7 @@ nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   if (control) {
     return CallQueryInterface(control, aReturn);
   }
+
   *aReturn = nsnull;
 
   return NS_OK;
@@ -1637,7 +1629,7 @@ nsFormControlList::GetNamedObject(const nsAString& aName,
   }
   
   // Get the hash entry
-  mNameLookupTable.Get(aName,aResult);
+  mNameLookupTable.Get(aName, aResult);
 
   return NS_OK;
 }
@@ -1646,14 +1638,13 @@ NS_IMETHODIMP
 nsFormControlList::NamedItem(const nsAString& aName,
                              nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsISupports> supports;
   
-  if (!mNameLookupTable.Get(aName,getter_AddRefs(supports))) // key not found
+  if (!mNameLookupTable.Get(aName, getter_AddRefs(supports))) // key not found
      return rv;
 
   if (supports) {
@@ -1680,9 +1671,7 @@ NS_IMETHODIMP
 nsFormControlList::NamedItem(const nsAString& aName,
                              nsISupports** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  mNameLookupTable.Get(aName,aReturn);
+  mNameLookupTable.Get(aName, aReturn);
 
   return NS_OK;
 }
@@ -1696,7 +1685,7 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild,
   }
 
   nsCOMPtr<nsISupports> supports;
-  mNameLookupTable.Get(aName,getter_AddRefs(supports));
+  mNameLookupTable.Get(aName, getter_AddRefs(supports));
 
   if (!supports) {
     // No entry found, add the form control
@@ -1779,7 +1768,7 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
 
   nsCOMPtr<nsISupports> supports;
 
-  if (!mNameLookupTable.Get(aName,getter_AddRefs(supports)))
+  if (!mNameLookupTable.Get(aName, getter_AddRefs(supports)))
     return NS_OK;
 
   nsCOMPtr<nsIFormControl> fctrl(do_QueryInterface(supports));

@@ -55,9 +55,9 @@ class nsSVGEllipseElement : public nsSVGEllipseElementBase,
 protected:
   friend nsresult NS_NewSVGEllipseElement(nsIContent **aResult,
                                          nsINodeInfo *aNodeInfo);
-  nsSVGEllipseElement();
+  nsSVGEllipseElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGEllipseElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
 
 public:
   // interfaces:
@@ -83,25 +83,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGEllipseElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGEllipseElement* it = new nsSVGEllipseElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(Ellipse)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -120,7 +103,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGEllipseElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGEllipseElement::nsSVGEllipseElement()
+nsSVGEllipseElement::nsSVGEllipseElement(nsINodeInfo *aNodeInfo)
+  : nsSVGEllipseElementBase(aNodeInfo)
 {
 
 }
@@ -131,9 +115,9 @@ nsSVGEllipseElement::~nsSVGEllipseElement()
 
 
 nsresult
-nsSVGEllipseElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGEllipseElement::Init()
 {
-  nsresult rv = nsSVGEllipseElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGEllipseElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -188,41 +172,14 @@ nsSVGEllipseElement::Init(nsINodeInfo* aNodeInfo)
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGEllipseElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGEllipseElement* it = new nsSVGEllipseElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  *aReturn = it;
-
-  return NS_OK;
-}
-
+NS_IMPL_SVG_DOM_CLONENODE(Ellipse)
 
 
 //----------------------------------------------------------------------

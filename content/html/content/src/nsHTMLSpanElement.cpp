@@ -48,7 +48,7 @@ class nsHTMLSpanElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLElement
 {
 public:
-  nsHTMLSpanElement();
+  nsHTMLSpanElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLSpanElement();
 
   // nsISupports
@@ -68,34 +68,12 @@ public:
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
 };
 
-nsresult
-NS_NewHTMLSpanElement(nsIHTMLContent** aInstancePtrResult,
-                      nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLSpanElement* it = new nsHTMLSpanElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Span)
 
 
-nsHTMLSpanElement::nsHTMLSpanElement()
+nsHTMLSpanElement::nsHTMLSpanElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -114,33 +92,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSpanElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+NS_IMPL_HTML_DOM_CLONENODE(Span)
 
-  nsHTMLSpanElement* it = new nsHTMLSpanElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
 
 static void
 BdoMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
@@ -192,6 +145,9 @@ nsHTMLSpanElement::SetInnerHTML(const nsAString& aInnerHTML)
 
 class nsHTMLUnknownElement : public nsHTMLSpanElement
 {
+public:
+  nsHTMLUnknownElement(nsINodeInfo *aNodeInfo);
+
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 };
@@ -200,53 +156,13 @@ NS_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLUnknownElement)
 NS_INTERFACE_MAP_END_INHERITING(nsHTMLSpanElement)
 
-nsresult
-NS_NewHTMLUnknownElement(nsIHTMLContent** aInstancePtrResult,
-                         nsINodeInfo *aNodeInfo)
+nsHTMLUnknownElement::nsHTMLUnknownElement(nsINodeInfo *aNodeInfo)
+  : nsHTMLSpanElement(aNodeInfo)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
-  nsHTMLUnknownElement* it = new nsHTMLUnknownElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  NS_ADDREF(*aInstancePtrResult = it);
-
-  return NS_OK;
 }
 
-nsresult
-nsHTMLUnknownElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
 
-  nsHTMLUnknownElement* it = new nsHTMLUnknownElement();
+NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
 
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  NS_ADDREF(*aReturn = it);
-
-  return NS_OK;
-}
+NS_IMPL_HTML_DOM_CLONENODE(Unknown)

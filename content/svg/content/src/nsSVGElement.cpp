@@ -59,8 +59,10 @@
 #include "nsICSSParser.h"
 #include "nsGenericHTMLElement.h"
 
-nsSVGElement::nsSVGElement()
+nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
+  : nsGenericElement(aNodeInfo)
 {
+
 }
 
 nsSVGElement::~nsSVGElement()
@@ -91,17 +93,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
 //----------------------------------------------------------------------
 // Implementation
   
-nsresult
-nsSVGElement::Init(nsINodeInfo* aNodeInfo)
-{
-  nsresult rv = nsGenericElement::Init(aNodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  // Create mapped properties:
-  
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // nsIContent methods
 
@@ -686,7 +677,7 @@ nsSVGElement::UpdateContentStyleRule()
     return;
 
   PRUint32 attrCount = mAttrsAndChildren.AttrCount();
-  for (int i = 0; i< attrCount; ++i) {
+  for (PRUint32 i = 0; i < attrCount; ++i) {
     const nsAttrName* attrName = mAttrsAndChildren.GetSafeAttrNameAt(i);
     if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
