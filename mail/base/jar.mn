@@ -23,6 +23,8 @@ messenger.jar:
 *+  content/messenger/SearchDialog.xul              (content/SearchDialog.xul)
 *+  content/messenger/ABSearchDialog.xul            (content/ABSearchDialog.xul)
 *+  content/messenger/ABSearchDialog.js             (content/ABSearchDialog.js)
+*+  content/messenger/FilterListDialog.xul          (content/FilterListDialog.xul)
+*+  content/messenger/FilterListDialog.js           (content/FilterListDialog.js)
 *+  content/messenger/subscribe.xul                 (content/subscribe.xul)
 *+  content/messenger/aboutDialog.xul               (content/aboutDialog.xul)
 *+  content/messenger/junkMail.xul                  (content/junkMail.xul)
