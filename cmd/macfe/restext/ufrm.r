@@ -80,6 +80,9 @@ resource 'UFRM' ( CS_MAC_TURKISH, "macturki.uf- CS_MAC_TURKISH", purgeable) {{
 resource 'UFRM' ( CS_LATIN1, "8859-1.uf- CS_LATIN1", purgeable) {{ 
 #include "8859-1.uf"
 }};
+resource 'UFRM' ( CS_TIS620, "macthai.uf- CS_TIS620", purgeable) {{ 
+#include "macthai.uf"
+}};
 
 
 resource 'UTO '  ( RES_CS_MAC_ICELANDIC, "macicela.ut- RES_CS_MAC_ICELANDIC", purgeable) {{ 
@@ -121,6 +124,9 @@ resource 'UTO ' ( CS_MAC_TURKISH, "macturki.ut- CS_MAC_TURKISH", purgeable) {{
 resource 'UTO ' ( CS_LATIN1, "8859-1.ut- CS_LATIN1", purgeable) {{ 
 #include "8859-1.ut"
 }};
+resource 'UTO ' ( CS_TIS620, "macthai.ut- CS_LATIN1", purgeable) {{ 
+#include "macthai.ut"
+}};
 
 resource CSIDLIST_RESTYPE (CSIDLIST_RESID, "Roman/CE/Cy/Gr/J/TC/SC/K/Symbol/Dingbats/Tr", purgeable) {{
     CS_MAC_ROMAN,
@@ -131,6 +137,7 @@ resource CSIDLIST_RESTYPE (CSIDLIST_RESID, "Roman/CE/Cy/Gr/J/TC/SC/K/Symbol/Ding
     CS_BIG5,
     CS_GB_8BIT,
     CS_KSC_8BIT,
+    CS_TIS620,
     CS_SYMBOL,
     CS_DINGBATS,
     CS_MAC_TURKISH
@@ -144,6 +151,7 @@ resource CSIDLIST_RESTYPE (CSIDLIST_RESID+1, "Roman/CE/Cy/Gr/TC/SC/K/J/Symbol/Di
     CS_GB_8BIT,
     CS_KSC_8BIT,
     CS_SJIS,
+    CS_TIS620,
     CS_SYMBOL,
     CS_DINGBATS,
     CS_MAC_TURKISH
@@ -157,6 +165,7 @@ resource CSIDLIST_RESTYPE (CSIDLIST_RESID+2, "Roman/CE/Cy/Gr/SC/K/J/TC/Symbol/Di
     CS_KSC_8BIT,
     CS_SJIS,
     CS_BIG5,
+    CS_TIS620,
     CS_SYMBOL,
     CS_DINGBATS,
     CS_MAC_TURKISH
@@ -170,6 +179,7 @@ resource CSIDLIST_RESTYPE (CSIDLIST_RESID+3, "Roman/CE/Cy/Gr/K/J/TC/SC/Symbol/Di
     CS_SJIS,
     CS_BIG5,
     CS_GB_8BIT,
+    CS_TIS620,
     CS_SYMBOL,
     CS_DINGBATS,
     CS_MAC_TURKISH
