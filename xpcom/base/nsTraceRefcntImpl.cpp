@@ -22,7 +22,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-#elif defined(linux)
+#elif defined(linux) && defined(__GLIBC__) && defined(__i386)
 #include <setjmp.h>
 
 //
@@ -30,7 +30,7 @@
 // if __USE_GNU is defined.  I suppose its some kind of standards
 // adherence thing.
 //
-#if defined(__GLIBC__) && (__GLIBC_MINOR__ >= 1)
+#if (__GLIBC_MINOR__ >= 1)
 #define __USE_GNU
 #endif
 
@@ -270,7 +270,9 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
   *cp = 0;
 }
 /* _WIN32 */
-#elif defined(linux) && defined(__i386) // i386 Linux stackwalking code
+
+
+#elif defined(linux) && defined(__GLIBC__) && defined(__i386) // i386 Linux stackwalking code
 
 void
 nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
@@ -325,7 +327,6 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
   *cp = '\0';
 }
 
-// i386 linux
 #else // unsupported platform.
 
 NS_COM void
