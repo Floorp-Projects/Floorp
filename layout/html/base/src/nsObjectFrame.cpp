@@ -674,7 +674,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
   if(bDoc)
   {
     nsIFrame * aNewFrame = nsnull;
-    rv = NS_NewHTMLFrameOuterFrame(aPresContext->PresShell(), &aNewFrame);
+    rv = NS_NewSubDocumentFrame(aPresContext->PresShell(), &aNewFrame);
     if(NS_FAILED(rv))
       return rv;
 

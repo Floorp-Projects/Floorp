@@ -320,9 +320,23 @@ void nsView::SetPosition(nscoord aX, nscoord aY)
   if (mShouldIgnoreSetPosition) {
     return;
   }
-  // XXX End Temporary fix for Bug #19416
 
-  if (nsnull != mWindow)
+  // XXX End Temporary fix for Bug #19416
+  ResetWidgetPosition(PR_TRUE);
+}
+
+void nsView::SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY)
+{
+  mDimBounds.x += aX - mPosX;
+  mDimBounds.y += aY - mPosY;
+  mPosX = aX;
+  mPosY = aY;
+
+  ResetWidgetPosition(PR_FALSE);
+}
+
+void nsView::ResetWidgetPosition(PRBool aRecurse) {
+  if (mWindow)
   {
     // see if we are caching our widget changes. Yes? 
     // mark us as changed. Later we will actually move the 
@@ -348,6 +362,11 @@ void nsView::SetPosition(nscoord aX, nscoord aY)
 
     mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + parx), scale),
                   NSTwipsToIntPixels((mDimBounds.y + pary), scale));
+  } else if (aRecurse) {
+    // reposition any widgets under this view
+    for (nsView* v = GetFirstChild(); v; v = v->GetNextSibling()) {
+      v->ResetWidgetPosition(aRecurse);
+    }
   }
 }
 

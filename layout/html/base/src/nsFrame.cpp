@@ -2554,6 +2554,66 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
   }
 }
 
+void
+nsFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
+                                   nsHTMLReflowMetrics& aDesiredSize,
+                                   const nsHTMLReflowState& aReflowState)
+{
+  if (aDesiredSize.width == mRect.width
+      && aDesiredSize.height == mRect.height)
+    return;
+
+  // Below, we invalidate the old frame area (or, in the case of
+  // outline, combined area) if the outline, border or background
+  // settings indicate that something other than the difference
+  // between the old and new areas needs to be painted. We are
+  // assuming that the difference between the old and new areas will
+  // be invalidated by some other means. That also means invalidating
+  // the old frame area is the same as invalidating the new frame area
+  // (since in either case the UNION of old and new areas will be
+  // invalidated)
+
+  // Invalidate the entire old frame+outline if the frame has an outline
+
+  // This assumes 'outline' is painted outside the element, as CSS2 requires.
+  // Currently we actually paint 'outline' inside the element so this code
+  // isn't strictly necessary. But we're trying to get ready to switch to
+  // CSS2 compliance.
+  const nsStyleOutline* outline = GetStyleOutline();
+  PRUint8 outlineStyle = outline->GetOutlineStyle();
+  if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE
+      && outlineStyle != NS_STYLE_BORDER_STYLE_HIDDEN) {
+    nscoord width;
+    outline->GetOutlineWidth(width);
+    if (width > 0) {
+      nsRect r(0, 0, mRect.width, mRect.height);
+      r.Inflate(width, width);
+      Invalidate(aPresContext, r);
+      return;
+    }
+  }
+
+  // Invalidate the old frame if the frame has borders. Those borders
+  // may be moving.
+  const nsStyleBorder* border = GetStyleBorder();
+  if (border->IsBorderSideVisible(NS_SIDE_LEFT)
+      || border->IsBorderSideVisible(NS_SIDE_RIGHT)
+      || border->IsBorderSideVisible(NS_SIDE_TOP)
+      || border->IsBorderSideVisible(NS_SIDE_BOTTOM)) {
+    Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+    return;
+  }
+
+  // Invalidate the old frame if the frame has a background
+  // whose position depends on the size of the frame
+  const nsStyleBackground* background = GetStyleBackground();
+  if (background->mBackgroundFlags &
+      (NS_STYLE_BG_X_POSITION_PERCENT | NS_STYLE_BG_Y_POSITION_PERCENT)) {
+    Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+    return;
+  }
+}
+
 // Define the MAX_FRAME_DEPTH to be the ContentSink's MAX_REFLOW_DEPTH plus
 // 4 for the frames above the document's frames: 
 //  the Viewport, GFXScroll, ScrollPort, and Canvas
@@ -5154,8 +5214,7 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsLayoutAtoms::brFrame,               "br",        "br");
   AddFrameTypeInfo(nsLayoutAtoms::bulletFrame,           "bullet",    "bullet");
   AddFrameTypeInfo(nsLayoutAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
-  AddFrameTypeInfo(nsLayoutAtoms::htmlFrameInnerFrame,   "frameI",    "htmlFrameInner");
-  AddFrameTypeInfo(nsLayoutAtoms::htmlFrameOuterFrame,   "frameO",    "htmlFrameOuter");
+  AddFrameTypeInfo(nsLayoutAtoms::subDocumentFrame,      "subdoc",    "subDocument");
   AddFrameTypeInfo(nsLayoutAtoms::imageFrame,            "img",       "image");
   AddFrameTypeInfo(nsLayoutAtoms::inlineFrame,           "inline",    "inline");
   AddFrameTypeInfo(nsLayoutAtoms::letterFrame,           "letter",    "letter");

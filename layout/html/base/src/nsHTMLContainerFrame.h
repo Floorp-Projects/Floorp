@@ -106,20 +106,6 @@ public:
                                         nsIFrame*       aOldParentFrame,
                                         nsIFrame*       aNewParentFrame);
 
-  /**
-   * Helper method to invalidate portions of a standard container frame if the
-   * reflow state indicates that the size has changed (specifically border,
-   * background and outline).
-   * We assume that the difference between the old frame area and the new
-   * frame area is invalidated by some other means.
-   * @param aPresContext the presentation context
-   * @param aDesiredSize the new size of the frame
-   * @param aReflowState the reflow that was just done on this frame
-   */
-  void CheckInvalidateSizeChange(nsIPresContext*          aPresContext,
-                                 nsHTMLReflowMetrics&     aDesiredSize,
-                                 const nsHTMLReflowState& aReflowState);
-
 protected:
   virtual PRIntn GetSkipSides() const = 0;
 

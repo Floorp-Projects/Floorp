@@ -829,7 +829,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
 
     // We must do this before we tell the script global object about
     // this new document since doing that will cause us to re-enter
-    // into nsHTMLFrameInnerFrame code through reflows caused by
+    // into nsSubDocumentFrame code through reflows caused by
     // FlushPendingNotifications() calls down the road...
 
     rv = MakeWindow(aParentWidget, aBounds);
@@ -1842,7 +1842,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
       // OK, so the container is not already hooked up into a foreign view manager hierarchy.
       // That means we can choose not to hook ourselves up.
       //
-      // If the parent container is a chrome shell, or a frameset, then we won't hook into its view
+      // If the parent container is a chrome shell then we won't hook into its view
       // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
       // but is really just for peace of mind. This check can be removed if we want to support fancy
       // chrome effects like transparent controls floating over content, transparent Web browsers, and
@@ -1856,11 +1856,6 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
           || NS_FAILED(parentContainer->GetItemType(&itemType))
           || itemType != nsIDocShellTreeItem::typeContent) {
         containerView = nsnull;
-      } else {
-        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(parentContainer));
-        if (nsnull == webShell || IsWebShellAFrameSet(webShell)) {
-          containerView = nsnull;
-        }
       }
     }
   }

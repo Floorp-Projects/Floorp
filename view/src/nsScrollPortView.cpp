@@ -639,7 +639,9 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aU
   if (!scrolledView) return NS_ERROR_FAILURE;
 
   // move the scrolled view to the new location
-  scrolledView->SetPosition(-aX, -aY);
+  // Note that child widgets may be scrolled by the native widget scrolling,
+  // so don't update their positions
+  scrolledView->SetPositionIgnoringChildWidgets(-aX, -aY);
       
   // store old position in pixels. We need to do this to make sure there is no
   // round off errors. This could cause weird scrolling.

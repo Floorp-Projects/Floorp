@@ -416,7 +416,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
         
         mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
       } else { // frame
-        result = NS_NewHTMLFrameOuterFrame(shell, &frame);
+        result = NS_NewSubDocumentFrame(shell, &frame);
         frame->Init(aPresContext, child, this, kidSC, nsnull);
 
         mChildTypes[mChildCount] = FRAME;

@@ -4639,9 +4639,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
       }
     }
     if (allowSubframes) {
-      rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
+      rv = NS_NewSubDocumentFrame(aPresShell, &newFrame);
       if (newFrame) {
-        // the nsFrameOuterFrame needs to know about its content parent during ::Init.
+        // the nsSubDocumentFrame needs to know about its content parent during ::Init.
         // there is no reasonable way to get the value there.
         // so we store it as a frame property.
         nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
@@ -5331,7 +5331,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           }
         }
         if (allowSubframes) {
-           rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
+           rv = NS_NewSubDocumentFrame(aPresShell, &newFrame);
         }
       }
       // PROGRESS METER CONSTRUCTION
@@ -8292,7 +8292,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     }
     // Don't create child frames for iframes/frames, they should not
     // display any content that they contain.
-    else if (nsLayoutAtoms::htmlFrameOuterFrame != frameType) {
+    else if (nsLayoutAtoms::subDocumentFrame != frameType) {
       // Construct a child frame (that does not have a table as parent)
       ConstructFrame(shell, aPresContext, state, childContent, parentFrame, frameItems);
     }

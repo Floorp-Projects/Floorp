@@ -2519,6 +2519,18 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
   NS_ASSERTION(aPO, "Pointer is null!");
   if (!aPO) return NS_ERROR_FAILURE;
 
+  // Check to see if the subdocument's element has been hidden by the parent document
+  if (aPO->mParent) {
+    nsIFrame * frame;
+    aPO->mParent->mPresShell->GetPrimaryFrameFor(aPO->mContent, &frame);
+    if (frame) {
+      if (!frame->GetStyleVisibility()->IsVisible()) {
+        aPO->mDontPrint = PR_TRUE;
+        return NS_OK;
+      }
+    }
+  }
+
   // Don't reflow hidden POs
   if (aPO->mIsHidden) return NS_OK;
 
@@ -2542,18 +2554,6 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
   // Calc the absolute poistion of the frames
   if (NS_FAILED(MapSubDocFrameLocations(aPO))) {
     return NS_ERROR_FAILURE;
-  }
-
-  // Check to see if the Iframe has been hidden
-  // then we don't want to print it.
-  if (aPO->mFrameType == eIFrame) {
-    nsIFrame * frame;
-    aPO->mParent->mPresShell->GetPrimaryFrameFor(aPO->mContent, &frame);
-    if (frame) {
-      if (!frame->GetStyleVisibility()->IsVisible()) {
-        aPO->mDontPrint = PR_TRUE;
-      }
-    }
   }
 
   PRInt32 cnt = aPO->mKids.Count();
@@ -2690,18 +2690,20 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
       NS_ASSERTION(frameMan, "No Frame manager!");
       nsIFrame* frame;
       frameMan->GetPrimaryFrameFor(aPO->mContent, &frame);
-      if (frame && (aPO->mFrameType == eIFrame || aPO->mFrameType == eFrame)) {
-        frame = frame->GetFirstChild(nsnull);
-      }
 
       if (frame) {
         nsIView* view = frame->GetView();
+        NS_ASSERTION(view, "Primary frame for subdoc must have view!");
         if (view) {
-          nsIWidget* w2 = view->GetWidget();
-          if (w2) {
-            widget = w2;
+          if (aPO->mFrameType == eIFrame || aPO->mFrameType == eFrame) {
+            view = view->GetFirstChild();
+            NS_ASSERTION(view, "innerView not found");
           }
-          canCreateScrollbars = PR_FALSE;
+
+          if (view && view->HasWidget()) {
+            widget = view->GetWidget();
+            canCreateScrollbars = PR_FALSE;
+          }
         }
       }
     } else {
@@ -3043,7 +3045,7 @@ nsPrintEngine::PrintDocContent(nsPrintObject* aPO, nsresult& aStatus)
 
 //-------------------------------------------------------
 // helper function - To calculate the correct position of
-// an iframe
+// an iframe's subdocument
 //
 // ASSUMPTION: x,y must be initialized before calling!
 //
@@ -3058,20 +3060,26 @@ static void GetIFramePosition(nsPrintObject * aPO, nscoord& aX, nscoord& aY)
       // This gets out HTMLIFrame
       nsIFrame* frame;
       frameMan->GetPrimaryFrameFor(aPO->mContent, &frame);
-      if (frame) {
-        // This gets the "inner" frame, 
-        // and then traverse out ot the pageContentFrame
-        frame = frame->GetFirstChild(nsnull);
-        while (frame) {
-          nsPoint pt = frame->GetPosition();
-          aX += pt.x;
-          aY += pt.y;
-          if (nsLayoutAtoms::pageContentFrame == frame->GetType()) {
-            break;
-          }
-          frame = frame->GetParent();
+      NS_ASSERTION(frame, "no primary frame for IFRAME");
+      // find the offset to the content rect
+      if (!frame)
+        return;
+
+      nsMargin borderPadding(0, 0, 0, 0);
+      frame->CalcBorderPadding(borderPadding);
+      aX += borderPadding.left;
+      aY += borderPadding.top;
+
+      // traverse out to the pageContentFrame
+      do {
+        nsPoint pt = frame->GetPosition();
+        aX += pt.x;
+        aY += pt.y;
+        if (nsLayoutAtoms::pageContentFrame == frame->GetType()) {
+          break;
         }
-      }
+        frame = frame->GetParent();
+      } while (frame);
     }
   }
 }
@@ -3198,7 +3206,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
       if (doOffsetting) {
         nscoord x = 0;
         nscoord y = 0;
-        // For IFrames, we locate the "inner" frame in the Parent document
+        // For IFrames, we locate the subdocument in the Parent document
         // then start calculating the location as we walk our way out to the 
         // the pageContentFrame
         if (aPO->mFrameType == eIFrame) {

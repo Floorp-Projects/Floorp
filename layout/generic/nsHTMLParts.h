@@ -157,7 +157,7 @@ NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame** aFrameResult);
 
 // <frame> and <iframe> 
 nsresult
-NS_NewHTMLFrameOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 // <frameset>
 nsresult
 NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
