@@ -801,6 +801,12 @@
 			settings = {
 			};
 		};
+		F507A831030C60D701026D5D = {
+			fileRef = F5A8CE4202DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F507BA480213AD5F01D93544 = {
 			isa = PBXFileReference;
 			path = BookmarksService.h;
@@ -4358,6 +4364,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F57F206A029997E701000106,
+				F507A831030C60D701026D5D,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
