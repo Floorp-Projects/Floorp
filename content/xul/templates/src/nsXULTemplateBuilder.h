@@ -331,6 +331,9 @@ public:
     nsresult
     CheckContainer(nsIRDFResource* aTargetResource, PRBool* aIsContainer, PRBool* aIsEmpty);
 
+    nsresult 
+    IsSystemPrincipal(nsIPrincipal *principal, PRBool *result);
+
 #ifdef PR_LOGGING
     nsresult
     Log(const char* aOperation,
