@@ -76,7 +76,6 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 
-#include "nsIFindComponent.h"
 #include "nsIPromptService.h"
 
 #include "imgIContainer.h"
@@ -420,6 +419,7 @@ nsEditorShell::IsSupportedTextType(const char* aMIMEType, PRBool *aResult)
 nsresult    
 nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
 {
+  printf("----------------------\nPrepareDocumentForEditing\n");
   if (!mContentAreaDocShell || !mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -2241,84 +2241,6 @@ nsEditorShell::InsertBreak()
     return NS_NOINTERFACE;
 
   return textEditor->InsertLineBreak();
-}
-
-// Both Find and FindNext call through here.
-nsresult
-nsEditorShell::DoFind(PRBool aFindNext)
-{
-  if (!mContentAreaDocShell)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  PRBool foundIt = PR_FALSE;
-  
-  // Get find component.
-  nsresult rv;
-  nsCOMPtr<nsIFindComponent> findComponent = 
-           do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
-  NS_ASSERTION(((NS_SUCCEEDED(rv)) && findComponent), "GetService failed for find component.");
-  if (NS_FAILED(rv)) { return rv; }
-
-  // make the search context if we need to
-  if (!mSearchContext)
-  {
-    if(!mContentWindow)
-      return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
-    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
-    rv = findComponent->CreateContext(cwP, this, getter_AddRefs(mSearchContext));
-  }
-  
-  if (NS_SUCCEEDED(rv))
-  {
-    if (aFindNext)
-      rv = findComponent->FindNext(mSearchContext, &foundIt);
-    else
-      rv = findComponent->Find(mSearchContext, &foundIt);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsEditorShell::Find()
-{
-  return DoFind(PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsEditorShell::FindNext()
-{
-  return DoFind(PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsEditorShell::Replace()
-{
-  if (!mContentAreaDocShell)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  // Get find component.
-  nsresult rv;
-  nsCOMPtr<nsIFindComponent> findComponent = 
-           do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
-  NS_ASSERTION(((NS_SUCCEEDED(rv)) && findComponent), "GetService failed for find component.");
-  if (NS_FAILED(rv)) { return rv; }
-
-  // make the search context if we need to
-  if (!mSearchContext)
-  {
-    if(!mContentWindow)
-      return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
-    if (!cwP) return NS_ERROR_NOT_INITIALIZED;
-    rv = findComponent->CreateContext(cwP, this, getter_AddRefs(mSearchContext));
-  }
-  
-  if (NS_SUCCEEDED(rv))
-    rv = findComponent->Replace(mSearchContext);
-
-  return rv;
 }
 
 /* Get localized strings for UI from the Editor's string bundle */

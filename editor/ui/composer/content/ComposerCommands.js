@@ -2033,31 +2033,14 @@ var nsFindCommand =
 
   doCommand: function(aCommand)
   {
-    var prefs = GetPrefs();
-    var newfind;
-    if (prefs) {
-      try {
-        newfind = prefs.getBoolPref("editor.new_find");
-      }
-      catch (ex) {
-        newfind = false;
-      }
+    try {
+      window.openDialog("chrome://editor/content/EdReplace.xul", "_blank",
+                        "chrome,dependent,titlebar", "");
     }
-    
-    if (newfind)
-    {
-      try {
-        window.openDialog("chrome://editor/content/EdReplace.xul", "_blank",
-                          "chrome,dependent,titlebar", "");
-      }
-      catch(ex) {
-        dump("*** Exception: couldn't open Replace Dialog\n");
-      }
-      window._content.focus();
+    catch(ex) {
+      dump("*** Exception: couldn't open Replace Dialog\n");
     }
-    else {
-      window.editorShell.Replace();
-    }
+    window._content.focus();
   }
 };
 

@@ -31,9 +31,5 @@ EXPORTS =                              \
 
 MODULE = txtsvc 
 
-XPIDLSRCS =                 \
-    .\nsIFindAndReplace.idl \
-    $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
