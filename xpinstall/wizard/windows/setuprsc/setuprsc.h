@@ -6,7 +6,6 @@
 #define WINVER 0x0400
 #endif
 #include "winresrc.h"
-
 #define IDS_ERROR_DIALOG_CREATE         1
 #define IDS_ERROR_FAILED                2
 #define IDS_ERROR_FILE_NOT_FOUND        3

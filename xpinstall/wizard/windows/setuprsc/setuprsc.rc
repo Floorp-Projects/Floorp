@@ -368,7 +368,7 @@ BEGIN
     IDS_ERROR_GET_SYSTEM_DIRECTORY_FAILED "GetSystemDirectory() failed."
     IDS_ERROR_GET_WINDOWS_DIRECTORY_FAILED "GetWindowsDirectory() failed."
     IDS_DLGQUITTITLE        "Exit Setup"
-    IDS_DLGQUITMSG          "Are you sure you want to cancel Setup?"
+    IDS_DLGQUITMSG          "Setup is not complete.  If you quit the Setup program now, the program will not be installed.  \n\nYou may run the Setup program at a later time to complete the installation.\n\nAre you sure you want to cancel Setup?"
     IDS_DLG_REBOOT_TITLE    "Restarting Windows"
     IDS_ERROR_GETPROCADDRESS "GetProcAddress() of %s failed."
     IDS_ERROR_WRITEPRIVATEPROFILESTRING 
