@@ -19,7 +19,6 @@ class CPrintProgressDialog : public CDialog
 // Construction
 public:
 	CPrintProgressDialog(nsIWebBrowser* aWebBrowser, 
-                       nsIDOMWindow* aDOMWin,
                        nsIPrintSettings* aPrintSettings,
                        CWnd* pParent = NULL);
 	virtual ~CPrintProgressDialog();

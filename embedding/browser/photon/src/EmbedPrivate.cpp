@@ -64,7 +64,6 @@
 
 // for profiles
 #include <nsMPFileLocProvider.h>
-#include "nsIWebBrowserPrint.h"
 #include "nsIPrintOptions.h"
 
 // all of our local includes
@@ -235,7 +234,7 @@ EmbedPrivate::Setup()
 	uriListener = do_QueryInterface(mContentListenerGuard);
 	webBrowser->SetParentURIContentListener(uriListener);
 
-	nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
+  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
 	if (print)
 		print->GetPrintSettings(getter_AddRefs(m_PrintSettings));
 
@@ -522,12 +521,11 @@ EmbedPrivate::Clear()
 void
 EmbedPrivate::Print(PpPrintContext_t *pc)
 {
-  nsCOMPtr<nsIDOMWindow> window;
-  mWindow->mWebBrowser->GetContentDOMWindow(getter_AddRefs(window));
-  nsCOMPtr<nsIWebBrowserPrint> print( do_GetInterface( mWindow->mWebBrowser ) );
-
-  m_PrintSettings->SetEndPageRange((PRInt32) pc);
-  print->Print(window, m_PrintSettings, mPrint);
+  nsCOMPtr<nsIWebBrowserPrint> print = do_GetInterface(mWindow->mWebBrowser);
+  if (print) {
+    m_PrintSettings->SetEndPageRange((PRInt32) pc);
+    print->Print(m_PrintSettings, mPrint);
+  }
 }
 
 nsresult

@@ -21,17 +21,14 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIPrintSettings.idl"
 
 
 %{ C++
-class nsIDeviceContext;
-class nsIWebShell;
-class nsIDOMWindow;
+#include <stdio.h>
 %}
 
-[ptr] native nsIDeviceContext(nsIDeviceContext);
-[ptr] native nsIWebShell(nsIWebShell);
-[ptr] native nsIDOMWindow(nsIDOMWindow);
+[ptr] native FILE(FILE);
 
 /**
  * The nsIDocShellFile    
@@ -40,15 +37,11 @@ class nsIDOMWindow;
 [scriptable, uuid(6317f32c-9bc7-11d3-bccc-0060b0fc76bd)]
 interface nsIContentViewerFile : nsISupports
 {
-	void Save();
-	readonly attribute boolean saveable;
+  /* readonly attribute boolean printable; */
+  readonly attribute boolean printable;
 
-	void Print();
-	readonly attribute boolean printable;
-
-  [noscript] void PrintContent(in nsIWebShell parent, 
-                               in nsIDeviceContext DContext, 
-                               in nsIDOMWindow aDOMWin, 
-                               in PRBool aIsSubDoc);
+  [noscript] void Print(in boolean aSilent,
+                        in FILE    aDebugFile, 
+                        in nsIPrintSettings aPrintSettings);
 };
 

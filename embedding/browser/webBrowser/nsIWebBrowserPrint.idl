@@ -33,41 +33,105 @@ interface nsIWebProgressListener;
 interface nsIWebBrowserPrint : nsISupports
 {
   /**
-   * Returns a PrintSettings object 
-   * Creates a new the first time, if one doesn't exist.
-   * then returns the same object each time after that
-   * unless a different object was set into it.
+   * PrintPreview Navigation Constants
    */
-  attribute nsIPrintSettings printSettings;
+  const short PRINTPREVIEW_GOTO_PAGENUM = 0;
+  const short PRINTPREVIEW_PREV_PAGE    = 1;
+  const short PRINTPREVIEW_NEXT_PAGE    = 2;
+  const short PRINTPREVIEW_HOME         = 3;
+  const short PRINTPREVIEW_END          = 4;
 
   /**
-   * This returns the current settings that was last used for printing
-   * or page setup. For peinring, the print engine always sets the PrintSettings
-   * from whoever is printing into the global settings
-   * for page setup it is the responsibilitity of those implementing page setup
-   * to set their setting into the global settings
+   * Returns a new, unique PrintSettings object each time.
+   *
+   * For example, if each browser was to have its own unique
+   * PrintSettings, then each brower window would call this to
+   * create its own unique PrintSettings object.
+   *
+   * If each browse window was to use the same PrintSettings object
+   * then it should use "globalPrintSettings"
+   *
    */
-  attribute nsIPrintSettings globalPrintSettings;
+  readonly attribute nsIPrintSettings newPrintSettings;
+
+  /**
+   * Returns a "global" PrintSettings object 
+   * Creates a new the first time, if one doesn't exist.
+   *
+   * Then returns the same object each time after that.
+   */
+  readonly attribute nsIPrintSettings globalPrintSettings;
+
+  /**
+   * Returns whether it is in Print Preview mode
+   */
+  readonly attribute boolean doingPrintPreview;
+
+  /**
+   * Use this to Set and Get the current values of the last print invocation
+   * of "print" or "printpreview". The print engine always sets the PrintSettings
+   * from whoever is printing (or printpreview'ing) into the global settings.
+   * 
+   * It is the responsibilitity of those implementing page setup
+   * to set their setting into the global settings if they want those new value
+   * to avilable to other callers of "globalPrintSettingsValues"
+   */
+  attribute nsIPrintSettings globalPrintSettingsValues;
+
+  /**
+   * This returns whether the current document is a frameset document
+   */
+  readonly attribute boolean isFramesetDocument;
 
   /**
    * Print the specified DOM window
    *
-   * aDOMWindow - The DOM window to print
    * aThePrintOptions - Printer Settings for the print job
+   * nsIWebProgressListener - is updated during the print
+   * @return void
    */
-  void print(in nsIDOMWindow aDOMWindow,
-             in nsIPrintSettings aThePrintSettings,
+  void print(in nsIPrintSettings aThePrintSettings,
 			 in nsIWebProgressListener aWPListener);
 
   /**
    * Print Preview the specified DOM window
    *
-   * aDOMWindow - The DOM window to print preview
    * aThePrintOptions - Printer Settings for the print preview
+   * @return void
    */
-  void printPreview(in nsIDOMWindow aDOMWindow,
-                    in nsIPrintSettings aThePrintSettings);
+  void printPreview(in nsIPrintSettings aThePrintSettings);
 
+  /**
+   * Print Preview - Navigates within the window
+   *
+   * aNavType - navigation enum
+   * aPageNum - page num to navigate to when aNavType = ePrintPreviewGoToPageNum
+   * @return void
+   */
+  void printPreviewNavigate(in short aNavType, in long aPageNum);
+
+  /**
+   * Cancel - Cancels the current print 
+   * @return void
+   */
   void cancel();
 
+  /**
+   * Returns an array of the names of all documents names (Title or URL)
+   * and sub-documents. This will return a single item if the attr "isFramesetDocument" is false
+   * and may return any number of items is "isFramesetDocument" is true
+   *
+   * @param  aCount - returns number of printers returned
+   * @param  aResult - returns array of names
+   * @return void
+   */
+  void enumerateDocumentNames(out PRUint32 aCount,[retval, array, size_is(aCount)] out wstring aResult);
+
+  /**
+   * This exists PrintPreview mode and returns browser window to galley mode
+   * @return void
+   */
+  void exitPrintPreview();
+
 };
+

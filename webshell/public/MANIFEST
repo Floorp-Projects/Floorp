@@ -5,5 +5,4 @@
 nsIDocStreamLoaderFactory.h
 nsILinkHandler.h
 nsIWebShell.h
-nsIContentViewerFile.h
 nsIWebShellServices.h

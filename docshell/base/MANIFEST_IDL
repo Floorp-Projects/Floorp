@@ -32,4 +32,5 @@ nsIScrollable.idl
 nsITextScroll.idl
 nsIContentViewer.idl
 nsIContentViewerEdit.idl
+nsIContentViewerFile.idl
 nsIURIFixup.idl

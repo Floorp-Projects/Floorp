@@ -51,7 +51,7 @@
 #include "nsILinkHandler.h"
 #include "nsIWebShell.h"
 #include "nsIContentViewerEdit.h"
-#include "nsIContentViewerFile.h"
+#include "nsIWebBrowserPrint.h"
 #include "nsIWidget.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -70,6 +70,7 @@
 #include "nsITimerCallback.h"
 
 class nsIPrintSettings;
+class nsIDOMWindow;
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -175,7 +176,7 @@ private:
 class PluginViewerImpl : public nsIPluginViewer,
                          public nsIContentViewer,
                          public nsIContentViewerEdit,
-                         public nsIContentViewerFile
+                         public nsIWebBrowserPrint
 {
 public:
   PluginViewerImpl(const char* aCommand);
@@ -195,8 +196,8 @@ public:
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
 
-  // nsIContentViewerFile
-  NS_DECL_NSICONTENTVIEWERFILE
+  // nsIWebBrowserPrint
+  NS_DECL_NSIWEBBROWSERPRINT
 
   virtual ~PluginViewerImpl();
 
@@ -266,7 +267,7 @@ NS_IMPL_QUERY_INTERFACE4(PluginViewerImpl,
                          nsIPluginViewer,
                          nsIContentViewer,
                          nsIContentViewerEdit,
-                         nsIContentViewerFile)
+                         nsIWebBrowserPrint)
 
 
 PluginViewerImpl::~PluginViewerImpl()
@@ -717,7 +718,7 @@ NS_IMETHODIMP pluginInstanceOwner::GetValue(nsPluginInstancePeerVariable variabl
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 /* ========================================================================================
- * nsIContentViewerFile
+ * nsIContentViewerEdit
  * ======================================================================================== */
 
 NS_IMETHODIMP PluginViewerImpl::Search()
@@ -781,35 +782,10 @@ NS_IMETHODIMP PluginViewerImpl::GetPasteable(PRBool *aPasteable)
 }
 
 /* ========================================================================================
- * nsIContentViewerEdit
+ * nsIWebBrowserPrint
  * ======================================================================================== */
 NS_IMETHODIMP
-PluginViewerImpl::Save()
-{
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-PluginViewerImpl::GetSaveable(PRBool *aSaveable)
-{
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-#ifdef NS_DEBUG
-NS_IMETHODIMP
-PluginViewerImpl::Print(PRBool            aSilent,
-                        FILE *            aDebugFile, 
-                        nsIPrintSettings* aPrintSettings)
-{
-  return NS_ERROR_FAILURE;
-}
-#endif
-
-NS_IMETHODIMP
-PluginViewerImpl::Print(PRBool            aSilent,
-                        nsIPrintSettings* aPrintSettings,
+PluginViewerImpl::Print(nsIPrintSettings* aPrintSettings,
                         nsIWebProgressListener* aWebProgressListener)
 {
   nsPluginPrint npprint;
@@ -827,32 +803,78 @@ PluginViewerImpl::Print(PRBool            aSilent,
 
 }
 
-NS_IMETHODIMP
-PluginViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
+NS_IMETHODIMP 
+PluginViewerImpl::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
 {
-  return NS_OK;      // XXX: hey, plug in guys!  implement me!
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-PluginViewerImpl::GetPrintable(PRBool *aPrintable) 
+/* readonly attribute nsIPrintSettings globalPrintSettings; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings)
 {
-  NS_ENSURE_ARG_POINTER(aPrintable);
-
-  *aPrintable = PR_FALSE;   // XXX: hey, plug in guys!  implement me!
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-NS_IMETHODIMP
-PluginViewerImpl::PrintContent(nsIWebShell *      aParent,
-                               nsIDeviceContext * aDContext,
-                               nsIDOMWindow     * aDOMWin,
-                               PRBool             aIsSubDoc)
+/* attribute nsIPrintSettings globalPrintSettingsValues; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetGlobalPrintSettingsValues(nsIPrintSettings * *aGlobalPrintSettingsValues)
 {
-  NS_ENSURE_ARG_POINTER(aParent);
-  NS_ENSURE_ARG_POINTER(aDContext);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-  return NS_OK;
+NS_IMETHODIMP 
+PluginViewerImpl::SetGlobalPrintSettingsValues(nsIPrintSettings * aGlobalPrintSettingsValues)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+/* void printPreview (in nsIPrintSettings aThePrintSettings); */
+NS_IMETHODIMP 
+PluginViewerImpl::PrintPreview(nsIPrintSettings *aThePrintSettings)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void printPreviewNavigate (in short aNavType, in long aPageNum); */
+NS_IMETHODIMP 
+PluginViewerImpl::PrintPreviewNavigate(PRInt16 aNavType, PRInt32 aPageNum)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute boolean doingPrintPreview; */
+NS_IMETHODIMP
+PluginViewerImpl::GetDoingPrintPreview(PRBool *aDoingPrintPreview)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void cancel (); */
+NS_IMETHODIMP 
+PluginViewerImpl::Cancel()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void enumerateDocumentNames (out PRUint32 aCount, [array, size_is (aCount), retval] out wstring aResult); */
+NS_IMETHODIMP 
+PluginViewerImpl::EnumerateDocumentNames(PRUint32 *aCount, PRUnichar ***aResult)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute boolean isFramesetDocument; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetIsFramesetDocument(PRBool *aIsFramesetDocument)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void exitPrintPreview (); */
+NS_IMETHODIMP 
+PluginViewerImpl::ExitPrintPreview()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

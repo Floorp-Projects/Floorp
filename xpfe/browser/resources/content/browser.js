@@ -39,7 +39,6 @@
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 var gPrintSettings = null;
-var gUseGlobalPrintSettings = false;
 
 function getWebNavigation()
 {
@@ -72,23 +71,46 @@ function BrowserReloadWithFlags(reloadFlags)
   }
 }
 
+
+function GetPrintSettings(webBrowserPrint)
+{
+  try {
+    if (gPrintSettings == null) {
+      var useGlobalPrintSettings = true;
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      if (pref) {
+        useGlobalPrintSettings = pref.getBoolPref("print.use_global_printsettings", false);
+      }
+
+      if (useGlobalPrintSettings) {
+        gPrintSettings = webBrowserPrint.newPrintSettings;
+      } else {
+        gPrintSettings = webBrowserPrint.globalPrintSettings;
+      }
+    }
+  } catch (e) {
+    alert("GetPrintSettings "+e);
+  }
+  return gPrintSettings;
+}
+
 function BrowserPrintPreview()
 {
-  var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
-                                         .getService(Components.interfaces.nsIPrintOptions);
-  if (gPrintSettings == null) {
-    gPrintSettings = printOptionsService.CreatePrintSettings();
-  }
-  // using _content.printPreview() until printing becomes scriptable on docShell
   try {
-    _content.printPreview(gPrintSettings);
-
+    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
+    if (webBrowserPrint) {
+      gPrintSettings = GetPrintSettings(webBrowserPrint);
+      webBrowserPrint.printPreview(gPrintSettings);
+    }
   } catch (e) {
-    // Pressing cancel is expressed as an NS_ERROR_FAILURE return value,
+    // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
     // causing an exception to be thrown which we catch here.
     // Unfortunately this will also consume helpful failures, so add a
     // dump(e); // if you need to debug
   }
+
 }
 
 
@@ -96,33 +118,20 @@ function BrowserPrintSetup()
 {
 
   try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    if (pref) {
-      gUseGlobalPrintSettings = pref.getBoolPref("print.use_global_printsettings", false);
-    }
-
-    var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
-                                           .getService(Components.interfaces.nsIPrintOptions);
-
-    // create our own local copy of the print settings
-    if (gPrintSettings == null) {
-      gPrintSettings = printOptionsService.CreatePrintSettings();
-    }
-
-    // if we are using the global settings then get them 
-    // before calling page setup
-    if (gUseGlobalPrintSettings) {
-      gPrintSettings = printOptionsService.printSettingsValues;
+    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
+    if (webBrowserPrint) {
+      gPrintSettings = GetPrintSettings(webBrowserPrint);
     }
 
     goPageSetup(gPrintSettings);  // from utilityOverlay.js
 
-    // now set our setting into the global settings
-    // after the changes were made
-    if (gUseGlobalPrintSettings) {
-      printOptionsService.printSettingsValues = gPrintSettings;
+    if (webBrowserPrint) {
+      if (webBrowserPrint.doingPrintPreview) {
+        webBrowserPrint.printPreview(gPrintSettings);
+      }
     }
+
   } catch (e) {
     alert("BrowserPrintSetup "+e);
   }
@@ -131,32 +140,12 @@ function BrowserPrintSetup()
 function BrowserPrint()
 {
   try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    if (pref) {
-      gUseGlobalPrintSettings = pref.getBoolPref("print.use_global_printsettings");
+    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
+    if (webBrowserPrint) {
+      gPrintSettings = GetPrintSettings(webBrowserPrint);
+      webBrowserPrint.print(gPrintSettings, null);
     }
-    var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
-                                             .getService(Components.interfaces.nsIPrintOptions);
-    if (gPrintSettings == null) {
-      gPrintSettings = printOptionsService.CreatePrintSettings();
-    }
-
-    // if we are using the global settings then get them 
-    // before calling print
-    if (gUseGlobalPrintSettings) {
-      gPrintSettings = printOptionsService.printSettingsValues;
-    }
-
-    // using _content.print() until printing becomes scriptable on docShell
-    _content.printWithSettings(gPrintSettings);
-
-    // now set our setting into the global settings
-    // after the changes were made
-    if (gUseGlobalPrintSettings) {
-      printOptionsService.printSettingsValues = gPrintSettings;
-    }
-
   } catch (e) {
     // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
     // causing an exception to be thrown which we catch here.

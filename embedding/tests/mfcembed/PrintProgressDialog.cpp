@@ -101,12 +101,10 @@ CDlgPrintListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aR
 
 
 CPrintProgressDialog::CPrintProgressDialog(nsIWebBrowser* aWebBrowser,
-                                           nsIDOMWindow* aDOMWin,
                                            nsIPrintSettings* aPrintSettings,
                                            CWnd* pParent /*=NULL*/)
 	: CDialog(CPrintProgressDialog::IDD, pParent),
   m_WebBrowser(aWebBrowser),
-  m_DOMWin(aDOMWin),
   m_PrintListener(nsnull),
   m_PrintSettings(aPrintSettings),
   m_InModalMode(PR_FALSE)
@@ -191,14 +189,14 @@ BOOL CPrintProgressDialog::OnInitDialog()
 int CPrintProgressDialog::DoModal( )
 {
   PRBool doModal = PR_FALSE;
-	nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(m_WebBrowser));
+  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(m_WebBrowser));
   if(print) 
   {
     m_PrintListener = new CDlgPrintListener(this); // constructor addrefs
     if (m_PrintListener) {
       // doModal will be set to false if the print job was cancelled
       nsIWebProgressListener * wpl = NS_STATIC_CAST(nsIWebProgressListener*, m_PrintListener);
-      doModal = NS_SUCCEEDED(print->Print(m_DOMWin, m_PrintSettings, wpl)) == PR_TRUE;
+      doModal = NS_SUCCEEDED(print->Print(m_PrintSettings, wpl)) == PR_TRUE;
     }
   }
 
