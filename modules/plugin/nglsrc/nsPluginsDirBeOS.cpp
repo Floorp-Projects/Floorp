@@ -206,12 +206,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         printf("Registering plugin for: \"%s\",\"%s\",\"%s\"\n", mtype,descr ? descr : "null",exten ? exten : "null");
 #endif
 
-        if(i==0) {
-            info.fMimeType = mtype ? mtype : (char *)"";
-            info.fMimeDescription = descr ? descr : (char *)"";
-            info.fExtensions = exten ? exten : (char *)"";
-        }
-
         if(!*mtype && !descr && !exten) {
             i--;
             info.fVariantCount--;
@@ -229,4 +223,3 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
   return NS_OK;
 }
-
