@@ -84,7 +84,6 @@ protected:
   PRFileDesc* mFd;
   PRInt32 mSecurityState;
   nsString mShortDesc;
-  PRBool mForceHandshake;
   PRBool mForTLSStepUp;
   PRBool mFirstWrite;
   PRBool mTLSIntolerant;

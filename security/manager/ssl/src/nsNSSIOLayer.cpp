@@ -150,7 +150,6 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, PRBool forTLSStepUp,
 nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nsnull),
     mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
-    mForceHandshake(PR_FALSE),
     mForTLSStepUp(PR_FALSE),
     mFirstWrite(PR_TRUE),
     mTLSIntolerant(PR_FALSE),
@@ -295,14 +294,14 @@ NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
 NS_IMETHODIMP
 nsNSSSocketInfo::GetForceHandshake(PRBool* forceHandshake)
 {
-  *forceHandshake = mForceHandshake;
+  *forceHandshake = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSSocketInfo::SetForceHandshake(PRBool forceHandshake)
 {
-  mForceHandshake = forceHandshake;
+  (void)forceHandshake;
   return NS_OK;
 }
 
@@ -838,17 +837,6 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
   
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Connect: forceHandshake = %d, forTLSStepUp = %d\n",
                                     (void*)fd, forceHandshake, forTLSStepUp));
-
-  if (!forTLSStepUp && forceHandshake) {
-    // Kick-start the handshake in order to work around bug 66706
-    PRInt32 res = PR_Write(fd,0,0);
-    
-    if (res == -1) {
-      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("[%p] ForceHandshake failure -- error %d\n",
-                                        (void*)fd, PR_GetError()));
-      status = PR_FAILURE;
-    }
-  }
 
 #if defined(XP_BEOS)  // bug 70217
  loser:
