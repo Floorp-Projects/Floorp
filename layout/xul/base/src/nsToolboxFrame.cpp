@@ -116,9 +116,10 @@ NS_NewToolboxFrame ( nsIFrame** aNewFrame )
 // Init, if necessary
 //
 nsToolboxFrame :: nsToolboxFrame ( )
-  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted), mDragListenerDelegate(nsnull),
+  : mSumOfToolbarHeights(0), mNumToolbars(0), mGrippyHilighted(kNoGrippyHilighted),
       kCollapsedAtom(dont_AddRef( NS_NewAtom("collapsed"))), 
-      kHiddenAtom(dont_AddRef( NS_NewAtom("hidden")))
+      kHiddenAtom(dont_AddRef( NS_NewAtom("hidden"))),
+      mDragListenerDelegate(nsnull)
 {
   // we start off vertical
   mHorizontal = PR_FALSE;
