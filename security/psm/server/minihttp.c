@@ -1630,6 +1630,9 @@ SSM_HTTPMonitorResourceHandler(HTTPRequest *req)
              */
             SSM_WaitForResourceShutdown(target);
         }
+        else{
+            PR_Sleep(PR_TicksPerSecond());
+        }
         SSM_FreeResource(target);
     }
 
