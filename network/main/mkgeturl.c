@@ -2982,7 +2982,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 							 this_entry->proxy_conf,
 							 &this_entry->proxy_addr,
 							 &this_entry->socks_host,
-							 &this_entry->socks_port))
+							 &this_entry->socks_port)) != 0
 		&& this_entry->proxy_addr
 		)
 	  {

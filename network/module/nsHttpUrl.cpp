@@ -30,8 +30,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsCRT.h"
-
-MWContext *new_stub_context(URL_Struct *URL_s);
+#include "nsStubContext.h"
 
 static NS_DEFINE_IID(kIOutputStreamIID,  NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);

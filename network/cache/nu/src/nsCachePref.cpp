@@ -113,50 +113,19 @@ nsCachePref::SetupPrefs(const char* i_Pref)
 
     if (bSetupAll || !PL_strcmp(i_Pref,CACHE_DIR_PREF)) 
     {
-#ifdef XP_MAC
-		tempPref = CPrefs::GetCachePath();
-		if (tempPref)
-		{
-			if (m_DiskCacheFolder)
-				delete m_DiskCacheFolder;
+	    if (PREF_OK == PREF_CopyPathPref(CACHE_DIR_PREF,&tempPref))
+        {
+            PR_ASSERT(tempPref);
+            delete [] m_DiskCacheFolder;
 			m_DiskCacheFolder =  new char[PL_strlen(tempPref)+2];
-		
 	        if (!m_DiskCacheFolder)
 	        {
 	            if (tempPref)
 	                PR_Free(tempPref);
 	            return;
 	        }
-	        /* Changing the mac path to unix because nspr converts 
-	           it the other way round and cant deal with it being a mac path */
-	        m_DiskCacheFolder[0]='/';
-	        m_DiskCacheFolder[1]='\0';
-	        PL_strcat(m_DiskCacheFolder, tempPref);
-	        char *tempPref2 = m_DiskCacheFolder+1;
-		    while (*tempPref2)
-		    {
-		    	if (*tempPref2 == ':')
-		    		*tempPref2 = '/';
-    			tempPref2++;
-    		}
-		     
-	   }
-#else
-	    if (PREF_OK == PREF_CopyCharPref(CACHE_DIR_PREF,&tempPref))
-        {
-            PR_ASSERT(tempPref);
-            if (m_DiskCacheFolder)
-                delete m_DiskCacheFolder;
-            m_DiskCacheFolder = new char[PL_strlen(tempPref)+1];
-            if (!m_DiskCacheFolder)
-            {
-                if (tempPref)
-                    PR_Free(tempPref);
-                return;
-            }
             PL_strcpy(m_DiskCacheFolder, tempPref);
-        }
-#endif
+	    }
         else //TODO set to temp folder
         {
 #if defined(MODULAR_NETLIB) && defined(XP_PC)

@@ -21,6 +21,7 @@
 #include "nsISupports.h"
 #include "nsINetService.h"
 #include "nsNetService.h"
+#include "nsRepository.h"
 
 /* This implementation of the network service factory is presently
  * only taking advantage of the service retrieval benefit that the

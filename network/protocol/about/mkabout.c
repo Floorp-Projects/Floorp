@@ -79,7 +79,7 @@ static PRHashTable *net_AboutTable = NULL;
 PRIVATE PRIntn net_AboutComparator(const void *v1, const void *v2)
 {
     char *idx = NULL;
-    if (idx = PL_strchr((char *) v1, '?')) {
+    if ((idx = PL_strchr((char *) v1, '?')) != 0) {
         int len = (int)(idx - (char *) v1);
         return PL_strncasecmp((char *) v1, (char *) v2, len) == 0;
     } else {
@@ -101,7 +101,7 @@ PRIVATE PLHashNumber net_HashAbout(const void *key)
 PRIVATE PRBool net_DoRegisteredAbout(const char *which, ActiveEntry *entry)
 {
     NET_AboutCB cb;
-    if (cb = (NET_AboutCB) PL_HashTableLookup(net_AboutTable, which)) {
+    if ((cb = (NET_AboutCB) PL_HashTableLookup(net_AboutTable, which))!= 0) {
         return cb(which, entry->format_out, entry->URL_s, entry->window_id);
     }
     return PR_FALSE;
@@ -138,7 +138,7 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 	char buf[64];
 	char *tmp=0;
 	char *escaped;
-	char *sec_msg, *il_msg;
+	char *il_msg;
 
 	NET_FindURLInCache(URL_s, ctxt);
 

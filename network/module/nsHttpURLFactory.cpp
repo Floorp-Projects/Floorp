@@ -19,6 +19,7 @@
 #include "nsIProtocolURLFactory.h"
 #include "nsHttpUrl.h"
 #include "nsINetService.h"
+#include "nsNetThread.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 

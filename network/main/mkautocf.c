@@ -55,6 +55,7 @@
 #include "jsapi.h"
 #include "jscompat.h"
 #include "jspubtd.h"
+#include "jsautocf.h"
 
 /* for XP_GetString() */
 #include "xpgetstr.h"

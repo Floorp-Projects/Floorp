@@ -607,7 +607,7 @@ NET_DumpDecoders()
     net_ConverterStruct * cs_ptr;
     XP_List *list_ptr = net_decoder_list[FO_PRESENT];
 
-    while((cs_ptr = XP_ListNextObject(list_ptr)))
+    while((cs_ptr = XP_ListNextObject(list_ptr)) != 0)
     {
         char *msg = PR_smprintf("in: %s  out: %d\n",cs_ptr->encoding_in, cs_ptr->format_out);
 
