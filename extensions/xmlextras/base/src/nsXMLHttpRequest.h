@@ -126,8 +126,6 @@ protected:
 
   nsCOMPtr<nsIOnReadystatechangeHandler> mOnReadystatechangeListener;
 
-  nsCOMPtr<nsIDOMEvent> mDelayedEvent;
-
   // used to implement getAllResponseHeaders()
   class nsHeaderVisitor : public nsIHttpHeaderVisitor {
   public:
