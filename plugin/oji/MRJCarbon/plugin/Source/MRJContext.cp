@@ -1719,6 +1719,13 @@ void MRJContext::synchronizeVisibility()
             int clipWidth = (mCachedClipRect.right - mCachedClipRect.left);
             int clipHeight = (mCachedClipRect.bottom - mCachedClipRect.top);
 
+#if TARGET_RT_MAC_MACHO
+            // XXX hack a little bit to make it work...
+            const SInt32 kTitleBarHeight = 22;
+            posY -= kTitleBarHeight;
+            clipY -= kTitleBarHeight;
+#endif
+
             status = ::SizeJavaControl(env, mAppletControl, mPluginWindow->width, mPluginWindow->height);
             status = ::MoveAndClipJavaControl(env, mAppletControl, posX, posY,
                                               clipX, clipY, clipWidth, clipHeight);
@@ -1730,6 +1737,23 @@ void MRJContext::synchronizeVisibility()
                 status = ::DrawJavaControl(env, mAppletControl);
             }
 
+#if TARGET_RT_MAC_MACHO && 0
+            if (GetCurrentKeyModifiers() & alphaLock) {
+                // raise(SIGINT);
+                printf("@@@ (posX = %d, posY = %d), (clipX = %d, clipY = %d, clipWidth = %d, clipHeight = %d) @@@\n",
+                    posX, posY, clipX, clipY, clipWidth, clipHeight);
+    
+                Rect clipBounds;
+                clipBounds.left = clipX, clipBounds.top = clipY;
+                clipBounds.right = clipX + clipWidth, clipBounds.bottom = clipY + clipHeight;
+                LocalPort port(mPluginPort);
+                port.Enter();
+                    FrameRect(&clipBounds);
+                    InvertRect(&clipBounds);
+                    QDFlushPortBuffer(mPluginPort, NULL);
+                port.Exit();
+            }
+#endif
         } else {
            status = ::MoveAndClipJavaControl(env, mAppletControl, 0, 0, 0, 0, 0, 0);
            status = ::ShowHideJavaControl(env, mAppletControl, false);
