@@ -27,12 +27,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "npapi.h"
-#include "nsIPluginManager.h"
+#include "nsIPluginManager2.h"
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
 #include "nsLiveConnect.h"
+#include "nsIEventHandler.h"
 #include "nsplugin.h"
 #include "nsDebug.h"
+
+#ifdef XP_MAC
+#include "jGNE.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // SECTION 3 - Classes
@@ -44,7 +49,10 @@
 //
 // This is the dummy plugin manager that interacts with the 5.0 plugin.
 //
-class CPluginManager : public nsIPluginManager, public nsIServiceManager, public nsIAllocator {
+
+#pragma mark CPluginManager
+
+class CPluginManager : public nsIPluginManager2, public nsIServiceManager, public nsIAllocator {
 public:
 	// Need an operator new for this.
 	void* operator new(size_t size) { return ::NPN_MemAlloc(size); }
@@ -58,20 +66,63 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginManager:
 
-    // (Corresponds to NPN_GetValue.)
+    /**
+     * Returns the value of a variable associated with the plugin manager.
+     *
+     * (Corresponds to NPN_GetValue.)
+     *
+     * @param variable - the plugin manager variable to get
+     * @param value - the address of where to store the resulting value
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     GetValue(nsPluginManagerVariable variable, void *value);
 
-    // (Corresponds to NPN_SetValue.)
-    NS_IMETHOD
-    SetValue(nsPluginManagerVariable variable, void *value);
-    
+    /**
+     * Causes the plugins directory to be searched again for new plugin 
+     * libraries.
+     *
+     * (Corresponds to NPN_ReloadPlugins.)
+     *
+     * @param reloadPages - indicates whether currently visible pages should 
+     * also be reloaded
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     ReloadPlugins(PRBool reloadPages);
 
-    // (Corresponds to NPN_UserAgent.)
+    /**
+     * Returns the user agent string for the browser. 
+     *
+     * (Corresponds to NPN_UserAgent.)
+     *
+     * @param resultingAgentString - the resulting user agent string
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
-    UserAgent(const char* *result);
+    UserAgent(const char* *resultingAgentString);
+
+    /**
+     * Fetches a URL.
+     *
+     * (Corresponds to NPN_GetURL and NPN_GetURLNotify.)
+     *
+     * @param pluginInst - the plugin making the request. If NULL, the URL
+     *   is fetched in the background.
+     * @param url - the URL to fetch
+     * @param target - the target window into which to load the URL
+     * @param notifyData - when present, URLNotify is called passing the
+     *   notifyData back to the client. When NULL, this call behaves like
+     *   NPN_GetURL.
+     * @param altHost - an IP-address string that will be used instead of the 
+     *   host specified in the URL. This is used to prevent DNS-spoofing 
+     *   attacks. Can be defaulted to NULL meaning use the host in the URL.
+     * @param referrer - the referring URL (may be NULL)
+     * @param forceJSEnabled - forces JavaScript to be enabled for 'javascript:'
+     *   URLs, even if the user currently has JavaScript disabled (usually 
+     *   specify PR_FALSE) 
+     * @result - NS_OK if this operation was successful
+     */
 
     NS_IMETHOD
     GetURL(nsISupports* pluginInst, 
@@ -81,6 +132,36 @@ public:
            const char* altHost = NULL,
            const char* referrer = NULL,
            PRBool forceJSEnabled = PR_FALSE);
+
+    /**
+     * Posts to a URL with post data and/or post headers.
+     *
+     * (Corresponds to NPN_PostURL and NPN_PostURLNotify.)
+     *
+     * @param pluginInst - the plugin making the request. If NULL, the URL
+     *   is fetched in the background.
+     * @param url - the URL to fetch
+     * @param target - the target window into which to load the URL
+     * @param postDataLength - the length of postData (if non-NULL)
+     * @param postData - the data to POST. NULL specifies that there is not post
+     *   data
+     * @param isFile - whether the postData specifies the name of a file to 
+     *   post instead of data. The file will be deleted afterwards.
+     * @param notifyData - when present, URLNotify is called passing the 
+     *   notifyData back to the client. When NULL, this call behaves like 
+     *   NPN_GetURL.
+     * @param altHost - an IP-address string that will be used instead of the 
+     *   host specified in the URL. This is used to prevent DNS-spoofing 
+     *   attacks. Can be defaulted to NULL meaning use the host in the URL.
+     * @param referrer - the referring URL (may be NULL)
+     * @param forceJSEnabled - forces JavaScript to be enabled for 'javascript:'
+     *   URLs, even if the user currently has JavaScript disabled (usually 
+     *   specify PR_FALSE) 
+     * @param postHeadersLength - the length of postHeaders (if non-NULL)
+     * @param postHeaders - the headers to POST. NULL specifies that there 
+     *   are no post headers
+     * @result - NS_OK if this operation was successful
+     */
 
     NS_IMETHOD
     PostURL(nsISupports* pluginInst,
@@ -95,6 +176,148 @@ public:
             PRBool forceJSEnabled = PR_FALSE,
             PRUint32 postHeadersLength = 0, 
             const char* postHeaders = NULL);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIPluginManager2:
+
+    /**
+     * Puts up a wait cursor.
+     *
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    BeginWaitCursor(void)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    /**
+     * Restores the previous (non-wait) cursor.
+     *
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    EndWaitCursor(void)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    /**
+     * Returns true if a URL protocol (e.g. "http") is supported.
+     *
+     * @param protocol - the protocol name
+     * @param result - true if the protocol is supported
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    SupportsURLProtocol(const char* protocol, PRBool *result)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    /**
+     * This method may be called by the plugin to indicate that an error 
+     * has occurred, e.g. that the plugin has failed or is shutting down 
+     * spontaneously. This allows the browser to clean up any plugin-specific 
+     * state.
+     *
+     * @param plugin - the plugin whose status is changing
+     * @param errorStatus - the the error status value
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    NotifyStatusChange(nsIPlugin* plugin, nsresult errorStatus)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+    
+    /**
+     * Returns the proxy info for a given URL. The caller is required to
+     * free the resulting memory with nsIMalloc::Free. The result will be in the
+     * following format
+     * 
+     *   i)   "DIRECT"  -- no proxy
+     *   ii)  "PROXY xxx.xxx.xxx.xxx"   -- use proxy
+     *   iii) "SOCKS xxx.xxx.xxx.xxx"  -- use SOCKS
+     *   iv)  Mixed. e.g. "PROXY 111.111.111.111;PROXY 112.112.112.112",
+     *                    "PROXY 111.111.111.111;SOCKS 112.112.112.112"....
+     *
+     * Which proxy/SOCKS to use is determined by the plugin.
+     */
+    NS_IMETHOD
+    FindProxyForURL(const char* url, char* *result)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    ////////////////////////////////////////////////////////////////////////////
+    // New top-level window handling calls for Mac:
+    
+    /**
+     * Registers a top-level window with the browser. Events received by that
+     * window will be dispatched to the event handler specified.
+     * 
+     * @param handler - the event handler for the window
+     * @param window - the platform window reference
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    RegisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window);
+    
+    /**
+     * Unregisters a top-level window with the browser. The handler and window pair
+     * should be the same as that specified to RegisterWindow.
+     *
+     * @param handler - the event handler for the window
+     * @param window - the platform window reference
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    UnregisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window);
+
+	/**
+     * Allocates a new menu ID (for the Mac).
+     *
+     * @param handler - the event handler for the window
+     * @param isSubmenu - whether this is a sub-menu ID or not
+     * @param result - the resulting menu ID
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+	AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt16 *result)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+	/**
+     * Deallocates a menu ID (for the Mac).
+     *
+     * @param handler - the event handler for the window
+     * @param menuID - the menu ID
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+	DeallocateMenuID(nsIEventHandler* handler, PRInt16 menuID)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+	/**
+	 * Indicates whether this event handler has allocated the given menu ID.
+     *
+     * @param handler - the event handler for the window
+     * @param menuID - the menu ID
+     * @param result - returns PR_TRUE if the menu ID is allocated
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    HasAllocatedMenuID(nsIEventHandler* handler, PRInt16 menuID, PRBool *result)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIServiceManager:
 
    /**
      * RegisterService may be called explicitly to register a service
@@ -183,6 +406,31 @@ public:
 
 private:
 	nsILiveconnect* mLiveconnect;
+
+	struct RegisteredWindow {
+		RegisteredWindow* mNext;
+		nsIEventHandler* mHandler;
+		nsPluginPlatformWindowRef mWindow;
+		
+		RegisteredWindow(RegisteredWindow* next, nsIEventHandler* handler, nsPluginPlatformWindowRef window)
+			: mNext(next), mHandler(handler), mWindow(window)
+		{
+			NS_ADDREF(mHandler);
+		}
+		
+		~RegisteredWindow()
+		{
+			NS_RELEASE(mHandler);
+		}
+	};
+
+	static RegisteredWindow* theRegisteredWindows;
+	static RegisteredWindow** GetRegisteredWindow(nsPluginPlatformWindowRef window);
+
+#ifdef XP_MAC
+	Boolean mEventFilterInstalled;
+	static Boolean EventFilter(EventRecord* event);
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,8 +439,10 @@ private:
 //
 // This is the dummy plugin manager stream that interacts with the 5.0 plugin.
 //
-class CPluginManagerStream : public nsIOutputStream {
 
+#pragma mark CPluginManagerStream
+
+class CPluginManagerStream : public nsIOutputStream {
 public:
 
     CPluginManagerStream(NPP npp, NPStream* pstr);
@@ -257,8 +507,10 @@ protected:
 // This is the dummy instance peer that interacts with the 5.0 plugin.
 // In order to do LiveConnect, the class subclasses nsILiveConnectPluginInstancePeer.
 //
-class CPluginInstancePeer : public nsIPluginInstancePeer, public nsIPluginTagInfo {
 
+#pragma mark CPluginInstancePeer
+
+class CPluginInstancePeer : public nsIPluginInstancePeer, public nsIPluginTagInfo {
 public:
 
     // XXX - I add parameters to the constructor because I wasn't sure if
@@ -330,15 +582,21 @@ protected:
 	char** values_list;
 };
 
+#pragma mark CPluginStreamInfo
+
 class CPluginStreamInfo : public nsIPluginStreamInfo {
 public:
-    NS_DECL_ISUPPORTS
 
 	CPluginStreamInfo(const char* URL, nsIPluginInputStream* inStr, nsMIMEType type, PRBool seekable)
-		 : mURL(URL), mInputStream(inStr), mMimeType(type), mIsSeekable(seekable) {}
+		 : mURL(URL), mInputStream(inStr), mMimeType(type), mIsSeekable(seekable)
+	{
+		NS_INIT_REFCNT();
+	}
 
 	virtual ~CPluginStreamInfo() {}
 
+    NS_DECL_ISUPPORTS
+    
 	NS_METHOD
 	GetContentType(nsMIMEType* result)
 	{
@@ -384,6 +642,8 @@ private:
 	nsMIMEType mMimeType;
 	PRBool mIsSeekable;
 };
+
+#pragma mark CPluginInputStream
 
 class CPluginInputStream : public nsIPluginInputStream {
 public:
@@ -518,6 +778,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 // SECTION 2 - Global Variables
 ////////////////////////////////////////////////////////////////////////////////
+#pragma mark Globals
 
 //
 // thePlugin and thePluginManager are used in the life of the plugin.
@@ -666,20 +927,17 @@ NPP_Initialize(void)
             return NPERR_OUT_OF_MEMORY_ERROR;  
         thePluginManager->AddRef();
     }
-    nsresult error = NS_OK;  
+    NPError error = NPERR_INVALID_PLUGIN_ERROR;  
     // On UNIX the plugin might have been created when calling NPP_GetMIMEType.
     if (thePlugin == NULL) {
         // create nsIPlugin factory
-        error = (NPError)NSGetFactory(thePluginManager, kPluginCID, NULL, NULL, (nsIFactory** )&thePlugin);
-#if 0
-		// beard: this will leak reference counts.       
-	    if (error == NS_OK) {
-	    	thePlugin->AddRef();
-	    }
-#endif
+        nsresult result = NSGetFactory(thePluginManager, kPluginCID, NULL, NULL, (nsIFactory**)&thePlugin);
+        if (result == NS_OK && thePlugin->Initialize() == NS_OK)
+        	error = NPERR_NO_ERROR;
+      
 	}
 	
-    return (NPError) error;	
+    return error;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1068,11 +1326,20 @@ CPluginManager::CPluginManager(void)
     NS_INIT_REFCNT();
     
     mLiveconnect = NULL;
+
+#ifdef XP_MAC
+    mEventFilterInstalled = false;
+#endif
 }
 
 CPluginManager::~CPluginManager(void) 
 {
 	NS_IF_RELEASE(mLiveconnect);
+
+#ifdef XP_MAC	
+	if (mEventFilterInstalled)
+		RemoveEventFilter();
+#endif
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1180,6 +1447,142 @@ CPluginManager::PostURL(nsISupports* pluginInst,
     return fromNPError[err];
 }
 
+//////////////////////////////
+// nsIPluginManager2 methods.
+
+
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++
+// UserAgent:
+//+++++++++++++++++++++++++++++++++++++++++++++++++
+
+NS_METHOD
+CPluginManager::UserAgent(const char* *result)
+{
+    *result = NPN_UserAgent(NULL);
+    return NS_OK;
+}
+
+
+int varMap[] = {
+    (int)NPNVxDisplay,                  // nsPluginManagerVariable_XDisplay = 1,
+    (int)NPNVxtAppContext,              // nsPluginManagerVariable_XtAppContext,
+    (int)NPNVnetscapeWindow,            // nsPluginManagerVariable_NetscapeWindow,
+    (int)NPPVpluginWindowBool,          // nsPluginInstancePeerVariable_WindowBool,
+    (int)NPPVpluginTransparentBool,     // nsPluginInstancePeerVariable_TransparentBool,
+    (int)NPPVjavaClass,                 // nsPluginInstancePeerVariable_JavaClass,
+    (int)NPPVpluginWindowSize,          // nsPluginInstancePeerVariable_WindowSize,
+    (int)NPPVpluginTimerInterval,       // nsPluginInstancePeerVariable_TimerInterval
+};
+
+//+++++++++++++++++++++++++++++++++++++++++++++++++
+// GetValue:
+//+++++++++++++++++++++++++++++++++++++++++++++++++
+
+NS_METHOD
+CPluginManager::GetValue(nsPluginManagerVariable variable, void *value)
+{
+#ifdef XP_UNIX
+    return fromNPError[NPN_GetValue(NULL, (NPNVariable)varMap[(int)variable], value)];
+#else
+    return fromNPError[NPERR_GENERIC_ERROR];
+#endif // XP_UNIX
+}
+
+//////////////////////////////
+// nsIPluginManager2 methods.
+//////////////////////////////
+
+CPluginManager::RegisteredWindow* CPluginManager::theRegisteredWindows = NULL;
+
+CPluginManager::RegisteredWindow** CPluginManager::GetRegisteredWindow(nsPluginPlatformWindowRef window)
+{
+	RegisteredWindow** link = &theRegisteredWindows;
+	RegisteredWindow* registeredWindow = *link;
+	while (registeredWindow != NULL) {
+		if (registeredWindow->mWindow == window)
+			return link;
+		link = &registeredWindow->mNext;
+		registeredWindow = *link;
+	}
+	return NULL;
+}
+
+NS_METHOD
+CPluginManager::RegisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window)
+{
+	theRegisteredWindows = new RegisteredWindow(theRegisteredWindows, handler, window);
+	
+#ifdef XP_MAC
+	// use jGNE to obtain events for registered windows.
+	if (!mEventFilterInstalled)
+		::InstallEventFilter(&EventFilter);
+
+	// plugin expect the window to be shown and selected at this point.
+	::ShowWindow(window);
+	::SelectWindow(window);
+#endif
+
+	return NS_OK;
+}
+
+NS_METHOD
+CPluginManager::UnregisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window)
+{
+	RegisteredWindow** link = GetRegisteredWindow(window);
+	if (link != NULL) {
+		RegisteredWindow* registeredWindow = *link;
+		*link = registeredWindow->mNext;
+		delete registeredWindow;
+	}
+
+#ifdef XP_MAC
+	::HideWindow(window);
+
+	// if no windows registered, remove the filter.
+	if (theRegisteredWindows == NULL) {
+		::RemoveEventFilter();
+		mEventFilterInstalled = false;
+	}
+#endif
+
+	return NS_OK;
+}
+
+#ifdef XP_MAC
+
+Boolean CPluginManager::EventFilter(EventRecord* event)
+{
+	Boolean filteredEvent = false;
+
+    nsPluginEvent pluginEvent = { event, NULL };
+	// see if this event is for one of our registered windows.
+	switch (event->what) {
+	case updateEvt:
+		WindowRef window = WindowRef(event->message);
+		RegisteredWindow** link = GetRegisteredWindow(window);
+		if (link != NULL) {
+			RegisteredWindow* registeredWindow = *link;
+			nsIEventHandler* handler = registeredWindow->mHandler;
+			pluginEvent.window = window;
+			PRBool handled = PR_FALSE;
+			GrafPtr port; GetPort(&port); SetPort(window); BeginUpdate(window);
+				handler->HandleEvent(&pluginEvent, &handled);
+			EndUpdate(window); SetPort(port);
+			filteredEvent = true;
+		}
+		break;
+	}
+	
+	return filteredEvent;
+}
+
+#endif /* XP_MAC */
+
+//////////////////////////////
+// nsIServiceManager methods.
+//////////////////////////////
+
 NS_METHOD
 CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
                nsISupports* *result,
@@ -1206,6 +1609,10 @@ CPluginManager::ReleaseService(const nsCID& aClass, nsISupports* service,
 	NS_RELEASE(service);
 	return NS_OK;
 }
+
+//////////////////////////////
+// nsIAllocator methods.
+//////////////////////////////
 
 NS_METHOD_(void*)
 CPluginManager::Alloc(PRUint32 size)
@@ -1247,70 +1654,21 @@ CPluginManager::HeapMinimize()
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
-// UserAgent:
+// nsISupports methods
 //+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginManager::UserAgent(const char* *result)
-{
-    *result = NPN_UserAgent(NULL);
-    return NS_OK;
-}
-
-
-int varMap[] = {
-    (int)NPNVxDisplay,                  // nsPluginManagerVariable_XDisplay = 1,
-    (int)NPNVxtAppContext,              // nsPluginManagerVariable_XtAppContext,
-    (int)NPNVnetscapeWindow,            // nsPluginManagerVariable_NetscapeWindow,
-    (int)NPPVpluginWindowBool,          // nsPluginInstancePeerVariable_WindowBool,
-    (int)NPPVpluginTransparentBool,     // nsPluginInstancePeerVariable_TransparentBool,
-    (int)NPPVjavaClass,                 // nsPluginInstancePeerVariable_JavaClass,
-    (int)NPPVpluginWindowSize,          // nsPluginInstancePeerVariable_WindowSize,
-    (int)NPPVpluginTimerInterval,       // nsPluginInstancePeerVariable_TimerInterval
-};
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// GetValue:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginManager::GetValue(nsPluginManagerVariable variable, void *value)
-{
-#ifdef XP_UNIX
-    return fromNPError[NPN_GetValue(NULL, (NPNVariable)varMap[(int)variable], value)];
-#else
-    return fromNPError[NPERR_GENERIC_ERROR];
-#endif // XP_UNIX
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// SetValue:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginManager::SetValue(nsPluginManagerVariable variable, void *value) 
-{
-#ifdef XP_UNIX
-    return fromNPError[NPN_SetValue(NULL, (NPPVariable)varMap[(int)variable], value)];
-#else
-    return fromNPError[NPERR_GENERIC_ERROR];
-#endif // XP_UNIX
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// nsISupports functions
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_IMPL_ADDREF(CPluginManager);
-NS_IMPL_RELEASE(CPluginManager);
 
 NS_METHOD
 CPluginManager::QueryInterface(const nsIID& iid, void** ptr) 
 {                                                                        
     if (NULL == ptr) {                                            
         return NS_ERROR_NULL_POINTER;                                        
+    }
+    
+    if (iid.Equals(nsIPluginManager::GetIID()) || iid.Equals(nsIPluginManager2::GetIID())) {
+        *ptr = (void*) ((nsIPluginManager2*)this);                        
+        AddRef();                                                            
+        return NS_OK;                                                        
     }                                                                      
-  
     if (iid.Equals(nsIServiceManager::GetIID())) {                                                          
         *ptr = (void*) (nsIServiceManager*)this;                                        
         AddRef();                                                            
@@ -1321,13 +1679,16 @@ CPluginManager::QueryInterface(const nsIID& iid, void** ptr)
         AddRef();                                                            
         return NS_OK;                                                        
     }
-    if (iid.Equals(nsIPluginManager::GetIID()) || iid.Equals(nsISupports::GetIID())) {
-        *ptr = (void*) ((nsIPluginManager*)this);                        
+    if (iid.Equals(nsISupports::GetIID())) {
+        *ptr = (void*) this;                        
         AddRef();                                                            
         return NS_OK;                                                        
     }                                                                      
     return NS_NOINTERFACE;                                                 
 }
+
+NS_IMPL_ADDREF(CPluginManager);
+NS_IMPL_RELEASE(CPluginManager);
 
 //////////////////////////////////////////////////////////////////////////////
 //
