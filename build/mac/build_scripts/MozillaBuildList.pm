@@ -543,6 +543,7 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:layout:html:forms:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:layout:html:base:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:mailnews:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:mailnews:base:resources:content:mac:jar.mn", $chrome_dir, \%jars);
     if ($main::options{smime} && $main::options{psm}) {
     	CreateJarFromManifest(":mozilla:mailnews:extensions:smime:jar.mn", $chrome_dir, \%jars);
     }

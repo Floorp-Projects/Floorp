@@ -1,0 +1,11 @@
+<?xml version="1.0"?> 
+<!-- mac version of platformMailOverlay.xul -->
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailOverlay.dtd">
+
+<overlay id="platformMailOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+	<key id="key_newMessage"  key="&newMessageCmd.key;" modifiers="accel,shift" command="cmd_newMessage"/>
+
+</overlay>

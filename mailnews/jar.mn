@@ -143,6 +143,7 @@ messenger.jar:
     content/messenger/mailOverlay.xul                                          (base/resources/content/mailOverlay.xul)
     content/messenger/mailWidgets.xml                                          (base/resources/content/mailWidgets.xml)
     content/messenger/platformMailnewsOverlay.xul                              (base/resources/content/win/platformMailnewsOverlay.xul)
+    content/messenger/platformMailOverlay.xul                                  (base/resources/content/win/platformMailOverlay.xul)
     content/messenger/SearchDialog.xul                                         (base/search/resources/content/SearchDialog.xul)
     content/messenger/ABSearchDialog.xul                                       (base/search/resources/content/ABSearchDialog.xul)
     content/messenger/SearchDialog.js                                          (base/search/resources/content/SearchDialog.js)

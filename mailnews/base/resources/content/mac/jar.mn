@@ -1,0 +1,3 @@
+messenger.jar:
+    content/messenger/platformMailnewsOverlay.xul
+    content/messenger/platformMailOverlay.xul
