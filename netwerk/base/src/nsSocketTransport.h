@@ -205,7 +205,6 @@ protected:
     
     nsresult                        mCancelStatus;
     PRBool                          mCloseConnectionOnceDone;
-    PRBool                          mLookupComplete;
     nsSocketState                   mCurrentState;
     nsCOMPtr<nsIRequest>            mDNSRequest;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
@@ -235,11 +234,10 @@ protected:
     PRUint32                        mReadOffset;
     PRUint32                        mWriteOffset;
     nsresult                        mStatus;
-    nsresult                        mSyncStatus;
     PRInt32                         mSuspendCount;
     PRInt32                         mWriteCount;
     nsCOMPtr<nsISupports>           mWriteContext;
-    PRInt32                         mBytesExpected;
+    PRInt32				            mBytesExpected;
     PRUint32                        mReuseCount;
     PRUint32                        mLastReuseCount;
     
