@@ -811,9 +811,46 @@ C:\mysql\bin\replace "#!/usr/bin/perl" "#!C:\perl\bin\perl" -- *.cgi *.pl
         </question>
         <answer>
           <para>
-            New to 2.18: Go into <filename>BugMail.pm</filename>
-            and set the '$enableSendMail' value to '0'.
+            To disable email, set the
+            <programlisting>$enableSendMail</programlisting> parameter to '0'
+            in either <filename>BugMail.pm</filename> (2.18 and later) or 
+            <filename>processmail</filename> (up to 2.16.x).
           </para>
+          <note>
+            <para>
+              Up to 2.16.x, changing
+              <programlisting>$enableSendMail</programlisting>
+              will only affect bugmail; email related to password changes,
+              email address changes, bug imports, flag changes, etc. will
+              still be sent out. As of the final release of 2.18, however,
+              the above step will disable <emphasis>all</emphasis> mail
+              sent from Bugzilla for any purpose.
+            </para>
+          </note>
+          <para>
+            To have bugmail (and only bugmail) redirected to you instead of
+            its intended recipients, leave
+            <programlisting>$enableSendMail</programlisting> alone;
+            instead, edit the <quote>newchangedmail</quote> parameter
+            as follows:
+          </para>
+          <itemizedlist>
+            <listitem>
+              <para>
+                Replace <quote>To:</quote> with <quote>X-Real-To:</quote>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Replace <quote>Cc:</quote> with <quote>X-Real-CC:</quote>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Add a <quote>To: %lt;your_email_address&gt;</quote>
+              </para>
+            </listitem>
+          </itemizedlist>
         </answer>
       </qandaentry>
 
@@ -1323,7 +1360,8 @@ C:\mysql\bin\replace "#!/usr/bin/perl" "#!C:\perl\bin\perl" -- *.cgi *.pl
             The rationale is that if you pick one of the bugs that's not
             VERIFIED and try to CLOSE it, the bug change will fail
             miserably (thus killing any changes in the list after it
-            while doing the bulk change) so it doesn'teven give you the choice.
+            while doing the bulk change) so it doesn't even give you the
+            choice.
           </para>
         </answer>
       </qandaentry>
@@ -1382,7 +1420,7 @@ C:\mysql\bin\replace "#!/usr/bin/perl" "#!C:\perl\bin\perl" -- *.cgi *.pl
             enhancement for Bugzilla.
           </para>
           <para>
-            You can view bugs marked for &amp;bz-nextver; release
+            You can view bugs marked for &bz-nextver; release
             <ulink url="http://bugzilla.mozilla.org/buglist.cgi?product=Bugzilla&amp;target_milestone=Bugzilla+&amp;bz-nextver;">here</ulink>.
             This list includes bugs for the &bz-nextver; release that have already
             been fixed and checked into CVS. Please consult the
