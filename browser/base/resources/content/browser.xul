@@ -31,8 +31,6 @@ Contributor(s): ______________________________________. -->
 %brandDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd" >
 %navigatorDTD;
-<!--<!ENTITY % policyDTD SYSTEM "chrome://browser/locale/policy/policy.dtd" >
-%policyDTD;-->
 <!ENTITY % contextMenuDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contextMenuDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
@@ -488,7 +486,7 @@ Contributor(s): ______________________________________. -->
             <menuitem id="menuitem_fullScreen" accesskey="&fullScreenCmd.accesskey;"
                       label="&fullScreenCmd.label;" key="key_fullScreen"
                       command="View:FullScreen" hidden="true"/>
-            <menuseparator />
+            <menuseparator/>
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
             <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" command="cmd_stop" key="key_stop"/>
             <menuseparator/>
@@ -607,9 +605,9 @@ Contributor(s): ______________________________________. -->
     
         <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
-              ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
+              ref="NC:BookmarksRoot" flags="dont-test-empty"
               oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)">
-          <template id="bookmarksMenuTemplate" xmlns:nc="http://home.netscape.com/NC-rdf#">
+          <template xmlns:nc="http://home.netscape.com/NC-rdf#">
             <rule nc:FolderGroup="true" iscontainer="true">
               <menupopup>
                 <menuitem class="menuitem-iconic bookmark-group" 
@@ -945,22 +943,6 @@ Contributor(s): ______________________________________. -->
     </statusbarpanel>
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status" observes="Communicator:WorkMode"/>
     <statusbarpanel class="statusbarpanel-iconic" id="security-button" onclick="displayPageInfo()"/>
-<!--
-    <statusbarpanel>
-      <button id="policy-menu" type="menu" label="Policy"
-              oncommand="policyMenuAction(event);">
-        <menupopup onpopupshowing="policyMenuShowing(event);"
-                   popupanchor="topleft" popupalign="topleft">
-          <label>&addCurrentPageTo.label;</label>
-          <menuitem id="policyMenu-newregion" label="&addToNewRegion.label;"/>
-          <menuseparator id="customPolicySeparator"/>
-          <label>&currentPageDetails.label;</label>
-          <menuitem id="policyMenu-cookies" label="&currentPageCanSetCookies.label;"/>
-          <menuitem id="policyMenu-scripts" label="&currentPageCanExecuteJavaScript.label;"/>
-        </menupopup>
-      </button>
-    </statusbarpanel>
--->
   </statusbar> 
 
 </window>
