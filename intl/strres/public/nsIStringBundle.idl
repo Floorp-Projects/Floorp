@@ -50,5 +50,4 @@ interface nsIStringBundleService : nsISupports
 {
    nsIStringBundle CreateBundle([const] in string aURLSpec, in nsILocale aLocale);
    nsIStringBundle CreateExtensibleBundle([const] in string aRegistryKey, in nsILocale aLocale);
-   nsIStringBundle CreateXPCBundle([const] in string aURLSpec, [const] in wstring aLocaleName);
 };
