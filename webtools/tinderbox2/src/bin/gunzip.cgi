@@ -10,8 +10,8 @@
 # without the '.gz.html' extension.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2001/10/10 15:06:48 $ 
+# $Revision: 1.9 $ 
+# $Date: 2002/04/26 22:27:17 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/gunzip.cgi,v $ 
 # $Name:  $ 
@@ -160,7 +160,7 @@ sub parse_args {
   if (-f $ZIPPED_FILE) {
     my (@cmd) = (@GUNZIP, $ZIPPED_FILE);
     system(@cmd);
-    ($?) && die("Could not run: '@cmd'\n");
+    ($?) && die("Could not run: '@cmd' : $! : waitstatus $? \n");
   } else {
     print "Could not find file: $ZIPPED_FILE\n";
   }
