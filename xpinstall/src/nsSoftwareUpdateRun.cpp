@@ -90,8 +90,8 @@ extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *gl
 
 // Defined in this file:
 PR_STATIC_CALLBACK(void) XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal, char** scriptBuffer, PRUint32 *scriptLength);
-static PRInt32  CanInstallFromExtensionManifest(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal);
+static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, char** scriptBuffer, PRUint32 *scriptLength);
+static PRInt32  OpenAndValidateArchive(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal);
 
 static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, 
                                     PRUint32 flags, nsIXULChromeRegistry* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
@@ -247,8 +247,8 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// Function name    : CanInstallFromExtensionManifest
-// Description      : Returns a stream to an extension manifest file from a passed jar file.
+// Function name    : OpenAndValidateArchive
+// Description      : Opens install archive and validates contents
 // Return type      : PRInt32
 // Argument         : nsIZipReader* hZip       - the zip reader
 // Argument         : nsIFile* jarFile         - the .xpi file
@@ -257,12 +257,13 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 static PRInt32
-CanInstallFromExtensionManifest(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal)
+OpenAndValidateArchive(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal)
 {
-    PRInt32 result = NS_OK;
+    if (!jarFile)
+        return nsInstall::DOWNLOAD_ERROR;
 
-    nsIFile* jFile;
-    nsresult rv =jarFile->Clone(&jFile);
+    nsCOMPtr<nsIFile> jFile;
+    nsresult rv =jarFile->Clone(getter_AddRefs(jFile));
     if (NS_SUCCEEDED(rv))
         rv = hZip->Init(jFile);
 
@@ -277,19 +278,18 @@ CanInstallFromExtensionManifest(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincip
     rv = hZip->Test(nsnull);
     if (NS_FAILED(rv))
     {
-        NS_ASSERTION(0, "CRC check of archive failed!");
+        NS_WARNING("CRC check of archive failed!");
         return nsInstall::CANT_READ_ARCHIVE;
     }
 
     rv = VerifySigning(hZip, aPrincipal);
     if (NS_FAILED(rv))
     {
-        NS_ASSERTION(0, "Signing check of archive failed!");
+        NS_WARNING("Signing check of archive failed!");
         return nsInstall::INVALID_SIGNATURE;
     }
  
-    // Verify that install.rdf exists
-    return hZip->Test("install.rdf");
+    return nsInstall::SUCCESS;
 }
 
 
@@ -297,51 +297,21 @@ CanInstallFromExtensionManifest(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincip
 // Function name    : GetInstallScriptFromJarfile
 // Description      : Extracts and reads in a install.js file from a passed jar file.
 // Return type      : static PRInt32
-// Argument         : const char* jarFile     - **NSPR** filepath
-// Argument         : nsIPrincipal* aPrincipal - a principal, if any, displayed to the user 
-//                    regarding the cert used to sign this install
 // Argument         : char** scriptBuffer     - must be deleted via delete []
 // Argument         : PRUint32 *scriptLength
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 static PRInt32
-GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal, char** scriptBuffer, PRUint32 *scriptLength)
+GetInstallScriptFromJarfile(nsIZipReader* hZip, char** scriptBuffer, PRUint32 *scriptLength)
 {
     PRInt32 result = NS_OK;
 
     *scriptBuffer = nsnull;
     *scriptLength = 0;
 
-    nsIFile* jFile;
-    nsresult rv =jarFile->Clone(&jFile);
-    if (NS_SUCCEEDED(rv))
-      rv = hZip->Init(jFile);
-
-    if (NS_FAILED(rv))
-        return nsInstall::CANT_READ_ARCHIVE;
-
-    rv = hZip->Open();
-    if (NS_FAILED(rv))
-        return nsInstall::CANT_READ_ARCHIVE;
-
-    // CRC check the integrity of all items in this archive
-    rv = hZip->Test(nsnull);
-    if (NS_FAILED(rv))
-    {
-        NS_ASSERTION(0, "CRC check of archive failed!");
-        return nsInstall::CANT_READ_ARCHIVE;
-    }
-
-    rv = VerifySigning(hZip, aPrincipal);
-    if (NS_FAILED(rv))
-    {
-        NS_ASSERTION(0, "Signing check of archive failed!");
-        return nsInstall::INVALID_SIGNATURE;
-    }
-
     // Extract the install.js file.
     nsCOMPtr<nsIInputStream> instream;
-    rv = hZip->GetInputStream("install.js", getter_AddRefs(instream));
+    nsresult rv = hZip->GetInputStream("install.js", getter_AddRefs(instream));
     if ( NS_SUCCEEDED(rv) )
     {
         // Read it into a buffer
@@ -424,6 +394,9 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
 
 
     glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, flags, reg, hZip);
+    if (!glob)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     // Init standard classes
     JS_InitStandardClasses(cx, glob);
 
@@ -525,28 +498,31 @@ extern "C" void RunInstallOnThread(void *data)
 
     nsCOMPtr<nsIFile> jarpath = installInfo->GetFile();
 
-    if (NS_SUCCEEDED(rv))
+    PRBool installed = PR_FALSE;
+    finalStatus = OpenAndValidateArchive( hZip,
+                                          jarpath,
+                                          installInfo->mPrincipal);
+
+    if (finalStatus == nsInstall::SUCCESS)
     {
-        PRBool installed = PR_FALSE;
-        finalStatus = CanInstallFromExtensionManifest( hZip,
-                                                       jarpath,
-                                                       installInfo->mPrincipal);
-        if (NS_SUCCEEDED(finalStatus)) 
+        if (NS_SUCCEEDED(hZip->Test("install.rdf")))
         {
+            // appears to be an Extension Manager install
             nsIExtensionManager* em = installInfo->GetExtensionManager();
-            if (em) 
+            if (em)
             {
                 rv = em->InstallExtension(jarpath, nsIExtensionManager::FLAG_INSTALL_PROFILE);
                 if (NS_SUCCEEDED(rv))
                     installed = PR_TRUE;
             }
         }
-        
+
         if (!installed)
         {
+            // Either no install.rdf, EM doesn't exist (Suite), or EM install failed:
+            // try original XPInstall
+            // XXX: Shouldn't the third case be an error and skip the old-style attempt?
             finalStatus = GetInstallScriptFromJarfile( hZip,
-                                                       jarpath,
-                                                       installInfo->mPrincipal,
                                                        &scriptBuffer,
                                                        &scriptLength);
             if ( finalStatus == NS_OK && scriptBuffer )
@@ -631,14 +607,9 @@ extern "C" void RunInstallOnThread(void *data)
                 if ( ownRuntime )
                     JS_DestroyRuntime(rt);
             }
+        }
         // force zip archive closed before other cleanup
         hZip = 0;
-    }
-    }
-    else
-    {
-        // no path to local jar archive
-        finalStatus = nsInstall::DOWNLOAD_ERROR;
     }
 
     if(listener)
