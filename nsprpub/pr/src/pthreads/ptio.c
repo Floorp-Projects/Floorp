@@ -3824,6 +3824,7 @@ static PRInt32 _pr_poll_with_poll(
             {
                 /* make poll() ignore this entry */
                 syspoll[index].fd = -1;
+                pds[index].out_flags = 0;
             }
         }
         if (0 == ready)
@@ -4084,6 +4085,10 @@ static PRInt32 _pr_poll_with_select(
                         pds[index].out_flags = PR_POLL_NVAL;  /* bogii */
                     }
                 }
+            }
+            else
+            {
+                pds[index].out_flags = 0;
             }
         }
         if (0 == ready)

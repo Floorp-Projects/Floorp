@@ -214,6 +214,10 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                 }
             }
         }
+        else
+        {
+            pd->out_flags = 0;
+        }
     }
 
     if (0 != ready)
