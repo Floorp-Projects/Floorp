@@ -201,10 +201,10 @@ class CEntityToken : public CHTMLToken {
                         CEntityToken(const nsString& aString);
     virtual const char*	GetClassName(void);
 		virtual PRInt32	    GetTokenType(void);
-            PRInt32     TranslateToUnicode(void);
+            PRInt32     TranslateToUnicodeStr(nsString& aString);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
     static  PRInt32     ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner* aScanner);
-    static  PRInt32     TranslateToUnicode(nsString& aString);
+    static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
     static  PRInt32     FindEntityIndex(const char* aBuffer,PRInt32 aBufLen=-1);
     static  PRBool      VerifyEntityTable(void);
     static  PRInt32     ReduceEntities(nsString& aString);

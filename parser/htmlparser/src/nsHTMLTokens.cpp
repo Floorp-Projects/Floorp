@@ -14,15 +14,22 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
- */ 
+ */  
 
-#include <ctype.h>
+#include <ctype.h> 
+#include <time.h>
+#include <stdio.h>  
 #include "nsScanner.h"
-#include "nsToken.h"
+#include "nsToken.h" 
 #include "nsHTMLTokens.h"
 #include "nsParserTypes.h"
 #include "prtypes.h"
 #include "nsDebug.h"
+
+//#define GESS_MACHINE
+#ifdef GESS_MACHINE
+#include "nsEntityEx.cpp"
+#endif
 
 static nsString     gIdentChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-");
 static nsString     gAttrTextChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-%.");
@@ -40,6 +47,7 @@ struct StrToUnicodeStruct
   char	  fName[kMAXNAMELEN+1];
   PRInt32 fValue;
 };
+
 
 	// KEEP THIS LIST SORTED!
   // NOTE: This names table is sorted in ascii collating order. If you
@@ -84,6 +92,7 @@ static StrToUnicodeStruct gStrToUnicodeTable[] =
   {"uuml",  0x00fc},  {"yacute",0x00fd},  {"yen",   0x00a5},  
   {"yuml",  0x00ff}
 };
+
 
 
 struct HTMLTagEntry
@@ -1016,15 +1025,21 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner* 
  *  @param   
  *  @return  
  *------------------------------------------------------*/
-PRInt32 CEntityToken::TranslateToUnicode(void) {
+PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   char* cp = mTextValue.ToNewCString();
   PRInt32 index=FindEntityIndex(cp);
+  if(kNotFound!=index) {
+    PRUnichar ch=gStrToUnicodeTable[index].fValue;
+    aString=ch;
+  } else {
+#ifdef GESS_MACHINE
+    index=TranslateExtendedEntity(cp,aString);
+#endif
+  }
   delete cp;
-  if(kNotFound==index)
-    return kNotFound;
-  return gStrToUnicodeTable[index].fValue;
+  return index;
 }
-
+ 
 
 /**-------------------------------------------------------
  *  This method ensures that the entity table doesn't get
@@ -1033,8 +1048,7 @@ PRInt32 CEntityToken::TranslateToUnicode(void) {
  *  @update  gess 3/25/98
  *  @return  PR_TRUE if valid (ordered correctly)
  *------------------------------------------------------*/
-PRBool CEntityToken::VerifyEntityTable()
-{
+PRBool CEntityToken::VerifyEntityTable(){
 	PRInt32	count=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
   PRInt32 i,j;
   for(i=1;i<count-1;i++)
@@ -1057,11 +1071,11 @@ PRBool CEntityToken::VerifyEntityTable()
  *  @return  integer offset of string in table, or kNotFound
  *------------------------------------------------------*/
 PRInt32 CEntityToken::FindEntityIndex(const char* aBuffer,PRInt32 aBufLen) {
-	PRInt32	result=-1;
+	PRInt32	result=kNotFound;
 	PRInt32	cnt=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
 	PRInt32	low=0; 
 	PRInt32	high=cnt-1;
-	PRInt32	middle=-1;
+	PRInt32	middle=kNotFound;
   
   if(kNotFound==aBufLen) {
     aBufLen=strlen(aBuffer);
@@ -1071,7 +1085,8 @@ PRInt32 CEntityToken::FindEntityIndex(const char* aBuffer,PRInt32 aBufLen) {
 		while(low<=high)
 		{
 			middle=(PRInt32)(low+high)/2;
-			result=strncmp(aBuffer,gStrToUnicodeTable[middle].fName,aBufLen);
+//			result=strncmp(aBuffer,gStrToUnicodeTable[middle].fName,aBufLen);
+			result=strcmp(aBuffer,gStrToUnicodeTable[middle].fName);
       if (result==0) {
 				return middle;
       }
