@@ -177,7 +177,7 @@ const COPYCOL_IMAGE_ADDRESS = 0;
 var metaView = new pageInfoTreeView(["meta-name","meta-content"], COPYCOL_META_CONTENT);
 var formView = new pageInfoTreeView(["form-name","form-method","form-action","form-node"], COPYCOL_FORM_ACTION);
 var fieldView = new pageInfoTreeView(["field-label","field-field","field-type","field-value"], COPYCOL_NONE);
-var linkView = new pageInfoTreeView(["link-name","link-address","link-type"], COPYCOL_LINK_ADDRESS);
+var linkView = new pageInfoTreeView(["link-name","link-address","link-type","link-accesskey"], COPYCOL_LINK_ADDRESS);
 var imageView = new pageInfoTreeView(["image-address","image-type","image-alt","image-node", "image-bg"], COPYCOL_IMAGE_ADDRESS);
 
 var intervalID = null;
@@ -228,6 +228,9 @@ const nsIEmbedElement    = Components.interfaces.nsIDOMHTMLEmbedElement
 const nsIButtonElement   = Components.interfaces.nsIDOMHTMLButtonElement
 const nsISelectElement   = Components.interfaces.nsIDOMHTMLSelectElement
 const nsITextareaElement = Components.interfaces.nsIDOMHTMLTextAreaElement
+
+// Interface for image loading content
+const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
 
 // namespaces, don't need all of these yet...
 const XLinkNS  = "http://www.w3.org/1999/xlink";
@@ -486,20 +489,21 @@ function makeTabs(aDocument, aWindow)
   imageTree.treeBoxObject.view = imageView;
   
   var iterator = aDocument.createTreeWalker(aDocument, NodeFilter.SHOW_ELEMENT, grabAll, true);
-
-  setTimeout(doGrab, 1, iterator, 0);
+  setTimeout(doGrab, 1, iterator);
 }
 
-function doGrab(iterator, i)
+function doGrab(iterator)
 {
   if (iterator.nextNode())
-    setTimeout(doGrab, 1, iterator, i);
+  {
+    setTimeout(doGrab, 1, iterator);
+  }
 }
 
 function ensureSelection(view)
 {
   // only select something if nothing is currently selected
-  // and that there's something to select
+  // and if there's anything to select
   if (view.selection.count == 0 && view.rowCount)
     view.selection.select(0);
 }
@@ -517,7 +521,7 @@ function grabAll(elem)
   if (elem instanceof nsIAnchorElement)
   {
     linktext = getValueText(elem);
-    linkView.addRow([linktext, getAbsoluteURL(elem.href, elem), gStrings.linkAnchor, elem.target]);
+    linkView.addRow([linktext, getAbsoluteURL(elem.href, elem), gStrings.linkAnchor, elem.target, elem.accessKey]);
   }
   else if (elem instanceof nsIImageElement)
   {
@@ -628,15 +632,18 @@ function onFormSelect()
 
     var labels = form.getElementsByTagName("label");
     var llength = labels.length;
+    var label;
 
     for (i = 0; i < llength; i++)
     {
-      var whatfor = labels[i].hasAttribute("for") ?
-        theDocument.getElementById(labels[i].getAttribute("for")) :
-        findFirstControl(labels[i]);
+      label = labels[i];
+      var whatfor = label.hasAttribute("for") ?
+        theDocument.getElementById(label.getAttribute("for")) :
+        findFirstControl(label);
 
-      if (whatfor && (whatfor.form == form)) {
-        var labeltext = getValueText(labels[i]);
+      if (whatfor && (whatfor.form == form)) 
+      {
+        var labeltext = getValueText(label);
         for (var j = 0; j < length; j++)
           if (formfields[j] == whatfor)
             fieldView.setCellText(j, "field-label", labeltext);
@@ -722,9 +729,9 @@ function onBeginLinkDrag(event,urlField,descField)
 function getSource(item)
 {
   // Return the correct source without strict warnings
-  if (item.href != null)
+  if ("href" in item && item.href)
     return item.href;
-  if (item.src != null)
+  if ("src" in item && item.src)
     return item.src;
   return null;
 }
@@ -848,30 +855,22 @@ function makePreview(row)
     }
   }
 
-  // find out the mime type, file size and expiration date
-  var mimeType = gStrings.unknown, httpType;
+  // find out the file size and expiration date
   if (cacheEntryDescriptor)
   {
-    var headers, match;
-
     pageSize = cacheEntryDescriptor.dataSize;
     kbSize = pageSize / 1024;
     sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
     expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
-
-    headers = cacheEntryDescriptor.getMetaDataElement("response-head");
-
-    match = /^Content-Type:\s*(.*?)\s*(?:\;|$)/mi.exec(headers);
-    if (match)
-      httpType = match[1];
   }
 
-  if (!(item instanceof nsIInputElement))
-    mimeType = ("type" in item && item.type) ||
-               ("codeType" in item && item.codeType) ||
-               ("contentType" in item && item.contentType) ||
-               httpType || gStrings.unknown;
+  var mimeType = ("type" in item && item.type) ||
+                 ("codeType" in item && item.codeType) ||
+                 ("contentType" in item && item.contentType) ||
+                 getContentTypeFromImgRequest(item) ||
+                 getContentTypeFromHeaders(cacheEntryDescriptor) ||
+                 gStrings.unknown;
 
   document.getElementById("imagetypetext").value = mimeType;
   document.getElementById("imagesourcetext").value = sourceText;
@@ -927,24 +926,62 @@ function makePreview(row)
   imageContainer.appendChild(newImage);
 }
 
+function getContentTypeFromHeaders(cacheEntryDescriptor)
+{
+  var headers, match;
+
+  if (cacheEntryDescriptor)
+  {  
+    headers = cacheEntryDescriptor.getMetaDataElement("response-head");
+    match = /^Content-Type:\s*(.*?)\s*(?:\;|$)/mi.exec(headers);
+    return match[1];
+  }
+}
+
+function getContentTypeFromImgRequest(item)
+{
+  var httpRequest;
+
+  try
+  {
+    var imageItem = item.QueryInterface(nsIImageLoadingContent);
+    var imageRequest = imageItem.getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+    if (imageRequest) 
+      httpRequest = imageRequest.mimeType;
+  }
+  catch (ex)
+  {
+    // This never happened.  ;)
+  }
+
+  return httpRequest;
+}
 
 //******** Other Misc Stuff
 // Modified from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
 // parse a node to extract the contents of the node
-// linkNode doesn't really _have_ to be link
-function getValueText(linkNode)
+function getValueText(node)
 {
   var valueText = "";
-  
-  var length = linkNode.childNodes.length;
+
+  // form input elements don't generally contain information that is useful to our callers, so return nothing
+  if (node instanceof nsIInputElement || node instanceof nsISelectElement || node instanceof nsITextareaElement)
+    return valueText;
+
+  // otherwise recurse for each child
+  var length = node.childNodes.length;
   for (var i = 0; i < length; i++)
   {
-    var childNode = linkNode.childNodes[i];
+    var childNode = node.childNodes[i];
     var nodeType = childNode.nodeType;
+
+    // text nodes are where the goods are
     if (nodeType == Node.TEXT_NODE)
       valueText += " " + childNode.nodeValue;
+    // and elements can have more text inside them
     else if (nodeType == Node.ELEMENT_NODE)
     {
+      // images are special, we want to capture the alt text as if the image weren't there
       if (childNode instanceof nsIImageElement)
         valueText += " " + getAltText(childNode);
       else
