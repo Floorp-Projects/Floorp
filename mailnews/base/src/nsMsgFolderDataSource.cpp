@@ -860,22 +860,31 @@ nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
 											   nsIRDFNode **target)
 {
 	nsresult rv;
+
+
+  PRBool isServer;
+  rv = folder->GetIsServer(&isServer);
+  if (NS_FAILED(rv)) return rv;
+
 	PRInt32 totalMessages;
-	rv = folder->GetTotalMessages(PR_FALSE, &totalMessages);
-	if(NS_SUCCEEDED(rv))
+	if(isServer)
+		totalMessages = -2;
+	else
 	{
-		if(totalMessages >= 0)
-			rv = createNode(totalMessages, target);
-		else if(totalMessages == -1)
-		{
-			nsString unknownMessages("???");
-			createNode(unknownMessages, target);
-		}
-		else if(totalMessages == -2)
-		{
-			nsString unknownMessages("");
-			createNode(unknownMessages, target);
-		}
+		rv = folder->GetTotalMessages(PR_FALSE, &totalMessages);
+		if(NS_FAILED(rv)) return rv;
+	}
+	if(totalMessages >= 0)
+		rv = createNode(totalMessages, target);
+	else if(totalMessages == -1)
+	{
+		nsString unknownMessages("???");
+		createNode(unknownMessages, target);
+	}
+	else if(totalMessages == -2)
+	{
+		nsString unknownMessages("");
+		createNode(unknownMessages, target);
 	}
 	return rv;
 }
@@ -929,22 +938,30 @@ nsMsgFolderDataSource::createUnreadMessagesNode(nsIMsgFolder *folder,
 												nsIRDFNode **target)
 {
 	nsresult rv;
+
+  PRBool isServer;
+  rv = folder->GetIsServer(&isServer);
+  if (NS_FAILED(rv)) return rv;
+
 	PRInt32 totalUnreadMessages;
-	rv = folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
-	if(NS_SUCCEEDED(rv))
+	if(isServer)
+		totalUnreadMessages = -2;
+	else
 	{
-		if(totalUnreadMessages >=0)
-			rv = createNode(totalUnreadMessages, target);
-		else if(totalUnreadMessages == -1)
-		{
-			nsString unknownMessages("???");
-			createNode(unknownMessages, target);
-		}
-		else if(totalUnreadMessages == -2)
-		{
-			nsString unknownMessages("");
-			createNode(unknownMessages, target);
-		}
+		rv = folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
+		if(NS_FAILED(rv)) return rv;
+	}
+	if(totalUnreadMessages >=0)
+		rv = createNode(totalUnreadMessages, target);
+	else if(totalUnreadMessages == -1)
+	{
+		nsString unknownMessages("???");
+		createNode(unknownMessages, target);
+	}
+	else if(totalUnreadMessages == -2)
+	{
+		nsString unknownMessages("");
+		createNode(unknownMessages, target);
 	}
 
 	return NS_OK;
