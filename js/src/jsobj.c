@@ -2270,12 +2270,9 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     cx->resolvingTable = table;
                 }
 
-                /* If cx->resolving is 0, the table had better be empty! */
-                JS_ASSERT(table->entryCount == 0 || cx->resolving != 0);
-
                 /*
-                 * Once we have successfully added an entry for key and bumped
-                 * cx->resolving, control flow must go through cleanup: before
+                 * Once we have successfully added an entry for (obj, key) to
+                 * cx->resolvingTable, control must go through cleanup: before
                  * returning.  But note that JS_DHASH_ADD may find an existing
                  * entry, in which case we bail to suppress runaway recursion.
                  */
@@ -2295,7 +2292,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 }
                 entry->key = key;
                 generation = table->generation;
-                cx->resolving++;
 
                 /* Null *propp here so we can test it at cleanup: safely. */
                 *propp = NULL;
@@ -2384,7 +2380,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 } else {
                     JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
                 }
-                cx->resolving--;
                 if (!ok || *propp)
                     return ok;
             }

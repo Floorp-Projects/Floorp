@@ -1042,11 +1042,11 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 static JSObject *
 InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
-    JSBool resolving;
     JSDHashTable *table;
+    JSBool resolving;
     JSRuntime *rt;
     JSResolvingKey key;
-    JSDHashEntryHdr *entry;
+    JSResolvingEntry *entry;
     JSObject *fun_proto, *obj_proto;
 
     /* If cx has no global object, use obj so prototypes can be found. */
@@ -1054,23 +1054,26 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
         cx->globalObject = obj;
 
     /* Record Function and Object in cx->resolvingTable, if we are resolving. */
-    resolving = (cx->resolving != 0);
-    table = NULL;       /* quell GCC overwarning */
+    table = cx->resolvingTable;
+    resolving = (table && table->entryCount);
     if (resolving) {
-        table = cx->resolvingTable;
         rt = cx->runtime;
         key.obj = obj;
         key.id = (jsid) rt->atomState.FunctionAtom;
-        entry = JS_DHashTableOperate(table, &key, JS_DHASH_LOOKUP);
-        if (JS_DHASH_ENTRY_IS_BUSY(entry))
+        entry = (JSResolvingEntry *)
+                JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
+        if (entry && entry->key.obj) {
+            /* Already resolving Function, record Object too. */
+            JS_ASSERT(entry->key.obj == obj);
             key.id = (jsid) rt->atomState.ObjectAtom;
-
-        entry = JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
+            entry = (JSResolvingEntry *)
+                    JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
+        }
         if (!entry) {
             JS_ReportOutOfMemory(cx);
             return NULL;
         }
-        ((JSResolvingEntry *)entry)->key = key;
+        entry->key = key;
     }
 
     /* Initialize the function class first so constructors can be made. */
