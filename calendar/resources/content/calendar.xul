@@ -199,9 +199,10 @@
    <menuseparator/>
    <menuitem label="&calendar.context.emailevent.label;" accesskey="&calendar.context.emailevent.accesskey;" observes="send_event_command"/>
    
+   <!--
    <menuseparator/>
    <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
-   
+   -->
 </popup>
 
 <!-- TASK ITEM CONTEXT MENU -->

@@ -122,17 +122,15 @@ function toDoUnifinderRefresh()
 {
    var Checked = document.getElementById( "only-completed-checkbox" ).checked;
    
+   gICalLib.resetFilter();
+      
    if( Checked === true )
    {
       var now = new Date();
 
       gICalLib.filter.completed.setTime( now );
    }
-   else
-   {
-      gICalLib.resetFilter()
-   }
-
+   
    var taskTable = gEventSource.getAllToDos();
    
    refreshToDoTree( taskTable );
@@ -411,7 +409,7 @@ function setUnifinderToDoTreeItem( treeItem, calendarToDo )
 
 function refreshToDoTree( eventArray )
 {
-   if( !eventArray )
+   if( eventArray === false )
       eventArray = getTaskTable();
 
    // get the old tree children item and remove it
@@ -446,16 +444,13 @@ function getTaskTable( )
 {
    var taskTable;
 
+   gICalLib.resetFilter();
+      
    if( document.getElementById( "only-completed-checkbox" ).getAttribute( "checked" ) == "true" )
    {
       var now = new Date();
 
       gICalLib.filter.completed.setTime( now );
-      
-   }
-   else
-   {
-      gICalLib.resetFilter()
    }
 
    var taskTable = gEventSource.getAllToDos();
