@@ -56,17 +56,17 @@
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
 #undef  NOISY_VERTICAL_ALIGN
-#undef   REALLY_NOISY_VERTICAL_ALIGN
+#undef  REALLY_NOISY_VERTICAL_ALIGN
 #undef  NOISY_REFLOW
 #undef  REALLY_NOISY_REFLOW
 #undef  NOISY_PUSHING
-#undef   REALLY_NOISY_PUSHING
-#undef DEBUG_ADD_TEXT
+#undef  REALLY_NOISY_PUSHING
+#undef  DEBUG_ADD_TEXT
 #undef  NOISY_MAX_ELEMENT_SIZE
-#undef   REALLY_NOISY_MAX_ELEMENT_SIZE
+#undef  REALLY_NOISY_MAX_ELEMENT_SIZE
 #undef  NOISY_CAN_PLACE_FRAME
-#undef NOISY_TRIM
-#undef REALLY_NOISY_TRIM
+#undef  NOISY_TRIM
+#undef  REALLY_NOISY_TRIM
 #endif
 
 //----------------------------------------------------------------------
@@ -952,7 +952,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 #endif // IBMBIDI
 
-  aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
+  rv = aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
+  if (NS_FAILED(rv)) {
+    NS_WARNING( "Reflow of frame failed in nsLineLayout" );
+    return rv;
+  }
 
 #ifdef IBMBIDI
   if (setMode) {
@@ -2433,8 +2437,11 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         if ( NS_SUCCEEDED(result) && blockTagAtom) {
           // (2) above, if the first line of LI
           if (isFirstLine && blockTagAtom.get() == nsHTMLAtoms::li) {
-            applyMinLH = PR_TRUE;
-            foundLI = PR_TRUE;
+            // if the line is empty, then don't force the min width (see bug 75963)
+            if ((mLineBox->mBounds.height > 0) || (mLineBox->mBounds.width > 0)) {
+              applyMinLH = PR_TRUE;
+              foundLI = PR_TRUE;
+            }
           }
           // (3) above, if the last line of LI, DT, or DD
           else if (!applyMinLH && isLastLine &&
