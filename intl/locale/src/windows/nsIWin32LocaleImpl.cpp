@@ -319,7 +319,11 @@ iso_map iso_list[] =
 		{ "IN", SUBLANG_DEFAULT },
 		{ "", 0}}
 	},
+	/* Duplicate the SUBLANG codes for Croatian and Serbian, because the Windows
+	   LANG code is the same for both */
 	{"hr",	LANG_CROATIAN, {
+		{ "CS", SUBLANG_SERBIAN_LATIN },
+		{ "SP", SUBLANG_SERBIAN_CYRILLIC },
 		{ "HR", SUBLANG_DEFAULT},
 		{ "" ,0 }}
 	},
@@ -449,8 +453,12 @@ iso_map iso_list[] =
 		{ "AL", SUBLANG_DEFAULT },
 		{ "", 0}}
 	},		
+	/* Duplicate the SUBLANG codes for Croatian and Serbian, because the Windows
+	   LANG code is the same for both */
 	{"sr",	LANG_SERBIAN, {
-		{ "CS", SUBLANG_DEFAULT }, // XXX Latin vs Cyrillic
+		{ "CS", SUBLANG_SERBIAN_LATIN },
+		{ "SP", SUBLANG_SERBIAN_CYRILLIC },
+		{ "HR", SUBLANG_DEFAULT },
 		{ "", 0}}
 	},
 	{ "sv", LANG_SWEDISH, {
@@ -593,6 +601,9 @@ iso_pair dbg_list[] =
 };
 #endif
 
+#define CROATIAN_ISO_CODE "hr"
+#define SERBIAN_ISO_CODE "sr"
+
 /* nsIWin32LocaleImpl */
 NS_IMPL_ISUPPORTS1(nsIWin32LocaleImpl,nsIWin32Locale)
 
@@ -647,7 +658,6 @@ NS_IMETHODIMP
 nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
 {
   DWORD    lang_id, sublang_id;
-  char     rfc_locale_string[9];
   int      i,j;
 
   lang_id = PRIMARYLANGID(LANGIDFROMLCID(winLCID));
@@ -655,17 +665,21 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
 
   for(i=0;i<LENGTH_MAPPING_LIST;i++) {
     if (lang_id==iso_list[i].win_code) {
+      /* Special-case Croatian and Serbian, which have the same LANG_ID on
+         Windows, but have been split into separate ISO-639-2 codes */
+      if (lang_id == LANG_CROATIAN) {
+        locale.AssignLiteral((sublang_id == SUBLANG_DEFAULT) ?
+                             CROATIAN_ISO_CODE : SERBIAN_ISO_CODE);
+      } else {
+        locale.AssignASCII(iso_list[i].iso_code);
+      }
       for(j=0;iso_list[i].sublang_list[j].win_code;j++) {
         if (sublang_id == iso_list[i].sublang_list[j].win_code) {
-          PR_snprintf(rfc_locale_string,9,"%s-%s%c",iso_list[i].iso_code,
-            iso_list[i].sublang_list[j].iso_code,0);
-          CopyASCIItoUTF16(nsDependentCString(rfc_locale_string), locale);
-          return NS_OK;
+          locale.Append(PRUnichar('-'));
+          locale.AppendASCII(iso_list[i].sublang_list[j].iso_code);
+          break;
         }
       }
-      // no sublang, so just lang
-      PR_snprintf(rfc_locale_string,9,"%s%c",iso_list[i].iso_code,0);
-      CopyASCIItoUTF16(nsDependentCString(rfc_locale_string), locale);
       return NS_OK;
     }
   }
