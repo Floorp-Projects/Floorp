@@ -491,6 +491,33 @@ PRUnichar* nsCRT::strdup(const PRUnichar* str)
   return rslt;
 }
 
+PRUint32 nsCRT::HashValue(const char* us)
+{
+  PRUint32 rv = 0;
+  if(us) {
+    char ch;
+    while ((ch = *us++) != 0) {
+      // FYI: rv = rv*37 + ch
+      rv = ((rv << 5) + (rv << 2) + rv) + ch;
+    }
+  }
+  return rv;
+}
+
+PRUint32 nsCRT::HashValue(const char* us, PRUint32* uslenp)
+{
+  PRUint32 rv = 0;
+  PRUint32 len = 0;
+  char ch;
+  while ((ch = *us++) != 0) {
+    // FYI: rv = rv*37 + ch
+    rv = ((rv << 5) + (rv << 2) + rv) + ch;
+    len++;
+  }
+  *uslenp = len;
+  return rv;
+}
+
 PRUint32 nsCRT::HashValue(const PRUnichar* us)
 {
   PRUint32 rv = 0;
