@@ -523,7 +523,7 @@ CalendarEventDataSource.prototype.getAllToDos = function calEvent_getAllToDos()
  */
 CalendarEventDataSource.prototype.getToDosForRange = function calEvent_getToDosForRange( StartDate, EndDate )
 {
-   var Checked = document.getElementById( "only-completed-checkbox" ).checked;
+   var Checked = document.getElementById( "hide-completed-checkbox" ).checked;
    
    gICalLib.resetFilter();
       

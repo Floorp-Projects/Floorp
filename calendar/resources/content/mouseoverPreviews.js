@@ -87,17 +87,17 @@ function getPreviewForTask( toDoItem )
       hasHeader = true;
     }
    
-    if (toDoItem.start && toDoItem.start.isSet)
+    if (toDoItem.entryDate.isValid)
     {
-      var startDate = new Date( toDoItem.start.getTime() );
-      boxAppendLabeledDateTime(vbox, "tooltipStart", startDate, toDoItem.allDay);
+      var startDate = toDoItem.entryDate.jsDate;
+      boxAppendLabeledDateTime(vbox, "tooltipStart", startDate, false);
       hasHeader = true;
     }
    
-    if (toDoItem.due && toDoItem.due.isSet)
+    if (toDoItem.dueDate.isValid)
     {
-      var dueDate = new Date( toDoItem.due.getTime() );
-      boxAppendLabeledDateTime(vbox, "tooltipDue", dueDate, toDoItem.allDay);
+      var dueDate = toDoItem.dueDate.jsDate;
+      boxAppendLabeledDateTime(vbox, "tooltipDue", dueDate, false);
       hasHeader = true;
     }   
 
@@ -107,34 +107,32 @@ function getPreviewForTask( toDoItem )
       hasHeader = true;
     }
 
-    if (toDoItem.status && toDoItem.status != toDoItem.ICAL_STATUS_NONE)
+    if (toDoItem.status && toDoItem.status != "NONE")
     {
       var status = getToDoStatusString(toDoItem);
       boxAppendLabeledText(vbox, "tooltipStatus", status);
       hasHeader = true;
     }
 
-    if (toDoItem.percent && toDoItem.percent != 0)
+    if (toDoItem.percentComplete != 0 && toDoItem.percentComplete != 100)
     {
-      boxAppendLabeledText(vbox, "tooltipPercent", String(toDoItem.percent)+"%");
+      boxAppendLabeledText(vbox, "tooltipPercent", String(toDoItem.percentComplete)+"%");
+      hasHeader = true;
+    } else if (toDoItem.percentComplete == 100)
+    {
+        var completedDate = toDoItem.completedDate.jsDate;
+      boxAppendLabeledDateTime(vbox, "tooltipCompleted", completedDate, false);
       hasHeader = true;
     }
 
-    if (toDoItem.completed && toDoItem.completed.isSet)
-    {
-      var completedDate = new Date( toDoItem.completed.getTime() );
-      boxAppendLabeledDateTime(vbox, "tooltipCompleted", completedDate, toDoItem.allDay);
-      hasHeader = true;
-    }
-
-
-    if (toDoItem.description)
+    var description = toDoItem.getProperty("description");
+    if (description)
     {
       // display up to 4 description lines like body of message below headers
       if (hasHeader)
         boxAppendText(vbox, ""); 
 
-      boxAppendLines(vbox, toDoItem.description, 4);
+      boxAppendLines(vbox, description, 4);
     }
       
     return ( vbox );

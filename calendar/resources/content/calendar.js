@@ -943,6 +943,13 @@ function editEvent( calendarEvent )
                   null);
 }
 
+function editToDo( calendarTodo )
+{
+  openEventDialog(calendarTodo,
+                  "edit",
+                  self.modifyEventDialogResponse,
+                  null);
+}
    
 /** 
 * Called when the user clicks OK in the edit event dialog

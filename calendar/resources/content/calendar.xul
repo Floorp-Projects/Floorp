@@ -559,7 +559,7 @@
           <label flex="1" crop="end" style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
         </box>
         <box align="center">
-          <checkbox id="only-completed-checkbox"
+          <checkbox id="hide-completed-checkbox"
                     label="&calendar.unifinder.hidecompletedtodos.label;"
                     flex="1"
                     crop="end"

@@ -59,78 +59,64 @@ var gTaskArray = new Array();
 
 var unifinderToDoDataSourceObserver =
 {
-   onLoad   : function()
-   {
-      toDoUnifinderRefresh();
-   },
-   
-   onStartBatch   : function()
-   {
-   },
-    
-   onEndBatch   : function()
-   {
-      toDoUnifinderRefresh();
-   },
-    
-   onAddItem : function( calendarToDo )
-   {
-      toDoUnifinderRefresh();
-   },
+    onStartBatch: function () { },
+    onEndBatch: function () {
+        toDoUnifinderRefresh();
+    },
 
-   onModifyItem : function( calendarToDo, originalToDo )
-   {
-      toDoUnifinderRefresh( );
-   },
+    onLoad: function () {
+        toDoUnifinderRefresh();
+    },
 
-   onDeleteItem : function( calendarToDo )
-   {
-      if( !gICalLib.batchMode )
-      {
-         toDoUnifinderRefresh();
-      }
-   },
+    onAddItem: function (aItem) {
+        if (aItem instanceof Components.interfaces.calITodo)
+            toDoUnifinderRefresh();
+    },
 
-   onAlarm : function( calendarToDo )
-   {
-      
-   },
+    onModifyItem: function (aNewItem, aOldItem) {
+        if (aNewItem instanceof Components.interfaces.calITodo)
+            toDoUnifinderRefresh();
+    },
 
-   onError : function()
-   {
-   }
+    onDeleteItem: function (aItem) {
+        if (aItem instanceof Components.interfaces.calITodo)
+            toDoUnifinderRefresh();
+    },
 
+    onAlarm: function (aAlarmItem) { },
+
+    onError: function (aErrNo, aMessage) { }
 };
 
 /**
 *   Called when the calendar is loaded
 */
 
-function prepareCalendarToDoUnifinder( )
+function prepareCalendarToDoUnifinder()
 {
-   // set up our calendar event observer
-   //gICalLib.addTodoObserver( unifinderToDoDataSourceObserver );
+    var calendar = createCalendar();
+    calendar.addObserver(unifinderToDoDataSourceObserver, calendar.ITEM_FILTER_TYPE_TODO);
+    toDoUnifinderRefresh();
 }
 
 /**
 *   Called when the calendar is unloaded
 */
 
-function finishCalendarToDoUnifinder( )
+function finishCalendarToDoUnifinder()
 {
-  //gICalLib.removeTodoObserver( unifinderToDoDataSourceObserver  );
+    calendar.removeObserver(unifinderToDoDataSourceObserver);
 }
 
 /**
 *   Helper function to display todo datetimes in the unifinder
 */
 
-function formatUnifinderToDoDateTime( oeICalDateTime )
+function formatUnifinderToDoDateTime(aDateTime)
 {
-  // datetime is from todo object, it is not a javascript date
-  if (oeICalDateTime && oeICalDateTime.isSet)
-    return gCalendarWindow.dateFormater.formatDateTime( new Date(oeICalDateTime.getTime()), true );
-  else 
+    // datetime is from todo object, it is not a javascript date
+    if (aDateTime && aDateTime.isValid)
+        return gCalendarWindow.dateFormater.formatDateTime(aDateTime.jsDate, true);
     return "";
 }
 
@@ -140,16 +126,33 @@ function formatUnifinderToDoDateTime( oeICalDateTime )
 
 function toDoUnifinderRefresh()
 {
-   var Checked = document.getElementById( "only-completed-checkbox" ).checked;
-   
-   gICalLib.resetFilter();
-      
-   if( Checked === true )
-      gICalLib.filter.completed.setTime( new Date() );
-   
-   var taskTable = gEventSource.getAllToDos();
-   
-   refreshToDoTree( taskTable );
+   var hideCompleted = document.getElementById("hide-completed-checkbox").checked;
+
+   var savedThis = this;
+   var refreshListener = {
+       mTaskArray: new Array(),
+
+       onOperationComplete: function (aCalendar, aStatus, aOperationType, aId, aDateTime) {
+           setTimeout(function () { refreshToDoTree (refreshListener.mTaskArray); }, 0);
+       },
+
+       onGetResult: function (aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+           for (var i = 0; i < aCount; i++) {
+               refreshListener.mTaskArray.push(aItems[i]);
+           }
+       }
+   };
+
+   var calendar = createCalendar();
+   var filter = 0;
+   if (hideCompleted)
+       filter |= calendar.ITEM_FILTER_COMPLETED_NO;
+   else
+       filter |= calendar.ITEM_FILTER_COMPLETED_ALL;
+
+   filter |= calendar.ITEM_FILTER_TYPE_TODO;
+
+   calendar.getItems (filter, 0, null, null, refreshListener);
 }
 
 function getToDoFromEvent( event )
@@ -217,28 +220,20 @@ function unifinderMouseDownToDo( event )
    }
 }
 
-function checkboxClick( ThisToDo, completed )
+function checkboxClick(thisTodo, completed)
 {
-   // var ThisToDo = event.currentTarget.parentNode.parentNode.toDo;
-   if( completed )
-   {
-      var completedTime = new Date();
-      
-      ThisToDo.completed.setTime( completedTime );
-      
-      ThisToDo.status = ThisToDo.ICAL_STATUS_COMPLETED;
-      
-   }
-   else
-   {
-      ThisToDo.completed.clear();
-
-      if( ThisToDo.percent == 0 )
-         ThisToDo.status = ThisToDo.ICAL_STATUS_NEEDSACTION;
-      else
-         ThisToDo.status = ThisToDo.ICAL_STATUS_INPROCESS;
-   }
-   gICalLib.modifyTodo( ThisToDo );
+    var newTodo = thisTodo.clone().QueryInterface(Components.interfaces.calITodo);
+    if(completed) {
+        newTodo.completedDate.jsDate = new Date();
+        newTodo.percentComplete = 100;
+    } else {
+        newTodo.completedDate.reset();
+        if (newTodo.percentComplete == 100)
+            newTodo.percentComplete = 0;
+    }
+   
+    var calendar = createCalendar();
+    calendar.modifyItem (newTodo, null);
 }
 
 
@@ -246,38 +241,33 @@ function checkboxClick( ThisToDo, completed )
 This function return the progress state of a ToDo task :
 completed, overdue, duetoday, inprogress, future
  */
-function ToDoProgressAtom( calendarToDo )
+function ToDoProgressAtom( aTodo )
 {
   var now = new Date();
-   
-  var completed = calendarToDo.completed;
-      
-  if (completed && completed.isSet) { 
-    return("completed");
+  var completed = (aTodo.percentComplete == 100);
+
+  if (completed)
+      return "completed";
+
+  if (aTodo.dueDate.isValid) {
+      if (aTodo.dueDate.jsDate.getTime() < now.getTime())
+          return "overdue";
+      else if (aTodo.dueDate.year == now.getFullYear() &&
+               aTodo.dueDate.month == now.getMonth() &&
+               aTodo.dueDate.day == now.getDate())
+          return "duetoday";
   }
-      
-  var startDate     = calendarToDo.start;
-  var dueDate       = calendarToDo.due;
-      
-  if (dueDate && dueDate.isSet) {
-    if (dueDate.getTime() < now.getTime()) {
-      return "overdue";
-    } else if (dueDate.year == now.getFullYear() &&
-               dueDate.month == now.getMonth() &&
-               dueDate.day == now.getDate()) {
-      return "duetoday";
-    }
-  }
-  if (startDate && startDate.isSet &&
-      startDate.getTime() < now.getTime()) {
+
+  if (aTodo.entryDate.isValid &&
+      aTodo.entryDate.jsDate.getTime() < now.getTime())
       return "inprogress";
-    }
+
   return "future";
 }
 
 var toDoTreeView =
 {
-   rowCount : gEventArray.length,
+   rowCount : gTaskArray.length,
    selectedColumn : null,
    sortDirection : null,
    sortStartedTime : new Date().getTime(), // updated just before sort
@@ -328,12 +318,10 @@ var toDoTreeView =
 
     // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
     if( (typeof(col)=="object" ? col.id : col) == "unifinder-todo-tree-col-completed")  {
-	  var completed = calendarToDo.completed.getTime();
-	  
-	  if( completed > 0 )
-	  checkboxClick( calendarToDo, false ) ;
+          if (calendarToDo.completedDate.isValid)
+              checkboxClick( calendarToDo, false ) ;
 	  else 
-	  checkboxClick( calendarToDo, true ) ;
+              checkboxClick( calendarToDo, true ) ;
 	}
    },
    cycleHeader : function(col, element) // element parameter used in Moz1.7-
@@ -539,20 +527,7 @@ function refreshToDoTree( taskArray )
 
 function getTaskTable( )
 {
-   var taskTable;
-
-   gICalLib.resetFilter();
-      
-   if( document.getElementById( "only-completed-checkbox" ).getAttribute( "checked" ) == "true" )
-   {
-      var now = new Date();
-
-      gICalLib.filter.completed.setTime( now );
-   }
-
-   taskTable = gEventSource.getAllToDos();
-   
-   return( taskTable );
+    return gTaskArray;
 }
 
 
@@ -562,11 +537,13 @@ function contextChangeProgress( event, Progress )
 
    if (tree.view.selection.count > 0)
    {
-      var toDoItem = tree.taskView.getCalendarTaskAtRow( tree.currentIndex );
-      if(toDoItem)
+      var todoItem = tree.taskView.getCalendarTaskAtRow( tree.currentIndex );
+      if(todoItem)
       {
-         toDoItem.percent = Progress;
-         gICalLib.modifyTodo( toDoItem );
+          var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
+          newItem.percentComplete = Progress;
+          var calendar = createCalendar();
+          calendar.modifyItem (newItem, null);
       }
    }
 }
@@ -578,11 +555,13 @@ function contextChangePriority( event, Priority )
 
    if (tree.view.selection.count > 0)
    {
-      var toDoItem = tree.taskView.getCalendarTaskAtRow( tree.currentIndex );
-      if(toDoItem)
+      var todoItem = tree.taskView.getCalendarTaskAtRow( tree.currentIndex );
+      if(todoItem)
       {
-         toDoItem.priority = Priority;
-         gICalLib.modifyTodo( toDoItem );
+          var newItem = todoItem.clone().QueryInterface(Components.interfaces.calITodo);
+          newItem.priority = Priority;
+          var calendar = createCalendar();
+          calendar.modifyItem (newItem, null);
       }
    }
 }
