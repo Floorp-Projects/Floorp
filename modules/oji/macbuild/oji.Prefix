@@ -1,0 +1,9 @@
+//
+//	oji.Prefix
+//
+// Global prefix file for the oji.shlb target.
+//
+//
+
+#include "MacPrefix.h"
+#include "ojiConfig.h"
