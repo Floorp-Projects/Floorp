@@ -483,6 +483,10 @@ PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner* aScanner) {
   return result;
 };
 
+const char* CCommentToken::GetClassName(void)
+{
+  return "/**/";
+}
 
 #ifdef TOKENIZE_CRLF
 /**-------------------------------------------------------
