@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.23 2002/10/03 03:34:35 jpierre%netscape.com Exp $
+ * $Id: cert.h,v 1.24 2002/10/03 04:01:34 wtc%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -968,9 +968,10 @@ CERT_DupCertList(CERTCertificateList * oldList);
 
 extern void CERT_DestroyCertificateList(CERTCertificateList *list);
 
-/* is cert a user cert ? ie. does it have CERTDB_USER trust,
-   ie. a private key
- */
+/*
+** is cert a user cert? i.e. does it have CERTDB_USER trust,
+** i.e. a private key?
+*/
 PRBool CERT_IsUserCert(CERTCertificate* cert);
 
 /* is cert a newer than cert b? */
