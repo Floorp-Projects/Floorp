@@ -1031,7 +1031,7 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 {
 	// what can we do? we can close the stream?
 	m_urlInProgress = PR_FALSE;  
-	//m_runningUrl->SetUrlState(PR_FALSE, aStatus);
+	m_runningURL->SetUrlState(PR_FALSE, aStatus);
 
 	
 	// don't close the connection...we may be re-using it.

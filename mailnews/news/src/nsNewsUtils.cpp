@@ -159,15 +159,15 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
 #ifdef DEBUG_sspitzer
   printf("nsGetNewsRoot(%s) = %s\n\tnewsgroup = %s\n",
-         hostname.ToNewCString(), (const char*)pathResult,
-         newsgroup.ToNewCString());
+         nsAutoCString(hostname), (const char*)pathResult,
+         nsAutoCString(newsgroup));
 #endif
 
   return NS_OK;
 }
 
 nsresult
-nsNewsURI2Name(const char* rootURI, char* uriStr, nsString& name)
+nsNewsURI2Name(const char* rootURI, const char* uriStr, nsString& name)
 {
   nsAutoString uri = uriStr;
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
