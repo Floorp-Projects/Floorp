@@ -421,6 +421,22 @@ Realize(Widget w,XtValueMask * mask,XSetWindowAttributes * wa)
     _XfeInvokeCallbacks(w,fp->before_realize_callback,
 						XmCR_BEFORE_REALIZE,NULL,False);
 
+    /*
+     * This is a complete HACK.  Hardcode the dimensions to 640x480
+     * until I write some clever code to compute dimensions from
+     * resources, command line, children preferred geometries, and
+     * other magical things.
+     */
+    if (_XfeWidth(w) <= 2)
+    {
+      _XfeWidth(w) = 600;
+    }
+
+    if (_XfeHeight(w) <= 2)
+    {
+      _XfeHeight(w) = 480;
+    }
+
     /* The actual realization is handled by the superclass */
 	(*topLevelShellWidgetClass->core_class.realize)(w,mask,wa);
 
