@@ -134,11 +134,19 @@ SOURCE=.\MozillaControl.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\MozillaControl.idl
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsSetupRegistry.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\PropertyBag.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PropertyDlg.cpp
 # End Source File
 # Begin Source File
 
@@ -219,6 +227,10 @@ SOURCE=.\MozillaBrowser.h
 # Begin Source File
 
 SOURCE=.\PropertyBag.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PropertyDlg.h
 # End Source File
 # Begin Source File
 
