@@ -48,6 +48,8 @@
 #include "nsNetUtil.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIObserverService.h"
+#include "nsIProfileChangeStatus.h"
 
 #if defined(DEBUG_dp) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_HTTP_STARTUP_CATEGORY 1
@@ -90,9 +92,10 @@ static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
-NS_IMPL_ISUPPORTS3(nsHTTPHandler,
+NS_IMPL_ISUPPORTS4(nsHTTPHandler,
                    nsIHTTPProtocolHandler,
                    nsIProtocolHandler,
+                   nsIObserver,
                    nsISupportsWeakReference)
 
 // nsIProtocolHandler methods
@@ -813,6 +816,11 @@ nsHTTPHandler::Init()
     CategoryCreateService(NS_HTTP_STARTUP_CATEGORY);
     // if creating the category service fails, that doesn't mean we should 
     // fail to create the http handler
+    
+    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+      observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+      
     return NS_OK;
 }
 
@@ -1548,6 +1556,19 @@ nsHTTPHandler::GetServerCapabilities (
         capabilities = mCapabilities & ((PRUint32) p);
 
     *o_Cap = capabilities;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTTPHandler::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+    if (!nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC)) {
+        nsAuthEngine *authEngine;
+        nsresult rv = GetAuthEngine(&authEngine);
+        if (NS_SUCCEEDED(rv) && authEngine)
+            authEngine->Logout();
+    }
     return NS_OK;
 }
 
