@@ -249,7 +249,12 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
           }
         } // if plain text
         else if ( toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime) ) {
-          if ( NS_SUCCEEDED(ConvertFromXIFToHTML(dataStr, outStr)) ) {  //еее shouldn't copy
+          nsresult res;
+          if (toFlavor.Equals(kHTMLMime))
+            res = ConvertFromXIFToHTML(dataStr, outStr);
+          else
+            res = ConvertFromXIFToText(dataStr, outStr);
+          if ( NS_SUCCEEDED(res) ) {
             nsCOMPtr<nsISupportsWString> dataWrapper;
             nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
                                                 NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
