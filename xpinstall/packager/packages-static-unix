@@ -254,7 +254,7 @@ bin/components/msgsmime.xpt
 bin/components/smime-service.js
 bin/components/msgmdn.xpt
 bin/components/mdn-service.js
-bin/components/msgmailviews.xpt
+bin/components/mailview.xpt
 
 [chatzilla]
 bin/components/chatzilla-service.js
