@@ -2008,7 +2008,23 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
     default:
-        break;
+        /*break;*/
+		/* this is some other property -- try to use the dir["file"] syntax */
+		if(file_isDirectory(file)){
+			PRDir *dir = NULL;
+			PRDirEntry *entry = NULL;
+
+			dir=PR_OpenDir(file->path);
+			while((entry=PR_ReadDir(dir,PR_SKIP_NONE))!=NULL){
+				char* prop_name = JS_GetStringBytes(JS_ValueToString(cx, id));
+				if(!strcmp(entry->name, prop_name)){
+					str = combinePath(cx, file->path, entry->name);
+					*vp = OBJECT_TO_JSVAL(NewFileObject(cx, str));
+					JS_free(cx, str);
+					return JS_TRUE;
+				}
+			}
+		}
     }
     return JS_TRUE;
 }
