@@ -48,6 +48,7 @@ var gHaveDocumentUrl = false;
 var gPreviewImageWidth = 80;
 var gPreviewImageHeight = 50;
 var StartupCalled = false;
+var gOkButton;
 
 // dialog initialization code
 
@@ -86,6 +87,7 @@ function Startup()
   gDialog.PreviewHeight     = document.getElementById( "PreviewHeight" );
   gDialog.PreviewSize       = document.getElementById( "PreviewSize" );
   gDialog.PreviewImage      = null;
+  gDialog.OkButton          = document.documentElement.getButton("accept");
 
   // Get a single selected image element
   var tagName = "img"
@@ -150,7 +152,6 @@ function Startup()
 function InitDialog()
 {
   // Set the controls to the image's attributes
-
   gDialog.srcInput.value = globalElement.getAttribute("src");
 
   // Set "Relativize" checkbox according to current URL state
@@ -400,9 +401,7 @@ function doOverallEnabling()
 
   wasEnableAll = canEnableOk;
 
-  // anon. content, so can't use SetElementEnabledById here
-  var dialogNode = document.getElementById("imageDlg");
-  dialogNode.getButton("accept").disabled = !canEnableOk;
+  SetElementEnabled(gDialog.OkButton, canEnableOk);
 
   SetElementEnabledById("AdvancedEditButton1", canEnableOk );
   SetElementEnabledById( "imagemapLabel",  canEnableOk );
@@ -427,16 +426,16 @@ function ToggleConstrain()
 
 function constrainProportions( srcID, destID )
 {
-  var srcElement = document.getElementById ( srcID );
-  if ( !srcElement )
+  var srcElement = document.getElementById(srcID);
+  if (!srcElement)
     return;
 
-  var destElement = document.getElementById( destID );
-  if ( !destElement )
+  var destElement = document.getElementById(destID);
+  if (!destElement)
     return;
 
   // always force an integer (whether we are constraining or not)
-  forceInteger( srcID );
+  forceInteger(srcID);
 
   if (!actualWidth || !actualHeight ||
       !(gDialog.constrainCheckbox.checked && !gDialog.constrainCheckbox.disabled))

@@ -44,6 +44,7 @@
   <popupset id="aTooltipSet" />
     
   <!-- Methods common to all editor dialogs -->
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <!-- element page functions -->
   <script type="application/x-javascript" src="chrome://editor/content/EdAEHTMLAttributes.js"/>

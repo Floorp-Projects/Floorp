@@ -66,7 +66,7 @@ function initDialog(){
 
   //check for relative url
   if (!((srcInput.value.indexOf("http://") != -1) || (srcInput.value.indexOf("file://") != -1))){
-    if (editorShell.editorDocument.location == "about:blank"){
+    if (IsUrlAboutBlank(editorShell.editorDocument.location)){
       alert(GetString("SaveToUseRelativeUrl"));
       window.close();
       //TODO: add option to save document now

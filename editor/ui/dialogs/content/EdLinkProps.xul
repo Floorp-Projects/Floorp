@@ -38,6 +38,7 @@
    ondialogcancel="return onCancel();"
    ondialoghelp="return doHelpButton();">
 
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdLinkProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />

@@ -47,8 +47,13 @@
 <!ENTITY filesave.keybinding "s">
 <!ENTITY saveAsCmd.label "Save As...">
 <!ENTITY filesaveas.accesskey "A">
+<!ENTITY publish.label "Publish">
+<!ENTITY publishmenu.accesskey "b">
+<!ENTITY publishcmd.accesskey "P">
+<!ENTITY publishAsCmd.label "Publish As...">
+<!ENTITY publishas.accesskey "i">
 <!ENTITY exportToTextCmd.label "Export to Text...">
-<!ENTITY fileexporttotext.accesskey "t">
+<!ENTITY fileexporttotext.accesskey "T">
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
 <!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Browse Page">
@@ -75,6 +80,8 @@
 <!ENTITY editmenu.accesskey "e">
 <!ENTITY pasteAs.label "Paste As">
 <!ENTITY pasteAs.accesskey "a">
+<!ENTITY publishSettings.label "Publishing Site Settings...">
+<!ENTITY publishSettings.accesskey "b">
 
 <!-- For a "Paste" submenu when more than 1 
      clipboard formats are available -->

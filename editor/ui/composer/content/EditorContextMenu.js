@@ -31,6 +31,7 @@ function EditorFillContextMenu(event, contextMenuNode)
   goUpdateCommand("cmd_copy");
   goUpdateCommand("cmd_paste");
   goUpdateCommand("cmd_delete");
+  goUpdateCommand("cmd_link");
 
   // Setup object property menuitem
   var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");

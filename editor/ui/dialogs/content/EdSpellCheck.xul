@@ -32,6 +32,7 @@
     onload = "Startup()"
     onunload = "onClose()">
 
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>

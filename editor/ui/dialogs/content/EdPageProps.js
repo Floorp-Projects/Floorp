@@ -48,7 +48,7 @@ function Startup()
   var location = editorShell.editorDocument.location;
   var lastmodString = GetString("Unknown");
 
-  if (location != "about:blank")
+  if (!IsUrlAboutBlank(location))
   {
     gDialog.PageLocation.setAttribute("value", editorShell.editorDocument.location);
 
