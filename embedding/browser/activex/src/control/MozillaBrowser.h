@@ -328,8 +328,8 @@ protected:
 
 	// Mozilla interfaces
 	nsCOMPtr<nsIWebBrowser>	mWebBrowser;
+	nsIBaseWindow		*	mWebBrowserAsWin;
 	nsIDocShell			*	mRootDocShell;
-	nsIBaseWindow		*	mRootDocShellAsWin;
     
 	nsIPref             *   mPrefs;
 	nsIEditor			*	mEditor;

@@ -99,7 +99,7 @@ CMozillaBrowser::CMozillaBrowser()
 
 	// Initialize layout interfaces
 	mRootDocShell = nsnull;
-	mRootDocShellAsWin = nsnull;
+	mWebBrowserAsWin = nsnull;
 	mPrefs = nsnull;
 	mValidBrowserFlag = FALSE;
 
@@ -362,10 +362,10 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 	NG_TRACE_METHOD(CMozillaBrowser::OnSize);
 
     // Pass resize information down to the WebShell...
-    if (mRootDocShellAsWin)
+    if (mWebBrowserAsWin)
 	{
-		mRootDocShellAsWin->SetPosition(0, 0);
-		mRootDocShellAsWin->SetSize(LOWORD(lParam), HIWORD(lParam), PR_TRUE);
+		mWebBrowserAsWin->SetPosition(0, 0);
+		mWebBrowserAsWin->SetSize(LOWORD(lParam), HIWORD(lParam), PR_TRUE);
 	}
 	return 0;
 }
@@ -878,10 +878,14 @@ HRESULT CMozillaBrowser::CreateBrowser()
 		return rv;
 	}
 
-	mWebBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), (void **) &mRootDocShellAsWin);
-	rv = mRootDocShellAsWin->InitWindow(nsNativeWidget(m_hWnd), nsnull,
+	mWebBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), (void **) &mWebBrowserAsWin);
+	rv = mWebBrowserAsWin->InitWindow(nsNativeWidget(m_hWnd), nsnull,
 		0, 0, rcLocation.right - rcLocation.left, rcLocation.bottom - rcLocation.top);
-	rv = mRootDocShellAsWin->Create();
+
+ 	nsCOMPtr<nsIDocShellTreeItem> browserAsItem(do_QueryInterface(mWebBrowser));
+    browserAsItem->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
+
+	rv = mWebBrowserAsWin->Create();
 	rv = mWebBrowser->GetDocShell(&mRootDocShell);
     if (mRootDocShell == nsnull)
     {
@@ -906,14 +910,11 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	// Set up the web shell
 	mWebBrowser->SetParentURIContentListener(mWebBrowserContainer);
 
-	nsCOMPtr<nsIDocShellTreeItem> browserAsItem(do_QueryInterface(mWebBrowser));
 	browserAsItem->SetTreeOwner(NS_STATIC_CAST(nsIDocShellTreeOwner *, mWebBrowserContainer));
 
-    // XXXXXXXXXXX XXXX XXXX XXXX TODO remove!!!!!
-//    browserAsItem->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
 
 	mRootDocShell->SetDocLoaderObserver(NS_STATIC_CAST(nsIDocumentLoaderObserver*, mWebBrowserContainer));
-	mRootDocShellAsWin->SetVisibility(PR_TRUE);
+	mWebBrowserAsWin->SetVisibility(PR_TRUE);
 
 	mValidBrowserFlag = TRUE;
 
@@ -935,10 +936,10 @@ HRESULT CMozillaBrowser::DestroyBrowser()
  	}
 
     // Destroy layout...
-	if (mRootDocShellAsWin != nsnull)
+	if (mWebBrowserAsWin != nsnull)
 	{
-		mRootDocShellAsWin->Destroy();
-		NS_RELEASE(mRootDocShellAsWin);
+		mWebBrowserAsWin->Destroy();
+		NS_RELEASE(mWebBrowserAsWin);
 	}
 
 	if (mRootDocShell != nsnull)
@@ -2123,7 +2124,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 
 	// Get the url from the web shell
 	nsXPIDLString szLocationName;
-	mRootDocShellAsWin->GetTitle(getter_Copies(szLocationName));
+	mWebBrowserAsWin->GetTitle(getter_Copies(szLocationName));
 	if (nsnull == (const PRUnichar *) szLocationName)
 	{
 		RETURN_E_UNEXPECTED();
