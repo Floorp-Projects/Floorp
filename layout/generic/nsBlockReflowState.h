@@ -550,6 +550,92 @@ nsBlockFrame::DrainOverflowList()
 #endif
 }
 
+void
+nsBlockFrame::ClearFloaters(nsBlockReflowState& aState, PRUint8 aBreakType)
+{
+  if (aState.mCurrentBand.count <= 1) {
+    // No floaters in this band therefore nothing to clear
+    return;
+  }
+
+  // Find the Y coordinate to clear to
+  nscoord clearYMost = aState.mY;
+  nsRect tmp;
+  PRInt32 i;
+  for (i = 0; i < aState.mCurrentBand.count; i++) {
+    nsStyleDisplay* display;
+    nsBandTrapezoid* trapezoid = &aState.mCurrentBand.data[i];
+    if (trapezoid->state != nsBandTrapezoid::Available) {
+      if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+        PRInt32 fn, numFrames = trapezoid->frames->Count();
+        NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
+        for (fn = 0; fn < numFrames; fn++) {
+          nsIFrame* f = (nsIFrame*) trapezoid->frames->ElementAt(fn);
+          f->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+
+          switch (display->mFloats) {
+          case NS_STYLE_FLOAT_LEFT:
+            if ((NS_STYLE_CLEAR_LEFT == aBreakType) ||
+                (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType)) {
+              trapezoid->GetRect(tmp);
+              nscoord ym = tmp.YMost();
+              if (ym > clearYMost) {
+                clearYMost = ym;
+              }
+            }
+            break;
+          case NS_STYLE_FLOAT_RIGHT:
+            if ((NS_STYLE_CLEAR_RIGHT == aBreakType) ||
+                (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType)) {
+              trapezoid->GetRect(tmp);
+              nscoord ym = tmp.YMost();
+              if (ym > clearYMost) {
+                clearYMost = ym;
+              }
+            }
+            break;
+          }
+        }
+      }
+      else {
+        trapezoid->frame->GetStyleData(eStyleStruct_Display,
+                                       (nsStyleStruct*&)display);
+        switch (display->mFloats) {
+        case NS_STYLE_FLOAT_LEFT:
+          if ((NS_STYLE_CLEAR_LEFT == aBreakType) ||
+              (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType)) {
+            trapezoid->GetRect(tmp);
+            nscoord ym = tmp.YMost();
+            if (ym > clearYMost) {
+              clearYMost = ym;
+            }
+          }
+          break;
+        case NS_STYLE_FLOAT_RIGHT:
+          if ((NS_STYLE_CLEAR_RIGHT == aBreakType) ||
+              (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType)) {
+            trapezoid->GetRect(tmp);
+            nscoord ym = tmp.YMost();
+            if (ym > clearYMost) {
+              clearYMost = ym;
+            }
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+               ("nsBlockFrame::ClearFloaters: mY=%d clearYMost=%d\n",
+                aState.mY, clearYMost));
+
+  aState.mY = clearYMost;
+
+  // Get a new band
+  GetAvailableSpace(aState, aState.mY);
+}
+
 nsresult
 nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
                         nsLineLayout&       aLineLayout,
@@ -600,6 +686,20 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
   }
+
+  // Process any pending break operations
+  switch (aLineLayout.mPendingBreak) {
+  default:
+    break;
+  case NS_STYLE_CLEAR_LEFT:
+  case NS_STYLE_CLEAR_RIGHT:
+  case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+    ClearFloaters(aState, aLineLayout.mPendingBreak);
+    break;
+  }
+  // XXX for now clear the pending break; this is where support for
+  // page breaks or column breaks could be partially handled.
+  aLineLayout.mPendingBreak = NS_STYLE_CLEAR_NONE;
 
   // Any below current line floaters to place?
   // XXX We really want to know whether this is the initial reflow (reflow
