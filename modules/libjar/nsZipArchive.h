@@ -57,8 +57,21 @@ public:
   PRUint32    realsize;
   PRUint32    crc32;
   PRUint16    mode;
+  PRUint16    time;
+  PRUint16    date;
 
   nsZipItem*  next;
+
+  /**
+   * GetModTime
+   *
+   * Utility to get an NSPR-friendly formatted string
+   * representing the last modified time of this item.
+   * 
+   * @return nsprstr    an NSPR-friendly string representation 
+   *                    of the modification time
+   */
+  char *GetModTime();
 
   nsZipItem();
   ~nsZipItem();
@@ -162,7 +175,7 @@ public:
   PRInt32 ExtractFile( const char * zipEntry, const char * aOutname );
 
   PRInt32 ExtractFileToFileDesc(const char * zipEntry, PRFileDesc* outFD,
-                                PRUint16 *itemModeResult);
+                                nsZipItem **outItem);
 
   /**
    * FindInit

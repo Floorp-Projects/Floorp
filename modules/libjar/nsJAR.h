@@ -91,6 +91,7 @@ class nsJAR : public nsIZipReader
                           nsIPrincipal* aPrincipal, PRInt16 aPreStatus);
     nsresult VerifyEntry(const char* aEntryName, char* aEntryData, 
                          PRUint32 aLen);
+    nsresult RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile);
 
     nsresult CalculateDigest(const char* aInBuf, PRUint32 aInBufLen,
                              char** digest);
