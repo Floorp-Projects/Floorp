@@ -29,3 +29,5 @@ pldhash.h
 plvector.h
 nsTextFormatter.h
 nsTimelineService.h
+nsRecyclingAllocator.h
+
