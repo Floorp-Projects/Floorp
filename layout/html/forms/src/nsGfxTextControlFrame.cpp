@@ -124,7 +124,7 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 const nscoord kSuggestedNotSet = -1;
 
 /*================== global functions =========================*/
-nsIWidget * GetDeepestWidget(nsIView * aView)
+static nsIWidget * GetDeepestWidget(nsIView * aView)
 {
 
   PRInt32 count;
@@ -153,7 +153,7 @@ nsIWidget * GetDeepestWidget(nsIView * aView)
   return nsnull;
 }
 
-void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
+static void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
 {
   aWidget = nsnull;
   nsIView *view = aView;
@@ -589,6 +589,11 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
 	    }
     }
     break;
+    
+    case NS_FORM_SELECTED:
+      nsAutoString commandString("selection-changed");
+      return UpdateTextControlCommands(commandString);
+      break;
   }
   return NS_OK;
 }
@@ -2582,6 +2587,19 @@ nsGfxTextControlFrame::InstallEventListeners()
   result = er->AddEventListenerByIID(focusListener, nsIDOMFocusListener::GetIID());
   if (NS_FAILED(result)) { return result; }
 
+  // add the selection listener
+  nsCOMPtr<nsIDOMSelection>selection;
+  if (mEditor && mEventListener)
+  {
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(result)) { return result; }
+    if (!selection) { return NS_ERROR_NULL_POINTER; }
+    nsCOMPtr<nsIDOMSelectionListener> selectionListener = do_QueryInterface(mEventListener);
+    if (!selectionListener) { return NS_ERROR_NO_INTERFACE; }
+    selection->AddSelectionListener(selectionListener);
+    if (NS_FAILED(result)) { return result; }
+  }
+
   return result;
 }
 
@@ -2773,19 +2791,6 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
 
     // turn on oninput notifications now that I'm done manipulating the editable content
     mNotifyOnInput = PR_TRUE;
-
-    // add the selection listener
-    nsCOMPtr<nsIDOMSelection>selection;
-    if (mEditor && mEventListener)
-    {
-      result = mEditor->GetSelection(getter_AddRefs(selection));
-      if (NS_FAILED(result)) { return result; }
-      if (!selection) { return NS_ERROR_NULL_POINTER; }
-      nsCOMPtr<nsIDOMSelectionListener> selectionListener = do_QueryInterface(mEventListener);
-      if (!selectionListener) { return NS_ERROR_NO_INTERFACE; }
-      selection->AddSelectionListener(selectionListener);
-      if (NS_FAILED(result)) { return result; }
-    }
   }
   return result;
 }
@@ -2814,6 +2819,16 @@ nsGfxTextControlFrame::InternalContentChanged()
   nsresult result = mContent->HandleDOMEvent(mFramePresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
 
   // update commands via controllers interface, if present
+  nsAutoString commandString("furby");
+  result = UpdateTextControlCommands(commandString);
+  
+  return result;
+}
+
+nsresult nsGfxTextControlFrame::UpdateTextControlCommands(const nsString& aCommand)
+{
+  nsresult result;
+  
   nsCOMPtr<nsIControllers> controllers;
   nsCOMPtr<nsIDOMNSHTMLInputElement> textInputDOMElement = do_QueryInterface(mContent);
   if (textInputDOMElement) {
@@ -2834,13 +2849,13 @@ nsGfxTextControlFrame::InternalContentChanged()
     if (NS_FAILED(result)) { return result; }
     if (commandDispatcher)
     {
-      nsAutoString commandString("furby");
-      result = commandDispatcher->UpdateCommands(commandString);
+      result = commandDispatcher->UpdateCommands(aCommand);
     }
   }
 
   return result;
 }
+
 
 void nsGfxTextControlFrame::RemoveNewlines(nsString &aString)
 {
@@ -2848,6 +2863,7 @@ void nsGfxTextControlFrame::RemoveNewlines(nsString &aString)
   static const char badChars[] = {10, 13, 0};
   aString.StripChars(badChars);
 }
+
 
 NS_IMETHODIMP
 nsGfxTextControlFrame::GetAdditionalChildListName(PRInt32 aIndex,

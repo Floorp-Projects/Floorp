@@ -283,7 +283,6 @@ protected:
   /** mouse event dispatch helper */
   nsresult DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEventType);
 
-
 protected:
   nsCWeakReference<nsGfxTextControlFrame> mFrame;
   nsIView                  *mView;    // not ref counted
@@ -608,6 +607,9 @@ protected:
   NS_IMETHOD GetAdditionalChildListName(PRInt32 aIndex,
                                         nsIAtom** aListName) const;
   NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+
+  /** Call the controller for this control to update commands */
+  nsresult UpdateTextControlCommands(const nsString& aCommand);
 
 public:
   void SetShouldSetFocus() { mDidSetFocus = PR_FALSE; };
