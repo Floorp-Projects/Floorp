@@ -41,6 +41,7 @@
  * XPC_IDispatch_GetterSetter, and XPC_IDispatch_CallMethod
  */
 #include "xpcprivate.h"
+#include "nsIActiveXSecurityPolicy.h"
 
 /**
  * This is COM's IDispatch IID, but in XPCOM's nsID type
@@ -72,88 +73,68 @@ XPCDispObject::WrapIDispatch(IDispatch *pDispatch, XPCCallContext &ccx,
     return PR_TRUE;
 }
 
-/**
- * Helper function to determine whether an object has the safe scripting
- * category
- * @param the class ID of the COM object to be created
- * @return true if it has the category
- */
-static PRBool HasSafeScriptingCategory(const CLSID & classID)
+HRESULT XPCDispObject::COMCreateInstance(BSTR className, PRBool enforceSecurity, IDispatch ** result)
 {
-    // TODO: probably should look into caching this if this becomes
-    // a performance issue
-    CComPtr<ICatInformation> catInfo;
-    HRESULT hr = catInfo.CoCreateInstance(CLSID_StdComponentCategoriesMgr);
-    // Must fail if we can't open the category manager
-    if(!catInfo)
-        return PR_FALSE;
-     
-    // See what categories the class implements
-    CComPtr<IEnumCATID> enumCATID;
-    if(FAILED(catInfo->EnumImplCategoriesOfClass(classID, &enumCATID)))
-        return PR_FALSE;  // Can't enumerate classes in category so fail
- 
-    // Search for matching categories
-    CATID catidNext = GUID_NULL;
-    // Get the next category, and no, I don't know what the 1 is
-    while(enumCATID->Next(1, &catidNext, NULL) == S_OK)
-    {
-        if(::IsEqualCATID(CATID_SafeForScripting, catidNext))
-        {
-            return PR_TRUE;
-        }
-    }
-    return PR_FALSE;
-}
+    // Turn the string into a CLSID
+    _bstr_t bstrName(className);
+    CLSID classID = CLSID_NULL;
+    HRESULT hr = CLSIDFromString(bstrName, &classID);
+    if (FAILED(hr))
+        hr = CLSIDFromProgID(bstrName, &classID);
+    if(FAILED(hr) || ::IsEqualCLSID(classID, CLSID_NULL))
+        return hr;
 
-/**
- * Returns true if the desired scriptable flags are set
- * @return true if the desired scriptable flags are set
- */
-inline
-PRBool ScriptOK(DWORD value)
-{
-    return value & (INTERFACESAFE_FOR_UNTRUSTED_CALLER | 
-        INTERFACESAFE_FOR_UNTRUSTED_DATA);
-}
+    nsresult rv;
+    nsCOMPtr<nsIDispatchSupport> dispSupport = do_GetService(NS_IDISPATCH_SUPPORT_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return E_UNEXPECTED;
 
-HRESULT XPCDispObject::COMCreateInstance(BSTR className, PRBool testScriptability, IDispatch ** result)
-{
-    CLSID classID;
-    HRESULT hr;
-    // If this looks like a class ID
-    if(FAILED(CLSIDFromString(className, &classID)))
+    PRUint32 hostingFlags = nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_NOTHING;
+    dispSupport->GetHostingFlags(nsnull, &hostingFlags);
+
+    PRBool allowSafeObjects;
+    if (hostingFlags & (nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS))
+        allowSafeObjects = PR_TRUE;
+    else
+        allowSafeObjects = PR_FALSE;
+    PRBool allowAnyObjects;
+    if (hostingFlags & (nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_ALL_OBJECTS))
+        allowAnyObjects = PR_TRUE;
+    else
+        allowAnyObjects = PR_FALSE;
+
+    // There is no point proceeding if flags say we can't script safe or unsafe objects
+    if(enforceSecurity && !allowSafeObjects && !allowAnyObjects)
     {
-        hr = CLSIDFromProgID(className, &classID);
-        if(FAILED(hr))
-            return hr;
+        return E_FAIL;
     }
-    PRBool scriptableOK = PR_TRUE;
-    if(testScriptability)
-        scriptableOK = HasSafeScriptingCategory(classID);
+
+    // Test if the object is scriptable
+    PRBool isScriptable = PR_FALSE;
+    if(enforceSecurity && !allowAnyObjects)
+    {
+        nsCID cid;
+        memcpy(&cid, &classID, sizeof(nsCID));
+        PRBool classExists = PR_FALSE;
+        dispSupport->IsClassMarkedSafeForScripting(cid, &classExists, &isScriptable);
+        if(!classExists)
+            return REGDB_E_CLASSNOTREG;
+    }
     
-    // Didn't have the safe for scripting category so lets look at IObjectSafety
+    // Create the object
     CComPtr<IDispatch> disp;
-    HRESULT hResult = disp.CoCreateInstance(classID);
-    if(FAILED(hResult))
-        return hResult;
+    hr = disp.CoCreateInstance(classID);
+    if(FAILED(hr))
+        return hr;
 
-    // If we're testing scriptability and it didn't have a scripting category
+    // If we're enforcing security and it didn't have a scripting category
     // we'll check via the IObjectSafety interface
-    if(testScriptability && !scriptableOK)
+    if(enforceSecurity && !allowAnyObjects && !isScriptable)
     {
-        CComQIPtr<IObjectSafety> objSafety(disp);
-        // Didn't have IObjectSafety so we'll bail
-        if(!objSafety)
-            return E_FAIL;
-        DWORD supported;
-        DWORD state;
-        hr = objSafety->GetInterfaceSafetyOptions(IID_IDispatch, &supported, &state);
-        if(FAILED(hr))
-            return hr;
-        if(!ScriptOK(supported) || !ScriptOK(state))
+        dispSupport->IsObjectSafeForScripting(disp, NSID_IDISPATCH, &isScriptable);
+        if (!isScriptable)
             return E_FAIL;
     }
+
     // Copy and addref
     disp.CopyTo(result);
     return S_OK;

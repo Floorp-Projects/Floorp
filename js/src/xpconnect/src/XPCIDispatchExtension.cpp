@@ -42,7 +42,7 @@ PRBool XPCIDispatchExtension::mIsEnabled = PR_TRUE;
 
 static JSBool
 CommonConstructor(XPCCallContext &ccx, JSObject *obj, uintN argc, jsval *argv, 
-                  jsval *rval, PRBool testScriptability)
+                     jsval *rval, PRBool enforceSecurity)
 {
     // Check if IDispatch is enabled, fail if not
     if (!nsXPConnect::IsIDispatchEnabled())
@@ -66,7 +66,7 @@ CommonConstructor(XPCCallContext &ccx, JSObject *obj, uintN argc, jsval *argv,
     }
     // Instantiate the desired COM object
     CComPtr<IDispatch> pDispatch;
-    HRESULT rv = XPCDispObject::COMCreateInstance(bstrClassName, testScriptability, &pDispatch);
+    HRESULT rv = XPCDispObject::COMCreateInstance(bstrClassName, enforceSecurity, &pDispatch);
     if(FAILED(rv))
     {
         XPCThrower::ThrowCOMError(ccx, rv, NS_ERROR_XPC_COM_CREATE_FAILED);

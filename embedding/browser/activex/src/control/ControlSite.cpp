@@ -45,13 +45,136 @@
 
 std::list<CControlSite *> CControlSite::m_cControlList;
 
+class CDefaultControlSiteSecurityPolicy : public CControlSiteSecurityPolicy
+{
+    // Test if the specified class id implements the specified category
+    BOOL ClassImplementsCategory(const CLSID & clsid, const CATID &catid, BOOL &bClassExists);
+public:
+    // Test if the class is safe to host
+    virtual BOOL IsClassSafeToHost(const CLSID & clsid);
+    // Test if the specified class is marked safe for scripting
+    virtual BOOL IsClassMarkedSafeForScripting(const CLSID & clsid, BOOL &bClassExists);
+    // Test if the instantiated object is safe for scripting on the specified interface
+    virtual BOOL IsObjectSafeForScripting(IUnknown *pObject, const IID &iid);
+};
+
+BOOL
+CDefaultControlSiteSecurityPolicy::ClassImplementsCategory(const CLSID &clsid, const CATID &catid, BOOL &bClassExists)
+{
+    bClassExists = FALSE;
+
+    // Test if there is a CLSID entry. If there isn't then obviously
+    // the object doesn't exist and therefore doesn't implement any category.
+    // In this situation, the function returns REGDB_E_CLASSNOTREG.
+
+    CRegKey key;
+    if (key.Open(HKEY_CLASSES_ROOT, _T("CLSID"), KEY_READ) != ERROR_SUCCESS)
+    {
+        // Must fail if we can't even open this!
+        return FALSE;
+    }
+    LPOLESTR szCLSID = NULL;
+    if (FAILED(StringFromCLSID(clsid, &szCLSID)))
+    {
+        return FALSE;
+    }
+    USES_CONVERSION;
+    CRegKey keyCLSID;
+    LONG lResult = keyCLSID.Open(key, W2CT(szCLSID), KEY_READ);
+    CoTaskMemFree(szCLSID);
+    if (lResult != ERROR_SUCCESS)
+    {
+        // Class doesn't exist
+        return FALSE;
+    }
+    keyCLSID.Close();
+
+    // CLSID exists, so try checking what categories it implements
+    bClassExists = TRUE;
+    CIPtr(ICatInformation) spCatInfo;
+    HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (LPVOID*) &spCatInfo);
+    if (spCatInfo == NULL)
+    {
+        // Must fail if we can't open the category manager
+        return FALSE;
+    }
+    
+    // See what categories the class implements
+    CIPtr(IEnumCATID) spEnumCATID;
+    if (FAILED(spCatInfo->EnumImplCategoriesOfClass(clsid, &spEnumCATID)))
+    {
+        // Can't enumerate classes in category so fail
+        return FALSE;
+    }
+
+    // Search for matching categories
+    BOOL bFound = FALSE;
+    CATID catidNext = GUID_NULL;
+    while (spEnumCATID->Next(1, &catidNext, NULL) == S_OK)
+    {
+        if (::IsEqualCATID(catid, catidNext))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+// Test if the class is safe to host
+BOOL CDefaultControlSiteSecurityPolicy::IsClassSafeToHost(const CLSID & clsid)
+{
+    return TRUE;
+}
+
+// Test if the specified class is marked safe for scripting
+BOOL CDefaultControlSiteSecurityPolicy::IsClassMarkedSafeForScripting(const CLSID & clsid, BOOL &bClassExists)
+{
+    // Test the category the object belongs to
+    return ClassImplementsCategory(clsid, CATID_SafeForScripting, bClassExists);
+}
+
+// Test if the instantiated object is safe for scripting on the specified interface
+BOOL CDefaultControlSiteSecurityPolicy::IsObjectSafeForScripting(IUnknown *pObject, const IID &iid)
+{
+    if (!pObject) {
+        return FALSE;
+    }
+    // Ask the control if its safe for scripting
+    CComQIPtr<IObjectSafety> spObjectSafety = pObject;
+    if (!spObjectSafety)
+    {
+        return FALSE;
+    }
+
+    DWORD dwSupported = 0; // Supported options (mask)
+    DWORD dwEnabled = 0; // Enabled options
+
+    // Assume scripting via IDispatch
+    if (FAILED(spObjectSafety->GetInterfaceSafetyOptions(
+            iid, &dwSupported, &dwEnabled)))
+    {
+        // Interface is not safe or failure.
+        return FALSE;
+    }
+
+    // Test if safe for scripting
+    if (!(dwEnabled & dwSupported) & INTERFACESAFE_FOR_UNTRUSTED_CALLER)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 // Constructor
 CControlSite::CControlSite()
 {
     NG_TRACE_METHOD(CControlSite::CControlSite);
 
     m_hWndParent = NULL;
-    m_clsid = CLSID_NULL;
+    m_CLSID = CLSID_NULL;
     m_bSetClientSiteFirst = FALSE;
     m_bVisibleAtRuntime = TRUE;
     memset(&m_rcObjectPos, 0, sizeof(m_rcObjectPos));
@@ -62,6 +185,8 @@ CControlSite::CControlSite()
     m_bWindowless = FALSE;
     m_bSupportWindowlessActivation = TRUE;
     m_bSafeForScriptingObjectsOnly = FALSE;
+    m_pDefaultSecurityPolicy = new CDefaultControlSiteSecurityPolicy;
+    m_pSecurityPolicy = m_pDefaultSecurityPolicy;
 
     // Initialise ambient properties
     m_nAmbientLocale = 0;
@@ -89,79 +214,10 @@ CControlSite::~CControlSite()
     NG_TRACE_METHOD(CControlSite::~CControlSite);
     Detach();
     m_cControlList.remove(this);
+
+    if (m_pDefaultSecurityPolicy)
+        delete m_pDefaultSecurityPolicy;
 }
-
-// Helper method checks whether a class implements a particular category
-HRESULT CControlSite::ClassImplementsCategory(const CLSID &clsid, const CATID &catid)
-{
-    // Test if there is a CLSID entry. If there isn't then obviously
-    // the object doesn't exist and therefore doesn't implement any category.
-    // In this situation, the function returns REGDB_E_CLASSNOTREG.
-
-    CRegKey key;
-    if (key.Open(HKEY_CLASSES_ROOT, _T("CLSID"), KEY_READ) != ERROR_SUCCESS)
-    {
-        // Must fail if we can't even open this!
-        return E_FAIL;
-    }
-    LPOLESTR szCLSID = NULL;
-    if (FAILED(StringFromCLSID(clsid, &szCLSID)))
-    {
-        return E_FAIL;
-    }
-    USES_CONVERSION;
-    CRegKey keyCLSID;
-    LONG lResult = keyCLSID.Open(key, W2CT(szCLSID), KEY_READ);
-    CoTaskMemFree(szCLSID);
-    if (lResult != ERROR_SUCCESS)
-    {
-        // Class doesn't exist
-        return REGDB_E_CLASSNOTREG;
-    }
-    keyCLSID.Close();
-
-    // CLSID exists, so try checking what categories it implements
-
-    CIPtr(ICatInformation) spCatInfo;
-    HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (LPVOID*) &spCatInfo);
-    if (spCatInfo == NULL)
-    {
-        // Must fail if we can't open the category manager
-        return E_FAIL;
-    }
-    
-    // See what categories the class implements
-    CIPtr(IEnumCATID) spEnumCATID;
-    if (FAILED(spCatInfo->EnumImplCategoriesOfClass(clsid, &spEnumCATID)))
-    {
-        // Can't enumerate classes in category so fail
-        return E_FAIL;
-    }
-
-    // Search for matching categories
-    BOOL bFound = FALSE;
-    CATID catidNext = GUID_NULL;
-    while (spEnumCATID->Next(1, &catidNext, NULL) == S_OK)
-    {
-        if (::IsEqualCATID(catid, catidNext))
-        {
-            bFound = TRUE;
-        }
-    }
-    if (!bFound)
-    {
-        return S_FALSE;
-    }
-
-    return S_OK;
-}
-
-
-#if 0
-// For use when the SDK does not define it (which isn't the case these days)
-static const CATID CATID_SafeForScripting = 
-{ 0x7DD95801, 0x9882, 0x11CF, { 0x9F, 0xA9, 0x00, 0xAA, 0x00, 0x6C, 0x42, 0xC4 } };
-#endif
 
 // Create the specified control, optionally providing properties to initialise
 // it with and a name.
@@ -170,19 +226,26 @@ HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl,
 {
     NG_TRACE_METHOD(CControlSite::Create);
 
-    m_clsid = clsid;
+    m_CLSID = clsid;
     m_ParameterList = pl;
+
+    // See if security policy will allow the control to be hosted
+    if (m_pSecurityPolicy && !m_pSecurityPolicy->IsClassSafeToHost(clsid))
+    {
+        return E_FAIL;
+    }
 
     // See if object is script safe
     BOOL checkForObjectSafety = FALSE;
-    if (m_bSafeForScriptingObjectsOnly)
+    if (m_pSecurityPolicy && m_bSafeForScriptingObjectsOnly)
     {
-        HRESULT hrClass = ClassImplementsCategory(clsid, CATID_SafeForScripting);
-        if (hrClass == REGDB_E_CLASSNOTREG && szCodebase)
+        BOOL bClassExists = FALSE;
+        BOOL bIsSafe = m_pSecurityPolicy->IsClassMarkedSafeForScripting(clsid, bClassExists);
+        if (!bClassExists && szCodebase)
         {
             // Class doesn't exist, so allow code below to fetch it
         }
-        else if (FAILED(hrClass))
+        else if (!bIsSafe)
         {
             // The class is not flagged as safe for scripting, so
             // we'll have to create it to ask it if its safe.
@@ -195,26 +258,8 @@ HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl,
     HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_IUnknown, (void **) &spObject);
     if (SUCCEEDED(hr) && checkForObjectSafety)
     {
-        // The control was created but it didn't check out as safe so
-        // it must be asked if its safe for scripting.
-        CComQIPtr<IObjectSafety> spObjectSafety = spObject;
-        if (!spObjectSafety)
-        {
-            return E_FAIL;
-        }
-        DWORD dwSupported = 0; // Supported options (mask)
-        DWORD dwEnabled = 0; // Enabled options
-
         // Assume scripting via IDispatch
-        if (FAILED(spObjectSafety->GetInterfaceSafetyOptions(
-                __uuidof(IDispatch), &dwSupported, &dwEnabled)))
-        {
-            // Interface is not safe or failure.
-            return E_FAIL;
-        }
-
-        // Test if safe for scripting
-        if (!(dwEnabled & dwSupported) & INTERFACESAFE_FOR_UNTRUSTED_CALLER)
+        if (!m_pSecurityPolicy->IsObjectSafeForScripting(spObject, __uuidof(IDispatch)))
         {
             return E_FAIL;
         }
@@ -596,6 +641,37 @@ void CControlSite::SetAmbientUserMode(BOOL bUserMode)
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// CControlSiteSecurityPolicy implementation
+
+// Test if the class is safe to host
+BOOL CControlSite::IsClassSafeToHost(const CLSID & clsid)
+{
+    if (m_pSecurityPolicy)
+        return m_pSecurityPolicy->IsClassSafeToHost(clsid);
+    return TRUE;
+}
+
+// Test if the specified class is marked safe for scripting
+BOOL CControlSite::IsClassMarkedSafeForScripting(const CLSID & clsid, BOOL &bClassExists)
+{
+    if (m_pSecurityPolicy)
+        return m_pSecurityPolicy->IsClassMarkedSafeForScripting(clsid, bClassExists);
+    return TRUE;
+}
+
+// Test if the instantiated object is safe for scripting on the specified interface
+BOOL CControlSite::IsObjectSafeForScripting(IUnknown *pObject, const IID &iid)
+{
+    if (m_pSecurityPolicy)
+        return m_pSecurityPolicy->IsObjectSafeForScripting(pObject, iid);
+    return TRUE;
+}
+
+BOOL CControlSite::IsObjectSafeForScripting(const IID &iid)
+{
+    return IsObjectSafeForScripting(m_spObject, iid);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // IServiceProvider implementation

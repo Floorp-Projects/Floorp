@@ -44,10 +44,25 @@
 #include "npapi.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsISupportsUtils.h"
-#include "nsWeakReference.h"
-#include "nsIObserver.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
+#include "nsWeakReference.h"
+#include "nsIObserver.h"
+#include "nsCRT.h"
+#include "nsString.h"
+
+#include "XPConnect.h"
+
+// These are the default hosting flags in the absence of a pref.
+
+const PRUint32 kDefaultHostingFlags =
+#ifdef XPC_IDISPATCH_SUPPORT
+    nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_NOTHING;
+#else
+    nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_SAFE_OBJECTS |
+    nsIActiveXSecurityPolicy::HOSTING_FLAGS_DOWNLOAD_CONTROLS |
+    nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS;
+#endif
 
 class PrefObserver :
     public nsSupportsWeakReference,
@@ -55,23 +70,38 @@ class PrefObserver :
 {
 public:
     PrefObserver();
+
 protected:
     virtual ~PrefObserver();
 
-    static PrefObserver *sPrefObserver;
+    void Sync(nsIPrefBranch *aPrefBranch);
+    
+    PRUint32 mHostingFlags;
+    nsCOMPtr<nsIPrefService> mPrefService;
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    static nsresult Subscribe();
-    static nsresult Unsubscribe();
+    static PrefObserver *sPrefObserver;
+
+    nsresult Subscribe();
+    nsresult Unsubscribe();
+    PRUint32 GetHostingFlags() const;
 };
+
+const char *kActiveXHostingFlags = "security.xpconnect.activex.";
+const char *kUserAgentPref = "general.useragent.";
+const char *kProxyPref = "network.http.";
 
 PrefObserver *PrefObserver::sPrefObserver = nsnull;
 
-PrefObserver::PrefObserver()
+PrefObserver::PrefObserver() :
+    mHostingFlags(kDefaultHostingFlags)
 {
     NS_INIT_ISUPPORTS();
+    nsresult rv = NS_OK;
+    mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ASSERTION(mPrefService, "where is the pref service?");
 }
 
 PrefObserver::~PrefObserver()
@@ -89,38 +119,65 @@ NS_INTERFACE_MAP_END
 /* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
 NS_IMETHODIMP PrefObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
+    if (nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic) != 0)
+    {
+        return S_OK;
+    }
+
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString pref = NS_ConvertUCS2toUTF8(aData);
+    if (nsCRT::strcmp(kActiveXHostingFlags, pref.get()) == 0 ||
+        nsCRT::strcmp(kUserAgentPref, pref.get()) == 0 ||
+        nsCRT::strcmp(kProxyPref, pref.get()) == 0)
+    {
+        Sync(prefBranch);
+    }
+    return NS_OK;
+}
+
+void PrefObserver::Sync(nsIPrefBranch *aPrefBranch)
+{
+    NS_ASSERTION(aPrefBranch, "no pref branch");
+    if (!aPrefBranch)
+    {
+        return;
+    }
+
+    // TODO
     // const char *userAgent = NPN_UserAgent(mData->pPluginInstance);
 	// ::UrlMkSetSessionOption(URLMON_OPTION_USERAGENT, userAgent, strlen(userAgent), 0);	
+
+    // TODO
     // INTERNET_PROXY_INFO ipi;
-    // UrlMkSetSessionOption(INTERNET_OPTION_PROXY, ....);
-    return NS_OK;
+    // ::UrlMkSetSessionOption(INTERNET_OPTION_PROXY, ....);
+
+    nsCOMPtr<nsIDispatchSupport> dispSupport = do_GetService(NS_IDISPATCH_SUPPORT_CONTRACTID);
+    if (!dispSupport)
+        mHostingFlags = kDefaultHostingFlags;
+    else
+        dispSupport->GetHostingFlags(nsnull, &mHostingFlags);
 }
 
 nsresult
 PrefObserver::Subscribe()
 {
-    if (sPrefObserver)
-    {
-        return NS_OK;
-    }
+    NS_ENSURE_TRUE(mPrefService, NS_ERROR_FAILURE);
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefService, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    sPrefObserver = new PrefObserver();
-    NS_ENSURE_TRUE(sPrefObserver, NS_ERROR_OUT_OF_MEMORY);
-    sPrefObserver->AddRef();
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    prefInternal->AddObserver(kProxyPref, this, PR_TRUE);
+    prefInternal->AddObserver(kUserAgentPref, this, PR_TRUE);
+    prefInternal->AddObserver(kActiveXHostingFlags, this, PR_TRUE);
 
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    NS_ENSURE_TRUE(prefBranch, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
-    NS_ENSURE_TRUE(pbi, NS_ERROR_FAILURE);
-
-    pbi->AddObserver("network.http.proxy.", sPrefObserver, PR_TRUE);
-    pbi->AddObserver("general.useragent.", sPrefObserver, PR_TRUE);
+    Sync(prefBranch);
 
     return S_OK;
 }
@@ -128,10 +185,50 @@ PrefObserver::Subscribe()
 nsresult
 PrefObserver::Unsubscribe()
 {
-    if (sPrefObserver)
-    {
-        sPrefObserver->Release();
-        sPrefObserver = nsnull;
-    }
+    NS_ENSURE_TRUE(mPrefService, NS_ERROR_FAILURE);
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefService, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    prefInternal->RemoveObserver(kProxyPref, this);
+    prefInternal->RemoveObserver(kUserAgentPref, this);
+    prefInternal->RemoveObserver(kActiveXHostingFlags, this);
+
     return NS_OK;
 }
+
+PRUint32 PrefObserver::GetHostingFlags() const
+{
+    return mHostingFlags;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+PRUint32 MozAxPlugin::PrefGetHostingFlags()
+{
+    if (!PrefObserver::sPrefObserver)
+    {
+        PrefObserver::sPrefObserver = new PrefObserver();
+        if (!PrefObserver::sPrefObserver)
+        {
+            return nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_NOTHING;
+        }
+        PrefObserver::sPrefObserver->AddRef();
+        PrefObserver::sPrefObserver->Subscribe();
+    }
+    return PrefObserver::sPrefObserver->GetHostingFlags();
+}
+
+void MozAxPlugin::ReleasePrefObserver()
+{
+    if (PrefObserver::sPrefObserver)
+    {
+        PrefObserver::sPrefObserver->Unsubscribe();
+        PrefObserver::sPrefObserver->Release();
+        PrefObserver::sPrefObserver = nsnull;
+    }
+}
+

@@ -43,19 +43,115 @@
 
 #include "XPCPrivate.h"
 
+#include "nsIActiveXSecurityPolicy.h"
+
+static nsresult
+ClassIsListed(HKEY hkeyRoot, const TCHAR *szKey, const CLSID &clsid, PRBool &listIsEmpty)
+{
+    // Test if the specified CLSID is found in the specified registry key
+
+    listIsEmpty = PR_FALSE;
+
+    CRegKey keyList;
+    if(keyList.Open(hkeyRoot, szKey, KEY_READ) != ERROR_SUCCESS)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Enumerate CLSIDs looking for this one
+    int i = 0;
+    do {
+        USES_CONVERSION;
+        TCHAR szCLSID[64];
+        const DWORD kBufLength = sizeof(szCLSID) / sizeof(szCLSID[0]);
+        if(::RegEnumKey(keyList, i, szCLSID, kBufLength) != ERROR_SUCCESS)
+        {
+            // An empty list
+            if(i == 0)
+                listIsEmpty = PR_TRUE;
+            break;
+        }
+        ++i;
+        szCLSID[kBufLength - 1] = TCHAR('\0');
+        CLSID clsidToCompare = GUID_NULL;
+        if(SUCCEEDED(::CLSIDFromString(T2OLE(szCLSID), &clsidToCompare)) &&
+            ::IsEqualCLSID(clsid, clsidToCompare))
+        {
+            return NS_OK;
+        }
+    } while (1);
+
+    return NS_ERROR_FAILURE;
+}
+
+static PRBool
+ClassExists(const CLSID &clsid)
+{
+    // Test if there is a CLSID entry. If there isn't then obviously
+    // the object doesn't exist.
+    CRegKey key;
+    if(key.Open(HKEY_CLASSES_ROOT, _T("CLSID"), KEY_READ) != ERROR_SUCCESS)
+        return PR_FALSE; // Must fail if we can't even open this!
+    
+    LPOLESTR szCLSID = NULL;
+    if(FAILED(StringFromCLSID(clsid, &szCLSID)))
+        return PR_FALSE; // Can't allocate string from CLSID
+
+    USES_CONVERSION;
+    CRegKey keyCLSID;
+    LONG lResult = keyCLSID.Open(key, W2CT(szCLSID), KEY_READ);
+    CoTaskMemFree(szCLSID);
+    if(lResult != ERROR_SUCCESS)
+        return PR_FALSE; // Class doesn't exist
+
+    return PR_TRUE;
+}
+
+static PRBool
+ClassImplementsCategory(const CLSID &clsid, const CATID &catid, PRBool &bClassExists)
+{
+    bClassExists = ClassExists(clsid);
+    // Non existent classes won't implement any category...
+    if(!bClassExists)
+        return PR_FALSE;
+
+    // CLSID exists, so try checking what categories it implements
+    bClassExists = TRUE;
+    CComPtr<ICatInformation> catInfo;
+    HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL,
+        CLSCTX_INPROC_SERVER, __uuidof(ICatInformation), (LPVOID*) &catInfo);
+    if(catInfo == NULL)
+        return PR_FALSE; // Must fail if we can't open the category manager
+    
+    // See what categories the class implements
+    CComPtr<IEnumCATID> enumCATID;
+    if(FAILED(catInfo->EnumImplCategoriesOfClass(clsid, &enumCATID)))
+        return PR_FALSE; // Can't enumerate classes in category so fail
+
+    // Search for matching categories
+    BOOL bFound = FALSE;
+    CATID catidNext = GUID_NULL;
+    while (enumCATID->Next(1, &catidNext, NULL) == S_OK)
+    {
+        if(::IsEqualCATID(catid, catidNext))
+            return PR_TRUE; // Match
+    }
+    return PR_FALSE;
+}
+
 nsDispatchSupport* nsDispatchSupport::mInstance = nsnull;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDispatchSupport, nsIDispatchSupport)
 
 nsDispatchSupport::nsDispatchSupport()
 {
-  NS_INIT_ISUPPORTS();
-  /* member initializers and constructor code */
+    NS_INIT_ISUPPORTS();
+    /* member initializers and constructor code */
 }
 
 nsDispatchSupport::~nsDispatchSupport()
 {
-  /* destructor code */
+    /* destructor code */
 }
 
 /**
@@ -86,6 +182,154 @@ NS_IMETHODIMP nsDispatchSupport::JSVal2COMVariant(jsval val, VARIANT * comvar)
     return retval;
 }
 
+/* boolean isClassSafeToHost (in nsCIDRef clsid, out boolean classExists); */
+NS_IMETHODIMP nsDispatchSupport::IsClassSafeToHost(const nsCID & cid, PRBool *classExists, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    NS_ENSURE_ARG_POINTER(classExists);
+
+    *_retval = PR_FALSE;
+
+    CLSID clsid = XPCDispnsCID2CLSID(cid);
+
+    *classExists = ClassExists(clsid);
+
+    // Test the Internet Explorer black list
+    const TCHAR kIEControlsBlacklist[] = _T("SOFTWARE\\Microsoft\\Internet Explorer\\ActiveX Compatibility");
+    CRegKey keyExplorer;
+    if(keyExplorer.Open(HKEY_LOCAL_MACHINE,
+        kIEControlsBlacklist, KEY_READ) == ERROR_SUCCESS)
+    {
+        LPOLESTR szCLSID = NULL;
+        ::StringFromCLSID(clsid, &szCLSID);
+        if(szCLSID)
+        {
+            CRegKey keyCLSID;
+            USES_CONVERSION;
+            if(keyCLSID.Open(keyExplorer, W2T(szCLSID), KEY_READ) == ERROR_SUCCESS)
+            {
+                DWORD dwType = REG_DWORD;
+                DWORD dwFlags = 0;
+                DWORD dwBufSize = sizeof(dwFlags);
+                if(::RegQueryValueEx(keyCLSID, _T("Compatibility Flags"),
+                    NULL, &dwType, (LPBYTE) &dwFlags, &dwBufSize) == ERROR_SUCCESS)
+                {
+                    // Documented flags for this reg key
+                    const DWORD kKillBit = 0x00000400; // MS Knowledge Base 240797
+                    if(dwFlags & kKillBit)
+                    {
+                        ::CoTaskMemFree(szCLSID);
+                        *_retval = PR_FALSE;
+                        return NS_OK;
+                    }
+                }
+            }
+            ::CoTaskMemFree(szCLSID);
+        }
+    }
+
+    // Registry keys containing lists of controls that the Gecko explicitly does
+    // or does not support.
+
+    const TCHAR kControlsToDenyKey[] = _T("Software\\Mozilla\\ActiveX\\Blacklist\\CLSID");
+    const TCHAR kControlsToAllowKey[] = _T("Software\\Mozilla\\ActiveX\\Whitelist\\CLSID");
+
+    // Check if the CLSID belongs to a list that the Gecko does not support
+    
+    PRBool listIsEmpty = PR_FALSE;
+    if(NS_SUCCEEDED(ClassIsListed(HKEY_LOCAL_MACHINE, kControlsToDenyKey, clsid, listIsEmpty)))
+    {
+        *_retval = PR_FALSE;
+        return NS_OK;
+    }
+
+    // Check if the CLSID is in the whitelist. This test only cares when the whitelist is
+    // non-empty, to indicates that it is being used.
+
+    listIsEmpty = PR_FALSE;
+    if(NS_FAILED(ClassIsListed(HKEY_LOCAL_MACHINE, kControlsToAllowKey, clsid, listIsEmpty)) &&
+        !listIsEmpty)
+    {
+        *_retval = PR_FALSE;
+        return NS_OK;
+    }
+
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
+
+/* boolean isClassMarkedSafeForScripting (in nsCIDRef clsid, out boolean classExists); */
+NS_IMETHODIMP nsDispatchSupport::IsClassMarkedSafeForScripting(const nsCID & cid, PRBool *classExists, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    NS_ENSURE_ARG_POINTER(classExists);
+    // Test the category the object belongs to
+    CLSID clsid = XPCDispnsCID2CLSID(cid);
+    *_retval = ClassImplementsCategory(clsid, CATID_SafeForScripting, *classExists);
+    return NS_OK;
+}
+
+/* boolean isObjectSafeForScripting (in voidPtr theObject, in nsIIDRef iid); */
+NS_IMETHODIMP nsDispatchSupport::IsObjectSafeForScripting(void * theObject, const nsIID & id, PRBool *_retval)
+{
+    NS_ENSURE_ARG_POINTER(theObject);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    // Test if the object implements IObjectSafety and is marked safe for scripting
+    IUnknown *pObject = (IUnknown *) theObject;
+    IID iid = XPCDispIID2IID(id);
+
+    // Ask the control if its safe for scripting
+    CComQIPtr<IObjectSafety> objectSafety = pObject;
+    if(!objectSafety)
+    {
+        *_retval = PR_FALSE;
+        return NS_OK;
+    }
+
+    DWORD dwSupported = 0; // Supported options (mask)
+    DWORD dwEnabled = 0;   // Enabled options
+
+    // Assume scripting via IDispatch
+    if(FAILED(objectSafety->GetInterfaceSafetyOptions(
+            iid, &dwSupported, &dwEnabled)))
+    {
+        // Interface is not safe or failure.
+        *_retval = PR_FALSE;
+        return NS_OK;
+    }
+
+    // Test if safe for scripting
+    if(!(dwEnabled & dwSupported) & INTERFACESAFE_FOR_UNTRUSTED_CALLER)
+    {
+        *_retval = PR_FALSE;
+        return NS_OK;
+    }
+
+    *_retval = PR_TRUE;
+    return NS_OK;
+}
+
+static const PRUint32 kDefaultHostingFlags =
+    nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_NOTHING;
+
+/* unsigned long getHostingFlags (in string aContext); */
+NS_IMETHODIMP nsDispatchSupport::GetHostingFlags(const char *aContext, PRUint32 *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+
+    // Ask the activex security policy what the hosting flags are
+    nsresult rv;
+    nsCOMPtr<nsIActiveXSecurityPolicy> securityPolicy =
+        do_GetService(NS_IACTIVEXSECURITYPOLICY_CONTRACTID, &rv);
+    if(NS_SUCCEEDED(rv) && securityPolicy)
+        return securityPolicy->GetHostingFlags(aContext, _retval);
+    
+    // No policy so use the defaults
+    *_retval = kDefaultHostingFlags;
+    return NS_OK;
+}
+
 /**
  * Creates an instance of an COM object, returning it as an IDispatch interface.
  * This also allows testing of scriptability.
@@ -97,14 +341,13 @@ NS_IMETHODIMP nsDispatchSupport::JSVal2COMVariant(jsval val, VARIANT * comvar)
  * @return nsresult
  */
 NS_IMETHODIMP nsDispatchSupport::CreateInstance(const nsAString & className,
-                                                PRBool testScriptability,
                                                 IDispatch ** result)
 {
     if (!nsXPConnect::IsIDispatchEnabled())
         return NS_ERROR_XPC_IDISPATCH_NOT_ENABLED;
     const nsPromiseFlatString & flat = PromiseFlatString(className);
     CComBSTR name(flat.Length(), flat.get());
-    return XPCDispObject::COMCreateInstance(name, testScriptability, result);
+    return XPCDispObject::COMCreateInstance(name, PR_TRUE, result);
 }
 
 nsDispatchSupport* nsDispatchSupport::GetSingleton()
