@@ -260,8 +260,6 @@ public:
   virtual PRBool    Resolve(JSContext *aContext, jsval aID);
   virtual PRBool    Convert(JSContext *aContext, jsval aID);
   virtual void      Finalize(JSContext *aContext);
-  virtual PRBool    Construct(JSContext *cx, JSObject *obj,  uintN argc, 
-                              jsval *argv, jsval *rval);
 
 protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
