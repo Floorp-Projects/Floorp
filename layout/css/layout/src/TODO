@@ -1,6 +1,20 @@
 todo for AOL August 1st deadline:
 ---------------------------------
 
+o pages without titles don't clear the title
+
+o bug17-3.html: when dealing with incremental frame-appended reflow we
+  need to know how the last clean line was ended (e.g. break, clear=all, etc.)
+  otherwise we won't adjust the y coordinate properly. We can save the
+  break status into the line or adjust the line height and make it tall.
+  
+o entities in attributes (e.g. alt text at disney.com)
+
+o tuning ideas:
+  o DidReflow N^2 [current disabled because of nested view x,y problem]
+  o FindTextRuns N^2
+  o LineData allocations/frees
+
 o click on gif, jpg, txt
 
 o http://www.aol.com/netfind
@@ -89,13 +103,36 @@ o docloader needs to disconnect itself as an observer when it's done
 o fix limited stack depth in content sink
 
 ----------------------------------------------------------------------
+After august 10th
+----------------------------------------------------------------------
+
+o NS_FRAME_FIRST_REFLOW needs to go; block code is the only consumer
+  instead keep a list of new frames and when we hit one, trigger the
+  initial reflow
+
+o Query-Interface day: go through and change all the QueryInterface
+  implementations to put the cast into a temp variable and then cast the
+  temp variable to void*
 
 o crash in: http://www-dsed.llnl.gov/documents/a_document.html
   the problem stems from a OL marked display:inline that contains LI's;
   the LI's aren't doing the right thing to find the container that
   has next ordinal number (which in this case is none!)
 
-ebina margin bugs:
+o implement hspace, vspace; test for navigator compatability
+  check for all other unimplemented tag attributes
+  verify that DumpContent works; write a oneof.html test that has every
+  tag with every attribute in every combination in it.
+
+o max-element-size and floaters:
+  the correct value is dependent on which table pass we are in;
+  for pass1 we really only need the max(floaters, child-max-element-size)
+  for pass2 we need a per-line max-element-size and then we need to
+  compute the sum(floaters, line-max-element-size); this is still not
+  quite right; the sum should be the sum of the floaters and the line's
+  first-element-size.
+
+o ebina margin bugs:
   BR tags
   line-height adjustment (sometimes; see test0.html and the large font)
   P's in LI's
@@ -103,6 +140,7 @@ ebina margin bugs:
   f:/html/bug6.html 
   www.infoseek.com; see steve's mail (date july 21st)
   www.w3.org
+  f:/html/image-hspace.html
 
 o rework how BR's work:
   f:/html/image-vspace.html; notice the top two lines stuck together in nav
@@ -115,8 +153,8 @@ o ebina's engine provides automatic margins around floating images that
   are PROPORTIONAL to the size of the image's border (find the code
   luke)
 
-tinderbox: add selftest to our makefile so that it will run whatever
-we want and verify the results of a build
+o tinderbox: add selftest to our makefile so that it will run whatever
+  we want and verify the results of a build
 
 o XXX code in block frame code
 
@@ -131,8 +169,6 @@ o have michael fix up the scrolling-view code so that if a document is
   scroll-to-ref code in the incremental reflow cases.
   o scroll to #ref needs to be able to update the scrollbars when it
     finds the target frame has been reflowed.
-
-parser calls WillInterrupt at the *wrong time*
 
 pseudo-frame whackage
 
@@ -153,19 +189,16 @@ o implement the LINK tag including base attributes for style sheets
 
 o LINK rel=stylesheet href=... type=text/css
 
-----------------------------------------
-
 Underlines across font/style changes look like cr*p. We should draw a
 single underline that's the same size.
 
-----------------------------------------
-
 www.excite.com; crash
-people.netscape.com/paquin/temple.html; crash
-people.netscape.com/kipp - Hickman breaking bug
-block-margins.html: margin after block & before text is lost
 
-----------------------------------------
+people.netscape.com/paquin/temple.html; crash
+
+people.netscape.com/kipp - Hickman breaking bug
+
+block-margins.html: margin after block & before text is lost
 
 Content objects for: FORM, /FORM, MAP, AREA, SCRIPT, STYLE
 
@@ -175,13 +208,7 @@ image-map.html: top border is black; why?
 
 css2 cursors into raptor
 
-load UA style sheet ONCE
-
 1 pass build on windows
-
-----------------------------------------
-
-async dns slow mode
 
 o write a combinatoric test case of the all the different variations on
   url parsing and compare with navigator; get nsURL.cpp to agree with it.
@@ -190,23 +217,10 @@ security dialog support code using raptor
 
 nspr log module list online
 
-----------------------------------------
+----------------------------------------------------------------------
+Would be nice someday
+----------------------------------------------------------------------
+
+async dns slow mode
 
 css parser keeping comments
-
-----------------------------------------
-
-DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE 
-
-src= setting for images (keep frame size when changing url's)
-
-headings in lists
-
-dup DidReflow's; one in the root, one in the root content
-
-x move the script context code into nsWebShell and out of nsIBrowserWindow
-x make the -q option on the viewer work
-x make the Open... menu item work
-x maps are broken yet again
-x fix *bleeping* title again
-x missing space after entity on yahoo home page, again
