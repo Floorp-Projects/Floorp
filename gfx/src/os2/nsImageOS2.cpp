@@ -281,7 +281,7 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
       // > There's probably a really good reason why ROP_SRCAND does the
       // > right thing in true colour...
 
-      long lRop = (mDeviceDepth <= 8) ? ROP_NOTSRCAND : ROP_SRCAND;
+      long lRop = ROP_SRCAND;
 
       // Apply mask to target, clear pels we will fill in from the image
       DrawBitmap( surf->mPS, 4, aptl, lRop, PR_TRUE);
@@ -552,7 +552,7 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                else
                {
                   // For some reason, only ROP_NOTSRCAND seems to work here....
-                  long lRop = (mDeviceDepth <= 8) ? ROP_NOTSRCAND : ROP_SRCAND;
+                  long lRop = ROP_SRCAND;
 
                   // Apply mask to target, clear pels we will fill in from the image
                   GpiSetBitmap( mPS, hBmpMask);

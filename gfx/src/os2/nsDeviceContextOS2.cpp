@@ -657,9 +657,13 @@ NS_IMETHODIMP nsDeviceContextOS2::GetILColorSpace(IL_ColorSpace*& aColorSpace)
       //
       // Note: the image library doesn't use the reserved colors, so it doesn't
       // matter what they're set to...
+#ifdef XP_OS2
+      IL_ColorMap* colorMap = IL_NewCubeColorMap(0, 0, COLOR_CUBE_SIZE);
+#else /* This code causes traps on 256 color */
       IL_RGB  reserved[10];
       memset(reserved, 0, sizeof(reserved));
       IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
+#endif
       if (nsnull == colorMap) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -757,9 +761,13 @@ NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
       }
   
       // Now set the color cube entries.
+#ifdef XP_OS2
+      NI_RGB*       map = colorSpace->cmap.map;
+#else /* Combined with changes in GetILColor Space, this traps */
       NI_RGB*       map = colorSpace->cmap.map + 10;
+#endif
 
-      for (i = 10; i < COLOR_CUBE_SIZE; i++, map++) {
+      for (i = 10; i < COLOR_CUBE_SIZE+10; i++, map++) {
         aulTable[i] = MK_RGB( map->red, map->green, map->blue);
       }
   
