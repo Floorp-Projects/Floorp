@@ -3445,12 +3445,14 @@ JSClass js_RegExpClass = {
     regexp_xdrObject, NULL,             regexp_mark,        0
 };
 
+static const jschar empty_regexp_ucstr[] = {'(', '?', ':', ')', 0};
+
 static JSBool
 regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
     JSRegExp *re;
-    jschar *chars;
+    jschar *source, *chars;
     size_t length, nflags;
     uintN flags;
     JSString *str;
@@ -3465,7 +3467,13 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_TRUE;
     }
 
-    length = JSSTRING_LENGTH(re->source) + 2;
+    source = JSSTRING_CHARS(re->source);
+    length = JSSTRING_LENGTH(re->source);
+    if (length == 0) {
+        source = empty_regexp_ucstr;
+        length = sizeof(empty_regexp_ucstr) / sizeof(jschar) - 1;
+    }
+    length += 2;
     nflags = 0;
     for (flags = re->flags; flags != 0; flags &= flags - 1)
         nflags++;
@@ -3476,7 +3484,7 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     chars[0] = '/';
-    js_strncpy(&chars[1], JSSTRING_CHARS(re->source), length - 2);
+    js_strncpy(&chars[1], source, length - 2);
     chars[length-1] = '/';
     if (nflags) {
         if (re->flags & JSREG_GLOB)
