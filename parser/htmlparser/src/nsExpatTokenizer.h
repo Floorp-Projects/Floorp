@@ -48,7 +48,7 @@
 
 CLASS_EXPORT_HTMLPARS nsExpatTokenizer : public nsHTMLTokenizer {
 public:
-          nsExpatTokenizer();      
+          nsExpatTokenizer(nsString* aURL = nsnull);      
   virtual ~nsExpatTokenizer();
 
           NS_DECL_ISUPPORTS
@@ -83,10 +83,14 @@ protected:
     PRUint32 aByteIndex, nsString& aLine);
 
   // Load up an external stream to get external entity information
-  static nsresult OpenInputStream(nsString2& aURLStr, 
-                                  nsIInputStream*& in);
+  static nsresult OpenInputStream(const nsString& aURLStr, 
+                                  const nsString& aBaseURL, 
+                                  nsIInputStream** in, 
+                                  nsString* aAbsURL);
+
   static nsresult LoadStream(nsIInputStream* in, 
-                             PRUnichar* &uniBuf, PRUint32 &retLen);
+                             PRUnichar* &uniBuf, 
+                             PRUint32 &retLen);
 
   /* The callback handlers that get called from the expat parser */
   static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);

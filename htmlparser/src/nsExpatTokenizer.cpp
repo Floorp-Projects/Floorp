@@ -142,7 +142,7 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
  *  @param   
  *  @return  
  */
-nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {  
+nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {  
   NS_INIT_REFCNT();
   mBytesParsed = 0;
   nsAutoString buffer("UTF-16");
@@ -152,6 +152,8 @@ nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {
 #ifdef XML_DTD
     XML_SetParamEntityParsing(mExpatParser, XML_PARAM_ENTITY_PARSING_ALWAYS);
 #endif
+    if (aURL)
+      XML_SetBase(mExpatParser, (const XML_Char*) aURL->GetUnicode());
     gTokenRecycler=(CTokenRecycler*)GetTokenRecycler();
     if (mExpatParser) {
       SetupExpatCallbacks();
@@ -484,52 +486,52 @@ void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData,
 }
 
 nsresult
-nsExpatTokenizer::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in) 
+nsExpatTokenizer::OpenInputStream(const nsString& aURLStr, 
+                                  const nsString& aBaseURL, 
+                                  nsIInputStream** in, 
+                                  nsString* aAbsURL) 
 {
-  nsresult ret;
+  nsresult rv;
 #ifndef NECKO
   nsINetService* pNetService = nsnull;
 
-  ret = nsServiceManager::GetService(kNetServiceCID,
+  aAbsURL->Truncate(0);
+  rv = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID, (nsISupports**) &pNetService);
-  /* get the url
-   */
-  nsIURI    *url = nsnull;
-
-  ret = pNetService->CreateURL(&url, aURLStr);
-  if (NS_FAILED(ret)) {
-#ifdef NS_DEBUG
-    char *s = aURLStr.ToNewCString();
-    printf("\n** cannot create URL for %s\n", s?s:"null");
-    delete s;
-#endif
-    return ret;
+  
+  if (NS_SUCCEEDED(rv)) {
+    nsIURI* contextURL = nsnull;
+    rv = pNetService->CreateURL(&contextURL, aBaseURL);
+    if (NS_SUCCEEDED(rv)) {
+      nsIURI* url = nsnull;
+      rv = pNetService->CreateURL(&url, aURLStr, contextURL);
+      if (NS_SUCCEEDED(rv)) {
+        rv = pNetService->OpenBlockingStream(url, nsnull, in);
+        const char* absURL = nsnull;
+        url->GetSpec(&absURL);
+        aAbsURL->Append(absURL);
+        NS_RELEASE(url);
+      }    
+      NS_RELEASE(contextURL);
+    }
+    NS_RELEASE(pNetService);
   }
-  //
-  ret = pNetService->OpenBlockingStream(url, nsnull, &in);
-  NS_RELEASE(url);
-#ifdef NS_DEBUG
-  if (NS_FAILED(ret) || !in) {
-    char *s = aURLStr.ToNewCString();
-    printf("\n** cannot open stream: %s\n", s?s:"null");
-    delete s;
-  }
-#endif
-
 #else // NECKO
   nsIURI* uri;
 
-  ret = NS_NewURI(&uri, aURLStr);
-  if (NS_FAILED(ret)) return ret;
+  rv = NS_NewURI(&uri, aURLStr);
+  if (NS_FAILED(rv)) return rv;
 
-  ret = NS_OpenURI(&in, uri);
+  ret = NS_OpenURI(in, uri);
+
   NS_RELEASE(uri);
 #endif // NECKO
-  return ret;
+  return rv;
 }
 
 nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in, 
-                                      PRUnichar* &uniBuf, PRUint32 &retLen)
+                                      PRUnichar*& uniBuf, 
+                                      PRUint32& retLen)
 {
   // read it
   PRUint32               aCount = 1024,
@@ -543,7 +545,6 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
                                        aCount,
                                        utf8);
 
-  //
   PRUint32 aReadCount = 0;
   uniBuf = (PRUnichar *) PR_Malloc(bufsize);
 
@@ -556,8 +557,11 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
       uniBuf = (PRUnichar *) PR_Realloc(uniBuf, bufsize*sizeof(PRUnichar));
     }
   }/* while */
+  if (NS_BASE_STREAM_EOF == res)
+    res = NS_OK;
   return res;
 }
+
 void nsExpatTokenizer::HandleNotationDecl(void *userData,
                                     const XML_Char *notationName,
                                     const XML_Char *base,
@@ -570,38 +574,44 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
                                          const XML_Char *openEntityNames,
                                          const XML_Char *base,
                                          const XML_Char *systemId,
-                                         const XML_Char *publicId){
+                                         const XML_Char *publicId)
+{
+  int result = 0;
+
 #ifdef XML_DTD
-  /* create an extent parser
-   */
-  nsAutoString buffer("UTF-16");
-  const PRUnichar* encoding = buffer.GetUnicode();
-  XML_Parser entParser = 
-    XML_ExternalEntityParserCreate(parser, 
+  // Create a parser for parsing the external entity
+  nsAutoString encoding("UTF-16");  
+  XML_Parser entParser = nsnull;
+
+  entParser = XML_ExternalEntityParserCreate(parser, 
                                    0, 
-                                   encoding?(const XML_Char*) encoding:0);
+                                   (const XML_Char*) encoding.GetUnicode());
 
-  int result = 1;
-
+  // Load the external entity into a buffer
   nsIInputStream *in = nsnull;
-  nsString2       s((PRUnichar *)systemId);
-  nsresult        res = OpenInputStream(s, in);
-  PRUint32        retLen = 0;
-  PRUnichar      *uniBuf = nsnull;
+  nsString urlSpec = (const PRUnichar*) systemId;
+  nsString baseURL = (const PRUnichar*) base;
+  nsString absURL;
 
-  res = LoadStream(in, uniBuf, retLen);
-  NS_RELEASE(in);
+  nsresult rv = OpenInputStream(urlSpec, baseURL, &in, &absURL);
 
-  result = XML_Parse(entParser, (char *)uniBuf,  retLen*sizeof(PRUnichar), 1);
-  XML_ParserFree(entParser);
+  if (entParser && NS_SUCCEEDED(rv)) {
+    PRUint32 retLen = 0;
+    PRUnichar *uniBuf = nsnull;
+    rv = LoadStream(in, uniBuf, retLen);
+    NS_RELEASE(in);
 
-  // free uniBuf too??
-  PR_FREEIF(uniBuf);
-
+    // Pass the buffer to expat for parsing
+    if (NS_SUCCEEDED(rv)) {    
+      XML_SetBase(entParser, (const XML_Char*) absURL.GetUnicode());
+      result = XML_Parse(entParser, (char *)uniBuf,  retLen * sizeof(PRUnichar), 1);
+      XML_ParserFree(entParser);
+      PR_FREEIF(uniBuf);      
+    }
+  }
 #else /* ! XML_DTD */
 
-  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleExternalEntityRef() not yet implemented.");
-  int result=0;
+  NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleExternalEntityRef() not yet implemented.");  
 
 #endif /* XML_DTD */
 
