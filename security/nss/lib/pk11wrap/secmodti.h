@@ -90,8 +90,7 @@ struct PK11SlotInfoStr {
     unsigned long defaultFlags;
     /* keep track of who is using us so we don't accidently get freed while
      * still in use */
-    int refCount;
-    PZLock *refLock;
+    PRInt32 refCount;    /* to be in/decremented by atomic calls ONLY! */
     PZLock *freeListLock;
     PK11SymKey *freeSymKeysHead;
     int keyCount;

@@ -406,15 +406,9 @@ PK11_NewSlotInfo(SECMODModule *mod)
     if (slot == NULL) return slot;
 
 #ifdef PKCS11_USE_THREADS
-    slot->refLock = PZ_NewLock(nssILockSlot);
-    if (slot->refLock == NULL) {
-	PORT_Free(slot);
-	return slot;
-    }
     slot->freeListLock = PZ_NewLock(nssILockFreelist);
     if (slot->freeListLock == NULL) {
 	PZ_DestroyLock(slot->sessionLock);
-	PZ_DestroyLock(slot->refLock);
 	PORT_Free(slot);
 	return slot;
     }
@@ -422,13 +416,11 @@ PK11_NewSlotInfo(SECMODModule *mod)
     slot->sessionLock = mod->isThreadSafe ?
 	PZ_NewLock(nssILockSession) : (PZLock *)mod->refLock;
     if (slot->sessionLock == NULL) {
-	PZ_DestroyLock(slot->refLock);
 	PORT_Free(slot);
 	return slot;
     }
 #else
     slot->sessionLock = NULL;
-    slot->refLock = NULL;
     slot->freeListLock = NULL;
 #endif
     slot->freeSymKeysHead = NULL;
@@ -479,9 +471,7 @@ PK11_NewSlotInfo(SECMODModule *mod)
 PK11SlotInfo *
 PK11_ReferenceSlot(PK11SlotInfo *slot)
 {
-    PK11_USE_THREADS(PZ_Lock(slot->refLock);)
-    slot->refCount++;
-    PK11_USE_THREADS(PZ_Unlock(slot->refLock);)
+    PR_AtomicIncrement(&slot->refCount);
     return slot;
 }
 
@@ -501,10 +491,6 @@ PK11_DestroySlot(PK11SlotInfo *slot)
 	PORT_Free(slot->mechanismList);
    }
 #ifdef PKCS11_USE_THREADS
-   if (slot->refLock) {
-	PZ_DestroyLock(slot->refLock);
-	slot->refLock = NULL;
-   }
    if (slot->isThreadSafe && slot->sessionLock) {
 	PZ_DestroyLock(slot->sessionLock);
    }
@@ -529,13 +515,9 @@ PK11_DestroySlot(PK11SlotInfo *slot)
 void
 PK11_FreeSlot(PK11SlotInfo *slot)
 {
-    PRBool freeit = PR_FALSE;
-
-    PK11_USE_THREADS(PZ_Lock(slot->refLock);)
-    if (slot->refCount-- == 1) freeit = PR_TRUE;
-    PK11_USE_THREADS(PZ_Unlock(slot->refLock);)
-
-    if (freeit) PK11_DestroySlot(slot);
+    if (PR_AtomicDecrement(&slot->refCount) == 0) {
+	PK11_DestroySlot(slot);
+    }
 }
 
 void
