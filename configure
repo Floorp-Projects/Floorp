@@ -8448,7 +8448,6 @@ fi
 
 
 MOZ_BUILD_XPFE=1
-
 # Check whether --enable-build-xpfe or --disable-build-xpfe was given.
 if test "${enable_build_xpfe+set}" = set; then
   enableval="$enable_build_xpfe"
@@ -8463,7 +8462,6 @@ fi
 
 
 MOZ_EDITOR=1
-
 # Check whether --enable-editor or --disable-editor was given.
 if test "${enable_editor+set}" = set; then
   enableval="$enable_editor"
@@ -8479,7 +8477,6 @@ fi
 
 
 MOZ_MAIL_NEWS=1
-
 # Check whether --enable-mailnews or --disable-mailnews was given.
 if test "${enable_mailnews+set}" = set; then
   enableval="$enable_mailnews"
@@ -8492,9 +8489,15 @@ if test "${enable_mailnews+set}" = set; then
   fi
 fi
 
+if test "$MOZ_MAIL_NEWS"; then
+  cat >> confdefs.h <<\EOF
+#define MOZ_MAIL_NEWS 1
+EOF
+
+fi
+
 
 NECKO=1
-
 # Check whether --enable-necko or --disable-necko was given.
 if test "${enable_necko+set}" = set; then
   enableval="$enable_necko"
@@ -8505,6 +8508,13 @@ if test "${enable_necko+set}" = set; then
   else
     { echo "configure: error: Option, necko, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
+fi
+
+if test "$NECKO"; then
+  cat >> confdefs.h <<\EOF
+#define NECKO 1
+EOF
+
 fi
 
 
@@ -8526,6 +8536,10 @@ if test "${enable_pics+set}" = set; then
   enableval="$enable_pics"
   if test "$enableval" = "yes"; then
     ENABLE_PICS=1
+  cat >> confdefs.h <<\EOF
+#define ENABLE_PICS 1
+EOF
+
   elif test "$enableval" = "no"; then
     :
   else
@@ -8534,14 +8548,9 @@ if test "${enable_pics+set}" = set; then
 fi
 
 
-cat >> confdefs.h <<\EOF
-#define ENABLE_PICS 1
-EOF
-
 
 
 ENABLE_TESTS=1
-
 # Check whether --enable-tests or --disable-tests was given.
 if test "${enable_tests+set}" = set; then
   enableval="$enable_tests"
@@ -8730,12 +8739,14 @@ fi
 
 # Compiler Options
 
-UNIX_CRASH_ON_ASSERT= 
 # Check whether --enable-crash-on-assert or --disable-crash-on-assert was given.
 if test "${enable_crash_on_assert+set}" = set; then
   enableval="$enable_crash_on_assert"
   if test "$enableval" = "yes"; then
-    UNIX_CRASH_ON_ASSERT=1
+    cat >> confdefs.h <<\EOF
+#define UNIX_CRASH_ON_ASSERT 1
+EOF
+
   elif test "$enableval" = "no"; then
     :
   else
@@ -8794,6 +8805,27 @@ if test "$MOZ_DEBUG"
 then
   CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
   CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
+  cat >> confdefs.h <<\EOF
+#define DEBUG 1
+EOF
+
+  cat >> confdefs.h <<EOF
+#define DEBUG_`$WHOAMI` 1
+EOF
+
+  cat >> confdefs.h <<\EOF
+#define TRACING 1
+EOF
+
+else
+  cat >> confdefs.h <<\EOF
+#define NDEBUG 1
+EOF
+
+  cat >> confdefs.h <<\EOF
+#define TRIMMED 1
+EOF
+
 fi
 
 MOZ_POST_DSO_LIB_COMMAND=true
@@ -9033,7 +9065,7 @@ if test "${enable_efence+set}" = set; then
   enableval="$enable_efence"
   if test "$enableval" = "yes"; then
     echo $ac_n "checking for malloc in -lefence""... $ac_c" 1>&6
-echo "configure:9037: checking for malloc in -lefence" >&5
+echo "configure:9069: checking for malloc in -lefence" >&5
 ac_lib_var=`echo efence'_'malloc | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -9041,7 +9073,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lefence  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 9045 "configure"
+#line 9077 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -9052,7 +9084,7 @@ int main() {
 malloc()
 ; return 0; }
 EOF
-if { (eval echo configure:9056: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:9088: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -9202,7 +9234,6 @@ fi
 
 MOZ_TIMER_LIBS=-ltimer_s
 
-
 NO_STATIC_LIB=1
 
 # Check whether --enable-static or --disable-static was given.
@@ -9229,7 +9260,7 @@ case "$target" in
 	    # Extract the first word of "makeC++SharedLib_r", so it can be a program name with args.
 set dummy makeC++SharedLib_r; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:9233: checking for $ac_word" >&5
+echo "configure:9264: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_AIX_SHLIB_BIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -9322,10 +9353,6 @@ esac
 
 
 
-
-
-
-
 # Check whether --with-jpeg or --without-jpeg was given.
 if test "${with_jpeg+set}" = set; then
   withval="$with_jpeg"
@@ -9342,7 +9369,7 @@ if test "$JPEG_DIR" = no; then
     SYSTEM_JPEG=
 else
     echo $ac_n "checking for jpeg_destroy_compress in -ljpeg""... $ac_c" 1>&6
-echo "configure:9346: checking for jpeg_destroy_compress in -ljpeg" >&5
+echo "configure:9373: checking for jpeg_destroy_compress in -ljpeg" >&5
 ac_lib_var=`echo jpeg'_'jpeg_destroy_compress | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -9350,7 +9377,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ljpeg $JPEG_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 9354 "configure"
+#line 9381 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -9361,7 +9388,7 @@ int main() {
 jpeg_destroy_compress()
 ; return 0; }
 EOF
-if { (eval echo configure:9365: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:9392: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -9390,7 +9417,7 @@ if test "$SYSTEM_JPEG" = 1; then
   SYSTEM_JPEG= 
 else
   cat > conftest.$ac_ext <<EOF
-#line 9394 "configure"
+#line 9421 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 	#include <sys/types.h>
@@ -9404,7 +9431,7 @@ else
 	}
 	
 EOF
-if { (eval echo configure:9408: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9435: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
 then
   SYSTEM_JPEG=1
 else
@@ -9442,16 +9469,16 @@ if test "$ZLIB_DIR" = no; then
     SYSTEM_ZLIB=
 else
     echo $ac_n "checking "for zlib.h"""... $ac_c" 1>&6
-echo "configure:9446: checking "for zlib.h"" >&5
+echo "configure:9473: checking "for zlib.h"" >&5
     cat > conftest.$ac_ext <<EOF
-#line 9448 "configure"
+#line 9475 "configure"
 #include "confdefs.h"
 #include "zlib.h"
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:9455: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:9482: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   result="yes" SYSTEM_ZLIB=1
 else
@@ -9465,7 +9492,7 @@ rm -f conftest*
 fi
 if test "$SYSTEM_ZLIB" = 1; then
     echo $ac_n "checking for gzread in -lz""... $ac_c" 1>&6
-echo "configure:9469: checking for gzread in -lz" >&5
+echo "configure:9496: checking for gzread in -lz" >&5
 ac_lib_var=`echo z'_'gzread | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -9473,7 +9500,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lz $ZLIB_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 9477 "configure"
+#line 9504 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -9484,7 +9511,7 @@ int main() {
 gzread()
 ; return 0; }
 EOF
-if { (eval echo configure:9488: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:9515: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -9530,7 +9557,7 @@ if test "$PNG_DIR" = no; then
     SYSTEM_PNG=
 else
     echo $ac_n "checking for png_get_valid in -lpng""... $ac_c" 1>&6
-echo "configure:9534: checking for png_get_valid in -lpng" >&5
+echo "configure:9561: checking for png_get_valid in -lpng" >&5
 ac_lib_var=`echo png'_'png_get_valid | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -9538,7 +9565,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lpng $PNG_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 9542 "configure"
+#line 9569 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -9549,7 +9576,7 @@ int main() {
 png_get_valid()
 ; return 0; }
 EOF
-if { (eval echo configure:9553: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:9580: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -9577,7 +9604,7 @@ if test "$SYSTEM_PNG" = 1; then
   SYSTEM_PNG= 
 else
   cat > conftest.$ac_ext <<EOF
-#line 9581 "configure"
+#line 9608 "configure"
 #include "confdefs.h"
 #include <stdio.h>
 	#include <sys/types.h>
@@ -9591,7 +9618,7 @@ else
 	}
 	
 EOF
-if { (eval echo configure:9595: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:9622: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest && (./conftest; exit) 2>/dev/null
 then
   SYSTEM_PNG=1
 else
@@ -9648,9 +9675,9 @@ CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
 LDFLAGS="$LDFLAGS -L${FULLCIRCLE_DIR}"
 LIBS="-lfullsoft $LIBS"
 echo $ac_n "checking "for FC_Initialize in -lfullsoft"""... $ac_c" 1>&6
-echo "configure:9652: checking "for FC_Initialize in -lfullsoft"" >&5;
+echo "configure:9679: checking "for FC_Initialize in -lfullsoft"" >&5;
 cat > conftest.$ac_ext <<EOF
-#line 9654 "configure"
+#line 9681 "configure"
 #include "confdefs.h"
  #include <stdio.h>
 	      #include "fullcircle.h" 
@@ -9658,7 +9685,7 @@ int main() {
  FC_Initialize(); exit(0); 
 ; return 0; }
 EOF
-if { (eval echo configure:9662: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:9689: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   FULLCIRCLE_LIBS="-I${FULLCIRCLE_DIR} -L${FULLCIRCLE_DIR} -lfullsoft" result="yes"
 else
@@ -9785,19 +9812,18 @@ fi
 fi # $no_x
 
 # netlib stuff
+MODULAR_NETLIB=1
 cat >> confdefs.h <<\EOF
 #define MODULAR_NETLIB 1
 EOF
 
-MODULAR_NETLIB=1
 
-if test "$MODULAR_NETLIB" = ""; then
+if test !"$MODULAR_NETLIB"; then
   cat >> confdefs.h <<\EOF
 #define CookieManagement 1
 EOF
 
 fi
-
 
 
 if test "$OS_TARGET" = "OS2"; then
@@ -9941,23 +9967,28 @@ fi
 # Save the defines header file before autoconf removes it.
 # (Do not add AC_DEFINE calls after this line.)
 if test "$_USE_CPP_INCLUDE_FLAG"; then
-  CONFIG_DEFS_H=config-defs.h
-  # Only write config-defs.h when something changes (or it doesn't exist)
-  if test ! -f $CONFIG_DEFS_H \
-     || diff confdefs.h $CONFIG_DEFS_H | grep \# > /dev/null; then
-    echo "$ac_t"""creating $CONFIG_DEFS_H"" 1>&6
+  _CONFIG_TMP=confdefs-tmp.h
+  _CONFIG_DEFS_H=config-defs.h
 
-  if test -n "$VERBOSE_CONFIG_DEFS"; then
-    cat confdefs.h 
-  fi
-
-    cat > $CONFIG_DEFS_H <<\EOF
+  cat > $_CONFIG_TMP <<\EOF
 /* List of defines generated by configure. Included with preprocessor flag,
  * -include, to avoid long list of -D defines on the compile command-line.
  * Do not edit.
  */
 EOF
-    cat confdefs.h >> $CONFIG_DEFS_H
+  sort confdefs.h >> $_CONFIG_TEMP
+
+  # Only write config-defs.h when something changes (or it doesn't exist)
+  if cmp -s $_CONFIG_TMP $_CONFIG_DEFS_H; then
+    rm $_CONFIG_TMP
+  else
+    echo "$ac_t"""creating $_CONFIG_DEFS_H"" 1>&6
+    mv -f $_CONFIG_TMP $_CONFIG_DEFS_H
+
+    if test "$VERBOSE_CONFIG_DEFS"; then
+      echo ==== $_CONFIG_DEFS_H =================================
+      cat $_CONFIG_DEFS_H
+    fi
   fi
 fi
 
@@ -10222,6 +10253,8 @@ s%@GLIB_CFLAGS@%$GLIB_CFLAGS%g
 s%@GLIB_LIBS@%$GLIB_LIBS%g
 s%@LIBIDL_CONFIG@%$LIBIDL_CONFIG%g
 s%@LIBOBJS@%$LIBOBJS%g
+s%@MOZ_MAIL_NEWS@%$MOZ_MAIL_NEWS%g
+s%@NECKO@%$NECKO%g
 s%@COMPILER_DEPEND@%$COMPILER_DEPEND%g
 s%@MDDEPDIR@%$MDDEPDIR%g
 s%@AIX_SHLIB_BIN@%$AIX_SHLIB_BIN%g
@@ -10234,7 +10267,6 @@ s%@NS_USE_NATIVE@%$NS_USE_NATIVE%g
 s%@MOZ_WIDGET_TOOLKIT@%$MOZ_WIDGET_TOOLKIT%g
 s%@MOZ_GFX_TOOLKIT@%$MOZ_GFX_TOOLKIT%g
 s%@MOZ_UPDATE_XTERM@%$MOZ_UPDATE_XTERM%g
-s%@NECKO@%$NECKO%g
 s%@MOZ_MONOLITHIC_TOOLKIT@%$MOZ_MONOLITHIC_TOOLKIT%g
 s%@MOZ_TIMER_LIBS@%$MOZ_TIMER_LIBS%g
 s%@MOZ_SECURITY@%$MOZ_SECURITY%g
@@ -10247,7 +10279,6 @@ s%@MOZ_INSURE@%$MOZ_INSURE%g
 s%@MOZ_INSURE_DIRS@%$MOZ_INSURE_DIRS%g
 s%@MOZ_INSURE_EXCLUDE_DIRS@%$MOZ_INSURE_EXCLUDE_DIRS%g
 s%@MOZ_INSURIFYING@%$MOZ_INSURIFYING%g
-s%@MOZ_MAIL_NEWS@%$MOZ_MAIL_NEWS%g
 s%@MOZ_BUILD_XPFE@%$MOZ_BUILD_XPFE%g
 s%@MOZ_EDITOR@%$MOZ_EDITOR%g
 s%@MOZ_BRPROF@%$MOZ_BRPROF%g
@@ -10259,8 +10290,6 @@ s%@NO_STATIC_LIB@%$NO_STATIC_LIB%g
 s%@ENABLE_TESTS@%$ENABLE_TESTS%g
 s%@ENABLE_PICS@%$ENABLE_PICS%g
 s%@MOZ_USER_DIR@%$MOZ_USER_DIR%g
-s%@MOZ_DOM@%$MOZ_DOM%g
-s%@MOZ_MAIL_COMPOSE@%$MOZ_MAIL_COMPOSE%g
 s%@FULL_STATIC_BUILD@%$FULL_STATIC_BUILD%g
 s%@NO_UNIX_LDAP@%$NO_UNIX_LDAP%g
 s%@BUILD_IDLC@%$BUILD_IDLC%g
