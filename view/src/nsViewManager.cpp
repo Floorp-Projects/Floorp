@@ -1972,7 +1972,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           offset.x = offset.y = 0;
 
           //Get offset from root of baseView
-          for (nsView *parent = baseView; parent != mRootView;
+          nsView *parent;
+          for (parent = baseView; parent != mRootView;
                parent = parent->GetParent())
             parent->ConvertToParentCoords(&offset.x, &offset.y);
 
@@ -1986,7 +1987,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           }
 
           //Subtract back offset from root of view
-          for (nsView *parent = view; parent != mRootView;
+          for (parent = view; parent != mRootView;
                parent = parent->GetParent())
             parent->ConvertFromParentCoords(&offset.x, &offset.y);
 
