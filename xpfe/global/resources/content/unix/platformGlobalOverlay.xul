@@ -8,6 +8,11 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+	<!-- change the xul key for Unix -->
+	<keyset id="unixoverlaykeyset">
+	<xulkey key="alt" />
+	</keyset>
+
 	<!-- close -->
 	<menuitem id="menu_close" value="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" observes="cmd_close"/>
 	<key id="key_close" xulkey="true" key="&closeCmd.key;" observes="cmd_close"/>
