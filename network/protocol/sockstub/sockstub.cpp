@@ -127,6 +127,7 @@ public:
 
 static PRMonitor *sockStub_lock = NULL;
 
+static
 PRBool
 nsSockStub_lock(void)
 {
@@ -140,6 +141,7 @@ nsSockStub_lock(void)
     return PR_TRUE;
 }
 
+static
 void
 nsSockStub_unlock(void)
 {
