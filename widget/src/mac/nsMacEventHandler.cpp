@@ -453,11 +453,19 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 		mTopLevelWidget->GetBounds(bounds);
 		nsPoint widgetOrigin(bounds.x, bounds.y);
 		widgetHit->LocalToWindowCoordinate(widgetOrigin);
-		widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
+		widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);		
 	}
-	else
-	  widgetHit = mTopLevelWidget;
-		
+	else {
+	  // this is most likely the case of a drag exit, so we need to make sure
+	  // we send the event to the last pointed to widget. We don't really care
+	  // about the mouse coordinates because we know they're outside the window.
+	  widgetHit = gEventDispatchHandler.GetWidgetPointed();
+	  widgetHitPoint = nsPoint(0,0);
+	}	
+
+	// update the tracking of which widget the mouse is now over.
+	gEventDispatchHandler.SetWidgetPointed(widgetHit);
+	
 	// nsEvent
 	geckoEvent.eventStructType = NS_DRAGDROP_EVENT;
 	geckoEvent.message = aMessage;
@@ -477,7 +485,10 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 	// nsMouseEvent
 	geckoEvent.clickCount = 1;
 	
-	widgetHit->DispatchMouseEvent(geckoEvent);
+	if ( widgetHit )
+		widgetHit->DispatchMouseEvent(geckoEvent);
+	else
+		NS_WARNING ("Oh shit, no widget to dispatch event to, we're in trouble" );
 	
 	return PR_TRUE;
 	
