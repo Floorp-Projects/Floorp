@@ -589,8 +589,9 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 			PRUnichar * uniURL = cSURL.ToNewUnicode();
             prev->SetURL(uniURL);
             nsAutoString referrer(mReferrer);
-	    	prev->LoadURL(uniURL, nsnull, PR_FALSE,  loadType, 0, historyObject, 
+         prev->SessionHistoryInternalLoadURL(uniURL, loadType, historyObject,
                           mReferrer ? referrer.GetUnicode() : nsnull);
+                           
 			Recycle(uniURL);
 
             if (aIsReload && (pcount > 0)) {
