@@ -23,14 +23,16 @@
  *
  */
 
-/* 
+/**
  * Implementation of the wrapper class to convert the Mozilla nsIDOMAttr
  * interface into a TransforMiiX Attr interface.
  */
 
 #include "mozilladom.h"
+#include "nsIDOMAttr.h"
+#include "nsIDOMElement.h"
 
-/*
+/**
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
  * @param aAttr the nsIDOMAttr you want to wrap
@@ -38,119 +40,61 @@
  */
 Attr::Attr(nsIDOMAttr* aAttr, Document* aOwner) : Node(aAttr, aOwner)
 {
-    NS_ASSERTION(aAttr, "Wrapper needs nsObject");
-    NS_ASSERTION(aOwner, "Wrapper needs owner document");
-    if (!aAttr || !aOwner)
-        return;
+    nsCOMPtr<nsIDOMElement> parent;
+    aAttr->GetOwnerElement(getter_AddRefs(parent));
+    mParent = do_QueryInterface(parent);
+
+    nsAutoString nameString;
+    aAttr->GetLocalName(nameString);
+    mLocalName = do_GetAtom(nameString);
+
     nsAutoString ns;
     aAttr->GetNamespaceURI(ns);
-    if (ns.IsEmpty()) {
-        namespaceID = kNameSpaceID_None;
-        return;
+    mNamespaceID = kNameSpaceID_None;
+    if (!ns.IsEmpty()) {
+        NS_ASSERTION(aOwner->nsNSManager,
+                     "owner document lacks namespace manager");
+        if (aOwner->nsNSManager) {
+            aOwner->nsNSManager->GetNameSpaceID(ns, mNamespaceID);
+        }
     }
-    NS_ASSERTION(aOwner->nsNSManager,
-                 "owner document lacks namespace manager");
-    if (!aOwner->nsNSManager)
-        return;
-    aOwner->nsNSManager->GetNameSpaceID(ns, namespaceID);
+    mNSId = mNamespaceID;
 }
 
-/*
+/**
  * Destructor
  */
 Attr::~Attr()
 {
 }
 
-/*
- * Call nsIDOMAttr::GetName to retrieve the name of this attribute.
- *
- * @return the attribute's name
- */
-const String& Attr::getName()
-{
-    NSI_FROM_TX(Attr)
-
-    nodeName.clear();
-    if (nsAttr)
-        nsAttr->GetName(nodeName);
-    return nodeName;
-}
-
-/*
- * Call nsIDOMAttr::GetSpecified to retrieve the specified flag for this
- * attribute.
- *
- * @return the value of the specified flag
- */
-MBool Attr::getSpecified() const
-{
-    NSI_FROM_TX(Attr)
-    MBool specified = MB_FALSE;
-
-    if (nsAttr)
-        nsAttr->GetSpecified(&specified);
-    return specified;
-}
-
-/*
- * Call nsIDOMAttr::GetValue to retrieve the value of this attribute.
- *
- * @return the attribute's value
- */
-const String& Attr::getValue()
-{
-    NSI_FROM_TX(Attr)
-
-    nodeValue.clear();
-    if (nsAttr)
-        nsAttr->GetValue(nodeValue);
-    return nodeValue;
-}
-
-/*
- * Call nsIDOMAttr::SetValue to set the value of this attribute.
- *
- * @return the attribute's value
- */
-void Attr::setValue(const String& aNewValue)
-{
-    NSI_FROM_TX(Attr)
-
-    if (nsAttr)
-        nsAttr->SetValue(aNewValue);
-}
-
-/*
+/**
  * Call nsIDOMAttr::GetOwnerElement to get the owning element
  *
  * @return the xpath parent
  */
 Node* Attr::getXPathParent()
 {
-    NSI_FROM_TX_NULL_CHECK(Attr)
-    nsCOMPtr<nsIDOMElement> ownerElem;
-
-    if (NS_SUCCEEDED(nsAttr->GetOwnerElement(getter_AddRefs(ownerElem))))
-        return ownerDocument->createWrapper(ownerElem);
-    return NULL;
+    nsCOMPtr<nsIDOMElement> ownerElem =
+        do_QueryInterface(mParent);
+    if (!ownerElem) {
+        return nsnull;
+    }
+    return mOwnerDocument->createElement(ownerElem);
 }
 
-/*
+/**
  * Returns the local name atomized
  *
  * @return the node's localname atom
  */
 MBool Attr::getLocalName(txAtom** aLocalName)
 {
-    if (!aLocalName)
+    if (!aLocalName) {
         return MB_FALSE;
-    NSI_FROM_TX(Attr)
-    if (!nsAttr)
-        return MB_FALSE;
-    nsAutoString lName;
-    NS_ENSURE_SUCCESS(nsAttr->GetLocalName(lName), MB_FALSE);
-    *aLocalName = NS_NewAtom(lName);
+    }
+    *aLocalName = mLocalName;
     NS_ENSURE_TRUE(*aLocalName, MB_FALSE);
+    TX_ADDREF_ATOM(*aLocalName);
     return MB_TRUE;
 }

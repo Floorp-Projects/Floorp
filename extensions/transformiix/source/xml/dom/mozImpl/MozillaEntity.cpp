@@ -22,11 +22,13 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla nsIDOMEntity
-   interface into a TransforMIIX Entity interface.
-*/
+/**
+ * Implementation of the wrapper class to convert the Mozilla nsIDOMEntity
+ * interface into a TransforMIIX Entity interface.
+ */
 
 #include "mozilladom.h"
+#include "nsIDOMEntity.h"
 
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.
@@ -52,11 +54,8 @@ Entity::~Entity()
  */
 const String& Entity::getPublicId()
 {
-    NSI_FROM_TX(Entity)
-
-    publicId.clear();
-    if (nsEntity)
-        nsEntity->GetPublicId(publicId);
+    NSI_FROM_TX(Entity);
+    nsEntity->GetPublicId(publicId);
     return publicId;
 }
 
@@ -67,11 +66,8 @@ const String& Entity::getPublicId()
  */
 const String& Entity::getSystemId()
 {
-    NSI_FROM_TX(Entity)
-
-    systemId.clear();
-    if (nsEntity)
-        nsEntity->GetSystemId(systemId);
+    NSI_FROM_TX(Entity);
+    nsEntity->GetSystemId(systemId);
     return systemId;
 }
 
@@ -83,10 +79,7 @@ const String& Entity::getSystemId()
  */
 const String& Entity::getNotationName()
 {
-    NSI_FROM_TX(Entity)
-
-    notationName.clear();
-    if (nsEntity)
-        nsEntity->GetNotationName(notationName);
+    NSI_FROM_TX(Entity);
+    nsEntity->GetNotationName(notationName);
     return notationName;
 }

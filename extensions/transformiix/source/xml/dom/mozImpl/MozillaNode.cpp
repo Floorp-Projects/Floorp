@@ -23,33 +23,37 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla nsIDOMNode
-   interface into a TransforMIIX Node interface.
-*/
+/**
+ * Implementation of the wrapper class to convert the Mozilla nsIDOMNode
+ * interface into a TransforMIIX Node interface.
+ */
 
-#include "txAtoms.h"
 #include "mozilladom.h"
-#include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsINameSpaceManager.h"
+#include "nsIDOMAttr.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
+#include "txAtoms.h"
 
 MOZ_DECL_CTOR_COUNTER(Node)
 
-/*
+/**
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
  * @param aNode the nsIDOMNode you want to wrap
  * @param aOwner the document that owns this object
  */
 Node::Node(nsIDOMNode* aNode, Document* aOwner) :
-            MozillaObjectWrapper(aNode, aOwner)
+    MozillaObjectWrapper(aNode, aOwner),
+    mNamespaceID(0),
+    mOrderInfo(0)
 {
     MOZ_COUNT_CTOR(Node);
-    namespaceID=0;
-    mOrderInfo = 0;
 }
 
-/*
+/**
  * Destructor
  */
 Node::~Node()
@@ -58,273 +62,166 @@ Node::~Node()
     delete mOrderInfo;
 }
 
-/*
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aNode the nsIDOMNode you want to wrap
- */
-void Node::setNSObj(nsIDOMNode* aNode)
-{
-    NSI_FROM_TX(Node)
-
-    // First we must remove this wrapper from the document hash table since we 
-    // don't want to be associated with the existing nsIDOM* object anymore
-    if (ownerDocument && nsNode)
-        ownerDocument->removeWrapper(nsNode);
-
-    // Now assume control of the new node
-    MozillaObjectWrapper::setNSObj(aNode);
-
-    // Finally, place our selves back in the hash table
-    if (ownerDocument && aNode)
-        ownerDocument->addWrapper(this);
-}
-
-/*
+/**
  * Call nsIDOMNode::GetNodeName to get the node's name.
  *
  * @return the node's name
  */
 const String& Node::getNodeName()
 {
-    NSI_FROM_TX(Node)
-
-    nodeName.clear();
-    if (nsNode)
-        nsNode->GetNodeName(nodeName);
-    return nodeName;
+    NSI_FROM_TX(Node);
+    nsNode->GetNodeName(mNodeName);
+    return mNodeName;
 }
 
-/*
+/**
  * Call nsIDOMNode::GetNodeValue to get the node's value.
  *
  * @return the node's name
  */
 const String& Node::getNodeValue()
 {
-    NSI_FROM_TX(Node)
-
-    nodeValue.clear();
-    if (nsNode)
-        nsNode->GetNodeValue(nodeValue);
-    return nodeValue;
+    NSI_FROM_TX(Node);
+    nsNode->GetNodeValue(mNodeValue);
+    return mNodeValue;
 }
 
-/*
+/**
  * Call nsIDOMNode::GetNodeType to get the node's type.
  *
  * @return the node's type
  */
 unsigned short Node::getNodeType() const
 {
-    NSI_FROM_TX(Node)
+    NSI_FROM_TX(Node);
     unsigned short nodeType = 0;
-
-    if (nsNode)
-        nsNode->GetNodeType(&nodeType);
+    nsNode->GetNodeType(&nodeType);
     return nodeType;
 }
 
-/*
+/**
  * Call nsIDOMNode::GetParentNode to get the node's parent.
  *
  * @return the node's parent
  */
 Node* Node::getParentNode()
 {
-    NSI_FROM_TX_NULL_CHECK(Node)
+    NSI_FROM_TX(Node);
     nsCOMPtr<nsIDOMNode> tmpParent;
-
-    if (NS_SUCCEEDED(nsNode->GetParentNode(getter_AddRefs(tmpParent))))
-        return ownerDocument->createWrapper(tmpParent);
-    else
-        return NULL;
+    nsNode->GetParentNode(getter_AddRefs(tmpParent));
+    if (!tmpParent) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(tmpParent);
 }
 
-/*
+/**
  * Call nsIDOMNode::GetChildNodes to get the node's childnodes.
  *
  * @return the node's children
  */
 NodeList* Node::getChildNodes()
 {
-    NSI_FROM_TX_NULL_CHECK(Node)
+    NSI_FROM_TX(Node);
     nsCOMPtr<nsIDOMNodeList> tmpNodeList;
-
-    if (NS_SUCCEEDED(nsNode->GetChildNodes(getter_AddRefs(tmpNodeList))))
-        return (NodeList*)ownerDocument->createNodeList(tmpNodeList);
-    else
-        return NULL;
+    nsNode->GetChildNodes(getter_AddRefs(tmpNodeList));
+    if (!tmpNodeList) {
+        return nsnull;
+    }
+    return mOwnerDocument->createNodeList(tmpNodeList);
 }
 
-/*
+/**
  * Call nsIDOMNode::GetFirstChild to get the node's first child.
  *
  * @return the node's first child
  */
 Node* Node::getFirstChild()
 {
-    NSI_FROM_TX_NULL_CHECK(Node)
+    NSI_FROM_TX(Node);
     nsCOMPtr<nsIDOMNode> tmpFirstChild;
-
-    if (NS_SUCCEEDED(nsNode->GetFirstChild(getter_AddRefs(tmpFirstChild))))
-        return ownerDocument->createWrapper(tmpFirstChild);
-    else
-        return NULL;
+    nsNode->GetFirstChild(getter_AddRefs(tmpFirstChild));
+    if (!tmpFirstChild) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(tmpFirstChild);
 }
 
-/*
+/**
  * Call nsIDOMNode::GetLastChild to get the node's last child.
  *
  * @return the node's first child
  */
 Node* Node::getLastChild() 
 {
-    NSI_FROM_TX_NULL_CHECK(Node)
+    NSI_FROM_TX(Node);
     nsCOMPtr<nsIDOMNode> tmpLastChild;
-
-    if (NS_SUCCEEDED(nsNode->GetLastChild(getter_AddRefs(tmpLastChild))))
-        return ownerDocument->createWrapper(tmpLastChild);
-    else
-        return NULL;
+    nsNode->GetLastChild(getter_AddRefs(tmpLastChild));
+    if (!tmpLastChild) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(tmpLastChild);
 }
 
-/*
+/**
  * Call nsIDOMNode::GetPreviousSibling to get the node's previous sibling.
  *
  * @return the node's previous sibling
  */
 Node* Node::getPreviousSibling()
 {
-    NSI_FROM_TX_NULL_CHECK(Node)
+    NSI_FROM_TX(Node);
     nsCOMPtr<nsIDOMNode> tmpPrevSib;
-
-    if (NS_SUCCEEDED(nsNode->GetPreviousSibling(getter_AddRefs(tmpPrevSib))))
-        return ownerDocument->createWrapper(tmpPrevSib);
-    else
-        return NULL;
+    nsNode->GetPreviousSibling(getter_AddRefs(tmpPrevSib));
+    if (!tmpPrevSib) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(tmpPrevSib);
 }
 
-/*
+/**
  * Call nsIDOMNode::GetNextSibling to get the node's next sibling.
  *
  * @return the node's next sibling
  */
 Node* Node::getNextSibling()
 {
-    NSI_FROM_TX_NULL_CHECK(Node)
+    NSI_FROM_TX(Node);
     nsCOMPtr<nsIDOMNode> tmpNextSib;
-
-    if (NS_SUCCEEDED(nsNode->GetNextSibling(getter_AddRefs(tmpNextSib))))
-        return ownerDocument->createWrapper(tmpNextSib);
-    else
-        return NULL;
+    nsNode->GetNextSibling(getter_AddRefs(tmpNextSib));
+    if (!tmpNextSib) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(tmpNextSib);
 }
 
-/*
+/**
  * Call nsIDOMNode::GetAttributes to get the node's attributes.
  *
  * @return the node's attributes
  */
 NamedNodeMap* Node::getAttributes()
 {
-    NSI_FROM_TX_NULL_CHECK(Node)
+    NSI_FROM_TX(Node);
     nsCOMPtr<nsIDOMNamedNodeMap> tmpAttributes;
-
-    if (NS_SUCCEEDED(nsNode->GetAttributes(getter_AddRefs(tmpAttributes))))
-        return (NamedNodeMap*)ownerDocument->createNamedNodeMap(tmpAttributes);
-    else
-        return NULL;
+    nsNode->GetAttributes(getter_AddRefs(tmpAttributes));
+    if (!tmpAttributes) {
+        return nsnull;
+    }
+    return mOwnerDocument->createNamedNodeMap(tmpAttributes);
 }
 
-/*
+/**
  * Get this wrapper's owning document.
  *
  * @return the wrapper's owning document
  */
 Document* Node::getOwnerDocument()
 {
-    return ownerDocument;
+    return mOwnerDocument;
 }
 
-/*
- * Call nsIDOMNode::SetNodeValue to set this node's value.
- *
- * @param aNewNodeValue the new value for the node
- */
-void Node::setNodeValue(const String& aNewNodeValue)
-{
-    NSI_FROM_TX(Node)
-
-    if (nsNode)
-        nsNode->SetNodeValue(aNewNodeValue);
-}
-
-/*
- * Call nsIDOMNode::insertBefore to insert a new child before an existing child.
- *
- * @param aNewChild the new child to insert
- * @param aRefChild the child before which the new child is inserted
- *
- * @return the inserted child
- */
-Node* Node::insertBefore(Node* aNewChild, Node* aRefChild)
-{
-    NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(GET_NSOBJ(aNewChild)));
-    nsCOMPtr<nsIDOMNode> refChild(do_QueryInterface(GET_NSOBJ(aRefChild)));
-    nsCOMPtr<nsIDOMNode> returnValue;
-
-    if (NS_SUCCEEDED(nsNode->InsertBefore(newChild, refChild,
-            getter_AddRefs(returnValue))))
-        return ownerDocument->createWrapper(returnValue);
-    else
-        return NULL;
-}
-
-/*
- * Call nsIDOMNode::ReplaceChild to replace an existing child with a new child.
- *
- * @param aNewChild the new child to insert
- * @param aOldChild the child that has to be replaced
- *
- * @return the replaced child
- */
-Node* Node::replaceChild(Node* aNewChild, Node* aOldChild)
-{
-    NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(GET_NSOBJ(aNewChild)));
-    nsCOMPtr<nsIDOMNode> oldChild(do_QueryInterface(GET_NSOBJ(aOldChild)));
-    nsCOMPtr<nsIDOMNode> returnValue;
-
-    if (NS_SUCCEEDED(nsNode->ReplaceChild(newChild,
-               oldChild, getter_AddRefs(returnValue))))
-        return (Node*)ownerDocument->removeWrapper(returnValue.get());
-    else
-        return NULL;
-}
-
-/*
- * Call nsIDOMNode::RemoveChild to remove a child.
- *
- * @param aOldChild the child to remove
- *
- * @return the removed child
- */
-Node* Node::removeChild(Node* aOldChild)
-{
-    NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> oldChild(do_QueryInterface(GET_NSOBJ(aOldChild)));
-    nsCOMPtr<nsIDOMNode> returnValue;
-
-    if (NS_SUCCEEDED(nsNode->RemoveChild(oldChild,
-            getter_AddRefs(returnValue))))
-        return (Node*)ownerDocument->removeWrapper(returnValue.get());
-    else
-        return NULL;
-}
-
-/*
+/**
  * Call nsIDOMNode::AppendChild to append a child to the current node.
  *
  * @param aNewChild the child to append
@@ -333,69 +230,46 @@ Node* Node::removeChild(Node* aOldChild)
  */
 Node* Node::appendChild(Node* aNewChild)
 {
-    NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(GET_NSOBJ(aNewChild)));
-    nsCOMPtr<nsIDOMNode> returnValue;
-
-    if (NS_SUCCEEDED(nsNode->AppendChild(newChild,
-            getter_AddRefs(returnValue))))
-        return ownerDocument->createWrapper(returnValue);
-    else
-        return NULL;
-}
-
-/*
- * Call nsIDOMNode::CloneNode to clone this node.
- *
- * @param aDeep recursive cloning?
- * @param aDest the Node to put the cloned nsIDOMNode into
- *
- * @return the new (cloned) node
- */
-Node* Node::cloneNode(MBool aDeep, Node* aDest)
-{
-    NSI_FROM_TX_NULL_CHECK(Node)
-    nsCOMPtr<nsIDOMNode> returnValue;
-
-    if (NS_SUCCEEDED(nsNode->CloneNode(aDeep, getter_AddRefs(returnValue))))
-    {
-        aDest->setNSObj(returnValue);  
-        return aDest;
+    if (!aNewChild) {
+        return nsnull;
     }
-    else
-        return NULL;
+    NSI_FROM_TX(Node);
+    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(aNewChild->getNSObj()));
+    nsCOMPtr<nsIDOMNode> returnValue;
+    nsNode->AppendChild(newChild, getter_AddRefs(returnValue));
+    if (!returnValue) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(returnValue);
 }
 
-/*
+/**
  * Call nsIDOMNode::HasChildNodes to return if this node has children.
  *
  * @return boolean value that says if this node has children
  */
 MBool Node::hasChildNodes() const
 {
-    NSI_FROM_TX(Node)
+    NSI_FROM_TX(Node);
     PRBool returnValue = MB_FALSE;
-
-    if (nsNode)
-        nsNode->HasChildNodes(&returnValue);
+    nsNode->HasChildNodes(&returnValue);
     return returnValue;
 }
 
-/*
+/**
  * Returns the Namespace URI
  * uses the Mozilla dom
  * Intoduced in DOM2
  */
 String Node::getNamespaceURI()
 {
-    NSI_FROM_TX(Node)
+    NSI_FROM_TX(Node);
     String uri;
-    if (nsNode)
-        nsNode->GetNamespaceURI(uri);
+    nsNode->GetNamespaceURI(uri);
     return uri;
 }
 
-/*
+/**
  * Returns the local name atomized
  *
  * @return the node's localname atom
@@ -408,17 +282,17 @@ MBool Node::getLocalName(txAtom** aLocalName)
     return MB_TRUE;
 }
 
-/*
+/**
  * Returns the namespace ID of the node
  *
  * @return the node's namespace ID
  */
 PRInt32 Node::getNamespaceID()
 {
-    return namespaceID;
+    return mNamespaceID;
 }
 
-/*
+/**
  * Returns the parent node according to the XPath datamodel
  */
 Node* Node::getXPathParent()
@@ -426,7 +300,7 @@ Node* Node::getXPathParent()
     return getParentNode();
 }
 
-/*
+/**
  * Returns the namespace ID associated with the given prefix in the context
  * of this node.
  *
@@ -438,21 +312,21 @@ Node* Node::getXPathParent()
  */
 PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
 {
-    NSI_FROM_TX(Node)
+    NSI_FROM_TX(Node);
     nsresult rv;
     
-    if (!nsNode)
-        return kNameSpaceID_Unknown;
-    if (aPrefix == txXMLAtoms::xmlns)
+    if (aPrefix == txXMLAtoms::xmlns) {
         return kNameSpaceID_XMLNS;
-    if (aPrefix == txXMLAtoms::xml)
+    }
+    if (aPrefix == txXMLAtoms::xml) {
         return kNameSpaceID_XML;
+    }
 
     nsCOMPtr<nsIContent> elem;
     unsigned short nodeType = 0;
     nsNode->GetNodeType(&nodeType);
     switch(nodeType) {
-        case Node::ATTRIBUTE_NODE :
+        case Node::ATTRIBUTE_NODE:
         {
             nsCOMPtr<nsIDOMElement> owner;
             nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(nsNode));
@@ -464,12 +338,15 @@ PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
             break;
         }
         default:
+        {
             //XXX Namespace: we have to handle namespace nodes here
             elem = do_QueryInterface(nsNode);
+        }
     }
 
-    if (!aPrefix || aPrefix == txXMLAtoms::_empty)
+    if (!aPrefix || aPrefix == txXMLAtoms::_empty) {
         aPrefix = txXMLAtoms::xmlns;
+    }
 
     while (elem) {
         nsAutoString uri;
@@ -477,11 +354,12 @@ PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
         NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
         if (rv != NS_CONTENT_ATTR_NOT_THERE) {
             PRInt32 nsId;
-            NS_ASSERTION(ownerDocument->nsNSManager,
+            NS_ASSERTION(mOwnerDocument->nsNSManager,
                          "owner document lacks namespace manager");
-            if (!ownerDocument->nsNSManager)
+            if (!mOwnerDocument->nsNSManager) {
                 return kNameSpaceID_Unknown;
-            ownerDocument->nsNSManager->RegisterNameSpace(uri, nsId);
+            }
+            mOwnerDocument->nsNSManager->RegisterNameSpace(uri, nsId);
             return nsId;
         }
 
@@ -490,15 +368,16 @@ PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
         NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
     }
 
-    if (aPrefix == txXMLAtoms::xmlns)
+    if (aPrefix == txXMLAtoms::xmlns) {
         // No default namespace
         return kNameSpaceID_None;
+    }
 
     // Error, namespace not found
     return kNameSpaceID_Unknown;
 }
 
-/*
+/**
  * Returns the base URI of the node. Acccounts for xml:base
  * attributes.
  *
@@ -506,59 +385,66 @@ PRInt32 Node::lookupNamespaceID(txAtom* aPrefix)
  */
 String Node::getBaseURI()
 {
-    NSI_FROM_TX(Node)
+    NSI_FROM_TX(Node);
     nsCOMPtr<nsIDOM3Node> nsDOM3Node = do_QueryInterface(nsNode);
     String url;
-
-    if (nsDOM3Node)
+    if (nsDOM3Node) {
         nsDOM3Node->GetBaseURI(url);
-
+    }
     return url;
 }
 
-/*
+/**
  * Compares document position of this node relative to another node
  */
 PRInt32 Node::compareDocumentPosition(Node* aOther)
 {
   OrderInfo* myOrder = getOrderInfo();
   OrderInfo* otherOrder = aOther->getOrderInfo();
-  if (!myOrder || !otherOrder)
+  if (!myOrder || !otherOrder) {
       return -1;
+  }
 
   if (myOrder->mRoot == otherOrder->mRoot) {
     int c = 0;
     while (c < myOrder->mSize && c < otherOrder->mSize) {
-      if (myOrder->mOrder[c] < otherOrder->mOrder[c])
+      if (myOrder->mOrder[c] < otherOrder->mOrder[c]) {
         return -1;
-      if (myOrder->mOrder[c] > otherOrder->mOrder[c])
+      }
+      if (myOrder->mOrder[c] > otherOrder->mOrder[c]) {
         return 1;
+      }
       ++c;
     }
-    if (c < myOrder->mSize)
+    if (c < myOrder->mSize) {
       return 1;
-    if (c < otherOrder->mSize)
+    }
+    if (c < otherOrder->mSize) {
       return -1;
+    }
     return 0;
   }
 
-  if (myOrder->mRoot < otherOrder->mRoot)
+  if (myOrder->mRoot < otherOrder->mRoot) {
     return -1;
+  }
 
   return 1;
 }
 
-/*
+/**
  * Get order information for node
  */
 Node::OrderInfo* Node::getOrderInfo()
 {
-    if (mOrderInfo)
+    if (mOrderInfo) {
         return mOrderInfo;
+    }
 
     mOrderInfo = new OrderInfo;
-    if (!mOrderInfo)
+    if (!mOrderInfo) {
         return 0;
+    }
 
     Node* parent = getXPathParent();
     if (!parent) {
@@ -612,7 +498,7 @@ Node::OrderInfo* Node::getOrderInfo()
         // XXX Namespace: need to handle namespace nodes here
         default:
         {
-            nsCOMPtr<nsIContent> cont(do_QueryInterface(nsObject));
+            nsCOMPtr<nsIContent> cont(do_QueryInterface(mMozObject));
 
             nsISupports* parentObj = parent->getNSObj();
 
@@ -641,7 +527,7 @@ Node::OrderInfo* Node::getOrderInfo()
             nsCOMPtr<nsIDOMNodeList> childNodes;
 
             nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(parentObj);
-            nsCOMPtr<nsIDOMNode> thisNode = do_QueryInterface(getNSObj());
+            nsCOMPtr<nsIDOMNode> thisNode = do_QueryInterface(mMozObject);
             parentNode->GetChildNodes(getter_AddRefs(childNodes));
             NS_ENSURE_TRUE(childNodes, 0);
 
@@ -664,7 +550,7 @@ Node::OrderInfo* Node::getOrderInfo()
     return mOrderInfo;
 }
 
-/*
+/**
  * OrderInfo destructor
  */
 Node::OrderInfo::~OrderInfo()

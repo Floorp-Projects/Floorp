@@ -23,56 +23,106 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla nsIDOMDocument
-   interface into a TransforMIIX Document interface.
-*/
+/**
+ * Implementation of the wrapper class to convert the Mozilla nsIDOMDocument
+ * interface into a TransforMIIX Document interface.
+ */
 
 #include "mozilladom.h"
-#include "nsContentCID.h"
 #include "nsIDocument.h"
-#include "nsIURL.h"
+#include "nsIDOMAttr.h"
+#include "nsIDOMComment.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentFragment.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEntity.h"
+#include "nsIDOMNotation.h"
+#include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMDocumentType.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMText.h"
 
-static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
+// Need to determine if these are well-chosen.
+#define WRAPPER_INITIAL_SIZE 256
+#define ATTR_INITIAL_SIZE 128
 
-PR_STATIC_CALLBACK(PRBool)
-DeleteWrapper(nsHashKey *aKey, void *aData, void* closure)
+struct txWrapperHashEntry : public PLDHashEntryHdr
 {
-    delete (MozillaObjectWrapper*)aData;
-    return PR_TRUE;
+    MozillaObjectWrapper* mWrapper;
+};
+
+PR_STATIC_CALLBACK(const void *)
+txWrapperHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+    txWrapperHashEntry *e =
+        NS_STATIC_CAST(txWrapperHashEntry *, entry);
+    return e->mWrapper->mMozObject;
 }
 
-/**
- * Construct a new Mozilla document and wrap it. The caller is responsible for
- * deleting the wrapper object!
- */
-Document::Document() : Node(0, 0)
+PR_STATIC_CALLBACK(void)
+txWrapperHashClearEntry(PLDHashTable *table,
+                        PLDHashEntryHdr *entry)
 {
-    nsresult res;
-    nsCOMPtr<nsIDOMDocument> document;
-
-    nsCOMPtr<nsIDOMDOMImplementation> implementation =
-                do_CreateInstance(kIDOMDOMImplementationCID, &res);
-    //if (NS_FAILED(res)) return NULL;
-
-    // Create an empty document from it
-    nsAutoString emptyStr;
-    res = implementation->CreateDocument(emptyStr, emptyStr, nsnull,
-                getter_AddRefs(document));
-    //if (NS_FAILED(res)) return NULL;
-
-    ownerDocument = this;
-    wrapperHashTable = new nsObjectHashtable(nsnull, nsnull,
-                                             DeleteWrapper, nsnull);
-#ifdef DEBUG
-    bInHashTableDeletion = PR_FALSE;
-#endif
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
-    NS_ASSERTION(doc,"document doesn't implement nsIDocument");
-    if (doc) {
-        doc->GetNameSpaceManager(*getter_AddRefs(nsNSManager));
-        NS_ASSERTION(nsNSManager, "Unable to get nsINamespaceManager");
+    txWrapperHashEntry *e = NS_STATIC_CAST(txWrapperHashEntry *, entry);
+    // Don't delete the document wrapper, this is only called from its
+    // destructor.
+    if (e->mWrapper != table->data) {
+        delete e->mWrapper;
     }
-    addWrapper(this);
+}
+
+PR_STATIC_CALLBACK(PRBool)
+txWrapperHashMatchEntry(PLDHashTable *table,
+                        const PLDHashEntryHdr *entry,
+                        const void *key)
+{
+    const txWrapperHashEntry *e =
+        NS_STATIC_CAST(const txWrapperHashEntry *, entry);
+    return e->mWrapper->mMozObject == key;
+}
+
+struct txAttributeHashEntry : public PLDHashEntryHdr
+{
+    Attr* mAttribute;
+};
+
+PR_STATIC_CALLBACK(const void *)
+txAttributeHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+    txAttributeHashEntry *e =
+        NS_STATIC_CAST(txAttributeHashEntry *, entry);
+    return e->mAttribute->GetKey();
+}
+
+PR_STATIC_CALLBACK(PLDHashNumber)
+txAttributeHashHashKey(PLDHashTable *table, const void *key)
+{
+    const txAttributeNodeKey* attrKey =
+        NS_STATIC_CAST(const txAttributeNodeKey *, key);
+    return attrKey->GetHash();
+}
+
+PR_STATIC_CALLBACK(PRBool)
+txAttributeHashMatchEntry(PLDHashTable *table,
+                               const PLDHashEntryHdr *entry,
+                               const void *key)
+{
+    const txAttributeHashEntry *e =
+        NS_STATIC_CAST(const txAttributeHashEntry *, entry);
+    const txAttributeNodeKey* key1 = e->mAttribute->GetKey();
+    const txAttributeNodeKey* key2 =
+        NS_STATIC_CAST(const txAttributeNodeKey *, key);
+
+    return key1->Equals(*key2);
+}
+
+PR_STATIC_CALLBACK(void)
+txAttributeHashClearEntry(PLDHashTable *table,
+                          PLDHashEntryHdr *entry)
+{
+    txAttributeHashEntry *e =
+        NS_STATIC_CAST(txAttributeHashEntry *, entry);
+    delete e->mAttribute;
 }
 
 /**
@@ -81,21 +131,70 @@ Document::Document() : Node(0, 0)
  *
  * @param aDocument the nsIDOMDocument you want to wrap
  */
-Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, 0)
+Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, this)
 {
-    ownerDocument = this;
-    wrapperHashTable = new nsObjectHashtable(nsnull, nsnull,
-                                             DeleteWrapper, nsnull);
 #ifdef DEBUG
-    bInHashTableDeletion = PR_FALSE;
+    mInHashTableDeletion = PR_FALSE;
 #endif
+
+    static PLDHashTableOps wrapper_hash_table_ops =
+    {
+        PL_DHashAllocTable,
+        PL_DHashFreeTable,
+        txWrapperHashGetKey,
+        PL_DHashVoidPtrKeyStub,
+        txWrapperHashMatchEntry,
+        PL_DHashMoveEntryStub,
+        txWrapperHashClearEntry,
+        PL_DHashFinalizeStub,
+    };
+    PRBool success = PL_DHashTableInit(&mWrapperHashTable,
+                                       &wrapper_hash_table_ops,
+                                       this,
+                                       sizeof(txWrapperHashEntry),
+                                       WRAPPER_INITIAL_SIZE);
+    if (success) {
+        txWrapperHashEntry* entry =
+            NS_STATIC_CAST(txWrapperHashEntry *,
+                           PL_DHashTableOperate(&mWrapperHashTable,
+                                                aDocument,
+                                                PL_DHASH_ADD));
+
+        NS_ASSERTION(entry, "Out-of-memory creating an entry.");
+        if (entry && !entry->mWrapper) {
+            entry->mWrapper = this;
+        }
+    }
+    else {
+        mWrapperHashTable.ops = nsnull;
+    }
+
+    static PLDHashTableOps attribute_hash_table_ops =
+    {
+        PL_DHashAllocTable,
+        PL_DHashFreeTable,
+        txAttributeHashGetKey,
+        txAttributeHashHashKey,
+        txAttributeHashMatchEntry,
+        PL_DHashMoveEntryStub,
+        txAttributeHashClearEntry,
+        PL_DHashFinalizeStub,
+    };
+    success = PL_DHashTableInit(&mAttributeNodes,
+                                &attribute_hash_table_ops,
+                                nsnull,
+                                sizeof(txAttributeHashEntry),
+                                ATTR_INITIAL_SIZE);
+    if (!success) {
+        mAttributeNodes.ops = nsnull;
+    }
+
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
     NS_ASSERTION(doc,"document doesn't implement nsIDocument");
     if (doc) {
         doc->GetNameSpaceManager(*getter_AddRefs(nsNSManager));
         NS_ASSERTION(nsNSManager, "Unable to get nsINamespaceManager");
     }
-    addWrapper(this);
 }
 
 /**
@@ -103,11 +202,58 @@ Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, 0)
  */
 Document::~Document()
 {
-    removeWrapper(this);
 #ifdef DEBUG
-    bInHashTableDeletion = PR_TRUE;
+    mInHashTableDeletion = PR_TRUE;
 #endif
-    delete wrapperHashTable;
+    if (mAttributeNodes.ops) {
+        PL_DHashTableFinish(&mAttributeNodes);
+    }
+    if (mWrapperHashTable.ops) {
+        PL_DHashTableFinish(&mWrapperHashTable);
+    }
+}
+
+/**
+ * This macro can be used to declare a createWrapper implementation
+ * for the supplied wrapper class.
+ */
+#define IMPL_CREATE_WRAPPER(_txClass)                           \
+IMPL_CREATE_WRAPPER2(_txClass, create##_txClass)
+
+/**
+ * This macro can be used to declare a createWrapper implementation
+ * for the supplied wrapper class. The function parameter defines
+ * the function name for the implementation function.
+ */
+#define IMPL_CREATE_WRAPPER2(_txClass, _function)               \
+_txClass* Document::_function(nsIDOM##_txClass* aNsObject)      \
+{                                                               \
+    NS_ASSERTION(aNsObject,                                     \
+                 "Need a Mozilla object to create a wrapper."); \
+    if (!mWrapperHashTable.ops) {                               \
+        return new _txClass(aNsObject, this);                   \
+    }                                                           \
+                                                                \
+    txWrapperHashEntry* entry =                                 \
+        NS_STATIC_CAST(txWrapperHashEntry *,                    \
+                       PL_DHashTableOperate(&mWrapperHashTable, \
+                                            aNsObject,          \
+                                            PL_DHASH_ADD));     \
+                                                                \
+    NS_ASSERTION(entry, "Out-of-memory creating an entry.");    \
+    if (!entry) {                                               \
+        return nsnull;                                          \
+    }                                                           \
+    if (!entry->mWrapper) {                                     \
+        entry->mWrapper = new _txClass(aNsObject, this);        \
+        NS_ASSERTION(entry->mWrapper,                           \
+                     "Out-of-memory creating a wrapper.");      \
+        if (!entry->mWrapper) {                                 \
+            PL_DHashTableRawRemove(&mWrapperHashTable, entry);  \
+            return nsnull;                                      \
+        }                                                       \
+    }                                                           \
+    return NS_STATIC_CAST(_txClass*, entry->mWrapper);          \
 }
 
 /**
@@ -118,14 +264,13 @@ Document::~Document()
  */
 Element* Document::getDocumentElement()
 {
-    NSI_FROM_TX_NULL_CHECK(Document)
-    nsCOMPtr<nsIDOMElement> theElement;
-
-    if (NS_SUCCEEDED(nsDocument->GetDocumentElement(
-                getter_AddRefs(theElement))))
-        return (Element*)createWrapper(theElement);
-    else
-        return NULL;
+    NSI_FROM_TX(Document);
+    nsCOMPtr<nsIDOMElement> element;
+    nsDocument->GetDocumentElement(getter_AddRefs(element));
+    if (!element) {
+        return nsnull;
+    }
+    return createElement(element);
 }
 
 /**
@@ -135,30 +280,13 @@ Element* Document::getDocumentElement()
  */
 DocumentType* Document::getDoctype()
 {
-    NSI_FROM_TX_NULL_CHECK(Document)
-    nsCOMPtr<nsIDOMDocumentType> theDocType;
-
-    if (NS_SUCCEEDED(nsDocument->GetDoctype(getter_AddRefs(theDocType))))
-        return (DocumentType*)createWrapper(theDocType);
-    else
-        return NULL;
-}
-
-/**
- * Call nsIDOMDocument::GetImplementation to get the document's
- * DOMImplementation.
- *
- * @return the DOMImplementation
- */
-DOMImplementation* Document::getImplementation()
-{
-    NSI_FROM_TX_NULL_CHECK(Document)
-    nsCOMPtr<nsIDOMDOMImplementation> theImpl;
-
-    if (NS_SUCCEEDED(nsDocument->GetImplementation(getter_AddRefs(theImpl))))
-        return createDOMImplementation(theImpl);
-    else
-        return NULL;
+    NSI_FROM_TX(Document);
+    nsCOMPtr<nsIDOMDocumentType> docType;
+    nsDocument->GetDoctype(getter_AddRefs(docType));
+    if (!docType) {
+        return nsnull;
+    }
+    return createDocumentType(docType);
 }
 
 /**
@@ -168,43 +296,13 @@ DOMImplementation* Document::getImplementation()
  */
 DocumentFragment* Document::createDocumentFragment()
 {
-    NSI_FROM_TX_NULL_CHECK(Document)
+    NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMDocumentFragment> fragment;
-
-    if (NS_SUCCEEDED(nsDocument->CreateDocumentFragment(
-                getter_AddRefs(fragment))))
-        return createDocumentFragment(fragment);
-    else
-        return NULL;
-}
-
-/**
- * Create a wrapper for a nsIDOMDocumentFragment, reuses an existing wrapper if
- * possible.
- *
- * @param aFragment the nsIDOMDocumentFragment you want to wrap
- *
- * @return the DocumentFragment
- */
-IMPL_CREATE_WRAPPER(DocumentFragment)
-
-/**
- * Call nsIDOMDocument::CreateElement to create an Element.
- *
- * @param aTagName the name of the element you want to create
- *
- * @return the Element
- */
-Element* Document::createElement(const String& aTagName)
-{
-    NSI_FROM_TX_NULL_CHECK(Document)
-    nsCOMPtr<nsIDOMElement> element;
-
-    if (NS_SUCCEEDED(nsDocument->CreateElement(aTagName,
-                getter_AddRefs(element))))
-        return createElement(element);
-    else
-        return NULL;
+    nsDocument->CreateDocumentFragment(getter_AddRefs(fragment));
+    if (!fragment) {
+        return nsnull;
+    }
+    return createNode(fragment);
 }
 
 /**
@@ -216,13 +314,13 @@ Element* Document::createElement(const String& aTagName)
  */
 Element* Document::getElementById(const String aID)
 {
-    NSI_FROM_TX_NULL_CHECK(Document)
+    NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMElement> element;
-
-    if (NS_SUCCEEDED(nsDocument->GetElementById(aID, getter_AddRefs(element))))
-        return createElement(element);
-    else
-        return NULL;
+    nsDocument->GetElementById(aID, getter_AddRefs(element));
+    if (!element) {
+        return nsnull;
+    }
+    return createElement(element);
 }
 
 /**
@@ -243,58 +341,16 @@ IMPL_CREATE_WRAPPER(Element)
  * @return the Element
  */
 Element* Document::createElementNS(const String& aNamespaceURI,
-            const String& aTagName)
+                                   const String& aTagName)
 {
-    NSI_FROM_TX_NULL_CHECK(Document)
+    NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMElement> element;
-
-    if (NS_SUCCEEDED(nsDocument->CreateElementNS(
-                aNamespaceURI, aTagName,
-                getter_AddRefs(element))))
-        return createElement(element);
-    else
-        return NULL;
-}
-
-/**
- * Call nsIDOMDocument::CreateAttribute to create an Attribute.
- *
- * @param aName the name of the attribute you want to create
- *
- * @return the Attribute
- */
-Attr* Document::createAttribute(const String& aName)
-{
-    NSI_FROM_TX_NULL_CHECK(Document)
-    nsCOMPtr<nsIDOMAttr> attr;
-
-    if (NS_SUCCEEDED(nsDocument->CreateAttribute(aName,
-                getter_AddRefs(attr))))
-        return createAttribute(attr);
-    else
-        return NULL;
-}
-
-/**
- * Call nsIDOMDocument::CreateAttributeNS to create an Attribute.
- *
- * @param aNamespaceURI the URI of the namespace for the element
- * @param aName the name of the attribute you want to create
- *
- * @return the Attribute
- */
-Attr* Document::createAttributeNS(const String& aNamespaceURI,
-                                  const String& aName)
-{
-    NSI_FROM_TX_NULL_CHECK(Document)
-    nsCOMPtr<nsIDOMAttr> attr;
-
-    if (NS_SUCCEEDED(nsDocument->CreateAttributeNS(
-                aNamespaceURI, aName,
-                getter_AddRefs(attr))))
-        return createAttribute(attr);
-    else
-        return NULL;
+    nsDocument->CreateElementNS(aNamespaceURI, aTagName,
+                                getter_AddRefs(element));
+    if (!element) {
+        return nsnull;
+    }
+    return createElement(element);
 }
 
 /**
@@ -304,7 +360,61 @@ Attr* Document::createAttributeNS(const String& aNamespaceURI,
  *
  * @return the Attribute
  */
-IMPL_CREATE_WRAPPER2(Attr, createAttribute)
+Attr* Document::createAttribute(nsIDOMAttr* aAttr)
+{
+    NS_ASSERTION(aAttr,
+                 "Need a Mozilla object to create a wrapper.");
+    if (!aAttr) {
+        return nsnull;
+    }
+
+    nsCOMPtr<nsIDOMElement> owner;
+    aAttr->GetOwnerElement(getter_AddRefs(owner));
+    nsCOMPtr<nsIContent> parent = do_QueryInterface(owner);
+
+    nsAutoString nameString;
+    aAttr->GetLocalName(nameString);
+    nsCOMPtr<nsIAtom> localName = do_GetAtom(nameString);
+
+    nsAutoString ns;
+    aAttr->GetNamespaceURI(ns);
+    PRInt32 namespaceID = kNameSpaceID_None;
+    if (!ns.IsEmpty()) {
+        NS_ASSERTION(nsNSManager,
+                     "owner document lacks namespace manager");
+        if (nsNSManager) {
+            nsNSManager->GetNameSpaceID(ns, namespaceID);
+        }
+    }
+
+    if (!mAttributeNodes.ops) {
+        return nsnull;
+    }
+
+    txAttributeNodeKey hashKey(parent, localName, namespaceID);
+
+    txAttributeHashEntry* entry =
+        NS_STATIC_CAST(txAttributeHashEntry *,
+                       PL_DHashTableOperate(&mAttributeNodes,
+                                            &hashKey,
+                                            PL_DHASH_ADD));
+
+    NS_ASSERTION(entry, "Out-of-memory creating an entry.");
+    if (!entry) {
+        return nsnull;
+    }
+    if (!entry->mAttribute) {
+        entry->mAttribute = new Attr(aAttr, this);
+        NS_ASSERTION(entry->mAttribute,
+                     "Out-of-memory creating an attribute wrapper.");
+        if (!entry->mAttribute) {
+            PL_DHashTableRawRemove(&mAttributeNodes, entry);
+            return nsnull;
+        }
+    }
+
+    return entry->mAttribute;
+}
 
 /**
  * Call nsIDOMDocument::CreateTextNode to create a Text node.
@@ -315,24 +425,15 @@ IMPL_CREATE_WRAPPER2(Attr, createAttribute)
  */
 Text* Document::createTextNode(const String& aData)
 {
-    NSI_FROM_TX_NULL_CHECK(Document)
+    NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMText> text;
-
-    if (NS_SUCCEEDED(nsDocument->CreateTextNode(aData,
-                getter_AddRefs(text))))
-        return createTextNode(text);
-    else
-        return NULL;
+    nsDocument->CreateTextNode(aData, getter_AddRefs(text));
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(text);
+    if (!node) {
+        return nsnull;
+    }
+    return createNode(node);
 }
-
-/**
- * Create a wrapper for a nsIDOMText, reuses an existing wrapper if possible.
- *
- * @param aText the nsIDOMText you want to wrap
- *
- * @return the Text node
- */
-IMPL_CREATE_WRAPPER2(Text, createTextNode)
 
 /**
  * Call nsIDOMDocument::CreateComment to create a Comment node.
@@ -343,53 +444,15 @@ IMPL_CREATE_WRAPPER2(Text, createTextNode)
  */
 Comment* Document::createComment(const String& aData)
 {
-    NSI_FROM_TX_NULL_CHECK(Document)
+    NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMComment> comment;
-
-    if (NS_SUCCEEDED(nsDocument->CreateComment(aData,
-                getter_AddRefs(comment))))
-        return createComment(comment);
-    else
-        return NULL;
+    nsDocument->CreateComment(aData, getter_AddRefs(comment));
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(comment);
+    if (!node) {
+        return nsnull;
+    }
+    return createNode(node);
 }
-
-/**
- * Create a wrapper for a nsIDOMComment, reuses an existing wrapper if possible.
- *
- * @param aComment the nsIDOMComment you want to wrap
- *
- * @return the Comment node
- */
-IMPL_CREATE_WRAPPER(Comment)
-
-/**
- * Call nsIDOMDocument::CreateCDATASection to create a CDataSection.
- *
- * @param aData the data of the CDataSection you want to create
- *
- * @return the CDataSection node
- */
-CDATASection* Document::createCDATASection(const String& aData)
-{
-    NSI_FROM_TX_NULL_CHECK(Document)
-    nsCOMPtr<nsIDOMCDATASection> cdata;
-
-    if (NS_SUCCEEDED(nsDocument->CreateCDATASection(aData,
-                getter_AddRefs(cdata))))
-        return createCDATASection(cdata);
-    else
-        return NULL;
-}
-
-/**
- * Create a wrapper for a nsIDOMCDATASection, reuses an existing wrapper if
- * possible.
- *
- * @param aCdata the nsIDOMCDATASection you want to wrap
- *
- * @return the CDATASection node
- */
-IMPL_CREATE_WRAPPER(CDATASection)
 
 /**
  * Call nsIDOMDocument::CreateProcessingInstruction to create a
@@ -403,15 +466,14 @@ IMPL_CREATE_WRAPPER(CDATASection)
 ProcessingInstruction* Document::createProcessingInstruction(
             const String& aTarget, const String& aData)
 {
-    NSI_FROM_TX_NULL_CHECK(Document)
+    NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMProcessingInstruction> pi;
-
-    if (NS_SUCCEEDED(nsDocument->CreateProcessingInstruction(
-                aTarget, aData,
-                getter_AddRefs(pi))))
-        return createProcessingInstruction(pi);
-    else
-        return NULL;
+    nsDocument->CreateProcessingInstruction(aTarget, aData,
+                                            getter_AddRefs(pi));
+    if (!pi) {
+        return nsnull;
+    }
+    return createProcessingInstruction(pi);
 }
 
 /**
@@ -423,35 +485,6 @@ ProcessingInstruction* Document::createProcessingInstruction(
  * @return the ProcessingInstruction node
  */
 IMPL_CREATE_WRAPPER(ProcessingInstruction)
-
-/**
- * Call nsIDOMDocument::CreateEntityReference to create a EntityReference.
- *
- * @param aName the name of the EntityReference you want to create
- *
- * @return the EntityReference
- */
-EntityReference* Document::createEntityReference(const String& aName)
-{
-    NSI_FROM_TX_NULL_CHECK(Document)
-    nsCOMPtr<nsIDOMEntityReference> entityRef;
-
-    if (NS_SUCCEEDED(nsDocument->CreateEntityReference(aName,
-                getter_AddRefs(entityRef))))
-        return createEntityReference(entityRef);
-    else
-        return NULL;
-}
-
-/**
- * Create a wrapper for a nsIDOMEntityReference, reuses an existing
- * wrapper if possible.
- *
- * @param aEntityRef the nsIDOMEntityReference you want to wrap
- *
- * @return the EntityReference
- */
-IMPL_CREATE_WRAPPER(EntityReference)
 
 /**
  * Create a wrapper for a nsIDOMEntity, reuses an existing wrapper if possible.
@@ -480,16 +513,6 @@ IMPL_CREATE_WRAPPER(Node)
  * @return the Notation
  */
 IMPL_CREATE_WRAPPER(Notation)
-
-/**
- * Create a wrapper for a nsIDOMDOMImplementation, reuses an existing wrapper if
- * possible.
- *
- * @param aImpl the nsIDOMDOMImplementation you want to wrap
- *
- * @return the DOMImplementation
- */
-IMPL_CREATE_WRAPPER(DOMImplementation)
 
 /**
  * Create a wrapper for a nsIDOMDocumentType, reuses an existing wrapper if
@@ -532,125 +555,129 @@ IMPL_CREATE_WRAPPER(NamedNodeMap)
  */
 Node* Document::createWrapper(nsIDOMNode* aNode)
 {
-    unsigned short nodeType = 0;
+    NS_ASSERTION(aNode,
+                 "Need a Mozilla object to create a wrapper.");
 
-    if (!aNode)
-      return NULL;
-
+    PRUint16 nodeType = 0;
     aNode->GetNodeType(&nodeType);
+
+    // Look up wrapper in the hash, except for attribute nodes since
+    // they're in a separate attribute hash. Let them be handled in
+    // createAttribute by falling through to the switch below.
+    if (nodeType != nsIDOMNode::ATTRIBUTE_NODE &&
+        mWrapperHashTable.ops) {
+        txWrapperHashEntry* entry =
+            NS_STATIC_CAST(txWrapperHashEntry *,
+                           PL_DHashTableOperate(&mWrapperHashTable,
+                                                aNode,
+                                                PL_DHASH_LOOKUP));
+        if (entry->mWrapper) {
+            return NS_STATIC_CAST(Node*, entry->mWrapper);
+        }
+    }
 
     switch (nodeType)
     {
         case nsIDOMNode::ELEMENT_NODE:
-            return createElement((nsIDOMElement*)aNode);
+        {
+            nsIDOMElement* element;
+            CallQueryInterface(aNode, &element);
+            Element* txElement = createElement(element);
+            NS_RELEASE(element);
+            return txElement;
             break;
-
+        }
         case nsIDOMNode::ATTRIBUTE_NODE:
-            return createAttribute((nsIDOMAttr*)aNode);
+        {
+            nsIDOMAttr* attr;
+            CallQueryInterface(aNode, &attr);
+            Attr* txAttr = createAttribute(attr);
+            NS_RELEASE(attr);
+            return txAttr;
             break;
-
-        case nsIDOMNode::TEXT_NODE:
-            return createTextNode((nsIDOMText*)aNode);
-            break;
-
+        }
         case nsIDOMNode::CDATA_SECTION_NODE:
-            return createCDATASection((nsIDOMCDATASection*)aNode);
-           break;
-
-        case nsIDOMNode::ENTITY_REFERENCE_NODE:
-            return createEntityReference((nsIDOMEntityReference*)aNode);
-            break;
-
-        case nsIDOMNode::ENTITY_NODE:
-            return createEntity((nsIDOMEntity*)aNode);
-            break;
-
-        case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-            return createProcessingInstruction(
-                        (nsIDOMProcessingInstruction*)aNode);
-            break;
-
         case nsIDOMNode::COMMENT_NODE:
-            return createComment((nsIDOMComment*)aNode);
-            break;
-
-        case nsIDOMNode::DOCUMENT_NODE:
-            if (aNode == getNSObj())
-                return this;
-            else {
-                // XXX (pvdb) We need a createDocument here!
-                return createNode(aNode);
-            }
-            break;
-
-        case nsIDOMNode::DOCUMENT_TYPE_NODE:
-            return createDocumentType((nsIDOMDocumentType*)aNode);
-            break;
-
         case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-            return createDocumentFragment((nsIDOMDocumentFragment*)aNode);
-            break;
-
-        case nsIDOMNode::NOTATION_NODE:
-            return createNotation((nsIDOMNotation*)aNode);
-            break;
-
-        default:
+        case nsIDOMNode::ENTITY_REFERENCE_NODE:
+        case nsIDOMNode::TEXT_NODE:
+        {
             return createNode(aNode);
+            break;
+        }
+        case nsIDOMNode::ENTITY_NODE:
+        {
+            nsIDOMEntity* entity;
+            CallQueryInterface(aNode, &entity);
+            Entity* txEntity = createEntity(entity);
+            NS_RELEASE(entity);
+            return txEntity;
+            break;
+        }
+        case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+        {
+            nsIDOMProcessingInstruction* pi;
+            CallQueryInterface(aNode, &pi);
+            ProcessingInstruction* txPi = createProcessingInstruction(pi);
+            NS_RELEASE(pi);
+            return txPi;
+            break;
+        }
+        case nsIDOMNode::DOCUMENT_NODE:
+        {
+            if (aNode == mMozObject) {
+                return this;
+            }
+            NS_ASSERTION(0, "We don't support creating new documents.");
+            return nsnull;
+            break;
+        }
+        case nsIDOMNode::DOCUMENT_TYPE_NODE:
+        {
+            nsIDOMDocumentType* docType;
+            CallQueryInterface(aNode, &docType);
+            DocumentType* txDocType = createDocumentType(docType);
+            NS_RELEASE(docType);
+            return txDocType;
+            break;
+        }
+        case nsIDOMNode::NOTATION_NODE:
+        {
+            nsIDOMNotation* notation;
+            CallQueryInterface(aNode, &notation);
+            Notation* txNotation = createNotation(notation);
+            NS_RELEASE(notation);
+            return txNotation;
+        }
+        default:
+        {
+            NS_WARNING("Don't know nodetype. This could be a failure.");
+            return createNode(aNode);
+        }
     }
-}
-
-/**
- * Add a wrapper to the document's hash table using the specified hash value.
- *
- * @param aObj the TxObject you want to add
- * @param aHashValue the key for the object in the hash table
- */
-void Document::addWrapper(MozillaObjectWrapper* aObject)
-{
-    nsISupportsKey key(aObject->getNSObj());
-    wrapperHashTable->Put(&key, aObject);
-}
-
-/**
- * Remove a wrapper from the document's hash table and return it to the caller.
- *
- * @param aHashValue the key for the object you want to remove
- *
- * @return the wrapper as a TxObject
- */
-TxObject* Document::removeWrapper(nsISupports* aMozillaObject)
-{
-    nsISupportsKey key(aMozillaObject);
-    return (TxObject*)wrapperHashTable->Remove(&key);
-}
-
-/**
- * Remove a wrapper from the document's hash table and return it to the caller.
- *
- * @param aHashValue the key for the object you want to remove
- *
- * @return the wrapper as a TxObject
- */
-TxObject* Document::removeWrapper(MozillaObjectWrapper* aObject)
-{
-    nsISupportsKey key(aObject->getNSObj());
-    return (TxObject*)wrapperHashTable->Remove(&key);
 }
 
 PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
 {
     PRInt32 namesspaceID = kNameSpaceID_Unknown;
-    if (nsNSManager)
+    if (nsNSManager) {
         nsNSManager->RegisterNameSpace(aNamespaceURI,
                                        namesspaceID);
+    }
     return namesspaceID;
 }
 
 void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
 {
-    if (nsNSManager)
+    if (nsNSManager) {
         nsNSManager->GetNameSpaceURI(aNamespaceID,
                                      aNamespaceURI);
-    return;
+    }
 }
+
+#ifdef DEBUG
+inline PRBool MozillaObjectWrapper::inHashTableDeletion()
+{
+    return mOwnerDocument->mInHashTableDeletion;
+}
+#endif

@@ -22,11 +22,13 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla nsIDOMNotation
-   interface into a TransforMIIX Notation interface.
-*/
+/**
+ * Implementation of the wrapper class to convert the Mozilla nsIDOMNotation
+ * interface into a TransforMIIX Notation interface.
+ */
 
 #include "mozilladom.h"
+#include "nsIDOMNotation.h"
 
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.
@@ -53,11 +55,8 @@ Notation::~Notation()
  */
 const String& Notation::getPublicId()
 {
-    NSI_FROM_TX(Notation)
-
-    publicId.clear();
-    if (nsNotation)
-        nsNotation->GetPublicId(publicId);
+    NSI_FROM_TX(Notation);
+    nsNotation->GetPublicId(publicId);
     return publicId;
 }
 
@@ -68,10 +67,7 @@ const String& Notation::getPublicId()
  */
 const String& Notation::getSystemId()
 {
-    NSI_FROM_TX(Notation)
-
-    systemId.clear();
-    if (nsNotation)
-        nsNotation->GetSystemId(systemId);
+    NSI_FROM_TX(Notation);
+    nsNotation->GetSystemId(systemId);
     return systemId;
 }

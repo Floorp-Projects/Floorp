@@ -23,16 +23,16 @@
  *
  */
 
-/*
+/**
  * Implementation of the wrapper class to convert the Mozilla
  * nsIDOMProcessingInstruction interface into a TransforMiiX
  * ProcessingInstruction interface.
  */
 
 #include "mozilladom.h"
-#include "nsIAtom.h"
+#include "nsIDOMProcessingInstruction.h"
 
-/*
+/**
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
  * @param aProcInstr the nsIDOMProcessingInstruction you want to wrap
@@ -45,14 +45,14 @@ ProcessingInstruction::ProcessingInstruction(
 {
 }
 
-/*
+/**
  * Destructor
  */
 ProcessingInstruction::~ProcessingInstruction()
 {
 }
 
-/*
+/**
  * Call nsIDOMProcessingInstruction::GetTarget to retrieve the target of the
  * processing instruction.
  *
@@ -60,15 +60,12 @@ ProcessingInstruction::~ProcessingInstruction()
  */
 const String& ProcessingInstruction::getTarget()
 {
-    NSI_FROM_TX(ProcessingInstruction)
-
-    target.clear();
-    if (nsProcessingInstruction)
-        nsProcessingInstruction->GetTarget(target);
-    return target;
+    NSI_FROM_TX(ProcessingInstruction);
+    nsProcessingInstruction->GetTarget(mTarget);
+    return mTarget;
 }
 
-/*
+/**
  * Call nsIDOMProcessingInstruction::GetData to retrieve the data of the
  * processing instruction.
  *
@@ -76,40 +73,22 @@ const String& ProcessingInstruction::getTarget()
  */
 const String& ProcessingInstruction::getData()
 {
-    NSI_FROM_TX(ProcessingInstruction)
-
-    data.clear();
-    if (nsProcessingInstruction)
-        nsProcessingInstruction->GetData(data);
-    return data;
+    NSI_FROM_TX(ProcessingInstruction);
+    nsProcessingInstruction->GetData(mData);
+    return mData;
 }
 
-/*
- * Call nsIDOMProcessingInstruction::SetData to set the data of the
- * processing instruction.
- *
- * @param aData the value to which you want to set the data of the PI
- */
-void ProcessingInstruction::setData(const String& aData)
-{
-    NSI_FROM_TX(ProcessingInstruction)
-
-    if (nsProcessingInstruction)
-        nsProcessingInstruction->SetData(aData);
-}
-
-/*
+/**
  * Returns the local name atomized
  *
  * @return the node's localname atom
  */
 MBool ProcessingInstruction::getLocalName(txAtom** aLocalName)
 {
-    if (!aLocalName)
+    if (!aLocalName) {
         return MB_FALSE;
-    NSI_FROM_TX(ProcessingInstruction)
-    if (!nsProcessingInstruction)
-        return MB_FALSE;
+    }
+    NSI_FROM_TX(ProcessingInstruction);
     nsAutoString target;
     nsProcessingInstruction->GetNodeName(target);
     *aLocalName = NS_NewAtom(target);
