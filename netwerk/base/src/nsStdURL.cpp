@@ -769,7 +769,7 @@ nsStdURL::SetFileName(const char* i_FileName)
         return SetPath(i_FileName);
     }
  
-    if (mFileName) nsCRT::free(mFileName);
+    CRTFREEIF(mFileName);
     nsresult status = DupString(&mFileName, i_FileName);
 
     // XXX This is ineffecient
