@@ -149,6 +149,15 @@ NS_IMETHODIMP nsWidget::Destroy()
 
 NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
+  printf("nsWidget::Move\n");
+  if (aX < 0) {
+    printf("*** x is %d, fixing.\n", aX);
+    aX = 0;
+  }
+  if (aY < 0) {
+    printf("*** y is %d, fixing.\n", aY);
+    aY = 0;
+  }
   XMoveWindow(gDisplay, mBaseWindow, aX, aY);
   return NS_OK;
 }
@@ -157,6 +166,15 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
+  printf("nsWidget::Resize\n");
+  if (aWidth <= 0) {
+    printf("*** width is %d, fixing.\n", aWidth);
+    aWidth = 1;
+  }
+  if (aHeight <= 0) {
+    printf("*** height is %d, fixing.\n", aHeight);
+    aHeight = 1;
+  }
   XMoveWindow(gDisplay, mBaseWindow, aWidth, aHeight);
   return NS_OK;
 }
@@ -167,6 +185,23 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
+  printf("nsWidget::Resize\n");
+  if (aWidth <= 0) {
+    printf("*** width is %d, fixing.\n", aWidth);
+    aWidth = 1;
+  }
+  if (aHeight <= 0) {
+    printf("*** height is %d, fixing.\n", aHeight);
+    aHeight = 1;
+  }
+  if (aX < 0) {
+    printf("*** x is %d, fixing.\n", aX);
+    aX = 0;
+  }
+  if (aY < 0) {
+    printf("*** y is %d, fixing.\n", aY);
+    aY = 0;
+  }
   XMoveResizeWindow(gDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
   return NS_OK;
 }
@@ -365,14 +400,14 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   
   printf("Creating XWindow: x %d y %d w %d h %d\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
-  if (aRect.width == 0) {
+  if (aRect.width <= 0) {
     printf("*** Fixing width...\n");
     width = 1;
   }
   else {
     width = aRect.width;
   }
-  if (aRect.height == 0) {
+  if (aRect.height <= 0) {
     printf("*** Fixing height...\n");
     height = 1;
   }
