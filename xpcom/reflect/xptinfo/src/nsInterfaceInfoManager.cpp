@@ -164,10 +164,10 @@ indexify_file(const char *filename,
     int limit = header->num_interfaces;
 
     interface_record *value;
-//#ifdef DEBUG_mccabe
+#ifdef DEBUG_mccabe
     static int which = 0;
     which++;
-//#endif
+#endif
     for (int i = 0; i < limit; i++) {
         XPTInterfaceDirectoryEntry *current = header->interface_directory + i;
 
@@ -195,7 +195,7 @@ indexify_file(const char *filename,
 #endif
             NS_ASSERTION(hashEntry != NULL, "PL_HashTableAdd failed?");
         }
-#ifdef DEBUG_MCCABE
+#ifdef DEBUG_mccabe
         else {
             fprintf(stderr, "... found, %d\n", value->which);
         }
@@ -208,7 +208,9 @@ indexify_file(const char *filename,
                          "some interface def'd in multiple typelibs.");
             value->which_header = header;
             value->resolved = PR_TRUE;
+#ifdef DEBUG_mccabe
             value->which = which;
+#endif
             value->entry = current;
 
             // XXX is this a leak?
