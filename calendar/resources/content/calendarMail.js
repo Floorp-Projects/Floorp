@@ -166,7 +166,7 @@ function sendEvent()
 	var nsIMsgAttachmentComponent;
 	var nsIMsgAttachment;
 
-	Event = gCalendarWindow.EventSelection.selectedEvents[0];
+	Event = gCalendarWindow.EventSelection.selectedEvents[0].clone();
 	CalendarDataFilePath = getCalendarDataFilePath();
 	if (! CalendarDataFilePath)
 	{
@@ -183,6 +183,8 @@ function sendEvent()
 		// lets open a composer with fields and body prefilled
 		try
 		{
+                        if(Event.method == 0)
+                            Event.method = Event.ICAL_METHOD_PUBLISH;
 			saveCalendarObject(CalendarDataFilePath, Event.getIcalString());
 			nsIMsgAttachmentComponent = Components.classes["@mozilla.org/messengercompose/attachment;1"];
 			nsIMsgAttachment = nsIMsgAttachmentComponent.createInstance(Components.interfaces.nsIMsgAttachment);
@@ -197,7 +199,7 @@ function sendEvent()
 			nsIMsgCompFields.attachVCard = true;
 			nsIMsgCompFields.from = gMailIdentity.email;
 			nsIMsgCompFields.replyTo = gMailIdentity.replyTo;
-			nsIMsgCompFields.subject = gMailIdentity.fullName + " would like to schedule a meeting with you";
+			nsIMsgCompFields.subject = Event.title;
 			nsIMsgCompFields.organization = gMailIdentity.organization;
 			nsIMsgCompFields.body = "When: " + Event.start + "-" + Event.end + "\nWhere: " + Event.location + "\nOrganizer: " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\nSummary:" + Event.description;
 			nsIMsgCompFields.addAttachment(nsIMsgAttachment);
