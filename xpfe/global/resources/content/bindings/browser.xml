@@ -201,9 +201,18 @@
                 onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
                 readonly="true"/>
 
+      <field name="_webBrowserFind">null</field>
+
       <property name="webBrowserFind"
-                readonly="true"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebBrowserFind);"/>
+                readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._webBrowserFind)
+            this._webBrowserFind = this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebBrowserFind);
+          return this._webBrowserFind;
+        ]]>
+        </getter>
+      </property>
 
       <property name="webProgress"
                 readonly="true"
