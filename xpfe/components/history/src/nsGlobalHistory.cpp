@@ -86,8 +86,17 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 
+struct matchExpiration_t {
+  PRInt64 *expirationDate;
+  nsGlobalHistory *history;
+};
+
+struct matchUrl_t {
+  const char *url;
+};
+
 static nsresult
-PRInt64ToChars(PRInt64 aValue, char* aBuf, PRInt32 aSize)
+PRInt64ToChars(const PRInt64& aValue, char* aBuf, PRInt32 aSize)
 {
   // Convert an unsigned 64-bit value to a string of up to aSize
   // decimal digits, placed in aBuf.
@@ -138,6 +147,38 @@ CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
 
   *aResult = result;
   return NS_OK;
+}
+
+
+PRBool
+nsGlobalHistory::matchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
+{
+  mdb_err err;
+  nsresult rv;
+  
+  mdbYarn yarn;
+  err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
+  if (err != 0) return PR_FALSE;
+  
+  PRInt64 lastVisitedTime;
+  rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &lastVisitedTime);
+  if (NS_FAILED(rv)) 
+    return PR_FALSE;
+  
+  return LL_CMP(lastVisitedTime, <, expirationDate);
+}
+
+static PRBool
+matchExpirationCallback(nsIMdbRow *row, void *aClosure)
+{
+  matchExpiration_t *expires = (matchExpiration_t*)aClosure;
+  return expires->history->matchExpiration(row, expires->expirationDate);
+}
+
+static PRBool
+matchAllCallback(nsIMdbRow *row, void *aClosure)
+{
+  return PR_TRUE;
 }
 
 //----------------------------------------------------------------------
@@ -362,7 +403,6 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
                                    const char *aReferrerURL,
                                    PRInt64 aDate)
 {
-  mdb_err err;
   nsresult rv;
   
   // Sanity check the URL
@@ -380,15 +420,10 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
   rv = gRDFService->GetDateLiteral(aDate, getter_AddRefs(date));
   if (NS_FAILED(rv)) return rv;
 
-  mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
-  mdbOid rowId;
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn,
-                        &yarn, &rowId, getter_Acquires(row));
+  rv = FindUrl(aURL, getter_Acquires(row));
 
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  if (row) {
+  if (NS_SUCCEEDED(rv) && row) {
 
     // update the database, and get the old info back
     PRInt64 oldDate;
@@ -434,9 +469,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     if (NS_FAILED(rv)) return rv;
   }
 
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -506,7 +539,7 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
 }
 
 nsresult
-nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64 aValue)
+nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt64& aValue)
 {
   mdb_err err;
   char buf[64];
@@ -550,7 +583,7 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol,
 }
 
 nsresult
-nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 aValue)
+nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt32 aValue)
 {
   mdb_err err;
   
@@ -564,6 +597,36 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 aValue)
   return NS_OK;
 }
 
+nsresult
+nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
+                             nsAWritableString& aResult)
+{
+  mdb_err err;
+  
+  mdbYarn yarn;
+  err = aRow->AliasCellYarn(mEnv, aCol, &yarn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  aResult.Truncate(0);
+  if (!yarn.mYarn_Fill)
+    return NS_OK;
+  
+  switch (yarn.mYarn_Form) {
+  case 0:                       // unicode
+    aResult.Assign((const PRUnichar *)yarn.mYarn_Buf, yarn.mYarn_Fill/sizeof(PRUnichar));
+    break;
+
+    // eventually we'll be supporting this in SetRowValue()
+  case 1:                       // UTF8
+    aResult.Assign(NS_ConvertUTF8toUCS2((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill));
+    break;
+
+  default:
+    return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 {
@@ -571,37 +634,26 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
   if (! aURL)
     return NS_ERROR_NULL_POINTER;
 
+  nsresult rv;
+  
   // Be defensive if somebody sends us a null title.
   static PRUnichar kEmptyString[] = { 0 };
   if (! aTitle)
     aTitle = kEmptyString;
 
-  mdb_err err;
-
-  PRInt32 len = PL_strlen(aURL);
-  mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
-
-  mdbOid rowId;
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn, &yarn,
-                        &rowId, getter_Acquires(row));
-
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  if (! row)
-    return NS_ERROR_UNEXPECTED; // we haven't seen this page yet
+  rv = FindUrl(aURL, getter_Acquires(row));
+  if (NS_FAILED(rv) || !row)
+    return NS_ERROR_UNEXPECTED;
 
   // Get the old title so we can notify observers
-  nsMdbPtr<nsIMdbCell> cell(mEnv);
-  err = row->AliasCellYarn(mEnv, kToken_NameColumn, &yarn);
-  if (err != 0) return NS_ERROR_FAILURE;
+  nsAutoString oldtitle;
+  rv = GetRowValue(row, kToken_NameColumn, oldtitle);
+  if (NS_FAILED(rv)) return rv;
 
-  nsresult rv;
   nsCOMPtr<nsIRDFLiteral> oldname;
-  if (yarn.mYarn_Fill) {
-    nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, PRInt32(yarn.mYarn_Fill / sizeof(PRUnichar)));
-
-    rv = gRDFService->GetLiteral(str.GetUnicode(), getter_AddRefs(oldname));
+  if (!oldtitle.IsEmpty()) {
+    rv = gRDFService->GetLiteral(oldtitle.GetUnicode(), getter_AddRefs(oldname));
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -630,16 +682,50 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 NS_IMETHODIMP
 nsGlobalHistory::RemovePage(const char *aURL)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mdb_err err;
+  nsresult rv;
+  
+  // find the old row, ignore it if we don't have it
+  nsMdbPtr<nsIMdbRow> row(mEnv);
+  rv = FindUrl(aURL, getter_Acquires(row));
+  if (NS_FAILED(rv) || !row) return NS_OK;
+
+  // get the resource so we can do the notification
+  nsCOMPtr<nsIRDFResource> oldRowResource;
+  gRDFService->GetResource(aURL, getter_AddRefs(oldRowResource));
+
+  // remove the row
+  err = mTable->CutRow(mEnv, row);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+
+  // not a fatal error if we can't cut all column
+  err = row->CutAllColumns(mEnv);
+  NS_ASSERTION(err == 0, "couldn't cut all columns");
+
+  NotifyUnassert(kNC_HistoryRoot, kNC_child, oldRowResource);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGlobalHistory::RemoveAllPages()
 {
-  // Iterate through all the rows in the table, notifying observers
-  // that they're going away and cutting each out of the database.
-  // Start with a cursor across the entire table.
+  nsresult rv;
+
+  rv = RemoveMatchingRows(matchAllCallback, nsnull, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+  
+  return Commit(kCompressCommit);
+}
+
+nsresult
+nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
+                                    void *aClosure,
+                                    PRBool notify)
+{
+  nsresult rv;
+  if (!mTable) return NS_OK;
+
   mdb_err err;
   mdb_count count;
   err = mTable->GetCount(mEnv, &count);
@@ -651,6 +737,7 @@ nsGlobalHistory::RemoveAllPages()
   NS_ASSERTION(err == 0, "unable to start batch");
   if (err != 0) return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIRDFResource> resource;
   // XXX from here until end batch, no early returns!
   for (mdb_pos pos = count - 1; pos >= 0; --pos) {
     nsMdbPtr<nsIMdbRow> row(mEnv);
@@ -663,52 +750,49 @@ nsGlobalHistory::RemoveAllPages()
     if (! row)
       continue;
 
-    // What's the URL? We need to know to properly notify our RDF
-    // observers.
-    mdbYarn yarn;
-    err = row->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
-    if (err != 0)
+    // now we actually do the match. If this row doesn't match, loop again
+    if (!(aMatchFunc)(row, aClosure))
       continue;
 
-    nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
-
-#ifdef DEBUG_waterson
-    printf("nsGlobalHistory::RemoveAllPages() - removing %s\n",
-           nsPromiseFlatCString(uri).get());
-#endif
-
-    nsresult rv;
-    nsCOMPtr<nsIRDFResource> resource;
-    rv = gRDFService->GetResource(nsPromiseFlatCString(uri).get(), getter_AddRefs(resource));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-    if (NS_FAILED(rv))
-      continue;
-
+    if (notify) {
+      // What's the URL? We need to know to properly notify our RDF
+      // observers.
+      mdbYarn yarn;
+      err = row->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
+      if (err != 0)
+        continue;
+      
+      nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+      
+      rv = gRDFService->GetResource(nsPromiseFlatCString(uri).get(), getter_AddRefs(resource));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+      if (NS_FAILED(rv))
+        continue;
+    }
     // Officially cut the row *now*, before notifying any observers:
     // that way, any re-entrant calls won't find the row.
     err = mTable->CutRow(mEnv, row);
     NS_ASSERTION(err == 0, "couldn't cut row");
     if (err != 0)
       continue;
-
+    
     // XXX possibly avoid leakage
     err = row->CutAllColumns(mEnv);
     NS_ASSERTION(err == 0, "couldn't cut all columns");
     // XXX we'll notify regardless of whether we could successfully
     // CutAllColumns or not.
-
+    
     // Notify observers that the row is, er, history.
-    NotifyUnassert(kNC_HistoryRoot, kNC_child, resource);
+    if (notify)
+      NotifyUnassert(kNC_HistoryRoot, kNC_child, resource);
+    
   }
-
+  
   // Finish the batch.
   err = mTable->EndBatchChangeHint(mEnv, &marker);
   NS_ASSERTION(err == 0, "error ending batch");
-
-  // Do a "large commit" to flush the (almost empty) table to disk.
-  return Commit(kCompressCommit);
+  return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
 }
-
 
 NS_IMETHODIMP
 nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
@@ -718,19 +802,14 @@ nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv;
-  mdb_err err;
 
-  PRInt32 len = PL_strlen(aURL);
-  mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
-
-  mdbOid rowId;
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn, &yarn,
-                        &rowId, getter_Acquires(row));
+  rv = FindUrl(aURL, getter_Acquires(row));
 
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  if (row) {
+  if (NS_SUCCEEDED(rv) && row) {
+    mdb_err err;
+    mdbYarn yarn;
+    
     err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
     if (err != 0) return NS_ERROR_FAILURE;
 
@@ -842,21 +921,14 @@ nsGlobalHistory::GetSource(nsIRDFResource* aProperty,
     if (! target)
       return NS_RDF_NO_VALUE;
 
-    mdb_err err;
-
     nsXPIDLCString uri;
     rv = target->GetValueConst(getter_Shares(uri));
     if (NS_FAILED(rv)) return rv;
 
-    PRInt32 len = PL_strlen(uri);
-    mdbYarn yarn = { (void*)NS_STATIC_CAST(const char*, uri), len, len, 0, 0, nsnull };
-
-    mdbOid rowId;
     nsMdbPtr<nsIMdbRow> row(mEnv);
-    err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn, &yarn, &rowId, getter_Acquires(row));
-    if (err != 0) return NS_ERROR_FAILURE;
+    rv = FindUrl(uri, getter_Acquires(row));
 
-    if (row) {
+    if (NS_SUCCEEDED(rv) && row) {
       // ...if so, return the URL. kNC_URL is just a self-referring arc.
       return CallQueryInterface(aTarget, aSource);
     }
@@ -1061,22 +1133,17 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     rv = aSource->GetValueConst(&uri);
     if (NS_FAILED(rv)) return rv;
 
-    PRInt32 len = PL_strlen(uri);
-    mdbYarn yarn = { NS_CONST_CAST(void*, NS_STATIC_CAST(const void*, uri)), len, len, 0, 0, nsnull };
-
-    mdbOid rowId;
     nsMdbPtr<nsIMdbRow> row(mEnv);
-    err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn, &yarn, &rowId, getter_Acquires(row));
-    if (err != 0) return NS_ERROR_FAILURE;
+    rv = FindUrl(uri, getter_Acquires(row));
 
-    if (!row) return NS_RDF_NO_VALUE;
+    if (NS_FAILED(rv) || !row) return NS_RDF_NO_VALUE;
 
     // ...and then depending on the property they want, we'll pull the
     // cell they want out of it.
     if (aProperty == kNC_Date  ||
         aProperty == kNC_FirstVisitDate) {
       // Last visit date
-
+      mdbYarn yarn;
       if (aProperty == kNC_Date)
         err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
       else
@@ -1094,6 +1161,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       return CallQueryInterface(date, aTarget);
     }
     else if (aProperty == kNC_VisitCount) {
+      mdbYarn yarn;
       err = row->AliasCellYarn(mEnv, kToken_VisitCountColumn, &yarn);
       if (err != 0) return NS_ERROR_FAILURE;
 
@@ -1112,22 +1180,19 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     }
     else if (aProperty == kNC_Name) {
       // Site name (i.e., page title)
-      err = row->AliasCellYarn(mEnv, kToken_NameColumn, &yarn);
-      if (err != 0) return NS_ERROR_FAILURE;
-
-      // Can't alias, because we don't store the terminating null
-      // character in the db.
-      len = yarn.mYarn_Fill / sizeof(PRUnichar);
-      nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, len);
+      nsAutoString title;
+      rv = GetRowValue(row, kToken_NameColumn, title);
+      if (NS_FAILED(rv)) return rv;
 
       nsCOMPtr<nsIRDFLiteral> name;
-      rv = gRDFService->GetLiteral(str.GetUnicode(), getter_AddRefs(name));
+      rv = gRDFService->GetLiteral(title.GetUnicode(), getter_AddRefs(name));
       if (NS_FAILED(rv)) return rv;
 
       return CallQueryInterface(name, aTarget);
     }
     else if (aProperty == kNC_Referrer) {
       // Referrer field
+      mdbYarn yarn;
       err = row->AliasCellYarn(mEnv, kToken_ReferrerColumn, &yarn);
       if (err != 0) return NS_ERROR_FAILURE;
 
@@ -1322,6 +1387,7 @@ nsGlobalHistory::RemoveObserver(nsIRDFObserver* aObserver)
     return NS_OK;
 
   mObservers->RemoveElement(aObserver);
+
   return NS_OK;
 }
 
@@ -1777,10 +1843,11 @@ nsresult nsGlobalHistory::Commit(eCommitType commitType)
       {
         mdb_count count;
         err = mTable->GetCount(mEnv, &count);
-        // Since Mork's shouldCompress doesn't work, we need to look at the file
-        // size and the number of rows, and make a stab at guessing if we've got
-        // a lot of deleted rows. The file size is the size when we opened the db,
-        // and we really want it to be the size after we've written out the file,
+        // Since Mork's shouldCompress doesn't work, we need to look
+        // at the file size and the number of rows, and make a stab
+        // at guessing if we've got a lot of deleted rows. The file
+        // size is the size when we opened the db, and we really want
+        // it to be the size after we've written out the file,
         // but I think this is a good enough approximation.
         if (count > 0)
         {
@@ -1830,100 +1897,20 @@ nsresult nsGlobalHistory::Commit(eCommitType commitType)
 // need or want to notify rdf.
 nsresult nsGlobalHistory::ExpireEntries(PRBool notify)
 {
-  nsresult rv;
-  if (!mTable) return NS_OK;
-  // we'd like to get the expire_days pref here, "browser.history_expire_days",
-  // but by the time we're called, we can't get the pref service because we're
-  // shutting down!
-
-  // Iterate through all the rows in the table, notifying observers
-  // that they're going away and cutting each out of the database.
-  // Start with a cursor across the entire table.
-  mdb_err err;
-  mdb_count count;
-  err = mTable->GetCount(mEnv, &count);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  // Begin the batch.
-  int marker;
-  err = mTable->StartBatchChangeHint(mEnv, &marker);
-  NS_ASSERTION(err == 0, "unable to start batch");
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIRDFResource> resource;
-
   PRTime expirationDate;
-	PRTime now = PR_Now();
-	PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInExpireDays;
+  PRTime now = PR_Now();
+  PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInExpireDays;
 	
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
   LL_UI2L(secondsInDays, 60 * 60 * 24 * mExpireDays);
-	LL_MUL(microSecondsInExpireDays, secondsInDays, microSecondsPerSecond);
+  LL_MUL(microSecondsInExpireDays, secondsInDays, microSecondsPerSecond);
   LL_SUB(expirationDate, now, microSecondsInExpireDays);
 
-  // XXX from here until end batch, no early returns!
-  for (mdb_pos pos = count - 1; pos >= 0; --pos) {
-    nsMdbPtr<nsIMdbRow> row(mEnv);
-    err = mTable->PosToRow(mEnv, pos, getter_Acquires(row));
-    NS_ASSERTION(err == 0, "unable to get row");
-    if (err != 0)
-      break;
-
-    NS_ASSERTION(row != nsnull, "no row");
-    if (! row)
-      continue;
-
-    mdbYarn yarn;
-    err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
-    if (err != 0) 
-      continue;
-
-    PRInt64 lastVisitedTime;
-    rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &lastVisitedTime);
-    if (NS_FAILED(rv)) 
-      continue;
-
-	  PRBool expireEntry = LL_CMP(lastVisitedTime, <, expirationDate);
-    if (expireEntry)
-    {
-      if (notify)
-      {
-        // What's the URL? We need to know to properly notify our RDF
-        // observers.
-        err = row->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
-        if (err != 0)
-          continue;
-
-        nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
-
-        rv = gRDFService->GetResource(nsPromiseFlatCString(uri).get(), getter_AddRefs(resource));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv))
-          continue;
-      }
-      // Officially cut the row *now*, before notifying any observers:
-      // that way, any re-entrant calls won't find the row.
-      err = mTable->CutRow(mEnv, row);
-      NS_ASSERTION(err == 0, "couldn't cut row");
-      if (err != 0)
-        continue;
-
-      // XXX possibly avoid leakage
-      err = row->CutAllColumns(mEnv);
-      NS_ASSERTION(err == 0, "couldn't cut all columns");
-      // XXX we'll notify regardless of whether we could successfully
-      // CutAllColumns or not.
-
-      // Notify observers that the row is, er, history.
-      if (notify)
-        NotifyUnassert(kNC_HistoryRoot, kNC_child, resource);
-    }
-  }
-
-  // Finish the batch.
-  err = mTable->EndBatchChangeHint(mEnv, &marker);
-  NS_ASSERTION(err == 0, "error ending batch");
-  return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
+  matchExpiration_t expiration;
+  expiration.history = this;
+  expiration.expirationDate = &expirationDate;
+  
+  return RemoveMatchingRows(matchExpirationCallback, (void *)&expiration, notify);
 }
 
 nsresult
@@ -1946,28 +1933,39 @@ nsGlobalHistory::CloseDB()
   return NS_OK;
 }
 
+nsresult
+nsGlobalHistory::FindUrl(const char *aURL, nsIMdbRow **aResult)
+{
+  mdb_err err;
+  PRInt32 len = PL_strlen(aURL);
+  mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
+
+  mdbOid rowId;
+  nsMdbPtr<nsIMdbRow> row(mEnv);
+  err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
+                        kToken_URLColumn, &yarn,
+                        &rowId, getter_Acquires(row));
+  
+  *aResult = row;
+  if (*aResult)
+    (*aResult)->AddStrongRef(mEnv);
+
+  return NS_OK;
+}
 
 PRBool
 nsGlobalHistory::IsURLInHistory(nsIRDFResource* aResource)
 {
   nsresult rv;
-  mdb_err err;
 
   const char* url;
   rv = aResource->GetValueConst(&url);
   if (NS_FAILED(rv)) return PR_FALSE;
 
-  PRInt32 len = PL_strlen(url);
-  mdbYarn yarn = { (void*) url, len, len, 0, 0, nsnull };
-
-  mdbOid rowId;
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn, &yarn,
-                        &rowId, getter_Acquires(row));
+  rv = FindUrl(url, getter_Acquires(row));
 
-  if (err != 0) return PR_FALSE;
-
-  return row ? PR_TRUE : PR_FALSE;
+  return (NS_SUCCEEDED(rv) && row) ? PR_TRUE : PR_FALSE;
 }
 
 
@@ -2091,6 +2089,7 @@ nsGlobalHistory::URLEnumerator::~URLEnumerator()
 {
   nsMemory::Free(mSelectValue);
 }
+
 
 PRBool
 nsGlobalHistory::URLEnumerator::IsResult(nsIMdbRow* aRow)
