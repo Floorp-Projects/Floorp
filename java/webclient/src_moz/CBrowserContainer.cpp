@@ -28,6 +28,7 @@
 #include "CBrowserContainer.h"
 #include "nsCWebBrowser.h"
 #include "nsIWebBrowser.h"
+#include "nsIWebBrowserFocus.h"
 #include "nsIRequest.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMWindow.h"
@@ -619,6 +620,10 @@ CBrowserContainer::doStartDocumentLoad(const PRUnichar *aDocumentName)
 nsresult JNICALL
 CBrowserContainer::doEndDocumentLoad(nsIWebProgress *aWebProgress)
 {
+
+    nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(mInitContext->webBrowser));
+    focus->Activate();
+
     nsCOMPtr<nsIDOMWindow> domWin;
     
     if (nsnull != aWebProgress) {
