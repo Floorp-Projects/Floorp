@@ -88,27 +88,35 @@ function SetState(uri, state)
 		var prop = RDF.GetResource("http://home.netscape.com/NC-rdf#Subscribed", true);
 		var oldLiteral = SubscribeDS.GetTarget(src, prop, true);
 		var newLiteral = RDF.GetLiteral(state);
-		SubscribeDS.Change(src, prop, oldLiteral, newLiteral);
+		dump("oldLiteral="+oldLiteral+"\n");
+
+		if (oldLiteral) {
+			dump("oldLiteral.Value="+oldLiteral.Value+"\n");
+			SubscribeDS.Change(src, prop, oldLiteral, newLiteral);
+		}
+		else {
+			SubscribeDS.Assert(src,prop, newLiteral, true);
+		}
 	}
 	catch (ex) {
 		dump("failed: " + ex + "\n");
 	}
 }
 
-function StateChanged(uri,state)
+function StateChanged(name,state)
 {
-	dump("StateChanged(" + uri + "," + state + ")\n");
-	if (!gChangeTable[uri]) {
-		gChangeTable[uri] = 0;
+	dump("StateChanged(" + name + "," + state + ")\n");
+	if (!gChangeTable[name]) {
+		gChangeTable[name] = 0;
 	}
 
 	if (state == 'true') {
-		gChangeTable[uri] = gChangeTable[uri] + 1;
+		gChangeTable[name] = gChangeTable[name] + 1;
 	}
 	else {
-		gChangeTable[uri] = gChangeTable[uri] - 1;
+		gChangeTable[name] = gChangeTable[name] - 1;
 	}
-	dump(gChangeTable[uri] + "\n");
+	dump(gChangeTable[name] + "\n");
 }
 
 function SetSubscribeState(state)
@@ -123,8 +131,10 @@ function SetSubscribeState(state)
 		group = groupList[i];
 		uri = group.getAttribute('id');
 		dump(uri + "\n");
+		name = group.getAttribute('name');
+		dump(name + "\n");
 		SetState(uri, state);
-		StateChanged(uri,state);
+		StateChanged(name,state);
 	}
   }
   catch (ex) {

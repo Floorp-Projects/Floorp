@@ -80,7 +80,7 @@ Rights Reserved.
 	<template>
 		<rule>
 			<treechildren>
-				<treeitem uri="...">	
+				<treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name">
 					<treerow>
 						<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 						<treecell value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
