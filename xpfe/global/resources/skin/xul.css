@@ -80,10 +80,6 @@ toolbarseparator {
 
 /****** Progress Meter ********/
 
-progressmeter {
-  behavior: url("resource:/chrome/xulBindings.xml#progressmeter");
-}
-
 /****** TitledBox ******/
 
 /********* XP Menus ***********/
@@ -234,12 +230,12 @@ radio {
   behavior: url(resource:/chrome/xulBindings.xml#radio);
 }
 
-button, button.left {
-  behavior: url(resource:/chrome/xulBindings.xml#buttonleft);
-}
-
 radiogroup {
   behavior: url(resource:/chrome/xulBindings.xml#radiogroup);
+}
+
+button, button.left {
+  behavior: url(resource:/chrome/xulBindings.xml#buttonleft);
 }
 
 button.top {
@@ -250,7 +246,15 @@ button.right {
   behavior: url(resource:/chrome/xulBindings.xml#buttonright);
 }
 
+button.bottom {
+  behavior: url(resource:/chrome/xulBindings.xml#buttonbottom);
+}
+
 separator {
   behavior: url(resource:/chrome/xulBindings.xml#separator);
 }
 
+/* appending to end so we don't make hyatt cry */
+progressmeter {
+  behavior: url(resource:/chrome/xulBindings.xml#progressmeter);
+}
