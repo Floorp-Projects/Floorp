@@ -80,6 +80,26 @@ if (exists $::FORM{'rebuildvotecache'}) {
 
 print "OK, now running sanity checks.<P>\n";
 
+Status("Checking passwords");
+SendSQL("SELECT COUNT(*) FROM profiles WHERE cryptpassword != ENCRYPT(password, left(cryptpassword, 2))");
+my $count = FetchOneColumn();
+if ($count) {
+    Alert("$count entries have problems in their crypted password.");
+    if ($::FORM{'rebuildpasswords'}) {
+        Status("Rebuilding passwords");
+        SendSQL("UPDATE profiles
+                 SET cryptpassword = ENCRYPT(password,
+                                            left(cryptpassword, 2))
+                 WHERE cryptpassword != ENCRYPT(password,
+                                                left(cryptpassword, 2))");
+        Status("Passwords have been rebuilt.");
+    } else {
+        print qq{<a href="sanitycheck.cgi?rebuildpasswords=1">Click here to rebuild the crypted passwords</a><p>\n};
+    }
+}
+
+
+
 Status("Checking groups");
 SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
 while (my $bit = FetchOneColumn()) {
