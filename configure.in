@@ -445,6 +445,7 @@ alpha*-*-osf*)
     ;;
 
 *-sco*) 
+    CXXFLAGS="$CXXFLAGS -I/usr/include/CC"
     if test ! "$GNU_CC"; then
        DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     fi
