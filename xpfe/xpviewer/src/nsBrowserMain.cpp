@@ -101,7 +101,9 @@ int main(int argc, char **argv)
 
   nsViewerApp* app = new nsViewerApp();
   NS_ADDREF(app);
-  app->Initialize(argc, argv);
+  /* we should, um, check for failure */
+  if (app->Initialize(argc, argv) != NS_OK)
+    return 0;
   app->OpenWindow();
   app->Run();
   NS_RELEASE(app);
