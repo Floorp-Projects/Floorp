@@ -43,13 +43,13 @@
 #include <float.h>
 
 #ifndef FLT_EPSILON
-// Not an ANSI compiler... oh, well.  Make up something sane
-#define FLT_EPSILON 1.0e-07f
+// Not an ANSI compiler... oh, well.  Use an IEEE value.
+#define FLT_EPSILON 1.19209290e-7f
 #endif
 /// handy constants
 #define TWIPS_PER_POINT_INT           20
 #define TWIPS_PER_POINT_FLOAT         20.0f
-#define CEIL_CONST_FLOAT              (1.0f - FLT_EPSILON)
+#define CEIL_CONST_FLOAT              (1.0f - 0.5f*FLT_EPSILON)
 #define ROUND_EXCLUSIVE_CONST_FLOAT   (0.5f*CEIL_CONST_FLOAT)
 #define ROUND_CONST_FLOAT             0.5f
 
