@@ -144,6 +144,7 @@ private:
 //                         nsIView *aStartView, nsVoidArray *aArray);
   PRBool AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex,
                           nsIView *aView, nsRect &aRect, PRUint32 aFlags);
+  void ShowDisplayList(PRInt32 flatlen);
   void ComputeViewOffset(nsIView *aView, nscoord *aX, nscoord *aY, PRInt32 aFlag);
   PRBool DoesViewHaveNativeWidget(nsIView &aView);
   void PauseTimer(void);
