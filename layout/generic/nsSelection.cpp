@@ -4082,6 +4082,14 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
   nsCOMPtr<nsIContent> content = do_QueryInterface(startNode);
   if (!content) return NS_ERROR_FAILURE;
 
+//if we simply cannot have children, return NS_OK as a non-failing, non-completing case for table selection
+  PRBool canContainChildren = PR_FALSE;
+  result = content->CanContainChildren(canContainChildren);
+  if (NS_FAILED(result))
+    return result;//simply asking should NOT fail
+  if (!canContainChildren)
+    return NS_OK; //got to be a text node, definately not a table row/cell
+  
   PRInt32 startOffset;
   PRInt32 endOffset;
   result = aRange->GetEndOffset(&endOffset);
