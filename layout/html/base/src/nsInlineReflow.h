@@ -22,7 +22,6 @@
 #include "nsIFrame.h"
 #include "nsIHTMLReflow.h"
 
-class nsFrameReflowState;
 class nsHTMLContainerFrame;
 class nsLineLayout;
 struct nsStyleDisplay;

@@ -25,7 +25,6 @@
 #include "nsBulletFrame.h"
 #include "nsLineBox.h"
 
-#include "nsFrameReflowState.h"
 #include "nsLineLayout.h"
 #include "nsInlineReflow.h"
 #include "nsPlaceholderFrame.h"
