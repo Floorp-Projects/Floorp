@@ -39,13 +39,12 @@
 #include "mozSpellChecker.h"
 #include "nsIServiceManager.h"
 #include "mozISpellI18NManager.h"
+#include "nsIStringEnumerator.h"
 
 NS_IMPL_ISUPPORTS1(mozSpellChecker, nsISpellChecker)
 
 mozSpellChecker::mozSpellChecker()
 {
-  mDictionaryName.SetLength(0);
-  
   nsresult rv;
 
   mPersonalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1",&rv);
@@ -56,7 +55,6 @@ mozSpellChecker::mozSpellChecker()
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not get spell checker");
   }
-  mPersonalDictionary->Init();
   mSpellCheckingEngine->SetPersonalDictionary(mPersonalDictionary);
 }
 
@@ -255,19 +253,18 @@ mozSpellChecker::RemoveWordFromPersonalDictionary(const nsAString &aWord)
 NS_IMETHODIMP 
 mozSpellChecker::GetPersonalDictionary(nsStringArray *aWordList)
 {
-  nsAutoString temp;
-  PRUint32 count,i;
-  PRUnichar **words;
-  
   if(!aWordList || !mPersonalDictionary)
     return NS_ERROR_NULL_POINTER;
-  mPersonalDictionary->GetWordList(&words,&count);
-  for(i=0;i<count;i++){
-    temp.Assign(words[i]);
-    aWordList->AppendString(temp);
-  }
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, words);
 
+  nsCOMPtr<nsIStringEnumerator> words;
+  mPersonalDictionary->GetWordList(getter_AddRefs(words));
+  
+  PRBool hasMore;
+  nsAutoString word;
+  while (NS_SUCCEEDED(words->HasMore(&hasMore)) && hasMore) {
+    words->GetNext(word);
+    aWordList->AppendString(word);
+  }
   return NS_OK;
 }
 

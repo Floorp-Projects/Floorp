@@ -38,6 +38,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIStringEnumerator;
+
 [scriptable, uuid(7EF52EAF-B7E1-462B-87E2-5D1DBACA9048)]
 
 /**
@@ -45,11 +47,6 @@
  */
 
 interface mozIPersonalDictionary : nsISupports {
-
-  /**
-   * Initialize the dictionary
-   */
-  void init();
 
   /**
    * Load the dictionary
@@ -62,9 +59,9 @@ interface mozIPersonalDictionary : nsISupports {
   void save();
 
   /**
-   * Get the list of words
+   * Get the (lexicographically sorted) list of words
    */
-  void getWordList([array, size_is(count)] out wstring words, out PRUint32 count);
+  readonly attribute nsIStringEnumerator wordList;
 
   /**
    * Check a unicode string
