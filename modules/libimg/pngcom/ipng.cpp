@@ -55,12 +55,7 @@ static void PR_CALLBACK il_png_error_handler(png_structp png_ptr, png_const_char
 int il_debug;
 PRLogModuleInfo *il_log_module = NULL;
 
-#ifdef CAN_SUPPORT_8_BIT_MASK
-#undef CAN_SUPPORT_8_BIT_MASK
-#endif
-#ifdef XP_WINBLAH
 #define CAN_SUPPORT_8_BIT_MASK
-#endif
 
 PRBool
 il_png_init(il_container *ic)
