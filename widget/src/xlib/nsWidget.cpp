@@ -951,7 +951,7 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
 
   printf("%4d %-26s(this=%-8p , window=%-8p",
          sPrintCount++,
-         (const char *) nsAutoCString(GuiEventToString(aEvent)),
+         (const char *) nsAutoCString(debug_GuiEventToString(&aEvent)),
          this,
          (void *) aWindow);
          

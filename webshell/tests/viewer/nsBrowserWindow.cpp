@@ -2865,13 +2865,15 @@ nsBrowserWindow::ToggleFrameBorders()
 }
 
 void
-nsBrowserWindow::ToggleFlashPaintArea()
+nsBrowserWindow::ToggleBoolPrefAndRefresh(const char * aPrefName)
 {
-  if (nsnull != mPrefs) 
+  NS_ASSERTION(nsnull != aPrefName,"null pref name");
+
+  if (nsnull != mPrefs && nsnull != aPrefName)
   {
-    PRBool flashing;
-    mPrefs->GetBoolPref("nglayout.widget.flash_invalidate_areas",&flashing);
-    mPrefs->SetBoolPref("nglayout.widget.flash_invalidate_areas",!flashing);
+    PRBool value;
+    mPrefs->GetBoolPref(aPrefName,&value);
+    mPrefs->SetBoolPref(aPrefName,!value);
     mPrefs->SavePrefFile();
     
     ForceRefresh();
@@ -2935,8 +2937,33 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
     result = nsEventStatus_eConsumeNoDefault;
     break;
 
-  case VIEWER_FLASH_PAINT_AREA:
-    ToggleFlashPaintArea();
+  case VIEWER_TOGGLE_PAINT_FLASHING:
+	ToggleBoolPrefAndRefresh("nglayout.debug.paint_flashing");
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_TOGGLE_PAINT_DUMPING:
+	ToggleBoolPrefAndRefresh("nglayout.debug.paint_dumping");
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_TOGGLE_INVALIDATE_DUMPING:
+	ToggleBoolPrefAndRefresh("nglayout.debug.invalidate_dumping");
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_TOGGLE_EVENT_DUMPING:
+	ToggleBoolPrefAndRefresh("nglayout.debug.event_dumping");
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_TOGGLE_MOTION_EVENT_DUMPING:
+	ToggleBoolPrefAndRefresh("nglayout.debug.motion_event_dumping");
+    result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_TOGGLE_CROSSING_EVENT_DUMPING:
+	ToggleBoolPrefAndRefresh("nglayout.debug.crossing_event_dumping");
     result = nsEventStatus_eConsumeNoDefault;
     break;
 

@@ -200,7 +200,7 @@ public:
   void DumpStyleSheets(FILE *out = stdout);
   void DumpStyleContexts(FILE *out = stdout);
   void ToggleFrameBorders();
-  void ToggleFlashPaintArea();
+  void ToggleBoolPrefAndRefresh(const char * aPrefName);
   void ShowContentSize();
   void ShowFrameSize(FILE* out = stdout);
   void ShowStyleSize();

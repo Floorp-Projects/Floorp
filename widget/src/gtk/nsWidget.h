@@ -150,7 +150,7 @@ public:
 #endif
 
   // Return the Gdk window used for rendering
-  virtual GdkWindow * GetRenderWindow();
+  virtual GdkWindow * GetRenderWindow(GtkWidget * aGtkWidget);
 
 protected:
 
@@ -345,8 +345,8 @@ protected:
                       PRUint32         aEventType);
 
 #ifdef DEBUG
-  void DebugPrintEvent(nsGUIEvent &   aEvent,
-                       GtkWidget *    aGtkWidget);
+  nsCAutoString  debug_GetName(GtkWidget * aGtkWidget);
+  PRInt32       debug_GetRenderXID(GtkWidget * aGtkWidget);
 #endif
 
   guint32 mGrabTime;
