@@ -46,17 +46,12 @@
 #include "nsIEditingSession.h"
 
 #include "nsIDOMElement.h"
-//#include "nsIDOMWindowInternal.h"
-//#include "nsIDOMDocument.h"
-//#include "nsIDocument.h"
-//#include "nsIURI.h"
 
 #include "nsIClipboard.h"
 
 #include "nsCOMPtr.h"
 
 #include "nsComposerCommands.h"
-//#include "nsIEditorMailSupport.h"
 #include "nsReadableUtils.h"
 #include "nsICommandParams.h"
 #include "nsComponentManagerUtils.h"
