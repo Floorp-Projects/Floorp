@@ -39,7 +39,7 @@
 #include "nsSVGValue.h"
 #include "nsISVGStyleValue.h"
 #include "nsSVGStyleValue.h"
-#include "nsIStyleRule.h"
+#include "nsICSSStyleRule.h"
 #include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsICSSParser.h"
@@ -72,7 +72,7 @@ protected:
   void UpdateStyleRule(nsIContent* aContent);
   
   nsString mValue;
-  nsCOMPtr<nsIStyleRule> mRule; // lazily cached
+  nsCOMPtr<nsICSSStyleRule> mRule; // lazily cached
 };
 
 //----------------------------------------------------------------------

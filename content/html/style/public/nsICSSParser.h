@@ -41,7 +41,7 @@
 #include "nsISupports.h"
 #include "nsAString.h"
 
-class nsIStyleRule;
+class nsICSSStyleRule;
 class nsICSSStyleSheet;
 class nsIUnicharInputStream;
 class nsIURI;
@@ -84,7 +84,7 @@ public:
   // the declaration.
   NS_IMETHOD ParseStyleAttribute(const nsAString&         aAttributeValue,
                                  nsIURI*                  aBaseURL,
-                                 nsIStyleRule**           aResult) = 0;
+                                 nsICSSStyleRule**        aResult) = 0;
 
   NS_IMETHOD ParseAndAppendDeclaration(const nsAString&         aBuffer,
                                        nsIURI*                  aBaseURL,

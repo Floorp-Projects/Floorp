@@ -400,7 +400,8 @@ public:
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule);
+  NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
+  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
   NS_IMETHOD_(PRBool)
     HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,

@@ -42,7 +42,7 @@
 #include "nsChangeHint.h"
 
 class nsString;
-class nsIStyleRule;
+class nsICSSStyleRule;
 class nsISupportsArray;
 class nsRuleWalker;
 
@@ -65,7 +65,9 @@ public:
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const = 0;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) = 0;
-  NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule) = 0;
+
+  NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule) = 0;
+  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify) = 0;
 
   /**
    * Does the list of style rules walked by |WalkContentStyleRules|

@@ -227,7 +227,8 @@ public:
   NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const;
   NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule);
+  NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
+  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
   NS_IMETHOD GetBaseURL(nsIURI** aBaseURL) const;
   NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const;
 

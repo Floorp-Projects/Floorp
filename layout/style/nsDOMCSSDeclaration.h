@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifndef nsDOMCSSDeclaration_h___
-#define nsDOMCSSSDeclaration_h___
+#define nsDOMCSSDeclaration_h___
 
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSS2Properties.h"

@@ -60,6 +60,7 @@
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
 #include "nsICSSParser.h"
+#include "nsICSSStyleRule.h"
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
@@ -729,7 +730,7 @@ nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsAString& aVal
       return result;
     }
 
-    nsCOMPtr<nsIStyleRule> rule;
+    nsCOMPtr<nsICSSStyleRule> rule;
     result = css->ParseStyleAttribute(aValue, aDocURL, getter_AddRefs(rule));
     
     if ((NS_OK == result) && rule) {
@@ -740,13 +741,13 @@ nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsAString& aVal
 }
 
 
-nsresult nsXULAttributes::SetInlineStyleRule(nsIStyleRule* aRule)
+nsresult nsXULAttributes::SetInlineStyleRule(nsICSSStyleRule* aRule)
 {
     mStyleRule = aRule;
     return NS_OK;
 }
 
-nsresult nsXULAttributes::GetInlineStyleRule(nsIStyleRule*& aRule)
+nsresult nsXULAttributes::GetInlineStyleRule(nsICSSStyleRule*& aRule)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
   if (mStyleRule != nsnull)
