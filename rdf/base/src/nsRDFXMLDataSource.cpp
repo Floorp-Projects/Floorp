@@ -748,13 +748,15 @@ RDFXMLDataSourceImpl::Unassert(nsIRDFResource* source,
 {
     // We don't accept assertions unless we're writable (except in the
     // case that we're actually _reading_ the datasource in).
-    if (!mIsLoading && !mIsWritable)
-        return NS_RDF_ASSERTION_REJECTED;
-
     nsresult rv;
-    if (NS_SUCCEEDED(rv = mInner->Unassert(source, property, target))) {
-        if (!mIsLoading)
+
+    if (mIsLoading || mIsWritable) {
+        rv = mInner->Unassert(source, property, target);
+        if (!mIsLoading && rv == NS_RDF_ASSERTION_ACCEPTED)
             mIsDirty = PR_TRUE;
+    }
+    else {
+        rv = NS_RDF_ASSERTION_REJECTED;
     }
 
     return rv;
@@ -768,21 +770,17 @@ RDFXMLDataSourceImpl::Change(nsIRDFResource* aSource,
 {
     nsresult rv;
 
-    if (mIsLoading) {
-        NS_NOTYETIMPLEMENTED("hmm, why is this being called?");
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-    else if (mIsWritable) {
+    if (mIsLoading || mIsWritable) {
         rv = mInner->Change(aSource, aProperty, aOldTarget, aNewTarget);
 
-        if (rv == NS_RDF_ASSERTION_ACCEPTED)
+        if (!mIsLoading && rv == NS_RDF_ASSERTION_ACCEPTED)
             mIsDirty = PR_TRUE;
-
-        return rv;
     }
     else {
-        return NS_RDF_ASSERTION_REJECTED;
+        rv = NS_RDF_ASSERTION_REJECTED;
     }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -793,20 +791,16 @@ RDFXMLDataSourceImpl::Move(nsIRDFResource* aOldSource,
 {
     nsresult rv;
 
-    if (mIsLoading) {
-        NS_NOTYETIMPLEMENTED("hmm, why is this being called?");
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-    else if (mIsWritable) {
+    if (mIsLoading || mIsWritable) {
         rv = mInner->Move(aOldSource, aNewSource, aProperty, aTarget);
-        if (rv == NS_RDF_ASSERTION_ACCEPTED)
+        if (!mIsLoading && rv == NS_RDF_ASSERTION_ACCEPTED)
             mIsDirty = PR_TRUE;
-
-        return rv;
     }
     else {
-        return NS_RDF_ASSERTION_REJECTED;
+        rv = NS_RDF_ASSERTION_REJECTED;
     }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -1633,3 +1627,4 @@ RDFXMLDataSourceImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResour
 
     return result;
 }
+
