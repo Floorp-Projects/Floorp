@@ -299,7 +299,7 @@ nsDirectoryService::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
         // use this to temporarily hold a reference to mService:
         nsCOMPtr<nsIDirectoryService> serv = mService;
 
-        nsresult rv = mService->Init();
+        rv = mService->Init();
         if (NS_FAILED(rv)) return rv;
         rv = mService->QueryInterface(aIID, aResult);
     }
