@@ -143,10 +143,6 @@ fix the problem on your installation.
 
 *** SECURITY ISSUES RESOLVED ***
 
-- The bug list sort order could take arbitrary SQL.  There
-  are no known exploits for this problem.
-  (bug 130821)
-
 - The bug reporter could set the priority even when
   'letsubmitterchoosepriority' was off.
   (bug 63018)
@@ -400,6 +396,12 @@ fix the problem on your installation.
   divulged, if the shadow database was in use and became
   corrupted.
   (bug 92263)
+
+- The bug list sort order is now stricter about the SQL it will accept,
+  ensuring you use correct column name syntax.  Before this, there were
+  some syntax checks, so it is not known whether this problem was
+  exploitable.
+  (bug 130821)
 
 ********************************************
 *** USERS UPGRADING FROM 2.14 OR EARLIER ***
