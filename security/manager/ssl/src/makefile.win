@@ -89,6 +89,7 @@ OBJS = \
     .\$(OBJDIR)\nsNSSCertificate.obj \
     .\$(OBJDIR)\nsPKCS12Blob.obj \
     .\$(OBJDIR)\nsCertOutliner.obj \
+    .\$(OBJDIR)\nsNSSASN1Object.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
