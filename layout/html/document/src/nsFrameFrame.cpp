@@ -1148,11 +1148,12 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   // Make an absolute URL
   nsCOMPtr<nsIURI> baseURL;
   nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(parentContent, &rv);
+  nsCOMPtr<nsIDocument> doc;
   if (NS_SUCCEEDED(rv) && htmlContent) {
     htmlContent->GetBaseURL(*getter_AddRefs(baseURL));
+    (void) htmlContent->GetDocument(*getter_AddRefs(doc));
   }
   else {
-    nsCOMPtr<nsIDocument> doc;
     rv = parentContent->GetDocument(*getter_AddRefs(doc));
     if (NS_SUCCEEDED(rv) && doc) {
       doc->GetBaseURL(*getter_AddRefs(baseURL));
@@ -1160,12 +1161,17 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   }
   if (!baseURL) return NS_ERROR_NULL_POINTER;
 
+  nsAutoString docCharset;
+  if (doc)
+    (void) doc->GetDocumentCharacterSet(docCharset);
+
   nsAutoString absURL;
   rv = NS_MakeAbsoluteURI(absURL, url, baseURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), absURL);
+  NS_NewURI(getter_AddRefs(uri), absURL, 
+            docCharset.IsEmpty() ? nsnull : NS_ConvertUCS2toUTF8(docCharset).get());
 
   // Check for security
   nsCOMPtr<nsIScriptSecurityManager> secMan = 

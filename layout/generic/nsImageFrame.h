@@ -225,6 +225,7 @@ private:
   nsresult RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest);
   inline int GetImageLoad(imgIRequest *aRequest);
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
+  void GetDocumentCharacterSet(nsAWritableString& aCharset) const;
 
   nsImageMap*         mImageMap;
 
