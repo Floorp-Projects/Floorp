@@ -26,10 +26,10 @@
 #    3. gmake -f client.mk
 #
 # Other targets (gmake -f client.mk [targets...]),
-#    checkout
-#    build
-#    realclean (also clobber_all)
-#    clean     (also clobber)
+#    checkout  (or pull_all)
+#    build     (or build_all)
+#    realclean (or clobber_all)
+#    clean     (or clobber)
 #
 # See http://www.mozilla.org/build/unix.html for more information.
 #
@@ -41,6 +41,7 @@
 #   MOZ_CVS_FLAGS        - Flags to pass cvs (default: -q -z3)
 #   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
+#
 
 CWD		:= $(shell pwd)
 ifeq (mozilla, $(notdir $(CWD)))
@@ -158,35 +159,33 @@ everything: checkout clobber_all build
 ####################################
 # CVS checkout
 #
-# The code for checkout is a little ugly because the cvs command needs
-# to pipe to "tee" and be able to return a cvs error. The tee
-# command saves the output to a file and also prints it to stdout.
-# Without the little magic below, the pipe would swallow up the error.
-#
-# Here is the psedo-code,
-#
-# { cvs || touch error-file } | tee log-file
-# if error-file exists then remove it and exit with an error.
-# (Next, look for checkout conflicts).
-#
-
 checkout:
-	@if test -f $(CVSCO_LOGFILE) ; then \
+	@: Backup the last checkout log. \
+	 ; \
+	if test -f $(CVSCO_LOGFILE) ; then \
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
 	else true; \
 	fi
-	@date | tee $(CVSCO_LOGFILE)
-	@echo cd $(ROOTDIR)\; $(CVSCO) $(MOZ_CO_MODULE)
-	@cd $(ROOTDIR) && \
-	  ( $(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp$$$$ ) 2>&1 \
-	  | tee -a $(CVSCO_LOGFILE)
-	@if [ -f cvs-failed.tmp$$$$ ]; then \
-	  rm cvs-failed.tmp$$$$; \
+	@: Start the checkout. Pipe the output to the tty and a log file. \
+	 : If it fails, touch an error file because the pipe hides the    \
+	 : error. If the file is created, remove it and return an error.  \
+	 ; \
+	echo "checkout start: "`date` | tee $(CVSCO_LOGFILE); \
+	echo "cd $(ROOTDIR); $(CVSCO) $(MOZ_CO_MODULE)"; \
+	cd $(ROOTDIR); \
+	rm -f cvs-failed.tmp*; \
+	( $(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp ) 2>&1 \
+	  | tee -a $(CVSCO_LOGFILE); \
+	if test -f cvs-failed.tmp ; then \
+	  rm cvs-failed.tmp; \
 	  false; \
 	else true; \
 	fi
-	@date | tee -a $(CVSCO_LOGFILE)
-	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
+	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE) \
+	 : \
+	 : Check the log for conflicts. \
+	 ; \
+	conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
 	  echo "$$conflicts" ;\
