@@ -30,12 +30,24 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
+#include "nsILocalFile.h"
 #include "nsIFactory.h"
 #include "nsIFileImpl.h"
 
+#include "windows.h"
+
+// For older version (<6.0) of the VC Compiler
+#if (_MSC_VER == 1100)
+#define INITGUID
+#include "objbase.h"
+DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
+#endif
+
+#include "shlobj.h"
+
 #include <sys/stat.h>
 
-class NS_COM nsIFileImpl : public nsIFile
+class NS_COM nsIFileImpl : public nsILocalFile
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_IFILEIMPL_CID)
@@ -50,33 +62,34 @@ public:
     
     // nsIFile interface
     NS_DECL_NSIFILE
+    
+    // nsILocalFile interface
+    NS_DECL_NSILOCALFILE
 
 private:
 
+    // this is the flag which indicates if I can used cached information about the file
+    PRBool mStatDirty;
+
     // this string will alway be in native format!
     nsCString mWorkingPath;
-
-    // this is the flag which indicates if I can used cached information about the files
-    // resolved stat.
-    PRBool mResolutionDirty;
     
     // this will be the resolve path which will *NEVER* be return to the user
     nsCString mResolvedPath;
     
-    // this is the flag which indicates if I can used cached information about the file's
-    // stat information
-    PRBool mStatDirty;
+    IPersistFile* mPersistFile; 
+    IShellLink*   mShellLink;
 
-    // for buffered stat calls.
-    struct stat mBuffered_st;
-    int mBuffered_stat_rv;
-    
-    nsresult resolveWorkingPath();
-    
-    nsresult bufferedStat(struct stat *st);
-    void makeDirty();
 
-    nsresult copymove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move);
+    WIN32_FILE_ATTRIBUTE_DATA mFileAttrData;    
+    
+    
+    
+    void MakeDirty();
+    nsresult ResolveAndStat(PRBool resolveTerminal);
+    nsresult ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath);
+
+    nsresult CopyMove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move);
 
 };
 
