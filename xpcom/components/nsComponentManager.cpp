@@ -34,6 +34,13 @@
 #include "nsCRT.h"
 #include "nspr.h"
 
+// Arena used by component manager for storing contractid string, dll
+// location strings and small objects
+// CAUTION: Arena align mask needs to be defined before including plarena.h
+//          currently from nsComponentManager.h
+#define PL_ARENA_CONST_ALIGN_MASK 7
+#define NS_CM_BLOCK_SIZE (1024)
+
 #include "NSReg.h"
 #include "nsAutoLock.h"
 #include "nsCOMPtr.h"
@@ -55,8 +62,8 @@
 #include "nsRegistry.h"
 #include "nsXPIDLString.h"
 #include "prcmon.h"
-#include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
 #include "xptinfo.h" // this after nsISupports, to pick up IID so that xpt stuff doesn't try to define it itself...
+#include <new.h>     // for placement new
 
 #ifdef XP_BEOS
 #include <FindDirectory.h>
@@ -217,6 +224,21 @@ nsGetServiceFromCategory::operator()( const nsIID& aIID, void** aInstancePtr) co
 }
  
 ////////////////////////////////////////////////////////////////////////////////
+// Arena helper functions
+////////////////////////////////////////////////////////////////////////////////
+static inline char *
+ArenaStrdup(const char *s, PLArenaPool *arena)
+{
+    void *mem;
+    // Include trailing null in the len
+    PRInt32 len = strlen(s) + 1;
+    PL_ARENA_ALLOCATE(mem, arena, len);
+    if (mem)
+        memcpy(mem, s, len);
+    return NS_STATIC_CAST(char *, mem);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Hashtable Callbacks
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -254,8 +276,9 @@ PR_STATIC_CALLBACK(void)
 factory_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsFactoryTableEntry* entry = NS_STATIC_CAST(nsFactoryTableEntry*, aHdr);
-
-    delete entry->mFactoryEntry;
+    // nsFactoryEntry is arena allocated. So we dont delete it.
+    // We call the destructor by hand.
+    entry->mFactoryEntry->~nsFactoryEntry();
     PL_DHashClearEntryStub(aTable, aHdr);
 }
   
@@ -298,11 +321,13 @@ contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
     if (entry->mFactoryEntry != kNonExistentContractID && 
         entry->mFactoryEntry->typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY && 
         entry->mFactoryEntry->cid.Equals(kEmptyCID)) {
-        // this object is owned by the hash.  Time to delete it.
-        delete entry->mFactoryEntry;
+        // this object is owned by the hash.
+        // nsFactoryEntry is arena allocated. So we dont delete it.
+        // We call the destructor by hand.
+        entry->mFactoryEntry->~nsFactoryEntry();
     }
 
-    nsCRT::free(entry->mContractID);
+    // contractIDs are arena allocated. No need to free them.
 
     PL_DHashClearEntryStub(aTable, aHdr);
 }
@@ -328,25 +353,26 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
                                int aType)
     : cid(aClass), typeIndex(aType)
 {
-    MOZ_COUNT_CTOR(nsFactoryEntry);
-    location = nsCRT::strdup(aLocation);
+    // Arena allocate the location string
+    location = ArenaStrdup(aLocation, &nsComponentManagerImpl::gComponentManager->mArena);
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
     : cid(aClass), typeIndex(NS_COMPONENT_TYPE_FACTORY_ONLY)
 {
-    MOZ_COUNT_CTOR(nsFactoryEntry);
     factory = aFactory;
     location = nsnull;
-
 }
 
+// nsFactoryEntry is usually arena allocated including the strings it
+// holds. So we call destructor by hand.
 nsFactoryEntry::~nsFactoryEntry(void)
 {
-    MOZ_COUNT_DTOR(nsFactoryEntry);
-    if (location)
-        nsCRT::free(location);
-    factory = 0;
+    // Release the reference to the factory
+    factory = nsnull;
+
+    // Release any service reference
+    mServiceObject = nsnull;
 }
 
 nsresult
@@ -357,9 +383,10 @@ nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
     // SERVICE_ONLY entries can be promoted to an entry of another type
     NS_ENSURE_TRUE((typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY || cid.Equals(aClass)),
                    NS_ERROR_INVALID_ARG);
-    if (location)
-      nsCRT::free(location);
-    location = nsCRT::strdup(aLocation);
+
+    // Arena allocate the location string
+    location = ArenaStrdup(aLocation, &nsComponentManagerImpl::gComponentManager->mArena);
+
     typeIndex = aType;
     return NS_OK;
 }
@@ -681,6 +708,9 @@ nsresult nsComponentManagerImpl::Init(void)
                ("xpcom-log-version : " NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING));
     }
 
+    // Initialize our arena
+    PL_INIT_ARENA_POOL(&mArena, "ComponentManagerArena", NS_CM_BLOCK_SIZE);
+
     if (!mFactories.ops) {
         if (!PL_DHashTableInit(&mFactories, &factory_DHashTableOps,
                                0, sizeof(nsFactoryTableEntry),
@@ -789,6 +819,9 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     }
     // Unload libraries
     UnloadLibraries(nsnull, NS_Shutdown);
+
+    // delete arena for strings and small objects
+    PL_FinishArenaPool(&mArena);
 
 #ifdef USE_REGISTRY
     // Release registry
@@ -1122,9 +1155,12 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
         type = GetLoaderType(componentType);
     }
 
-    nsFactoryEntry *res = new nsFactoryEntry(aCID, library, type);
-    if (res == nsnull)
+     // Arena allocate the nsFactoryEntry
+     void *mem;
+     PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsFactoryEntry));
+     if (!mem)
       return NS_ERROR_OUT_OF_MEMORY;
+     nsFactoryEntry *res = new (mem) nsFactoryEntry(aCID, library, type);
 
     *result = res;
     return NS_OK;
@@ -1250,9 +1286,12 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         if (!(aClass.Parse(cidString)))
             continue;
 
-        nsFactoryEntry *entry = new nsFactoryEntry(aClass, buf, loadertype);
-        if (!entry)
+        // Arena allocate the nsFactoryEntry
+        void *mem;
+        PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsFactoryEntry));
+        if (!mem)
             return NS_ERROR_OUT_OF_MEMORY;
+        nsFactoryEntry *entry = new (mem) nsFactoryEntry(aClass, buf, loadertype);
 
         nsAutoMonitor mon(mMon);
 
@@ -1369,8 +1408,10 @@ nsComponentManagerImpl::HashContractID(const char *aContractID, nsFactoryEntry *
     if (!contractIDTableEntry)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    NS_ASSERTION(!contractIDTableEntry->mContractID || !strcmp(contractIDTableEntry->mContractID, aContractID), "contractid conflict");
+
     if (!contractIDTableEntry->mContractID)
-        contractIDTableEntry->mContractID = nsCRT::strdup(aContractID);
+        contractIDTableEntry->mContractID = ArenaStrdup(aContractID, &mArena);
 
     contractIDTableEntry->mFactoryEntry = fe;
  
@@ -1935,9 +1976,12 @@ nsComponentManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aServi
     nsFactoryEntry *entry = GetFactoryEntry(aClass, key, 0);
 
     if (!entry) { // XXXdougt - should we require that all services register factories??  probably not.
-        entry = new nsFactoryEntry(aClass, nsnull);
-        if (entry == nsnull)
+        void *mem;
+        PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsFactoryEntry));
+        if (!mem)
             return NS_ERROR_OUT_OF_MEMORY;
+        entry = new (mem) nsFactoryEntry(aClass, nsnull);
+
         entry->typeIndex = NS_COMPONENT_TYPE_SERVICE_ONLY;
         nsFactoryTableEntry* factoryTableEntry =
             NS_STATIC_CAST(nsFactoryTableEntry*,
@@ -1995,9 +2039,12 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
         entry = nsnull;
 
     if (!entry) { // XXXdougt - should we require that all services register factories??  probably not.
-        entry = new nsFactoryEntry(kEmptyCID, nsnull);
-        if (entry == nsnull)
+        void *mem;
+        PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsFactoryEntry));
+        if (!mem)
             return NS_ERROR_OUT_OF_MEMORY;
+        entry = new (mem) nsFactoryEntry(kEmptyCID, nsnull);
+
         entry->typeIndex = NS_COMPONENT_TYPE_SERVICE_ONLY;
    
         nsContractIDTableEntry* contractIDTableEntry =
@@ -2010,7 +2057,7 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
         }
 
         if (!contractIDTableEntry->mContractID)
-            contractIDTableEntry->mContractID = nsCRT::strdup(aContractID);
+            contractIDTableEntry->mContractID = ArenaStrdup(aContractID, &mArena);
 
         contractIDTableEntry->mFactoryEntry = entry;
     }
@@ -2413,10 +2460,11 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         entry->ReInit(aClass, aFactory);
     }
     else {
-        entry = new nsFactoryEntry(aClass, aFactory);
-        if (entry == nsnull)
+        void *mem;
+        PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsFactoryEntry));
+        if (!mem)
             return NS_ERROR_OUT_OF_MEMORY;
-
+        entry = new (mem) nsFactoryEntry(aClass, aFactory);
         
         nsFactoryTableEntry* factoryTableEntry =
             NS_STATIC_CAST(nsFactoryTableEntry*,
@@ -2594,9 +2642,11 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         entry->ReInit(aClass, aRegistryName, typeIndex);
     }
     else {
-        entry = new nsFactoryEntry(aClass, aRegistryName, typeIndex);
-        if (!entry)
+        void *mem;
+        PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsFactoryEntry));
+        if (!mem)
             return NS_ERROR_OUT_OF_MEMORY;
+        entry = new (mem) nsFactoryEntry(aClass, aRegistryName, typeIndex);
 
         nsFactoryTableEntry* factoryTableEntry =
             NS_STATIC_CAST(nsFactoryTableEntry*,

@@ -57,6 +57,7 @@
 #include "nsWeakReference.h"
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
+#include "plarena.h"
 
 class nsFactoryEntry;
 class nsDll;
@@ -231,6 +232,8 @@ protected:
     nsLoaderdata *mLoaderData;
     int mNLoaderData;
     int mMaxNLoaderData;
+
+    PLArenaPool   mArena;
 };
 
 
