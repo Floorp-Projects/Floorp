@@ -130,6 +130,16 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
 	return JS_TRUE;
     subPath = JS_GetStringBytes(JSVAL_TO_STRING(id));
 
+    /*
+     * There will be an attempt to invoke the toString() method when producing
+     * the string representation of a JavaPackage.  When this occurs, avoid
+     * creating a bogus toString package.  (This means that no one can ever
+     * create a package with the simple name "toString", but we'll live with
+     * that limitation.)
+     */
+    if (!strcmp(subPath, "toString"))
+        return JS_FALSE;
+
     path = package->path;
     newPath = PR_smprintf("%s%s%s", path, (path[0] ? "/" : ""), subPath);
     if (!newPath) {
@@ -215,7 +225,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
         }
         
 #ifdef DEBUG
-        printf("JavaPackage \'%s/%s\' created\n", subPath, newPath);
+        printf("JavaPackage \'%s\' created\n", newPath);
 #endif
 
     }
@@ -446,6 +456,20 @@ error:
     return JS_FALSE;
 }
 
+static JSBool
+JavaPackage_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+	             jsval *rval)
+{
+    if (!JS_InstanceOf(cx, obj, &JavaPackage_class, argv))
+        return JS_FALSE;
+    return JavaPackage_convert(cx, obj, JSTYPE_STRING, rval);
+}
+
+static JSFunctionSpec JavaPackage_methods[] = {
+    {"toString",   JavaPackage_toString,        0},
+    {0}
+};
+
 /*
  * One-time initialization for the JavaPackage class.  (This is not
  * run once per thread, rather it's run once for a given JSContext.)
@@ -455,7 +479,8 @@ jsj_init_JavaPackage(JSContext *cx, JSObject *global_obj,
                      JavaPackageDef *additional_predefined_packages) {
 
     /* Define JavaPackage class */
-    if (!JS_InitClass(cx, global_obj, 0, &JavaPackage_class, 0, 0, 0, 0, 0, 0))
+    if (!JS_InitClass(cx, global_obj, 0, &JavaPackage_class,
+                      0, 0, 0, JavaPackage_methods, 0, 0))
         return JS_FALSE;
 
     /* Add top-level packages, e.g. : java, netscape, sun */
