@@ -103,7 +103,7 @@ static void UserLogStuff( void )
 int main(PRIntn argc, const char **argv)
 {
     PRThread *thread;
-    
+
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
@@ -124,6 +124,11 @@ int main(PRIntn argc, const char **argv)
     PR_LogPrint("%s logging into %s\n", argv[0], argv[1]);
 
     PR_LogPrint("%s creating new thread\n", argv[0]);
+
+    /*
+    ** Now change buffering.
+    */
+    PR_SetLogBuffering( 65500 );    
 	thread = PR_CreateThread(
 	    PR_USER_THREAD, forked, (void*)argv[0], PR_PRIORITY_NORMAL,
 	    PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
