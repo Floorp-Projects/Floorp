@@ -193,7 +193,7 @@ nsLoadSaveContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 NS_IMETHODIMP
 nsLoadSaveContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
                                             const PRUnichar *aEncoding,
-                                            const PRInt32 aStandalone)
+                                            PRInt32 aStandalone)
 {
   return mExpatSink->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
 }

@@ -72,7 +72,7 @@ public:
                                        const PRUnichar *aData);
   nsresult HandleXMLDeclaration(const PRUnichar *aVersion,
                                 const PRUnichar *aEncoding,
-                                const PRInt32 aStandalone);
+                                PRInt32 aStandalone);
   nsresult HandleDefault(const PRUnichar *aData, const PRUint32 aLength);
   nsresult HandleStartCdataSection();
   nsresult HandleEndCdataSection();
