@@ -76,9 +76,23 @@ char * strdup(const char *src)
 
 #ifdef XP_UNIX
     #include <sys/stat.h>
+    #include <limits.h>
+    #include <unistd.h>
 #elif defined(XP_PC)
     #include <io.h>
 #endif
+
+#ifndef XP_UNIX /* we need to have some constant defined in limits.h and unistd.h */
+#  ifndef S_IFMT
+#    define S_IFMT 0170000
+#  endif
+#  ifndef S_IFLNK
+#    define S_IFLNK  0120000
+#  endif
+#  ifndef PATH_MAX
+#    define PATH_MAX 1024
+#  endif
+#endif  /* XP_UNIX */
 
 #include "zipfile.h"
 #include "zipstruct.h"
@@ -87,6 +101,7 @@ char * strdup(const char *src)
 static PRUint16 xtoint(unsigned char *ii);
 static PRUint32 xtolong(unsigned char *ll);
 static PRUint16 ExtractMode(PRUint32 ext_attr);
+static PRBool   IsSymlink(PRUint32 ext_attr); 
 static void dosdate(char *aOutDateStr, PRUint16 aDate);
 static void dostime(char *aOutTimeStr, PRUint16 aTime);
 
@@ -549,13 +564,19 @@ PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname)
   PRInt32 status = ExtractFileToFileDesc(zipEntry, fOut, &item);
   PR_Close(fOut);
 
-  if (status != ZIP_OK) {
-      PR_Delete(aOutname);
+  if (status != ZIP_OK) 
+  {
+    PR_Delete(aOutname);
   }
 #if defined(XP_UNIX)
-  else {
-      //-- set extracted file permissions
-      chmod(aOutname, item->mode);
+  else 
+  {
+    if (item->isSymlink) 
+    {
+       status = ResolveSymlink(aOutname,item);
+    }
+    //-- set extracted file permissions
+    chmod(aOutname, item->mode);
   }
 #endif
   return status;
@@ -703,8 +724,40 @@ PRInt32 nsZipArchive::FindFree( nsZipFind* aFind )
   return ZIP_OK;
 }
 
-
-
+#ifdef XP_UNIX
+//---------------------------------------------
+// nsZipArchive::ResolveSymlink
+//---------------------------------------------
+PRInt32 nsZipArchive::ResolveSymlink(const char *path, nsZipItem *item) 
+{
+  PRInt32    status = ZIP_OK;
+  if (item->isSymlink) 
+  {
+    char buf[PATH_MAX+1];
+    PRFileDesc * fIn = PR_Open(path, PR_RDONLY, 0644);
+    if (fIn) 
+    {
+      PRInt32 length = PATH_MAX;
+      length = PR_Read(fIn,(void*)buf,length);
+      PR_Close(fIn); 
+      fIn = 0;
+      if (   length <= 0
+	  || (buf[length] = 0, PR_Delete(path)) != 0
+	  || symlink(buf, path) != 0 )
+      {
+        status = ZIP_ERR_DISK;
+      }
+    } else {
+      status = ZIP_ERR_DISK;
+    }
+    if (fIn) 
+    {
+      PR_Close(fIn);
+    }
+  }
+  return status;
+}
+#endif 
 
 //***********************************************************
 //      nsZipArchive  --  private implementation
@@ -844,7 +897,9 @@ PRInt32 nsZipArchive::BuildFileList()
     item->size = xtolong( central->size );
     item->realsize = xtolong( central->orglen );
     item->crc32 = xtolong( central->crc32 );
-    item->mode = ExtractMode(xtolong( central->external_attributes )); 
+    PRUint32 external_attributes = xtolong( central->external_attributes );
+    item->mode = ExtractMode( external_attributes );
+    item->isSymlink = IsSymlink( external_attributes );
     item->time = xtoint( central->time );
     item->date = xtoint( central->date );
 
@@ -1592,6 +1647,18 @@ static PRUint16 ExtractMode(PRUint32 ext_attr)
     ext_attr |= 0x00000100;
 
     return (PRUint16) ext_attr;
+}
+
+
+/*
+ *  
+ *  Return true if the attributes are for a symbolic link 
+ *
+ */
+
+static PRBool IsSymlink(PRUint32 ext_attr) 
+{
+  return (((ext_attr>>16) & S_IFMT) == S_IFLNK) ? PR_TRUE : PR_FALSE;
 }
 
 /*

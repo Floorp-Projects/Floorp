@@ -65,6 +65,7 @@ public:
   PRUint16    mode;
   PRUint16    time;
   PRUint16    date;
+  PRBool      isSymlink;
 
   nsZipItem*  next;
 
@@ -215,6 +216,15 @@ public:
   PRInt32 FindNext( nsZipFind* aFind, nsZipItem** aResult);
 
   PRInt32 FindFree( nsZipFind *aFind );
+
+#ifdef XP_UNIX
+  /**
+   * ResolveSymLinks
+   * @param path      where the file is located
+   * @param zipItem   the zipItem related to "path" 
+   */
+  PRInt32  ResolveSymlink(const char *path, nsZipItem *zipItem);
+#endif
 
 private:
   //--- private members ---
