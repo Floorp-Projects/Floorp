@@ -1056,6 +1056,9 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
     eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,    
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
+
+    eHTMLTag_table,// XXX kipp was here
+
     eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
     eHTMLTag_whitespace,
     0};
@@ -2767,6 +2770,7 @@ CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
      else {
        //oops, we're actually looking at plain text...
        nsAutoString temp("&");
+       temp.Append(ch);
        result=ConsumeText(temp,aScanner,aToken);
      }
    }//if
