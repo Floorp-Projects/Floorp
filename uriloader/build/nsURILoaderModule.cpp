@@ -41,6 +41,11 @@
 #include "nsOSHelperAppService.h"
 #include "nsExternalProtocolHandler.h"
 
+#if !defined(XP_MAC)
+#include "nsPrefetchService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefetchService, Init)
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
 //
@@ -68,7 +73,11 @@ static const nsModuleComponentInfo components[] = {
   { "Netscape Mime Mapping Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_MIMESERVICE_CONTRACTID, 
      nsOSHelperAppServiceConstructor, },
   { "Netscape Default Protocol Handler", NS_EXTERNALPROTOCOLHANDLER_CID, NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default", 
-     nsExternalProtocolHandlerConstructor, } 
+     nsExternalProtocolHandlerConstructor, },
+#if !defined(XP_MAC)
+  {  NS_PREFETCHSERVICE_CLASSNAME, NS_PREFETCHSERVICE_CID, NS_PREFETCHSERVICE_CONTRACTID,
+     nsPrefetchServiceConstructor, nsPrefetchService::RegisterProc, nsPrefetchService::UnregisterProc },
+#endif
 };
 
 
