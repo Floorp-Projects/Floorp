@@ -98,7 +98,9 @@ TagList  gFontKids={3,{eHTMLTag_legend,eHTMLTag_table,eHTMLTag_text}}; // Added 
 TagList  gFormKids={1,{eHTMLTag_keygen}};
 TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
 
-TagList  gHtmlKids={9,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_noframes,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
+TagList  gHtmlKids={10,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head, eHTMLTag_map,
+                        eHTMLTag_noscript,eHTMLTag_noframes, eHTMLTag_script,eHTMLTag_newline,
+                        eHTMLTag_whitespace, eHTMLTag_iframe}}; // Added iframe to fix bug 149887
 TagList  gHeadKids={8,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed}};
 
 TagList  gLabelKids={1,{eHTMLTag_span}};
