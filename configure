@@ -2628,7 +2628,7 @@ else
     exec 3<&0 <<LOOP_INPUT
 	force="-Wl,--whole-archive";   unforce="-Wl,--no-whole-archive"
 	force="-Wl,-z -Wl,allextract"; unforce="-Wl,-z -Wl,defaultextract"
-	force="-Wl,all";               unforce="-Wl,-none"
+	force="-Wl,-all";              unforce="-Wl,-none"
 LOOP_INPUT
     while read line
     do
