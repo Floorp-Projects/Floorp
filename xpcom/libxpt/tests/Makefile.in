@@ -21,9 +21,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= PrimitiveTest
+SIMPLE_PROGRAMS	= PrimitiveTest SimpleTypeLib
 
-CSRCS		= PrimitiveTest.c
+CSRCS			= PrimitiveTest.c SimpleTypeLib.c
 
 LIBS = \
 	-lxpt \
@@ -31,6 +31,4 @@ LIBS = \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-
 
