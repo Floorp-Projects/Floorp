@@ -67,6 +67,7 @@ const nsIWebDAVOperationListener =
 const calICalendar = Components.interfaces.calICalendar;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;
 const calIEvent = Components.interfaces.calIEvent;
+const calITodo = Components.interfaces.calITodo;
 const calEventClass = Components.classes["@mozilla.org/calendar/event;1"];
 const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
 
@@ -74,10 +75,8 @@ function makeOccurrence(item, start, end)
 {
     var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].
         createInstance(calIItemOccurrence);
-    // XXX poor form
-    occ.wrappedJSObject.item = item;
-    occ.wrappedJSObject.occurrenceStartDate = start;
-    occ.wrappedJSObject.occurrenceEndDate = end;
+    occ.initialize(item, start, end);
+
     return occ;
 }
   
@@ -119,7 +118,7 @@ calDavCalendar.prototype = {
             {
                 return;
             }
-        }
+       }
 
         this.mObservers.push( {observer: aObserver, filter: aItemFilter} );
     },
@@ -129,7 +128,7 @@ calDavCalendar.prototype = {
         var newObservers = Array();
         for (var i = 0; i < this.mObservers.length; i++) {
             if (this.mObservers[i].observer != aObserver)
-                newObservers.push(mObservers[i]);
+                newObservers.push(this.mObservers[i]);
         }
         this.mObservers = newObservers;
     },
@@ -334,51 +333,155 @@ calDavCalendar.prototype = {
 
     // void getItem( in string id, in calIOperationListener aListener );
     getItem: function (aId, aListener) {
+
         if (!aListener)
             return;
 
-        // XXX we really should use DASL SEARCH or CalDAV REPORT, but the only
-        // server we can possibly test against doesn't yet support those
-
-        function searchItemsLocally(calendarToReturn, aAllItems) {
-
-            if (aId == null || aAllItems[aId] == null) {
-                aListener.onOperationComplete(this,
-                                              Components.results.NS_ERROR_FAILURE,
-                                              aListener.GET,
-                                              null,
-                                              "IID doesn't exist for getItem");
-                // XXX FAILURE is a bad choice
-                return;
-            }
-
-            var item = aAllItems[aId];
-            var iid = null;
-
-            if (item.QueryInterface(calIEvent)) {
-                iid = calIEvent;
-            } else if (item.QueryInterface(Components.interfaces.calITodo)) {
-                iid = Components.interfaces.calITodo;
-            } else {
-                aListener.onOperationComplete(this,
-                                              Components.results.NS_ERROR_FAILURE,
-                                              aListener.GET,
-                                              aId,
-                                              "Can't deduce item type based on QI");
-                return;
-            }
-
-            aListener.onGetResult(calendarToReturn, Components.results.NS_OK,
-                                  iid, null, 1, [item]);
-
-            aListener.onOperationComplete(calendarToReturn,
-                                          Components.results.NS_OK,
-                                          aListener.GET, aId, null);
+        if (aId == null) {
+            // XXX FAILURE is a bad choice
+            aListener.onOperationComplete(this,
+                                          Components.results.NS_ERROR_FAILURE,
+                                          aListener.GET,
+                                          null,
+                                          "passed in empty iid");
+            return;
         }
 
-        this.getAllEvents(aListener, searchItemsLocally);
 
+        // this is our basic search-by-uid xml
+        // XXX get rid of vevent filter?
+        // XXX need a prefix in the namespace decl?
+        default xml namespace = "urn:ietf:params:xml:ns:caldav";
+        queryXml = 
+          <calendar-query xmlns:C="urn:ietf:params:xml:ns:caldav">
+            <calendar-query-result/>
+              <filter>
+                <icalcomp-filter name="VCALENDAR">
+                  <icalcomp-filter name="VEVENT">
+                    <icalprop-filter name="UID">
+                      <text-match caseless="no">
+                       {aId}
+                      </text-match>
+                    </icalprop-filter>
+                  </icalcomp-filter>
+                </icalcomp-filter>
+              </filter>
+          </calendar-query>;
+
+        this.reportInternal(queryXml.toXMLString(), false, aListener);
         return;
+    },
+
+    reportInternal: function (aQuery, aOccurrences, aListener)
+    {
+        var reportListener = new WebDavListener();
+
+        reportListener.onOperationDetail = function(aStatusCode, aResource,
+                                                    aOperation, aDetail,
+                                                    aClosure) {
+            var rv;
+            var errString;
+
+            // is this detail the entire search result, rather than a single
+            // detail within a set?
+            //
+            if (aResource.path == calendarDirUri.path) {
+                // XXX is this even valid?  what should we do here?
+                throw("XXX report result for calendar, not event\n");
+            }
+
+            // XXX need to do better than looking for just 200
+            if (aStatusCode == 200) {
+
+                // aDetail is the response element from the multi-status
+                // XXX try-catch
+                var xSerializer = Components.classes
+                    ['@mozilla.org/xmlextras/xmlserializer;1']
+                    .getService(Components.interfaces.nsIDOMSerializer);
+                //XXXdump(xSerializer.serializeToString(aDetail));
+                responseElement = new XML(
+                    xSerializer.serializeToString(aDetail));
+
+                // create calIItemBase from e4x object
+                // XXX error-check that we only have one result, etc
+                var C = new Namespace("urn:ietf:params:xml:ns:caldav");
+
+                // create a local event item
+                var item = calEventClass.createInstance(calIEvent);
+
+                // cause returned data to be parsed into the event item
+                // XXX try-catch
+                item.icalString = 
+                    responseElement..C::["calendar-query-result"]; 
+
+                // figure out what type of item to return
+                var iid;
+                if(aOccurrences) {
+                    iid = calIItemOccurrence;
+                    item = makeOccurrence(item, item.startDate, item.endDate);
+                } else if (item.QueryInterface(calIEvent)) {
+                    iid = calIEvent;
+                    rv = Components.results.NS_OK
+                } else if (item.QueryInterface(calITodo)) {
+                    iid = calITodo;
+                } else {
+                    errString = "Can't deduce item type based on query";
+                    rv = Components.results.NS_ERROR_FAILURE;
+                }
+
+            } else { 
+                // XXX
+                errString = "XXX";
+                rv = Components.results.NS_ERROR_FAILURE;
+            }
+
+            dump("errString = " + errString + "\n");
+            dump("item = " + item + "\n");
+            aListener.onGetResult(this, rv, iid, null, 1, 
+                                  errString ? errString : [item]);
+            return;
+        };
+
+        reportListener.onOperationComplete = function(aStatusCode, aResource,
+                                                      aOperation, aClosure) {
+            
+            // XXX test that something reasonable happens w/notfound
+
+            // parse aStatusCode
+            var rv;
+            var errString;
+            if (aStatusCode == 200) { // XXX better error checking
+                rv = Components.results.NS_OK;
+            } else {
+                rv = Components.results.NS_ERROR_FAILURE;
+                errString = "XXX something bad happened";
+            }
+
+            // call back the listener
+            aListener.onOperationComplete(this,
+                                          Components.results.NS_ERROR_FAILURE,
+                                          aListener.GET, null, errString);
+            return;
+        };
+
+        // convert this into a form the WebDAV service can use
+        // XXX is "text/xml" really the right type?
+        var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
+                      .getService(Components.interfaces.nsIDOMParser);
+        queryDoc = xParser.parseFromString(aQuery, "text/xml");
+
+        // construct the resource we want to search against
+        // XXX adding "calendar/" to the uri is wrong
+        var calendarDirUri = this.mUri.clone();
+        calendarDirUri.spec = calendarDirUri.spec + "calendar/";
+        var calendarDirResource = new WebDavResource(calendarDirUri);
+
+        var webSvc = Components.classes['@mozilla.org/webdav/service;1']
+            .getService(Components.interfaces.nsIWebDAVService);
+        webSvc.report(calendarDirResource, queryDoc, true, reportListener,
+                      null);
+        return;    
+
     },
 
 
@@ -387,263 +490,46 @@ calDavCalendar.prototype = {
     //                in calIOperationListener aListener );
     getItems: function (aItemFilter, aCount, aRangeStart, aRangeEnd, aListener)
     {
-        // XXX we really should use DASL SEARCH or CalDAV REPORT, but the only
-        // server we can possibly test against doesn't yet support those
-
-        // this code copy-pasted from calMemoryCalendar.getItems()
-        function searchItemsLocally(calendarToReturn, aAllItems){
-            const calIItemBase = Components.interfaces.calIItemBase;
-            const calITodo = Components.interfaces.calITodo;
-            const calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
-
-            var itemsFound = Array();
-            var startTime = START_OF_TIME;
-            var endTime = END_OF_TIME;
-            if (aRangeStart)
-                startTime = aRangeStart.nativeTime;
-            if (aRangeEnd)
-                endTime = aRangeEnd.nativeTime;
-
-            //
-            // filters
-            //
-
-            // item base type
-            var itemTypeFilter = null;
-            if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_ALL)
-                itemTypeFilter = calIItemBase;
-            else if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT)
-                itemTypeFilter = calIEvent;
-            else if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_TODO)
-                itemTypeFilter = calITodo;
-            else {
-                // bail.
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                               aListener.GET,
-                                               null,
-                                               "Bad aItemFilter passed to getItems");
-                return;
-            }
-
-            // completed?
-            var itemCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_YES) != 0);
-            var itemNotCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_NO) != 0);
-
-            // return occurrences?
-            var itemReturnOccurrences = ((aItemFilter & calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0);
-
-            //  if aCount != 0, we don't attempt to sort anything, and
-            //  instead return the first aCount items that match.
-
-            for (var i in aAllItems) {
-                var item = aAllItems[i];
-                var itemtoadd = null;
-                if (itemTypeFilter && !(item instanceof itemTypeFilter))
-                    continue;
-
-                var itemStartTime = 0;
-                var itemEndTime = 0;
-            
-                var tmpitem = item;
-                if (item instanceof calIEvent) {
-                    tmpitem = item.QueryInterface(calIEvent);
-                    itemStartTime = item.startDate.valid ? item.startDate.nativeTime :
-                                                           START_OF_TIME;
-                    itemEndTime = item.endDate.valid ? item.endDate.nativeTime :
-                                                       END_OF_TIME
-
-                } else if (item instanceof calITodo) {
-                    // if it's a todo, also filter based on completeness
-                    if (item.percentComplete == 100 && !itemCompletedFilter)
-                        continue;
-                    else if (item.percentComplete < 100 && !itemNotCompletedFilter)
-                        continue;
-                    
-                    itemEndTime = itemStartTime = item.entryTime.nativeTime || 0;
-                } else {
-                    // XXX unknown item type, wth do we do?
-                    continue;
-                }
-
-
-                if (itemStartTime <= endTime) {
-                    // figure out if there are recurrences here we care about
-                    if (itemReturnOccurrences && item.recurrenceInfo)
-                    {
-                        // there might be some recurrences here that we need to handle
-                        var recs = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
-                        for (var i = 0; i < recs.length; i++) {
-                            itemsFound.push(recs[i]);
-                        }
-                    } else if (itemEndTime >= startTime) {
-                        // no occurrences
-                        if (itemReturnOccurrences)
-                            itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
-                        else
-                            itemtoadd = item;
-                        itemsFound.push(itemtoadd);
-                    }
-                }
-
-                if (aCount && itemsFound.length >= aCount)
-                    break;
-            }
-
-            dump("itemsFound = " + itemsFound + "\n");
-            aListener.onGetResult (calendarToReturn,
-                                   Components.results.NS_OK,
-                                   itemReturnOccurrences ? calIItemOccurrence : itemTypeFilter,
-                                   null,
-                                   itemsFound.length,
-                                   itemsFound);
-
-            aListener.onOperationComplete (calendarToReturn,
-                                           Components.results.NS_OK,
-                                           aListener.GET,
-                                           null,
-                                           null);
+        if (!aListener)
             return;
-        };
 
-        // XXX for now, we're just gonna start off getting events.
-        // worry about todos and other stuff later
-        this.getAllEvents(aListener, searchItemsLocally);
+        // this is our basic report xml
+        // XXX get rid of vevent filter?
+        var C = new Namespace("urn:ietf:params:xml:ns:caldav")
+        default xml namespace = C;
+        var queryXml = <calendar-query>
+                         <calendar-query-result/>
+                         <filter>
+                           <icalcomp-filter name="VCALENDAR">
+                             <icalcomp-filter name="VEVENT"/>
+                           </icalcomp-filter>
+                         </filter>
+                       </calendar-query>;
+
+        // XXX aCount
+
+        // if a time range has been specified, do the appropriate restriction.
+        // XXX no way to express "end of time" in caldav in either direction
+        if (aRangeStart && aRangeStart.valid && 
+            aRangeEnd && aRangeEnd.valid) {
+
+            var rangeXml = <time-range start={aRangeStart.icalString}
+                                       end={aRangeEnd.icalString}/>;
+
+            // append the time-range as a child of our innermost 
+            // icalcomp-filter
+            queryXml[0].C::filter.C::["icalcomp-filter"]
+                .C::["icalcomp-filter"].appendChild(rangeXml);
+        }
+
+        // XXX aItemFilter
+
+        var queryString = queryXml.toXMLString();
+        dump("queryString = " + queryString + "\n");
+        var occurrences = (aItemFilter &
+                           calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0; 
+        this.reportInternal(queryString, occurrences, aListener);
     },
-
-    // A nasty little hack until there is a CalDAV server in existence to 
-    // test against which implements DASL SEARCH or CalDAV REPORT.   Basically
-    // we get all the events here, and then the caller specifies an 
-    // aInternalCallback function that it uses to do the actual searching
-    // and callbacks
-    //
-    getAllEvents: function(aListener, aInternalCallback) {
-        if (!aListener) {
-            throw Components.results.NS_ERROR_ILLEGAL_VALUE;
-        }
-
-        var webSvc = Components.classes['@mozilla.org/webdav/service;1']
-            .getService(Components.interfaces.nsIWebDAVService);
-
-        // So we need a list of items to iterate over.  Should theoretically 
-        // use search to find this out
-        var eventDirUri = this.mUri.clone();
-        eventDirUri.spec = eventDirUri.spec + "calendar/";
-        var eventDirResource = new WebDavResource(eventDirUri);
-
-        var propsToGet = ["DAV: getlastmodified"];
-
-        var listener = new WebDavListener();
-        var allItems = new Object();
-        var listCompleted = false;
-        var itemsPending = 0;
-        var itemsCompleted = 0;
-        listener.onOperationDetail = function(aStatusCode, aResource,
-                                              aOperation, aDetail, aClosure) {
-            if (aStatusCode != 200) {
-                // this property had an error
-
-                // XXX report error to caller, or just log?
-                dump("calDavCalendar.listener.onOperationDetail: " + 
-                     " property " + aResource + " returned error " + 
-                     aStatusCode + "\n");
-
-                return;
-            }
-                         
-            var getListener = new WebDavListener();
-            getListener.onOperationDetail = function(aStatusCode, aResource,
-                                                     aOperation, aDetail,
-                                                     aClosure) {
-
-                dump("getListener.onOperationDetail called\n");
-                if (aStatusCode == 200) {
-
-                    // turn the detail item into a datatype we can deal with
-                    aDetail.QueryInterface(nsISupportsCString);
-
-                    // create a local event item
-                    item = calEventClass.createInstance(calIEvent);
-
-                    // cause returned data to be parsed into the event item
-                    item.icalString = aDetail.data;
-
-                    // add the event to the array of all items
-                    allItems[item.id] = item;
-                    dump("getListener.onOperationDetail: item " + item.id +
-                         " found\n");
-
-                } else {
-                    // XXX do real error handling here
-                    dump("getListener.onOperationDetail: aStatusCode = " +
-                         aStatusCode + "\n");
-                }
-
-            };
-
-            getListener.onOperationComplete = function(aStatusCode, 
-                                                       aResource, aOperation,
-                                                       aClosure) {
-                dump("getListener.onOperationComplete() called\n");
-
-                if (aStatusCode != 200) {
-                    dump("getListener.onOperationComplete: " + 
-                         " property " + aResource + " returned error " + 
-                         aStatusCode + "\n");
-
-                    aClosure.onGetResult();// XXX call back error
-                }
-
-                // we've finished this get; make a note of that
-                ++itemsCompleted;
-
-                // if this was the last get we were waiting on, we're done
-                if ( listCompleted && itemsPending == itemsCompleted) {
-
-                    // we're done with all the gets
-                    aInternalCallback(this, allItems);
-                }
-            };
-
-            // we don't care about the directory itself, only the children
-            // (think of the children!!)  This is a gross hack, but it'll go
-            // away once we start using REPORT or SEARCH
-            // 
-            if (aResource.path == eventDirUri.path) {
-                return;
-            }
-
-            // make a note that this request is pending
-            ++itemsPending;
-            
-            webSvc.getToString(new WebDavResource(aResource), getListener, 
-                               null);
-
-        }
-        listener.onOperationComplete = function(aStatusCode, aResource,
-                                                aOperation, aClosure) {
-            listCompleted = true;
-
-            // if something went wrong while listing, call the error
-            // back to the caller, and then give up.
-
-            if (aStatusCode != 207 && aStatusCode != 200) {
-
-                // XXX test to find out return code if no children of events
-
-                dump("calDavCalendar.listener.onOperationComplete: " + 
-                     " property " + aResource + " returned error " + 
-                     aStatusCode + "\n");
-
-                // aClosure contains the calIOperationListener
-                aClosure.onOperationComplete(this, aStatusCode, 
-                                             calICalendar.GET, null, null);
-            }
-        }
-
-        webSvc.getResourceProperties(eventDirResource, propsToGet.length, 
-                                     propsToGet, true, listener, aListener);
-    },
-
 
     //
     // Helper functions
