@@ -216,7 +216,6 @@ static JSHashAllocOps atom_alloc_ops = {
 JSBool
 js_InitAtomState(JSContext *cx, JSAtomState *state)
 {
-    state->runtime = cx->runtime;
     state->table = JS_NewHashTable(JS_ATOM_HASH_SIZE, js_hash_atom_key,
                                    js_compare_atom_keys, js_compare_stub,
                                    &atom_alloc_ops, state);
@@ -224,6 +223,8 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
+
+    state->runtime = cx->runtime;
 #ifdef JS_THREADSAFE
     js_InitLock(&state->lock);
     state->tablegen = 0;
@@ -302,7 +303,8 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
 void
 js_FreeAtomState(JSContext *cx, JSAtomState *state)
 {
-    JS_HashTableDestroy(state->table);
+    if (state->table)
+        JS_HashTableDestroy(state->table);
 #ifdef JS_THREADSAFE
     js_FinishLock(&state->lock);
 #endif
@@ -334,7 +336,7 @@ js_FinishAtomState(JSAtomState *state)
 {
     UninternArgs args;
 
-    if (!state->runtime)
+    if (!state->table)
         return;
     args.rt = state->runtime;
     args.leaks = 0;
@@ -382,6 +384,8 @@ js_MarkAtomState(JSAtomState *state, uintN gcflags, JSGCThingMarker mark,
 {
     MarkArgs args;
 
+    if (!state->table)
+        return;
     args.gcflags = gcflags;
     args.mark = mark;
     args.data = data;
@@ -411,7 +415,8 @@ void
 js_SweepAtomState(JSAtomState *state)
 {
     state->liveAtoms = 0;
-    JS_HashTableEnumerateEntries(state->table, js_atom_sweeper, state);
+    if (state->table)
+        JS_HashTableEnumerateEntries(state->table, js_atom_sweeper, state);
 }
 
 JS_STATIC_DLL_CALLBACK(intN)
