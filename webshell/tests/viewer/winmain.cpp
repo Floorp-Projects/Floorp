@@ -15,14 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-
-//we need openfilename stuff... MMP
-#ifdef WIN32_LEAN_AND_MEAN
-#undef WIN32_LEAN_AND_MEAN
-#endif
-
 #include <windows.h>
+#include <crtdbg.h>
 #include <stdio.h>
 
 #include "resources.h"
@@ -861,9 +855,10 @@ BOOL CreateRobotDialog(HWND hParent)
 
 void PrintHelpInfo(char **argv)
 {
-  fprintf(stderr, "Usage: %s [-p][-q][-f filename][-d #] [starting url]\n", argv[0]);
+  fprintf(stderr, "Usage: %s [-p][-q][-md #][-f filename][-d #] [starting url]\n", argv[0]);
   fprintf(stderr, "\t-p   -- run purify\n");
   fprintf(stderr, "\t-q   -- run quantify\n");
+  fprintf(stderr, "\t-md # -- set the crt debug flags to #\n");
   fprintf(stderr, "\t-d # -- set the delay between URL loads to # (in milliseconds)\n");
   fprintf(stderr, "\t-r # -- set the repeat count, which is the number of times the URLs will be loaded in batch mode.\n");
   fprintf(stderr, "\t-f filename -- read a list of URLs from <filename>\n");
@@ -896,6 +891,16 @@ void main(int argc, char **argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
+      }
+      else if (strcmp(argv[i], "-md") == 0) {
+        if (i == argc - 1) {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        int oldFlags = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+        int newFlags = atoi(argv[++i]);
+        _CrtSetDbgFlag(newFlags);
+        printf("Note: crt flags: old=%x new=%x\n", oldFlags, newFlags);
       }
       else if (strcmp(argv[i], "-r") == 0) {
         i++;
