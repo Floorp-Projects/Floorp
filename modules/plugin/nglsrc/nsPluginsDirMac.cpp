@@ -29,6 +29,9 @@
 
 #include <Processes.h>
 #include <Folders.h>
+#include <Resources.h>
+#include <TextUtils.h>
+#include <string.h>
 
 static nsresult getApplicationDir(nsNativeFileSpec& outAppDir)
 {
@@ -93,10 +96,55 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 	return NS_OK;
 }
 
+static char* p2cstrdup(StringPtr pstr)
+{
+	int len = pstr[0];
+	char* cstr = new char[len + 1];
+	if (cstr != NULL) {
+		::BlockMoveData(pstr + 1, cstr, len);
+		cstr[len] = '\0';
+	}
+	return cstr;
+}
+
+static char* GetPluginString(short id, short index)
+{
+	Str255 str;
+	::GetIndString(str, id, index);
+	return p2cstrdup(str);
+}
+
 /**
  * Obtains all of the information currently available for this plugin.
  */
-nsresult nsPluginFile::GetPluginInfo(nsPluginInfo &outPluginInfo)
+nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
+	// need to open the plugin's resource file and read some resources.
+	const FSSpec spec = *this;
+	short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
+	if (refNum != -1) {
+		if (info.fPluginInfoSize >= sizeof(nsPluginInfo)) {
+			// 'STR#', 126, 2 => plugin name.
+			info.fName = GetPluginString(126, 2);
+			
+			// 'STR#', 126, 1 => plugin description.
+			info.fDescription = GetPluginString(126, 1);
+			
+			// 'STR#', 128, 1 => MIME type.
+			info.fMimeType = GetPluginString(128, 1);
+
+			// 'STR#', 127, 1 => MIME description.
+			info.fMimeDescription = GetPluginString(127, 1);
+			
+			// 'STR#', 128, 2 => extensions.
+			info.fExtensions = GetPluginString(128, 2);
+
+			info.fVariantCount = 0;
+			info.fMimeTypeArray = NULL;
+			info.fMimeDescriptionArray = NULL;
+		}
+		
+		::CloseResFile(refNum);
+	}
 	return NS_OK;
 }
