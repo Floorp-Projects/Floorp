@@ -52,7 +52,7 @@ debugging=0
 while [ $# -gt 0 ]
 do
   case $1 in
-    -h | --help)
+    -h | --help )
       script_args="$script_args -h"
       shift
       ;;
@@ -70,7 +70,7 @@ do
 		# keep this in synch with 
 		# mozilla/xpfe/bootstrap/nsAppRunner.cpp  
 		# and mozilla/profile/src/nsProfile.cpp
-		-P | -CreateProfile | -ProfileManager | -ProfileWizard | -installer | -edit | -mail | -news | -pref | -compose | -editor | -addressbook | -chrome )
+		-v | --version | -h | --help | -P | -CreateProfile | -ProfileManager | -ProfileWizard | -installer | -edit | -mail | -news | -pref | -compose | -editor | -addressbook | -chrome )
 		if [ "x$moreargs" != "x" ]
 		then
 			echo "You can't have $1 and $moreargs"

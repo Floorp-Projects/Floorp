@@ -593,10 +593,33 @@ static nsresult main1(int argc, char* argv[])
   return rv ;
 }
 
+static
+void DumpHelp(char *appname)
+{
+	printf("%s: help info here\n", appname);
+}
+
+static
+void DumpVersion(char *appname)
+{
+	printf("%s: version info\n", appname);
+}
 
 int main(int argc, char* argv[])
 {
   nsresult rv;
+
+  /* -help and -version should return quick */
+  if (argc == 2) {
+	if ((PL_strcmp(argv[1], "-h") == 0) || (PL_strcmp(argv[1], "-help") == 0) || (PL_strcmp(argv[1], "--help") == 0)) {
+		DumpHelp(argv[0]);
+		return 0;
+	}
+	else if ((PL_strcmp(argv[1], "-v") == 0) || (PL_strcmp(argv[1], "-version") == 0) || (PL_strcmp(argv[1], "--version") == 0)) {
+		DumpVersion(argv[0]);
+		return 0;
+	}
+  }
     
   if( !NS_CanRun() )
     return 1; 
