@@ -514,8 +514,6 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:xpfe:components:ucth:public:MANIFEST_IDL",			"$distdirectory:idl:");
    # xfer
    InstallFromManifest(":mozilla:xpfe:components:xfer:public:MANIFEST_IDL",			"$distdirectory:idl:");
-
-   BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",				"mozcomps");
 	
 	# XPAPPS
    InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
