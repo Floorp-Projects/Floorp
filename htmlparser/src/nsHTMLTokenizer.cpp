@@ -28,6 +28,7 @@
 #include "nsScanner.h"
 #include "nsDTDUtils.h"
 #include "nsElementTable.h"
+#include "nsHTMLEntities.h"
 
 /************************************************************************
   And now for the main class -- nsHTMLTokenizer...
@@ -539,7 +540,21 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
        aScanner.PutBack(theChar);
        return ConsumeText(temp,aToken,aScanner);
     }//if
-    AddToken(aToken,result,mTokenDeque);
+    if(aToken){
+      char cbuf[30];
+      nsString& theStr=aToken->GetStringValueXXX();
+      theStr.ToCString(cbuf, sizeof(cbuf)-1);
+      if(-1==NS_EntityToUnicode(cbuf)){
+        //if you're here we have a bogus entity.
+        //convert it into a text token.
+        nsAutoString temp("&");
+        temp.Append(theStr);
+        CToken* theToken=theRecycler->CreateTokenOfType(eToken_text,eHTMLTag_text,temp);
+        theRecycler->RecycleToken(aToken);
+        aToken=theToken;
+      }
+      AddToken(aToken,result,mTokenDeque);
+    }
   }//if
   return result;
 }
