@@ -88,6 +88,8 @@ class CBrowserContext : public CNSContext
 		
 		virtual Boolean				SupportsPageServices();
 		
+		void						SetCloseCallback ( void (* close_callback)(void *close_arg), void* close_arg );
+
 // FIX ME!!! ACCESSOR for unique ID
 
 			// LAYERS / COMPOSITOR
@@ -107,6 +109,7 @@ class CBrowserContext : public CNSContext
 											LO_EmbedStruct*			inEmbed, 
 											CL_Event*				inEvent);
 														
+
 			// HISTORY
 		virtual	void				RememberHistoryPosition(
 											Int32					inX,
@@ -463,6 +466,9 @@ class CBrowserContext : public CNSContext
 	    Boolean					mMochaImagesDelayed;
 	    
 	    Boolean					mInNoMoreUsers;
+
+		void (* mCloseCallback)(void *);				// called on window close
+		void*					mCloseCallbackArg;
 
 }; // class CBrowserContext
 

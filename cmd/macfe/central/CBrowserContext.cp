@@ -108,6 +108,8 @@ CBrowserContext::CBrowserContext()
 ,	mMochaImagesLooping(false)
 ,	mMochaImagesDelayed(false)
 ,	mInNoMoreUsers(false)
+,	mCloseCallback(nil)
+,	mCloseCallbackArg(nil)
 {
 	mLoadImagesOverride = false;
 	mDelayImages = 	CPrefs::GetBoolean( CPrefs::DelayImages );
@@ -143,6 +145,8 @@ CBrowserContext::CBrowserContext(MWContextType inType)
 ,	mMochaImagesLooping(false)
 ,	mMochaImagesDelayed(false)
 ,	mInNoMoreUsers(false)
+,	mCloseCallback(nil)
+,	mCloseCallbackArg(nil)
 {
 	mLoadImagesOverride = false;
 	mDelayImages = 	CPrefs::GetBoolean( CPrefs::DelayImages );
@@ -179,6 +183,8 @@ CBrowserContext::CBrowserContext(const CBrowserContext& inOriginal)
 ,	mMochaImagesLooping(false)
 ,	mMochaImagesDelayed(false)
 ,	mInNoMoreUsers(false)
+,	mCloseCallback(nil)
+,	mCloseCallbackArg(nil)
 {
 	mLoadImagesOverride = inOriginal.IsLoadImagesOverride();
 	mDelayImages = 	inOriginal.IsImageLoadingDelayed();
@@ -214,7 +220,26 @@ CBrowserContext::~CBrowserContext()
 		XP_FREE(mContext.name);
 		mContext.name = NULL;
 		}
+
+	// 98-05-27 pinkerton - call close callback
+	if ( mCloseCallback )
+		(*mCloseCallback)(mCloseCallbackArg);
 }
+
+
+//
+// SetCloseCallback
+//
+// Set a callback (from the chrome structure) to be called when this window/context goes
+// away.
+//
+void
+CBrowserContext :: SetCloseCallback ( void (* close_callback)(void *close_arg), void* close_arg )
+{
+	mCloseCallback = close_callback;
+	mCloseCallbackArg = close_arg;
+}
+
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	

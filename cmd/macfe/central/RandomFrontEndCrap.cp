@@ -404,6 +404,11 @@ MWContext* FE_MakeNewWindow(MWContext* old_context,
 			/* jpm changes: get Shift_JIS & MacRoman 8bit to display correctly in security dialogs */
 			if ((chrome != nil) && (theContext != nil))
 			{
+				// pinkerton - 98-05-27
+				// save the close callback so that we can run it when the context goes away. Make sure
+				// we are setting this on the _new_ context, not the old one.
+				theBrowserContext->SetCloseCallback ( chrome->close_callback, chrome->close_arg );
+
 				if (chrome->type == MWContextDialog)
 				{
 					CNSContext* theNSContext = ExtractNSContext(theContext);
@@ -437,11 +442,18 @@ MWContext* FE_MakeNewWindow(MWContext* old_context,
 
 void FE_UpdateChrome(MWContext *inContext, Chrome *inChrome)
 {
-	CBrowserWindow* theWindow = CBrowserWindow::WindowForContext(ExtractBrowserContext(inContext));
+	CBrowserContext* brContext = ExtractBrowserContext(inContext);
+	CBrowserWindow* theWindow = CBrowserWindow::WindowForContext(brContext);
 	
 	if (theWindow != nil)
 	{
 		theWindow->SetChromeInfo(inChrome);
+
+		if ( inChrome ) {
+			// 98-05-27 pinkerton
+			// Set the callback info so we do the right thing when the window goes away
+			brContext->SetCloseCallback ( inChrome->close_callback, inChrome->close_arg );
+		}
 	}
 }
 
