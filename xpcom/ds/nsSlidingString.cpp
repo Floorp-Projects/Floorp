@@ -54,10 +54,24 @@ Distance( const nsSharedBufferList::Position& aStart, const nsSharedBufferList::
     return result;
   }
 
-nsSlidingSubstring::nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList, const nsSharedBufferList::Position& aStart, const nsSharedBufferList::Position& aEnd )
-    : mStart(aStart), mEnd(aEnd), mBufferList(aBufferList), mLength(PRUint32(Distance(aStart, aEnd)))
+nsSlidingSubstring::nsSlidingSubstring( const nsSlidingSubstring& aString )
+    : mStart(aString.mStart),
+      mEnd(aString.mEnd),
+      mBufferList(aString.mBufferList),
+      mLength(aString.mLength)
   {
     mBufferList.AcquireReference();
+    mStart.mBuffer->AcquireReference();
+  }
+
+nsSlidingSubstring::nsSlidingSubstring( const nsSlidingSubstring& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+    : mStart(aStart),
+      mEnd(aEnd),
+      mBufferList(aString.mBufferList),
+      mLength(PRUint32(Distance(mStart, mEnd)))
+  {
+    mBufferList.AcquireReference();
+    mStart.mBuffer->AcquireReference();
   }
 
 nsSlidingSubstring::nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList )
@@ -65,8 +79,10 @@ nsSlidingSubstring::nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList )
   {
     mBufferList.AcquireReference();
 
-    mStart  = nsSlidingSharedBufferList::Position(mBufferList.GetFirstBuffer(), mBufferList.GetFirstBuffer()->DataStart());
-    mEnd    = nsSlidingSharedBufferList::Position(mBufferList.GetLastBuffer(), mBufferList.GetLastBuffer()->DataEnd());
+    mStart.PointBefore(mBufferList.GetFirstBuffer());
+    mStart.mBuffer->AcquireReference();
+
+    mEnd.PointAfter(mBufferList.GetLastBuffer());
     mLength = PRUint32(Distance(mStart, mEnd));
   }
 
@@ -80,23 +96,31 @@ nsSlidingSubstring::~nsSlidingSubstring()
 const PRUnichar*
 nsSlidingSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
-    const nsSlidingSharedBufferList::Buffer* buffer = 0;
+    const Buffer* result_buffer = 0;
     switch ( aRequest )
       {
         case kPrevFragment:
-          buffer = NS_STATIC_CAST(const nsSlidingSharedBufferList::Buffer*, aFragment.mFragmentIdentifier)->mPrev;
+          {
+            const Buffer* current_buffer = NS_STATIC_CAST(const Buffer*, aFragment.mFragmentIdentifier);
+            if ( current_buffer != mStart.mBuffer )
+              result_buffer = current_buffer->mPrev;
+          }
           break;
 
         case kFirstFragment:
-          buffer = mBufferList.GetFirstBuffer();
+          result_buffer = mStart.mBuffer;
           break;
 
         case kLastFragment:
-          buffer = mBufferList.GetLastBuffer();
+          result_buffer = mEnd.mBuffer;
           break;
 
         case kNextFragment:
-          buffer = NS_STATIC_CAST(const nsSlidingSharedBufferList::Buffer*, aFragment.mFragmentIdentifier)->mNext;
+          {
+            const Buffer* current_buffer = NS_STATIC_CAST(const Buffer*, aFragment.mFragmentIdentifier);
+            if ( current_buffer != mEnd.mBuffer )
+              result_buffer = current_buffer->mNext;
+          }
           break;
 
         case kFragmentAt:
@@ -104,11 +128,19 @@ nsSlidingSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragmen
           break;
       }
 
-    if ( buffer )
+    if ( result_buffer )
       {
-        aFragment.mStart  = buffer->DataStart();
-        aFragment.mEnd    = buffer->DataEnd();
-        aFragment.mFragmentIdentifier = buffer;
+        if ( result_buffer == mStart.mBuffer )
+          aFragment.mStart = mStart.mPosInBuffer;
+        else
+          aFragment.mStart = result_buffer->DataStart();
+
+        if ( result_buffer == mEnd.mBuffer )
+          aFragment.mEnd = mEnd.mPosInBuffer;
+        else
+          aFragment.mEnd = result_buffer->DataEnd();
+
+        aFragment.mFragmentIdentifier = result_buffer;
         return aFragment.mStart + aOffset;
       }
 
@@ -126,28 +158,23 @@ nsSlidingString::nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd,
 void
 nsSlidingString::AppendBuffer( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
   {
-    nsSlidingSharedBufferList::Buffer* new_buffer = new nsSlidingSharedBufferList::Buffer(aStorageStart, aDataEnd, aStorageStart, aStorageEnd);
-    nsSlidingSharedBufferList::Buffer* old_last_buffer = mBufferList.GetLastBuffer();
+    Buffer* new_buffer = new Buffer(aStorageStart, aDataEnd, aStorageStart, aStorageEnd);
+    Buffer* old_last_buffer = mBufferList.GetLastBuffer();
     mBufferList.LinkBuffer(old_last_buffer, new_buffer, 0);
     mLength += new_buffer->DataLength();
 
-    if ( !old_last_buffer )
-      {
-        // set up mStart and mEnd from the now non-empty list
-      }
+    mEnd.PointAfter(new_buffer);
   }
 
 void
 nsSlidingString::DiscardPrefix( const nsReadingIterator<PRUnichar>& aIter )
   {
-    const nsSlidingSharedBufferList::Buffer* new_start_buffer = NS_REINTERPRET_CAST(const nsSlidingSharedBufferList::Buffer*, aIter.fragment().mFragmentIdentifier);
-    new_start_buffer->AcquireReference();
+    Position old_start(mStart);
+    mStart = aIter;
+    mLength -= Distance(old_start, mStart);
 
-    nsSlidingSharedBufferList::Buffer* old_start_buffer = mStart.mBuffer;
-    mStart.mBuffer = NS_CONST_CAST(nsSlidingSharedBufferList::Buffer*, new_start_buffer);
-    mStart.mPosInBuffer = NS_CONST_CAST(PRUnichar*, aIter.get());
+    mStart.mBuffer->AcquireReference();
+    old_start.mBuffer->ReleaseReference();
 
-    old_start_buffer->ReleaseReference();
-
-    mBufferList.DiscardUnreferencedPrefix(old_start_buffer);
+    mBufferList.DiscardUnreferencedPrefix(old_start.mBuffer);
   }
