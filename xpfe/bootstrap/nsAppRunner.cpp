@@ -43,6 +43,10 @@
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
+#ifdef NECKO
+#include "nsICookieService.h"
+#endif // NECKO
+
 
 // Temporary stuff.
 #include "nsIDOMToolkitCore.h"
@@ -72,6 +76,9 @@ static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
+#ifdef NECKO
+static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
+#endif // NECKO
 
 // defined for profileManager
 #if defined(NS_USING_PROFILES)
@@ -237,6 +244,15 @@ int main(int argc, char* argv[])
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
 
+#ifdef NECKO
+    // fire up an instance of the cookie manager.
+    // I'm doing this using the serviceManager for convenience's sake.
+    // Presumably an application will init it's own cookie service a 
+    // different way (this way works too though).
+    NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+    if (NS_FAILED(rv)) goto done;
+#endif // NECKO
+
   // get and start the ProfileManager service
 #if defined(NS_USING_PROFILES)
   rv = nsServiceManager::GetService(kProfileCID, 
@@ -250,7 +266,6 @@ int main(int argc, char* argv[])
   profileService->Startup(nsnull);
 
 #endif // defined(NS_USING_PROFILES)
-
 
 
   /*
