@@ -3928,7 +3928,32 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
             focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
             nsCOMPtr<nsIDOMWindowInternal> ourFocusedWindow(do_QueryInterface(ourWindow));
-            if (ourFocusedWindow == focusedWindow)
+
+            // We want to null out the last focused element if the document containing
+            // it is going away.  If the last focused element is in a descendent
+            // window of our domwindow, its document will be destroyed when we
+            // destroy our children.  So, check for this case and null out the
+            // last focused element.  See bug 70484.
+
+            PRBool isSubWindow = PR_FALSE;
+            nsCOMPtr<nsIDOMWindow> curwin;
+            if (focusedWindow)
+              focusedWindow->GetParent(getter_AddRefs(curwin));
+            while (curwin) {
+              if (curwin == NS_STATIC_CAST(nsIDOMWindow*, ourFocusedWindow)) {
+                isSubWindow = PR_TRUE;
+                break;
+              }
+              nsIDOMWindow* temp;
+              curwin->GetParent(&temp);
+              if (curwin == temp) {
+                NS_RELEASE(temp);
+                break;
+              }
+              curwin = dont_AddRef(temp);
+            }
+
+            if (ourFocusedWindow == focusedWindow || isSubWindow)
               focusController->SetFocusedElement(nsnull);
         }
     }
