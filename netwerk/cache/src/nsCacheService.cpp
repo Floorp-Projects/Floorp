@@ -230,6 +230,8 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
         if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
 
     }
+
+    delete request;
     return rv;
 }
 
@@ -272,55 +274,45 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     // search active entries (including those not bound to device)
     nsCacheEntry *entry = mActiveEntries.GetEntry(request->mKey);
 
-    // doom existing entry if we are processing a FORCE-WRITE
+    if (!entry) {
+        // search cache devices for entry
+        entry = SearchCacheDevices(request->mKey, request->mStoragePolicy);
+        entry->MarkInitialized();
+    }
+
+    if (!entry && !(request->mAccessRequested & nsICache::ACCESS_WRITE)) {
+        // this is a READ-ONLY request
+        rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
+        goto error;
+    }
+
     if (entry && (request->mAccessRequested == nsICache::ACCESS_WRITE)) {
-        DoomEntry_Internal(entry);
+        // this is FORCE-WRITE request
+        rv = DoomEntry_Internal(entry);
+        if (NS_FAILED(rv)) {
+            //** what to do?
+        }
+
+        if (entry->IsNotInUse()) {
+            DeactivateEntry(entry); // tell device to get rid of it
+        }
         entry = nsnull;
     }
 
     if (!entry) {
-        entry = SearchCacheDevices(request->mKey, request->mStoragePolicy);
-
-        if (!entry) {
-
-            if (!(request->mAccessRequested & nsICache::ACCESS_WRITE)) {
-                // this was a READ-ONLY request
-                rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
-                goto error;
-            }
-
-            entry = new nsCacheEntry(request->mKey,
-                                     request->mStreamBased,
-                                     request->mStoragePolicy);
-            if (!entry)
-                return NS_ERROR_OUT_OF_MEMORY;            
-
-#if 0
-            //** we could bind entry to device early in somecases
-            if ((request->mStoragePolicy == nsICache::STORE_IN_MEMORY) ||
-                (!request->mStreamBased))
-            {
-                // we can bind the memory cache
-                rv = mMemoryDevice->BindEntry(entry);
-                if (NS_FAILED(rv)) {
-                    //** what to do?
-                    goto error;
-                }
-            } else if (request->mStoragePolicy == nsICache::STORE_ON_DISK) {
-                // we can bind to the disk cache
-                rv = mDiskDevice->BindEntry(entry);
-                if (NS_FAILED(rv)) {
-                    //** what to do?
-                    goto error;
-                }
-            }
-#endif
-        }
-
-        rv = mActiveEntries.AddEntry(entry);
-        if (NS_FAILED(rv)) goto error;
+        entry = new nsCacheEntry(request->mKey,
+                                 request->mStreamBased,
+                                 request->mStoragePolicy);
+        if (!entry)
+            return NS_ERROR_OUT_OF_MEMORY;
+        
+        //** we could perform an early bind in some cases based on storage policy
     }
 
+    rv = mActiveEntries.AddEntry(entry);
+    if (NS_FAILED(rv)) goto error;
+    entry->MarkActive();  // mark entry active, because it's now in mActiveEntries
+    
     *result = entry;
     return NS_OK;
     
@@ -373,7 +365,6 @@ nsCacheService::BindEntry(nsCacheEntry * entry)
 }
 
 
-
 nsresult
 nsCacheService::ValidateEntry(nsCacheEntry * entry)
 {
@@ -406,12 +397,14 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
         //** check rv, but what can we really do...
     }
 
-    // remove from active entries
-    rv = mActiveEntries.RemoveEntry(entry);
-    if (NS_FAILED(rv)) {
-        //** what to do
+    if (entry->IsActive()) {
+        // remove from active entries
+        rv = mActiveEntries.RemoveEntry(entry);
+        entry->MarkInactive();
+        if (NS_FAILED(rv)) {
+            //** what to do
+        }
     }
-    
     // put on doom list to wait for descriptors to close
     NS_ASSERTION(PR_CLIST_IS_EMPTY(entry->GetListNode()),
                  "doomed entry still on device list");
@@ -477,14 +470,18 @@ void
 nsCacheService::DeactivateEntry(nsCacheEntry * entry)
 {
     nsresult  rv = NS_OK;
+    NS_ASSERTION(entry->IsNotInUse(), "deactivating an entry while in use!");
 
     if (entry->IsDoomed()) {
         // remove from Doomed list
         PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
     } else {
-        // remove from active entries
-        rv = mActiveEntries.RemoveEntry(entry);
-        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to remove an active entry !?!");
+        if (entry->IsActive()) {
+            // remove from active entries
+            rv = mActiveEntries.RemoveEntry(entry);
+            entry->MarkInactive();
+            NS_ASSERTION(NS_SUCCEEDED(rv),"failed to remove an active entry !?!");
+        }
     }
 
     nsCacheDevice * device = entry->CacheDevice();
@@ -497,5 +494,6 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
     } else {
         // increment deactivating unbound entry statistic
         ++mDeactivatedUnboundEntries;
+        delete entry; // because no one else will
     }
 }

@@ -66,8 +66,6 @@ nsMemoryCacheDevice::FindEntry(nsCString * key)
     nsCacheEntry * entry = mMemCacheEntries.GetEntry(key);
     if (!entry)  return nsnull;
 
-    entry->MarkActive(); // so we don't evict it
-    
     // move entry to the tail of the eviction list
     PR_REMOVE_AND_INIT_LINK(entry->GetListNode());
     PR_APPEND_LINK(entry->GetListNode(), &mEvictionList);
@@ -169,3 +167,6 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 }
 
 //** need methods for enumerating entries
+
+
+//** check entry->IsInUse() before evicting.

@@ -171,6 +171,7 @@ nsCacheEntry::CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGran
     
     if (!IsInitialized()) {
         // brand new, unbound entry
+        request->mKey = nsnull;  // steal ownership of the key string
         *accessGranted = request->mAccessRequested & nsICache::ACCESS_WRITE;
         NS_ASSERTION(*accessGranted, "new cache entry for READ-ONLY request");
         if (request->mStreamBased)  MarkStreamBased();
@@ -250,13 +251,6 @@ nsCacheEntry::AsyncOpen(nsCacheRequest * request)
         //** queue request and we're done (MarkValid will notify pending requests)
     }
     return rv;
-}
-
-
-nsresult
-nsCacheEntry::Doom()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

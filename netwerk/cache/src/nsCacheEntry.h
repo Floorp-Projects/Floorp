@@ -127,12 +127,15 @@ public:
     PRBool IsInitialized()     { return (mFlags & eInitializedMask) != 0; }
     PRBool IsValid()           { return (mFlags & eValidMask) != 0; }
     PRBool IsAllowedInMemory() { return (mFlags & eAllowedInMemoryMask) != 0; }
-    PRBool IsAllowedOnDisk()   { return (mFlags & eAllowedOnDiskMask) !=0; } 
+    PRBool IsAllowedOnDisk()   { return (mFlags & eAllowedOnDiskMask) !=0; }
+    PRBool IsInUse()           { return !(PR_CLIST_IS_EMPTY(&mRequestQ) &&
+                                          PR_CLIST_IS_EMPTY(&mDescriptorQ)); }
+    PRBool IsNotInUse()        { return (PR_CLIST_IS_EMPTY(&mRequestQ) &&
+                                         PR_CLIST_IS_EMPTY(&mDescriptorQ)); }
 
     // methods for nsCacheService
     nsresult Open(nsCacheRequest *request, nsICacheEntryDescriptor ** result);
     nsresult AsyncOpen(nsCacheRequest *request);
-    nsresult Doom(void);
     PRBool   RemoveRequest( nsCacheRequest * request);
     PRBool   RemoveDescriptor( nsCacheEntryDescriptor * descriptor);
 
