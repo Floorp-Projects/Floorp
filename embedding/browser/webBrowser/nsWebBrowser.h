@@ -73,6 +73,9 @@ protected:
    nsCOMPtr<nsIWidget>        mParentWidget;
    nativeWindow               mParentNativeWindow;
    nsCOMPtr<nsIWidget>        mInternalWidget;
+
+   //Weak Reference interfaces...
+   nsIWebBrowserChrome*       mTopLevelWindow;           
 };
 
 #endif /* nsWebBrowser_h__ */

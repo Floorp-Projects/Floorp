@@ -21,7 +21,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIProgressListener.idl"
+
+interface nsIProgressListener;
 
 /**
  * The nsIProgress interface is used to look at the progress of a given browser

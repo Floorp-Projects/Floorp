@@ -26,7 +26,9 @@
 #include "nsIDeviceContext.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-
+#include "nsIInterfaceRequestor.h"
+#include "nsIDocShell.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsWebBrowser.h"
 
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
@@ -36,7 +38,7 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 //***    nsWebBrowser: Object Management
 //*****************************************************************************
 
-nsWebBrowser::nsWebBrowser() : mCreated(PR_FALSE)
+nsWebBrowser::nsWebBrowser() : mCreated(PR_FALSE), mTopLevelWindow(nsnull)
 {
 	NS_INIT_REFCNT();
    mInitInfo = new nsWebBrowserInitInfo();
@@ -120,6 +122,22 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIInterfaceRequestor* list
 
    NS_ENSURE_TRUE(mListenerList->RemoveElement(listener), NS_ERROR_INVALID_ARG);
 
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::GetTopLevelWindow(nsIWebBrowserChrome** topWindow)
+{
+   NS_ENSURE_ARG_POINTER(topWindow);
+   
+   *topWindow = mTopLevelWindow;
+   NS_IF_ADDREF(*topWindow);
+
+   return NS_OK;   
+}
+
+NS_IMETHODIMP nsWebBrowser::SetTopLevelWindow(nsIWebBrowserChrome* topWindow)
+{
+   mTopLevelWindow = topWindow;  //Weak Reference
    return NS_OK;
 }
 
