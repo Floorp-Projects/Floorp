@@ -990,7 +990,7 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (!NS_SUCCEEDED(res))
     return res;
 
-  if (0 == range)
+  if (! range)
     return NS_ERROR_UNEXPECTED;
   res = range->SetEnd(aParentNode, aOffset);
   if (!NS_SUCCEEDED(res))
