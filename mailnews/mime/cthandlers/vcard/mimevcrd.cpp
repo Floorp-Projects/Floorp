@@ -1757,8 +1757,6 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
   PRInt32 res;
 
   // convert from the resource charset. 
-  if (!charset)
-    charset = "ISO-8859-1";
   res = MIME_ConvertCharset(charset, "UTF-8", line, PL_strlen(line), 
                             &converted, &converted_length);
   if ( (res != 0) || (converted == NULL) )
