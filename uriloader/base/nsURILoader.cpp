@@ -113,6 +113,7 @@ nsresult nsDocumentOpenInfo::Init(nsISupports * aWindowContext)
   // ask the window context if it has a uri content listener...
   nsresult rv = NS_OK;
   m_contentListener = do_GetInterface(aWindowContext, &rv);
+
   return rv;
 }
 
@@ -246,43 +247,101 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISuppor
 
 nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports * aCtxt)
 {
-  nsXPIDLCString aContentType;
-  nsresult rv = aChannel->GetContentType(getter_Copies(aContentType));
+  nsresult rv;
+  nsXPIDLCString contentType;
+
+  rv = aChannel->GetContentType(getter_Copies(contentType));
   if (NS_FAILED(rv)) return rv;
 
-  // go to the uri dispatcher and give them our stuff...
+   // go to the uri dispatcher and give them our stuff...
   NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIURIContentListener> aContentListener;
-    nsXPIDLCString aDesiredContentType;
-    rv = pURILoader->DispatchContent(aContentType, mCommand, m_windowTarget, 
+    nsCOMPtr<nsIURIContentListener> contentListener;
+    nsXPIDLCString desiredContentType;
+
+    //
+    // First step:  See if any nsIURIContentListener prefers to handle this
+    //              content type.
+    //
+    rv = pURILoader->DispatchContent(contentType, mCommand, m_windowTarget, 
                                      aChannel, aCtxt, 
                                      m_contentListener, 
-                                     getter_Copies(aDesiredContentType), 
-                                     getter_AddRefs(aContentListener));
-    if (NS_SUCCEEDED(rv) && aContentListener)
-    {
-      nsCOMPtr<nsIStreamListener> aContentStreamListener;
-      PRBool aAbortProcess = PR_FALSE;
-      nsCAutoString contentTypeToUse;
-      if (aDesiredContentType)
-        contentTypeToUse = aDesiredContentType;
-      else
-        contentTypeToUse = aContentType;
+                                     getter_Copies(desiredContentType), 
+                                     getter_AddRefs(contentListener));
+    //
+    // Second step:  If no listener prefers this type, see if any stream
+    //               decoders exist to transform this content type into
+    //               some other.
+    //
+    if (!contentListener) {
+      nsDocumentOpenInfo* nextLink;
 
-      rv = aContentListener->DoContent(contentTypeToUse, mCommand, m_windowTarget, 
-                                    aChannel, getter_AddRefs(aContentStreamListener),
-                                    &aAbortProcess);
+      // When applying stream decoders, it is necessary to "insert" an 
+      // intermediate nsDocumentOpenInfo instance to handle the targeting of
+      // the "final" stream or streams.
+      //
+      // For certain content types (ie. multi-part/x-mixed-replace) the input
+      // stream is split up into multiple destination streams.  This
+      // intermediate instance is used to target these "decoded" streams...
+      //
+      nextLink = Clone();
+      if (!nextLink) return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(nextLink);
+
+      // Set up the final destination listener.
+      nextLink->m_targetStreamListener = nsnull;
+
+      // The following call binds this channelListener's mNextListener (typically
+      // the nsDocumentBindInfo) to the underlying stream converter, and returns
+      // the underlying stream converter which we then set to be this channelListener's
+      // mNextListener. This effectively nestles the stream converter down right
+      // in between the raw stream and the final listener.
+      rv = RetargetOutput(aChannel, contentType, "*/*", nextLink);
+      NS_RELEASE(nextLink);
+
+      if (m_targetStreamListener) {
+        return NS_OK;
+      }
+    }
+    
+    //
+    // Step 3:
+    //
+    // BIG TIME HACK ALERT!!!!! WE NEED THIS HACK IN PLACE UNTIL OUR NEW UNKNOWN CONTENT
+    // HANDLER COMES ONLINE!!! 
+    // Until that day, if we couldn't find a handler for the content type, then go back to the listener who
+    // originated the url request and force them to handle the content....this forces us through the old code
+    // path for unknown content types which brings up the file save as dialog...
+    if (!contentListener) {
+      contentListener = m_contentListener;
+    }
+
+    //
+    // Good news!  Some content listener can handle this content type.
+    //
+    if (contentListener)
+    {
+      nsCOMPtr<nsIStreamListener> contentStreamListener;
+      PRBool bAbortProcess = PR_FALSE;
+      nsCAutoString contentTypeToUse;
+      if (desiredContentType)
+        contentTypeToUse = desiredContentType;
+      else
+        contentTypeToUse = contentType;
+
+      rv = contentListener->DoContent(contentTypeToUse, mCommand, m_windowTarget, 
+                                    aChannel, getter_AddRefs(contentStreamListener),
+                                    &bAbortProcess);
 
       // the listener is doing all the work from here...we are done!!!
-      if (aAbortProcess) return rv;
+      if (bAbortProcess) return rv;
 
       // okay, all registered listeners have had a chance to handle this content...
       // did one of them give us a stream listener back? if so, let's start reading data
       // into it...
-      rv = RetargetOutput(aChannel, aContentType, aDesiredContentType, aContentStreamListener);
-    }
+      rv = RetargetOutput(aChannel, contentType, desiredContentType, contentStreamListener);
+    } 
   }
   return rv;
 }
@@ -294,37 +353,21 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * 
   // do we need to invoke the stream converter service?
   if (aOutContentType && *aOutContentType && nsCRT::strcasecmp(aSrcContentType, aOutContentType))
   {
-    	NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
-	    if (NS_FAILED(rv)) return rv;
-      nsAutoString aUnicSrc (aSrcContentType);
-      nsAutoString aUniTo (aOutContentType);
-
-      nsDocumentOpenInfo* nextLink;
-
-      // When applying stream converters, it is necessary to "insert" an 
-      // intermediate nsDocumentOpenInfo instance to handle the targeting of
-      // the "final" stream or streams.
-      //
-      // For certain content types (ie. multi-part/x-mixed-replace) the input
-      // stream is split up into multiple destination streams.  This
-      // intermediate instance is used to target these "converted" streams...
-      //
-      nextLink = Clone();
-      if (!nextLink) return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(nextLink);
-
-      // Set up the final destination listener.
-      nextLink->m_targetStreamListener = aStreamListener;
+      NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+      if (NS_FAILED(rv)) return rv;
+      nsAutoString from_w (aSrcContentType);
+      nsAutoString to_w (aOutContentType);
 
       // The following call binds this channelListener's mNextListener (typically
       // the nsDocumentBindInfo) to the underlying stream converter, and returns
       // the underlying stream converter which we then set to be this channelListener's
       // mNextListener. This effectively nestles the stream converter down right
       // in between the raw stream and the final listener.
-      rv = StreamConvService->AsyncConvertData(aUnicSrc.GetUnicode(), aUniTo.GetUnicode(), nextLink, aChannel,
-                                             getter_AddRefs(m_targetStreamListener));
-
-      NS_RELEASE(nextLink);
+      rv = StreamConvService->AsyncConvertData(from_w.GetUnicode(), 
+                                               to_w.GetUnicode(), 
+                                               aStreamListener, 
+                                               aChannel,
+                                               getter_AddRefs(m_targetStreamListener));
   }
   else
     m_targetStreamListener = aStreamListener; // no converter necessary so use a direct pipe
@@ -519,17 +562,6 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
   rv = nsComponentManager::CreateInstance(handlerProgID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
     rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aChannel);
-  else if (aContentListener)
-  {
-    // BIG TIME HACK ALERT!!!!! WE NEED THIS HACK IN PLACE UNTIL OUR NEW UNKNOWN CONTENT
-    // HANDLER COMES ONLINE!!! 
-    // Until that day, if we couldn't find a handler for the content type, then go back to the listener who
-    // originated the url request and force them to handle the content....this forces us through the old code
-    // path for unknown content types which brings up the file save as dialog...
-    *aContentListenerToUse = aContentListener;
-    NS_IF_ADDREF(*aContentListenerToUse);
-    rv = NS_OK;
-  }
   
   return rv;
 }
