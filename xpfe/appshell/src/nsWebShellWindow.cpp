@@ -108,6 +108,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIDOMToolkitCore.h"
 #include "nsAppCoresCIDs.h"
 
+#include "nsIPopupSetFrame.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -1161,21 +1162,9 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
 }
 
 NS_IMETHODIMP
-nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                              PRInt32 aXPos, PRInt32 aYPos, 
-                              const nsString& aPopupType, const nsString& anAnchorAlignment,
-                              const nsString& aPopupAlignment,
-                              nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
+nsWebShellWindow::GetPresShell(nsIPresShell** aPresShell) 
 {
   nsresult rv = NS_OK;
-  
-  // clear out result param up front. It's an error if a legal place to
-  // stick the result isn't provided.
-  if ( !outPopup ) {
-    NS_ERROR ( "Invalid param -- need to provide a place for result" );
-    return NS_ERROR_INVALID_ARG;
-  }
-  *outPopup = nsnull;
 
   nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
   contentViewerContainer = do_QueryInterface(mWebShell);
@@ -1209,6 +1198,74 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
       return NS_ERROR_FAILURE;
   }
 
+  *aPresShell = presShell.get();
+  NS_IF_ADDREF(*aPresShell);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                              PRInt32 aXPos, PRInt32 aYPos, 
+                              const nsString& aPopupType, const nsString& anAnchorAlignment,
+                              const nsString& aPopupAlignment,
+                              nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
+{
+  nsresult rv = NS_OK;
+
+  // First we need to obtain the popup set frame that encapsulates the target popup.
+  // Without a popup set, we're dead in the water.
+  nsCOMPtr<nsIPresShell> presShell;
+  if (NS_FAILED(GetPresShell(getter_AddRefs(presShell)))) {
+    return NS_OK;
+  }
+
+  // Get the parent of the popup content.
+  nsCOMPtr<nsIDOMNode> popupSet;
+  aPopupContent->GetParentNode(getter_AddRefs(popupSet));
+  if (!popupSet)
+    return NS_OK;
+
+  // Do a sanity check to ensure we have a popup set element.
+  nsString tagName;
+  nsCOMPtr<nsIDOMElement> popupSetElement = do_QueryInterface(popupSet);
+  popupSetElement->GetTagName(tagName);
+  if (tagName != "menupopupset")
+    return NS_OK;
+
+  // Now obtain the popup set frame.
+  nsCOMPtr<nsIContent> popupSetContent = do_QueryInterface(popupSet);
+  nsIFrame* frame;
+  presShell->GetPrimaryFrameFor(popupSetContent, &frame);  
+  if (!frame)
+    return NS_OK;
+
+  // Retrieve the frame that corresponds to the element that the popup
+  // is attached to.
+  nsIFrame* elementFrame;
+  nsCOMPtr<nsIContent> elementContent = do_QueryInterface(aElement);
+  presShell->GetPrimaryFrameFor(elementContent, &elementFrame);  
+  if (!elementFrame)
+    return NS_OK;
+
+  // Pass this all off to the popup set frame.
+  nsCOMPtr<nsIPopupSetFrame> popupSetFrame = do_QueryInterface(frame);
+  nsCOMPtr<nsIContent> popupContent = do_QueryInterface(aPopupContent);
+  popupSetFrame->CreatePopup(elementFrame, popupContent, aXPos, aYPos,
+                             aPopupType, anAnchorAlignment,
+                             aPopupAlignment);
+
+
+  /*
+  // clear out result param up front. It's an error if a legal place to
+  // stick the result isn't provided.
+  if ( !outPopup ) {
+    NS_ERROR ( "Invalid param -- need to provide a place for result" );
+    return NS_ERROR_INVALID_ARG;
+  }
+  *outPopup = nsnull;
+
+ 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   if (anAnchorAlignment != "none") {
     // We need to compute our screen coordinates.
@@ -1419,7 +1476,8 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   // return the popup.
   *outPopup = domWindow;
   NS_ADDREF(*outPopup);
-  
+  */
+
   return rv;
 }
 
