@@ -41,7 +41,7 @@
 */
 //-----------------------------------------------------------------------------
 var bug = 119909;
-var summary = "Should't crash on regexps with many nested parentheses";
+var summary = "Shouldn't crash on regexps with many nested parentheses";
 var NO_BACKREFS = false;
 var DO_BACKREFS = true;
 
@@ -77,7 +77,6 @@ function testThis(numParens, doBackRefs, strOriginal, strReplace)
   for (var i=0; i<numParens; i++) {pattern += openParen;}
   pattern += strOriginal;
   for (i=0; i<numParens; i++) {pattern += closeParen;}
-
   var re = new RegExp(pattern);
 
   var res = strOriginal.search(re);
