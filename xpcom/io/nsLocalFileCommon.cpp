@@ -33,7 +33,11 @@
 #include "nsFileSpec.h"
 
 #ifdef XP_PC
+#ifdef XP_OS2
+#include "nsLocalFileOS2.h"
+#else
 #include "nsLocalFileWin.h"
+#endif
 #endif
 
 #ifdef XP_MAC
