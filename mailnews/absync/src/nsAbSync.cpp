@@ -537,6 +537,11 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   // Did we get sane values...
   if (!mAbSyncServer)
   {
+    // If we get here, we need to put up a UI warning
+    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncNeedPrefs").GetUnicode());
+    DisplayErrorMessage(outValue);
+    PR_FREEIF(outValue);
+
     rv = NS_ERROR_FAILURE;
     goto EarlyExit;
   }

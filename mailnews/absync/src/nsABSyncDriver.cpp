@@ -198,6 +198,11 @@ NS_IMETHODIMP nsAbSyncDriver::KickIt(nsIMsgStatusFeedback *aStatus)
       PR_FREEIF(msgValue);
     }
   }
+  else
+  {
+    // We failed, turn the button back on...
+    mStatus->StopMeteors();
+  }
   return rv;
 }
 
