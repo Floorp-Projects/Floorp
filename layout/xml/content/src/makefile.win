@@ -30,20 +30,18 @@ CPPSRCS=					\
 	nsXMLElement.cpp			\
 	nsXMLCDATASection.cpp			\
 	nsXMLProcessingInstruction.cpp		\
-	nsXMLEntity.cpp \
-	nsXMLNotation.cpp \
-	nsXMLDocumentType.cpp \
-	nsXMLNamedNodeMap.cpp \
+	nsXMLEntity.cpp				\
+	nsXMLNotation.cpp			\
+	nsXMLNamedNodeMap.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsXMLElement.obj		\
 	.\$(OBJDIR)\nsXMLCDATASection.obj	\
 	.\$(OBJDIR)\nsXMLProcessingInstruction.obj \
-	.\$(OBJDIR)\nsXMLEntity.obj \
-	.\$(OBJDIR)\nsXMLNotation.obj \
-	.\$(OBJDIR)\nsXMLDocumentType.obj \
-	.\$(OBJDIR)\nsXMLNamedNodeMap.obj \
+	.\$(OBJDIR)\nsXMLEntity.obj		\
+	.\$(OBJDIR)\nsXMLNotation.obj		\
+	.\$(OBJDIR)\nsXMLNamedNodeMap.obj	\
 	$(NULL)
 
 LINCS= \
