@@ -105,7 +105,6 @@ pref("browser.chrome.toolbar_tips",         true);
 pref("browser.chrome.toolbar_style",        2);
 
 pref("browser.toolbars.showbutton.bookmarks", true);
-pref("browser.toolbars.showbutton.clear",   false);
 pref("browser.toolbars.showbutton.go",      false);
 pref("browser.toolbars.showbutton.home",    true);
 pref("browser.toolbars.showbutton.mynetscape", true);

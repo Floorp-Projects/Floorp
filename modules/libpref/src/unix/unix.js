@@ -69,9 +69,6 @@ pref("clipboard.autocopy", true);
 
 pref("browser.urlbar.clickSelectsAll", false);
 
-// clearbutton default on
-pref("browser.toolbars.showbutton.clear", true);
-
 // override double-click word selection behavior.
 pref("layout.word_select.stop_at_punctuation", false);
 
