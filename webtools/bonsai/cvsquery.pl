@@ -105,7 +105,7 @@ sub query_checkins {
 
     ConnectToDatabase();
 
-    my $qstring = "select type, UNIX_TIMESTAMP(when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid";
+    my $qstring = "select type, UNIX_TIMESTAMP(ci_when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid";
 
     if( $query_module ne 'allrepositories' ){
         $qstring .= " and repositories.repository = '$CVS_ROOT'";
@@ -113,11 +113,11 @@ sub query_checkins {
 
     if ($query_date_min) {
         my $t = formatSqlTime($query_date_min);
-        $qstring .= " and when >= '$t'";
+        $qstring .= " and ci_when >= '$t'";
     }
     if ($query_date_max) {
         my $t = formatSqlTime($query_date_max);
-        $qstring .= " and when <= '$t'";
+        $qstring .= " and ci_when <= '$t'";
     }
     if ($query_branch_head) {
         $qstring .= " and branches.branch = ''";

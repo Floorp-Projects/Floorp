@@ -423,7 +423,7 @@ sub AddToDatabase {
      # Build the query...
      $basequery = "replace into
                       checkins(
-                          type, when, whoid, repositoryid, dirid,
+                          type, ci_when, whoid, repositoryid, dirid,
                           fileid, revision, stickytag, branchid, addedlines,
                           removedlines, descid)
                       values (";

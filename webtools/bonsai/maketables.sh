@@ -123,7 +123,7 @@ show index from branches;
 
 create table checkins (
 	type enum('Change', 'Add', 'Remove'),
-	when datetime not null,
+	ci_when datetime not null,
 	whoid mediumint not null,
 	repositoryid mediumint not null,
 	dirid mediumint not null,
@@ -136,7 +136,7 @@ create table checkins (
 	descid mediumint,
 
 	unique (repositoryid,dirid,fileid,revision),
-	index(when),
+	index(ci_when),
 	index(whoid),
 	index(repositoryid),
 	index(dirid),

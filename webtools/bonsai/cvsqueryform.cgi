@@ -318,7 +318,7 @@ sub refigureStartDateIfNecessary {
     }
 
     ConnectToDatabase();
-    SendSQL("select min(when) 
+    SendSQL("select min(ci_when) 
                from checkins,repositories 
                where repositories.id = repositoryid and 
                      repository = '$CVS_ROOT'");

@@ -10,6 +10,13 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+10/12/99 Apparently, newer alphas of MySQL won't allow you to have
+"when" as a column name.  So, I have had to rename a column in the
+checkins table.  You must feed the below to mysql or you won't
+work at all.
+
+	alter table checkins change column when ci_when datetime not null;
+
 
 7/9/99 Ported completely to perl!  (Due to heroic efforts by Dieter
 Weber <dieter@Compatible.COM>).  Among the things you need to do to
