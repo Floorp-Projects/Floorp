@@ -65,14 +65,14 @@ public class LDAPModification {
 
     /**
      * Specifies a modification to be made to an attribute.
-     * @param op The type of modification to make, which can be one of the following:
+     * @param op the type of modification to make. This can be one of the following:
      *   <P>
      *   <UL>
      *   <LI><CODE>LDAPModification.ADD</CODE> (the value should be added to the attribute)
      *   <LI><CODE>LDAPModification.DELETE</CODE> (the value should be removed from the attribute)
      *   <LI><CODE>LDAPModification.REPLACE</CODE> (the value should replace the existing value of the attribute)
      *   </UL><P>
-     * @param attr The attribute (possibly with values) to be modified.
+     * @param attr the attribute (possibly with values) to modify
      * @see netscape.ldap.LDAPAttribute
      */
     public LDAPModification( int op, LDAPAttribute attr ) {
@@ -82,7 +82,7 @@ public class LDAPModification {
 
     /**
      * Returns the type of modification specified by this object.
-     * @return One of the following types of modifications:
+     * @return one of the following types of modifications:
      *   <P>
      *   <UL>
      *   <LI><CODE>LDAPModification.ADD</CODE> (the value should be added to the attribute)
@@ -96,7 +96,7 @@ public class LDAPModification {
 
     /**
      * Returns the attribute (possibly with values) to be modified.
-     * @return The attribute to be modified.
+     * @return the attribute to be modified.
      * @see netscape.ldap.LDAPAttribute
      */
     public LDAPAttribute getAttribute() {
@@ -124,7 +124,7 @@ public class LDAPModification {
      * LDAPModification: ADD, LDAPAttribute {type='description', values='This entry was modified with the modattrs program'}
      * </PRE>
      *
-     * @return String representation of the current modification.
+     * @return string representation of the current modification.
      */
     public String toString() {
         String s = "LDAPModification: ";

@@ -121,7 +121,7 @@ public class LDAPPersistSearchControl extends LDAPControl {
      * Constructs an <CODE>LDAPPersistSearchControl</CODE> object
      * that specifies a persistent search.
      *
-     * @param changeTypes The change types to be monitored. You can perform
+     * @param changeTypes the change types to monitor. You can perform
      * a bitwise OR on any of the following values and specify the result as
      * the change types:
      * <UL>
@@ -136,11 +136,12 @@ public class LDAPPersistSearchControl extends LDAPControl {
      * </UL>
      * @param changesOnly <code>true</code> if you do not want the server
      * to return all existing entries in the directory that match the
-     * search criteria.  (You just want the changed entries to be returned.)
-     * @param returnControls <code>true</code> you want the server to return
-     * entry change controls with each entry in the search results.
+     * search criteria.  (Use this if you just want the changed entries 
+     * to be returned.)
+     * @param returnControls <code>true</code> if you want the server to return
+     * entry change controls with each entry in the search results
      * @param isCritical <code>true</code> if this control is critical to
-     * the search operation (for example, if the server does not support
+     * the search operation. (If the server does not support
      * this control, you may not want the server to perform the search
      * at all.)
      * @see netscape.ldap.LDAPControl
@@ -158,7 +159,7 @@ public class LDAPPersistSearchControl extends LDAPControl {
 
     /**
      * Gets the change types monitored by this control.
-     * @return Integer representing the change types that you want monitored.
+     * @return integer representing the change types to monitor.
      * This value can be the bitwise OR of <code>ADD, DELETE, MODIFY,</code>
      * and/or <code>MODDN</code>. If the change type is unknown,
      * this method returns -1.
@@ -172,7 +173,7 @@ public class LDAPPersistSearchControl extends LDAPControl {
      * Indicates whether you want the server to send any existing
      * entries that already match the search criteria or only the
      * entries that have changed.
-     * @return If <code>true</code>, the server returns only the
+     * @return if <code>true</code>, the server returns only the
      * entries that have changed.  If <code>false</code>, the server
      * also returns any existing entries that match the search criteria
      * but have not changed.
@@ -198,7 +199,7 @@ public class LDAPPersistSearchControl extends LDAPControl {
 
     /**
      * Sets the change types that you want monitored by this control.
-     * @param types Integer representing the change types that you want monitored.
+     * @param types integer representing the change types to monitor
      * This value can be the bitwise OR of <code>ADD, DELETE, MODIFY,</code>
      * and/or <code>MODDN</code>.
      * @see netscape.ldap.controls.LDAPPersistSearchControl#getChangeTypes
@@ -211,7 +212,7 @@ public class LDAPPersistSearchControl extends LDAPControl {
      * Specifies whether you want the server to send any existing
      * entries that already match the search criteria or only the
      * entries that have changed.
-     * @param changesOnly If <code>true</code>, the server returns only the
+     * @param changesOnly if <code>true</code>, the server returns only the
      * entries that have changed.  If <code>false</code>, the server
      * also returns any existing entries that match the search criteria
      * but have not changed.
@@ -225,9 +226,9 @@ public class LDAPPersistSearchControl extends LDAPControl {
      * Specifies whether you want the server to include an "entry change
      * notification" control with each entry it sends back to the client
      * during the persistent search.
-     * @param returnControls If <code>true</code>, the server includes
+     * @param returnControls if <code>true</code>, the server includes
      * "entry change notification" controls with the entries it sends
-     * during the persistent search.
+     * during the persistent search
      * @see netscape.ldap.controls.LDAPEntryChangeControl
      * @see netscape.ldap.controls.LDAPPersistSearchControl#setReturnControls
      */
@@ -239,8 +240,8 @@ public class LDAPPersistSearchControl extends LDAPControl {
      * Takes an input byte array and extracts the ber elements, assigning
      * them to appropriate fields in the entry change control.
      *
-     * @param c Byte array that contains BER elements.
-     * @return The entry change control.
+     * @param c byte array that contains BER elements
+     * @return the entry change control.
      * @deprecated LDAPEntryChangeControl controls are now automatically 
      * instantiated.
      */
@@ -363,12 +364,12 @@ public class LDAPPersistSearchControl extends LDAPControl {
      *
      * </PRE>
      *
-     * @param controls An array of <CODE>LDAPControl</CODE> objects,
+     * @param controls an array of <CODE>LDAPControl</CODE> objects,
      * representing the controls returned by the server
-     * with an entry.  To get these controls, use the
+     * with an entry. To get these controls, use the
      * <CODE>getResponseControls</CODE> method of the
      * <CODE>LDAPConnection</CODE> class.
-     * @return An <CODE>LDAPEntryChangeControl</CODE> object representing
+     * @return an <CODE>LDAPEntryChangeControl</CODE> object representing
      * the entry change control sent by the server.  If no entry change
      * control was sent, this method returns null.
      * @see netscape.ldap.controls.LDAPEntryChangeControl
@@ -394,11 +395,11 @@ public class LDAPPersistSearchControl extends LDAPControl {
     /**
      * Creates a "flattened" BER encoding of the persistent search
      * specifications and returns it as a byte array.
-     * @param changeTypes The change types to be monitored on the server.
-     * @param changesOnly <code>true</code> to skip the initial search.
+     * @param changeTypes the change types to monitor on the server
+     * @param changesOnly <code>true</code> to skip the initial search
      * @param returnECs <code>true</code> if entry change controls are to be
-     * returned with the search results.
-     * @return The BER-encoded data.
+     * returned with the search results
+     * @return the BER-encoded data.
      */
     private byte[] createPersistSearchSpecification(int changeTypes,
         boolean changesOnly, boolean returnECs) {

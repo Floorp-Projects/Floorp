@@ -64,8 +64,8 @@ class LDAPMessageQueue {
 
     /**
      * Constructor
-     * @param asynchOp A flag whether the object is used for asynchronous
-     * LDAP operations
+     * @param asynchOp a boolean flag  that is true if the object is used 
+     * for asynchronous LDAP operations
      * @see netscape.ldap.LDAPAsynchronousConnection
      */   
     LDAPMessageQueue (boolean asynchOp) {
@@ -75,7 +75,7 @@ class LDAPMessageQueue {
     /**
      * Returns a flag whether the listener is used for asynchronous LDAP
      * operations
-     * @return Asynchronous operation flag
+     * @return asynchronous operation flag.
      * @see netscape.ldap.LDAPAsynchronousConnection
      */
     boolean isAsynchOp() {
@@ -85,7 +85,7 @@ class LDAPMessageQueue {
     /**
      * Blocks until a response is available or until all operations
      * associated with the object have completed or been canceled.
-     * @return LDAP message or null if there is no more outstanding requests 
+     * @return LDAP message or null if there are no more outstanding requests.
      * @exception LDAPException Network error exception
      * @exception LDAPInterruptedException The invoking thread was interrupted
      */
@@ -123,7 +123,7 @@ class LDAPMessageQueue {
      * Wait for request to complete. This method blocks until a message of
      * type LDAPResponse has been received. Used by synchronous search 
      * with batch size of zero (block until all results are received)
-     * @return LDAPResponse message or null if there is no more outstanding requests 
+     * @return LDAPResponse message or null if there are no more outstanding requests.
      * @exception LDAPException Network error exception
      * @exception LDAPInterruptedException The invoking thread was interrupted
      */
@@ -225,7 +225,7 @@ class LDAPMessageQueue {
      * The proper way to handle this scenario is to create a separate listener
      * for each new request, and after l.getIDs() has been invoked, merge the
      * new request with the existing one.
-     * @param mq2 Message queue to be merged with this one.
+     * @param mq2 message queue to merge with this one
      */
     synchronized void merge(LDAPMessageQueue mq2) {
         synchronized (mq2) {
@@ -248,7 +248,7 @@ class LDAPMessageQueue {
 
     /**
      * Retrieves all messages currently in the queue without blocking
-     * @returns Vector of messages
+     * @return vector of messages.
      */
     synchronized Vector getAllMessages() {
         Vector result = m_messageQueue;
@@ -263,6 +263,14 @@ class LDAPMessageQueue {
      */
     synchronized void addMessage (LDAPMessage msg) {
         m_messageQueue.addElement(msg);
+        
+        // Mark conn as bound for asych bind operations
+        if (isAsynchOp() && msg.getType() == msg.BIND_RESPONSE) {
+            if (((LDAPResponse) msg).getResultCode() == 0) {
+                getConnection(msg.getID()).markConnAsBound();
+            }                
+        }
+        
         notifyAll ();
     }
 
@@ -281,7 +289,7 @@ class LDAPMessageQueue {
 
     /**
      * Checks if response message is received.
-     * @return true or false
+     * @return true or false.
      */
     boolean isMessageReceived() {
         return m_messageQueue.size() != 0;
@@ -289,7 +297,7 @@ class LDAPMessageQueue {
 
     /**
      * Returns the count of queued messages
-     * @return message count
+     * @return message count.
      */
     public int getMessageCount () {
         return m_messageQueue.size();
@@ -302,7 +310,7 @@ class LDAPMessageQueue {
      * Not synchronized as its private and can be called only by
      * abandon() and removeAllRequests()
      * 
-     * @return Count of removed messages
+     * @return count of removed messages.
      */
     private int removeAllMessages(int id) {
         int removeCount=0;
@@ -331,8 +339,8 @@ class LDAPMessageQueue {
     
     /**
      * Returns the connection associated with the specified request id
-     * @parm id request id
-     * @return connection
+     * @param id request id
+     * @return connection.
      */
     synchronized LDAPConnection getConnection(int id) {
         for (int i=0; i < m_requestList.size(); i++) {
@@ -347,8 +355,8 @@ class LDAPMessageQueue {
 
     /**
      * Returns the connection thread associated with the specified request id
-     * @parm id request id
-     * @return connection thread 
+     * @param id request id.
+     * @return connection thread.
      */
     synchronized LDAPConnThread getConnThread(int id) {
         for (int i=0; i < m_requestList.size(); i++) {
@@ -362,8 +370,8 @@ class LDAPMessageQueue {
     }
 
     /**
-     * Returns message id of the last request
-     * @return Message id.
+     * Returns message ID of the last request
+     * @return message ID.
      */
     synchronized int getID() {
         int reqCnt = m_requestList.size();
@@ -377,8 +385,8 @@ class LDAPMessageQueue {
     }
     
     /**
-     * Returns a list of message ids for all outstanding requests
-     * @return Message id array
+     * Returns a list of message IDs for all outstanding requests
+     * @return message ID array.
      */
     synchronized int[] getIDs() {
         int[] ids = new int[m_requestList.size()];
@@ -393,8 +401,8 @@ class LDAPMessageQueue {
      * Registers a LDAP request
      * @param id LDAP request message ID
      * @param connection LDAP Connection for the message ID
-     * @param connThread A physical connection to the server
-     * @param timeLimit The maximum number of milliseconds to wait for
+     * @param connThread a physical connection to the server
+     * @param timeLimit the maximum number of milliseconds to wait for
      * the request to complete 
     */
     synchronized void addRequest(int id, LDAPConnection connection,
@@ -410,7 +418,7 @@ class LDAPMessageQueue {
 
     /**
      * Returns the number of outstanding requests.
-     * @return Outstanding request count.
+     * @return outstanding request count.
      */    
     public int getRequestCount() {
         return m_requestList.size();
@@ -421,7 +429,7 @@ class LDAPMessageQueue {
      * Called when a LDAP operation is abandoned (called from
      * LDAPConnThread), or terminated (called by nextMessage() when
      * LDAPResponse message is received) 
-     * @return Flag whether the request was removed
+     * @return flag indicating whether the request was removed.
      */
     synchronized boolean removeRequest(int id) {
         for (int i=0; i < m_requestList.size(); i++) {
@@ -439,7 +447,7 @@ class LDAPMessageQueue {
     /**
      * Remove all requests associated with the specified connThread
      * Called when a connThread has a network error
-     * @return Number of removed request
+     * @return number of removed requests.
      */
     synchronized int removeAllRequests(LDAPConnThread connThread) {
         int removeCount=0;

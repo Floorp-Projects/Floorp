@@ -35,8 +35,8 @@ public class LDAPSearchResult extends LDAPMessage {
      * Constructor
      * 
      * @param msgid message identifier
-     * @param rsp Search operation response
-     * @param controls Array of controls of null
+     * @param rsp search operation response
+     * @param controls array of controls or null
      * @see netscape.ldap.LDAPEntry
      */
     LDAPSearchResult(int msgid, JDAPSearchResponse rsp, LDAPControl[]controls) {
@@ -45,8 +45,8 @@ public class LDAPSearchResult extends LDAPMessage {
     
     /**
      * Returns the entry of a server search response.
-     * @return  An entry returned by the server in response to a search
-     * request
+     * @return an entry returned by the server in response to a search
+     * request.
      * @see netscape.ldap.LDAPEntry
      */
     public LDAPEntry getEntry() {

@@ -53,7 +53,7 @@ public class LDAPSearchResults implements Enumeration {
     private boolean currAttrsOnly;
     private Vector referralResults = new Vector();
     private Vector exceptions;
-    private LDAPControl[] responseControls = null;
+    private int msgID = -1;
 
     // only used for the persistent search
     private boolean firstResult = false;
@@ -86,7 +86,7 @@ public class LDAPSearchResults implements Enumeration {
     /**
      * Constructs an enumeration of search results. Used when returning results
      * from a cache.
-     * @param v The vector containing LDAPEntries.
+     * @param v the vector containing LDAPEntries
      * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean)
      */
     LDAPSearchResults(Vector v) {
@@ -167,7 +167,7 @@ public class LDAPSearchResults implements Enumeration {
     /**
      * For asynchronous search, this mechanism allows the programmer to
      * close a connection whenever the search completes.
-     * @param toClose Connection to close when the search terminates
+     * @param toClose connection to close when the search terminates
      */
     void closeOnCompletion (LDAPConnection toClose) {
         if (searchComplete) {
@@ -213,11 +213,12 @@ public class LDAPSearchResults implements Enumeration {
     }
 
     /**
-     * Sets the response controls for this search result.
-     * @param controls The controls to be stored.
+     * Sets the message ID for this search request. msgID is used
+     * to retrieve response controls.
+     * @param msgID Message ID for this search request
      */
-    protected void setResponseControls(LDAPControl[] controls) {
-        responseControls = controls;
+    void setMsgID(int msgID) {
+        this.msgID = msgID;
     }
     
     /**
@@ -225,11 +226,11 @@ public class LDAPSearchResults implements Enumeration {
      * is registered with <CODE>LDAPControl</CODE>, an attempt is made to
      * instantiate the control. If the instantiation fails, the control is
      * returned as a basic <CODE>LDAPControl</CODE>.
-     * @return An array of type <CODE>LDAPControl</CODE>
+     * @return an array of type <CODE>LDAPControl</CODE>.
      * @see netscape.ldap.LDAPControl#register
      */
     public LDAPControl[] getResponseControls() {
-        return responseControls;
+        return currConn.getResponseControls(msgID);
     }
 
     /**
@@ -262,7 +263,7 @@ public class LDAPSearchResults implements Enumeration {
      * the cursor is reset to the (new) first element.
      * <P>
      *
-     * @param compare Comparator used to determine the sort order of the results.
+     * @param compare comparator used to determine the sort order of the results
      * @see LDAPEntryComparator
      */
     public synchronized void sort(LDAPEntryComparator compare) {
@@ -323,7 +324,7 @@ public class LDAPSearchResults implements Enumeration {
      *   ...
      * }
      * </PRE>
-     * @return The next LDAP entry in the search results.
+     * @return the next LDAP entry in the search results.
      * @exception LDAPReferralException A referral (thrown
      * if the next result is a referral), or LDAPException 
      * if a limit on the number of entries or the time was 
@@ -367,7 +368,7 @@ public class LDAPSearchResults implements Enumeration {
      *   } 
      * } 
      * </PRE> 
-     * @return The next element in the search results.
+     * @return the next element in the search results.
      * @see netscape.ldap.LDAPSearchResults#hasMoreElements()
      */
     public Object nextElement() {
@@ -423,7 +424,7 @@ public class LDAPSearchResults implements Enumeration {
      *   ...
      * }
      * </PRE>
-     * @return <CODE>true</CODE> if there are more search results
+     * @return <CODE>true</CODE> if there are more search results.
      * @see netscape.ldap.LDAPSearchResults#nextElement()
      * @see netscape.ldap.LDAPSearchResults#next()
      */
@@ -450,7 +451,7 @@ public class LDAPSearchResults implements Enumeration {
 
     /**
      * Returns a count of the entries in the search results.
-     * @return Count of entries found by the search.
+     * @return count of entries found by the search.
      */
     public int getCount() {
         int totalReferralEntries = 0;
@@ -471,8 +472,8 @@ public class LDAPSearchResults implements Enumeration {
     }
 
     /**
-     * Returns message id.
-     * @return Message id.
+     * Returns message ID.
+     * @return Message ID.
      */
     int getID() {
         if ( resultSource == null )

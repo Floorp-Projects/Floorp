@@ -44,7 +44,7 @@ public class BEROctetString extends BERElement {
     /**
      * Constructs an octet string element containing a copy of
      * the contents of buffer.
-     * @param buffer A UCS-2 String.
+     * @param buffer a UCS-2 String
      */
     public BEROctetString(String buffer) {
         if (buffer == null)
@@ -58,8 +58,8 @@ public class BEROctetString extends BERElement {
     /**
      * Constructs an octet string element containing a reference to
      * buffer.
-     * @param buffer A byte array, which must be in UTF-8 format if
-     * it is string data.
+     * @param buffer a byte array, which must be in UTF-8 format if
+     * it is string data
      */
     public BEROctetString(byte[] buffer) {
         m_value = buffer;
@@ -84,7 +84,7 @@ public class BEROctetString extends BERElement {
      * (for constructed encoding)
      * @param decoder a decode that understands the specific tags
      * @param stream source
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BEROctetString(BERTagDecoder decoder, InputStream stream,
@@ -130,7 +130,7 @@ public class BEROctetString extends BERElement {
      * Constructs an octet string element from an input stream
      * (for primitive encoding)
      * @param stream source
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BEROctetString(InputStream stream, int[] bytes_read)
@@ -181,7 +181,7 @@ public class BEROctetString extends BERElement {
     /**
      * Gets the string representation.
      * NOTE: currently prints out values in decimal form.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         if (m_value == null)

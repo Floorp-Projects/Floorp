@@ -18,9 +18,9 @@
 package netscape.ldap;
 
 /**
- * Used to do explicit bind processing on a referral. A client may
- * specify an instance of this class to be used on a single operation
- * (through the <CODE>LDAPConstraints</CODE> object) or for all operations 
+ * Performs explicit bind processing on a referral. A client may
+ * specify an instance of this class for use on a single operation
+ * (through the <CODE>LDAPConstraints</CODE> object) or all operations 
  * (through <CODE>LDAPConnection.setOption()</CODE>). It is typically used
  * to control the authentication mechanism used on implicit referral 
  * handling.
@@ -30,13 +30,14 @@ public interface LDAPBind {
 
     /**
      * This method is called by <CODE>LDAPConnection</CODE> when 
-     * authenticating. An implementation may access the host, port, 
-     * credentials, and other information in the <CODE>LDAPConnection</CODE>
-     * to decide on an appropriate authentication mechanism, and/or may 
-     * interact with a user or external module. 
+     * authenticating. An implementation of <CODE>LDAPBind</CODE> may access 
+     * the host, port, credentials, and other information in the 
+     * <CODE>LDAPConnection</CODE> in order to decide on an appropriate 
+     * authentication mechanism.<BR> 
+     * The bind method can also interact with a user or external module. 
      * @exception netscape.ldap.LDAPException
      * @see netscape.ldap.LDAPConnection#bind
-     * @param conn An established connection to an LDAP server.
+     * @param conn an established connection to an LDAP server
      */
 
     public void bind(LDAPConnection conn) throws LDAPException;

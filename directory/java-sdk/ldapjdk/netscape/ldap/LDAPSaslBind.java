@@ -24,7 +24,7 @@ import netscape.ldap.ber.stream.*;
 import netscape.ldap.util.*;
 import java.io.*;
 import java.net.*;
-import javax.security.auth.callback.CallbackHandler;
+//import javax.security.auth.callback.CallbackHandler;
 
 /**
  * Authenticates to a server using SASL
@@ -34,25 +34,31 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
      * Construct an object which can authenticate to an LDAP server
      * using the specified name and a specified SASL mechanism.
      *
-     * @param dn If non-null and non-empty, specifies that the connection and
-     * all operations through it should be authenticated with dn as the
-     * distinguished name.
-     * @param mechanisms Array of mechanism names, e.g. { "GSSAPI", "SKEY" }
-     * @param props Optional additional properties of the desired
-     * authentication mechanism, e.g. minimum security level.
-     * @param cbh A class which may be called by the SASL framework to
-     * obtain additional information required.
+     * @param dn if non-null and non-empty, specifies that the connection and
+     * all operations through it should authenticate with dn as the
+     * distinguished name
+     * @param mechanisms array of mechanism names, e.g. { "GSSAPI", "SKEY" }
+     * @param props optional additional properties of the desired
+     * authentication mechanism, e.g. minimum security level
+     * @param cbh a class which may be called by the SASL framework to
+     * obtain additional required information
      */
     public LDAPSaslBind( String dn,
                          String[] mechanisms,
                          String packageName,
                          Hashtable props,
-                         CallbackHandler cbh ) {
+                         /*CallbackHandler*/ Object cbh ) {
         _dn = dn;
         _mechanisms = mechanisms;
         _packageName = packageName;
         _props = props;
         _cbh = cbh;
+        if ( (cbh != null) &&
+             !(cbh instanceof javax.security.auth.callback.CallbackHandler) ) {
+            throw new IllegalArgumentException(
+                "Callback argument must implement " +
+                "javax.security.auth.callback.CallbackHandler" );
+        }
     }
 
     /**
@@ -64,8 +70,8 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
      * to the server. If the object had already authenticated, the old
      * authentication is discarded.
      *
-     * @param ldc An active connection to a server, which will have
-     * the new authentication state on return from the method.
+     * @param ldc an active connection to a server, which will have
+     * the new authentication state on return from the method
      * @exception LDAPException Failed to authenticate to the LDAP server.
      */
     public void bind( LDAPConnection ldc ) throws LDAPException {
@@ -89,10 +95,10 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
     /**
      * Get a SaslClient object from the Sasl framework
      *
-     * @param ldc Contains the host name
-     * @param packageName Package containing a ClientFactory
-     * @return A SaslClient supporting one of the mechanisms
-     * of the member variable _mechanisms
+     * @param ldc contains the host name
+     * @param packageName package containing a ClientFactory
+     * @return a SaslClient supporting one of the mechanisms
+     * of the member variable _mechanisms.
      * @exception LDAPException on error producing a client
      */
     private Object getClient( LDAPConnection ldc, String packageName )
@@ -207,7 +213,7 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
                         _saslClient,
                         mechanismName, "getOutputStream", args, argNames);
                 ldc.setOutputStream(os);
-                ldc.updateThreadConnTable();
+                ldc.markConnAsBound();
             } catch (LDAPException e) {
                 throw e;
             } catch (Exception e) {
@@ -268,6 +274,6 @@ public class LDAPSaslBind implements LDAPBind, Serializable {
     private String[] _mechanisms;
     private String _packageName;
     private Hashtable _props;
-    private CallbackHandler _cbh;
+    private /*CallbackHandler*/ Object _cbh;
     private Object _saslClient = null;
 }

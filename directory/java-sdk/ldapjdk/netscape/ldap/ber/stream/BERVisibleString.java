@@ -56,7 +56,7 @@ public class BERVisibleString extends BERCharacterString {
      * Constructs a visiblestring element with the input stream.
      * (for constructed encoding)
      * @param stream input stream
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BERVisibleString(BERTagDecoder decoder, InputStream stream,
@@ -68,7 +68,7 @@ public class BERVisibleString extends BERCharacterString {
      * Constructs a visiblestring element with the input stream.
      * (for primitive encoding)
      * @param stream input stream
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BERVisibleString(InputStream stream, int[] bytes_read)
@@ -87,7 +87,7 @@ public class BERVisibleString extends BERCharacterString {
     /**
      * Gets the string representation. Note that currently prints out
      * values in decimal form.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         if (m_value == null)

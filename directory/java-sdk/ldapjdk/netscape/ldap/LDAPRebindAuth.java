@@ -57,10 +57,10 @@ public class LDAPRebindAuth {
     /**
      * Constructs information that is used by the client
      * for authentication when following referrals automatically.
-     * @param dn Distinguished name to use for authenticating to
+     * @param dn distinguished name to use for authenticating to
      * the LDAP server during an automatic referral (if the client
      * is set up to follow referrals automatically)
-     * @param password Password to use for authenticating to
+     * @param password password to use for authenticating to
      * the LDAP server during an automatic referral (if the client
      * is set up to follow referrals automatically)
      */
@@ -72,7 +72,7 @@ public class LDAPRebindAuth {
     /**
      * Returns the distinguished name to be used for reauthentication,
      * if the client is set up to follow referrals automatically.
-     * @return Distinguished name to be used for authenticating to
+     * @return distinguished name to use when authenticating to
      * other LDAP servers during referrals.
      */
     public String getDN() {
@@ -82,7 +82,7 @@ public class LDAPRebindAuth {
     /**
      * Returns the password to be used for reauthentication,
      * if the client is set up to follow referrals automatically.
-     * @return Password to be used for authenticating to other
+     * @return password to use when authenticating to other
      * LDAP servers during referrals.
      */
     public String getPassword() {

@@ -27,8 +27,8 @@ public class LDAPResponseListener extends LDAPMessageQueue{
 
     /**
      * Constructor
-     * @param asynchOp A flag whether the object is used for asynchronous
-     * LDAP operations
+     * @param asynchOp a boolean flag that is true if the object is used for 
+     * asynchronous LDAP operations
      * @see netscape.ldap.LDAPAsynchronousConnection
      */
     LDAPResponseListener(boolean asynchOp) {
@@ -40,8 +40,8 @@ public class LDAPResponseListener extends LDAPMessageQueue{
      * associated with the object have completed or been canceled, and
      * returns the response.
      *
-     * @return A response for a LDAP operation or null if there is no
-     * more outstanding requests 
+     * @return a response for an LDAP operation or null if there are no
+     * more outstanding requests.
      * @exception LDAPException Network error exception
      * @exception LDAPInterruptedException The invoking thread was interrupted
      */
@@ -66,7 +66,7 @@ public class LDAPResponseListener extends LDAPMessageQueue{
      * The proper way to handle this scenario is to create a separate listener
      * for each new request, and after l.getIDs() has been invoked, merge the
      * new request with the existing one.
-     * @param listener2 The listener to be merged with.
+     * @param listener2 the listener with which to merge
      */
     public void merge(LDAPSearchListener listener2) {
         super.merge(listener2);
@@ -75,15 +75,15 @@ public class LDAPResponseListener extends LDAPMessageQueue{
     /**
      * Reports true if a response has been received from the server.
      *
-     * @return A flag whether the response message queue is empty
+     * @return a flag indicating whether the response message queue is empty.
      */
     public boolean isResponseReceived() {
         return super.isMessageReceived();
     }
 
     /**
-     * Returns message ids for all outstanding requests
-     * @return Message id array
+     * Returns message IDs for all outstanding requests
+     * @return message ID array.
      */
     public int[] getIDs() {
         return super.getIDs();

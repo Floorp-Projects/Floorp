@@ -577,7 +577,7 @@ public class LDAPException extends java.lang.Exception {
      * thrown, any code that catches the exception may need to extract
      * the result code from the exception.)
      * <P>
-     * @param message The additional error information.
+     * @param message the additional error information
      * @see netscape.ldap.LDAPException#toString()
      */
     public LDAPException( String message ) {
@@ -592,10 +592,9 @@ public class LDAPException extends java.lang.Exception {
      * <CODE>getLDAPResultCode()</CODE> method.
      * <P>
      *
-     * @param message The additional error information that you
-     * want to specify.
-     * @param resultCode The result code returned from the
-     * operation that caused this exception.
+     * @param message the additional error information to specify
+     * @param resultCode the result code returned from the
+     * operation that caused this exception
      * @see netscape.ldap.LDAPException#toString()
      * @see netscape.ldap.LDAPException#getLDAPResultCode()
      */
@@ -627,12 +626,11 @@ public class LDAPException extends java.lang.Exception {
      *
      * Use this form of the constructor
      * for higher-level LDAP operational errors.
-     * @param message The additional error information that you
-     * want to specify.
-     * @param resultCode The result code returned from the
-     * operation that caused this exception.
-     * @param serverErrorMessage Error message specifying additional
-     * information returned from the server.
+     * @param message the additional error information to specify
+     * @param resultCode the result code returned from the
+     * operation that caused this exception
+     * @param serverErrorMessage error message specifying additional
+     * information returned from the server
      * @see netscape.ldap.LDAPException#toString()
      * @see netscape.ldap.LDAPException#getLDAPResultCode()
      * @see netscape.ldap.LDAPException#getLDAPErrorMessage()
@@ -673,12 +671,12 @@ public class LDAPException extends java.lang.Exception {
      * <P>
      *
      * This form is used for higher-level LDAP operational errors.
-     * @param message The additional error information.
-     * @param resultCode The result code returned.
-     * @param serverErrorMessage Error message specifying additional information
-     * returned from the server.
-     * @param matchedDN Maximal subset of a specified DN which could be
-     * matched by the server.
+     * @param message the additional error information
+     * @param resultCode the result code returned
+     * @param serverErrorMessage error message specifying additional information
+     * returned from the server
+     * @param matchedDN maximal subset of a specified DN which could be
+     * matched by the server
      * @see netscape.ldap.LDAPException#toString()
      * @see netscape.ldap.LDAPException#getLDAPResultCode()
      * @see netscape.ldap.LDAPException#getLDAPErrorMessage()
@@ -697,7 +695,7 @@ public class LDAPException extends java.lang.Exception {
      * This result code is defined as a public final static int member
      * of this class.  Note that this value is not always valid.
      * -1 indicates that the result code is invalid.
-     * @return The LDAP result code of the last operation.
+     * @return the LDAP result code of the last operation.
      */
     public int getLDAPResultCode () {
         return resultCode;
@@ -721,7 +719,7 @@ public class LDAPException extends java.lang.Exception {
      * method instead.
      * <P>
      *
-     * @return The error message of the last error (or <CODE>null</CODE>
+     * @return the error message of the last error (or <CODE>null</CODE>
      * if no message was set).
      * @see netscape.ldap.LDAPException#toString()
      */
@@ -747,7 +745,7 @@ public class LDAPException extends java.lang.Exception {
      *
      * If the exception does not specify a matching DN,
      * this method returns <CODE>null</CODE>.
-     * @return The maximal subset of a DN which could be matched,
+     * @return the maximal subset of a DN which could be matched,
      * or <CODE>null</CODE> if the error is not one of the above.
      */
     public String getMatchedDN () {
@@ -781,7 +779,7 @@ public class LDAPException extends java.lang.Exception {
      * a current locale.
      * <P>
      *
-     * @return String representation of exception
+     * @return string representation of exception.
      * @see netscape.ldap.LDAPException#errorCodeToString(int)
      */
     public String toString() {
@@ -808,8 +806,8 @@ public class LDAPException extends java.lang.Exception {
      * and delimited by an underscore) of the default locale. For example:
      * <PRE>netscape/ldap/error/ErrorCodes_en_US.props</PRE>
      *
-     * @return The error message describing the error code for this
-     *  exception in the default locale
+     * @return the error message describing the error code for this
+     * exception in the default locale.
      */
     public String errorCodeToString() {
         return errorCodeToString(resultCode, m_locale);
@@ -824,10 +822,10 @@ public class LDAPException extends java.lang.Exception {
      * and delimited by an underscore) of the default locale. For example:
      * <PRE>netscape/ldap/error/ErrorCodes_en_US.props</PRE>
      *
-     * @param l The <CODE>java.util.Locale</CODE> object representing the
-     *  locale of the error message that you want to retrieve.
-     * @return The error message describing the current error code
-     *  in the specified locale.
+     * @param l the <CODE>java.util.Locale</CODE> object representing the
+     * locale of the error message to retrieve
+     * @return the error message describing the current error code
+     * in the specified locale.
      */
     public String errorCodeToString(Locale l) {
         return errorCodeToString(resultCode, l);
@@ -844,10 +842,10 @@ public class LDAPException extends java.lang.Exception {
      * and delimited by an underscore) of the default locale. For example:
      * <PRE>netscape/ldap/error/ErrorCodes_en_US.props</PRE>
      *
-     * @param code The error code that you want to get the
-     *  corresponding error message for.
-     * @return Error message describing the specified error code for
-     *  the default locale.
+     * @param code the error code for which to get the
+     * corresponding error message
+     * @return error message describing the specified error code for
+     * the default locale.
      */
     public static String errorCodeToString(int code) {
         return errorCodeToString(code, Locale.getDefault());
@@ -862,12 +860,12 @@ public class LDAPException extends java.lang.Exception {
      * and delimited by an underscore) of the default locale. For example:
      * <PRE>netscape/ldap/error/ErrorCodes_en_US.props</PRE>
      *
-     * @param code The error code that you want to get the
-     *  corresponding error message for.
-     * @param locale The <CODE>java.util.Locale</CODE> object representing the
-     *  locale of the error message that you want to retrieve.
-     * @return Error message describing the specified error code for
-     *  the specified locale.
+     * @param code the error code for which to get the
+     * corresponding error
+     * @param locale the <CODE>java.util.Locale</CODE> object representing the
+     * locale of the error message that you want to retrieve
+     * @return error message describing the specified error code for
+     * the specified locale.
      */
     public synchronized static String errorCodeToString(int code, Locale locale) {
         try {

@@ -48,7 +48,7 @@ public abstract class LDIFBaseContent
     /**
      * Retrieves the list of controls specified in the content
      * of the LDIF record, if any
-     * @return An array of <CODE>LDAPControl</CODE> objects that
+     * @return an array of <CODE>LDAPControl</CODE> objects that
      * represent any controls specified in the the LDIF record,
      * or <CODE>null</CODE> if none were specified.
      */
@@ -58,8 +58,8 @@ public abstract class LDIFBaseContent
 
     /**
      * Sets the list of controls
-     * @param controls An array of <CODE>LDAPControl</CODE> objects
-     * or <CODE>null</CODE> if none are to be specified.
+     * @param controls an array of <CODE>LDAPControl</CODE> objects
+     * or <CODE>null</CODE> if none are to be specified
      */
     public void setControls( LDAPControl[] controls ) {
         m_controls = controls;
@@ -68,8 +68,8 @@ public abstract class LDIFBaseContent
     /**
      * Get the OIDs of all controls, if any, as a string
      *
-     * @return The OIDs of all controls, if any, as a string,
-     * or an empty string if there are no controls
+     * @return the OIDs of all controls, if any, as a string,
+     * or an empty string if there are no controls.
      */
     protected String getControlString() {
         String s = "";

@@ -22,7 +22,7 @@ import java.io.*;
 import java.net.*;
 
 /**
- * Make a connection to a server from a list using "smart" failover.
+ * Makes a connection to a server from a list using "smart" failover.
  * Connection attempts can be made serially from the same thread, or
  * in parallel by creating a separate thread after the specified delay.
  * Connection setup status is preserved for later attempts, so that servers
@@ -109,9 +109,9 @@ class LDAPConnSetupMgr implements Cloneable{
 
     /**
      * Constructor
-     * @param host List of host names to connect to
-     * @param port List of port numbers corresponding to the host list
-     * @param factory Socket factory for SSL connections
+     * @param host list of host names to which to connect
+     * @param port list of port numbers corresponding to the host list
+     * @param factory socket factory for SSL connections
      * @param delay delay in seconds for the parallel connection setup policy.
      * Possible values are: <br>(delay=-1) use serial policy,<br>
      * (delay=0) start immediately concurrent threads to each specified server
@@ -162,7 +162,7 @@ class LDAPConnSetupMgr implements Cloneable{
     }
 
     /**
-     * To be called when the current connection is lost.
+     * Called when the current connection is lost.
      * Put the connected server at the end of the server list for
      * the next connect attempt.    
      */
@@ -187,7 +187,7 @@ class LDAPConnSetupMgr implements Cloneable{
     }
     
     /**
-     * To be called when the current connection is terminated by the user
+     * Called when the current connection is terminated by the user.
      * Mark the connected server status as DISCONNECTED. This will
      * put it at top of the server list for the next connect attempt.
      */
@@ -363,7 +363,7 @@ class LDAPConnSetupMgr implements Cloneable{
 
 
     /**
-     * Sort Server List so that servers which are more likely to be available
+     * Sorts Server List so that servers which are more likely to be available
      * are tried first. The likelihood of making a successful connection
      * is determined by the connSetupStatus. Lower values have higher
      * likelihood. Thus, the order of server access is (1) disconnected by
@@ -382,7 +382,22 @@ class LDAPConnSetupMgr implements Cloneable{
             }
         }
     }    
-    
+
+    /**
+     * This is used only by the ldapjdk test libaray to simulate a
+     *  server problem and to test fail-over and rebind
+     * @return A flag whether the connection was closed
+     */
+    boolean breakConnection() {
+        try {                
+            m_socket.close();
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }            
+
     public String toString() {
         String str = "dsIdx="+m_dsIdx+ " dsList=";
         for (int i=0; i < m_dsList.length; i++) {

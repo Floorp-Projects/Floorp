@@ -65,7 +65,7 @@ public class LDIF implements Serializable {
     /**
      * Constructs an <CODE>LDIF</CODE> object to parse the
      * LDIF data read from a specified file.
-     * @param file The name of the LDIF file that you want to parse.
+     * @param file the name of the LDIF file to parse
      * @exception IOException An I/O error has occurred.
      */
     public LDIF(String file) throws IOException {
@@ -80,7 +80,7 @@ public class LDIF implements Serializable {
     /**
      * Constructs an <CODE>LDIF</CODE> object to parse the
      * LDIF data read from an input stream.
-     * @param ds The input stream providing the LDIF data.
+     * @param dstThe input stream providing the LDIF data
      * @exception IOException An I/O error has occurred.
      */
     public LDIF(DataInputStream ds) throws IOException {
@@ -94,7 +94,7 @@ public class LDIF implements Serializable {
      * method repeatedly to iterate through all records in the LDIF data.
      * <P>
      *
-     * @return The next record as an <CODE>LDIFRecord</CODE>
+     * @return the next record as an <CODE>LDIFRecord</CODE>
      * object or null if there are no more records.
      * @exception IOException An I/O error has occurred.
      * @see netscape.ldap.util.LDIFRecord
@@ -119,7 +119,10 @@ public class LDIF implements Serializable {
         Vector attrs = new Vector();
         LDIFRecord rec = null;
 
-        line = d.readLine();
+        // Skip past any blank lines
+        while( ((line = d.readLine()) != null) &&
+               (line.length() < 1) ) {
+        }
         if (line == null) {
             return null;
         }
@@ -426,7 +429,7 @@ public class LDIF implements Serializable {
     }
 
     /**
-     * Parses moddn/modrdn modification
+     * Parses moddn/modrdn modification.
      * @param d data input stream
      */
     private LDIFModDNContent parse_moddn_spec(LineReader d)
@@ -477,7 +480,7 @@ public class LDIF implements Serializable {
     }
 
     /**
-     * Parse the specification of a control<BR>
+     * Parses the specification of a control<BR>
      *
      * A control looks line one of the following:
      *<BR>
@@ -497,8 +500,8 @@ public class LDIF implements Serializable {
      *<BR>
      * control: 1.2.3.4.10.210:< file:///usr/local/directory/cont.dta
      *
-     * @param line A line containing a control spec
-     * @return A parsed control
+     * @param line a line containing a control spec
+     * @return a parsed control.
      * @exception IOException if the line could not be parsed
      */
     protected LDAPControl parse_control_spec( String line )
@@ -569,12 +572,12 @@ public class LDIF implements Serializable {
     }
 
     /**
-     * Return true if all the bytes in the given array are valid for output as a
+     * Returns true if all the bytes in the given array are valid for output as a
      * String according to the LDIF specification. If not, the array should
      * output base64-encoded.
-     * @return true if all the bytes in the given array are valid for output as a
-     * String according to the LDIF specification; otherwise, false.
-     * false.
+     * @return <code>true</code> if all the bytes in the given array are valid for 
+     * output as a String according to the LDIF specification; otherwise, 
+     * <code>false</code>.
      */
     public static boolean isPrintable(byte[] b) {
         for( int i = b.length - 1; i >= 0; i-- ) {
@@ -589,9 +592,9 @@ public class LDIF implements Serializable {
     /**
      * Outputs the String in LDIF line-continuation format. No line will be longer
      * than the given max. A continuation line starts with a single blank space.
-     * @param pw The printer writer.
-     * @param value The given string being printed out.
-     * @param max The maximum characters allowed in the line.
+     * @param pw the printer writer
+     * @param value the given string being printed out
+     * @param max the maximum characters allowed in the line
      */
     public static void breakString( PrintWriter pw, String value, int max) {
         int leftToGo = value.length();
@@ -617,7 +620,7 @@ public class LDIF implements Serializable {
 
     /**
      * Gets the version of LDIF used in the data.
-     * @return Version of LDIF used in the data.
+     * @return version of LDIF used in the data.
      */
     public int getVersion() {
         return m_version;
@@ -626,7 +629,7 @@ public class LDIF implements Serializable {
     /**
      * Gets the string representation of the
      * entire LDIF file.
-     * @return The string representation of the entire LDIF data.
+     * @return the string representation of the entire LDIF data file.
      */
     public String toString() {
         return "LDIF {" + m_source + "}";
@@ -649,7 +652,7 @@ public class LDIF implements Serializable {
         }
         /**
          * Reads a non-comment line.
-         * @return  A string, or null
+         * @return a string or null.
          */
         String readLine() throws IOException {
             String line = null;
@@ -703,11 +706,11 @@ public class LDIF implements Serializable {
     }
 
     /**
-     * Convert a byte array to a printable string following
+     * Converts a byte array to a printable string following
      * the LDIF rules (encode in base64 if necessary)
      *
-     * @param b The byte array to convert
-     * @return A converted string which is printable
+     * @param b the byte array to convert
+     * @return a converted string which is printable.
      */
     public static String toPrintableString( byte[] b ) {
         String s = "";
@@ -731,10 +734,10 @@ public class LDIF implements Serializable {
     }
 
     /**
-     * Test driver - just read and parse an LDIF file, printing
+     * Test driver - just reads and parses an LDIF file, printing
      * each record as interpreted
      *
-     * @param args Name of LDIF file to parse
+     * @param args name of the LDIF file to parse
      */
     public static void main( String[] args ) {
         if ( args.length != 1 ) {

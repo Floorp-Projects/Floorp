@@ -134,12 +134,12 @@ public class GetOpt implements java.io.Serializable {
 
     /**
      * Constructs a <CODE>GetOpt</CODE> object.
-     * @param strControl A string specifying the letters of
+     * @param strControl a string specifying the letters of
      * all available options. If an option requires an argument
      * (for example, "-h <hostname>"), use a colon after the
      * letter for that option (for example, "h:p:D:w:H").
-     * @param args An array of strings representing the list
-     * of arguments that you want parsed (for example, the
+     * @param args an array of strings representing the list
+     * of arguments to parse (for example, the
      * array passed into Main).
      */
     public GetOpt(String strControl, String args[]) {
@@ -192,8 +192,8 @@ public class GetOpt implements java.io.Serializable {
      * was specified.
      * <P>
      *
-     * @param c Letter of the option that you want to check.
-     * @return true if the option was specified.
+     * @param c letter of the option to check
+     * @return <code>true</code> if the option was specified.
      */
     public boolean hasOption(char c) {
         boolean fReturn = false;
@@ -213,8 +213,8 @@ public class GetOpt implements java.io.Serializable {
      * the -h option (such as "localhost" in "-h localhost").
      * <P>
      *
-     * @param c The letter of the option that you want to check.
-     * @return The argument specified for this option.
+     * @param c the letter of the option to check
+     * @return the argument specified for this option.
      */
     public String getOptionParam(char c) {
         char cOption[] = new char[1];
@@ -227,7 +227,7 @@ public class GetOpt implements java.io.Serializable {
     /**
      * Gets a list of any additional parameters specified
      * (not including the arguments for any options).
-     * @return A list of the additional parameters.
+     * @return a list of the additional parameters.
      */
     public Vector getParameters() {
         return(m_ParameterList);

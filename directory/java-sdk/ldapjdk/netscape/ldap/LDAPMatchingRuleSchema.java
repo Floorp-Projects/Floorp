@@ -225,7 +225,7 @@ public class LDAPMatchingRuleSchema extends LDAPSchemaElement {
      * Gets the list of the OIDs of the attribute types which can be used
      * with the matching rule.
      * @return array of the OIDs of the attribute types which can be used
-     * with the matching rule
+     * with the matching rule.
      */
     public String[] getAttributes() {
         return attributes;
@@ -368,7 +368,7 @@ public class LDAPMatchingRuleSchema extends LDAPSchemaElement {
      * Gets the definition of the matching rule in a user friendly format.
      * This is the format that the matching rule definition uses when
      * you print the matching rule or the schema.
-     * @return definition of the matching rule in a user friendly format
+     * @return definition of the matching rule in a user friendly format.
      */
     public String toString() {
         String s = "Name: " + name + "; OID: " + oid + "; Type: ";

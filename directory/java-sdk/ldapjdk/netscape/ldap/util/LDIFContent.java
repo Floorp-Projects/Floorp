@@ -78,8 +78,8 @@ public interface LDIFContent {
     public final static int MODDN_CONTENT = 4;
 
     /**
-     * Determine the content type.
-     * @return The content type, identified by one of the following values:
+     * Determines the content type.
+     * @return the content type, identified by one of the following values:
      * <UL>
      * <LI>ATTRIBUTE_CONTENT (specifies an entry and its attributes)
      * <LI>ADD_CONTENT (specifies a new entry to be added)
@@ -93,7 +93,7 @@ public interface LDIFContent {
     /**
      * Retrieves the list of controls specified in the content
      * of the LDIF record, if any
-     * @return An array of <CODE>LDAPControl</CODE> objects that
+     * @return an array of <CODE>LDAPControl</CODE> objects that
      * represent any controls specified in the the LDIF record,
      * or <CODE>null</CODE> if none were specified.
      */
@@ -101,14 +101,14 @@ public interface LDIFContent {
 
     /**
      * Sets the list of controls
-     * @param controls An array of <CODE>LDAPControl</CODE> objects
-     * or <CODE>null</CODE> if none are to be specified.
+     * @param controls an array of <CODE>LDAPControl</CODE> objects
+     * or <CODE>null</CODE> if none are to be specified
      */
     public void setControls( LDAPControl[] controls );
 
     /**
      * Returns the string representation of the content of the LDIF record.
-     * @return String representation of the content of the LDIF record.
+     * @return string representation of the content of the LDIF record.
      */
     public String toString();
 }

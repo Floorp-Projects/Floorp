@@ -58,7 +58,7 @@ public class BERInteger extends BERIntegral {
      * Constructs an integer element with the input stream.
      * @param stream input stream
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERInteger(InputStream stream, int[] bytes_read) throws IOException {
@@ -75,7 +75,7 @@ public class BERInteger extends BERIntegral {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         return "Integer {" + getValue() + "}";

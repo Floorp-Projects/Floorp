@@ -32,14 +32,14 @@ public class LDAPAttribute {
     private String name = null;
     private byte[] nameBuf = null;
     /**
-     * Internally, it is a list of "byte[]"-based attribute values.
+     * Internally, this is a list of "byte[]"-based attribute values.
      */
     private Object values[] = new Object[0];
 
     /**
      * Constructs an attribute from another existing attribute.
      * Effectively, this makes a copy of the existing attribute.
-     * @param attr The attribute to copy
+     * @param attr the attribute to copy
      */
     public LDAPAttribute( LDAPAttribute attr ) {
         name = attr.name;
@@ -54,7 +54,7 @@ public class LDAPAttribute {
 
     /**
      * Constructs an attribute with no values.
-     * @param attrName Name of the attribute.
+     * @param attrName name of the attribute
      */
     public LDAPAttribute( String attrName ) {
         name = attrName;
@@ -62,8 +62,8 @@ public class LDAPAttribute {
 
     /**
      * Constructs an attribute with a byte-formatted value.
-     * @param attrName Name of the attribute.
-     * @param attrValue Value of the attribute in byte format.
+     * @param attrName name of the attribute
+     * @param attrValue value of the attribute in byte format
      */
     public LDAPAttribute( String attrName, byte[] attrValue ) {
         name = attrName;
@@ -72,8 +72,8 @@ public class LDAPAttribute {
 
     /**
      * Constructs an attribute that has a single string value.
-     * @param attrName Name of the attribute.
-     * @param attrValue Value of the attribute in String format.
+     * @param attrName name of the attribute
+     * @param attrValue value of the attribute in String format
      */
     public LDAPAttribute( String attrName, String attrValue ) {
         name = attrName;
@@ -82,8 +82,8 @@ public class LDAPAttribute {
 
     /**
      * Constructs an attribute that has an array of string values.
-     * @param attrName Name of the attribute.
-     * @param attrValues The list of string values for this attribute.
+     * @param attrName name of the attribute
+     * @param attrValues the list of string values for this attribute
      */
     public LDAPAttribute( String attrName, String[] attrValues ) {
         name = attrName;
@@ -96,7 +96,7 @@ public class LDAPAttribute {
      * Constructs an attribute from a BER (Basic Encoding Rules) element.
      * (The protocol elements of LDAP are encoded for exchange using the
      * Basic Encoding Rules.)
-     * @param element Element that you want translated into an attribute.
+     * @param element element that you want translated into an attribute
      * @exception IOException The attribute could not be created from
      * the specified element.
      */
@@ -116,7 +116,7 @@ public class LDAPAttribute {
 
     /**
      * Returns the number of values of the attribute.
-     * @return Number of values for this attribute.
+     * @return number of values for this attribute.
      */
     public int size() {
         return values.length;
@@ -124,7 +124,7 @@ public class LDAPAttribute {
 
     /**
      * Returns an enumerator for the string values of an attribute.
-     * @return Enumerator for the string values.
+     * @return enumerator for the string values.
      */
     public Enumeration getStringValues() {
         Vector v = new Vector();
@@ -144,10 +144,11 @@ public class LDAPAttribute {
         return v.elements();
     }
 	
-	/**
-     * Returns a array for the values of the attribute as <CODE>String</CODE> objects.
-     * @return Array of attribute values. Each element in the array
-     * will be a <CODE>String</CODE> object.
+    /**
+     * Returns the values of the attribute as an array of <CODE>String</CODE> 
+     * objects.
+     * @return array of attribute values. Each element in the array
+     * is a <CODE>String</CODE> object.
      */
     public String[] getStringValueArray() {
     
@@ -171,8 +172,8 @@ public class LDAPAttribute {
     /**
      * Returns an enumerator for the values of the attribute in <CODE>byte[]</CODE>
      * format.
-     * @return A set of attribute values. Each element in the enumeration
-     * will be of type <CODE>byte[]</CODE>.
+     * @return a set of attribute values. Each element in the enumeration
+     * is of type <CODE>byte[]</CODE>.
      */
     public Enumeration getByteValues() {
         Vector v = new Vector();
@@ -188,10 +189,10 @@ public class LDAPAttribute {
         return v.elements();
     }
 
-	/**
-     * Returns an array for the values of the attribute in <CODE>byte[]</CODE>
+    /**
+     * Returns the values of the attribute in an array of <CODE>byte[]</CODE>
      * format.
-     * @return Array of attribute values. Each element in the array
+     * @return array of attribute values. Each element in the array
      * will be of type <CODE>byte[]</CODE>.
      */
      public byte[][] getByteValueArray() {
@@ -213,7 +214,7 @@ public class LDAPAttribute {
      
     /**
      * Returns the name of the attribute.
-     * @return Name of the attribute.
+     * @return name of the attribute.
      */
     public String getName() {
         if ((name == null) && (nameBuf != null)) {
@@ -231,8 +232,8 @@ public class LDAPAttribute {
      * and <CODE>phonetic</CODE>.
      * <P>
      *
-     * @param attrName Name of the attribute to extract the subtypes from
-     * @return Array of subtypes, or null (if the name has no subtypes)
+     * @param attrName name of the attribute from which to extract the subtypes
+     * @return array of subtypes, or null (if the name has no subtypes).
      * @see netscape.ldap.LDAPAttribute#getBaseName
      */
     public static String[] getSubtypes(String attrName) {
@@ -257,7 +258,7 @@ public class LDAPAttribute {
      * containing <CODE>lang-ja</CODE> and <CODE>phonetic</CODE>.
      *<P>
      *
-     * @return Array of subtypes, or null (if the name has no subtypes)
+     * @return array of subtypes, or null (if the name has no subtypes).
      */
     public String[] getSubtypes() {
         return getSubtypes(getName());
@@ -270,7 +271,7 @@ public class LDAPAttribute {
      * returns the String <CODE>lang-ja</CODE>.
      *<P>
      *
-     * @return The language subtype, or null (if the name has no
+     * @return the language subtype, or null (if the name has no
      * language subtype).
      */
     public String getLangSubtype() {
@@ -291,8 +292,8 @@ public class LDAPAttribute {
      * this method returns <CODE>cn</CODE>.
      * <P>
      *
-     * @param attrName Name of the attribute from which to extract the base name
-     * @return Base name (the attribute name without any subtypes)
+     * @param attrName name of the attribute from which to extract the base name
+     * @return base name (the attribute name without any subtypes).
      * @see netscape.ldap.LDAPAttribute#getSubtypes
      */
     public static String getBaseName(String attrName) {
@@ -311,7 +312,7 @@ public class LDAPAttribute {
      * <CODE>cn</CODE>.
      * <P>
      *
-     * @return Base name (the attribute name without any subtypes)
+     * @return base name (the attribute name without any subtypes).
      * @see netscape.ldap.LDAPAttribute#getSubtypes
      */
     public String getBaseName() {
@@ -319,14 +320,14 @@ public class LDAPAttribute {
     }
 
     /**
-     * Report if the attribute name contains the specified subtype.
+     * Reports whether the attribute name contains the specified subtype.
      * For example, if you check for the subtype <CODE>lang-en</CODE>
      * and the attribute name is <CODE>cn;lang-en</CODE>, this method
      * returns <CODE>true</CODE>.
      * <P>
      *
-     * @param subtype The single subtype that you want to check for
-     * @return true if the attribute name contains the specified subtype
+     * @param subtype the single subtype for which you want to check
+     * @return true if the attribute name contains the specified subtype.
      * @see netscape.ldap.LDAPAttribute#getSubtypes
      */
     public boolean hasSubtype(String subtype) {
@@ -339,14 +340,14 @@ public class LDAPAttribute {
     }
 
     /**
-     * Report if the attribute name contains all specified subtypes
+     * Reports if the attribute name contains all specified subtypes
      * For example, if you check for the subtypes <CODE>lang-en</CODE>
-     * and <CODE>phonetic</CODE> and if the attribute name is
+     * and <CODE>phonetic</CODE> and the attribute name is
      * <CODE>cn;lang-en;phonetic</CODE>, this method returns <CODE>true</CODE>.
      * If the attribute name is <CODE>cn;phonetic</CODE> or
      * <CODE>cn;lang-en</CODE>, this method returns <CODE>false</CODE>.
      * <P>
-     * @param subtypes An array of subtypes to check
+     * @param subtypes an array of subtypes to check
      * @return true if the attribute name contains all subtypes
      * @see netscape.ldap.LDAPAttribute#getSubtypes
      */
@@ -360,7 +361,7 @@ public class LDAPAttribute {
 
     /**
      * Adds a string value to the attribute.
-     * @param attrValue The string value that you want to add to the attribute.
+     * @param attrValue the string value to add to the attribute
      */
     public synchronized void addValue( String attrValue ) {
         if (attrValue != null) {
@@ -374,7 +375,7 @@ public class LDAPAttribute {
 
     /**
      * Sets the string values as the attribute's values.
-     * @param attrValues The string values that you want to use in the attribute.
+     * @param attrValues the string values to use in the attribute
      */
     protected void setValues( String[] attrValues ) {
         Object[] vals;
@@ -394,8 +395,8 @@ public class LDAPAttribute {
 
     /**
      * Adds a <CODE>byte[]</CODE>-formatted value to the attribute.
-     * @param attrValue The <CODE>byte[]</CODE>-formatted value that you
-     * want to add to the attribute.
+     * @param attrValue the <CODE>byte[]</CODE>-formatted value to
+     * add to the attribute
      */
     public synchronized void addValue( byte[] attrValue ) {
         if (attrValue != null) {
@@ -409,7 +410,7 @@ public class LDAPAttribute {
 
     /**
      * Sets the byte[] values as the attribute's values.
-     * @param attrValues The values that you want to use in the attribute.
+     * @param attrValues the values to use in the attribute
      */
     protected synchronized void setValues( Object[] attrValues ) {
         values = attrValues;
@@ -417,7 +418,7 @@ public class LDAPAttribute {
 
     /**
      * Removes a string value from the attribute.
-     * @param attrValue The string value that you want removed.
+     * @param attrValue the string value to remove
      */
     public synchronized void removeValue( String attrValue) {
         if (attrValue != null) {
@@ -431,7 +432,7 @@ public class LDAPAttribute {
 
     /**
      * Removes a <CODE>byte[]</CODE>-formatted value from the attribute.
-     * @param attrValue <CODE>byte[]</CODE>-formatted value that you want removed.
+     * @param attrValue <CODE>byte[]</CODE>-formatted value to remove
      */
     public synchronized void removeValue( byte[] attrValue) {
         if ((attrValue == null) || (values == null)|| (values.length < 1))
@@ -467,10 +468,10 @@ public class LDAPAttribute {
     }
 
     /**
-     * Retrieves the BER (Basic Encoding Rules) representation of attribute.
+     * Retrieves the BER (Basic Encoding Rules) representation of an attribute.
      * (The protocol elements of LDAP are encoded for exchange using the
      * Basic Encoding Rules.)
-     * @return The BER representation of the attribute.
+     * @return the BER representation of the attribute.
      */
     public BERElement getBERElement() {
         try {
@@ -489,7 +490,7 @@ public class LDAPAttribute {
 
     /**
      * Retrieves the string representation of attribute parameters.
-     * @return string representation parameters
+     * @return string representation parameters.
      */
     private String getParamString() {
         StringBuffer sb = new StringBuffer();
@@ -517,12 +518,12 @@ public class LDAPAttribute {
     }
 
     /**
-     * Retrieves the string representation of attribute
+     * Retrieves the string representation of an attribute
      * in an LDAP entry. For example:
      *
      * <PRE>LDAPAttribute {type='cn', values='Barbara Jensen,Babs Jensen'}</PRE>
      *
-     * @return String representation of the attribute.
+     * @return string representation of the attribute.
      */
     public String toString() {
         return "LDAPAttribute " + getParamString();

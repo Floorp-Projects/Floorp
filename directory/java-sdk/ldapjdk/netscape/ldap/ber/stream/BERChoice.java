@@ -40,7 +40,7 @@ public class BERChoice extends BERElement {
 
     /**
      * Constructs a choice element.
-     * @param value Any BERElement value
+     * @param value any BERElement value
      */
     public BERChoice(BERElement value) {
         m_value = value;
@@ -53,7 +53,7 @@ public class BERChoice extends BERElement {
      * chosen. The following method will never be called.
      * @param stream input stream
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERChoice(BERTagDecoder decoder, InputStream stream,
@@ -88,7 +88,7 @@ public class BERChoice extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         return "CHOICE {" + m_value + "}";

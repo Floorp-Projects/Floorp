@@ -45,7 +45,7 @@ public class LDAPAttributeSet implements Cloneable
 
     /**
      * Constructs an attribute set.
-     * @param attrs The list of attributes.
+     * @param attrs the list of attributes
      */
     public LDAPAttributeSet( LDAPAttribute[] attrs ) {
         this.attrs = attrs;
@@ -66,7 +66,7 @@ public class LDAPAttributeSet implements Cloneable
 
     /**
      * Returns an enumeration of the attributes in this attribute set.
-     * @return Enumeration of the attributes in this set.
+     * @return enumeration of the attributes in this set.
      */
     public Enumeration getAttributes () {
         Vector v = new Vector();
@@ -103,17 +103,17 @@ public class LDAPAttributeSet implements Cloneable
      * sn;phonetic;lang-ja
      * </PRE>
      *
-     * @param subtype Semi-colon delimited list of subtypes
-     * that you want to find in attribute names.
+     * @param subtype semi-colon delimited list of subtypes
+     * to find within attribute names. 
      * For example:
-     *<PRE>
+     * <PRE>
      *     "lang-ja"        // Only Japanese language subtypes
      *     "binary"         // Only binary subtypes
      *     "binary;lang-ja" // Only Japanese language subtypes
      *                         which also are binary
-     *</PRE>
-     * @return Attribute set containing the attributes that have
-     * the specified subtypes
+     * </PRE>
+     * @return attribute set containing the attributes that have
+     * the specified subtypes.
      * @see netscape.ldap.LDAPAttribute
      * @see netscape.ldap.LDAPAttributeSet#getAttribute
      * @see netscape.ldap.LDAPEntry#getAttributeSet
@@ -143,13 +143,13 @@ public class LDAPAttributeSet implements Cloneable
     /**
      * Returns a single attribute that exactly matches the specified attribute
      * name.
-     * @param attrName Name of attribute to return.
+     * @param attrName name of attribute to return
      * For example:
      *<PRE>
      *     "cn"            // Only a non-subtyped version of cn
      *     "cn;lang-ja"    // Only a Japanese version of cn
      *</PRE>
-     * @return Attribute that has exactly the same name, or null
+     * @return attribute that has exactly the same name, or null
      * (if no attribute in the set matches the specified name).
      * @see netscape.ldap.LDAPAttribute
      */
@@ -168,7 +168,7 @@ public class LDAPAttributeSet implements Cloneable
     }
 
     /**
-     * Prepare hashtable for fast attribute lookups
+     * Prepares hashtable for fast attribute lookups.
      */
     private void prepareHashtable() {
         if ((attrHash == null) && (attrs.length >= ATTR_COUNT_REQUIRES_HASH)) {
@@ -193,8 +193,8 @@ public class LDAPAttributeSet implements Cloneable
      * they contain the specified <CODE>lang</CODE> subtype and if
      * the set contains no attribute having only the <CODE>lang</CODE>
      * subtype.  (For example, <CODE>getAttribute( "cn", "lang-ja" )</CODE>
-     * returns the <CODE>cn;lang-ja;phonetic</CODE> attribute only if
-     * the <CODE>cn;lang-ja</CODE> attribute does not exist.)
+     * returns <CODE>cn;lang-ja;phonetic</CODE> only if the 
+     * <CODE>cn;lang-ja</CODE> attribute does not exist.)
      * <P>
      *
      * If null is specified for the <CODE>lang</CODE> argument,
@@ -222,9 +222,9 @@ public class LDAPAttributeSet implements Cloneable
      * <LI><CODE>getAttribute( "sn", "lang-en" )</CODE> returns the "<CODE>sn</CODE>" attribute.
      *</UL>
      * <P>
-     * @param attrName Name of attribute to find in the entry.
-     * @param lang A language specification.
-     * @return The attribute that matches the base name and that best
+     * @param attrName name of attribute to find in the entry
+     * @param lang a language specification
+     * @return the attribute that matches the base name and that best
      * matches any specified language subtype.
      * @see netscape.ldap.LDAPAttribute
      */
@@ -302,23 +302,23 @@ public class LDAPAttributeSet implements Cloneable
     }
 
     /**
-     * Returns the attribute at the position specified by the index
-     * (for example, if you specify the index 0, the method returns the
-     * first attribute in the set).  The index is 0-based.
+     * Returns the attribute at the position specified by the index.
+     * For example, if you specify the index 0, the method returns the
+     * first attribute in the set. The index is 0-based.
      *
-     * @param index Index of the attribute that you want to get.
-     * @return Attribute at the position specified by the index.
+     * @param index index of the attribute to obtain
+     * @return attribute at the position specified by the index.
      */
     public LDAPAttribute elementAt (int index) {
         return attrs[index];
     }
 
     /**
-     * Removes attribute at the position specified by the index
-     * (for example, if you specify the index 0, the method removes the
-     * first attribute in the set).  The index is 0-based.
+     * Removes the attribute at the position specified by the index.
+     * For example, if you specify the index 0, the method removes the
+     * first attribute in the set.  The index is 0-based.
      *
-     * @param index Index of the attribute that you want to remove.
+     * @param index index of the attribute to remove
      */
     public void removeElementAt (int index) {
         if ((index >= 0) && (index < attrs.length)) {
@@ -337,7 +337,7 @@ public class LDAPAttributeSet implements Cloneable
 
     /**
      * Returns the number of attributes in this set.
-     * @return Number of attributes in this attribute set.
+     * @return number of attributes in this attribute set.
      */
     public int size () {
         return attrs.length;
@@ -345,7 +345,7 @@ public class LDAPAttributeSet implements Cloneable
 
     /**
      * Adds the specified attribute to this attribute set.
-     * @param attr Attribute that you want to add to this set.
+     * @param attr attribute to add to this set
      */
     public synchronized void add( LDAPAttribute attr ) {
         if (attr != null) {
@@ -362,7 +362,7 @@ public class LDAPAttributeSet implements Cloneable
 
     /**
      * Removes the specified attribute from the set.
-     * @param name Name of the attribute that you want removed.
+     * @param name name of the attribute to remove
      */
     public synchronized void remove( String name ) {
         for( int i = 0; i < attrs.length; i++ ) {
@@ -385,7 +385,7 @@ public class LDAPAttributeSet implements Cloneable
      * values='Product Development,People'}
      * </PRE>
      *
-     * @return String representation of all attributes in the set.
+     * @return string representation of all attributes in the set.
      */
     public String toString() {
         StringBuffer sb = new StringBuffer("LDAPAttributeSet: ");

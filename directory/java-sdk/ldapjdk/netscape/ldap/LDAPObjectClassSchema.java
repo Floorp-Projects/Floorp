@@ -103,7 +103,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
     /**
      * Constructs an object class definition, using the specified
      * information. The type of the object class will be STRUCTURAL.
-     * @param name Name of the object class.
+     * @param name name of the object class
      * @param oid object identifier (OID) of the object class
      * in dotted-string format (for example, "1.2.3.4")
      * @param description description of the object class
@@ -143,9 +143,9 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
      * (the object classes that this object class inherits from)
      * @param required array of names of attributes required
      * in this object class
-     * @param optional array names of optional attributes
+     * @param optional array of names of optional attributes
      * allowed in this object class
-     * @param type Either ABSTRACT, STRUCTURAL, or AUXILIARY
+     * @param type either ABSTRACT, STRUCTURAL, or AUXILIARY
      * @param aliases names which are to be considered aliases for this
      * object class; <CODE>null</CODE> if there are no aliases
      */
@@ -206,9 +206,9 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
     }
 
     /**
-     * Gets the name of the object class that this class inherits from.
-     * @return the name of the object class that this class
-     * inherits from. If it inherits from more than one class, only one
+     * Gets the name of the object class from which this class inherits.
+     * @return the name of the object class from which this class
+     * inherits. If it inherits from more than one class, only one
      * is returned.
      * @see netscape.ldap.LDAPObjectClassSchema#getSuperiors
      */
@@ -221,8 +221,8 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
      * Gets the names of all object classes that this class inherits
      * from. Typically only one, but RFC 2252 allows multiple
      * inheritance.
-     * @return the names of the object classes that this class
-     * inherits from
+     * @return the names of the object classes from which this class
+     * inherits.
      */
     public String[] getSuperiors() {
         return getQualifier( SUPERIOR );
@@ -232,7 +232,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
      * Gets an enumeration of the names of the required attributes for
      * this object class.
      * @return an enumeration of the names of the required attributes
-     * for this object class
+     * for this object class.
      */
     public Enumeration getRequiredAttributes() {
         return must.elements();
@@ -242,7 +242,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
      * Gets an enumeration of names of optional attributes allowed
      * in this object class.
      * @return an enumeration of the names of optional attributes
-     * allowed in this object class
+     * allowed in this object class.
      */
     public Enumeration getOptionalAttributes() {
         return may.elements();
@@ -250,7 +250,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
 
     /**
      * Gets the type of the object class.
-     * @return STRUCTURAL, ABSTRACT, or AUXILIARY
+     * @return STRUCTURAL, ABSTRACT, or AUXILIARY.
      */
     public int getType() {
         int type = STRUCTURAL;
@@ -267,7 +267,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
      *
      * @param quotingBug <CODE>true</CODE> if SUP and SYNTAX values are to
      * be quoted. That is to satisfy bugs in certain LDAP servers.
-     * @return a String ready to be submitted to an LDAP server
+     * @return a String ready for submission to an LDAP server.
      */
     String getValue( boolean quotingBug ) {
         String s = getValuePrefix();
@@ -303,7 +303,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
      * Gets the definition of the object class in a user friendly format.
      * This is the format that the object class definition uses when
      * you print the object class or the schema.
-     * @return definition of the object class in a user friendly format
+     * @return definition of the object class in a user friendly format.
      */
     public String toString() {
         String s = "Name: " + name + "; OID: " + oid +
@@ -351,7 +351,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
      * Creates a list within parentheses, with $ as delimiter
      *
      * @param vals values for list
-     * @return a String with a list of values
+     * @return a String with a list of values.
      */
     protected String vectorToList( Vector vals ) {
         String val = "( ";

@@ -79,10 +79,10 @@ public class LDAPProxiedAuthControl extends LDAPControl {
     /**
      * Constructs an <CODE>LDAPProxiedAuthControl</CODE> object with a
      * DN to use as identity.
-     * @param dn DN to use as identity for execution of a request.
+     * @param dn DN to use as identity for execution of a request
      * @param critical <CODE>true</CODE> if the LDAP operation should be
      * discarded when the server does not support this control (in other
-     * words, this control is critical to the LDAP operation).
+     * words, this control is critical to the LDAP operation)
      * @see netscape.ldap.LDAPControl
      */
     public LDAPProxiedAuthControl( String dn,
@@ -94,8 +94,8 @@ public class LDAPProxiedAuthControl extends LDAPControl {
     /**
      * Create a "flattened" BER encoding of the requested contents,
      * and return it as a byte array.
-     * @param dn The DN to use as identity.
-     * @return The byte array of encoded data.
+     * @param dn the DN to use as an identity
+     * @return the byte array of encoded data.
      */
     private byte[] createSpecification( String dn ) {
         /* A sequence */

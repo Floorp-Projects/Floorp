@@ -61,7 +61,7 @@ public abstract class BERCharacterString extends BERElement {
      * Constructs a character string element from an input stream
      * (for constructed encoding)
      * @param stream input stream
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BERCharacterString(BERTagDecoder decoder, InputStream stream,
@@ -114,7 +114,7 @@ public abstract class BERCharacterString extends BERElement {
      * Constructs a character string element from an input stream
      * (for primitive encoding)
      * @param stream source
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BERCharacterString(InputStream stream, int[] bytes_read)
@@ -171,7 +171,7 @@ public abstract class BERCharacterString extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation
+     * @return string representation.
      */
     public abstract String toString();
 }

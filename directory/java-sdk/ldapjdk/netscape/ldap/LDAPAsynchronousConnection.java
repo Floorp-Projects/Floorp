@@ -19,7 +19,6 @@ package netscape.ldap;
 
 import java.util.*;
 import java.io.*;
-import javax.security.auth.callback.CallbackHandler;
 
 /**
  * Encapsulates a connection to an LDAP server, providing access to the input queue
@@ -33,11 +32,11 @@ public interface LDAPAsynchronousConnection {
      * Adds an entry to the directory.
      *
      * @param entry LDAPEntry object specifying the distinguished name and
-     * attributes of the new entry.
-     * @param listener Handler for messages returned from a server in response
+     * attributes of the new entry
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to the operation.
-     * @return LDAPSearchListener Handler for messages returned from a server
+     * @param cons constraints specific to the operation
+     * @return LDAPSearchListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPEntry
@@ -55,11 +54,11 @@ public interface LDAPAsynchronousConnection {
      * <P>
      *
      * @param entry LDAPEntry object specifying the distinguished name and
-     * attributes of the new entry.
-     * @param listener Handler for messages returned from a server in response
+     * attributes of the new entry
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to the operation.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @param cons constraints specific to the operation
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPEntry
@@ -79,15 +78,15 @@ public interface LDAPAsynchronousConnection {
      * reconnect to the server. If the object had already authenticated, the
      * old authentication is discarded.
      * 
-     * @param dn If non-null and non-empty, specifies that the connection
+     * @param dn if non-null and non-empty, specifies that the connection
      * and all operations through it should be authenticated with dn as the
-     * distinguished name.
-     * @param passwd If non-null and non-empty, specifies that the connection
+     * distinguished name
+     * @param passwd if non-null and non-empty, specifies that the connection
      * and all operations through it should be authenticated with dn as the
-     * distinguished name and passwd as password.
-     * @param listener Handler for messages returned from a server in response
+     * distinguished name and passwd as password
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPResponseListener
@@ -106,16 +105,16 @@ public interface LDAPAsynchronousConnection {
      * reconnect to the server. If the object had already authenticated, the
      * old authentication is discarded.
      * 
-     * @param dn If non-null and non-empty, specifies that the connection
+     * @param dn if non-null and non-empty, specifies that the connection
      * and all operations through it should be authenticated with dn as the
-     * distinguished name.
-     * @param passwd If non-null and non-empty, specifies that the connection
+     * distinguished name
+     * @param passwd if non-null and non-empty, specifies that the connection
      * and all operations through it should be authenticated with dn as the
-     * distinguished name and passwd as password.
-     * @param listener Handler for messages returned from a server in response
+     * distinguished name and passwd as password
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to the operation.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @param cons constraints specific to the operation
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPResponseListener
@@ -132,10 +131,10 @@ public interface LDAPAsynchronousConnection {
     /**
      * Deletes the entry for the specified DN from the directory.
      * 
-     * @param dn Distinguished name of the entry to delete.
-     * @param listener Handler for messages returned from a server in response
+     * @param dn distinguished name of the entry to delete
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPResponseListener
@@ -148,11 +147,11 @@ public interface LDAPAsynchronousConnection {
     /**
      * Deletes the entry for the specified DN from the directory.
      * 
-     * @param dn Distinguished name of the entry to delete.
-     * @param listener Handler for messages returned from a server in response
+     * @param dn distinguished name of the entry to delete
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to the operation.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @param cons constraints specific to the operation
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPResponseListener
@@ -171,11 +170,11 @@ public interface LDAPAsynchronousConnection {
      * The LDAPModification object specifies both the change to be made and
      * the LDAPAttribute value to be changed.
      * 
-     * @param dn Distinguished name of the entry to modify.
-     * @param mod A single change to be made to an entry.
-     * @param listener Handler for messages returned from a server in response
+     * @param dn distinguished name of the entry to modify
+     * @param mod a single change to make to an entry
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPModification
@@ -193,12 +192,12 @@ public interface LDAPAsynchronousConnection {
      * The LDAPModification object specifies both the change to be made and
      * the LDAPAttribute value to be changed.
      * 
-     * @param dn Distinguished name of the entry to modify.
-     * @param mod A single change to be made to an entry.
-     * @param listener Handler for messages returned from a server in response
+     * @param dn distinguished name of the entry to modify
+     * @param mod a single change to make to an entry
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to the operation.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @param cons constraints specific to the operation
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPModification
@@ -216,11 +215,11 @@ public interface LDAPAsynchronousConnection {
      * example, changes attribute values, adds new attribute values, or
      * removes existing attribute values).
      * <P>
-     * @param dn Distinguished name of the entry to modify.
-     * @param mods A set of modifications to be made to the entry.
-     * @param listener Handler for messages returned from a server in response
+     * @param dn distinguished name of the entry to modify
+     * @param mods a set of modifications to make to the entry
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPModificationSet
@@ -236,12 +235,12 @@ public interface LDAPAsynchronousConnection {
      * example, changes attribute values, adds new attribute values, or
      * removes existing attribute values).
      * 
-     * @param dn Distinguished name of the entry to modify.
-     * @param mods A set of modifications to be made to the entry.
-     * @param listener Handler for messages returned from a server in response
+     * @param dn distinguished name of the entry to modify
+     * @param mods a set of modifications to make to the entry
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to the operation.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @param cons constraints specific to the operation
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPModificationSet
@@ -258,13 +257,13 @@ public interface LDAPAsynchronousConnection {
     /**
      * Renames an existing entry in the directory.
      * 
-     * @param dn Current distinguished name of the entry.
-     * @param newRdn New relative distinguished name for the entry.
-     * @param deleteOldRdn   If true, the old name is not retained as an
-     * attribute value.
-     * @param listener Handler for messages returned from a server in response
+     * @param dn current distinguished name of the entry
+     * @param newRdn new relative distinguished name for the entry
+     * @param deleteOldRdn if <code>true</code>, the old name is not retained as an
+     * attribute value
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPResponseListener
@@ -278,13 +277,14 @@ public interface LDAPAsynchronousConnection {
     /**
      * Renames an existing entry in the directory.
      * 
-     * @param dn Current distinguished name of the entry.
-     * @param newRdn New relative distinguished name for the entry.
-     * @param deleteOldRdn   If true, the old name is not retained as an
-     * @param listener Handler for messages returned from a server in response
+     * @param dn current distinguished name of the entry
+     * @param newRdn new relative distinguished name for the entry
+     * @param deleteOldRdn if <code>true</code>, the old name is not retained as an
+     * attribute value
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to the operation.
-     * @return LDAPResponseListener Handler for messages returned from a server
+     * @param cons constraints specific to the operation
+     * @return LDAPResponseListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPResponseListener
@@ -301,26 +301,25 @@ public interface LDAPAsynchronousConnection {
      * Performs the search specified by the criteria that you enter. <P>
      * To abandon the search, use the <CODE>abandon</CODE> method.
      *
-     * @param base The base distinguished name to search from
-     * @param scope The scope of the entries to search.  You can specify one
+     * @param base the base distinguished name from which to search
+     * @param scope the scope of the entries to search.  You can specify one
      * of the following: <P>
      * <UL>
      * <LI><CODE>LDAPv2.SCOPE_BASE</CODE> (search only the base DN) <P>
      * <LI><CODE>LDAPv2.SCOPE_ONE</CODE>
-     * (search only entries under the base DN) <P>
+     * (search only those entries that are one level below the base DN) <P>
      * <LI><CODE>LDAPv2.SCOPE_SUB</CODE>
      * (search the base DN and all entries within its subtree) <P>
      * </UL>
      * <P>
-     * @param filter Search filter specifying the search criteria.
-     * @param attrs List of attributes that you want returned in the
-     * search results.
-     * @param typesOnly If true, returns the names but not the values of the
-     * attributes found.  If false, returns the names and values for
-     * attributes found
-     * @param listener Handler for messages returned from a server in response
+     * @param filter search filter specifying the search criteria
+     * @param attrs list of attributes to return in the search results
+     * @param typesOnly if <code>true</code>, returns the names but not the values of the
+     * attributes found. If <code>false</code>, returns the names and values of the
+     * attributes found.
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @return LDAPSearchListener Handler for messages returned from a server
+     * @return LDAPSearchListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPAsynchronousConnection#abandon(netscape.ldap.LDAPSearchListener)
@@ -340,28 +339,27 @@ public interface LDAPAsynchronousConnection {
      * maximum time to wait for search results). <P>
      * To abandon the search, use the <CODE>abandon</CODE> method.
      *
-     * @param base The base distinguished name to search from
-     * @param scope The scope of the entries to search.  You can specify one
+     * @param base the base distinguished name from which to search
+     * @param scope the scope of the entries to search.  You can specify one
      * of the following: <P>
      * <UL>
      * <LI><CODE>LDAPv2.SCOPE_BASE</CODE> (search only the base DN) <P>
      * <LI><CODE>LDAPv2.SCOPE_ONE</CODE>
-     * (search only entries under the base DN) <P>
+     * (search only those entries that are one level below the base DN) <P>
      * <LI><CODE>LDAPv2.SCOPE_SUB</CODE>
      * (search the base DN and all entries within its subtree) <P>
      * </UL>
      * <P>
-     * @param filter Search filter specifying the search criteria.
-     * @param attrs List of attributes that you want returned in the search
-     * results.
-     * @param typesOnly If true, returns the names but not the values of the
-     * attributes found.  If false, returns the names and  values for
+     * @param filter search filter specifying the search criteria
+     * @param attrs list of attributes to return in the search results
+     * @param typesOnly if <code>true</code>, returns the names but not the values of the
+     * attributes found.  If <code>false</code>, returns the names and  values for
      * attributes found.
-     * @param listener Handler for messages returned from a server in response
+     * @param listener handler for messages returned from a server in response
      * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to this search (for example, the
-     * maximum number of entries to return).
-     * @return LDAPSearchListener Handler for messages returned from a server
+     * @param cons constraints specific to this search (for example, the
+     * maximum number of entries to return)
+     * @return LDAPSearchListener handler for messages returned from a server
      * in response to this request.
      * @exception LDAPException Failed to send request.
      * @see netscape.ldap.LDAPAsynchronousConnection#abandon(netscape.ldap.LDAPSearchListener)
@@ -376,18 +374,18 @@ public interface LDAPAsynchronousConnection {
                                      throws LDAPException;
     
     /**
-     * Compare an attribute value with one in the directory. The result can 
-     * be obtained by calling <CODE>getResultCode</CODE> on the 
+     * Compares an attribute value with one in the directory. The result
+     * is obtained by calling <CODE>getResultCode</CODE> on the 
      * <CODE>LDAPResponse</CODE> from the <CODE>LDAPResponseListener</CODE>.
      * The code will be <CODE>LDAPException.COMPARE_TRUE</CODE> or 
      * <CODE>LDAPException.COMPARE_FALSE</CODE>. 
      * 
-     * @param dn Distinguished name of the entry to compare.
-     * @param attr Attribute with a value to compare.
-     * @param listener Handler for messages returned from a server in response
-     * to this request. If it is null, a listener object is created internally.
-     * @return LDAPResponseListener Handler for messages returned from a server
-     * in response to this request.
+     * @param dn distinguished name of the entry to compare
+     * @param attr attribute with a value to compare
+     * @param listener handler for messages returned from a server in response
+     * to the specified request. If it is null, a listener object is created internally.
+     * @return LDAPResponseListener handler for messages returned from a server
+     * in response to the specified request.
      * @exception LDAPException Failed to send request.
      */
     public LDAPResponseListener compare(String dn, 
@@ -396,19 +394,19 @@ public interface LDAPAsynchronousConnection {
                                         throws LDAPException;
     
     /**
-     * Compare an attribute value with one in the directory. The result can 
-     * be obtained by calling <CODE>getResultCode</CODE> on the 
+     * Compares an attribute value with one in the directory. The result
+     * is obtained by calling <CODE>getResultCode</CODE> on the 
      * <CODE>LDAPResponse</CODE> from the <CODE>LDAPResponseListener</CODE>.
      * The code will be <CODE>LDAPException.COMPARE_TRUE</CODE> or 
      * <CODE>LDAPException.COMPARE_FALSE</CODE>. 
      * 
-     * @param dn Distinguished name of the entry to compare.
-     * @param attr Attribute with a value to compare.
-     * @param listener Handler for messages returned from a server in response
-     * to this request. If it is null, a listener object is created internally.
-     * @param cons Constraints specific to this operation.
-     * @return LDAPResponseListener Handler for messages returned from a server
-     * in response to this request.
+     * @param dn distinguished name of the entry to compare
+     * @param attr attribute with a value to compare
+     * @param listener handler for messages returned from a server in response
+     * to the specified request. If it is null, a listener object is created internally.
+     * @param cons constraints specific to this operation
+     * @return LDAPResponseListener handler for messages returned from a server
+     * in response to the specified request.
      * @exception LDAPException Failed to send request.
      */
     public LDAPResponseListener compare(String dn, 
@@ -421,7 +419,7 @@ public interface LDAPAsynchronousConnection {
      * Cancels the ldap request with the specified id and discards
      * any results already received.
      * 
-     * @param id A LDAP request id
+     * @param id an LDAP request ID
      * @exception LDAPException Failed to send request.
      */
     public void abandon(int id) throws LDAPException;
@@ -430,7 +428,7 @@ public interface LDAPAsynchronousConnection {
      * Cancels all outstanding search requests associated with this
      * LDAPSearchListener object and discards any results already received.
      * 
-     * @param searchlistener A search listener returned from a search. 
+     * @param searchlistener a search listener returned from a search
      * @exception LDAPException Failed to send request.
      */
     public void abandon(LDAPSearchListener searchlistener)

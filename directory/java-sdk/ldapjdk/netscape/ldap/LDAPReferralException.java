@@ -44,7 +44,7 @@ public class LDAPReferralException extends LDAPException {
     /**
      * Constructs a default exception with a specified string as
      * additional information. This form is used for lower-level errors.
-     * @param message The additional error information
+     * @param message the additional error information
      */
     public LDAPReferralException( String message ) {
         super( message );
@@ -54,7 +54,7 @@ public class LDAPReferralException extends LDAPException {
      * Constructs a default exception with a specified string as
      * additional information. This form is used for higher-level LDAP
      * operational errors.
-     * @param message The additional error information
+     * @param message the additional error information
      * @param resultCode result code
      * @param serverErrorMessage error message
      */
@@ -67,10 +67,10 @@ public class LDAPReferralException extends LDAPException {
      * Constructs an exception with a list of LDAP URLs to other LDAP servers.
      * This list of referrals points the client to LDAP servers that may
      * contain the requested entries.
-     * @param message The additional error information
+     * @param message the additional error information
      * @param resultCode result code
-     * @param referrals Array of LDAP URLs identifying other LDAP servers that
-     * may contain the requested entries.
+     * @param referrals array of LDAP URLs identifying other LDAP servers that
+     * may contain the requested entries
      */
     public LDAPReferralException( String message, int resultCode,
         String referrals[] ) {
@@ -86,7 +86,7 @@ public class LDAPReferralException extends LDAPException {
      * to follow referrals automatically, any operation that results in a referral will use
      * this list to create new connections to the LDAP servers in this list.
      *
-     * @return List of LDAP URLs to other LDAP servers.
+     * @return list of LDAP URLs to other LDAP servers.
      */
     public LDAPUrl[] getURLs() {
         if (getLDAPErrorMessage() == null) {

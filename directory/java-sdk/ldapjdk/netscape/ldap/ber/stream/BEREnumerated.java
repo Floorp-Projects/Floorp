@@ -50,9 +50,9 @@ public class BEREnumerated extends BERIntegral {
 
     /**
      * Constructs an enumerated element with the input stream.
-     * @param stream input stream to decode from.
+     * @param stream input stream from which to decode
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from array.
+     * number of bytes read from array
      * @exception IOException failed to construct
      */
     public BEREnumerated(InputStream stream, int[] bytes_read)
@@ -70,7 +70,7 @@ public class BEREnumerated extends BERIntegral {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         return "Enumerated {" + getValue() + "}";

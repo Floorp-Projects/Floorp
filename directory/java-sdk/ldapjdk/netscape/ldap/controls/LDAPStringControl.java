@@ -31,12 +31,12 @@ abstract class LDAPStringControl extends LDAPControl {
     }
 
     /**
-     * Constructs a <CODE>LDAPStringControl</CODE> object, and stores the 
+     * Constructs an <CODE>LDAPStringControl</CODE> object, and stores the 
      * value as a string. To retrieve this string value, use 
      * <CODE>getMsg()</CODE>.
-     * @param oid The oid of defining this control.
-     * @param critical True if this control is critical.
-     * @param value The value associated with this control.
+     * @param oid the oid of this control
+     * @param critical <code>true</code> if this control is critical to the search
+     * @param value the value associated with this control
      * @see netscape.ldap.LDAPcontrol
      */
     public LDAPStringControl( String oid, boolean critical, byte[] value ) {
@@ -60,13 +60,13 @@ abstract class LDAPStringControl extends LDAPControl {
      * <CODE>LDAPConnection</CODE> class.
      * <P>
      *
-     * @param controls An array of <CODE>LDAPControl</CODE> objects,
+     * @param controls an array of <CODE>LDAPControl</CODE> objects,
      * representing the controls returned by the server
-     * after a search.  To get these controls, use the
+     * after a search. To get these controls, use the
      * <CODE>getResponseControls</CODE> method of the
      * <CODE>LDAPConnection</CODE> class.
-     * @param type The OID of the control to look for.
-     * @return A message string, or null if the server did
+     * @param type the OID of the control to look for
+     * @return a message string, or null if the server did
      * not return a string.
      * @see netscape.ldap.LDAPConnection#getResponseControls
      */

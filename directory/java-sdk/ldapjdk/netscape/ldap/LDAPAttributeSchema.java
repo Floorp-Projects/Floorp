@@ -21,12 +21,11 @@ import java.util.*;
 
 /**
  * The definition of an attribute type in the schema.
- * <A HREF="http://ds.internic.net/rfc/rfc2252.txt"
+ * <A HREF="http://www.ietf.org/rfc/rfc2252.txt"
  * TARGET="_blank">RFC 2252, Lightweight Directory Access Protocol (v3):
  * Attribute Syntax Definitions</A> covers the types of information
- * that need to be specified in the definition of an attribute type.
- * According to the RFC, the description of an attribute type can
- * include the following information:
+ * to specify when defining an attribute type. According to the RFC, 
+ * the description of an attribute type can include the following:
  * <P>
  *
  * <UL>
@@ -36,7 +35,7 @@ import java.util.*;
  * <LI>the name of the parent attribute type
  * <LI>the syntax used by the attribute (for example,
  * <CODE>cis</CODE> or <CODE>int</CODE>)
- * <LI>an indication of whether or not the attribute type is single-valued
+ * <LI>an indication of whether the attribute type is single-valued
  * or multi-valued
  * </UL>
  * <P>
@@ -48,7 +47,7 @@ import java.util.*;
  * returns schema information as an object with attribute values in this
  * format.
  * <P>
-
+ *
  * There a number of additional optional description fields which
  * are not explicitly accessible through LDAPAttributeSchema, but which
  * can be managed with setQualifier, getQualifier, and getQualifierNames:
@@ -65,8 +64,8 @@ import java.util.*;
  * </UL>
  * <P>
  *
- * You can get the name, OID, and description of this attribute type
- * definition by using the <CODE>getName</CODE>, <CODE>getOID</CODE>, and
+ * To get the name, OID, and description of this attribute type
+ * definition, use the <CODE>getName</CODE>, <CODE>getOID</CODE>, and
  * <CODE>getDescription</CODE> methods inherited from the abstract class
  * <CODE>LDAPSchemaElement</CODE>. Optional and custom qualifiers are
  * accessed with <CODE>getQualifier</CODE> and <CODE>getQualifierNames</CODE>
@@ -201,13 +200,13 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
     /**
      * Constructs an attribute type definition based on a description in
      * the AttributeTypeDescription format. For information on this format,
-     * (see <A HREF="http://ds.internic.net/rfc/rfc2252.txt"
+     * (see <A HREF="http://www.ietf.org/rfc/rfc2252.txt"
      * TARGET="_blank">RFC 2252, Lightweight Directory Access Protocol (v3):
      * Attribute Syntax Definitions</A>.  This is the format that LDAP servers
      * and clients use to exchange schema information.  (For example, when
      * you search an LDAP server for its schema, the server returns an entry
      * with the attributes "objectclasses" and "attributetypes".  The
-     * values of the "attributetypes" attribute are attribute type descriptions
+     * values of "attributetypes" are attribute type descriptions
      * in this format.)
      * <P>
      *
@@ -227,7 +226,7 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
     /**
      * Determines if the attribute type is single-valued.
      * @return <code>true</code> if single-valued,
-     * <code>false</code> if multi-valued
+     * <code>false</code> if multi-valued.
      */
     public boolean isSingleValued() {
         return (properties != null) ? properties.containsKey( SINGLE ) :
@@ -237,8 +236,8 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
     /**
      * Gets the name of the attribute that this attribute inherits from,
      * if any.
-     * @return the name of the attribute that this attribute
-     * inherits from, or <CODE>null</CODE> if it does not have a superior
+     * @return the name of the attribute from which this attribute
+     * inherits, or <CODE>null</CODE> if it does not have a superior.
      */
     public String getSuperior() {
         String[] val = getQualifier( SUPERIOR );
@@ -247,7 +246,7 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
 
     /**
      * Gets the syntax of the schema element
-     * @return One of the following values:
+     * @return one of the following values:
      * <UL>
      * <LI><CODE>cis</CODE> (case-insensitive string)
      * <LI><CODE>ces</CODE> (case-exact string)
@@ -273,11 +272,11 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
     }
 
     /**
-     * Prepare a value in RFC 2252 format for submitting to a server
+     * Prepares a value in RFC 2252 format for submission to a server
      *
      * @param quotingBug <CODE>true</CODE> if SUP and SYNTAX values are to
-     * be quoted; that is to satisfy bugs in certain LDAP servers.
-     * @return a String ready to be submitted to an LDAP server
+     * be quoted. This is required to work with bugs in certain LDAP servers.
+     * @return a String ready for submission to an LDAP server.
      */
     String getValue( boolean quotingBug ) {
         String s = getValuePrefix();
@@ -315,8 +314,8 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
     /**
      * Gets the definition of the attribute type in a user friendly format.
      * This is the format that the attribute type definition uses when
-     * you print the attribute type or the schema.
-     * @return definition of the attribute type in a user friendly format
+     * printing the attribute type or the schema.
+     * @return definition of the attribute type in a user friendly format.
      */
     public String toString() {
         String s = "Name: " + name + "; OID: " + oid + "; Type: ";

@@ -65,7 +65,7 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Constructs an empty byte buffer with the specified initial length.
-     * @param length Initial number of bytes that this buffer should hold.
+     * @param length initial number of bytes that this buffer should hold
      */
     public ByteBuf(int length) {
         value = new byte[length];
@@ -74,7 +74,7 @@ public final class ByteBuf implements Serializable {
     /**
      * Constructs a byte buffer with the specified initial value.
      * The new byte buffer is 16 bytes longer than the initial value.
-     * @param str Initial value that this buffer should hold.
+     * @param str initial value that this buffer should hold
      */
     public ByteBuf(String str) {
         this(str.length() + 16);
@@ -85,12 +85,9 @@ public final class ByteBuf implements Serializable {
      * Constructs a byte buffer with the specified length.
      * An initial value is stored in this buffer, starting
      * at the specified offset.
-     * @param bytes Array of bytes that you want to store in
-     * the buffer initially.
-     * @param offset Index in the array where you want the
-     * initial value to start.
-     * @param length Length of the buffer that you want to
-     * allocate.
+     * @param bytes array of bytes to initially store in the buffer
+     * @param offset index where you want the initial value to start in the array
+     * @param length length of the buffer to allocate
      */
     public ByteBuf(byte bytes[], int offset, int length) {
         value = new byte[length];
@@ -117,8 +114,8 @@ public final class ByteBuf implements Serializable {
     /**
      * Ensures that the capacity of the buffer is at least equal to the
      * specified minimum capacity.
-     * @param minimumCapacity The minimum number of bytes that you want
-     * the byte buffer to hold.
+     * @param minimumCapacity the minimum number of bytes that you want
+     * the byte buffer to hold
      */
     public void ensureCapacity(int minimumCapacity) {
         int maxCapacity = value.length;
@@ -140,7 +137,7 @@ public final class ByteBuf implements Serializable {
      * shorter than the current length, bytes at the end of the buffer
      * are lost. If you increase the length of the buffer, the values
      * of the new bytes in the buffer are set to 0.
-     * @param newLength The new length of the buffer
+     * @param newLength the new length of the buffer
      * @exception StringIndexOutOfBoundsException  You have specified
      * an invalid length.
      */
@@ -160,7 +157,7 @@ public final class ByteBuf implements Serializable {
     /**
      * Returns the byte at the specified index.  The value of an index
      * can range from 0 to length - 1.
-     * @param index Index of the byte you want to find.
+     * @param index index of the byte to find
      * @exception StringIndexOutOfBoundsException You have specified an
      * invalid index.
      */
@@ -178,14 +175,14 @@ public final class ByteBuf implements Serializable {
      * bytes are inserted in the byte array at the index specified by
      * <CODE>dstBegin</CODE>. Both <CODE>srcBegin</CODE> and
      * <CODE>srcEnd</CODE> must be valid indexes in the buffer.
-     * @param srcBegin Index identifying the start of the section
-     * of the byte buffer that you want to copy.
-     * @param srcEnd Index identifying the end of the section
-     * of the byte buffer that you want to copy. (Copy all bytes
+     * @param srcBegin index identifying the start of the section
+     * of the byte buffer to copy
+     * @param srcEnd index identifying the end of the section
+     * of the byte buffer to copy. (Copy all bytes
      * before the byte identified by this index.)
-     * @param dst   The byte array to copy the data to
-     * @param dstBegin  Index of the byte array identifying the
-     * location where you want the byte buffer copied to.
+     * @param dst the byte array to copy the data to
+     * @param dstBegin index of the byte array identifying the
+     * location to which the byte buffer is copied
      * @exception StringIndexOutOfBoundsException You specified an invalid index into the buffer.
      */
     public void getBytes(int srcBegin, int srcEnd, byte dst[], int dstBegin) {
@@ -202,8 +199,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Sets the value of the byte at the specified index.
-     * @param index The index of the byte that you want to set.
-     * @param b The new value that you want to set.
+     * @param index the index of the byte to set
+     * @param b the new value to set
      * @exception StringIndexOutOfBoundsException You have specified
      * an invalid index.
      */
@@ -216,8 +213,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends an object to the end of this byte buffer.
-     * @param obj The object that you want appended to the buffer.
-     * @return  The same <CODE>ByteBuf</CODE> object (not a new object)
+     * @param obj the object to append to the buffer
+     * @return the same <CODE>ByteBuf</CODE> object (not a new object)
      * with the string representation of the specified object appended.
      */
     public ByteBuf append(Object obj) {
@@ -233,9 +230,9 @@ public final class ByteBuf implements Serializable {
      * If you want to retain all bits in the character (not just
      * the lower 8 bits), use <CODE>append(String.getBytes())</CODE>
      * instead.
-     * @param str The string that you want appended to the buffer.
-     * @return  The same <CODE>ByteBuf</CODE> object (not a new object)
-     * with the specified string appended.
+     * @param str the string that you want appended to the buffer
+     * @return the same <CODE>ByteBuf</CODE> object (not a new object)
+     * with the specified string appended
      */
     public ByteBuf append(String str) {
         if (str == null) {
@@ -252,8 +249,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends an array of bytes to the end of this byte buffer.
-     * @param str The array of bytes that you want appended to this buffer.
-     * @return  The same <CODE>ByteBuf</CODE> object (not a new object)
+     * @param str the array of bytes to append to this buffer
+     * @return the same <CODE>ByteBuf</CODE> object (not a new object)
      * with the specified bytes appended.
      */
     public ByteBuf append(byte str[]) {
@@ -266,12 +263,12 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends a part of an array of bytes to the end of this byte buffer.
-     * @param str The array of bytes that you want appended to this buffer.
-     * @param offset The index in the array marking the start of the
-     * section that you want to copy.
-     * @param len The number of bytes that you want to add.
-     * @return  The same <CODE>ByteBuf</CODE> object (not a new object)
-     * with the specified section of the byte array appended.
+     * @param str the array of bytes to append to this buffer
+     * @param offset the index in the array marking the start of the
+     * section to copy
+     * @param len the number of bytes to add
+     * @return the same <CODE>ByteBuf</CODE> object (not a new object)
+     * with the specified section of the byte array appended
      */
     public ByteBuf append(byte str[], int offset, int len) {
         ensureCapacity(count + len);
@@ -282,8 +279,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends a byte buffer to the end of this byte buffer.
-     * @param buf The byte buffer that you want appended to this buffer.
-     * @return  The original <CODE>ByteBuf</CODE> object (not a new object)
+     * @param buf the byte buffer to append to this buffer
+     * @return the original <CODE>ByteBuf</CODE> object (not a new object)
      * with bytes from the specified byte buffer appended.
      */
     public ByteBuf append(ByteBuf buf) {
@@ -293,8 +290,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends a boolean to the end of this byte buffer.
-     * @param b The boolean value that you want appended to this buffer.
-     * @return  The original <CODE>ByteBuf</CODE> object (not a new object)
+     * @param b the boolean value that you want appended to this buffer
+     * @return  the original <CODE>ByteBuf</CODE> object (not a new object)
      * with bytes from the string representation of the boolean value appended.
      */
     public ByteBuf append(boolean b) {
@@ -303,8 +300,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends a byte to the end of this byte buffer.
-     * @param ch  The byte that you want appended to this buffer.
-     * @return  The original <CODE>ByteBuf</CODE> object (not a new object)
+     * @param ch the byte to append to this buffer
+     * @return the original <CODE>ByteBuf</CODE> object (not a new object)
      * with the specified byte appended.
      */
     public ByteBuf append(byte b) {
@@ -315,8 +312,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends an integer to the end of this byte buffer.
-     * @param i The integer that you want appended to this byte buffer.
-     * @return  The original <CODE>ByteBuf</CODE> object (not a new object)
+     * @param i the integer to append to this byte buffer
+     * @return the original <CODE>ByteBuf</CODE> object (not a new object)
      * with the string representation of the specified integer appended.
      */
     public ByteBuf append(int i) {
@@ -325,9 +322,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends a <CODE>long</CODE> value to the end of this byte buffer.
-     * @param l The <CODE>long</CODE> value that you want appended
-     * to this buffer.
-     * @return  The original <CODE>ByteBuf</CODE> object (not a new object)
+     * @param l the <CODE>long</CODE> value to append to this buffer
+     * @return the original <CODE>ByteBuf</CODE> object (not a new object)
      * with the string representation of the specified <CODE>long</CODE>
      * value appended.
      */
@@ -337,9 +333,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends a <CODE>float</CODE> to the end of this byte buffer.
-     * @param f The <CODE>float</CODE> value that you want appended
-     * to this buffer.
-     * @return  The original <CODE>ByteBuf</CODE> object (not a new object)
+     * @param f the <CODE>float</CODE> value to append to this buffer
+     * @return the original <CODE>ByteBuf</CODE> object (not a new object)
      * with the string representation of the specified <CODE>float</CODE>
      * value appended.
      */
@@ -349,9 +344,8 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Appends a <CODE>double</CODE> to the end of this byte buffer.
-     * @param d The <CODE>double</CODE> value that you want appended to
-     * this buffer.
-     * @return  The original <CODE>ByteBuf</CODE> object (not a new object)
+     * @param d the <CODE>double</CODE> value to append to this buffer
+     * @return the original <CODE>ByteBuf</CODE> object (not a new object)
      * with the string representation of the specified <CODE>double</CODE>
      * value appended.
      */
@@ -361,7 +355,7 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Returns the data in the byte buffer to a string.
-     * @return  The string representation of the data in the byte buffer.
+     * @return the string representation of the data in the byte buffer.
      */
     public String toString() {
         return new String(value, 0, count);
@@ -369,7 +363,7 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Returns the data in the byte buffer as a byte array.
-     * @return  The byte array containing data in the byte buffer.
+     * @return the byte array containing data in the byte buffer.
      */
     public byte[] toBytes() {
         byte[] b = new byte[count];
@@ -380,11 +374,11 @@ public final class ByteBuf implements Serializable {
     /**
      * Invokes the <CODE>InputStream.read</CODE> method and appends the
      * the bytes read to this byte buffer.
-     * @param file The input stream that you want to read the bytes from.
-     * @param max_bytes The maximum number of bytes to read into the
-     * byte buffer.
-     * @return The number of bytes read, or -1 if there is no more data
-     * to be read.
+     * @param file the input stream from which to read the bytes
+     * @param max_bytes the maximum number of bytes to read into the
+     * byte buffer
+     * @return the number of bytes read, or -1 if there is no more data
+     * to read.
      * @exception IOException An I/O error has occurred.
      */
     public int read(InputStream file, int max_bytes)
@@ -398,12 +392,12 @@ public final class ByteBuf implements Serializable {
     /**
      * Invokes the <CODE>RandomAccessFile.read</CODE> method, appending
      * the bytes read to this byte buffer.
-     * @param file The <CODE>RandomAccessFile</CODE> object that you want
-     * to read the bytes from.
-     * @param max_bytes The maximum number of bytes to read into the
-     * byte buffer.
-     * @return The number of bytes read, or -1 if there is no more data
-     * to be read.
+     * @param file the <CODE>RandomAccessFile</CODE> object from which 
+     * to read the bytes
+     * @param max_bytes the maximum number of bytes to read into the
+     * byte buffer
+     * @return the number of bytes read, or -1 if there is no more data
+     * to read.
      * @exception IOException An I/O error has occurred.
      */
     public int read(RandomAccessFile file, int max_bytes)
@@ -416,7 +410,7 @@ public final class ByteBuf implements Serializable {
 
     /**
      * Writes the contents of the byte buffer to the specified output stream.
-     * @param out The output stream.
+     * @param out the output stream
      * @exception IOException An I/O error has occurred.
      */
     public void write(OutputStream out) throws IOException {
@@ -426,8 +420,8 @@ public final class ByteBuf implements Serializable {
     /**
      * Writes the contents of the byte buffer to the specified
      * <CODE>RandomAccessFile</CODE> object.
-     * @param out The <CODE>RandomAccessFile</CODE> object.
-     * @exception IOException An I/O error has occurred.
+     * @param out the <CODE>RandomAccessFile</CODE> object
+     * dexception IOException An I/O error has occurred.
      */
     public void write(RandomAccessFile out) throws IOException {
         out.write(value, 0, count);

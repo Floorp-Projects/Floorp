@@ -70,9 +70,9 @@ public class LDIFRecord implements Serializable {
     /**
      * Constructs a new <CODE>LDIFRecord</CODE> object with the
      * specified content.
-     * @param dn Distinguished name of the entry associated with
-     * the record.
-     * @param content Content of the LDIF record.  You can specify
+     * @param dn distinguished name of the entry associated with
+     * the record
+     * @param content content of the LDIF record.  You can specify
      * an object of the <CODE>LDIFAttributeContent</CODE>,
      * <CODE>LDIFAddContent</CODE>, <CODE>LDIFModifyContent</CODE>,
      * or <CODE>LDIFDeleteContent</CODE> classes.
@@ -88,7 +88,7 @@ public class LDIFRecord implements Serializable {
 
     /**
      * Retrieves the distinguished name of the LDIF record.
-     * @return The distinguished name of the LDIF record.
+     * @return the distinguished name of the LDIF record.
      */
     public String getDN() {
         return m_dn;
@@ -162,7 +162,7 @@ public class LDIFRecord implements Serializable {
      * ...
      * </PRE>
      *
-     * @return The content of the LDIF record.
+     * @return the content of the LDIF record.
      * @see netscape.ldap.util.LDIFAddContent
      * @see netscape.ldap.util.LDIFModifyContent
      * @see netscape.ldap.util.LDIFDeleteContent
@@ -174,9 +174,9 @@ public class LDIFRecord implements Serializable {
 
     /**
      * Retrieves the list of controls specified in the content
-     * of the LDIF record, if any
-     * @return An array of <CODE>LDAPControl</CODE> objects that
-     * represent any controls specified in the the LDIF record,
+     * of the LDIF record, if any.
+     * @return an array of <CODE>LDAPControl</CODE> objects that
+     * represent any controls specified in the LDIF record,
      * or <CODE>null</CODE> if none were specified.
      */
     public LDAPControl[] getControls() {
@@ -186,7 +186,7 @@ public class LDIFRecord implements Serializable {
     /**
      * Gets the string representation of the <CODE>LDIFRecord</CODE>
      * object.
-     * @return The string representation of the LDIF record.
+     * @return the string representation of the LDIF record.
      */
     public String toString() {
         return "LDIFRecord {dn=" + m_dn + ", content=" + m_content + "}";

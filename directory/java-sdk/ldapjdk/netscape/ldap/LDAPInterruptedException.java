@@ -32,7 +32,7 @@ public class LDAPInterruptedException extends LDAPException {
      * the <CODE>toString()</CODE> method.
      * <P>
      *
-     * @param message The additional information.
+     * @param message the additional information
      * @see netscape.ldap.LDAPInterruptedException#toString()
      */
     LDAPInterruptedException( String message ) {

@@ -148,7 +148,7 @@ public class BERReal extends BERElement {
                 contents_length_left = length - 1 - num_exponent_octets;
                 number = readUnsignedBinary(stream, bytes_read, contents_length_left);
 
-                mantissa = sign * number * 2 * f;
+                mantissa = (int)(sign * number * Math.pow(2, f));
                 m_value = mantissa * (float)Math.pow((double)base,(double)exponent);
             } else {
                 /* bits 8 + 7 = 00 */

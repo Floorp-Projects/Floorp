@@ -176,11 +176,11 @@ public class LDAPControl implements Cloneable {
      * data to be used by the control.
      * <P>
      *
-     * @param id The object ID (OID) identifying the control.
+     * @param id the object ID (OID) identifying the control
      * @param critical <CODE>true</CODE> if the LDAP operation should be
      * cancelled when the server does not support this control (in other
-     * words, this control is critical to the LDAP operation).
-     * @param vals Control-specific data.
+     * words, this control is critical to the LDAP operation)
+     * @param vals control-specific data
      * @see netscape.ldap.LDAPConstraints#setClientControls
      * @see netscape.ldap.LDAPConstraints#setServerControls
      */
@@ -194,7 +194,7 @@ public class LDAPControl implements Cloneable {
     
     /**
      * Gets the object ID (OID) of the control.
-     * @return Object ID (OID) of the control.
+     * @return object ID (OID) of the control.
      */
     public String getID() {
         return m_oid;
@@ -211,7 +211,7 @@ public class LDAPControl implements Cloneable {
 
     /**
      * Gets the data in the control.
-     * @return Returns the data in the control as a byte array.
+     * @return the data in the control as a byte array.
      */
     public byte[] getValue() {
         return m_value;
@@ -219,7 +219,7 @@ public class LDAPControl implements Cloneable {
 
     /**
      * Gets the ber representation of control.
-     * @return ber representation of control
+     * @return ber representation of control.
      */
     BERElement getBERElement() {
         BERSequence seq = new BERSequence();
@@ -238,9 +238,9 @@ public class LDAPControl implements Cloneable {
      * <CODE>LDAPControl</CODE>, and should implement the <CODE>LDAPControl(
      * String oid, boolean critical, byte[] value)</CODE> constructor to 
      * instantiate the control. 
-     * @param oid The string representation of the oid.
-     * @param controlClass The class that instantatiates the control associated
-     * with oid.
+     * @param oid the string representation of the oid
+     * @param controlClass the class that instantatiates the control associated
+     * with oid
      * @exception netscape.ldap.LDAPException If the class parameter is not
      * a subclass of <CODE>LDAPControl</CODE> or the class parameter does not
      * implement the <CODE>LDAPControl(String oid, boolean critical, byte[] value)
@@ -284,8 +284,8 @@ public class LDAPControl implements Cloneable {
 
     /**
      * Returns the <CODE>Class</CODE> that has been registered to oid.
-     * @param oid A String that associates the control class to a control.
-     * @return A <CODE>Class</CODE> that can instantiate a control of the
+     * @param oid a String that associates the control class to a control
+     * @return a <CODE>Class</CODE> that can instantiate a control of the
      * type specified by oid.
      * @see netscape.ldap.LDAPControl#register
      *
@@ -304,10 +304,10 @@ public class LDAPControl implements Cloneable {
      * no Class is found for the given control, or an exception occurs when 
      * attempting to instantiate the control, a basic <CODE>LDAPControl</CODE>
      * is instantiated using the parameters. 
-     * @param oid The oid of the control to be instantiated.
-     * @param critical <CODE>true</CODE> if this is a critical control.
-     * @param value the byte value for the control.
-     * @return A newly instantiated <CODE>LDAPControl</CODE>.
+     * @param oid the oid of the control to instantiate
+     * @param critical <CODE>true</CODE> if this is a critical control
+     * @param value the byte value for the control
+     * @return a newly instantiated <CODE>LDAPControl</CODE>.
      * @see netscape.ldap.LDAPControl#register
      */ 
   protected static LDAPControl createControl(String oid, boolean critical,
@@ -359,13 +359,13 @@ public class LDAPControl implements Cloneable {
      * no Class is found for the given control, or an exception occurs when 
      * attempting to instantiate the control, a basic <CODE>LDAPControl</CODE>
      * is instantiated using the parameters.
-     * @param el The <CODE>BERElement</CODE> containing the control.
-     * @return A newly instantiated <CODE>LDAPControl</CODE>.
+     * @param el the <CODE>BERElement</CODE> containing the control
+     * @return a newly instantiated <CODE>LDAPControl</CODE>.
      * @see netscape.ldap.LPAPControl#register
      * 
      * Note:
      * This code was extracted from <CODE>JDAPControl(BERElement el)</CODE>
-     * constructor
+     * constructor.
      */ 
   static LDAPControl parseControl(BERElement el) {
         BERSequence s = (BERSequence)el;
@@ -400,8 +400,8 @@ public class LDAPControl implements Cloneable {
      * <P>
      * If an exception occurs when instantiating a control, that control is 
      * returned as a basic <CODE>LDAPControl</CODE>.
-     * @param data The LDAP message fragment in raw BER format.
-     * @return A <CODE>LDAPControl</CODE> array containing all of the controls
+     * @param data the LDAP message fragment in raw BER format
+     * @return an <CODE>LDAPControl</CODE> array containing all of the controls
      * from the message fragment.
      * @exception java.lang.IOException If the data passed to this method
      * is not a valid LDAP message fragment.
@@ -438,7 +438,7 @@ public class LDAPControl implements Cloneable {
 
     /**
      * Creates a copy of the control.
-     * @return Copy of the control.
+     * @return copy of the control.
      */
     public Object clone() {
         byte[] vals = null;
@@ -455,8 +455,8 @@ public class LDAPControl implements Cloneable {
     /**
      * Create a "flattened" BER encoding from a BER,
      * and return it as a byte array.
-     * @param ber A BER encoded sequence.
-     * @return The byte array of encoded data.
+     * @param ber a BER encoded sequence
+     * @return the byte array of encoded data.
      */
     protected byte[] flattenBER( BERSequence ber ) {
         /* Suck out the data and return it */
@@ -472,7 +472,7 @@ public class LDAPControl implements Cloneable {
     /**
      * Return a string representation of the control for debugging
      *
-     * @return A string representation of the control
+     * @return a string representation of the control.
      */
     public String toString() {
         String s = getID() + ' ' + isCritical();

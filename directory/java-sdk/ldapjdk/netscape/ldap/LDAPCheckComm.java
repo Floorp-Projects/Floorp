@@ -18,18 +18,19 @@
 package netscape.ldap;
 
 /**
- * This static class checks if the caller is the applet running in the
- * communicator. If so, then it returns the appropriate method.
+ * This static class checks if the caller is an applet running in
+ * Netscape Communicator. If so, it returns the appropriate method.
  */
 class LDAPCheckComm {
 
     /**
-     * It returns the method whose name matches the specified argument.
-     * @param classPackage The class package
-     * @param name The method name
-     * @return The method
-     * @exception LDAPException Gets thrown it the method is not found or
-     *            the caller is not an applet running in the communicator
+     * Returns the method whose name matches the specified argument.
+     * @param classPackage the class package
+     * @param name the method name
+     * @return the method.
+     * @exception LDAPException Gets thrown if the method is not found or
+     *            the caller is not an applet running in Netscape
+     *            Communicator.
      */
     static java.lang.reflect.Method getMethod(String classPackage, String name) throws LDAPException {
       SecurityManager sec = System.getSecurityManager();

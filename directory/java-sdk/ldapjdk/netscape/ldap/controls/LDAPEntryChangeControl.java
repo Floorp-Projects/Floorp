@@ -74,11 +74,11 @@ public class LDAPEntryChangeControl extends LDAPControl {
      * Contructs an <CODE>LDAPEntryChangedControl</CODE> object. 
      * This constructor is used by <CODE>LDAPControl.register</CODE> to 
      * instantiate entry change controls.
-     * @param oid This parameter must be 
+     * @param oid this parameter must be 
      * <CODE>LDAPEntryChangeControl.ENTRYCHANGED</CODE>
-     * or a <CODE>LDAPException</CODE> is thrown.
-     * @param critical True if this control is critical.
-     * @param value The value associated with this control.
+     * or an <CODE>LDAPException</CODE> is thrown
+     * @param critical <code>true</code> if this control is critical
+     * @param value the value associated with this control
      * @exception netscape.ldap.LDAPException If oid is not 
      * <CODE>LDAPEntryChangeControl.ENTRYCHANGED</CODE>.
      * @exception java.io.IOException If value is not a valid BER sequence.
@@ -129,7 +129,7 @@ public class LDAPEntryChangeControl extends LDAPControl {
      * Sets the change number (which identifies the record of the change
      * in the server's change log) in this "entry change notification"
      * control.
-     * @param num Change number that you want to set.
+     * @param num change number to set
      * @see netscape.ldap.controls.LDAPEntryChangeControl#getChangeNumber
      */
     public void setChangeNumber(int num) {
@@ -139,7 +139,7 @@ public class LDAPEntryChangeControl extends LDAPControl {
     /**
      * Sets the change type (which identifies the type of change
      * that occurred) in this "entry change notification" control.
-     * @param num Change type that you want to set.  This can be one of
+     * @param num change type to set. This can be one of
      * the following values:
      * <P>
      *
@@ -164,7 +164,7 @@ public class LDAPEntryChangeControl extends LDAPControl {
     /**
      * Sets the previous DN of the entry (if the entry was renamed)
      * in the "entry change notification control".
-     * @param dn The previous distinguished name of the entry.
+     * @param dn the previous distinguished name of the entry
      * @see netscape.ldap.controls.LDAPEntryChangeControl#getPreviousDN
      */
     public void setPreviousDN(String dn) {
@@ -174,7 +174,7 @@ public class LDAPEntryChangeControl extends LDAPControl {
     /**
      * Gets the change number, which identifies the record of the change
      * in the server's change log.
-     * @return Change number identifying the change made.
+     * @return change number identifying the change made.
      * @see netscape.ldap.controls.LDAPEntryChangeControl#setChangeNumber
      */
     public int getChangeNumber() {
@@ -184,7 +184,7 @@ public class LDAPEntryChangeControl extends LDAPControl {
     /**
      * Gets the change type, which identifies the type of change
      * that occurred.
-     * @returns Change type identifying the type of change that
+     * @returns change type identifying the type of change that
      * occurred.  This can be one of the following values:
      * <P>
      *
@@ -208,7 +208,7 @@ public class LDAPEntryChangeControl extends LDAPControl {
 
     /**
      * Gets the previous DN of the entry (if the entry was renamed).
-     * @returns The previous distinguished name of the entry.
+     * @returns the previous distinguished name of the entry.
      * @see netscape.ldap.controls.LDAPEntryChangeControl#setPreviousDN
      */
     public String getPreviousDN() {

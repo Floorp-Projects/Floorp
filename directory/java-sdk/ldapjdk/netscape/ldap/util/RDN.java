@@ -52,7 +52,7 @@ public final class RDN implements java.io.Serializable {
     /**
      * Constructs a new <CODE>RDN</CODE> object from the specified
      * DN component.
-     * @param rdn DN component.
+     * @param rdn DN component
      */
     public RDN(String rdn) {
         int index = rdn.indexOf("=");
@@ -68,9 +68,9 @@ public final class RDN implements java.io.Serializable {
     /**
      * Returns the DN component as the first element in an
      * array of strings.
-     * @param noType Specify true to ignore the attribute type and
-     * equals sign (for example, "cn=") and return only the value.
-     * @return An array of strings representing the DN component.
+     * @param noType specify <code>true</code> to ignore the attribute type and
+     * equals sign (for example, "cn=") and return only the value
+     * @return an array of strings representing the DN component.
      */
     public String[] explodeRDN(boolean noType) {
         if (m_type == null)
@@ -86,7 +86,7 @@ public final class RDN implements java.io.Serializable {
 
     /**
      * Returns the attribute type of the DN component.
-     * @return rdn The attribute type of the DN component.
+     * @return rdn the attribute type of the DN component.
      */
     public String getType() {
         return m_type;
@@ -94,7 +94,7 @@ public final class RDN implements java.io.Serializable {
 
     /**
      * Returns the value of the DN component.
-     * @return rdn The value of the DN component.
+     * @return rdn the value of the DN component.
      */
     public String getValue() {
         return m_value;
@@ -102,7 +102,7 @@ public final class RDN implements java.io.Serializable {
 
     /**
      * Returns the string representation of the DN component.
-     * @return The string representation of the DN component.
+     * @return the string representation of the DN component.
      */
     public String toString() {
         return m_type + "=" + m_value;
@@ -110,8 +110,8 @@ public final class RDN implements java.io.Serializable {
 
     /**
      * Determines if the specified string is an distinguished name component.
-     * @param dn The string that you want to check.
-     * @return true if the string is a distinguished name component.
+     * @param dn the string to check
+     * @return <code>true</code> if the string is a distinguished name component.
      */
     public static boolean isRDN(String rdn) {
         RDN newrdn = new RDN(rdn);
@@ -121,9 +121,9 @@ public final class RDN implements java.io.Serializable {
     /**
      * Determines if the current DN component is equal to the specified
      * DN component.
-     * @param rdn The DN component that you want compared against the
+     * @param rdn the DN component to compare against the
      * current DN component.
-     * @return true if the two DN components are equal.
+     * @return <code>true</code> if the two DN components are equal.
      */
     public boolean equals(RDN rdn) {
         return(toString().toUpperCase().equals(rdn.toString().toUpperCase()));

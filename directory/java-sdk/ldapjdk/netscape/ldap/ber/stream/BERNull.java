@@ -49,7 +49,7 @@ public class BERNull extends BERElement {
      * Constructs a null element from an input stream.
      * @param stream input stream from socket
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERNull(InputStream stream, int[] bytes_read) throws IOException {
@@ -71,7 +71,7 @@ public class BERNull extends BERElement {
 
     /**
      * Gets the element type.
-     * @return element type
+     * @return element type.
      */
     public int getType() {
         return BERElement.NULL;
@@ -79,7 +79,7 @@ public class BERNull extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         return "Null {}";

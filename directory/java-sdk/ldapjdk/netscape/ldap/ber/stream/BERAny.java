@@ -53,7 +53,7 @@ public class BERAny extends BERElement {
      * implementation.  The following method will never be called.
      * @param stream input stream
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERAny(BERTagDecoder decoder, InputStream stream,
@@ -79,7 +79,7 @@ public class BERAny extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         return "ANY {" + m_value + "}";

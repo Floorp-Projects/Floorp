@@ -48,7 +48,7 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
      * ascending order.
      * <P>
      *
-     * @param attribute Name of attribute for comparisons.
+     * @param attribute name of attribute for comparisons
      */
     public LDAPCompareAttrNames (String attribute) {
         m_attrs = new String[1];
@@ -58,13 +58,13 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
     }
 
     /**
-     * Constructs a comparator that compares the string values in
+     * Constructs a comparator that compares the string values of
      * a named attribute in LDAP entries and that allows you to sort
      * entries either in ascending or descending order.
      * <P>
      *
-     * @param attribute Name of attribute for comparisons.
-     * @param ascendingFlag If <CODE>true</CODE>, sort in ascending order.
+     * @param attribute name of attribute for comparisons
+     * @param ascendingFlag if <CODE>true</CODE>, sort in ascending order
      */
     public LDAPCompareAttrNames (String attribute,
                                  boolean ascendingFlag) {
@@ -75,25 +75,25 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
     }
 
     /**
-     * Constructs a comparator that compares the string values in
+     * Constructs a comparator that compares the string values of
      * a set of named attributes in LDAP entries and that sort
      * the entries in ascending order.
      * <P>
      *
      * Use an array of strings to specify the set of attributes
-     * that you want to use for sorting.  If the values of the
-     * first attribute (the name specified in <CODE>attribute[0]</CODE>)
-     * are equal, then the values of the next attribute are compared.
+     * to use for sorting.  If the values of the first attribute 
+     * (the name specified in <CODE>attribute[0]</CODE>) are equal, 
+     * then the values of the next attribute are compared.
      * <P>
      *
      * For example, if <CODE>attributes[0] = "cn"</CODE> and
-         * <CODE>attributes[1]="uid"</CODE>, results are first sorted
+     * <CODE>attributes[1]="uid"</CODE>, results are first sorted
      * by the <CODE>cn</CODE> attribute.  If two entries have the
-     * same value for the <CODE>cn</CODE>, then the <CODE>uid</CODE>
+     * same value for <CODE>cn</CODE>, then the <CODE>uid</CODE>
      * attribute is used to sort the entries.
      * <P>
      *
-     * @param attributes Array of the attribute names used for comparisons.
+     * @param attributes array of the attribute names used for comparisons
      */
     public LDAPCompareAttrNames (String[] attributes) {
         m_attrs = attributes;
@@ -103,14 +103,14 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
     }
 
     /**
-     * Constructs a comparator that compares the string values in
-     * a set of named attributes in LDAP entries and that allows you
+     * Constructs a comparator that compares the string values of
+     * a set of named attributes in LDAP entries and allows you
      * to sort the entries in ascending or descending order.
      * <P>
      *
      * Use an array of strings to specify the set of attributes
-     * that you want to use for sorting.  If the values of the
-     * first attribute (the name specified in <CODE>attribute[0]</CODE>)
+     * to use for sorting.  If the values of the first attribute 
+     * (the name specified in <CODE>attribute[0]</CODE>)
      * are equal, then the values of the next attribute are compared.
      * <P>
      *
@@ -136,10 +136,10 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
      * <CODE>LDAPException</CODE> is thrown.
      * <P>
      *
-     * @param attribute Array of the attribute names to use for comparisons.
-     * @param ascendingFlags Array of boolean values specifying ascending
+     * @param attribute array of the attribute names to use for comparisons
+     * @param ascendingFlags array of boolean values specifying ascending
      * or descending order to use for each attribute name. If
-     * <CODE>true</CODE>, sort the attributes in ascending order.
+     * <CODE>true</CODE>, the attributes are sorted in ascending order.
      */
     public LDAPCompareAttrNames (String[] attributes,
                                  boolean[] ascendingFlags) {
@@ -153,20 +153,20 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
     }
 
     /**
-     * Get the locale used for collation, if any. If it is null,
-     * an ordinary string comparison will be used for sorting.
+     * Gets the locale, if any, used for collation. If the locale is null,
+     * an ordinary string comparison is used for sorting.
      *
-     * @return The locale used for collation, or null.
+     * @return the locale used for collation, or null.
      */
     public Locale getLocale() {
         return m_locale;
     }
 
     /**
-     * Set the locale used for collation, if any. If it is null,
-     * an ordinary string comparison will be used for sorting.
+     * Set the locale, if any, used for collation. If the locale is null,
+     * an ordinary string comparison is used for sorting.
      *
-     * @param locale The locale used for collation, or null.
+     * @param locale the locale used for collation, or null.
      */
     public void setLocale( Locale locale ) {
         m_locale = locale;
@@ -178,8 +178,8 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
     }
 
     /**
-     * If the value of the attribute in the first entry is greater
-     * than the attribute in the second entry, returns <CODE>true</CODE>.
+     * Returns <CODE>true</CODE> if the value of the attribute in the first entry is greater
+     * than the value of the attribute in the second entry.
      * <P>
      *
      * If one of the entries is missing the attribute, the other is
@@ -190,8 +190,8 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
      * is used for comparisons.
      * <P>
      *
-     * @param greater Entry to be tested against.
-     * @param less Entry to test.
+     * @param greater entry against which to test
+     * @param less entry to test
      * @return <CODE>true</CODE> if (<CODE>greater &gt; less</CODE>).
      */
     public boolean isGreater (LDAPEntry greater, LDAPEntry less) {
@@ -202,9 +202,9 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
     /**
      * Compares a particular attribute in both entries. If equal,
      * moves on to the next.
-     * @param greater Greater arg from isGreater
-     * @param less Less param is isGreater
-     * @param attrPos Index into array of attributes, indicating
+     * @param greater greater arg from isGreater
+     * @param less less arg from isGreater
+     * @param attrPos the index in an array of attributes, indicating
      * the attribute to compare
      * @return (greater > less)
      */

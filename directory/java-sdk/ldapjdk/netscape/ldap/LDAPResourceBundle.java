@@ -48,7 +48,7 @@ class LDAPResourceBundle {
      * Return the property resource bundle according to the base name of the
      * property file and the locale. The class loader will find the closest match
      * with the given locale.
-     * @return The property resource bundle
+     * @return the property resource bundle.
      * @exception IOException Gets thrown when failed to open the resource
      *            bundle file.
      */
@@ -62,10 +62,10 @@ class LDAPResourceBundle {
      * Return the property resource bundle according to the base name of the
      * property file and the locale. The class loader will find the closest match
      * with the given locale.
-     * @param baseName The base name of the property file, ie, the name contains
-     *        no locale context and no . suffix
-     * @param l The locale
-     * @return The property resource bundle
+     * @param baseName the base name of the property file. The base name contains
+     * no locale context and no . suffix.
+     * @param l the locale
+     * @return the property resource bundle.
      * @exception IOException Gets thrown when failed to create a property
      *            resource
      */
@@ -94,10 +94,10 @@ class LDAPResourceBundle {
     /**
      * Constructs the whole absolute path name of a property file and retrieves
      * an input stream on the file.
-     * @param baseName The base name of the property file, ie, the name contains
-     *        no locale context and no . suffix
-     * @param The locale string being inserted within the file name.
-     * @return The input stream on the property file.
+     * @param baseName the base name of the property file. The base name contains
+     * no locale context and no . suffix.
+     * @param the locale string to insert into the file name
+     * @return the input stream of the property file.
      */
     private static InputStream getStream(String baseName, String locale) {
         String fStr = baseName+locale+m_suffix;
@@ -106,7 +106,7 @@ class LDAPResourceBundle {
 
     /**
      * Prints debug messages if the debug mode is on.
-     * @param str The given message being printed.
+     * @param str the message that is printed
      */
     private static void printDebug(String str) {
         if (m_debug)

@@ -56,7 +56,7 @@ public class LDIFModDNContent extends LDIFBaseContent {
      * Returns the content type. You can use this with the
      * <CODE>getContent</CODE> method of the <CODE>LDIFRecord</CODE>
      * object to determine the type of content specified in the record.
-     * @return The content type (which is
+     * @return the content type (which is
      * <CODE>LDIFContent.MODDN_CONTENT</CODE>).
      * @see netscape.ldap.util.LDIFRecord#getContent
      */
@@ -66,7 +66,7 @@ public class LDIFModDNContent extends LDIFBaseContent {
 
     /**
      * Sets the new RDN that should be assigned to the entry.
-     * @param rdn The new RDN.
+     * @param rdn the new RDN
      * @see netscape.ldap.util.LDIFModDNContent#getRDN
      */
     public void setRDN(String rdn) {
@@ -84,7 +84,7 @@ public class LDIFModDNContent extends LDIFBaseContent {
 
     /**
      * Sets the new parent DN that should be assigned to the entry.
-     * @param parent The new parent DN for the entry.
+     * @param parent the new parent DN for the entry
      * @see netscape.ldap.util.LDIFModDNContent#getNewParent
      */
     public void setNewParent(String parent) {
@@ -94,7 +94,7 @@ public class LDIFModDNContent extends LDIFBaseContent {
     /**
      * Returns the entry's new parent DN, if specified in the content
      * of the LDIF record.
-     * @return The new parent for the entry.
+     * @return the new parent of the entry.
      * @see netscape.ldap.util.LDIFModDNContent#setNewParent
      */
     public String getNewParent() {
@@ -104,7 +104,7 @@ public class LDIFModDNContent extends LDIFBaseContent {
     /**
      * Sets whether or not the old RDN should be removed as an
      * attribute in the entry.
-     * @param bool If <CODE>true</CODE>, remove the attribute representing
+     * @param bool if <CODE>true</CODE>, remove the attribute representing
      * the RDN.  If <CODE>false</CODE>, leave the attribute in the entry.
      * @see netscape.ldap.util.LDIFModDNContent#getDeleteOldRDN
      */
@@ -115,9 +115,9 @@ public class LDIFModDNContent extends LDIFBaseContent {
     /**
      * Determines if the content of the LDIF record specifies that
      * the old RDN should be removed as an attribute in the entry.
-     * @return If <CODE>true</CODE>, the change specifies that the
-     * the attribute representing the RDN should be removed.
-     * If <CODE>false</CODE>, the change specifies that the attribute
+     * @return <CODE>true</CODE> if the change specifies that the
+     * the attribute representing the RDN should be removed,
+     * <CODE>false</CODE> if the change specifies that the attribute
      * should be left in the entry.
      * @see netscape.ldap.util.LDIFModDNContent#setDeleteOldRDN
      */
@@ -127,7 +127,7 @@ public class LDIFModDNContent extends LDIFBaseContent {
 
     /**
      * Returns string representation of the content of the LDIF record.
-     * @return The string representation of the content of the LDIF record.
+     * @return the string representation of the content of the LDIF record.
      */
     public String toString() {
         String s = "";

@@ -18,9 +18,9 @@
 package netscape.ldap;
 
 /**
- * Represents a SSL socket connection that you can use to connect to an
+ * Represents an SSL socket connection that you can use to connect to an
  * LDAP server. This interface extends the base interface LDAPSocketFactory 
- * and it provides the methods for SSL specific matters.
+ * and provides SSL-specific methods.
  * <P>
  *
  * @version 1.0
@@ -30,17 +30,17 @@ package netscape.ldap;
 public interface LDAPSSLSocketFactoryExt extends LDAPSocketFactory {
 
     /**
+     * Returns the suite of ciphers used for SSL connections. These connections 
+     * are made through sockets created by the LDAPSSLSocketFactory.
+     *
+     * @return the suite of ciphers used.
+     */
+    public Object getCipherSuites();
+    
+    /**
      * Returns <code>true</code> if client authentication is enabled.
      * @see netscape.ldap.LDAPSSLSocketFactory#enableClientAuth
      */
     public boolean isClientAuth();
-
-    /**
-     * Returns the suite of ciphers used for SSL connections made through
-     * sockets created by this factory.
-     *
-     * @return The suite of ciphers used.
-     */
-    public Object getCipherSuites();
 }
 

@@ -65,12 +65,12 @@ public class ConnectionPool {
     /**
      * Constructor for specifying all parameters
      *
-     * @param min Initial number of connections
-     * @param max Maximum number of connections
-     * @param host Hostname of LDAP server
-     * @param port Port number of LDAP server
+     * @param min initial number of connections
+     * @param max maximum number of connections
+     * @param host hostname of LDAP server
+     * @param port port number of LDAP server
      * @param authdn DN to authenticate as
-     * @param authpw Password for authentication
+     * @param authpw password for authentication
      * @exception LDAPException on failure to create connections
      */
     public ConnectionPool( int min, int max,
@@ -84,10 +84,10 @@ public class ConnectionPool {
      * Constructor for specifying all parameters, anonymous
      * identity
      *
-     * @param min Initial number of connections
-     * @param max Maximum number of connections
-     * @param host Hostname of LDAP server
-     * @param port Port number of LDAP server
+     * @param min initial number of connections
+     * @param max maximum number of connections
+     * @param host hostname of LDAP server
+     * @param port port number of LDAP server
      * @exception LDAPException on failure to create connections
      */
     public ConnectionPool( int min, int max,
@@ -99,8 +99,8 @@ public class ConnectionPool {
     /**
      * Constructor for using default parameters, anonymous identity
      *
-     * @param host Hostname of LDAP server
-     * @param port Port number of LDAP server
+     * @param host hostname of LDAP server
+     * @param port port number of LDAP server
      * @exception LDAPException on failure to create connections
      */
     public ConnectionPool( String host, int port ) 
@@ -114,9 +114,9 @@ public class ConnectionPool {
      * Constructor for using an existing connection to clone
      * from
      * 
-     * @param min Initial number of connections
-     * @param max Maximum number of connections
-     * @param ldc Connection to clone 
+     * @param min initial number of connections
+     * @param max maximum number of connections
+     * @param ldc connection to clone 
      * @exception LDAPException on failure to create connections 
      */ 
     public ConnectionPool( int min, int max, LDAPConnection ldc )
@@ -130,13 +130,13 @@ public class ConnectionPool {
      * Constructor for using an existing connection to clone
      * from
      * 
-     * @param min Initial number of connections
-     * @param max Maximum number of connections
-     * @param host Hostname of LDAP server
-     * @param port Port number of LDAP server
+     * @param min initial number of connections
+     * @param max maximum number of connections
+     * @param host hostname of LDAP server
+     * @param port port number of LDAP server
      * @param authdn DN to authenticate as
-     * @param authpw Password for authentication
-     * @param ldc Connection to clone 
+     * @param authpw password for authentication
+     * @param ldc connection to clone 
      * @exception LDAPException on failure to create connections 
      */ 
     private ConnectionPool( int min, int max,
@@ -167,14 +167,14 @@ public class ConnectionPool {
     }
 
     /**
-     * Get a connection from the pool
+     * Gets a connection from the pool
      *
      * If no connections are available, the pool will be
      * extended if the number of connections is less than
      * the maximum; if the pool cannot be extended, the method
      * blocks until a free connection becomes available.
      *
-     * @return An active connection
+     * @return an active connection.
      */
     public LDAPConnection getConnection() {
         LDAPConnection con;
@@ -191,14 +191,14 @@ public class ConnectionPool {
     }
             
     /**
-     * Get a connection from the pool
+     * Gets a connection from the pool
      *
      * If no connections are available, the pool will be
      * extended if the number of connections is less than
      * the maximum; if the pool cannot be extended, the method
      * returns null.
      *
-     * @return An active connection or null
+     * @return an active connection or null.
      */
     protected synchronized LDAPConnection getConnFromPool() {
         LDAPConnection con = null;
@@ -248,9 +248,9 @@ public class ConnectionPool {
 
     /**
      * This is our soft close - all we do is mark
-     * the connection available for others to use
+     * the connection as available for others to use.
      *
-     * @param ld A connection to be returned to the pool
+     * @param ld a connection to return to the pool
      */
     public synchronized void close( LDAPConnection ld ) {
 
@@ -380,18 +380,18 @@ public class ConnectionPool {
     }
 
     /**
-      * Set the debug printout mode
+      * Sets the debug printout mode.
       *
-      * @param mode Debug mode to use
+      * @param mode debug mode to use
       */
     public synchronized void setDebug( boolean mode ) {
         debugMode = mode;
     }
 
     /**
-      * Report the debug printout mode
+      * Reports the debug printout mode.
       *
-      * @return Debug mode in use
+      * @return debug mode in use.
       */
     public boolean getDebug() {
         return debugMode;
@@ -416,9 +416,9 @@ public class ConnectionPool {
     class LDAPConnectionObject{
 
         /**
-         * Returns the associated LDAPConnection
+         * Returns the associated LDAPConnection.
          *
-         * @return the LDAPConnection
+         * @return the LDAPConnection.
          * 
          */
         LDAPConnection getLDAPConn() {
@@ -438,7 +438,7 @@ public class ConnectionPool {
         /**
          * Marks a connection in use or available
          *
-         * @param inUse true to mark in use, false available
+         * @param inUse <code>true</code> to mark in use, <code>false</code> if available
          * 
          */
         void setInUse( boolean inUse ) {
@@ -449,7 +449,7 @@ public class ConnectionPool {
          * Returns whether the connection is available
          * for use by another user.
          *
-         * @return true if available
+         * @return <code>true</code> if available.
          */
         boolean isAvailable() {
             return !inUse;
@@ -458,7 +458,7 @@ public class ConnectionPool {
         /**
          * Debug method
          *
-         * @return A user-friendly rendering of the object
+         * @return s user-friendly rendering of the object.
          */
         public String toString() {
             return "LDAPConnection=" + ld + ",inUse=" + inUse;

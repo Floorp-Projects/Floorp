@@ -40,8 +40,8 @@ public class LDAPSSLSocketWrapFactory implements LDAPSSLSocketFactoryExt {
 
     /**
      * The constructor with the specified package for security
-     * @param className The name of a class which has an implementation
-     * of SSL Socket extending Object class.
+     * @param className the name of a class which has an implementation
+     * of the SSL Socket extending Object class
      */
     public LDAPSSLSocketWrapFactory(String className) {
         m_packageName = new String(className);
@@ -50,9 +50,9 @@ public class LDAPSSLSocketWrapFactory implements LDAPSSLSocketFactoryExt {
     /**
      * The constructor with the specified package for security and the
      * specified cipher suites.
-     * @param className The name of a class which has an implementation
-     * of SSL Socket extending Object class.
-     * @param cipherSuites The cipher suites.
+     * @param className the name of a class which has an implementation
+     * of the SSL Socket extending Object class
+     * @param cipherSuites the cipher suites
      */
     public LDAPSSLSocketWrapFactory(String className, Object cipherSuites) {
         m_packageName = new String(className);
@@ -61,9 +61,9 @@ public class LDAPSSLSocketWrapFactory implements LDAPSSLSocketFactoryExt {
 
     /**
      * Returns socket to the specified host name and port number.
-     * @param host The host to connect to
-     * @param port The port number
-     * @return The socket to the host name and port number as passed in.
+     * @param host the host to connect to
+     * @param port the port number
+     * @return the socket to the host name and port number as passed in.
      * @exception LDAPException A socket to the specified host and port
      * could not be created.
      */
@@ -87,8 +87,8 @@ public class LDAPSSLSocketWrapFactory implements LDAPSSLSocketFactoryExt {
 
     /**
      * Returns <code>true</code> if client authentication is to be used.
-     * @return true if client authentication is enabled, otherwise, false if
-     * client authentication is disabled.
+     * @return <code>true</code> if client authentication is enabled; 
+     * <code>false</code>if client authentication is disabled.
      */
     public boolean isClientAuth() {
         return m_clientAuth;
@@ -110,7 +110,7 @@ public class LDAPSSLSocketWrapFactory implements LDAPSSLSocketFactoryExt {
     /**
      * Returns the name of the class that implements SSL sockets for this factory.
      *
-     * @return The name of the class that implements SSL sockets for this factory.
+     * @return the name of the class that implements SSL sockets for this factory.
      */
     public String getSSLSocketImpl() {
         return m_packageName;
@@ -120,7 +120,7 @@ public class LDAPSSLSocketWrapFactory implements LDAPSSLSocketFactoryExt {
      * Returns the suite of ciphers used for SSL connections made through
      * sockets created by this factory.
      *
-     * @return The suite of ciphers used.
+     * @return the suite of ciphers used.
      */
     public Object getCipherSuites() {
         return m_cipherSuites;

@@ -70,8 +70,8 @@ public interface LDAPv2 {
     public static final int DEREF = 2;
 
     /**
-     * Option specifying the maximum number of search results that
-     * can be returned.
+     * Option specifying the maximum number of search results to
+     * return.
      * <P>
      *
      * @see netscape.ldap.LDAPConnection#getOption
@@ -81,7 +81,7 @@ public interface LDAPv2 {
 
     /**
      * Option specifying the maximum number of milliseconds to
-     * wait for an operation to be completed.
+     * wait for an operation to complete.
      * @see netscape.ldap.LDAPConnection#getOption
      * @see netscape.ldap.LDAPConnection#setOption
      */
@@ -89,7 +89,8 @@ public interface LDAPv2 {
 
     /**
      * Option specifying the maximum number of milliseconds the 
-     * server should wait when returning search results. 
+     * server should spend returning search results before aborting
+     * the search. 
      * @see netscape.ldap.LDAPConnection#getOption
      * @see netscape.ldap.LDAPConnection#setOption
      */
@@ -221,20 +222,20 @@ public interface LDAPv2 {
 
     /**
      * Connects to the LDAP server.
-     * @param host Hostname of the LDAP server.
-     * @param port Port number of the LDAP server.  To specify the
-     * default, well-known port, use <CODE>DEFAULT_PORT</CODE>.
+     * @param host hostname of the LDAP server
+     * @param port port number of the LDAP server.  To specify the
+     * default port, use <CODE>DEFAULT_PORT</CODE>.
      * @exception LDAPException Failed to connect to the server.
      */
     public void connect (String host, int port) throws LDAPException;
 
     /**
      * Connects and authenticates to the LDAP server.
-     * @param host Hostname of the LDAP server.
-     * @param port Port number of the LDAP server.  To specify the
-     * default, well-known port, use <CODE>DEFAULT_PORT</CODE>.
-     * @param dn Distinguished name to use for authentication.
-     * @param passwd Password for authentication.
+     * @param host hostname of the LDAP server
+     * @param port port number of the LDAP server. To specify the
+     * default port, use <CODE>DEFAULT_PORT</CODE>.
+     * @param dn distinguished name to use for authentication
+     * @param passwd password for authentication
      * @exception LDAPException Failed to connect and authenticate to the server.
      */
     public void connect (String host, int port, String dn, String passwd)
@@ -251,30 +252,30 @@ public interface LDAPv2 {
      * Notifies the server to not send additional results associated with this
      * <CODE>LDAPSearchResults</CODE> object, and discards any results already 
      * received.
-     * @param results LDAPSearchResults object returned from a search.
+     * @param results LDAPSearchResults object returned from a search
      * @exception LDAPException Failed to notify the server.
      */
     public void abandon(LDAPSearchResults results) throws LDAPException;
 
     /**
      * Authenticates user with the LDAP server.
-     * @param Dn Distinguished name to use for authentication.
-     * @param passwd Password for authentication.
+     * @param DN distinguished name to use for authentication
+     * @param passwd password for authentication
      * @exception LDAPException Failed to authenticate to the server.
      */
     public void authenticate (String DN, String passwd) throws LDAPException;
 
     /**
      * Authenticates user with the LDAP server.
-     * @param Dn Distinguished name to use for authentication.
-     * @param passwd Password for authentication.
+     * @param DN distinguished name to use for authentication
+     * @param passwd password for authentication
      * @exception LDAPException Failed to authenticate to the server.
      */
     public void bind (String DN, String passwd) throws LDAPException;
 
     /**
      * Read the entry corresponding to the specified distinguished name (DN).
-     * @param DN Distinguished name of the entry to retrieve.
+     * @param DN distinguished name of the entry to retrieve
      * @exception LDAPException Failed to retrieve the specified entry.
      */
     public LDAPEntry read (String DN) throws LDAPException;
@@ -282,8 +283,8 @@ public interface LDAPv2 {
     /**
      * Read the entry corresponding to the specified distinguished name (DN),
      * and retrieve only the specified attributes.
-     * @param DN Distinguished name of the entry to retrieve.
-     * @param attrs Names of attributes to retrieve.
+     * @param DN distinguished name of the entry to retrieve
+     * @param attrs names of attributes to retrieve
      * @exception LDAPException Failed to retrieve the specified entry.
      */
     public LDAPEntry read (String DN, String attrs[]) throws LDAPException;
@@ -291,9 +292,9 @@ public interface LDAPv2 {
     /**
      * Read the entry corresponding to the specified distinguished name (DN),
      * and retrieve only the specified attributes.
-     * @param DN Distinguished name of the entry to retrieve.
-     * @param attrs Names of attributes to retrieve.
-     * @param cons The constraints set for the read operation.
+     * @param DN distinguished name of the entry to retrieve
+     * @param attrs names of attributes to retrieve
+     * @param cons the constraints set for the read operation
      * @exception LDAPException Failed to retrieve the specified entry.
      */
     public LDAPEntry read (String DN, String attrs[], LDAPSearchConstraints cons)
@@ -301,19 +302,19 @@ public interface LDAPv2 {
 
     /**
      * Searches for entries in the directory.
-     * @param base Starting point for the search in the directory
-     *   (distinguished name).
-     * @param scope Indicates whether the scope of the search includes
+     * @param base starting point for the search in the directory
+     *   (distinguished name)
+     * @param scope indicates whether the scope of the search includes
      *   only the base DN (equivalent to a read operation), only the entries
      *   one level below the base DN, or all entries at all levels beneath
-     *   the base DN (including the base DN itself).
+     *   the base DN (including the base DN itself)
      * @param filter String which describes the search criteria. The format
      *   of the string is described fully in
      *   <A HREF="http://www.cis.ohio-state.edu/htbin/rfc/rfc1558.html" TARGET="_blank">RFC 1558</A>.
-     * @param attrs Names of the attributes to return for each matching
+     * @param attrs names of the attributes to return for each matching
      *   directory entry.  If <CODE>null</CODE>, all attributes are returned.
-     * @param attrsOnly If <CODE>true</CODE>, the search will return only the names of
-     *   the attributes (and not their values).
+     * @param attrsOnly if <CODE>true</CODE>, the search will return only the names of
+     *   the attributes (and not their values)
      * @exception LDAPException Failed to complete the requested search.
      */
     public LDAPSearchResults search (String base, int scope, String filter,
@@ -321,21 +322,21 @@ public interface LDAPv2 {
 
     /**
      * Searches for entries in the directory.
-     * @param base Starting point for the search in the directory
-     *   (distinguished name).
-     * @param scope Indicates whether the scope of the search includes
+     * @param base starting point for the search in the directory
+     *   (distinguished name)
+     * @param scope indicates whether the scope of the search includes
      *   only the base DN (equivalent to a read operation), only the entries
      *   one level below the base DN, or all entries at all levels beneath
-     *   the base DN (including the base DN itself).
+     *   the base DN (including the base DN itself)
      * @param filter String which describes the search criteria. The format
      *   of the string is described fully in
      *   <A HREF="http://www.cis.ohio-state.edu/htbin/rfc/rfc1558.html" TARGET="_blank">RFC 1558</A>.
-     * @param attrs Names of the attributes to return for each matching
+     * @param attrs names of the attributes to return for each matching
      *   directory entry.  If <CODE>null</CODE>, all attributes are returned.
-     * @param attrsOnly If <CODE>true</CODE>, the search will return only the names of
-     *   the attributes (and not their values).
-     * @param cons Constraints specific to the search (for example, the maximum number
-     *   of entries to return or the maximum time to wait for the search operation to complete).
+     * @param attrsOnly if <CODE>true</CODE>, the search will return only the names of
+     *   the attributes (and not their values)
+     * @param cons constraints specific to the search (for example, the maximum number
+     *   of entries to return or the maximum time to wait for the search operation to complete)
      * @exception LDAPException Failed to complete the requested search.
      */
     public LDAPSearchResults search (String base, int scope, String filter,
@@ -345,9 +346,9 @@ public interface LDAPv2 {
     /**
      * Compares the given entry's attribute value to the specified
      * attribute value.
-     * @param DN Distinguished name of the entry that you want compared
-     *   against the specified attribute value.
-     * @param attr Attribute name and value to use in the comparison.
+     * @param DN distinguished name of the entry that you want compared
+     * against the specified attribute value
+     * @param attr attribute name and value to use in the comparison
      * @exception LDAPException Failed to perform the comparison.
      */
     public boolean compare (String DN, LDAPAttribute attr) throws LDAPException;
@@ -355,10 +356,10 @@ public interface LDAPv2 {
     /**
      * Compares the given entry's attribute value to the specified
      * attribute value.
-     * @param DN Distinguished name of the entry that you want compared
-     *   against the specified attribute value.
-     * @param attr Attribute name and value to use in the comparison.
-     * @param cons The constraints set for the compare operation.
+     * @param DN distinguished name of the entry that you want compared
+     * against the specified attribute value
+     * @param attr attribute name and value to use in the comparison
+     * @param cons the constraints set for the compare operation
      * @exception LDAPException Failed to perform the comparison.
      */
     public boolean compare (String DN, LDAPAttribute attr,
@@ -366,15 +367,15 @@ public interface LDAPv2 {
 
     /**
      * Adds an entry to the directory.
-     * @param entry New entry to add to the directory.
+     * @param entry new entry to add to the directory
      * @exception LDAPException Failed to add the entry to the directory.
      */
     public void add (LDAPEntry entry) throws LDAPException;
 
     /**
      * Adds an entry to the directory.
-     * @param entry New entry to add to the directory.
-     * @param cons The constraints set for the add operation.
+     * @param entry new entry to add to the directory
+     * @param cons the constraints set for the add operation
      * @exception LDAPException Failed to add the entry to the directory.
      */
     public void add (LDAPEntry entry, LDAPConstraints cons)
@@ -382,17 +383,17 @@ public interface LDAPv2 {
 
     /**
      * Modifies an attribute of a directory entry.
-     * @param DN Distinguished name identifying the entry to be modified.
-     * @param mod The modification to be made.
+     * @param DN distinguished name identifying the entry to modify
+     * @param mod the modification to make
      * @exception LDAPException Failed to modify the specified entry.
      */
     public void modify (String DN, LDAPModification mod) throws LDAPException;
 
     /**
      * Modifies an attribute of a directory entry.
-     * @param DN Distinguished name identifying the entry to be modified.
-     * @param mod The modification to be made.
-     * @param cons The constraints set for the modify operation.
+     * @param DN distinguished name identifying the entry to modify
+     * @param mod the modification to make
+     * @param cons the constraints set for the modify operation
      * @exception LDAPException Failed to modify the specified entry.
      */
     public void modify (String DN, LDAPModification mod,
@@ -400,17 +401,17 @@ public interface LDAPv2 {
 
     /**
      * Modifies the attributes of a directory entry.
-     * @param DN Distinguished name identifying the entry to be modified.
-     * @param mod List of the modifications to be made.
+     * @param DN distinguished name identifying the entry to modify
+     * @param mod list of the modifications to make
      * @exception LDAPException Failed to modify the specified entry.
      */
     public void modify (String DN, LDAPModificationSet mods ) throws LDAPException;
 
     /**
      * Modifies the attributes of a directory entry.
-     * @param DN Distinguished name identifying the entry to be modified.
-     * @param mod List of the modifications to be made.
-     * @param cons The constraints set for the modify operation.
+     * @param DN distinguished name identifying the entry to modify
+     * @param mod list of the modifications to make
+     * @param cons the constraints set for the modify operation
      * @exception LDAPException Failed to modify the specified entry.
      */
     public void modify (String DN, LDAPModificationSet mods,
@@ -418,15 +419,15 @@ public interface LDAPv2 {
 
     /**
      * Removes an entry from the directory.
-     * @param DN Distinguished name identifying the entry to remove.
+     * @param DN distinguished name identifying the entry to remove
      * @exception LDAPException Failed to remove the entry from the directory.
      */
     public void delete( String DN ) throws LDAPException;
 
     /**
      * Removes an entry from the directory.
-     * @param DN Distinguished name identifying the entry to remove.
-     * @param cons The constraints set for the delete operation.
+     * @param DN distinguished name identifying the entry to remove
+     * @param cons the constraints set for the delete operation
      * @exception LDAPException Failed to remove the entry from the directory.
      */
     public void delete( String DN, LDAPConstraints cons )
@@ -434,11 +435,10 @@ public interface LDAPv2 {
 
     /**
      * Changes the name of an entry in the directory.
-     * @param DN Original distinguished name (DN) of entry.
-     * @param newRDN New relative distinguished name (RDN) of the entry.
-     * @param deleteOldRDN Specifies whether or not the original RDN remains
-     *   as an attribute of the entry. If <CODE>true</CODE>, the original RDN
-     *   is no longer an attribute of the entry.
+     * @param DN distinguished name (DN) of entry
+     * @param newRDN the new relative distinguished name (RDN) of the entry
+     * @param deleteOldRDN <CODE>true</CODE> if the original RDN should no longer
+     * be an attribute of the entry; <CODE>false</CODE> if it should
      * @exception LDAPException Failed to rename the entry in the directory.
      */
     public void rename ( String DN, String newRDN, boolean deleteOldRDN )
@@ -446,12 +446,12 @@ public interface LDAPv2 {
 
     /**
      * Changes the name of an entry in the directory.
-     * @param DN Original distinguished name (DN) of entry.
-     * @param newRDN New relative distinguished name (RDN) of the entry.
-     * @param deleteOldRDN Specifies whether or not the original RDN remains
-     *   as an attribute of the entry. If <CODE>true</CODE>, the original RDN
-     *   is no longer an attribute of the entry.
-     * @param cons The constraints set for the rename operation.
+     * @param DN distinguished name (DN) of entry
+     * @param newRDN new relative distinguished name (RDN) of the entry
+     * @param deleteOldRDN specifies whether or not the original RDN remains
+     * as an attribute of the entry. If <CODE>true</CODE>, the original RDN
+     * is no longer an attribute of the entry.
+     * @param cons the constraints set for the rename operation
      * @exception LDAPException Failed to rename the entry in the directory.
      */
     public void rename ( String DN, String newRDN, boolean deleteOldRDN,

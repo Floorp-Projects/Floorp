@@ -187,7 +187,7 @@ public class LDAPMessage {
 
     /**
      * Returns the message identifer.
-     * @return message identifer
+     * @return message identifer.
      */
     public int getID(){
         return m_msgid;
@@ -195,7 +195,7 @@ public class LDAPMessage {
 
     /**
      * Returns the LDAP operation type of the message
-     * @return message type
+     * @return message type.
      */
     public int getType(){
         return m_protocolOp.getType();
@@ -203,7 +203,7 @@ public class LDAPMessage {
 
     /**
      * Retrieves the protocol operation.
-     * @return protocol operation
+     * @return protocol operation.
      */
     JDAPProtocolOp getProtocolOp() {
         return m_protocolOp;
@@ -211,7 +211,7 @@ public class LDAPMessage {
 
     /**
      * Retrieves list of controls.
-     * @return controls
+     * @return controls.
      */
     public LDAPControl[] getControls() {
         return m_controls;
@@ -242,8 +242,8 @@ public class LDAPMessage {
     }
 
     /**
-     * Returns string representation of a ldap message.
-     * @return ldap message
+     * Returns string representation of an LDAP message.
+     * @return LDAP message.
      */
     public String toString() {
         StringBuffer sb = new StringBuffer("[LDAPMessage] ");

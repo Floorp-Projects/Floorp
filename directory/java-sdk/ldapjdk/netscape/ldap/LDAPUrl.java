@@ -194,10 +194,10 @@ public class LDAPUrl {
     /**
      * Constructs with the specified host, port, and DN.  This form is used to
      * create URL references to a particular object in the directory.
-     * @param host Host name of LDAP server, or null for "nearest X.500/LDAP"
-     * @param port Port number for LDAP server (use LDAPv2.DEFAULT_PORT for
-     *   default port)
-     * @param DN Distinguished name of object
+     * @param host host name of the LDAP server, or null for "nearest X.500/LDAP"
+     * @param port port number of the LDAP server (use LDAPv2.DEFAULT_PORT for
+     * the default port)
+     * @param DN distinguished name of the object
      */
     public LDAPUrl (String host, int port, String DN) {
         if (host != null) {
@@ -219,16 +219,16 @@ public class LDAPUrl {
 
     /**
      * Constructs a full-blown LDAP URL to specify an LDAP search operation.
-     * @param host Host name of LDAP server, or null for "nearest X.500/LDAP"
-     * @param port Port number for LDAP server (use LDAPv2.DEFAULT_PORT for
-     *   default port)
-     * @param DN Distinguished name of object
-     * @param attributes List of attributes to return. Use null for "all
-     *   attributes"
-     * @param scope Depth of search (in DN namespace). Use one of SCOPE_BASE,
-     *   SCOPE_ONE, SCOPE_SUB from LDAPv2
-     * @param filter LDAP fitler string (as defined in RFC 1558) use null for
-     *   no filter (this effectively makes the URL reference a single object)
+     * @param host host name of the LDAP server, or null for "nearest X.500/LDAP"
+     * @param port port number of the LDAP server (use LDAPv2.DEFAULT_PORT for
+     * the default port)
+     * @param DN distinguished name of the object
+     * @param attributes list of attributes to return. Use null for "all
+     * attributes."
+     * @param scope depth of search (in DN namespace). Use one of the LDAPv2 scopes:
+     * SCOPE_BASE, SCOPE_ONE, or SCOPE_SUB.
+     * @param filter LDAP filter string (as defined in RFC 1558). Use null for
+     * no filter (this effectively makes the URL reference a single object).
      */
     public LDAPUrl (String host, int port, String DN,
         String attributes[], int scope, String filter) {
@@ -246,16 +246,16 @@ public class LDAPUrl {
 
     /**
      * Constructs a full-blown LDAP URL to specify an LDAP search operation.
-     * @param host Host name of LDAP server, or null for "nearest X.500/LDAP"
-     * @param port Port number for LDAP server (use LDAPv2.DEFAULT_PORT for
-     *   default port)
-     * @param DN Distinguished name of object
-     * @param attributes List of attributes to return. Use null for "all
-     *   attributes"
-     * @param scope Depth of search (in DN namespace). Use one of SCOPE_BASE,
-     *   SCOPE_ONE, SCOPE_SUB from LDAPv2
-     * @param filter LDAP fitler string (as defined in RFC 1558) use null for
-     *   no filter (this effectively makes the URL reference a single object)
+     * @param host host name of the LDAP server, or null for "nearest X.500/LDAP"
+     * @param port port number of the LDAP server (use LDAPv2.DEFAULT_PORT for
+     * the default port)
+     * @param DN distinguished name of the object
+     * @param attributes list of the attributes to return. Use null for "all
+     * attributes."
+     * @param scope depth of the search (in DN namespace). Use one of the LDAPv2 scopes: 
+     * SCOPE_BASE, SCOPE_ONE, or SCOPE_SUB.
+     * @param filter LDAP filter string (as defined in RFC 1558). Use null for
+     * no filter (this effectively makes the URL reference a single object).
      */
     public LDAPUrl (String host, int port, String DN,
       Enumeration attributes, int scope, String filter) {
@@ -336,7 +336,7 @@ public class LDAPUrl {
 
     /**
      * Return the host name of the LDAP server
-     * @return LDAP host
+     * @return LDAP host.
      */
     public String getHost () {
         return hostName;
@@ -344,7 +344,7 @@ public class LDAPUrl {
 
     /**
      * Return the port number for the LDAP server
-     * @return port number
+     * @return port number.
      */
     public int getPort () {
         return portNumber;
@@ -352,7 +352,7 @@ public class LDAPUrl {
 
     /**
      * Return the distinguished name encapsulated in the URL
-     * @return target distinguished name
+     * @return target distinguished name.
      */
     public String getDN () {
         return DN;
@@ -361,7 +361,7 @@ public class LDAPUrl {
     /**
      * Return the collection of attributes specified in the URL, or null
      * for "every attribute"
-     * @return enumeration of attributes
+     * @return enumeration of attributes.
      */
     public Enumeration getAttributes () {
         if (attributes == null)
@@ -373,7 +373,7 @@ public class LDAPUrl {
     /**
      * Return the collection of attributes specified in the URL, or null
      * for "every attribute"
-     * @return string array of attribute
+     * @return string array of attributes.
      */
     public String[] getAttributeArray () {
         if (attributes == null)
@@ -392,9 +392,9 @@ public class LDAPUrl {
 
     /**
      * Returns the scope of the search, according to the values
-     * SCOPE_BASE, SCOPE_ONE, SCOPE_SUB defined in LDAPv2.  This refers
-     * to how deep in the directory namespace the search will look
-     * @return search scope
+     * SCOPE_BASE, SCOPE_ONE, SCOPE_SUB as defined in LDAPv2.  This refers
+     * to how deep within the directory namespace the search will look
+     * @return search scope.
      */
     public int getScope () {
         return scope;
@@ -403,9 +403,9 @@ public class LDAPUrl {
     /**
      * Returns the scope of the search. If the scope returned is -1, then
      * the given string is not for the scope.
-     * @param str The string which compares with the scope type.
-     * @returns The scope of the search, -1 returns if the given string is
-     *          not one of the values: sub, one or base.
+     * @param str the string against which to compare the scope type
+     * @returns the scope of the search, -1 is returned if the given string is
+     * not SUB, ONE or BASE (the acceptable LDAPv2 values for scope).
      */
     private int getScope(String str) {
 
@@ -423,7 +423,7 @@ public class LDAPUrl {
     /**
      * Returns the search filter (RFC 1558), or the default if none was
      * specified.
-     * @return filter
+     * @return the search filter.
      */
     public String getFilter () {
         return filter;
@@ -431,7 +431,7 @@ public class LDAPUrl {
 
     /**
      * Returns a valid string representation of this LDAP URL.
-     * @return LDAP search expression in URL form
+     * @return the LDAP search expression in URL form.
      */
     public String getUrl () {
         return URL;
@@ -439,9 +439,9 @@ public class LDAPUrl {
 
     /**
      * Checks if the given string is a filter expression.
-     * @param The string which is checked if it is filter expression.
-     * @return true if the given string is a filter expression; otherwise,
-     * return false;
+     * @param the string which is checked
+     * @return <code>true</code> if the given string is a filter expression; otherwise,
+     * <code>false</code>.
      */
     private boolean isFilter(String str) {
         if (str.startsWith("("))
@@ -453,9 +453,9 @@ public class LDAPUrl {
 
     /**
      * Checks if the given string is an attribute expression.
-     * @param The string which is checked if it is attribute expression.
-     * @return true if the given string is an attribute expression; otherwise,
-     * return false;
+     * @param the string which is checked
+     * @return <code>true</code> if the given string is an attribute expression; otherwise,
+     * <code>false</code>.
      */
     private boolean isAttribute(String str) {
         if ((!str.startsWith("(")) && (!str.equalsIgnoreCase("base")) &&
@@ -467,8 +467,8 @@ public class LDAPUrl {
 
     /**
      * Reads next construct from the given string parser.
-     * @param parser The string parser
-     * @return The next construct which can be attribute, scope or filter.
+     * @param parser the string parser
+     * @return the next construct which can be an attribute, scope or filter.
      * @exception java.net.MalformedURLException Get thrown when the url format
      *            is incorrect.
      */
@@ -515,7 +515,7 @@ public class LDAPUrl {
      * Decodes a URL-encoded string. Any occurences of %HH are decoded to the
      * hex value represented.  However, this routine does NOT decode "+"
      * into " ". See RFC 1738 for full details about URL encoding/decoding.
-     * @param URLEncoded A segment of a URL which was encoded via the URL
+     * @param URLEncoded a segment of a URL which was encoded using the URL
      * encoding rules
      * @exception MalformedURLException failed to parse URL
      */
@@ -556,7 +556,7 @@ public class LDAPUrl {
      * thing, not a general URL thing).  Note that, because Sun's URLEncoder
      * does do this encoding, we can't use it.
      * See RFC 1738 for full details about URL encoding/decoding.
-     * @param toEncode An arbitrary string to encode for embedding in a URL
+     * @param toEncode an arbitrary string to encode for embedding within a URL
      */
     public static String encode (String toEncode) {
       StringBuffer encoded = new StringBuffer (toEncode.length()+10);
@@ -577,5 +577,66 @@ public class LDAPUrl {
         }
 
         return encoded.toString();
+    }
+
+    /**
+     * Returns the URL in String format
+     *
+     * @return the URL in String format
+     */
+    public String toString() {
+        return getUrl();
+    }
+
+    /**
+     * Reports if the two objects represent the same URL
+     *
+     * @param url the object to be compared to
+     * @return <CODE>true</CODE> if the two are equivalent
+     */
+    public boolean equals( LDAPUrl url ) {
+        if ( getHost() == null ) {
+            if ( url.getHost() != null ) {
+                return false;
+            }
+        } else if ( !getHost().equals( url.getHost() ) ) {
+            return false;
+        }
+        if ( getPort() != url.getPort() ) {
+            return false;
+        }
+        if ( getDN() == null ) {
+            if ( url.getDN() != null ) {
+                return false;
+            }
+        } else if ( !getDN().equals( url.getDN() ) ) {
+            return false;
+        }
+        if ( getFilter() == null ) {
+            if ( url.getFilter() != null ) {
+                return false;
+            }
+        } else if ( !getFilter().equals( url.getFilter() ) ) {
+            return false;
+        }
+        if ( getScope() != url.getScope() ) {
+            return false;
+        }
+
+        if ( attributes == null ) {
+            if ( url.attributes != null ) {
+                return false;
+            }
+        } else if ( attributes.size() != url.attributes.size() ) {
+            return false;
+        } else {
+            for( int i = 0; i < attributes.size(); i++ ) {
+                if ( attributes.elementAt( i ) !=
+                     url.attributes.elementAt( i ) ) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

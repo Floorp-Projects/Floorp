@@ -62,11 +62,11 @@ public class LDAPVirtualListResponse extends LDAPControl {
 
    /**
      * Contructs an <CODE>LDAPVirtualListResponse</CODE> object.
-     * @param oid This parameter must be equal to
-     * <CODE>LDAPVirtualListResponse.VIRTUALLISTRESPONSE</CODE> or a 
-     * <CODE>LDAPException</CODE>is thrown.
-     * @param critical True if this control is critical.
-     * @param value The value associated with this control.
+     * @param oid this parameter must be equal to
+     * <CODE>LDAPVirtualListResponse.VIRTUALLISTRESPONSE</CODE> or an 
+     * <CODE>LDAPException</CODE>is thrown
+     * @param critical <code>true</code> if this control is critical
+     * @param value the value associated with this control
      * @exception netscape.ldap.LDAPException If oid is not 
      * <CODE>LDAPVirtualListResponse.VIRTUALLISTRESPONSE</CODE>.
      * @see netscape.ldap.LDAPControl#register
@@ -85,7 +85,7 @@ public class LDAPVirtualListResponse extends LDAPControl {
 
     /**
      * Constructs a new <CODE>LDAPVirtualListResponse</CODE> object.
-     * @param value A BER encoded byte array.
+     * @param value a BER encoded byte array
      * @see netscape.ldap.LDAPControl
      */
     public LDAPVirtualListResponse( byte[] value ) {
@@ -96,7 +96,7 @@ public class LDAPVirtualListResponse extends LDAPControl {
 
     /**
      * Gets the size of the virtual result set.
-     * @return The size of the virtual result set, or -1 if not known.
+     * @return the size of the virtual result set, or -1 if not known.
      */
     public int getContentCount() {
         return m_contentCount;
@@ -104,7 +104,7 @@ public class LDAPVirtualListResponse extends LDAPControl {
 
     /**
      * Gets the index of the first entry returned.
-     * @return The index of the first entry returned.
+     * @return the index of the first entry returned.
      */
     public int getFirstPosition() {
         return m_firstPosition;
@@ -112,7 +112,7 @@ public class LDAPVirtualListResponse extends LDAPControl {
 
     /**
      * Gets the result code.
-     * @return The result code.
+     * @return the result code.
      */
     public int getResultCode() {
         return m_resultCode;
@@ -120,7 +120,7 @@ public class LDAPVirtualListResponse extends LDAPControl {
 
     /**
      * Gets the context cookie, if any.
-     * @return The result context cookie.
+     * @return the result context cookie.
      */
     public String getContext() {
         return m_context;
@@ -131,7 +131,7 @@ public class LDAPVirtualListResponse extends LDAPControl {
      * "this" should be a control returned on a previous paged results
      * search, so it contains information on the virtual result set
      * size.
-     * @return A control useful for subsequent paged results searches.
+     * @return a control useful for subsequent paged results searches.
      */
     private void parseResponse() {
         /* Suck out the data and parse it */
@@ -161,9 +161,9 @@ public class LDAPVirtualListResponse extends LDAPControl {
 
     /**
      * Returns a control returned on a VLV search.
-     * @param controls An array of controls that may include a VLV
-     * results control.
-     * @return The control, if any; otherwise null.
+     * @param controls an array of controls that may include a VLV
+     * results control
+     * @return the control, if any; otherwise null.
      * @deprecated LDAPVirtualListResponse controls are now automatically 
      * instantiated.
      */

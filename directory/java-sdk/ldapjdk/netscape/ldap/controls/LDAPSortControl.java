@@ -233,11 +233,11 @@ public class LDAPSortControl extends LDAPControl {
      * <P> 
      * To retrieve the attribute that caused the sort operation to fail, call
      * <CODE>getFailedAttribute</CODE>.
-     * @param oid The oid for this control. This must be 
-     * <CODE>LDAPSortControl.SORTRESPONSE</CODE> or a <CODE>LDAPException</CODE> 
+     * @param oid the oid for this control. This must be 
+     * <CODE>LDAPSortControl.SORTRESPONSE</CODE> or an <CODE>LDAPException</CODE> 
      * is thrown.
-     * @param critical True if this control is critical to the operation.
-     * @param value The value associated with this control.
+     * @param critical <code>true</code> if this control is critical to the operation
+     * @param value the value associated with this control
      * @exception netscape.ldap.LDAPException If oid is not 
      * <CODE>LDAPSortControl.SORTRESPONSE</CODE>.
      * @exception java.io.IOException If value contains an invalid BER sequence.
@@ -276,14 +276,14 @@ public class LDAPSortControl extends LDAPControl {
     }
 
     /**
-     * @return The attribute that caused the sort operation to fail.
+     * @return the attribute that caused the sort operation to fail.
      */
     public String getFailedAttribute() {
 	return m_failedAttribute;
     }
 
     /**
-     * @return The result code from the search operation.
+     * @return the result code from the search operation.
      */
     public int getResultCode() {
 	return m_resultCode;
@@ -292,10 +292,10 @@ public class LDAPSortControl extends LDAPControl {
     /**
      * Constructs an <CODE>LDAPSortControl</CODE> object with a single
      * sorting key.
-     * @param key A single attribute to sort by.
+     * @param key a single attribute by which to sort
      * @param critical <CODE>true</CODE> if the LDAP operation should be
      * discarded when the server does not support this control (in other
-     * words, this control is critical to the LDAP operation).
+     * words, this control is critical to the LDAP operation)
      * @see netscape.ldap.LDAPControl
      * @see netscape.ldap.LDAPSortKey
      */
@@ -311,10 +311,10 @@ public class LDAPSortControl extends LDAPControl {
     /**
      * Constructs an <CODE>LDAPSortControl</CODE> object with an array of
      * sorting keys.
-     * @param keys The attributes to sort by.
+     * @param keys the attributes by which to sort
      * @param critical <CODE>true</CODE> if the LDAP operation should be
      * discarded when the server does not support this control (in other
-     * words, this control is critical to the LDAP operation).
+     * words, this control is critical to the LDAP operation)
      * @see netscape.ldap.LDAPControl
      * @see netscape.ldap.LDAPSortKey
      */
@@ -485,14 +485,14 @@ public class LDAPSortControl extends LDAPControl {
      * </TABLE>
      * <P>
      *
-     * @param controls An array of <CODE>LDAPControl</CODE> objects,
+     * @param controls an array of <CODE>LDAPControl</CODE> objects,
      * representing the controls returned by the server
-     * after a search.  To get these controls, use the
+     * after a search. To get these controls, use the
      * <CODE>getResponseControls</CODE> method of the
      * <CODE>LDAPConnection</CODE> class.
-     * @param results An array of integers.  The first element of this array
+     * @param results an array of integers.  The first element of this array
      * specifies the result code of the sorting operation.
-     * @return The attribute that caused the error, or null if the server did
+     * @return the attribute that caused the error, or null if the server did
      * not specify which attribute caused the error.
      * @see netscape.ldap.LDAPConnection#getResponseControls
      * @deprecated LDAPSortControl response controls are now automatically 
@@ -538,8 +538,8 @@ public class LDAPSortControl extends LDAPControl {
     /**
      * Create a "flattened" BER encoding of the requested sort keys,
      * and return it as a byte array.
-     * @param keys The attributes to sort by.
-     * @return The byte array of encoded data.
+     * @param keys the attributes by which to sort
+     * @return the byte array of encoded data.
      */
     private byte[] createSortSpecification( LDAPSortKey[] keys ) {
         /* A sequence of sequences */

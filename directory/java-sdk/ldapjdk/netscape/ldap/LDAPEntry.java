@@ -40,7 +40,7 @@ public class LDAPEntry {
     /**
      * Constructs a new entry with the specified distinguished name and with
      * an empty attribute set.
-     * @param distinguishedName The distinguished name of the new entry.
+     * @param distinguishedName the distinguished name of the new entry
      */
     public LDAPEntry( String distinguishedName ) {
         dn = distinguishedName;
@@ -50,8 +50,8 @@ public class LDAPEntry {
     /**
      * Constructs a new entry with the specified distinguished name and
      * set of attributes.
-     * @param distinguishedName The distinguished name of the new entry.
-     * @param attrs The set of attributes that you want assigned to the new entry.
+     * @param distinguishedName the distinguished name of the new entry
+     * @param attrs the set of attributes to assign to the new entry
      * @see netscape.ldap.LDAPAttributeSet
      */
     public LDAPEntry( String distinguishedName, LDAPAttributeSet attrs ) {
@@ -61,7 +61,7 @@ public class LDAPEntry {
 
     /**
      * Returns the distinguished name of the current entry.
-     * @return Distinguished name of the current entry.
+     * @return distinguished name of the current entry.
      */
     public String getDN() {
         return dn;
@@ -73,7 +73,7 @@ public class LDAPEntry {
 
     /**
      * Returns the attribute set of the entry.
-     * @return Set of attributes in the entry.
+     * @return set of attributes in the entry.
      * @see netscape.ldap.LDAPAttributeSet
      */
     public LDAPAttributeSet getAttributeSet() {
@@ -105,7 +105,7 @@ public class LDAPEntry {
      * sn;phonetic;lang-ja
      * </PRE>
      *
-     * @param subtype Semi-colon delimited list of subtypes
+     * @param subtype semi-colon delimited list of subtypes
      * that you want to find in attribute names.
      *<PRE>
      *     "lang-ja"        // Only Japanese language subtypes
@@ -113,8 +113,8 @@ public class LDAPEntry {
      *     "binary;lang-ja" // Only Japanese language subtypes
      *                         which also are binary
      *</PRE>
-     * @return Attribute set containing the attributes that have
-     * the specified subtypes
+     * @return attribute set containing the attributes that have
+     * the specified subtypes.
      * @see netscape.ldap.LDAPAttributeSet
      * @see netscape.ldap.LDAPAttributeSet#getSubset
      */
@@ -125,14 +125,14 @@ public class LDAPEntry {
     /**
      * In an entry, returns the single attribute that exactly matches the
      * specified attribute name.
-     * @param attrName Name of attribute to return.
+     * @param attrName name of attribute to return
      * For example:
      *<PRE>
      *     "cn"            // Only a non-subtyped version of cn
      *     "cn;lang-ja"    // Only a Japanese version of cn, will not
      *                     // return "cn;lang-ja-JP-kanji", for example
      *</PRE>
-     * @return Attribute in the current entry that has exactly the same name,
+     * @return attribute in the current entry that has exactly the same name,
      * or null (if no attribute in the entry matches the specified name).
      * @see netscape.ldap.LDAPAttribute
      */
@@ -161,9 +161,9 @@ public class LDAPEntry {
      *  getAttribute( "sn", "lang-en" ) returns the "<CODE>sn</CODE>" attribute.
      *</PRE>
      * <P>
-     * @param attrName Name of attribute to find in the entry.
-     * @param lang A language specification (for example, <CODE>lang-en</CODE>).
-     * @return The attribute that matches the base name and that best
+     * @param attrName name of attribute to find in the entry
+     * @param lang a language specification (for example, <CODE>lang-en</CODE>)
+     * @return the attribute that matches the base name and that best
      * matches any specified language subtype.
      * @see netscape.ldap.LDAPAttribute
      */
@@ -185,7 +185,7 @@ public class LDAPEntry {
      * values='Product Development,People'}
      * </PRE>
      *
-     * @return String representation of the entry's DN and its attributes.
+     * @return string representation of the entry's DN and its attributes.
      */
     public String toString() {
         StringBuffer sb = new StringBuffer("LDAPEntry: ");

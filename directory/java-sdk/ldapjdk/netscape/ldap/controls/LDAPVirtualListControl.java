@@ -234,11 +234,11 @@ public class LDAPVirtualListControl extends LDAPControl {
      * Constructs a new <CODE>LDAPVirtualListControl</CODE> object. Use this
      * constructor on an initial search operation, specifying the first
      * entry to be matched, or the initial part of it.
-     * @param jumpTo An LDAP search expression defining the result set.
-     * @param beforeCount The number of results before the top/center to
-     * return per page.
-     * @param afterCount The number of results after the top/center to
-     * return per page.
+     * @param jumpTo an LDAP search expression defining the result set
+     * @param beforeCount the number of results before the top/center to
+     * return per page
+     * @param afterCount the number of results after the top/center to
+     * return per page
      * @see netscape.ldap.LDAPControl
      */
     public LDAPVirtualListControl( String jumpTo, int beforeCount,
@@ -257,12 +257,12 @@ public class LDAPVirtualListControl extends LDAPControl {
      * Constructs a new <CODE>LDAPVirtualListControl</CODE> object. Use this
      * constructor on a subsquent search operation, after we know the
      * size of the virtual list, to fetch a subset.
-     * @param startIndex The index into the virtual list of an entry to
-     * return.
-     * @param beforeCount The number of results before the top/center to
-     * return per page.
-     * @param afterCount The number of results after the top/center to
-     * return per page.
+     * @param startIndex the index into the virtual list of an entry to
+     * return
+     * @param beforeCount the number of results before the top/center to
+     * return per page
+     * @param afterCount the number of results after the top/center to
+     * return per page
      * @see netscape.ldap.LDAPControl
      */
     public LDAPVirtualListControl( int startIndex, int beforeCount,
@@ -283,12 +283,12 @@ public class LDAPVirtualListControl extends LDAPControl {
      * Sets the starting index, and the number of entries before and after
      * to return. Apply this method to a control returned from a previous
      * search, to specify what result range to return on the next search.
-     * @param startIndex The index into the virtual list of an entry to
-     * return.
-     * @param beforeCount The number of results before startIndex to
-     * return per page.
-     * @param afterCount The number of results after startIndex to
-     * return per page.
+     * @param startIndex the index into the virtual list of an entry to
+     * return
+     * @param beforeCount the number of results before startIndex to
+     * return per page
+     * @param afterCount the number of results after startIndex to
+     * return per page
      * @see netscape.ldap.LDAPControl
      */
     public void setRange( int startIndex, int beforeCount, int afterCount  ) {
@@ -302,12 +302,12 @@ public class LDAPVirtualListControl extends LDAPControl {
     /**
      * Sets the search expression, and the number of entries before and after
      * to return.
-     * @param jumpTo An LDAP search expression defining the result set.
+     * @param jumpTo an LDAP search expression defining the result set
      * return.
-     * @param beforeCount The number of results before startIndex to
-     * return per page.
-     * @param afterCount The number of results after startIndex to
-     * return per page.
+     * @param beforeCount the number of results before startIndex to
+     * return per page
+     * @param afterCount the number of results after startIndex to
+     * return per page
      * @see netscape.ldap.LDAPControl
      */
     public void setRange( String jumpTo, int beforeCount, int afterCount  ) {
@@ -318,7 +318,7 @@ public class LDAPVirtualListControl extends LDAPControl {
 
     /**
      * Gets the size of the virtual result set.
-     * @return The size of the virtual result set, or -1 if not known.
+     * @return the size of the virtual result set, or -1 if not known.
      */
     public int getIndex() {
         return m_listIndex;
@@ -326,7 +326,7 @@ public class LDAPVirtualListControl extends LDAPControl {
 
     /**
      * Gets the size of the virtual result set.
-     * @return The size of the virtual result set, or -1 if not known.
+     * @return the size of the virtual result set, or -1 if not known.
      */
     public int getListSize() {
         return m_listSize;
@@ -334,7 +334,7 @@ public class LDAPVirtualListControl extends LDAPControl {
 
     /**
      * Sets the size of the virtual result set.
-     * @param listSize The virtual result set size.
+     * @param listSize the virtual result set size
      */
     public void setListSize( int listSize ) {
         m_listSize = listSize;
@@ -342,7 +342,7 @@ public class LDAPVirtualListControl extends LDAPControl {
 
     /**
      * Gets the number of results before the top/center to return per page.
-     * @return The number of results before the top/center to return per page.
+     * @return the number of results before the top/center to return per page.
      */
     public int getBeforeCount() {
         return m_beforeCount;
@@ -350,23 +350,23 @@ public class LDAPVirtualListControl extends LDAPControl {
 
     /**
      * Gets the number of results after the top/center to return per page.
-     * @return The number of results after the top/center to return per page.
+     * @return the number of results after the top/center to return per page.
      */
     public int getAfterCount() {
         return m_afterCount;
     }
 
     /**
-     * Gets the optional context cookie
-     * @return The optional context cookie
+     * Gets the optional context cookie.
+     * @return the optional context cookie.
      */
     public String getContext() {
         return m_context;
     }
 
     /**
-     * Sets the optional context cookie
-     * @param context The optional context cookie
+     * Sets the optional context cookie.
+     * @param context the optional context cookie
      */
     public void setContext( String context ) {
         m_context = context;
@@ -375,10 +375,10 @@ public class LDAPVirtualListControl extends LDAPControl {
     /**
      * Creates a "flattened" BER encoding of the requested page
      * specifications and return it as a byte array.
-     * @param subFilter Filter expression for generating the results.
-     * @param beforeCount Number of entries before first match to return.
-     * @param afterCount Number of entries ager first match to return.
-     * @return The byte array of encoded data.
+     * @param subFilter filter expression for generating the results
+     * @param beforeCount number of entries before first match to return
+     * @param afterCount number of entries after first match to return
+     * @return the byte array of encoded data.
      */
     private byte[] createPageSpecification( String subFilter,
                                             int beforeCount,
@@ -399,11 +399,11 @@ public class LDAPVirtualListControl extends LDAPControl {
     /**
      * Creates a "flattened" BER encoding of the requested page
      * specifications and return it as a byte array.
-     * @param listIndex The center or starting entry to return.
-     * @param listSize The virtual list size.
-     * @param beforeCount Number of entries before first match to return.
-     * @param afterCount Number of entries after first match to return.
-     * @return The byte array of encoded data.
+     * @param listIndex the center or starting entry to return
+     * @param listSize the virtual list size
+     * @param beforeCount number of entries before the first match to return
+     * @param afterCount number of entries after the first match to return
+     * @return the byte array of encoded data.
      */
     private byte[] createPageSpecification( int listIndex,
                                             int listSize,

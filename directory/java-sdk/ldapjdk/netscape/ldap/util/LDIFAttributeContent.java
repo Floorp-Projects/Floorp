@@ -55,7 +55,7 @@ public class LDIFAttributeContent extends LDIFBaseContent {
      * Returns the content type. You can use this with the
      * <CODE>getContent</CODE> method of the <CODE>LDIFRecord</CODE>
      * object to determine the type of content specified in the record.
-     * @return The content type (which is
+     * @return the content type (which is
      * <CODE>LDIFContent.ATTRIBUTE_CONTENT</CODE>).
      * @see netscape.ldap.util.LDIFRecord#getContent
      */
@@ -65,7 +65,7 @@ public class LDIFAttributeContent extends LDIFBaseContent {
 
     /**
      * Adds an attribute to the content of the LDIF record.
-     * @param attr The attribute that you want to add.
+     * @param attr the attribute to add
      */
     public void addElement(LDAPAttribute attr) {
         m_attrs.addElement(attr);
@@ -74,7 +74,7 @@ public class LDIFAttributeContent extends LDIFBaseContent {
     /**
      * Retrieves the list of the attributes specified in the content
      * of the LDIF record.
-     * @return An array of <CODE>LDAPAttribute</CODE> objects that
+     * @return an array of <CODE>LDAPAttribute</CODE> objects that
      * represent the attributes specified in the content of the LDIF record.
      */
     public LDAPAttribute[] getAttributes() {
@@ -87,7 +87,7 @@ public class LDIFAttributeContent extends LDIFBaseContent {
 
     /**
      * Returns the string representation of the content of the LDIF record.
-     * @return The string representation of the content of the LDIF record.
+     * @return the string representation of the content of the LDIF record.
      */
     public String toString() {
         String s = "";

@@ -28,7 +28,7 @@ public class LDAPSortKey {
     /**
      * Constructs a new <CODE>LDAPSortKey</CODE> object that will
      * sort based on the specified instructions.
-     * @param keyDescription A single attribute specification to sort by.
+     * @param keyDescription a single attribute specification by which to sort
      * If preceded by a hyphen ("-"), the attribute is sorted in reverse order.
      * You can also specify the object ID (OID) of a matching rule after
      * a colon (":"). For example:
@@ -66,15 +66,15 @@ public class LDAPSortKey {
     /**
      * Constructs a new <CODE>LDAPSortKey</CODE> object that will
      * sort based on the specified attribute and sort order.
-     * @param key A single attribute to sort by.  For example:
+     * @param key a single attribute by which to sort.  For example:
      * <P>
      * <UL>
      * <LI><CODE>"cn"</CODE> (sort by the <CODE>cn</CODE> attribute)
      * <LI><CODE>"givenname"</CODE> (sort by the <CODE>givenname</CODE>
      * attribute)
      * </UL>
-     * @param reverse If <CODE>true</CODE>, the sorting is done in
-     * descending order.
+     * @param reverse if <CODE>true</CODE>, the sorting is done in
+     * descending order
      * @see netscape.ldap.controls.LDAPSortControl
      * @see netscape.ldap.controls.LDAPVirtualListControl
      */
@@ -89,17 +89,17 @@ public class LDAPSortKey {
      * Constructs a new <CODE>LDAPSortKey</CODE> object that will
      * sort based on the specified attribute, sort order, and matching
      * rule.
-     * @param key A single attribute to sort by. For example:
+     * @param key a single attribute by which to sort. For example:
      * <P>
      * <UL>
      * <LI><CODE>"cn"</CODE> (sort by the <CODE>cn</CODE> attribute)
      * <LI><CODE>"givenname"</CODE> (sort by the <CODE>givenname</CODE>
      * attribute)
      * </UL>
-     * @param reverse If <CODE>true</CODE>, the sorting is done in
-     * descending order.
-     * @param matchRule Object ID (OID) of the matching rule for
-     * the attribute (for example, <CODE>1.2.3.4</CODE>).
+     * @param reverse if <CODE>true</CODE>, the sorting is done in
+     * descending order
+     * @param matchRule object ID (OID) of the matching rule for
+     * the attribute (for example, <CODE>1.2.3.4</CODE>)
      * @see netscape.ldap.controls.LDAPSortControl
      * @see netscape.ldap.controls.LDAPVirtualListControl
      */
@@ -112,8 +112,8 @@ public class LDAPSortKey {
     }
 
     /**
-     * Returns the attribute to sort by.
-     * @return A single attribute to sort by.
+     * Returns the attribute by which to sort.
+     * @return a single attribute by which to sort.
      */
     public String getKey() {
         return m_key;
@@ -130,7 +130,7 @@ public class LDAPSortKey {
     /**
      * Returns the object ID (OID) of the matching rule used for sorting.
      * If no matching rule is specified, <CODE>null</CODE> is returned.
-     * @return The object ID (OID) of the matching rule, or <CODE>null</CODE>
+     * @return the object ID (OID) of the matching rule, or <CODE>null</CODE>
      * if the sorting instructions specify no matching rule.
      */
     public String getMatchRule() {

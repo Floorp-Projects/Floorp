@@ -56,7 +56,7 @@ public class BERBoolean extends BERElement {
      * Constructs a boolean element from an input stream.
      * @param stream source
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERBoolean(InputStream stream, int[] bytes_read) throws IOException {
@@ -102,7 +102,7 @@ public class BERBoolean extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         return "Boolean {" + m_value + "}";

@@ -41,10 +41,10 @@ public abstract class BERConstruct extends BERElement {
 
     /**
      * Constructs a construct element from an input stream.
-     * @param decoder decoder for application specific ber
+     * @param decoder decoder for application specific BER
      * @param stream input stream from socket
      * @param bytes_read array of 1 int; value incremented by number
-     *        of bytes read from stream.
+     * of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERConstruct(BERTagDecoder decoder, InputStream stream,
@@ -75,7 +75,7 @@ public abstract class BERConstruct extends BERElement {
 
     /**
      * Adds an element to the list.
-     * @return BER encoding of the element
+     * @return BER encoding of the element.
      */
     public void addElement(BERElement element) {
         m_elements.addElement(element);
@@ -83,7 +83,7 @@ public abstract class BERConstruct extends BERElement {
 
     /**
      * Retrieves number of elements.
-     * @return number of element
+     * @return number of elements.
      */
     public int size() {
         return m_elements.size();
@@ -91,8 +91,8 @@ public abstract class BERConstruct extends BERElement {
 
     /**
      * Gets ber element at specific position.
-     * @param index index of element to get
-     * @return ber element
+     * @param index index of the element to get
+     * @return BER element.
      */
     public BERElement elementAt(int index) {
         return (BERElement)m_elements.elementAt(index);
@@ -124,7 +124,7 @@ public abstract class BERConstruct extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public abstract String toString();
 }

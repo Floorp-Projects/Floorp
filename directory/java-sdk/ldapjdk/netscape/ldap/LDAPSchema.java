@@ -199,8 +199,7 @@ public class LDAPSchema {
      * <P>
      *
      * @param objectSchema <CODE>LDAPObjectClassSchema</CODE> object
-     * representing the object class schema definition that you want
-     * to add.
+     * representing the object class schema definition to add
      * @see netscape.ldap.LDAPObjectClassSchema
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
@@ -230,8 +229,7 @@ public class LDAPSchema {
      * <P>
      *
      * @param attrSchema <CODE>LDAPAttributeSchema</CODE> object
-     * representing the attribute type schema definition that you
-     * want to add.
+     * representing the attribute type schema definition to add
      * @see netscape.ldap.LDAPAttributeSchema
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
@@ -260,8 +258,7 @@ public class LDAPSchema {
      * <P>
      *
      * @param matchSchema <CODE>LDAPMatchingRuleSchema</CODE> object
-     * representing the matching rule schema definition that you want
-     * to add.
+     * representing the matching rule schema definition to add
      * @see netscape.ldap.LDAPMatchingRuleSchema
      * @see netscape.ldap.LDAPSchemaElement#add
      * @see netscape.ldap.LDAPSchemaElement#remove
@@ -272,7 +269,7 @@ public class LDAPSchema {
 
     /**
      * Gets an enumeration ofthe object class definitions in this schema.
-     * @return An enumeration ofobject class definitions.
+     * @return an enumeration of object class definitions.
      */
     public Enumeration getObjectClasses() {
         return objectClasses.elements();
@@ -280,7 +277,7 @@ public class LDAPSchema {
 
     /**
      * Gets an enumeration ofthe attribute type definitions in this schema.
-     * @return An enumeration ofattribute type definitions.
+     * @return an enumeration of attribute type definitions.
      */
     public Enumeration getAttributes() {
         return attributes.elements();
@@ -288,7 +285,7 @@ public class LDAPSchema {
 
     /**
      * Gets an enumeration ofthe matching rule definitions in this schema.
-     * @return An enumeration ofmatching rule definitions.
+     * @return an enumeration of matching rule definitions.
      */
     public Enumeration getMatchingRules() {
         return matchingRules.elements();
@@ -296,8 +293,8 @@ public class LDAPSchema {
 
     /**
      * Gets the definition of the object class with the specified name.
-     * @param name Name of the object class that you want to find.
-     * @return An <CODE>LDAPObjectClassSchema</CODE> object representing
+     * @param name name of the object class to find
+     * @return an <CODE>LDAPObjectClassSchema</CODE> object representing
      * the object class definition, or <CODE>null</CODE> if not found.
      */
     public LDAPObjectClassSchema getObjectClass( String name ) {
@@ -306,8 +303,8 @@ public class LDAPSchema {
 
     /**
      * Gets the definition of the attribute type with the specified name.
-     * @param name Name of the attribute type that you want to find.
-     * @return An <CODE>LDAPAttributeSchema</CODE> object representing
+     * @param name name of the attribute type to find
+     * @return an <CODE>LDAPAttributeSchema</CODE> object representing
      * the attribute type definition, or <CODE>null</CODE> if not found.
      */
     public LDAPAttributeSchema getAttribute( String name ) {
@@ -316,8 +313,8 @@ public class LDAPSchema {
 
     /**
      * Gets the definition of a matching rule with the specified name.
-     * @param name Name of the matching rule that you want to find.
-     * @return An <CODE>LDAPMatchingRuleSchema</CODE> object representing
+     * @param name name of the matching rule to find
+     * @return an <CODE>LDAPMatchingRuleSchema</CODE> object representing
      * the matching rule definition, or <CODE>null</CODE> if not found.
      */
     public LDAPMatchingRuleSchema getMatchingRule( String name ) {
@@ -326,7 +323,7 @@ public class LDAPSchema {
 
     /**
      * Get an enumeration of the names of the object classes in this schema.
-     * @return An enumeration of object class names (all lower-case).
+     * @return an enumeration of object class names (all lower-case).
      */
     public Enumeration getObjectClassNames() {
         return objectClasses.keys();
@@ -334,7 +331,7 @@ public class LDAPSchema {
 
     /**
      * Get an enumeration of the names of the attribute types in this schema.
-     * @return An enumeration of attribute names (all lower-case).
+     * @return an enumeration of attribute names (all lower-case).
      */
     public Enumeration getAttributeNames() {
         return attributes.keys();
@@ -342,7 +339,7 @@ public class LDAPSchema {
 
     /**
      * Get an enumeration of the names of the matching rules in this schema.
-     * @return An enumeration of matching rule names (all lower-case).
+     * @return an enumeration of matching rule names (all lower-case).
      */
     public Enumeration getMatchingRuleNames() {
         return matchingRules.keys();
@@ -350,8 +347,8 @@ public class LDAPSchema {
 
     /**
      * Retrieve the schema for a specific entry.
-     * @param ld An active connection to a Directory Server.
-     * @param dn The entry for which to fetch schema.
+     * @param ld an active connection to a Directory Server
+     * @param dn the entry for which to fetch schema
      * @exception LDAPException on failure.
      */
     public void fetchSchema( LDAPConnection ld, String dn )
@@ -415,7 +412,7 @@ public class LDAPSchema {
 
     /**
      * Retrieve the entire schema from the root of a Directory Server.
-     * @param ld An active connection to a Directory Server.
+     * @param ld an active connection to a Directory Server
      * @exception LDAPException on failure.
      */
     public void fetchSchema( LDAPConnection ld ) throws LDAPException {
@@ -426,8 +423,8 @@ public class LDAPSchema {
      * Read one attribute definition from a server to determine if
      * attribute syntaxes are quoted (a bug, present in Netscape
      * and Novell servers).
-     * @param ld An active connection to a Directory Server.
-     * @return <CODE>true</CODE> if standards-compliant
+     * @param ld an active connection to a Directory Server
+     * @return <CODE>true</CODE> if standards-compliant.
      * @exception LDAPException on failure.
      */
     static boolean isAttributeSyntaxStandardsCompliant( LDAPConnection ld )
@@ -491,7 +488,7 @@ public class LDAPSchema {
      * classes, attribute types, and matching rules) in an easily
      * readable format (not the same as the format expected by
      * an LDAP server).
-     * @return A string containing the schema in printable format.
+     * @return a string containing the schema in printable format.
      */
     public String toString() {
         String s = "Object classes:\n";
@@ -517,8 +514,8 @@ public class LDAPSchema {
 
     /**
      * Retrieve the DN of the schema definitions for a specific entry.
-     * @param ld An active connection to a Directory Server.
-     * @param dn The entry for which to fetch schema.
+     * @param ld an active connection to a Directory Server
+     * @param dn the entry for which to fetch schema
      * @exception LDAPException on failure.
      */
     static String getSchemaDN( LDAPConnection ld, String dn )
@@ -562,7 +559,7 @@ public class LDAPSchema {
 
     /**
      * Helper for "main" to print out schema elements.
-     * @param en Enumeration of schema elements.
+     * @param en enumeration of schema elements
      */
     private static void printEnum( Enumeration en ) {
         while( en.hasMoreElements() ) {
@@ -583,9 +580,9 @@ public class LDAPSchema {
      * java netscape.ldap.LDAPSchema myhost.mydomain.com 389
      * </PRE>
      *
-     * @param args The host name and the port number of the LDAP server
+     * @param args the host name and the port number of the LDAP server
      * (for example, <CODE>netscape.ldap.LDAPSchema directory.netscape.com
-     * 389</CODE>).
+     * 389</CODE>)
      */
     public static void main( String[] args ) {
         if ( args.length < 2 ) {

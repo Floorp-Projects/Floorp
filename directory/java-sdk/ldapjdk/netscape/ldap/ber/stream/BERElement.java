@@ -84,10 +84,10 @@ public abstract class BERElement implements Serializable {
 
     /**
      * Gets a ber element from the input stream.
-     * @param decoder decoder for application specific ber
+     * @param decoder decoder for application specific BER
      * @param stream source of ber encoding
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      * @exception IOException failed to decode an element.
      */
     public static BERElement getElement(BERTagDecoder decoder,
@@ -152,9 +152,9 @@ public abstract class BERElement implements Serializable {
     /**
      * Reads and decodes a length byte and then that many octets
      * from the input stream.
-     * @param stream input stream to read from
+     * @param stream input stream from which to read
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      * @return length of contents or -1 if indefinite length.
      * @exception IOException failed to read octets
      */
@@ -187,8 +187,8 @@ public abstract class BERElement implements Serializable {
     /**
      * Writes length octets (definite length only) to stream.
      * Uses shortform whenever possible.
-     * @param stream output stream to write to.
-     * @param num_content_octets value to be encode into length octets.
+     * @param stream output stream to write to
+     * @param num_content_octets value to be encode into length octets
      * @return number of bytes sent to stream.
      * @exception IOException failed to read octets
      */
@@ -232,8 +232,8 @@ public abstract class BERElement implements Serializable {
      * an integer..
      * @param stream source of data
      * @param bytes_read number of bytes read
-     * @param length number of bytes to be read (1 - 4)
-     * @return the value of the data as two's complement
+     * @param length number of bytes to be read (1 to 4)
+     * @return the value of the data as two's complement.
      * @exception IOException failed to read octets
      */
     protected int readUnsignedBinary(InputStream stream,
@@ -256,7 +256,7 @@ public abstract class BERElement implements Serializable {
      * @param stream source of data
      * @param bytes_read number of bytes read
      * @param length number of bytes to be read
-     * @return the integer value as two's complement
+     * @return the integer value as two's complement.
      * @exception IOException failed to read octets
      */
     protected int readTwosComplement(InputStream stream,
@@ -299,20 +299,20 @@ public abstract class BERElement implements Serializable {
 
     /**
      * Sends the BER encoding directly to a stream.
-     * @param stream output stream.
+     * @param stream output stream
      * @return bytes written to stream.
      */
     public abstract void write(OutputStream stream) throws IOException;
 
     /**
      * Gets the element type.
-     * @return element type
+     * @return element type.
      */
     public abstract int getType();
 
     /**
      * Gets the string representation.
-     * @return string representation of an element
+     * @return string representation of an element.
      */
     public abstract String toString();
 }

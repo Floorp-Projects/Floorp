@@ -54,7 +54,7 @@ public class LDIFModifyContent extends LDIFBaseContent {
      * Returns the content type. You can use this with the
      * <CODE>getContent</CODE> method of the <CODE>LDIFRecord</CODE>
      * object to determine the type of content specified in the record.
-     * @return The content type (which is
+     * @return the content type (which is
      * <CODE>LDIFContent.MODIFICATION_CONTENT</CODE>).
      * @see netscape.ldap.util.LDIFRecord#getContent
      */
@@ -66,7 +66,7 @@ public class LDIFModifyContent extends LDIFBaseContent {
      * Specifies an additional modification that should be made to
      * the entry.
      * @param mod <CODE>LDAPModification</CODE> object representing
-     * the change to be made to the entry.
+     * the change to make to the entry
      * @see netscape.ldap.LDAPModification
      */
     public void addElement(LDAPModification mod) {
@@ -76,7 +76,7 @@ public class LDIFModifyContent extends LDIFBaseContent {
     /**
      * Retrieves the list of the modifications specified in the content
      * of the LDIF record.
-     * @return An array of <CODE>LDAPModification</CODE> objects that
+     * @return an array of <CODE>LDAPModification</CODE> objects that
      * represent the modifications specified in the content of the LDIF record.
      * @see netscape.ldap.LDAPModification
      */
@@ -90,7 +90,7 @@ public class LDIFModifyContent extends LDIFBaseContent {
 
     /**
      * Returns the string representation of the content of the LDIF record.
-     * @return The string representation of the content of the LDIF record.
+     * @return the string representation of the content of the LDIF record.
      */
     public String toString() {
         String s = "";

@@ -36,10 +36,10 @@ public class LDAPDN {
 
     /**
      * Returns the individual components of a distinguished name (DN).
-     * @param dn Distinguished name that you want to get the components of.
-     * @param noTypes If <CODE>true</CODE>, returns only the values of the
-     * components and not the names (such as 'cn=').
-     * @return An array of strings representing the components of the DN.
+     * @param dn distinguished name of which you want to get the components.
+     * @param noTypes if <CODE>true</CODE>, returns only the values of the
+     * components and not the names (such as 'cn=')
+     * @return an array of strings representing the components of the DN.
      * @see netscape.ldap.LDAPDN#explodeRDN(java.lang.String, boolean)
      */
     public static String[] explodeDN (String dn, boolean noTypes) {
@@ -49,10 +49,10 @@ public class LDAPDN {
 
     /**
      * Returns the individual components of a relative distinguished name (RDN).
-     * @param rdn Relative distinguished name that you want to get the components of.
-     * @param noTypes If <CODE>true</CODE>, returns only the values of the
-     * components and not the names (such as 'cn=').
-     * @return An array of strings representing the components of the RDN.
+     * @param rdn relative distinguished name of which you want to get the components.
+     * @param noTypes if <CODE>true</CODE>, returns only the values of the
+     * components and not the names (such as 'cn=')
+     * @return an array of strings representing the components of the RDN.
      * @see netscape.ldap.LDAPDN#explodeDN(java.lang.String, boolean)
      */
     public static String[] explodeRDN (String rdn, boolean noTypes) {
@@ -65,8 +65,8 @@ public class LDAPDN {
      * by <CODE>netscape.ldap.util.DN.ESCAPED_CHAR</CODE>.
      * <P>
      *
-     * @param rdn The RDN that you want escaped.
-     * @return The RDN with the characters escaped.
+     * @param rdn the RDN to escape
+     * @return the RDN with the characters escaped.
      * @see netscape.ldap.util.DN#ESCAPED_CHAR
      * @see netscape.ldap.LDAPDN#unEscapeRDN(java.lang.String)
      */
@@ -98,8 +98,8 @@ public class LDAPDN {
      * DN, see <CODE>netscape.ldap.LDAPDN.ESCAPED_CHAR</CODE>.
      * <P>
      *
-     * @param rdn The RDN that you want unescaped.
-     * @return The unescaped RDN.
+     * @param rdn the RDN to unescape
+     * @return the unescaped RDN.
      * @see netscape.ldap.util.DN#ESCAPED_CHAR
      * @see netscape.ldap.LDAPDN#escapeRDN(java.lang.String)
      */

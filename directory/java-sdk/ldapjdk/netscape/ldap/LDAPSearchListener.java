@@ -33,9 +33,9 @@ public class LDAPSearchListener extends LDAPMessageQueue {
 
     /**
      * Constructs a LDAP search listener.
-     * @param asynchOp A flag whether the object is used for asynchronous
-     * LDAP operations
-     * @param cons LDAP Search Constraints
+     * @param asynchOp a boolean flag indicating whether the object is used 
+     * for asynchronous LDAP operations
+     * @param cons LDAP search constraints
      * @see netscape.ldap.LDAPAsynchronousConnection
      */
     LDAPSearchListener ( boolean asynchOp,
@@ -47,7 +47,7 @@ public class LDAPSearchListener extends LDAPMessageQueue {
     /**
      * Block until all results are in. Used for synchronous search with 
      * batch size of zero.
-     * @return search response message
+     * @return search response message.
      * @exception Network exception error
      */
     LDAPResponse completeSearchOperation () throws LDAPException{
@@ -58,8 +58,8 @@ public class LDAPSearchListener extends LDAPMessageQueue {
     /**
      * Blocks until a search result, reference or response is available,     * or until all operations associated with the object have completed     * or been canceled.
      *
-     * @return A search result, search reference, or search response message
-     * or null if there is no more outstanding requests 
+     * @return a search result, search reference, search response message,
+     * or null if there are no more outstanding requests. 
      * @exception LDAPException Network error exception
      * @exception LDAPInterruptedException The invoking thread was interrupted
      * @see LDAPResponse
@@ -67,7 +67,16 @@ public class LDAPSearchListener extends LDAPMessageQueue {
      * @see LDAPSearchResultReference
      */
     public LDAPMessage getResponse () throws LDAPException{
-        LDAPMessage result = nextMessage();
+        return nextMessage();
+    }
+
+
+    /**
+     * Override nextMessage to wake up the LDAPConnThread if 
+     *  backlog limit has been reached 
+     */
+    LDAPMessage nextMessage()  throws LDAPException{
+        LDAPMessage result = super.nextMessage();
 
         // Notify LDAPConnThread to wake up if backlog limit has been reached
         if (result instanceof LDAPSearchResult || result instanceof LDAPSearchResultReference) {
@@ -97,7 +106,7 @@ public class LDAPSearchListener extends LDAPMessageQueue {
      * The proper way to handle this scenario is to create a separate listener
      * for each new request, and after l.getIDs() has been invoked, merge the
      * new request with the existing one.
-     * @param listener2 The listener to be merged with.
+     * @param listener2 the listener with which to merge
      */
     public void merge(LDAPSearchListener listener2) {
         super.merge(listener2);
@@ -106,23 +115,23 @@ public class LDAPSearchListener extends LDAPMessageQueue {
     /**
      * Reports true if a response has been received from the server.
      *
-     * @return A flag whether the response message queue is empty
+     * @return a flag indicating whether the response message queue is empty.
      */
     public boolean isResponseReceived() {
         return super.isMessageReceived();
     }
 
     /**
-     * Returns message ids for all outstanding requests
-     * @return Message id array
+     * Returns message IDs for all outstanding requests
+     * @return message ID array.
      */
     public int[] getIDs() {
         return super.getIDs();
     }
     
     /**
-     * Return the search constraints used to create this object
-     * @return the search constraints used to create this object
+     * Return the search constraints used to create this object.
+     * @return the search constraints used to create this object.
      */
     LDAPSearchConstraints getSearchConstraints() {
         return m_constraints;
@@ -133,7 +142,7 @@ public class LDAPSearchListener extends LDAPMessageQueue {
      * when the results get processed in the queue. After the results have been
      * saved in the vector, then the key and a vector of results are put in
      * the cache.
-     * @param key The key of the cache entry
+     * @param key the key of the cache entry
      */
     void setKey(Long key) {
         m_key = key;
@@ -141,7 +150,7 @@ public class LDAPSearchListener extends LDAPMessageQueue {
 
     /**
      * Get the key of the cache entry.
-     * @return The key of the cache entry
+     * @return the key of the cache entry.
      */
     Long getKey() {
         return m_key;

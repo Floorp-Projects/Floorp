@@ -27,7 +27,7 @@ import netscape.ldap.client.opers.JDAPSearchResultReference;
 public class LDAPSearchResultReference extends LDAPMessage {
 
     /**
-     * A lists of referred to Ldap URLs
+     * A list of LDAP URLs that are referred to.
      */
     private String m_URLs[];
     
@@ -35,8 +35,8 @@ public class LDAPSearchResultReference extends LDAPMessage {
      * Constructor
      * 
      * @param msgid message identifier
-     * @param resRef Search result reference response
-     * @param controls Array of controls of null
+     * @param resRef search result reference response
+     * @param controls array of controls or null
      * @see netscape.ldap.LDAPEntry
      */
     LDAPSearchResultReference(int msgid, JDAPSearchResultReference resRef, LDAPControl[]controls) {
@@ -45,8 +45,8 @@ public class LDAPSearchResultReference extends LDAPMessage {
     }
     
     /**
-     * Returns a list of referred to LDAP URLs
-     * @return A list of URLs
+     * Returns a list of LDAP URLs that are referred to.
+     * @return a list of URLs.
      */
     public String[] getUrls() {
         return m_URLs;

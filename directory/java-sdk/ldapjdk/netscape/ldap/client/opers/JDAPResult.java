@@ -33,7 +33,7 @@ import java.net.*;
  *     success (0),
  *     ...
  *   },
- *   matchedND LDAPDN,
+ *   matchedDN LDAPDN,
  *   errorMessage LDAPString
  * }
  * </pre>
@@ -239,7 +239,7 @@ public class JDAPResult {
      * @return string representation
      */
     public String getParamString() {
-        return "{resultCode=" + m_result_code + ", matcheDN=" +
+        return "{resultCode=" + m_result_code + ", matchedDN=" +
           m_matched_dn + ", errorMessage=" + m_error_message + "}";
     }
 

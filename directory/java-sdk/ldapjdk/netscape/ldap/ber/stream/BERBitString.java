@@ -57,7 +57,7 @@ public class BERBitString extends BERElement {
      * (for constructed encodings).
      * @param stream source
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERBitString(BERTagDecoder decoder, InputStream stream,
@@ -120,7 +120,7 @@ public class BERBitString extends BERElement {
      * (for primitive encodings).
      * @param stream source
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERBitString(InputStream stream, int[] bytes_read)
@@ -230,7 +230,7 @@ public class BERBitString extends BERElement {
 
     /**
      * Gets the number of bits.
-     * @return bit numbers
+     * @return bit numbers.
      */
     public int getSize() {
         return m_value_num_bits;
@@ -246,7 +246,7 @@ public class BERBitString extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         String hex_string = "";

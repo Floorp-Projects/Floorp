@@ -123,8 +123,8 @@ public class LDAPExtendedOperation {
 
     /**
      * Construct an object
-     * @param oid Identifier for the particular operation.
-     * @param vals Operation-specific data.
+     * @param oid identifier for the particular operation
+     * @param vals operation-specific data
      */
     public LDAPExtendedOperation( String oid, byte[] vals ) {
         m_oid = oid;
@@ -133,7 +133,7 @@ public class LDAPExtendedOperation {
 
     /**
      * Get the identifier for this operation.
-     * @return oid Identifier for the particular operation.
+     * @return oid identifier for the particular operation.
      */
     public String getID() {
         return m_oid;
@@ -141,7 +141,7 @@ public class LDAPExtendedOperation {
 
     /**
      * Get the data for this operation.
-     * @return vals Operation-specific data.
+     * @return vals operation-specific data.
      */
     public byte[] getValue() {
         return m_vals;

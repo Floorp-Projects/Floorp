@@ -34,8 +34,8 @@ public class BERObjectId extends BERElement {
     private int[] m_value = null;
 
     /**
-     * Constructs an object id element from an array of values.
-     * @param value object id value as array of components
+     * Constructs an object ID element from an array of values.
+     * @param value object ID value as array of components
      */
     public BERObjectId(int[] value) {
         m_value = new int[value.length];
@@ -57,7 +57,7 @@ public class BERObjectId extends BERElement {
      * Constructs an object id element from an input stream.
      * @param stream source
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERObjectId(InputStream stream, int[] bytes_read) throws IOException {
@@ -119,7 +119,7 @@ public class BERObjectId extends BERElement {
      * Reads a sub identifier from stream.
      * @param stream input stream
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream.
+     * number of bytes read from stream
      */
     private int readSubIdentifier(InputStream stream, int[] bytes_read)
         throws IOException {
@@ -156,7 +156,7 @@ public class BERObjectId extends BERElement {
 
     /**
      * Gets the element value.
-     * @return element value
+     * @return element value.
      */
     public int[] getValue() {
         return m_value;
@@ -164,7 +164,7 @@ public class BERObjectId extends BERElement {
 
     /**
      * Gets the element type.
-     * @return element type
+     * @return element type.
      */
     public int getType() {
         return BERElement.OBJECTID;
@@ -172,7 +172,7 @@ public class BERObjectId extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation of element
+     * @return string representation of element.
      */
     public String toString() {
         if (m_value == null)

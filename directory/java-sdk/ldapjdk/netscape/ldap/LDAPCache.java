@@ -24,9 +24,8 @@ import netscape.ldap.util.*;
 import java.util.zip.CRC32;
 
 /**
- * <CODE>LDAPCache</CODE> is the class that represents an
- * in-memory cache that you can use to reduce the number of
- * search requests sent to the LDAP server.
+ * <CODE>LDAPCache</CODE> represents an in-memory cache that you can use 
+ * to reduce the number of search requests sent to the LDAP server.
  * <P>
  *
  * Each item in the cache represents a search request and
@@ -47,7 +46,7 @@ import java.util.zip.CRC32;
  * <P>
  *
  * After a search request is cached, the results of any
- * subsequent search requests using the same criteria are 8
+ * subsequent search requests using the same criteria are
  * read from the cache.  Note that if any part of the
  * criteria differs (for example, if a different DN is used
  * when binding to the server or if a different set of
@@ -84,6 +83,9 @@ import java.util.zip.CRC32;
  * the same <CODE>LDAPCache</CODE> object.
  * <P>
  *
+ * Note that search requests that return referrals are not cached.
+ * <P>
+ *
  * The <CODE>LDAPCache</CODE> class includes methods for
  * getting statistics (such as hit rates) from the cache and
  * for flushing entries from the cache.
@@ -92,7 +94,7 @@ import java.util.zip.CRC32;
  * @see netscape.ldap.LDAPConnection#setCache(netscape.ldap.LDAPCache)
  * @see netscape.ldap.LDAPConnection#getCache
  */
-public class LDAPCache implements TimerEventListener {
+public class LDAPCache {
     private Hashtable m_cache;
     private long m_timeToLive;
     private long m_maxSize;
@@ -104,14 +106,23 @@ public class LDAPCache implements TimerEventListener {
      * for the cache.
      */
     public static final String DELIM = "#";
-    private Timer m_timer = null;
-    private static long TIMEOUT = 60000;
+    private TTLTimer m_timer = null;
     private long m_totalOpers = 0;
-    private static final boolean m_debug = false;
     private long m_hits = 0;
     private long m_flushes = 0;
 
-
+    // Debug can be activated by defining debug.cache property    
+    private static boolean m_debug = false;
+    static {
+        try {
+            String traceProp = System.getProperty("debug.cache");
+            m_debug = (traceProp != null);
+        }
+        catch (Exception e) {
+            ;// In browser access to property might not be allowed
+        }
+    }
+    
     /**
      * Constructs a new <CODE>LDAPCache</CODE> object, using the
      * specified maximum size of the cache (in bytes) and the maximum
@@ -119,9 +130,9 @@ public class LDAPCache implements TimerEventListener {
      * exceed this age, they are removed from the cache.
      * <P>
      *
-     * @param ttl The maximum amount of time that an item can be cached
+     * @param ttl the maximum amount of time that an item can be cached
      *  (in seconds)
-     * @param size The maximum size of the cache (in bytes)
+     * @param size the maximum size of the cache (in bytes)
      */
     public LDAPCache(long ttl, long size)
     {
@@ -138,10 +149,10 @@ public class LDAPCache implements TimerEventListener {
      * request is <CODE>o=Airius.com</CODE>.)
      * <P>
      *
-     * @param ttl The maximum amount of time that an item can be cached
+     * @param ttl the maximum amount of time that an item can be cached
      *  (in seconds)
-     * @param size The maximum size of the cache (in bytes)
-     * @param dns The list of base DNs of searches that you want to cache.
+     * @param size the maximum size of the cache (in bytes)
+     * @param dns the list of base DNs of searches that you want to cache.
      */
     public LDAPCache(long ttl, long size, String[] dns)
     {
@@ -158,7 +169,7 @@ public class LDAPCache implements TimerEventListener {
      * Gets the maximum size of the cache (in bytes).
      * <P>
      *
-     * @return The maximum size of the cache (in bytes)
+     * @return the maximum size of the cache (in bytes).
      */
     public long getSize()
     {
@@ -171,7 +182,7 @@ public class LDAPCache implements TimerEventListener {
      * removed from the cache.)
      * <P>
      *
-     * @return The maximum age of items in the cache (in
+     * @return the maximum age of items in the cache (in
      *  seconds).
      */
     public long getTimeToLive()
@@ -184,7 +195,7 @@ public class LDAPCache implements TimerEventListener {
      * (Search requests with these base DNs are cached.)
      * <P>
      *
-     * @return The array of base DNs.
+     * @return the array of base DNs.
      */
     public String[] getBaseDNs()
     {
@@ -195,12 +206,12 @@ public class LDAPCache implements TimerEventListener {
      * Flush the entries identified by DN and scope from the cache.
      * <P>
      *
-     * @param dn The distinguished name (or base DN) of the entries
+     * @param dn the distinguished name (or base DN) of the entries
      *  to be removed from the cache. Use this parameter in conjunction
      *  with <CODE>scope</CODE> to identify the entries that you want
      *  removed from the cache.  If this parameter is <CODE>null</CODE>,
      *  the entire cache is flushed.
-     * @param scope The scope identifying the entries that you want
+     * @param scope the scope identifying the entries that you want
      *  removed from the cache. The value of this parameter can be
      *  one of the following:
      *  <UL>
@@ -212,8 +223,8 @@ public class LDAPCache implements TimerEventListener {
      *      subtree under <CODE>dn</CODE> in the directory)
      *  </UL>
      * <P>
-     * @return <CODE>true</CODE> if the entry is removed from the cache,
-     *  or <CODE>false</CODE> if the entry is not removed.
+     * @return <CODE>true</CODE> if the entry is removed from the cache;
+     * <CODE>false</CODE> if the entry is not removed.
      */
     public synchronized boolean flushEntries(String dn, int scope) {
 
@@ -227,6 +238,9 @@ public class LDAPCache implements TimerEventListener {
             m_remainingSize = m_maxSize;
             m_cache.clear();
             m_orderedStruct.removeAllElements();
+            // reset stats
+            m_totalOpers = m_hits = m_flushes = 0;
+
             return true;
         }
 
@@ -283,22 +297,10 @@ public class LDAPCache implements TimerEventListener {
     }
 
     /**
-     * Gets invoked when the timer expires.
-     * @param e The timer event containing the timer itself.
-     */
-    public void timerExpired(TimerEvent e)
-    {
-        flushEntries();
-
-        Timer t = (Timer)e.getSource();
-        t.start();
-    }
-
-    /**
      * Gets the amount of available space (in bytes) left in the cache.
      * <P>
      *
-     * @return The available space (in bytes) in the cache.
+     * @return the available space (in bytes) in the cache.
      */
     public long getAvailableSize() {
         return m_remainingSize;
@@ -310,7 +312,7 @@ public class LDAPCache implements TimerEventListener {
      * the cache and items not found in the cache.
      * <P>
      *
-     * @return The total number of requests for retrieving items from
+     * @return the total number of requests for retrieving items from
      * the cache.
      */
     public long getTotalOperations() {
@@ -322,7 +324,7 @@ public class LDAPCache implements TimerEventListener {
      * retrieve an item from the cache.
      * <P>
      *
-     * @return The number of requests that did not find and retrieve
+     * @return the number of requests that did not find and retrieve
      *  an item in the cache.
      */
     public long getNumMisses() {
@@ -332,7 +334,7 @@ public class LDAPCache implements TimerEventListener {
     /**
      * Gets the total number of requests which successfully found and
      * retrieved an item from the cache.
-     * @return The number of requests that successfully found and
+     * @return the number of requests that successfully found and
      *  retrieved an item from the cache.
      */
     public long getNumHits() {
@@ -344,7 +346,7 @@ public class LDAPCache implements TimerEventListener {
      *  and <CODE>flushEntries</CODE> is called.
      * <P>
      *
-     * @return The total number of entries that are flushed when timer
+     * @return the total number of entries that are flushed when timer
      *  expires.
      */
     public long getNumFlushes() {
@@ -353,7 +355,7 @@ public class LDAPCache implements TimerEventListener {
 
     /**
      * Create a key for a cache entry by concatenating all input parameters
-     * @return The key for a cache entry
+     * @return the key for a cache entry
      * @exception LDAPException Thrown when failed to create key.
      */
     Long createKey(String host, int port, String baseDN, String filter,
@@ -400,8 +402,9 @@ public class LDAPCache implements TimerEventListener {
             String[] objID = new String[serverControls.length];
 
             for (int i=0; i<serverControls.length; i++) {
-                long val = getCRC32(serverControls[i].getValue());
-                objID[i] = new Long(val).toString();
+                LDAPControl ctrl = serverControls[i];
+                long val = getCRC32(ctrl.getValue());
+                objID[i] = ctrl.getID() + ctrl.isCritical() + new Long(val).toString();
             }
             key = key + appendString(objID);
         }
@@ -413,8 +416,10 @@ public class LDAPCache implements TimerEventListener {
             String[] objID = new String[clientControls.length];
 
             for (int i=0; i<clientControls.length; i++) {
-                long val = getCRC32(clientControls[i].getValue());
-                objID[i] = new Long(val).toString();
+                LDAPControl ctrl = clientControls[i];
+                long val = getCRC32(ctrl.getValue());
+                objID[i] = ctrl.getID() + ctrl.isCritical() + new Long(val).toString();
+
             }
             key = key + appendString(objID);
         }
@@ -422,13 +427,16 @@ public class LDAPCache implements TimerEventListener {
             key = key+appendString(0);
 
         long val = getCRC32(key.getBytes());
+        if(m_debug) {
+            System.out.println("key="+val + " for "+key);
+        }
         return new Long(val);
     }
 
     /**
      * Gets the cache entry based on the specified key.
-     * @param key The key for the cache entry.
-     * @return The cache entry
+     * @param key the key for the cache entry
+     * @return the cache entry.
      */
     synchronized Object getEntry(Long key) {
         Object obj = null;
@@ -453,15 +461,14 @@ public class LDAPCache implements TimerEventListener {
     }
 
     /**
-     * Flush entries which stays longer or equal to the time-to-live.
+     * Flush entries which stay longer or equal to the time-to-live.
      */
     synchronized void flushEntries()
     {
         Vector v = null;
         boolean delete = false;
 
-        Date date = new Date();
-        long currTime = date.getTime();
+        long currTime = System.currentTimeMillis();
 
         m_flushes = 0;
         while(true) {
@@ -475,7 +482,6 @@ public class LDAPCache implements TimerEventListener {
 
                 if (m_debug)
                     System.out.println("DEBUG: Timer flush entry whose key is "+key);
-
                 Vector entry = (Vector)m_cache.remove(key);
                 m_remainingSize = m_remainingSize + ((Long)entry.firstElement()).longValue();
 
@@ -496,27 +502,26 @@ public class LDAPCache implements TimerEventListener {
     /**
      * Add the entry to the hashtable cache and to the vector respectively.
      * The vector is used to keep track of the order of the entries being added.
-     * @param key The key for the cache entry.
-     * @param value The cache entry being added to the cache for the specified
-     *        key.
-     * @exception LDAPException Get thrown when failed to add the entry.
+     * @param key the key for the cache entry
+     * @param value the cache entry being added to the cache for the specified
+     * key
+     * @return a flag indicating whether the entry was added.
      */
-    synchronized void addEntry(Long key, Object value) throws LDAPException
+    synchronized boolean addEntry(Long key, Object value)
     {
         // if entry exists, dont perform add operation
         if (m_cache.get(key) != null)
-            return;
+            return false;
 
         Vector v = (Vector)value;
-
-        // assume the size of the key is 4 bytes
-        long size = ((Long)v.elementAt(0)).longValue()+4;
+        long size = ((Long)v.elementAt(0)).longValue();
 
         if (size > m_maxSize) {
-            throw new LDAPException("Failed to add an entry to the cache since the new entry exceeds the cache size", LDAPException.OTHER);
+            if (m_debug) {
+                System.out.println("Failed to add an entry to the cache since the new entry exceeds the cache size");
+            }    
+            return false;
         }
-
-        v.setElementAt(new Long(size), 0);
 
         // if the size of entry being added is bigger than the spare space in the
         // cache
@@ -542,32 +547,67 @@ public class LDAPCache implements TimerEventListener {
         m_cache.put(key, v);
         Vector element = new Vector();
         element.addElement(key);
-        Date date = new Date();
-        element.addElement(new Long(date.getTime()));
+        element.addElement(new Long(System.currentTimeMillis()));
         m_orderedStruct.addElement(element);
 
+        // Start TTL Timer if first entry is added
+        if (m_orderedStruct.size() == 1) {
+            scheduleTTLTimer();
+        }            
+            
         if (m_debug)
         {
             System.out.println("DEBUG: Adding a new entry whose key -> "+key);
             System.out.println("DEBUG: The current number of keys in the cache "+
             m_cache.size());
         }
+        return true;
     }
 
     /**
-     * Gets the number of entries being cached.
-     * @return The number of entries being cached.
+     * Flush entries which stayed longer or equal to the time-to-live, and
+     * Set up the TTLTimer for the next flush. Called when first entry is
+     * added to the cache and when the TTLTimer expires.
      */
-    int size()
+    synchronized void scheduleTTLTimer() {
+        if (m_orderedStruct.size() <= 0) {
+                return;
+        }
+
+        if (m_timer == null) {            
+            m_timer = new TTLTimer(this);
+        }
+
+        Vector v = (Vector)m_orderedStruct.firstElement();        
+        long currTime = System.currentTimeMillis();
+        long creationTime = ((Long)v.elementAt(1)).longValue();
+        long timeout = creationTime + m_timeToLive - currTime;
+        if (timeout > 0) {
+            m_timer.start(timeout);
+        }
+        else {
+            flushEntries();
+            scheduleTTLTimer();
+        }
+    }        
+        
+    
+    /**
+     * Gets the number of entries being cached.
+     * @return the number of entries being cached.
+     */
+    public int getNumEntries()
     {
         return m_cache.size();
     }
 
     /**
-     * Clean up
+     * Cleans up
      */
     void cleanup() {
+        flushEntries(null, 0);
         m_timer.stop();
+        m_timer = null;
     }
 
     /**
@@ -581,15 +621,12 @@ public class LDAPCache implements TimerEventListener {
         m_remainingSize = size;
         m_dns = null;
         m_orderedStruct = new Vector();
-        m_timer = new Timer(TIMEOUT);
-        m_timer.addTimerExpiredEventListener((TimerEventListener)this);
-        m_timer.start();
     }
 
     /**
-     * Concatenate the specified integer with the delimiter.
-     * @param str The string which concatenate with the delimiter.
-     * @return The concatenated string
+     * Concatenates the specified integer with the delimiter.
+     * @param str the String to concatenate with the delimiter
+     * @return the concatenated string.
      */
     private String appendString(String str) {
         if (str == null)
@@ -599,9 +636,9 @@ public class LDAPCache implements TimerEventListener {
     }
 
     /**
-     * Concatenate the specified integer with the delimiter.
-     * @param num The integer which concatenate with the delimiter.
-     * @return The concatenated string
+     * Concatenates the specified integer with the delimiter.
+     * @param num the integer to concatenate with the delimiter
+     * @return the concatenated string.
      */
     private String appendString(int num) {
         return num+DELIM;
@@ -609,8 +646,8 @@ public class LDAPCache implements TimerEventListener {
 
     /**
      * Concatenate the specified string array with the delimiter.
-     * @param str A string array.
-     * @return The concatenated string
+     * @param str a string array
+     * @return the concatenated string.
      */
     private String appendString(String[] str) {
 
@@ -630,7 +667,7 @@ public class LDAPCache implements TimerEventListener {
 
     /**
      * Sorts the array of strings using bubble sort.
-     * @param str The array of string being sorted. The str parameter contains
+     * @param str the array of strings to sort. The str parameter contains
      * the sorted result.
      */
     private void sortStrings(String[] str) {
@@ -654,6 +691,9 @@ public class LDAPCache implements TimerEventListener {
      * Create a 32 bits CRC from the given byte array.
      */
     private long getCRC32(byte[] barray) {
+        if (barray==null) {
+            return 0;
+        }
         CRC32 crcVal = new CRC32();
         crcVal.update(barray);
         return crcVal.getValue();
@@ -662,30 +702,31 @@ public class LDAPCache implements TimerEventListener {
 
 /**
  * Represents a timer which will timeout for every certain interval. It
- * provides methods to start, stop, or restart timer. It also provides
- * methods to register/deregister the event listeners.
+ * provides methods to start, stop, or restart timer.
  */
-class Timer {
+class TTLTimer implements Runnable{
 
     private long m_timeout;
+    private LDAPCache m_cache;
     private Thread t = null;
-    private TimerEventListener listener;
-    protected TimerEventListener stopListener = null;
 
     /**
      * Constructor with the specified timout.
-     * @param timeout The timeout value in milliseconds.
+     * @param timeout the timeout value in milliseconds
      */
-    Timer(long timeout) {
-        m_timeout = timeout;
+    TTLTimer(LDAPCache cache) {
+        m_cache = cache;
     }
 
     /**
-     * Start the timer.
+     * (Re)start the timer.
      */
-    void start() {
-        TimerRunnable trun = new TimerRunnable(this);
-        t = new Thread(trun);
+    void start(long timeout) {
+        m_timeout = timeout;
+        if (Thread.currentThread() != t) {
+            stop();
+        }            
+        t = new Thread(this, "LDAPCache-TTLTimer");
         t.setDaemon(true);
         t.start();
     }
@@ -694,59 +735,9 @@ class Timer {
      * Stop the timer.
      */
     void stop() {
-        t.interrupt();
-    }
-
-    /**
-     * Get the timeout value.
-     * @return the timeout value.
-     */
-    long getTimeout() {
-        return m_timeout;
-    }
-
-    /**
-     * Notify the listener when the timer expires.
-     */
-    void fireExpiredEvent() {
-        TimerEvent event;
-
-        if (stopListener != null)
-        {
-            event = new TimerEvent(this);
-            stopListener.timerExpired(event);
+        if (t !=null) {
+            t.interrupt();
         }
-    }
-
-    /**
-     * Add the listener to the queue who wants to be notified when the timer
-     * expires.
-     */
-    void addTimerExpiredEventListener(TimerEventListener listener) {
-        stopListener = listener;
-    }
-
-    /**
-     * Remove the listener from the queue who will not get notified when the
-     * timer expires.
-     */
-    void removeTimerExpiredEventListener(TimerEventListener listener) {
-        stopListener = null;
-    }
-}
-
-/**
- * Represents the starting point for the timer thread to execute.
- */
-class TimerRunnable implements Runnable {
-    Timer m_timer;
-
-    /**
-     * Constructor with the specified timer object.
-     * @param t The timer
-     */
-    TimerRunnable(Timer t) {
-        m_timer = t;
     }
 
     /**
@@ -757,42 +748,13 @@ class TimerRunnable implements Runnable {
 
         synchronized(this) {
             try {
-                this.wait(m_timer.getTimeout());
+                this.wait(m_timeout);
             } catch (InterruptedException e) {
                 // This happens if the timer is stopped
+                return;
             }
         }
 
-        m_timer.fireExpiredEvent();
+        m_cache.scheduleTTLTimer();
     }
 }
-
-/**
- * Represents the timer event. When the timer expires, it will notify
- * all the registered listeners which receive the timer event. The
- * listener can retrieve the source of the event from the timer event.
- */
-class TimerEvent extends EventObject {
-
-    /**
-     * Constructor with the specified source of the timer event.
-     * @param source The source of the timer event.
-     */
-    TimerEvent(Object source) {
-        super(source);
-    }
-}
-
-/**
- * The timer client needs to implement this interface if it wants to
- * receive the timeout event.
- */
-interface TimerEventListener extends EventListener {
-    /**
-     * Gets invoked when the timer expires.
-     * @param timeout Timeout event contains the source of the event which is
-     *        the timer.
-     */
-    void timerExpired(TimerEvent timeout);
-}
-

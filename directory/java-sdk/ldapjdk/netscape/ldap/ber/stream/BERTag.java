@@ -61,11 +61,11 @@ public class BERTag extends BERElement {
 
     /**
      * Constructs a tag element from an input stream.
-     * @param decoder decoder object for application specific tags
+     * @param decoder decoder object for application-specific tags
      * @param tag tag value; already stripped from stream
      * @param stream source
      * @param bytes_read array of 1 int; incremented by number
-     *        ofbytes read from stream
+     * of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERTag(BERTagDecoder decoder, int tag, InputStream stream,
@@ -85,7 +85,7 @@ public class BERTag extends BERElement {
 
     /**
      * Gets the element from the tagged object.
-     * @return ber element
+     * @return BER element.
      */
     public BERElement getValue() {
         return m_element;
@@ -127,7 +127,7 @@ public class BERTag extends BERElement {
 
     /**
      * Gets the element type.
-     * @return element type
+     * @return element type.
      */
     public int getType() {
         return BERElement.TAG;
@@ -143,7 +143,7 @@ public class BERTag extends BERElement {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         String s = "";

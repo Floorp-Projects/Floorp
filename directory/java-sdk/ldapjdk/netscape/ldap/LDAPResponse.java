@@ -31,8 +31,8 @@ public class LDAPResponse extends LDAPMessage {
      * Constructor
      * 
      * @param msgid message identifier
-     * @param rsp Operation response
-     * @param controls Array of controls of null
+     * @param rsp operation response
+     * @param controls array of controls or null
      */
     LDAPResponse(int msgid, JDAPProtocolOp rsp, LDAPControl controls[]) {
         super(msgid, rsp, controls);
@@ -41,7 +41,7 @@ public class LDAPResponse extends LDAPMessage {
     /**
      * Returns any error message in the response.
      *
-     * @return The error message of the last error (or <CODE>null</CODE>
+     * @return the error message of the last error (or <CODE>null</CODE>
      * if no message was set).
      */
     public String  getErrorMessage() {
@@ -52,7 +52,7 @@ public class LDAPResponse extends LDAPMessage {
     /**
      * Returns the partially matched DN field, if any, in a server response.
      *
-     * @return The maximal subset of a DN which could be matched,
+     * @return the maximal subset of a DN to match,
      * or <CODE>null</CODE>.
      */
     public String getMatchedDN() {
@@ -63,7 +63,7 @@ public class LDAPResponse extends LDAPMessage {
     /**
      * Returns all referrals, if any, in a server response.
      *
-     * @return A list of referrals or <CODE>null</CODE>.
+     * @return a list of referrals or <CODE>null</CODE>.
      */
     public String[] getReferrals() {
         JDAPResult result = (JDAPResult) getProtocolOp();
@@ -73,7 +73,7 @@ public class LDAPResponse extends LDAPMessage {
     /**
      * Returns the result code in a server response.
      *
-     * @return The result code.
+     * @return the result code.
      */
     public int getResultCode() {
         JDAPResult result = (JDAPResult) getProtocolOp();

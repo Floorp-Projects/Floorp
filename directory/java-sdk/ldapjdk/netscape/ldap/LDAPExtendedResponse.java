@@ -30,8 +30,8 @@ public class LDAPExtendedResponse extends LDAPResponse {
      * Constructor
      * 
      * @param msgid message identifier
-     * @param rsp  Extended operation response
-     * @paarm controls Array of controls of null
+     * @param rsp extended operation response
+     * @paarm controls array of controls or null
      */
     LDAPExtendedResponse(int msgid, JDAPExtendedResponse rsp, LDAPControl controls[]) {
         super(msgid, rsp, controls);
@@ -40,7 +40,7 @@ public class LDAPExtendedResponse extends LDAPResponse {
     /**
      * Returns the OID of the response.
      *
-     * @return The response OID
+     * @return the response OID.
      */
     public String  getOID() {
         JDAPExtendedResponse result = (JDAPExtendedResponse)getProtocolOp();
@@ -50,7 +50,7 @@ public class LDAPExtendedResponse extends LDAPResponse {
     /**
      * Returns the raw bytes of the value part of the response.
      *
-     * @return Response as a raw array of bytes
+     * @return response as a raw array of bytes.
      */
     public byte[] getValue() {
         JDAPExtendedResponse result = (JDAPExtendedResponse)getProtocolOp();

@@ -39,11 +39,11 @@ public class LDAPPasswordExpiringControl extends LDAPStringControl {
      * <P>
      * To retrieve the number of seconds until this password expires,
      * call <CODE>getSecondsToExpiration</CODE>.
-     * @param oid This parameter must be 
+     * @param oid this parameter must be 
      * <CODE>LDAPPasswordExpiringControl.EXPIRING</CODE>
-     * or an <CODE>LDAPException</CODE> is thrown.
-     * @param critical True if this control is critical.
-     * @param value The value associated with this control.
+     * or an <CODE>LDAPException</CODE> is thrown
+     * @param critical <code>true</code> if this control is critical
+     * @param value the value associated with this control
      * @exception netscape.ldap.LDAPException If oid is not 
      * <CODE>LDAPPasswordExpiringControl.EXPIRING.</CODE>
      * @see netscape.ldap.LDAPControl#register
@@ -60,7 +60,7 @@ public class LDAPPasswordExpiringControl extends LDAPStringControl {
     /**
      * Gets the number of seconds until the password expires returned by the 
      * server.
-     * @return int The number of seconds until the password expires.
+     * @return int the number of seconds until the password expires.
      * @exception java.lang.NumberFormatException If the server returned an
      * undecipherable message. In this case, use <CODE>getMessage</CODE> to 
      * retrieve the message as a string.
@@ -71,19 +71,19 @@ public class LDAPPasswordExpiringControl extends LDAPStringControl {
 
     /**
      * Gets the value associated with this control parsed as a string.
-     * @return The value associated with this control parsed as a string.
+     * @return the value associated with this control parsed as a string.
      */
     public String getMessage() {
         return m_msg;
     }
 
     /**
-     * @param controls An array of <CODE>LDAPControl</CODE> objects,
-     * representing the controls returned by the server
+     * @param controls an array of <CODE>LDAPControl</CODE> objects,
+     * representing the controls returned by the server.
      * after a search.  To get these controls, use the
      * <CODE>getResponseControls</CODE> method of the
      * <CODE>LDAPConnection</CODE> class.
-     * @return An error message string, or null if none is in the control.
+     * @return an error message string, or null if none is in the control.
      * @see netscape.ldap.LDAPConnection#getResponseControls
      * @deprecated LDAPPasswordExpiringControl controls are now automatically
      * instantiated.

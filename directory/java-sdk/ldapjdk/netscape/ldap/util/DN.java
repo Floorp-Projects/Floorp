@@ -86,7 +86,7 @@ public final class DN implements Serializable {
      * can be in RFC 1485 or OSF format.
      * <P>
      *
-     * @param dn String representation of the distinguished name.
+     * @param dn string representation of the distinguished name
      */
     public DN(String dn) {
         if (dn == null)
@@ -163,8 +163,8 @@ public final class DN implements Serializable {
      * beginning of the current DN.
      * <P>
      *
-     * @param rdn The relative distinguished name that you want
-     * to add to the beginning of the current DN.
+     * @param rdn the relative distinguished name to add to the 
+     * beginning of the current DN
      * @see netscape.ldap.util.RDN
      */
     public void addRDNToFront(RDN rdn) {
@@ -176,8 +176,7 @@ public final class DN implements Serializable {
      * end of the current DN.
      * <P>
      *
-     * @param rdn The relative distinguished name that you want
-     * to append to the current DN.
+     * @param rdn the relative distinguished name to append to the current DN
      * @see netscape.ldap.util.RDN
      */
     public void addRDNToBack(RDN rdn) {
@@ -191,8 +190,7 @@ public final class DN implements Serializable {
      * end of the DN.
      * <P>
      *
-     * @param rdn The relative distinguished name that you want to add to
-     * the current DN.
+     * @param rdn the relative distinguished name to add to the current DN
      * @see netscape.ldap.util.RDN
      */
     public void addRDN(RDN rdn) {
@@ -207,8 +205,8 @@ public final class DN implements Serializable {
      * Sets the type of format used for the DN (RFC format or OSF format).
      * <P>
      *
-     * @param type One of the following constants: <CODE>DN.RFC</CODE>
-     * (to use the RFC format) or <CODE>DN.OSF</CODE> (to use the OSF format).
+     * @param type one of the following constants: <CODE>DN.RFC</CODE>
+     * (to use the RFC format) or <CODE>DN.OSF</CODE> (to use the OSF format)
      * @see netscape.ldap.util.DN#getDNType
      * @see netscape.ldap.util.DN#RFC
      * @see netscape.ldap.util.DN#OSF
@@ -221,7 +219,7 @@ public final class DN implements Serializable {
      * Gets the type of format used for the DN (RFC format or OSF format).
      * <P>
      *
-     * @return One of the following constants: <CODE>DN.RFC</CODE>
+     * @return one of the following constants: <CODE>DN.RFC</CODE>
      * (if the DN is in RFC format) or <CODE>DN.OSF</CODE>
      * (if the DN is in OSF format).
      * @see netscape.ldap.util.DN#setDNType
@@ -234,7 +232,7 @@ public final class DN implements Serializable {
 
     /**
      * Returns the number of components that make up the current DN.
-     * @return The number of components in this DN.
+     * @return the number of components in this DN.
      */
     public int countRDNs() {
         return m_rdns.size();
@@ -243,7 +241,7 @@ public final class DN implements Serializable {
     /**
      * Returns a list of the components (<CODE>RDN</CODE> objects)
      * that make up the current DN.
-     * @return A list of the components of this DN.
+     * @return a list of the components of this DN.
      * @see netscape.ldap.util.RDN
      */
     public Vector getRDNs() {
@@ -253,8 +251,8 @@ public final class DN implements Serializable {
     /**
      * Returns an array of the individual components that make up
      * the current distinguished name.
-     * @param noTypes Specify true to remove the attribute type
-     * and equals sign (for example, "cn=") from each component.
+     * @param noTypes specify <code>true</code> to remove the attribute type
+     * and equals sign (for example, "cn=") from each component
      */
     public String[] explodeDN(boolean noTypes) {
         if (m_rdns.size() == 0)
@@ -271,7 +269,7 @@ public final class DN implements Serializable {
 
     /**
      * Determines if the DN is in RFC 1485 format.
-     * @return true if the DN is in RFC 1485 format.
+     * @return <code>true</code> if the DN is in RFC 1485 format.
      */
     public boolean isRFC() {
         return (m_dnType == RFC);
@@ -279,7 +277,7 @@ public final class DN implements Serializable {
 
     /**
      * Returns the DN in RFC 1485 format.
-     * @return The DN in RFC 1485 format.
+     * @return the DN in RFC 1485 format.
      */
     public String toRFCString() {
         String dn = "";
@@ -293,7 +291,7 @@ public final class DN implements Serializable {
 
     /**
      * Returns the DN in OSF format.
-     * @return The DN in OSF format.
+     * @return the DN in OSF format.
      */
     public String toOSFString() {
         String dn = "";
@@ -313,7 +311,7 @@ public final class DN implements Serializable {
      * <CODE>DN</CODE> object was constructed from a DN
      * in RFC 1485 format, this method returns the DN
      * in RFC 1485 format.
-     * @return The string representation of the DN.
+     * @return the string representation of the DN.
      */
     public String toString() {
         if (m_dnType == RFC)
@@ -326,7 +324,7 @@ public final class DN implements Serializable {
      * Determines if the given string is an distinguished name or
      * not.
      * @param dn distinguished name
-     * @return true or false
+     * @return <code>true</code> or <code>false</code>.
      */
     public static boolean isDN(String dn) {
         if ( dn.equals( "" ) ) {
@@ -338,8 +336,8 @@ public final class DN implements Serializable {
 
     /**
      * Determines if the current DN is equal to the specified DN.
-     * @param dn DN that you want to compare against the current DN.
-     * @return true if the two DNs are the same.
+     * @param dn DN to compare against the current DN
+     * @return <code>true</code> if the two DNs are the same.
      */
     public boolean equals(DN dn) {
         return (dn.toRFCString().toUpperCase().equals(toRFCString().toUpperCase()));
@@ -386,8 +384,8 @@ public final class DN implements Serializable {
      * the value of <CODE>isContain</CODE> is true.
      * <P>
      *
-     * @param dn The DN of a subtree that you want to check.
-     * @return true if the current DN belongs to the subtree
+     * @param dn the DN of a subtree to check
+     * @return <code>true</code> if the current DN belongs to the subtree
      * specified by <CODE>dn</CODE>.
      * @deprecated Please use isDescendantOf() instead.
      */
@@ -418,8 +416,8 @@ public final class DN implements Serializable {
      * In the case where the given DN is equal to this DN
      * it returns false.
      *
-     * @param dn The DN of a subtree that you want to check.
-     * @return true if the current DN is a descendant of the DN
+     * @param dn the DN of a subtree to check
+     * @return <code>true</code> if the current DN is a descendant of the DN
      * specified by <CODE>dn</CODE>.
      */
 

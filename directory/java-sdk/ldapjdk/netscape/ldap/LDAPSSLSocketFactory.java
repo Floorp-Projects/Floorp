@@ -83,12 +83,12 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
      * Constructs an <CODE>LDAPSSLSocketFactory</CODE> object using
      * the specified class. The class must implement the interface
      * <CODE>javax.net.ssl.SSLSocket</CODE>.
-     * @param className The name of a class implementing
+     * @param className the name of a class implementing
      * the <CODE>javax.net.ssl.SSLSocket</CODE> interface.
      * Pass <code>null</code> for this parameter to use the
      * default SSL socket implementation,
      * <CODE>netscape.net.SSLSocket</CODE>, which is included with
-     * Netscape Communicator 4.05 and up.
+     * Netscape Communicator 4.05 and higher.
      */
     public LDAPSSLSocketFactory(String className) {
         m_packageName = new String(className);
@@ -98,12 +98,12 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
      * Constructs an <CODE>LDAPSSLSocketFactory</CODE> object using
      * the specified class. The class must implement the interface
      * <CODE>javax.net.ssl.SSLSocket</CODE>.
-     * @param className The name of a class implementing
+     * @param className the name of a class implementing
      * the <CODE>javax.net.ssl.SSLSocket</CODE> interface.
      * Pass <code>null</code> for this parameter to use the
      * default SSL socket implementation,
      * <CODE>netscape.net.SSLSocket</CODE>, which is included with
-     * Netscape Communicator 4.05 and up.
+     * Netscape Communicator 4.05 and higher.
      * @param clientAuth <CODE>true</CODE> if certificate-based client
      * authentication is desired. By default, client authentication is
      * not used.
@@ -116,13 +116,13 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
     /**
      * The constructor with the specified package for security and the specified
      * cipher suites.
-     * @param className The name of a class implementing the interface
-     * <CODE>javax.net.ssl.SSLSocket</CODE>
+     * @param className the name of a class implementing the interface
+     * <CODE>javax.net.ssl.SSLSocket</CODE>.
      * Pass <code>null</code> for this parameter to use the
      * default SSL socket implementation,
      * <CODE>netscape.net.SSLSocket</CODE>, which is included with
-     * Netscape Communicator 4.05 and up.
-     * @param cipherSuites The cipher suites to use for SSL connections.
+     * Netscape Communicator 4.05 and higher.
+     * @param cipherSuites the cipher suites to use for SSL connections
      */
     public LDAPSSLSocketFactory(String className, Object cipherSuites) {
         m_packageName = new String(className);
@@ -132,13 +132,13 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
     /**
      * The constructor with the specified package for security and the specified
      * cipher suites.
-     * @param className The name of a class implementing the interface
-     * <CODE>javax.net.ssl.SSLSocket</CODE>
+     * @param className the name of a class implementing the interface
+     * <CODE>javax.net.ssl.SSLSocket</CODE>.
      * Pass <code>null</code> for this parameter to use the
      * default SSL socket implementation,
      * <CODE>netscape.net.SSLSocket</CODE>, which is included with
-     * Netscape Communicator 4.05.
-     * @param cipherSuites The cipher suites to use for SSL connections.
+     * Netscape Communicator 4.05 and higher.
+     * @param cipherSuites the cipher suites to use for SSL connections
      * @param clientAuth <CODE>true</CODE> if certificate-based client
      * authentication is desired. By default, client authentication is
      * not used.
@@ -175,11 +175,11 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
      * Enables client authentication for an application that uses
      * an external (file-based) certificate database.
      * Call this method before you call <CODE>makeSocket</CODE>.
-     * @param certdb The pathname for certificate database
-     * @param keydb The pathname for private key database
-     * @param keypwd The password for private key database
-     * @param certnickname The alias for certificate
-     * @param keynickname The alias for key
+     * @param certdb the pathname for the certificate database
+     * @param keydb the pathname for the private key database
+     * @param keypwd the password for the private key database
+     * @param certnickname the alias for the certificate
+     * @param keynickname the alias for the key
      * @see netscape.ldap.LDAPSSLSocketFactory#isClientAuth
      * @see netscape.ldap.LDAPSSLSocketFactory#makeSocket
      * @exception LDAPException Since this method is not yet implemented,
@@ -207,7 +207,7 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
     /**
      * Returns the name of the class that implements SSL sockets for this factory.
      *
-     * @return The name of the class that implements SSL sockets for this factory.
+     * @return the name of the class that implements SSL sockets for this factory.
      */
     public String getSSLSocketImpl() {
         return m_packageName;
@@ -217,7 +217,7 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
      * Returns the suite of ciphers used for SSL connections made through
      * sockets created by this factory.
      *
-     * @return The suite of ciphers used.
+     * @return the suite of ciphers used.
      */
     public Object getCipherSuites() {
         return m_cipherSuites;
@@ -226,9 +226,9 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
     /**
      * Returns a socket to the LDAP server with the specified
      * host name and port number.
-     * @param host The host to connect to
-     * @param port The port number
-     * @return The socket to the host name and port number.
+     * @param host the host to connect to
+     * @param port the port number
+     * @return the socket to the host name and port number.
      * @exception LDAPException A socket to the specified host and port
      * could not be created.
      * @see netscape.ldap.LDAPSSLSocketFactory

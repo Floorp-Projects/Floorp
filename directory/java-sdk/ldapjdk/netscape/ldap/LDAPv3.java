@@ -36,34 +36,34 @@ import java.io.*;
 public interface LDAPv3 extends LDAPv2 {
 
     /**
-     * Connects and authenticates to the LDAP server with the specified LDAP
-     * protocol version.
-     * @param version LDAP protocol version requested: currently 2 or 3
-     * @param host Hostname of the LDAP server.
-     * @param port Port number of the LDAP server.  To specify the
-     * default, well-known port, use <CODE>DEFAULT_PORT</CODE>.
-     * @param dn Distinguished name to use for authentication.
-     * @param passwd Password for authentication.
+     * Connects and authenticates to the LDAP server using the specified version of the
+     * LDAP protocol.
+     * @param version requested version of the LDAP protocol: currently 2 or 3
+     * @param host hostname of the LDAP server
+     * @param port port number of the LDAP server. To specify the
+     * default port, use <CODE>DEFAULT_PORT</CODE>.
+     * @param dn distinguished name to use for authentication
+     * @param passwd password for authentication
      * @exception LDAPException Failed to connect and authenticate to the server.
      */
     public void connect(int version, String host, int port, String dn,
       String passwd) throws LDAPException;
 
     /**
-     * Authenticates to the LDAP server (that the object is currently
-     * connected to) using the specified name and password, with the
-     * specified LDAP protocol version. If the server does not support
-     * the requested protocol version, an exception is thrown.  If the
-     * object has been disconnected from an LDAP server, this method
-     * attempts to reconnect to the server. If the object had already
-     * authenticated, the old authentication is discarded.
-     * @param version LDAP protocol version requested: currently 2 or 3.
-     * @param dn If non-null and non-empty, specifies that the
-     * connection and all operations through it should be
-     * authenticated with dn as the distinguished name.
-     * @param passwd If non-null and non-empty, specifies that the
-     * connection and all operations through it should be
-     * authenticated with passwd as password.
+     * Authenticates to the LDAP server (to which the object is currently
+     * connected) using the specified name, password, and version
+     * of the LDAP protocol. If the server does not support the requested 
+     * protocol version, an exception is thrown.  If the object has been 
+     * disconnected from an LDAP server, this method attempts to reconnect 
+     * to the server. If the object had already authenticated, the old 
+     * authentication is discarded.
+     * @param version requested LDAP protocol version: currently 2 or 3.
+     * @param dn if non-null and non-empty, specifies that the
+     * connection and all operations through it should
+     * authenticate with dn as the distinguished name
+     * @param passwd if non-null and non-empty, specifies that the
+     * connection and all operations through it should
+     * authenticated with passwd as password
      * @exception LDAPException Failed to authenticate to the LDAP server.
      */
     public void authenticate(int version,
@@ -72,20 +72,20 @@ public interface LDAPv3 extends LDAPv2 {
                              throws LDAPException;
 
     /**
-     * Authenticates to the LDAP server (that the object is currently
-     * connected to) using the specified name and password, with the
-     * specified LDAP protocol version. If the server does not support
-     * the requested protocol version, an exception is thrown.  If the
+     * Authenticates to the LDAP server (to which the object is currently
+     * connected) using the specified name, password, and version of the
+     * LDAP protocol. If the server does not support the requested
+     * version of the protocol, an exception is thrown.  If the
      * object has been disconnected from an LDAP server, this method
      * attempts to reconnect to the server. If the object had already
      * authenticated, the old authentication is discarded.
-     * @param version LDAP protocol version requested: currently 2 or 3.
-     * @param dn If non-null and non-empty, specifies that the
-     * connection and all operations through it should be
-     * authenticated with dn as the distinguished name.
-     * @param passwd If non-null and non-empty, specifies that the
-     * connection and all operations through it should be
-     * authenticated with passwd as password.
+     * @param version requested LDAP protocol version: currently 2 or 3.
+     * @param dn if non-null and non-empty, specifies that the
+     * connection and all operations through it should authenticate
+     * with dn as the distinguished name
+     * @param passwd if non-null and non-empty, specifies that the
+     * connection and all operations through it should authenticate
+     * with passwd as password
      * @exception LDAPException Failed to authenticate to the LDAP server.
      */
     public void bind(int version,
@@ -99,7 +99,7 @@ public interface LDAPv3 extends LDAPv2 {
      * <P>
      *
      * @param op LDAPExtendedOperation object specifying the OID of the
-     * extended operation and the data to be used in the operation.
+     * extended operation and the data to use in the operation
      * @exception LDAPException Failed to execute the operation
      * @return LDAPExtendedOperation object representing the extended response
      * returned by the server.
@@ -110,10 +110,12 @@ public interface LDAPv3 extends LDAPv2 {
 
     /**
      * Renames and moves an entry in the directory.
-     * @param DN Original distinguished name (DN) for the entry.
-     * @param newRDN New relative distinguished name (RDN) for the entry.
-     * @param newParentDN Distinguished name of the new parent entry of the
-     *   specified entry.
+     * @param DN original distinguished name (DN) for the entry
+     * @param newRDN new relative distinguished name (RDN) for the entry
+     * @param newParentDN distinguished name of the new parent entry of the
+     * specified entry
+     * @param deleteOldRDN specifies whether or not to remove the old RDN
+     * when renaming and moving the entry. If <code>true</code>, the old RDN will be deleted.
      * @exception LDAPException Failed to rename the specified entry.
      */
     public void rename( String DN, String newRDN, String newParentDN,
@@ -121,19 +123,21 @@ public interface LDAPv3 extends LDAPv2 {
 
     /**
      * Renames and moves an entry in the directory.
-     * @param DN Original distinguished name (DN) for the entry.
-     * @param newRDN New relative distinguished name (RDN) for the entry.
-     * @param newParentDN Distinguished name of the new parent entry of the
-     *   specified entry.
-     * @param cons The constraints set for the rename operation.
+     * @param DN original distinguished name (DN) for the entry
+     * @param newRDN new relative distinguished name (RDN) for the entry
+     * @param newParentDN distinguished name of the new parent entry of the
+     * specified entry
+     * @param deleteOldRDN specifies whether or not to remove the old RDN
+     * when renaming and moving the entry. If <code>true</code>, the old RDN will be deleted.
+     * @param cons the constraints set for the rename operation
      * @exception LDAPException Failed to rename the specified entry.
      */
     public void rename( String DN, String newRDN, String newParentDN,
       boolean deleteOldRDN, LDAPConstraints cons ) throws LDAPException;
 
     /**
-     * Returns an array of the latest controls (if any) from server.
-     * @return An array of the controls returned by an operation,
+     * Returns an array of the latest controls (if any) from the server.
+     * @return an array of the controls returned by an operation,
      * or <CODE>null</CODE> if none.
      * @see netscape.ldap.LDAPControl
      */

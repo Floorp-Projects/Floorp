@@ -31,9 +31,9 @@ import java.net.*;
  * <P>
  *
  * When you construct a new <CODE>LDAPConnection</CODE>
- * object, you can specify that the connection uses his socket by
- * passing the constructor an object of the class that implements
- * this interface.
+ * object, you can specify that the connection use this socket. 
+ * To do this, pass the constructor an object of the class that 
+ * implements this interface.
  * <P>
  *
  * @version 1.0
@@ -45,8 +45,8 @@ public interface LDAPSocketFactory {
      * Returns a socket to the specified host name and port number.
      * <P>
      *
-     * @param host Name of the host that you want to connect to.
-     * @param port Port number that you want to connect to.
+     * @param host name of the host to which you want to connect
+     * @param port port number to which you want to connect
      * @exception LDAPException Failed to create the socket.
      * @see LDAPSSLSocketFactory#makeSocket(java.lang.String,int)
      */

@@ -52,30 +52,30 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * Constructs a new <CODE>LDAPSearchConstraints</CODE> object and allows you
      * to specify the search constraints in that object.
      * <P>
-     * @param msLimit Maximum time in milliseconds to wait for results (0
+     * @param msLimit maximum time in milliseconds to wait for results (0
      * by default, which means that there is no maximum time limit)
-     * @param dereference Either <CODE>LDAPv2.DEREF_NEVER</CODE>,
+     * @param dereference either <CODE>LDAPv2.DEREF_NEVER</CODE>,
      * <CODE>LDAPv2.DEREF_FINDING</CODE>,
      * <CODE>LDAPv2.DEREF_SEARCHING</CODE>, or
      * <CODE>LDAPv2.DEREF_ALWAYS</CODE> (see LDAPConnection.setOption).
      * <CODE>LDAPv2.DEREF_NEVER</CODE> is the default.
-     * @param maxResults Maximum number of search results to return
+     * @param maxResults maximum number of search results to return
      * (1000 by default)
-     * @param doReferrals Specify <CODE>true</CODE> to follow referrals
-     * automatically, or <CODE>False</CODE> to throw an
+     * @param doReferrals specify <CODE>true</CODE> to follow referrals
+     * automatically, or <CODE>false</CODE> to throw an
      * <CODE>LDAPReferralException</CODE> error if the server sends back
-     * a referral (<CODE>False</CODE> by default)
-     * @param batchSize Specify the number of results to return at a time
+     * a referral (<CODE>false</CODE> by default)
+     * @param batchSize specify the number of results to return at a time
      * (1 by default)
-     * @param rebind_proc Specifies the object of the class that
+     * @param rebind_proc specifies the object of the class that
      * implements the <CODE>LDAPRebind</CODE> interface (you need to
      * define this class).  The object will be used when the client
      * follows referrals automatically.  The object provides the client
      * with a method for getting the distinguished name and password
      * used to authenticate to another LDAP server during a referral.
      * (This field is <CODE>null</CODE> by default.)
-     * @param hop_limit Maximum number of referrals to follow in a
-     * sequence when attempting to resolve a request.
+     * @param hop_limit maximum number of referrals to follow in a
+     * sequence when attempting to resolve a request
      * @see netscape.ldap.LDAPConnection#setOption(int, java.lang.Object)
      * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl, netscape.ldap.LDAPSearchConstraints)
      * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
@@ -93,32 +93,33 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * Constructs a new <CODE>LDAPSearchConstraints</CODE> object and allows you
      * to specify the search constraints in that object.
      * <P>
-     * @param msLimit Maximum time in milliseconds to wait for results (0
+     * @param msLimit maximum time in milliseconds to wait for results (0
      * by default, which means that there is no maximum time limit)
-     * @param timeLimit Maximum time in seconds for the server to spend
-     * processing a search request (0 by default for no limit)
-     * @param dereference Either <CODE>LDAPv2.DEREF_NEVER</CODE>,
+     * @param timeLimit maximum time in seconds for the server to spend
+     * processing a search request (the default value is 0, indicating that there
+     * is no limit)
+     * @param dereference either <CODE>LDAPv2.DEREF_NEVER</CODE>,
      * <CODE>LDAPv2.DEREF_FINDING</CODE>,
      * <CODE>LDAPv2.DEREF_SEARCHING</CODE>, or
      * <CODE>LDAPv2.DEREF_ALWAYS</CODE> (see LDAPConnection.setOption).
      * <CODE>LDAPv2.DEREF_NEVER</CODE> is the default.
-     * @param maxResults Maximum number of search results to return
+     * @param maxResults maximum number of search results to return
      * (1000 by default)
-     * @param doReferrals Specify <CODE>true</CODE> to follow referrals
-     * automatically, or <CODE>False</CODE> to throw an
+     * @param doReferrals specify <CODE>true</CODE> to follow referrals
+     * automatically, or <CODE>false</CODE> to throw an
      * <CODE>LDAPReferralException</CODE> error if the server sends back
-     * a referral (<CODE>False</CODE> by default)
-     * @param batchSize Specify the number of results to return at a time
+     * a referral (<CODE>false</CODE> by default)
+     * @param batchSize specify the number of results to return at a time
      * (1 by default)
-     * @param rebind_proc Specifies the object that
+     * @param rebind_proc specifies the object that
      * implements the <CODE>LDAPRebind</CODE> interface. 
      * The object will be used when the client
      * follows referrals automatically.  The object provides the client
      * with a method for getting the distinguished name and password
      * used to authenticate to another LDAP server during a referral.
      * (This field is <CODE>null</CODE> by default.)
-     * @param hop_limit Maximum number of referrals to follow in a
-     * sequence when attempting to resolve a request.
+     * @param hop_limit maximum number of referrals to follow in a
+     * sequence when attempting to resolve a request
      * @see netscape.ldap.LDAPConnection#setOption(int, java.lang.Object)
      * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl, netscape.ldap.LDAPSearchConstraints)
      * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
@@ -140,30 +141,31 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * Constructs a new <CODE>LDAPSearchConstraints</CODE> object and allows you
      * to specify the search constraints in that object.
      * <P>
-     * @param msLimit Maximum time in milliseconds to wait for results (0
+     * @param msLimit maximum time in milliseconds to wait for results (0
      * by default, which means that there is no maximum time limit)
-     * @param timeLimit Maximum time in seconds for the server to spend
-     * processing a search request (0 by default for no limit)
-     * @param dereference Either <CODE>LDAPv2.DEREF_NEVER</CODE>,
+     * @param timeLimit maximum time in seconds for the server to spend
+     * processing a search request (the default value is 0, indicating that there
+     * is no limit)
+     * @param dereference either <CODE>LDAPv2.DEREF_NEVER</CODE>,
      * <CODE>LDAPv2.DEREF_FINDING</CODE>,
      * <CODE>LDAPv2.DEREF_SEARCHING</CODE>, or
      * <CODE>LDAPv2.DEREF_ALWAYS</CODE> (see LDAPConnection.setOption).
      * <CODE>LDAPv2.DEREF_NEVER</CODE> is the default.
-     * @param maxResults Maximum number of search results to return
+     * @param maxResults maximum number of search results to return
      * (1000 by default)
-     * @param doReferrals Specify <CODE>true</CODE> to follow referrals
-     * automatically, or <CODE>False</CODE> to throw an
+     * @param doReferrals specify <CODE>true</CODE> to follow referrals
+     * automatically, or <CODE>false</CODE> to throw an
      * <CODE>LDAPReferralException</CODE> error if the server sends back
-     * a referral (<CODE>False</CODE> by default)
-     * @param batchSize Specify the number of results to return at a time
+     * a referral (<CODE>false</CODE> by default)
+     * @param batchSize specify the number of results to return at a time
      * (1 by default)
-     * @param bind_proc Specifies the object that
+     * @param bind_proc specifies the object that
      * implements the <CODE>LDAPBind</CODE> interface (you need to
      * define this class).  The object will be used to authenticate
      * to the server on referrals.
      * (This field is <CODE>null</CODE> by default.)
-     * @param hop_limit Maximum number of referrals to follow in a
-     * sequence when attempting to resolve a request.
+     * @param hop_limit maximum number of referrals to follow in a
+     * sequence when attempting to resolve a request
      * @see netscape.ldap.LDAPConnection#setOption(int, java.lang.Object)
      * @see netscape.ldap.LDAPConnection#search(netscape.ldap.LDAPUrl, netscape.ldap.LDAPSearchConstraints)
      * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean, netscape.ldap.LDAPSearchConstraints)
@@ -184,7 +186,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
     /**
      * Returns the maximum number of seconds to wait for the server to
      * spend on a search operation.If 0, there is no time limit.
-     * @return Maximum number of seconds for the server to spend.
+     * @return maximum number of seconds for the server to spend.
      */
     public int getServerTimeLimit() {
         return serverTimeLimit;
@@ -207,9 +209,9 @@ public class LDAPSearchConstraints extends LDAPConstraints
     }
 
     /**
-     * Returns the maximum number of search results to be returned; 0 means
-     * no limit.
-     * @return Maximum number of search results to be returned.
+     * Returns the maximum number of search results that are to be returned; 0 means
+     * there is no limit.
+     * @return maximum number of search results to be returned.
      */
     public int getMaxResults() {
         return maxRes;
@@ -219,7 +221,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * Returns the suggested number of results to return at a time during
      * search. This should be 0 if intermediate results are not needed, and
      * 1 if results are to be processed as they come in.
-     * @return Number of results to return at a time.
+     * @return number of results to return at a time.
      */
     public int getBatchSize() {
         return batch;
@@ -228,7 +230,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
     /**
      * Sets the maximum number of seconds for the server to spend
      * returning search results. If 0, there is no time limit.
-     * @param limit Maximum number of seconds for the server to spend.
+     * @param limit maximum number of seconds for the server to spend.
      * (0 by default, which means that there is no maximum time limit.)
      */
     public void setServerTimeLimit( int limit ) {
@@ -245,16 +247,16 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * to dereference when searching the entries beneath the
      * starting point of the search (but not when finding the starting
      * entry), or <CODE>LDAPv2.DEREF_ALWAYS</CODE> to always
-     * dereference aliases.
+     * dereference aliases
      */
     public void setDereference( int dereference ) {
         deref = dereference;
     }
 
     /**
-     * Sets the maximum number of search results to be returned; 0 means
-     * no limit. (By default, this is set to 1000.)
-     * @param maxResults Maximum number of search results to be returned.
+     * Sets the maximum number of search results to return; 0 means
+     * there is no limit. (By default, this is set to 1000.)
+     * @param maxResults maximum number of search results to return
      */
     public void setMaxResults( int maxResults ) {
         maxRes = maxResults;
@@ -264,7 +266,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
      * Sets the suggested number of results to return at a time during search.
      * This should be 0 if intermediate results are not needed, and 1 if
      * results are to be processed as they come in. (By default, this is 1.)
-     * @param batchSize Number of results to return at a time.
+     * @param batchSize number of results to return at a time
      */
     public void setBatchSize( int batchSize ) {
         batch = batchSize;
@@ -273,7 +275,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
     /**
      * Set the maximum number of unread entries any search listener can
      * have before we stop reading from the server.
-     * @param backlog The maximum number of unread entries per listener
+     * @param backlog the maximum number of unread entries per listener
      * @deprecated Use <CODE>LDAPConnection.getOption()</CODE>
      */
     public void setMaxBacklog( int backlog ) {
@@ -283,7 +285,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
     /**
      * Get the maximum number of unread entries any search listener can
      * have before we stop reading from the server.
-     * @return The maximum number of unread entries per listener
+     * @return the maximum number of unread entries per listener.
      * @deprecated Use <CODE>LDAPConnection.setOption()</CODE>
      */
     public int getMaxBacklog() {
@@ -292,7 +294,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
 
     /**
      * Makes a copy of an existing set of search constraints.
-     * @returns A copy of an existing set of search constraints.
+     * @return a copy of an existing set of search constraints.
      */
     public Object clone() {
         LDAPSearchConstraints o = new LDAPSearchConstraints();
@@ -302,7 +304,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
         o.maxRes = this.maxRes;
         o.batch = this.batch;
         
-        o.setHopLimit(this.getTimeLimit());
+        o.setHopLimit(this.getHopLimit());
         o.setReferrals(this.getReferrals());
         o.setTimeLimit(this.getTimeLimit());
         
@@ -335,5 +337,22 @@ public class LDAPSearchConstraints extends LDAPConstraints
         }
 
         return o;
+    }
+
+    /**
+     * Return a string representation of the object for debugging
+     *
+     * @return A string representation of the object
+     */
+    public String toString() {
+        StringBuffer sb = new StringBuffer("LDAPSearchConstraints {");
+        sb.append( super.toString() + ' ' );
+        sb.append("size limit " + maxRes + ", ");
+        sb.append("server time limit " + serverTimeLimit + ", ");
+        sb.append("aliases " + deref + ", ");
+        sb.append("batch size " + batch);
+        sb.append('}');
+
+        return sb.toString();
     }
 }

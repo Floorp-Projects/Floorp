@@ -130,9 +130,10 @@ ifndef JAVAC
 endif
 
 BERDOCCLASSES=netscape.ldap.ber.stream
+SASLDOCCLASSES=com.netscape.sasl com.netscape.sasl.mechanisms
 
 DOCCLASSES=netscape.ldap netscape.ldap.beans netscape.ldap.controls \
-	netscape.ldap.util $(TOOLSDIR)/*.java $(BERDOCCLASSES)
+	netscape.ldap.util $(SASLDOCCLASSES) $(TOOLSDIR)/*.java $(BERDOCCLASSES)
 
 all: classes
 

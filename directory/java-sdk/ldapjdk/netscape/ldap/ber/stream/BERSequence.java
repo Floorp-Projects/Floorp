@@ -42,10 +42,10 @@ public class BERSequence extends BERConstruct {
 
     /**
      * Constructs a sequence element from an input stream.
-     * @param decoder application specific ber decoder.
-     * @param stream input stream to read ber from.
+     * @param decoder application-specific BER decoder
+     * @param stream input stream from which to read BER
      * @param bytes_read array of 1 int; value is incremented by
-     *        number of bytes read from stream
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERSequence(BERTagDecoder decoder, InputStream stream,
@@ -56,7 +56,7 @@ public class BERSequence extends BERConstruct {
 
     /**
      * Gets the element type.
-     * @return element type
+     * @return element type.
      */
     public int getType() {
         return BERElement.SEQUENCE;
@@ -64,7 +64,7 @@ public class BERSequence extends BERConstruct {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         String elements = "";

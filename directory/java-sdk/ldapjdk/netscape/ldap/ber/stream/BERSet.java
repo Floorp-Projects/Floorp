@@ -42,10 +42,10 @@ public class BERSet extends BERConstruct {
 
     /**
      * Constructs a set element from an input stream.
-     * @param decoder decoder for application specific ber
+     * @param decoder decoder for application-specific BER
      * @param stream source
      * @param bytes_read array of 1 int; value incremented by number
-     *        of bytes read from stream.
+     * of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERSet(BERTagDecoder decoder, InputStream stream,
@@ -64,7 +64,7 @@ public class BERSet extends BERConstruct {
 
     /**
      * Gets the element type.
-     * @return element type
+     * @return element type.
      */
     public int getType() {
         return BERElement.SET;
@@ -72,7 +72,7 @@ public class BERSet extends BERConstruct {
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         String elements = "";

@@ -38,11 +38,11 @@ public class LDAPPasswordExpiredControl extends LDAPStringControl {
      * instantiate password expired controls.
      * <P>
      * To retrieve the message from the server, call <CODE>getMessage</CODE>.
-     * @param oid This parameter must be equal to 
+     * @param oid this parameter must be equal to 
      * <CODE>LDAPPasswordExpiredControl.EXPIRED</CODE>
-     * or a <CODE>LDAPException</CODE> is thrown.
-     * @param critical True if this control is critical.
-     * @param value The value associated with this control.
+     * or an <CODE>LDAPException</CODE> is thrown
+     * @param critical <code>true</code> if this control is critical
+     * @param value the value associated with this control
      * @exception netscape.ldap.LDAPException If oid is not 
      * <CODE>LDAPPasswordExpiredControl.EXPIRED</CODE>.
      * @see netscape.ldap.LDAPControl#register
@@ -58,12 +58,12 @@ public class LDAPPasswordExpiredControl extends LDAPStringControl {
     }
 
     /**
-     * @param controls An array of <CODE>LDAPControl</CODE> objects,
+     * @param controls an array of <CODE>LDAPControl</CODE> objects,
      * representing the controls returned by the server
-     * after a search.  To get these controls, use the
+     * after a search. To get these controls, use the
      * <CODE>getResponseControls</CODE> method of the
      * <CODE>LDAPConnection</CODE> class.
-     * @return An error message string, or null if none is in the control.
+     * @return an error message string, or null if none is in the control.
      * @see netscape.ldap.LDAPConnection#getResponseControls
      * @deprecated LDAPPasswordExpiredControl controls are now automatically
      * instantiated.
@@ -73,8 +73,8 @@ public class LDAPPasswordExpiredControl extends LDAPStringControl {
     }
  
     /**
-     * Gets the message returned by the server with this control
-     * @return The message returned by the server
+     * Gets the message returned by the server with this control.
+     * @return the message returned by the server.
      */    
     public String getMessage() {
         return m_msg;

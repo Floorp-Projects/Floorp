@@ -56,7 +56,7 @@ public class BERNumericString extends BERCharacterString {
      * Constructs a numeric string element from an input stream
      * (for constructed encoding)
      * @param stream source
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BERNumericString(BERTagDecoder decoder, InputStream stream,
@@ -68,7 +68,7 @@ public class BERNumericString extends BERCharacterString {
      * Constructs a numericstring element from an input stream
      * (for primitive encoding)
      * @param stream input stream
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BERNumericString(InputStream stream, int[] bytes_read)
@@ -78,7 +78,7 @@ public class BERNumericString extends BERCharacterString {
 
     /**
      * Gets the element type.
-     * @return element type
+     * @return element type.
      */
     public int getType() {
         return BERElement.NUMERICSTRING;
@@ -87,7 +87,7 @@ public class BERNumericString extends BERCharacterString {
     /**
      * Gets the string representation. Note that currently prints out
      * values in decimal form.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         if (m_value == null)

@@ -48,7 +48,7 @@ public class LDIFDeleteContent extends LDIFBaseContent {
      * Returns the content type. You can use this with the
      * <CODE>getContent</CODE> method of the <CODE>LDIFRecord</CODE>
      * object to determine the type of content specified in the record.
-     * @return The content type (which is
+     * @return the content type (which is
      * <CODE>LDIFContent.DELETE_CONTENT</CODE>).
      * @see netscape.ldap.util.LDIFRecord#getContent
      */
@@ -58,7 +58,7 @@ public class LDIFDeleteContent extends LDIFBaseContent {
 
     /**
      * Returns the string representation of the content of the LDIF record.
-     * @return The string representation of the content of the LDIF record.
+     * @return the string representation of the content of the LDIF record.
      */
     public String toString() {
         String s = "";

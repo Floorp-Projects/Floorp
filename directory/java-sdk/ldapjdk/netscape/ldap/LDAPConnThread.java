@@ -428,10 +428,10 @@ class LDAPConnThread extends Thread {
      * When a response arrives from the LDAP server, it is processed by
      * this routine.  It will pass the message on to the listening object
      * associated with the LDAP msgId.
-     * @param incoming New message from LDAP server
+     * @param msg New message from LDAP server
      */
-    private void processResponse (LDAPMessage incoming, int size) {
-        Integer messageID = new Integer (incoming.getID());
+    private void processResponse (LDAPMessage msg, int size) {
+        Integer messageID = new Integer (msg.getID());
         LDAPMessageQueue l = (LDAPMessageQueue)m_requests.get (messageID);
 
         if (l == null) {
@@ -445,9 +445,9 @@ class LDAPConnThread extends Thread {
         if ( ! l.isAsynchOp()) {
             
             /* Were there any controls for this client? */
-            LDAPControl[] con = incoming.getControls();
+            LDAPControl[] con = msg.getControls();
             if (con != null) {
-                int msgid = incoming.getID();
+                int msgid = msg.getID();
                 LDAPConnection ldc = l.getConnection(msgid);
                 if (ldc != null) {
                     ldc.setResponseControls( this,
@@ -456,19 +456,30 @@ class LDAPConnThread extends Thread {
             }
         }
 
-        if ((l instanceof LDAPSearchListener) && m_cache != null) {
-            cacheSearchResult((LDAPSearchListener)l, incoming, size);
+        if (m_cache != null && (l instanceof LDAPSearchListener)) {
+            cacheSearchResult((LDAPSearchListener)l, msg, size);
         }            
         
-        l.addMessage (incoming);
+        l.addMessage (msg);
 
-        if (incoming instanceof LDAPResponse) { 
+        if (msg instanceof LDAPResponse) { 
             m_requests.remove (messageID);
         }        
     }
 
-    private synchronized void cacheSearchResult (LDAPSearchListener l, LDAPMessage incoming, int size) {
-        Integer messageID = new Integer (incoming.getID());
+    /**
+     * Collect search results to be added to the LDAPCache. Search results are
+     * packaged in a vector and temporary stored into a hashtable m_messages
+     * using the message id as the key. The vector first element (at index 0)
+     * is a Long integer representing the total size of all LDAPEntries entries.
+     * It is followed by the actual LDAPEntries.
+     * If the total size of entries exceeds the LDAPCache max size, or a referral
+     * has been received, caching of search results is disabled and the entry is 
+     * not added to the LDAPCache. A disabled search request is denoted by setting
+     * the entry size to -1.
+     */
+    private synchronized void cacheSearchResult (LDAPSearchListener l, LDAPMessage msg, int size) {
+        Integer messageID = new Integer (msg.getID());
         Long key = l.getKey();
         Vector v = null;
 
@@ -476,59 +487,75 @@ class LDAPConnThread extends Thread {
             return;
         }
         
-        if ((incoming instanceof LDAPSearchResult)/* ||
-            (incoming instanceof LDAPSearchResultReference)*/) {
+        if (msg instanceof LDAPSearchResult) {
 
             // get the vector containing the LDAPMessages for the specified messageID
             v = (Vector)m_messages.get(messageID);
-
             if (v == null) {
-                v = new Vector();
-                // keeps track of the total size of all LDAPMessages belonging to the
-                // same messageID, now the size is 0
+                m_messages.put(messageID, v = new Vector());
                 v.addElement(new Long(0));
             }
 
+            // Return if the entry size is -1, i.e. the caching is disabled
+            if (((Long)v.firstElement()).longValue() == -1L) {
+                return;
+            }
+            
             // add the size of the current LDAPMessage to the lump sum
             // assume the size of LDAPMessage is more or less the same as the size
             // of LDAPEntry. Eventually LDAPEntry object gets stored in the cache
             // instead of LDAPMessage object.
             long entrySize = ((Long)v.firstElement()).longValue() + size;
 
+            // If the entrySize exceeds the cache size, discard the collected
+            // entries and disble collecting of entries for this search request
+            // by setting the entry size to -1.
+            if (entrySize > m_cache.getSize()) {
+                v.removeAllElements();
+                v.addElement(new Long(-1L));
+                return;
+            }                
+                
             // update the lump sum located in the first element of the vector
             v.setElementAt(new Long(entrySize), 0);
 
             // convert LDAPMessage object into LDAPEntry which is stored to the
             // end of the Vector
-            v.addElement(((LDAPSearchResult)incoming).getEntry());
+            v.addElement(((LDAPSearchResult)msg).getEntry());
 
-            // replace the entry
-            m_messages.put(messageID, v);
+        } else if (msg instanceof LDAPSearchResultReference) {
 
-        } else if (incoming instanceof LDAPResponse) {
+            // If a search reference is received disable caching of
+            // this search request 
+            v = (Vector)m_messages.get(messageID);
+            if (v == null) {
+                m_messages.put(messageID, v = new Vector());
+            }
+            else {
+                v.removeAllElements();
+            }
+            v.addElement(new Long(-1L));
 
-            boolean fail = ((LDAPResponse)incoming).getResultCode() > 0;
+        } else if (msg instanceof LDAPResponse) {
 
+            // The search request has completed. Store the cache entry
+            // in the LDAPCache if the operation has succeded and caching
+            // is not disabled due to the entry size or referrals
+            
+            boolean fail = ((LDAPResponse)msg).getResultCode() > 0;
+            v = (Vector)m_messages.remove(messageID);
+            
             if (!fail)  {
-                // Collect all the LDAPMessages for the specified messageID
-                // no need to keep track of this entry. Remove it.
-                v = (Vector)m_messages.remove(messageID);
-
                 // If v is null, meaning there are no search results from the
                 // server
                 if (v == null) {
                     v = new Vector();
-
-                    // set the entry size to be 0
                     v.addElement(new Long(0));
                 }
 
-                try {
-                    // add the new entry with key and value (a vector of
-                    // LDAPEntry objects)
+                // add the new entry if the entry size is not -1 (caching diabled)
+                if (((Long)v.firstElement()).longValue() != -1L) {
                     m_cache.addEntry(key, v);
-                } catch (LDAPException e) {
-                    System.out.println("Exception: "+e.toString());
                 }
             }
         }
@@ -540,6 +567,10 @@ class LDAPConnThread extends Thread {
      */
     void abandon (int id ) {
         LDAPMessageQueue l = (LDAPMessageQueue)m_requests.remove(new Integer(id));
+        // Clean up cache if enabled
+        if (m_messages != null) {
+            m_messages.remove(new Integer(id));
+        }            
         if (l != null) {
             l.removeRequest(id);
         }

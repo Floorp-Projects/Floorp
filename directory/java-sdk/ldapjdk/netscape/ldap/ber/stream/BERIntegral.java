@@ -63,7 +63,7 @@ public abstract class BERIntegral extends BERElement {
      * Constructs an integral element from an input stream.
      * @param stream source
      * @param bytes_read array of 1 int; value incremented by
-     *        number of bytes read from stream
+     * number of bytes read from stream
      * @exception IOException failed to construct
      */
     public BERIntegral(InputStream stream, int[] bytes_read) throws IOException {
@@ -95,7 +95,7 @@ public abstract class BERIntegral extends BERElement {
 
     /**
      * Writes BER to stream.
-     * @param stream output stream.
+     * @param stream output stream
      * @exception IOException on failure to write
      */
     public void write(OutputStream stream) throws IOException {
@@ -154,7 +154,7 @@ public abstract class BERIntegral extends BERElement {
 
     /**
      * Gets the integral value.
-     * @return element value
+     * @return element value.
      */
     public int getValue() {
         return m_value;
@@ -162,13 +162,13 @@ public abstract class BERIntegral extends BERElement {
 
     /**
      * Gets the element type.
-     * @return element type
+     * @return element type.
      */
     public abstract int getType();
 
     /**
      * Gets the string representation.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public abstract String toString();
 }

@@ -51,7 +51,7 @@ public class LDAPModificationSet {
     /**
      * Retrieves the number of <CODE>LDAPModification</CODE>
      * objects in this set.
-     * @return The number of <CODE>LDAPModification</CODE>
+     * @return the number of <CODE>LDAPModification</CODE>
      * objects in this set.
      */
     public int size () {
@@ -61,10 +61,10 @@ public class LDAPModificationSet {
     /**
      * Retrieves a particular <CODE>LDAPModification</CODE> object at
      * the position specified by the index.
-     * @param Index position of the <CODE>LDAPModification</CODE>
+     * @param index position of the <CODE>LDAPModification</CODE>
      * object that you want to retrieve.
      * @return <CODE>LDAPModification</CODE> object representing
-     * a change to be made to an attribute.
+     * a change to make to an attribute.
      */
     public LDAPModification elementAt (int index) {
         return (LDAPModification)modifications.elementAt(index);
@@ -73,8 +73,8 @@ public class LDAPModificationSet {
     /**
      * Removes a particular <CODE>LDAPModification</CODE> object at
      * the position specified by the index.
-     * @param Index position of the <CODE>LDAPModification</CODE>
-     * object that you want to remove.
+     * @param index position of the <CODE>LDAPModification</CODE>
+     * object that you want to remove
      */
     public void removeElementAt( int index ) {
         modifications.removeElementAt(index);
@@ -82,7 +82,7 @@ public class LDAPModificationSet {
 
     /**
      * Specifies another modification to be added to the set of modifications.
-     * @param op The type of modification to make, which can be one of the following:
+     * @param op the type of modification to make. This can be one of the following:
      *   <P>
      *   <UL>
      *   <LI><CODE>LDAPModification.ADD</CODE> (the value should be added to the attribute)
@@ -93,7 +93,7 @@ public class LDAPModificationSet {
      * modification type with <CODE>LDAPModification.BVALUES</CODE>.
      * <P>
      *
-     * @param attr The attribute (possibly with values) to be modified.
+     * @param attr the attribute (possibly with values) to modify
      */
     public synchronized void add( int op, LDAPAttribute attr ) {
         LDAPModification mod = new LDAPModification( op, attr );
@@ -102,7 +102,7 @@ public class LDAPModificationSet {
 
     /**
      * Removes the first attribute with the specified name in the set of modifications.
-     * @param name Name of the attribute to be removed.
+     * @param name name of the attribute to remove
      */
     public synchronized void remove( String name ) {
         for( int i = 0; i < modifications.size(); i++ ) {
@@ -119,7 +119,7 @@ public class LDAPModificationSet {
      * Retrieves the string representation of the
      * modification set.
      *
-     * @return String representation of the modification set.
+     * @return string representation of the modification set.
      */
     public String toString() {
         String s = "LDAPModificationSet: {";

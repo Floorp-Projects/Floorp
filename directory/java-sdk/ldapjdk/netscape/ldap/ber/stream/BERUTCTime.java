@@ -53,7 +53,7 @@ public class BERUTCTime extends BERElement {
      * Constructs a UTCTime element from an input stream
      * (for constructed encoding)
      * @param stream source
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BERUTCTime(BERTagDecoder decoder, InputStream stream,
@@ -96,7 +96,7 @@ public class BERUTCTime extends BERElement {
      * Constructs a UTC time element from an input stream
      * (for primitive encoding)
      * @param stream source
-     * @param bytes_read array of 1 int, incremented by number of bytes read.
+     * @param bytes_read array of 1 int, incremented by number of bytes read
      * @exception IOException failed to construct
      */
     public BERUTCTime(InputStream stream, int[] bytes_read) throws IOException {
@@ -117,7 +117,7 @@ public class BERUTCTime extends BERElement {
     }
 
     /**
-     * Writes ber to a stream
+     * Writes BER to a stream.
      * @return number of bytes written to stream.
      * @exception IOException failed to write
      */
@@ -157,7 +157,7 @@ public class BERUTCTime extends BERElement {
     /**
      * Gets the string representation.
      * NOTE: currently prints out values in decimal form.
-     * @return string representation of tag
+     * @return string representation of tag.
      */
     public String toString() {
         if (m_value == null)

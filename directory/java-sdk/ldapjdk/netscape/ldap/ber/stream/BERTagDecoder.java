@@ -40,7 +40,7 @@ public abstract class BERTagDecoder {
      * @param tag element tag
      * @param stream source stream
      * @param bytes_read array of 1 int; value incremented by number
-     *        of bytes read from stream.
+     * of bytes read from stream
      * @param implicit array of implicit flags
      */
     public abstract BERElement getElement(BERTagDecoder decoder, int tag,

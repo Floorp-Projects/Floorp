@@ -21,19 +21,19 @@ import java.util.*;
 import java.io.*;
 
 /**
- * Specifies how you can retrieve authentication information automatically
+ * Specifies how to retrieve authentication information automatically
  * for referrals. If you have set up the search constraints (or the options
- * in the <CODE>LDAPConnection</CODE> object) so that automatic referral is
- * used, you must define a class that implements this interface.
+ * in the <CODE>LDAPConnection</CODE> object) to use automatic referral,
+ * you must define a class that implements this interface.
  * <P>
  *
  * If no class implements this interface, clients that follow automatic
- * referrals are authenticated anonymously with subsequent LDAP servers.
+ * referrals are authenticated anonymously to subsequent LDAP servers.
  * The following example is a simple class that implements this interface.
- * Objects of this class check the host and port of the LDAP server that is
- * being referred to.  If the host and port are "alway.mcom.com:389", the
- * directory manager's name and password will be used to authenticate to that
- * server. For all other LDAP servers, anonymous authentication is used.
+ * Objects of the myLDAPRebind class check the host and port of the 
+ * referred LDAP server.  If the host and port are "alway.mcom.com:389", 
+ * the directory manager's name and password are used to authenticate.
+ * For all other LDAP servers, anonymous authentication is used.
  *
  * <PRE>
  * public class myLDAPRebind implements netscape.ldap.LDAPRebind
