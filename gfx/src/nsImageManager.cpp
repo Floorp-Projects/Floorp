@@ -26,8 +26,6 @@ static NS_DEFINE_IID(kIImageManagerIID, NS_IIMAGEMANAGER_IID);
 
 class ImageManagerImpl : public nsIImageManager {
 public:
-  static ImageManagerImpl *sTheImageManager;
-
   ImageManagerImpl();
   ~ImageManagerImpl();
 
@@ -49,8 +47,6 @@ public:
 private:
   ilISystemServices *mSS;
 };
-
-ImageManagerImpl* ImageManagerImpl::sTheImageManager = nsnull;
 
 ImageManagerImpl::ImageManagerImpl()
 {
@@ -116,6 +112,24 @@ ImageManagerImpl::GetImageType(const char *buf, PRInt32 length)
   }
 }
 
+// The singleton image manager
+static ImageManagerImpl*   gImageManager;
+
+// Class to manage construction and destruction of the singleton
+// image manager
+struct ImageManagerInit {
+  ImageManagerInit() {
+    gImageManager = new ImageManagerImpl();
+    NS_ADDREF(gImageManager);
+  }
+
+  ~ImageManagerInit() {
+    NS_RELEASE(gImageManager);
+  }
+};
+
+static ImageManagerInit imageManagerInit;
+
 extern "C" NS_GFX_(nsresult)
 NS_NewImageManager(nsIImageManager **aInstancePtrResult)
 {
@@ -124,16 +138,6 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (ImageManagerImpl::sTheImageManager == nsnull) {
-    ImageManagerImpl::sTheImageManager = new ImageManagerImpl();
-    // XXX: This will prevent the ImageManager from being deleted :-(
-    NS_IF_ADDREF(ImageManagerImpl::sTheImageManager);
-  }
-
-  if (ImageManagerImpl::sTheImageManager == nsnull) {
-        return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return ImageManagerImpl::sTheImageManager->QueryInterface(kIImageManagerIID, 
-                                                (void **) aInstancePtrResult);
+  NS_ASSERTION(nsnull != gImageManager, "no image manager");
+  return gImageManager->QueryInterface(kIImageManagerIID, (void **)aInstancePtrResult);
 }

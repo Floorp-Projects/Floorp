@@ -77,8 +77,8 @@ private:
 ImageGroupImpl::ImageGroupImpl(nsIImageManager *aManager)
 {
   NS_INIT_REFCNT();
-  // XXX: The caller has already called AddRef() on aManager...
   mManager = aManager;
+  NS_ADDREF(mManager);
 }
  
 ImageGroupImpl::~ImageGroupImpl()
@@ -242,6 +242,7 @@ NS_NewImageGroup(nsIImageGroup **aInstancePtrResult)
   if (group == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  NS_RELEASE(manager);
 
   return group->QueryInterface(kIImageGroupIID, (void **) aInstancePtrResult);
 }
