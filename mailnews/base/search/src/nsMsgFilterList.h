@@ -60,7 +60,7 @@ public:
 	virtual ~nsMsgFilterList();
 
 	NS_IMETHOD GetFolderForFilterList(nsIMsgFolder **aFolder);
-	NS_IMETHOD GetFilterCount(PRInt32 *pCount);
+	NS_IMETHOD GetFilterCount(PRUint32 *pCount);
 	NS_IMETHOD GetFilterAt(PRUint32 filterIndex, nsIMsgFilter **filter);
 	/* these methods don't delete filters - they just change the list. FE still must
 		call MSG_DestroyFilter to delete a filter.

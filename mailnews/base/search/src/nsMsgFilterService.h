@@ -21,10 +21,6 @@
 
 #include "nsIMsgFilterService.h"
 
-//f5aacb00-072d-11d3-8d70-00805f8a6617
-#define NS_MSGFILTERSERVICE_CID							\
-{ 0xf5aacb00, 0x072d, 0x11d3,							\
-    { 0x8d, 0x70, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x17 } }
 
 NS_BEGIN_EXTERN_C
 
@@ -39,6 +35,9 @@ class nsMsgFilterService : public nsIMsgFilterService
 {
 
 public:
+	nsMsgFilterService();
+	virtual ~nsMsgFilterService();
+
   NS_DECL_ISUPPORTS
 /* clients call OpenFilterList to get a handle to a FilterList, of existing nsMsgFilter *.
 	These are manipulated by the front end as a result of user interaction

@@ -43,7 +43,7 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_IMSGFILTERLIST_IID; return iid; }
 
 	NS_IMETHOD GetFolderForFilterList(nsIMsgFolder **aFolder)= 0;
-	NS_IMETHOD GetFilterCount(PRInt32 *pCount)= 0;
+	NS_IMETHOD GetFilterCount(PRUint32 *pCount)= 0;
 	NS_IMETHOD GetFilterAt(PRUint32 filterIndex, nsIMsgFilter **filter)= 0;
 	/* these methods don't delete filters - they just change the list. FE still must
 		call MSG_DestroyFilter to delete a filter.

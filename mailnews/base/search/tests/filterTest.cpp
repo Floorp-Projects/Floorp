@@ -1,0 +1,270 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+///////////////////////////////////////////////////////////////////////////////
+// This is at test harness for mail filters.
+//
+// For command (1) parsing a filter file,
+//		You are prompted for the name of a filter file you wish to parse
+//		CURRENTLY this file name must be in the form of a file url:
+//		i.e. "D|/mozilla/MailboxFile". 
+#include "msgCore.h"
+#include "prprf.h"
+
+#include <stdio.h>
+#include <assert.h>
+
+#ifdef XP_PC
+#include <windows.h>
+#endif
+
+#include "nsFileSpec.h"
+#include "nsIPref.h"
+#include "plstr.h"
+#include "plevent.h"
+#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
+#include "nsString.h"
+
+#include "nsXPComCIID.h"
+#include "nsMsgFilterService.h"
+#include "nsCOMPtr.h"
+
+#include "nsMsgBaseCID.h"
+
+#include "nsIRDFService.h"
+#include "nsIRDFDataSource.h"
+#include "nsRDFCID.h"
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+
+/////////////////////////////////////////////////////////////////////////////////
+// Define keys for all of the interfaces we are going to require for this test
+/////////////////////////////////////////////////////////////////////////////////
+
+static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
+
+/////////////////////////////////////////////////////////////////////////////////
+// Define default values to be used to drive the test
+/////////////////////////////////////////////////////////////////////////////////
+
+/* strip out non-printable characters */
+static void strip_nonprintable(char *string) {
+    char *dest, *src;
+
+    dest=src=string;
+    while (*src) {
+        if (isprint(*src)) {
+            (*src)=(*dest);
+            src++; dest++;
+        } else {
+            src++;
+        }
+    }
+    (*dest)='\0';
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// The nsFilterTestDriver is a class that I envision could be generalized to form the
+// building block of a protocol test harness. To configure it, you would list all of
+// the events you know how to handle and when one of those events is triggered, you
+// would be asked to process it....right now it is just Mailbox specific....
+///////////////////////////////////////////////////////////////////////////////////
+
+class nsFilterTestDriver
+{
+public:
+
+	nsFilterTestDriver(nsIMsgFilterService *);
+	virtual ~nsFilterTestDriver();
+
+	// run driver initializes the instance, lists the commands, runs the command and when
+	// the command is finished, it reads in the next command and continues...theoretically,
+	// the client should only ever have to call RunDriver(). It should do the rest of the 
+	// work....
+	nsresult RunDriver(); 
+
+	// User drive commands
+	void InitializeTestDriver(); // will end up prompting the user for things like host, port, etc.
+	nsresult ListCommands();   // will list all available commands to the user...i.e. "get groups, get article, etc."
+	nsresult ReadAndDispatchCommand(); // reads a command number in from the user and calls the appropriate command generator
+	nsresult PromptForUserData(const char * userPrompt);
+
+	nsresult OnOpenFilterFile();
+	nsresult OnExit(); 
+
+	nsresult OnWriteFilterList();
+
+protected:
+	char m_userData[500];	// generic string buffer for storing the current user entered data...
+
+	nsFileSpec	m_folderSpec;
+
+	PRBool	    m_runTestHarness;
+	nsCOMPtr<nsIMsgFilterService>	m_filterService;
+};
+
+nsFilterTestDriver::nsFilterTestDriver(nsIMsgFilterService *filterService) : m_folderSpec("")
+{
+	m_runTestHarness = PR_TRUE;
+	m_filterService = filterService;
+	InitializeTestDriver(); // prompts user for initialization information...
+
+}
+
+nsFilterTestDriver::~nsFilterTestDriver()
+{
+}
+
+nsresult nsFilterTestDriver::RunDriver()
+{
+	nsresult status = NS_OK;
+
+	while (m_runTestHarness)
+	{
+		status = ReadAndDispatchCommand();
+
+	} // until the user has asked us to stop
+
+	return status;
+}
+
+void nsFilterTestDriver::InitializeTestDriver()
+{
+	nsresult rv;
+}
+
+// prints the userPrompt and then reads in the user data. Assumes urlData has already been allocated.
+// it also reconstructs the url string in m_urlString but does NOT reload it....
+nsresult nsFilterTestDriver::PromptForUserData(const char * userPrompt)
+{
+	char tempBuffer[500];
+	tempBuffer[0] = '\0'; 
+
+	if (userPrompt)
+		printf(userPrompt);
+	else
+		printf("Enter data for command: ");
+
+    fgets(tempBuffer, sizeof(tempBuffer), stdin);
+    strip_nonprintable(tempBuffer);
+	// only replace m_userData if the user actually entered a valid line...
+	// this allows the command function to set a default value on m_userData before
+	// calling this routine....
+	if (tempBuffer && *tempBuffer)
+		PL_strcpy(m_userData, tempBuffer);
+
+	return NS_OK;
+}
+
+nsresult nsFilterTestDriver::ReadAndDispatchCommand()
+{
+	nsresult status = NS_OK;
+	PRInt32 command = 0; 
+	char commandString[5];
+	commandString[0] = '\0';
+
+	printf("Enter command number: ");
+    fgets(commandString, sizeof(commandString), stdin);
+    strip_nonprintable(commandString);
+	if (commandString && *commandString)
+	{
+		command = atoi(commandString);
+	}
+
+	// now switch on command to the appropriate 
+	switch (command)
+	{
+	case 0:
+		status = ListCommands();
+		break;
+	case 1:
+		status = OnOpenFilterFile();
+		break;
+	case 2:
+		status = OnWriteFilterList();
+		break;
+	default:
+		status = OnExit();
+		break;
+	}
+
+	return status;
+}
+
+nsresult nsFilterTestDriver::ListCommands()
+{
+	printf("Commands currently available: \n");
+	printf("0) List commands. \n");
+	printf("1) Open a filter file. \n");
+	printf("2) Output a filter file. \n");
+	printf("9) Exit the test application. \n");
+	return NS_OK;
+}
+
+nsresult nsFilterTestDriver::OnExit()
+{
+	printf("Terminating Mailbox test harness....\n");
+	m_runTestHarness = PR_FALSE; // next time through the test driver loop, we'll kick out....
+	return NS_OK;
+}
+
+
+nsresult nsFilterTestDriver::OnOpenFilterFile()
+{
+	nsCOMPtr <nsIMsgFilterList> filterList;
+
+	PromptForUserData("enter filter file name");
+	nsFileSpec filterFile(m_userData);
+
+	if (filterFile.Exists())
+	{
+		nsresult res = m_filterService->OpenFilterList(&filterFile, getter_AddRefs(filterList));
+		if (NS_SUCCEEDED(res))
+		{
+		}
+	}
+	return NS_OK;
+}
+
+nsresult nsFilterTestDriver::OnWriteFilterList()
+{
+	return NS_OK;
+}
+
+int main()
+{
+    nsresult rv;
+
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+	NS_WITH_SERVICE(nsIMsgFilterService, filterService, kMsgFilterServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+
+
+	// okay, everything is set up, now we just need to create a test driver and run it...
+	nsFilterTestDriver * driver = new nsFilterTestDriver(filterService);
+	if (driver)
+	{
+		driver->RunDriver();
+		// when it kicks out...it is done....so delete it...
+		delete driver;
+	}
+
+	// shut down:
+    
+    return 0;
+}

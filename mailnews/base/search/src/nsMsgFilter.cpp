@@ -29,6 +29,7 @@ static const char *kImapPrefix = "//imap:";
 nsMsgFilter::nsMsgFilter()
 {
 	m_filterList = nsnull;
+	NS_INIT_REFCNT();
 }
 
 nsMsgFilter::~nsMsgFilter()

@@ -38,6 +38,15 @@ NS_NewMsgFilterService(const nsIID& iid, void **result)
 NS_END_EXTERN_C
 
 
+nsMsgFilterService::nsMsgFilterService()
+{
+	NS_INIT_REFCNT();
+}
+
+nsMsgFilterService::~nsMsgFilterService()
+{
+}
+
 NS_IMETHODIMP nsMsgFilterService::QueryInterface(REFNSIID aIID, void** aResult)
 {   
     if (aResult == NULL)  
@@ -55,7 +64,7 @@ NS_IMETHODIMP nsMsgFilterService::QueryInterface(REFNSIID aIID, void** aResult)
 
 NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgFilterList **resultFilterList)
 {
-	nsresult ret;
+	nsresult ret = NS_OK;
 
 	nsIOFileStream *fileStream = new nsIOFileStream(*filterFile);
 	if (!fileStream)
@@ -64,7 +73,9 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgF
 	nsMsgFilterList *filterList = new nsMsgFilterList(fileStream);
 	if (!filterList)
 		return NS_ERROR_OUT_OF_MEMORY;
-	ret = filterList->LoadTextFilters();
+	NS_ADDREF(filterList);
+	if (filterFile->GetFileSize() > 0)
+		ret = filterList->LoadTextFilters();
 	if (NS_SUCCEEDED(ret))
 		*resultFilterList = filterList;
 	else

@@ -40,6 +40,7 @@ nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
 	nsresult rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
 	m_loggingEnabled = PR_FALSE;
 	m_curFilter = nsnull;
+	NS_INIT_REFCNT();
 }
 
 NS_IMPL_ADDREF(nsMsgFilterList)
@@ -285,7 +286,7 @@ const char *nsMsgFilterList::GetStringForAttrib(nsMsgFilterFileAttrib attrib)
 
 nsresult nsMsgFilterList::LoadValue(nsString2 &value)
 {
-	nsString2	valueStr;
+	nsString2	valueStr(eOneByte);
 	char	curChar;
 	value = "";
 	curChar = SkipWhitespace();
@@ -295,7 +296,7 @@ nsresult nsMsgFilterList::LoadValue(nsString2 &value)
 		return NS_MSG_FILTER_PARSE_ERROR;
 	}
 	curChar = ReadChar();
-	for (int i = 0; i + 2 < sizeof(valueStr); )
+	do
 	{
 		if (curChar == '\\')
 		{
@@ -308,7 +309,7 @@ nsresult nsMsgFilterList::LoadValue(nsString2 &value)
 			}
 			else
 			{
-				valueStr.SetCharAt(curChar, i++) ;
+				valueStr += curChar;
 				curChar = nextChar;
 			}
 		}
@@ -316,20 +317,14 @@ nsresult nsMsgFilterList::LoadValue(nsString2 &value)
 		{
 			if (curChar == (char) -1 || curChar == '"' || curChar == '\n' || curChar == '\r')
 			{
-				valueStr.SetCharAt(0, i);
 			    value += valueStr;
 				break;
 			}
 		}
-		valueStr.SetCharAt(curChar, i++);
+		valueStr += curChar;
 		curChar = ReadChar();
-		if (i + 2 >= sizeof(valueStr))
-		{
-			valueStr.SetCharAt(0, i);
-			value += valueStr;
-			i = 0;
-		}
 	}
+	while (!m_fileStream->eof());
 	return NS_OK;
 }
 
@@ -538,12 +533,13 @@ nsresult nsMsgFilterList::SaveTextFilters()
 {
 	nsresult	err = NS_OK;
 	const char *attribStr;
-	int32			filterCount = m_filters->Count();
+	PRUint32			filterCount;
+	m_filters->Count(&filterCount);
 
 	attribStr = GetStringForAttrib(nsMsgFilterAttribVersion);
 	err = WriteIntAttr(nsMsgFilterAttribVersion, kFileVersion);
 	err = WriteBoolAttr(nsMsgFilterAttribLogging, m_loggingEnabled);
-	for (int i = 0; i < filterCount; i ++)
+	for (PRUint32 i = 0; i < filterCount; i ++)
 	{
 		nsMsgFilter *filter;
 		if (GetMsgFilterAt(i, &filter) == NS_OK && filter != nsnull)
@@ -560,7 +556,10 @@ nsresult nsMsgFilterList::SaveTextFilters()
 
 nsMsgFilterList::~nsMsgFilterList()
 {
-	for (PRUint32 i = 0; i < m_filters->Count(); i++)
+
+	PRUint32			filterCount;
+	m_filters->Count(&filterCount);
+	for (PRUint32 i = 0; i < filterCount; i++)
 	{
 		nsIMsgFilter *filter;
 		if (GetFilterAt(i, &filter) == NS_OK)
@@ -604,18 +603,17 @@ nsresult nsMsgFilterList::Close()
 #endif
 }
 
-nsresult nsMsgFilterList::GetFilterCount(PRInt32 *pCount)
+nsresult nsMsgFilterList::GetFilterCount(PRUint32 *pCount)
 {
-	if (pCount == nsnull)
-		return NS_ERROR_NULL_POINTER;
-	*pCount = m_filters->Count();
-	return NS_OK;
+	return m_filters->Count(pCount);
 }
 
 nsresult nsMsgFilterList::GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **filter)
 {
 
-	if (! (m_filters->Count() >= filterIndex))
+	PRUint32			filterCount;
+	m_filters->Count(&filterCount);
+	if (! (filterCount >= filterIndex))
 		return NS_ERROR_INVALID_ARG;
 	if (filter == nsnull)
 		return NS_ERROR_NULL_POINTER;
@@ -625,7 +623,9 @@ nsresult nsMsgFilterList::GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **fil
 
 nsresult nsMsgFilterList::GetFilterAt(PRUint32 filterIndex, nsIMsgFilter **filter)
 {
-	if (! (m_filters->Count() >= filterIndex))
+	PRUint32			filterCount;
+	m_filters->Count(&filterCount);
+	if (! (filterCount >= filterIndex))
 		return NS_ERROR_INVALID_ARG;
 	if (filter == nsnull)
 		return NS_ERROR_NULL_POINTER;
@@ -660,7 +660,9 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
 {
 	nsIMsgFilter	*tempFilter;
 
-	if (! (m_filters->Count() >= filterIndex))
+	PRUint32			filterCount;
+	m_filters->Count(&filterCount);
+	if (! (filterCount >= filterIndex))
 		return NS_ERROR_INVALID_ARG;
 
 	tempFilter = (nsIMsgFilter *) m_filters->ElementAt(filterIndex);
@@ -673,7 +675,7 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
 	}
 	else if (motion == nsMsgFilterDown)
 	{
-		if (filterIndex + 1 > (PRUint32) (m_filters->Count() - 1))
+		if (filterIndex + 1 > filterCount - 1)
 			return NS_OK;
 		m_filters->ReplaceElementAt(m_filters->ElementAt(filterIndex + 1), filterIndex);
 		m_filters->ReplaceElementAt(tempFilter, filterIndex + 1);
@@ -688,9 +690,11 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
 #ifdef DEBUG
 void nsMsgFilterList::Dump()
 {
-	printf("%d filters\n", m_filters->Count());
+	PRUint32			filterCount;
+	m_filters->Count(&filterCount);
+	printf("%d filters\n", filterCount);
 
-	for (int32 i = 0; i < m_filters->Count(); i++)
+	for (PRUint32 i = 0; i < filterCount; i++)
 	{
 		nsMsgFilter *filter;
 		if (GetMsgFilterAt(i, &filter) == NS_OK)
