@@ -198,7 +198,6 @@ output_row(gif_struct *gs)
             int result = (gs->GIFCallback_HaveDecodedRow)(
               gs->clientptr,
               gs->rowbuf,                /* Pointer to single scanline temporary buffer */
-              gs->rgbrow,                /* Pointer to temporary storage for dithering/mapping */
               gs->x_offset,              /* x offset with respect to GIF logical screen origin */
               width,                     /* Length of the row */
               drow_start,                /* Row number */
@@ -478,7 +477,6 @@ PRBool GIFInit(
   int (*PR_CALLBACK GIFCallback_HaveDecodedRow)(
     void* aClientData,
     PRUint8* aRowBufPtr,   /* Pointer to single scanline temporary buffer */
-    PRUint8* aRGBrowBufPtr,/* Pointer to temporary storage for dithering/mapping */
     int aXOffset,          /* With respect to GIF logical screen origin */
     int aLength,           /* Length of the row? */
     int aRow,              /* Row number? */
@@ -1260,11 +1258,9 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
             if (gs->screen_width < width) {
                 /* XXX Deviant! */
 
-                //gs->rgbrow = (PRUint8*)PR_REALLOC(gs->rgbrow, 3 * width);
-                gs->rgbrow = (PRUint8*)PR_REALLOC(gs->rgbrow, sizeof(GIF_RGB) * width);
                 gs->rowbuf = (PRUint8*)PR_REALLOC(gs->rowbuf, width);
 
-                if((!gs->rgbrow)||(!gs->rowbuf)){
+                if(!gs->rowbuf){
                   gs->state = gif_oom;
                   break;
                 }
@@ -1300,15 +1296,11 @@ int gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
                 //}
         }
         else{
-            if (!gs->rgbrow)
-                gs->rgbrow = (PRUint8*)PR_MALLOC(sizeof(GIF_RGB) * gs->screen_width);
-                //gs->rgbrow = (PRUint8*)PR_MALLOC(3 * gs->screen_width);
-
             if (!gs->rowbuf)
                 gs->rowbuf = (PRUint8*)PR_MALLOC(gs->screen_width);
         }
 
-            if (!gs->rowbuf || !gs->rgbrow)
+            if (!gs->rowbuf)
             {
                     //ILTRACE(0,("il:gif: MEM row"));
                     gs->state=gif_oom;
@@ -1674,7 +1666,6 @@ gif_destroy(gif_struct *gs)
   gif_destroy_transparency(gs);
 
   PR_FREEIF(gs->rowbuf);
-  PR_FREEIF(gs->rgbrow);
   PR_FREEIF(gs->prefix);
   PR_FREEIF(gs->suffix);
   PR_FREEIF(gs->stack);
