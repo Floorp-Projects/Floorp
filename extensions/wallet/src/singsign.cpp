@@ -144,7 +144,7 @@ si_SelectDialog(const PRUnichar* szMessage, char** pList, PRInt32* pCount) {
 #ifdef XP_MAC
 #else
   rv = prompter->Select( NULL, szMessage, *pCount, (const char **)pList, &selectedIndex, &rtnValue );
-#end
+#endif
   *pCount = selectedIndex;
   si_UserHasBeenSelected = PR_TRUE;
   return rtnValue;  
