@@ -57,6 +57,8 @@
 #include "nsPrintSession.h"
 #include "gfxImageFrame.h"
 
+#include "nsOS2Uni.h"
+
 // objects that just require generic constructors
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsOS2)

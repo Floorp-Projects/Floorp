@@ -284,7 +284,6 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(void)
 nsWidgetOS2ModuleDtor(nsIModule *self)
 {
-  OS2Uni::FreeUconvObjects();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetOS2Module,
