@@ -78,7 +78,8 @@ void nsRadioButton::Create(nsIWidget *aParent,
                          XmNy, aRect.y,
                          nsnull);
 
-  mRadioBtn = ::XmCreateToggleButton(mWidget, "radio", nsnull, 0);
+  mRadioBtn = ::XmCreateToggleButton(mWidget, "", nsnull, 0);
+  XtManageChild(mRadioBtn);
 
   if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 

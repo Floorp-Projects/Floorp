@@ -24,6 +24,8 @@
 
 #include <Xm/List.h>
 
+#define DBG 0
+
 //-------------------------------------------------------------------------
 //
 //  initializer
@@ -45,7 +47,13 @@ void nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 void nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
-  //SendMessage(mWnd, LB_INSERTSTRING, (int)aPosition, (LPARAM)(LPCTSTR)val); 
+
+  XmString str;
+
+  str = XmStringCreateLocalized(val);
+
+  printf("String being added [%s] %d\n", val, aPosition);
+  XmListAddItem(mWidget, str, (int)aPosition);
   NS_FREE_STR_BUF(val);
 }
 
@@ -232,6 +240,63 @@ nsresult nsListBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
     }
 
     return result;
+}
+
+//-------------------------------------------------------------------------
+//
+// nsListBox Creator
+//
+//-------------------------------------------------------------------------
+void nsListBox::Create(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+  Widget parentWidget = nsnull;
+
+  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
+
+  if (aParent) {
+    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+  } else {
+    parentWidget = (Widget) aInitData ;
+  }
+
+  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
+
+  mWidget = ::XtVaCreateManagedWidget("",
+                                    xmListWidgetClass,
+                                    parentWidget,
+                                    XmNitemCount, 0,
+                                    XmNwidth, aRect.width,
+                                    XmNheight, aRect.height,
+                                    XmNx, aRect.x,
+                                    XmNy, aRect.y,
+                                    nsnull);
+
+  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
+
+  // save the event callback function
+  mEventCallback = aHandleEventFunction;
+
+  //InitCallbacks();
+
+}
+
+//-------------------------------------------------------------------------
+//
+// nsListBox Creator
+//
+//-------------------------------------------------------------------------
+void nsListBox::Create(nsNativeWindow aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
 }
 
 //-------------------------------------------------------------------------
