@@ -58,7 +58,6 @@ LIBS := \
 	-lnetcache \
 	-lpref \
 	-lsecfree \
-	-lnetutil \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-limg \
 	$(PNG_LIBS) \

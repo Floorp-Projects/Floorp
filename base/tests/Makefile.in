@@ -44,7 +44,6 @@ LIBS		= \
 	-lpwcac \
 	-lhttpurl \
 	-lnetwork \
-	-lnetutil \
 	-lnetcache \
 	-lgmbase$(MOZ_TOOLKIT) \
 	$(TK_LIBS) \

@@ -46,7 +46,6 @@ LIBS = \
 	-lnetcnvts \
 	-lnetwork \
 	-lsockstuburl \
-	-lnetutil \
 	-lmimetype \
 	-lnetcache \
 	-lhttpurl \
