@@ -33,7 +33,7 @@ var set = null;
 function CreateProfileWizard()
 {
   // Need to call CreateNewProfile xuls
-  window.openDialog('chrome://communicator/content/profile/createProfileWizard.xul', 'CPW', 'chrome,modal=yes,titlebar=yes');
+  window.openDialog('chrome://communicator/content/profile/createProfileWizard.xul', 'CPW', 'centerscreen,chrome,modal=yes,titlebar=yes');
 }
 
 // update the display to show the additional profile
