@@ -54,7 +54,11 @@ LLIBS=                          \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\raptorgfxwin.lib   \
  $(DIST)\lib\plc3.lib       \
+!ifdef NECKO
+ $(DIST)\lib\necko.lib		\
+!else
  $(DIST)\lib\netlib.lib         \
+!endif
  $(LIBNSPR)                     \
  $(NULL)
 
