@@ -86,7 +86,8 @@ const TODO_PERCENT_COMPLETE = TODO_COLUMN_COUNTER++;
 function newDateTime(aPRTime) {
     var t = Components.classes[kCalDateTimeContractID]
                       .createInstance(kCalDateTimeIID);
-    t.utcTime = aPRTime;
+    t.isUtc = true;
+    t.nativeTime = aPRTime;
     return t;
 }
 
@@ -137,14 +138,6 @@ calStorageCalendar.prototype = {
     // nsICalendar interface
     //
 
-    mBatchMode: false,
-    // attribute boolean batchMode;
-    get batchMode() { return this.mBatchMode; },
-    set batchMode(aBatchMode) {
-        this.mBatchMode = aBatchMode;
-        
-    },
-
     mURI: null,
     // attribute nsIURI uri;
     get uri() { return this.mURI; },
@@ -171,8 +164,6 @@ calStorageCalendar.prototype = {
     get suppressAlarms() { return false; },
     set suppressAlarms(aSuppressAlarms) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
-    // XXX what happens when we add an observer that already exists with a different filter?
-    // we can add them separately, but when we remove, we'll remove all instances
     // void addObserver( in calIObserver observer, in unsigned long aItemFilter );
     addObserver: function (aObserver, aItemFilter) {
         for (var i = 0; i < this.mObservers.length; i++) {
@@ -200,6 +191,7 @@ calStorageCalendar.prototype = {
     addItem: function (aItem, aListener) {
         if (aItem.id == null) {
             // is this an error?  Or should we generate an IID?
+            aItem.id = "uuid:" + (new Date()).getTime();
         }
         if (this.mItems[aItem.id] != null) {
             // is this an error?
@@ -282,7 +274,8 @@ calStorageCalendar.prototype = {
         }
 
         // is this item an event?
-        var event = aItem.QueryInterface(kCalEventIID);
+        var item = getItemByHash (aId);
+        var event = item.QueryInterface(kCalEventIID);
         if (event) {
             deleteEvent (aId);
         } else {
@@ -293,8 +286,8 @@ calStorageCalendar.prototype = {
             return;
         }
 
-        // notify observers XXX
-        //observeDeleteItem(deletedItem);
+        // notify observers 
+        observeDeleteItem(item);
 
         if (aListener)
             aListener.onOperationComplete (Components.results.NS_OK,
@@ -309,18 +302,27 @@ calStorageCalendar.prototype = {
         if (!aListener)
             return;
 
-        // XXX what do we load from? this thing is horribly underspecified
         var item = getItemByHash (aId);
         if (item) {
-            aListener.onOperationComplete (Components.results.NS_OK,
-                                           aId,
-                                           aListener.GET,
-                                           item);
+            var item_iid = null;
+            if (item.QueryInterface (kCalEventIID)) {
+                item_iid = kCalEventIID;
+            } else if (item.QueryInterface (kCalTodoIID)) {
+                item_iid = kCalTodoIID;
+            } else {
+                aListener.onGetComplete(Components.results.NS_ERROR_FAILURE,
+                                        null,
+                                        "Unknown IID type", 0, []);
+                return;
+            }
+
+            aListener.onGetComplete(Components.results.NS_OK,
+                                    item_iid,
+                                    null, 1, [item]);
         } else {
-            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                           aId,
-                                           aListener.GET,
-                                           "ID not found");
+            aListener.onGetComplete (Components.results.NS_ERROR_FAILURE,
+                                     null,
+                                     "ID not found", 0, []);
         }
     },
 
@@ -362,12 +364,8 @@ calStorageCalendar.prototype = {
             aListener.onGetComplete (Components.results.NS_OK,
                                      aItemType,
                                      null,
+                                     itemsFound.length,
                                      itemsFound);
-    },
-
-    // void reportError( in unsigned long errorid, in AUTF8String aMessage );
-    reportError: function (aErrorId, aMessage)
-    {
     },
 
     //
@@ -445,9 +443,9 @@ calStorageCalendar.prototype = {
 
         mSelectEventByHash = mDB.createStatement ("SELECT * FROM cal_events WHERE hashid = ? LIMIT 1");
         mSelectEventByOid = mDB.createStatement ("SELECT * FROM cal_events WHERE oid = ? LIMIT 1");
-        // this needs to have the range bound like this: start, end, start, start, end, end
-        mSelectEventsByRange = mDB.createStatement ("SELECT * FROM cal_events WHERE (time_start >= ? AND time_end <= ?) OR (time_start <= ? AND time_end > ?) OR (time_start <= ? AND time_end <= ?)");
-        mSelectEventsByRangeAndLimit = mDB.createStatement ("SELECT * FROM cal_events WHERE (time_start >= ? AND time_end <= ?) OR (time_start <= ? AND time_end > ?) OR (time_start <= ? AND time_end <= ?) LIMIT ?");
+        // this needs to have the range bound like this: start, end
+        mSelectEventsByRange = mDB.createStatement ("SELECT * FROM cal_events WHERE (time_end >= ? AND time_start <= ?)");
+        mSelectEventsByRangeAndLimit = mDB.createStatement ("SELECT * FROM cal_events WHERE (time_end >= ? AND time_start <= ?) LIMIT ?");
         mDeleteEventByHash = mDB.createStatement ("DELETE FROM cal_events WHERE hashid = ?");
         qs = "?"; for (var i = 1; i < EV_COLUMN_COUNTER; i++) qs += ",?";
         mInsertEvent = mDB.createStatement ("INSERT INTO cal_events VALUES (" + qs + ")");

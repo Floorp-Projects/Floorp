@@ -68,23 +68,14 @@ calMemoryCalendar.prototype = {
     // nsICalendar interface
     //
 
-    mBatchMode: false,
-    // attribute boolean batchMode;
-    get batchMode() { return this.mBatchMode; },
-    set batchMode(aBatchMode) {
-        this.mBatchMode = aBatchMode;
-    },
-
     // attribute nsIURI uri;
-    get uri() { return false; },
+    get uri() { return ""; },
     set uri(aURI) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
     // attribute boolean suppressAlarms;
     get suppressAlarms() { return false; },
     set suppressAlarms(aSuppressAlarms) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
-    // XXX what happens when we add an observer that already exists with a different filter?
-    // we can add them separately, but when we remove, we'll remove all instances
     // void addObserver( in calIObserver observer, in unsigned long aItemFilter );
     addObserver: function (aObserver, aItemFilter) {
         for (var i = 0; i < this.mObservers.length; i++) {
@@ -112,6 +103,7 @@ calMemoryCalendar.prototype = {
     addItem: function (aItem, aListener) {
         if (aItem.id == null) {
             // is this an error?  Or should we generate an IID?
+            aItem.id = "uuid:" + (new Date()).getTime();
         }
         if (this.mItems[aItem.id] != null) {
             // is this an error?
@@ -193,22 +185,35 @@ calMemoryCalendar.prototype = {
 
     // void getItem( in string id, in calIOperationListener aListener );
     getItem: function (aId, aListener) {
+        if (!aListener)
+            return;
+
         if (aId == null ||
             this.mItems[aId] == null)
         {
-            if (aListener)
-                aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                               aId,
-                                               aListener.GET,
-                                               "ID doesn't exist for getItem");
+            aListener.onGetComplete(Components.results.NS_ERROR_FAILURE,
+                                    null,
+                                    "IID doesn't exist for getItem", 0, []);
             return;
         }
 
-        if (aListener)
-            aListener.onOperationComplete (Components.results.NS_OK,
-                                           aId,
-                                           aListener.GET,
-                                           this.mItems[aId]);
+        var item = this.mItems[aId];
+        var iid = null;
+
+        if (item.QueryInterface(Components.interfaces.calIEvent)) {
+            iid = Components.interfaces.calIEvent;
+        } else if (item.QueryInterface(Components.interfaces.calITodo)) {
+            iid = Components.interfaces.calITodo;
+        } else {
+            aListener.onGetComplete(Components.results.NS_ERROR_FAILURE,
+                                    null,
+                                    "Can't deduce item type based on QI", 0, []);
+            return;
+        }
+
+        aListener.onGetComplete(Components.results.NS_OK,
+                                iid,
+                                null, 1, [item]);
     },
 
     // void getItems( in nsIIDRef aItemType, in unsigned long aItemFilter, 
@@ -260,10 +265,7 @@ calMemoryCalendar.prototype = {
                 }
 
                 // determine whether any endpoint falls within the range
-                if ((itemStartTime >= startTime && itemEndTime <= endTime) ||
-                    (itemStartTime <= startTime && itemEndTime > startTime) ||
-                    (itemStartTime <= endTime && itemEndTime >= endTime))
-                {
+                if (itemStartTime <= endTime && itemEndTime >= startTime) {
                     itemsFound.push(item);
                 }
 
@@ -276,12 +278,8 @@ calMemoryCalendar.prototype = {
             aListener.onGetComplete (Components.results.NS_OK,
                                      aItemType,
                                      null,
+                                     itemsFound.length,
                                      itemsFound);
-    },
-
-    // void reportError( in unsigned long errorid, in AUTF8String aMessage );
-    reportError: function (aErrorId, aMessage)
-    {
     },
 
     //
