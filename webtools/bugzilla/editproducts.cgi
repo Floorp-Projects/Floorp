@@ -487,11 +487,11 @@ if ($action eq 'edit') {
     my ($description, $milestoneurl, $disallownew) = FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
+    print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
     EmitFormElements($product, $description, $milestoneurl, $disallownew);
     
-    print "</TR><TR>\n";
+    print "</TR><TR VALIGN=top>\n";
     print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "\">Edit components:</A></TH>\n";
     print "  <TD>";
     SendSQL("SELECT value,description
