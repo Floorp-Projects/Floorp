@@ -2149,6 +2149,7 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
       rc.GetWidth(buf, wordLen, width);
     }
     rc.SetFont(oldfm);
+    NS_IF_RELEASE(oldfm);
     NS_RELEASE(sc);
 
 #ifdef DEBUG_WORD_WRAPPING
