@@ -765,7 +765,7 @@ nsMimeBaseEmitter::WriteHTMLHeaders()
 nsresult
 nsMimeBaseEmitter::DumpSubjectFromDate()
 {
-  mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" name=\"header-part1\">");
+  mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" class=\"header-part1\">");
 
     // This is the envelope information
     OutputGenericHeader(HEADER_SUBJECT);
@@ -795,7 +795,7 @@ nsMimeBaseEmitter::DumpToCC()
   // which looked weird.
   if (toField || ccField || bccField || newsgroupField)
   {
-    mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" name=\"header-part2\">");
+    mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" class=\"header-part2\">");
 
     OutputGenericHeader(HEADER_TO);
     OutputGenericHeader(HEADER_CC);
@@ -816,7 +816,7 @@ nsMimeBaseEmitter::DumpRestOfHeaders()
   if (mHeaderDisplayType != nsMimeHeaderDisplayTypes::AllHeaders)
     return NS_OK;
 
-  mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" name=\"header-part3\">");
+  mHTMLHeaders.Append("<table border=0 cellspacing=0 cellpadding=0 width=\"100%\" class=\"header-part3\">");
   
   for (i=0; i<mHeaderArray->Count(); i++)
   {
