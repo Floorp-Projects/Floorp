@@ -546,7 +546,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   NS_RELEASE(viewMan);
   SetView(view);
 
-  nsIWidget* widget = view->GetWidget();
+  nsIWidget* widget;
+  view->GetWidget(widget);
   nsRect webBounds(0, 0, NSToCoordRound(aSize.width * t2p), 
                    NSToCoordRound(aSize.height * t2p));
 

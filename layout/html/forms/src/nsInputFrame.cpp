@@ -154,7 +154,9 @@ nsInputFrame::SetViewVisiblity(nsIPresContext* aPresContext, PRBool aShow)
       // initially the widget was created as hidden
       nsViewVisibility newVisibility =
         aShow ? nsViewVisibility_kShow : nsViewVisibility_kHide;
-      if (newVisibility != view->GetVisibility()) {
+      nsViewVisibility  currentVisibility;
+      view->GetVisibility(currentVisibility);
+      if (newVisibility != currentVisibility) {
         // this only inits the 1st time
         // XXX kipp says: this is yucky; init on first visibility seems lame
         // XXX is this even called
@@ -339,7 +341,8 @@ nsInputFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 nsresult
 nsInputFrame::GetWidget(nsIView* aView, nsIWidget** aWidget)
 {
-  nsIWidget*  widget = aView->GetWidget();
+  nsIWidget*  widget;
+  aView->GetWidget(widget);
   nsresult    result;
 
   if (nsnull == widget) {

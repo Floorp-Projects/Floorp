@@ -176,7 +176,7 @@ NS_IMETHODIMP nsViewManager :: SetRootView(nsIView *aView)
   NS_IF_RELEASE(mRootWindow);
 
   if (nsnull != mRootView)
-    mRootWindow = mRootView->GetWidget();
+    mRootView->GetWidget(mRootWindow);
 
   return NS_OK;
 }
@@ -351,7 +351,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   region->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
   trect.ScaleRoundOut(p2t);
 
-  aView->Paint(*localcx, trect, 0);
+  PRBool  result;
+  aView->Paint(*localcx, trect, 0, nsnull, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
@@ -431,7 +432,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
     localcx->SetClipRect(trect, nsClipCombine_kReplace);
   }
 
-  aView->Paint(*localcx, trect, 0);
+  PRBool  result;
+  aView->Paint(*localcx, trect, 0, nsnull, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
     localcx->CopyOffScreenBits(wrect);
@@ -540,8 +542,10 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
       trect.x += x;
       trect.y += y;
+
+      par->GetParent(par);
     }
-    while (par = par->GetParent());
+    while (nsnull != par);
   }
 
 //printf("updating... ");
@@ -733,9 +737,10 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
         aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, p2t);
 
         
-        aStatus = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
-                                            NS_VIEW_FLAG_CHECK_PARENT |
-                                            NS_VIEW_FLAG_CHECK_SIBLINGS);
+        view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
+                                  NS_VIEW_FLAG_CHECK_PARENT |
+                                  NS_VIEW_FLAG_CHECK_SIBLINGS,
+                          aStatus);
 
         aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
         aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
@@ -780,7 +785,8 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIV
 
   if ((nsnull != parent) && (nsnull != child))
   {
-    PRInt32 numkids = parent->GetChildCount();
+    PRInt32 numkids;
+    parent->GetChildCount(numkids);
     nsIView *kid = nsnull, *prev = nsnull;
 
     //verify that the sibling exists...
@@ -788,7 +794,7 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIV
     for (PRInt32 cnt = 0; cnt < numkids; cnt++)
     {
       // XXX This is extremely inefficient...
-      kid = parent->GetChild(cnt);
+      parent->GetChild(cnt, kid);
 
       if (kid == sibling)
         break;
@@ -810,7 +816,9 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIV
 
     //and mark this area as dirty if the view is visible...
 
-    if (child->GetVisibility() != nsViewVisibility_kHide)
+    nsViewVisibility  visibility;
+    child->GetVisibility(visibility);
+    if (nsViewVisibility_kHide != visibility)
       UpdateView(child, nsnull, 0);
   }
   return NS_OK;
@@ -823,7 +831,8 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRIn
 
   if ((nsnull != parent) && (nsnull != child))
   {
-    PRInt32 numkids = parent->GetChildCount();
+    PRInt32 numkids;
+    parent->GetChildCount(numkids);
     nsIView *kid = nsnull, *prev = nsnull;
 
     //find the right insertion point...
@@ -833,9 +842,9 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRIn
       PRInt32 idx;
     
       // XXX This is extremely inefficient...
-      kid = parent->GetChild(cnt);
+      parent->GetChild(cnt, kid);
 
-      idx = kid->GetZIndex();
+      kid->GetZIndex(idx);
 
       if (zindex < idx)
         break;
@@ -851,8 +860,9 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRIn
     UpdateTransCnt(nsnull, child);
 
     //and mark this area as dirty if the view is visible...
-
-    if (child->GetVisibility() != nsViewVisibility_kHide)
+    nsViewVisibility  visibility;
+    child->GetVisibility(visibility);
+    if (nsViewVisibility_kHide != visibility)
       UpdateView(child, nsnull, 0);
   }
   return NS_OK;
@@ -893,12 +903,15 @@ NS_IMETHODIMP nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY
 
   if ((aX != oldX) || (aY != oldY))
   {
-    if (nsViewVisibility_kHide != aView->GetVisibility())
+    nsViewVisibility  visibility;
+    aView->GetVisibility(visibility);
+    if (visibility != nsViewVisibility_kHide)
     {
       nsRect  bounds;
       aView->GetBounds(bounds);
     	nsRect oldArea(oldX, oldY, bounds.width, bounds.height);
-    	nsIView* parent = aView->GetParent();  // no addref
+    	nsIView* parent;
+      aView->GetParent(parent);
   	  UpdateView(parent, oldArea, 0);
   	  nsRect newArea(aX, aY, bounds.width, bounds.height); 
   	  UpdateView(parent, newArea, 0);
@@ -938,7 +951,8 @@ NS_IMETHODIMP nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord
 
   aView->SetDimensions(width, height);
 
-	nsIView *parent = aView->GetParent();  // no addref
+	nsIView *parent;
+  aView->GetParent(parent);
 
   if (nsnull == parent)
   {
@@ -1012,7 +1026,9 @@ NS_IMETHODIMP nsViewManager :: GetViewClipAbsolute(nsIView *aView, nsRect *rect,
 
 NS_IMETHODIMP nsViewManager :: SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
 {
-  if (aTransparent != aView->HasTransparency())
+  PRBool  hasTransparency;
+  aView->HasTransparency(hasTransparency);
+  if (aTransparent != hasTransparency)
   {
     if (aTransparent == PR_FALSE)
     {
@@ -1040,7 +1056,7 @@ NS_IMETHODIMP nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
   else
     newopaque = PR_FALSE;
 
-  oldopacity = aView->GetOpacity();
+  aView->GetOpacity(oldopacity);
 
   if ((oldopacity == 1.0f) || (oldopacity == 0.0f))
     oldopaque = PR_TRUE;
@@ -1146,7 +1162,7 @@ NS_IMETHODIMP nsViewManager :: GetShowQuality(PRBool &aResult)
 
   retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
   if (NS_SUCCEEDED(retval)) {
-    aResult = scroller->GetShowQuality();
+    scroller->GetShowQuality(aResult);
   }
 
   return retval;
@@ -1175,7 +1191,7 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
 
   do
   {
-    win = par->GetWidget();
+    par->GetWidget(win);
 
     if (nsnull != win)
       break;
@@ -1193,8 +1209,10 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
       ax += x;
       ay += y;
     }
+
+    par->GetParent(par);
   }
-  while (par = par->GetParent());
+  while (nsnull != par);
 
   if (nsnull != win)
   {
@@ -1238,13 +1256,27 @@ void nsViewManager :: AddRectToDirtyRegion(nsRect &aRect)
 
 void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)
 {
-  if ((nsnull != oldview) && (oldview->HasTransparency() ||
-      (oldview->GetOpacity() != 1.0f)))
-    mTransCnt--;
+  if (nsnull != oldview) {
+    PRBool  hasTransparency;
+    float   opacity;
 
-  if ((nsnull != newview) && (newview->HasTransparency() ||
-      (newview->GetOpacity() != 1.0f)))
-    mTransCnt++;
+    oldview->HasTransparency(hasTransparency);
+    oldview->GetOpacity(opacity);
+
+    if (hasTransparency || (1.0f != opacity))
+      mTransCnt--;
+  }
+
+  if (nsnull != newview) {
+    PRBool  hasTransparency;
+    float   opacity;
+
+    newview->HasTransparency(hasTransparency);
+    newview->GetOpacity(opacity);
+
+    if (hasTransparency || (1.0f != opacity))
+      mTransCnt++;
+  }
 }
 
 NS_IMETHODIMP nsViewManager :: DisableRefresh(void)

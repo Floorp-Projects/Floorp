@@ -95,16 +95,16 @@ public:
    * @param aVisibilityFlag initial visibility state of view
    * @result The result of the initialization, NS_OK if no errors
    */
-  virtual nsresult Init(nsIViewManager* aManager,
-						const nsRect &aBounds,
-						nsIView *aParent,
-						const nsIID *aWindowIID = nsnull,
-            nsWidgetInitData *aWidgetInitData = nsnull,
-						nsNativeWidget aNative = nsnull,
-						PRInt32 aZIndex = 0,
-						const nsViewClip *aClip = nsnull,
-						float aOpacity = 1.0f,
-						nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
+  NS_IMETHOD  Init(nsIViewManager* aManager,
+						       const nsRect &aBounds,
+        					 nsIView *aParent,
+        					 const nsIID *aWindowIID = nsnull,
+                   nsWidgetInitData *aWidgetInitData = nsnull,
+        					 nsNativeWidget aNative = nsnull,
+        					 PRInt32 aZIndex = 0,
+        					 const nsViewClip *aClip = nsnull,
+        					 float aOpacity = 1.0f,
+        					 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
 
   /**
    * Destroy the view.
@@ -116,13 +116,13 @@ public:
    * SetRootView(NULL) if the view is the root view and calling RemoveChild()
    * otherwise.
    */
-  virtual void Destroy() = 0;
+  NS_IMETHOD  Destroy() = 0;
 
   /**
    * Get the view manager the "owns" the view
    * @result view manager
    */
-  virtual nsIViewManager * GetViewManager() = 0;
+  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) = 0;
 
   /**
    * In 4.0, the "cutout" nature of a view is queryable.
@@ -130,7 +130,7 @@ public:
    * could be a replacement.
    * @result widget that this view contains
    */
-  virtual nsIWidget * GetWidget() = 0;
+  NS_IMETHOD  GetWidget(nsIWidget *&aWidget) = 0;
 
   /**
    * Called to indicate that the specified rect of the view
@@ -141,11 +141,11 @@ public:
    * @param aPaintFlags see nsIView.h for flag definitions
    * @param aBackstop if we will need to do back to front
    *        painting, this is the view that, once rendered
-   *        ends the back to front pass.
+   *        ends the back to front pass. can be nsnull.
    * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
    */
-  virtual PRBool Paint(nsIRenderingContext& rc, const nsRect& rect,
-                       PRUint32 aPaintFlags, nsIView *aBackstop = nsnull) = 0;
+  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
+                    PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &aResult) = 0;
 
   /**
    * Called to indicate that the specified region of the view
@@ -156,7 +156,8 @@ public:
    * @param aPaintFlags see nsIView.h for flag definitions
    * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
    */
-  virtual PRBool Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags) = 0;
+  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
+                    PRUint32 aPaintFlags, PRBool &aResult) = 0;
   
   /**
    * Called to indicate that the specified event should be handled
@@ -166,7 +167,7 @@ public:
    * @param aEventFlags see nsIView.h for flag definitions
    * @result processing status
    */
-  virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags) = 0;
+  NS_IMETHOD  HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags, nsEventStatus &aStatus) = 0;
 
   /**
    * Called to indicate that the position of the view has been changed.
@@ -174,7 +175,7 @@ public:
    * @param x new x position
    * @param y new y position
    */
-  virtual void SetPosition(nscoord x, nscoord y) = 0;
+  NS_IMETHOD  SetPosition(nscoord x, nscoord y) = 0;
 
   /**
    * Called to get the position of a view.
@@ -182,7 +183,7 @@ public:
    * @param x out parameter for x position
    * @param y out parameter for y position
    */
-  virtual void GetPosition(nscoord *x, nscoord *y) = 0;
+  NS_IMETHOD  GetPosition(nscoord *x, nscoord *y) = 0;
   
   /**
    * Called to indicate that the dimensions of the view (actually the
@@ -190,15 +191,15 @@ public:
    * @param width new width
    * @param height new height
    */
-  virtual void SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE) = 0;
-  virtual void GetDimensions(nscoord *width, nscoord *height) = 0;
+  NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE) = 0;
+  NS_IMETHOD  GetDimensions(nscoord *width, nscoord *height) = 0;
 
   /**
    * Called to indicate that the dimensions and position of the view have
    * been changed.
    * @param aBounds new bounds
    */
-  virtual void SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE) = 0;
+  NS_IMETHOD  SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE) = 0;
 
   /**
    * Called to indicate that the dimensions and position of the view have
@@ -208,15 +209,15 @@ public:
    * @param aWidth new width
    * @param aHeight new height
    */
-  virtual void SetBounds(nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight,
-                         PRBool aPaint = PR_TRUE) = 0;
+  NS_IMETHOD  SetBounds(nscoord aX, nscoord aY,
+                        nscoord aWidth, nscoord aHeight,
+                        PRBool aPaint = PR_TRUE) = 0;
 
   /**
    * Called to get the dimensions and position of the view.
    * @param aBounds out parameter for bounds
    */
-  virtual void GetBounds(nsRect &aBounds) const = 0;
+  NS_IMETHOD  GetBounds(nsRect &aBounds) const = 0;
 
   /**
    * Called to indicate that the clip of the view has been changed.
@@ -226,7 +227,7 @@ public:
    * @param aRight new right position
    * @param aBottom new bottom position
    */
-  virtual void SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom) = 0;
+  NS_IMETHOD  SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom) = 0;
 
   /**
    * Called to get the dimensions and position of the clip for the view.
@@ -236,58 +237,59 @@ public:
    * @param aBottom bottom position
    * @result PR_TRUE of there actually is a clip for the view, else PR_FALSE
    */
-  virtual PRBool GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) = 0;
+  NS_IMETHOD  GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom,
+                      PRBool &aResult) = 0;
 
   /**
    * Called to indicate that the visibility of a view has been
    * changed.
    * @param visibility new visibility state
    */
-  virtual void SetVisibility(nsViewVisibility visibility) = 0;
+  NS_IMETHOD  SetVisibility(nsViewVisibility aVisibility) = 0;
 
   /**
    * Called to query the visibility state of a view.
    * @result current visibility state
    */
-  virtual nsViewVisibility GetVisibility() = 0;
+  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) = 0;
 
   /**
    * Called to indicate that the z-index of a view has been changed.
    * The z-index is relative to all siblings of the view.
    * @param zindex new z depth
    */
-  virtual void SetZIndex(PRInt32 zindex) = 0;
+  NS_IMETHOD  SetZIndex(PRInt32 aZIndex) = 0;
 
   /**
    * Called to query the z-index of a view.
    * The z-index is relative to all siblings of the view.
    * @result current z depth
    */
-  virtual PRInt32 GetZIndex() = 0;
+  NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) = 0;
 
   /**
    * Called to set the parent of the view.
    * @param aParent new parent
    */
-  virtual void SetParent(nsIView *aParent) = 0;
+  NS_IMETHOD  SetParent(nsIView *aParent) = 0;
 
   /**
    * Called to query the parent of the view.
    * @result view's parent
    */
-  virtual nsIView *GetParent() = 0;
+  NS_IMETHOD  GetParent(nsIView *&aParent) = 0;
 
   /**
    * Called to query the next sibling of the view.
    * @result view's next sibling
    */
-  virtual nsIView* GetNextSibling() const = 0;
+  NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const = 0;
 
   /**
    * Called to set the next sibling of the view.
    * @param aNextSibling new next sibling
    */
-  virtual void SetNextSibling(nsIView* aNextSibling) = 0;
+  NS_IMETHOD  SetNextSibling(nsIView* aNextSibling) = 0;
 
   /**
    * Used to insert a child after the specified sibling. In general,
@@ -297,20 +299,20 @@ public:
    * @param sibling view to set as previous sibling of child
    *                if nsnull, then child is inserted at head of list
    */
-  virtual void InsertChild(nsIView *child, nsIView *sibling) = 0;
+  NS_IMETHOD  InsertChild(nsIView *aChild, nsIView *aSibling) = 0;
 
   /**
    * Remove a child from the child list. The removal will be driven
    * through the view manager.
    * @param child to remove
    */
-  virtual void RemoveChild(nsIView *child) = 0;
+  NS_IMETHOD  RemoveChild(nsIView *aChild) = 0;
   
   /**
    * Get the number of children for this view.
    * @result child count
    */
-  virtual PRInt32 GetChildCount() = 0;
+  NS_IMETHOD  GetChildCount(PRInt32 &aCount) = 0;
   
   /**
    * Get a child at a specific index. Could be replaced by some sort of
@@ -318,21 +320,21 @@ public:
    * @param index of desired child view
    * @result the view at index or nsnull if there is no such child
    */
-  virtual nsIView * GetChild(PRInt32 index) = 0;
+  NS_IMETHOD  GetChild(PRInt32 index, nsIView*& aChild) = 0;
 
   /**
    * Note: This didn't exist in 4.0. This transform might include scaling
    * but probably not rotation for the first pass.
    * @param transform new transformation of view
    */
-  virtual void SetTransform(nsTransform2D &aXForm) = 0;
+  NS_IMETHOD  SetTransform(nsTransform2D &aXForm) = 0;
 
   /**
    * Note: This didn't exist in 4.0. This transform might include scaling
    * but probably not rotation for the first pass.
    * @result view's transformation
    */
-  virtual void GetTransform(nsTransform2D &aXForm) = 0;
+  NS_IMETHOD  GetTransform(nsTransform2D &aXForm) = 0;
 
   /**
    * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
@@ -340,7 +342,7 @@ public:
    * completely opaque.
    * @param opacity new opacity value
    */
-  virtual void SetOpacity(float opacity) = 0;
+  NS_IMETHOD  SetOpacity(float aOpacity) = 0;
 
   /**
    * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
@@ -348,7 +350,7 @@ public:
    * completely opaque.
    * @result view's opacity value
    */
-  virtual float GetOpacity() = 0;
+  NS_IMETHOD  GetOpacity(float &aOpacity) = 0;
 
   /**
    * Used to ask a view if it has any areas within its bounding box
@@ -356,26 +358,26 @@ public:
    * be set externally, transparency is a quality of the view itself.
    * @result Returns PR_TRUE if there are transparent areas, PR_FALSE otherwise.
    */
-  virtual PRBool HasTransparency() = 0;
+  NS_IMETHOD  HasTransparency(PRBool &aTransparent) = 0;
 
   /**
    * Used set the transparency status of the content in a view. see
    * HasTransparency().
    * @param aTransparent PR_TRUE if there are transparent areas, PR_FALSE otherwise.
    */
-  virtual void SetContentTransparency(PRBool aTransparent) = 0;
+  NS_IMETHOD  SetContentTransparency(PRBool aTransparent) = 0;
 
   /**
    * Set the view's link to client owned data.
    * @param aData - data to associate with view. nsnull to disassociate
    */
-  virtual void SetClientData(void *aData) = 0;
+  NS_IMETHOD  SetClientData(void *aData) = 0;
 
   /**
    * Query the view for it's link to client owned data.
    * @result data associated with view or nsnull if there is none.
    */
-  virtual void * GetClientData() = 0;
+  NS_IMETHOD  GetClientData(void *&aData) = 0;
 
   /**
    * Get the nearest widget in this view or a parent of this view and
@@ -384,14 +386,14 @@ public:
    * @param aDy out parameter for y offset
    * @return widget (if there is one) closest to view
    */
-  virtual nsIWidget * GetOffsetFromWidget(nscoord *aDx, nscoord *aDy) = 0;
+  NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget) = 0;
 
   /**
    * Get the visible offset of scrollable view (if any) that contains this view
    * @param aDx out parameter for x offset
    * @param aDy out parameter for y offset
    */
-  virtual void GetScrollOffset(nscoord *aDx, nscoord *aDy) = 0;
+  NS_IMETHOD  GetScrollOffset(nscoord *aDx, nscoord *aDy) = 0;
 
   /**
    * Output debug info to FILE

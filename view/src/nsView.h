@@ -45,56 +45,57 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIView
-  virtual nsresult Init(nsIViewManager* aManager,
-						const nsRect &aBounds,
-						nsIView *aParent,
-						const nsCID *aWindowIID = nsnull,
-            nsWidgetInitData *aWidgetInitData = nsnull,
-						nsNativeWidget aNative = nsnull,
-						PRInt32 aZIndex = 0,
-						const nsViewClip *aClip = nsnull,
-						float aOpacity = 1.0f,
-						nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
+  NS_IMETHOD  Init(nsIViewManager* aManager,
+      						 const nsRect &aBounds,
+      						 nsIView *aParent,
+      						 const nsCID *aWindowIID = nsnull,
+                   nsWidgetInitData *aWidgetInitData = nsnull,
+      						 nsNativeWidget aNative = nsnull,
+      						 PRInt32 aZIndex = 0,
+      						 const nsViewClip *aClip = nsnull,
+      						 float aOpacity = 1.0f,
+      						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
-  virtual void Destroy();
-  virtual nsIViewManager * GetViewManager();
-  virtual nsIWidget * GetWidget();
-  virtual PRBool Paint(nsIRenderingContext& rc, const nsRect& rect,
-                     PRUint32 aPaintFlags, nsIView *aBackstop = nsnull);
-  virtual PRBool Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags);
-  virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags);
-  virtual void SetPosition(nscoord x, nscoord y);
-  virtual void GetPosition(nscoord *x, nscoord *y);
-  virtual void SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
-  virtual void GetDimensions(nscoord *width, nscoord *height);
-  virtual void SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE);
-  virtual void SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint = PR_TRUE);
-  virtual void GetBounds(nsRect &aBounds) const;
-  virtual void SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  virtual PRBool GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom);
-  virtual void SetVisibility(nsViewVisibility visibility);
-  virtual nsViewVisibility GetVisibility();
-  virtual void SetZIndex(PRInt32 zindex);
-  virtual PRInt32 GetZIndex();
-  virtual void SetParent(nsIView *aParent);
-  virtual nsIView *GetParent();
-  virtual nsIView* GetNextSibling() const;
-  virtual void SetNextSibling(nsIView* aNextSibling);
-  virtual void InsertChild(nsIView *child, nsIView *sibling);
-  virtual void RemoveChild(nsIView *child);
-  virtual PRInt32 GetChildCount();
-  virtual nsIView * GetChild(PRInt32 index);
-  virtual void SetTransform(nsTransform2D &aXForm);
-  virtual void GetTransform(nsTransform2D &aXForm);
-  virtual void SetOpacity(float opacity);
-  virtual float GetOpacity();
-  virtual PRBool HasTransparency();
-  virtual void SetContentTransparency(PRBool aTransparent);
+  NS_IMETHOD  Destroy();
+  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr);
+  NS_IMETHOD  GetWidget(nsIWidget *&aWidget);
+  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
+                    PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &aResult);
+  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
+                    PRUint32 aPaintFlags, PRBool &aResult);
+  NS_IMETHOD  HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags, nsEventStatus &aStatus);
+  NS_IMETHOD  SetPosition(nscoord x, nscoord y);
+  NS_IMETHOD  GetPosition(nscoord *x, nscoord *y);
+  NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
+  NS_IMETHOD  GetDimensions(nscoord *width, nscoord *height);
+  NS_IMETHOD  SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE);
+  NS_IMETHOD  SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint = PR_TRUE);
+  NS_IMETHOD  GetBounds(nsRect &aBounds) const;
+  NS_IMETHOD  SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD  GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom, PRBool &aResult);
+  NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
+  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility);
+  NS_IMETHOD  SetZIndex(PRInt32 zindex);
+  NS_IMETHOD  GetZIndex(PRInt32 &aZIndex);
+  NS_IMETHOD  SetParent(nsIView *aParent);
+  NS_IMETHOD  GetParent(nsIView *&aParent);
+  NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
+  NS_IMETHOD  SetNextSibling(nsIView* aNextSibling);
+  NS_IMETHOD  InsertChild(nsIView *child, nsIView *sibling);
+  NS_IMETHOD  RemoveChild(nsIView *child);
+  NS_IMETHOD  GetChildCount(PRInt32 &aCount);
+  NS_IMETHOD  GetChild(PRInt32 index, nsIView*& aChild);
+  NS_IMETHOD  SetTransform(nsTransform2D &aXForm);
+  NS_IMETHOD  GetTransform(nsTransform2D &aXForm);
+  NS_IMETHOD  SetOpacity(float opacity);
+  NS_IMETHOD  GetOpacity(float &aOpacity);
+  NS_IMETHOD  HasTransparency(PRBool &aTransparent);
+  NS_IMETHOD  SetContentTransparency(PRBool aTransparent);
+  NS_IMETHOD  SetClientData(void *aData);
+  NS_IMETHOD  GetClientData(void *&aData);
+  NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
+  NS_IMETHOD  GetScrollOffset(nscoord *aDx, nscoord *aDy);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  virtual void SetClientData(void *aData);
-  virtual void * GetClientData();
-  virtual nsIWidget * GetOffsetFromWidget(nscoord *aDx, nscoord *aDy);
-  virtual void GetScrollOffset(nscoord *aDx, nscoord *aDy);
 
   // Helper function to get the view that's associated with a widget
   static nsIView*  GetViewFor(nsIWidget* aWidget);

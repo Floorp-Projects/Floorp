@@ -50,9 +50,6 @@
 #define kInsertInRemoveList 0
 #define kInsertInAddList    1
 
-
-NS_DEF_PTR(nsIViewManager);
-
 // Kludged Content stuff
 nsIFrame   * fFrameArray[1024];
 nsIContent * fContentArray[1024];
@@ -397,7 +394,8 @@ NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
     nsIView* parentWithView;
     nsPoint origin;
     GetOffsetFromView(origin, parentWithView);
-    nsIViewManager  *vm = mView->GetViewManager();
+    nsIViewManager  *vm;
+    mView->GetViewManager(vm);
     vm->MoveViewTo(mView, origin.x, origin.y);
     NS_RELEASE(vm);
   }
@@ -412,7 +410,8 @@ NS_METHOD nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 
   // Let the view know
   if ((nsnull != mView) && (0 == (mState & NS_FRAME_IN_REFLOW))) {
-    nsIViewManager  *vm = mView->GetViewManager();
+    nsIViewManager  *vm;
+    mView->GetViewManager(vm);
     vm->ResizeView(mView, aWidth, aHeight);
     NS_RELEASE(vm);
   }
@@ -1076,7 +1075,8 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       nsIView* parentWithView;
       nsPoint origin;
       GetOffsetFromView(origin, parentWithView);
-      nsIViewManager  *vm = mView->GetViewManager();
+      nsIViewManager  *vm;
+      mView->GetViewManager(vm);
       vm->ResizeView(mView, mRect.width, mRect.height);
       vm->MoveViewTo(mView, origin.x, origin.y);
       NS_RELEASE(vm);
@@ -1303,7 +1303,7 @@ NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
      
     frame->GetView(view);
     if (nsnull != view) {
-      aWindow = view->GetWidget();
+      view->GetWidget(aWindow);
       if (nsnull != aWindow) {
         break;
       }
@@ -1316,10 +1316,10 @@ NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
 
 void nsFrame::Invalidate(const nsRect& aDamageRect) const
 {
-  nsIViewManagerPtr viewManager;
+  nsIViewManager* viewManager = nsnull;
 
   if (nsnull != mView) {
-    viewManager = mView->GetViewManager();
+    mView->GetViewManager(viewManager);
     viewManager->UpdateView(mView, aDamageRect, NS_VMREFRESH_NO_SYNC);
     
   } else {
@@ -1330,9 +1330,11 @@ void nsFrame::Invalidate(const nsRect& aDamageRect) const
     GetOffsetFromView(offset, view);
     NS_ASSERTION(nsnull != view, "no view");
     rect += offset;
-    viewManager = view->GetViewManager();
+    view->GetViewManager(viewManager);
     viewManager->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
   }
+
+  NS_IF_RELEASE(viewManager);
 }
 
 // Style sizing methods
@@ -1703,10 +1705,9 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;
-  // XXX I sure hope this code isn't actually used, because the ref counting is
-  // all screwed up...
   if (view != nsnull) {
-    nsIViewManager * viewMgr = view->GetViewManager();
+    nsIViewManager * viewMgr;
+    view->GetViewManager(viewMgr);
     if (viewMgr != nsnull) {
       viewMgr->UpdateView(view, rect, 0);
       NS_RELEASE(viewMgr);

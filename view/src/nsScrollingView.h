@@ -35,44 +35,44 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
 
-  virtual nsresult Init(nsIViewManager* aManager,
-					const nsRect &aBounds,
-					nsIView *aParent,
-					const nsIID *aWindowIID = nsnull,
-          nsWidgetInitData *aWidgetInitData = nsnull,
-					nsNativeWidget aNative = nsnull,
-					PRInt32 aZIndex = 0,
-					const nsViewClip *aClip = nsnull,
-					float aOpacity = 1.0f,
-					nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
+  NS_IMETHOD  Init(nsIViewManager* aManager,
+        					 const nsRect &aBounds,
+        					 nsIView *aParent,
+        					 const nsIID *aWindowIID = nsnull,
+                   nsWidgetInitData *aWidgetInitData = nsnull,
+        					 nsNativeWidget aNative = nsnull,
+        					 PRInt32 aZIndex = 0,
+        					 const nsViewClip *aClip = nsnull,
+        					 float aOpacity = 1.0f,
+        					 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   //overrides
-  virtual void SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
-  virtual void SetPosition(nscoord aX, nscoord aY);
-  virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
-  virtual nsEventStatus HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
-  virtual void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
-  virtual PRBool Paint(nsIRenderingContext& rc, const nsRect& rect,
-                     PRUint32 aPaintFlags, nsIView *aBackstop = nsnull);
+  NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
+  NS_IMETHOD  SetPosition(nscoord aX, nscoord aY);
+  NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
+  NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
+                    PRUint32 aPaintFlags, nsIView *aBackstop, PRBool &aResult);
 
   //nsIScrollableView interface
-  virtual void ComputeContainerSize();
-  virtual void GetContainerSize(nscoord *aWidth, nscoord *aHeight);
-  virtual void SetVisibleOffset(nscoord aOffsetX, nscoord aOffsetY);
-  virtual void GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY);
-  virtual nsIView * GetScrolledView(void);
+  NS_IMETHOD  ComputeContainerSize();
+  NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight);
+  NS_IMETHOD  SetVisibleOffset(nscoord aOffsetX, nscoord aOffsetY);
+  NS_IMETHOD  GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY);
+  NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView);
 
-  virtual void ShowQuality(PRBool aShow);
-  virtual PRBool GetShowQuality(void);
-  virtual void SetQuality(nsContentQuality aQuality);
+  NS_IMETHOD  ShowQuality(PRBool aShow);
+  NS_IMETHOD  GetShowQuality(PRBool &aShow);
+  NS_IMETHOD  SetQuality(nsContentQuality aQuality);
 
-  virtual void SetScrollPreference(nsScrollPreference aPref);
-  virtual nsScrollPreference GetScrollPreference(void);
-  NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
-  NS_IMETHOD GetClipSize(nscoord *aX, nscoord *aY);
+  NS_IMETHOD  SetScrollPreference(nsScrollPreference aPref);
+  NS_IMETHOD  GetScrollPreference(nsScrollPreference &aScrollPreference);
+  NS_IMETHOD  ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
+  NS_IMETHOD  GetClipSize(nscoord *aX, nscoord *aY);
 
   //private
   void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
+  virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
+  virtual void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
