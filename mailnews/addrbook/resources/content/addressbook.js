@@ -312,7 +312,6 @@ function AddSelectedAddressesIntoBucket(prefix)
 			AddAddressIntoBucket(bucketDoc, address);
 		}
 	}	
-	DumpDOM(bucketDoc.documentElement);
 }
 
 function AddAddressIntoBucket(doc, address)
