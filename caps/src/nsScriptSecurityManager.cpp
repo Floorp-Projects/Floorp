@@ -81,8 +81,7 @@ static JSContext *
 GetCurrentContext() {
     // Get JSContext from stack.
     nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
-                    &rv);
+    nsCOMPtr<nsIJSContextStack> stack = do_GetService("nsThreadJSContextStack", &rv);
     if (NS_FAILED(rv))
         return nsnull;
     JSContext *cx;
@@ -90,6 +89,25 @@ GetCurrentContext() {
         return nsnull;
     return cx;
 }
+
+// Convinience method to get the current js context stack.
+// Uses cached JSContextStack service instead of calling through
+// to the service manager.
+JSContext *
+nsScriptSecurityManager::GetCurrentContextQuick() {
+    // Get JSContext from stack.
+    nsresult rv;
+    if (!mThreadJSContextStack) {
+        mThreadJSContextStack = do_GetService("nsThreadJSContextStack", &rv);
+    }
+    if (!mThreadJSContextStack)
+        return nsnull;
+    JSContext *cx;
+    if (NS_FAILED(mThreadJSContextStack->Peek(&cx)))
+        return nsnull;
+    return cx;
+}
+
 
 #if 0
 // unused.
@@ -632,7 +650,7 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **result)
 {
-    JSContext *cx = GetCurrentContext();
+    JSContext *cx = GetCurrentContextQuick();
     if (!cx) {
         *result = nsnull;
         return NS_OK;
@@ -836,7 +854,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
 {
     nsresult rv;
     JSStackFrame *fp = nsnull;
-    JSContext *cx = GetCurrentContext();
+    JSContext *cx = GetCurrentContextQuick();
     fp = cx ? JS_FrameIterator(cx, &fp) : nsnull;
     if (!fp) {
         // No script code on stack. Allow execution.
@@ -1058,7 +1076,7 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
 NS_IMETHODIMP
 nsScriptSecurityManager::EnableCapability(const char *capability)
 {
-    JSContext *cx = GetCurrentContext();
+    JSContext *cx = GetCurrentContextQuick();
     JSStackFrame *fp;
 
     //Error checks for capability string length (200)
@@ -1102,7 +1120,7 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
 NS_IMETHODIMP
 nsScriptSecurityManager::RevertCapability(const char *capability)
 {
-    JSContext *cx = GetCurrentContext();
+    JSContext *cx = GetCurrentContextQuick();
     JSStackFrame *fp;
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), 
@@ -1119,7 +1137,7 @@ nsScriptSecurityManager::RevertCapability(const char *capability)
 NS_IMETHODIMP
 nsScriptSecurityManager::DisableCapability(const char *capability)
 {
-    JSContext *cx = GetCurrentContext();
+    JSContext *cx = GetCurrentContextQuick();
     JSStackFrame *fp;
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), 
@@ -1183,7 +1201,7 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
     }
     if (!isEqual)
     {
-        JSContext* cx = GetCurrentContext();
+        JSContext* cx = GetCurrentContextQuick();
         if (!cx) return NS_ERROR_FAILURE;
 		static const char msg1[] = "Only code signed by the system certificate may call SetCanEnableCapability or Invalidate";
         static const char msg2[] = "Attempt to call SetCanEnableCapability or Invalidate when no system certificate has been established";
@@ -1395,6 +1413,7 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
     NS_INIT_REFCNT();
     memset(hasDomainPolicyVector, 0, sizeof(hasDomainPolicyVector));
     InitPrefs();
+    mThreadJSContextStack = do_GetService("nsThreadJSContextStack");
 }
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void)
