@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Jan Varga (varga@utcru.sk)
  *   Håkan Waara (hwaara@chello.se)
+ *   Neil Rashbrook (neil@parkwaycc.co.uk)
  */
 
 /* This is where functions related to the 3 pane window are kept */
@@ -176,10 +177,23 @@ var folderListener = {
                  // don't select it though
                  scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
                     
-                 // if we failed to find a new message, scroll to the top
+                 // if we failed to find a new message, 
+                 // scroll to the newest, which might be the top or the bottom
+                 // depending on our sort order and sort type
                  if (!scrolled) {
-                   EnsureRowInThreadTreeIsVisible(0);
+                   if (gDBView.sortOrder == nsMsgViewSortOrder.ascending) {
+                     switch (gDBView.sortType) {
+                       case nsMsgViewSortType.byDate: 
+                       case nsMsgViewSortType.byId: 
+                       case nsMsgViewSortType.byThread: 
+                         scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
+                         break;
+                     }
+                   }
                  }
+
+                 if (!scrolled)
+                   EnsureRowInThreadTreeIsVisible(0);
                }
                SetBusyCursor(window, false);
              }
