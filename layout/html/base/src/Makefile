@@ -54,7 +54,7 @@ EXPORTS =				\
 
 MODULE = raptor
 
-REQUIRES = xpcom raptor dom netlib plugin java js
+REQUIRES = xpcom raptor dom netlib plugin java js oji
 
 include $(DEPTH)/config/config.mk
 
