@@ -31,7 +31,7 @@
 #include "nsIScriptGlobalObject.h"
 
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsLiteralString.h"
+#include "nsString.h"
 
 #include "nsICommandManager.h"
 #include "nsPICommandUpdater.h"
