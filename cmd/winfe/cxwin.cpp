@@ -3782,7 +3782,7 @@ CNSToolTip*	CWinCX::CreateToolTip(LO_ImageStruct* pImage, CPoint& cpPoint, CL_La
 	//	Layout wants this in pixels, not FE units.
 	LTRB Rect;
 	ResolveElement(Rect, IL_GetImagePixmap(pImage->image_req), pImage->x_offset, pImage->y_offset, 
-						pImage->x, pImage->y, pImage->width, pImage->height);
+						pImage->x, pImage->y, pImage->width, pImage->height, 0, 0);
 	CPoint cpMap((int) (cpPoint.x - Twips2PixX(Rect.left)), 
 		         (int) (cpPoint.y - Twips2PixY(Rect.top)));
 	char* alt_text;
@@ -6772,7 +6772,7 @@ void CWinCX::invalidateElement( LO_Element *pElement )
 		ResolveElement(Rect, IL_GetImagePixmap(pImage->image_req), 
 			           pImage->x_offset + pImage->border_width,
 					   pImage->y_offset + pImage->border_width, 
-					   pImage->x, pImage->y, pImage->width, pImage->height);
+					   pImage->x, pImage->y, pImage->width, pImage->height, 0, 0);
 
 		rectEmpty = FALSE;
 		break;

@@ -1297,7 +1297,7 @@ HBITMAP CDCCX::CreateBitmap(HDC hTargetDC,  NI_Pixmap *image)
 }
 
 
-int CDCCX::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, LTRB& Rect)
+int CDCCX::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect)
 {
 	//	If width and height are 0, then we assume the entire width and height.
 	//	x and y are relative coords to the top left of the image.
@@ -1318,7 +1318,8 @@ int CDCCX::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, in
 	yRepeat = (CASTINT(height) + CASTINT(y_offset) + CASTINT(imageInfo->targetHeight) -1) / CASTINT(imageInfo->targetHeight);
 	if (!ResolveElement(Rect, image, x_offset * m_lConvertX, y_offset *m_lConvertY, 
 							x * m_lConvertX, y* m_lConvertY, 
-							width* m_lConvertX, height* m_lConvertY))
+							width* m_lConvertX, height* m_lConvertY,
+                                                        lScaleWidth * m_lConvertX, lScaleHeight * m_lConvertY))
 		return FALSE;
 	SafeSixteen(Rect);
 

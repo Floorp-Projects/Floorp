@@ -768,10 +768,11 @@ BOOL CPrintCX::ResolveElement(LTRB& Rect, int32 x, int32 y, int32 x_offset, int3
 
 BOOL CPrintCX::ResolveElement(LTRB& Rect, NI_Pixmap *pImage, int32 lX, int32 lY, 
 								int32 orgx, int32 orgy, 
-								uint32 ulWidth, uint32 ulHeight)
+								uint32 ulWidth, uint32 ulHeight,
+                                                                int32 lScaleWidth, int32 lScaleHeight)
 {
 	//	Call the base first.
-	CDCCX::ResolveElement(Rect, pImage, lX, lY, orgx, orgy, ulWidth, ulHeight);
+	CDCCX::ResolveElement(Rect, pImage, lX, lY, orgx, orgy, ulWidth, ulHeight, lScaleWidth,lScaleHeight);
 	return AdjustRect(Rect);
 }
 
@@ -1920,7 +1921,7 @@ BOOL CPrintCX::IsDeviceDC()
 }
 
 #ifdef XP_WIN32
-void CPrintCX::CopyOffscreenBitmap(NI_Pixmap* image, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, LTRB& Rect)
+void CPrintCX::CopyOffscreenBitmap(NI_Pixmap* image, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect)
 {
 	LTRB sourceRect(Rect);
 	ResolveElement(Rect, image, 
@@ -1928,7 +1929,10 @@ void CPrintCX::CopyOffscreenBitmap(NI_Pixmap* image, int32 x, int32 y, int32 x_o
                    y_offset* m_lConvertY, 
                    x * m_lConvertX, y* m_lConvertY, 
                    width * m_lConvertX, 
-                   height* m_lConvertY);
+                   height* m_lConvertY,
+                   lScaleWidth * m_lConvertX,
+                   lScaleHeight * m_lConvertY);
+
 	WORD nBitCount;
 	nBitCount = GetBitsPerPixel();
 	int	nColorTable;
@@ -2012,8 +2016,31 @@ void CPrintCX::CopyOffscreenBitmap(NI_Pixmap* image, int32 x, int32 y, int32 x_o
 }
 #endif
 
-int	 CPrintCX::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, LTRB& Rect)
+int	 CPrintCX::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect)
 {
+   //  Figure out the width and height we will want to display on the screen.
+    //  This is not a one to one with the width and height of the image,
+    //      especially in scaling cases.
+    int32 lDisplayWidth;
+    int32 lDisplayHeight;
+
+    if((!lScaleWidth)&&(!lScaleHeight)){
+        lDisplayWidth = width;
+        lDisplayHeight = height;
+    }else{
+
+        if(lScaleWidth)
+            lDisplayWidth = lScaleWidth;
+        else
+            lDisplayWidth = (int32) width * (((float) lScaleHeight)/height );
+    
+        if(lScaleHeight)
+            lDisplayHeight = lScaleHeight;
+        else
+            lDisplayHeight = (int32) height * (((float) lScaleWidth)/width );
+    }
+
+
 //	LTRB Rect;
     if (GetDisplayMode() == BLOCK_DISPLAY)
         return FALSE;
@@ -2039,12 +2066,14 @@ int	 CPrintCX::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y
 					x_offset, y_offset, 
 					(imageInfo->width > width) ? imageInfo->width : width, 
 					(imageInfo->height > height) ? imageInfo->height : height, 
+					lScaleWidth,
+					lScaleHeight,
 					Rect);
 		RestorePrintDC();
 	}
 
 	if (mask && m_printBk && !IsPrintPreview()) {
-		CopyOffscreenBitmap(image, x, y, x_offset, y_offset, width, height, Rect);
+		CopyOffscreenBitmap(image, x, y, x_offset, y_offset, width, height, lScaleWidth, lScaleHeight, Rect);
 	}
 	else
 		CDCCX::DisplayPixmap(image, mask, 
@@ -2052,6 +2081,7 @@ int	 CPrintCX::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y
 						x_offset, y_offset, 
 						(imageInfo->width > width) ? imageInfo->width : width, 
 						(imageInfo->height > height) ? imageInfo->height : height, 
+						lDisplayWidth, lDisplayHeight,
 						Rect);
 #else
 	if (ResolveElement(Rect, image, 
@@ -2059,10 +2089,13 @@ int	 CPrintCX::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y
                        (y_offset * m_lConvertY), 
                        x, y, 
                        (width * m_lConvertX), 
-                       (height * m_lConvertY))) {
+                       (height * m_lConvertY),
+                        lScaleWidth * m_lConvertX,
+                       lScaleHeight * m_lConvertY) {
 		if (IsPrintPreview())
 			CDCCX::DisplayPixmap(image, mask, x, y, x_offset, 
-						y_offset, width, height, Rect);
+						y_offset, width, height, 
+                                                lScaleWidth, lScaleHeight, Rect);
 		else {
 			StretchPixmap(GetContextDC(), image, 
 				Rect.left,

@@ -1071,10 +1071,12 @@ BOOL CDCCX::ResolveElement(LTRB& Rect, LO_FormElementStruct *pFormElement)	{
 
 BOOL CDCCX::ResolveElement(LTRB& Rect, NI_Pixmap *pImage, int32 lX, int32 lY, 
 						   int32 orgx, int32 orgy,
-						   uint32 ulWidth, uint32 ulHeight)
+						   uint32 ulWidth, uint32 ulHeight,
+                                                   int32 lScaleWidth, int32 lScaleHeight)
 {
 	BOOL bRetval = TRUE;
 
+        /* Use the size of the image if size not provided. */
 	if(ulWidth == 0)	{
 		ulWidth = pImage->header.width;
 	}
@@ -1082,6 +1084,17 @@ BOOL CDCCX::ResolveElement(LTRB& Rect, NI_Pixmap *pImage, int32 lX, int32 lY,
 	if(ulHeight == 0)	{
 		ulHeight = pImage->header.height;
 	}
+
+        /*  Scaled size overrides further if this is a print context.*/
+	if(IsPrintContext()) {
+		if(lScaleWidth) {
+			ulWidth = (uint32)lScaleWidth;
+		}
+		if(lScaleHeight) {
+			ulHeight = (uint32)lScaleHeight;
+		}
+	}
+
 	Rect.left = orgx + lX - m_lOrgX;
 	Rect.top = orgy + lY - m_lOrgY;
 	
@@ -2175,22 +2188,42 @@ void CDCCX::DisplayIcon(int32 x0, int32 y0, int icon_number)
 				hBitmap = LOADBITMAP(bitmapID);
 				if(maskID) 
 					mask = LOADBITMAP(maskID);
-				HBITMAP hOldBitmap = NULL;                                       
+		
+			HBITMAP hOldBitmap = NULL;                                       
 
-				if(maskID) {
-
-					// load the mask out of the resource file
-						StretchMaskBlt(hdc, hBitmap, mask, 
-									Rect.left, Rect.top, width, height,
-									0, 0, x, y);
+			if(maskID) {
+				if (IsPrintContext()) {
+						HBITMAP hOldBitmap = (HBITMAP)::SelectObject(m_pImageDC, hBitmap);
+						// filled in the background color for transparent bitmap.
+						AlterBackgroundColor(m_pImageDC, x, y, mask, 
+							(HBRUSH)::GetStockObject(WHITE_BRUSH));
+						::StretchBlt(hdc,
+									CASTINT(Rect.left), 
+    								CASTINT(Rect.top),
+    								CASTINT(width), 
+    								CASTINT(height), 
+    								m_pImageDC,
+    								CASTINT(0), 
+    								CASTINT(0), 
+    								CASTINT(x),
+    								CASTINT(y), 
+    								SRCCOPY);
+						::SelectObject(m_pImageDC, hOldBitmap);
+				       }
+				       else {
+					        // load the mask out of the resource file
+					        StretchMaskBlt(hdc, hBitmap, mask, 
+							Rect.left, Rect.top, width, height,
+							0, 0, x, y);
+                                        }
  					VERIFY(::DeleteObject(mask));
-				} 
+                                } 
 				else {
     				// load the bitmap into the cached image CDC                                                   
 					hOldBitmap = (HBITMAP) ::SelectObject(m_pImageDC, hBitmap);
 
 					::StretchBlt(hdc,
-								CASTINT(Rect.left), 
+							CASTINT(Rect.left), 
     							CASTINT(Rect.top),
     							CASTINT(width), 
     							CASTINT(height), 

@@ -133,12 +133,13 @@ _IMGCB_DestroyPixmap(struct IMGCB* self, jint op, void* displayContext, IL_Pixma
 
 JMC_PUBLIC_API(void)
 _IMGCB_DisplayPixmap(struct IMGCB* self, jint op, void* displayContext, IL_Pixmap* image, IL_Pixmap* mask, 
-					 jint x, jint y, jint x_offset, jint y_offset, jint width, jint height)
+					 jint x, jint y, jint x_offset, jint y_offset, jint width, jint height,
+                                         jint scalewidth, jint scaleheight)
 {
     MWContext *pContext = (MWContext *)displayContext;
 	CDCCX  *dispCxt = (CDCCX *) pContext->fe.cx;
 	LTRB Rect;
-	dispCxt->DisplayPixmap( image, mask, x, y, x_offset, y_offset, width, height, Rect);
+	dispCxt->DisplayPixmap( image, mask, x, y, x_offset, y_offset, width, height, scalewidth, scaleheight, Rect);
 }
 
 JMC_PUBLIC_API(void)

@@ -88,8 +88,8 @@ EXTERN_C const JMCInterfaceID IMGCBIF_ID = { 0x38775d44, 0x23525963, 0x7f763562,
 #define IMGCBIF_DestroyPixmap(self, a, b)	\
 	(((self)->vtable->DestroyPixmap)(self, IMGCBIF_DestroyPixmap_op, a, b))
 
-#define IMGCBIF_DisplayPixmap(self, a, b, c, d, e, f, g, h, i)	\
-	(((self)->vtable->DisplayPixmap)(self, IMGCBIF_DisplayPixmap_op, a, b, c, d, e, f, g, h, i))
+#define IMGCBIF_DisplayPixmap(self, a, b, c, d, e, f, g, h, i, j, k)	\
+	(((self)->vtable->DisplayPixmap)(self, IMGCBIF_DisplayPixmap_op, a, b, c, d, e, f, g, h, i, j, k))
 
 #define IMGCBIF_DisplayIcon(self, a, b, c, d)	\
 	(((self)->vtable->DisplayIcon)(self, IMGCBIF_DisplayIcon_op, a, b, c, d))
@@ -121,7 +121,7 @@ struct IMGCBIFInterface {
 	void	(*UpdatePixmap)(struct IMGCBIF* self, jint op, void* a, IL_Pixmap* b, jint c, jint d, jint e, jint f);
 	void	(*ControlPixmapBits)(struct IMGCBIF* self, jint op, void* a, IL_Pixmap* b, IL_PixmapControl c);
 	void	(*DestroyPixmap)(struct IMGCBIF* self, jint op, void* a, IL_Pixmap* b);
-	void	(*DisplayPixmap)(struct IMGCBIF* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i);
+	void	(*DisplayPixmap)(struct IMGCBIF* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i, jint j, jint k);
 	void	(*DisplayIcon)(struct IMGCBIF* self, jint op, void* a, jint b, jint c, jint d);
 	void	(*GetIconDimensions)(struct IMGCBIF* self, jint op, void* a, int* b, int* c, jint d);
 };
@@ -239,7 +239,7 @@ extern JMC_PUBLIC_API(void)
 _IMGCBIF_DestroyPixmap(struct IMGCBIF* self, jint op, void* a, IL_Pixmap* b);
 
 extern JMC_PUBLIC_API(void)
-_IMGCBIF_DisplayPixmap(struct IMGCBIF* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i);
+_IMGCBIF_DisplayPixmap(struct IMGCBIF* self, jint op, void* a, IL_Pixmap* b, IL_Pixmap* c, jint d, jint e, jint f, jint g, jint h, jint i, jint j, jint k);
 
 extern JMC_PUBLIC_API(void)
 _IMGCBIF_DisplayIcon(struct IMGCBIF* self, jint op, void* a, jint b, jint c, jint d);

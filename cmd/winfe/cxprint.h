@@ -201,7 +201,8 @@ public:
 								int32 width, int32 height);
 	virtual BOOL ResolveElement(LTRB& Rect, NI_Pixmap *pImage, int32 lX, int32 lY, 
 								int32 orgx, int32 orgy, 
-								uint32 ulWidth, uint32 ulHeight);
+								uint32 ulWidth, uint32 ulHeight,
+                                                                int32 lScaleWidth, int32 lScaleHeight);
 	virtual BOOL ResolveElement(LTRB& Rect, LO_EmbedStruct *pEmbed, int iLocation, Bool bWindowed);
     virtual BOOL ResolveElement(LTRB& Rect, LO_FormElementStruct *pFormElement);
 	virtual COLORREF ResolveTextColor(LO_TextAttr *pAttr);
@@ -253,7 +254,7 @@ public:
 	virtual void DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEmbed);
 	virtual void DisplayFormElement(MWContext *pContext, int iLocation, LO_FormElementStruct *pFormElement);
 	virtual void DisplayHR(MWContext *pContext, int iLocation, LO_HorizRuleStruct *pHorizRule);
-	virtual int	 DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, LTRB& Rect);
+	virtual int DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect);
 	virtual void DisplayLineFeed(MWContext *pContext, int iLocation, LO_LinefeedStruct *pLineFeed, XP_Bool clear);
 	virtual void DisplaySubDoc(MWContext *pContext, int iLocation, LO_SubDocStruct *pSubDoc);
 	virtual void DisplayCell(MWContext *pContext, int iLocation, LO_CellStruct *pCell);
@@ -263,7 +264,7 @@ public:
 	virtual void DisplayPlugin(MWContext *pContext, LO_EmbedStruct *pEmbed, NPEmbeddedApp* pEmbeddedApp, int iLocation);
 	virtual void DisplayWindowlessPlugin(MWContext *pContext, LO_EmbedStruct *pEmbed, NPEmbeddedApp *pEmbeddedApp, int iLocation);
 #ifdef XP_WIN32
-	void CopyOffscreenBitmap(NI_Pixmap* image, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, LTRB& Rect);
+	void CopyOffscreenBitmap(NI_Pixmap* image, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect);
 #endif
 	//	Layout initialization respecting page size.
 	virtual void LayoutNewDocument(MWContext *pContext, URL_Struct *pURL, int32 *pWidth, int32 *pHeight, int32 *pmWidth, int32 *pmHeight);

@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.c,v 3.1 1998/03/28 03:35:02 ltabb Exp $
+ *   $Id: ilclient.c,v 3.2 1998/05/28 18:48:00 pnunn Exp $
  */
 
 
@@ -329,6 +329,11 @@ il_image_match(il_container *ic,          /* Candidate for match. */
        created for an onscreen context in a printer context or
        vice-versa. */
     if (display_type != ic->display_type)
+        return FALSE;
+
+    if((ic->display_type==IL_Printer) &&
+	(ic->dest_width != ic->image->header.width) &&
+	(ic->dest_height != ic->image->header.height ))
         return FALSE;
 
     /* XXX - temporary */

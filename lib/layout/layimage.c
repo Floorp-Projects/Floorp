@@ -3128,8 +3128,12 @@ void lo_GetImage(MWContext *context, IL_GroupContext *img_cx,
     /* Create a dummy Net Context for the Image Library to use for network
        operations.  This will be replaced by a true Net Context when the
        Network Library is modularized. */
-    reload_method =
-        net_request_allowed ? requested_reload_method : NET_CACHE_ONLY_RELOAD;
+
+    if(context->type != MWContextPrint){
+        reload_method = net_request_allowed ? requested_reload_method : NET_CACHE_ONLY_RELOAD;
+	}else{
+		reload_method =  NET_NORMAL_RELOAD;
+	}
     net_cx = IL_NewDummyNetContext(context, reload_method);
 
     /* Determine whether to request a mask if this is a transparent image.
