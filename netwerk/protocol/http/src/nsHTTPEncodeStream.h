@@ -29,21 +29,13 @@
 #include "nsIFileStreams.h"
 
 class nsHTTPEncodeStream : public nsIInputStream,
-                           public nsIRandomAccessStore
+                           public nsISeekableStream
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIBASESTREAM
     NS_DECL_NSIINPUTSTREAM
-    NS_DECL_NSIRANDOMACCESSSTORE
-
-#if 0
-    NS_IMETHOD Seek(PRSeekWhence whence, PRInt32 offset);
-    NS_IMETHOD Tell(PRIntn* outWhere);
-    // XXX supposedly "protected":
-    NS_IMETHOD GetAtEOF(PRBool* outAtEOF);
-    NS_IMETHOD SetAtEOF(PRBool inAtEOF);
-#endif
+    NS_DECL_NSISEEKABLESTREAM
 
     // nsHTTPEncodeStream methods:
     nsHTTPEncodeStream();

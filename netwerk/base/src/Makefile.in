@@ -32,6 +32,7 @@ LIBRARY_NAME	= neckobase_s
 CPPSRCS		= \
 		nsURLHelper.cpp \
 		nsFileStreams.cpp \
+		nsBufferedStreams.cpp \
 		nsAsyncStreamListener.cpp \
 		nsSyncStreamListener.cpp \
 		nsIOService.cpp \

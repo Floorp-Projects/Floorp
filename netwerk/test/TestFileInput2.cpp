@@ -155,14 +155,22 @@ public:
         PRUint32 copyCount = 0;
 
         // Open the input stream:
-        rv = NS_NewFileInputStream(mInPath, getter_AddRefs(inStr));
+        nsCOMPtr<nsIInputStream> fileIn;
+        rv = NS_NewFileInputStream(mInPath, getter_AddRefs(fileIn));
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = NS_NewBufferedInputStream(fileIn, 65535, getter_AddRefs(inStr));
         if (NS_FAILED(rv)) return rv;
         
         // Open the output stream:
+        nsCOMPtr<nsIOutputStream> fileOut;
         rv = NS_NewFileOutputStream(mOutPath, 
                                     PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
                                     0664,
-                                    getter_AddRefs(outStr));
+                                    getter_AddRefs(fileOut));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = NS_NewBufferedOutputStream(fileOut, 65535, getter_AddRefs(outStr));
         if (NS_FAILED(rv)) return rv;
 
         // Copy from one to the other

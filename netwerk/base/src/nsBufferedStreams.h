@@ -31,36 +31,46 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsBufferedStream : public nsIBaseStream, 
-                         public nsIRandomAccessStore
+                         public nsISeekableStream
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIBASESTREAM
-    NS_DECL_NSIRANDOMACCESSSTORE
+    NS_DECL_NSISEEKABLESTREAM
 
     nsBufferedStream();
     virtual ~nsBufferedStream();
 
-    nsresult Init(PRUint32 bufferSize, nsIBaseStream* stream);
+protected:
+    nsresult Init(nsIBaseStream* stream, PRUint32 bufferSize);
+    NS_IMETHOD Fill() = 0;
+    NS_IMETHOD Flush() = 0;
 
 protected:
     PRUint32                    mBufferSize;
     char*                       mBuffer;
+    // mBufferStartOffset is the offset relative to the start of mStream:
     PRUint32                    mBufferStartOffset;
+    // mCursor is the read cursor for input streams, or write cursor for
+    // output streams, and is relative to mBufferStartOffset:
     PRUint32                    mCursor;
-    nsCOMPtr<nsIBaseStream>     mStream;
+    // mFillPoint is the amount available in the buffer for input streams,
+    // or the end of the buffer for output streams, and is relative to 
+    // mBufferStartOffset:
+    PRUint32                    mFillPoint;
+    nsIBaseStream*              mStream;        // cast to appropriate subclass
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsBufferedInputStream : public nsBufferedStream,
-                              public nsIInputStream
+                              public nsIBufferedInputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIBASESTREAM
     NS_DECL_NSIINPUTSTREAM
-    NS_DECL_NSIRANDOMACCESSSTORE
+    NS_DECL_NSIBUFFEREDINPUTSTREAM
 
     nsBufferedInputStream() : nsBufferedStream() {}
     virtual ~nsBufferedInputStream() {}
@@ -69,20 +79,24 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsIInputStream* Source() { 
-        return (nsIInputStream*)mStream.get();
+        return (nsIInputStream*)mStream;
     }
+
+protected:
+    NS_IMETHOD Fill();
+    NS_IMETHOD Flush() { return NS_OK; } // no-op for input streams
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsBufferedOutputStream : public nsBufferedStream, 
-                               public nsIOutputStream
+                               public nsIBufferedOutputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIBASESTREAM
     NS_DECL_NSIOUTPUTSTREAM
-    NS_DECL_NSIRANDOMACCESSSTORE
+    NS_DECL_NSIBUFFEREDOUTPUTSTREAM
 
     nsBufferedOutputStream() : nsBufferedStream() {}
     virtual ~nsBufferedOutputStream() {}
@@ -91,8 +105,11 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsIOutputStream* Sink() { 
-        return (nsIOutputStream*)mStream.get();
+        return (nsIOutputStream*)mStream;
     }
+
+protected:
+    NS_IMETHOD Fill() { return NS_OK; } // no-op for output streams
 };
 
 ////////////////////////////////////////////////////////////////////////////////

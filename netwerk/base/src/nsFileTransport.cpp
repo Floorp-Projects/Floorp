@@ -46,6 +46,11 @@
 #include "nsNetUtil.h"
 #include "nsInt64.h"
 
+#define NS_INPUT_STREAM_BUFFER_SIZE     (16 * 1024)
+#define NS_OUTPUT_STREAM_BUFFER_SIZE    (64 * 1024)
+
+//#define NO_BUFFERING 1
+
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -89,9 +94,12 @@ public:
         // just do the right thing.)
         PRInt64 size;
         rv = mFile->GetFileSize(&size);
-        if (NS_FAILED(rv)) return rv;
-        *contentLength = nsInt64(size);
-        if (! *contentLength)
+        if (NS_SUCCEEDED(rv)) {
+            *contentLength = nsInt64(size);
+            if (! *contentLength)
+                *contentLength = -1;
+        }
+        else 
             *contentLength = -1;
 
         PRBool isDir;
@@ -162,7 +170,20 @@ public:
                     (const char*)mSpec, rv));
             return rv;
         }
-        rv = NS_NewFileInputStream(mFile, aInputStream);
+
+        nsCOMPtr<nsIInputStream> fileIn;
+        rv = NS_NewFileInputStream(mFile, getter_AddRefs(fileIn));
+        if (NS_FAILED(rv)) return rv;
+
+#ifdef NO_BUFFERING
+        *aInputStream = fileIn;
+        NS_ADDREF(*aInputStream);
+#else
+        rv = NS_NewBufferedInputStream(fileIn, NS_OUTPUT_STREAM_BUFFER_SIZE,
+                                       aInputStream);
+#endif
+
+        // printf("opening %s for reading\n", (const char*)mSpec);
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: opening local file %s for input (%x)",
                 (const char*)mSpec, rv));
@@ -177,10 +198,27 @@ public:
         if (isDir) {
             return NS_ERROR_FAILURE;
         }
+
+        nsCOMPtr<nsIOutputStream> fileOut;
         rv = NS_NewFileOutputStream(mFile, 
                                     PR_CREATE_FILE | PR_WRONLY,
                                     0664,
-                                    aOutputStream);
+                                    getter_AddRefs(fileOut));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIOutputStream> bufStr;
+#ifdef NO_BUFFERING
+        bufStr = fileOut;
+#else
+        rv = NS_NewBufferedOutputStream(fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE,
+                                        getter_AddRefs(bufStr));
+        if (NS_FAILED(rv)) return rv;
+#endif
+
+        *aOutputStream = bufStr;
+        NS_ADDREF(*aOutputStream);
+
+        // printf("opening %s for writing\n", (const char*)mSpec);
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: opening local file %s for output (%x)",
                 (const char*)mSpec, rv));
@@ -189,15 +227,15 @@ public:
 
     nsLocalFileSystem(nsIFile* file) : mFile(file) {
         NS_INIT_REFCNT();
-#ifdef PR_LOGGING
+//#ifdef PR_LOGGING
         (void)mFile->GetPath(&mSpec);
-#endif
+//#endif
     }
 
     virtual ~nsLocalFileSystem() {
-#ifdef PR_LOGGING
+//#ifdef PR_LOGGING
         if (mSpec) nsCRT::free(mSpec);
-#endif
+//#endif
     }
 
     static nsresult Create(nsIFile* file, nsIFileSystem* *result) {
@@ -211,9 +249,9 @@ public:
 
 protected:
     nsCOMPtr<nsIFile>   mFile;
-#ifdef PR_LOGGING
+//#ifdef PR_LOGGING
     char*               mSpec;
-#endif
+//#endif
 };
 
 NS_IMPL_ISUPPORTS1(nsLocalFileSystem, nsIFileSystem);
@@ -577,20 +615,29 @@ nsFileTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **resu
     if (mState != CLOSED)
         return NS_ERROR_IN_PROGRESS;
 
-    nsCOMPtr<nsIOutputStream> str;
+    nsCOMPtr<nsIOutputStream> fileOut;
     rv = NS_NewFileOutputStream(mFile, 
                                 PR_CREATE_FILE | PR_WRONLY,
                                 0664,
-                                getter_AddRefs(str));
+                                getter_AddRefs(fileOut));
     if (NS_FAILED(rv)) return rv;
 
-    *result = str;
+    nsCOMPtr<nsIOutputStream> bufStr;
+#ifdef NO_BUFFERING
+    bufStr = fileOut;
+#else
+    rv = NS_NewBufferedOutputStream(fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE,
+                                    getter_AddRefs(bufStr));
+    if (NS_FAILED(rv)) return rv;
+#endif
+
+    *result = bufStr;
     NS_ADDREF(*result);
 
     mOffset = startPosition;
     if (mOffset > 0) {
-        // if we need to set a starting offset, QI for nsIRandomAccessStore
-        nsCOMPtr<nsIRandomAccessStore> ras =
+        // if we need to set a starting offset, QI for nsISeekableStream
+        nsCOMPtr<nsISeekableStream> ras =
             do_QueryInterface(*result, &mStatus);
         if (NS_FAILED(mStatus))
             return NS_ERROR_IN_PROGRESS;
@@ -802,8 +849,8 @@ nsFileTransport::Process(void)
         }
 
         if (mOffset > 0) {
-            // if we need to set a starting offset, QI for the nsIRandomAccessStore and set it
-            nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mSource, &mStatus);
+            // if we need to set a starting offset, QI for the nsISeekableStream and set it
+            nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mSource, &mStatus);
             if (NS_FAILED(mStatus)) {
                 mState = END_READ;
                 return;
@@ -927,8 +974,8 @@ nsFileTransport::Process(void)
         }
 
         if (mOffset > 0) {
-            // if we need to set a starting offset, QI for the nsIRandomAccessStore and set it
-            nsCOMPtr<nsIRandomAccessStore> ras = do_QueryInterface(mSink, &mStatus);
+            // if we need to set a starting offset, QI for the nsISeekableStream and set it
+            nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mSink, &mStatus);
             if (NS_FAILED(mStatus)) {
                 mState = END_WRITE;
                 return;
