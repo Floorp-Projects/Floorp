@@ -75,12 +75,12 @@ protected:
 
 public:
     static HINSTANCE mDllInstance;
+    // OS flag
+    static PRBool    mIsNT;
 
 #ifdef MOZ_AIMM
     // Active Input Method support
-    static IUnknown                   *gAIMM;
-    static IActiveIMMApp              *gAIMMApp;
-    static IActiveIMMMessagePumpOwner *gAIMMMsgPumpOwner;
+    static IActiveIMMApp *gAIMMApp;
 #endif
 };
 
