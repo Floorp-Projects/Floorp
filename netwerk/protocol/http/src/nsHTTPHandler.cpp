@@ -112,6 +112,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             if (pNewInstance)
             {
                 NS_ADDREF(pNewInstance);
+                pNewInstance->Init();
                 pNewInstance->QueryInterface(nsIChannel::GetIID(), (void**)o_Instance);
                 // add this instance to the active list of connections
                 // TODO!
