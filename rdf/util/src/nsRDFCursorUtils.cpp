@@ -39,12 +39,15 @@ NS_IMPL_ISUPPORTS_INHERITED(nsRDFArrayCursor,
 
 NS_IMETHODIMP nsRDFArrayCursor::Advance(void)
 { 
-    if (mStarted) {
-        nsresult rv = Next();
-        if (NS_SUCCEEDED(rv)) return rv;
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+    if (!mStarted) {
+        mStarted = PR_TRUE;
+        nsresult rv = First();
+        if (NS_FAILED(rv)) return NS_ERROR_RDF_CURSOR_EMPTY;
     }
-    mStarted = PR_TRUE;
+    else {
+        nsresult rv = Next();
+        if (NS_FAILED(rv)) return NS_ERROR_RDF_CURSOR_EMPTY;
+    }
     return IsDone() == NS_OK ? NS_ERROR_RDF_CURSOR_EMPTY : NS_OK;
 }
 
@@ -294,12 +297,15 @@ nsRDFEnumeratorCursor::QueryInterface(REFNSIID iid, void** result)
 
 NS_IMETHODIMP nsRDFEnumeratorCursor::Advance(void)
 { 
-    if (mStarted) {
-        nsresult rv = mEnum->Next();
-        if (NS_SUCCEEDED(rv)) return rv;
-        return NS_ERROR_RDF_CURSOR_EMPTY;
+    if (!mStarted) {
+        mStarted = PR_TRUE;
+        nsresult rv = mEnum->First();
+        if (NS_FAILED(rv)) return NS_ERROR_RDF_CURSOR_EMPTY;
     }
-    mStarted = PR_TRUE;
+    else {
+        nsresult rv = mEnum->Next();
+        if (NS_FAILED(rv)) return NS_ERROR_RDF_CURSOR_EMPTY;
+    }
     return mEnum->IsDone() == NS_OK ? NS_ERROR_RDF_CURSOR_EMPTY : NS_OK;
 }
 
