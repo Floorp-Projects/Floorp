@@ -39,8 +39,6 @@ function Init()
   if (ccm) {
     ccm = ccm.getService(Components.interfaces.nsICharsetConverterManager2);
     availCharsetList = ccm.GetDecoderList();
-    availCharsetList = availCharsetList.QueryInterface(Components.interfaces.nsISupportsArray);
-    availCharsetList.sort;
   }
 
   LoadAvailableCharSets();
@@ -190,7 +188,7 @@ function SelectAvailableCharset()
   if (active_charsets.selectedItems.length > 0)
     active_charsets.clearItemSelection();
 
-  enable_add_button();
+  update_buttons();
 } //SelectAvailableCharset
 
 
@@ -203,19 +201,10 @@ function SelectActiveCharset()
   if (available_charsets.selectedItems.length > 0)
       available_charsets.clearItemSelection();
 
-  enable_remove_button();
+  update_buttons();
 } //SelectActiveCharset
 
 
-
-function enable_remove_button()
-{
-  var remove_button = document.getElementById('remove_button');
-
-  remove_button.setAttribute('disabled','false');
-}
-
-  
 function enable_save()
 {
   var save_button = document.getElementById('ok');
@@ -223,11 +212,28 @@ function enable_save()
 }
 
 
-
-function enable_add_button()
+function update_buttons()
 {
+  var available_charsets = document.getElementById('available_charsets');
+  var active_charsets = document.getElementById('active_charsets');
+  var remove_button = document.getElementById('remove_button');
   var add_button = document.getElementById('add_button');
-  add_button.setAttribute('disabled','false');
+  var up_button = document.getElementById('up_button');
+  var down_button = document.getElementById('down_button');
+
+  var activeCharsetSelected = (active_charsets.selectedItems.length > 0);
+  remove_button.disabled = !activeCharsetSelected;
+
+  if (activeCharsetSelected) {
+    up_button.disabled = !(active_charsets.selectedItems[0].previousSibling);
+    down_button.disabled = !(active_charsets.selectedItems[0].nextSibling);
+  }
+  else {
+    up_button.disabled = true;
+    down_button.disabled = true;
+  }
+  
+  add_button.disabled = (available_charsets.selectedItems.length == 0);
 }
 
 

@@ -36,7 +36,7 @@
   persist="width height"
   width="500" height="394">
 
-  <script language="javascript" src="chrome://communicator/content/pref/pref-charset.js"></script>
+  <script type="text/javascript" src="chrome://communicator/content/pref/pref-charset.js"/>
 
   <keyset id="keyset"/>
   
@@ -46,10 +46,12 @@
 
   <!-- The two-pane -->
   <box flex="1">
-  	<box orient="vertical" flex="1">
-	    <text class="label" value="&charset.customize.additional.label;" crop="right"/>
+    <box orient="vertical" flex="1">
+      <text class="label" value="&charset.customize.additional.label;" crop="right"/>
       <!-- Available Charsets Tree -->
-      <tree class="inset" id="available_charsets" flex="1" onselect="SelectAvailableCharset();" 
+      <tree class="inset" id="available_charsets" flex="1"
+            onselect="SelectAvailableCharset();" 
+            ondblclick="AddAvailableCharset();"
             datasources="rdf:null" indent="false" multiple="true">
         <treecolgroup>
           <treecol flex="1"/>
@@ -63,10 +65,13 @@
       </box>
     </box> 
     <separator orient="vertical"/>
-  	<box orient="vertical" flex="1">
-	    <text class="label" value="&charset.customize.current.label;" crop="right"/>
-      <tree class="inset" id="active_charsets" flex="1" onselect="SelectActiveCharset();" datasources="rdf:null"
-	          indent="false" multiple="true">
+    <box orient="vertical" flex="1">
+      <text class="label" value="&charset.customize.current.label;" crop="right"/>
+      <tree class="inset" id="active_charsets" flex="1" 
+            onselect="SelectActiveCharset();"
+            ondblclick="RemoveActiveCharset();"
+            datasources="rdf:null"
+            indent="false" multiple="true">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
@@ -74,14 +79,17 @@
       </tree>
       <separator class="thin"/>
       <box autostretch="never">
-        <button id="remove_button" oncommand="RemoveActiveCharset();" class="dialog" disabled="true"
-                value="&charset.customize.remove.label;" />
+        <button id="remove_button" oncommand="RemoveActiveCharset();"
+                class="dialog" disabled="true"
+                value="&charset.customize.remove.label;"/>
       </box>
     </box> 
     <box orient="vertical">
       <spring flex="1"/>
-      <button oncommand="MoveUp();" id="up" class="up small" />
-      <button oncommand="MoveDown();" id="down" class="down small"/>
+      <button id="up_button" class="up small" disabled="true"
+              oncommand="MoveUp();"/>
+      <button id="down_button" class="down small" disabled="true"
+              oncommand="MoveDown();"/>
       <spring flex="1"/>
     </box>
   </box>
