@@ -3282,6 +3282,7 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 		cmdArray->AppendElement(kNC_BookmarkCommand_NewBookmark);
 		cmdArray->AppendElement(kNC_BookmarkCommand_NewFolder);
 		cmdArray->AppendElement(kNC_BookmarkCommand_NewSeparator);
+		cmdArray->AppendElement(kNC_BookmarkSeparator);
 	}
 	if (isBookmark)
 	{
@@ -3296,6 +3297,9 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 	{
 		cmdArray->AppendElement(kNC_BookmarkCommand_DeleteBookmarkSeparator);
 	}
+
+	// always append a separator last (due to aggregation of commands from multiple datasources)
+	cmdArray->AppendElement(kNC_BookmarkSeparator);
 
 	nsISimpleEnumerator		*result = new nsArrayEnumerator(cmdArray);
 	if (!result)

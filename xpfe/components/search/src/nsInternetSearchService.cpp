@@ -280,6 +280,7 @@ static	PRBool				mEngineListBuilt;
 	static nsIRDFResource		*kNC_Price;
 	static nsIRDFResource		*kNC_PriceSort;
 	static nsIRDFResource		*kNC_Availability;
+	static nsIRDFResource		*kNC_BookmarkSeparator;
 
 	static nsIRDFResource		*kNC_SearchCommand_AddToBookmarks;
 	static nsIRDFResource		*kNC_SearchCommand_FilterResult;
@@ -383,6 +384,7 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Engine;
 nsIRDFResource			*InternetSearchDataSource::kNC_Price;
 nsIRDFResource			*InternetSearchDataSource::kNC_PriceSort;
 nsIRDFResource			*InternetSearchDataSource::kNC_Availability;
+nsIRDFResource			*InternetSearchDataSource::kNC_BookmarkSeparator;
 
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_AddToBookmarks;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterResult;
@@ -436,6 +438,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "Price",               &kNC_Price);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Price?sort=true",     &kNC_PriceSort);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Availability",        &kNC_Availability);
+		gRDFService->GetResource(NC_NAMESPACE_URI "BookmarkSeparator",   &kNC_BookmarkSeparator);
 
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=addtobookmarks", &kNC_SearchCommand_AddToBookmarks);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filterresult",   &kNC_SearchCommand_FilterResult);
@@ -479,6 +482,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Price);
 		NS_IF_RELEASE(kNC_PriceSort);
 		NS_IF_RELEASE(kNC_Availability);
+		NS_IF_RELEASE(kNC_BookmarkSeparator);
 
 		NS_IF_RELEASE(kNC_SearchCommand_AddToBookmarks);
 		NS_IF_RELEASE(kNC_SearchCommand_FilterResult);
@@ -1215,6 +1219,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 						&& (isBookmarkedFlag == PR_FALSE))
 					{
 						cmdArray->AppendElement(kNC_SearchCommand_AddToBookmarks);
+						cmdArray->AppendElement(kNC_BookmarkSeparator);
 					}
 					Recycle(uri);
 				}
@@ -1222,12 +1227,16 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 		}
 		cmdArray->AppendElement(kNC_SearchCommand_FilterResult);
 		cmdArray->AppendElement(kNC_SearchCommand_FilterSite);
+		cmdArray->AppendElement(kNC_BookmarkSeparator);
 		cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
 	}
 	else if (isSearchURI(source) || (source == kNC_LastSearchRoot))
 	{
 		cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
 	}
+
+	// always append a separator last (due to aggregation of commands from multiple datasources)
+	cmdArray->AppendElement(kNC_BookmarkSeparator);
 
 	nsISimpleEnumerator		*result = new nsArrayEnumerator(cmdArray);
 	if (!result)

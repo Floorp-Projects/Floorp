@@ -567,8 +567,10 @@ function fillContextMenu(name)
     }
 
     var select_list = treeNode.selectedItems;
-
     debug("# of Nodes selected: " + treeNode.selectedItems.length + "\n");
+
+    var separatorResource = rdf.GetResource("http://home.netscape.com/NC-rdf#BookmarkSeparator");
+    if (!separatorResource)	return(false);
 
     // perform intersection of commands over selected nodes
     var cmdArray = new Array();
@@ -601,6 +603,7 @@ function fillContextMenu(name)
         {
             var cmd = cmdEnum.GetNext();
             if (!cmd)    break;
+
             if (nodeIndex == 0)
             {
                 cmdArray[cmdArray.length] = cmd;
@@ -624,9 +627,13 @@ function fillContextMenu(name)
                         break;
                     }
                 }
-                if (cmdFound == false)
+                if ((cmdFound == false) && (cmdArray[cmdIndex]))
                 {
-                    cmdArray[cmdIndex] = null;
+			var cmdResource = cmdArray[cmdIndex].QueryInterface(Components.interfaces.nsIRDFResource);
+                	if ((cmdResource) && (cmdResource != separatorResource))
+                	{
+				cmdArray[cmdIndex] = null;
+			}
                 }
             }
         }
@@ -641,12 +648,28 @@ function fillContextMenu(name)
     if (cmdArray.length < 1)    return(false);
 */
 
+    var lastWasSep = false;
     for (var cmdIndex = 0; cmdIndex < cmdArray.length; cmdIndex++)
     {
         var cmd = cmdArray[cmdIndex];
         if (!cmd)        continue;
         var cmdResource = cmd.QueryInterface(Components.interfaces.nsIRDFResource);
         if (!cmdResource)    break;
+
+	// handle separators
+	if (cmdResource == separatorResource)
+	{
+		if (lastWasSep != true)
+		{
+			lastWasSep = true;
+		        var menuItem = document.createElement("menuseparator");
+		        popupNode.appendChild(menuItem);
+		}
+		continue;
+	}
+
+	lastWasSep = false;
+
         var cmdNameNode = compositeDB.GetTarget(cmdResource, rdfNameResource, true);
         if (!cmdNameNode)    break;
         cmdNameLiteral = cmdNameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
@@ -663,6 +686,20 @@ function fillContextMenu(name)
         menuItem.setAttribute("oncommand", "return doContextCmd('" + cmdResource.Value + "');");
     }
 
+	// strip off leading/trailing menuseparators
+	while (popupNode.childNodes.length > 0)
+	{
+		if (popupNode.childNodes[0].tagName != "menuseparator")
+			break;
+		popupNode.removeChild(popupNode.childNodes[0]);
+	}
+	while (popupNode.childNodes.length > 0)
+	{
+		if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
+			break;
+		popupNode.removeChild(popupNode.childNodes[popupNode.childNodes.length - 1]);
+	}
+
 	// if one and only one node is selected
 	if (treeNode.selectedItems.length == 1)
 	{
@@ -675,8 +712,11 @@ function fillContextMenu(name)
 			// then add a menu separator (if necessary)
 			if (popupNode.childNodes.length > 0)
 			{
-				var menuSep = document.createElement("menuseparator");
-				popupNode.appendChild(menuSep);
+				if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
+				{
+					var menuSep = document.createElement("menuseparator");
+					popupNode.appendChild(menuSep);
+				}
 			}
 
 			// and then add a "Properties" menu items
