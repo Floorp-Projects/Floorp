@@ -102,7 +102,7 @@ RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const cha
 nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 
-nsresult NS_InitXPCOM(nsIServiceManager* *result)
+nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result)
 {
     nsresult rv = NS_OK;
 
@@ -259,6 +259,15 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
     nsComponentManagerImpl::gComponentManager->PlatformPrePopulateRegistry();
 
     return rv;
+}
+
+nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
+{
+    NS_ASSERTION(nsServiceManager::mGlobalServiceManager == servMgr,
+                 "This is not my global service manager!");
+    NS_RELEASE(nsServiceManager::mGlobalServiceManager);
+    NS_RELEASE(nsComponentManagerImpl::gComponentManager);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
