@@ -88,6 +88,11 @@ public:
                                nsIFactory *aFactory,
                                PRBool aReplace);
 
+  // Register the component loader for a given type.
+    NS_IMETHOD RegisterComponentLoader(const char *aType,
+                                       const char *aProgID,
+                                       PRBool aReplace);
+
     // Manually register a dynamically loaded component.
     // The libraryPersistentDescriptor is what gets passed to the library
     // self register function from ComponentManager. The format of this string
@@ -211,6 +216,7 @@ protected:
     nsIRegistry::Key    mClassesKey;
     nsIRegistry::Key    mCLSIDKey;
     PRBool              mPrePopulationDone;
+    nsIRegistry::Key    mLoadersKey;
     nsNativeComponentLoader *mNativeComponentLoader;
 };
 
@@ -290,7 +296,7 @@ public:
         }
         nsresult rv = loader->GetFactory(cid, location, type, aFactory);
         if (NS_SUCCEEDED(rv))
-            factory = *aFactory;
+            factory = do_QueryInterface(*aFactory);
         return rv;
     }
 

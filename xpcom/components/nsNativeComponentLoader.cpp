@@ -70,9 +70,6 @@ nsNativeComponentLoader::nsNativeComponentLoader() :
     mRegistry(nsnull), mCompMgr(nsnull), mDllStore(nsnull)
 {
     NS_INIT_REFCNT();
-#ifdef DEBUG_shaver
-    fprintf(stderr, "nsNCL: creating\n");
-#endif
 }
 
 static PRBool
@@ -87,13 +84,9 @@ nsNativeComponentLoader::~nsNativeComponentLoader()
 {
     mRegistry = nsnull;
     mCompMgr = nsnull;
-    delete mComponentsDir;
 
-    /* XXX correct way to destroy mDllStore */
+    delete mComponentsDir;
     delete mDllStore;
-#ifdef DEBUG_shaver
-    fprintf(stderr, "nsNCL: destroying\n");
-#endif
 }
     
 NS_IMPL_ISUPPORTS(nsNativeComponentLoader, NS_GET_IID(nsIComponentLoader));
@@ -191,6 +184,10 @@ NS_IMETHODIMP
 nsNativeComponentLoader::Init(nsISupports *aCompMgr, nsISupports *aReg)
 {
     nsresult rv;
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "nNCL: Init()\n");
+#endif
 
     mCompMgr = do_QueryInterface(aCompMgr);
     mRegistry = do_QueryInterface(aReg);
@@ -303,17 +300,14 @@ nsNativeComponentLoader::RegisterComponentsInDir(PRInt32 when,
                 }
             if (NS_FAILED(rv))
                 {
-#ifdef DEBUG_shaver
-                    char *specName;
-                    dirEntry->GetNativePath(&specName);
-                    fprintf(stderr, "failure %x returned from autoreg of %s\n",
-                            rv, specName);
-                    nsAllocator::Free(specName);
-#endif
                     // This means either of AutoRegisterComponent or
                     // SyncComponentsInDir failed. It could be because
                     // the file isn't a component like initpref.js
                     // So dont break on these errors.
+
+                    // Update: actually, we return NS_OK for the wrong file
+                    // types, but we should never fail hard because just one
+                    // component didn't work.
                 }
                     
             NS_RELEASE(dirEntry);
@@ -860,14 +854,6 @@ nsNativeComponentLoader::OnRegister(const nsIID &aCID, const char *aType,
                                     const char *aProgID, const char *aLocation,
                                     PRBool aReplace, PRBool aPersist)
 {
-    /* XXX annotate registry with file time and size */
-    
-#ifdef DEBUG_shaver
-    char *cidString = aCID.ToString();
-    fprintf(stderr, "nNCL:OnRegister(%s, %s, %s, %s, %d, %d)\n",
-            cidString, aClassName, aProgID, aLocation, aReplace, aPersist);
-    delete [] cidString;
-#endif
     return NS_OK;
 }
 
@@ -1065,11 +1051,6 @@ nsNativeComponentLoader::CreateDll(nsIFileSpec *aSpec,
             spec = aSpec;
         }
 
-#ifdef DEBUG_shaver
-    fprintf(stderr, "nNCL:CreateDll(%s) -> %s\n", aLocation,
-            dll->GetNativePath());
-#endif
-
     if (!dll)
         {
             rv = NS_OK;
@@ -1080,6 +1061,7 @@ nsNativeComponentLoader::CreateDll(nsIFileSpec *aSpec,
                        ("nsNativeComponentLoader: no registry, eep!"));
             dll = new nsDll(spec, aLocation, modificationTime, fileSize);
         }
+
     if (!dll)
         return NS_ERROR_OUT_OF_MEMORY;
 
