@@ -48,6 +48,8 @@
 #include "nsIRequestObserver.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIFileStream.h"
+#include "nsISeekableStream.h"
+
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -303,11 +305,11 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
             rv = destFolder->GetOfflineStoreInputStream(getter_AddRefs(offlineStoreInputStream));
             if (NS_SUCCEEDED(rv) && offlineStoreInputStream)
             {
-              nsCOMPtr<nsIRandomAccessStore> seekStream = do_QueryInterface(offlineStoreInputStream);
+              nsCOMPtr<nsISeekableStream> seekStream = do_QueryInterface(offlineStoreInputStream);
               NS_ASSERTION(seekStream, "non seekable stream - can't read from offline msg");
               if (seekStream)
               {
-                rv = seekStream->Seek(PR_SEEK_SET, messageOffset);
+                rv = seekStream->Seek(nsISeekableStream::NS_SEEK_SET, messageOffset);
                 if (NS_SUCCEEDED(rv))
                 {
                   // now, copy the dest folder offline store msg to the temp file

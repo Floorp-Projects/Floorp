@@ -4840,29 +4840,29 @@ nsresult nsImapMailFolder::CopyOfflineMsgBody(nsIMsgFolder *srcFolder, nsIMsgDBH
 {
   nsCOMPtr<nsIOutputStream> outputStream;
   nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(outputStream));
-  nsCOMPtr <nsIRandomAccessStore> randomStore;
-  PRInt32 curStorePos;
+  nsCOMPtr <nsISeekableStream> seekable;
+  PRUint32 curStorePos;
 
-  randomStore = do_QueryInterface(outputStream);
+  seekable = do_QueryInterface(outputStream);
 
-  if (randomStore)
+  if (seekable)
   {
     nsMsgKey messageOffset;
     PRUint32 messageSize;
     origHdr->GetMessageOffset(&messageOffset);
     origHdr->GetOfflineMessageSize(&messageSize);
 
-    randomStore->Tell(&curStorePos);
+    seekable->Tell(&curStorePos);
     destHdr->SetMessageOffset(curStorePos);
     nsCOMPtr <nsIInputStream> offlineStoreInputStream;
     rv = srcFolder->GetOfflineStoreInputStream(getter_AddRefs(offlineStoreInputStream));
     if (NS_SUCCEEDED(rv) && offlineStoreInputStream)
     {
-      nsCOMPtr<nsIRandomAccessStore> seekStream = do_QueryInterface(offlineStoreInputStream);
+      nsCOMPtr<nsISeekableStream> seekStream = do_QueryInterface(offlineStoreInputStream);
       NS_ASSERTION(seekStream, "non seekable stream - can't read from offline msg");
       if (seekStream)
       {
-        rv = seekStream->Seek(PR_SEEK_SET, messageOffset);
+        rv = seekStream->Seek(nsISeekableStream::NS_SEEK_SET, messageOffset);
         if (NS_SUCCEEDED(rv))
         {
           // now, copy the dest folder offline store msg to the temp file
@@ -5651,9 +5651,9 @@ nsresult nsImapMailFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputS
           rv = NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE, 00700);
           supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void **) outputStream);
 
-          nsCOMPtr <nsIRandomAccessStore> randomStore = do_QueryInterface(supports);
-          if (randomStore)
-            randomStore->Seek(PR_SEEK_END, 0);
+          nsCOMPtr <nsISeekableStream> seekable = do_QueryInterface(supports);
+          if (seekable)
+            seekable->Seek(nsISeekableStream::NS_SEEK_END, 0);
         }
         return rv;
       }
