@@ -25,6 +25,12 @@
  *               David Bienvenu <bienvenu@netscape.com>
  */
 
+const MSG_FLAG_IMAP_DELETED      = 0x200000;
+const MSG_FLAG_MDN_REPORT_NEEDED = 0x400000;
+const MSG_FLAG_MDN_REPORT_SENT   = 0x800000;
+const MDN_DISPOSE_TYPE_DISPLAYED = 0;
+const ADDR_DB_LARGE_COMMIT       = 1;
+
 var gMessengerBundle;
 var gPromptService;
 var gOfflinePromptsBundle;
@@ -557,7 +563,6 @@ function UpdateDeleteCommand()
 function SelectedMessagesAreDeleted()
 {
     try {
-        const MSG_FLAG_IMAP_DELETED = 0x200000;
         return gDBView.hdrForFirstSelectedMessage.flags & MSG_FLAG_IMAP_DELETED;
     }
     catch (ex) {
@@ -1942,18 +1947,30 @@ function SetUpJunkBar(aMsgHdr)
   goUpdateCommand('button_junk');
 }
 
-function OnMsgLoaded(folder, aMessageURI)
+function OnMsgLoaded(aUrl)
 {
-    if (/type=x-message-display/.test(aMessageURI))
+    if (!aUrl)
+      return;
+
+    var folder = aUrl.folder;
+    var msgURI = GetLoadedMessage();
+    
+    if (!folder || !msgURI)
+      return;
+
+    if (/type=x-message-display/.test(msgURI))
       SetUpJunkBar(null);
     else
     {
-    var msgHdr = messenger.messageServiceFromURI(aMessageURI).messageURIToMsgHdr(aMessageURI);
-    SetUpJunkBar(msgHdr);
+      var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+      SetUpJunkBar(msgHdr);
     }
 
+    // See if MDN was requested but has not been sent.
+    HandleMDNResponse(aUrl);
+
     var currentMsgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-    if (!IsImapMessage(aMessageURI))
+    if (!IsImapMessage(msgURI))
       return;
 
     var imapServer = currentMsgFolder.server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
@@ -1990,6 +2007,61 @@ function OnMsgLoaded(folder, aMessageURI)
         res = outputPFC.copyMessages(currentMsgFolder, messages, false /*isMove*/, msgWindow /* nsIMsgWindow */, null /* listener */, false /* isFolder */, false /*allowUndo*/ );
       }
      }
+}
+
+//
+// This function handles all mdn response generation (ie, imap and pop).
+// For pop the msg uid can be 0 (ie, 1st msg in a local folder) so no
+// need to check uid here. No one seems to set mimeHeaders to null so
+// no need to check it either.
+//
+function HandleMDNResponse(aUrl)
+{
+  if (!aUrl)
+    return;
+
+  var msgFolder = aUrl.folder;
+  var msgURI = GetLoadedMessage();
+  if (!msgFolder || !msgURI)
+    return;
+
+  var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+  var mimeHdr = aUrl.mimeHeaders;
+    
+  // If we didn't get the message id when we downloaded the message header,
+  // we cons up an md5: message id. If we've done that, we'll try to extract
+  // the message id out of the mime headers for the whole message.
+  var msgId = msgHdr.messageId;
+  if (msgId.split(":")[0] == "md5")
+  {
+    var mimeMsgId = mimeHdr.extractHeader("Message-Id", false);
+    if (mimeMsgId)
+      msgHdr.messageId = mimeMsgId;
+  }
+  
+  // After a msg is downloaded it's already marked READ at this point so we must check if
+  // the msg has a "Disposition-Notification-To" header and no MDN report has been sent yet.
+  var msgFlags = msgHdr.flags;
+  if ((msgFlags & MSG_FLAG_IMAP_DELETED) || (msgFlags & MSG_FLAG_MDN_REPORT_SENT))
+    return;
+
+  var DNTHeader = mimeHdr.extractHeader("Disposition-Notification-To", false);
+  if (!DNTHeader)
+    return;
+ 
+  // Everything looks good so far, let's generate the MDN response.
+  var mdnGenerator = Components.classes["@mozilla.org/messenger-mdn/generator;1"].
+                                  createInstance(Components.interfaces.nsIMsgMdnGenerator);
+  mdnGenerator.process(MDN_DISPOSE_TYPE_DISPLAYED, msgWindow, msgFolder, msgHdr.messageKey, mimeHdr, false);
+
+  // Reset mark msg MDN "Sent" and "Not Needed".
+  msgHdr.flags = (msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+  msgHdr.OrFlags(MSG_FLAG_MDN_REPORT_SENT);
+
+  // Commit db changes.
+  var msgdb = msgFolder.getMsgDatabase(msgWindow);
+  if (msgdb)
+    msgdb.Commit(ADDR_DB_LARGE_COMMIT);
 }
 
 function MsgSearchMessages()
