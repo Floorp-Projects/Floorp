@@ -32,6 +32,7 @@ class nsIDocumentLoaderObserver;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsWindowListener;
+class nsIDOMHTMLDocument;
 
 struct nsRect;
 
@@ -49,7 +50,6 @@ enum nsXPBaseWindowType {
                   ///creates a modal dialog
                 eXPBaseWindowType_modalDialog,
               }; 
-
 
 
 /**
@@ -88,10 +88,9 @@ public:
 
   NS_IMETHOD GetPresShell(nsIPresShell*& aPresShell) = 0;
 
-  NS_IMETHOD FindDOMElement(const nsString &aId, nsIDOMElement *& aElement) = 0;
+  NS_IMETHOD GetDocument(nsIDOMHTMLDocument *& aDocument) = 0;
   NS_IMETHOD AddEventListener(nsIDOMNode * aNode) = 0;
   NS_IMETHOD RemoveEventListener(nsIDOMNode * aNode) = 0;
-
   NS_IMETHOD AddWindowListener(nsWindowListener * aWindowListener) = 0;
 
   // XXX minimize, maximize

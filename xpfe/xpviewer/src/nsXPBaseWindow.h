@@ -123,7 +123,7 @@ public:
   }
 
   // DOM Element & Node Interfaces
-  NS_IMETHOD FindDOMElement(const nsString &aId, nsIDOMElement *& aElement);
+  NS_IMETHOD GetDocument(nsIDOMHTMLDocument *& aDocument);
   NS_IMETHOD AddEventListener(nsIDOMNode * aNode);
   NS_IMETHOD RemoveEventListener(nsIDOMNode * aNode);
   NS_IMETHOD AddWindowListener(nsWindowListener * aWindowListener);
@@ -141,8 +141,6 @@ public:
 
 protected:
   void         GetContentRoot(); //Gets the Root Content node after Doc is loaded
-  nsIDOMNode * SearchTree(nsIDOMNode *aNode, const nsString &aId);
-
   nsIContent * mContentRoot; // Points at the Root Content Node
 
 
