@@ -98,23 +98,29 @@ PRInt32 nsHTMLContainer::IndexOf(nsIContent* aPossibleChild) const
   return mChildren.IndexOf(aPossibleChild);
 }
 
-PRBool nsHTMLContainer::InsertChildAt(nsIContent* aKid, PRInt32 aIndex)
+NS_IMETHODIMP
+nsHTMLContainer::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                               PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
-  PRBool rv = mChildren.InsertElementAt(aKid, aIndex);
+  PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(this);
-    nsIDocument* doc = mDocument;
-    if (nsnull != doc) {
-      aKid->SetDocument(doc);
-      doc->ContentInserted(this, aKid, aIndex);
+    if (aNotify) {
+      nsIDocument* doc = mDocument;
+      if (nsnull != doc) {
+        aKid->SetDocument(doc);
+        doc->ContentInserted(this, aKid, aIndex);
+      }
     }
   }
-  return rv;
+  return NS_OK;
 }
 
-PRBool nsHTMLContainer::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex)
+NS_IMETHODIMP
+nsHTMLContainer::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIContent* oldKid = (nsIContent*) mChildren.ElementAt(aIndex);
@@ -122,52 +128,62 @@ PRBool nsHTMLContainer::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex)
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(this);
-    nsIDocument* doc = mDocument;
-    if (nsnull != doc) {
-      aKid->SetDocument(doc);
-      doc->ContentReplaced(this, oldKid, aKid, aIndex);
+    if (aNotify) {
+      nsIDocument* doc = mDocument;
+      if (nsnull != doc) {
+        aKid->SetDocument(doc);
+        doc->ContentReplaced(this, oldKid, aKid, aIndex);
+      }
     }
     oldKid->SetDocument(nsnull);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }
-  return rv;
+  return NS_OK;
 }
 
-PRBool nsHTMLContainer::AppendChild(nsIContent* aKid)
+NS_IMETHODIMP
+nsHTMLContainer::AppendChild(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION((nsnull != aKid) && (aKid != this), "null ptr");
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(this);
-    nsIDocument* doc = mDocument;
-    if (nsnull != doc) {
-      aKid->SetDocument(doc);
-      doc->ContentAppended(this);
+    if (aNotify) {
+      nsIDocument* doc = mDocument;
+      if (nsnull != doc) {
+        aKid->SetDocument(doc);
+        doc->ContentAppended(this);
+      }
     }
   }
-  return rv;
+  return NS_OK;
 }
 
-PRBool nsHTMLContainer::RemoveChildAt(PRInt32 aIndex)
+NS_IMETHODIMP
+nsHTMLContainer::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 {
   nsIContent* oldKid = (nsIContent*) mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
-    if (nsnull != doc) {
-      doc->ContentWillBeRemoved(this, oldKid, aIndex);
+    if (aNotify) {
+      if (nsnull != doc) {
+        doc->ContentWillBeRemoved(this, oldKid, aIndex);
+      }
     }
     PRBool rv = mChildren.RemoveElementAt(aIndex);
-    if (nsnull != doc) {
-      doc->ContentHasBeenRemoved(this, oldKid, aIndex);
+    if (aNotify) {
+      if (nsnull != doc) {
+        doc->ContentHasBeenRemoved(this, oldKid, aIndex);
+      }
     }
     oldKid->SetDocument(nsnull);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
-    return rv;
   }
-  return PR_FALSE;
+
+  return NS_OK;
 }
 
 void nsHTMLContainer::Compact()
@@ -798,7 +814,8 @@ nsresult nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
+nsresult
+nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
 {
   NS_PRECONDITION(nsnull != newChild, "Null new child");
 
@@ -810,7 +827,7 @@ nsresult nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChil
   if (NS_OK == res) {
     if (nsnull == refChild) {
       // Append the new child to the end
-      if (PR_FALSE == AppendChild(newContent)) {
+      if (PR_FALSE == AppendChild(newContent, PR_TRUE)) {
         res = NS_ERROR_FAILURE;
       }
     } else {
@@ -822,7 +839,7 @@ nsresult nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChil
       if (NS_OK == res) {
         PRInt32 pos = IndexOf(content);
         if (pos >= 0) {
-          if (PR_FALSE == InsertChildAt(newContent, pos)) {
+          if (PR_FALSE == InsertChildAt(newContent, pos, PR_TRUE)) {
             res = NS_ERROR_FAILURE;
           }
         }
@@ -849,7 +866,7 @@ nsresult nsHTMLContainer::ReplaceChild(nsIDOMNode *newChild,
       nsresult res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
       NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
       if (NS_OK == res) {
-        if (PR_FALSE == ReplaceChildAt(newContent, pos)) {
+        if (PR_FALSE == ReplaceChildAt(newContent, pos, PR_TRUE)) {
           res = NS_ERROR_FAILURE;
         }
         NS_RELEASE(newContent);
@@ -869,7 +886,7 @@ nsresult nsHTMLContainer::RemoveChild(nsIDOMNode *oldChild)
   if (NS_OK == res) {
     PRInt32 pos = IndexOf(content);
     if (pos >= 0) {
-      if (PR_TRUE == RemoveChildAt(pos)) {
+      if (PR_TRUE == RemoveChildAt(pos, PR_TRUE)) {
         res = NS_ERROR_FAILURE;
       }
     }
