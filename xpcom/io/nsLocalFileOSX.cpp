@@ -1220,6 +1220,13 @@ NS_IMETHODIMP nsLocalFile::InitWithNativePath(const nsACString& filePath)
   // On 10.2, huge paths crash CFURLGetFSRef()
   if (filePath.Length() > PATH_MAX)
     return NS_ERROR_FILE_NAME_TOO_LONG;
+  // And, a path with consecutive '/'s which are not between
+  // nodes also crashes CFURLGetFSRef(). Consecutive '/'s which
+  // are between actual nodes are OK. So, convert consecutive
+  // '/'s to a single one.
+  nsCAutoString fixedPath;
+  fixedPath.Assign(filePath);
+  fixedPath.ReplaceSubstring("//", "/");
 
   mNonExtantNodes.clear();
   mIdentityDirty = PR_TRUE;
@@ -1227,7 +1234,7 @@ NS_IMETHODIMP nsLocalFile::InitWithNativePath(const nsACString& filePath)
   CFStringRef pathAsCFString;
   CFURLRef pathAsCFURL;
 
-  pathAsCFString = ::CFStringCreateWithCString(nsnull, PromiseFlatCString(filePath).get(), kCFStringEncodingUTF8);
+  pathAsCFString = ::CFStringCreateWithCString(nsnull, fixedPath.get(), kCFStringEncodingUTF8);
   if (!pathAsCFString)
     return NS_ERROR_FAILURE;
   pathAsCFURL = ::CFURLCreateWithFileSystemPath(nsnull, pathAsCFString, kCFURLPOSIXPathStyle, PR_FALSE);
