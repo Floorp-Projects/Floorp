@@ -60,18 +60,23 @@ FindMode(char *mode)
     return NULL;
 }
 
-gboolean enable_debug             = FALSE;
-gboolean enable_warnings          = FALSE;
-gboolean verbose_mode             = FALSE;
-gboolean emit_typelib_annotations = FALSE;
-gboolean explicit_output_filename = FALSE;
+gboolean enable_debug               = FALSE;
+gboolean enable_warnings            = FALSE;
+gboolean verbose_mode               = FALSE;
+gboolean emit_typelib_annotations   = FALSE;
+gboolean explicit_output_filename   = FALSE;
+
+/* The following globals are explained in xpt_struct.h */
+PRUint8  major_version              = XPT_MAJOR_VERSION;
+PRUint8  minor_version              = XPT_MINOR_VERSION;
 
 static char xpidl_usage_str[] =
-"Usage: %s [-m mode] [-w] [-v]\n"
+"Usage: %s [-m mode] [-w] [-v] [-t version number]\n"
 "          [-I path] [-o basename | -e filename.ext] filename.idl\n"
 "       -a emit annotations to typelib\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode (NYI)\n"
+"       -t create a typelib of a specific version number\n"
 "       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
 "       -o use basename (e.g. ``/tmp/nsIThing'') for output\n"
 "       -e use explicit output filename\n"
@@ -99,6 +104,7 @@ int main(int argc, char *argv[])
     IncludePathEntry *inc, *inc_head, **inc_tail;
     char *file_basename = NULL;
     ModeData *mode = NULL;
+    gboolean create_old_typelib = FALSE;
 
     /* turn this on for extra checking of our code */
 /*    IDL_check_cast_enable(TRUE); */
@@ -130,6 +136,58 @@ int main(int argc, char *argv[])
           case 'v':
             verbose_mode = TRUE;
             break;
+          case 't':
+          {
+            /* Parse for "-t version number" and store it into global boolean
+             * and string variables.
+             */
+            const gchar* typelib_version_string = NULL;
+
+            /* 
+             * If -t is the last argument on the command line, we have a problem
+             */
+
+            if (i + 1 == argc) {
+                fprintf(stderr, "ERROR: missing version number after -t\n");
+                xpidl_usage(argc, argv);
+                return 1;
+            }
+
+            /* Do not allow more than one "-t" definition */
+            if (create_old_typelib) {
+                fprintf(stderr,
+                        "ERROR: -t argument used twice. "
+                        "Cannot specify more than one version\n");
+                xpidl_usage(argc, argv);
+                return 1;
+            }
+
+            /*
+             * Assume that the argument after "-t" is the version number string
+             * and search for it in our internal list of acceptable version
+             * numbers.
+             */
+            switch (XPT_ParseVersionString(argv[++i], &major_version, 
+                                           &minor_version)) {
+              case XPT_VERSION_CURRENT:
+                break; 
+              case XPT_VERSION_OLD: 
+                create_old_typelib = TRUE;
+                break; 
+              case XPT_VERSION_UNSUPPORTED: 
+                fprintf(stderr, "ERROR: version \"%s\" not supported.\n", 
+                        argv[i]);
+                xpidl_usage(argc, argv);
+                return 1;          
+              case XPT_VERSION_UNKNOWN: 
+              default:
+                fprintf(stderr, "ERROR: version \"%s\" not recognised.\n", 
+                        argv[i]);
+                xpidl_usage(argc, argv);
+                return 1;          
+            }
+            break;
+          }
           case 'I':
             if (argv[i][2] == '\0' && i == argc) {
                 fputs("ERROR: missing path after -I\n", stderr);
@@ -170,7 +228,7 @@ int main(int argc, char *argv[])
             explicit_output_filename = TRUE;
             break;
           case 'm':
-            if (i == argc) {
+            if (i + 1 == argc) {
                 fprintf(stderr, "ERROR: missing modename after -m\n");
                 xpidl_usage(argc, argv);
                 return 1;
@@ -189,8 +247,7 @@ int main(int argc, char *argv[])
                 xpidl_usage(argc, argv);
                 return 1;
             }
-            break;
-
+            break;                 
           default:
             fprintf(stderr, "unknown option %s\n", argv[i]);
             xpidl_usage(argc, argv);

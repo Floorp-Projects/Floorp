@@ -122,6 +122,58 @@ NS_IMETHODIMP xpctestEcho::EchoIn2OutOneDOMString(const nsAReadableString & inpu
     return NS_OK;
 }
 
+/* AString In2OutOneAString (in AString input); */
+NS_IMETHODIMP xpctestEcho::In2OutOneAString(const nsAString & input, 
+                                              nsAString & _retval)
+{
+    _retval.Assign(input);
+    return NS_OK;
+}
+
+/* AString EchoIn2OutOneAString (in AString input); */
+NS_IMETHODIMP xpctestEcho::EchoIn2OutOneAString(const nsAString & input, nsAString & _retval)
+{
+    if(mReceiver)
+        return mReceiver->EchoIn2OutOneAString(input, _retval);
+    return NS_OK;
+}
+
+
+/* UTF8String In2OutOneUTF8String (in UTF8String input); */
+NS_IMETHODIMP xpctestEcho::In2OutOneUTF8String(const nsACString & input, 
+                                              nsACString & _retval)
+{
+    _retval.Assign(input);
+    return NS_OK;
+}
+
+/* UTF8String EchoIn2OutOneUTF8String (in UTF8String input); */
+NS_IMETHODIMP xpctestEcho::EchoIn2OutOneUTF8String(const nsACString & input, 
+                                                   nsACString & _retval)
+{
+    if(mReceiver)
+        return mReceiver->EchoIn2OutOneUTF8String(input, _retval);
+    return NS_OK;
+}
+
+/* CString In2OutOneCString (in CString input); */
+NS_IMETHODIMP xpctestEcho::In2OutOneCString(const nsACString & input, 
+                                            nsACString & _retval)
+{
+    _retval.Assign(input);
+    return NS_OK;
+}
+
+/* CString EchoIn2OutOneCString (in CString input); */
+NS_IMETHODIMP xpctestEcho::EchoIn2OutOneCString(const nsACString & input, 
+                                                nsACString & _retval)
+{
+    if(mReceiver)
+        return mReceiver->EchoIn2OutOneCString(input, _retval);
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP xpctestEcho::In2OutAddTwoInts(int input1,
                                        int input2,
                                        int* output1,

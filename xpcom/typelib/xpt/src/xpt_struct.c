@@ -120,14 +120,14 @@ XPT_SizeOfHeaderBlock(XPTHeader *header)
 }
 
 XPT_PUBLIC_API(XPTHeader *)
-XPT_NewHeader(XPTArena *arena, PRUint16 num_interfaces)
+XPT_NewHeader(XPTArena *arena, PRUint16 num_interfaces, PRUint8 major_version, PRUint8 minor_version)
 {
     XPTHeader *header = XPT_NEWZAP(arena, XPTHeader);
     if (!header)
         return NULL;
     memcpy(header->magic, XPT_MAGIC, 16);
-    header->major_version = XPT_MAJOR_VERSION;
-    header->minor_version = XPT_MINOR_VERSION;
+    header->major_version = major_version;
+    header->minor_version = minor_version;
     header->num_interfaces = num_interfaces;
     if (num_interfaces) {
         header->interface_directory = 
@@ -935,4 +935,22 @@ XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
     indexp = 0;
     return PR_FALSE;
 }
+
+static XPT_TYPELIB_VERSIONS_STRUCT versions[] = XPT_TYPELIB_VERSIONS;
+#define XPT_TYPELIB_VERSIONS_COUNT (sizeof(versions) / sizeof(versions[0]))
+
+XPT_PUBLIC_API(PRUint16)
+XPT_ParseVersionString(const char* str, PRUint8* major, PRUint8* minor)
+{
+    int i;
+    for (i = 0; i < XPT_TYPELIB_VERSIONS_COUNT; i++) {
+        if (!strcmp(versions[i].str, str)) {
+            *major = versions[i].major;
+            *minor = versions[i].minor;
+            return versions[i].code;
+        }
+    }
+    return XPT_VERSION_UNKNOWN;
+}
+
 

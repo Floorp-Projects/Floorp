@@ -718,6 +718,8 @@ XPCJSRuntime::~XPCJSRuntime()
 
     // unwire the readable/JSString sharing magic
     XPCStringConvert::ShutdownDOMStringFinalizer();
+    
+    XPCConvert::RemoveXPCOMUCStringFinalizer();
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,

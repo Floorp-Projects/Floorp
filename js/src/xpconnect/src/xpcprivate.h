@@ -2241,8 +2241,10 @@ public:
     static nsresult ConstructException(nsresult rv, const char* message,
                                        const char* ifaceName,
                                        const char* methodName,
-                                       nsISupports* data,
+                                       nsISupports* data,                                       
                                        nsIException** exception);
+
+    static void RemoveXPCOMUCStringFinalizer();
 
 private:
     XPCConvert(); // not implemented

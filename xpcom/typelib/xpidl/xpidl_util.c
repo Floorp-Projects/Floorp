@@ -220,6 +220,32 @@ verify_const_declaration(IDL_tree const_tree) {
 }
 
 
+
+/*
+ * This method consolidates error checking needed when coercing the XPIDL compiler 
+ * via the -t flag to generate output for a specific version of XPConnect.
+ */
+static gboolean
+verify_type_fits_version(IDL_tree in_tree, IDL_tree error_tree)
+{
+    if (major_version == 1 && minor_version == 1)
+    {
+        /* XPIDL Version 1.1 checks */
+
+        /* utf8string, cstring, and astring types are not supported */
+        if (IDL_tree_property_get(in_tree, "utf8string") != NULL ||
+            IDL_tree_property_get(in_tree, "cstring")    != NULL ||
+            IDL_tree_property_get(in_tree, "astring")    != NULL)
+        {
+            IDL_tree_error(error_tree,
+                           "Cannot use [utf8string], [cstring] and [astring] "
+                           "types when generating version 1.1 typelibs\n");
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 gboolean
 verify_attribute_declaration(IDL_tree attr_tree)
 {
@@ -274,8 +300,8 @@ verify_attribute_declaration(IDL_tree attr_tree)
         return TRUE;
 
     /*
-     * If it should be scriptable, check that the type is non-native. nsid and
-     * domstring are exempted.
+     * If it should be scriptable, check that the type is non-native. nsid,
+     * domstring, utf8string, cstring, astring are exempted.
      */
     attr_type = IDL_ATTR_DCL(attr_tree).param_type_spec;
 
@@ -283,7 +309,10 @@ verify_attribute_declaration(IDL_tree attr_tree)
     {
         if (UP_IS_NATIVE(attr_type) &&
             IDL_tree_property_get(attr_type, "nsid") == NULL &&
-            IDL_tree_property_get(attr_type, "domstring") == NULL)
+            IDL_tree_property_get(attr_type, "domstring") == NULL &&
+            IDL_tree_property_get(attr_type, "utf8string") == NULL &&
+            IDL_tree_property_get(attr_type, "cstring") == NULL &&
+            IDL_tree_property_get(attr_type, "astring") == NULL)
         {
             IDL_tree_error(attr_tree,
                            "attributes in [scriptable] interfaces that are "
@@ -310,6 +339,14 @@ verify_attribute_declaration(IDL_tree attr_tree)
                            "and must be read-only\n");
             return FALSE;
         }
+
+        /* 
+         * Run additional error checks on the attribute type if targetting an 
+         * older version of XPConnect.
+         */
+
+        if (!verify_type_fits_version(attr_type, attr_tree))
+            return FALSE;
     }
 
     if (IDL_LIST(IDL_ATTR_DCL(attr_tree).simple_declarations).next != NULL)
@@ -528,13 +565,17 @@ verify_method_declaration(IDL_tree method_tree)
         
         /*
          * Reject this method if it should be scriptable and some parameter is
-         * native that isn't marked with either nsid, domstring, or iid_is.
+         * native that isn't marked with either nsid, domstring, utf8string, 
+         * cstring, astring or iid_is.
          */
         if (scriptable_method &&
             UP_IS_NATIVE(param_type) &&
             IDL_tree_property_get(param_type, "nsid") == NULL &&
             IDL_tree_property_get(simple_decl, "iid_is") == NULL &&
-            IDL_tree_property_get(param_type, "domstring") == NULL)
+            IDL_tree_property_get(param_type, "domstring") == NULL &&
+            IDL_tree_property_get(param_type, "utf8string") == NULL &&
+            IDL_tree_property_get(param_type, "cstring") == NULL &&
+            IDL_tree_property_get(param_type, "astring") == NULL)
         {
             IDL_tree_error(method_tree,
                            "methods in [scriptable] interfaces that are "
@@ -589,7 +630,7 @@ verify_method_declaration(IDL_tree method_tree)
 
         /*
          * Confirm that [shared] attributes are only used with string, wstring,
-         * or native (but not nsid or domstring) 
+         * or native (but not nsid, domstring, utf8string, cstring or astring) 
          * and can't be used with [array].
          */
         if (IDL_tree_property_get(simple_decl, "shared") != NULL) {
@@ -608,7 +649,10 @@ verify_method_declaration(IDL_tree method_tree)
                   IDL_NODE_TYPE(real_type) == IDLN_TYPE_WIDE_STRING ||
                   (UP_IS_NATIVE(real_type) &&
                    !IDL_tree_property_get(real_type, "nsid") &&
-                   !IDL_tree_property_get(real_type, "domstring"))))
+                   !IDL_tree_property_get(real_type, "domstring")  &&
+                   !IDL_tree_property_get(real_type, "utf8string") &&
+                   !IDL_tree_property_get(real_type, "cstring")    &&
+                   !IDL_tree_property_get(real_type, "astring"))))
             {
                 IDL_tree_error(method_tree,
                                "[shared] parameter \"%s\" must be of type "
@@ -618,27 +662,34 @@ verify_method_declaration(IDL_tree method_tree)
         }
 
         /*
-         * inout is not allowed with "domstring" types
+         * inout is not allowed with "domstring", "UTF8String", "CString" 
+         * and "AString" types
          */
         if (IDL_PARAM_DCL(param).attr == IDL_PARAM_INOUT &&
             UP_IS_NATIVE(param_type) &&
-            IDL_tree_property_get(param_type, "domstring") != NULL) {
+            (IDL_tree_property_get(param_type, "domstring")  != NULL ||
+             IDL_tree_property_get(param_type, "utf8string") != NULL ||
+             IDL_tree_property_get(param_type, "cstring")    != NULL ||
+             IDL_tree_property_get(param_type, "astring")    != NULL )) {
             IDL_tree_error(method_tree,
-                           "[domstring] types cannot be used as inout "
-                           "parameters");
+                           "[domstring], [utf8string], [cstring], [astring] "
+                           "types cannot be used as inout parameters");
             return FALSE;
         }
 
 
         /*
-         * arrays of "domstring" types not allowed
+         * arrays of domstring, utf8string, cstring, astring types not allowed
          */
         if (IDL_tree_property_get(simple_decl, "array") != NULL &&
             UP_IS_NATIVE(param_type) &&
-            IDL_tree_property_get(param_type, "domstring") != NULL) {
+            (IDL_tree_property_get(param_type, "domstring")  != NULL ||
+             IDL_tree_property_get(param_type, "utf8string") != NULL ||
+             IDL_tree_property_get(param_type, "cstring")    != NULL ||
+             IDL_tree_property_get(param_type, "astring")    != NULL)) {
             IDL_tree_error(method_tree,
-                           "[domstring] types cannot be used in array "
-                           "parameters");
+                           "[domstring], [utf8string], [cstring], [astring] "
+                           "types cannot be used in array parameters");
             return FALSE;
         }                
 
@@ -646,6 +697,15 @@ verify_method_declaration(IDL_tree method_tree)
             !check_param_attribute(method_tree, param, LENGTH_IS) ||
             !check_param_attribute(method_tree, param, SIZE_IS))
             return FALSE;
+
+        /* 
+         * Run additional error checks on the parameter type if targetting an 
+         * older version of XPConnect.
+         */
+
+        if (!verify_type_fits_version(param_type, method_tree))
+            return FALSE;
+        
     }
     
     /* XXX q: can return type be nsid? */
@@ -653,7 +713,10 @@ verify_method_declaration(IDL_tree method_tree)
     if (scriptable_method &&
         op->op_type_spec != NULL && UP_IS_NATIVE(op->op_type_spec) &&
         IDL_tree_property_get(op->op_type_spec, "nsid") == NULL &&
-        IDL_tree_property_get(op->op_type_spec, "domstring") == NULL)
+        IDL_tree_property_get(op->op_type_spec, "domstring") == NULL &&
+        IDL_tree_property_get(op->op_type_spec, "utf8string") == NULL &&
+        IDL_tree_property_get(op->op_type_spec, "cstring") == NULL &&
+        IDL_tree_property_get(op->op_type_spec, "astring") == NULL)
     {
         IDL_tree_error(method_tree,
                        "methods in [scriptable] interfaces that are "
@@ -661,6 +724,7 @@ verify_method_declaration(IDL_tree method_tree)
                        "types must be marked [noscript]");
         return FALSE;
     }
+
 
     /* 
      * nsid's parameters that aren't ptr's or ref's are not currently 
@@ -678,6 +742,17 @@ verify_method_declaration(IDL_tree method_tree)
                        "must be marked either [ptr] or [ref], "
                        "or else method \"%s\" must be marked [notxpcom] ",
                        method_name);
+        return FALSE;
+    }
+
+    /* 
+     * Run additional error checks on the return type if targetting an 
+     * older version of XPConnect.
+     */
+
+    if (op->op_type_spec != NULL &&
+        !verify_type_fits_version(op->op_type_spec, method_tree))
+    {
         return FALSE;
     }
 

@@ -176,7 +176,10 @@ public:
         T_INTERFACE_IS      = TD_INTERFACE_IS_TYPE,
         T_ARRAY             = TD_ARRAY            ,
         T_PSTRING_SIZE_IS   = TD_PSTRING_SIZE_IS  ,
-        T_PWSTRING_SIZE_IS  = TD_PWSTRING_SIZE_IS
+        T_PWSTRING_SIZE_IS  = TD_PWSTRING_SIZE_IS ,
+        T_UTF8STRING        = TD_UTF8STRING       ,
+        T_CSTRING           = TD_CSTRING          ,
+        T_ASTRING           = TD_ASTRING
     };
 // NO DATA - this a flyweight wrapper
 };

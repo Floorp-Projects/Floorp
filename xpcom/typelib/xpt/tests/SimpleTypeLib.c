@@ -105,7 +105,7 @@ main(int argc, char **argv)
     TRY("XPT_NewArena", arena);
 
     /* construct a header */
-    header = XPT_NewHeader(arena, 1);
+    header = XPT_NewHeader(arena, 1, XPT_MAJOR_VERSION, XPT_MINOR_VERSION);
     TRY("NewHeader", header);
 
     

@@ -75,6 +75,9 @@ TypesArray  dd        t_Int4Bytes                       ; nsXPTType::T_I8
             dd        t_Int4Bytes                       ; TD_ARRAY
             dd        t_Int4Bytes                       ; TD_PSTRING_SIZE_IS
             dd        t_Int4Bytes                       ; TD_PWSTRING_SIZE_IS
+            dd        t_Int4Bytes                       ; TD_UTF8STRING
+            dd        t_Int4Bytes                       ; TD_CSTRING
+            dd        t_Int4Bytes                       ; TD_ASTRING
             ;  All other values default to 4 byte int/ptr
 
 

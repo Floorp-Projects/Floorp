@@ -66,7 +66,6 @@ interface nsITestXPCFoo2 : nsITestXPCFoo {
 
 [scriptable, uuid(CD2F2F40-C5D9-11d2-9838-006008962422)]
 interface nsIEcho : nsISupports {
-
     void SetReceiver(in nsIEcho aReceiver);
     void SendOneString(in string str);
     long In2OutOneInt(in long input);
@@ -78,6 +77,15 @@ interface nsIEcho : nsISupports {
 
     DOMString In2OutOneDOMString(in DOMString input);
     DOMString EchoIn2OutOneDOMString(in DOMString input);
+
+    AString In2OutOneAString(in AString input);
+    AString EchoIn2OutOneAString(in AString input);
+
+    AUTF8String In2OutOneUTF8String(in AUTF8String input);
+    AUTF8String EchoIn2OutOneUTF8String(in AUTF8String input);
+
+    ACString In2OutOneCString(in ACString input);
+    ACString EchoIn2OutOneCString(in ACString input);
 
     void SimpleCallNoEcho();
     void SendManyTypes(in octet                 p1,
