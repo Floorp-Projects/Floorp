@@ -26,6 +26,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMSelection.h"
 #include "nsIDOMEditorAppCore.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -36,9 +38,13 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kISelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIEditorAppCoreIID, NS_IDOMEDITORAPPCORE_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
+NS_DEF_PTR(nsIDOMDocument);
+NS_DEF_PTR(nsIDOMSelection);
 NS_DEF_PTR(nsIDOMEditorAppCore);
 NS_DEF_PTR(nsIDOMWindow);
 
@@ -47,7 +53,9 @@ NS_DEF_PTR(nsIDOMWindow);
 //
 enum EditorAppCore_slots {
   EDITORAPPCORE_CONTENTSASTEXT = -1,
-  EDITORAPPCORE_CONTENTSASHTML = -2
+  EDITORAPPCORE_CONTENTSASHTML = -2,
+  EDITORAPPCORE_EDITORDOCUMENT = -3,
+  EDITORAPPCORE_EDITORSELECTION = -4
 };
 
 /***********************************************************************/
@@ -82,6 +90,30 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         if (NS_OK == a->GetContentsAsHTML(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case EDITORAPPCORE_EDITORDOCUMENT:
+      {
+        nsIDOMDocument* prop;
+        if (NS_OK == a->GetEditorDocument(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case EDITORAPPCORE_EDITORSELECTION:
+      {
+        nsIDOMSelection* prop;
+        if (NS_OK == a->GetEditorSelection(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -900,6 +932,8 @@ static JSPropertySpec EditorAppCoreProperties[] =
 {
   {"contentsAsText",    EDITORAPPCORE_CONTENTSASTEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"contentsAsHTML",    EDITORAPPCORE_CONTENTSASHTML,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"editorDocument",    EDITORAPPCORE_EDITORDOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"editorSelection",    EDITORAPPCORE_EDITORSELECTION,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

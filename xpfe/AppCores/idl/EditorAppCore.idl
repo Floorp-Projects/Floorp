@@ -6,6 +6,9 @@ interface EditorAppCore : BaseAppCore
   readonly attribute wstring contentsAsText;
   readonly attribute wstring contentsAsHTML;
 
+	readonly attribute Document editorDocument;
+	readonly attribute Selection editorSelection;
+	
 	void EditorAppCore();
 	
 	void setEditorType(in wstring editorType);
