@@ -574,7 +574,7 @@ PR_EXTERN(nsresult)
 rdf_PossiblyMakeAbsolute(const nsString& aContextURI, nsString& aURI)
 {
     PRInt32 index = aURI.Find(':');
-    if (index > 0 && index < 10 /* XXX */)
+    if (index > 0 && index < 25 /* XXX */)
         return NS_OK;
 
     PRUnichar last  = aContextURI.Last();
