@@ -73,8 +73,8 @@ class nsIXULPrototypeDocument;
 class nsIXULTemplateBuilder;
 class nsRDFDOMNodeList;
 class nsString;
-class nsVoidArray;
 class nsXULAttributes;
+class nsVoidArray;
 class nsIWebShell;
 
 ////////////////////////////////////////////////////////////////////////
@@ -511,7 +511,7 @@ protected:
     nsXULPrototypeElement*              mPrototype;
     nsIDocument*                        mDocument;           // [WEAK]
     nsIContent*                         mParent;             // [WEAK]
-    nsCOMPtr<nsISupportsArray>          mChildren;           // [OWNER]
+    nsVoidArray                         mChildren;           // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
     void*                               mScriptObject;       // [OWNER]
     PRInt32                             mContentId;

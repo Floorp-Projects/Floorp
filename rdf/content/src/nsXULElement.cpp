@@ -171,6 +171,8 @@ static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
 
 //----------------------------------------------------------------------
 
+#include "nsIJSRuntimeService.h"
+static nsIJSRuntimeService* gJSRuntimeService;
 static JSRuntime* gScriptRuntime;
 static PRInt32 gScriptRuntimeRefcnt;
 
@@ -182,7 +184,14 @@ AddJSGCRoot(JSContext* cx, void* aScriptObjectRef, const char* aName)
     if (! ok) return NS_ERROR_OUT_OF_MEMORY;
 
     if (gScriptRuntimeRefcnt++ == 0) {
-        gScriptRuntime = JS_GetRuntime(cx);
+        nsServiceManager::GetService("nsJSRuntimeService", // progid
+                                     NS_GET_IID(nsIJSRuntimeService),
+                                     (nsISupports**) &gJSRuntimeService);
+
+        if (! gJSRuntimeService)
+            return NS_ERROR_FAILURE;
+
+        gJSRuntimeService->GetRuntime(&gScriptRuntime);
     }
 
     return NS_OK;
@@ -191,9 +200,13 @@ AddJSGCRoot(JSContext* cx, void* aScriptObjectRef, const char* aName)
 static nsresult
 RemoveJSGCRoot(void* aScriptObjectRef)
 {
+    if (! gScriptRuntime)
+        return NS_ERROR_FAILURE;
+
     JS_RemoveRootRT(gScriptRuntime, aScriptObjectRef);
 
     if (--gScriptRuntimeRefcnt == 0) {
+        NS_RELEASE(gJSRuntimeService);
         gScriptRuntime = nsnull;
     }
 
@@ -311,7 +324,6 @@ nsXULElement::nsXULElement()
     : mPrototype(nsnull),
       mDocument(nsnull),
       mParent(nsnull),
-      mChildren(nsnull),
       mScriptObject(nsnull),
       mLazyState(0),
       mIsAnonymous(PR_FALSE),
@@ -377,18 +389,12 @@ nsXULElement::~nsXULElement()
     //NS_IF_RELEASE(mDocument); // not refcounted
     //NS_IF_RELEASE(mParent)    // not refcounted
 
-    if (mChildren) {
-        // Force child's parent to be null. This ensures that we don't
-        // have dangling pointers if a child gets leaked.
-        PRUint32 cnt;
-        mChildren->Count(&cnt);
-        for (PRInt32 i = cnt - 1; i >= 0; --i) {
-            nsISupports* isupports = mChildren->ElementAt(i);
-            nsCOMPtr<nsIContent> child = do_QueryInterface(isupports);
-            NS_RELEASE(isupports);
-
-            child->SetParent(nsnull);
-        }
+    // Force child's parent to be null. This ensures that we don't
+    // have dangling pointers if a child gets leaked.
+    for (PRInt32 i = mChildren.Count() - 1; i >= 0; --i) {
+        nsIContent* child = NS_STATIC_CAST(nsIContent*, mChildren[i]);
+        child->SetParent(nsnull);
+        NS_RELEASE(child);
     }
 
     // Clean up shared statics
@@ -1124,15 +1130,11 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
         return NS_ERROR_UNEXPECTED;
     }
 
-    if (aDeep && mChildren) {
+    if (aDeep) {
         // Copy cloned children!
-        PRUint32 count;
-        rv = mChildren->Count(&count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-            nsCOMPtr<nsIContent> child =
-                dont_AddRef(NS_STATIC_CAST(nsIContent*, mChildren->ElementAt(i)));
+        PRInt32 count = mChildren.Count();
+        for (PRInt32 i = 0; i < count; ++i) {
+            nsIContent* child = NS_STATIC_CAST(nsIContent*, mChildren[i]);
 
             NS_ASSERTION(child != nsnull, "null ptr");
             if (! child)
@@ -1668,19 +1670,7 @@ nsXULElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
 NS_IMETHODIMP
 nsXULElement::PeekChildCount(PRInt32& aCount) const
 {
-    if (mChildren) {
-        PRUint32 cnt;
-
-        nsresult rv;
-        rv = mChildren->Count(&cnt);
-        if (NS_FAILED(rv)) return rv;
-
-        aCount = PRInt32(cnt);
-    }
-    else {
-        aCount = 0;
-    }
-    
+    aCount = mChildren.Count();
     return NS_OK;
 }
 
@@ -2309,24 +2299,9 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
         }
     }
 
-    if (aDeep && mChildren) {
-        PRUint32 cnt;
-        rv = mChildren->Count(&cnt);
-        if (NS_FAILED(rv)) return rv;
-        for (PRInt32 i = cnt - 1; i >= 0; --i) {
-            // XXX this entire block could be more rigorous about
-            // dealing with failure.
-            nsCOMPtr<nsISupports> isupports = dont_AddRef( mChildren->ElementAt(i) );
-
-            NS_ASSERTION(isupports != nsnull, "null ptr");
-            if (! isupports)
-                continue;
-
-            nsCOMPtr<nsIContent> child = do_QueryInterface(isupports);
-            NS_ASSERTION(child != nsnull, "not an nsIContent");
-            if (! child)
-                continue;
-
+    if (aDeep) {
+        for (PRInt32 i = mChildren.Count() - 1; i >= 0; --i) {
+            nsIContent* child = NS_STATIC_CAST(nsIContent*, mChildren[i]);
             child->SetDocument(aDocument, aDeep, aCompileEventHandlers);
         }
     }
@@ -2378,19 +2353,8 @@ nsXULElement::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
         return rv;
     }
 
-    aResult = nsnull;
-    if (! mChildren)
-        return NS_OK;
-
-    nsCOMPtr<nsISupports> isupports = dont_AddRef( mChildren->ElementAt(aIndex) );
-    if (! isupports)
-        return NS_OK; // It's okay to ask for an element off the end.
-
-    nsIContent* content;
-    rv = isupports->QueryInterface(kIContentIID, (void**) &content);
-    if (NS_FAILED(rv)) return rv;
-
-    aResult = content; // take the AddRef() from the QI
+    nsIContent* content = NS_STATIC_CAST(nsIContent*, mChildren[aIndex]);
+    NS_IF_ADDREF(aResult = content);
     return NS_OK;
 }
 
@@ -2403,7 +2367,7 @@ nsXULElement::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
         return rv;
     }
 
-    aResult = (mChildren) ? (mChildren->IndexOf(aPossibleChild)) : (-1);
+    aResult = mChildren.IndexOf(aPossibleChild);
     return NS_OK;
 }
 
@@ -2416,18 +2380,14 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 
     NS_PRECONDITION(nsnull != aKid, "null ptr");
 
-    if (! mChildren) {
-        rv = NS_NewISupportsArray(getter_AddRefs(mChildren));
-        if (NS_FAILED(rv)) return rv;
-    }
-
     // Make sure that we're not trying to insert the same child
     // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
     // freak out.
-    NS_ASSERTION(mChildren->IndexOf(aKid) < 0, "element is already a child");
+    NS_ASSERTION(mChildren.IndexOf(aKid) < 0, "element is already a child");
 
-    PRBool insertOk = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
+    PRBool insertOk = mChildren.InsertElementAt(aKid, aIndex);
     if (insertOk) {
+        NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildInserted(this, aIndex);
 
@@ -2448,28 +2408,21 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     if (NS_FAILED(rv = EnsureContentsGenerated()))
         return rv;
 
-    NS_PRECONDITION(nsnull != mChildren, "illegal value");
-    if (! mChildren)
-        return NS_ERROR_ILLEGAL_VALUE;
-
     NS_PRECONDITION(nsnull != aKid, "null ptr");
     if (! aKid)
         return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsISupports> isupports = dont_AddRef( mChildren->ElementAt(aIndex) );
-    if (! isupports)
-        return NS_OK; // XXX No kid at specified index; just silently ignore?
-
-    nsCOMPtr<nsIContent> oldKid = do_QueryInterface(isupports);
+    nsIContent* oldKid = NS_STATIC_CAST(nsIContent*, mChildren[aIndex]);
     NS_ASSERTION(oldKid != nsnull, "old kid not nsIContent");
     if (! oldKid)
         return NS_ERROR_FAILURE;
 
-    if (oldKid.get() == aKid)
+    if (oldKid == aKid)
         return NS_OK;
 
-    PRBool replaceOk = mChildren->ReplaceElementAt(aKid, aIndex);
+    PRBool replaceOk = mChildren.ReplaceElementAt(aKid, aIndex);
     if (replaceOk) {
+        NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
 
@@ -2487,6 +2440,7 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 
         // We've got no mo' parent.
         oldKid->SetParent(nsnull);
+        NS_RELEASE(oldKid);
     }
     return NS_OK;
 }
@@ -2500,13 +2454,9 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 
     NS_PRECONDITION((nsnull != aKid) && (aKid != NS_STATIC_CAST(nsIStyledContent*, this)), "null ptr");
 
-    if (!mChildren) {
-        rv = NS_NewISupportsArray(getter_AddRefs(mChildren));
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    PRBool appendOk = mChildren->AppendElement(aKid);
+    PRBool appendOk = mChildren.AppendElement(aKid);
     if (appendOk) {
+        NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         // ranges don't need adjustment since new child is at end of list
 
@@ -2514,11 +2464,7 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         aKid->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
         if (aNotify && mDocument) {
-            PRUint32 cnt;
-            rv = mChildren->Count(&cnt);
-            if (NS_FAILED(rv)) return rv;
-            
-            mDocument->ContentAppended(NS_STATIC_CAST(nsIStyledContent*, this), cnt - 1);
+            mDocument->ContentAppended(NS_STATIC_CAST(nsIStyledContent*, this), mChildren.Count() - 1);
         }
     }
     return NS_OK;
@@ -2531,16 +2477,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     if (NS_FAILED(rv = EnsureContentsGenerated()))
         return rv;
 
-    NS_PRECONDITION(mChildren != nsnull, "illegal value");
-    if (! mChildren)
-        return NS_ERROR_ILLEGAL_VALUE;
-
-    nsCOMPtr<nsISupports> isupports = dont_AddRef( mChildren->ElementAt(aIndex) );
-    if (! isupports)
-        return NS_OK; // XXX No kid at specified index; just silently ignore?
-
-    nsCOMPtr<nsIContent> oldKid = do_QueryInterface(isupports);
-    NS_ASSERTION(oldKid != nsnull, "old kid not nsIContent");
+    nsIContent* oldKid = NS_STATIC_CAST(nsIContent*, mChildren[aIndex]);
     if (! oldKid)
         return NS_ERROR_FAILURE;
 
@@ -2597,7 +2534,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
     if (oldKid) {
         nsIDocument* doc = mDocument;
-        PRBool removeOk = mChildren->RemoveElementAt(aIndex);
+        PRBool removeOk = mChildren.RemoveElementAt(aIndex);
         //nsRange::OwnerChildRemoved(this, aIndex, oldKid);
         if (aNotify && removeOk && mDocument) {
             doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
@@ -2609,6 +2546,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
         // We've got no mo' parent.
         oldKid->SetParent(nsnull);
+        NS_RELEASE(oldKid);
     }
 
     return NS_OK;
@@ -3627,11 +3565,6 @@ nsXULElement::EnsureContentsGenerated(void) const
 
         // XXX hack because we can't use "mutable"
         nsXULElement* unconstThis = NS_CONST_CAST(nsXULElement*, this);
-
-        if (! unconstThis->mChildren) {
-            rv = NS_NewISupportsArray(getter_AddRefs(unconstThis->mChildren));
-            if (NS_FAILED(rv)) return rv;
-        }
 
         // Clear this value *first*, so we can re-enter the nsIContent
         // getters if needed.
