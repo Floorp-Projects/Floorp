@@ -28,6 +28,14 @@ nsVoidArray::nsVoidArray()
   mCount = 0;
 }
 
+nsVoidArray::nsVoidArray(PRInt32 aCount)
+{
+  NS_PRECONDITION(aCount > 0, "bad count");
+  mCount = mArraySize = aCount;
+  mArray = new void*[mCount];
+  nsCRT::memset(mArray, 0, mCount * sizeof(void*));
+}
+
 nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
 {
   if (nsnull != mArray) {

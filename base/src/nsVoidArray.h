@@ -28,6 +28,7 @@ typedef PRBool (*nsVoidArrayEnumFunc)(void* aElement, void *aData);
 class NS_BASE nsVoidArray {
 public:
   nsVoidArray();
+  nsVoidArray(PRInt32 aCount);  // initial count of aCount elements set to nsnull
   ~nsVoidArray();
 
   nsVoidArray& operator=(const nsVoidArray& other);
