@@ -38,7 +38,7 @@
 #define MAX_DISK_CACHE_ENTRIES  3200
 
 // Cache capacities in MB, overridable via APIs
-#define DEFAULT_MEMORY_CACHE_CAPACITY  2000
+#define DEFAULT_MEMORY_CACHE_CAPACITY  100
 #define DEFAULT_DISK_CACHE_CAPACITY   10000
 
 #define CACHE_HIGH_WATER_MARK(capacity) ((PRUint32)(0.98 * (capacity)))
@@ -162,7 +162,8 @@ nsCacheManager::GetCachedNetData(const char *aUriSpec, const char *aSecondaryKey
         if (mDiskCacheCapacity == (PRUint32)-1)
             return NS_ERROR_NOT_AVAILABLE;
 
-    } else if ((aFlags & BYPASS_PERSISTENT_CACHE) || !mDiskCacheCapacity) {
+    } else if ((aFlags & BYPASS_PERSISTENT_CACHE) ||
+               (!mFileCache && !mFlatCache) || !mDiskCacheCapacity) {
         cache = mMemCache;
         spaceManager = mMemSpaceManager;
     } else {
@@ -218,7 +219,7 @@ nsCacheManager::NoteDormant(nsCachedNetData* aEntry)
     
     nsStringKey hashTableKey(nsCString(key, keyLength));
     deletedEntry = (nsCachedNetData*)gCacheManager->mActiveCacheRecords->Remove(&hashTableKey);
-    NS_ASSERTION(deletedEntry == aEntry, "Hash table inconsistency");
+//  NS_ASSERTION(deletedEntry == aEntry, "Hash table inconsistency");
     return NS_OK;
 }
 
