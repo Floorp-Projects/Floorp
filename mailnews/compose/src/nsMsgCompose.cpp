@@ -1103,10 +1103,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
       mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
       if (compFields)
       {
-        nsAutoString aCharset(msgCompHeaderInternalCharset());
-	      	nsAutoString replyTo;
+          nsAutoString aCharset(msgCompHeaderInternalCharset());
+          nsAutoString replyTo;
           nsAutoString newgroups;
           nsAutoString followUpTo;
+          nsAutoString messageId;
+          nsAutoString references;
           char *outCString = nsnull;
           PRUnichar emptyUnichar = 0;
           PRBool toChanged = PR_FALSE;
@@ -1135,6 +1137,22 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
             PR_FREEIF(outCString);
           }
           
+          mHeaders->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE, &outCString);
+          if (outCString)
+          {
+            // Convert fields to UTF-8
+            ConvertToUnicode(aCharset, outCString, messageId);
+            PR_FREEIF(outCString);
+          }
+          
+          mHeaders->ExtractHeader(HEADER_REFERENCES, PR_FALSE, &outCString);
+          if (outCString)
+          {
+            // Convert fields to UTF-8
+            ConvertToUnicode(aCharset, outCString, references);
+            PR_FREEIF(outCString);
+          }
+          
           if (! replyTo.IsEmpty())
           {
             compFields->SetTo(replyTo.GetUnicode());
@@ -1154,6 +1172,11 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
             if (type == nsIMsgCompType::Reply)
               compFields->SetTo(&emptyUnichar);
           }
+          
+          if (! references.IsEmpty())
+          	references += ' ';
+          references += messageId;
+          compFields->SetReferences(references.GetUnicode());
           
           if (toChanged)
           {
