@@ -185,7 +185,8 @@ struct JSTokenStream {
 #define TSF_REGEXP      0x08            /* looking for a regular expression */
 #define TSF_NLFLAG      0x20            /* last linebuf ended with \n */
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
-#define TSF_DIRTYLINE   0x80            /* stuff other than whitespace since start of line */
+#define TSF_DIRTYLINE   0x80            /* non-whitespace since start of line */
+#define TSF_OWNFILENAME 0x100           /* ts->filename is malloc'd */
 
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028

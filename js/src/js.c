@@ -586,6 +586,7 @@ static struct {
 } js_options[] = {
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
+    {"atline",          JSOPTION_ATLINE},
     {0,                 0}
 };
 
