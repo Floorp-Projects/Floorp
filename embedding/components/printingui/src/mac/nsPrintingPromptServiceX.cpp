@@ -63,9 +63,6 @@
 #include <PMApplication.h>
 #include <CFPlugIn.h>
 
-// Constants
-static const char *kPrintProgressDialogURL = "chrome://global/content/printProgress.xul";
-
 //-----------------------------------------------------------------------------
 // Static Helpers
 //-----------------------------------------------------------------------------
