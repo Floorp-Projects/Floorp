@@ -499,5 +499,24 @@ function BM_navigatorLoad(aEvent)
   }
 }
 
+
+// An interim workaround for 101131 - Bookmarks Toolbar button nonfunctional.
+// This simply checks to see if the bookmark menu is empty (aside from static
+// items) when it is opened and if it is, prompts a rebuild. 
+// The best fix for this is more time consuming, and relies on document
+// <template>s without content (referencing a remote <template/> by id) 
+// be noted as 'waiting' for a template to load from somewhere. When the 
+// ::Merge function in nsXULDocument is called and a template node inserted, 
+// the id of the template to be inserted is looked up in the map of waiting
+// references, and then the template builder hooked up. 
+function checkBookmarksMenuTemplateBuilder()
+{
+  var lastStaticSeparator = document.getElementById("lastStaticSeparator");
+  if (!lastStaticSeparator.nextSibling) {
+	var button = document.getElementById("bookmarks-button");
+	button.builder.rebuild();
+  }
+}
+
 addEventListener("load", BM_navigatorLoad, false);
 
