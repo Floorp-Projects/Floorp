@@ -209,6 +209,9 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
     NS_RELEASE(rootStyleContext);
   
     // Force a reflow of the root frame
+    // XXX We really should only do a reflow if a preference that affects
+    // formatting changed, e.g., a font change. If it's just a color change
+    // then we only need to repaint...
     mShell->StyleChangeReflow();
   }
 }
