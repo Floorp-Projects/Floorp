@@ -300,6 +300,7 @@ interface nsIMsgImapMailFolder : nsISupports {
 
   void RemoveSubFolder(in nsIMsgFolder folder);
   void CreateClientSubfolderInfo(in string folderName);
+  void List();
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;
