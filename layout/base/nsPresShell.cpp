@@ -1532,8 +1532,8 @@ PresShell::Init(nsIDocument* aDocument,
   mDocument = dont_QueryInterface(aDocument);
   mViewManager = aViewManager;
 
-  //doesn't add a ref since we own it... MMP
-  mViewManager->SetViewObserver((nsIViewObserver *)this);
+  // The document viewer owns both view manager and pres shell.
+  mViewManager->SetViewObserver(this);
 
   // Bind the context to the presentation shell.
   mPresContext = dont_QueryInterface(aPresContext);
@@ -1695,6 +1695,9 @@ PresShell::Destroy()
   if (mViewManager) {
     // Disable paints during tear down of the frame tree
     mViewManager->DisableRefresh();
+    // Clear the view manager's weak pointer back to |this| in case it
+    // was leaked.
+    mViewManager->SetViewObserver(nsnull);
     mViewManager = nsnull;
   }
 
