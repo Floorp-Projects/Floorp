@@ -218,7 +218,7 @@ DataStruct::WriteCache(nsISupports* aData, PRUint32 aDataLen)
     NS_NewLocalFileOutputStream(getter_AddRefs(outStr),
                                 cacheFile);
 
-      if (!outStr) return NS_ERROR_FAILURE;
+    if (!outStr) return NS_ERROR_FAILURE;
 
     void* buff = nsnull;
     nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor.get(), aData, &buff, aDataLen );
