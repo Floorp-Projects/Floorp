@@ -145,14 +145,13 @@ protected:
     return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
-  void SlideFrames(nsIPresContext& aPresContext,
-                   nsISpaceManager* aSpaceManager,
-                   nsLineBox* aLine, nscoord aDY);
+  void SlideLine(nsIPresContext& aPresContext,
+                 nsISpaceManager* aSpaceManager,
+                 nsLineBox* aLine, nscoord aDY);
 
   void SlideFloaters(nsIPresContext& aPresContext,
                      nsISpaceManager* aSpaceManager,
-                     nsLineBox* aLine, nscoord aDY,
-                     PRBool aUpdateSpaceManager);
+                     nsLineBox* aLine, nscoord aDY);
 
   PRBool DrainOverflowLines();
 
@@ -183,9 +182,9 @@ protected:
 
   nsresult ReflowDirtyLines(nsBlockReflowState& aState);
 
-  nsresult RecoverStateFrom(nsBlockReflowState& aState,
-                            nsLineBox* aLine,
-                            nscoord aDeltaY);
+  void RecoverStateFrom(nsBlockReflowState& aState,
+                        nsLineBox* aLine,
+                        nscoord aDeltaY);
 
   //----------------------------------------
   // Methods for line reflow
