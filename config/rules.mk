@@ -211,7 +211,6 @@ endif # MOZ_MAPINFO
 
 ifdef DEFFILE
 OS_LDFLAGS += /DEF:$(DEFFILE)
-DSO_LDOPTS += /DEF:$(DEFFILE)
 endif
 
 ifdef MAPFILE
