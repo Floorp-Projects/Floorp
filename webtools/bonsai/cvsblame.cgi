@@ -61,6 +61,20 @@ print "\n";
 
 @src_roots = getRepositoryList();
 
+# Do not use layers if the client does not support them.
+$useLayers = 1;
+$user_agent = $ENV{HTTP_USER_AGENT};
+if (not $user_agent =~ m@^Mozilla/4.@ or $user_agent =~ /MSIE/) {
+  $useLayers = 0;
+}
+
+#if ($user_agent =~ /Win/) {
+#    $font_tag = "<PRE><FONT FACE='Lucida Console' SIZE=-1>";
+#} else {
+#    # We don't want your stinking Windows font
+    $font_tag = "<PRE>";
+#}
+
 # Init sanitiazation source checker
 #
 $sanitization_dictionary = $form{'sanitize'};
@@ -175,14 +189,6 @@ foreach $mark (split(',',$mark_arg)) {
 #
 &print_top;
 
-if ($ENV{'HTTP_USER_AGENT'} =~ /Win/) {
-    $font_tag = "<PRE><FONT FACE='Lucida Console' SIZE=-1>";
-} else {
-    # We don't want your stinking Windows font
-    #$font_tag = "<FONT>";
-    $font_tag = "<PRE><FONT>";
-}
-
 # Print link at top for directory browsing
 #
 $output = "<DIV ALIGN=LEFT>";
@@ -196,9 +202,9 @@ foreach $path (split('/',$rcs_path)) {
     $link_path .= '/';
 }
 $output .= "$file_tail "
-    ." (<A HREF onclick='return dif(\"$prev_revision{$revision}\",\"$revision\");'"
-    ." onmouseover='return log(event,\"$prev_revision{$revision}\","
-    ."\"$revision\");'>";
+    ." (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
+$output .= " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
+$output .= ">";
 $output .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 $output .= $revision if $revision;
 $output .= "</A>)";
@@ -257,11 +263,11 @@ foreach $revision (@revision_map)
     if ($old_revision ne $revision) {
       if ($useAlternateColor) {
 	$useAlternateColor = 0;
-	$output .= '</td></tr></TABLE>' unless $inMark;
+	$output .= "</td></tr></TABLE>$font_tag" unless $inMark;
       } else {
 	$useAlternateColor = 1;
 	$output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
-	  . '<TR><TD BGCOLOR=#e7e7e7><PRE>' unless $inMark;
+	  . "<TR><TD BGCOLOR=#e7e7e7>$font_tag" unless $inMark;
       }
     }
 
@@ -271,10 +277,9 @@ foreach $revision (@revision_map)
 
         $revision_width = max($revision_width,length($revision));
 
-        $output .= "<A HREF "
-        ."onclick='return dif(\"$prev_revision{$revision}\",\"$revision\");' "
-        ."onmouseover='return log(event,\"$prev_revision{$revision}\","
-        ."\"$revision\");'>";
+        $output .= "<A HREF ='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
+	$output .= "onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
+        $output .= ">";
 	$author = $revision_author{$revision};
 	$author =~ s/%.*$//;
         $author_width = max($author_width,length($author));
@@ -300,7 +305,7 @@ foreach $revision (@revision_map)
         #}
         $output .= "</TR></TABLE>";
 	$output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
-	  . '<TR><TD BGCOLOR=#e7e7e7><PRE>' if $useAlternateColor;
+	  . "<TR><TD BGCOLOR=#e7e7e7>$font_tag" if $useAlternateColor;
 	$inMark = 0;
     }
 
@@ -308,34 +313,34 @@ foreach $revision (@revision_map)
 }
 print "</FONT></PRE>\n";
 
-# Write out cvs log messages as a JS variables
-#
-print "<SCRIPT>";
-while (($revision, $junk) = each %usedlog) {
-
-        # Create a safe variable name for a revision log
-        $revisionName = $revision;
-        $revisionName =~ tr/./_/;
+if ($useLayers) {
+  # Write out cvs log messages as a JS variables
+  #
+  print "<SCRIPT>";
+  while (($revision, $junk) = each %usedlog) {
     
-        $log = $revision_log{$revision};
-        $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
-        eval ('$log =~ s@\d{4,6}@' . $BUGSYSTEMEXPR . '@g;');
-        $log =~ s/\n|\r|\r\n/<BR>/g;
-        $log =~ s/"/\\"/g;
-
-        # Write JavaScript variable for log entry (e.g. log1_1 = "New File")
-	$author = $revision_author{$revision};
-	$author =~ tr/%/@/;
-        print "log$revisionName = \""
-            ."<b>$revision</b> &nbsp;&nbsp;<a href='mailto:$author'>$author</a>"
-	    ." &nbsp;&nbsp;<b>$revision_ctime{$revision}</b><BR>"
-            ."<SPACER TYPE=VERTICAL SIZE=5>$log\";\n";
+    # Create a safe variable name for a revision log
+    $revisionName = $revision;
+    $revisionName =~ tr/./_/;
+    
+    $log = $revision_log{$revision};
+    $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
+    eval ('$log =~ s@\d{4,6}@' . $BUGSYSTEMEXPR . '@g;');
+    $log =~ s/\n|\r|\r\n/<BR>/g;
+    $log =~ s/"/\\"/g;
+    
+    # Write JavaScript variable for log entry (e.g. log1_1 = "New File")
+    $author = $revision_author{$revision};
+    $author =~ tr/%/@/;
+    print "log$revisionName = \""
+      ."<b>$revision</b> &nbsp;&nbsp;<a href='mailto:$author'>$author</a>"
+	." &nbsp;&nbsp;<b>$revision_ctime{$revision}</b><BR>"
+	  ."<SPACER TYPE=VERTICAL SIZE=5>$log\";\n";
+  }
+  print "</SCRIPT>";
 }
-print "</SCRIPT>";
 
 &print_bottom;
-
-print "<NOLAYER><BR><FONT SIZE=-1>(This page is much cooler with a layers enabled browser)</FONT></NOLAYER>";
 
 if ( $opt_sanitize )
 {
@@ -367,19 +372,12 @@ sub print_top {
     
     $diff_link = &url_encode3($diff_link);
 
-    print <<__TOP__;
-<HTML>
-<HEAD>
-<TITLE>CVS Blame $title_text</TITLE>
+    print "<HTML><HEAD><TITLE>CVS Blame $title_text</TITLE>";
+
+    print <<__TOP__ if $useLayers;
 <SCRIPT>
 var event = 0;	// Nav3.0 compatibility
 document.loaded = false;
-
-function revToName (rev) {
-    revName = rev + "";
-    revArray = revName.split(".");
-    return revArray.join("_");
-}
 
 function finishedLoad() {
     if (parseInt(navigator.appVersion) < 4) {
@@ -389,6 +387,12 @@ function finishedLoad() {
     document.layers['popup'].visibility='hide';
     
     return true;
+}
+
+function revToName (rev) {
+    revName = rev + "";
+    revArray = revName.split(".");
+    return revArray.join("_");
 }
 
 function log(event, prev_rev, rev) {
@@ -423,15 +427,6 @@ function log(event, prev_rev, rev) {
     return true;
 }
 
-function dif(prev_rev, rev) {
-    if (prev_rev == '') {
-        document.location = "$diff_dir_link";
-    } else {
-        document.location = "$diff_link"
-            + "&rev1=" + prev_rev + "&rev2=" + rev;
-    }
-    return false;
-}
 file_tail = "$file_tail";
 
 initialLayer = "<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=1><TR><TD><B>Page loading...please wait.</B></TD></TR></TABLE>";
@@ -441,6 +436,7 @@ initialLayer = "<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=1><TR><TD><B>Page load
 <BODY onLoad="finishedLoad();">
 <LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
 __TOP__
+  print '<BODY>' if not $useLayers;
 } # print_top
 
 sub print_usage {
