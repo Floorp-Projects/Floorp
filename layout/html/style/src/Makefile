@@ -21,6 +21,8 @@ include $(DEPTH)/config/config.mk
 
 LIBRARY_NAME = raptorhtmlstyle_s
 
+DEFINES += -D_IMPL_NS_HTML
+
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
 	nsCSSKeywords.cpp		\
@@ -39,10 +41,9 @@ CPPSRCS =				\
 
 MODULE = raptor
 
-INCLUDES += -I../../base/src -I.
-
-LCFLAGS += -D_IMPL_NS_HTML
+INCLUDES += -I../../base/src -I../../../base/src -I.
 
 REQUIRES = xpcom raptor dom
 
 include $(DEPTH)/config/rules.mk
+

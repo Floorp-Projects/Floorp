@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../../..
+DEPTH=../..
 
 DEFINES =-D_IMPL_NS_BASE
 

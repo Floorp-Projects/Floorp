@@ -47,8 +47,8 @@ MODULE = raptor
 
 REQUIRES = xpcom raptor dom
 
-INCLUDES += -I../../base/src -I../../style/src
+INCLUDES += -I../../base/src -I../../style/src -I../../../base/src
 
-LCFLAGS += -D_IMPL_NS_HTML
+DEFINES += -D_IMPL_NS_HTML
 
 include $(DEPTH)/config/rules.mk

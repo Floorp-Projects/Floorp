@@ -17,6 +17,8 @@
 
 DEPTH=../../../..
 
+MODULE = raptor
+
 EXPORTS =               \
         nsICSSParser.h	\
         $(NULL)

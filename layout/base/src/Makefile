@@ -37,29 +37,6 @@ CPPSRCS =				\
 	$(NULL)
 
 EXPORTS =			\
-	nslayout.h		\
-	nsIContent.h		\
-	nsIContentDelegate.h	\
-	nsIDocument.h		\
-	nsIDocumentContainer.h	\
-	nsIDocumentObserver.h	\
-	nsIFrame.h		\
-	nsIPresContext.h	\
-	nsIPresShell.h		\
-	nsIRunaround.h		\
-	nsISpaceManager.h	\
-	nsIStyleContext.h	\
-	nsIStyleRule.h		\
-	nsIStyleSet.h		\
-	nsIStyleSheet.h		\
-	nsITextContent.h	\
-	nsDocument.h		\
-	nsStyleConsts.h		\
-	nsFrame.h		\
-	nsSplittableFrame.h	\
-	nsContainerFrame.h	\
-	nsReflowCommand.h	\
-	nsSpaceManager.h	\
 	$(NULL)
 
 MODULE = raptor
