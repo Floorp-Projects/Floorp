@@ -34,6 +34,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIURL.h"
 #include "prio.h"
+#include "prmem.h" // XXX can be removed when we start doing real content-type discovery
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -438,10 +439,20 @@ nsFileChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
+#define DUMMY_TYPE "text/html"
+
 NS_IMETHODIMP
 nsFileChannel::GetContentType(char * *aContentType)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX temporary hack until we have a contenttype strategy
+    *aContentType = new char[PL_strlen(DUMMY_TYPE) + 1];
+    if (!*aContentType)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_strcpy(*aContentType, DUMMY_TYPE);
+    return NS_OK;
+
+    //return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
