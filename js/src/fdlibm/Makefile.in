@@ -1,75 +1,68 @@
- # 
- # The contents of this file are subject to the Netscape Public License
- # Version 1.0 (the "License"); you may not use this file except in
- # compliance with the License.  You may obtain a copy of the License at
- # http://www.mozilla.org/NPL/
- #
- # Software distributed under the License is distributed on an "AS IS"
- # basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
- # the License for the specific language governing rights and limitations
- # under the License.
- #
- # The Original Code is Mozilla Communicator client code.
- #
- # The Initial Developer of the Original Code is Netscape Communications
- # Corporation.  Portions created by Netscape are Copyright (C) 1998
- # Netscape Communications Corporation.  All Rights Reserved.
- #
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License.  You may obtain a copy of the License at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+# the License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is Mozilla Communicator client code.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation.  Portions created by Netscape are Copyright (C) 1998
+# Netscape Communications Corporation.  All Rights Reserved.
+#
 
-DEPTH           = ../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-#
-# Default IEEE libm
-#
-CFLAGS          += -D_IEEE_LIBM
-
+MODULE		= js
 LIBRARY_NAME	= fdm
 
-MODULE		= js
+CSRCS		= \
+		e_acos.c \
+		e_asin.c \
+		e_atan2.c \
+		e_exp.c \
+		e_fmod.c \
+		e_log.c \
+		e_pow.c \
+		e_rem_pio2.c \
+		s_scalbn.c \
+		e_sqrt.c \
+		k_cos.c \
+		k_sin.c \
+		k_rem_pio2.c \
+		k_tan.c \
+		s_atan.c \
+		s_ceil.c \
+		s_copysign.c \
+		s_cos.c \
+		s_fabs.c \
+		s_finite.c \
+		s_floor.c \
+		s_isnan.c \
+		s_lib_version.c \
+		s_sin.c \
+		s_tan.c \
+		w_acos.c \
+		w_asin.c \
+		w_atan2.c \
+		w_exp.c \
+		w_fmod.c \
+		w_log.c \
+		w_pow.c \
+		w_sqrt.c \
+		$(NULL)
 
-CSRCS		=	\
-	e_acos.c	\
-	e_asin.c	\
-	e_atan2.c	\
-	e_exp.c		\
-	e_fmod.c	\
-	e_log.c		\
-	e_pow.c		\
-	e_rem_pio2.c	\
-	s_scalbn.c	\
-	e_sqrt.c 	\
-	k_cos.c		\
-	k_sin.c		\
-	k_rem_pio2.c	\
-	k_tan.c 	\
-	s_atan.c	\
-	s_ceil.c	\
-	s_copysign.c	\
-	s_cos.c		\
-	s_fabs.c	\
-	s_finite.c	\
-	s_floor.c	\
-	s_isnan.c	\
-	s_lib_version.c	\
-	s_sin.c		\
-	s_tan.c		\
-	w_acos.c	\
-	w_asin.c	\
-	w_atan2.c	\
-	w_exp.c		\
-	w_fmod.c	\
-	w_log.c		\
-	w_pow.c		\
-	w_sqrt.c	\
-	$(NULL)
-
-EXPORTS	= fdlibm.h
+EXPORTS		= fdlibm.h
 
 # we need to force a static lib for the linking that js/src/Makefile.in wants
 # to do, and we don't really need a shared library ever, so:
@@ -78,32 +71,36 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
-# from mozilla/js/src/Makefile
+#
+# Default IEEE libm
+#
+CFLAGS		+= -D_IEEE_LIBM
+
+ifeq ($(OS_ARCH),Linux)
+LDFLAGS		+= -ldl
+endif
+
+ifeq ($(OS_ARCH),OSF1)
+LDFLAGS		+= -lc_r
+endif
+
+ifeq ($(OS_ARCH),SunOS)
+LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
 ifeq ($(CPU_ARCH),sparc)
 
 ifndef JS_NO_ULTRA
-ULTRA_OPTIONS := -xarch=v8plus,-DULTRA_SPARC
-ULTRA_OPTIONSCC := -DULTRA_SPARC
+ULTRA_OPTIONS	:= -xarch=v8plus,-DULTRA_SPARC
+ULTRA_OPTIONSCC	:= -DULTRA_SPARC
 else
-ULTRA_OPTIONS := -xarch=v8
-ULTRA_OPTIONSCC :=
+ULTRA_OPTIONS	:= -xarch=v8
+ULTRA_OPTIONSCC	:=
 endif
 
 ifeq ($(shell uname -m),sun4u)
-ASFLAGS	+= -Wa,$(ULTRA_OPTIONS),-P,-L,-D_ASM,-D__STDC__=0 $(ULTRA_OPTIONSCC)
+ASFLAGS		+= -Wa,$(ULTRA_OPTIONS),-P,-L,-D_ASM,-D__STDC__=0 $(ULTRA_OPTIONSCC)
 else
-ASFLAGS	+= -Wa,-xarch=v8,-P,-L,-D_ASM,-D__STDC__=0
+ASFLAGS		+= -Wa,-xarch=v8,-P,-L,-D_ASM,-D__STDC__=0
 endif
 
-endif # sparc
+endif
 
-ifeq ($(OS_ARCH), OSF1)
-LDFLAGS += -lc_r
-endif
-ifeq ($(OS_ARCH), SunOS)
-LDFLAGS += -lposix4 -ldl -lnsl -lsocket
-endif
-ifeq ($(OS_ARCH), Linux)
-LDFLAGS += -ldl
-endif
-# end from mozilla/js/src/Makefile
