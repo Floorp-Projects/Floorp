@@ -37,6 +37,7 @@ OBJS =					    \
 	.\$(OBJDIR)\nsDocLoader.obj	    \
 	.\$(OBJDIR)\nsEditorInterfaces.obj  \
 	.\$(OBJDIR)\nsEditorMode.obj	    \
+	.\$(OBJDIR)\nsSetupRegistry.obj	    \
 	$(NULL)
 
 LINCS=	\

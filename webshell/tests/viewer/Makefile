@@ -20,8 +20,8 @@ DEPTH=../../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-	main.cpp		\
-	$(NULL)
+main.cpp		\
+$(NULL)
 
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom -I$(PUBLIC)/netlib -I$(PUBLIC)/js -I$(PUBLIC)/pref
@@ -31,9 +31,9 @@ DIRS	=
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
-	$(DIST)/bin/libraptorbase.so	\
-	$(DIST)/bin/libpng.so \
-	$(DIST)/bin/libpref.so \
+$(DIST)/bin/libraptorbase.so	\
+$(DIST)/bin/libpng.so \
+$(DIST)/bin/libpref.so \
 	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/bin/libwidgetunix.so \
 	$(DIST)/bin/libraptorgfx.so \
@@ -93,6 +93,9 @@ TARGETS = $(PROGS)
 
 include $(DEPTH)/config/rules.mk
 
+$(OBJDIR)/nsSetupRegistry.o::	nsSetupRegistry.cpp
+	$(CCC) -o $@ -c $(CFLAGS) nsSetupRegistry.cpp $(LDFLAGS) 
+
 $(OBJDIR)/nsDocLoader.o::	nsDocLoader.cpp
 	$(CCC) -o $@ -c $(CFLAGS) nsDocLoader.cpp $(LDFLAGS) 
 
@@ -113,12 +116,12 @@ $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
 
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(EX_LIBS)
+$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
+	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
-	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
+	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(OBJDIR)/nsEditorMode.o $(OBJDIR)/nsEditorInterfaces.o $(OBJDIR)/nsSetupRegistry.o $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
 endif
 
 export::
