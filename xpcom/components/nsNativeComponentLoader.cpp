@@ -28,6 +28,7 @@
 #include "nsHashtable.h"
 #include "nsHashtableEnumerator.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 #ifdef  XP_MAC  // sdagley dougt fix
 #include <Files.h>
