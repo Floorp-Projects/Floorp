@@ -541,6 +541,7 @@ function SortFolderPane(column, sortKey)
 	//Remove the sortActive attribute because we don't want this pane to have any
 	//sort styles.
 	node.setAttribute("sortActive", "false");
+	return true;
 }
 
 function SortColumn(node, sortKey, secondarySortKey, direction)
@@ -814,8 +815,8 @@ function GetNextMessageAfterDelete(messages)
 	if(!nextMessage)
 	{
 
-		var curMessage = messages[0];
-		var nextMessage = null;
+		curMessage = messages[0];
+		nextMessage = null;
 		//search forward
 		while(curMessage)
 		{

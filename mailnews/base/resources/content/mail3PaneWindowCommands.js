@@ -315,6 +315,7 @@ var DefaultController =
 			default:
 				return false;
 		}
+		return false;
 	},
 
 	doCommand: function(command)

@@ -352,7 +352,7 @@ function loadStartFolder(startFolderUri)
 			if(!inboxFolder) return;
 
 			var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-			var startFolderUri = resource.Value;
+			startFolderUri = resource.Value;
 
 			//first, let's see if it's already in the dom.  This will make life easier.
 			//We need to make sure content is built by this time
@@ -478,6 +478,8 @@ function FindInSidebar(currentWindow, id)
 		if(frameItem)
 			return frameItem;
 	}
+
+	return null;
 }
 
 function GetThreadAndMessagePaneSplitter()
@@ -568,19 +570,6 @@ function GetSelectedFolder()
 		return null;
 
 }
-
-function GetSelectedMessage()
-{
-	var tree = GetThreadTree();
-	var selection = tree.selectedItems;
-	if(selection.length > 0)
-		return selection[0];
-	else
-		return null;
-
-}
-
-
 
 function GetServer(uri)
 {
