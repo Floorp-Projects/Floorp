@@ -284,39 +284,6 @@ nsToolbarFrame :: Paint ( nsIPresContext* aPresContext,
 } // Paint
 
 
-#if 0
-//
-// GetFrameForPoint
-//
-// Override to process events in our own frame
-//
-NS_IMETHODIMP
-nsToolbarFrame :: GetFrameForPoint ( nsIPresContext* aPresContext,
-                                     const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer,
-                                     nsIFrame** aFrame)
-{
-  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
-
-  if (! mRect.Contains(aPoint)) {
-    return retVal;
-  }
-
-  // returning NS_OK means that we tell the frame finding code that we have something
-  // and to stop looking elsewhere for a frame.
-  if ( aFrame && *aFrame == this )
-    retVal = NS_OK;
-  else if ( retVal != NS_OK ) {
-    *aFrame = this;
-    retVal = NS_OK;
-  }
-     
-  return retVal;
-  
-} // GetFrameForPoint
-#endif
-
-
 // 
 // HandleEvent 
 // 

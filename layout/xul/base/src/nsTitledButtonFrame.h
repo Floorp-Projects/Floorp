@@ -23,23 +23,28 @@
 #define nsTitledButtonFrame_h___
 
 #include "nsHTMLImageLoader.h"
-#include "nsXULLeafFrame.h"
+#include "nsLeafBoxFrame.h"
 
 class nsIPopUpMenu;
 class nsTitledButtonRenderer;
 
-class nsTitledButtonFrame : public nsXULLeafFrame
+class nsTitledButtonFrame : public nsLeafBoxFrame
 {
 public:
 
+  // nsIBox
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD NeedsRecalc();
+
+  // our methods
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter };
 
   friend nsresult NS_NewTitledButtonFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   // nsIBox frame interface
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-
-  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug) { return NS_OK; }
 
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
@@ -67,11 +72,6 @@ public:
   virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline);
   virtual void UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize);
 
-  // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
 
   NS_IMETHOD  Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
@@ -85,6 +85,8 @@ public:
  
   ~nsTitledButtonFrame();
 protected:
+
+  void CacheSizes(nsBoxLayoutState& aBoxLayoutState);
 
   enum CheckState { eUnset, eOff, eOn, eMixed } ;
 
@@ -124,7 +126,7 @@ protected:
                      PRUint32&            aMaxFit,
                      nsIRenderingContext& aContext);
 
-  nsTitledButtonFrame();
+  nsTitledButtonFrame(nsIPresShell* aShell);
 
   virtual void CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth);
 
@@ -169,6 +171,12 @@ private:
   PRBool mNeedsAccessUpdate;
   PRInt32 mAccesskeyIndex;
   nscoord mBeforeWidth, mAccessWidth, mAccessUnderlineSize, mAccessOffset;
+
+  nsSize mPrefSize;
+  nsSize mMinSize;
+  nscoord mAscent;
+  PRBool mNeedsRecalc;
+
 
  // nsIPopUpMenu * mPopUpMenu;
  // PRBool         mMenuIsPoppedUp;

@@ -41,6 +41,7 @@
 #include "nsIPresContext.h"
 #include "nsIWidget.h"
 #include "nsINameSpaceManager.h"
+#include "nsBoxLayoutState.h"
 
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
@@ -103,7 +104,7 @@ nsToolboxFrame :: nsToolboxFrame (nsIPresShell* aShell):nsBoxFrame(aShell)
     mGrippyHilighted(kNoGrippyHilighted),
     kCollapsedAtom(dont_AddRef( NS_NewAtom("collapsed"))), 
     kHiddenAtom(dont_AddRef( NS_NewAtom("hidden"))),
-    mDragListenerDelegate(nsnull)
+    mDragListenerDelegate(nsnull), mNeedsCalc(PR_TRUE)
 {
 }
 
@@ -203,6 +204,8 @@ nsToolboxFrame::Init(nsIPresContext*  aPresContext,
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow)
 {
+  mPresContext = aPresContext;
+
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   UpdateStyles(aPresContext);
 
@@ -313,39 +316,67 @@ nsToolboxFrame :: DrawGrippy (  nsIPresContext* aPresContext, nsIRenderingContex
 
 } // DrawGrippy
 
+/*
 NS_IMETHODIMP
 nsToolboxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
   CalculateGrippies(aPresContext);
   return nsBoxFrame::GetBoxInfo(aPresContext, aReflowState, aSize);
 }
+*/
 
-NS_IMETHODIMP 
-nsToolboxFrame :: Reflow(nsIPresContext*          aPresContext,
-                         nsHTMLReflowMetrics&     aDesiredSize,
-                         const nsHTMLReflowState& aReflowState,
-                         nsReflowStatus&          aStatus)
+NS_IMETHODIMP
+nsToolboxFrame::NeedsRecalc()
 {
-  nsresult errCode = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  errCode = ReflowGrippies(aPresContext, aDesiredSize, aReflowState, aStatus);
-  return errCode;
+  nsresult rv = nsBoxFrame::NeedsRecalc();
+  mNeedsCalc = PR_TRUE;
+  return rv;
+}
 
-} // Reflow
+
+NS_IMETHODIMP
+nsToolboxFrame::GetInset(nsMargin& aMargin)
+{
+  if (mNeedsCalc) 
+  {
+     CalculateGrippies(mPresContext);
+     mNeedsCalc = PR_FALSE;
+  }
+
+  nsBoxFrame::GetInset(aMargin);
+  aMargin += mInset;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsToolboxFrame::Layout(nsBoxLayoutState& aState)
+{
+  // lay us out
+  nsresult rv = nsBoxFrame::Layout(aState);
+  LayoutGrippies(aState);
+  return rv;
+}
 
 // After we have been flowed this should be flowed to place the grippies at there
 // physical locations.
 nsresult
-nsToolboxFrame::ReflowGrippies(nsIPresContext*          aPresContext,
-                         nsHTMLReflowMetrics&     aDesiredSize,
-                         const nsHTMLReflowState& aReflowState,
-                         nsReflowStatus&          aStatus)
+nsToolboxFrame::LayoutGrippies(nsBoxLayoutState& aState)
 {
   // get the rect we can place the grippies in. This is inside our borders and debug rect.
-  nsRect innerRect(0,0,0,0);
-  GetInnerRect(innerRect);
+  nsRect ourRect(0,0,0,0);
+  GetRect(ourRect);
+  ourRect.x = 0;
+  ourRect.y = 0;
 
+  nsRect innerRect(ourRect);
+  nsMargin border(0,0,0,0);
+  GetBorderAndPadding(border);
+  innerRect.Deflate(border);
+
+  nsIPresContext* presContext = aState.GetPresContext();
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  presContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nscoord grippyWidth = kGrippyWidthInPixels * onePixel;   // remember to leave room for the grippy on the right
   nscoord collapsedGrippyHeight = kCollapsedGrippyHeightInPixels * onePixel;
@@ -356,14 +387,19 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext*          aPresContext,
   // iterate over all visible toolbar frames, moving the associated grippy
   // next to the toolbar
   mNumToolbars = 0;
-  nsIFrame* childFrame = mFrames.FirstChild(); 
-  while ( childFrame ) {    
+  nsIBox* childBox;
+  GetChildBox(&childBox);
+
+  while ( childBox ) {    
     // get the childs rect and figure out the grippy size
+    nsIFrame* childFrame = nsnull;
+    childBox->GetFrame(&childFrame);
+
     nsCOMPtr<nsIContent> childContent;
     childFrame->GetContent(getter_AddRefs(childContent));
 
     nsRect grippyRect;
-    childFrame->GetRect(grippyRect);
+    childBox->GetBounds(grippyRect);
 
     if ( isHorz ) {
       grippyRect.y = innerRect.y;
@@ -380,7 +416,7 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext*          aPresContext,
     // Set the location of the grippy to the left...
     grippyInfo->SetBounds(grippyRect);
 
-    errCode = childFrame->GetNextSibling(&childFrame);
+    errCode = childBox->GetNextBox(&childBox);
     NS_ASSERTION(errCode == NS_OK, "failed to get next child");
     mNumToolbars++;
   }
@@ -393,9 +429,9 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext*          aPresContext,
       // horzontal toolbox our height is our width. Thats why we just use
       // height here on both x and y coords.
       if ( isHorz )
-        currGrippy->mBoundingRect.x = aDesiredSize.width - collapsedGrippyHeight;
+        currGrippy->mBoundingRect.x = ourRect.width - collapsedGrippyHeight;
       else
-        currGrippy->mBoundingRect.y = aDesiredSize.height - collapsedGrippyHeight;
+        currGrippy->mBoundingRect.y = ourRect.height - collapsedGrippyHeight;
     }
   }
 
@@ -407,6 +443,7 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext*          aPresContext,
 void
 nsToolboxFrame::CalculateGrippies(nsIPresContext* aPresContext)
 {
+
    // compute amount (in twips) each toolbar will be offset from the right because of 
   // the grippy
   float p2t;
@@ -560,52 +597,6 @@ nsToolboxFrame :: ClearGrippyList ( nsVoidArray & inList )
   }
   
 } // ClearGrippyList
-
-
-//
-// GetInset
-//
-// Our Reflow() method computes a margin for the grippies and for collased grippies (if
-// any). Return this pre-computed margin when asked by the box.
-//
-void
-nsToolboxFrame::GetInset(nsMargin& margin)
-{
-   nsBoxFrame::GetInset(margin);
-   margin += mInset;
-}
-
-
-#if 0
-//
-// GetFrameForPoint
-//
-// Override to process events in our own frame
-//
-NS_IMETHODIMP
-nsToolboxFrame :: GetFrameForPoint(nsIPresContext* aPresContext,
-                                   const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**     aFrame)
-{
-  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
-
-  if (! mRect.Contains(aPoint)) {
-    return retVal;
-  }
-
-  // returning NS_OK means that we tell the frame finding code that we have something
-  // and to stop looking elsewhere for a frame.
-  if ( aFrame && *aFrame == this )
-    retVal = NS_OK;
-  else if ( retVal != NS_OK ) {
-    *aFrame = this;
-    retVal = NS_OK;
-  }
-  return retVal;
-  
-} // GetFrameForPoint
-#endif     
 
 
 //

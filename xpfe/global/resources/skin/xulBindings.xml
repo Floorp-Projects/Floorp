@@ -48,9 +48,9 @@
   </binding>
 
   <binding name="menus">
-    <content excludes="template,observes,menupopup">
+    <content autostretch="never" excludes="template,observes,menupopup">
       <xul:image class="menu-left"/>
-      <xul:titledbutton class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="acceltext:value"/>
       <xul:image class="menu-right"/>
     </content>

@@ -58,14 +58,12 @@ class nsToolboxFrame : public nsBoxFrame
 public:
   friend nsresult NS_NewToolboxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-    // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+  // nsIBox
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD GetInset(nsMargin& aInset);
+  NS_IMETHOD NeedsRecalc();
 
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-
+  // nsIFrame
   NS_IMETHOD  Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
@@ -85,14 +83,6 @@ public:
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext* aStyleContext);
  
-#if 0
-    // Overridden to capture events
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint,
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
-#endif
-
 /*BEGIN implementations of dragevent handler interface*/
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
@@ -135,10 +125,7 @@ protected:
 
   virtual void UpdateStyles(nsIPresContext* aPresContext);
   virtual void CalculateGrippies(nsIPresContext* aPresContext);
-  virtual nsresult ReflowGrippies(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+  virtual nsresult LayoutGrippies(nsBoxLayoutState& aBoxLayoutState);
 
  
   void RefreshStyleContext(nsIPresContext* aPresContext,
@@ -167,7 +154,6 @@ protected:
   nsCOMPtr<nsIStyleContext>    mGrippyRolloverStyle;
   
   nsMargin mInset;
-  virtual void GetInset(nsMargin& margin);
 
   unsigned long mSumOfToolbarHeights;
   nsVoidArray  mGrippies;          // list of all active grippies
@@ -186,6 +172,7 @@ protected:
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
+  
     // nsIDOMEventListener interface
     virtual nsresult HandleEvent(nsIDOMEvent* aEvent)
     {
@@ -235,6 +222,8 @@ protected:
   nsToolboxFrame ( const nsToolboxFrame& aFrame ) ;	            // DO NOT IMPLEMENT
   nsToolboxFrame& operator= ( const nsToolboxFrame& aFrame ) ;  // DO NOT IMPLEMENT
   
+  PRBool mNeedsCalc;
+  nsIPresContext* mPresContext;
 }; // class nsToolboxFrame
 
 #endif

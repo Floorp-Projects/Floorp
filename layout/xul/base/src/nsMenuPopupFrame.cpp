@@ -1245,7 +1245,7 @@ nsMenuPopupFrame::Destroy(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsMenuPopupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                    const nsPoint& aPoint,
-                                   nsFramePaintLayer aWhichLayer,
+                                   nsFramePaintLayer aWhichLayer,    
                                    nsIFrame** aFrame)
 {
   return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);

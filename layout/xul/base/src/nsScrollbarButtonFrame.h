@@ -30,12 +30,12 @@
 #ifndef nsScrollbarButtonFrame_h___
 #define nsScrollbarButtonFrame_h___
 
-#include "nsXULButtonFrame.h"
+#include "nsButtonBoxFrame.h"
 #include "nsITimerCallback.h"
 
 class nsSliderFrame;
 
-class nsScrollbarButtonFrame : public nsXULButtonFrame, 
+class nsScrollbarButtonFrame : public nsButtonBoxFrame, 
                                public nsITimerCallback
 {
 public:

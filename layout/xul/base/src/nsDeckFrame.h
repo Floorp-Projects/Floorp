@@ -31,9 +31,9 @@
 #ifndef nsDeckFrame_h___
 #define nsDeckFrame_h___
 
-#include "nsStackFrame.h"
+#include "nsBoxFrame.h"
 
-class nsDeckFrame : public nsStackFrame
+class nsDeckFrame : public nsBoxFrame
 {
 public:
 
@@ -47,8 +47,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                      nsDidReflowStatus aStatus);
+  NS_IMETHOD Layout(nsBoxLayoutState& aState);
 
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
@@ -56,10 +55,10 @@ public:
                     nsFramePaintLayer aWhichLayer);
 
  
-  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
-                               const nsPoint& aPoint, 
-                               nsFramePaintLayer aWhichLayer,
-                               nsIFrame**     aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,    
+                              nsIFrame**     aFrame);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
@@ -75,6 +74,7 @@ protected:
 
 private:
 
+  static nsCOMPtr<nsIBoxLayout> gLayout;
   nsIFrame* mSelected;
 
 }; // class nsDeckFrame

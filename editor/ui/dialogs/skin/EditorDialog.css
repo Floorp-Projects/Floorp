@@ -206,6 +206,7 @@ menu.colorpicker {
   margin-bottom: 2px;
 }
 
+
 menu.colorpicker:active {
   border: 1px inset #CCCCCC;
 }

@@ -19,12 +19,12 @@
  *
  * Contributor(s): 
  */
-#ifndef nsScrollFrame_h___
-#define nsScrollFrame_h___
+#ifndef nsGfxScrollFrame_h___
+#define nsGfxScrollFrame_h___
 
 #include "nsHTMLContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIBox.h"
+#include "nsBoxFrame.h"
 #include "nsIScrollableFrame.h"
 
 class nsISupportsArray;
@@ -39,21 +39,18 @@ class nsGfxScrollFrameInner;
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsGfxScrollFrame : public nsHTMLContainerFrame, 
-                         public nsIAnonymousContentCreator,
-                         public nsIBox,
+class nsGfxScrollFrame : public nsIAnonymousContentCreator,
+                         public nsBoxFrame,
                          public nsIScrollableFrame {
 public:
   friend nsresult NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
-                                       nsIDocument* aDocument);
+                                       nsIDocument* aDocument, PRBool aIsRoot);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
-
-  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
 
   virtual ~nsGfxScrollFrame();
 
@@ -85,13 +82,6 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD DidReflow(nsIPresContext*   aPresContext,
-                       nsDidReflowStatus aStatus);
-
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
 
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -105,18 +95,18 @@ public:
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent);
 
-  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
-
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aAnonymousItems);
 
   // nsIBox methods
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
-  NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
-  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD GetPadding(nsMargin& aPadding);
 
   // nsIScrollableFrame
   NS_IMETHOD  SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame);
@@ -138,8 +128,10 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
 
+  virtual nsresult GetContentOf(nsIContent** aContent);
+
 protected:
-  nsGfxScrollFrame(nsIDocument* aDocument);
+  nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument, PRBool aIsRoot);
   virtual PRIntn GetSkipSides() const;
 
 private:

@@ -17,34 +17,37 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- *
  * Contributor(s): 
  */
-#ifndef nsXULButtonFrame_h___
-#define nsXULButtonFrame_h___
 
-#include "nsBoxFrame.h"
+/**
 
-class nsXULButtonFrame : public nsBoxFrame
+  Eric D Vaughan
+  A frame that can have multiple children. Only one child may be displayed at one time. So the
+  can be flipped though like a deck of cards.
+ 
+**/
+
+#ifndef nsStackLayout_h___
+#define nsStackLayout_h___
+
+#include "nsBoxLayout.h"
+
+class nsStackLayout : public nsBoxLayout
 {
 public:
-  friend nsresult NS_NewXULButtonFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  nsXULButtonFrame(nsIPresShell* aPresShell);
+  nsStackLayout(nsIPresShell* aShell);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
+  NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
 
-  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
-                                      nsGUIEvent* aEvent,
-                                      nsEventStatus* aEventStatus);
-
-  virtual void MouseClicked (nsIPresContext* aPresContext);
+  NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+}; // class nsStackLayout
 
 
-}; // class nsXULButtonFrame
 
-#endif /* nsXULButtonFrame_h___ */
+#endif
+

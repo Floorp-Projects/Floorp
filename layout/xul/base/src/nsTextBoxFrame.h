@@ -19,23 +19,27 @@
  *
  * Contributor(s): 
  */
-#ifndef nsXULTextFrame_h___
-#define nsXULTextFrame_h___
+#ifndef nsTextBoxFrame_h___
+#define nsTextBoxFrame_h___
 
-#include "nsXULLeafFrame.h"
+#include "nsLeafBoxFrame.h"
 
 class nsAccessKeyInfo;
 
-class nsXULTextFrame : public nsXULLeafFrame
+class nsTextBoxFrame : public nsLeafBoxFrame
 {
 public:
 
+  // nsIBox
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD NeedsRecalc();
+
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter };
 
-  friend nsresult NS_NewXULTextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-
-  // nsIBox frame interface
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  friend nsresult NS_NewTextBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
@@ -53,19 +57,14 @@ public:
 
   virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline);
 
-  // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
+ 
   NS_IMETHOD  Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
  
-  ~nsXULTextFrame();
+  ~nsTextBoxFrame();
 protected:
 
   void UpdateAccessUnderline();
@@ -82,8 +81,9 @@ protected:
                                    nsFramePaintLayer aWhichLayer,
                                    const nsRect& aTextRect);
 
+  virtual void CalcTextSize(nsBoxLayoutState& aBoxLayoutState);
 
-  nsXULTextFrame();
+  nsTextBoxFrame(nsIPresShell* aShell);
 
   virtual void CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth);
   virtual void GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize, nscoord& aAscent);
@@ -95,6 +95,9 @@ private:
   nsString mCroppedTitle;
   nscoord mTitleWidth;
   nsAccessKeyInfo* mAccessKeyInfo;
-}; // class nsXULTextFrame
+  PRBool mNeedsRecalc;
+  nsSize mTextSize;
+  nscoord mAscent;
+}; // class nsTextBoxFrame
 
-#endif /* nsXULTextFrame_h___ */
+#endif /* nsTextBoxFrame_h___ */

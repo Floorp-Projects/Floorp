@@ -30,11 +30,21 @@ MODULE		= layout
 LIBRARY_NAME	= raptorxulbase_s
 
 CPPSRCS		= \
-		nsXULButtonFrame.cpp \
+       nsImageBoxFrame.cpp \
+       nsRootBoxFrame.cpp \
+		nsBox.cpp \
+        nsBoxLayoutState.cpp \
+        nsBoxToBlockAdaptor.cpp \
+        nsButtonBoxFrame.cpp \
+        nsCheckBoxFrame.cpp \
+        nsContainerBox.cpp \
+        nsLeafBoxFrame.cpp \
+        nsSprocketLayout.cpp \
+        nsBoxLayout.cpp \
+        nsStackLayout.cpp \
+        nsTextBoxFrame.cpp \
         nsStackFrame.cpp \
         nsSpringFrame.cpp \
-        nsXULLeafFrame.cpp \
-        nsXULTextFrame.cpp \
 		nsTitledBoxFrame.cpp \
 		nsTitleFrame.cpp \
 		nsFrameNavigator.cpp \
@@ -72,7 +82,6 @@ CPPSRCS		= \
 		nsMenuDismissalListener.cpp \
 		nsPopupSetFrame.cpp \
 		nsRepeatService.cpp \
-		nsXULCheckboxFrame.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

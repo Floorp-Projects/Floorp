@@ -535,28 +535,51 @@ grippy:hover:active{
 	background-color: #99CCFF;
 }
 
-box[align="vertical"]>splitter grippy {
+box[orient="vertical"]>splitter grippy {
 	/* a horizontal splitter */
-	min-width: 60px;
-	max-height: 4px;
+	width: 60px;
+	height:8px;
 }
 
-box[align="horizontal"]>splitter grippy {
+box>splitter grippy {
 	/* a vertical splitter */
-	max-width: 4px;
-	min-height: 60px;
+	width: 8px;
+	height: 60px;
+}
+
+window[orient="vertical"]>splitter grippy {
+	/* a horizontal splitter */
+	width: 8px;
+	height: 10px;
+}
+
+window>splitter grippy {
+	/* a vertical splitter */
+	width: 8px;
+	height: 60px;
+}
+
+box[orient="vertical"]>splitter {
+	/* a vertical splitter */
+    cursor: n-resize;
+}
+
+window[orient="vertical"]>splitter {
+	/* a vertical splitter */
+	cursor: n-resize;
+}
+
+/* for backwards compatibility */
+box[align="vertical"]>splitter grippy {
+	/* a horizontal splitter */
+	width: 60px;
+	height: 8px;
 }
 
 window[align="vertical"]>splitter grippy {
 	/* a horizontal splitter */
-	min-width: 60px;
-	max-height: 4px;
-}
-
-window[align="horizontal"]>splitter grippy {
-	/* a vertical splitter */
-	max-width: 4px;
-	min-height: 60px;
+	width: 60px;
+	height: 8px;
 }
 
 box[align="vertical"]>splitter {
@@ -596,7 +619,7 @@ splitter.gray-horizontal-splitter grippy:active {
 
 splitter.gray-horizontal-splitter #begincap { 
 	min-width: 8px;
-	max-width: 8px;
+	width: 8px;
 	background-image: url("chrome://global/skin/gray-bottomleft.gif");
 	background-repeat: no-repeat;
 	background-position: 0% 100%;
@@ -604,9 +627,33 @@ splitter.gray-horizontal-splitter #begincap {
 
 splitter.gray-horizontal-splitter #endcap { 
 	min-width: 8px;
-	max-width: 8px;
+	width: 8px;
 }
 
+
+/****** Progress Meter ********/
+
+progressmeter[align="horizontal"] {
+	height: 1em;
+}
+
+box.progress-bar {
+	background-color : #9999cc;
+}
+
+box.progress-remainder {
+	background-color: #999999;
+}
+
+progressmeter[mode="undetermined"] > .internal-box
+{
+  background-image: url(chrome://global/skin/progressmeter-busy.gif);
+}
+
+progressmeter[mode="undetermined"] > .internal-box > stack > progressbar
+{
+  display: none;
+}
 
 /********* Box ********/
 
@@ -660,6 +707,7 @@ menubar {
 
 menu {
 	color: black;
+	vertical-align: middle;
 }
 
 menu[disabled="true"] {
@@ -668,6 +716,7 @@ menu[disabled="true"] {
 
 menuitem {
 	color: black;
+	vertical-align: middle;
 }
 
 menuitem[disabled="true"] {
@@ -808,7 +857,6 @@ popup > menuitem[menuactive="true"][disabled="true"] {
 .menu-right {
   padding: 0px;
   border: 0px;
-  width: 10px;
   margin-top: 0px;
   margin-bottom: 0px;
   margin-left: 6px;
@@ -819,7 +867,6 @@ popup > menuitem[menuactive="true"][disabled="true"] {
   color: inherit;
   padding: 0px;
   border: 0px;
-  width: 13px;
   margin-top: 0px;
   margin-bottom: 0px;
   margin-right: 2px;
@@ -886,6 +933,80 @@ menu[menuactive="true"][disabled="true"] > .menu-right {
 
 menu[menuactive="true"] > .menu-right {
   list-style-image: url("chrome://global/skin/menu-arrow-hover.gif");
+}
+
+
+menulist, menubutton {
+  padding: 1px 0px 1px 0px;
+}
+
+menulist > .menu-text,
+menubutton > .menu-text {
+  padding-left: 4px;
+  padding-right: 4px;
+  border: 1px inset #CCCCCC;
+}
+
+menubutton > .menu-button {
+  border: 1px outset #CCCCCC;
+  padding: 2px;
+}
+
+menubutton > .menu-button:active {
+  border: 1px inset #CCCCCC;
+  padding: 3px 1px 1px 3px;
+}
+
+
+menubutton > .menu-dropmarker, 
+menulist > .menu-dropmarker {
+  border: 1px outset #CCCCCC;
+  list-style-image: url("chrome://global/skin/scroll-down.gif");
+  padding: 0px 2px 0px 2px;
+}
+
+menubutton[open="true"] > .menu-dropmarker,
+menulist[open="true"] > .menu-dropmarker {
+  border: 1px inset #CCCCCC;
+  padding: 1px 1px -1px 3px;
+}
+
+menubutton menupopup, menulist menupopup {
+  border: 1px outset #CCCCCC;
+}
+
+menulist[editable="true"] {
+  padding: 0px;
+}
+
+menulist[editable="true"] > .menu-text {
+  border-left: none;
+  border-top: 1px inset #CCCCCC;
+  border-right: 1px inset #CCCCCC;
+  border-bottom: 1px inset #CCCCCC;
+  margin: 0px 2px 0px 0px;
+}
+
+menulist[editable="true"] > .menu-dropmarker {
+  border: 1px outset #CCCCCC;
+}
+
+menulist[editable="true"][open="true"] > .menu-dropmarker {
+  border: 1px inset #CCCCCC;
+}
+
+menulist[editable="true"] > .menu-icon {
+  list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
+  background-color: white;
+  padding: 1px;
+  border-left: 1px inset #CCCCCC;
+  border-top: 1px inset #CCCCCC;
+  border-right: none;
+  border-bottom: 1px inset #CCCCCC;
+}
+
+menulist menupopup > menuseparator {
+  border-bottom: 2px groove #CCCCCC;
 }
 
 /******** Rules for menus on the standard toolbars ***************/

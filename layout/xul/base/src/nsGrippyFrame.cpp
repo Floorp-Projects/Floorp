@@ -62,7 +62,7 @@ NS_NewGrippyFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGrippyFrame* it = new (aPresShell) nsGrippyFrame;
+  nsGrippyFrame* it = new (aPresShell) nsGrippyFrame (aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -71,7 +71,7 @@ NS_NewGrippyFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewGrippyFrame
 
-nsGrippyFrame::nsGrippyFrame():mCollapsed(PR_FALSE)
+nsGrippyFrame::nsGrippyFrame(nsIPresShell* aShell):nsTitledButtonFrame(aShell),mCollapsed(PR_FALSE)
 {
 }
 

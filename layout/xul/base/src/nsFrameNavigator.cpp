@@ -30,10 +30,14 @@
 #include "nsFrameNavigator.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsIBox.h"
 
 nsIAtom*
-nsFrameNavigator::GetTag(nsIFrame* frame)
+nsFrameNavigator::GetTag(nsIBox* aBox)
 {
+   nsIFrame* frame = nsnull;
+   aBox->GetFrame(&frame);
+
    nsCOMPtr<nsIContent> content;
    frame->GetContent(getter_AddRefs(content));
    if (content) {
@@ -45,11 +49,11 @@ nsFrameNavigator::GetTag(nsIFrame* frame)
    return nsnull;
 }
 
-nsIFrame*
-nsFrameNavigator::GetChildBeforeAfter(nsIPresContext* aPresContext, nsIFrame* start, PRBool before)
+nsIBox*
+nsFrameNavigator::GetChildBeforeAfter(nsIPresContext* aPresContext, nsIBox* start, PRBool before)
 {
-   nsIFrame* parent = nsnull;
-   start->GetParent(&parent);
+   nsIBox* parent = nsnull;
+   start->GetParentBox(&parent);
    PRInt32 index = IndexOf(aPresContext, parent,start);
    PRInt32 count = CountFrames(aPresContext, parent);
 
@@ -72,18 +76,18 @@ nsFrameNavigator::GetChildBeforeAfter(nsIPresContext* aPresContext, nsIFrame* st
 }
 
 PRInt32
-nsFrameNavigator::IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame* child)
+nsFrameNavigator::IndexOf(nsIPresContext* aPresContext, nsIBox* parent, nsIBox* child)
 {
   PRInt32 count = 0;
 
-  nsIFrame* childFrame;
-  parent->FirstChild(aPresContext, nsnull, &childFrame); 
-  while (nsnull != childFrame) 
+  nsIBox* box = nsnull;
+  parent->GetChildBox(&box); 
+  while (nsnull != box) 
   {    
-    if (childFrame == child)
+    if (box == child)
        return count;
 
-    nsresult rv = childFrame->GetNextSibling(&childFrame);
+    nsresult rv = box->GetNextBox(&box);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
   }
@@ -92,15 +96,15 @@ nsFrameNavigator::IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFra
 }
 
 PRInt32
-nsFrameNavigator::CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame)
+nsFrameNavigator::CountFrames(nsIPresContext* aPresContext, nsIBox* aBox)
 {
   PRInt32 count = 0;
 
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame); 
-  while (nsnull != childFrame) 
+  nsIBox* box;
+  aBox->GetChildBox(&box); 
+  while (nsnull != box) 
   {    
-    nsresult rv = childFrame->GetNextSibling(&childFrame);
+    nsresult rv = box->GetNextBox(&box);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
   }
@@ -108,19 +112,19 @@ nsFrameNavigator::CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame)
   return count;
 }
 
-nsIFrame*
-nsFrameNavigator::GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt32 index)
+nsIBox*
+nsFrameNavigator::GetChildAt(nsIPresContext* aPresContext, nsIBox* parent, PRInt32 index)
 {
   PRInt32 count = 0;
 
-  nsIFrame* childFrame;
-  parent->FirstChild(aPresContext, nsnull, &childFrame); 
-  while (nsnull != childFrame) 
+  nsIBox* box;
+  parent->GetChildBox(&box); 
+  while (nsnull != box) 
   {    
     if (count == index)
-       return childFrame;
+       return box;
 
-    nsresult rv = childFrame->GetNextSibling(&childFrame);
+    nsresult rv = box->GetNextBox(&box);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
   }

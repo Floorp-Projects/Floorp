@@ -22,7 +22,7 @@
  * Contributor(s): 
  */
 #include "nsCOMPtr.h"
-#include "nsXULButtonFrame.h"
+#include "nsButtonBoxFrame.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
@@ -36,13 +36,13 @@
 // Creates a new Button frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewXULButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+NS_NewButtonBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXULButtonFrame* it = new (aPresShell) nsXULButtonFrame(aPresShell);
+  nsButtonBoxFrame* it = new (aPresShell) nsButtonBoxFrame(aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -52,11 +52,11 @@ NS_NewXULButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewXULButtonFrame
 
-nsXULButtonFrame::nsXULButtonFrame(nsIPresShell* aPresShell)
+nsButtonBoxFrame::nsButtonBoxFrame(nsIPresShell* aPresShell)
 :nsBoxFrame(aPresShell, PR_FALSE)
 {}
 
-NS_IMETHODIMP nsXULButtonFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsButtonBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                     const nsPoint& aPoint, 
                                     nsFramePaintLayer aWhichLayer,
                                     nsIFrame**     aFrame)
@@ -66,7 +66,7 @@ NS_IMETHODIMP nsXULButtonFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsXULButtonFrame::HandleEvent(nsIPresContext* aPresContext, 
+nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
@@ -89,7 +89,7 @@ nsXULButtonFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 void 
-nsXULButtonFrame::MouseClicked (nsIPresContext* aPresContext) 
+nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext) 
 {
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;

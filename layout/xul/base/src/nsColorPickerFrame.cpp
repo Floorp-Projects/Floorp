@@ -36,6 +36,7 @@
 #include "nsIServiceManager.h"
 #include "nsStdColorPicker.h"
 #include "nsColorPickerCID.h"
+#include "nsBoxLayoutState.h"
 //
 // NS_NewColorPickerFrame
 //
@@ -48,7 +49,7 @@ NS_NewColorPickerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsColorPickerFrame* it = new (aPresShell) nsColorPickerFrame;
+  nsColorPickerFrame* it = new (aPresShell) nsColorPickerFrame (aPresShell);
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;
@@ -60,10 +61,6 @@ NS_NewColorPickerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 //
 // nsColorPickerFrame cntr
 //
-nsColorPickerFrame::nsColorPickerFrame()
-{
-
-}
 
 nsColorPickerFrame::~nsColorPickerFrame()
 {
@@ -192,6 +189,28 @@ nsColorPickerFrame::Paint(nsIPresContext* aPresContext,
 }
 
 
+NS_IMETHODIMP
+nsColorPickerFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+{
+  float p2t;
+
+  nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
+
+  presContext->GetScaledPixelsToTwips(&p2t);
+
+  nsSize pixelSize(0,0);
+  mColorPicker->GetSize(&pixelSize.width, &pixelSize.height);
+  
+  aSize.width = nscoord(pixelSize.width * p2t);
+  aSize.height = nscoord(pixelSize.height * p2t);
+
+  AddBorderAndPadding(aSize);
+  AddInset(aSize);      
+
+  return NS_OK;
+}
+
+/*
 //
 // GetDesiredSize
 //
@@ -202,34 +221,6 @@ nsColorPickerFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsHTMLReflowMetrics& aDesiredSize)
 {
-  float p2t;
-
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-
-
-   // if the width is set use it
-	if (NS_INTRINSICSIZE != aReflowState.mComputedWidth) 
-	  aDesiredSize.width = aReflowState.mComputedWidth;
-  else
-    aDesiredSize.width = -1;
-
-	// if the height is set use it
- 	if (NS_INTRINSICSIZE != aReflowState.mComputedHeight) 
-		aDesiredSize.height = aReflowState.mComputedHeight;
-  else
-    aDesiredSize.height = -1;
-
-  mColorPicker->SetSize((aDesiredSize.width == -1) ? -1 : PRInt32(aDesiredSize.width/p2t),
-                        (aDesiredSize.height == -1) ? -1 : PRInt32(aDesiredSize.height/p2t));
-
-
-  int width, height;
-  
-  mColorPicker->GetSize(&width, &height);
-  
-  aDesiredSize.width = nscoord(width * p2t);
-  aDesiredSize.height = nscoord(height * p2t);
-  aDesiredSize.ascent = nscoord(height * p2t);
-  aDesiredSize.descent = 0;
 
 } // GetDesiredSize
+*/

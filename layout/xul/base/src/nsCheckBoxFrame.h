@@ -17,22 +17,23 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- *
  * Contributor(s): 
  */
-#ifndef nsXULCheckboxFrame_h___
-#define nsXULCheckboxFrame_h___
+#ifndef nsCheckBoxFrame_h___
+#define nsCheckBoxFrame_h___
 
-#include "nsXULButtonFrame.h"
+#include "nsButtonBoxFrame.h"
 
-class nsXULCheckboxFrame : public nsXULButtonFrame
+class nsCheckBoxFrame : public nsButtonBoxFrame
 {
 public:
-  nsXULCheckboxFrame(nsIPresShell* aPresShell);
 
-  friend nsresult NS_NewXULCheckboxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsresult NS_NewCheckBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-}; // class nsXULCheckboxFrame
+  PRIntn GetDefaultAlignment();
 
-#endif /* nsXULCheckboxFrame_h___ */
+  nsCheckBoxFrame(nsIPresShell* aPresShell);
+
+}; // class nsCheckBoxFrame
+
+#endif /* nsCheckBoxFrame_h___ */

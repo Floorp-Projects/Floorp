@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresContext.h"
 #include "nsButtonFrameRenderer.h"
+#include "nsBoxLayoutState.h"
 
 #include "nsHTMLParts.h"
 #include "nsString.h"
@@ -71,6 +72,7 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
+#include "nsBoxLayoutState.h"
 
 #include "nsFormControlHelper.h"
 
@@ -130,6 +132,11 @@ nsTitledButtonFrame::UpdateImageFrame(nsIPresContext* aPresContext,
                                       PRUint32 aStatus)
 {
   if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
+    nsTitledButtonFrame* us = (nsTitledButtonFrame*)aFrame;
+    nsBoxLayoutState state(aPresContext);
+    us->MarkDirty(state);
+
+    /*
     // Now that the size is available, trigger a content-changed reflow
     nsIContent* content = nsnull;
     aFrame->GetContent(&content);
@@ -142,6 +149,7 @@ nsTitledButtonFrame::UpdateImageFrame(nsIPresContext* aPresContext,
       }
       NS_RELEASE(content);
     }
+    */
   }
   return NS_OK;
 }
@@ -158,7 +166,7 @@ NS_NewTitledButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTitledButtonFrame* it = new (aPresShell) nsTitledButtonFrame;
+  nsTitledButtonFrame* it = new (aPresShell) nsTitledButtonFrame (aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -187,10 +195,8 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
       UpdateAccessUnderline();
 
   if (aResize) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    mState |= NS_FRAME_IS_DIRTY;
-    mParent->ReflowDirtyChild(shell, this);
+    nsBoxLayoutState state(aPresContext);
+    MarkDirty(state);
   } else if (aRedraw) {
     mRenderer->Redraw(aPresContext);
   }
@@ -210,7 +216,10 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-nsTitledButtonFrame::nsTitledButtonFrame()
+nsTitledButtonFrame::nsTitledButtonFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell), 
+                                                               mPrefSize(0,0),
+                                                               mMinSize(0,0),
+                                                               mAscent(0)
 {
 	mTitle = "";
 	mAlign = GetDefaultAlignment();
@@ -218,13 +227,22 @@ nsTitledButtonFrame::nsTitledButtonFrame()
 	mNeedsLayout = PR_TRUE;
   mNeedsAccessUpdate = PR_TRUE;
 	mHasImage = PR_FALSE;
-    mHasOnceBeenInMixedState = PR_FALSE;
-    mRenderer = new nsTitledButtonRenderer();
+  mHasOnceBeenInMixedState = PR_FALSE;
+  mRenderer = new nsTitledButtonRenderer();
+  NeedsRecalc();
 }
 
 nsTitledButtonFrame::~nsTitledButtonFrame()
 {
     delete mRenderer;
+}
+
+
+NS_IMETHODIMP
+nsTitledButtonFrame::NeedsRecalc()
+{
+  mNeedsRecalc = PR_TRUE;
+  return NS_OK;
 }
 
 NS_METHOD
@@ -233,7 +251,7 @@ nsTitledButtonFrame::Destroy(nsIPresContext* aPresContext)
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.StopAllLoadImages(aPresContext);
 
-  return nsXULLeafFrame::Destroy(aPresContext);
+  return nsLeafBoxFrame::Destroy(aPresContext);
 }
 
 
@@ -244,7 +262,7 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
                           nsIStyleContext* aContext,
                           nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsXULLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   mRenderer->SetNameSpace(kNameSpaceID_None);
   mRenderer->SetFrame(this,aPresContext);
@@ -938,21 +956,6 @@ nsTitledButtonFrame::PaintImage(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsTitledButtonFrame::Reflow(nsIPresContext*   aPresContext,
-                     nsHTMLReflowMetrics&     aMetrics,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus)
-{
-
-
-  mNeedsLayout = PR_TRUE;
-  nsresult result = nsXULLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
-
-  return result;
-}
-
 struct nsTitleRecessedBorder : public nsStyleSpacing {
   nsTitleRecessedBorder(nscoord aBorderWidth)
     : nsStyleSpacing()
@@ -1204,7 +1207,7 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext* aPresContext,
       break;
   }
 
-  return nsXULLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsLeafBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 //
@@ -1388,22 +1391,79 @@ nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)
  * Ok return our dimensions
  */
 NS_IMETHODIMP
-nsTitledButtonFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+nsTitledButtonFrame::Layout(nsBoxLayoutState& aState)
 {
-  GetImageSize(aPresContext);
+  mNeedsLayout = PR_TRUE;
+  return nsLeafBoxFrame::Layout(aState);
+}
 
-  aSize.minSize.width = mImageRect.width;
-  aSize.minSize.height = mImageRect.height;
-  aSize.prefSize.width = mImageRect.width;
-  aSize.prefSize.height = mImageRect.height;
+/**
+ * Ok return our dimensions
+ */
+NS_IMETHODIMP
+nsTitledButtonFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+{
+  if (mNeedsRecalc) {
+     CacheSizes(aBoxLayoutState);
+  }
+
+  aSize = mPrefSize;
+  return NS_OK;
+}
+
+/**
+ * Ok return our dimensions
+ */
+NS_IMETHODIMP
+nsTitledButtonFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+{
+  if (mNeedsRecalc) {
+     CacheSizes(aBoxLayoutState);
+  }
+
+  aSize = mMinSize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTitledButtonFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aCoord)
+{
+  if (mNeedsRecalc) {
+     CacheSizes(aBoxLayoutState);
+  }
+
+  aCoord = mAscent;
+  return NS_OK;
+}
+
+/**
+ * Ok return our dimensions
+ */
+void
+nsTitledButtonFrame::CacheSizes(nsBoxLayoutState& aBoxLayoutState)
+{
+  nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
+  const nsHTMLReflowState* state = aBoxLayoutState.GetReflowState();
+  if (!state)
+    return;
+
+  nsIRenderingContext* rendContext = state->rendContext;
+
+  GetImageSize(presContext);
+
+  mMinSize.width = mImageRect.width;
+  mMinSize.height = mImageRect.height;
+  mPrefSize.width = mImageRect.width;
+  mPrefSize.height = mImageRect.height;
 
   // depending on the type of alignment add in the space for the text
   nsSize size;
   nscoord ascent = 0;
-  GetTextSize(aPresContext, *aReflowState.rendContext,
+
+  GetTextSize(presContext, *rendContext,
               mTitle, size, ascent);
 
-  aSize.ascent = ascent;
+  mAscent = ascent;
  
    switch (mAlign) {
       case NS_SIDE_TOP:
@@ -1411,59 +1471,81 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflow
 
         // if we have an image add the image to our min size
         if (mHasImage)
-           aSize.minSize.width = aSize.prefSize.width;
+           mMinSize.width = mPrefSize.width;
 
         // if we are not cropped then our min size also includes the text.
         if (mCropType == CropNone) 
-           aSize.minSize.width = PR_MAX(size.width, aSize.minSize.width);
+           mMinSize.width = PR_MAX(size.width, mMinSize.width);
 
-		  if (size.width > aSize.prefSize.width)
-			  aSize.prefSize.width = size.width;
+		  if (size.width > mPrefSize.width)
+			  mPrefSize.width = size.width;
 
   		  if (mTitle.Length() > 0) {
-             aSize.prefSize.height += size.height;
+             mPrefSize.height += size.height;
   		       if (mHasImage) 
-                aSize.prefSize.height += mSpacing;
+                mPrefSize.height += mSpacing;
         }
 
-        aSize.minSize.height = aSize.prefSize.height;
+        mMinSize.height = mPrefSize.height;
 
         break;
      case NS_SIDE_LEFT:
      case NS_SIDE_RIGHT:
-		  if (size.height > aSize.prefSize.height)
-			  aSize.prefSize.height = size.height;
+		  if (size.height > mPrefSize.height)
+			  mPrefSize.height = size.height;
 
       if (mHasImage)
-         aSize.minSize.width = aSize.prefSize.width;
+         mMinSize.width = mPrefSize.width;
       
       // if we are not cropped then our min size also includes the text.
       if (mCropType == CropNone) 
-         aSize.minSize.width += size.width;
+         mMinSize.width += size.width;
 
       if (mTitle.Length() > 0) {
-         aSize.prefSize.width += size.width;
+         mPrefSize.width += size.width;
       
          if (mHasImage) {
-            aSize.prefSize.width += mSpacing;
-            aSize.minSize.width += mSpacing;
+            mPrefSize.width += mSpacing;
+            mMinSize.width += mSpacing;
          }
       }
 
       break;
    }
 
+   nscoord oldHeight = mPrefSize.height;
+
    nsMargin focusBorder = mRenderer->GetAddedButtonBorderAndPadding();
 
-   aSize.prefSize.width += focusBorder.left + focusBorder.right;
-   aSize.prefSize.height += focusBorder.top + focusBorder.bottom;
+   mPrefSize.width += focusBorder.left + focusBorder.right;
+   mPrefSize.height += focusBorder.top + focusBorder.bottom;
 
-   aSize.minSize.width += focusBorder.left + focusBorder.right;
-   aSize.minSize.height += focusBorder.top + focusBorder.bottom;
+   mMinSize.width += focusBorder.left + focusBorder.right;
+   mMinSize.height += focusBorder.top + focusBorder.bottom;
 
-   ascent += focusBorder.top;
 
-   return NS_OK;
+  AddBorderAndPadding(mPrefSize);
+  AddInset(mPrefSize);
+  nsIBox::AddCSSPrefSize(aBoxLayoutState, this, mPrefSize);
+
+  AddBorderAndPadding(mMinSize);
+  AddInset(mMinSize);
+  nsIBox::AddCSSMinSize(aBoxLayoutState, this, mMinSize);
+
+  if (mPrefSize.width < mMinSize.width)
+     mPrefSize.width = mMinSize.width;
+
+  if (mPrefSize.height < mMinSize.height)
+     mPrefSize.height = mMinSize.height;
+
+  nsMargin m(0,0,0,0);
+  GetBorderAndPadding(m);
+  mAscent += m.top;
+  GetInset(m);
+  mAscent += m.top;
+  mAscent += focusBorder.top;
+
+  mNeedsRecalc = PR_FALSE;
 }
 
 NS_IMETHODIMP

@@ -31,9 +31,10 @@
 #ifndef nsSpringFrame_h___
 #define nsSpringFrame_h___
 
-#include "nsXULLeafFrame.h"
+#include "nsLeafBoxFrame.h"
+struct nsPoint;
 
-class nsSpringFrame : public nsXULLeafFrame
+class nsSpringFrame : public nsLeafBoxFrame
 {
 public:
 
@@ -41,15 +42,17 @@ public:
 
  
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                             nsIFrame**     aFrame);
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,    
+                              nsIFrame**     aFrame);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
       aResult = "Spring";
       return NS_OK;
   }
+
+  nsSpringFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell) {}
 }; // class nsSpringFrame
 
 

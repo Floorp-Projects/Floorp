@@ -48,8 +48,8 @@ box[type="largeheader"] > toolbar > .circle {
 }
 
 /* profile selection dialog */
-deck#prattle {
-  max-width: 17em;
+html#intro {
+  width: 17em;
 }
 
 box#managebuttons > button {

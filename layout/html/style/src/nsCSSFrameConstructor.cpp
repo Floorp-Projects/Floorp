@@ -120,7 +120,7 @@
 #include "nsIDOMDocument.h"
 #include "nsDocument.h"
 #include "nsToolbarItemFrame.h"
-#include "nsXULCheckboxFrame.h"
+#include "nsCheckBoxFrame.h"
 #include "nsIScrollable.h"
 
 #ifdef DEBUG
@@ -132,8 +132,28 @@ static PRBool gNoisyInlineConstruction = PR_FALSE;
 #define NEWGFX_LIST_SCROLLFRAME
 //------------------------------------------------------------------
 
+#ifdef NEWGFX_LIST_SCROLLFRAME
 nsresult
 NS_NewGfxListControlFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+#endif
+
+// grid
+
+/*
+nsresult
+NS_NewGridFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
+NS_NewTempleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsHorizontal);
+
+nsresult
+NS_NewObeliskFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsHorizontal);
+
+// end grid
+*/
+
+nsresult
+NS_NewRootBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewThumbFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -142,7 +162,7 @@ nsresult
 NS_NewScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewGfxScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIDocument* aDocument );
+NS_NewGfxScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIDocument* aDocument, PRBool aIsRoot);
 
 nsresult
 NS_NewTabFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -163,7 +183,10 @@ nsresult
 NS_NewTitledButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewXULTextFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+NS_NewImageBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
+NS_NewTextBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewTitledBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -178,7 +201,7 @@ nsresult
 NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
 
 nsresult
-NS_NewXULButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+NS_NewButtonBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -2359,6 +2382,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
   if (  (nsXULAtoms::button          == tag.get())  ||
 	      (nsXULAtoms::titledbutton      == tag.get())  ||
+	      (nsXULAtoms::box      == tag.get())  ||
         (nsXULAtoms::image == tag.get()) ||
         (nsXULAtoms::grippy          == tag.get())  ||
         (nsXULAtoms::splitter        == tag.get())  ||
@@ -2603,6 +2627,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                               aParentFrame,
                               nsLayoutAtoms::scrolledContentPseudo,
                               document,
+                              PR_FALSE,
                               scrollFrame,
                               newContext,
                               newScrollFrame);
@@ -2837,7 +2862,15 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     nsIAtom* rootPseudo;
         
     if (!isPaginated) {
-        NS_NewRootFrame(aPresShell, &rootFrame);
+        PRInt32 nameSpaceID;
+        if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
+            nameSpaceID == nsXULAtoms::nameSpaceID) 
+        {
+          NS_NewRootBoxFrame(aPresShell, &rootFrame);
+        } else {
+          NS_NewRootFrame(aPresShell, &rootFrame);
+        }
+
         rootPseudo = nsLayoutAtoms::canvasPseudo;
         mDocElementContainingBlock = rootFrame;
     } else {
@@ -2867,6 +2900,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       NS_RELEASE(dc);
     }
   }
+
+  //isScrollable = PR_FALSE;
 
   // As long as the webshell doesn't prohibit it, and the device supports
   // it, create a scroll frame that will act as the scolling mechanism for
@@ -2941,6 +2976,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                 viewportFrame,
                                 rootPseudo,
                                 document,
+                                PR_TRUE,
                                 newFrame,
                                 rootPseudoStyle,
                                 newScrollableFrame);
@@ -4656,7 +4692,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     else if (aTag == nsXULAtoms::button) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewXULButtonFrame(aPresShell, &newFrame);
+      rv = NS_NewButtonBoxFrame(aPresShell, &newFrame);
 
       const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
@@ -4679,15 +4715,18 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } // End of BUTTON CONSTRUCTION logic
 
          // TITLED BUTTON CONSTRUCTION
-    else if (aTag == nsXULAtoms::titledbutton ||
-             aTag == nsXULAtoms::image) {
+    else if (aTag == nsXULAtoms::titledbutton) {
 
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewTitledButtonFrame(aPresShell, &newFrame);
     }
     // End of TITLED BUTTON CONSTRUCTION logic
-
+    else if (aTag == nsXULAtoms::image) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewImageBoxFrame(aPresShell, &newFrame);
+    }
     else if (aTag == nsXULAtoms::spring) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
@@ -4699,7 +4738,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     else if (aTag == nsXULAtoms::text) {
         processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewXULTextFrame(aPresShell, &newFrame);
+      rv = NS_NewTextBoxFrame(aPresShell, &newFrame);
     }
     // End of TEXT CONSTRUCTION logic
 
@@ -4736,7 +4775,90 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewMenuPopupFrame(aPresShell, &newFrame);
-    }
+    } 
+
+    /*
+    
+    // ------- Begin Grid ---------
+    else if (aTag == nsXULAtoms::grid) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewGridFrame(aPresShell, &newFrame);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      } 
+    } //------- End Grid ------
+
+    // ------- Begin Rows/Columns ---------
+    else if (aTag == nsXULAtoms::rows || aTag == nsXULAtoms::columns) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      PRBool isHorizontal = (aTag == nsXULAtoms::columns);
+      rv = NS_NewTempleFrame(aPresShell, &newFrame, isHorizontal);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      } 
+    } //------- End Grid ------
+
+    // ------- Begin Row/Column ---------
+    else if (aTag == nsXULAtoms::row || aTag == nsXULAtoms::column) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      PRBool isHorizontal = (aTag == nsXULAtoms::row);
+      rv = NS_NewObeliskFrame(aPresShell, &newFrame, isHorizontal);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // set the top to be the newly created scrollframe
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+                         topFrame, aStyleContext);
+
+        // we have a scrollframe so the parent becomes the scroll frame.
+        newFrame->GetParent(&aParentFrame);
+
+        primaryFrameSet = PR_TRUE;
+
+        frameHasBeenInitialized = PR_TRUE;
+
+      } 
+    } //------- End Grid ------
+*/
     else if (aTag == nsXULAtoms::title) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
@@ -4949,7 +5071,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
              aTag == nsXULAtoms::radio) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewXULCheckboxFrame(aPresShell, &newFrame);
+      rv = NS_NewCheckBoxFrame(aPresShell, &newFrame);
     }
     // End of XULCHECKBOX CONSTRUCTION logic
 
@@ -5123,6 +5245,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
                                                nsIFrame*                aParentFrame,
                                                nsIAtom*                 aScrolledPseudo,
                                                nsIDocument*             aDocument,
+                                               PRBool                   aIsRoot,
                                                nsIFrame*&               aNewFrame,                                                                                             
                                                nsCOMPtr<nsIStyleContext>& aScrolledChildStyle,
                                                nsIFrame*&               aScrollableFrame)
@@ -5140,7 +5263,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
   if (isGfx) {
   
     BuildGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument, aParentFrame,
-                        contentStyle, gfxScrollFrame, anonymousItems);
+                        contentStyle, aIsRoot, gfxScrollFrame, anonymousItems);
 
     scrollFrame = anonymousItems.childList;
     parentFrame = gfxScrollFrame;
@@ -5283,6 +5406,7 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                      aParentFrame,
                      nsLayoutAtoms::scrolledContentPseudo,
                      document,
+                     PR_FALSE,
                      aNewFrame,
                      scrolledContentStyle,
                      scrollFrame);
@@ -5317,10 +5441,11 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
                                              nsIDocument*             aDocument,
                                              nsIFrame*                aParentFrame,
                                              nsIStyleContext*         aStyleContext,
+                                             PRBool                   aIsRoot,
                                              nsIFrame*&               aNewFrame,
                                              nsFrameItems&            aAnonymousFrames)
 {
-  NS_NewGfxScrollFrame(aPresShell, &aNewFrame,aDocument);
+  NS_NewGfxScrollFrame(aPresShell, &aNewFrame, aDocument, aIsRoot);
 
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       aParentFrame, aStyleContext, nsnull, aNewFrame);
@@ -7074,6 +7199,28 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   } else {
     // Find the frame that precedes the insertion point.
     nsIFrame* prevSibling = FindPreviousSibling(shell, aContainer, aIndexInContainer);
+
+    /*
+    if (prevSibling) {
+      nsIFrame* parent;
+      prevSibling->GetParent(&parent);
+      nsIFrame* first;
+      parent->FirstChild(aPresContext, nsnull, &first);
+      PRBool found = PR_FALSE;
+      while(first)
+      {
+        if (first == prevSibling) {
+          found = PR_TRUE;
+          break;
+        }
+
+        first->GetNextSibling(&first);
+      }
+
+      NS_ASSERTION(found,"Error sibling not in parent!!!!!");
+    }
+    */
+
     nsIFrame* nextSibling = nsnull;
     PRBool    isAppend = PR_FALSE;
     

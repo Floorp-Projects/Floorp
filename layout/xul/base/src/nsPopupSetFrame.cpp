@@ -50,6 +50,7 @@
 #include "nsIDOMElement.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMText.h"
+#include "nsBoxLayoutState.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
@@ -199,6 +200,40 @@ nsPopupSetFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
+nsPopupSetFrame::Layout(nsBoxLayoutState& aState)
+{
+  // lay us out
+  nsresult rv = nsBoxFrame::Layout(aState);
+
+  // layout the popup. First we need to get it.
+  nsIFrame* popupChild = GetActiveChild();
+  if (popupChild) {
+    nsIBox* ibox = nsnull;
+    nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
+    NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
+
+    // then get its preferred size
+    nsSize prefSize(0,0);
+    nsSize minSize(0,0);
+    nsSize maxSize(0,0);
+
+    ibox->GetPrefSize(aState, prefSize);
+    ibox->GetMinSize(aState, minSize);
+    ibox->GetMaxSize(aState, maxSize);
+
+    BoundsCheck(minSize, prefSize, maxSize);
+
+    // lay it out
+    LayoutChildAt(aState, ibox, nsRect(0,0,prefSize.width, prefSize.height));
+  }
+
+  SyncLayout(aState);
+
+  return rv;
+}
+
+/** Replaced by layout
+NS_IMETHODIMP
 nsPopupSetFrame::Reflow(nsIPresContext*   aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -283,9 +318,10 @@ nsPopupSetFrame::Reflow(nsIPresContext*   aPresContext,
 
   return rv;
 }
+*/
 
 NS_IMETHODIMP
-nsPopupSetFrame::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
+nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 {
   // see if our state matches the given debug state
   PRBool debugSet = mState & NS_STATE_CURRENTLY_IN_DEBUG;
@@ -294,15 +330,15 @@ nsPopupSetFrame::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
   // if it doesn't then tell each child below us the new debug state
   if (debugChanged)
   {
-      nsBoxFrame::SetDebug(aPresContext, aDebug);
-      SetDebug(aPresContext, mPopupFrames.FirstChild(), aDebug);
+      nsBoxFrame::SetDebug(aState, aDebug);
+      SetDebug(aState, mPopupFrames.FirstChild(), aDebug);
   }
 
   return NS_OK;
 }
 
 nsresult
-nsPopupSetFrame::SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDebug)
+nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
 {
       if (!aList)
           return NS_OK;
@@ -310,7 +346,7 @@ nsPopupSetFrame::SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool 
       while (aList) {
           nsIBox* ibox = nsnull;
           if (NS_SUCCEEDED(aList->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
-              ibox->SetDebug(aPresContext, aDebug);
+              ibox->SetDebug(aState, aDebug);
           }
 
           aList->GetNextSibling(&aList);
@@ -358,7 +394,8 @@ nsPopupSetFrame::RemoveFrame(nsIPresContext* aPresContext,
   if (mPopupFrames.ContainsFrame(aOldFrame)) {
     // Go ahead and remove this frame.
     mPopupFrames.DestroyFrame(aPresContext, aOldFrame);
-    rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
+    nsBoxLayoutState state(aPresContext);
+    rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
   }
@@ -381,8 +418,9 @@ nsPopupSetFrame::InsertFrames(nsIPresContext* aPresContext,
   frameChild->GetTag(*getter_AddRefs(tag));
   if (tag && tag.get() == nsXULAtoms::popup) {
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
-    SetDebug(aPresContext, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
-    rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
+    nsBoxLayoutState state(aPresContext);
+    SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
+    rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);  
   }
@@ -408,8 +446,9 @@ nsPopupSetFrame::AppendFrames(nsIPresContext* aPresContext,
   frameChild->GetTag(*getter_AddRefs(tag));
   if (tag && tag.get() == nsXULAtoms::popup) {
     mPopupFrames.AppendFrames(nsnull, aFrameList);
-    SetDebug(aPresContext, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
-    rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
+    nsBoxLayoutState state(aPresContext);
+    SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
+    rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
   }

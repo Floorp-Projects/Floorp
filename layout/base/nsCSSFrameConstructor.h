@@ -646,6 +646,7 @@ protected:
                            nsIFrame*                aParentFrame,
                            nsIAtom*                 aScrolledPseudo,
                            nsIDocument*             aDocument,
+                           PRBool                   aIsRoot,
                            nsIFrame*&               aNewFrame, 
                            nsCOMPtr<nsIStyleContext>& aScrolledChildStyle,
                            nsIFrame*&               aScrollableFrame);
@@ -671,6 +672,7 @@ protected:
                       nsIDocument*             aDocument,
                       nsIFrame*                aParentFrame,
                       nsIStyleContext*         aStyleContext,
+                      PRBool                   aIsRoot,
                       nsIFrame*&               aNewFrame,
                       nsFrameItems&            aAnonymousFrames);
 

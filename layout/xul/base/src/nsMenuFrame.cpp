@@ -55,6 +55,7 @@
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
+#include "nsBoxLayoutState.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
@@ -217,12 +218,13 @@ nsMenuFrame::Destroy(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
+                              nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame)
 {
-  if (!mRect.Contains(aPoint)) {
-    return NS_ERROR_FAILURE;
-  }
+ // if it is not inside us or not in the layer in which we paint, fail
+  if (!mRect.Contains(aPoint)) 
+      return NS_ERROR_FAILURE;
+  
   nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   if ((result != NS_OK) || (*aFrame == this)) {
     return result;
@@ -666,6 +668,53 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 }
 
 NS_IMETHODIMP
+nsMenuFrame::Layout(nsBoxLayoutState& aState)
+{
+  nsRect contentRect;
+  GetContentRect(contentRect);
+
+  // lay us out
+  nsresult rv = nsBoxFrame::Layout(aState);
+
+  // layout the popup. First we need to get it.
+  nsIFrame* popupChild = mPopupFrames.FirstChild();
+
+  if (popupChild) {
+    nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(mContent);
+
+    nsIBox* ibox = nsnull;
+    nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
+    NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
+
+    // then get its preferred size
+    nsSize prefSize(0,0);
+    nsSize minSize(0,0);
+    nsSize maxSize(0,0);
+
+    ibox->GetPrefSize(aState, prefSize);
+    ibox->GetMinSize(aState, minSize);
+    ibox->GetMaxSize(aState, maxSize);
+
+    BoundsCheck(minSize, prefSize, maxSize);
+
+    AddMargin(ibox, prefSize);
+
+    if (menulist && prefSize.width < contentRect.width)
+        prefSize.width = contentRect.width;
+
+    // lay it out
+    LayoutChildAt(aState, ibox, nsRect(0,0,prefSize.width, prefSize.height));
+  }
+
+  SyncLayout(aState);
+
+  LayoutFinished(aState);
+
+  return rv;
+}
+
+/** Replaced by Layout
+NS_IMETHODIMP
 nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -777,9 +826,10 @@ nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
   }
   return rv;
 }
+*/
 
 NS_IMETHODIMP
-nsMenuFrame::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
+nsMenuFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 {
   // see if our state matches the given debug state
   PRBool debugSet = mState & NS_STATE_CURRENTLY_IN_DEBUG;
@@ -788,15 +838,15 @@ nsMenuFrame::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
   // if it doesn't then tell each child below us the new debug state
   if (debugChanged)
   {
-      nsBoxFrame::SetDebug(aPresContext, aDebug);
-      SetDebug(aPresContext, mPopupFrames.FirstChild(), aDebug);
+      nsBoxFrame::SetDebug(aState, aDebug);
+      SetDebug(aState, mPopupFrames.FirstChild(), aDebug);
   }
 
   return NS_OK;
 }
 
 nsresult
-nsMenuFrame::SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDebug)
+nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
 {
       if (!aList)
           return NS_OK;
@@ -804,7 +854,7 @@ nsMenuFrame::SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDeb
       while (aList) {
           nsIBox* ibox = nsnull;
           if (NS_SUCCEEDED(aList->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
-              ibox->SetDebug(aPresContext, aDebug);
+              ibox->SetDebug(aState, aDebug);
           }
 
           aList->GetNextSibling(&aList);
@@ -814,13 +864,9 @@ nsMenuFrame::SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDeb
 }
 
 
-NS_IMETHODIMP
-nsMenuFrame::DidReflow(nsIPresContext* aPresContext,
-                            nsDidReflowStatus aStatus)
-{
-  nsresult rv;
-  rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
-
+void
+nsMenuFrame::LayoutFinished(nsBoxLayoutState& aState)
+{  
   // Sync up the view.
   nsIFrame* frame = mPopupFrames.FirstChild();
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
@@ -849,10 +895,10 @@ nsMenuFrame::DidReflow(nsIPresContext* aPresContext,
         popupAlign = "topleft";
     }
 
-    menuPopup->SyncViewWithFrame(aPresContext, popupAnchor, popupAlign, this, -1, -1);
+    nsIPresContext* presContext = aState.GetPresContext();
+    menuPopup->SyncViewWithFrame(presContext, popupAnchor, popupAlign, this, -1, -1);
   }
 
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -1088,6 +1134,12 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 
 }
 
+NS_IMETHODIMP
+nsMenuFrame::CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousChildren)
+{
+  return NS_OK;
+}
+
 void 
 nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 {
@@ -1295,7 +1347,8 @@ nsMenuFrame::RemoveFrame(nsIPresContext* aPresContext,
   if (mPopupFrames.ContainsFrame(aOldFrame)) {
     // Go ahead and remove this frame.
     mPopupFrames.DestroyFrame(aPresContext, aOldFrame);
-    rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
+    nsBoxLayoutState state(aPresContext);
+    rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
   }
@@ -1319,8 +1372,9 @@ nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
   frameChild->GetTag(*getter_AddRefs(tag));
   if (tag && tag.get() == nsXULAtoms::menupopup) {
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
-    SetDebug(aPresContext, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
-    rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
+    nsBoxLayoutState state(aPresContext);
+    SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
+    rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);  
   }
@@ -1346,8 +1400,9 @@ nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
   frameChild->GetTag(*getter_AddRefs(tag));
   if (tag && tag.get() == nsXULAtoms::menupopup) {
     mPopupFrames.AppendFrames(nsnull, aFrameList);
-    SetDebug(aPresContext, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
-    rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
+    nsBoxLayoutState state(aPresContext);
+    SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
+    rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
   }
@@ -1371,13 +1426,68 @@ nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
 }
 
 NS_IMETHODIMP
+nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+  aSize.width = 0;
+  aSize.height = 0;
+  nsresult rv = nsBoxFrame::GetPrefSize(aState, aSize);
+
+  nsCOMPtr<nsIDOMXULMenuListElement> menulist(do_QueryInterface(mContent));
+  if (menulist) {
+      nsCOMPtr<nsIDOMElement> element;
+      menulist->GetSelectedItem(getter_AddRefs(element));
+      if (!element) {
+        nsAutoString value;
+        menulist->GetValue(value);
+        if (value == "") {
+          nsCOMPtr<nsIContent> child;
+          GetMenuChildrenElement(getter_AddRefs(child));
+          if (child) {
+            PRInt32 count;
+            child->ChildCount(count);
+            if (count > 0) {
+              nsCOMPtr<nsIContent> item;
+              child->ChildAt(0, *getter_AddRefs(item));
+              nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
+              if (selectedElement) 
+                menulist->SetSelectedItem(selectedElement);
+            }
+          }
+        }
+      }
+
+     nsSize tmpSize(-1,0);
+     nsIBox::AddCSSPrefSize(aState, this, tmpSize);
+     nscoord flex;
+     GetFlex(aState, flex);
+
+     if (tmpSize.width == -1 && flex==0) {
+        nsIFrame* frame = mPopupFrames.FirstChild();
+        if (!frame) {
+          MarkAsGenerated();
+          frame = mPopupFrames.FirstChild();
+        }
+      
+        nsIBox* ibox = nsnull;
+        nsresult rv2 = frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
+        NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
+
+        ibox->GetPrefSize(aState, tmpSize);
+        aSize.width = tmpSize.width;
+     }
+  }
+
+  return rv;
+}
+
+/* Need to figure out what this does.
+NS_IMETHODIMP
 nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
   nsresult rv = nsBoxFrame::GetBoxInfo(aPresContext, aReflowState, aSize);
   nsCOMPtr<nsIDOMXULMenuListElement> menulist(do_QueryInterface(mContent));
   if (menulist) {
-    nsCalculatedBoxInfo boxInfo;
-    boxInfo.frame = this;
+    nsCalculatedBoxInfo boxInfo(this);
     boxInfo.prefSize.width = NS_UNCONSTRAINEDSIZE;
     boxInfo.prefSize.height = NS_UNCONSTRAINEDSIZE;
     boxInfo.flex = 0;
@@ -1392,8 +1502,7 @@ nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& a
       }
       
       nsCOMPtr<nsIBox> box(do_QueryInterface(frame));
-      nsCalculatedBoxInfo childInfo;
-      childInfo.frame = frame;
+      nsCalculatedBoxInfo childInfo(frame);
       box->GetBoxInfo(aPresContext, aReflowState, childInfo);
       GetRedefinedMinPrefMax(aPresContext, this, childInfo);
       aSize.prefSize.width = childInfo.prefSize.width;
@@ -1406,4 +1515,5 @@ nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& a
   }
   return rv;
 }
+*/
 

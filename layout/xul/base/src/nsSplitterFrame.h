@@ -48,6 +48,7 @@ public:
   }
 #endif
 
+
   // nsIFrame overrides
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
@@ -65,6 +66,7 @@ public:
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
 
   // nsIAnonymousContentCreator
   NS_IMETHOD  CreateAnonymousContent(nsIPresContext* aPresContext,
@@ -93,7 +95,10 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,    
+                              nsIFrame**     aFrame);
 
   virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
 

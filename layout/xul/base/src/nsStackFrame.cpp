@@ -43,7 +43,8 @@
 #include "nsStyleChangeList.h"
 #include "nsCSSRendering.h"
 #include "nsIViewManager.h"
-
+#include "nsBoxLayoutState.h"
+#include "nsStackLayout.h"
 
 nsresult
 NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
@@ -59,108 +60,32 @@ NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   *aNewFrame = it;
   return NS_OK;
   
-} // NS_NewDeckFrame
+} // NS_NewStackFrame
+
+nsCOMPtr<nsIBoxLayout> nsStackFrame::gLayout = nsnull;
 
 nsStackFrame::nsStackFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell)
 {
+ if (!gLayout)
+    gLayout = new nsStackLayout(aPresShell);
+
+  SetLayoutManager(gLayout);
 }
 
-
-NS_IMETHODIMP
-nsStackFrame::Init(nsIPresContext*  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsIStyleContext* aContext,
-              nsIFrame*        aPrevInFlow)
-{
-   // Get the element's tag
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  return rv;
-}
-
-void
-nsStackFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
-{
-     // largest preferred size
-    if (aChildInfo.prefSize.width > aInfo.prefSize.width)
-      aInfo.prefSize.width = aChildInfo.prefSize.width;
-
-    if (aChildInfo.prefSize.height > aInfo.prefSize.height)
-      aInfo.prefSize.height = aChildInfo.prefSize.height;
-
-    // largest min size
-    if (aChildInfo.minSize.width > aInfo.minSize.width)
-      aInfo.minSize.width = aChildInfo.minSize.width;
-
-    if (aChildInfo.minSize.height > aInfo.minSize.height)
-      aInfo.minSize.height = aChildInfo.minSize.height;
-
-    // smallest max size
-    if (aChildInfo.maxSize.width < aInfo.maxSize.width)
-      aInfo.maxSize.width = aChildInfo.maxSize.width;
-
-    if (aChildInfo.maxSize.height < aInfo.maxSize.height)
-      aInfo.maxSize.height = aChildInfo.maxSize.height;
-}
-
-
-void
-nsStackFrame::ComputeChildsNextPosition(nsCalculatedBoxInfo* aInfo, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect, nscoord aMaxAscent)
-{
-   // let everything layout on top of each other.
-    aCurX = aNextX = aBoxRect.x;
-    aCurY = aNextY = aBoxRect.y;
-}
-
-void
-nsStackFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool*& aResized, PRInt32 aInfoCount, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
-{
-  if (aDesiredSize.width > aRect.width) {
-    aRect.width = aDesiredSize.width;
-    InvalidateChildren();
-    LayoutChildrenInRect(aRect, aMaxAscent);
-    aReason = "child's width got bigger";
-    aChangedIndex = aIndex;
-    aFinished = PR_FALSE;
-  } else if (aDesiredSize.height > aRect.height) {
-    aRect.height = aDesiredSize.height;
-    InvalidateChildren();
-    LayoutChildrenInRect(aRect, aMaxAscent);
-    aReason = "child's height got bigger";
-    aChangedIndex = aIndex;
-    aFinished = PR_FALSE;    
-  }
-}
-
-void
-nsStackFrame::LayoutChildrenInRect(nsRect& aGivenSize, nscoord& aMaxAscent)
-{
-  nsInfoList* list = GetInfoList();
-  nsCalculatedBoxInfo* info = list->GetFirst();
-
-  while(info) {
-      info->calculatedSize.width = aGivenSize.width;
-      info->calculatedSize.height = aGivenSize.height;
-      info->mFlags |= NS_FRAME_BOX_SIZE_VALID;
-      info = info->next;
-  }
-
-  aMaxAscent = 0;
-}
 
 NS_IMETHODIMP  
 nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                              const nsPoint& aPoint, 
-                             nsFramePaintLayer aWhichLayer,
+                             nsFramePaintLayer aWhichLayer,    
                              nsIFrame**     aFrame)
 {   
+  return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+
+  /*
   nsRect r(mRect);
 
-  // if it is not inside us or not in the layer in which we paint, fail
-  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_BACKGROUND) ||
-      (!r.Contains(aPoint))) {
-      return NS_ERROR_FAILURE;
-  }
+  if (!r.Contains(aPoint))
+     return NS_ERROR_FAILURE;
 
   // is it inside our border, padding, and debugborder or insets?
   nsMargin im(0,0,0,0);
@@ -209,6 +134,7 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       }
   }
 
+ 
   #ifdef NS_DEBUG
                             printf("\n------------");
 
@@ -217,8 +143,9 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                             printf("--------------\n");
   #endif
 
-  return rv;
 
+  return rv;
+  */
 }
 
 
@@ -278,4 +205,3 @@ nsStackFrame::PaintChild(nsIPresContext*      aPresContext,
     nsBoxFrame::PaintChild(aPresContext, aRenderingContext, aDirtyRect, aFrame, NS_FRAME_PAINT_LAYER_FOREGROUND);
   } 
 }
-

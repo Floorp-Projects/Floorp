@@ -147,7 +147,7 @@ static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 static PRInt32 gMaxRCProcessingTime = -1;
 
 // Largest chunk size we recycle
-static const size_t gMaxRecycledSize = 300;
+static const size_t gMaxRecycledSize = 400;
 
 // Flag for enabling/disabling asynchronous reflow
 // Set via the "layout.reflow.async" pref
@@ -156,6 +156,173 @@ static PRBool gDoAsyncReflow = PR_FALSE;
 // Flag for enabling/disabling asynchronous reflow after the document has loaded.
 // Set via the "layout.reflow.async.afterDocLoad" pref
 static PRBool gDoAsyncReflowAfterDocLoad = PR_FALSE;
+
+#define MARK_INCREMENT 50
+#define BLOCK_INCREMENT 2048
+
+/**A block of memory that the stack will 
+ * chop up and hand out
+ */
+struct StackBlock {
+   
+   // a block of memory
+   void* mBlock;
+
+   // another block of memory that would only be created
+   // if our stack overflowed. Yes we have the ability
+   // to grow on a stack overflow
+   StackBlock* mNext;
+   StackBlock()
+   {
+      mBlock = new char*[BLOCK_INCREMENT];
+      mNext = nsnull;
+   }
+
+   ~StackBlock()
+   {
+     delete[] mBlock;
+   }
+};
+
+/* we hold an array of marks. A push pushes a mark on the stack
+ * a pop pops it off.
+ */
+struct StackMark {
+   // the block of memory we are currently handing out chunks of
+   StackBlock* mBlock;
+   
+   // our current position in the memory
+   size_t mPos;
+};
+
+
+/* A stack arena allows a stack based interface to a block of memory.
+ * It should be used when you need to allocate some temporary memory that
+ * you will immediately return.
+ */
+class StackArena {
+public:
+  StackArena();
+  ~StackArena();
+
+  // Memory management functions
+  nsresult  Allocate(size_t aSize, void** aResult);
+  nsresult  Push();
+  nsresult  Pop();
+
+private:
+  // our current position in memory
+  size_t mPos;
+
+  // a list of memory block. Usually there is only one
+  // but if we overrun our stack size we can get more memory.
+  StackBlock* mBlocks;
+
+  // the current block of memory we are passing our chucks of
+  StackBlock* mCurBlock;
+
+  // our stack of mark where push has been called
+  StackMark* mMarks;
+
+  // the current top of the the mark list
+  PRUint32 mStackTop;
+
+  // the size of the mark array
+  PRUint32 mMarkLength;
+};
+
+
+
+StackArena::StackArena()
+{
+  // allocate the marks array
+  mMarkLength = MARK_INCREMENT;
+  mMarks = new StackMark[mMarkLength];
+
+  // allocate our stack memory
+  mBlocks = new StackBlock();
+  mCurBlock = mBlocks;
+
+  mStackTop = 0;
+  mPos = 0;
+}
+
+StackArena::~StackArena()
+{
+  // free up our data
+  delete[] mMarks;
+  while(mBlocks)
+  {
+    StackBlock* toDelete = mBlocks;
+    mBlocks = mBlocks->mNext;
+    delete toDelete;
+  }
+} 
+
+nsresult
+StackArena::Push()
+{
+  // if the we overrun our mark array. Resize it.
+  if (mStackTop + 1 >= mMarkLength)
+  {
+    StackMark* oldMarks = mMarks;
+    PRUint32 oldLength = mMarkLength;
+    mMarkLength += MARK_INCREMENT;
+    void* marks = 0;
+    mMarks = new StackMark[mMarkLength];
+    nsCRT::memcpy(mMarks, oldMarks, sizeof(StackMark)*oldLength);
+
+    delete[] oldMarks;
+  }
+
+  // set a mark at the top
+  mMarks[mStackTop].mBlock = mCurBlock;
+  mMarks[mStackTop].mPos = mPos;
+
+  mStackTop++;
+
+  return NS_OK;
+}
+
+nsresult
+StackArena::Allocate(size_t aSize, void** aResult)
+{
+  NS_ASSERTION(mStackTop > 0, "Error allocate called before push!!!");
+
+  // make sure we are aligned. Beard said 8 was safer then 4. 
+  // Round size to multiple of 8
+  aSize = PR_ROUNDUP(aSize, 8);
+
+  // if the size makes the stack overflow. Grab another block for the stack
+  if (mPos + aSize >= BLOCK_INCREMENT)
+  {
+    NS_ASSERTION(aSize <= BLOCK_INCREMENT,"Requested memory is greater that our block size!!");
+    if (mCurBlock->mNext == nsnull)
+      mCurBlock->mNext = new StackBlock();
+
+    mCurBlock =  mCurBlock->mNext;
+    mPos = 0;
+  }
+
+  // return the chunk they need.
+  *aResult = ((char*)mCurBlock->mBlock) + mPos;
+  mPos += aSize;
+
+  return NS_OK;
+}
+
+nsresult
+StackArena::Pop()
+{
+  // pop off the mark
+  NS_ASSERTION(mStackTop > 0, "Error Pop called 1 too many times");
+  mStackTop--;
+  mCurBlock = mMarks[mStackTop].mBlock;
+  mPos      = mMarks[mStackTop].mPos;
+
+  return NS_OK;
+}
+
 
 // Memory is allocated 4-byte aligned. We have recyclers for chunks up to
 // 200 bytes
@@ -190,7 +357,7 @@ FrameArena::~FrameArena()
 {
   // Free the arena in the pool and finish using it
   PL_FinishArenaPool(&mPool);
-}
+} 
 
 nsresult
 FrameArena::AllocateFrame(size_t aSize, void** aResult)
@@ -309,7 +476,12 @@ public:
 
   NS_IMETHOD AllocateFrame(size_t aSize, void** aResult);
   NS_IMETHOD FreeFrame(size_t aSize, void* aFreeChunk);
-  
+
+  // Dynamic stack memory allocation
+  NS_IMETHOD PushStackMemory();
+  NS_IMETHOD PopStackMemory();
+  NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult);
+
   NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresContext(nsIPresContext** aResult);
   NS_IMETHOD GetViewManager(nsIViewManager** aResult);
@@ -522,6 +694,7 @@ protected:
   PRBool                        mPendingReflowEvent;
   nsCOMPtr<nsIEventQueue>       mEventQueue;
   FrameArena                    mFrameArena;
+  StackArena*                   mStackArena;
   PRInt32                       mAccumulatedReflowTime;  // Time spent in reflow command processing so far
   PRPackedBool                  mDocumentIsLoading;  // A flag that is true while the document is loading.
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.
@@ -540,6 +713,8 @@ protected:
 
 
 private:
+  void FreeDynamicStack();
+
   //helper funcs for disabing autoscrolling
   void DisableScrolling(){mScrollingEnabled = PR_FALSE;}
   void EnableScrolling(){mScrollingEnabled = PR_TRUE;}
@@ -650,7 +825,7 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
                             (void **) aInstancePtrResult);
 }
 
-PresShell::PresShell()
+PresShell::PresShell():mStackArena(nsnull)
 {
   NS_INIT_REFCNT();
   mIsDestroying = PR_FALSE;
@@ -718,6 +893,9 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 PresShell::~PresShell()
 {
+  // if we allocated any stack memory free it.
+  FreeDynamicStack();
+
   mRefCnt = 99;/* XXX hack! get around re-entrancy bugs */
 
   mIsDestroying = PR_TRUE;
@@ -872,6 +1050,44 @@ PresShell::Init(nsIDocument* aDocument,
 
   return NS_OK;
 }
+
+                  // Dynamic stack memory allocation
+NS_IMETHODIMP
+PresShell::PushStackMemory()
+{
+  if (nsnull == mStackArena)
+     mStackArena = new StackArena();
+   
+  return mStackArena->Push();
+}
+
+NS_IMETHODIMP
+PresShell::PopStackMemory()
+{
+  if (nsnull == mStackArena)
+     mStackArena = new StackArena();
+
+  return mStackArena->Pop();
+}
+
+NS_IMETHODIMP
+PresShell::AllocateStackMemory(size_t aSize, void** aResult)
+{
+  if (nsnull == mStackArena)
+     mStackArena = new StackArena();
+
+  return mStackArena->Allocate(aSize, aResult);
+}
+
+void
+PresShell::FreeDynamicStack()
+{
+  if (mStackArena) {
+    delete mStackArena;
+    mStackArena = nsnull;
+  }
+}
+ 
 
 NS_IMETHODIMP
 PresShell::FreeFrame(size_t aSize, void* aPtr)
@@ -2138,6 +2354,9 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_STOP(mReflowWatch);  
+
+  // if we allocated any stack memory during reflow free it.
+  //FreeDynamicStack();
   return NS_OK;
 }
 

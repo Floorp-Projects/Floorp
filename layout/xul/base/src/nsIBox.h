@@ -31,27 +31,15 @@
 #ifndef nsIBox_h___
 #define nsIBox_h___
 
-class nsIPresContext;
-class nsIFrame;
-struct nsHTMLReflowState;
-class nsBoxInfo;
+#include "nsISupports.h"
+#include "nsIBoxLayout.h"
 
-// {02A560C0-01BF-11d3-B35C-00A0CC3C1CDE} 
-#define NS_IBOX_IID { 0x2a560c0, 0x1bf, 0x11d3, { 0xb3, 0x5c, 0x0, 0xa0, 0xcc, 0x3c, 0x1c, 0xde } }
+class nsBoxLayoutState;
+struct nsRect;
+struct nsSize;
 
-class nsBoxInfo {
-public:
-    nsSize prefSize;
-    nsSize minSize;
-    nsSize maxSize; 
-    PRInt32 flex;
-    nscoord ascent;
-
-    nsBoxInfo();
-    virtual void Clear();
-    virtual ~nsBoxInfo();
-  
-};
+// {162F6B5A-F926-11d3-BA06-001083023C1E}
+#define NS_IBOX_IID { 0x162f6b5a, 0xf926, 0x11d3, { 0xba, 0x6, 0x0, 0x10, 0x83, 0x2, 0x3c, 0x1e } }
 
 class nsIBox : public nsISupports {
 
@@ -59,19 +47,63 @@ public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_IBOX_IID; return iid; }
 
-  /** Get the layout information object for this box. It will contains things like flexiblity,
-    * preferred, min, max sizes. 
-    */
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)=0;
+    enum Halignment {
+        hAlign_Left,
+        hAlign_Right,
+        hAlign_Center
+  };
 
-  /** clear any cached layout info about our children. If the child is specifically specified
-   *  then only clear cached layout information for that specific child. If the child is not
-   *  then clear all childrens cached information. 
-   */
-  NS_IMETHOD InvalidateCache(nsIFrame* aChild)=0;
+    enum Valignment {
+        vAlign_Top,
+        vAlign_Middle,
+        vAlign_BaseLine,
+        vAlign_Bottom
+    };
 
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)=0;
+  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)=0;
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)=0;
+  NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed)=0;
+  NS_IMETHOD Collapse(nsBoxLayoutState& aBoxLayoutState)=0;
+  NS_IMETHOD UnCollapse(nsBoxLayoutState& aBoxLayoutState)=0;
+  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect)=0;
+  NS_IMETHOD GetBounds(nsRect& aRect)=0;
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState)=0;
+  NS_IMETHOD IsDirty(PRBool& aIsDirty)=0;
+  NS_IMETHOD HasDirtyChildren(PRBool& aIsDirty)=0;
+  NS_IMETHOD MarkDirty(nsBoxLayoutState& aState)=0;
+  NS_IMETHOD MarkDirtyChildren(nsBoxLayoutState& aState)=0;
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug)=0;
+  NS_IMETHOD GetDebug(PRBool& aDebug)=0;
+  NS_IMETHOD GetChildBox(nsIBox** aBox)=0;
+  NS_IMETHOD GetNextBox(nsIBox** aBox)=0;
+  NS_IMETHOD SetNextBox(nsIBox* aBox)=0;
+  NS_IMETHOD GetParentBox(nsIBox** aParent)=0;
+  NS_IMETHOD SetParentBox(nsIBox* aParent)=0;
+  NS_IMETHOD GetFrame(nsIFrame** aFrame)=0;
+  NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding)=0;
+  NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding)=0;
+  NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding)=0;
+  NS_IMETHOD GetInset(nsMargin& aInset)=0;
+  NS_IMETHOD GetMargin(nsMargin& aMargin)=0;
+  NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout)=0;
+  NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout)=0;
+  NS_IMETHOD GetContentRect(nsRect& aContentRect) = 0;
+  NS_IMETHOD GetClientRect(nsRect& aContentRect) = 0;
+  NS_IMETHOD GetVAlign(Valignment& aAlign) = 0;
+  NS_IMETHOD GetHAlign(Halignment& aAlign) = 0;
+  NS_IMETHOD GetOrientation(PRBool& aIsHorizontal)=0;
+  NS_IMETHOD Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE)=0;
+  NS_IMETHOD NeedsRecalc()=0;
+  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox)=0;
 
-  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug)=0;
+  static PRBool AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
+  static PRBool AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
+  static PRBool AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
+  static PRBool AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex);
+  static PRBool AddCSSCollapsed(nsBoxLayoutState& aState, nsIBox* aBox, PRBool& aCollapsed);
 
 };
 

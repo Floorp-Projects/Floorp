@@ -28,7 +28,7 @@
 #define nsColorPickerFrame_h__
 
 
-#include "nsLeafFrame.h"
+#include "nsLeafBoxFrame.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
@@ -40,11 +40,14 @@ class nsString;
 nsresult NS_NewColorPickerFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 
-class nsColorPickerFrame : public nsLeafFrame
+class nsColorPickerFrame : public nsLeafBoxFrame
 {
 public:
-  nsColorPickerFrame();
+  nsColorPickerFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell) {}
   virtual ~nsColorPickerFrame();
+
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -72,10 +75,6 @@ public:
                    nsFramePaintLayer aWhichLayer);
   
 protected:
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize) ;
-
 
 private:
   nsIColorPicker *mColorPicker;
