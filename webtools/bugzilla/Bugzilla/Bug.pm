@@ -149,7 +149,7 @@ sub initBug  {
       delta_ts, COALESCE(SUM(votes.vote_count), 0),
       reporter_accessible, cclist_accessible,
       estimated_time, remaining_time, " .
-      $dbh->sql_date_format('deadline', '%Y-%m-%d') . ",
+      $dbh->sql_date_format('deadline', '%Y-%m-%d') . "
     FROM bugs LEFT JOIN votes using(bug_id),
       classifications, products, components
     WHERE bugs.bug_id = ?
