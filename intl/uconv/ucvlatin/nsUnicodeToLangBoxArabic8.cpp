@@ -42,104 +42,218 @@
 
 #include "nsISupports.h"
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToLangBoxArabic8 [declaration]
+static const unsigned char uni2lbox [] = 
+ {
+  0xC1,   /* FE80 */
+  0xC2 , 
+  0xC2 , 
+  0xC3 , 
+  0xC3 , 
+  0xC4 , 
+  0xC4 , 
+  0xC5 , 
+  0xC5 , 
+  0x9F , 
+  0xC6 , 
+  0xC0 , 
+  0xC0 , 
+  0xC7 ,
+  0xC7 , 
+  0xC8 , 
+  0xC8 , /* FE90 */
+  0xEB , 
+  0xEB , 
+  0xC9 , 
+  0x8E , /* START TAA MARBUTA FINAL */
+  0xCA , 
+  0xCA , 
+  0xEC , 
+  0xEC , 
+  0xCB , 
+  0xCB , 
+  0xED , 
+  0xED , 
+  0xCC , 
+  0xCC , 
+  0xEE , 
+  0xEE , 
+  0xCD , 
+  0xCD , 
+  0xEF , 
+  0xEF , 
+  0xCE ,
+  0xCE , 
+  0xF0 , 
+  0xF0 , 
+  0xCF , 
+  0xCF , 
+  0xD0 , 
+  0xD0 , 
+  0xD1 ,
+  0xD1 , 
+  0xD2 , 
+  0xD2 , 
+  0xD3 , 
+  0x8F , 
+  0xF1 , 
+  0xF1 , 
+  0xD4 , 
+  0x90 , 
+  0xF2 , 
+  0xF2 , 
+  0xD5 , 
+  0x91 , 
+  0xF3 , 
+  0xF3 , 
+  0xD6 ,
+  0x92 , 
+  0xF4 , 
+  0xF4 , 
+  0xD7 ,
+  0xD7 , 
+  0x93 , 
+  0x93 , 
+  0xD8 , 
+  0xD8 , 
+  0x94 , 
+  0x94 , 
+  0xD9 , 
+  0x96 , 
+  0xF5 , 
+  0x95 , 
+  0xDA ,
+  0x98 , 
+  0xF6 , 
+  0x97 , 
+  0xE1 , 
+  0xE1 , 
+  0xF7 , 
+  0x99 , 
+  0xE2 , 
+  0xE2 , 
+  0xF8 , 
+  0x9A , 
+  0xE3 , 
+  0xE3 , 
+  0xF9 , 
+  0x9B , 
+  0xE4 , 
+  0xE4 , 
+  0xFA , 
+  0xFA , 
+  0xE5 , 
+  0xE5 , 
+  0xFB , 
+  0xFB , 
+  0xE6 , 
+  0xE6 , 
+  0xFC , 
+  0xFC , 
+  0xE7 , 
+  0x9D , 
+  0xFD , 
+  0x9C , 
+  0xE8 , 
+  0xE8 , 
+  0x8D , 
+  0xE9 , 
+  0x9E , 
+  0xEA , 
+  0xFE , 
+  0xFE  /* FEF4 */
+ };
 
-class nsUnicodeToLangBoxArabic8 : public nsBasicEncoder
+/**
+ * The following are the Unicode Lam-Alef ligatures:
+ * 
+ * FEF5;ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE ISOLATED FORM
+ * FEF6;ARABIC LIGATURE LAM WITH ALEF WITH MADDA ABOVE FINAL FORM
+ * FEF7;ARABIC LIGATURE LAM WITH ALEF WITH HAMZA ABOVE ISOLATED FORM
+ * FEF8;ARABIC LIGATURE LAM WITH ALEF WITH HAMZA ABOVE FINAL FORM
+ * FEF9;ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW ISOLATED FORM
+ * FEFA;ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW FINAL FORM
+ * FEFB;ARABIC LIGATURE LAM WITH ALEF ISOLATED FORM
+ * FEFC;ARABIC LIGATURE LAM WITH ALEF FINAL FORM
+ *
+ * In the Langbox 8x encoding, they have to be split into separate glyphs:
+ *
+ * 0xA1 ARABIC LIGATURE ALEF OF LAM ALEF
+ * 0xA2 ARABIC LIGATURE MADDA ON ALEF OF LAM ALEF
+ * 0xA3 ARABIC LIGATURE HAMZA ON ALEF OF LAM ALEF
+ * 0xA4 ARABIC LIGATURE HAMZA UNDER ALEF OF LAM ALEF
+ * 0xA5 ARABIC LIGATURE LAM OF LAM ALEF INITIAL FORM
+ * 0xA6 ARABIC LIGATURE LAM OF LAM ALEF MEDIAL FORM
+ */
+
+static const unsigned char lboxAlefs[] =
 {
-
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToLangBoxArabic8() : nsBasicEncoder(1) {};
-  virtual ~nsUnicodeToLangBoxArabic8() {};
-
-  NS_IMETHOD Convert(
-      const PRUnichar * aSrc, PRInt32 * aSrcLength,
-      char * aDest, PRInt32 * aDestLength);
-
-  NS_IMETHOD Finish(
-      char * aDest, PRInt32 * aDestLength);
-
-  NS_IMETHOD Reset();
-
-  NS_IMETHOD SetOutputErrorBehavior(
-      PRInt32 aBehavior,
-      nsIUnicharEncoder * aEncoder, PRUnichar aChar);
-
-  NS_IMETHOD FillInfo(PRUint32* aInfo);
+  0xA2,
+  0xA3,
+  0xA4,
+  0xA1
 };
 
-
-enum {
- eZWNJ = 0x200C,
- eZWJ = 0x200D,
- eLRM = 0x200E,
- eRLM = 0x200F,
- eLRE = 0x202A,
- eRLE = 0x202B,
- ePDF = 0x202C,
- eLRO = 0x202D,
- eRLO = 0x202E
+static const unsigned char lboxLams[] = 
+{
+  0xA5,
+  0xA6
 };
-// I currently only put in hack to show what this function will do in the
-// future after implement by LangBox
-// Done:
-// 1. Logical order to Visual order
-// 2. Arabic char to Arabic Isolated form
-// 
-// To Do:
-// 1. Arabic char to presentation form (shaping)
-// 2. Lam Alef ligature
-// 
+
 NS_IMETHODIMP nsUnicodeToLangBoxArabic8::Convert(
       const PRUnichar * aSrc, PRInt32 * aSrcLength,
       char * aDest, PRInt32 * aDestLength)
 {
-   unsigned char* dest = (unsigned char*)aDest;
-   PRInt32 outlen = 0;
+   char* dest = aDest;
+   PRInt32 inlen = 0;
+
    if(*aSrc<=0) {
       *aDestLength = 0;
       return NS_OK;
    }
-   const PRUnichar *in = aSrc + *aSrcLength-1;
-   // scanning from logical end to start, which mean visually left to right
-   while((in >= aSrc) && (outlen < *aDestLength))
-   {
-      // begin of hack
-      // replace the following code with real arabic shaping
-      PRUnichar aChar = *in;
-      if((0x0600 >= aChar) && (aChar >=0x066F)) {
-        
-        if((0x061F >= aChar) && (aChar >=0x064A)) {
-            *dest++ = (unsigned char)(aChar - 0x061F + 0xBF);
-            outlen++;
-        } else if((0x064B >= aChar) && (aChar >=0x0652)) {
-            *dest++ = (unsigned char)(aChar - 0x064B + 0xA8);
-            outlen++;
-        } else if((0x0660 >= aChar) && (aChar >=0x0669)) {
-            *dest++ = (unsigned char)(aChar - 0x0660 + 0xB0);
-            outlen++;
-        } else if(0x060C == aChar) {
-            *dest++ = (unsigned char)0xBA;
-            outlen++;
-        } else if(0x061B == aChar) {
-            *dest++ = (unsigned char)0xBB;
-            outlen++;
-        } else { 
-         // do nothing
-        }
-      } else  {
-         // do nothing
-      }
-      in--;
-      // end of hack
+
+   while (inlen < *aSrcLength) {
+     PRUnichar aChar = aSrc[inlen];
+
+     if((aChar >= 0x0660) && (aChar <=0x0669)) { /* Hindu Numerals */
+       *dest++ = (char)(aChar - 0x0660 + 0xB0);
+     } else if ((aChar >= 0x064B) && (aChar <= 0x0652)) {
+       *dest++ = (char)(aChar - 0x64B + 0xA8);
+     } else if(0x060C == aChar) {
+       *dest++ = (char)0xBA;
+     } else if(0x061B == aChar) {
+       *dest++ = (char)0xBB;
+     } else if(0x061F == aChar) {
+       *dest++ = (char)0xBF;
+     } else if(0x0640 == aChar) {
+       *dest++ = (char)0xE0;
+     } else if ((aChar>=0xFE80) && (aChar <= 0xFEF4)) {
+       *dest++ = uni2lbox[aChar-0xFE80];
+     } else if ((aChar >=0xFEF5) && (aChar <= 0xFEFC)) {
+       PRUint8 lamAlefType = aChar - 0xFEF5;       // first map to 0-7 range,
+       PRUint8 alefType = (lamAlefType & 6) >> 1;  // then the high 2 bits give us the type of alef
+       PRUint8 lamType = lamAlefType & 1;          // and the low bits give us the type of lam
+
+       *dest++ = lboxAlefs[alefType];
+       *dest++ = lboxLams[lamType];
+     } else if ((aChar >=0x0001) && (aChar <= 0x007F)) {
+       *dest++ = (char) (aChar & 0x7F);
+     } else {
+       // do nothing
+     }
+     inlen++;
    }
-   *aDestLength = outlen;
-   return NS_OK;
+
+    *aDestLength = dest - aDest;
+    return NS_OK;
 }
+
+NS_IMETHODIMP nsUnicodeToLangBoxArabic8::GetMaxLength(
+const PRUnichar * aSrc, PRInt32 aSrcLength, 
+                           PRInt32 * aDestLength) 
+{
+  *aDestLength = 2*aSrcLength;
+  return NS_OK;
+};
 
 NS_IMETHODIMP nsUnicodeToLangBoxArabic8::Finish(
       char * aDest, PRInt32 * aDestLength)
@@ -160,15 +274,10 @@ NS_IMETHODIMP nsUnicodeToLangBoxArabic8::SetOutputErrorBehavior(
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 NS_IMETHODIMP nsUnicodeToLangBoxArabic8::FillInfo(PRUint32* aInfo)
 {
    PRUnichar i;
-   // I think we should also add Presentation Form B here 
-   // Bi-di format char
-   for(i=eZWNJ;i<=eRLM;i++)
-      SET_REPRESENTABLE(aInfo, i);      
-   for(i=eLRE;i<=eRLO;i++)
-      SET_REPRESENTABLE(aInfo, i);      
 
    SET_REPRESENTABLE(aInfo, 0x060c);      
    SET_REPRESENTABLE(aInfo, 0x061b);      
@@ -179,14 +288,14 @@ NS_IMETHODIMP nsUnicodeToLangBoxArabic8::FillInfo(PRUint32* aInfo)
       SET_REPRESENTABLE(aInfo, i);      
    for(i=0x0660;i<=0x0669;i++)
       SET_REPRESENTABLE(aInfo, i);      
+
+   // Arabic Pres Form-B
+   for(i=0xFE80; i < 0xFEFD;i++)
+     SET_REPRESENTABLE(aInfo, i);
+
+   // ASCII range
+   for(i=0x0000; i < 0x007f;i++)
+     SET_REPRESENTABLE(aInfo, i);
+
    return NS_OK;
-}
-nsresult NEW_UnicodeToLangBoxArabic8(nsISupports **aResult)
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToLangBoxArabic8();
-  if(p) {
-   *aResult = p;
-   return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY; 
 }

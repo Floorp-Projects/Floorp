@@ -199,6 +199,7 @@
 #include "nsUnicodeToMacGujarati.h"
 #include "nsUnicodeToMacGurmukhi.h"
 #include "nsUnicodeToMacHebrew.h"
+#include "nsUnicodeToLangBoxArabic8.h"
 
 // ucvibm
 #include "nsUCvIBMCID.h"
@@ -357,6 +358,7 @@ NS_UCONV_REG_UNREG("x-mac-hebrew" , NS_MACHEBREWTOUNICODE_CID, NS_UNICODETOMACHE
 NS_UCONV_REG_UNREG_ENCODER("UTF-16" , NS_UNICODETOUTF16_CID)
 NS_UCONV_REG_UNREG_ENCODER("Adobe-Symbol-Encoding" , NS_UNICODETOSYMBOL_CID)
 NS_UCONV_REG_UNREG_ENCODER("x-zapf-dingbats" , NS_UNICODETOZAPFDINGBATS_CID)
+NS_UCONV_REG_UNREG_ENCODER("x-iso-8859-6-8-x" , NS_UNICODETOLANGBOXARABIC_CID)
 
   // ucvibm
 NS_UCONV_REG_UNREG("IBM850", NS_CP850TOUNICODE_CID, NS_UNICODETOCP850_CID)
@@ -446,6 +448,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF16LE);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF16);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUCS4BE);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUCS4LE);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToLangBoxArabic8);
 
 // ucvibm
 
@@ -1316,6 +1319,11 @@ static const nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "x-mac-hebrew" , NS_UNICODETOMACHEBREW_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-hebrew",
     nsUnicodeToMacHebrewConstructor, 
+  },
+  { 
+    ENCODER_NAME_BASE "x-iso-8859-6-8-x" , NS_UNICODETOLANGBOXARABIC_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-iso-8859-6-8-x",
+    nsUnicodeToLangBoxArabic8Constructor, 
   },
   // ucvibm
   { 
