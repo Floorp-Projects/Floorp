@@ -653,6 +653,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     switch (aEvent->message) {
+
       case NS_FOCUS_CONTENT:
       {
         nsIFormControlFrame* formControlFrame = nsnull;
@@ -664,7 +665,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           return NS_OK;
         }                                                                       
       }                                                                         
-      break; 
+      break; // NS_FOCUS_CONTENT
           
       case NS_KEY_PRESS:
       {
@@ -703,9 +704,29 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             break;
           }
         }
-      }
-    }
-  }
+      } break;// NS_KEY_PRESS
+
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      {
+        PRInt32 type;
+        GetType(&type);
+        switch(type) {
+          case NS_FORM_INPUT_CHECKBOX:
+            {
+              PRBool checked;
+              GetChecked(&checked);
+              SetChecked(!checked);
+            }
+            break;
+          case NS_FORM_INPUT_RADIO:
+            SetChecked(PR_TRUE);
+            break;
+        } //switch 
+      } break;// NS_MOUSE_LEFT_BUTTON_DOWN
+
+    } //switch 
+
+  } // if
 
   return ret;
 }
