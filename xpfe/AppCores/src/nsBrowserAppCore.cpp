@@ -1294,10 +1294,10 @@ nsFileDownloadDialog::OnSave() {
                                         nsnull,
                                         kIFileWidgetIID,
                                         (void**)getter_AddRefs(fileWidget) );
-    
-    nsFileSpec fileSpec;
-    nsFileDlgResults result = fileWidget->PutFile( nsnull, title, fileSpec );
-    if ( result == nsFileDlgResults_OK || result == nsFileDlgResults_Replace ) {
+    if (fileWidget) {
+      nsFileSpec fileSpec;
+      nsFileDlgResults result = fileWidget->PutFile( nsnull, title, fileSpec );
+      if ( result == nsFileDlgResults_OK || result == nsFileDlgResults_Replace ) {
         // Save the stream into the specified file...
         mFileName = fileSpec;
         mMode = kProgress;
@@ -1305,6 +1305,7 @@ nsFileDownloadDialog::OnSave() {
         mWebShell->LoadURL( progressXUL.GetUnicode() );
         // Open output file stream.
         mOutput = new nsOutputFileStream( mFileName );
+      }
     }
 }
 
@@ -1588,45 +1589,29 @@ nsBrowserAppCore::OpenWindow()
   nsIFileWidget *fileWidget;
 
   nsString title("Open File");
-  nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
+  if (NS_OK == nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget)) {
   
-  nsString titles[] = {"All Readable Files", "HTML Files",
-                       "XML Files", "Image Files", "All Files"};
-  nsString filters[] = {"*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png",
-                        "*.htm; *.html",
-                        "*.xml",
-                        "*.gif; *.jpg; *.jpeg; *.png",
-                        "*.*"};
-  fileWidget->SetFilterList(5, titles, filters);
+    nsString titles[] = {"All Readable Files", "HTML Files",
+                         "XML Files", "Image Files", "All Files"};
+    nsString filters[] = {"*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png",
+                          "*.htm; *.html",
+                          "*.xml",
+                          "*.gif; *.jpg; *.jpeg; *.png",
+                          "*.*"};
+    fileWidget->SetFilterList(5, titles, filters);
 
 
-#if 0 // Old way
-  fileWidget->Create(nsnull, title, eMode_load, nsnull, nsnull);
-
-  nsAutoString fileURL;
-  PRBool result = fileWidget->Show();
-  if (result) {
-    nsString fileName;
-    nsString dirName;
-    fileWidget->GetFile(fileName);
-
-    BuildFileURL(nsAutoCString(fileName), fileURL);
+    nsFileSpec fileSpec;
+    if (fileWidget->GetFile(nsnull, title, fileSpec) == nsFileDlgResults_OK) {
+      nsFileURL fileURL(fileSpec);
+      char buffer[1024];
+      const nsAutoCString cstr(fileURL.GetAsString());
+      PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)cstr);
+      ExecuteScript( mToolbarScriptContext, buffer );
+    }
+    NS_RELEASE(fileWidget);
   }
-  printf("If I could open a new window with [%s] I would.\n", (const char *)nsAutoCString(fileURL));
-#else  // New Way
-  nsFileSpec fileSpec;
-  if (fileWidget->GetFile(nsnull, title, fileSpec) == nsFileDlgResults_OK) {
 
-  nsFileURL fileURL(fileSpec);
-  char buffer[1024];
-  const nsAutoCString cstr(fileURL.GetAsString());
-  PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)cstr);
-  ExecuteScript( mToolbarScriptContext, buffer );
-  }
-#endif
-  NS_RELEASE(fileWidget);
-
-  return NS_OK;
   return NS_OK;
 }
 
