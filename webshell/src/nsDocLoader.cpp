@@ -107,6 +107,8 @@ nsDocFactoryImpl::nsDocFactoryImpl()
 NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 
+static char* gValidTypes[] = {"text/html","text/xml","application/rtf",0};
+
 NS_IMETHODIMP
 nsDocFactoryImpl::CreateInstance(nsIURL* aURL, 
                                  const char* aContentType, 
@@ -118,16 +120,15 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
     nsIDocument* doc = nsnull;
     nsIWebWidget* ww = nsnull;
 
-    /*
-     * XXX: 
-     *    All of this code should be replaced by a registry and factories
-     *    for each content type...
-     */
-    if (0 != PL_strcmp("text/html", aContentType)) {
-        rv = NS_ERROR_FAILURE;
-        goto done;
+    int typeIndex=0;
+    while(gValidTypes[typeIndex]) {
+      if (0== PL_strcmp(gValidTypes[typeIndex++], aContentType)) {
+        goto nextstep;
+      }
     }
+    goto done;
 
+nextstep:
     /*
      * Create the HTML document...
      */

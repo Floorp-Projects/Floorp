@@ -42,40 +42,41 @@ enum  eParseMode {
 };
 
 
-const PRInt32   kEOF          = 1000000L;
-const PRInt32   kUnknownError = -1000;
-const PRInt32   kCantPropagate = -6;
-const PRInt32   kContextMismatch = -5;
-const PRInt32   kBadFilename  = -4;
-const PRInt32   kBadURL       = -3;
-const PRInt32   kInterrupted  = -2;
-const PRInt32   kNotFound     = -1;
-const PRInt32   kNoError      = 0;
+const PRInt32   kEOF              = 1000000L;
+const PRInt32   kUnknownError     = -1000;
+const PRInt32   kCantPropagate    = -6;
+const PRInt32   kContextMismatch  = -5;
+const PRInt32   kBadFilename      = -4;
+const PRInt32   kBadURL           = -3;
+const PRInt32   kInterrupted      = -2;
+const PRInt32   kNotFound         = -1;
+const PRInt32   kNoError          = 0;
 
-const PRUint32  kNewLine      = '\n';
-const PRUint32  kCR           = '\r';
-const PRUint32  kLF           = '\n';
-const PRUint32  kTab          = '\t';
-const PRUint32  kSpace        = ' ';
-const PRUint32  kQuote        = '"';
-const PRUint32  kApostrophe   = '\'';
-const PRUint32  kLessThan     = '<';
-const PRUint32  kGreaterThan  = '>';
-const PRUint32  kAmpersand    = '&';
-const PRUint32  kForwardSlash = '/';
-const PRUint32  kEqual        = '=';
-const PRUint32  kMinus        = '-';
-const PRUint32  kPlus         = '+';
-const PRUint32  kExclamation  = '!';
-const PRUint32  kSemicolon    = ';';
-const PRUint32  kHashsign     = '#';
-const PRUint32  kAsterisk     = '*';
-const PRUint32  kUnderbar     = '_';
-const PRUint32  kComma        = ',';
-const PRUint32  kLeftParen    = '(';
-const PRUint32  kRightParen   = ')';
-const PRUint32  kLeftBrace    = '{';
-const PRUint32  kRightBrace   = '}';
+const PRUint32  kNewLine          = '\n';
+const PRUint32  kCR               = '\r';
+const PRUint32  kLF               = '\n';
+const PRUint32  kTab              = '\t';
+const PRUint32  kSpace            = ' ';
+const PRUint32  kQuote            = '"';
+const PRUint32  kApostrophe       = '\'';
+const PRUint32  kLessThan         = '<';
+const PRUint32  kGreaterThan      = '>';
+const PRUint32  kAmpersand        = '&';
+const PRUint32  kForwardSlash     = '/';
+const PRUint32  kBackSlash        = '\\';
+const PRUint32  kEqual            = '=';
+const PRUint32  kMinus            = '-';
+const PRUint32  kPlus             = '+';
+const PRUint32  kExclamation      = '!';
+const PRUint32  kSemicolon        = ';';
+const PRUint32  kHashsign         = '#';
+const PRUint32  kAsterisk         = '*';
+const PRUint32  kUnderbar         = '_';
+const PRUint32  kComma            = ',';
+const PRUint32  kLeftParen        = '(';
+const PRUint32  kRightParen       = ')';
+const PRUint32  kLeftBrace        = '{';
+const PRUint32  kRightBrace       = '}';
 
 
 #endif

@@ -282,17 +282,32 @@ void CNavDTD::SetDTDDebug(nsIDTDDebug * aDTDDebug)
 }
 
 /**
- * This method gets called by the parser to determine if this DTD can handle 
- * the requested process for the requested content type.
- *
+ * This method is called to determine if the given DTD can parse
+ * a document in a given source-type. 
+ * NOTE: Parsing always assumes that the end result will involve
+ *       storing the result in the main content model.
  * @update	gess6/24/98
- * @param 
- * @return  TRUE if the DTD can handle the process for this type; FALSE otherwise.
+ * @param   
+ * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CNavDTD::IsCapableOf(eProcessType aProcessType, nsString& aContentType,PRInt32 aVersion){
+PRBool CNavDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
   PRBool result=aContentType.Equals(kHTMLTextContentType);
   return result;
 }
+
+/**
+ * 
+ * @update	gess7/7/98
+ * @param 
+ * @return
+ */
+eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
+  eAutoDetectResult result=eUnknownDetect;
+  if(PR_TRUE==aType.Equals(kHTMLTextContentType)) 
+    result=eValidDetect;
+  return result;
+}
+
 
 
 /**

@@ -74,7 +74,7 @@ class nsIDTD;
 class nsIDTDDebug;
 class CScanner;
 class nsIParserFilter;
-
+class fstream;
 
 class nsParser : public nsIParser, public nsIStreamListener {
             
@@ -118,10 +118,6 @@ friend class CTokenHandler;
      */
     virtual CScanner* GetScanner(void);
 
-    virtual PRInt32 BeginParse(nsIURL* aURL,
-                               nsIStreamObserver* aListener, 
-                               nsIDTDDebug * aDTDDebug = 0);
-
     /**
      * Cause parser to parse input from given URL in given mode
      * @update	gess5/11/98
@@ -136,10 +132,17 @@ friend class CTokenHandler;
      * Cause parser to parse input from given file in given mode
      * @update	gess5/11/98
      * @param   aFilename is a path for file document
-     * @param   aMode is the desired parser mode (Nav, other, etc.)
      * @return  TRUE if all went well -- FALSE otherwise
      */
     virtual PRInt32 Parse(const char* aFilename);
+
+    /**
+     * Cause parser to parse input from given stream 
+     * @update	gess5/11/98
+     * @param   aStream is the i/o source
+     * @return  TRUE if all went well -- FALSE otherwise
+     */
+    virtual PRInt32 Parse(fstream& aStream);
 
     /**
      * @update	gess5/11/98
@@ -148,15 +151,6 @@ friend class CTokenHandler;
      * @return  TRUE if all went well -- FALSE otherwise
      */
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens);
-
-    /******************************************************************************************
-     *  Convert methods start input source (of known or unknown form), and perform conversions 
-     *  until you wind up with a <i>stream</i> in your target form.
-     *  The internal content model is never effected.
-     ******************************************************************************************/
-    virtual PRInt32 Convert(nsIURL* aURL,char* aSourceForm, char* aTargetForm,nsIStreamListener* aListener);
-    virtual PRInt32 Convert(const char* aFilename,char* aSourceForm,char* aTargetForm);
-    virtual PRInt32 Convert(nsString& anHTMLString,char* aSourceForm,char* aTargetForm,PRBool appendTokens);
 
     /**
      * This method gets called (automatically) during incremental parsing
@@ -214,7 +208,7 @@ protected:
      * @param 
      * @return
      */
-    PRInt32 WillBuildModel(eProcessType theProcessType=eParsing,const char* aFilename=0);
+    PRInt32 WillBuildModel(const char* aFilename=0);
 
     /**
      * 
@@ -309,7 +303,7 @@ private:
      * @param 
      * @return  TRUE if we figured it out.
      */
-    eAutoDetectResult AutoDetectContentType(nsString& aBuffer);
+    eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
 
 protected:
@@ -335,7 +329,8 @@ protected:
     CScanner*           mScanner;
     nsIURL*             mURL;
 	  nsIDTDDebug*		    mDTDDebug;
-    nsString            mContentType;
+    nsString            mSourceType;
+    nsString            mTargetType;
     eAutoDetectResult   mAutoDetectStatus;
 };
 

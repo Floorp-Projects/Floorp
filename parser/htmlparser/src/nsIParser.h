@@ -35,6 +35,7 @@ class nsString;
 class CToken;
 class nsIURL;
 class nsIDTDDebug;
+class fstream;
 
 /**
  *  This class defines the iparser interface. This XPCOM
@@ -49,7 +50,7 @@ class nsIParser : public nsISupports {
 
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
-    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer)=0;
+    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType)=0;
 
     /**
      *  Cause the tokenizer to consume the next token, and 
@@ -61,26 +62,15 @@ class nsIParser : public nsISupports {
      */
     virtual PRInt32 ConsumeToken(CToken*& aToken)=0;
 
-    virtual PRInt32 BeginParse(nsIURL* aURL,
-                               nsIStreamObserver* aListener = nsnull,
-                               nsIDTDDebug * aDTDDebug = 0) = 0;
-
     /******************************************************************************************
      *  Parse methods always begin with an input source, and perform conversions 
      *  until you wind up with HTML in your actual content model.
      ******************************************************************************************/
     virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,nsIDTDDebug * aDTDDebug = 0) = 0;
     virtual PRInt32 Parse(const char* aFilename)=0;
+    virtual PRInt32 Parse(fstream& aStream)=0;
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
 
-    /******************************************************************************************
-     *  Convert methods start input source (of known or unknown form), and perform conversions 
-     *  until you wind up with a <i>stream</i> in your target form.
-     *  The internal content model is never effected.
-     ******************************************************************************************/
-    virtual PRInt32 Convert(nsIURL* aURL,char* aSourceForm,char* aTargetForm,nsIStreamListener* aListener) = 0;
-    virtual PRInt32 Convert(const char* aFilename,char* aSourceForm,char* aTargetForm)=0;
-    virtual PRInt32 Convert(nsString& anHTMLString,char* aSourceForm,char* aTargetForm,PRBool appendTokens)=0;
 
     virtual PRInt32 ResumeParse(void)=0;
 

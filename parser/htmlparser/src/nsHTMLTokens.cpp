@@ -247,7 +247,7 @@ PRInt32 CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
    //and see if the next char is ">". If so, we have a complete
    //tag without attributes.
   if(kNoError==result) {  
-    result=aScanner.SkipWhite();
+    result=aScanner.SkipWhitespace();
     if(kNoError==result) {
       result=aScanner.GetChar(aChar);
       if(kNoError==result) {
@@ -678,7 +678,7 @@ PRInt32 ConsumeAttributeValueText(PRUnichar aChar,nsString& aString,CScanner& aS
  */
 PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
-  aScanner.SkipWhite();             //skip leading whitespace                                      
+  aScanner.SkipWhitespace();             //skip leading whitespace                                      
   PRInt32 result=aScanner.Peek(aChar);
   if(kNoError==result) {
     if(kQuote==aChar) {               //if you're here, handle quoted key...
@@ -703,12 +703,12 @@ PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
     }
 
       //now it's time to Consume the (optional) value...
-    if(!(result=aScanner.SkipWhite())) { 
+    if(!(result=aScanner.SkipWhitespace())) { 
       if(!(result=aScanner.Peek(aChar))) {
         if(kEqual==aChar){
           result=aScanner.GetChar(aChar);  //skip the equal sign...
           if(kNoError==result) {
-            result=aScanner.SkipWhite();     //now skip any intervening whitespace
+            result=aScanner.SkipWhitespace();     //now skip any intervening whitespace
             if(kNoError==result) {
               result=aScanner.GetChar(aChar);  //and grab the next char.    
               if(kNoError==result) {
@@ -722,7 +722,7 @@ PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
                 } 
               }//if
               if(kNoError==result)
-                result=aScanner.SkipWhite();     
+                result=aScanner.SkipWhitespace();     
             }//if
           }//if
         }//if

@@ -47,6 +47,7 @@ CScanner::CScanner(eParseMode aMode) : mBuffer("") {
   mNetStream=0;
   mFileStream=0;
   mIncremental=PR_TRUE;
+  mOwnsStream=PR_TRUE;
 }
 
 /**
@@ -64,12 +65,31 @@ CScanner::CScanner(const char* aFilename,eParseMode aMode) : mBuffer("") {
   mParseMode=aMode;
   mNetStream=0;
   mIncremental=PR_FALSE;
+  mOwnsStream=PR_TRUE;
 #if defined(XP_UNIX) && (defined(IRIX) || defined(MKLINUX))
   /* XXX: IRIX does not support ios::binary */
   mFileStream=new fstream(aFilename,ios::in);
 #else
   mFileStream=new fstream(aFilename,ios::in|ios::binary);
 #endif
+}
+
+/**
+ *  Use this constructor if you want i/o to be file based.
+ *
+ *  @update  gess 5/12/98
+ *  @param   aMode represents the parser mode (nav, other)
+ *  @return  
+ */
+CScanner::CScanner(fstream& aStream,eParseMode aMode) : mBuffer("") {
+  mOffset=0;
+  mMarkPos=-1;
+  mTotalRead=0;
+  mParseMode=aMode;
+  mNetStream=0;
+  mIncremental=PR_FALSE;
+  mOwnsStream=PR_FALSE;
+  mFileStream=&aStream;
 }
 
 /**
@@ -91,6 +111,7 @@ CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
   mIncremental=PR_FALSE;
   mNetStream=aURL->Open(&error);
   gURLRef=aURL->GetSpec();
+  mOwnsStream=PR_FALSE;
 }
 
 
@@ -104,7 +125,8 @@ CScanner::CScanner(nsIURL* aURL,eParseMode aMode) : mBuffer("") {
 CScanner::~CScanner() {
   if(mFileStream) {
     mFileStream->close();
-    delete mFileStream;
+    if(mOwnsStream)
+      delete mFileStream;
   }
   else if(mNetStream) {
     mNetStream->Close();
@@ -354,7 +376,7 @@ PRInt32 CScanner::PutBack(PRUnichar aChar) {
  *  @param   
  *  @return  error status
  */
-PRInt32 CScanner::SkipWhite(void) {
+PRInt32 CScanner::SkipWhitespace(void) {
   static nsAutoString chars(" \n\r\t");
   return SkipOver(chars);
 }

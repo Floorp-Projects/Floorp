@@ -149,16 +149,28 @@ COtherDTD::~COtherDTD(){
 }
 
 /**
- * This method gets called by the parser to determine if this DTD can handle 
- * the requested process for the requested content type.
- *
+ * This method is called to determine if the given DTD can parse
+ * a document in a given source-type. 
+ * NOTE: Parsing always assumes that the end result will involve
+ *       storing the result in the main content model.
  * @update	gess6/24/98
- * @param 
- * @return  TRUE if the DTD can handle the process for this type; FALSE otherwise.
+ * @param   
+ * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool COtherDTD::IsCapableOf(eProcessType aProcessType, nsString& aContentType,PRInt32 aVersion){
-  return CNavDTD::IsCapableOf(aProcessType,aContentType,aVersion);
+PRBool COtherDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
+  return CNavDTD::CanParse(aContentType,aVersion);
 }
+
+/**
+ * 
+ * @update	gess7/7/98
+ * @param 
+ * @return
+ */
+eAutoDetectResult COtherDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
+  return CNavDTD::AutoDetectContentType(aBuffer,aType);
+}
+
 
 /**
  * 
