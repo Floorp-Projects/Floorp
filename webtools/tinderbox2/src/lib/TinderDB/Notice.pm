@@ -30,8 +30,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.24 $ 
-# $Date: 2003/04/13 14:21:42 $ 
+# $Revision: 1.25 $ 
+# $Date: 2003/04/13 22:01:17 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Notice.pm,v $ 
 # $Name:  $ 
@@ -81,10 +81,11 @@ use File::Basename;
 use lib '#tinder_libdir#';
 
 use Utils;
+use VCDisplay;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.24 $ )[1];
+$VERSION = ( qw $Revision: 1.25 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -362,17 +363,31 @@ sub render_notice {
 
      foreach $time (@db_times) {    
 
-         $localtime = localtime($time);
+         my ($pretty_time) = HTMLPopUp::timeHTML($time);
+
+         my $checkin_links;
+         $checkin_links .= VCDisplay::query(
+                                            'tree' => $tree,
+                                            'mindate' => $time,
+                                            'linktxt' => "Checkins since $pretty_time",
+                                            );
+         $checkin_links .= "<br>\n";
+         $checkin_links .= VCDisplay::query(
+                                            'tree' => $tree,
+                                            'maxdate' => $time,
+                                            'mindate' => $time-$main::SECONDS_PER_HOUR,
+                                            'linktxt' => "Checkins before $pretty_time",
+                                            );
+         $checkin_links .= "<br>\n";
+
+         # allow us to reference individual notices in the file
          $rendered_notices .= (
                                "\n\n".
-                               # allow us to reference individual
-                               # notices in the file
                                HTMLPopUp::Link(
                                                "name"=>$time,
                                                "href"=>"\#$time",
-                                               #"linktxt" => $localtime,
                                                ).
-                               "<!-- $localtime -->".
+                               "<!-- $pretty_time -->".
                                "\n".
                                "");
 
@@ -417,6 +432,15 @@ sub render_notice {
      my $href = (FileStructure::get_filename($tree, 'tree_URL').
                  "/all_notices.html\#$first_notice_time");
     
+     my $index_link =  (
+                        "\t\t".
+                        HTMLPopUp::Link(
+                                        "linktxt" => "All Notices for this tree",
+                                        "href" => $href,
+                                        ).
+                        "<br>\n".
+                        "");
+
     # the popup window software is pretty sensitive to newlines and
     # terminating quotes.  Take those out of the message.
 
@@ -435,7 +459,7 @@ sub render_notice {
                                 
                                 "linktxt" => " $NOTICE_AVAILABLE ",
                                 "href" => $href,
-                                "windowtxt" => $rendered_notices,
+                                "windowtxt" => $rendered_notices.$index_link,
                                 "windowtitle" => $title,
                                 "windowheight" => (175 * $num_notices)+100,
                                 ).
