@@ -1650,7 +1650,10 @@ nsNntpIncomingServer::SetSearchValue(const char *searchValue)
     mSubscribeSearchResult.Clear();
     mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)buildSubscribeSearchResult, (void *)this);
 
-    if (mOutliner) mOutliner->Invalidate();
+    if (mOutliner) {
+     mOutliner->Invalidate();
+     mOutliner->InvalidateScrollbar();
+    }
     return NS_OK;
 }
 
