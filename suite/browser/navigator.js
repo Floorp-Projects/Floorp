@@ -110,8 +110,9 @@ this doesn't work anymore (target is null), not sure why.
       } // if transferable
     } // if drag service
 
-    return !dragStarted;  // don't propagate the event if a drag has begun
-
+    if ( dragStarted )               // don't propagate the event if a drag has begun
+      event.preventBubble();
+    
   } // BeginDragPersonalToolbar
   
   
@@ -157,7 +158,7 @@ this doesn't work anymore (target is null), not sure why.
 		var objectRes = rdf.GetResource(id, true);
 
               dragSession.canDrop = true;
-              var dropAccepted = true;
+              dropAccepted = true;
               
 		var boxWithDatabase = document.getElementById("innermostBox");
 		var database = boxWithDatabase.database;
@@ -191,7 +192,8 @@ this doesn't work anymore (target is null), not sure why.
       } // if dragsession
     } // if dragservice
     
-    return !dropAccepted;  // don't propagate the event if a drag was accepted
+    if ( dropAccepted )               // don't propagate the event if we did the drop
+      event.preventBubble();
 
   } // DropPersonalToolbar
   
@@ -218,11 +220,10 @@ this doesn't work anymore (target is null), not sure why.
           var toolbar = document.getElementById("PersonalToolbar");
           toolbar.setAttribute ( "dd-triggerrepaint", 0 );
           dragSession.canDrop = true;
+          event.preventBubble();
         }
       }
     }
-
-    return true;
 
   } // DragOverPersonalToolbar
 
@@ -253,11 +254,10 @@ this doesn't work anymore (target is null), not sure why.
           // XXX do some drag feedback here, set a style maybe???
           
           dragSession.canDrop = true;
+          event.preventBubble();
         }
       }
     }
-
-    return true;  
   } // DragOverContentArea
 
 
@@ -297,7 +297,9 @@ this doesn't work anymore (target is null), not sure why.
               // stuff it into the url field and go, baby, go!
               var urlBar = document.getElementById ( "urlbar" );
               urlBar.value = id;
-              BrowserLoadURL();             
+              BrowserLoadURL();
+              
+              event.preventBubble();     
             }
           } // foreach drag item
         }
@@ -306,7 +308,61 @@ this doesn't work anymore (target is null), not sure why.
   } // DropOnContentArea
 
 
-  
+  //
+  // DragProxyIcon
+  //
+  // Called when the user is starting a drag from the proxy icon next to the URL bar. Basically
+  // just gets the url from the url bar and places the data (as plain text) in the drag service.
+  //
+  // This is by no means the final implementation, just another example of what you can do with
+  // JS. Much still left to do here.
+  // 
+  function DragProxyIcon ( event )
+  {
+    var dragStarted = false;
+    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    if ( dragService ) {
+      var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+      if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+      if ( trans ) {
+        trans.addDataFlavor("text/plain");
+        var genTextData = Components.classes["component://netscape/supports-string"].createInstance();
+        if ( genTextData ) genTextData = genTextData.QueryInterface(Components.interfaces.nsISupportsString);
+        
+        if ( genTextData ) {
+        
+          // pull the url out of the url bar
+          var urlBar = document.getElementById ( "urlbar" );
+          if ( !urlBar )
+            return;            
+		  var id = urlBar.value
+          genTextData.data = id;
+        
+		  dump("ID: " + id + "\n");
+
+          trans.setTransferData ( "text/plain", genTextData, id.length );  // single byte data
+          var transArray = Components.classes["component://netscape/supports-array"].createInstance();
+          if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
+          if ( transArray ) {
+            // put it into the transferable as an |nsISupports|
+            var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
+            transArray.AppendElement(genTrans);
+            var nsIDragService = Components.interfaces.nsIDragService;
+            dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+                                                nsIDragService.DRAGDROP_ACTION_MOVE );
+            dragStarted = true;
+          }
+        } // if data object
+      } // if transferable
+    } // if drag service
+
+    if ( dragStarted )               // don't propagate the event if a drag has begun
+      event.preventBubble();
+    
+  } // DragProxyIcon
+
+
 function UpdateHistory(event)
 {
     // This is registered as a capturing "load" event handler. When a
