@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.11 $ $Date: 2002/08/01 01:21:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.12 $ $Date: 2002/08/01 14:23:49 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -987,7 +987,7 @@ cert_getUIDFromObject(nssPKIObject *o, NSSItem *uid)
     derCert = nssCertificate_GetEncoding(c);
     uid[0].data = NULL; uid[0].size = 0;
     uid[1].data = NULL; uid[1].size = 0;
-    if (derCert == NULL) {
+    if (derCert != NULL) {
 	uid[0] = *derCert;
     }
 #else
