@@ -1286,8 +1286,13 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   // This is a compatibility hack.
   //
 
-  // Track whether we're in the "outer" HandleDOMEvent invocation
-  PRBool clickOrExtActivate =
+  // Track whether we're in the outermost HandleDOMEvent invocation that will
+  // cause activation of the input.  That is, if we're a click event, or a
+  // DOMActivate that was dispatched directly, this will be set, but if we're
+  // a DOMActivate dispatched from click handling, it will not be set.
+  PRBool outerActivateEvent =
+    !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
+    !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
     (aEvent->message == NS_MOUSE_LEFT_CLICK ||
      (aEvent->message == NS_UI_ACTIVATE &&
       !GET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE)));
@@ -1296,9 +1301,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
 
   nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
 
-  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) &&
-      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-      clickOrExtActivate) {
+  if (outerActivateEvent) {
 
     SET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED, PR_FALSE);
 
@@ -1390,9 +1393,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
-  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) &&
-      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-      clickOrExtActivate) {
+  if (outerActivateEvent) {
     switch(oldType) {
       case NS_FORM_INPUT_SUBMIT:
       case NS_FORM_INPUT_IMAGE:
@@ -1411,7 +1412,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
 
   // now check to see if the event was "cancelled"
-  if (GET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED) && clickOrExtActivate) {
+  if (GET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED) && outerActivateEvent) {
     if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
       // if it was cancelled and a radio button, then set the old
       // selected btn to TRUE. if it is a checkbox then set it to its
@@ -1617,7 +1618,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
         break;
       }
 
-      if (clickOrExtActivate) {
+      if (outerActivateEvent) {
         if (mForm && (oldType == NS_FORM_INPUT_SUBMIT ||
                       oldType == NS_FORM_INPUT_IMAGE)) {
           if (mType != NS_FORM_INPUT_SUBMIT && mType != NS_FORM_INPUT_IMAGE) {
@@ -1655,7 +1656,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
         } //switch 
       } //click or outer activate event
     } else {
-      if (clickOrExtActivate &&
+      if (outerActivateEvent &&
           (oldType == NS_FORM_INPUT_SUBMIT || oldType == NS_FORM_INPUT_IMAGE) &&
           mForm) {
         // tell the form to flush a possible pending submission.
