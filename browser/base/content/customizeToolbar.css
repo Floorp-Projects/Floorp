@@ -35,3 +35,7 @@
   overflow:auto; 
   margin:0px 15px 10px 15px;
 }
+
+toolbarbutton[dragactive], toolbaritem[dragactive] {
+  -moz-border-left-colors: black !important;
+}
