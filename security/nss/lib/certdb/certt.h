@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.28 2004/05/11 02:43:09 jpierre%netscape.com Exp $
+ * $Id: certt.h,v 1.29 2005/03/05 08:03:03 nelsonb%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -348,7 +348,7 @@ struct CERTCertificateRequestStr {
     SECItem version;
     CERTName subject;
     CERTSubjectPublicKeyInfo subjectPublicKeyInfo;
-    SECItem **attributes;
+    CERTAttribute **attributes;
 };
 #define SEC_CERTIFICATE_REQUEST_VERSION		0	/* what we *create* */
 
@@ -858,6 +858,7 @@ SEC_ASN1_CHOOSER_DECLARE(CERT_CertificateTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_CrlTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_IssuerAndSNTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_NameTemplate)
+SEC_ASN1_CHOOSER_DECLARE(CERT_SequenceOfCertExtensionTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SetOfSignedCrlTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SignedDataTemplate)
 SEC_ASN1_CHOOSER_DECLARE(CERT_SubjectPublicKeyInfoTemplate)
