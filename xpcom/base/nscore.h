@@ -76,7 +76,7 @@
 #define NS_IMETHOD_(type) virtual type
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
-#define NS_CALLBACK_(_type, _name) _type ( _System * _name)
+#define NS_CALLBACK_(_type, _name) _type (* _name)
 
 #else
 
