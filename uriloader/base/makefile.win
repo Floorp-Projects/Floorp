@@ -18,6 +18,16 @@ MODULE = uriloader
 DEPTH = ..\..
 include <$(DEPTH)/config/config.mak>
 
+include <$(DEPTH)\config\config.mak>
+
+################################################################################
+## exports
+
+
+EXPORTS=						        \
+          nsURIDispatcher.h \
+	        $(NULL)
+
 XPIDLSRCS=						\
 		.\nsIURIContentListener.idl		\
 		.\nsIContentHandler.idl			\
