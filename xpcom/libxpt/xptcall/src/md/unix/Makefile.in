@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,7 +15,7 @@
 # Reserved.
 #
 
-DEPTH=../../../../../..
+DEPTH		= ../../../../../..
 
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
@@ -26,22 +25,23 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-CFLAGS	+= -DEXPORT_XPTC_API
+CFLAGS		+= -DEXPORT_XPTC_API
 
 LIBRARY_NAME	= xptcmd
-
 MODULE		= xptcall
 
-ifeq ($(OS_ARCH), Linux)
-CPPSRCS=		\
-	xptcinvoke_linux_x86.cpp \
-	xptcstubs_linux_x86.cpp \
-	$(NULL)
-else
-CPPSRCS=		\
-	xptcinvoke_unsupported.cpp \
-	xptcstubs_unsupported.cpp \
-	$(NULL)
+CPPSRCS		= \
+		  xptcinvoke_unsupported.cpp \
+		  xptcstubs_unsupported.cpp \
+		  $(NULL)
+
+ifeq ($(OS_ARCH),Linux)
+ifeq (86,$(findstring 86,$(OS_TEST)))
+CPPSRCS		= \
+		  xptcinvoke_linux_x86.cpp \
+		  xptcstubs_linux_x86.cpp \
+		  $(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
