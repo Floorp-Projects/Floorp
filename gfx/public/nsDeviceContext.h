@@ -38,6 +38,8 @@ public:
 
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext);
+  NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext) = 0;
+
   NS_IMETHOD  InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow);
 
   NS_IMETHOD  GetDevUnitsToTwips(float &aDevUnitsToTwips) const;
