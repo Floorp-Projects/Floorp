@@ -32,6 +32,7 @@ use strict;
 
 use Bugzilla::Config qw(:DEFAULT $templatedir $datadir);
 use Bugzilla::Util;
+use Bugzilla::User;
 
 # for time2str - replace by TT Date plugin??
 use Date::Format ();
@@ -406,7 +407,7 @@ sub create {
             'user' => sub { return Bugzilla->user; },
 
             # UserInGroup. Deprecated - use the user.* functions instead
-            'UserInGroup' => \&::UserInGroup,
+            'UserInGroup' => \&Bugzilla::User::UserInGroup,
 
             # SendBugMail - sends mail about a bug, using Bugzilla::BugMail.pm
             'SendBugMail' => sub {

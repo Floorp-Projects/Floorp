@@ -562,7 +562,7 @@ sub init {
              my $table = "longdescs_$chartid";
              my $extra = "";
              if (Param("insidergroup") 
-                 && !&::UserInGroup(Param("insidergroup")))
+                 && !UserInGroup(Param("insidergroup")))
              {
                  $extra = "AND $table.isprivate < 1";
              }
@@ -625,7 +625,7 @@ sub init {
              }
              my $table = "longdescs_$chartseq";
              my $extra = "";
-             if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
+             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
                  $extra = "AND $table.isprivate < 1";
              }
              push(@supptables, "LEFT JOIN longdescs AS $table " .
@@ -643,7 +643,7 @@ sub init {
              }
              my $table = "longdescs_$chartseq";
              my $extra = "";
-             if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
+             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
                  $extra = "AND $table.isprivate < 1";
              }
              if ($list) {
@@ -664,7 +664,7 @@ sub init {
          "^long_?desc," => sub {
              my $table = "longdescs_$chartid";
              my $extra = "";
-             if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
+             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
                  $extra = "AND $table.isprivate < 1";
              }
              push(@supptables, "INNER JOIN longdescs AS $table " .
@@ -740,7 +740,7 @@ sub init {
          "^attachments\..*," => sub {
              my $table = "attachments_$chartid";
              my $extra = "";
-             if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
+             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
                  $extra = "AND $table.isprivate = 0";
              }
              push(@supptables, "INNER JOIN attachments AS $table " .

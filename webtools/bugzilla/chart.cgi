@@ -48,6 +48,7 @@ require "CGI.pl";
 use Bugzilla::Constants;
 use Bugzilla::Chart;
 use Bugzilla::Series;
+use Bugzilla::User;
 
 use vars qw($cgi $template $vars);
 

@@ -966,14 +966,6 @@ sub get_legal_field_values {
     return @$result_ref;
 }
 
-sub UserInGroup {
-    if ($_[1]) {
-        die "UserInGroup no longer takes a second parameter.";
-    }
-    
-    return defined Bugzilla->user->groups->{$_[0]};
-}
-
 sub BugInGroupId {
     my ($bugid, $groupid) = (@_);
     PushGlobalSQLState();

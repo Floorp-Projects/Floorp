@@ -49,6 +49,7 @@ use Bugzilla::Config qw(:DEFAULT :db);
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::DB::Schema;
+use Bugzilla::User;
 
 # All this code is backwards compat fu. As such, its a bit ugly. Note the
 # circular dependencies on Bugzilla.pm
@@ -261,7 +262,7 @@ sub bz_get_field_defs {
     my ($self) = @_;
 
     my $extra = "";
-    if (!&::UserInGroup(Param('timetrackinggroup'))) {
+    if (!UserInGroup(Param('timetrackinggroup'))) {
         $extra = "AND name NOT IN ('estimated_time', 'remaining_time', " .
                  "'work_time', 'percentage_complete', 'deadline')";
     }

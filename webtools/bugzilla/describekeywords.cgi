@@ -25,6 +25,7 @@ use strict;
 use lib ".";
 
 use Bugzilla;
+use Bugzilla::User;
 
 require "CGI.pl";
 

@@ -39,6 +39,7 @@ use vars qw($template $vars);
 use Bugzilla;
 use Bugzilla::Search;
 use Bugzilla::Constants;
+use Bugzilla::User;
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";

@@ -27,6 +27,7 @@ use strict;
 
 use lib qw(.);
 require "CGI.pl";
+use Bugzilla::User;
 
 # Use global template variables.
 use vars qw($template $vars);

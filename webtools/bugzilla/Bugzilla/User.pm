@@ -45,6 +45,7 @@ use Bugzilla::Auth;
 use base qw(Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
     login_to_id
+    UserInGroup
 );
 
 ################################################################################
@@ -1058,6 +1059,10 @@ sub login_to_id ($) {
     }
 }
 
+sub UserInGroup ($) {
+    return defined Bugzilla->user->groups->{$_[0]} ? 1 : 0;
+}
+
 1;
 
 __END__
@@ -1335,8 +1340,6 @@ Params: $username (scalar, string) - The full login name of the username
             can change his username to $username. (That is, this function
             will return a boolean true value).
 
-=back
-
 =item C<login_to_id($login)>
 
 Takes a login name of a Bugzilla user and changes that into a numeric
@@ -1350,6 +1353,12 @@ of a user, but you don't want the full weight of Bugzilla::User.
 
 However, consider using a Bugzilla::User object instead of this function
 if you need more information about the user than just their ID.
+
+=item C<UserInGroup($groupname)>
+
+Takes a name of a group, and returns 1 if a user is in the group, 0 otherwise.
+
+=back
 
 =head1 SEE ALSO
 

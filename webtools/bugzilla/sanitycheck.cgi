@@ -28,6 +28,7 @@ use lib qw(.);
 
 require "CGI.pl";
 use Bugzilla::Constants;
+use Bugzilla::User;
 
 ###########################################################################
 # General subs

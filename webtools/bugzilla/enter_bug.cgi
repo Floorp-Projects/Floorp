@@ -40,6 +40,7 @@ use lib qw(.);
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
+use Bugzilla::User;
 require "CGI.pl";
 
 use vars qw(

@@ -31,6 +31,7 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::User;
 require "CGI.pl";
 
 my $cgi = Bugzilla->cgi;

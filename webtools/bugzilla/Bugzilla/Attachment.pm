@@ -34,6 +34,7 @@ package Bugzilla::Attachment;
 # Use the Flag module to handle flags.
 use Bugzilla::Flag;
 use Bugzilla::Config qw(:locations);
+use Bugzilla::User;
 
 ############################################################################
 # Functions
@@ -69,7 +70,7 @@ sub query
 
   my $dbh = Bugzilla->dbh;
 
-  my $in_editbugs = &::UserInGroup("editbugs");
+  my $in_editbugs = UserInGroup("editbugs");
   &::SendSQL("SELECT product_id
            FROM bugs 
            WHERE bug_id = $bugid");

@@ -35,7 +35,7 @@ use Bugzilla::Constants;
 require "CGI.pl";
 require "globals.pl";
 use Bugzilla::Series;
-
+use Bugzilla::User;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just

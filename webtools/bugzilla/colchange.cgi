@@ -34,6 +34,7 @@ use vars qw(
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::User;
 require "CGI.pl";
 
 Bugzilla->login();

@@ -26,6 +26,7 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::User;
 
 require "CGI.pl";
 

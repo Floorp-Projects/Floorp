@@ -32,6 +32,7 @@ require "CGI.pl";
 
 use Bugzilla::Constants;
 use Bugzilla::Search;
+use Bugzilla::User;
 
 use vars qw(
     @CheckOptionValues

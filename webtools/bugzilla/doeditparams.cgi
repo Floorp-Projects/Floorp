@@ -28,6 +28,7 @@ use lib qw(.);
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin $datadir);
+use Bugzilla::User;
 
 require "CGI.pl";
 

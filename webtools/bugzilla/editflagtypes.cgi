@@ -36,6 +36,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
+use Bugzilla::User;
 
 use vars qw( $template $vars );
 

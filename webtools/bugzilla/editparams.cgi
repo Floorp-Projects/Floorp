@@ -27,6 +27,7 @@ use lib ".";
 
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin);
+use Bugzilla::User;
 
 require "CGI.pl";
 
