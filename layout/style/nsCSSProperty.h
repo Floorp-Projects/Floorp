@@ -48,7 +48,7 @@
 enum nsCSSProperty {
   eCSSProperty_UNKNOWN = -1,
 
-  #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_) eCSSProperty_##id_,
+  #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eCSSProperty_##id_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP
 

@@ -474,11 +474,11 @@ nsCSSExpandedDataBlock::~nsCSSExpandedDataBlock()
 
 const nsCSSExpandedDataBlock::PropertyOffsetInfo
 nsCSSExpandedDataBlock::kOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+    #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
         { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),           \
           size_t(-1),                                                         \
           size_t(-1) },
-    #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+    #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
         { offsetof(nsCSSExpandedDataBlock, m##datastruct_.member_),           \
           offsetof(nsRuleData, m##datastruct_##Data),                         \
           offsetof(nsRuleData##datastruct_, member_) },
