@@ -207,7 +207,13 @@ void nsRenderingContextWin :: PushState()
     mStateCache->RemoveElementAt(cnt - 1);
 
     state->mNext = mStates;
+
+    //clone state info
+
     state->mMatrix = mStates->mMatrix;
+    state->mLocalClip = mStates->mLocalClip;
+    state->mGlobalClip = mStates->mGlobalClip;
+    state->mClipRegion = nsnull;
 
     mStates = state;
   }
@@ -228,6 +234,14 @@ void nsRenderingContextWin :: PopState()
     mStates = mStates->mNext;
 
     mStateCache->AppendElement(oldstate);
+
+    //kill the clip region we are popping off the stack
+
+    if (nsnull != oldstate->mClipRegion)
+    {
+      ::DeleteObject(oldstate->mClipRegion);
+      oldstate->mClipRegion = nsnull;
+    }
 
     if (nsnull != mStates)
     {
