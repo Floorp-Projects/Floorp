@@ -27,7 +27,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = browsercomp
+MODULE = browsercomps
 LIBRARY_NAME  = history_s
 FORCE_STATIC_LIB = 1
 
