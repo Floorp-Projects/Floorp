@@ -189,9 +189,9 @@ XP_FormGetReadonly(LO_FormElementData *form)
 	case FORM_TYPE_TEXT:
 	case FORM_TYPE_PASSWORD:
 	case FORM_TYPE_READONLY:
-	  return form->ele_text.readonly;
+	  return form->ele_text.read_only;
 	case FORM_TYPE_TEXTAREA:
-	  return form->ele_textarea.readonly;
+	  return form->ele_textarea.read_only;
 	default:
 	  return FALSE;
 	}

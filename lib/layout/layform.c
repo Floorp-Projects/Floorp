@@ -986,14 +986,14 @@ lo_form_input_text(MWContext *context, lo_DocState *state,
 	}
 #endif /* OLD_FILE_UPLOAD */
 
-	form_data->readonly = FALSE;
+	form_data->read_only = FALSE;
 	if (type != FORM_TYPE_FILE)
 	  {
 		buff = lo_FetchParamValue(context, tag, PARAM_READONLY);
 		if (buff != NULL)
 		  {
 			PA_FREE(buff);
-			form_data->readonly = TRUE;
+			form_data->read_only = TRUE;
 		  }
 	  }
 
@@ -1146,12 +1146,12 @@ lo_form_textarea(MWContext *context, lo_DocState *state,
 		form_data->disabled = TRUE;
 	}
 
-	form_data->readonly = FALSE;
+	form_data->read_only = FALSE;
 	buff = lo_FetchParamValue(context, tag, PARAM_READONLY);
 	if (buff != NULL)
 	{
 		PA_FREE(buff);
-		form_data->readonly = TRUE;
+		form_data->read_only = TRUE;
 	}
 
 	form_data->auto_wrap = TEXTAREA_WRAP_OFF;

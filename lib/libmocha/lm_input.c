@@ -531,7 +531,7 @@ input_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	        *vp = BOOLEAN_TO_JSVAL(text->disabled);
 		goto good;
 	      case INPUT_READONLY:
-		*vp = BOOLEAN_TO_JSVAL(text->readonly);
+		*vp = BOOLEAN_TO_JSVAL(text->read_only);
 		goto good;
 #endif
 	      default:
@@ -897,7 +897,7 @@ input_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	      case INPUT_READONLY:
 		if (form_element->element_data->type == FORM_TYPE_FILE)
 		  break;
-		text->readonly = JSVAL_TO_BOOLEAN(*vp);
+		text->read_only = JSVAL_TO_BOOLEAN(*vp);
 		if (context) {
 		  ET_PostManipulateForm(context, (LO_Element *)form_element,
 					EVENT_CHANGE);
