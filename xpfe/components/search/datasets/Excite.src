@@ -1,0 +1,20 @@
+<search
+    name="Excite"
+    method="GET"
+    action="http://search.excite.com/search.gw"
+    >
+
+<input name="search" user>
+<input name="look" value="excite_applesherlock_us">
+<input name="perPage" value="30" mode="results">
+
+<interpret
+				resultListStart="<!-- RESULT LIST START -->"
+				resultListEnd="<!-- RESULT LIST END -->"
+				resultItemStart="<!-- RESULT ITEM START -->"
+				resultItemEnd="<!-- RESULT ITEM END -->"
+				relevanceStart="<!-- RELEVANCE START -->"
+				relevanceEnd="<!-- RELEVANCE END -->"
+				bannerStart="<!-- BANNER START -->"
+				bannerEnd="<!-- BANNER END -->"
+				>
