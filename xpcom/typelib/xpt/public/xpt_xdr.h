@@ -61,25 +61,6 @@ XPT_Do16(XPTCursor *cursor, PRUint16 *u16p);
 extern XPT_PUBLIC_API(PRBool)
 XPT_Do8(XPTCursor *cursor, PRUint8 *u8p);
 
-/*
- * When working with bitfields, use the DoBits call with a uint8.
- * Only the appropriate number of bits are manipulated, so when
- * you're decoding you probably want to ensure that the uint8 is pre-zeroed.
- * When you're done sending bits along, use
- * XPT_FlushBits to make sure that you don't eat a leading bit from the
- * next structure.  (You should probably be writing full bytes' worth of bits
- * anyway, and zeroing out the bits you don't use, but just to be sure...)
- */
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_DoBits(XPTCursor *cursor, PRUint8 *u8p, int nbits);
-
-#define XPT_DO_BITS(curs, field, width, scr) (PR_TRUE)
-
-/* returns the number of bits skipped, which should be 0-7 */
-extern XPT_PUBLIC_API(int)
-XPT_FlushBits(XPTCursor *cursor);
-
 extern XPT_PUBLIC_API(PRBool)
 XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp);
 
@@ -182,9 +163,9 @@ XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset);
 #define XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already)           \
     XPTMode mode = cursor->state->mode;                                       \
     if (!(mode == XPT_ENCODE || XPT_Do32(cursor, &new_curs.offset)) ||        \
-        !CheckForRepeat(cursor, (void **)addrp, pool,                     \
-                        mode == XPT_ENCODE ? size : 0u, &new_curs,         \
-                        &already) ||                                      \
+        !CheckForRepeat(cursor, (void **)addrp, pool,                         \
+                        mode == XPT_ENCODE ? size : 0u, &new_curs,            \
+                        &already) ||                                          \
         !(mode == XPT_DECODE || XPT_Do32(cursor, &new_curs.offset)))          \
         return PR_FALSE;                                                      \
     if (already)                                                              \
