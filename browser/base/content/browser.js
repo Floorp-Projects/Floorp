@@ -385,7 +385,6 @@ function Startup()
     elt = gURLBar;
   else
     elt = _content;
-  }
   
   setTimeout(delayedStartup, 0, elt);
 }
