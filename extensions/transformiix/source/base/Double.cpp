@@ -27,7 +27,7 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
- * $Id: Double.cpp,v 1.5 2001/06/26 14:07:45 peterv%netscape.com Exp $
+ * $Id: Double.cpp,v 1.6 2001/07/02 09:24:01 peterv%netscape.com Exp $
  */
 
 #include "primitives.h"
@@ -147,7 +147,6 @@ MBool Double::isNaN() {
 double Double::toDouble(const String& src) {
 
     double dbl = 0.0;
-    double fraction   = 1.0;
     double multiplier = 10.0;
     PRInt32 idx = 0;
 

@@ -161,8 +161,6 @@ void DOMHelper::addParentReference(Node* child, Node* parent) {
 void DOMHelper::continueIndexing(Node* node) {
     if (!node) return;
 
-    TxObjectWrapper* wrapper = 0;
-
     //-- get indexing information
     Document* doc = 0;
     if (node->getNodeType() == Node::DOCUMENT_NODE)
@@ -252,7 +250,8 @@ int DOMHelper::getChildNumber(Node* node) {
         case Node::ATTRIBUTE_NODE:
             break;
         default:
-            while (tmp = tmp->getPreviousSibling()) ++c;     
+            while ((tmp = tmp->getPreviousSibling()))
+                ++c;     
             break;
     }
     

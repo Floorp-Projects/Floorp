@@ -19,7 +19,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: ExtensionFunctionCall.cpp,v 1.1 2000/04/19 10:35:59 kvisco%ziplink.net Exp $
+ * $Id: ExtensionFunctionCall.cpp,v 1.2 2001/07/02 09:24:10 peterv%netscape.com Exp $
  */
 
 #include "FunctionLib.h"
@@ -67,8 +67,6 @@ ExprResult* ExtensionFunctionCall::evaluate(Node* context, ContextState* cs) {
 
         //copy parameters
         ListIterator* iter = params.iterator();
-        Expr* param = 0;
-
         while (iter->hasNext()) {
            fnCall->addParam( new ExprWrapper( (Expr*) iter->next() ) );
         }

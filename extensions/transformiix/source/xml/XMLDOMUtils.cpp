@@ -26,7 +26,7 @@
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.17 $ $Date: 2001/06/26 14:10:15 $
+ * @version $Revision: 1.18 $ $Date: 2001/07/02 09:24:58 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -143,7 +143,6 @@ void XMLDOMUtils::getNodeValue(Node* node, String* target) {
     if (!node) return;
 
     int nodeType = node->getNodeType();
-    Element* element = 0;
 
     switch ( nodeType ) {
         case Node::ATTRIBUTE_NODE :
