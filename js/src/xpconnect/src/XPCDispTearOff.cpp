@@ -321,19 +321,15 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
         void* mark;
         JSBool foundDependentParam;
         JSObject* thisObj;
-        JSExceptionState* saved_exception = nsnull;
+        AutoScriptEvaluate scriptEval(ccx);
         XPCJSRuntime* rt = ccx.GetRuntime();
 
         thisObj = obj = GetJSObject();;
 
-        if(cx)
-            older = JS_SetErrorReporter(cx, xpcWrappedJSErrorReporter);
-
-        // dispID's for us are 1 based not zero
         if(!cx || !xpcc)
             goto pre_call_clean_up;
 
-        saved_exception = xpc_DoPreScriptEvaluated(cx);
+        scriptEval.StartEvaluating(xpcWrappedJSErrorReporter);
 
         xpcc->SetPendingResult(pending_result);
         xpcc->SetException(nsnull);
@@ -535,11 +531,6 @@ done:
         if(sp)
             js_FreeStack(cx, mark);
 
-        if(cx)
-        {
-            JS_SetErrorReporter(cx, older);
-            xpc_DoPostScriptEvaluated(cx, saved_exception);
-        }
         // TODO: I think we may need to translate this error, 
         // for now we'll pass through
         return retval;
