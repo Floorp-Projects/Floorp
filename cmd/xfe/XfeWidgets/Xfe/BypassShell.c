@@ -416,8 +416,18 @@ Resize(Widget w)
 {
     XfeBypassShellPart *	bp = _XfeBypassShellPart(w);
 
-    /* The actual realization is handled by the superclass */
+    /* The actual resize is handled by the superclass */
     (*vendorShellWidgetClass->core_class.resize)(w);
+
+/*      printf("Resize(%s)\n",XtName(w)); */
+
+    /* Place the managed child in the center of the shell */
+    if (_XfeIsAlive(bp->managed_child))
+    {
+		_XfeMoveWidget(bp->managed_child,
+					   bp->shadow_thickness,
+					   bp->shadow_thickness);
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
