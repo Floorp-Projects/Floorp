@@ -32,6 +32,10 @@
 #ifdef NS_DEBUG
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "prefapi.h"
+
+static void debug_RegisterPrefCallbacks();
+
 #endif
 
 #ifdef NOISY_WIDGET_LEAKS
@@ -76,6 +80,10 @@ nsBaseWidget::nsBaseWidget()
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
   printf("WIDGETS+ = %d\n", gNumWidgets);
+#endif
+
+#ifdef NS_DEBUG
+    debug_RegisterPrefCallbacks();
 #endif
 
     NS_NewISupportsArray(getter_AddRefs(mChildren));
@@ -807,51 +815,144 @@ case _value: eventName = _name ; break
 }
 //////////////////////////////////////////////////////////////
 //
-// The idea here is to get the prefs service once and cache it.
-// The reason being that this code gets called from OnPaint() 
-// which we dont want to slow down.
-//
-// So, gPrefs will leak when the beast shutdowns.
-//
-// debug_CleanupCrapSoThatBruceAndPurifyAreHappy() can be called from
-// the widget dll unloading hook to cleanup...
-//
-// But then again, its only debug code, so...
+// Code to deal with paint and event debug prefs.
 //
 //////////////////////////////////////////////////////////////
-static nsIPref * gPrefs = nsnull;
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-static nsIPref *
-_GetPrefService()
+struct PrefPair
 {
-  if (!gPrefs)
-  {
-    nsresult rv = nsServiceManager::GetService(kPrefCID, 
-                                               NS_GET_IID(nsIPref),
-                                               (nsISupports**) &gPrefs);
-    
-    NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-    NS_ASSERTION(nsnull != gPrefs,"Prefs services is null.");
-  }
+	char * name;
+	PRBool value;
+};
 
-  return gPrefs;
-}
+static PrefPair debug_PrefValues[] =
+{
+	{ "nglayout.debug.crossing_event_dumping", PR_FALSE },
+	{ "nglayout.debug.event_dumping", PR_FALSE },
+	{ "nglayout.debug.invalidate_dumping", PR_FALSE },
+	{ "nglayout.debug.motion_event_dumping", PR_FALSE },
+	{ "nglayout.debug.paint_dumping", PR_FALSE },
+	{ "nglayout.debug.paint_flashing", PR_FALSE }
+};
+
+static PRUint32 debug_NumPrefValues = 
+  (sizeof(debug_PrefValues) / sizeof(debug_PrefValues[0]));
+
+
 //////////////////////////////////////////////////////////////
-static PRBool
-_GetBoolPref(const char * aPrefName)
+static PRBool debug_GetBoolPref(nsIPref * aPrefs,const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
+  NS_ASSERTION(nsnull != aPrefs,"cmon, prefs are null.");
 
   PRBool value = PR_FALSE;
 
-  nsIPref * prefs = _GetPrefService();
-
-  if (prefs)
-    prefs->GetBoolPref(aPrefName,&value);
+  if (aPrefs)
+  {
+	  aPrefs->GetBoolPref(aPrefName,&value);
+  }
 
   return value;
+}
+//////////////////////////////////////////////////////////////
+static PRBool debug_GetCachedBoolPref(const char * aPrefName)
+{
+  NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
+
+  for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
+  {
+	  if (nsAutoString(debug_PrefValues[i].name) == aPrefName)
+	  {
+		  return debug_PrefValues[i].value;
+	  }
+  }
+
+  return PR_FALSE;
+}
+//////////////////////////////////////////////////////////////
+static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
+{
+  NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
+
+  for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
+  {
+	  if (nsAutoString(debug_PrefValues[i].name) == aPrefName)
+	  {
+		  debug_PrefValues[i].value = aValue;
+
+		  return;
+	  }
+  }
+
+  NS_ASSERTION(PR_FALSE, "cmon, this code is not reached dude.");
+}
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+//////////////////////////////////////////////////////////////
+/* static */ int 
+debug_PrefChangedCallback(const char * name,void * closure)
+{
+
+	nsIPref * prefs = nsnull;
+	
+	nsresult rv = nsServiceManager::GetService(kPrefCID, 
+											   NS_GET_IID(nsIPref),
+											   (nsISupports**) &prefs);
+	
+	NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
+	NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
+
+	if (NS_SUCCEEDED(rv))
+	{
+		PRBool value = PR_FALSE;
+
+		prefs->GetBoolPref(name,&value);
+
+		debug_SetCachedBoolPref(name,value);
+
+		NS_RELEASE(prefs);
+	}
+
+   	return PREF_NOERROR;
+}
+//////////////////////////////////////////////////////////////
+/* static */ void
+debug_RegisterPrefCallbacks()
+{
+	static PRBool once = PR_TRUE;
+
+	if (once)
+	{
+		once = PR_FALSE;
+
+		nsIPref * prefs = nsnull;
+
+		nsresult rv = nsServiceManager::GetService(kPrefCID, 
+												   NS_GET_IID(nsIPref),
+												   (nsISupports**) &prefs);
+		
+		NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
+		NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
+
+		if (NS_SUCCEEDED(rv))
+		{
+			for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
+			{
+				// Initialize the pref values
+				debug_PrefValues[i].value = 
+					debug_GetBoolPref(prefs,debug_PrefValues[i].name);
+
+				// Register callbacks for when these change
+				prefs->RegisterCallback(debug_PrefValues[i].name,
+										debug_PrefChangedCallback,
+										NULL);
+
+				printf("Registering callback for %s\n",debug_PrefValues[i].name);
+			}
+			
+			NS_RELEASE(prefs);
+		}
+	}
 }
 //////////////////////////////////////////////////////////////
 static PRInt32
@@ -865,7 +966,7 @@ _GetPrintCount()
 /* static */ PRBool
 nsBaseWidget::debug_WantPaintFlashing()
 {
-  return _GetBoolPref("nglayout.debug.paint_flashing");
+  return debug_GetCachedBoolPref("nglayout.debug.paint_flashing");
 }
 //////////////////////////////////////////////////////////////
 /* static */ void
@@ -881,18 +982,18 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
 
   if (aGuiEvent->message == NS_MOUSE_MOVE)
   {
-    if (!_GetBoolPref("nglayout.debug.motion_event_dumping"))
+    if (!debug_GetCachedBoolPref("nglayout.debug.motion_event_dumping"))
       return;
   }
   
   if (aGuiEvent->message == NS_MOUSE_ENTER || 
       aGuiEvent->message == NS_MOUSE_EXIT)
   {
-    if (!_GetBoolPref("nglayout.debug.crossing_event_dumping"))
+    if (!debug_GetCachedBoolPref("nglayout.debug.crossing_event_dumping"))
       return;
   }
 
-  if (!_GetBoolPref("nglayout.debug.event_dumping"))
+  if (!debug_GetCachedBoolPref("nglayout.debug.event_dumping"))
     return;
   
   fprintf(aFileOut,
@@ -917,7 +1018,7 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
   NS_ASSERTION(nsnull != aWidget,"cmon, the widget is null");
   NS_ASSERTION(nsnull != aPaintEvent,"cmon, the paint event is null");
 
-  if (!_GetBoolPref("nglayout.debug.paint_dumping"))
+  if (!debug_GetCachedBoolPref("nglayout.debug.paint_dumping"))
     return;
   
   fprintf(aFileOut,
@@ -952,7 +1053,7 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID)
 {
-  if (!_GetBoolPref("nglayout.debug.invalidate_dumping"))
+  if (!debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping"))
     return;
 
   NS_ASSERTION(nsnull != aFileOut,"cmon, null output FILE");
@@ -986,17 +1087,6 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
           (const char *) (aIsSynchronous ? "yes" : "no "));
   
   fprintf(aFileOut,"\n");
-}
-//////////////////////////////////////////////////////////////
-/* static */ void
-nsBaseWidget::debug_CleanupCrapSoThatBruceAndPurifyAreHappy()
-{
-  if (gPrefs)
-  {
-    nsServiceManager::ReleaseService(kPrefCID, gPrefs);
-
-    gPrefs = nsnull;
-  }
 }
 //////////////////////////////////////////////////////////////
 
