@@ -36,7 +36,7 @@ chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir";
 # Remove files older than 7 days
 #
 sub files_to_remove {
-  unlink if /(?:\.gz|\.brief\.html)$/ and int(-M $_) > 7;
+  unlink if /(?:\.gz|\.brief\.html|tbx.[0-9]+)$/ and int(-M $_) > 7;
 }
 &find(\&files_to_remove, $tinderboxdir);
 
