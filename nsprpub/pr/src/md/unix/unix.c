@@ -2499,7 +2499,7 @@ PRInt32 _MD_getopenfileinfo64(const PRFileDesc *fd, PRFileInfo64 *info)
     return rv;
 }
 
-struct _MD_IOVector _md_iovector;
+struct _MD_IOVector _md_iovector = { open };
 
 /*
 ** These implementations are to emulate large file routines on systems that
