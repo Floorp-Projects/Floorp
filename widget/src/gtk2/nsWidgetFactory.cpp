@@ -35,9 +35,11 @@
 
 #include "nsIGenericFactory.h"
 #include "nsWidgetsCID.h"
-#include "nsWindow.h"
 #include "nsAppShell.h"
+#include "nsBaseWidget.h"
 #include "nsLookAndFeel.h"
+#include "nsWindow.h"
+#include "nsScrollbar.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
@@ -47,6 +49,64 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+
+static
+nsresult nsHorizScrollbarConstructor (nsISupports *aOuter,
+				      REFNSIID     aIID,
+				      void       **aResult)
+{
+  nsresult rv;
+  nsISupports *inst = nsnull;
+
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  inst = (nsISupports *)(nsBaseWidget *)(nsCommonWidget *)
+    new nsScrollbar(PR_FALSE);
+
+  if (!inst)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+
+static
+nsresult nsVertScrollbarConstructor   (nsISupports *aOuter,
+				       REFNSIID     aIID,
+				       void       **aResult)
+{
+  nsresult rv;
+  nsISupports *inst = nsnull;
+
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  *aResult = nsnull;
+
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
+
+  inst = (nsISupports *)(nsBaseWidget *)(nsCommonWidget *)
+    new nsScrollbar(PR_TRUE);
+
+  if (!inst)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
 
 static nsModuleComponentInfo components[] =
 {
@@ -66,6 +126,14 @@ static nsModuleComponentInfo components[] =
     NS_LOOKANDFEEL_CID,
     "@mozilla.org/widget/lookandfeel/gtk;1",
     nsLookAndFeelConstructor },
+  { "Gtk2 Horiz Scrollbar",
+    NS_HORZSCROLLBAR_CID,
+    "@mozilla.org/widgets/hoizscroll/gtk;1",
+    nsHorizScrollbarConstructor },
+  { "Gtk2 Vert Scrollbar",
+    NS_VERTSCROLLBAR_CID,
+    "@mozilla.org/widgets/vertscroll/gtk;1",
+    nsVertScrollbarConstructor },
 #ifdef IBMBIDI
   { "Gtk2 Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,

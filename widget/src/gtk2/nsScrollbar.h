@@ -48,6 +48,51 @@ class nsScrollbar : public nsCommonWidget,
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  // nsIWidget
+  NS_IMETHOD Create(nsIWidget        *aParent,
+                    const nsRect     &aRect,
+                    EVENT_CALLBACK   aHandleEventFunction,
+                    nsIDeviceContext *aContext,
+                    nsIAppShell      *aAppShell = nsnull,
+                    nsIToolkit       *aToolkit = nsnull,
+                    nsWidgetInitData *aInitData = nsnull);
+  NS_IMETHOD Create(nsNativeWidget aParent,
+                    const nsRect     &aRect,
+                    EVENT_CALLBACK   aHandleEventFunction,
+                    nsIDeviceContext *aContext,
+                    nsIAppShell      *aAppShell = nsnull,
+                    nsIToolkit       *aToolkit = nsnull,
+                    nsWidgetInitData *aInitData = nsnull);
+  NS_IMETHOD Show(PRBool aState);
+  NS_IMETHOD IsVisible(PRBool & aState);
+  NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
+  NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool   aRepaint);
+  NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                    PRBool   aRepaint);
+  NS_IMETHOD Enable(PRBool aState);
+  NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE);
+  virtual nsIFontMetrics* GetFont(void);
+  NS_IMETHOD SetFont(const nsFont &aFont);
+  NS_IMETHOD Invalidate(PRBool aIsSynchronous);
+  NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+  NS_IMETHOD Update();
+  NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
+  NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+  virtual void* GetNativeData(PRUint32 aDataType);
+  NS_IMETHOD SetTitle(const nsString& aTitle);
+  NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar);
+  NS_IMETHOD ShowMenuBar(PRBool aShow);
+  NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
+  NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
+  NS_IMETHOD BeginResizingChildren(void);
+  NS_IMETHOD EndResizingChildren(void);
+  NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+  NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener,
+                                 PRBool aDoCapture,
+                                 PRBool aConsumeRollupEvent);
+
   // nsIScrollbar
   NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
   NS_IMETHOD GetMaxRange(PRUint32& aMaxRange);
