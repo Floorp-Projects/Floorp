@@ -46,3 +46,13 @@ treeitem[container="true"][open="true"][id="NC:SiteMapRoot"] > treerow > treecel
 treeitem > treerow > treecell > .tree-icon {
     list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
 }
+
+treeitem > treerow > treecell > .tree-icon > .twisty{
+  display: none;
+}
+
+/* Override rule in xul.css  */
+treeitem[selected="true"] > treerow {
+  color: inherit;
+  background-color: inherit;
+}
