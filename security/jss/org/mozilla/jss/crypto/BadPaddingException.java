@@ -32,6 +32,9 @@
  */
 package org.mozilla.jss.crypto;
 
+/**
+ * @deprecated Use javax.crypto.BadPaddingException.
+ */
 public class BadPaddingException extends Exception {
     public BadPaddingException() {
         super();
