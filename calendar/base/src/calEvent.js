@@ -22,6 +22,7 @@ calEvent.prototype = {
         this.mStartDate = new CalDateTime();
         this.mEndDate = new CalDateTime();
         this.mStampDate = new CalDateTime();
+        this.mStampDate.jsDate = new Date();
     },
 
     clone: function () {
