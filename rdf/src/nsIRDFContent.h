@@ -23,6 +23,10 @@
 #include "nsISupports.h"
 #include "nsIXMLContent.h"
 
+class nsIRDFContent;
+class nsIRDFDocument;
+class nsIRDFNode;
+
 // {954F0810-81DC-11d2-B52A-000000000000}
 #define NS_IRDFCONTENT_IID \
 { 0x954f0810, 0x81dc, 0x11d2, { 0xb5, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
@@ -32,8 +36,13 @@
  */
 class nsIRDFContent : public nsIXMLContent {
 public:
+  NS_IMETHOD Init(nsIRDFDocument* doc, nsIRDFNode* resource, PRBool childrenMustBeGenerated) = 0;
+
   NS_IMETHOD SetResource(const nsString& aURI) = 0;
   NS_IMETHOD GetResource(nsString& rURI) const = 0;
+
+  NS_IMETHOD SetResource(nsIRDFNode* aResource) = 0;
+  NS_IMETHOD GetResource(nsIRDFNode*& aResource) = 0;
 
   NS_IMETHOD SetProperty(const nsString& aPropertyURI, const nsString& aValue) = 0;
   NS_IMETHOD GetProperty(const nsString& aPropertyURI, nsString& rValue) const = 0;

@@ -32,10 +32,13 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFDocumentContentSink.obj  \
         .\$(OBJDIR)\nsRDFElement.obj              \
         .\$(OBJDIR)\nsRDFFactory.obj              \
+        .\$(OBJDIR)\nsRDFHTMLDocument.obj         \
         .\$(OBJDIR)\nsRDFRegistryImpl.obj         \
         .\$(OBJDIR)\nsRDFResourceManager.obj      \
         .\$(OBJDIR)\nsRDFSimpleContentSink.obj    \
+        .\$(OBJDIR)\nsRDFTreeDocument.obj         \
         .\$(OBJDIR)\nsSimpleDataBase.obj          \
+        .\$(OBJDIR)\rdfutil.obj                   \
 	$(NULL)
 
 LLIBS=\

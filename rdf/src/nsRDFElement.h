@@ -61,6 +61,11 @@ public:
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
     // nsIContent (from nsIRDFContent via nsIXMLContent)
+
+    // Any of the nsIContent methods that directly manipulate content
+    // (e.g., AppendChildTo()), are assumed to "know what they're
+    // doing" to the content model. No attempt is made to muck with
+    // the underlying RDF representation.
     NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
     NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep);
     NS_IMETHOD GetParent(nsIContent*& aResult) const;
@@ -98,8 +103,13 @@ public:
     NS_IMETHOD GetNameSpaceIdentifier(PRInt32& aNameSpeceId);
 
     // nsIRDFContent
+    NS_IMETHOD Init(nsIRDFDocument* doc, nsIRDFNode* resource, PRBool childrenMustBeGenerated);
+
     NS_IMETHOD SetResource(const nsString& aURI);
     NS_IMETHOD GetResource(nsString& rURI) const;
+
+    NS_IMETHOD SetResource(nsIRDFNode* aResource);
+    NS_IMETHOD GetResource(nsIRDFNode*& aResource);
 
     NS_IMETHOD SetProperty(const nsString& aPropertyURI, const nsString& aValue);
     NS_IMETHOD GetProperty(const nsString& aPropertyURI, nsString& rValue) const;
@@ -128,13 +138,10 @@ protected:
     void*             mScriptObject;
     nsIRDFNode*       mResource;
     nsISupportsArray* mChildren;
+    PRBool            mChildrenMustBeGenerated;
     nsIContent*       mParent;
 
-    nsresult GenerateChildren(void);
-    nsresult CreateChild(nsIRDFNode* value, nsIRDFContent*& result);
-    nsresult CreateChild(nsIRDFNode* property,
-                         nsIRDFNode* value,
-                         nsIRDFContent*& result);
+    nsresult GenerateChildren(void) const;
 };
 
 #endif // nsRDFElement_h___

@@ -34,7 +34,8 @@ static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFRegistryCID,           NS_RDFREGISTRY_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
-static NS_DEFINE_CID(kRDFDocumentCID,           NS_RDFDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
 
 class nsRDFFactory : public nsIFactory
 {
@@ -110,6 +111,8 @@ nsRDFFactory::CreateInstance(nsISupports *aOuter,
 
     *aResult = nsnull;
 
+    nsresult rv;
+    PRBool wasRefCounted = PR_FALSE;
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kRDFResourceManagerCID)) {
         inst = NS_STATIC_CAST(nsISupports*, new nsRDFResourceManager());
@@ -126,19 +129,33 @@ nsRDFFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kRDFSimpleDataBaseCID)) {
         inst = NS_STATIC_CAST(nsISupports*, new nsSimpleDataBase());
     }
-    else if (mClassID.Equals(kRDFDocumentCID)) {
-        inst = NS_STATIC_CAST(nsIRDFDocument*, new nsRDFDocument());
+    else if (mClassID.Equals(kRDFHTMLDocumentCID)) {
+        if (NS_FAILED(rv = NS_NewRDFHTMLDocument((nsIRDFDocument**) &inst)))
+            return rv;
+
+        wasRefCounted = PR_TRUE;
+    }
+    else if (mClassID.Equals(kRDFTreeDocumentCID)) {
+        if (NS_FAILED(rv = NS_NewRDFTreeDocument((nsIRDFDocument**) &inst)))
+            return rv;
+
+        wasRefCounted = PR_TRUE;
+    }
+    else {
+        return NS_ERROR_NO_INTERFACE;
     }
 
     if (! inst)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult res = inst->QueryInterface(aIID, aResult);
-    if (NS_FAILED(res))
+    if (NS_FAILED(rv = inst->QueryInterface(aIID, aResult)))
         // We didn't get the right interface, so clean up
         delete inst;
 
-    return res;
+    if (wasRefCounted)
+        NS_IF_RELEASE(inst);
+
+    return rv;
 }
 
 nsresult nsRDFFactory::LockFactory(PRBool aLock)

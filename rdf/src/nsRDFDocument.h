@@ -26,6 +26,7 @@
 
 class nsIArena;
 class nsIParser;
+class nsISupportsArray;
 
 /**
  * An NGLayout document context for displaying an RDF graph.
@@ -197,6 +198,8 @@ public:
 
     // nsIRDFDocument interface
     NS_IMETHOD GetDataBase(nsIRDFDataBase*& result);
+
+    NS_IMETHOD CreateChildren(nsIRDFNode* resource, nsISupportsArray* children) = 0;
 
 protected:
     nsIContent*
