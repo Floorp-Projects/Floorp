@@ -54,11 +54,18 @@ public:
 	NS_IMETHOD NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item);
 	NS_IMETHOD NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item);
 
-  
+	nsresult Init();
 protected:
   nsIMsgAccountManager *m_accountManager;
 	nsVoidArray *mListeners; 
 
 };
+
+NS_BEGIN_EXTERN_C
+
+nsresult
+NS_NewMsgMailSession(const nsIID& iid, void **result);
+
+NS_END_EXTERN_C
 
 #endif /* nsMsgMailSession_h__ */

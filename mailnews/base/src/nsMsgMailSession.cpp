@@ -35,22 +35,12 @@ static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
 nsMsgMailSession::nsMsgMailSession():
   mRefCnt(0),
-  m_accountManager(0)
+  m_accountManager(0),
+  mListeners(nsnull)
 {
 	NS_INIT_REFCNT();
-
-    nsresult rv;
-
-    rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
-                                            NULL,
-                                            nsCOMTypeInfo<nsIMsgAccountManager>::GetIID(),
-                                            (void **)&m_accountManager);
-    if (NS_SUCCEEDED(rv))
-      m_accountManager->LoadAccounts();
-
-	mListeners = new nsVoidArray();
-
 }
+
 
 nsMsgMailSession::~nsMsgMailSession()
 {
@@ -66,6 +56,26 @@ nsMsgMailSession::~nsMsgMailSession()
 
 }
 
+nsresult nsMsgMailSession:: Init()
+{
+	nsresult rv;
+
+    rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
+                                            NULL,
+                                            nsCOMTypeInfo<nsIMsgAccountManager>::GetIID(),
+                                            (void **)&m_accountManager);
+    if (NS_FAILED(rv))
+		return rv;
+
+    m_accountManager->LoadAccounts();
+
+	mListeners = new nsVoidArray();
+	if(!mListeners)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	return NS_OK;
+
+}
 
 // nsIMsgMailSession
 nsresult nsMsgMailSession::GetCurrentIdentity(nsIMsgIdentity ** aIdentity)
@@ -183,4 +193,21 @@ NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemDeleted(nsIFolder *folder, nsISu
 	}
 	return NS_OK;
 
+}
+
+nsresult
+NS_NewMsgMailSession(const nsIID& iid, void **result)
+{
+  if (!result) return NS_ERROR_NULL_POINTER;
+  
+  nsMsgMailSession *mailSession = new nsMsgMailSession;
+  if (!mailSession) return NS_ERROR_OUT_OF_MEMORY;
+  
+  nsresult rv = mailSession->Init();
+  if(NS_FAILED(rv))
+  {
+	  delete mailSession;
+	  return rv;
+  }
+  return mailSession->QueryInterface(iid, result);
 }
