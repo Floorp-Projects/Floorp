@@ -2482,11 +2482,11 @@ BUILD_SOURCE: SPAWN_BATCH1 BATCH_BUILD_2 WAIT_OBJECTS
 BUILD_SOURCE: $(OBJ_FILES)
 !endif
 
-!if defined(MOZ_EXPORT_ALL_SYMBOLS_OFF)
-"$(OUTDIR)\mozilla.exe" : "$(OUTDIR)" BUILD_SOURCE $(OUTDIR)\mozilla.res $(LINK_LIBS) LINK_CL
+!if defined(NETSCAPE_OFFICIAL)
+"$(OUTDIR)\mozilla.exe" : "$(OUTDIR)" BUILD_SOURCE $(OUTDIR)\mozilla.res $(LINK_LIBS) LINK_CL DISPATCHER
 	$(LINK) @"$(OUTDIR)\link.cl"
 !else
-"$(OUTDIR)\mozilla.exe" : "$(OUTDIR)" BUILD_SOURCE $(OUTDIR)\mozilla.res $(LINK_LIBS) LINK_CL DISPATCHER
+"$(OUTDIR)\mozilla.exe" : "$(OUTDIR)" BUILD_SOURCE $(OUTDIR)\mozilla.res $(LINK_LIBS) LINK_CL
 	$(LINK) @"$(OUTDIR)\link.cl"
 !endif
 
@@ -2639,7 +2639,7 @@ LINK_CL:
 !if "$(MOZ_BITS)"=="16"
     $(RSC) /K $(OUTDIR)\appicon.res $(OUTDIR)\mozilla.exe
 !endif
-!if !defined(MOZ_EXPORT_ALL_SYMBOLS_OFF)
+!if defined(NETSCAPE_OFFICIAL)
 !if "$(MOZ_BITS)"=="32"
 	$(PERL) listsymb.pl $(OUTDIR)\link.cl $(OUTDIR)\symbols.txt
 !endif
@@ -2649,7 +2649,7 @@ LINK_CL:
 # dispwin.obj is then added to link.cl so that it will
 # be linked with the rest of the libraries and object files
 # to form the excutable
-!if !defined(MOZ_EXPORT_ALL_SYMBOLS_OFF)
+!if defined(NETSCAPE_OFFICIAL)
 DISPATCHER : $(OUTDIR)/symbols.txt
 !if "$(MOZ_BITS)"=="32"
 	$(PERL) gendisp.pl $(OUTDIR)\symbols.txt $(OUTDIR)\dispwin.h $(OUTDIR)\dispwin.c $(OUTDIR)\cmoffset.h
