@@ -85,6 +85,24 @@ public:
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);
 
+  NS_IMETHOD
+  SetInitialChildList(nsIPresContext* aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList)
+  {
+    nsresult rv;
+    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+    // 1. The REC says:
+    //    The <msqrt> element leaves both attributes [displaystyle and scriptlevel]
+    //    unchanged within all its arguments.
+    // 2. The TeXBook (Ch 17. p.141) says that \sqrt is cramped 
+    UpdatePresentationDataFromChildAt(0, -1, 0,
+       NS_MATHML_COMPRESSED,
+       NS_MATHML_COMPRESSED);
+    InsertScriptLevelStyleContext(aPresContext);
+    return rv;
+  }
+
 protected:
   nsMathMLmsqrtFrame();
   virtual ~nsMathMLmsqrtFrame();

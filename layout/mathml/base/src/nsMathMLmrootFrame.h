@@ -56,7 +56,16 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(1, 2, PR_FALSE, PR_FALSE);
+    // 1. The REC says:
+    //    The <mroot> element increments scriptlevel by 2, and sets displaystyle to
+    //    "false", within index, but leaves both attributes unchanged within base.
+    // 2. The TeXbook (Ch 17. p.141) says \sqrt is compressed
+    UpdatePresentationDataFromChildAt(1, 1, 2,
+      ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
+       NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
+    UpdatePresentationDataFromChildAt(0, 0, 0,
+       NS_MATHML_COMPRESSED, NS_MATHML_COMPRESSED);
+    // switch the style of the index
     InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
