@@ -808,10 +808,10 @@ LocationImpl::GetSourceURL(JSContext* cx,
 
         if (doc) {
           result = doc->GetBaseURL(*sourceURI);
-        }
 
-        if (!*sourceURI) {
-          *sourceURI = doc->GetDocumentURL();
+          if (!*sourceURI) {
+            *sourceURI = doc->GetDocumentURL();
+          }
         }
       }
     }
