@@ -323,8 +323,10 @@ nsMsgRDFDataSource::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 NS_IMETHODIMP
 nsMsgRDFDataSource::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData )
 {
-	m_shuttingDown = PR_TRUE;
-	Cleanup();
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+	  m_shuttingDown = PR_TRUE;
+	  Cleanup();
+  }
 	return NS_OK;
 }
 

@@ -401,44 +401,55 @@ function onSetDefault(event) {
 }
 
 function onRemoveAccount(event) {
-    //dump("onRemoveAccount\n");
+  //dump("onRemoveAccount\n");
 
-    if (event.target.getAttribute("disabled") == "true") return;
+  if (event.target.getAttribute("disabled") == "true") return;
 
   var result = getServerIdAndPageIdFromTree(accounttree);
-    if (!result) return;
+  if (!result) 
+    return;
 
-    var account = getAccountFromServerId(result.serverId);
-    if (!account) return;
+  if (result.serverId == "http://home.netscape.com/NC-rdf#PageTitleFakeAccount") {
+    nsPrefBranch.setBoolPref("mailnews.fakeaccount.show", false);
 
-    var server = account.incomingServer;
-    var type = server.type;
+    // select the default account
+    selectServer(null, null); 
+  }
 
-    var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
-    var canDelete = protocolinfo.canDelete;
-    if (!canDelete) {
-        canDelete = server.canDelete;
-    }
-    if (!canDelete) return;
+  var account = getAccountFromServerId(result.serverId);
+  if (!account) 
+    return;
 
-    var confirmRemoveAccount =
-      gPrefsBundle.getString("confirmRemoveAccount");
-    if (!window.confirm(confirmRemoveAccount)) return;
+  var server = account.incomingServer;
+  var type = server.type;
 
-    try {
-      // clear cached data out of the account array
-      if (accountArray[result.serverId])
-        accountArray[result.serverId] = null;
-      currentServerId = currentPageId = null;
+  var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+  var canDelete = protocolinfo.canDelete;
+  if (!canDelete) {
+    canDelete = server.canDelete;
+  }
+  if (!canDelete) 
+    return;
 
-      accountManager.removeAccount(account);
-      selectServer(null);
-    }
-    catch (ex) {
-      dump("failure to remove account: " + ex + "\n");
-      var alertText = gPrefsBundle.getString("failedRemoveAccount");
-      window.alert(alertText);
-    }
+  var confirmRemoveAccount =
+    gPrefsBundle.getString("confirmRemoveAccount");
+  if (!window.confirm(confirmRemoveAccount)) 
+    return;
+
+  try {
+    // clear cached data out of the account array
+    if (accountArray[result.serverId])
+      accountArray[result.serverId] = null;
+    currentServerId = currentPageId = null;
+
+    accountManager.removeAccount(account);
+    selectServer(null, null);
+  }
+  catch (ex) {
+    dump("failure to remove account: " + ex + "\n");
+    var alertText = gPrefsBundle.getString("failedRemoveAccount");
+    window.alert(alertText);
+  }
 }
 
 function saveAccount(accountValues, account)
@@ -539,15 +550,15 @@ function updateButtons(tree,serverId) {
   //dump("account = " + account + "\n");
 
   if (account) {
-  var server = account.incomingServer;
-  var type = server.type;
+    var server = account.incomingServer;
+    var type = server.type;
 
     if (account.identities.Count() < 1)
       canSetDefault = false;
 
-  //dump("servertype = " + type + "\n");
+    //dump("servertype = " + type + "\n");
 
-  var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+    var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
     canDuplicate = protocolinfo.canDuplicate;
     canDelete = protocolinfo.canDelete;
     if (!canDelete) {
@@ -555,12 +566,13 @@ function updateButtons(tree,serverId) {
     }
   }
   else {
-  // HACK
-  // if account is null, we have either selected a SMTP server, or there is a problem
-  // either way, we don't want the user to be able to delete it or duplicate it
+    // HACK
+    // if account is null, we have either selected a SMTP server, or there is a problem
+    // either way, we don't want the user to be able to delete it or duplicate it
+
     canSetDefault = false;
-  canDelete = false;
-  canDuplicate = false;
+    canDelete = (serverId == "http://home.netscape.com/NC-rdf#PageTitleFakeAccount");
+    canDuplicate = false;
   }
 
   if (tree.treeBoxObject.selection.count < 1)

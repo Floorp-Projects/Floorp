@@ -73,6 +73,7 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIFOLDERLISTENER
     NS_DECL_NSIINCOMINGSERVERLISTENER
+    NS_DECL_NSIOBSERVER
   // RDF datasource methods
   
   /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
