@@ -644,7 +644,7 @@ static PRInt32 CountGermanSzlig(const PRUnichar* aText, PRInt32 len)
 static void ReplaceGermanSzligToSS(PRUnichar* aText, PRInt32 len, PRInt32 szCnt)
 {
   PRUnichar *src, *dest;
-  src = aText + len;
+  src = aText + len - 1;
   dest = src + szCnt;
   while( (src!=dest) && (src >= aText) )
   {
