@@ -131,9 +131,13 @@
 #include "nsMsgCompFields.h"
 #include "nsMsgComposeBE.h"
 #include "nsIMsgSendListener.h"
+#if 0
 #include "nsMsgCopy.h"
+#endif
 #include "nsIMsgIdentity.h"
+#if 0
 #include "nsMsgDeliveryListener.h"
+#endif
 
 #include "net.h" /* should be defined into msgCore.h? */
 

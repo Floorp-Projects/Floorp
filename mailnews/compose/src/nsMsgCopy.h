@@ -34,7 +34,6 @@
 { 0x8e, 0xfb, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } };
 
 // Forward declarations...
-class   nsMsgComposeAndSend;
 class   nsMsgCopy;
 
 ////////////////////////////////////////////////////////////////////////////////////
