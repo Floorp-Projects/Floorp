@@ -422,18 +422,58 @@ nsresult testDecoder(nsIUnicodeDecoder * aDec,
   res = aDec->Convert(dest, 0, &destLen, aSrc, 0, &srcLen);
   // we want a perfect result here - the test data should be complete!
   if (res != NS_OK) {
-    printf("ERROR at %s.easy.Convert() code=0x%x.\n",aTestName,res);
+    printf("ERROR at %s.easy.Decode() code=0x%x.\n",aTestName,res);
     return NS_ERROR_UNEXPECTED;
   }
 
   // compare results
   if (aResLength != destLen) {
-      printf("ERROR at %s.easy.ConvResLen expected=0x%x result=0x%x.\n", 
+      printf("ERROR at %s.easy.DecResLen expected=0x%x result=0x%x.\n", 
           aTestName, aResLength, destLen);
       return NS_ERROR_UNEXPECTED;
   }
   for (PRInt32 i=0; i<aResLength; i++) if (aRes[i] != dest[i]) {
-      printf("ERROR at %s.easy.ConvResChar[%d] expected=0x%x result=0x%x.\n", 
+      printf("ERROR at %s.easy.DecResChar[%d] expected=0x%x result=0x%x.\n", 
+          aTestName, i, aRes[i], dest[i]);
+      return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Encoder test.
+ * 
+ * This method will test the conversion only.
+ */
+nsresult testEncoder(nsIUnicodeEncoder * aEnc, 
+                     const PRUnichar * aSrc, PRInt32 aSrcLength, 
+                     const char * aRes, PRInt32 aResLength,
+                     const char * aTestName)
+{
+  nsresult res;
+
+  // prepare for conversion
+  PRInt32 srcLen = aSrcLength;
+  char dest[GENERAL_BUFFER];
+  PRInt32 destLen = GENERAL_BUFFER;
+
+  // conversion
+  res = aEnc->Convert(aSrc, &srcLen, dest, &destLen);
+  // we want a perfect result here - the test data should be complete!
+  if (res != NS_OK) {
+    printf("ERROR at %s.easy.Encode() code=0x%x.\n",aTestName,res);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // compare results
+  if (aResLength != destLen) {
+      printf("ERROR at %s.easy.EncResLen expected=0x%x result=0x%x.\n", 
+          aTestName, aResLength, destLen);
+      return NS_ERROR_UNEXPECTED;
+  }
+  for (PRInt32 i=0; i<aResLength; i++) if (aRes[i] != dest[i]) {
+      printf("ERROR at %s.easy.EncResChar[%d] expected=0x%x result=0x%x.\n", 
           aTestName, i, aRes[i], dest[i]);
       return NS_ERROR_UNEXPECTED;
   }
@@ -528,6 +568,104 @@ nsresult testStressDecoder(nsIUnicodeDecoder * aDec,
 }
 
 /**
+ * Encoder test.
+ * 
+ * This method will test a given converter under a given set of data and some 
+ * very stressful conditions.
+ */
+nsresult testStressEncoder(nsIUnicodeEncoder * aEnc, 
+                           const PRUnichar * aSrc, PRInt32 aSrcLength,
+                           const char * aRes, PRInt32 aResLength, 
+                           const char * aTestName)
+{
+  nsresult res;
+
+  // get estimated length
+  PRInt32 estimatedLength;
+  res = aEnc->GetMaxLength(aSrc, aSrcLength, &estimatedLength);
+  if (NS_FAILED(res)) {
+    printf("ERROR at %s.stress.Length() code=0x%x.\n",aTestName,res);
+    return res;
+  }
+  PRBool exactLength = (res == NS_OK_UENC_EXACTLENGTH);
+
+  // prepare for conversion
+  PRInt32 srcLen = 0;
+  PRInt32 srcOff = 0;
+  char dest[GENERAL_BUFFER];
+  PRInt32 destLen = 0;
+  PRInt32 destOff = 0;
+
+  // controlled conversion
+  for (;srcOff < aSrcLength;) {
+    res = aEnc->Convert(aSrc + srcOff, &srcLen, dest + destOff, &destLen);
+    if (NS_FAILED(res)) {
+      printf("ERROR at %s.stress.Convert() code=0x%x.\n",aTestName,res);
+      return res;
+    }
+
+    srcOff+=srcLen;
+    destOff+=destLen;
+
+    // give a little input each time; it'll be consumed if enough output space
+    srcLen = 1;
+    // give output space only when requested: sadic!
+    if (res == NS_OK_UENC_MOREOUTPUT) {
+      destLen = 1;
+    } else {
+      destLen = 0;
+    }
+  }
+
+  if (res != NS_OK) if (res != NS_OK_UENC_MOREOUTPUT) {
+    printf("ERROR at %s.stress.postConvert() code=0x%x.\n",aTestName,res);
+    return NS_ERROR_UNEXPECTED;
+  } else for (;;) {
+    res = aEnc->Finish(dest + destOff, &destLen);
+    if (NS_FAILED(res)) {
+      printf("ERROR at %s.stress.Finish() code=0x%x.\n",aTestName,res);
+      return res;
+    }
+
+    destOff+=destLen;
+
+    // give output space only when requested: sadic!
+    if (res == NS_OK_UENC_MOREOUTPUT) {
+      destLen = 1;
+    } else break;
+  }
+
+  // compare lengths
+  if (exactLength) {
+    if (destOff != estimatedLength) {
+      printf("ERROR at %s.stress.EstimatedLen expected=0x%x result=0x%x.\n",
+          aTestName, estimatedLength, destOff);
+      return NS_ERROR_UNEXPECTED;
+    }
+  } else {
+    if (destOff > estimatedLength) {
+      printf("ERROR at %s.stress.EstimatedLen expected<=0x%x result=0x%x.\n",
+          aTestName, estimatedLength, destOff);
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  // compare results
+  if (aResLength != destOff) {
+      printf("ERROR at %s.stress.ConvResLen expected=0x%x result=0x%x.\n", 
+          aTestName, aResLength, destOff);
+      return NS_ERROR_UNEXPECTED;
+  }
+  for (PRInt32 i=0; i<aResLength; i++) if (aRes[i] != dest[i]) {
+      printf("ERROR at %s.stress.ConvResChar[%d] expected=0x%x result=0x%x.\n", 
+          aTestName, i, aRes[i], dest[i]);
+      return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+/**
  * Reset decoder.
  */
 nsresult resetDecoder(nsIUnicodeDecoder * aDec, const char * aTestName)
@@ -535,7 +673,22 @@ nsresult resetDecoder(nsIUnicodeDecoder * aDec, const char * aTestName)
   nsresult res = aDec->Reset();
 
   if (NS_FAILED(res)) {
-    printf("ERROR at %s.reset.Reset() code=0x%x.\n",aTestName,res);
+    printf("ERROR at %s.dec.Reset() code=0x%x.\n",aTestName,res);
+    return res;
+  }
+
+  return res;
+}
+
+/**
+ * Reset encoder.
+ */
+nsresult resetEncoder(nsIUnicodeEncoder * aEnc, const char * aTestName)
+{
+  nsresult res = aEnc->Reset();
+
+  if (NS_FAILED(res)) {
+    printf("ERROR at %s.enc.Reset() code=0x%x.\n",aTestName,res);
     return res;
   }
 
@@ -698,24 +851,21 @@ nsresult testLatin1Encoder()
 
   // create converter
   CREATE_ENCODER("iso-8859-1");
+  enc->SetOutputErrorBehavior(enc->kOnError_Replace, NULL, 0x00cc);
 
-  // XXX finish me
-
-/*
   // test data
-  char src[] = {"\x00\x0d\x7f\x80\xff"};
-  PRUnichar exp[] = {0x0000,0x000d,0x007F,0x0080,0x00FF};
+  PRUnichar src[] = {0x0001,0x0002,0xffff,0x00e3};
+  char exp[] = {"\x01\x02\xcc\xe3"};
 
   // test converter - easy test
-  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+  res = testEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
 
   // reset converter
-  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
+  if (NS_SUCCEEDED(res)) res = resetEncoder(enc, testName);
 
   // test converter - stress test
   if (NS_SUCCEEDED(res)) 
-    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
-*/
+    res = testStressEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
 
   // release converter
   NS_RELEASE(enc);
