@@ -116,6 +116,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 SHAREDCMMSRCS += nsNativeAppSupportForCocoa.mm
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
+SHAREDSRCS += nsNativeAppSupportPh.cpp
+endif
+
 CPPSRCS = \
 	$(SHAREDCPPSRCS) \
 	nsAppRunner.cpp \
