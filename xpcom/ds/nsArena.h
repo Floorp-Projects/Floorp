@@ -27,7 +27,7 @@
 // Simple arena implementation layered on plarena
 class ArenaImpl : public nsIArena {
 public:
-  ArenaImpl(void) { NS_INIT_REFCNT(); }
+  ArenaImpl(void);
   virtual ~ArenaImpl();
 
   NS_DECL_ISUPPORTS
