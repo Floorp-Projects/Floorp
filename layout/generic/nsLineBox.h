@@ -193,4 +193,46 @@ public:
   nsLineBox* mNext;
 };
 
+//----------------------------------------------------------------------
+
+struct nsLineIterator {
+  nsLineIterator();
+  ~nsLineIterator();
+
+  nsresult Init(nsLineBox* aLines);
+
+  PRInt32 NumLines() const {
+    return mNumLines;
+  }
+
+  nsLineBox* CurrentLine() {
+    return mLines[mIndex];
+  }
+
+  nsLineBox* PrevLine() {
+    if (0 == mIndex) {
+      return nsnull;
+    }
+    return mLines[--mIndex];
+  }
+
+  nsLineBox* NextLine() {
+    if (mIndex >= mNumLines - 1) {
+      return nsnull;
+    }
+    return mLines[++mIndex];
+  }
+
+  nsLineBox* LineAt(PRInt32 aIndex) {
+    if ((aIndex < 0) || (aIndex >= mNumLines)) {
+      return nsnull;
+    }
+    return mLines[aIndex];
+  }
+
+  nsLineBox** mLines;
+  PRInt32 mIndex;
+  PRInt32 mNumLines;
+};
+
 #endif /* nsLineBox_h___ */
