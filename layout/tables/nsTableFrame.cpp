@@ -517,12 +517,6 @@ void nsTableFrame::ResetCellMap ()
   mCellMap = nsnull; // for now, will rebuild when needed
 }
 
-/* call when column structure has changed. */
-void nsTableFrame::ResetColumns ()
-{
-  EnsureCellMap();
-}
-
 /** sum the columns represented by all nsTableColGroup objects
   * if the cell map says there are more columns than this, 
   * add extra implicit columns to the content tree.
@@ -533,7 +527,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
                                  nsReflowStatus&      aStatus)
 {
   // XXX sec should only be called on firstInFlow
-  EnsureCellMap();
+  SetMinColSpanForTable();
   if (nsnull==mCellMap)
     return; // no info yet, so nothing useful to do
 
@@ -637,10 +631,6 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
                                        const nsReflowState& aReflowState,
                                        nsReflowStatus&      aStatus)
 {
-
-  if (nsnull!=mCellMap)
-    return; // we already have a cell map so this makes no sense
-
   PRInt32 actualColumns = 0;
   nsTableColGroupFrame *lastColGroupFrame = nsnull;
   nsIFrame * firstRowGroupFrame=nsnull;
@@ -724,6 +714,32 @@ void nsTableFrame::EnsureColumnFrameAt(PRInt32              aColIndex,
   }
 }
 
+void nsTableFrame::AddColumnFrame (nsTableColFrame *aColFrame)
+{
+  mCellMap->AppendColumnFrame(aColFrame);
+}
+
+/** return the index of the next row that is not yet assigned */
+PRInt32 nsTableFrame::GetNextAvailRowIndex() const
+{
+  PRInt32 result=0;
+  if (nsnull!=mCellMap)
+  {
+    result = mCellMap->GetRowCount(); // the next index is the current count
+    mCellMap->GrowToRow(result+1);    // expand the cell map to include this new row
+  }
+  return result;
+}
+
+/** return the index of the next column in aRowIndex that does not have a cell assigned to it */
+PRInt32 nsTableFrame::GetNextAvailColIndex(PRInt32 aRowIndex, PRInt32 aColIndex) const
+{
+  PRInt32 result=0;
+  if (nsnull!=mCellMap)
+    result = mCellMap->GetNextAvailColIndex(aRowIndex, aColIndex);
+  return result;
+}
+
 /** Get the cell map for this table frame.  It is not always mCellMap.
   * Only the firstInFlow has a legit cell map
   */
@@ -737,123 +753,10 @@ nsCellMap * nsTableFrame::GetCellMap()
   return mCellMap;
 }
 
-void nsTableFrame::EnsureCellMap()
+void nsTableFrame::SetMinColSpanForTable()
 { // XXX: must be called ONLY on first-in-flow
-  if (mCellMap == nsnull)
-    BuildCellMap();
-}
-
-void nsTableFrame::BuildCellMap ()
-{
-  // XXX: must be called only on first-in-flow!
-  if (gsDebug==PR_TRUE) printf("Build Cell Map...\n");
-
-  int rowCount = GetRowCount();
-  if (0 == rowCount)
-  {
-    // until we have some rows, there's nothing useful to do
-    return;
-  }
-
-  // Make an educated guess as to how many columns we have. It's
-  // only a guess because we can't know exactly until we have
-  // processed the last row.
-  nsTableRowGroupFrame *rowGroupFrame = NextRowGroupFrame(nsnull);
-  if (0 == mColCount)
-    mColCount = GetSpecifiedColumnCount();
-  if (0 == mColCount) // no column parts
-  {
-    // Use the first row to estimate the number of columns
-    nsTableRowFrame *rowFrame;
-    rowGroupFrame->FirstChild((nsIFrame*&)rowFrame);
-    if (nsnull!=rowFrame)
-    {
-      mColCount = rowFrame->GetMaxColumns();
-      if (gsDebug==PR_TRUE) 
-        printf("mColCount=0 at start.  Guessing col count to be %d from a row.\n", mColCount);
-    }
-  }
-
-  // If we have a cell map reset it; otherwise allocate a new cell map
-  if (nsnull==mCellMap)
-    mCellMap = new nsCellMap(rowCount, mColCount);
-  else
-    mCellMap->Reset(rowCount, mColCount);
-  if (gsDebug==PR_TRUE) printf("mCellMap set to (%d, %d)\n", rowCount, mColCount);
-
-  // Iterate over each row group frame
-  PRInt32 rowIndex = -1;
-  while (nsnull != rowGroupFrame)
-  {
-    // Iterate over each row frame within the row group
-    nsTableRowFrame *rowFrame;
-    rowGroupFrame->FirstChild((nsIFrame*&)rowFrame);
-    while (nsnull != rowFrame)
-    {
-      // Set the row frame's row index. Note that this is a table-wide index,
-      // and not the index within the row group
-      rowIndex++;
-      rowFrame->SetRowIndex(rowIndex);
-
-      // Iterate the table cells
-      PRInt32 cellIndex = 0;
-      PRInt32 colIndex = 0;
-      nsIFrame* cellFrame;
-      rowFrame->FirstChild(cellFrame);
-
-      while ((nsnull != cellFrame) && (colIndex < mColCount))
-      {
-        if (gsDebug==PR_TRUE) printf("      colIndex = %d, with mColCount = %d\n", colIndex, mColCount);
-        CellData *data = mCellMap->GetCellAt(rowIndex, colIndex);
-        if (nsnull == data)
-        {
-          BuildCellIntoMap((nsTableCellFrame*)cellFrame, rowIndex, colIndex);
-          cellIndex++;
-
-          // Get the next cell frame
-          cellFrame->GetNextSibling(cellFrame);
-        }
-        colIndex++;
-      }
-
-      // See if there are any cell frames left in this row
-      if (nsnull != cellFrame)
-      {
-        // We didn't use all the cells in this row up. Grow the cell
-        // data because we now know that we have more columns than we
-        // originally thought we had.
-        PRInt32 cellCount = cellIndex + LengthOf(cellFrame);
-
-        if (gsDebug==PR_TRUE) printf("   calling GrowCellMap because cellIndex < %d\n", cellIndex, cellCount);
-        GrowCellMap (cellCount);
-        while (nsnull != cellFrame)
-        {
-          if (gsDebug==PR_TRUE) printf("     calling GrowCellMap again because cellIndex < %d\n", cellIndex, cellCount);
-          GrowCellMap (colIndex + 1); // ensure enough cols in map, may be low due to colspans
-          CellData *data =mCellMap->GetCellAt(rowIndex, colIndex);
-          if (data == nsnull)
-          {
-            BuildCellIntoMap((nsTableCellFrame*)cellFrame, rowIndex, colIndex);
-            cellIndex++;
-
-            // Get the next cell frame
-            cellFrame->GetNextSibling(cellFrame);
-          }
-          colIndex++;
-        }
-      }
-
-      // Get the next row frame
-      rowFrame->GetNextSibling((nsIFrame *&)rowFrame);
-    }
-
-    // Get the next row group frame
-    rowGroupFrame = NextRowGroupFrame(rowGroupFrame);
-  }
-  if (gsDebug==PR_TRUE)
-    DumpCellMap ();
-  // iterate through the columns setting the min col span if necessary
-  // it would be more efficient if we could do this in the above loop
+  // set the minColSpan for each column
+  PRInt32 rowCount = mCellMap->GetRowCount();
   for (PRInt32 colIndex=0; colIndex<mColCount; colIndex++)
   {
     PRInt32 minColSpan;
@@ -874,6 +777,56 @@ void nsTableFrame::BuildCellMap ()
   }
 }
 
+void nsTableFrame::AddCellToTable (nsTableRowFrame *aRowFrame, 
+                                   nsTableCellFrame *aCellFrame,
+                                   PRBool aAddRow)
+{
+  NS_ASSERTION(nsnull!=aRowFrame, "bad aRowFrame arg");
+  NS_ASSERTION(nsnull!=aCellFrame, "bad aCellFrame arg");
+  NS_PRECONDITION(nsnull!=mCellMap, "bad cellMap");
+
+  // XXX: must be called only on first-in-flow!
+  if (gsDebug==PR_TRUE) printf("Build Cell Map...\n");
+
+  // Make an educated guess as to how many columns we have. It's
+  // only a guess because we can't know exactly until we have
+  // processed the last row.
+  if (0 == mColCount)
+    mColCount = GetSpecifiedColumnCount();
+  if (0 == mColCount) // no column parts
+  {
+    mColCount = aRowFrame->GetMaxColumns();
+  }
+
+  PRInt32 rowIndex;
+  // If we have a cell map reset it; otherwise allocate a new cell map
+  // also determine the index of aRowFrame and set it if necessary
+  if (0==mCellMap->GetRowCount())
+  { // this is the first time we've ever been called
+    rowIndex = 0;
+    if (gsDebug==PR_TRUE) printf("rowFrame %p set to index %d\n", aRowFrame, rowIndex);
+  }
+  else
+  {
+    rowIndex = mCellMap->GetRowCount() - 1;   // rowIndex is 0-indexed, rowCount is 1-indexed
+  }
+
+  PRInt32 colIndex=0;
+  while (PR_TRUE)
+  {
+    CellData *data = mCellMap->GetCellAt(rowIndex, colIndex);
+    if (nsnull == data)
+    {
+      BuildCellIntoMap(aCellFrame, rowIndex, colIndex);
+      break;
+    }
+    colIndex++;
+  }
+
+  if (gsDebug==PR_TRUE)
+    DumpCellMap ();
+}
+
 /**
   */
 void nsTableFrame::DumpCellMap () 
@@ -882,7 +835,7 @@ void nsTableFrame::DumpCellMap ()
   if (nsnull != mCellMap)
   {
     PRInt32 rowCount = mCellMap->GetRowCount();
-    PRInt32 cols = GetColCount();
+    PRInt32 cols = mCellMap->GetColCount();
     for (PRInt32 r = 0; r < rowCount; r++)
     {
       if (gsDebug==PR_TRUE)
@@ -933,20 +886,27 @@ void nsTableFrame::DumpCellMap ()
 void nsTableFrame::BuildCellIntoMap (nsTableCellFrame *aCell, PRInt32 aRowIndex, PRInt32 aColIndex)
 {
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
-  NS_PRECONDITION (aColIndex < mColCount, "bad column index arg");
-  NS_PRECONDITION (aRowIndex < GetRowCount(), "bad row index arg");
+  NS_PRECONDITION (0 <= aColIndex, "bad column index arg");
+  NS_PRECONDITION (0 <= aRowIndex, "bad row index arg");
 
   // Setup CellMap for this cell
-  int rowSpan = GetEffectiveRowSpan (aRowIndex, aCell);
-  int colSpan = aCell->GetColSpan ();
+  int rowSpan = aCell->GetRowSpan();
+  int colSpan = aCell->GetColSpan();
   if (gsDebug==PR_TRUE) printf("        BuildCellIntoMap. rowSpan = %d, colSpan = %d\n", rowSpan, colSpan);
 
   // Grow the mCellMap array if we will end up addressing
   // some new columns.
-  if (mColCount < (aColIndex + colSpan))
+  if (mCellMap->GetColCount() < (aColIndex + colSpan))
   {
-    if (gsDebug==PR_TRUE) printf("        mColCount=%d<aColIndex+colSpan so calling GrowCellMap(%d)\n", mColCount, aColIndex+colSpan);
+    if (gsDebug==PR_TRUE) 
+      printf("        calling GrowCellMap(%d)\n", aColIndex+colSpan);
     GrowCellMap (aColIndex + colSpan);
+  }
+
+  if (mCellMap->GetRowCount() < (aRowIndex+1))
+  {
+    printf("*********************************************** calling GrowToRow(%d)\n", aRowIndex+1);
+    mCellMap->GrowToRow(aRowIndex+1);
   }
 
   // Setup CellMap for this cell in the table
@@ -955,7 +915,6 @@ void nsTableFrame::BuildCellIntoMap (nsTableCellFrame *aCell, PRInt32 aRowIndex,
   data->mRealCell = data;
   if (gsDebug==PR_TRUE) printf("        calling mCellMap->SetCellAt(data, %d, %d)\n", aRowIndex, aColIndex);
   mCellMap->SetCellAt(data, aRowIndex, aColIndex);
-  aCell->SetColIndex (aColIndex);
 
   // Create CellData objects for the rows that this cell spans. Set
   // their mCell to nsnull and their mRealCell to point to data. If
@@ -1000,10 +959,7 @@ void nsTableFrame::GrowCellMap (PRInt32 aColCount)
 {
   if (nsnull!=mCellMap)
   {
-    if (mColCount < aColCount)
-    {
-      mCellMap->GrowTo(aColCount);
-    }
+    mCellMap->GrowToCol(aColCount);
     mColCount = aColCount;
   }
 }
@@ -1444,6 +1400,9 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   {
     if (PR_FALSE==IsFirstPassValid())
     { // we treat the table as if we've never seen the layout data before
+      if (mCellMap!=nsnull)
+        delete mCellMap;
+      mCellMap = new nsCellMap(0, 0);
       mPass = kPASS_FIRST;
       aStatus = ResizeReflowPass1(&aPresContext, aDesiredSize, aReflowState, aStatus);
       // check result
@@ -1651,8 +1610,6 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
     }
   }
 
-  // BuildColumnCache calls EnsureCellMap. If that ever changes, be sure to call EnsureCellMap
-  // here first.
   BuildColumnCache(aPresContext, aDesiredSize, aReflowState, aStatus);
   // Recalculate Layout Dependencies
   RecalcLayoutData();
@@ -1749,7 +1706,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   }
 
   // Return our size and our status
-  aDesiredSize.width = aReflowState.maxSize.width;
+  aDesiredSize.width = ComputeDesiredWidth(aReflowState);
   aDesiredSize.height = state.y + myBorderPadding.top + myBorderPadding.bottom;
 
 
@@ -1771,6 +1728,20 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
 
   return status;
 
+}
+
+nscoord nsTableFrame::ComputeDesiredWidth(const nsReflowState& aReflowState) const
+{
+  nscoord desiredWidth=aReflowState.maxSize.width;
+  // this is the biggest hack in the world.  But there's no other rational way to handle nested percent tables
+  nsStylePosition* position;
+  PRBool isNested=IsNested(aReflowState, position);
+  if((eReflowReason_Initial==aReflowState.reason) && 
+     (PR_TRUE==isNested) && (eStyleUnit_Percent==position->mWidth.GetUnit()))
+  {
+    desiredWidth =  mTableLayoutStrategy->GetTableMaxWidth();
+  }
+  return desiredWidth;
 }
 
 // Collapse child's top margin with previous bottom margin
@@ -2492,9 +2463,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
                                        nsSize* aMaxElementSize)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
-
-  if (nsnull==mCellMap)
-    return; // we don't have any information yet, so we can't do any useful work
+  NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
 
   PRInt32 numCols = GetColCount();
   if (nsnull==mColumnWidths)
@@ -2570,13 +2539,12 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
 void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
+  NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
 
   nscoord cellSpacing = GetCellSpacing();
   if (gsDebug==PR_TRUE) 
     printf ("SetTableWidth with cellSpacing = %d ", cellSpacing);
   PRInt32 tableWidth = cellSpacing;
-  if (nsnull==mCellMap)
-    return;  // no info, so nothing to do
 
   PRInt32 numCols = GetColCount();
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
@@ -2762,6 +2730,8 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
                                      nsReflowStatus&      aStatus
                                     )
 {
+  // probably want this assertion : NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
+  NS_ASSERTION(nsnull!=mCellMap, "never ever call me until the cell map is built!");
   EnsureColumns(aPresContext, aDesiredSize, aReflowState, aStatus);
   if (nsnull==mColCache)
   {
@@ -2938,8 +2908,8 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
   else
   {
     NS_ASSERTION(nsnull!=mColumnWidths, "illegal state");
-#ifdef DEBUG
-    NS_ASSERTION(nsnull!=mCellMap, "no column layout data");
+#ifdef NS_DEBUG
+    NS_ASSERTION(nsnull!=mCellMap, "no cell map");
     PRInt32 numCols = GetColCount();
     NS_ASSERTION (numCols > aColIndex, "bad arg, col index out of bounds");
 #endif
@@ -2957,7 +2927,7 @@ void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
-  //printf("SET_COL_WIDTH: %p, FIF=%p setting col %d to %d\n", this, firstInFlow, aColIndex, aWidth);
+
   if (this!=firstInFlow)
     firstInFlow->SetColumnWidth(aColIndex, aWidth);
   else
@@ -2967,9 +2937,6 @@ void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
       mColumnWidths[aColIndex] = aWidth;
   }
 }
-
-
-
 
 /**
   *
@@ -3174,6 +3141,34 @@ nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
   }
   *aInstancePtrResult = it;
   return NS_OK;
+}
+
+/* helper method for determining if this is a nested table or not */
+PRBool nsTableFrame::IsNested(const nsReflowState& aReflowState, nsStylePosition *& aPosition) const
+{
+  PRBool result = PR_FALSE;
+#ifdef NS_DEBUG
+  PRInt32 counter=0;
+#endif
+  // Walk up the reflow state chain until we find a cell or the root
+  const nsReflowState* rs = aReflowState.parentReflowState;
+  while (nsnull != rs) 
+  {
+#ifdef NS_DEBUG
+    counter++;
+    NS_ASSERTION(counter<100000, "infinite loop in IsNested");
+#endif
+    nsIFrame* parentTable = nsnull;
+    rs->frame->QueryInterface(kTableFrameCID, (void**) &parentTable);
+    if (nsnull!=parentTable)
+    {
+      result = PR_TRUE;
+      parentTable->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)aPosition));
+      break;
+    }
+    rs = rs->parentReflowState;
+  }
+  return result;
 }
 
 /* helper method for getting the width of the table's containing block */

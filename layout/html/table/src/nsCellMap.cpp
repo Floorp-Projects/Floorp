@@ -16,121 +16,155 @@
  * Reserved.
  */
 
-#include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsCellMap.h"
 #include "nsTableFrame.h"
 
 #ifdef NS_DEBUG
-static PRBool gsDebug1 = PR_FALSE;
+static PRBool gsDebug = PR_FALSE;
 #else
-static const PRBool gsDebug1 = PR_FALSE;
+static const PRBool gsDebug = PR_FALSE;
 #endif
 
-static const PRInt32 gBytesPerPointer = sizeof(PRInt32);
-
-nsCellMap::nsCellMap(int aRows, int aColumns)
-  : mRowCount(aRows),
-    mColCount(aColumns)
+nsCellMap::nsCellMap(int aRowCount, int aColCount)
+  : mRowCount(0),
+    mColCount(0),
+    mTotalRowCount(0)
 {
-  mCells = nsnull;
+  mRows = nsnull;
   mColFrames = nsnull;
   mMinColSpans = nsnull;
-  Reset(aRows, aColumns);
+  Reset(aRowCount, aColCount);
 }
 
 nsCellMap::~nsCellMap()
 {
-  if (nsnull!=mCells)
+  if (nsnull!=mRows)
   {
-    for (int i=0;i<mRowCount;i++)
+    for (int i=mTotalRowCount-1; 0<i; i--)
     {
-      for (int j=0;j<mColCount;j++)
+      nsVoidArray *row = (nsVoidArray *)(mRows->ElementAt(i));
+      for (int j=mColCount; 0<j ;j--)
       {
-        int index = (i*mColCount)+j;
-        CellData* data = (CellData*)mCells[index];
+        CellData* data = (CellData *)(row->ElementAt(j));
         if (data != nsnull)
         {
           delete data;
-          mCells[index] = 0;
         }
       } 
+      delete row;
     }
-    delete [] mCells;
+    delete mRows;
   }
   if (nsnull != mColFrames)
     delete mColFrames;
   if (nsnull != mMinColSpans)
     delete [] mMinColSpans;
-  mCells = nsnull;
+  mRows = nsnull;
   mColFrames = nsnull;
   mMinColSpans = nsnull;
 };
 
 
-void nsCellMap::Reset(int aRows, int aColumns)
+void nsCellMap::Reset(int aRowCount, int aColCount)
 {
+  if (gsDebug) printf("calling Reset(%d,%d) with mRC=%d, mCC=%d, mTRC=%d\n",
+                      aRowCount, aColCount, mRowCount, mColCount, mTotalRowCount);
   if (nsnull==mColFrames)
   {
-    mColFrames = new nsVoidArray();
+    mColFrames = new nsVoidArray(); // don't give the array a count, because null col frames are illegal (unlike null cell entries in a row)
   }
 
-  // needs to be more efficient, to reuse space if possible
-  if (nsnull!=mCells)
+  if (nsnull==mRowCount)
   {
-    delete [] mCells;
-    mCells = nsnull;
+    mRows = new nsVoidArray();  // don't give the array a count, because null rows are illegal (unlike null cell entries in a row)
   }
-  mRowCount = aRows;
-  mColCount = aColumns;
-  mCells = new PRInt32 [mRowCount*mColCount*gBytesPerPointer];
-  nsCRT::memset (mCells, 0, (mRowCount*mColCount)*gBytesPerPointer);
 
-}
-
-void nsCellMap::GrowTo(int aColCount)
-{
-  if (aColCount <= mColCount)
-    return;
-  PRInt32 * newCells = new PRInt32 [mRowCount*aColCount*gBytesPerPointer];
-  for (int rowIndex = 0; rowIndex < mRowCount; rowIndex++)
+  // void arrays force the caller to handle null padding elements themselves
+  // so if the number of columns has increased, we need to add extra cols to each row
+  PRInt32 newCols = mColCount-aColCount;
+  for (PRInt32 rowIndex=0; rowIndex<mRowCount; rowIndex++)
   {
-    PRInt32* rowMap = (PRInt32*)&(newCells[rowIndex*aColCount]);
-    nsCRT::memset (rowMap, 0, aColCount*gBytesPerPointer);
-    nsCRT::memcpy(rowMap, &(mCells[rowIndex*mColCount]), mColCount*gBytesPerPointer);
+    nsVoidArray *row = (nsVoidArray *)(mRows->ElementAt(rowIndex));
+    const PRInt32 colsInRow = row->Count();
+    if (colsInRow == aColCount)
+      break;  // we already have enough columns in each row
+    for (PRInt32 colIndex = colsInRow; colIndex<aColCount; colIndex++)
+      row->AppendElement(nsnull);
   }
-  if (mCells != nsnull)
-    delete [] mCells;
-  mCells = newCells;
+
+  // if the number of rows has increased, add the extra rows
+  PRInt32 newRows = aRowCount-mTotalRowCount; // (new row count) - (total row allocation)
+  for ( ; newRows>0; newRows--)
+  {
+    nsVoidArray *row;
+    if (0!=aColCount)
+      row = new nsVoidArray(aColCount);
+    else
+      row = new nsVoidArray();
+    mRows->AppendElement(row);
+  }
+
+  mRowCount = aRowCount;
+  mTotalRowCount = PR_MAX(mTotalRowCount, mRowCount);
   mColCount = aColCount;
+  if (gsDebug) printf("leaving Reset with mRC=%d, mCC=%d, mTRC=%d\n",
+                      mRowCount, mColCount, mTotalRowCount);
 }
 
 void nsCellMap::DumpCellMap() const
 {
-  if (gsDebug1==PR_TRUE)
+  if (gsDebug==PR_TRUE)
   {
     printf("Cell Map =\n");
-    for (int i=0;i<mRowCount;i++)
-      for (int j=0;j<mColCount;j++)
+    for (int rowIndex=0; rowIndex<mRowCount ; rowIndex++)
+    {
+      nsVoidArray *row = (nsVoidArray *)(mRows->ElementAt(rowIndex)); 
+      for (int colIndex=0; colIndex<mColCount; colIndex++)
       {
-        int index = (i*mColCount)+j;
-        printf("Cell [%d,%d] = %d  for index = %d\n", i, j, mCells[index], index);
+        CellData* data = (CellData *)(row->ElementAt(colIndex));
+        printf("Cell [%d,%d] = %p  for index = %d\n", rowIndex, colIndex, data);
       }
+    }
   }
 }
 
-void nsCellMap::SetCellAt(CellData *aCell, int aRow, int aColumn)
+void nsCellMap::GrowToRow(PRInt32 aRowCount)
 {
-  //Assert aRow, aColumn
-  int index = (aRow*mColCount)+aColumn;
-  CellData* cell = GetCellAt(aRow,aColumn);
-  if (cell != nsnull)
-    delete cell;
-  mCells[index] = (PRInt32)aCell;
+  Reset(aRowCount, mColCount);
 }
 
-nsTableColFrame* nsCellMap::GetColumnFrame(PRInt32 aColIndex)
+void nsCellMap::GrowToCol(PRInt32 aColCount)
 {
+  Reset(mRowCount, aColCount);
+}
+
+void nsCellMap::SetCellAt(CellData *aCell, int aRowIndex, int aColIndex)
+{
+  NS_PRECONDITION(nsnull!=aCell, "bad aCell");
+  PRInt32 newRows = (aRowIndex+1)-mRowCount;    // add 1 to the "index" to get a "count"
+  if (0<newRows)
+  {
+    for ( ; newRows>0; newRows--)
+    {
+      nsVoidArray *row = new nsVoidArray(mColCount);
+      mRows->AppendElement(row);
+    }
+    mTotalRowCount = aRowIndex+1; // remember to always add 1 to an index when you want a count
+  }
+
+  CellData* cell = GetCellAt(aRowIndex,aColIndex);
+  if (cell != nsnull)
+    delete cell;
+  nsVoidArray *row = (nsVoidArray *)(mRows->ElementAt(aRowIndex));
+  row->ReplaceElementAt(aCell, aColIndex);
+  if (gsDebug) printf("leaving SetCellAt(%p,%d,%d) with mRC=%d, mCC=%d, mTRC=%d\n",
+                      aCell, aRowIndex, aColIndex, mRowCount, mColCount, mTotalRowCount);
+}
+
+nsTableColFrame* nsCellMap::GetColumnFrame(PRInt32 aColIndex) const
+{
+  NS_ASSERTION(nsnull!=mColFrames, "bad state");
   return (nsTableColFrame *)(mColFrames->ElementAt(aColIndex));
 }
 
@@ -151,7 +185,7 @@ void nsCellMap::SetMinColSpan(PRInt32 aColIndex, PRBool aColSpan)
   mMinColSpans[aColIndex] = aColSpan;
 }
 
-PRInt32 nsCellMap::GetMinColSpan(PRInt32 aColIndex)
+PRInt32 nsCellMap::GetMinColSpan(PRInt32 aColIndex) const
 {
   NS_ASSERTION(aColIndex<mColCount, "bad aColIndex");
 
@@ -161,6 +195,34 @@ PRInt32 nsCellMap::GetMinColSpan(PRInt32 aColIndex)
   return result;
 }
 
-
+/** return the index of the next column in aRowIndex that does not have a cell assigned to it */
+PRInt32 nsCellMap::GetNextAvailColIndex(PRInt32 aRowIndex, PRInt32 aColIndex) const
+{
+  PRInt32 result = 0;
+  if (aColIndex > mColCount)
+  {
+    result = aColIndex;
+  }
+  else
+  {
+    if (aRowIndex < mRowCount)
+    {
+      result = aColIndex;
+      nsVoidArray *row = (nsVoidArray *)(mRows->ElementAt(aRowIndex));
+      PRInt32 count = row->Count();
+      for (PRInt32 colIndex=aColIndex; colIndex<count; colIndex++)
+      {
+        void * data = row->ElementAt(colIndex);
+        if (nsnull==data)
+        {
+          result = colIndex;
+          break;
+        }
+        result++;
+      }
+    }
+  }
+  return result;
+}
 
 

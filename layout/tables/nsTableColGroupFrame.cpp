@@ -17,6 +17,7 @@
  */
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
+#include "nsTableFrame.h"
 #include "nsITableContent.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
@@ -117,6 +118,9 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
 
       // set nsColFrame-specific information
       ((nsTableColFrame *)kidFrame)->SetColumnIndex(colIndex+mStartColIndex);
+      nsIFrame* tableFrame=nsnull;
+      GetGeometricParent(tableFrame);
+      ((nsTableFrame *)tableFrame)->AddColumnFrame((nsTableColFrame *)kidFrame);
 
       // Link child frame into the list of children
       if (nsnull != prevKidFrame) {

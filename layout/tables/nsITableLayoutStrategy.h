@@ -44,6 +44,15 @@ public:
   virtual PRBool BalanceColumnWidths(nsIStyleContext *aTableStyle,
                                      const nsReflowState& aReflowState,
                                      nscoord aMaxWidth)=0;
+
+  /** return the computed max "natural" size of the table. 
+    * this is the sum of the desired size of the content taking into account table
+    * attributes, but NOT factoring in the available size the table is laying out into.
+    * the actual table width in a given situation will depend on the available size
+    * provided by the parent (especially for percent-width tables.)
+    */
+  virtual nscoord GetTableMaxWidth() const = 0;
+
 };
 
 #endif

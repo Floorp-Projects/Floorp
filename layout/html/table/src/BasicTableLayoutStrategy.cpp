@@ -321,7 +321,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
         maxColSpan = colSpan;
       if (colIndex!=cellFrame->GetColIndex()) {
         // For cells that span cols, we figure in the row using previously-built SpanInfo 
-        NS_ASSERTION(1 != cellFrame->GetColSpan(), "col index does not match row span");  // sanity check
+        NS_ASSERTION(1 != cellFrame->GetColSpan(), "col index does not match col span");  // sanity check
         continue;
       }
 
@@ -1251,6 +1251,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
     }
     tableWidth += mTableFrame->GetColumnWidth(colIndex) + colInset;
   }
+  if (1==mNumCols)
+    tableWidth += colInset;
 
   /* --- post-process if necessary --- */
 
@@ -1966,6 +1968,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
     }
     tableWidth += mTableFrame->GetColumnWidth(colIndex) + colInset;
   }
+  if (1==mNumCols)
+    tableWidth += colInset;
   /* --- post-process if necessary --- */
   // first, assign autoWidth columns a width
   if (PR_TRUE==atLeastOneAutoWidthColumn)

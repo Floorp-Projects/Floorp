@@ -29,6 +29,9 @@ struct nsStylePosition;
 
 /* ----------- SpanInfo ---------- */
 
+/** SpanInfo is a transient data structure that holds info about 
+  * cells that have col spans.  Used during column balancing.
+  */
 struct SpanInfo
 {
   PRInt32 span;
@@ -59,6 +62,11 @@ inline SpanInfo::SpanInfo(PRInt32 aColIndex, PRInt32 aSpan,
 
 /* ---------- BasicTableLayoutStrategy ---------- */
 
+/** Implementation of Nav4 compatible HTML browser table layout.
+  * The input to this class is the results from pass1 table layout.
+  * The output from this class is to set the column widths in
+  * mTableFrame.
+  */
 class BasicTableLayoutStrategy : public nsITableLayoutStrategy
 {
 public:
@@ -69,14 +77,24 @@ public:
     */
   BasicTableLayoutStrategy(nsTableFrame *aFrame, PRInt32 aNumCols);
 
-  ~BasicTableLayoutStrategy();
+  /** destructor */
+  virtual ~BasicTableLayoutStrategy();
 
   /** call once every time any table thing changes (content, structure, or style) */
   virtual PRBool Initialize(nsSize* aMaxElementSize);
 
+  /** Called during resize reflow to determine the new column widths
+    * @param aTableStyle - the resolved style for mTableFrame
+	* @param aReflowState - the reflow state for mTableFrame
+	* @param aMaxWidth - the computed max width for columns to fit into
+	*/
   virtual PRBool BalanceColumnWidths(nsIStyleContext *    aTableStyle,
                                      const nsReflowState& aReflowState,
                                      nscoord              aMaxWidth);
+
+  nscoord GetTableMaxWidth() const;
+
+protected:
 
   /** assign widths for each column.
     * if the column has a fixed coord width, use it.
@@ -234,6 +252,9 @@ protected:
   nscoord        mFixedTableWidth;        // the amount of space taken up by fixed-width columns
 
 };
+
+inline nscoord BasicTableLayoutStrategy::GetTableMaxWidth() const
+{ return mMaxTableWidth; };
 
 #endif
 
