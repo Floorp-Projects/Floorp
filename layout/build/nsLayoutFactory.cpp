@@ -100,66 +100,66 @@ extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-nsLayoutFactory::nsLayoutFactory(const nsCID &aClass)   
-{   
+nsLayoutFactory::nsLayoutFactory(const nsCID &aClass)
+{
   mRefCnt = 0;
   mClassID = aClass;
-#ifdef DEBUG_kipp
+#if 0
   char* cs = aClass.ToString();
   printf("+++ Creating layout factory for %s\n", cs);
   nsCRT::free(cs);
 #endif
-}   
+}
 
-nsLayoutFactory::~nsLayoutFactory()   
-{   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-#ifdef DEBUG_kipp
+nsLayoutFactory::~nsLayoutFactory()
+{
+  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+#if 0
   char* cs = mClassID.ToString();
   printf("+++ Destroying layout factory for %s\n", cs);
   nsCRT::free(cs);
 #endif
-}   
+}
 
 nsresult
-nsLayoutFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
+nsLayoutFactory::QueryInterface(const nsIID &aIID, void **aResult)
+{
+  if (aResult == NULL) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
+  // Always NULL result, in case of failure
+  *aResult = NULL;
 
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
+  if (aIID.Equals(kISupportsIID)) {
+    *aResult = (void *)(nsISupports*)this;
+  } else if (aIID.Equals(kIFactoryIID)) {
+    *aResult = (void *)(nsIFactory*)this;
+  }
 
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
+  if (*aResult == NULL) {
+    return NS_NOINTERFACE;
+  }
 
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-nsrefcnt
-nsLayoutFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
+  AddRef(); // Increase reference count for caller
+  return NS_OK;
+}
 
 nsrefcnt
-nsLayoutFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+nsLayoutFactory::AddRef()
+{
+  return ++mRefCnt;
+}
+
+nsrefcnt
+nsLayoutFactory::Release()
+{
+  if (--mRefCnt == 0) {
+    delete this;
+    return 0; // Don't access mRefCnt after deleting!
+  }
+  return mRefCnt;
+}
 
 #ifdef DEBUG
 #define LOG_NEW_FAILURE(_msg,_ec)                                           \
@@ -170,19 +170,19 @@ nsLayoutFactory::Release()
 #endif
 
 nsresult
-nsLayoutFactory::CreateInstance(nsISupports *aOuter,  
-                                const nsIID &aIID,  
-                                void **aResult)  
-{  
+nsLayoutFactory::CreateInstance(nsISupports *aOuter,
+                                const nsIID &aIID,
+                                void **aResult)
+{
   nsresult res;
   PRBool refCounted = PR_TRUE;
 
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
+  if (aResult == NULL) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  *aResult = NULL;  
-  
+  *aResult = NULL;
+
   nsISupports *inst = nsnull;
 
   // XXX ClassID check happens here
@@ -253,7 +253,7 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
     refCounted = PR_TRUE;
-  } 
+  }
   else if (mClassID.Equals(kContentIteratorCID)) {
     res = NS_NewContentIterator((nsIContentIterator **)&inst);
     if (NS_FAILED(res)) {
@@ -261,7 +261,7 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
     refCounted = PR_TRUE;
-  } 
+  }
   else if (mClassID.Equals(kSubtreeIteratorCID)) {
     res = NS_NewContentSubtreeIterator((nsIContentIterator **)&inst);
     if (NS_FAILED(res)) {
@@ -269,7 +269,7 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
     refCounted = PR_TRUE;
-  } 
+  }
   else if (mClassID.Equals(kCSSParserCID)) {
     res = NS_NewCSSParser((nsICSSParser**)&inst);
     if (NS_FAILED(res)) {
@@ -386,26 +386,26 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     return NS_NOINTERFACE;
   }
 
-  if (inst == NULL) {  
-    return NS_ERROR_OUT_OF_MEMORY;  
-  }  
+  if (inst == NULL) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   res = inst->QueryInterface(aIID, aResult);
 
   if (refCounted) {
     NS_RELEASE(inst);
   }
-  else if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
+  else if (res != NS_OK) {
+    // We didn't get the right interface, so clean up
     LOG_NEW_FAILURE("final QueryInterface", res);
-    delete inst;  
-  }  
+    delete inst;
+  }
 
-  return res;  
-}  
+  return res;
+}
 
-nsresult nsLayoutFactory::LockFactory(PRBool aLock)  
-{  
-  // Not implemented in simplest case.  
+nsresult nsLayoutFactory::LockFactory(PRBool aLock)
+{
+  // Not implemented in simplest case.
   return NS_OK;
-}  
+}
