@@ -130,7 +130,6 @@ namespace MetaData {
 
     void JS2Metadata::validateStatic(Context *cxt, Environment *env, FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted, size_t pos)
     {
-        Variable *v;
         FunctionInstance *fnInst = NULL;
         DEFINE_ROOTKEEPER(rk1, fnInst);
         switch (fnDef->prefix) {
@@ -139,19 +138,31 @@ namespace MetaData {
             if (hoisted)
                 defineHoistedVar(env, fnDef->name, OBJECT_TO_JS2VAL(fnInst), false, pos);
             else {
-                v = new Variable(functionClass, OBJECT_TO_JS2VAL(fnInst), true);
+                Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fnInst), true);
                 defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, pos, true);
             }
             break;
         case FunctionName::Get:
+            {
+                if (a->prototype)
+                    reportError(Exception::attributeError, "A getter cannot have the prototype attribute", pos);
+                ASSERT(!(unchecked || hoisted));
+                // XXX shouldn't be using validateStaticFunction
+                fnInst = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+                Getter *g = new Getter(fnInst);
+                defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, ReadAccess, g, pos, true);
+            }
+            break;
         case FunctionName::Set:
-            if (a->prototype)
-                reportError(Exception::attributeError, "A getter or setter cannot have the prototype attribute", pos);
-            ASSERT(!(unchecked || hoisted));
-            // XXX shouldn't be using validateStaticFunction
-            fnInst = validateStaticFunction(cxt, env, fnDef, false, false, pos);
-            v = new Variable(functionClass, OBJECT_TO_JS2VAL(fnInst), true);
-            defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, pos, true);
+            {
+                if (a->prototype)
+                    reportError(Exception::attributeError, "A setter cannot have the prototype attribute", pos);
+                ASSERT(!(unchecked || hoisted));
+                // XXX shouldn't be using validateStaticFunction
+                fnInst = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+                Setter *s = new Setter(fnInst);
+                defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, WriteAccess, s, pos, true);
+            }
             break;
         }
     }
@@ -2371,9 +2382,18 @@ doUnary:
                         {
                             JS2Class *limit = objectType(pf);
                             InstanceMember *mBase = findBaseInstanceMember(limit, multiname, ReadAccess);
-                            if (mBase)
-                                // XXX *exprType = mBase->...
+                            if (mBase) {
+                                InstanceMember *m = getDerivedInstanceMember(*exprType, mBase, ReadAccess);
+                                switch (m->memberKind) {
+                                case Member::InstanceVariableMember:
+                                    {
+                                        InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
+                                        *exprType = mv->type;
+                                    }
+                                    break;
+                                }
                                 keepLooking = false;
+                            }
                             else {
                                 js2val base = OBJECT_TO_JS2VAL(pf);
                                 Member *m = findCommonMember(&base, multiname, ReadAccess, false);
@@ -2496,6 +2516,7 @@ doUnary:
                             InstanceMember *m = getDerivedInstanceMember(*exprType, mBase, ReadAccess);
                             if (m->memberKind == Member::InstanceVariableMember) {
                                 InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
+                                *exprType = mv->type;
                                 returnRef = new (*referenceArena) SlotReference(mv->slotIndex);
                             }
                         }
@@ -4083,6 +4104,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 *rval = OBJECT_TO_JS2VAL(fInst);
                 return true;
             }
+        case Member::InstanceGetterMember:
+            {
+                InstanceGetter *ig = checked_cast<InstanceGetter *>(m);
+                *rval = invokeFunction(ig->fInst, containerVal, NULL, 0);
+                return true;
+            }
         default:
             ASSERT(false);
         }
@@ -4100,6 +4127,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 if (mv->immutable && !JS2VAL_IS_UNINITIALIZED(s->value))
                     reportError(Exception::compileExpressionError, "Reinitialization of constant", engine->errorPos());
                 s->value = mv->type->implicitCoerce(this, newValue, mv->type);
+                return true;
+            }
+        case Member::InstanceSetterMember:
+            {
+                InstanceSetter *is = checked_cast<InstanceSetter *>(m);
+                invokeFunction(is->fInst, containerVal, &newValue, 1);
                 return true;
             }
         default:
@@ -4159,7 +4192,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             *rval = (checked_cast<ConstructorMethod *>(m))->value;
             return true;
         case LocalMember::GetterMember:
+            {
+                Getter *g = checked_cast<Getter *>(m);
+                *rval = invokeFunction(g->code, JS2VAL_VOID, NULL, 0);
+            }
+            return true;
         case LocalMember::SetterMember:
+            ASSERT(false);
             break;
         }
         NOT_REACHED("Bad member kind");
@@ -4215,8 +4254,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             (checked_cast<DynamicVariable *>(m))->value = newValue;
             return true;
         case LocalMember::GetterMember:
-        case LocalMember::SetterMember:
+            ASSERT(false);
             break;
+        case LocalMember::SetterMember:
+            {
+                Setter *s = checked_cast<Setter *>(m);
+                invokeFunction(s->code, JS2VAL_VOID, &newValue, 1);
+            }
+            return true;
         }
         NOT_REACHED("Bad member kind");
         return false;

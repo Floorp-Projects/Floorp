@@ -485,20 +485,20 @@ public:
 
 class Getter : public LocalMember {
 public:
-    Getter() : LocalMember(Member::GetterMember), type(NULL), code(NULL) { }
+    Getter(FunctionInstance *code) : LocalMember(Member::GetterMember), type(NULL), code(code) { }
 
-    JS2Class *type;         // The type of the value read from this getter
-    Invokable *code;        // calling this object does the read
+    JS2Class *type;             // The type of the value read from this getter
+    FunctionInstance *code;     // calling this object does the read
 
     virtual void mark();
 };
 
 class Setter : public LocalMember {
 public:
-    Setter() : LocalMember(Member::SetterMember), type(NULL), code(NULL) { }
+    Setter(FunctionInstance *code) : LocalMember(Member::SetterMember), type(NULL), code(code) { }
 
-    JS2Class *type;         // The type of the value written into the setter
-    Invokable *code;        // calling this object does the write
+    JS2Class *type;             // The type of the value written into the setter
+    FunctionInstance *code;     // calling this object does the write
 
     virtual void mark();
 };
