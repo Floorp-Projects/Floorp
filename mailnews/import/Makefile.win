@@ -17,6 +17,13 @@
 
 DEPTH=..\..
 
-DIRS=public src resources oexpress
+LocalDirs=public src resources
+
+
+!if "$(_MSC_VER)" == "1200"
+DIRS=$(LocalDirs) oexpress
+!else
+DIRS=$(LocalDirs)
+!endif
 
 include <$(DEPTH)\config\rules.mak>
