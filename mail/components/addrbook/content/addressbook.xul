@@ -108,22 +108,22 @@
 <keyset id="tasksKeys">
   <!-- File Menu -->
   #ifdef XP_MACOSX
-    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel,shift"/>
+    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel,shift" oncommand="AbNewMessage()"/>
   #else
-    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel"/>
+    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel" oncommand="AbNewMessage()"/>
   #endif
-  <key id="key_printCard" key="&printCardViewCmd.key;" modifiers="accel"/>
-  <key id="key_close" key="&closeCmd.key;" modifiers="accel"/>
-  <key id="key_quit" key="&quitApplicationCmd.key;" modifiers="accel"/>
+  <key id="key_printCard" key="&printCardViewCmd.key;" oncommand="AbPrintCard()" modifiers="accel"/>
+  <key id="key_close" key="&closeCmd.key;" modifiers="accel" oncommand="AbClose()"/>
+  <key id="key_quit" key="&quitApplicationCmd.key;" modifiers="accel" oncommand="goQuitApplication()"/>
   <!-- Edit Menu -->
   <key id="key_undo" key="&undoCmd.key;" modifiers="accel"/>
   <key id="key_redo" key="&redoCmd.key;" modifiers="accel"/>
   <key id="key_cut" key="&cutCmd.key;" modifiers="accel"/>
   <key id="key_copy" key="&copyCmd.key;" modifiers="accel"/>
   <key id="key_paste" key="&pasteCmd.key;" modifiers="accel"/>
-  <key id="key_delete" keycode="VK_DELETE"/>
+  <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
-  <key id="key_properties" key="&propertiesCmd.key;" modifiers="accel"/>
+  <key id="key_properties" command="cmd_properties" key="&propertiesCmd.key;" modifiers="accel"/>
 
   <!-- Tab/F6 Keys -->
   <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
