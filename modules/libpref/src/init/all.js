@@ -62,7 +62,6 @@ pref("browser.cache.disk_cache_size",       7680);
 pref("browser.cache.enable",                true);
 pref("browser.cache.disk.enable",                true);
 pref("browser.cache.memory_cache_size",     1024);
-pref("browser.cache.num.accessed.limit",    100);
 pref("browser.cache.disk_cache_ssl",        false);
 pref("browser.display.foreground_color",    "#000000");
 pref("browser.display.background_color",    "#C0C0C0");
