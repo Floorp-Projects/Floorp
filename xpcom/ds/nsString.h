@@ -110,9 +110,9 @@ public:
   nsCString(const nsCString& aString);   
 
 #ifdef NEW_STRING_APIS
-  nsCString( const nsAReadableCString& );
+  explicit nsCString( const nsAReadableCString& );
 
-  nsCString(const char*);
+  explicit nsCString(const char*);
   nsCString(const char*, PRInt32);
 #else
   /**
@@ -833,10 +833,11 @@ public:
     virtual ~nsCAutoString();
 
     nsCAutoString();
-    nsCAutoString(const nsCString& );
-    nsCAutoString(const char* aString);
+    // why does this class have no copy constructor?  nsCAutoString( const nsCAutoString& );
+    explicit nsCAutoString(const nsCString& );
+    explicit nsCAutoString(const char* aString);
     nsCAutoString(const char* aString,PRInt32 aLength);
-    nsCAutoString(const CBufDescriptor& aBuffer);
+    explicit nsCAutoString(const CBufDescriptor& aBuffer);
 
 #ifndef NEW_STRING_APIS
 //  nsCAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
@@ -895,6 +896,7 @@ class NS_COM NS_ConvertUCS2toUTF8
     */
   {
     public:
+      explicit
       NS_ConvertUCS2toUTF8( const PRUnichar* aString )
         {
           Init( aString, ~PRUint32(0) /* MAXINT */);
@@ -905,6 +907,7 @@ class NS_COM NS_ConvertUCS2toUTF8
           Init( aString, aLength );
         }
 
+      explicit
       NS_ConvertUCS2toUTF8( PRUnichar aChar )
         {
           Init( &aChar, 1 );
@@ -939,7 +942,7 @@ class NS_COM NS_ConvertUCS2toUTF8
  ***************************************************************/
 class NS_COM nsSubsumeCStr : public nsCString {
 public:
-  nsSubsumeCStr(nsStr& aString);
+  explicit nsSubsumeCStr(nsStr& aString);
   nsSubsumeCStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   nsSubsumeCStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 

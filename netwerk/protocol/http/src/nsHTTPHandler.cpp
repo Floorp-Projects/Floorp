@@ -314,7 +314,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
     }
     else {
         nsCOMPtr<nsISupports> in;
-        rv = NS_NewCStringInputStream(getter_AddRefs(in), nsCString(data));
+        rv = NS_NewCStringInputStream(getter_AddRefs(in), nsCAutoString(data));
         if (NS_FAILED(rv)) return rv;
 
         rv = in->QueryInterface(NS_GET_IID(nsIInputStream),(void**)result);
