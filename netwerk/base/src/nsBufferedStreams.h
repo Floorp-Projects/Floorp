@@ -97,7 +97,7 @@ public:
     NS_DECL_NSIBUFFEREDOUTPUTSTREAM
 
     nsBufferedOutputStream() : nsBufferedStream() {}
-    virtual ~nsBufferedOutputStream() {}
+    virtual ~nsBufferedOutputStream() { nsBufferedOutputStream::Close(); }
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
