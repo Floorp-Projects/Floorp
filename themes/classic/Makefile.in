@@ -27,9 +27,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 DIRS  = communicator/search/win \
-	communicator/sidebar \
+	communicator/sidebar/win \
 	communicator/win \
-	global \
+	global/win \
 	messenger/win \
 	messenger/addressbook/win \
 	preview/win \

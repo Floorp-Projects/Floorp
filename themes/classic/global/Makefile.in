@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 ifeq ($(OS_ARCH),OS2)
 DIRS = win
 else
-DIRS = win unix
+DIRS = win
 endif
 
 include $(topsrcdir)/config/rules.mk
