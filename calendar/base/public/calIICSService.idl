@@ -57,6 +57,8 @@ interface calIIcalComponent : nsISupports
     readonly attribute PRUint32 isA;
 
     attribute AUTF8String uid;
+    attribute AUTF8String prodid;
+    attribute AUTF8String version;
 
     const PRUint32 METHOD_PUBLISH = 10012;
     const PRUint32 METHOD_REQUEST = 10013;
@@ -87,6 +89,10 @@ interface calIIcalComponent : nsISupports
     const PRUint32 STATUS_NONE = 10037;
     attribute PRUint32 status;
 
+    const PRUint32 TRANSP_OPAQUE = 10039;
+    const PRUint32 TRANSP_TRANSPARENT = 10040;
+    attribute PRUint32 transp;
+
     attribute AUTF8String summary;
     attribute AUTF8String description;
     attribute AUTF8String location;
@@ -99,7 +105,7 @@ interface calIIcalComponent : nsISupports
     const PRUint32 VISIBILITY_PRIVATE = 10008;
     const PRUint32 VISIBILITY_CONFIDENTIAL = 10009;
     const PRUint32 VISIBILITY_NONE = 10010;
-    attribute PRUint32 visibility;
+    attribute PRUint32 icalClass;
 
     attribute calIDateTime startTime;
     attribute calIDateTime endTime;
