@@ -260,7 +260,7 @@ function MailCheckBeforeOfflineChange()
       break;
       case 1:
         // download news, download mail, send unsent messages, go offline when done, msg window
-        gOfflineManager.synchronizeForOffline(false, true, false, true, msgWindow);
+        gOfflineManager.synchronizeForOffline(true, true, false, true, msgWindow);
         break;
       case 2:
         // download news, download mail, send unsent messages, go offline when done, msg window
