@@ -40,6 +40,8 @@
 #include "calDateTime.h"
 #include "calIItemBase.h"
 
+#include "calICSService.h"
+
 #include "nsCOMArray.h"
 
 extern "C" {
@@ -186,7 +188,6 @@ NS_IMETHODIMP
 calRecurrenceInfo::GetRecurStart(calIDateTime * *aRecurStart)
 {
     NS_ENSURE_ARG_POINTER(aRecurStart);
-    NS_ENSURE_ARG_POINTER(*aRecurStart);
 
     NS_IF_ADDREF(*aRecurStart = mRecurStart);
     return NS_OK;
@@ -486,5 +487,36 @@ NS_IMETHODIMP
 calRecurrenceInfo::GetOccurrences(calIItemBase *aItem, calIDateTime *aStartTime, PRUint32 aMaxCount,
                                   PRUint32 *aCount, calIItemOccurrence ***aItems)
 {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+calRecurrenceInfo::GetIcalProperty(calIIcalProperty **prop)
+{
+    icalproperty* rrule = icalproperty_new_rrule(*mIcalRecur);
+    if (!rrule)
+        return NS_ERROR_OUT_OF_MEMORY; // XXX map error code
+    *prop = new calIcalProperty(rrule, nsnull);
+    if (!*prop) {
+        icalproperty_free(rrule);
+        return NS_ERROR_FAILURE;
+    }
+
+    NS_ADDREF(*prop);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calRecurrenceInfo::SetIcalProperty(calIIcalProperty *prop)
+{
+    nsCAutoString propName;
+    if (NS_FAILED(prop->GetPropertyName(propName)))
+        return NS_ERROR_FAILURE; // hahahahaha
+    if (!propName.EqualsLiteral("RRULE"))
+        return NS_ERROR_INVALID_ARG;
+    icalproperty* rrule = ((calIcalProperty *)prop)->getIcalProperty();
+    if (!rrule)
+        return NS_ERROR_INVALID_ARG;
+    *mIcalRecur = icalproperty_get_rrule(rrule);
     return NS_OK;
 }

@@ -65,7 +65,7 @@ interface calIAttendee : nsISupports
   attribute AUTF8String    role;
 
   /**
-   * NEEDSACTION
+   * NEEDS-ACTION
    * ACCEPTED
    * DECLINED
    * TENTATIVE

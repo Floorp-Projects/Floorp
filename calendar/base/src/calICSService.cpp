@@ -51,26 +51,6 @@ extern "C" {
 #    include "ical.h"
 }
 
-class calIcalProperty : public calIIcalProperty
-{
-public:
-    calIcalProperty(icalproperty *prop, calIIcalComponent *parent) :
-        mProperty(prop), mParent(parent) { }
-    virtual ~calIcalProperty()
-    {
-        if (!mParent)
-            icalproperty_free(mProperty);
-    }
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_CALIICALPROPERTY
-
-    friend class calIcalComponent;
-protected:
-    icalproperty *mProperty;
-    nsCOMPtr<calIIcalComponent> mParent;
-};
-
 NS_IMPL_ISUPPORTS1(calIcalProperty, calIIcalProperty)
 
 NS_IMETHODIMP

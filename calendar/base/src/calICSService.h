@@ -36,7 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsCOMPtr.h"
 #include "calIICSService.h"
+extern "C" {
+#   include "ical.h"
+}
+
+class calIIcalComponent;
+class calIcalComponent;
 
 class calICSService : public calIICSService
 {
@@ -46,4 +53,26 @@ class calICSService : public calIICSService
     
     NS_DECL_ISUPPORTS
     NS_DECL_CALIICSSERVICE
+};
+
+class calIcalProperty : public calIIcalProperty
+{
+public:
+    calIcalProperty(icalproperty *prop, calIIcalComponent *parent) :
+        mProperty(prop), mParent(parent) { }
+    virtual ~calIcalProperty()
+    {
+        if (!mParent)
+            icalproperty_free(mProperty);
+    }
+
+    icalproperty *getIcalProperty() { return mProperty; }
+    
+    NS_DECL_ISUPPORTS
+    NS_DECL_CALIICALPROPERTY
+
+    friend class calIcalComponent;
+protected:
+    icalproperty *mProperty;
+    nsCOMPtr<calIIcalComponent> mParent;
 };

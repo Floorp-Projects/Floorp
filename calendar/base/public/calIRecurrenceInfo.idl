@@ -42,6 +42,8 @@ interface calIItemBase;
 interface calIDateTime;
 interface calIItemOccurrence;
 
+interface calIIcalProperty;
+
 [scriptable, uuid(a6a458cf-052c-45d1-bee7-b700ad21109a)]
 interface calIRecurrenceInfo : nsISupports
 {
@@ -71,7 +73,7 @@ interface calIRecurrenceInfo : nsISupports
 
   attribute long recurType;
 
-  attribute calIDateTime recurStart;
+  attribute calIDatetime recurStart;
 
   // setting either of these attributes calculates the other.
   // recurCount of -1 or null recurEnd means "forever"
@@ -119,4 +121,6 @@ interface calIRecurrenceInfo : nsISupports
                        in calIDateTime aStartTime,
                        in unsigned long aMaxCount,
                        out unsigned long aCount, [array,size_is(aCount),retval] out calIItemOccurrence aItems);
+
+  attribute calIIcalProperty icalProperty;
 };
