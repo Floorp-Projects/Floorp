@@ -6,8 +6,8 @@ nsIRDFContentSink.h
 nsIRDFDataSource.h
 nsIRDFNode.h
 nsIRDFObserver.h
+nsIRDFPurgeableDataSource.h
 nsIRDFResource.h
-nsIRDFResourceFactory.h
 nsIRDFService.h
 nsIRDFXMLDataSource.h
 nsIRDFXMLSource.h

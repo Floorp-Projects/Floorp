@@ -28,10 +28,11 @@ EXPORTS=\
         nsIRDFContainerUtils.h          \
         nsIRDFContentSink.h             \
 	nsIRDFDataSource.h              \
+        nsIRDFLiteral.h                 \
         nsIRDFNode.h                    \
 	nsIRDFObserver.h                \
+        nsIRDFPurgeableDataSource.h     \
         nsIRDFResource.h                \
-        nsIRDFResourceFactory.h         \
         nsIRDFService.h                 \
         nsIRDFXMLDataSource.h           \
         nsIRDFXMLSource.h               \
