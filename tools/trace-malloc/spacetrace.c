@@ -379,6 +379,22 @@ int initOptions(int aArgCount, char** aArgArray)
                 }
                 break;
 
+                case 'o':
+                {
+                    PRInt32 scanRes = 0;
+
+                    /*
+                    ** Sort Order.
+                    */
+                    scanRes = PR_sscanf(&aArgArray[traverse][2], "%u", &globals.mOptions.mOrderBy);
+                    if(1 != scanRes)
+                    {
+                        retval = __LINE__;
+                        globals.mOptions.mShowHelp = __LINE__;
+                    }
+                }
+                break;
+
                 case 'd':
                 {
                     /*
@@ -1038,14 +1054,13 @@ PRUint32 byteSize(STAllocation* aAlloc)
 
         /*
         ** Generally, the size is the last event's size.
-        ** Unless that event is a realloc of size 0 (odd free).
         */
         do
         {
             index--;
             retval = aAlloc->mEvents[index].mHeapSize;
         }
-        while(0 == retval && 0 != index && TM_EVENT_REALLOC == aAlloc->mEvents[index].mEventType);
+        while(0 == retval && 0 != index);
     }
 
     /*
@@ -1151,9 +1166,9 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
                 for(eventLoop = 0; eventLoop < aAllocation->mEventCount; eventLoop++)
                 {
                     /*
-                    ** If not a free, and not a realloc of size 0...
+                    ** If not a free...
                     */
-                    if(TM_EVENT_FREE != aAllocation->mEvents[eventLoop].mEventType && (TM_EVENT_REALLOC != aAllocation->mEvents[eventLoop].mEventType || 0 != aAllocation->mEvents[eventLoop].mHeapSize))
+                    if(TM_EVENT_FREE != aAllocation->mEvents[eventLoop].mEventType)
                     {
                         tmcallsite* callsite = aAllocation->mEvents[eventLoop].mCallsite;
                         STRun* callsiteRun = NULL;
@@ -1454,8 +1469,24 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2)
 
                 case ST_SIZE:
                 {
-                    PRUint32 size1 = byteSize(alloc1);
-                    PRUint32 size2 = byteSize(alloc2);
+                    PRUint32 size1 = 0;
+                    PRUint32 size2 = 0;
+
+                    /*
+                    ** MSVC's qsort is so freaking slow on this, use the raw
+                    **  numbers to help out....
+                    ** They seem to have a breakdown regarding the uniqueness
+                    **  of the sorted values.  The byteSize function makes a
+                    **  lot of matches happen, as everything is wrapped to a
+                    **  boundry, and this appears to be the reason.
+                    */
+#if defined(XP_WIN32) && defined(_MSC_VER)
+                    size1 = alloc1->mEvents[alloc1->mEventCount - 1].mHeapSize;
+                    size2 = alloc2->mEvents[alloc2->mEventCount - 1].mHeapSize;
+#else
+                    size1 = byteSize(alloc1);
+                    size2 = byteSize(alloc2);
+#endif
 
                     if(size1 < size2)
                     {
@@ -1675,17 +1706,7 @@ STAllocation* getLiveAllocationByHeapID(STRun* aRun, PRUint32 aHeapID)
                     }
                     break;
                         
-                    /*
-                    ** Can not be a realloc of size zero (free).
-                    ** Fall through if OK.
-                    */
                     case TM_EVENT_REALLOC:
-                    {
-                        if(0 == event->mHeapSize)
-                        {
-                            break;
-                        }
-                    }
                     case TM_EVENT_CALLOC:
                     case TM_EVENT_MALLOC:
                     {
@@ -1775,7 +1796,7 @@ STAllocEvent* appendEvent(STAllocation* aAllocation, PRUint32 aTimeval, char aEv
             ** Otherwise, mMaxTimeval remains  ST_TIMEVAL_MAX.
             ** Set in allocationTracker.
             */
-            if(TM_EVENT_FREE == aEventType || (TM_EVENT_REALLOC == aEventType && 0 == aHeapSize))
+            if(TM_EVENT_FREE == aEventType)
             {
                 aAllocation->mMaxTimeval = aTimeval;
             }
@@ -2193,6 +2214,7 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
                         static PRIntervalTime sec2int = 0;
                         PRUint32 timeval = 0;
                         PRUint64 timeval64 = LL_INIT(0, 0);
+                        char eventType = aEvent->type;
                         
                         if(0 == sec2int)
                         {
@@ -2205,7 +2227,17 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
                         LL_MUL(timeval64, (PRUint64)aEvent->u.alloc.interval, (PRUint64)ST_TIMEVAL_RESOLUTION);
                         LL_DIV(timeval64, timeval64, (PRUint64)sec2int);
                         LL_L2UI(timeval, timeval64);
-                        trackEvent(timeval, aEvent->type, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
+
+                        /*
+                        ** Play a nasty trick on reallocs of size zero.
+                        ** They are to become free events.
+                        ** This allows me to avoid all types of special case code.
+                        */
+                        if(0 == aEvent->u.alloc.size && TM_EVENT_REALLOC == aEvent->type)
+                        {
+                            eventType = TM_EVENT_FREE;
+                        }
+                        trackEvent(timeval, eventType, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
                     }
                 }
                 else
@@ -2607,9 +2639,9 @@ PRUint32 callsiteArrayFromRun(tmcallsite*** aArray, PRUint32 aExistingCount, STR
             for(eventLoop = 0; 0 == stopLoops && eventLoop < aRun->mAllocations[allocLoop]->mEventCount; eventLoop++)
             {
                 /*
-                ** Skip the free events (or realloc by zero).
+                ** Skip the free events.
                 */
-                if(TM_EVENT_FREE != aRun->mAllocations[allocLoop]->mEvents[eventLoop].mEventType && (TM_EVENT_REALLOC != aRun->mAllocations[allocLoop]->mEvents[eventLoop].mEventType || 0 != aRun->mAllocations[allocLoop]->mEvents[eventLoop].mHeapSize))
+                if(TM_EVENT_FREE != aRun->mAllocations[allocLoop]->mEvents[eventLoop].mEventType)
                 {
                     tmcallsite** expand = NULL;
 
@@ -3014,10 +3046,9 @@ int displayMemoryLeaks(STRun* aRun)
                 ** In order to be a leak, the last event of it's life must
                 **  NOT be a free operation.
                 **
-                ** A free operation is just that, a free, or it can also
-                **  be a realloc of size 0.
+                ** A free operation is just that, a free.
                 */
-                if(TM_EVENT_FREE != current->mEvents[current->mEventCount - 1].mEventType && (TM_EVENT_REALLOC != current->mEvents[current->mEventCount - 1].mEventType || 0 != current->mEvents[current->mEventCount - 1].mHeapSize))
+                if(TM_EVENT_FREE != current->mEvents[current->mEventCount - 1].mEventType)
                 {
                     PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
                     PRUint32 size = byteSize(current);
