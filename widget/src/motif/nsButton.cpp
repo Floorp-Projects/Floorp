@@ -80,9 +80,9 @@ void nsButton::Create(nsIWidget *aParent,
 void nsButton::Create(nsNativeWindow aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext = nsnull,
-                      nsIToolkit *aToolkit = nsnull,
-                      nsWidgetInitData *aInitData = nsnull)
+                      nsIDeviceContext *aContext,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
 {
 }
 
