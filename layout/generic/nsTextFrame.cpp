@@ -4630,7 +4630,16 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   // has actually changed...
   /*if (eReflowReason_Incremental == aReflowState.reason ||
       eReflowReason_Dirty == aReflowState.reason) {*/
-    maxFrameWidth  = PR_MAX(maxFrameWidth,  mRect.width);
+    // XXX See bug 71523 We should really adjust the frames x coordinate to
+    // a pixel boundary to solve this. 
+    // For now we add 1 pixel to the width of the invalidated rect.
+    // This fixes cases where the twips to pixel roundoff causes the invalidated
+    // rect's width to be one pixel short. 
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+    maxFrameWidth  = PR_MAX(maxFrameWidth,  mRect.width) + onePixel; 
     maxFrameHeight = PR_MAX(maxFrameHeight, mRect.height);
     Invalidate(aPresContext, nsRect(0,0,maxFrameWidth,maxFrameHeight));
   /*}*/
