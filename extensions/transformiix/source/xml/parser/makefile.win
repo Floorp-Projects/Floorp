@@ -21,22 +21,37 @@
 
 DEPTH=..\..\..\..\..
 
-!if defined(MOZ_XSL)
+!ifdef MOZ_XSL
 DEFINES=$(DEFINES) -DMOZ_XSL
-!endif
 
-CPPSRCS=			\
-	XMLParser.cpp		\
+CPPSRCS= 			\
+	nsSyncLoader.cpp	\
+	XMLParser.cpp	\
 	$(NULL)
 
-CPP_OBJS=				\
+CPP_OBJS= 					\
+	.\$(OBJDIR)\nsSyncLoader.obj	\
 	.\$(OBJDIR)\XMLParser.obj	\
 	$(NULL)
+!else
+CPPSRCS= 			\
+	XMLParser.cpp	\
+	$(NULL)
+
+CPP_OBJS= 					\
+	.\$(OBJDIR)\XMLParser.obj	\
+	$(NULL)
+!endif
 
 EXPORTS =	\
 	$(NULL)
 
-LINCS=-I..\..\base -I..\dom -I$(PUBLIC)\expat
+LINCS=-I..\..\base -I..\dom -I..\..\net
+!ifdef MOZ_XSL
+LINCS=$(LINCS) -I$(PUBLIC)\expat
+!else
+LINCS=$(LINCS) -Ixmlparse
+!endif
 
 LCFLAGS = \
 	-DXML_UNICODE \

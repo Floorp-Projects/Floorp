@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.27 2001/01/10 11:48:48 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.28 2001/01/12 20:06:43 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.27 $ $Date: 2001/01/10 11:48:48 $
+ * @version $Revision: 1.28 $ $Date: 2001/01/12 20:06:43 $
 **/
 
 /**
@@ -191,7 +191,7 @@ void XSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument, String& href)
     NodeList* nl = xmlDocument.getChildNodes();
     String type;
     String tmpHref;
-    for ( int i = 0; i < nl->getLength(); i++ ) {
+    for ( UInt32 i = 0; i < nl->getLength(); i++ ) {
         Node* node = nl->item(i);
         if ( node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE ) {
             String target = ((ProcessingInstruction*)node)->getTarget();
@@ -382,7 +382,7 @@ void XSLTProcessor::processTopLevel
     if (!stylesheet) return;
 
     NodeList* nl = stylesheet->getChildNodes();
-    for (int i = 0; i < nl->getLength(); i++) {
+    for (UInt32 i = 0; i < nl->getLength(); i++) {
         Node* node = nl->item(i);
         if (node->getNodeType() == Node::ELEMENT_NODE) {
             Element* element = (Element*)node;
@@ -756,7 +756,7 @@ MBool XSLTProcessor::getText
     if ( deep ) XMLDOMUtils::getNodeValue(dfrag, &dest);
     else {
         NodeList* nl = dfrag->getChildNodes();
-        for ( int i = 0; i < nl->getLength(); i++ ) {
+        for ( UInt32 i = 0; i < nl->getLength(); i++ ) {
             Node* node = nl->item(i);
             switch(node->getNodeType()) {
                 case Node::CDATA_SECTION_NODE:
@@ -992,7 +992,7 @@ void XSLTProcessor::processAction
             {
                 NodeList* nl = actionElement->getChildNodes();
                 Element* xslTemplate = 0;
-                for (int i = 0; i < nl->getLength(); i++ ) {
+                for ( UInt32 i = 0; i < nl->getLength(); i++ ) {
                     Node* tmp = nl->item(i);
                     if ( tmp->getNodeType() != Node::ELEMENT_NODE ) continue;
                     xslTemplate = (Element*)tmp;
@@ -1068,6 +1068,10 @@ void XSLTProcessor::processAction
                         // XXX (pvdb) Check if we need to set a new default namespace?
                         String nameSpaceURI;
                         ps->getNameSpaceURI(name, nameSpaceURI);
+                        // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
+                        if (ps->getOutputFormat()->isHTMLOutput()) {
+                            name.toLowerCase();
+                        }
                         element = resultDoc->createElementNS(nameSpaceURI, name);
 #else
                         element = resultDoc->createElement(name);
@@ -1313,6 +1317,10 @@ void XSLTProcessor::processAction
 
                 String nameSpaceURI;
                 ps->getNameSpaceURI(nodeName, nameSpaceURI);
+                // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
+                if (ps->getOutputFormat()->isHTMLOutput()) {
+                    nodeName.toLowerCase();
+                }
                 Element* element = resultDoc->createElementNS(nameSpaceURI, nodeName);
 #else
                 Element* element = resultDoc->createElement(nodeName);
@@ -1322,12 +1330,12 @@ void XSLTProcessor::processAction
                 ps->getNodeStack()->push(element);
                 //-- handle attributes
                 NamedNodeMap* atts = actionElement->getAttributes();
+
                 if ( atts ) {
                     String xsltNameSpace = ps->getXSLNamespace();
                     NodeSet nonXSLAtts(atts->getLength());
                     //-- process special XSL attributes first
-                    int i;
-                    for (i = 0; i < atts->getLength(); i++ ) {
+                    for ( UInt32 i = 0; i < atts->getLength(); i++ ) {
                         Attr* attr = (Attr*) atts->item(i);
                         //-- filter attributes in the XSLT namespace
                         String attrNameSpace;
@@ -1344,8 +1352,8 @@ void XSLTProcessor::processAction
                         else nonXSLAtts.add(attr);
                     }
                     //-- process all non XSL attributes
-                    for ( i = 0; i < nonXSLAtts.size(); i++ ) {
-                        Attr* attr = (Attr*) nonXSLAtts.get(i);
+                    for ( int j = 0; j < nonXSLAtts.size(); j++ ) {
+                        Attr* attr = (Attr*) nonXSLAtts.get(j);
                         Attr* newAttr = resultDoc->createAttribute(attr->getName());
                         //-- process Attribute Value Templates
                         String value;
@@ -1356,8 +1364,7 @@ void XSLTProcessor::processAction
                 }
                 //-- process children
                 NodeList* nl = xslAction->getChildNodes();
-                int i;
-                for ( i = 0; i < nl->getLength(); i++) {
+                for ( UInt32 i = 0; i < nl->getLength(); i++) {
                     processAction(node, nl->item(i),ps);
                 }
                 ps->getNodeStack()->pop();
@@ -1447,7 +1454,7 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
 
     //-- handle xsl:with-param elements
     NodeList* nl = xslAction->getChildNodes();
-    for (int i = 0; i < nl->getLength(); i++) {
+    for (UInt32 i = 0; i < nl->getLength(); i++) {
         Node* tmpNode = nl->item(i);
         int nodeType = tmpNode->getNodeType();
         if ( nodeType == Node::ELEMENT_NODE ) {
@@ -1500,7 +1507,7 @@ void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorStat
         bindings->push(&localBindings);
         processTemplateParams(xslTemplate, node, ps, params);
         NodeList* nl = xslTemplate->getChildNodes();
-        for (int i = 0; i < nl->getLength(); i++)
+        for (UInt32 i = 0; i < nl->getLength(); i++)
             processAction(node, nl->item(i), ps);
         bindings->pop();
     }
@@ -1522,9 +1529,8 @@ void XSLTProcessor::processTemplateParams
 
     if ( xslTemplate ) {
         NodeList* nl = xslTemplate->getChildNodes();
-        int i = 0;
         //-- handle params
-        for (i = 0; i < nl->getLength(); i++) {
+        for (UInt32 i = 0; i < nl->getLength(); i++) {
             Node* tmpNode = nl->item(i);
             int nodeType = tmpNode->getNodeType();
             if ( nodeType == Node::ELEMENT_NODE ) {
@@ -1591,7 +1597,7 @@ ExprResult* XSLTProcessor::processVariable
         Document* resultTree = ps->getResultDocument();
         NodeStack* nodeStack = ps->getNodeStack();
         nodeStack->push(resultTree->createDocumentFragment());
-        for (int i = 0; i < nl->getLength(); i++) {
+        for (UInt32 i = 0; i < nl->getLength(); i++) {
             processAction(node, nl->item(i), ps);
         }
         Node* node = nodeStack->pop();
@@ -1631,6 +1637,10 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
 
             String nameSpaceURI;
             ps->getNameSpaceURI(nodeName, nameSpaceURI);
+            // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
+            if (ps->getOutputFormat()->isHTMLOutput()) {
+                nodeName.toLowerCase();
+            }
             copy = resultDoc->createElementNS(nameSpaceURI, nodeName);
 #else
             copy = resultDoc->createElement(nodeName);
@@ -1751,7 +1761,6 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
       //------------------------------------------------------/
      //- index templates and process top level xsl elements -/
     //------------------------------------------------------/
-
     processTopLevel(xslDocument, ps);
 
       //---------------------------------------/
@@ -1765,10 +1774,17 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
         nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
         if (NS_SUCCEEDED(res)) {
-            nsIDOMNode* docElement = (resultDocument->getDocumentElement())->getNSObj();
+            Node* docElement = resultDocument->getDocumentElement();
+            nsIDOMNode* nsDocElement;
+            if (docElement) {
+                nsDocElement = docElement->getNSNode();
+            }
+            else {
+                nsDocElement = nsnull;
+            }
 
             anObserverService->AddObserver(aObserver, topic.GetUnicode());
-            anObserverService->Notify(docElement, topic.GetUnicode(), nsnull);
+            anObserverService->Notify(nsDocElement, topic.GetUnicode(), nsnull);
         }
     }
 

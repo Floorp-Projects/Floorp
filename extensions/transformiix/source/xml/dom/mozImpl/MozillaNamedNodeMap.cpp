@@ -89,7 +89,7 @@ Node* NamedNodeMap::setNamedItem(Node* aNode)
 {
     nsCOMPtr<nsIDOMNode> node;
 
-    if (NS_SUCCEEDED(nsNamedNodeMap->SetNamedItem(aNode->getNSObj(),
+    if (NS_SUCCEEDED(nsNamedNodeMap->SetNamedItem(aNode->getNSNode(),
                 getter_AddRefs(node))))
         return ownerDocument->createWrapper(node);
     else

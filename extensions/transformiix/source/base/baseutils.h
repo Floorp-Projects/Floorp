@@ -24,7 +24,7 @@
  * Tom Kneeland, tomk@mitre.org
  *    -- added UInt32 to provide a common unsigned integer
  *
- * $Id: baseutils.h,v 1.5 2000/08/26 04:45:02 Peter.VanderBeken%pandora.be Exp $
+ * $Id: baseutils.h,v 1.6 2001/01/12 20:06:09 axel%pike.org Exp $
  */
 
 // Basic Definitions used throughout many of these classes
@@ -34,7 +34,7 @@
 #define TRANSFRMX_BASEUTILS_H
 
 typedef int Int32;
-#ifndef nsNetUtil_h__
+#ifndef __MACTYPES__
 typedef unsigned int UInt32;
 #endif
 

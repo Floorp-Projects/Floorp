@@ -29,7 +29,9 @@
 // Who  When        What
 
 #include "HashTable.h"
+#ifndef MOZ_XSL
 #include <iostream.h>
+#endif
 
 HashTable::HashTable()
 {

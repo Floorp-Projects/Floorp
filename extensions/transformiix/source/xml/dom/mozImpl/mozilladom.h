@@ -46,10 +46,10 @@
 #endif
 
 #include "TxString.h"
-#include "HashTable.h"
 
 //A bunch of Mozilla DOM headers
 #include "nsCOMPtr.h"
+#include "nsHashtable.h"
 
 #include "nsIDocument.h"
 
@@ -104,7 +104,7 @@ class MozillaObjectWrapper : public MITREObject
         void setNSObj(nsISupports* aNsObject);
         void setNSObj(nsISupports* aNsObject, Document* aaOwner);
 
-        void* getKey() const;
+        nsISupports* getNSObj() const;
    
     protected:
         // We want to maintain a pointer back to the aOwner document for memory
@@ -161,7 +161,7 @@ class Node : public MozillaObjectWrapper
 
         void setNSObj(nsIDOMNode* aNode);
         void setNSObj(nsIDOMNode* aNode, Document* aOwner);
-        nsIDOMNode* getNSObj();
+        nsIDOMNode* getNSNode();
 
         // Read functions
         virtual const String& getNodeName();
@@ -273,8 +273,9 @@ class Document : public Node
         // Determine what kind of node this is, and create the appropriate
         // wrapper for it.
         Node* createWrapper(nsIDOMNode* node);
-        void addWrapper(MITREObject* aObj, void* aHashValue);
-        MITREObject* removeWrapper(void* aHashValue);
+        void addWrapper(MozillaObjectWrapper* aObject);
+        MITREObject* removeWrapper(nsISupports* aMozillaObject);
+        MITREObject* removeWrapper(MozillaObjectWrapper* aObject);
 
         // Factory functions for various node types.  These functions
         // are responsible for storing the wrapper classes they create in 
@@ -287,9 +288,6 @@ class Document : public Node
     
         Element* createElement(const String& aTagName);
         Element* createElement(nsIDOMElement* aElement);
-    
-        Element* createElementNS(const String& aNamespaceURI,
-                    const String& aTagName);
 
         Attr* createAttribute(const String& aName);
         Attr* createAttribute(nsIDOMAttr* aAttr);
@@ -327,12 +325,18 @@ class Document : public Node
  
         NamedNodeMap* createNamedNodeMap(nsIDOMNamedNodeMap* aMap);
 
+        // Introduced in DOM Level 2
+        Element* createElementNS(const String& aNamespaceURI,
+                    const String& aTagName);
+
+        Element* getElementById(const String aID);
+
     private:
         nsIDOMDocument* nsDocument;
 
         PRBool bInHashTableDeletion;
 
-        HashTable wrapperHashTable;
+        nsObjectHashtable *wrapperHashTable;
 };
 
 /**

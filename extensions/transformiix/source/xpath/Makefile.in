@@ -61,11 +61,18 @@ CPPSRCS = AdditiveExpr.cpp \
         VariableRefExpr.cpp \
         WildCardExpr.cpp \
         XPathNames.cpp
-##      Parser.cpp \
+ifdef MOZ_XSL
+CPPSRCS += XPathProcessor.cpp
+endif
 
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../base -I$(srcdir)/../xml \
-        -I$(srcdir)/../xml/dom -I$(srcdir)/../xslt
+        -I$(srcdir)/../xml/dom -I$(srcdir)/../xml/util \
+        -I$(srcdir)/../xslt -I$(srcdir)/../xslt/util \
+        -I$(srcdir)/../xslt/functions
+ifdef MOZ_XSL
+INCLUDES += -I$(srcdir)
+endif
 
 install:: $(OBJS)

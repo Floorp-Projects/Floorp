@@ -34,11 +34,14 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.10 2000/08/26 04:50:58 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLParser.cpp,v 1.11 2001/01/12 20:06:26 axel%pike.org Exp $
  */
 
 #include "XMLParser.h"
-
+#ifdef MOZ_XSL
+#include "nsSyncLoader.h"
+#include "URIUtils.h"
+#endif
 /**
  *  Implementation of an In-Memory DOM based XML parser.  The actual XML
  *  parsing is provided by EXPAT.
@@ -78,7 +81,27 @@ Document* XMLParser::getDocumentFromURI
 {
 
 #ifdef MOZ_XSL
-    return NULL;
+    nsresult rv = NS_OK;
+    String documentURL;
+    URIUtils::resolveHref(href, documentBase, documentURL);
+    nsCOMPtr<nsIURI> documentURI;
+    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return NULL;
+
+    char *hrefStr = (documentURL.getConstNSString()).ToNewCString();
+    rv = pService->NewURI(hrefStr, nsnull, getter_AddRefs(documentURI));
+    nsCRT::free(hrefStr);
+    if (NS_FAILED(rv)) return NULL;
+
+    nsCOMPtr<nsISyncLoader>aLoader = do_CreateInstance( TRANSFORMIIX_SYNCLOADER_CONTRACTID, &rv );
+    if (NS_FAILED(rv)) return NULL;
+
+    nsCOMPtr <nsIDocument> theDocument;
+    aLoader->LoadDocument(documentURI, getter_AddRefs(theDocument));
+    nsCOMPtr<nsIDOMDocument> theDOMDocument = do_QueryInterface(theDocument, & rv);
+    if (NS_FAILED(rv)) return NULL;
+
+    return new Document(theDOMDocument);
 #else
     istream* xslInput = URIUtils::getInputStream(href, documentBase, errMsg);
 
@@ -158,7 +181,6 @@ void startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 {
   ParserState* ps = (ParserState*)userData;
   Element* newElement;
-  Attr* newAttribute;
   XML_Char* attName;
   XML_Char* attValue;
   XML_Char** theAtts = (XML_Char**)atts;

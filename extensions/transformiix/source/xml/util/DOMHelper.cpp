@@ -19,13 +19,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.cpp,v 1.5 2000/08/27 05:58:59 kvisco%ziplink.net Exp $
+ * $Id: DOMHelper.cpp,v 1.6 2001/01/12 20:06:29 axel%pike.org Exp $
  */
 
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/08/27 05:58:59 $
+ * @version $Revision: 1.6 $ $Date: 2001/01/12 20:06:29 $
 **/
 
 #include "DOMHelper.h"
@@ -116,7 +116,7 @@ Node* DOMHelper::getParentNode(Node* node) {
         return node->getParentNode();
 
 #ifdef MOZ_XSL
-    void* key = node->getKey();
+    void* key = node->getNSObj();
 #else
     Int32 key = (Int32)node;
 #endif
@@ -144,7 +144,7 @@ Node* DOMHelper::getParentNode(Node* node) {
 void DOMHelper::addParentReference(Node* child, Node* parent) {
 
 #ifdef MOZ_XSL
-    void* key = child->getKey();
+    void* key = child->getNSObj();
 #else
     Int32 key = (Int32)child;
 #endif
@@ -207,7 +207,7 @@ void DOMHelper::continueIndexing(Node* node) {
                 Element* element = (Element*)idxState->next;
                 NamedNodeMap* atts = element->getAttributes();
                 if (atts) {
-                    for (int i = 0; i < atts->getLength(); i++) {
+                    for (UInt32 i = 0; i < atts->getLength(); i++) {
                         Node* tmpNode = atts->item(i);
                         addParentReference(tmpNode, element);
                         if (node == tmpNode) found = MB_TRUE;
@@ -274,7 +274,7 @@ OrderInfo* DOMHelper::getDocumentOrder(Node* node) {
     if (!node) return 0;
 
 #ifdef MOZ_XSL
-    void* key = node->getKey();
+    void* key = node->getNSObj();
 #else
     Int32 key = (Int32)node;
 #endif

@@ -144,9 +144,9 @@ Document* NodeDefinition::getOwnerDocument() const
   return ownerDocument;
 }
 
-Node* NodeDefinition::item(Int32 index)
+Node* NodeDefinition::item(UInt32 index)
 {
-  Int32 selectLoop;
+  UInt32 selectLoop;
   NodeDefinition* pSelectNode = firstChild;
 
   if (index < length)
@@ -160,7 +160,7 @@ Node* NodeDefinition::item(Int32 index)
   return NULL;
 }
 
-Int32 NodeDefinition::getLength()
+UInt32 NodeDefinition::getLength()
 {
   return length;
 }

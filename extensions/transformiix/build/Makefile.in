@@ -103,10 +103,12 @@ OBJS =../source/base/ArrayList.o \
   ../source/xpath/VariableRefExpr.o \
   ../source/xpath/WildCardExpr.o \
   ../source/xpath/XPathNames.o \
+  ../source/xpath/XPathProcessor.o \
   ../source/xml/XMLUtils.o \
   ../source/xml/XMLDOMUtils.o \
   ../source/xml/util/DOMHelper.o \
   ../source/xml/parser/XMLParser.o \
+  ../source/xml/parser/nsSyncLoader.o \
   ../source/xml/parser/hashtable.o \
   ../source/xml/parser/xmlrole.o \
   ../source/xml/parser/xmlparse.o \
@@ -117,8 +119,10 @@ OBJS =../source/base/ArrayList.o \
   ../source/xslt/ProcessorState.o \
   ../source/xslt/VariableBinding.o \
   ../source/xslt/XSLTProcessor.o \
+  ../source/xslt/functions/CurrentFunctionCall.o \
   ../source/xslt/functions/DocumentFunctionCall.o \
   ../source/xslt/functions/GenerateIdFunctionCall.o \
+  ../source/xslt/functions/SystemPropertyFunctionCall.o \
   ../source/xslt/util/NodeSorter.o \
   ../source/xslt/util/NodeStack.o \
   XSLTProcessorModule.o

@@ -61,6 +61,9 @@ CPPSRCS=				\
 	VariableRefExpr.cpp		\
 	WildCardExpr.cpp		\
 	XPathNames.cpp			\
+!if defined(MOZ_XSL)
+	XPathProcessor.cpp		\
+!endif
 	$(NULL)
 
 CPP_OBJS=						\
@@ -99,13 +102,17 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\VariableRefExpr.obj			\
 	.\$(OBJDIR)\WildCardExpr.obj			\
 	.\$(OBJDIR)\XPathNames.obj			\
+!if defined(MOZ_XSL)
+	.\$(OBJDIR)\XPathProcessor.obj		\
+!endif
 	$(NULL)
 
 EXPORTS = \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\base -I..\util -I..\xml\dom \
-      -I..\xml -I ..\xslt
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+      -I..\base -I..\util -I..\xml -I..\xml\util -I..\xml\dom -I..\xslt \
+      -I..\xslt\functions -I..\xslt\util
 
 LCFLAGS = \
         $(LCFLAGS) \

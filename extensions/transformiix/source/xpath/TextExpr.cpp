@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: TextExpr.cpp,v 1.1 2000/04/06 07:45:49 kvisco%ziplink.net Exp $
+ * $Id: TextExpr.cpp,v 1.2 2001/01/12 20:06:37 axel%pike.org Exp $
  */
 
 #include "Expr.h"
@@ -41,7 +41,7 @@ ExprResult* TextExpr::evaluate(Node* context, ContextState* cs) {
 
     NodeList* nl = context->getChildNodes();
 
-    for (int i = 0; i < nl->getLength(); i++ ) {
+    for ( UInt32 i = 0; i < nl->getLength(); i++ ) {
         Node* node = nl->item(i);
         if ( node->getNodeType() == Node::TEXT_NODE )
             nodeSet->add(node);

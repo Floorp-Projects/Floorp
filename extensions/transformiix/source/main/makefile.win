@@ -1,0 +1,139 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..\..\..\..
+
+MAKE_OBJ_TYPE = EXE
+PROGRAM = ..\..\transformiix.exe
+
+CPP_OBJS=                                       \
+  ../base/$(OBJDIR)/ArrayList.obj \
+  ../base/$(OBJDIR)/CommandLineUtils.obj \
+  ../base/$(OBJDIR)/DefaultStringComparator.obj \
+  ../base/$(OBJDIR)/Double.obj \
+  ../base/$(OBJDIR)/HashTable.obj \
+  ../base/$(OBJDIR)/Integer.obj \
+  ../base/$(OBJDIR)/List.obj \
+  ../base/$(OBJDIR)/MITREObjectWrapper.obj \
+  ../base/$(OBJDIR)/Map.obj \
+  ../base/$(OBJDIR)/NamedMap.obj \
+  ../base/$(OBJDIR)/SimpleErrorObserver.obj \
+  ../base/$(OBJDIR)/Stack.obj \
+  ../base/$(OBJDIR)/StringComparator.obj \
+  ../base/$(OBJDIR)/StringList.obj \
+  ../base/$(OBJDIR)/Tokenizer.obj \
+  ../base/$(OBJDIR)/TxString.obj \
+  ../net/$(OBJDIR)/URIUtils.obj \
+  ../xml/dom/standalone/$(OBJDIR)/Attr.obj \
+  ../xml/dom/standalone/$(OBJDIR)/CDATASection.obj \
+  ../xml/dom/standalone/$(OBJDIR)/DocumentType.obj \
+  ../xml/dom/standalone/$(OBJDIR)/EntityReference.obj \
+  ../xml/dom/standalone/$(OBJDIR)/CharacterData.obj \
+  ../xml/dom/standalone/$(OBJDIR)/Comment.obj \
+  ../xml/dom/standalone/$(OBJDIR)/DocumentFragment.obj \
+  ../xml/dom/standalone/$(OBJDIR)/DOMImplementation.obj \
+  ../xml/dom/standalone/$(OBJDIR)/NodeListDefinition.obj \
+  ../xml/dom/standalone/$(OBJDIR)/NodeDefinition.obj \
+  ../xml/dom/standalone/$(OBJDIR)/Element.obj \
+  ../xml/dom/standalone/$(OBJDIR)/NamedNodeMap.obj \
+  ../xml/dom/standalone/$(OBJDIR)/Document.obj \
+  ../xml/dom/standalone/$(OBJDIR)/Entity.obj \
+  ../xml/dom/standalone/$(OBJDIR)/Notation.obj \
+  ../xml/dom/standalone/$(OBJDIR)/ProcessingInstruction.obj \
+  ../xml/dom/standalone/$(OBJDIR)/Text.obj \
+  ../xpath/$(OBJDIR)/AdditiveExpr.obj \
+  ../xpath/$(OBJDIR)/AttributeExpr.obj \
+  ../xpath/$(OBJDIR)/AttributeValueTemplate.obj \
+  ../xpath/$(OBJDIR)/BasicNodeExpr.obj \
+  ../xpath/$(OBJDIR)/BooleanExpr.obj \
+  ../xpath/$(OBJDIR)/BooleanFunctionCall.obj \
+  ../xpath/$(OBJDIR)/BooleanResult.obj \
+  ../xpath/$(OBJDIR)/ElementExpr.obj \
+  ../xpath/$(OBJDIR)/ErrorFunctionCall.obj \
+  ../xpath/$(OBJDIR)/ExprLexer.obj \
+  ../xpath/$(OBJDIR)/ExprParser.obj \
+  ../xpath/$(OBJDIR)/ExtensionFunctionCall.obj \
+  ../xpath/$(OBJDIR)/FilterExpr.obj \
+  ../xpath/$(OBJDIR)/FunctionCall.obj \
+  ../xpath/$(OBJDIR)/IdentityExpr.obj \
+  ../xpath/$(OBJDIR)/LocationStep.obj \
+  ../xpath/$(OBJDIR)/MultiplicativeExpr.obj \
+  ../xpath/$(OBJDIR)/NodeSet.obj \
+  ../xpath/$(OBJDIR)/NodeSetFunctionCall.obj \
+  ../xpath/$(OBJDIR)/NumberExpr.obj \
+  ../xpath/$(OBJDIR)/NumberFunctionCall.obj \
+  ../xpath/$(OBJDIR)/NumberResult.obj \
+  ../xpath/$(OBJDIR)/ParentExpr.obj \
+  ../xpath/$(OBJDIR)/PathExpr.obj \
+  ../xpath/$(OBJDIR)/PredicateList.obj \
+  ../xpath/$(OBJDIR)/RelationalExpr.obj \
+  ../xpath/$(OBJDIR)/RootExpr.obj \
+  ../xpath/$(OBJDIR)/StringExpr.obj \
+  ../xpath/$(OBJDIR)/StringFunctionCall.obj \
+  ../xpath/$(OBJDIR)/StringResult.obj \
+  ../xpath/$(OBJDIR)/TextExpr.obj \
+  ../xpath/$(OBJDIR)/UnionExpr.obj \
+  ../xpath/$(OBJDIR)/VariableRefExpr.obj \
+  ../xpath/$(OBJDIR)/WildCardExpr.obj \
+  ../xpath/$(OBJDIR)/XPathNames.obj \
+  ../xml/$(OBJDIR)/XMLUtils.obj \
+  ../xml/$(OBJDIR)/XMLDOMUtils.obj \
+  ../xml/util/$(OBJDIR)/DOMHelper.obj \
+  ../xml/parser/$(OBJDIR)/XMLParser.obj \
+  ../xml/printer/$(OBJDIR)/XMLPrinter.obj \
+  ../xml/printer/$(OBJDIR)/HTMLPrinter.obj \
+  ../xml/printer/$(OBJDIR)/TEXTPrinter.obj \
+  ../xslt/$(OBJDIR)/OutputFormat.obj \
+  ../xslt/$(OBJDIR)/Names.obj \
+  ../xslt/$(OBJDIR)/Numbering.obj \
+  ../xslt/$(OBJDIR)/ProcessorState.obj \
+  ../xslt/$(OBJDIR)/VariableBinding.obj \
+  ../xslt/$(OBJDIR)/XSLTProcessor.obj \
+  ../xslt/functions/$(OBJDIR)/CurrentFunctionCall.obj \
+  ../xslt/functions/$(OBJDIR)/DocumentFunctionCall.obj \
+  ../xslt/functions/$(OBJDIR)/GenerateIdFunctionCall.obj \
+  ../xslt/functions/$(OBJDIR)/SystemPropertyFunctionCall.obj \
+  ../xslt/util/$(OBJDIR)/NodeSorter.obj \
+  ../xslt/util/$(OBJDIR)/NodeStack.obj \
+  ./$(OBJDIR)/transformiix.obj \
+	$(NULL)
+
+EXPORTS = 					\
+	$(NULL)
+
+LINCS=-I../xslt -I../base -I../net \
+  -I../xml -I../xml/dom -I../xml/util \
+  -I../xml/printer -I../xpath -I../xslt/util \
+  -I../xslt/functions -I../xml/parser
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+LLIBS=        \
+ $(DIST)\lib\expat.lib	\
+ $(NULL)	
+
+CPP_PROG_LINK		= 1
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(OBJDIR) $(PROGRAM)

@@ -25,6 +25,8 @@ DIRS=dom parser util
 
 !if defined(MOZ_XSL)
 DEFINES=$(DEFINES) -DMOZ_XSL
+!else
+DIRS = $(DIRS) printer
 !endif
 
 CPPSRCS=				\

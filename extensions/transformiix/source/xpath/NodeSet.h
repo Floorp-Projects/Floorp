@@ -24,13 +24,13 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- moved initialization of DEFAULT_SIZE to NodeSet.cpp
  *
- * $Id: NodeSet.h,v 1.3 2000/06/11 12:22:51 Peter.VanderBeken%pandora.be Exp $
+ * $Id: NodeSet.h,v 1.4 2001/01/12 20:06:35 axel%pike.org Exp $
  */
 
 /**
  * NodeSet
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/06/11 12:22:51 $
+ * @version $Revision: 1.4 $ $Date: 2001/01/12 20:06:35 $
 **/
 
 #ifndef TRANSFRMX_NODESET_H
@@ -39,10 +39,18 @@
 #include "MITREObject.h"
 #include "dom.h"
 #include "ExprResult.h"
-#include "XMLDOMUtils.h"
 
-class NodeSet : public ExprResult {
+#ifdef MOZ_XSL
+#include "nsIDOMNodeList.h"
+#include "nsIScriptObjectOwner.h"
 
+class NodeSet : public ExprResult,
+                public nsIDOMNodeList,
+                public nsIScriptObjectOwner
+#else
+class NodeSet : public ExprResult
+#endif
+{
 
 public:
 
@@ -70,6 +78,17 @@ public:
     **/
     virtual ~NodeSet();
 
+#ifdef MOZ_XSL
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsIDocumentTransformer interface
+    NS_DECL_IDOMNODELIST
+
+    // nsIScriptObjectOwner interface
+    NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+    NS_IMETHOD SetScriptObject(void* aScriptObject);
+#endif
     /**
      * Adds the specified Node to this NodeSet if it is not already
      * contained within in this NodeSet.
@@ -199,6 +218,10 @@ private:
       //-------------------/
      //- Private Members -/
     //-------------------/
+
+#ifdef MOZ_XSL
+    void* mScriptObject;
+#endif
 
     static const int DEFAULT_SIZE;
 

@@ -22,7 +22,7 @@
 DEPTH=..\..\..\..
 
 !if defined(MOZ_XSL)
-DEFINES=-DMOZ_XSL
+DEFINES= $(DEFINES) -DMOZ_XSL
 !endif
 
 CPPSRCS=				\
@@ -34,17 +34,25 @@ CPPSRCS=				\
 	Integer.cpp			\
 	List.cpp			\
 	MITREObjectWrapper.cpp		\
-	MozillaString.cpp		\
 	NamedMap.cpp			\
 	SimpleErrorObserver.cpp		\
 	Stack.cpp			\
 	Map.cpp				\
 	StringComparator.cpp		\
 	StringList.cpp			\
-	Tokenizer.cpp			\
-	$(NULL)
+	Tokenizer.cpp			
 
-CPP_OBJS=					\
+!ifdef MOZ_XSL
+CPPSRCS = $(CPPSRCS)			\
+	MozillaString.cpp		\
+	$(NULL)
+!else
+CPPSRCS = $(CPPSRCS)			\
+	TxString.cpp			\
+	$(NULL)
+!endif
+
+CPP_OBJS=                                       \
 	.\$(OBJDIR)\ArrayList.obj 		\
 	.\$(OBJDIR)\CommandLineUtils.obj	\
 	.\$(OBJDIR)\DefaultStringComparator.obj	\
@@ -53,15 +61,23 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\Integer.obj			\
 	.\$(OBJDIR)\List.obj			\
 	.\$(OBJDIR)\MITREObjectWrapper.obj	\
-	.\$(OBJDIR)\MozillaString.obj		\
 	.\$(OBJDIR)\NamedMap.obj		\
 	.\$(OBJDIR)\SimpleErrorObserver.obj	\
 	.\$(OBJDIR)\Stack.obj			\
 	.\$(OBJDIR)\Map.obj			\
 	.\$(OBJDIR)\StringComparator.obj	\
 	.\$(OBJDIR)\StringList.obj		\
-	.\$(OBJDIR)\Tokenizer.obj		\
+	.\$(OBJDIR)\Tokenizer.obj		
+
+!ifdef MOZ_XSL
+CPP_OBJS = $(CPP_OBJS)			\
+	.\$(OBJDIR)\MozillaString.obj	\
 	$(NULL)
+!else
+CPP_OBJS = $(CPP_OBJS)			\
+	.\$(OBJDIR)\TxString.obj	\
+	$(NULL)
+!endif
 
 EXPORTS = 					\
 	$(NULL)

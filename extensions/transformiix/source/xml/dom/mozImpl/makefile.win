@@ -21,7 +21,9 @@
 
 DEPTH=..\..\..\..\..\..
 
-DEFINES=-DMOZ_XSL
+!ifdef MOZ_XSL
+DEFINES=$(DEFINES) -DMOZ_XSL
+!endif
 
 CPPSRCS=				\
 	MozillaAttr.cpp			\

@@ -92,9 +92,9 @@ void NodeListDefinition::append(Node& newNode)
 //
 // Return the Node contained in the item specified
 //
-Node* NodeListDefinition::item(Int32 index)
+Node* NodeListDefinition::item(UInt32 index)
 {
-  Int32 selectLoop;
+  UInt32 selectLoop;
   ListItem* pListItem = firstItem;
 
   if (index < length)
@@ -111,7 +111,7 @@ Node* NodeListDefinition::item(Int32 index)
 //
 // Return the number of items in the list
 //
-Int32 NodeListDefinition::getLength()
+UInt32 NodeListDefinition::getLength()
 {
   return length;
 }

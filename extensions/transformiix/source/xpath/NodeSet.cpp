@@ -27,18 +27,35 @@
  * Olivier Gerardin, ogerardin@vo.lu
  *    -- fixed numberValue()
  *
- * $Id: NodeSet.cpp,v 1.3 2000/06/11 12:22:48 Peter.VanderBeken%pandora.be Exp $
+ * $Id: NodeSet.cpp,v 1.4 2001/01/12 20:06:35 axel%pike.org Exp $
  */
 
 #include "NodeSet.h"
+#include "XMLDOMUtils.h"
+#ifndef MOZ_XSL
 #include <iostream.h>
+#else
+#include "nsDOMCID.h"
+#include "nsIDOMScriptObjectFactory.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIServiceManager.h"
+#endif
+
 /**
  * NodeSet <BR />
  * This class was ported from XSL:P. <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.3 $ $Date: 2000/06/11 12:22:48 $
+ * @version $Revision: 1.4 $ $Date: 2001/01/12 20:06:35 $
 **/
 
+
+#ifdef MOZ_XSL
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+
+NS_IMPL_ISUPPORTS2(NodeSet,
+                   nsIDOMNodeList,
+                   nsIScriptObjectOwner)
+#endif
 
   //-------------/
  //- Constants -/
@@ -77,6 +94,11 @@ NodeSet::NodeSet(const NodeSet& source) {
  * Helper method for Constructors
 **/
 void NodeSet::initialize(int size) {
+#ifdef MOZ_XSL
+    NS_INIT_ISUPPORTS();
+
+    mScriptObject = nsnull;
+#endif
     elements = new Node*[size];
     for ( int i = 0; i < size; i++ ) elements[i] = 0;
     elementCount = 0;
@@ -98,7 +120,7 @@ NodeSet::~NodeSet() {
  * @return true if the Node is added to the NodeSet
 **/
 MBool NodeSet::add(Node* node) {
-    if (!contains(node)) {
+    if (node && !contains(node)) {
         if (elementCount == bufferSize) increaseSize();
         elements[elementCount++] = node;
         return MB_TRUE;
@@ -115,7 +137,7 @@ MBool NodeSet::add(Node* node) {
 **/
 MBool NodeSet::add(int index, Node* node)
 {
-    if ((index < 0) || (index > elementCount)) return MB_FALSE;
+    if (!node || (index < 0) || (index > elementCount)) return MB_FALSE;
 
     if (contains(node)) return MB_FALSE;
 
@@ -190,6 +212,18 @@ Node* NodeSet::get(int index) {
 } //-- get
 
 
+#ifdef MOZ_XSL
+NS_IMETHODIMP NodeSet::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+    if ((aIndex < 0) || aIndex >= (UInt32)elementCount) return NS_ERROR_INVALID_ARG;
+    Node* aNode = elements[aIndex];
+    if (!aNode) return NS_ERROR_INVALID_ARG;
+    *aReturn = aNode->getNSNode();
+    return NS_OK;
+} //-- Item
+#endif
+
+
 /**
  * Returns the index of the specified Node,
  * or -1 if the Node is not contained in the NodeSet
@@ -248,6 +282,15 @@ MBool NodeSet::remove(Node* node) {
 int NodeSet::size() const{
     return elementCount;
 } //-- size
+
+#ifdef MOZ_XSL
+NS_IMETHODIMP NodeSet::GetLength(PRUint32* aLength)
+{
+    *aLength = elementCount;
+    return NS_OK;
+} //-- GetLength
+#endif
+
 
 /**
  * Creates a String representation of this NodeSet
@@ -350,3 +393,41 @@ void NodeSet::stringValue(String& str) {
     }
 } //-- stringValue
 
+#ifdef MOZ_XSL
+/* 
+ * nsIScriptObjectOwner
+ */
+
+NS_IMETHODIMP
+NodeSet::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+    nsresult rv = NS_OK;
+    nsIScriptGlobalObject* global = aContext->GetGlobalObject();
+
+    if (nsnull == mScriptObject) {
+        nsIDOMScriptObjectFactory *factory;
+    
+        if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
+                                                           NS_GET_IID(nsIDOMScriptObjectFactory),
+                                                           (nsISupports **)&factory))) {
+            rv = factory->NewScriptNodeList(aContext, 
+                                            (nsISupports*)(nsIDOMNodeList*)this, 
+                                            global, 
+                                            (void**)&mScriptObject);
+
+            nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
+        }
+    }
+    *aScriptObject = mScriptObject;
+
+    NS_RELEASE(global);
+    return rv;
+}
+
+NS_IMETHODIMP
+NodeSet::SetScriptObject(void* aScriptObject)
+{
+    mScriptObject = aScriptObject;
+    return NS_OK;
+}
+#endif

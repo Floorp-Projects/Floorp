@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.12 2000/11/07 10:46:03 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.cpp,v 1.13 2001/01/12 20:06:42 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.12 $ $Date: 2000/11/07 10:46:03 $
+ * @version $Revision: 1.13 $ $Date: 2001/01/12 20:06:42 $
 **/
 
 #include "ProcessorState.h"
@@ -101,7 +101,7 @@ void ProcessorState::addAttributeSet(Element* attributeSet) {
 
     //-- add xsl:attribute elements to attSet
     NodeList* nl = attributeSet->getChildNodes();
-    for ( int i = 0; i < nl->getLength(); i++) {
+    for ( UInt32 i = 0; i < nl->getLength(); i++) {
         Node* node = nl->item(i);
         if ( node->getNodeType() == Node::ELEMENT_NODE) {
             String nodeName = node->getNodeName();
@@ -669,16 +669,44 @@ void ProcessorState::recieveError(String& errorMessage, ErrorLevel level) {
  * @return the FunctionCall for the function with the given name.
 **/
 FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
+   String err;
 
-   if (GENERATE_ID_FN.isEqual(name)) {
-       return new GenerateIdFunctionCall(&domHelper);
-   }
-    else if (DOCUMENT_FN.isEqual(name)) {
+   if (DOCUMENT_FN.isEqual(name)) {
        return new DocumentFunctionCall(xslDocument);
    }
-
-   String err("invalid function call: ");
-   err.append(name);
+   else if (KEY_FN.isEqual(name)) {
+       err = "function not yet implemented: ";
+       err.append(name);
+   }
+   else if (FORMAT_NUMBER_FN.isEqual(name)) {
+       err = "function not yet implemented: ";
+       err.append(name);
+   }
+   else if (CURRENT_FN.isEqual(name)) {
+       return new CurrentFunctionCall();
+   }
+   else if (UNPARSED_ENTITY_URI_FN.isEqual(name)) {
+       err = "function not yet implemented: ";
+       err.append(name);
+   }
+   else if (GENERATE_ID_FN.isEqual(name)) {
+       return new GenerateIdFunctionCall(&domHelper);
+   }
+   else if (SYSTEM_PROPERTY_FN.isEqual(name)) {
+       return new SystemPropertyFunctionCall();
+   }
+   else if (ELEMENT_AVAILABLE_FN.isEqual(name)) {
+       err = "function not yet implemented: ";
+       err.append(name);
+   }
+   else if (FUNCTION_AVAILABLE_FN.isEqual(name)) {
+       err = "function not yet implemented: ";
+       err.append(name);
+   }
+   else {
+       err = "invalid function call: ";
+       err.append(name);
+   }
 
    return new ErrorFunctionCall(err);
 
@@ -792,7 +820,7 @@ void ProcessorState::initialize() {
 	    //-- process namespace nodes
 	    NamedNodeMap* atts = element->getAttributes();
 	    if ( atts ) {
-	        for (int i = 0; i < atts->getLength(); i++) {
+	        for (UInt32 i = 0; i < atts->getLength(); i++) {
 	            Attr* attr = (Attr*)atts->item(i);
 	            String attName = attr->getName();
 	            String attValue = attr->getValue();

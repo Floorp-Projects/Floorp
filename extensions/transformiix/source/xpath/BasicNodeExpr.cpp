@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: BasicNodeExpr.cpp,v 1.1 2000/04/06 07:44:45 kvisco%ziplink.net Exp $
+ * $Id: BasicNodeExpr.cpp,v 1.2 2001/01/12 20:06:31 axel%pike.org Exp $
  */
 
 #include "Expr.h"
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:44:45 $
+ * @version $Revision: 1.2 $ $Date: 2001/01/12 20:06:31 $
 **/
 
 //- Constructors -/
@@ -67,7 +67,7 @@ ExprResult* BasicNodeExpr::evaluate(Node* context, ContextState* cs) {
     NodeSet* nodeSet = new NodeSet();
     if ( !context ) return nodeSet;
     NodeList* nl = context->getChildNodes();
-    for (int i = 0; i < nl->getLength(); i++ ) {
+    for (UInt32 i = 0; i < nl->getLength(); i++ ) {
         Node* node = nl->item(i);
         if (matches(node, context, cs)) nodeSet->add(node);
     }

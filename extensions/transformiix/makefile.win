@@ -21,6 +21,16 @@
 
 DEPTH=..\..
 
-DIRS=source build
+!ifdef MOZ_XSL
+DIRS=source build public
+!else
+DIRS=$(DEPTH)\expat source
+!endif
 
 include <$(DEPTH)\config\rules.mak>
+
+standalone: setenv all
+
+setenv:
+	@set INCS=-UMOZILLA_CLIENT -DXML_DTD=1 -DXML_UNICODE
+	@set MOZ_XSL=
