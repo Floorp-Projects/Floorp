@@ -32,6 +32,10 @@
  #include <Types.h>
 #endif
 
+#ifdef XP_UNIX
+ #include <cstdio>
+#endif
+
 namespace JS = JavaScript;
 
 
@@ -91,7 +95,7 @@ static void dprintf(const char *format, ...)
 void JS::Assert(const char *s, const char *file, int line)
 {
 #if defined(XP_UNIX) || defined(XP_OS2)
-    fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, line);
+    std::fprintf(std::stderr, "Assertion failure: %s, at %s:%d\n", s, file, line);
 #endif
 #ifdef XP_MAC
     dprintf("Assertion failure: %s, at %s:%d\n", s, file, line);
@@ -1535,6 +1539,11 @@ const char16 *JS::skipWhiteSpace(const char16 *str, const char16 *strEnd)
 // C++ I/O
 //
 
+#ifdef __GNUC__
+JS::SaveFormat::SaveFormat(ostream &) {}
+
+JS::SaveFormat::~SaveFormat() {}
+#else
 JS::SaveFormat::SaveFormat(ostream &out): o(out), flags(out.flags()), fill(out.fill()) {}
 
 JS::SaveFormat::~SaveFormat()
@@ -1542,6 +1551,7 @@ JS::SaveFormat::~SaveFormat()
 	o.flags(flags);
 	o.fill(fill);
 }
+#endif
 
 
 // Quotes for printing non-ASCII characters on an ASCII stream
@@ -1564,7 +1574,11 @@ void JS::showChar(ostream &out, char16 ch)
 		out << static_cast<char>(ch);
 	else {
 		SaveFormat sf(out);
+#ifdef __GNUC__
+		out << beginUnprintable << std::hex << std::setw(4) << std::setfill('0') << (uint16)ch << endUnprintable;
+#else
 		out << beginUnprintable << std::hex << std::uppercase << std::setw(4) << std::setfill('0') << (uint16)ch << endUnprintable;
+#endif
 	}
 }
 
