@@ -42,6 +42,12 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 /*
  * Images for the main buttons
  */
+ 
+#nav-bar-buttons > button,
+#nav-bar-buttons > menubutton {
+ margin-bottom: 0px;
+}
+
 
 #back-button 
   {
