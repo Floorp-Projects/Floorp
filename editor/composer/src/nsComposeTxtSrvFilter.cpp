@@ -48,6 +48,7 @@ nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
   mBlockQuoteAtom  = do_GetAtom("blockquote");
   mPreAtom         = do_GetAtom("pre");
   mSpanAtom        = do_GetAtom("span");
+  mTableAtom       = do_GetAtom("table");
   mMozQuoteAtom    = do_GetAtom("_moz_quote");
   mClassAtom       = do_GetAtom("class");
   mTypeAtom        = do_GetAtom("type");
@@ -94,6 +95,13 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, PRBool *_retval)
                tag == mSelectAreaAtom ||
                tag == mMapAtom) {
       *_retval = PR_TRUE;
+    } else if (tag == mTableAtom) {
+      if (mIsForMail) {
+          nsAutoString className;
+          if (NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, mClassAtom, className))) {
+            *_retval = className.EqualsLiteral("moz-email-headers-table");
+        }
+      } 
     }
   }
 
