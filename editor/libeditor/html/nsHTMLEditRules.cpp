@@ -186,6 +186,7 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRB
       // add in any needed <br>s, and remove any unneeded ones.
       res = AdjustSpecialBreaks();
       if (NS_FAILED(res)) return res;
+      
       // adjust whitespace for insert text and delete actions
       if ((action == nsEditor::kOpInsertText) || 
           (action == nsEditor::kOpInsertIMEText) ||
@@ -194,6 +195,7 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRB
         res = AdjustWhitespace(selection);
         if (NS_FAILED(res)) return res;
       }
+      
       // replace newlines that are preformatted
       if ((action == nsEditor::kOpInsertText) || 
           (action == nsEditor::kOpInsertIMEText) ||
@@ -201,14 +203,35 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRB
       {
         res = ReplaceNewlines(mDocChangeRange);
       }
+      
       // clean up any empty nodes in the selection
       res = RemoveEmptyNodes();
       if (NS_FAILED(res)) return res;
+      
+/* I'll move to this code in M15.  For now being very conservative with changes
+
+      // adjust selection for insert text and delete actions
+      if ((action == nsEditor::kOpInsertText) || 
+          (action == nsEditor::kOpInsertIMEText) ||
+          (action == nsEditor::kOpDeleteSelection))
+      {
+        res = AdjustSelection(selection, aDirection);
+        if (NS_FAILED(res)) return res;
+      }
+*/
     }
     
-    // adjust selection
-    res = AdjustSelection(selection, aDirection);
-    if (NS_FAILED(res)) return res;
+    // adjust selection unless it was an inline style manipulation
+    // see above commented out code: we're just being safe for now
+    // with the minimal change to fix selection problem when removing
+    // link property
+    if ((action != nsEditor::kOpSetTextProperty) && 
+        (action != nsEditor::kOpRemoveTextProperty))
+    {
+      res = AdjustSelection(selection, aDirection);
+      if (NS_FAILED(res)) return res;
+    }
+    
     // detect empty doc
     res = CreateBogusNodeIfNeeded(selection);
 
@@ -381,36 +404,6 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   else 
     blockParent = mEditor->GetBlockNodeParent(selNode);
   if (!blockParent) return NS_ERROR_FAILURE;
-
-  // are we not in a textnode?
-  if (!mEditor->IsTextNode(selNode))  
-  {
-    // find a nearby text node if possible
-    nsCOMPtr<nsIDOMNode> priorNode, nextNode;
-    res = GetPriorHTMLNode(selNode, selOffset, &priorNode);
-    if (NS_SUCCEEDED(res) && priorNode && mEditor->IsTextNode(priorNode) 
-         && (blockParent == mEditor->GetBlockNodeParent(priorNode)))
-    {
-      // put selection at end of prior node
-      PRUint32 strLength;
-      nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(priorNode);
-      res = textNode->GetLength(&strLength);
-      if (NS_FAILED(res)) return res;
-      res = aSelection->Collapse(priorNode, strLength);
-      if (NS_FAILED(res)) return res;
-    }
-    else
-    {
-      res = GetNextHTMLNode(selNode, selOffset, &nextNode);
-      if (NS_SUCCEEDED(res) && nextNode && mEditor->IsTextNode(nextNode)
-           && (blockParent == mEditor->GetBlockNodeParent(nextNode)))
-      {
-        // put selection at begining of next node
-        res = aSelection->Collapse(nextNode, 0);
-        if (NS_FAILED(res)) return res;
-      }
-    }
-  }
   
   PRBool bCancel;  
   nsString theString(*inString);  // copy instring for now
@@ -3288,7 +3281,7 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
       }
     }
   }
-  
+
   // we aren't in a textnode: are we adjacent to a break or an image?
   res = GetPriorHTMLSibling(selNode, selOffset, &nearNode);
   if (NS_FAILED(res)) return res;
@@ -3325,6 +3318,7 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
     if (aAction == nsIEditor::ePrevious) selOffset++;  // want to be beyond it if we backed up to it
     res = aSelection->Collapse(selNode, selOffset);
   }
+
   return res;
 }
 
