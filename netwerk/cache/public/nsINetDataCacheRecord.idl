@@ -21,14 +21,16 @@
 
 interface nsIFileSpec;
 interface nsIChannel;
+interface nsINetDataCache;
 
 /**
  * The nsINetDataCacheRecord represents a single entry in a database that
  * caches data retrieved from the network. On top of this low-level interface
  * to the raw record data, the cache manager implements a higher-level record
  * interface, nsICachedNetData.  Each instance of nsINetDataCacheRecord is
- * associated with a parent database, an instance of the nsINetDataCache
- * interface.
+ * (internally) associated with a parent database, an instance of the
+ * nsINetDataCache interface.  This interface is essentially a pseudo-private
+ * API for the cache manager.  Other clients should never use this interface.
  *
  * Each cache record may contain both content and metadata.  The content may
  * be, for example, GIF image data or HTML, and it is accessed through
@@ -91,24 +93,18 @@ interface nsINetDataCacheRecord : nsISupports
     attribute PRUint32 storedContentLength;
 
     /** 
-     * Delete this cache entry and its associated content.  If there are any
-     * outstanding nsIChannel instances associated with this cache record,
-     * an error is returned and deletion is not performed.
+     * Delete this cache entry and its associated content.
      */
     void delete();
 
     /**
      * Create a channel for reading or writing a stream of content into the
-     * entry.  It is expected that many of the nsIChannel methods return
-     * NS_NOT_IMPLEMENTED:
+     * entry.  However, many of the nsIChannel methods may return
+     * NS_NOT_IMPLEMENTED, including:
      *
      *    + GetURI()
      *    + GetContentType()
      *    + GetContentLength()
-     *
-     * Though nsIChannel provides for both async and synchronous I/O APIs, both
-     * need not be implemented.  Only AsyncRead() and one of AsyncWrite() or
-     * OpenOutputStream() is required.
      */
     nsIChannel newChannel(in nsILoadGroup loadGroup);
 

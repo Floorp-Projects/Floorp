@@ -22,18 +22,16 @@ include <$(DEPTH)/config/config.mak>
 
 
 EXPORTS =                   \
-        nsICacheManager.h   \
-        nsICacheObject.h    \
-        nsICachePref.h      \
-        nsICacheModule.h    \
         $(NULL)
 
 XPIDLSRCS =                             \
+        .\nsICachedNetData.idl          \
         .\nsINetDataCacheManager.idl    \
         .\nsINetDataCache.idl           \
+        .\nsINetDataCacheRecord.idl     \
         .\nsINetDataDiskCache.idl       \
-        .\nsICachedNetData.idl          \
-        .\nsINetDataCacheRecord.idl
+        .\nsIStreamAsFile.idl           \
+        $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 

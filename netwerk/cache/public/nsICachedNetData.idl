@@ -16,12 +16,17 @@
  * Reserved.
  */
 
-#include "nsINetDataCacheRecord.idl"
 #include "nsrootidl.idl"
+#include "nsISupports.idl"
 
 interface nsIFileSpec;
 interface nsIURI;
 interface nsIObserver;
+interface nsIChannel;
+interface nsINetDataCache;
+interface nsINetDataCacheRecord;
+interface nsILoadGroup;
+interface nsIStreamListener;
 
 /**
  * The nsICachedNetData interface represents a single entry in a database that
@@ -42,94 +47,155 @@ interface nsIObserver;
  * @See nsINetDataCacheManager
  */
 [scriptable, uuid(6aeb2a40-6d43-11d3-90c8-000064657374)]
-interface nsICachedNetData : nsINetDataCacheRecord
+interface nsICachedNetData : nsISupports
 {
     /**
-     * The URI that was provided as an argument to the call to
+     * String form of the URI provided as an argument to the call to
      * nsINetDataCacheManager::GetCachedNetData() that created this record.
      */
-    readonly attribute nsIURI uri;
+    readonly attribute string uriSpec;
     
     /**
-     * Getter for the opaque secondary database key that was provided as an
-     * argument to the call to nsINetDataCacheManager::GetCachedNetData() that
-     * created this record.
+     * Getter for the opaque secondary database key provided as an argument to
+     * the call to nsINetDataCacheManager::GetCachedNetData() that created this
+     * record.
      */
     void getSecondaryKey(out unsigned long length,
                          [retval, size_is(length)] out string secondaryKey);
 
     /**
      * This flag may be set by a protocol handler to indicate that it supports
-     * partial fetching of data.  In that case, the cache manager may truncate
-     * the entry's content to accommodate data for other cache entries rather
-     * than deleting it wholesale.
+     * partial fetching of data.  In that case, the cache manager is permitted
+     * to truncate the entry's content to accommodate incoming data for other
+     * cache entries rather than deleting it wholesale.
      */
     attribute boolean allowPartial;
     
     /**
      * This flag indicates that the write stream supplying content data for the
-     * cache did not complete normally, so the content may be truncated.
+     * cache did not complete normally and, therefore, the content may be
+     * truncated.
      */
     readonly attribute boolean partial;
 
     /**
-     * This flag can be set and cleared by a protocol handler so as to avoid
-     * race conditions in which the handler issues two identical network
-     * requests to fill the same cache entry.
+     * This flag can be set and cleared by a protocol handler as a form of
+     * self-notification, so as to avoid race conditions in which a protocol
+     * handler issues two identical network requests to fill the same cache
+     * entry.  The cache manager itself largely ignores this flag.
      */
     attribute boolean updateInProgress;
 
     /**
      * Date/time that the document was last stored on the origin server, as
-     * supplied by the protocol handler. If the protocol can't supply a
-     * last-modified time, this attribute should remain unset.  This value
-     * is used as input to the cache replacement policy.
+     * supplied by the protocol handler.  This value is used as input to the
+     * cache replacement policy, i.e. it is not used for validation.  If the
+     * protocol can't supply a last-modified time, this attribute should remain
+     * unset.  When unset, the value of this attribute is zero.
      *
      * FIXME: Should use nsIDateTime interface, once it's created
-     *  instead of PRTime, for improved scriptability ? 
+     * instead of PRTime, for improved scriptability ? 
      */
-    readonly attribute PRTime lastModifiedTime;
+    attribute PRTime lastModifiedTime;
 
     /**
-     * Date/time of expiration for this record, supplied by the protocol
-     * handler, at which point the content is *likely* to be stale.  This
-     * heuristic date does not necessarily correspond to the HTTP Expires
-     * header, as it does not determine when cached network data must be
-     * validated with the origin server, but only serves as a hint to the cache
-     * replacement policy.
+     * Supplied by the protocol handler, the expirationTime attribute specifies
+     * the time until which the document is guaranteed fresh, i.e. the document
+     * does not have to be validated with the server and, therefore, any data
+     * in cache is definitely usable.  The value of this attribute serves as a
+     * hint to the cache replacement policy.  Only one of either staleTime or
+     * expirationTime may be set for a single cache record.  When unset, the
+     * value of this attribute is zero. 
      */
-    readonly attribute PRTime expirationTime;
+    attribute PRTime expirationTime;
 
     /**
-     * Date/time of last access (retrieval) of the data in this record.
+     * Date/time supplied by the protocol handler, at which point the content
+     * is *likely* to be stale, i.e. the data in the cache may be out-of-date
+     * with respect to the data on the server.  This heuristic date does not
+     * necessarily correspond to the HTTP Expires header, as it does not
+     * determine when cached network data must be validated with the origin
+     * server, but only serves as a hint to the cache replacement policy.  Only
+     * one of either staleTime or expirationTime may be set for a single cache
+     * record.  When unset, the value of this attribute is zero.
      */
-    readonly attribute PRTime lastRetrievalTime;
+    attribute PRTime staleTime;
 
     /**
-     * Number of times an output stream has been created for this cache entry
-     * since it was first stored.
+     * Date/time of last access of the data in this cache record, as determined
+     * by the cache manager.
      */
-    readonly attribute PRUint16 numberRetrievals;
+    readonly attribute PRTime lastAccessTime;
 
     /**
-     * If the underlying cache database is persistent, flush this entry's data
-     * to the database and the underlying nsINetDataCacheRecord instance.
+     * Number of times this record has been accessed since it was first stored.
+     */
+    readonly attribute PRUint16 numberAccesses;
+
+    /**
+     * Accessors for opaque protocol-specific meta-data which can be updated by
+     * the protocol handler for each cache entry, independently of the content
+     * data.
+     */
+    void getProtocolPrivate(out PRUint32 length, [size_is(length), retval] out string data);
+    void setProtocolPrivate(in  PRUint32 length, [size_is(length)] in string data);
+
+    /**
+     * As a getter, return the number of content bytes stored in the cache,
+     * i.e. via the nsIChannel streaming APIs.  This may be less than the
+     * complete content length if a partial cache fill occurred.  The cached
+     * content can be truncated by setting the value of this attribute.  The
+     * value of the attribute represents a logical, not a physical, length.  If
+     * compression has been used, the content may consume less storage than
+     * indicated by this attribute.
+     *
+     * When this attribute is set to zero the associated cache disk file, if
+     * any, should be deleted.
+     */
+    attribute PRUint32 storedContentLength;
+
+    /** 
+     * Notify any observers associated with this cache entry of the deletion
+     * request.  If all observers drop their reference to the cache entry,
+     * proceed to delete the underlying cache database record and associated
+     * content storage.
+     */
+    void delete();
+
+    /**
+     * Flush any changes in this entry's data to the cache database.  This
+     * method will automatically be called when the last reference to the cache
+     * is dropped, but it can also be called explicitly for a synchronous
+     * effect.
      */
     void commit();
 
     /**
-     * Add an observer for this cache record.  When the cache wants to delete
-     * or truncate a record, so as to make space for another cache entry's
-     * content data, it will call <code>aObserver</code>'s Observe() method,
-     * passing the nsICachedNetData instance as the <code>aSubject</code>
-     * argument and "Eviction Notice" as the <code>aTopic</code> argument.  If
-     * the observer does not wish to inhibit the deletion, it should Release()
-     * any references it has to the cache record.
+     * Parent container cache for this entry.
      */
-    void addObserver(in nsIObserver aObserver);
+    readonly attribute nsINetDataCache cache;
 
     /**
-     * Delete an observer that was added by the AddObserver() method.
+     * Create a channel for reading or writing a stream of content into the
+     * entry.  It is expected that many of the nsIChannel methods return
+     * NS_NOT_IMPLEMENTED, including:
+     *
+     *    + GetURI()
+     *    + GetContentType()
+     *    + GetContentLength()
+     *
+     * Though nsIChannel provides for both async and synchronous I/O APIs, both
+     * may not be implemented.  Only AsyncRead() and OpenOutputStream() is
+     * required.
      */
-    void removeObserver(in nsIObserver aObserver);
+    nsIChannel newChannel(in nsILoadGroup loadGroup);
+
+    /**
+     * This method can be used by a caching protocol handler to store data in
+     * the cache by forking an asynchronous read stream so that it is
+     * simultaneously sent to a requester and written into the cache.  This
+     * method implicitly sets the updateInProgress flag, if it has not already
+     * been set.
+     */
+    nsIStreamListener interceptAsyncRead(in nsIStreamListener aOriginalListener);
 };

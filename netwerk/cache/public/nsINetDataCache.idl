@@ -24,10 +24,12 @@ interface nsISimpleEnumerator;
 interface nsIFileSpec;
 
 /**
- * The nsINetDataCache defines a network-data cache, used to cache the
- * responses to network retrieval commands.  This interface, along with
- * nsINetDataCacheRecord, is implemented by the memory cache, the disk cache
- * and, optionally, by some extension caches.
+ * The nsINetDataCache defines the low-level API for a network-data
+ * cache, used to cache the responses to network retrieval commands.
+ * This interface, along with nsINetDataCacheRecord, is implemented by
+ * the memory cache, the file cache and, optionally, by some extension
+ * caches.  This interface is essentially a pseudo-private API for the
+ * cache manager.  Other clients should never use this interface.
  *
  * Each cache entry may contain both content, e.g. GIF image data, and
  * associated metadata, e.g. HTTP headers.  Each entry is indexed by two
@@ -36,7 +38,7 @@ interface nsIFileSpec;
  *
  * The nsINetDataCache interface is agnostic as to where the data is
  * stored and whether the storage is volatile or persistent.  The
- * memory cache, the disk cache and any extension caches must all
+ * memory cache, any disk caches and any extension caches must all
  * implement this interface.
  *
  */
@@ -71,11 +73,22 @@ interface nsINetDataCache : nsISupports
 	 */
     attribute boolean enabled;
 
+    /**
+     * Constants for flags attribute, below
+     */
+
+    // Used for extension caches, e.g. a CD-ROM cache
+    const long READ_ONLY          = 1 << 0;
+
+    // One of these bits must be set
+    const long MEMORY_CACHE       = 1 << 1;
+    const long FLAT_FILE_CACHE    = 1 << 2;
+    const long FILE_PER_URL_CACHE = 1 << 3;
+
 	/**
-	 * This attribute will be false for the memory cache and the disk cache,
-	 * but will be true for all other cache modules.
+	 * See constants defined above.
 	 */
-	readonly attribute boolean readOnly;
+	readonly attribute PRUint32 flags;
 
     /**
      * Total number of URI entries stored in the cache.
@@ -100,12 +113,9 @@ interface nsINetDataCache : nsISupports
     attribute nsINetDataCache nextCache;
 
     /**
-     * Set the maximum permitted size of the cache, in kB.  Setting the
-     * capacity lower than the current amount of space currently in use may
-     * cause cache entries to be evicted from the cache to accomodate the
-     * requested capacity.
+     * The maximum permitted size of the cache, in kB.
 	 */
-    attribute PRUint32 capacity;
+    readonly attribute PRUint32 capacity;
 
     /**
      * An estimate of the amount of storage occupied by the cache, in kB.
@@ -129,6 +139,6 @@ interface nsINetDataCache : nsISupports
 // ProgID prefix for Components that implement this interface
 #define NS_NETWORK_CACHE_PROGID "component://netscape/network/cache"
 #define NS_NETWORK_MEMORY_CACHE_PROGID NS_NETWORK_CACHE_PROGID "?name=memory-cache"
-#define NS_NETWORK_PERSISTENT_CACHE_PROGID   NS_NETWORK_CACHE_PROGID "?name=persistent-cache"
+#define NS_NETWORK_FLAT_CACHE_PROGID   NS_NETWORK_CACHE_PROGID "?name=flat-cache"
 #define NS_NETWORK_FILE_CACHE_PROGID   NS_NETWORK_CACHE_PROGID "?name=file-cache"
 %}
