@@ -151,6 +151,9 @@ nsresult nsView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+  
+  *aInstancePtr = nsnull;
+  
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kClassIID, kIViewIID);
 
