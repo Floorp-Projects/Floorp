@@ -703,7 +703,7 @@ nsresult	nsDBFolderInfo::SetUint32PropertyWithToken(mdb_token aProperty, PRUint3
 nsresult	nsDBFolderInfo::SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue)
 {
 	nsString propertyStr;
-	propertyStr.Append(propertyValue, 10);
+	propertyStr.Append(propertyValue, 16);
 	return SetPropertyWithToken(aProperty, &propertyStr);
 }
 
