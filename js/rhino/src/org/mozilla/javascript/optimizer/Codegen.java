@@ -61,62 +61,15 @@ public class Codegen extends Interpreter
                           boolean returnFunction,
                           Object securityDomain)
     {
-        Context cx = Context.getCurrentContext();
-        OptClassNameHelper
-            nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
-        Class[] interfaces = nameHelper.getTargetImplements();
-        Class superClass = nameHelper.getTargetExtends();
-        boolean isPrimary = (interfaces == null && superClass == null);
-        String mainClassName = nameHelper.getScriptClassName(isPrimary);
+        int serial;
+        synchronized (globalLock) {
+            serial = ++globalSerialClassCounter;
+        }
+        String mainClassName = "org.mozilla.javascript.gen.c"+serial;
 
         byte[] mainClassBytes = compileToClassFile(compilerEnv, mainClassName,
                                                    scriptOrFn, encodedSource,
                                                    returnFunction);
-
-        boolean onlySave = false;
-        ClassRepository repository = nameHelper.getClassRepository();
-        if (repository != null) {
-            try {
-                if (!repository.storeClass(mainClassName, mainClassBytes,
-                                           true))
-                {
-                    onlySave = true;
-                }
-            } catch (IOException iox) {
-                throw Context.throwAsScriptRuntimeEx(iox);
-            }
-
-            if (!isPrimary) {
-                String adapterClassName = nameHelper.getScriptClassName(true);
-                int functionCount = scriptOrFn.getFunctionCount();
-                ObjToIntMap functionNames = new ObjToIntMap(functionCount);
-                for (int i = 0; i != functionCount; ++i) {
-                    FunctionNode ofn = scriptOrFn.getFunctionNode(i);
-                    String name = ofn.getFunctionName();
-                    if (name != null && name.length() != 0) {
-                        functionNames.put(name, ofn.getParamCount());
-                    }
-                }
-                if (superClass == null) {
-                    superClass = ScriptRuntime.ObjectClass;
-                }
-                byte[] classFile = JavaAdapter.createAdapterCode(
-                                       functionNames, adapterClassName,
-                                       superClass, interfaces,
-                                       mainClassName);
-                try {
-                    if (!repository.storeClass(adapterClassName, classFile,
-                                               true))
-                    {
-                        onlySave = true;
-                    }
-                } catch (IOException iox) {
-                    throw Context.throwAsScriptRuntimeEx(iox);
-                }
-            }
-        }
-
-        if (onlySave) { return null; }
 
         Exception e = null;
         Class result = null;
@@ -135,6 +88,7 @@ public class Codegen extends Interpreter
             throw new RuntimeException("Malformed optimizer package " + e);
 
         if (returnFunction) {
+            Context cx = Context.getCurrentContext();
             NativeFunction f;
             try {
                 Constructor ctor = result.getConstructors()[0];
@@ -163,7 +117,7 @@ public class Codegen extends Interpreter
                                               ScriptOrFnNode scriptOrFn,
                                               String debugSource)
     {
-        // Not supported
+        throw new RuntimeException("NOT SUPPORTED");
     }
 
     byte[] compileToClassFile(CompilerEnvirons compilerEnv,
@@ -1064,6 +1018,9 @@ public class Codegen extends Interpreter
    static final String FUNCTION_CONSTRUCTOR_SIGNATURE
         = "(Lorg/mozilla/javascript/Scriptable;"
           +"Lorg/mozilla/javascript/Context;I)V";
+
+    private static final Object globalLock = new Object();
+    private static int globalSerialClassCounter;
 
     private CompilerEnvirons compilerEnv;
 

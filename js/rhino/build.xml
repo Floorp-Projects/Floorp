@@ -71,8 +71,6 @@ Requires Ant version 1.2 or later
     <jar basedir="${classes}" destfile="${dist.dir}/${small-rhino.jar}"
          compress="${jar-compression}">
       <include name="org/mozilla/javascript/*.class"/>
-      <exclude name="org/mozilla/javascript/ClassNameHelper*.class"/>
-      <exclude name="org/mozilla/javascript/ClassRepository*.class"/>
       <exclude name="org/mozilla/javascript/JavaAdapter*.class"/>
       <exclude name="org/mozilla/javascript/Token.class"/>
 
