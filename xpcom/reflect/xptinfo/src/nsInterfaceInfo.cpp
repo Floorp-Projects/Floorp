@@ -32,7 +32,9 @@
 #include "nsInterfaceInfoManager.h"
 #include "xptinfo.h"
 
-NS_IMPL_ISUPPORTS1(nsInterfaceInfo, nsIInterfaceInfo)
+NS_IMPL_THREADSAFE_ADDREF(nsInterfaceInfo)
+NS_IMPL_THREADSAFE_RELEASE(nsInterfaceInfo)
+NS_IMPL_QUERY_INTERFACE1(nsInterfaceInfo, nsIInterfaceInfo)
 
 nsInterfaceInfo::nsInterfaceInfo(nsInterfaceRecord *record,
                                  nsInterfaceInfo *parent)
