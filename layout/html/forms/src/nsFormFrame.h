@@ -102,6 +102,7 @@ public:
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
   void RemoveRadioGroups();
 
   void DoDefaultSelection(nsIPresContext*          aPresContext, 
