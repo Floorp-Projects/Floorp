@@ -675,7 +675,7 @@ Contributor(s):
                          context="backMenu"
                          tooltiptext="&backButton.tooltip;">
             <menupopup context="" onpopupshowing="BrowserBackMenu(event);"
-                       oncommand="goToHistoryIndex(event); event.preventBubble();"/>
+                       oncommand="gotoHistoryIndex(event); event.preventBubble();"/>
           </toolbarbutton>
         
           <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
@@ -683,7 +683,7 @@ Contributor(s):
                          command="Browser:Forward"
                          context="forwardMenu"
                          tooltiptext="&forwardButton.tooltip;">
-            <menupopup context="" oncommand="goToHistoryIndex(event); event.preventBubble()"
+            <menupopup context="" oncommand="gotoHistoryIndex(event); event.preventBubble()"
                        onpopupshowing="BrowserForwardMenu(event);"/>
           </toolbarbutton>
         
