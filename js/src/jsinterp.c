@@ -948,24 +948,6 @@ out:
 }
 
 JSBool
-js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
-                    uintN flags, uintN argc, jsval *argv, jsval *rval)
-{
-    JS_ASSERT(flags & (JSINVOKE_GETTER | JSINVOKE_SETTER));
-    if (cx->runtime->checkObjectAccess) {
-        if (!cx->runtime->checkObjectAccess(cx, obj, ID_TO_VALUE(id),
-                                            (flags & JSINVOKE_GETTER)
-                                            ? JSACC_READ
-                                            : JSACC_WRITE,
-                                            &fval)) {
-            return JS_FALSE;
-        }
-    }
-
-    return js_InternalInvoke(cx, obj, fval, flags, argc, argv, rval);
-}
-
-JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN special, jsval *result)
 {
@@ -1196,10 +1178,10 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     if (report != JSREPORT_ERROR) {
         /*
          * Allow redeclaration of variables and functions, but insist that the
-         * new value is not a getter if the old value was, ditto for setters.
-         * Allow a getter or setter redefinition only if prop is impermanent.
+         * new value is not a getter or setter -- or if it is, insist that the
+         * property being replaced is not permanent.
          */
-        if ((~(attrs ^ oldAttrs) & (JSPROP_GETTER | JSPROP_SETTER)) == 0)
+        if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
             return JS_TRUE;
         if (!(oldAttrs & JSPROP_PERMANENT))
             return JS_TRUE;
