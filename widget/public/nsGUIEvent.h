@@ -40,6 +40,7 @@ class nsIRegion;
 class nsIWidget;
 class nsIMenuItem;
 class nsIAccessible;
+class nsIContent;
 
 /**
  * Return status for event processors.
@@ -290,6 +291,17 @@ struct nsMenuEvent : public nsGUIEvent {
   PRUint32      mCommand;           
 };
 
+/**
+ * Form event
+ * 
+ * We hold the originating form control for form submit and reset events.
+ * originator is a weak pointer (does not hold a strong reference).
+ */
+
+struct nsFormEvent : public nsEvent {
+  nsIContent *originator;
+};
+
 
 /**
  * Event status for D&D Event
@@ -326,6 +338,7 @@ enum nsDragDropEventStatus {
 #define NS_SCROLLPORT_EVENT   18
 #define NS_RECONVERSION_QUERY 19
 #define NS_ACCESSIBLE_EVENT   20
+#define NS_FORM_EVENT         21
 
  /**
  * GUI MESSAGES

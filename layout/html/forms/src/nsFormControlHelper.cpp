@@ -971,7 +971,6 @@ nsFormControlHelper::DoManualSubmitOrReset(nsIPresContext* aPresContext,
     aFormControlFrame->GetContent(getter_AddRefs(controlContent));
   }
 
-  nsEventStatus status = nsEventStatus_eIgnore;
   if (formContent) {
     //Either use the PresShell passed in or go get it from the PresContext
     nsCOMPtr<nsIPresShell> shell; // this will do our clean up
@@ -982,9 +981,16 @@ nsFormControlHelper::DoManualSubmitOrReset(nsIPresContext* aPresContext,
 
     // With a valid PreShell handle the event
     if (NS_SUCCEEDED(result) && nsnull != aPresShell) {
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
+
+      // Get originator for event (failure is non-fatal)
+      nsCOMPtr<nsIContent> formControl;
+      aFormControlFrame->GetContent(getter_AddRefs(formControl));
+
+      nsFormEvent event;
+      event.eventStructType = NS_FORM_EVENT;
       event.message         = aDoSubmit?NS_FORM_SUBMIT:NS_FORM_RESET;
+      event.originator      = formControl;
+      nsEventStatus status  = nsEventStatus_eIgnore;
       if (aDoDOMEvent) {
         aPresShell->HandleDOMEventWithTarget(formContent, &event, &status);
       } else {

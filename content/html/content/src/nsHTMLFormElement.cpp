@@ -40,6 +40,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"   
 #include "nsIFrame.h"
+#include "nsIFormControlFrame.h"
 #include "nsISizeOfHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsDOMError.h"
@@ -331,10 +332,11 @@ nsHTMLFormElement::Submit()
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
-    nsEventStatus status  = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
+    nsFormEvent event;
+    event.eventStructType = NS_FORM_EVENT;
     event.message         = NS_FORM_SUBMIT;
+    event.originator      = nsnull;
+    nsEventStatus status  = nsEventStatus_eIgnore;
     rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
   return rv;
@@ -348,10 +350,11 @@ nsHTMLFormElement::Reset()
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
+    nsFormEvent event;
+    event.eventStructType = NS_FORM_EVENT;
+    event.message         = NS_FORM_RESET;
+    event.originator      = nsnull;
     nsEventStatus status  = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_FORM_RESET;
     rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
   return rv;
@@ -450,7 +453,19 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
                 ret = formMan->OnReset(aPresContext);
               }
               else {
-                ret = formMan->OnSubmit(aPresContext, nsnull);
+                nsIFrame *originatingFrame = nsnull;
+
+                // Get the originating frame (failure is non-fatal)
+                if (aEvent) {
+                  if (NS_FORM_EVENT == aEvent->eventStructType) {
+                    nsIContent *originator = ((nsFormEvent *)aEvent)->originator;
+                    if (originator) {
+                      shell->GetPrimaryFrameFor(originator, &originatingFrame);
+                    }
+                  }
+                }
+
+                ret = formMan->OnSubmit(aPresContext, originatingFrame);
               }
             }
           }

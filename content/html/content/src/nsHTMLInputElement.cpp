@@ -886,10 +886,13 @@ nsHTMLInputElement::MouseClickForAltText(nsIPresContext* aPresContext)
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     if (shell) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_FORM_SUBMIT;
+      nsCOMPtr<nsIContent> formControl = this; // kungFuDeathGrip
+
+      nsFormEvent event;
+      event.eventStructType = NS_FORM_EVENT;
+      event.message         = NS_FORM_SUBMIT;
+      event.originator      = formControl;
+      nsEventStatus status  = nsEventStatus_eIgnore;
       shell->HandleDOMEventWithTarget(form, &event, &status);
     }
   }
