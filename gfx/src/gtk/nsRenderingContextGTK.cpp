@@ -437,6 +437,10 @@ NS_IMETHODIMP nsRenderingContextGTK::GetLineStyle(nsLineStyle &aLineStyle)
 
 NS_IMETHODIMP nsRenderingContextGTK::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
+  if (mFontMetrics)
+    aFontMetrics = mFontMetrics;
+  else
+    aFontMetrics = nsnull;
   return NS_OK;
 }
 
