@@ -2462,6 +2462,7 @@ wallet_Initialize(PRBool fetchTables) {
       }
     }
     Recycle(message);
+    wallet_Clear(&wallet_SchemaToValue_list); /* otherwise we will duplicate the list */
     wallet_ReadFromFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
     wallet_keyInitialized = PR_TRUE;
   }
