@@ -53,7 +53,6 @@ FontCacheImpl :: FontCacheImpl()
 FontCacheImpl :: ~FontCacheImpl()
 {
   Flush();
-  NS_IF_RELEASE(mContext);
 }
 
 NS_IMPL_ISUPPORTS(FontCacheImpl, kIFontCacheIID)
@@ -61,8 +60,9 @@ NS_IMPL_ISUPPORTS(FontCacheImpl, kIFontCacheIID)
 nsresult FontCacheImpl :: Init(nsIDeviceContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
+  // Note: we don't hold a reference to the device context, because it
+  // holds a reference to us and we don't want circular references
   mContext = aContext;
-  NS_ADDREF(mContext);
   return NS_OK;
 }
 
