@@ -133,6 +133,22 @@ function dumpObjectTree (o, recurse, compress, level)
     
 }
 
+function argumentsAsArray (args, start)
+{
+    if (typeof start == "undefined")
+        start = 0;
+
+    if (start >= args.length)
+        return null;
+    
+    var rv = new Array();
+    
+    for (var i = start; i < args.length; ++i)
+        rv.push(args[i]);
+    
+    return rv;
+}
+
 function splitLongWord (str, pos)
 {
     if (str.length <= pos)
