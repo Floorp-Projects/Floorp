@@ -89,6 +89,9 @@
 // The XUL interfaces implemented by the RDF content node.
 #include "nsIDOMXULElement.h"
 
+// The XUL doc interface
+#include "nsIDOMXULDocument.h"
+
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
@@ -135,13 +138,83 @@ static NS_DEFINE_IID(kIDOMMenuListenerIID,        NS_IDOMMENULISTENER_IID);
 
 struct XULBroadcastListener
 {
-	nsAutoString mAttribute;
-	nsCOMPtr<nsIDOMElement> mListener;
+	nsVoidArray* mAttributeList;
+	nsIDOMElement* mListener;
 
-	XULBroadcastListener(const nsString& attr, nsIDOMElement* listen)
-		: mAttribute(attr), mListener( dont_QueryInterface(listen) )
-	{ // Nothing else to do 
+	XULBroadcastListener(const nsString& aAttribute, nsIDOMElement* aListener)
+	{
+    mListener = aListener; // WEAK REFERENCE
+    if (aAttribute != "*") {
+      mAttributeList = new nsVoidArray();
+      mAttributeList->AppendElement((void*)(new nsString(aAttribute)));
+    }
+
+    // For the "*" case we leave the attribute list nulled out, and this means
+    // we're observing all attribute changes.
 	}
+
+  ~XULBroadcastListener()
+  {
+    // Release all the attribute strings.
+    if (mAttributeList) {
+      PRInt32 count = mAttributeList->Count();
+      for (PRInt32 i = 0; i < count; i++) {
+        nsString* str = (nsString*)(mAttributeList->ElementAt(i));
+        delete str;
+      }
+
+      delete mAttributeList;
+    }
+  }
+
+  PRBool IsEmpty()
+  {
+    if (ObservingEverything())
+      return PR_FALSE;
+
+    PRInt32 count = mAttributeList->Count();
+    return (count == 0);
+  }
+
+  void RemoveAttribute(const nsString& aString)
+  {
+    if (ObservingEverything())
+      return;
+
+    if (mAttributeList) {
+      PRInt32 count = mAttributeList->Count();
+      for (PRInt32 i = 0; i < count; i++) {
+        nsString* str = (nsString*)(mAttributeList->ElementAt(i));
+        if (*str == aString) {
+          mAttributeList->RemoveElementAt(i);
+          delete str;
+          break;
+        }
+      }
+    }
+  }
+
+  PRBool ObservingEverything()
+  {
+    return (mAttributeList == nsnull);
+  }
+
+  PRBool ObservingAttribute(const nsString& aString)
+  {
+    if (ObservingEverything())
+      return PR_TRUE;
+
+    if (mAttributeList) {
+      PRInt32 count = mAttributeList->Count();
+      for (PRInt32 i = 0; i < count; i++) {
+        nsString* str = (nsString*)(mAttributeList->ElementAt(i));
+        if (*str == aString)
+          return PR_TRUE;
+      }
+    }
+
+    return PR_FALSE;
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -304,6 +377,7 @@ private:
     static nsIAtom*             kPopupAtom;
     static nsIAtom*             kTooltipAtom;
     static nsIAtom*             kContextAtom;
+    static nsIAtom*             kObservesAtom;
 
     nsIDocument*           mDocument;           // [WEAK]
     void*                  mScriptObject;       // [OWNER]
@@ -317,7 +391,7 @@ private:
     nsXULAttributes*       mAttributes;         // [OWNER]
     PRBool                 mContentsMustBeGenerated;
     nsVoidArray*		   mBroadcastListeners; // [WEAK]
-    nsIDOMXULElement*      mBroadcaster;        // [OWNER]
+    nsIDOMXULElement*      mBroadcaster;        // [WEAK]
     nsIController*         mController;         // [OWNER]
     nsCOMPtr<nsIRDFCompositeDataSource> mDatabase; // [OWNER]
 
@@ -339,6 +413,7 @@ nsIAtom*             RDFElementImpl::kTreeAtom;
 nsIAtom*             RDFElementImpl::kPopupAtom;
 nsIAtom*             RDFElementImpl::kTooltipAtom;
 nsIAtom*             RDFElementImpl::kContextAtom;
+nsIAtom*             RDFElementImpl::kObservesAtom;
 PRInt32              RDFElementImpl::kNameSpaceID_RDF;
 PRInt32              RDFElementImpl::kNameSpaceID_XUL;
 
@@ -426,6 +501,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kPopupAtom       = NS_NewAtom("popup");
         kTooltipAtom     = NS_NewAtom("tooltip");
         kContextAtom     = NS_NewAtom("context");
+        kObservesAtom    = NS_NewAtom("observes");
 
         EventHandlerMapEntry* entry = kEventHandlerMap;
         while (entry->mAttributeName) {
@@ -477,22 +553,14 @@ RDFElementImpl::~RDFElementImpl()
         PRInt32 count = mBroadcastListeners->Count();
         for (PRInt32 i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(0);
-            RemoveBroadcastListener(xulListener->mAttribute, xulListener->mListener);
+            RemoveBroadcastListener("*", xulListener->mListener);
         }
     }
 
-    // We might be an observes element. We need to remove our parent from
-    // the broadcaster's array
+    // XXX This never even gets set! It's unused right now! This is not good.
     if (mBroadcaster != nsnull)
     {
-        nsCOMPtr<nsIContent> parentContent;
-        GetParent(*getter_AddRefs(parentContent));
-
-        nsCOMPtr<nsIDOMElement> parentElement;
-        parentElement = do_QueryInterface(parentContent);
-
-        mBroadcaster->RemoveBroadcastListener("*", parentElement);
-        NS_RELEASE(mBroadcaster);
+        mBroadcaster->RemoveBroadcastListener("*", this);
     }
 
     NS_IF_RELEASE(mController);
@@ -515,6 +583,7 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kContextAtom);
         NS_IF_RELEASE(kTooltipAtom);
+        NS_IF_RELEASE(kObservesAtom);
         NS_IF_RELEASE(gNameSpaceManager);
 
         EventHandlerMapEntry* entry = kEventHandlerMap;
@@ -1885,6 +1954,23 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         // XXX Some kind of special document update might need to happen here.
     }
 
+    // Check to see if the OBSERVES attribute is being set.  If so, we need to attach
+    // to the observed broadcaster.
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && 
+        (aName == kObservesAtom))
+    {
+      // Do a getElementById to retrieve the broadcaster.
+      nsCOMPtr<nsIDOMElement> broadcaster;
+      nsCOMPtr<nsIDOMXULDocument> domDoc = do_QueryInterface(mDocument);
+      domDoc->GetElementById(aValue, getter_AddRefs(broadcaster));
+      if (broadcaster) {
+        nsCOMPtr<nsIDOMXULElement> xulBroadcaster = do_QueryInterface(broadcaster);
+        if (xulBroadcaster) {
+          xulBroadcaster->AddBroadcastListener("*", this);
+        }
+      }
+    }
+
     // Check to see if the POPUP attribute is being set.  If so, we need to attach
     // a new instance of our popup handler to the node.
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && 
@@ -1990,7 +2076,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         count = mBroadcastListeners->Count();
         for (i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
-            if ((xulListener->mAttribute == attribute) && (xulListener->mListener != nsnull)) {
+            if (xulListener->ObservingAttribute(attribute)) {
                 // First we set the attribute in the observer.
                 xulListener->mListener->SetAttribute(attribute, aValue);
                 ExecuteOnChangeHandler(xulListener->mListener, attribute);
@@ -2144,6 +2230,8 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
 
     // XXX Know how to remove POPUP event listeners when an attribute is unset?
 
+    nsAutoString oldValue;
+
     nsresult rv = NS_OK;
     PRBool successful = PR_FALSE;
     if (nsnull != mAttributes) {
@@ -2152,6 +2240,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
         for (i = 0; i < count; i++) {
             nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(i);
             if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
+                oldValue = attr->mValue.GetUnicode();
                 mAttributes->RemoveElementAt(i);
                 NS_RELEASE(attr);
                 successful = PR_TRUE;
@@ -2162,6 +2251,23 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
 
     // XUL Only. Find out if we have a broadcast listener for this element.
     if (successful) {
+      // Check to see if the OBSERVES attribute is being unset.  If so, we need to remove
+      // ourselves completely.
+      if (mDocument && (aNameSpaceID == kNameSpaceID_None) && 
+          (aName == kObservesAtom))
+      {
+        // Do a getElementById to retrieve the broadcaster.
+        nsCOMPtr<nsIDOMElement> broadcaster;
+        nsCOMPtr<nsIDOMXULDocument> domDoc = do_QueryInterface(mDocument);
+        domDoc->GetElementById(oldValue, getter_AddRefs(broadcaster));
+        if (broadcaster) {
+          nsCOMPtr<nsIDOMXULElement> xulBroadcaster = do_QueryInterface(broadcaster);
+          if (xulBroadcaster) {
+            xulBroadcaster->RemoveBroadcastListener("*", this);
+          }
+        }
+      }
+
       if (mBroadcastListeners != nsnull) {
         PRInt32 count = mBroadcastListeners->Count();
         for (PRInt32 i = 0; i < count; i++)
@@ -2169,7 +2275,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
             nsAutoString str;
             aName->ToString(str);
-            if (xulListener->mAttribute == str) {
+            if (xulListener->ObservingAttribute(str)) {
                 // Unset the attribute in the broadcast listener.
                 nsCOMPtr<nsIDOMElement> element;
                 element = do_QueryInterface(xulListener->mListener);
@@ -2473,6 +2579,24 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElem
 	// We need to sync up the initial attribute value.
   nsCOMPtr<nsIContent> listener( do_QueryInterface(anElement) );
 
+  if (attr == "*") {
+    // All of the attributes found on this node should be set on the
+    // listener.
+    if (mAttributes) {
+        for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
+            const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
+            if ((attr->mNameSpaceID == kNameSpaceID_None) &&
+                (attr->mName == kIdAtom))
+              continue;
+
+            // We aren't the id atom, so it's ok to set us in the listener.
+            listener->SetAttribute(attr->mNameSpaceID, attr->mName, attr->mValue, PR_TRUE);
+        }
+    }
+
+    return NS_OK;
+  }
+
   // Find out if the attribute is even present at all.
   nsAutoString attrValue;
   nsIAtom* kAtom = NS_NewAtom(attr);
@@ -2505,18 +2629,26 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anE
 
 	// Find the element.
 	PRInt32 count = mBroadcastListeners->Count();
-	for (PRInt32 i = 0; i < count; i++)
-	{
+	for (PRInt32 i = 0; i < count; i++) {
 		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
 		
-		if ((xulListener->mAttribute == attr || xulListener->mAttribute == "*") &&
-			  xulListener->mListener == nsCOMPtr<nsIDOMElement>( dont_QueryInterface(anElement) ))
-		{
-			// Do the removal.
-			mBroadcastListeners->RemoveElementAt(i);
-			delete xulListener;
-			return NS_OK;
-		}
+		if (xulListener->mListener == anElement) {
+      if (xulListener->ObservingEverything() || attr == "*") { 
+			  // Do the removal.
+			  mBroadcastListeners->RemoveElementAt(i);
+			  delete xulListener;
+      }
+      else {
+        // We're observing specific attributes and removing a specific attribute
+        xulListener->RemoveAttribute(attr);
+        if (xulListener->IsEmpty()) {
+          // Do the removal.
+			    mBroadcastListeners->RemoveElementAt(i);
+			    delete xulListener;
+        }
+      }
+			break;
+    }
 	}
 
 	return NS_OK;
