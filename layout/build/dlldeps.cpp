@@ -42,6 +42,7 @@
 #include "nsIPresShell.h"
 #include "nsIPrintContext.h"
 #include "nsIPresContext.h"
+#include "nsIPrintPreviewContext.h"
 #include "nsIStyleSet.h"
 #include "nsIDocument.h"
 #include "nsHTMLParts.h"
@@ -52,9 +53,10 @@ void XXXNeverCalled()
   nsIPresShell* ps;
   NS_NewPresShell(&ps);
   nsIPresContext* cx;
-  nsIPrintContext *px;
   NS_NewGalleyContext(&cx);
-  NS_NewPrintPreviewContext(&cx);
+  nsIPrintPreviewContext *ppx;
+  NS_NewPrintPreviewContext(&ppx);
+  nsIPrintContext *px;
   NS_NewPrintContext(&px);
   nsIFrame* f;
   NS_NewTextFrame(ps, &f);
