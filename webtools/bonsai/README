@@ -60,9 +60,21 @@ configdata: 	some TCL source that defines treelist, a list of trees you want
 	set rlogcommand /tools/ns/bin/rlog
 	set rcsdiffcommand /tools/ns/bin/rcsdiff
 	set cocommand /tools/ns/bin/co
+	set sendmailcommand /usr/lib/sendmail
 	set lxr_base http://cvs-mirror.mozilla.org/webtools/lxr/source
 	set mozilla_lxr_kludge TRUE
 
+	The ./configure script will make a guess on these commands from
+	your PATH, so if it complains, add the directories in which these
+	commands reside to your PATH, or override the path check, for
+	example:
+
+		setenv PERL /usr/local/lib/perl5
+		./configure
+
+	or for the Bourne shell:
+
+		PERL=/usr/local/lib/perl5 ./configure
 
 
 hidelist:	A list of regexps that define filenames that we don't want
