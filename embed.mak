@@ -40,7 +40,6 @@ DIRS = \
 !endif		
   dbm \
   modules\libutil \
-  modules\mpfilelocprovider    \
   modules\zlib \
   modules\zlib\standalone \
   netwerk \
