@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/updateNotification.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://global/locale/updateNotification.dtd" >
 
 <overlay id="updateNotificationMenuID"
 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
