@@ -154,7 +154,7 @@ nsXMLProcessingInstruction::QueryInterface(REFNSIID aIID, void** aInstancePtrRes
 NS_IMETHODIMP    
 nsXMLProcessingInstruction::GetTarget(nsString& aTarget)
 {
-  aTarget=aTarget;
+  aTarget=mTarget;
 
   return NS_OK;
 }
