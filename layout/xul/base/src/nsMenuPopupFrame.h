@@ -115,6 +115,13 @@ public:
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const
+  {
+      aResult = "MenuPopup";
+      return NS_OK;
+  }
+
+
 protected:
   // return true if the alignment is horizontal false if vertical
   virtual PRBool GetInitialAlignment(); 

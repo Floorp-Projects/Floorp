@@ -84,12 +84,18 @@ NS_IMETHODIMP_(void) nsRepeatService::Notify(nsITimer *timer)
    // if the repeat delay is the initial one reset it.
   if (mRepeatTimer) {
      mRepeatTimer->Cancel();
+  }
+
+  // do callback
+  if (mCallback)
+    mCallback->Notify(timer);
+
+  // start timer again.
+  if (mRepeatTimer) {
      NS_NewTimer(getter_AddRefs(mRepeatTimer));
      mRepeatTimer->Init(this, REPEAT_DELAY);
   }
 
-  if (mCallback)
-    mCallback->Notify(timer);
 }
 
 NS_IMPL_ISUPPORTS(nsRepeatService, NS_GET_IID(nsITimerCallback));

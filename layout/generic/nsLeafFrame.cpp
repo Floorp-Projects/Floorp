@@ -113,6 +113,7 @@ nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent)
 {
+    /*
   // Generate a reflow command with this frame as the target frame
   nsIReflowCommand* cmd;
   nsresult          rv;
@@ -128,6 +129,11 @@ nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
   }
 
   return rv;
+  */
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    mState |= NS_FRAME_IS_DIRTY;
+    return mParent->ReflowDirtyChild(shell, this);
 }
 
 #ifdef DEBUG

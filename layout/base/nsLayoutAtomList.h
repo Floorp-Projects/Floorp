@@ -79,6 +79,7 @@ LAYOUT_ATOM(processingInstructionTagName, "__moz_pi")
 LAYOUT_ATOM(scrolledContentPseudo, ":scrolled-content")
 LAYOUT_ATOM(viewportPseudo, ":viewport")
 LAYOUT_ATOM(viewportScrollPseudo, ":viewport-scroll")
+LAYOUT_ATOM(selectScrolledContentPseudo, ":-moz-select-scrolled-content")
 
   // Alphabetical list of frame types
 LAYOUT_ATOM(areaFrame, "AreaFrame")

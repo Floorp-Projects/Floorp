@@ -74,10 +74,16 @@ public:
 
   virtual PRIntn GetSkipSides() const { return 0; }  
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const
+  {
+      aResult = "Deck";
+      return NS_OK;
+  }
+
 protected:
 
   virtual nsIFrame* GetSelectedFrame();
-    virtual nsresult PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect);
+    virtual void ComputeChildsNextPosition( nsIFrame* aChild, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect);
     virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
     virtual void LayoutChildrenInRect(nsRect& size);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);

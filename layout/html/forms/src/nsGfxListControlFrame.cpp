@@ -375,6 +375,251 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.width  = 0;
   aDesiredSize.height = 0;
 
+  PRBool isInDropDownMode = IsInDropDownMode();
+
+  // Add the list frame as a child of the form
+  if (isInDropDownMode == PR_FALSE && !mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+  }
+  
+  nsHTMLReflowState childReflowState(aPresContext, aReflowState, firstChildFrame, nsSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE));
+
+   // Get the size of option elements inside the listbox
+   // Compute the width based on the longest line in the listbox.
+  
+  childReflowState.mComputedWidth  = aReflowState.mComputedWidth;
+  childReflowState.mComputedHeight = aReflowState.mComputedHeight;
+
+  // remove our padding from the childs computed size.
+  nsMargin cb = aReflowState.mComputedPadding;
+
+  if (childReflowState.mComputedWidth != NS_INTRINSICSIZE) {
+      childReflowState.mComputedWidth += aReflowState.mComputedPadding.left + aReflowState.mComputedPadding.right;
+
+      if (childReflowState.mComputedWidth >= (cb.left + cb.right))
+         childReflowState.mComputedWidth -= (cb.left + cb.right);
+      else
+         childReflowState.mComputedWidth = 0;
+  }
+
+  
+  if (childReflowState.mComputedHeight != NS_INTRINSICSIZE) {
+      childReflowState.mComputedHeight += aReflowState.mComputedPadding.top + aReflowState.mComputedPadding.bottom;
+
+      if (childReflowState.mComputedHeight >= (cb.top + cb.bottom))
+         childReflowState.mComputedHeight -= (cb.top + cb.bottom);
+      else
+         childReflowState.mComputedHeight = 0;
+  }
+
+  // now reflow the child
+  nsSize scrolledAreaSize(0,0);
+  nsHTMLReflowMetrics  scrolledAreaDesiredSize(&scrolledAreaSize);
+
+  firstChildFrame->Reflow(aPresContext, 
+                        scrolledAreaDesiredSize,
+                        childReflowState, 
+                        aStatus);
+
+  if (childReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+      PRInt32 numRows = 1;
+      GetSizeAttribute(&numRows);
+
+      if (numRows == kNoSizeSpecified) {
+        nsIDOMNode* node;
+        nsresult rv = mContent->QueryInterface(nsCOMTypeInfo<nsIDOMNode>::GetIID(),(void**) &node);
+        if (node && NS_SUCCEEDED(rv)) {
+          numRows = 0;
+          CountAllChild(node, numRows);
+          NS_RELEASE(node);
+        }
+      }
+
+      if (numRows > 1) {
+          PRInt32 heightOfARow = scrolledAreaDesiredSize.maxElementSize->height;
+          nscoord visibleHeight;
+
+          if (isInDropDownMode) {
+             visibleHeight = childReflowState.mComputedHeight;
+
+            if (visibleHeight > (kMaxDropDownRows * heightOfARow)) {
+               visibleHeight = (kMaxDropDownRows * heightOfARow);
+            }
+          } else {
+              visibleHeight = numRows * heightOfARow;
+          }
+
+          //printf("Row height: %d\n", heightOfARow);
+
+          nsHTMLReflowState pass2ReflowState(aPresContext, aReflowState, firstChildFrame, nsSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE));
+          pass2ReflowState.mComputedHeight = visibleHeight;
+          pass2ReflowState.mComputedWidth = childReflowState.mComputedWidth;
+
+          firstChildFrame->Reflow(aPresContext, 
+                            scrolledAreaDesiredSize,
+                            pass2ReflowState, 
+                            aStatus);
+      }
+  }
+
+  nsMargin b = aReflowState.mComputedBorderPadding - aReflowState.mComputedPadding;
+
+  
+  // The visible height is zero, this could be a select with no options
+  // or a select with a single option that has no content or no label
+  //
+  // So this may not be the best solution, but we get the height of the font
+  // for the list frame and use that as the max/minimum size for the contents
+  /*
+  if (visibleHeight == 0) {
+    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+    if (fontMet) {
+      aReflowState.rendContext->SetFont(fontMet);
+      fontMet->GetHeight(visibleHeight);
+      mMaxHeight = visibleHeight;
+    }
+  }
+  */
+  
+
+  nsRect r(b.left,b.top, scrolledAreaDesiredSize.width, scrolledAreaDesiredSize.height);
+  firstChildFrame->SetRect(aPresContext, r);
+
+    // Set the max element size to be the same as the desired element size.
+  if (nsnull != aDesiredSize.maxElementSize) {
+      aDesiredSize.maxElementSize->width  = scrolledAreaDesiredSize.width;
+	  aDesiredSize.maxElementSize->height = scrolledAreaDesiredSize.height;
+  }
+
+  aDesiredSize.width = scrolledAreaDesiredSize.width + b.left + b.right;
+  aDesiredSize.height = scrolledAreaDesiredSize.height + b.top + b.bottom;
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
+  aStatus = NS_FRAME_COMPLETE;
+#ifdef DEBUG_rodsXXX
+  if (!isInDropDownMode) {
+    PRInt32 numRows = 1;
+    GetSizeAttribute(&numRows);
+    printf("%d ", numRows);
+    if (numRows == 2) {
+      COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 56, 38) 
+    } if (numRows == 3) {
+      COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 56, 54) 
+    } if (numRows == 4) {
+      COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 56, 70) 
+    }
+  }
+#endif
+
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+
+  return NS_OK;
+}
+
+
+#if 0
+//---------------------------------------------------------
+// Reflow is overriden to constrain the listbox height to the number of rows and columns
+// specified. 
+
+NS_IMETHODIMP 
+nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext, 
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState, 
+                           nsReflowStatus&          aStatus)
+{
+#ifdef DEBUG_rodsXXX
+  printf("nsGfxListControlFrame::Reflow    Reason: ");
+  switch (aReflowState.reason) {
+    case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
+    case eReflowReason_Incremental:printf("eReflowReason_Incremental\n");break;
+    case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
+    case eReflowReason_StyleChange:printf("eReflowReason_StyleChange\n");break;
+  }
+#endif // DEBUG_rodsXXX
+
+#if 0
+    // reflow optimization - why reflow if all the contents 
+    // and frames aren't there yet
+    if (!mIsAllContentHere || !mIsAllFramesHere) {
+      aDesiredSize.width  = 30*15;
+      aDesiredSize.height = 30*15;
+      if (nsnull != aDesiredSize.maxElementSize) {
+        aDesiredSize.maxElementSize->width  = aDesiredSize.width;
+	      aDesiredSize.maxElementSize->height = aDesiredSize.height;
+      }
+      aStatus = NS_FRAME_COMPLETE;
+      printf("--------------------------> Skipping reflow\n");
+      return NS_OK;
+    }
+#endif
+
+  // If all the content and frames are here 
+  // then initialize it before reflow
+    if (mIsAllContentHere && !mHasBeenInitialized) {
+      if (PR_FALSE == mIsAllFramesHere) {
+        CheckIfAllFramesHere();
+      }
+      if (mIsAllFramesHere && !mHasBeenInitialized) {
+        mHasBeenInitialized = PR_TRUE;
+        InitSelectionCache(-1); // Reset sel cache so as not to send event
+        Reset(mPresContext);
+        // reflow if initialized in reflow
+        nsCOMPtr<nsIReflowCommand> cmd;
+        nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(cmd), this, nsIReflowCommand::StyleChanged);
+        if (NS_FAILED(rv)) { return rv; }
+        if (!cmd) { return NS_ERROR_NULL_POINTER; }
+        nsCOMPtr<nsIPresShell> shell;
+        rv = mPresContext->GetShell(getter_AddRefs(shell));
+        if (NS_FAILED(rv)) { return rv; }
+        if (!shell) { return NS_ERROR_NULL_POINTER; }
+        rv = shell->EnterReflowLock();
+        if (NS_FAILED(rv)) { return rv; }
+        rv = shell->AppendReflowCommand(cmd);
+        // must do this next line regardless of result of AppendReflowCommand
+        shell->ExitReflowLock(PR_TRUE);
+      }
+    }
+
+#if 1
+  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
+                                                         aDesiredSize, aReflowState, aStatus);
+  if (NS_SUCCEEDED(skiprv)) {
+    return skiprv;
+  }
+#endif
+    // XXX So this may do it too often
+    // the side effect of this is if the user has scrolled to some other place in the list and
+    // an incremental reflow comes through the list gets scrolled to the first selected item
+    // I haven't been able to make it do it, but it will do it
+    // basically the real solution is to know when all the reframes are there.
+    if (aReflowState.reason == eReflowReason_Incremental) {
+      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
+      if (content) {
+        ScrollToFrame(content);
+      }
+    }
+
+  nsIFrame * firstChildFrame = nsnull;
+  FirstChild(aPresContext, nsnull, &firstChildFrame);
+
+   // Strategy: Let the inherited reflow happen as though the width and height of the
+   // ScrollFrame are big enough to allow the listbox to
+   // shrink to fit the longest option element line in the list.
+   // The desired width and height returned by the inherited reflow is returned, 
+   // unless one of the following has been specified.
+   // 1. A css width has been specified.
+   // 2. The size has been specified.
+   // 3. The css height has been specified, but the number of rows has not.
+   //  The size attribute overrides the height setting but the height setting
+   // should be honored if there isn't a size specified.
+
+    // Determine the desired width + height for the listbox + 
+  aDesiredSize.width  = 0;
+  aDesiredSize.height = 0;
+
   // Add the list frame as a child of the form
   if (IsInDropDownMode() == PR_FALSE && !mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
@@ -638,6 +883,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   return NS_OK;
 }
+#endif
 
 //---------------------------------------------------------
 NS_IMETHODIMP

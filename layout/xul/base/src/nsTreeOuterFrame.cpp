@@ -108,12 +108,29 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
 							      const nsHTMLReflowState& aReflowState,
 							      nsReflowStatus&          aStatus)
 {
-  NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE, 
-               "Reflowing outer tree frame with unconstrained width!!!!");
-  
-  NS_ASSERTION(aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE, 
-               "Reflowing outer tree frame with unconstrained height!!!!");
+    /*
+    // XXX at the moment we don't handle non incremental dirty reflow commands. So just convert them
+    // to style changes for now.
+    if (aReflowState.reason == eReflowReason_Dirty) {
+        NS_WARNING("Converting Dirty to StyleChange!! Table need to implement reflow Dirty!!");
+        nsHTMLReflowState goodState(aReflowState);
+        goodState.reason = eReflowReason_StyleChange;
+        return Reflow(aPresContext, aDesiredSize, goodState, aStatus);
+    }
+    */
 
+    PRBool badWidth = PR_FALSE;
+
+    if (aReflowState.mComputedWidth == NS_UNCONSTRAINEDSIZE) {
+        NS_WARNING("Inefficient XUL: Reflowing outer tree frame with unconstrained width, try giving it a width in CSS!");
+        nsHTMLReflowState goodState(aReflowState);
+        goodState.mComputedWidth = 1000;
+        return Reflow(aPresContext, aDesiredSize, goodState, aStatus);
+    }
+
+    if (aReflowState.mComputedHeight == NS_UNCONSTRAINEDSIZE) {
+        NS_WARNING("Inefficient XUL: Reflowing outer tree frame with unconstrained height, try giving it a height in CSS!");
+    }
   //printf("TOF Width: %d, TOF Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 
   nsresult rv = nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -138,26 +155,6 @@ nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
   return rv;
 }
 
-/**
- * Ok return our dimensions
- */
-NS_IMETHODIMP
-nsTreeOuterFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
-{
-  aSize.minSize.width = 0;
-  aSize.minSize.height = 0;
-  aSize.prefSize.width = 100;
-  aSize.prefSize.height = 100;
-
-  ((nsCalculatedBoxInfo&)aSize).prefWidthIntrinsic = PR_FALSE;
-  ((nsCalculatedBoxInfo&)aSize).prefHeightIntrinsic = PR_FALSE;
-
-  return NS_OK;
-}
-
-/**
- * We can be a nsIBox
- */
 NS_IMETHODIMP 
 nsTreeOuterFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {           
@@ -167,24 +164,12 @@ nsTreeOuterFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                                         
-  if (aIID.Equals(NS_GET_IID(nsIBox))) {                                         
-    *aInstancePtr = (void*)(nsIBox*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }   
-  else if (aIID.Equals(NS_GET_IID(nsISelfScrollingFrame))) {
+  if (aIID.Equals(NS_GET_IID(nsISelfScrollingFrame))) {
     *aInstancePtr = (void*)(nsISelfScrollingFrame*) this;
     return NS_OK;
   }
 
   return nsTableOuterFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
-
-NS_IMETHODIMP
-nsTreeOuterFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
-{
-  incrementalChild = this;
-  return NS_OK;
 }
 
 /*

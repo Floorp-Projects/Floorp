@@ -99,6 +99,7 @@ nsScrollbarButtonFrame::HandlePress(nsIPresContext* aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
+  MouseClicked();
   nsRepeatService::GetInstance()->Start(this);
   return NS_OK;
 }
@@ -121,7 +122,7 @@ NS_IMETHODIMP_(void) nsScrollbarButtonFrame::Notify(nsITimer *timer)
 void
 nsScrollbarButtonFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  MouseClicked();
+  //MouseClicked();
 }
 
 void

@@ -86,6 +86,7 @@ install::
 	$(MAKE_INSTALL) taskbar-tab-hover.gif  $(DISTBROWSER)
 	$(MAKE_INSTALL) stop.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) print.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) progressmeter-busy.gif $(DISTBROWSER)
 
 	$(MAKE_INSTALL) button28-bg-active.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) button28-bg-disabled.gif $(DISTBROWSER)

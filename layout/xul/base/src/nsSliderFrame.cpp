@@ -60,8 +60,6 @@
 
 #define DEBUG_SLIDER PR_FALSE
 
-nscoord            nsSliderFrame::gChange = 0;
-
 
 nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -80,14 +78,14 @@ NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 } // NS_NewSliderFrame
 
 nsSliderFrame::nsSliderFrame()
-: mCurPos(0), mScrollbarListener(nsnull)
+: mCurPos(0), mScrollbarListener(nsnull),mChange(0)
 {
 }
 
 // stop timer
 nsSliderFrame::~nsSliderFrame()
 {
-
+   mRedrawImmediate = PR_FALSE;
 }
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
@@ -227,13 +225,17 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
              aAttribute == nsXULAtoms::increment)) {
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
-  
+ 
+      /*
       nsCOMPtr<nsIReflowCommand> reflowCmd;
       rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
                                    nsIReflowCommand::StyleChanged);
       if (NS_SUCCEEDED(rv)) 
         shell->AppendReflowCommand(reflowCmd);
+      */
 
+      mState |= NS_FRAME_IS_DIRTY;
+      return mParent->ReflowDirtyChild(shell, this);
   }
 
   return rv;
@@ -479,6 +481,10 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
 
   if (isDraggingThumb(aPresContext))
   {
+      // we want to draw immediately if the user doing it directly with the
+      // mouse that makes redrawing much faster.
+      mRedrawImmediate = PR_TRUE;
+
     switch (aEvent->message) {
     case NS_MOUSE_MOVE: {
        // convert coord to pixels
@@ -549,6 +555,11 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
       AddListener();
       DragThumb(aPresContext, PR_FALSE);
     }
+
+    // we want to draw immediately if the user doing it directly with the
+    // mouse that makes redrawing much faster. Switch it back now.
+    mRedrawImmediate = PR_FALSE;
+
     //return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     return NS_OK;
   }
@@ -658,7 +669,7 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     changeRect.UnionRect(thumbRect, newThumbRect);
 
     // redraw just the change
-    Invalidate(aPresContext, changeRect, PR_TRUE);
+    Invalidate(aPresContext, changeRect, mRedrawImmediate);
 
     if (mScrollbarListener)
       mScrollbarListener->PositionChanged(aPresContext, mCurPos, curpos);
@@ -916,9 +927,10 @@ nsSliderFrame::HandlePress(nsIPresContext* aPresContext,
     if ((isHorizontal && aEvent->point.x < thumbRect.x) || (!isHorizontal && aEvent->point.y < thumbRect.y)) 
         change = -1;
 
-    gChange = change;
-    nsRepeatService::GetInstance()->Start(this);
+    mChange = change;
+    mClickPoint = aEvent->point;
     PageUpDown(thumbFrame, change);
+    nsRepeatService::GetInstance()->Start(this);
 
   return NS_OK;
 }
@@ -979,9 +991,42 @@ nsSliderFrame::SetScrollbarListener(nsIScrollbarListener* aListener)
 }
 
 NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
-{
-  nsIFrame* thumbFrame = mFrames.FirstChild();
-  PageUpDown(thumbFrame, gChange);
+{ 
+    PRBool stop = PR_FALSE;
+
+    nsIFrame* thumbFrame = mFrames.FirstChild();
+    nsRect thumbRect;
+    thumbFrame->GetRect(thumbRect);
+
+    nsIContent* scrollbar = GetScrollBar();
+    PRBool isHorizontal = IsHorizontal(scrollbar);
+
+    // see if the thumb has moved passed our original click point.
+    // if it has we want to stop.
+    if (isHorizontal) {
+        if (mChange < 0) {
+            if (thumbRect.x < mClickPoint.x) 
+                stop = PR_TRUE;
+        } else {
+            if (thumbRect.x + thumbRect.width > mClickPoint.x)
+                stop = PR_TRUE;
+        }
+    } else {
+         if (mChange < 0) {
+            if (thumbRect.y < mClickPoint.y) 
+                stop = PR_TRUE;
+        } else {
+            if (thumbRect.y + thumbRect.width > mClickPoint.y)
+                stop = PR_TRUE;
+        }
+    }
+
+
+    if (stop) {
+       nsRepeatService::GetInstance()->Stop();
+    } else {
+      PageUpDown(thumbFrame, mChange);
+    }
 }
 
 class nsThumbFrame : public nsTitledButtonFrame

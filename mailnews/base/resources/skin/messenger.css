@@ -316,3 +316,12 @@ menu.push[disabled="true"]:active {
         text-decoration: none;
 }
 
+/**
+ * Make sure the min height is small so we can 
+ * resize the pane vertically -EDV
+ */
+box#messagepanebox
+{
+   min-height: 10px;
+}
+

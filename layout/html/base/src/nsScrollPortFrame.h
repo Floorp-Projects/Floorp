@@ -82,6 +82,8 @@ public:
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
 
+   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
+
   /**
    * Get the "type" of the frame
    *
@@ -95,10 +97,10 @@ public:
 
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
+  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
 
 protected:
   nsScrollPortFrame();

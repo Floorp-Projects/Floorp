@@ -233,7 +233,10 @@ private:
   // XXX Hack
   nsIPresContext* mPresContext;  // weak reference
 
-  static nscoord gChange;
+  nscoord mChange;
+  nsPoint mClickPoint;
+  PRBool mRedrawImmediate;
+
 }; // class nsSliderFrame
 
 #endif

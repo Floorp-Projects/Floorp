@@ -1386,6 +1386,12 @@ sourcetext { /* XXX should not be in HTML namespace */
   border: 2px outset #c0c0c0;
 }
 
+:-moz-select-scrolled-content {
+  background: inherit;
+  display: inherit;
+  padding: inherit;
+}
+
 :scrolled-content {
   background: inherit;
   padding: inherit;

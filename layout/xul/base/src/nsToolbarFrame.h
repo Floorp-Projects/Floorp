@@ -99,6 +99,13 @@ public:
   void SetDropfeedbackLocation(nscoord aX)  { mXDropLoc = aX; }
 #endif
 
+
+  NS_IMETHOD GetFrameName(nsString& aResult) const
+  {
+      aResult = "Toolbar";
+      return NS_OK;
+  }
+
 protected:
 
   nsToolbarFrame();

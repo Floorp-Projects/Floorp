@@ -58,8 +58,24 @@ public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_IBOX_IID; return iid; }
 
+  /** Get the layout information object for this box. It will contains things like flexiblity,
+    * preferred, min, max sizes. 
+    */
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)=0;
-  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)=0;
+
+  /** clear any cached layout info about our children. If the child is specifically specified
+   *  then only clear cached layout information for that specific child. If the child is not
+   *  then clear all childrens cached information. 
+   */
+  NS_IMETHOD InvalidateCache(nsIFrame* aChild)=0;
+
+  /**
+   * Helper method from doing box reflow
+   */
+  static void HandleRootBoxReflow(nsIPresContext* aPresContext,
+                                  nsIFrame* aBox, 
+                                  const nsHTMLReflowState& aReflowState);
+
 };
 
 #endif

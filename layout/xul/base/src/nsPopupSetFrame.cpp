@@ -201,35 +201,65 @@ nsPopupSetFrame::Reflow(nsIPresContext*   aPresContext,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
 {
-  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  nsIFrame* frame = GetActiveChild();
-    
-  if (!frame || (rv != NS_OK))
-    return rv;
+    nsIFrame* popupChild = GetActiveChild();
 
-  // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
-  nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
-                                   availSize);
-  kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
-  kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
-    
-   // Reflow child
-  nscoord w = aDesiredSize.width;
-  nscoord h = aDesiredSize.height;
-  
-  nsRect rect;
-  frame->GetRect(rect);
-  rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState,
-                   rect.x, rect.y, 0, aStatus);
+    nsHTMLReflowState boxState(aReflowState);
 
-   // Set the child's width and height to its desired size
-  FinishReflowChild(frame, aPresContext, aDesiredSize, rect.x, rect.y, 0);
+    if (aReflowState.reason == eReflowReason_Incremental) {
 
-  // Don't let it affect our size.
-  aDesiredSize.width = w;
-  aDesiredSize.height = h;
-  
+        nsIFrame* incrementalChild;
+
+        // get the child but don't pull it off
+        aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
+        
+        // see if it is in the mPopupFrames list
+        nsIFrame* child = mPopupFrames.FirstChild();
+        popupChild = nsnull;
+
+        while (nsnull != child) 
+        { 
+            // if it is then flow the popup incrementally then flow
+            // us with a resize just to get our correct desired size.
+            if (child == incrementalChild) {
+                // pull it off now
+                aReflowState.reflowCommand->GetNext(incrementalChild);
+
+                // we know what child
+                popupChild = child;
+
+                // relow the box with resize just to get the
+                // aDesiredSize set correctly
+                boxState.reason = eReflowReason_Resize;
+                break;
+            }
+
+            nsresult rv = child->GetNextSibling(&child);
+            NS_ASSERTION(rv == NS_OK,"failed to get next child");
+        }   
+    } 
+
+  if (popupChild) {
+      // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
+      nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, popupChild,
+                                       availSize);
+      kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
+      kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
+
+       // Reflow child
+      nsHTMLReflowMetrics kidDesiredSize(aDesiredSize);
+
+      nsRect rect;
+      popupChild->GetRect(rect);
+      nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
+                       rect.x, rect.y, 0, aStatus);
+
+       // Set the child's width and height to its desired size
+      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, 0);
+  }
+
+  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, boxState, aStatus);
+
   return rv;
 }
 
@@ -258,45 +288,6 @@ nsPopupSetFrame::DidReflow(nsIPresContext* aPresContext,
   }
 
   return nsBoxFrame::DidReflow(aPresContext, aStatus);
-}
-
-// Overridden Box method.
-NS_IMETHODIMP
-nsPopupSetFrame::Dirty(nsIPresContext* aPresContext,  const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
-{
-  incrementalChild = nsnull;
-  nsresult rv = NS_OK;
-
-  // Dirty any children that need it.
-  nsIFrame* frame;
-  aReflowState.reflowCommand->GetNext(frame, PR_FALSE);
-  if (frame == nsnull) {
-    incrementalChild = this;
-    return rv;
-  }
-
-  // Now call our original box frame method
-  rv = nsBoxFrame::Dirty(aPresContext, aReflowState, incrementalChild);
-  if (rv != NS_OK || incrementalChild)
-    return rv;
-
-  nsIFrame* popup = GetActiveChild();
-  if (popup && (frame == popup)) {
-    // An incremental reflow command is targeting something inside our
-    // hidden popup view.  We can't actually return the child, since it
-    // won't ever be found by box.  Instead return ourselves, so that box
-    // will later send us an incremental reflow command.
-    incrementalChild = this;
-
-    // In order for the child box to know what it needs to reflow, we need
-    // to call its Dirty method...
-    nsIFrame* ignore;
-    nsIBox* ibox;
-    if (NS_SUCCEEDED(popup->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox)
-      ibox->Dirty(aPresContext, aReflowState, ignore);
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP
