@@ -595,7 +595,7 @@ protected:
     nsIRDFResource*            OwnedResource() const      { return mSlots ? mSlots->mOwnedResource.get()      : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
     nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }
-    nsIXBLBinding*             Binding() const         { return mSlots ? mSlots->mBinding                     : nsnull; }
+    nsIXBLBinding*             Binding() const         { return mSlots ? mSlots->mBinding.get()                     : nsnull; }
 };
 
 
