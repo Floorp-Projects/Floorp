@@ -244,13 +244,11 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
     gRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
     gRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
     gRDFService->GetResource(kURINC_Name,    &kNC_Name);
-	gRDFService->GetResource(kURINC_SpecialFolder, &kNC_SpecialFolder);
-
+    gRDFService->GetResource(kURINC_SpecialFolder, &kNC_SpecialFolder);
     gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
     gRDFService->GetResource(kURINC_Sender, &kNC_Sender);
     gRDFService->GetResource(kURINC_Date, &kNC_Date);
     gRDFService->GetResource(kURINC_Status, &kNC_Status);
-
     gRDFService->GetResource(kURINC_Delete, &kNC_Delete);
     gRDFService->GetResource(kURINC_Reply, &kNC_Reply);
     gRDFService->GetResource(kURINC_Forward, &kNC_Forward);
