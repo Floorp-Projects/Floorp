@@ -27,6 +27,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISupportsUtils.h"
+#include "nsXPIDLString.h"
 
 // Static Variables
 
@@ -265,6 +266,69 @@ nsMPFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_re
     return rv;
 }
 
+/*
+    Copies the contents of srcDir into destDir.
+    destDir will be created if it doesn't exist.
+*/
+
+static
+nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
+{
+    nsresult rv;
+    PRBool isDir;
+    
+    rv = srcDir->IsDirectory(&isDir);
+    if (NS_FAILED(rv)) return rv;
+      if (!isDir) return NS_ERROR_INVALID_ARG;
+
+    PRBool exists;
+    rv = destDir->Exists(&exists);
+      if (NS_SUCCEEDED(rv) && !exists)
+              rv = destDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+      if (NS_FAILED(rv)) return rv;
+
+    PRBool hasMore = PR_FALSE;
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    rv = srcDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = dirIterator->HasMoreElements(&hasMore);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIFile> dirEntry;
+    
+      while (hasMore)
+      {
+              rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
+              if (NS_SUCCEEDED(rv))
+              {
+                  rv = dirEntry->IsDirectory(&isDir);
+                  if (NS_SUCCEEDED(rv))
+                  {
+                      if (isDir)
+                      {
+                          nsCOMPtr<nsIFile> destClone;
+                          rv = destDir->Clone(getter_AddRefs(destClone));
+                          if (NS_SUCCEEDED(rv))
+                          {
+                              nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
+                              nsXPIDLCString leafName;
+                              dirEntry->GetLeafName(getter_Copies(leafName));
+                              newChild->AppendRelativePath(leafName);
+                              rv = RecursiveCopy(dirEntry, newChild);
+                          }
+                      }
+                      else
+                          rv = dirEntry->CopyTo(destDir, nsnull);
+                  }
+              
+              }
+        rv = dirIterator->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
+      }
+
+      return rv;
+}
 
 nsresult nsMPFileLocProvider::InitProfileDir(nsIFile *profileParentDir,
                                                 const char *profileDirName,
@@ -295,7 +359,7 @@ nsresult nsMPFileLocProvider::InitProfileDir(nsIFile *profileParentDir,
             rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(profDefaultsFolder));
             if (NS_FAILED(rv)) return rv;
         }
-        rv = profDefaultsFolder->CopyTo(profileParentDir, profileDirName);
+        rv = RecursiveCopy(profDefaultsFolder, profileDir);
         if (NS_FAILED(rv)) return rv;
     }
 
