@@ -649,8 +649,8 @@ public:
     NS_IMETHOD    CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aResult); 
     
     // nsIXULChildDocument Interface
-    NS_IMETHOD    SetFragmentRoot(nsIRDFResource* aFragmentRoot);
-    NS_IMETHOD    GetFragmentRoot(nsIRDFResource** aFragmentRoot);
+    NS_IMETHOD    SetContentSink(nsIXULContentSink* aContentSink);
+    NS_IMETHOD    GetContentSink(nsIXULContentSink** aContentSink);
     NS_IMETHOD    LayoutPopupDocument();
 
     // nsIDOMNode interface
@@ -782,7 +782,7 @@ protected:
     nsCOMPtr<nsIWordBreaker>            mWordBreaker;    // [OWNER] 
     nsIContentViewerContainer* mContentViewerContainer;  // [WEAK] it owns me! (indirectly)
     nsString                   mCommand;
-    nsCOMPtr<nsIRDFResource>   mFragmentRoot;     // [OWNER] 
+    nsIXULContentSink*         mParentContentSink;     // [WEAK] 
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
     PRBool                     mIsPopup; 
     nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
@@ -1126,7 +1126,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
     // Create the composite data source and builder, but only do this
     // if we're not a XUL fragment. XUL fragments get "imported"
     // directly into the parent document's datasource.
-    if (mFragmentRoot == nsnull) {
+    if (mParentContentSink == nsnull) {
         // Create a "scratch" in-memory data store to associate with the
         // document to be a catch-all for any doc-specific info that we
         // need to store (e.g., current sort order, etc.)
@@ -1790,9 +1790,9 @@ XULDocumentImpl::EndLoad()
 {
     // Set up the document's composite datasource, which will include
     // the main document datasource and the local store. Only do this
-    // if we are a bona-fide top-level XUL document; (mFragmentRoot !=
-    // nsnull) implies we are a XUL fragment.
-    if (mFragmentRoot == nsnull) {
+    // if we are a bona-fide top-level XUL document; (mParentContentSink !=
+    // nsnull) implies we are a XUL overlay.
+    if (mParentContentSink == nsnull) {
         NS_PRECONDITION(mRootResource != nsnull, "no root resource");
         if (! mRootResource)
             return NS_ERROR_UNEXPECTED;
@@ -3191,21 +3191,16 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
 ////////////////////////////////////////////////////////////////////////
 // nsIXULChildDocument interface
 NS_IMETHODIMP 
-XULDocumentImpl::SetFragmentRoot(nsIRDFResource* aFragmentRoot)
+XULDocumentImpl::SetContentSink(nsIXULContentSink* aParentContentSink)
 {
-    if (aFragmentRoot != mFragmentRoot.get()) {
-        mFragmentRoot = dont_QueryInterface(aFragmentRoot);
-    }
+    mParentContentSink = aParentContentSink;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-XULDocumentImpl::GetFragmentRoot(nsIRDFResource** aFragmentRoot)
+XULDocumentImpl::GetContentSink(nsIXULContentSink** aParentContentSink)
 {
-    if (mFragmentRoot) {
-        *aFragmentRoot = mFragmentRoot;
-        NS_ADDREF(*aFragmentRoot);
-    }
+    *aParentContentSink = mParentContentSink;
     return NS_OK;
 }
 
@@ -3917,13 +3912,13 @@ XULDocumentImpl::Init(void)
 nsresult
 XULDocumentImpl::StartLayout(void)
 {
+	if (mParentContentSink)
+      return NS_OK; // Overlays rely on the master document for layout
+
     NS_ASSERTION(mRootContent != nsnull, "Error in XUL file. Love to tell ya where if only I knew.");
     if (!mRootContent)
       return NS_ERROR_UNEXPECTED;
     
-    if (mFragmentRoot)
-      return NS_OK; // Subdocuments rely on the parent document for layout
-
     PRInt32 count = GetNumberOfShells();
     for (PRInt32 i = 0; i < count; i++) {
       nsIPresShell* shell = GetShellAt(i);

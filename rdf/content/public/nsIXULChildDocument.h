@@ -25,15 +25,14 @@
 #define NS_IXULCHILDDOCUMENT_IID \
 { 0x7b75c621, 0xd641, 0x11d2, { 0xbf, 0x86, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-class nsIContentViewerContainer;
-class nsIRDFResource;
+class nsIXULContentSink;
 
 class nsIXULChildDocument: public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IXULCHILDDOCUMENT_IID; return iid; }
 
-    NS_IMETHOD SetFragmentRoot(nsIRDFResource* aContent) = 0;
-    NS_IMETHOD GetFragmentRoot(nsIRDFResource** aContent) = 0;
+    NS_IMETHOD SetContentSink(nsIXULContentSink* aContentSink) = 0;
+    NS_IMETHOD GetContentSink(nsIXULContentSink** aContentSink) = 0;
 
     // Used for popup child documents
     NS_IMETHOD LayoutPopupDocument() = 0;
