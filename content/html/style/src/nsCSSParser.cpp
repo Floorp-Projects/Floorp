@@ -3349,10 +3349,12 @@ static PRInt32 ComputeChangeHint(nsCSSProperty aPropID,
         // XXX: it would be better to pass out a hint NS_STYLE_HINT_VIEWCHANGE,
         // but it does not exist
         return NS_STYLE_HINT_FRAMECHANGE;
-      } else {
-        return NS_STYLE_HINT_VISUAL;
       }
+      return NS_STYLE_HINT_VISUAL;
     }
+    break;
+  default:
+    break;
   }
   
   return nsCSSProps::kHintTable[aPropID];
