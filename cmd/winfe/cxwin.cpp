@@ -1992,7 +1992,8 @@ void CWinCX::ResetToolTipImg() {
 	pLastToolTipImg = 0;
 	m_pLastToolTipAnchor = NULL;
 	if (m_ToolTip) {
-		m_ToolTip->Activate(FALSE);
+		if (::IsWindow(m_ToolTip->m_hWnd))
+			m_ToolTip->Activate(FALSE);
 		delete m_ToolTip;
 		m_ToolTip = 0;
 	}
