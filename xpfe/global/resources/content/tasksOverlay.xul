@@ -50,7 +50,8 @@
       <template>
         <rule>
           <menupopup>
-            <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#name"/>
+            <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#name"
+            oncommand="ShowUpdateFromResource( event.target )"/>
           </menupopup>
         </rule>
       </template>

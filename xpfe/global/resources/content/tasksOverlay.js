@@ -260,6 +260,12 @@ function OpenTaskURL( inURL )
 	window.open( inURL );
 }
 
+function ShowUpdateFromResource( node )
+{
+	var url = node.getAttribute('url');
+    dump( url +" finding \n" );
+	OpenTaskURL( url )
+}
 /** 
  * WALLET submenu
  */
