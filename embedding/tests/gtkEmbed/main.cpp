@@ -27,7 +27,8 @@ handle_event_queue(gpointer data, gint source, GdkInputCondition condition)
                char *argv[] )
      {
          nsresult rv;
-         NS_InitEmbedding("");
+         nsCOMPtr<nsILocalFile> binDir;
+         NS_InitEmbedding(binDir, nsnull);
 
          // set up the thread event queue
          nsIEventQueueService* eventQService;
