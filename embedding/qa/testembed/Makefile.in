@@ -1,0 +1,147 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: Mozilla-sample-code 1.0
+#
+# Copyright (c) 2002 Netscape Communications Corporation and
+# other contributors
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this Mozilla sample software and associated documentation files
+# (the "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to permit
+# persons to whom the Software is furnished to do so, subject to the
+# following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+# Contributor(s):
+# Ashish Bhatt <ashishbhatt@netscape.com>
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+PROGRAM		= testembed$(BIN_SUFFIX)
+RESFILE		= testembed.res
+
+MODULE = testEmbed
+REQUIRES = \
+	xpcom \
+	string \
+	necko \
+	webbrwsr \
+	webBrowser_core \
+	widget \
+	docshell \
+	dom \
+	uriloader \
+	embed_base \
+	webshell \
+	shistory \
+	appcomps \
+	pref \
+	profile \
+	find \
+	gfx \
+	windowwatcher \
+	layout \
+	history \
+	helperAppDlg \
+	content \
+	webbrowserpersist \
+	xpinstall \
+	composer \
+	commandhandler \
+	$(NULL)
+
+CPPSRCS		= \
+	    TestEmbed.cpp     \
+	    BrowserFrm.cpp   \
+	    BrowserFrameGlue.cpp   \
+	    BrowserView.cpp \
+	    BrowserImpl.cpp \
+	    BrowserImplWebPrgrsLstnr.cpp \
+	    BrowserImplHistoryLstnr.cpp \
+	    BrowserImplCtxMenuLstnr.cpp \
+	    Dialogs.cpp       \
+	    ProfileMgr.cpp \
+	    ProfilesDlg.cpp \
+	    winEmbedFileLocProvider.cpp \
+	    MostRecentUrls.cpp \
+	    PrintProgressDialog.cpp       \
+	    Preferences.cpp \
+	    StdAfx.cpp       \
+	    UrlDialog.cpp       \
+	    QaUtils.cpp \
+	    Tests.cpp \
+	    nsirequest.cpp \
+	    nsihistory.cpp \
+	    nsiwebnav.cpp \
+	    nsiDirServ.cpp \
+	    domwindow.cpp \
+	    selection.cpp \
+	    nsProfile.cpp \
+	    nsIClipBoardCmd.cpp \
+	    nsIObserServ.cpp \
+	    nsIFile.cpp \
+	    nsIWebBrow.cpp \
+		nsIWebProg.cpp \
+		nsIWebBrowFind.cpp \
+		QaFindDlg.cpp \
+		WebProgDlg.cpp \
+		$(NULL)
+
+EXTRA_DSO_LIBS	= embed_base_s gkgfx testEmbedComponents
+
+LIBS		= \
+		$(EXTRA_DSO_LIBS) \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+OS_LIBS		+= \
+		ole32.lib \
+		comdlg32.lib \
+		shell32.lib \
+		version.lib \
+		$(NULL)
+
+LOCAL_INCLUDES	= -I$(srcdir)/components
+
+#
+# Control the default heap size.
+# This is the heap returned by GetProcessHeap().
+# As we use the CRT heap, the default size is too large and wastes VM.
+#
+# The default heap size is 1MB on Win32.
+# The heap will grow if need be.
+#
+# Set it to 256k.  See bug 127069.
+#
+LDFLAGS += /HEAP:0x40000
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+= /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON"
+LDFLAGS		+= -SUBSYSTEM:windows
+
+libs:: testembed.htm
+	$(INSTALL) $^ $(DIST)/bin
+
+install:: testembed.htm
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)
+
