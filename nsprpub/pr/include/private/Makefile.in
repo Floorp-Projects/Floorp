@@ -49,10 +49,9 @@ RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)/private
 
 HEADERS = $(RELEASE_HEADERS) $(srcdir)/pprmwait.h $(srcdir)/primpl.h
 
+includedir := $(includedir)/private
+
 include $(topsrcdir)/config/rules.mk
 
 export:: $(RELEASE_HEADERS)
-	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(includedir)/private
-ifeq ($(MOZ_BITS),16)
-	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(MOZ_INCL)/private
-endif
+	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(dist_includedir)/private
