@@ -40,6 +40,7 @@
 #include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutCID.h"
+#include "nsIPref.h"
 
 #include "nsEditorUtils.h"
 
@@ -53,6 +54,7 @@ const static PRUnichar nbsp = 160;
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 enum
 {
@@ -78,6 +80,7 @@ NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult)
 nsHTMLEditRules::nsHTMLEditRules() : 
 mDocChangeRange(nsnull)
 ,mListenerEnabled(PR_TRUE)
+,mReturnInEmptyLIKillsList(PR_TRUE)
 ,mUtilRange(nsnull)
 ,mJoinOffset(0)
 {
@@ -113,6 +116,25 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   nsresult res = nsTextEditRules::Init(aEditor, aFlags);
   if (NS_FAILED(res)) return res;
 
+  // cache any prefs we care about
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  char *returnInEmptyLIKillsList = 0;
+  res = prefs->CopyCharPref("editor.liReturnBehavior", &returnInEmptyLIKillsList);
+                          
+  if (NS_SUCCEEDED(res) && returnInEmptyLIKillsList)
+  {
+    if (!strncmp(returnInEmptyLIKillsList, "no", 2))
+      mReturnInEmptyLIKillsList = PR_FALSE; 
+    else
+      mReturnInEmptyLIKillsList = PR_TRUE; 
+  }
+  else
+  {
+    mReturnInEmptyLIKillsList = PR_TRUE; 
+  }
+  
   // make a utility range for use by the listenter
   res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
                                                     getter_AddRefs(mUtilRange));
@@ -3675,7 +3697,7 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
   PRBool isEmpty;
   res = IsEmptyBlock(aListItem, &isEmpty, PR_TRUE, PR_FALSE);
   if (NS_FAILED(res)) return res;
-  if (isEmpty)
+  if (isEmpty && mReturnInEmptyLIKillsList)   // but only if prefs says it's ok
   {
     nsCOMPtr<nsIDOMNode> list, listparent;
     PRInt32 offset, itemOffset;
