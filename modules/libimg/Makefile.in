@@ -23,25 +23,15 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef STANDALONE_IMAGE_LIB
-DIRS = png public src
-EXTRA_LIBS = libzlib.a libpng.a
+DIRS = public src
 else
 DIRS = classes public src
-
-EXTRA_LIBS =
-
-ifdef MOZ_NATIVE_PNG
-EXTRA_LIBS	+= -lpng
-else
-DIRS		+= png
-EXTRA_LIBS	+= libpng.a
 endif
 
-ifdef MOZ_NATIVE_ZLIB
-EXTRA_LIBS	+= -lz
-else
-EXTRA_LIBS	+= libzlib.a
+ifndef MOZ_NATIVE_PNG
+DIRS += png
 endif
-endif
+
+EXTRA_LIBS = $(PNG_LIBS) $(ZLIB_LIBS)
 
 include $(topsrcdir)/config/rules.mk
