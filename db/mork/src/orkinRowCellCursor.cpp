@@ -40,6 +40,22 @@
 #include "orkinRowCellCursor.h"
 #endif
 
+#ifndef _MORKROWOBJECT_
+#include "morkRowObject.h"
+#endif
+
+#ifndef _MORKROW_
+#include "morkRow.h"
+#endif
+
+#ifndef _ORKINROW_
+#include "orkinRow.h"
+#endif
+
+#ifndef _MORKCELL_
+#include "morkCell.h"
+#endif
+
 #ifndef _MORKENV_
 #include "morkEnv.h"
 #endif
@@ -80,9 +96,10 @@ orkinRowCellCursor::MakeRowCellCursor(morkEnv* ev, morkRowCellCursor* ioObject)
 
 morkEnv*
 orkinRowCellCursor::CanUseRowCellCursor(nsIMdbEnv* mev, mork_bool inMutable,
-  mdb_err* outErr) const
+  mdb_err* outErr, morkRow** outRow) const
 {
   morkEnv* outEnv = 0;
+  morkRow* row = 0;
   morkEnv* ev = morkEnv::FromMdbEnv(mev);
   if ( ev )
   {
@@ -91,12 +108,38 @@ orkinRowCellCursor::CanUseRowCellCursor(nsIMdbEnv* mev, mork_bool inMutable,
     if ( self )
     {
       if ( self->IsRowCellCursor() )
-        outEnv = ev;
+      {
+        if ( self->IsMutable() || !inMutable )
+        {
+          morkRowObject* rowObj = self->mRowCellCursor_RowObject;
+          if ( rowObj )
+          {
+            morkRow* theRow = rowObj->mRowObject_Row;
+            if ( theRow )
+            {
+              if ( theRow->IsRow() )
+              {
+                outEnv = ev;
+                row = theRow;
+              }
+              else
+                theRow->NonRowTypeError(ev);
+            }
+            else
+              rowObj->NilRowError(ev);
+          }
+          else
+            self->NilRowObjectError(ev);
+        }
+        else
+          self->NonMutableNodeError(ev);
+      }
       else
         self->NonRowCellCursorTypeError(ev);
     }
     *outErr = ev->AsErr();
   }
+  *outRow = row;
   MORK_ASSERT(outEnv);
   return outEnv;
 }
@@ -200,13 +243,17 @@ orkinRowCellCursor::IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
 orkinRowCellCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
 {
   mdb_err outErr = 0;
+  mdb_count count = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    count = row->mRow_Length;
     outErr = ev->AsErr();
   }
+  if ( outCount )
+  	*outCount = count;
   return outErr;
 }
 
@@ -214,13 +261,17 @@ orkinRowCellCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
 orkinRowCellCursor::GetSeed(nsIMdbEnv* mev, mdb_seed* outSeed)
 {
   mdb_err outErr = 0;
+  mdb_seed seed = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    seed = row->mRow_Seed;
     outErr = ev->AsErr();
   }
+  if ( outSeed )
+  	*outSeed = seed;
   return outErr;
 }
 
@@ -228,11 +279,13 @@ orkinRowCellCursor::GetSeed(nsIMdbEnv* mev, mdb_seed* outSeed)
 orkinRowCellCursor::SetPos(nsIMdbEnv* mev, mdb_pos inPos)
 {
   mdb_err outErr = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    cursor->mCursor_Pos = inPos;
     outErr = ev->AsErr();
   }
   return outErr;
@@ -242,13 +295,18 @@ orkinRowCellCursor::SetPos(nsIMdbEnv* mev, mdb_pos inPos)
 orkinRowCellCursor::GetPos(nsIMdbEnv* mev, mdb_pos* outPos)
 {
   mdb_err outErr = 0;
+  mdb_pos pos = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    pos = cursor->mCursor_Pos;
     outErr = ev->AsErr();
   }
+  if ( outPos )
+  	*outPos = pos;
   return outErr;
 }
 
@@ -256,27 +314,34 @@ orkinRowCellCursor::GetPos(nsIMdbEnv* mev, mdb_pos* outPos)
 orkinRowCellCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
 {
   mdb_err outErr = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    cursor->mCursor_DoFailOnSeedOutOfSync = inFail;
     outErr = ev->AsErr();
   }
   return outErr;
 }
 
 /*virtual*/ mdb_err
-orkinRowCellCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
+orkinRowCellCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
 {
   mdb_err outErr = 0;
+  mdb_bool doFail = morkBool_kFalse;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    doFail = cursor->mCursor_DoFailOnSeedOutOfSync;
     outErr = ev->AsErr();
   }
+  if ( outFail )
+  	*outFail = doFail;
   return outErr;
 }
 // } ----- end attribute methods -----
@@ -290,11 +355,32 @@ orkinRowCellCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
 orkinRowCellCursor::SetRow(nsIMdbEnv* mev, nsIMdbRow* ioRow)
 {
   mdb_err outErr = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    morkRow* row = 0;
+    orkinRow* orow = (orkinRow*) ioRow;
+    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
+    {
+    	morkStore* store = row->GetRowSpaceStore(ev);
+    	if ( store )
+    	{
+	      morkRowObject* rowObj = row->AcquireRowObject(ev, store);
+	      if ( rowObj )
+	      {
+		      morkRowObject::SlotStrongRowObject((morkRowObject*) 0, ev,
+		        &cursor->mRowCellCursor_RowObject);
+		        
+		      cursor->mRowCellCursor_RowObject = rowObj; // take this strong ref
+		      cursor->mCursor_Seed = row->mRow_Seed;
+		      
+		      row->GetCell(ev, cursor->mRowCellCursor_Col, &cursor->mCursor_Pos);
+	      }
+    	}
+    }
     outErr = ev->AsErr();
   }
   return outErr;
@@ -304,13 +390,21 @@ orkinRowCellCursor::SetRow(nsIMdbEnv* mev, nsIMdbRow* ioRow)
 orkinRowCellCursor::GetRow(nsIMdbEnv* mev, nsIMdbRow** acqRow)
 {
   mdb_err outErr = 0;
+  nsIMdbRow* outRow = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    morkRowObject* rowObj = cursor->mRowCellCursor_RowObject;
+    if ( rowObj )
+	    outRow = rowObj->AcquireRowHandle(ev);
+
     outErr = ev->AsErr();
   }
+  if ( acqRow )
+  	*acqRow = outRow;
   return outErr;
 }
 // } ----- end attribute methods -----
@@ -324,13 +418,31 @@ orkinRowCellCursor::MakeCell( // get cell at current pos in the row
   nsIMdbCell** acqCell)
 {
   mdb_err outErr = 0;
+  nsIMdbCell* outCell = 0;
+  mdb_pos pos = 0;
+  mdb_column col = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    pos = cursor->mCursor_Pos;
+    morkCell* cell = row->CellAt(ev, pos);
+    if ( cell )
+    {
+    	col = cell->GetColumn();
+    	outCell = row->AcquireCellHandle(ev, cell, col, pos);
+    }
     outErr = ev->AsErr();
   }
+  if ( acqCell )
+  	*acqCell = outCell;
+ 	if ( outPos )
+ 		*outPos = pos;
+ 	if ( outColumn )
+ 		*outColumn = col;
+ 		
   return outErr;
 }
 // } ----- end cell creation methods -----
@@ -344,13 +456,18 @@ orkinRowCellCursor::SeekCell( // same as SetRow() followed by MakeCell()
   nsIMdbCell** acqCell)
 {
   mdb_err outErr = 0;
+  nsIMdbCell* outCell = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
+  if ( acqCell )
+  	*acqCell = outCell;
   return outErr;
 }
 // } ----- end cell seeking methods -----
@@ -364,10 +481,12 @@ orkinRowCellCursor::NextCell( // get next cell in the row
   mdb_pos* outPos)
 {
   mdb_err outErr = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -381,21 +500,23 @@ orkinRowCellCursor::PickNextCell( // get next cell in row within filter set
   const mdbColumnSet* inFilterSet, // col set of actual caller interest
   mdb_column* outColumn, // column for this particular cell
   mdb_pos* outPos)
+// Note that inFilterSet should not have too many (many more than 10?)
+// cols, since this might imply a potential excessive consumption of time
+// over many cursor calls when looking for column and filter intersection.
 {
   mdb_err outErr = 0;
+  morkRow* row = 0;
   morkEnv* ev =
-    this->CanUseRowCellCursor(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+    this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
+    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
   return outErr;
 }
 
-// Note that inFilterSet should not have too many (many more than 10?)
-// cols, since this might imply a potential excessive consumption of time
-// over many cursor calls when looking for column and filter intersection.
 // } ----- end cell iteration methods -----
 
 // } ===== end nsIMdbRowCellCursor methods =====
