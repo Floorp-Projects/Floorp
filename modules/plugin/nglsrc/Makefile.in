@@ -52,6 +52,6 @@ CFLAGS += -D_IMPL_NS_PLUGIN
 
 TARGETS = $(LIBRARY)
 
-INCLUDES += -I$(srcdir)/. -I$(DEPTH)/dist/oji
+INCLUDES += -I$(srcdir)/. -I$(DEPTH)/dist/oji -I$(DEPTH)/dist/cache
 
 include $(topsrcdir)/config/rules.mk
