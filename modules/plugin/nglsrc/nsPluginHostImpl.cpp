@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Sean Echevarria <sean@beatnik.com>
  */
 
 #include "nsPluginHostImpl.h"
@@ -1693,6 +1694,9 @@ ReadHeadersFromChannelAndPostToListener(nsIHTTPChannel *httpChannel,
 nsPluginHostImpl::nsPluginHostImpl()
 {
   NS_INIT_REFCNT();
+#ifdef NS_DEBUG
+  printf("nsPluginHostImpl ctor\n");
+#endif
   mPluginsLoaded = PR_FALSE;
   mDontShowBadPluginMessage = PR_FALSE;
   mIsDestroyed = PR_FALSE;
@@ -1700,29 +1704,24 @@ nsPluginHostImpl::nsPluginHostImpl()
 
   nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   if (obsService)
+  {
     obsService->AddObserver(this, NS_LITERAL_STRING("quit-application").get());
+    obsService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+  }
 }
 
 nsPluginHostImpl::~nsPluginHostImpl()
 {
 #ifdef NS_DEBUG
-printf("killing plugin host\n");
+  printf("nsPluginHostImpl dtor\n");
 #endif
+  nsCOMPtr<nsIObserverService> obsService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (obsService)
+  {
+    obsService->RemoveObserver(this, NS_LITERAL_STRING("quit-application").get());
+    obsService->RemoveObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+  }
   Destroy();
-  if (nsnull != mPluginPath)
-  {
-    PR_Free(mPluginPath);
-    mPluginPath = nsnull;
-  }
-
-  while (nsnull != mPlugins)
-  {
-    nsPluginTag *temp = mPlugins->mNext;
-    delete mPlugins;
-    mPlugins = temp;
-  }
-
-  CleanUnloadedLibraries();
 }
 
 NS_IMPL_ISUPPORTS6(nsPluginHostImpl,
@@ -2377,6 +2376,21 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 
   // at this point nsIPlugin::Shutdown calls will be performed if needed
   mActivePluginList.shut();
+
+  if (nsnull != mPluginPath)
+  {
+    PR_Free(mPluginPath);
+    mPluginPath = nsnull;
+  }
+
+  while (nsnull != mPlugins)
+  {
+    nsPluginTag *temp = mPlugins->mNext;
+    delete mPlugins;
+    mPlugins = temp;
+  }
+
+  CleanUnloadedLibraries();
 
   return NS_OK;
 }
@@ -4306,7 +4320,18 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
                                         const PRUnichar *aTopic,
                                         const PRUnichar *someData)
 {
-  Destroy();
+#ifdef NS_DEBUG
+  nsAutoString topic(aTopic);
+  char * newString = topic.ToNewCString();
+  printf("nsPluginHostImpl::Observe \"%s\"\n", newString ? newString : "");
+  if (newString)
+    nsCRT::free(newString);
+#endif
+  if (NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID) == aTopic || 
+      NS_LITERAL_STRING("quit-application") == aTopic)
+  {
+    Destroy();
+  }
   return NS_OK;
 }
 
