@@ -21,9 +21,14 @@
 
 #include "nsFileSpec.h"
 #include "nsString.h"
+#include "nsIMsgIncomingServer.h"
 
 static const char kImapRootURI[] = "imap:/";
 static const char kImapMessageRootURI[] = "imap_message:/";
+
+nsresult
+nsGetImapServer(const char* username, const char* hostname,
+                nsIMsgIncomingServer ** aResult);
 
 extern nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, 
