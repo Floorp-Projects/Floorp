@@ -265,7 +265,7 @@ public:
 					StHandleLocker(Handle inHandle)
 					:	mHandle(inHandle)
 					{
-						ASSERT(mHandle, "No handle");
+						AE_ASSERT(mHandle, "No handle");
 						mOldHandleState = HGetState(mHandle);
 						HLock(mHandle);
 					}

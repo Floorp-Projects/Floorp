@@ -50,11 +50,11 @@ typedef enum
 
 #if DEBUG
 
-#define ASSERT(x,msg)	{ if (!(x)) { DebugStr("\p"msg); } }
+#define AE_ASSERT(x,msg)	{ if (!(x)) { DebugStr("\p"msg); } }
 
 #else
 
-#define ASSERT(x)		((void) 0)
+#define AE_ASSERT(x)		((void) 0)
 
 #endif
 

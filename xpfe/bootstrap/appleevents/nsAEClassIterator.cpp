@@ -362,7 +362,7 @@ void AEClassIterator::CheckKeyFormSupport(DescType keyForm)
 		case formPropertyID:			testMask = eHasFormPropertyID;			break;
 		case formName:				testMask = eHasFormName;				break;
 		default:
-			ASSERT(false, "Unknown key form");
+			AE_ASSERT(false, "Unknown key form");
 	}
 	if ((mKeyFormSupport & testMask) == 0)
 		ThrowOSErr(errAEBadKeyForm);

@@ -177,7 +177,7 @@ exit:
 ----------------------------------------------------------------------------*/
 void DisposeThreadAEInfo(TThreadAEInfo *threadAEInfo)
 {
-	ASSERT(threadAEInfo && threadAEInfo->mSuspendCount == 0, "Bad suspend count");
+	AE_ASSERT(threadAEInfo && threadAEInfo->mSuspendCount == 0, "Bad suspend count");
 	MyDisposeBlock(threadAEInfo);
 }
 
@@ -635,7 +635,7 @@ StHandleHolder::~StHandleHolder()
 ----------------------------------------------------------------------------*/
 StHandleHolder& StHandleHolder::operator=(Handle rhs)
 {
-	ASSERT(mLockCount == 0, "Bad lock count");
+	AE_ASSERT(mLockCount == 0, "Bad lock count");
 	mLockCount = 0;
 	
 	if (mHandle)
@@ -664,7 +664,7 @@ void StHandleHolder::Lock()
 void StHandleHolder::Unlock()
 {
 	ThrowIfNil(mHandle);
-	ASSERT(mLockCount > 0, "Bad lock count");
+	AE_ASSERT(mLockCount > 0, "Bad lock count");
 	if (--mLockCount == 0)
 		HSetState(mHandle, mOldHandleState);
 }
@@ -714,7 +714,7 @@ Boolean AEListIterator::Next(AEDesc* outItemData)
 		ThrowIfOSErr(::AEGetNthDesc(&mListToken, mCurItem, typeWildCard, &keyword, outItemData));
 		
 		// what about nested lists?
-		ASSERT(!AEListUtils::TokenContainsTokenList(outItemData), "Nested list found");
+		AE_ASSERT(!AEListUtils::TokenContainsTokenList(outItemData), "Nested list found");
 	}
 	else
 	{

@@ -39,7 +39,7 @@ AEDispatchHandler::AEDispatchHandler(DescType handlerClass, AEGenericClass* hand
 ,	mHandlerClass(handlerClass)
 ,	mHandler(handler)
 {
-	ASSERT(mHandler, "No handler");
+	AE_ASSERT(mHandler, "No handler");
 }
 
 
@@ -62,7 +62,7 @@ void AEDispatchHandler::DispatchEvent(				AEDesc *			token,
 											const AppleEvent *	appleEvent,
 											AppleEvent *		reply)
 {
-	ASSERT(mHandler, "No handler");
+	AE_ASSERT(mHandler, "No handler");
 	mHandler->DispatchEvent(token, appleEvent, reply);
 }
 
@@ -77,7 +77,7 @@ void AEDispatchHandler::GetProperty(				DescType			desiredClass,
 											const AEDesc*		keyData,
 											AEDesc*			resultToken)
 {
-	ASSERT(mHandler, "No handler");
+	AE_ASSERT(mHandler, "No handler");
 	mHandler->GetProperty(desiredClass, containerToken, containerClass, keyForm, keyData, resultToken);
 }
 
@@ -89,7 +89,7 @@ void	AEDispatchHandler::GetDataFromListOrObject(		const AEDesc *		tokenOrTokenLi
 											AEDesc *			desiredTypes,
 											AEDesc *			data)
 {
-	ASSERT(mHandler, "No handler");
+	AE_ASSERT(mHandler, "No handler");
 	mHandler->GetDataFromListOrObject(tokenOrTokenList, desiredTypes, data);
 }
 
@@ -105,7 +105,7 @@ void	AEDispatchHandler::GetItemFromContainer(			DescType			desiredClass,
 												const AEDesc*		keyData,
 												AEDesc*			resultToken)
 {
-	ASSERT(mHandler, "No handler");
+	AE_ASSERT(mHandler, "No handler");
 	mHandler->GetItemFromContainer(desiredClass, containerToken, containerClass, keyForm, keyData, resultToken);
 }
 
@@ -119,7 +119,7 @@ void AEDispatchHandler::CompareObjects(					DescType			comparisonOperator,
 												const AEDesc *		descriptorOrObject,
 												Boolean *			result)
 {
-	ASSERT(mHandler, "No handler");
+	AE_ASSERT(mHandler, "No handler");
 	mHandler->CompareObjects(comparisonOperator, object, descriptorOrObject, result);
 }
 
@@ -134,7 +134,7 @@ void AEDispatchHandler::CountObjects(					DescType 		 	desiredType,
 												const AEDesc *		container,
 								   				long *			result)
 {
-	ASSERT(mHandler, "No handler");
+	AE_ASSERT(mHandler, "No handler");
 	mHandler->CountObjects(desiredType, containerClass, container, result);
 }
 
@@ -146,7 +146,7 @@ void AEDispatchHandler::CountObjects(					DescType 		 	desiredType,
 void AEDispatchHandler::CreateSelfSpecifier(				const AEDesc *		token,
 												AEDesc *			outSpecifier)
 {
-	ASSERT(mHandler, "No handler");
+	AE_ASSERT(mHandler, "No handler");
 	mHandler->CreateSelfSpecifier(token, outSpecifier);
 }
 
