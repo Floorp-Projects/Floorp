@@ -428,7 +428,7 @@ new scripts are new and improved in the following ways:
 3. Build options are customizable via a local prefs file.
 4. Better user interaction and error reporting.
 
-If you have any questions, contact Simon Fraser (sfraser@netscape.com)
+If you have any questions, contact Simon Fraser (sfraser\@netscape.com)
 ----------------------------------------------------------------------
 
 EOS
