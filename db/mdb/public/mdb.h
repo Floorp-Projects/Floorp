@@ -302,8 +302,11 @@ class mdbCell;
 // { %%%%% begin temporary dummy base class for class hierarchy %%%%%
 class mdbISupports { // msg db base class
 public:
-	mdb_count Release(void) {return 0;}
-	mdb_count AddRef(void);
+	mdbISupports() {mRefCnt ;}
+	mdb_count Release(void) {if (mRefCnt > 0) -- mRefCnt; int saveRefCnt = mRefCnt; if (mRefCnt == 0) delete this; return saveRefCnt;}
+	mdb_count AddRef(void) {return ++mRefCnt;}
+protected:
+	int	mRefCnt;
 };
 // } %%%%% end temporary dummy base class for class hierarchy %%%%%
 
@@ -328,28 +331,28 @@ public:
 // { ===== begin mdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(mdbEnv* ev, mdb_bool* outIsReadonly) = 0;
+   mdb_err IsFrozenMdbObject(mdbEnv* ev, mdb_bool* outIsReadonly) ;
   // same as mdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMsgDbFactory(mdbEnv* ev, mdbFactory** acqFactory) = 0; 
+   mdb_err GetMsgDbFactory(mdbEnv* ev, mdbFactory** acqFactory) ; 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(mdbEnv* ev, // weak refs
-    mdb_count* outCount) = 0;  
-  virtual mdb_err GetStrongRefCount(mdbEnv* ev, // strong refs
-    mdb_count* outCount) = 0;
+   mdb_err GetWeakRefCount(mdbEnv* ev, // weak refs
+    mdb_count* outCount) ;  
+   mdb_err GetStrongRefCount(mdbEnv* ev, // strong refs
+    mdb_count* outCount) ;
 
-  virtual mdb_err AddWeakRef(mdbEnv* ev) = 0;
-  virtual mdb_err AddStrongRef(mdbEnv* ev) = 0;
+   mdb_err AddWeakRef(mdbEnv* ev) ;
+   mdb_err AddStrongRef(mdbEnv* ev) ;
 
-  virtual mdb_err CutWeakRef(mdbEnv* ev) = 0;
-  virtual mdb_err CutStrongRef(mdbEnv* ev) = 0;
+   mdb_err CutWeakRef(mdbEnv* ev) ;
+   mdb_err CutStrongRef(mdbEnv* ev) ;
   
-  virtual mdb_err CloseMdbObject(mdbEnv* ev) = 0; // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(mdbEnv* ev, mdb_bool* outOpen) = 0;
+   mdb_err CloseMdbObject(mdbEnv* ev) ; // called at strong refs zero
+   mdb_err IsOpenMdbObject(mdbEnv* ev, mdb_bool* outOpen) ;
   // } ----- end ref counting -----
   
 // } ===== end mdbObject methods =====
@@ -370,8 +373,8 @@ public:
 class mdbErrorHook { // env callback handler to report errors
 
 // { ===== begin mdbErrorHook methods =====
-  virtual mdb_err OnErrorString(mdbEnv* ev, const char* inAscii) = 0;
-  virtual mdb_err OnErrorYarn(mdbEnv* ev, const mdbYarn* inYarn) = 0;
+   mdb_err OnErrorString(mdbEnv* ev, const char* inAscii) ;
+   mdb_err OnErrorYarn(mdbEnv* ev, const mdbYarn* inYarn) ;
 // } ===== end mdbErrorHook methods =====
 };
 
@@ -385,10 +388,10 @@ class mdbErrorHook { // env callback handler to report errors
 class mdbCompare { // caller-supplied yarn comparison
 
 // { ===== begin mdbCompare methods =====
-  virtual mdb_err Order(mdbEnv* ev,      // compare first to second yarn
+   mdb_err Order(mdbEnv* ev,      // compare first to second yarn
     const mdbYarn* inFirst,   // first yarn in comparison
     const mdbYarn* inSecond,  // second yarn in comparison
-    mdb_order* outOrder) = 0; // negative="<", zero="=", positive=">"
+    mdb_order* outOrder) ; // negative="<", zero="=", positive=">"
 // } ===== end mdbCompare methods =====
   
 };
@@ -398,22 +401,22 @@ class mdbCompare { // caller-supplied yarn comparison
 class mdbThumb : public mdbObject { // closure for repeating incremental method
 public:
 // { ===== begin mdbThumb methods =====
-  virtual mdb_err GetProgress(mdbEnv* ev,
+   mdb_err GetProgress(mdbEnv* ev,
     mdb_count* outTotal,    // total somethings to do in operation
     mdb_count* outCurrent,  // subportion of total completed so far
     mdb_bool* outDone,      // is operation finished?
     mdb_bool* outBroken     // is operation irreparably dead and broken?
-  ) = 0;
+  ) ;
   
-  virtual mdb_err DoMore(mdbEnv* ev,
+   mdb_err DoMore(mdbEnv* ev,
     mdb_count* outTotal,    // total somethings to do in operation
     mdb_count* outCurrent,  // subportion of total completed so far
     mdb_bool* outDone,      // is operation finished?
     mdb_bool* outBroken     // is operation irreparably dead and broken?
-  ) = 0;
+  ) ;
   
-  virtual mdb_err CancelAndBreakThumb( // cancel pending operation
-    mdbEnv* ev) = 0;
+   mdb_err CancelAndBreakThumb( // cancel pending operation
+    mdbEnv* ev) ;
 // } ===== end mdbThumb methods =====
 };
 
@@ -451,18 +454,18 @@ class mdbEnv : public mdbObject { // db specific context parameter
 // { ===== begin mdbEnv methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetErrorCount(mdb_count* outCount,
-    mdb_bool* outShouldAbort) = 0;
+  mdb_err GetErrorCount(mdb_count* outCount,
+    mdb_bool* outShouldAbort) ;
   
-  virtual mdb_err GetDoTrace(mdb_bool* outDoTrace) = 0;
-  virtual mdb_err SetDoTrace(mdb_bool inDoTrace) = 0;
+  mdb_err GetDoTrace(mdb_bool* outDoTrace) ;
+  mdb_err SetDoTrace(mdb_bool inDoTrace);
   
-  virtual mdb_err GetErrorHook(mdbErrorHook** acqErrorHook) = 0;
-  virtual mdb_err SetErrorHook(
-    mdbErrorHook* ioErrorHook) = 0; // becomes referenced
+  mdb_err GetErrorHook(mdbErrorHook** acqErrorHook);
+  mdb_err SetErrorHook(
+    mdbErrorHook* ioErrorHook); // becomes referenced
   // } ----- end attribute methods -----
   
-  virtual mdb_err ClearErrors() = 0; // clear errors beore re-entering db API
+  mdb_err ClearErrors() ; // clear errors beore re-entering db API
 // } ===== end mdbEnv methods =====
 };
 
@@ -517,63 +520,63 @@ public:
 // { ===== begin mdbFactory methods =====
 
   // { ----- begin env methods -----
-  virtual mdb_err MakeEnv(mdbEnv** acqEnv) = 0; // acquire new env instance
+   mdb_err MakeEnv(mdbEnv** acqEnv); // acquire new env instance
   // } ----- end env methods -----
 
   // { ----- begin row methods -----
-  virtual mdb_err MakeRow(mdbEnv* ev, mdbRow** acqRow) = 0; // acquire new row
+  mdb_err MakeRow(mdbEnv* ev, mdbRow** acqRow); // acquire new row
   // } ----- end row methods -----
   
   // { ----- begin port methods -----
-  virtual mdb_err CanOpenFilePort(
+   mdb_err CanOpenFilePort(
     mdbEnv* ev, // context
     const char* inFilePath, // the file to investigate
     const mdbYarn* inFirst512Bytes,
     mdb_bool* outCanOpen, // whether OpenFilePort() might succeed
-    mdbYarn* outFormatVersion) = 0; // informal file format description
+    mdbYarn* outFormatVersion) ; // informal file format description
     
-  virtual mdb_err OpenFilePort(
+   mdb_err OpenFilePort(
     mdbEnv* ev, // context
     const char* inFilePath, // the file to open for readonly import
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental port open
+    mdbThumb** acqThumb); // acquire thumb for incremental port open
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then call mdbFactory::ThumbToOpenPort() to get the port instance.
 
-  virtual mdb_err ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort()
+   mdb_err ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort()
     mdbEnv* ev, // context
     mdbThumb* ioThumb, // thumb from OpenFilePort() with done status
-    mdbPort** acqPort) = 0; // acquire new port object
+    mdbPort** acqPort); // acquire new port object
   // } ----- end port methods -----
   
   // { ----- begin store methods -----
-  virtual mdb_err CanOpenFileStore(
+   mdb_err CanOpenFileStore(
     mdbEnv* ev, // context
     const char* inFilePath, // the file to investigate
     const mdbYarn* inFirst512Bytes,
     mdb_bool* outCanOpenAsStore, // whether OpenFileStore() might succeed
     mdb_bool* outCanOpenAsPort, // whether OpenFilePort() might succeed
-    mdbYarn* outFormatVersion) = 0; // informal file format description
+    mdbYarn* outFormatVersion); // informal file format description
     
-  virtual mdb_err OpenFileStore( // open an existing database
+   mdb_err OpenFileStore( // open an existing database
     mdbEnv* ev, // context
     const char* inFilePath, // the file to open for general db usage
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental store open
+    mdbThumb** acqThumb) ; // acquire thumb for incremental store open
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then call mdbFactory::ThumbToOpenStore() to get the store instance.
     
-  virtual mdb_err
+   mdb_err
   ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
     mdbEnv* ev, // context
     mdbThumb* ioThumb, // thumb from OpenFileStore() with done status
-    mdbStore** acqStore) = 0; // acquire new db store object
+    mdbStore** acqStore) ; // acquire new db store object
   
-  virtual mdb_err CreateNewFileStore( // create a new db with minimal content
+   mdb_err CreateNewFileStore( // create a new db with minimal content
     mdbEnv* ev, // context
     const char* inFilePath, // name of file which should not yet exist
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
-    mdbStore** acqStore) = 0; // acquire new db store object
+    mdbStore** acqStore) ; // acquire new db store object
   // } ----- end store methods -----
 
 // } ===== end mdbFactory methods =====
@@ -643,43 +646,43 @@ public:
 // { ===== begin mdbPort methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetIsPortReadonly(mdbEnv* ev, mdb_bool* outBool) = 0;
-  virtual mdb_err GetIsStore(mdbEnv* ev, mdb_bool* outBool) = 0;
-  virtual mdb_err GetIsStoreAndDirty(mdbEnv* ev, mdb_bool* outBool) = 0;
+   mdb_err GetIsPortReadonly(mdbEnv* ev, mdb_bool* outBool) ;
+   mdb_err GetIsStore(mdbEnv* ev, mdb_bool* outBool) ;
+   mdb_err GetIsStoreAndDirty(mdbEnv* ev, mdb_bool* outBool) ;
 
-  virtual mdb_err GetUsagePolicy(mdbEnv* ev, 
-    mdbUsagePolicy* ioUsagePolicy) = 0;
+   mdb_err GetUsagePolicy(mdbEnv* ev, 
+    mdbUsagePolicy* ioUsagePolicy) ;
 
-  virtual mdb_err SetUsagePolicy(mdbEnv* ev, 
-    const mdbUsagePolicy* inUsagePolicy) = 0;
+   mdb_err SetUsagePolicy(mdbEnv* ev, 
+    const mdbUsagePolicy* inUsagePolicy) ;
   // } ----- end attribute methods -----
 
   // { ----- begin memory policy methods -----  
-  virtual mdb_err IdleMemoryPurge( // do memory management already scheduled
+   mdb_err IdleMemoryPurge( // do memory management already scheduled
     mdbEnv* ev, // context
-    mdb_size* outEstimatedBytesFreed) = 0; // approximate bytes actually freed
+    mdb_size* outEstimatedBytesFreed) ; // approximate bytes actually freed
 
-  virtual mdb_err SessionMemoryPurge( // determine preferred export format
+   mdb_err SessionMemoryPurge( // determine preferred export format
     mdbEnv* ev, // context
     mdb_size inDesiredBytesFreed, // approximate number of bytes wanted
-    mdb_size* outEstimatedBytesFreed) = 0; // approximate bytes actually freed
+    mdb_size* outEstimatedBytesFreed) ; // approximate bytes actually freed
 
-  virtual mdb_err PanicMemoryPurge( // desperately free all possible memory
+   mdb_err PanicMemoryPurge( // desperately free all possible memory
     mdbEnv* ev, // context
-    mdb_size* outEstimatedBytesFreed) = 0; // approximate bytes actually freed
+    mdb_size* outEstimatedBytesFreed) ; // approximate bytes actually freed
   // } ----- end memory policy methods -----
 
   // { ----- begin filepath methods -----
-  virtual mdb_err GetPortFilePath(
+   mdb_err GetPortFilePath(
     mdbEnv* ev, // context
     mdbYarn* outFilePath, // name of file holding port content
-    mdbYarn* outFormatVersion) = 0; // file format description
+    mdbYarn* outFormatVersion) ; // file format description
   // } ----- end filepath methods -----
 
   // { ----- begin export methods -----
-  virtual mdb_err BestExportFormat( // determine preferred export format
+   mdb_err BestExportFormat( // determine preferred export format
     mdbEnv* ev, // context
-    mdbYarn* outFormatVersion) = 0; // file format description
+    mdbYarn* outFormatVersion) ; // file format description
 
   // some tentative suggested import/export formats
   // "ns:msg:db:port:format:ldif:ns4.0:passthrough" // necessary
@@ -698,42 +701,42 @@ public:
   // "ns:msg:db:port:format:xml:print:verbose"      // recommended
   // "ns:msg:db:port:format:xml:print:concise"
 
-  virtual mdb_err
+   mdb_err
   CanExportToFormat( // can export content in given specific format?
     mdbEnv* ev, // context
     const char* inFormatVersion, // file format description
-    mdb_bool* outCanExport) = 0; // whether ExportSource() might succeed
+    mdb_bool* outCanExport); // whether ExportSource() might succeed
 
-  virtual mdb_err ExportToFormat( // export content in given specific format
+   mdb_err ExportToFormat( // export content in given specific format
     mdbEnv* ev, // context
     const char* inFilePath, // the file to receive exported content
     const char* inFormatVersion, // file format description
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental export
+    mdbThumb** acqThumb); // acquire thumb for incremental export
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the export will be finished.
 
   // } ----- end export methods -----
 
   // { ----- begin token methods -----
-  virtual mdb_err TokenToString( // return a string name for an integer token
+   mdb_err TokenToString( // return a string name for an integer token
     mdbEnv* ev, // context
     mdb_token inToken, // token for inTokenName inside this port
-    mdbYarn* outTokenName) = 0; // the type of table to access
+    mdbYarn* outTokenName); // the type of table to access
   
-  virtual mdb_err StringToToken( // return an integer token for scope name
+   mdb_err StringToToken( // return an integer token for scope name
     mdbEnv* ev, // context
     const char* inTokenName, // Latin1 string to tokenize if possible
-    mdb_token* outToken) = 0; // token for inTokenName inside this port
+    mdb_token* outToken); // token for inTokenName inside this port
     
   // String token zero is never used and never supported. If the port
   // is a mutable store, then StringToToken() to create a new
   // association of inTokenName with a new integer token if possible.
   // But a readonly port will return zero for an unknown scope name.
 
-  virtual mdb_err QueryToken( // like StringToToken(), but without adding
+   mdb_err QueryToken( // like StringToToken(), but without adding
     mdbEnv* ev, // context
     const char* inTokenName, // Latin1 string to tokenize if possible
-    mdb_token* outToken) = 0; // token for inTokenName inside this port
+    mdb_token* outToken); // token for inTokenName inside this port
   
   // QueryToken() will return a string token if one already exists,
   // but unlike StringToToken(), will not assign a new token if not
@@ -742,39 +745,39 @@ public:
   // } ----- end token methods -----
 
   // { ----- begin row methods -----  
-  virtual mdb_err HasRow( // contains a row with the specified oid?
+   mdb_err HasRow( // contains a row with the specified oid?
     mdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
-    mdb_bool* outHasRow) = 0; // whether GetRow() might succeed
+    mdb_bool* outHasRow); // whether GetRow() might succeed
     
-  virtual mdb_err GetRow( // access one row with specific oid
+   mdb_err GetRow( // access one row with specific oid
     mdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
-    mdbRow** acqRow) = 0; // acquire specific row (or null)
+    mdbRow** acqRow); // acquire specific row (or null)
 
-  virtual mdb_err GetRowRefCount( // get number of tables that contain a row 
+   mdb_err GetRowRefCount( // get number of tables that contain a row 
     mdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
-    mdb_count* outRefCount) = 0; // number of tables containing inRowKey 
+    mdb_count* outRefCount); // number of tables containing inRowKey 
   // } ----- end row methods -----
 
   // { ----- begin table methods -----  
-  virtual mdb_err HasTable( // supports a table with the specified oid?
+   mdb_err HasTable( // supports a table with the specified oid?
     mdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical table oid
-    mdb_bool* outHasTable) = 0; // whether GetTable() might succeed
+    mdb_bool* outHasTable); // whether GetTable() might succeed
     
-  virtual mdb_err GetTable( // access one table with specific oid
+   mdb_err GetTable( // access one table with specific oid
     mdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical table oid
-    mdbTable** acqTable) = 0; // acquire specific table (or null)
+    mdbTable** acqTable); // acquire specific table (or null)
   
-  virtual mdb_err HasTableKind( // supports a table of the specified type?
+   mdb_err HasTableKind( // supports a table of the specified type?
     mdbEnv* ev, // context
     mdb_scope inRowScope, // rid scope for row ids
     mdb_kind inTableKind, // the type of table to access
     mdb_count* outTableCount, // current number of such tables
-    mdb_bool* outSupportsTable) = 0; // whether GetTableKind() might succeed
+    mdb_bool* outSupportsTable); // whether GetTableKind() might succeed
     
   // row scopes to be supported include the following suggestions:
   // "ns:msg:db:row:scope:address:cards:all"
@@ -790,20 +793,20 @@ public:
   // "ns:msg:db:table:kind:mail:threads:all"
   // "ns:msg:db:table:kind:mail:thread"
     
-  virtual mdb_err GetTableKind( // access one (random) table of specific type
+   mdb_err GetTableKind( // access one (random) table of specific type
     mdbEnv* ev, // context
     mdb_scope inRowScope,      // row scope for row ids
     mdb_kind inTableKind,      // the type of table to access
     mdb_count* outTableCount, // current number of such tables
     mdb_bool* outMustBeUnique, // whether port can hold only one of these
-    mdbTable** acqTable) = 0;       // acquire scoped collection of rows
+    mdbTable** acqTable) ;       // acquire scoped collection of rows
     
-  virtual mdb_err
+   mdb_err
   GetPortTableCursor( // get cursor for all tables of specific type
     mdbEnv* ev, // context
     mdb_scope inRowScope, // row scope for row ids
     mdb_kind inTableKind, // the type of table to access
-    mdbPortTableCursor** acqCursor) = 0; // all such tables in the port
+    mdbPortTableCursor** acqCursor); // all such tables in the port
   // } ----- end table methods -----
 
 // } ===== end mdbPort methods =====
@@ -878,91 +881,91 @@ public:
 // { ===== begin mdbStore methods =====
 
   // { ----- begin table methods -----
-  virtual mdb_err NewTable( // make one new table of specific type
+   mdb_err NewTable( // make one new table of specific type
     mdbEnv* ev, // context
     mdb_scope inRowScope,    // row scope for row ids
     mdb_kind inTableKind,    // the type of table to access
     mdb_bool inMustBeUnique, // whether store can hold only one of these
-    mdbTable** acqTable) = 0;     // acquire scoped collection of rows
+    mdbTable** acqTable) ;     // acquire scoped collection of rows
   // } ----- end table methods -----
 
   // { ----- begin row scope methods -----
-  virtual mdb_err RowScopeHasAssignedIds(mdbEnv* ev,
+   mdb_err RowScopeHasAssignedIds(mdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
-    mdb_bool* outStoreAssigned) = 0; // nonzero if store db assigned specified
+    mdb_bool* outStoreAssigned) ; // nonzero if store db assigned specified
 
-  virtual mdb_err SetCallerAssignedIds(mdbEnv* ev,
+   mdb_err SetCallerAssignedIds(mdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
-    mdb_bool* outStoreAssigned) = 0; // nonzero if store db assigned specified
+    mdb_bool* outStoreAssigned) ; // nonzero if store db assigned specified
 
-  virtual mdb_err SetStoreAssignedIds(mdbEnv* ev,
+   mdb_err SetStoreAssignedIds(mdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
-    mdb_bool* outStoreAssigned) = 0; // nonzero if store db assigned specified
+    mdb_bool* outStoreAssigned) ; // nonzero if store db assigned specified
   // } ----- end row scope methods -----
 
   // { ----- begin row methods -----
-  virtual mdb_err NewRowWithOid(mdbEnv* ev, // new row w/ caller assigned oid
+   mdb_err NewRowWithOid(mdbEnv* ev, // new row w/ caller assigned oid
     mdb_scope inRowScope,   // row scope for row ids
     const mdbOid* inOid,   // caller assigned oid
-    mdbRow** acqRow) = 0; // create new row
+    mdbRow** acqRow) ; // create new row
 
-  virtual mdb_err NewRow(mdbEnv* ev, // new row with db assigned oid
+   mdb_err NewRow(mdbEnv* ev, // new row with db assigned oid
     mdb_scope inRowScope,   // row scope for row ids
-    mdbRow** acqRow) = 0; // create new row
+    mdbRow** acqRow) ; // create new row
   // Note this row must be added to some table or cell child before the
   // store is closed in order to make this row persist across sesssions.
   // } ----- end row methods -----
 
   // { ----- begin inport/export methods -----
-  virtual mdb_err ImportContent( // import content from port
+   mdb_err ImportContent( // import content from port
     mdbEnv* ev, // context
     mdb_scope inRowScope, // scope for rows (or zero for all?)
     mdbPort* ioPort, // the port with content to add to store
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental import
+    mdbThumb** acqThumb) ; // acquire thumb for incremental import
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the import will be finished.
   // } ----- end inport/export methods -----
 
   // { ----- begin hinting methods -----
-  virtual mdb_err
+   mdb_err
   ShareAtomColumnsHint( // advise re shared column content atomizing
     mdbEnv* ev, // context
     mdb_scope inScopeHint, // zero, or suggested shared namespace
-    const mdbColumnSet* inColumnSet) = 0; // cols desired tokenized together
+    const mdbColumnSet* inColumnSet) ; // cols desired tokenized together
 
-  virtual mdb_err
+   mdb_err
   AvoidAtomColumnsHint( // advise column with poor atomizing prospects
     mdbEnv* ev, // context
-    const mdbColumnSet* inColumnSet) = 0; // cols with poor atomizing prospects
+    const mdbColumnSet* inColumnSet) ; // cols with poor atomizing prospects
   // } ----- end hinting methods -----
 
   // { ----- begin commit methods -----
-  virtual mdb_err SmallCommit( // save minor changes if convenient and uncostly
-    mdbEnv* ev) = 0; // context
+   mdb_err SmallCommit( // save minor changes if convenient and uncostly
+    mdbEnv* ev); // context
   
-  virtual mdb_err LargeCommit( // save important changes if at all possible
+   mdb_err LargeCommit( // save important changes if at all possible
     mdbEnv* ev, // context
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental commit
+    mdbThumb** acqThumb) ; // acquire thumb for incremental commit
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the commit will be finished.  Note the store is effectively write
   // locked until commit is finished or canceled through the thumb instance.
   // Until the commit is done, the store will report it has readonly status.
 
-  virtual mdb_err SessionCommit( // save all changes if large commits delayed
+   mdb_err SessionCommit( // save all changes if large commits delayed
     mdbEnv* ev, // context
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental commit
+    mdbThumb** acqThumb) ; // acquire thumb for incremental commit
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the commit will be finished.  Note the store is effectively write
   // locked until commit is finished or canceled through the thumb instance.
   // Until the commit is done, the store will report it has readonly status.
 
-  virtual mdb_err
+   mdb_err
   CompressCommit( // commit and make db physically smaller if possible
     mdbEnv* ev, // context
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental commit
+    mdbThumb** acqThumb) ; // acquire thumb for incremental commit
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the commit will be finished.  Note the store is effectively write
   // locked until commit is finished or canceled through the thumb instance.
@@ -999,14 +1002,14 @@ class mdbCursor : public mdbObject { // collection iterator
 // { ===== begin mdbCursor methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetCount(mdbEnv* ev, mdb_count* outCount) = 0; // readonly
-  virtual mdb_err GetSeed(mdbEnv* ev, mdb_seed* outSeed) = 0;    // readonly
+   mdb_err GetCount(mdbEnv* ev, mdb_count* outCount) ; // readonly
+   mdb_err GetSeed(mdbEnv* ev, mdb_seed* outSeed) ;    // readonly
   
-  virtual mdb_err SetPos(mdbEnv* ev, mdb_pos inPos) = 0;   // mutable
-  virtual mdb_err GetPos(mdbEnv* ev, mdb_pos* outPos) = 0;
+   mdb_err SetPos(mdbEnv* ev, mdb_pos inPos) ;   // mutable
+   mdb_err GetPos(mdbEnv* ev, mdb_pos* outPos) ;
   
-  virtual mdb_err SetDoFailOnSeedOutOfSync(mdbEnv* ev, mdb_bool inFail) = 0;
-  virtual mdb_err SetDoFailOnSeedOutOfSync(mdbEnv* ev, mdb_bool* outFail) = 0;
+   mdb_err SetDoFailOnSeedOutOfSync(mdbEnv* ev, mdb_bool inFail) ;
+   mdb_err SetDoFailOnSeedOutOfSync(mdbEnv* ev, mdb_bool* outFail) ;
   // } ----- end attribute methods -----
 
 // } ===== end mdbCursor methods =====
@@ -1024,24 +1027,24 @@ class mdbPortTableCursor : public mdbCursor { // table collection iterator
 // { ===== begin mdbPortTableCursor methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetPort(mdbEnv* ev, mdbPort* ioPort) = 0; // sets pos to -1
-  virtual mdb_err GetPort(mdbEnv* ev, mdbPort** acqPort) = 0;
+   mdb_err SetPort(mdbEnv* ev, mdbPort* ioPort) ; // sets pos to -1
+   mdb_err GetPort(mdbEnv* ev, mdbPort** acqPort) ;
   
-  virtual mdb_err SetRowScope(mdbEnv* ev, // sets pos to -1
-    mdb_scope inRowScope) = 0;
-  virtual mdb_err GetRowScope(mdbEnv* ev, mdb_scope* outRowScope) = 0; 
+   mdb_err SetRowScope(mdbEnv* ev, // sets pos to -1
+    mdb_scope inRowScope) ;
+   mdb_err GetRowScope(mdbEnv* ev, mdb_scope* outRowScope) ; 
   // setting row scope to zero iterates over all row scopes in port
     
-  virtual mdb_err SetTableKind(mdbEnv* ev, // sets pos to -1
-    mdb_kind inTableKind) = 0;
-  virtual mdb_err GetTableKind(mdbEnv* ev, mdb_kind* outTableKind) = 0;
+   mdb_err SetTableKind(mdbEnv* ev, // sets pos to -1
+    mdb_kind inTableKind) ;
+   mdb_err GetTableKind(mdbEnv* ev, mdb_kind* outTableKind) ;
   // setting table kind to zero iterates over all table kinds in row scope
   // } ----- end attribute methods -----
 
   // { ----- begin table iteration methods -----
-  virtual mdb_err NextTable( // get table at next position in the db
+   mdb_err NextTable( // get table at next position in the db
     mdbEnv* ev, // context
-    mdbTable** acqTable) = 0; // the next table in the iteration
+    mdbTable** acqTable) ; // the next table in the iteration
   // } ----- end table iteration methods -----
 
 // } ===== end mdbPortTableCursor methods =====
@@ -1128,32 +1131,32 @@ public:
 // { ===== begin mdbCollection methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetSeed(mdbEnv* ev,
-    mdb_seed* outSeed) = 0;    // member change count
-  virtual mdb_err GetCount(mdbEnv* ev,
-    mdb_count* outCount) = 0; // member count
+   mdb_err GetSeed(mdbEnv* ev,
+    mdb_seed* outSeed) ;    // member change count
+   mdb_err GetCount(mdbEnv* ev,
+    mdb_count* outCount) ; // member count
 
-  virtual mdb_err GetPort(mdbEnv* ev,
-    mdbPort** acqPort) = 0; // collection container
+   mdb_err GetPort(mdbEnv* ev,
+    mdbPort** acqPort) ; // collection container
   // } ----- end attribute methods -----
 
   // { ----- begin cursor methods -----
-  virtual mdb_err GetCursor( // make a cursor starting iter at inMemberPos
+   mdb_err GetCursor( // make a cursor starting iter at inMemberPos
     mdbEnv* ev, // context
     mdb_pos inMemberPos, // zero-based ordinal pos of member in collection
-    mdbCursor** acqCursor) = 0; // acquire new cursor instance
+    mdbCursor** acqCursor) ; // acquire new cursor instance
   // } ----- end cursor methods -----
 
   // { ----- begin ID methods -----
-  virtual mdb_err GetOid(mdbEnv* ev,
-    const mdbOid* outOid) = 0; // read object identity
-  virtual mdb_err BecomeContent(mdbEnv* ev,
-    const mdbOid* inOid) = 0; // exchange content
+   mdb_err GetOid(mdbEnv* ev,
+    const mdbOid* outOid) ; // read object identity
+   mdb_err BecomeContent(mdbEnv* ev,
+    const mdbOid* inOid) ; // exchange content
   // } ----- end ID methods -----
 
   // { ----- begin activity dropping methods -----
-  virtual mdb_err DropActivity( // tell collection usage no longer expected
-    mdbEnv* ev) = 0;
+   mdb_err DropActivity( // tell collection usage no longer expected
+    mdbEnv* ev) ;
   // } ----- end activity dropping methods -----
 
 // } ===== end mdbCollection methods =====
@@ -1241,76 +1244,76 @@ public:
 // { ===== begin mdbTable methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetTableKind(mdbEnv* ev, mdb_kind* outTableKind) = 0;
-  virtual mdb_err GetRowScope(mdbEnv* ev, mdb_scope* outRowScope) = 0;
+   mdb_err GetTableKind(mdbEnv* ev, mdb_kind* outTableKind) ;
+   mdb_err GetRowScope(mdbEnv* ev, mdb_scope* outRowScope) ;
   
-  virtual mdb_err GetPort( // get port containing this table
+   mdb_err GetPort( // get port containing this table
     mdbEnv* ev, // context
-    mdbPort** acqPort) = 0; // acquire containing port or store
+    mdbPort** acqPort) ; // acquire containing port or store
   // } ----- end attribute methods -----
 
   // { ----- begin cursor methods -----
-  virtual mdb_err GetTableRowCursor( // make a cursor, starting iteration at inRowPos
+   mdb_err GetTableRowCursor( // make a cursor, starting iteration at inRowPos
     mdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
-    mdbTableRowCursor** acqCursor) = 0; // acquire new cursor instance
+    mdbTableRowCursor** acqCursor) ; // acquire new cursor instance
   // } ----- end row position methods -----
 
   // { ----- begin row position methods -----
-  virtual mdb_err RowPosToOid( // get row member for a table position
+   mdb_err RowPosToOid( // get row member for a table position
     mdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
-    mdbOid* outOid) = 0; // row oid at the specified position
+    mdbOid* outOid) ; // row oid at the specified position
     
   // Note that HasRow() performs the inverse oid->pos mapping
   // } ----- end row position methods -----
 
   // { ----- begin oid set methods -----
-  virtual mdb_err AddOid( // make sure the row with inOid is a table member 
+   mdb_err AddOid( // make sure the row with inOid is a table member 
     mdbEnv* ev, // context
-    const mdbOid* inOid) = 0; // row to ensure membership in table
+    const mdbOid* inOid) ; // row to ensure membership in table
 
-  virtual mdb_err HasOid( // test for the table position of a row member
+   mdb_err HasOid( // test for the table position of a row member
     mdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
-    mdb_pos* outPos) = 0; // zero-based ordinal position of row in table
+    mdb_pos* outPos) ; // zero-based ordinal position of row in table
 
-  virtual mdb_err CutOid( // make sure the row with inOid is not a member 
+   mdb_err CutOid( // make sure the row with inOid is not a member 
     mdbEnv* ev, // context
-    const mdbOid* inOid) = 0; // row to remove from table
+    const mdbOid* inOid) ; // row to remove from table
   // } ----- end oid set methods -----
 
   // { ----- begin row set methods -----
-  virtual mdb_err NewRow( // create a new row instance in table
+   mdb_err NewRow( // create a new row instance in table
     mdbEnv* ev, // context
     mdbOid* ioOid, // please use zero (unbound) rowId for db-assigned IDs
-    mdbRow** acqRow) = 0; // create new row
+    mdbRow** acqRow) ; // create new row
 
-  virtual mdb_err AddRow( // make sure the row with inOid is a table member 
+   mdb_err AddRow( // make sure the row with inOid is a table member 
     mdbEnv* ev, // context
-    mdbRow* ioRow) = 0; // row to ensure membership in table
+    mdbRow* ioRow) ; // row to ensure membership in table
 
-  virtual mdb_err HasRow( // test for the table position of a row member
+   mdb_err HasRow( // test for the table position of a row member
     mdbEnv* ev, // context
     mdbRow* ioRow, // row to find in table
-    mdb_pos* outPos) = 0; // zero-based ordinal position of row in table
+    mdb_pos* outPos) ; // zero-based ordinal position of row in table
 
-  virtual mdb_err CutRow( // make sure the row with inOid is not a member 
+   mdb_err CutRow( // make sure the row with inOid is not a member 
     mdbEnv* ev, // context
-    mdbRow* ioRow) = 0; // row to remove from table
+    mdbRow* ioRow) ; // row to remove from table
   // } ----- end row set methods -----
 
   // { ----- begin searching methods -----
-  virtual mdb_err SearchOneSortedColumn( // search only currently sorted col
+   mdb_err SearchOneSortedColumn( // search only currently sorted col
     mdbEnv* ev, // context
     const mdbYarn* inPrefix, // content to find as prefix in row's column cell
-    mdbRange* outRange) = 0; // range of matching rows
+    mdbRange* outRange) ; // range of matching rows
     
-  virtual mdb_err SearchManyColumns( // search variable number of sorted cols
+   mdb_err SearchManyColumns( // search variable number of sorted cols
     mdbEnv* ev, // context
     const mdbYarn* inPrefix, // content to find as prefix in row's column cell
     mdbSearch* ioSearch, // columns to search and resulting ranges
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental search
+    mdbThumb** acqThumb) ; // acquire thumb for incremental search
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the search will be finished.  Until that time, the ioSearch argument
   // is assumed referenced and used by the thumb; one should not inspect any
@@ -1318,117 +1321,117 @@ public:
   // } ----- end searching methods -----
 
   // { ----- begin hinting methods -----
-  virtual mdb_err SearchColumnsHint( // advise re future expected search cols  
+   mdb_err SearchColumnsHint( // advise re future expected search cols  
     mdbEnv* ev, // context
-    const mdbColumnSet* inColumnSet) = 0; // columns likely to be searched
+    const mdbColumnSet* inColumnSet) ; // columns likely to be searched
     
-  virtual mdb_err SortColumnsHint( // advise re future expected sort columns  
+   mdb_err SortColumnsHint( // advise re future expected sort columns  
     mdbEnv* ev, // context
-    const mdbColumnSet* inColumnSet) = 0; // columns for likely sort requests
+    const mdbColumnSet* inColumnSet) ; // columns for likely sort requests
   // } ----- end hinting methods -----
 
   // { ----- begin sorting methods -----
   // sorting: note all rows are assumed sorted by row ID as a secondary
   // sort following the primary column sort, when table rows are sorted.
 
-  virtual mdb_err
+   mdb_err
   CanSortColumn( // query which column is currently used for sorting
     mdbEnv* ev, // context
     mdb_column inColumn, // column to query sorting potential
-    mdb_bool* outCanSort) = 0; // whether the column can be sorted
+    mdb_bool* outCanSort) ; // whether the column can be sorted
   
-  virtual mdb_err
+   mdb_err
   NewSortColumn( // change the column used for sorting in the table
     mdbEnv* ev, // context
     mdb_column inColumn, // requested new column for sorting table
     mdb_column* outActualColumn, // column actually used for sorting
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental table resort
+    mdbThumb** acqThumb) ; // acquire thumb for incremental table resort
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the sort will be finished. 
   
-  virtual mdb_err
+   mdb_err
   NewSortColumnWithCompare( // change sort column with explicit compare
     mdbEnv* ev, // context
     mdbCompare* ioCompare, // explicit interface for yarn comparison
     mdb_column inColumn, // requested new column for sorting table
     mdb_column* outActualColumn, // column actually used for sorting
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental table resort
+    mdbThumb** acqThumb) ; // acquire thumb for incremental table resort
   // Note the table will hold a reference to inCompare if this object is used
   // to sort the table.  Until the table closes, callers can only force release
   // of the compare object by changing the sort (by say, changing to unsorted).
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the sort will be finished. 
   
-  virtual mdb_err GetSortColumn( // query which col is currently sorted
+   mdb_err GetSortColumn( // query which col is currently sorted
     mdbEnv* ev, // context
-    mdb_column* outColumn) = 0; // col the table uses for sorting (or zero)
+    mdb_column* outColumn) ; // col the table uses for sorting (or zero)
 
   
-  virtual mdb_err CloneSortColumn( // view same table with a different sort
+   mdb_err CloneSortColumn( // view same table with a different sort
     mdbEnv* ev, // context
     mdb_column inColumn, // requested new column for sorting table
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental table clone
+    mdbThumb** acqThumb) ; // acquire thumb for incremental table clone
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then call mdbTable::ThumbToCloneSortTable() to get the table instance.
     
-  virtual mdb_err
+   mdb_err
   ThumbToCloneSortTable( // redeem complete CloneSortColumn() thumb
     mdbEnv* ev, // context
     mdbThumb* ioThumb, // thumb from CloneSortColumn() with done status
-    mdbTable** acqTable) = 0; // new table instance (or old if sort unchanged)
+    mdbTable** acqTable) ; // new table instance (or old if sort unchanged)
   // } ----- end sorting methods -----
 
   // { ----- begin moving methods -----
   // moving a row does nothing unless a table is currently unsorted
   
-  virtual mdb_err MoveOid( // change position of row in unsorted table
+   mdb_err MoveOid( // change position of row in unsorted table
     mdbEnv* ev, // context
     const mdbOid* inOid,  // row oid to find in table
     mdb_pos inHintFromPos, // suggested hint regarding start position
     mdb_pos inToPos,       // desired new position for row inRowId
-    mdb_pos* outActualPos) = 0; // actual new position of row in table
+    mdb_pos* outActualPos) ; // actual new position of row in table
 
-  virtual mdb_err MoveRow( // change position of row in unsorted table
+   mdb_err MoveRow( // change position of row in unsorted table
     mdbEnv* ev, // context
     mdbRow* ioRow,  // row oid to find in table
     mdb_pos inHintFromPos, // suggested hint regarding start position
     mdb_pos inToPos,       // desired new position for row inRowId
-    mdb_pos* outActualPos) = 0; // actual new position of row in table
+    mdb_pos* outActualPos) ; // actual new position of row in table
   // } ----- end moving methods -----
   
   // { ----- begin index methods -----
-  virtual mdb_err AddIndex( // create a sorting index for column if possible
+   mdb_err AddIndex( // create a sorting index for column if possible
     mdbEnv* ev, // context
     mdb_column inColumn, // the column to sort by index
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental index building
+    mdbThumb** acqThumb) ; // acquire thumb for incremental index building
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the index addition will be finished.
   
-  virtual mdb_err CutIndex( // stop supporting a specific column index
+   mdb_err CutIndex( // stop supporting a specific column index
     mdbEnv* ev, // context
     mdb_column inColumn, // the column with index to be removed
-    mdbThumb** acqThumb) = 0; // acquire thumb for incremental index destroy
+    mdbThumb** acqThumb) ; // acquire thumb for incremental index destroy
   // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the index removal will be finished.
   
-  virtual mdb_err HasIndex( // query for current presence of a column index
+   mdb_err HasIndex( // query for current presence of a column index
     mdbEnv* ev, // context
     mdb_column inColumn, // the column to investigate
-    mdb_bool* outHasIndex) = 0; // whether column has index for this column
+    mdb_bool* outHasIndex) ; // whether column has index for this column
 
   
-  virtual mdb_err EnableIndexOnSort( // create an index for col on first sort
+   mdb_err EnableIndexOnSort( // create an index for col on first sort
     mdbEnv* ev, // context
-    mdb_column inColumn) = 0; // the column to index if ever sorted
+    mdb_column inColumn) ; // the column to index if ever sorted
   
-  virtual mdb_err QueryIndexOnSort( // check whether index on sort is enabled
+   mdb_err QueryIndexOnSort( // check whether index on sort is enabled
     mdbEnv* ev, // context
     mdb_column inColumn, // the column to investigate
-    mdb_bool* outIndexOnSort) = 0; // whether column has index-on-sort enabled
+    mdb_bool* outIndexOnSort) ; // whether column has index-on-sort enabled
   
-  virtual mdb_err DisableIndexOnSort( // prevent future index creation on sort
+   mdb_err DisableIndexOnSort( // prevent future index creation on sort
     mdbEnv* ev, // context
-    mdb_column inColumn) = 0; // the column to index if ever sorted
+    mdb_column inColumn) ; // the column to index if ever sorted
   // } ----- end index methods -----
 
 // } ===== end mdbTable methods =====
@@ -1463,36 +1466,36 @@ public:
 // { ===== begin mdbTableRowCursor methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetTable(mdbEnv* ev, mdbTable* ioTable) = 0; // sets pos to -1
-  virtual mdb_err GetTable(mdbEnv* ev, mdbTable** acqTable) = 0;
+   mdb_err SetTable(mdbEnv* ev, mdbTable* ioTable) ; // sets pos to -1
+   mdb_err GetTable(mdbEnv* ev, mdbTable** acqTable) ;
   // } ----- end attribute methods -----
 
   // { ----- begin oid iteration methods -----
-  virtual mdb_err NextRowOid( // get row id of next row in the table
+   mdb_err NextRowOid( // get row id of next row in the table
     mdbEnv* ev, // context
     const mdbOid* outOid, // out row oid
-    mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+    mdb_pos* outRowPos) ;    // zero-based position of the row in table
   // } ----- end oid iteration methods -----
 
   // { ----- begin row iteration methods -----
-  virtual mdb_err NextRow( // get row cells from table for cells already in row
+   mdb_err NextRow( // get row cells from table for cells already in row
     mdbEnv* ev, // context
     mdbRow** acqRow, // acquire next row in table
-    mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+    mdb_pos* outRowPos) ;    // zero-based position of the row in table
   // } ----- end row iteration methods -----
 
   // { ----- begin copy iteration methods -----
-  virtual mdb_err NextRowCopy( // put row cells into sink only when already in sink
+   mdb_err NextRowCopy( // put row cells into sink only when already in sink
     mdbEnv* ev, // context
     mdbRow* ioSinkRow, // sink for row cells read from next row
     const mdbOid* outOid, // out row oid
-    mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+    mdb_pos* outRowPos) ;    // zero-based position of the row in table
 
-  virtual mdb_err NextRowCopyAll( // put all row cells into sink, adding to sink
+   mdb_err NextRowCopyAll( // put all row cells into sink, adding to sink
     mdbEnv* ev, // context
     mdbRow* ioSinkRow, // sink for row cells read from next row
     const mdbOid* outOid, // out row oid
-    mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+    mdb_pos* outRowPos) ;    // zero-based position of the row in table
   // } ----- end copy iteration methods -----
 
 // } ===== end mdbTableRowCursor methods =====
@@ -1506,54 +1509,54 @@ public:
 // { ===== begin mdbRow methods =====
 
   // { ----- begin cursor methods -----
-  virtual mdb_err
+   mdb_err
   GetRowCellCursor( // make a cursor starting iteration at inRowPos
     mdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
-    mdbTableRowCursor** acqCursor) = 0; // acquire new cursor instance
+    mdbTableRowCursor** acqCursor) ; // acquire new cursor instance
   // } ----- end cursor methods -----
 
   // { ----- begin column methods -----
-  virtual mdb_err AddColumn( // make sure a particular column is inside row
+   mdb_err AddColumn( // make sure a particular column is inside row
     mdbEnv* ev, // context
     mdb_column inColumn, // column to add
-    const mdbYarn* inYarn) = 0; // cell value to install
+    const mdbYarn* inYarn) ; // cell value to install
 
-  virtual mdb_err CutColumn( // make sure a column is absent from the row
+   mdb_err CutColumn( // make sure a column is absent from the row
     mdbEnv* ev, // context
-    mdb_column inColumn) = 0; // column to ensure absent from row
+    mdb_column inColumn) ; // column to ensure absent from row
 
-  virtual mdb_err CutAllColumns( // remove all columns from the row
-    mdbEnv* ev) = 0; // context
+   mdb_err CutAllColumns( // remove all columns from the row
+    mdbEnv* ev) ; // context
   // } ----- end column methods -----
 
   // { ----- begin cell methods -----
-  virtual mdb_err NewCell( // get cell for specified column, or add new one
+   mdb_err NewCell( // get cell for specified column, or add new one
     mdbEnv* ev, // context
     mdb_column inColumn, // column to add
-    mdbCell** acqCell) = 0; // cell column and value
+    mdbCell** acqCell) ; // cell column and value
     
-  virtual mdb_err AddCell( // copy a cell from another row to this row
+   mdb_err AddCell( // copy a cell from another row to this row
     mdbEnv* ev, // context
-    const mdbCell* inCell) = 0; // cell column and value
+    const mdbCell* inCell) ; // cell column and value
     
-  virtual mdb_err GetCell( // find a cell in this row
+   mdb_err GetCell( // find a cell in this row
     mdbEnv* ev, // context
     mdb_column inColumn, // column to find
-    mdbCell** acqCell) = 0; // cell for specified column, or null
+    mdbCell** acqCell) ; // cell for specified column, or null
     
-  virtual mdb_err EmptyAllCells( // make all cells in row empty of content
-    mdbEnv* ev) = 0; // context
+   mdb_err EmptyAllCells( // make all cells in row empty of content
+    mdbEnv* ev) ; // context
   // } ----- end cell methods -----
 
   // { ----- begin row methods -----
-  virtual mdb_err AddRow( // add all cells in another row to this one
+   mdb_err AddRow( // add all cells in another row to this one
     mdbEnv* ev, // context
-    mdbRow* ioSourceRow) = 0; // row to union with
+    mdbRow* ioSourceRow) ; // row to union with
     
-  virtual mdb_err SetRow( // make exact duplicate of another row
+   mdb_err SetRow( // make exact duplicate of another row
     mdbEnv* ev, // context
-    mdbRow* ioSourceRow) = 0; // row to duplicate
+    mdbRow* ioSourceRow) ; // row to duplicate
   // } ----- end row methods -----
 
 // } ===== end mdbRow methods =====
@@ -1573,23 +1576,23 @@ class mdbRowCellCursor : public mdbCursor { // cell collection iterator
 // { ===== begin mdbRowCellCursor methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetRow(mdbEnv* ev, mdbRow* ioRow) = 0; // sets pos to -1
-  virtual mdb_err GetRow(mdbEnv* ev, mdbRow** acqRow) = 0;
+   mdb_err SetRow(mdbEnv* ev, mdbRow* ioRow) ; // sets pos to -1
+   mdb_err GetRow(mdbEnv* ev, mdbRow** acqRow) ;
   // } ----- end attribute methods -----
 
   // { ----- begin cell iteration methods -----
-  virtual mdb_err NextCell( // get next cell in the row
+   mdb_err NextCell( // get next cell in the row
     mdbEnv* ev, // context
     mdb_column* outColumn, // column for this particular cell
     mdb_pos* outPos, // position of cell in row sequence
-    mdbCell** acqCell) = 0; // the next cell in the iteration
+    mdbCell** acqCell) ; // the next cell in the iteration
     
-  virtual mdb_err PickNextCell( // get next cell in row within filter set
+   mdb_err PickNextCell( // get next cell in row within filter set
     mdbEnv* ev, // context
     const mdbColumnSet* inFilterSet, // set of cols with actual caller interest
     mdb_column* outColumn, // column for this particular cell
     mdb_pos* outPos, // position of cell in row sequence
-    mdbCell** acqCell) = 0; // the next cell in the iteration
+    mdbCell** acqCell) ; // the next cell in the iteration
 
   // Note that inFilterSet should not have too many (many more than 10?)
   // cols, since this might imply a potential excessive consumption of time
@@ -1608,29 +1611,29 @@ public:
 // { ===== begin mdbBlob methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetBlob(mdbEnv* ev,
-    mdbBlob* ioBlob) = 0; // reads inBlob slots
+   mdb_err SetBlob(mdbEnv* ev,
+    mdbBlob* ioBlob) ; // reads inBlob slots
   // when inBlob is in the same suite, this might be fastest cell-to-cell
   
-  virtual mdb_err ClearBlob( // make empty (so content has zero length)
-    mdbEnv* ev) = 0;
+   mdb_err ClearBlob( // make empty (so content has zero length)
+    mdbEnv* ev) ;
   // clearing a yarn is like SetYarn() with empty yarn instance content
   
-  virtual mdb_err GetBlobFill(mdbEnv* ev,
-    mdb_fill* outFill) = 0;  // size of blob 
+   mdb_err GetBlobFill(mdbEnv* ev,
+    mdb_fill* outFill) ;  // size of blob 
   // Same value that would be put into mYarn_Fill, if one called GetYarn()
   // with a yarn instance that had mYarn_Buf==nil and mYarn_Size==0.
   
-  virtual mdb_err SetYarn(mdbEnv* ev, 
-    const mdbYarn* inYarn) = 0;   // reads from yarn slots
+   mdb_err SetYarn(mdbEnv* ev, 
+    const mdbYarn* inYarn) ;   // reads from yarn slots
   // make this text object contain content from the yarn's buffer
   
-  virtual mdb_err GetYarn(mdbEnv* ev, 
-    mdbYarn* outYarn) = 0;  // writes some yarn slots 
+   mdb_err GetYarn(mdbEnv* ev, 
+    mdbYarn* outYarn) ;  // writes some yarn slots 
   // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
   
-  virtual mdb_err AliasYarn(mdbEnv* ev, 
-    mdbYarn* outYarn) = 0; // writes ALL yarn slots
+   mdb_err AliasYarn(mdbEnv* ev, 
+    mdbYarn* outYarn) ; // writes ALL yarn slots
   // AliasYarn() reveals sensitive internal text buffer state to the caller
   // by setting mYarn_Buf to point into the guts of this text implementation.
   //
@@ -1659,7 +1662,7 @@ public:
   // copy and transformation when such is incompatible with the mdbYarn format.
   //
   // The implementation of AliasYarn() should have extremely little overhead
-  // besides the virtual dispatch to the method implementation, and the code
+  // besides the  dispatch to the method implementation, and the code
   // necessary to populate all the mdbYarn member slots with internal buffer
   // address and metainformation that describes the buffer content.  Note that
   // mYarn_Grow must always be set to nil to indicate no resizing is allowed.
@@ -1700,53 +1703,53 @@ class mdbCell : public mdbBlob { // text attribute in row with column scope
 // { ===== begin mdbCell methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetColumn(mdbEnv* ev, mdb_column inColumn) = 0; 
-  virtual mdb_err GetColumn(mdbEnv* ev, mdb_column* outColumn) = 0;
+   mdb_err SetColumn(mdbEnv* ev, mdb_column inColumn) ; 
+   mdb_err GetColumn(mdbEnv* ev, mdb_column* outColumn) ;
   
-  virtual mdb_err GetCellInfo(  // all cell metainfo except actual content
+   mdb_err GetCellInfo(  // all cell metainfo except actual content
     mdbEnv* ev, 
     mdb_column* outColumn,           // the column in the containing row
     mdb_fill*   outBlobFill,         // the size of text content in bytes
     mdbOid*     outChildOid,         // oid of possible row or table child
-    mdb_bool*   outIsRowChild) = 0;  // nonzero if child, and a row child
+    mdb_bool*   outIsRowChild) ;  // nonzero if child, and a row child
 
   // Checking all cell metainfo is a good way to avoid forcing a large cell
   // in to memory when you don't actually want to use the content.
   
-  virtual mdb_err GetRow(mdbEnv* ev, // parent row for this cell
-    mdbRow** acqRow) = 0;
-  virtual mdb_err GetPort(mdbEnv* ev, // port containing cell
-    mdbPort** acqPort) = 0;
+   mdb_err GetRow(mdbEnv* ev, // parent row for this cell
+    mdbRow** acqRow) ;
+   mdb_err GetPort(mdbEnv* ev, // port containing cell
+    mdbPort** acqPort) ;
   // } ----- end attribute methods -----
 
   // { ----- begin children methods -----
-  virtual mdb_err HasAnyChild( // does cell have a child instead of text?
+   mdb_err HasAnyChild( // does cell have a child instead of text?
     mdbEnv* ev,
     const mdbOid* outOid,  // out id of row or table (or unbound if no child)
-    mdb_bool* outIsRow) = 0; // nonzero if child is a row (rather than a table)
+    mdb_bool* outIsRow) ; // nonzero if child is a row (rather than a table)
 
-  virtual mdb_err GetAnyChild( // access table of specific attribute
+   mdb_err GetAnyChild( // access table of specific attribute
     mdbEnv* ev, // context
     mdbRow** acqRow, // child row (or null)
-    mdbTable** acqTable) = 0; // child table (or null)
+    mdbTable** acqTable) ; // child table (or null)
 
 
-  virtual mdb_err SetChildRow( // access table of specific attribute
+   mdb_err SetChildRow( // access table of specific attribute
     mdbEnv* ev, // context
-    mdbRow* ioRow) = 0; // inRow must be bound inside this same db port
+    mdbRow* ioRow) ; // inRow must be bound inside this same db port
 
-  virtual mdb_err GetChildRow( // access row of specific attribute
+   mdb_err GetChildRow( // access row of specific attribute
     mdbEnv* ev, // context
-    mdbRow** acqRow) = 0; // acquire child row (or nil if no child)
+    mdbRow** acqRow) ; // acquire child row (or nil if no child)
 
 
-  virtual mdb_err SetChildTable( // access table of specific attribute
+   mdb_err SetChildTable( // access table of specific attribute
     mdbEnv* ev, // context
-    mdbTable* inTable) = 0; // table must be bound inside this same db port
+    mdbTable* inTable) ; // table must be bound inside this same db port
 
-  virtual mdb_err GetChildTable( // access table of specific attribute
+   mdb_err GetChildTable( // access table of specific attribute
     mdbEnv* ev, // context
-    mdbTable** acqTable) = 0; // acquire child table (or nil if no child)
+    mdbTable** acqTable) ; // acquire child table (or nil if no child)
   // } ----- end children methods -----
 
 // } ===== end mdbCell methods =====
