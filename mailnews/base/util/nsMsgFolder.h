@@ -56,6 +56,9 @@ public:
   NS_IMETHOD GetElementAt(PRUint32 i, nsISupports* *result) {
     return mSubFolders->GetElementAt(i, result);
   }
+  NS_IMETHOD  QueryElementAt(PRUint32 i, const nsIID & iid, void * *result) {
+    return mSubFolders->QueryElementAt(i, iid, result);
+  }
   NS_IMETHOD SetElementAt(PRUint32 i, nsISupports* value) {
     return mSubFolders->SetElementAt(i, value);
   }

@@ -25,6 +25,8 @@ interface nsICollection : nsISupports
 
   PRUint32 Count();
   nsISupports GetElementAt(in PRUint32 index);
+  void QueryElementAt(in PRUint32 index, in nsIIDRef uuid, 
+                      [iid_is(uuid),retval] out nsQIResult result);
   void SetElementAt(in PRUint32 index, in nsISupports item);
   void AppendElement(in nsISupports item);
   void RemoveElement(in nsISupports item);

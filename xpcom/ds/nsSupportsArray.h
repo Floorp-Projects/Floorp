@@ -39,6 +39,14 @@ public:
     *result = ElementAt(aIndex);
     return NS_OK;
   }
+  NS_IMETHOD QueryElementAt(PRUint32 aIndex, const nsIID & aIID, void * *aResult) {
+    if (aIndex < mCount) {
+      nsISupports* element = mArray[aIndex];
+      if (nsnull != element)
+        return element->QueryInterface(aIID, aResult);
+    }
+    return NS_ERROR_FAILURE;
+  }
   NS_IMETHOD SetElementAt(PRUint32 aIndex, nsISupports* value) {
     PRBool ok = ReplaceElementAt(value, aIndex);
     return ok ? NS_OK : NS_ERROR_FAILURE;
