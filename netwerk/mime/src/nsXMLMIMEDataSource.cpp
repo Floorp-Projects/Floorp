@@ -81,7 +81,7 @@ nsXMLMIMEDataSource::nsXMLMIMEDataSource() {
 }
 
 nsXMLMIMEDataSource::~nsXMLMIMEDataSource() {
-    mInfoObjects->Reset(DeleteEntry, nsnull);
+    mInfoObjects->Reset((nsHashtableEnumFunc)DeleteEntry, nsnull);
     delete mInfoObjects;
 }
 

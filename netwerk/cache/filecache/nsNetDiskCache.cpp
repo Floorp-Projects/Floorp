@@ -73,7 +73,7 @@ static const char * const CACHE_DIR_PREF   = "browser.cache.directory";
 static const char * const CACHE_ENABLE_PREF   = "browser.cache.disk.enable";
 
 
-static int folderChanged(const char *pref, void *closure)
+static int PR_CALLBACK folderChanged(const char *pref, void *closure)
 {
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
@@ -102,7 +102,7 @@ static int folderChanged(const char *pref, void *closure)
 	return ( (nsNetDiskCache*)closure )->SetDiskCacheFolder( cacheFolder );	
 }
 
-static int enableChanged(const char *pref, void *closure)
+static int PR_CALLBACK enableChanged(const char *pref, void *closure)
 {
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
