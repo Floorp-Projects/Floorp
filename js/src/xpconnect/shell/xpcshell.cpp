@@ -98,6 +98,7 @@ FILE *gErrFile = NULL;
 
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
+static int reportWarnings = 0;
 
 static void PR_CALLBACK
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
@@ -111,6 +112,10 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
         return;
     }
 
+    /* Conditionally ignore reported warnings. */
+    if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings)
+        return;
+
     if (report->filename)
         prefix = JS_smprintf("%s:", report->filename);
     if (report->lineno) {
@@ -120,7 +125,9 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     if (JSREPORT_IS_WARNING(report->flags)) {
         tmp = prefix;
-        prefix = JS_smprintf("%swarning: ", tmp ? tmp : "");
+        prefix = JS_smprintf("%s%swarning: ",
+                             tmp ? tmp : "",
+                             JSREPORT_IS_STRICT(report->flags) ? "strict " : "");
         JS_free(cx, tmp);
     }
 
@@ -540,11 +547,9 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-w] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-s] [-w] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
 }
-
-static int reportWarnings;
 
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
@@ -570,7 +575,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             case 'w':
                 reportWarnings++;
                 break;
-
+            case 's':
+                JS_ToggleOptions(cx, JSOPTION_STRICT);
+                break;
             case 'f':
                 if (i+1 == argc) {
                     return usage();
