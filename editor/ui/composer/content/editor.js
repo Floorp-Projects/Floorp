@@ -2096,35 +2096,16 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
   return color;
 }
 
-var gHaveSpellChecker = false;
-var gSoughtSpellChecker = false;
-
 //-----------------------------------------------------------------------------------
 function IsSpellCheckerInstalled()
 {
-  if (gSoughtSpellChecker)
-    return gHaveSpellChecker;
-
-  var spellcheckerClass = Components.classes["@mozilla.org/spellchecker;1"];
-  gHaveSpellChecker = (spellcheckerClass != null);
-  gSoughtSpellChecker = true;
-  //dump("Have SpellChecker = "+gHaveSpellChecker+"\n");
-  return gHaveSpellChecker;
+  return "@mozilla.org/spellchecker;1" in Components.classes;
 }
 
-var gHaveFind = false;
-var gSoughtFind = false;
 //-----------------------------------------------------------------------------------
 function IsFindInstalled()
 {
-  if (gSoughtFind)
-    return gHaveFind;
-
-  var findClass = Components.classes["@mozilla.org/appshell/component/find;1"];
-  gHaveFind = (findClass != null);
-  gSoughtFind = true;
-  //dump("Have Find = "+gHaveFind+"\n");
-  return gHaveFind;
+  return "@mozilla.org/appshell/component/find;1" in Components.classes;
 }
 
 //-----------------------------------------------------------------------------------
