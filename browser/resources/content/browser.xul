@@ -9,6 +9,8 @@
         title="&browserWindow.title;"
         width="600" height="400" statusbar="window-statusbar">
 
+  <script src="chrome://browser/content/browser.js"/>
+
   <menubar>
     <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
       <menupopup>
@@ -179,9 +181,24 @@
       <spring flex="1"/>
       <throbber/>
     </toolbar>
-    <toolbar>
+    <toolbar class="chromeclass-location">
       <label>&toolbarLocation.label;</label>
+      <textbox id="locationBar" flex="1"
+               type="autocomplete" searchSessions="history" 
+               timeout="50" maxrows="6" alwaysopenpopup="true"
+               disablehistory="false"
+               defaultSearchEngine="true" tabScrolling="true"
+               showCommentColumn="true"
+               oninput="window.XULBrowserWindow.userTyped.value=true;"
+               ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
+               ontextrevert="return handleURLBarRevert();"
+               onfocus="URLBarFocusHandler(event);"
+               onblur="URLBarBlurHandler(event);"/>
+
+<!-- XXXben - make "location-bar" be a combination of the special matter added to auto-complete widget in navigator.xul
       <location-bar flex="1"/>
+  -->
+
       <toolbarbutton id="go-button" class="toolbarbutton-2"
                      label="&toolbarGo.label;" tooltiptext="&toolbarGo.tooltip;"/>
     </toolbar>

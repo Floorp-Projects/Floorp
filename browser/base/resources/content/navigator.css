@@ -1,0 +1,44 @@
+/* ::::: Hide the link toolbar if it is set to autohide and has no items. ::::: */
+
+#linktoolbar[hidden="maybe"][hasitems="false"] {
+  display: none;
+}
+
+/* ::::: urlbar autocomplete ::::: */
+
+#urlbar {
+  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#urlbar");
+}
+
+.autocomplete-result-popup[for="urlbar"] {
+  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-result-popup") !important;
+}
+
+.autocomplete-search-box {
+  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-search-box");
+}
+
+.autocomplete-search-engine {
+  -moz-binding: url("chrome://navigator/content/urlbarBindings.xml#autocomplete-search-engine");
+}
+
+
+/* ::::::::::
+   :: Rules for 'hiding' portions of the chrome for special
+   :: kinds of browser-specific window toolbars. Other global
+   :: window rules are in xul.css
+   ::::: */
+ 
+window[chromehidden~="toolbar"] #nav-bar-buttons,
+window[chromehidden~="toolbar"] #print-button {
+  display: none;
+}
+
+window[chromehidden~="toolbar"] #navigator-throbber {
+  margin: 0 5px 0 0 !important;
+  list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif") !important;
+}
+  
+window[chromehidden~="toolbar"] #navigator-throbber[busy="true"] {
+  list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif") !important;
+}
