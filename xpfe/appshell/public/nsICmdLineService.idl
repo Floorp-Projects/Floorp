@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,6 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
+#include "nsICmdLineHandler.idl"
 
 %{C++
 // e34783f5-ac08-11d2-8d19-00805fc2500c
@@ -34,12 +35,54 @@
 [scriptable, uuid(e34783f4-ac08-11d2-8d19-00805fc2500c)]
 interface nsICmdLineService : nsISupports
 {
-    string Initialize(in long argc);
-    string getCmdLineValue(in string argc);
+    /**
+     * initialize
+     * Used to pass the original argv/argc from main()
+     * Warning: This will hold a reference to the original argv
+     * passed into Initialze();
+     */
+    [noscript] void initialize(in long argc, out string argv);
+
+    /**
+     * getCmdLineValue
+     * returns the 2nd parameter, if any, to the parameter passed in
+     * For example, getCmdLineValue "-edit" will return any url that
+     * came after the -edit parameter
+     */
+    string getCmdLineValue(in string argv);
+
+    /**
+     * URLToLoad
+     * The URL to load as passed to the command line
+     */
     readonly attribute string URLToLoad;
+
+    /**
+     * programName
+     *
+     */
     readonly attribute string programName;
+
+    /**
+     * argc
+     * The number of parameters passed in on the command line
+     */
     readonly attribute long argc;
+
+    /**
+     * argv
+     * returns a direct reference to the parameter array passed in
+     * to initialize() - do NOT dereference this array!
+     */
     [noscript] readonly attribute charArray argv;
+
+    /**
+     * Get the command line handler for the given parameter
+     * @param param - can be any parameter, with or without leading
+     *                "-" such as "-mail" or "edit" - Pass in a null
+     *                string if you want the "default" handler
+     */
+    nsICmdLineHandler getHandlerForParam(in string param);
 
 };
 
