@@ -161,6 +161,7 @@ int main(int argc, char *argv[]) {
     return(1);
   }
 
+#if 0
   if (do_path == 0) {
     /* Get the name of this EXE and use its location as the path */
     HMODULE hmodule;
@@ -170,6 +171,7 @@ int main(int argc, char *argv[]) {
     pchar++;
     *pchar = '\0';
   }
+#endif
 
   if (do_load) {
     ULONG ulCurMaxFH;
