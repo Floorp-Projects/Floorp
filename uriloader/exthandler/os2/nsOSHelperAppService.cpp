@@ -71,8 +71,8 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
 
     if (url)
     {
-      nsXPIDLCString extenion;
-      url->GetFileExtension(getter_Copies(extenion));
+      nsCAutoString extenion;
+      url->GetFileExtension(extenion);
     
      fileExtension = ".";  
      fileExtension.Append(extenion);
@@ -206,10 +206,10 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   if (aURL)
   {
     // extract the url spec from the url
-    nsXPIDLCString urlSpec;
-    aURL->GetSpec(getter_Copies(urlSpec));
+    nsCAutoString urlSpec;
+    aURL->GetSpec(urlSpec);
 
-    HOBJECT hobject = WinQueryObject( urlSpec );
+    HOBJECT hobject = WinQueryObject( urlSpec.get() );
     if (WinSetObjectData( hobject, "OPEN=DEFAULT" ))
       rv = NS_OK;
     else
