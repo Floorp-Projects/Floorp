@@ -1183,6 +1183,7 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
     }
     else {
         const char* str;
+        NS_ASSERTION(nsnull != aURL, "url is null");
         aURL->GetSpec(&str);
         nsresult err = NS_NewURL(&base, str);
         if (err != NS_OK) return err;
