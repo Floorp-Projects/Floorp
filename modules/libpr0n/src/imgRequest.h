@@ -38,6 +38,8 @@
 
 #include "nsVoidArray.h"
 
+#include "nsString.h"
+
 #define NS_IMGREQUEST_CID \
 { /* 9f733dd6-1dd1-11b2-8cdf-effb70d1ea71 */         \
      0x9f733dd6,                                     \
@@ -70,6 +72,8 @@ public:
 
   PRBool RemoveFromCache();
 
+  void SniffMimeType(const char *buf, PRUint32 len);
+
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
   NS_DECL_NSIREQUEST
@@ -86,10 +90,13 @@ private:
 
   nsVoidArray mObservers;
 
+  PRBool mLoading;
   PRBool mProcessing;
 
   PRUint32 mStatus;
   PRUint32 mState;
+
+  nsCString mContentType;
 };
 
 #endif
