@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.12 2001/03/07 17:34:44 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.13 2001/04/11 22:28:11 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3988,8 +3988,6 @@ UpdateV5DB(CERTCertDBHandle *handle, DB *updatedb)
 
     (* updatedb->close)(updatedb);
     return(SECSuccess);
-    
-    return(rv);
 }
 
 static PRBool
@@ -4720,7 +4718,7 @@ cert_parseNickname(char *nickname)
 
 	for (cp=nickname; *cp && *cp != ':'; cp++);
 
-	if (*cp == ':') return cp++;
+	if (*cp == ':') return cp+1;
 	return nickname;
 }
 

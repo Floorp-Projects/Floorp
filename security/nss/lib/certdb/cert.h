@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.8 2001/02/09 01:06:41 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.9 2001/04/11 22:28:08 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1075,6 +1075,14 @@ CERT_AddCertToListTail(CERTCertList *certs, CERTCertificate *cert);
 
 SECStatus
 CERT_AddCertToListHead(CERTCertList *certs, CERTCertificate *cert);
+
+SECStatus
+CERT_AddCertToListTailWithData(CERTCertList *certs, CERTCertificate *cert,
+							 void *appData);
+
+SECStatus
+CERT_AddCertToListHeadWithData(CERTCertList *certs, CERTCertificate *cert,
+							 void *appData);
 
 typedef PRBool (* CERTSortCallback)(CERTCertificate *certa,
 				    CERTCertificate *certb,

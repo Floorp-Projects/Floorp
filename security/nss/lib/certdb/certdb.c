@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.9 2001/02/28 22:50:12 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.10 2001/04/11 22:28:09 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2019,8 +2019,10 @@ CERT_RemoveCertListNode(CERTCertListNode *node)
     return;
 }
 
+
 SECStatus
-CERT_AddCertToListTail(CERTCertList *certs, CERTCertificate *cert)
+CERT_AddCertToListTailWithData(CERTCertList *certs, 
+				CERTCertificate *cert, void *appData)
 {
     CERTCertListNode *node;
     
@@ -2033,6 +2035,7 @@ CERT_AddCertToListTail(CERTCertList *certs, CERTCertificate *cert)
     PR_INSERT_BEFORE(&node->links, &certs->list);
     /* certs->count++; */
     node->cert = cert;
+    node->appData = appData;
     return(SECSuccess);
     
 loser:
@@ -2040,7 +2043,14 @@ loser:
 }
 
 SECStatus
-CERT_AddCertToListHead(CERTCertList *certs, CERTCertificate *cert)
+CERT_AddCertToListTail(CERTCertList *certs, CERTCertificate *cert)
+{
+    CERT_AddCertToListTailWithData(certs, cert, NULL);
+}
+
+SECStatus
+CERT_AddCertToListHeadWithData(CERTCertList *certs, 
+					CERTCertificate *cert, void *appData)
 {
     CERTCertListNode *node;
     CERTCertListNode *head;
@@ -2058,10 +2068,17 @@ CERT_AddCertToListHead(CERTCertList *certs, CERTCertificate *cert)
     PR_INSERT_BEFORE(&node->links, &head->links);
     /* certs->count++; */
     node->cert = cert;
+    node->appData = appData;
     return(SECSuccess);
     
 loser:
     return(SECFailure);
+}
+
+SECStatus
+CERT_AddCertToListHead(CERTCertList *certs, CERTCertificate *cert)
+{
+    return CERT_AddCertToListHeadWithData(certs, cert, NULL);
 }
 
 /*
