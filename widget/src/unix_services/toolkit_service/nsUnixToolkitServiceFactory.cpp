@@ -16,142 +16,27 @@
  * Reserved.
  */
 
-#include "nsIUnixToolkitService.h"
-
-#include "nsIFactory.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
 #include "nsCOMPtr.h"
 
+#include "nsIUnixToolkitService.h"
 #include "nsUnixToolkitService.h"
 
-static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnixToolkitService)
 
-class nsUnixToolkitServiceFactory : public nsIFactory
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-			    const nsIID &aIID,
-			    void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-  
-  nsUnixToolkitServiceFactory(const nsCID &aClass);
-  virtual ~nsUnixToolkitServiceFactory();
-
-private:
-  nsCID mClassID;
+struct components_t {
+  nsCID cid;
+  nsIGenericFactory::ConstructorProcPtr constructor;
+  const char *progid;
+  const char *description;
 };
 
-nsUnixToolkitServiceFactory::nsUnixToolkitServiceFactory(const nsCID &aClass) :
-  mRefCnt(0),
-  mClassID(aClass)
+static components_t components[] =
 {
-}
+  { NS_UNIX_TOOLKIT_SERVICE_CID, &nsUnixToolkitServiceConstructor,
+    NS_UNIX_TOOLKIT_SERVICE_PROGID, "Unix WIndow Service", },
+};
 
-nsUnixToolkitServiceFactory::~nsUnixToolkitServiceFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS(nsUnixToolkitServiceFactory, nsIFactory::GetIID())
-
-NS_IMETHODIMP
-nsUnixToolkitServiceFactory::CreateInstance(nsISupports *aOuter,
-					   const nsIID &aIID,
-					   void **aResult)
-{
-  if (aResult == nsnull)
-    return NS_ERROR_NULL_POINTER;
-
-  *aResult = nsnull;
-
-  nsISupports *inst = nsnull;
-  if (mClassID.Equals(kCUnixToolkitServiceCID)) {
-    inst = (nsISupports *)(nsUnixToolkitService *) new nsUnixToolkitService();
-  }
-
-  if (inst == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = inst->QueryInterface(aIID, aResult);
-  if (rv != NS_OK)
-    delete inst;
-  return rv;
-}
-
-nsresult nsUnixToolkitServiceFactory::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.  
-  return NS_OK;
-}
-
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports *servMgr,
-	     const nsCID &aClass,
-	     const char *aClassName,
-	     const char *aProgID,
-	     nsIFactory **aFactory)
-{
-  if (nsnull == aFactory)
-    return NS_ERROR_NULL_POINTER;
-
-  *aFactory = new nsUnixToolkitServiceFactory(aClass);
-  
-  if (nsnull == aFactory) 
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
-                                     (void **)aFactory);
-}
-
-extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports *aServMgr)
-{
-  return PR_FALSE;
-}
-
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
-{
-  nsresult rv;
-
-#ifdef NS_DEBUG
-  printf("*** Registering UnixToolkitService\n");
-#endif
-
-  nsCOMPtr<nsIServiceManager>
-    serviceManager(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = compMgr->RegisterComponent(kCUnixToolkitServiceCID,
-                                  "Unix Window Service",
-                                  NS_UNIX_TOOLKIT_SERVICE_PROGID,
-                                  fullpath,
-                                  PR_TRUE,
-                                  PR_TRUE);
-  return rv;
-}
-
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports *aServMgr, const char *fullpath)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager>
-    serviceManager(do_QueryInterface(aServMgr, &rv));
-
-  if (NS_FAILED(rv)) return rv;
-  
-  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-
-  if (NS_FAILED(rv)) return rv;
-
-  compMgr->UnregisterComponent(kCUnixToolkitServiceCID, fullpath);
-  
-  return NS_OK;
-}
+NS_IMPL_MODULE(components)
+NS_IMPL_NSGETMODULE(nsModule)
