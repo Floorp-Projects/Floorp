@@ -51,8 +51,8 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-
 var re = /(a)|(b)/;
+
 re.test('a');
   status = inSection(1);
   actual = RegExp.$1;
@@ -64,8 +64,6 @@ re.test('a');
   expect = '';
   addThis();
 
-
-var re = /(a)|(b)/;
 re.test('b');
   status = inSection(3);
   actual = RegExp.$1;
