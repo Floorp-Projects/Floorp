@@ -3113,6 +3113,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nsresult rv = NS_OK;
 
   nsIFrame* frame = aLine->mFirstChild;
+  if (!frame) {
+    NS_ASSERTION(PR_FALSE, "program error - unexpected empty line"); 
+    return NS_ERROR_NULL_POINTER; 
+  }
 
   // Prepare the block reflow engine
   const nsStyleDisplay* display;
