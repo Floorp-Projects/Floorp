@@ -437,9 +437,10 @@
         <vbox flex="1" id="addresses-box">
           <hbox align="center">
             <label value="&fromAddr.label;" accesskey="&fromAddr.accesskey;" control="msgIdentity"/>
-            <menulist id="msgIdentity" label="..." oncommand="LoadIdentity(false);">
+            <menulist id="msgIdentity" label="..." flex="1" oncommand="LoadIdentity(false);">
               <menupopup id="msgIdentityPopup"/>
             </menulist>
+            <spacer flex="1000"/>
           </hbox> 
           <listbox id="addressingWidget" flex="1"/>
           <hbox align="center">
