@@ -259,8 +259,9 @@ nsresult WebWidgetImpl::InitUAStyleSheet(void)
           rv = NS_NewCSSParser(&css);
           if (NS_OK == rv) {
             // Parse the input and produce a style set
-            mUAStyleSheet = css->Parse(&ec, uin, uaURL);
-
+            // XXX note: we are ignoring rv until the error code stuff in the
+            // input routines is converted to use nsresult's
+            css->Parse(uin, uaURL, mUAStyleSheet);
             NS_RELEASE(css);
           }
           NS_RELEASE(uin);
