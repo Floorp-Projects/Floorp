@@ -94,16 +94,17 @@ AC_DEFUN(MOZ_READ_MYCONFIG,
 # Read in 'myconfig.sh' script to set the initial options.
 # See the load-myconfig.sh script for more details.
 _topsrcdir=`dirname [$]0`
-_load_myconfig=$_topsrcdir/build/autoconf/load-myconfig.sh
-if test "$MOZ_MYCONFIG"; then
-  . $_load_myconfig
-elif test -f myconfig.sh; then
-   MOZ_MYCONFIG=myconfig.sh
-   . $_load_myconfig
-elif test -f $_topsrcdir/myconfig.sh; then
-   MOZ_MYCONFIG=$_topsrcdir/myconfig.sh
-   . $_load_myconfig
-fi])
+for _config in $MOZ_MYCONFIG \
+               myconfig.sh \
+               $_topsrcdir/myconfig.sh \
+               $HOME/.mozmyconfig.sh
+do
+     if test -f $_config; then
+	MOZ_MYCONFIG=$_config;
+	. $_topsrcdir/build/autoconf/load-myconfig.sh
+	break
+     fi
+done])
 
 dnl This gets inserted at the top of the configure script
 MOZ_READ_MYCONFIG
