@@ -817,8 +817,11 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   uri.Right(ref, uri.Length() - (indx + 1));
   uri.Truncate(indx);
 
+  nsCOMPtr<nsIDocument> boundDocument;
+  aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
+    
   nsCOMPtr<nsIXBLDocumentInfo> docInfo;
-  LoadBindingDocumentInfo(aBoundElement, uri, ref, PR_FALSE, getter_AddRefs(docInfo));
+  LoadBindingDocumentInfo(aBoundElement, boundDocument, uri, ref, PR_FALSE, getter_AddRefs(docInfo));
   if (!docInfo)
     return NS_ERROR_FAILURE;
 
@@ -903,7 +906,8 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
 }
 
 NS_IMETHODIMP
-nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, const nsCString& aURLStr, const nsCString& aRef,
+nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
+                                      const nsCString& aURLStr, const nsCString& aRef,
                                       PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult)
 {
   nsresult rv;
@@ -921,12 +925,10 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, const nsCString
 
   if (!info) {
     // The second line of defense is the binding manager's document table.
-    nsCOMPtr<nsIDocument> boundDocument;
-    aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
     nsCOMPtr<nsIBindingManager> bindingManager;
-    boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
     bindingManager->GetXBLDocumentInfo(aURLStr, getter_AddRefs(info));
- 
+
     nsCOMPtr<nsIAtom> tagName;
     if (aBoundElement)
       aBoundElement->GetTag(*getter_AddRefs(tagName));
@@ -962,7 +964,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, const nsCString
                                          getter_AddRefs(uri));
       uri->SetSpec(aURLStr);
       nsCOMPtr<nsIDocument> document;
-      FetchBindingDocument(aBoundElement, uri, aRef, aForceSyncLoad, getter_AddRefs(document));
+      FetchBindingDocument(aBoundElement, aBoundDocument, uri, aRef, aForceSyncLoad, getter_AddRefs(document));
    
       if (document) {
         NS_NewXBLDocumentInfo(document, getter_AddRefs(info));
@@ -984,10 +986,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, const nsCString
         
         if (!cached) {
           // Otherwise we put it in our binding manager's document table.
-          nsCOMPtr<nsIDocument> boundDocument;
-          aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
           nsCOMPtr<nsIBindingManager> bindingManager;
-          boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+          aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
           bindingManager->PutXBLDocumentInfo(info);
         }
       }
@@ -1004,7 +1004,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, const nsCString
 }
 
 NS_IMETHODIMP
-nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, 
+nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
+                                   nsIURI* aURI, const nsCString& aRef, 
                                    PRBool aForceSyncLoad, nsIDocument** aResult)
 {
   // Initialize our out pointer to nsnull
@@ -1024,10 +1025,8 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, cons
 
   // Now we have to synchronously load the binding file.
   // Create an XML content sink and a parser. 
-  nsCOMPtr<nsIDocument> boundDoc;
-  aBoundElement->GetDocument(*getter_AddRefs(boundDoc));
   nsCOMPtr<nsILoadGroup> loadGroup;
-  boundDoc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  aBoundDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
   
   nsCOMPtr<nsIChannel> channel;
   rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, loadGroup);
@@ -1042,19 +1041,18 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, cons
   }
 
   nsCOMPtr<nsIAtom> tagName;
-  aBoundElement->GetTag(*getter_AddRefs(tagName)); 
+  if (aBoundElement)
+    aBoundElement->GetTag(*getter_AddRefs(tagName)); 
   if (tagName.get() != kScrollbarAtom && !aForceSyncLoad) {
     // We can be asynchronous
-    nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener, boundDoc, doc);
+    nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener, aBoundDocument, doc);
     
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
     rec->AddEventListener(NS_ConvertASCIItoUCS2("load"), (nsIDOMLoadListener*)xblListener, PR_FALSE);
 
     // Add ourselves to the list of loading docs.
-    nsCOMPtr<nsIDocument> boundDocument;
-    aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
     nsCOMPtr<nsIBindingManager> bindingManager;
-    boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsXPIDLCString uri;
     aURI->GetSpec(getter_Copies(uri));
     bindingManager->PutLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, uri)), xblListener);
