@@ -43,7 +43,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= ipcd_lock
+MODULE		= ipcd
+XPIDL_MODULE = ipcd_lock
 
 EXPORTS		= \
 			ipcLockCID.h \

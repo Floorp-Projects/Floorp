@@ -42,7 +42,8 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = ipcd_transmngr
+MODULE = ipcd
+XPIDL_MODULE = ipcd_transmngr
 
 XPIDLSRCS = \
   ipcITransactionService.idl \
