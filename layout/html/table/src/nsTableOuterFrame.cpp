@@ -242,7 +242,9 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   if (nsnull==prevInFlow)
   {
     // assign column widths, and assign aMaxElementSize->width
-    mInnerTableFrame->BalanceColumnWidths(aPresContext, aReflowState.maxSize, aDesiredSize.maxElementSize);
+    mInnerTableFrame->BalanceColumnWidths(aPresContext, aReflowState,
+                                          aReflowState.maxSize,
+                                          aDesiredSize.maxElementSize);
     // assign table width
     mInnerTableFrame->SetTableWidth(aPresContext);
   }

@@ -27,6 +27,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPtr.h"
+#include "nsHTMLIIDs.h"
 
 NS_DEF_PTR(nsTableCol);
 NS_DEF_PTR(nsTableCell);
@@ -116,7 +117,10 @@ PRBool BasicTableLayoutStrategy::IsAutoWidth(nsStylePosition* aStylePosition)
 
 
 // aSpecifiedTableWidth is filled if the table witdth is not auto
-PRBool BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle, nscoord & aSpecifiedTableWidth)
+PRBool
+BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle,
+                                           const nsReflowState& aReflowState,
+                                           nscoord& aSpecifiedTableWidth)
 {
   NS_ASSERTION(nsnull!=aTableStyle, "bad arg - aTableStyle");
   PRBool result = PR_TRUE;  // the default
@@ -148,10 +152,30 @@ PRBool BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle, 
       aSpecifiedTableWidth = tablePosition->mWidth.GetCoordValue();
       result = PR_FALSE;
       break;
+
     case eStyleUnit_Percent:
-      // get the parent's width (available only from parent frames that claim they can provide it,
-      // and assuming it's already specified; that is, top-down layout sets the widths on the way down.)
-      nscoord parentWidth = 0;
+      // Get the parent's width (available only from parent frames
+      // that claim they can provide it, and assuming it's already
+      // specified; that is, top-down layout sets the widths on the
+      // way down.)
+      nscoord parentWidth = aReflowState.maxSize.width;
+
+      // Walk up the reflow state chain until we find a block
+      // frame. Our width is computed relative to there.
+      const nsReflowState* rs = &aReflowState;
+      while (nsnull != rs) {
+        nsIFrame* block = nsnull;
+        rs->frame->QueryInterface(kBlockFrameCID, (void**) &block);
+        if (nsnull != block) {
+          // We found the nearest containing block which defines what
+          // a percentage size is relative to. Use the width that it
+          // will reflow to as the basis for computing our width.
+          parentWidth = rs->maxSize.width;
+          break;
+        }
+        rs = rs->parentReflowState;
+      }
+#if 0
       nsIFrame *parent=nsnull;
       nsIFrame *child=nsnull;
       mTableFrame->GetGeometricParent(child); // start with the outer table frame as the child
@@ -170,6 +194,8 @@ PRBool BasicTableLayoutStrategy::TableIsAutoWidth(nsIStyleContext *aTableStyle, 
         }
         parent->GetGeometricParent(parent); // get next ancestor
       }
+#endif
+
       // set aSpecifiedTableWidth to be the given percent of the parent.
       float percent = tablePosition->mWidth.GetPercentValue();
       aSpecifiedTableWidth = (PRInt32)(parentWidth*percent);
@@ -191,14 +217,16 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 {
 }
 
-PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContext,
-                                                     nsIStyleContext *aTableStyle,
-                                                     PRInt32 aMaxWidth, 
-                                                     PRInt32 aNumCols,
-                                                     PRInt32 &aTotalFixedWidth,
-                                                     PRInt32 &aMinTableWidth,
-                                                     PRInt32 &aMaxTableWidth,
-                                                     nsSize* aMaxElementSize)
+PRBool
+BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContext,
+                                              nsIStyleContext *aTableStyle,
+                                              const nsReflowState& aReflowState,
+                                              PRInt32 aMaxWidth, 
+                                              PRInt32 aNumCols,
+                                              PRInt32 &aTotalFixedWidth,
+                                              PRInt32 &aMinTableWidth,
+                                              PRInt32 &aMaxTableWidth,
+                                              nsSize* aMaxElementSize)
 {
   PRBool result = PR_TRUE;
 
@@ -219,7 +247,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContex
   // Step 2 - determine how much space is really available
   PRInt32 availWidth = aMaxWidth - aTotalFixedWidth;
   nscoord tableWidth = 0;
-  if (PR_FALSE==TableIsAutoWidth(aTableStyle, tableWidth))
+  if (PR_FALSE==TableIsAutoWidth(aTableStyle, aReflowState, tableWidth))
     availWidth = tableWidth - aTotalFixedWidth;
   
   // Step 3 - assign the width of all proportional-width columns in the remaining space

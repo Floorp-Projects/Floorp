@@ -57,6 +57,7 @@ public:
 
   virtual PRBool BalanceColumnWidths(nsIPresContext* aPresContext,
                                      nsIStyleContext *aTableStyle,
+                                     const nsReflowState& aReflowState,
                                      PRInt32 aMaxWidth, 
                                      PRInt32 aNumCols,
                                      PRInt32 &aTotalFixedWidth,
@@ -165,7 +166,9 @@ public:
 
   virtual PRBool IsAutoWidth(nsStylePosition* aStylePosition);
 
-  virtual PRBool TableIsAutoWidth(nsIStyleContext *aTableStyle, nscoord & aSpecifiedTableWidth);
+  virtual PRBool TableIsAutoWidth(nsIStyleContext *aTableStyle,
+                                  const nsReflowState& aReflowState,
+                                  nscoord& aSpecifiedTableWidth);
 
   
 
