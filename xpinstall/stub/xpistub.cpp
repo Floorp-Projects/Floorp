@@ -237,11 +237,11 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
                                     long          aFlags )
 {
     nsresult                rv = NS_ERROR_NULL_POINTER;
-    nsString                args(aArgs);
+    nsString                args; args.AssignWithConversion(aArgs);
     nsCOMPtr<nsIFileSpec>   iFile;
     nsFileSpec              file(aFile);
     nsFileURL               URL(file);
-    nsString                URLstr(URL.GetURLString());
+    nsString                URLstr; URLstr.AssignWithConversion(URL.GetURLString());
 
     gInstallStatus = -322; // unique stub error code
 
