@@ -236,7 +236,7 @@ GetAgeInDays(PRInt64 aNormalizedNow, PRInt64 aDate)
   // two-step process since I can't seem to load
   // MSECS_PER_DAY * PR_MSEC_PER_SEC into a PRInt64 at compile time
   PRInt64 msecPerSec;
-  LL_L2I(msecPerSec, PR_MSEC_PER_SEC);
+  LL_I2L(msecPerSec, PR_MSEC_PER_SEC);
   PRInt64 ageInSeconds;
   LL_DIV(ageInSeconds, diff, msecPerSec);
 
