@@ -235,13 +235,10 @@ void ConvertJSValToStr(nsString&  aString,
 {
   JSString *jsstring;
 
-  if((jsstring = JS_ValueToString(aContext, aValue)) != nsnull)
+  if ( JSVAL_IS_STRING(aValue) &&
+       (jsstring = JS_ValueToString(aContext, aValue)) != nsnull)
   {
     aString.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
-    if (aString.EqualsIgnoreCase("null"))
-    {
-        aString.Truncate();
-    }
   }
   else
   {
@@ -408,7 +405,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsAutoString b4;
   JSObject *jsObj;
   nsInstallFolder *folder;
-  PRInt32 b5;
+  PRInt32 flags;
 
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
@@ -509,7 +506,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
      //                              String jarSourcePath,
      //                              Object localDirSpec,
      //                              String relativeLocalPath,
-     //                              Boolean forceUpdate);  
+     //                              Int    flags);  
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
@@ -531,25 +528,14 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       return JS_TRUE; 
     }
 
-    if(JSVAL_IS_BOOLEAN(argv[5])) //Old form of the AddDirectory took a boolean
-    {
-      b5 = JSVAL_TO_BOOLEAN(argv[5]);
-      if( b5 == PR_TRUE )
-        b5 = INSTALL_NO_COMPARE;  //convert to values that mean something in the bit field
-      else
-        b5 = INSTALL_IF_NEWER;
-    }
+    if(JSVAL_IS_INT(argv[5]))
+      flags = JSVAL_TO_INT(argv[5]);
     else
-    {
-      if(!(b5 = JSVAL_TO_INT(argv[5])))  //File handling bit field
-      {
-        return JS_FALSE;
-      }
-    }
+      flags = 0;
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, folder, b4, b5, &nativeRet))
+    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, folder, b4, flags, &nativeRet))
     {
         return JS_FALSE;
     }
@@ -581,7 +567,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   nsAutoString b4;
   JSObject* jsObj;
   nsInstallFolder* folder;
-  PRInt32 b5;
+  PRInt32 flags = 0;
 
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
@@ -597,7 +583,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     //                               String jarSourcePath,
     //                               Object localDirSpec,
     //                               String relativeLocalPath,
-    //                               Boolean forceUpdate); 
+    //                               Int    flags); 
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
@@ -619,25 +605,14 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
       return JS_TRUE; 
     }
 
-    if(JSVAL_IS_BOOLEAN(argv[5])) //Old form of the AddSubComponent took a boolean
-    {
-      b5 = JSVAL_TO_BOOLEAN(argv[5]);
-      if( b5 == PR_TRUE )
-        b5 = INSTALL_NO_COMPARE;  //convert to values that mean something in the bit field
-      else
-        b5 = INSTALL_IF_NEWER;
-    }
+    if(JSVAL_IS_INT(argv[5]))
+      flags = JSVAL_TO_INT(argv[5]);
     else
-    {
-      if(!(b5 = JSVAL_TO_INT(argv[5])))  //File handling bit field
-      {
-        return JS_FALSE;
-      }
-    }
+      flags = 0;
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, b5, &nativeRet))
+    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, flags, &nativeRet))
     {
     return JS_FALSE;
     }
@@ -1830,22 +1805,23 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::BAD_PACKAGE_NAME,           "BAD_PACKAGE_NAME"             },
     { nsInstall::UNEXPECTED_ERROR,           "UNEXPECTED_ERROR"             },
     { nsInstall::ACCESS_DENIED,              "ACCESS_DENIED"                },
+
     { nsInstall::NO_INSTALL_SCRIPT,          "NO_INSTALL_SCRIPT"            },
-    { nsInstall::NO_CERTIFICATE,             "NO_CERTIFICATE"               },
-    { nsInstall::NO_MATCHING_CERTIFICATE,    "NO_MATCHING_CERTIFICATE"      },
+
+
     { nsInstall::CANT_READ_ARCHIVE,          "CANT_READ_ARCHIVE"            },
     { nsInstall::INVALID_ARGUMENTS,          "INVALID_ARGUMENTS"            },
-    { nsInstall::ILLEGAL_RELATIVE_PATH,      "ILLEGAL_RELATIVE_PATH"        },
+
     { nsInstall::USER_CANCELLED,             "USER_CANCELLED"               },
     { nsInstall::INSTALL_NOT_STARTED,        "INSTALL_NOT_STARTED"          },
-    { nsInstall::SILENT_MODE_DENIED,         "SILENT_MODE_DENIED"           },
+
     { nsInstall::NO_SUCH_COMPONENT,          "NO_SUCH_COMPONENT"            },
     { nsInstall::DOES_NOT_EXIST,             "DOES_NOT_EXIST"               },
     { nsInstall::READ_ONLY,                  "READ_ONLY"                    },
     { nsInstall::IS_DIRECTORY,               "IS_DIRECTORY"                 },
     { nsInstall::NETWORK_FILE_IS_IN_USE,     "NETWORK_FILE_IS_IN_USE"       },
     { nsInstall::APPLE_SINGLE_ERR,           "APPLE_SINGLE_ERR"             },
-    { nsInstall::INVALID_PATH_ERR,           "INVALID_PATH_ERR"             },
+
     { nsInstall::PATCH_BAD_DIFF,             "PATCH_BAD_DIFF"               },
     { nsInstall::PATCH_BAD_CHECKSUM_TARGET,  "PATCH_BAD_CHECKSUM_TARGET"    },
     { nsInstall::PATCH_BAD_CHECKSUM_RESULT,  "PATCH_BAD_CHECKSUM_RESULT"    },
@@ -1856,14 +1832,12 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::ABORT_INSTALL,              "ABORT_INSTALL"                },
     { nsInstall::DOWNLOAD_ERROR,             "DOWNLOAD_ERROR"               },
     { nsInstall::SCRIPT_ERROR,               "SCRIPT_ERROR"                 },
-
     { nsInstall::ALREADY_EXISTS,             "ALREADY_EXISTS"               },
     { nsInstall::IS_FILE,                    "IS_FILE"                      },
     { nsInstall::SOURCE_DOES_NOT_EXIST,      "SOURCE_DOES_NOT_EXIST"        },
     { nsInstall::SOURCE_IS_DIRECTORY,        "SOURCE_IS_DIRECTORY"          },
     { nsInstall::SOURCE_IS_FILE,             "SOURCE_IS_FILE"               },
     { nsInstall::INSUFFICIENT_DISK_SPACE,    "INSUFFICIENT_DISK_SPACE"      },
-    { nsInstall::FILENAME_TOO_LONG,          "FILENAME_TOO_LONG"            },
 
     { nsInstall::UNABLE_TO_LOCATE_LIB_FUNCTION, "UNABLE_TO_LOCATE_LIB_FUNCTION"},
     { nsInstall::UNABLE_TO_LOAD_LIBRARY,     "UNABLE_TO_LOAD_LIBRARY"       },
