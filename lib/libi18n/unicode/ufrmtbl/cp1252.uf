@@ -34,7 +34,7 @@ End of Item 0000
 Begin of Item 0001
  Format 0
   srcBegin = 00A0
-  srcEnd = 00DB
+  srcEnd = 00FF
   destBegin = 00A0
 End of Item 0001 
 
@@ -44,7 +44,7 @@ Begin of Item 0002
   srcEnd = 0153
   mappingOffset = 0000
  Mapping  = 
-  008C 009C 
+  008D 009D 
 End of Item 0002 
 
 Begin of Item 0003
@@ -62,7 +62,7 @@ Begin of Item 0004
   srcEnd = 017E
   mappingOffset = 0004
  Mapping  = 
-  009F FFFD FFFD FFFD FFFD 008E 009E 
+  009F FFFD FFFD FFFD FFFD 0090 009E 
 End of Item 0004 
 
 Begin of Item 0005
@@ -99,7 +99,7 @@ End of Item 0008
 Begin of Item 0009
  Format 2
   srcBegin = 20AC
-  destBegin = 0080
+  destBegin = 0081
 End of Item 0009 
 
 Begin of Item 000A
@@ -131,7 +131,7 @@ End of Item 000A
 /*-------------------------------------------------------*/
 /*       Offset=0x0007   Start of MapCell Array */ 
 /* 0000 */    0x0000, 0x007F, 0x0000, 
-/* 0001 */    0x00A0, 0x00DB, 0x00A0, 
+/* 0001 */    0x00A0, 0x00FF, 0x00A0, 
 /* 0002 */    0x0152, 0x0153, 0x0000, 
 /* 0003 */    0x0160, 0x0161, 0x0002, 
 /* 0004 */    0x0178, 0x017E, 0x0004, 
@@ -139,13 +139,13 @@ End of Item 000A
 /* 0006 */    0x02C6, 0x0000, 0x0088, 
 /* 0007 */    0x02DC, 0x0000, 0x0098, 
 /* 0008 */    0x2013, 0x203A, 0x000B, 
-/* 0009 */    0x20AC, 0x0000, 0x0080, 
+/* 0009 */    0x20AC, 0x0000, 0x0081, 
 /* 000A */    0x2122, 0x0000, 0x0099, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0028   Start of MappingTable */ 
 
-/* 0000 */    0x008C, 0x009C, 0x008A, 0x009A, 0x009F, 0xFFFD, 0xFFFD, 0xFFFD, 
-/* 0008 */    0xFFFD, 0x008E, 0x009E, 0x0096, 0x0097, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0000 */    0x008D, 0x009D, 0x008A, 0x009A, 0x009F, 0xFFFD, 0xFFFD, 0xFFFD, 
+/* 0008 */    0xFFFD, 0x0090, 0x009E, 0x0096, 0x0097, 0xFFFD, 0xFFFD, 0xFFFD, 
 /* 0010 */    0x0091, 0x0092, 0x0082, 0xFFFD, 0x0093, 0x0094, 0x0084, 0xFFFD, 
 /* 0018 */    0x0086, 0x0087, 0x0095, 0xFFFD, 0xFFFD, 0xFFFD, 0x0085, 0xFFFD, 
 /* 0020 */    0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD, 
