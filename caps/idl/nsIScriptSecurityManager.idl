@@ -97,17 +97,24 @@ interface nsIScriptSecurityManager : nsISupports
     void CheckLoadURI(in nsIURI from, in nsIURI uri, 
 	                  in boolean disallowFromMail);
 
+  /**
+   * Check that the function 'funObj' is allowed to run on 'targetObj'
+   *
+   * Will return error code NS_ERROR_DOM_SECURITY_ERR if the function
+   * should not run
+   *
+   * @param cx The current active JavaScript context.
+   * @param funObj The function trying to run..
+   * @param targetObj The object the function will run on.
+   */
+    void CheckFunctionAccess(in JSContextPtr cx, in voidPtr funObj,
+                  in voidPtr targetObj);
+
 	/**
 	 * Return true if content from the given principal is allowed to
 	 * execute scripts.
 	 */
     boolean CanExecuteScripts(in nsIPrincipal principal);
-
-	/**
-	 * Return true if the given JavaScript function object was compiled with
-	 * a principal that is allowed to execute scripts.
-	 */
-    boolean CanExecuteFunction(in voidPtr jsFunction);
 
 
 	///////////////// Capabilities /////////////////////
