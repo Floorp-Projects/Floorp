@@ -3,6 +3,8 @@ Things in here have not necessarily been tested or tried by anyone
 except the original contributor, so tred carefully.  But it may still
 be useful to you.
 
+This file is encoded in UTF8 for purposes of contributor names.
+
 This directory includes:
 
        bug-bugzilla/ --  A standalone bug submission script.
@@ -29,3 +31,11 @@ bugzilla_ldapsync.rb --  Script you can run via cron that queries an LDAP
                          for. Will optionally disable Bugzilla users with
                          no matching LDAP record. Contributed by Thomas
                          Stromberg <thomas+bugzilla@stromberg.org>
+
+         syncLDAP.pl --  Script you can run via cron that queries an LDAP
+                         server for users and e-mail addresses and adds
+                         missing users to Bugzilla. Can disable/update 
+                         non-existing/changed information. Contributed by
+                         Andreas Höfler <andreas.hoefler@bearingpoint.com>
+
+
