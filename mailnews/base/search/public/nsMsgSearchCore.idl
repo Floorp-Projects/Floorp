@@ -64,69 +64,69 @@ typedef long nsMsgSearchAttribValue;
 [scriptable, uuid(68c8710a-304e-11d3-97bf-00a0c900d445)]
 interface nsMsgSearchAttrib {
 
-    const long Subject = 0;	/* mail and news */
-    const long Sender = 1;   
-    const long Body = 2;	
-    const long Date = 3;	
+    const nsMsgSearchAttribValue Subject = 0;	/* mail and news */
+    const nsMsgSearchAttribValue Sender = 1;   
+    const nsMsgSearchAttribValue Body = 2;	
+    const nsMsgSearchAttribValue Date = 3;	
 
-    const long Priority = 4;	    /* mail only */
-    const long MsgStatus = 5;	
-    const long To = 6;
-    const long CC = 7;
-    const long ToOrCC = 8;
+    const nsMsgSearchAttribValue Priority = 4;	    /* mail only */
+    const nsMsgSearchAttribValue MsgStatus = 5;	
+    const nsMsgSearchAttribValue To = 6;
+    const nsMsgSearchAttribValue CC = 7;
+    const nsMsgSearchAttribValue ToOrCC = 8;
 
-    const long CommonName = 9;   /* LDAP only */
-    const long RFC822Address = 10;	
-    const long PhoneNumber = 11;
-    const long Organization = 12;
-    const long OrgUnit = 13;
-    const long Locality = 14;
-    const long StreetAddress = 15;
-    const long Size = 16;
-    const long AnyText = 17;      /* any header or body */
-	const long Keywords = 18;
+    const nsMsgSearchAttribValue CommonName = 9;   /* LDAP only */
+    const nsMsgSearchAttribValue RFC822Address = 10;	
+    const nsMsgSearchAttribValue PhoneNumber = 11;
+    const nsMsgSearchAttribValue Organization = 12;
+    const nsMsgSearchAttribValue OrgUnit = 13;
+    const nsMsgSearchAttribValue Locality = 14;
+    const nsMsgSearchAttribValue StreetAddress = 15;
+    const nsMsgSearchAttribValue Size = 16;
+    const nsMsgSearchAttribValue AnyText = 17;      /* any header or body */
+	const nsMsgSearchAttribValue Keywords = 18;
 
-    const long DistinguishedName = 19; /* LDAP result elem only */
-    const long ObjectClass = 20;       
-    const long JpegFile = 21;
+    const nsMsgSearchAttribValue DistinguishedName = 19; /* LDAP result elem only */
+    const nsMsgSearchAttribValue ObjectClass = 20;       
+    const nsMsgSearchAttribValue JpegFile = 21;
 
-    const long Location = 22;          /* result list only */
-    const long MessageKey = 23;        /* message result elems */
+    const nsMsgSearchAttribValue Location = 22;          /* result list only */
+    const nsMsgSearchAttribValue MessageKey = 23;        /* message result elems */
 
-	const long AgeInDays = 24;    /* for purging old news articles */
+	const nsMsgSearchAttribValue AgeInDays = 24;    /* for purging old news articles */
 
-	const long GivenName = 25;    /* for sorting LDAP results */
-	const long Surname = 26; 
+	const nsMsgSearchAttribValue GivenName = 25;    /* for sorting LDAP results */
+	const nsMsgSearchAttribValue Surname = 26; 
 
-	const long FolderInfo = 27;	/* for "view thread context" from result */
+	const nsMsgSearchAttribValue FolderInfo = 27;	/* for "view thread context" from result */
 
-	const long Custom1 = 28;		/* custom LDAP attributes */
-	const long Custom2 = 29;
-	const long Custom3 = 30;
-	const long Custom4 = 31;
-	const long Custom5 = 32;
+	const nsMsgSearchAttribValue Custom1 = 28;		/* custom LDAP attributes */
+	const nsMsgSearchAttribValue Custom2 = 29;
+	const nsMsgSearchAttribValue Custom3 = 30;
+	const nsMsgSearchAttribValue Custom4 = 31;
+	const nsMsgSearchAttribValue Custom5 = 32;
 
-	const long MessageId = 33; 
+	const nsMsgSearchAttribValue MessageId = 33; 
 	/* the following are LDAP specific attributes */
-	const long nsnMsgSearchAttribCarlicense = 34;
-	const long BusinessCategory = 35;
-	const long DepartmentNumber = 36;
-	const long Description = 37;
-	const long EmployeeType = 38;
-	const long FaxNumber = 39;
-	const long Manager = 40;
-	const long PostalAddress = 41;
-	const long PostalCode = 42;
-	const long Secretary = 43;
-	const long Title = 44;
-	const long Nickname = 45;
-	const long HomePhone = 46;
-	const long Pager = 47;
-	const long Cellular = 48;
+	const nsMsgSearchAttribValue nsnMsgSearchAttribCarlicense = 34;
+	const nsMsgSearchAttribValue BusinessCategory = 35;
+	const nsMsgSearchAttribValue DepartmentNumber = 36;
+	const nsMsgSearchAttribValue Description = 37;
+	const nsMsgSearchAttribValue EmployeeType = 38;
+	const nsMsgSearchAttribValue FaxNumber = 39;
+	const nsMsgSearchAttribValue Manager = 40;
+	const nsMsgSearchAttribValue PostalAddress = 41;
+	const nsMsgSearchAttribValue PostalCode = 42;
+	const nsMsgSearchAttribValue Secretary = 43;
+	const nsMsgSearchAttribValue Title = 44;
+	const nsMsgSearchAttribValue Nickname = 45;
+	const nsMsgSearchAttribValue HomePhone = 46;
+	const nsMsgSearchAttribValue Pager = 47;
+	const nsMsgSearchAttribValue Cellular = 48;
     //49 is for showing customize... in ui headers start from 50 onwards up until 99.
-	const long OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these... */
+	const nsMsgSearchAttribValue OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these... */
 
-    const long kNumMsgSearchAttributes = 100;      /* must be last attribute */
+    const nsMsgSearchAttribValue kNumMsgSearchAttributes = 100;      /* must be last attribute */
 };
 
 /* NB: If you add elements to this enum, add only to the end, since 
@@ -137,29 +137,29 @@ typedef long nsMsgSearchOpValue;
 
 [scriptable, uuid(82cc4518-304e-11d3-831d-00a0c900d445)]
 interface nsMsgSearchOp {
-    const long Contains = 0; /* for text attributes      */
-    const long DoesntContain = 1;
-    const long Is = 2; /* is and isn't also apply to some non-text attrs */
-    const long Isnt = 3; 
-    const long IsEmpty = 4;
+    const nsMsgSearchOpValue Contains = 0; /* for text attributes      */
+    const nsMsgSearchOpValue DoesntContain = 1;
+    const nsMsgSearchOpValue Is = 2; /* is and isn't also apply to some non-text attrs */
+    const nsMsgSearchOpValue Isnt = 3; 
+    const nsMsgSearchOpValue IsEmpty = 4;
 
-    const long IsBefore = 5; /* for date attributes              */
-    const long IsAfter = 6;
+    const nsMsgSearchOpValue IsBefore = 5; /* for date attributes              */
+    const nsMsgSearchOpValue IsAfter = 6;
     
-    const long IsHigherThan = 7; /* for priority. Is also applies  */
-    const long IsLowerThan = 8;
+    const nsMsgSearchOpValue IsHigherThan = 7; /* for priority. Is also applies  */
+    const nsMsgSearchOpValue IsLowerThan = 8;
 
-    const long BeginsWith = 9;              
-	const long EndsWith = 10;
+    const nsMsgSearchOpValue BeginsWith = 9;              
+	const nsMsgSearchOpValue EndsWith = 10;
 
-    const long SoundsLike = 11; /* for LDAP phoenetic matching      */
-	const long LdapDwim = 12; /* Do What I Mean for simple search */
+    const nsMsgSearchOpValue SoundsLike = 11; /* for LDAP phoenetic matching      */
+	const nsMsgSearchOpValue LdapDwim = 12; /* Do What I Mean for simple search */
 
-	const long IsGreaterThan = 13;	
-	const long IsLessThan = 14;
+	const nsMsgSearchOpValue IsGreaterThan = 13;	
+	const nsMsgSearchOpValue IsLessThan = 14;
 
-	const long NameCompletion = 15; /* Name Completion operator...as the name implies =) */
-    const long kNumMsgSearchOperators  = 16;     /* must be last operator */
+	const nsMsgSearchOpValue NameCompletion = 15; /* Name Completion operator...as the name implies =) */
+    const nsMsgSearchOpValue kNumMsgSearchOperators  = 16;     /* must be last operator */
 };
 
 typedef long nsMsgSearchWidgetValue;
@@ -167,11 +167,11 @@ typedef long nsMsgSearchWidgetValue;
 /* FEs use this to help build the search dialog box */
 [scriptable,uuid(903dd2e8-304e-11d3-92e6-00a0c900d445)]
 interface nsMsgSearchWidget {
-    const long Text = 0;
-    const long Date = 1;
-    const long Menu = 2;
-	const long Int = 3;          /* added to account for age in days which requires an integer field */
-    const long None = 4;
+    const nsMsgSearchWidgetValue Text = 0;
+    const nsMsgSearchWidgetValue Date = 1;
+    const nsMsgSearchWidgetValue Menu = 2;
+	const nsMsgSearchWidgetValue Int = 3;          /* added to account for age in days which requires an integer field */
+    const nsMsgSearchWidgetValue None = 4;
 };
 
 typedef long nsMsgSearchTypeValue;
@@ -180,19 +180,19 @@ typedef long nsMsgSearchTypeValue;
 /* Used to specify type of search to be performed */
 [scriptable,uuid(964b7f32-304e-11d3-ae13-00a0c900d445)]
 interface nsMsgSearchType {
-	const long None = 0;
-	const long RootDSE = 1;
-	const long Normal = 2;
-	const long LdapVLV = 3;
-	const long NameCompletion = 4;
+	const nsMsgSearchTypeValue None = 0;
+	const nsMsgSearchTypeValue RootDSE = 1;
+	const nsMsgSearchTypeValue Normal = 2;
+	const nsMsgSearchTypeValue LdapVLV = 3;
+	const nsMsgSearchTypeValue NameCompletion = 4;
 };
 
 typedef long nsMsgSearchBooleanOperator;
  
 [scriptable, uuid(a37f3f4a-304e-11d3-8f94-00a0c900d445)]
 interface nsMsgSearchBooleanOp {
-    const long BooleanOR = 0;
-    const long BooleanAND = 1;
+    const nsMsgSearchBooleanOperator BooleanOR = 0;
+    const nsMsgSearchBooleanOperator BooleanAND = 1;
 };
 
 /* Use this to specify the value of a search term */

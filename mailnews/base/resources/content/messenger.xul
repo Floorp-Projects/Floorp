@@ -59,6 +59,7 @@ Rights Reserved.
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
 </stringbundleset>
 
 <resourcebundle id="resource_bundle_messenger" />
@@ -75,6 +76,7 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgAccountCentral.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/searchBar.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
@@ -163,9 +165,8 @@ Rights Reserved.
       <vbox id="accountCentralBox" flex="1">
                      <iframe name="accountCentralPane" flex="1" src="about:blank"/>
                   </vbox>
-
       <vbox id="messagesBox" flex="1">
-     
+      <hbox id="searchBox"/>
       <outliner id="threadOutliner" flex="2" persist="height" style="height:0px" context="threadPaneContext"/>
 
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->

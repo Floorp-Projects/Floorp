@@ -67,6 +67,31 @@ NS_IMETHODIMP nsMsgThreadedDBView::Close()
   return nsMsgDBView::Close();
 }
 
+NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
+{
+  mIsSearchView = PR_FALSE;
+  m_sortValid = PR_FALSE;  //force a sort
+  nsresult rv = NS_OK;
+  if (m_preSearchKeys.GetSize())
+  {
+    // restore saved id array and flags array
+    m_keys.RemoveAll();
+    m_flags.RemoveAll();
+    m_levels.RemoveAll();
+    m_keys.InsertAt(0, &m_preSearchKeys);
+    m_flags.InsertAt(0, &m_preSearchFlags);
+    m_levels.InsertAt(0, &m_preSearchLevels);
+    ClearPreSearchInfo();
+    ClearPrevIdArray();  // previous cached info about non threaded display is not useful
+    InitSort(m_sortType, m_sortOrder);
+  }
+  else
+  {
+    rv=InitThreadedView(nsnull);
+  }
+  return rv;
+}
+
 nsresult nsMsgThreadedDBView::InitThreadedView(PRInt32 *pCount)
 {
 	nsresult rv;
@@ -141,7 +166,6 @@ nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const ch
 NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
   nsresult rv;
-  
   nsMsgKeyArray preservedSelection;
   SaveSelection(&preservedSelection);
   
@@ -153,9 +177,9 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   // if the client wants us to forget our cached id arrays, they
   // should build a new view. If this isn't good enough, we
   // need a method to do that.
-  if (sortType != m_sortType || !m_sortValid)
+  if (sortType != m_sortType || !m_sortValid )
   {
-    if (sortType == nsMsgViewSortType::byThread)
+    if (sortType == nsMsgViewSortType::byThread)  
     {
       SaveSortInfo(sortType, sortOrder);
       m_sortType = sortType;
@@ -391,11 +415,13 @@ void	nsMsgThreadedDBView::OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extr
 void nsMsgThreadedDBView::OnHeaderAddedOrDeleted()
 {
 	ClearPrevIdArray();
+  ClearPreSearchInfo();
 }
 
 void nsMsgThreadedDBView::ClearPrevIdArray()
 {
   m_prevKeys.RemoveAll();
+  m_prevLevels.RemoveAll();
   m_prevFlags.RemoveAll();
   m_havePrevView = PR_FALSE;
 }
@@ -427,6 +453,11 @@ nsresult nsMsgThreadedDBView::InitSort(nsMsgViewSortTypeValue sortType, nsMsgVie
 nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool ensureListed)
 {
   nsresult	rv = NS_OK;
+  if (mIsSearchView)
+  {
+    OnHeaderAddedOrDeleted();  //db has changed and we are not adding hdr to view so clear the cached info..
+    return NS_OK; // do not add a new message to search view.
+  }
   // views can override this behaviour, which is to append to view.
   // This is the mail behaviour, but threaded views want
   // to insert in order...
@@ -668,4 +699,64 @@ NS_IMETHODIMP nsMsgThreadedDBView::GetViewType(nsMsgViewTypeValue *aViewType)
     NS_ENSURE_ARG_POINTER(aViewType);
     *aViewType = nsMsgViewType::eShowAllThreads; 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgThreadedDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
+{
+  NS_ENSURE_ARG(aMsgHdr);
+  NS_ENSURE_ARG(folder);
+  nsMsgKey msgKey;
+  PRUint32 msgFlags;
+  aMsgHdr->GetMessageKey(&msgKey);
+  aMsgHdr->GetFlags(&msgFlags);
+  m_keys.Add(msgKey);
+  m_levels.Add(0);
+  m_flags.Add(msgFlags);
+  if (mOutliner)
+    mOutliner->RowCountChanged(m_keys.GetSize() - 1, 1);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgThreadedDBView::OnSearchDone(nsresult status)
+{  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMsgThreadedDBView::OnNewSearch()
+{
+  if (!mIsSearchView)
+  {
+    SavePreSearchInfo();  //save the folder view to reload it later. 
+  }
+  if (mOutliner)
+  {
+    PRInt32 viewSize = m_keys.GetSize();
+    mOutliner->RowCountChanged(0, -viewSize); // all rows gone.
+  }
+  m_keys.RemoveAll();
+  m_levels.RemoveAll();
+  m_flags.RemoveAll();
+  ClearPrevIdArray(); // previous cached info about non threaded display is not useful
+  mIsSearchView = PR_TRUE;  
+  return NS_OK;
+}
+
+void nsMsgThreadedDBView::SavePreSearchInfo()
+{
+  ClearPreSearchInfo();
+  m_preSearchKeys.InsertAt(0, &m_keys);
+  m_preSearchLevels.InsertAt(0, &m_levels);
+  m_preSearchFlags.InsertAt(0, &m_flags);
+}
+
+void nsMsgThreadedDBView::ClearPreSearchInfo()
+{
+  m_preSearchKeys.RemoveAll();
+  m_preSearchLevels.RemoveAll();
+  m_preSearchFlags.RemoveAll();
 }

@@ -359,14 +359,16 @@ function SwitchView(command)
 function SetSentFolderColumns(isSentFolder)
 {
   var senderOrRecipientColumn = document.getElementById("senderOrRecipientCol");
-
+  var searchCriteria = document.getElementById("searchCriteria");
   if(isSentFolder)
   {
     senderOrRecipientColumn.setAttribute("label", gMessengerBundle.getString("recipientColumnHeader"));
+    searchCriteria.setAttribute("value", gMessengerBundle.getString("recipientSearchCriteria"));
   }
   else
   {
     senderOrRecipientColumn.setAttribute("label", gMessengerBundle.getString("senderColumnHeader"));
+    searchCriteria.setAttribute("value", gMessengerBundle.getString("senderSearchCriteria"));
   }
 }
 
@@ -681,6 +683,12 @@ function FolderPaneSelectionChange()
               {
                 dump("failed to get view & sort values.  ex = " + ex +"\n");
               }
+            }
+            if (gDBView && gDBView.isSearchView)
+            {
+              gDBView.isSearchView = false;  //reset the search input on folder switch
+              var searchInput = document.getElementById("searchInput");
+              if (searchInput) searchInput.value = "";
             }
             ChangeFolderByURI(folderResource.Value, viewType, viewFlags, sortType, sortOrder);
         }

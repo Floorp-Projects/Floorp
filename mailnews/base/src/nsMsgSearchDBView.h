@@ -39,10 +39,9 @@
 #define _nsMsgSearchDBView_H_
 
 #include "nsMsgDBView.h"
-#include "nsIMsgSearchNotify.h"
 #include "nsIMsgCopyServiceListener.h"
 
-class nsMsgSearchDBView : public nsMsgDBView, public nsIMsgSearchNotify
+class nsMsgSearchDBView : public nsMsgDBView
 {
 public:
   nsMsgSearchDBView();

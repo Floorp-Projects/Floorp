@@ -55,7 +55,7 @@ interface nsIMsgHdr;
 [scriptable, uuid(a819050a-0302-11d3-a50a-0060b0fc04b7)]
 interface nsIMsgSearchSession :  nsISupports {
 
-    void AddSearchTerm(in nsMsgSearchAttribValue attrib, /* attribute for this term */
+    void addSearchTerm(in nsMsgSearchAttribValue attrib, /* attribute for this term */
                        in nsMsgSearchOpValue op,/* operator e.g. opContains */
                        in nsIMsgSearchValue value, /* value e.g. "Dogbert" */
                        in boolean BooleanAND, /* set to true if associated boolean operator is AND */

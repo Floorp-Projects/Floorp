@@ -59,6 +59,7 @@ Rights Reserved.
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
 </stringbundleset>
 
 <resourcebundle id="resource_bundle_messenger" />
@@ -80,6 +81,7 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/searchBar.js"/>
 
 <commandset id="mailCommands">
   <commandset id="mailFileMenuItems"/>
@@ -160,10 +162,14 @@ Rights Reserved.
         </vbox>
         <splitter id="gray_vertical_splitter" collapse="before"  persist="state"/>
 
+       
         <hbox id="mail3PaneVertLayoutBox" persist="collapsed width" flex="2">
-          <hbox id="threadpaneBox" flex="1" persist="width">
-            <outliner id="threadOutliner" flex="1" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
-          </hbox>
+          <vbox id="searchAndthreadpaneBox" persist="width" flex ="1">
+            <hbox id="searchBox"/>
+            <vbox id="threadpaneBox" flex="1" persist="width">
+              <outliner id="threadOutliner" flex="1" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
+            </vbox>
+          </vbox>
           <hbox id="accountCentralBox" flex="1" persist="width"> 
             <iframe name="accountCentralPane" style="width:0px;" flex="1" src="about:blank"/>
           </hbox>

@@ -97,6 +97,7 @@ NS_INTERFACE_MAP_BEGIN(nsMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIDBChangeListener)
    NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
    NS_INTERFACE_MAP_ENTRY(nsIMsgCopyServiceListener)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgSearchNotify)
 NS_INTERFACE_MAP_END
 
 nsMsgDBView::nsMsgDBView()
@@ -116,6 +117,7 @@ nsMsgDBView::nsMsgDBView()
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
   m_deletingMsgs = PR_FALSE;
   mRemovingRow = PR_FALSE;
+  mIsSearchView = PR_FALSE;
   // initialize any static atoms or unicode strings
   if (gInstanceCount == 0) 
   {
@@ -462,7 +464,7 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
   // turn our message keys into corresponding view indices
   PRInt32 arraySize = aMsgKeyArray->GetSize();
   nsMsgViewIndex	currentViewPosition = nsMsgViewIndex_None;
-  nsMsgViewIndex	newViewPosition;
+  nsMsgViewIndex	newViewPosition = nsMsgViewIndex_None;
 
   // if we are threaded, we need to do a little more work
   // we need to find (and expand) all the threads that contain messages 
@@ -489,7 +491,7 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
       if (mOutliner) mOutliner->EnsureRowIsVisible(currentViewPosition);
     }
   }
-
+ 
   for (PRInt32 index = 0; index < arraySize; index ++)
   {
     newViewPosition = FindKey(aMsgKeyArray->GetAt(index), PR_FALSE);  
@@ -1149,13 +1151,13 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     NS_ENSURE_SUCCESS(rv,rv);
 	  m_db->AddListener(this);
     m_folder = folder;
+    mIsSearchView = PR_FALSE;
     // save off sort type and order, view type and flags
     folderInfo->SetSortType(sortType);
     folderInfo->SetSortOrder(sortOrder);
     folderInfo->SetViewFlags(viewFlags);
     GetViewType(&viewType);
     folderInfo->SetViewType(viewType);
-
     // determine if we are in a news folder or not.
     // if yes, we'll show lines instead of size, and special icons in the thread pane
     nsCOMPtr <nsIMsgIncomingServer> server;
@@ -1179,6 +1181,11 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
 #endif
 
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::ReloadFolderAfterQuickSearch()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgDBView::Close()
@@ -1239,6 +1246,18 @@ NS_IMETHODIMP nsMsgDBView::GetSupressMsgDisplay(PRBool * aSupressDisplay)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBView::GetIsSearchView(PRBool * aResult)
+{
+  NS_ENSURE_ARG(aResult);
+  *aResult = mIsSearchView;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::SetIsSearchView(PRBool aResult)
+{
+  mIsSearchView = aResult;
+  return NS_OK;
+}
 nsresult nsMsgDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1424,12 +1443,18 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
     rv = ToggleWatched(indices,	numIndices);
     break;
   case nsMsgViewCommandType::expandAll:
-    rv = ExpandAll();
-    mOutliner->Invalidate();
+    if (!mIsSearchView)  //ignore for search view
+    {
+      rv = ExpandAll();
+      mOutliner->Invalidate();
+    }
     break;
   case nsMsgViewCommandType::collapseAll:
-    rv = CollapseAll();
-    mOutliner->Invalidate();
+    if (!mIsSearchView)  //ignore for search view
+    {
+      rv = CollapseAll();
+      mOutliner->Invalidate();
+    }
     break;
   default:
     NS_ASSERTION(PR_FALSE, "invalid command type");
@@ -4613,4 +4638,23 @@ NS_IMETHODIMP nsMsgDBView::SelectMsgByKey(nsMsgKey aKey)
   nsresult rv = RestoreSelection(&keyArray);
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::OnSearchDone(nsresult status)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsMsgDBView::OnNewSearch()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }

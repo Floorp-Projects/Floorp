@@ -275,6 +275,7 @@ interface nsIMsgDBView : nsISupports
     readonly attribute nsIMsgDBHdr hdrForFirstSelectedMessage;
     void loadMessageByMsgKey (in nsMsgKey aMsgKey);
     void reloadMessage();
+	void reloadFolderAfterQuickSearch();
 
     readonly attribute unsigned long numSelected;
     readonly attribute nsMsgViewIndex msgToSelectAfterDelete; 
@@ -285,6 +286,9 @@ interface nsIMsgDBView : nsISupports
 
     // we'll suppress displaying messages if the message pane is collapsed
     attribute boolean supressMsgDisplay;
+
+	//to tell us if we are in the search view
+	attribute boolean isSearchView;
 };
 
 /* this interface is rapidly morphing from a command updater interface into a more generic

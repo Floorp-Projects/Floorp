@@ -125,6 +125,8 @@ Rights Reserved.
 <!ENTITY showSidebarMenu.label ".SideBar">
 <!ENTITY showMessengerToolbarCmd.label		"Mail Toolbar">
 <!ENTITY showMessengerToolbarCmd.accesskey	"o">
+<!ENTITY showSearchToolbarCmd.label		"Search Bar">
+<!ENTITY showSearchToolbarCmd.accesskey	"e">
 <!ENTITY showLocationToolbarCmd.label		".Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey "L">
 <!ENTITY showMessageCmd.label "Message">
@@ -414,6 +416,8 @@ Rights Reserved.
 <!--Tooltips-->
 <!ENTITY menuBar.tooltip "Menu Bar">
 <!ENTITY mailToolbar.tooltip "Mail Toolbar">
+<!ENTITY searchBar.tooltip "Search Bar">
+<!ENTITY advancedButton.tooltip "Search Messages...">
 <!ENTITY getMsgButton.tooltip "Get new messages">
 <!ENTITY newMsgButton.tooltip "Create a new message">
 <!ENTITY replyButton.tooltip "Reply to the message">
@@ -505,3 +509,6 @@ Rights Reserved.
 <!-- Print Engine -->
 <!ENTITY printEngine.title "Printing...">
 
+<!---SearchBar-->
+<!ENTITY SearchSubjectOrSender.label "Subject or Sender contains:">
+<!ENTITY advancedButton.label "Advanced...">

@@ -102,6 +102,10 @@ function HandleColumnClick(columnID)
   }
 
   var dbview = GetDBView();
+  if (sortType == nsMsgViewSortType.byThread)  
+  {  //do not allow sorting by thread in search view.
+    if (dbview && dbview.isSearchView) return;
+  } 
   if (dbview.sortType == sortType) {
     MsgReverseSortThreadPane();
   }
@@ -203,7 +207,10 @@ function MsgSortByTotal()
 
 function MsgSortByThread()
 {
-    MsgSortThreadPane(nsMsgViewSortType.byThread);
+  var dbview = GetDBView();
+  if(dbview && dbview.isSearchView)  //do not allow sorting by thread in search view.
+    return;
+  MsgSortThreadPane(nsMsgViewSortType.byThread);
 }
 
 function MsgSortThreadPane(sortType)

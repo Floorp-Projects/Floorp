@@ -57,6 +57,7 @@
 #include "nsIDOMElement.h"
 #include "nsIAtom.h"
 #include "nsIImapIncomingServer.h"
+#include "nsIMsgSearchNotify.h"
 
 #include "nsIStringBundle.h"
 
@@ -76,7 +77,7 @@ enum eFieldType {
 // I think this will be an abstract implementation class.
 // The classes that implement the outliner support will probably
 // inherit from this class.
-class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView, public nsIMsgCopyServiceListener
+class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView, public nsIMsgCopyServiceListener, public nsIMsgSearchNotify
 {
 public:
   nsMsgDBView();
@@ -87,6 +88,7 @@ public:
   NS_DECL_NSIDBCHANGELISTENER
   NS_DECL_NSIOUTLINERVIEW
   NS_DECL_NSIMSGCOPYSERVICELISTENER
+  NS_DECL_NSIMSGSEARCHNOTIFY
 
 protected:
   static nsrefcnt gInstanceCount;
@@ -122,6 +124,7 @@ protected:
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
   PRUint32 mNumSelectedRows; // we cache this to determine when to push command status notifications.
   PRBool   mSupressMsgDisplay; // set when the message pane is collapsed
+  PRBool   mIsSearchView; // tells if the search view is loaded.
   PRBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to supress msg loading.
                         // during delete/move operations.
   PRBool  mOfflineMsgSelected;

@@ -58,6 +58,7 @@ var folderDataSource;
 
 var messagesBox = null;
 var accountCentralBox = null;
+var gSearchBox = null;
 var gAccountCentralLoaded = false;
 var gPaneConfig = null;
 //End progress and Status variables
@@ -71,11 +72,15 @@ function OnMailWindowUnload()
 {
   RemoveMailOfflineObserver();
 
+  var searchSession = GetSearchSession();
+  if (searchSession)
+    removeGlobalListeners();
+
   var dbview = GetDBView();
   if (dbview) {
     dbview.close(); 
   }
-
+    
   var mailSession = Components.classes[mailSessionContractID].getService();
   if(mailSession)
   {
@@ -164,6 +169,7 @@ function CreateMailWindowGlobals()
 
   messagesBox       = document.getElementById("messagesBox");
   accountCentralBox = document.getElementById("accountCentralBox");
+  gSearchBox = document.getElementById("searchBox");
   gPaneConfig = pref.GetIntPref("mail.pane_config");
 }
 
@@ -457,6 +463,7 @@ function ShowAccountCentral()
         {
             case 0:
                 messagesBox.setAttribute("collapsed", "true");
+                gSearchBox.setAttribute("collapsed", "true");
                 accountCentralBox.removeAttribute("collapsed");
                 window.frames["accountCentralPane"].location = acctCentralPage;
                 gAccountCentralLoaded = true;
@@ -465,8 +472,8 @@ function ShowAccountCentral()
             case 1:
                 var messagePaneBox = document.getElementById("messagepanebox");
                 messagePaneBox.setAttribute("collapsed", "true");
-                var threadPaneBox = document.getElementById("threadpaneBox");
-                threadPaneBox.setAttribute("collapsed", "true");
+                var searchAndThreadPaneBox = document.getElementById("searchAndthreadpaneBox");
+                searchAndThreadPaneBox.setAttribute("collapsed", "true");
                 var threadPaneSplitter = document.getElementById("threadpane-splitter");
                 threadPaneSplitter.setAttribute("collapsed", "true");
                 accountCentralBox.removeAttribute("collapsed");
@@ -493,6 +500,7 @@ function HideAccountCentral()
         {
             case 0:
                 accountCentralBox.setAttribute("collapsed", "true");
+                gSearchBox.removeAttribute("collapsed");
                 messagesBox.removeAttribute("collapsed");
                 gAccountCentralLoaded = false;
                 break;
@@ -501,8 +509,8 @@ function HideAccountCentral()
                 accountCentralBox.setAttribute("collapsed", "true");
                 var messagePaneBox = document.getElementById("messagepanebox");
                 messagePaneBox.removeAttribute("collapsed");
-                var threadPaneBox = document.getElementById("threadpaneBox");
-                threadPaneBox.removeAttribute("collapsed");
+                var searchAndThreadPaneBox = document.getElementById("searchAndthreadpaneBox");
+                searchAndThreadPaneBox.removeAttribute("collapsed");
                 var threadPaneSplitter = document.getElementById("threadpane-splitter");
                 threadPaneSplitter.removeAttribute("collapsed");
                 gAccountCentralLoaded = false;
@@ -545,4 +553,12 @@ function OpenInboxForServer(server)
         dump("Error opening inbox for server -> " + ex + "\n");
         return;
     }
+}
+
+function GetSearchSession()
+{
+  if (gSearchSession)
+    return gSearchSession;
+  else
+    return null;
 }

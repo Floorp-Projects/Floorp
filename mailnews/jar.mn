@@ -114,6 +114,7 @@ messenger.jar:
     content/messenger/newFolderDialog.js                                       (base/resources/content/newFolderDialog.js)
     content/messenger/msgViewNavigation.js                                     (base/resources/content/msgViewNavigation.js)
     content/messenger/msgMail3PaneWindow.js                                    (base/resources/content/msgMail3PaneWindow.js)
+    content/messenger/searchBar.js                                             (base/resources/content/searchBar.js)
     content/messenger/msgAccountCentral.xul                                    (base/resources/content/msgAccountCentral.xul)
     content/messenger/msgAccountCentral.js                                     (base/resources/content/msgAccountCentral.js)
     content/messenger/mail3PaneWindowCommands.js                               (base/resources/content/mail3PaneWindowCommands.js)

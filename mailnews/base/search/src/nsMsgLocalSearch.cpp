@@ -318,6 +318,7 @@ nsMsgSearchOfflineMail::nsMsgSearchOfflineMail (nsIMsgSearchScopeTerm *scope, ns
 nsMsgSearchOfflineMail::~nsMsgSearchOfflineMail ()
 {
     // Database should have been closed when the scope term finished. 
+    CleanUpScope();
     NS_ASSERTION(!m_db, "db not closed");
 }
 
@@ -672,6 +673,7 @@ nsresult nsMsgSearchOfflineMail::Search (PRBool *aDone)
   
   const PRInt32 kNumHdrsInSlice = 500;
 
+
   *aDone = PR_FALSE;
   // Try to open the DB lazily. This will set up a parser if one is required
   if (!m_db)
@@ -770,8 +772,6 @@ nsMsgSearchOfflineMail::Abort ()
     if (m_db)
         m_db->Close(PR_TRUE /* commit in case we downloaded new headers */);
     m_db = nsnull;
-
-
     return nsMsgSearchAdapter::Abort ();
 }
 

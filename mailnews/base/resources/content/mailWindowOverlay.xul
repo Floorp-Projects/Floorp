@@ -932,6 +932,12 @@ Rights Reserved.
            accesskey="&showMessengerToolbarCmd.accesskey;"
            oncommand="goToggleToolbar('msgToolbar', 'menu_showMessengerToolbar')"
            checked="true"/>
+          <menuitem id="menu_showSearchToolbar"
+           type="checkbox"
+           label="&showSearchToolbarCmd.label;"
+           accesskey="&showSearchToolbarCmd.accesskey;"
+           oncommand="goToggleToolbar('searchBox', 'menu_showSearchToolbar')"
+           checked="true"/>
           <menuitem type="checkbox" id="menu_showTaskbar"/>
         </menupopup>
       </menu>
@@ -1379,7 +1385,11 @@ Rights Reserved.
   </toolbar>
 </toolbox>
 
-
+<hbox id="searchBox" persist="collapsed" tooltip="aTooltip" tooltiptext="&searchBar.tooltip;" align="center">
+  <text id="searchCriteria" class="label" value="&SearchSubjectOrSender.label;"/>
+  <textbox id="searchInput" flex ="1" oninput = "onSearchInput(event);" />
+  <button id="advancedButton" label="&advancedButton.label;" tooltip="aTooltip" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"/>
+</hbox>
 
 <statusbar id="status-bar"> 
   <hbox insertbefore="unreadMessageCount" flex="1">
