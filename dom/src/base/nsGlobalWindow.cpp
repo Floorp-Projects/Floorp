@@ -2893,9 +2893,11 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
     nsAutoString propName;
     nsAutoString prefix;
     propName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
-    prefix.SetString(propName.GetUnicode(), 2);
-    if (prefix.EqualsIgnoreCase("on")) {
-      result = CheckForEventListener(aContext, propName);
+    if (propName.Length() > 2) {
+      prefix.SetString(propName.GetUnicode(), 2);
+      if (prefix.EqualsIgnoreCase("on")) {
+        result = CheckForEventListener(aContext, propName);
+      }
     }
   }
   else if (JSVAL_IS_STRING(aID)) {
