@@ -193,7 +193,7 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 
 		if(NS_SUCCEEDED(rv = node->QueryInterface(nsCOMTypeInfo<nsIDOMXULElement>::GetIID(), (void**)&xulElement)))
 		{
-			if(NS_SUCCEEDED(rv = xulElement->GetResource(&resource)))
+			if(NS_SUCCEEDED(rv = xulElement->GetResource(&resource)) && resource)
 			{
 				(*resourceArray)->AppendElement(resource);
 				NS_RELEASE(resource);
@@ -433,12 +433,6 @@ nsMessenger::OpenURL(const char * url)
 			mWebShell->LoadURL(urlStr.GetUnicode());
 		}
 	}
-	/*	here's how we'd turn off the throbber
-  setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
-  PRBool result=PR_TRUE;
-    //Disable the Stop button
-  setAttribute( rootWebshell, "canStop", "disabled", "true" );
-	*/
 	return NS_OK;
 }
 

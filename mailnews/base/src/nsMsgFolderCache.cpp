@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"
+#include "nsIMsgAccountManager.h"
 #include "nsMsgFolderCacheElement.h"
 #include "nsMsgFolderCache.h"
 #include "nsMorkCID.h"
@@ -24,8 +25,10 @@
 #include "nsFileStream.h"
 
 #include "nsXPIDLString.h"
+#include "nsMsgBaseCID.h"
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 const char *kFoldersScope = "ns:msg:db:row:scope:folders:all";	// scope for all folders table
 const char *kFoldersTableKind = "ns:msg:db:table:kind:folders";
@@ -36,6 +39,11 @@ nsMsgFolderCache::nsMsgFolderCache()
 	m_mdbStore = nsnull;
 	NS_INIT_REFCNT();
 	m_mdbAllFoldersTable = nsnull;
+    nsresult rv = nsServiceManager::GetService(kCMsgMailSessionCID,
+                                      nsCOMTypeInfo<nsIMsgMailSession>::GetIID(),
+                                      (nsISupports**)&m_mailSession,
+                                      this);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "have to get mail session service");
 }
 
 // should this, could this be an nsCOMPtr ?
@@ -54,7 +62,58 @@ nsMsgFolderCache::~nsMsgFolderCache()
 }
 
 
-NS_IMPL_ISUPPORTS(nsMsgFolderCache, GetIID());
+
+
+NS_IMPL_ADDREF(nsMsgFolderCache)
+NS_IMPL_RELEASE(nsMsgFolderCache)
+  
+nsresult
+nsMsgFolderCache::QueryInterface(const nsIID& iid, void **result)
+{
+	nsresult rv = NS_NOINTERFACE;
+	if (! result)
+		return NS_ERROR_NULL_POINTER;
+
+	void *res = nsnull;
+	if (iid.Equals(nsCOMTypeInfo<nsIMsgFolderCache>::GetIID()) ||
+	      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+		res = NS_STATIC_CAST(nsIMsgFolderCache*, this);
+	else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
+		res = NS_STATIC_CAST(nsIShutdownListener*, this);
+
+	if (res) 
+	{
+		NS_ADDREF(this);
+		*result = res;
+		rv = NS_OK;
+	}
+	return rv;
+}
+
+
+/* called if the mail session service goes offline */
+NS_IMETHODIMP
+nsMsgFolderCache::OnShutdown(const nsCID& aClass, nsISupports *service)
+{
+	if (aClass.Equals(kCMsgMailSessionCID)) 
+	{
+		nsCOMPtr <nsIMsgAccountManager> accountManager;
+
+		if (m_mailSession)
+		{
+			nsresult rv = m_mailSession->GetAccountManager(getter_AddRefs(accountManager));
+			if (NS_SUCCEEDED(rv)  && accountManager)
+				rv = accountManager->WriteToFolderCache(this);
+			// releasing the service seems to be wrong, since it causes the service to
+			// be deleted out from under itself while getting shut down.
+//			nsServiceManager::ReleaseService(kCMsgMailSessionCID, m_mailSession /*, this */);
+		}
+		m_mailSession = nsnull;
+	}
+
+	return NS_OK;
+}
+
 
 /* static */ nsIMdbFactory *nsMsgFolderCache::GetMDBFactory()
 {
@@ -313,7 +372,7 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *uri, PRBool createIf
 			}
 		}
 	}
-	return NS_COMFALSE;
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsMsgFolderCache::Close()

@@ -52,8 +52,8 @@ nsMsgMailSession::~nsMsgMailSession()
 {
   if(m_accountManager)
   {
-	  if (m_msgFolderCache)
-		m_accountManager->WriteToFolderCache(m_msgFolderCache);
+//	  if (m_msgFolderCache)
+//		m_accountManager->WriteToFolderCache(m_msgFolderCache);
 	  m_accountManager->UnloadAccounts();
   }
 
@@ -83,34 +83,6 @@ nsresult nsMsgMailSession:: Init()
 	mListeners = new nsVoidArray();
 	if(!mListeners)
 		return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = nsComponentManager::CreateInstance(kMsgFolderCacheCID,
-                                            NULL,
-                                            nsCOMTypeInfo<nsIMsgFolderCache>::GetIID(),
-                                            (void **)&m_msgFolderCache);
-    if (NS_FAILED(rv))
-		return rv;
-
-	nsFileSpec profileDir;
-    nsCOMPtr <nsIFileSpec> cacheFile;
-  
-	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-	if (NS_FAILED(rv)) 
-		return 0;
-
-	rv = profile->GetCurrentProfileDir(&profileDir);
-	if (NS_FAILED(rv)) 
-		return 0;
-
-    nsFileSpec folderCache(profileDir);
-
-    folderCache += "panacea.dat";
-
-    rv = NS_NewFileSpecWithSpec(folderCache, getter_AddRefs(cacheFile));
-    if (NS_FAILED(rv)) 
-		return rv;
-
-	m_msgFolderCache->Init(cacheFile);
 
 	return NS_OK;
 
@@ -160,10 +132,44 @@ nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
 nsresult nsMsgMailSession::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
 {
   if (!aFolderCache) return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+
+  if (!m_msgFolderCache)
+  {
+    rv = nsComponentManager::CreateInstance(kMsgFolderCacheCID,
+                                            NULL,
+                                            nsCOMTypeInfo<nsIMsgFolderCache>::GetIID(),
+                                            (void **)&m_msgFolderCache);
+    if (NS_FAILED(rv))
+		return rv;
+
+	nsFileSpec profileDir;
+    nsCOMPtr <nsIFileSpec> cacheFile;
   
+	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+	if (NS_FAILED(rv)) 
+		return 0;
+
+	rv = profile->GetCurrentProfileDir(&profileDir);
+	if (NS_FAILED(rv)) 
+		return 0;
+
+    nsFileSpec folderCache(profileDir);
+
+    folderCache += "panacea.dat";
+
+    rv = NS_NewFileSpecWithSpec(folderCache, getter_AddRefs(cacheFile));
+    if (NS_FAILED(rv)) 
+		return rv;
+
+	m_msgFolderCache->Init(cacheFile);
+
+  }
+
   *aFolderCache = m_msgFolderCache;
   NS_IF_ADDREF(*aFolderCache);
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsMsgMailSession::GetTemporaryMsgStatusFeedback(nsIMsgStatusFeedback* *aMsgStatusFeedback)

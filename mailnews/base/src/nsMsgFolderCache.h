@@ -24,9 +24,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsIMsgMailSession.h"
 #include "mdb.h"
 
-class nsMsgFolderCache : public nsIMsgFolderCache
+class nsMsgFolderCache : public nsIMsgFolderCache, public nsIShutdownListener
 {
 
 public:
@@ -35,6 +36,10 @@ public:
 	nsMsgFolderCache();
 	virtual ~nsMsgFolderCache();
 
+	/* nsIShutdownListener methods */
+
+	NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+  
 	NS_DECL_ISUPPORTS
 
 	//nsMsgFolderCache
@@ -60,6 +65,7 @@ protected:
 
 	nsFileSpec		m_dbFileSpec;
 	nsISupportsArray	*m_cacheElements;
+	nsCOMPtr <nsIMsgMailSession>	m_mailSession;
 
 	// mdb stuff
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
