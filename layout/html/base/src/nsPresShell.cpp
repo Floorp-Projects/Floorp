@@ -5358,12 +5358,6 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
     set->BeginRuleTreeReconstruct();
   }
 
-  // Clear all undisplayed content in the undisplayed content map.
-  // These cached style contexts will no longer be valid 
-  // HACK? see bug 118014 - this is really be done because some XUL anonymous content
-  // may have been removed but not cleared from the undisplayed map
-  frameManager->ClearUndisplayedContentMap();
-  
   PRInt32 frameChange = NS_STYLE_HINT_NONE;
   frameManager->ComputeStyleChangeFor(mPresContext, rootFrame, 
                                       kNameSpaceID_Unknown, nsnull,

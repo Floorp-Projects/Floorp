@@ -237,8 +237,6 @@ public:
   nsresult RemoveNodeFor(nsIContent* aParentContent, UndisplayedNode* aNode);
   nsresult RemoveNodesFor(nsIContent* aParentContent);
 
-  nsresult GetNodeFor(nsIContent* aContent, nsIStyleContext** aResult);
-
   // Removes all entries from the hash table
   void  Clear(void);
 
@@ -828,13 +826,25 @@ FrameManager::ClearPlaceholderFrameMap()
 NS_IMETHODIMP
 FrameManager::GetUndisplayedContent(nsIContent* aContent, nsIStyleContext** aResult)
 {
-  if (!aContent)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aContent);
   *aResult = nsnull;  // initialize out param
 
-  if (mUndisplayedMap)
-    mUndisplayedMap->GetNodeFor(aContent, aResult);
-    
+  if (!mUndisplayedMap)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> parent;
+  aContent->GetParent(*getter_AddRefs(parent));
+  if (!parent)
+    return NS_OK;
+
+  for (UndisplayedNode* node = mUndisplayedMap->GetFirstNode(parent);
+         node; node = node->mNext) {
+    if (node->mContent == aContent) {
+      *aResult = node->mStyle;
+      NS_ADDREF(*aResult);
+      return NS_OK;
+    }
+  }
   return NS_OK;
 }
   
@@ -1731,8 +1741,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         }
       }
       else {
-        // XXXdwh figure this out.
-        // oldContext->RemapStyle(aPresContext, PR_FALSE);
         if (pseudoTag && pseudoTag != nsHTMLAtoms::mozNonElementPseudo &&
             aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
             HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
@@ -1771,8 +1779,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
               }
             }
             else {
-              // XXXdwh figure this out.
-              // oldExtraContext->RemapStyle(aPresContext, PR_FALSE);
               // XXXldb |oldContext| is null by this point, so this will
               // never do anything.
               if (pseudoTag && pseudoTag != nsHTMLAtoms::mozNonElementPseudo &&
@@ -1813,15 +1819,13 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         }
         NS_IF_RELEASE(pseudoTag);
         if (undisplayedContext) {
-          if (undisplayedContext == undisplayed->mStyle) {
-            // XXXdwh figure this out.
-            // undisplayedContext->RemapStyle(aPresContext);
-          }
           const nsStyleDisplay* display = 
                 (const nsStyleDisplay*)undisplayedContext->GetStyleData(eStyleStruct_Display);
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
             aChangeList.AppendChange(nsnull, ((undisplayed->mContent) ? undisplayed->mContent : localContent), 
                                      NS_STYLE_HINT_FRAMECHANGE);
+            // The node should be removed from the undisplayed map when
+            // we reframe it.
             NS_RELEASE(undisplayedContext);
           } else {
             // update the undisplayed node with the new context
@@ -2510,20 +2514,6 @@ UndisplayedMap::AddNodeFor(nsIContent* aParentContent, nsIStyleContext* aPseudoS
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return AppendNodeFor(node, aParentContent);
-}
-
-nsresult 
-UndisplayedMap::GetNodeFor(nsIContent* aContent, nsIStyleContext** aResult)
-{
-  PLHashEntry** entry = GetEntryFor(aContent);
-  if (*entry) {
-    UndisplayedNode* node = (UndisplayedNode*)((*entry)->value);
-    *aResult = node->mStyle;
-    NS_IF_ADDREF(*aResult);
-  }
-  else
-    *aResult = nsnull;
-  return NS_OK;
 }
 
 nsresult 
