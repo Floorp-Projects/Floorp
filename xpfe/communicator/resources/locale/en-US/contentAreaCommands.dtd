@@ -18,27 +18,27 @@
 <!ENTITY addToBookmarksCmd.label      "Bookmark This Page">
 <!ENTITY addToBookmarksCmd.accesskey  "B">
 <!ENTITY goBackCmd.label              "Back">
-<!ENTITY goBackCmd.accesskey          "b">
+<!ENTITY goBackCmd.accesskey          "B">
 <!ENTITY goForwardCmd.label           "Forward">
-<!ENTITY goForwardCmd.accesskey       "f">
+<!ENTITY goForwardCmd.accesskey       "F">
 <!ENTITY reloadCmd.label              "Reload">
-<!ENTITY reloadCmd.accesskey          "r">
+<!ENTITY reloadCmd.accesskey          "R">
 <!ENTITY reloadCmd.commandkey         "r">
 <!ENTITY stopCmd.label                "Stop">
 <!ENTITY stopCmd.accesskey            "S">
 <!ENTITY reloadFrameCmd.label         "Reload Frame">
-<!ENTITY reloadFrameCmd.accesskey     "r">
+<!ENTITY reloadFrameCmd.accesskey     "R">
 <!ENTITY viewPartialSourceForSelectionCmd.label "View Selection Source">
 <!ENTITY viewPartialSourceForMathMLCmd.label    "View MathML Source">
 <!ENTITY viewPartialSourceCmd.accesskey "e">
 <!ENTITY viewPageSourceCmd.label      "View Page Source">
-<!ENTITY viewPageSourceCmd.accesskey  "v">
+<!ENTITY viewPageSourceCmd.accesskey  "V">
 <!ENTITY viewFrameSourceCmd.label     "View Frame Source">
-<!ENTITY viewFrameSourceCmd.accesskey "v">
+<!ENTITY viewFrameSourceCmd.accesskey "V">
 <!ENTITY viewPageInfoCmd.label        "View Page Info">
 <!ENTITY viewPageInfoCmd.accesskey    "I">
 <!ENTITY viewFrameInfoCmd.label       "View Frame Info">
-<!ENTITY viewFrameInfoCmd.accesskey   "i">
+<!ENTITY viewFrameInfoCmd.accesskey   "I">
 <!ENTITY viewImageCmd.label           "View Image">
 <!ENTITY viewImageCmd.accesskey       "I">
 <!ENTITY viewBGImageCmd.label         "View Background Image">
@@ -50,18 +50,18 @@
 <!ENTITY bookmarkLinkCmd.label        "Bookmark This Link">
 <!ENTITY bookmarkLinkCmd.accesskey    "L">
 <!ENTITY bookmarkFrameCmd.label       "Bookmark This Frame">
-<!ENTITY bookmarkFrameCmd.accesskey   "f">
+<!ENTITY bookmarkFrameCmd.accesskey   "F">
 <!ENTITY savePageCmd.label            "Save Page As...">
 <!ENTITY savePageCmd.accesskey        "A">
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
-<!ENTITY saveFrameCmd.accesskey       "f">
+<!ENTITY saveFrameCmd.accesskey       "F">
 <!ENTITY saveLinkCmd.label            "Save Link Target As...">
 <!ENTITY saveLinkCmd.accesskey        "r">
 <!ENTITY saveImageCmd.label           "Save Image As...">
 <!ENTITY saveImageCmd.accesskey       "v">
 <!ENTITY copyCmd.label                "Copy">
-<!ENTITY copyCmd.accesskey            "c">
+<!ENTITY copyCmd.accesskey            "C">
 <!ENTITY selectAllCmd.label           "Select All">
 <!ENTITY selectAllCmd.accesskey       "A">
 <!ENTITY copyLinkCmd.label            "Copy Link Location">
@@ -73,7 +73,7 @@
 <!ENTITY copyEmailCmd.label           "Copy Email Address">
 <!ENTITY copyEmailCmd.accesskey       "E">
 <!ENTITY pasteCmd.label               "Paste">
-<!ENTITY pasteCmd.accesskey           "p">
+<!ENTITY pasteCmd.accesskey           "P">
 <!ENTITY cutCmd.label                 "Cut">
 <!ENTITY cutCmd.accesskey             "t">
 <!ENTITY deleteCmd.label              "Delete">
@@ -82,6 +82,6 @@
 <!ENTITY undoCmd.accesskey            "U">
 <!ENTITY redoCmd.label                "Redo">
 <!ENTITY redoCmd.accesskey            "R">
-<!ENTITY thisFrameMenu.label              "This Frame">
-<!ENTITY thisFrameMenu.accesskey          "h">
+<!ENTITY thisFrameMenu.label          "This Frame">
+<!ENTITY thisFrameMenu.accesskey      "h">
 <!ENTITY search.accesskey             "W">
