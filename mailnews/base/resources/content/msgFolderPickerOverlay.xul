@@ -300,4 +300,27 @@ Rights Reserved.
 	</template>
 	<menupopup />
 	</menu>
+    <menulist id="searchableFolders"
+              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+              ref="msgaccounts:/">
+      <template>
+        <rule iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem uri="..." value="&filemessageschoosethis.label;"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule>
+          <menupopup>
+            <menuitem uri="..."
+                      value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menulist>
+        
 </overlay>

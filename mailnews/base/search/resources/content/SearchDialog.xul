@@ -24,6 +24,7 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
 
@@ -34,18 +35,15 @@ Rights Reserved.
     class="dialog"
     orient="vertical">
 
-  <script src="chrome://messenger/content/SearchDialog.js"/>
   <script src="chrome://global/content/strres.js"/>
+  <script src="chrome://messenger/content/SearchDialog.js"/>
+  <script src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
+
   <text value="This dialog is a work in progress! Please don't file any bugs against it."/>
   <box>
     <text class="label" value="&searchHeading.label;"/>
-    <menulist>
-      <menupopup>
-        <menuitem value="sample1"/>
-        <menuitem value="sample1"/>
-        <menuitem value="sample1"/>
-      </menupopup>
-    </menulist>
+    <menulist id="searchableFolders" flex="2"
+              oncommand="onChooseFolder(event)"/>
     <spring flex="1"/>
     <checkbox value="&searchSubfolders.label;"/>
   </box>

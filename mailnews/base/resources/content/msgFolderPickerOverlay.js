@@ -1,3 +1,29 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ * Alec Flett <alecf@netscape.com>
+ */
+
+var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+
+
 // call this from dialog onload() to set the menu item to the correct value
 function MsgFolderPickerOnLoad(pickerID)
 {
@@ -57,12 +83,17 @@ function SetFolderPicker(uri,pickerID)
 	if (msgfolder.isServer)
 		selectedValue = msgfolder.name;
 	else {
-		if (msgfolder.server) {
-			selectedValue = msgfolder.name + " on " + msgfolder.server.prettyName; 
-		}
-		else {
-			selectedValue = msgfolder.name + " on ???";
-		}
+		if (msgfolder.server)
+            serverName = msgfolder.server.prettyName;
+        else {
+            dump("Cant' find server for " + uri + "\n");
+            serverName = "???";
+        }
+
+        selectedValue =
+            Bundle.formatStringFromName("verboseFolderFormat",
+                                        [ msgfolder.name,
+                                        serverName ], 2);
 	}
 
 	picker.setAttribute("value",selectedValue);
