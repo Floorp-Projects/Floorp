@@ -22,9 +22,7 @@
  * JS lexical scanner interface.
  */
 #include <stddef.h>
-#ifdef JSFILE
 #include <stdio.h>
-#endif
 #include "jsopcode.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -144,9 +142,7 @@ struct JSTokenStream {
     JSTokenBuf          userbuf;        /* user input buffer if !file */
     JSTokenBuf          tokenbuf;       /* current token string buffer */
     const char          *filename;      /* input filename or null */
-#ifdef JSFILE
     FILE                *file;          /* stdio stream if reading from file */
-#endif
     JSPrincipals        *principals;    /* principals associated with given input */
     JSSourceHandler     listener;       /* callback for source; eg debugger */
     void                *listenerData;  /* listener 'this' data */
@@ -196,10 +192,8 @@ js_NewTokenStream(JSContext *cx, const jschar *base, size_t length,
 extern JS_FRIEND_API(JSTokenStream *)
 js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length);
 
-#ifdef JSFILE
 extern JS_FRIEND_API(JSTokenStream *)
 js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp);
-#endif
 
 extern JS_FRIEND_API(JSBool)
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts);

@@ -107,10 +107,6 @@ static void initConsole(StringPtr consoleName, const char* startupMessage, int *
 
 #endif
 
-#ifndef JSFILE
-# error "JSFILE must be defined for this module to work."
-#endif
-
 #ifdef JSDEBUGGER
 static JSDContext *_jsdc;
 #ifdef JSDEBUGGER_JAVA_UI

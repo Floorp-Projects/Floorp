@@ -772,10 +772,8 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
 				const jschar *chars, size_t length,
 				const char *filename, uintN lineno);
 
-#ifdef JSFILE
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename);
-#endif
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script);

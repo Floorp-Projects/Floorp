@@ -206,7 +206,6 @@ js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length)
     return ts;
 }
 
-#ifdef JSFILE
 JS_FRIEND_API(JSTokenStream *)
 js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
 {
@@ -235,18 +234,13 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
     ts->filename = filename;
     return ts;
 }
-#endif /* JSFILE */
 
 JS_FRIEND_API(JSBool)
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
 {
     if (ts->principals)
 	JSPRINCIPALS_DROP(cx, ts->principals);
-#ifdef JSFILE
     return !ts->file || fclose(ts->file) == 0;
-#else
-    return JS_TRUE;
-#endif
 }
 
 static int32
@@ -262,7 +256,6 @@ GetChar(JSTokenStream *ts)
 	if (ts->linebuf.ptr == ts->linebuf.limit) {
 	    len = PTRDIFF(ts->userbuf.limit, ts->userbuf.ptr, jschar);
 	    if (len <= 0) {
-#ifdef JSFILE
 		/* Fill ts->userbuf so that \r and \r\n convert to \n. */
 		if (ts->file) {
 		    JSBool crflag;
@@ -291,9 +284,7 @@ GetChar(JSTokenStream *ts)
 			ubuf[i] = (jschar) (unsigned char) cbuf[j];
 		    ts->userbuf.limit = ubuf + len;
 		    ts->userbuf.ptr = ubuf;
-		} else
-#endif /* JSFILE */
-		{
+		} else {
 		    ts->flags |= TSF_EOF;
 		    return EOF;
 		}
@@ -333,18 +324,17 @@ GetChar(JSTokenStream *ts)
 	    if (nl < ts->userbuf.limit) {
 		if (*nl == '\r') {
 		    if (ts->linebuf.base[len-1] == '\r') {
-#ifdef JSFILE
-			/*
-			 * Does the line segment end in \r?  We must check
-			 * for a \n at the front of the next segment before
-			 * storing a \n into linebuf.
-			 */
+                        /*
+                         * Does the line segment end in \r?  We must check for
+                         * a \n at the front of the next segment before storing
+                         * a \n into linebuf.  This case only applies when
+                         * reading from a file.
+                         */
 			if (nl + 1 == ts->userbuf.limit) {
 			    len--;
 			    ts->flags |= TSF_CRFLAG;
 			} else
-#endif
-			ts->linebuf.base[len-1] = '\n';
+                            ts->linebuf.base[len-1] = '\n';
 		    }
 		} else if (*nl == '\n') {
 		    if (nl > ts->userbuf.base &&

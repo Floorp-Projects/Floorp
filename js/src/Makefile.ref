@@ -51,8 +51,7 @@ endif
 #
 # XCFLAGS may be set in the environment or on the gmake command line
 #
-CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
-                  -DJSFILE $(XCFLAGS)
+CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 LDFLAGS		= -lm $(XLDFLAGS)
 
 # For purify

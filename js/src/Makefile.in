@@ -138,10 +138,6 @@ ifndef BUILD_OPT
 MOCHAFILE	= 1
 endif
 
-ifdef JSFILE
-DEFINES		+= -DJSFILE
-endif
-
 ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
 endif
@@ -233,10 +229,8 @@ $(FDLIBM_LIBRARY):
 			cd $(@D); $(MAKE) $(@F); cd $$oldDir;	\
 			set +e;
 
-# this requires clobbering and recompiling with XCFLAGS=-DJSFILE
 js:
-	$(MAKE) clobber
-	$(MAKE) XCFLAGS=-DJSFILE $(OBJDIR)/js$(BIN_SUFFIX)
+	$(MAKE) $(OBJDIR)/js$(BIN_SUFFIX)
 
 .PHONY: js$(BIN_SUFFIX)
 
