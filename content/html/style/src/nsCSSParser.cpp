@@ -1051,6 +1051,12 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
           nsIAtom* pseudoElement = pseudoClassList->mAtom;  // steal ref count
           pseudoClassList->mAtom = nsnull;
           listSel->Reset();
+          if (listSel->mNext) {// more to the selector
+            listSel->mOperator = PRUnichar('>');
+            nsCSSSelector empty;
+            list->AddSelector(empty); // leave a blank (universal) selector in the middle
+            listSel = list->mSelectors; // use the new one for the pseudo
+          }
           listSel->mTag = pseudoElement;
         }
         else {  // append new pseudo element selector
