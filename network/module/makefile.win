@@ -29,7 +29,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIHttpUrl.h                  \
           $(NULL)
 
-
+DIRS = tests
 #//------------------------------------------------------------------------
 #//
 #// Specify the depth of the current directory relative to the
