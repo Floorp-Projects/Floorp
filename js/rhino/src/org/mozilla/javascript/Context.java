@@ -636,7 +636,7 @@ public class Context {
             if (scope == null)
                 scope = new NativeObject();
             ScriptableObject.defineClass(scope, NativeFunction.class, sealed);
-            (new NativeObject()).scopeInit(this, scope, sealed);
+            NativeObject.init(this, scope, sealed);
 
             Scriptable objectProto = ScriptableObject.
                                       getObjectPrototype(scope);
@@ -651,16 +651,16 @@ public class Context {
                 scope.setPrototype(objectProto);
             
             // must precede NativeGlobal since it's needed therein
-            (new NativeError()).scopeInit(this, scope, sealed);
-            (new NativeGlobal()).scopeInit(this, scope, sealed);
+            NativeError.init(this, scope, sealed);
+            NativeGlobal.init(this, scope, sealed);
 
-            (new NativeArray()).scopeInit(this, scope, sealed);
-            (new NativeString()).scopeInit(this, scope, sealed);
-            (new NativeBoolean()).scopeInit(this, scope, sealed);
-            (new NativeNumber()).scopeInit(this, scope, sealed);
-            (new NativeDate()).scopeInit(this, scope, sealed);
-            (new NativeMath()).scopeInit(this, scope, sealed);
-            (new NativeWith()).scopeInit(this, scope, sealed);
+            NativeArray.init(this, scope, sealed);
+            NativeString.init(this, scope, sealed);
+            NativeBoolean.init(this, scope, sealed);
+            NativeNumber.init(this, scope, sealed);
+            NativeDate.init(this, scope, sealed);
+            NativeMath.init(this, scope, sealed);
+            NativeWith.init(this, scope, sealed);
                                 
             String[] classes = { "NativeCall",          "Call",
                                  "regexp.NativeRegExp", "RegExp",

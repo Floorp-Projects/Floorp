@@ -50,9 +50,13 @@ import java.lang.reflect.Method;
  * @author Mike Shaver
  */
 
-public class NativeGlobal implements ScopeInitializer, IdFunctionMaster {
+public class NativeGlobal implements IdFunctionMaster {
 
-    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        (new NativeGlobal()).scopeInit(cx, scope, sealed);
+    }
+    
+    private void scopeInit(Context cx, Scriptable scope, boolean sealed) {
 
         for (int id = 1; id <= MAX_ID; ++id) {
             String name = getMethodName(id);

@@ -45,10 +45,11 @@ package org.mozilla.javascript;
  */
 public class NativeError extends IdScriptable {
 
-    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
-        defineProperty("message", "", ScriptableObject.EMPTY);
-        defineProperty("name", "Error", ScriptableObject.EMPTY);
-        super.scopeInit(cx, scope, sealed);
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeError obj = new NativeError();
+        obj.defineProperty("message", "", ScriptableObject.EMPTY);
+        obj.defineProperty("name", "Error", ScriptableObject.EMPTY);
+        obj.addAsPrototype(cx, scope, sealed);
     }
     
     public int methodArity(int methodId) {

@@ -44,6 +44,11 @@ package org.mozilla.javascript;
  */
 public class NativeBoolean extends IdScriptable {
 
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeBoolean obj = new NativeBoolean();
+        obj.addAsPrototype(cx, scope, sealed);
+    }
+
     /**
      * Zero-parameter constructor: just used to create Boolean.prototype
      */

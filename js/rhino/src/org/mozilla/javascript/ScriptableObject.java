@@ -606,11 +606,11 @@ public abstract class ScriptableObject implements Scriptable {
     /**
      * Defines JavaScript objects from a Java class that implements Scriptable.
      *
-     * If the given class implements the <code>ScopeInitializer</code>
-     * interface, then its instance is constructed and <code>scopeInit</code>
-     * is called upon it and no further initialization is done.
-     *
      * If the given class has a method
+     * <pre>
+     * static void init(Context cx, Scriptable scope, boolean sealed);</pre>
+     *
+     * or its compatibility form 
      * <pre>
      * static void init(Scriptable scope);</pre>
      *
@@ -740,26 +740,32 @@ public abstract class ScriptableObject implements Scriptable {
                InvocationTargetException, ClassDefinitionException,
                PropertyException
     {
-        if (ScopeInitializerClass.isAssignableFrom(clazz)) {
-            ScopeInitializer setup = (ScopeInitializer)clazz.newInstance();
-            Context cx = Context.getContext();
-            setup.scopeInit(cx, scope, sealed);
-            return;
-        }
-        
         Method[] methods = FunctionObject.getMethodList(clazz);
         for (int i=0; i < methods.length; i++) {
-            if (!methods[i].getName().equals("init"))
+            Method method = methods[i];
+            if (!method.getName().equals("init"))
                 continue;
-            Class[] parmTypes = methods[i].getParameterTypes();
-            if (parmTypes.length == 1 &&
-                parmTypes[0] == ScriptRuntime.ScriptableClass &&
-                Modifier.isStatic(methods[i].getModifiers()))
+            Class[] parmTypes = method.getParameterTypes();
+            if (parmTypes.length == 3 &&
+                parmTypes[0] == ContextClass &&
+                parmTypes[1] == ScriptRuntime.ScriptableClass &&
+                parmTypes[2] == Boolean.TYPE &&
+                Modifier.isStatic(method.getModifiers()))
             {
-                Object args[] = { scope };
-                methods[i].invoke(null, args);
+                Object args[] = { Context.getContext(), scope, 
+                                  sealed ? Boolean.TRUE : Boolean.FALSE };
+                method.invoke(null, args);
                 return;
             }
+            if (parmTypes.length == 1 &&
+                parmTypes[0] == ScriptRuntime.ScriptableClass &&
+                Modifier.isStatic(method.getModifiers()))
+            {
+                Object args[] = { scope };
+                method.invoke(null, args);
+                return;
+            }
+            
         }
 
         // If we got here, there isn't an "init" method with the right
@@ -1797,5 +1803,5 @@ public abstract class ScriptableObject implements Scriptable {
         boolean setterReturnsValue;
     }
 
-    private static final Class ScopeInitializerClass = ScopeInitializer.class;
+    private static final Class ContextClass = Context.class;
 }

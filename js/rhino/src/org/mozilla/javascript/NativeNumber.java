@@ -48,6 +48,11 @@ public class NativeNumber extends IdScriptable {
 
     private static final int MAX_PRECISION = 100;
 
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeNumber obj = new NativeNumber();
+        obj.addAsPrototype(cx, scope, sealed);
+    }
+
     /**
      * Zero-parameter constructor: just used to create Number.prototype
      */

@@ -61,6 +61,11 @@ public class NativeArray extends IdScriptable {
      * always gets at least an object back, even when Array == null.
      */
 
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeArray obj = new NativeArray();
+        obj.addAsPrototype(cx, scope, sealed);
+    }
+
     /**
      * Zero-parameter constructor: just used to create Array.prototype
      */

@@ -50,20 +50,7 @@ import java.text.SimpleDateFormat;
  */
 public class NativeDate extends IdScriptable {
 
-    public String getClassName() {
-        return "Date";
-    }
-
-    public Object getDefaultValue(Class typeHint) {
-        if (typeHint == null)
-            typeHint = ScriptRuntime.StringClass;
-        return super.getDefaultValue(typeHint);
-    }
-
-    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
-
-        // Set the value of the prototype Date to NaN ('invalid date');
-        date = ScriptRuntime.NaN;
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
 
         if (thisTimeZone == null) {
             // j.u.TimeZone is synchronized, so setting class statics from it
@@ -72,7 +59,22 @@ public class NativeDate extends IdScriptable {
             LocalTZA = thisTimeZone.getRawOffset();
         }
 
-        super.scopeInit(cx, scope, sealed);
+        NativeDate obj = new NativeDate();
+        
+        // Set the value of the prototype Date to NaN ('invalid date');
+        obj.date = ScriptRuntime.NaN;
+
+        obj.addAsPrototype(cx, scope, sealed);
+    }
+
+    public String getClassName() {
+        return "Date";
+    }
+
+    public Object getDefaultValue(Class typeHint) {
+        if (typeHint == null)
+            typeHint = ScriptRuntime.StringClass;
+        return super.getDefaultValue(typeHint);
     }
 
     protected void fillConstructorProperties

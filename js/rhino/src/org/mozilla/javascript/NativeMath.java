@@ -44,18 +44,17 @@ package org.mozilla.javascript;
 
 public class NativeMath extends IdScriptable
 {
-    public String getClassName() { return "Math"; }
-
-    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
-        activateIdMap(cx, sealed);
-        setPrototype(getObjectPrototype(scope));
-        setParentScope(scope);
-        if (sealed) {
-            sealObject();
-        }
-        ScriptableObject.defineProperty
-            (scope, "Math", this, ScriptableObject.DONTENUM);
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeMath obj = new NativeMath();
+        obj.activateIdMap(cx, sealed);
+        obj.setPrototype(getObjectPrototype(scope));
+        obj.setParentScope(scope);
+        if (sealed) { obj.sealObject(); }
+        ScriptableObject.defineProperty(scope, "Math", obj,
+                                        ScriptableObject.DONTENUM);
     }
+
+    public String getClassName() { return "Math"; }
 
     protected int getIdDefaultAttributes(int id) {
         if (id > LAST_METHOD_ID) {

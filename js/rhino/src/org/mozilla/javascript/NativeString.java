@@ -54,6 +54,11 @@ import java.util.Vector;
  */
 public class NativeString extends IdScriptable {
 
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeString obj = new NativeString();
+        obj.addAsPrototype(cx, scope, sealed);
+    }
+
     /**
      * Zero-parameter constructor: just used to create String.prototype
      */

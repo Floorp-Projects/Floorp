@@ -56,7 +56,7 @@ may override scopeInit or fillConstructorProperties methods.
 
 */
 public abstract class IdScriptable extends ScriptableObject
-    implements IdFunctionMaster, ScopeInitializer
+    implements IdFunctionMaster
 {
     public boolean has(String name, Scriptable start) {
         if (maxId != 0) {
@@ -320,7 +320,7 @@ public abstract class IdScriptable extends ScriptableObject
      ** constructor with name getClassName in scope and makes its prototype
      ** property to point to this object.
      */ 
-    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
+    public void addAsPrototype(Context cx, Scriptable scope, boolean sealed) {
 
         activateIdMap(cx, sealed);
 

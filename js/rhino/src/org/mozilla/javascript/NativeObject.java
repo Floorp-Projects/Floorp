@@ -45,6 +45,11 @@ import java.util.Hashtable;
  */
 public class NativeObject extends IdScriptable {
 
+    public static void init(Context cx, Scriptable scope, boolean sealed) {
+        NativeObject obj = new NativeObject();
+        obj.addAsPrototype(cx, scope, sealed);
+    }
+
     public String getClassName() {
         return "Object";
     }
