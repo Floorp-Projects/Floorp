@@ -384,6 +384,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 		case PR_FILE_IS_BUSY_ERROR:	/* file in use */
 		case PR_FILE_IS_LOCKED_ERROR:
 		case PR_ILLEGAL_ACCESS_ERROR:
+        case PR_NO_ACCESS_RIGHTS_ERROR:
             /* DVNOTE: should we try read only? */
 			(*fh) = PR_Open(path, PR_RDONLY, 00700);
 	        if ( VALID_FILEHANDLE(*fh) )
