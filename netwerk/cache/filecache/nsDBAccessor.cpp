@@ -167,6 +167,8 @@ nsDBAccessor::Get(PRInt32 aID, void** anEntry, PRUint32 *aLength)
   *aLength = 0 ;
 
   NS_ASSERTION(mDB, "no database") ;
+  if(!mDB)
+    return NS_ERROR_FAILURE ;
 
   DBT db_key, db_data ;
 
@@ -192,6 +194,8 @@ NS_IMETHODIMP
 nsDBAccessor::Put(PRInt32 aID, void* anEntry, PRUint32 aLength)
 {
   NS_ASSERTION(mDB, "no database") ;
+  if(!mDB)
+    return NS_ERROR_FAILURE ;
 
   DBT db_key, db_data ;
 
@@ -217,6 +221,8 @@ NS_IMETHODIMP
 nsDBAccessor::Del(PRInt32 aID, void* anEntry, PRUint32 aLength)
 {
   NS_ASSERTION(mDB, "no database") ;
+  if(!mDB)
+    return NS_ERROR_FAILURE ;
 
   DBT db_key ;
 
@@ -246,6 +252,8 @@ NS_IMETHODIMP
 nsDBAccessor::GetID(const char* key, PRUint32 length, PRInt32* aID) 
 {
   NS_ASSERTION(mDB, "no database") ;
+  if(!mDB)
+    return NS_ERROR_FAILURE ;
 
   DBT db_key, db_data ;
 
@@ -291,6 +299,8 @@ nsDBAccessor::EnumEntry(void** anEntry, PRUint32* aLength, PRBool bReset)
   *aLength = 0 ;
 
   NS_ASSERTION(mDB, "no database") ;
+  if(!mDB)
+    return NS_ERROR_FAILURE ;
 
   PRUint32 flag ;
 
@@ -344,6 +354,10 @@ nsDBAccessor::GetSizeEntry(void** anEntry, PRUint32* aLength)
   if(!anEntry)
     return NS_ERROR_NULL_POINTER ;
 
+  NS_ASSERTION(mDB, "no database") ;
+  if(!mDB)
+    return NS_ERROR_FAILURE ;
+
   *anEntry = nsnull ;
   *aLength = 0 ;
 
@@ -370,6 +384,7 @@ nsDBAccessor::GetSizeEntry(void** anEntry, PRUint32* aLength)
 NS_IMETHODIMP
 nsDBAccessor::SetSizeEntry(void* anEntry, PRUint32 aLength)
 {
+  NS_ASSERTION(mDB, "no database") ;
   if( !mDB )
   	return NS_ERROR_FAILURE;
   DBT db_key, db_data ;
@@ -399,6 +414,10 @@ nsDBAccessor::Sync(void)
 {
   PRIntervalTime time = PR_IntervalNow() ;
   PRIntervalTime duration = time - mLastSyncTime ;
+
+  NS_ASSERTION(mDB, "no database") ;
+  if(!mDB)
+    return NS_ERROR_FAILURE ;
   
   if (PR_IntervalToMilliseconds(duration) > SyncInterval) {
     int status = (*mDB->sync)(mDB, 0) ;
