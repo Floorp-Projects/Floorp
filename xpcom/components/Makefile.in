@@ -28,6 +28,7 @@ LIBRARY_NAME	= xpcomcomponents_s
 CPPSRCS		= \
 		nsComponentManager.cpp \
 		nsGenericFactory.cpp \
+		nsNativeComponentLoader.cpp \
 		nsRegistry.cpp \
 		nsRepository.cpp \
 		nsServiceManager.cpp \
@@ -35,12 +36,13 @@ CPPSRCS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIFactory.idl	\
+		nsIComponentLoader.idl	\
 		nsIModule.idl	\
 		$(NULL)
 
 EXPORTS		= \
 		nsIComponentManager.h \
-		nsIFactory.h \
 		nsIGenericFactory.h \
 		nsIRegistry.h \
 		nsIServiceManager.h \

@@ -35,6 +35,7 @@ EXPORTS =                     \
         $(NULL)			
 
 XPIDLSRCS =               \
+        .\nsIComponentLoader.idl \
         .\nsIModule.idl	  \
         $(NULL)
 
@@ -55,6 +56,7 @@ LCFLAGS = -DUSE_NSREG -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 CPP_OBJS =                                 \
         .\$(OBJDIR)\nsComponentManager.obj \
         .\$(OBJDIR)\nsGenericFactory.obj   \
+        .\$(OBJDIR)\nsNativeComponentLoader.obj \
         .\$(OBJDIR)\nsRegistry.obj         \
         .\$(OBJDIR)\nsRepository.obj       \
         .\$(OBJDIR)\nsServiceManager.obj   \

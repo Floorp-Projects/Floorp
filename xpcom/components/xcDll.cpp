@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -31,7 +31,6 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 
-// MAC ONLY
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
@@ -50,12 +49,13 @@ nsDll::nsDll(const char *codeDllName, int type)
     }
 }
 
-nsDll::nsDll(nsIFileSpec *dllSpec)
+nsDll::nsDll(nsIFileSpec *dllSpec, const char *registryLocation)
   : m_dllName(NULL), m_dllSpec(dllSpec), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
     m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
 
 {
+    m_registryLocation = nsCRT::strdup(registryLocation);
     Init(dllSpec);
 }
 
@@ -96,6 +96,26 @@ nsDll::Init(nsIFileSpec *dllSpec)
         m_status = DLL_INVALID_PARAM;
         return;
     }
+#ifdef XP_UNIX
+    /* on Unix, symlinks are fair game too; XXX move to nsFileSpec? */
+    if (!isFile) {
+#ifdef DEBUG_shaver
+        char *pathName;
+        m_dllSpec->GetNativePath(&pathName);
+        fprintf(stderr, "%s is not a file ", pathName);
+        nsAllocator::Free(pathName);
+#endif
+        if (NS_FAILED(m_dllSpec->IsSymlink(&isFile))) {
+            m_status = DLL_INVALID_PARAM;
+            return;
+        }
+#ifdef DEBUG_shaver
+        fputs(isFile ? "but it's a symlink\n" : "and it's not a symlink\n",
+              stderr);
+#endif
+    }
+#endif /* XP_UNIX */
+
     if (isFile == PR_FALSE)
     {
       // Not a file. Cant work with it.
@@ -159,6 +179,8 @@ nsDll::~nsDll(void)
         nsCRT::free(m_persistentDescriptor);
     if (m_nativePath)
         nsCRT::free(m_nativePath);
+    if (m_registryLocation)
+        nsCRT::free(m_registryLocation);
 
 }
 
@@ -202,6 +224,10 @@ nsDll::HasChanged()
     if (NS_FAILED(rv) || aSize != m_size)
       return PR_TRUE;
 
+#ifdef DEBUG_shaver
+    fprintf(stderr, "%s not changed (%d/%d\n)",
+            GetNativePath(), m_modDate, m_size);
+#endif
     return PR_FALSE;
 }
 
@@ -288,7 +314,7 @@ void * nsDll::FindSymbol(const char *symbol)
 	if (Load() != PR_TRUE)
 		return (NULL);
 
-	return (PR_FindSymbol(m_instance, symbol));
+    return(PR_FindSymbol(m_instance, symbol));
 }
 
 
@@ -332,7 +358,8 @@ nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
     nsGetModuleProc proc =
       (nsGetModuleProc) FindSymbol(NS_GET_MODULE_SYMBOL);
 
-    if (proc == NULL) return NS_ERROR_FAILURE;
+    if (proc == NULL)
+        return NS_ERROR_FACTORY_NOT_LOADED;
 
     rv = (*proc) (compMgr, m_dllSpec, &m_moduleObject);
     if (NS_SUCCEEDED(rv))
