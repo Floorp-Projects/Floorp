@@ -31,7 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsRDFCID.h"
 #include "nsXULMenuListElement.h"
-#include "nsIDOMXULPopupElement.h"
+#include "nsXULAtoms.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
@@ -39,8 +39,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
-#include "nsIPopupSetFrame.h"
-#include "nsIFrame.h"
+
 
 NS_IMPL_ADDREF_INHERITED(nsXULMenuListElement, nsXULAggregateElement);
 NS_IMPL_RELEASE_INHERITED(nsXULMenuListElement, nsXULAggregateElement);
@@ -149,19 +148,16 @@ nsXULMenuListElement::SetDisabled(PRBool aDisabled)
 static void
 GetMenuChildrenElement(nsIContent* aParent, nsIContent** aResult)
 {
+  *aResult = nsnull;
+
   PRInt32 count;
   aParent->ChildCount(count);
 
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> child;
-    aParent->ChildAt(i, *getter_AddRefs(child));
-    nsCOMPtr<nsIDOMXULPopupElement> menuPopup(do_QueryInterface(child));
-    if (child) {
-      *aResult = child.get();
-      NS_ADDREF(*aResult);
-      return;
-    }
-  }
+  if (count == 0)
+    return;
+  
+  aParent->ChildAt(0, *aResult);
+  return;
 }
 
 NS_IMETHODIMP
