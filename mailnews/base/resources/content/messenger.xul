@@ -168,8 +168,12 @@ Rights Reserved.
 	
 	<menu id="menu_Edit">
 		<menupopup>
+			<menuitem value="Undo" key="key_undo" oncommand="messenger.Undo()"/>
+			<menuitem value="Redo" key="key_redo" oncommand="messenger.Redo()"/>
+			<!-- FIX ME - put these back when focus fix is in...  
 			<menuitem id="menu_undo"/>
 			<menuitem id="menu_redo"/>
+			-->
 			 <menuseparator/>
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
