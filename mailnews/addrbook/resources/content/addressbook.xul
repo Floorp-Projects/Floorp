@@ -128,7 +128,7 @@ Rights Reserved.
 				<menuitem value="&importCmd.label;" oncommand="toImport()"/>
 				<menuitem value="&exportCmd.label;" disabled="true" oncommand="AbExport()"/>
 				<menuseparator/>
-				<menuitem id="menu_pageSetup"/>
+				<menuitem id="cmd_pageSetup"/>
 				<menuitem value="&printPreviewCmd.label;" disabled="true" oncommand="AbPrintPreview()"/>
 				<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" observes="cmd_PrintCard"/>
 				<menuitem value="&printAddressBook.label;" disabled="true" oncommand="AbPrintAddressBook()"/>
