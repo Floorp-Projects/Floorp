@@ -238,10 +238,29 @@ static PRUint16 gArabicLigatureMap[] =
    ((c) + (PRUint16)ARABIC_TO_HINDI_DIGIT_INCREMENT): \
    (c))
 
-nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
-                       PRUnichar* aBuf, PRUint32 *aBufLen)
+// helper function to reverse a PRUnichar buffer
+void ReverseString(PRUnichar* aBuffer, PRUint32 aLen)
 {
-  const PRUnichar* src = aString;
+  PRUnichar *start, *end;
+  PRUnichar swapChar;
+
+  for (start = aBuffer, end = aBuffer + aLen - 1; start < end; ++start, --end) {
+    swapChar = *start;
+    *start = *end;
+    *end = swapChar;
+  }
+}
+
+nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
+                       PRUnichar* aBuf, PRUint32 *aBufLen, 
+                       PRBool aInputLogical, PRBool aOutputLogical)
+{
+  nsAutoString tempString(aString);
+  PRUnichar *tempBuf = (PRUnichar*)tempString.get();
+  if (aInputLogical) {
+    ReverseString(tempBuf, aLen);
+  }
+  const PRUnichar* src = tempBuf;
   const PRUnichar* p;
   PRUnichar* dest = aBuf;
   PRUnichar formB;
@@ -249,23 +268,23 @@ nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
   PRInt8 leftNoTrJ, rightNoTrJ;
   thisJ = eNJ;
   rightJ = GetJoiningClass(*(src));
-  while(src<aString+aLen-1) {
+  while(src<tempBuf+aLen-1) {
     leftJ = thisJ;
 
     if ((eTr != leftJ) || ((leftJ == eTr) && 
-        ( ( (src-1) >= aString ) && !IS_ARABIC_CHAR(*(src-1)))))
+        ( ( (src-1) >= tempBuf) && !IS_ARABIC_CHAR(*(src-1)))))
       leftNoTrJ = thisJ;
 
-    if(src-2 >= (aString)){
-      for(p=src-2; (p >= (aString))&& (eTr == leftNoTrJ) && (IS_ARABIC_CHAR(*(p+1))) ; p--)  
+    if(src-2 >= (tempBuf)){
+      for(p=src-2; (p >= (tempBuf))&& (eTr == leftNoTrJ) && (IS_ARABIC_CHAR(*(p+1))) ; p--)  
         leftNoTrJ = GetJoiningClass(*(p)) ;
     }
 
     thisJ = rightJ;
     rightJ = rightNoTrJ = GetJoiningClass(*(src+1)) ;
 
-    if(src+2 <= (aString+aLen-1)){
-      for(p=src+2; (p <= (aString+aLen-1))&&(eTr == rightNoTrJ) && (IS_ARABIC_CHAR(*(src+1))); p++)
+    if(src+2 <= (tempBuf+aLen-1)){
+      for(p=src+2; (p <= (tempBuf+aLen-1))&&(eTr == rightNoTrJ) && (IS_ARABIC_CHAR(*(src+1))); p++)
         rightNoTrJ = GetJoiningClass(*(p)) ;
     }
 
@@ -275,11 +294,11 @@ nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
 
   }
   if((eTr != thisJ) || 
-     ((thisJ == eTr) && (((src-1)>=aString) && (!IS_ARABIC_CHAR(*(src-1))))))
+     ((thisJ == eTr) && (((src-1)>=tempBuf) && (!IS_ARABIC_CHAR(*(src-1))))))
     leftNoTrJ = thisJ;
 
-  if(src-2 >= (aString)){
-    for(p=src-2; (src-2 >= (aString)) && (eTr == leftNoTrJ) && (IS_ARABIC_CHAR(*(p+1))); p--)
+  if(src-2 >= (tempBuf)){
+    for(p=src-2; (src-2 >= (tempBuf)) && (eTr == leftNoTrJ) && (IS_ARABIC_CHAR(*(p+1))); p--)
       leftNoTrJ = GetJoiningClass(*(p)) ;
   }
 
@@ -317,6 +336,9 @@ nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
 
   *aBufLen = lDest - aBuf;
 
+  if (aOutputLogical) {
+    ReverseString(aBuf, *aBufLen);
+  }
   return NS_OK;
 }
 
@@ -326,7 +348,6 @@ nsresult Conv_FE_06(const nsString& aSrc, nsString& aDst)
   PRUint32 i, size = aSrc.Length();
   aDst.Truncate();
   for (i=0;i<size;i++) { // i : Source
-    aSrcUnichars[i];
     if (aSrcUnichars[i] == 0x0000) 
       break; // no need to convert char after the NULL
     if (IS_FE_CHAR(aSrcUnichars[i])) {
@@ -420,15 +441,10 @@ nsresult Conv_06_FE_WithReverse(const nsString& aSrc,
       endArabic--;
       PRUnichar buf[8192];
       PRUint32 len=8192;
-      //reverse the buffer for shaping
 
-      for(i=beginArabic; i<=endArabic; i++) {
-        buf[i-beginArabic]=aSrcUnichars[endArabic-i+beginArabic];
-      }
-      for(i=0; i<=endArabic-beginArabic; i++) {
-        aSrcUnichars[i+beginArabic]=buf[i];
-      }
-      ArabicShaping(&aSrcUnichars[beginArabic], endArabic-beginArabic+1, buf, &len);
+      ArabicShaping(&aSrcUnichars[beginArabic], endArabic-beginArabic+1,
+                    buf, &len, 
+                    PR_TRUE, PR_FALSE);
       // to reverse the numerals
       PRUint32 endNumeral, beginNumeral;
       for (endNumeral=0;endNumeral<=len-1;endNumeral++){
