@@ -770,6 +770,7 @@
   <toolbarbutton id="HighlightColorButton" tooltip="aTooltip"
           tooltiptext="&HighlightColorButton.tooltip;" command="cmd_highlight">
     <observes element="cmd_highlight" attribute="state" onbroadcast="onHighlightColorChange()"/>
+    <observes element="cmd_highlight" attribute="collapsed"/>
   </toolbarbutton>
 
 <!-- A BUG IN CSS/BOXES MAKES THIS ASSERT WHEN CLASS= IS PRESENT AND WE TRY TO COLLAPSE THE TOOLBOX -->
