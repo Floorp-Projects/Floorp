@@ -3913,7 +3913,7 @@ xxlib_draw_xprint_scaled_rgb_image( XlibRgbHandle *handle,
                                     int rowstride)
 {
   long available = ((65536 < handle->max_request_size) ? 
-                    (65536 << 2):(handle->max_request_size << 2))
+                    (65536 << 1):(handle->max_request_size << 1))
 		   - 512 /* SIZEOF(xPutImageReq) */;
                 
   if (image_resolution == 0)
@@ -3935,8 +3935,8 @@ xxlib_draw_xprint_scaled_rgb_image( XlibRgbHandle *handle,
 
 #ifdef DEBUG    
     printf("xxlib_draw_xprint_scaled_rgb_image: "
-           "splitting image x=%d, y=%d, width=%d, height=%d, subimageheight=%d, scaling_factor=%g\n",
-           x, y, width, height, subimageheight, scaling_factor);
+           "splitting image x=%d, y=%d, width=%d, height=%d, subimageheight=%d, scaling_factor=%g, max_request_size=%ld, available=%ld\n",
+           x, y, width, height, subimageheight, scaling_factor, (long)handle->max_request_size, (long)available);
 #endif /* DEBUG */
 
     if (subimageheight == 0)
