@@ -503,6 +503,11 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       if (cSpec[0] != '\0') {
         // Strip out old tail component and put in the new one
         char* dp = PL_strrchr(uFile, '/');
+        if (!dp) {
+          delete cSpec;
+          NS_UNLOCK_INSTANCE();
+          return NS_ERROR_ILLEGAL_VALUE;
+        }
         PRInt32 dirlen = (dp + 1) - uFile;
         mFile = (char*) PR_Malloc(dirlen + len);
         PL_strncpy(mFile, uFile, dirlen);
