@@ -150,6 +150,7 @@ static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
 #endif
 
 // GFXWIN
+#ifndef XP_UNIX
 static NS_DEFINE_CID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kCDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kCFontMetricsCID, NS_FONT_METRICS_CID);
@@ -162,6 +163,7 @@ static NS_DEFINE_CID(kCDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_CID(kCDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 static NS_DEFINE_CID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 static NS_DEFINE_CID(kScreenManagerCID, NS_SCREENMANAGER_CID);
+#endif
 
 // VIEW
 static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
@@ -362,6 +364,7 @@ NS_SetupRegistry()
 #endif
 
   // GFXWIN
+#ifndef XP_UNIX
   nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "component://netscape/gfx/renderingcontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "component://netscape/gfx/devicecontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "component://netscape/gfx/fontmetrics", GFXWIN_DLL, PR_FALSE, PR_FALSE);
@@ -374,6 +377,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCDeviceContextSpecFactoryCID, "Device Context Spec Factory", "component://netscape/gfx/devicecontextspecfactory", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kImageManagerCID, "Image Manager", "component://netscape/gfx/imagemanager", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kScreenManagerCID, "Screen Manager", "component://netscape/gfx/screenmanager", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+#endif
 
   // VIEW
   nsComponentManager::RegisterComponentLib(kCViewManagerCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
