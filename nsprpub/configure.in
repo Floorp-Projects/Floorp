@@ -47,7 +47,6 @@ fi
 
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
-AC_VALIDATE_CACHED_SYSTEM_TUPLE
 AC_PREFIX_DEFAULT(\${MOD_DEPTH}/dist)
 
 dnl Set this define to make fixes w/o breaking anything else.
@@ -663,11 +662,11 @@ case "$target" in
     AC_DEFINE(XP_UNIX)
     MDCPUCFG_H=_nto.cfg
     PR_MD_CSRCS=nto.c
-    MKSHLIB='qcc -Vgcc_ntox86 -shared -Wl,-h$(@:$(OBJDIR)/%.so=%.so) -o $(@:$(OBJDIR)/%.so=%.so)'
+    MKSHLIB='qcc -Vgcc_ntox86 -shared -Wl,-h$(@:$(OBJDIR)/%.so=%.so) -M -o $(@:$(OBJDIR)/%.so=%.so)'
     CFLAGS="$CFLAGS -Wc,-Wall -Wc,-Wno-parentheses -DNTO -D_QNX_SOURCE -DHAVE_POINTER_LOCALTIME_R -shared"
     OS_LIBS="-lsocket"
-    _OPTIMIZE_FLAGS="-O2"
-    _DEBUG_FLAGS="-O2 -gdwarf-2"
+    _OPTIMIZE_FLAGS="-O1"
+    _DEBUG_FLAGS="-O1 -gstabs"
     COMPILER_TAG="_qcc"
     CC="qcc -Vgcc_ntox86 -w"
     CXX="QCC -Vgcc_ntox86 -w"
