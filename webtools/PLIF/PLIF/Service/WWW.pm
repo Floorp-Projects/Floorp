@@ -55,7 +55,7 @@ sub init {
 sub get {
     my $self = shift;
     my($app, $uri) = @_;
-    my $request = HTTP::Request('GET', $uri)->new();
+    my $request = HTTP::Request->new('GET', $uri);
     my $response = $self->ua->request($request);
     # XXX no error handling
     # XXX headers are not returned
