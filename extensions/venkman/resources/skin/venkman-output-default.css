@@ -1,6 +1,11 @@
-body.venkman-body {
+body {
     background: black;
     color: lightgrey;
+}
+
+body[mode="inverse"] {
+    background: white;
+    color: black;
 }
 
 /* links */
@@ -13,7 +18,6 @@ a.venkman-link {
 a.venkman-link:hover {
     text-decoration: underline;
 }
-
 
 #output-table {
     width: 100%;
@@ -39,6 +43,29 @@ a.venkman-link:hover {
     margin-right: 5px;
 }
 
+.msg-data[msg-type="STOP"]:before {
+    content: "*";
+    color: pink;
+}
+
+.msg-data[msg-type="STOP"] {
+    color: red;
+}
+
+.msg-data[msg-type="CONT"]:before {
+    content: "*";
+    color: lightgreen;
+}
+
+.msg-data[msg-type="CONT"] {
+    color: green;
+}
+
+.msg-data[msg-type="ETRACE"]:before {
+    content: "!";
+    color: brown;
+}
+   
 .msg-data[msg-type="ERROR"] {
     background: red;
     color: white;
