@@ -389,18 +389,37 @@ static NSSLOWCERTCertificate *
 pk11_getCert(PK11TokenObject *object)
 {
     NSSLOWCERTCertificate *cert;
+    CK_OBJECT_CLASS objClass = object->obj.objclass;
 
-    if ((object->obj.objclass != CKO_CERTIFICATE) &&
-	 		(object->obj.objclass != CKO_NETSCAPE_TRUST)) {
+    if ((objClass != CKO_CERTIFICATE) && (objClass != CKO_NETSCAPE_TRUST)) {
 	return NULL;
     }
-    if (object->obj.objectInfo) {
+    if (objClass == CKO_CERTIFICATE && object->obj.objectInfo) {
 	return (NSSLOWCERTCertificate *)object->obj.objectInfo;
     }
     cert = nsslowcert_FindCertByKey(object->obj.slot->certDB,&object->dbKey);
-    object->obj.objectInfo = (void *)cert;
-    object->obj.infoFree = (PK11Free) nsslowcert_DestroyCertificate ;
+    if (objClass == CKO_CERTIFICATE) {
+	object->obj.objectInfo = (void *)cert;
+	object->obj.infoFree = (PK11Free) nsslowcert_DestroyCertificate ;
+    }
     return cert;
+}
+
+static NSSLOWCERTTrust *
+pk11_getTrust(PK11TokenObject *object)
+{
+    NSSLOWCERTTrust *trust;
+
+    if (object->obj.objclass != CKO_NETSCAPE_TRUST) {
+	return NULL;
+    }
+    if (object->obj.objectInfo) {
+	return (NSSLOWCERTTrust *)object->obj.objectInfo;
+    }
+    trust = nsslowcert_FindTrustByKey(object->obj.slot->certDB,&object->dbKey);
+    object->obj.objectInfo = (void *)trust;
+    object->obj.infoFree = (PK11Free) nsslowcert_DestroyTrust ;
+    return trust;
 }
 
 static NSSLOWKEYPublicKey *
@@ -881,10 +900,8 @@ pk11_FindSMIMEAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 static PK11Attribute *
 pk11_FindTrustAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 {
-    NSSLOWCERTCertificate *cert;
+    NSSLOWCERTTrust *trust;
     unsigned char hash[SHA1_LENGTH];
-    SECItem *item;
-    PK11Attribute *attr;
     unsigned int trustFlags;
 
     switch (type) {
@@ -897,38 +914,29 @@ pk11_FindTrustAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     default:
 	break;
     }
-    cert = pk11_getCert(object);
-    if (cert == NULL) {
+    trust = pk11_getTrust(object);
+    if (trust == NULL) {
 	return NULL;
     }
     switch (type) {
     case CKA_CERT_SHA1_HASH:
-	SHA1_HashBuf(hash,cert->derCert.data,cert->derCert.len);
-	return pk11_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
+	SHA1_HashBuf(hash,trust->derCert->data,trust->derCert->len);
+	return pk11_NewTokenAttribute(type, hash, SHA1_LENGTH, PR_TRUE);
     case CKA_CERT_MD5_HASH:
-	MD5_HashBuf(hash,cert->derCert.data,cert->derCert.len);
-	return pk11_NewTokenAttribute(type,hash,MD5_LENGTH, PR_TRUE);
-    case CKA_ISSUER:
-	return pk11_NewTokenAttribute(type,cert->derIssuer.data,
-						cert->derIssuer.len, PR_FALSE);
-    case CKA_SERIAL_NUMBER:
-	item = SEC_ASN1EncodeItem(NULL,NULL,cert,pk11_SerialTemplate);
-	if (item == NULL) break;
-	attr = pk11_NewTokenAttribute(type, item->data, item->len, PR_TRUE);
-	SECITEM_FreeItem(item,PR_TRUE);
-	return attr;
+	MD5_HashBuf(hash,trust->derCert->data,trust->derCert->len);
+	return pk11_NewTokenAttribute(type, hash, MD5_LENGTH, PR_TRUE);
     case CKA_TRUST_CLIENT_AUTH:
-	trustFlags = cert->trust->sslFlags & CERTDB_TRUSTED_CLIENT_CA ?
-		cert->trust->sslFlags | CERTDB_TRUSTED_CA : 0 ;
+	trustFlags = trust->trust->sslFlags & CERTDB_TRUSTED_CLIENT_CA ?
+		trust->trust->sslFlags | CERTDB_TRUSTED_CA : 0 ;
 	goto trust;
     case CKA_TRUST_SERVER_AUTH:
-	trustFlags = cert->trust->sslFlags;
+	trustFlags = trust->trust->sslFlags;
 	goto trust;
     case CKA_TRUST_EMAIL_PROTECTION:
-	trustFlags = cert->trust->emailFlags;
+	trustFlags = trust->trust->emailFlags;
 	goto trust;
     case CKA_TRUST_CODE_SIGNING:
-	trustFlags = cert->trust->objectSigningFlags;
+	trustFlags = trust->trust->objectSigningFlags;
 trust:
 	if (trustFlags & CERTDB_TRUSTED_CA ) {
 	    return (PK11Attribute *)&pk11_StaticTrustedDelegatorAttr;
@@ -952,6 +960,28 @@ trust:
     default:
 	break;
     }
+
+#ifdef notdef
+    switch (type) {
+    case CKA_ISSUER:
+	cert = pk11_getCertObject(object);
+	if (cert == NULL) break;
+	attr = pk11_NewTokenAttribute(type,cert->derIssuer.data,
+						cert->derIssuer.len, PR_FALSE);
+	
+    case CKA_SERIAL_NUMBER:
+	cert = pk11_getCertObject(object);
+	if (cert == NULL) break;
+	item = SEC_ASN1EncodeItem(NULL,NULL,cert,pk11_SerialTemplate);
+	if (item == NULL) break;
+	attr = pk11_NewTokenAttribute(type, item->data, item->len, PR_TRUE);
+	SECITEM_FreeItem(item,PR_TRUE);
+    }
+    if (cert) {
+	NSSLOWCERTDestroyCertificate(cert);	
+	return attr;
+    }
+#endif
     return NULL;
 }
 
@@ -1180,7 +1210,6 @@ pk11_Attribute2SSecItem(PLArenaPool *arena,SECItem *item,PK11Object *object,
                                       CK_ATTRIBUTE_TYPE type)
 {
     PK11Attribute *attribute;
-    unsigned char *start;
 
     item->data = NULL;
 

@@ -3861,10 +3861,22 @@ pk11_searchCertsAndTrust(PK11Slot *slot, SECItem *derCert, SECItem *name,
 				pk11_cert_collect, &certData);
     } else if ((issuerSN->derIssuer.data != NULL) && 
 			(issuerSN->serialNumber.data != NULL)) {
-	NSSLOWCERTCertificate *cert = 
+        if (classFlags & NSC_CERT) {
+	    NSSLOWCERTCertificate *cert = 
 		nsslowcert_FindCertByIssuerAndSN(certHandle,issuerSN);
 
-	pk11_searchSingleCert(&certData,cert);
+	    pk11_searchSingleCert(&certData,cert);
+	}
+	if (classFlags & NSC_TRUST) {
+	    NSSLOWCERTTrust *trust = 
+		nsslowcert_FindTrustByIssuerAndSN(certHandle, issuerSN);
+
+	    if (trust) {
+		pk11_addHandle(handles,
+		    pk11_mkHandle(slot,&trust->dbKey,PK11_TOKEN_TYPE_TRUST));
+		nsslowcert_DestroyTrust(trust);
+	    }
+	}
     } else if (email->data != NULL) {
 	char *tmp_name = (char*)PORT_Alloc(email->len+1);
 	certDBEntrySMime *entry = NULL;
@@ -3907,7 +3919,7 @@ pk11_searchCertsAndTrust(PK11Slot *slot, SECItem *derCert, SECItem *name,
 	    pk11_addHandle(handles,
 		pk11_mkHandle(slot,&cert->certKey,PK11_TOKEN_TYPE_CERT));
 	}
-	if ((classFlags & NSC_TRUST) && nsslowcert_hasTrust(cert)) {
+	if ((classFlags & NSC_TRUST) && nsslowcert_hasTrust(cert->trust)) {
 	    pk11_addHandle(handles,
 		pk11_mkHandle(slot,&cert->certKey,PK11_TOKEN_TYPE_TRUST));
 	}

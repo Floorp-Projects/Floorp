@@ -49,6 +49,8 @@ SEC_BEGIN_PROTOS
 SECStatus nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *handle, 
 			NSSLOWCERTCertificate *cert,
 				char *nickname, NSSLOWCERTCertTrust *trust);
+SECStatus nsslowcert_AddPermNickname(NSSLOWCERTCertDBHandle *dbhandle,
+				NSSLOWCERTCertificate *cert, char *nickname);
 
 SECStatus nsslowcert_DeletePermCertificate(NSSLOWCERTCertificate *cert);
 
@@ -88,6 +90,7 @@ nsslowcert_NewTempCertificate(NSSLOWCERTCertDBHandle *handle, SECItem *derCert,
 NSSLOWCERTCertificate *
 nsslowcert_DupCertificate(NSSLOWCERTCertificate *cert);
 void nsslowcert_DestroyCertificate(NSSLOWCERTCertificate *cert);
+void nsslowcert_DestroyTrust(NSSLOWCERTTrust *Trust);
 
 /*
  * Lookup a certificate in the databases without locking
@@ -100,12 +103,30 @@ NSSLOWCERTCertificate *
 nsslowcert_FindCertByKey(NSSLOWCERTCertDBHandle *handle, SECItem *certKey);
 
 /*
+ * Lookup trust for a certificate in the databases without locking
+ *	"certKey" is the database key to look for
+ *
+ * XXX - this should be internal, but pkcs 11 needs to call it during a
+ * traversal.
+ */
+NSSLOWCERTTrust *
+nsslowcert_FindTrustByKey(NSSLOWCERTCertDBHandle *handle, SECItem *certKey);
+
+/*
 ** Generate a certificate key from the issuer and serialnumber, then look it
 ** up in the database.  Return the cert if found.
 **	"issuerAndSN" is the issuer and serial number to look for
 */
 extern NSSLOWCERTCertificate *
 nsslowcert_FindCertByIssuerAndSN (NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssuerAndSN *issuerAndSN);
+
+/*
+** Generate a certificate key from the issuer and serialnumber, then look it
+** up in the database.  Return the cert if found.
+**	"issuerAndSN" is the issuer and serial number to look for
+*/
+extern NSSLOWCERTTrust *
+nsslowcert_FindTrustByIssuerAndSN (NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssuerAndSN *issuerAndSN);
 
 /*
 ** Find a certificate in the database by a DER encoded certificate
@@ -189,7 +210,7 @@ nsslowcert_ChangeCertTrust(NSSLOWCERTCertDBHandle *handle,
 	  	NSSLOWCERTCertificate *cert, NSSLOWCERTCertTrust *trust);
 
 PRBool
-nsslowcert_hasTrust(NSSLOWCERTCertificate *cert);
+nsslowcert_hasTrust(NSSLOWCERTCertTrust *trust);
 
 void
 nsslowcert_DestroyGlobalLocks(void);

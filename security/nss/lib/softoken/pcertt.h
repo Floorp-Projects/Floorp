@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.3 2001/11/21 18:00:24 relyea%netscape.com Exp $
+ * $Id: pcertt.h,v 1.4 2002/05/16 20:39:03 relyea%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -53,6 +53,7 @@
 typedef struct NSSLOWCERTCertDBHandleStr               NSSLOWCERTCertDBHandle;
 typedef struct NSSLOWCERTCertKeyStr                    NSSLOWCERTCertKey;
 
+typedef struct NSSLOWCERTTrustStr                      NSSLOWCERTTrust;
 typedef struct NSSLOWCERTCertTrustStr                  NSSLOWCERTCertTrust;
 typedef struct NSSLOWCERTCertificateStr                NSSLOWCERTCertificate;
 typedef struct NSSLOWCERTCertificateListStr            NSSLOWCERTCertificateList;
@@ -104,6 +105,17 @@ struct NSSLOWCERTCertTrustStr {
     unsigned int sslFlags;
     unsigned int emailFlags;
     unsigned int objectSigningFlags;
+};
+
+/*
+** PKCS11 Trust representation
+*/
+struct NSSLOWCERTTrustStr {
+    NSSLOWCERTCertDBHandle *dbhandle;
+    SECItem dbKey;			/* database key for this cert */
+    certDBEntryCert *dbEntry;		/* database entry struct */
+    NSSLOWCERTCertTrust *trust;
+    SECItem *derCert;			/* original DER for the cert */
 };
 
 /*

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.10 2002/04/08 23:37:47 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.11 2002/05/16 20:39:02 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -256,6 +256,7 @@ pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle,
 }
 
 static rdbfunc pk11_rdbfunc;
+static void *pk11_tnx;
 
 /* NOTE: SHLIB_SUFFIX is defined on the command line */
 #define RDBLIB "rdb."SHLIB_SUFFIX
@@ -283,13 +284,46 @@ DB * rdbopen(const char *appName, const char *prefix,
     /* get the entry point */
     pk11_rdbfunc = (rdbfunc) PR_FindSymbol(lib,"rdbopen");
     if (pk11_rdbfunc) {
-	return (*pk11_rdbfunc)(appName,prefix,type,flags);
+	db = (*pk11_rdbfunc)(appName,prefix,type,flags);
+	return db;
     }
 
     /* couldn't find the entry point, unload the library and fail */
     PR_UnloadLibrary(lib);
     return NULL;
 }
+
+struct RDBStr {
+    DB	db;
+    int (*xactstart)(DB *db);
+    int (*xactdone)(DB *db, PRBool abort);
+};
+
+#define DB_RDB ((DBTYPE) 0xff)
+
+int
+db_BeginTransaction(DB *db)
+{
+    RDB *rdb = (RDB *)db;
+    if (db->type != DB_RDB) {
+	return 0;
+    }
+
+    return rdb->xactstart(db);
+}
+
+int
+db_FinishTransaction(DB *db, PRBool abort)
+{
+    RDB *rdb = (RDB *)db;
+    if (db->type != DB_RDB) {
+	return 0;
+    }
+
+    return rdb->xactdone(db, abort);
+}
+
+
 
 SECStatus
 db_Copy(DB *dest,DB *src)
