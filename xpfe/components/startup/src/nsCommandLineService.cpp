@@ -119,11 +119,11 @@ nsCmdLineService::Initialize(int argc, char ** argv)
 	         /* This is the last argument and a URL 
             * Append a PR_TRUE for the previous option in the value array
             */
-           mArgValueList.AppendElement((void *)PL_strdup("1"));
-	         mArgCount++;
+           //mArgValueList.AppendElement((void *)PL_strdup("1"));
+	         //mArgCount++;
 
  		       // Append the url to the arrays
-           mArgList.AppendElement((void *)PL_strdup("-url"));
+           //mArgList.AppendElement((void *)PL_strdup("-url"));
 		       mArgValueList.AppendElement((void *) PL_strdup(argv[i]));
 	 	       mArgCount++;
            continue;
