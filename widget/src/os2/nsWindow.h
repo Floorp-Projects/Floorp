@@ -84,6 +84,7 @@ class nsWindow : public nsBaseWidget,
    // Hierarchy: only interested in widget children (it seems)
    virtual nsIWidget *GetParent();
 
+    NS_IMETHOD              SetSizeMode(PRInt32 aMode);
     NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
     NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
 

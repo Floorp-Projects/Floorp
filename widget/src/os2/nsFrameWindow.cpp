@@ -280,6 +280,17 @@ nsresult nsFrameWindow::Show( PRBool bState)
       if( bState) {
          ULONG ulStyle = WinQueryWindowULong( GetMainWindow(), QWL_STYLE);
          ulFlags = SWP_SHOW | SWP_ACTIVATE;
+         if (!( ulStyle & WS_VISIBLE)) {
+            PRInt32 sizeMode;
+            GetSizeMode( &sizeMode);
+            if ( sizeMode == nsSizeMode_Maximized) {
+               ulFlags |= SWP_MAXIMIZE;
+            } else if ( sizeMode == nsSizeMode_Minimized) {
+               ulFlags |= SWP_MINIMIZE;
+            } else {
+               ulFlags |= SWP_RESTORE;
+            }
+         }
          if( ulStyle & WS_MINIMIZED)
             ulFlags |= (SWP_RESTORE | SWP_MAXIMIZE);
       }
@@ -351,6 +362,21 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
             UpdateClientSize();
             DispatchResizeEvent( mSizeClient.width, mSizeClient.height);
          }
+ 
+         if ( pSwp->fl & (SWP_MAXIMIZE | SWP_MINIMIZE | SWP_RESTORE)) {
+            nsSizeModeEvent event;
+            event.eventStructType = NS_SIZEMODE_EVENT;
+            if ( pSwp->fl & SWP_MAXIMIZE)
+              event.mSizeMode = nsSizeMode_Maximized;
+            else if ( pSwp->fl & SWP_MINIMIZE)
+              event.mSizeMode = nsSizeMode_Minimized;
+            else
+              event.mSizeMode = nsSizeMode_Normal;
+            InitEvent(event, NS_SIZEMODE);
+            DispatchWindowEvent(&event);
+            NS_RELEASE(event.widget);
+         }
+
          break;
       }
 
