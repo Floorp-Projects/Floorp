@@ -110,7 +110,7 @@ nsContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (!mFrames.IsEmpty()) {
     // We already have child frames which means we've already been
     // initialized
-#ifdef DEBUG_dbaron // XXX Fix asserts and remove this ifdef.
+#ifdef DEBUG_dbaron_off // XXX Fix asserts and remove this ifdef.
     NS_NOTREACHED("unexpected second call to SetInitialChildList");
 #endif
     result = NS_ERROR_UNEXPECTED;
