@@ -23,7 +23,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.8a6</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Mozilla 1.8a6, © 1998-2004 The Mozilla Organization</string>
+	<string>Mozilla 1.8a6, © 1998-2005 The Mozilla Organization</string>
         <key>NSAppleScriptEnabled</key>
         <true/>
 	<key>CFBundleDocumentTypes</key>

@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>xulrunner-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>XULRunner APP_VERSION, © 1998-2004 Contributors</string>
+	<string>XULRunner APP_VERSION, © 1998-2005 Contributors</string>
 	<key>CFBundleIconFile</key>
 	<string>xulrunner</string>
 	<key>CFBundleIdentifier</key>
