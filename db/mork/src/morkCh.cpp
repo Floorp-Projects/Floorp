@@ -40,7 +40,7 @@
 /*============================================================================*/
 /* morkCh_Type */
 
-const mork_u1 morkCh_Type[] = /* derives from public domain Mithril ch table */
+const mork_flags morkCh_Type[] = /* derives from public domain Mithril table */
 {
   0,                /* 0x0 */
   0,                /* 0x1 */
