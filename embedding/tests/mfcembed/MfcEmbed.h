@@ -66,6 +66,7 @@ public:
     void ShowDebugConsole();
     BOOL IsCmdLineSwitch(const char *pSwitch, BOOL bRemove = TRUE);
     void ParseCmdLine();
+    nsresult OverrideComponents();
 
 	// Overrides
 	// ClassWizard generated virtual function overrides

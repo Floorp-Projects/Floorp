@@ -58,6 +58,13 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+// this is for overriding the Mozilla default PromptService component
+#include "PromptService.h"
+#define kComponentsLibname "mfcEmbedComponents.dll"
+#define NS_PROMPTSERVICE_CID \
+ {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
+static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
+
 BEGIN_MESSAGE_MAP(CMfcEmbedApp, CWinApp)
 	//{{AFX_MSG_MAP(CMfcEmbedApp)
 	ON_COMMAND(ID_NEW_BROWSER, OnNewBrowser)
@@ -120,6 +127,49 @@ void CMfcEmbedApp::ParseCmdLine()
     // Show Debug Console?
     if(IsCmdLineSwitch("-console"))
         ShowDebugConsole();
+}
+
+/* Some Gecko interfaces are implemented as components, automatically
+   registered at application initialization. nsIPrompt is an example:
+   the default implementation uses XUL, not native windows. Embedding
+   apps can override the default implementation by implementing the
+   nsIPromptService interface and registering a factory for it with
+   the same CID and Contract ID as the default's.
+
+   Note that this example implements the service in a separate DLL,
+   replacing the default if the override DLL is present. This could
+   also have been done in the same module, without a separate DLL.
+   See the PowerPlant example for, well, an example.
+*/
+nsresult CMfcEmbedApp::OverrideComponents()
+{
+    nsresult rv = NS_OK;
+
+    // replace Mozilla's default PromptService with our own, if the
+    // expected override DLL is present
+    HMODULE overlib = ::LoadLibrary(kComponentsLibname);
+    if (overlib) {
+        InitPromptServiceType InitLib;
+        MakeFactoryType MakeFactory;
+        InitLib = reinterpret_cast<InitPromptServiceType>(::GetProcAddress(overlib, kPromptServiceInitFuncName));
+        MakeFactory = reinterpret_cast<MakeFactoryType>(::GetProcAddress(overlib, kPromptServiceFactoryFuncName));
+
+        if (InitLib && MakeFactory) {
+            InitLib(overlib);
+
+            nsCOMPtr<nsIFactory> promptFactory;
+            rv = MakeFactory(getter_AddRefs(promptFactory));
+            if (NS_SUCCEEDED(rv))
+                nsComponentManager::RegisterFactory(kPromptServiceCID,
+                                                    "Prompt Service",
+                                                    "@mozilla.org/embedcomp/prompt-service;1",
+                                                    promptFactory,
+                                                    PR_TRUE); // replace existing
+        } else
+          ::FreeLibrary(overlib);
+    }
+
+    return rv;
 }
 
 void CMfcEmbedApp::ShowDebugConsole()
@@ -189,12 +239,20 @@ BOOL CMfcEmbedApp::InitInstance()
     }
 
     nsresult rv;
-	rv = NS_InitEmbedding(nsnull, provider);
+    rv = NS_InitEmbedding(nsnull, provider);
     if(NS_FAILED(rv))
     {
         ASSERT(FALSE);
         return FALSE;
     }
+
+    rv = OverrideComponents();
+    if(NS_FAILED(rv))
+    {
+        ASSERT(FALSE);
+        return FALSE;
+    }
+
 
     rv = InitializeWindowCreator();
     if (NS_FAILED(rv))

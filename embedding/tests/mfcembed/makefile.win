@@ -21,11 +21,17 @@
 
 DEPTH=..\..\..
 
+DIRS=components \
+     $(NULL)
+
 MAKE_OBJ_TYPE   = EXE
 
 MODULE          = mfcembed
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
 RESFILE         = $(MODULE).res
+
+LINCS = -Icomponents \
+        $(NULL)
 
 OBJS =                           \
     .\$(OBJDIR)\MfcEmbed.obj     \
@@ -33,7 +39,6 @@ OBJS =                           \
     .\$(OBJDIR)\BrowserFrameGlue.obj   \
     .\$(OBJDIR)\BrowserView.obj \
     .\$(OBJDIR)\BrowserImpl.obj \
-    .\$(OBJDIR)\BrowserImplPrompt.obj \
     .\$(OBJDIR)\BrowserImplWebPrgrsLstnr.obj \
     .\$(OBJDIR)\BrowserImplCtxMenuLstnr.obj \
     .\$(OBJDIR)\Dialogs.obj       \
@@ -42,7 +47,7 @@ OBJS =                           \
     .\$(OBJDIR)\winEmbedFileLocProvider.obj \
     .\$(OBJDIR)\MostRecentUrls.obj \
     .\$(OBJDIR)\PrintProgressDialog.obj       \
-	.\$(OBJDIR)\Preferences.obj \
+    .\$(OBJDIR)\Preferences.obj \
     .\$(OBJDIR)\StdAfx.obj       \
     $(NULL)
 
@@ -50,6 +55,7 @@ LLIBS=					\
     $(DIST)\lib\baseembed_s.lib		\
     $(DIST)\lib\gkgfxwin.lib		\
     $(DIST)\lib\xpcom.lib		\
+    $(DIST)\lib\mfcEmbedComponents.lib  \
     $(LIBNSPR)				\
     $(NULL)
 
