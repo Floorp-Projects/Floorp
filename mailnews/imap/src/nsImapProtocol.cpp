@@ -93,7 +93,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
-#define IMAP_ENV_HEADERS "From To Cc Subject Date Message-ID"
+#define IMAP_ENV_HEADERS "From To Cc Subject Date Message-ID "
 #define IMAP_DB_HEADERS "Priority X-Priority References Newsgroups"
 #define IMAP_ENV_AND_DB_HEADERS IMAP_ENV_HEADERS IMAP_DB_HEADERS
 static const PRInt32 kImapSleepTime = 1000000;
