@@ -38,14 +38,11 @@
 ?>
 <div id="side">
 <?php
-unset($typename);
-$types = array("E"=>"Extensions","T"=>"Themes","U"=>"Updates");
-$typename = $types["$type"];
 
 echo"<ul id=\"nav\">\n";
 
 if (!$category AND $index !="yes") {echo"<SPAN CLASS=\"selected\">"; }
-  echo"<li><A HREF=\"showlist.php?category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\"><strong>All Extensions</strong></A></li>\n";
+  echo"<li><A HREF=\"showlist.php?category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\"><strong>All Themes</strong></A></li>\n";
 if (!$category AND $index !="yes") {echo"</SPAN>"; }
 
 // Object Categories
