@@ -458,6 +458,15 @@ form {
 
 
 /* button */
+input[type=button] {
+  border: 1px solid inactiveborder;
+  background-color: buttonface;
+}
+
+input[type=button]:active {
+  border: 1px solid activeborder;
+}
+
 input[type=button]:-moz-buttonlabel {
   box-sizing: border-box;
   content:"   ";
@@ -551,11 +560,11 @@ select[size="1"]:focus input#-moz-display {
 }
 
 input[type=radio]:focus {
-  border: 2px inset rgb(204, 204, 204);
+  border: 2px inset rgb(153, 153, 153);
 }
 
 input[type=checkbox]:focus {
-  border: 1px inset rgb(204, 204, 204);
+  border: 1px inset rgb(153, 153, 153);
 }
 
 input[type=image]:focus {
@@ -567,6 +576,11 @@ input[type=image]:focus {
 input[type=image] {
   box-sizing: border-box;
   border: 2px solid blue;
+}
+
+input[type=image][disabled] {
+  border: 2px solid rgb(153, 153, 153);
+  cursor: default;
 }
 
 input[type=file] {
@@ -582,7 +596,7 @@ input[type=file] input[type=button] {
 
 /* Show browse button inside the file selector disabled */
 input[type=file][disabled] input[type="button"] {
-  border-style:solid;
+  border: 1px solid;
 } 
 
 input[type=file] input[type=button]:-moz-buttonlabel {
@@ -601,9 +615,9 @@ input[type=radio] {
   /* these margins are for NavQuirks, we need a Standard ua.css */  
   margin-left:   3px;   
   margin-right:  5px;  
-  margin-top:    3px; 
-  margin-bottom: 3px; 
-  border: 2px outset rgb(204, 204, 204);
+  margin-top:    2px; 
+  margin-bottom: 4px; 
+  border: 2px outset rgb(153, 153, 153);
   background-color:rgb(204, 204, 204);
   color:black;
   width:12px;
@@ -612,21 +626,23 @@ input[type=radio] {
 }
 
 input[type=radio][disabled] {
-  background-color:rgb(150, 150, 150);
-}
-
-input[type=radio]:active {
-  background-color:white;
-  border: 2px inset rgb(204, 204, 204);
-}
-
-input[type=radio][disabled]:hover {
-  background-color:rgb(150, 150, 150);
-  border: 2px outset rgb(204, 204, 204);
+  border: 1px solid;
 }
 
 input[type=radio]:hover {
   border : 2px solid black;
+}
+
+input[type=radio]:active {
+  background-color: white;
+}
+
+input[type=radio][disabled]:hover {
+  border: 1px solid rgb(153, 153, 153);
+}
+
+input[type=radio][disabled]:active {
+  background-color: rgb(204, 204, 204);
 }
 
 :-moz-radio {
@@ -642,30 +658,32 @@ input[type=radio]:hover {
 input[type=checkbox] {
   box-sizing: border-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
+  padding-top:   0px;
+  padding-left:  0px;
+  padding-right: 1px;
+  padding-bottom:1px;
   margin-left:   3px;   
-  margin-right:  5px;  
+  margin-right:  4px;  
   margin-top:    3px; 
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   border: 1px outset rgb(153, 153, 153);
-  width:11px;
-  height:11px;
   background-color:rgb(204, 204, 204);
+  width:13px;
+  height:13px;
   color:black;
 /*  -moz-border-radius:1px; */
 }
 
 input[type=checkbox][disabled] {
-  background-color:rgb(150, 150, 150);
+  border: 1px solid;
 }
 
 input[type=checkbox]:active {
-  background-color:gray;
-  border: 1px inset rgb(204, 204, 204);
+  background-color: white;
 }
 
 input[type=checkbox][disabled]:active {
-  background-color:rgb(150, 150, 150);
-  border : 1px solid rgb(204, 204, 204);
+  background-color:rgb(204, 204, 204);
 }
 
 input[type=checkbox]:hover {
@@ -673,7 +691,7 @@ input[type=checkbox]:hover {
 }
 
 input[type=checkbox][disabled]:hover {
-  border: 1px outset rgb(153, 153, 153);
+  border: 1px solid rgb(153, 153, 153);
 }
 
 input[type="submit"] { 
@@ -707,11 +725,11 @@ input[type="submit"]:hover {
 }
 
 input[type="submit"][disabled] {
-   border-style: solid;
+   border: 1px solid;
 }
 
 input[type="submit"][disabled]:hover {
-  border: 2px solid rgb(156, 154, 156);
+  border: 1px solid rgb(156, 154, 156);
 }
 
 input[type="submit"][disabled]:active {
@@ -768,11 +786,11 @@ input[type="reset"]:hover {
 }
 
 input[type="reset"][disabled] {
-   border-style: solid;
+   border: 1px solid;
 }
 
 input[type="reset"][disabled]:hover {
-  border: 2px solid rgb(156, 154, 156);
+  border: 1px solid rgb(156, 154, 156);
 }
 
 input[type="reset"][disabled]:active {
@@ -826,11 +844,11 @@ input[type="button"]:hover {
 }
 
 input[type="button"][disabled] {
-   border-style: solid;
+   border: 1px solid;
 }
 
 input[type="button"][disabled]:hover {
-  border: 2px solid rgb(156, 154, 156);
+  border: 1px solid rgb(156, 154, 156);
 }
 
 input[type="button"][disabled]:active {
@@ -896,11 +914,12 @@ button:hover:-moz-outline {
 }
 
 button[disabled] {
-   border-style: solid;
+   border: 1px solid;
+   color: gray;
 }
 
 button[disabled]:hover {
-  border: 2px solid rgb(156, 154, 156);
+  border: 1px solid rgb(156, 154, 156);
 }
 
 button[disabled]:active {
@@ -926,9 +945,11 @@ button:focus:-moz-focus-inner {
 }
 
 input[type=text] {
+  box-sizing: border-box;
   font-family:monospace;
   font-size: 10;
-  border: 2px inset rgb(204, 204, 204);
+  border: 2px inset rgb(204, 204, 204); /* for Nav Quirks */
+  padding: 0px;                         /* for Nav Quirks */
   background-color: white;
   color: black;
 }
@@ -943,6 +964,9 @@ input[type=password] {
   color:black;
 }
 
+input[type=password][disabled] {
+  color: gray;
+}
 
 label {
   display: inline;
@@ -953,26 +977,30 @@ label {
 
 /* Combo box style */
 select:-moz-dummy-option { 
-  visibility: collapse; 
+  visibility: hidden; 
   content: "X"; 
   /*display: block;*/
 }
 
+select[size] {
+  background-color: white;
+  border: 2px inset rgb(153, 153, 153);
+  padding-left:   0px;
+  padding-top:    0px;
+  padding-right:  3px;
+  padding-bottom: 0px;
+}
+
 select, select[size="1"] {
+  background-color: white;
   border: inset 1px rgb(192, 192, 192);
-  padding: 0px 0px 0px 0px;
+  padding: 0px 4px 0px 0px;
   margin: 0px 0px 0px 0px;
   vertical-align: bottom;
   background-color:rgb(204, 204, 204);  
   color:black;
   white-space:nowrap;
   text-align: left; 
-}
-
-/* Listbox style */
-select[size] {
-  background-color: white;
-  border: 1px inset rgb(153, 153, 153);
 }
 
 select[size][disabled] {
@@ -982,7 +1010,11 @@ select[size][disabled] {
 
 select[multiple] {
   background-color: white;
-  border: 1px inset rgb(153, 153, 153);
+  border: 2px inset rgb(153, 153, 153);
+  padding-left:   0px;
+  padding-top:    0px;
+  padding-right:  3px;
+  padding-bottom: 0px;
 }
 
 select[multiple][disabled] {
@@ -997,18 +1029,12 @@ select[disabled] {
 
 select[multiple][size="1"] {
   background-color: white;
-  border: 1px inset rgb(153, 153, 153);
+  border: 2px inset rgb(153, 153, 153);
+  padding-left:   0px;
+  padding-top:    0px;
+  padding-right:  3px;
+  padding-bottom: 0px;
 }
-
-select[size="1"] {
-  border: inset 1px rgb(204, 204, 204);
-  vertical-align: bottom;
-  background-color:rgb(204, 204, 204);  
-  color:black;
-  white-space:nowrap;
-  text-align: left; 
-}
-
 
 /* combobox button */
 select input[type=button] {
@@ -1023,7 +1049,7 @@ select input[type=button] {
 }
 
 /* combobox button depressed */
-select input[type="button]:active {
+select input[type=button]:active {
   background-image:url("arrowd.gif");
   padding:1px;
 }
@@ -1078,6 +1104,7 @@ option {
   display:block;
   padding-left:3px;
   padding-right:3px;
+  padding-bottom:1px;
   font-family: sans-serif;
   font-size: small;
 }
@@ -1147,6 +1174,7 @@ select[multiple][size="1"] option[-moz-option-selected] {
 }
 
 select input[type="button"]#-moz-display:-moz-focus-inner {
+   border:none;
    padding-left  : 3px;
    padding-right : 0px;
    padding-top   : 0px;
@@ -1155,6 +1183,7 @@ select input[type="button"]#-moz-display:-moz-focus-inner {
 }
 
 select input[type="button"]#-moz-display:focus:-moz-focus-inner {
+   border:none;
    padding-left  : 0px;
    padding-right : 0px;
    padding-top   : 0px;
@@ -1188,12 +1217,14 @@ optgroup:before {
 
 
 textarea {
+  box-sizing: border-box;
   font-family:monospace;
   font-size: 10;
   vertical-align: bottom;
   border: 2px inset #c0c0c0;
   background-color:white;
   color:black;
+  padding: 0px;
 }
 
 textarea[disabled] {
