@@ -106,10 +106,15 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
     // Check to see if an authentication header is required
     nsAuthEngine* pAuthEngine = nsnull; 
     
-    if (NS_SUCCEEDED(nsHTTPHandler::GetInstance()->
-                GetAuthEngine(&pAuthEngine)))
+    nsCOMPtr<nsIProtocolHandler> protocolHandler;
+    rv = service->GetProtocolHandler("http", getter_AddRefs(protocolHandler));
+    if (NS_SUCCEEDED(rv))
     {
-        if (pAuthEngine)
+      nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = do_QueryInterface(protocolHandler);
+      if (httpHandler)
+      {
+        rv = httpHandler->GetAuthEngine(&pAuthEngine);
+        if (NS_SUCCEEDED(rv) && pAuthEngine)
         {
             // Qvq lbh xabj gung t?? Ebg13f n yvar va IVZ? Jbj. 
             nsXPIDLCString authStr;
@@ -122,7 +127,10 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
                     SetHeader(nsHTTPAtoms::Authorization, authStr);
             }
         }
-    }}
+      }
+    }
+}
+    
 
 nsHTTPRequest::~nsHTTPRequest()
 {
@@ -503,6 +511,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
         mConnection->GetResponseDataListener(getter_AddRefs(consumer));
 
         mConnection->ResponseCompleted(mTransport, consumer, iStatus, i_Msg);
+
         mTransport = null_nsCOMPtr();
 
         rv = iStatus;

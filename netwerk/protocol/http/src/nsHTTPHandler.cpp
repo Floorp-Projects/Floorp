@@ -65,26 +65,6 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler)
-{
-#if defined(PR_LOGGING)
-    //
-    // Initialize the global PRLogModule for HTTP Protocol logging 
-    // if necessary...
-    //
-    if (nsnull == gHTTPLog) {
-        gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
-    }
-#endif /* PR_LOGGING */
-    
-    if (o_HTTPHandler)
-    {
-        *o_HTTPHandler = nsHTTPHandler::GetInstance();
-        return NS_OK;
-    }
-    return NS_ERROR_NULL_POINTER;
-}
-
 nsHTTPHandler::nsHTTPHandler():
     mDoKeepAlive(PR_FALSE),
     mProxy(nsnull),
@@ -92,6 +72,10 @@ nsHTTPHandler::nsHTTPHandler():
 {
     nsresult rv;
     NS_INIT_REFCNT();
+
+#if defined (PR_LOGGING)
+    gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
+#endif /* PR_LOGGING */
 
     mSessionStartTime = PR_Now();
 
@@ -501,14 +485,6 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
                                 o_pTrans);
 }
 
-nsHTTPHandler * nsHTTPHandler::GetInstance(void)
-{
-    static nsHTTPHandler* pHandler = new nsHTTPHandler();
-    NS_IF_ADDREF(pHandler);
-    return pHandler;
-};
-
-
 nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
 {
     nsresult rv;
@@ -627,4 +603,11 @@ nsHTTPHandler::SetProxyHost(const char* i_ProxyHost)
         return (mProxy == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
     }
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPHandler::GetAuthEngine(nsAuthEngine** o_AuthEngine)
+{
+  *o_AuthEngine = &mAuthEngine;
+  return NS_OK;
 }

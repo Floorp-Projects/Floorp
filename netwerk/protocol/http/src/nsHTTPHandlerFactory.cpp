@@ -21,13 +21,7 @@
  */
 
 /*
-
-    The nsHTTPHandlerFactory implementation. This was directly
-    plagiarized from Chris Waterson the Great. So if you find 
-    a fault here... make sure you notify him as well. 
-
-    -Gagan Saksena 03/25/99
-
+    This file has become obsolete...it's been replaced by the http handler module
 */
 
 #include "nsCOMPtr.h"
@@ -44,76 +38,3 @@ static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID,      NS_HTTP_HANDLER_FACTORY_CID);
 
-////////////////////////////////////////////////////////////////////////
-
-nsHTTPHandlerFactory::nsHTTPHandlerFactory(const nsCID &aClass)
-    : mClassID(aClass)
-{
-    NS_INIT_REFCNT();
-}
-
-nsHTTPHandlerFactory::~nsHTTPHandlerFactory()
-{
-}
-
-NS_IMETHODIMP
-nsHTTPHandlerFactory::QueryInterface(const nsIID &aIID, void **aResult)
-{
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    // Always NULL result, in case of failure
-    *aResult = nsnull;
-
-    if (aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aResult = NS_STATIC_CAST(nsISupports*, this);
-        AddRef();
-        return NS_OK;
-    } else if (aIID.Equals(kIFactoryIID)) {
-        *aResult = NS_STATIC_CAST(nsIFactory*, this);
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsHTTPHandlerFactory);
-NS_IMPL_RELEASE(nsHTTPHandlerFactory);
-
-NS_IMETHODIMP
-nsHTTPHandlerFactory::CreateInstance(nsISupports *aOuter,
-                                 const nsIID &aIID,
-                                 void **aResult)
-{
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
-    nsresult rv;
-
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kHTTPHandlerCID)) {
-        if (NS_FAILED(rv = NS_CreateOrGetHTTPHandler((nsIHTTPProtocolHandler**) &inst)))
-            return rv;
-    }
-    else {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-    return rv;
-}
-
-nsresult nsHTTPHandlerFactory::LockFactory(PRBool aLock)
-{
-    // Not implemented in simplest case.
-    return NS_OK;
-}
