@@ -49,6 +49,23 @@ sub BugLink {
     return "<a href=\"show_bug.cgi?id=$id\">$id</a>";
 }
 
+#
+# Parameter is a list of bug ids.
+#
+# Return is a string containing a list of all the bugids, as hrefs,
+# followed by a link to them all as a buglist
+sub BugListLinks {
+    my @bugs = @_;
+
+    # Historically, GetBugLink() wasn't used here. I'm guessing this
+    # was because it didn't exist or is too performance heavy, or just
+    # plain unnecessary
+    my @bug_links = map(BugLink($_), @bugs);
+
+    return join(', ',@bug_links) . " <a href=\"buglist.cgi?bug_id=" .
+        join(',',@bugs) . "\">(as buglist)</a>";
+}
+
 ###########################################################################
 # Start
 ###########################################################################
@@ -199,7 +216,8 @@ foreach my $field (("bug_severity", "bug_status", "op_sys",
         push (@invalid, FetchOneColumn());
     }
     if (@invalid) {
-        Alert("Bug(s) found with invalid $field value: ".join(', ',@invalid));
+        Alert("Bug(s) found with invalid $field value: ".
+              BugListLinks(@invalid));
     }
 }
 
@@ -535,8 +553,8 @@ foreach my $b (keys(%realk)) {
 }
 if (@badbugs) {
     @badbugs = sort {$a <=> $b} @badbugs;
-    Alert("Bug(s) found with incorrect keyword cache: " .
-          join(', ', @badbugs));
+    Alert(scalar(@badbugs) . " bug(s) found with incorrect keyword cache: " .
+          BugListLinks(@badbugs));
     if (exists $::FORM{'rebuildkeywordcache'}) {
         Status("OK, now fixing keyword cache.");
         foreach my $b (@badbugs) {
@@ -575,11 +593,9 @@ sub BugCheck ($$) {
         my ($id) = (@row);
         push (@badbugs, $id);
     }
-    
-    @badbugs = map(BugLink($_), @badbugs);
-    
+
     if (@badbugs) {
-        Alert("$errortext: " . join(', ', @badbugs));
+        Alert("$errortext: " . BugListLinks(@badbugs));
     }
 }
 
@@ -709,7 +725,8 @@ while (@row = FetchSQLData()) {
 
 if (@badbugs > 0) {
     Alert("Bugs that have changes but no mail sent for at least half an hour: " .
-          join (", ", @badbugs));
+          BugListLinks(@badbugs));
+
     print qq{<a href="sanitycheck.cgi?rescanallBugMail=1">Send these mails</a>.<p>\n};
 }
 
