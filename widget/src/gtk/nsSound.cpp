@@ -134,7 +134,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 
   long samples_per_sec, avg_bytes_per_sec;
   long rate;
-  int format, width = 8, channels = 1, block_align, bits_per_sample;
+  int format, channels = 1, block_align, bits_per_sample;
 
 
   if (strncmp(string, "RIFF", 4)) {
@@ -180,12 +180,17 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
       }
   }
 
+#if 0
+  printf("f: %d | c: %d | sps: %li | abps: %li | ba: %d | bps: %d | rate: %li\n",
+         format, channels, samples_per_sec, avg_bytes_per_sec, block_align, bits_per_sample, rate);
+#endif
+
   /* open up conneciton to esd */  
   EsdPlayStreamFallbackType EsdPlayStreamFallback = (EsdPlayStreamFallbackType) PR_FindSymbol(elib, "esd_play_stream_fallback");
   
   mask = ESD_PLAY | ESD_STREAM;
 
-  if (width == 8)
+  if (bits_per_sample == 8)
     mask |= ESD_BITS8;
   else 
     mask |= ESD_BITS16;
