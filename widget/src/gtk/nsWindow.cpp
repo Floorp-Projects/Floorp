@@ -436,16 +436,7 @@ PRBool nsWindow::GetWindowPos(nscoord &x, nscoord &y)
   if ((mCachedX==-1) && (mCachedY==-1)) { /* Not cached */
     gint xpos, ypos;
 
-    if (mParent)
-      {
-        // Just ask our parent; it might have its position cached, so
-        // we can save a bunch of work.
-        nsRect newRect;
-        mParent->WidgetToScreen(mBounds, newRect);
-        xpos = newRect.x;
-        ypos = newRect.y;
-      }
-    else if (mMozArea)
+    if (mMozArea)
       {
         if (mMozArea->window)
           {
