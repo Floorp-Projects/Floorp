@@ -19,6 +19,7 @@
  *
  *
  * Contributor(s): 
+ *   Blake Ross <blakeross@telocity.com>
  */
 
 #ifdef ENDER_LITE
@@ -3217,8 +3218,28 @@ nsGfxTextControlFrame2::RestoreState(nsIPresContext* aPresContext, nsIPresState*
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetScrollableView(nsIScrollableView** aView)
 {
+  nsresult rv = NS_OK;
   *aView = mScrollableView;
-  return NS_OK;
+  if (mScrollableView && !IsScrollable()) {
+    nsIView *view = 0;
+    nsIScrollableView* scrollableView = 0;
+    rv = mScrollableView->QueryInterface(NS_GET_IID(nsIView), (void**)&view);
+    while (view) {
+      rv = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollableView);
+      if (NS_SUCCEEDED(rv) && scrollableView)
+        *aView = scrollableView;
+      view->GetParent(view);
+    }
+  }
+  return rv;
+}
+
+PRBool
+nsGfxTextControlFrame2::IsScrollable() const
+{
+  if (!IsSingleLineTextControl())
+    return PR_TRUE;
+  return PR_FALSE;
 }
 
 #endif
