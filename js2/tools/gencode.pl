@@ -138,6 +138,12 @@ $ops{"NEW_ARRAY"} =
    rem    => "dest",
    params => [ ("TypedRegister") ]
   };
+$ops{"DELETE_PROP"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, object, prop name",
+   params => [ ("TypedRegister", "TypedRegister", "const StringAtom*") ]
+  };
 $ops{"GET_PROP"} =
   {
    super  => "Instruction_3",
