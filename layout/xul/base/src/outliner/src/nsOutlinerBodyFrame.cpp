@@ -538,12 +538,14 @@ nsOutlinerBodyFrame::GetFocused(PRBool* aFocused)
 NS_IMETHODIMP 
 nsOutlinerBodyFrame::SetFocused(PRBool aFocused)
 {
-  mFocused = aFocused;
-  if (mView) {
-    nsCOMPtr<nsIOutlinerSelection> sel;
-    mView->GetSelection(getter_AddRefs(sel));
-    if (sel)
-      sel->InvalidateSelection();
+  if (mFocused != aFocused) {
+    mFocused = aFocused;
+    if (mView) {
+      nsCOMPtr<nsIOutlinerSelection> sel;
+      mView->GetSelection(getter_AddRefs(sel));
+      if (sel)
+        sel->InvalidateSelection();
+    }
   }
   return NS_OK;
 }
@@ -586,7 +588,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetFirstVisibleRow(PRInt32 *_retval)
 
 NS_IMETHODIMP nsOutlinerBodyFrame::GetLastVisibleRow(PRInt32 *_retval)
 {
-  *_retval = mTopRowIndex + mPageCount - 1;
+  *_retval = mTopRowIndex + mPageCount;
   return NS_OK;
 }
 
@@ -623,17 +625,16 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateCell(PRInt32 aIndex, const PRUnicha
     return NS_OK;
 
   nscoord currX = mInnerBox.x;
+  nscoord yPos = mInnerBox.y+mRowHeight*(aIndex-mTopRowIndex);
   for (nsOutlinerColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
        currCol = currCol->GetNext()) {
-    nsRect colRect(currX, mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
-    PRInt32 overflow = colRect.x+colRect.width-(mInnerBox.x+mInnerBox.width);
-    if (overflow > 0)
-      colRect.width -= overflow;
+    nsRect cellRect(currX, yPos, currCol->GetWidth(), mRowHeight);
 
     if (nsCRT::strcmp(currCol->GetID(), aColID) == 0) {
-      nsLeafBoxFrame::Invalidate(mPresContext, colRect, PR_FALSE);
+      nsLeafBoxFrame::Invalidate(mPresContext, cellRect, PR_FALSE);
       break;
     }
+    currX += currCol->GetWidth();
   }
   return NS_OK;
 }
@@ -651,8 +652,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
   if (aStart < mTopRowIndex)
     aStart = mTopRowIndex;
 
-  if (aEnd > mTopRowIndex + mPageCount + 1)
-    aEnd = mTopRowIndex + mPageCount + 1;
+  if (aEnd > last)
+    aEnd = last;
 
   nsRect rangeRect(mInnerBox.x, mInnerBox.y+mRowHeight*(aStart-mTopRowIndex), mInnerBox.width, mRowHeight*(aEnd-aStart+1));
   nsLeafBoxFrame::Invalidate(mPresContext, rangeRect, PR_FALSE);
@@ -697,6 +698,8 @@ nsresult nsOutlinerBodyFrame::SetVisibleScrollbar(PRBool aSetVisible)
   else if (isCollapsed.IsEmpty() && !aSetVisible)
     scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
                               NS_LITERAL_STRING("true"), PR_TRUE);
+  else
+    return NS_OK;
 
   Invalidate();
 
@@ -1303,6 +1306,7 @@ nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID,
         nsCOMPtr<nsIOutlinerImageListener> listener(do_QueryInterface(obs));
         if (listener)
           listener->AddRow(aRowIndex);
+        return NS_OK;
       }
     }
   }
@@ -1329,7 +1333,6 @@ nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID,
      
       nsCOMPtr<nsIURI> srcURI;
       NS_NewURI(getter_AddRefs(srcURI), myList->mListStyleImage, baseURI);
-
       nsCOMPtr<imgIRequest> imageRequest;
 
       nsresult rv;
@@ -1337,11 +1340,10 @@ nsOutlinerBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID,
       il->LoadImage(srcURI, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
 
       if (!mImageCache) {
-        mImageCache = new nsSupportsHashtable(32);
+        mImageCache = new nsSupportsHashtable(64);
         if (!mImageCache)
           return NS_ERROR_OUT_OF_MEMORY;
       }
-
       nsISupportsKey key(aStyleContext);
       mImageCache->Put(&key, imageRequest);
     }
@@ -1620,7 +1622,6 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintColumn(nsOutlinerColumn*    aColumn,
 
   return NS_OK;
 }
-
 NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRect,
                                             nsIPresContext*      aPresContext,
                                             nsIRenderingContext& aRenderingContext,
@@ -2814,7 +2815,8 @@ nsOutlinerImageListener::nsOutlinerImageListener(nsIOutlinerBoxObject* aOutliner
   NS_INIT_ISUPPORTS();
   mOutliner = aOutliner;
   mColID = aID;
-  mMin = mMax = 0;
+  mMin = -1; // min should start out "undefined"
+  mMax = 0;
 }
 
 nsOutlinerImageListener::~nsOutlinerImageListener()
@@ -2866,7 +2868,9 @@ NS_IMETHODIMP nsOutlinerImageListener::FrameChanged(imgIContainer *aContainer, n
 NS_IMETHODIMP
 nsOutlinerImageListener::AddRow(int aIndex)
 {
-  if (aIndex < mMin)
+  if (mMin == -1)
+    mMin = mMax = aIndex;
+  else if (aIndex < mMin)
     mMin = aIndex;
   else if (aIndex > mMax)
     mMax = aIndex;
