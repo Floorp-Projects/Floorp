@@ -157,7 +157,9 @@ function CreatePublishDataFromUrl(docUrl)
     browseUrl  : pubUrl,
     docDir     : "",
     otherDir   : "",
+    publishOtherFiles : true,
     dirList    : [""],
+    saveDirs   : false,
     notInSiteData : true
   }
 
@@ -183,22 +185,11 @@ function GetPublishDataFromSiteName(siteName, docUrlOrFilename)
     if (siteNameList[i] == siteName)
     {
       var publishData = GetPublishData_internal(publishBranch, siteName);
-      var filename = docUrlOrFilename;
-      var scheme = GetScheme(docUrlOrFilename);
-      if (scheme)
-      {
-        // Separate into the base url and filename
-        var lastSlash = docUrlOrFilename.lastIndexOf("\/");
-        var url = docUrlOrFilename.slice(0, lastSlash);
-        filename = docUrlOrFilename.slice(lastSlash+1);
+      if (GetScheme(docUrlOrFilename))
+        FillInMatchingPublishData(publishData, docUrlOrFilename);
+      else
+        publishData.filename = docUrlOrFilename;
 
-        // Get length of the publish url that matches this docUrl
-        var len = GetMatchingPublishUrlLength(publishData, url);
-        if (len)
-          // The remainder is a subdirectory within the site
-          publishData.docDir = FormatDirForPublishing(url.slice(len));
-      }
-      publishData.filename = filename;
       return publishData;
     }
   }
@@ -233,8 +224,10 @@ function GetPublishData_internal(publishBranch, siteName)
     return null;
 
   var savePassword = false;
+  var publishOtherFiles = true;
   try {
     savePassword = publishBranch.getBoolPref(prefPrefix+"save_password");
+    publishOtherFiles = publishBranch.getBoolPref(prefPrefix+"publish_other_files");
   } catch (e) {}
 
   var publishData = { 
@@ -245,10 +238,26 @@ function GetPublishData_internal(publishBranch, siteName)
     publishUrl : publishUrl,
     browseUrl  : GetPublishStringPref(publishBranch, prefPrefix+"browse_url"),
     docDir     : FormatDirForPublishing(GetPublishStringPref(publishBranch, prefPrefix+"doc_dir")),
-    otherDir   : FormatDirForPublishing(GetPublishStringPref(publishBranch, prefPrefix+"other_dir"))
+    otherDir   : FormatDirForPublishing(GetPublishStringPref(publishBranch, prefPrefix+"other_dir")),
+    publishOtherFiles : publishOtherFiles,
+    saveDirs : false
   }
+
   // Get password from PasswordManager
   publishData.password = GetSavedPassword(publishData);
+
+  // If password was found, user must have checked "Save password"
+  //    checkbox in prompt outside of publishing, so override the pref we stored
+  if (publishData.password)
+  {
+    if (!savePassword)
+    {
+      try {
+        publishPrefsBranch.setBoolPref(prefPrefix+"save_password", true);
+      } catch (e) {}
+    }
+    publishData.savePassword = true;
+  }
 
   // Build history list of directories 
   // Always supply the root dir 
@@ -352,14 +361,22 @@ function SavePublishDataToPrefs(publishData)
   {
     var siteName = GetPublishStringPref(publishBranch, "site_name."+i);
     if (siteName == publishData.siteName)
+    {
+      // Delete prefs for an existing site
+      try {
+        publishBranch.deleteBranch("site_data." + siteName + ".");
+      } catch (e) {}
       break;
+    }
   }
+
+
   var ret = SavePublishData_Internal(publishBranch, publishData, i);
   if (ret)
   {
     SavePrefFile();
     // Clear signal to save these data
-    if (publishData.notInSiteData)
+    if ("notInSiteData" in publishData && publishData.notInSiteData)
       publishData.notInSiteData = false;
   }
   return ret;
@@ -376,23 +393,38 @@ function SavePublishData_Internal(publishPrefsBranch, publishData, siteIndex)
   FixupUsernamePasswordInPublishData(publishData);
 
   var prefPrefix = "site_data." + publishData.siteName + "."
+
   SetPublishStringPref(publishPrefsBranch, prefPrefix+"url", publishData.publishUrl);
   SetPublishStringPref(publishPrefsBranch, prefPrefix+"browse_url", publishData.browseUrl);
   SetPublishStringPref(publishPrefsBranch, prefPrefix+"username", publishData.username);
   
   try {
     publishPrefsBranch.setBoolPref(prefPrefix+"save_password", publishData.savePassword);
+    publishPrefsBranch.setBoolPref(prefPrefix+"publish_other_files", publishData.publishOtherFiles);
   } catch (e) {}
 
   // Save password using PasswordManager 
   // (If publishData.savePassword = false, this clears existing password)
   SavePassword(publishData);
 
-  SetPublishStringPref(publishPrefsBranch, prefPrefix+"doc_dir", publishData.docDir);
-  if (publishData.otherDir)
-    SetPublishStringPref(publishPrefsBranch, prefPrefix+"other_dir", publishData.otherDir);
+  SetPublishStringPref(publishPrefsBranch, prefPrefix+"doc_dir", 
+                       FormatDirForPublishing(publishData.docDir));
 
-  // Save array of directories in each site
+  if (publishData.publishOtherFiles && publishData.otherDir)
+    SetPublishStringPref(publishPrefsBranch, prefPrefix+"other_dir",
+                         FormatDirForPublishing(publishData.otherDir));
+
+  if ("saveDirs" in publishData && publishData.saveDirs)
+  {
+    if (publishData.docDir)
+      AppendNewDirToList(publishData, publishData.docDir);
+
+    if (publishData.publishOtherFiles && publishData.otherDir 
+        && publishData.otherDir != publishData.docDir)
+      AppendNewDirToList(publishData, publishData.otherDir);
+  }
+
+  // Save array of subdirectories with site
   if (publishData.dirList.length)
   {
     publishData.dirList.sort();
@@ -409,6 +441,89 @@ function SavePublishData_Internal(publishPrefsBranch, publishData, siteIndex)
       }
     }
   }
+
+  return true;
+}
+
+function AppendNewDirToList(publishData, newDir)
+{
+  newDir = FormatDirForPublishing(newDir);
+  if (!publishData || !newDir)
+    return;
+
+  if (!publishData.dirList)
+  {
+    publishData.dirList = [newDir];
+    return;
+  }
+
+  // Check if already in the list
+  for (var i = 0; i < publishData.dirList.length; i++)
+  {
+    // Don't add if already in the list
+    if (newDir == publishData.dirList[i])
+      return;
+  }
+  // Add to end of list
+  publishData.dirList[publishData.dirList.length] = newDir;
+}
+
+function RemovePublishSubdirectoryFromPrefs(publishData, removeDir)
+{
+  removeDir = FormatDirForPublishing(removeDir);
+  if (!publishData || !publishData.siteName || !removeDir)
+    return false;
+
+  var publishBranch = GetPublishPrefsBranch();
+  if (!publishBranch)
+    return false;
+
+  var prefPrefix = "site_data." + publishData.siteName + ".";
+
+  // Remove dir from the default dir prefs
+  if (publishData.docDir == removeDir)
+  {
+    publishData.docDir = "";
+    SetPublishStringPref(publishBranch, prefPrefix+"doc_dir", "");
+  }
+
+  if (publishData.otherDir == removeDir)
+  {
+    publishData.otherDir = "";
+    SetPublishStringPref(publishBranch, prefPrefix+"other_dir", "");
+  }
+
+  prefPrefix += "dir.";
+
+  // Delete entire subdir list
+  try {
+    publishBranch.deleteBranch(prefPrefix);
+  } catch (e) {}
+
+  // Rebuild prefs, skipping over site to remove
+  if (publishData.dirList.length)
+  {
+    var dirIndex = 0;
+    var docDirInList = false;
+    var otherDirInList = false;
+    for (var i = 0; i < publishData.dirList.length; i++)
+    {
+      var dir = publishData.dirList[i];
+      if (dir == removeDir)
+      {
+        // Remove item from the dirList array
+        publishData.dirList.splice(i, 1);
+        --i;
+      }
+      else if (dir && dir != "/") // skip empty or root dir
+      {
+        // Save to prefs
+        SetPublishStringPref(publishBranch, prefPrefix + dirIndex, dir);
+        dirIndex++;
+      }
+    }
+  }
+  SavePrefFile();
   return true;
 }
 
@@ -533,55 +648,74 @@ function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
   if (!publishSiteData || !docUrl || GetScheme(docUrl) == "file")
     return -1;
 
-  // Remove filename from docUrl
-  // (Check for terminal "/" so docUrl param can be a directory path)
-  if (docUrl.charAt(docUrl.length-1) != "/")
-  {
-    var lastSlash = docUrl.lastIndexOf("/");
-    docUrl = docUrl.slice(0, lastSlash+1);
-  }
-
   var siteIndex = -1;
   var siteUrlLen = 0;
-  var urlLen = docUrl.length;
   
   for (var i = 0; i < publishSiteData.length; i++)
   {
     // Site publish or browse url needs to be contained in document URL,
     //  but that may also have a directory after the site base URL
     //  So we must examine all records to find the site URL that best
-    //    matches the document URL (XXX is this right?)
-    var len = GetMatchingPublishUrlLength(publishSiteData[i], docUrl);
+    //    matches the document URL: the longest-matching substring (XXX is this right?)
+    var lenObj = {value:0};
+    var tempData = publishSiteData[i];
+    
+    // Check if this site matches docUrl (returns length of match if found)
+    var len = FillInMatchingPublishData(tempData, docUrl);
     if (len > siteUrlLen)
     {
       siteIndex = i;
       siteUrlLen = len;
+      if (dirObj)
+        dirObj.value = tempData.docDir;
+
+      // Continue to find the site with longest-matching publishUrl
     }
   }
-
-  // Get directory name from the end of url
-  if (dirObj && siteIndex >= 0 && urlLen > siteUrlLen)
-    dirObj.value = FormatDirForPublishing(docUrl.slice(siteUrlLen));
-
   return siteIndex;
 }
 
 // Look for a matching publish url within the document url
 // (We need to look at both "publishUrl" and "browseUrl" in case we are editing
 //  an http: document but using ftp: to publish.)
-// Return the length of that matching portion
-// Used to find the optimum publishing site within all site data
-//   and to extract remaining directory from the end of a document url
-function GetMatchingPublishUrlLength(publishData, docUrl)
+// If match is found:
+//    Fill in the filename and subirectory based on the docUrl and 
+//    return the length of the docUrl with username+password stripped out
+function FillInMatchingPublishData(publishData, docUrl)
 {
-  if (publishData && docUrl)
+  if (!publishData || !docUrl)
+    return 0;
+
+  // Separate docUrl into the base url and filename
+  var lastSlash = docUrl.lastIndexOf("\/");
+  var baseUrl = docUrl.slice(0, lastSlash+1);
+  var filename = docUrl.slice(lastSlash+1);
+    
+  // Strip username+password from docUrl because these
+  //  are stored separately in publishData, never embedded in the publishUrl
+  // If both docUrl and publishData contain usernames,
+  //   we must match that as well as the url
+  var username = {value:""};
+  baseUrl = StripUsernamePassword(baseUrl, username); 
+  username = username.value;
+
+  var matchedLength = 0;
+  var pubUrlFound = baseUrl.indexOf(publishData.publishUrl) == 0;
+  var browseUrlFound = baseUrl.indexOf(publishData.browseUrl) == 0;
+
+  if ((pubUrlFound || browseUrlFound) 
+      && (!username || !publishData.username || username == publishData.username))
   {
-    var pubUrlFound = docUrl.indexOf(publishData.publishUrl) == 0;
-    var browseUrlFound = docUrl.indexOf(publishData.browseUrl) == 0;
-    if (pubUrlFound || browseUrlFound)
-      return  pubUrlFound ? publishData.publishUrl.length : publishData.browseUrl.length;
+    // We found a match
+    matchedLength = pubUrlFound ? publishData.publishUrl.length 
+                            : publishData.browseUrl.length;
+
+    publishData.filename = filename;
+
+    // Subdirectory within the site is whats left in baseUrl after the matched portion
+    publishData.docDir = FormatDirForPublishing(baseUrl.slice(matchedLength));
   }
-  return 0;
+  return matchedLength;
 }
 
 // Prefs that don't exist will through an exception,
@@ -707,7 +841,7 @@ function GetPasswordManagerInternal()
 
 function GetSavedPassword(publishData)
 {
-  if (!publishData || !publishData.savePassword)
+  if (!publishData)
     return "";
   var passwordManagerInternal = GetPasswordManagerInternal();
   if (!passwordManagerInternal)
@@ -716,12 +850,13 @@ function GetSavedPassword(publishData)
   var host = {value:""};
   var user =  {value:""};
   var password = {value:""}; 
+  var url = GetUrlForPasswordManager(publishData);
+  
   try {
     passwordManagerInternal.findPasswordEntry
-      (publishData.publishUrl, publishData.username, "", host, user, password);
+      (url, publishData.username, "", host, user, password);
     return password.value;
-  } catch (e) {
-  }
+  } catch (e) {}
 
   return "";
 }
@@ -734,20 +869,44 @@ function SavePassword(publishData)
   var passwordManager = GetPasswordManager();
   if (passwordManager)
   {
+    var url = GetUrlForPasswordManager(publishData);
+
     // Remove existing entry
     // (Note: there is no method to update a password for an existing entry)
     try {
-      passwordManager.removeUser(publishData.publishUrl, publishData.username);
+      passwordManager.removeUser(url, publishData.username);
     } catch (e) {}
 
     // If SavePassword is true, add new password
     if (publishData.savePassword)
     {
       try {
-        passwordManager.addUser(publishData.publishUrl, publishData.username, publishData.password);
+        passwordManager.addUser(url, publishData.username, publishData.password);
       } catch (e) {}
     }
     return true;
   }
   return false;
+}
+
+function GetUrlForPasswordManager(publishData)
+{
+  if (!publishData || !publishData.publishUrl)
+    return false;
+
+  var url;
+
+  // For FTP, we must embed the username into the url for a site address
+  // XXX Maybe we should we do this for HTTP as well???
+  if (publishData.username && GetScheme(publishData.publishUrl) == "ftp")
+    url = InsertUsernameIntoUrl(publishData.publishUrl, publishData.username);
+  else
+    url = publishData.publishUrl;
+
+  // Strip off terminal "/"
+  var len = url.length;
+  if (len && url.charAt(len-1) == "\/")
+    url = url.slice(0, len-1);
+  
+  return url;
 }

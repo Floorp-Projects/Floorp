@@ -354,7 +354,10 @@ var nsSaveCommand =
       var docUrl = GetDocumentUrl();
       var scheme = GetScheme(docUrl);
       if (scheme && scheme != "file")
+      {
         goDoCommand("cmd_publish");
+        return true;
+      }
 
       FinishHTMLSource();
       result = SaveDocument(IsUrlAboutBlank(docUrl), false, editorShell.contentsMIMEType);
@@ -445,10 +448,17 @@ var nsPublishCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return window.editorShell && window.editorShell.documentEditable
-              && (window.editorShell.documentModified || 
-                  IsUrlAboutBlank(GetDocumentUrl()) ||
-                  window.gHTMLSourceChanged);
+    if (window.editorShell && window.editorShell.documentEditable)
+    {
+      // Always allow publishing when editing a local document,
+      //  otherwise the document modified state would prevent that
+      //  when you first open any local file.
+      var docUrl = GetDocumentUrl();
+      return window.editorShell.documentModified || window.gHTMLSourceChanged
+             || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file";
+             
+    }
+    return false;
   },
   
   doCommand: function(aCommand)
@@ -472,9 +482,9 @@ var nsPublishCommand =
         // Try to get publish data from the document url
         publishData = CreatePublishDataFromUrl(docUrl);
 
-        // If none, use default publishing site
-        if (!publishData)
-          publishData = GetPublishDataFromSiteName(GetDefaultPublishSiteName(), filename);
+        // If none, use default publishing site? Need a pref for this
+        //if (!publishData)
+        //  publishData = GetPublishDataFromSiteName(GetDefaultPublishSiteName(), filename);
       }
 
       if (showPublishDialog || !publishData)
@@ -561,12 +571,13 @@ function GetSuggestedFileName(aDocumentURLString, aMIMEType, aHTMLDoc)
   {
     var docURI = null;
     try {
-      docURI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-      docURI.spec = aDocumentURLString;
-      var docURL = docURI.QueryInterface(Components.interfaces.nsIURL);
+
+      var ioService = GetIOService();
+      docURI = ioService.newURI(aDocumentURLString, window.editorShell.GetDocumentCharacterSet(), null);
+      docURI = docURI.QueryInterface(Components.interfaces.nsIURL);
 
       // grab the file name
-      var url = docURL.fileBaseName;
+      var url = docURI.fileBaseName;
       if (url)
         return url+extension;
     } catch(e) {}
@@ -585,8 +596,7 @@ function GetSuggestedFileName(aDocumentURLString, aMIMEType, aHTMLDoc)
   }
 
   // if we still don't have a file name, let's just go with "untitled"
-  // shouldn't this come out of a string bundle? I'm shocked localizers haven't complained!
-  return "untitled" + extension;
+  return GetString("untitled") + extension;
 }
 
 // returns file picker result
@@ -631,8 +641,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
     
     var isLocalFile = true;
     try {
-      var docURI = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIURI);
-      docURI.spec = aDocumentURLString;
+      var docURI = ioService.newURI(aDocumentURLString, window.editorShell.GetDocumentCharacterSet(), null);
       isLocalFile = docURI.schemeIs("file");
     }
     catch (e) {}
@@ -789,6 +798,7 @@ function GetOutputFlags(aMimeType, aWrapColumn)
 }
 
 // returns number of column where to wrap
+const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
 function GetWrapColumn()
 {
   var wrapCol = 72;
@@ -812,9 +822,9 @@ function GetPromptService()
   return promptService;
 }
 
-const gShowDebugOutputStateChange = false;
+const gShowDebugOutputStateChange = true;
 const gShowDebugOutputProgress = false;
-const gShowDebugOutputStatusChange = false;
+const gShowDebugOutputStatusChange = true;
 
 const gShowDebugOutputLocationChange = false;
 const gShowDebugOutputSecurityChange = false;
@@ -852,6 +862,8 @@ var gEditorOutputProgressListener =
         dump(" STATE_IS_NETWORK ");
 
       dump("\n * requestSpec="+requestSpec+", pubSpec="+pubSpec+", aStatus="+aStatus+"\n");
+
+      DumpDebugStatus(aStatus);
     }
 
     // Detect start of file upload of any file:
@@ -870,61 +882,85 @@ var gEditorOutputProgressListener =
       }
     }
 
-    // Detect end of file upload of HTML file:
+    // Detect end of file upload of any file:
     if ((aStateFlags & nsIWebProgressListener.STATE_STOP) && requestSpec)
     {
-      // Show final status in progress dialog when we receive the STOP
-      //  notification for the destination file
-      if (gProgressDialog)
+      // New: Stop at the first bad aStatus, rather than waiting for STATE_IS_NETWORK message
+      try {
+        // check http channel for response: 200 range is ok; other ranges are not
+        var httpChannel = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel);
+        var httpResponse = httpChannel.responseStatus;
+        if (httpResponse < 200 || httpResponse >= 300)
+          aStatus = httpResponse;   // not a real error but enough to pass check below
+      } catch(e) {}
+
+      // Notify progress dialog when we receive the STOP
+      //  notification for a file if there was an error 
+      //  or for a successful finish only if 
+      //  destination url is contains the publishing location
+      if (gProgressDialog &&
+          (aStatus != 0 
+           || requestSpec && requestSpec.indexOf(gPublishData.publishUrl) == 0))
       {
         try {
           gProgressDialog.SetProgressFinished(GetFilename(requestSpec), aStatus);
-        } catch(e) {
-          dump(" Exception error calling SetProgressFinished\n");
-        }
+        } catch(e) {}
       }
+
+      if (aStatus)
+      {
+        // Cancel the publish 
+        gPersistObj.cancelSave();
+
+        //XXX TODO: we should provide more meaningful errors (if possible)
+        var failedStr = GetString("PublishFailed");
+        
+        // XXX We don't have error codes in IDL !!!
+        // Give better error messages for cases we know about:
+        if (aStatus == 2152398868)  // Bad directory
+        {
+          var requestFilename = requestSpec ? GetFilename(requestSpec) : "";
+          var dir = (gPublishData.filename == requestFilename) ? 
+                       gPublishData.docDir : gPublishData.otherDir;
+
+          failedStr = GetString("PublishDirFailed").replace(/%dir%/, gPublishData.docDir);
+          if (gProgressDialog)
+            gProgressDialog.SetStatusMessage(failedStr);
+
+          // Remove directory from saved prefs
+          RemovePublishSubdirectoryFromPrefs(gPublishData, dir);
+        }
+
+        // Do not do any commands after failure
+        gCommandAfterPublishing = null;
+
+        // Show error in progress dialog and let user close it
+        if (gProgressDialog)
+        {
+          try {
+            // Tell dialog final status value so it can show appropriate message
+            gProgressDialog.SetProgressFinished(null, aStatus);
+          } catch (e) { 
+            dump(" **** EXCEPTION ERROR CALLING ProgressDialog.SetProgressFinished\n");
+            AlertWithTitle(GetString("Publish"), failedStr); 
+          }
+        }
+        else
+        {
+          // In case we ever get final alert with no dialog
+          AlertWithTitle(GetString("Publish"), failedStr);
+
+          // Final cleanup
+          FinishPublishing();
+        }
+        return;  // we don't want to change location or reset mod count, etc.
+      }
+
       if ((aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK))
       {
-        // FINISHED ALL PUBLISHING
-
-        try {
-          // check http channel for response: 200 range is ok; other ranges are not
-          var httpChannel = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel);
-          var httpResponse = httpChannel.responseStatus;
-          if (httpResponse < 200 || httpResponse >= 300)
-            aStatus = httpResponse;   // not a real error but enough to pass check below
-        } catch(e) {}
-
-        if (aStatus)
-        {
-          // Cancel the publish 
-          gPersistObj.cancelSave();
-
-          //XXX TODO: we should provide more meaningful errors (if possible)
-          var failedStr = GetString("PublishFailed");
-          
-          // Show error in progress dialog and let user close it
-          if (gProgressDialog)
-          {
-            try {
-              // Tell dialog final status value so it can show appropriate message
-              gProgressDialog.SetProgressFinished(null, aStatus);
-            } catch (e) { 
-              dump(" **** EXCEPTION ERROR CALLING ProgressDialog.SetProgressFinished\n");
-              AlertWithTitle(GetString("Publish"), failedStr); 
-            }
-          }
-          else
-          {
-            // In case we ever get final alert with no dialog
-            AlertWithTitle(GetString("Publish"), failedStr);
-
-            // Final cleanup
-            FinishPublishing();
-          }
-          return;  // we don't want to change location or reset mod count, etc.
-        }
-
+        // All files are finished uploading
+        
+        // Publishing succeeded...
         try {
           // Get the new docUrl from the "browse location" in case "publish location" was FTP
           var urlstring = GetDocUrlFromPublishData(gPublishData);
@@ -937,18 +973,26 @@ var gEditorOutputProgressListener =
           // Set UI based on whether we're editing a remote or local url
           SetSaveAndPublishUI(urlstring);
 
-          // Save publishData to prefs
-          if (publishData.savePublishData)
-            SavePublishDataToPrefs(publishData);
-          else
-            SavePassword();
-
         } catch (e) {}
 
-        // Ask progress dialog to close, 
-        // "false" =  don't force it if user checked checkbox to keep it open
+        // Save publishData to prefs
+        if (gPublishData)
+        {
+          if (gPublishData.savePublishData)
+          {
+            // We published successfully, so we can safely
+            //  save docDir and otherDir to prefs
+            gPublishData.saveDirs = true;
+            SavePublishDataToPrefs(gPublishData);
+          }
+          else
+            SavePassword(gPublishData);
+        }
+
+        // Ask progress dialog to close, but it may not
+        // if user checked checkbox to keep it open
         if (gProgressDialog)
-          gProgressDialog.CloseDialog(false);
+          gProgressDialog.RequestCloseDialog();
         else
           FinishPublishing();
       }
@@ -977,9 +1021,6 @@ var gEditorOutputProgressListener =
         else if(gPersistObj.currentState == gPersistObj.PERSIST_STATE_FINISHED)
         {
           dump(" PERSISTER HAS FINISHED SAVING DATA\n\n\n");
-          // Allow editing again
-          // XXXX WE REALLY SHOULDN'T DO THIS!!!
-//          SetDocumentEditable(true);
         }
       }
     }
@@ -1005,37 +1046,8 @@ var gEditorOutputProgressListener =
         dump("*****        request: " + channel.URI.spec + "\n");
       }
       catch (e) { dump("          couldn't get request\n"); }
-
-      if (aStatus == 2152398852)
-        dump("*****        status is UNKNOWN_TYPE\n");
-      else if (aStatus == 2152398853)
-        dump("*****        status is DESTINATION_NOT_DIR\n");
-      else if (aStatus == 2152398854)
-        dump("*****        status is TARGET_DOES_NOT_EXIST\n");
-      else if (aStatus == 2152398856)
-        dump("*****        status is ALREADY_EXISTS\n");
-      else if (aStatus == 2152398858)
-        dump("*****        status is DISK_FULL\n");
-      else if (aStatus == 2152398860)
-        dump("*****        status is NOT_DIRECTORY\n");
-      else if (aStatus == 2152398861)
-        dump("*****        status is IS_DIRECTORY\n");
-      else if (aStatus == 2152398862)
-        dump("*****        status is IS_LOCKED\n");
-      else if (aStatus == 2152398863)
-        dump("*****        status is TOO_BIG\n");
-      else if (aStatus == 2152398865)
-        dump("*****        status is NAME_TOO_LONG\n");
-      else if (aStatus == 2152398866)
-        dump("*****        status is NOT_FOUND\n");
-      else if (aStatus == 2152398867)
-        dump("*****        status is READ_ONLY\n");
-      else if (aStatus == 2152398868)
-        dump("*****        status is DIR_NOT_EMPTY\n");
-      else if (aStatus == 2152398869)
-        dump("*****        status is ACCESS_DENIED\n");
-      else
-        dump("*****        status is " + aStatus + "\n");
+      
+      DumpDebugStatus(aStatus);
 
       if (gPersistObj)
       {
@@ -1074,23 +1086,9 @@ var gEditorOutputProgressListener =
 // nsIPrompt
   alert : function(dlgTitle, text)
   {
-    // If Progress dialog is up, put message in there instead of Alert
-    if (gProgressDialog)
-    {
-      try {
-        gProgressDialog.SetStatusMessage(failedStr);
-      } catch (e) {
-        dump(" nsIPrompt::Alert EXCEPTION ERROR CALLING ProgressDialog.SetStatusMessage\n");
-        AlertWithTitle(dlgTitle, text);
-      }
-    }
-    else
-    {
-      AlertWithTitle(dlgTitle, text);
-      CancelPublishing();
-    }
+    AlertWithTitle(dlgTitle, text, gProgressDialog ? gProgressDialog : window);
   },
-  alertCheck : function(dialogTitle, text, checkBoxLabel, checkValue)
+  alertCheck : function(dialogTitle, text, checkBoxLabel, checkObj)
   {
     AlertWithTitle(dialogTitle, text);
   },
@@ -1098,14 +1096,14 @@ var gEditorOutputProgressListener =
   {
     return ConfirmWithTitle(dlgTitle, text, null, null);
   },
-  confirmCheck : function(dlgTitle, text, checkBoxLabel, checkValue)
+  confirmCheck : function(dlgTitle, text, checkBoxLabel, checkObj)
   {
     var promptServ = GetPromptService();
     if (!promptServ)
       return;
 
     promptServ.confirmEx(window, dlgTitle, text, nsIPromptService.STD_OK_CANCEL_BUTTONS,
-                         "", "", "", checkBoxLabel, checkValue, outButtonPressed);
+                         "", "", "", checkBoxLabel, checkObj, outButtonPressed);
   },
   confirmEx : function(dlgTitle, text, btnFlags, btn0Title, btn1Title, btn2Title, checkBoxLabel, checkVal, outBtnPressed)
   {
@@ -1117,34 +1115,47 @@ var gEditorOutputProgressListener =
                         btn0Title, btn1Title, btn2Title,
                         checkBoxLabel, checkVal, outBtnPressed);
   },
-  prompt : function(dlgTitle, text, inoutText, checkBoxLabel, checkValue)
+  prompt : function(dlgTitle, text, inoutText, checkBoxLabel, checkObj)
   {
     var promptServ = GetPromptService();
     if (!promptServ)
      return false;
 
-    return promptServ.prompt(window, dlgTitle, text, inoutText, checkBoxLabel, checkValue);
+    return promptServ.prompt(window, dlgTitle, text, inoutText, checkBoxLabel, checkObj);
   },
-  promptPassword : function(dlgTitle, text, password, checkBoxLabel, checkValue)
+  promptPassword : function(dlgTitle, text, pwObj, checkBoxLabel, savePWObj)
   {
+
     var promptServ = GetPromptService();
     if (!promptServ)
-      return false;
+     return false;
 
-    var ret = promptServ.promptPassword(window, dlgTitle, text, password, checkBoxLabel, checkValue);
-    if (!ret)
-      setTimeout("CancelPublishing()",0);
+    var ret = false;
+    try {
+      // Note difference with nsIAuthPrompt::promptPassword, which has 
+      // just "in" savePassword param, while nsIPrompt is "inout"
+      // Initialize with user's previous preference for this site
+      if (gPublishData)
+        savePWObj.value = gPublishData.savePassword;
+
+      ret = promptServ.promptPassword(gProgressDialog ? gProgressDialog : window,
+                                      dlgTitle, text, pwObj, checkBoxLabel, savePWObj);
+
+      if (!ret)
+        setTimeout(CancelPublishing,0);
+
+      if (ret && gPublishData)
+        UpdateUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pwObj.value, savePWObj.value);
+    } catch(e) {}
+
     return ret;
   },
-  promptUsernameAndPassword : function(dlgTitle, text, login, pw, checkBoxLabel, checkValue)
+  promptUsernameAndPassword : function(dlgTitle, text, userObj, pwObj, checkBoxLabel, savePWObj)
   {
-    var promptServ = GetPromptService();
-    if (!promptServ)
-      return false;
-
-    var ret = promptServ.promptUsernameAndPassword(window, dlgTitle, text, login, pw, checkBoxLabel, checkValue);
+    var ret = PromptUsernameAndPassword(dlgTitle, text, savePWObj, userObj, pwObj);
     if (!ret)
-      setTimeout("CancelPublishing()",0);
+      setTimeout(CancelPublishing,0);
+
     return ret;
   },
   select : function(dlgTitle, text, count, selectList, outSelection)
@@ -1163,11 +1174,11 @@ var gEditorOutputProgressListener =
     if (!promptServ)
       return false;
 
-    var saveCheck = {value:savePW};
+    var savePWObj = {value:savePW};
     var ret = promptServ.prompt(gProgressDialog ? gProgressDialog : window,
-                                dlgTitle, text, defaultText, pwrealm, saveCheck);
+                                dlgTitle, text, defaultText, pwrealm, savePWObj);
     if (!ret)
-      setTimeout("CancelPublishing()",0);
+      setTimeout(CancelPublishing,0);
     return ret;
   },
 
@@ -1175,7 +1186,7 @@ var gEditorOutputProgressListener =
   {
     var ret = PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj);
     if (!ret)
-      setTimeout("CancelPublishing()",0);
+      setTimeout(CancelPublishing,0);
     return ret;
   },
 
@@ -1187,16 +1198,23 @@ var gEditorOutputProgressListener =
       if (!promptServ)
         return false;
 
-      var saveCheck = {value:savePW};
+      // Note difference with nsIPrompt::promptPassword, which has 
+      // "inout" savePassword param, while nsIAuthPrompt is just "in"
+      // Also nsIAuth doesn't supply "checkBoxLabel"
+      // Initialize with user's previous preference for this site
+      var savePWObj = {value:savePW};
       // Initialize with user's previous preference for this site
       if (gPublishData)
-        saveCheck.value = gPublishData.savePassword;
+        savePWObj.value = gPublishData.savePassword;
 
       ret = promptServ.promptPassword(gProgressDialog ? gProgressDialog : window,
-                                      dlgTitle, text, pwObj, GetString("SavePassword"), saveCheck);
+                                      dlgTitle, text, pwObj, GetString("SavePassword"), savePWObj);
+
+      if (!ret)
+        setTimeout(CancelPublishing,0);
 
       if (ret && gPublishData)
-        UpdateUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pwObj.value, saveCheck.value);
+        UpdateUsernamePasswordFromPrompt(gPublishData, gPublishData.username, pwObj.value, savePWObj.value);
     } catch(e) {}
 
     return ret;
@@ -1216,27 +1234,61 @@ function PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj)
     if (!promptServ)
       return false;
 
-    var saveCheck = {value:savePW};
+    var savePWObj = {value:savePW};
 
     // Initialize with user's previous preference for this site
     if (gPublishData)
     {
       // HTTP put uses this dialog if either username or password is bad,
       //   so prefill username input field with the previous value for modification
-      saveCheck.value = gPublishData.savePassword;
+      savePWObj.value = gPublishData.savePassword;
       if (!userObj.value)
         userObj.value = gPublishData.username;
     }
 
     ret = promptServ.promptUsernameAndPassword(gProgressDialog ? gProgressDialog : window, 
                                                dlgTitle, text, userObj, pwObj, 
-                                               GetString("SavePassword"), saveCheck);
+                                               GetString("SavePassword"), savePWObj);
     if (ret && gPublishData)
-      UpdateUsernamePasswordFromPrompt(gPublishData, userObj.value, pwObj.value, saveCheck.value);
+      UpdateUsernamePasswordFromPrompt(gPublishData, userObj.value, pwObj.value, savePWObj.value);
 
   } catch (e) {}
 
   return ret;
+}
+
+function DumpDebugStatus(aStatus)
+{
+  if (aStatus == 2152398852)
+    dump("*****        status is UNKNOWN_TYPE\n");
+  else if (aStatus == 2152398853)
+    dump("*****        status is DESTINATION_NOT_DIR\n");
+  else if (aStatus == 2152398854)
+    dump("*****        status is TARGET_DOES_NOT_EXIST\n");
+  else if (aStatus == 2152398856)
+    dump("*****        status is ALREADY_EXISTS\n");
+  else if (aStatus == 2152398858)
+    dump("*****        status is DISK_FULL\n");
+  else if (aStatus == 2152398860)
+    dump("*****        status is NOT_DIRECTORY\n");
+  else if (aStatus == 2152398861)
+    dump("*****        status is IS_DIRECTORY\n");
+  else if (aStatus == 2152398862)
+    dump("*****        status is IS_LOCKED\n");
+  else if (aStatus == 2152398863)
+    dump("*****        status is TOO_BIG\n");
+  else if (aStatus == 2152398865)
+    dump("*****        status is NAME_TOO_LONG\n");
+  else if (aStatus == 2152398866)
+    dump("*****        status is NOT_FOUND\n");
+  else if (aStatus == 2152398867)
+    dump("*****        status is READ_ONLY\n");
+  else if (aStatus == 2152398868)
+    dump("*****        status is DIR_NOT_EMPTY\n");
+  else if (aStatus == 2152398869)
+    dump("*****        status is ACCESS_DENIED\n");
+  else
+    dump("*****        status is " + aStatus + "\n");
 }
 
 // Update any data that the user supplied in a prompt dialog
@@ -1424,9 +1476,11 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
   return success;
 }
 
+
 //-------------------------------  Publishing
 var gPublishData;
 var gProgressDialog;
+var gCommandAfterPublishing = null;
 
 function Publish(publishData)
 {
@@ -1442,21 +1496,25 @@ function Publish(publishData)
   if (!gPublishData.docURI)
     return false;
 
-  gPublishData.otherFilesURI = CreateURIFromPublishData(publishData, false);
+  if (gPublishData.publishOtherFiles)
+    gPublishData.otherFilesURI = CreateURIFromPublishData(publishData, false);
+  else
+    gPublishData.otherFilesURI = null;
 
   if (gShowDebugOutputStateChange)
   {
     dump("\n *** publishData: PublishUrl="+publishData.publishUrl+", BrowseUrl="+publishData.browseUrl+
       ", Username="+publishData.username+", Dir="+publishData.docDir+
       ", Filename="+publishData.filename+"\n");
-    dump(" * gPublishData.docURI.spec="+gPublishData.docURI.spec+"\n");
+//    dump(" * gPublishData.docURI.spec w/o pass="+StripPassword(gPublishData.docURI.spec)+", PublishOtherFiles="+gPublishData.publishOtherFiles+"\n");
+    dump(" * gPublishData.docURI.spec w/o pass="+gPublishData.docURI.spec+", PublishOtherFiles="+gPublishData.publishOtherFiles+"\n");
   }
 
-  // XXX Missing username or password will make FTP fail 
-  // and it won't call us for prompt dialog (bug 132320),
-  // so we should do the prompt before trying to publish
-  if (GetScheme(publishData.publishUrl) == "ftp" &&
-      (!publishData.username || !publishData.password))
+  // XXX Missing username will make FTP fail 
+  // and it won't call us for prompt dialog (bug 132320)
+  // (It does prompt if just password is missing)
+  // So we should do the prompt ourselves before trying to publish
+  if (GetScheme(publishData.publishUrl) == "ftp" && !publishData.username)
   {
     var message = GetString("PromptFTPUsernamePassword").replace(/%host%/, GetHost(publishData.publishUrl));
     var savePWobj = {value:publishData.savePassword};
@@ -1469,8 +1527,11 @@ function Publish(publishData)
     gPublishData.docURI.username = publishData.username;
     gPublishData.docURI.password = publishData.password;
 
-    gPublishData.otherFilesURI.username = publishData.username;
-    gPublishData.otherFilesURI.password = publishData.password;
+    if (gPublishData.otherFilesURI)
+    {
+      gPublishData.otherFilesURI.username = publishData.username;
+      gPublishData.otherFilesURI.password = publishData.password;
+    }
   }
 
   try {
@@ -1481,7 +1542,7 @@ function Publish(publishData)
     // Start progress monitoring
     gProgressDialog =
       window.openDialog("chrome://editor/content/EditorPublishProgress.xul", "_blank",
-                        "chrome,dependent", gPublishData, gPersistObj);
+                        "chrome,dependent,titlebar", gPublishData, gPersistObj);
 
   } catch (e) {}
 
@@ -1506,12 +1567,14 @@ function CancelPublishing()
     gPersistObj.cancelSave(); // Cancel all networking transactions
   } catch (e) {}
 
+  // If canceling publishing do not do any commands after this    
+  gCommandAfterPublishing = null;
+
   if (gProgressDialog)
   {
     // Close Progress dialog 
-    // "true" will force close,
     // (this will call FinishPublishing())
-    gProgressDialog.CloseDialog(true);
+    gProgressDialog.CloseDialog();
   }
   else
     FinishPublishing();
@@ -1522,7 +1585,14 @@ function FinishPublishing()
   SetDocumentEditable(true);
   gProgressDialog = null;
   gPublishData = null;
-  window._content.focus();
+
+  if (gCommandAfterPublishing)
+  {
+    // Be sure to null out the global now incase of trouble when executing command
+    var command = gCommandAfterPublishing;
+    gCommandAfterPublishing = null;
+    goDoCommand(command);
+  }
 }
 
 // Create a nsIURI object filled in with all required publishing info
@@ -1533,18 +1603,14 @@ function CreateURIFromPublishData(publishData, doDocUri)
 
   var URI;
   try {
-    URI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-
-    if (!URI)
-      return null;
-
     var spec = publishData.publishUrl;
     if (doDocUri)
       spec += FormatDirForPublishing(publishData.docDir) + publishData.filename; 
     else
       spec += FormatDirForPublishing(publishData.otherDir);
 
-    URI.spec = spec;
+    var ioService = GetIOService();
+    URI = ioService.newURI(spec, window.editorShell.GetDocumentCharacterSet(), null);
 
     if (publishData.username)
       URI.username = publishData.username;
@@ -1566,20 +1632,25 @@ function GetDocUrlFromPublishData(publishData)
   var url;
   var docScheme = GetScheme(GetDocumentUrl());
 
-  if (docScheme == "ftp" || !publishData.browseUrl)
+  // Always use the "HTTP" address if available
+  // XXX Should we do some more validation here for bad urls???
+  // Let's at least check for a scheme!
+  if (!GetScheme(publishData.browseUrl))
     url = publishData.publishUrl;
   else
     url = publishData.browseUrl;
-  
+
   url += FormatDirForPublishing(publishData.docDir) + publishData.filename;
+
+  if (GetScheme(url) == "ftp")
+    url = InsertUsernameIntoUrl(url, publishData.username);
 
   return url;
 }
 
 // Depending on editing local vs. remote files:
-//   1. Switch the "Save" and "Publish" buttons on toolbars,
-//   2. Hide "Save" menuitem if editing remote
-//   3. Shift accel+S keybinding to Save or Publish commands
+//   * Switch the "Save" and "Publish" buttons on toolbars,
+//   * Shift accel+S keybinding to Save or Publish commands
 // Note: A new, unsaved file is treated as a local file
 //     (XXX Have a pref to treat as remote for user's who mostly edit remote?)
 function SetSaveAndPublishUI(urlstring)
@@ -1616,8 +1687,9 @@ function SetSaveAndPublishUI(urlstring)
     SetElementHidden(publishButton, false);
   }
 
-  SetElementHidden(menuItem1, true);
-  SetElementHidden(menuItem2, false);
+//  Use this to hide "Save" menuitem if editing remote, Hide "Publish" if editing local
+//  SetElementHidden(menuItem1, true);
+//  SetElementHidden(menuItem2, false);
 
   var key = document.getElementById("savekb");
   if (key && command)
@@ -1628,6 +1700,9 @@ function SetSaveAndPublishUI(urlstring)
     menuItem1.removeAttribute("key");
     menuItem2.setAttribute("key","savekb");
   }
+
+  // Be sure enabled state of toolbar button is correct
+  goUpdateCommand(command);
 }
 
 function SetDocumentEditable(isDocEditable)
@@ -1639,11 +1714,11 @@ function SetDocumentEditable(isDocEditable)
       window.editorShell.editor.flags = isDocEditable ?  
             flags &= ~nsIPlaintextEditor.eEditorReadonlyMask :
             flags | nsIPlaintextEditor.eEditorReadonlyMask;
-
-      // update all commands
-      window.updateCommands("create");
-
     } catch(e) {}
+
+    // update all commands
+    window._content.focus();
+    window.updateCommands("create");
   }  
 }
 
@@ -1731,7 +1806,7 @@ function CloseWindow()
 {
   // Check to make sure document is saved. "true" means allow "Don't Save" button,
   //   so user can choose to close without saving
-  if (CheckAndSaveDocument(GetString("BeforeClosing"), true)) 
+  if (CheckAndSaveDocument("cmd_close", true)) 
   {
     if (window.InsertCharWindow)
       SwitchInsertCharToAnotherEditorOrClose();
@@ -1773,7 +1848,7 @@ var nsPreviewCommand =
   {
 	  // Don't continue if user canceled during prompt for saving
     // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
-    if (!CheckAndSaveDocument(GetString("BeforePreview"), DocumentHasBeenSaved()))
+    if (!CheckAndSaveDocument("cmd_preview", DocumentHasBeenSaved()))
 	    return;
 
     // Check if we saved again just in case?
@@ -1807,7 +1882,7 @@ var nsPreviewCommand =
           // Be sure browser contains real source content, not cached
           // setTimeout is needed because the "browser" created by openDialog 
           //    needs time to finish else BrowserReloadSkipCache doesn't exist
-          setTimeout( function(browser) { browser.BrowserReloadSkipCache(); }, 0, browser );
+          setTimeout( function(browser) { browser.BrowserReloadSkipCache(); }, 10, browser );
           browser.focus();
         }
       } catch (ex) {}
@@ -1828,7 +1903,7 @@ var nsSendPageCommand =
   {
 	  // Don't continue if user canceled during prompt for saving
     // DocumentHasBeenSaved will test if we have a URL and suppress "Don't Save" button if not
-    if (!CheckAndSaveDocument(GetString("SendPageReason"), DocumentHasBeenSaved()))
+    if (!CheckAndSaveDocument("cmd_editSendPage", DocumentHasBeenSaved()))
 	    return;
 
     // Check if we saved again just in case?
@@ -1920,7 +1995,7 @@ var nsFindCommand =
     {
       try {
         window.openDialog("chrome://editor/content/EdReplace.xul", "_blank",
-                          "chrome,dependent", "");
+                          "chrome,dependent,titlebar", "");
       }
       catch(ex) {
         dump("*** Exception: couldn't open Replace Dialog\n");
@@ -2008,8 +2083,7 @@ var nsValidateCommand =
     // then just validate the current url.
     if (editorShell.documentModified || gHTMLSourceChanged)
     {
-      if (!CheckAndSaveDocument(GetString("BeforeValidate"),
-                                false))
+      if (!CheckAndSaveDocument("cmd_validate", false))
         return;
 
       // Check if we saved again just in case?
