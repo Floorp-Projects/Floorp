@@ -46,6 +46,8 @@
 var UBound = 0;
 var bug = 121658;
 var msg = '"Too much recursion" errors should be safely caught by try...catch';
+var TEST_PASSED = 'i retained the value it had at location of error';
+var TEST_FAILED = 'i did NOT retain this value';
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -77,6 +79,7 @@ expect = formatThis(true);
 addThis();
 
 
+
 // Now try in function scope -
 function g()
 {
@@ -91,6 +94,7 @@ expect = formatThis(true);
 addThis();
 
 
+
 // Now try in eval scope -
 var sEval = 'function h(){++i; try{h();} catch(e){}}; i=0; h();';
 eval(sEval);
@@ -100,8 +104,9 @@ expect = formatThis(true);
 addThis();
 
 
+
 // Try in eval scope and mix functions up -
-var sEval = 'function a(){++i; try{h();} catch(e){}}; i=0; a();';
+sEval = 'function a(){++i; try{h();} catch(e){}}; i=0; a();';
 eval(sEval);
 status = inSection(4);
 actual = formatThis(i>0);
@@ -119,9 +124,6 @@ test();
 
 function formatThis(bool)
 {
-  var TEST_PASSED = 'i retained the value it had at location of error';
-  var TEST_FAILED = 'i did NOT retain this value';
-
   return bool? TEST_PASSED : TEST_FAILED;
 }
 
