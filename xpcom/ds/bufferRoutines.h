@@ -93,7 +93,7 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
   char* to = aDest+aLength+aCount;
 
   //Copy rightmost chars, up to offset+theDelta...
-  while(first<=last) {
+  while(first<last) {
     *to=*last;  
     to--;
     last--;
@@ -141,7 +141,7 @@ void ShiftDoubleCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint
   PRUnichar* to = theBuf+aLength+aCount;
 
   //Copy rightmost chars, up to offset+theDelta...
-  while(first<=last) {
+  while(first<last) {
     *to=*last;  
     to--;
     last--;
@@ -289,7 +289,7 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
   PRInt32  theIndex=0;
   PRInt32  theLength=(PRInt32)aLength;
   for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
-    PRUnichar theChar=GetCharAt(aDest,theIndex);
+    PRUnichar theChar=aDest[theIndex];
     if(aIgnoreCase)
       theChar=nsCRT::ToUpper(theChar);
     if(theChar==theCmpChar)
@@ -311,10 +311,11 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  */
 inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
-  PRInt32  theIndex=0;
-  PRInt32  theLength=(PRInt32)aLength;
+  PRInt32     theIndex=0;
+  PRInt32     theLength=(PRInt32)aLength;
+  PRUnichar*  theBuf=(PRUnichar*)aDest;
   for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
-    PRUnichar theChar=GetUnicharAt(aDest,theIndex);
+    PRUnichar theChar=theBuf[theIndex];
     if(aIgnoreCase)
       theChar=nsCRT::ToUpper(theChar);
     if(theChar==theCmpChar)
@@ -598,199 +599,7 @@ PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){
 typedef PRInt32 (*CaseConverters)(char*,PRUint32,PRBool);
 CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
 
-//----------------------------------------------------------------------------------------
-//
-//  This set of methods is used strip chars from a given buffer...
-//
 
-/**
- * This method removes chars (given in aSet) from the given buffer 
- *
- * @update	gess 01/04/99
- * @param   aString is the buffer to be manipulated
- * @param   anOffset is starting pos in buffer for manipulation
- * @param   aCount is the number of chars to compare
- * @param   aSet tells us which chars to remove from given buffer
- * @return  the new length of the given buffer
- */
-PRInt32 StripChars1(char* aString,PRUint32 anOffset,PRUint32 aCount,const char* aSet){ 
-  PRInt32 result=0;
-
-  typedef char  chartype;
-  chartype*  from = (chartype*)&aString[anOffset];
-  chartype*  end  = (chartype*)from + aCount-1;
-  chartype*  to   = from;
-
-  if(aSet){
-    PRUint32 aSetLen=strlen(aSet);
-    while (from <= end) {
-      chartype ch = *from;
-      if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-        *to++=*from;
-      }
-      from++;
-    }
-    *to = 0;
-  }
-  return to - (chartype*)aString;
-}
-
-/**
- * This method removes chars (given in aSet) from the given buffer 
- *
- * @update	gess 01/04/99
- * @param   aString is the buffer to be manipulated
- * @param   anOffset is starting pos in buffer for manipulation
- * @param   aCount is the number of chars to compare
- * @param   aSet tells us which chars to remove from given buffer
- * @return  the new length of the given buffer
- */
-PRInt32 StripChars2(char* aString,PRUint32 anOffset,PRUint32 aCount,const char* aSet){ 
-  PRInt32 result=0;
-
-  typedef PRUnichar  chartype;
-  chartype*  from = (chartype*)&aString[anOffset];
-  chartype*  end  = (chartype*)from + aCount-1;
-  chartype*  to   = from;
-
-  if(aSet){
-    PRUint32 aSetLen=strlen(aSet);
-    while (from <= end) {
-      chartype ch = *from;
-      if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-        *to++=*from;
-      }
-      from++;
-    }
-    *to = 0;
-  }
-  return to - (chartype*)aString;
-}
-
-typedef PRInt32 (*StripChars)(char* aString,PRUint32 aDestOffset,PRUint32 aCount,const char* aSet);
-StripChars gStripChars[]={&StripChars1,&StripChars2};
-
-//----------------------------------------------------------------------------------------
-//
-//  This set of methods is used trim chars from the edges of a buffer...
-//
-
-/**
- * This method trims chars (given in aSet) from the edges of given buffer 
- *
- * @update	gess 01/04/99
- * @param   aString is the buffer to be manipulated
- * @param   aLength is the length of the buffer
- * @param   aSet tells us which chars to remove from given buffer
- * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
- * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
- * @return  the new length of the given buffer
- */
-PRInt32 TrimChars1(char* aString,PRUint32 aLength,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
-  PRInt32 result=0;
-
-  typedef char  chartype;
-  chartype*  from = (chartype*)aString;
-  chartype*  end =  from + aLength -1;
-  chartype*  to = from;
-
-  if(aSet) {
-    PRUint32 aSetLen=strlen(aSet);
-      //begin by find the first char not in aTrimSet
-    if(aEliminateLeading) {
-      while (from <= end) {
-        chartype ch = *from;
-        if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-          break;
-        }
-        from++;
-      }
-    }
-      //Now, find last char not in aTrimSet
-    if(aEliminateTrailing) {
-      while(from<=end) {
-        chartype ch = *end;
-        if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-          break;
-        }
-        end--;
-      }
-    }
-      //now rewrite your string without unwanted 
-      //leading or trailing characters.
-    if (from != to) {
-      while (from <= end) {
-        *to++ = *from++;
-      }
-    }
-    else {
-      to = ++end;
-    }
-
-    *to = 0;
-  }
-  return to - (chartype*)aString;
-}
-
-/**
- * This method trims chars (given in aSet) from the edges of given buffer 
- *
- * @update	gess 01/04/99
- * @param   aString is the buffer to be manipulated
- * @param   aLength is the length of the buffer
- * @param   aSet tells us which chars to remove from given buffer
- * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
- * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
- * @return  the new length of the given buffer
- */
-PRInt32 TrimChars2(char* aString,PRUint32 aLength,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
-  PRInt32 result=0;
-
-  typedef PRUnichar  chartype;
-  chartype*  from = (chartype*)aString;
-  chartype*  end =  from + aLength -1;
-  chartype*  to = from;
-
-  if(aSet) {
-    PRUint32 aSetLen=strlen(aSet);
-      //begin by find the first char not in aTrimSet
-    if(aEliminateLeading) {
-      while (from <= end) {
-        chartype ch = *from;
-        if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-          break;
-        }
-        from++;
-      }
-    }
-      //Now, find last char not in aTrimSet
-    if(aEliminateTrailing) {
-      while(from<=end) {
-        chartype ch = *end;
-        if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-          break;
-        }
-        end--;
-      }
-    }
-      //now rewrite your string without unwanted 
-      //leading or trailing characters.
-    if (from != to) {
-      while (from <= end) {
-        *to++ = *from++;
-      }
-    }
-    else {
-      to = ++end;
-    }
-
-    *to = 0;
-  }
-  return to - (chartype*)aString;
-}
-
-typedef PRInt32 (*TrimChars)(char* aString,PRUint32 aCount,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
-TrimChars gTrimChars[]={&TrimChars1,&TrimChars2};
 
 //----------------------------------------------------------------------------------------
 //
@@ -809,10 +618,8 @@ TrimChars gTrimChars[]={&TrimChars1,&TrimChars2};
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
+PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){ 
   PRInt32 result=0;
-
-  TrimChars1(aString,aLength,aSet,aEliminateLeading,aEliminateTrailing);
 
   typedef char  chartype;
   chartype*  from = aString;
@@ -824,18 +631,18 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 
   if(aSet){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
-      chartype ch = *from++;
-      if(kNotFound!=FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-        *to++ = (char)aChar;
+      chartype theChar = *from++;
+      if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+        to++;
         while (from <= end) {
-          ch = *from++;
-          if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-            *to++ = ch;
+          theChar = *from++;
+          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+            *to++ = theChar;
             break;
           }
         }
       } else {
-        *to++ = ch;
+        *to++ = theChar;
       }
     }
     *to = 0;
@@ -855,10 +662,8 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet,PRUint32 
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
-PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){ 
+PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){ 
   PRInt32 result=0;
-
-  TrimChars2(aString,aLength,aSet,aEliminateLeading,aEliminateTrailing);
 
   typedef PRUnichar  chartype;
   chartype*  from = (chartype*)aString;
@@ -870,18 +675,18 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet,PRUint32 
   if(aSet){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
-      chartype ch = *from++;
-      if(kNotFound!=FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-        *to++ = (PRUnichar)aChar;
+      chartype theChar = *from++;
+      if(kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+        to++;
         while (from <= end) {
-          ch = *from++;
-          if(kNotFound==FindChar1(aSet,aSetLen,0,ch,PR_FALSE)){
-            *to++ = ch;
+          theChar = *from++;
+          if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+            *to++ = theChar;
             break;
           }
         }
       } else {
-        *to++ = ch;
+        *to++ = theChar;
       }
     }
     *to = 0;
@@ -889,7 +694,7 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet,PRUint32 
   return to - (chartype*)aString;
 }
 
-typedef PRInt32 (*CompressChars)(char* aString,PRUint32 aCount,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+typedef PRInt32 (*CompressChars)(char* aString,PRUint32 aCount,const char* aSet);
 CompressChars gCompressChars[]={&CompressChars1,&CompressChars2};
 
 
