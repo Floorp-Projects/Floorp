@@ -145,7 +145,8 @@ case "$target" in
     AC_CHECK_PROGS(CXX, cl)
     AC_CHECK_PROGS(LD, link)
     AC_CHECK_PROGS(MIDL, midl)    
-    
+    AC_PATH_PROGS(AS, ml)
+
     # Make sure compilers are valid
     CFLAGS="$CFLAGS -TC"
     CXXFLAGS="$CXXFLAGS -TP"
@@ -3300,10 +3301,17 @@ fi
 dnl ========================================================
 dnl = Build Personal Security Manager
 dnl ========================================================
-MOZ_PSM=
 MOZ_ARG_ENABLE_BOOL(crypto,
 [  --enable-crypto         Enable crypto support (Personal Security Manager)],
-    MOZ_PSM=1 )
+    MOZ_PSM=1,
+    MOZ_PSM= )
+case $target in
+*-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
+    if test -n "$MOZ_PSM" -a ! -e "$AS_BIN"; then
+        AC_MSG_ERROR([Building crypto support requires a valid version of the standalone assembler, ml.exe.])
+    fi
+    ;;
+esac
 
 dnl ========================================================
 dnl = JS Debugger XPCOM component (js/jsd)
