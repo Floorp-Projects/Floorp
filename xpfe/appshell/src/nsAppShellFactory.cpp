@@ -18,7 +18,11 @@
  */
 #include "nsIFactory.h"
 #include "nscore.h"
-#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
+
+/* extern the factory entry points... */
+nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
+
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
