@@ -100,7 +100,7 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
   mOpacity = 1.0f;
 
   mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-  mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT;
+  mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE;
   mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
   if (nsnull != aPresContext) {
     aPresContext->GetDefaultBackgroundColor(mBackgroundColor);
@@ -581,6 +581,7 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
   // These properties not inherited
   mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
   mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
+//  mVerticalAlign.Reset(); TBI
 
   if (nsnull != aParent) {
     mTextAlign = aParent->mTextAlign;
@@ -1176,10 +1177,16 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   if (eCompatibility_NavQuirks == quirkMode) {
     if ((mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE) || 
         (mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) {
+
+      StyleContextImpl* holdParent = mParent;
+      mParent = nsnull; // cut off all inheritance. this really blows
+
       // time to emulate a sub-document
       // This is ugly, but we need to map style once to determine display type
       // then reset and map it again so that all local style is preserved
-      mFont.ResetFrom(nsnull, aPresContext);
+      if (mDisplay.mDisplay != NS_STYLE_DISPLAY_TABLE) {
+        mFont.ResetFrom(nsnull, aPresContext);
+      }
       mColor.ResetFrom(nsnull, aPresContext);
       mSpacing.ResetFrom(nsnull, aPresContext);
       mList.ResetFrom(nsnull, aPresContext);
@@ -1191,6 +1198,11 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
         MapStyleData  data(this, aPresContext);
         mRules->EnumerateForwards(MapStyleRule, &data);
       }
+      // reset all font data for tables again
+      if (mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE) {
+        mFont.ResetFrom(nsnull, aPresContext);
+      }
+      mParent = holdParent;
     }
   }
 
