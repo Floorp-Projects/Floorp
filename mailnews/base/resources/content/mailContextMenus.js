@@ -126,6 +126,12 @@ function SetupCopyMenuItem(menuID, numSelected, forceHide)
   EnableMenuItem(menuID, (numSelected > 0));
 }
 
+function SetupLabelsMenuItem(menuID, numSelected, forceHide)
+{
+  ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, (numSelected == 1));
+}
+
 function SetupSaveAsMenuItem(menuID, numSelected, forceHide)
 {
   ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
@@ -357,6 +363,7 @@ function fillMessagePaneContextMenu()
   SetupCopyMessageUrlMenuItem("messagePaneContext-copyMessageUrl", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems)); 
   SetupCopyMenuItem("messagePaneContext-copyMenu", numSelected, (numSelected == 0 || hideMailItems));
   SetupMoveMenuItem("messagePaneContext-moveMenu", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
+  SetupLabelsMenuItem("messagePaneContext-labels", numSelected, (numSelected == 0 || hideMailItems));
   SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0 || hideMailItems));
   SetupPrintMenuItem("messagePaneContext-print", numSelected, (numSelected == 0 || hideMailItems));
   SetupDeleteMenuItem("messagePaneContext-delete", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
@@ -370,6 +377,8 @@ function fillMessagePaneContextMenu()
   ShowMenuItem("messagePaneContext-sep-link", ShowSeparator("messagePaneContext-sep-link"));
   ShowMenuItem("messagePaneContext-sep-image", ShowSeparator("messagePaneContext-sep-image"));
   ShowMenuItem("messagePaneContext-sep-copy", ShowSeparator("messagePaneContext-sep-copy"));
+  ShowMenuItem("messagePaneContext-sep-labels-1", ShowSeparator("messagePaneContext-sep-labels-1"));
+  ShowMenuItem("messagePaneContext-sep-labels-2", ShowSeparator("messagePaneContext-sep-labels-2"));
   
   if (!hideMailItems)
     ShowMenuItem("messagePaneContext-sep-edit", false);

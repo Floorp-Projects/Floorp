@@ -488,8 +488,8 @@ Rights Reserved.
       </template>
     </menu>
     <menuseparator/>
-    <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
-      <menupopup id="threadPaneContext-labels" onpopupshowing="InitMessageLabel('threadPaneContext')">
+    <menu id="threadPaneContext-labels" label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
+      <menupopup onpopupshowing="InitMessageLabel('threadPaneContext')">
         <menuitem
            id="threadPaneContext-labelMenuItem0"
            accesskey="&labelCmd0.accesskey;"
@@ -767,9 +767,9 @@ Rights Reserved.
         </rule>
       </template>
     </menu>
-    <menuseparator/>
-    <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
-      <menupopup id="messagePaneContext-labels" onpopupshowing="InitMessageLabel('messagePaneContext')">
+    <menuseparator id="messagePaneContext-sep-labels-1"/>
+    <menu id="messagePaneContext-labels" label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
+      <menupopup onpopupshowing="InitMessageLabel('messagePaneContext')">
         <menuitem
            id="messagePaneContext-labelMenuItem0"
            accesskey="&labelCmd0.accesskey;"
@@ -797,7 +797,7 @@ Rights Reserved.
            observes="cmd_label5"/>
       </menupopup>
     </menu>
-    <menuseparator/>
+    <menuseparator id="messagePaneContext-sep-labels-2"/>
     <menuitem id="messagePaneContext-saveAs"
         label="&contextSaveAs.label;"
         accesskey="&contextSaveAs.accesskey;"
