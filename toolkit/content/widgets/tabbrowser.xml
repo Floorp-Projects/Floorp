@@ -14,9 +14,9 @@
    - The Original Code is this file as it was released on
    - March 28, 2001.
    -
-   - The Initial Developer of the Original Code is Peter Annema.
-   - Portions created by Peter Annema are Copyright (C) 2001
-   - Peter Annema.  All Rights Reserved.
+   - The Initial Developer of the Original Code is David Hyatt
+   - Portions created by David Hyatt are Copyright (C) 2001
+   - David Hyatt.  All Rights Reserved.
    -
    - Contributor(s):
    -   David Hyatt <hyatt@netscape.com> (Original Author of <tabbrowser>)
@@ -51,7 +51,7 @@
 
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
-      <xul:tabbox flex="1" eventnode="document"
+      <xul:tabbox flex="1"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
@@ -79,7 +79,6 @@
           </xul:menupopup>
 
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
-                    tooltiptextnew="&newTabButton.tooltip;"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
                                 event.stopPropagation();"
@@ -98,7 +97,7 @@
           </xul:tabs>
         </xul:hbox>
         <xul:tabpanels flex="1" class="plain">
-          <xul:browser type="content-primary" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
+          <xul:browser type="content-primary" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
         </xul:tabpanels>
       </xul:tabbox>
       <children/>
@@ -108,10 +107,6 @@
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefService)
                   .getBranch(null);
-      </field>
-      <field name="mURIFixup" readonly="true">
-        Components.classes["@mozilla.org/docshell/urifixup;1"]
-                  .getService(Components.interfaces.nsIURIFixup);
       </field>
       <field name="mTabBox">
         document.getAnonymousNodes(this)[1]
@@ -355,7 +350,7 @@
             var newTitle = "";
             var docTitle;
             if (this.docShell.contentViewer)
-              docTitle = this.contentTitle;
+              docTitle = this.contentDocument.title;
             
             if (docTitle) {
               newTitle += this.ownerDocument.documentElement.getAttribute("titlepreface");
@@ -391,12 +386,23 @@
             if (this.mCurrentBrowser)
               this.mCurrentBrowser.setAttribute("type", "content");
             
+            var updatePageReport = false;
+            if ((this.mCurrentBrowser.pageReport && !newBrowser.pageReport) ||
+                (!this.mCurrentBrowser.pageReport && newBrowser.pageReport))
+              updatePageReport = true;
+
             newBrowser.setAttribute("type", "content-primary");
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
 
+            if (updatePageReport)
+              this.mCurrentBrowser.updatePageReport();
+
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
+            if (!loc)
+              loc = ({ spec: "" });
+
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
             var i, p;
@@ -549,38 +555,18 @@
         <body>
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
-            var title = browser.contentTitle;
             var crop = "end";
+            var titleViaGetter = browser.contentDocument.__proto__.__lookupGetter__('title').call(browser.contentDocument);
+            var title;
 
-            if (!title) {
-              if (browser.currentURI.spec) {
-                try {
-                  title = this.mURIFixup.createExposableURI(browser.currentURI).spec;
-                }
-                catch(ex) {
-                  title = browser.currentURI.spec;
-                }
-              }
-
-              if (title && title != "about:blank") {
-                // At this point, we now have a URI.
-                // Let's try to unescape it using a character set
-                // in case the URI is not ASCII.
-                try {
-                  var characterSet = Components.lookupMethod(browser.contentDocument, 'characterSet')
-                                               .call(browser.contentDocument);
-                  const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
-                                                 .getService(Components.interfaces.nsITextToSubURI);
-                  title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
-                }
-                catch(ex) {
-                  // Do nothing.
-                }
-
-                crop = "center";
-              } else // Still no title?  Fall back to our untitled string.
-                title = this.mStringBundle.getString("tabs.untitled");
+            if (titleViaGetter)
+              title = titleViaGetter
+            else if (browser.currentURI.spec && browser.currentURI.spec != "about:blank") {
+              title = browser.currentURI.spec;
+              crop  = "center";
             }
+            else
+              title = this.mStringBundle.getString("tabs.untitled");
 
             aTab.label = title;
             aTab.setAttribute("crop", crop);
@@ -620,9 +606,9 @@
           <![CDATA[
             this.mTabbedMode = true; // Welcome to multi-tabbed mode.
 
-            // Get the first tab all hooked up with a title listener.
+            // Get the first tab all hooked up with a title listener and popup blocking listener.
             this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-
+            
             this.setTabTitle(this.mCurrentTab);
 
             // Hook up our favicon.
@@ -790,12 +776,15 @@
             this.mTabFilters.splice(index, 1);
             this.mTabListeners.splice(index, 1);
 
-            // Remove our title change listener
+            // Remove our title change and blocking listeners
             oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
             
             // We are no longer the primary content area.
             oldBrowser.setAttribute("type", "content");
 
+            // Now select the new tab before nuking the old one.
+            var currentIndex = this.mPanelContainer.selectedIndex;
+            
             // Now select the new tab before nuking the old one.
             var currentIndex = this.mPanelContainer.selectedIndex;
             
@@ -814,13 +803,17 @@
             // clean up the before/afterselected attributes before removing the tab
             oldTab.selected = false;
 
+            // XXX browser's destructor isn't always called, so we force a cleanup ourselves
+            oldBrowser.destroy();
+            
             this.mTabContainer.removeChild(oldTab);
             this.mPanelContainer.removeChild(oldBrowser);
 
             this.selectedTab = this.mTabContainer.childNodes[newIndex];
             this.mPanelContainer.selectedIndex = newIndex;
-
+            
             this.updateCurrentBrowser();
+            }
           ]]>
         </body>
       </method>
@@ -1104,6 +1097,10 @@
         </body>
       </method>
 
+      <property name="pageReport"
+                onget="return this.mCurrentBrowser.pageReport;"
+                readonly="true"/>
+
       <property name="currentURI"
                 onget="return this.mCurrentBrowser.currentURI;"
                 readonly="true"/>
@@ -1152,10 +1149,6 @@
                 onget="return this.mCurrentBrowser.contentDocument;"
                 readonly="true"/>
 
-      <property name="contentTitle"
-                onget="return this.mCurrentBrowser.contentTitle;"
-                readonly="true"/>
-
       <property name="securityUI"
                 onget="return this.mCurrentBrowser.securityUI;"
                 readonly="true"/>
@@ -1164,6 +1157,7 @@
         <![CDATA[
         this.mCurrentBrowser = this.mPanelContainer.firstChild;
         this.mCurrentTab = this.mTabContainer.firstChild;
+        this.mTabBox.setAttribute("handleCtrlTab", "false");
         ]]>
       </constructor>
 
