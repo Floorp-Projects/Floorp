@@ -24,3 +24,24 @@
 <!ENTITY  SSLProtocolVersions          "SSL Protocol Versions">
 <!ENTITY  SSLWarnings                  "SSL Warnings">
 <!ENTITY  SSLClientAuthMethod          "Client Certificate Selection">
+
+<!ENTITY enable.ssl2 "Enable SSL version 2">
+<!ENTITY enable.ssl3 "Enable SSL version 3">
+<!ENTITY enable.tls "Enable TLS">
+
+<!ENTITY edit.sslciphers "Edit SSL Ciphers...">
+
+<!ENTITY warn.enteringsecure "Entering a site that supports encryption">
+<!ENTITY warn.enteringweak "Entering a site that uses weak encryption">
+<!ENTITY warn.insecurepost
+ "Sending form data from an insecure page to an insecure page">
+<!ENTITY warn.insecurepostfromsecure
+ "Sending form data from a secure page to an insecure page">
+<!ENTITY warn.secureredirect "Redirection from one secure site to another">
+<!ENTITY warn.secureredirecttoinsecure
+ "Redirection from a secure site to an insecure site">
+<!ENTITY warn.viewmixed "Viewing a page with an encrypted/unencrypted mix">
+
+<!ENTITY certselect.auto "Select Automatically">
+<!ENTITY certselect.ask "Ask Every Time">
+

@@ -35,9 +35,9 @@
   <box id="CACerts" orient="vertical">
     <outliner id="ca-outliner" multiple="true" 
               onselect="ca_enableButtons()" flex="1">
-      <outlinercol id="certcol" label="Certificate Name" flex="1"/>
+      <outlinercol id="certcol" label="&certmgr.certname;" flex="1"/>
       <splitter/>
-      <outlinercol id="tokencol" label="Token Name" flex="1"/>
+      <outlinercol id="tokencol" label="&certmgr.tokenname;" flex="1"/>
       <outlinercol id="certdbkeycol" collapsed="true" flex="1"/>
       <outlinerbody flex="1"/>
     </outliner>

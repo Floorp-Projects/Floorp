@@ -29,6 +29,7 @@
 <!ENTITY setPassword.meter.label "Password quality meter:">
 <!ENTITY setPassword.meter.bad "Bad">
 <!ENTITY setPassword.meter.good "Good">
+<!ENTITY setPassword.meter.loading "Loading">
 <!ENTITY setPassword.stats.total "Total characters:">
 <!ENTITY setPassword.stats.numbers "Numbers:">
 <!ENTITY setPassword.stats.symbols "Symbols:">

@@ -51,19 +51,19 @@
 
     <!-- Prefs -->
     <box orient="vertical" flex="1" autostretch="never" >
-      <checkbox id="enableSSL2" label="Enable SSL version 2"
+      <checkbox id="enableSSL2" label="&enable.ssl2;"
                 pref="true" preftype="bool" prefstring="security.enable_ssl2"
                 prefattribute="checked"/>
-      <checkbox id="enableSSL3" label="Enable SSL version 3"
+      <checkbox id="enableSSL3" label="&enable.ssl3;"
                 pref="true" preftype="bool" prefstring="security.enable_ssl3"
                 prefattribute="checked"/>
-      <checkbox id="enableTLS" label="Enable TLS"
+      <checkbox id="enableTLS" label="&enable.tls;"
                 pref="true" preftype="bool" prefstring="security.enable_tls"
                 prefattribute="checked"/>
     </box>
 
     <box orient="vertical" halign="right">
-      <button class="dialog" label="Edit SSL Ciphers..." disabled="true"
+      <button class="dialog" label="&edit.sslciphers;" disabled="true"
         oncommand="window.openDialog('chrome://pippki/content/cipherViewer.xul', '',
                        'modal=yes,resizable,chrome');" />
     </box>
@@ -78,30 +78,27 @@ Set Netscape to show a warning and ask permission before:
     </html>
 
     <!-- Prefs -->
-    <checkbox id="warnEnteringSecure" 
-      label="Entering a site that supports encryption"
+    <checkbox id="warnEnteringSecure" label="&warn.enteringsecure;"
               pref="true" preftype="bool" prefstring="security.warn_entering_secure"
               prefattribute="checked"/>
-    <checkbox id="warnEnteringWeak" 
-		  label="Entering a site that uses weak encryption"
+    <checkbox id="warnEnteringWeak" label="&warn.enteringweak;"
               pref="true" preftype="bool" prefstring="security.warn_entering_weak"
               prefattribute="checked"/>
-    <checkbox id="warnInsecurePost"
-      label="Sending form data from an insecure page to an insecure page"
+    <checkbox id="warnInsecurePost" label="&warn.insecurepost;"
               pref="true" preftype="bool" prefstring="security.warn_submit_insecure"
               prefattribute="checked"/>
     <checkbox id="warnInsecurePostFromSecure"
-      label="Sending form data from a secure page to an insecure page"
+              label="&warn.insecurepostfromsecure;"
               pref="true" preftype="bool" prefstring="security.warn_insecure_post_from_secure"
               prefattribute="checked" checked="true"  disabled="true"/>
-    <checkbox id="warnSecureRedirect" label="Redirection from one secure site to another"
+    <checkbox id="warnSecureRedirect" label="&warn.secureredirect;"
               pref="true" preftype="bool" prefstring="security.warn_secure_redirect"
               prefattribute="checked"/>
     <checkbox id="warnSecureRedirectToInsecure" 
-              label="Redirection from a secure site to an insecure site"
+              label="&warn.secureredirecttoinsecure;"
               pref="true" preftype="bool" prefstring="security.warn_secure_redirect_to_insecure"
               prefattribute="checked"/>
-    <checkbox id="warnViewMixed" label="Viewing a page with an encrypted/unencrypted mix"
+    <checkbox id="warnViewMixed" label="&warn.viewmixed;"
               pref="true" preftype="bool" prefstring="security.warn_viewing_mixed"
               prefattribute="checked" checked="true"/>
   </titledbox>
@@ -113,8 +110,8 @@ Set Netscape to show a warning and ask permission before:
     <!-- Prefs -->
     <radiogroup id="certSelection" pref="true" preftype="string" 
 	prefstring="security.default_personal_cert" prefattribute="value">
-    <radio group="certSelection" label="Select Automatically" value="Select Automatically"/>
-    <radio group="certSelection" label="Ask Every Time" value="Ask Every Time"/>
+    <radio group="certSelection" label="&certselect.auto;"/>
+    <radio group="certSelection" label="&certselect.ask;"/>
     </radiogroup>
   </titledbox>
 
