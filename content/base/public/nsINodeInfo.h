@@ -57,10 +57,12 @@
 #define nsINodeInfo_h___
 
 #include "nsISupports.h"
-#include "nsAWritableString.h"
+#include "nsIAtom.h"
+#include "nsAString.h"
+#include "domstubs.h"
+#include "nsINameSpaceManager.h"
 
 // Forward declarations
-class nsIAtom;
 class nsINodeInfoManager;
 class nsINameSpaceManager;
 class nsIDocument;
@@ -84,13 +86,23 @@ class nsINodeInfo : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INODEINFO_IID)
 
+  nsINodeInfo()
+    : mInner(nsnull, nsnull, kNameSpaceID_None)
+  {
+  }
+
   /*
    * Get the name from this node as a string, this does not include the prefix.
    *
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "body".
    */
-  NS_IMETHOD GetName(nsAWritableString& aName) = 0;
+  nsresult GetName(nsAString& aName) const
+  {
+    mInner.mName->ToString(aName);
+
+    return NS_OK;
+  }
 
   /*
    * Get the name from this node as an atom, this does not include the prefix.
@@ -99,7 +111,13 @@ public:
    * For the HTML element "<body>" this will return the "body" atom and for
    * the XML element "<html:body>" this will return the "body" atom.
    */
-  NS_IMETHOD GetNameAtom(nsIAtom*& aAtom) = 0;
+  nsresult GetNameAtom(nsIAtom*& aAtom) const
+  {
+    aAtom = mInner.mName;
+    NS_ADDREF(aAtom);
+
+    return NS_OK;
+  }
 
   /*
    * Get the qualified name from this node as a string, the qualified name
@@ -108,7 +126,7 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "html:body".
    */
-  NS_IMETHOD GetQualifiedName(nsAWritableString& aQualifiedName) = 0;
+  NS_IMETHOD GetQualifiedName(nsAString& aQualifiedName) const = 0;
 
   /*
    * Get the local name from this node as a string, GetLocalName() gets the
@@ -119,7 +137,7 @@ public:
    * For the HTML element "<body>" in a HTML document this will return a null
    * string and for the XML element "<html:body>" this will return "body".
    */
-  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) = 0;
+  NS_IMETHOD GetLocalName(nsAString& aLocalName) const = 0;
 
   /*
    * Get the prefix from this node as a string.
@@ -127,7 +145,16 @@ public:
    * For the HTML element "<body>" this will return a null string and for
    * the XML element "<html:body>" this will return the string "html".
    */
-  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) = 0;  
+  nsresult GetPrefix(nsAString& aPrefix) const
+  {
+    if (mInner.mPrefix) {
+      mInner.mPrefix->ToString(aPrefix);
+    } else {
+      SetDOMStringToNull(aPrefix);
+    }
+
+    return NS_OK;
+  }
 
   /*
    * Get the prefix from this node as an atom.
@@ -135,7 +162,13 @@ public:
    * For the HTML element "<body>" this will return a null atom and for
    * the XML element "<html:body>" this will return the "html" atom.
    */
-  NS_IMETHOD GetPrefixAtom(nsIAtom*& aAtom) = 0;  
+  nsresult GetPrefixAtom(nsIAtom*& aAtom) const
+  {
+    aAtom = mInner.mPrefix;
+    NS_IF_ADDREF(aAtom);
+
+    return NS_OK;
+  }
 
   /*
    * Get the namespace URI for a node, if the node has a namespace URI.
@@ -146,7 +179,7 @@ public:
    * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
    * the string "http://www.w3.org/1999/xhtml".
    */
-  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNameSpaceURI) = 0;
+  NS_IMETHOD GetNamespaceURI(nsAString& aNameSpaceURI) const = 0;
 
   /*
    * Get the namespace ID for a node if the node has a namespace, if not this
@@ -158,43 +191,77 @@ public:
    * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
    * the namespace ID for "http://www.w3.org/1999/xhtml".
    */
-  NS_IMETHOD GetNamespaceID(PRInt32& aResult) = 0;
+  nsresult GetNamespaceID(PRInt32& aNameSpaceID) const
+  {
+    aNameSpaceID = mInner.mNamespaceID;
+
+    return NS_OK;
+  }
 
   /*
-   * Get and set the ID attribute atom for this node.  
+   * Get and set the ID attribute atom for this node.
    * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
    * for the definition of an ID attribute.
    *
    */
-  NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult) = 0;  
+  NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult) const = 0;
   NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult) = 0;
 
   /*
    * Get the owning node info manager, this will never return null.
    */
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) = 0;
+  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) const = 0;
 
   /*
    * Utility functions that can be used to check if a nodeinfo holds a specific
    * name, name and prefix, name and prefix and namespace ID, or just
    * namespace ID.
    */
-  NS_IMETHOD_(PRBool) Equals(nsINodeInfo *aNodeInfo) = 0;
-  NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom) = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName) = 0;
-  NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom) = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName,
-                             const nsAReadableString& aPrefix) = 0;
-  NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID) = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName, PRInt32 aNamespaceID) = 0;
-  NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
-                             PRInt32 aNamespaceID) = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName, 
-                             const nsAReadableString& aPrefix,
-                             PRInt32 aNamespaceID) = 0;
-  NS_IMETHOD_(PRBool) NamespaceEquals(PRInt32 aNamespaceID) = 0;
-  NS_IMETHOD_(PRBool) NamespaceEquals(const nsAReadableString& aNamespaceURI) = 0;
-  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsAReadableString& aQualifiedName) = 0;
+  PRBool Equals(nsINodeInfo *aNodeInfo) const
+  {
+    return aNodeInfo == this || aNodeInfo->Equals(mInner.mName, mInner.mPrefix,
+                                                  mInner.mNamespaceID);
+  }
+
+  PRBool Equals(nsIAtom *aNameAtom) const
+  {
+    return mInner.mName == aNameAtom;
+  }
+
+  PRBool Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom) const
+  {
+    return (mInner.mName == aNameAtom) && (mInner.mPrefix == aPrefixAtom);
+  }
+
+  PRBool Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID) const
+  {
+    return ((mInner.mName == aNameAtom) &&
+            (mInner.mNamespaceID == aNamespaceID));
+  }
+
+  PRBool Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
+                             PRInt32 aNamespaceID) const
+  {
+    return ((mInner.mName == aNameAtom) &&
+            (mInner.mPrefix == aPrefixAtom) &&
+            (mInner.mNamespaceID == aNamespaceID));
+  }
+
+  PRBool NamespaceEquals(PRInt32 aNamespaceID) const
+  {
+    return mInner.mNamespaceID == aNamespaceID;
+  }
+
+  NS_IMETHOD_(PRBool) Equals(const nsAString& aName) const = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
+                             const nsAString& aPrefix) const = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
+                             PRInt32 aNamespaceID) const = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
+                             const nsAString& aPrefix,
+                             PRInt32 aNamespaceID) const = 0;
+  NS_IMETHOD_(PRBool) NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
+  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsAString& aQualifiedName) const = 0;
 
   /*
    * This is a convinience method that creates a new nsINodeInfo that differs
@@ -211,7 +278,40 @@ public:
   /*
    * Retrieve a pointer to the document that owns this node info.
    */
-  NS_IMETHOD GetDocument(nsIDocument*& aDocument) = 0;
+  NS_IMETHOD GetDocument(nsIDocument*& aDocument) const = 0;
+
+protected:
+  /*
+   * nsNodeInfoInner is used for two things:
+   *
+   *   1. as a member in nsNodeInfo for holding the name, prefix and
+   *      namespace ID
+   *   2. as the hash key in the hash table in nsNodeInfoManager
+   *
+   * nsNodeInfoInner does not do any kind of reference counting,
+   * that's up to the user of this class. Since nsNodeInfoInner is
+   * typically used as a member of nsNodeInfo, the hash table doesn't
+   * need to delete the keys. When the value (nsNodeInfo) is deleted
+   * the key is automatically deleted.
+   */
+
+  class nsNodeInfoInner
+  {
+  public:
+    nsNodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID)
+      : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID)
+    {
+    }
+
+    nsIAtom*            mName;
+    nsIAtom*            mPrefix;
+    PRInt32             mNamespaceID;
+  };
+
+  // nsNodeInfoManager needs to pass mInner to the hash table.
+  friend class nsNodeInfoManager;
+
+  nsNodeInfoInner mInner;
 };
 
 
@@ -238,17 +338,15 @@ public:
    */
   NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, nsIAtom *aPrefix,
+  NS_IMETHOD GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, 
-                         const nsAReadableString& aPrefix,
+  NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, 
-                         const nsAReadableString& aPrefix,
-                         const nsAReadableString& aNamespaceURI,
+  NS_IMETHOD GetNodeInfo(const nsAString& aName, const nsAString& aPrefix,
+                         const nsAString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsAReadableString& aQualifiedName,
-                         const nsAReadableString& aNamespaceURI,
+  NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
+                         const nsAString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo) = 0;
 
   /*

@@ -60,6 +60,35 @@ nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult)
 }
 
 
+PLHashNumber
+nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
+{
+  NS_ASSERTION(key, "Null key passed to nsNodeInfo::GetHashValue!");
+
+  const nsINodeInfo::nsNodeInfoInner *node =
+    NS_REINTERPRET_CAST(const nsINodeInfo::nsNodeInfoInner *, key);
+
+  // Is this an acceptable hash value?
+  return (PLHashNumber(NS_PTR_TO_INT32(node->mName)) & 0xffff) >> 8;
+}
+
+
+PRIntn
+nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
+{
+  NS_ASSERTION(key1 && key2, "Null key passed to NodeInfoInnerKeyCompare!");
+
+  const nsINodeInfo::nsNodeInfoInner *node1 =
+    NS_REINTERPRET_CAST(const nsINodeInfo::nsNodeInfoInner *, key1);
+  const nsINodeInfo::nsNodeInfoInner *node2 =
+    NS_REINTERPRET_CAST(const nsINodeInfo::nsNodeInfoInner *, key2);
+
+  return (node1->mName == node2->mName &&
+          node1->mPrefix == node2->mPrefix &&
+          node1->mNamespaceID == node2->mNamespaceID);
+}
+
+
 nsNodeInfoManager::nsNodeInfoManager()
   : mDocument(nsnull)
 {
@@ -78,8 +107,8 @@ nsNodeInfoManager::nsNodeInfoManager()
 
   gNodeManagerCount++;
 
-  mNodeInfoHash = PL_NewHashTable(32, nsNodeInfoInner::GetHashValue,
-                                  nsNodeInfoInner::KeyCompare,
+  mNodeInfoHash = PL_NewHashTable(32, GetNodeInfoInnerHashValue,
+                                  NodeInfoInnerKeyCompare,
                                   PL_CompareValues, nsnull, nsnull);
 
 #ifdef DEBUG_jst
@@ -145,7 +174,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 {
   NS_ENSURE_ARG_POINTER(aName);
 
-  nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID);
+  nsINodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID);
 
   void *node = PL_HashTableLookup(mNodeInfoHash, &tmpKey);
 
@@ -176,7 +205,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, nsIAtom *aPrefix,
+nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo)
 {
   NS_ENSURE_ARG(aName.Length());
@@ -189,8 +218,9 @@ nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, nsIAtom *aPrefix,
 
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, const nsAReadableString& aPrefix,
-                               PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo)
+nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
+                               const nsAString& aPrefix, PRInt32 aNamespaceID,
+                               nsINodeInfo*& aNodeInfo)
 {
   NS_ENSURE_ARG(aName.Length());
 
@@ -209,8 +239,9 @@ nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, const nsAReadable
 
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, const nsAReadableString& aPrefix,
-                               const nsAReadableString& aNamespaceURI,
+nsNodeInfoManager::GetNodeInfo(const nsAString& aName,
+                               const nsAString& aPrefix,
+                               const nsAString& aNamespaceURI,
                                nsINodeInfo*& aNodeInfo)
 {
   NS_ENSURE_ARG(aName.Length());
@@ -238,8 +269,8 @@ nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, const nsAReadable
 
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aQualifiedName,
-                               const nsAReadableString& aNamespaceURI,
+nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
+                               const nsAString& aNamespaceURI,
                                nsINodeInfo*& aNodeInfo)
 {
   NS_ENSURE_ARG(aQualifiedName.Length());

@@ -47,7 +47,7 @@
 
 
 nsNodeInfo::nsNodeInfo()
-  : mInner(), mOwnerManager(nsnull)
+  : nsINodeInfo(), mOwnerManager(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -91,37 +91,14 @@ nsNodeInfo::Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 
 // nsISupports
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsNodeInfo, nsINodeInfo);
+NS_IMPL_ISUPPORTS1(nsNodeInfo, nsINodeInfo);
 
 
 // nsINodeInfo
 
 NS_IMETHODIMP
-nsNodeInfo::GetName(nsAWritableString& aName)
+nsNodeInfo::GetQualifiedName(nsAString& aQualifiedName) const
 {
-  NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
-
-  return mInner.mName->ToString(aName);
-}
-
-
-NS_IMETHODIMP
-nsNodeInfo::GetNameAtom(nsIAtom*& aAtom)
-{
-  NS_ABORT_IF_FALSE(mInner.mName, "nsNodeInfo not initialized!");
-
-  aAtom = mInner.mName;
-  NS_IF_ADDREF(aAtom);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNodeInfo::GetQualifiedName(nsAWritableString& aQualifiedName)
-{
-  NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
-
   if (mInner.mPrefix) {
     mInner.mPrefix->ToString(aQualifiedName);
 
@@ -140,10 +117,8 @@ nsNodeInfo::GetQualifiedName(nsAWritableString& aQualifiedName)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetLocalName(nsAWritableString& aLocalName)
+nsNodeInfo::GetLocalName(nsAString& aLocalName) const
 {
-  NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
-
 #ifdef STRICT_DOM_LEVEL2_LOCALNAME
   if (mInner.mNamespaceID > 0) {
     return mInner.mName->ToString(aLocalName);
@@ -159,32 +134,8 @@ nsNodeInfo::GetLocalName(nsAWritableString& aLocalName)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetPrefix(nsAWritableString& aPrefix)
+nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 {
-  if (mInner.mPrefix) {
-    mInner.mPrefix->ToString(aPrefix);
-  } else {
-    SetDOMStringToNull(aPrefix);
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNodeInfo::GetPrefixAtom(nsIAtom*& aAtom)
-{
-  aAtom = mInner.mPrefix;
-  NS_IF_ADDREF(aAtom);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNodeInfo::GetNamespaceURI(nsAWritableString& aNameSpaceURI)
-{
-  NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
   nsresult rv = NS_OK;
 
   if (mInner.mNamespaceID > 0) {
@@ -203,19 +154,9 @@ nsNodeInfo::GetNamespaceURI(nsAWritableString& aNameSpaceURI)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetNamespaceID(PRInt32& aResult)
+nsNodeInfo::GetIDAttributeAtom(nsIAtom** aResult) const
 {
-  aResult = mInner.mNamespaceID;
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNodeInfo::GetIDAttributeAtom(nsIAtom** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mInner.mIDAttributeAtom;
+  *aResult = mIDAttributeAtom;
   NS_IF_ADDREF(*aResult);
 
   return NS_OK;
@@ -225,7 +166,7 @@ NS_IMETHODIMP
 nsNodeInfo::SetIDAttributeAtom(nsIAtom* aID)
 {
   NS_ENSURE_ARG(aID);
-  mInner.mIDAttributeAtom = aID;
+  mIDAttributeAtom = aID;
 
   return NS_OK;
 }
@@ -233,10 +174,8 @@ nsNodeInfo::SetIDAttributeAtom(nsIAtom* aID)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager)
+nsNodeInfo::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) const
 {
-  NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
-
   aNodeInfoManager = mOwnerManager;
 
   NS_ADDREF(aNodeInfoManager);
@@ -246,26 +185,8 @@ nsNodeInfo::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager)
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(nsINodeInfo *aNodeInfo)
+nsNodeInfo::Equals(const nsAString& aName) const
 {
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
-
-  return aNodeInfo->Equals(mInner.mName, mInner.mPrefix, mInner.mNamespaceID);
-}
-
-
-NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(nsIAtom *aNameAtom)
-{
-  return mInner.mName == aNameAtom;
-}
-
-
-NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(const nsAReadableString& aName)
-{
-  if (!mInner.mName) return PR_FALSE;
-
   const PRUnichar *name;
   mInner.mName->GetUnicode(&name);
 
@@ -274,39 +195,28 @@ nsNodeInfo::Equals(const nsAReadableString& aName)
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom)
+nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix) const
 {
-  return (mInner.mName == aNameAtom) && (mInner.mPrefix == aPrefixAtom);
-}
-
-
-NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(const nsAReadableString& aName, const nsAReadableString& aPrefix)
-{
-  if (!mInner.mName) return PR_FALSE;
-
-  const PRUnichar *name, *prefix = nsnull;
+  const PRUnichar *name;
   mInner.mName->GetUnicode(&name);
 
-  if (mInner.mPrefix)
-    mInner.mPrefix->GetUnicode(&prefix);
+  if (!aName.Equals(name)) {
+    return PR_FALSE;
+  }
 
-  return aName.Equals(name) && aPrefix.Equals(prefix);
+  if (!mInner.mPrefix) {
+    return aPrefix.IsEmpty();
+  }
+
+  mInner.mPrefix->GetUnicode(&name);
+
+  return aPrefix.Equals(name);
 }
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID)
+nsNodeInfo::Equals(const nsAString& aName, PRInt32 aNamespaceID) const
 {
-  return (mInner.mName == aNameAtom) && (mInner.mNamespaceID == aNamespaceID);
-}
-
-
-NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(const nsAReadableString& aName, PRInt32 aNamespaceID)
-{
-  if (!mInner.mName) return PR_FALSE;
-
   const PRUnichar *name;
   mInner.mName->GetUnicode(&name);
 
@@ -315,43 +225,25 @@ nsNodeInfo::Equals(const nsAReadableString& aName, PRInt32 aNamespaceID)
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
-                   PRInt32 aNamespaceID)
+nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
+                   PRInt32 aNamespaceID) const
 {
-  return (mInner.mName == aNameAtom) &&
-         (mInner.mPrefix == aPrefixAtom) &&
-         (mInner.mNamespaceID == aNamespaceID);
-}
-
-
-NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(const nsAReadableString& aName, const nsAReadableString& aPrefix,
-                   PRInt32 aNamespaceID)
-{
-  if (!mInner.mName) return PR_FALSE;
-
-  const PRUnichar *name, *prefix = nsnull;
+  PRUnichar nullChar = '\0';
+  const PRUnichar *name, *prefix = &nullChar;
   mInner.mName->GetUnicode(&name);
 
-  if (mInner.mPrefix)
+  if (mInner.mPrefix) {
     mInner.mPrefix->GetUnicode(&prefix);
+  }
 
-  return aName.Equals(name) && aPrefix.Equals(prefix) &&
-         (mInner.mNamespaceID == aNamespaceID);
+  return ((mInner.mNamespaceID == aNamespaceID) && aName.Equals(name) &&
+          aPrefix.Equals(prefix));
 }
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::NamespaceEquals(PRInt32 aNamespaceID)
+nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
-  return mInner.mNamespaceID == aNamespaceID;
-}
-
-
-NS_IMETHODIMP_(PRBool)
-nsNodeInfo::NamespaceEquals(const nsAReadableString& aNamespaceURI)
-{
-  NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsINameSpaceManager> nsmgr;
 
   NS_ENSURE_SUCCESS(mOwnerManager->GetNamespaceManager(*getter_AddRefs(nsmgr)),
@@ -360,46 +252,60 @@ nsNodeInfo::NamespaceEquals(const nsAReadableString& aNamespaceURI)
   PRInt32 nsid;
   nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
 
-  return mInner.mNamespaceID == nsid;
+  return nsINodeInfo::NamespaceEquals(nsid);
 }
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::QualifiedNameEquals(const nsAReadableString& aQualifiedName)
+nsNodeInfo::QualifiedNameEquals(const nsAString& aQualifiedName) const
 {
-  const nsPromiseFlatString& flatName = PromiseFlatString(aQualifiedName);
-  const PRUnichar *qname = flatName.get();
-  PRUint32 i = 0;
-
-  if (mInner.mPrefix) {
-    const PRUnichar *prefix;
-    mInner.mPrefix->GetUnicode(&prefix);
-
-    i = nsCRT::strlen(prefix);
-
-    if (nsCRT::strncmp(qname, prefix, i))
-      return PR_FALSE;
-
-    if (*(qname + i) != PRUnichar(':'))
-      return PR_FALSE;
-
-    i++;
-  }
-
   const PRUnichar *name;
   mInner.mName->GetUnicode(&name);
 
-  if (nsCRT::strcmp(qname + i, name))
-    return PR_FALSE;
+  if (!mInner.mPrefix) {
+    return aQualifiedName.Equals(name);
+  }
 
-  return PR_TRUE;
+  nsAString::const_iterator start;
+  aQualifiedName.BeginReading(start);
+
+  nsAString::const_iterator colon(start);
+
+  const PRUnichar *prefix;
+  mInner.mPrefix->GetUnicode(&prefix);
+
+  PRUint32 len = nsCRT::strlen(prefix);
+
+  if (len >= aQualifiedName.Length()) {
+    return PR_FALSE;
+  }
+
+  colon.advance(len);
+
+  // If the character at the prefix length index is not a colon,
+  // aQualifiedName is not equal to this string.
+  if (*colon != ':') {
+    return PR_FALSE;
+  }
+
+  // Compare the prefix to the string from the start to the colon
+  if (!Substring(start, colon).Equals(prefix)) {
+    return PR_FALSE;
+  }
+
+  ++colon; // Skip the ':'
+
+  nsAString::const_iterator end;
+  aQualifiedName.EndReading(end);
+
+  // Compare the local name to the string between the colon and the
+  // end of aQualifiedName
+  return Substring(colon, end).Equals(name);
 }
 
 NS_IMETHODIMP
 nsNodeInfo::NameChanged(nsIAtom *aName, nsINodeInfo*& aResult)
 {
-  NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
-
   return mOwnerManager->GetNodeInfo(aName, mInner.mPrefix, mInner.mNamespaceID,
                                     aResult);
 }
@@ -408,60 +314,13 @@ nsNodeInfo::NameChanged(nsIAtom *aName, nsINodeInfo*& aResult)
 NS_IMETHODIMP
 nsNodeInfo::PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult)
 {
-  NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
-
   return mOwnerManager->GetNodeInfo(mInner.mName, aPrefix, mInner.mNamespaceID,
                                     aResult);
 }
 
 NS_IMETHODIMP
-nsNodeInfo::GetDocument(nsIDocument*& aDocument)
+nsNodeInfo::GetDocument(nsIDocument*& aDocument) const
 {
-  NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
-
   return mOwnerManager->GetDocument(aDocument);
-}
-
-
-PLHashNumber
-nsNodeInfoInner::GetHashValue(const void *key)
-{
-#ifdef NS_DEBUG // Just to shut down a compiler warning
-  NS_WARN_IF_FALSE(key, "Null key passed to nsNodeInfo::GetHashValue!");
-#endif
-
-  if (key) {
-    const nsNodeInfoInner *node = (const nsNodeInfoInner *)key;
-
-    // Is this an acceptable hash value?
-    return (PLHashNumber(NS_PTR_TO_INT32(node->mName)) & 0xffff) >> 8;
-  }
-
-  return 0;
-}
-
-
-PRIntn
-nsNodeInfoInner::KeyCompare(const void *key1, const void *key2)
-{
-#ifdef NS_DEBUG // Just to shut down a compiler warning
-  NS_WARN_IF_FALSE(key1 && key2, "Null key passed to nsNodeInfo::KeyCompare!");
-#endif
-
-  if (!key1 || !key2) {
-    return PR_FALSE;
-  }
-
-  const nsNodeInfoInner *node1 = (const nsNodeInfoInner *)key1;
-  const nsNodeInfoInner *node2 = (const nsNodeInfoInner *)key2;
-
-  if (node1->mName == node2->mName &&
-      node1->mPrefix == node2->mPrefix &&
-      node1->mNamespaceID == node2->mNamespaceID) {
-
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
 }
 

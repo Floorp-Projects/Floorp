@@ -45,37 +45,6 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 
-/*
- * nsNodeInfoInner is used for two things:
- *
- *   1. as a member in nsNodeInfo for holding the name, prefix and
- *      namespace ID
- *   2. as the hash key in the hash table in nsNodeInfoManager
- *
- * nsNodeInfoInner does not do any kind of reference counting, that's up
- * to the user of this class, since nsNodeInfoInner is a member of
- * nsNodeInfo the hash table doesn't need to delete the keys, when the
- * value (nsNodeInfo) the key is automatically deleted.
- */
-
-struct nsNodeInfoInner
-{
-  nsNodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID)
-    : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID) { }
-
-  nsNodeInfoInner()
-    : mName(nsnull), mPrefix(nsnull), mNamespaceID(kNameSpaceID_None) { }
-
-  static PRIntn PR_CALLBACK KeyCompare(const void *key1, const void *key2);
-  static PLHashNumber PR_CALLBACK GetHashValue(const void *key);
-
-  nsIAtom*            mName;
-  nsIAtom*            mPrefix;
-  PRInt32             mNamespaceID;
-  nsCOMPtr<nsIAtom>   mIDAttributeAtom;
-};
-
-
 class nsNodeInfoManager;
 
 class nsNodeInfo : public nsINodeInfo
@@ -84,37 +53,25 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsINodeInfo
-  NS_IMETHOD GetName(nsAWritableString& aName);
-  NS_IMETHOD GetNameAtom(nsIAtom*& aAtom);
-  NS_IMETHOD GetQualifiedName(nsAWritableString& aQualifiedName);
-  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName);
-  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix);
-  NS_IMETHOD GetPrefixAtom(nsIAtom*& aAtom);
-  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNameSpaceURI);
-  NS_IMETHOD GetNamespaceID(PRInt32& aResult);
-  NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult);
+  NS_IMETHOD GetQualifiedName(nsAString &aQualifiedName) const;
+  NS_IMETHOD GetLocalName(nsAString& aLocalName) const;
+  NS_IMETHOD GetNamespaceURI(nsAString& aNameSpaceURI) const;
+  NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult) const;
   NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult);
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
-  NS_IMETHOD_(PRBool) Equals(nsINodeInfo *aNodeInfo);
-  NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom);
-  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName);
-
-  NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom);
-  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName,
-                             const nsAReadableString& aPrefix);
-  NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID);
-  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName, PRInt32 aNamespaceID);
-  NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
-                             PRInt32 aNamespaceID);
-  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName, const nsAReadableString& aPrefix,
-                             PRInt32 aNamespaceID);
-  NS_IMETHOD_(PRBool) NamespaceEquals(PRInt32 aNamespaceID);
-  NS_IMETHOD_(PRBool) NamespaceEquals(const nsAReadableString& aNamespaceURI);
-  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsAReadableString& aQualifiedName);
+  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) const;
+  NS_IMETHOD_(PRBool) Equals(const nsAString& aName) const;
+  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
+                             const nsAString& aPrefix) const;
+  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
+                             PRInt32 aNamespaceID) const;
+  NS_IMETHOD_(PRBool) Equals(const nsAString& aName, const nsAString& aPrefix,
+                             PRInt32 aNamespaceID) const;
+  NS_IMETHOD_(PRBool) NamespaceEquals(const nsAString& aNamespaceURI) const;
+  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsAString& aQualifiedName) const;
 
   NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo*& aResult);
   NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult);
-  NS_IMETHOD GetDocument(nsIDocument*& aDocument);
+  NS_IMETHOD GetDocument(nsIDocument*& aDocument) const;
 
   // nsNodeInfo
   nsNodeInfo();
@@ -131,11 +88,9 @@ public:
                 nsNodeInfoManager *aOwnerManager);
 
 protected:
-  friend class nsNodeInfoManager; // The NodeInfoManager needs to pass this
-                                  // to the hash table.
-  nsNodeInfoInner mInner;
+  nsCOMPtr<nsIAtom>   mIDAttributeAtom;
 
-  nsNodeInfoManager*  mOwnerManager; // Strong reference!
+  nsNodeInfoManager* mOwnerManager; // Strong reference!
 };
 
 #endif /* nsNodeInfo_h___ */
