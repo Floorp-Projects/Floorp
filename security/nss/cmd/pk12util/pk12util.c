@@ -206,9 +206,8 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
     SECItem it = { 0 };
     SECItem *dup = NULL;
     PRBool ret;
-    /* If converting Unicode to ASCII, swap bytes before conversion
-     * as neccessary.
-     */
+
+#ifdef DEBUG_CONVERSION
     if (pk12_debugging) {
 	int i;
 	printf("Converted from:\n");
@@ -218,9 +217,13 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
 	}
 	printf("\n");
     }
+#endif
     it.data = inBuf;
     it.len = inBufLen;
     dup = SECITEM_DupItem(&it);
+    /* If converting Unicode to ASCII, swap bytes before conversion
+     * as neccessary.
+     */
     if (!toUnicode && swapBytes) {
 	if (p12u_SwapUnicodeBytes(dup) != SECSuccess) {
 	    SECITEM_ZfreeItem(dup, PR_TRUE);
@@ -232,22 +235,8 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
                                    outBuf, maxOutBufLen, outBufLen);
     if (dup)
 	SECITEM_ZfreeItem(dup, PR_TRUE);
-    /* If converting ASCII to Unicode, swap bytes before returning
-     * as neccessary.
-     */
-#if 0
-    if (toUnicode && swapBytes) {
-	it.data = outBuf;
-	it.len = *outBufLen;
-	dup = SECITEM_DupItem(&it);
-	if (p12u_SwapUnicodeBytes(dup) != SECSuccess) {
-	    SECITEM_ZfreeItem(dup, PR_TRUE);
-	    return PR_FALSE;
-	}
-	memcpy(outBuf, dup->data, *outBufLen);
-	SECITEM_ZfreeItem(dup, PR_TRUE);
-    }
-#endif
+
+#ifdef DEBUG_CONVERSION
     if (pk12_debugging) {
 	int i;
 	printf("Converted to:\n");
@@ -257,6 +246,7 @@ p12u_ucs2_ascii_conversion_function(PRBool	   toUnicode,
 	}
 	printf("\n");
     }
+#endif
     return ret;
 }
 
@@ -364,7 +354,6 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
 			secuPWData *slotPw, secuPWData *p12FilePw)
 {
     p12uContext *p12cxt = NULL;
-    unsigned char inBuf[PKCS12_IN_BUFFER_SIZE];
     SEC_PKCS12DecoderContext *p12dcx = NULL;
     SECItem *pwitem = NULL, uniPwitem = { 0 };
     SECItem p12file = { 0 };
