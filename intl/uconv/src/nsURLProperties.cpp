@@ -47,7 +47,8 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
   nsIURI* url = nsnull;
   nsIInputStream* in = nsnull;
 
-  res = gIOService->NewURI(aUrl.GetBuffer(), nsnull, &url);
+  nsCAutoString aUrlCString(aUrl);
+  res = gIOService->NewURI(aUrlCString.GetBuffer(), nsnull, &url);
   if (NS_FAILED(res)) return;
 
   res = NS_OpenURI(&in, url);
