@@ -1,0 +1,51 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+#include "nsIDOMHTMLElement.idl"
+
+[scriptable, uuid(a6cf9093-15b3-11d2-932e-00805f8add32)]
+interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
+{
+
+            attribute  DOMString            defaultValue;
+            attribute  boolean              defaultChecked;
+   readonly attribute  nsIDOMHTMLFormElement      form;
+            attribute  DOMString            accept;
+            attribute  DOMString            accessKey;
+            attribute  DOMString            align;
+            attribute  DOMString            alt;
+            attribute  boolean              checked;
+            attribute  boolean              disabled;
+            attribute  long                 maxLength;
+            attribute  DOMString            name;
+            attribute  boolean              readOnly;
+            attribute  DOMString            size;
+            attribute  DOMString            src;
+            attribute  long                 tabIndex;
+            attribute  DOMString            type;
+            attribute  DOMString            useMap;
+            attribute  DOMString            value;
+   void                      blur();
+   void                      focus();
+   void                      select();
+   void                      click();
+};
+
