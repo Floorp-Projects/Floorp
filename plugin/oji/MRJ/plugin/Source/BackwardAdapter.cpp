@@ -34,6 +34,8 @@
 #include "nsIEventHandler.h"
 #include "nsplugin.h"
 #include "nsDebug.h"
+#include "nsIJRILiveConnectPlugin.h"
+#include "nsIJRILiveConnectPlugInstPeer.h"
 
 #ifdef XP_MAC
 #include "EventFilter.h"
@@ -525,7 +527,7 @@ protected:
 
 #pragma mark CPluginInstancePeer
 
-class CPluginInstancePeer : public nsIPluginInstancePeer, public nsIPluginTagInfo {
+class CPluginInstancePeer : public nsIPluginInstancePeer, public nsIPluginTagInfo, public nsIJRILiveConnectPluginInstancePeer {
 public:
 
     // XXX - I add parameters to the constructor because I wasn't sure if
@@ -538,7 +540,15 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    // (Corresponds to NPN_GetValue.)
+    /**
+     * Returns the value of a variable associated with the plugin manager.
+     *
+     * (Corresponds to NPN_GetValue.)
+     *
+     * @param variable - the plugin manager variable to get
+     * @param value - the address of where to store the resulting value
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     GetValue(nsPluginInstancePeerVariable variable, void *value);
 
@@ -546,13 +556,66 @@ public:
     NS_IMETHOD
     SetValue(nsPluginInstancePeerVariable variable, void *value);
 
-    // Corresponds to NPP_New's MIMEType argument.
+    /**
+     * Returns the MIME type of the plugin instance. 
+     *
+     * (Corresponds to NPP_New's MIMEType argument.)
+     *
+     * @param result - resulting MIME type
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     GetMIMEType(nsMIMEType *result);
 
-    // Corresponds to NPP_New's mode argument.
+    /**
+     * Returns the mode of the plugin instance, i.e. whether the plugin is
+     * embedded in the html, or full page. 
+     *
+     * (Corresponds to NPP_New's mode argument.)
+     *
+     * @param result - the resulting mode
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     GetMode(nsPluginMode *result);
+
+    /**
+     * This operation is called by the plugin instance when it wishes to send
+     * a stream of data to the browser. It constructs a new output stream to which
+     * the plugin may send the data. When complete, the Close and Release methods
+     * should be called on the output stream.
+     *
+     * (Corresponds to NPN_NewStream.)
+     *
+     * @param type - type MIME type of the stream to create
+     * @param target - the target window name to receive the data
+     * @param result - the resulting output stream
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    NewStream(nsMIMEType type, const char* target, nsIOutputStream* *result);
+
+    /**
+     * This operation causes status information to be displayed on the window
+     * associated with the plugin instance. 
+     *
+     * (Corresponds to NPN_Status.)
+     *
+     * @param message - the status message to display
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    ShowStatus(const char* message);
+
+    /**
+     * Set the desired size of the window in which the plugin instance lives.
+     *
+     * @param width - new window width
+     * @param height - new window height
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    SetWindowSize(PRUint32 width, PRUint32 height);
 
     // Get a ptr to the paired list of attribute names and values,
     // returns the length of the array.
@@ -566,16 +629,29 @@ public:
     NS_IMETHOD
     GetAttribute(const char* name, const char* *result);
 
-    // Corresponds to NPN_NewStream.
-    NS_IMETHOD
-    NewStream(nsMIMEType type, const char* target, nsIOutputStream* *result);
+	/**
+	 * Returns a JRI env corresponding to the current Java thread of the
+	 * browser.
+     *
+     * (Corresponds to NPN_GetJavaEnv.)
+     *
+     * @result - NS_OK if this operation was successful
+	 */
+	NS_IMETHOD
+	GetJavaEnv(JRIEnv* *resultingEnv);
 
-    // Corresponds to NPN_ShowStatus.
+    /**
+     * Returns a JRI reference to the Java peer object associated with the
+     * plugin instance. This object is an instance of the class specified
+     * by nsIJRILiveConnectPlugin::GetJavaClass.
+     *
+     * (Corresponds to NPN_GetJavaPeer.)
+     *
+     * @param resultingJavaPeer - a resulting reference to the Java instance
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
-    ShowStatus(const char* message);
-
-    NS_IMETHOD
-    SetWindowSize(PRUint32 width, PRUint32 height);
+    GetJavaPeer(jref *resultingJavaPeer);
 
 	nsIPluginInstance* GetInstance(void) { return mInstance; }
 	NPP GetNPPInstance(void) { return npp; }
@@ -970,20 +1046,15 @@ NPP_Initialize(void)
 jref
 NPP_GetJavaClass(void)
 {
-    // Only call initialize the plugin if it hasn't been `d.
-#if 0
-    if (thePluginManager == NULL) {
-        // Create the plugin manager and plugin objects.
-        NPError result = CPluginManager::Create();	
-        if (result) return NULL;
-        assert( thePluginManager != NULL );
-        thePluginManager->AddRef();
-        NP_CreatePlugin(thePluginManager, (nsIPlugin** )(&thePlugin));
-        assert( thePlugin != NULL );
-    }
-    return thePlugin->GetJavaClass();
-#endif
-    return NULL;
+	jref pluginClass = NULL;
+	if (thePlugin != NULL) {
+		nsIJRILiveConnectPlugin* jriPlugin = NULL;
+		if (thePlugin->QueryInterface(nsIJRILiveConnectPlugin::GetIID(), (void**)&jriPlugin) == NS_OK) {
+			jriPlugin->GetJavaClass(NPN_GetJavaEnv(), &pluginClass);
+			NS_RELEASE(jriPlugin);
+		}
+	}
+	return pluginClass;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1993,6 +2064,38 @@ CPluginInstancePeer::GetAttributes(PRUint16& n, const char* const*& names, const
     values = values_list;
 
     return NS_OK;
+}
+
+/**
+ * Returns a JRI env corresponding to the current Java thread of the
+ * browser.
+ *
+ * (Corresponds to NPN_GetJavaEnv.)
+ *
+ * @result - NS_OK if this operation was successful
+ */
+NS_METHOD
+CPluginInstancePeer::GetJavaEnv(JRIEnv* *resultingEnv)
+{
+	*resultingEnv = NPN_GetJavaEnv();
+	return NS_OK;
+}
+
+/**
+ * Returns a JRI reference to the Java peer object associated with the
+ * plugin instance. This object is an instance of the class specified
+ * by nsIJRILiveConnectPlugin::GetJavaClass.
+ *
+ * (Corresponds to NPN_GetJavaPeer.)
+ *
+ * @param resultingJavaPeer - a resulting reference to the Java instance
+ * @result - NS_OK if this operation was successful
+ */
+NS_METHOD
+CPluginInstancePeer::GetJavaPeer(jref *resultingJavaPeer)
+{
+	*resultingJavaPeer = NPN_GetJavaPeer(npp);
+	return NS_OK;
 }
 
 #if defined(XP_MAC)
