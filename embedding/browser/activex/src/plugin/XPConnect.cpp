@@ -1027,7 +1027,7 @@ MozAxPlugin::GetValue(NPP instance, NPPVariable variable, void *value)
         {
             PRBool classExists = PR_FALSE;
             nsCID cid;
-            memcpy(&iid, &pData->clsid, sizeof(cid));
+            memcpy(&cid, &pData->clsid, sizeof(cid));
             dispSupport->IsClassMarkedSafeForScripting(cid, &classExists, &isScriptable);
         }
         if (!isScriptable)
