@@ -826,6 +826,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
   return PR_FALSE;
 }
 
+#if 0
 static PRBool
 IsEmptyTextContent(nsIContent* aContent)
 {
@@ -837,7 +838,6 @@ IsEmptyTextContent(nsIContent* aContent)
   return result;
 }
 
-#if 0
 #include "nsIDOMHTMLParagraphElement.h"
 
 static PRBool
