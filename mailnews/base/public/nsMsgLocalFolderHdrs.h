@@ -47,6 +47,6 @@
 #define CONTENT_LENGTH_LEN        /*12345678901234*/        14
 
 /* Provide a common means of detecting empty lines in a message. i.e. to detect the end of headers among other things...*/
-#define EMPTY_MESSAGE_LINE(buf) (buf[0] == CR || buf[0] == LF || buf[0] == '\0')
+#define EMPTY_MESSAGE_LINE(buf) (buf[0] == nsCRT::CR || buf[0] == nsCRT::LF || buf[0] == '\0')
 
 #endif

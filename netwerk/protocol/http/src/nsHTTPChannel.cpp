@@ -2519,7 +2519,7 @@ nsHTTPChannel::Authenticate(const char *aChallenge, PRBool aProxyAuth)
     // go thru each to see if we support that. 
     for (const char *eol = aChallenge-1; eol != 0;) {
         const char* bol = eol+1;
-        eol = PL_strchr(bol, LF);
+        eol = PL_strchr(bol, nsCRT::LF);
         if (eol)
             authLine.Assign(bol, eol-bol);
         else

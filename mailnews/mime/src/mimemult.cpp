@@ -198,7 +198,7 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
       // If this line is blank, we're now done parsing headers, and should
       // now examine the content-type to create this "body" part.
       //
-      if (*line == CR || *line == LF)
+      if (*line == nsCRT::CR || *line == nsCRT::LF)
       {
         status = ((MimeMultipartClass *) obj->clazz)->create_child(obj);
         if (status < 0) return status;
@@ -531,8 +531,8 @@ MimeMultipart_parse_child_line (MimeObject *obj, char *line, PRInt32 length,
    */
 
   /* Remove the trailing newline... */
-  if (length > 0 && line[length-1] == LF) length--;
-  if (length > 0 && line[length-1] == CR) length--;
+  if (length > 0 && line[length-1] == nsCRT::LF) length--;
+  if (length > 0 && line[length-1] == nsCRT::CR) length--;
 
   if (!first_line_p)
 	{

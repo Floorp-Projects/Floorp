@@ -139,7 +139,7 @@ nsMsgAttachmentHandler::AnalyzeDataChunk(const char *chunk, PRInt32 length)
 		  m_highbit_count++;
 		  m_unprintable_count++;
 		}
-	  else if (*s < ' ' && *s != '\t' && *s != CR && *s != LF)
+	  else if (*s < ' ' && *s != '\t' && *s != nsCRT::CR && *s != nsCRT::LF)
 		{
 		  m_unprintable_count++;
 		  m_ctl_count++;
@@ -147,9 +147,9 @@ nsMsgAttachmentHandler::AnalyzeDataChunk(const char *chunk, PRInt32 length)
 			m_null_count++;
 		}
 
-	  if (*s == CR || *s == LF)
+	  if (*s == nsCRT::CR || *s == nsCRT::LF)
 		{
-		  if (s+1 < end && s[0] == CR && s[1] == LF)
+		  if (s+1 < end && s[0] == nsCRT::CR && s[1] == nsCRT::LF)
 			s++;
 		  if (m_max_column < m_current_column)
 			m_max_column = m_current_column;

@@ -732,7 +732,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 //				ConvertToUnicode(charset, buf, compare);
 				if (compare.Length() > 0) {
 					char startChar = (char) compare.CharAt(0);
-					if (startChar != CR && startChar != LF)
+					if (startChar != nsCRT::CR && startChar != nsCRT::LF)
 					{
 						err = MatchString (compare, folderCharset, &result);
 						lines++; 

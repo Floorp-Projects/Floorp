@@ -517,7 +517,7 @@ char *nsIMAPGenericParser::CreateLiteral()
 			if (!terminatedLine)
 			{
 				if (fCurrentTokenPlaceHolder &&
-					*fCurrentTokenPlaceHolder == LF &&
+					*fCurrentTokenPlaceHolder == nsCRT::LF &&
 					*(fCurrentTokenPlaceHolder+1))
 				{
 					// This is a static buffer, with a CRLF between the literal size ({91}) and

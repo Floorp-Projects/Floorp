@@ -284,24 +284,24 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
     for (; in < end; in++) {
       if (m_just_hit_CR) {
         m_just_hit_CR = PR_FALSE;
-        if (*in == LF) {
+        if (*in == nsCRT::LF) {
           // The last thing we wrote was a CRLF from hitting a CR.
           // So, we don't want to do anything from a following LF;
           // we want to ignore it.
           continue;
         }
       }
-      if (*in == CR || *in == LF) {
+      if (*in == nsCRT::CR || *in == nsCRT::LF) {
         /* Write out the newline. */
-        *out++ = CR;
-        *out++ = LF;
+        *out++ = nsCRT::CR;
+        *out++ = nsCRT::LF;
         
         status = mime_write_message_body(m_state, buffer,
           out - buffer);
         if (status < 0) return status;
         out = buffer;
         
-        if (*in == CR) {
+        if (*in == nsCRT::CR) {
           m_just_hit_CR = PR_TRUE;
         }
         
@@ -392,11 +392,11 @@ divide_content_headers(const char *headers,
       /* Loop until we reach a newline that is not followed by whitespace.
         */
         if (tail[0] == 0 ||
-          ((tail[0] == CR || tail[0] == LF) &&
-          !(tail[1] == ' ' || tail[1] == '\t' || tail[1] == LF)))
+          ((tail[0] == nsCRT::CR || tail[0] == nsCRT::LF) &&
+          !(tail[1] == ' ' || tail[1] == '\t' || tail[1] == nsCRT::LF)))
         {
           /* Swallow the whole newline. */
-          if (tail[0] == CR && tail[1] == LF)
+          if (tail[0] == nsCRT::CR && tail[1] == nsCRT::LF)
             tail++;
           if (*tail)
             tail++;
@@ -592,9 +592,9 @@ nsMsgSendPart::Write()
 
       L = PL_strlen(content_type_header);
       
-      if (content_type_header[L-1] == LF)
+      if (content_type_header[L-1] == nsCRT::LF)
         content_type_header[--L] = 0;
-      if (content_type_header[L-1] == CR)
+      if (content_type_header[L-1] == nsCRT::CR)
         content_type_header[--L] = 0;
       
       ct2 = PR_smprintf("%s;\r\n boundary=\"%s\"" CRLF, content_type_header, separator);
@@ -692,9 +692,9 @@ nsMsgSendPart::Write()
         }
         
         int hdrLen = PL_strlen(buffer);
-        if ((hdrLen < 2) || (buffer[hdrLen-2] != CR)) { // if the line doesn't end with CRLF,
+        if ((hdrLen < 2) || (buffer[hdrLen-2] != nsCRT::CR)) { // if the line doesn't end with CRLF,
           // ... make it end with CRLF.
-          if ( (hdrLen == 0) || ((buffer[hdrLen-1] != CR) && (buffer[hdrLen-1] != LF)) )
+          if ( (hdrLen == 0) || ((buffer[hdrLen-1] != nsCRT::CR) && (buffer[hdrLen-1] != nsCRT::LF)) )
             hdrLen++;
           buffer[hdrLen-1] = '\015';
           buffer[hdrLen] = '\012';
@@ -720,7 +720,7 @@ nsMsgSendPart::Write()
         
         PUSH(line);
         
-        if (*line == CR || *line == LF) {
+        if (*line == nsCRT::CR || *line == nsCRT::LF) {
           break;	// Now can do normal reads for the body.
         }
       }

@@ -2882,8 +2882,8 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
         if (MSG_LINEBREAK_LEN == 1 && !canonicalLineEnding)
         {
             if ((endOfLine - localMessageLine) >= 2 &&
-                endOfLine[-2] == CR &&
-                endOfLine[-1] == LF)
+                endOfLine[-2] == nsCRT::CR &&
+                endOfLine[-1] == nsCRT::LF)
 			{
                 /* CRLF -> CR or LF */
                 endOfLine[-2] = MSG_LINEBREAK[0];
@@ -2891,7 +2891,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 			}
             else if (endOfLine > localMessageLine + 1 &&
                      endOfLine[-1] != MSG_LINEBREAK[0] &&
-                     ((endOfLine[-1] == CR) || (endOfLine[-1] == LF)))
+                     ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF)))
 			{
                 /* CR -> LF or LF -> CR */
                 endOfLine[-1] = MSG_LINEBREAK[0];
@@ -2904,10 +2904,10 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
         }
         else
         {
-            if (((endOfLine - localMessageLine) >= 2 && endOfLine[-2] != CR) ||
-                ((endOfLine - localMessageLine) >= 1 && endOfLine[-1] != LF))
+            if (((endOfLine - localMessageLine) >= 2 && endOfLine[-2] != nsCRT::CR) ||
+                ((endOfLine - localMessageLine) >= 1 && endOfLine[-1] != nsCRT::LF))
 			{
-                if ((endOfLine[-1] == CR) || (endOfLine[-1] == LF))
+                if ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF))
                 {
 				  /* LF -> CRLF or CR -> CRLF */
                     endOfLine[-1] = MSG_LINEBREAK[0];

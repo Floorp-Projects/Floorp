@@ -876,14 +876,14 @@ int nsParseMailMessageState::ParseHeaders ()
         header->value = value;
 
   SEARCH_NEWLINE:
-	  while (*buf != 0 && *buf != CR && *buf != LF)
+	  while (*buf != 0 && *buf != nsCRT::CR && *buf != nsCRT::LF)
 		buf++;
 
 	  if (buf+1 >= buf_end)
 		;
 	  /* If "\r\n " or "\r\n\t" is next, that doesn't terminate the header. */
 	  else if (buf+2 < buf_end &&
-			   (buf[0] == CR  && buf[1] == LF) &&
+			   (buf[0] == nsCRT::CR  && buf[1] == nsCRT::LF) &&
 			   (buf[2] == ' ' || buf[2] == '\t'))
 		{
 		  buf += 3;
@@ -891,7 +891,7 @@ int nsParseMailMessageState::ParseHeaders ()
 		}
 	  /* If "\r " or "\r\t" or "\n " or "\n\t" is next, that doesn't terminate
 		 the header either. */
-	  else if ((buf[0] == CR  || buf[0] == LF) &&
+	  else if ((buf[0] == nsCRT::CR  || buf[0] == nsCRT::LF) &&
 			   (buf[1] == ' ' || buf[1] == '\t'))
 		{
 		  buf += 2;
@@ -901,10 +901,10 @@ int nsParseMailMessageState::ParseHeaders ()
 	  if (header)
 		header->length = buf - header->value;
 
-	  if (*buf == CR || *buf == LF)
+	  if (*buf == nsCRT::CR || *buf == nsCRT::LF)
 		{
 		  char *last = buf;
-		  if (*buf == CR && buf[1] == LF)
+		  if (*buf == nsCRT::CR && buf[1] == nsCRT::LF)
 			buf++;
 		  buf++;
 		  *last = 0;	/* short-circuit const, and null-terminate header. */

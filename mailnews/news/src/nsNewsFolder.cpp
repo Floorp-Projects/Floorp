@@ -1114,7 +1114,7 @@ nsMsgNewsFolder::HandleNewsrcLine(char* line, PRUint32 line_size)
     nsresult rv;
 
 	/* guard against blank line lossage */
-	if (line[0] == '#' || line[0] == CR || line[0] == LF) return 0;
+	if (line[0] == '#' || line[0] == nsCRT::CR || line[0] == nsCRT::LF) return 0;
 
 	line[line_size] = 0;
 

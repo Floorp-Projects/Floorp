@@ -178,7 +178,7 @@ net_pop3_load_state(const char* searchhost,
 	while (!fileStream.eof() && !fileStream.failed() && fileStream.is_open())
   {
       fileStream.readline(buf, 512);
-      if (*buf == '#' || *buf == CR || *buf == LF || *buf == 0)
+      if (*buf == '#' || *buf == nsCRT::CR || *buf == nsCRT::LF || *buf == 0)
           continue;
 	  if (buf[0] == '*') {
         /* It's a host&user line. */
@@ -2384,7 +2384,7 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
     }
 
     if ((line[0] == '.') &&
-        ((line[1] == CR) || (line[1] == LF)))
+        ((line[1] == nsCRT::CR) || (line[1] == nsCRT::LF)))
     {
         m_pop3ConData->assumed_end = PR_TRUE;	/* in case byte count from server is */
                                     /* wrong, mark we may have had the end */ 

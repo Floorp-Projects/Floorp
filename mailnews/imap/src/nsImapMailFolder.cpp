@@ -2517,7 +2517,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
         end = PL_strstr(start, "\r");
         if (!end)
             end = PL_strstr(start, "\n");
-        else if (*(end+1) == LF && linebreak_len == 0)
+        else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
             linebreak_len = 2;
 
         if (linebreak_len == 0) // not initialize yet

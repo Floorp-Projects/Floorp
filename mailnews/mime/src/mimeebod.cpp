@@ -143,7 +143,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
   /* If this line is blank, we're now done parsing headers, and should
 	 create a dummy body to show that.  Gag.
    */
-  if (*line == CR || *line == LF)
+  if (*line == nsCRT::CR || *line == nsCRT::LF)
 	{
 	  bod->body = nsCRT::strdup("");
 	  if (!bod->body) return MIME_OUT_OF_MEMORY;

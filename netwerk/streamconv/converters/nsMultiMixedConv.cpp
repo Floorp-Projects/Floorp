@@ -218,7 +218,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         // if we don't have a channel already, then we don't even
         // have enough info to start a part, go ahead and buffer
         // enough to collect a boundary token.
-        if (!mPartChannel || !(cursor[bufLen-1] == LF) )
+        if (!mPartChannel || !(cursor[bufLen-1] == nsCRT::LF) )
             bufAmt = PR_MIN(mTokenLen - 1, bufLen);
     }
 
@@ -443,8 +443,8 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
 PRInt8 
 nsMultiMixedConv::PushOverLine(char *&aPtr, PRUint32 &aLen) {
     PRInt8 chars = 0;
-    if (*aPtr == CR || *aPtr == LF) {
-        if (aPtr[1] == LF)
+    if (*aPtr == nsCRT::CR || *aPtr == nsCRT::LF) {
+        if (aPtr[1] == nsCRT::LF)
             chars++;
         chars++;
     }
@@ -464,9 +464,9 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
     PRUint8 lineFeedIncrement = 1;
 
     while ( (cursorLen > 0) 
-            && (newLine = PL_strchr(cursor, LF)) ) {
+            && (newLine = PL_strchr(cursor, nsCRT::LF)) ) {
         // adjust for linefeeds
-        if ( (newLine > cursor) && (newLine[-1] == CR) ) { // CRLF
+        if ( (newLine > cursor) && (newLine[-1] == nsCRT::CR) ) { // CRLF
              lineFeedIncrement = 2;
              newLine--;
         }

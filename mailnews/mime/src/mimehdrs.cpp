@@ -126,7 +126,7 @@ MimeHeaders_parse_line (const char *buffer, PRInt32 size, MimeHeaders *hdrs)
   PR_ASSERT(!hdrs->done_p);
   if (hdrs->done_p) return -1;
 
-  if (!buffer || size == 0 || *buffer == CR || *buffer == LF)
+  if (!buffer || size == 0 || *buffer == nsCRT::CR || *buffer == nsCRT::LF)
 	{
 	  /* If this is a blank line, we're done.
 	   */
@@ -237,10 +237,10 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
   end = hdrs->all_headers + hdrs->all_headers_fp;
   for (s = hdrs->all_headers; s <= end-1; s++)
 	{
-	  if (s <= (end-1) && s[0] == CR && s[1] == LF) /* CRLF -> LF */
+	  if (s <= (end-1) && s[0] == nsCRT::CR && s[1] == nsCRT::LF) /* CRLF -> LF */
 		s++;
 
-	  if ((s[0] == CR || s[0] == LF) &&			/* we're at a newline, and */
+	  if ((s[0] == nsCRT::CR || s[0] == nsCRT::LF) &&			/* we're at a newline, and */
 		  (s >= (end-1) ||						/* we're at EOF, or */
 		   !(s[1] == ' ' || s[1] == '\t')))		/* next char is nonwhite */
 		hdrs->heads_size++;
@@ -265,7 +265,7 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
   while (s <= end)
 	{
 	SEARCH_NEWLINE:
-	  while (s <= end-1 && *s != CR && *s != LF)
+	  while (s <= end-1 && *s != nsCRT::CR && *s != nsCRT::LF)
 		s++;
 
 	  if (s+1 >= end)
@@ -273,7 +273,7 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
 
 	  /* If "\r\n " or "\r\n\t" is next, that doesn't terminate the header. */
 	  else if (s+2 < end &&
-			   (s[0] == CR  && s[1] == LF) &&
+			   (s[0] == nsCRT::CR  && s[1] == nsCRT::LF) &&
 			   (s[2] == ' ' || s[2] == '\t'))
 		{
 		  s += 3;
@@ -281,7 +281,7 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
 		}
 	  /* If "\r " or "\r\t" or "\n " or "\n\t" is next, that doesn't terminate
 		 the header either. */
-	  else if ((s[0] == CR  || s[0] == LF) &&
+	  else if ((s[0] == nsCRT::CR  || s[0] == nsCRT::LF) &&
 			   (s[1] == ' ' || s[1] == '\t'))
 		{
 		  s += 2;
@@ -291,8 +291,8 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
 	  /* At this point, `s' points before a header-terminating newline.
 		 Move past that newline, and store that new position in `heads'.
 	   */
-	  if (*s == CR) s++;
-	  if (*s == LF) s++;
+	  if (*s == nsCRT::CR) s++;
+	  if (*s == nsCRT::LF) s++;
 
 	  if (s < end)
 		{
@@ -790,7 +790,7 @@ MIME_StripContinuations(char *original)
 	while(*p2)
 	{
 		/* p2 runs ahead at (CR and/or LF) */
-		if ((p2[0] == CR) || (p2[0] == LF))
+		if ((p2[0] == nsCRT::CR) || (p2[0] == nsCRT::LF))
 		{
             p2++;
 		} else {
@@ -824,7 +824,7 @@ mime_decode_filename(char *name, const char *charset,
 	{
 		/* Remove backslashes when they are used to escape special characters. */
 		if ((*s == '\\') &&
-			((*(s+1) == CR) || (*(s+1) == LF) || (*(s+1) == '"') || (*(s+1) == '\\')))
+			((*(s+1) == nsCRT::CR) || (*(s+1) == nsCRT::LF) || (*(s+1) == '"') || (*(s+1) == '\\')))
 			s++; /* take whatever char follows the backslash */
 		if (*s)
 			*d++ = *s++;

@@ -2042,7 +2042,7 @@ nsAbSync::ExtractCurrentLine()
   nsString    extractString; 
 
   while ( (*mProtocolOffset) && 
-          ( (*mProtocolOffset != CR) && (*mProtocolOffset != LF) )
+          ( (*mProtocolOffset != nsCRT::CR) && (*mProtocolOffset != nsCRT::LF) )
         )
   {
     extractString.Append(PRUnichar(*mProtocolOffset));
@@ -2054,10 +2054,10 @@ nsAbSync::ExtractCurrentLine()
   else
   {
     while ( (*mProtocolOffset) && 
-            (*mProtocolOffset == CR) )
+            (*mProtocolOffset == nsCRT::CR) )
             mProtocolOffset++;
 
-    if (*mProtocolOffset == LF)
+    if (*mProtocolOffset == nsCRT::LF)
       mProtocolOffset++;
 
     char *tString = extractString.ToNewCString();
@@ -2074,9 +2074,9 @@ nsAbSync::ExtractCurrentLine()
 nsresult        
 nsAbSync::AdvanceToNextLine()
 {
-  // First, find first CR or LF...
+  // First, find first nsCRT::CR or nsCRT::LF...
   while ( (*mProtocolOffset) && 
-          ( (*mProtocolOffset != CR) && (*mProtocolOffset != LF) )
+          ( (*mProtocolOffset != nsCRT::CR) && (*mProtocolOffset != nsCRT::LF) )
         )
   {
     mProtocolOffset++;
@@ -2086,10 +2086,10 @@ nsAbSync::AdvanceToNextLine()
   if (*mProtocolOffset)
   {
     while ( (*mProtocolOffset) && 
-            (*mProtocolOffset != LF) )
+            (*mProtocolOffset != nsCRT::LF) )
         mProtocolOffset++;
     
-    if (*mProtocolOffset == LF)
+    if (*mProtocolOffset == nsCRT::LF)
       mProtocolOffset++;
   }
 

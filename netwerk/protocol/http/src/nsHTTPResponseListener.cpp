@@ -859,7 +859,7 @@ nsWriteLineToString(nsIInputStream* in,
         for (; count>0; --count) {
             c = *p++;
             (*writeCount)++;
-            if (c == LF) {
+            if (c == nsCRT::LF) {
                 info->haveLF = PR_TRUE;
                 break;
             }
@@ -910,7 +910,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in,
     }
 
     // Wait for more data to arrive before processing the header...
-    if (bL > 0 && mHeaderBuffer.CharAt(bL - 1) != LF) return NS_OK;
+    if (bL > 0 && mHeaderBuffer.CharAt(bL - 1) != nsCRT::LF) return NS_OK;
 
     LOG(("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n",
         this, mHeaderBuffer.get()));
@@ -983,7 +983,7 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIInputStream* in,
         // If last character in the header string is a LF, then the header 
         // may be complete...
         //
-        newlineOffset = mHeaderBuffer.FindChar(LF, PR_FALSE, newlineOffset);
+        newlineOffset = mHeaderBuffer.FindChar(nsCRT::LF, PR_FALSE, newlineOffset);
         if (newlineOffset == -1)
             return NS_OK;
 

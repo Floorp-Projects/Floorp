@@ -463,8 +463,8 @@ PERMISSION_Read() {
   while(CKutil_GetLine(strm,buffer) != -1) {
     if ( !buffer.IsEmpty() ) {
       PRUnichar firstChar = buffer.CharAt(0);
-      if (firstChar == '#' || firstChar == CR ||
-          firstChar == LF || firstChar == 0) {
+      if (firstChar == '#' || firstChar == nsCRT::CR ||
+          firstChar == nsCRT::LF || firstChar == 0) {
         continue;
       }
     }

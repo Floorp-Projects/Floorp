@@ -1735,7 +1735,7 @@ FindCharacterSet(MimeObject *obj)
     return nsnull;
   }
 
-  while ( (*cTypePtr) && (*cTypePtr != CR) && (*cTypePtr != LF) )
+  while ( (*cTypePtr) && (*cTypePtr != nsCRT::CR) && (*cTypePtr != nsCRT::LF) )
   {
     tCharSet  = (char *) PL_strcasestr(cTypePtr, "charset=");
     if (tCharSet )
@@ -1753,7 +1753,7 @@ FindCharacterSet(MimeObject *obj)
 
       while (*ptr)
       {
-        if ( (*ptr == ' ') || (*ptr == ';') || (*ptr == CR) || (*ptr == LF) ) 
+        if ( (*ptr == ' ') || (*ptr == ';') || (*ptr == nsCRT::CR) || (*ptr == nsCRT::LF) ) 
         {
           *ptr = '\0';
           break;
@@ -1861,14 +1861,14 @@ MIME_StripContinuations(char *original)
 	while(*p2)
 	{
 		/* p2 runs ahead at (CR and/or LF) + <space> */
-		if ((p2[0] == CR) || (p2[0] == LF))
+		if ((p2[0] == nsCRT::CR) || (p2[0] == nsCRT::LF))
 		{
 			/* move past (CR and/or LF) + whitespace following */	
 			do
 			{
 				p2++;
 			}
-			while((*p2 == CR) || (*p2 == LF) || IS_SPACE(*p2));
+			while((*p2 == nsCRT::CR) || (*p2 == nsCRT::LF) || IS_SPACE(*p2));
 
 			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
 		}

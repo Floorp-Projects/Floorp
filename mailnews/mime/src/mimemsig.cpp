@@ -316,8 +316,8 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		   */
 
 		  /* Remove the trailing newline... */
-		  if (length > 0 && line[length-1] == LF) length--;
-		  if (length > 0 && line[length-1] == CR) length--;
+		  if (length > 0 && line[length-1] == nsCRT::LF) length--;
+		  if (length > 0 && line[length-1] == nsCRT::CR) length--;
 
 		  PR_ASSERT(sig->xlation_closure);
 
@@ -524,8 +524,8 @@ MimeMultipartSigned_parse_child_line (MimeObject *obj,
 		 */
 
 		/* Remove the trailing newline... */
-		if (length > 0 && line[length-1] == LF) length--;
-		if (length > 0 && line[length-1] == CR) length--;
+		if (length > 0 && line[length-1] == nsCRT::LF) length--;
+		if (length > 0 && line[length-1] == nsCRT::CR) length--;
 
 		PR_ASSERT(sig->part_buffer);
 		PR_ASSERT(first_line_p ==

@@ -408,7 +408,7 @@ void ImportAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsTextStringBundle::FreeString( pFmt);
-	pStream->AppendWithConversion( LF);
+	pStream->AppendWithConversion( char(nsCRT::LF));
 	NS_IF_RELEASE( pBundle);
 }
 
@@ -423,7 +423,7 @@ void ImportAddressImpl::ReportError( PRInt32 errorNum, nsString& name, nsString 
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsTextStringBundle::FreeString( pFmt);
-	pStream->AppendWithConversion( LF);
+	pStream->AppendWithConversion( char(nsCRT::LF));
 	NS_IF_RELEASE( pBundle);
 }
 

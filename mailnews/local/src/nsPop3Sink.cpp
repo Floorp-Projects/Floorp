@@ -338,7 +338,7 @@ nsPop3Sink::GetDummyEnvelope(void)
 	  now = 0x7FFFFFFF;
 #endif
   ct = ctime(&now);
-  PR_ASSERT(ct[24] == CR || ct[24] == LF);
+  PR_ASSERT(ct[24] == nsCRT::CR || ct[24] == nsCRT::LF);
   ct[24] = 0;
   /* This value must be in ctime() format, with English abbreviations.
 	 strftime("... %c ...") is no good, because it is localized. */

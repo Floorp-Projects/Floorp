@@ -859,7 +859,7 @@ nsFtpState::Process() {
                     mNextState = FTP_ERROR;
                     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) FAILED\n", this));
                 } else {
-                    char *lf = PL_strchr(mResponseMsg.get(), LF);
+                    char *lf = PL_strchr(mResponseMsg.get(), nsCRT::LF);
                     if (lf && lf+1 && *(lf+1)) 
                         // we have a double response
                         // need to read again...
@@ -1542,7 +1542,7 @@ nsFtpState::R_retr() {
         // this can happen if the server sends back two
         // responses before we've processed the first one.
         PRInt32 loc = -1;
-        loc = mResponseMsg.FindChar(LF);
+        loc = mResponseMsg.FindChar(nsCRT::LF);
         if (loc > -1) {
             PRInt32 err;
             nsCAutoString response;

@@ -33,7 +33,7 @@
 #include "nsIMsgSearchScopeTerm.h"
 #include "nsIMsgSearchTerm.h"
 
-#define EMPTY_MESSAGE_LINE(buf) (buf[0] == CR || buf[0] == LF || buf[0] == '\0')
+#define EMPTY_MESSAGE_LINE(buf) (buf[0] == nsCRT::CR || buf[0] == nsCRT::LF || buf[0] == '\0')
 
 class nsMsgSearchTerm : public nsIMsgSearchTerm
 {

@@ -79,7 +79,7 @@ nsGopherDirListingConv::Convert(nsIInputStream *aFromStream,
 
     convertedData.Append("300: ");
     convertedData.Append(spec);
-    convertedData.Append(LF);
+    convertedData.Append(char(nsCRT::LF));
     // END 300:
     
     //Column headings
@@ -197,7 +197,7 @@ nsGopherDirListingConv::OnDataAvailable(nsIRequest *request,
         
         indexFormat.Append("300: ");
         indexFormat.Append(spec.get());
-        indexFormat.Append(LF);
+        indexFormat.Append(char(nsCRT::LF));
         // END 300:
 
         // build up the column heading; 200:
@@ -278,9 +278,9 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
     PRBool cr = PR_FALSE;
 
     // while we have new lines, parse 'em into application/http-index-format.
-    while (line && (eol = PL_strchr(line, LF)) ) {
+    while (line && (eol = PL_strchr(line, nsCRT::LF)) ) {
         // yank any carriage returns too.
-        if (eol > line && *(eol-1) == CR) {
+        if (eol > line && *(eol-1) == nsCRT::CR) {
             eol--;
             *eol = '\0';
             cr = PR_TRUE;
@@ -393,7 +393,7 @@ nsGopherDirListingConv::DigestBufferLines(char* aBuffer, nsCAutoString& aString)
                     aString.Append("DIRECTORY");
                 else
                     aString.Append("FILE");
-                aString.Append(LF);
+                aString.Append(char(nsCRT::LF));
             }
         } else {
             NS_WARNING("Error parsing gopher directory response.\n");

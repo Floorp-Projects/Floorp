@@ -2427,7 +2427,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 		AdvanceToNextLine();
 		if (ContinueParse())
 		{
-			if (lastCRLFwasCRCRLF && (*fCurrentLine == CR))
+			if (lastCRLFwasCRCRLF && (*fCurrentLine == nsCRT::CR))
 			{
 				char *usableCurrentLine = PL_strdup(fCurrentLine + 1);
 				PR_FREEIF(fCurrentLine);
@@ -2453,11 +2453,11 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 					*displayEndOfLine = 0;
 					fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk);
 					*displayEndOfLine = saveit;
-					lastCRLFwasCRCRLF = (*(displayEndOfLine - 1) == CR);
+					lastCRLFwasCRCRLF = (*(displayEndOfLine - 1) == nsCRT::CR);
 				}
 				else
 				{
-					lastCRLFwasCRCRLF = (*(fCurrentLine + nsCRT::strlen(fCurrentLine) - 1) == CR);
+					lastCRLFwasCRCRLF = (*(fCurrentLine + nsCRT::strlen(fCurrentLine) - 1) == nsCRT::CR);
 					fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk && (charsReadSoFar == numberOfCharsInThisChunk));
 				}
 			}

@@ -2167,7 +2167,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     end = PL_strstr(start, "\r");
     if (!end)
       	end = PL_strstr(start, "\n");
-    else if (*(end+1) == LF && linebreak_len == 0)
+    else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
         linebreak_len = 2;
 
     if (linebreak_len == 0) // not set yet
@@ -2227,7 +2227,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         end = PL_strstr(start, "\r");
         if (end)
         {
-          if (*(end+1) == LF)  //need to set the linebreak_len each time
+          if (*(end+1) == nsCRT::LF)  //need to set the linebreak_len each time
              linebreak_len = 2;  //CRLF
           else
              linebreak_len = 1;  //only CR
@@ -2727,7 +2727,7 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
 				// Remove CR or LF at end of line
 				char	*lastChar = uidl + len - 1;
 				
-				while ( (lastChar > uidl) && (*lastChar == LF || *lastChar == CR) ) {
+				while ( (lastChar > uidl) && (*lastChar == nsCRT::LF || *lastChar == nsCRT::CR) ) {
 					*lastChar = '\0';
 					lastChar --;
 				}

@@ -556,7 +556,7 @@ nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec)
   while (!fileStream.eof() && !fileStream.failed() && 
          fileStream.is_open()) { 
     fileStream.readline(buffer, 512); 
-    if (*buffer == CR || *buffer == LF || *buffer == 0) 
+    if (*buffer == nsCRT::CR || *buffer == nsCRT::LF || *buffer == 0) 
       continue; 
 
     for (int i = 0; i < (int)PL_strlen(buffer); i++) { 

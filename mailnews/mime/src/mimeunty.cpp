@@ -159,8 +159,8 @@ MimeUntypedText_parse_line (char *line, PRInt32 length, MimeObject *obj)
     // just eat it and continue and if we really get more data, we'll open
     // up the subpart then.
     //
-    if (line[0] == CR) return 0;
-    if (line[0] == LF) return 0;
+    if (line[0] == nsCRT::CR) return 0;
+    if (line[0] == nsCRT::LF) return 0;
 
 	  PR_ASSERT(!begin_line_p);
 	  status = MimeUntypedText_open_subpart (obj,
@@ -412,8 +412,8 @@ MimeUntypedText_uu_begin_line_p(const char *line, PRInt32 length,
   name[(line+length)-s] = 0;
 
   /* take off newline. */
-  if (name[nsCRT::strlen(name)-1] == LF) name[nsCRT::strlen(name)-1] = 0;
-  if (name[nsCRT::strlen(name)-1] == CR) name[nsCRT::strlen(name)-1] = 0;
+  if (name[nsCRT::strlen(name)-1] == nsCRT::LF) name[nsCRT::strlen(name)-1] = 0;
+  if (name[nsCRT::strlen(name)-1] == nsCRT::CR) name[nsCRT::strlen(name)-1] = 0;
 
   /* Now try and figure out a type.
    */
@@ -493,8 +493,8 @@ MimeUntypedText_binhex_begin_line_p(const char *line, PRInt32 length,
 static PRBool
 MimeUntypedText_binhex_end_line_p(const char *line, PRInt32 length)
 {
-  if (length > 0 && line[length-1] == LF) length--;
-  if (length > 0 && line[length-1] == CR) length--;
+  if (length > 0 && line[length-1] == nsCRT::LF) length--;
+  if (length > 0 && line[length-1] == nsCRT::CR) length--;
 
   if (length != 0 && length != 64)
 	return PR_TRUE;

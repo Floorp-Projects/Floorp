@@ -617,12 +617,12 @@ nsresult nsMsgProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
                     L++;
                 }
                 
-                if (!lastLineWasComplete || (L > 1 && line[L-2] == CR &&
-                                             line[L-1] == LF))
+                if (!lastLineWasComplete || (L > 1 && line[L-2] == nsCRT::CR &&
+                                             line[L-1] == nsCRT::LF))
                 {
                     /* already ok */
                 }
-                else if(L > 0 /* && (line[L-1] == LF || line[L-1] == CR) */)
+                else if(L > 0 /* && (line[L-1] == nsCRT::LF || line[L-1] == nsCRT::CR) */)
                 {
                     /* only add the crlf if required
                      * we still need to do all the
@@ -632,8 +632,8 @@ nsresult nsMsgProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
                     if(/* add_crlf_to_line_endings */ PR_TRUE)
                     {
                         /* Change newline to CRLF. */
-                          line[L++] = CR;
-                          line[L++] = LF;
+                          line[L++] = nsCRT::CR;
+                          line[L++] = nsCRT::LF;
                           line[L] = 0;
                     }
                 }
@@ -641,8 +641,8 @@ nsresult nsMsgProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
                          /* && add_crlf_to_line_endings */)
                 {
                     // jt ** empty line; output CRLF
-                    line[L++] = CR;
-                    line[L++] = LF;
+                    line[L++] = nsCRT::CR;
+                    line[L++] = nsCRT::LF;
                     line[L] = 0;
                 }
                 

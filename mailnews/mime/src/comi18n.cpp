@@ -92,23 +92,23 @@ do \
 #define OUTPUT_MACHINE_NEW_LINE(c) \
 do \
 { \
-	OUTPUT(CR); \
-	OUTPUT(LF); \
+	OUTPUT(nsCRT::CR); \
+	OUTPUT(nsCRT::LF); \
 } while (0)
 #else
 #ifdef XP_MAC
 #define OUTPUT_MACHINE_NEW_LINE(c) \
 do \
 { \
-	OUTPUT(CR); \
-	if (c) OUTPUT(LF); \
+	OUTPUT(nsCRT::CR); \
+	if (c) OUTPUT(nsCRT::LF); \
 } while (0)
 #else
 #define OUTPUT_MACHINE_NEW_LINE(c) \
 do \
 { \
-	if (c) OUTPUT(CR); \
-	OUTPUT(LF); \
+	if (c) OUTPUT(nsCRT::CR); \
+	OUTPUT(nsCRT::LF); \
 } while (0)
 #endif
 #endif
@@ -129,7 +129,7 @@ do \
 #define NEW_LINE(c) \
 do \
 { \
-	if ((*in == CR) && (*(in + 1) == LF)) \
+	if ((*in == nsCRT::CR) && (*(in + 1) == nsCRT::LF)) \
 	{ \
 		in += 2; \
 	} \
@@ -179,7 +179,7 @@ xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
 	{
 		if (checkQuoting && (in == beginningOfLine) && (*in == '>'))
 		{
-			while (*in && (*in != CR) && (*in != LF))
+			while (*in && (*in != nsCRT::CR) && (*in != nsCRT::LF))
 			{
 				OUTPUT(*in++);
 			}
@@ -199,7 +199,7 @@ xp_word_wrap(unsigned char *str, int maxColumn, int checkQuoting,
 		}
 		else
 		{
-			if ((*in == CR) || (*in == LF))
+			if ((*in == nsCRT::CR) || (*in == nsCRT::LF))
 			{
 				if (in != beginningOfLine)
 				{
@@ -711,7 +711,7 @@ convert_and_encode:
       if ( ( maxLineLen - line_len < 30 ) || bChop ) {
         /* chop first, then continue */
         buf1 = retbuf + retbuflen;
-        *buf1++ = CR;   *buf1++ = LF; *buf1++ = '\t';
+        *buf1++ = nsCRT::CR;   *buf1++ = nsCRT::LF; *buf1++ = '\t';
         line_len = 0;
         retbuflen += 3;
         *buf1 = '\0';
@@ -862,8 +862,8 @@ convert_and_encode:
       if ((line_len > 10) &&
           ((line_len + convlen) > maxLineLen))
       {
-        *buf1++ = CR;
-        *buf1++ = LF;
+        *buf1++ = nsCRT::CR;
+        *buf1++ = nsCRT::LF;
         *buf1++ = '\t';
         line_len = 0;
         iThreshold = default_iThreshold;
@@ -905,8 +905,8 @@ convert_and_encode:
       if ((line_len > 10) &&
           ((line_len + len) > maxLineLen))
       {
-        *buf1++ = CR;
-        *buf1++ = LF;
+        *buf1++ = nsCRT::CR;
+        *buf1++ = nsCRT::LF;
         *buf1++ = '\t';
         line_len = 0;
         iThreshold = default_iThreshold;
@@ -914,7 +914,7 @@ convert_and_encode:
       /* copy buffer from begin to buf1 stripping CRLFTAB */
       for (p = begin; *p; p++)
       {
-        if (*p == CR || *p == LF || *p == TAB)
+        if (*p == nsCRT::CR || *p == nsCRT::LF || *p == TAB)
           len --;
         else
           *buf1++ = *p;
@@ -924,7 +924,7 @@ convert_and_encode:
     }
 
     buf1 = buf1 + nsCRT::strlen(buf1);
-    if (sep == CR || sep == LF || sep == TAB) /* strip CR,LF,TAB */
+    if (sep == nsCRT::CR || sep == nsCRT::LF || sep == TAB) /* strip CR,LF,TAB */
       *buf1 = '\0';
     else
     {

@@ -1871,7 +1871,7 @@ ResetChannelCharset(MimeObject *obj)
           {
             char *ptr2 = cSet;
             while ( (*cSet) && (*cSet != ' ') && (*cSet != ';') && 
-                    (*cSet != CR) && (*cSet != LF) && (*cSet != '"') )
+                    (*cSet != nsCRT::CR) && (*cSet != nsCRT::LF) && (*cSet != '"') )
               ptr2++;
             
             if (*cSet) {
