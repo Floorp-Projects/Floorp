@@ -29,8 +29,15 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsConsoleMessage, NS_GET_IID(nsIConsoleMessage));
 
 nsConsoleMessage::nsConsoleMessage() 
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
+
+nsConsoleMessage::nsConsoleMessage(const PRUnichar *message) 
+{
+	NS_INIT_ISUPPORTS();
+	mMessage.Assign(message);
+}
+
 nsConsoleMessage::~nsConsoleMessage() {};
 
 NS_IMETHODIMP
