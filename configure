@@ -4802,7 +4802,7 @@ EOF
         if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
             { echo "configure: error: cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS" 1>&2; exit 1; }
         fi
-        MOZ_TOOLS_DIR=`echo $MOZ_TOOLS_DIR | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
+        MOZ_TOOLS_DIR=`cygpath -w $MOZ_TOOLS_DIR | sed -e 's|\\\\|/|g'`
         GLIB_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
         GLIB_LIBS='$(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
         LIBIDL_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
