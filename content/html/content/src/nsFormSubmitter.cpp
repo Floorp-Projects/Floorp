@@ -140,12 +140,14 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
                           nsIPresContext* aPresContext,
                           nsIContent* aSubmitElement)
 {
+  PRUint8 ctrlsModAtSubmit=0;
+  PRUint8 textDirAtSubmit=0;
 #ifdef IBMBIDI
 //ahmed
   PRUint32 bidiOptions;
   aPresContext->GetBidi(&bidiOptions);
-  PRUint8 ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
-  PRUint8 textDirAtSubmit  = GET_BIDI_OPTION_DIRECTION(bidiOptions);
+  ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
+  textDirAtSubmit  = GET_BIDI_OPTION_DIRECTION(bidiOptions);
 //ahmed end
 #endif
 
