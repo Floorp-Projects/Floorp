@@ -683,6 +683,9 @@ static nsresult GetNativeType(PRUint16 aType, nsAString & aSchemaNamespaceURI, n
   case nsIDataType::VTYPE_STRING_SIZE_IS:
   case nsIDataType::VTYPE_WSTRING_SIZE_IS:
   case nsIDataType::VTYPE_ASTRING:
+  case nsIDataType::VTYPE_DOMSTRING:
+  case nsIDataType::VTYPE_CSTRING:
+  case nsIDataType::VTYPE_UTF8STRING:
     aSchemaType.Assign(kStringSchemaType);
     break;
   case nsIDataType::VTYPE_INT8:
