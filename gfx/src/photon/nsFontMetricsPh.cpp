@@ -58,50 +58,7 @@ nsFontMetricsPh :: ~nsFontMetricsPh()
   mDeviceContext = nsnull;
 }
 
-#ifdef LEAK_DEBUG
-nsrefcnt
-nsFontMetricsPh :: AddRef()
-{
-  NS_PRECONDITION(mRefCnt != 0, "resurrecting a dead object");
-  return ++mRefCnt;
-}
-
-nsrefcnt
-nsFontMetricsPh :: Release()
-{
-  NS_PRECONDITION(mRefCnt != 0, "too many release's");
-  if (--mRefCnt == 0) {
-    delete this;
-  }
-  return mRefCnt;
-}
-
-nsresult
-nsFontMetricsPh :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aInstancePtr = NULL;
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kClassIID, kIFontMetricsIID);
-  if (aIID.Equals(kClassIID)) {
-    *aInstancePtr = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-#else
 NS_IMPL_ISUPPORTS(nsFontMetricsPh, kIFontMetricsIID)
-#endif
 
 NS_IMETHODIMP
 nsFontMetricsPh :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
