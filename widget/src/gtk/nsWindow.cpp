@@ -842,6 +842,9 @@ NS_IMETHODIMP nsWindow::SetBackgroundColor(const nscolor &aColor)
 NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
 {
   if (!mSuperWin) 
+    /* These cases should agree with enum nsCursor in nsIWidget.h
+     * We're limited to those cursors available with XCreateFontCursor()
+     * If you change these, change them in gtk/nsWidget, too. */
     return NS_ERROR_FAILURE;
 
   // Only change cursor if it's changing
@@ -849,30 +852,46 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
     GdkCursor *newCursor = 0;
 
     switch(aCursor) {
-      case eCursor_select:
-        newCursor = gdk_cursor_new(GDK_XTERM);
+      case eCursor_standard:
+        newCursor = gdk_cursor_new(GDK_LEFT_PTR);
         break;
 
       case eCursor_wait:
         newCursor = gdk_cursor_new(GDK_WATCH);
         break;
 
+      case eCursor_select:
+        newCursor = gdk_cursor_new(GDK_XTERM);
+        break;
+
       case eCursor_hyperlink:
         newCursor = gdk_cursor_new(GDK_HAND2);
         break;
 
-      case eCursor_standard:
-        newCursor = gdk_cursor_new(GDK_LEFT_PTR);
-        break;
-
       case eCursor_sizeWE:
-      case eCursor_sizeNS:
-        newCursor = gdk_cursor_new(GDK_TCROSS);
+        /* GDK_SB_H_DOUBLE_ARROW <==>.  The ideal choice is: =>||<= */
+        newCursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
         break;
 
-      case eCursor_arrow_south:
-      case eCursor_arrow_south_plus:
-        newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
+      case eCursor_sizeNS:
+        /* Again, should be =>||<= rotated 90 degrees. */
+        newCursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+        break;
+      
+      case eCursor_sizeNW:
+        newCursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+        break;
+
+      case eCursor_sizeSE:
+        newCursor = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
+        break;
+
+      case eCursor_sizeNE:
+        newCursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+        break;
+
+      case eCursor_sizeSW:
+        newCursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
         break;
 
       case eCursor_arrow_north:
@@ -880,15 +899,59 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
         newCursor = gdk_cursor_new(GDK_TOP_SIDE);
         break;
 
-      case eCursor_arrow_east:
-      case eCursor_arrow_east_plus:
-        newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+      case eCursor_arrow_south:
+      case eCursor_arrow_south_plus:
+        newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
         break;
 
       case eCursor_arrow_west:
       case eCursor_arrow_west_plus:
         newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
         break;
+
+       case eCursor_arrow_east:
+       case eCursor_arrow_east_plus:
+         newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+         break;
+ 
+       case eCursor_crosshair:
+         newCursor = gdk_cursor_new(GDK_CROSSHAIR);
+         break;
+ 
+       case eCursor_move:
+         newCursor = gdk_cursor_new(GDK_FLEUR);
+         break;
+ 
+       case eCursor_help:
+         newCursor = gdk_cursor_new(GDK_QUESTION_ARROW);
+         break;
+ 
+       case eCursor_copy: // CSS3
+       case eCursor_alias:
+       case eCursor_context_menu:
+         // XXX: these CSS3 cursors need to be implemented
+         // For CSS3 Cursor Definitions, See:
+         // www.w3.org/TR/css3-userint
+         break;
+ 
+       case eCursor_cell:
+         newCursor = gdk_cursor_new(GDK_PLUS);
+         break;
+ 
+       case eCursor_grab:
+       case eCursor_grabbing:
+         newCursor = gdk_cursor_new(GDK_HAND1);
+         break;
+ 
+       case eCursor_spinning:
+         newCursor = gdk_cursor_new(GDK_EXCHANGE);
+         break;
+ 
+       case eCursor_count_up:
+       case eCursor_count_down:
+       case eCursor_count_up_down:
+         // XXX: these CSS3 cursors need to be implemented
+         break;
 
       default:
         NS_ASSERTION(aCursor, "Invalid cursor type");
