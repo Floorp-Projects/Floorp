@@ -40,6 +40,7 @@ extern int putenv (const char *);
 
 #if defined(LINUX) && defined(__GLIBC__) && (__GLIBC__ >= 2)
 #define LINUX_GLIBC_2
+#define HAVE_SYSERRLIST
 #endif
 
 #endif /* __xfe_mozilla_h_ */

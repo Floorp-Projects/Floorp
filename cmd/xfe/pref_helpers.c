@@ -76,7 +76,6 @@ extern int XFE_HELPERS_PLUGIN_DESC_CHANGE;
 #define ALT				"alt"
 #define SPACE				" "
 
-/* For sys_errlist and sys_nerr */
 #include "prprf.h"
 #include "libi18n.h"
 #include "fonts.h"

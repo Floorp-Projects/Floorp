@@ -40,7 +40,7 @@
 #include "xfe.h"
 
 #include <sys/errno.h>
-#if !defined(__FreeBSD__) && !defined(LINUX_GLIBC_2)
+#if !defined(HAVE_SYSERRLIST)
 extern char *sys_errlist[];
 extern int sys_nerr;
 #endif

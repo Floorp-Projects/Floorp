@@ -1920,6 +1920,8 @@ build_user_agent_string(char *versionLocale)
 	strcat (buf, "IRIX");
 #elif defined(__FreeBSD__)
 	strcat (buf, "FreeBSD");
+#elif defined(__NetBSD__)
+	strcat (buf, "NetBSD");
 #elif defined(__386BSD__)
 	strcat (buf, "BSD/386");
 #elif defined(__osf__)
@@ -3580,7 +3582,7 @@ fe_rename_init_files (Widget toplevel)
 
 #else  /* !OLD_UNIX_FILES */
 
-#if !defined(__FreeBSD__) && !defined(MKLINUX) && !defined(LINUX_GLIBC_2)
+#if !defined(HAVE_SYSERRLIST)
 extern char *sys_errlist[];
 extern int sys_nerr;
 #endif
@@ -5327,4 +5329,3 @@ XP_Bool fe_enable_fullcircle(void)
   return fullcircle_enable;
 }
 #endif /* MOZ_FULLCIRCLE */
-
