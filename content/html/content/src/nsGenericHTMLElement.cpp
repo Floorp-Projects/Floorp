@@ -1226,11 +1226,11 @@ nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
     nsRect r = view->GetBounds();
 
     *aClientHeight = NSTwipsToIntPixels(r.height, t2p);
-  } else if (mNodeInfo->Equals(nsHTMLAtoms::body) && frame) {
-    // Special case code to make document.body.clientHeight work even
-    // if the body element's overflow is hidden.
-    //
-    // http://bugzilla.mozilla.org/show_bug.cgi?id=180552
+  } else if (frame &&
+             (frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
+              (frame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT))) {
+    // Special case code to make clientHeight work even when there isn't
+    // a scroll view, see bug 180552 and bug 227567.
 
     *aClientHeight = NSTwipsToIntPixels(GetClientAreaSize(frame).height, t2p);
   }
@@ -1257,11 +1257,11 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
     nsRect r = view->GetBounds();
 
     *aClientWidth = NSTwipsToIntPixels(r.width, t2p);
-  } else if (mNodeInfo->Equals(nsHTMLAtoms::body) && frame) {
-    // Special case code to make document.body.clientWidth work even
-    // if the body element's overflow is hidden.
-    //
-    // http://bugzilla.mozilla.org/show_bug.cgi?id=180552
+  } else if (frame &&
+             (frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
+              (frame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT))) {
+    // Special case code to make clientWidth work even when there isn't
+    // a scroll view, see bug 180552 and bug 227567.
 
     *aClientWidth = NSTwipsToIntPixels(GetClientAreaSize(frame).width, t2p);
   }
