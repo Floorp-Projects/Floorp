@@ -49,7 +49,6 @@ XPIDLSRCS	= \
 		nsIStatusCodeEventSink.idl \
 		nsIStreamIO.idl \
 		nsIStreamLoader.idl \
-		nsINetPrompt.idl \
 		nsISocketTransport.idl \
 		nsIURLParser.idl \
 		nsIProxy.idl \
@@ -62,7 +61,7 @@ XPIDLSRCS	= \
 EXPORTS		= \
 		netCore.h \
 		nsNetUtil.h \
-        nsUnixColorPrintf.h \
+		nsUnixColorPrintf.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
