@@ -1,23 +1,23 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="EditorDialog.css" type="text/css"?>
-<!DOCTYPE dialog>
+<!DOCTYPE window SYSTEM "numrangedlog.dtd">
 <window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40">
 
-  <table xmlns="http://www.w3.org/TR/REC-html40" cellspacing=20>
+  <table xmlns="http://www.w3.org/TR/REC-html40" cellspacing="20">
     <tr>
       <td>
         image
       </td>
 
       <td>
-        <xul:label>The number you have entered is out of range.</xul:label>
+        <p>The number you have entered is out of range.</p>
         <p/>
-        <xul:label>Please enter a number between:</xul:label>
+        <p>Please enter a number between:</p>
         <br/>
-        <xul:label>Minimum Number:  1</xul:label>
+        <p>Minimum Number:  1</p>
         <br/>
-        <xul:label>Maximum Number:  100</xul:label>
+        <p>Maximum Number:  100</p>
       </td>
     </tr>
 
