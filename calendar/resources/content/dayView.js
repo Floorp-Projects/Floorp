@@ -469,9 +469,12 @@ DayView.prototype.refreshDisplay = function dayview_refreshDisplay( )
 		dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 1);
 		dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 2);
 	}
-   var monthName = this.calendarWindow.dateFormater.getMonthName( this.calendarWindow.getSelectedDate().getMonth() );
    
-   var dateString = monthName + " " + this.calendarWindow.getSelectedDate().getDate() + " " + this.calendarWindow.getSelectedDate().getFullYear();
+   var weekNumber = DateUtils.getWeekNumber( this.calendarWindow.getSelectedDate() );
+
+   var weekViewStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+
+   var dateString = weekViewStringBundle.GetStringFromName( "Week" )+" "+weekNumber+ ": " + this.calendarWindow.dateFormater.getFormatedDate( this.calendarWindow.getSelectedDate() ) ;
    
    var dayTextItemPrev2 = document.getElementById( "-2-day-title" );
    var dayTextItemPrev1 = document.getElementById( "-1-day-title" );

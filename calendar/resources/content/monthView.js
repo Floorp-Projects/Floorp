@@ -172,7 +172,7 @@ function MonthView( calendarWindow )
    
    this.dayNumberItemArray = new Array();
    this.dayBoxItemArray = new Array();
-//   this.weekNumberItemArray = new Array();
+   this.weekNumberItemArray = new Array();
    this.kungFooDeathGripOnEventBoxes = new Array();
    this.firstDateOfView = new Date();
    this.lastDateOfView = new Date();
@@ -181,8 +181,8 @@ function MonthView( calendarWindow )
    
    for( var weekIndex = 1; weekIndex <= 6; ++weekIndex )
    {
-//     var weekNumberItem = document.getElementById( "month-week-" + weekIndex + "-left" );
-//     this.weekNumberItemArray[ weekIndex ] = weekNumberItem;
+     var weekNumberItem = document.getElementById( "month-week-" + weekIndex + "-left" );
+     this.weekNumberItemArray[ weekIndex ] = weekNumberItem;
 
       for( var dayIndex = 1; dayIndex <= 7; ++dayIndex )
       {
@@ -529,21 +529,21 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
        document.getElementById( "month-week-6-row" ).removeAttribute( "collapsed" );
    }
    
-//   // To Set Week Number 
-//   var weekNumberItem;
-//   var weekNumber ;
-//   var mondayDate ;
-//   var newoffset = (Offset >= 5) ? 8 -Offset : 1 - Offset ;
-//   for( var weekIndex = 0; weekIndex < 6; ++weekIndex )
-//   {
-//     weekNumberItem = this.weekNumberItemArray[ weekIndex+1 ] ;
-//     mondayDate = new Date( this.firstDateOfView.getFullYear(), 
-//			    this.firstDateOfView.getMonth(),
-//			    this.firstDateOfView.getDate()+newoffset+7*weekIndex );
+  // To Set Week Number 
+  var weekNumberItem;
+  var weekNumber ;
+  var mondayDate ;
+  var newoffset = (Offset >= 5) ? 8 -Offset : 1 - Offset ;
+  for( var weekIndex = 0; weekIndex < 6; ++weekIndex )
+  {
+    weekNumberItem = this.weekNumberItemArray[ weekIndex+1 ] ;
+    mondayDate = new Date( this.firstDateOfView.getFullYear(), 
+			    this.firstDateOfView.getMonth(),
+			    this.firstDateOfView.getDate()+newoffset+7*weekIndex );
 
-//     weekNumber=DateUtils.getWeekNumber(mondayDate);
-//     weekNumberItem.setAttribute( "value" , weekNumber );  
-//   }
+    weekNumber=DateUtils.getWeekNumber(mondayDate);
+    weekNumberItem.setAttribute( "value" , weekNumber );  
+  }
    
    // loop through all the day boxes
    

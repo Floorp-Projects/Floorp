@@ -568,15 +568,19 @@ WeekView.prototype.refreshDisplay = function( )
    var firstDayOfWeek = new Date( viewYear, viewMonth, dateOfFirstDayInWeek );
    var lastDayOfWeek = new Date( viewYear, viewMonth, dateOfLastDayInWeek );
     
-   var firstDayMonthName = this.calendarWindow.dateFormater.getMonthName( firstDayOfWeek.getMonth() );
-   var lastDayMonthName =  this.calendarWindow.dateFormater.getMonthName( lastDayOfWeek.getMonth() );
+   var firstDayMonthName = this.calendarWindow.dateFormater.getFormatedDateWithoutYear( firstDayOfWeek );
+   var lastDayMonthName =  this.calendarWindow.dateFormater.getFormatedDateWithoutYear( lastDayOfWeek );
    
-   var weekNumber = this.getWeekNumber();
+   var newoffset = (Offset >= 5) ? 8 -Offset : 1 - Offset ;
+   var mondayDate = new Date( firstDayOfWeek.getFullYear(), 
+			      firstDayOfWeek.getMonth(),
+			      firstDayOfWeek.getDate()+newoffset );
+   
+   var weekNumber = DateUtils.getWeekNumber(mondayDate);
 
    var weekViewStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
    
-   var dateString = weekViewStringBundle.GetStringFromName( "Week" )+" "+weekNumber+ ": "+firstDayMonthName + " " + firstDayOfWeek.getDate() + " - " +
-                    lastDayMonthName  + " " + lastDayOfWeek.getDate();
+   var dateString = weekViewStringBundle.GetStringFromName( "Week" )+" "+weekNumber+ ": "+firstDayMonthName + " - " + lastDayMonthName ;
    
    var weekTextItem = document.getElementById( "week-title-text" );
    weekTextItem.setAttribute( "value" , dateString ); 
@@ -829,26 +833,4 @@ WeekView.prototype.clearSelectedDate = function( )
    {
       SelectedBoxes[i].removeAttribute( "weekselected" );
    }
-}
-
-
-WeekView.prototype.getWeekNumber = function()
-{
-	var today = new Date( this.calendarWindow.getSelectedDate() );
-	var Year = today.getYear() + 1900;
-	var Month = today.getMonth();
-	var Day = today.getDate();
-   var now = new Date(Year,Month,Day+1);
-	now = now.getTime();
-   var Firstday = new Date( this.calendarWindow.getSelectedDate() );
-	Firstday.setYear(Year);
-	Firstday.setMonth(0);
-	Firstday.setDate(1);
-	var then = new Date(Year,0,1);
-   then = then.getTime();
-	var Compensation = Firstday.getDay();
-	if (Compensation > 3) Compensation -= 4;
-	else Compensation += 3;
-	NumberOfWeek =  Math.round((((now-then)/86400000)+Compensation)/7);
-	return NumberOfWeek;
 }
