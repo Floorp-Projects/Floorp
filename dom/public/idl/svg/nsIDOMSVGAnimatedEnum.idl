@@ -36,9 +36,12 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsIDOMSVGTextPositionElem.idl"
+#include "domstubs.idl"
 
-[scriptable, uuid(4a23cb1f-cf1e-437e-9524-8756f7928b2e)]
-interface nsIDOMSVGTSpanElement : nsIDOMSVGTextPositioningElement
-{ 
+[scriptable, uuid(73b101bd-797b-470f-9308-c24c64278bcd)]
+interface nsIDOMSVGAnimatedEnumeration : nsISupports
+{
+           attribute unsigned short baseVal;
+              // raises DOMException on setting
+  readonly attribute unsigned short animVal;
 };

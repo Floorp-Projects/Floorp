@@ -1,4 +1,4 @@
-nsIDOMSVGAnimatedEnumeration.idl
+nsIDOMSVGAnimatedEnum.idl
 nsIDOMSVGAnimatedLength.idl
 nsIDOMSVGAnimatedLengthList.idl
 nsIDOMSVGAnimatedNumberList.idl
@@ -35,7 +35,7 @@ nsIDOMSVGSVGElement.idl
 nsIDOMSVGStylable.idl
 nsIDOMSVGTextContentElement.idl
 nsIDOMSVGTextElement.idl
-nsIDOMSVGTextPositioningElem.idl
+nsIDOMSVGTextPositionElem.idl
 nsIDOMSVGTransform.idl
 nsIDOMSVGTransformList.idl
 nsIDOMSVGTransformable.idl
