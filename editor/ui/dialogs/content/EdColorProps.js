@@ -63,8 +63,8 @@ var vlinkStr =       "vlink";
 var alinkStr =       "alink";
 var bgcolorStr =     "bgcolor";
 var backgroundStr =  "background";
-var colorStyle =     "color:";
-var backImageStyle = " background-image:";
+var colorStyle =     "color: ";
+var backImageStyle = " background-image: url(";
 
 // dialog initialization code
 function Startup()
@@ -218,9 +218,8 @@ function SetColor(ColorWellID, color)
       // Must combine background color and image style values
       styleValue = colorStyle+color;
       if (dialog.backgroundImage > 0)
-      {
-        styleValue += ";"+backImageStyle+backImageStyle+";";
-      }
+        styleValue += ";"+backImageStyle+backImageStyle+");";
+
       dialog.ColorPreview.setAttribute(styleStr,styleValue);
       break;
   }
@@ -277,7 +276,7 @@ function onBackgroundImageCheckbox()
   if (dialog.BackgroundImageCheckbox.checked && ValidateImage())
   {
     // Append image style
-    styleValue += backImageStyle+dialog.BackgroundImage+";";
+    styleValue += backImageStyle+dialog.BackgroundImage+");";
   }
 dump(styleValue+"=style value when setting image\n")
   // Set style on preview (removes image if not checked or not valid)

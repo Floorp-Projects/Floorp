@@ -48,33 +48,33 @@
     <columns><column/><column/><column/></columns>
     <rows>
       <row vertical-align="baseline"  autostretch="never">
-        <text class="align-right" flex="1" value="&numRowsEditField.label;"/>
-        <textfield id="rows" onkeyup="forceInteger(this.id)" />
+        <text class="dialog align-right" value="&numRowsEditField.label;"/>
+        <textfield class="narrow" id="rows" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
       <spring class="spacer"/>
       <row vertical-align="baseline"  autostretch="never">
-        <text class="align-right" flex="1" value="&numColumnsEditField.label;"/>
-        <textfield id="columns" onkeyup="forceInteger(this.id)" />
+        <text class="dialog align-right" value="&numColumnsEditField.label;"/>
+        <textfield class="narrow" id="columns" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
       <spring class="spacer"/>
       <row vertical-align="baseline"  autostretch="never">
-        <text class="align-right" flex="1" value="&widthEditField.label;"/>
-        <textfield id="width" onkeyup="forceInteger(this.id)" />
+        <text class="dialog align-right" value="&widthEditField.label;"/>
+        <textfield class="narrow" id="width" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
       <spring class="spacer"/>
       <row vertical-align="baseline"  autostretch="never">
-        <text class="align-right" flex="1" value="&widthEditField.label;"/>
-        <textfield id="width" onkeyup="forceInteger(this.id)" />
+        <text class="dialog align-right" value="&widthEditField.label;"/>
+        <textfield class="narrow" id="width" onkeyup="forceInteger(this.id)" />
         <menulist id="pixelOrPercentMenulist"><menupopup/></menulist>
           <!-- child elements are appended by JS -->
       </row>
       <spring class="spacer"/>
       <row vertical-align="baseline" autostretch="never">
-        <text class="align-right" flex="1" value="&borderEditField.label;"/>
-        <textfield id="borderInput" onkeyup="forceInteger(this.id)" />
+        <text class="dialog align-right" value="&borderEditField.label;"/>
+        <textfield class="narrow" id="borderInput" onkeyup="forceInteger(this.id)" />
         <text value="&pixelsPopup.value;"/>  
       </row>
     </rows>

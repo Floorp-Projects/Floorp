@@ -54,7 +54,7 @@
     <tabpanel class="Padding5" orient="vertical" id="TabPanel">
       <!-- TABLE PANEL -->
       <box id="TablePanel" orient="vertical">
-        <titledbox class="NoBottomPad NoTopMargin NoTopPadding"><title><text value="&size.label;"/></title>
+        <titledbox><title><text value="&size.label;"/></title>
           <box orient="vertical">
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="left" for="TableRowsInput" value="&tableRows.label;"/>
@@ -81,10 +81,10 @@
               <html:select id="TableWidthUnits"/>
             </box>
           </box>
-        <spring flex="1"/>
+          <spring flex="1"/>
         </titledbox>
         <box>
-          <titledbox class="NoBottomPad" align="vertical"><title><text align="left" value="&tableBorderSpacing.label;"/></title>
+          <titledbox align="vertical"><title><text align="left" value="&tableBorderSpacing.label;"/></title>
             <box valign="middle" autostretch="never">
               <text align="left" for="BorderWidthInput" value="&tableBorderWidth.label;"/>
               <spring class="spacer"/>
@@ -130,7 +130,7 @@
           </box>
           <spring class="bigspacer"/>
         </box>
-        <titledbox class="NoBottomPad" align="vertical"><title><text align="left" value="&background.label;"/></title>
+        <titledbox align="vertical"><title><text align="left" value="&background.label;"/></title>
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" value="&color.label;"/>
             <menu class="colorpicker">
@@ -171,7 +171,7 @@
 
       <!-- CELL PANEL -->
     	<box id="CellPanel" orient="vertical">
-        <titledbox class="NoTopMargin NoTopPadding NoBottomPad" autostretch="never" valign="middle">
+        <titledbox autostretch="never" valign="middle">
           <title><text align="left" value="&cellSelection.label;"/></title>
           <spring class="spacer"/>
           <menulist class="MinWidth50" id="SelectionList">
@@ -187,7 +187,7 @@
           <button class="dialog MinWidth50" value="&cellSelectionNext.label;" oncommand="SelectNext()" disabled="true"/>
         </titledbox>
         <!-- cell size titledbox -->
-        <titledbox class="NoBottomPad"><title><text align="left" value="&size.label;"/></title>
+        <titledbox><title><text align="left" value="&size.label;"/></title>
           <box orient="vertical">
             <box valign="middle" autostretch="never">
               <text class="MinWidth50" align="left" for="CellHeightInput" value="&tableHeight.label;"/>
@@ -219,11 +219,11 @@
           </box>
         </titledbox>
         <box>
-          <titledbox class="NoBottomPad" orient="vertical" flex="1">
+          <titledbox orient="vertical" flex="1">
             <title><text align="left" value="&cellContentAlignment.label;"/></title>
             <box valign="top" autostretch="never">
               <text class="MinWidth70" align="right" for="CellHAlignSelect" value="&cellHorizontal.label;"/>
-              <html:select class="MinWidth100" id="CellHAlignSelect" onchange="SelectCellHAlign()">
+              <html:select class="MinWidth100" id="CellHAlignSelect" oncommand="SelectCellHAlign()">
                 <html:option value="left">&AlignLeft.label;</html:option>
                 <html:option value="center">&AlignCenter.label;</html:option>
                 <html:option value="right">&AlignRight.label;</html:option>
@@ -244,7 +244,7 @@
             </box>
           </titledbox>
           <spring class="spacer"/>
-          <titledbox class="NoBottomPad" orient="vertical">
+          <titledbox orient="vertical">
             <title><text align="left" value="&cellTextStyle.label;"/></title>
             <box valign="middle" autostretch="never">
               <html:input type="checkbox" id="HeaderCheck"/>
@@ -256,7 +256,7 @@
             </box>
           </titledbox>
         </box>
-        <titledbox class="NoBottomPad" orient="vertical"><title><text align="left" value="&background.label;"/></title>
+        <titledbox orient="vertical"><title><text align="left" value="&background.label;"/></title>
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" value="&color.label;"/>
             <menu class="colorpicker">

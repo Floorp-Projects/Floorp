@@ -42,92 +42,85 @@
 
   <broadcaster id="args" value=""/>
 
-  <text value="&pageColors.label;"/>
-  <spring class="bigspacer"/>
+  <text class="dialog bold" value="&pageColors.label;"/>
   <box orient="vertical">
     <radiogroup orient="vertical">
       <radio id="DefaultColorsRadio" value="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"/>
       <radio id="CustomColorsRadio" value="&customColorsRadio.label;" oncommand="UseCustomColors()"/>
     </radiogroup>
   </box>
-  <spring class="bigspacer"/>
-
-<!-- DON'T SHOW COLOR SCHEMES UNTIL REDESIGNED -->
-  <box>
-    <spring class="bigspacer"/>
-    <box align="vertical" flex="1">
-      <box>
-        <text value="&normalText.label;"/>
-        <spring flex="1"/>
-        <menu class="colorpicker">
-    	    <box>
-            <spring id="textCW" class="color-well"/>
-            <image class="popup-trigger"/>
-          </box>
-    	    <menupopup id="normalMenuPopup">
-            <colorpicker id="textCP" palettename="standard" oncommand="GetColorAndUpdate('textCP','textCW',this);"/>
-    	    </menupopup>
-        </menu>
-      </box>
-      <box>
-        <text value="&linkText.label;"/>
-        <spring flex="1"/>
-        <menu class="colorpicker">
-    	    <box>
-            <spring id="linkCW" class="color-well"/>
-            <image class="popup-trigger"/>
-          </box>
-    	    <menupopup>
-            <colorpicker id="linkCP" palettename="standard" oncommand="GetColorAndUpdate('linkCP','linkCW',this);"/>
-    	    </menupopup>
-        </menu>
-      </box>
-      <box>
-        <text value="&activeLinkText.label;"/>
-        <spring flex="1"/>
-        <menu class="colorpicker">
-    	    <box>
-            <spring id="activeCW" class="color-well"/>
-            <image class="popup-trigger"/>
-          </box>
-    	    <menupopup>
-            <colorpicker id="activeCP" palettename="standard" oncommand="GetColorAndUpdate('activeCP','activeCW',this);"/>
-    	    </menupopup>
-        </menu>
-      </box>
-      <box>
-        <text value ="&visitedLinkText.label;"/>
-        <spring flex="1"/>
-        <menu class="colorpicker">
-    	    <box>
-            <spring id="visitedCW" class="color-well"/>
-            <image class="popup-trigger"/>
-          </box>
-    	    <menupopup>
-            <colorpicker id="visitedCP" palettename="standard" oncommand="GetColorAndUpdate('visitedCP','visitedCW',this);"/>
-    	    </menupopup>
-        </menu>
-      </box>
-      <box>
-        <text value="&background.label;"/>
-        <spring flex="1"/>
-        <menu class="colorpicker">
-    	    <box>
-            <spring id="backgroundCW" class="color-well"/>
-            <image class="popup-trigger"/>
-          </box>
-    	    <menupopup>
-            <colorpicker id="backgroundCP" palettename="standard" oncommand="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
-    	    </menupopup>
-        </menu>
-      </box>
-    </box>
-    <spring class="bigspacer"/>
+  <spring class="spacer"/>
+  <box class="big-left-margin">
+    <grid>
+      <columns><column/><column/></columns>
+      <rows>
+        <row>
+          <text class="dialog" value="&normalText.label;"/>
+          <menu class="colorpicker">
+    	      <box>
+              <spring id="textCW" class="color-well"/>
+              <image class="popup-trigger"/>
+            </box>
+    	      <menupopup id="normalMenuPopup">
+              <colorpicker id="textCP" palettename="standard" oncommand="GetColorAndUpdate('textCP','textCW',this);"/>
+    	      </menupopup>
+          </menu>
+        </row>
+        <row>
+        <text class="dialog" value="&linkText.label;"/>
+          <menu class="colorpicker">
+    	      <box>
+              <spring id="linkCW" class="color-well"/>
+              <image class="popup-trigger"/>
+            </box>
+    	      <menupopup>
+              <colorpicker id="linkCP" palettename="standard" oncommand="GetColorAndUpdate('linkCP','linkCW',this);"/>
+    	      </menupopup>
+          </menu>
+        </row>
+        <row>
+          <text class="dialog" value="&activeLinkText.label;"/>
+          <menu class="colorpicker">
+    	      <box>
+              <spring id="activeCW" class="color-well"/>
+              <image class="popup-trigger"/>
+            </box>
+    	      <menupopup>
+              <colorpicker id="activeCP" palettename="standard" oncommand="GetColorAndUpdate('activeCP','activeCW',this);"/>
+    	      </menupopup>
+          </menu>
+        </row>
+        <row>
+          <text class="dialog" value ="&visitedLinkText.label;"/>
+          <menu class="colorpicker">
+    	      <box>
+              <spring id="visitedCW" class="color-well"/>
+              <image class="popup-trigger"/>
+            </box>
+    	      <menupopup>
+              <colorpicker id="visitedCP" palettename="standard" oncommand="GetColorAndUpdate('visitedCP','visitedCW',this);"/>
+    	      </menupopup>
+          </menu>
+        </row>
+        <row>
+          <text class="dialog" value="&background.label;"/>
+          <menu class="colorpicker">
+    	      <box>
+              <spring id="backgroundCW" class="color-well"/>
+              <image class="popup-trigger"/>
+            </box>
+    	      <menupopup>
+              <colorpicker id="backgroundCP" palettename="standard" oncommand="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
+    	      </menupopup>
+          </menu>
+        </row>
+      </rows>
+    </grid>
     <box orient="vertical" id="ColorPreview">
-      <text id="NormalText" value="&normalText.label;"/>
-      <text id="LinkText" value="&linkText.label;"/>
-      <text id="ActiveLinkText" value="&activeLinkText.label;"/>
-      <text id="VisitedLinkText" value="&visitedLinkText.label;"/>
+      <text class="dialog" id="NormalText" value="&normalText.label;"/>
+      <text class="dialog" id="LinkText" value="&linkText.label;"/>
+      <text class="dialog" id="ActiveLinkText" value="&activeLinkText.label;"/>
+      <text class="dialog" id="VisitedLinkText" value="&visitedLinkText.label;"/>
     </box>
   </box>
   <separator class="groove"/>

@@ -51,12 +51,12 @@ function Startup()
   dialog.MisspelledWord = document.getElementById("MisspelledWord");
   dialog.ReplaceWordInput = document.getElementById("ReplaceWord");
   dialog.SuggestedList = document.getElementById("SuggestedList");
-  dialog.LanguageList = document.getElementById("LanguageList");
+  dialog.LanguageMenulist = document.getElementById("LanguageMenulist");
 
   if (!dialog.MisspelledWord ||
       !dialog.ReplaceWordInput ||
       !dialog.SuggestedList  ||
-      !dialog.LanguageList )
+      !dialog.LanguageMenulist )
   {
     dump("Not all dialog controls were found!!!\n");
   }
@@ -76,8 +76,8 @@ function Startup()
   dialog.ReplaceWordInput.value = MisspelledWord;
 
   //Use English for now TODO: Kin needs to finish this work so we can fill in list
-  dialog.LanguageList.selectedIndex = 0;
-  dump("Language Listed Index = "+dialog.LanguageList.selectedIndex+"\n");
+  
+  dump("Language Listed Index = "+dialog.LanguageMenulist.selectedIndex+"\n");
 
   DoEnabling();
 
@@ -90,31 +90,31 @@ function DoEnabling()
   {
     dialog.MisspelledWordLabel.setAttribute("value",GetString("CheckSpellingDone"));
     
-    SetElementEnabledByID("MisspelledWord", false);
-    SetElementEnabledByID("ReplaceWordLabel", false);
-    SetElementEnabledByID("ReplaceWord", false);
-    SetElementEnabledByID("CheckWord", false);
-    SetElementEnabledByID("SuggestedListLabel", false);
-    SetElementEnabledByID("SuggestedList", false);
-    SetElementEnabledByID("Ignore", false);
-    SetElementEnabledByID("IgnoreAll", false);
-    SetElementEnabledByID("Replace", false);
-    SetElementEnabledByID("ReplaceAll", false);
-    SetElementEnabledByID("AddToDictionary", false);
+    SetElementEnabledById("MisspelledWord", false);
+    SetElementEnabledById("ReplaceWordLabel", false);
+    SetElementEnabledById("ReplaceWord", false);
+    SetElementEnabledById("CheckWord", false);
+    SetElementEnabledById("SuggestedListLabel", false);
+    SetElementEnabledById("SuggestedList", false);
+    SetElementEnabledById("Ignore", false);
+    SetElementEnabledById("IgnoreAll", false);
+    SetElementEnabledById("Replace", false);
+    SetElementEnabledById("ReplaceAll", false);
+    SetElementEnabledById("AddToDictionary", false);
   } else {
     dialog.MisspelledWordLabel.setAttribute("value",GetString("MisspelledWordLabel"));
 
-    SetElementEnabledByID("MisspelledWord", true);
-    SetElementEnabledByID("ReplaceWordLabel", true);
-    SetElementEnabledByID("ReplaceWord", true);
-    SetElementEnabledByID("CheckWord", true);
-    SetElementEnabledByID("SuggestedListLabel", true);
-    SetElementEnabledByID("SuggestedList", true);
-    SetElementEnabledByID("Ignore", true);
-    SetElementEnabledByID("IgnoreAll", true);
-    SetElementEnabledByID("Replace", true);
-    SetElementEnabledByID("ReplaceAll", true);
-    SetElementEnabledByID("AddToDictionary", true);
+    SetElementEnabledById("MisspelledWord", true);
+    SetElementEnabledById("ReplaceWordLabel", true);
+    SetElementEnabledById("ReplaceWord", true);
+    SetElementEnabledById("CheckWord", true);
+    SetElementEnabledById("SuggestedListLabel", true);
+    SetElementEnabledById("SuggestedList", true);
+    SetElementEnabledById("Ignore", true);
+    SetElementEnabledById("IgnoreAll", true);
+    SetElementEnabledById("Replace", true);
+    SetElementEnabledById("ReplaceAll", true);
+    SetElementEnabledById("AddToDictionary", true);
   }
 }
 
@@ -152,8 +152,9 @@ function CheckWord()
       MisspelledWord = word;
       FillSuggestedList();
     } else {
-      ClearList(dialog.SuggestedList);
-      AppendStringToList(dialog.SuggestedList, GetString("CorrectSpelling"));
+      ClearTreelist(dialog.SuggestedList);
+      var item = AppendStringToTreelistById(dialog.SuggestedList, "CorrectSpelling");
+      if (item) item.setAttribute("disabled", "true");
       // Suppress being able to select the message text
       allowSelectWord = false;
     }
@@ -248,21 +249,24 @@ function FillSuggestedList()
   list = dialog.SuggestedList;
 
   // Clear the current contents of the list
-  ClearList(list);
+  ClearTreelist(list);
 
+dump(MisspelledWord+"=misspelledword\n");
   if (MisspelledWord.length > 0)
   {
     // Get suggested words until an empty string is returned
     do {
       word = spellChecker.GetSuggestedWord();
-      dump("Suggested Word = "+word+"\n");
-      if (word != "") {
-        AppendStringToList(list, word);
+      dump("Suggested Word="+word+"|\n");
+      if (word.length > 0) {
+        AppendStringToTreelist(list, word);
       }
-    } while (word != "");
-    if (list.length == 0) {
+    } while (word.length > 0);
+
+    if (list.getAttribute("length") == 0) {
       // No suggestions - show a message but don't let user select it
-      AppendStringToList(list, GetString("NoSuggestedWords"));
+      var item = AppendStringToTreelistById(list, "NoSuggestedWords");
+      if (item) item.setAttribute("disabled", "true");
       allowSelectWord = false;
     } else {
       allowSelectWord = true;

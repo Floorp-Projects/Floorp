@@ -49,259 +49,207 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
 
-<titledbox orient="vertical">
-  <title
-    class = "dialog"
-    align = "left">
-    <text value="&locationBox.label;"/>
-  </title>
-
-  <box>
+  <titledbox orient="vertical">
+    <title><text value="&locationBox.label;"/></title>
     <!--/////// Src URL and ALT Text //////-->
-    <box orient="vertical">
-      <box>
-        <text class = "label" 
-          for   = "srcInput"
-          value = "&locationEditField.label;"
-          align = "right" />
-      </box>
-      <box>
-        <text class = "label"
-          id    = "altTextLabel" 
-          for   = "altTextInput"
-          value = "&altTextEditField.label;" />
-      </box>
-    </box>
-    
-    <spring flex="100%"/>
-    
-    <box orient="vertical">
-      <box>
-        <textfield 
-          id         = "srcInput" 
-          class      = "MinWidth20em"
-          onkeyup    = "doOverallEnabling()"
-          onmouseup  = "doOverallEnabling()"
-          onchange   = "doOverallEnabling()" />
-        <spring flex="100%"/>
-        <!-- from EdDialogOverlay.xul -->
-        <button id="ChooseFile"/>
-      </box>
-
-      <spring flex="100%"/>
-
-      <box>  
-        <textfield
-          id       ="altTextInput"
-          class      = "MinWidth20em"
-          onchange = "doOverallEnabling()"/>
-      </box>  
-    </box> 
-  </box>
-</titledbox>
-
-<box>
-  <button 
-    class   = "dialog" 
-    id      = "MoreFewerButton" 
-    align   = "left" 
-    oncommand = "onMoreFewerImage()" 
-    persist = "more"/>
-  <spring flex="100%"/>
-  <!-- From EdDialogOverlay.xul -->
-  <button id="AdvancedEditButton2"/>
-</box>
-<!-- Area that shows and hides via MoreFewerButton --> 
-<box id="MoreSection" orient="vertical" flex="100%">
-  <box flex="100%">
-    <box orient="vertical">
-    <!-- //////// Image Dimensions //////// -->
-    <titledbox orient="vertical" flex="100%">
-      <title
-        class="dialog"
-        id="dimensionsLabel">
-        <text value="&dimensionsBox.label;"/>
-      </title>
-      
-      <!-- THESE NEED TO BE onchange RATHER THAN oncommand -->
-      <radiogroup orient="vertical">
-        <radio
-          id      = "originalsizeRadio" 
-          value   = "&originalSizeRadio.label;"
-         oncommand = "doDimensionEnabling( false );"/>
-        <radio
-          id      = "customsizeRadio" 
-          value   = "&customSizeRadio.label;"
-          oncommand = "doDimensionEnabling( true );" />
-      </radiogroup>
-
-	  <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
-      <spring flex="100%"/>
-      
-        <!--//////  IMAGE WIDTH  //////-->
-      <box>
-        <text class = "label" 
-          id    = "widthLabel"
-          for   = "widthInput"
-          value = "&widthEditField.label;" />
-        <spring flex="100%"/>
-        <textfield
-          id       = "widthInput" 
-          class    = "MinWidth20em"
-          onfocus  = "oldSourceInt = this.value;"
-          onkeyup  = "constrainProportions(this.id, 'heightInput')" 
-          onchange = "doOverallEnabling()" />
-        <spring flex="100%"/>
-        <menulist id = "widthUnitsMenulist" oncommand = "doOverallEnabling()"/>
-        <!-- contents are appended by JS -->
-      </box>
-
-        <!--////// IMAGE HEIGHT //////-->
-      <box>
-        <text class = "label" 
-          id    = "heightLabel"
-          for   = "heightInput"
-          value = "&heightEditField.label;" />
-        <spring flex="100%"/>
-        <textfield 
-          id       = "heightInput" 
-          onfocus  = "oldSourceInt = this.value;"
-          onkeyup  = "constrainProportions(this.id, 'widthInput')"
-          onchange = "doOverallEnabling()" />
-        <spring flex="100%"/>
-        <menulist id = "heightUnitsMenulist" oncommand = "doOverallEnabling()"/>
-          <!-- contents are appended by JS -->
-      </box>
-
-      <!--////// CONSTRAIN DIMENSIONS //////-->
-	  <box>
-      <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"/>
-	  </box>
-    </titledbox>
-
-    <titledbox flex="100%">
-      <title
-        class="dialog"
-        id="imagemapLabel">
-        <text value="&imagemapBox.label;"/>
-      </title>
-      <button
-        class   = "dialog"
-        id      = "editImageMap"
-        oncommand = "editImageMap()"
-        value   = "&editImageMapButton.label;"/>
-      <button
-        class   = "dialog"
-        id      = "removeImageMap"
-        oncommand = "removeImageMap()"
-        value   = "&removeImageMapButton.label;"/>
-    </titledbox>
-
-    </box>
-
-    <box orient="vertical" flex="100%">
-      <!-- Bottom Right Region -->
-      <!--//////// Alignment ////////-->
-      <titledbox flex="1" orient="vertical">
-        <title
-          class = "dialog" 
-          id    = "alignLabel"
-          for   = "alignTypeSelect">
-          <text value="&alignment.label;"/>
-        </title>
-
-      <menulist id = "alignTypeSelect" onchange = "doOverallEnabling()" >
-        <menupopup>
-          <menuitem value = "&topPopup.value;" 
-             src          = "resource:/chrome/editor/skin/default/images/img-align-top.gif"
-          />
-          <menuitem value = "&centerPopup.value;"
-             src          = "resource:/chrome/editor/skin/default/images/img-align-middle.gif" 
-          />
-          <menuitem value = "&bottomPopup.value;"
-             src          = "resource:/chrome/editor/skin/default/images/img-align-bottom.gif" 
-          />
-          <menuitem value = "&wrapLeftPopup.value;"
-             src          = "resource:/chrome/editor/skin/default/images/img-align-right.gif" 
-          />
-          <menuitem value = "&wrapRightPopup.value;"
-             src          = "resource:/chrome/editor/skin/default/images/img-align-left.gif" 
-          />
-        </menupopup>
-      </menulist>
-      </titledbox>
-
-      <!--//////// Borders and Spacing ////////-->
-      <titledbox flex="100%">
-        <title
-          class = "dialog"
-          id    = "spacingLabel"> 
-          <text value="&spacingBox.label;"/>
-        </title>
-
-        <box orient="vertical">
-          <text class = "align-right" 
-            id    = "leftrightLabel"
-            value = "&leftRightEditField.label;"/>
-          <spring flex="100%"/>
-          <text class = "align-right" 
-            id    = "topbottomLabel"
-            value = "&topBottomEditField.label;"/>
-          <spring flex="100%"/>
-          <text class = "align-right" 
-            id    = "borderLabel"
-            value = "&borderEditField.label;"/>
-        </box>
-        
-        <box orient="vertical">
+    <grid>
+      <columns><column/><column/><column/></columns>
+      <rows>
+        <row>
+          <text class = "dialog" 
+            for   = "srcInput"
+            value = "&locationEditField.label;"
+            align = "right" />
           <textfield 
-            id        = "imageleftrightInput" 
-            onkeyup   = "forceInteger(this.id)" 
-            onchange  = "doOverallEnabling()"/>
-          <spring flex="100%"/>
-          <textfield 
-            id        = "imagetopbottomInput" 
-            onkeyup   = "forceInteger(this.id)"
-            onchange  = "doOverallEnabling()"/>
-          <spring flex="100%"/>
+            id         = "srcInput" 
+            class      = "MinWidth20em"
+            onkeyup    = "doOverallEnabling()"
+            onmouseup  = "doOverallEnabling()"
+            onchange   = "doOverallEnabling()" />
+          <!-- from EdDialogOverlay.xul -->
+          <button id="ChooseFile"/>
+        </row>
+        <row>
+          <text class = "dialog"
+            id    = "altTextLabel" 
+            for   = "altTextInput"
+            value = "&altTextEditField.label;" />
           <textfield
-            id        = "border" 
-            onkeyup   = "forceInteger(this.id)"
-            onchange  = "doOverallEnabling()" />
-        </box>
-        
-        <box orient="vertical">
-          <text class = "label" 
-            id    = "leftrighttypeLabel"
-            for   = "imageleftrightInput"
-            value = "&pixelsPopup.value;" />
-          <spring flex="100%"/>
-          <text class = "label" 
-            id    = "topbottomtypeLabel"
-            for   = "imagetopbottomInput"
-            value = "&pixelsPopup.value;" />
-          <spring flex="100%"/>
-          <text class = "label" 
-            id    = "bordertypeLabel"
-            for   = "border"
-            value = "&pixelsPopup.value;" />
-        </box>
-
-      </titledbox>
-    </box> <!-- Bottom Right region -->
-  </box> <!-- The horizontal box -->
-  
-  <!-- buttons along bottom -->
-  <box>
-    <spring flex="100%"/>
-    <!-- From EdDialogOverlay -->
-    <button id="AdvancedEditButton3"/>
+            id       ="altTextInput"
+            class      = "MinWidth20em"
+            onchange = "doOverallEnabling()"/>
+          <spring/> <!-- placeholder for 3rd column -->
+        </row>
+      </rows>
+    </grid>
+  </titledbox>
+  <box> 
+    <button 
+      class   = "dialog" 
+      id      = "MoreFewerButton" 
+      align   = "left" 
+      oncommand = "onMoreFewerImage()" 
+      persist = "more"/>
+    <spring flex="1"/>
+    <!-- From EdDialogOverlay.xul -->
+    <button id="AdvancedEditButton2"/>
   </box>
-</box> <!-- END OF MORE/FEWER SECTION -->
 
-<separator/>
+  <!-- Area that shows and hides via MoreFewerButton --> 
+  <box id="MoreSection" orient="vertical" flex="1">
+    <box flex="1">
+      <box orient="vertical">
+        <!-- //////// Image Dimensions //////// -->
+        <titledbox orient="vertical" flex="1">
+          <title><text id="dimensionsLabel" value="&dimensionsBox.label;"/></title>
+          <radiogroup orient="vertical">
+            <radio
+              id      = "originalsizeRadio" 
+              value   = "&originalSizeRadio.label;"
+              oncommand = "doDimensionEnabling( false );"/>
+            <radio
+              id      = "customsizeRadio" 
+              value   = "&customSizeRadio.label;"
+              oncommand = "doDimensionEnabling( true );" />
+          </radiogroup>
+          <spring class="spacer"/>
+          <grid class="big-left-margin">
+            <columns><column/><column/><column/></columns>
+            <rows>
+              <!--//////  IMAGE WIDTH  //////-->
+              <row vertical-align="baseline" autostretch="never">
+                <text class = "dialog" 
+                  id    = "widthLabel"
+                  for   = "widthInput"
+                  value = "&widthEditField.label;" />
+                <textfield
+                  id       = "widthInput" 
+                  class    = "narrow"
+                  onfocus  = "oldSourceInt = this.value;"
+                  onkeyup  = "constrainProportions(this.id, 'heightInput')" 
+                  onchange = "doOverallEnabling()" />
+                <menulist id = "widthUnitsMenulist" oncommand = "doOverallEnabling()"/>
+                <!-- contents are appended by JS -->
+              </row>
+              <!--////// IMAGE HEIGHT //////-->
+              <row vertical-align="baseline" autostretch="never">
+                <text class = "dialog" 
+                  id    = "heightLabel"
+                  for   = "heightInput"
+                  value = "&heightEditField.label;" />
+                <textfield 
+                  id       = "heightInput" 
+                  class    = "narrow"
+                  onfocus  = "oldSourceInt = this.value;"
+                  onkeyup  = "constrainProportions(this.id, 'widthInput')"
+                  onchange = "doOverallEnabling()" />
+                <menulist id = "heightUnitsMenulist" oncommand = "doOverallEnabling()"/>
+                <!-- contents are appended by JS -->
+              </row>
+            </rows>          
+          </grid>
+          <!--////// CONSTRAIN DIMENSIONS //////-->
+          <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"/>
+        </titledbox>
+        <!--////// IMAGE MAP BUTTONS //////-->
+        <titledbox flex="1">
+          <title><text id="imagemapLabel" value="&imagemapBox.label;"/></title>
+          <box>
+            <button
+              class   = "dialog"
+              id      = "editImageMap"
+              oncommand = "editImageMap()"
+              value   = "&editImageMapButton.label;"/>
+            <button
+              class   = "dialog"
+              id      = "removeImageMap"
+              oncommand = "removeImageMap()"
+              value   = "&removeImageMapButton.label;"/>
+          </box>
+        </titledbox>
+      </box> <!-- vert. box on bottom left side -->
 
-<!-- from global dialogOverlay -->
-<box id="okCancelButtons"/> 
+      <!-- Bottom Right Region -->
+      <box orient="vertical" flex="1">
+        <!--//////// Alignment ////////-->
+        <titledbox flex="1" orient="vertical">
+          <title><text class="dialog" id="alignLabel" value="&alignment.label;"/></title>
+          <menulist id = "alignTypeSelect" onchange ="doOverallEnabling()">
+            <menupopup vertical-align="middle">
+              <menuitem class="middle"><image id="img-align-top"/>   <text class="dialog" value = "&topPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-middle"/><text class="dialog" value = "&centerPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-bottom"/><text class="dialog" value = "&bottomPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-left"/>  <text class="dialog" value = "&wrapLeftPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-right"/> <text class="dialog" value = "&wrapRightPopup.value;"/></menuitem>
+            </menupopup>
+          </menulist>
+        </titledbox>
+
+        <!--//////// Borders and Spacing ////////-->
+        <titledbox flex="1">
+          <title><text id="spacingLabel" value="&spacingBox.label;"/></title>
+          <grid>
+            <columns><column/><column/><column/></columns>
+            <rows>
+              <row vertical-align="baseline" autostretch="never">
+                <text 
+                  class = "dialog align-right" 
+                  id    = "leftrightLabel"
+                  value = "&leftRightEditField.label;"/>
+                <textfield 
+                  class     = "narrow"
+                  id        = "imageleftrightInput" 
+                  onkeyup   = "forceInteger(this.id)" 
+                  onchange  = "doOverallEnabling()"/>
+                <text 
+                  class = "dialog" 
+                  id    = "leftrighttypeLabel"
+                  value = "&pixelsPopup.value;" />
+              </row>
+              <row vertical-align="baseline" autostretch="never">
+                <text 
+                  class = "dialog align-right" 
+                  id    = "topbottomLabel"
+                  value = "&topBottomEditField.label;"/>
+                <textfield 
+                  class     = "narrow"
+                  id        = "imagetopbottomInput" 
+                  onkeyup   = "forceInteger(this.id)"
+                  onchange  = "doOverallEnabling()"/>
+                <text
+                  class = "dialog" 
+                  id    = "topbottomtypeLabel"
+                  value = "&pixelsPopup.value;" />
+              </row>
+              <row vertical-align="baseline" autostretch="never">
+                <text class = "dialog align-right" 
+                  id    = "borderLabel"
+                  value = "&borderEditField.label;"/>
+                <textfield
+                  class     = "narrow"
+                  id        = "border" 
+                  onkeyup   = "forceInteger(this.id)"
+                  onchange  = "doOverallEnabling()" />
+                <text 
+                  class = "dialog" 
+                  id    = "bordertypeLabel"
+                  value = "&pixelsPopup.value;" />
+              </row>
+            </rows>
+          </grid>
+        </titledbox>
+      </box> <!-- Bottom Right region -->
+    </box> <!-- The horizontal box -->
+  
+    <!-- buttons along bottom -->
+    <box>
+      <spring flex="1"/>
+      <!-- From EdDialogOverlay -->
+      <button id="AdvancedEditButton3"/>
+    </box>
+  </box> <!-- END OF MORE/FEWER SECTION -->
+  <separator class="groove"/>
+  <!-- from global dialogOverlay -->
+  <box id="okCancelButtons"/> 
 
 </window>

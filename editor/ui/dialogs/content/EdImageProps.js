@@ -268,6 +268,8 @@ function onMoreFewerImage()
     SetGlobalElementToCurrentDialogSettings();
     
     dialog.MoreSection.setAttribute("style","display: none");
+    //TODO: Bugs in box layout prevent us from using this:
+    //dialog.MoreSection.setAttribute("style","visibility: collapse");
     // Show the "Advanced Edit" button on same line as "More Properties"
     dialog.AdvancedEditButton2.setAttribute("style","display: inherit");
     window.sizeToContent();
@@ -278,6 +280,7 @@ function onMoreFewerImage()
   else
   {
     dialog.MoreSection.setAttribute("style","display: inherit");
+    //dialog.MoreSection.setAttribute("style","visibility: inherit");
     // Hide the "Advanced Edit" next to "More..." Use button at bottom right of dialog
     dialog.AdvancedEditButton2.setAttribute("style","display: none");
     window.sizeToContent();
@@ -309,18 +312,18 @@ function doDimensionEnabling( doEnable )
   // Enabled only if "Custom" is checked
   var enable = (doEnable && dialog.customsizeRadio.checked);
 
-  SetElementEnabledByID( "widthInput", enable );
-  SetElementEnabledByID( "widthLabel", enable);
-  SetElementEnabledByID( "widthUnitsMenulist", enable );
+  SetElementEnabledById( "widthInput", enable );
+  SetElementEnabledById( "widthLabel", enable);
+  SetElementEnabledById( "widthUnitsMenulist", enable );
 
-  SetElementEnabledByID( "heightInput", enable );
-  SetElementEnabledByID( "heightLabel", enable );
-  SetElementEnabledByID( "heightUnitsMenulist", enable );
+  SetElementEnabledById( "heightInput", enable );
+  SetElementEnabledById( "heightLabel", enable );
+  SetElementEnabledById( "heightUnitsMenulist", enable );
 
   var constrainEnable = enable 
          && ( dialog.widthUnitsMenulist.selectedIndex == 0 )
          && ( dialog.heightUnitsMenulist.selectedIndex == 0 );
-  SetElementEnabledByID( "constrainCheckbox", constrainEnable );
+  SetElementEnabledById( "constrainCheckbox", constrainEnable );
 }
 
 function doOverallEnabling()
@@ -331,37 +334,37 @@ function doOverallEnabling()
   
   wasEnableAll = canEnableAll;
 
-  SetElementEnabledByID("ok", canEnableAll );
-  SetElementEnabledByID( "altTextLabel", canEnableAll );
+  SetElementEnabledById("ok", canEnableAll );
+  SetElementEnabledById( "altTextLabel", canEnableAll );
 
   // Do widgets for sizing
-  SetElementEnabledByID( "dimensionsLabel", canEnableAll );
+  SetElementEnabledById( "dimensionsLabel", canEnableAll );
   doDimensionEnabling( canEnableAll );
   
-  SetElementEnabledByID("alignLabel", canEnableAll );
-  SetElementEnabledByID("alignTypeSelect", canEnableAll );
+  SetElementEnabledById("alignLabel", canEnableAll );
+  SetElementEnabledById("alignTypeSelect", canEnableAll );
 
   // spacing Box
-  SetElementEnabledByID( "spacingLabel", canEnableAll );
-  SetElementEnabledByID( "imageleftrightInput", canEnableAll );
-  SetElementEnabledByID( "leftrightLabel", canEnableAll );
-  SetElementEnabledByID( "leftrighttypeLabel", canEnableAll );
+  SetElementEnabledById( "spacingLabel", canEnableAll );
+  SetElementEnabledById( "imageleftrightInput", canEnableAll );
+  SetElementEnabledById( "leftrightLabel", canEnableAll );
+  SetElementEnabledById( "leftrighttypeLabel", canEnableAll );
 
-  SetElementEnabledByID( "imagetopbottomInput", canEnableAll );
-  SetElementEnabledByID( "topbottomLabel", canEnableAll );
-  SetElementEnabledByID( "topbottomtypeLabel", canEnableAll );
+  SetElementEnabledById( "imagetopbottomInput", canEnableAll );
+  SetElementEnabledById( "topbottomLabel", canEnableAll );
+  SetElementEnabledById( "topbottomtypeLabel", canEnableAll );
 
-  SetElementEnabledByID( "border", canEnableAll );
-  SetElementEnabledByID( "borderLabel", canEnableAll );
-  SetElementEnabledByID( "bordertypeLabel", canEnableAll );
+  SetElementEnabledById( "border", canEnableAll );
+  SetElementEnabledById( "borderLabel", canEnableAll );
+  SetElementEnabledById( "bordertypeLabel", canEnableAll );
 
   // This shouldn't find button, but it does!
-  SetElementEnabledByID( "AdvancedEditButton2", canEnableAll );
-  SetElementEnabledByID( "AdvancedEditButton3", canEnableAll );
+  SetElementEnabledById( "AdvancedEditButton2", canEnableAll );
+  SetElementEnabledById( "AdvancedEditButton3", canEnableAll );
 
-  SetElementEnabledByID( "editImageMap", canEnableAll );
+  SetElementEnabledById( "editImageMap", canEnableAll );
   // TODO: ADD APPROPRIATE DISABLING BASED ON EXISTENCE OF IMAGE MAP
-  SetElementEnabledByID( "removeImageMap", canEnableAll && canRemoveImageMap);
+  SetElementEnabledById( "removeImageMap", canEnableAll && canRemoveImageMap);
 }
 
 // constrainProportions contribution by pete@postpagan.com

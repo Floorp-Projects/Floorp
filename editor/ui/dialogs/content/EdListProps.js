@@ -92,11 +92,11 @@ function InitDialog()
 
 function BuildBulletStyleList()
 {
-  ClearList(BulletStyleList);
+  ClearMenulist(BulletStyleList);
   var label = "";
   var selectedIndex = -1;
 
-  //dump("List Type: "+ListType+" globalElement: "+globalElement+"\n");
+dump("List Type: "+ListType+" globalElement: "+globalElement+"\n");
 
   if (ListType == "ul")
   {
@@ -106,9 +106,9 @@ function BuildBulletStyleList()
     StartingNumberLabel.setAttribute("disabled", "true");
     label = GetString("BulletStyle");
 
-    AppendStringToListByID(BulletStyleList,"SolidCircle");
-    AppendStringToListByID(BulletStyleList,"OpenCircle");
-    AppendStringToListByID(BulletStyleList,"SolidSquare");
+    AppendStringToMenulistById(BulletStyleList,"SolidCircle");
+    AppendStringToMenulistById(BulletStyleList,"OpenCircle");
+    AppendStringToMenulistById(BulletStyleList,"SolidSquare");
 
     BulletStyleList.selectedIndex = BulletStyleIndex;
     ListTypeList.selectedIndex = 1;
@@ -121,11 +121,11 @@ function BuildBulletStyleList()
     StartingNumberLabel.removeAttribute("disabled");
     label = GetString("NumberStyle");
 
-    AppendStringToListByID(BulletStyleList,"Style_1");
-    AppendStringToListByID(BulletStyleList,"Style_I");
-    AppendStringToListByID(BulletStyleList,"Style_i");
-    AppendStringToListByID(BulletStyleList,"Style_A");
-    AppendStringToListByID(BulletStyleList,"Style_a");
+    AppendStringToMenulistById(BulletStyleList,"Style_1");
+    AppendStringToMenulistById(BulletStyleList,"Style_I");
+    AppendStringToMenulistById(BulletStyleList,"Style_i");
+    AppendStringToMenulistById(BulletStyleList,"Style_A");
+    AppendStringToMenulistById(BulletStyleList,"Style_a");
 
     BulletStyleList.selectedIndex = NumberStyleIndex;
     ListTypeList.selectedIndex = 2;
@@ -155,6 +155,7 @@ function BuildBulletStyleList()
 
 function SelectListType()
 {
+dump(ListTypeList+"ListTypeList\n");
   switch (ListTypeList.selectedIndex)
   {
     case 1:

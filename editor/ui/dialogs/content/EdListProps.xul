@@ -42,26 +42,27 @@
   <keyset id="keyset"/>
   <broadcaster id="args" value=""/>
 
-  <text for="ListType" value="&ListType.label;"/>
-  <html:select class="ComboBox" id="ListType" onchange="SelectListType()">
-    <html:option>&none.value;</html:option>
-    <html:option>&bulletList.value;</html:option>
-    <html:option>&numberList.value;</html:option>
-    <html:option>&definitionList.value;</html:option>
-  </html:select>
+  <text class="dialog" value="&ListType.label;"/>
+  <menulist flex="1" id="ListType" oncommand="SelectListType()">
+    <menupopup>
+      <menuitem value="&none.value;"/>
+      <menuitem value="&bulletList.value;"/>
+      <menuitem value="&numberList.value;"/>
+      <menuitem value="&definitionList.value;"/>
+    </menupopup>
+  </menulist>
   <spring class="spacer"/>
 
   <!-- message text and list items are set in JS 
        text value should be identical to string with id=BulletStyle in editor.properties 
   -->
-  <text id="BulletStyleLabel" value="&bulletStyle.label;"/>
-  <html:select class="ComboBox" id="BulletStyle" style="min-width: 10em" onchange="SelectBulletStyle()"/>
+  <text class="dialog" id="BulletStyleLabel" value="&bulletStyle.label;"/>
+  <menulist flex="1" class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
   <spring class="spacer"/>
-
   <box>
-    <text id="StartingNumberLabel" for="StartingNumber" value="&startingNumber.label;"/>
+    <text class="dialog" id="StartingNumberLabel" value="&startingNumber.label;"/>
     <spring class="spacer"/>
-    <html:input type="text" id="StartingNumber" size="3" onkeyup="forceInteger('StartingNumber')"/>
+    <textfield class="narrow" id="StartingNumber" onkeyup="forceInteger('StartingNumber')"/>
     <spring/>
   </box>
   <!-- from EdDialogOverlay -->

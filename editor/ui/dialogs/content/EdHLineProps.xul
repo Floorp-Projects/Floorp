@@ -43,18 +43,18 @@
   <script language="JavaScript" src="chrome://editor/content/EdHLineProps.js"/>
 
   <keyset id="keyset"/>
-  <titledbox><title><text align="left" value="&dimensionsBox.label;"/></title>
+  <titledbox><title><text value="&dimensionsBox.label;"/></title>
     <grid>
       <columns><column/><column/><column /></columns>
       <rows>
         <row vertical-align="baseline" autostretch="never">
-          <text value="&heightEditField.label;"/>
-          <textfield id="height" onkeyup="forceInteger('height')"/>
-          <text value="&pixelsPopup.value;"/>
+          <text class="dialog" value="&heightEditField.label;"/>
+          <textfield class="narrow" id="height" onkeyup="forceInteger('height')"/>
+          <text class="dialog" value="&pixelsPopup.value;"/>
         </row>
         <row vertical-align="baseline" autostretch="never">
-          <text value="&widthEditField.label;"/>
-          <textfield id="width" flex="1" onkeyup="forceInteger('width')"/>
+          <text class="dialog" value="&widthEditField.label;"/>
+          <textfield class="narrow" id="width" flex="1" onkeyup="forceInteger('width')"/>
           <menulist id="pixelOrPercentMenulist"/>
           <!-- menupopup and menuitems added by JS -->
         </row>

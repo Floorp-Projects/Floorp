@@ -62,11 +62,10 @@ function Startup()
   dialog.AdvancedEditSection = document.getElementById("AdvancedEdit");
 
   var selection = editorShell.editorSelection;
-  if (selection) {
+  if (selection)
     dump("There is a selection: collapsed = "+selection.isCollapsed+"\n");
-  } else {
+  else
     dump("Failed to get selection\n");
-  }
 
   // See if we have a single selected image
   imageElement = editorShell.GetSelectedElement("img");
@@ -139,11 +138,10 @@ function Startup()
   
   if (insertLinkAtCaret)
   {
-    // Note: Use linkTextMessage for normal weight, 
-    //       because linkTextCaption is bold (set in EdDialog.css)
-    dialog.linkTextMessage.setAttribute("value",GetString("EnterLinkText"));
-    // Hide the other string 
-    dialog.linkTextCaption.setAttribute("hidden","true");
+    // Titledbox caption:
+    dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
+    // Message above input field:
+    dialog.linkTextMessage.setAttribute("value", GetString("EnterLinkText"));
   }
   else
   {
@@ -244,20 +242,25 @@ function FillListboxes()
 {
   var NamedAnchorNodeList = editorShell.editorDocument.anchors;
   var NamedAnchorCount = NamedAnchorNodeList.length;
-  if (NamedAnchorCount > 0) {
-    for (var i = 0; i < NamedAnchorCount; i++) {
-      AppendStringToList(dialog.NamedAnchorList,NamedAnchorNodeList.item(i).name);
+  if (NamedAnchorCount > 0)
+  {
+    for (var i = 0; i < NamedAnchorCount; i++)
+    {
+      var item = AppendStringToTreelist(dialog.NamedAnchorList, NamedAnchorNodeList.item(i).name);
+
     }
     haveNamedAnchors = true;
   } else {
     // Message to tell user there are none
-    AppendStringToList(dialog.NamedAnchorList,GetString("NoNamedAnchors"));
-    dialog.NamedAnchorList.setAttribute("disabled", "true");
+    var item = AppendStringToTreelistById(dialog.NamedAnchorList, "NoNamedAnchors");
+    if (item) item.setAttribute("disabled", "true");
   }
   var firstHeading = true;
-  for (var j = 1; j <= 6; j++) {
+  for (var j = 1; j <= 6; j++)
+  {
     var headingList = editorShell.editorDocument.getElementsByTagName("h"+String(j));
-    if (headingList.length > 0) {
+    if (headingList.length > 0)
+    {
       var heading = headingList.item(0);
 
       // Skip headings that already have a named anchor as their first child
@@ -266,23 +269,23 @@ function FillListboxes()
       var child = heading.firstChild;
 //      if( child && child.name )
 //        dump(child.name+" = Child.name. Length="+child.name.length+"\n");
-      if (child && child.nodeName == "A" && child.name && (child.name.length>0)) {
+      if (child && child.nodeName == "A" && child.name && (child.name.length>0))
         continue;
-      }
 
       var range = editorShell.editorDocument.createRange();
       range.setStart(heading,0);
       var lastChildIndex = heading.childNodes.length;
       range.setEnd(heading,lastChildIndex);
       var text = range.toString();
-      if (text) {
+      if (text)
+      {
         // Use just first 40 characters, don't add "...",
         //  and replace whitespace with "_" and strip non-word characters
         text = PrepareStringForURL(TruncateStringAtWordEnd(text, 40, false));
         // Append "_" to any name already in the list
         if (GetExistingHeadingIndex(text) > -1)
           text += "_";
-        AppendStringToList(dialog.HeadingsList, text);
+        AppendStringToTreelist(dialog.HeadingsList, text);
 
         // Save nodes in an array so we can create anchor node under it later
         if (!HNodeArray)
@@ -292,18 +295,21 @@ function FillListboxes()
       }
     }
   }
-  if (HNodeArray) {
+  if (HNodeArray)
+  {
     haveHeadings = true;
   } else {
     // Message to tell user there are none
-    AppendStringToList(dialog.HeadingsList,GetString("NoHeadings"));
-    dialog.HeadingsList.setAttribute("disabled", "true");
+    var item = AppendStringToTreelistById(dialog.HeadingsList, "NoHeadings");
+    if (item) item.setAttribute("disabled", "true");
   }
 }
 
 function GetExistingHeadingIndex(text)
 {
-  for (var i=0; i < dialog.HeadingsList.length; i++) {
+  var len = dialog.HeadingsList.getAttribute("length");
+  for (var i=0; i < len; i++)
+  {
     if (dialog.HeadingsList.options[i].value == text)
       return i;
   }
@@ -312,16 +318,15 @@ function GetExistingHeadingIndex(text)
 
 function SelectNamedAnchor()
 {
-  if (haveNamedAnchors) {
-    dialog.hrefInput.value = "#"+dialog.NamedAnchorList.options[dialog.NamedAnchorList.selectedIndex].value;
-  }
+dump("SelectNamedAnchor\n");
+  if (haveNamedAnchors)
+    dialog.hrefInput.value = "#"+dialog.NamedAnchorList.value;
 }
 
 function SelectHeading()
 {
-  if (haveHeadings) {
-    dialog.hrefInput.value = "#"+dialog.HeadingsList.options[dialog.HeadingsList.selectedIndex].value;
-  }
+  if (haveHeadings)
+    dialog.hrefInput.value = "#"+dialog.HeadingsList.value;
 }
 
 // Get and validate data from widgets.
@@ -329,21 +334,26 @@ function SelectHeading()
 function ValidateData()
 {
   href = dialog.hrefInput.value.trimString();
-  if (href.length > 0) {
+  if (href.length > 0)
+  {
     // Set the HREF directly on the editor document's anchor node
     //  or on the newly-created node if insertNew is true
     globalElement.setAttribute("href",href);
-  } else if (insertNew) {
+  }
+  else if (insertNew)
+  {
     // We must have a URL to insert a new link
     //NOTE: We accept an empty HREF on existing link to indicate removing the link
     ShowInputErrorMessage(GetString("EmptyHREFError"));
     return false;
   }
-  if (dialog.linkTextInput) {
+  if (dialog.linkTextInput)
+  {
     // The text we will insert isn't really an attribute,
     //  but it makes sense to validate it
     newLinkText = TrimString(dialog.linkTextInput.value);
-    if (newLinkText.length == 0) {
+    if (newLinkText.length == 0)
+    {
       ShowInputErrorMessage(GetString("GetInputError"));
       dialog.linkTextInput.focus();
       return false;
@@ -357,7 +367,8 @@ function onOK()
 {
   if (ValidateData())
   {
-    if (href.length > 0) {
+    if (href.length > 0)
+    {
       // Copy attributes to element we are changing or inserting
       editorShell.CloneAttributes(anchorElement, globalElement);
 
@@ -365,20 +376,21 @@ function onOK()
       editorShell.BeginBatchChanges();
 
       // Get text to use for a new link
-      if (insertLinkAtCaret) {
+      if (insertLinkAtCaret)
+      {
         // Append the link text as the last child node 
         //   of the anchor node
         textNode = editorShell.editorDocument.createTextNode(newLinkText);
-        if (textNode) {
+        if (textNode)
           anchorElement.appendChild(textNode);
-        }
         try {
           editorShell.InsertElementAtSelection(anchorElement, false);
         } catch (e) {
           dump("Exception occured in InsertElementAtSelection\n");
           return true;
         }
-      } else if (insertNew) {
+      } else if (insertNew)
+      {
         //  Link source was supplied by the selection,
         //  so insert a link node as parent of this
         //  (may be text, image, or other inline content)
@@ -390,7 +402,8 @@ function onOK()
         }
       }
       // Check if the link was to a heading 
-      if (href[0] == "#") {
+      if (href[0] == "#")
+      {
         var name = href.substr(1);
         var index = GetExistingHeadingIndex(name);
         if (index >= 0) {
@@ -409,7 +422,9 @@ dump("Anchor node created and inserted under heading\n");
         }
       }
       editorShell.EndBatchChanges();
-    } else if (!insertNew) {
+    } 
+    else if (!insertNew)
+    {
       // We already had a link, but empty HREF means remove it
       editorShell.RemoveTextProperty("a", "");
     }
