@@ -131,8 +131,9 @@ protected:
   void CancelFind();
   PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext, 
                          nsIDOMRange *aRange, PRBool aMustBeVisible, nsIDOMRange **aNewRange);
-  nsresult FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
-  nsresult GetSearchContainers(nsISupports *aContainer, PRBool aIsFirstVisiblePreferred, PRBool aCanUseDocSelection,
+  nsresult FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
+  nsresult GetSearchContainers(nsISupports *aContainer, PRBool aIsRepeatingSameChar,
+                               PRBool aIsFirstVisiblePreferred, PRBool aCanUseDocSelection,
                                nsIPresShell **aPresShell, nsIPresContext **aPresContext,
                                nsIDOMRange **aSearchRange, nsIDOMRange **aStartRange, nsIDOMRange **aEndRange);
   void DisplayStatus(PRBool aSuccess, PRBool aClearStatus);
@@ -150,6 +151,7 @@ protected:
   PRBool mIsRepeatingSameChar;
   PRBool mLiteralTextSearchOnly;
   PRBool mKeepSelectionOnCancel;
+  PRBool mDontTryExactMatch;
   PRInt32 mTimeoutLength; // Amount of time before find is automatically cancelled
   static PRBool gIsFindingText; // this flag prevents side effects from listener callbacks while selecting/focusing found text
   nsCOMPtr<nsIDOMRange> mStartFindRange;  // where selection was when user started the find

@@ -121,7 +121,7 @@ nsTypeAheadFind* nsTypeAheadFind::mInstance = nsnull;
 nsTypeAheadFind::nsTypeAheadFind(): 
   mLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), 
   mCaretBrowsingOn(PR_FALSE), mIsRepeatingSameChar(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE),
-  mKeepSelectionOnCancel(PR_FALSE), mTimeoutLength(0),
+  mKeepSelectionOnCancel(PR_FALSE), mDontTryExactMatch(PR_FALSE), mTimeoutLength(0),
   mFind(do_CreateInstance(NS_FIND_CONTRACTID)), 
   mFindService(do_GetService("@mozilla.org/find/find_service;1"))
 {
@@ -525,6 +525,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     }
     mTypeAheadBuffer = Substring(mTypeAheadBuffer, 0, mTypeAheadBuffer.Length() - 1);
     isBackspace = PR_TRUE;
+    mDontTryExactMatch = PR_FALSE;
   }
   // ----------- Printable characters --------------
   else {
@@ -564,7 +565,18 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   }
 
   gIsFindingText = PR_TRUE; // prevents listener callbacks from resetting us during typeahead find processing
-  nsresult rv = FindItNow(isLinksOnly, isFirstVisiblePreferred, isBackspace);
+
+  nsresult rv;
+
+#ifndef PREFER_LINK_CYCLE_ON_SAME_CHAR
+  if (!mDontTryExactMatch)
+    rv = FindItNow(PR_FALSE, mLinksOnly, isFirstVisiblePreferred, isBackspace); // Prefer to find exact match
+  if (NS_FAILED(rv) && mIsRepeatingSameChar)   // mIsRepeatingSameChar
+#endif
+  {
+    mDontTryExactMatch = PR_TRUE;
+    rv = FindItNow(mIsRepeatingSameChar, isLinksOnly, isFirstVisiblePreferred, isBackspace);
+  }
 
   // ------- If accessibility.typeaheadfind.timeout is set, cancel find after specified # milliseconds
   if (mTimeoutLength) {
@@ -622,7 +634,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 }
 
 
-nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace)
+nsresult nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace)
 {
   nsCOMPtr<nsIPresShell> presShell, startingPresShell(do_QueryReferent(mFocusedWeakShell));
   if (aIsBackspace && mStartFindRange) { // when backspace is pressed, start from where first char was found
@@ -673,7 +685,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
 
   // ------------ Get ranges ready ----------------
   nsCOMPtr<nsIDOMRange> searchRange, startPointRange, endPointRange, returnRange;
-  if (NS_FAILED(GetSearchContainers(currentContainer, aIsFirstVisiblePreferred, PR_TRUE,
+  if (NS_FAILED(GetSearchContainers(currentContainer, aIsRepeatingSameChar, aIsFirstVisiblePreferred, PR_TRUE,
                                     getter_AddRefs(presShell), getter_AddRefs(presContext), 
                                     getter_AddRefs(searchRange), getter_AddRefs(startPointRange), 
                                     getter_AddRefs(endPointRange))))
@@ -689,7 +701,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
   PRBool hasWrapped = (rangeCompareResult <= 0); // No need to wrap find in doc if starting at beginning
 
   nsAutoString findBuffer;
-  if (mIsRepeatingSameChar)
+  if (aIsRepeatingSameChar)
     findBuffer = mTypeAheadBuffer.First();
   else 
     findBuffer = PromiseFlatString(mTypeAheadBuffer);
@@ -705,7 +717,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
       RangeStartsInsideLink(returnRange, presShell, &isInsideLink, &isStartingLink);
 
       if (!IsRangeVisible(presShell, presContext, returnRange, aIsFirstVisiblePreferred, getter_AddRefs(startPointRange)) ||
-          (mIsRepeatingSameChar && !isStartingLink) || (aIsLinksOnly && !isInsideLink)) {
+          (aIsRepeatingSameChar && !isStartingLink) || (aIsLinksOnly && !isInsideLink)) {
         // ------ Failure ------
         // Start find again from here 
         startPointRange->Collapse(PR_FALSE);  // collapse to end
@@ -745,7 +757,8 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
     do {
       if (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMoreDocShells)) && hasMoreDocShells) {
         docShellEnumerator->GetNext(getter_AddRefs(currentContainer));
-        if (NS_FAILED(GetSearchContainers(currentContainer, aIsFirstVisiblePreferred, PR_FALSE,
+        if (NS_FAILED(GetSearchContainers(currentContainer, aIsRepeatingSameChar, 
+                                          aIsFirstVisiblePreferred, PR_FALSE,
                                           getter_AddRefs(presShell), getter_AddRefs(presContext), 
                                           getter_AddRefs(searchRange), getter_AddRefs(startPointRange), 
                                           getter_AddRefs(endPointRange))))
@@ -778,13 +791,14 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
       // The aardvark rule: if they repeat the same character and then change
       // first find exactly what they typed, if not there start over with new char
       mTypeAheadBuffer = mTypeAheadBuffer.Last();
-      return FindItNow(PR_TRUE, aIsFirstVisiblePreferred, aIsBackspace);
+      return FindItNow(aIsRepeatingSameChar, PR_TRUE, aIsFirstVisiblePreferred, aIsBackspace);
     }
-    if (mIsRepeatingSameChar && mTypeAheadBuffer.Length() > 1 && mTypeAheadBuffer.Length() <5) {
+#ifdef PREFER_LINK_CYCLE_ON_SAME_CHAR
+    if (aIsRepeatingSameChar && mTypeAheadBuffer.Length() > 1 && mTypeAheadBuffer.Length() < 5) {
       // Can't find a link that starts with the repeated char, so try a normal search
-      mIsRepeatingSameChar = PR_FALSE;
-      return FindItNow(mLinksOnly, aIsFirstVisiblePreferred, aIsBackspace);
+      return FindItNow(PR_FALSE, mLinksOnly, aIsFirstVisiblePreferred, aIsBackspace);
     }
+#endif
     
     // ------------- Failed --------------
     break;
@@ -794,7 +808,7 @@ nsresult nsTypeAheadFind::FindItNow(PRBool aIsLinksOnly, PRBool aIsFirstVisibleP
 }
 
 
-nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, 
+nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer, PRBool aIsRepeatingSameChar, 
                                               PRBool aIsFirstVisiblePreferred, PRBool aCanUseDocSelection,
                                               nsIPresShell **aPresShell, nsIPresContext **aPresContext,
                                               nsIDOMRange **aSearchRange, nsIDOMRange **aStartPointRange, 
@@ -849,7 +863,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   else {
     PRInt32 startOffset;
     nsCOMPtr<nsIDOMNode> startNode;
-    if (mIsRepeatingSameChar) {
+    if (aIsRepeatingSameChar) {
       currentSelectionRange->GetEndContainer(getter_AddRefs(startNode));
       currentSelectionRange->GetEndOffset(&startOffset);
     }
@@ -1022,6 +1036,7 @@ void nsTypeAheadFind::CancelFind()
   mCaretBrowsingOn = PR_FALSE;
   mIsRepeatingSameChar = PR_FALSE;
   mLiteralTextSearchOnly = PR_FALSE;
+  mDontTryExactMatch = PR_FALSE;
   mStartFindRange = nsnull;
 }
 
