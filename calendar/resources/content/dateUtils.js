@@ -104,19 +104,19 @@ DateFormater.prototype.getFormatedDate = function( date )
    // that displays the date uses this function we will be able to 
    // make a user settable date format and use it here.
 
-   try                                                                                                           if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
-   {                                                                                                             {
-      if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )                                    var oneBasedMonthNum = date.getMonth() + 1;
-         var dateFormat = dateService.dateFormatLong                                                             
-      else                                                                                                          var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
-         var dateFormat = dateService.dateFormatShort;                                                              
-                                                                                                                    var dateString =  monthString + " " + date.getDate()+", "+date.getFullYear();
-      return( dateService.FormatDate( "", dateFormat, date.getFullYear(), date.getMonth()+1, date.getDate() ) );    
-   }                                                                                                                return dateString;
-   catch(ex)                                                                                                     }
-   {                                                                                                             else
-      return "";                                                                                                 {  
-   }                                                                                                                try
+   try
+   {
+      if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
+         var dateFormat = dateService.dateFormatLong;
+      else                                                                                                       
+         var dateFormat = dateService.dateFormatShort;
+                                                                                                                 
+      return( dateService.FormatDate( "", dateFormat, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
+   }
+   catch(ex)
+   {
+      return "";
+   }
 }
 
 
