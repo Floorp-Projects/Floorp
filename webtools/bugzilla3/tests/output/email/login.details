@@ -3,7 +3,7 @@ COSES
 
 <text>
 To: <text value="(data.session.fields.contact:e-mail)"/><br/>
-From: XXX@spam.hixie.ch<br/>
+From: <text value="(data.output.address)"/><br/>
 Subject: Test From PLIF<br/>
 </text>
 
