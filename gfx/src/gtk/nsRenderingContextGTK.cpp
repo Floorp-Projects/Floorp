@@ -513,6 +513,9 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
     return NS_ERROR_FAILURE;
   }
  
+  g_return_val_if_fail ((aBounds != NULL), NS_ERROR_FAILURE);
+  g_return_val_if_fail ((aBounds->width != 0) && (aBounds->height != 0), NS_ERROR_FAILURE);
+ 
   pixmap = ::gdk_pixmap_new(mRenderingSurface->drawable, aBounds->width, aBounds->height, -1);
   nsDrawingSurfaceGTK * surface = new nsDrawingSurfaceGTK();
 
@@ -528,6 +531,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
 {
   nsDrawingSurfaceGTK * surface = (nsDrawingSurfaceGTK *) aDS;
 
+  g_return_val_if_fail ((surface != NULL), NS_ERROR_FAILURE);
+  g_return_val_if_fail ((surface->drawable != NULL), NS_ERROR_FAILURE);
   ::gdk_pixmap_unref (surface->drawable);
 
   delete surface;
@@ -537,9 +542,12 @@ NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE;
-  }
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
+
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
 
@@ -552,10 +560,13 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE;
-  }
   PRUint32 i ;
+
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+                        (mRenderingSurface != NULL) ||
+                        (mRenderingSurface->drawable != NULL) ||
+                        (mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (PRInt32 i = 0; i < aNumPoints; i++)
@@ -592,6 +603,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aW
   y = aY;
   w = aWidth;
   h = aHeight;
+
+  g_return_val_if_fail ((mRenderingSurface->drawable != NULL) ||
+                        (mRenderingSurface->gc != NULL), NS_ERROR_FAILURE);
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
@@ -631,9 +645,11 @@ NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aW
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE;
-  }
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (PRInt32 i = 0; i < aNumPoints; i++)
@@ -652,9 +668,11 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt3
 
 NS_IMETHODIMP nsRenderingContextGTK::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE;
-  }
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
 
   GdkPoint *pts = new GdkPoint[aNumPoints];
 	for (PRInt32 i = 0; i < aNumPoints; i++)
@@ -678,9 +696,12 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE;
-  }
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
+
   nscoord x,y,w,h;
 
   x = aX;
@@ -704,9 +725,12 @@ NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE;
-  }
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
+
   nscoord x,y,w,h;
 
   x = aX;
@@ -733,9 +757,12 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawArc(nscoord aX, nscoord aY,
                                              nscoord aWidth, nscoord aHeight,
                                              float aStartAngle, float aEndAngle)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE;
-  }
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
+
   nscoord x,y,w,h;
 
   x = aX;
@@ -764,9 +791,12 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
                                              nscoord aWidth, nscoord aHeight,
                                              float aStartAngle, float aEndAngle)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
-    return NS_ERROR_FAILURE;
-  }
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
+
   nscoord x,y,w,h;
 
   x = aX;
@@ -814,6 +844,11 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString, nscoord &aWid
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
                                               PRUint32 aLength, nscoord &aWidth)
 {
+  g_return_val_if_fail ((aString != NULL) ||
+			(aLength != 0) ||
+			(aWidth != 0),
+			NS_ERROR_FAILURE);
+
   PRInt32     rc;
 
   GdkFont *font = (GdkFont *)mCurrentFont;
@@ -828,6 +863,11 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const PRUnichar *aString,
                                               PRUint32 aLength, nscoord &aWidth)
 {
+  g_return_val_if_fail ((aString != NULL) ||
+			(aLength != 0) ||
+			(aWidth != 0),
+			NS_ERROR_FAILURE);
+
     nsString nsStr;
     nsStr.SetString(aString, aLength);
     char* cStr = nsStr.ToNewCString();
@@ -842,6 +882,15 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
                                   nscoord aWidth,
                                   const nscoord* aSpacing)
 {
+  g_return_val_if_fail ((aString != NULL) ||
+			(aLength != 0) ||
+			(aWidth != 0) ||
+			(mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
+
   nscoord x = aX;
   nscoord y = aY;
 
@@ -968,6 +1017,12 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   nsRect                drect = aDestBounds;
   nsDrawingSurfaceGTK  *destsurf;
 
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
+
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
     NS_ASSERTION(!(nsnull == mRenderingSurface), "no back buffer");
@@ -1000,6 +1055,13 @@ nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
                                            nsClipCombine aCombine,
                                            PRBool &aClipEmpty)
 {
+
+  g_return_val_if_fail ((mTMatrix != NULL) ||
+			(mRenderingSurface != NULL) ||
+			(mRenderingSurface->drawable != NULL) ||
+			(mRenderingSurface->gc != NULL),
+			NS_ERROR_FAILURE);
+
   PRBool bEmpty = PR_FALSE;
 
   nsRect  trect = aRect;

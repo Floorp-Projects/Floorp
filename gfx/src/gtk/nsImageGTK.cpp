@@ -63,6 +63,8 @@ NS_IMPL_ISUPPORTS(nsImageGTK, kIImageIID);
 
 nsresult nsImageGTK :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
+  g_return_val_if_fail ((aWidth != 0) || (aHeight != 0), NS_ERROR_FAILURE);
+
   if (nsnull != mImageBits)
    delete[] (PRUint8*)mImageBits;
 
@@ -245,6 +247,8 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
                                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
+  g_return_val_if_fail ((aSurface != NULL), NS_ERROR_FAILURE);
+
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
   moz_gdk_draw_bgr_image (drawing->drawable,
@@ -265,7 +269,10 @@ NS_IMETHODIMP nsImageGTK :: Draw(nsIRenderingContext &aContext,
                                   PRInt32 aX, PRInt32 aY,
                                   PRInt32 aWidth, PRInt32 aHeight)
 {
+  g_return_val_if_fail ((aSurface != NULL), NS_ERROR_FAILURE);
+
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*) aSurface;
+
   XImage *x_image = NULL;
   Pixmap pixmap = 0;
   Display *dpy = NULL;
