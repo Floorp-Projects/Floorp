@@ -883,37 +883,37 @@ nsresult nsHttpUrlImpl::SetPostData(nsIInputStream* input)
 
 nsresult nsHttpUrlImpl::ToString(PRUnichar* *unichars) const
 {
-    nsString& aString = *new nsString();
+    nsAutoString string;
     NS_LOCK_INSTANCE();
 
     // XXX Special-case javascript: URLs for the moment.
     // This code will go away when we actually start doing
     // protocol-specific parsing.
     if (PL_strcmp(mProtocol, "javascript") == 0) {
-        aString.SetString(mSpec);
+        string.SetString(mSpec);
     } else {
-        aString.SetLength(0);
-        aString.Append(mProtocol);
-        aString.Append("://");
+        string.SetLength(0);
+        string.Append(mProtocol);
+        string.Append("://");
         if (nsnull != mHost) {
-            aString.Append(mHost);
+            string.Append(mHost);
             if (0 < mPort) {
-                aString.Append(':');
-                aString.Append(mPort, 10);
+                string.Append(':');
+                string.Append(mPort, 10);
             }
         }
-        aString.Append(mFile);
+        string.Append(mFile);
         if (nsnull != mRef) {
-            aString.Append('#');
-            aString.Append(mRef);
+            string.Append('#');
+            string.Append(mRef);
         }
         if (nsnull != mSearch) {
-            aString.Append('?');
-            aString.Append(mSearch);
+            string.Append('?');
+            string.Append(mSearch);
         }
     }
     NS_UNLOCK_INSTANCE();
-    *unichars = aString.ToNewUnicode();
+    *unichars = string.ToNewUnicode();
     return NS_OK;
 }
 
