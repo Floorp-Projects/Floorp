@@ -131,9 +131,11 @@ public:
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
 
-  PRBool GetContent(nsString& aString) const;
+  virtual PRBool GetContent(nsString& aString) const;
 
-  void SetContent(const nsString& aValue);
+  virtual void SetContent(const nsString& aValue);
+
+  void CompressContent();
 
 protected:
   virtual ~nsOption();
@@ -223,6 +225,7 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   PRInt32 numChildren = select->ChildCount();
   for (int i = 0; i < numChildren; i++) {
     nsOption* option = (nsOption*) select->ChildAt(i);  // YYY this had better be an option 
+    option->CompressContent();
     nsString text;
     if (PR_FALSE == option->GetContent(text)) {
       continue;
@@ -569,6 +572,14 @@ void nsOption::SetContent(const nsString& aString)
     mContent = new nsString();
   }
   *mContent = aString;
+}
+
+void
+nsOption::CompressContent()
+{
+  if (nsnull != mContent) {
+    mContent->CompressWhitespace(PR_TRUE, PR_TRUE);
+  }
 }
 
 PRBool
