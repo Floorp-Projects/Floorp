@@ -964,7 +964,6 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
 
             if (!entityReplacement.IsEmpty()) {
               entityText = entityReplacement.get();
-              lengthReplaced = 1;
               break;
             }
           }
@@ -998,7 +997,7 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
           aOutputStr.Append(PRUnichar('&'));
           AppendASCIItoUTF16(entityText, aOutputStr);
           aOutputStr.Append(PRUnichar(';'));
-          advanceLength += lengthReplaced;
+          advanceLength++;
         }
         // if it comes from nsIEntityConverter, it already has '&' and ';'
         else if (fullEntityText) {
