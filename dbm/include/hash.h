@@ -131,7 +131,7 @@ typedef struct htab	 {		/* Memory resident data structure */
 	SEGMENT 	*dir;		/* Hash Bucket directory */
 	off_t		file_size;	/* in bytes */
 	char		is_temp;	/* unlink file on close */
-	char		updateEOF;	/* close and reopen on flush */
+	char		updateEOF;	/* force EOF update on flush */
 } HTAB;
 
 /*
