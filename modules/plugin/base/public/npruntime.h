@@ -254,7 +254,7 @@ NPIdentifier NPN_GetStringIdentifier(const NPUTF8 *name);
 void NPN_GetStringIdentifiers(const NPUTF8 **names, int32_t nameCount,
                               NPIdentifier *identifiers);
 NPIdentifier NPN_GetIntIdentifier(int32_t intid);
-bool NPN_IdentifierIsString(NPIdentifier *identifier);
+bool NPN_IdentifierIsString(NPIdentifier identifier);
 
 /*
     The NPUTF8 returned from NPN_UTF8FromIdentifier SHOULD be freed.
