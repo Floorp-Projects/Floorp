@@ -1940,8 +1940,10 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     {
       nsCOMPtr<nsILocalFile> sigFile;
       rv = identity->GetSignature(getter_AddRefs(sigFile));
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv) && sigFile)
         rv = sigFile->GetPath(getter_Copies(sigNativePath));
+      else
+        useSigFile = PR_FALSE;  //No signature file! therefore turn it off.
     }
   }
   
