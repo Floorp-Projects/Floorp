@@ -1,0 +1,29 @@
+DEPTH=../../../..
+topsrcdir=@top_srcdir@
+srcdir=@srcdir@
+VPATH=@srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE=mailprofilemigration
+LIBRARY_NAME = profilemigration
+EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+MODULE_NAME = nsMailProfileMigratorModule
+
+REQUIRES = \
+	string \
+	xpcom \
+	xulapp \
+	libreg \
+	toolkitcomps \
+	$(NULL)
+
+CPPSRCS = nsProfileMigrator.cpp
+
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_XPCOM_OBSOLETE_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
