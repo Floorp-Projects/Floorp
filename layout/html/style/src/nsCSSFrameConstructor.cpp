@@ -498,7 +498,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame (nsIPresContext*  aPresConte
                                                      nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
-
+  NS_WARNING("WARNING - an anonymous table frame was created. \n");
   nsCOMPtr<nsIStyleContext> parentStyleContext;
   aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
   const nsStyleDisplay* parentDisplay = 
@@ -644,6 +644,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
     // the caller is responsible for calling SetInitialChildList on the outer, inner frames
     aNewTopFrame = aNewCaptionFrame;
   } else { // parent is not a table, need to create a new table
+    NS_WARNING("WARNING - a non table contains a table caption child. \n");
     nsIFrame* outerFrame;
     ConstructAnonymousTableFrame(aPresContext, aContent, aParentFrame, aNewTopFrame,
                                  outerFrame, innerFrame, aAbsoluteItems, aFixedItems, 
@@ -717,6 +718,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
                                       aAbsoluteItems, aIsRowGroup, aNewTopFrame, aNewGroupFrame, 
                                       aFixedItems, aTableCreator, contentDisplayIsGroup);
   } else { // construct anonymous frames
+    NS_WARNING("WARNING - a non table contains a table row or col group child. \n");
     nsIFrame* innerFrame;
     nsIFrame* outerFrame;
 
@@ -856,6 +858,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
                                     aFixedItems, aTableCreator);
     aNewTopFrame = aNewRowFrame;
   } else { // construct an anonymous row group frame
+    NS_WARNING("WARNING - a non table row/col group contains a table row child. \n");
     nsIFrame* groupFrame;
     nsTableList localToDo;
     nsTableList* toDo = (aToDo) ? aToDo : &localToDo;
@@ -928,45 +931,61 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
                                               nsTableCreator&  aTableCreator)
 {
   nsresult rv = NS_OK;
-
+  // the content display here is always table-col and were always called from above
   const nsStyleDisplay* parentDisplay = GetDisplay(aParentFrame);
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == parentDisplay->mDisplay) {
-    rv = aTableCreator.CreateTableColFrame(aNewColFrame);
-    aNewColFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
-                       nsnull);
+    rv = ConstructTableColFrameOnly(aPresContext, aContent, aParentFrame, 
+                                    aStyleContext, aAbsoluteItems, aNewColFrame, 
+                                    aFixedItems, aTableCreator);
     aNewTopFrame = aNewColFrame;
   } else { // construct anonymous col group frame
+    NS_WARNING("WARNING - a non table col group contains a table col child. \n");
+    nsTableList toDo;
     nsIFrame* groupFrame;
     rv = ConstructTableGroupFrame(aPresContext, aContent, aParentFrame, aStyleContext,
                                   aAbsoluteItems, PR_FALSE, aNewTopFrame, 
-                                  groupFrame, aFixedItems, aTableCreator);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIStyleContext> groupStyleContext; 
-      groupFrame->GetStyleContext(getter_AddRefs(groupStyleContext));
-      nsCOMPtr<nsIStyleContext> styleContext;
-      aPresContext->ResolveStyleContextFor(aContent, groupStyleContext,
-                                           PR_FALSE,
-                                           getter_AddRefs(styleContext));
-      rv = aTableCreator.CreateTableColFrame(aNewColFrame);
-      aNewColFrame->Init(*aPresContext, aContent, groupFrame, styleContext, nsnull);
-      if (NS_SUCCEEDED(rv)) {
-        groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewColFrame);
-      }
-    }
+                                  groupFrame, aFixedItems, aTableCreator, &toDo);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIStyleContext> groupStyleContext; 
+    groupFrame->GetStyleContext(getter_AddRefs(groupStyleContext));
+    nsCOMPtr<nsIStyleContext> styleContext;
+    aPresContext->ResolveStyleContextFor(aContent, groupStyleContext,
+                                         PR_FALSE, getter_AddRefs(styleContext));
+    rv = ConstructTableColFrameOnly(aPresContext, aContent, groupFrame, 
+                                    styleContext, aAbsoluteItems, aNewColFrame, 
+                                    aFixedItems, aTableCreator);
+    if (NS_FAILED(rv)) return rv;
+    groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewColFrame);
+
+    // if an anoymous table got created, then set its initial child list
+    TableProcessTableList(aPresContext, toDo);
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    nsFrameItems colChildItems;
-    nsAbsoluteItems floatingKids(nsnull);
-    rv = ProcessChildren(aPresContext, aContent, aNewColFrame, aAbsoluteItems, 
-                         colChildItems, aFixedItems, floatingKids);
-    if (NS_SUCCEEDED(rv)) {
-      aNewColFrame->SetInitialChildList(*aPresContext, nsnull,
-                                        colChildItems.childList);
-      NS_ASSERTION(nsnull == floatingKids.childList, "floater in odd spot");
-    }
-  }
+  return rv;
+}
 
+nsresult
+nsCSSFrameConstructor::ConstructTableColFrameOnly(nsIPresContext*  aPresContext,
+                                                  nsIContent*      aContent,
+                                                  nsIFrame*        aParentFrame,
+                                                  nsIStyleContext* aStyleContext,
+                                                  nsAbsoluteItems& aAbsoluteItems,
+                                                  nsIFrame*&       aNewColFrame,
+                                                  nsAbsoluteItems& aFixedItems,
+                                                  nsTableCreator&  aTableCreator)
+{
+  nsresult rv = aTableCreator.CreateTableColFrame(aNewColFrame);
+  if (NS_FAILED(rv)) return rv;
+  aNewColFrame->Init(*aPresContext, aContent, aParentFrame, 
+                     aStyleContext, nsnull);
+  nsFrameItems colChildItems;
+  nsAbsoluteItems floatingKids(nsnull);
+  rv = ProcessChildren(aPresContext, aContent, aNewColFrame, aAbsoluteItems, 
+                       colChildItems, aFixedItems, floatingKids);
+  NS_ASSERTION(nsnull == floatingKids.childList, "floater in odd spot");
+  if (NS_FAILED(rv)) return rv;
+  aNewColFrame->SetInitialChildList(*aPresContext, nsnull,
+                                    colChildItems.childList);
   return rv;
 }
 
@@ -1012,6 +1031,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                      aFixedItems, aTableCreator, aProcessChildren);
     aNewTopFrame = aNewCellFrame;
   } else { // the cell needs some ancestors to be fabricated
+    NS_WARNING("WARNING - a non table row contains a table cell child. \n");
     nsTableList toDo;
     nsIFrame* rowFrame;
     rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, aStyleContext,
