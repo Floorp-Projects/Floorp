@@ -28,16 +28,8 @@ class nsBlockReflowState;
 class nsPlaceholderFrame;
 struct nsStyleText;
 
-// If your machine has a limited size stack, you'll want to adjust
-// these numbers. Note that it will force the line layout code to use
-// the heap more so layout will be slower!
-#if defined(XP_MAC)
-#define NS_LINELAYOUT_NUM_FRAMES        15
+#define NS_LINELAYOUT_NUM_FRAMES        10
 #define NS_LINELAYOUT_NUM_SPANS         5
-#else
-#define NS_LINELAYOUT_NUM_FRAMES        50
-#define NS_LINELAYOUT_NUM_SPANS         20
-#endif
 
 class nsLineLayout {
 public:
@@ -48,8 +40,11 @@ public:
   nsLineLayout(nsIPresContext& aPresContext);
   ~nsLineLayout();
 
-  void Init(nsBlockReflowState* aState) {
+  void Init(nsBlockReflowState* aState, nscoord aMinLineHeight,
+            PRInt32 aLineNumber) {
     mBlockRS = aState;
+    mMinLineHeight = aMinLineHeight;
+    mLineNumber = aLineNumber;
   }
 
   PRInt32 GetColumn() {
@@ -58,10 +53,6 @@ public:
 
   void SetColumn(PRInt32 aNewColumn) {
     mColumn = aNewColumn;
-  }
-
-  void AdvanceToNextLine() {
-    mLineNumber++;
   }
   
   PRInt32 GetLineNumber() const {
