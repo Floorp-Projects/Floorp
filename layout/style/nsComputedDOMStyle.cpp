@@ -323,8 +323,7 @@ static const nsCSSProperty queryableProperties[] = {
   eCSSProperty_text_transform,
   eCSSProperty_letter_spacing,
   eCSSProperty_word_spacing,
-  eCSSProperty_white_space,
-
+  eCSSProperty_white_space
 };
 
 nsresult
@@ -1046,9 +1045,7 @@ nsComputedDOMStyle::GetFontWeight(nsIFrame *aFrame,
       val->SetString(str_weight);
     }
     else {
-      nsAutoString num_weight;
-      num_weight.AppendInt(font->mFont.weight, 10);
-      val->SetString(num_weight);
+      val->SetNumber(font->mFont.weight);
     }
   }
   else {
@@ -1490,14 +1487,12 @@ nsComputedDOMStyle::GetZIndex(nsIFrame *aFrame,
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   const nsStylePosition* position = nsnull;
-  nsAutoString zindex;
 
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position, aFrame);
   if (position) {
     switch (position->mZIndex.GetUnit()) {
       case eStyleUnit_Integer:
-        zindex.AppendInt(position->mZIndex.GetIntValue(), 10);
-        val->SetString(zindex);
+        val->SetNumber(position->mZIndex.GetIntValue());
         break;
       case eStyleUnit_Auto:
         val->SetString(NS_LITERAL_STRING("auto"));
