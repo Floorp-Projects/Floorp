@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.1 $ $Date: 2000/05/15 20:39:58 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.2 $ $Date: 2000/05/17 18:28:13 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "ckdbm.h"
@@ -145,6 +145,11 @@ nss_dbm_mdToken_GetLabel
 
   if( (NSSUTF8 *)NULL == token->label ) {
     token->label = nss_dbm_db_get_label(token->slot->token_db, token->arena, pError);
+  }
+
+  /* If no label has been set, return *something* */
+  if( (NSSUTF8 *)NULL == token->label ) {
+    return token->slot->filename;
   }
 
   return token->label;

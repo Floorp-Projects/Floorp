@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: db.c,v $ $Revision: 1.3 $ $Date: 2000/05/16 01:55:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: db.c,v $ $Revision: 1.4 $ $Date: 2000/05/17 18:28:13 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "ckdbm.h"
@@ -198,7 +198,7 @@ nss_dbm_db_get_label
   CK_RV *pError
 )
 {
-  NSSUTF8 *rv;
+  NSSUTF8 *rv = (NSSUTF8 *)NULL;
   DBT k, v;
   int dbrv;
 
@@ -213,18 +213,18 @@ nss_dbm_db_get_label
 
     dbrv = db->db->get(db->db, &k, &v, 0);
     if( 0 == dbrv ) {
-      ;
+      rv = nssUTF8_Duplicate((NSSUTF8 *)v.data, arena);
+      if( (NSSUTF8 *)NULL == rv ) {
+        *pError = CKR_HOST_MEMORY;
+      }
     } else if( dbrv > 0 ) {
-      v.data = "";
+      /* Just return null */
+      ;
     } else {
       *pError = CKR_DEVICE_ERROR;
-      v.data = "";
+      ;
     }
 
-    rv = nssUTF8_Duplicate((NSSUTF8 *)v.data, arena);
-    if( (NSSUTF8 *)NULL == rv ) {
-      *pError = CKR_HOST_MEMORY;
-    }
 
     (void)NSSCKFWMutex_Unlock(db->crustylock);
   }
