@@ -179,16 +179,6 @@ class nsScanner {
       nsresult SkipWhitespace(PRInt32& aNewlinesSkipped);
 
       /**
-       *  Determine if the scanner has reached EOF.
-       *  This method can also cause the buffer to be filled
-       *  if it happens to be empty
-       *  
-       *  @update  gess 3/25/98
-       *  @return  PR_TRUE upon eof condition
-       */
-      nsresult Eof(void);
-
-      /**
        *  Consume characters until you run into space, a '<', a '>', or a '/'.
        *  
        *  @param   aString - receives new data from stream
@@ -377,18 +367,18 @@ class nsScanner {
         mParser = aParser;
       }
 
-  protected:
-
-
-    enum {eBufferSizeThreshold=0x1000};  //4K
 
       /**
-       * Internal method used to cause the internal buffer to
-       * be filled with data. 
+       * Fill internal buffer with new data, returns an error if
+       * no new data is read.
        *
        * @update  gess4/3/98
        */
       nsresult FillBuffer(void);
+
+  protected:
+
+      enum {eBufferSizeThreshold=0x1000};  //4K
 
       void AppendToBuffer(nsScannerString::Buffer *, nsIRequest *aRequest);
       void AppendToBuffer(const nsAString& aStr)

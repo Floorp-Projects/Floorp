@@ -446,38 +446,13 @@ nsresult nsScanner::FillBuffer(void) {
       return kEOF;
     }
 
-    if((0<numread) && (0==result)) {
+    if((0<numread) && NS_SUCCEEDED(result)) {
       AppendASCIItoBuffer(buf, numread, nsnull);
     }
     mTotalRead+=numread;
   }
 
   return result;
-}
-
-/**
- *  determine if the scanner has reached EOF
- *  
- *  @update  gess 5/12/98
- *  @param   
- *  @return  0=!eof 1=eof 
- */
-nsresult nsScanner::Eof() {
-  nsresult theError=NS_OK;
-  
-  if (!mSlidingBuffer) {
-    return kEOF;
-  }
-
-  theError=FillBuffer();  
-
-  if(NS_OK==theError) {
-    if (0==(PRUint32)mSlidingBuffer->Length()) {
-      return kEOF;
-    }
-  }
-
-  return theError;
 }
 
 /**
@@ -496,7 +471,7 @@ nsresult nsScanner::GetChar(PRUnichar& aChar) {
   }
 
   if (mCurrentPosition == mEndPosition) {
-    result=Eof();
+    result = FillBuffer();
   }
 
   if(NS_OK == result){
@@ -524,13 +499,13 @@ nsresult nsScanner::Peek(PRUnichar& aChar, PRUint32 aOffset) {
   }
 
   if (mCurrentPosition == mEndPosition) {
-    result=Eof();
+    result = FillBuffer();
   }
 
   if(NS_OK == result){
     if (aOffset) {
       while ((NS_OK == result) && (mCountRemaining <= aOffset)) {
-        result = Eof();
+        result = FillBuffer();
       }
 
       if (NS_OK == result) {
@@ -554,7 +529,7 @@ nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset)
   }
 
   if (mCurrentPosition == mEndPosition) {
-    return Eof();
+    return FillBuffer();
   }    
   
   nsScannerIterator start, end;
@@ -599,9 +574,8 @@ nsresult nsScanner::SkipWhitespace(PRInt32& aNewlinesSkipped) {
   PRUnichar theChar = 0;
   nsresult  result = Peek(theChar);
   
-  if (result == kEOF) {
-    // XXX why wouldn't Eof() return kEOF?? --darin
-    return Eof();
+  if (NS_FAILED(result)) {
+    return result;
   }
   
   nsScannerIterator current = mCurrentPosition;
@@ -634,7 +608,7 @@ nsresult nsScanner::SkipWhitespace(PRInt32& aNewlinesSkipped) {
   if (skipped) {
     SetPosition(current);
     if (current == mEndPosition) {
-      result = Eof();
+      result = FillBuffer();
     }
   }
 
@@ -824,7 +798,7 @@ nsresult nsScanner::ReadTagIdentifier(nsScannerSharedSubstring& aString) {
 
   SetPosition(current);  
   if (current == end) {
-    result = Eof();
+    result = FillBuffer();
   }
 
   //DoErrTest(aString);
@@ -884,7 +858,7 @@ nsresult nsScanner::ReadEntityIdentifier(nsString& aString) {
   SetPosition(current);
   if (current == end) {
     AppendUnicodeTo(origin, current, aString);
-    return Eof();
+    return FillBuffer();
   }
 
   //DoErrTest(aString);
@@ -933,7 +907,7 @@ nsresult nsScanner::ReadNumber(nsString& aString,PRInt32 aBase) {
   SetPosition(current);
   if (current == end) {
     AppendUnicodeTo(origin, current, aString);
-    return Eof();
+    return FillBuffer();
   }
 
   //DoErrTest(aString);
@@ -962,8 +936,8 @@ nsresult nsScanner::ReadWhitespace(nsScannerSharedSubstring& aString,
   PRUnichar theChar = 0;
   nsresult  result = Peek(theChar);
   
-  if (result == kEOF) {
-    return Eof();
+  if (NS_FAILED(result)) {
+    return result;
   }
   
   nsScannerIterator origin, current, end;
@@ -1011,7 +985,7 @@ nsresult nsScanner::ReadWhitespace(nsScannerSharedSubstring& aString,
   SetPosition(current);
   if (current == end) {
     AppendUnicodeTo(origin, current, aString);
-    result = Eof();
+    result = FillBuffer();
   }
 
   aHaveCR = haveCR;
@@ -1031,8 +1005,8 @@ nsresult nsScanner::ReadWhitespace(nsScannerIterator& aStart,
   PRUnichar theChar = 0;
   nsresult  result = Peek(theChar);
   
-  if (result == kEOF) {
-    return Eof();
+  if (NS_FAILED(result)) {
+    return result;
   }
   
   nsScannerIterator origin, current, end;
@@ -1070,7 +1044,7 @@ nsresult nsScanner::ReadWhitespace(nsScannerIterator& aStart,
   if (current == end) {
     aStart = origin;
     aEnd = current;
-    result = Eof();
+    result = FillBuffer();
   }
 
   return result;
@@ -1120,7 +1094,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
   SetPosition(current);
   if (current == end) {
     AppendUnicodeTo(origin, current, aString);
-    return Eof();
+    return FillBuffer();
   }
 
   //DoErrTest(aString);
@@ -1157,8 +1131,8 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
 
-  if (result == kEOF) {
-    return Eof();
+  if (NS_FAILED(result)) {
+    return result;
   }
   
   while (current != mEndPosition) {
@@ -1192,7 +1166,7 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   // current = mEndPosition
   SetPosition(current);
   AppendUnicodeTo(origin, current, aString);
-  return Eof();
+  return FillBuffer();
 }
 
 nsresult nsScanner::ReadUntil(nsScannerSharedSubstring& aString,
@@ -1213,8 +1187,8 @@ nsresult nsScanner::ReadUntil(nsScannerSharedSubstring& aString,
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
 
-  if (result == kEOF) {
-    return Eof();
+  if (NS_FAILED(result)) {
+    return result;
   }
   
   while (current != mEndPosition) {
@@ -1248,7 +1222,7 @@ nsresult nsScanner::ReadUntil(nsScannerSharedSubstring& aString,
   // current = mEndPosition
   SetPosition(current);
   AppendUnicodeTo(origin, current, aString);
-  return Eof();
+  return FillBuffer();
 }
 
 nsresult nsScanner::ReadUntil(nsScannerIterator& aStart, 
@@ -1270,9 +1244,9 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
   
-  if (result == kEOF) {
+  if (NS_FAILED(result)) {
     aStart = aEnd = current;
-    return Eof();
+    return result;
   }
   
   while (current != mEndPosition) {
@@ -1304,7 +1278,7 @@ nsresult nsScanner::ReadUntil(nsScannerIterator& aStart,
   SetPosition(current);
   aStart = origin;
   aEnd = current;
-  return Eof();
+  return FillBuffer();
 }
 
 /**
@@ -1328,8 +1302,12 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   current = origin;
 
   PRUnichar theChar;
-  Peek(theChar);
-  
+  nsresult result = Peek(theChar);
+
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
   while (current != mEndPosition) {
     if (aTerminalChar == theChar) {
       if(addTerminal)
@@ -1346,7 +1324,7 @@ nsresult nsScanner::ReadUntil(nsAString& aString,
   // current = mEndPosition
   AppendUnicodeTo(origin, current, aString);
   SetPosition(current);
-  return Eof();
+  return FillBuffer();
 
 }
 
