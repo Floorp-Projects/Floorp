@@ -159,6 +159,18 @@ nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
 }
 
 NS_IMETHODIMP
+nsMsgIncomingServer::GetRootMsgFolder(nsIMsgFolder **aRootMsgFolder)
+{
+  NS_ENSURE_ARG_POINTER(aRootMsgFolder);
+  nsCOMPtr <nsIFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if (NS_SUCCEEDED(rv) && rootFolder)
+    rv = rootFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aRootMsgFolder);
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMsgIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
 #ifdef DEBUG_sspitzer
@@ -989,10 +1001,8 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
   nsresult rv;
   
   if (!mFilterList) {
-      nsCOMPtr<nsIFolder> folder;
-      rv = GetRootFolder(getter_AddRefs(folder));
-
-      nsCOMPtr<nsIMsgFolder> msgFolder(do_QueryInterface(folder, &rv));
+      nsCOMPtr<nsIMsgFolder> msgFolder;
+      rv = GetRootMsgFolder(getter_AddRefs(msgFolder));
       NS_ENSURE_SUCCESS(rv, rv);
       
       nsCOMPtr<nsIFileSpec> thisFolder;

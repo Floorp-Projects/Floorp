@@ -419,8 +419,7 @@ function GetWindowMediator()
 function GetInboxFolder(server)
 {
     try {
-        var rootFolder = server.RootFolder;
-        var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+        var rootMsgFolder = server.rootMsgFolder;
 
         //now find Inbox
         var outNumFolders = new Object();
@@ -794,9 +793,7 @@ function getDestinationFolder(preselectedFolder, server)
     var isCreateSubfolders = preselectedFolder.canCreateSubfolders;
     if (!isCreateSubfolders)
     {
-        var tmpDestFolder = server.RootFolder;
-        destinationFolder
-          = tmpDestFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+        destinationFolder = server.rootMsgFolder;
 
         var verifyCreateSubfolders = null;
         if (destinationFolder)
@@ -809,9 +806,7 @@ function getDestinationFolder(preselectedFolder, server)
             try {
                 var account = accountManager.defaultAccount;
                 var defaultServer = account.incomingServer;
-                var tmpDefaultFolder = defaultServer.RootFolder;
-                var defaultFolder
-                  = tmpDefaultFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+                var defaultFolder = defaultServer.rootMsgFolder;
 
                 var checkCreateSubfolders = null;
                 if (defaultFolder)

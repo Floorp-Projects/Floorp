@@ -40,6 +40,7 @@
 
 interface nsIFileSpec;
 interface nsIFolder;
+interface nsIMsgFolder;
 interface nsIMsgFolderCache;
 interface nsIMsgWindow;
 interface nsIMsgFilterList;
@@ -149,7 +150,10 @@ interface nsIMsgIncomingServer : nsISupports {
   readonly attribute string serverURI;
 
   /* the root folder for this server */
-  attribute nsIFolder RootFolder;
+  attribute nsIFolder rootFolder;
+
+  /* handy accessor when we want a msg folder */
+  readonly attribute nsIMsgFolder rootMsgFolder;
 
   /* are we already getting new Messages on the current server..
      This is used to help us prevent multiple get new msg commands from

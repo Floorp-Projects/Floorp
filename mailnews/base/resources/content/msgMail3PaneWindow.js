@@ -370,7 +370,7 @@ function ServerContainsFolder(server, folder)
 
 function SelectServer(server)
 {
-  SelectFolder(server.RootFolder.URI);
+  SelectFolder(server.rootFolder.URI);
 }
 
 // we have this incoming server listener in case we need to
@@ -520,8 +520,7 @@ function loadStartFolder(initialUri)
             var defaultAccount = accountManager.defaultAccount;
 
             defaultServer = defaultAccount.incomingServer;
-            var rootFolder = defaultServer.RootFolder;
-            var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+            var rootMsgFolder = defaultServer.rootMsgFolder;
 
             startFolderResource = rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 
