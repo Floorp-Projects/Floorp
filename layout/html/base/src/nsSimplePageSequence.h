@@ -58,6 +58,16 @@ protected:
                           nsIFrame*            aFrame,
                           nsFramePaintLayer    aWhichLayer);
 
+  nsresult IncrementalReflow(nsIPresContext&          aPresContext,
+                             const nsHTMLReflowState& aReflowState,
+                             nsSize&                  aPageSize,
+                             nscoord                  aX,
+                             nscoord&                 aY);
+
+  nsresult CreateContinuingPageFrame(nsIPresContext& aPresContext,
+                                     nsIFrame*       aPageFrame,
+                                     nsIFrame**      aContinuingFrame);
+  
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
 };
