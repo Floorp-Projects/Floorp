@@ -374,6 +374,8 @@ public class Codegen extends Interpreter {
         this.namesVector = names;
         this.classFilesVector = classFiles;
         Context cx = Context.getCurrentContext();
+        itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
+
         itsSourceFile = null;
         // default is to generate debug info
         if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug())
@@ -1372,7 +1374,7 @@ public class Codegen extends Interpreter {
         variableObjectLocal = reserveWordLocal(2);
         thisObjLocal = reserveWordLocal(3);
 
-        if (inFunction && !cx.hasCompileFunctionsWithDynamicScope() &&
+        if (inFunction && !itsUseDynamicScope &&
             directParameterCount == -1)
         {
             // Unless we're either using dynamic scope or we're in a
@@ -1759,11 +1761,15 @@ public class Codegen extends Interpreter {
             addByteCode(ByteCode.SWAP);
             addByteCode(ByteCode.POP);
 
-            addByteCode(ByteCode.DUP);
-            classFile.add(ByteCode.INVOKEINTERFACE,
+            if (!itsUseDynamicScope) {
+                addByteCode(ByteCode.DUP);
+                classFile.add(ByteCode.INVOKEINTERFACE,
                                 "org/mozilla/javascript/Scriptable",
                                 "getParentScope",
                                 "()", "Lorg/mozilla/javascript/Scriptable;");
+            } else {
+                aload(variableObjectLocal);
+            }
             aload(contextLocal);
             addByteCode(ByteCode.SWAP);
 
@@ -3802,6 +3808,7 @@ public class Codegen extends Interpreter {
     private short itsZeroArgArray;
     private short itsOneArgArray;
 
+    private boolean itsUseDynamicScope;
     private boolean hasVarsInRegs;
     private boolean itsForcedObjectParameters;
     private boolean trivialInit;
