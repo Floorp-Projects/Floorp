@@ -552,13 +552,12 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
   nsCOMPtr<nsIAtom> type;
   aChild->GetTag(*getter_AddRefs(type));
 
-  if (((type != nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::src) ||
-       (type == nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::data)) &&
-      mOwnsFrameLoader) {
+  if ((type != nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::src) ||
+      (type == nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::data)) {
     nsHTMLFrameInnerFrame* firstChild =
       NS_STATIC_CAST(nsHTMLFrameInnerFrame*, mFrames.FirstChild());
 
-    if (firstChild) {
+    if (firstChild && firstChild->mOwnsFrameLoader) {
       firstChild->ReloadURL();
     }
   }
