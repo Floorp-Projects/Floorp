@@ -448,7 +448,7 @@ namespace ICodeASM {
     ICodeParser::ParseArgumentListOperand (iter begin, iter end,
                                            VM::ArgumentList **rval)
     {
-        /* parse argument list on the format "('argname': register[, ...])" */
+        /* parse argument list on the format "(['argname': ]register[, ...])" */
         TokenLocation tl = SeekTokenStart (begin, end);
         VM::ArgumentList *al = new VM::ArgumentList();
         
@@ -456,18 +456,22 @@ namespace ICodeASM {
             throw new ICodeParseException ("Expected Argument List");
         
         tl = SeekTokenStart (tl.begin + 1, end);
-        while (tl.estimate == teString) {
-            /* look for the argname in quotes */
-            string *argName;
-            begin = ParseString (tl.begin, end, &argName);
+        while (tl.estimate == teString || tl.estimate == teAlpha) {
+            string *argName = 0;
 
-            /* look for the : */
-            tl = SeekTokenStart (begin, end);
-            if (tl.estimate != teColon)
-                throw new ICodeParseException ("Expected colon");
+            if (tl.estimate == teString) {
+                /* look for the argname in quotes */
+                begin = ParseString (tl.begin, end, &argName);
 
-            /* and now the register */
-            tl = SeekTokenStart (tl.begin + 1, end);
+                /* look for the : */
+                tl = SeekTokenStart (begin, end);
+                if (tl.estimate != teColon)
+                    throw new ICodeParseException ("Expected colon");
+
+                /* and now the register */
+                tl = SeekTokenStart (tl.begin + 1, end);
+            }
+
             if (tl.estimate != teAlpha)
                 throw new ICodeParseException ("Expected Register value");
 
@@ -486,7 +490,7 @@ namespace ICodeASM {
             /* if the next token is a comma,
              * seek to the next one and go again */
             if (tl.estimate == teComma) {
-                tl = SeekTokenStart (tl.begin, end);
+                tl = SeekTokenStart (tl.begin + 1, end);
             }
         }
 
