@@ -1378,6 +1378,11 @@ void _MD_unix_map_open_error(int err)
 		case ETIMEDOUT:
 			PR_SetError(PR_REMOTE_FILE_ERROR, err);
 			break;
+#ifdef EOVERFLOW
+		case EOVERFLOW:
+			PR_SetError(PR_FILE_TOO_BIG_ERROR, err);
+			break;
+#endif
 		case EROFS:
 			PR_SetError(PR_READ_ONLY_FILESYSTEM_ERROR, err);
 			break;
