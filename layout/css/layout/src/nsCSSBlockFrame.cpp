@@ -1196,95 +1196,96 @@ InlineFrameData::ReflowLine(nsCSSBlockReflowState& aState,
   // XXX factor this better while still keeping it fast
   while (nsnull != ild->mNext) {
     InlineLineData* nextLine = ild->mNext;
-    PRInt32 i, n = nextLine->mChildCount;
-    for (i = 0; i < n; i++) {
-      nsIFrame* nextKid;
-      prevChild->GetNextSibling(nextKid);
-      NS_ASSERTION(nextKid == nextLine->mFirstChild, "bad lines");
-
-      // Get first child from the next line and try reflowing and placing it
-      child = nextLine->mFirstChild;
-      rs = inlineLayout.ReflowAndPlaceFrame(child);
-      if (IS_REFLOW_ERROR(rs)) {
-        return nsresult(rs);
-      }
-      switch (rs & NS_INLINE_REFLOW_REFLOW_MASK) {
-      case NS_INLINE_REFLOW_COMPLETE:
-        // Pullup succeeded
-        if (0 == ild->mChildCount) {
-          ild->mFirstChild = child;
-        }
-        ild->mChildCount++;
-        if (--nextLine->mChildCount == 0) {
-          ild->mNext = nextLine->mNext;
-          delete nextLine;
-          nextLine = nsnull;
-        }
-        else {
-          child->GetNextSibling(nextLine->mFirstChild);
-        }
-        prevChild = child;
-        aState.mChildPrevInFlow = nsnull;
-        break;
-
-      case NS_INLINE_REFLOW_BREAK_AFTER:
-        // Pullup succeeded and we are done
-        if (0 == ild->mChildCount) {
-          ild->mFirstChild = child;
-        }
-        ild->mChildCount++;
-        if (--nextLine->mChildCount == 0) {
-          ild->mNext = nextLine->mNext;
-          delete nextLine;
-          nextLine = nsnull;
-        }
-        else {
-          child->GetNextSibling(nextLine->mFirstChild);
-        }
-        aState.mChildPrevInFlow = nsnull;
-        goto done;
-
-      case NS_INLINE_REFLOW_BREAK_BEFORE:
-        // The child can't fit on this line so never mind
-        aState.mChildPrevInFlow = nsnull;
-        goto done;
-
-      case NS_INLINE_REFLOW_NOT_COMPLETE:
-        // Some of the child fit on the line.
-        if (0 == ild->mChildCount) {
-          ild->mFirstChild = child;
-        }
-        ild->mChildCount++;
-        if (--nextLine->mChildCount == 0) {
-          ild->mNext = nextLine->mNext;
-          delete nextLine;
-          nextLine = nsnull;
-        }
-        else {
-          child->GetNextSibling(nextLine->mFirstChild);
-        }
-
-        // XXX as this section is coded, the above will delete an empty
-        // nextLine and then the MaybeCreateNextInFlow code will turn
-        // around and recreate it
-
-        // Create continuation frame (if necessary); add it to the end
-        // of this InlineLineData
-        MaybeCreateNextInFlow(aState, inlineLayout, ild, child);
-        child->GetNextSibling(child);
-
-        // Put continuation frame onto the next InlineLineData
-        rv = SplitLine(aState, inlineLayout, ild, child);
-        if (IS_REFLOW_ERROR(rv)) {
-          return rv;
-        }
-        goto done;
-      }
+    if (0 == nextLine->mChildCount) {
+      // The next line is empty. This can happen when a child that was
+      // continued across lines is reflowed and fits completey and has
+      // it's continuation destroyed
+      NS_ASSERTION(nsnull == nextLine->mFirstChild, "bad pullup code");
+      ild->mNext = nextLine->mNext;
+      delete nextLine;
+      continue;
     }
 
-    // Remove empty lines from the list
-    ild->mNext = nextLine->mNext;
-    delete nextLine;/* XXX freeList in nsCSSBlockReflowState? */
+    nsIFrame* child = nextLine->mFirstChild;
+    rs = inlineLayout.ReflowAndPlaceFrame(child);
+    if (IS_REFLOW_ERROR(rs)) {
+      return nsresult(rs);
+    }
+    switch (rs & NS_INLINE_REFLOW_REFLOW_MASK) {
+    case NS_INLINE_REFLOW_COMPLETE:
+      // Pullup succeeded
+      if (0 == ild->mChildCount) {
+        ild->mFirstChild = child;
+      }
+      ild->mChildCount++;
+
+      // Take child from nextLine
+      if (--nextLine->mChildCount == 0) {
+        ild->mNext = nextLine->mNext;
+        delete nextLine;
+      }
+      else {
+        child->GetNextSibling(nextLine->mFirstChild);
+      }
+      prevChild = child;
+      aState.mChildPrevInFlow = nsnull;
+      break;
+
+    case NS_INLINE_REFLOW_BREAK_AFTER:
+      // Pullup succeeded and we are done
+      if (0 == ild->mChildCount) {
+        ild->mFirstChild = child;
+      }
+      ild->mChildCount++;
+
+      // Take child from nextLine
+      if (--nextLine->mChildCount == 0) {
+        ild->mNext = nextLine->mNext;
+        delete nextLine;
+      }
+      else {
+        child->GetNextSibling(nextLine->mFirstChild);
+      }
+      aState.mChildPrevInFlow = nsnull;
+      goto done;
+
+    case NS_INLINE_REFLOW_BREAK_BEFORE:
+      // The child can't fit on this line so never mind
+      aState.mChildPrevInFlow = nsnull;
+      goto done;
+
+    case NS_INLINE_REFLOW_NOT_COMPLETE:
+      // Some of the child fit on the line.
+      if (0 == ild->mChildCount) {
+        ild->mFirstChild = child;
+      }
+      ild->mChildCount++;
+
+      // Take child from nextLine
+      if (--nextLine->mChildCount == 0) {
+        ild->mNext = nextLine->mNext;
+        delete nextLine;
+      }
+      else {
+        child->GetNextSibling(nextLine->mFirstChild);
+      }
+
+      // XXX as this section is coded, the above will delete an empty
+      // nextLine and then the MaybeCreateNextInFlow code will turn
+      // around and recreate it
+
+      // Create continuation frame (if necessary); add it to the end
+      // of this InlineLineData
+      MaybeCreateNextInFlow(aState, inlineLayout, ild, child);
+      child->GetNextSibling(child);
+
+      // Put continuation frame onto the next InlineLineData
+      rv = SplitLine(aState, inlineLayout, ild, child);
+      if (IS_REFLOW_ERROR(rv)) {
+        return rv;
+      }
+      goto done;
+    }
   }
 
   // Pullup children from the blocks next-in-flow
