@@ -138,9 +138,17 @@ MemoryFlusher::Run()
     mRunning = PR_TRUE;
 
     while (1) {
-        PR_Lock(mLock);
-        PRStatus status = PR_WaitCondVar(mCVar, mTimeout);
-        PR_Unlock(mLock);
+        PRStatus status;
+
+        {
+            nsAutoLock l(mLock);
+            if (! mRunning) {
+                rv = NS_OK;
+                break;
+            }
+
+            status = PR_WaitCondVar(mCVar, mTimeout);
+        }
 
         if (status != PR_SUCCESS) {
             rv = NS_ERROR_FAILURE;
@@ -177,10 +185,9 @@ nsresult
 MemoryFlusher::Stop()
 {
     if (mRunning) {
-        PR_Lock(mLock);
+        nsAutoLock l(mLock);
         mRunning = PR_FALSE;
         PR_NotifyCondVar(mCVar);
-        PR_Unlock(mLock);
     }
 
     return NS_OK;
@@ -213,21 +220,6 @@ nsMemoryImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
         if (! mm->mFlushLock)
             break;
 
-#ifdef NS_MEMORY_FLUSHER_THREAD
-        // Create and start a memory flusher thread
-        rv = MemoryFlusher::Create(&mm->mFlusher, mm);
-        if (NS_FAILED(rv))
-            break;
-
-        rv = NS_NewThread(getter_AddRefs(mm->mFlusherThread),
-                          mm->mFlusher,
-                          0, /* XXX use default stack size? */
-                          PR_JOINABLE_THREAD);
-
-        if (NS_FAILED(rv))
-            break;
-#endif
-
         rv = NS_OK;
     } while (0);
 
@@ -248,16 +240,6 @@ nsMemoryImpl::nsMemoryImpl()
 
 nsMemoryImpl::~nsMemoryImpl()
 {
-    if (mFlusher) {
-        // Stop the runnable...
-        mFlusher->Stop();
-        NS_RELEASE(mFlusher);
-
-        // ...and wait for the thread to exit
-        if (mFlusherThread)
-            mFlusherThread->Join();
-    }
-
     if (mFlushLock)
         PR_DestroyLock(mFlushLock);
 }
@@ -454,33 +436,67 @@ nsMemoryImpl::DestroyFlushEvent(PLEvent* aEvent)
     // no-op, since mEvent is a member of nsMemoryImpl
 }
 
-nsIMemory* gMemory = nsnull;
-
-nsresult 
-nsMemoryImpl::Startup()
-{
-    return Create(nsnull, NS_GET_IID(nsIMemory), (void**)&gMemory);
-}
-
-nsresult 
-nsMemoryImpl::Shutdown()
-{
-    NS_RELEASE(gMemory);
-    gMemory = nsnull;
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsMemory static helper routines
+nsMemoryImpl* gMemory = nsnull;
 
 static void
 EnsureGlobalMemoryService()
 {
     if (gMemory) return;
-    nsresult rv = nsMemoryImpl::Startup();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "nsMemoryImpl::Startup failed");
+    nsresult rv = nsMemoryImpl::Create(nsnull, NS_GET_IID(nsIMemory), (void**)&gMemory);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsMemoryImpl::Create failed");
     NS_ASSERTION(gMemory, "improper xpcom initialization");
 }
+
+nsresult 
+nsMemoryImpl::Startup()
+{
+    EnsureGlobalMemoryService();
+    if (! gMemory)
+        return NS_ERROR_FAILURE;
+
+#ifdef NS_MEMORY_FLUSHER_THREAD
+    nsresult rv;
+
+    // Create and start a memory flusher thread
+    rv = MemoryFlusher::Create(&gMemory->mFlusher, gMemory);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewThread(getter_AddRefs(gMemory->mFlusherThread),
+                      gMemory->mFlusher,
+                      0, /* XXX use default stack size? */
+                      PR_JOINABLE_THREAD);
+
+    if (NS_FAILED(rv)) return rv;
+#endif
+
+    return NS_OK;
+}
+
+nsresult 
+nsMemoryImpl::Shutdown()
+{
+    if (gMemory) {
+#ifdef NS_MEMORY_FLUSHER_THREAD
+        if (gMemory->mFlusher) {
+            // Stop the runnable...
+            gMemory->mFlusher->Stop();
+            NS_RELEASE(gMemory->mFlusher);
+
+            // ...and wait for the thread to exit
+            if (gMemory->mFlusherThread)
+                gMemory->mFlusherThread->Join();
+        }
+#endif
+
+        NS_RELEASE(gMemory);
+        gMemory = nsnull;
+    }
+
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsMemory static helper routines
 
 NS_EXPORT void*
 nsMemory::Alloc(PRSize size)

@@ -212,6 +212,10 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
     rv = nsIThread::SetMainThread();
     if (NS_FAILED(rv)) return rv;
 
+    // Startup the memory manager
+    rv = nsMemoryImpl::Startup();
+    if (NS_FAILED(rv)) return rv;
+
     // 1. Create the Global Service Manager
     nsIServiceManager* servMgr = NULL;
     if (gServiceManager == NULL)
@@ -667,8 +671,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     _FreeAutoLockStatics();
 #endif
 
-    nsThread::Shutdown();
     nsMemoryImpl::Shutdown();
+    nsThread::Shutdown();
     NS_PurgeAtomTable();
 
 #if (defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING))
