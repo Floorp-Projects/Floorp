@@ -158,7 +158,7 @@ NS_METHOD nsAppShell::Run()
   nsIEventQueue * EQueue = nsnull;
 
   // Get the event queue service 
-  NS_WITH_SERVICE(nsIEventQueueService, mEventQService, kEventQueueServiceCID, &rv);
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) {
     NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
     return rv;
@@ -169,20 +169,20 @@ NS_METHOD nsAppShell::Run()
 #endif /* DEBUG */
 
   //Get the event queue for the thread.
-  rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+  rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
 
   // If a queue already present use it.
   if (EQueue)
     goto done;
 
   // Create the event queue for the thread
-  rv = mEventQService->CreateThreadEventQueue();
+  rv = eventQService->CreateThreadEventQueue();
   if (NS_OK != rv) {
     NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
     return rv;
   }
   //Get the event queue for the thread
-  rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+  rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
   if (NS_OK != rv) {
     NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
     return rv;
