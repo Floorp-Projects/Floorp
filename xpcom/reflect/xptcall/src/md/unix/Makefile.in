@@ -101,6 +101,7 @@ endif
 
 # IRIX
 ifeq ($(OS_ARCH), IRIX)
+ifneq ($(basename $(OS_RELEASE)),5)
 CPPSRCS		= \
 		  xptcinvoke_irix.cpp \
 		  xptcstubs_irix.cpp \
@@ -109,6 +110,7 @@ ASFILES		= \
 		  xptcinvoke_asm_irix.s \
 		  xptcstubs_asm_irix.s \
 		  $(NULL)
+endif
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
