@@ -47,7 +47,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(e9de5df0-c7ec-11d3-8cda-0060b0fc14a3)]
+[scriptable, uuid(8429d350-1040-4661-8b71-f2a6ba455980)]
 interface nsISeekableStream : nsISupports
 {
     /* 
