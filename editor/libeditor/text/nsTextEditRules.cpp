@@ -148,9 +148,12 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   res = CreateBogusNodeIfNeeded(selection);   // this method handles null selection, which should never happen anyway
   if (NS_FAILED(res)) return res;
 
-  // insure trailing br node
-  res = CreateTrailingBRIfNeeded();
-  if (NS_FAILED(res)) return res;
+  if (mFlags & nsIPlaintextEditor::eEditorPlaintextMask)
+  {
+    // insure trailing br node
+    res = CreateTrailingBRIfNeeded();
+    if (NS_FAILED(res)) return res;
+  }
   
   // create a range that is the entire body contents
   nsCOMPtr<nsIDOMRange> wholeDoc = do_CreateInstance(kRangeCID);
