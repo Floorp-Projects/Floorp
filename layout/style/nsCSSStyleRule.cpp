@@ -17,6 +17,7 @@
  */
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
+#include "nsIStyleSheet.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIDeviceContext.h"
@@ -29,12 +30,25 @@
 #include "nsUnitConversion.h"
 #include "nsStyleUtil.h"
 #include "nsIFontMetrics.h"
+#include "nsIDOMCSSStyleSheet.h"
+#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSStyleRuleSimple.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsDOMCSSDeclaration.h"
 
 //#define DEBUG_REFS
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
+static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
+static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
+static NS_DEFINE_IID(kIDOMCSSStyleRuleSimpleIID, NS_IDOMCSSSTYLERULESIMPLE_IID);
+static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
 static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
@@ -231,10 +245,79 @@ CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+// -- nsDOMStyleRuleDeclaration -------------------------------
+
+class DOMCSSDeclarationImpl : public nsDOMCSSDeclaration
+{
+public:
+  DOMCSSDeclarationImpl(nsICSSStyleRule *aRule);
+  ~DOMCSSDeclarationImpl();
+
+  virtual void DropReference();
+  virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
+                                     PRBool aAllocate);
+  virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
+                                        PRInt32 aHint);
+  virtual nsresult GetParent(nsISupports **aParent);
+
+protected:
+  nsICSSStyleRule *mRule;
+};
+
+DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(nsICSSStyleRule *aRule)
+{
+  // This reference is not reference-counted. The rule
+  // object tells us when its about to go away.
+  mRule = aRule;
+}
+
+DOMCSSDeclarationImpl::~DOMCSSDeclarationImpl()
+{
+}
+
+void 
+DOMCSSDeclarationImpl::DropReference()
+{
+  mRule = nsnull;
+}
+
+nsresult
+DOMCSSDeclarationImpl::GetCSSDeclaration(nsICSSDeclaration **aDecl,
+                                             PRBool aAllocate)
+{
+  if (nsnull != mRule) {
+    *aDecl = mRule->GetDeclaration();
+  }
+  else {
+    *aDecl = nsnull;
+  }
+
+  return NS_OK;
+}
+
+nsresult 
+DOMCSSDeclarationImpl::StylePropertyChanged(const nsString& aPropertyName,
+                                            PRInt32 aHint)
+{
+  // XXX TBI
+  return NS_OK;
+}
+
+nsresult 
+DOMCSSDeclarationImpl::GetParent(nsISupports **aParent)
+{
+  if (nsnull != mRule) {
+    return mRule->QueryInterface(kISupportsIID, (void **)aParent);
+  }
+
+  return NS_OK;
+}
 
 // -- nsCSSStyleRule -------------------------------
 
-class CSSStyleRuleImpl : public nsICSSStyleRule {
+class CSSStyleRuleImpl : public nsICSSStyleRule, 
+                         public nsIDOMCSSStyleRuleSimple, 
+                         public nsIScriptObjectOwner {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
@@ -263,9 +346,24 @@ public:
 
   virtual nsIStyleRule* GetImportantRule(void);
 
+  virtual nsIStyleSheet* GetStyleSheet(void);
+  virtual void SetStyleSheet(nsIStyleSheet *aSheet);
+
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  // nsIDOMCSSStyleRule interface
+  NS_IMETHOD    GetType(nsString& aType);
+
+  // nsIDOMCSSStyleRuleSimple interface
+  NS_IMETHOD    GetSelectorText(nsString& aSelectorText);
+  NS_IMETHOD    SetSelectorText(const nsString& aSelectorText);
+  NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+
+  // nsIScriptObjectOwner interface
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void* aScriptObject);
 
 private: 
   // These are not supported and are not implemented! 
@@ -283,6 +381,9 @@ protected:
   nsICSSDeclaration*  mDeclaration;
   PRInt32             mWeight;
   CSSImportantRule*   mImportantRule;
+  nsIStyleSheet*      mStyleSheet;                         
+  DOMCSSDeclarationImpl *mDOMDeclaration;                          
+  void*               mScriptObject;                           
 #ifdef DEBUG_REFS
   PRInt32 mInstance;
 #endif
@@ -334,6 +435,8 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
     mWeight(0), mImportantRule(nsnull)
 {
   NS_INIT_REFCNT();
+  mDOMDeclaration = nsnull;
+  mScriptObject = nsnull;
 #ifdef DEBUG_REFS
   mInstance = gInstanceCount++;
   fprintf(stdout, "%d of %d + CSSStyleRule\n", mInstance, gInstanceCount);
@@ -351,6 +454,9 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl()
   }
   NS_IF_RELEASE(mDeclaration);
   NS_IF_RELEASE(mImportantRule);
+  if (nsnull != mDOMDeclaration) {
+    mDOMDeclaration->DropReference();
+  }
 #ifdef DEBUG_REFS
   --gInstanceCount;
   fprintf(stdout, "%d of %d - CSSStyleRule\n", mInstance, gInstanceCount);
@@ -389,7 +495,6 @@ nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kICSSStyleRuleIID)) {
     *aInstancePtrResult = (void*) ((nsICSSStyleRule*)this);
     NS_ADDREF_THIS();
@@ -400,8 +505,28 @@ nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kIDOMCSSStyleRuleIID)) {
+    nsIDOMCSSStyleRule *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMCSSStyleRuleSimpleIID)) {
+    nsIDOMCSSStyleRuleSimple *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)this);
+    nsICSSStyleRule *tmp = this;
+    nsISupports *tmp2 = tmp;
+    *aInstancePtrResult = (void*) tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -541,6 +666,21 @@ nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
   }
   NS_IF_ADDREF(mImportantRule);
   return mImportantRule;
+}
+
+nsIStyleSheet* CSSStyleRuleImpl::GetStyleSheet(void)
+{
+  NS_IF_ADDREF(mStyleSheet);
+  
+  return mStyleSheet;
+}
+
+void CSSStyleRuleImpl::SetStyleSheet(nsIStyleSheet *aSheet)
+{
+  // XXX We don't reference count this up reference. The style sheet
+  // will tell us when it's going away or when we're detached from
+  // it.
+  mStyleSheet = aSheet;
 }
 
 nscoord CalcLength(const nsCSSValue& aValue,
@@ -1233,6 +1373,105 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
   }
   fputs("\n", out);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleRuleImpl::GetType(nsString& aType)
+{
+  // XXX Need to define the different types
+  aType.SetString("simple");
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleRuleImpl::GetSelectorText(nsString& aSelectorText)
+{
+  nsAutoString buffer;
+  nsAutoString thisSelector;
+  nsCSSSelector *selector = &mSelector;
+
+  // XXX Ugh...they're in reverse order from the source. Sorry
+  // for the ugliness.
+  aSelectorText.SetLength(0);
+  while (nsnull != selector) {
+    thisSelector.SetLength(0);
+    if (nsnull != selector->mTag) {
+      selector->mTag->ToString(buffer);
+      thisSelector.Append(buffer);
+    }
+    if (nsnull != selector->mID) {
+      selector->mID->ToString(buffer);
+      thisSelector.Append("#");
+      thisSelector.Append(buffer);
+    }
+    if (nsnull != selector->mClass) {
+      selector->mClass->ToString(buffer);
+      thisSelector.Append(".");
+      thisSelector.Append(buffer);
+    }
+    if (nsnull != selector->mPseudoClass) {
+      selector->mPseudoClass->ToString(buffer);
+      thisSelector.Append(":");
+      thisSelector.Append(buffer);
+    }
+    aSelectorText.Insert(thisSelector, 0, thisSelector.Length());
+    selector = selector->mNext;
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleRuleImpl::SetSelectorText(const nsString& aSelectorText)
+{
+  // XXX TBI
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleRuleImpl::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
+{
+  if (nsnull == mDOMDeclaration) {
+    mDOMDeclaration = new DOMCSSDeclarationImpl(this);
+    if (nsnull == mDOMDeclaration) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mDOMDeclaration);
+  }
+  
+  *aStyle = mDOMDeclaration;
+  NS_ADDREF(mDOMDeclaration);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+CSSStyleRuleImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+
+  if (nsnull == mScriptObject) {
+    nsISupports *supports = (nsISupports *)(nsICSSStyleRule *)this;
+    // XXX Parent should be the style sheet
+    // XXX Should be done through factory
+    res = NS_NewScriptCSSStyleRuleSimple(aContext, 
+                                         supports,
+                                         (nsISupports *)global, 
+                                         (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+
+  NS_RELEASE(global);
+  return res;
+}
+
+NS_IMETHODIMP 
+CSSStyleRuleImpl::SetScriptObject(void* aScriptObject)
+{
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 

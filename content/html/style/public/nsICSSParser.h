@@ -43,7 +43,7 @@ public:
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aSheet) = 0;
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
-                   nsIURL*                aInputURL,
+                   nsIURL*          aInputURL,
                    nsIStyleSheet*&        aResult) = 0;
 
   // Parse declarations assuming that the outer curly braces have
@@ -58,6 +58,7 @@ public:
                                        nsICSSDeclaration* aDeclaration,
                                        PRInt32*           aHint) = 0;
 
+  NS_IMETHOD ProcessImport(const nsString& aURLSpec) = 0;
 };
 
 // Values or'd in the GetInfoMask; other bits are reserved

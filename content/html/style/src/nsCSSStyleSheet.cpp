@@ -32,6 +32,13 @@
 #include "nsString.h"
 #include "nsIPtr.h"
 #include "nsHTMLIIDs.h"
+#include "nsIDOMStyleSheetCollection.h"
+#include "nsIDOMCSSStyleSheet.h"
+#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSStyleRuleCollection.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsICSSParser.h"
 
 //#define DEBUG_REFS
 //#define DEBUG_RULES
@@ -39,6 +46,12 @@
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
+static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
+static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
+static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
+static NS_DEFINE_IID(kIDOMCSSStyleRuleCollectionIID, NS_IDOMCSSSTYLERULECOLLECTION_IID);
+static NS_DEFINE_IID(kIDOMStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 NS_DEF_PTR(nsIHTMLContent);
 NS_DEF_PTR(nsIContent);
@@ -129,6 +142,7 @@ public:
                          RuleEnumFunc aFunc, void* aData);
   void EnumerateTagRules(nsIAtom* aTag,
                          RuleEnumFunc aFunc, void* aData);
+
 protected:
   void AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule);
 
@@ -171,6 +185,7 @@ void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyl
       value = value->mNext;
     }
     value->mNext = new RuleValue(aRule, mRuleCount++);
+    value = value->mNext;
   }
 }
 
@@ -242,11 +257,279 @@ void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
   }
 }
 
+// -------------------------------
+// Style Rule Collection for the DOM
+//
+class CSSStyleRuleCollectionImpl : public nsIDOMCSSStyleRuleCollection,
+                                   public nsIScriptObjectOwner 
+{
+public:
+  CSSStyleRuleCollectionImpl(nsICSSStyleSheet *aStyleSheet);
+
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMCSSStyleRuleCollection interface
+  NS_IMETHOD    GetLength(PRUint32* aLength); 
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMCSSStyleRule** aReturn); 
+
+  // nsIScriptObjectOwner interface
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  
+  void DropReference() { mStyleSheet = nsnull; }
+
+protected:
+  virtual ~CSSStyleRuleCollectionImpl();
+
+  nsICSSStyleSheet*  mStyleSheet;
+  void*              mScriptObject;
+};
+
+CSSStyleRuleCollectionImpl::CSSStyleRuleCollectionImpl(nsICSSStyleSheet *aStyleSheet)
+{
+  NS_INIT_REFCNT();
+  // Not reference counted to avoid circular references.
+  // The style sheet will tell us when its going away.
+  mStyleSheet = aStyleSheet;
+  mScriptObject = nsnull;
+}
+
+CSSStyleRuleCollectionImpl::~CSSStyleRuleCollectionImpl()
+{
+}
+
+NS_IMPL_ADDREF(CSSStyleRuleCollectionImpl);
+NS_IMPL_RELEASE(CSSStyleRuleCollectionImpl);
+
+nsresult 
+CSSStyleRuleCollectionImpl::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
+{
+  if (NULL == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kIDOMCSSStyleRuleCollectionIID)) {
+    nsIDOMCSSStyleRuleCollection *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    nsIDOMCSSStyleRuleCollection *tmp = this;
+    nsISupports *tmp2 = tmp;
+    *aInstancePtrResult = (void*) tmp2;
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+
+NS_IMETHODIMP    
+CSSStyleRuleCollectionImpl::GetLength(PRUint32* aLength)
+{
+  if (nsnull != mStyleSheet) {
+    *aLength = mStyleSheet->StyleRuleCount();
+  }
+  else {
+    *aLength = 0;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleRuleCollectionImpl::Item(PRUint32 aIndex, nsIDOMCSSStyleRule** aReturn)
+{
+  nsresult result = NS_OK;
+
+  *aReturn = nsnull;
+  if (nsnull != mStyleSheet) {
+    nsICSSStyleRule *rule;
+
+    result = mStyleSheet->GetStyleRuleAt(aIndex, rule);
+    if (NS_OK == result) {
+      result = rule->QueryInterface(kIDOMCSSStyleRuleIID, (void **)aReturn);
+    }
+    NS_RELEASE(rule);
+  }
+  
+  return result;
+}
+
+NS_IMETHODIMP
+CSSStyleRuleCollectionImpl::GetScriptObject(nsIScriptContext *aContext, 
+                                            void** aScriptObject)
+{
+  nsresult res = NS_OK;
+
+  if (nsnull == mScriptObject) {
+    nsISupports *supports = (nsISupports *)(nsIDOMCSSStyleRuleCollection *)this;
+
+    // XXX Should be done through factory
+    res = NS_NewScriptCSSStyleRuleCollection(aContext, 
+                                             supports,
+                                             (nsISupports *)mStyleSheet, 
+                                             (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+
+  return res;
+}
+
+NS_IMETHODIMP 
+CSSStyleRuleCollectionImpl::SetScriptObject(void* aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
+// -------------------------------
+// Imports Collection for the DOM
+//
+class CSSImportsCollectionImpl : public nsIDOMStyleSheetCollection,
+                                 public nsIScriptObjectOwner 
+{
+public:
+  CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet);
+
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMCSSStyleSheetCollection interface
+  NS_IMETHOD    GetLength(PRUint32* aLength); 
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn); 
+
+  // nsIScriptObjectOwner interface
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void* aScriptObject);
+  
+  void DropReference() { mStyleSheet = nsnull; }
+
+protected:
+  virtual ~CSSImportsCollectionImpl();
+
+  nsICSSStyleSheet*  mStyleSheet;
+  void*              mScriptObject;
+};
+
+CSSImportsCollectionImpl::CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet)
+{
+  NS_INIT_REFCNT();
+  // Not reference counted to avoid circular references.
+  // The style sheet will tell us when its going away.
+  mStyleSheet = aStyleSheet;
+  mScriptObject = nsnull;
+}
+
+CSSImportsCollectionImpl::~CSSImportsCollectionImpl()
+{
+}
+
+NS_IMPL_ADDREF(CSSImportsCollectionImpl);
+NS_IMPL_RELEASE(CSSImportsCollectionImpl);
+
+nsresult 
+CSSImportsCollectionImpl::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
+{
+  if (NULL == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kIDOMStyleSheetCollectionIID)) {
+    nsIDOMStyleSheetCollection *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    nsIDOMStyleSheetCollection *tmp = this;
+    nsISupports *tmp2 = tmp;
+    *aInstancePtrResult = (void*) tmp2;
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP    
+CSSImportsCollectionImpl::GetLength(PRUint32* aLength)
+{
+  if (nsnull != mStyleSheet) {
+    *aLength = mStyleSheet->StyleSheetCount();
+  }
+  else {
+    *aLength = 0;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSImportsCollectionImpl::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
+{
+  nsresult result = NS_OK;
+
+  *aReturn = nsnull;
+  if (nsnull != mStyleSheet) {
+    nsICSSStyleSheet *sheet;
+
+    result = mStyleSheet->GetStyleSheetAt(aIndex, sheet);
+    if (NS_OK == result) {
+      result = sheet->QueryInterface(kIDOMStyleSheetIID, (void **)aReturn);
+    }
+    NS_RELEASE(sheet);
+  }
+  
+  return result;
+}
+
+NS_IMETHODIMP
+CSSImportsCollectionImpl::GetScriptObject(nsIScriptContext *aContext, 
+                                            void** aScriptObject)
+{
+  nsresult res = NS_OK;
+
+  if (nsnull == mScriptObject) {
+    nsISupports *supports = (nsISupports *)(nsIDOMStyleSheetCollection *)this;
+
+    // XXX Should be done through factory
+    res = NS_NewScriptStyleSheetCollection(aContext, 
+                                           supports,
+                                           (nsISupports *)mStyleSheet, 
+                                           (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+
+  return res;
+}
+
+NS_IMETHODIMP 
+CSSImportsCollectionImpl::SetScriptObject(void* aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
 
 // -------------------------------
 // CSS Style Sheet
 //
-class CSSStyleSheetImpl : public nsICSSStyleSheet {
+class CSSStyleSheetImpl : public nsICSSStyleSheet, 
+                          public nsIDOMCSSStyleSheet, 
+                          public nsIScriptObjectOwner {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
@@ -281,7 +564,31 @@ public:
   virtual PRInt32   StyleRuleCount(void);
   virtual nsresult  GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRule);
 
+  virtual PRInt32   StyleSheetCount();
+  virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet);
+
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  // nsIDOMStyleSheet interface
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled);
+  NS_IMETHOD    SetDisabled(PRBool aDisabled);
+  NS_IMETHOD    GetReadOnly(PRBool* aReadOnly);
+
+  // nsIDOMCSSStyleSheet interface
+  NS_IMETHOD    GetOwningElement(nsIDOMHTMLElement** aOwningElement);
+  NS_IMETHOD    GetParentStyleSheet(nsIDOMCSSStyleSheet** aParentStyleSheet);
+  NS_IMETHOD    GetHref(nsString& aHref);
+  NS_IMETHOD    GetTitle(nsString& aTitle);
+  NS_IMETHOD    GetImports(nsIDOMStyleSheetCollection** aImports);
+  NS_IMETHOD    GetRules(nsIDOMCSSStyleRuleCollection** aRules);
+  NS_IMETHOD    AddRule(const nsString& aSelector, const nsString& aDeclaration, PRUint32 aIndex, PRUint32* aReturn);
+  NS_IMETHOD    AddImport(const nsString& aUrl, PRUint32 aIndex, PRUint32* aReturn);
+  NS_IMETHOD    RemoveRule(PRUint32 aIndex);
+  NS_IMETHOD    RemoveImport(PRUint32 aIndex);
+
+  // nsIScriptObjectOwner interface
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD SetScriptObject(void* aScriptObject);
 
 private: 
   // These are not supported and are not implemented! 
@@ -303,7 +610,11 @@ protected:
   nsISupportsArrayPtr   mOrderedRules;
   nsISupportsArrayPtr   mWeightedRules;
   nsICSSStyleSheetPtr   mNext;
+  nsICSSStyleSheet*     mParent;
   RuleHash*             mRuleHash;
+  CSSStyleRuleCollectionImpl* mRuleCollection;
+  CSSImportsCollectionImpl* mImportsCollection;
+  void *                mScriptObject;
 };
 
 
@@ -354,10 +665,25 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(nsIURL* aURL)
 {
   NS_INIT_REFCNT();
   mURL.SetAddRef(aURL);
+  mParent = nsnull;
+  mRuleCollection = nsnull;
+  mImportsCollection = nsnull;
+  mScriptObject = nsnull;
 #ifdef DEBUG_REFS
   ++gInstanceCount;
   fprintf(stdout, "%d + CSSStyleSheet size: %d\n", gInstanceCount, sizeof(*this));
 #endif
+}
+
+static PRBool DropStyleSheetReference(nsISupports* aElement, void *aData)
+{
+  nsICSSStyleRule *rule = (nsICSSStyleRule *)aElement;
+
+  if (nsnull != rule) {
+    rule->SetStyleSheet(nsnull);
+  }
+
+  return PR_TRUE;
 }
 
 CSSStyleSheetImpl::~CSSStyleSheetImpl()
@@ -366,6 +692,22 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
   --gInstanceCount;
   fprintf(stdout, "%d - CSSStyleSheet\n", gInstanceCount);
 #endif
+  if (mFirstChild.IsNotNull()) {
+    nsICSSStyleSheet* child = mFirstChild;
+    while (nsnull != child) {
+      ((CSSStyleSheetImpl *)child)->mParent = nsnull;
+      child = ((CSSStyleSheetImpl*)child)->mNext;
+    }
+  }
+  if (nsnull != mRuleCollection) {
+    mRuleCollection->DropReference();
+    NS_RELEASE(mRuleCollection);
+  }
+  if (nsnull != mImportsCollection) {
+    mImportsCollection->DropReference();
+    NS_RELEASE(mImportsCollection);
+  }
+  mOrderedRules->EnumerateForwards(DropStyleSheetReference, nsnull);
   ClearHash();
 }
 
@@ -390,8 +732,28 @@ nsresult CSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kIDOMStyleSheetIID)) {
+    nsIDOMStyleSheet *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMCSSStyleSheetIID)) {
+    nsIDOMCSSStyleSheet *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner *tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)this);
+    nsICSSStyleSheet *tmp = this;
+    nsISupports *tmp2 = tmp;
+    *aInstancePtrResult = (void*) tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -750,6 +1112,10 @@ void CSSStyleSheetImpl::AppendStyleSheet(nsICSSStyleSheet* aSheet)
     }
     ((CSSStyleSheetImpl*)child)->mNext.SetAddRef(aSheet);
   }
+  
+  // This is not reference counted. Our parent tells us when
+  // it's going away.
+  ((CSSStyleSheetImpl*)aSheet)->mParent = this;
 }
 
 void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
@@ -778,6 +1144,7 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
   }
   mWeightedRules->InsertElementAt(aRule, index + 1);
   mOrderedRules->InsertElementAt(aRule, 0);
+  aRule->SetStyleSheet(this);
 }
 
 void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
@@ -807,6 +1174,7 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
   }
   mWeightedRules->InsertElementAt(aRule, index);
   mOrderedRules->AppendElement(aRule);
+  aRule->SetStyleSheet(this);
 }
 
 PRInt32 CSSStyleSheetImpl::StyleRuleCount(void)
@@ -831,6 +1199,43 @@ nsresult CSSStyleSheetImpl::GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRu
     aRule = nsnull;
   }
   return result;
+}
+
+PRInt32 CSSStyleSheetImpl::StyleSheetCount()
+{
+  // XXX Far from an ideal way to do this, but the hope is that
+  // it won't be done too often. If it is, we might want to 
+  // consider storing the children in an array.
+  PRInt32 count = 0;
+  if (mFirstChild.IsNotNull()) {
+    nsICSSStyleSheet* child = mFirstChild;
+    while (nsnull != child) {
+      count++;
+      child = ((CSSStyleSheetImpl*)child)->mNext;
+    }
+  }
+
+  return count;
+}
+
+nsresult CSSStyleSheetImpl::GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet)
+{
+  // XXX Ughh...an O(n^2) method for doing iteration. Again, we hope
+  // that this isn't done too often. If it is, we need to change the
+  // underlying storage mechanism
+  aSheet = nsnull;
+  if (mFirstChild.IsNotNull()) {
+    nsICSSStyleSheet* child = mFirstChild;
+    while ((nsnull != child) && (0 != aIndex)) {
+      --aIndex;
+      child = ((CSSStyleSheetImpl*)child)->mNext;
+    }
+    
+    aSheet = child;
+    NS_IF_ADDREF(child);
+  }
+
+  return NS_OK;
 }
 
 void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
@@ -884,6 +1289,224 @@ void CSSStyleSheetImpl::BuildHash(void)
   if ((nsnull != mRuleHash) && mWeightedRules.IsNotNull()) {
     mWeightedRules->EnumerateBackwards(BuildHashEnum, mRuleHash);
   }
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::GetDisabled(PRBool* aDisabled)
+{
+  // XXX TBI
+  *aDisabled = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::SetDisabled(PRBool aDisabled)
+{
+  // XXX TBI
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::GetReadOnly(PRBool* aReadOnly)
+{
+  // XXX TBI
+  *aReadOnly = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::GetOwningElement(nsIDOMHTMLElement** aOwningElement)
+{
+  // XXX TBI
+  *aOwningElement = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aParentStyleSheet)
+{
+  if (nsnull != mParent) {
+    return mParent->QueryInterface(kIDOMCSSStyleSheetIID, (void **)aParentStyleSheet);
+  }
+  else {
+    *aParentStyleSheet = nsnull;
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::GetHref(nsString& aHref)
+{
+  if (mURL.IsNotNull()) {
+    mURL->ToString(aHref);
+  }
+  else {
+    aHref.SetLength(0);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::GetTitle(nsString& aTitle)
+{
+  // XX TBI
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::GetImports(nsIDOMStyleSheetCollection** aImports)
+{
+  if (nsnull == mImportsCollection) {
+    mImportsCollection = new CSSImportsCollectionImpl(this);
+    if (nsnull == mImportsCollection) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mImportsCollection);
+  }
+
+  *aImports = mImportsCollection;
+  NS_ADDREF(mImportsCollection);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::GetRules(nsIDOMCSSStyleRuleCollection** aRules)
+{
+  if (nsnull == mRuleCollection) {
+    mRuleCollection = new CSSStyleRuleCollectionImpl(this);
+    if (nsnull == mRuleCollection) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mRuleCollection);
+  }
+
+  *aRules = mRuleCollection;
+  NS_ADDREF(mRuleCollection);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::AddRule(const nsString& aSelector, 
+                           const nsString& aDeclaration, 
+                           PRUint32 aIndex, 
+                           PRUint32* aReturn)
+{
+  nsICSSParser* css;
+  nsresult result = NS_NewCSSParser(&css);
+  if (NS_OK == result) {
+    nsAutoString str;
+    str.SetString(aSelector);
+    // XXX Can we assume that the braces aren't there?
+    str.Append(" { ");
+    str.Append(aDeclaration);
+    str.Append(" } ");
+
+    nsIUnicharInputStream* input = nsnull;
+    result = NS_NewStringUnicharInputStream(&input, &str);
+    if (NS_OK == result) {
+      nsIStyleSheet *tmp;
+      css->SetStyleSheet(this);
+      // XXX Currently, the parser will append the rule to the
+      // style sheet. We shouldn't ignore the index.
+      result = css->Parse(input, mURL, tmp);
+      NS_ASSERTION(tmp = this, "parser incorrectly created a new stylesheet");
+      NS_RELEASE(input);
+      *aReturn = mOrderedRules->Count();
+    }
+
+    NS_RELEASE(css);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::AddImport(const nsString& aUrl, PRUint32 aIndex, PRUint32* aReturn)
+{
+  nsICSSParser* css;
+  nsresult result = NS_NewCSSParser(&css);
+  if (NS_OK == result) {
+    css->SetStyleSheet(this);
+    result = css->ProcessImport(aUrl);
+  }
+  
+  return result;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::RemoveRule(PRUint32 aIndex)
+{
+  nsICSSStyleRule *rule;
+  
+  rule = (nsICSSStyleRule *)mOrderedRules->ElementAt(aIndex);
+  if (nsnull != rule) {
+    mOrderedRules->RemoveElementAt(aIndex);
+    mWeightedRules->RemoveElement(rule);
+    rule->SetStyleSheet(nsnull);
+    NS_RELEASE(rule);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSStyleSheetImpl::RemoveImport(PRUint32 aIndex)
+{
+  if (mFirstChild.IsNotNull()) {
+    nsICSSStyleSheet* prev = nsnull;
+    nsICSSStyleSheet* child = mFirstChild;
+    while ((nsnull != child) && (0 != aIndex)) {
+      prev = child;
+      child = ((CSSStyleSheetImpl*)child)->mNext;
+      --aIndex;
+    }
+
+    if ((nsnull != child) && (0 == aIndex)) {
+      // Hold on to the child while we clean it up
+      NS_ADDREF(child);
+      if (nsnull == prev) {
+        mFirstChild.SetAddRef(((CSSStyleSheetImpl*)child)->mNext);
+      }
+      else {
+        ((CSSStyleSheetImpl*)prev)->mNext.SetAddRef(((CSSStyleSheetImpl*)child)->mNext);
+      }
+      ((CSSStyleSheetImpl*)child)->mNext.SetAddRef(nsnull);
+      ((CSSStyleSheetImpl*)child)->mParent = nsnull;
+      NS_RELEASE(child);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+CSSStyleSheetImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+
+  if (nsnull == mScriptObject) {
+    nsISupports *supports = (nsISupports *)(nsICSSStyleSheet *)this;
+    // XXX Should be done through factory
+    res = NS_NewScriptCSSStyleSheet(aContext, 
+                                    supports,
+                                    (nsISupports *)global, 
+                                    (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+
+  NS_RELEASE(global);
+  return res;
+}
+
+NS_IMETHODIMP 
+CSSStyleSheetImpl::SetScriptObject(void* aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
 }
 
 NS_HTML nsresult

@@ -39,6 +39,10 @@ public:
 
   virtual PRInt32   StyleRuleCount(void) = 0;
   virtual nsresult  GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRule) = 0;
+
+  virtual PRInt32   StyleSheetCount() = 0;
+  virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) = 0;
+
 };
 
 extern NS_HTML nsresult

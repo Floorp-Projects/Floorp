@@ -29,6 +29,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
+#include "nsIDOMStyleSheetCollection.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 
@@ -40,6 +41,7 @@ static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kINSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
 static NS_DEFINE_IID(kIHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
@@ -47,6 +49,7 @@ NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMHTMLElement);
 NS_DEF_PTR(nsIDOMHTMLDocument);
 NS_DEF_PTR(nsIDOMNSHTMLDocument);
+NS_DEF_PTR(nsIDOMStyleSheetCollection);
 NS_DEF_PTR(nsIDOMHTMLCollection);
 NS_DEF_PTR(nsIDOMNodeList);
 
@@ -74,10 +77,11 @@ enum HTMLDocument_slots {
   NSHTMLDOCUMENT_VLINKCOLOR = -18,
   NSHTMLDOCUMENT_BGCOLOR = -19,
   NSHTMLDOCUMENT_FGCOLOR = -20,
-  NSHTMLDOCUMENT_LASTMODIFIED = -21,
-  NSHTMLDOCUMENT_EMBEDS = -22,
-  NSHTMLDOCUMENT_LAYERS = -23,
-  NSHTMLDOCUMENT_PLUGINS = -24
+  NSHTMLDOCUMENT_STYLESHEETS = -21,
+  NSHTMLDOCUMENT_LASTMODIFIED = -22,
+  NSHTMLDOCUMENT_EMBEDS = -23,
+  NSHTMLDOCUMENT_LAYERS = -24,
+  NSHTMLDOCUMENT_PLUGINS = -25
 };
 
 /***********************************************************************/
@@ -472,6 +476,42 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_STYLESHEETS:
+      {
+        nsIDOMStyleSheetCollection* prop;
+        nsIDOMNSHTMLDocument* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetStyleSheets(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
             NS_RELEASE(b);
           }
           else {
@@ -1368,6 +1408,7 @@ static JSPropertySpec HTMLDocumentProperties[] =
   {"vlinkColor",    NSHTMLDOCUMENT_VLINKCOLOR,    JSPROP_ENUMERATE},
   {"bgColor",    NSHTMLDOCUMENT_BGCOLOR,    JSPROP_ENUMERATE},
   {"fgColor",    NSHTMLDOCUMENT_FGCOLOR,    JSPROP_ENUMERATE},
+  {"styleSheets",    NSHTMLDOCUMENT_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"lastModified",    NSHTMLDOCUMENT_LASTMODIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"embeds",    NSHTMLDOCUMENT_EMBEDS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"layers",    NSHTMLDOCUMENT_LAYERS,    JSPROP_ENUMERATE | JSPROP_READONLY},

@@ -60,7 +60,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-#include "nsDOMStyleDeclaration.h"
+#include "nsDOMCSSDeclaration.h"
 #include "prprf.h"
 #include "prmem.h"
 
@@ -175,7 +175,7 @@ public:
   // nsIDOMNodeList interface
   NS_DECL_IDOMNODELIST
   
-  void DropContent();
+  void DropReference();
 
 private:
   nsGenericHTMLContainerElement *mContent;
@@ -554,6 +554,113 @@ DOMAttributeMap::GetLength(PRUint32 *aLength)
 
 //----------------------------------------------------------------------
 
+class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration 
+{
+public:
+  nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent);
+  ~nsDOMCSSAttributeDeclaration();
+
+  virtual void DropReference();
+  virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
+                                     PRBool aAllocate);
+  virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
+                                        PRInt32 aHint);
+  virtual nsresult GetParent(nsISupports **aParent);
+
+protected:
+  nsIHTMLContent *mContent;  
+};
+
+nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent)
+{
+  // This reference is not reference-counted. The content
+  // object tells us when its about to go away.
+  mContent = aContent;
+}
+
+nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
+{
+}
+
+void 
+nsDOMCSSAttributeDeclaration::DropReference()
+{
+  mContent = nsnull;
+}
+
+nsresult
+nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
+                                                  PRBool aAllocate)
+{
+  nsHTMLValue val;
+  nsIStyleRule* rule;
+  nsICSSStyleRule*  cssRule;
+  nsresult result = NS_OK;
+
+  *aDecl = nsnull;
+  if (nsnull != mContent) {
+    mContent->GetAttribute(nsHTMLAtoms::style, val);
+    if (eHTMLUnit_ISupports == val.GetUnit()) {
+      rule = (nsIStyleRule*) val.GetISupportsValue();
+      result = rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule);
+      if (NS_OK == result) {
+        *aDecl = cssRule->GetDeclaration();
+        NS_RELEASE(cssRule);
+      }      
+      NS_RELEASE(rule);
+    }
+    else if (PR_TRUE == aAllocate) {
+      result = NS_NewCSSDeclaration(aDecl);
+      if (NS_OK == result) {
+        result = NS_NewCSSStyleRule(&cssRule, nsCSSSelector());
+        if (NS_OK == result) {
+          cssRule->SetDeclaration(*aDecl);
+          cssRule->SetWeight(0x7fffffff);
+          rule = (nsIStyleRule *)cssRule;
+          result = mContent->SetAttribute(nsHTMLAtoms::style, 
+                                          nsHTMLValue(cssRule), 
+                                          PR_FALSE);
+          NS_RELEASE(cssRule);
+        }
+        else {
+          NS_RELEASE(*aDecl);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+nsresult 
+nsDOMCSSAttributeDeclaration::StylePropertyChanged(const nsString& aPropertyName,
+                                                   PRInt32 aHint)
+{
+  nsresult result = NS_OK;
+  if (nsnull != mContent) {
+    nsIDocument *doc;
+    result = mContent->GetDocument(doc);
+    if (NS_OK == result) {
+      result = doc->AttributeChanged(mContent, nsHTMLAtoms::style, aHint);
+      NS_RELEASE(doc);
+    }
+  }
+  
+  return result;
+}
+
+nsresult 
+nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
+{
+  if (nsnull != mContent) {
+    return mContent->QueryInterface(kISupportsIID, (void **)aParent);
+  }
+
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
 static nsresult EnsureWritableAttributes(nsIHTMLContent* aContent,
                                          nsIHTMLAttributes*& aAttributes, PRBool aCreate)
 {
@@ -641,11 +748,11 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   NS_IF_RELEASE(mListenerManager);
   if (nsnull != mDOMSlots) {
     if (nsnull != mDOMSlots->mChildNodes) {
-      mDOMSlots->mChildNodes->DropContent();
+      mDOMSlots->mChildNodes->DropReference();
       NS_RELEASE(mDOMSlots->mChildNodes);
     }
     if (nsnull != mDOMSlots->mStyle) {
-      mDOMSlots->mStyle->DropContent();
+      mDOMSlots->mStyle->DropReference();
       NS_RELEASE(mDOMSlots->mStyle);
     } 
     // XXX Should really be arena managed
@@ -954,7 +1061,7 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   nsDOMSlots *slots = GetDOMSlots();
 
   if (nsnull == slots->mStyle) {
-    slots->mStyle = new nsDOMStyleDeclaration(mContent);
+    slots->mStyle = new nsDOMCSSAttributeDeclaration(mContent);
     if (nsnull == slots->mStyle) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2909,7 +3016,7 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 void
-nsChildContentList::DropContent()
+nsChildContentList::DropReference()
 {
   mContent = nsnull;
 }

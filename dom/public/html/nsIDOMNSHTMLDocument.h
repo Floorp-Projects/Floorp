@@ -25,6 +25,7 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMElement;
+class nsIDOMStyleSheetCollection;
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMNSHTMLDOCUMENT_IID \
@@ -48,6 +49,8 @@ public:
 
   NS_IMETHOD    GetFgColor(nsString& aFgColor)=0;
   NS_IMETHOD    SetFgColor(const nsString& aFgColor)=0;
+
+  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)=0;
 
   NS_IMETHOD    GetLastModified(nsString& aLastModified)=0;
 
@@ -74,6 +77,7 @@ public:
   NS_IMETHOD    SetBgColor(const nsString& aBgColor);  \
   NS_IMETHOD    GetFgColor(nsString& aFgColor);  \
   NS_IMETHOD    SetFgColor(const nsString& aFgColor);  \
+  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);  \
   NS_IMETHOD    GetLastModified(nsString& aLastModified);  \
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds);  \
   NS_IMETHOD    GetLayers(nsIDOMHTMLCollection** aLayers);  \
@@ -94,6 +98,7 @@ public:
   NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return _to##SetBgColor(aBgColor); } \
   NS_IMETHOD    GetFgColor(nsString& aFgColor) { return _to##GetFgColor(aFgColor); } \
   NS_IMETHOD    SetFgColor(const nsString& aFgColor) { return _to##SetFgColor(aFgColor); } \
+  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets) { return _to##GetStyleSheets(aStyleSheets); } \
   NS_IMETHOD    GetLastModified(nsString& aLastModified) { return _to##GetLastModified(aLastModified); } \
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds) { return _to##GetEmbeds(aEmbeds); } \
   NS_IMETHOD    GetLayers(nsIDOMHTMLCollection** aLayers) { return _to##GetLayers(aLayers); } \

@@ -47,7 +47,7 @@ class nsIStyleRule;
 class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
 class nsChildContentList;
-class nsDOMStyleDeclaration;
+class nsDOMCSSDeclaration;
 
 
 // There are a set of DOM- and scripting-specific instance variables
@@ -59,7 +59,7 @@ class nsDOMStyleDeclaration;
 typedef struct {
   void *mScriptObject;
   nsChildContentList *mChildNodes;
-  nsDOMStyleDeclaration *mStyle;
+  nsDOMCSSDeclaration *mStyle;
 } nsDOMSlots;
 
 class nsGenericHTMLElement : public nsIJSScriptObject {

@@ -105,7 +105,11 @@
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMLocation.h"
+#include "nsIDOMStyleSheetCollection.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSStyleSheet.h"
+#include "nsIDOMCSSStyleRuleSimple.h"
+#include "nsIDOMCSSStyleRuleCollection.h"
 #include "plhash.h"
 
 static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
@@ -673,5 +677,9 @@ void XXXDomNeverCalled()
   NS_NewScriptLocation(0, 0, 0, 0);
   NS_NewScriptEventListener(0, 0, 0);
   NS_NewScriptCSSStyleDeclaration(0, 0, 0, 0);
+  NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
+  NS_NewScriptCSSStyleRuleSimple(0, 0, 0, 0);
+  NS_NewScriptStyleSheetCollection(0, 0, 0, 0);
+  NS_NewScriptCSSStyleRuleCollection(0, 0, 0, 0);
   NET_InitJavaScriptProtocol();
 }

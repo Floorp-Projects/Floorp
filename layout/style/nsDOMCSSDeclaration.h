@@ -16,22 +16,20 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifndef nsDOMStyleDeclaration_h___
-#define nsDOMStyleDeclaration_h___
+#ifndef nsDOMCSSDeclaration_h___
+#define nsDOMCSSSDeclaration_h___
 
 #include "nsISupports.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIScriptObjectOwner.h"
 
-class nsIHTMLContent;
 class nsICSSDeclaration;
 
-class nsDOMStyleDeclaration : public nsIDOMCSSStyleDeclaration,
-                              public nsIScriptObjectOwner
+class nsDOMCSSDeclaration : public nsIDOMCSSStyleDeclaration,
+                            public nsIScriptObjectOwner
 {
 public:
-  nsDOMStyleDeclaration(nsIHTMLContent *aContent);
-  virtual ~nsDOMStyleDeclaration();
+  nsDOMCSSDeclaration();
 
   NS_DECL_ISUPPORTS
 
@@ -41,13 +39,17 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void* aScriptObject);
 
-  void DropContent();
+  virtual void DropReference() = 0;
+  virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
+                                     PRBool aAllocate) = 0;
+  virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
+                                        PRInt32 aHint) = 0;
+  virtual nsresult GetParent(nsISupports **aParent) = 0;
 
 protected:
-  nsresult GetContentStyle(nsICSSDeclaration **aDecl, PRBool aAllocate);
+  virtual ~nsDOMCSSDeclaration();
 
   void *mScriptObject;
-  nsIHTMLContent *mContent;
 };
 
-#endif // nsDOMStyleDeclaration_h___
+#endif // nsDOMCSSDeclaration_h___

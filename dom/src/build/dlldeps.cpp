@@ -25,6 +25,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIScriptEventListener.h"
+#include "nsIDOMCSSStyleSheet.h"
 #include "jsurl.h"
 
 // Force references to all of the symbols that we want exported from
@@ -42,5 +43,6 @@ void XXXDomNeverCalled()
   NS_NewScriptHTMLImageElement(0, 0, 0, 0);
   NS_NewScriptHTMLFormElement(0, 0, 0, 0);
   NS_NewScriptHTMLInputElement(0, 0, 0, 0);
+  NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
   NET_InitJavaScriptProtocol();
 }
