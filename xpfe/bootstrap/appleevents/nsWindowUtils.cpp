@@ -49,8 +49,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIHTMLContent.h"
-#include "nsIPrincipal.h"
-#include "nsICodebasePrincipal.h"
 #include "nsIServiceManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebShellWindow.h"
