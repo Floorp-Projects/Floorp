@@ -1514,7 +1514,8 @@ LPCTSTR nsWindow::WindowClass()
     if (!nsWindow::sIsRegistered) {
         WNDCLASS wc;
 
-        wc.style            = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+        // wc.style            = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+        wc.style            = CS_DBLCLKS;
         wc.lpfnWndProc      = ::DefWindowProc;
         wc.cbClsExtra       = 0;
         wc.cbWndExtra       = 0;
