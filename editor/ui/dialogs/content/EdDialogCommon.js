@@ -38,6 +38,49 @@ function ValidateNumberString(value, minValue, maxValue)
   return "";
 }
 
+// this function takes an elementID and a flag
+// if the element can be found by ID, then it is either enabled (by removing "disabled" attr)
+// or disabled (setAttribute) as specified in the "doEnable" parameter
+function SetElementEnabledByID( elementID, doEnable )
+{
+  element = document.getElementById(elementID);
+  if ( element )
+  {
+    if ( doEnable )
+    {
+      element.removeAttribute( "disabled" );
+    }
+    else
+    {
+      element.setAttribute( "disabled", "true" );
+    }
+  }
+}
+
+// this function takes an ID for a label and a flag
+// if an element can be found by its ID, then it is either enabled or disabled
+// The class is set to either "enabled" or "disabled" depending on the flag passed in.
+// This function relies on css having a special appearance for these two classes.
+function SetLabelEnabledByID( labelID, doEnable )
+{
+  label = document.getElementById(labelID);
+  if ( label )
+  {
+    if ( doEnable )
+    {
+     label.setAttribute( "class", "enabled" );
+    }
+    else
+    {
+     label.setAttribute( "class", "disabled" );
+    }
+  }
+  else
+  {
+    dump( "not changing label"+labelID+"\n" );
+  }
+}
+
 // All dialogs share this simple method
 function onCancel()
 {
