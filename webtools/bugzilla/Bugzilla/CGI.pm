@@ -142,7 +142,7 @@ sub header {
         unshift(@_, '-cookie' => $self->{Bugzilla_cookie_list});
     }
 
-    return $self->SUPER::header(@_);
+    return $self->SUPER::header(@_) || "";
 }
 
 # We override the entirety of multipart_start instead of falling through to
