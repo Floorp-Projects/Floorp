@@ -8,6 +8,8 @@ nsIFilePicker.idl
 nsISound.idl
 nsIToolkit.idl
 nsITransferable.idl
+nsIClipboardDragDropHooks.idl
+nsIClipboardDragDropHookList.idl
 nsIDragSession.idl
 nsIDragService.idl
 nsIFormatConverter.idl
