@@ -93,6 +93,8 @@ function onLoad() {
 
     var filterMenuList = document.getElementById("filterMenuList");
     filterMenuList.appendChild(filterPopup);
+    if (numFilters > 0)
+      filterMenuList.selectedIndex = 0;
     var filterBox = document.getElementById("filterBox");
     filterBox.removeAttribute("hidden");
   } else if (filePickerMode == nsIFilePicker.modeGetFolder) {
