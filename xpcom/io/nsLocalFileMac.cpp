@@ -1492,7 +1492,7 @@ NS_IMETHODIMP
 nsLocalFile::AppendNative(const nsACString &aNode)
 {
     if (aNode.IsEmpty())
-        return NS_ERROR_INVALID_ARG;
+        return NS_OK;
     
     nsACString::const_iterator start, end;
     aNode.BeginReading(start);

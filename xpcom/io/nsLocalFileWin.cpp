@@ -845,12 +845,14 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 NS_IMETHODIMP  
 nsLocalFile::AppendNative(const nsACString &node)
 {
+    if (node.IsEmpty())
+        return NS_OK;
+
     // Append only one component. Check for subdirs.
     // XXX can we avoid the PromiseFlatCString call?
-    if (node.IsEmpty() || (_mbschr((const unsigned char*) PromiseFlatCString(node).get(), '\\') != nsnull))
-    {
+    if (_mbschr((const unsigned char*) PromiseFlatCString(node).get(), '\\') != nsnull)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-    }
+
     return AppendRelativeNativePath(node);
 }
 
