@@ -414,7 +414,7 @@ nsCStringKey::Equals(const nsHashKey* aKey) const
     nsCStringKey* other = (nsCStringKey*)aKey;
     if (mStrLen != other->mStrLen)
         return PR_FALSE;
-    return nsCRT::memcmp(mStr, other->mStr, mStrLen) == 0;
+    return nsCRT::memcmp(mStr, other->mStr, mStrLen * sizeof(char)) == 0;
 }
 
 nsHashKey*
@@ -473,7 +473,7 @@ nsStringKey::Equals(const nsHashKey* aKey) const
     nsStringKey* other = (nsStringKey*)aKey;
     if (mStrLen != other->mStrLen)
         return PR_FALSE;
-    return nsCRT::memcmp(mStr, other->mStr, mStrLen) == 0;
+    return nsCRT::memcmp(mStr, other->mStr, mStrLen * sizeof(PRUnichar)) == 0;
 }
 
 nsHashKey*
