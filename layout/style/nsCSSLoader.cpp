@@ -1,0 +1,1068 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+#include "nsICSSLoader.h"
+
+#include "nsICSSParser.h"
+#include "nsICSSStyleSheet.h"
+
+#include "nsIParser.h"
+#include "nsIHTMLContent.h"
+#include "nsIDOMNode.h"
+#include "nsIStyleSheetLinkingElement.h"
+#include "nsIDocument.h"
+
+#include "nsIUnicharStreamLoader.h"
+#include "nsIUnicharInputStream.h"
+
+#include "nsHashtable.h"
+#include "nsIURL.h"
+#include "nsCRT.h"
+#include "nsVoidArray.h"
+#include "nsISupportsArray.h"
+
+static NS_DEFINE_IID(kICSSLoaderIID, NS_ICSS_LOADER_IID);
+//static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
+//static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
+//static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
+
+class CSSLoaderImpl;
+
+class URLKey: public nsHashKey {
+public:
+  URLKey(nsIURL* aURL)
+    : nsHashKey(),
+      mURL(aURL)
+  {
+    NS_ADDREF(mURL);
+    mHashValue = 0;
+
+    PRUnichar*  urlStr;
+    mURL->ToString(&urlStr);
+    if (urlStr) {
+      mHashValue = nsCRT::HashValue(urlStr);
+      delete [] urlStr;
+    }
+  }
+
+  URLKey(const URLKey& aKey)
+    : nsHashKey(),
+      mURL(aKey.mURL),
+      mHashValue(aKey.mHashValue)
+  {
+    NS_ADDREF(mURL);
+  }
+
+  virtual ~URLKey(void)
+  {
+    NS_RELEASE(mURL);
+  }
+
+  virtual PRUint32 HashValue(void) const
+  {
+    return mHashValue;
+  }
+
+  virtual PRBool Equals(const nsHashKey* aKey) const
+  {
+    URLKey* key = (URLKey*)aKey;
+    return mURL->Equals(key->mURL);
+  }
+
+  virtual nsHashKey *Clone(void) const
+  {
+    return new URLKey(*this);
+  }
+
+  nsIURL*   mURL;
+  PRUint32  mHashValue;
+};
+
+class SupportsKey: public nsHashKey {
+public:
+  SupportsKey(nsISupports* aSupports)
+    : nsHashKey(),
+      mSupports(aSupports)
+  { // note: does not hold reference on supports pointer
+  }
+
+  SupportsKey(const SupportsKey& aKey)
+    : nsHashKey(),
+      mSupports(aKey.mSupports)
+  {
+  }
+
+  virtual ~SupportsKey(void)
+  {
+  }
+
+  virtual PRUint32 HashValue(void) const
+  {
+    return (PRUint32)mSupports;
+  }
+
+  virtual PRBool Equals(const nsHashKey* aKey) const
+  {
+    SupportsKey* key = (SupportsKey*)aKey;
+    return PRBool(mSupports == key->mSupports);
+  }
+
+  virtual nsHashKey *Clone(void) const
+  {
+    return new SupportsKey(*this);
+  }
+
+  nsISupports*  mSupports;
+};
+
+struct SheetLoadData {
+  SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
+                const nsString& aTitle, const nsString& aMedia,
+                nsIHTMLContent* aOwner, PRInt32 aDocIndex, 
+                nsIParser* aParserToUnblock, PRBool aIsInline);
+  SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, const nsString& aMedia,
+                nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex);
+  ~SheetLoadData(void);
+
+  CSSLoaderImpl*  mLoader;
+  nsIURL*         mURL;
+  nsString        mTitle;
+  nsString        mMedia;
+  PRInt32         mSheetIndex;
+
+  nsIHTMLContent* mOwningElement;
+  nsIParser*      mParserToUnblock;
+
+  nsICSSStyleSheet* mParentSheet;
+
+  SheetLoadData*  mNext;
+  SheetLoadData*  mParentData;
+
+  PRUint32        mPendingChildren;
+
+  PRBool          mIsInline;
+};
+
+struct PendingSheetData {
+  PendingSheetData(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
+                   nsIHTMLContent* aElement)
+    : mSheet(aSheet),
+      mDocIndex(aDocIndex),
+      mOwningElement(aElement),
+      mNotify(PR_FALSE)
+  {
+    NS_ADDREF(mSheet);
+    NS_IF_ADDREF(mOwningElement);
+  }
+
+  ~PendingSheetData(void)
+  {
+    NS_RELEASE(mSheet);
+    NS_IF_RELEASE(mOwningElement);
+  }
+
+  nsICSSStyleSheet* mSheet;
+  PRInt32           mDocIndex;
+  nsIHTMLContent*   mOwningElement;
+  PRBool            mNotify;
+};
+
+class CSSLoaderImpl: public nsICSSLoader {
+public:
+  CSSLoaderImpl(void);
+  virtual ~CSSLoaderImpl(void);
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Init(nsIDocument* aDocument);
+
+  NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
+  NS_IMETHOD SetPreferredSheet(const nsString& aTitle);
+
+  NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,
+                          nsICSSParser** aParser);
+  NS_IMETHOD RecycleParser(nsICSSParser* aParser);
+
+  NS_IMETHOD LoadInlineStyle(nsIHTMLContent* aElement,
+                             nsIUnicharInputStream* aIn, 
+                             const nsString& aTitle, 
+                             const nsString& aMedia, 
+                             PRInt32 aIndex,
+                             nsIParser* aParserToUnblock,
+                             PRBool& aCompleted);
+
+  NS_IMETHOD LoadStyleLink(nsIHTMLContent* aElement,
+                           nsIURL* aURL, 
+                           const nsString& aTitle, 
+                           const nsString& aMedia, 
+                           PRInt32 aIndex,
+                           nsIParser* aParserToUnblock,
+                           PRBool& aCompleted);
+
+  NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
+                            nsIURL* aURL, 
+                            const nsString& aMedia,
+                            PRInt32 aIndex);
+
+  // local helper methods (public for access from statics)
+  void Cleanup(URLKey& aKey, SheetLoadData* aLoadData);
+  nsresult SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData);
+
+  nsresult ParseSheet(nsIUnicharInputStream* aIn, SheetLoadData* aLoadData,
+                      PRBool& aCompleted);
+
+  void DidLoadStyle(nsIUnicharStreamLoader* aLoader,
+                    nsString& aStyleData,
+                    SheetLoadData* aLoadData,
+                    nsresult aStatus);
+
+  nsresult SetMedia(nsICSSStyleSheet* aSheet, const nsString& aMedia);
+
+  nsresult PrepareSheet(nsICSSStyleSheet* aSheet, const nsString& aTitle, 
+                        const nsString& aMedia);
+
+  nsresult AddPendingSheet(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex, 
+                           nsIHTMLContent* aElement);
+
+  PRBool IsAlternate(const nsString& aTitle);
+
+  nsresult InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex, 
+                            nsIHTMLContent* aElement, PRBool aNotify);
+
+  nsresult InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aParentSheet, 
+                            PRInt32 aIndex);
+
+  nsresult LoadSheet(URLKey& aKey, SheetLoadData* aData);
+
+  nsIDocument*  mDocument;  // the document we live for
+
+  PRBool        mCaseSensitive; // is document CSS case sensitive
+  nsString      mPreferredSheet;    // title of preferred sheet
+
+  nsISupportsArray* mParsers;     // array of CSS parsers
+
+  nsHashtable   mLoadedSheets;  // url to first sheet fully loaded for URL
+  nsHashtable   mLoadingSheets; // all current loads
+
+  nsVoidArray   mParsingData; // array of data for sheets currently parsing
+
+  nsVoidArray   mPendingDocSheets;  // loaded sheet waiting for doc insertion
+  nsVoidArray   mPendingAlternateSheets;  // alternates waiting for load to start
+
+  nsHashtable   mSheetMapTable;  // map to insertion index arrays
+};
+
+SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
+                             const nsString& aTitle, const nsString& aMedia,
+                             nsIHTMLContent* aOwner, PRInt32 aDocIndex, 
+                             nsIParser* aParserToUnblock, PRBool aIsInline)
+  : mLoader(aLoader),
+    mURL(aURL),
+    mTitle(aTitle),
+    mMedia(aMedia),
+    mOwningElement(aOwner),
+    mSheetIndex(aDocIndex),
+    mParserToUnblock(aParserToUnblock),
+    mParentSheet(nsnull),
+    mNext(nsnull),
+    mParentData(nsnull),
+    mPendingChildren(0),
+    mIsInline(aIsInline)
+{
+  NS_ADDREF(mLoader);
+  NS_ADDREF(mURL);
+  NS_IF_ADDREF(mOwningElement);
+  NS_IF_ADDREF(mParserToUnblock);
+}
+
+SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL, 
+                             const nsString& aMedia, nsICSSStyleSheet* aParentSheet, 
+                             PRInt32 aSheetIndex)
+  : mLoader(aLoader),
+    mURL(aURL),
+    mTitle(),
+    mMedia(aMedia),
+    mSheetIndex(aSheetIndex),
+    mOwningElement(nsnull),
+    mParserToUnblock(nsnull),
+    mParentSheet(aParentSheet),
+    mNext(nsnull),
+    mParentData(nsnull),
+    mPendingChildren(0),
+    mIsInline(PR_FALSE)
+{
+  NS_ADDREF(mLoader);
+  NS_ADDREF(mURL);
+  NS_ADDREF(mParentSheet);
+}
+
+SheetLoadData::~SheetLoadData(void)
+{
+  NS_RELEASE(mLoader);
+  NS_RELEASE(mURL);
+  NS_IF_RELEASE(mOwningElement);
+  NS_IF_RELEASE(mParserToUnblock);
+  NS_IF_RELEASE(mParentSheet);
+  if (mNext) {
+    delete mNext;
+  }
+}
+
+CSSLoaderImpl::CSSLoaderImpl(void)
+{
+  NS_INIT_REFCNT();
+  mDocument = nsnull;
+  mCaseSensitive = PR_FALSE;
+  mParsers = nsnull;
+}
+
+static PRBool ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)aData;
+  NS_RELEASE(sheet);
+  return PR_TRUE;
+}
+
+static PRBool DeleteHashLoadData(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  SheetLoadData* data = (SheetLoadData*)aData;
+  delete data;
+  return PR_TRUE;
+}
+
+static PRBool DeletePendingData(void* aData, void* aClosure)
+{
+  PendingSheetData* data = (PendingSheetData*)aData;
+  delete data;
+  return PR_TRUE;
+}
+
+static PRBool DeleteLoadData(void* aData, void* aClosure)
+{
+  SheetLoadData* data = (SheetLoadData*)aData;
+  delete data;
+  return PR_TRUE;
+}
+
+static PRBool DeleteSheetMap(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsVoidArray* map = (nsVoidArray*)aData;
+  delete map;
+  return PR_TRUE;
+}
+
+CSSLoaderImpl::~CSSLoaderImpl(void)
+{
+  NS_IF_RELEASE(mParsers);
+  mLoadedSheets.Enumerate(ReleaseSheet);
+  mLoadingSheets.Enumerate(DeleteHashLoadData);
+  mPendingDocSheets.EnumerateForwards(DeletePendingData, nsnull);
+  mPendingAlternateSheets.EnumerateForwards(DeleteLoadData, nsnull);
+  mSheetMapTable.Enumerate(DeleteSheetMap);
+}
+
+NS_IMPL_ISUPPORTS(CSSLoaderImpl, kICSSLoaderIID)
+
+NS_IMETHODIMP
+CSSLoaderImpl::Init(nsIDocument* aDocument)
+{
+  NS_ASSERTION(! mDocument, "already initialized");
+  if (! mDocument) {
+    mDocument = aDocument;
+    return NS_OK;
+  }
+  return NS_ERROR_ALREADY_INITIALIZED;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::SetCaseSensitive(PRBool aCaseSensitive)
+{
+  mCaseSensitive = aCaseSensitive;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::SetPreferredSheet(const nsString& aTitle)
+{
+  mPreferredSheet = aTitle;
+
+  // start any pending alternates that aren't alternates anymore
+  PRInt32 index = 0;
+  while (index < mPendingAlternateSheets.Count()) { // count will change during loop
+    SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(index);
+    if (! IsAlternate(data->mTitle)) {
+      mPendingAlternateSheets.RemoveElementAt(index);
+      URLKey key(data->mURL);
+      LoadSheet(key, data); // this may steal pending alternates too
+    }
+    else {
+      index++;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::GetParserFor(nsICSSStyleSheet* aSheet, 
+                            nsICSSParser** aParser)
+{
+  NS_ASSERTION(aParser, "null pointer");
+  if (! aParser) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsresult result = NS_OK;
+
+  *aParser = nsnull;
+  if (mParsers) {
+    PRUint32 count = 0;
+    mParsers->Count(&count);
+    if (0 < count--) {
+      *aParser = (nsICSSParser*)mParsers->ElementAt(count);
+      mParsers->RemoveElementAt(count);
+    }
+  }
+
+  if (! *aParser) {
+    result = NS_NewCSSParser(aParser);
+  }
+  if (*aParser) {
+    (*aParser)->SetCaseSensitive(mCaseSensitive);
+    if (aSheet) {
+      (*aParser)->SetStyleSheet(aSheet);
+    }
+    (*aParser)->SetChildLoader(this);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+
+  if (aParser) {
+    result = NS_OK;
+    if (! mParsers) {
+      result = NS_NewISupportsArray(&mParsers);
+    }
+    if (mParsers) {
+      mParsers->AppendElement(aParser);
+    }
+    NS_RELEASE(aParser);
+  }
+  return result;
+}
+
+static void
+DoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
+                 nsString& aStyleData,
+                 void* aLoadData,
+                 nsresult aStatus)
+{
+  SheetLoadData* data = (SheetLoadData*)aLoadData;
+  data->mLoader->DidLoadStyle(aLoader, aStyleData, data, aStatus);
+  // We added a reference when the loader was created. This
+  // release should destroy it.
+  NS_RELEASE(aLoader);
+}
+
+static PRBool
+InsertPendingSheet(void* aPendingData, void* aLoader)
+{
+  PendingSheetData* data = (PendingSheetData*)aPendingData;
+  CSSLoaderImpl*  loader = (CSSLoaderImpl*)aLoader;
+  loader->InsertSheetInDoc(data->mSheet, data->mDocIndex, 
+                           data->mOwningElement, data->mNotify);
+  delete data;
+  return PR_TRUE;
+}
+
+static PRBool
+AreAllPendingAlternateSheets(void* aPendingData, void* aLoader)
+{
+  PendingSheetData* data = (PendingSheetData*)aPendingData;
+  CSSLoaderImpl*  loader = (CSSLoaderImpl*)aLoader;
+  nsAutoString  title;
+  data->mSheet->GetTitle(title);
+  if (loader->IsAlternate(title)) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+void
+CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
+{
+  // unblock parser
+  SheetLoadData* data = aLoadData;
+  do {
+    if (data->mParentData) {
+      if (0 == --(data->mParentData->mPendingChildren)) {  // all children are done, handle parent
+        NS_ASSERTION(data->mParentSheet, "bug");
+        SheetComplete(data->mParentSheet, data->mParentData);
+      }
+    }
+
+    if (data->mParserToUnblock) {
+      data->mParserToUnblock->EnableParser(PR_TRUE);
+      break;
+    }
+    data = data->mNext;
+  } while (data);
+    
+  if (! aLoadData->mIsInline) { // inline sheets don't go in loading table
+    mLoadingSheets.Remove(&aKey);
+  }
+
+  // if all loads complete, put pending sheets into doc
+  if (0 == mLoadingSheets.Count()) {
+    PRInt32  count = mPendingDocSheets.Count();
+    if (count) {
+      if (! mPendingDocSheets.EnumerateForwards(AreAllPendingAlternateSheets, this)) {
+        PendingSheetData* last = (PendingSheetData*)mPendingDocSheets.ElementAt(count - 1);
+        last->mNotify = PR_TRUE;
+      }
+      mPendingDocSheets.EnumerateForwards(InsertPendingSheet, this);
+      mPendingDocSheets.Clear();
+    }
+    // start pending alternate loads
+    while (mPendingAlternateSheets.Count()) {
+      SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(0);
+      mPendingAlternateSheets.RemoveElementAt(0);
+      URLKey key(data->mURL);
+      LoadSheet(key, data); // this may pull other pending alternates (with same URL)
+    }
+  }
+
+  delete aLoadData; // delete data last, it may have last ref on loader...
+}
+
+nsresult
+CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
+{
+  nsresult result = NS_OK;
+
+  URLKey  key(aLoadData->mURL);
+
+  if (! aLoadData->mIsInline) { // don't remember inline sheets
+    NS_ADDREF(aSheet);  // add ref for table
+    mLoadedSheets.Put(&key, aSheet);
+  }
+
+  SheetLoadData* data = aLoadData;
+  do {  // add to parent sheet, parent doc or pending doc sheet list
+    PrepareSheet(aSheet, data->mTitle, data->mMedia);
+    if (data->mParentSheet) {
+      InsertChildSheet(aSheet, data->mParentSheet, data->mSheetIndex);
+    }
+    else {
+      if (data->mParserToUnblock || data->mIsInline) {
+        InsertSheetInDoc(aSheet, data->mSheetIndex, data->mOwningElement, PR_TRUE);
+      }
+      else {
+        AddPendingSheet(aSheet, data->mSheetIndex, data->mOwningElement);
+      }
+    }
+
+    data = data->mNext;
+    if (data) { // clone sheet for next insertion
+      nsICSSStyleSheet* clone = nsnull;
+      result = aSheet->Clone(clone);
+      NS_RELEASE(aSheet);
+      if (NS_SUCCEEDED(result)) {
+        aSheet = clone;
+      }
+    }
+    else {
+      NS_RELEASE(aSheet);
+    }
+  } while (data && aSheet);
+
+  Cleanup(key, aLoadData);
+  return result;
+}
+
+nsresult
+CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aIn,
+                          SheetLoadData* aLoadData,
+                          PRBool& aCompleted)
+{
+  nsresult result;
+
+  aCompleted = PR_TRUE;
+  nsICSSStyleSheet* sheet = nsnull;
+  result = NS_NewCSSStyleSheet(&sheet, aLoadData->mURL);
+  if (NS_SUCCEEDED(result)) {
+    nsICSSParser* parser;
+    result = GetParserFor(sheet, &parser);
+    if (NS_SUCCEEDED(result)) {
+      mParsingData.AppendElement(aLoadData);
+      result = parser->Parse(aIn, aLoadData->mURL, sheet);  // this may result in re-entrant load child sheet calls
+      mParsingData.RemoveElementAt(mParsingData.Count() - 1);
+
+      if (NS_SUCCEEDED(result)) {
+        if (0 == aLoadData->mPendingChildren) { // sheet isn't still loading children
+          if (aLoadData->mIsInline) {
+            NS_IF_RELEASE(aLoadData->mParserToUnblock);  // don't need to unblock, we're done and won't block
+          }
+          SheetComplete(sheet, aLoadData);
+        }
+        else {  // else sheet is still waiting for children to load, last child will complete it
+          aCompleted = PR_FALSE;
+        }
+      }
+      RecycleParser(parser);
+    }
+    NS_RELEASE(sheet);
+  }
+  return result;
+}
+
+void
+CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
+                            nsString& aStyleData,
+                            SheetLoadData* aLoadData,
+                            nsresult aStatus)
+{
+  if (NS_SUCCEEDED(aStatus) && (0 < aStyleData.Length())) {
+    nsresult result;
+    nsIUnicharInputStream* uin = nsnull;
+    // wrap the string with the CSS data up in a unicode input stream.
+    result = NS_NewStringUnicharInputStream(&uin, new nsString(aStyleData));
+    if (NS_SUCCEEDED(result)) {
+      // XXX We have no way of indicating failure. Silently fail?
+      PRBool completed;
+      result = ParseSheet(uin, aLoadData, completed);
+
+      NS_RELEASE(uin);
+    }
+  }
+  else {  // load failed, cleanup
+    URLKey  key(aLoadData->mURL);
+    Cleanup(key, aLoadData);
+  }
+
+}
+
+typedef PRBool (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
+
+static PRBool EnumerateMediaString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
+{
+  PRBool    running = PR_TRUE;
+
+  nsAutoString  stringList(aStringList); // copy to work buffer
+  nsAutoString  subStr;
+
+  stringList.Append(kNullCh);  // put an extra null at the end
+
+  PRUnichar* start = (PRUnichar*)(const PRUnichar*)stringList.GetUnicode();
+  PRUnichar* end   = start;
+
+  while (running && (kNullCh != *start)) {
+    PRBool  quoted = PR_FALSE;
+
+    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+      start++;
+    }
+
+    if ((kApostrophe == *start) || (kQuote == *start)) { // quoted string
+      PRUnichar quote = *start++;
+      quoted = PR_TRUE;
+      end = start;
+      while (kNullCh != *end) {
+        if (quote == *end) {  // found closing quote
+          *end++ = kNullCh;     // end string here
+          while ((kNullCh != *end) && (kComma != *end)) { // keep going until comma
+            end++;
+          }
+          break;
+        }
+        end++;
+      }
+    }
+    else {  // non-quoted string or ended
+      end = start;
+
+      while ((kNullCh != *end) && (kComma != *end)) { // look for comma
+        end++;
+      }
+      *end = kNullCh; // end string here
+    }
+
+    // truncate at first non letter, digit or hyphen
+    PRUnichar* test = start;
+    while (test <= end) {
+      if ((PR_FALSE == nsString::IsAlpha(*test)) && 
+          (PR_FALSE == nsString::IsDigit(*test)) && (kMinus != *test)) {
+        *test = kNullCh;
+        break;
+      }
+      test++;
+    }
+    subStr = start;
+
+    if (PR_FALSE == quoted) {
+      subStr.CompressWhitespace(PR_FALSE, PR_TRUE);
+    }
+
+    if (0 < subStr.Length()) {
+      running = (*aFunc)(subStr, aData);
+    }
+
+    start = ++end;
+  }
+
+  return running;
+}
+
+static PRBool MediumEnumFunc(const nsString& aSubString, void* aData)
+{
+  nsIAtom*  medium = NS_NewAtom(aSubString);
+  ((nsICSSStyleSheet*)aData)->AppendMedium(medium);
+  return PR_TRUE;
+}
+
+
+nsresult
+CSSLoaderImpl::SetMedia(nsICSSStyleSheet* aSheet, const nsString& aMedia)
+{
+  if (0 < aMedia.Length()) {
+    EnumerateMediaString(aMedia, MediumEnumFunc, aSheet);
+  }
+  return NS_OK;
+}
+
+nsresult
+CSSLoaderImpl::PrepareSheet(nsICSSStyleSheet* aSheet, const nsString& aTitle, 
+                            const nsString& aMedia)
+{
+  nsresult result = SetMedia(aSheet, aMedia);
+  
+  aSheet->SetTitle(aTitle);
+  return result;
+}
+
+nsresult
+CSSLoaderImpl::AddPendingSheet(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
+                               nsIHTMLContent* aElement) 
+{
+  PendingSheetData* data = new PendingSheetData(aSheet, aDocIndex, aElement);
+  if (data) {
+    mPendingDocSheets.AppendElement(data);
+    return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+PRBool
+CSSLoaderImpl::IsAlternate(const nsString& aTitle)
+{
+  if (0 < aTitle.Length()) {
+    return PRBool(! aTitle.EqualsIgnoreCase(mPreferredSheet));
+  }
+  return PR_FALSE;
+}
+
+nsresult
+CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex, 
+                                nsIHTMLContent* aElement, PRBool aNotify)
+{
+  if ((! mDocument) || (! aSheet)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (nsnull != aElement) {
+    nsIDOMNode* domNode = nsnull;
+    if (NS_SUCCEEDED(aElement->QueryInterface(kIDOMNodeIID, (void**)&domNode))) {
+      aSheet->SetOwningNode(domNode);
+      NS_RELEASE(domNode);
+    }
+
+    nsIStyleSheetLinkingElement* element;
+    if (NS_SUCCEEDED(aElement->QueryInterface(kIStyleSheetLinkingElementIID,
+                                              (void**)&element))) {
+      element->SetStyleSheet(aSheet);
+      NS_RELEASE(element);
+    }
+  }
+
+  nsAutoString  title;
+  aSheet->GetTitle(title);
+  aSheet->SetEnabled(! IsAlternate(title));
+
+  SupportsKey key(mDocument);
+  nsVoidArray*  sheetMap = (nsVoidArray*)mSheetMapTable.Get(&key);
+  if (! sheetMap) {
+    sheetMap = new nsVoidArray();
+    if (sheetMap) {
+      mSheetMapTable.Put(&key, sheetMap);
+    }
+  }
+
+  if (sheetMap) {
+    PRInt32 insertIndex = sheetMap->Count();
+    while (0 <= --insertIndex) {
+      PRInt32 targetIndex = (PRInt32)sheetMap->ElementAt(insertIndex);
+      if (targetIndex < aDocIndex) {
+        mDocument->InsertStyleSheetAt(aSheet, insertIndex + 1, aNotify);
+        sheetMap->InsertElementAt((void*)aDocIndex, insertIndex + 1);
+        aSheet = nsnull;
+        break;
+      }
+    }
+    if (nsnull != aSheet) { // didn't insert yet
+      mDocument->InsertStyleSheetAt(aSheet, 0, aNotify);
+      sheetMap->InsertElementAt((void*)aDocIndex, 0);
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsresult
+CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aParentSheet, 
+                                PRInt32 aIndex)
+{
+  if ((! aParentSheet) || (! aSheet)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  SupportsKey key(aParentSheet);
+  nsVoidArray*  sheetMap = (nsVoidArray*)mSheetMapTable.Get(&key);
+  if (! sheetMap) {
+    sheetMap = new nsVoidArray();
+    if (sheetMap) {
+      mSheetMapTable.Put(&key, sheetMap);
+    }
+  }
+
+  if (sheetMap) {
+    PRInt32 insertIndex = sheetMap->Count();
+    while (0 <= --insertIndex) {
+      PRInt32 targetIndex = (PRInt32)sheetMap->ElementAt(insertIndex);
+      if (targetIndex < aIndex) {
+        aParentSheet->InsertStyleSheetAt(aSheet, insertIndex + 1);
+        sheetMap->InsertElementAt((void*)aIndex, insertIndex + 1);
+        aSheet = nsnull;
+        break;
+      }
+    }
+    if (nsnull != aSheet) { // didn't insert yet
+      aParentSheet->InsertStyleSheetAt(aSheet, 0);
+      sheetMap->InsertElementAt((void*)aIndex, 0);
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsresult
+CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
+{
+  nsresult result = NS_OK;
+
+  SheetLoadData* loadingData = (SheetLoadData*)mLoadingSheets.Get(&aKey);
+  if (loadingData) {  // already loading this sheet, glom on to the load
+    while (loadingData->mNext) {
+      loadingData = loadingData->mNext;
+    }
+    loadingData->mNext = aData;
+  }
+  else {  // not loading, go load it
+    nsIUnicharStreamLoader* loader;
+    result = NS_NewUnicharStreamLoader(&loader, aKey.mURL, DoneLoadingStyle, aData);
+    if (NS_SUCCEEDED(result)) {
+      mLoadingSheets.Put(&aKey, aData);
+      // grab any pending alternates that have this URL
+      loadingData = aData;
+      PRInt32 index = 0;
+      while (index < mPendingAlternateSheets.Count()) {
+        SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(index);
+        if (aKey.mURL->Equals(data->mURL)) {
+          mPendingAlternateSheets.RemoveElementAt(index);
+          loadingData->mNext = data;
+          loadingData = data;
+        }
+        else {
+          index++;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::LoadInlineStyle(nsIHTMLContent* aElement,
+                               nsIUnicharInputStream* aIn, 
+                               const nsString& aTitle, 
+                               const nsString& aMedia, 
+                               PRInt32 aDocIndex,
+                               nsIParser* aParserToUnblock,
+                               PRBool& aCompleted)
+{
+  // XXX need to add code to cancel any pending sheets for element
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (aIn) {
+    nsIURL* docURL;
+    mDocument->GetBaseURL(docURL);
+    SheetLoadData* data = new SheetLoadData(this, docURL, aTitle, aMedia,
+                                            aElement,
+                                            aDocIndex, aParserToUnblock,
+                                            PR_TRUE);
+    result = ParseSheet(aIn, data, aCompleted);
+    NS_RELEASE(docURL);
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP
+CSSLoaderImpl::LoadStyleLink(nsIHTMLContent* aElement,
+                             nsIURL* aURL, 
+                             const nsString& aTitle, 
+                             const nsString& aMedia, 
+                             PRInt32 aDocIndex,
+                             nsIParser* aParserToUnblock,
+                             PRBool& aCompleted)
+{
+  // XXX need to add code to cancel any pending sheets for element
+  nsresult result = NS_ERROR_NULL_POINTER;
+
+  aCompleted = PR_TRUE;
+  if (aURL) {
+    URLKey  key(aURL);
+
+    nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
+      // XXX need to make sure it hasn't been modified via DOM
+      // if so, load a new one
+
+    if (sheet) {  // already have one fully loaded
+      nsICSSStyleSheet* clone = nsnull;
+      result = sheet->Clone(clone);
+      if (NS_SUCCEEDED(result)) {
+        PrepareSheet(clone, aTitle, aMedia);
+        if (aParserToUnblock) { // stick it in now, parser is waiting for it
+          result = InsertSheetInDoc(clone, aDocIndex, aElement, PR_TRUE);
+        }
+        else {  // add to pending list?
+          result = AddPendingSheet(clone, aDocIndex, aElement);
+        }
+        NS_RELEASE(clone);
+      }
+    }
+    else {  // need to load it
+      SheetLoadData* data = new SheetLoadData(this, aURL, aTitle, aMedia,
+                                              aElement, aDocIndex, 
+                                              aParserToUnblock, PR_FALSE);
+      if (IsAlternate(aTitle) && mLoadingSheets.Count() &&
+          (! mLoadingSheets.Get(&key)) && (! aParserToUnblock)) {
+        // this is an alternate, and we're already loading others, but not loading this, defer it
+        mPendingAlternateSheets.AppendElement(data);
+        result = NS_OK;
+      }
+      else {
+        result = LoadSheet(key, data);
+      }
+      aCompleted = PR_FALSE;
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
+                              nsIURL* aURL, 
+                              const nsString& aMedia,
+                              PRInt32 aIndex)
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+
+  if (aURL) {
+    URLKey  key(aURL);
+
+    nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
+    // XXX need to verify hasn't been modified via DOM
+    // otherwise load a new one
+
+    if (sheet) {  // already have one loaded
+      nsICSSStyleSheet* clone = nsnull;
+      result = sheet->Clone(clone);
+      if (NS_SUCCEEDED(result)) {
+        SetMedia(clone, aMedia);
+        result = InsertChildSheet(clone, aParentSheet, aIndex);
+        NS_RELEASE(clone);
+      }
+    }
+    else {
+      SheetLoadData* data = new SheetLoadData(this, aURL, aMedia,
+                                              aParentSheet, aIndex);
+
+      PRInt32 count = mParsingData.Count();
+      if (count) { // still parsing the parent (expected for @import)
+        // XXX assert that last parsing == parent sheet
+        SheetLoadData* parentData = (SheetLoadData*)mParsingData.ElementAt(count - 1);
+        data->mParentData = parentData;
+
+        // verify that sheet doesn't have new child as a parent 
+        do {
+          if (parentData->mURL->Equals(aURL)) {  // houston, we have a loop, blow off this child
+            data->mParentData = nsnull;
+            delete data;
+            return NS_OK;
+          }
+          parentData = parentData->mParentData;
+        } while (parentData);
+        
+        (data->mParentData->mPendingChildren)++;
+      }
+      result = LoadSheet(key, data);
+    }
+  }
+  return result;
+}
+
+
+
+nsresult NS_NewCSSLoader(nsIDocument* aDocument, nsICSSLoader** aLoader)
+{
+  CSSLoaderImpl* it = new CSSLoaderImpl();
+
+  if (it == nsnull) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  it->Init(aDocument);
+  return it->QueryInterface(kICSSLoaderIID, (void **)aLoader);
+}
+
+nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
+{
+  CSSLoaderImpl* it = new CSSLoaderImpl();
+
+  if (it == nsnull) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return it->QueryInterface(kICSSLoaderIID, (void **)aLoader);
+}
+
+
+

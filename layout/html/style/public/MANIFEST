@@ -3,6 +3,7 @@
 #
 
 nsCSSAtoms.h
+nsICSSLoader.h
 nsICSSParser.h
 nsICSSStyleSheet.h
 nsStyleUtil.h
