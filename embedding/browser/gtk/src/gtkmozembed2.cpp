@@ -994,7 +994,7 @@ gtk_moz_embed_get_nsIWebBrowser  (GtkMozEmbed *embed, nsIWebBrowser **retval)
 }
 
 PRUnichar *
-gtk_moz_embed_get_title_unicode (GtkMozEmbed *embed)
+gtk_moz_embed_get_title_unichar (GtkMozEmbed *embed)
 {
   PRUnichar *retval = nsnull;
   EmbedPrivate *embedPrivate;
