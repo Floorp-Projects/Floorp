@@ -112,6 +112,7 @@ class nsLDAPConnection : public nsILDAPConnection,
      */
     nsresult RemovePendingOperation(nsILDAPOperation *aOperation);
 
+    void Close();                       // close the connection
     LDAP *mConnectionHandle;            // the LDAP C SDK's connection object
     nsCString mBindName;                // who to bind as
     nsCOMPtr<nsIThread> mThread;        // thread which marshals results

@@ -58,6 +58,10 @@ class nsLDAPOperation : public nsILDAPOperation
     nsLDAPOperation();
     virtual ~nsLDAPOperation();
 
+    /**
+     * used to break cycles
+     */
+    void Clear();
   protected:
     /**
      * wrapper for ldap_search_ext()

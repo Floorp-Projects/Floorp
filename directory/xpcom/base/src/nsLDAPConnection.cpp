@@ -22,6 +22,7 @@
  *                 Kipp Hickman <kipp@netscape.com>
  *                 Warren Harris <warren@netscape.com>
  *                 Dan Matejka <danm@netscape.com>
+ *                 David Bienvenu <bienvenu@mozilla.org>
  *  
  * 
  * Alternatively, the contents of this file may be used under the
@@ -51,6 +52,7 @@
 #include "nsIProxyObjectManager.h"
 #include "nsEventQueueUtils.h"
 #include "nsNetError.h"
+#include "nsLDAPOperation.h"
 
 const char kConsoleServiceContractId[] = "@mozilla.org/consoleservice;1";
 const char kDNSServiceContractId[] = "@mozilla.org/network/dns-service;1";
@@ -71,40 +73,7 @@ nsLDAPConnection::nsLDAPConnection()
 //
 nsLDAPConnection::~nsLDAPConnection()
 {
-  int rc;
-
-  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbinding\n"));
-
-  if (mConnectionHandle) {
-      // note that the ldap_unbind() call in the 5.0 version of the LDAP C SDK
-      // appears to be exactly identical to ldap_unbind_s(), so it may in fact
-      // still be synchronous
-      //
-      rc = ldap_unbind(mConnectionHandle);
-#ifdef PR_LOGGING
-      if (rc != LDAP_SUCCESS) {
-          PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
-                 ("nsLDAPConnection::~nsLDAPConnection: %s\n", 
-                  ldap_err2string(rc)));
-      }
-#endif
-  }
-
-  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
-
-  if (mPendingOperations) {
-      delete mPendingOperations;
-  }
-
-  // Cancel the DNS lookup if needed, and also drop the reference to the
-  // Init listener (if still there).
-  //
-  if (mDNSRequest) {
-      mDNSRequest->Cancel();
-      mDNSRequest = 0;
-  }
-  mInitListener = 0;
-
+  Close();
   // Release the reference to the runnable object.
   //
   NS_IF_RELEASE(mRunnable);
@@ -220,7 +189,6 @@ nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
                  "get current event queue");
         return NS_ERROR_FAILURE;
     }
-
     // Do the pre-resolve of the hostname, using the DNS service. This
     // will also initialize the LDAP connection properly, once we have
     // the IPs resolved for the hostname. This includes creating the
@@ -268,6 +236,49 @@ nsLDAPConnection::Init(const char *aHost, PRInt32 aPort, PRBool aSSL,
         mDNSHost.Truncate();
     }
     return rv;
+}
+
+// this might get exposed to clients, so we've broken it
+// out of the destructor.
+void
+nsLDAPConnection::Close()
+{
+  int rc;
+
+  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbinding\n"));
+
+  if (mConnectionHandle) {
+      // note that the ldap_unbind() call in the 5.0 version of the LDAP C SDK
+      // appears to be exactly identical to ldap_unbind_s(), so it may in fact
+      // still be synchronous
+      //
+      rc = ldap_unbind(mConnectionHandle);
+#ifdef PR_LOGGING
+      if (rc != LDAP_SUCCESS) {
+          PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+                 ("nsLDAPConnection::Close(): %s\n", 
+                  ldap_err2string(rc)));
+      }
+#endif
+      mConnectionHandle = nsnull;
+  }
+
+  PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
+
+  if (mPendingOperations) {
+      delete mPendingOperations;
+      mPendingOperations = nsnull;
+  }
+
+  // Cancel the DNS lookup if needed, and also drop the reference to the
+  // Init listener (if still there).
+  //
+  if (mDNSRequest) {
+      mDNSRequest->Cancel();
+      mDNSRequest = 0;
+  }
+  mInitListener = 0;
+
 }
 
 NS_IMETHODIMP
@@ -511,6 +522,12 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     // from the connection queue.
     //
     if (aRemoveOpFromConnQ) {
+        nsCOMPtr <nsLDAPOperation> operation = 
+          getter_AddRefs(NS_STATIC_CAST(nsLDAPOperation *,
+                                        mPendingOperations->Get(key)));
+        // try to break cycles
+        if (operation)
+          operation->Clear();
         rv = mPendingOperations->Remove(key);
         if (NS_FAILED(rv)) {
             NS_ERROR("nsLDAPConnection::InvokeMessageCallback: unable to "
