@@ -20,6 +20,7 @@
 #define nsSocketTransportService_h___
 
 #include "nspr.h"
+#include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsISocketTransportService.h"
 #include "nsIInputStream.h"

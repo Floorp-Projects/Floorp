@@ -20,6 +20,7 @@
 #define __nsftpconnectionthread__h_
 
 #include "nsIThread.h"
+#include "nsIRunnable.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"

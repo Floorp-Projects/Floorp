@@ -25,6 +25,7 @@
 #include "nsIEventSinkGetter.h"
 #include "nsIProgressEventSink.h"
 #include "nsIThread.h"
+#include "nsIThreadPool.h"
 #include "nsISupportsArray.h"
 #include "nsFileSpec.h"
 #include "nsAutoLock.h"

@@ -19,7 +19,9 @@
 #ifndef nsThread_h__
 #define nsThread_h__
 
+#include "nsIRunnable.h"
 #include "nsIThread.h"
+#include "nsIThreadPool.h"
 #include "nsISupportsArray.h"
 #include "prcmon.h"
 
