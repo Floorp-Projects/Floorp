@@ -36,6 +36,7 @@ Notes to self:
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIAllocator.h"
+#include "nsPrimitiveHelpers.h"
  
 #include "nsIFileSpec.h"
 #include "nsIOutputStream.h"
@@ -185,10 +186,14 @@ DataStruct::WriteCache(nsISupports* aData, PRUint32 aDataLen)
     nsCOMPtr<nsIOutputStream> outStr;
     cacheFile->GetOutputStream( getter_AddRefs(outStr) );
     
-    //XXX broken until i can stream/inflate these primitive objects.
-    //outStr->Write(aData, aDataLen, &bytes);
-
-    return NS_OK;
+    void* buff = nsnull;
+    nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor.GetBuffer(), aData, &buff, aDataLen );
+    if ( buff ) {
+      PRUint32 ignored;
+      outStr->Write(NS_REINTERPRET_CAST(char*, buff), aDataLen, &ignored);
+      nsAllocator::Free(buff);
+      return NS_OK;
+    }
   }
   return NS_ERROR_FAILURE;
 }
@@ -221,11 +226,9 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
 
     // make sure we got all the data ok
     if ( NS_SUCCEEDED(rv) && *aDataLen == (PRUint32)fileSize) {
-      *aDataLen = fileSize;
-      
-      //XXX broken until i can inflate primitive objects
-      //*aData    = data;
-      return NS_OK;
+      *aDataLen = fileSize; 
+      nsPrimitiveHelpers::CreatePrimitiveForData ( mFlavor.GetBuffer(), data, fileSize, aData );
+      return *aData ? NS_OK : NS_ERROR_FAILURE;
     }
 
     // delete the buffer because we got an error
