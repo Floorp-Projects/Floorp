@@ -1550,7 +1550,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
         /* if (db) { */
         if (!db) {
             if (cx)
-                db = DOM_StyleGetDatabaseFromContext(cx);
+                db = DOM_StyleDatabaseFromContext(cx);
             else
                 goto error;
             if (!db)
