@@ -83,7 +83,6 @@ XPIDLSRCS	= \
 
 EXPORTS		= \
 		nsCookieHTTPNotify.h \
-		nsCCookie.h \
 		nsCCookieManager.h \
 		$(NULL)
 

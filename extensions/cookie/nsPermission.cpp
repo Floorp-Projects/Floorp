@@ -37,41 +37,41 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPermission.h"
-#include "nsCRT.h"
-#include "prmem.h"
 
 // nsPermission Implementation
 
-NS_IMPL_ISUPPORTS2(nsPermission, nsIPermission, nsISupportsWeakReference);
+NS_IMPL_ISUPPORTS1(nsPermission, nsIPermission)
 
-nsPermission::nsPermission()
+nsPermission::nsPermission(const nsACString &aHost,
+                           PRUint32         aType,
+                           PRUint32         aCapability)
+ : mHost(aHost)
+ , mType(aType)
+ , mCapability(aCapability)
 {
 }
 
-nsPermission::nsPermission
-  (const nsACString &aHost,
-   PRUint32 aType,
-   PRUint32 aCapability)
-: mHost(aHost),
-  mType(aType),
-  mCapability(aCapability)
+nsPermission::~nsPermission()
 {
 }
 
-nsPermission::~nsPermission() {
-}
-
-NS_IMETHODIMP nsPermission::GetHost(nsACString& aHost) {
+NS_IMETHODIMP
+nsPermission::GetHost(nsACString &aHost)
+{
   aHost = mHost;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPermission::GetType(PRUint32 *aType) {
+NS_IMETHODIMP
+nsPermission::GetType(PRUint32 *aType)
+{
   *aType = mType;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPermission::GetCapability(PRUint32 *aCapability) {
+NS_IMETHODIMP
+nsPermission::GetCapability(PRUint32 *aCapability)
+{
   *aCapability = mCapability;
   return NS_OK;
 }
