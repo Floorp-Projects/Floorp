@@ -60,6 +60,11 @@ LIBS = \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
+	-lgfxgtk	\
+	-lraptorgfx	\
+	-lgfxps		\
+	-limg		\
+	-lmozutil	\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
