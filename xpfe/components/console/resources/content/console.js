@@ -92,8 +92,6 @@ function onLoadJSConsole()
     cs.registerListener(consoleListener);
 
     bundle = srGetStrBundle("chrome://global/locale/console.properties");
-    
-    return true;
 }
 
 function onUnloadJSConsole()
@@ -112,12 +110,10 @@ function onUnloadJSConsole()
     }
 
     cs.unregisterListener(consoleListener);
-
-    return true;
 }
 
-gErrorCount = 0;
-gWarningCount = 0;
+//  var gErrorCount = 0;
+//  var gWarningCount = 0;
 
 /*
  * Given a message, write it to the page.
@@ -268,8 +264,6 @@ function clear ()
 
   
 	num_errors=0;
-    return true;
-	
 }
 
 /*
@@ -284,6 +278,4 @@ function deleteOne ()
 	var node = tree.firstChild;
 	tree.removeChild(node);
 	num_errors--;
-    return true;
-	
 }
