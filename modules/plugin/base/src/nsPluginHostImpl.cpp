@@ -3783,49 +3783,39 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
 
 
 ////////////////////////////////////////////////////////////////////////
-void nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
+nsresult nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
                                                nsIPluginInstance* aInstance,
                                                nsIURI* aURL,
                                                PRBool aDefaultPlugin,
                                                nsIPluginInstancePeer* peer)
 
 {
+  NS_ENSURE_ARG_POINTER(aURL);
+
   nsCAutoString url;
-
-  if(!aURL)
-    return;
-
   (void)aURL->GetSpec(url);
 
-  // find corresponding plugin tag
-  // this is legal for xpcom plugins not to have nsIPlugin implemented
+  // let's find the corresponding plugin tag by matching nsIPlugin pointer
+  // it's legal for XPCOM plugins not to have nsIPlugin implemented but 
+  // this is OK, we don't need the plugin tag for XPCOM plugins. It is going
+  // to be used later when we decide whether or not we should delay unloading
+  // NPAPI dll from memory, and XPCOM dlls will stay in memory anyway.
   nsPluginTag * pluginTag = nsnull;
-  if(aPlugin)
-  {
-    for(pluginTag = mPlugins; pluginTag != nsnull; pluginTag = pluginTag->mNext)
-    {
+  if(aPlugin) {
+    for(pluginTag = mPlugins; pluginTag != nsnull; pluginTag = pluginTag->mNext) {
       if(pluginTag->mEntryPoint == aPlugin)
         break;
     }
     NS_ASSERTION(pluginTag, "Plugin tag not found");
   }
-  else
-  {
-    // we don't need it for xpcom plugins because the only purpose to have it
-    // is to be able to postpone unloading library dll in some circumstances
-    // which we don't do for xpcom plugins. In case we need it in the future
-    // we can probably use the following
-    /*
-    FindPluginEnabledForType(mimetype, pluginTag);
-    */
-  }
 
   nsActivePlugin * plugin = new nsActivePlugin(pluginTag, aInstance, url.get(), aDefaultPlugin, peer);
 
-  if(plugin == nsnull)
-    return;
+  if(!plugin)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   mActivePluginList.add(plugin);
+  return NS_OK;
 }
 
 
@@ -4100,8 +4090,8 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     if (NS_FAILED(result))                 // except in some cases not Java, see bug 140931
       return result;       // our COM pointer will free the peer
 
-    // we should addref here
-    AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE, pIpeer);
+    // instance and peer will be addreffed here
+    result = AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE, pIpeer);
 
     //release what was addreffed in Create(Plugin)Instance
     NS_RELEASE(instance);
@@ -4117,7 +4107,7 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   PR_LogFlush();
 #endif
 
-    return NS_OK;
+    return result;
 }
 
 
@@ -4196,13 +4186,13 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   if (NS_FAILED(result))                 // except in some cases not Java, see bug 140931
     return result;       // our COM pointer will free the peer
 
-  // we should addref here
-  AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE, pIpeer);
+  // instance and peer will be addreffed here
+  result = AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE, pIpeer);
 
   //release what was addreffed in Create(Plugin)Instance
   NS_RELEASE(instance);
 
-  return NS_OK;
+  return result;
 }
 
 
