@@ -55,6 +55,8 @@ const MODE_EXCL     = 0x80;
 
 const filterCalendar    = "Calendar Files";
 const extensionCalendar = ".ics";
+const filtervCalendar    = "vCalendar Files";
+const extensionvCalendar = ".vcs";
 const filterXcs         = "iCalendar XML Document";
 const extensionXcs      = ".xcs";
 const filterXml         = "XML Document";
@@ -117,6 +119,7 @@ function loadEventsFromFile()
   fp.defaultExtension = "ics";
    
   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
+  fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
   fp.appendFilter( filterXcs, "*" + extensionXcs );
   fp.appendFilter( filterOutlookCsv, "*" + extensionCsv );
   fp.show();
@@ -598,6 +601,7 @@ function saveEventsToFile( calendarEventArray )
    fp.defaultExtension = "ics";
 
    fp.appendFilter( filterCalendar, "*" + extensionCalendar );
+   fp.appendFilter( filtervCalendar, "*" + extensionvCalendar );
    fp.appendFilter( filterRtf, "*" + extensionRtf );
    fp.appendFilters(nsIFilePicker.filterHTML);
    fp.appendFilter( filterCsv, "*" + extensionCsv );
