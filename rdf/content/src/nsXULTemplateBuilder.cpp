@@ -1271,9 +1271,10 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
                                 nsIRDFResource* aPredicate,
                                 nsIRDFNode* aObject)
 {
-    NS_PRECONDITION(mDocument != nsnull, "not initialized");
+	// Just silently fail, because this can happen "normally" as part
+	// of tear-down code. (Bug 9098)
     if (! mDocument)
-        return NS_ERROR_NOT_INITIALIZED;
+        return NS_OK;
 
     nsresult rv;
 
@@ -1498,9 +1499,10 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
                                   nsIRDFResource* aPredicate,
                                   nsIRDFNode* aObject)
 {
-    NS_PRECONDITION(mDocument != nsnull, "not initialized");
+	// Just silently fail, because this can happen "normally" as part
+	// of tear-down code. (Bug 9098)
     if (! mDocument)
-        return NS_ERROR_NOT_INITIALIZED;
+        return NS_OK;
 
     nsresult rv;
 
