@@ -737,21 +737,20 @@ nsHTMLDocument::Write(JSContext *cx, jsval *argv, PRUint32 argc)
   
   if (argc > 0) {
     PRUint32 index;
+    nsAutoString str;
     for (index = 0; index < argc; index++) {
-      nsAutoString str;
       JSString *jsstring = JS_ValueToString(cx, argv[index]);
       
       if (nsnull != jsstring) {
-        str.SetString(JS_GetStringChars(jsstring));
+        str.Append(JS_GetStringChars(jsstring));
       }
       else {
-        str.SetString("");   // Should this really be null?? 
+        str.Append("");   // Should this really be null?? 
       }
-      
-      result = mParser->Parse(str, PR_TRUE);
-      if (NS_OK != result) {
-        return result;
-      }
+    }
+    result = mParser->Parse(str, PR_TRUE);
+    if (NS_OK != result) {
+      return result;
     }
   }
   
