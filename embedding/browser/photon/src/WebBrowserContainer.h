@@ -60,6 +60,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIURIContentListener.h"
+#include "nsIDNSListener.h"
 
 // This is the class that handles the XPCOM side of things, callback
 // interfaces into the web shell and so forth.
@@ -76,7 +77,8 @@ class CWebBrowserContainer :
         public nsIContextMenuListener,
         public nsICommandHandler,
         public nsIPrintListener,
-				public nsSupportsWeakReference
+		public nsIDNSListener,
+		public nsSupportsWeakReference
 {
 public:
 	CWebBrowserContainer(PtWidget_t *pOwner);
@@ -88,6 +90,7 @@ public:
 	NS_IMETHOD AppendToStream( const char *aData, int32 aLen );
 	NS_IMETHOD CloseStream( void );
 	NS_IMETHOD IsStreaming( void );
+	void RequestToURIString(nsIRequest *aRequest, char **aString);
 
 	// this will get the PIDOMWindow for this widget
 	nsresult GetPIDOMWindow( nsPIDOMWindow **aPIWin );
@@ -95,7 +98,7 @@ public:
 	virtual ~CWebBrowserContainer();
 
 	PtWidget_t *m_pOwner;
-	PRBool										 mSkipOnState;
+	PRBool										 mSkipOnState, mDownloadDocument;
 
 // Protected members
 protected:
@@ -113,9 +116,11 @@ public:
 	NS_DECL_NSIREQUESTOBSERVER
 	NS_DECL_NSIINTERFACEREQUESTOR
 	NS_DECL_NSIWEBPROGRESSLISTENER
-  NS_DECL_NSICONTEXTMENULISTENER
-  NS_DECL_NSICOMMANDHANDLER
+  	NS_DECL_NSICONTEXTMENULISTENER
+  	NS_DECL_NSICOMMANDHANDLER
 	NS_DECL_NSIPRINTLISTENER
+	NS_DECL_NSIDNSLISTENER
+	
 
 private:
 	nsCOMPtr<nsIInputStream>   	mStream;

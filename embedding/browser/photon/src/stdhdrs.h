@@ -43,7 +43,6 @@
 
 
 #include "xp_core.h"
-#include "jscompat.h"
 
 #include "prthread.h"
 #include "prprf.h"
