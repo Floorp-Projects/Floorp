@@ -19,7 +19,7 @@ DEPTH=..\..\..
 #IGNORE_MANIFEST=1
 
 LIBRARY_NAME = raptorbasewidget_s
-REQUIRES=xpcom gfxwin raptor dom js network
+REQUIRES=xpcom gfxwin raptor dom js network netlib
 DEFINES =-D_IMPL_NS_WIDGET
 
 CPPSRCS =nsBaseWidget.cpp      \
