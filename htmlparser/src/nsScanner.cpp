@@ -60,7 +60,7 @@ CScanner::~CScanner() {
 
 /*-------------------------------------------------------
  * 
- * @update	gess4/3/98
+ * @update  gess4/3/98
  * @param 
  * @return
  *------------------------------------------------------*/
@@ -188,10 +188,10 @@ PRInt32 CScanner::SkipOver(nsString& aValidSet){
     result=GetChar(ch);
     if(!result) {
       PRInt32 pos=aValidSet.Find(ch);
-			if(kNotFound==pos) {
-			  PutBack(ch);
-			  break;
-  	  }
+      if(kNotFound==pos) {
+        PutBack(ch);
+        break;
+      }
     } 
     else break;
   } //while
@@ -249,18 +249,18 @@ PRInt32 CScanner::ReadWhile(nsString& aString,nsString& aValidSet,PRBool addTerm
  *  @return  error code
  *------------------------------------------------------*/
 PRInt32 CScanner::ReadUntil(nsString& aString,nsString& aTerminalSet,PRBool addTerminal){
-	PRUnichar ch=0;
+  PRUnichar ch=0;
   PRInt32   result=kNoError;
 
-	while(!Eof()) {
-   	result=GetChar(ch);
+  while(!Eof()) {
+     result=GetChar(ch);
     if(kNoError==result) {
       PRInt32 pos=aTerminalSet.Find(ch);
-  		if(kNotFound!=pos) {
-      	if(addTerminal)
+      if(kNotFound!=pos) {
+        if(addTerminal)
           aString+=ch;
         else PutBack(ch);
-  			break;
+        break;
       }
       else aString+=ch;
     }
@@ -277,7 +277,7 @@ PRInt32 CScanner::ReadUntil(nsString& aString,nsString& aTerminalSet,PRBool addT
  *  @return  error code
  *------------------------------------------------------*/
 PRInt32 CScanner::ReadUntil(nsString& aString,PRUnichar aTerminalChar,PRBool addTerminal){
-	PRUnichar ch=0;
+  PRUnichar ch=0;
   PRInt32   result=kNoError;
 
   while(kNoError==result) {
@@ -307,4 +307,6 @@ void CScanner::SelfTest(void) {
 #ifdef _DEBUG
 #endif
 }
+
+
 

@@ -21,30 +21,30 @@ LIBRARY_NAME = raptorhtmlpars
 
 DEFINES = -D_IMPL_NS_HTMLPARS
 
-CPPSRCS =			\
-	nsHTMLContentSink.cpp	\
-	nsParserNode.cpp	\
-	nsScanner.cpp		\
-	nsToken.cpp		\
-	nsTokenizer.cpp		\
-	nsTokenHandler.cpp \
-	CNavDelegate.cpp	\
-	CNavDTD.cpp \
-	COtherDelegate.cpp	\
-	COtherDTD.cpp \
-	nsHTMLParser.cpp	\
-	nsHTMLTokens.cpp	\
-	$(NULL)
+CPPSRCS =     \
+  nsHTMLContentSink.cpp \
+  nsParserNode.cpp  \
+  nsScanner.cpp   \
+  nsToken.cpp   \
+  nsTokenizer.cpp   \
+  nsTokenHandler.cpp \
+  CNavDelegate.cpp  \
+  CNavDTD.cpp \
+  COtherDelegate.cpp  \
+  COtherDTD.cpp \
+  nsHTMLParser.cpp  \
+  nsHTMLTokens.cpp  \
+  $(NULL)
 
-EXPORTS =			\
-	nshtmlpars.h		\
-	nsIContentSink.h	\
-	nsIHTMLContentSink.h	\
-	nsHTMLTokens.h		\
-	nsIParserNode.h		\
-	nsIParser.h		\
-	nsToken.h		\
-	$(NULL)
+EXPORTS =     \
+  nshtmlpars.h    \
+  nsIContentSink.h  \
+  nsIHTMLContentSink.h  \
+  nsHTMLTokens.h    \
+  nsIParserNode.h   \
+  nsIParser.h   \
+  nsToken.h   \
+  $(NULL)
 
 MODULE = raptor
 

@@ -33,7 +33,7 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOtherHTML_DTD_IID); 
 
 
-/**-------------------------------------------------------
+/**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
  *  of some type.
@@ -42,7 +42,7 @@ static NS_DEFINE_IID(kClassIID,     NS_IOtherHTML_DTD_IID);
  *  @param    nsIID  id of object to discover
  *  @param    aInstancePtr ptr to newly discovered interface
  *  @return   NS_xxx result code
- *------------------------------------------------------*/
+ */
 nsresult COtherDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
 {                                                                        
   if (NULL == aInstancePtr) {                                            
@@ -66,14 +66,14 @@ nsresult COtherDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
-/**-------------------------------------------------------
+/**
  *  This method is defined in nsIParser. It is used to 
  *  cause the COM-like construction of an nsHTMLParser.
  *  
  *  @update  gess 4/8/98
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
- *------------------------------------------------------*/
+ */
 NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult)
 {
   COtherDTD* it = new COtherDTD();
@@ -90,27 +90,27 @@ NS_IMPL_ADDREF(COtherDTD)
 NS_IMPL_RELEASE(COtherDTD)
 
 
-/**-------------------------------------------------------
+/**
  *  Default constructor
  *  
  *  @update  gess 4/9/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 COtherDTD::COtherDTD() : nsIDTD() {
 }
 
-/**-------------------------------------------------------
+/**
  *  Default destructor
  *  
  *  @update  gess 4/9/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 COtherDTD::~COtherDTD(){
 }
 
-/** ------------------------------------------------------
+/**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  
@@ -118,7 +118,7 @@ COtherDTD::~COtherDTD(){
  *  @param   aParent -- tag enum of parent container
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
- */ //----------------------------------------------------
+ */
 PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=PR_FALSE;
 
@@ -295,7 +295,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       }
       break;
 
-    case eHTMLTag_hr:			
+    case eHTMLTag_hr:      
       break;    //singletons can't contain anything...
 
     case eHTMLTag_html:
@@ -465,7 +465,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 }
 
 
-/** ------------------------------------------------------
+/**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  
@@ -473,7 +473,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  *  @param   aParent -- tag enum of parent container
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
- */ //----------------------------------------------------
+ */
 PRBool COtherDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=PR_FALSE;
 
@@ -511,14 +511,14 @@ PRBool COtherDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
   return result;
 }
 
-/** -------------------------------------------------------
+/**
  *  This method gets called to determine whether a given 
  *  tag can contain newlines. Most do not.
  *  
  *  @update  gess 3/25/98
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
- */ //----------------------------------------------------
+ */
 PRBool COtherDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=PR_FALSE;
 
@@ -542,14 +542,14 @@ PRBool COtherDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
   return result;
 }
 
-/** -------------------------------------------------------
+/**
  *  This method gets called to determine whether a given 
  *  tag is itself a container
  *  
  *  @update  gess 4/8/98
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
- */ //----------------------------------------------------
+ */
 PRBool COtherDTD::IsContainer(PRInt32 aTag) const {
   PRBool result=PR_FALSE;
 
@@ -575,14 +575,14 @@ PRBool COtherDTD::IsContainer(PRInt32 aTag) const {
   return result;
 }
 
-/*-------------------------------------------------------
+/**
  * This method does two things: 1st, help construct
  * our own internal model of the content-stack; and
  * 2nd, pass this message on to the sink.
- * @update	gess4/6/98
+ * @update  gess4/6/98
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
- *------------------------------------------------------*/
+ */
 PRInt32 COtherDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
   eHTMLTags result=eHTMLTag_unknown;
   switch(aTag) {
@@ -651,17 +651,17 @@ PRInt32 COtherDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
 }
 
 
-/** ------------------------------------------------------
+/**
  * This method gets called at various times by the parser
  * whenever we want to verify a valid context stack. This
  * method also gives us a hook to add debugging metrics.
  *
- * @update	gess4/6/98
+ * @update  gess4/6/98
  * @param   aStack[] array of ints (tokens)
  * @param   aCount number of elements in given array
  * @return  TRUE if stack is valid, else FALSE
- */ //-----------------------------------------------------
-PRBool COtherDTD::VerifyContextStack(PRInt32 aStack[],PRInt32 aCount) const {
+ */
+PRBool COtherDTD::VerifyContextVector(PRInt32* aVector,PRInt32 aCount) const {
   PRBool result=PR_TRUE;
 
   if(aCount>0) {
@@ -671,35 +671,37 @@ PRBool COtherDTD::VerifyContextStack(PRInt32 aStack[],PRInt32 aCount) const {
 }
 
 
-
-/** -------------------------------------------------------
+/**
  * This method tries to design a context map (without actually
  * changing our parser state) from the parent down to the
  * child. 
  *
- * @update	gess4/6/98
+ * @update  gess4/6/98
  * @param   aParent -- tag type of parent
  * @param   aChild -- tag type of child
  * @return  Non zero count of intermediate nodes; 
  *          0 if unable to comply
- */ //----------------------------------------------------
-PRInt32 COtherDTD::ForwardPropagate(PRInt32 aVector[],PRInt32 aParent,PRInt32 aChild) const {
-  PRInt32 result=0;
+ */
+PRBool COtherDTD::ForwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const {
+  PRBool result=PR_FALSE;
   return result;
 }
 
-/** -------------------------------------------------------
+
+/**
  * This method tries to design a context map (without actually
  * changing our parser state) from the parent down to the
  * child. 
  *
- * @update	gess4/6/98
+ * @update  gess4/6/98
  * @param   aParent -- tag type of parent
  * @param   aChild -- tag type of child
  * @return  Non zero count of intermediate nodes; 
  *          0 if unable to comply
- */ //----------------------------------------------------
-PRInt32 COtherDTD::BackwardPropagate(PRInt32 aVector[],PRInt32 aParent,PRInt32 aChild) const {
-  PRInt32 result=0;
+ */
+PRBool COtherDTD::BackwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const {
+  PRBool result=PR_FALSE;
   return result;
 }
+
+

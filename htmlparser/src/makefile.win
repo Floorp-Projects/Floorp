@@ -53,18 +53,18 @@ LCFLAGS = \
         $(NULL)
 
 # These are the libraries we need to link with to create the dll
-LLIBS=				\
- $(DIST)\lib\xpcom32.lib	\
- $(DIST)\lib\raptorbase.lib	\
+LLIBS=        \
+ $(DIST)\lib\xpcom32.lib  \
+ $(DIST)\lib\raptorbase.lib \
  $(DIST)\lib\libplc21.lib       \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+  $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+  $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
+  rm -f $(DIST)\bin\$(DLLNAME).dll
+  rm -f $(DIST)\lib\$(DLLNAME).lib

@@ -39,7 +39,7 @@
 
 class CNavDTD : public nsIDTD {
             
-	public:
+  public:
 
     NS_DECL_ISUPPORTS
 
@@ -108,7 +108,7 @@ class CNavDTD : public nsIDTD {
      * This method does two things: 1st, help construct
      * our own internal model of the content-stack; and
      * 2nd, pass this message on to the sink.
-     * @update	gess4/6/98
+     * @update  gess4/6/98
      * @param   aNode -- next node to be added to model
      * @return  TRUE if ok, FALSE if error
      */
@@ -120,40 +120,40 @@ class CNavDTD : public nsIDTD {
      * whenever we want to verify a valid context stack. This
      * method also gives us a hook to add debugging metrics.
      *
-     * @update	gess4/6/98
+     * @update  gess4/6/98
      * @param   aStack[] array of ints (tokens)
      * @param   aCount number of elements in given array
      * @return  TRUE if stack is valid, else FALSE
      */
-    virtual PRBool VerifyContextStack(PRInt32 aStack[],PRInt32 aCount) const;
+    virtual PRBool VerifyContextVector(PRInt32* aVector,PRInt32 aCount) const;
 
     /**
      * This method tries to design a context map (without actually
      * changing our parser state) from the parent down to the
      * child. 
      *
-     * @update	gess4/6/98
+     * @update  gess4/6/98
      * @param   aParent -- tag type of parent
      * @param   aChild -- tag type of child
-     * @return  Non zero count of intermediate nodes; 
-     *          0 if unable to comply
+     * @return  True if closure was achieved -- other false
      */
-    virtual PRInt32 ForwardPropagate(PRInt32 aVector[],PRInt32 aParent,PRInt32 aChild) const;
+    virtual PRBool ForwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const;
 
     /**
      * This method tries to design a context map (without actually
      * changing our parser state) from the child up to the parent.
      *
-     * @update	gess4/6/98
+     * @update  gess4/6/98
      * @param   aParent -- tag type of parent
      * @param   aChild -- tag type of child
-     * @return  Non zero count of intermediate nodes; 
-     *          0 if unable to comply
+     * @return  True if closure was achieved -- other false
      */
-    virtual PRInt32 BackwardPropagate(PRInt32 aVector[],PRInt32 aParent,PRInt32 aChild) const;
+    virtual PRBool BackwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const;
 
 };
 
 
 #endif 
+
+
 

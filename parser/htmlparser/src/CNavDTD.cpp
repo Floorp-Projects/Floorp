@@ -33,7 +33,7 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID); 
 
 
-/**-------------------------------------------------------
+/**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
  *  of some type.
@@ -42,7 +42,7 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
  *  @param    nsIID  id of object to discover
  *  @param    aInstancePtr ptr to newly discovered interface
  *  @return   NS_xxx result code
- *------------------------------------------------------*/
+ */
 nsresult CNavDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
 {                                                                        
   if (NULL == aInstancePtr) {                                            
@@ -66,14 +66,14 @@ nsresult CNavDTD::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
-/**-------------------------------------------------------
+/**
  *  This method is defined in nsIParser. It is used to 
  *  cause the COM-like construction of an nsHTMLParser.
  *  
  *  @update  gess 4/8/98
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
- *------------------------------------------------------*/
+ */
 NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult)
 {
   CNavDTD* it = new CNavDTD();
@@ -90,27 +90,28 @@ NS_IMPL_ADDREF(CNavDTD)
 NS_IMPL_RELEASE(CNavDTD)
 
 
-/**-------------------------------------------------------
+/**
  *  Default constructor
  *  
  *  @update  gess 4/9/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CNavDTD::CNavDTD() : nsIDTD() {
 }
 
-/**-------------------------------------------------------
+/**
  *  Default destructor
  *  
  *  @update  gess 4/9/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CNavDTD::~CNavDTD(){
 }
 
-/** ------------------------------------------------------
+
+/**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  
@@ -118,11 +119,11 @@ CNavDTD::~CNavDTD(){
  *  @param   aParent -- tag enum of parent container
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
- */ //----------------------------------------------------
+ */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=PR_FALSE;
 
-    //tagset1 has 61 members...
+    //tagset1 has 64 members...
   static char  gTagSet1[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
     eHTMLTag_bold,      eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,
@@ -132,29 +133,39 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
     eHTMLTag_hr,        eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_img,
-    eHTMLTag_input,     eHTMLTag_isindex,   eHTMLTag_kbd,       eHTMLTag_label,
-    eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_noframes,  eHTMLTag_noscript,
+    eHTMLTag_input,     eHTMLTag_isindex,   
+    
+    eHTMLTag_kbd,       eHTMLTag_label,
+    eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline, //JUST ADDED!
+    eHTMLTag_noframes,  eHTMLTag_noscript,
     eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_paragraph, eHTMLTag_pre,
     eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,
-    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_textarea,
-    eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        eHTMLTag_userdefined,
-    eHTMLTag_var,   0};
+    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
+    
+    eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
+    eHTMLTag_userdefined,   eHTMLTag_var,   
+    eHTMLTag_whitespace,  //JUST ADDED!
+    0};
 
-    //tagset2 has 37 members...
+    //tagset2 has 43 members...
   static char  gTagSet2[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
     eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
     eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
     eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        eHTMLTag_italic,    
     eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     eHTMLTag_kbd,       
-    eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_object,    eHTMLTag_paragraph, 
+
+    eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,    //JUST ADDED!
+    eHTMLTag_object,    eHTMLTag_paragraph, 
     eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,    
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
-    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_tt,        eHTMLTag_textarea,  
-    eHTMLTag_u,         eHTMLTag_var,0};
+    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
+    eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
+    eHTMLTag_whitespace,//JUST ADDED!
+    0};
 
-    //tagset3 has 53 members...
+    //tagset3 has 57 members...
   static char  gTagSet3[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
     eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
@@ -164,12 +175,19 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
     eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
-    eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_listitem,  eHTMLTag_noframes,
+
+    eHTMLTag_label,     eHTMLTag_legend,    
+    eHTMLTag_listitem,  eHTMLTag_newline,   //JUST ADDED!
+        
+    eHTMLTag_noframes,
     eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_paragraph, eHTMLTag_pre,
     eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_small,
     eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
-    eHTMLTag_td,        eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         
-    eHTMLTag_var,0};
+    eHTMLTag_td,        eHTMLTag_text,
+    
+    eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined,
+    eHTMLTag_var,       eHTMLTag_whitespace,  //JUST ADDED!
+    0};
 
     //This hack code is here because we don't yet know what to do
     //with userdefined tags...  XXX Hack
@@ -295,7 +313,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       }
       break;
 
-    case eHTMLTag_hr:			
+    case eHTMLTag_hr:      
       break;    //singletons can't contain anything...
 
     case eHTMLTag_html:
@@ -431,9 +449,17 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_thead:
       result=PRBool(eHTMLTag_tr==aChild); break;
 
-    case eHTMLTag_td:
     case eHTMLTag_th:
       result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      break;
+
+    case eHTMLTag_td:
+      {
+        static char  extraTags[]={eHTMLTag_newline,0};
+        result=PRBool(0!=strchr(extraTags,aChild));
+        if(PR_FALSE==result)
+          result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      }
       break;
 
     case eHTMLTag_textarea:
@@ -465,7 +491,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 }
 
 
-/** ------------------------------------------------------
+/**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  
@@ -473,7 +499,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  *  @param   aParent -- tag enum of parent container
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
- */ //----------------------------------------------------
+ */
 PRBool CNavDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=PR_FALSE;
 
@@ -511,22 +537,28 @@ PRBool CNavDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
   return result;
 }
 
-/** -------------------------------------------------------
+/**
  *  This method gets called to determine whether a given 
  *  tag can contain newlines. Most do not.
  *  
  *  @update  gess 3/25/98
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
- */ //----------------------------------------------------
+ */
 PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
   PRBool result=PR_FALSE;
 
   switch((eHTMLTags)aParent) {
+    case eHTMLTag_html:
+    case eHTMLTag_body:
+    case eHTMLTag_head:
+    case eHTMLTag_title:
+ 
     case eHTMLTag_tr:
+//    case eHTMLTag_td:
     case eHTMLTag_table:
     case eHTMLTag_thead:
-    case eHTMLTag_tfoot:
+    case eHTMLTag_tfoot: 
     case eHTMLTag_tbody:
     case eHTMLTag_col:
     case eHTMLTag_colgroup:
@@ -542,14 +574,14 @@ PRBool CNavDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
   return result;
 }
 
-/** -------------------------------------------------------
+/**
  *  This method gets called to determine whether a given 
  *  tag is itself a container
  *  
  *  @update  gess 4/8/98
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
- */ //----------------------------------------------------
+ */
 PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
   PRBool result=PR_FALSE;
 
@@ -566,6 +598,9 @@ PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
     case eHTMLTag_style:      case eHTMLTag_spacer:
     case eHTMLTag_wbr:
     case eHTMLTag_form:
+    case eHTMLTag_newline:
+    case eHTMLTag_whitespace:
+    case eHTMLTag_text: 
       result=PR_FALSE;
       break;
 
@@ -575,17 +610,21 @@ PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
   return result;
 }
 
-/*-------------------------------------------------------
+/**
  * This method does two things: 1st, help construct
  * our own internal model of the content-stack; and
  * 2nd, pass this message on to the sink.
- * @update	gess4/6/98
+ * @update  gess4/6/98
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
- *------------------------------------------------------*/
+ */
 PRInt32 CNavDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
   eHTMLTags result=eHTMLTag_unknown;
   switch(aTag) {
+
+    case eHTMLTag_text:
+      result=eHTMLTag_paragraph; break;
+
     case eHTMLTag_html:
       result=(eHTMLTags)kNotFound; break;
 
@@ -610,8 +649,10 @@ PRInt32 CNavDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
     case eHTMLTag_tbody:
     case eHTMLTag_tfoot:
     case eHTMLTag_thead:
-    case eHTMLTag_tr:
       result=eHTMLTag_table; break;
+
+    case eHTMLTag_tr:
+      result=eHTMLTag_tbody; break;
 
     case eHTMLTag_td:
     case eHTMLTag_th:
@@ -651,17 +692,17 @@ PRInt32 CNavDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
 }
 
 
-/** ------------------------------------------------------
+/**
  * This method gets called at various times by the parser
  * whenever we want to verify a valid context stack. This
  * method also gives us a hook to add debugging metrics.
  *
- * @update	gess4/6/98
+ * @update  gess4/6/98
  * @param   aStack[] array of ints (tokens)
  * @param   aCount number of elements in given array
  * @return  TRUE if stack is valid, else FALSE
- */ //-----------------------------------------------------
-PRBool CNavDTD::VerifyContextStack(PRInt32 aStack[],PRInt32 aCount) const {
+ */
+PRBool CNavDTD::VerifyContextVector(PRInt32* aVector,PRInt32 aCount) const {
   PRBool result=PR_TRUE;
 
   if(aCount>0) {
@@ -671,34 +712,73 @@ PRBool CNavDTD::VerifyContextStack(PRInt32 aStack[],PRInt32 aCount) const {
 }
 
 
-/** -------------------------------------------------------
- * This method tries to design a context map (without actually
+/**
+ * This method tries to design a context vector (without actually
  * changing our parser state) from the parent down to the
  * child. 
  *
- * @update	gess4/6/98
+ * @update  gess4/6/98
+ * @param   aVector is the string where we store our output vector
+ *          in bottom-up order.
  * @param   aParent -- tag type of parent
  * @param   aChild -- tag type of child
- * @return  Non zero count of intermediate nodes; 
- *          0 if unable to comply
- */ //----------------------------------------------------
-PRInt32 CNavDTD::ForwardPropagate(PRInt32 aVector[],PRInt32 aParent,PRInt32 aChild) const {
-  PRInt32 result=0;
+ * @return  TRUE if propagation closes; false otherwise
+ */
+PRBool CNavDTD::ForwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const {
+  PRBool result=PR_FALSE;
+
+  switch(aParentTag) {
+    case eHTMLTag_table:
+    case eHTMLTag_tr:
+      if(PR_TRUE==CanContain(eHTMLTag_td,aChildTag)) {
+        aVector.Append((PRUnichar)eHTMLTag_td);
+        result=BackwardPropagate(aVector,aParentTag,eHTMLTag_td);
+//        result=PR_TRUE;
+      }
+
+      break;
+
+    case eHTMLTag_th:
+      break;
+
+    default:
+      break;
+  }//switch
   return result;
 }
 
-/** -------------------------------------------------------
+
+/**
  * This method tries to design a context map (without actually
- * changing our parser state) from the parent down to the
- * child. 
+ * changing our parser state) from the child up to the parent.
  *
- * @update	gess4/6/98
+ * @update  gess4/6/98
+ * @param   aVector is the string where we store our output vector
+ *          in bottom-up order.
  * @param   aParent -- tag type of parent
  * @param   aChild -- tag type of child
- * @return  Non zero count of intermediate nodes; 
- *          0 if unable to comply
- */ //----------------------------------------------------
-PRInt32 CNavDTD::BackwardPropagate(PRInt32 aVector[],PRInt32 aParent,PRInt32 aChild) const {
-  PRInt32 result=0;
-  return result;
+ * @return  TRUE if propagation closes; false otherwise
+ */
+PRBool CNavDTD::BackwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const {
+
+  PRBool    result=PR_FALSE;
+  eHTMLTags theParentTag=(eHTMLTags)aChildTag;
+
+//  aVector.Truncate();
+
+    //create the necessary stack of parent tags...
+    //continue your search until you run out of known parents,
+    //or you find the specific parent you were given (aParentTag).
+//  aVector.Append((PRUnichar)aChildTag);
+  do {
+    theParentTag=(eHTMLTags)GetDefaultParentTagFor(theParentTag);
+    if(theParentTag!=kNotFound) {
+      aVector.Append((PRUnichar)theParentTag);
+    }
+  } while((theParentTag!=kNotFound) && (theParentTag!=aParentTag));
+  
+  return PRBool(aParentTag==theParentTag);
 }
+
+
+

@@ -50,7 +50,7 @@
  *------------------------------------------------------*/
 class nsIParserNode {
             
-	public:
+  public:
 
     virtual const nsString&     GetName() const =0;  //to get name of tag
     virtual const nsString&     GetText() const =0;  //get plain text if available
@@ -71,3 +71,5 @@ class nsIParserNode {
 };
 
 #endif
+
+

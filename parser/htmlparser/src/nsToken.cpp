@@ -48,7 +48,7 @@ CToken::~CToken() {
  *  @return int error code
  *------------------------------------------------------*/
 PRInt32 CToken::Consume(PRUnichar aChar,CScanner& aScanner) {
-	PRInt32 result=kNoError;
+  PRInt32 result=kNoError;
   return result;
 }
 
@@ -59,7 +59,7 @@ PRInt32 CToken::Consume(PRUnichar aChar,CScanner& aScanner) {
  *  @param  aValue -- char* containing new value
  *------------------------------------------------------*/
 void CToken::SetStringValue(const char* aValue) {
-	mTextValue=aValue;
+  mTextValue=aValue;
 }
 
 /**-------------------------------------------------------
@@ -70,7 +70,7 @@ void CToken::SetStringValue(const char* aValue) {
  *  @param  ostream -- output stream to accept output data
  *------------------------------------------------------*/
 void CToken::DebugDumpToken(ostream& anOutputStream) {
-	anOutputStream << "[" << GetClassName() << "] ";
+  anOutputStream << "[" << GetClassName() << "] ";
   for(int i=0;i<mTextValue.Length();i++){
     anOutputStream << char(mTextValue[i]);
   }
@@ -86,7 +86,7 @@ void CToken::DebugDumpToken(ostream& anOutputStream) {
  *------------------------------------------------------*/
 void CToken::DebugDumpSource(ostream& anOutputStream) {
   char buf[256];
-	anOutputStream << mTextValue.ToCString(buf, 256);
+  anOutputStream << mTextValue.ToCString(buf,256);
 }
 
 /**-------------------------------------------------------
@@ -121,7 +121,7 @@ void CToken::SetOrdinal(PRInt32 value) {
  *  @update gess 3/25/98
  *  @return int containing ordinal value
  *------------------------------------------------------*/
-PRInt32	CToken::GetOrdinal(void) {
+PRInt32  CToken::GetOrdinal(void) {
   return mOrdinalValue;
 }
 
@@ -132,7 +132,7 @@ PRInt32	CToken::GetOrdinal(void) {
  *  @update gess 3/25/98
  *  @return int value containing token type.
  *------------------------------------------------------*/
-PRInt32	CToken::GetTokenType(void) {
+PRInt32  CToken::GetTokenType(void) {
   return -1;
 }
 
@@ -142,7 +142,7 @@ PRInt32	CToken::GetTokenType(void) {
  *  @update gess 3/25/98
  *  @return char* containing name of class
  *------------------------------------------------------*/
-const char*	CToken::GetClassName(void) {
+const char*  CToken::GetClassName(void) {
   return "token";
 }
 
@@ -154,3 +154,5 @@ void CToken::SelfTest(void) {
 #ifdef _DEBUG
 #endif
 }
+
+

@@ -51,25 +51,27 @@ class CScanner;
  *  @update  gess 3/25/98
  *------------------------------------------------------*/
 class CToken {
-	public:
-									        CToken(const nsString& aName);
-    virtual               ~CToken();
-		
-    virtual	nsString&     GetStringValue(void);
-    virtual	nsString&     GetText(void);
-		virtual	void			    SetStringValue(const char* name);
-    virtual	void			    SetOrdinal(PRInt32 value);
-  	virtual	PRInt32			  GetOrdinal(void);
-  	virtual	PRInt32       Consume(PRUnichar aChar,CScanner& aScanner);
-  	virtual	void			    DebugDumpToken(ostream& out);
-  	virtual	void			    DebugDumpSource(ostream& out);
-		virtual	PRInt32			  GetTokenType(void);
-    virtual const char*	  GetClassName(void);
-    static void           SelfTest();
+  public:
+                          CToken(const nsString& aName);
+                          ~CToken();
+    
+    virtual  nsString&    GetStringValue(void);
+    virtual  nsString&    GetText(void);
+    virtual  void         SetStringValue(const char* name);
+    virtual  void         SetOrdinal(PRInt32 value);
+    virtual  PRInt32      GetOrdinal(void);
+    virtual  PRInt32      Consume(PRUnichar aChar,CScanner& aScanner);
+    virtual  void         DebugDumpToken(ostream& out);
+    virtual  void         DebugDumpSource(ostream& out);
+    virtual  PRInt32      GetTokenType(void);
+    virtual const char*   GetClassName(void);
+    virtual   void        SelfTest(void);
 
 protected:
-          	PRInt32			  mOrdinalValue;
-          	nsString      mTextValue;
+            PRInt32       mOrdinalValue;
+            nsString      mTextValue;
 };
 
 #endif
+
+

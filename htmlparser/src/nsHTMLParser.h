@@ -77,11 +77,11 @@ class nsIDTD;
 
 class nsHTMLParser : public nsIParser {
             
-	public:
+  public:
 friend class CTokenHandler;
 
     NS_DECL_ISUPPORTS
-						                    nsHTMLParser();
+                                nsHTMLParser();
                                 ~nsHTMLParser();
     virtual nsIContentSink*     SetContentSink(nsIContentSink* aSink);
     virtual PRBool              Parse(nsIURL* aURL);
@@ -92,10 +92,8 @@ friend class CTokenHandler;
             PRBool              HandleStartToken(CToken* aToken);
             PRBool              HandleEndToken(CToken* aToken);
             PRBool              HandleEntityToken(CToken* aToken);
-            PRBool              HandleNewlineToken(CToken* aToken);
             PRBool              HandleCommentToken(CToken* aToken);
-            PRBool              HandleWhitespaceToken(CToken* aToken);
-            PRBool              HandleTextToken(CToken* aToken);
+            PRBool              HandleSimpleContentToken(CToken* aToken);
             PRBool              HandleSkippedContentToken(CToken* aToken);
             PRBool              HandleAttributeToken(CToken* aToken);
             PRBool              HandleScriptToken(CToken* aToken);
@@ -142,6 +140,7 @@ friend class CTokenHandler;
             PRInt32             GetTopmostIndex(eHTMLTags aTag) const;
             PRBool              ReduceContextStackFor(PRInt32 aChildTag);
             PRBool              CreateContextStackFor(PRInt32 aChildTag);
+            PRBool              HandleDefaultStartToken(CToken* aToken,eHTMLTags aTag,nsCParserNode& aNode);
 
             nsIHTMLContentSink* mSink;
             CTokenizer*         mTokenizer;
@@ -159,4 +158,6 @@ friend class CTokenHandler;
 
 
 #endif 
+
+
 

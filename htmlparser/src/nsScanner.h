@@ -43,21 +43,21 @@ class ifstream;
 
 class CScanner {
   public:
-   					      CScanner(nsIURL* aURL,eParseMode aMode=eParseMode_navigator);
-            		  ~CScanner();
+                   CScanner(nsIURL* aURL,eParseMode aMode=eParseMode_navigator);
+                  ~CScanner();
 
       PRInt32     GetChar(PRUnichar& ch);
-			PRInt32   	Peek(PRUnichar& ch);
-      PRInt32   	PutBack(PRUnichar ch);
-			PRInt32    	SkipOver(nsString& SkipChars);
-			PRInt32   	SkipPast(nsString& aSequence);
-			PRInt32   	SkipPast(PRUnichar aChar);
-			PRInt32    	SkipWhite(void);
+      PRInt32     Peek(PRUnichar& ch);
+      PRInt32     PutBack(PRUnichar ch);
+      PRInt32      SkipOver(nsString& SkipChars);
+      PRInt32     SkipPast(nsString& aSequence);
+      PRInt32     SkipPast(PRUnichar aChar);
+      PRInt32      SkipWhite(void);
       PRBool      Eof(void);
 
-			PRInt32     ReadUntil(nsString& aString,PRUnichar aTerminal,PRBool addTerminal);
-			PRInt32     ReadUntil(nsString& aString,nsString& terminals,PRBool addTerminal);
-			PRInt32     ReadWhile(nsString& aString,nsString& validChars,PRBool addTerminal);
+      PRInt32     ReadUntil(nsString& aString,PRUnichar aTerminal,PRBool addTerminal);
+      PRInt32     ReadUntil(nsString& aString,nsString& terminals,PRBool addTerminal);
+      PRInt32     ReadWhile(nsString& aString,nsString& validChars,PRBool addTerminal);
 
       static void SelfTest();
 
@@ -65,7 +65,7 @@ class CScanner {
 
       PRInt32     FillBuffer(PRInt32& anError);
 
-			nsIInputStream* mStream;
+      nsIInputStream* mStream;
       nsString        mBuffer;
       PRInt32         mOffset;
       PRInt32         mTotalRead;
@@ -73,3 +73,5 @@ class CScanner {
 };
 
 #endif
+
+

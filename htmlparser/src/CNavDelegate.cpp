@@ -40,7 +40,7 @@ static char gIdentChars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
  *  @return  
  */
 CNavDelegate::CNavDelegate() :
-	ITokenizerDelegate(), mTokenDeque() {
+  ITokenizerDelegate(), mTokenDeque() {
 }
 
 /**
@@ -57,7 +57,7 @@ CNavDelegate::CNavDelegate(CNavDelegate& aDelegate) :
 
 /**
  * 
- * @update	gess4/11/98
+ * @update  gess4/11/98
  * @param 
  * @return
  */
@@ -69,7 +69,7 @@ eParseMode CNavDelegate::GetParseMode() const {
 /**
  * Cause delegate to create and return a new DTD.
  *
- * @update	gess4/22/98
+ * @update  gess4/22/98
  * @return  new DTD or null
  */
 nsIDTD* CNavDelegate::GetDTD(void) const{
@@ -86,7 +86,7 @@ nsIDTD* CNavDelegate::GetDTD(void) const{
  *  @return  
  */
 CToken* CNavDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-	CToken* result=0;
+  CToken* result=0;
   nsAutoString empty("");
   anErrorCode=anErrorCode=aScanner.GetChar(aChar);
 
@@ -130,19 +130,19 @@ CToken* CNavDelegate::ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anE
  *  @return  
  */
 void CNavDelegate::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-	PRBool done=PR_FALSE;
+  PRBool done=PR_FALSE;
   nsAutoString as("");
   anErrorCode=kNoError;
   while((!done) && (anErrorCode==kNoError)) {
-   	CToken* result = new CAttributeToken(as);
+     CToken* result = new CAttributeToken(as);
       if(result){
         anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
          mTokenDeque.Push(result);
       }
-		aScanner.Peek(aChar);
+    aScanner.Peek(aChar);
       if(aChar==kGreaterThan) { //you just ate the '>'
-			  aScanner.GetChar(aChar); //skip the '>'
-      	done=PR_TRUE;
+        aScanner.GetChar(aChar); //skip the '>'
+        done=PR_TRUE;
       }
   }
   return;
@@ -181,7 +181,7 @@ CToken* CNavDelegate::ConsumeContentToEndTag(const nsString& aString,PRUnichar a
  *  @return new token or null 
  */
 CToken* CNavDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode) {
-	CStartToken* result=new CStartToken(nsAutoString(""));
+  CStartToken* result=new CStartToken(nsAutoString(""));
   if(result) {
     anErrorCode= result->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
     if(result->IsAttributed()) {
@@ -292,7 +292,7 @@ CToken* CNavDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,PRI
   CToken* result=new CTextToken(aString);
   if(result) {
     PRUnichar ch;
-   	anErrorCode=result->Consume(ch,aScanner);
+     anErrorCode=result->Consume(ch,aScanner);
   }
   return result;
 }
@@ -307,9 +307,9 @@ CToken* CNavDelegate::ConsumeText(const nsString& aString,CScanner& aScanner,PRI
  *  @return new token or null 
  */
 CToken* CNavDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode){
-	CToken* result=new CNewlineToken(nsAutoString(""));
+  CToken* result=new CNewlineToken(nsAutoString(""));
   if(result) {
-   	anErrorCode=result->Consume(aChar,aScanner);
+     anErrorCode=result->Consume(aChar,aScanner);
   }
   return result;
 }
@@ -327,15 +327,15 @@ CToken* CNavDelegate::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32&
  *  @return new token or null 
  */
 CToken* CNavDelegate::GetToken(CScanner& aScanner,PRInt32& anErrorCode){
-	CToken* 	result=0;
+  CToken*   result=0;
   PRUnichar aChar;
 
   if(mTokenDeque.GetSize()>0) {
     return (CToken*)mTokenDeque.Pop();
   }
 
- 	while(!aScanner.Eof()) {
-   	anErrorCode=aScanner.GetChar(aChar);
+   while(!aScanner.Eof()) {
+     anErrorCode=aScanner.GetChar(aChar);
     switch(aChar) {
       case kAmpersand:
         return ConsumeEntity(aChar,aScanner,anErrorCode);
@@ -356,13 +356,13 @@ CToken* CNavDelegate::GetToken(CScanner& aScanner,PRInt32& anErrorCode){
     } //switch
     if(anErrorCode==kEOF)
       anErrorCode=0;
- 	} //while
-	return result;
+   } //while
+  return result;
 }
 
 /**
  * 
- * @update	gess4/11/98
+ * @update  gess4/11/98
  * @param 
  * @return
  */
@@ -396,8 +396,8 @@ PRBool CNavDelegate::WillAddToken(CToken& /*aToken*/) {
  *  @return TRUE if preinitialization completed successfully
  */
 PRBool CNavDelegate::WillTokenize() {
-	PRBool result=PR_TRUE;
-	return result;
+  PRBool result=PR_TRUE;
+  return result;
 }
 
 /**
@@ -409,7 +409,7 @@ PRBool CNavDelegate::WillTokenize() {
  *  @return TRUE if preinitialization completed successfully
  */
 PRBool CNavDelegate::DidTokenize() {
-	PRBool result=PR_TRUE;
+  PRBool result=PR_TRUE;
    return result;
 }
 
@@ -427,5 +427,7 @@ void CNavDelegate::SelfTest(void) {
 
 #endif
 }
+
+
 
 

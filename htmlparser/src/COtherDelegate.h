@@ -36,8 +36,8 @@
  * scanner.stream, and produces an HTML specific CToken.
  */
 
-#ifndef	_OTHER_DELEGATE
-#define	_OTHER_DELEGATE
+#ifndef  _OTHER_DELEGATE
+#define  _OTHER_DELEGATE
 
 #include "nsHTMLTokens.h"
 #include "nsITokenizerDelegate.h"
@@ -45,15 +45,15 @@
 #include "nsIDTD.h"
 
 class COtherDelegate : public ITokenizerDelegate {
-	public:
-    							        COtherDelegate();
-    							        COtherDelegate(COtherDelegate& aDelegate);
+  public:
+                          COtherDelegate();
+                          COtherDelegate(COtherDelegate& aDelegate);
 
-      virtual	CToken*	    GetToken(CScanner& aScanner,PRInt32& anErrorCode);
+      virtual  CToken*      GetToken(CScanner& aScanner,PRInt32& anErrorCode);
       virtual PRBool      WillAddToken(CToken& aToken);
 
-		  virtual	PRBool      WillTokenize();
-		  virtual	PRBool      DidTokenize();
+      virtual  PRBool      WillTokenize();
+      virtual  PRBool      DidTokenize();
 
       virtual eParseMode  GetParseMode() const;
       virtual nsIDTD*     GetDTD(void) const;
@@ -63,14 +63,14 @@ class COtherDelegate : public ITokenizerDelegate {
 
       virtual CToken*     CreateTokenOfType(eHTMLTokenTypes aType);
 
-					    CToken* 	  ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-					    CToken* 	  ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-					    void		    ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-					    CToken* 	  ConsumeText(const nsString& aString,CScanner& aScanner,PRInt32& anErrorCode);
-					    CToken* 	  ConsumeEntity(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-					    CToken* 	  ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-					    CToken* 	  ConsumeComment(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
-					    CToken* 	  ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+              CToken*     ConsumeTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+              CToken*     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+              void        ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+              CToken*     ConsumeText(const nsString& aString,CScanner& aScanner,PRInt32& anErrorCode);
+              CToken*     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+              CToken*     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+              CToken*     ConsumeComment(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
+              CToken*     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
 
                     //the only special case method...
       virtual CToken*     ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,PRInt32& anErrorCode);
@@ -80,4 +80,6 @@ class COtherDelegate : public ITokenizerDelegate {
 };
 
 #endif
+
+
 
