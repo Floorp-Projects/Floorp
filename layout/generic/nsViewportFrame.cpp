@@ -524,6 +524,8 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
         kidReflowState.mComputedHeight = aReflowState.availableHeight;
         ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                     0, 0, 0, aStatus);
+        kidRect.width = kidDesiredSize.width;
+        kidRect.height = kidDesiredSize.height;
 
         FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, 0, 0, 0);
       }
