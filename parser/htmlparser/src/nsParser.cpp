@@ -934,7 +934,7 @@ nsresult nsParser::Tokenize(){
 
   nsresult result=NS_OK;
 
-  ++mMajorIteration;
+  ++mMajorIteration; 
 
   WillTokenize();
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
