@@ -40,10 +40,12 @@ catch (ex) {
 }
 
   var appCore = null;
-  var defaultStatus = bundle.GetStringFromName( "defaultStatus" ); 
+  var defaultStatus = bundle.GetStringFromName( "defaultStatus" );
+  var jsStatus = null;
+  var jsDefaultStatus = null;
+  var overLink = null; 
   var explicitURL = false;
   var statusTextFld = null;
-  var xulBrowserWin = null;
 
 
 function UpdateHistory(event)
@@ -149,6 +151,23 @@ function createBrowserInstance()
     }
   }
 
+function UpdateStatusField()
+{
+	var text = defaultStatus;
+
+	if(jsStatus)
+		text = jsStatus;
+	else if(overLink)
+		text = overLink;
+	else if(jsDefaultStatus)
+		text = jsDefaultStatus;
+
+	if(!statusTextFld)
+		statusTextFld = document.getElementById("statusText");
+
+	statusTextFld.setAttribute("value", text);
+}
+
 function nsXULBrowserWindow()
 {
 }
@@ -161,35 +180,43 @@ nsXULBrowserWindow.prototype =
 			return this;
 		throw Components.results.NS_NOINTERFACE;
 		},
-	setStatus : function(status)
+	setJSStatus : function(status)
 		{
 		if(status == "")
-			status = defaultStatus;
-		if(!statusTextFld)
-			statusTextFld = document.getElementById("statusText");
-
-		statusTextFld.setAttribute("value", status);
+			jsStatus = null;
+		else
+			jsStatus = status;
+		UpdateStatusField();
+		},
+	setJSDefaultStatus : function(status)
+		{
+		if(status == "")
+			jsDefaultStatus = null;
+		else
+			jsDefaultStatus = status;
+		UpdateStatusField();
 		},
 	setDefaultStatus : function(status)
 		{
-		//XXX Should do something here.
+		if(status == "")
+			defaultStatus = null;
+		else
+			defaultStatus = status;
+		UpdateStatusField();
 		},
 	setOverLink : function(link)
 		{
 		if(link == "")
-			link = defaultStatus;
-
-		if(!statusTextFld)
-			statusTextFld = document.getElementById("statusText");
-
-		statusTextFld.setAttribute("value", link);
+			overLink = null;
+		else
+			overLink = link;
+		UpdateStatusField();
 		}
 }
 
 function Startup()
   {
-	 xulBrowserWin = new nsXULBrowserWindow();
-    window.addXPConnectObject("XULBrowserWindow", xulBrowserWin);
+    window.XULBrowserWindow = new nsXULBrowserWindow();
     //  TileWindow();
     // Make sure window fits on screen initially
     //FitToScreen();
@@ -1012,8 +1039,9 @@ function BrowserEditBookmarks()
 						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
 						var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
 						dump( msg + "\n" );
-						xulBrowserWin.setStatus(msg);
-                  defaultStatus = msg;
+						defaultStatus = msg;
+						UpdateStatusField();
+						window.XULBrowserWindow.setDefaultStatus(msg);
                     // Turn progress meter off.
                     meter.setAttribute("mode","normal");
                 }

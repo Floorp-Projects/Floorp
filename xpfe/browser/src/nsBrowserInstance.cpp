@@ -33,6 +33,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsIXULBrowserWindow.h"
+#include "nsPIDOMWindow.h"
 
 // Use this trick temporarily, to minimize delta to nsBrowserAppCore.cpp.
 #define nsBrowserAppCore nsBrowserInstance
@@ -1632,15 +1633,17 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel, nsString& aMsg)
 {
-   if(!mDOMWindow)
+   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(mDOMWindow));
+   if(!piDOMWindow)
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   mDOMWindow->GetXPConnectObject("XULBrowserWindow", getter_AddRefs(xpConnectObj));
+   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   piDOMWindow->GetXPConnectObject(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
    if(xulBrowserWindow)
-      xulBrowserWindow->SetStatus(aMsg.GetUnicode());
+      xulBrowserWindow->SetDefaultStatus(aMsg.GetUnicode());
 
    return NS_OK;
 }

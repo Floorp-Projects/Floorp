@@ -31,8 +31,24 @@
 [scriptable, uuid(46B4015C-0121-11d4-9877-00C04FA0D27A)]
 interface nsIXULBrowserWindow : nsISupports
 {
-	void setStatus(in wstring status);
-	void setDefaultStatus(in wstring status);
+	/*
+	 Sets the status according to JS' version of status.
+	*/
+	void setJSStatus(in wstring status);
+
+	/*
+	 Sets the default status according to JS' version of default status.
+	*/
+	void setJSDefaultStatus(in wstring status);
+
+	/*
+	 Tells the object implementing this function what link we are currently over.
+	*/
 	void setOverLink(in wstring link);
+
+	/*
+	 Tells the browser window what to use for the default status text.
+	*/
+	void setDefaultStatus(in wstring status);
 };
 
