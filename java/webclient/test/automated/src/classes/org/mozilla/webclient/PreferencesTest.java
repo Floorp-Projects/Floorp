@@ -1,5 +1,5 @@
 /*
- * $Id: PreferencesTest.java,v 1.1 2003/09/28 06:29:18 edburns%acm.org Exp $
+ * $Id: PreferencesTest.java,v 1.2 2004/04/01 14:54:57 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -104,6 +104,8 @@ public class PreferencesTest extends WebclientTestCase {
 	// test that our pref-change callback has not been called.
 	assertFalse(System.getProperty(PREFNAME).equals(CLOSURE));
 	
+	// clear the preference
+	prefs.setPref(PREFNAME, null);
 
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
 	BrowserControlFactory.appTerminate();

@@ -38,13 +38,13 @@ import java.io.FileNotFoundException;
 
 /**
  *
- *  <p><B>BrowserControlFactory</B> uses the discovery algorithm below
- *  to find an implementation of {@link WebclientFactory}.  All of the
- *  public static methods in this class simply call through to this
- *  implemenatation instance.</p>
+ *  <p><B>BrowserControlFactory</B> uses {@link
+ *  Utilities#getImplFromServices} to find an implementation of {@link
+ *  WebclientFactory}.  All of the public static methods in this class
+ *  simply call through to this implemenatation instance.</p>
  *
  *
- * @version $Id: BrowserControlFactory.java,v 1.9 2003/09/28 06:29:04 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.10 2004/04/01 14:54:56 edburns%acm.org Exp $
  * 
  *
  */

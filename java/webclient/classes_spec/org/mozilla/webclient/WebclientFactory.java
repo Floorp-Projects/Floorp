@@ -30,11 +30,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 /**
- * <p>This interface allows a pluggable webclient API implementation.
- * The static methods in {@link BrowserControlFactory} call through to
- * methods on this interface.  Please see {@link BrowserControlFactory}
- * for information on how to hook up your <code>WebclientFactory</code>
- * implementation to the <code>BrowserControlFactory</code></p>
+ * <p>Do per-app one-time initialization and shutdown, as well as being
+ * the factory for per-window {@link BrowserControl} instances.  This
+ * interface allows a pluggable webclient API implementation.  The
+ * static methods in {@link BrowserControlFactory} call through to
+ * methods on this interface.</p>
  */
 
 public interface WebclientFactory {
