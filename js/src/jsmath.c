@@ -209,42 +209,50 @@ math_log(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 math_max(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    jsdouble x, y, z;
+    jsdouble x, z = *cx->runtime->jsNegativeInfinity;
+    uintN i;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
-    return JS_FALSE;
-    if (!js_ValueToNumber(cx, argv[1], &y))
-    return JS_FALSE;
-    if (JSDOUBLE_IS_NaN(y)||JSDOUBLE_IS_NaN(x))
-    {
-        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    if (argc == 0) {
+        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNegativeInfinity);
         return JS_TRUE;
-    }   
-    if ((x==0)&&(x==y)&&(fd_copysign(1,y)==-1))
-        z = x;
-    else
-        z = (x > y) ? x : y;
+    }
+    for (i = 0; i < argc; i++) {
+        if (!js_ValueToNumber(cx, argv[i], &x))
+            return JS_FALSE;
+        if (JSDOUBLE_IS_NaN(x)) {
+            *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+            return JS_TRUE;
+        }
+        if ((x==0)&&(x==z)&&(fd_copysign(1.0,z)==-1))
+            z = x;
+        else
+            z = (x > z) ? x : z;
+    }
     return js_NewNumberValue(cx, z, rval);
 }
 
 static JSBool
 math_min(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    jsdouble x, y, z;
+    jsdouble x, z = *cx->runtime->jsPositiveInfinity;
+    uintN i;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
-	return JS_FALSE;
-    if (!js_ValueToNumber(cx, argv[1], &y))
-    return JS_FALSE;
-    if (JSDOUBLE_IS_NaN(y)||JSDOUBLE_IS_NaN(x))
-    {
-        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    if (argc == 0) {
+        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsPositiveInfinity);
         return JS_TRUE;
     }
-    if ((x==0)&&(x==y)&&(fd_copysign(1,y)==-1))
-        z = y;
-    else
-        z = (x < y) ? x : y;
+    for (i = 0; i < argc; i++) {
+        if (!js_ValueToNumber(cx, argv[i], &x))
+            return JS_FALSE;
+        if (JSDOUBLE_IS_NaN(x)) {
+            *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+            return JS_TRUE;
+        }
+        if ((x==0)&&(x==z)&&(fd_copysign(1.0,x)==-1))
+            z = x;
+        else
+            z = (x < z) ? x : z;
+    }
     return js_NewNumberValue(cx, z, rval);
 }
 
