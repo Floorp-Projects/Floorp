@@ -1627,16 +1627,13 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
 {
   if (gNoisy) { printf("nsTextEditor::SetTextPropertiesForNodeWithDifferentParents\n"); }
   nsresult result=NS_OK;
+  PRUint32 count;
   if (!aRange || !aStartNode || !aEndNode || !aParent || !aPropName)
     return NS_ERROR_NULL_POINTER;
   // create a style node for the text in the start parent
   nsCOMPtr<nsIDOMNode>parent;
-  result = aStartNode->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(result)) {
-    return result;
-  }
 
-  // create style nodes for all the content between the start and end nodes
+  // create new parent nodes for all the content between the start and end nodes
   nsCOMPtr<nsIContentIterator>iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
                                               kIContentIteratorIID, getter_AddRefs(iter));
@@ -1670,7 +1667,6 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
             IsTextPropertySetByContent(node, aPropName, aAttribute, aValue, textPropertySet, getter_AddRefs(resultNode));
             if (PR_FALSE==textPropertySet)
             {
-              nsCOMPtr<nsIDOMNode>parent;
               charNode->GetParentNode(getter_AddRefs(parent));
               if (!parent) {
                 return NS_ERROR_NULL_POINTER;
@@ -1683,12 +1679,14 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
 
               nsCOMPtr<nsIDOMNode>newStyleNode;
               result = nsEditor::CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
-              if (NS_SUCCEEDED(result) && newStyleNode) {
+              if (NS_SUCCEEDED(result) && newStyleNode) 
+              {
                 nsCOMPtr<nsIDOMNode>contentNode;
                 contentNode = do_QueryInterface(content);
-                result = nsEditor::DeleteNode(contentNode);
+                if (!contentNode) { return NS_ERROR_NULL_POINTER;}
+                result = GetLengthOfDOMNode(contentNode, count);
                 if (NS_SUCCEEDED(result)) {
-                  result = nsEditor::InsertNode(contentNode, newStyleNode, 0);
+                  result = SetTextPropertiesForNode(contentNode, newStyleNode, 0, count, aPropName, aAttribute, aValue);
                 }
               }
             }
@@ -1696,30 +1694,42 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
         }
         // note we don't check the result, we just rely on iter->IsDone
         iter->Next();
-        result = iter->CurrentNode(getter_AddRefs(content));
+        iter->CurrentNode(getter_AddRefs(content));
       }
     }
   }
 
-  // create a style node for the text in the start parent
-  nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
-  nodeAsChar = do_QueryInterface(aStartNode);
-  if (!nodeAsChar)
-    return NS_ERROR_FAILURE;
-  PRUint32 count;
-  nodeAsChar->GetLength(&count);
-  result = SetTextPropertiesForNode(aStartNode, parent, aStartOffset, count, aPropName, aAttribute, aValue);
+  // handle endpoints
+  if (NS_SUCCEEDED(result))
+  {
+    // create a style node for the text in the start parent
+    result = aStartNode->GetParentNode(getter_AddRefs(parent));
+    if (NS_FAILED(result)) {
+      return result;
+    }
+    nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
+    nodeAsChar = do_QueryInterface(aStartNode);
+    if (nodeAsChar)
+    {   
+      nodeAsChar->GetLength(&count);
+      result = SetTextPropertiesForNode(aStartNode, parent, aStartOffset, count, aPropName, aAttribute, aValue);
+    }
 
-  // create a style node for the text in the end parent
-  result = aEndNode->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(result)) {
-    return result;
+    if (NS_SUCCEEDED(result))
+    {
+      // create a style node for the text in the end parent
+      result = aEndNode->GetParentNode(getter_AddRefs(parent));
+      if (NS_FAILED(result)) {
+        return result;
+      }
+      nodeAsChar = do_QueryInterface(aEndNode);
+      if (nodeAsChar)
+      {
+        nodeAsChar->GetLength(&count);
+        result = SetTextPropertiesForNode(aEndNode, parent, 0, aEndOffset, aPropName, aAttribute, aValue);
+      }
+    }
   }
-  nodeAsChar = do_QueryInterface(aEndNode);
-  if (!nodeAsChar)
-    return NS_ERROR_FAILURE;
-  nodeAsChar->GetLength(&count);
-  result = SetTextPropertiesForNode(aEndNode, parent, 0, aEndOffset, aPropName, aAttribute, aValue);
 
   return result;
 }
