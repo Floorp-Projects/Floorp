@@ -113,7 +113,7 @@ protected:
     nsXULPrototypeCache();
     virtual ~nsXULPrototypeCache();
 
-    static PRBool UnlockJSObjectCallback(nsHashKey* aKey, void* aData, void* aClosure);
+    static PRBool PR_CALLBACK UnlockJSObjectCallback(nsHashKey* aKey, void* aData, void* aClosure);
     JSRuntime*  GetJSRuntime();
 
     nsSupportsHashtable mPrototypeTable;
