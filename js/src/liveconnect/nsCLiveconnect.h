@@ -62,7 +62,7 @@ public:
      *                     wrapped up as java wrapper netscape.javascript.JSObject.
      */
     NS_IMETHOD	
-    GetMember(JNIEnv *jEnv, jsobject obj, const char *name, jobject *pjobj);
+    GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject *pjobj);
 
     /**
      * get member of a Native JSObject for a given index.
@@ -73,7 +73,7 @@ public:
      *                     the member. 
      */
     NS_IMETHOD	
-    GetSlot(JNIEnv *jEnv, jsobject obj, int index, jobject *pjobj);
+    GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject *pjobj);
 
     /**
      * set member of a Native JSObject for a given name.
@@ -85,7 +85,7 @@ public:
      *                     then a internal mapping is consulted to convert to a NJSObject.
      */
     NS_IMETHOD	
-    SetMember(JNIEnv *jEnv, jsobject obj, const char *name, jobject jobj);
+    SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject jobj);
 
     /**
      * set member of a Native JSObject for a given index.
@@ -97,7 +97,7 @@ public:
      *                     then a internal mapping is consulted to convert to a NJSObject.
      */
     NS_IMETHOD	
-    SetSlot(JNIEnv *jEnv, jsobject obj, int slot, jobject jobj);
+    SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject jobj);
 
     /**
      * remove member of a Native JSObject for a given name.
@@ -106,7 +106,7 @@ public:
      * @param name       - Name of a member.
      */
     NS_IMETHOD	
-    RemoveMember(JNIEnv *jEnv, jsobject obj, const char *name);
+    RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length);
 
     /**
      * call a method of Native JSObject. 
@@ -117,7 +117,7 @@ public:
      * @param pjobj      - return value.
      */
     NS_IMETHOD	
-    Call(JNIEnv *jEnv, jsobject obj, const char *name, jobjectArray jobjArr, jobject *pjobj);
+    Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobjectArray jobjArr, jobject *pjobj);
 
     /**
      * Evaluate a script with a Native JS Object representing scope.
@@ -130,7 +130,7 @@ public:
      */
     NS_IMETHOD	
     //Eval(JNIEnv *jEnv, jsobject obj, nsIPrincipal **pNSIPrincipaArray, PRInt32 numPrincipals, const char *script, jobject *pjobj);
-    Eval(JNIEnv *jEnv, jsobject obj, const char *script, jobject *pjobj);
+    Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jint length, jobject *pjobj);
 
     /**
      * Get the window object for a plugin instance.

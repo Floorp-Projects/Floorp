@@ -44,19 +44,19 @@ public:
      *                     a corresponding java type. If it is a NJSObject, then it is
      *                     wrapped up as java wrapper netscape.javascript.JSObject.
      */
-    NS_IMETHOD	
-    GetMember(JNIEnv *jEnv, jsobject obj, const char *name, jobject *pjobj) = 0;
+    NS_IMETHOD
+    GetMember(JNIEnv *jEnv, jsobject jsobj, const jchar *name, jsize length, jobject *pjobj) = 0;
 
     /**
      * get member of a Native JSObject for a given index.
      *
      * @param obj        - A Native JS Object.
-     * @param index      - Index of a member.
+     * @param slot      - Index of a member.
      * @param pjobj      - return parameter as a java object representing 
      *                     the member. 
      */
-    NS_IMETHOD	
-    GetSlot(JNIEnv *jEnv, jsobject obj, int index, jobject *pjobj) = 0;
+    NS_IMETHOD
+    GetSlot(JNIEnv *jEnv, jsobject jsobj, jint slot, jobject *pjobj) = 0;
 
     /**
      * set member of a Native JSObject for a given name.
@@ -67,8 +67,8 @@ public:
      *                     using standard JNI calls but if it is a wrapper to a JSObject
      *                     then a internal mapping is consulted to convert to a NJSObject.
      */
-    NS_IMETHOD	
-    SetMember(JNIEnv *jEnv, jsobject obj, const char *name, jobject jobj) = 0;
+    NS_IMETHOD
+    SetMember(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length, jobject jobj) = 0;
 
     /**
      * set member of a Native JSObject for a given index.
@@ -79,8 +79,8 @@ public:
      *                     using standard JNI calls but if it is a wrapper to a JSObject
      *                     then a internal mapping is consulted to convert to a NJSObject.
      */
-    NS_IMETHOD	
-    SetSlot(JNIEnv *jEnv, jsobject obj, int slot, jobject jobj) = 0;
+    NS_IMETHOD
+    SetSlot(JNIEnv *jEnv, jsobject jsobj, jint slot, jobject jobj) = 0;
 
     /**
      * remove member of a Native JSObject for a given name.
@@ -88,8 +88,8 @@ public:
      * @param obj        - A Native JS Object.
      * @param name       - Name of a member.
      */
-    NS_IMETHOD	
-    RemoveMember(JNIEnv *jEnv, jsobject obj, const char *name) = 0;
+    NS_IMETHOD
+    RemoveMember(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length) = 0;
 
     /**
      * call a method of Native JSObject. 
@@ -99,8 +99,8 @@ public:
      * @param jobjArr    - Array of jobjects representing parameters of method being caled.
      * @param pjobj      - return value.
      */
-    NS_IMETHOD	
-    Call(JNIEnv *jEnv, jsobject obj, const char *name, jobjectArray jobjArr, jobject *pjobj) = 0;
+    NS_IMETHOD
+    Call(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length, jobjectArray jobjArr, jobject *pjobj) = 0;
 
     /**
      * Evaluate a script with a Native JS Object representing scope.
@@ -111,9 +111,9 @@ public:
      * @param script             - Script to be executed.
      * @param pjobj              - return value.
      */
-    NS_IMETHOD	
-    //Eval(jsobject obj, nsIPrincipal **pNSIPrincipaArray, PRInt32 numPrincipals, const char *script, jobject *pjobj) = 0;
-    Eval(JNIEnv *jEnv, jsobject obj, const char *script, jobject *pjobj) = 0;
+    NS_IMETHOD
+    //Eval(jsobject jsobj, nsIPrincipal **pNSIPrincipaArray, PRInt32 numPrincipals, const jchar* script, jobject *pjobj) = 0;
+    Eval(JNIEnv *jEnv, jsobject jsobj, const jchar* script, jsize length, jobject *pjobj) = 0;
 
     /**
      * Get the window object for a plugin instance.
@@ -124,7 +124,7 @@ public:
      *                             representing the window object of a frame 
      *                             in which a applet/bean resides.
      */
-    NS_IMETHOD	
+    NS_IMETHOD
     GetWindow(JNIEnv *jEnv, void *pJavaObject, jsobject *pobj) = 0;
 
     /**
@@ -133,8 +133,8 @@ public:
      * @param jEnv       - JNIEnv on which the call is being made.
      * @param obj        - A Native JS Object.
      */
-    NS_IMETHOD	
-    FinalizeJSObject(JNIEnv *jEnv, jsobject obj) = 0;
+    NS_IMETHOD
+    FinalizeJSObject(JNIEnv *jEnv, jsobject jsobj) = 0;
 
 };
 
@@ -144,7 +144,7 @@ public:
     0x3318,                                          \
     0x11d2,                                          \
     {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
-};
+}
 
 #define NS_CLIVECONNECT_CID                          \
 { /* b8f0cef0-3931-11d2-97f0-00805f8a28d0 */         \
@@ -152,6 +152,6 @@ public:
     0x3931,                                          \
     0x11d2,                                          \
     {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
-};
+}
 
 #endif // nsILiveconnect_h___
