@@ -1877,39 +1877,43 @@ function cli_ijoin (e)
         return false;
     }
     
-    var ary = e.inputData.match(/(\S+) ?(\S+)?/);
+    var ary = e.inputData.match(/(((\S+), *)*(\S+)) *(\S+)?/);
     var name;
     var key = "";
-    
+    var namelist;
+
     if (ary)
     {
-        name = ary[1];
-        if (2 in ary)
-            key = ary[2];
+        namelist = ary[1].split(/, */);
+        if (5 in ary)
+            key = ary[5];
     }
     else
     {
         if (client.currentObject.TYPE == "IRCChannel")
-            name = client.currentObject.name;
+            namelist = [client.currentObject.name];
         else
             return false;
 
         if (client.currentObject.mode.key)
             key = client.currentObject.mode.key
     }
-    
-    if ((name[0] != "#") && (name[0] != "&") && (name[0] != "+") &&
-        (name[0] != "!"))
-        name = "#" + name;
 
-    e.channel = e.server.addChannel (name);
-    e.channel.join(key);
-    if (!("messages" in e.channel))
-        e.channel.display (getMsg("cli_ijoinMsg3",e.channel.name), "INFO");
-    setCurrentObject(e.channel);
-    
+    for (i in namelist)
+    {
+        name = namelist[i];
+        if ((name[0] != "#") && (name[0] != "&") && (name[0] != "+") &&
+            (name[0] != "!"))
+            name = "#" + name;
+
+        e.channel = e.server.addChannel (name);
+        e.channel.join(key);
+        if (!("messages" in e.channel))
+            e.channel.display (getMsg("cli_ijoinMsg3",e.channel.name), "INFO");
+        setCurrentObject(e.channel);
+    }
+
     return true;
-    
 }
 
 client.onInputLeave =
