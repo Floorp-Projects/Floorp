@@ -216,7 +216,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID)
 	}
 	catch(ex)
 	{
-        printf("Error loading with many headers to download\n");
+        dump("Error loading with many headers to download\n");
 	}
   }
   else

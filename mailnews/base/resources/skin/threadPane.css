@@ -75,11 +75,11 @@ treeitem[Flagged="flagged"] treerow > treecell.flagcol > .tree-button{
   list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
 }
 
-treecell.threadColumnHeader[currentView="threaded"] {
+treecell.threadColumnHeader[currentView="threaded"] > .tree-button{
   list-style-image: url("chrome://messenger/skin/threadcol.gif");
 }
 
-treecell.threadColumnHeader[currentView="unthreaded"] {
+treecell.threadColumnHeader[currentView="unthreaded"] > .tree-button{
   list-style-image: url("chrome://messenger/skin/unthreadcol.gif");
 }
 
