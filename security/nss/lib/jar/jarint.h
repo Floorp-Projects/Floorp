@@ -44,9 +44,9 @@ extern CERTCertDBHandle *JAR_open_database (void);
 
 extern int JAR_close_database (CERTCertDBHandle *certdb);
 
-extern int jar_close_key_database (SECKEYKeyDBHandle *keydb);
+extern int jar_close_key_database (void *keydb);
 
-extern SECKEYKeyDBHandle *jar_open_key_database (void);
+extern void *jar_open_key_database (void);
 
 extern JAR_Signer *JAR_new_signer (void);
 
@@ -110,7 +110,7 @@ JAR_FOPEN_to_PR_Open(const char *name, const char *mode);
 #endif
 
 int jar_create_pk7
-   (CERTCertDBHandle *certdb, SECKEYKeyDBHandle *keydb,
+   (CERTCertDBHandle *certdb, void *keydb,
        CERTCertificate *cert, char *password, JAR_FILE infp, 
        JAR_FILE outfp);
 

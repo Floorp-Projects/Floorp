@@ -86,8 +86,6 @@ SECStatus SEC_TraversePermCerts
 static int jar_validate_pkcs7 
      (JAR *jar, JAR_Signer *signer, char *data, long length);
 
-static int jar_decode (JAR *jar, char *data, long length);
-
 static void jar_catch_bytes
      (void *arg, const char *buf, unsigned long len);
 
@@ -120,7 +118,9 @@ static char *jar_basename (const char *path);
 static int jar_signal 
      (int status, JAR *jar, const char *metafile, char *pathname);
 
+#ifdef DEBUG
 static int jar_insanity_check (char ZHUGEP *data, long length);
+#endif
 
 int jar_parse_mf
     (JAR *jar, char ZHUGEP *raw_manifest, 
@@ -1658,7 +1658,7 @@ static int jar_validate_pkcs7
   {
   SECItem detdig;
 
-  SEC_PKCS7ContentInfo *cinfo;
+  SEC_PKCS7ContentInfo *cinfo = NULL;
   SEC_PKCS7DecoderContext *dcx;
 
   int status = 0;
@@ -1870,7 +1870,7 @@ static CERTCertificate *jar_get_certificate
   int found = 0;
 
   JAR_Item *it;
-  JAR_Cert *fing;
+  JAR_Cert *fing = NULL;
 
   JAR_Context *ctx;
 
@@ -1907,6 +1907,7 @@ static CERTCertificate *jar_get_certificate
     return NULL;
     }
 
+  PORT_Assert(fing != NULL);
   *result = 0;
   return fing->cert;
   }

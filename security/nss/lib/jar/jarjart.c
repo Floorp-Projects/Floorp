@@ -112,7 +112,7 @@ static SECStatus jar_list_cert_callback
 
 char *JAR_JAR_list_certs (void)
   {
-  SECStatus status;
+  SECStatus status = SECFailure;
   CERTCertDBHandle *certdb;
 
   char *ugly_list;
@@ -132,7 +132,7 @@ char *JAR_JAR_list_certs (void)
 
   JAR_close_database (certdb);
 
-  return status ? NULL : ugly_list;
+  return (status != SECSuccess) ? NULL : ugly_list;
   }
 
 int JAR_JAR_validate_archive (char *filename)
@@ -312,7 +312,7 @@ int JAR_JAR_sign_archive
   JAR_FILE out_fp;
 
   CERTCertDBHandle *certdb;
-  SECKEYKeyDBHandle *keydb;
+  void *keydb;
 
   CERTCertificate *cert;
 
