@@ -33,7 +33,7 @@ var gJSAttr = {};
 var gCoreHTMLAttr =
 [
   "^id",
-	"^class",
+	"class",
 	"title"
 ];
 
