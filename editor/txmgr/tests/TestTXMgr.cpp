@@ -4542,7 +4542,7 @@ main (int argc, char *argv[])
 {
   nsresult result;
 
-  nsRepository::RegisterFactory(kCTransactionManagerFactoryCID,
+  nsRepository::RegisterComponent(kCTransactionManagerFactoryCID, NULL, NULL,
                                 TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
 
   result = simple_test();
