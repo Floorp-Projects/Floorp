@@ -101,12 +101,13 @@ my $format = GetFormat("list/list", $::FORM{'format'}, $::FORM{'ctype'});
 # http://www.browsercaps.org used as source of compatible browsers.
 #
 my $serverpush =
-  exists $ENV{'HTTP_USER_AGENT'} 
-    && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ 
-      && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/
-        && $format->{'extension'} eq "html"
-          && !defined($::FORM{'serverpush'})
-            || $::FORM{'serverpush'};
+  $format->{'extension'} eq "html"
+    && exists $ENV{'HTTP_USER_AGENT'} 
+      && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ 
+        && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/
+          && $ENV{'HTTP_USER_AGENT'} !~ /WebKit/
+            && !defined($::FORM{'serverpush'})
+              || $::FORM{'serverpush'};
 
 my $order = $::FORM{'order'} || "";
 my $order_from_cookie = 0;  # True if $order set using $::COOKIE{'LASTORDER'}
