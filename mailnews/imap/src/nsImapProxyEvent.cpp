@@ -34,8 +34,19 @@
 #include <windows.h>						// for InterlockedIncrement
 #endif
 
+nsImapEvent::nsImapEvent()
+{
+    m_notifyCompletion = PR_FALSE;
+}
+
 nsImapEvent::~nsImapEvent()
 {
+}
+
+void
+nsImapEvent::SetNotifyCompletion(PRBool notifyCompletion)
+{
+    m_notifyCompletion = PR_TRUE;
 }
 
 void
@@ -136,9 +147,6 @@ NS_IMETHODIMP nsImapLogProxy::HandleImapLogData(const char *aLogData)
 		else
 		{
 				res = m_realImapLog->HandleImapLogData(aLogData);
-        // notify the protocol instance that the fe event has been completed.
-        // *** important ***
-        m_protocol->NotifyFEEventCompletion();
 		}
 		return res;
 }
@@ -163,7 +171,8 @@ NS_IMETHODIMP
 nsImapLogProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapLog->HandleImapLogData(m_logData);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
 		return res;
 }
 
@@ -207,7 +216,10 @@ nsImapMailFolderSinkProxy::PossibleImapMailbox(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -236,7 +248,6 @@ nsImapMailFolderSinkProxy::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMailFolderSink->MailboxDiscoveryDone(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -264,7 +275,6 @@ nsImapMailFolderSinkProxy::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
     {
         res = m_realImapMailFolderSink->UpdateImapMailboxInfo(aProtocol,
                                                         aSpec);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -292,7 +302,6 @@ nsImapMailFolderSinkProxy::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
     {
         res = m_realImapMailFolderSink->UpdateImapMailboxStatus(aProtocol,
                                                         aSpec);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -315,7 +324,6 @@ nsImapMailFolderSinkProxy::ChildDiscoverySucceeded(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMailFolderSink->ChildDiscoverySucceeded(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -343,7 +351,6 @@ nsImapMailFolderSinkProxy::OnlineFolderDelete(nsIImapProtocol* aProtocol,
     {
         res = m_realImapMailFolderSink->OnlineFolderDelete(aProtocol,
                                                        folderName);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -371,7 +378,6 @@ nsImapMailFolderSinkProxy::OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
     {
         res = m_realImapMailFolderSink->OnlineFolderCreateFailed(aProtocol,
                                                              folderName);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -399,7 +405,6 @@ nsImapMailFolderSinkProxy::OnlineFolderRename(nsIImapProtocol* aProtocol,
     {
         res = m_realImapMailFolderSink->OnlineFolderRename(aProtocol,
                                                        aStruct);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -427,7 +432,6 @@ nsImapMailFolderSinkProxy::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
     {
         res = m_realImapMailFolderSink->SubscribeUpgradeFinished(aProtocol,
                                                              aState);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -455,7 +459,6 @@ nsImapMailFolderSinkProxy::PromptUserForSubscribeUpdatePath(
     {
         res = m_realImapMailFolderSink->PromptUserForSubscribeUpdatePath
                                                          (aProtocol, aBool);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -482,7 +485,6 @@ nsImapMailFolderSinkProxy::FolderIsNoSelect(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMailFolderSink->FolderIsNoSelect(aProtocol, aInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -504,7 +506,10 @@ nsImapMailFolderSinkProxy::SetupHeaderParseStream(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -536,7 +541,6 @@ nsImapMailFolderSinkProxy::ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMailFolderSink->ParseAdoptedHeaderLine(aProtocol, aMsgLineInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -559,7 +563,6 @@ nsImapMailFolderSinkProxy::NormalEndHeaderParseStream(nsIImapProtocol* aProtocol
     else
     {
         res = m_realImapMailFolderSink->NormalEndHeaderParseStream(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -582,7 +585,6 @@ nsImapMailFolderSinkProxy::AbortHeaderParseStream(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMailFolderSink->AbortHeaderParseStream(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -626,7 +628,10 @@ nsImapMessageSinkProxy::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -658,7 +663,6 @@ nsImapMessageSinkProxy::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMessageSink->ParseAdoptedMsgLine(aProtocol, aMsgLineInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -681,7 +685,6 @@ nsImapMessageSinkProxy::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMessageSink->NormalEndMsgWriteStream(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -704,7 +707,6 @@ nsImapMessageSinkProxy::AbortMsgWriteStream(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMessageSink->AbortMsgWriteStream(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -731,7 +733,6 @@ nsImapMessageSinkProxy::OnlineCopyReport(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMessageSink->OnlineCopyReport(aProtocol, aCopyState);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -754,7 +755,6 @@ nsImapMessageSinkProxy::BeginMessageUpload(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMessageSink->BeginMessageUpload(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -781,7 +781,6 @@ nsImapMessageSinkProxy::UploadMessageFile(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMessageSink->UploadMessageFile(aProtocol, aMsgInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -808,7 +807,6 @@ nsImapMessageSinkProxy::NotifyMessageFlags(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMessageSink->NotifyMessageFlags(aProtocol, aKeyStruct);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -835,7 +833,6 @@ nsImapMessageSinkProxy::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMessageSink->NotifyMessageDeleted(aProtocol, aStruct);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -857,7 +854,10 @@ nsImapMessageSinkProxy::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -907,7 +907,6 @@ nsImapExtensionSinkProxy::SetUserAuthenticated(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapExtensionSink->SetUserAuthenticated(aProtocol, aBool);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -934,7 +933,6 @@ nsImapExtensionSinkProxy::SetMailServerUrls(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapExtensionSink->SetMailServerUrls(aProtocol, hostName);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -961,7 +959,6 @@ nsImapExtensionSinkProxy::SetMailAccountUrl(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapExtensionSink->SetMailAccountUrl(aProtocol, hostName);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -983,7 +980,10 @@ nsImapExtensionSinkProxy::ClearFolderRights(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1010,7 +1010,10 @@ nsImapExtensionSinkProxy::AddFolderRights(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1042,7 +1045,6 @@ nsImapExtensionSinkProxy::RefreshFolderRights(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapExtensionSink->RefreshFolderRights(aProtocol, aclRights);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1064,7 +1066,10 @@ nsImapExtensionSinkProxy::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1097,7 +1102,6 @@ nsImapExtensionSinkProxy::SetFolderAdminURL(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapExtensionSink->SetFolderAdminURL(aProtocol, aInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1145,7 +1149,6 @@ nsImapMiscellaneousSinkProxy::AddSearchResult(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->AddSearchResult(aProtocol, searchHitLine);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1172,7 +1175,6 @@ nsImapMiscellaneousSinkProxy::GetArbitraryHeaders(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->GetArbitraryHeaders(aProtocol, aInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1194,7 +1196,10 @@ nsImapMiscellaneousSinkProxy::GetShouldDownloadArbitraryHeaders(
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1223,7 +1228,10 @@ nsImapMiscellaneousSinkProxy::GetShowAttachmentsInline(
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1248,7 +1256,10 @@ nsImapMiscellaneousSinkProxy::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1276,7 +1287,6 @@ nsImapMiscellaneousSinkProxy::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMiscellaneousSink->UpdateSecurityStatus(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1299,7 +1309,6 @@ nsImapMiscellaneousSinkProxy::FinishImapConnection(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMiscellaneousSink->FinishImapConnection(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1326,7 +1335,6 @@ nsImapMiscellaneousSinkProxy::SetImapHostPassword(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->SetImapHostPassword(aProtocol, aInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1353,7 +1361,6 @@ nsImapMiscellaneousSinkProxy::GetPasswordForUser(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->GetPasswordForUser(aProtocol, userName);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1372,7 +1379,10 @@ nsImapMiscellaneousSinkProxy::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1399,7 +1409,10 @@ nsImapMiscellaneousSinkProxy::GetStoredUIDValidity(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1423,7 +1436,10 @@ nsImapMiscellaneousSinkProxy::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1455,7 +1471,6 @@ nsImapMiscellaneousSinkProxy::FEAlert(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->FEAlert(aProtocol, aString);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1482,7 +1497,6 @@ nsImapMiscellaneousSinkProxy::FEAlertFromServer(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->FEAlertFromServer(aProtocol, aString);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1509,7 +1523,6 @@ nsImapMiscellaneousSinkProxy::ProgressStatus(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->ProgressStatus(aProtocol, statusMsg);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1536,7 +1549,6 @@ nsImapMiscellaneousSinkProxy::PercentProgress(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->PercentProgress(aProtocol, aInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1559,7 +1571,6 @@ nsImapMiscellaneousSinkProxy::PastPasswordCheck(nsIImapProtocol* aProtocol)
     else
     {
         res = m_realImapMiscellaneousSink->PastPasswordCheck(aProtocol);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1581,7 +1592,10 @@ nsImapMiscellaneousSinkProxy::CommitNamespaces(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1608,7 +1622,10 @@ nsImapMiscellaneousSinkProxy::CommitCapabilityForHost(nsIImapProtocol* aProtocol
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -1640,7 +1657,6 @@ nsImapMiscellaneousSinkProxy::TunnelOutStream(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->TunnelOutStream(aProtocol, aInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1667,7 +1683,6 @@ nsImapMiscellaneousSinkProxy::ProcessTunnel(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapMiscellaneousSink->ProcessTunnel(aProtocol, aInfo);
-        aProtocol->NotifyFEEventCompletion();
     }
     return res;
 }
@@ -1730,7 +1745,8 @@ PossibleImapMailboxProxyEvent::HandleEvent()
     nsresult res =
         m_proxy->m_realImapMailFolderSink->PossibleImapMailbox(
             m_proxy->m_protocol, &m_mailboxSpec);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -1749,7 +1765,8 @@ MailboxDiscoveryDoneProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->MailboxDiscoveryDone(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -1790,6 +1807,7 @@ UpdateImapMailboxInfoProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->UpdateImapMailboxInfo(
         m_proxy->m_protocol, &m_mailboxSpec);
+//    if (m_notifyCompletion)
 //    m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1831,7 +1849,8 @@ UpdateImapMailboxStatusProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->UpdateImapMailboxStatus(
         m_proxy->m_protocol, &m_mailboxSpec);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -1850,7 +1869,8 @@ ChildDiscoverySucceededProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->ChildDiscoverySucceeded(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -1876,7 +1896,8 @@ OnlineFolderDeleteProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->OnlineFolderDelete(
         m_proxy->m_protocol, m_folderName); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -1902,7 +1923,8 @@ OnlineFolderCreateFailedProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->OnlineFolderCreateFailed(
         m_proxy->m_protocol, m_folderName);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -1940,7 +1962,8 @@ OnlineFolderRenameProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->OnlineFolderRename(
         m_proxy->m_protocol, &m_folderRenameStruct);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -1964,7 +1987,8 @@ SubscribeUpgradeFinishedProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->SubscribeUpgradeFinished(
         m_proxy->m_protocol, &m_state);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -1989,7 +2013,8 @@ PromptUserForSubscribeUpdatePathProxyEvent::HandleEvent()
     nsresult res =
         m_proxy->m_realImapMailFolderSink->PromptUserForSubscribeUpdatePath(
             m_proxy->m_protocol, &m_bool); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2025,7 +2050,8 @@ FolderIsNoSelectProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->FolderIsNoSelect(
         m_proxy->m_protocol, &m_folderQueryInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2090,7 +2116,8 @@ SetupHeaderParseStreamProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->SetupHeaderParseStream(
         m_proxy->m_protocol, &m_streamInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2124,6 +2151,7 @@ ParseAdoptedHeaderLineProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->ParseAdoptedHeaderLine(
         m_proxy->m_protocol, &m_msgLineInfo);
+//    if (m_notifyCompletion)
 //    m_proxy->m_protocol->NotifyFEEventCompletion();
 	// imap thread is NOT waiting for FEEvent completion, so don't send it.
     return res;
@@ -2145,6 +2173,7 @@ NormalEndHeaderParseStreamProxyEvent::HandleEvent()
     nsresult res = m_proxy->m_realImapMailFolderSink->NormalEndHeaderParseStream(
         m_proxy->m_protocol);
 	// IMAP thread is NOT waiting for FEEvent Completion.
+//    if (m_notifyCompletion)
 //    m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2164,7 +2193,8 @@ AbortHeaderParseStreamProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->AbortHeaderParseStream(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2239,7 +2269,8 @@ SetupMsgWriteStreamProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->SetupMsgWriteStream(
         m_proxy->m_protocol, &m_streamInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2273,7 +2304,8 @@ ParseAdoptedMsgLineProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->ParseAdoptedMsgLine(
         m_proxy->m_protocol, &m_msgLineInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
     
@@ -2292,7 +2324,8 @@ NormalEndMsgWriteStreamProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->NormalEndMsgWriteStream(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
     
@@ -2312,6 +2345,7 @@ AbortMsgWriteStreamProxyEvent::HandleEvent()
     nsresult res = m_proxy->m_realImapMessageSink->AbortMsgWriteStream(
         m_proxy->m_protocol);
 	// IMAP thread is NOT waiting for FEEvent Completion.
+//    if (m_notifyCompletion)
 //    m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2341,7 +2375,8 @@ OnlineCopyReportProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->OnlineCopyReport(
         m_proxy->m_protocol, &m_copyState); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2360,7 +2395,8 @@ BeginMessageUploadProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->BeginMessageUpload(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2394,7 +2430,8 @@ UploadMessageFileProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->UploadMessageFile(
         m_proxy->m_protocol, &m_msgInfo); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2424,7 +2461,8 @@ NotifyMessageFlagsProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->NotifyMessageFlags(
         m_proxy->m_protocol, &m_keyStruct); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2463,7 +2501,8 @@ NotifyMessageDeletedProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->NotifyMessageDeleted(
         m_proxy->m_protocol, &m_deleteMessageStruct); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2485,7 +2524,8 @@ GetMessageSizeFromDBProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMessageSink->GetMessageSizeFromDB(
         m_proxy->m_protocol, m_sizeInfo); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2518,7 +2558,8 @@ SetUserAuthenticatedProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->SetUserAuthenticated(
         m_proxy->m_protocol, m_bool); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2544,7 +2585,8 @@ SetMailServerUrlsProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->SetMailServerUrls(
         m_proxy->m_protocol, m_hostName); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2570,7 +2612,8 @@ SetMailAccountUrlProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->SetMailAccountUrl(
         m_proxy->m_protocol, m_hostName); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2612,7 +2655,8 @@ ClearFolderRightsProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->ClearFolderRights(
         m_proxy->m_protocol, &m_aclRightsInfo); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2654,7 +2698,8 @@ AddFolderRightsProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->AddFolderRights(
         m_proxy->m_protocol, &m_aclRightsInfo); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2696,7 +2741,8 @@ RefreshFolderRightsProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->RefreshFolderRights(
         m_proxy->m_protocol, &m_aclRightsInfo); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2738,7 +2784,8 @@ FolderNeedsACLInitializedProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->FolderNeedsACLInitialized(
         m_proxy->m_protocol, &m_aclRightsInfo); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2772,7 +2819,8 @@ SetFolderAdminURLProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->SetFolderAdminURL(
         m_proxy->m_protocol, &m_folderQueryInfo); 
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2811,7 +2859,8 @@ AddSearchResultProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->AddSearchResult(
         m_proxy->m_protocol, m_searchHitLine);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2832,7 +2881,8 @@ GetArbitraryHeadersProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->GetArbitraryHeaders(
         m_proxy->m_protocol, m_info);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2854,7 +2904,8 @@ GetShouldDownloadArbitraryHeadersProxyEvent::HandleEvent()
     nsresult res = 
         m_proxy->m_realImapMiscellaneousSink->GetShouldDownloadArbitraryHeaders(
             m_proxy->m_protocol, m_info);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2875,7 +2926,8 @@ GetShowAttachmentsInlineProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->GetShowAttachmentsInline(
         m_proxy->m_protocol, m_bool);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2894,7 +2946,8 @@ HeaderFetchCompletedProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->HeaderFetchCompleted(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2913,7 +2966,8 @@ FinishImapConnectionProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->FinishImapConnection(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2932,7 +2986,8 @@ UpdateSecurityStatusProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->UpdateSecurityStatus(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2966,7 +3021,8 @@ SetImapHostPasswordProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->SetImapHostPassword(
         m_proxy->m_protocol, &m_info);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -2992,7 +3048,8 @@ GetPasswordForUserProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->GetPasswordForUser(
         m_proxy->m_protocol, m_userName);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3013,7 +3070,8 @@ SetBiffStateAndUpdateProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->SetBiffStateAndUpdate(
         m_proxy->m_protocol, m_biffState);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3048,7 +3106,8 @@ GetStoredUIDValidityProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->GetStoredUIDValidity(
         m_proxy->m_protocol, &m_uidValidityInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3068,7 +3127,8 @@ LiteSelectUIDValidityProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->LiteSelectUIDValidity(
         m_proxy->m_protocol, m_uidValidity);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3094,7 +3154,8 @@ FEAlertProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->FEAlert(
         m_proxy->m_protocol, m_alertString);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3120,7 +3181,8 @@ FEAlertFromServerProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->FEAlertFromServer(
         m_proxy->m_protocol, m_alertString);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3146,7 +3208,8 @@ ProgressStatusProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->ProgressStatus(
         m_proxy->m_protocol, m_statusMsg);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3178,7 +3241,8 @@ PercentProgressProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->PercentProgress(
         m_proxy->m_protocol, &m_progressInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3197,7 +3261,8 @@ PastPasswordCheckProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->PastPasswordCheck(
         m_proxy->m_protocol);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3223,7 +3288,8 @@ CommitNamespacesProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->CommitNamespaces(
         m_proxy->m_protocol, m_hostName);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3249,7 +3315,8 @@ CommitCapabilityForHostProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->CommitCapabilityForHost(
         m_proxy->m_protocol, m_hostName);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3282,7 +3349,8 @@ TunnelOutStreamProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->TunnelOutStream(
         m_proxy->m_protocol, &m_msgLineInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
 
@@ -3310,6 +3378,7 @@ ProcessTunnelProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->ProcessTunnel(
         m_proxy->m_protocol, &m_tunnelInfo);
-    m_proxy->m_protocol->NotifyFEEventCompletion();
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }

@@ -240,14 +240,17 @@ public:
 /* ******* Imap Base Event struct ******** */
 struct nsImapEvent : public PLEvent
 {
+  nsImapEvent();
 	virtual ~nsImapEvent();
 	virtual void InitEvent();
 
 	NS_IMETHOD HandleEvent() = 0;
 	void PostEvent(nsIEventQueue* aEventQ);
-
+  virtual void SetNotifyCompletion(PRBool notifyCompletion);
+  
 	static void PR_CALLBACK imap_event_handler(PLEvent* aEvent);
 	static void PR_CALLBACK imap_event_destructor(PLEvent *aEvent);
+  PRBool m_notifyCompletion;
 };
 
 struct nsImapLogProxyEvent : public nsImapEvent
