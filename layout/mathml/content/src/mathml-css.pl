@@ -1,5 +1,7 @@
 # add mathml.css to the ua.css
 
+exit; # temporarily disable to check if this is causing bug 124570 +1.5% in Ts time
+
 $sep = '/'; # directory separator
 
 $ua = $ARGV[0]; $ua =~ s|\\|$sep|g;
