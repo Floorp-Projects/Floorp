@@ -30,8 +30,6 @@
 #include "nsIBrowserInstance.h"
 #include "nsIURIContentListener.h"
 
- 
-
 #include "nsIAppShellComponentImpl.h"
 
 #include "nscore.h"
@@ -82,8 +80,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     // WebProgress listener
     NS_DECL_NSIWEBPROGRESSLISTENER
-
-    static PRUint32 gRefCnt;
 
   protected:
 

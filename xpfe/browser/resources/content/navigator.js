@@ -371,9 +371,43 @@ function UpdateBackForwardButtons()
   forwardBroadcaster.setAttribute("disabled", !webNavigation.canGoForward);
 }
 
+
+function nsButtonPrefListener()
+{
+  try {
+    pref.addObserver(this.domain, this);
+  } catch(ex) {
+    dump("Failed to observe prefs: " + ex + "\n");
+  }
+}
+
+// implements nsIObserver
+nsButtonPrefListener.prototype =
+{
+  domain: "browser.toolbars.showbutton",
+  Observe: function(subject, topic, prefName)
+  {
+    // verify that we're changing a button pref
+    if (topic != "nsPref:changed") return;
+    if (prefName.substr(0, this.domain.length) != this.domain) return;
+    
+    var buttonName = prefName.substr(this.domain.length+1);
+    var buttonId = buttonName + "-button";
+    var button = document.getElementById(buttonId);
+    
+    var show = pref.GetBoolPref(prefName);
+    if (show)
+      button.removeAttribute("hidden");
+    else
+      button.setAttribute("hidden", "true");
+  }
+}
+
 function Startup()
 {
   window.XULBrowserWindow = new nsXULBrowserWindow();
+  window.buttonPrefListener = new nsButtonPrefListener();
+
 
   var webNavigation;
   try {
@@ -490,6 +524,11 @@ function Shutdown()
   } catch (ex) {
   }
 
+  // unregister us as a pref listener
+  pref.removeObserver(window.buttonPrefListener.domain,
+                      window.buttonPrefListener);
+  window.offlineObserver.unload();
+  
   // Close the app core.
   if (appCore)
     appCore.close();
@@ -1020,18 +1059,20 @@ var consoleListener = {
 function initConsoleListener()
 {
   /**
-   * XXX - console launch hookup requires some work that I'm not sure how to
-   *       do.
+   * XXX - console launch hookup requires some work that I'm not sure
+   * how to do.
    *
-   *       1) ideally, the notification would disappear when the document that had the
-   *          error was flushed. how do I know when this happens? All the nsIScriptError
-   *          object I get tells me is the URL. Where is it located in the content area?
-   *       2) the notification service should not display chrome script errors.
-   *          web developers and users are not interested in the failings of our shitty,
-   *          exception unsafe js. One could argue that this should also extend to
-   *          the console by default (although toggle-able via setting for chrome authors)
-   *          At any rate, no status indication should be given for chrome script
-   *          errors.
+   *       1) ideally, the notification would disappear when the
+   *       document that had the error was flushed. how do I know when
+   *       this happens? All the nsIScriptError object I get tells me
+   *       is the URL. Where is it located in the content area?
+   *       2) the notification service should not display chrome
+   *       script errors.  web developers and users are not interested
+   *       in the failings of our shitty, exception unsafe js. One
+   *       could argue that this should also extend to the console by
+   *       default (although toggle-able via setting for chrome
+   *       authors) At any rate, no status indication should be given
+   *       for chrome script errors.
    *
    *       As a result I am commenting out this for the moment.
    *
