@@ -488,8 +488,8 @@ nsBlender::Do24Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
 
     PRIntn x;
     for (x = 0; x < numPixels; x++) {
-      PRUint32 pixSColor  = *((PRUint32*)(s2))&0xFFFFFF;
-      PRUint32 pixSSColor = *((PRUint32*)(ss2))&0xFFFFFF;
+      PRUint32 pixSColor  = s2[0] | (s2[1] << 8) | (s2[2] << 16);
+      PRUint32 pixSSColor = ss2[0] | (ss2[1] << 8) | (ss2[2] << 16);
       
       if ((pixSColor != 0x000000) || (pixSSColor != 0xFFFFFF)) {
         if (pixSColor != pixSSColor) {
