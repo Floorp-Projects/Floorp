@@ -25,8 +25,6 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 #include "nsIWebShell.h"
 
 class nsIMenuBar;
@@ -34,6 +32,7 @@ class nsIMenu;
 class nsIMenuItem;
 class nsIMenuListener;
 class nsIChangeManager;
+class nsIContent;
 
 // {ab6cea83-00ff-11d5-bb6f-f432a43ead7c}
 #define NS_IMENU_IID      \
@@ -54,7 +53,7 @@ class nsIMenu : public nsISupports {
     *
     */
     NS_IMETHOD Create ( nsISupports * aParent, const nsAReadableString &aLabel, const nsAReadableString &aAccessKey, 
-                          nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode ) = 0;
+                          nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) = 0;
 
    /**
     * Get the Menu's Parent
@@ -171,10 +170,10 @@ class nsIMenu : public nsISupports {
     NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
 
    /**
-    * Get DOMNode
+    * Get GetMenuContent
     *
     */
-    NS_IMETHOD GetDOMNode(nsIDOMNode ** aMenuNode) = 0;
+    NS_IMETHOD GetMenuContent(nsIContent ** aMenuContent) = 0;
     
 };
 

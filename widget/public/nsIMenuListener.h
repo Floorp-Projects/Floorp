@@ -64,17 +64,9 @@ class nsIMenuListener : public nsISupports {
      */
     virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent) = 0;
 
-    virtual nsEventStatus MenuConstruct(
-
-      const nsMenuEvent & aMenuEvent,
-
-      nsIWidget         * aParentWindow, 
-
-      void              * menubarNode,
-
-	  void              * aWebShell) = 0;
-
-      
+    virtual nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent,
+                                          nsIWidget* aParentWindow, void* aNode,
+                                          void* aWebShell) = 0;
 
     virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent) = 0;
     
