@@ -44,7 +44,7 @@ while(<STDIN>){
 }
 close(DF);
 
-$err = system("./processbuild.pl data/tbx.$$");
+$err = system("./processbuild.pl", "data/tbx.$$");
 
 if( $err ) {
     die "processbuild.pl returned an error\n";

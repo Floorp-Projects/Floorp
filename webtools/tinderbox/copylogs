@@ -10,7 +10,7 @@ for $br (last_successful_builds($tree)) {
     print "Log previously copied for $br->{buildname}, $logfile\n";
   } else {
     chdir "$tree";
-    system "wget http://tinderbox.mozilla.org/$logfile";
+    system("wget", "http://tinderbox.mozilla.org/$logfile");
     chdir '..';
     print "Log copied for $br->{buildname}, $logfile\n";
   }

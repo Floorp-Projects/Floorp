@@ -64,7 +64,7 @@ unlink $mail_file;
 
 # Who data
 #
-system "./buildwho.pl $tinderbox{tree}";
+system("./buildwho.pl", "$tinderbox{tree}");
 
 
 # Warnings
@@ -74,7 +74,7 @@ require "$tinderbox{tree}/treedata.pl" if -r "$tinderbox{tree}/treedata.pl";
 if (defined $warning_buildnames_pat
     and $tinderbox{build} =~ /^$warning_buildnames_pat$/
     and $tinderbox{status} ne 'failed') {
-  system "./warnings.pl $tinderbox{tree}/$tinderbox{logfile}";
+  system("./warnings.pl", "$tinderbox{tree}/$tinderbox{logfile}");
 }
 
 # Bloat data
@@ -83,7 +83,7 @@ if (defined $warning_buildnames_pat
 if (defined $bloat_buildnames_pat
     and $tinderbox{build} =~ /^$bloat_buildnames_pat$/
     and $tinderbox{status} eq 'success') {
-  system "./bloat.pl $tinderbox{tree} $tinderbox{logfile}";
+  system("./bloat.pl",  "$tinderbox{tree}", "$tinderbox{logfile}");
 }
 
 # Pageloader data
@@ -92,7 +92,7 @@ if (defined $bloat_buildnames_pat
 if (defined $pageloader_buildnames_pat
     and $tinderbox{build} =~ /^$pageloader_buildnames_pat$/
     and $tinderbox{status} eq 'success') {
-  system "./pageloader.pl $tinderbox{tree} $tinderbox{logfile}";
+  system("./pageloader.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
 }
 
 # Startup data
@@ -101,7 +101,7 @@ if (defined $pageloader_buildnames_pat
 if (defined $startup_buildnames_pat
     and $tinderbox{build} =~ /^$startup_buildnames_pat$/
     and $tinderbox{status} eq 'success') {
-  system "./startup.pl $tinderbox{tree} $tinderbox{logfile}";
+  system("./startup.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
 }
 
 # Scrape data
@@ -109,13 +109,13 @@ if (defined $startup_buildnames_pat
 require "$tinderbox{tree}/scrapebuilds.pl" if -r "$tinderbox{tree}/scrapebuilds.pl";
 if ($scrape_builds->{$tinderbox{build}}
     and $tinderbox{status} eq 'success') {
-  system "./scrape.pl $tinderbox{tree} $tinderbox{logfile}";
+  system("./scrape.pl", "$tinderbox{tree}", "$tinderbox{logfile}");
 }
 
 # Static pages
 #   For Sidebar flash and tinderbox panels.
 $ENV{QUERY_STRING}="tree=$tinderbox{tree}&static=1";
-system './showbuilds.cgi';
+system("./showbuilds.cgi");
 
 # end of main
 ######################################################################

@@ -302,7 +302,7 @@ sub tb_build_static {
   # Build tinderbox static pages
   $ENV{QUERY_STRING}="tree=$tree&static=1";
   $ENV{REQUEST_METHOD}="GET";
-  system './showbuilds.cgi >/dev/null&';
+  system("./showbuilds.cgi >/dev/null&");
 }
 
 # end of public functions

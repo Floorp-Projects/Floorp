@@ -147,7 +147,7 @@ sub do_static {
     eval "$call";
 
     close(OUT);
-    system "mv $outfile.$$ $outfile";
+    system("mv $outfile.$$ $outfile");
   }
   select $oldfh;
 }
