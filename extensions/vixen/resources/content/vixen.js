@@ -10,9 +10,9 @@ const kMenuHeight = 130;
 const kPropertiesWidth = 170;
 
 
-function xe_Startup()
+function vx_Startup()
 {
-  _dd("xe_Startup");
+  _dd("vx_Startup");
   window.moveTo(0,0);
   window.outerWidth = screen.availWidth;
   window.outerHeight = kMenuHeight;
@@ -21,20 +21,20 @@ function xe_Startup()
   controllers.insertControllerAt(0, defaultController);
  
   // load a scratch document
-  xe_LoadForm("chrome://xuledit/content/vfdScratch.xul");
+  vx_LoadForm("chrome://vixen/content/vfdScratch.xul");
   
   var url = Components.classes["component://netscape/network/standard-url"].createInstance();
   if (url) url = url.QueryInterface(Components.interfaces.nsIURI);
-  url.spec = "chrome://xuledit/skin/vfdScratch.css";
+  url.spec = "chrome://vixen/skin/vfdScratch.css";
   var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
   chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
   var url2 = chromeRegistry.convertChromeURL(url);
   dump(url2);
 }
 
-function xe_Shutdown()
+function vx_Shutdown()
 {
-  _dd("xe_Shutdown");
+  _dd("vx_Shutdown");
   
   const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
   var wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
@@ -45,7 +45,7 @@ function xe_Shutdown()
   }
 }
 
-function xe_LoadForm(aURL)
+function vx_LoadForm(aURL)
 {
   hwnd = openDialog(aURL, "", "chrome,dialog=no,resizable");
   hwnd.moveTo(kPropertiesWidth + 5, kMenuHeight + 5);
@@ -166,6 +166,5 @@ var defaultController = {
   
   onEvent: function(event)
   {
-//    dump("DefaultController:onEvent\n");
   }
 }

@@ -22,17 +22,17 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-CHROME_DIR=packages\xuledit
-CHROME_CONTENT_DIR=xuledit\content
+CHROME_DIR=packages\vixen
+CHROME_CONTENT_DIR=vixen\content
 
 CHROME_CONTENT = \
-	.\vfdCommands.xul \
-	.\vfdCommands.js \
+  .\vfdCommands.xul \
+  .\vfdCommands.js \
   .\vfdScratch.xul \
   .\vfdScratchDocument.xul \
-  .\xuledit.xul \
-  .\xuledit.js \
+  .\vixen.xul \
+  .\vixen.js \
   .\xe_NavOverlay.xul \
-	$(NULL)
+  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -22,8 +22,8 @@
 DEPTH=..\..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-CHROME_DIR=packages\xuledit
-CHROME_LOCALE_DIR=xuledit\locale
+CHROME_DIR=packages\vixen
+CHROME_LOCALE_DIR=vixen\locale
 
 CHROME_LOCALE = \
 	.\xuledit.dtd \
