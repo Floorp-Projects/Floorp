@@ -2,3 +2,4 @@ dlldata.c
 msgMapi.h
 msgMapi_i.c
 msgMapi_p.c
+Makefile
