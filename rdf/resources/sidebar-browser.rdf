@@ -2,9 +2,10 @@
 
 <!DOCTYPE RDF
 [
-<!ENTITY sidebar.bookmarks.label      "Bookmarks">
+<!ENTITY sidebar.whats-related.label  "What's Related">
 <!ENTITY sidebar.flash.label          "Flashes">
 <!ENTITY sidebar.tinderbox.label      "Mozilla Tinderbox">
+<!ENTITY sidebar.bookmarks.label      "Bookmarks">
 ]>
 
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -12,10 +13,10 @@
 
   <RDF:Seq ID="NC:BrowserSidebarRoot">
     <RDF:li>
-       <RDF:Description ID="bookmarks">
-         <NC:title>&sidebar.bookmarks.label;</NC:title>
-         <NC:content>resource://res/rdf/bm-panel.xul</NC:content>
-         <NC:customize>resource://res/rdf/bm-panel-cust.xul</NC:customize>
+       <RDF:Description ID="whats-related">
+         <NC:title>&sidebar.whats-related.label;</NC:title>
+         <NC:content>resource://res/samples/related-panel.xul</NC:content>
+         <NC:customize>resource://res/samples/related-panel-cust.xul</NC:customize>
        </RDF:Description>
     </RDF:li>
     <RDF:li>
@@ -29,6 +30,13 @@
        <RDF:Description ID="tinderbox">
          <NC:title>&sidebar.tinderbox.label;</NC:title>
          <NC:content>http://cvs-mirror.mozilla.org/webtools/tinderbox/SeaMonkey/panel.html</NC:content>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+       <RDF:Description ID="bookmarks">
+         <NC:title>&sidebar.bookmarks.label;</NC:title>
+         <NC:content>resource://res/rdf/bm-panel.xul</NC:content>
+         <NC:customize>resource://res/rdf/bm-panel-cust.xul</NC:customize>
        </RDF:Description>
     </RDF:li>
   </RDF:Seq>
