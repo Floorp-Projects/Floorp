@@ -107,6 +107,9 @@ public:
   // from nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
+  NS_IMETHOD SetDocumentForAnonymousContent(nsIDocument* aDocument,
+                                            PRBool aDeep,
+                                            PRBool aCompileEventHandlers);
   NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                             nsIContent *      aContent,
                             nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
@@ -121,8 +124,8 @@ public:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 protected:
-  nsIHTMLContent*     mInputContent;
   nsIHTMLContent*     mTextContent;
+  nsIHTMLContent*     mInputContent;
 
   // XXX Hack: pres context needed by function KeyPress() and SetFocus()
   nsIPresContext*     mPresContext;  // weak reference

@@ -241,6 +241,15 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   return result;
 }
 
+NS_IMETHODIMP
+nsIsIndexFrame::SetDocumentForAnonymousContent(nsIDocument* aDocument,
+                                                   PRBool aDeep,
+                                                   PRBool aCompileEventHandlers)
+{
+  // XXX WRITE ME
+  return NS_OK;
+}
+
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -296,9 +305,11 @@ nsIsIndexFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   nsresult rv = NS_OK;
   if (nsHTMLAtoms::prompt == aAttribute) {
-    UpdatePromptLabel();
+    rv = UpdatePromptLabel();
+  } else {
+    rv = nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
   }
-  return nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+  return rv;
 }
 
 
@@ -426,7 +437,6 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     if (NS_FAILED(result)) return result;
 
     // Now pass on absolute url to the click handler
-    nsIInputStream* postDataStream = nsnull;
     if (handler) {
       handler->OnLinkClick(mContent, eLinkVerb_Replace,
                            absURLSpec.GetUnicode(),
