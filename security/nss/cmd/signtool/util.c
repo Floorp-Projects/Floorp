@@ -766,10 +766,15 @@ InitCrypto(char *cert_dir, PRBool readOnly)
 		/* some functions such as OpenKeyDB expect this path to be
 		 * implicitly set prior to calling */
 		if (readOnly) {
-		   NSS_Init(cert_dir);
+		    rv = NSS_Init(cert_dir);
 		} else {
-		    NSS_InitReadWrite(cert_dir);
+		    rv = NSS_InitReadWrite(cert_dir);
 		}
+    		if (rv != SECSuccess) {
+		    SECU_PrintPRandOSError(PROGRAM_NAME);
+		    exit(-1);
+    		}
+
 		SECU_ConfigDirectory (cert_dir);
 
 		/* Been there done that */

@@ -40,6 +40,8 @@
 
 static void install_error(char *message);
 static char* PR_fgets(char *buf, int size, PRFileDesc *file);
+static char *progName;
+
 
 /* This enum must be kept in sync with the commandNames list */
 typedef enum {
@@ -503,6 +505,8 @@ init_crypto(PRBool create, PRBool readOnly)
 	PRBool free_moddbname = PR_FALSE;
 #endif
 	Error retval;
+	SECStatus rv;
+
 
 	if(SECU_ConfigDirectory(dbdir)[0] == '\0') {
 		PR_fprintf(PR_STDERR, errStrings[NO_DBDIR_ERR]);
@@ -613,8 +617,13 @@ init_crypto(PRBool create, PRBool readOnly)
 	}
 
 	/* Open/create key database */
-	NSS_Initialize(SECU_ConfigDirectory(NULL), dbprefix, dbprefix,
+	rv = NSS_Initialize(SECU_ConfigDirectory(NULL), dbprefix, dbprefix,
 	               "secmod.db", readOnly);
+	if (rv != SECSuccess) {
+	    SECU_PrintPRandOSError(progName);
+	    retval=NSS_INITIALIZE_FAILED_ERR;
+	    goto loser;
+	}
 
 	retval=SUCCESS;
 loser:
@@ -704,6 +713,10 @@ main(int argc, char *argv[])
 	PRBool createdb, readOnly;
 #define STDINBUF_SIZE 80
 	char stdinbuf[STDINBUF_SIZE];
+
+    progName = strrchr(argv[0], '/');
+    progName = progName ? progName+1 : argv[0];
+
 
 	PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
 

@@ -42,7 +42,7 @@
 
 #define PKCS12_IN_BUFFER_SIZE	200
 
-char *progName;
+static char *progName;
 
 PRIntn pk12uErrno = 0;
 
@@ -784,10 +784,18 @@ loser:
 static PRUintn
 P12U_Init(char *dir)
 {
+    SECStatus rv;
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    NSS_InitReadWrite(dir);
+    rv = NSS_InitReadWrite(dir);
+    if (rv != SECSuccess) {
+    	SECU_PrintPRandOSError(progName);
+        exit(-1);
+    }
+
+    /* enable all ciphers */
+    p12u_EnableAllCiphers();
 
     /* setup unicode callback functions */
     PORT_SetUCS2_ASCIIConversionFunction(p12u_ucs2_ascii_conversion_function);

@@ -80,6 +80,7 @@ typedef enum {
 	STDIN_READ_ERR,
 	UNSPECIFIED_ERR,
 	NOCERTDB_MISUSE_ERR,
+	NSS_INITIALIZE_FAILED_ERR,
 
 	LAST_ERR /* must be last */
 } Error;
@@ -132,6 +133,7 @@ static char *errStrings[] = {
 	"ERROR: Unable to read from standard input.\n",
 	"ERROR: Unknown error occurred.\n",
 	"ERROR: -nocertdb option can only be used with the -jar command.\n"
+	"ERROR: NSS_Initialize() failed.\n"
 };
 
 typedef enum {

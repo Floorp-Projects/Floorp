@@ -187,6 +187,7 @@ int main(int argc, char **argv)
 	PRBool displayAllSigners = PR_FALSE;
 	PRFileInfo info;
 	PRInt32 nb;
+	SECStatus secstatus;
 
 	secuCommand signver;
 	signver.numCommands = sizeof(signver_commands) /sizeof(secuCommandFlag);
@@ -302,7 +303,11 @@ int main(int argc, char **argv)
 	} 
 
 	PR_SetError(0, 0); /* PR_Init("pp", 1, 1, 0);*/
-	NSS_Init(SECU_ConfigDirectory(NULL));
+	secstatus = NSS_Init(SECU_ConfigDirectory(NULL));
+    	if (secstatus != SECSuccess) {
+	    SECU_PrintPRandOSError(progName);
+	    return -1;
+	}
 
 	rv = SECU_ReadDERFromFile(&der, signFile, 
 	                          signver.options[opt_ASCII].activated);

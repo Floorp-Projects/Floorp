@@ -34,7 +34,7 @@
 /*
  * p7content -- A command to display pkcs7 content.
  *
- * $Id: p7content.c,v 1.3 2001/01/07 07:43:13 nelsonb%netscape.com Exp $
+ * $Id: p7content.c,v 1.4 2001/01/31 23:24:44 kirke%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -203,6 +203,7 @@ main(int argc, char **argv)
     PRFileDesc *inFile;
     PLOptState *optstate;
     PLOptStatus status;
+	SECStatus rv;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -251,7 +252,11 @@ main(int argc, char **argv)
 
     /* Call the initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    NSS_Init(SECU_ConfigDirectory(NULL));
+    rv = NSS_Init(SECU_ConfigDirectory(NULL));
+    if (rv != SECSuccess) {
+	SECU_PrintPRandOSError(progName);
+	return -1;
+    }
 
     if (DecodeAndPrintFile(outFile, inFile, progName)) {
 	SECU_PrintError(progName, "problem decoding data");

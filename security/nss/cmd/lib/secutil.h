@@ -297,6 +297,8 @@ extern void SEC_Init(void);
 
 extern char *SECU_SECModDBName(void);
 
+extern void SECU_PrintPRandOSError(char *progName);
+
 /*
  *
  *  Utilities for parsing security tools command lines 

@@ -2455,3 +2455,19 @@ SECU_ErrorString(int16 err)
 
     return SECUErrorBuf;
 }
+
+
+void 
+SECU_PrintPRandOSError(char *progName) 
+{
+    char buffer[513];
+    PRErrorCode err    = PR_GetError();
+    PRInt32     errLen = PR_GetErrorTextLength();
+    if (errLen > 0 && errLen < sizeof buffer) {
+        PR_GetErrorText(buffer);
+    }
+    SECU_PrintError(progName, "NSS_Initialize failed");
+    if (errLen > 0 && errLen < sizeof buffer) {
+        PR_fprintf(PR_STDERR, "\t%s\n", buffer);
+    }
+}
