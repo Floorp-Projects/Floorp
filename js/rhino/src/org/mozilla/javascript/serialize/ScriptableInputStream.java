@@ -17,6 +17,8 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
+ * Attila Szegedi
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -61,6 +63,24 @@ public class ScriptableInputStream extends ObjectInputStream {
         super(in);
         this.scope = scope;
         enableResolveObject(true);
+        Context cx = Context.getCurrentContext();
+        if (cx != null) {
+            this.classLoader = cx.getApplicationClassLoader();
+        }
+    }
+
+    protected Class resolveClass(ObjectStreamClass desc)
+        throws IOException, ClassNotFoundException
+    {
+        String name = desc.getName();
+        if (classLoader != null) {
+            try {
+                return classLoader.loadClass(name);
+            } catch (ClassNotFoundException ex) {
+                // fall through to default loading
+            }
+        }
+        return super.resolveClass(desc);
     }
 
     protected Object resolveObject(Object obj)
@@ -82,4 +102,5 @@ public class ScriptableInputStream extends ObjectInputStream {
     }
 
     private Scriptable scope;
+    private ClassLoader classLoader;
 }
