@@ -47,6 +47,8 @@ static nsModuleComponentInfo components[] = {
   { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALHELPERAPPSERVICE_PROGID, 
      nsOSHelperAppServiceConstructor, },
   { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALPROTOCOLSERVICE_PROGID, 
+     nsOSHelperAppServiceConstructor, },
+  { "Netscape Mime Mapping Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_MIMESERVICE_PROGID, 
      nsOSHelperAppServiceConstructor, }  
 };
 
