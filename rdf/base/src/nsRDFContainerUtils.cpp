@@ -382,12 +382,15 @@ nsresult
 RDFContainerUtilsImpl::MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType, nsIRDFContainer** aResult)
 {
     NS_PRECONDITION(aDataSource != nsnull, "null ptr");
-    if (! aDataSource)
-        return NS_ERROR_NULL_POINTER;
+    if (! aDataSource)	return NS_ERROR_NULL_POINTER;
 
     NS_PRECONDITION(aResource != nsnull, "null ptr");
-    if (! aResource)
-        return NS_ERROR_NULL_POINTER;
+    if (! aResource)	return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aType != nsnull, "null ptr");
+    if (! aType)	return NS_ERROR_NULL_POINTER;
+
+    if (aResult)	*aResult = nsnull;
 
     nsresult rv;
 
@@ -397,18 +400,18 @@ RDFContainerUtilsImpl::MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResour
     rv = IsContainer(aDataSource, aResource, &isContainer);
     if (NS_FAILED(rv)) return rv;
 
-    if (isContainer)
-      return NS_OK;
+    if (isContainer == PR_FALSE)
+    {
+	rv = aDataSource->Assert(aResource, kRDF_instanceOf, aType, PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
 
-    rv = aDataSource->Assert(aResource, kRDF_instanceOf, aType, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIRDFLiteral> nextVal;
+	rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("1").GetUnicode(), getter_AddRefs(nextVal));
+	if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRDFLiteral> nextVal;
-    rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("1").GetUnicode(), getter_AddRefs(nextVal));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = aDataSource->Assert(aResource, kRDF_nextVal, nextVal, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+	rv = aDataSource->Assert(aResource, kRDF_nextVal, nextVal, PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
+    }
 
     if (aResult) {
         rv = NS_NewRDFContainer(aResult);
