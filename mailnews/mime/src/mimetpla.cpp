@@ -249,13 +249,16 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
       MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
       if (text->mIsSig && !quoting)
       {
-        status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
-             // sig
+        status = MimeObject_write(obj, "</div>", 6, PR_FALSE);  // .txt-sig
         if (status < 0) return status;
       }
-      status = MimeObject_write(obj, "</pre></div>", 12, PR_FALSE);
-             // pre, text-plain
-	  if (status < 0) return status;
+      status = MimeObject_write(obj, "</pre>", 6, PR_FALSE);
+      if (status < 0) return status;
+      if (!quoting)
+      {
+        status = MimeObject_write(obj, "</div>", 6, PR_FALSE);  // .text-plain
+        if (status < 0) return status;
+      }
 
       /* text/plain objects always have separators before and after them.
 		 Note that this is not the case for text/enriched objects.
