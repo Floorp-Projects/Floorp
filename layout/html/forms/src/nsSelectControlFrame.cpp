@@ -767,10 +767,18 @@ nsSelectControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection, PRUint32
   PRBool status = PR_FALSE;
   nsIDOMHTMLOptionElement* option = GetOption(aCollection, aIndex);
   if (option) {
-    nsresult result = option->GetValue(aValue);
-    if (aValue.Length() > 0) {
-      status = PR_TRUE;
-    } else {
+    nsIHTMLContent* content = nsnull;
+    nsresult result = option->QueryInterface(kIHTMLContentIID, (void **)&content);
+    if (NS_SUCCEEDED(result) && content) {
+      nsHTMLValue value(aValue);
+      result = content->GetHTMLAttribute(nsHTMLAtoms::value, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        value.GetStringValue(aValue);
+        status = PR_TRUE;
+      }
+      NS_RELEASE(content);
+    }
+    if (!status) {
       result = option->GetText(aValue);
       if (aValue.Length() > 0) {
         status = PR_TRUE;
