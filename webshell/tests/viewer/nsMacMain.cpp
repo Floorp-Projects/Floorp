@@ -123,7 +123,6 @@ enum
     cmd_DebugOutputHTML,    
     cmd_DebugToggleSelection,
     cmd_DebugRobot,
-    cmd_ShowContentQuality,
     cmd_GFXWidgetMode,
     cmd_NativeWidgetMode,
     cmd_GFXScrollBars,
@@ -364,7 +363,6 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
                 case cmd_DebugOutputHTML:               xpID = VIEWER_DISPLAYHTML;              break;
                 case cmd_DebugToggleSelection:  xpID = VIEWER_TOGGLE_SELECTION;         break;
                 case cmd_DebugRobot:                        xpID = VIEWER_DEBUGROBOT;                       break;
-                case cmd_ShowContentQuality:        xpID =VIEWER_SHOW_CONTENT_QUALITY;  break;
 #ifdef GC_LEAK_DETECTOR
                 case cmd_DumpLeaks:
                     {
