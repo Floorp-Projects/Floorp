@@ -84,7 +84,12 @@ public:
   NS_DECL_NSIDOMHTMLBUTTONELEMENT
 
   // nsIDOMNSHTMLButtonElement
-  NS_DECL_NSIDOMNSHTMLBUTTONELEMENT
+  // Can't just use the macro, since it shares GetType with
+  // nsIDOMHTMLButtonElement
+  NS_IMETHOD Blur();
+  NS_IMETHOD Focus();
+  NS_IMETHOD Click();
+  NS_IMETHOD SetType(const nsAString& aType);
 
   // overrided nsIFormControl method
   NS_IMETHOD_(PRInt32) GetType() { return mType; }
@@ -257,6 +262,13 @@ nsHTMLButtonElement::GetType(nsAString& aType)
   return AttributeToString(nsHTMLAtoms::type,
                            nsHTMLValue(mType, eHTMLUnit_Enumerated),
                            aType);
+}
+
+
+NS_IMETHODIMP
+nsHTMLButtonElement::SetType(const nsAString& aType)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType, PR_TRUE);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
