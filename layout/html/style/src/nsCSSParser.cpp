@@ -52,9 +52,6 @@
 // - rework aErrorCode stuff: switch over to nsresult
 // verify ! is followed by important and nothing else
 
-static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
-static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
-static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 
 #define ENABLE_OUTLINE   // un-comment this to enable the outline properties (bug 9816)
                          // XXX un-commenting for temporary fix for nsbeta3+ Bug 48973
@@ -315,7 +312,7 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kICSSParserIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsICSSParser), (void **) aInstancePtrResult);
 }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -386,7 +383,7 @@ CSSParserImpl::Init(nsICSSStyleSheet* aSheet)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(CSSParserImpl,kICSSParserIID)
+NS_IMPL_ISUPPORTS(CSSParserImpl,NS_GET_IID(nsICSSParser))
 
 CSSParserImpl::~CSSParserImpl()
 {

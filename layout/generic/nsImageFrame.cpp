@@ -70,7 +70,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #undef NOISY_IMAGE_LOADING
 #endif
 
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 // Value's for mSuppress
 #define SUPPRESS_UNSET   0
@@ -713,7 +712,7 @@ nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
       usemap.Cut(0, 1);
     }
     nsIHTMLDocument* hdoc;
-    nsresult rv = doc->QueryInterface(kIHTMLDocumentIID, (void**)&hdoc);
+    nsresult rv = doc->QueryInterface(NS_GET_IID(nsIHTMLDocument), (void**)&hdoc);
     NS_RELEASE(doc);
     if (NS_SUCCEEDED(rv)) {
       nsIDOMHTMLMapElement* map;

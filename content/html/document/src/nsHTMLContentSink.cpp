@@ -119,23 +119,7 @@ const PRBool kBlockByDefault=PR_FALSE;
 const PRBool kBlockByDefault=PR_TRUE;
 #endif
 
-static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLMapElementIID, NS_IDOMHTMLMAPELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -725,7 +709,7 @@ static
 void SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
 {
   nsIFormControl* formControl = nsnull;
-  nsresult result = aContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+  nsresult result = aContent->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
   if ((NS_OK == result) && formControl) {
     formControl->SetForm(aForm);
     NS_RELEASE(formControl);
@@ -1168,7 +1152,7 @@ MakeContentObject(nsHTMLTag aNodeType,
       // If the text area has some content, set it 
       if (aContent && (aContent->Length() > 0)) {
         nsIDOMHTMLTextAreaElement* taElem;
-        rv = (*aResult)->QueryInterface(kIDOMHTMLTextAreaElementIID, (void **)&taElem);
+        rv = (*aResult)->QueryInterface(NS_GET_IID(nsIDOMHTMLTextAreaElement), (void **)&taElem);
         if ((NS_OK == rv) && taElem) {
           taElem->SetDefaultValue(*aContent);
           NS_RELEASE(taElem);
@@ -1675,7 +1659,7 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
             // After the form control is removed from it's container, restore
             // it's form.
             nsIFormControl* childFormControl = nsnull;
-            result = child->QueryInterface(kIFormControlIID, (void**)&childFormControl);
+            result = child->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&childFormControl);
             if (NS_SUCCEEDED(result)) {
               // It is a form control, so get it's form and cache it.
               nsIDOMHTMLFormElement* formElem = nsnull;
@@ -1848,7 +1832,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
 
   result = NS_NewCommentNode(&comment);
   if (NS_OK == result) {
-    result = comment->QueryInterface(kIDOMCommentIID, 
+    result = comment->QueryInterface(NS_GET_IID(nsIDOMComment), 
                                      (void **)&domComment);
     if (NS_OK == result) {
       domComment->AppendData(aNode.GetText());
@@ -2187,7 +2171,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
     delete it;
     return rv;
   }
-  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContentSink), (void **)aResult);
 }
 
 // Note: operator new zeros our memory
@@ -2296,7 +2280,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mDocument = aDoc;
   NS_ADDREF(aDoc);
   aDoc->AddObserver(this);
-  aDoc->QueryInterface(kIHTMLDocumentIID, (void**)&mHTMLDocument);
+  aDoc->QueryInterface(NS_GET_IID(nsIHTMLDocument), (void**)&mHTMLDocument);
   rv = mDocument->GetNodeInfoManager(mNodeInfoManager);
   NS_ENSURE_SUCCESS(rv, rv);
   mDocumentURI = aURL;
@@ -2327,7 +2311,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   prefs->GetIntPref("content.maxtextrun", &mMaxTextRun);
 
   nsIHTMLContentContainer* htmlContainer = nsnull;
-  if (NS_SUCCEEDED(aDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
+  if (NS_SUCCEEDED(aDoc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer))) {
     htmlContainer->GetCSSLoader(mCSSLoader);
     NS_RELEASE(htmlContainer);
   }
@@ -2699,7 +2683,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
     rv = NS_NewTextNode(&text);
     if (NS_OK == rv) {
       nsIDOMText* tc;
-      rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+      rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&tc);
       if (NS_OK == rv) {
         tc->SetData(*mTitle);
         NS_RELEASE(tc);
@@ -2908,7 +2892,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 
     result = NS_NewHTMLFormElement(&content, nodeInfo);
     if (NS_SUCCEEDED(result) && content) {
-      content->QueryInterface(kIDOMHTMLFormElementIID, (void**)&mCurrentForm);
+      content->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&mCurrentForm);
       NS_RELEASE(content);
     }
     
@@ -2921,7 +2905,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
         
       content = mCurrentContext->GetCurrentContainer();
       if (nsnull != content) {
-        result = content->QueryInterface(kIDOMHTMLFormElementIID, 
+        result = content->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), 
                                          (void**)&mCurrentForm);
         NS_RELEASE(content);
       }
@@ -3576,7 +3560,7 @@ HTMLContentSink::StartLayout()
           vm->GetRootView(rootView);
           if (nsnull != rootView) {
             nsIScrollableView* sview = nsnull;
-            rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
+            rootView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &sview);
             if (nsnull != sview) {
               if (mFrameset)
                 mOriginalScrollPreference = nsScrollPreference_kNeverScroll;
@@ -4221,7 +4205,7 @@ HTMLContentSink::ProcessMAPTag(const nsIParserNode& aNode,
   NS_IF_RELEASE(mCurrentMap);
 
   nsIDOMHTMLMapElement* domMap;
-  rv = aContent->QueryInterface(kIDOMHTMLMapElementIID, (void**)&domMap);
+  rv = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLMapElement), (void**)&domMap);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -4945,7 +4929,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     rv = NS_NewTextNode(&text);
     if (NS_OK == rv) {
       nsIDOMText* tc;
-      rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+      rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&tc);
       if (NS_OK == rv) {
         tc->SetData(script);
         NS_RELEASE(tc);
@@ -5153,7 +5137,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
           rv = NS_NewTextNode(&text);
           if (NS_OK == rv) {
             nsIDOMText* tc;
-            rv = text->QueryInterface(kIDOMTextIID, (void**)&tc);
+            rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&tc);
             if (NS_OK == rv) {
               tc->SetData(content);
               NS_RELEASE(tc);

@@ -70,7 +70,6 @@
 #define PR_ABS(x) ((x) < 0 ? -(x) : (x))
 #endif
 
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);
 
 #ifdef NS_DEBUG
@@ -229,8 +228,7 @@ void nsBlinkTimer::Stop()
   }
 }
 
-static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
-NS_IMPL_ISUPPORTS(nsBlinkTimer, kITimerCallbackIID);
+NS_IMPL_ISUPPORTS(nsBlinkTimer, NS_GET_IID(nsITimerCallback));
 
 void nsBlinkTimer::AddFrame(nsIPresContext* aPresContext, nsIFrame* aFrame) {
   FrameData* frameData = new FrameData(aPresContext, aFrame);

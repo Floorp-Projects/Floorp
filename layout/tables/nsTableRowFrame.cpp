@@ -41,7 +41,6 @@
 #include "nsCOMPtr.h"
 // the following header files are required for style optimizations that work only when the child content is really a cell
 #include "nsIHTMLTableCellElement.h"
-static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 // end includes for style optimizations that require real content knowledge
 
 

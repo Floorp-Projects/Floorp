@@ -73,12 +73,6 @@
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 
 
-static NS_DEFINE_IID(kIDOMMouseListenerIID,       NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID,         NS_IDOMKEYLISTENER_IID);
-static NS_DEFINE_IID(kIDOMNodeIID,                NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIFrameIID,                  NS_IFRAME_IID);
-static NS_DEFINE_IID(kIPrivateDOMEventIID,        NS_IPRIVATEDOMEVENT_IID);
 //static NS_DEFINE_IID(kBlockFrameCID,              NS_BLOCK_FRAME_CID);
 
 // Constants

@@ -63,17 +63,6 @@
 // #define DEBUG_REFS
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
-static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
-static NS_DEFINE_IID(kICSSRuleIID, NS_ICSS_RULE_IID);
-static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
-static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
-static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
-static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
-static NS_DEFINE_IID(kIDOMCSSRuleIID, NS_IDOMCSSRULE_IID);
-static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
-static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
 static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
@@ -681,7 +670,7 @@ CSSImportantRule::~CSSImportantRule(void)
   NS_IF_RELEASE(mDeclaration);
 }
 
-NS_IMPL_ISUPPORTS(CSSImportantRule, kIStyleRuleIID);
+NS_IMPL_ISUPPORTS(CSSImportantRule, NS_GET_IID(nsIStyleRule));
 
 #if 0
 NS_IMETHODIMP
@@ -909,10 +898,10 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
       if (sheet) {
         sheet->GetURL(baseURI);
         sheet->GetOwningDocument(owningDoc);
-        sheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet);
+        sheet->QueryInterface(NS_GET_IID(nsICSSStyleSheet), (void**)&cssSheet);
         if (owningDoc) {
           nsIHTMLContentContainer* htmlContainer;
-          result = owningDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer);
+          result = owningDoc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer);
           if (NS_SUCCEEDED(result)) {
             result = htmlContainer->GetCSSLoader(cssLoader);
             NS_RELEASE(htmlContainer);
@@ -1148,34 +1137,34 @@ nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kICSSStyleRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSStyleRule))) {
     *aInstancePtrResult = (void*) ((nsICSSStyleRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kICSSRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
     *aInstancePtrResult = (void*) ((nsICSSRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMCSSRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMCSSRule))) {
     nsIDOMCSSRule *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMCSSStyleRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMCSSStyleRule))) {
     nsIDOMCSSStyleRule *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
@@ -1202,7 +1191,7 @@ NS_IMETHODIMP CSSStyleRuleImpl::Equals(const nsIStyleRule* aRule, PRBool& aResul
   else {
     aResult = PR_FALSE;
     if ((nsnull != aRule) && 
-        (NS_OK == ((nsIStyleRule*)aRule)->QueryInterface(kICSSStyleRuleIID, (void**) &iCSSRule))) {
+        (NS_OK == ((nsIStyleRule*)aRule)->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**) &iCSSRule))) {
 
       CSSStyleRuleImpl* rule = (CSSStyleRuleImpl*)iCSSRule;
       const nsCSSSelector* local = &mSelector;
@@ -1539,7 +1528,7 @@ CSSStyleRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSStyleRuleImpl* clone = new CSSStyleRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(kICSSRuleIID, (void **)&aClone);
+    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -3373,7 +3362,7 @@ NS_IMETHODIMP
 CSSStyleRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   if (nsnull != mSheet) {
-    return mSheet->QueryInterface(kIDOMCSSStyleSheetIID, (void**)aSheet);
+    return mSheet->QueryInterface(NS_GET_IID(nsIDOMCSSStyleSheet), (void**)aSheet);
   }
   *aSheet = nsnull;
   return NS_OK;
@@ -3458,5 +3447,5 @@ NS_HTML nsresult
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kICSSStyleRuleIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void **) aInstancePtrResult);
 }

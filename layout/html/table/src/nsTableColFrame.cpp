@@ -38,7 +38,6 @@
 #define COL_TYPE_ANONYMOUS_COLGROUP   0x2
 #define COL_TYPE_ANONYMOUS_CELL       0x3
 
-static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
 
 nsTableColFrame::nsTableColFrame()
   : nsFrame(), 

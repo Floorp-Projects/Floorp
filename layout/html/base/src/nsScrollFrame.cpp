@@ -48,15 +48,11 @@
 
 #undef NOISY_SECOND_REFLOW
 
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIScrollableFrameIID,             NS_ISCROLLABLE_FRAME_IID);
 
 //----------------------------------------------------------------------
 
@@ -129,7 +125,7 @@ nsScrollFrame::GetClipSize(   nsIPresContext* aPresContext,
     nsIScrollableView* scrollingView;
     nsIView*           view;
     GetView(aPresContext, &view);
-    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+    if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
        const nsIView* clip = nsnull;
        scrollingView->GetClipView(&clip);
        clip->GetDimensions(aWidth, aHeight);
@@ -152,7 +148,7 @@ nsScrollFrame::GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* a
   nsIScrollableView* scrollingView;
   nsIView*           view;
   GetView(aPresContext, &view);
-  if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+  if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
      nsScrollPreference pref;
      scrollingView->GetScrollPreference(pref);
      switch(pref) 
@@ -207,7 +203,7 @@ nsScrollFrame::GetScrollPosition(nsIPresContext* aPresContext, nscoord &aX, nsco
     nsIScrollableView* scrollingView;
     nsIView*           view;
     GetView(aPresContext, &view);
-    nsresult rv = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+    nsresult rv = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
     NS_ASSERTION(NS_SUCCEEDED(rv), "No scrolling view");
     return scrollingView->GetScrollPosition(aX, aY); 
 }
@@ -219,7 +215,7 @@ nsScrollFrame::ScrollTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PR
     nsIView*           view;
     GetView(aPresContext, &view);
 
-    nsresult rv = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+    nsresult rv = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
     NS_ASSERTION(NS_SUCCEEDED(rv), "No scrolling view");
     return scrollingView->ScrollTo(aX, aY, aFlags); 
 
@@ -238,7 +234,7 @@ nsScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext,
     nsIScrollableView* scrollingView;
     nsIView*           view;
     GetView(aPresContext, &view);
-    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+    if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
       scrollingView->GetScrollbarVisibility(aVerticalVisible, aHorizontalVisible);
     } else {
         aVerticalVisible = PR_FALSE;
@@ -266,7 +262,7 @@ nsScrollFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                                         
-  if (aIID.Equals(kIScrollableFrameIID)) {                                         
+  if (aIID.Equals(NS_GET_IID(nsIScrollableFrame))) {                                         
     *aInstancePtr = (void*)(nsIScrollableFrame*) this;                                        
     return NS_OK;                                                        
   }   
@@ -358,7 +354,7 @@ nsScrollFrame::DidReflow(nsIPresContext*   aPresContext,
     nsIScrollableView* scrollingView;
     nsIView*           view;
     GetView(aPresContext, &view);
-    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+    if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
       scrollingView->ComputeScrollOffsets(PR_TRUE);
     }
   }
@@ -409,7 +405,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
   // Create the scrolling view
   nsresult rv = nsComponentManager::CreateInstance(kScrollingViewCID, 
                                              nsnull, 
-                                             kIViewIID, 
+                                             NS_GET_IID(nsIView), 
                                              (void **)&view);
 
   if (NS_OK == rv) {
@@ -448,7 +444,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
-    view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+    view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
 
     // Have the scrolling view create its internal widgets
     scrollingView->CreateScrollControls();
@@ -592,7 +588,7 @@ nsScrollFrame::CalculateScrollAreaSize(nsIPresContext*          aPresContext,
         nsIScrollableView* scrollingView;
         nsIView*           view;
         GetView(aPresContext, &view);
-        if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+        if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
           PRBool  unused;
           scrollingView->GetScrollbarVisibility(aRoomForVerticalScrollbar, &unused);
         }
@@ -1007,7 +1003,7 @@ nsScrollFrame::SaveState(nsIPresContext* aPresContext,
   nsIScrollableView* scrollingView;
   nsIView*           view;
   GetView(aPresContext, &view);
-  if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+  if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
     scrollingView->GetScrollPosition(x,y);
   }
   nsIView* child = nsnull;
@@ -1094,7 +1090,7 @@ nsScrollFrame::RestoreState(nsIPresContext* aPresContext,
       nsIScrollableView* scrollingView;
       nsIView*           view;
       GetView(aPresContext, &view);
-      if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+      if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
 
         nsIView* child = nsnull;
         nsRect childRect(0,0,0,0);

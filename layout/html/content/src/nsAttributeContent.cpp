@@ -64,13 +64,7 @@ class nsIDOMText;
 
 // XXX share all id's in this dir
 
-NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
-static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
-static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 
 class nsAttributeContent : public nsITextContent, public nsIAttributeContent {
@@ -544,7 +538,7 @@ nsAttributeContent::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  result = it->QueryInterface(kITextContentIID, (void**) aReturn);
+  result = it->QueryInterface(NS_GET_IID(nsITextContent), (void**) aReturn);
   if (NS_FAILED(result)) {
     return result;
   }

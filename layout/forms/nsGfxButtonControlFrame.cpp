@@ -178,8 +178,7 @@ nsGfxButtonControlFrame::IsBrowse(PRInt32 type)
 const nsIID&
 nsGfxButtonControlFrame::GetIID()
 {
-  static NS_DEFINE_IID(kButtonIID, NS_IBUTTON_IID);
-  return kButtonIID;
+  return NS_GET_IID(nsIButton);
 }
   
 const nsIID&

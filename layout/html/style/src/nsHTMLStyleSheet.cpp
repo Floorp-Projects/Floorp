@@ -61,9 +61,6 @@
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
 
-static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
-static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
-static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
 class HTMLColorRule : public nsIStyleRule {
@@ -114,7 +111,7 @@ HTMLColorRule::~HTMLColorRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(HTMLColorRule, kIStyleRuleIID);
+NS_IMPL_ISUPPORTS(HTMLColorRule, NS_GET_IID(nsIStyleRule));
 
 NS_IMETHODIMP
 HTMLColorRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
@@ -309,7 +306,7 @@ GenericTableRule::~GenericTableRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(GenericTableRule, kIStyleRuleIID);
+NS_IMPL_ISUPPORTS(GenericTableRule, NS_GET_IID(nsIStyleRule));
 
 NS_IMETHODIMP
 GenericTableRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
@@ -782,12 +779,12 @@ nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kIHTMLStyleSheetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLStyleSheet))) {
     *aInstancePtrResult = (void*) ((nsIHTMLStyleSheet*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleSheetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleSheet))) {
     *aInstancePtrResult = (void*) ((nsIStyleSheet*)this);
     NS_ADDREF_THIS();
     return NS_OK;

@@ -38,12 +38,6 @@
 #include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
-static NS_DEFINE_IID(kICSSRuleIID, NS_ICSS_RULE_IID);
-static NS_DEFINE_IID(kICSSCharsetRuleIID, NS_ICSS_CHARSET_RULE_IID);
-static NS_DEFINE_IID(kICSSImportRuleIID, NS_ICSS_IMPORT_RULE_IID);
-static NS_DEFINE_IID(kICSSMediaRuleIID, NS_ICSS_MEDIA_RULE_IID);
-static NS_DEFINE_IID(kICSSNameSpaceRuleIID, NS_ICSS_NAMESPACE_RULE_IID);
 
 #define DECL_STYLE_RULE_INHERIT  \
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
@@ -125,17 +119,17 @@ CSSCharsetRuleImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kICSSCharsetRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSCharsetRule))) {
     *aInstancePtrResult = (void*) ((nsICSSCharsetRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kICSSRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
     *aInstancePtrResult = (void*) ((nsICSSRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -221,7 +215,7 @@ CSSCharsetRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSCharsetRuleImpl* clone = new CSSCharsetRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(kICSSRuleIID, (void **)&aClone);
+    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -249,7 +243,7 @@ NS_NewCSSCharsetRule(nsICSSCharsetRule** aInstancePtrResult, const nsString& aEn
   }
 
   it->Init(aEncoding);
-  return it->QueryInterface(kICSSCharsetRuleIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsICSSCharsetRule), (void **) aInstancePtrResult);
 }
 
 
@@ -318,17 +312,17 @@ CSSImportRuleImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kICSSImportRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSImportRule))) {
     *aInstancePtrResult = (void*) ((nsICSSImportRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kICSSRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
     *aInstancePtrResult = (void*) ((nsICSSRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -416,7 +410,7 @@ CSSImportRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSImportRuleImpl* clone = new CSSImportRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(kICSSRuleIID, (void **)&aClone);
+    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -467,7 +461,7 @@ NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult,
 
   it->SetURLSpec(aURLSpec);
   it->SetMedia(aMedia);
-  return it->QueryInterface(kICSSImportRuleIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsICSSImportRule), (void **) aInstancePtrResult);
 }
 
 // -------------------------------------------
@@ -568,17 +562,17 @@ CSSMediaRuleImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kICSSMediaRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSMediaRule))) {
     *aInstancePtrResult = (void*) ((nsICSSMediaRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kICSSRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
     *aInstancePtrResult = (void*) ((nsICSSRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -725,7 +719,7 @@ CSSMediaRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSMediaRuleImpl* clone = new CSSMediaRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(kICSSRuleIID, (void **)&aClone);
+    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -821,7 +815,7 @@ NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kICSSMediaRuleIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsICSSMediaRule), (void **) aInstancePtrResult);
 }
 
 
@@ -892,17 +886,17 @@ CSSNameSpaceRuleImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kICSSNameSpaceRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSNameSpaceRule))) {
     *aInstancePtrResult = (void*) ((nsICSSNameSpaceRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kICSSRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSRule))) {
     *aInstancePtrResult = (void*) ((nsICSSRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -996,7 +990,7 @@ CSSNameSpaceRuleImpl::Clone(nsICSSRule*& aClone) const
 {
   CSSNameSpaceRuleImpl* clone = new CSSNameSpaceRuleImpl(*this);
   if (clone) {
-    return clone->QueryInterface(kICSSRuleIID, (void **)&aClone);
+    return clone->QueryInterface(NS_GET_IID(nsICSSRule), (void **)&aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -1049,6 +1043,6 @@ NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult,
 
   it->SetPrefix(aPrefix);
   it->SetURLSpec(aURLSpec);
-  return it->QueryInterface(kICSSNameSpaceRuleIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsICSSNameSpaceRule), (void **) aInstancePtrResult);
 }
 

@@ -34,7 +34,6 @@
 #include "nsIScrollableView.h"
 #include "nsIBox.h"
 
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 class nsScrollBoxObject : public nsIScrollBoxObject, public nsBoxObject
 {
@@ -249,7 +248,7 @@ nsScrollBoxObject::GetScrollableView()
   nsIView* view;
   frame->GetView(context, &view);
   nsIScrollableView* scrollingView = nsnull;
-  if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {  
+  if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {  
     return scrollingView;
   }
 

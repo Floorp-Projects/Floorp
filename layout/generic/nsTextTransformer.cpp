@@ -80,7 +80,6 @@ nsAutoTextBuffer::GrowTo(PRInt32 aNewSize, PRBool aCopyToHead)
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 
 static nsICaseConversion* gCaseConv =  nsnull;
 
@@ -89,7 +88,7 @@ nsTextTransformer::Initialize()
 {
   nsresult res = NS_OK;
   if (!gCaseConv) {
-    res = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
+    res = nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),
                                        (nsISupports**)&gCaseConv);
     NS_ASSERTION( NS_SUCCEEDED(res), "cannot get UnicharUtil");
     NS_ASSERTION( gCaseConv != NULL, "cannot get UnicharUtil");

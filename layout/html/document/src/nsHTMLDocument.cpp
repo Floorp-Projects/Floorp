@@ -614,13 +614,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
   if (needsParser) {
     rv = nsComponentManager::CreateInstance(kCParserCID, 
                                             nsnull, 
-                                            kCParserIID, 
+                                            NS_GET_IID(nsIParser), 
                                             (void **)&mParser);
     if (NS_FAILED(rv)) { return rv; }
   }
@@ -2098,12 +2097,11 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   result = Reset(channel, group);
   if (NS_FAILED(result)) return result;
   if (NS_OK == result) {
-    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
     static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
     
     result = nsComponentManager::CreateInstance(kCParserCID, 
                                                 nsnull, 
-                                                kCParserIID, 
+                                                NS_GET_IID(nsIParser), 
                                                 (void **)&mParser);
     mIsWriting = 1;
     

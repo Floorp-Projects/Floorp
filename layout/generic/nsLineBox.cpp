@@ -496,7 +496,6 @@ nsLineBox::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kILineIteratorIID, NS_ILINE_ITERATOR_IID);
 
 static nsLineBox* gDummyLines[1];
 

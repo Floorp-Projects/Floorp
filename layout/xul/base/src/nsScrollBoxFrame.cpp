@@ -54,8 +54,6 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollBoxViewCID, NS_SCROLL_PORT_VIEW_CID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 //----------------------------------------------------------------------
 
@@ -239,7 +237,7 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
   // Create the scrolling view
   nsresult rv = nsComponentManager::CreateInstance(kScrollBoxViewCID, 
                                              nsnull, 
-                                             kIViewIID, 
+                                             NS_GET_IID(nsIView), 
                                              (void **)&view);
 
 
@@ -283,7 +281,7 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
-    view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+    view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
 
     scrollingView->SetScrollPreference(nsScrollPreference_kNeverScroll);
 
@@ -418,7 +416,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   nsIScrollableView* scrollingView;
   nsIView*           view;
   GetView(presContext, &view);
-  if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+  if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
     scrollingView->ComputeScrollOffsets(PR_TRUE);
   }
 
@@ -482,7 +480,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
         nsIScrollableView* scrollingView;
         nsIView*           view;
         GetView(presContext, &view);
-        if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+        if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
 
           nsIView* child = nsnull;
           nsRect childRect(0,0,0,0);
@@ -682,7 +680,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
   nsIScrollableView* scrollingView;
   nsIView*           view;
   GetView(aPresContext, &view);
-  if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+  if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
     scrollingView->GetScrollPosition(x,y);
   }
   nsIView* child = nsnull;

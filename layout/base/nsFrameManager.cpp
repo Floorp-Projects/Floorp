@@ -83,7 +83,6 @@
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // IID's
-static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 
 //----------------------------------------------------------------------
 
@@ -816,7 +815,7 @@ FrameManager::RevokePostedEvents()
     nsresult              rv;
 
     rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                      kIEventQueueServiceIID,
+                                      NS_GET_IID(nsIEventQueueService),
                                       (nsISupports **)&eventService);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIEventQueue> eventQueue;
@@ -865,7 +864,7 @@ FrameManager::DequeuePostedEventFor(nsIFrame* aFrame)
     nsresult              rv;
 
     rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                      kIEventQueueServiceIID,
+                                      NS_GET_IID(nsIEventQueueService),
                                       (nsISupports **)&eventService);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIEventQueue> eventQueue;
@@ -949,7 +948,7 @@ FrameManager::CantRenderReplacedElement(nsIPresContext* aPresContext,
   // We need to notify the style stystem, but post the notification so it
   // doesn't happen now
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
+                                    NS_GET_IID(nsIEventQueueService),
                                     (nsISupports **)&eventService);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIEventQueue> eventQueue;

@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include "plstr.h"
 
-static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 
 #ifdef NS_DEBUG
 class nsFrameUtil : public nsIFrameUtil {
@@ -492,7 +491,7 @@ NS_NewFrameUtil(nsIFrameUtil** aResult)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIFrameUtilIID, (void**) aResult);
+  return it->QueryInterface(NS_GET_IID(nsIFrameUtil), (void**) aResult);
 }
 
 nsFrameUtil::nsFrameUtil()
@@ -504,7 +503,7 @@ nsFrameUtil::~nsFrameUtil()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsFrameUtil, kIFrameUtilIID);
+NS_IMPL_ISUPPORTS(nsFrameUtil, NS_GET_IID(nsIFrameUtil));
 
 void
 nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)

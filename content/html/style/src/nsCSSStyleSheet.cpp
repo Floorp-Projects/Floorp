@@ -70,13 +70,6 @@
 //#define DEBUG_RULES
 //#define EVENT_DEBUG
 
-static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
-static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
-static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
-static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
-static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
-static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 // ----------------------
 // Rule hash key
@@ -986,7 +979,7 @@ CSSImportsCollectionImpl::QueryInterface(REFNSIID aIID, void** aInstancePtrResul
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     AddRef();
@@ -1028,7 +1021,7 @@ CSSImportsCollectionImpl::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
 
     result = mStyleSheet->GetStyleSheetAt(aIndex, sheet);
     if (NS_OK == result) {
-      result = sheet->QueryInterface(kIDOMStyleSheetIID, (void **)aReturn);
+      result = sheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void **)aReturn);
     }
     NS_RELEASE(sheet);
   }
@@ -1476,29 +1469,29 @@ nsresult CSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kICSSStyleSheetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsICSSStyleSheet))) {
     *aInstancePtrResult = (void*) ((nsICSSStyleSheet*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleSheetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleSheet))) {
     *aInstancePtrResult = (void*) ((nsIStyleSheet*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMStyleSheetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMStyleSheet))) {
     nsIDOMStyleSheet *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMCSSStyleSheetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMCSSStyleSheet))) {
     nsIDOMCSSStyleSheet *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
@@ -1764,7 +1757,7 @@ CSSStyleSheetImpl::ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleS
   if (aContains) {
     // if we found it and the out-param is there, set it and addref
     if (aTheChild) {
-      rv = QueryInterface( nsIStyleSheet::GetIID(), (void **)aTheChild);
+      rv = QueryInterface( NS_GET_IID(nsIStyleSheet), (void **)aTheChild);
     }
   } else {
     CSSStyleSheetImpl*  child = mFirstChild;
@@ -3163,7 +3156,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
     selector = selector->mNext;
     if (SelectorMatchesTree(data->mPresContext, data->mContent, selector)) {
       nsIStyleRule* iRule;
-      if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
+      if (NS_OK == aRule->QueryInterface(NS_GET_IID(nsIStyleRule), (void**)&iRule)) {
         data->mResults->AppendElement(iRule);
         NS_RELEASE(iRule);
         iRule = aRule->GetImportantRule();
@@ -3281,7 +3274,7 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
     }
 
     nsIStyleRule* iRule;
-    if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
+    if (NS_OK == aRule->QueryInterface(NS_GET_IID(nsIStyleRule), (void**)&iRule)) {
       data->mResults->AppendElement(iRule);
       NS_RELEASE(iRule);
       iRule = aRule->GetImportantRule();

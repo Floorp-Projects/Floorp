@@ -58,7 +58,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 
 class nsHTMLSelectElement;
@@ -1432,7 +1431,7 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsIFrame* formFrame = nsnull;
 
   if (formControlFrame &&
-      NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID,
+      NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame),
                                                     (void **)&formFrame)) &&
       formFrame)
   {

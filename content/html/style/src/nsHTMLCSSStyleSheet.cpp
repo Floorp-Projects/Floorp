@@ -43,10 +43,6 @@
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
 
-static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID, NS_IHTML_CSS_STYLE_SHEET_IID);
-static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
-static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
-static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 
 class CSSFirstLineRule : public nsIStyleRule {
 public:
@@ -80,7 +76,7 @@ CSSFirstLineRule::~CSSFirstLineRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(CSSFirstLineRule, kIStyleRuleIID);
+NS_IMPL_ISUPPORTS(CSSFirstLineRule, NS_GET_IID(nsIStyleRule));
 
 NS_IMETHODIMP
 CSSFirstLineRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
@@ -460,12 +456,12 @@ nsresult HTMLCSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kIHTMLCSSStyleSheetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLCSSStyleSheet))) {
     *aInstancePtrResult = (void*) ((nsIHTMLCSSStyleSheet*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleSheetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleSheet))) {
     *aInstancePtrResult = (void*) ((nsIStyleSheet*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -515,7 +511,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       while (index < postCount) {
         nsIStyleRule* rule = (nsIStyleRule*)aResults->ElementAt(index++);
         nsICSSStyleRule*  cssRule;
-        if (NS_SUCCEEDED(rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule))) {
+        if (NS_SUCCEEDED(rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule))) {
           nsIStyleRule* important = cssRule->GetImportantRule();
           if (nsnull != important) {
             aResults->AppendElement(important);

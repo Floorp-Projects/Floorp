@@ -60,11 +60,7 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
-static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
-static NS_DEFINE_IID(kIScrollableFrameIID,             NS_ISCROLLABLE_FRAME_IID);
 
 //----------------------------------------------------------------------
 
@@ -923,7 +919,7 @@ nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
   nsIFrame* frame = nsnull;
   mScrollAreaBox->GetFrame(&frame);
   frame->GetView(aPresContext, &view);
-  nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+  nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
   NS_ASSERTION(NS_SUCCEEDED(result), "assertion gfx scrollframe does not contain a scrollframe");          
   return scrollingView;
 }

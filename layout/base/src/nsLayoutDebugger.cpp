@@ -23,7 +23,6 @@
 #include "nsIFrame.h"
 #include "nsIFrameDebug.h"
 
-static NS_DEFINE_IID(kILayoutDebuggerIID, NS_ILAYOUT_DEBUGGER_IID);
 
 #ifdef NS_DEBUG
 class nsLayoutDebugger : public nsILayoutDebugger {
@@ -63,7 +62,7 @@ NS_NewLayoutDebugger(nsILayoutDebugger** aResult)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kILayoutDebuggerIID, (void**)aResult);
+  return it->QueryInterface(NS_GET_IID(nsILayoutDebugger), (void**)aResult);
 }
 
 nsLayoutDebugger::nsLayoutDebugger()
@@ -75,7 +74,7 @@ nsLayoutDebugger::~nsLayoutDebugger()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsLayoutDebugger, kILayoutDebuggerIID);
+NS_IMPL_ISUPPORTS(nsLayoutDebugger, NS_GET_IID(nsILayoutDebugger));
 
 NS_IMETHODIMP
 nsLayoutDebugger::SetShowFrameBorders(PRBool aEnable)

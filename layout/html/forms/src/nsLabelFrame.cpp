@@ -54,13 +54,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsFormControlFrame.h"
 
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 class nsLabelFrame : public nsHTMLContainerFrame
 {
@@ -202,7 +196,7 @@ nsLabelFrame::HandleEvent(nsIPresContext* aPresContext,
       return NS_OK;
     } else {
       nsIFrame * frame;
-      if (NS_OK == mControlFrame->QueryInterface(kIFrameIID, (void**)&frame)) {
+      if (NS_OK == mControlFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame)) {
         if ( nsFormFrame::GetDisabled(frame)) {
           return NS_OK;
         }
@@ -377,7 +371,7 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
     shell->GetPrimaryFrameFor(controlContent, &frame);
     if (nsnull != frame) {
       nsIFormControlFrame* fcFrame = nsnull;
-      nsresult result = frame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+      nsresult result = frame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
       if ((NS_OK == result) && (nsnull != fcFrame)) {
         aResultFrame = fcFrame;
         NS_RELEASE(fcFrame);
@@ -398,7 +392,7 @@ nsLabelFrame::FindFirstControl(nsIPresContext* aPresContext,
   aParentFrame->FirstChild(aPresContext, nsnull, &child);
   while (nsnull != child) {
     nsIFormControlFrame* fcFrame = nsnull;
-    nsresult result = child->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+    nsresult result = child->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
     if ((NS_OK == result) && fcFrame) {
       PRInt32 type;
       fcFrame->GetType(&type);
@@ -512,7 +506,7 @@ nsLabelFrame::Init(nsIPresContext*  aPresContext,
   nsIView* view;
   GetView(aPresContext, &view);
   if (!view) {
-    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
+    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView),
                                                   (void **)&view);
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));

@@ -52,7 +52,6 @@
 #include "nsLayoutAtoms.h"
 #include "prenv.h"
 
-static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
 #define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nsnull; }
 
@@ -3587,7 +3586,7 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult result = context->QueryInterface(kIStyleContextIID, (void **) aInstancePtrResult);
+  nsresult result = context->QueryInterface(NS_GET_IID(nsIStyleContext), (void **) aInstancePtrResult);
   context->RemapStyle(aPresContext);  // remap after initial ref-count is set
 
 #ifdef SHARE_STYLECONTEXTS

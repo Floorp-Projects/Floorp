@@ -182,8 +182,6 @@ nsIFrameDebug::GetLogModuleInfo()
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-static NS_DEFINE_IID(kIFrameSelection, NS_IFRAMESELECTION_IID);
 nsresult
 NS_NewEmptyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -258,7 +256,7 @@ nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kClassIID, kIFrameIID);
+  static NS_DEFINE_IID(kClassIID, NS_GET_IID(nsIFrame));
 
 #ifdef DEBUG
   if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
@@ -833,7 +831,7 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEve
   {
     // Check for a table cell by querying to a known CellFrame interface
     nsITableCellLayout *cellElement;
-    result = (frame)->QueryInterface(nsITableCellLayout::GetIID(), (void **)&cellElement);
+    result = (frame)->QueryInterface(NS_GET_IID(nsITableCellLayout), (void **)&cellElement);
     if (NS_SUCCEEDED(result) && cellElement)
     {
       foundCell = PR_TRUE;
@@ -847,7 +845,7 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEve
       // This will happen when starting frame is the table or child of a table,
       //  such as a row (we were inbetween cells or in table border)
       nsITableLayout *tableElement;
-      result = (frame)->QueryInterface(nsITableLayout::GetIID(), (void **)&tableElement);
+      result = (frame)->QueryInterface(NS_GET_IID(nsITableLayout), (void **)&tableElement);
       if (NS_SUCCEEDED(result) && tableElement)
       {
         foundTable = PR_TRUE;
@@ -2325,7 +2323,7 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
     while (tmp)
     {
       nsIGfxTextControlFrame2 *tcf;
-      if (NS_SUCCEEDED(tmp->QueryInterface(nsIGfxTextControlFrame2::GetIID(),(void**)&tcf)))
+      if (NS_SUCCEEDED(tmp->QueryInterface(NS_GET_IID(nsIGfxTextControlFrame2),(void**)&tcf)))
       {
         return tcf->GetSelectionContr(aSelCon);
       }

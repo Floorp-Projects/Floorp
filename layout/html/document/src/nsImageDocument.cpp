@@ -52,8 +52,6 @@
 // 3. override the save-as methods so that we don't write out our synthetic
 //    html
 
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 class nsImageDocument : public nsHTMLDocument {
 public:
@@ -112,7 +110,7 @@ ImageListener::~ImageListener()
   NS_IF_RELEASE(mNextStream);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(ImageListener, kIStreamListenerIID)
+NS_IMPL_THREADSAFE_ISUPPORTS(ImageListener, NS_GET_IID(nsIStreamListener))
 
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
@@ -161,7 +159,7 @@ NS_NewImageDocument(nsIDocument** aInstancePtrResult)
 {
   nsImageDocument* doc = new nsImageDocument();
   if(doc)
-    return doc->QueryInterface(kIDocumentIID, (void**) aInstancePtrResult);
+    return doc->QueryInterface(NS_GET_IID(nsIDocument), (void**) aInstancePtrResult);
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -382,7 +380,7 @@ nsresult nsImageDocument::UpdateTitle( void )
   //  - get the URL interface, get the extension, convert to upper-case
   //  Unless the Imagerequest or Image can tell us the type this is the best we can do.
   nsIURL *pURL=nsnull;
-  if(NS_SUCCEEDED(mDocumentURL->QueryInterface(nsIURL::GetIID(),(void **)&pURL))){
+  if(NS_SUCCEEDED(mDocumentURL->QueryInterface(NS_GET_IID(nsIURL),(void **)&pURL))){
     char *pExtension=nsnull;
     pURL->GetFileExtension(&pExtension);
     if(pExtension){

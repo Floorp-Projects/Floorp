@@ -455,6 +455,7 @@ typedef PRBool nsDidReflowStatus;
 class nsIFrame : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
   /**
    * Called to initialize the frame. This is called immediately after creating
    * the frame.

@@ -41,7 +41,6 @@
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
 
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half

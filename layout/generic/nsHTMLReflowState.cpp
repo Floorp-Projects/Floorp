@@ -43,7 +43,6 @@
 
 // hack for bug 50695
 #include "nsIFormManager.h"
-static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
 
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
@@ -1315,7 +1314,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
     if (nsLayoutAtoms::blockFrame == frameType.get()) {
       // special hack for bug 50695, skip form frames
       nsIFrame* formFrame;
-      if (NS_OK == rs->frame->QueryInterface(kIFormManagerIID, (void **)&formFrame)) {
+      if (NS_OK == rs->frame->QueryInterface(NS_GET_IID(nsIFormManager), (void **)&formFrame)) {
         continue;
       }
       if (!firstBlockRS) {

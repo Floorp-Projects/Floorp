@@ -31,8 +31,6 @@
 #include "nsIReflowCommand.h"
 #include "nsIPresShell.h"
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 /**
  * Viewport frame class.
@@ -318,7 +316,7 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext*          aPresC
   if (nsnull != kidView) {
     nsIScrollableView* scrollingView;
     
-    if (NS_SUCCEEDED(kidView->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+    if (NS_SUCCEEDED(kidView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
       // Get the scrollbar dimensions
       float             sbWidth, sbHeight;
       nsCOMPtr<nsIDeviceContext> dc;

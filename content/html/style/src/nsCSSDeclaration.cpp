@@ -48,7 +48,6 @@ static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
 static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
 static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
 static NS_DEFINE_IID(kCSSAuralSID, NS_CSS_AURAL_SID);
-static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 
 
 #define CSS_IF_DELETE(ptr)  if (nsnull != ptr)  { delete ptr; ptr = nsnull; }
@@ -1138,7 +1137,7 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
 #endif
 }
 
-NS_IMPL_ISUPPORTS(CSSDeclarationImpl, kICSSDeclarationIID);
+NS_IMPL_ISUPPORTS(CSSDeclarationImpl, NS_GET_IID(nsICSSDeclaration));
 
 #define CSS_IF_GET_ELSE(sid,ptr,result) \
   if (sid.Equals(kCSS##ptr##SID))  { *result = m##ptr;  } else
@@ -4678,7 +4677,7 @@ CSSDeclarationImpl::Clone(nsICSSDeclaration*& aClone) const
 {
   CSSDeclarationImpl* clone = new CSSDeclarationImpl(*this);
   if (clone) {
-    return clone->QueryInterface(kICSSDeclarationIID, (void**)&aClone);
+    return clone->QueryInterface(NS_GET_IID(nsICSSDeclaration), (void**)&aClone);
   }
   aClone = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -4699,7 +4698,7 @@ NS_HTML nsresult
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kICSSDeclarationIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsICSSDeclaration), (void **) aInstancePtrResult);
 }
 
 

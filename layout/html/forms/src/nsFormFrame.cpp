@@ -117,7 +117,6 @@ static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 NS_IMETHODIMP
@@ -475,7 +474,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
 
   nsCOMPtr<nsIContent> newContent;
   nsIFrame* newFrame = nsnull;
-  nsresult rv = aFrame.QueryInterface(kIFrameIID, (void **)&newFrame);
+  nsresult rv = aFrame.QueryInterface(NS_GET_IID(nsIFrame), (void **)&newFrame);
   if (NS_SUCCEEDED(rv) && newFrame) {
     rv = newFrame->GetContent(getter_AddRefs(newContent));
     if (NS_SUCCEEDED(rv) && newContent) {
@@ -486,7 +485,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
         if (thisControl) {
           nsCOMPtr<nsIContent> thisContent;
           nsIFrame* thisFrame = nsnull;
-          rv = thisControl->QueryInterface(kIFrameIID, (void **)&thisFrame);
+          rv = thisControl->QueryInterface(NS_GET_IID(nsIFrame), (void **)&thisFrame);
           if (NS_SUCCEEDED(rv) && thisFrame) {
             rv = thisFrame->GetContent(getter_AddRefs(thisContent));
             if (NS_SUCCEEDED(rv) && thisContent) {
@@ -680,7 +679,7 @@ nsFormFrame::ProcessValue(nsIFormProcessor& aFormProcessor, nsIFormControlFrame*
   nsresult res = NS_OK;
 
   nsIFrame *frame = nsnull;
-  res = aFrameControl->QueryInterface(kIFrameIID, (void **)&frame);
+  res = aFrameControl->QueryInterface(NS_GET_IID(nsIFrame), (void **)&frame);
   if (NS_SUCCEEDED(res) && (frame)) {
     nsCOMPtr<nsIContent> content;
     nsresult rv = frame->GetContent(getter_AddRefs(content));

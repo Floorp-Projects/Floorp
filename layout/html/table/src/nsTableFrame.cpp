@@ -61,10 +61,7 @@
 #include "nsHTMLReflowCommand.h"
 #include "nsIFrameManager.h"
 
-static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
-static NS_DEFINE_IID(kIBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
-static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 
 // helper function for dealing with placeholder for positioned/floated table
 static void GetPlaceholderFor(nsIPresContext& aPresContext, nsIFrame& aFrame, nsIFrame** aPlaceholder);
@@ -1152,7 +1149,7 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
   }
   else if (nsLayoutAtoms::scrollFrame == frameType) {
     nsIScrollableFrame* scrollable = nsnull;
-    nsresult rv = aFrame->QueryInterface(kIScrollableFrameIID, (void **)&scrollable);
+    nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **)&scrollable);
     if (NS_SUCCEEDED(rv) && (scrollable)) {
       nsIFrame* scrolledFrame;
       scrollable->GetScrolledFrame(nsnull, scrolledFrame);

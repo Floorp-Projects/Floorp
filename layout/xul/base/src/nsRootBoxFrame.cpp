@@ -47,8 +47,6 @@
 #include "nsStackLayout.h"
 
 // Interface IDs
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 //#define DEBUG_REFLOW
 

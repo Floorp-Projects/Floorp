@@ -52,7 +52,6 @@
 #include "nsIPrivateDOMEvent.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 
 class nsHTMLTextAreaElement : public nsGenericHTMLContainerFormElement,
@@ -552,7 +551,7 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsIFrame* formFrame = nsnull;
 
   if (formControlFrame &&
-      NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID,
+      NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame),
                                                     (void **)&formFrame)) &&
       formFrame) {
     const nsStyleUserInterface* uiStyle;

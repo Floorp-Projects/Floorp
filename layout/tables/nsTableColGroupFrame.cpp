@@ -37,8 +37,6 @@
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 
-static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
 
 #define COLGROUP_TYPE_CONTENT              0x0
 #define COLGROUP_TYPE_ANONYMOUS_COL        0x1
@@ -684,7 +682,7 @@ PRInt32 nsTableColGroupFrame::GetSpan()
 
   // col group element derives from col element
   nsIDOMHTMLTableColElement* cgContent = nsnull;
-  rv = iContent->QueryInterface(kIDOMHTMLTableColElementIID, 
+  rv = iContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTableColElement), 
                                (void **)&cgContent);  
   if (cgContent && NS_SUCCEEDED(rv)) { 
     cgContent->GetSpan(&span);

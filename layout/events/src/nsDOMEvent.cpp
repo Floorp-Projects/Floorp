@@ -42,7 +42,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsMutationEvent.h"
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 static char* mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",

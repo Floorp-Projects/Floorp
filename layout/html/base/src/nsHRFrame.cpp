@@ -38,7 +38,6 @@
 #include "nsStyleUtil.h"
 #include "nsLayoutAtoms.h"
 
-static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 
 // default hr thickness in pixels
 #define DEFAULT_THICKNESS 3
@@ -282,7 +281,7 @@ HRuleFrame::GetNoShade()
 {
   PRBool result = PR_FALSE;
   nsIDOMHTMLHRElement* hr = nsnull;
-  mContent->QueryInterface(kIDOMHTMLHRElementIID, (void**) &hr);
+  mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLHRElement), (void**) &hr);
   if (nsnull != hr) {
     hr->GetNoShade(&result);
     NS_RELEASE(hr);

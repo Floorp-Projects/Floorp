@@ -68,14 +68,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 // done I10N
 
 
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 // For figuring out the "WRAP" property
 #define kTextControl_Wrap_Soft "SOFT"
@@ -454,7 +448,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
 
   const nsStylePosition* pos;
   nsIFrame* iFrame = nsnull;
-  nsresult rv = aFrame->QueryInterface(kIFrameIID, (void**)&iFrame);
+  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&iFrame);
   if ((NS_OK == rv) && (nsnull != iFrame)) { 
     iFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
     if (eStyleUnit_Percent == pos->mWidth.GetUnit()) {
@@ -863,7 +857,7 @@ nsFormControlHelper::GetInputElementValue(nsIContent* aContent, nsString* aText,
 {
   nsresult result = NS_OK;
   nsIDOMHTMLInputElement* inputElem = nsnull;
-  result = aContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElem);
+  result = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElem);
   if ((NS_OK == result) && inputElem) {
     if (PR_TRUE == aInitialValue) {
       result = inputElem->GetDefaultValue(*aText);

@@ -93,13 +93,8 @@
 
 const PRInt32 kSizeNotSet = -1;
 
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 nsFormControlFrame::nsFormControlFrame()
   : nsLeafFrame()
@@ -142,7 +137,7 @@ nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIFormControlFrameIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   }
@@ -623,8 +618,7 @@ nsFormControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 const nsIID&
 nsFormControlFrame::GetIID()
 {
-  static NS_DEFINE_IID(kButtonIID, NS_IBUTTON_IID);
-  return kButtonIID;
+  return NS_GET_IID(nsIButton);
 }
   
 const nsIID&
@@ -676,7 +670,7 @@ nsFormControlFrame::GetType(PRInt32* aType) const
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
     nsIFormControl* formControl = nsnull;
-    result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+    result = mContent->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
     if ((NS_OK == result) && formControl) {
       result = formControl->GetType(aType);
       NS_RELEASE(formControl);
@@ -830,7 +824,7 @@ nsresult
 nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
 {	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+  if (NS_OK == mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement)) {
     res = inputElement->GetDefaultChecked(aState);
     NS_RELEASE(inputElement);
   }
@@ -842,7 +836,7 @@ nsFormControlFrame::SetDefaultCheckState(PRBool aState)
 {
 	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+  if (NS_OK == mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement)) {
     res = inputElement->SetDefaultChecked(aState);
     NS_RELEASE(inputElement);
   }
@@ -854,7 +848,7 @@ nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
 {
 	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+  if (NS_OK == mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement)) {
     res = inputElement->GetChecked(aState);
     NS_RELEASE(inputElement);
   }
@@ -866,7 +860,7 @@ nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 {
 	nsresult res = NS_OK;
   nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+  if (NS_OK == mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElement)) {
     inputElement->SetChecked(aState); 
    NS_RELEASE(inputElement);
   }

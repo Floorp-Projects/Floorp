@@ -112,10 +112,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 //----------------------------------------------------------------------
 
 
-static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
 static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
-static NS_DEFINE_IID(kIScriptNameSpaceManagerIID, NS_ISCRIPTNAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 
 class LayoutScriptNameSet : public nsIScriptExternalNameSet {
 public:
@@ -137,7 +134,7 @@ LayoutScriptNameSet::~LayoutScriptNameSet()
 {
 }
 
-NS_IMPL_ISUPPORTS(LayoutScriptNameSet, kIScriptExternalNameSetIID);
+NS_IMPL_ISUPPORTS(LayoutScriptNameSet, NS_GET_IID(nsIScriptExternalNameSet));
 
 NS_IMETHODIMP 
 LayoutScriptNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
@@ -152,12 +149,11 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
   nsIScriptNameSpaceManager* manager;
   static NS_DEFINE_IID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
   static NS_DEFINE_IID(kHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
-  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
   result = aScriptContext->GetNameSpaceManager(&manager);
   if (NS_OK == result) {
     result = manager->RegisterGlobalName(NS_ConvertToString("HTMLImageElement"),
-                                         kIScriptObjectOwnerIID,
+                                         NS_GET_IID(nsIScriptObjectOwner),
                                          kHTMLImageElementCID,
                                          PR_TRUE);
     if (NS_FAILED(result)) {
@@ -166,7 +162,7 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     }
 
     result = manager->RegisterGlobalName(NS_ConvertToString("HTMLOptionElement"),
-                                         kIScriptObjectOwnerIID,
+                                         NS_GET_IID(nsIScriptObjectOwner),
                                          kHTMLOptionElementCID,
                                          PR_TRUE);
     if (NS_FAILED(result)) {
@@ -182,7 +178,6 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
 
 nsIScriptNameSetRegistry* nsLayoutModule::gRegistry;
 nsICSSStyleSheet* nsLayoutModule::gUAStyleSheet = nsnull;
@@ -198,7 +193,7 @@ nsLayoutModule::~nsLayoutModule()
   Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsLayoutModule, kIModuleIID)
+NS_IMPL_ISUPPORTS(nsLayoutModule, NS_GET_IID(nsIModule))
 
 // Perform our one-time intialization for this module
 nsresult
@@ -236,7 +231,7 @@ nsLayoutModule::Initialize()
   // XXX Initialize the script name set thingy-ma-jigger
   if (!gRegistry) {
     rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                      kIScriptNameSetRegistryIID,
+                                      NS_GET_IID(nsIScriptNameSetRegistry),
                                       (nsISupports**) &gRegistry);
     if (NS_SUCCEEDED(rv)) {
       LayoutScriptNameSet* nameSet = new LayoutScriptNameSet();

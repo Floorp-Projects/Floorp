@@ -41,7 +41,6 @@
 #include "nsFormControlFrame.h"
 
 static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
-static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
  
 nsresult
 NS_NewLegendFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)

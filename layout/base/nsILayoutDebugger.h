@@ -37,6 +37,8 @@ class nsIPresShell;
  */
 class nsILayoutDebugger : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILAYOUT_DEBUGGER_IID)
+
   NS_IMETHOD SetShowFrameBorders(PRBool aEnable) = 0;
 
   NS_IMETHOD GetShowFrameBorders(PRBool* aResult) = 0;

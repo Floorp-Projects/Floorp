@@ -55,12 +55,9 @@
 #include "nsIFrameManager.h"
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-static NS_DEFINE_IID(kFrameIID, NS_IFRAME_IID);
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 // NS_NewMenuPopupFrame
 //
@@ -126,7 +123,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   // lookup if we're allowed to overlap the OS bar (menubar/taskbar) from the
   // look&feel object
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, 
+  nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), 
                                       getter_AddRefs(lookAndFeel));
   if ( lookAndFeel )
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, mMenuCanOverlapOSBar);
@@ -774,7 +771,7 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
   nsIFrame* currFrame = nsnull;
   nsIFrame* startFrame = nsnull;
   if (aStart) {
-    aStart->QueryInterface(kIFrameIID, (void**)&currFrame); 
+    aStart->QueryInterface(NS_GET_IID(nsIFrame), (void**)&currFrame); 
     if (currFrame) {
       startFrame = currFrame;
       currFrame->GetNextSibling(&currFrame);
@@ -844,7 +841,7 @@ nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResu
   nsIFrame* currFrame = nsnull;
   nsIFrame* startFrame = nsnull;
   if (aStart) {
-    aStart->QueryInterface(kIFrameIID, (void**)&currFrame);
+    aStart->QueryInterface(NS_GET_IID(nsIFrame), (void**)&currFrame);
     if (currFrame) {
       startFrame = currFrame;
       currFrame = frames.GetPrevSiblingFor(currFrame);
@@ -910,7 +907,7 @@ nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
   do {
     currFrame->GetView(mPresContext, &view);
     if ( view )
-      view->QueryInterface(nsIScrollableView::GetIID(), (void**)&scrollableView);
+      view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
     if ( scrollableView )
       return scrollableView;
     currFrame->GetNextSibling(&currFrame);
@@ -933,7 +930,7 @@ nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
 void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsIMenuFrame* aMenuItem)
 {
   nsIFrame* frame=nsnull;
-  aMenuItem->QueryInterface(kFrameIID, (void**)&frame);
+  aMenuItem->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame);
   if ( frame ) {
     nsIFrame* childFrame=nsnull;
     FirstChild(mPresContext, nsnull, &childFrame);
@@ -941,7 +938,7 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsIMenuFrame* aMenuItem)
     scrollableView=GetScrollableView(childFrame);
     if ( scrollableView ) {
       nsIView* view=nsnull;
-      scrollableView->QueryInterface(nsIView::GetIID(), (void**)&view);
+      scrollableView->QueryInterface(NS_GET_IID(nsIView), (void**)&view);
       if ( view ) {
         nsRect viewRect, itemRect;
         nscoord scrollX, scrollY;
@@ -980,7 +977,7 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 
       nsILookAndFeel * lookAndFeel;
       if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
-                      kILookAndFeelIID, (void**)&lookAndFeel)) {
+                      NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel)) {
         lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
        NS_RELEASE(lookAndFeel);
       }
