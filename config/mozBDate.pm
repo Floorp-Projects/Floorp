@@ -118,6 +118,7 @@ sub SubstituteBuildNumber($$$) {
     my $build = <$INFILE>;
     close $INFILE;
     chomp $build;
+    chop $build if (substr($build, -1, 1) eq "\r");
     
     if ($infile ne "") {
         open($INFILE, "< $infile") || die "$infile: $!\n";
@@ -127,31 +128,30 @@ sub SubstituteBuildNumber($$$) {
     open $OUTFILE, ">${outfile}.old" || die;
     
     while (<$INFILE>) {
-    
-    my $id = $_;
-    my $temp;
-    if ($id =~ "Build ID:") {
-        $temp = "Build ID: " . $build;
-        $id =~ s/Build ID:\s\d+/$temp/;
-        print $OUTFILE $id;
-    }
-    elsif ($id =~ "NS_BUILD_ID") {
-        $temp = "NS_BUILD_ID " . $build;
-        $id =~ s/NS_BUILD_ID\s\d+/$temp/;
-        print $OUTFILE $id;
-    }
-    elsif ($id =~ "GRE_BUILD_ID") {
-	if (defined($ENV{'MOZ_MILESTONE_RELEASE'})) {
-	    $temp = "GRE_BUILD_ID \"$milestone\"";
-	} else {
-	    $temp = "GRE_BUILD_ID \"${milestone}_${build}\"";
-	}
-        $id =~ s/GRE_BUILD_ID\s\"\d+\"/$temp/;
-        print $OUTFILE $id;
-    }
-    else {
-        print $OUTFILE $_;
-    }
+        my $id = $_;
+        my $temp;
+        if ($id =~ "Build ID:") {
+            $temp = "Build ID: " . $build;
+            $id =~ s/Build ID:\s\d+/$temp/;
+            print $OUTFILE $id;
+        }
+        elsif ($id =~ "NS_BUILD_ID") {
+            $temp = "NS_BUILD_ID " . $build;
+            $id =~ s/NS_BUILD_ID\s\d+/$temp/;
+            print $OUTFILE $id;
+        }
+        elsif ($id =~ "GRE_BUILD_ID") {
+            if (defined($ENV{'MOZ_MILESTONE_RELEASE'})) {
+                $temp = "GRE_BUILD_ID \"$milestone\"";
+            } else {
+                $temp = "GRE_BUILD_ID \"${milestone}_${build}\"";
+            }
+            $id =~ s/GRE_BUILD_ID\s\"\d+\"/$temp/;
+            print $OUTFILE $id;
+        }
+        else {
+            print $OUTFILE $_;
+        }
     }
 
     close $INFILE;
