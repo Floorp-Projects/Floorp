@@ -325,8 +325,14 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 	
 	SInt32  sleepTime = (havePendingEvent || BrowserIsBusy()) ? 0 : 2;
 	
+	// when in the background, we don't want to chew up time processing mouse move
+	// events, so set the mouse region to null. If we're in the fg, however,
+	// we want every mouseMove event we can get our grubby little hands on, so set
+	// it to a 1x1 rect.
+	RgnHandle mouseRgn = nsToolkit::IsAppInForeground() ? mMouseRgn : nsnull;
+	
 	::SetEventMask(everyEvent); // we need keyUp events
-	PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mMouseRgn);
+	PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mouseRgn);
   
 	sNextWNECall = ::TickCount() + kWNECallIntervalTicks;
 
@@ -725,7 +731,6 @@ void nsMacMessagePump::DoMouseUp(EventRecord &anEvent)
 	DispatchOSEventToRaptor(anEvent, whichWindow);
 }
 
-
 //-------------------------------------------------------------------------
 //
 // DoMouseMove
@@ -903,7 +908,8 @@ void	nsMacMessagePump::DoIdle(EventRecord &anEvent)
 	EventRecord	localEvent = anEvent;
 	localEvent.what = nullEvent;
 	lastWhere = localEvent.where;
-  DoMouseMove(localEvent);
+  if ( nsToolkit::IsAppInForeground() )
+    DoMouseMove(localEvent);
 }
 
 
