@@ -64,6 +64,7 @@ nsHttpChannel::nsHttpChannel()
     , mTriedCredentialsFromPrehost(PR_FALSE)
     , mFromCacheOnly(PR_FALSE)
     , mCachedContentIsValid(PR_FALSE)
+    , mResponseHeadersModified(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
@@ -927,16 +928,16 @@ nsHttpChannel::InitCacheEntry()
         return NS_OK;
     }
 
-    // Store secure data in memory only
-    if (mSecurityInfo)
-        mCacheEntry->SetSecurityInfo(mSecurityInfo);
-
     // For HTTPS transactions, the storage policy will already be IN_MEMORY.
     // We are concerned instead about load attributes which may have changed.
     if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
         rv = mCacheEntry->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
         if (NS_FAILED(rv)) return rv;
     }
+
+    // Store secure data in memory only
+    if (mSecurityInfo)
+        mCacheEntry->SetSecurityInfo(mSecurityInfo);
 
     // Set the expiration time for this cache entry
     rv = UpdateExpirationTime();
@@ -952,6 +953,33 @@ nsHttpChannel::InitCacheEntry()
     nsCAutoString head;
     mResponseHead->Flatten(head, PR_TRUE);
     return mCacheEntry->SetMetaDataElement("response-head", head.get());
+}
+
+// Finalize the cache entry
+//  - may need to rewrite response headers if any headers changed
+//  - may need to recalculate the expiration time if any headers changed
+//  - called only for freshly written cache entries
+nsresult
+nsHttpChannel::FinalizeCacheEntry()
+{
+    LOG(("nsHttpChannel::FinalizeCacheEntry [this=%x]\n", this));
+
+    if (mResponseHeadersModified) {
+        // The no-store directive within the 'Cache-Control:' header indicates
+        // that we should not store the response in the cache.
+        // XXX this should probably be done from within SetResponseHeader.
+        const char *val = mResponseHead->PeekHeader(nsHttp::Cache_Control);
+        if (val && PL_strcasestr(val, "no-store")) {
+            LOG(("Dooming cache entry because of \"%s\"\n", val));
+            mCacheEntry->Doom();
+            return NS_OK;
+        }
+
+        // Set the expiration time for this cache entry
+        nsresult rv = UpdateExpirationTime();
+        if (NS_FAILED(rv)) return rv;
+    }
+    return NS_OK;
 }
 
 // Open an output stream to the cache entry and insert a listener tee into
@@ -2041,9 +2069,21 @@ nsHttpChannel::SetResponseHeader(const char *header, const char *value)
     if (!atom)
         return NS_ERROR_NOT_AVAILABLE;
 
+    // these response headers must not be changed 
+    if (atom == nsHttp::Content_Type ||
+        atom == nsHttp::Content_Length ||
+        atom == nsHttp::Content_Encoding ||
+        atom == nsHttp::Trailer ||
+        atom == nsHttp::Transfer_Encoding)
+        return NS_ERROR_ILLEGAL_VALUE;
+
     nsresult rv = mResponseHead->SetHeader(atom, value);
-    if (NS_SUCCEEDED(rv))
+
+    // XXX temporary hack until http supports some form of a header change observer
+    if ((atom == nsHttp::Set_Cookie) && NS_SUCCEEDED(rv))
         rv = nsHttpHandler::get()->OnExamineResponse(this);
+
+    mResponseHeadersModified = PR_TRUE;
     return rv;
 }
 
@@ -2140,6 +2180,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     if (mTransaction) {
         NS_RELEASE(mTransaction);
         mTransaction = nsnull;
+
+        // perform any final cache operations before we close the cache entry.
+        if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE))
+            FinalizeCacheEntry();
     }
     
     // we don't support overlapped i/o (bug 82418)
