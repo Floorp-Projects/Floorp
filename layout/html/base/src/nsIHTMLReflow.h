@@ -424,6 +424,13 @@ public:
   NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY) = 0;
+
+  NS_IMETHOD VerticalAlignFrames(nscoord aLineHeight,
+                                 nscoord aDistanceFromTopEdge) = 0;
+
+#if 0
+  NS_IMETHOD RelativePositionFrames(nsRect& aCombinedArea) = 0;
+#endif
 };
 
 //----------------------------------------------------------------------
