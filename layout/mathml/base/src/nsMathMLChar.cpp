@@ -1049,8 +1049,8 @@ nsMathMLChar::GetStyleContext(nsIStyleContext** aStyleContext) const
   NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
   NS_PRECONDITION(aStyleContext, "null OUT ptr");
   NS_ASSERTION(mStyleContext, "chars shoud always have style context");
-  NS_IF_ADDREF(mStyleContext);
   *aStyleContext = mStyleContext;
+  NS_IF_ADDREF(*aStyleContext);
   return NS_OK;
 }
 
