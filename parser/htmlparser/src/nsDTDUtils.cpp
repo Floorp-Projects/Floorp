@@ -249,9 +249,6 @@ void nsDTDContext::Push(eHTMLTags aTag) {
 eHTMLTags nsDTDContext::Pop() {
   eHTMLTags result=eHTMLTag_unknown;
   PRInt32   size = GetCount();
-#ifndef NS_DEBUG
-  size = mTags.mCount;
-#endif
   if(size>0) {
     result=mTags.Pop();
     size--;
