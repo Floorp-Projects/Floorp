@@ -16,18 +16,17 @@
 # Reserved.
 
 DEPTH=..\..\..\..\..
-IGNORE_MANIFEST=1
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=mailnews
+MODULE=msgbase
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) SearchDialog.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) SearchDialog.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) FilterListDialog.xul	$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) FilterEditor.xul	$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) FilterEditor.js		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) FilterEditor.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) FilterEditor.js			$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\SearchDialog.xul

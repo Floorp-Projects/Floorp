@@ -16,10 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..\..
-IGNORE_MANIFEST=1
-
-DEFINES=-DWIN32_LEAN_AND_MEAN
-MODULE=mailnews
+MODULE=addrbook
 
 include <$(DEPTH)\config\rules.mak>
 
