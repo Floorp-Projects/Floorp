@@ -107,6 +107,7 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
                            getter_AddRefs(mBundle));
 
     mRowCount = 0;
+    mExpectAbsLoc = PR_FALSE;
 
     return rv;
 }
@@ -236,6 +237,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mParser->SetEncoding(NS_LossyConvertUCS2toASCII(charset).get());
         NS_ENSURE_SUCCESS(rv, rv);
+
+    } else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isScheme)) && isScheme) {
+        mExpectAbsLoc = PR_TRUE;
     }
 
     nsString buffer;
@@ -476,7 +480,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     nsXPIDLCString loc;
     aIndex->GetLocation(getter_Copies(loc));
-    
+
     if (!mTextToSubURI) {
         mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
@@ -496,9 +500,21 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     NS_ConvertUCS2toUTF8 utf8UnEscapeSpec(unEscapeSpec);
 
-    NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(),
-                 esc_Colon|esc_Forced|esc_FileBaseName|esc_OnlyASCII|esc_AlwaysCopy, 
-                 escapeBuf);
+    // now minimally re-escape the location...
+    PRUint32 escFlags;
+    // for some protocols, like gopher, we expect the location to be absolute.
+    // if so, and if the location indeed appears to be a valid URI, then go
+    // ahead and treat it like one.
+    if (mExpectAbsLoc &&
+        NS_SUCCEEDED(net_ExtractURLScheme(utf8UnEscapeSpec, nsnull, nsnull, nsnull))) {
+        // escape as absolute 
+        escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_Minimal;
+    }
+    else {
+        // escape as relative
+        escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_FileBaseName | esc_Colon;
+    }
+    NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(), escFlags, escapeBuf);
   
     pushBuffer.Append(NS_ConvertUTF8toUCS2(escapeBuf));
     
