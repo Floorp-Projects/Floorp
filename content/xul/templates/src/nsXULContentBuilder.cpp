@@ -1705,7 +1705,7 @@ nsXULContentBuilder::ReplaceMatch(nsIRDFResource* aMember,
 
         RemoveMember(content, member, PR_TRUE);
 
-        if (aNewMatch) {
+        if (!aNewMatch) {
             // If there's no new match, then go ahead an update the
             // container attributes now.
             SetContainerAttrs(content, aOldMatch);
