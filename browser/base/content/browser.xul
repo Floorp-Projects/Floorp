@@ -562,7 +562,7 @@
     <!-- Menu -->
       <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
 #ifdef XP_MACOSX
-               defaultset="menubar-itmes"
+               defaultset="menubar-items"
 #else
                defaultset="menubar-items,spring,throbber-box"
 #endif
