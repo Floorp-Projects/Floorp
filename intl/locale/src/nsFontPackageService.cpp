@@ -49,6 +49,10 @@ enum {
   eInstalled
 };
 
+/* Keep the languages handled here in sync with handled_languages in
+ * mozilla/xpfe/global/resources/content/fontpackage.properties
+ * and the contents of http://www.mozilla.org/projects/intl/fonts/win/redirect/
+ */
 static PRInt8 mJAState = eInit;
 static PRInt8 mKOState = eInit;
 static PRInt8 mZHTWState = eInit;
@@ -114,7 +118,7 @@ nsresult nsFontPackageService::CallDownload(const char *aFontPackID, PRInt8 aInS
       const char *langID = &aFontPackID[5]; 
       rv = fontEnum->HaveFontFor(langID, &have);
       if (NS_SUCCEEDED(rv)) { 
-        if (!have)  {
+        if (!have) {
           *aOutState = eDownload;
           rv = mHandler->NeedFontPackage(aFontPackID);
           if (rv == NS_ERROR_ABORT) {
