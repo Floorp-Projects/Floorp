@@ -45,21 +45,22 @@
 #endif
 
 /* XXX fail if XPT_DATA and !state->data_offset */
-#define CHECK_COUNT_(cursor, space)                                       \
- /* if we're in the header, then exceeding the data_offset is illegal */  \
-((cursor)->pool == XPT_HEADER ?                                           \
- (ENCODING(cursor) &&                                                     \
-  ((cursor)->offset - 1 + (space) > (cursor)->state->data_offset)         \
-  ? (DBG(("no space left in HEADER %d + %d > %d\n", (cursor)->offset,     \
-          (space), (cursor)->state->data_offset)), PR_FALSE)              \
-  : PR_TRUE) :                                                            \
- /* if we're in the data area and we're about to exceed the allocation */ \
- (CURS_POOL_OFFSET(cursor) + (space) > (cursor)->state->pool->allocated ? \
-  /* then grow if we're in ENCODE mode */                                 \
-  (ENCODING(cursor) ? XPT_GrowPool((cursor)->state->pool)                 \
-   /* and fail if we're in DECODE mode */                                 \
-   : (DBG(("can't extend in DECODE")), PR_FALSE))                         \
-  /* otherwise we're OK */                                                \
+#define CHECK_COUNT_(cursor, space)                                           \
+ /* if we're in the header, then exceeding the data_offset is illegal */      \
+((cursor)->pool == XPT_HEADER ?                                               \
+ (ENCODING(cursor) &&                                                         \
+  ((cursor)->state->data_offset &&                                            \
+   ((cursor)->offset - 1 + (space) > (cursor)->state->data_offset))           \
+  ? (DBG(("no space left in HEADER %d + %d > %d\n", (cursor)->offset,         \
+          (space), (cursor)->state->data_offset)), PR_FALSE)                  \
+  : PR_TRUE) :                                                                \
+ /* if we're in the data area and we're about to exceed the allocation */     \
+ (CURS_POOL_OFFSET(cursor) + (space) > (cursor)->state->pool->allocated ?     \
+  /* then grow if we're in ENCODE mode */                                     \
+  (ENCODING(cursor) ? XPT_GrowPool((cursor)->state->pool)                     \
+   /* and fail if we're in DECODE mode */                                     \
+   : (DBG(("can't extend in DECODE")), PR_FALSE))                             \
+  /* otherwise we're OK */                                                    \
   : PR_TRUE))
 
 #define CHECK_COUNT(cursor, space)                                            \
@@ -277,15 +278,26 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
 {
     XPTCursor my_cursor;
     char *ident = *identp;
-    PRBool already;
-    XPTMode mode = cursor->state->mode;
+    uint32 offset = 0;
     
-    XPT_PREAMBLE_NO_ALLOC(cursor, identp, XPT_DATA, strlen(ident) + 1,
-                          my_cursor, already);
+    XPTMode mode = cursor->state->mode;
 
     if (mode == XPT_DECODE) {
-        char *start = &CURS_POINT(&my_cursor), *end;
+        char *start, *end;
         int len;
+
+        if (!XPT_Do32(cursor, &offset))
+            return PR_FALSE;
+        
+        if (!offset) {
+            *identp = NULL;
+            return PR_TRUE;
+        }
+
+        my_cursor.pool = XPT_DATA;
+        my_cursor.offset = offset;
+        my_cursor.state = cursor->state;
+        start = &CURS_POINT(&my_cursor);
 
         end = strchr(start, 0); /* find the end of the string */
         if (!end) {
@@ -302,12 +314,20 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
         ident[len] = 0;
         *identp = ident;
 
-        if (!XPT_SetAddrForOffset(&my_cursor, my_cursor.offset, ident)) {
-            PR_DELETE(ident);
-            return PR_FALSE;
+    } else {
+
+        if (!ident) {
+            offset = 0;
+            if (!XPT_Do32(cursor, &offset))
+                return PR_FALSE;
+            return PR_TRUE;
         }
 
-    } else {
+        if (!XPT_MakeCursor(cursor->state, XPT_DATA, strlen(ident) + 1,
+                            &my_cursor) ||
+            !XPT_Do32(cursor, &my_cursor.offset))
+            return PR_FALSE;
+        
         while(*ident)
             if (!XPT_Do8(&my_cursor, ident++))
                 return PR_FALSE;

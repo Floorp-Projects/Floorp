@@ -257,6 +257,18 @@ XPT_DumpAnnotations(XPTAnnotation *ann, const int indent, PRBool verbose_mode)
     return PR_TRUE;
 }
 
+static void
+print_IID(struct nsID *iid, FILE *file)
+{
+    fprintf(file, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+            (PRUint32) iid->m0, (PRUint32) iid->m1,(PRUint32) iid->m2,
+            (PRUint32) iid->m3[0], (PRUint32) iid->m3[1],
+            (PRUint32) iid->m3[2], (PRUint32) iid->m3[3],
+            (PRUint32) iid->m3[4], (PRUint32) iid->m3[5],
+            (PRUint32) iid->m3[6], (PRUint32) iid->m3[7]);
+            
+}
+
 PRBool
 XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide, 
                                  const int indent, PRBool verbose_mode)
@@ -264,13 +276,9 @@ XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
     int new_indent = indent + BASE_INDENT;
 
     if (verbose_mode) {
-        fprintf(stdout, "%*sIID:                             "
-                "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x\n", indent, " ",
-                (PRUint32) ide->iid.m0, (PRUint32) ide->iid.m1,(PRUint32) ide->iid.m2,
-                (PRUint32) ide->iid.m3[0], (PRUint32) ide->iid.m3[1],
-                (PRUint32) ide->iid.m3[2], (PRUint32) ide->iid.m3[3],
-                (PRUint32) ide->iid.m3[4], (PRUint32) ide->iid.m3[5],
-                (PRUint32) ide->iid.m3[6], (PRUint32) ide->iid.m3[7]);
+        fprintf(stdout, "%*sIID:                             ", indent, " ");
+        print_IID(&ide->iid, stdout);
+        fprintf(stdout, "\n");
         
         fprintf(stdout, "%*sName:                            %s\n", 
                 indent, " ", ide->name);
@@ -286,8 +294,10 @@ XPT_DumpInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
             return PR_FALSE;
         }
     } else {
-        fprintf(stdout, "%*sInterface %s::%s:\n", indent, " ", 
-                ide->namespace, ide->name);
+        fprintf(stdout, "%*s- %s::%s (", indent, " ", 
+                ide->namespace ? ide->namespace : "", ide->name);
+        print_IID(&ide->iid, stdout);
+        fprintf(stdout, "):\n");
         if (!XPT_DumpInterfaceDescriptor(ide->interface_descriptor, 
                                          new_indent, verbose_mode)) {
             return PR_FALSE;
@@ -304,6 +314,11 @@ XPT_DumpInterfaceDescriptor(XPTInterfaceDescriptor *id, const int indent,
     int i;
     int new_indent = indent + BASE_INDENT;
     int more_indent = new_indent + BASE_INDENT;
+
+    if (!id) {
+        fprintf(stdout, "%*s[Unresolved]\n", indent, " ");
+        return PR_TRUE;
+    }
 
     if (verbose_mode) {
         fprintf(stdout, "%*sOffset of parent interface (in data pool): %p\n", 
