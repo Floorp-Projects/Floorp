@@ -27,3 +27,5 @@ FilterEditor.js
 FilterEditor.xul
 FilterListDialog.xul
 FilterListDialog.js
+searchTermOverlay.xul
+searchTermOverlay.js

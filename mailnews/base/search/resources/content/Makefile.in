@@ -36,6 +36,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		FilterListDialog.js \
 		FilterEditor.xul \
 		FilterEditor.js \
+		searchTermOverlay.xul \
+		searchTermOverlay.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
