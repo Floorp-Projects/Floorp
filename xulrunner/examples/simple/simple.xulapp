@@ -7,8 +7,6 @@ Copyright=Copyright (c) 2004 Mozilla.org
 
 [XRE]
 Version=0.1
-EnableProfileMigrator=false
-EnableExtensionManager=false
 
 [Shell]
 Icon=chrome/icons/default/simple
