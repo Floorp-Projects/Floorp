@@ -71,7 +71,7 @@
     <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
     <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
 
-#ifdef XP_WIN
+#ifndef XP_MACOSX
     <command id="cmd_handleBackspace"  oncommand="BrowserHandleBackspace();" />
 #endif
 
@@ -206,7 +206,7 @@
          modifiers="accel"/>
     <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
 
-#ifdef XP_WIN
+#ifndef XP_MACOSX
     <key keycode="VK_BACK" command="cmd_handleBackspace"/>
     <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
 #endif

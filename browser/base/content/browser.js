@@ -780,7 +780,7 @@ function BrowserBack(aEvent, aIgnoreAlt)
   }
 }
 
-#ifdef XP_WIN
+#ifndef XP_MACOSX
 function BrowserHandleBackspace()
 {
   // The order of seeing keystrokes is this:
