@@ -142,3 +142,9 @@ function ReloadPAC() {
   pps.configureFromPAC(autoURL.value);
 }   
 
+// Password Management
+
+function editPasswords()
+{
+  window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","_blank","chrome,centerscreen,resizable=yes", "S");
+}

@@ -13,6 +13,12 @@
 <!ENTITY enbPluginCheckMailNews.label     "Plugins">
 <!ENTITY enbPluginCheckMailNews.accesskey "p">
 
+<!-- Password Manager -->
+<!ENTITY  signonHeader.label          "Passwords">
+<!ENTITY  signonDescription.label     "Manage stored mail server passwords:">
+<!ENTITY  viewSignons.label           "Manage Stored Passwords">
+<!ENTITY  viewSignons.accesskey       "e">
+
 <!ENTITY returnReceiptsDescription.label "Configure Return Receipts.">
 
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->

@@ -67,6 +67,9 @@ locale/en-US/communicator/pref/pref-applications-edit.dtd, en-US/locale/en-US/co
 
 locale/en-US/communicator/xpinstall,                      en-US/locale/en-US/communicator/xpinstall
 
+locale/en-US/communicator/wallet/SignonViewer.properties, en-US/locale/en-US/communicator/wallet/SignonViewer.properties
+locale/en-US/communicator/wallet/SignonViewer.dtd,        en-US/locale/en-US/communicator/wallet/SignonViewer.dtd
+
 #################################################################################################
 # editor
 #################################################################################################

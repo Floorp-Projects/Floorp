@@ -79,7 +79,8 @@ nsldappr32v50.dll
 
 ; wallet
 components\wallet.dll
-components\wallet.xpt  
+components\wallet.xpt 
+components\signonviewer.xpt 
 
 ; download progress
 components\nsProgressDialog.js

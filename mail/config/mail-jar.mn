@@ -78,28 +78,33 @@ content/communicator/pref/pref-proxies.xul,           comm/content/communicator/
 content/communicator/pref/pref.xul,                   comm/content/communicator/pref//pref.xul
 content/communicator/pref/nsPrefWindow.js,            comm/content/communicator/pref/nsPrefWindow.js
 content/communicator/pref/pref-applications-edit.xul, comm/content/communicator/pref/pref-applications-edit.xul
-content/communicator/pref/pref-applications-edit.js, comm/content/communicator/pref/pref-applications-edit.js
+content/communicator/pref/pref-applications-edit.js,  comm/content/communicator/pref/pref-applications-edit.js
 
 # dummy contextHelp.js file so we don't get a bunch of errors about this file not being found
-content/help/contextHelp.js,	 		      comm/content/help/contextHelp.js
+content/help/contextHelp.js,                          comm/content/help/contextHelp.js
 content/help/contents.rdf,                            comm/content/help/contents.rdf
 
 # from profile
 content/communicator/profile,                         comm/content/communicator/profile
 
 # from layout
-content/xbl-marquee,    			      comm/content/xbl-marquee
-content/necko, 				              comm/content/necko
-content/mozldap,  				      comm/content/mozldap
+content/xbl-marquee,                                  comm/content/xbl-marquee
+content/necko,                                        comm/content/necko
+content/mozldap,                                      comm/content/mozldap
 
 # from navigator
-content/navigator-region,			      comm/content/navigator-region
-content/navigator/viewSource.xul,		      comm/content/navigator/viewSource.xul
-content/navigator/viewsource.js,		      comm/content/navigator/viewsource.js
+content/navigator-region,                             comm/content/navigator-region
+content/navigator/viewSource.xul,                     comm/content/navigator/viewSource.xul
+content/navigator/viewsource.js,                      comm/content/navigator/viewsource.js
 content/navigator/contents.rdf,                       comm/content/navigator/contents.rdf
 
 # from xpinstall for theme installations
 content/communicator/xpinstall,                       comm/content/communicator/xpinstall
+
+# from the password manager
+content/communicator/wallet/SignonViewer.xul,         comm/content/communicator/wallet/SignonViewer.xul
+content/communicator/wallet/SignonViewer.js,          comm/content/communicator/wallet/SignonViewer.js
+content/communicator/wallet/nsWalletTreeUtils.js,     comm/content/communicator/wallet/nsWalletTreeUtils.js
 
 #################################################################################################
 # Files we need from global.jar
@@ -156,8 +161,8 @@ content/global/finddialog.js,                         toolkit/content/global/fin
 content/global/finddialog.xul,                        toolkit/content/global/finddialog.xul
 content/global/autocomplete.xml,                      toolkit/content/global/autocomplete.xml
 content/global/autocomplete.css,                      toolkit/content/global/autocomplete.css
-content/global/filepicker.js,			      toolkit/content/global/filepicker.js
-content/global/filepicker.xul,		              toolkit/content/global/filepicker.xul
+content/global/filepicker.js,                         toolkit/content/global/filepicker.js
+content/global/filepicker.xul,                        toolkit/content/global/filepicker.xul
 
 # embedding\components\ui
 content/global/nsHelperAppDlg.xul,                    toolkit/content/global/nsHelperAppDlg.xul

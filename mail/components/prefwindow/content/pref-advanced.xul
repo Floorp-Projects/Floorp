@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Sean Su <ssu@netscape.com>
+#   Scott MacGregor <scott@scott-macgregor.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -108,6 +109,17 @@
 
       </vbox>      
     </expander>  
+
+    <!-- Password management -->
+    <expander id="passwordManagement" class="prefExpander" label="&signonHeader.label;" persist="open">
+      <label class="expanderDescription" value="&signonDescription.label;" flex="1"/>
+      <hbox pack="end">
+        <button label="&viewSignons.label;" accesskey="&viewSignons.accesskey;"
+                oncommand="editPasswords();"
+                id="viewStoredPassword"
+                prefstring="pref.advanced.password.disable_button.view_stored_password"/>
+      </hbox>
+    </expander>
 
     <!-- Email Collection (commented out for now until I can figure out why the abs aren't showing up)
     <expander id="emailCollection" class="prefExpander" label="&emailCollectiontitle.label;" persist="open">
