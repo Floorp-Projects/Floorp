@@ -330,7 +330,7 @@ static jobject globalPasswordCallback = NULL;
  * The Java virtual machine can be used to retrieve the JNI environment
  * pointer from callback functions.
  */
-static JavaVM *javaVM = NULL;
+JavaVM * JSS_javaVM;
 
 /***********************************************************************
  * CryptoManager.initialize
@@ -548,7 +548,6 @@ JSS_completeInitialize(JNIEnv *env,
 	if (rv != SECSuccess) {
 		goto finish;
 	}
-	
 
     /*
      * Save the JavaVM pointer so we can retrieve the JNI environment
@@ -567,7 +566,7 @@ JSS_completeInitialize(JNIEnv *env,
         PR_smprintf_free(str);
         PR_ASSERT(PR_FALSE);
     }
-    javaVM = VMs[0];
+    JSS_javaVM = VMs[0];
 
     initialized = PR_TRUE;
 
@@ -711,7 +710,7 @@ getPWFromCallback(PK11SlotInfo *slot, PRBool retry, void *arg)
     }
 
     /* Get the JNI environment */
-    if( (*javaVM)->AttachCurrentThread(javaVM, (void**)&env, NULL) != 0) {
+    if((*JSS_javaVM)->AttachCurrentThread(JSS_javaVM, (void**)&env, NULL) != 0){
         PR_ASSERT(PR_FALSE);
         goto finish;
     }
