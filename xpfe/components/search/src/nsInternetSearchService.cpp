@@ -77,6 +77,11 @@
 #define	POSTHEADER_PREFIX	"Content-type: application/x-www-form-urlencoded; charset=ISO-8859-1\r\nContent-Length: "
 #define	POSTHEADER_SUFFIX	"\r\n\r\n"
 
+#ifdef	DEBUG
+// #define	DEBUG_SEARCH_OUTPUT	1
+#endif
+
+
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
@@ -908,7 +913,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		{
 			if (rv != NS_RDF_NO_VALUE)
 			{
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 				nsCOMPtr<nsIRDFLiteral>	lastLit = do_QueryInterface(lastTarget);
 				if (lastLit)
 				{
@@ -1036,7 +1041,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		engineArray->RemoveElementAt(0);
 		if (!baseFilename)	continue;
 
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 		printf("Search engine to query: '%s'\n", baseFilename);
 #endif
 
@@ -1143,7 +1148,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (NS_FAILED(rv = GetInputs(data, text, input)))
 		return(rv);
 
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 	char *cAction = action.ToNewCString();
 	char *cMethod = method.ToNewCString();
 	char *cInput = input.ToNewCString();
@@ -1831,7 +1836,7 @@ InternetSearchDataSourceCallback::OnStartRequest(nsIChannel* channel, nsISupport
 	nsIRDFLiteral		*literal = nsnull;
 	nsresult		rv;
 
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 	printf("InternetSearchDataSourceCallback::OnStartRequest entered.\n");
 #endif
 
@@ -1872,13 +1877,13 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 
 	if (!mLine)
 	{
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 		printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
 #endif
 		return(NS_OK);
 	}
 
-#if	0
+#ifdef	DEBUG_SEARCH_OUTPUT
 	printf("\n\n%s\n\n", mLine);
 #endif
 
@@ -1929,7 +1934,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 	InternetSearchDataSource::GetData(data, "interpret", "bannerStart", bannerStartStr);
 	InternetSearchDataSource::GetData(data, "interpret", "bannerEnd", bannerEndStr);
 
-#if 0
+#ifdef	DEBUG_SEARCH_OUTPUT
 	char *cStr;
 	cStr = resultListStartStr.ToNewCString();
 	if (cStr)
@@ -2053,7 +2058,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 			htmlResults.Cut(0, resultItemEnd);
 		}
 
-#if 0
+#ifdef	DEBUG_SEARCH_OUTPUT
 		char	*results = resultItem.ToNewCString();
 		if (results)
 		{
@@ -2067,7 +2072,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		PRInt32	hrefOffset = resultItem.Find("HREF=", PR_TRUE);
 		if (hrefOffset < 0)
 		{
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 			printf("\n***** Unable to find HREF!\n\n");
 #endif
 			continue;
@@ -2125,7 +2130,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 
 		nsAutoString	site(href);
 
-#if 0
+#ifdef	DEBUG_SEARCH_OUTPUT
 		printf("HREF: '%s'\n", href);
 #endif
 
@@ -2218,7 +2223,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		PRInt32	anchorEnd = resultItem.FindCharInSet(">", quoteEndOffset);
 		if (anchorEnd < quoteEndOffset)
 		{
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 			printf("\n\nSearch: Unable to find ending > when computing name.\n\n");
 #endif
 			continue;
@@ -2227,7 +2232,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		PRInt32	anchorStop = resultItem.Find("</A>", PR_TRUE, quoteEndOffset);
 		if (anchorStop < anchorEnd)
 		{
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 			printf("\n\nSearch: Unable to find </A> tag to compute name.\n\n");
 #endif
 			continue;
@@ -2491,14 +2496,14 @@ InternetSearchDataSourceCallback::OnDataAvailable(nsIChannel* channel, nsISuppor
 			PRUint32	count=0, numBytes = (aLength > sizeof(buffer)-1 ? sizeof(buffer)-1 : aLength);
 			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)) || count == 0)
 			{
-#ifdef	DEBUG			
+#ifdef	DEBUG_SEARCH_OUTPUT			
 				printf("Search datasource read failure.\n");
 #endif
 				break;
 			}
 			if (numBytes != count)
 			{
-#ifdef	DEBUG
+#ifdef	DEBUG_SEARCH_OUTPUT
 				printf("Search datasource read # of bytes failure.\n");
 #endif
 				break;
