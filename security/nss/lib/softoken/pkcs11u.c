@@ -749,6 +749,17 @@ pk11_DestroyObject(PK11Object *object)
 		crv=pk11_Attribute2SecItem(NULL,&pubKey,object,CKA_NETSCAPE_DB);
 		if (crv != CKR_OK) break;
 		rv = SECKEY_DeleteKey(SECKEY_GetDefaultKeyDB(), &pubKey);
+		if (rv != SECSuccess && pubKey.data[0] == 0) {
+		    /* Because of legacy code issues, sometimes the public key
+		     * has a '0' prepended to it, forcing it to be unsigned.
+	             * The database  does not store that '0', so catch that
+		     * failure here.
+		     */
+		    SECItem tmpPubKey;
+		    tmpPubKey.data = pubKey.data + 1;
+		    tmpPubKey.len = pubKey.len - 1;
+		    rv = SECKEY_DeleteKey(SECKEY_GetDefaultKeyDB(), &tmpPubKey);
+		}
 		if (rv != SECSuccess) crv= CKR_DEVICE_ERROR;
 		break;
 	      case PK11_TOKEN_TYPE_CERT:
