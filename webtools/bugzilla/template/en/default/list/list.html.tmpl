@@ -52,7 +52,11 @@
 %]
 
 <div align="center">
-  <b>[% time2str("%a %b %e %T %Z %Y", currenttime) %]</b><br>
+  [% IF Param('timezone') %]
+    <b>[% time2str("%a %b %e %Y %T %Z", currenttime, Param('timezone')) %]</b><br>
+  [% ELSE %]
+    <b>[% time2str("%a %b %e %Y %T", currenttime) %]</b><br>
+  [% END %]
 
   [% IF debug %]
     <p>[% query FILTER html %]</p>
