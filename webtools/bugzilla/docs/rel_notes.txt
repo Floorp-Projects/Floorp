@@ -1,13 +1,15 @@
-After many hours of banging heads against brick walls and
-much imbibed caffeine, the Bugzilla team is proud to
-announce Bugzilla 2.14.
+2.16 has not been released yet - these are prerelease notes.
 
-This release is primarily a security release, in order to
-rectify security issues.  However, some other important
-changes were made.
+Insert nice little intro for version 2.16 here.
 
-Recommended Practice For The Upgrade
-------------------------------------
+**************************
+*** ABOUT THIS VERSION ***
+**************************
+
+Bug numbers referenced in this document are all on
+bugzilla.mozilla.org unless otherwise specified.
+
+*** Recommended Practice For The Upgrade ***
 
 As always, please ensure you have ran checksetup.pl after
 replacing the files in your installation.
@@ -29,12 +31,124 @@ available to enterprising individuals.  This includes the
 localconfig file and the entire data directory.  Please
 see the Bugzilla Guide for more information.
 
-**************************
-*** ABOUT THIS VERSION ***
-**************************
+*** Dependency Requirements ***
 
-Bugs referenced in the following text are bug numbers on
-bugzilla.mozilla.org.
+MySQL v???
+Perl v???
+DBI v1.13
+DBD::MySQL v1.2209
+AppConfig v1.52
+Template v2.06
+Text::Wrap v20001.0131
+Data::Dumper, Date::Parse, CGI::Carp (any)
+GD v1.19 (optional)
+Chart::Base v0.99 (optional)
+XML::Parser (any)
+
+*** Deprecated Features ***
+
+???
+
+*** Outstanding Issues Of Note ***
+
+- Renaming or removing keywords will not update the "keyword
+  cache", and queries on keywords may not work properly, until
+  you rebuild the cache on the sanity check page
+  (sanitycheck.cgi).  The changer will receive a warning to do
+  this when altering the keyword.
+  (bug 69621)
+- Email notifications will not work out of the box if you are
+  using Postfix, Exim or possibly other non-SendMail mail
+  transfer agents, as Bugzilla sends mail by default in
+  "deferred" mode using the "-ODeliveryMode=deferred" command
+  line option, which needs to be supported by the sendmail
+  program.  To fix this, you can turn on the "sendmailnow"
+  parameter on the Edit Parameters page (editparams.cgi).
+  (bug 50159)
+???
+
+************************************************************
+*** USERS UPGRADING FROM 2.14.1 OR EARLIER - 2.16 ISSUES ***
+************************************************************
+
+*** IMPORTANT CHANGES ***
+
+???
+
+*** Other changes of note ***
+
+???
+
+*** Bug fixes of note ***
+
+- Bug counts (on reports.cgi) were very slow if you had to
+  count a lot of bugs.
+  (bug 63249)
+- The new options to let people see a bug when their name
+  is on it but who aren't in the groups the bug is restricted
+  to only allow people to view bugs if they know the bug number.
+  It still will not show up in these people's buglists and
+  they will not receive email about changes to the bugs.
+  (bugs 95024, 97469)
+???
+
+************************************************************
+*** USERS UPGRADING FROM 2.14 OR EARLIER - 2.14.1 ISSUES ***
+************************************************************
+
+The 2.14.1 release fixes several security issues that became
+known to us after the Bugzilla 2.14 release.
+
+*** SECURITY ISSUES RESOLVED ***
+
+- If LDAP Authentication was being used, Bugzilla would allow
+  you to log in as anyone if you left the password blank.
+  (bug 54901)
+
+- It was possible to add comments or file a bug as someone else
+  by editing the HTML on the appropriate submission page before
+  submitting the form.  User identity is checked now, and the
+  form values suggesting the user are now ignored.
+  (bug 108385, 108516)
+
+- The Product popup menu on the show_bug form listed all
+  products, even if the user didn't have access to all of them.
+  It now only shows products the user has access to (and the
+  product the bug is in, if the user is viewing it because of
+  some other override).
+  (bug 102141)
+
+- If a user had any blessgroupset privileges (the ability to
+  change only specific privileges for other users), it was
+  possible to change your own groupset (privileges) by
+  altering the page HTML before submitting on editusers.cgi.
+  (bug 108821)
+
+- An untrusted variable was echoed back to user in the HTML
+  output if there was a login error while editing votes.
+  (bug 98146)
+
+- buglist.cgi had an undocumented parameter that allowed you
+  to pass arbitrary SQL for the "WHERE" part of a query.
+  This has been disabled. (bug 108812)
+
+- It was possible for a user to send arbitrary SQL by inserting
+  single quotes in the "mybugslink" field in the user
+  preferences. (bug 108822)
+
+- buglist.cgi was not validating that the field names being
+  passed from the "boolean chart" query form were valid field
+  names, thus allowing arbitrary SQL to be inserted if you 
+  edited the HTML by hand before submitting the form.
+  (bug 109679)
+
+- long_list.cgi was not validating that the bug ID parameter
+  was actually a number, allowing arbitrary SQL to be inserted
+  if you edited the HTML by hand. (bug 109690)
+
+**********************************************************
+*** USERS UPGRADING FROM 2.12 OR EARLIER - 2.14 ISSUES ***
+**********************************************************
 
 *** IMPORTANT CHANGES ***
 
@@ -212,34 +326,6 @@ bugzilla.mozilla.org.
 - Bugzilla didn't properly shut down when told to - some
   queries could still be sent to the database.
   (bug 95082)
-
-*** Outstanding issues of note ***
-
-- Bug counts (on reports.cgi) can be very slow if you have to
-  count a lot of bugs.  In this case the connection can time
-  out before the  page finishes loading.  Extending the cgi
-  timeout on your web server might help this situation.
-  (bug 63249)
-- Renaming or removing keywords will not update the "keyword
-  cache", and queries on keywords may not work properly, until
-  you rebuild the cache on the sanity check page
-  (sanitycheck.cgi).  The changer will receive a warning to do
-  this when altering the keyword.
-  (bug 69621)
-- Email notifications will not work out of the box if you are
-  using Postfix, Exim or possibly other non-SendMail mail
-  transfer agents, as Bugzilla sends mail by default in
-  "deferred" mode using the "-ODeliveryMode=deferred" command
-  line option, which needs to be supported by the sendmail
-  program.  To fix this, you can turn on the "sendmailnow"
-  parameter on the Edit Parameters page (editparams.cgi).
-  (bug 50159)
-- The new options to let people see a bug when their name
-  is on it but who aren't in the groups the bug is restricted
-  to only allow people to view bugs if they know the bug number.
-  It still will not show up in these people's buglists and
-  they will not receive email about changes to the bugs.
-  (bugs 95024, 97469)
 
 **********************************************************
 *** USERS UPGRADING FROM 2.10 OR EARLIER - 2.12 ISSUES ***
