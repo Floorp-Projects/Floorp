@@ -29,6 +29,7 @@ FILES=\
 	find.xul		\
 	findresults.css		\
 	findresults.xul		\
+	icons.css		\
 	internet.css		\
 	internet.js		\
 	internet.xul		\
