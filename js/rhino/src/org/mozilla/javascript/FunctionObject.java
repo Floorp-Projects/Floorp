@@ -186,9 +186,21 @@ public class FunctionObject extends BaseFunction {
         hasVoidReturn = method != null && method.getReturnType() == Void.TYPE;
 
         ScriptRuntime.setFunctionProtoAndParent(scope, this);
-        Context cx = Context.getCurrentContext();
-        useDynamicScope = cx != null &&
-                          cx.hasCompileFunctionsWithDynamicScope();
+        Context cx = Context.getContext();
+        useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
+
+        if (method != null) {
+            Invoker master = invokerMaster;
+            if (master != null) {
+                try {
+                    invoker = master.createInvoker(cx, method, types);
+                } catch (SecurityException ex) {
+                    // Ignore invoker optimization in case of SecurityException
+                    // which can be the case if class loader creation is
+                    // disabled.
+                }
+            }
+        }
     }
 
     /**
@@ -489,11 +501,7 @@ public class FunctionObject extends BaseFunction {
     private final Object doInvoke(Context cx, Object thisObj, Object[] args)
         throws IllegalAccessException, InvocationTargetException
     {
-        Invoker master = invokerMaster;
-        if (master != null) {
-            if (invoker == null) {
-                invoker = master.createInvoker(cx, method, types);
-            }
+        if (invoker != null) {
             try {
                 return invoker.invoke(thisObj, args);
             } catch (Exception e) {

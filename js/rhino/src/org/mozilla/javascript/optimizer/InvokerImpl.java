@@ -57,9 +57,13 @@ public class InvokerImpl extends Invoker {
         int classNum;
         synchronized (this) {
             if (invokersCache == null) {
-                invokersCache = new Hashtable();
                 ClassLoader parentLoader = cx.getClass().getClassLoader();
                 classLoader = cx.createClassLoader(parentLoader);
+                // Initialize invokersCache after creation of classloader
+                // since it can throw SecurityException. It prevents
+                // NullPointerException when accessing classLoader on
+                // the second Invoker invocation.
+                invokersCache = new Hashtable();
             } else {
                 result = (Invoker)invokersCache.get(method);
                 if (result != null) { return result; }
