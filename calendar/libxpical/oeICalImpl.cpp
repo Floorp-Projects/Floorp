@@ -185,13 +185,13 @@ oeDateEnumerator::GetNext(nsISupports **_retval)
         nsresult rv; 
         nsCOMPtr<nsISupportsPRTime> nsPRTime = do_CreateInstance( NS_SUPPORTS_PRTIME_CONTRACTID , &rv); 
         if( NS_FAILED( rv ) ) { 
-            *_retval = NULL; 
+            *_retval = nsnull; 
             return rv; 
         } 
         nsISupportsPRTime* date; 
         rv = nsPRTime->QueryInterface(NS_GET_IID(nsISupportsPRTime), (void **)&date); 
         if( NS_FAILED( rv ) ) { 
-            *_retval = NULL; 
+            *_retval = nsnull; 
             return rv; 
         } 
 
@@ -248,9 +248,9 @@ oeICalImpl::oeICalImpl()
         nsCOMPtr<nsITimer> alarmtimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
         alarmtimer->QueryInterface(NS_GET_IID(nsITimer), (void **)&m_alarmtimer);
         if( NS_FAILED( rv ) )
-            m_alarmtimer = NULL;
+            m_alarmtimer = nsnull;
         else
-            m_alarmtimer->Init( NULL, this, 0, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
+            m_alarmtimer->Init( nsnull, this, 0, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
 }
 
 oeICalImpl::~oeICalImpl()
@@ -735,7 +735,7 @@ NS_IMETHODIMP oeICalImpl::FetchEvent(PRInt32 id, oeIICalEvent **ev)
     printf( "oeICalImpl::FetchEvent()\n" );
 #endif
     oeIICalEvent* event = m_eventlist.GetEventById( id );
-    if( event != NULL ) {
+    if( event != nsnull ) {
         event->AddRef();
     }
     *ev = event;
@@ -1077,7 +1077,7 @@ void oeICalImpl::SetupAlarmManager() {
     printf( "oeICalImpl::SetupAlarmManager()\n" );
 #endif
 
-    PRTime todayinms = time( NULL );
+    PRTime todayinms = time( nsnull );
     todayinms *= 1000;
     icaltimetype now = ConvertFromPrtime( todayinms );
 
