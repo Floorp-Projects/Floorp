@@ -68,19 +68,19 @@ static MenuRef gDefaultRootMenu = nsnull;
 //
 nsMenuBarX::nsMenuBarX()
 {
-    NS_INIT_REFCNT();
-    mNumMenus       = 0;
-    mParent         = nsnull;
-    mIsMenuBarAdded = PR_FALSE;
-    mDocument       = nsnull;
+  NS_INIT_REFCNT();
+  mNumMenus       = 0;
+  mParent         = nsnull;
+  mIsMenuBarAdded = PR_FALSE;
+  mDocument       = nsnull;
 
-    OSStatus status = ::CreateNewMenu(0, 0, &mRootMenu);
-    NS_ASSERTION(status == noErr, "nsMenuBarX::nsMenuBarX:  creation of root menu failed.");
+  OSStatus status = ::CreateNewMenu(0, 0, &mRootMenu);
+  NS_ASSERTION(status == noErr, "nsMenuBarX::nsMenuBarX:  creation of root menu failed.");
 
-    if (gDefaultRootMenu == nsnull) {
-        gDefaultRootMenu = ::AcquireRootMenu();
-        NS_ASSERTION(gDefaultRootMenu != nsnull, "nsMenuBarX::nsMenuBarX:  no default root menu!.");
-    }
+  if (gDefaultRootMenu == nsnull) {
+    gDefaultRootMenu = ::AcquireRootMenu();
+    NS_ASSERTION(gDefaultRootMenu != nsnull, "nsMenuBarX::nsMenuBarX:  no default root menu!.");
+  }
 }
 
 //
@@ -217,17 +217,17 @@ nsMenuBarX :: GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument )
 void
 nsMenuBarX :: RegisterAsDocumentObserver ( nsIWebShell* inWebShell )
 {
-    nsCOMPtr<nsIDocument> doc;
-    GetDocument(inWebShell, getter_AddRefs(doc));
-    if (!doc)
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(inWebShell, getter_AddRefs(doc));
+  if (!doc)
     return;
 
-    // register ourselves
-    nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
-    doc->AddObserver(observer);
-    // also get pointer to doc, just in case webshell goes away
-    // we can still remove ourself as doc observer directly from doc
-    mDocument = doc;
+  // register ourselves
+  nsCOMPtr<nsIDocumentObserver> observer ( do_QueryInterface(NS_STATIC_CAST(nsIMenuBar*,this)) );
+  doc->AddObserver(observer);
+  // also get pointer to doc, just in case webshell goes away
+  // we can still remove ourself as doc observer directly from doc
+  mDocument = doc;
 } // RegisterAsDocumentObesrver
 
 
@@ -337,6 +337,48 @@ NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
   // keep track of all added menus.
   mMenusArray.AppendElement(aMenu);    // owner
 
+  if (mNumMenus == 0)
+  {
+    Str32 menuStr = { 1, kMenuAppleLogoFilledGlyph };
+    MenuHandle appleMenu;
+    OSStatus s = ::CreateNewMenu(kAppleMenuID, 0, &appleMenu);
+    ::SetMenuTitle(appleMenu, menuStr);
+
+    if (appleMenu)
+    {
+      // this code reads the "label" attribute from the <menuitem/> with
+      // id="aboutName" and puts its label in the Apple Menu
+      nsAutoString label;
+      nsCOMPtr<nsIContent> menu;
+      aMenu->GetMenuContent(getter_AddRefs(menu));
+      if (menu) {
+        nsCOMPtr<nsIDocument> doc;
+        menu->GetDocument(*getter_AddRefs(doc));
+        if (doc) {
+          nsCOMPtr<nsIDOMDocument> domdoc ( do_QueryInterface(doc) );
+          if ( domdoc ) {
+            nsCOMPtr<nsIDOMElement> aboutMenuItem;
+            domdoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(aboutMenuItem));
+            if (aboutMenuItem)
+              aboutMenuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
+          }
+        }
+      }
+
+      CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)label.GetUnicode(), label.Length());
+      ::InsertMenuItemTextWithCFString(appleMenu, labelRef, 1, 0, 0);
+      ::CFRelease(labelRef);
+
+      // InsertMenuItem() is 1-based, so the apple/application menu needs to
+      // be at index 1. |mNumMenus| will be incremented below, so the following menu (File)
+      // won't overwrite the apple menu by reusing the ID.
+      mNumMenus = 1;
+      ::AppendMenu(appleMenu, "\p-");
+      ::InsertMenuItem(mRootMenu, menuStr, mNumMenus);
+      OSStatus status = ::SetMenuItemHierarchicalMenu(mRootMenu, mNumMenus, appleMenu);
+    }
+  }
+
   MenuRef menuRef = nsnull;
   aMenu->GetNativeData((void**)&menuRef);
 
@@ -424,31 +466,6 @@ NS_METHOD nsMenuBarX::Paint()
     // hack to correctly swap menu bars.
     // hopefully this is fast enough.
     ::SetRootMenu(mRootMenu);
-
-#if !TARGET_CARBON
-    // Now we have blown away the merged Help menu, so we have to rebuild it
-    PRUint32  numItems;
-    mMenusArray.Count(&numItems);
-    for (PRInt32 i = numItems - 1; i >= 0; --i)
-    {
-        nsCOMPtr<nsISupports> thisItem = getter_AddRefs(mMenusArray.ElementAt(i));
-        nsCOMPtr<nsIMenu>     menu = do_QueryInterface(thisItem);
-        PRBool isHelpMenu = PR_FALSE;
-        if (menu)
-        menu->IsHelpMenu(&isHelpMenu);
-        if (isHelpMenu)
-        {
-            MenuHandle helpMenuHandle;
-            ::HMGetHelpMenuHandle(&helpMenuHandle);
-            menu->SetNativeData((void*)helpMenuHandle);
-            nsMenuEvent event;
-            event.mCommand = (unsigned int) helpMenuHandle;
-            nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(menu);
-            listener->MenuSelected(event);
-        }
-    }
-#endif
-
     ::DrawMenuBar();
     return NS_OK;
 }
@@ -699,95 +716,6 @@ nsMenuBarX :: Lookup ( nsIContent *aContent, nsIChangeObserver **_retval )
 
 
 #pragma mark -
-
-
-//
-// SetMenuItemText
-//
-// A utility routine for handling unicode->OS text conversions for setting the item
-// text in a menu.
-//
-void 
-MenuHelpersX::SetMenuItemText ( MenuHandle inMacMenuHandle, short inMenuItem, const nsString& inMenuString,
-                                   const UnicodeToTextRunInfo inConverter )
-{
-  // ::TruncString() doesn't take the number of characters to truncate to, it takes a pixel with
-  // to fit the string in. Ugh. I talked it over with sfraser and we couldn't come up with an 
-  // easy way to compute what this should be given the system font, etc, so we're just going
-  // to hard code it to something reasonable and bigger fonts will just have to deal.
-  const short kMaxItemPixelWidth = 300;
-  
-	short themeFontID;
-	SInt16 themeFontSize;
-	Style themeFontStyle;
-  char* scriptRunText = ConvertToScriptRun ( inMenuString, inConverter, &themeFontID,
-                                               &themeFontSize, &themeFontStyle );
-  if ( scriptRunText ) {    
-    // convert it to a pascal string
-    Str255 menuTitle;
-    short scriptRunTextLength = strlen(scriptRunText);
-    if (scriptRunTextLength > 255)
-      scriptRunTextLength = 255;
-    BlockMoveData(scriptRunText, &menuTitle[1], scriptRunTextLength);
-    menuTitle[0] = scriptRunTextLength;
-    
-    // if the item text is too long, truncate it.
-    ::TruncString ( kMaxItemPixelWidth, menuTitle, truncMiddle );
-	  ::SetMenuItemText(inMacMenuHandle, inMenuItem, menuTitle);
-	  OSErr err = ::SetMenuItemFontID(inMacMenuHandle, inMenuItem, themeFontID);	
-
-  	nsMemory::Free(scriptRunText);
-  }
-  		
-} // SetMenuItemText
-
-
-//
-// ConvertToScriptRun
-//
-// Converts unicode to a single script run and extract the relevant font information. The
-// caller is responsible for deleting the memory allocated by this call with |nsMemory::Free()|.
-// Returns |nsnull| if an error occurred.
-//
-char*
-MenuHelpersX::ConvertToScriptRun ( const nsString & inStr, const UnicodeToTextRunInfo inConverter,
-                                    short* outFontID, SInt16* outFontSize, Style* outFontStyle )
-{
-  //
-  // extract the Unicode text from the nsString and convert it into a single script run
-  //
-  const PRUnichar* unicodeText = inStr.GetUnicode();
-  size_t unicodeTextLengthInBytes = inStr.Length() * sizeof(PRUnichar);
-  size_t scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
-  char* scriptRunText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(scriptRunTextSizeInBytes + sizeof(char)));
-  if ( !scriptRunText )
-    return nsnull;
-    
-  ScriptCodeRun convertedTextScript;
-  size_t unicdeTextReadInBytes, scriptRunTextLengthInBytes, scriptCodeRunListLength;
-  OSErr err = ::ConvertFromUnicodeToScriptCodeRun(inConverter, unicodeTextLengthInBytes,
-                  NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
-                  0, /* no flags*/
-                  0,NULL,NULL,NULL, /* no offset arrays */
-                  scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,
-                  scriptRunText,
-                  1 /* count of script runs*/,&scriptCodeRunListLength,&convertedTextScript);
-  NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: ConvertFromUnicodeToScriptCodeRun failed.");
-  if ( err ) { nsMemory::Free(scriptRunText); return nsnull; }
-  scriptRunText[scriptRunTextLengthInBytes] = '\0';	// null terminate
-	
-  //
-  // get a font from the script code
-  //
-  Str255 themeFontName;
-  err = ::GetThemeFont(kThemeSystemFont, convertedTextScript.script, themeFontName, outFontSize, outFontStyle);
-  NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: GetThemeFont failed.");
-  if ( err ) { nsMemory::Free(scriptRunText); return nsnull; }
-  ::GetFNum(themeFontName, outFontID);
-
-  return scriptRunText;
-                              
-} // ConvertToScriptRun
 
 
 //
