@@ -12,6 +12,7 @@
 @import url(chrome://communicator/skin/button.css);
 @import url(chrome://communicator/skin/brand.css);
 @import url(chrome://communicator/skin/menubutton.css);
+@import url(chrome://communicator/skin/prefpanels.css);
 @import url(chrome://communicator/skin/formatting.css);
 @import url(chrome://communicator/skin/toolbar.css);
 /* should we put this here, or make a dialog include it specifically? */
