@@ -36,17 +36,21 @@
 
 
 const DEBUG = true; /* set to false to suppress debug messages */
-const FILEPICKER_PROGID   = "component://mozilla/filepicker";
-const FILEPICKER_CID      = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
-const APPSHELL_SERV_PROGID= "component://netscape/appshell/appShellService";
-const nsIAppShellService  = Components.interfaces.nsIAppShellService;
-const nsILocalFile        = Components.interfaces.nsILocalFile;
-const nsIFileURL          = Components.interfaces.nsIFileURL;
-const nsISupports         = Components.interfaces.nsISupports;
-const nsIFactory          = Components.interfaces.nsIFactory;
-const nsIFilePicker       = Components.interfaces.nsIFilePicker;
-const bundle              = srGetStrBundle("chrome://global/locale/filepicker.properties");
-var   lastDirectory       = "/";
+const FILEPICKER_PROGID     = "component://mozilla/filepicker";
+const FILEPICKER_CID        = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
+
+const APPSHELL_SERV_PROGID  = "component://netscape/appshell/appShellService";
+const nsIAppShellService    = Components.interfaces.nsIAppShellService;
+const nsILocalFile          = Components.interfaces.nsILocalFile;
+const nsIFileURL            = Components.interfaces.nsIFileURL;
+const nsISupports           = Components.interfaces.nsISupports;
+const nsIFactory            = Components.interfaces.nsIFactory;
+const nsIFilePicker         = Components.interfaces.nsIFilePicker;
+const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor
+const nsIDOMWindow          = Components.interfaces.nsIDOMWindow;
+
+const bundle                = srGetStrBundle("chrome://global/locale/filepicker.properties");
+var   lastDirectory         = "/";
 
 function nsFilePicker()
 {
@@ -89,30 +93,30 @@ nsFilePicker.prototype = {
     this.mMode = mode;
   },
 
-  setFilters: function(filterMask) {
+  appendFilters: function(filterMask) {
     if (filterMask & nsIFilePicker.filterHTML) {
-      this.mFilterTitles.push(bundle.GetStringFromName("htmlTitle"));
-      this.mFilters.push(bundle.GetStringFromName("htmlFilter"));
+      this.appendFilter(bundle.GetStringFromName("htmlTitle"),
+                   bundle.GetStringFromName("htmlFilter"));
     }
     if (filterMask & nsIFilePicker.filterText) {
-      this.mFilterTitles.push(bundle.GetStringFromName("textTitle"));
-      this.mFilters.push(bundle.GetStringFromName("textFilter"));
+      this.appendFilter(bundle.GetStringFromName("textTitle"),
+                   bundle.GetStringFromName("textFilter"));
     }
     if (filterMask & nsIFilePicker.filterImages) {
-      this.mFilterTitles.push(bundle.GetStringFromName("imageTitle"));
-      this.mFilters.push(bundle.GetStringFromName("imageFilter"));
+      this.appendFilter(bundle.GetStringFromName("imageTitle"),
+                   bundle.GetStringFromName("imageFilter"));
     }
     if (filterMask & nsIFilePicker.filterXML) {
-      this.mFilterTitles.push(bundle.GetStringFromName("xmlTitle"));
-      this.mFilters.push(bundle.GetStringFromName("xmlFilter"));
+      this.appendFilter(bundle.GetStringFromName("xmlTitle"),
+                   bundle.GetStringFromName("xmlFilter"));
     }
     if (filterMask & nsIFilePicker.filterXUL) {
-      this.mFilterTitles.push(bundle.GetStringFromName("xulTitle"));
-      this.mFilters.push(bundle.GetStringFromName("xulFilter"));
+      this.appendFilter(bundle.GetStringFromName("xulTitle"),
+                   bundle.GetStringFromName("xulFilter"));
     }
     if (filterMask & nsIFilePicker.filterAll) {
-      this.mFilterTitles.push(bundle.GetStringFromName("allTitle"));
-      this.mFilters.push(bundle.GetStringFromName("allFilter"));
+      this.appendFilter(bundle.GetStringFromName("allTitle"),
+                   bundle.GetStringFromName("allFilter"));
     }
   },
 
@@ -132,26 +136,34 @@ nsFilePicker.prototype = {
     o.filters.types = this.mFilters;
     o.retvals = new Object();
 
+    dump("nsIDOMWindow id value = " + nsIDOMWindow.id + "\n");
+
     var parent;
     try {
       if (this.mParentWindow) {
         parent = this.mParentWindow;
-      } else if (window) {
+      } else if (typeof(window) == "object" && window != null) {
         parent = window;
       } else {
-        var appShellService = Components.classes[APPSHELL_SERV_PROGID].getService(nsIAppShellService);
-        parent = appShellService.GetHiddenWindow();
+        try {
+          var appShellService = Components.classes[APPSHELL_SERV_PROGID].getService(nsIAppShellService);
+          parent = appShellService.getHiddenDOMWindow();
+        } catch(ex) {
+          dump("Can't get parent.  xpconnect hates me so we can't get one from the appShellService.\n");
+          dump(ex + "\n");
+        }
       }
-    } catch(ex) { }
+    } catch(ex) { dump("fuck\n"); }
 
-    parent.openDialog("chrome://global/content/filepicker.xul",
-                      "",
-                      "chrome,modal,resizeable=yes,dependent=yes",
-                      o);
-
-    this.mFile = o.retvals.file;
-    lastDirectory = o.retvals.directory;
-    return o.retvals.buttonStatus;
+    try {
+      parent.openDialog("chrome://global/content/filepicker.xul",
+                        "",
+                        "chrome,modal,resizeable=yes,dependent=yes",
+                        o);
+      this.mFile = o.retvals.file;
+      lastDirectory = o.retvals.directory;
+      return o.retvals.buttonStatus;
+    } catch(ex) { dump("unable to open file picker\n" + ex + "\n"); }
   }
 }
 

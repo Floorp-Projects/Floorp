@@ -56,12 +56,12 @@ interface nsIFilePicker : nsISupports
   void init(in nsIDOMWindow parent, in wstring title, in short mode);
 
  /**
-  * Set filter list to something in the predefined list
+  * Append to the  filter list with things from the predefined list
   *
   * @param      filters  mask of filters i.e. (filterAll | filterHTML)
   *
   */
-  void setFilters(in long filterMask);
+  void appendFilters(in long filterMask);
 
  /**
   * Add a filter

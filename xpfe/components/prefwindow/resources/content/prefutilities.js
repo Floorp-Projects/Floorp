@@ -41,7 +41,7 @@ function getFileOrFolderSpec( aTitle, aFolder )
       mode = nsIFilePicker.modeOpen;
 
     fp.init(window, aTitle, mode);
-    fp.setFilters(nsIFilePicker.filterAll);
+    fp.appendFilters(nsIFilePicker.filterAll);
     fp.show();
   }
   catch(e) {

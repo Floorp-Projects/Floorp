@@ -68,7 +68,7 @@ function chooseProfileFolder( aRootFolder )
     try {
       var fp = Components.classes["component://mozilla/filepicker"].createInstance(Components.interfaces.nsIFilePicker);
       fp.init(window, bundle.GetStringFromName("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
-      fp.setFilters(Components.interfaces.nsIFilePicker.filterAll);
+      fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
       fp.show();
       // later change to 
       aRootFolder = fp.file.unicodePath;

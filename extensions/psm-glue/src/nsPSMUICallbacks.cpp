@@ -120,8 +120,8 @@ nsPSMUIHandlerImpl::PromptForFile(const PRUnichar *prompt, const char *fileRegEx
 
 
     fp->Init(nsnull, prompt, nsIFilePicker::modeOpen);
-    fp->SetFilters(nsIFilePicker::filterAll);
     fp->AppendFilter(NS_ConvertASCIItoUCS2(fileRegEx).GetUnicode(), NS_ConvertASCIItoUCS2(fileRegEx).GetUnicode());  
+    fp->AppendFilters(nsIFilePicker::filterAll);
     PRInt16 mode;
     nsresult rv = fp->Show(&mode);
 
