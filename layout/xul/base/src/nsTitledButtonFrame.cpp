@@ -1024,22 +1024,30 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  // let the render handle the UI stuff
+  // let the renderer handle the UI stuff
   mRenderer.HandleEvent(aPresContext, aEvent, aEventStatus);
 
   aEventStatus = nsEventStatus_eIgnore;
  
   switch (aEvent->message) {
 
-    case NS_MOUSE_ENTER:
+  case NS_MOUSE_ENTER:
     break;
-    case NS_MOUSE_LEFT_BUTTON_DOWN: 
-      mRenderer.SetFocus(PR_TRUE, PR_TRUE);
+    
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+    mRenderer.SetFocus(PR_TRUE, PR_TRUE);
+    break;
+    
+  case NS_MOUSE_LEFT_BUTTON_UP:
     break;
 
-    case NS_MOUSE_LEFT_BUTTON_UP:
-	    break;
-    case NS_MOUSE_EXIT:
+  case NS_MOUSE_EXIT:
+    break;
+
+  case NS_MOUSE_MOVE:
+    break;
+    
+  default:
     break;
   }
 
