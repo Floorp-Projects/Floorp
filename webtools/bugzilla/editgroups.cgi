@@ -279,12 +279,12 @@ if ($action eq 'new') {
     # First the next available bit
     my $bit = "";
     foreach (@bitvals) {
-        if ($bit == "") {
+        if ($bit eq "") {
             SendSQL("SELECT bit FROM groups WHERE bit=" . SqlQuote($_));
             if (!FetchOneColumn()) { $bit = $_; }
         }
     }
-    if ($bit == "") {
+    if ($bit eq "") {
         ShowError("Sorry, you already have the maximum number of groups " .
                   "defined.<BR><BR>You must delete a group first before you " .
                   "can add any more.</B>");
@@ -349,11 +349,57 @@ if ($action eq 'del') {
     print "</tr>\n";
     print "</table>\n";
 
-    print "<H2>Confirmation</H2>\n";
-    print "<P>Do you really want to delete this group?<P>\n";
-
     print "<FORM METHOD=POST ACTION=editgroups.cgi>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
+    my $cantdelete = 0;
+    SendSQL("SELECT login_name FROM profiles WHERE " .
+            "(groupset & $bit) OR (blessgroupset & $bit)");
+    if (!FetchOneColumn()) {} else {
+       $cantdelete = 1;
+       print "
+<B>One or more users belong to this group. You cannot delete this group while
+there are users in it.</B><BR>
+<A HREF=\"editusers.cgi?action=list&query=" .
+url_quote("(groupset & $bit) OR (blessgroupset & $bit)") . "\">Show me which users.</A> - <INPUT TYPE=CHECKBOX NAME=\"removeusers\">Remove all users from
+this group for me<P>
+";
+    }
+    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
+    if (MoreSQLData()) {
+       $cantdelete = 1;
+       my $buglist = "0";
+       while (MoreSQLData()) {
+         my ($bug) = FetchSQLData();
+         $buglist .= "," . $bug;
+       }
+       print "
+<B>One or more bug reports are visible only to this group.
+You cannot delete this group while any bugs are using it.</B><BR>
+<A HREF=\"buglist.cgi?bug_id=$buglist\">Show me which bugs.</A> -
+<INPUT TYPE=CHECKBOX NAME=\"removebugs\">Remove all bugs from this group
+restriction for me<BR>
+<B>NOTE:</B> It's quite possible to make confidential bugs public by checking
+this box.  It is <B>strongly</B> suggested that you review the bugs in this
+group before checking the box.<P>
+";
+    }
+    SendSQL("SELECT product FROM products WHERE product=" . SqlQuote($name));
+    if (MoreSQLData()) {
+       $cantdelete = 1;
+       print "
+<B>This group is tied to the <U>$name</U> product.
+You cannot delete this group while it is tied to a product.</B><BR>
+<INPUT TYPE=CHECKBOX NAME=\"unbind\">Delete this group anyway, and make the
+<U>$name</U> product publicly visible.<BR>
+";
+    }
+
+    print "<H2>Confirmation</H2>\n";
+    print "<P>Do you really want to delete this group?\n";
+    if ($cantdelete) {
+      print "<BR><B>You must check all of the above boxes or correct the " .
+            "indicated problems first before you can proceed.</B>";
+    }
+    print "<P><INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"group\" VALUE=\"$bit\">\n";
     print "</FORM>";
@@ -367,23 +413,88 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting user");
-    ShowError("This function has not been implemented yet! (Sorry)<br>" .
-              "Try again later");
+    PutHeader("Deleting group");
+    my $bit = trim($::FORM{group} || '');
+    unless ($bit) {
+        ShowError("No group specified.<BR>" .
+                  "Click the <b>Back</b> button and try again.");
+        PutFooter();
+        exit;
+    }
+    SendSQL("SELECT name " .
+            "FROM groups " .
+            "WHERE bit = " . SqlQuote($bit));
+    my ($name) = FetchSQLData();
 
-    print "
-Deleting a group is not as easy as it sounds:<p>
-<OL>
-<LI>All users have to be checked to ensure anyone who is a member of this group is first removed from membership.
-<LI>All bugs have to be checked to ensure no bugs are set to use this group.
-</OL>
-If the above is not done, conflicts may occur if a new group is created that uses a bit number that has already been used in the past.<p>
-Deleting a group will be implemented very shortly, stay tuned!
-I just figured most people would be more interested in adding and editing
-groups for the time being, so I would get that done first, so I could get this out here for people to use. :)<p>
-Watch <a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=25010\">Bug 25010</a> on Mozilla's bugzilla for details.
-<p>
-";
+    my $cantdelete = 0;
+    my $opblessgroupset = '9223372036854775807'; # This is all 64 bits.
+
+    SendSQL("SELECT userid FROM profiles " .
+            "WHERE (groupset & $opblessgroupset)=$opblessgroupset");
+    my @opusers = ();
+    while (MoreSQLData()) {
+      my ($userid) = FetchSQLData();
+      push @opusers, $userid; # cache a list of the users with admin powers
+    }
+    SendSQL("SELECT login_name FROM profiles WHERE " .
+            "(groupset & $bit)=$bit OR (blessgroupset & $bit)=$bit");
+    if (FetchOneColumn()) {
+      if (!defined $::FORM{'removeusers'}) {
+        $cantdelete = 1;
+      }
+    }
+    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)=$bit");
+    if (FetchOneColumn()) {
+      if (!defined $::FORM{'removebugs'}) {
+        $cantdelete = 1;
+      }
+    }
+    SendSQL("SELECT product FROM products WHERE product=" . SqlQuote($name));
+    if (FetchOneColumn()) {
+      if (!defined $::FORM{'unbind'}) {
+        $cantdelete = 1;
+      }
+    }
+
+    if ($cantdelete == 1) {
+      ShowError("This group cannot be deleted because there are child " .
+          "records in the database which refer to it.  All child records " .
+          "must be removed or altered to remove the reference to this " .
+          "group before the group can be deleted.");
+      print "<A HREF=\"editgroups.cgi?action=del&group=$bit\">" .
+            "View the list of which records are affected</A><BR>";
+      PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
+      exit;
+    }
+
+    SendSQL("SELECT login_name,groupset,blessgroupset FROM profiles WHERE " .
+            "(groupset & $bit) OR (blessgroupset & $bit)");
+    if (FetchOneColumn()) {
+      SendSQL("UPDATE profiles SET groupset=(groupset-$bit) " .
+              "WHERE (groupset & $bit)");
+      print "All users have been removed from group $bit.<BR>";
+      SendSQL("UPDATE profiles SET blessgroupset=(blessgroupset-$bit) " .
+              "WHERE (blessgroupset & $bit)");
+      print "All users with authority to add users to group $bit have " .
+            "had that authority removed.<BR>";
+    }
+    SendSQL("SELECT bug_id FROM bugs WHERE (groupset & $bit)");
+    if (FetchOneColumn()) {
+      SendSQL("UPDATE bugs SET groupset=(groupset-$bit) " .
+              "WHERE (groupset & $bit)");
+      print "All bugs have had group bit $bit cleared.  Any of these " .
+            "bugs that were not also in another group are now " .
+            "publicly visible.<BR>";
+    }
+    SendSQL("DELETE FROM groups WHERE bit=$bit");
+    print "<B>Group $bit has been deleted.</B><BR>";
+
+    foreach my $userid (@opusers) {
+      SendSQL("UPDATE profiles SET groupset=$opblessgroupset " .
+              "WHERE userid=$userid");
+      print "Group bits restored for " . DBID_to_name($userid) .
+            " (maintainer)<BR>\n";
+    }
 
     PutTrailer("<a href=editgroups.cgi>Back to group list</a>");
     exit;

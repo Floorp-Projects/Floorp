@@ -253,19 +253,27 @@ List users with login name matching:
 
 if ($action eq 'list') {
     PutHeader("Select user");
-    my $query = "SELECT login_name,realname,disabledtext " .
-        "FROM profiles WHERE login_name ";
-    if ($::FORM{'matchtype'} eq 'substr') {
-        $query .= "like";
-        $::FORM{'matchstr'} = '%' . $::FORM{'matchstr'} . '%';
-    } elsif ($::FORM{'matchtype'} eq 'regexp') {
-        $query .= "regexp";
-    } elsif ($::FORM{'matchtype'} eq 'notregexp') {
-        $query .= "not regexp";
+    my $query = "";
+    if (exists $::FORM{'matchtype'}) {
+      $query = "SELECT login_name,realname,disabledtext " .
+          "FROM profiles WHERE login_name ";
+      if ($::FORM{'matchtype'} eq 'substr') {
+          $query .= "like";
+          $::FORM{'matchstr'} = '%' . $::FORM{'matchstr'} . '%';
+      } elsif ($::FORM{'matchtype'} eq 'regexp') {
+          $query .= "regexp";
+      } elsif ($::FORM{'matchtype'} eq 'notregexp') {
+          $query .= "not regexp";
+      } else {
+          die "Unknown match type";
+      }
+      $query .= SqlQuote($::FORM{'matchstr'}) . " ORDER BY login_name";
+    } elsif (exists $::FORM{'query'}) {
+      $query = "SELECT login_name,realname,disabledtext " .
+          "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
     } else {
-        die "Unknown match type";
+      die "Missing parameters";
     }
-    $query .= SqlQuote($::FORM{'matchstr'}) . " ORDER BY login_name";
 
     SendSQL($query);
     my $count = 0;
@@ -446,7 +454,7 @@ if ($action eq 'del') {
     CheckUser($user);
 
     # display some data about the user
-    SendSQL("SELECT realname, groupset, emailnotification, login_name
+    SendSQL("SELECT realname, groupset, emailnotification
 	     FROM profiles
 	     WHERE login_name=" . SqlQuote($user));
     my ($realname, $groupset, $emailnotification) = FetchSQLData();
@@ -478,7 +486,8 @@ if ($action eq 'del') {
     my $found = 0;
     while ( MoreSQLData() ) {
 	my ($bit,$name) = FetchSQLData();
-	if ($bit & $groupset) {
+        my $cmpr = $bit & $groupset;
+        if ($cmpr) {
 	    print "<br>\n" if $found;
 	    print ucfirst $name;
 	    $found = 1;
