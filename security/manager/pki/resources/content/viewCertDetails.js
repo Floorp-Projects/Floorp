@@ -66,7 +66,7 @@ function AddUsage(usage)
   var row  = document.createElement("treerow");
   var cell = document.createElement("treecell");
   cell.setAttribute("class", "propertylist");
-  cell.setAttribute("value", usage);
+  cell.setAttribute("label", usage);
   row.appendChild(cell);
   tree.appendChild(row);
 }
