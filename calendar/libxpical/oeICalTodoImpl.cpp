@@ -95,8 +95,8 @@ oeICalTodoImpl::oeICalTodoImpl()
 
 oeICalTodoImpl::~oeICalTodoImpl()
 {
-#ifdef ICAL_DEBUG
-    printf( "oeICalTodoImpl::~oeICalTodoImpl( %d )\n", mRefCnt );
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalTodoImpl::~oeICalTodoImpl()\n");
 #endif
     /* destructor code */
     if( m_due )
