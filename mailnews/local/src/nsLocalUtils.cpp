@@ -27,7 +27,7 @@
 #include "nsCOMPtr.h"
 
 // stuff for temporary root folder hack
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsINoIncomingServer.h"
@@ -35,8 +35,6 @@
 
 #include "nsMsgUtils.h"
 
-
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 // it would be really cool to:
 // - cache the last hostname->path match

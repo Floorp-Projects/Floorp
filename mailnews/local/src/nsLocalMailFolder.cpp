@@ -35,8 +35,8 @@
 #include "nsIMailboxService.h"
 #include "nsIMessage.h"
 #include "nsParseMailbox.h"
-#include "nsIFolderListener.h"
-#include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
+#include "nsIMsgWindow.h"
 #include "nsCOMPtr.h"
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
@@ -64,7 +64,6 @@
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
@@ -194,20 +193,7 @@ nsMsgLocalMailFolder::Init(const char* aURI)
   rv = nsMsgDBFolder::Init(aURI);
   if (NS_FAILED(rv)) return rv;
 
-
-#if 0
-  // find the server from the account manager
-  NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIMsgAccountManager> accountManager;
-  rv = session->GetAccountManager(getter_AddRefs(accountManager));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsISupportsArray> matchingServers;
-  accountManager->FindServersByHostname();
-#endif
-
+  // XXX - DEADCODE - we don't need to override this, do we?
   return rv;
 
 }
