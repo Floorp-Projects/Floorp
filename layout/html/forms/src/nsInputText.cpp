@@ -35,6 +35,9 @@
 #include "nsHTMLForms.h"
 #include "nsIStyleContext.h"
 #include "nsFont.h"
+#include "nsDOMEvent.h"
+
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 class nsInputTextFrame : public nsInputFrame {
 public:
@@ -48,6 +51,8 @@ public:
   virtual const nsIID& GetCID();
 
   virtual const nsIID& GetIID();
+
+  virtual void EnterPressed(nsIPresContext& aPresContext) ;
 
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
@@ -167,6 +172,31 @@ nsInputTextFrame::GetTextType()
   nsInputTextType type = content->GetTextType();
   NS_RELEASE(content);
   return type;
+}
+
+void
+nsInputTextFrame::EnterPressed(nsIPresContext& aPresContext) 
+{
+  nsInputText* text = (nsInputText *)mContent;
+  nsIFormManager* formMan = text->GetFormManager();
+  if (nsnull != formMan) {
+    nsInputTextType type = text->GetTextType();
+    // a form with one text area causes a submit when the enter key is pressed
+    // XXX this logic should be in the form manager, but then it needs to be passed
+    //     enough to trigger the dom event.
+    if ((kInputText_Text == type) && text->GetCanSubmit()) {
+      nsEventStatus mStatus;
+      nsEvent mEvent;
+      mEvent.eventStructType = NS_EVENT;
+      mEvent.message = NS_FORM_SUBMIT;
+      mContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+
+      nsIFormControl* control;
+      mContent->QueryInterface(kIFormControlIID, (void**)&control);
+      formMan->OnSubmit(&aPresContext, this, control);
+    }
+  }
+  NS_RELEASE(formMan);
 }
 
 void 

@@ -145,6 +145,11 @@ public:
   virtual nsresult GetWidget(nsIView* aView, nsIWidget** aWidget);
 
   /**
+    * Respond to a enter key being pressed
+    */
+  virtual void EnterPressed(nsIPresContext& aPresContext) {} 
+
+  /**
     * Respond to a mouse click (e.g. mouse enter, mouse down, mouse up)
     */
   virtual void MouseClicked(nsIPresContext* aPresContext) {}

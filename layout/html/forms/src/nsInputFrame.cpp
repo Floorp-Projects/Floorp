@@ -409,6 +409,14 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_EXIT:
 	    mLastMouseState = eMouseNone;
 	    break;
+    case NS_KEY_DOWN:
+      if (NS_KEY_EVENT == aEvent->eventStructType) {
+        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+        if (NS_VK_RETURN == keyEvent->keyCode) {
+          EnterPressed(aPresContext);
+        }
+      }
+      break;
   }
   aEventStatus = nsEventStatus_eConsumeDoDefault;
   return NS_OK;
