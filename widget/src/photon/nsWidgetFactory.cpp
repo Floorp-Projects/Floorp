@@ -41,9 +41,11 @@
 #include "nsButton.h"
 #include "nsCheckButton.h"
 #include "nsRadioButton.h"
+#ifdef LOSER
 #include "nsMenuBar.h"
 #include "nsMenu.h"
 #include "nsMenuItem.h"
+#endif
 #include "nsTextWidget.h"
 #include "nsTextAreaWidget.h"
 #include "nsScrollbar.h"
@@ -73,12 +75,15 @@ static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
+#ifdef LOSER
 static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
-static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
-static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
 static NS_DEFINE_IID(kCMenuButton,    NS_MENUBUTTON_CID);
+static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
+#endif
+
+static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 
 // Drag & Drop, Clipboard
 static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
@@ -232,7 +237,7 @@ PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 1 mRefCnt=<%d>\
 
     }
 	
-#if 1
+#ifdef LOSER
 /* Widget we don't support */
     else if (mClassID.Equals(kCPopUpMenu)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of PopUpMenu\n" ));
@@ -251,6 +256,7 @@ PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 1 mRefCnt=<%d>\
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLookAndFeel\n" ));
         inst = (nsISupports*)new nsLookAndFeel();
     }
+#ifdef LOSER
     else if (mClassID.Equals(kCMenuBar)) {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsMenuBar\n" ));
         inst = (nsISupports*)(nsIMenuBar *)new nsMenuBar();
@@ -263,6 +269,7 @@ PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 1 mRefCnt=<%d>\
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsMenuItem\n" ));
         inst = (nsISupports*)(nsIMenuItem *)new nsMenuItem();
     }
+#endif
     else if (mClassID.Equals(kCLabel)) {
       PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLabel\n" ));
       inst = (nsISupports*)(nsILabel *)new nsLabel();

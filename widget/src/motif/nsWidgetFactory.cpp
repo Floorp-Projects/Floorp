@@ -36,10 +36,12 @@
 #include "nsComboBox.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
+#ifdef LOSER
 #include "nsMenuBar.h"
 #include "nsMenu.h"
 #include "nsMenuItem.h"
 #include "nsPopUpMenu.h"
+#endif
 // #include "nsFontRetrieverService.h"
 
 // Drag & Drop, Clipboard
@@ -68,10 +70,12 @@ static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
+#ifdef LOSER
 static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
+#endif
 static NS_DEFINE_IID(kCFontRetrieverService,    NS_FONTRETRIEVERSERVICE_CID);
 
 // Drag & Drop, Clipboard
@@ -210,6 +214,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCLabel)) {
         inst = (nsISupports*)(nsIWidget *)new nsLabel();
     }
+#ifdef LOSER
     else if (mClassID.Equals(kCMenuBar)) {
         inst = (nsISupports*)(nsIMenuBar *)new nsMenuBar();
     }
@@ -222,6 +227,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
     }
+#endif
     else if (mClassID.Equals(kCTransferable)) {
         inst = (nsISupports*)new nsTransferable();
     }
