@@ -270,16 +270,20 @@ NS_IMETHODIMP
 nsJARChannel::AsyncOpen(nsIStreamListener* listener, nsISupports* ctxt)
 {
     nsresult rv;
+
     mUserContext = ctxt;
     mUserListener = listener;
+    mSynchronousRead = PR_FALSE;
 
     if (mLoadGroup) {
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
-    mSynchronousRead = PR_FALSE;
-    return EnsureJARFileAvailable();
+    rv = EnsureJARFileAvailable();
+    if (NS_FAILED(rv) && mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, rv);
+    return rv;
 }
 
 nsresult
@@ -288,30 +292,43 @@ nsJARChannel::EnsureJARFileAvailable()
     nsresult rv;
 
 #ifdef PR_LOGGING
-    nsXPIDLCString jarURLStr;
-    mURI->GetSpec(getter_Copies(jarURLStr));
-    PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-           ("nsJarProtocol: EnsureJARFileAvailable %s", (const char*)jarURLStr));
+    if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
+        nsXPIDLCString jarURLStr;
+        mURI->GetSpec(getter_Copies(jarURLStr));
+        PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
+               ("nsJarProtocol: EnsureJARFileAvailable %s", (const char*)jarURLStr));
+    }
 #endif
 
     rv = mURI->GetJARFile(getter_AddRefs(mJARBaseURI));
-    if (NS_FAILED(rv)) goto error;
+    if (NS_FAILED(rv)) return rv;
 
     rv = mURI->GetJAREntry(&mJAREntry);
-    if (NS_FAILED(rv)) goto error;
+    if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewDownloader(getter_AddRefs(mDownloader),
-                          mJARBaseURI, this, nsnull, mSynchronousRead,
-                          mLoadGroup, mCallbacks, mLoadFlags);
+    // try to get a nsIFile directly from the url, which will often succeed.
+    {
+        nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mJARBaseURI);
+        if (fileURL)
+            fileURL->GetFile(getter_AddRefs(mDownloadedJARFile));
+    }
 
-    // if DownloadComplete() was called early, need to release the reference.
-    if (mSynchronousRead && mSynchronousInputStream)
-        mDownloader = null_nsCOMPtr();
+    if (mDownloadedJARFile) {
+        // after successfully downloading the jar file to the cache,
+        // start the extraction process:
+        if (mSynchronousRead)
+            rv = OpenJARElement();
+        else
+            rv = AsyncReadJARElement();
+    }
+    else {
+        rv = NS_NewDownloader(getter_AddRefs(mDownloader),
+                              mJARBaseURI, this, nsnull, mSynchronousRead,
+                              mLoadGroup, mCallbacks, mLoadFlags);
 
-  error:
-    if (NS_FAILED(rv) && mLoadGroup) {
-        nsresult rv2 = mLoadGroup->RemoveRequest(this, nsnull, NS_OK);
-        NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
+        // if DownloadComplete() was called early, need to release the reference.
+        if (mSynchronousRead && mSynchronousInputStream)
+            mDownloader = 0;
     }
     return rv;
 }
@@ -340,10 +357,12 @@ nsJARChannel::AsyncReadJARElement()
     }
 
 #ifdef PR_LOGGING
-    nsXPIDLCString jarURLStr;
-    mURI->GetSpec(getter_Copies(jarURLStr));
-    PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-           ("nsJarProtocol: AsyncRead jar entry %s", (const char*)jarURLStr));
+    if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
+        nsXPIDLCString jarURLStr;
+        mURI->GetSpec(getter_Copies(jarURLStr));
+        PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
+               ("nsJarProtocol: AsyncRead jar entry %s", (const char*)jarURLStr));
+    }
 #endif
 
     rv = jarTransport->AsyncRead(this, nsnull, 0, PRUint32(-1), 0,
@@ -566,13 +585,15 @@ nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* con
 {
     nsresult rv;
 #ifdef PR_LOGGING
-    nsCOMPtr<nsIURI> jarURI;
-    nsXPIDLCString jarURLStr;
-    rv = mURI->GetSpec(getter_Copies(jarURLStr));
-    if (NS_SUCCEEDED(rv)) {
-        PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-               ("nsJarProtocol: jar extraction complete %s status=%x",
-                (const char*)jarURLStr, aStatus));
+    if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
+        nsCOMPtr<nsIURI> jarURI;
+        nsXPIDLCString jarURLStr;
+        rv = mURI->GetSpec(getter_Copies(jarURLStr));
+        if (NS_SUCCEEDED(rv)) {
+            PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
+                   ("nsJarProtocol: jar extraction complete %s status=%x",
+                    (const char*)jarURLStr, aStatus));
+        }
     }
 #endif
 
@@ -656,10 +677,12 @@ NS_IMETHODIMP
 nsJARChannel::GetInputStream(nsIInputStream* *aInputStream) 
 {
 #ifdef PR_LOGGING
-    nsXPIDLCString jarURLStr;
-    mURI->GetSpec(getter_Copies(jarURLStr));
-    PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
-           ("nsJarProtocol: GetInputStream jar entry %s", (const char*)jarURLStr));
+    if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
+        nsXPIDLCString jarURLStr;
+        mURI->GetSpec(getter_Copies(jarURLStr));
+        PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
+               ("nsJarProtocol: GetInputStream jar entry %s", (const char*)jarURLStr));
+    }
 #endif
     NS_ENSURE_TRUE(mJAR, NS_ERROR_NULL_POINTER);
     return mJAR->GetInputStream(mJAREntry, aInputStream);
