@@ -96,6 +96,12 @@ public:
   NS_IMETHOD DoLayout() = 0;
 
  /**
+  * Forces the toolbar to layout horizontally
+  *
+  */
+  NS_IMETHOD SetHorizontalLayout(PRBool aDoHorizontalLayout) = 0;
+
+ /**
   * Indicates that the last item is right justifed
   *
   */
