@@ -1129,16 +1129,22 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       context = global->GetContext();
     }
   } else {
-    doc = do_QueryInterface(aObject);
-
+    nsCOMPtr<nsIDOMWindow> win(do_QueryInterface(aObject));
     nsCOMPtr<nsIScriptGlobalObject> global;
-
-    if (doc) {
-      global = doc->GetScriptGlobalObject();
+    if (win) {
+      nsCOMPtr<nsIDOMDocument> domdoc;
+      win->GetDocument(getter_AddRefs(domdoc));
+      doc = do_QueryInterface(domdoc);
+      global = do_QueryInterface(win);
     } else {
-      global = do_QueryInterface(aObject);
-    }
+      doc = do_QueryInterface(aObject);
 
+      if (doc) {
+        global = doc->GetScriptGlobalObject();
+      } else {
+        global = do_QueryInterface(aObject);
+      }
+    }
     if (global) {
       context = global->GetContext();
     }
