@@ -14,68 +14,92 @@
 		<html:span id="lefttext">&pane.title;</html:span>
 	</html:div>
 
-&forwardReply.label;
 <html:form>
-	<html:table>
-		<html:tr><html:td>&forwardMsg.label;
-			<html:select>
-			<html:option>&inline.label;</html:option>
-			<html:option>&quoted.label;</html:option>
-			<html:option>&asAttachment.label;</html:option>
-			</html:select>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.auto_quote" checked="true"/>
-			<html:label>&autoQuote.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>&then.label;
-			<html:select>
-			<html:option>&aboveQuote.label;</html:option>
-			<html:option>&belowQuote.label;</html:option>
-			<html:option>&selectquote.label;</html:option>
-			</html:select>
-		</html:td></html:tr>
-	</html:table>
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+				<html:div>&forwardReply.label;</html:div>
+			</html:legend>
+			<html:table>
+				<html:tr><html:td>&forwardMsg.label;
+					<html:select id="pref:int:mail.forward_message_mode">
+						<html:option valye="2" label="&inline.label;"/>
+<!-- forward as quoted is obsolete
+						<html:option valye="1" label="&quoted.label;"/>
+-->
+						<html:option valye="0" label="&asAttachment.label;"/>
+					</html:select>
+				</html:td></html:tr>
+				<html:tr><html:td>
+					<html:input type="checkbox" id="pref:0:bool:mail.auto_quote" checked="true"/>
+					<html:label>&autoQuote.label;</html:label>
+				</html:td></html:tr>
+				<html:tr><html:td>&then.label;
+					<html:select id="pref:int:mailnews.reply_on_top">
+						<html:option value="1" label="&aboveQuote.label;"/>
+						<html:option value="0" label="&belowQuote.label;"/>
+						<html:option value="2" label="&selectAndAboveQuote.label;"/>
+						<html:option value="3" label="&selectAndBelowQuote.label;"/>
+					</html:select>
+				</html:td></html:tr>
+			</html:table>
+		</html:fieldset>
+	</box>
 </html:form>
 
 <html:form>
-	<html:table>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.SpellCheckBeforeSend"/>
-			<html:label>&spellCheck.label;</html:label>
-		</html:td></html:tr>
-	</html:table>
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:table>
+				<html:tr><html:td>
+					<html:input type="checkbox" id="pref:0:bool:mail.SpellCheckBeforeSend"/>
+					<html:label>&spellCheck.label;</html:label>
+				</html:td></html:tr>
+			</html:table>
+		</html:fieldset>
+	</box>
 </html:form>
 
-&msgWrapping.label;
 <html:form>
-	<html:table>
-		<html:tr><html:td>
-			<html:input type="checkbox" id="pref:0:bool:mail.wrap_long_lines"/>
-			<html:label>&wrapInMsg.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>&wrapOutMsg.label;
-			<html:input name="wraplength" type="text" value=""
-			 id="pref:string:mailnews.wraplength" size="10"/>&char.label;
-		</html:td></html:tr>
-	</html:table>
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+				<html:div>&msgWrapping.label;</html:div>
+			</html:legend>
+			<html:table>
+				<html:tr><html:td>
+					<html:input type="checkbox" id="pref:0:bool:mail.wrap_long_lines"/>
+					<html:label>&wrapInMsg.label;</html:label>
+				</html:td></html:tr>
+				<html:tr><html:td>&wrapOutMsg.label;
+					<html:input name="wraplength" type="text" value=""
+					 id="pref:string:mailnews.wraplength" size="10"/>&char.label;
+				</html:td></html:tr>
+			</html:table>
+		</html:fieldset>
+	</box>
 </html:form>
 
-&use8Bits.label;
-<html:table>
-	<html:tr><html:td>&cleanupMsg.label;</html:td></html:tr>
-	<html:form>
-		<html:tr><html:td>
-			<html:input name="msgcleanup" type="radio" id="pref:0:int:mail.strictly_mime" checked="true"/>
-			<html:label>&asIs.label;</html:label>
-		</html:td></html:tr>
-		<html:tr><html:td>
-			<html:input name="msgcleanup" type="radio" id="pref:1:int:mail.strictly_mime"/>
-			<html:label>&useMIME.label;</html:label>
-		</html:td></html:tr>
-	</html:form>
-</html:table>
-
+<html:form>
+	<box align="vertical" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+			<html:legend align="left">
+				<html:div>&use8Bits.label;</html:div>
+			</html:legend>
+			<html:table>
+				<html:tr><html:td>
+					<html:input name="strictly_mime" type="radio" id="pref:0:int:mail.strictly_mime" />
+					<html:label>&asIs.label;</html:label>
+				</html:td></html:tr>
+				<html:tr><html:td>
+					<html:input name="strictly_mime" type="radio" id="pref:1:int:mail.strictly_mime"/>
+					<html:label>&useMIMEpart1.label;</html:label><html:br/>
+					<html:label>&useMIMEpart2.label;</html:label>
+				</html:td></html:tr>
+			</html:table>
+		</html:fieldset>
+	</box>
+</html:form>
 
 </html:div>
 </window>

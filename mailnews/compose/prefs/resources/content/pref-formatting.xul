@@ -14,10 +14,13 @@
 	<html:div id="top">
 		<html:span id="lefttext">&pane.title;</html:span>
 	</html:div>
-
-<html:br/>
-&sendMail.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&sendMail.label;</html:div>
+</html:legend>
+
 	<html:table>
 		<html:tr><html:td>
 			<html:input name="recipients" type="radio" id="pref:0:int:mail.default_html_action" checked="true"/>
@@ -36,9 +39,9 @@
 			<html:label>&sendBoth.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
-		<html:tr><html:td>
-			&override.label;
-		</html:td></html:tr>
+	&override.label;
+</html:fieldset>
+</box>
 </html:form>
 
 </html:div>
