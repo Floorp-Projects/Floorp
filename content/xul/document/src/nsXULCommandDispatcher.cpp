@@ -196,8 +196,10 @@ XULCommandDispatcherImpl::AddCommand(nsIDOMElement* aElement)
 
   if (!mFocusListeners) {
     mFocusListeners = new nsVoidArray();
-    mFocusListeners->AppendElement((void*)aElement); // Weak ref to element.
   }
+
+  mFocusListeners->AppendElement((void*)aElement); // Weak ref to element.
+
   return NS_OK;
 }
 
