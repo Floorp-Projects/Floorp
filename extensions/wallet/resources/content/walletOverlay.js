@@ -174,6 +174,24 @@
             if (type != "select-one") {
               elementCount++;
             }
+
+            /* If database is encrypted and user has not yet supplied master password,
+             * we won't be able to access the data.  In that case, enable the item rather
+             * than asking user for password at this time.  Otherwise you'll be asking for
+             * the password whenever user clicks on edit menu or context menu
+             */
+            try {
+              if (this.pref.GetBoolPref("wallet.crypto")) {
+                // database is encrypted, see if it is still locked
+//              if (locked) { -- there's currently no way to make such a test
+                  // it's encrypted and locked, we lose
+                  return enable;
+//              }
+              }
+            } catch(e) {
+              // there is no crypto pref so database could not possible be encrypted
+            }
+
             if (bestState == hide) {
               bestState = disable;
             }
