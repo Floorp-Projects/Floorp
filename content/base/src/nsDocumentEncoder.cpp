@@ -1087,7 +1087,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
       // found a good way to tell if we are in a plaintext editor.
       nsCOMPtr<nsIDOMElement> bodyElem = do_QueryInterface(selContent);
       nsAutoString wsVal;
-      rv = bodyElem->GetAttribute(NS_LITERAL_STRING("white-space"), wsVal);
+      rv = bodyElem->GetAttribute(NS_LITERAL_STRING("style"), wsVal);
       if (NS_SUCCEEDED(rv) && (kNotFound != wsVal.Find(NS_LITERAL_STRING("-moz-pre-wrap").get())))
       {
         mIsTextWidget = PR_TRUE;

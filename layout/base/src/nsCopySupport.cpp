@@ -36,6 +36,11 @@
 #include "nsIUBidiUtils.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+#include "nsIDOMRange.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
+#include "nsIHTMLDocument.h"
+#include "nsHTMLAtoms.h"
 static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
 
@@ -58,19 +63,30 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
   docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  rv = docEncoder->Init(aDoc, NS_LITERAL_STRING("text/html"), 0);
+  PRBool bIsPlainTextContext = PR_FALSE;
+
+  rv = IsPlainTextContext(aSel, aDoc, &bIsPlainTextContext);
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool bIsHTMLCopy = !bIsPlainTextContext;
+  PRUint32 flags = 0;
+  nsAutoString mimeType;
+
+  if (bIsHTMLCopy)
+    mimeType = NS_LITERAL_STRING(kHTMLMime);
+  else
+  {
+    flags |= nsIDocumentEncoder::OutputBodyOnly | nsIDocumentEncoder::OutputPreformatted;
+    mimeType = NS_LITERAL_STRING(kUnicodeMime);
+  }
+
+  rv = docEncoder->Init(aDoc, mimeType, flags);
   if (NS_FAILED(rv)) return rv;
   rv = docEncoder->SetSelection(aSel);
   if (NS_FAILED(rv)) return rv;
-  nsAutoString mimeType;
-  rv = docEncoder->GetMimeType(mimeType);
-  if (NS_FAILED(rv)) return rv;
-
-  nsAutoString buffer, parents, info;
-  PRBool bIsHTMLCopy = PR_FALSE;
-  if (mimeType.EqualsWithConversion("text/html")) 
-    bIsHTMLCopy = PR_TRUE;
     
+  nsAutoString buffer, parents, info;
+
   if (bIsHTMLCopy)
   {
     // encode the selection as html with contextual info
@@ -221,4 +237,72 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
     }
   }
   return rv;
+}
+
+nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc, PRBool *aIsPlainTextContext)
+{
+  nsresult rv;
+
+  if (!aSel || !aIsPlainTextContext)
+    return NS_ERROR_NULL_POINTER;
+
+  *aIsPlainTextContext = PR_FALSE;
+  
+  nsCOMPtr<nsIDOMRange> range;
+  nsCOMPtr<nsIDOMNode> commonParent;
+  PRInt32 count = 0;
+
+  rv = aSel->GetRangeCount(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // if selection is uninitialized return
+  if (!count)
+    return NS_ERROR_FAILURE;
+  
+  // we'll just use the common parent of the first range.  Implicit assumption
+  // here that multi-range selections are table cell selections, in which case
+  // the common parent is somewhere in the table and we don't really care where.
+  rv = aSel->GetRangeAt(0, getter_AddRefs(range));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!range)
+    return NS_ERROR_NULL_POINTER;
+  range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
+
+  nsCOMPtr<nsIContent> tmp, selContent( do_QueryInterface(commonParent) );
+  while (selContent)
+  {
+    // checking for selection inside a plaintext form widget
+    nsCOMPtr<nsIAtom> atom;
+    selContent->GetTag(*getter_AddRefs(atom));
+
+    if (atom.get() == nsHTMLAtoms::input ||
+        atom.get() == nsHTMLAtoms::textarea)
+    {
+      *aIsPlainTextContext = PR_TRUE;
+      break;
+    }
+
+    if (atom.get() == nsHTMLAtoms::body)
+    {
+      // check for moz prewrap style on body.  If it's there we are 
+      // in a plaintext editor.  This is pretty cheezy but I haven't 
+      // found a good way to tell if we are in a plaintext editor.
+      nsCOMPtr<nsIDOMElement> bodyElem = do_QueryInterface(selContent);
+      nsAutoString wsVal;
+      rv = bodyElem->GetAttribute(NS_LITERAL_STRING("style"), wsVal);
+      if (NS_SUCCEEDED(rv) && (kNotFound != wsVal.Find(NS_LITERAL_STRING("-moz-pre-wrap").get())))
+      {
+        *aIsPlainTextContext = PR_TRUE;
+        break;
+      }
+    }
+    selContent->GetParent(*getter_AddRefs(tmp));
+    selContent = tmp;
+  }
+  
+  // also consider ourselves in a text widget if we can't find an html document
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDoc);
+  if (!htmlDoc) *aIsPlainTextContext = PR_TRUE;
+
+  return NS_OK;
 }

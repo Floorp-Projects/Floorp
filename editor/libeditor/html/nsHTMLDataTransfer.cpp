@@ -937,12 +937,8 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
   if (NS_FAILED(rv)) return rv;
 
   /* create html flavor transferable */
-  nsCOMPtr<nsITransferable> trans;
-  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                        NS_GET_IID(nsITransferable), 
-                                        getter_AddRefs(trans));
-  if (NS_FAILED(rv)) return rv;
-  if ( !trans ) return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID);
+  NS_ENSURE_TRUE(trans, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMDocument> domdoc;
   rv = GetDocument(getter_AddRefs(domdoc));
@@ -951,47 +947,71 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
   if (doc)
   {
-    nsCOMPtr<nsIDocumentEncoder> docEncoder;
+    // find out if we're a plaintext control or not
+    PRUint32 editorFlags = 0;
+    rv = GetFlags(&editorFlags);
+    if (NS_FAILED(rv)) return rv;
 
-    docEncoder = do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html");
+    PRBool bIsPlainTextControl = ((editorFlags & eEditorPlaintextMask) != 0);
+    
+    // get correct mimeType and document encoder flags set
+    nsAutoString mimeType;
+    PRUint32 docEncoderFlags = 0;
+    if (bIsPlainTextControl)
+    {
+      docEncoderFlags |= nsIDocumentEncoder::OutputBodyOnly | nsIDocumentEncoder::OutputPreformatted;
+      mimeType = NS_LITERAL_STRING(kUnicodeMime);
+    }
+    else
+      mimeType = NS_LITERAL_STRING(kHTMLMime);
+    
+    // set up docEncoder
+    nsCOMPtr<nsIDocumentEncoder> docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
     NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-    docEncoder->Init(doc, NS_LITERAL_STRING("text/html"), 0);
-    docEncoder->SetSelection(selection);
+    rv = docEncoder->Init(doc, mimeType, docEncoderFlags);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = docEncoder->SetSelection(selection);
+    if (NS_FAILED(rv)) return rv;
 
+    // grab a string
     nsAutoString buffer;
-
     rv = docEncoder->EncodeToString(buffer);
-  
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
 
+    // if we have an empty string, we're done; otherwise continue
     if ( !buffer.IsEmpty() )
     {
-      nsCOMPtr<nsIFormatConverter> htmlConverter;
-      rv = nsComponentManager::CreateInstance(kCHTMLFormatConverterCID, nsnull, NS_GET_IID(nsIFormatConverter),
-                                              getter_AddRefs(htmlConverter));
-      if (NS_FAILED(rv)) return rv;
-      if (!htmlConverter) return NS_ERROR_OUT_OF_MEMORY;
-
-      nsCOMPtr<nsISupportsWString> dataWrapper;
-      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull,
-                                              NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper));
-      if (NS_FAILED(rv)) return rv;
-      if ( !dataWrapper ) return NS_ERROR_OUT_OF_MEMORY;
-
-      rv = trans->AddDataFlavor(kHTMLMime);
-      if (NS_FAILED(rv)) return rv;
-      rv = trans->SetConverter(htmlConverter);
-      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsISupportsWString> dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+      NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
 
       rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.get()) );
       if (NS_FAILED(rv)) return rv;
 
+      if (bIsPlainTextControl)
+      {
+         // Add the unicode flavor to the transferable
+        rv = trans->AddDataFlavor(kUnicodeMime);
+        if (NS_FAILED(rv)) return rv;
+      }
+      else
+      {
+        rv = trans->AddDataFlavor(kHTMLMime);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kCHTMLFormatConverterCID);
+        NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
+
+        rv = trans->SetConverter(htmlConverter);
+        if (NS_FAILED(rv)) return rv;
+      }
+
       // QI the data object an |nsISupports| so that when the transferable holds
       // onto it, it will addref the correct interface.
       nsCOMPtr<nsISupports> nsisupportsDataWrapper ( do_QueryInterface(dataWrapper) );
-      rv = trans->SetTransferData(kHTMLMime, nsisupportsDataWrapper, buffer.Length() * 2);
+      rv = trans->SetTransferData(bIsPlainTextControl ? kUnicodeMime : kHTMLMime,  
+                                  nsisupportsDataWrapper, buffer.Length() * 2);
       if (NS_FAILED(rv)) return rv;
 
       /* add the transferable to the array */
@@ -1001,9 +1021,6 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
       /* invoke drag */
       unsigned int flags;
       // in some cases we'll want to cut rather than copy... hmmmmm...
-      // if ( wantToCut )
-      //   flags = nsIDragService.DRAGDROP_ACTION_COPY + nsIDragService.DRAGDROP_ACTION_MOVE;
-      // else
         flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
       
       rv = dragService->InvokeDragSession( domnode, transferableArray, nsnull, flags);
