@@ -83,7 +83,7 @@ SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile
 
 include $(topsrcdir)/config/rules.mk
 
-dependclean export::
+depend dependclean export::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
@@ -115,7 +115,7 @@ endif
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
-clean clobber clobber_all realclean distclean depend::
+clean clobber clobber_all realclean distclean::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
