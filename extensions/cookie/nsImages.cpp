@@ -197,7 +197,7 @@ IMAGE_CheckForPermission
   /* use common routine to make decision */
   if (NS_SUCCEEDED(PERMISSION_Read())) {
     *permission = Permission_Check(0, hostname, IMAGEPERMISSION,
-                                   PR_FALSE /* gWarningPref */,
+                                   PR_FALSE /* gWarningPref */, nsnull,
                                    "PermissionToAcceptImage", 0);
   } else {
     *permission = PR_TRUE;

@@ -45,6 +45,8 @@
 #include "nsIIOService.h"
 #include "nsIURI.h"
 
+#include <time.h>
+
 class nsIPrompt;
 class nsIHttpChannel;
 
@@ -75,5 +77,18 @@ extern nsresult COOKIE_Enumerate
      nsCookiePolicy * policy);
 extern void COOKIE_Remove
   (const char* host, const char* name, const char* path, const PRBool blocked);
+
+typedef struct _cookie_CookieStruct {
+  char * path;
+  char * host;
+  char * name;
+  char * cookie;
+  time_t expires;
+  time_t lastAccessed;
+  PRBool isSecure;
+  PRBool isDomain;   /* is it a domain instead of an absolute host? */
+  nsCookieStatus status;
+  nsCookiePolicy policy;
+} cookie_CookieStruct;
 
 #endif /* COOKIES_H */
