@@ -85,9 +85,10 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   if (0 != mCarriedOutBottomMargin) {
     fprintf(out, "bm=%d ", mCarriedOutBottomMargin);
   }
-  out << mBounds;
-  fprintf(out, " ca=");
-  out << mCombinedArea;
+  fprintf(out, "{%d,%d,%d,%d} ca={%d,%d,%d,%d}",
+          mBounds.x, mBounds.y, mBounds.width, mBounds.height,
+          mCombinedArea.x, mCombinedArea.y,
+          mCombinedArea.width, mCombinedArea.height);
   fprintf(out, " <\n");
 
   nsIFrame* frame = mFirstChild;
