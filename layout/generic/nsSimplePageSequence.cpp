@@ -565,7 +565,7 @@ void
 nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, PRBool aPageNumOnly)
 {
   // Doing this here so we only have to go get these formats once
-  nsAutoString pageNumberFormat;
+  nsXPIDLString pageNumberFormat;
   // Now go get the Localized Page Formating String
   nsresult rv =
     nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
@@ -711,14 +711,14 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
   // to have UI for setting the header/footer font name and size
   //
   // Get default font name and size to be used for the headers and footers
-  nsAutoString fontName;
+  nsXPIDLString fontName;
   rv = nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
                                          "fontname", fontName);
   if (NS_FAILED(rv)) {
     fontName.AssignLiteral("serif");
   }
 
-  nsAutoString fontSizeStr;
+  nsXPIDLString fontSizeStr;
   nscoord      pointSize = 10;;
   rv = nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
                                           "fontsize", fontSizeStr);

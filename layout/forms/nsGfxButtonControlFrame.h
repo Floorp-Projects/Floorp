@@ -103,7 +103,7 @@ public:
 protected:
   NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                                    const nsHTMLReflowState& aSuggestedReflowState);
-  nsresult GetDefaultLabel(nsString& aLabel);
+  nsresult GetDefaultLabel(nsXPIDLString& aLabel);
 
   PRBool IsFileBrowseButton(PRInt32 type); // Browse button of file input
 

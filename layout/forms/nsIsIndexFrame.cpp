@@ -135,7 +135,7 @@ nsIsIndexFrame::UpdatePromptLabel()
 
   // Get the text from the "prompt" attribute.
   // If it is zero length, set it to a default value (localized)
-  nsAutoString prompt;
+  nsXPIDLString prompt;
   if (mContent)
     mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::prompt, prompt);
 

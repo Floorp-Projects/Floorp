@@ -308,7 +308,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     do_QueryInterface(doc->GetScriptGlobalObject());
 
   // Get Loc title
-  nsString title;
+  nsXPIDLString title;
   nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                      "FileUpload", title);
 
