@@ -19,11 +19,15 @@ DEPTH=../..
 
 include $(DEPTH)/config/config.mk
 
-DIRS = core
+DIRS = coreDOM
 
 LIBRARY_NAME = jsdom
 
-DEFINES = -D_IMPL_NS_DOM
+MODULE = raptor
+
+REQUIRES = xpcom raptor dom js netlib
+
+LCFLAGS = -D_IMPL_NS_DOM
 
 CPPSRCS =				\
 	nsJSEnvironment.cpp		\
@@ -31,10 +35,6 @@ CPPSRCS =				\
 	nsJSNavigator.cpp       \
 	nsGlobalWindow.cpp      \
 	$(NULL)
-
-MODULE = raptor
-
-REQUIRES = xpcom raptor dom js netlib
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)
