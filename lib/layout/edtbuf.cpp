@@ -13826,6 +13826,14 @@ NORMAL_PASTE:
     XP_ASSERT(pRight->FindContainer());
                }
             }
+
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+
+            if( m_bEmbedded )
+                AddImagesToSafeList(pElement);
+
+#endif /* ENDER && MOZ_ENDER_MIME */
+
             pLastInserted = pElement;
             pElement->InsertBefore(pRight->FindContainer());
 
@@ -13838,13 +13846,6 @@ NORMAL_PASTE:
             {
                 bAtStartOfParagraph = TRUE;
             }
-
-#if defined(ENDER) && defined(MOZ_ENDER_MIME)
-
-            if( m_bEmbedded )
-                AddImagesToSafeList(pElement);
-
-#endif /* ENDER && MOZ_ENDER_MIME */
 
 #ifdef DEBUG
             m_pRoot->ValidateTree();
