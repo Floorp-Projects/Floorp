@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Chase Tingley <tingley@sundell.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -78,6 +79,16 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID,  NS_RDFXMLDATASOURCE_CID);
 // xpcom
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
+
+////////////////////////////////////////////////////////////////////////
+// Blatantly stolen from netwerk/test/
+#define RETURN_IF_FAILED(rv, step) \
+    PR_BEGIN_MACRO \
+    if (NS_FAILED(rv)) { \
+        printf(">>> %s failed: rv=%x\n", step, rv); \
+        return rv;\
+    } \
+    PR_END_MACRO
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -146,7 +157,6 @@ public:
 
 NS_IMPL_ISUPPORTS1(ConsoleOutputStreamImpl, nsIOutputStream)
 
-
 ////////////////////////////////////////////////////////////////////////
 
 int
@@ -155,7 +165,7 @@ main(int argc, char** argv)
     nsresult rv;
 
     if (argc < 2) {
-        fprintf(stderr, "usage: %s <url> [<poll-interval>]\n", argv[0]);
+        fprintf(stderr, "usage: %s <url>\n", argv[0]);
         return 1;
     }
 
@@ -164,65 +174,51 @@ main(int argc, char** argv)
     // Get netlib off the floor...
     nsCOMPtr<nsIEventQueueService> theEventQueueService = 
              do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    RETURN_IF_FAILED(rv, "EventQueueService");
 
     rv = theEventQueueService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) {
-        fprintf(stderr, "unable to create thread event queue\n");
-        return rv;
-    }
+    RETURN_IF_FAILED(rv, "CreateThreadEventQueue");
+
+    nsIEventQueue* eq = nsnull;
+    rv = theEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &eq);
+    RETURN_IF_FAILED(rv, "GetThreadEventQueue");
 
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL.
-    nsCOMPtr<nsIRDFDataSource> ds;
-    rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFDataSource),
-                                            getter_AddRefs(ds));
+    nsCOMPtr<nsIRDFDataSource> ds = do_CreateInstance(kRDFXMLDataSourceCID,
+                                                      &rv);
+    RETURN_IF_FAILED(rv, "RDF/XML datasource creation");
 
-    if (NS_FAILED(rv)) {
-        fprintf(stderr, "unable to create RDF/XML data source\n");
-        return rv;
-    }
-
-    nsCOMPtr<nsIRDFRemoteDataSource> remote
-        = do_QueryInterface(ds);
-
-    if (! remote)
-        return NS_ERROR_UNEXPECTED;
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(ds, &rv);
+    RETURN_IF_FAILED(rv, "QI to nsIRDFRemoteDataSource");
 
     rv = remote->Init(argv[1]);
-    if (NS_FAILED(rv)) {
-        fprintf(stderr, "unable to initialize data source\n");
-        return rv;
-    }
+    RETURN_IF_FAILED(rv, "datasource initialization");
 
     // Okay, this should load the XML file...
-    rv = remote->Refresh(PR_TRUE);
-    if (NS_FAILED(rv)) {
-        fprintf(stderr, "unable to open file\n");
-        return rv;
+    rv = remote->Refresh(PR_FALSE);
+    RETURN_IF_FAILED(rv, "datasource refresh");
+
+    // Pump events until the load is finished
+    PRBool done = PR_FALSE;
+    while (!done) {
+        eq->ProcessPendingEvents();
+        remote->GetLoaded(&done);
     }
 
     // And this should write it back out. The do_QI() on the pointer
     // is a hack to make sure that the new object gets AddRef()-ed.
     nsCOMPtr<nsIOutputStream> out =
-        do_QueryInterface(new ConsoleOutputStreamImpl);
-
-    if (! out) {
-        fprintf(stderr, "unable to create console output stream\n");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+        do_QueryInterface(new ConsoleOutputStreamImpl, &rv);
+    RETURN_IF_FAILED(rv, "creation of console output stream");
 
     nsCOMPtr<nsIRDFXMLSource> source = do_QueryInterface(ds);
-    if (! source)
-        return NS_ERROR_UNEXPECTED;
+    RETURN_IF_FAILED(rv, "QI to nsIRDFXMLSource");
 
     rv = source->Serialize(out);
-    if (NS_FAILED(rv)) {
-        fprintf(stderr, "error serializing\n");
-        return rv;
-    }
+    RETURN_IF_FAILED(rv, "datasoure serialization");
+
+    theEventQueueService->DestroyThreadEventQueue();
 
     return NS_OK;
 }
