@@ -12,12 +12,13 @@ menubar > toolbargrippy
 menu, menuitem  
   {
     color                 : MenuText;
-	vertical-align        : middle;
+    vertical-align        : middle;
   }
 
 menuitem 
   {
-	padding	: 0px !important; 
+    padding               : 0px !important;
+    cursor                : default !important; 
   }
 
 menu[disabled="true"], menuitem[disabled="true"],
@@ -57,9 +58,10 @@ popup > menuitem[disabled="true"], popup > menu[disabled="true"]
 
 menuseparator 
   {
-  	border-top			  : 1px solid -moz-mac-menushadow;
+    border-top            : 1px solid -moz-mac-menushadow;
     border-bottom         : 1px solid ThreeDHighlight;
     margin                : 2px 0px 2px 0px;
+    cursor                : default !important;
   }
 
 /*I don't believe this does anything on MacOS (lordpixel@mac.com)*/
@@ -144,34 +146,31 @@ menuitem[type="checkbox"] > .menu-iconic-left, menuitem[type="radio"] > .menu-ic
     margin                : 0px 2px 0px 0px;
   }
 
+.menu-iconic-text
+  {
+    margin                : 0px 2px 0px 0px;
+  }
+
 .menu-iconic-text, .menu-iconic-accel, .menu-text, .menu-accel 
   {
     color                 : inherit;
-    margin                : 0px 2px 0px 0px;
   }
   
-
-
 .menu-text 
   {
     padding-left          : 20px;
   }
 
-.menu-accel 
+.menu-accel, .menu-iconic-accel
   {
     margin-left           : 4px;
     padding-right         : 14px;
   }
 
-menuitem > .menu-accel
+menuitem > .menu-accel, menuitem > .menu-iconic-accel
   {
-  	margin : 0px;
-  	padding-right : 9px;
-  }
-
-.menu-iconic-accel 
-  {
-    margin-left           : 4px;
+    margin : 0px;
+    padding-right : 9px;
   }
 
 .menubar-text 

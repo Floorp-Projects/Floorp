@@ -12,7 +12,12 @@ menubar > toolbargrippy
 menu, menuitem  
   {
     color                 : #000000;
-	  vertical-align        : middle;
+    vertical-align        : middle;
+  }
+
+menuitem
+  {
+    cursor                : default !important;
   }
 
 menuitem[default="true"]
@@ -49,6 +54,7 @@ menuseparator
   {
     border-bottom         : 1px solid #336699; 
     margin                : 2px 0px 2px 0px;
+    cursor                : default !important;
   }
 
 menubar > menu 
@@ -115,10 +121,14 @@ popup > menuitem[menuactive="true"]
     margin                : 0px 2px 0px 0px;
   }
 
+.menu-iconic-text
+  {
+    margin                : 0px 2px 0px 0px;
+  }
+
 .menu-iconic-text, .menu-iconic-accel, .menu-text, .menu-accel 
   {
     color                 : inherit;
-    margin                : 0px 2px 0px 0px;
   }
 
 .menu-text 
@@ -127,15 +137,10 @@ popup > menuitem[menuactive="true"]
     font-weight           : inherit;
   }
 
-.menu-accel 
+.menu-accel, .menu-iconic-accel
   {
     margin-left           : 4px;
     padding-right         : 14px;
-  }
-
-.menu-iconic-accel 
-  {
-    margin-left           : 4px;
   }
 
 .menubar-text 

@@ -18,6 +18,11 @@ menu, menuitem
     vertical-align        : middle;
   }
 
+menuitem
+  {
+    cursor                : default !important;
+  }
+
 menuitem[default="true"]
   {
     font-weight           : bold;
@@ -57,9 +62,10 @@ menupopup > menuitem, popup > menuitem
 
 menuseparator 
   {
-    border-top			  : 1px solid #7A8490;
+    border-top            : 1px solid #7A8490;
     border-bottom         : 1px solid #FEFEFE; 
     margin                : 2px 3px;
+    cursor                : default !important;
   }
 
 menubar > menu 
@@ -122,10 +128,14 @@ popup > menuitem[menuactive="true"]
     margin                : 0px 2px 0px 0px;
   }
 
+.menu-iconic-text
+  {
+    margin                : 0px 2px 0px 0px;
+  }
+
 .menu-iconic-text, .menu-iconic-accel, .menu-text, .menu-accel 
   {
     color                 : inherit;
-    margin                : 0px 2px 0px 0px;
   }
 
 .menu-text 
@@ -134,15 +144,10 @@ popup > menuitem[menuactive="true"]
     font-weight           : inherit;
   }
 
-.menu-accel 
+.menu-accel, .menu-iconic-accel
   {
     margin-left           : 4px;
     padding-right         : 14px;
-  }
-
-.menu-iconic-accel 
-  {
-    margin-left           : 4px;
   }
 
 .menubar-text 
