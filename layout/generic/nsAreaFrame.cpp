@@ -518,11 +518,12 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   // frame has a height specified by CSS then we don't do this!
   if ((NS_UNCONSTRAINEDSIZE == reflowState.computedHeight) &&
       (NS_FRAME_OUTSIDE_CHILDREN & mState)) {
-    nscoord contentYMost = aDesiredSize.height -
-      aReflowState.mComputedBorderPadding.bottom;
+    nscoord contentYMost = aDesiredSize.height;
     nscoord yMost = aDesiredSize.mCombinedArea.YMost();
     if (yMost > contentYMost) {
-      aDesiredSize.height += yMost - contentYMost;
+      // retain the border+padding for this element after the bottom
+      // most object.
+      aDesiredSize.height = yMost;
     }
   }
 
