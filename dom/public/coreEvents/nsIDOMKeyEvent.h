@@ -150,7 +150,8 @@ public:
     DOM_VK_OPEN_BRACKET = 219,
     DOM_VK_BACK_SLASH = 220,
     DOM_VK_CLOSE_BRACKET = 221,
-    DOM_VK_QUOTE = 222
+    DOM_VK_QUOTE = 222,
+    DOM_VK_META = 224
   };
 
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode)=0;

@@ -46,6 +46,10 @@
 #include "nsIView.h"
 #include "nsISupportsArray.h"
 
+#include "nsIPref.h"
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
 /*
  * nsMenuBarListener implementation
  */
@@ -58,7 +62,7 @@ NS_IMPL_QUERY_INTERFACE3(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListen
 ////////////////////////////////////////////////////////////////////////
 
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
-:mAltKeyDown(PR_FALSE)
+  :mAccessKeyDown(PR_FALSE), mAccessKey(-1)
 {
   NS_INIT_REFCNT();
   mMenuBarFrame = aMenuBar;
@@ -69,34 +73,64 @@ nsMenuBarListener::~nsMenuBarListener()
 {
 }
 
+void nsMenuBarListener::InitAccessKey()
+{
+  if (mAccessKey >= 0)
+    return;
 
+  // Compiled-in defaults, in case we can't get LookAndFeel --
+  // mac doesn't have menu shortcuts, other platforms use alt.
+#ifndef XP_MAC
+  mAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
+#else
+  mAccessKey = 0;
+#endif
+
+  // Get the menu access key value from prefs, overriding the default:
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+  {
+    rv = prefs->GetIntPref("ui.key.menuAccessKey", &mAccessKey);
+  }
+#ifdef DEBUG_akkana
+  if (NS_FAILED(rv))
+  {
+    NS_ASSERTION(PR_FALSE,"Menubar listener couldn't get accel key from prefs!\n");
+  }
+#endif
+}
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
 nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {  
-  // On a press of the ALT key by itself, we toggle the menu's 
-  // active/inactive state.
-  // Get the ascii key code.
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-  PRUint32 theChar;
-	keyEvent->GetKeyCode(&theChar);
+  InitAccessKey();
 
-#if !defined(XP_UNIX) || defined(NTO)
-  if (theChar == NS_VK_ALT && mAltKeyDown) {
-    // The ALT key was down and is now up.
-    mMenuBarFrame->ToggleMenuActiveState();
+  if (mAccessKey)
+  {
+    // On a press of the ALT key by itself, we toggle the menu's 
+    // active/inactive state.
+    // Get the ascii key code.
+    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+    PRUint32 theChar;
+    keyEvent->GetKeyCode(&theChar);
+
+    if (mAccessKeyDown && (PRInt32)theChar == mAccessKey)
+    {
+      // The access key was down and is now up.
+      mMenuBarFrame->ToggleMenuActiveState();
+    }
+    mAccessKeyDown = PR_FALSE; 
+
+    PRBool active = mMenuBarFrame->IsActive();
+    if (active) {
+      aKeyEvent->PreventBubble();
+      aKeyEvent->PreventCapture();
+      aKeyEvent->PreventDefault();
+      return NS_ERROR_BASE; // I am consuming event
+    }
   }
-  mAltKeyDown = PR_FALSE; 
-#endif
-
-  PRBool active = mMenuBarFrame->IsActive();
-  if (active) {
-	  aKeyEvent->PreventBubble();
-    aKeyEvent->PreventCapture();
-    aKeyEvent->PreventDefault();
-    return NS_ERROR_BASE; // I am consuming event
-  } 
   
   return NS_OK; // means I am NOT consuming event
 }
@@ -105,36 +139,39 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-#if !defined(XP_UNIX) || defined(NTO)
-  nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
-  PRBool preventDefault;
+  InitAccessKey();
 
-  nsUIEvent->GetPreventDefault(&preventDefault);
-  if (!preventDefault) {
-    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-    PRUint32 theChar;
-	  keyEvent->GetKeyCode(&theChar);
+  if (mAccessKey)
+  {
+    nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
+    PRBool preventDefault;
 
-    if (mAltKeyDown && (theChar != NS_VK_ALT)) {
-      mAltKeyDown = PR_FALSE;
+    nsUIEvent->GetPreventDefault(&preventDefault);
+    if (!preventDefault) {
+      nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+      PRUint32 theChar;
+      keyEvent->GetKeyCode(&theChar);
 
-      // Do shortcut navigation.
-      // A letter was pressed. We want to see if a shortcut gets matched. If
-      // so, we'll know the menu got activated.
-      keyEvent->GetCharCode(&theChar);
+      if (mAccessKeyDown && ((PRInt32)theChar != mAccessKey)) {
+        mAccessKeyDown = PR_FALSE;
 
-      PRBool active = PR_FALSE;
-      mMenuBarFrame->ShortcutNavigation(theChar, active);
+        // Do shortcut navigation.
+        // A letter was pressed. We want to see if a shortcut gets matched. If
+        // so, we'll know the menu got activated.
+        keyEvent->GetCharCode(&theChar);
 
-      if (active) {
-	      aKeyEvent->PreventBubble();
-        aKeyEvent->PreventCapture();
-        aKeyEvent->PreventDefault();
-      }
-    return NS_ERROR_BASE; // I am consuming event
-    }    
-  } 
-#endif
+        PRBool active = PR_FALSE;
+        mMenuBarFrame->ShortcutNavigation(theChar, active);
+
+        if (active) {
+          aKeyEvent->PreventBubble();
+          aKeyEvent->PreventCapture();
+          aKeyEvent->PreventDefault();
+        }
+        return NS_ERROR_BASE; // I am consuming event
+      }    
+    } 
+  }
   return NS_OK;
 }
 
@@ -142,31 +179,56 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-#if !defined(XP_UNIX) || defined(NTO)
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-  PRUint32 theChar;
-	keyEvent->GetKeyCode(&theChar);
-  PRBool alt;
-  keyEvent->GetAltKey(&alt);
-  if (theChar == NS_VK_TAB && mAltKeyDown) {
-    mAltKeyDown = PR_FALSE;
-  }
+  InitAccessKey();
 
-  if (theChar == NS_VK_ALT && alt) {
-    // No other modifiers can be down.
-    // Especially CTRL.  CTRL+ALT == AltGR, and
-    // we'll fuck up on non-US enhanced 102-key
-    // keyboards if we don't check this.
-    PRBool ctrl,shift,meta;
-    keyEvent->GetCtrlKey(&ctrl);
-    keyEvent->GetShiftKey(&shift);
-    keyEvent->GetMetaKey(&meta);
-    if (!(ctrl || shift || meta)) {
-      // The ALT key just went down by itself. Track this.
-      mAltKeyDown = PR_TRUE;
+  if (mAccessKey)
+  {
+    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+    PRUint32 theChar;
+    keyEvent->GetKeyCode(&theChar);
+
+    PRBool access;
+    switch (mAccessKey)
+    {
+      case nsIDOMKeyEvent::DOM_VK_CONTROL:
+        keyEvent->GetCtrlKey(&access);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_ALT:
+        keyEvent->GetAltKey(&access);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_META:
+        keyEvent->GetMetaKey(&access);
+        break;
+      default:
+        access = 0;
+    }
+    if (theChar == nsIDOMKeyEvent::DOM_VK_TAB && mAccessKeyDown) {
+      mAccessKeyDown = PR_FALSE;
+    }
+
+    if (theChar == mAccessKey || access) {
+      // No other modifiers can be down.
+      // Especially CTRL.  CTRL+ALT == AltGR, and
+      // we'll fuck up on non-US enhanced 102-key
+      // keyboards if we don't check this.
+      PRBool ctrl = PR_FALSE;
+      if (mAccessKey != nsIDOMKeyEvent::DOM_VK_CONTROL)
+        keyEvent->GetCtrlKey(&ctrl);
+      PRBool alt=PR_FALSE;
+      if (mAccessKey != nsIDOMKeyEvent::DOM_VK_ALT)
+        keyEvent->GetAltKey(&alt);
+      PRBool shift=PR_FALSE;
+      if (mAccessKey != nsIDOMKeyEvent::DOM_VK_SHIFT)
+        keyEvent->GetShiftKey(&shift);
+      PRBool meta=PR_FALSE;
+      if (mAccessKey != nsIDOMKeyEvent::DOM_VK_META)
+        keyEvent->GetMetaKey(&meta);
+      if (!(ctrl || alt || shift || meta)) {
+        // The access key just went down by itself. Track this.
+        mAccessKeyDown = PR_TRUE;
+      }
     }
   }
-#endif
 
   return NS_OK; // means I am NOT consuming event
 }
@@ -187,7 +249,7 @@ nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 	  mMenuBarFrame->ToggleMenuActiveState();
 	  PRBool handled;
     mMenuBarFrame->Escape(handled);
-	  mAltKeyDown = PR_FALSE;
+	  mAccessKeyDown = PR_FALSE;
   }
   return NS_OK; // means I am NOT consuming event
 }
@@ -200,7 +262,7 @@ nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
 	  mMenuBarFrame->ToggleMenuActiveState();
 	  PRBool handled;
     mMenuBarFrame->Escape(handled);
-	  mAltKeyDown = PR_FALSE;
+	  mAccessKeyDown = PR_FALSE;
   }
   return NS_OK; // means I am NOT consuming event
 }

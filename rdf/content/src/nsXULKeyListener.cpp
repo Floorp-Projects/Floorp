@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -63,6 +63,8 @@
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -196,6 +198,8 @@ static NS_DEFINE_IID(kIDomNodeIID,            NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
 enum eEventType {
   eKeyPress,
   eKeyDown,
@@ -308,10 +312,9 @@ private:
 
     static nsSupportsHashtable* mKeyBindingTable;
 
-    // The "xul key" modifier can be any of the known modifiers:
-    enum {
-        xulKeyNone, xulKeyShift, xulKeyControl, xulKeyAlt, xulKeyMeta
-    } mXULKeyModifier;
+    // The "xul key" modifier is a key code from nsIDOMKeyEvent,
+    // e.g. nsIDOMKeyEvent::DOM_VK_CONTROL
+    PRUint32 mXULKeyModifier;
 };
 
 nsSupportsHashtable* nsXULKeyListenerImpl::mKeyBindingTable = nsnull;
@@ -461,14 +464,29 @@ nsXULKeyListenerImpl::Init(
 
   mDOMDocument = xulDoc; // Weak reference.
 
-  // Set the default for the xul key modifier
+  // Compiled-in defaults, in case we can't get LookAndFeel --
+  // command for mac, control for all other platforms.
 #ifdef XP_MAC
-  mXULKeyModifier = xulKeyMeta;
-#elif XP_UNIX
-  mXULKeyModifier = xulKeyAlt;
+  mXULKeyModifier = nsIDOMKeyEvent::DOM_VK_META;
 #else
-  mXULKeyModifier = xulKeyControl;
+  mXULKeyModifier = nsIDOMKeyEvent::DOM_VK_CONTROL;
 #endif
+
+  // Get the accelerator key value from prefs, overriding the default:
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+  {
+    rv = prefs->GetIntPref("ui.key.acceleratorKey",
+                           (PRInt32*)&mXULKeyModifier);
+  }
+#ifdef DEBUG_akkana
+  else
+  {
+    NS_ASSERTION(PR_FALSE, "XULKeyListener couldn't get accel key from prefs!\n");
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -1478,7 +1496,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
             || (property == falseString && isModKey))
             break;
         // and also the xul key, if it's specified to be shift:
-        if (xulKeyShift == mXULKeyModifier &&
+        if (nsIDOMKeyEvent::DOM_VK_SHIFT == mXULKeyModifier &&
             ((xproperty == trueString && !isModKey)
              || (xproperty == falseString && isModKey)))
             break;
@@ -1491,7 +1509,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           || (property == falseString && isModKey))
           break;
         // and if xul is control:
-        if (xulKeyControl == mXULKeyModifier &&
+        if (nsIDOMKeyEvent::DOM_VK_CONTROL == mXULKeyModifier &&
             ((xproperty == trueString && !isModKey)
              || (xproperty == falseString && isModKey)))
             break;
@@ -1504,7 +1522,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           || (property == falseString && isModKey))
           break;
         // and if xul is alt:
-        if (xulKeyAlt == mXULKeyModifier &&
+        if (nsIDOMKeyEvent::DOM_VK_ALT == mXULKeyModifier &&
           ((xproperty == trueString && !isModKey)
            || (xproperty == falseString && isModKey)))
           break;
@@ -1517,7 +1535,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
           || (property == falseString && isModKey))
           break;
         // and if xul is meta:
-        if (xulKeyMeta == mXULKeyModifier &&
+        if (nsIDOMKeyEvent::DOM_VK_META == mXULKeyModifier &&
           ((xproperty == trueString && !isModKey)
            || (xproperty == falseString && isModKey)))
           break;

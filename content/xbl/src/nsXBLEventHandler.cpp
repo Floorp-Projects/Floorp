@@ -45,6 +45,10 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsXBLBinding.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
@@ -71,6 +75,7 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
   mEventName.Assign(aEventName);
   mNextHandler = nsnull;
   gRefCnt++;
+  mAccessKey = -1;
   if (gRefCnt == 1) {
     kKeyCodeAtom = NS_NewAtom("keycode");
     kKeyAtom = NS_NewAtom("key");
@@ -371,7 +376,38 @@ nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-///////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+// Get the menu access key from prefs.
+// XXX Eventually pick up using CSS3 key-equivalent property or somesuch
+void
+nsXBLEventHandler::InitAccessKey()
+{
+  if (mAccessKey >= 0)
+    return;
+
+  // Compiled-in defaults, in case we can't get the pref --
+  // mac doesn't have menu shortcuts, other platforms use alt.
+#ifndef XP_MAC
+  mAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
+#else
+  mAccessKey = 0;
+#endif
+
+  // Get the menu access key value from prefs, overriding the default:
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+  {
+    rv = prefs->GetIntPref("ui.key.menuAccessKey", &mAccessKey);
+  }
+#ifdef DEBUG_akkana
+  if (NS_FAILED(rv))
+  {
+    NS_ASSERTION(PR_FALSE,"XBLEventHandler couldn't get menu access key from prefs!\n");
+  }
+#endif
+}
+
 
 PRBool 
 nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
@@ -409,31 +445,31 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 
   // Now check modifier keys
   nsAutoString modifier;
-  PRBool isModifierPresent;
   mHandlerElement->GetAttribute(kNameSpaceID_None, kPrimaryAtom, modifier);
-  if (modifier == trueString) {
-    // The XUL key must be set.  Hard code for now.
-    // XXX Eventually pick up using CSS3 key-equivalent property or somesuch
-#ifdef XP_MAC
-    aKeyEvent->GetMetaKey(&isModifierPresent);
-#elif XP_UNIX
-    aKeyEvent->GetAltKey(&isModifierPresent);
-#else
-    aKeyEvent->GetCtrlKey(&isModifierPresent);
-#endif
 
+  // Get the xulkey.
+  InitAccessKey();
+  PRBool isModifierPresent = PR_FALSE;
+  switch (mAccessKey)
+  {
+    case nsIDOMKeyEvent::DOM_VK_META:
+      aKeyEvent->GetMetaKey(&isModifierPresent);
+      break;
+
+    case nsIDOMKeyEvent::DOM_VK_ALT:
+      aKeyEvent->GetAltKey(&isModifierPresent);
+      break;
+
+    case nsIDOMKeyEvent::DOM_VK_CONTROL:
+    default:
+      aKeyEvent->GetCtrlKey(&isModifierPresent);
+  }
+
+  if (modifier == trueString) {
     if (!isModifierPresent)
       return PR_FALSE;
   }
   else if (modifier == falseString) {
-#ifdef XP_MAC
-    aKeyEvent->GetMetaKey(&isModifierPresent);
-#elif XP_UNIX
-    aKeyEvent->GetAltKey(&isModifierPresent);
-#else
-    aKeyEvent->GetCtrlKey(&isModifierPresent);
-#endif
-
     if (isModifierPresent)
       return PR_FALSE;
   }
@@ -505,31 +541,30 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
   // XXX Check for button and modifier keys.
 // Now check modifier keys
   nsAutoString modifier;
-  PRBool isModifierPresent;
   mHandlerElement->GetAttribute(kNameSpaceID_None, kPrimaryAtom, modifier);
-  if (modifier == trueString) {
-    // The XUL key must be set.  Hard code for now.
-    // XXX Eventually pick up using CSS3 key-equivalent property or somesuch
-#ifdef XP_MAC
-    aMouseEvent->GetMetaKey(&isModifierPresent);
-#elif XP_UNIX
-    aMouseEvent->GetAltKey(&isModifierPresent);
-#else
-    aMouseEvent->GetCtrlKey(&isModifierPresent);
-#endif
 
+  // Get the xulkey
+  InitAccessKey();
+  PRBool isModifierPresent = PR_FALSE;
+  switch (mAccessKey)
+  {
+    case nsIDOMKeyEvent::DOM_VK_META:
+      aMouseEvent->GetMetaKey(&isModifierPresent);
+      break;
+
+    case nsIDOMKeyEvent::DOM_VK_ALT:
+      aMouseEvent->GetAltKey(&isModifierPresent);
+      break;
+
+    case nsIDOMKeyEvent::DOM_VK_CONTROL:
+    default:
+      aMouseEvent->GetCtrlKey(&isModifierPresent);
+  }
+  if (modifier == trueString) {
     if (!isModifierPresent)
       return PR_FALSE;
   }
   else if (modifier == falseString) {
-#ifdef XP_MAC
-    aMouseEvent->GetMetaKey(&isModifierPresent);
-#elif XP_UNIX
-    aMouseEvent->GetAltKey(&isModifierPresent);
-#else
-    aMouseEvent->GetCtrlKey(&isModifierPresent);
-#endif
-
     if (isModifierPresent)
       return PR_FALSE;
   }

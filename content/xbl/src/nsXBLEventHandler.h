@@ -130,6 +130,9 @@ protected:
   nsIContent* mHandlerElement;
   nsAutoString mEventName;
 
+  void InitAccessKey();
+  PRInt32 mAccessKey;        // the default access key or "xulkey"
+
   nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 };
 

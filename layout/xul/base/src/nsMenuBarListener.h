@@ -64,8 +64,11 @@ public:
   NS_DECL_ISUPPORTS
 
 protected:
+  void InitAccessKey();
+
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
-  PRBool mAltKeyDown;            // Whether or not the ALT key is currently down.
+  PRBool mAccessKeyDown;         // Whether or not the ALT key is currently down.
+  PRInt32 mAccessKey;            // See nsIDOMKeyEvent.h for sample values
 };
 
 

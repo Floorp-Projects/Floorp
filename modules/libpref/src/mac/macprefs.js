@@ -138,6 +138,9 @@ pref("font.name.monospace.zh-TW", "Apple LiGothic Medium");
 pref("font.name.cursive.zh-TW", "XXX.cursive");
 pref("font.name.fantasy.zh-TW", "XXX.fantasy");
 
+// Override the Windows settings: no menu key, meta accelerator key.
+pref("ui.key.menuAccessKey", 0);
+pref("ui.key.acceleratorKey", 224);
 
 // This overrides the setting in config.js (which points to the Windows page)
 config("menu.help.item_0.label","Help Contents");

@@ -305,9 +305,9 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
 
 // the following block is to append the accesskey to to mTitle if there is an accesskey 
 // but the mTitle doesn't have the character 
+  // XXX Should this code first check to see if there's a menuAccessKey?
 
   mAccesskeyIndex = -1;
-#ifndef XP_UNIX
   nsAutoString accesskey;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                          accesskey);
@@ -325,7 +325,6 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
 		  	mTitle += tmpstring;
 	  }
   }
-#endif
 
   return rv;
 }

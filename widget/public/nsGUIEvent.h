@@ -601,6 +601,8 @@ enum nsDragDropEventStatus {
 #define NS_VK_CLOSE_BRACKET  0xDD
 #define NS_VK_QUOTE          0xDE
 
+#define NS_VK_META           0xE0
+
 #define NS_EVENT_FLAG_NONE          0x0000
 #define NS_EVENT_FLAG_INIT          0x0001
 #define NS_EVENT_FLAG_BUBBLE        0x0002
