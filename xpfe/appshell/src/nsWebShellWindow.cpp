@@ -463,6 +463,21 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         break;
       }
 
+      case NS_GOTFOCUS: {
+        void* data;
+        aEvent->widget->GetClientData(data);
+        if (data) {
+          nsCOMPtr<nsIWebShell> contentShell;
+          ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
+          if (contentShell) {
+            nsCOMPtr<nsIDOMWindow> domWindow;
+            if (NS_SUCCEEDED(((nsWebShellWindow *)data)->
+                ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
+              domWindow->Focus();
+            }
+          }
+        }
+      }
       default:
         break;
 

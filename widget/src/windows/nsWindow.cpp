@@ -3190,9 +3190,12 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
 {
     // call the event callback 
     if (mEventCallback) {
-      if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
+      //XXX Commenting this out becaus its blocking all focus events and 
+      //    I don't think it still works.  If I'm wrong we might start getting
+      //    crashes due to focus events during window destruction again.
+      //if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
         return(DispatchStandardEvent(aEventType));
-      }
+      //}
     }
 
     return PR_FALSE;

@@ -59,6 +59,8 @@
 #include "nsINetSupport.h"
 #endif
 #include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
+#include "nsIPresShell.h"
 #include "nsScreen.h"
 #include "nsHistory.h"
 #include "nsBarProps.h"
@@ -102,6 +104,7 @@ static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 #ifndef NECKO
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
@@ -1122,18 +1125,51 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
 NS_IMETHODIMP
 GlobalWindowImpl::Focus()
 {
-  nsresult result = NS_OK;
-  
   nsIBrowserWindow *browser;
   if (NS_OK == GetBrowserWindowInterface( browser))
   {
       browser->Show();
       NS_RELEASE( browser);
   }
-  
-  if (nsnull != mWebShell) {
-    result = mWebShell->SetFocus();
+
+  nsresult result = NS_OK;
+
+  nsIContentViewer *viewer = nsnull;
+  mWebShell->GetContentViewer(&viewer);
+  if (viewer) {
+    nsIDocumentViewer* docv = nsnull;
+    viewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+    if (nsnull != docv) {
+      nsIPresContext* cx = nsnull;
+      docv->GetPresContext(cx);
+	    if (nsnull != cx) {
+        nsIPresShell  *shell = nsnull;
+	      cx->GetShell(&shell);
+        if (nsnull != shell) {
+          nsIViewManager  *vm = nsnull;
+          shell->GetViewManager(&vm);
+          if (nsnull != vm) {
+            nsIView *rootview = nsnull;
+            vm->GetRootView(rootview);
+            if (rootview) {
+              nsIWidget* widget;
+              rootview->GetWidget(widget);
+              if (widget) {
+                result = widget->SetFocus();
+                NS_RELEASE(widget);
+              }
+            }
+    	      NS_RELEASE(vm);
+          }
+  	      NS_RELEASE(shell);
+        }
+	      NS_RELEASE(cx);
+	    }
+      NS_RELEASE(docv);
+    }
+    NS_RELEASE(viewer);
   }
+
   return result;
 }
 
