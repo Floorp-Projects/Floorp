@@ -168,7 +168,7 @@ Rhino actually creates a new Java class that implements <tt>ActionListener</tt>
 and forwards calls from that class to the JavaScript object. So when you
 click on the button, the <tt>printDate</tt> method is called.
 <p>
-Starting from the release 1.5R5  Rhino allows to pass JavaScript functions directly to Java methods if the corresponding argument is Java interface with single method. It allows to pass <tt>printDate</tt> directly to <tt>addActionListener</tt> and simplifies example:
+Starting from the release 1.5R5  Rhino allows to pass JavaScript functions directly to Java methods if the corresponding argument is Java interface and it either has the single method or all its methods has the same number of arguments and corresponding arguments has the same types. It allows to pass <tt>printDate</tt> directly to <tt>addActionListener</tt> and simplifies example:
 <pre>$ java org.mozilla.javascript.tools.shell.Main
 js> importPackage(java.awt);
 js> frame = new Frame("JavaScript")

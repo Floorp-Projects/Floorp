@@ -15,24 +15,39 @@ This is a log of significant changes in Rhino 1.5 Release 5.
 
 <h3>Wrapping of JavaScript functions as Java interfaces</h3>
 <p>
-Rhino allows to pass a JavaScript function to a Java method expecting an interface with a single method. The JavaScript function will be called whenever interface's method is called from Java. It allows to simplify code that previously had to create explicit JavaAdapter objects. 
+Rhino allows to pass a JavaScript function to a Java method expecting an interface which either has a single method or all its methods have the same number of parameters and each corresponding parameter has the same type. 
+The JavaScript function will be called whenever interface's method is called from Java. The function will receive all Java arguments properly converted into JS types and as the last parameter Rhino will pass interface method's name. 
 </p>
 <p>
-For example, one can write now:
+The feature allows to simplify code that previously had to create explicit JavaAdapter objects. For example, one can write now:
 <pre>
     var button = new javax.swing.JButton("My Button");
     button.addActionListener(function(e) {
-    	java.lang.System.out.println("Button click:"+e);
+        java.lang.System.out.println("Button click:"+e);
+    }); 
+    var frame = new javax.swing.JFrame("My Frame");
+    frame.addWindowListener(function(e, methodName) {
+        java.lang.System.out.println("Window event:"+e);
+        if (methodName == "windowClosing") {     
+            java.lang.System.exit(0);
+        }
     }); 
 </pre>
 instead of 
 <pre>
     var button = new javax.swing.JButton("My Button");
-    button.addActionListener(new java.awt.event.ActionListener({
-    	actionPerformed : function(e) {
-    	    java.lang.System.out.println("Button click:"+e);
-    	}
+    button.addActionListener(new java.awt.event.WindowListener({
+        windowClosing : function(e) {
+            java.lang.System.out.println("Window event:"+e);
+            java.lang.System.exit(0);
+        },
+        windowActivated : function(e) {
+            java.lang.System.out.println("Window event:"+e);
+        },
+        // similar code for the rest of WindowListener methods
     });
+    var frame = new javax.swing.JFrame("My Frame");
+    frame.addWindowListener(function(e, methodName) {
 </pre>
 which was necessary in the previous version of Rhino. 
 See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=223435">Bugzilla 223435</a>.

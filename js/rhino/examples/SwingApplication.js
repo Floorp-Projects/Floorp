@@ -16,7 +16,10 @@ function createComponents() {
     var button = new JButton("I'm a Swing button!");
     button.mnemonic = KeyEvent.VK_I;
     // Since Rhino 1.5R5 JS functions can be passed to Java method if
-    // corresponding argument type is Java interface with single method.
+    // corresponding argument type is Java interface with single method
+    // or all its methods have the same number of arguments and the
+    // corresponding arguments has the same type. See also comments for
+    // frame.addWindowListener bellow
     button.addActionListener(function() {
 	numClicks += 1;
 	label.setText(labelPrefix + numClicks);
@@ -48,12 +51,18 @@ try {
 var frame = new JFrame("SwingApplication");
 frame.getContentPane().add(createComponents(), BorderLayout.CENTER);
 
-//Finish setting up the frame, and show it.
-frame.addWindowListener(new WindowAdapter({
-    windowClosing : function() {
-	java.lang.System.exit(0);
+// Pass JS function as implementation of WindowListener. It is allowed since 
+// all methods in WindowListener have the same signature. To distinguish 
+// between methods Rhino passes to JS function the name of corresponding 
+// method as the last argument  
+frame.addWindowListener(function(event, methodName) {
+print(event + " "+methodName);
+    if (methodName == "windowClosing") {     
+        java.lang.System.exit(0);
     }
-}) );
+});
+
+//Finish setting up the frame, and show it.
 frame.pack();
 frame.setVisible(true);
 
