@@ -52,7 +52,7 @@
   <colorpicker id="ColorPicker" palettename="standard" 
     persist="palettename"
     onclick="SetDefaultToOk();"
-    ondblclick="if (onOK()) window.close();"
+    ondblclick="if (onAccept()) window.close();"
     onkeypress="SelectColorByKeypress(event);"
     onselect="SelectColor();"/>
 <!-- Web palette is not implemented???
