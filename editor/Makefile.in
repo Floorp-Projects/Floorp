@@ -26,6 +26,7 @@ DIRS = public
 
 ifdef MOZ_EDITOR
 DIRS += core
+# Add "DIRS += guimgr" after building on all platforms
 ifdef ENABLE_TESTS
 DIRS += tests
 endif
