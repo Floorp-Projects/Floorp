@@ -788,7 +788,9 @@ nsProfileAccess::FixRegEntry(PRUnichar** dirName)
     PRBool haveHexBytes = PR_TRUE;
 
     // Decode the directory name to return the ordinary string
-    nsInputStringStream stream(*dirName);
+    nsCAutoString dirNameCString; dirNameCString.AssignWithConversion(*dirName);
+    nsInputStringStream stream(dirNameCString);
+//  nsInputStringStream stream(NS_ConvertUCS2toUTF8(*dirName));
     nsPersistentFileDescriptor descriptor;
 
     char bigBuffer[MAX_PERSISTENT_DATA_SIZE + 1];
