@@ -332,8 +332,12 @@ int nsGIFDecoder2::EndImageFrame(
     decoder->mImageFrame->SetTimeout(aDelayTimeout);
   }
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
-    
-  if (decoder->mObserver && decoder->mImageFrame) {
+
+  // if the gif is corrupt don't mark the frame as complete, as nsCSSRendering
+  // will happily try using it to draw a background
+  if (decoder->mObserver && 
+      decoder->mImageFrame && 
+      decoder->mGIFStruct->state != gif_error) {
     decoder->FlushImageData();
 
     if (aFrameNumber == 1) {
