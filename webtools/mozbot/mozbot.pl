@@ -2889,6 +2889,8 @@ sub Kicked {
     my %channels = map { $_ => 1 } @channels;
     if ($channels{$channel}) {
         $self->debug("kicked from $channel by ".$event->{'from'});
+        # XXX this next line can cause a "nosuchchannel: mozbot I No such channel" message
+        # would be nice to fix that somehow
         $event->{'bot'}->part($channel, 'I was told to leave by '.$event->{'from'}.'. :-(');
         delete($channels{$channel});
         @channels = keys %channels;
