@@ -244,7 +244,7 @@ nsPosixLocale::ParseLocaleString(const char* locale_string, char* language, char
   
   if (*src == '@') { 
     src++;  // move past the modifier separator
-    NS_ASSERTION(strcmp("euro",src) != 0, "found non euro modifier");
+    NS_ASSERTION(strcmp("euro",src) == 0, "found non euro modifier");
     dest = modifier;
     dest_space = MAX_EXTRA_LEN;
     while ((*src) && (dest_space--)) {
