@@ -233,10 +233,10 @@ private:
                                  nsIDOMNode **aWordEndNode,
                                  PRInt32 *aWordEndOffset);
 
-  /* DEBUG */
+#ifdef DEBUG_kin
   void PrintOffsetTable();
   void PrintContentNode(nsIContent *aContent);
-
+#endif
 };
 
 #endif // nsTextServicesDocument_h__
