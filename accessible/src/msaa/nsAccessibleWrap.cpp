@@ -40,6 +40,9 @@
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleWin32Object.h"
 #include "nsArray.h"
+#include "nsIDOMDocument.h"
+#include "nsIPrefService.h"
+#include "nsIServiceManager.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
 #define _ATLBASE_IMPL
@@ -162,35 +165,14 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
     return E_FAIL;  // We've been shut down
 
   nsCOMPtr<nsIAccessible> xpParentAccessible;
-  GetParent(getter_AddRefs(xpParentAccessible));
 
+  GetParent(getter_AddRefs(xpParentAccessible));
   if (xpParentAccessible) {
     *ppdispParent = NativeAccessible(xpParentAccessible);
     return S_OK;
   }
 
-  // If we have a widget but no parent nsIAccessible then we might have a native
-  // widget parent that could give us a IAccessible. Lets check.
-
-  void* wnd;
-  GetOwnerWindow(&wnd);
-
-  HWND pWnd = ::GetParent(NS_REINTERPRET_CAST(HWND, wnd));
-  if (pWnd) {
-    // get the accessible.
-    void* ptr = nsnull;
-    HRESULT result = AccessibleObjectFromWindow(pWnd, OBJID_WINDOW, IID_IAccessible, &ptr);
-    if (SUCCEEDED(result)) {
-      IAccessible* msaaParentAccessible = (IAccessible*)ptr;
-      // got one? return it.
-      if (msaaParentAccessible) {
-        *ppdispParent = msaaParentAccessible;
-        return NS_OK;
-      }
-    }
-  }
-
-  return E_FAIL;  
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)
