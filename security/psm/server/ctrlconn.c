@@ -1101,6 +1101,7 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
         }
         SSM_DEBUG("I think the process lives in <%s>\n", processDir);
         fullModuleName = PR_smprintf("%s%s", processDir, LOADABLE_CERTS_MODULE);
+        PR_FREEIF(processDir);
         fullModuleName = SSM_ConvertMacPathToUnix(fullModuleName);
 #elif defined(WIN32)
         fullModuleName = PL_strdup(LOADABLE_CERTS_MODULE);
