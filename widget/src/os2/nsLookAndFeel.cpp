@@ -43,6 +43,7 @@
 #include "nsLookAndFeel.h"
 #include "nsXPLookAndFeel.h"
 #include "nsFont.h"
+#include "nsSize.h"
  
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
