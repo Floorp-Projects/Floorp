@@ -83,8 +83,8 @@ nsHTMLDocument::nsHTMLDocument()
 nsHTMLDocument::~nsHTMLDocument()
 {
   // XXX Temporary code till forms become real content
-  int i, count = mTempForms.Count();
-  for (i = 0; i < count; i++) {
+  PRInt32 i;
+  for (i = 0; i < mTempForms.Count(); i++) {
     nsIFormManager *form = (nsIFormManager *)mTempForms.ElementAt(i);
     if (nsnull != form) {
       NS_RELEASE(form);
@@ -99,6 +99,11 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mForms);
   NS_IF_RELEASE(mAttrStyleSheet);
   NS_IF_RELEASE(mParser);
+  for (i = 0; i < mImageMaps.Count(); i++) {
+    nsIImageMap*  map = (nsIImageMap*)mImageMaps.ElementAt(i);
+
+    NS_RELEASE(map);
+  }
 // XXX don't bother doing this until the dll is unloaded???
 //  nsHTMLAtoms::ReleaseAtoms();
 }
