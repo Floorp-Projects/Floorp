@@ -39,7 +39,7 @@ $results_server           = "tegu.mozilla.org";
 #
 
 $CreateProfileTimeout           = 45;
-$RegxpcomTimeout                = 15;
+$RegxpcomTestTimeout            = 15;
 
 $AliveTestTimeout               = 45;
 $ViewerTestTimeout              = 45;

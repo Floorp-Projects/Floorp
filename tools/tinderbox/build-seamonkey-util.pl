@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.115 $ ';
+$::UtilsVersion = '$Revision: 1.116 $ ';
 
 package TinderUtils;
 
@@ -753,7 +753,7 @@ sub run_all_tests {
     unlink("$binary_dir/component.reg");
 	if($Settings::RegxpcomTest) {
 	  AliveTest("regxpcom", $build_dir, "$binary_dir/regxpcom", 0,
-				$Settings::RegxpcomTimeout);
+				$Settings::RegxpcomTestTimeout);
 	}
 
 	#
