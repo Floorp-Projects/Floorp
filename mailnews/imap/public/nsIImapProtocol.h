@@ -64,14 +64,16 @@ public:
 	// IsBusy returns true if the connection is currently processing a url
 	// and false otherwise.
 	/////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy) = 0;
+	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy, 
+                      PRBool & isInboxConnection) = 0;
 
 	// Protocol instance examines the url, looking at the host name,
 	// user name and folder the action would be on in order to figure out
 	// if it can process this url. I decided to push the semantics about
 	// whether a connection can handle a url down into the connection level
 	// instead of in the connection cache.
-	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl) = 0;
+	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl,
+                            PRBool & hasToWait) = 0;
 
 	/////////////////////////////////////////////////////////////////////////
 	// Right now, initialize requires the event queue of the UI thread, 
