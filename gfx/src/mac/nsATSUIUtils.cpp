@@ -435,9 +435,9 @@ nsATSUIToolkit::GetTextDimensions(
     EndDraw(savePort);
     return res;
   }
-  oDim.width = after;
-  oDim.ascent = ascent;
-  oDim.descent = descent;
+  oDim.width = FixRound(after);
+  oDim.ascent = FixRound(ascent);
+  oDim.descent = FixRound(descent);
   res = NS_OK;
   EndDraw(savePort);
   return res;
