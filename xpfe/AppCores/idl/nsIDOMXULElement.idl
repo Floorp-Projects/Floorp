@@ -1,0 +1,2 @@
+/* stub interface for compatibility with XPIDL */
+interface nsIDOMXULElement {};
