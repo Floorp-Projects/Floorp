@@ -1963,7 +1963,7 @@ HBRUSH nsWindow::OnControlColor()
 
 nsWindow::Enumerator::Enumerator()
 {
-    mRefCnt = 0;
+    mRefCnt = 1;
     mArraySize = INITIAL_SIZE;
     mChildrens = (nsIWidget**)new DWORD[mArraySize];
     memset(mChildrens, 0, sizeof(DWORD) * mArraySize);
