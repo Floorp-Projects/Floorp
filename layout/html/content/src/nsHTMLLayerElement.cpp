@@ -28,6 +28,8 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 
+#define _I32_MIN  (-2147483647i32 - 1) /* minimum signed 32 bit value */
+
 static NS_DEFINE_IID(kIDOMHTMLLayerElementIID, NS_IDOMHTMLELEMENT_IID);
 
 class nsHTMLLayerElement : public nsIDOMHTMLElement,/* XXX need layer api */
@@ -134,57 +136,52 @@ static nsGenericHTMLElement::EnumTable kVisibilityTable[] = {
 };
 
 NS_IMETHODIMP
-nsHTMLLayerElement::StringToAttribute(nsIAtom* aAttribute,
-                               const nsString& aValue,
-                               nsHTMLValue& aResult)
+nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
+                                      const nsString& aValue,
+                                      nsHTMLValue&    aResult)
 {
-#if 0
   // XXX CLIP
-  nsHTMLValue val;
   if (aAttribute == nsHTMLAtoms::src) {
-    nsAutoString src(aString);
+    nsAutoString src(aValue);
     src.StripWhitespace();
-    val.SetStringValue(src);
-    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+    aResult.SetStringValue(src);
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if ((aAttribute == nsHTMLAtoms::left) ||
-      (aAttribute == nsHTMLAtoms::top)) {
-    nsHTMLValue val;
-    if (ParseValue(aString, _I32_MIN, val, eHTMLUnit_Pixel)) {
-      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+           (aAttribute == nsHTMLAtoms::top)) {
+    if (nsGenericHTMLElement::ParseValue(aValue, _I32_MIN, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if ((aAttribute == nsHTMLAtoms::width) ||
            (aAttribute == nsHTMLAtoms::height)) {
-    nsHTMLValue val;
-    if (ParseValueOrPercent(aString, val, eHTMLUnit_Pixel)) {
-      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::zindex) {
-    nsHTMLValue val;
-    if (ParseValue(aString, 0, val, eHTMLUnit_Integer)) {
-      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::visibility) {
-    if (ParseEnumValue(aString, kVisibilityTable, val)) {
-      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kVisibilityTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    ParseColor(aString, val);
-    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+    if (nsGenericHTMLElement::ParseColor(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
   }
   else if (aAttribute == nsHTMLAtoms::background) {
-    nsAutoString url(aString);
+    nsAutoString url(aValue);
     url.StripWhitespace();
-    val.SetStringValue(url);
-    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+    aResult.SetStringValue(url);
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
   // ABOVE, BELOW, OnMouseOver, OnMouseOut, OnFocus, OnBlur, OnLoad
-#endif
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -199,7 +196,6 @@ nsHTMLLayerElement::AttributeToString(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
