@@ -411,6 +411,9 @@ MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND)
 else
 MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
 MKDEPEND	= $(MKDEPEND_DIR)/mkdepend
+ifndef COMPILER_DEPEND
+MKDEPEND_BUILTIN = $(MKDEPEND_DIR)/mkdepend
+endif
 endif
 
 MKDEPENDENCIES	= depend.mk

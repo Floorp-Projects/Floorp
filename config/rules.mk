@@ -1268,15 +1268,9 @@ endif
 else
 
 ifndef MOZ_NATIVE_MAKEDEPEND
-$(MKDEPEND):
-	cd $(DEPTH)/config; $(MAKE) nsinstall
-	cd $(MKDEPEND_DIR); $(MAKE)
-endif
-
-ifndef MOZ_NATIVE_MAKEDEPEND
-MKDEPEND_BUILTIN	= $(MKDEPEND)
-else
-MKDEPEND_BUILTIN	=
+$(MKDEPEND_BUILTIN):
+	$(MAKE) -C $(DEPTH)/config nsinstall
+	$(MAKE) -C $(MKDEPEND_DIR) mkdepend
 endif
 
 endif # ! COMPILER_DEPEND

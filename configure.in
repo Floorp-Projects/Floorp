@@ -994,6 +994,7 @@ dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris32.cfg\"'
+    SYSTEM_MAKEDEPEND=
     if test -z "$GNU_CC"; then
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        LDFLAGS='-xildoff'
