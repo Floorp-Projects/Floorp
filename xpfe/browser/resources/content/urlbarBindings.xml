@@ -200,8 +200,13 @@
         <body><![CDATA[
           var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                       .getService(Components.interfaces.nsIRDFService);
-          var ds = rdf.GetDataSource("rdf:internetsearch");
-                      
+          try {
+            var ds = rdf.GetDataSource("rdf:internetsearch");
+          } catch (ex) {
+            // sometimes bad profiles cause this error, which horks the hold urlbar
+            return;
+          }
+                              
           const kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
           const kNC_Icon = rdf.GetResource("http://home.netscape.com/NC-rdf#Icon");
           const kNC_searchBarUrl = rdf.GetResource("http://home.netscape.com/NC-rdf#actionBar");
