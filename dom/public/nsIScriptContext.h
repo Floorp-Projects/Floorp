@@ -217,7 +217,7 @@ public:
    * Return the global object.
    *
    **/
-  NS_IMETHOD_(nsIScriptGlobalObject*) GetGlobalObject() = 0;
+  NS_IMETHOD GetGlobalObject(nsIScriptGlobalObject** aGlobalObject) = 0;
 
   /**
    * Return the native script context

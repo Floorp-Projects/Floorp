@@ -3239,7 +3239,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
     if (!doc)
       return NS_ERROR_UNEXPECTED;
 
-    rootContent = doc->GetRootContent();
+    doc->GetRootContent(getter_AddRefs(rootContent));
 
     iter->Init(rootContent);
 
@@ -3932,7 +3932,8 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
   if (!doc)
     return 0;
 
-  nsIContent* rootContent = doc->GetRootContent();
+  nsCOMPtr<nsIContent> rootContent;
+  doc->GetRootContent(getter_AddRefs(rootContent));
   if (!rootContent)
     return 0;
 

@@ -394,7 +394,8 @@ nsMenuPopupFrame :: AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopu
     nsCOMPtr<nsIDocument> targetDocument;
     targetAsContent->GetDocument(*getter_AddRefs(targetDocument));
     if (targetDocument) {
-      nsCOMPtr<nsIPresShell> shell ( dont_AddRef(targetDocument->GetShellAt(0)) );
+      nsCOMPtr<nsIPresShell> shell;
+      targetDocument->GetShellAt(0, getter_AddRefs(shell));
       nsCOMPtr<nsIViewManager> viewManagerTarget;
       if ( shell ) {
         shell->GetViewManager(getter_AddRefs(viewManagerTarget));

@@ -440,15 +440,16 @@ nsXULTreeElement::FireOnSelectHandler()
     return NS_OK;
 
   PRInt32 count = document->GetNumberOfShells();
-	for (PRInt32 i = 0; i < count; i++) {
-		nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(i));
-		if (nsnull == shell)
-				continue;
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIPresShell> shell;
+    document->GetShellAt(i, getter_AddRefs(shell));
+    if (!shell)
+      continue;
 
-		// Retrieve the context in which our DOM event will fire.
-		nsCOMPtr<nsIPresContext> aPresContext;
-		shell->GetPresContext(getter_AddRefs(aPresContext));
-				
+    // Retrieve the context in which our DOM event will fire.
+    nsCOMPtr<nsIPresContext> aPresContext;
+    shell->GetPresContext(getter_AddRefs(aPresContext));
+
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event;
     event.eventStructType = NS_EVENT;

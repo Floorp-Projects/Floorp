@@ -4343,7 +4343,8 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
       rv = owner->GetDocument(getter_AddRefs(doc));
       if (NS_SUCCEEDED(rv) && doc)
       {
-        nsCOMPtr<nsIURI> docURL( getter_AddRefs(doc->GetDocumentURL()) );
+        nsCOMPtr<nsIURI> docURL;
+        doc->GetDocumentURL(getter_AddRefs(docURL));
  
         // Create an absolute URL
         rv = NS_MakeAbsoluteURI(absUrl, aURL, docURL);

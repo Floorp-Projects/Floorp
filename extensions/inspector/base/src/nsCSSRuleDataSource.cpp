@@ -338,7 +338,7 @@ nsCSSRuleDataSource::GetTargetsForElement(nsIDOMElement* aElement, nsIRDFResourc
   nsCOMPtr<nsIStyleContext> styleContext;
   for (PRInt32 i = 0; i < num; i++) {
     // get the style context
-    shell = doc->GetShellAt(i);
+    doc->GetShellAt(i, getter_AddRefs(shell));
     rv = shell->GetPrimaryFrameFor(content, &frame);
     if (NS_FAILED(rv) || !frame) return rv;
     shell->GetStyleContextFor(frame, getter_AddRefs(styleContext));

@@ -145,7 +145,8 @@ nsXBLDocumentInfo::SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPro
 
 nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult)
 {
-  nsCOMPtr<nsIURI> url = getter_AddRefs(aDocument->GetDocumentURL());
+  nsCOMPtr<nsIURI> url;
+  aDocument->GetDocumentURL(getter_AddRefs(url));
   
   nsXPIDLCString str;
   url->GetSpec(getter_Copies(str));
@@ -626,7 +627,8 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
   SetAnonymousNodesFor(aContent, nsnull);
 
   for (PRInt32 i = aOldDocument->GetNumberOfShells() - 1; i >= 0; --i) {
-    nsCOMPtr<nsIPresShell> shell = dont_AddRef( aOldDocument->GetShellAt(i) );
+    nsCOMPtr<nsIPresShell> shell;
+    aOldDocument->GetShellAt(i, getter_AddRefs(shell));
     NS_ASSERTION(shell != nsnull, "Zoiks! nsIPresShell::ShellAt() broke");
 
     // See if the element has nsIAnonymousContentCreator-created
@@ -881,7 +883,8 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableS
   uri->SetSpec(url);
   
 
-  nsCOMPtr<nsIURI> docURL = getter_AddRefs(aBoundDoc->GetDocumentURL());
+  nsCOMPtr<nsIURI> docURL;
+  aBoundDoc->GetDocumentURL(getter_AddRefs(docURL));
   nsXPIDLCString scheme;
   docURL->GetScheme(getter_Copies(scheme));
 
@@ -990,7 +993,8 @@ nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   nsCOMPtr<nsIDocument> doc;
   aDocumentInfo->GetDocument(getter_AddRefs(doc));
 
-  nsCOMPtr<nsIURI> uri(getter_AddRefs(doc->GetDocumentURL()));
+  nsCOMPtr<nsIURI> uri;
+  doc->GetDocumentURL(getter_AddRefs(uri));
   nsXPIDLCString str;
   uri->GetSpec(getter_Copies(str));
   

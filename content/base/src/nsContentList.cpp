@@ -696,8 +696,8 @@ nsContentList::PopulateSelf()
     PopulateWith(mRootContent, PR_FALSE);
   }
   else if (mDocument) {
-    nsIContent *root;
-    root = mDocument->GetRootContent();
+    nsIContent *root = nsnull;
+    mDocument->GetRootContent(&root);
     if (root) {
       PopulateWith(root, PR_TRUE);
       NS_RELEASE(root);

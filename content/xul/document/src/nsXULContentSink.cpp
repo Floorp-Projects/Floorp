@@ -493,7 +493,8 @@ XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
     // XXX this is silly; who cares?
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-        nsIPresShell* shell = mDocument->GetShellAt(i);
+        nsCOMPtr<nsIPresShell> shell;
+        mDocument->GetShellAt(i, getter_AddRefs(shell));
         if (nsnull != shell) {
             nsIViewManager* vm;
             shell->GetViewManager(&vm);
@@ -501,7 +502,6 @@ XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
                 vm->SetQuality(nsContentQuality(aQualityLevel));
             }
             NS_RELEASE(vm);
-            NS_RELEASE(shell);
         }
     }
 #endif
@@ -860,8 +860,10 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
             return NS_ERROR_FAILURE; // doc went away!
 
         PRBool doneLoading;
+        PRInt32 numSheets = 0;
+        doc->GetNumberOfStyleSheets(&numSheets);
         rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
-                                       doc->GetNumberOfStyleSheets(),
+                                       numSheets,
                                        ((blockParser) ? mParser : nsnull),
                                        doneLoading, nsnull);
         if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {

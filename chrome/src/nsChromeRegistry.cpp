@@ -1186,7 +1186,8 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
     // Deal with the backstop sheets first.
     PRInt32 shellCount = document->GetNumberOfShells();
     for (PRInt32 k = 0; k < shellCount; k++) {
-      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(k));
+      nsCOMPtr<nsIPresShell> shell;
+      document->GetShellAt(k, getter_AddRefs(shell));
       if (shell) {
         nsCOMPtr<nsIStyleSet> styleSet;
         rv = shell->GetStyleSet(getter_AddRefs(styleSet));
@@ -1255,12 +1256,14 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
     rv = container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
     if (NS_FAILED(rv)) return rv;
 
-    PRInt32 count = document->GetNumberOfStyleSheets();
+    PRInt32 count = 0;
+    document->GetNumberOfStyleSheets(&count);
   
     // Iterate over the style sheets.
     for (PRInt32 i = 0; i < count; i++) {
       // Get the style sheet
-      nsCOMPtr<nsIStyleSheet> styleSheet = getter_AddRefs(document->GetStyleSheetAt(i));
+      nsCOMPtr<nsIStyleSheet> styleSheet;
+      document->GetStyleSheetAt(i, getter_AddRefs(styleSheet));
     
       // Make sure we aren't the special style sheets that never change.  We
       // want to skip those.
@@ -2758,7 +2761,8 @@ nsChromeRegistry::GetBackstopSheets(nsIDocShell* aDocShell, nsISupportsArray **a
           nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
           nsCOMPtr<nsIDocument> doc;
           content->GetDocument(*getter_AddRefs(doc));
-          nsCOMPtr<nsIURI> docURL = getter_AddRefs(doc->GetDocumentURL());
+          nsCOMPtr<nsIURI> docURL;
+          doc->GetDocumentURL(getter_AddRefs(docURL));
           nsCOMPtr<nsIURI> url;
           rv = NS_NewURI(getter_AddRefs(url), token, docURL);
 

@@ -1566,7 +1566,8 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   }
   nsCOMPtr<nsIEventStateManager> esm;
   presContext->GetEventStateManager(getter_AddRefs(esm));
-  nsCOMPtr<nsIContent>rootContent(getter_AddRefs(doc->GetRootContent()));
+  nsCOMPtr<nsIContent> rootContent;
+  doc->GetRootContent(getter_AddRefs(rootContent));
 
   printf("DS %p  Ty %s  Doc %p DW %p EM %p CN %p\n",  
     parentAsDocShell.get(), 
@@ -2685,7 +2686,8 @@ nsDocShell::SetFocus()
   GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
     presContext->GetEventStateManager(getter_AddRefs(esm));
-    nsCOMPtr<nsIContent> rootContent(getter_AddRefs(document->GetRootContent()));
+    nsCOMPtr<nsIContent> rootContent;
+    document->GetRootContent(getter_AddRefs(rootContent));
     if (esm && rootContent) {
       // Either focus the document or the "first" piece of content
       if (doFocusDoc) {
@@ -2784,7 +2786,8 @@ nsDocShell::FocusNextChild(nsIBaseWindow * aCurrentFocus, PRBool aForward)
       nsIEventStateManager::eDocType docType;
       if (NS_FAILED(esm->FigureOutKindOfDoc(document, &docType))) return PR_FALSE;
 
-      nsCOMPtr<nsIContent> rootContent = getter_AddRefs(document->GetRootContent());
+      nsCOMPtr<nsIContent> rootContent;
+      document->GetRootContent(getter_AddRefs(rootContent));
       if (!rootContent) return PR_FALSE;
 
       PRBool hasTabIndexes;
@@ -5871,7 +5874,8 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
   presShell->GetDocument(getter_AddRefs(doc));
   if (!doc) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> rootContent = getter_AddRefs(doc->GetRootContent());
+  nsCOMPtr<nsIContent> rootContent;
+  doc->GetRootContent(getter_AddRefs(rootContent));
   if (!rootContent) return NS_ERROR_FAILURE;
 
   nsIFrame* frame;

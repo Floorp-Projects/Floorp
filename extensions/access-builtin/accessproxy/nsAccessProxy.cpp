@@ -128,7 +128,7 @@ nsresult nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
   if (domDoc) {
     doc = do_QueryInterface(domDoc);
     if (doc && doc->GetNumberOfShells()>0)
-      presShell= dont_AddRef(doc->GetShellAt(0));
+      doc->GetShellAt(0, getter_AddRefs(presShell));
     }
   //return  NS_OK;
   /*

@@ -85,7 +85,7 @@ public:
   // All documents have a memory arena associated with them which is
   // used for memory allocation during document creation. This call
   // returns the arena associated with this document.
-  virtual nsIArena* GetArena() = 0;
+  NS_IMETHOD GetArena(nsIArena** aArena) = 0;
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
@@ -104,7 +104,7 @@ public:
   /**
    * Return the URL for the document. May return null.
    */
-  virtual nsIURI* GetDocumentURL() const = 0;
+  NS_IMETHOD GetDocumentURL(nsIURI** aURL) const = 0;
 
   /**
    * Return the principal responsible for this document.
@@ -201,23 +201,23 @@ public:
                          nsIPresShell** aInstancePtrResult) = 0;
   virtual PRBool DeleteShell(nsIPresShell* aShell) = 0;
   virtual PRInt32 GetNumberOfShells() = 0;
-  virtual nsIPresShell* GetShellAt(PRInt32 aIndex) = 0;
+  NS_IMETHOD GetShellAt(PRInt32 aIndex, nsIPresShell** aShell) = 0;
 
   /**
    * Return the parent document of this document. Will return null
    * unless this document is within a compound document and has a parent.
    */
-  virtual nsIDocument* GetParentDocument() = 0;
-  virtual void SetParentDocument(nsIDocument* aParent) = 0;
-  virtual void AddSubDocument(nsIDocument* aSubDoc) = 0;
-  virtual PRInt32 GetNumberOfSubDocuments() = 0;
-  virtual nsIDocument* GetSubDocumentAt(PRInt32 aIndex) = 0;
+  NS_IMETHOD GetParentDocument(nsIDocument** aParent) = 0;
+  NS_IMETHOD SetParentDocument(nsIDocument* aParent) = 0;
+  NS_IMETHOD AddSubDocument(nsIDocument* aSubDoc) = 0;
+  NS_IMETHOD GetNumberOfSubDocuments(PRInt32* aCount) = 0;
+  NS_IMETHOD GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc) = 0;
 
   /**
    * Return the root content object for this document.
    */
-  virtual nsIContent* GetRootContent() = 0;
-  virtual void SetRootContent(nsIContent* aRoot) = 0;
+  NS_IMETHOD GetRootContent(nsIContent** aRoot) = 0;
+  NS_IMETHOD SetRootContent(nsIContent* aRoot) = 0;
 
   /** 
    * Get the direct children of the document - content in
@@ -231,9 +231,9 @@ public:
    * Get the style sheets owned by this document.
    * Style sheets are ordered, most significant last.
    */
-  virtual PRInt32 GetNumberOfStyleSheets() = 0;
-  virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex) = 0;
-  virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet) = 0;
+  NS_IMETHOD GetNumberOfStyleSheets(PRInt32* aCount) = 0;
+  NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet) = 0;
+  NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex) = 0;
   virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet) = 0;
   NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets) = 0;

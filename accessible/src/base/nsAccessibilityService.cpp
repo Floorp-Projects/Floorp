@@ -322,10 +322,7 @@ NS_IMETHODIMP nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aR
   NS_ASSERTION(shells > 0,"Error no shells!");
 #endif
 
-  *aShell = document->GetShellAt(0);
-  NS_IF_ADDREF(*aShell);
-
-  return NS_OK;
+  return document->GetShellAt(0, aShell);
 }
 
 NS_IMETHODIMP 
@@ -347,7 +344,8 @@ nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* node, nsISupports
 
   nsCOMPtr<nsIDocument> doc;
   if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc))) && doc) {
-    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+    nsCOMPtr<nsIPresShell> presShell;
+    doc->GetShellAt(0, getter_AddRefs(presShell));
     if (presShell) {
       nsCOMPtr<nsISupports> supps;
       presShell->GetSubShellFor(content, getter_AddRefs(supps));

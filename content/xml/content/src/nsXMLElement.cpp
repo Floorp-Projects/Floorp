@@ -243,7 +243,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
       nsCOMPtr<nsIURI> docBase;
       mDocument->GetBaseURL(*getter_AddRefs(docBase));
       if (!docBase) {
-        docBase = dont_AddRef(mDocument->GetDocumentURL());
+        mDocument->GetDocumentURL(getter_AddRefs(docBase));
       }
       if (base.IsEmpty()) {
         *aURI = docBase.get();    
@@ -595,7 +595,8 @@ nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
                                   "nsXMLElement::mScriptObject");
 
       // See if we have a frame.  
-      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+      nsCOMPtr<nsIPresShell> shell;
+      mDocument->GetShellAt(0, getter_AddRefs(shell));
       if (shell) {
         nsIFrame* frame;
         shell->GetPrimaryFrameFor(this, &frame);

@@ -124,7 +124,8 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
         if (!m_pPrincipal && m_pJSCX ) {
             nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(m_pJSCX);
             if (scriptContext) {
-                nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(scriptContext->GetGlobalObject()));
+                nsCOMPtr<nsIScriptGlobalObject> global;
+                scriptContext->GetGlobalObject(getter_AddRefs(global));
                 NS_ASSERTION(global, "script context has no global object");
 
                 if (global) {

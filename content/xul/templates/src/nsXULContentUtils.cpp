@@ -289,7 +289,8 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
         rv = aElement->GetDocument(*getter_AddRefs(doc));
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIURI> url = dont_AddRef( doc->GetDocumentURL() );
+        nsCOMPtr<nsIURI> url;
+        doc->GetDocumentURL(getter_AddRefs(url));
         NS_ASSERTION(url != nsnull, "element has no document");
         if (! url)
             return NS_ERROR_UNEXPECTED;

@@ -983,7 +983,7 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
       
       nsCOMPtr<nsIURI> baseURI;
       if (NS_SUCCEEDED(rv) && doc) 
-        baseURI = dont_AddRef(doc->GetDocumentURL());
+        doc->GetDocumentURL(getter_AddRefs(baseURI));
       nsCOMPtr<nsIURI> absURI;
       if (NS_SUCCEEDED(rv)) 
         rv = NS_NewURI(getter_AddRefs(absURI), aURLSpec, baseURI);

@@ -361,9 +361,11 @@ inSearchOrphanImages::BuildRemoteURLHash()
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
   if (doc) {
-    PRInt32 count = doc->GetNumberOfStyleSheets();
+    PRInt32 count = 0;
+    doc->GetNumberOfStyleSheets(&count);
     for (PRInt32 i = 0; i < count; i++) {
-      nsIStyleSheet* sheet = doc->GetStyleSheetAt(i);
+      nsCOMPtr<nsIStyleSheet> sheet;
+      doc->GetStyleSheetAt(i, getter_AddRefs(sheet));
       HashStyleSheet(sheet);
     }
   }

@@ -86,7 +86,8 @@ NS_ScriptErrorReporter(JSContext *cx,
   // XXX this means we are not going to get error reports on non DOM contexts
   nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(context));
   if (context) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObject( dont_AddRef( context->GetGlobalObject() ) );
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    context->GetGlobalObject(getter_AddRefs(globalObject));
 
     if (globalObject) {
       nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
@@ -242,7 +243,8 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   // If we get here we're most likely executing an infinite loop in JS,
   // we'll tell the user about this and we'll give the user the option
   // of stopping the execution of the script.
-  nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(ctx->GetGlobalObject()));
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  ctx->GetGlobalObject(getter_AddRefs(global));
   NS_ENSURE_TRUE(global, JS_TRUE);
 
   nsCOMPtr<nsIDocShell> docShell;
@@ -424,7 +426,8 @@ nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
     aPrincipal->GetJSPrincipals(&jsprin);
   }
   else {
-    nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    GetGlobalObject(getter_AddRefs(global));
     if (!global)
       return NS_ERROR_FAILURE;
     nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal = do_QueryInterface(global, &rv);
@@ -540,7 +543,8 @@ nsJSContext::EvaluateString(const nsAReadableString& aScript,
     aPrincipal->GetJSPrincipals(&jsprin);
   }
   else {
-    nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    GetGlobalObject(getter_AddRefs(global));
     if (!global)
       return NS_ERROR_FAILURE;
     nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal = do_QueryInterface(global, &rv);
@@ -810,7 +814,8 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
 {
   JSPrincipals *jsprin = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  GetGlobalObject(getter_AddRefs(global));
   if (global) {
     // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
     nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
@@ -863,7 +868,8 @@ nsJSContext::CompileFunction(void* aTarget,
 {
   JSPrincipals *jsprin = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> global = getter_AddRefs(GetGlobalObject());
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  GetGlobalObject(getter_AddRefs(global));
   if (global) {
     // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
     nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
@@ -977,20 +983,23 @@ nsJSContext::SetDefaultLanguageVersion(const char* aVersion)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsIScriptGlobalObject*)
-nsJSContext::GetGlobalObject()
+NS_IMETHODIMP
+nsJSContext::GetGlobalObject(nsIScriptGlobalObject** aGlobalObject)
 {
   JSObject *global = ::JS_GetGlobalObject(mContext);
+  *aGlobalObject = nsnull;
 
   if (!global) {
-    return nsnull;
+    NS_WARNING("Context has no global.");
+    return NS_OK;
   }
 
   JSClass *c = JS_GET_CLASS(mContext, global);
 
   if (!c || ((~c->flags) & (JSCLASS_HAS_PRIVATE |
                             JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
-    return nsnull;
+    NS_WARNING("Global is not an nsISupports.");
+    return NS_OK;
   }
 
   nsCOMPtr<nsISupports> native =
@@ -1006,17 +1015,16 @@ nsJSContext::GetGlobalObject()
     wrapped_native->GetNative(getter_AddRefs(native));
   }
 
-  nsIScriptGlobalObject *script_global = nsnull;
-
-  if (native) {
-    // We have private data (either directly from ::JS_GetPrivate() or
-    // through wrapped_native->GetNative()), check if it's a
-    // nsIScriptGlobalObject
-
-    CallQueryInterface(native, &script_global);
+  if (!native) {
+    NS_WARNING("XPConnect wrapped native doesn't wrap anything.");
+    return NS_OK;
   }
 
-  return script_global;
+  // We have private data (either directly from ::JS_GetPrivate() or
+  // through wrapped_native->GetNative()), check if it's a
+  // nsIScriptGlobalObject
+
+  return CallQueryInterface(native, aGlobalObject);
 }
 
 NS_IMETHODIMP_(void*)

@@ -89,7 +89,7 @@ public:
                                    void** aFunctionObject);
 
   NS_IMETHOD SetDefaultLanguageVersion(const char* aVersion);
-  NS_IMETHOD_(nsIScriptGlobalObject*) GetGlobalObject();
+  NS_IMETHOD GetGlobalObject(nsIScriptGlobalObject** aGlobalObject);
   NS_IMETHOD_(void *) GetNativeContext();
   NS_IMETHOD InitContext(nsIScriptGlobalObject *aGlobalObject);
   NS_IMETHOD IsContextInitialized();

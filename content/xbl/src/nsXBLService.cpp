@@ -136,7 +136,8 @@ public:
     if (parent)
       parent->IndexOf(mBoundElement, index);
         
-    nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+    nsCOMPtr<nsIPresShell> shell;
+    doc->GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
       nsIFrame* childFrame;
       shell->GetPrimaryFrameFor(mBoundElement, &childFrame);
@@ -359,12 +360,14 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     // Remove ourselves from the set of pending docs.
     nsCOMPtr<nsIBindingManager> bindingManager;
     doc->GetBindingManager(getter_AddRefs(bindingManager));
-    nsCOMPtr<nsIURI> uri(getter_AddRefs(mBindingDocument->GetDocumentURL()));
+    nsCOMPtr<nsIURI> uri;
+    mBindingDocument->GetDocumentURL(getter_AddRefs(uri));
     nsXPIDLCString str;
     uri->GetSpec(getter_Copies(str));
     bindingManager->RemoveLoadingDocListener(nsCAutoString(NS_STATIC_CAST(const char*, str)));
 
-    nsCOMPtr<nsIContent> root = getter_AddRefs(mBindingDocument->GetRootContent());
+    nsCOMPtr<nsIContent> root;
+    mBindingDocument->GetRootContent(getter_AddRefs(root));
     if (root)
       nsXBLService::StripWhitespaceNodes(root);
     else {
@@ -949,7 +952,8 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
     // We have a doc. Obtain our specific binding element.
     // Walk the children looking for the binding that matches the ref
     // specified in the URL.
-    nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
+    nsCOMPtr<nsIContent> root;
+    doc->GetRootContent(getter_AddRefs(root));
     if (!root)
       return NS_ERROR_FAILURE;
 
@@ -1328,7 +1332,8 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   // It generates text nodes even for whitespace.  The following
   // call walks the generated document tree and trims out these
   // nodes.
-  nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
+  nsCOMPtr<nsIContent> root;
+  doc->GetRootContent(getter_AddRefs(root));
   if (root)
     StripWhitespaceNodes(root);
 

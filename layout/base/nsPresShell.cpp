@@ -1793,12 +1793,14 @@ NS_IMETHODIMP
 PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 {
   if (mDocument && mStyleSet) {
-    PRInt32 count = mDocument->GetNumberOfStyleSheets();
+    PRInt32 count = 0;
+    mDocument->GetNumberOfStyleSheets(&count);
     PRInt32 index;
     nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
     for (index = 0; index < count; index++) {
-      nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
-      if (nsnull != sheet) {
+      nsCOMPtr<nsIStyleSheet> sheet;
+      mDocument->GetStyleSheetAt(index, getter_AddRefs(sheet));
+      if (sheet) {
         nsAutoString type;
         sheet->GetType(type);
         if (PR_FALSE == type.Equals(textHtml)) {
@@ -1813,7 +1815,6 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
             }
           }
         }
-        NS_RELEASE(sheet);
       }
     }
     ReconstructFrames();
@@ -1825,12 +1826,14 @@ NS_IMETHODIMP
 PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
 {
   if (mDocument) {
-    PRInt32 count = mDocument->GetNumberOfStyleSheets();
+    PRInt32 count = 0;
+    mDocument->GetNumberOfStyleSheets(&count);
     PRInt32 index;
     nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
     for (index = 0; index < count; index++) {
-      nsIStyleSheet* sheet = mDocument->GetStyleSheetAt(index);
-      if (nsnull != sheet) {
+      nsCOMPtr<nsIStyleSheet> sheet;
+      mDocument->GetStyleSheetAt(index, getter_AddRefs(sheet));
+      if (sheet) {
         nsAutoString type;
         sheet->GetType(type);
         if (PR_FALSE == type.Equals(textHtml)) {
@@ -1842,7 +1845,6 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
             }
           }
         }
-        NS_RELEASE(sheet);
       }
     }
   }
@@ -2490,13 +2492,13 @@ GetRootScrollFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame, nsIFrame*
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
-  nsIContent* root = nsnull;
+  nsCOMPtr<nsIContent> root;
 
 #ifdef NS_DEBUG
   if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
     nsCOMPtr<nsIURI> uri;
     if (mDocument) {
-      uri = dont_AddRef(mDocument->GetDocumentURL());
+      mDocument->GetDocumentURL(getter_AddRefs(uri));
       if (uri) {
         char* url = nsnull;
         uri->GetSpec(&url);
@@ -2520,14 +2522,14 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (mDocument) {
-    root = mDocument->GetRootContent();
+    mDocument->GetRootContent(getter_AddRefs(root));
   }
 
   // Get the root frame from the frame manager
   nsIFrame* rootFrame;
   mFrameManager->GetRootFrame(&rootFrame);
   
-  if (nsnull != root) {
+  if (root) {
     MOZ_TIMER_DEBUGLOG(("Reset and start: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
     MOZ_TIMER_RESET(mFrameCreationWatch);
     MOZ_TIMER_START(mFrameCreationWatch);
@@ -2543,7 +2545,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     // Have the style sheet processor construct frame for the root
     // content object down
     mStyleSet->ContentInserted(mPresContext, nsnull, root, 0);
-    NS_RELEASE(root);
     VERIFY_STYLE_TREE;
     MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
     MOZ_TIMER_STOP(mFrameCreationWatch);
@@ -3448,7 +3449,7 @@ PresShell::AppendReflowCommandInternal(nsIReflowCommand* aReflowCommand,
     if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
       printf("Current content model:\n");
       nsCOMPtr<nsIContent> rootContent;
-      rootContent = getter_AddRefs(mDocument->GetRootContent());
+      mDocument->GetRootContent(getter_AddRefs(rootContent));
       if (rootContent) {
         rootContent->List(stdout, 0);
       }
@@ -5396,7 +5397,7 @@ PresShell::HandleEvent(nsIView         *aView,
                 // On the Mac it is possible to be running with no windows open, only the native menu bar.
                 // In this situation, we need to handle key board events but there are no frames, so
                 // we set mCurrentEventContent and that works itself out in HandleEventInternal.
-                mCurrentEventContent = mDocument->GetRootContent();
+                mDocument->GetRootContent(&mCurrentEventContent);
                 mCurrentEventFrame = nsnull;
 /*#else
 								if (aForceHandle) {
@@ -6746,10 +6747,10 @@ PresShell::DumpReflows()
   if (mReflowCountMgr) {
     char * uriStr = nsnull;
     if (mDocument) {
-      nsIURI * uri = mDocument->GetDocumentURL();
+      nsCOMPtr<nsIURI> uri;
+      mDocument->GetDocumentURL(getter_AddRefs(uri));
       if (uri) {
         uri->GetPath(&uriStr);
-        NS_RELEASE(uri);
       }
     }
     mReflowCountMgr->DisplayTotals(uriStr);

@@ -124,7 +124,8 @@ nsBoxObject::SetDocument(nsIDocument* aDocument)
 {
   mPresState = nsnull;
   if (aDocument) {
-    nsCOMPtr<nsIPresShell> shell = getter_AddRefs(aDocument->GetShellAt(0));
+    nsCOMPtr<nsIPresShell> shell;
+    aDocument->GetShellAt(0, getter_AddRefs(shell));
     mPresShell = shell;
   }
   else {
@@ -155,7 +156,8 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 
   if (doc) {
     // Get Presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+    nsCOMPtr<nsIPresShell> presShell;
+    doc->GetShellAt(0, getter_AddRefs(presShell));
 
     if(presShell) {
       // Flush all pending notifications so that our frames are uptodate
@@ -182,7 +184,8 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 
         // Find the frame parent whose content's tagName either matches 
         // the tagName passed in or is the document element.
-        nsCOMPtr<nsIContent> docElement = getter_AddRefs(doc->GetRootContent());
+        nsCOMPtr<nsIContent> docElement;
+        doc->GetRootContent(getter_AddRefs(docElement));
         nsIFrame* parent = frame;
         nsCOMPtr<nsIContent> parentContent;
         frame->GetParent(&parent);
@@ -264,7 +267,8 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
 
   if (doc) {
     // Get Presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+    nsCOMPtr<nsIPresShell> presShell;
+    doc->GetShellAt(0, getter_AddRefs(presShell));
     
     if (presShell) {
       // Flush all pending notifications so that our frames are uptodate

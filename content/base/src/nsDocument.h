@@ -212,7 +212,7 @@ class nsDocument : public nsIDocument,
 public:
   NS_DECL_ISUPPORTS
 
-  virtual nsIArena* GetArena();
+  NS_IMETHOD GetArena(nsIArena** aArena);
 
   NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
@@ -233,7 +233,7 @@ public:
   /**
    * Return the URL for the document. May return null.
    */
-  virtual nsIURI* GetDocumentURL() const;
+  NS_IMETHOD GetDocumentURL(nsIURI** aURI) const;
 
   /**
    * Return the principal responsible for this document.
@@ -328,23 +328,23 @@ public:
 #endif
   virtual PRBool DeleteShell(nsIPresShell* aShell);
   virtual PRInt32 GetNumberOfShells();
-  virtual nsIPresShell* GetShellAt(PRInt32 aIndex);
+  NS_IMETHOD GetShellAt(PRInt32 aIndex, nsIPresShell** aShell);
 
   /**
    * Return the parent document of this document. Will return null
    * unless this document is within a compound document and has a parent.
    */
-  virtual nsIDocument* GetParentDocument();
-  virtual void SetParentDocument(nsIDocument* aParent);
-  virtual void AddSubDocument(nsIDocument* aSubDoc);
-  virtual PRInt32 GetNumberOfSubDocuments();
-  virtual nsIDocument* GetSubDocumentAt(PRInt32 aIndex);
+  NS_IMETHOD GetParentDocument(nsIDocument** aParent);
+  NS_IMETHOD SetParentDocument(nsIDocument* aParent);
+  NS_IMETHOD AddSubDocument(nsIDocument* aSubDoc);
+  NS_IMETHOD GetNumberOfSubDocuments(PRInt32* aCount);
+  NS_IMETHOD GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc);
 
   /**
    * Return the root content object for this document.
    */
-  virtual nsIContent* GetRootContent();
-  virtual void SetRootContent(nsIContent* aRoot);
+  NS_IMETHOD GetRootContent(nsIContent** aRoot);
+  NS_IMETHOD SetRootContent(nsIContent* aRoot);
 
   /** 
    * Get the direct children of the document - content in
@@ -358,9 +358,9 @@ public:
    * Get the style sheets owned by this document.
    * These are ordered, highest priority last
    */
-  virtual PRInt32 GetNumberOfStyleSheets();
-  virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
-  virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet);
+  NS_IMETHOD GetNumberOfStyleSheets(PRInt32* aCount);
+  NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet);
+  NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex);
   virtual void AddStyleSheet(nsIStyleSheet* aSheet);
   virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);
   

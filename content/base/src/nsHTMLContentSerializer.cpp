@@ -283,7 +283,8 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         nsCOMPtr<nsIDocument> document;
         aContent->GetDocument(*getter_AddRefs(document));
         if (document) {
-          nsCOMPtr<nsIURI> uri = dont_AddRef(document->GetDocumentURL());
+          nsCOMPtr<nsIURI> uri;
+          document->GetDocumentURL(getter_AddRefs(uri));
           if (uri) {
             nsAutoString absURI;
             rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);

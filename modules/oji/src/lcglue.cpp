@@ -432,7 +432,8 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
         if (pJSCX) {
             nsCOMPtr<nsIScriptContext> scriptContext = NS_REINTERPRET_CAST(nsIScriptContext*, JS_GetContextPrivate(pJSCX));
             if (scriptContext) {
-                nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(scriptContext->GetGlobalObject()));
+                nsCOMPtr<nsIScriptGlobalObject> global;
+                scriptContext->GetGlobalObject(getter_AddRefs(global));
                 NS_ASSERTION(global, "script context has no global object");
 
                 if (global) {

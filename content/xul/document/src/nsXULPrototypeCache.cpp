@@ -250,7 +250,8 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   nsCOMPtr<nsIDocument> doc;
   aDocumentInfo->GetDocument(getter_AddRefs(doc));
 
-  nsCOMPtr<nsIURI> uri(getter_AddRefs(doc->GetDocumentURL()));
+  nsCOMPtr<nsIURI> uri;
+  doc->GetDocumentURL(getter_AddRefs(uri));
 
   nsXPIDLCString str;
   uri->GetSpec(getter_Copies(str));

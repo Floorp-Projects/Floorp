@@ -830,7 +830,7 @@ LocationImpl::GetSourceURL(JSContext* cx, nsIURI** sourceURI)
           result = doc->GetBaseURL(*sourceURI);
 
           if (!*sourceURI) {
-            *sourceURI = doc->GetDocumentURL();
+            doc->GetDocumentURL(sourceURI);
           }
         }
       }

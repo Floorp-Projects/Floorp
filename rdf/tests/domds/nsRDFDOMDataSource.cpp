@@ -859,7 +859,8 @@ nsRDFDOMDataSource::getTargetsForKnownObject(nsISupports *object,
   nsCOMPtr<nsIDOMDocument> document =
     do_QueryInterface(object, &rv);
   if (NS_SUCCEEDED(rv)) {
-    //    nsIContent *content = document->GetRootContent();
+    //    nsIContent *content;
+    //    document->GetRootContent(&content);
     //    if (content) {
     //      rv = createContentArcs(content, arcs);
     //      NS_RELEASE(content);

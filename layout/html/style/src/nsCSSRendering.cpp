@@ -1421,8 +1421,8 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
   if (shell) {
     nsIDocument *doc = nsnull;
     if (NS_SUCCEEDED(shell->GetDocument(&doc)) && doc) {
-      nsIContent *pContent = doc->GetRootContent();
-      if (pContent) {
+      nsIContent *pContent;
+      if (NS_SUCCEEDED(doc->GetRootContent(&pContent)) && pContent) {
         // make sure that this is the HTML element
         nsIAtom *tag = nsnull;
         pContent->GetTag(tag);

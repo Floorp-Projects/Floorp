@@ -668,7 +668,8 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
 
         if (doc) { 
-          nsCOMPtr<nsIURI> uri(dont_AddRef(doc->GetDocumentURL()));
+          nsCOMPtr<nsIURI> uri;
+          doc->GetDocumentURL(getter_AddRefs(uri));
 
           // Set the referrer
           loadInfo->SetReferrer(uri);
@@ -970,7 +971,8 @@ nsWindowWatcher::URIfromURL(const char *aURL,
     nsISupports *cxsup = (nsISupports *) JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptContext> scriptcx(do_QueryInterface(cxsup));
     if (scriptcx) {
-      nsCOMPtr<nsIScriptGlobalObject> gobj(dont_AddRef(scriptcx->GetGlobalObject()));
+      nsCOMPtr<nsIScriptGlobalObject> gobj;
+      scriptcx->GetGlobalObject(getter_AddRefs(gobj));
       baseWindow = do_QueryInterface(gobj);
     }
   }
@@ -991,7 +993,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
       nsCOMPtr<nsIDocument> doc;
       doc = do_QueryInterface(domDoc);
       if (doc)
-        baseURI = dont_AddRef(doc->GetDocumentURL());
+        doc->GetDocumentURL(getter_AddRefs(baseURI));
     }
   }
 

@@ -2001,7 +2001,8 @@ DocumentViewerImpl::IsParentAFrameSet(nsIWebShell * aParent)
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      nsCOMPtr<nsIContent> rootContent = getter_AddRefs(doc->GetRootContent());
+      nsCOMPtr<nsIContent> rootContent;
+      doc->GetRootContent(getter_AddRefs(rootContent));
       if (rootContent) {
         if (NS_SUCCEEDED(FindFrameSetWithIID(rootContent, NS_GET_IID(nsIDOMHTMLFrameSetElement)))) {
           isFrameSet = PR_TRUE;
@@ -2059,7 +2060,8 @@ DocumentViewerImpl::GetWebShellTitleAndURL(nsIWebShell * aWebShell,
           }
         }
 
-        nsCOMPtr<nsIURI> url(getter_AddRefs(doc->GetDocumentURL()));
+        nsCOMPtr<nsIURI> url;
+        doc->GetDocumentURL(getter_AddRefs(url));
         if (url) {
           char * urlCStr;
           url->GetSpec(&urlCStr);
@@ -2576,7 +2578,7 @@ DocumentViewerImpl::GetPresShellAndRootContent(nsIWebShell *  aWebShell,
   presShell->GetDocument(getter_AddRefs(doc));
   if (!doc) return;
 
-  *aContent   = doc->GetRootContent(); // this addrefs
+  doc->GetRootContent(aContent); // this addrefs
   *aPresShell = presShell.get();
   NS_ADDREF(*aPresShell);
 }
@@ -3702,10 +3704,12 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 
   rv = nsComponentManager::CreateInstance(kStyleSetCID,nsnull,NS_GET_IID(nsIStyleSet),(void**)aStyleSet);
   if (NS_OK == rv) {
-    PRInt32 index = aDocument->GetNumberOfStyleSheets();
+    PRInt32 index = 0;
+    aDocument->GetNumberOfStyleSheets(&index);
 
     while (0 < index--) {
-      nsCOMPtr<nsIStyleSheet> sheet(getter_AddRefs(aDocument->GetStyleSheetAt(index)));
+      nsCOMPtr<nsIStyleSheet> sheet;
+      aDocument->GetStyleSheetAt(index, getter_AddRefs(sheet));
 
       /*
        * GetStyleSheetAt will return all style sheets in the document but
@@ -3986,7 +3990,8 @@ NS_IMETHODIMP DocumentViewerImpl::SelectAll()
   }
   else if (mDocument)
   {
-    nsCOMPtr<nsIContent> rootContent = getter_AddRefs(mDocument->GetRootContent());
+    nsCOMPtr<nsIContent> rootContent;
+    mDocument->GetRootContent(getter_AddRefs(rootContent));
     bodyNode = do_QueryInterface(rootContent);
   }
   if (!bodyNode) return NS_ERROR_FAILURE; 

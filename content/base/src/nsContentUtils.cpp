@@ -121,13 +121,13 @@ nsresult
 nsContentUtils::GetDynamicScriptGlobal(JSContext* aContext,
                                       nsIScriptGlobalObject** aNativeGlobal)
 {
-  nsIScriptGlobalObject* nativeGlobal = nsnull;
   nsCOMPtr<nsIScriptContext> scriptCX;
   GetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
-  if (scriptCX) {
-    *aNativeGlobal = nativeGlobal = scriptCX->GetGlobalObject();
+  if (!scriptCX) {
+    *aNativeGlobal = nsnull;
+    return NS_ERROR_FAILURE;
   }
-  return nativeGlobal ? NS_OK : NS_ERROR_FAILURE;
+  return scriptCX->GetGlobalObject(aNativeGlobal);
 }  
 
 //static
@@ -451,7 +451,8 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   nsCOMPtr<nsISupports> new_parent;
 
   if (!aNewParent) {
-    nsCOMPtr<nsIContent> root(dont_AddRef(old_doc->GetRootContent()));
+    nsCOMPtr<nsIContent> root;
+    old_doc->GetRootContent(getter_AddRefs(root));
 
     if (root.get() == aContent) {
       new_parent = old_doc;

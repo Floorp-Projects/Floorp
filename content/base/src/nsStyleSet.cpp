@@ -521,14 +521,16 @@ void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocumen
   if (EnsureArray(&mDocSheets)) {
     mDocSheets->RemoveElement(aSheet);
     // lowest index last
-    PRInt32 newDocIndex = aDocument->GetIndexOfStyleSheet(aSheet);
+    PRInt32 newDocIndex = 0;
+    aDocument->GetIndexOfStyleSheet(aSheet, &newDocIndex);
     PRUint32 count;
     nsresult rv = mDocSheets->Count(&count);
     if (NS_FAILED(rv)) return;  // XXX error?
     PRUint32 index;
     for (index = 0; index < count; index++) {
       nsIStyleSheet* sheet = (nsIStyleSheet*)mDocSheets->ElementAt(index);
-      PRInt32 sheetDocIndex = aDocument->GetIndexOfStyleSheet(sheet);
+      PRInt32 sheetDocIndex = 0;
+      aDocument->GetIndexOfStyleSheet(sheet, &sheetDocIndex);
       if (sheetDocIndex < newDocIndex) {
         mDocSheets->InsertElementAt(aSheet, index);
         index = count; // break loop

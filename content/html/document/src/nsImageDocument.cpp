@@ -277,7 +277,8 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
   // so that we can pass it back upwards.
 
 
-  nsIPresShell* shell = GetShellAt(0);
+  nsCOMPtr<nsIPresShell> shell;
+  GetShellAt(0, getter_AddRefs(shell));
   if (nsnull != shell) {
     nsCOMPtr<nsIPresContext> cx;
     shell->GetPresContext(getter_AddRefs(cx));
@@ -301,7 +302,6 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
         NS_RELEASE(group);
       }
     }
-    NS_RELEASE(shell);
   }
   
   // Finally, start the layout going
@@ -401,7 +401,8 @@ nsImageDocument::StartLayout()
 
   PRInt32 i, ns = GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = GetShellAt(i);
+    nsCOMPtr<nsIPresShell> shell;
+    GetShellAt(i, getter_AddRefs(shell));
     if (nsnull != shell) {
       // Make shell an observer for next time
       shell->BeginObservingDocument();
@@ -421,7 +422,6 @@ nsImageDocument::StartLayout()
         vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       }
 
-      NS_RELEASE(shell);
     }
   }
 }

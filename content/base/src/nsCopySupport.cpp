@@ -92,7 +92,8 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
   
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
   if (doc) {
-    nsCOMPtr<nsIPresShell> shell(dont_AddRef(doc->GetShellAt(0)));
+    nsCOMPtr<nsIPresShell> shell;
+    doc->GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
       nsCOMPtr<nsIPresContext> context;
       shell->GetPresContext(getter_AddRefs(context) );

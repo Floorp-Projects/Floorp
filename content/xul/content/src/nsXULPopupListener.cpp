@@ -390,7 +390,7 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsCOMPtr<nsIPresShell> shell;
     nsCOMPtr<nsIPresContext> context;
     nsCOMPtr<nsIDocument> tempdoc = do_QueryInterface(domDoc);
-    shell = getter_AddRefs(tempdoc->GetShellAt(0));  // Get nsIDOMElement for targetNode
+    tempdoc->GetShellAt(0, getter_AddRefs(shell));  // Get nsIDOMElement for targetNode
     shell->GetPresContext(getter_AddRefs(context));
  
     nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
