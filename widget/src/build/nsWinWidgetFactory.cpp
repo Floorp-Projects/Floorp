@@ -51,6 +51,7 @@
 #include "nsToolbarItemHolder.h"
 #include "nsAppShell.h"
 #include "nsIServiceManager.h"
+#include "nsXULCommand.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -82,6 +83,7 @@ static NS_DEFINE_IID(kCToolBarItemHolder,  NS_TOOLBARITEMHOLDER_CID);
 static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
 static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
 static NS_DEFINE_IID(kCTreeView, NS_TREEVIEW_CID);
+static NS_DEFINE_IID(kCXULCommand, NS_XULCOMMAND_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -227,6 +229,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCMenuItem)) {
         inst = (nsISupports*)(nsIMenuItem*)new nsMenuItem();
+    }
+    else if (mClassID.Equals(kCXULCommand)) {
+        inst = (nsISupports*)(nsIXULCommand*) new nsXULCommand();
     }
     else if (mClassID.Equals(kCImageButton)) {
         inst = (nsISupports*)(nsWindow*)new nsImageButton();

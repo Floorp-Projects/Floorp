@@ -22,7 +22,7 @@ LIBRARY_NAME = raptorbasewidget_s
 REQUIRES=xpcom gfxwin raptor dom js
 DEFINES =-D_IMPL_NS_WIDGET
 
-CPPSRCS =              \
+CPPSRCS =nsXULCommand.cpp     \
 	nsBaseWidget.cpp      \
 	nsMenuButton.cpp        \
 	nsToolbarItemHolder.cpp           \
