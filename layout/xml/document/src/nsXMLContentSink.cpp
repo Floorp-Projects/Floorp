@@ -70,11 +70,8 @@
 #include "prmem.h"
 #ifdef MOZ_XSL
 #include "nsXSLContentSink.h"
-#include "nsIDOMElement.h"
-#include "nsISupports.h"
 #include "nsParserCIID.h"
-#include "nsIIOService.h"
-#include "nsIServiceManager.h"
+#include "nsIDocumentViewer.h"
 #endif
 
 // XXX misnamed header file, but oh well
@@ -88,21 +85,10 @@ static char kStyleSheetPI[] = "xml-stylesheet";
 static char kXSLType[] = "text/xsl";
 #endif
 
-static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 
-static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
-static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
-static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
-static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIDOMCDATASectionIID, NS_IDOMCDATASECTION_IID);
 #ifdef MOZ_XSL
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 #endif
 
 nsINameSpaceManager* nsXMLContentSink::gNameSpaceManager = nsnull;
@@ -142,7 +128,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
     delete it;
     return rv;
   }
-  return it->QueryInterface(kIXMLContentSinkIID, (void **)aResult);
+  return it->QueryInterface(NS_GET_IID(nsIXMLContentSink), (void **)aResult);
 }
 
 nsXMLContentSink::nsXMLContentSink()
@@ -204,9 +190,6 @@ nsXMLContentSink::~nsXMLContentSink()
     PR_FREEIF(mText);
   }
   NS_IF_RELEASE(mCSSLoader);
-#ifdef MOZ_XSL
-  NS_IF_RELEASE(mXSLTransformMediator);
-#endif
 }
 
 nsresult
@@ -238,7 +221,7 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, mPreferredStyle);
 
   nsIHTMLContentContainer* htmlContainer = nsnull;
-  if (NS_SUCCEEDED(aDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
+  if (NS_SUCCEEDED(aDoc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer))) {
     htmlContainer->GetCSSLoader(mCSSLoader);
     NS_RELEASE(htmlContainer);
   }
@@ -294,8 +277,11 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     }
   }
 
+  mDocument->SetRootContent(mDocElement);
+
 #ifndef MOZ_XSL
-  StartLayoutProcess();
+  StartLayout();
+  mDocument->EndLoad();
 #else
   nsresult rv;
   if (mXSLTransformMediator) {
@@ -303,8 +289,8 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   }
 
   if (!mXSLTransformMediator || NS_FAILED(rv)) {
-    mDocument->SetRootContent(mDocElement);
-    StartLayoutProcess();
+    StartLayout();
+    mDocument->EndLoad();
   }
 #endif
 
@@ -315,40 +301,61 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   return NS_OK;
 }
 
-void
-nsXMLContentSink::StartLayoutProcess()
-{
-  StartLayout();
-
-  // XXX Should scroll to ref when that makes sense
-  // ScrollToRef();
-
-  mDocument->EndLoad();
-}
-
 #ifdef MOZ_XSL
 // The observe method is called on completion of the transform.  The nsISupports argument is an
 // nsIDOMElement interface to the root node of the output content model.
 NS_IMETHODIMP
 nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
 {
-  nsCOMPtr<nsIContent> content;
   nsresult rv = NS_OK;
+  nsAutoString topic(aTopic);
 
-  // Set the output content model on the document
-  content = do_QueryInterface(aSubject, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    mDocument->SetRootContent(content);    
+  if (topic.Equals(NS_LITERAL_STRING("xslt-done"))) {
+    nsCOMPtr<nsIContent> content;
+
+    // Set the output content model on the document
+    content = do_QueryInterface(aSubject, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOMDocument> resultDOMDoc;
+      mXSLTransformMediator->GetResultDocument(getter_AddRefs(resultDOMDoc));
+      nsCOMPtr<nsIDocument> resultDoc = do_QueryInterface(resultDOMDoc);
+
+      mDocument->EndLoad();
+      NS_RELEASE(mDocument);
+
+      mDocument = resultDoc;
+      NS_ADDREF(mDocument);
+      mDocument->SetRootContent(content);
+
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+      nsCOMPtr<nsIContentViewer> contentViewer;
+      rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+      if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+        contentViewer->SetDOMDocument(resultDOMDoc);
+      }
+
+      // Reset the observer on the transform mediator
+      mXSLTransformMediator->SetTransformObserver(nsnull);
+    }
+    else
+    {
+      // Transform failed
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+      nsCOMPtr<nsIContentViewer> contentViewer;
+      rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+      if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+        nsCOMPtr<nsIDocumentViewer> documentViewer;
+        documentViewer->SetTransformMediator(nsnull);
+      }
+
+      mXSLTransformMediator = nsnull;
+      mDocument->SetRootContent(mDocElement);
+    }
+
+    // Start the layout process
+    StartLayout();
+    mDocument->EndLoad();
   }
-  else
-    mDocument->SetRootContent(mDocElement);
-
-  // Start the layout process
-  StartLayoutProcess();
-
-  // Reset the observer on the transform mediator
-  mXSLTransformMediator->SetTransformObserver(nsnull);
-
   return rv;
 }
 
@@ -363,21 +370,26 @@ nsXMLContentSink::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const 
 nsresult
 nsXMLContentSink::SetupTransformMediator()
 {
-  nsIDOMElement* source;
-  nsIDOMDocument* currentDoc;
   nsresult rv = NS_OK;
 
-  rv = mDocElement->QueryInterface(kIDOMElementIID, (void **) &source);
-  if (NS_SUCCEEDED(rv)) {
-    mXSLTransformMediator->SetSourceContentModel(source);
-    rv = mDocument->QueryInterface(kIDOMDocumentIID, (void **) &currentDoc);
-    if (NS_SUCCEEDED(rv)) {
-      mXSLTransformMediator->SetCurrentDocument(currentDoc);
-      mXSLTransformMediator->SetTransformObserver(this);
-      NS_RELEASE(currentDoc);
-    }
-    NS_RELEASE(source);
-  }
+  nsCOMPtr<nsIDOMDocument> currentDOMDoc(do_QueryInterface(mDocument));
+  mXSLTransformMediator->SetSourceContentModel(currentDOMDoc);
+
+  // Create the result document
+  nsCOMPtr<nsIDOMDocument> resultDOMDoc;
+
+  nsCOMPtr<nsIURI> url;
+  mDocument->GetBaseURL(*getter_AddRefs(url));
+
+  nsAutoString emptyStr;
+  rv = NS_NewDOMDocument(getter_AddRefs(resultDOMDoc), emptyStr, emptyStr, nsnull, url);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIXMLDocument> resultXMLDoc(do_QueryInterface(resultDOMDoc));
+  resultXMLDoc->SetDefaultStylesheets(url);
+
+  mXSLTransformMediator->SetResultDocument(resultDOMDoc);
+  mXSLTransformMediator->SetTransformObserver(this);
 
   return rv;
 }
@@ -406,161 +418,23 @@ nsXMLContentSink::SetParser(nsIParser* aParser)
 }
 
 // XXX Code copied from nsHTMLContentSink. It should be shared.
-void
-nsXMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
-                                      PRInt32 aIndex,
-                                      nsString& aResult)
-{
-  // Copy value
-  const nsString& value = aNode.GetValueAt(aIndex);
-  aResult.Truncate();
-  aResult.Append(value);
-
-  // Strip quotes if present
-  PRUnichar first = aResult.First();
-  if ((first == '\"') || (first == '\'')) {
-    if (aResult.Last() == first) {
-      aResult.Cut(0, 1);
-      PRInt32 pos = aResult.Length() - 1;
-      if (pos >= 0) {
-        aResult.Cut(pos, 1);
-      }
-    } else {
-      // Mismatched quotes - leave them in
-    }
-  }
-
-  if (mParser) {
-    nsCOMPtr<nsIDTD> dtd;
-
-    nsresult rv = mParser->GetDTD(getter_AddRefs(dtd));
-
-    if (NS_SUCCEEDED(rv)) {
-
-      // Reduce any entities
-      // XXX Note: as coded today, this will only convert well formed
-      // entities.  This may not be compatible enough.
-      // XXX there is a table in navigator that translates some numeric entities
-      // should we be doing that? If so then it needs to live in two places (bad)
-      // so we should add a translate numeric entity method from the parser...
-      char cbuf[100];
-      PRUint32 index = 0;
-      while (index < aResult.Length()) {
-        // If we have the start of an entity (and it's not at the end of
-        // our string) then translate the entity into it's unicode value.
-        if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
-          PRInt32 start = index - 1;
-          PRUnichar e = aResult.CharAt(index);
-          if (e == '#') {
-            // Convert a numeric character reference
-            index++;
-            char* cp = cbuf;
-            char* limit = cp + sizeof(cbuf) - 1;
-            PRBool ok = PR_FALSE;
-            PRUint32 slen = aResult.Length();
-            while ((index < slen) && (cp < limit)) {
-              PRUnichar ch = aResult.CharAt(index);
-              if (ch == ';') {
-                index++;
-                ok = PR_TRUE;
-                break;
-              }
-              if ((ch >= '0') && (ch <= '9')) {
-                *cp++ = char(ch);
-                index++;
-                continue;
-              }
-              break;
-            }
-            if (!ok || (cp == cbuf)) {
-              continue;
-            }
-            *cp = '\0';
-            if (cp - cbuf > 5) {
-              continue;
-            }
-            PRInt32 ch = PRInt32( ::atoi(cbuf) );
-            if (ch > 65535) {
-              continue;
-            }
-
-            // Remove entity from string and replace it with the integer
-            // value.
-            aResult.Cut(start, index - start);
-            aResult.Insert(PRUnichar(ch), start);
-            index = start + 1;
-          }
-          else if (((e >= 'A') && (e <= 'Z')) ||
-                   ((e >= 'a') && (e <= 'z'))) {
-            // Convert a named entity
-            index++;
-            char* cp = cbuf;
-            char* limit = cp + sizeof(cbuf) - 1;
-            *cp++ = char(e);
-            PRBool ok = PR_FALSE;
-            PRUint32 slen = aResult.Length();
-            while ((index < slen) && (cp < limit)) {
-              PRUnichar ch = aResult.CharAt(index);
-              if (ch == ';') {
-                index++;
-                ok = PR_TRUE;
-                break;
-              }
-              if (((ch >= '0') && (ch <= '9')) ||
-                  ((ch >= 'A') && (ch <= 'Z')) ||
-                  ((ch >= 'a') && (ch <= 'z'))) {
-                *cp++ = char(ch);
-                index++;
-                continue;
-              }
-              break;
-            }
-            if (!ok || (cp == cbuf)) {
-              continue;
-            }
-            *cp = '\0';
-            PRInt32 ch;
-            nsAutoString str; str.AssignWithConversion(cbuf);
-            dtd->ConvertEntityToUnicode(str, &ch);
-            if (ch < 0) {
-              continue;
-            }
-
-            // Remove entity from string and replace it with the integer
-            // value.
-            aResult.Cut(start, index - start);
-            aResult.Insert(PRUnichar(ch), start);
-            index = start + 1;
-          }
-          else if (e == '{') {
-            // Convert a script entity
-            // XXX write me!
-          }
-        }
-      }
-    }
-  }
-}
-
-// XXX Code copied from nsHTMLContentSink. It should be shared.
 nsresult
 nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
                                 nsIContent* aContent,
                                 PRBool aIsHTML)
 {
   // Add tag attributes to the content attributes
-  nsAutoString name, v;
+  nsAutoString name;
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
     const nsString& key = aNode.GetKeyAt(i);
-    name.Truncate();
-    name.Append(key);
+    name.Assign(key);
 
     nsCOMPtr<nsIAtom> nameSpacePrefix(dont_AddRef(CutNameSpacePrefix(name)));
     nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(name)));
     PRInt32 nameSpaceID;
-    
+
     if (nameSpacePrefix) {
         nameSpaceID = GetNameSpaceId(nameSpacePrefix);
     } else {
@@ -585,11 +459,8 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
                                   *getter_AddRefs(ni));
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
-    // Get value and remove mandatory quotes
-    GetAttributeValueAt(aNode, i, v);
-
     // Add attribute to content
-    aContent->SetAttribute(ni, v, PR_FALSE);
+    aContent->SetAttribute(ni, aNode.GetValueAt(i), PR_FALSE);
   }
 
   // Give autoloading links a chance to fire
@@ -612,7 +483,7 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
 void
 nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
 {
-  nsAutoString k, uri, prefix;
+  nsAutoString k, prefix;
   PRInt32 ac = aNode.GetAttributeCount();
   PRInt32 offset;
   nsINameSpace* nameSpace = nsnull;
@@ -634,8 +505,7 @@ nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
   if (nsnull != nameSpace) {
     for (PRInt32 i = 0; i < ac; i++) {
       const nsString& key = aNode.GetKeyAt(i);
-      k.Truncate();
-      k.Append(key);
+      k.Assign(key);
       // Look for "xmlns" at the start of the attribute name
       offset = k.Find(kNameSpaceDef);
       if (0 == offset) {
@@ -655,13 +525,10 @@ nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
           }
         }
 
-        // Get the attribute value (the URI for the namespace)
-        GetAttributeValueAt(aNode, i, uri);
-
         // Open a local namespace
         nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
         nsINameSpace* child = nsnull;
-        nameSpace->CreateChildNameSpace(prefixAtom, uri, child);
+        nameSpace->CreateChildNameSpace(prefixAtom, aNode.GetValueAt(i), child);
         if (nsnull != child) {
           NS_RELEASE(nameSpace);
           nameSpace = child;
@@ -732,7 +599,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     if (nsHTMLAtoms::script == tagAtom.get()) {
       result = ProcessStartSCRIPTTag(aNode);
     }
-    
+
     nsCOMPtr<nsIHTMLContent> htmlContent;
     result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
     content = do_QueryInterface(htmlContent);
@@ -753,7 +620,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
     else {
       nsCOMPtr<nsIXMLContent> xmlContent;
       result = NS_NewXMLElement(getter_AddRefs(xmlContent), nodeInfo);
-    
+
       content = do_QueryInterface(xmlContent);
     }
   }
@@ -776,8 +643,8 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
         // to set the root content object.  Hence, the following
         // ifndef.
 #ifdef MOZ_XSL
-				if (!mXSLTransformMediator)
-					mDocument->SetRootContent(mDocElement);		  
+        if (!mXSLTransformMediator)
+            mDocument->SetRootContent(mDocElement);
 #else
         mDocument->SetRootContent(mDocElement);
 #endif
@@ -950,7 +817,7 @@ nsXMLContentSink::AddComment(const nsIParserNode& aNode)
   text.Assign(aNode.GetText());
   result = NS_NewCommentNode(&comment);
   if (NS_OK == result) {
-    result = comment->QueryInterface(kIDOMCommentIID, (void **)&domComment);
+    result = comment->QueryInterface(NS_GET_IID(nsIDOMComment), (void **)&domComment);
     if (NS_OK == result) {
       domComment->AppendData(text);
       NS_RELEASE(domComment);
@@ -977,7 +844,7 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
   text.Assign(aNode.GetText());
   result = NS_NewXMLCDATASection(&cdata);
   if (NS_OK == result) {
-    result = cdata->QueryInterface(kIDOMCDATASectionIID, (void **)&domCDATA);
+    result = cdata->QueryInterface(NS_GET_IID(nsIDOMCDATASection), (void **)&domCDATA);
     if (NS_OK == result) {
       domCDATA->AppendData(text);
       NS_RELEASE(domCDATA);
@@ -1028,17 +895,17 @@ GetQuotedAttributeValue(nsString& aSource,
     startOfAttribute = aSource.Find(aAttribute, PR_FALSE, startOfAttribute);
     // If attribute found
     if (startOfAttribute != -1) { 
-      // Find the '=' character while skipping whitespace      
+      // Find the '=' character while skipping whitespace
       startOfValue = FindWhileSkippingWhitespace(aSource, '=', startOfAttribute + aAttribute.Length());
       // If '=' found
-      if (startOfValue != -1) {        
+      if (startOfValue != -1) {
         PRUnichar delimeter = kQuote;
         // Find the quote or apostrophe while skipping whitespace
         posnOfValueDelimeter = FindWhileSkippingWhitespace(aSource, kQuote, startOfValue + 1);
         if (posnOfValueDelimeter == -1) {
           posnOfValueDelimeter = FindWhileSkippingWhitespace(aSource, kApostrophe, startOfValue + 1);
           delimeter = kApostrophe;
-        }        
+        }
         // If quote or apostrophe found
         if (posnOfValueDelimeter != -1) {
           startOfValue = posnOfValueDelimeter + 1;
@@ -1046,12 +913,12 @@ GetQuotedAttributeValue(nsString& aSource,
           posnOfValueDelimeter = aSource.FindChar(delimeter, PR_FALSE, startOfValue);
           // If found
           if (posnOfValueDelimeter != -1) {
-            // Set the value of the attibute and exit the loop            
+            // Set the value of the attibute and exit the loop
             // The attribute value starts at startOfValue and ends at (posnOfValueDelimeter - 1)
             aSource.Mid(aValue, startOfValue, posnOfValueDelimeter - startOfValue);
             result = NS_OK;
             break;
-          }          
+          }
           else {
             // Try to find the attribute in the remainder of the string
             startOfAttribute++;
@@ -1127,21 +994,22 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
   nsresult rv = NS_OK;
   nsCOMPtr<nsIParser> parser;
 
-  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);
 
   // Create the XML parser
   rv = nsComponentManager::CreateInstance(kCParserCID,
                                     nsnull,
-                                    kCParserIID,
+                                    NS_GET_IID(nsIParser),
                                     getter_AddRefs(parser));
 
   if (NS_FAILED(rv)) return rv;
 
   // Create a transform mediator
-  rv = NS_NewTransformMediator(&mXSLTransformMediator, aType);
-  if (NS_FAILED(rv)) return rv;
-
+  rv = NS_NewTransformMediator(getter_AddRefs(mXSLTransformMediator), aType);
+  if (NS_FAILED(rv)) {
+    // No XSLT processor available, continue normal document loading
+    return NS_OK;
+  }
 
   // Enable the transform mediator. It will start the transform
   // as soon as it has enough state to do so.  The state needed is
@@ -1150,29 +1018,39 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
   // this state by calling the various setters on nsITransformMediator.
   mXSLTransformMediator->SetEnabled(PR_TRUE);
 
-  // The XML document owns the transform mediator.  Give the mediator to
-  // the XML document.
-  nsCOMPtr<nsIXMLDocument> xmlDoc;
-  rv = mDocument->QueryInterface(kIXMLDocumentIID, (void**) getter_AddRefs(xmlDoc));
+  // The document viewer owns the transform mediator.
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+    nsCOMPtr<nsIDocumentViewer> documentViewer = do_QueryInterface(contentViewer);
+    documentViewer->SetTransformMediator(mXSLTransformMediator);
+  }
+
+  // Create the XSL stylesheet document
+  nsCOMPtr<nsIDOMDocument> styleDOMDoc;
+  nsAutoString emptyStr;
+  emptyStr.Truncate();
+  rv = NS_NewDOMDocument(getter_AddRefs(styleDOMDoc), emptyStr, emptyStr, nsnull, aUrl);
   if (NS_FAILED(rv)) return rv;
-  xmlDoc->SetTransformMediator(mXSLTransformMediator);
+  nsCOMPtr<nsIDocument> styleDoc(do_QueryInterface(styleDOMDoc));
 
   // Create the XSL content sink
   nsCOMPtr<nsIXMLContentSink> sink;
-  rv = NS_NewXSLContentSink(getter_AddRefs(sink), mXSLTransformMediator, mDocument, aUrl, mWebShell);
+  rv = NS_NewXSLContentSink(getter_AddRefs(sink), mXSLTransformMediator, styleDoc, aUrl, mWebShell);
   if (NS_FAILED(rv)) return rv;
 
   // Hook up the content sink to the parser's output and ask the parser
   // to start parsing the URL specified by aURL.
   parser->SetContentSink(sink);
   nsAutoString utf8(NS_ConvertASCIItoUCS2("UTF-8"));
-  mDocument->SetDocumentCharacterSet(utf8);
+  styleDoc->SetDocumentCharacterSet(utf8);
   parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
   parser->Parse(aUrl);
 
   // Set the parser as the stream listener and start the URL load
   nsCOMPtr<nsIStreamListener> sl;
-  rv = parser->QueryInterface(kIStreamListenerIID, (void**)getter_AddRefs(sl));
+  rv = parser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)getter_AddRefs(sl));
   if (NS_FAILED(rv)) return rv;
 
   rv = NS_OpenURI(sl, nsnull, aUrl);
@@ -1309,7 +1187,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
       if (NS_SUCCEEDED(result)) {
         media.ToLowerCase();
       }
-      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);      
+      result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
 #ifndef MOZ_XSL
       result = ProcessCSSStyleLink(node, href, alternate.EqualsWithConversion("yes"),
                                 title, type, media);
@@ -1376,10 +1254,10 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
     GetDocTypeToken(str, token, PR_FALSE);
     if (token.EqualsWithConversion("PUBLIC")) {
       GetDocTypeToken(str, publicId, PR_TRUE);
-      GetDocTypeToken(str, systemId, PR_TRUE);    
+      GetDocTypeToken(str, systemId, PR_TRUE);
     }
     else if (token.EqualsWithConversion("SYSTEM")) {
-      GetDocTypeToken(str, systemId, PR_TRUE);    
+      GetDocTypeToken(str, systemId, PR_TRUE);
     }
 
     // The rest is the internal subset (minus the trailing >)
@@ -1408,7 +1286,7 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   } else {
     /*
      * If we don't already have one, append it.
-     */    
+     */
     rv = doc->AppendChild(docType, getter_AddRefs(tmpNode));
   }
   
@@ -1429,9 +1307,8 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
         content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
         // Set the text in the text node
-        static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
         nsITextContent* text = nsnull;
-        content->QueryInterface(kITextContentIID, (void**) &text);
+        content->QueryInterface(NS_GET_IID(nsITextContent), (void**) &text);
         text->SetText(mText, mTextLength, PR_FALSE);
         NS_RELEASE(text);
 
@@ -1666,7 +1543,7 @@ nsXMLContentSink::StartLayout()
           vm->GetRootView(rootView);
           if (nsnull != rootView) {
             nsIScrollableView* sview = nsnull;
-            rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
+            rootView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &sview);
             if (nsnull != sview) {
               if (topLevelFrameset)
                 mOriginalScrollPreference = nsScrollPreference_kNeverScroll;
@@ -1833,12 +1710,11 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
   for (i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
-      GetAttributeValueAt(aNode, i, src);
+      src = aNode.GetValueAt(i);
     }
     else if (key.EqualsIgnoreCase("type")) {
-      nsAutoString  type;
+      const nsString& type = aNode.GetValueAt(i);
 
-      GetAttributeValueAt(aNode, i, type);
       nsAutoString  mimeType;
       nsAutoString  params;
       SplitMimeType(type, mimeType, params);
@@ -1863,9 +1739,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       }
     }
     else if (key.EqualsIgnoreCase("language")) {
-      nsAutoString  lang;
-
-      GetAttributeValueAt(aNode, i, lang);
+      const nsString& lang = aNode.GetValueAt(i);
       isJavaScript = IsJavaScriptLanguage(lang, &jsVersionString);
     }
   }

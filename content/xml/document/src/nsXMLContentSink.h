@@ -116,9 +116,6 @@ protected:
 
   nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                      PRBool* aDidFlush=nsnull);
-  void GetAttributeValueAt(const nsIParserNode& aNode,
-                           PRInt32 aIndex,
-                           nsString& aResult);
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIContent* aContent,
                          PRBool aIsHTML);
@@ -156,8 +153,6 @@ protected:
   nsresult LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType);
   nsresult SetupTransformMediator();
 #endif
-  void StartLayoutProcess();
-
   nsresult AddText(const nsString& aString);
 
   static void
@@ -196,7 +191,7 @@ protected:
   nsICSSLoader* mCSSLoader;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
 #ifdef MOZ_XSL
-  nsITransformMediator* mXSLTransformMediator;    // Weak reference
+  nsCOMPtr<nsITransformMediator> mXSLTransformMediator;
 #endif
 };
 
