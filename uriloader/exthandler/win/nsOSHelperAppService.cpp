@@ -28,6 +28,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsMimeTypes.h"
 #include "nsILocalFile.h"
+#include "nsIProcess.h"
 #include "nsIProcess"
 
 // we need windows.h to read out registry information...
