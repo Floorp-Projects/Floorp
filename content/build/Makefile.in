@@ -45,7 +45,7 @@ ifndef MKSHLIB_FORCE_ALL
 CPPSRCS		+= dlldeps.cpp
 endif
 
-EXPORTS		= nsContentCID.h
+EXPORTS		= nsContentCID.h $(BUILD_DATE)
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libgkconevents_s.$(LIB_SUFFIX) \
@@ -92,6 +92,8 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../xul/templates/src \
 		   -I$(srcdir)/../events/src \
 		   $(NULL)
+
+GARBAGE+=$(BUILD_DATE)
 
 $(BUILD_DATE):
 	$(RM) $@
