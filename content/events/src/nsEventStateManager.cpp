@@ -113,6 +113,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCSSAtoms.h"
+#include "nsContentUtils.h"
 
 #if defined (XP_MAC) || defined(XP_MACOSX)
 #include <Events.h>

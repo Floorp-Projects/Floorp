@@ -102,6 +102,7 @@
 #include "nsCRT.h"
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
+#include "nsIScriptGlobalObjectOwner.h"
 
 static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
@@ -720,6 +721,16 @@ nsXMLDocument::EndLoad()
     nsEvent event;
     event.eventStructType = NS_EVENT;
     event.message = NS_PAGE_LOAD;
+
+    nsCOMPtr<nsIScriptGlobalObject> sgo;
+    nsCOMPtr<nsIScriptGlobalObjectOwner> container =
+      do_QueryReferent(mDocumentContainer);
+    if (container) {
+      container->GetScriptGlobalObject(getter_AddRefs(sgo));
+    }
+
+    nsCxPusher pusher(sgo);
+
     HandleDOMEvent(nsnull, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }    
   return nsDocument::EndLoad();  
