@@ -132,6 +132,8 @@ bin/components/libautoconfig.so
 bin/components/libprofile.so
 bin/components/content_base.xpt
 bin/components/content_html.xpt
+bin/components/content_htmldoc.xpt
+bin/components/content_xmldoc.xpt
 bin/components/content_xslt.xpt
 bin/components/libgklayout.so
 bin/components/libgkplugin.so
