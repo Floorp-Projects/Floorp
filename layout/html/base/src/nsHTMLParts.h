@@ -278,7 +278,8 @@ extern nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
 
 // These AreaFrame's shrink wrap around their contents
 inline nsresult NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
-  return NS_NewBlockFrame(aPresShell, aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
+  return NS_NewBlockFrame(aPresShell, aNewFrame,
+                          NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame is the document root, a margin root, and the
