@@ -5,7 +5,9 @@ Release:		0
 Serial:			0
 Copyright:		NPL/MPL
 Group:			Mozilla
-Source0:		mozilla-dist.tar.gz
+Source0:		ftp://ftp.mozilla.org/pub/mozilla/nightly/latest/mozilla-source.tar.gz
+#Source0:		ftp://ftp.mozilla.org/pub/mozilla/nightly/latest/mozilla-binary.tar.gz
+Source1:		mozilla-run-regxpcom.sh
 Buildroot:		/var/tmp/mozilla-root
 Prefix:			/usr
 Requires:		gtk+ >= 1.2.4
@@ -16,155 +18,155 @@ Requires:		gtk+ >= 1.2.4
 Mozilla is the king of all beasts - big badass Beasts.
 
 %package nspr
-Summary:	nspr
+Summary:	mozilla-nspr
 Group:		Mozilla
 
 %description nspr
-nspr
+mozilla-nspr
 
 %package nspr-devel
-Requires:	nspr
-Summary:	nspr-devel
+Requires:	mozilla-nspr
+Summary:	mozilla-nspr-devel
 Group:		Mozilla
 
 %description nspr-devel
-nspr devel
+mozilla-nspr devel
 
 %package core
-Summary:	core
+Summary:	mozilla-core
 Group:		Mozilla
-Requires:	nspr
+Requires:	mozilla-nspr
 
 %description core
-core
+mozilla-core
 
 %package core-devel
-Requires:	core
-Summary:	core-devel
+Requires:	mozilla-core
+Summary:	mozilla-core-devel
 Group:		Mozilla
-Requires:	nspr-devel
+Requires:	mozilla-nspr-devel
 
 %description core-devel
-core devel
+mozilla-core devel
 
 %package network
-Summary:	network
+Summary:	mozilla-network
 Group:		Mozilla
-Requires:	core
+Requires:	mozilla-core
 
 %description network
-network
+mozilla-network
 
 %package network-devel
-Requires:	network
-Summary:	network-devel
+Requires:	mozilla-network
+Summary:	mozilla-network-devel
 Group:		Mozilla
-Requires:	core-devel
+Requires:	mozilla-core-devel
 
 %description network-devel
-network devel
+mozilla-network devel
 
 %package layout
-Summary:	layout
+Summary:	mozilla-layout
 Group:		Mozilla
-Requires:	network
+Requires:	mozilla-network
 
 %description layout
-layout
+mozilla-layout
 
 %package layout-devel
-Requires:	layout
-Summary:	layout-devel
+Requires:	mozilla-layout
+Summary:	mozilla-layout-devel
 Group:		Mozilla
-Requires:	network-devel
+Requires:	mozilla-network-devel
 
 %description layout-devel
-layout devel
+mozilla-layout devel
 
 %package xpinstall
-Summary:	xpinstall
+Summary:	mozilla-xpinstall
 Group:		Mozilla
-Requires:	layout
+Requires:	mozilla-layout
 
 %description xpinstall
-xpinstall
+mozilla-xpinstall
 
 %package xpinstall-devel
-Requires:	xpinstall
-Summary:	xpinstall-devel
+Requires:	mozilla-xpinstall
+Summary:	mozilla-xpinstall-devel
 Group:		Mozilla
-Requires:	layout-devel
+Requires:	mozilla-layout-devel
 
 %description xpinstall-devel
-xpinstall devel
+mozilla-xpinstall devel
 
 %package profile
-Summary:	profile
+Summary:	mozilla-profile
 Group:		Mozilla
-Requires:	layout
+Requires:	mozilla-layout
 
 %description profile
-profile
+mozilla-profile
 
 %package profile-devel
-Requires:	profile
-Summary:	profile-devel
+Requires:	mozilla-profile
+Summary:	mozilla-profile-devel
 Group:		Mozilla
-Requires:	layout-devel
+Requires:	mozilla-layout-devel
 
 %description profile-devel
-profile devel
+mozilla-profile devel
 
 %package xptoolkit
-Summary:	xptoolkit
+Summary:	mozilla-xptoolkit
 Group:		Mozilla
-Requires:	layout
+Requires:	mozilla-layout
 
 %description xptoolkit
-xptoolkit
+mozilla-xptoolkit
 
 %package xptoolkit-devel
-Requires:	xptoolkit
-Summary:	xptoolkit-devel
+Requires:	mozilla-xptoolkit
+Summary:	mozilla-xptoolkit-devel
 Group:		Mozilla
-Requires:	layout-devel
+Requires:	mozilla-layout-devel
 
 %description xptoolkit-devel
-xptoolkit devel
+mozilla-xptoolkit devel
 
 %package cookie
-Summary:	cookie
+Summary:	mozilla-cookie
 Group:		Mozilla
-Requires:	layout
+Requires:	mozilla-layout
 
 %description cookie
-cookie
+mozilla-cookie
 
 %package cookie-devel
-Requires:	cookie
-Summary:	cookie-devel
+Requires:	mozilla-cookie
+Summary:	mozilla-cookie-devel
 Group:		Mozilla
-Requires:	layout-devel
+Requires:	mozilla-layout-devel
 
 %description cookie-devel
-cookie devel
+mozilla-cookie devel
 
 %package wallet
-Summary:	wallet
+Summary:	mozilla-wallet
 Group:		Mozilla
-Requires:	layout
+Requires:	mozilla-layout
 
 %description wallet
-wallet
+mozilla-wallet
 
 %package wallet-devel
-Requires:	wallet
-Summary:	wallet-devel
+Requires:	mozilla-wallet
+Summary:	mozilla-wallet-devel
 Group:		Mozilla
-Requires:	layout-devel
+Requires:	mozilla-layout-devel
 
 %description wallet-devel
-wallet devel
+mozilla-wallet devel
 
 %prep
 %setup -n mozilla
@@ -185,6 +187,8 @@ here=`pwd`
 #
 ################################
 
+if [ 1 ]
+then
 ###
 ###
 ###
@@ -193,10 +197,12 @@ touch $here/blank
 MOZCONFIG=blank
 export MOZCONFIG
 
-./configure --disable-debug --enable-optimize --disable-mailnews --disable-tests --with-xlib=no --with-motif=no --enable-strip-libs
+./configure --disable-mailnews --disable-tests --with-xlib=no --with-motif=no --disable-gtk-mozilla
+
+#./configure --disable-debug --enable-optimize --disable-mailnews --disable-tests --with-xlib=no --with-motif=no --enable-strip-libs --disable-gtk-mozilla
 
 make
-
+fi
 ################################
 
 mkdir -p $RPM_BUILD_ROOT/%{prefix}/lib/mozilla
@@ -233,6 +239,12 @@ cd $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/
 /bin/mv -f bin/res .
 
 cd $here
+
+install -m 755 build/package/rpm/mozilla $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/bin
+
+install -m 755 $RPM_SOURCE_DIR/mozilla-run-regxpcom.sh $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/bin
+
+touch $RPM_BUILD_ROOT/%{prefix}/lib/mozilla/component.reg
 ################################
 
 %clean
@@ -246,9 +258,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f file-lists/mozilla-core-file-list.txt core
 %defattr(-,root,root)
+%config(missingok) %{prefix}/lib/mozilla/component.reg
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
 
 %files -f file-lists/mozilla-core-devel-file-list.txt core-devel
 %defattr(-,root,root)
+
+%post core
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
 
 %files -f file-lists/mozilla-network-file-list.txt network
 %defattr(-,root,root)
@@ -256,11 +273,17 @@ rm -rf $RPM_BUILD_ROOT
 %files -f file-lists/mozilla-network-devel-file-list.txt network-devel
 %defattr(-,root,root)
 
+%post network
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+
 %files -f file-lists/mozilla-layout-file-list.txt layout
 %defattr(-,root,root)
 
 %files -f file-lists/mozilla-layout-devel-file-list.txt layout-devel
 %defattr(-,root,root)
+
+%post layout
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
 
 %files -f file-lists/mozilla-xpinstall-file-list.txt xpinstall
 %defattr(-,root,root)
@@ -268,17 +291,27 @@ rm -rf $RPM_BUILD_ROOT
 %files -f file-lists/mozilla-xpinstall-devel-file-list.txt xpinstall-devel
 %defattr(-,root,root)
 
+%post xpinstall
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+
 %files -f file-lists/mozilla-profile-file-list.txt profile
 %defattr(-,root,root)
 
 %files -f file-lists/mozilla-profile-devel-file-list.txt profile-devel
 %defattr(-,root,root)
 
+%post profile
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+
 %files -f file-lists/mozilla-xptoolkit-file-list.txt xptoolkit
 %defattr(-,root,root)
+%{prefix}/lib/mozilla/bin/mozilla
 
 %files -f file-lists/mozilla-xptoolkit-devel-file-list.txt xptoolkit-devel
 %defattr(-,root,root)
+
+%post xptoolkit
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
 
 %files -f file-lists/mozilla-cookie-file-list.txt cookie
 %defattr(-,root,root)
@@ -286,11 +319,17 @@ rm -rf $RPM_BUILD_ROOT
 %files -f file-lists/mozilla-cookie-devel-file-list.txt cookie-devel
 %defattr(-,root,root)
 
+%post cookie
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
+
 %files -f file-lists/mozilla-wallet-file-list.txt wallet
 %defattr(-,root,root)
 
 %files -f file-lists/mozilla-wallet-devel-file-list.txt wallet-devel
 %defattr(-,root,root)
+
+%post wallet
+%{prefix}/lib/mozilla/bin/mozilla-run-regxpcom.sh %{prefix}/lib/mozilla
 
 %changelog
 * Wed Oct 20 1999 Ramiro Estrugo <ramiro@fateware.com>
