@@ -1,0 +1,337 @@
+/*NS4 win; US; JB 8/25/02*/
+
+#bigbox { margin-bottom:5px; }
+
+/*ed structure*/
+div#ed_align { text-align:left; }
+div.ed_container { 
+	width:776px;	
+	background-color:#fff;
+	border-bottom:1px #333 solid;
+}
+body.ed_body { 
+margin:0px; 
+background-color:#476685;
+}
+div#ed_topnav { 
+	border-right:1px #036 solid; 	
+	background-color:#fff;
+	width:776px;	
+}  
+
+div#ed_mid { 
+	margin-top:0px;
+	margin-bottom:0px;
+	width:776px; 
+	border-right:1px #036 solid; 
+	background-color:#fff;	
+}
+/*          div#ed_lnav { }                     */
+/*td.ed_lnav_td { 
+	background-color:#369; 
+	text-align:center; 
+} */
+div#ed_art_head { 
+	padding:none; 
+	padding-left:10px; 
+	padding-right:10px;
+}
+div#ed_art_content { 
+	padding:none; 
+	padding-left:10px; 
+	padding-right:10px;
+} 
+ed_art_content_02 { /* for port numbers */
+	padding:none; 
+	padding-left:10px; 
+	padding-right:10px;
+}	
+div#ed_art_bottom { 
+	padding-left:10px; 
+	padding-right:10px;
+}
+div#ed_rcol { background-color:#dedede; }
+div#ed_rcol_02 { background-color:#dedede; }
+td.ed_rcol_td { 
+	background-color:#dedede;
+	border-left:1px #ccc solid; 
+	border-top:1px #eee solid;
+}
+div.ed_footer { 
+	width:776px; 
+	border-right:1px #036 solid;
+}
+
+/* end structure */
+
+/*fr boards.css */
+
+.arrow { FONT-SIZE: 10pt; }
+.field { FONT-FAMILY: arial, geneva,sans-serif; FONT-SIZE: 11pt; TEXT-DECORATION: none; }
+.taboff { COLOR: #ffffcc; TEXT-DECORATION: none; }
+.tabon { COLOR: #ffcc33; }
+.l { FONT-SIZE: 10pt; TEXT-DECORATION: none; }
+
+/*Boards 2002*/
+
+.bt-on { 
+	text-align:center;
+	background-color: #369; 
+	color:#fc3;
+}
+.bt-off { 
+	text-align:center; 
+}
+.bt-off A { 
+	color:#039; 
+}
+.bt-off A:hover { 
+	color:#c30; 
+}
+#b-best-t { 
+border:none; 
+}
+#b-best-t td { 
+	padding-left:4px;
+	padding-right:4px;
+}
+#b-best-t td.text { 
+	padding-left:0px;
+	background-color:#ccc;
+	border-right:1px #eee solid;
+	BORDER-left:#999 1px solid;
+	border-bottom:1px #999 solid; 
+	font-family:tahoma,verdana,sans-serif;
+	font-size:12px;padding-left:4px;
+	color:#333;
+}
+#b-best-t td.text a { 
+	color:#333; 
+}
+
+#b-best-t td.text a:hover { 
+	color:#c30; 
+	text-decoration:none;
+}
+.btab { font-family:tahoma,verdana,sans-serif;font-size:70%; }
+.favbforms { font-family:tahoma,verdana,sans-serif;font-size:70%; }
+
+.bborder { border-left:1px #ccc solid;border-right:1px #ccc solid; }
+
+.btablerule { border-top:1px #efefef solid; }
+.bbevt { background-color:#999; }
+.bbevb { background-color:#fff; }
+
+/*transaction ctr*/
+.tctext { font: bold 70% verdana,sans-serif; color:#333; }
+.tcmods { background-color:#e5e5e5;border:1px solid #ccc; }
+.tchead { border:1px solid #ccc; }
+/*
+.tcsubmit { font-weight:bold; }
+*/
+
+/*Reg/MBC - Kurt 05-23-01*/
+.regtext { font-family: verdana,sans-serif; font-size: 65% }
+.regnav { font-family: verdana,sans-serif; font-size: 60% }
+
+ul.mfunds { margin-left:-18px; }
+
+/*MP*/
+.mplists { font: 9pt verdana,sans-serif; }
+.mpdir { font: 9pt verdana,sans-serif; }
+
+.mphead {
+	font: bold small arial, helvetica, sans-serif;	
+	color:#fff;
+	background-color:#369;
+	border-color: #369 #036 #036 #369; 
+	border-style: solid; 
+	border-width: 1px; 
+}
+.myhead {
+	font: bold small arial, helvetica, sans-serif;	
+	background-color:#393;
+	color:#fff;
+	border-color: #393 #060 #060 #393; 
+	border-style: solid; 
+	border-width: 1px; 
+}
+
+.mloff {
+	background:#eee; 
+	BORDER-BOTTOM: #ccc 1px solid; 
+	BORDER-RIGHT: #CCC 1px solid;		
+	PADDING-LEFT: 4px; 
+}
+.mlon {	
+	background:#ffc; 
+	BORDER-BOTTOM: #ccc9 1px solid; 
+	BORDER-RIGHT: #CCC 1px solid;	
+	PADDING-LEFT: 4px; 
+}
+.mylinks { font: 8.5pt verdana,sans-serif; TEXT-DECORATION: none;	}
+a:hover.mylinks { text-decoration: underline; }
+/*end*/
+
+/*ola nav - Kurt 03-01-01*/
+.olahead { font: bold medium arial, sans-serif;color:#036;}
+.olasubhead { font: bold small arial, sans-serif;color:#036;}
+.olanav { font: bold x-small verdana,sans-serif; }
+.olanav-sub { font: 9.5px verdana,sans-serif; color:#036;}
+.olanav-head { font: bold x-small verdana,sans-serif;color:#036; }
+.ola-intra-nav-head { font: bold x-small verdana,sans-serif; color:#fff; }
+A.olanav { text-decoration:none; }
+A.olanav:hover { text-decoration: underline; }
+
+/*l-nav 10-00*/
+.ln { font: bold x-small verdana,sans-serif; padding:1px; }
+.ln2 { font: x-small verdana,sans-serif; line-height:14px; padding-left:4px; }
+.ln3 { font: x-small verdana,sans-serif;padding-left:10px;padding-top:2px;padding-bottom:2px; }
+
+A.l-nav1 { text-decoration:none;padding-left:4px;color:#fff;font-weight:bold; }
+A.l-nav1:hover { 
+	text-decoration: underline; 
+	color:#fff;
+}
+
+A.l-nav2 { color:#333; text-decoration:none; font-weight:bold; }
+A.l-nav2:hover { color:#c30; text-decoration:underline; }
+
+A.l-nav3 { color:#333; text-decoration:none;}
+A.l-nav3:hover { color:#c30; text-decoration:underline; }
+
+.r-promo { FONT: x-small verdana, arial, sans-serif;border:2px #393 solid;border-top:none; }
+.r-promo-head { FONT: bold small arial, sans-serif; color:#fff; padding-left:4px; }
+.r-promo-box { FONT: x-small verdana, arial, sans-serif;border:2px #393 solid; }
+
+.rel-links-head { FONT: bold small arial, sans-serif; color:#333; }
+.intra-nav-head { FONT: bold small arial, sans-serif; color:#fff; }
+
+.intra-nav-links { font: x-small verdana, sans-serif;padding-left:2px;padding-top:4px;padding-bottom:4px; }
+
+.rel-links { font: x-small verdana, sans-serif;padding-bottom:1px; }
+.rel-links-box { background-color:#fc3; }
+.intra-nav-box { background-color:#369; }
+
+.arrow-ag-div  {
+  background: #fff url("http://www.fool.com/art/new/ui/ArrowBlue_div.gif") no-repeat;
+	margin-top:2px;	
+	padding-left:10px;
+	font: small verdana,arial,sans-serif;
+}	
+
+.arrow-ag-ul  {
+  list-style-image: url("http://www.fool.com/art/new/ui/ArrowBlue_ul2.gif");
+	margin-bottom:30px;
+	margin-right:10px;
+}	
+
+/*Global H ns6*/
+a:hover {COLOR: #C30;}
+
+/*text*/
+.text {FONT-FAMILY: verdana,sans-serif;FONT-SIZE: small;}
+.smalltext {FONT-FAMILY: verdana,sans-serif;FONT-SIZE: x-small;}
+
+/*GM Arrow, div*/
+.listarrow  {
+  margin-top: 4px;
+  padding-left: 12px;
+  background: #fff url("http://www.fool.com/art/new/butts/ArrowBlue.gif") no-repeat;
+	font-size:small;		 
+	font-family:verdana,sans-serif;
+}	
+
+/*Tabs2 B-Nav 08/00*/
+A.t2botnav { font-weight:bold; text-decoration: none; }
+
+
+/*MyF -- cull Fall 00 */
+.TblBorder { BORDER: 3px #ccc solid;}
+.HalfBorder { BORDER: 3px #ccc solid;}
+.BEIGE { COLOR: #f0f0df; TEXT-DECORATION: none; }
+.black { COLOR: #000; TEXT-DECORATION: none;}
+.link {COLOR:#369;TEXT-DECORATION:none;}
+A.link:hover {TEXT-DECORATION: underline;}
+.MFldata { font: small arial,sans-serif; }
+.MFrdata { font: small arial,sans-serif;text-align:right; }  
+.MFcdata { font: small arial,sans-serif;text-align:center;}
+.CELL {font:small VERDANA,sans-serif;}
+
+/*QFC FPN - GRM 5.26.00 */
+.bodytext {font-family:arial,helvetica,sans-serif;font-size:small;}
+.bodytextsmall {font-family:arial,helvetica,sans-serif;font-size:x-small;}
+
+/*Ags  5/2/00 jb*/
+.ag-heading { font: bold medium arial,sans-serif;color:#333; }
+.promohead {font-family:arial, sans-serif;font-size:small;font-weight:medium;}	
+.microfeature {font-family:verdana,arial, sans-serif;font-size:x-small;font-weight:bold;color:#333;}
+.datestamp {font-family:arial,sans-serif;font-size:x-small;}
+
+/*Article: 08/00*/
+.headline { font: bold 18pt arial,helvetica,sans-serif; }
+.subhead {font: bold medium arial,helvetica,sans-serif;}
+.articlesummary { font: bold arial,helvetica,sans-serif; color:#333; }
+b.PH {font: bold medium arial,sans-serif;}
+b.ph {font: bold medium arial,sans-serif;}
+H3 { font: bold medium arial,helvetica,sans-serif; margin-bottom:0px; }
+
+/*added 7/29/02 per Barry*/
+h1.headline { font-weight:bold;margin-top:0px; }
+h2.subhead { font-weight:bold;margin-top:-20px; }
+
+
+/*Boards 2002 - added by Kurt 08OCT02*/
+
+.pbmsg { 
+font-size:medium;
+}
+
+.pbnav {
+font: 11px verdana,arial,sans-serif;
+}
+.nolink {
+font: bold 11px verdana,arial,sans-serif; color:#888;
+}
+a.pbnavlink {
+font: 11px verdana,arial,sans-serif; color:#039; 
+}
+a.pbnavlink:hover {
+color:#c30; text-decoration:underline; 
+}
+a.pbnavlink:visited {
+color:#060; text-decoration:underline; 
+}
+.pbheaderlink {
+font: bold 11px verdana,arial,sans-serif;
+}
+.pipe {
+font: bold verdana 11px; color:#98AAB1;
+}
+td.pblist {
+border-bottom: 1px solid #eee;
+FONT: x-small verdana, sans-serif;
+}
+.pbnavtable {
+background-color:#DEE3E7;
+border-bottom: 1px solid #98AAB1;
+border-top: 1px solid #fff;
+}
+.pbnavtable td {
+padding-top: 2px;
+padding-bottom: 2px;
+padding-right: 4px;
+padding-left: 4px;
+}
+.pb_h_table {
+background-color:#e5e5e5;
+padding: 4px;
+}
+.pb_f_table {
+background-color:#efefef;
+padding-top: 8px;
+padding-bottom: 8px;
+padding-right: 4px;
+padding-left: 4px;
+}
+
