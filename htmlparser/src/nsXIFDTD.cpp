@@ -1459,3 +1459,4 @@ nsresult nsXIFDTD::AddCSSDeclaration(const nsIParserNode& aNode)
 /*******************************
  * ----- CSS Methods Ends------*
  *******************************/
+
