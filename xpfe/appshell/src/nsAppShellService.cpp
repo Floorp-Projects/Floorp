@@ -121,6 +121,7 @@ protected:
   nsICmdLineService* mCmdLineService;
   nsIWindowMediator* mWindowMediator;
   nsCOMPtr<nsIWebShellWindow> mHiddenWindow;
+  PRBool mDeleteCalled;
 };
 
 nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
@@ -130,10 +131,12 @@ nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
   mAppShell     = nsnull;
   mWindowList   = nsnull;
   mCmdLineService = nsnull;
+  mDeleteCalled		= PR_FALSE;
 }
 
 nsAppShellService::~nsAppShellService()
 {
+  mDeleteCalled = PR_TRUE;
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mWindowList);
   NS_IF_RELEASE(mCmdLineService);
@@ -720,6 +723,14 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
 	{
 		service->UnregisterWindow( aWindow );
 		nsServiceManager::ReleaseService(kWindowMediatorCID, service);
+	}
+
+	if (mDeleteCalled) {
+		// return an error code in order to:
+		// - avoid doing anything with other member variables while we are in the destructor
+		// - notify the caller not to release the AppShellService after unregistering the window
+		//   (we don't want to be deleted twice consecutively to mHiddenWindow->Close() in our destructor)
+		return NS_ERROR_FAILURE;
 	}
   
   nsresult rv;

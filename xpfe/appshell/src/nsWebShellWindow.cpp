@@ -465,7 +465,8 @@ nsWebShellWindow::Close()
     return rv;
   
   rv = appShell->UnregisterTopLevelWindow(this);
-  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  if (NS_SUCCEEDED(rv))
+  	nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
   return rv;
 }
