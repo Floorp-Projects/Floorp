@@ -941,7 +941,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kExtensions, kFlowEntity, kNone,	
-      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+      /*special props, prop-range*/       kNone,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_html);
 
     Initialize( 

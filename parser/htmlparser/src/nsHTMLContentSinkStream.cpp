@@ -161,7 +161,7 @@ nsHTMLContentSinkStream::~nsHTMLContentSinkStream()
   NS_IF_RELEASE(mDTD);
 
   if (mBuffer)
-    nsMemory::Free(mBuffer);
+    delete [] mBuffer;
 }
 
 /**

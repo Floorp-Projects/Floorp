@@ -64,13 +64,13 @@ static char* gHTMLTypes[] = {
   "text/plain",
   "text/rtf",
   "text/cpp",
+  "text/css",
   0
 };
   
 static char* gXMLTypes[] = {
   "text/xml",
   "application/xml",
-  "text/css",
   0
 };
 

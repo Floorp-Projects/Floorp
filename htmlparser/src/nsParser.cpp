@@ -678,6 +678,11 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
     aParseMode=eDTDMode_quirks;
     return;
   }
+  else if(aMimeType.EqualsWithConversion(kTextCSSContentType)) {
+    aDocType=ePlainText;
+    aParseMode=eDTDMode_quirks;
+    return;
+  }
 
 
   //now let's see if we have HTML or XHTML...
