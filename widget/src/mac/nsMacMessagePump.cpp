@@ -22,6 +22,9 @@
 #include "nsWidgetsCID.h"
 #include <LPeriodical.h>
 
+
+#define DRAW_ON_RESIZE
+
 #define IsUserWindow(wp) (wp && ((((WindowPeek)wp)->windowKind) >= userKind))
 
 nsWindow* nsMacMessagePump::gCurrentWindow = nsnull;   
@@ -303,7 +306,7 @@ static PRUint32 translateMenu (long aMenuResult)
 			result = VIEWER_VISUAL_DEBUGGING + menuItem;
 			break;
 		case DEMO_MENU:
-			  result = VIEWER_DEMO0 + menuItem;
+			  result = VIEWER_DEMO0 - 1 + menuItem;
 			break;
 		case PRIN_MENU:
 			result = VIEWER_ONE_COLUMN + menuItem;
@@ -325,7 +328,6 @@ nsMacMessagePump::DoMouseDown(EventRecord *aTheEvent)
 PRBool				result;
 Rect					therect;
 Point					windowcoord;
-long					newsize;			// window's new size
 WindowPtr			whichwindow;
 PRInt16				partcode;
 nsWindow			*thewindow;
@@ -414,33 +416,63 @@ nsMouseEvent	mouseevent;
 				
 			case inGrow:
 				SetPort(whichwindow);
-				therect = whichwindow->portRect;
-				EraseRect(&therect); 
-				InvalRect(&therect);
-				
-				// Set up the window's allowed minimum and maximum sizes
-				therect.bottom = qd.screenBits.bounds.bottom;
-				therect.right = qd.screenBits.bounds.right;
-				therect.top = therect.left = 75;
-				newsize = GrowWindow(whichwindow, aTheEvent->where, &therect);
-				if(newsize != 0)
-					SizeWindow(whichwindow, newsize & 0x0FFFF, (newsize >> 16) & 0x0FFFF, true);
 
-				// Draw the grow icon & validate that area
-				therect = whichwindow->portRect;
-				therect.left = therect.right - 16;
-				therect.top = therect.bottom - 16;
-				DrawGrowIcon(whichwindow);
-				ValidRect(&therect);
-				
-				if (thewindow != nsnull)
+				Point oldPt, newPt;
+				oldPt = aTheEvent->where;
+				GlobalToLocal(&oldPt);
+#ifdef DRAW_ON_RESIZE
+				while (WaitMouseUp())
 				{
-					therect = whichwindow->portRect;
-					LocalToGlobal(&topLeft(therect));
-					LocalToGlobal(&botRight(therect));
-					thewindow->SetBounds(therect);
-				}
+					LPeriodical::DevoteTimeToRepeaters(*aTheEvent);
+					GetMouse(&newPt);
+					if (DeltaPoint(oldPt, newPt))
+					{
+						oldPt = newPt;
 
+						// Resize Mac window (draw on resize)
+						short width = max((short)75, newPt.h);
+						short height = max((short)75, newPt.v);
+						SizeWindow(whichwindow, width, height, true);
+#else
+						// Resize Mac window (the usual way)
+						therect.bottom = qd.screenBits.bounds.bottom;
+						therect.right = qd.screenBits.bounds.right;
+						therect.top = therect.left = 75;
+						long newsize = GrowWindow(whichwindow, aTheEvent->where, &therect);
+						if(newsize != 0)
+							SizeWindow(whichwindow, newsize & 0x0FFFF, (newsize >> 16) & 0x0FFFF, true);
+#endif
+						// Draw the grow icon & validate that area
+						therect = whichwindow->portRect;
+						therect.left = therect.right - 16;
+						therect.top = therect.bottom - 16;
+						DrawGrowIcon(whichwindow);
+						ValidRect(&therect);
+						
+						// Resize layout objects
+						thewindow = (nsWindow *) GetWRefCon (whichwindow);
+						if (thewindow != nsnull)
+						{
+							therect = whichwindow->portRect;
+							LocalToGlobal(&topLeft(therect));
+							LocalToGlobal(&botRight(therect));
+							thewindow->SetBounds(therect);
+
+							nsSizeEvent sizeevent;
+							nsRect windowSize;
+							windowSize.SetRect(0, 0, therect.right - therect.left, therect.bottom - therect.top);
+							sizeevent.eventStructType = NS_SIZE_EVENT;
+							sizeevent.message = NS_SIZE;
+							sizeevent.widget = (nsWindow *)thewindow;
+							sizeevent.windowSize = &windowSize;
+
+							thewindow->DoResizeWidgets(sizeevent);
+							result = thewindow->OnResize(sizeevent);
+						}
+#ifdef DRAW_ON_RESIZE
+					}
+				}
+#endif
 				break;
 			case inGoAway:
 				if(TrackGoAway(whichwindow,aTheEvent->where))
