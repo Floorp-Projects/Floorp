@@ -2295,8 +2295,8 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
       htmlElement = do_QueryInterface(tmp);
       // look at parent if the queried color is transparent and if the node to
       // examine is not the root of the document
-    } while ( aOutColor.Equals(NS_LITERAL_STRING("transparent")) && !htmlElement );
-    if (htmlElement && aOutColor.Equals(NS_LITERAL_STRING("transparent"))) {
+    } while ( aOutColor.Equals(NS_LITERAL_STRING("transparent")) && htmlElement );
+    if (!htmlElement && aOutColor.Equals(NS_LITERAL_STRING("transparent"))) {
       // we have hit the root of the document and the color is still transparent !
       // Grumble... Let's look at the default background color because that's the
       // color we are looking for
@@ -2333,7 +2333,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
       if (NS_FAILED(res)) return res;
       nodeToExamine = tmp;
       htmlElement = do_QueryInterface(tmp);
-    } while ( aOutColor.Equals(NS_LITERAL_STRING("transparent")) && !htmlElement );
+    } while ( aOutColor.Equals(NS_LITERAL_STRING("transparent")) && htmlElement );
   }
   return NS_OK;
 }
