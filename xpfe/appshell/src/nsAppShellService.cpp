@@ -121,6 +121,7 @@ protected:
 
   void InitializeComponent( const nsCID &aComponentCID );
   void ShutdownComponent( const nsCID &aComponentCID );
+  typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
   void EnumerateComponents( void (nsAppShellService::*function)(const nsCID&) );
 
   nsIAppShell* mAppShell;
@@ -249,7 +250,7 @@ done:
 
 // Apply function (Initialize/Shutdown) to each app shell component.
 void
-nsAppShellService::EnumerateComponents( void (nsAppShellService::*function)( const nsCID& ) ) {
+nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
     nsresult rv;
     nsIRegistry *registry = 0;
     nsIRegistry::Key key;
