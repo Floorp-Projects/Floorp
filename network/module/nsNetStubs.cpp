@@ -1798,6 +1798,7 @@ ET_PostMessageBox(MWContext* context, char* szMessage, JSBool bConfirm)
 	    return JS_FALSE;
 	}
     }
+    return JS_FALSE;
 }
 
 JSBool
