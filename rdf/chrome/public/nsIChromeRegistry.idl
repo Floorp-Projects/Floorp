@@ -68,9 +68,13 @@ interface nsIChromeRegistry : nsISupports
 	void setDefaultSkin(in wstring skinName, in wstring packageName);
 	void setDefaultLocale(in wstring localeName, in wstring packageName);
 
-	nsISimpleEnumerator getSkins();
-	nsISimpleEnumerator getPackages();
-	nsISimpleEnumerator getLocales();
+	nsISimpleEnumerator getInstalledSkins();
+	nsISimpleEnumerator getInstalledPackages();
+	nsISimpleEnumerator getInstalledLocales();
+
+  nsISimpleEnumerator getSelectedSkins();
+  nsISimpleEnumerator getSelectedPackages();
+  nsISimpleEnumerator getSelectedLocales();
 };
 
 
