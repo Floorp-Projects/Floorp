@@ -108,7 +108,10 @@ nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 		if (m_runningUrl)
 			statusFeedback->StartMeteors();
 		else
+		{
+			statusFeedback->ShowProgress(0);
 			statusFeedback->StopMeteors();
+		}
 	}
 	if (m_urlListeners)
 	{
