@@ -260,6 +260,7 @@ protected:
   static jsval sFrames_id;
   static jsval sSelf_id;
   static jsval sOpener_id;
+  static jsval sAdd_id;
 
   static const JSClass *sObjectClass;
 
@@ -882,10 +883,16 @@ protected:
   {
   }
 
+  static JSBool JS_DLL_CALLBACK Add(JSContext *cx, JSObject *obj, uintN argc,
+                                    jsval *argv, jsval *rval);
+
 public:
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsval id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+  
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsHTMLOptionsCollectionSH(aData);

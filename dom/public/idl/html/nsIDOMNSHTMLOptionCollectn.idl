@@ -41,9 +41,9 @@
 #include "domstubs.idl"
 
 interface nsIDOMHTMLOptionElement;
+interface nsIDOMHTMLSelectElement;
 
-
-[scriptable, uuid(409bbf14-1dd2-11b2-91de-8d672d406276)]
+[scriptable, uuid(1181207B-2337-41a7-8DDF-FBE96461256F)]
 interface nsIDOMNSHTMLOptionCollection : nsISupports
 {
            attribute long             selectedIndex;
@@ -51,8 +51,5 @@ interface nsIDOMNSHTMLOptionCollection : nsISupports
   [noscript] void           setOption(in long index,
                                       in nsIDOMHTMLOptionElement option);
 
-  // The following exists to give us partial compatibility with the
-  // add method as it exists in IE (we don't yet support the second
-  // argument)
-  void                      add(in nsIDOMHTMLOptionElement option);
+  [noscript] readonly attribute nsIDOMHTMLSelectElement select;
 };

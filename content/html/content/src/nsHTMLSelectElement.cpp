@@ -2324,10 +2324,10 @@ nsHTMLOptionCollection::NamedItem(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-nsHTMLOptionCollection::Add(nsIDOMHTMLOptionElement *aOption)
+nsHTMLOptionCollection::GetSelect(nsIDOMHTMLSelectElement **aReturn)
 {
-  nsCOMPtr<nsIDOMNode> ret;
-  return mSelect->AppendChild(aOption, getter_AddRefs(ret));
+  NS_IF_ADDREF(*aReturn = mSelect);
+  return NS_OK;
 }
 
 nsresult
