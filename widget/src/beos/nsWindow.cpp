@@ -391,18 +391,14 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 {
   aStatus = nsEventStatus_eIgnore;
   
-  //if (nsnull != mMenuListener)
-  //	aStatus = mMenuListener->MenuSelected(*event);
-  if (nsnull != mEventCallback) {
+  nsCOMPtr <nsIWidget> mWidget = event->widget;
+  
+  if (mEventCallback)
     aStatus = (*mEventCallback)(event);
-  }
 
-    // Dispatch to event listener if event was not consumed
-  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+  if ((aStatus != nsEventStatus_eIgnore) && (mEventListener))
     aStatus = mEventListener->ProcessEvent(*event);
-  }
-// YK990522 was unused
-//  nsWindow * thisPtr = this;
+  
   return NS_OK;
 }
 
@@ -1571,156 +1567,198 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 //-------------------------------------------------------------------------
 bool nsWindow::CallMethod(MethodInfo *info)
 {
-    bool bRet = TRUE;
+  bool bRet = TRUE;
 
-    switch (info->methodId) {
-        case nsWindow::CREATE:
-            NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
-            Create((nsIWidget*)(info->args[0]), 
-                        (nsRect&)*(nsRect*)(info->args[1]), 
-                        (EVENT_CALLBACK)(info->args[2]), 
-                        (nsIDeviceContext*)(info->args[3]),
-                        (nsIAppShell *)(info->args[4]),
-                        (nsIToolkit*)(info->args[5]),
-                        (nsWidgetInitData*)(info->args[6]));
-            break;
+  switch (info->methodId)
+  {
+    case nsWindow::CREATE:
+      NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
+      Create((nsIWidget*)(info->args[0]), 
+        (nsRect&)*(nsRect*)(info->args[1]), 
+        (EVENT_CALLBACK)(info->args[2]), 
+        (nsIDeviceContext*)(info->args[3]),
+        (nsIAppShell *)(info->args[4]),
+        (nsIToolkit*)(info->args[5]),
+        (nsWidgetInitData*)(info->args[6]));
+      break;
 
-        case nsWindow::CREATE_NATIVE:
-            NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
-            Create((nsNativeWidget)(info->args[0]), 
-                        (nsRect&)*(nsRect*)(info->args[1]), 
-                        (EVENT_CALLBACK)(info->args[2]), 
-                        (nsIDeviceContext*)(info->args[3]),
-                        (nsIAppShell *)(info->args[4]),
-                        (nsIToolkit*)(info->args[5]),
-                        (nsWidgetInitData*)(info->args[6]));
-            return TRUE;
+    case nsWindow::CREATE_NATIVE:
+      NS_ASSERTION(info->nArgs == 7, "Wrong number of arguments to CallMethod");
+      Create((nsNativeWidget)(info->args[0]), 
+        (nsRect&)*(nsRect*)(info->args[1]), 
+        (EVENT_CALLBACK)(info->args[2]), 
+        (nsIDeviceContext*)(info->args[3]),
+        (nsIAppShell *)(info->args[4]),
+        (nsIToolkit*)(info->args[5]),
+        (nsWidgetInitData*)(info->args[6]));
+      break;
 
-        case nsWindow::DESTROY:
-            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-			Destroy();
-            break;
+    case nsWindow::DESTROY:
+      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+      Destroy();
+      break;
 
-		case nsWindow::CLOSEWINDOW :
-            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-			DispatchStandardEvent(NS_DESTROY);
-			break;
+    case nsWindow::CLOSEWINDOW :
+      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+      DispatchStandardEvent(NS_DESTROY);
+      break;
 
-        case nsWindow::SET_FOCUS:
-            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-            SetFocus(PR_FALSE);
-            break;
+    case nsWindow::SET_FOCUS:
+      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+      SetFocus(PR_FALSE);
+      break;
 
-        case nsWindow::GOT_FOCUS:
-            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-        	DispatchFocus(NS_GOTFOCUS);
-        	//if(gJustGotActivate) {
-        	//  gJustGotActivate = PR_FALSE;
-        	  DispatchFocus(NS_ACTIVATE);
-        	//}
-        	break;
+    case nsWindow::GOT_FOCUS:
+      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+      DispatchFocus(NS_GOTFOCUS);
+      //if(gJustGotActivate) {
+      //  gJustGotActivate = PR_FALSE;
+      DispatchFocus(NS_ACTIVATE);
+      //}
+      break;
 
-        case nsWindow::KILL_FOCUS:
-            NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-        	DispatchFocus(NS_LOSTFOCUS);
-        	//if(gJustGotDeactivate) {
-        	//  gJustGotDeactivate = PR_FALSE;
-        	  DispatchFocus(NS_DEACTIVATE);
-        	//} 
-        	break;
+    case nsWindow::KILL_FOCUS:
+      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+      DispatchFocus(NS_LOSTFOCUS);
+      //if(gJustGotDeactivate) {
+      //  gJustGotDeactivate = PR_FALSE;
+      DispatchFocus(NS_DEACTIVATE);
+      //} 
+      break;
 
-		case nsWindow::ONMOUSE :
-			{
-            	NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
-				// close popup when clicked outside of the popup window 
-				// TODO: wheel mouse 
-				uint32 eventID = ((int32 *)info->args)[0]; 
-				bool rollup = false; 
+    case nsWindow::ONMOUSE :
+      {
+        NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+        // close popup when clicked outside of the popup window 
+        uint32 eventID = ((int32 *)info->args)[0]; 
+        bool rollup = false; 
  
-				if ((eventID == NS_MOUSE_LEFT_BUTTON_DOWN || 
-					eventID == NS_MOUSE_RIGHT_BUTTON_DOWN || 
-					eventID == NS_MOUSE_MIDDLE_BUTTON_DOWN) && 
-					mView && mView->LockLooper()) { 
-       
-					BPoint p(((int32 *)info->args)[1], ((int32 *)info->args)[2]); 
-					mView->ConvertToScreen(&p); 
-					if (DealWithPopups(nsWindow::ONMOUSE, nsPoint(p.x, p.y))) 
-						rollup = true; 
-					mView->UnlockLooper(); 
-				} 
-				if (rollup) break; 
+        if ((eventID == NS_MOUSE_LEFT_BUTTON_DOWN || 
+        eventID == NS_MOUSE_RIGHT_BUTTON_DOWN || 
+        eventID == NS_MOUSE_MIDDLE_BUTTON_DOWN) && 
+        mView && mView->LockLooper())
+        { 
+          BPoint p(((int32 *)info->args)[1], ((int32 *)info->args)[2]); 
+          mView->ConvertToScreen(&p); 
+          if (DealWithPopups(nsWindow::ONMOUSE, nsPoint(p.x, p.y))) 
+            rollup = true; 
+          mView->UnlockLooper(); 
+        } 
+        if (rollup)
+          break; 
                                
-				DispatchMouseEvent(((int32 *)info->args)[0], 
-					nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]), 
-					((int32 *)info->args)[3], 
-					((int32 *)info->args)[4]);
+        DispatchMouseEvent(((int32 *)info->args)[0], 
+          nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]), 
+          ((int32 *)info->args)[3], 
+          ((int32 *)info->args)[4]);
 			
-				if (((int32 *)info->args)[0] == NS_MOUSE_RIGHT_BUTTON_DOWN) {
-					DispatchMouseEvent (NS_CONTEXTMENU,
-						nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
-						((int32 *)info->args)[3],
-						((int32 *)info->args)[4]);
-				}
-			}
-			break;
+        if (((int32 *)info->args)[0] == NS_MOUSE_RIGHT_BUTTON_DOWN)
+        {
+          DispatchMouseEvent (NS_CONTEXTMENU,
+            nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
+            ((int32 *)info->args)[3],
+            ((int32 *)info->args)[4]);
+        }
+      }
+      break;
+		
+    case nsWindow::ONWHEEL :
+      {
+        NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
+			  
+        nsMouseScrollEvent scrollEvent;
+        
+        scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
 
-		case nsWindow::ONKEY :
-            NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
-			if (((int32 *)info->args)[0] == NS_KEY_DOWN) {
-				OnKeyDown(((int32 *)info->args)[0],
-					(const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
-					((uint32 *)info->args)[3], ((uint32 *)info->args)[4]);
-			} else
-			if (((int32 *)info->args)[0] == NS_KEY_UP) {
-				OnKeyUp(((int32 *)info->args)[0],
-					(const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
-					((uint32 *)info->args)[3], ((uint32 *)info->args)[4]);
-			}
-			break;
+        scrollEvent.delta = (info->args)[0];
+        
+        scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+        scrollEvent.message   = NS_MOUSE_SCROLL;
+        scrollEvent.nativeMsg = nsnull;
+        scrollEvent.widget    = this;
+        scrollEvent.time      = PR_IntervalNow();
 
-		case nsWindow::ONPAINT :
-			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-			if(mView && mView->LockLooper())
-			{
-				nsRect r;
-				nsViewBeOS	*bv = dynamic_cast<nsViewBeOS *>(mView);
-				if(bv && bv->GetPaintRect(r))
-					OnPaint(r);
-				mView->UnlockLooper();
-			}
-			break;
+        // XXX implement these items?
+        scrollEvent.point.x = 100;
+        scrollEvent.point.y = 100;
+       
+        // we don't use the mIsXDown bools because
+        // they get reset on Gecko reload (makes it harder
+        // to use stuff like Alt+Wheel)
+        uint32 mod (modifiers());
+        
+        scrollEvent.isControl = mod & B_CONTROL_KEY;
+        scrollEvent.isShift = mod & B_SHIFT_KEY;
+        scrollEvent.isAlt   = mod & B_COMMAND_KEY;
+        scrollEvent.isMeta  = PR_FALSE;
+               
+        nsEventStatus rv;
+        DispatchEvent (&scrollEvent, rv);
+      }              
+      break;
+		
+    case nsWindow::ONKEY :
+      NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+      if (((int32 *)info->args)[0] == NS_KEY_DOWN)
+      {
+        OnKeyDown(((int32 *)info->args)[0],
+          (const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
+          ((uint32 *)info->args)[3], ((uint32 *)info->args)[4]);
+      }
+      else
+      {
+        if (((int32 *)info->args)[0] == NS_KEY_UP)
+        {
+          OnKeyUp(((int32 *)info->args)[0],
+          (const char *)(&((uint32 *)info->args)[1]), ((int32 *)info->args)[2],
+          ((uint32 *)info->args)[3], ((uint32 *)info->args)[4]);
+        }
+      }
+      break;
 
-		case nsWindow::ONRESIZE :
-			{
-				NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
+    case nsWindow::ONPAINT :
+      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+      if(mView && mView->LockLooper())
+      {
+        nsRect r;
+        nsViewBeOS *bv = dynamic_cast<nsViewBeOS *>(mView);
+        if(bv && bv->GetPaintRect(r))
+          OnPaint(r);
+        mView->UnlockLooper();
+      }
+      break;
 
-				nsRect r;
-				r.width=(nscoord)info->args[0];
-				r.height=(nscoord)info->args[1];
+    case nsWindow::ONRESIZE :
+      {
+        NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
 
-				OnResize(r);
-			}
-			break;
+        nsRect r;
+        r.width=(nscoord)info->args[0];
+        r.height=(nscoord)info->args[1];
 
-		case nsWindow::ONSCROLL:
-			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-			OnScroll();
-			break;
+        OnResize(r);
+      }
+      break;
 
-		case nsWindow::BTNCLICK :
-            NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
-			DispatchMouseEvent(((int32 *)info->args)[0],
-				nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
-				((int32 *)info->args)[3],
-				((int32 *)info->args)[4]);
-			break;
+    case nsWindow::ONSCROLL:
+      NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+      OnScroll();
+      break;
 
-        default:
-            bRet = FALSE;
-            break;
-    }
+    case nsWindow::BTNCLICK :
+      NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+      DispatchMouseEvent(((int32 *)info->args)[0],
+        nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
+        ((int32 *)info->args)[3],
+        ((int32 *)info->args)[4]);
+      break;
 
-    return bRet;
+    default:
+      bRet = FALSE;
+      break;
+  }
+
+  return bRet;
 }
 
 //-------------------------------------------------------------------------
@@ -2458,7 +2496,7 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 		if(mView && mView->LockLooper())
 		{
 			BRect r = mView->Bounds();
-                       event.mWinWidth  = r.IntegerWidth()+1;
+                       event.mWinWidth  = r.IntegerWidth()+1; 
                        event.mWinHeight = r.IntegerHeight()+1;
 			mView->UnlockLooper();
 		} else {
@@ -2719,24 +2757,25 @@ bool nsWindowBeOS::QuitRequested( void )
 
 void nsWindowBeOS::MessageReceived(BMessage *msg)
 {
-	switch(msg->what)
-	{
-               case 'RESZ':
-			{
-				//this is the message generated by the resizeRunner - it
-				//has now served its purpose
-				delete resizeRunner;
-				resizeRunner=NULL;
+  switch (msg->what)
+  {
+    case 'RESZ':
+      {
+        // this is the message generated by the resizeRunner - it
+        // has now served its purpose
+        delete resizeRunner;
+        resizeRunner=NULL;
 
-				//kick off the xp resizing stuff
-				DoFrameResized();
-			}
-			break;
 
-		default :
-			BWindow::MessageReceived(msg);
-			break;
-	}
+        //kick off the xp resizing stuff
+        DoFrameResized();
+      }
+      break;
+
+    default :
+      BWindow::MessageReceived(msg);
+      break;
+  }
 }
 
 void nsWindowBeOS::FrameResized(float width, float height)
@@ -2953,20 +2992,50 @@ void nsViewBeOS::MouseUp(BPoint point)
 
 void nsViewBeOS::MessageReceived(BMessage *msg)
 {
-	switch(msg->what)
-	{
-	case B_UNMAPPED_KEY_DOWN:
-		//printf("unmapped_key_down\n");
-		this->KeyDown(NULL, 0);
-		break;
-	case B_UNMAPPED_KEY_UP:
-		//printf("unmapped_key_up\n");
-		this->KeyUp(NULL, 0);
-		break;
+  switch(msg->what)
+  {
+    case B_UNMAPPED_KEY_DOWN:
+      //printf("unmapped_key_down\n");
+      this->KeyDown(NULL, 0);
+      break;
+      
+    case B_UNMAPPED_KEY_UP:
+      //printf("unmapped_key_up\n");
+      this->KeyUp(NULL, 0);
+      break;
+
+    case B_MOUSE_WHEEL_CHANGED:
+      {
+        float wheel_y;
+        
+        msg->FindFloat ("be:wheel_delta_y", &wheel_y);
+        
+        // make sure there *was* movement on the y axis
+        if(wheel_y == 0)
+          break;
+
+        nsWindow    *w = (nsWindow *)GetMozillaWidget();
+        nsToolkit   *t;
+        
+        if(w && (t = w->GetToolkit()) != 0)
+        {
+          uint32 args[1];
+          if (wheel_y > 0)
+            args[0] = (uint32)3;
+          else
+            args[0] = (uint32)-3;
+            
+          MethodInfo *info = new MethodInfo(w, w, nsWindow::ONWHEEL, 1, args);
+          t->CallMethodAsync(info);
+          NS_RELEASE(t);
+        }
+      }
+      break;
+      
 	default :
-		BView::MessageReceived(msg);
-		break;
-	}
+      BView::MessageReceived(msg);
+      break;
+  }
 }
 
 void nsViewBeOS::KeyDown(const char *bytes, int32 numBytes)
