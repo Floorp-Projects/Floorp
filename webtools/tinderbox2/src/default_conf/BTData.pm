@@ -4,9 +4,9 @@
 # Tracking system and its relationship to the tinderbox trees.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/11/29 21:49:29 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2001/02/16 01:40:08 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BTData.pm,v $ 
 # $Name:  $ 
 
@@ -33,6 +33,27 @@
 # Contributor(s): 
 
 
+# This package is used for configuring the Generic Bug Tracking system
+# module.  I belive that this will handle most bug tracking systems.
+# We assume that bugs are stored in a database (each bug has a known
+# list of field names) and that a subset of the fields will be of
+# interest to the tinderbox users (tinderbox is not the correct place
+# to display any sort of long comment field).  Tinderbox will display
+# the bug number and a popup window showing relevant fields discribing
+# this bug.  If the users wishes more information they may click on
+# the link and be taken directly to the bugtracking system for more
+# information about the bug.  Bugs have their state change as the bug
+# is worked on and users of tinderbox wish to see information about
+# the bug as the state changes.  We divide state changes into two
+# types: 'Progress', 'Slippage'. Most important is to get a feel for
+# the number of bugs which move into bad/backward states ('REOPENED').
+
+# Users will certainly need to configure the tables in this module for
+# their needs. Additionally users need to define how to convert
+# information about each bug to the correct tinderbox tree that this
+# bug belongs.  This is handled by defining the update2tree() function
+# as appropriate.
+
 
 
 package BTData;
@@ -52,8 +73,8 @@ $VERSION = '#tinder_version#';
 #       Bug#: 1999
 #       OS/Version: 
 
-# Some AIM variable names have spaces in them, we will conert these
-# into '_' after the mail is parsed.
+# Some AIM variable names have spaces ' ' in them, we will convert
+# these into underscores '_' after the mail is parsed.
 
 $VAR_PATTERN = '[A-Z][a-zA-Z0-9._/ \#\-]*'; 
 
@@ -68,6 +89,10 @@ $BUGID_FIELD_NAME = 'Bug#';
 # the name of the bug tracking field which shows progress/slippage.
 
 $STATUS_FIELD_NAME = 'Status';
+
+# a URL to the bug tracking systems main page.
+
+$BT_URL	= 'http://bugzilla.mozilla.org/';
 
 
 # The values of the status field wich denote that the ticket is moving
@@ -84,13 +109,33 @@ $STATUS_FIELD_NAME = 'Status';
 
 %STATUS_PROGRESS = (
 		    'ASSIGNED' => 'Progress',
+
+                    # QA action states
+
+                    'RESOLVED' => 'Progress',
 		    'VERIFIED' => 'Progress',
+                    'CLOSED' => 'Progress',
+                    
+                    # Developer action states
+
+                    'FIXED' => 'Progress',
+                    'INVALID' => 'Progress',
+                    'WONTFIX' => 'Progress',
+                    'LATER' => 'Progress',
+                    'REMIND' => 'Progress',
+                    'DUPLICATE' => 'Progress',
+                    'WORKSFORME' => 'Progress',
 
 		    'REOPENED' => 'Slipage',
 		    'FAILED' => 'Slipage',
 		    'OPENED' => 'Slipage',
 		    'NEW' => 'Slipage',
 		   );
+
+
+
+
+
 
 
 # Uncomment only the fields you wish displayed in the popup window,
@@ -151,23 +196,29 @@ $STATUS_FIELD_NAME = 'Status';
 		  );
 
 
-# Given a pointer to a bug update hash return the name of the tree to
+# Given a pointer to a bug update hash, return the name of the tree to
 # which this bug report belongs.  Typically this will be the contents
-# of a field like 'Product', however some projects may be more
-# compicated.  One example of a complex function would be if each of
-# the product product types listed in the bug tracking data base
-# refers to one development project except for a particular
+# of a field like 'Product', (if you have one tinderbox page for each
+# product in your bug database) however some projects may be more
+# compicated.  
+
+# One example of a complex function to determine tree name would be if
+# each of the product product types listed in the bug tracking data
+# base refers to one development project, except for a particular
 # feature/platform of one particular project which is being developed
 # by a separate group of developers.  So the version control notion of
-# tress (a set of modules on a branch) may not have a direct map into
+# trees (a set of modules on a branch) may not have a direct map into
 # the bug tracking database at all times.
 
-# This function should return 'undef' if the bug report should be
-# ignored by the tinderbox server.
+# This function should return the null list '()' if the bug report
+# should be ignored by the tinderbox server.  The function returns a
+# list of trees which should display the data about this bug update.
 
 
 sub update2tree {
   my ($tinderbox_ref) = @_;
+
+  my ($out);
 
   $out = (
 	  $tinderbox_ref->{'Product'}.
@@ -177,16 +228,18 @@ sub update2tree {
   # that this tree is valid, but this would make it harder for testing
   # using genbugs.
 
-  return $out;
+  return ($out);
 }
 
 
-# Given a pointer to a bug_update_hash return a URL ('href') to the
-# bug. If the bug tracker does not support URL's to a bug number,
+# Given a bug id  return a URL ('href') to the bug. 
+# If the bug tracker does not support URL's to a bug number,
 # return a 'mailto: ' to someone who cares about the bug.
 
-sub update2bug_url {
-  my ($tinderbox_ref) = @_;
+sub bug_id2bug_url {
+  my ($bug_id) = @_;
+
+  my ($out);
 
   # AIM can not accept bug numbers as URLS without encoding lots of
   # other junk (logged in user name, session id info). Just give a
@@ -197,11 +250,12 @@ sub update2bug_url {
   #	  $tinderbox_ref{'User_Login'}.
   #	  "");
 
-  # Bugzilla has an easy format for making URL's of bugs
+  # Bugzilla has an easy format for making URL's of bugs.
 
   $out = (
-	  'http://bugzilla.mozilla.org/show_bug.cgi?id='.
-	  $tinderbox_ref->{$BTData::BUGID_FIELD_NAME}.
+          $BT_URL.
+          '/show_bug.cgi?id='.
+	  $bug_id.
 	  "");
 
   return $out;
@@ -214,6 +268,7 @@ sub get_all_progress_states {
 
   return @progress_states;
 }
+
 
 sub is_status_valid {
   my ($status) = @_;
