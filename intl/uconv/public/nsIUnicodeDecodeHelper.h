@@ -23,6 +23,7 @@
 #include "nscore.h"
 #include "uconvutil.h"
 #include "nsISupports.h"
+#include "nsIMappingCache.h"
 
 // Interface ID for our Unicode Decode Helper interface
 // {9CC39FF0-DD5D-11d2-8AAC-00600811A836}
@@ -33,6 +34,8 @@ NS_DECLARE_ID(kIUnicodeDecodeHelperIID,
 // {9CC39FF1-DD5D-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kUnicodeDecodeHelperCID, 
   0x9cc39ff1, 0xdd5d, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+#define NS_UNICODEDECODEHELPER_PROGID "component://netscape/intl/unicode/decodehelper"
 
 #define NS_ERROR_UDEC_NOHELPER  \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x41)
@@ -71,6 +74,18 @@ public:
   NS_IMETHOD ConvertByFastTable(const char * aSrc, PRInt32 * aSrcLength, 
       PRUnichar * aDest, PRInt32 * aDestLength, PRUnichar * aFastTable, 
       PRInt32 aTableSize) = 0;
+
+  /**
+   * Create a Mapping Cache
+   */
+
+  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult) = 0;
+  /**
+   * Destroy a Mapping Cache
+   */
+
+  NS_IMETHOD DestroyCache(nsIMappingCache aCache) = 0;
+
 
   /**
    * Create a cache-like fast lookup table from a normal one.

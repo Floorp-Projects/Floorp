@@ -19,26 +19,26 @@
 #include "unicpriv.h" 
 
 
-typedef PRUint16 (* MapFormatFunc)(PRUint16 in,uTable *uT,uMapCell *cell);
-typedef PRBool (* HitFormateFunc)(PRUint16 in,uMapCell *cell);
+typedef PRUint16 (* MapFormatFunc)(PRUint16 in,const uTable *uT,const uMapCell *cell);
+typedef PRBool (* HitFormateFunc)(PRUint16 in,const uMapCell *cell);
 
 
-PRIVATE PRBool uHitFormate0(PRUint16 in,uMapCell *cell);
-PRIVATE PRBool uHitFormate1(PRUint16 in,uMapCell *cell);
-PRIVATE PRBool uHitFormate2(PRUint16 in,uMapCell *cell);
-PRIVATE PRUint16 uMapFormate0(PRUint16 in,uTable *uT,uMapCell *cell);
-PRIVATE PRUint16 uMapFormate1(PRUint16 in,uTable *uT,uMapCell *cell);
-PRIVATE PRUint16 uMapFormate2(PRUint16 in,uTable *uT,uMapCell *cell);
+PRIVATE PRBool uHitFormate0(PRUint16 in,const uMapCell *cell);
+PRIVATE PRBool uHitFormate1(PRUint16 in,const uMapCell *cell);
+PRIVATE PRBool uHitFormate2(PRUint16 in,const uMapCell *cell);
+PRIVATE PRUint16 uMapFormate0(PRUint16 in,const uTable *uT,const uMapCell *cell);
+PRIVATE PRUint16 uMapFormate1(PRUint16 in,const uTable *uT,const uMapCell *cell);
+PRIVATE PRUint16 uMapFormate2(PRUint16 in,const uTable *uT,const uMapCell *cell);
 
 
-PRIVATE uMapCell *uGetMapCell(uTable *uT, PRInt16 item);
-PRIVATE char uGetFormat(uTable *uT, PRInt16 item);
+PRIVATE const uMapCell *uGetMapCell(const uTable *uT, PRInt16 item);
+PRIVATE char uGetFormat(const uTable *uT, PRInt16 item);
 
 
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE MapFormatFunc m_map[uNumFormatTag] =
+PRIVATE const MapFormatFunc m_map[uNumFormatTag] =
 {
 	uMapFormate0,
 	uMapFormate1,
@@ -48,65 +48,18 @@ PRIVATE MapFormatFunc m_map[uNumFormatTag] =
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE HitFormateFunc m_hit[uNumFormatTag] =
+PRIVATE const HitFormateFunc m_hit[uNumFormatTag] =
 {
 	uHitFormate0,
 	uHitFormate1,
 	uHitFormate2,
 };
 
-/*
-	Need more work
-*/
-/*=================================================================================
+#define	uHit(format,in,cell) 		(* m_hit[(format)])((in),(cell))
+#define uMap(format,in,uT,cell) 	(* m_map[(format)])((in),(uT),(cell))
+#define uGetMapCell(uT, item) ((uMapCell *)(((PRUint16 *)uT) + (uT)->offsetToMapCellArray) + (item))
+#define uGetFormat(uT, item) (((((PRUint16 *)uT) + (uT)->offsetToFormatArray)[(item)>> 2 ] >> (((item)% 4 ) << 2)) & 0x0f)
 
-=================================================================================*/
-PRIVATE PRBool uHit(unsigned char format, PRUint16 in,uMapCell *cell)
-{
-	return 	(* m_hit[format])((in),(cell));
-}
-/*=================================================================================
-
-=================================================================================*/
-/*	
-	Switch to Macro later for performance
-	
-#define	uHit(format,in,cell) 		(* m_hit[format])((in),(cell))
-*/
-/*=================================================================================
-
-=================================================================================*/
-PRIVATE PRUint16 uMap(unsigned char format, PRUint16 in,uTable *uT,uMapCell *cell)
-{
-	return 	(* m_map[format])((in),(uT),(cell));
-}
-/* 	
-	Switch to Macro later for performance
-	
-#define uMap(format,in,cell) 		(* m_map[format])((in),(cell))
-*/
-
-/*=================================================================================
-
-=================================================================================*/
-/*	
-	Switch to Macro later for performance
-*/
-PRIVATE uMapCell *uGetMapCell(uTable *uT, PRInt16 item)
-{
-	return ((uMapCell *)(((PRUint16 *)uT) + uT->offsetToMapCellArray) + item) ;
-}
-/*=================================================================================
-
-=================================================================================*/
-/*	
-	Switch to Macro later for performance
-*/
-PRIVATE char uGetFormat(uTable *uT, PRInt16 item)
-{
-	return (((((PRUint16 *)uT) + uT->offsetToFormatArray)[ item >> 2 ]
-		>> (( item % 4 ) << 2)) & 0x0f);
-}
 /*=================================================================================
 
 =================================================================================*/
@@ -118,8 +71,8 @@ MODULE_PRIVATE PRBool uMapCode(uTable *uT, PRUint16 in, PRUint16* out)
 	*out = NOMAPPING;
 	for(i=0;i<itemOfList;i++)
 	{
-		uMapCell* uCell;
-		char format = uGetFormat(uT,i);
+		const uMapCell* uCell;
+		PRInt8 format = uGetFormat(uT,i);
 		uCell = uGetMapCell(uT,i);
 		if(uHit(format, in, uCell))
 		{
@@ -138,7 +91,7 @@ MODULE_PRIVATE PRBool uMapCode(uTable *uT, PRUint16 in, PRUint16* out)
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uHitFormate0(PRUint16 in,uMapCell *cell)
+PRIVATE PRBool uHitFormate0(PRUint16 in,const uMapCell *cell)
 {
 	return ( (in >= cell->fmt.format0.srcBegin) &&
 			     (in <= cell->fmt.format0.srcEnd) ) ;
@@ -146,28 +99,28 @@ PRIVATE PRBool uHitFormate0(PRUint16 in,uMapCell *cell)
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uHitFormate1(PRUint16 in,uMapCell *cell)
+PRIVATE PRBool uHitFormate1(PRUint16 in,const uMapCell *cell)
 {
 	return  uHitFormate0(in,cell);
 }
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRBool uHitFormate2(PRUint16 in,uMapCell *cell)
+PRIVATE PRBool uHitFormate2(PRUint16 in,const uMapCell *cell)
 {
 	return (in == cell->fmt.format2.srcBegin);
 }
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRUint16 uMapFormate0(PRUint16 in,uTable *uT,uMapCell *cell)
+PRIVATE PRUint16 uMapFormate0(PRUint16 in,const uTable *uT,const uMapCell *cell)
 {
 	return ((in - cell->fmt.format0.srcBegin) + cell->fmt.format0.destBegin);
 }
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRUint16 uMapFormate1(PRUint16 in,uTable *uT,uMapCell *cell)
+PRIVATE PRUint16 uMapFormate1(PRUint16 in,const uTable *uT,const uMapCell *cell)
 {
 	return (*(((PRUint16 *)uT) + uT->offsetToMappingTable
 		+ cell->fmt.format1.mappingOffset + in - cell->fmt.format1.srcBegin));
@@ -175,7 +128,7 @@ PRIVATE PRUint16 uMapFormate1(PRUint16 in,uTable *uT,uMapCell *cell)
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE PRUint16 uMapFormate2(PRUint16 in,uTable *uT,uMapCell *cell)
+PRIVATE PRUint16 uMapFormate2(PRUint16 in,const uTable *uT,const uMapCell *cell)
 {
 	return (cell->fmt.format2.destBegin);
 }

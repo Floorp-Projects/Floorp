@@ -134,23 +134,36 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kUnicodeDecodeHelperCID, NULL, NULL,
+  rv = compMgr->RegisterComponent(kUnicodeDecodeHelperCID, 
+      "Unicode Decode Helper",
+      NS_UNICODEDECODEHELPER_PROGID, 
       path, PR_TRUE, PR_TRUE);
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kUnicodeEncodeHelperCID, NULL, NULL,
-      path, PR_TRUE, PR_TRUE);
-  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
-
-  rv = compMgr->RegisterComponent(kCharsetAliasCID, NULL, NULL, path, 
+  rv = compMgr->RegisterComponent(kUnicodeEncodeHelperCID, 
+      "Unicode Encode Helper",
+      NS_UNICODEENCODEHELPER_PROGID, 
+      path, 
       PR_TRUE, PR_TRUE);
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kCharsetConverterManagerCID, NULL, NULL,
+  rv = compMgr->RegisterComponent(kCharsetAliasCID, 
+      "Charset Alias Information", 
+      NS_CHARSETALIAS_PROGID, 
+      path, 
+      PR_TRUE, PR_TRUE);
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
+  rv = compMgr->RegisterComponent(kCharsetConverterManagerCID, 
+      "Charset Conversion Manager", 
+      NS_CHARSETCONVERTERMANAGER_PROGID,
       path, PR_TRUE, PR_TRUE);
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
-  rv = compMgr->RegisterComponent(kPlatformCharsetCID, NULL, NULL, path, 
+  rv = compMgr->RegisterComponent(kPlatformCharsetCID, 
+      "Platform Charset Information", 
+      NS_PLATFORMCHARSET_PROGID, 
+      path, 
       PR_TRUE, PR_TRUE);
 
   done:
