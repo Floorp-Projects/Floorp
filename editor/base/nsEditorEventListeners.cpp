@@ -193,15 +193,12 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
                mEditor->GetFlags(&flags);
                if (! (flags & nsIHTMLEditor::eEditorSingleLineMask))
                {
-                  if (metaKey || altKey)
+                  if (metaKey || altKey)  // why block option-tab?
                      return NS_OK;   // don't consume
                   // else we insert the tab straight through  
-                   nsAutoString key;
-                  key += keyCode;
-
                   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
                    if (htmlEditor)
-                      htmlEditor->InsertText(key);
+                      htmlEditor->EditorKeyPress(uiEvent);
                   ScrollSelectionIntoView();
                   return NS_ERROR_BASE; // this means "I handled the event, don't do default processing"
                }
@@ -278,7 +275,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         mEditor->GetFlags(&flags);
         if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
         {
-          htmlEditor->InsertBreak();
+          //htmlEditor->InsertBreak();
+          htmlEditor->EditorKeyPress(uiEvent);
           ScrollSelectionIntoView();
           return NS_ERROR_BASE; // consumed
         }
@@ -288,16 +286,18 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         }
       }
     }
-     
-    if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey) &&
+    
+    // i turned off the blocking of alt keys - these are option-keypresses on mac and
+    // it's traditional that those go through (and they are used to generate some additional
+    // characters) - joe
+    if (/*(PR_FALSE==altKey) &&*/ (PR_FALSE==ctrlKey) &&
         (NS_SUCCEEDED(uiEvent->GetCharCode(&character))))
     {
       if (nsIDOMUIEvent::VK_TAB==character) 
       {
         return NS_OK; // ignore tabs here, they're handled in keyDown if at all
       }
-      key += character;
-      htmlEditor->InsertText(key);
+      htmlEditor->EditorKeyPress(uiEvent);
       ScrollSelectionIntoView();
     }
   }
@@ -942,7 +942,7 @@ IsNodeInSelection(nsIDOMNode *aInNode, nsIDOMSelection *aInSelection, PRBool &aO
   nsCOMPtr<nsIContentIterator>iter;
   nsresult result = nsComponentManager::CreateInstance(kContentIteratorCID, nsnull,
                                                        nsIContentIterator::GetIID(), 
-                                                                                  getter_AddRefs(iter));
+                                                       getter_AddRefs(iter));
    if (NS_FAILED(result)) { return result; }
    if (!iter) { return NS_ERROR_OUT_OF_MEMORY; }
 
@@ -1040,8 +1040,8 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
          // Get the Clipboard
          nsIClipboard* clipboard;
          rv = nsServiceManager::GetService(kCClipboardCID,
-                                                          nsIClipboard::GetIID(),
-                                                           (nsISupports **)&clipboard);
+                                           nsIClipboard::GetIID(),
+                                           (nsISupports **)&clipboard);
          if (NS_OK == rv) 
          {
             // Create a data flavor to tell the transferable 
@@ -1051,15 +1051,16 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
             // Create a transferable for putting data on the Clipboard
             nsCOMPtr<nsITransferable> trans;
             rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                                                        nsITransferable::GetIID(), 
-                                                                        (void**) getter_AddRefs(trans));
+                                                    nsITransferable::GetIID(), 
+                                                    (void**) getter_AddRefs(trans));
             if (NS_OK == rv) {
                // The data on the clipboard will be in "XIF" format
                // so give the clipboard transferable a "XIFConverter" for 
                // converting from XIF to other formats
                nsCOMPtr<nsIFormatConverter> xifConverter;
                rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-                                                                           nsIFormatConverter::GetIID(), (void**) getter_AddRefs(xifConverter));
+                                                       nsIFormatConverter::GetIID(), 
+                                                       (void**) getter_AddRefs(xifConverter));
                if (NS_OK == rv) {
                   // Add the XIF DataFlavor to the transferable
                   // this tells the transferable that it can handle receiving the XIF format
@@ -1076,14 +1077,16 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
                   // Now invoke the drag session
                   nsIDragService* dragService; 
                   nsresult rv = nsServiceManager::GetService(kCDragServiceCID, 
-                                                                                  nsIDragService::GetIID(), 
-                                                                                  (nsISupports **)&dragService); 
+                                                             nsIDragService::GetIID(), 
+                                                             (nsISupports **)&dragService); 
                   if (NS_OK == rv) { 
                      nsCOMPtr<nsISupportsArray> items;
                      NS_NewISupportsArray(getter_AddRefs(items));
                      if ( items ) {
                         items->AppendElement(trans);
-                        dragService->InvokeDragSession(items, nsnull, nsIDragService::DRAGDROP_ACTION_COPY | nsIDragService::DRAGDROP_ACTION_MOVE);
+                        dragService->InvokeDragSession(items, nsnull, 
+                                  nsIDragService::DRAGDROP_ACTION_COPY | 
+                                  nsIDragService::DRAGDROP_ACTION_MOVE);
                      }
                      nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
                   } 
@@ -1158,7 +1161,8 @@ nsTextEditorMouseListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
   if (htmlEditor)
   {
     nsCOMPtr<nsIDOMElement> selectedElement;
-    if (NS_SUCCEEDED(htmlEditor->GetSelectedElement("", getter_AddRefs(selectedElement))) && selectedElement)
+    if (NS_SUCCEEDED(htmlEditor->GetSelectedElement("", getter_AddRefs(selectedElement)))
+         && selectedElement)
     {
       nsAutoString TagName;
       selectedElement->GetTagName(TagName);

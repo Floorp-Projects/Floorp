@@ -60,6 +60,8 @@ public:
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
+  NS_IMETHOD EditorKeyPress(nsIDOMUIEvent* aKeyEvent);
+
   NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
   NS_IMETHOD GetDocumentLength(PRInt32 *aCount);
   NS_IMETHOD SetMaxTextLength(PRInt32 aMaxTextLength);
@@ -229,6 +231,10 @@ protected:
   // Return TRUE if aElement is a table-related elemet and caret was set
   PRBool     SetCaretInTableCell(nsIDOMElement* aElement);
   PRBool     IsElementInBody(nsIDOMElement* aElement);
+
+  // key event helpers
+  NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
+  NS_IMETHOD InsertBR();
 
 // Table Editing (implemented in EditTable.cpp)
 
