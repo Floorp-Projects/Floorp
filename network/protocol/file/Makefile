@@ -17,6 +17,8 @@
 
 DEPTH		= ../../..
 
+include $(DEPTH)/config/config.mk
+
 MODULE		= fileurl
 LIBRARY_NAME	= fileurl
 
