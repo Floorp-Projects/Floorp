@@ -1541,6 +1541,8 @@ PRInt32 nsParseNewMailState::PublishMsgHeader()
 		FolderTypeSpecificTweakMsgHeader(m_newMsgHdr);
 		if (!m_disableFilters)
 		{
+			// flush the inbox because filters will read from disk
+			m_inboxFileStream->flush();
 			ApplyFilters(&moved);
 		}
 		if (!moved)
