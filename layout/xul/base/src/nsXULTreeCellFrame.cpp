@@ -47,6 +47,8 @@
 #include "nsIBoxLayout.h"
 #include "nsMonumentLayout.h"
 
+//#define MOZ_GRID2 1
+
 #ifdef MOZ_GRID2
 #include "nsGrid.h"
 #include "nsGridRow.h"
@@ -142,7 +144,9 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         nsGrid* grid;
         PRInt32 index;
         part->GetGrid(box, &grid, &index);
-        nsIBox* splitBox = grid->GetColumnAt(i)->GetBox();
+        nsIBox* splitBox = nsnull;
+        if (grid->GetColumnCount() > 0)
+          splitBox = grid->GetColumnAt(i)->GetBox();
 #else
         box->GetLayoutManager(getter_AddRefs(lm));
         nsCOMPtr<nsIMonument> mon(do_QueryInterface(lm));

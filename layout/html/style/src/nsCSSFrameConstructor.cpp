@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+//#define MOZ_GRID2 1
+
 #include "nsCSSFrameConstructor.h"
 #include "nsIArena.h"
 #include "nsCRT.h"
@@ -299,23 +301,19 @@ NS_NewOutlinerBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 #ifdef MOZ_GRID2
 nsresult
 NS_NewGridLayout2 ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
-#else
-nsresult
-NS_NewGridLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
-#endif
-
-#ifdef MOZ_GRID2
 nsresult
 NS_NewGridRowLeafLayout ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
-#else
 nsresult
-NS_NewObeliskLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
-#endif
-
-#ifdef MOZ_GRID2
+NS_NewGridRowLeafFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayout);
 nsresult
 NS_NewGridRowGroupLayout ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
+nsresult
+NS_NewGridRowGroupFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayout);
 #else
+nsresult
+NS_NewGridLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout ); 
+nsresult
+NS_NewObeliskLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
 nsresult
 NS_NewTempleLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
 #endif
@@ -5422,10 +5420,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         {
 #ifdef MOZ_GRID2
           NS_NewGridRowGroupLayout(aPresShell, getter_AddRefs(layout));
+          rv = NS_NewGridRowGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
 #else
           NS_NewTempleLayout(aPresShell, layout);
-#endif
           rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+#endif
         }
 
         // Boxes can scroll.
@@ -5456,6 +5455,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       
         nsCOMPtr<nsIBoxLayout> layout;
 
+
 #ifdef MOZ_GRID2
         NS_NewGridRowLeafLayout(aPresShell, getter_AddRefs(layout));
 #else
@@ -5465,7 +5465,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (aTag == nsXULAtoms::treerow)
           rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout);
         else
-          rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+#ifdef MOZ_GRID2
+          rv = NS_NewGridRowLeafFrame(aPresShell, &newFrame, PR_FALSE, layout);
+#else
+          rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);         
+#endif
 
         // Boxes can scroll.
         if (IsScrollable(aPresContext, display)) {
