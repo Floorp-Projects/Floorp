@@ -57,19 +57,19 @@ NS_IMETHODIMP nsMsgFilterDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
     
     // if it's a folder, then we return a filter list..
     // otherwise make sure it's in the form
-    // mailbox://userid@server/foldername#filter4
+    // mailbox://userid@server/foldername;filterName=foo
     
 
     nsXPIDLCString uri;
     aOuter->GetValueConst(getter_Shares(uri));
 
-    // if it has '#filter' then it's a filter, otherwise we'll assume
+    // if it has ';filter' then it's a filter, otherwise we'll assume
     // that it's a folder.
     nsCAutoString uriStr(uri);
 
     nsCOMPtr<nsISupports> resultSupports;
     
-    if (uriStr.Find("#filter") != -1) {
+    if (uriStr.Find("filterName=") != -1) {
         nsCOMPtr<nsIMsgFilter> filter;
         rv = getFilterDelegate(aOuter, getter_AddRefs(filter));
         if (NS_SUCCEEDED(rv))
@@ -114,32 +114,35 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
                                               nsIMsgFilter **aResult)
 {
     nsresult rv;
-    // now try to find "#filter"
+    // now try to find ";filterName="
     nsXPIDLCString uri;
     rv = aOuter->GetValue(getter_Copies(uri));
     if (NS_FAILED(rv)) return rv;
     
     PRInt32 seperatorPosition = 0;
     const char *filterTag = uri;
-    while (filterTag && *filterTag != '#') {
+    while (filterTag && *filterTag != ';') {
         seperatorPosition++;
         filterTag++;
     }
     
-    // if no #, and it's not a folder,
+    // if no ;, and it's not a folder,
     // I don't know what the heck it is.
     if (!filterTag)
         return NS_ERROR_FAILURE;
 
-    PRInt32 filterNumber = getFilterNumber(filterTag);
+    const char *filterName = getFilterName(filterTag);
 
     nsCOMPtr<nsIMsgFilterList> filterList;
     rv = getFilterList(uri, seperatorPosition, getter_AddRefs(filterList));
 
         // now that we have the filter list and index, retrieve the filter.
 
+    // XXX convert from UTF8
+    nsAutoString filterString;
+    filterString.AssignWithConversion(filterName);
     nsCOMPtr<nsIMsgFilter> filter;
-    rv = filterList->GetFilterAt(filterNumber, getter_AddRefs(filter));
+    rv = filterList->GetFilterNamed(filterString.GetUnicode(), getter_AddRefs(filter));
     if (NS_FAILED(rv)) return rv;
 
     *aResult = filter;
@@ -149,16 +152,17 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
 }
     
 
-PRInt32
-nsMsgFilterDelegateFactory::getFilterNumber(const char *filterTag)
+const char *
+nsMsgFilterDelegateFactory::getFilterName(const char *filterTag)
 {
     
     if (nsCRT::strncmp(filterTag, MSGFILTER_TAG, MSGFILTER_TAG_LENGTH) != 0)
-        return -1;
+        return nsnull;
     
-    const char *filterNumberStr = filterTag + MSGFILTER_TAG_LENGTH;
-    
-    return atoi(filterNumberStr);
+    const char *filterNameStr = filterTag + MSGFILTER_TAG_LENGTH;
+
+    printf("GetFilterName(%s) -> %s\n", filterTag, filterNameStr);
+    return filterNameStr;
 }
 
 nsresult

@@ -25,8 +25,8 @@
 
 #include "nsIRDFDelegateFactory.h"
 
-#define MSGFILTER_TAG "#filter"
-#define MSGFILTER_TAG_LENGTH 7
+#define MSGFILTER_TAG ";filterName="
+#define MSGFILTER_TAG_LENGTH 12
 
 class nsIMsgFilterList;
 class nsIMsgFilter;
@@ -47,7 +47,7 @@ class nsMsgFilterDelegateFactory : public nsIRDFDelegateFactory {
   static nsresult getFilterDelegate(nsIRDFResource *aOuter,
                                     nsIMsgFilter **aResult);
   
-  static PRInt32 getFilterNumber(const char *filterTag);
+  static const char* getFilterName(const char *filterTag);
 
   static nsresult getFilterList(const char *aUri, PRInt32 aTagPosition,
                                 nsIMsgFilterList** aResult);

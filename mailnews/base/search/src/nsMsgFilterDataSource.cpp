@@ -265,10 +265,10 @@ nsMsgFilterDataSource::ArcLabelsOut(nsIRDFResource *aSource,
 // the array that corresponds to all the filters.
 // it does this quickly because it knows the sub-filters will be in the form
 //
-// mailbox://username@host/folder#filter0
-// mailbox://username@host/folder#filter1
-// mailbox://username@host/folder#filter2
-// mailbox://username@host/folder#filter3
+// mailbox://username@host/folder;filterName=abc
+// mailbox://username@host/folder;filterName=cde
+// mailbox://username@host/folder;filterName=efg
+// mailbox://username@host/folder;filterName=ghi
 //
 // and so forth
 nsresult
@@ -281,9 +281,9 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
     nsresult rv;
 
     // get the URI of the source resource, say mailbox://username@host/folder
-    // from there we'll append "#filter", and then enumerate the
+    // from there we'll append ";filter", and then enumerate the
     // filters to get all the resources like
-    // mailbox://username@host/folder#filter4
+    // mailbox://username@host/folder;filterName=abcd
 
     // a better way to do this might be to ask the filter
     // what folder it's in. Then we wouldn't need aSource
@@ -291,7 +291,7 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
     aSource->GetValueConst(getter_Shares(filterListUri));
 
     nsCAutoString filterUri((const char *)filterListUri);
-    filterUri.Append("#filter");
+    filterUri.Append(";filterName=");
 
     // we'll use the length of this base string to truncate the string later
     PRInt32 baseFilterUriLength = filterUri.Length();
@@ -305,7 +305,18 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
 
     PRUint32 i;
     for (i=0; i<filterCount; i++) {
-        filterUri.AppendInt(PRInt32(i));
+        nsCOMPtr<nsIMsgFilter> filter;
+        rv = aFilterList->GetFilterAt(i, getter_AddRefs(filter));
+        if (NS_FAILED(rv)) continue;
+
+        nsXPIDLString filterName;
+        rv = filter->GetFilterName(getter_Copies(filterName));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString filterString(filterName);
+        
+        // XXX - convert to UTF8 :(
+        filterUri.AppendWithConversion(filterString);
         
         nsCOMPtr<nsIRDFResource> filterResource;
         rv = getRDFService()->GetResource(filterUri.GetBuffer(),
