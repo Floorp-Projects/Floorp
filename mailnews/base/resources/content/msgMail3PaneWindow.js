@@ -66,9 +66,6 @@ var folderListener = {
 
 	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
 	{
-  // fix me!!!
-
-  /*
 		var currentLoadedFolder = GetThreadPaneFolder();
 		var currentURI = currentLoadedFolder.URI;
 
@@ -92,7 +89,6 @@ var folderListener = {
 				}
 			}      
 		}
-    */
 	},
 
 	OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
