@@ -37,7 +37,8 @@ EXPORTS	=				      \
 	nsIPluginStreamInfo.h                 \
 	nsplugin.h			      \
 	nsplugindefs.h		 	      \
-	nsICookieStorage.h
+	nsICookieStorage.h		      \
+	nsPIPluginHost.h
 
 # DEPRECATED -- remove before we ship 5.0
 EXPORTS = $(EXPORTS)                          \
