@@ -180,6 +180,9 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
+  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
+
+
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont);
 

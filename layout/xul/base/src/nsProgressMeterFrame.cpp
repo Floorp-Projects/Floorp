@@ -41,6 +41,9 @@ static int   ANIMATION_SPEED = 50;    // miliseconds
 #include "nsITimer.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsIReflowCommand.h"
+#include "nsHTMLParts.h"
+#include "nsIPresShell.h"
 
 class StripeTimer : public nsITimerCallback {
 public:
@@ -244,7 +247,7 @@ nsProgressMeterFrame::setProgress(nsAutoString progress)
 	else if (v > 100)
 		v = 100;
 
-	printf("ProgressMeter value=%d\n", v);
+//	printf("ProgressMeter value=%d\n", v);
     mProgress = float(v)/float(100);
 }
 
@@ -685,10 +688,51 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
     aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, newValue);
     setProgress(newValue);
 
-    // redraw
+    Redraw(aPresContext);
+
+  } else if (nsXULAtoms::mode == aAttribute) {
+    nsAutoString newValue;
+
+    aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::mode, newValue);
+    setMode(newValue);
+
+    // needs to reflow so we start the timer.
+    Reflow(aPresContext);
+  } else if (nsHTMLAtoms::align == aAttribute) {
+    nsAutoString newValue;
+
+	// get attribute and set it
+    aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, newValue);
+    setAlignment(newValue);
+
+ 
+    Reflow(aPresContext);
   }
 
   return NS_OK;
+}
+
+void
+nsProgressMeterFrame::Reflow(nsIPresContext* aPresContext)
+{
+   // reflow
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    
+    nsCOMPtr<nsIReflowCommand> reflowCmd;
+    nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                          nsIReflowCommand::StyleChanged);
+    if (NS_SUCCEEDED(rv)) 
+      shell->AppendReflowCommand(reflowCmd);
+}
+
+void
+nsProgressMeterFrame::Redraw(nsIPresContext* aPresContext)
+{
+   	nsRect frameRect;
+	  GetRect(frameRect);
+	  nsRect rect(0, 0, frameRect.width, frameRect.height);
+    Invalidate(rect, PR_TRUE);
 }
 
 //

@@ -83,6 +83,10 @@ public:
 
   virtual void animate();
 
+  virtual void Reflow(nsIPresContext* aPresContext);
+
+  virtual void Redraw(nsIPresContext* aPresContext);
+
 protected:
   nsProgressMeterFrame();
   virtual ~nsProgressMeterFrame();

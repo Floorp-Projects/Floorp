@@ -67,6 +67,16 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const = 0;
 
+   /**
+   * Determine if the control uses a native widget for rendering
+   * @param aRequiresWidget is set to PR_TRUE if it has a native widget, PR_FALSE otherwise.
+   * @returns NS_OK 
+   */
+
+  virtual nsresult RequiresWidget(PRBool &aRequiresWidget) = 0;
+ 
+
+
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont) = 0;
   /**
@@ -94,6 +104,8 @@ public:
    */
 
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue) = 0; 
+
+
 
 };
 

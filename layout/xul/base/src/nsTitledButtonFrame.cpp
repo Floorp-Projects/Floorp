@@ -991,22 +991,16 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
  
   switch (aEvent->message) {
 
-        case NS_MOUSE_ENTER:
-	      break;
-        case NS_MOUSE_LEFT_BUTTON_DOWN: 
-			if (mRenderer.GetState() == nsButtonFrameRenderer::active) 
-			{ // do mouse click 
-				mRenderer.SetFocus(PR_TRUE, PR_TRUE);
-			}
-		  break;
+    case NS_MOUSE_ENTER:
+    break;
+    case NS_MOUSE_LEFT_BUTTON_DOWN: 
+      mRenderer.SetFocus(PR_TRUE, PR_TRUE);
+    break;
 
-        case NS_MOUSE_LEFT_BUTTON_UP:
-
-			   
-
-	        break;
-        case NS_MOUSE_EXIT:
-	      break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+	    break;
+    case NS_MOUSE_EXIT:
+    break;
   }
 
   //aEventStatus = nsEventStatus_eConsumeNoDefault;
