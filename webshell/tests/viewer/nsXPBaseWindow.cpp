@@ -50,7 +50,6 @@
 #include "nsIContentViewer.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsHTMLContentSinkStream.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMElement.h"
