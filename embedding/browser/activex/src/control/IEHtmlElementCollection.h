@@ -33,7 +33,7 @@
 class CIEHtmlElement;
 
 class CIEHtmlElementCollection : public CComObjectRootEx<CComSingleThreadModel>,
-							  public IDispatchImpl<IHTMLElementCollection, &IID_IHTMLElementCollection, &LIBID_MSHTML>
+                              public IDispatchImpl<IHTMLElementCollection, &IID_IHTMLElementCollection, &LIBID_MSHTML>
 {
 private:
     IDispatch **mNodeList;
@@ -41,20 +41,20 @@ private:
     PRUint32    mNodeListCapacity;
 
 public:
-	CIEHtmlElementCollection();
+    CIEHtmlElementCollection();
 
 protected:
-	virtual ~CIEHtmlElementCollection();
+    virtual ~CIEHtmlElementCollection();
 
 public:
-	// Pointer to parent node/document
-	IDispatch *m_pIDispParent;
+    // Pointer to parent node/document
+    IDispatch *m_pIDispParent;
 
-	// Adds a node to the collection
-	virtual HRESULT AddNode(IDispatch *pNode);
+    // Adds a node to the collection
+    virtual HRESULT AddNode(IDispatch *pNode);
 
-	// Sets the parent node of this collection
-	virtual HRESULT SetParentNode(IDispatch *pIDispParent);
+    // Sets the parent node of this collection
+    virtual HRESULT SetParentNode(IDispatch *pIDispParent);
 
     // Populates the collection from a DOM HTML collection
     virtual HRESULT PopulateFromDOMHTMLCollection(nsIDOMHTMLCollection *pNodeList, BOOL bRecurseChildren);
@@ -62,11 +62,11 @@ public:
     // Populates the collection from a DOM node list
     virtual HRESULT PopulateFromDOMNodeList(nsIDOMNodeList *pNodeList, BOOL bRecurseChildren);
 
-	// Populates the collection with items from the DOM node
-	virtual HRESULT PopulateFromDOMNode(nsIDOMNode *pIDOMNode, BOOL bRecurseChildren);
+    // Populates the collection with items from the DOM node
+    virtual HRESULT PopulateFromDOMNode(nsIDOMNode *pIDOMNode, BOOL bRecurseChildren);
 
-	// Helper method creates a collection from a parent node
-	static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, BOOL bRecurseChildren, CIEHtmlElementCollection **pInstance);
+    // Helper method creates a collection from a parent node
+    static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, BOOL bRecurseChildren, CIEHtmlElementCollection **pInstance);
 
     // Helper method creates a collection from the specified node list
     static HRESULT CreateFromDOMNodeList(CIEHtmlNode *pParentNode, nsIDOMNodeList *pNodeList, CIEHtmlElementCollection **pInstance);
@@ -76,17 +76,17 @@ public:
 
 
 BEGIN_COM_MAP(CIEHtmlElementCollection)
-	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElementCollection)
-	COM_INTERFACE_ENTRY_IID(IID_IHTMLElementCollection, IHTMLElementCollection)
+    COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElementCollection)
+    COM_INTERFACE_ENTRY_IID(IID_IHTMLElementCollection, IHTMLElementCollection)
 END_COM_MAP()
 
-	// IHTMLElementCollection methods
-	virtual HRESULT STDMETHODCALLTYPE toString(BSTR __RPC_FAR *String);
-	virtual HRESULT STDMETHODCALLTYPE put_length(long v);
-	virtual HRESULT STDMETHODCALLTYPE get_length(long __RPC_FAR *p);
-	virtual HRESULT STDMETHODCALLTYPE get__newEnum(IUnknown __RPC_FAR *__RPC_FAR *p);
-	virtual HRESULT STDMETHODCALLTYPE item(VARIANT name, VARIANT index, IDispatch __RPC_FAR *__RPC_FAR *pdisp);
-	virtual HRESULT STDMETHODCALLTYPE tags(VARIANT tagName, IDispatch __RPC_FAR *__RPC_FAR *pdisp);
+    // IHTMLElementCollection methods
+    virtual HRESULT STDMETHODCALLTYPE toString(BSTR __RPC_FAR *String);
+    virtual HRESULT STDMETHODCALLTYPE put_length(long v);
+    virtual HRESULT STDMETHODCALLTYPE get_length(long __RPC_FAR *p);
+    virtual HRESULT STDMETHODCALLTYPE get__newEnum(IUnknown __RPC_FAR *__RPC_FAR *p);
+    virtual HRESULT STDMETHODCALLTYPE item(VARIANT name, VARIANT index, IDispatch __RPC_FAR *__RPC_FAR *pdisp);
+    virtual HRESULT STDMETHODCALLTYPE tags(VARIANT tagName, IDispatch __RPC_FAR *__RPC_FAR *pdisp);
 };
 
 typedef CComObject<CIEHtmlElementCollection> CIEHtmlElementCollectionInstance;

@@ -29,25 +29,25 @@
 // Object wrapper for property list. This class can be set up with a
 // list of properties and used to initialise a control with them
 
-class CPropertyBag :	public CComObjectRootEx<CComSingleThreadModel>,
-						public IPropertyBag
+class CPropertyBag :    public CComObjectRootEx<CComSingleThreadModel>,
+                        public IPropertyBag
 {
-	// List of properties in the bag
-	PropertyList m_PropertyList;
+    // List of properties in the bag
+    PropertyList m_PropertyList;
 
 public:
-	// Constructor
-	CPropertyBag();
-	// Destructor
-	virtual ~CPropertyBag();
+    // Constructor
+    CPropertyBag();
+    // Destructor
+    virtual ~CPropertyBag();
 
 BEGIN_COM_MAP(CPropertyBag)
-	COM_INTERFACE_ENTRY(IPropertyBag)
+    COM_INTERFACE_ENTRY(IPropertyBag)
 END_COM_MAP()
 
 // IPropertyBag methods
-	virtual /* [local] */ HRESULT STDMETHODCALLTYPE Read(/* [in] */ LPCOLESTR pszPropName, /* [out][in] */ VARIANT __RPC_FAR *pVar, /* [in] */ IErrorLog __RPC_FAR *pErrorLog);
-	virtual HRESULT STDMETHODCALLTYPE Write(/* [in] */ LPCOLESTR pszPropName, /* [in] */ VARIANT __RPC_FAR *pVar);
+    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Read(/* [in] */ LPCOLESTR pszPropName, /* [out][in] */ VARIANT __RPC_FAR *pVar, /* [in] */ IErrorLog __RPC_FAR *pErrorLog);
+    virtual HRESULT STDMETHODCALLTYPE Write(/* [in] */ LPCOLESTR pszPropName, /* [in] */ VARIANT __RPC_FAR *pVar);
 };
 
 typedef CComObject<CPropertyBag> CPropertyBagInstance;

@@ -25,38 +25,38 @@
 #ifndef CONTROLSITEIPFRAME_H
 #define CONTROLSITEIPFRAME_H
 
-class CControlSiteIPFrame :	public CComObjectRootEx<CComSingleThreadModel>,
-							public IOleInPlaceFrame
+class CControlSiteIPFrame :    public CComObjectRootEx<CComSingleThreadModel>,
+                            public IOleInPlaceFrame
 {
 public:
-	CControlSiteIPFrame();
-	virtual ~CControlSiteIPFrame();
+    CControlSiteIPFrame();
+    virtual ~CControlSiteIPFrame();
 
-	HWND m_hwndFrame;
+    HWND m_hwndFrame;
 
 BEGIN_COM_MAP(CControlSiteIPFrame)
-	COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleInPlaceFrame)
-	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceUIWindow, IOleInPlaceFrame)
-	COM_INTERFACE_ENTRY(IOleInPlaceFrame)
+    COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleInPlaceFrame)
+    COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceUIWindow, IOleInPlaceFrame)
+    COM_INTERFACE_ENTRY(IOleInPlaceFrame)
 END_COM_MAP()
 
-	// IOleWindow
-	virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE GetWindow(/* [out] */ HWND __RPC_FAR *phwnd);
-	virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(/* [in] */ BOOL fEnterMode);
+    // IOleWindow
+    virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE GetWindow(/* [out] */ HWND __RPC_FAR *phwnd);
+    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(/* [in] */ BOOL fEnterMode);
 
-	// IOleInPlaceUIWindow implementation
-	virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE GetBorder(/* [out] */ LPRECT lprectBorder);
-	virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE RequestBorderSpace(/* [unique][in] */ LPCBORDERWIDTHS pborderwidths);
-	virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE SetBorderSpace(/* [unique][in] */ LPCBORDERWIDTHS pborderwidths);
-	virtual HRESULT STDMETHODCALLTYPE SetActiveObject(/* [unique][in] */ IOleInPlaceActiveObject __RPC_FAR *pActiveObject, /* [unique][string][in] */ LPCOLESTR pszObjName);
+    // IOleInPlaceUIWindow implementation
+    virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE GetBorder(/* [out] */ LPRECT lprectBorder);
+    virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE RequestBorderSpace(/* [unique][in] */ LPCBORDERWIDTHS pborderwidths);
+    virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE SetBorderSpace(/* [unique][in] */ LPCBORDERWIDTHS pborderwidths);
+    virtual HRESULT STDMETHODCALLTYPE SetActiveObject(/* [unique][in] */ IOleInPlaceActiveObject __RPC_FAR *pActiveObject, /* [unique][string][in] */ LPCOLESTR pszObjName);
 
-	// IOleInPlaceFrame implementation
-	virtual HRESULT STDMETHODCALLTYPE InsertMenus(/* [in] */ HMENU hmenuShared, /* [out][in] */ LPOLEMENUGROUPWIDTHS lpMenuWidths);
-	virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE SetMenu(/* [in] */ HMENU hmenuShared, /* [in] */ HOLEMENU holemenu, /* [in] */ HWND hwndActiveObject);
-	virtual HRESULT STDMETHODCALLTYPE RemoveMenus(/* [in] */ HMENU hmenuShared);
-	virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE SetStatusText(/* [in] */ LPCOLESTR pszStatusText);
-	virtual HRESULT STDMETHODCALLTYPE EnableModeless(/* [in] */ BOOL fEnable);
-	virtual HRESULT STDMETHODCALLTYPE TranslateAccelerator(/* [in] */ LPMSG lpmsg, /* [in] */ WORD wID);
+    // IOleInPlaceFrame implementation
+    virtual HRESULT STDMETHODCALLTYPE InsertMenus(/* [in] */ HMENU hmenuShared, /* [out][in] */ LPOLEMENUGROUPWIDTHS lpMenuWidths);
+    virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE SetMenu(/* [in] */ HMENU hmenuShared, /* [in] */ HOLEMENU holemenu, /* [in] */ HWND hwndActiveObject);
+    virtual HRESULT STDMETHODCALLTYPE RemoveMenus(/* [in] */ HMENU hmenuShared);
+    virtual /* [input_sync] */ HRESULT STDMETHODCALLTYPE SetStatusText(/* [in] */ LPCOLESTR pszStatusText);
+    virtual HRESULT STDMETHODCALLTYPE EnableModeless(/* [in] */ BOOL fEnable);
+    virtual HRESULT STDMETHODCALLTYPE TranslateAccelerator(/* [in] */ LPMSG lpmsg, /* [in] */ WORD wID);
 };
 
 typedef CComObject<CControlSiteIPFrame> CControlSiteIPFrameInstance;

@@ -26,7 +26,7 @@
 #define GUIDS_H
 
 #define NS_EXTERN_IID(_name) \
-	extern const nsIID _name;
+    extern const nsIID _name;
 
 // Class IDs
 NS_EXTERN_IID(kEventQueueServiceCID);

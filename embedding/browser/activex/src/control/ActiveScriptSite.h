@@ -26,53 +26,53 @@
 #define ACTIVESCRIPTSITE_H
 
 
-class CActiveScriptSite :	public CComObjectRootEx<CComSingleThreadModel>,
-							public IActiveScriptSite
+class CActiveScriptSite :    public CComObjectRootEx<CComSingleThreadModel>,
+                            public IActiveScriptSite
 {
-	// Pointer to owned script engine
-	CComQIPtr<IActiveScript, &IID_IActiveScript> m_spIActiveScript;
+    // Pointer to owned script engine
+    CComQIPtr<IActiveScript, &IID_IActiveScript> m_spIActiveScript;
 
-	// List of registered, named objects
-	CNamedObjectList m_cObjectList;
+    // List of registered, named objects
+    CNamedObjectList m_cObjectList;
 
-	// Current script state
-	SCRIPTSTATE m_ssScriptState;
+    // Current script state
+    SCRIPTSTATE m_ssScriptState;
 
 public:
-	CActiveScriptSite();
-	virtual ~CActiveScriptSite();
+    CActiveScriptSite();
+    virtual ~CActiveScriptSite();
 
 BEGIN_COM_MAP(CActiveScriptSite)
-	COM_INTERFACE_ENTRY(IActiveScriptSite)
+    COM_INTERFACE_ENTRY(IActiveScriptSite)
 END_COM_MAP()
 
-	// Attach to the specified script engine	
-	virtual HRESULT Attach(CLSID clsidScriptEngine);
-	// Helper to attach to the VBScript engine
-	virtual HRESULT AttachVBScript();
-	// Helper to attach to the JScript engine
-	virtual HRESULT AttachJScript();
-	// Detach from the script engine
-	virtual HRESULT Detach();
-	// Return the current state of the script engine
-	virtual SCRIPTSTATE GetScriptState() const
-	{
-		return m_ssScriptState;
-	}
+    // Attach to the specified script engine    
+    virtual HRESULT Attach(CLSID clsidScriptEngine);
+    // Helper to attach to the VBScript engine
+    virtual HRESULT AttachVBScript();
+    // Helper to attach to the JScript engine
+    virtual HRESULT AttachJScript();
+    // Detach from the script engine
+    virtual HRESULT Detach();
+    // Return the current state of the script engine
+    virtual SCRIPTSTATE GetScriptState() const
+    {
+        return m_ssScriptState;
+    }
 
-	// Parse the specified script
-	virtual HRESULT ParseScriptText(const TCHAR *szScript);
-	// Parse the specified script from a file
-	virtual HRESULT ParseScriptFile(const TCHAR *szFile);
-	// Add object to script address space
-	virtual HRESULT AddNamedObject(const TCHAR *szName, IUnknown *pObject, BOOL bGlobalMembers = FALSE);
-	// Play the script
-	virtual HRESULT PlayScript();
-	// Stop the script
-	virtual HRESULT StopScript();
+    // Parse the specified script
+    virtual HRESULT ParseScriptText(const TCHAR *szScript);
+    // Parse the specified script from a file
+    virtual HRESULT ParseScriptFile(const TCHAR *szFile);
+    // Add object to script address space
+    virtual HRESULT AddNamedObject(const TCHAR *szName, IUnknown *pObject, BOOL bGlobalMembers = FALSE);
+    // Play the script
+    virtual HRESULT PlayScript();
+    // Stop the script
+    virtual HRESULT StopScript();
 
 public:
-	// IActiveScriptSite
+    // IActiveScriptSite
     virtual HRESULT STDMETHODCALLTYPE GetLCID(/* [out] */ LCID __RPC_FAR *plcid);
     virtual HRESULT STDMETHODCALLTYPE GetItemInfo(/* [in] */ LPCOLESTR pstrName, /* [in] */ DWORD dwReturnMask, /* [out] */ IUnknown __RPC_FAR *__RPC_FAR *ppiunkItem, /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppti);
     virtual HRESULT STDMETHODCALLTYPE GetDocVersionString(/* [out] */ BSTR __RPC_FAR *pbstrVersion);
