@@ -76,7 +76,8 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD GetRootFolder(nsIFolder * *aRootFolder);
   NS_IMETHOD SetRootFolder(nsIFolder * aRootFolder);
 
-  
+  NS_IMETHOD PerformBiff();
+
 private:
   nsIPref *m_prefs;
   char *m_serverKey;

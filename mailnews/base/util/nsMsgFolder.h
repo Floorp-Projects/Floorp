@@ -265,6 +265,14 @@ public:
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset) = 0;
 	NS_IMETHOD SetCharset(PRUnichar * aCharset) = 0;
 
+	NS_IMETHOD GetBiffState(PRUint32 *aBiffState);
+	NS_IMETHOD SetBiffState(PRUint32 aBiffState);
+
+	NS_IMETHOD GetNumNewMessages(PRInt32 *aNumNewMessages);
+	NS_IMETHOD SetNumNewMessages(PRInt32 aNumNewMessages);
+
+	NS_IMETHOD GetNewMessagesNotificationDescription(PRUnichar * *adescription);
+
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
 	nsresult NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
@@ -305,6 +313,9 @@ protected:
   // we don't want to do an expensive select until the user actually opens that folder
   PRInt32 mNumPendingUnreadMessages;
   PRInt32 mNumPendingTotalMessages;
+
+  PRUint32	mBiffState;
+  PRInt32	mNumNewBiffMessages;
 
   PRBool mIsCachable;
 

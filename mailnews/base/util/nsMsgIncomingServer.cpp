@@ -85,7 +85,15 @@ nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
     }
 	return NS_OK;
 }
-    
+  
+NS_IMETHODIMP
+nsMsgIncomingServer::PerformBiff()
+{
+	//This had to be implemented in the derived class, but in case someone doesn't implement it
+	//just return not implemented.
+	return NS_ERROR_NOT_IMPLEMENTED;	
+}
+
 char *
 nsMsgIncomingServer::getPrefName(const char *serverKey,
                                  const char *fullPrefName)

@@ -51,7 +51,9 @@ nsMsgFolder::nsMsgFolder(void)
     mNumUnreadMessages(-1),
     mNumTotalMessages(-1),
     mDepth(0), 
-    mPrefFlags(0)
+    mPrefFlags(0),
+	mBiffState(nsMsgBiffState_NoMail),
+	mNumNewBiffMessages(0)
 	{
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -1240,6 +1242,81 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 NS_IMETHODIMP nsMsgFolder::GetNewMessages()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetBiffState(PRUint32 *aBiffState)
+{
+	if(!aBiffState)
+		return NS_ERROR_NULL_POINTER;
+	*aBiffState = mBiffState;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
+{
+	if(mBiffState != aBiffState)
+	{
+		PRUint32 oldBiffState = mBiffState;
+		mBiffState = aBiffState;
+		nsCOMPtr<nsISupports> supports;
+		if(NS_SUCCEEDED(QueryInterface(kISupportsIID, getter_AddRefs(supports))))
+			NotifyPropertyFlagChanged(supports, "BiffState", oldBiffState, mBiffState);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetNumNewMessages(PRInt32 *aNumNewMessages)
+{
+	if(!aNumNewMessages)
+		return NS_ERROR_NULL_POINTER;
+
+	*aNumNewMessages = mNumNewBiffMessages;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::SetNumNewMessages(PRInt32 aNumNewMessages)
+{
+	if(aNumNewMessages != mNumNewBiffMessages)
+	{
+		PRInt32 oldNumMessages = mNumNewBiffMessages;
+		mNumNewBiffMessages = aNumNewMessages;
+
+		char *oldNumMessagesStr = PR_smprintf("%d", oldNumMessages);
+		char *newNumMessagesStr = PR_smprintf("%d",aNumNewMessages);
+		NotifyPropertyChanged("NumNewBiffMessages", oldNumMessagesStr, newNumMessagesStr);
+		PR_smprintf_free(oldNumMessagesStr);
+		PR_smprintf_free(newNumMessagesStr);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetNewMessagesNotificationDescription(PRUnichar * *aDescription)
+{
+	nsresult rv;
+	nsString description("");
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	rv = GetServer(getter_AddRefs(server));
+	if(NS_SUCCEEDED(rv))
+	{
+		char *serverName = nsnull;
+		rv = server->GetPrettyName(&serverName);
+		if(NS_SUCCEEDED(rv) && PL_strcmp(serverName, ""))
+			description = serverName;
+		else
+		{
+			if(serverName)
+				PR_Free(serverName);
+			rv = server->GetHostName(&serverName);
+			if(NS_SUCCEEDED(rv))
+				description = serverName;
+		}
+		if(serverName)
+		  PR_Free(serverName);
+
+	}
+	*aDescription = description.ToNewUnicode();
+	return NS_OK;
 }
 
 nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
