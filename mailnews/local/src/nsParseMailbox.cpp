@@ -1286,7 +1286,9 @@ nsParseNewMailState::nsParseNewMailState()
     , m_logFile(nsnull)
 #endif
 {
+#ifdef DOING_FILTERS
 	m_inboxFileStream = nsnull;
+#endif
 }
 
 nsresult
@@ -1296,8 +1298,10 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	m_mailboxName = nsCRT::strdup(folder);
 
 	m_position = folder.GetFileSize();
+#ifdef DOING_FILTERS
 	m_rootFolder = rootFolder;
 	m_inboxFileStream = inboxFileStream;
+#endif
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartBinding mechanism the mailbox parser uses. So, let's open the db right now.
 	nsCOMPtr<nsIMsgDatabase> mailDB;
