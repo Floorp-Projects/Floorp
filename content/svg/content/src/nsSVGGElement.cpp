@@ -117,7 +117,8 @@ nsSVGGElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
     sTextContentElementsMap,
-    sFontSpecificationMap
+    sFontSpecificationMap,
+    sColorMap
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||

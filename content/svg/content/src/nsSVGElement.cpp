@@ -433,6 +433,14 @@ nsSVGElement::sMarkersMap[] = {
   { nsnull }
 };
 
+// PresentationAttributes-Color
+/* static */ const nsGenericElement::MappedAttributeEntry
+nsSVGElement::sColorMap[] = {
+  { &nsSVGAtoms::color },
+  { nsnull }
+};
+
+
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
