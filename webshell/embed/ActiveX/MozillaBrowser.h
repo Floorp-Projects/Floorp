@@ -132,7 +132,8 @@ BEGIN_MSG_MAP(CMozillaBrowser)
 	COMMAND_ID_HANDLER(ID_PAGESETUP, OnPageSetup)
 END_MSG_MAP()
 
-	static HRESULT _stdcall EditModeHandler(IOleCommandTarget *pCmdTarget, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+	static HRESULT _stdcall EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+	static HRESULT _stdcall EditCommandHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 
 BEGIN_OLECOMMAND_TABLE()
 	// Standard "common" commands
@@ -304,6 +305,7 @@ protected:
 	virtual HRESULT GetPresShell(nsIPresShell **pPresShell);
 	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
 	virtual HRESULT SetEditorMode(BOOL bEnabled);
+	virtual HRESULT OnEditorCommand(DWORD nCmdID);
 	virtual BOOL IsValid();
 	virtual int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = _T(""), UINT nType = MB_OK);
 
