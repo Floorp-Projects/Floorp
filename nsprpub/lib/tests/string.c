@@ -3038,7 +3038,7 @@ PRBool test_031(void)
     s1 = string;
     while( (token = PL_strtok_r(s1, s2, &lasts)) != NULL)
     {
-        if( strcmp(token, tokens[i]) != 0 )
+        if( PL_strcmp(token, tokens[i]) != 0 )
         {
             printf("FAIL wrong token scanned\n");
             return PR_FALSE;
