@@ -61,6 +61,7 @@ pref("update.app.updateVersion", "");
 pref("update.app.updateDescription", "");
 pref("update.app.updateURL", "");
 pref("update.extensions.enabled", true);
+pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.properties");
 // Automatically download and install updates to themes and extensions.
 pref("update.extensions.autoUpdate", false);
 
