@@ -35,39 +35,20 @@
 
 
 /*
-  WARNING:
-    This file defines several macros for internal use only.  These macros begin with the
-    prefix NSCAP_.  Do not use these macros in your own code.  They are for internal use
-    only for cross-platform compatibility, and are subject to change without notice.
-*/
-
-
-/*
-  WARNING:
-    The code in this file should be considered EXPERIMENTAL.  It defies several of our
-    current coding conventions; in particular, it is based on templates.
-
-
-    Except within the Composer module, it is not to be used in production code under
-    any circumstances, until such time as our current coding-conventions barring templates
-    can be relaxed.  At that time, this warning will be removed.
-
-    It is checked-in only so that concerned parties can experiment, to see if it fills
-    a useful (and affordable) role.
-
-    NOT FOR USE IN PRODUCTION CODE!
-*/
-
-
-/*
   To do...
 
+		+ send updated files to Peter Linss (get his approval)
     + finish `User Manual'
+    + put user manual online
     + better comments
 */
 
 
 /* USER MANUAL
+
+  See also:
+    <http://www.meer.net/ScottCollins/doc/nsCOMPtr.html>, or
+    <http://www.mozilla.org/...?...> [[get a place for this]]
 
   What is |nsCOMPtr|?
 
@@ -102,22 +83,6 @@
     your use force others to use it.
 
 
-  Why does |nsCOMPtr| have such a funny name?  I.e., why doesn't it follow our
-  naming conventions?
-
-		[[OBSOLETE -- needs update]]
-
-    The name of this class is very important.  It is designed to communicate the purpose
-    of the class easily to any programmer new to the project, who is already familiar with
-    |std::auto_ptr| and who knows that COM requires ref-counting.  Relating this class'
-    name to |auto_ptr| is far more important to clarity than following the local naming
-    convention.  |func_AddRefs| and |func_doesnt_AddRef| use underscores for the same
-    reason our special macros do, quoting from our coding conventions "...to make them
-    stick out like a sore thumb".  Note also that since |AddRef| is one word,
-    |func_AddRefs| and |func_doesnt_AddRef| couldn't have the right spacing if only inter-
-    caps were used. 
-
-
   Where should I use |nsCOMPtr|?
 
     ...
@@ -125,7 +90,7 @@
 
   Where _shouldn't_ I use |nsCOMPtr|?
 
-    ...
+    In public interfaces... [[others]]
 
 
   How does a |nsCOMPtr| differ from a raw pointer?
@@ -181,7 +146,7 @@
     Rather it must be wrapped with a utility call that says whether the function calls
     |AddRef| before returning, e.g.,
 
-      ...->QueryInterface(riid, &fooP)      ...->QueryInterface(riid, func_AddRefs(fooP))
+      ...->QueryInterface(riid, &fooP)      ...->QueryInterface(riid, getter_AddRefs(fooP))
 
       LookupFoo(&fooP);                     LookupFoo( getter_doesnt_AddRef(fooP) );
 
@@ -229,7 +194,33 @@
 
   What do I have to beware of?
 
-    ...
+    VC++ < 6.0 _can't_ handle the following situation
+
+      class nsIFoo;          // forward declare some class
+      // ...
+      nsCOMPtr<nsIFoo> bar;  // ERROR: incomplete type nsIFoo, etc.
+ 
+    Instead, you must make sure that you actually defined the underlying interface class, e.g.,
+
+      #include "nsIFoo.h"    // fully defines |class nsIFoo|
+      // ...
+      nsCOMPtr<nsIFoo> bar;  // no problem
+
+    Why is this?  It's because VC++ tries to instantiate every member of the template
+    as soon as it sees the template declarations.  Bad compiler.  No cookie!
+    [[Thanks to mjudge, waterson, and pinkerton on this one.]]
+
+    [[ others ]]
+
+
+  Why does |getter_AddRefs| have such a funny name?  I.e., why doesn't it follow our
+  naming conventions?
+
+    |getter_AddRefs| and |getter_doesnt_AddRef| use underscores for the same
+    reason our special macros do, quoting from our coding conventions "...to make them
+    stick out like a sore thumb".  Note also that since |AddRef| is one word,
+    |getter_AddRefs| and |getter_doesnt_AddRef| couldn't have the right spacing if only inter-
+    caps were used. 
 */
 
 
@@ -238,16 +229,22 @@
 
 
 
+/*
+  WARNING:
+    This file defines several macros for internal use only.  These macros begin with the
+    prefix |NSCAP_|.  Do not use these macros in your own code.  They are for internal use
+    only for cross-platform compatibility, and are subject to change without notice.
+*/
+
+
   /*
-    Set up some #defines to turn off a couple of troublesome C++ features.
+    Set up some |#define|s to turn off a couple of troublesome C++ features.
     Interestingly, none of the compilers barf on template stuff.
 
     Ideally, we would want declarations like these in a configuration file
-    that that everybody would get.  Deciding exactly how to do that should
+    that everybody would get.  Deciding exactly how to do that should
     be part of the process of moving from experimental to production.
   */
-
-#define NSCAP_FEATURE_DONT_ADDREF
 
 #if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
@@ -282,6 +279,20 @@
   typedef PRBool NSCAP_BOOL;
 #endif
 
+	/*
+		WARNING:
+			VC++4.2 is very picky.  To compile under VC++4.2, the classes must be defined
+			in an order that satisfies:
+		
+				nsDerivedSafe < nsCOMPtr
+				nsDontAddRef < nsCOMPtr
+				nsCOMPtr < nsGetterAddRefs
+				nsCOMPtr < nsGetterDoesntAddRef
+
+			The other compilers probably won't complain, so please don't reorder these
+			classes, on pain of breaking 4.2 compatibility.
+	*/
+
 
 template <class T>
 class nsDerivedSafe : public T
@@ -302,7 +313,11 @@ class nsDerivedSafe : public T
       nsrefcnt Release();
 #endif
 
-			void operator delete(void*); // NOT TO BE IMPELEMENTED
+			void operator delete( void* );                    // NOT TO BE IMPLEMENTED
+				// declaring |operator delete| private makes calling delete on an interface pointer a compile error
+
+			nsDerivedSafe& operator=( const nsDerivedSafe& ); // NOT TO BE IMPLEMENTED
+				// you may not call |operator=()| through a dereferenced |nsCOMPtr|, because you'd get the wrong one
   };
 
 #if defined(NSCAP_NO_MEMBER_USING_DECLARATIONS) && defined(NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS)
@@ -325,7 +340,6 @@ nsDerivedSafe<T>::Release()
 
 
 
-#ifdef NSCAP_FEATURE_DONT_ADDREF
 template <class T>
 struct nsDontAddRef
     /*
@@ -360,7 +374,6 @@ dont_AddRef( T* aRawPtr )
   {
     return nsDontAddRef<T>(aRawPtr);
   }
-#endif
 
 
 
@@ -389,7 +402,6 @@ class nsCOMPtr
 	      		// ...and |QueryInterface| does the |AddRef| for us
       	}
 
-#ifdef NSCAP_FEATURE_DONT_ADDREF
       explicit
       nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
           : mRawPtr(aSmartPtr.mRawPtr),
@@ -397,7 +409,6 @@ class nsCOMPtr
         {
           // nothing else to do here
         }
-#endif
 
       nsCOMPtr( const nsCOMPtr<T>& aSmartPtr )
           : mRawPtr(aSmartPtr.mRawPtr),
@@ -429,7 +440,6 @@ class nsCOMPtr
       		return *this;
 				}
 
-#ifdef NSCAP_FEATURE_DONT_ADDREF
       nsCOMPtr&
       operator=( const nsDontAddRef<T>& rhs )
         {
@@ -440,7 +450,6 @@ class nsCOMPtr
           mRawPtr = rhs.mRawPtr;
           return *this;
         }
-#endif
 
 			nsCOMPtr&
 			operator=( const nsCOMPtr& rhs )
