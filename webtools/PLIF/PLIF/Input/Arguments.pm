@@ -184,9 +184,3 @@ sub propertyGet {
         # }
     }
 }
-
-sub getMetaData {
-    my $self = shift;
-    my($field) = @_;
-    return '';
-}
