@@ -2861,6 +2861,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
             }
 
+            // ignore [shift+]alt+space so the OS can handle it 
+            if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
+                result = PR_FALSE;
+                break;
+            }
+
             unsigned char    ch = (unsigned char)wParam;
             UINT            char_result;
   
@@ -2936,7 +2942,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
                 mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
             } else { // WM_KEYUP
-                // If the Context Code bit is down and we got a WM_KEY
                 // If the Context Code bit is down and we got a WM_KEY
                 // it is a key press for character, not accelerator
                 // see p246 of Programming Windows 95 [Charles Petzold] for details
