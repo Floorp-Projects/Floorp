@@ -31,26 +31,21 @@ nsRDFDOMViewerElement::~nsRDFDOMViewerElement()
 NS_IMPL_ISUPPORTS_INHERITED(nsRDFDOMViewerElement, nsRDFResource, nsIDOMViewerElement)
 
 NS_IMETHODIMP
-nsRDFDOMViewerElement::SetNode(nsIDOMNode* node)
+nsRDFDOMViewerElement::SetObject(nsISupports* object)
 {
-  mNode = node;
+  mObject = do_QueryInterface(object);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRDFDOMViewerElement::GetNode(nsIDOMNode** node)
+nsRDFDOMViewerElement::GetObject(nsISupports** object)
 {
-  if (!node) return NS_ERROR_NULL_POINTER;
+  if (!object) return NS_ERROR_NULL_POINTER;
 
-  nsresult rv = NS_OK;
-  if (mNode) {
-      *node = mNode;
-      NS_ADDREF(*node);
-  }
-  else {
-      *node = nsnull;
-  }
-  return rv;
+  *object = mObject;
+  NS_IF_ADDREF(*object);
+  
+  return NS_OK;
 }
   
 NS_METHOD

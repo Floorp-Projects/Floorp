@@ -12,12 +12,55 @@
 <html:script language="JavaScript" src="DOMDataSourceViewer.js"/>
 <box align="vertical" flex="30%">
   <html:input value="resource:/res/samples/rdf/domviewer.html" type="text" name="url" id="url" onkeyup="if (event.which == 13) loadUrl();"/>
+  <html:div>
+    Show: 
+    <html:input type="checkbox" onclick="setMode('content', !event.target.checked);"/>
+    Content
+    <html:input type="checkbox" onclick="setMode('dom', !event.target.checked);"/>
+    DOM
+    <html:input type="checkbox" onclick="setMode('frame', !event.target.checked);"/> Frames
+    <html:input type="checkbox" onclick="setMode('leaf', !event.target.checked);"/>
+    OOB data
+  </html:div>
   <box align="horizontal">
     <titledbutton onclick="loadUrl();" value="Load"/>
     <titledbutton onclick="refreshTree();" value="Refresh"/>
   </box>
-  <html:iframe flex="100%" src="DOMTree.xul" name="treeframe"/>
+<html:div flex="100%">
+<tree style="height:100%"
+  rdf:datasources="rdf:domds"
+  id="dataSourceTree">
+
+  <template>
+    <rule>
+      <treechildren>
+        <treeitem uri="..."
+          Type="rdf:http://home.netscape.com/NC-rdf#Type">
+          <treerow>
+            <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            <treecell value="rdf:http://home.netscape.com/NC-rdf#Value"/>
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </rule>
+  <treechildren>
+    <treeitem   id="NC:DOMRoot"/>
+  </treechildren>
+  </template>
+
+  <treecol style="width: 50%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol style="width: 50%" id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value"/>
+  <treehead>
+    <treerow>
+      <treecell value="Name"/>
+      <treecell value="Value"/>
+    </treerow>
+  </treehead>
+</tree>
+</html:div>
+
 </box>
+<splitter collapse="before" persist="state hidden" chromeclass="extrachrome"/>
 <html:iframe onload="onSrcLoaded();" name="srcdoc" src="resource:/res/samples/rdf/domviewer.html" flex="73%"/>
 
 </window>

@@ -32,7 +32,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMText.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNode.h"
@@ -40,7 +39,19 @@
 #include "nsIDOMViewerElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMXULDocument.h"
+#include "nsRDFDOMViewerUtils.h"
 
+
+#include "nsICSSDeclaration.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDocument.h"
+
+#include "nsIScriptGlobalObject.h"
+#include "nsIWebShell.h"
+#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
 
 #include "prprf.h"
 
@@ -54,6 +65,7 @@ static PRInt32 gCurrentId=0;
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kFrameIID, NS_IFRAME_IID);
 
 nsRDFDOMDataSource::nsRDFDOMDataSource():
     mURI(nsnull),
@@ -80,50 +92,9 @@ nsRDFDOMDataSource::~nsRDFDOMDataSource()
                                                       mRDFService);
 }
 
-NS_IMPL_ADDREF(nsRDFDOMDataSource)
-NS_IMPL_RELEASE(nsRDFDOMDataSource)
-
-NS_IMETHODIMP
-nsRDFDOMDataSource::QueryInterface(const nsIID& iid, void **result)
-{
-  nsresult rv = NS_NOINTERFACE;
-  if (!result) return NS_ERROR_NULL_POINTER;
-
-  void *res=nsnull;
-
-  if (iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(kISupportsIID)) {
-    res = NS_STATIC_CAST(nsIRDFDataSource*, this);
-  }
-  else if(iid.Equals(nsIDOMDataSource::GetIID())) {
-      res = NS_STATIC_CAST(nsIDOMDataSource*, this);
-  }
-  if (res) {
-      NS_ADDREF(this);
-      *result = res;
-      rv = NS_OK;
-  }
-
-  return rv;
-
-}
-
-
-/* void Init (in string uri); */
-NS_IMETHODIMP
-nsRDFDOMDataSource::Init(const char *uri)
-{
-    nsresult rv=NS_OK;
-
-    if (!mURI || PL_strcmp(uri, mURI) != 0)
-        mURI = PL_strdup(uri);
-    
-    
-    rv = getRDFService()->RegisterDataSource(this, PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-    
-    return rv;
-}
+NS_IMPL_ISUPPORTS2(nsRDFDOMDataSource,
+                   nsIRDFDataSource,
+                   nsIDOMDataSource);
 
 
 /* readonly attribute string URI; */
@@ -171,8 +142,10 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
          (const char*)propval);
 #endif
 
+  *_retval = nsnull;
+  
   nsresult rv;
-  nsAutoString str;
+  nsAutoString str = "unknown";
   if (aSource == kNC_DOMRoot) {
     if (aProperty == kNC_Name)
       str="DOMRoot";
@@ -180,41 +153,89 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
       str="DOMRootValue";
     else if (aProperty == kNC_Type)
       str = "DOMRootType";
-
+    rv = NS_OK;
   } else {
+    // try the different objects we know about:
+
     nsCOMPtr<nsIDOMViewerElement> nodeContainer =
       do_QueryInterface(aSource);
 
-    nsCOMPtr<nsIDOMNode> node;
-    nodeContainer->GetNode(getter_AddRefs(node));
+    nsCOMPtr<nsISupports> supports;
+    nodeContainer->GetObject(getter_AddRefs(supports));
 
-    if (node) {
-      if (aProperty == kNC_Name)
-        node->GetNodeName(str);
-      else if (aProperty == kNC_Value)
-        node->GetNodeValue(str);
-      else if (aProperty == kNC_Type) {
-        PRUint16 type;
-        node->GetNodeType(&type);
-        str.Append(PRInt32(type));
-      }        
-    }
+    rv = getTargetForKnownObject(supports, aProperty, _retval);
   }
 
-  nsCOMPtr<nsIRDFLiteral> literal;
-
-  PRUnichar* uniStr = str.ToNewUnicode();
-  rv = getRDFService()->GetLiteral(uniStr,
-                                   getter_AddRefs(literal));
-  nsAllocator::Free(uniStr);
-  
-  *_retval = literal;
-  NS_IF_ADDREF(*_retval);
+  // if nobody set _retval, then create a literal from *str
+  if (!(*_retval))
+    rv = createLiteral(str, _retval);
   
   return rv;
 }
 
+nsresult
+nsRDFDOMDataSource::createFrameTarget(nsIFrame *frame,
+                                        nsIRDFResource *aProperty,
+                                        nsIRDFNode **aResult)
+{
+  nsAutoString str;
+  if (aProperty == kNC_Name)
+    frame->GetFrameName(str);
+  else if (aProperty == kNC_Type)
+    str = "frame";
 
+  return createLiteral(str, aResult);
+}
+
+
+nsresult
+nsRDFDOMDataSource::createDOMNodeTarget(nsIDOMNode *node,
+                                        nsIRDFResource *aProperty,
+                                        nsIRDFNode **aResult)
+{
+  nsAutoString str;
+  if (aProperty == kNC_Name)
+    node->GetNodeName(str);
+  else if (aProperty == kNC_Value)
+    node->GetNodeValue(str);
+  else if (aProperty == kNC_Type) {
+    PRUint16 type;
+    node->GetNodeType(&type);
+    str.Append(PRInt32(type));
+  }
+  return createLiteral(str, aResult);
+}
+
+nsresult
+nsRDFDOMDataSource::createContentTarget(nsIContent *content,
+                                        nsIRDFResource *aProperty,
+                                        nsIRDFNode **aResult)
+{
+  nsAutoString str;
+  if (aProperty == kNC_Name) {
+    nsCOMPtr<nsIAtom> atom;
+    content->GetTag(*getter_AddRefs(atom));
+    atom->ToString(str);
+  } else if (aProperty == kNC_Value) {
+
+
+  } else if (aProperty == kNC_Type) {
+
+    str = "content";
+  }
+
+  return createLiteral(str, aResult);
+}
+
+nsresult
+nsRDFDOMDataSource::createStyledContentTarget(nsIStyledContent *styledContent,
+                                              nsIRDFResource *aProperty,
+                                              nsIRDFNode **aResult)
+{
+
+  return createContentTarget(styledContent, aProperty, aResult);
+}
+                                        
 /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource, in nsIRDFResource aProperty, in boolean aTruthValue); */
 NS_IMETHODIMP
 nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsISimpleEnumerator **_retval)
@@ -245,97 +266,709 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
 
   
   // what node is this?
-  nsCOMPtr<nsIDOMNode> node;
   if (aSource == kNC_DOMRoot) {
-    node = mDocument;
+    nsStringKey frameMode("frame");
+    if (mModeTable.Get(&frameMode))
+      rv = getTargetsForKnownObject(mRootFrame, aProperty, PR_TRUE, arcs);
+    else
+      rv = getTargetsForKnownObject(mDocument, aProperty, PR_TRUE, arcs);
   } else {
     nsCOMPtr<nsIDOMViewerElement> nodeContainer;
     nodeContainer = do_QueryInterface(aSource, &rv);
 
-    if (NS_SUCCEEDED(rv) && nodeContainer)
-      nodeContainer->GetNode(getter_AddRefs(node));
-  }
+    if (NS_SUCCEEDED(rv) && nodeContainer) {
+      nsCOMPtr<nsISupports> supports;
+      nodeContainer->GetObject(getter_AddRefs(supports));
 
-  // node is now the node we're interested in.
-
-  if (aProperty == kNC_Child && node ) {
-    
-    PRUint32 i;
-
-    // attributes
-    nsCOMPtr<nsIDOMNamedNodeMap> attrmap;
-    node->GetAttributes(getter_AddRefs(attrmap));
-
-    PRUint32 length=0;
-    if (attrmap) {
-      rv = attrmap->GetLength(&length);
-      if (NS_FAILED(rv)) return rv;
-    }
-    for (i=0; i<length; i++) {
-      nsCOMPtr<nsIDOMNode> attrNode;
-      attrmap->Item(i,getter_AddRefs(attrNode));
+      rv = getTargetsForKnownObject(supports, aProperty, PR_FALSE, arcs);
       
-      nsAutoString attrName;
-      attrNode->GetNodeName(attrName);
-      char *attr_name = attrName.ToNewCString();
-      char *uri = PR_smprintf("%s#%s",
-                              (const char*)sourceval,
-                              attr_name);
-      nsCRT::free(attr_name);
-      if (uri) {
-        nsCOMPtr<nsIRDFResource> resource;
-        getRDFService()->GetResource(uri,
-                                     getter_AddRefs(resource));
-        {
-          // now fill in the resource stuff
-          nsCOMPtr<nsIDOMViewerElement> nodeContainer =
-            do_QueryInterface(resource);
-          if (nodeContainer)
-            nodeContainer->SetNode(attrNode);
-        }
-        arcs->AppendElement(resource);
-      }
     }
-    
-    // child nodes
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    rv = node->GetChildNodes(getter_AddRefs(childNodes));
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = childNodes->GetLength(&length);
-    if (NS_FAILED(rv)) return rv;
-
-    
-    nsCOMPtr<nsIDOMNode> childNode;
-    for (i=0; i<length; i++) {
-      
-      rv = childNodes->Item(i, getter_AddRefs(childNode));
-      if (NS_FAILED(rv)) return rv;
-
-
-      char *uri =
-        PR_smprintf("dom://%8.8X", gCurrentId++);
-
-      if (uri) {
-        nsCOMPtr<nsIRDFResource> resource;
-        getRDFService()->GetResource(uri,
-                                     getter_AddRefs(resource));
-        {
-          // now fill in the resource stuff
-          nsCOMPtr<nsIDOMViewerElement> nodeContainer =
-            do_QueryInterface(resource);
-          if (nodeContainer)
-            nodeContainer->SetNode(childNode);
-        }
-        arcs->AppendElement(resource);
-      }
-    }
-
   }
 
   return NS_OK;
 }
 
+
+nsresult
+nsRDFDOMDataSource::createContentArcs(nsIContent *content,
+                                      nsISupportsArray* arcs)
+{
+  nsresult rv;
+  rv = createContentAttributeArcs(content, arcs);
+  rv = createContentMiscArcs(content, arcs);
+  rv = createContentChildArcs(content, arcs);
+  return rv;
+}
+
+nsresult
+nsRDFDOMDataSource::createContentChildArcs(nsIContent *content,
+                                           nsISupportsArray* arcs)
+{
+  nsresult rv = NS_OK;
+  PRInt32 length;
+  content->ChildCount(length);
+  PRInt32 i;
+  for (i=0; i<length; i++) {
+    nsCOMPtr<nsIContent> child;
+    content->ChildAt(i, *getter_AddRefs(child));
+
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = getResourceForObject(child, getter_AddRefs(resource));
+    rv = arcs->AppendElement(resource);
+  }
+
+  return rv;
+}
+
+nsresult
+nsRDFDOMDataSource::createContentAttributeArcs(nsIContent* content,
+                                               nsISupportsArray* arcs)
+{
+  nsresult rv;
+  PRInt32 attribs;
+
+  content->GetAttributeCount(attribs);
+
+  // content attributes don't have objects associated with them, so
+  // we have touse the viewerObjects
+  PRInt32 i;
+  for (i=0; i< attribs; i++) {
+    nsCOMPtr<nsIAtom> nameAtom;
+    PRInt32 nameSpace;
+    content->GetAttributeNameAt(i, nameSpace, *getter_AddRefs(nameAtom));
+    
+    nsString attribValue;
+    rv = content->GetAttribute(nameSpace, nameAtom, attribValue);
+    if (NS_FAILED(rv)) continue;
+
+    nsString name; nameAtom->ToString(name);
+
+    appendLeafObject(name, attribValue, arcs);
+    
+  }
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::createContentMiscArcs(nsIContent *content,
+                                          nsISupportsArray *arcs)
+{
+  nsAutoString name;
+  nsAutoString value;
+
+  // namespace
+  name="namespace";
+
+  PRInt32 namespaceID;
+  content->GetNameSpaceID(namespaceID);
+  value.Append(namespaceID);
+
+  appendLeafObject(name, value, arcs);
+
+  // cancontainchildren
+  name = "Can contain children";
+  
+  PRBool containerCapability;
+  content->CanContainChildren(containerCapability);
+  value = containerCapability ? "yes" : "no";
+ 
+  appendLeafObject(name, value, arcs);
+
+  // syntetic
+  name = "synthetic";
+  
+  PRBool synthetic;
+  content->IsSynthetic(synthetic);
+  value = synthetic ? "yes" : "no";
+
+  appendLeafObject(name, value, arcs);
+
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::createStyledContentArcs(nsIStyledContent *content,
+                                            nsISupportsArray *arcs)
+{
+  nsresult rv;
+
+  // classes
+  createStyledContentClassArcs(content, arcs);
+  
+  nsCOMPtr<nsISupportsArray> rules;
+
+  // content style rules
+  NS_NewISupportsArray(getter_AddRefs(rules));
+  rv = content->GetContentStyleRules(rules);
+  if (NS_SUCCEEDED(rv))
+    rv = createArcsFromSupportsArray(rules, arcs);
+
+  // inline style rules
+  NS_NewISupportsArray(getter_AddRefs(rules));
+  rv = content->GetContentStyleRules(rules);
+  if (NS_SUCCEEDED(rv))
+    rv = createArcsFromSupportsArray(rules, arcs);
+
+  // continue up hierarchy
+  return createContentArcs(content, arcs);
+}
+
+nsresult
+nsRDFDOMDataSource::createStyledContentClassArcs(nsIStyledContent *content,
+                                                 nsISupportsArray *arcs)
+{
+  nsVoidArray classes;
+  content->GetClasses(classes);
+  PRInt32 count = classes.Count();
+  for (PRInt32 i=0; i< count ; i++) {
+    nsIAtom *atom = (nsIAtom*)classes[i];
+    
+    nsAutoString value;
+    atom->ToString(value);
+
+    nsAutoString name("class");
+    appendLeafObject(name, value, arcs);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::getDOMCSSStyleDeclTarget(nsIDOMCSSStyleDeclaration *decl,
+                                             nsIRDFResource *property,
+                                             nsIRDFNode **aResult)
+{
+  nsAutoString str;
+  if (property == kNC_Name)
+    str = "DOM CSS Style Declaration";
+  
+  else if (property == kNC_Value)
+    decl->GetCssText(str);
+  
+  else if (property == kNC_Type)
+    str = "domcssstyledecl";
+
+  return createLiteral(str, aResult);
+}
+                                       
+
+nsresult
+nsRDFDOMDataSource::getCSSStyleRuleTarget(nsICSSStyleRule *rule,
+                                          nsIRDFResource *property,
+                                          nsIRDFNode **aResult)
+{
+  nsICSSDeclaration* decl;
+
+  nsAutoString str;
+  if (property == kNC_Name)
+    str = "DOM CSS Style Rule";
+  
+  else if (property == kNC_Value) {
+    decl = rule->GetDeclaration();
+    if (decl) {
+      decl->ToString(str);
+    } else
+      str = "<unavailable>";
+    
+  } else if (property == kNC_Type)
+    str="domcssstylerule";
+    
+  return createLiteral(str, aResult);
+
+}
+
+nsresult
+nsRDFDOMDataSource::getDOMCSSRuleTarget(nsIDOMCSSRule *rule,
+                                        nsIRDFResource *property,
+                                        nsIRDFNode **aResult)
+{
+  nsAutoString str;
+  if (property == kNC_Name)
+    str = "DOM CSS Rule";
+  else if (property == kNC_Value)
+    rule->GetCssText(str);
+  else
+    str = "domcssrule";
+
+  return createLiteral(str, aResult);
+}
+
+
+nsresult
+nsRDFDOMDataSource::getDOMCSSStyleRuleTarget(nsIDOMCSSStyleRule *rule,
+                                       nsIRDFResource *property,
+                                       nsIRDFNode **aResult)
+{
+  return getDOMCSSRuleTarget(rule, property, aResult);
+}
+
+
+nsresult
+nsRDFDOMDataSource::getCSSRuleTarget(nsICSSRule *rule,
+                                       nsIRDFResource *property,
+                                       nsIRDFNode **aResult)
+{
+  nsAutoString str;
+  if (property == kNC_Name)
+    str = "CSSRule";
+  else if (property == kNC_Value)
+    str = "<unavailable>";
+  else if (property == kNC_Type)
+    str = "cssrule";
+
+  return createLiteral(str, aResult);
+}
+
+nsresult
+nsRDFDOMDataSource::getStyleRuleTarget(nsIStyleRule *rule,
+                                       nsIRDFResource *property,
+                                       nsIRDFNode **aResult)
+{
+  nsAutoString str;
+  if (property == kNC_Name)
+    str = "styleRule";
+  else if (property == kNC_Value)
+    str = "<unavailable>";
+  else if (property == kNC_Type) {
+    str = "stylerule";
+  }
+
+  return createLiteral(str, aResult);
+}
+
+nsresult
+nsRDFDOMDataSource::createFrameArcs(nsIFrame* frame,
+                                    nsISupportsArray* arcs)
+{
+  nsresult rv;
+  nsIFrame *child;
+  nsCOMPtr<nsIRDFResource> resource;
+
+  // primary child list
+  frame->FirstChild(nsnull, &child);
+  while (child) {
+    rv = getResourceForObject(child, getter_AddRefs(resource));
+    arcs->AppendElement(resource);
+
+    child->GetNextSibling(&child);
+  }
+  
+  // secondary child lists
+  PRInt32 listIndex=0;
+  nsCOMPtr<nsIAtom> childList;
+  frame->GetAdditionalChildListName(listIndex++, getter_AddRefs(childList));
+  while (childList) {
+    rv = frame->FirstChild(childList, &child);
+    while (NS_SUCCEEDED(rv) && (child)) {
+      rv = getResourceForObject(child, getter_AddRefs(resource));
+      arcs->AppendElement(resource);
+      
+      child->GetNextSibling(&child);
+    }
+
+    frame->GetAdditionalChildListName(listIndex++, getter_AddRefs(childList));
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::createHTMLElementArcs(nsIDOMHTMLElement* element,
+                                          nsISupportsArray* arcs)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> decl;
+  
+  rv = element->GetStyle(getter_AddRefs(decl));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = getResourceForObject(decl, getter_AddRefs(resource));
+    arcs->AppendElement(resource);
+  }
+
+  return createDOMNodeArcs(element, arcs);
+    
+}
+
+
+nsresult
+nsRDFDOMDataSource::createDOMNodeArcs(nsIDOMNode *node,
+                                      nsISupportsArray* arcs)
+{
+  nsresult rv;
+
+  rv = createDOMAttributeArcs(node, arcs);
+  rv = createDOMChildArcs(node, arcs);
+    
+  return rv;
+
+}
+
+nsresult
+nsRDFDOMDataSource::createDOMAttributeArcs(nsIDOMNode *node,
+                                           nsISupportsArray *arcs)
+{
+  if (!node) return NS_OK;
+  nsresult rv;
+  // attributes
+  nsCOMPtr<nsIDOMNamedNodeMap> attrmap;
+  rv = node->GetAttributes(getter_AddRefs(attrmap));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = createDOMNamedNodeMapArcs(attrmap, arcs);
+  
+  return rv;
+}
+
+nsresult
+nsRDFDOMDataSource::createDOMChildArcs(nsIDOMNode *node,
+                                       nsISupportsArray *arcs)
+{
+  if (!node) return NS_OK;
+  nsresult rv;
+  // child nodes
+  nsCOMPtr<nsIDOMNodeList> childNodes;
+  rv = node->GetChildNodes(getter_AddRefs(childNodes));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = createDOMNodeListArcs(childNodes, arcs);
+  
+  return rv;
+}
+
+nsresult
+nsRDFDOMDataSource::createDOMNodeListArcs(nsIDOMNodeList *nodelist,
+                                          nsISupportsArray *arcs)
+{
+
+  if (!nodelist) return NS_OK;
+  PRUint32 length=0;
+  nsresult rv = nodelist->GetLength(&length);
+  if (NS_FAILED(rv)) return rv;
+
+    
+  PRUint32 i;
+  for (i=0; i<length; i++) {
+      
+    nsCOMPtr<nsIDOMNode> node;
+    rv = nodelist->Item(i, getter_AddRefs(node));
+
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = getResourceForObject(node, getter_AddRefs(resource));
+    rv = arcs->AppendElement(resource);
+  }
+  return rv;
+
+
+}
+
+nsresult
+nsRDFDOMDataSource::createDOMNamedNodeMapArcs(nsIDOMNamedNodeMap *nodelist,
+                                          nsISupportsArray *arcs)
+{
+
+  if (!nodelist) return NS_OK;
+  PRUint32 length=0;
+  nsresult  rv = nodelist->GetLength(&length);
+  if (NS_FAILED(rv)) return rv;
+
+    
+  PRUint32 i;
+  for (i=0; i<length; i++) {
+      
+    nsCOMPtr<nsIDOMNode> node;
+    rv = nodelist->Item(i, getter_AddRefs(node));
+
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = getResourceForObject(node, getter_AddRefs(resource));
+    rv = arcs->AppendElement(resource);
+  }
+  return rv;
+
+
+}
+
+
+nsresult
+nsRDFDOMDataSource::getResourceForObject(nsISupports* object,
+                                         nsIRDFResource** resource)
+{
+  nsresult rv;
+  nsISupportsKey objKey(object);
+  nsCOMPtr<nsISupports> supports = dont_AddRef((nsISupports*)objectTable.Get(&objKey));
+
+  // it's not in the hash table, so add it.
+  if (supports) {
+    nsCOMPtr<nsIRDFResource> res = do_QueryInterface(supports, &rv);
+    *resource = res;
+  } else {
+    char *uri =
+      PR_smprintf("object://%8.8X", gCurrentId++);
+    
+    rv = getRDFService()->GetResource(uri, resource);
+    if (NS_FAILED(rv)) return rv;
+
+    // add it to the hash table
+    objectTable.Put(&objKey, *resource);
+    
+    // now fill in the resource stuff
+    nsCOMPtr<nsIDOMViewerElement> nodeContainer =
+      do_QueryInterface(*resource, &rv);
+
+    if (NS_FAILED(rv)) return rv;
+    nodeContainer->SetObject(object);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::getTargetForKnownObject(nsISupports* object,
+                                            nsIRDFResource *aProperty,
+                                            nsIRDFNode ** aResult)
+{
+  nsresult rv;
+
+  // should we display nsIFrames?
+  nsStringKey frameMode("frame");
+  if (mModeTable.Get(&frameMode)) {
+    nsIFrame *frame;
+    rv = object->QueryInterface(kFrameIID, (void **)&frame);
+    if (NS_SUCCEEDED(rv)) {
+      return createFrameTarget(frame, aProperty, aResult);
+    }
+  }
+
+  // should we display nsIDOMNodes?
+  nsStringKey domMode("dom");
+  if (mModeTable.Get(&domMode)) {
+    
+    // nsIDOMNode
+    nsCOMPtr<nsIDOMNode> node =
+      do_QueryInterface(object, &rv);
+    if (NS_SUCCEEDED(rv))
+      return createDOMNodeTarget(node, aProperty, aResult);
+  }
+
+  // if we get this far, default to nsIContent mode
+  
+  // nsIStyledContent
+  // nsIContent
+  nsCOMPtr<nsIStyledContent> styledContent =
+    do_QueryInterface(object, &rv);
+  if (NS_SUCCEEDED(rv))
+    return createStyledContentTarget(styledContent, aProperty, aResult);
+    
+    // nsIContent
+  nsCOMPtr<nsIContent> content =
+    do_QueryInterface(object, &rv);
+  if (NS_SUCCEEDED(rv))
+    return createContentTarget(content, aProperty, aResult);
+
+
+  //
+  // nsIRDFDOMViewerObject:
+  //
+  nsCOMPtr<nsIRDFDOMViewerObject> viewerObject =
+    do_QueryInterface(object, &rv);
+  
+  if (NS_SUCCEEDED(rv))
+    return viewerObject->GetTarget(aProperty, aResult);
+
+  // nsIDOMCSSStyleDeclaration
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> decl =
+    do_QueryInterface(object, &rv);
+  if (NS_SUCCEEDED(rv))
+    return getDOMCSSStyleDeclTarget(decl, aProperty, aResult);
+    
+  
+  // nsIDOMCSSStyleRule
+  // nsIDOMCSSRule
+  nsCOMPtr<nsIDOMCSSStyleRule> domCSSStyleRule =
+    do_QueryInterface(object, &rv);
+  if (NS_SUCCEEDED(rv))
+    return getDOMCSSStyleRuleTarget(domCSSStyleRule, aProperty, aResult);
+
+  nsCOMPtr<nsIDOMCSSRule> domCSSRule =
+    do_QueryInterface(object, &rv);
+  if (NS_SUCCEEDED(rv))
+    return getDOMCSSRuleTarget(domCSSRule, aProperty, aResult);
+
+  // nsICSSStyleRule
+  // nsICSSRule
+  // nsIStyleRule
+  nsCOMPtr<nsICSSStyleRule> cssStyleRule =
+    do_QueryInterface(object, &rv);
+  if (NS_SUCCEEDED(rv))
+    return getCSSRuleTarget(cssStyleRule, aProperty, aResult);
+
+  nsCOMPtr<nsICSSRule> cssRule =
+    do_QueryInterface(object, &rv);
+  if (NS_SUCCEEDED(rv))
+    return getCSSRuleTarget(cssRule, aProperty, aResult);
+  
+  nsCOMPtr<nsIStyleRule> styleRule =
+    do_QueryInterface(object,&rv);
+  if (NS_SUCCEEDED(rv))
+    return getStyleRuleTarget(styleRule, aProperty, aResult);
+
+  //
+  // doh! I don't know what the heck this is.
+  printf("getTargetForKnownObject: unknown Object!\n");
+  return NS_OK;
+}
+
+// there's some special logic here, because there is no dupe-checking amongst
+// the interfaces.
+// the problem is that "object" may implement more than one support interface,
+// and some of those interfaces may inherit from each other
+// solutions are as follows:
+// - For objects which implement multiple interfaces, we present a UI to the
+//   user which determines which interfaces we should follow
+//   (The problem yet to be solved: which interface to we answer to with
+//   GetTarget?
+// - For interfaces which inherit from each other, we need to start at a
+//   leaf interface, and keep QI'ing up in the inheritance hierarchy.
+//   It is the responsibility of each of the interface creators to call
+//   up the hierarchy. For an example, follow the target creation for
+//   nsIStyledContent
+// - special case the nsIDocument interface
+
+nsresult
+nsRDFDOMDataSource::getTargetsForKnownObject(nsISupports *object,
+                                             nsIRDFResource *aProperty,
+                                             PRBool useDOM,
+                                             nsISupportsArray *arcs)
+{
+  nsresult rv;
+
+  if (!object) return NS_ERROR_NULL_POINTER;
+  
+  // nsIDocument (special case)
+  nsCOMPtr<nsIDOMDocument> document =
+    do_QueryInterface(object, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    //    nsIContent *content = document->GetRootContent();
+    //    if (content) {
+    //      rv = createContentArcs(content, arcs);
+    //      NS_RELEASE(content);
+    //    }
+    printf("This is a document.\n");
+    createDOMNodeArcs(document, arcs);
+    return NS_OK;
+  }
+
+  // nsIFrame (testing right now)
+  nsStringKey frameKey("frame");
+  if (mModeTable.Get(&frameKey)) {
+    nsIFrame* frame;
+    rv = object->QueryInterface(kFrameIID, (void **)&frame);
+    if (NS_SUCCEEDED(rv)) {
+      printf("creating arcs for frame\n");
+      createFrameArcs(frame, arcs);
+    }
+  }
+  
+  // nsIDOMNode hierarchy
+  nsStringKey domKey("dom");
+  if (mModeTable.Get(&domKey)) {
+
+    // try HTML first
+    //    nsCOMPtr<nsIDOMHTMLElement> htmlElement =
+    //      do_QueryInterface(object, &rv);
+    //    if (NS_SUCCEEDED(rv))
+    //      rv = createHTMLElementArcs(htmlElement, arcs);
+    //    else {
+      
+      nsCOMPtr<nsIDOMNode> node =
+        do_QueryInterface(object, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = createDOMNodeArcs(node, arcs);
+      //    }
+  }
+
+  // nsIContent hierarchy
+  nsStringKey contentKey("content");
+  if (mModeTable.Get(&contentKey) && !useDOM) {
+    // start at nsIStyleContent and work upwards
+    nsCOMPtr<nsIStyledContent> styledContent =
+      do_QueryInterface(object, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = createStyledContentArcs(styledContent, arcs);
+    else {
+      nsCOMPtr<nsIContent> content =
+        do_QueryInterface(object, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = createContentArcs(content, arcs);
+    }
+    
+  }
+  return NS_OK;
+}
+
+
+
+nsresult
+nsRDFDOMDataSource::appendLeafObject(nsString& name,
+                               nsString& value,
+                               nsISupportsArray* arcs)
+{
+  nsresult rv;
+  nsStringKey leafKey("leaf");
+  if (!mModeTable.Get(&leafKey)) return NS_OK;
+  
+  nsIRDFDOMViewerObject* viewerObject;
+  rv = NS_NewDOMViewerObject(NS_GET_IID(nsIRDFDOMViewerObject), (void **)&viewerObject);
+
+  nsAutoString type("leaf");
+  viewerObject->SetTargetLiteral(kNC_Name, name);
+  viewerObject->SetTargetLiteral(kNC_Value, value);
+  viewerObject->SetTargetLiteral(kNC_Type, type);
+  
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = getResourceForObject(viewerObject, getter_AddRefs(resource));
+  rv = arcs->AppendElement(resource);
+  
+  NS_RELEASE(viewerObject);
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::createArcsFromSupportsArray(nsISupportsArray *array,
+                                                nsISupportsArray *arcs)
+{
+  nsresult rv;
+  PRUint32 count;
+  array->Count(&count);
+
+  for (PRUint32 i=0; i<count; i++) {
+    nsCOMPtr<nsISupports> item;
+
+    rv = array->GetElementAt(i, getter_AddRefs(item));
+    if (NS_FAILED(rv)) continue;
+
+    nsCOMPtr<nsIRDFResource> resource;
+    getResourceForObject(item, getter_AddRefs(resource));
+    arcs->AppendElement(resource);
+    
+  }
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::createLiteral(nsString& str, nsIRDFNode **aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIRDFLiteral> literal;
+    
+  PRUnichar* uniStr = str.ToNewUnicode();
+  rv = getRDFService()->GetLiteral(uniStr,
+                                   getter_AddRefs(literal));
+  nsAllocator::Free(uniStr);
+    
+  *aResult = literal;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
 
 /* void Assert (in nsIRDFResource aSource, in nsIRDFResource aProperty, in nsIRDFNode aTarget, in boolean aTruthValue); */
 NS_IMETHODIMP
@@ -427,18 +1060,24 @@ nsRDFDOMDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRDFDOMDataSource::Change(nsIRDFResource *, nsIRDFResource *,
+                           nsIRDFNode *, nsIRDFNode*)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsRDFDOMDataSource::Move(nsIRDFResource *, nsIRDFResource *,
+                         nsIRDFResource *, nsIRDFNode*)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 /* nsISimpleEnumerator GetAllResources (); */
 NS_IMETHODIMP
 nsRDFDOMDataSource::GetAllResources(nsISimpleEnumerator **_retval)
-{
-    return NS_RDF_NO_VALUE;
-}
-
-
-/* void Flush (); */
-NS_IMETHODIMP
-nsRDFDOMDataSource::Flush()
 {
     return NS_RDF_NO_VALUE;
 }
@@ -539,17 +1178,88 @@ nsRDFDOMDataSource::unassertEnumFunc(void *aElement, void *aData)
   return PR_TRUE;
 }
 
+// nsIDOMDataSource methods
 nsresult
 nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
   nsresult rv;
 
+  objectTable.Reset();
   nsCOMPtr<nsIDOMDocument> document;
   rv = window->GetDocument(getter_AddRefs(mDocument));
+  
   if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject =
+    do_QueryInterface(window, &rv);
+  if (NS_FAILED(rv)) {
+    printf("Couldn't get scriptglobalobject\n");
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIWebShell> webShell;
+  scriptGlobalObject->GetWebShell(getter_AddRefs(webShell));
+  if (!webShell) {
+    printf("Couldn't get webshell\n");
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIContentViewer> cv;
+  rv = webShell->GetContentViewer(getter_AddRefs(cv));
+  if (NS_FAILED(rv)) {
+    printf("Couldn't get content viewer\n");
+    return NS_OK;
+  }
 
+  nsCOMPtr<nsIDocumentViewer> dv =
+    do_QueryInterface(cv, &rv);
+  if (NS_FAILED(rv)) {
+    printf("Couldn't get document viewer\n");
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPresContext> pcx;
+  rv = dv->GetPresContext(*getter_AddRefs(pcx));
+  if (NS_FAILED(rv)) {
+    printf("Couldn't get pres context\n");
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPresShell> pshell;
+  pcx->GetShell(getter_AddRefs(pshell));
+  if (NS_FAILED(rv)) {
+    printf("Couldn't get presshell\n");
+    return NS_OK;
+  }
+    
+  pshell->GetRootFrame(&mRootFrame);
+  if (NS_FAILED(rv)) {
+    printf("Couldn't get frame\n");
+    return NS_OK;
+  }
+  
+  nsAutoString framename;
+  mRootFrame->GetFrameName(framename);
+
+  printf("Got root frame: %s\n", framename.ToNewCString());
   return rv;
 }
 
+nsresult
+nsRDFDOMDataSource::SetMode(const char *mode, PRBool active)
+{
+  printf("Turning %s the %s mode\n", active ? "ON" : "OFF",
+         mode);
+  nsStringKey modeKey(mode);
+  mModeTable.Put(&modeKey, (void *)active);
+  return NS_OK;
+}
+
+nsresult
+nsRDFDOMDataSource::GetMode(const char *mode, PRBool *active)
+{
+  nsStringKey modeKey(mode);
+  *active = (PRBool)mModeTable.Get(&modeKey);
+  return NS_OK;
+}
 
 
 NS_METHOD

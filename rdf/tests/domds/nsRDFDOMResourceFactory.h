@@ -29,7 +29,6 @@
 #include "rdf.h"
 #include "nsRDFResource.h"
 #include "nsIDOMViewerElement.h"
-#include "nsIDOMNode.h"
 
 class nsRDFDOMViewerElement : nsRDFResource,
                               nsIDOMViewerElement
@@ -46,9 +45,8 @@ public:
   Create(nsISupports* aOuter,const nsIID& iid, void **result);
 
 private:
-      // weak reference to DOM node
-      //nsWeakPtr mNode;
-      nsCOMPtr<nsIDOMNode> mNode;
+      //nsWeakPtr mObject;
+      nsCOMPtr<nsISupports> mObject;
 };
 
 /* {84a87046-57f4-11d3-9061-00a0c900d445} */

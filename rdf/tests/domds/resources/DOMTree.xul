@@ -7,39 +7,4 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:div flex="100%">
-<tree style="height:100%"
-  rdf:datasources="rdf:domds"
-  id="dataSourceTree">
-
-  <template>
-    <rule>
-      <treechildren>
-        <treeitem uri="..."
-          Type="rdf:http://home.netscape.com/NC-rdf#Type">
-          <treerow>
-            <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-            <treecell value="rdf:http://home.netscape.com/NC-rdf#Value"/>
-            <treecell value="rdf:http://home.netscape.com/NC-rdf#Type"/>
-          </treerow>
-        </treeitem>
-      </treechildren>
-    </rule>
-  <treechildren>
-    <treeitem   id="NC:DOMRoot"/>
-  </treechildren>
-  </template>
-
-  <treecol style="width: 40%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol style="width: 50%" id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value"/>
-  <treecol style="width: 10%" id="TypeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Type"/>
-  <treehead>
-    <treerow>
-      <treecell value="Name"/>
-      <treecell value="Value"/>
-      <treecell value="Type"/>
-    </treerow>
-  </treehead>
-</tree>
-</html:div>
 </window>

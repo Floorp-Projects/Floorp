@@ -27,9 +27,20 @@
 #include "nsIRDFService.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
+#include "nsHashtable.h"
 
-#include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
+// 
+#include "nsIDOMNode.h"
+#include "nsIContent.h"
+#include "nsIStyledContent.h"
+#include "nsIDOMCSSRule.h"
+#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMHTMLElement.h"
+
+#include "nsICSSStyleRule.h"
+#include "nsIStyleRule.h"
+#include "nsIFrame.h"
 
 /* {c7cf77e8-245a-11d3-80f0-006008948010} */
 #define NS_RDF_DOMDATASOURCE_CID \
@@ -44,123 +55,10 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
   virtual ~nsRDFDOMDataSource();
   
   NS_DECL_ISUPPORTS
-    
-  /* void Init (in string uri); */
-  NS_IMETHOD Init(const char *uri);
 
-  /* readonly attribute string URI; */
-  NS_IMETHOD GetURI(char * *aURI);
+  NS_DECL_NSIRDFDATASOURCE
 
-  /* nsIRDFResource GetSource (in nsIRDFResource aProperty,
-     in nsIRDFNode aTarget,
-     in boolean aTruthValue); */
-  NS_IMETHOD GetSource(nsIRDFResource *aProperty,
-                       nsIRDFNode *aTarget,
-                       PRBool aTruthValue,
-                       nsIRDFResource **_retval);
-
-  /* nsISimpleEnumerator GetSources (in nsIRDFResource aProperty,
-     in nsIRDFNode aTarget,
-     in boolean aTruthValue); */
-  NS_IMETHOD GetSources(nsIRDFResource *aProperty,
-                        nsIRDFNode *aTarget,
-                        PRBool aTruthValue,
-                        nsISimpleEnumerator **_retval);
-
-  /* nsIRDFNode GetTarget (in nsIRDFResource aSource,
-     in nsIRDFResource aProperty,
-     in boolean aTruthValue); */
-  NS_IMETHOD GetTarget(nsIRDFResource *aSource,
-                       nsIRDFResource *aProperty,
-                       PRBool aTruthValue,
-                       nsIRDFNode **_retval);
-
-  /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource,
-     in nsIRDFResource aProperty,
-     in boolean aTruthValue); */
-  NS_IMETHOD GetTargets(nsIRDFResource *aSource,
-                        nsIRDFResource *aProperty,
-                        PRBool aTruthValue,
-                        nsISimpleEnumerator **_retval);
-
-  /* void Assert (in nsIRDFResource aSource,
-     in nsIRDFResource aProperty,
-     in nsIRDFNode aTarget,
-     in boolean aTruthValue); */
-  NS_IMETHOD Assert(nsIRDFResource *aSource,
-                    nsIRDFResource *aProperty,
-                    nsIRDFNode *aTarget,
-                    PRBool aTruthValue);
-
-  /* void Unassert (in nsIRDFResource aSource,
-     in nsIRDFResource aProperty,
-     in nsIRDFNode aTarget); */
-  NS_IMETHOD Unassert(nsIRDFResource *aSource,
-                      nsIRDFResource *aProperty,
-                      nsIRDFNode *aTarget);
-
-  /* boolean HasAssertion (in nsIRDFResource aSource,
-     in nsIRDFResource aProperty,
-     in nsIRDFNode aTarget,
-     in boolean aTruthValue); */
-  NS_IMETHOD HasAssertion(nsIRDFResource *aSource,
-                          nsIRDFResource *aProperty,
-                          nsIRDFNode *aTarget,
-                          PRBool aTruthValue,
-                          PRBool *_retval);
-
-  /* void AddObserver (in nsIRDFObserver aObserver); */
-  NS_IMETHOD AddObserver(nsIRDFObserver *aObserver);
-
-  /* void RemoveObserver (in nsIRDFObserver aObserver); */
-  NS_IMETHOD RemoveObserver(nsIRDFObserver *aObserver);
-
-  /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
-  NS_IMETHOD ArcLabelsIn(nsIRDFNode *aNode,
-                         nsISimpleEnumerator **_retval);
-
-  /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource *aSource,
-                          nsISimpleEnumerator **_retval);
-
-  /* nsISimpleEnumerator GetAllResources (); */
-  NS_IMETHOD GetAllResources(nsISimpleEnumerator **_retval);
-
-  /* void Flush (); */
-  NS_IMETHOD Flush();
-
-  /* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
-  NS_IMETHOD GetAllCommands(nsIRDFResource *aSource,
-                            nsIEnumerator **_retval);
-
-  /* nsISimpleEnumerator GetAllCmds (in nsIRDFResource aSource); */
-  NS_IMETHOD GetAllCmds(nsIRDFResource *aSource,
-                            nsISimpleEnumerator **_retval);
-
-  /* boolean IsCommandEnabled (in nsISupportsArray aSources,
-     in nsIRDFResource aCommand,
-     in nsISupportsArray aArguments); */
-  NS_IMETHOD IsCommandEnabled(nsISupportsArray *aSources,
-                              nsIRDFResource *aCommand,
-                              nsISupportsArray *aArguments,
-                              PRBool *_retval);
-
-  /* void DoCommand (in nsISupportsArray aSources,
-     in nsIRDFResource aCommand,
-     in nsISupportsArray aArguments); */
-  NS_IMETHOD DoCommand(nsISupportsArray *aSources,
-                       nsIRDFResource *aCommand,
-                       nsISupportsArray *aArguments);
-
-  NS_IMETHOD SetWindow(nsIDOMWindow *window);
-
-  NS_IMETHOD Change(nsIRDFResource*, nsIRDFResource*,
-                    nsIRDFNode*, nsIRDFNode*)
-        {return NS_ERROR_NOT_IMPLEMENTED;}
-    
-  NS_IMETHOD Move(nsIRDFResource*, nsIRDFResource*,
-                  nsIRDFResource*, nsIRDFNode*)
-        {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_DECL_NSIDOMDATASOURCE
     
   static NS_METHOD  Create(nsISupports* aOuter,
                        const nsIID& iid,
@@ -177,17 +75,124 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
 
  private:
 
+    // HTML stuff
+    nsresult createHTMLElementArcs(nsIDOMHTMLElement *element,
+                                   nsISupportsArray *arcs);
+
+    nsresult createFrameArcs(nsIFrame *frame,
+                             nsISupportsArray *arcs);
+    // DOM stuff
+    nsresult createDOMNodeArcs(nsIDOMNode *node,
+                               nsISupportsArray *arcs);
+    nsresult createDOMAttributeArcs(nsIDOMNode *node,
+                               nsISupportsArray *arcs);
+    nsresult createDOMChildArcs(nsIDOMNode *node,
+                                nsISupportsArray *arcs);
+
+    nsresult createDOMNodeListArcs(nsIDOMNodeList *nodelist,
+                                   nsISupportsArray *arcs);
+    nsresult createDOMNamedNodeMapArcs(nsIDOMNamedNodeMap *nodelist,
+                                       nsISupportsArray *arcs);
+
+
+    nsresult createFrameTarget(nsIFrame *frame, 
+                                 nsIRDFResource *property,
+                                 nsIRDFNode **aResult);
+    nsresult createDOMNodeTarget(nsIDOMNode *node,
+                                 nsIRDFResource *property,
+                                 nsIRDFNode **aResult);
+    // nsIContent stuff
+    nsresult createContentArcs(nsIContent *content,
+                               nsISupportsArray *arcs);
+    nsresult createContentChildArcs(nsIContent *content,
+                                    nsISupportsArray *arcs);
+    nsresult createContentAttributeArcs(nsIContent *content,
+                                        nsISupportsArray *arcs);
+    nsresult createContentMiscArcs(nsIContent* content,
+                                   nsISupportsArray *arcs);
+    nsresult createContentTarget(nsIContent *content,
+                                 nsIRDFResource *property,
+                                 nsIRDFNode **aResult);
+    
+    
+    // nsIStyledContent stuff
+    nsresult createStyledContentArcs(nsIStyledContent *content,
+                                     nsISupportsArray *arcs);
+    nsresult createStyledContentClassArcs(nsIStyledContent *content,
+                                          nsISupportsArray *arcs);
+
+    nsresult createStyledContentTarget(nsIStyledContent *content,
+                                       nsIRDFResource *property,
+                                       nsIRDFNode **aResult);
+
+    // nsIDOMCSSStyleDeclaration
+    nsresult getDOMCSSStyleDeclTarget(nsIDOMCSSStyleDeclaration *decl,
+                                          nsIRDFResource *property,
+                                          nsIRDFNode **aResult);
+    
+    // nsIDOMCSSStyleRule
+    // nsIDOMCSSRule
+    nsresult getDOMCSSStyleRuleTarget(nsIDOMCSSStyleRule *rule,
+                                      nsIRDFResource *property,
+                                      nsIRDFNode **result);
+    nsresult getDOMCSSRuleTarget(nsIDOMCSSRule *rule,
+                                 nsIRDFResource *property,
+                                 nsIRDFNode **result);
+    
+    
+    // nsICSSStyleRule
+    // nsICSSRule
+    // nsIStyleRule
+    nsresult getCSSStyleRuleTarget(nsICSSStyleRule *rule,
+                              nsIRDFResource *property,
+                              nsIRDFNode **result);
+    
+    nsresult getCSSRuleTarget(nsICSSRule *rule,
+                              nsIRDFResource *property,
+                              nsIRDFNode **result);
+    
+    nsresult getStyleRuleTarget(nsIStyleRule *rule,
+                                   nsIRDFResource *property,
+                                   nsIRDFNode **result);
+    
+    // helper routines
+    nsresult createArcsFromSupportsArray(nsISupportsArray *rules,
+                                          nsISupportsArray *arcs);
+    nsresult getResourceForObject(nsISupports *object,
+                                  nsIRDFResource **resource);
+
+    nsresult appendLeafObject(nsString& name,
+                              nsString& value,
+                              nsISupportsArray *arcs);
+
+    nsresult getTargetForKnownObject(nsISupports *object,
+                                     nsIRDFResource* aProperty,
+                                     nsIRDFNode **result);
+    
+    nsresult getTargetsForKnownObject(nsISupports *object,
+                                      nsIRDFResource *aProperty,
+                                      PRBool useDOM,
+                                      nsISupportsArray *arcs);
+    
+    nsresult createLiteral(nsString& str, nsIRDFNode **result);
+    // member variables
     PRBool init;
     nsIRDFService *mRDFService;
+    PRInt32 mMode;
     nsVoidArray *mObservers;
 
+    nsSupportsHashtable objectTable;
+    nsHashtable mModeTable;
+    
     nsCOMPtr<nsIDOMDocument> mDocument;
+    nsIFrame *mRootFrame;
 
     nsIRDFResource* kNC_Name;
     nsIRDFResource* kNC_Value;
     nsIRDFResource* kNC_Type;
     nsIRDFResource* kNC_Child;
     nsIRDFResource* kNC_DOMRoot;
+
 };
 
 #endif

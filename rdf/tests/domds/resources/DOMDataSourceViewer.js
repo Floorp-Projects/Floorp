@@ -21,6 +21,8 @@
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
+var domds;
+
 function loadUrl() {
     var urlwidget = document.getElementById("url");
     
@@ -36,25 +38,24 @@ function loadUrl() {
 
 }
 
-function refreshTree() {
-    var ds = RDF.GetDataSource("rdf:domds");
-    var domds = ds.QueryInterface(Components.interfaces.nsIDOMDataSource);
-    
-    var win = window.frames["srcdoc"];
-    domds.SetWindow(win);
 
-    var treeframe = window.frames["treeframe"];
-    var tree = treeframe.document.getElementById("dataSourceTree");
+function setMode(mode, active) {
+    
+    domds.setMode(mode, active);
+}
+
+function refreshTree() {
+
+    dump("refresh..\n");
+    var win = window.frames["srcdoc"];
+    domds.setWindow(win);
+
+    var tree = document.getElementById("dataSourceTree");
+    tree.clearItemSelection();
     tree.setAttribute("ref","NC:DOMRoot");
 }
 
 function onSrcLoaded() {
     var ds = RDF.GetDataSource("rdf:domds");
-    var domds = ds.QueryInterface(Components.interfaces.nsIDOMDataSource);
-    
-    var win = window.frames["srcdoc"];
-    domds.SetWindow(win);
-
-    dump("window done loading.\n");
-
+    domds = ds.QueryInterface(Components.interfaces.nsIDOMDataSource);
 }
