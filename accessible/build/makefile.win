@@ -37,6 +37,7 @@ SHARED_LIBRARY_LIBS=\
 LLIBS=\
   $(DIST)\lib\xpcom.lib                     \
   $(DIST)\lib\timer_s.lib                   \
+  $(DIST)\lib\accessibility_s.lib           \
   $(DIST)\lib\gkgfx.lib                  \
   $(DIST)\lib\contentshared_s.lib           \
   $(LIBNSPR)                                \
