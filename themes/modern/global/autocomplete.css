@@ -89,10 +89,6 @@ textbox[type="autocomplete"] {
   padding: 0px !important;
 }
 
-.outliner-columnpicker {
-  display: none;
-}
-
 .autocomplete-outlinerbody:-moz-outliner-cell-text {
   padding-left: 8px;
   color: #000000;

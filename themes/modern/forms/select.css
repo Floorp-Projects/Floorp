@@ -60,7 +60,7 @@ xul|*.select-outlinercol {
   padding: 0px !important;
 }
 
-xul|*.select-outlinercols > xul|*.outliner-columnpicker {
+xul|*.select-outlinercols > xul|outlinercolpicker {
   display: none;
 }
 
