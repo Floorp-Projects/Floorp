@@ -31,6 +31,9 @@
 #include "nsISO2022JPToUnicode.h"
 #include "nsUnicodeToEUCJP.h"
 #include "nsUnicodeToISO2022JP.h"
+#include "nsUnicodeToJISx0201.h"
+#include "nsUnicodeToJISx0208.h"
+#include "nsUnicodeToJISx0212.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -102,6 +105,24 @@ FactoryData g_FactoryData[] =
     nsUnicodeToEUCJP::CreateInstance,
     "Unicode",
     "EUC-JP"
+  },
+  {
+    &kUnicodeToJISx0201CID,
+    nsUnicodeToJISx0201::CreateInstance,
+    "Unicode",
+    "jis_0201"
+  },
+  {
+    &kUnicodeToJISx0208CID,
+    nsUnicodeToJISx0208::CreateInstance,
+    "Unicode",
+    "jis_0208-1983"
+  },
+  {
+    &kUnicodeToJISx0212CID,
+    nsUnicodeToJISx0212::CreateInstance,
+    "Unicode",
+    "jis_0212-1990"
   },
   {
     &kUnicodeToISO2022JPCID,

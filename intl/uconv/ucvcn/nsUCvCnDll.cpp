@@ -29,6 +29,7 @@
 #include "nsUCvCnDll.h"
 #include "nsGB2312ToUnicode.h"
 #include "nsUnicodeToGB2312.h"
+#include "nsUnicodeToGB2312GL.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -82,6 +83,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToGB2312::CreateInstance,
     "Unicode",
     "GB2312"
+  },
+  {
+    &kUnicodeToGB2312GLCID,
+    nsUnicodeToGB2312GL::CreateInstance,
+    "Unicode",
+    "gb_2312-80"
   },
 };
 
