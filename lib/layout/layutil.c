@@ -753,7 +753,7 @@ lo_EvalCellAlignParam(char *str)
 	return(alignment);
 }
 
-#ifdef EDITOR
+#if defined( EDITOR ) || !defined( MEMORY_ARENAS )
 /* this is a replacement routine for the non-editor version and should eventually
  *	replace the non-edit version.  It uses an array of values. instead of an 
  *	unrolled loop.  
