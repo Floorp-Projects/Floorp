@@ -770,7 +770,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             NS_LoadString(hSetupRscInst, IDS_STR_CREATE_DIRECTORY, szStrCreateDirectory, MAX_BUF);
             if(NS_LoadString(hSetupRscInst, IDS_MSG_CREATE_DIRECTORY, szMsgCreateDirectory, MAX_BUF) == WIZ_OK)
             {
-              lstrcpy(szBufTemp, "\n\n    ");
+              lstrcpy(szBufTemp, "\n\n");
               lstrcat(szBufTemp, szBuf);
               RemoveBackSlash(szBufTemp);
               lstrcat(szBufTemp, "\n\n");
@@ -785,7 +785,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
               {
                 char szECreateDirectory[MAX_BUF];
 
-                lstrcpy(szBufTemp, "\n\n    ");
+                lstrcpy(szBufTemp, "\n\n");
                 lstrcat(szBufTemp, sgProduct.szPath);
                 RemoveBackSlash(szBufTemp);
                 lstrcat(szBufTemp, "\n\n");
@@ -2517,7 +2517,7 @@ void DlgSequenceNext()
           DeleteFile(szInstallLogFile);
           gbILUseTemp = FALSE;
 
-          lstrcat(szBuf, "Uninstall\\");
+          lstrcat(szBuf, "uninstall\\");
           CreateDirectoriesAll(szBuf, TRUE);
 
           /* save the installer files in the local machine */
