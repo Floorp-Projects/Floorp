@@ -893,6 +893,12 @@ case "$target" in
         MACOS_DEPLOYMENT_TARGET=`printf "%02d%02d%02d" "$MACOS_VERSION_MAJOR" "$MACOS_VERSION_MINOR" "$MACOS_VERSION_MICRO"`
         AC_DEFINE_UNQUOTED(MACOS_DEPLOYMENT_TARGET, $MACOS_DEPLOYMENT_TARGET)
     fi
+
+    # do the right thing for panther SDK support
+    if test "NEXT_ROOT"; then
+        CFLAGS="-I$(NEXT_ROOT)/usr/include $CFLAGS"
+        CXXFLAGS="-I$(NEXT_ROOT)/usr/include $CXXFLAGS"
+    fi
     ;;
 
 *-dgux*)
