@@ -880,10 +880,9 @@ static PRBool CheckForBrowser(nsIContent* aContent, nsIBaseWindow* aShell)
             nsCOMPtr<nsIWebNavigation> histNav(do_QueryInterface(hist));
             histNav->Reload(0);
             boxObject->RemoveProperty(NS_LITERAL_STRING("history"));
+            return PR_FALSE;
           }
         }
-          
-        return PR_FALSE;
       }
     }
   }
