@@ -1113,6 +1113,11 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
     native = (((scope == PR_GLOBAL_THREAD)|| (scope == PR_GLOBAL_BOUND_THREAD))
 							&& _PR_IS_NATIVE_THREAD_SUPPORTED());
 
+#ifdef XP_MAC
+    if (stackSize < _MD_DEFAULT_STACK_SIZE)
+    	stackSize = _MD_DEFAULT_STACK_SIZE;
+#endif
+
     _PR_ADJUST_STACKSIZE(stackSize);
 
     if (native) {
