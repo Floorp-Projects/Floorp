@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.10 2001/11/30 23:21:48 relyea%netscape.com Exp $
+ * $Id: blapi.h,v 1.11 2002/11/02 01:51:40 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -704,6 +704,56 @@ extern SECStatus SHA1_Flatten(SHA1Context *cx,unsigned char *space);
  */
 extern SHA1Context * SHA1_Resurrect(unsigned char *space, void *arg);
 
+/******************************************/
+
+extern SHA256Context *SHA256_NewContext(void);
+extern void SHA256_DestroyContext(SHA256Context *cx, PRBool freeit);
+extern void SHA256_Begin(SHA256Context *cx);
+extern void SHA256_Update(SHA256Context *cx, const unsigned char *input,
+			unsigned int inputLen);
+extern void SHA256_End(SHA256Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen);
+extern SECStatus SHA256_HashBuf(unsigned char *dest, const unsigned char *src,
+			      uint32 src_length);
+extern SECStatus SHA256_Hash(unsigned char *dest, const char *src);
+extern void SHA256_TraceState(SHA256Context *cx);
+extern unsigned int SHA256_FlattenSize(SHA256Context *cx);
+extern SECStatus SHA256_Flatten(SHA256Context *cx,unsigned char *space);
+extern SHA256Context * SHA256_Resurrect(unsigned char *space, void *arg);
+
+/******************************************/
+
+extern SHA512Context *SHA512_NewContext(void);
+extern void SHA512_DestroyContext(SHA512Context *cx, PRBool freeit);
+extern void SHA512_Begin(SHA512Context *cx);
+extern void SHA512_Update(SHA512Context *cx, const unsigned char *input,
+			unsigned int inputLen);
+extern void SHA512_End(SHA512Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen);
+extern SECStatus SHA512_HashBuf(unsigned char *dest, const unsigned char *src,
+			      uint32 src_length);
+extern SECStatus SHA512_Hash(unsigned char *dest, const char *src);
+extern void SHA512_TraceState(SHA512Context *cx);
+extern unsigned int SHA512_FlattenSize(SHA512Context *cx);
+extern SECStatus SHA512_Flatten(SHA512Context *cx,unsigned char *space);
+extern SHA512Context * SHA512_Resurrect(unsigned char *space, void *arg);
+
+/******************************************/
+
+extern SHA384Context *SHA384_NewContext(void);
+extern void SHA384_DestroyContext(SHA384Context *cx, PRBool freeit);
+extern void SHA384_Begin(SHA384Context *cx);
+extern void SHA384_Update(SHA384Context *cx, const unsigned char *input,
+			unsigned int inputLen);
+extern void SHA384_End(SHA384Context *cx, unsigned char *digest,
+		     unsigned int *digestLen, unsigned int maxDigestLen);
+extern SECStatus SHA384_HashBuf(unsigned char *dest, const unsigned char *src,
+			      uint32 src_length);
+extern SECStatus SHA384_Hash(unsigned char *dest, const char *src);
+extern void SHA384_TraceState(SHA384Context *cx);
+extern unsigned int SHA384_FlattenSize(SHA384Context *cx);
+extern SECStatus SHA384_Flatten(SHA384Context *cx,unsigned char *space);
+extern SHA384Context * SHA384_Resurrect(unsigned char *space, void *arg);
 
 /******************************************/
 /*

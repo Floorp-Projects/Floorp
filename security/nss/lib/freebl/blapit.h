@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.4 2001/11/15 02:41:16 nelsonb%netscape.com Exp $
+ * $Id: blapit.h,v 1.5 2002/11/02 01:51:40 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPIT_H_
@@ -70,6 +70,17 @@
 #define MD2_LENGTH		16	/* Bytes */
 #define MD5_LENGTH		16	/* Bytes */
 #define SHA1_LENGTH		20	/* Bytes */
+#define SHA256_LENGTH 		32 	/* bytes */
+#define SHA384_LENGTH 		48 	/* bytes */
+#define SHA512_LENGTH 		64 	/* bytes */
+
+/*
+ * Input block size for each hash algorithm.
+ */
+
+#define SHA256_BLOCK_LENGTH 	 64 	/* bytes */
+#define SHA384_BLOCK_LENGTH 	128 	/* bytes */
+#define SHA512_BLOCK_LENGTH 	128 	/* bytes */
 
 #define NSS_FREEBL_DEFAULT_CHUNKSIZE 2048
 
@@ -125,6 +136,8 @@ struct AESContextStr        ;
 struct MD2ContextStr        ;
 struct MD5ContextStr        ;
 struct SHA1ContextStr       ;
+struct SHA256ContextStr     ;
+struct SHA512ContextStr     ;
 
 typedef struct DESContextStr        DESContext;
 typedef struct RC2ContextStr        RC2Context;
@@ -134,6 +147,10 @@ typedef struct AESContextStr        AESContext;
 typedef struct MD2ContextStr        MD2Context;
 typedef struct MD5ContextStr        MD5Context;
 typedef struct SHA1ContextStr       SHA1Context;
+typedef struct SHA256ContextStr     SHA256Context;
+typedef struct SHA512ContextStr     SHA512Context;
+/* SHA384Context is really a SHA512ContextStr.  This is not a mistake. */
+typedef struct SHA512ContextStr     SHA384Context;
 
 /***************************************************************************
 ** RSA Public and Private Key structures

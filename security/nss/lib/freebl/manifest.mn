@@ -81,6 +81,7 @@ CSRCS = \
 	sha_fast.c \
 	md2.c \
 	md5.c \
+	sha512.c \
 	alg2268.c \
 	arcfour.c \
 	arcfive.c \
