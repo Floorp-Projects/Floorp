@@ -217,10 +217,10 @@ private:
   nsRegion      mUpdateRegion;
 
   // alpha layer members
-  PRInt16       mAlphaRowBytes;     // alpha bytes per row
-  PRInt16       mTrueAlphaRowBytes; // alpha bytes per row
-  PRInt16       mAlphaWidth;        // alpha layer width
-  PRInt16       mAlphaHeight;       // alpha layer height
+  PRInt32       mAlphaRowBytes;     // alpha bytes per row
+  PRInt32       mTrueAlphaRowBytes; // alpha bytes per row
+  PRInt32       mAlphaWidth;        // alpha layer width
+  PRInt32       mAlphaHeight;       // alpha layer height
   PRInt8        mAlphaDepth;        // alpha layer depth
   PRInt8        mTrueAlphaDepth;    // alpha layer depth
   PRPackedBool  mIsSpacer;
