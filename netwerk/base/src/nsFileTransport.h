@@ -29,11 +29,10 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsIProgressEventSink.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 
 class nsIEventSinkGetter;
-class nsIBaseStream;
-class nsIBufferInputStream;
-class nsIBufferOutputStream;
 
 class nsFileTransport : public nsIChannel, 
                         public nsIRunnable,
