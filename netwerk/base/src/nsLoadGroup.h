@@ -31,8 +31,7 @@
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
 
-class nsISupportsArray;
-class nsLoadGroupEntry;
+class  nsISupportsArray;
 
 class nsLoadGroup : public nsILoadGroup,
                     public nsSupportsWeakReference
@@ -47,33 +46,28 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsILoadGroup methods:
     NS_DECL_NSILOADGROUP
+
     ////////////////////////////////////////////////////////////////////////////
     // nsLoadGroup methods:
 
     nsLoadGroup(nsISupports* outer);
-    virtual ~nsLoadGroup();
     
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    friend class nsLoadGroupEntry;
-
 protected:
-    typedef nsresult (*PropagateDownFun)(nsIRequest* request);
-    nsresult PropagateDown(PropagateDownFun fun);
+    virtual ~nsLoadGroup();
+    nsresult Init();
 
-    nsresult SubGroupIsEmpty(nsresult aStatus);
 
 protected:
     PRUint32                    mDefaultLoadAttributes;
-    nsISupportsArray*           mChannels;
-    nsISupportsArray*           mSubGroups;
-////    nsWeakPtr                   mObserver;
-    nsCOMPtr<nsIStreamObserver>                   mObserver;
-    nsLoadGroup*                mParent;        // weak ref
     PRUint32                    mForegroundCount;
-    PRBool                      mIsActive;
 
+    nsISupportsArray*           mChannels;
+
+////    nsWeakPtr               mObserver;
+    nsCOMPtr<nsIStreamObserver> mObserver;
     nsCOMPtr<nsIChannel>        mDefaultLoadChannel;
 
     nsWeakPtr                   mGroupListenerFactory;

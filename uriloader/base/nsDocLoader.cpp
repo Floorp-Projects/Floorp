@@ -37,17 +37,16 @@
 #include "nsXPIDLString.h"
 
 #include "nsILoadGroup.h"
-//#include "nsILoadGroupObserver.h"
+
 #include "nsNeckoUtil.h"
 #include "nsIURL.h"
-#include "nsIDNSService.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
+#include "nsIDNSService.h"
 #include "nsIProgressEventSink.h"
 
 #include "nsIGenericFactory.h"
-#include "nsIStreamLoadableDocument.h"
 #include "nsCOMPtr.h"
 #include "nsCom.h"
 #include "prlog.h"
@@ -71,29 +70,26 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 
-#ifdef DEBUG
-#undef NOISY_CREATE_DOC
-#else
-#undef NOISY_CREATE_DOC
-#endif
-
-#if defined(DEBUG) || defined(FORCE_PR_LOG)
+#if defined(PR_LOGGING)
+//
+// Log module for nsIDocumentLoader logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=DocLoader:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
 PRLogModuleInfo* gDocLoaderLog = nsnull;
-#endif /* DEBUG || FORCE_PR_LOG */
-
-
-  /* Private IIDs... */
-/* eb001fa0-214f-11d2-bec0-00805f8a66dc */
-#define NS_DOCUMENTBINDINFO_IID   \
-{ 0xeb001fa0, 0x214f, 0x11d2, \
-  {0xbe, 0xc0, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
+#endif /* PR_LOGGING */
 
 
 /* Define IIDs... */
 static NS_DEFINE_IID(kIStreamObserverIID,          NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,          NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
-static NS_DEFINE_IID(kDocumentBindInfoIID,         NS_DOCUMENTBINDINFO_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,          NS_ISTREAMLISTENER_IID);
@@ -110,7 +106,7 @@ class nsChannelListener : public nsIStreamListener
 public:
   nsChannelListener();
 
-  nsresult Init(nsDocLoaderImpl *aDocLoader, nsIStreamListener *aListener);
+  nsresult Init(nsIStreamListener *aListener);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMOBSERVER
@@ -119,12 +115,8 @@ public:
 protected:
   virtual ~nsChannelListener();
 
-  nsDocLoaderImpl *mDocLoader;
   nsCOMPtr<nsIStreamListener> mNextListener;
 };
-
-
-
 
 
 /* 
@@ -151,8 +143,6 @@ public:
                   nsILoadGroup* aLoadGroup, 
                   nsIInputStream *postDataStream,
                   const PRUnichar* aReferrer=nsnull);
-
-    nsresult BindWithChannel(nsIChannel *aChannel);
 
     // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
@@ -187,7 +177,7 @@ public:
 
     nsDocLoaderImpl();
 
-    nsresult Init();
+    nsresult Init(nsDocLoaderImpl* aParent);
 
     // for nsIGenericFactory:
     static NS_IMETHODIMP Create(nsISupports *aOuter, const nsIID &aIID, void **aResult);
@@ -211,11 +201,6 @@ public:
                             const PRUint32 aLocalIP = 0,
                             const PRUnichar* aReferrer = nsnull);
 
-    NS_IMETHOD LoadSubDocument(nsIURI * aUri,
-                               nsISupports* aExtraInfo = nsnull,
-                               nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                               const PRUint32 aLocalIP = 0);
-
     NS_IMETHOD Stop(void);
 
     NS_IMETHOD IsBusy(PRBool& aResult);
@@ -227,8 +212,11 @@ public:
 
     NS_IMETHOD SetContainer(nsISupports* aContainer);
     NS_IMETHOD GetContainer(nsISupports** aResult);
+
+    // XXX: this method is evil and should be removed.
     NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, 
                                          nsIContentViewerContainer** aResult);
+
 	NS_IMETHOD GetLoadGroup(nsILoadGroup** aResult);
 
     NS_IMETHOD Destroy();
@@ -241,12 +229,22 @@ public:
     NS_DECL_NSISTREAMOBSERVER
 
     // Implementation specific methods...
-    nsresult AddChildGroup(nsDocLoaderImpl *aLoader);
+    nsresult CreateContentViewer(const char *aCommand,
+                                 nsIChannel* channel,
+                                 const char* aContentType, 
+                                 nsISupports* aContainer,
+                                 nsISupports* aExtraInfo,
+                                 nsIStreamListener** aDocListener,
+                                 nsIContentViewer** aDocViewer);
+
+protected:
+    virtual ~nsDocLoaderImpl();
+
     nsresult RemoveChildGroup(nsDocLoaderImpl *aLoader);
+    void DocLoaderIsEmpty(nsresult aStatus);
 
     void FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                                 nsIURI* aURL, 
-                                 const char* aCommand);
+                                 nsIURI* aURL);
 
     void FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
                                nsIChannel *aDocChannel,
@@ -259,26 +257,7 @@ public:
     void FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
                           nsIChannel* channel, nsresult aStatus);
 
-    void SetParent(nsDocLoaderImpl* aParent);
-    void SetDocumentChannel(nsIChannel* channel);
-
-    nsILoadGroup* GetLoadGroup() { return mLoadGroup; } 
-    PRBool        IsLoadingDocument() { return mIsLoadingDocument; }
-
-    nsresult CreateContentViewer(const char *aCommand,
-                                 nsIChannel* channel,
-                                 const char* aContentType, 
-                                 nsISupports* aContainer,
-                                 nsISupports* aExtraInfo,
-                                 nsIStreamListener** aDocListener,
-                                 nsIContentViewer** aDocViewer);
-
 protected:
-    virtual ~nsDocLoaderImpl();
-
-protected:
-    static PRBool IsBusyEnumerator(nsISupports* aElement, void* aData);
-
 
     // IMPORTANT: The ownership implicit in the following member
     // variables has been explicitly checked and set using nsCOMPtr
@@ -288,10 +267,12 @@ protected:
   
     nsCOMPtr<nsIChannel>       mDocumentChannel;       // [OWNER] ???compare with document
     nsVoidArray                mDocObservers;
-    nsISupports* mContainer;          // [WEAK] it owns me!
+    nsISupports*               mContainer;             // [WEAK] it owns me!
 
-    nsDocLoaderImpl*  mParent;                      // [OWNER] but upside down ownership model
-                                                    //  needs to be fixed***
+    nsDocLoaderImpl*           mParent;                // [WEAK]
+
+    nsCString                  mCommand;
+
     /*
      * This flag indicates that the loader is loading a document.  It is set
      * from the call to LoadDocument(...) until the OnConnectionsComplete(...)
@@ -308,11 +289,11 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 {
     NS_INIT_REFCNT();
 
-#if defined(DEBUG) || defined(FORCE_PR_LOG)
+#if defined(PR_LOGGING)
     if (nsnull == gDocLoaderLog) {
         gDocLoaderLog = PR_NewLogModule("DocLoader");
     }
-#endif /* DEBUG || FORCE_PR_LOG */
+#endif /* PR_LOGGING */
 
     mContainer = nsnull;
     mParent    = nsnull;
@@ -324,11 +305,11 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 }
 
 nsresult
-nsDocLoaderImpl::Init()
+nsDocLoaderImpl::Init(nsDocLoaderImpl *aParent)
 {
     nsresult rv;
 
-    rv = NS_NewLoadGroup(nsnull, this, nsnull, getter_AddRefs(mLoadGroup));
+    rv = NS_NewLoadGroup(nsnull, this, getter_AddRefs(mLoadGroup));
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -338,7 +319,10 @@ nsDocLoaderImpl::Init()
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewISupportsArray(getter_AddRefs(mChildList));
-    return rv;
+    if (NS_FAILED(rv)) return rv;
+
+    mParent = aParent;
+    return NS_OK;
 }
 
 nsDocLoaderImpl::~nsDocLoaderImpl()
@@ -406,34 +390,45 @@ nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
 {
-    nsDocLoaderImpl* newLoader = nsnull;
-    nsresult rv = NS_OK;
+  nsDocLoaderImpl* newLoader = nsnull;
+  nsresult rv = NS_OK;
 
-    /* Check for initial error conditions... */
-    if (nsnull == anInstance) {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
-    }
+  /* Check for initial error conditions... */
+  if (nsnull == anInstance) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-    NS_NEWXPCOM(newLoader, nsDocLoaderImpl);
-    if (nsnull == newLoader) {
-        *anInstance = nsnull;
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto done;
-    }
-
-    rv = newLoader->QueryInterface(kIDocumentLoaderIID, (void**)anInstance);
-    if (NS_SUCCEEDED(rv)) {
-        // Initialize now that we have a reference
-        rv = newLoader->Init();
-        if (NS_SUCCEEDED(rv)) {
-            AddChildGroup(newLoader);
-            newLoader->SetParent(this);
-        }
-    }
-
-  done:
+  *anInstance = nsnull;
+  NS_NEWXPCOM(newLoader, nsDocLoaderImpl);
+  if (nsnull == newLoader) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  //
+  // The QI causes the new document laoder to get AddRefed...  So now
+  // its refcount is 1.
+  //
+  rv = newLoader->QueryInterface(kIDocumentLoaderIID, (void**)anInstance);
+  if (NS_FAILED(rv)) {
+    delete newLoader;
     return rv;
+  }
+
+  // Initialize now that we have a reference
+  rv = newLoader->Init(this);
+  if (NS_SUCCEEDED(rv)) {
+    //
+    // XXX this method incorrectly returns a bool    
+    //
+    rv = mChildList->AppendElement((nsIDocumentLoader*)newLoader) 
+       ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  // Delete the new document loader if any error occurs during initialization
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(*anInstance);
+  }
+
+  return rv;
 }
 
 nsresult
@@ -504,7 +499,6 @@ nsDocLoaderImpl::LoadOpenedDocument(nsIChannel * aOpenedChannel,
                aContainer,     // Viewer Container
                /* aExtraInfo */ nsnull);    // Extra Info
 
-  rv = loader->BindWithChannel(aOpenedChannel);
   loader->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aContentHandler);
 
   /*
@@ -593,6 +587,9 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
       goto done;
   }
 
+  // Save the command associated with this load...
+  mCommand = aCommand;
+
   NS_NEWXPCOM(loader, nsDocumentBindInfo);
   if (nsnull == loader) {
       rv = NS_ERROR_OUT_OF_MEMORY;
@@ -619,49 +616,28 @@ done:
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::LoadSubDocument(nsIURI *aUri,
-                                 nsISupports* aExtraInfo,
-                                 nsLoadFlags aType,
-                                 const PRUint32 aLocalIP)
-{
-  nsresult rv;
-  nsDocumentBindInfo* loader = nsnull;
-  if (!aUri)
-    return NS_ERROR_NULL_POINTER;
-
-#ifdef DEBUG
-  nsXPIDLCString uriSpec;
-  rv = aUri->GetSpec(getter_Copies(uriSpec));
-  if (NS_FAILED(rv)) return rv;
-
-  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader:%p: LoadSubDocument(...) called for %s.",
-          this, (const char *) uriSpec));
-#endif /* DEBUG */
-
-  NS_NEWXPCOM(loader, nsDocumentBindInfo);
-  if (nsnull == loader) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      return rv;
-  }
-  NS_ADDREF(loader);
-  loader->Init(this,           // DocLoader
-               nsnull,         // Command
-               nsnull,         // Viewer Container
-               aExtraInfo);    // Extra Info
-
-
-  rv = loader->Bind(aUri, mLoadGroup, nsnull, nsnull);
-  NS_RELEASE(loader);
-  return rv;
-}
-
-NS_IMETHODIMP
 nsDocLoaderImpl::Stop(void)
 {
   nsresult rv = NS_OK;
+  PRUint32 count, i;
+
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: Stop() called\n", this));
+
+  rv = mChildList->Count(&count);
+  if (NS_FAILED(rv)) return rv;
+
+  for (i=0; i<count; i++) {
+    nsIDocumentLoader* loader;
+
+    loader = NS_STATIC_CAST(nsIDocumentLoader*, mChildList->ElementAt(i));
+
+    if (loader) {
+      (void) loader->Stop();
+      NS_RELEASE(loader);
+    }
+  }
+
   rv = mLoadGroup->Cancel();
 
   return rv;
@@ -671,16 +647,41 @@ nsDocLoaderImpl::Stop(void)
 NS_IMETHODIMP
 nsDocLoaderImpl::IsBusy(PRBool& aResult)
 {
+  nsresult rv;
+
+  //
+  // A document loader is busy if either:
+  //
+  //   1. It is currently loading a document (ie. one or more URIs)
+  //   2. One of it's child document loaders is busy...
+  //
   aResult = PR_FALSE;
 
-  /* If this document loader is busy? */
+  /* Is this document loader busy? */
   if (mIsLoadingDocument) {
-    aResult = PR_TRUE;
-  } 
+    rv = mLoadGroup->IsPending(&aResult);
+    if (NS_FAILED(rv)) return rv;
+  }
+
   /* Otherwise, check its child document loaders... */
-  else {
-    mChildList->EnumerateForwards(nsDocLoaderImpl::IsBusyEnumerator, 
-                                  (void*)&aResult);
+  if (!aResult) {
+    PRUint32 count, i;
+
+    rv = mChildList->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (i=0; i<count; i++) {
+      nsIDocumentLoader* loader;
+
+      loader = NS_STATIC_CAST(nsIDocumentLoader*, mChildList->ElementAt(i));
+
+      if (loader) {
+        (void) loader->IsBusy(aResult);
+        NS_RELEASE(loader);
+
+        if (aResult) break;
+      }
+    }
   }
 
   return NS_OK;
@@ -695,11 +696,18 @@ nsDocLoaderImpl::IsBusy(PRBool& aResult)
 NS_IMETHODIMP
 nsDocLoaderImpl::AddObserver(nsIDocumentLoaderObserver* aObserver)
 {
-  // Make sure the observer isn't already in the list
+  nsresult rv;
+
   if (mDocObservers.IndexOf(aObserver) == -1) {
-    mDocObservers.AppendElement(aObserver);
+    //
+    // XXX this method incorrectly returns a bool    
+    //
+    rv = mDocObservers.AppendElement(aObserver) ? NS_OK : NS_ERROR_FAILURE;
+  } else {
+    // The observer is already in the list...
+    rv = NS_ERROR_FAILURE;
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -784,7 +792,7 @@ nsDocLoaderImpl::Destroy()
   // Remove the document loader from the parent list of loaders...
     if (mParent) {
         mParent->RemoveChildGroup(this);
-        NS_RELEASE(mParent);
+        mParent = nsnull;
     }
 
     mDocumentChannel = null_nsCOMPtr();
@@ -801,13 +809,10 @@ nsDocLoaderImpl::Destroy()
 
 
 NS_IMETHODIMP
-nsDocLoaderImpl::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
+nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
 {
-    // called when the group gets its first element
+    // called each time a channel is added to the group.
     nsresult rv;
-    nsCOMPtr<nsIURI> uri;
-    rv = channel->GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) return rv;
 
     //
     // Only fire an OnStartDocumentLoad(...) if the document loader
@@ -815,58 +820,71 @@ nsDocLoaderImpl::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
     // resulted from a channel being added to the load group.
     //
     if (mIsLoadingDocument) {
-        FireOnStartDocumentLoad(this, uri, "load"); // XXX fix command
+        PRUint32 count;
+
+        rv = mLoadGroup->GetActiveCount(&count);
+        if (NS_FAILED(rv)) return rv;
+
+        if (1 == count) {
+            nsCOMPtr<nsIURI> uri;
+
+            rv = aChannel->GetURI(getter_AddRefs(uri));
+            if (NS_FAILED(rv)) return rv;
+
+            // This channel is associated with the entire document...
+            mDocumentChannel = aChannel;
+
+            FireOnStartDocumentLoad(this, uri);
+        } 
+        else {
+          nsCOMPtr<nsIContentViewer> viewer;
+          nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContainer));
+          NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
+  
+          webShell->GetContentViewer(getter_AddRefs(viewer));
+
+          FireOnStartURLLoad(this, aChannel, viewer);
+        }
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
-                               nsresult status, const PRUnichar *errorMsg)
+nsDocLoaderImpl::OnStopRequest(nsIChannel *aChannel, 
+                               nsISupports *aCtxt, 
+                               nsresult aStatus, 
+                               const PRUnichar *aMsg)
 {
-  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader:%p: Is now idle...\n", this));
+  nsresult rv = NS_OK;
 
   //
   // Only fire the OnEndDocumentLoad(...) if the document loader 
   // has initiated a load...
   //
   if (mIsLoadingDocument) {
-    nsCOMPtr<nsIChannel> docChannel(mDocumentChannel);
+    PRUint32 count;
 
-    mDocumentChannel = null_nsCOMPtr();
-
-    mIsLoadingDocument = PR_FALSE;
+    rv = mLoadGroup->GetActiveCount(&count);
+    if (NS_FAILED(rv)) return rv;
 
     //
-    // Do nothing after firing the OnEndDocumentLoad(...). The document
-    // loader may be loading a *new* document - if LoadDocument()
-    // was called from a handler!
+    // The load group for this DocumentLoader is idle...
     //
-    FireOnEndDocumentLoad(this, docChannel, status);
+    if (0 == count) {
+      DocLoaderIsEmpty(aStatus);
+    } else {
+      FireOnEndURLLoad(this, aChannel, aStatus);
+    }
   }
 
   return NS_OK;
 }
 
 
-nsresult nsDocLoaderImpl::AddChildGroup(nsDocLoaderImpl* aLoader)
-{
-  nsresult rv;
-
-  rv = mLoadGroup->AddSubGroup(aLoader->GetLoadGroup());
-  if (NS_SUCCEEDED(rv)) {
-    mChildList->AppendElement((nsIDocumentLoader*)aLoader);
-  }
-  return rv;
-}
-
-
 nsresult nsDocLoaderImpl::RemoveChildGroup(nsDocLoaderImpl* aLoader)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  rv = mLoadGroup->RemoveSubGroup(aLoader->GetLoadGroup());
   if (NS_SUCCEEDED(rv)) {
     mChildList->RemoveElement((nsIDocumentLoader*)aLoader);
   }
@@ -885,7 +903,7 @@ nsDocLoaderImpl::CreateLoadGroupListener(nsIStreamListener *aListener,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(newListener);
-  newListener->Init(this, aListener);
+  newListener->Init(aListener);
 
   *aResult = newListener;
 
@@ -893,36 +911,83 @@ nsDocLoaderImpl::CreateLoadGroupListener(nsIStreamListener *aListener,
 }
 
 
-void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                                              nsIURI* aURL, 
-                                              const char* aCommand)
+void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
 {
-  PRInt32 count = mDocObservers.Count();
-  PRInt32 index;
+  if (mIsLoadingDocument) {
+    PRBool busy = PR_FALSE;
+
+    IsBusy(busy);
+    if (!busy) {
+      PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+             ("DocLoader:%p: Is now idle...\n", this));
+
+      nsCOMPtr<nsIChannel> docChannel(mDocumentChannel);
+
+      mDocumentChannel = null_nsCOMPtr();
+      mIsLoadingDocument = PR_FALSE;
+
+      //
+      // Do nothing after firing the OnEndDocumentLoad(...). The document
+      // loader may be loading a *new* document - if LoadDocument()
+      // was called from a handler!
+      //
+      FireOnEndDocumentLoad(this, docChannel, aStatus);
+
+      if (mParent) {
+        mParent->DocLoaderIsEmpty(aStatus);
+      }
+    }
+  }
+}
+
+
+void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
+                                              nsIURI* aURL)
+{
+  PRInt32 count;
 
 #if defined(DEBUG)
   char *buffer;
 
   aURL->GetSpec(&buffer);
-  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader:%p: Firing OnStartDocumentLoad(...) called for [DocLoader:%p] %s.\n",
-          this, aLoadInitiator, buffer));
+  if (aLoadInitiator == this) {
+    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+           ("DocLoader:%p: ++ Firing OnStartDocumentLoad(...).\tURI: %s\n",
+            this, buffer));
+  } else {
+    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+           ("DocLoader:%p: --   Propagating OnStartDocumentLoad(...)."
+            "DocLoader:%p  URI:%s\n", 
+            this, aLoadInitiator, buffer));
+  }
   nsCRT::free(buffer);
 #endif /* DEBUG */
 
   /*
-   * First notify any observers that the URL load has begun...
+   * First notify any observers that the document load has begun...
+   *
+   * Operate the elements from back to front so that if items get
+   * get removed from the list it won't affect our iteration
    */
-  for (index = 0; index < count; index++) {
-    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStartDocumentLoad(aLoadInitiator, aURL, aCommand);
+  count = mDocObservers.Count();
+  while (count > 0) {
+    nsIDocumentLoaderObserver *observer;
+
+    observer = NS_STATIC_CAST(nsIDocumentLoaderObserver*, mDocObservers.ElementAt(--count));
+
+    NS_ASSERTION(observer, "NULL observer found in list.");
+    if (! observer) {
+      continue;
+    }
+
+    observer->OnStartDocumentLoad(aLoadInitiator, aURL, mCommand);
   }
 
   /*
    * Finally notify the parent...
    */
   if (mParent) {
-    mParent->FireOnStartDocumentLoad(aLoadInitiator, aURL, aCommand);
+    mParent->FireOnStartDocumentLoad(aLoadInitiator, aURL);
   }
 }
 
@@ -932,119 +997,182 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
 									
 {
 #if defined(DEBUG)
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_OK;
-    if (aDocChannel)
-        rv = aDocChannel->GetURI(getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv)) {
-        char* buffer = nsnull;
-        if (uri)
-            rv = uri->GetSpec(&buffer);
-        if (NS_SUCCEEDED(rv) && buffer != nsnull) {
-            PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-                   ("DocLoader:%p: Firing OnEndDocumentLoad(...) called for [DocLoader:%p] %s\n", 
-                    this, aLoadInitiator, buffer));
-            nsCRT::free(buffer);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_OK;
+  if (aDocChannel)
+    rv = aDocChannel->GetURI(getter_AddRefs(uri));
+  if (NS_SUCCEEDED(rv)) {
+    char* buffer = nsnull;
+    if (uri)
+      rv = uri->GetSpec(&buffer);
+      if (NS_SUCCEEDED(rv) && buffer != nsnull) {
+        if (aLoadInitiator == this) {
+          PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+                 ("DocLoader:%p: ++ Firing OnEndDocumentLoad(...)"
+                  "\tURI: %s Status: %x\n", 
+                  this, buffer, aStatus));
+        } else {
+          PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+                 ("DocLoader:%p: --   Propagating OnEndDocumentLoad(...)."
+                  "DocLoader:%p  URI:%s\n", 
+                  this, aLoadInitiator, buffer));
         }
+        nsCRT::free(buffer);
+      }
     }
 #endif /* DEBUG */
 
-    /*
-     * First notify any observers that the document load has finished...
-     */
-    PRInt32 count = mDocObservers.Count();
-    PRInt32 index;
+  /*
+   * First notify any observers that the document load has finished...
+   *
+   * Operate the elements from back to front so that if items get
+   * get removed from the list it won't affect our iteration
+   */
+  PRInt32 count;
 
-    for (index = 0; index < count; index++) {
-        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)
-            mDocObservers.ElementAt(index);
-        if (observer) {
-            observer->OnEndDocumentLoad(aLoadInitiator, 
-                                        aDocChannel,
-                                        aStatus, observer);
-        }
+  count = mDocObservers.Count();
+  while (count > 0) {
+    nsIDocumentLoaderObserver *observer;
+
+    observer = NS_STATIC_CAST(nsIDocumentLoaderObserver*, mDocObservers.ElementAt(--count));
+
+    NS_ASSERTION(observer, "NULL observer found in list.");
+    if (! observer) {
+      continue;
     }
-    /*
-     * Next notify the parent...
-     */
-    if (mParent) {
-        mParent->FireOnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus);
-    }
+
+    observer->OnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus, observer);
+  }
+
+  /*
+   * Next notify the parent...
+   */
+  if (mParent) {
+    mParent->FireOnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus);
+  }
 }
 
 
 void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                                         nsIChannel* channel,
+                                         nsIChannel* aChannel,
                                          nsIContentViewer* aViewer)
 {
-  PRInt32 count = mDocObservers.Count();
-  PRInt32 index;
+#if defined(DEBUG)
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_OK;
+  if (aChannel)
+    rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_SUCCEEDED(rv)) {
+    char* buffer = nsnull;
+    if (uri)
+      rv = uri->GetSpec(&buffer);
+    if (NS_SUCCEEDED(rv) && buffer != nsnull) {
+      if (aLoadInitiator == this) {
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+               ("DocLoader:%p: ++ Firing OnStartURLLoad(...)"
+                "\tURI: %s Viewer: %x\n", 
+                this, buffer, aViewer));
+      } else {
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+               ("DocLoader:%p: --   Propagating OnStartURLLoad(...)."
+                "DocLoader:%p  URI:%s\n", 
+                this, aLoadInitiator, buffer));
+      }
+      nsCRT::free(buffer);
+    }
+  }
+#endif /* DEBUG */
+
+  PRInt32 count;
 
   /*
    * First notify any observers that the URL load has begun...
+   *
+   * Operate the elements from back to front so that if items get
+   * get removed from the list it won't affect our iteration
    */
-  for (index = 0; index < count; index++) {
-    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStartURLLoad(aLoadInitiator, channel, aViewer);
+  count = mDocObservers.Count();
+  while (count > 0) {
+    nsIDocumentLoaderObserver *observer;
+
+    observer = NS_STATIC_CAST(nsIDocumentLoaderObserver*, mDocObservers.ElementAt(--count));
+
+    NS_ASSERTION(observer, "NULL observer found in list.");
+    if (! observer) {
+      continue;
+    }
+
+    observer->OnStartURLLoad(aLoadInitiator, aChannel, aViewer);
   }
 
   /*
    * Finally notify the parent...
    */
   if (mParent) {
-    mParent->FireOnStartURLLoad(aLoadInitiator, channel, aViewer);
+    mParent->FireOnStartURLLoad(aLoadInitiator, aChannel, aViewer);
   }
 }
 
 
 void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                                       nsIChannel* channel, nsresult aStatus)
+                                       nsIChannel* aChannel, nsresult aStatus)
 {
-  PRInt32 count = mDocObservers.Count();
-  PRInt32 index;
+#if defined(DEBUG)
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_OK;
+  if (aChannel)
+    rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_SUCCEEDED(rv)) {
+    char* buffer = nsnull;
+    if (uri)
+      rv = uri->GetSpec(&buffer);
+    if (NS_SUCCEEDED(rv) && buffer != nsnull) {
+      if (aLoadInitiator == this) {
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+               ("DocLoader:%p: ++ Firing OnEndURLLoad(...)"
+                "\tURI: %s Status: %x\n", 
+                this, buffer, aStatus));
+      } else {
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+               ("DocLoader:%p: --   Propagating OnEndURLLoad(...)."
+                "DocLoader:%p  URI:%s\n", 
+                this, aLoadInitiator, buffer));
+      }
+      nsCRT::free(buffer);
+    }
+  }
+#endif /* DEBUG */
+
+  PRInt32 count;
 
   /*
-   * First notify any observers that the URL load has begun...
+   * First notify any observers that the URL load has completed...
+   *
+   * Operate the elements from back to front so that if items get
+   * get removed from the list it won't affect our iteration
    */
-  for (index = 0; index < count; index++) {
-    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnEndURLLoad(aLoadInitiator, channel, aStatus);
+  count = mDocObservers.Count();
+  while (count > 0) {
+    nsIDocumentLoaderObserver *observer;
+
+    observer = NS_STATIC_CAST(nsIDocumentLoaderObserver*, mDocObservers.ElementAt(--count));
+
+    NS_ASSERTION(observer, "NULL observer found in list.");
+    if (! observer) {
+      continue;
+    }
+
+    observer->OnEndURLLoad(aLoadInitiator, aChannel, aStatus);
   }
 
   /*
    * Finally notify the parent...
    */
   if (mParent) {
-    mParent->FireOnEndURLLoad(aLoadInitiator, channel, aStatus);
+    mParent->FireOnEndURLLoad(aLoadInitiator, aChannel, aStatus);
   }
 }
 
-
-void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
-{
-  NS_IF_RELEASE(mParent);
-  mParent = aParent;
-  NS_IF_ADDREF(mParent);
-}
-
-void nsDocLoaderImpl::SetDocumentChannel(nsIChannel* channel)
-{
-  mDocumentChannel = channel;
-}
-
-
-PRBool nsDocLoaderImpl::IsBusyEnumerator(nsISupports* aElement, void* aData)
-{
-  nsCOMPtr<nsIDocumentLoader> docLoader;
-  PRBool* result = (PRBool*)aData;
-    
-  docLoader = do_QueryInterface(aElement);
-  if (docLoader) {
-    docLoader->IsBusy(*result);
-  }
-
-  return !(*result);
-}
 
 /****************************************************************************
  * nsDocumentBindInfo implementation...
@@ -1113,23 +1241,12 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kDocumentBindInfoIID)) {
-    *aInstancePtrResult = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*) this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
-}
-
-nsresult nsDocumentBindInfo::BindWithChannel(nsIChannel *aChannel)
-{
-  m_DocLoader->SetDocumentChannel(aChannel);
-  return NS_OK;
 }
 
 nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, 
@@ -1162,7 +1279,6 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL,
           }
       }
   }
-  m_DocLoader->SetDocumentChannel(channel);
 
   rv = channel->AsyncRead(0, -1, nsnull, this);
 
@@ -1342,16 +1458,10 @@ NS_IMPL_ISUPPORTS2(nsChannelListener, nsIStreamObserver, nsIStreamListener);
 nsChannelListener::nsChannelListener()
 {
   NS_INIT_REFCNT();
-
-  mDocLoader = nsnull;
 }
 
-nsresult nsChannelListener::Init(nsDocLoaderImpl *aDocLoader, 
-                                 nsIStreamListener *aListener)
+nsresult nsChannelListener::Init(nsIStreamListener *aListener)
 {
-  mDocLoader = aDocLoader;
-  NS_ADDREF(mDocLoader);
-
   mNextListener = aListener;
 
   return NS_OK;
@@ -1359,7 +1469,6 @@ nsresult nsChannelListener::Init(nsDocLoaderImpl *aDocLoader,
 
 nsChannelListener::~nsChannelListener()
 {
-  NS_RELEASE(mDocLoader);
   mNextListener = null_nsCOMPtr();
 }
 
@@ -1367,11 +1476,14 @@ NS_IMETHODIMP
 nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
 {
   nsresult rv;
-  nsCOMPtr<nsIContentViewer> viewer;
 
   ///////////////////////////////
   // STREAM CONVERTERS
   ///////////////////////////////
+
+  nsXPIDLCString contentType;
+  rv = aChannel->GetContentType(getter_Copies(contentType));
+  if (NS_FAILED(rv)) return rv;
 
   // if we are using the uri loader, it handles the stream converter work for us!
 
@@ -1426,53 +1538,14 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
   //////////////////////////////
   
   // Pass the notification to the next listener...
-  rv = mNextListener->OnStartRequest(aChannel, aContext);
-
-
-  //
-  // Notify the document loader...
-  nsCOMPtr<nsISupports> container;
-  NS_ENSURE_SUCCESS(mDocLoader->GetContainer(getter_AddRefs(container)),
-   NS_ERROR_FAILURE);
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(container));
-  NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
-  
-  webShell->GetContentViewer(getter_AddRefs(viewer));
-
-  if (mDocLoader->IsLoadingDocument()) {
-    nsLoadFlags loadAttribs;
-    aChannel->GetLoadAttributes(&loadAttribs);
-
-    if (!(loadAttribs & nsIChannel::LOAD_BACKGROUND)) {
-      mDocLoader->FireOnStartURLLoad(mDocLoader, 
-                                     aChannel, 
-                                     viewer);
-    }
-  }
-
-  return rv;
+  return mNextListener->OnStartRequest(aChannel, aContext);
 }
 
 NS_IMETHODIMP
 nsChannelListener::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
                                  nsresult aStatus, const PRUnichar *aMsg)
 {
-  nsresult rv;
-
-  rv = mNextListener->OnStopRequest(aChannel, aContext, aStatus, aMsg);
-
-  if (mDocLoader->IsLoadingDocument()) {
-    nsLoadFlags loadAttribs;
-    aChannel->GetLoadAttributes(&loadAttribs);
-
-    if (!(loadAttribs & nsIChannel::LOAD_BACKGROUND)) {
-      mDocLoader->FireOnEndURLLoad(mDocLoader, 
-                                   aChannel, 
-                                   aStatus);
-    }
-  }
-
-  return rv;
+  return mNextListener->OnStopRequest(aChannel, aContext, aStatus, aMsg);
 }
 
 NS_IMETHODIMP
@@ -1529,7 +1602,7 @@ nsDocLoaderImpl::Create(nsISupports *aOuter, const nsIID &aIID, void **aResult)
   NS_ADDREF(inst);
   rv = inst->QueryInterface(aIID, aResult);
   if (NS_SUCCEEDED(rv)) {
-      rv = inst->Init();
+    rv = inst->Init(nsnull);
   }
   NS_RELEASE(inst);
 

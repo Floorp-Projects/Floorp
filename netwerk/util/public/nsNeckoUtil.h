@@ -76,7 +76,7 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result);
 
 extern nsresult
 NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
-                nsILoadGroup* parent, nsILoadGroup* *result);
+                nsILoadGroup* *result);
 
 extern nsresult
 NS_NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,

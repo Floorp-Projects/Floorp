@@ -186,7 +186,7 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 
 NECKO_EXPORT(nsresult)
 NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
-                nsILoadGroup* parent, nsILoadGroup* *result)
+                nsILoadGroup* *result)
 {
     nsresult rv;
     nsILoadGroup* group;
@@ -195,7 +195,7 @@ NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
                                             (void**)&group);
     if (NS_FAILED(rv)) return rv;
 
-    rv = group->Init(observer, parent);
+    rv = group->Init(observer);
     if (NS_FAILED(rv)) {
         NS_RELEASE(group);
         return rv;
