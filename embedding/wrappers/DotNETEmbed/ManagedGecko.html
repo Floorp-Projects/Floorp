@@ -6,36 +6,86 @@
   <title>Convert Gecko from unmanged to managed code in .Net</title>
 </head>
 <body>
-<h1 style="margin-left: 40px;">Convert Gecko APIs from unmanaged to
-managed using </h1>
-<h1 style="margin-left: 40px;">Managed Extensions for Microsoft Visual
-Studio C++ .Net<br>
-</h1>
-<br>
+<h1 style="margin-left: 40px; text-align: center;">Wrapping Gecko APIs
+using Microsoft Visual Studio .NET Managed Extensions for C++<big><big><big><br
+ style="color: rgb(255, 0, 0);">
+</big></big></big> </h1>
+<div style="text-align: center;"> <big><big><big><span
+ style="color: rgb(255, 0, 0);">**DRAFT**</span></big></big></big><br>
+</div>
 <br>
 <h2>Intended Audience:</h2>
 This paper is intended for a C++ programmer who would like to know how
-to convert the Gecko from unmanaged C++ to managed C++ in Microsoft
-.Net, CLR environment.&nbsp; Author assumes the reader is familiar with
-Gecko XPCOM and MS C++ .Net with Managed Extensions.<br>
+to wrap Gecko engine from unmanaged C++ to managed C++ .&nbsp; Author
+assumes the reader is familiar with Gecko and MS Visual Studio.NET with
+Managed Extensions for C++.&nbsp; <br>
 <br>
 <h2>Background:</h2>
-Why do we go all this trouble?&nbsp; When we have Gecko as ActiveX
-control, then why don't we use the Runtime-Callable Wrapper (RCW) and
-COM-Callable Wrapper (CCW)?&nbsp; <br>
-<br>
-<h2 class="dtH1">Three Ways to Use Code</h2>
-<p>There are three basic ways to use existing code: </p>
-<ol type="1">
-  <li>You can use the built-in .NET runtime interop facilities to talk
-directly to the existing code.</li>
-  <li>You can wrap the code using the managed extensions to C++.</li>
-  <li>You can rewrite the code in a .NET language.</li>
+<ol>
+  <li> Why do we go all this trouble?&nbsp; </li>
+  <li>When we have Gecko as ActiveX control, then why don't we use the
+Runtime-Callable Wrapper (RCW) and COM-Callable Wrapper (CCW)?&nbsp; </li>
 </ol>
 <br>
+<h2 class="dtH1">How do we do this?</h2>
+There are few ways to convert the existing unmanaged code to managed
+code:
+<ol type="1">
+  <li>You can use the built-in .NET runtime interop facilities (such as
+PInvoke or COM Interop)<br>
+  </li>
+  <li>You can wrap the unmanaged code using the managed extensions to
+C++.</li>
+  <li>You can rewrite the entire code in a .NET language.</li>
+</ol>
+<h2 class="dtH1">What do we need?</h2>
+We need <br>
+<ol>
+  <li>.NET Framework (1.1) <br>
+  </li>
+  <li>Microsoft Visual Studio .NET (preferably 2003)</li>
+  <li>mozilla development environment
+(http://www.mozilla.org/build/win32.html)<br>
+  </li>
+</ol>
 <h2>Terminology:</h2>
-Following terms are used throught out this document and it is important
-to understand what each term means.&nbsp; <br>
+Following terms are used throughout out this document and it is
+important to understand what each term means.&nbsp; <br>
+<ul>
+  <li><span style="font-weight: bold;">Assembly</span><br>
+  </li>
+</ul>
+<div style="margin-left: 80px;">Assembly is a building block of the
+.Net Framework.&nbsp; It is the fundamental unit of deployment, version
+control, reuse, activation, scoping, and security permissions.&nbsp; It
+provides the Common Language Runtime (CLR) with the information it needs
+to be aware of type implementations.&nbsp; It is a collection of types
+and resources that are built to work together and form a logical unit of
+functionality.&nbsp; <br>
+</div>
+<ul style="font-weight: bold;">
+  <li>Global Assembly Cache</li>
+</ul>
+<div style="margin-left: 80px;">Global Assembly Cache is a machine wide
+code cache that is installed whereever the CLR is installed.&nbsp; In
+most cases, if you intend to share an assembly with multiple
+applications, you should deploy it into the global assembly cache.<br>
+</div>
+<ul>
+  <li><span style="font-weight: bold;">Managed code vs Unmanaged code</span><br>
+  </li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">Manged
+code</span> requires the execution environment of the CLR.&nbsp;
+Compilers emit managed code as MSIL, the intermidate language.&nbsp; The
+reason for the name is that code is managed by the CLR and objects are
+allocated from heaps managed by the CLR.<br>
+</div>
+<div style="margin-left: 80px;"><span style="font-style: italic;">Unmanaged
+code</span> does not use nor require the execution environment of the
+Common Language Runtime (CLR).&nbsp; Unmanaged code is outside the
+reach of the CLR's security system, garbage collector and other
+services.</div>
 <ul>
   <li style="font-weight: bold;">CLR</li>
   <li style="font-weight: bold;">Runtime-Callable Wrapper (RCW)</li>
@@ -97,86 +147,20 @@ int y;<br>
 <div style="margin-left: 40px;"> };<br>
 </div>
 </div>
-<ul>
-  <li><span style="font-weight: bold;">Assembly</span><br>
-  </li>
-</ul>
-<div style="margin-left: 80px;">Assembly is a building block of the
-.Net Framework.&nbsp; It is the fundamental unit of deployment, version
-control, reuse, activation, scoping, and security permissions.&nbsp; It
-provides the Common Language Runtime (CLR) with the information it needs
-to be aware of type implementations.&nbsp; It is a collection of types
-and resources that are built to work together and form a logical unit of
-functionality.&nbsp; <br>
-</div>
-<ul style="font-weight: bold;">
-  <li>Global Assembly Cache</li>
-</ul>
-<div style="margin-left: 80px;">Global Assembly Cache is a machine wide
-code cache that is installed whereever the CLR is installed.&nbsp; In
-most cases, if you intend to share an assembly with multiple
-applications, you should deploy it into the global assembly cache.<br>
-</div>
-<ul>
-  <li><span style="font-weight: bold;">Managed code vs Unmanaged code</span></li>
-</ul>
-<div style="margin-left: 80px;"><span style="font-style: italic;">Manged
-code</span> requires the execution environment of the CLR.&nbsp;
-Compilers emit managed code as MSIL, the intermidate language.&nbsp; The
-reason for the name is that code is managed by the CLR and objects are
-allocated from heaps managed by the CLR.<br>
-<span style="font-style: italic;">Unmanaged code</span> does not use nor
-require the execution environment of the Common Language Runtime
-(CLR).&nbsp; Unmanaged code is outside the reach of the CLR's security
-system, garbage collector and other services.<br>
-</div>
+<br>
 <h2>Necessary Steps:</h2>
 <ul>
 </ul>
-<ol>
-  <li>Create a wrapper Assembly library using MS Visual C++ .Net with
-Managed Extensions</li>
-  <li><br>
-  </li>
-</ol>
-<ul>
-  <li>Convert IDL to a type library by using MIDL.exe or MKTYPLIB.exe</li>
-  <ul>
-    <li>IDL file-&gt; MIDL.EXE -&gt; TYPELIB file-&gt; TLBIMP.EXE -&gt;
-Interop Assembly file&nbsp;&nbsp;&nbsp; (-&gt; ILDASM.EXE -&gt; IL file)<br>
-    </li>
-  </ul>
-  <li>Create a Multifile Library Assemblies</li>
-  <ul>
-    <li>set Assembly Attributes</li>
-    <li>create Shared (Strong-Named) Assembly<br>
-    </li>
-    <li>cl /CLR:noAssembly /c myLibrary1.cpp</li>
-    <li>link -dll /noassembly /node:libcpmt.lib /out:myCodeLibrary1.dll
-myLibrary1.obj</li>
-    <li>cl /CLR:noAssembly /c myLibrary2.cpp</li>
-    <li>link -dll /noassembly /node:libcpmt.lib /out:myCodeLibrary2.dll
-myLibrary2.obj</li>
-    <li>al /out:myAssembly.dll /t:lib myCodeLibrary1.dll
-myCodeLibrary2.dll </li>
-  </ul>
-  <li>Add to Global Assembly Cache</li>
-  <ul>
-    <li>gacutil -i myAssembly.dll</li>
-  </ul>
-  <li>Write and test a sample code in C#<br>
-  </li>
-</ul>
 <br>
 <h2>Gecko APIs</h2>
+We will be exposing list of Gecko APIs<br>
 <ul>
   <li>nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
 nsIDirectoryServiceProvider *aAppFileLocProvider);<br>
   </li>
-  <li>nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &amp;aEvent,
-PRBool &amp;aWasHandled);<br>
-  </li>
   <li>nsresult NS_TermEmbedding();</li>
+  <li>...<br>
+  </li>
 </ul>
 <br>
 <h2>Coding Techniques:</h2>
@@ -262,9 +246,22 @@ gcroot</span> <br>
   <li>TLBEXP.exe</li>
   <li>REGASM.exe</li>
   <li>AXIMP.exe</li>
-  <li>REGSVCS.exe<br>
+  <li>REGSVCS.exe</li>
+</ul>
+<br>
+<h2 class="dtH1">References<br>
+</h2>
+<ul>
+  <li>Visual Studio .NET
+(http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vsintro7/html/vsstartpage.asp)<br>
+  </li>
+  <li>Managed Extensions for C++ programming (http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vcmex/html/vcconmcoverview.asp)</li>
+  <li>Managed Extensions for C++ specifications
+(http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vcmxspec/html/vcManagedExtensionsSpec_Start.asp)<br>
   </li>
 </ul>
+<h2><br>
+</h2>
 <h2>History:</h2>
 Draft 0.1 : April 9 2003&nbsp; Roy Yokoyama<br>
 <br>
