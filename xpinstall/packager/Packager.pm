@@ -80,9 +80,10 @@ sub Copy {
   			next LINE;
   	};
 
-  	# make sure a component is defined before doing any copies or deletes.
-  	if (( $component eq "" ) && ($components eq "" )) {
-  		die "Error: item $_ outside a component ($package, $lineno).  Exiting...\n";
+  	# if we find a file before we have a component and we are in flat mode,
+  	# copy it - allows for flat only files (installed-chrome.txt)
+  	if (( $component eq "" ) && ($components eq "" ) && (!$flat)) {
+  		next LINE;
   	}
 
   	# skip line if we're only copying specific components and outside
