@@ -48,6 +48,7 @@
 #include "nsIWebShell.h"
 #include "nsICookieService.h"
 #include "nsIWindowMediator.h"
+#include "nsIDOMWindow.h"
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
@@ -63,11 +64,6 @@ static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
 #ifdef DEBUG
 #include "prlog.h"
 #endif
-
-// Temporary stuff.
-#include "nsIDOMToolkitCore.h"
-#include "nsAppCoresCIDs.h"
-static NS_DEFINE_CID( kToolkitCoreCID, NS_TOOLKITCORE_CID );
 
 #ifdef MOZ_FULLCIRCLE
 #include "fullsoft.h"
@@ -221,6 +217,36 @@ static void InitFullCircle()
 #endif
 }
 
+static nsresult OpenWindow( const char*urlstr, const PRUnichar *args ) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
+    if ( NS_SUCCEEDED( rv ) ) {
+        nsCOMPtr<nsIDOMWindow> hiddenWindow;
+        JSContext *jsContext;
+        rv = appShellService->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
+                                                           &jsContext );
+        if ( NS_SUCCEEDED( rv ) ) {
+            void *stackPtr;
+            jsval *argv = JS_PushArguments( jsContext,
+                                            &stackPtr,
+                                            "sssW",
+                                            urlstr,
+                                            "_blank",
+                                            "chrome,dialog=no,all",
+                                            args );
+            if( argv ) {
+                nsCOMPtr<nsIDOMWindow> newWindow;
+                rv = hiddenWindow->OpenDialog( jsContext,
+                                               argv,
+                                               4,
+                                               getter_AddRefs( newWindow ) );
+                JS_PopArguments( jsContext, stackPtr );
+            }
+        }
+    }
+    return rv;
+}
+
 static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
 {
 	char* cmdResult = nsnull;
@@ -240,12 +266,9 @@ static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs, nsIPref *pr
       urlstr = "chrome://editor/content/";
       withArgs = "chrome://editor/content/EditorInitPage.html";
      
-     	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkit, kToolkitCoreCID, &rv);
-      if (NS_SUCCEEDED(rv))
-      {
-        toolkit->ShowWindowWithArgs( urlstr, nsnull, withArgs );
-     	}
+      OpenWindow( urlstr, withArgs.GetUnicode() );
     }
+
     // Check for -editor -- this will eventually go away
     if (nsnull == urlstr)
     {
@@ -345,11 +368,7 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *pref
       urlstr = "chrome://messengercompose/content/";
       withArgs = "chrome://editor/content/EditorInitPage.html";
   	  
-  	  NS_WITH_SERVICE(nsIDOMToolkitCore, toolkit, kToolkitCoreCID, &rv);
-      if (NS_SUCCEEDED(rv))
-      {
-        toolkit->ShowWindowWithArgs( urlstr, nsnull, withArgs );
-      }
+      OpenWindow( urlstr, withArgs.GetUnicode() );
     }
   }
 	
