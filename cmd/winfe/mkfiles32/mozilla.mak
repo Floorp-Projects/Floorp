@@ -1110,12 +1110,10 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\xp\xp_error.c
 	$(DEPTH)\lib\xp\xp_file.c 
 	$(DEPTH)\lib\xp\xp_hash.c
-	$(DEPTH)\lib\xp\xp_md5.c  
 	$(DEPTH)\lib\xp\xp_mesg.c 
 	$(DEPTH)\lib\xp\xp_ncent.c
 	$(DEPTH)\lib\xp\xp_reg.c  
 	$(DEPTH)\lib\xp\xp_rgb.c  
-	$(DEPTH)\lib\xp\xp_sec.c  
 	$(DEPTH)\lib\xp\xp_str.c  
 	$(DEPTH)\lib\xp\xp_thrmo.c
 	$(DEPTH)\lib\xp\xp_time.c 
