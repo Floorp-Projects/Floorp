@@ -58,23 +58,11 @@ Contributor(s): ______________________________________. -->
 			
 			<box align="horizontal"  flex="100%" style="margin-bottom: 1em; width: 100%;">
 				<html:input type="checkbox" id="dialog.newWindow"/>
-            	<html:label for="dialog.newWindow">&openWin.label;</html:label>
+				<html:label for="dialog.newWindow">&openWin.label;</html:label>
            		<spring flex="100%"/> 
 			</box>
-			
-			<spring flex="100%"/>
-			
-			<box align="horizontal">
-				
-				<spring flex="100%"/>
-				
-				<titledbutton id="dialog.ok" value="&ok.label;" onclick="open()"/>
-            	<titledbutton id="dialog.cancel" value="&cancel.label;" onclick="cancel()"/>
-				
-				<spring flex="100%"/>
-				
-			</box>
-			
+
+			<box id="okCancelButtons"/>
 		</box>
 		
 	</box>
