@@ -1,0 +1,66 @@
+ftp> open netwinsite.com
+Connected to netwinsite.com.
+220 SurgeFTP netwin1 (Version 2.1e)
+Name (netwinsite.com:cyp): 331 Guest login ok, send your complete e-mail address as password.
+230-  Alias                Real path                      Access
+230-  /                    /disk2/ftp                     read
+230 User anonymous logged in.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> cd pub
+250 CWD command successful now (/pub)
+ftp> ls
+200 PORT command successful.
+150 Opening ASCII mode data connection for file list. (/pub)
+drwxr-xr-x   2 jesseftp netwin       4096 Jul  7 21:37 cgimail
+drwxr-xr-x   4 dnewsftp netwin       4096 May  2 17:38 dbabble
+drwxr-xr-x   2 netwin   netwin       4096 Jul  1  2001 dek_temp
+drwxr-xr-x   2 netwin   netwin       4096 Jul  1  2001 deye
+drwxr-xr-x   2 jesseftp root         4096 Feb 18 17:50 dfree
+drwxr-xr-x   2 netwin   netwin       4096 Jul  1  2001 dgate
+drwxr-xr-x   4 root     root         4096 Jan 31 15:18 discontinued
+drwxr-xr-x   4 dmailftp netwin       8192 Jul  7 21:28 dmail
+drwxr-xr-x   4 pnftp    netwin       4096 Jun 30 17:56 dmailweb
+drwxr-xr-x   8 dnewsftp netwin       8192 Jul 10  1:40 dnews
+drwxr-xr-x   3 netwin   netwin       4096 Jul  1  2001 dnewsweb
+drwxr-xr-x   3 pnftp    root         4096 Sep  4  2001 dnotice
+drwxr-xr-x   2 root     root         4096 May  6 16:58 fengate
+drwxr-xr-x   2 pnftp    root         4096 May 28 19:01 ferngate
+drwxr-xr-x   3 netwin   netwin       4096 Jul  1  2001 jeeves
+drwxr-xr-x   2 netwin   netwin       4096 Jun 27 20:10 misc
+drwxr-xr-x   3 pnftp    bin          4096 Jul  4 21:13 netauth
+drwxr-xr-x   2 pnftp    bin          4096 Feb  8  1999 poppassd
+drwxr-xr-x   2 jesseftp netwin       4096 Jul  9  1:39 surgeftp
+drwxr-xr-x   2 surgemail root         4096 Jul  3  0:00 surgemail
+drwxr-xr-x   2 surgemail root         4096 Jul  3  0:01 surgemail-enterprise
+drwxr-xr-x   2 surgemail root         4096 Jul  3  0:01 surgemail-home
+drwxr-xr-x   2 surgemail root         4096 Jul  3  0:01 surgemail-isp
+drwxr-xr-x   2 surgemail root         4096 Jul  3  0:01 surgemail-workplace
+drwxr-xr-x   3 netwin   bin          4096 Jul  4  2001 watchdog
+drwxr-xr-x   3 pnftp    bin          4096 Mar 21  2001 webimap
+drwxr-xr-x   3 pnftp    root         4096 Apr 28 21:30 webmail
+drwxr-xr-x   3 pnftp    bin          4096 Jun 30 18:23 webnews
+drwxr-xr-x   2 pnftp    root         4096 Jan 30 20:31 webshareit
+drwxr-xr-x   2 netwin   bin          4096 Sep 20  1999 webtwin
+drwxr-xr-x   4 pnftp    root         4096 Jul  8 17:07 beta
+lrwxrwxrwx   1 pnftp    pnftp          12 Mar 18 15:48 wmail.exe -> wmail30h.exe
+-rw-r--r--   1 pnftp    pnftp     2312192 Feb 19 15:33 wmail30h.exe
+-rw-r--r--   1 pnftp    pnftp     3360893 Feb 21 19:24 wmail30h_aix4.tar.Z
+-rw-r--r--   1 pnftp    pnftp     3508885 Mar 18 15:47 wmail30h_bsdi4.tar.Z
+-rw-r--r--   1 pnftp    pnftp     2693234 Feb 19 15:47 wmail30h_freebsd.tar.Z
+-rw-r--r--   1 pnftp    pnftp     2640047 Feb 19 15:38 wmail30h_freebsd3.tar.Z
+-rw-r--r--   1 pnftp    pnftp     2654381 Feb 19 15:43 wmail30h_freebsd4.tar.Z
+-rw-r--r--   1 pnftp    pnftp     3005333 Mar 18 18:21 wmail30h_hpux.tar.Z
+-rw-r--r--   1 pnftp    pnftp     2779942 Feb 19 15:52 wmail30h_linux.tar.Z
+-rw-r--r--   1 pnftp    pnftp     2782353 Feb 19 15:58 wmail30h_linuxlibc6.tar.Z
+-rw-r--r--   1 pnftp    pnftp     1783391 Feb 19 16:01 wmail30h_linuxppc.tar.gz
+-rw-r--r--   1 pnftp    pnftp     2758233 Mar 18 15:47 wmail30h_macosx_aqua.tar.Z
+-rw-r--r--   1 pnftp    pnftp     3113365 Mar 18 15:47 wmail30h_osf.tar.Z
+-rw-r--r--   1 pnftp    pnftp     1779720 Apr 28 21:30 wmail30h_raq3.tar.gz
+-rw-r--r--   1 pnftp    pnftp     1789173 Mar 11 16:38 wmail30h_raq4.tar.gz
+-rw-r--r--   1 pnftp    pnftp     2846045 Feb 19 16:06 wmail30h_solaris.tar.Z
+-rw-r--r--   1 pnftp    pnftp     2858946 Feb 19 16:11 wmail30h_solarisx86.tar.Z
+226 Transfer complete. 
+ftp> close
+221 Closing connection - goodbye!
+ftp> 
