@@ -25,6 +25,7 @@
 
 
 destdir=/web/cgibins/cgi-forms/tinderbox
+htmldir=/accts/kestes/htdocs/tinderbox
 
 builddir=./build
 
@@ -46,6 +47,7 @@ perl_flags='-T'
 	egrep -v '/CVS/' | egrep -v '\#' | egrep -v '~' | \
 	perl	\
 		-e "\$destdir = \"$destdir\";"		\
+		-e "\$htmldir = \"$htmldir\";"		\
 		-e "\$builddir = \"$builddir\";"	\
 		-e "\$config_script=\"$config_script\";"\
 		-e '
@@ -69,6 +71,7 @@ perl_flags='-T'
 
 prefix=$destdir
 builddir=$builddir
+htmldir=$htmldir
 
 config_script=$config_script
 confdir=localconf
@@ -79,9 +82,7 @@ confdir=localconf
 all: build
 ALL: all
 
-build_code: mk_build_dirs build_files
-
-build:set_build_permissions compile_code
+build: mk_build_dirs build_files set_build_permissions 
 
 install: build mk_dest_dirs install_files
 
@@ -93,17 +94,32 @@ clean:
 # We do not accidently wish to edit to the 'binary' version of these
 # files so ensure the build dir copies are not writable.
 
-set_build_permissions: build_code
+set_build_permissions: 
 	@ echo "\\n\\n-----Setting Build directory permissions-----\\n\\n"
 	find \$(builddir) -type f | xargs chmod 444
 	find \$(builddir)/bin -type f | xargs chmod 555
+	find \$(builddir)/test -type f -name 'gen*' | xargs chmod 555
 	find \$(builddir)/clientbin -type f | xargs chmod 555
 
-compile_code: build_files
+compile_all_code: build
 	@ echo "\\n\\n-----Testing if perl can compile code-----\\n\\n"
 	find \$(builddir) -type f | \\
-	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi" | \\
+	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \\
 	  xargs -l perl -T -c 
+
+compile_bin_code: build
+	@ echo "\\n\\n-----Testing if perl can compile all files in the bin directory-----\\n\\n"
+	find \$(builddir)/bin -type f | \\
+	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \\
+	  xargs -l perl -T -c 
+
+gen_test: compile_bin_code
+	rm -rf \$(htmldir)
+	perl \$(builddir)/test/genbuilds.tst
+	perl \$(builddir)/test/gennotices.tst
+	perl \$(builddir)/test/genbugs.tst
+	\$(builddir)/bin/tinder.cgi --daemon-mode
+
 
 # Automated file list is generated after this line
 # ------------------------------------------------
@@ -181,7 +197,9 @@ echo "while (<>) {" >> $config_script
 echo "  s!\#tinder_libdir\#!$destdir/local_conf',\n   '$destdir/default_conf',\n   '$destdir/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
 echo "  s!\#tinder_version\#!$tinder_version!;" >> $config_script
 echo "  s!\#perlflags\#!$perl_flags!;" >> $config_script
-echo "\n" >> $config_script
+
+
+echo -e "\n" >> $config_script
 
 
 for cmd in perl gzip uudecode
