@@ -309,6 +309,7 @@ sub show_bug {
 
     # Add the bug and user hashes to the variables
     $vars->{'bug'} = \%bug;
+    $vars->{'user'} = \%user;
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("bug/edit.html.tmpl", $vars)
