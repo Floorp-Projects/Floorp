@@ -35,7 +35,7 @@ include $(topsrcdir)/config/config.mk
 SIMPLE_PROGRAMS = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
 ifndef NECKO
-LIBS = 		\
+NET_LIBS = 		\
 	-lpwcac \
 	-lfileurl \
 	-lftpurl \
@@ -51,12 +51,12 @@ LIBS = 		\
 	-lsockstuburl \
 	$(NULL)
 else
-LIBS = 		\
+NET_LIBS = 		\
 	-lneckoutil_s \
 	$(NULL)
 endif
 
-LIBS += \
+LIBS = \
 	-limg \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
@@ -75,6 +75,7 @@ LIBS += \
 	-lxmltok \
 	-ljsurl \
 	$(TK_LIBS) \
+	$(NET_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
