@@ -57,16 +57,24 @@
             <html:option value="2">&modelDeleteImmediately.label;</html:option>
           </html:select>
         </html:div>
-        <html:div><html:input name="imap.cleanupInboxOnExit" type="checkbox"/>&expungeOnExit.label;</html:div>
+        <html:div>
+          <html:input name="imap.cleanupInboxOnExit" type="checkbox"/>
+          &expungeOnExit.label;
+        </html:div>
         <html:div><html:input name="imap.emptyTrashOnExit" type="checkbox"/>&emptyTrashOnExit.label;</html:div>
       </box>
       <!-- News -->
       <box align="vertical" flex="100%">
-        <html:div>
-		<html:input name="nntp.notifyOn" type="checkbox"/>&maxMessagesStart.label;
-		<html:input name="nntp.maxArticles" type="text" size="6"/>
-		&maxMessagesEnd.label;
-        </html:div>
+        <box align="horizontal">
+          <html:div>
+          <html:input name="nntp.notifyOn" type="checkbox"/>
+            &maxMessagesStart.label;
+          </html:div>
+  		  <html:div>
+            <html:input name="nntp.maxArticles" type="text" size="6"/>
+  		    &maxMessagesEnd.label;
+          </html:div>
+        </box>
       </box>
       <!-- None -->
       <box align="vertical" flex="100%">
