@@ -21,6 +21,7 @@
  * Contributor(s): Mike Potter <mikep@oeone.com>
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *                 Matthew Buckett <buckett@bumph.org>
+ *                 Mike Loll <michaelloll@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -289,7 +290,15 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    node.setAttribute("http://home.netscape.com/NC-rdf#path", CalendarObject.path);
 
    // CofC save off the color of the new calendar
-   node.setAttribute("http://home.netscape.com/NC-rdf#color", CalendarObject.color);
+    // Add the default color for when a user does not select a calendar color.
+    if( CalendarObject.color == '' )
+    {
+        node.setAttribute("http://home.netscape.com/NC-rdf#color", "#F9F4FF");
+    }
+    else
+    {
+        node.setAttribute("http://home.netscape.com/NC-rdf#color", CalendarObject.color);
+    }
    
    if( CalendarObject.remotePath.indexOf( "http://" ) != -1 ||
        CalendarObject.remotePath.indexOf( "https://" ) != -1 ||
