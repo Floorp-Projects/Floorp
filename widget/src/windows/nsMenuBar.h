@@ -23,6 +23,10 @@
 #include "nsWindow.h"
 #include "nsSwitchToUIThread.h"
 
+#include "nsCOMPtr.h"
+#include "nsIDOMElement.h"
+#include "nsIWebShell.h"
+
 #include "nsIMenuBar.h"
 #include "nsIMenuListener.h"
 #include "nsVoidArray.h"
@@ -43,6 +47,8 @@ public:
   // nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   
   NS_DECL_ISUPPORTS
 
@@ -62,6 +68,8 @@ public:
   NS_IMETHOD Paint();
   NS_IMETHOD SetNativeData(void* aData);
 
+  NS_IMETHOD ConstructMenuBar(nsIDOMElement * menubarElement);
+
 protected:
   PRUint32    mNumMenus;
   HMENU       mMenu;
@@ -71,6 +79,8 @@ protected:
 
   nsVoidArray * mItems;
 
+  nsCOMPtr<nsIWebShell>   mWebShell;
+  nsCOMPtr<nsIDOMElement> mDOMElement;
 };
 
 #endif // nsMenuBar_h__

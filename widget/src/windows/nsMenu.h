@@ -44,11 +44,11 @@ public:
   //nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  
-  NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
-
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
 
   // nsIMenu Methods
+  NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(const nsString &aText);
