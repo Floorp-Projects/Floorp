@@ -839,6 +839,7 @@ if (@bugidlist) {
         $min_membercontrol{$bug_id} = $min_membercontrol;
     }
     foreach my $bug (@bugs) {
+        next unless defined($min_membercontrol{$bug->{'bug_id'}});
         if ($min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPSHOWN
               || $min_membercontrol{$bug->{'bug_id'}} == CONTROLMAPDEFAULT) {
             $bug->{'secure_mode'} = 'manual';
