@@ -47,6 +47,8 @@ MAKE_OBJ_TYPE = DLL
 
 include <$(DEPTH)/config/config.mak>
 
+CFLAGS = $(CFLAGS) -DNSS_USE_STATIC_LIBS
+
 LINCS = $(LINCS)     \
     -I$(PUBLIC)      \
     -I$(XPDIST)/public/security \
