@@ -58,9 +58,10 @@ function commonDialogOnLoad()
 	        done = true;
 	        messageFragment = messageText;
 	      }
-                var textnode = document.createElement("text");
-                textnode.setAttribute("value", messageFragment);
-                messageParent.appendChild(textnode);
+                var textnode = document.createTextNode(messageFragment);
+                var htmlnode = document.createElement("html");
+                htmlnode.appendChild(textnode);
+                messageParent.appendChild(htmlnode);
 	    }
 	}
 	var msg = param.GetString( 3 );
