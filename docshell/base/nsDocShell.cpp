@@ -2339,14 +2339,13 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
    // XXX What if SetupNewViewer fails?
 
    OSHE = LSHE;
-/*   
+   
    PRBool updateHistory = PR_TRUE;
 
     // Determine if this type of load should update history   
     switch(mLoadType)
     {
-    case nsIDocShellLoadInfo::loadHistory:
-    case nsIDocShellLoadInfo::loadReloadNormal:
+    case nsIDocShellLoadInfo::loadNormalReplace:
     case nsIDocShellLoadInfo::loadReloadBypassCache:
     case nsIDocShellLoadInfo::loadReloadBypassProxy:
     case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
@@ -2355,12 +2354,12 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
     default:
         break;
     } 
-*/
-  if (OSHE) {
+
+  if (OSHE && updateHistory) {
     nsCOMPtr<nsILayoutHistoryState> layoutState;
 
     rv = OSHE->GetLayoutHistoryState(getter_AddRefs(layoutState));
-    if (layoutState && (mLoadType != nsIDocShellLoadInfo::loadNormalReplace)) {
+    if (layoutState) {
       // This is a SH load. That's why there is a LayoutHistoryState in OSHE
       nsCOMPtr<nsIPresShell> presShell;
       rv = GetPresShell(getter_AddRefs(presShell));
