@@ -95,7 +95,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
       continue;
     }
 
-    const nsAString& temp = NS_ConvertASCIItoUCS2(categoryEntry);
+    NS_ConvertASCIItoUCS2 temp(categoryEntry);
       // XXX Mac chokes _later_ if we put the |NS_Conv...| right in the |nsStringKey| ctor, so make a temp
     nsStringKey key(temp);
 
