@@ -775,23 +775,3 @@ nsresult nsMessageViewThreadEnumerator::GetMessagesForCurrentThread()
 	return rv;
 }
 
-nsresult
-NS_NewMessageViewDataSource(const nsIID& iid, void **result)
-{
-    NS_PRECONDITION(result != nsnull, "null ptr");
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-
-    nsMessageViewDataSource* datasource = new nsMessageViewDataSource();
-    if (! datasource)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv;
-    rv = datasource->Init();
-    if (NS_FAILED(rv)) {
-        delete datasource;
-        return rv;
-    }
-
-	return datasource->QueryInterface(iid, result);
-}
