@@ -170,11 +170,11 @@ fe_MakeAppleDoubleEncodeStream (int  format_out,
     
     TRACEMSG(("Setting up apple encode stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = new (NET_StreamClass);
     if(stream == NULL) 
         return(NULL);
 
-    obj = XP_NEW(AppleDoubleEncodeObject);
+    obj = new (AppleDoubleEncodeObject);
     if (obj == NULL) 
     {
         PR_FREEIF (stream);
@@ -211,7 +211,7 @@ fe_MakeAppleDoubleEncodeStream (int  format_out,
 		return (NULL);
 	}
 	
-	obj->fname = XP_STRDUP(dst_filename);
+  obj->fname = nsCRT::strdup(dst_filename);
 	 
 	obj->buff	= working_buff;
 	obj->s_buff = bSize;
@@ -265,7 +265,7 @@ net_AppleDouble_Decode_Write (
 	if (obj->bytes_in_buff + l > 1024)
 	{
 		size = 1024 - obj->bytes_in_buff;
-		XP_MEMCPY(obj->in_buff+obj->bytes_in_buff, 
+		nsCRT::memcpy(obj->in_buff+obj->bytes_in_buff, 
 					s, 
 					size);
 		s += size;
@@ -287,7 +287,7 @@ net_AppleDouble_Decode_Write (
 	else
 	{
 		/* and we are sure we will not get overflow with the buff. */ 
-		XP_MEMCPY(obj->in_buff+obj->bytes_in_buff, 
+		nsCRT::memcpy(obj->in_buff+obj->bytes_in_buff, 
 					s, 
 					l);
 		obj->bytes_in_buff += l;
@@ -361,7 +361,7 @@ static void
 simple_copy(MWContext* context, char* saveName, void* closure)
 {
 	/* just copy the filename to the closure, so the caller can get it.	*/
-	XP_STRCPY(closure, saveName);
+  nsCRT::strcpy(closure, saveName);
 }
 #endif
 
@@ -451,11 +451,11 @@ fe_MakeAppleDoubleDecodeStream (int  format_out,
     
     TRACEMSG(("Setting up apple double decode stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = new (NET_StreamClass);
     if(stream == NULL) 
         return(NULL);
 
-    obj = XP_NEW(AppleDoubleDecodeObject);
+    obj = new (AppleDoubleDecodeObject);
     if (obj == NULL)
     {
     	PR_FREEIF(stream);

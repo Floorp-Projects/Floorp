@@ -65,7 +65,7 @@ int write_stream(
 {	
 	if (p_ap_encode_obj->pos_outbuff + len < p_ap_encode_obj->s_outbuff)
 	{
-		XP_MEMCPY(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff, 
+		nsCRT::memcpy(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff, 
 				out_string, 
 				len);
 		p_ap_encode_obj->pos_outbuff += len;
@@ -78,10 +78,10 @@ int write_stream(
 		*/
 		int s_len = p_ap_encode_obj->s_outbuff - p_ap_encode_obj->pos_outbuff;
 		
-		XP_MEMCPY(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff, 
+		nsCRT::memcpy(p_ap_encode_obj->outbuff + p_ap_encode_obj->pos_outbuff, 
 					out_string, 
 					s_len);
-		XP_MEMCPY(p_ap_encode_obj->b_overflow + p_ap_encode_obj->s_overflow,
+		nsCRT::memcpy(p_ap_encode_obj->b_overflow + p_ap_encode_obj->s_overflow,
 					out_string + s_len,
 					p_ap_encode_obj->s_overflow += (len - s_len));
 		p_ap_encode_obj->pos_outbuff += s_len;
@@ -104,7 +104,7 @@ int fill_apple_mime_header(
 //	if (status != noErr)
 //		return status;
 
-	sprintf(tmpstr,
+	PR_snprintf(tmpstr, sizeof(tmpstr),
 			"Content-Type: multipart/appledouble; boundary=\"=\"; name=\"");
 	status = write_stream(p_ap_encode_obj, 
 						tmpstr,
@@ -118,11 +118,11 @@ int fill_apple_mime_header(
 	if (status != noErr)
 		return status;
 		
-	XP_SPRINTF(tmpstr,
+	PR_snprintf(tmpstr, sizeof(tmpstr),
 			"\"\nContent-Disposition: inline; filename=\"%s\"\n\n\n--=\n",
 			p_ap_encode_obj->fname);
 #endif
-	XP_SPRINTF(tmpstr, "--%s"CRLF, p_ap_encode_obj->boundary);
+	PR_snprintf(tmpstr, sizeof(tmpstr), "--%s"CRLF, p_ap_encode_obj->boundary);
 	status = write_stream(p_ap_encode_obj, 
 						tmpstr, 
 						nsCRT::strlen(tmpstr));
@@ -292,7 +292,7 @@ int ap_encode_header(
 	
 	if (firstime)
 	{
-		XP_STRCPY(rd_buff, 
+    nsCRT::strcpy(rd_buff, 
 			"Content-Type: application/applefile\nContent-Transfer-Encoding: base64\n\n");
 		status = write_stream(p_ap_encode_obj,
 			 				rd_buff, 
@@ -346,7 +346,7 @@ int ap_encode_header(
 		/*
 		** write out the boundary 
 		*/
-		XP_SPRINTF(rd_buff, 
+		PR_snprintf(rd_buff, sizeof(rd_buff),
 						CRLF"--%s"CRLF, 
 						p_ap_encode_obj->boundary);
 					
@@ -444,7 +444,7 @@ int ap_encode_data(
 		** preparing to encode the data fork.
 		*/
 		name[0] = nsCRT::strlen(p_ap_encode_obj->fname);
-		XP_STRCPY((char*)name+1, p_ap_encode_obj->fname);
+    nsCRT::strcpy((char*)name+1, p_ap_encode_obj->fname);
 		if (HOpen( 	p_ap_encode_obj->vRefNum,
 					p_ap_encode_obj->dirId, 
 					name, 
@@ -507,7 +507,7 @@ int ap_encode_data(
 		/*
 		**	the data portion header information.
 		*/
-		XP_SPRINTF(rd_buff, 
+		PR_snprintf(rd_buff, sizeof(rd_buff),
 			"Content-Type: %s; name=\"%s\"" CRLF "Content-Transfer-Encoding: base64" CRLF "Content-Disposition: inline; filename=\"%s\""CRLF CRLF,
 			magic_type,
 			p_ap_encode_obj->fname,
@@ -551,7 +551,7 @@ int ap_encode_data(
 		
 		/* write out the boundary 	*/
 		
-		XP_SPRINTF(rd_buff, 
+		PR_snprintf(rd_buff, sizeof(rd_buff),
 						CRLF"--%s--"CRLF CRLF, 
 						p_ap_encode_obj->boundary);
 	

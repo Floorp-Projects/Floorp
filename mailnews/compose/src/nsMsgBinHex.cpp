@@ -29,6 +29,7 @@
 
 #include "nscore.h"
 #include "msgCore.h"
+#include "nsCRT.h"
 
 #include "nsMsgAppleDouble.h"
 #include "nsMsgAppleCodes.h"
@@ -228,7 +229,7 @@ int binhex_encode_init(binhex_encode_object *p_bh_encode_obj)
 	/*
 	** init all the status.
 	*/
-	XP_MEMSET(p_bh_encode_obj, 0, sizeof(binhex_encode_object));
+	nsCRT::memset(p_bh_encode_obj, 0, sizeof(binhex_encode_object));
 	
 	p_bh_encode_obj->line_length = 1;
 	
@@ -260,7 +261,7 @@ int binhex_encode_next(
 	*/
 	if (p_bh_encode_obj->s_overflow)
 	{
-		XP_MEMCPY(p_bh_encode_obj->overflow, 
+		nsCRT::memcpy(p_bh_encode_obj->overflow, 
 				p_bh_encode_obj->outbuff, 
 				p_bh_encode_obj->s_overflow);
 				
@@ -287,19 +288,19 @@ int binhex_encode_next(
 		{
 			if  (p_bh_encode_obj->state == BINHEX_STATE_START)
 			{
-				XP_STRCPY(p_bh_encode_obj->outbuff + p_bh_encode_obj->pos_outbuff,
+				nsCRT::strcpy(p_bh_encode_obj->outbuff + p_bh_encode_obj->pos_outbuff,
 							"\r\n(This file must be converted with BinHex 4.0)\r\n\r\n:");
 				p_bh_encode_obj->pos_outbuff += 52;
 			
 				p_bh_encode_obj->state = BINHEX_STATE_HEADER;
 				
-				XP_MEMCPY(p_bh_encode_obj->name,
+				nsCRT::memcpy(p_bh_encode_obj->name,
 							in_buff, 
 							in_size);	
 			}
 			else if  (p_bh_encode_obj->state == BINHEX_STATE_HEADER)
 			{
-				XP_MEMCPY(&(p_bh_encode_obj->head),
+				nsCRT::memcpy(&(p_bh_encode_obj->head),
 							in_buff, 
 							sizeof(binhex_header));
 				
@@ -370,12 +371,12 @@ int binhex_reencode_head(
 	p_bh_encode_obj->head.dlen = htonl(dlen = p_bh_encode_obj->head.dlen);
 	
 	/* make a copy before do the encoding, -- it may modify the head!!!. */
-	XP_MEMCPY(buff, (char*)&p_bh_encode_obj->head, 
+	nsCRT::memcpy(buff, (char*)&p_bh_encode_obj->head, 
 						sizeof(binhex_header));
 	if (18 < sizeof(binhex_header))
 	{
 		/* we get an alignment problem here.	*/
-		XP_MEMCPY(buff + 10, buff + 12, 8);
+		nsCRT::memcpy(buff + 10, buff + 12, 8);
 	}
 									
 	status = binhex_encode_next(
@@ -506,7 +507,7 @@ int binhex_decode_init (
 	binhex_decode_object *p_bh_decode_obj,
 	MWContext  *context)
 {
-	XP_MEMSET(p_bh_decode_obj, 0, sizeof(binhex_decode_object));
+	nsCRT::memset(p_bh_decode_obj, 0, sizeof(binhex_decode_object));
 	
 	p_bh_decode_obj->octetin 	= 26;
 	p_bh_decode_obj->donepos 	= 3;
@@ -518,7 +519,7 @@ int binhex_decode_init (
 static void
 simple_copy(MWContext* context, char* newFile, void* closure)
 {
-	XP_STRCPY((char *)closure, newFile);
+	nsCRT::strcpy((char *)closure, newFile);
 }
 
 PRIVATE void binhex_process(
@@ -731,10 +732,10 @@ PRIVATE void binhex_process(
 					{
 						reply.sfFile.vRefNum = p_bh_decode_obj->mSpec->vRefNum;
 						reply.sfFile.parID = p_bh_decode_obj->mSpec->parID;
-						XP_MEMCPY(&reply.sfFile.name, p_bh_decode_obj->mSpec->name , 63 );		
+						nsCRT::memcpy(&reply.sfFile.name, p_bh_decode_obj->mSpec->name , 63 );		
 					}					
 					
-					XP_MEMCPY(p_bh_decode_obj->name, 
+					nsCRT::memcpy(p_bh_decode_obj->name, 
 							reply.sfFile.name, 
 							*(reply.sfFile.name)+1);	/* save the new file name.	*/
 						

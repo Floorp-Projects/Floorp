@@ -28,6 +28,7 @@
 *		
 */
 #include "nsID.h"
+#include "nsCRT.h"
 #include "nscore.h"
 #include "msgCore.h"
 #include "nsMsgAppleDouble.h"
@@ -40,12 +41,12 @@
 #include "m_cvstrm.h"
 
 #pragma cplusplus on
-#include "InternetConfig.h"
-#include "ufilemgr.h"
-#include "BufferStream.h"
-#include "Umimemap.h"
-#include "uprefd.h"
-#include "ulaunch.h"
+//RICHIERM #include "InternetConfig.h"
+//RICHIERM #include "ufilemgr.h"
+//RICHIERM #include "BufferStream.h"
+//RICHIERM #include "Umimemap.h"
+//RICHIERM #include "uprefd.h"
+//RICHIERM #include "ulaunch.h"
 void DecodingDone( appledouble_decode_object* p_ap_decode_obj );
 
 OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec)
@@ -61,12 +62,11 @@ char* my_PathnameFromFSSpec(FSSpec* fspec)
 
 /* returns true if the resource fork should be sent */
 PRBool	
-nsMsgIsMacFile(char* filename)
+nsMsgIsMacFile(nsFileSpec *fs)
 {
 	Boolean returnValue = FALSE;
 	
-	FSSpec fspec;
-	my_FSSpecFromPathname(filename, &fspec);
+	FSSpec fspec = fs->GetFSSpec();
 
 	returnValue = CFileMgr::FileHasResourceFork(fspec);
 	/* always use IC even if the pref isn't checked since we have no
@@ -131,14 +131,14 @@ void	MacGetFileType(nsFileSpec   *path,
 	if (mapper != NULL)
 	{
 		*useDefault = FALSE;
-		*fileType = XP_STRDUP(mapper->GetMimeName());
+		*fileType = nsCRT::strdup(mapper->GetMimeName());
 	}
 	else
 	{
 		FInfo		fndrInfo;
 		OSErr err = FSpGetFInfo( &spec, &fndrInfo );
 		if ( (err != noErr) || (fndrInfo.fdType == 'TEXT') )
-			*fileType = XP_STRDUP(APPLICATION_OCTET_STREAM);
+      *fileType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
 		else
 		{
 			// Time to call IC to see if it knows anything
@@ -152,7 +152,7 @@ void	MacGetFileType(nsFileSpec   *path,
 			{
 				*useDefault = FALSE;
 				CStr255 mimeName( ICMapper.MIME_type );
-				*fileType = XP_STRDUP( mimeName );
+				*fileType = nsCRT::strdup( mimeName );
 			}
 			else
 			{
@@ -161,12 +161,12 @@ void	MacGetFileType(nsFileSpec   *path,
 				if( mapper)
 				{
 					*useDefault = FALSE;
-					*fileType = XP_STRDUP(mapper->GetMimeName());
+					*fileType = nsCRT::strdup(mapper->GetMimeName());
 				}
 				else
 				{
 					// don't have a mime mapper
-					*fileType = XP_STRDUP(APPLICATION_OCTET_STREAM);
+					*fileType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
 				}
 			}
 		}
@@ -199,27 +199,26 @@ void DecodingDone( appledouble_decode_object* p_ap_decode_obj )
 *	Setup the encode envirment
 */
 
-int ap_encode_init(
-	appledouble_encode_object *p_ap_encode_obj, 
-	char* 	fname,
-	char*	separator)
+int ap_encode_init( appledouble_encode_object *p_ap_encode_obj, 
+	                  char                      *fname,
+                    char                      *separator)
 {
 	FSSpec	fspec;
 	
 	if (my_FSSpecFromPathname(fname, &fspec) != noErr )
 		return -1;
 	
-	XP_MEMSET(p_ap_encode_obj, 0, sizeof(appledouble_encode_object));
+  nsCRT::memset(p_ap_encode_obj, 0, sizeof(appledouble_encode_object));
 	
 	/*
 	**	Fill out the source file inforamtion.
 	*/	
-	XP_MEMCPY(p_ap_encode_obj->fname, fspec.name+1, *fspec.name);
+	nsCRT::memcpy(p_ap_encode_obj->fname, fspec.name+1, *fspec.name);
 	p_ap_encode_obj->fname[*fspec.name] = '\0';
 	p_ap_encode_obj->vRefNum = fspec.vRefNum;
 	p_ap_encode_obj->dirId   = fspec.parID;
 	
-	p_ap_encode_obj->boundary = XP_STRDUP(separator);
+	p_ap_encode_obj->boundary = nsCRT::strdup(separator);
 	return noErr;
 }
 /*
@@ -392,7 +391,7 @@ int ap_decode_init(
 	PRBool	write_as_binhex,
 	void  	*closure)
 {	
-	XP_MEMSET(p_ap_decode_obj, 0, sizeof(appledouble_decode_object));
+  nsCRT::memset(p_ap_decode_obj, 0, sizeof(appledouble_decode_object));
 	
 	/* presume first buff starts a line */
 	p_ap_decode_obj->uu_starts_line = TRUE; 

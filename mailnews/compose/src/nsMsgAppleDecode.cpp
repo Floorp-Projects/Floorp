@@ -171,10 +171,10 @@ int ap_seek_part_start(
 		if (newline[0] == '\0' && p_ap_decode_obj->boundary0 != NULL)
 			return errDone;
 		
-		if (!XP_STRNCASECMP(newline, "--", 2))
+		if (!PL_strncasecmp(newline, "--", 2))
 		{
 			/* we meet the start seperator, copy it and it will be our boundary */
-			p_ap_decode_obj->boundary0 = XP_STRDUP(newline+2);
+      p_ap_decode_obj->boundary0 = nsCRT::strdup(newline+2);
 			return errDone;
 		}
 	}
@@ -202,31 +202,31 @@ int ParseFileHeader(
 			/*
 			**	we only care about these params.
 			*/
-			if (!XP_STRNCASECMP(param, "Content-Type:", 13))
+			if (!PL_strncasecmp(param, "Content-Type:", 13))
 			{
-				if (!XP_STRNCASECMP(define, MULTIPART_APPLEDOUBLE,
+				if (!PL_strncasecmp(define, MULTIPART_APPLEDOUBLE,
 									nsCRT::strlen(MULTIPART_APPLEDOUBLE)) ||
-					!XP_STRNCASECMP(define, MULTIPART_HEADER_SET,
+					!PL_strncasecmp(define, MULTIPART_HEADER_SET,
 									nsCRT::strlen(MULTIPART_HEADER_SET)))
 					p_ap_decode_obj->messagetype = kAppleDouble;
 				else
 					p_ap_decode_obj->messagetype = kGeneralMine;
 			}
-			else if (!XP_STRNCASECMP(param, "boundary=", 9))
+			else if (!PL_strncasecmp(param, "boundary=", 9))
 			{
 				for (i = 0; *define && *define != '\"'; )
 					p_ap_decode_obj->boundary0[i++] = *define++;
 					
 				p_ap_decode_obj->boundary0[i] = '\0';
 			}
-			else if (!XP_STRNCASECMP(param, "Content-Disposition:", 20))
+			else if (!PL_strncasecmp(param, "Content-Disposition:", 20))
 			{
-				if (!XP_STRNCASECMP(define, "inline", 5))
+				if (!PL_strncasecmp(define, "inline", 5))
 					p_ap_decode_obj->deposition = kInline;
 				else
 					p_ap_decode_obj->deposition = kDontCare;
 			}
-			else if (!XP_STRNCASECMP(param, "filename=", 9))
+			else if (!PL_strncasecmp(param, "filename=", 9))
 			{
 				for (i = 0, p=define; *p && *p != '\"'; )
 					p_ap_decode_obj->fname[i++] = *p++;
@@ -255,11 +255,11 @@ int ap_seek_to_boundary(
 		if (status != NOERR)
 			break;
 				
-		if ((!XP_STRNCASECMP(buff, "--", 2) &&
-			!XP_STRNCASECMP(	buff+2, 
+		if ((!PL_strncasecmp(buff, "--", 2) &&
+			!PL_strncasecmp(	buff+2, 
 						p_ap_decode_obj->boundary0, 
 						nsCRT::strlen(p_ap_decode_obj->boundary0))) 
-		  ||!XP_STRNCASECMP(	buff, 
+		  ||!PL_strncasecmp(	buff, 
 						p_ap_decode_obj->boundary0, 
 						nsCRT::strlen(p_ap_decode_obj->boundary0)))
 		{
@@ -306,40 +306,40 @@ int ap_parse_header(
 			/*
 			**	we only care about these params.
 			*/
-			if (!XP_STRNCASECMP(param, "Content-Type:", 13))
+			if (!PL_strncasecmp(param, "Content-Type:", 13))
 			{
-				if (!XP_STRNCASECMP(define, "application/applefile", 21))
+				if (!PL_strncasecmp(define, "application/applefile", 21))
 					p_ap_decode_obj->which_part = kHeaderPortion;
 				else
 				{
 					p_ap_decode_obj->which_part = kDataPortion;
-					if (!XP_STRNCASECMP(define, "text/plain", 10))
+					if (!PL_strncasecmp(define, "text/plain", 10))
 						p_ap_decode_obj->is_binary = FALSE;
 					else
 						p_ap_decode_obj->is_binary = TRUE; 
 				}
 				
 				/* Broken QuickMail messages */
-				if (!XP_STRNCASECMP(define, "x-uuencode-apple-single", 23))
+				if (!PL_strncasecmp(define, "x-uuencode-apple-single", 23))
 					p_ap_decode_obj->encoding = kEncodeUU;
 			}
-			else if (!XP_STRNCASECMP(param, "Content-Transfer-Encoding:",26))
+			else if (!PL_strncasecmp(param, "Content-Transfer-Encoding:",26))
 			{
-				if (!XP_STRNCASECMP(define, "base64", 6))
+				if (!PL_strncasecmp(define, "base64", 6))
 					p_ap_decode_obj->encoding = kEncodeBase64;
-				else if (!XP_STRNCASECMP(define, "quoted-printable", 16))
+				else if (!PL_strncasecmp(define, "quoted-printable", 16))
 					p_ap_decode_obj->encoding = kEncodeQP;
 				else 
 					p_ap_decode_obj->encoding = kEncodeNone;
 			}
-			else if (!XP_STRNCASECMP(param, "Content-Disposition:", 20))
+			else if (!PL_strncasecmp(param, "Content-Disposition:", 20))
 			{
-				if (!XP_STRNCASECMP(define, "inline", 5))
+				if (!PL_strncasecmp(define, "inline", 5))
 					p_ap_decode_obj->deposition = kInline;
 				else
 					p_ap_decode_obj->deposition = kDontCare;
 			}
-			else if (!XP_STRNCASECMP(param, "filename=", 9))
+			else if (!PL_strncasecmp(param, "filename=", 9))
 			{
 				if (p_ap_decode_obj->fname[0] == '\0')
 				{
@@ -474,7 +474,7 @@ int ap_decode_file_infor(appledouble_decode_object *p_ap_decode_obj)
 	}
 
 	/* P_String version of the file name. */
-	XP_STRCPY((char *)name+1, p_ap_decode_obj->fname);
+  nsCRT::strcpy((char *)name+1, p_ap_decode_obj->fname);
 	name[0] = (char) in_count;
 	
 	if (p_ap_decode_obj->write_as_binhex)
@@ -577,7 +577,7 @@ int ap_decode_file_infor(appledouble_decode_object *p_ap_decode_obj)
 		StandardFileReply reply;
 
 		/* convert char* p_ap_decode_obj->fname to a pascal string */
-		XP_STRCPY((char*)filename + 1, p_ap_decode_obj->fname);
+		nsCRT::strcpy((char*)filename + 1, p_ap_decode_obj->fname);
 		filename[0] = nsCRT::strlen(p_ap_decode_obj->fname);
 														
 		if( !p_ap_decode_obj->mSpec )
@@ -595,10 +595,10 @@ int ap_decode_file_infor(appledouble_decode_object *p_ap_decode_obj)
 		{
 			reply.sfFile.vRefNum = p_ap_decode_obj->mSpec->vRefNum;
 			reply.sfFile.parID = p_ap_decode_obj->mSpec->parID;
-			XP_MEMCPY(&reply.sfFile.name, p_ap_decode_obj->mSpec->name , 63 );		
+      nsCRT::memcpy(&reply.sfFile.name, p_ap_decode_obj->mSpec->name , 63 );		
 		}
 		
-		XP_MEMCPY(p_ap_decode_obj->fname, 
+		nsCRT::memcpy(p_ap_decode_obj->fname, 
 					reply.sfFile.name+1, 
 					*(reply.sfFile.name)+1);
 		p_ap_decode_obj->fname[*(reply.sfFile.name)] = '\0';
@@ -829,7 +829,7 @@ int ap_decode_process_header(
 				short	refNum;
 					
 				fname[0] = nsCRT::strlen(p_ap_decode_obj->fname);
-				XP_STRCPY((char*)fname+1, p_ap_decode_obj->fname);
+				nsCRT::strcpy((char*)fname+1, p_ap_decode_obj->fname);
 				 
 				if (HOpenRF(p_ap_decode_obj->vRefNum,
 							p_ap_decode_obj->dirId,
@@ -946,7 +946,7 @@ int ap_decode_process_data(
 			fspec.vRefNum = p_ap_decode_obj->vRefNum;
 			fspec.parID   = p_ap_decode_obj->dirId;
 			fspec.name[0] = nsCRT::strlen(p_ap_decode_obj->fname);
-			XP_STRCPY((char*)fspec.name+1, p_ap_decode_obj->fname);
+			nsCRT::strcpy((char*)fspec.name+1, p_ap_decode_obj->fname);
 			
 			filename = my_PathnameFromFSSpec(&fspec);
 			if (p_ap_decode_obj->is_binary)
@@ -1425,11 +1425,11 @@ PRIVATE int from_qp(
 				if (p_ap_decode_obj->pos_inbuff < p_ap_decode_obj->s_inbuff)
 				{
 					if (p_ap_decode_obj->boundary0 && 
-					 	(!XP_STRNCASECMP(p_ap_decode_obj->pos_inbuff+p_ap_decode_obj->inbuff, 
+					 	(!PL_strncasecmp(p_ap_decode_obj->pos_inbuff+p_ap_decode_obj->inbuff, 
 									"--",
 									2) 
 					&&
-						!XP_STRNCASECMP(p_ap_decode_obj->pos_inbuff+p_ap_decode_obj->inbuff+2, 
+						!PL_strncasecmp(p_ap_decode_obj->pos_inbuff+p_ap_decode_obj->inbuff+2, 
 									p_ap_decode_obj->boundary0, 
 									nsCRT::strlen(p_ap_decode_obj->boundary0))))
 						{
@@ -1460,7 +1460,7 @@ PRIVATE void ensure_uu_body_state(appledouble_decode_object* p)
 	char *current = &(p->inbuff[p->pos_inbuff]);
 
 	if (p->uu_state == kMainBody && p->uu_starts_line
-		&& !XP_STRNCASECMP(current, "end", PR_MIN(3, end - current)))
+		&& !PL_strncasecmp(current, "end", PR_MIN(3, end - current)))
 		p->uu_state = kEnd;
 
 	while (p->uu_state != kMainBody && (current < end))
@@ -1506,7 +1506,7 @@ PRIVATE void ensure_uu_body_state(appledouble_decode_object* p)
 					*/
 
 					if ((p->uu_state == kWaitingForBegin)
-						&& !XP_STRNCASECMP(current, "begin", PR_MIN(5, end - current)))
+						&& !PL_strncasecmp(current, "begin", PR_MIN(5, end - current)))
 						p->uu_state = kBegin;
 					p->uu_starts_line = FALSE; /* make us advance to next line */
 				}
@@ -1544,7 +1544,7 @@ PRIVATE int fetch_next_char_uu(appledouble_decode_object* p, PRBool newBunch)
 			char *current = &(p->inbuff[p->pos_inbuff]);
 			
 			/* Look here for 'end' line signifying end of uuencode body. */
-			if (!XP_STRNCASECMP(current, "end", PR_MIN(3, end - current)))
+			if (!PL_strncasecmp(current, "end", PR_MIN(3, end - current)))
 			{
 				p->uu_state = kEnd; /* set the uuencode state to end */
 				p->pos_inbuff = p->s_inbuff; /* run out the current buffer */
@@ -1755,11 +1755,11 @@ PRIVATE int from_none(
 			if (p_ap_decode_obj->pos_inbuff < p_ap_decode_obj->s_inbuff)
 			{
 				if (p_ap_decode_obj->boundary0 && 
-				 	(!XP_STRNCASECMP(p_ap_decode_obj->pos_inbuff+p_ap_decode_obj->inbuff, 
+				 	(!PL_strncasecmp(p_ap_decode_obj->pos_inbuff+p_ap_decode_obj->inbuff, 
 								"--",
 								2) 
 				&&
-					!XP_STRNCASECMP(p_ap_decode_obj->pos_inbuff+p_ap_decode_obj->inbuff+2, 
+					!PL_strncasecmp(p_ap_decode_obj->pos_inbuff+p_ap_decode_obj->inbuff+2, 
 								p_ap_decode_obj->boundary0, 
 								nsCRT::strlen(p_ap_decode_obj->boundary0))))
 					{
