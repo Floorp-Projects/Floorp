@@ -54,6 +54,8 @@ extern nsIPluginManager* thePluginManager;
 extern nsIPluginManager2* thePluginManager2;
 
 static OSStatus JMTextToStr255(JMTextRef textRef, Str255 str);
+static char* JMTextToEncoding(JMTextRef textRef, JMTextEncoding encoding);
+
 static void blinkRgn(RgnHandle rgn);
 
 void LocalPort::Enter()
@@ -84,7 +86,7 @@ static RgnHandle NewEmptyRgn()
 MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
 	:	mPluginInstance(instance), mSession(session), mSessionRef(session->getSessionRef()), mPeer(NULL),
 		mLocator(NULL), mContext(NULL), mViewer(NULL), mViewerFrame(NULL), mIsActive(false),
-		mPluginWindow(NULL), mCachedClipping(NULL), mPluginClipping(NULL), mPluginPort(NULL),
+		mPluginWindow(NULL), mPluginClipping(NULL), mPluginPort(NULL),
 		mDocumentBase(NULL), mAppletHTML(NULL), mPage(NULL)
 {
 	instance->GetPeer(&mPeer);
@@ -92,7 +94,6 @@ MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
 	// we cache attributes of the window, and periodically notice when they change.
 	mCachedOrigin.x = mCachedOrigin.y = -1;
     ::SetRect((Rect*)&mCachedClipRect, 0, 0, 0, 0);
-    mCachedClipping = ::NewEmptyRgn();
 	mPluginClipping =::NewEmptyRgn();
 	mPluginPort = getEmptyPort();
 }
@@ -133,11 +134,6 @@ MRJContext::~MRJContext()
 		mPage = NULL;
 	}
 
-    if (mCachedClipping != NULL) {
-		::DisposeRgn(mCachedClipping);
-		mCachedClipping = NULL;
-    }
-    
 	if (mPluginClipping != NULL) {
 		::DisposeRgn(mPluginClipping);
 		mPluginClipping = NULL;
@@ -207,9 +203,9 @@ static void addAttribute(string& attrs, const char* name, const char* value)
 
 static void addParameter(string& params, const char* name, const char* value)
 {
-	params += "<param name=\"";
+	params += "<PARAM NAME=\"";
 	params += name;
-	params += "\" value=\"";
+	params += "\" VALUE=\"";
 	params += value;
 	params += "\">\n";
 }
@@ -285,7 +281,7 @@ static char* synthesizeAppletElement(nsIPluginTagInfo* tagInfo)
     // this may be used because of the way the applet is being
     // instantiated, or it may be used to work around bugs
     // in the shipping browser.
-    string element("<applet");
+    string element("<APPLET");
     string attributes("");
     string parameters("");
     
@@ -315,7 +311,7 @@ static char* synthesizeAppletElement(nsIPluginTagInfo* tagInfo)
     element += attributes;
     element += ">\n";
     element += parameters;
-    element += "</applet>\n";
+    element += "</APPLET>\n";
     
     return ::strdup(element.c_str());
 }
@@ -588,7 +584,7 @@ void MRJContext::processAppletTag()
 		mPage = findPage(pageAttributes);
 		
 		// keep the codeBase around for later.
-		setCodeBase(baseURL);
+		// setCodeBase(baseURL);
 		delete[] baseURL;
 
 		status = ::JMNewAppletLocatorFromInfo(&mLocator, mSessionRef, &info, NULL);
@@ -823,6 +819,25 @@ static OSStatus JMTextToStr255(JMTextRef textRef, Str255 str)
 	return status;
 }
 
+static char* JMTextToEncoding(JMTextRef textRef, JMTextEncoding encoding)
+{
+	UInt32 length = 0;
+    OSStatus status = ::JMGetTextLengthInBytes(textRef, encoding, &length);
+    if (status != noErr)
+        return NULL;
+    char* text = new char[length + 1];
+    if (text != NULL) {
+        UInt32 actualLength;
+    	status = ::JMGetTextBytes(textRef, encoding, text, length, &actualLength);
+	    if (status != noErr) {
+	        delete text;
+	        return NULL;
+	    }
+	    text[length] = '\0';
+    }
+    return text;
+}
+
 void MRJContext::exceptionOccurred(JMAWTContextRef context, JMTextRef exceptionName, JMTextRef exceptionMsg, JMTextRef stackTrace)
 {
 	// why not display this using the Appearance Manager's wizzy new alert?
@@ -831,6 +846,13 @@ void MRJContext::exceptionOccurred(JMAWTContextRef context, JMTextRef exceptionN
 		Str255 error, explanation;
 		status = ::JMTextToStr255(exceptionName, error);
 		status = ::JMTextToStr255(exceptionMsg, explanation);
+
+#if 0
+        TextEncoding utf8 = CreateTextEncoding(kTextEncodingUnicodeDefault, kTextEncodingDefaultVariant, kUnicodeUTF8Format);
+		char* where = ::JMTextToEncoding(stackTrace, utf8);
+        if (where != NULL)
+            delete[] where;
+#endif
 		
 		SInt16 itemHit = 0;
 		OSErr result = ::StandardAlert(kAlertPlainAlert, error, explanation, NULL, &itemHit);
@@ -1001,14 +1023,7 @@ OSStatus MRJContext::createFrame(JMFrameRef frameRef, JMFrameKind kind, const Re
 		frame = new AppletViewerFrame(frameRef, this);
 
 		// make sure the frame's clipping is up-to-date.
-		setVisibility();
-
-#if 0		
-		// ensure the frame is active.
-		WindowRef appletWindow = getPort();
-		Boolean isHilited = IsWindowHilited(appletWindow);
-		frame->activate(isHilited);
-#endif
+		synchronizeClipping();
 	} else if (thePluginManager2 != NULL) {
 		// Can only do this safely if we are using the new API.
 		frame = new TopLevelFrame(mPluginInstance, frameRef, kind, initialBounds, resizeable);
@@ -1034,28 +1049,27 @@ void MRJContext::setProxyInfoForURL(char * url, JMProxyType proxyType)
 	 * We then call 'nsIPluginManager2::FindProxyForURL' which will return
 	 * proxy information which we can parse and set via JMSetProxyInfo.
 	 */	
-	 
-	 char * result = NULL;
-	
-	thePluginManager2->FindProxyForURL(url, &result);
-	if (result != NULL) {
-		JMProxyInfo proxyInfo;
-
+	char* proxy = NULL;
+	nsresult rv = thePluginManager2->FindProxyForURL(url, &proxy);
+	if (NS_SUCCEEDED(rv) && proxy != NULL) {
 		/* See if a proxy was specified */
-		if (strcmp("DIRECT", result)) {				
-			int index = 0;
-			int length = strlen(result);
-			
+		if (strcmp("DIRECT", proxy) != 0) {
+	    	JMProxyInfo proxyInfo;
 			proxyInfo.useProxy = true;
-			result = strchr(result, ' ');
-			for (index = 0; *result != ':' && index < length; result++, index++) {
-				proxyInfo.proxyHost[index] = *result;
-			}
-			proxyInfo.proxyHost[index] = '\0';
-			result++;
-			proxyInfo.proxyPort = atoi(result);
-			JMSetProxyInfo(mSessionRef, proxyType, &proxyInfo);
-		}			
+			char* space = strchr(proxy, ' ');
+			if (space != NULL) {
+			    char* host = space + 1;
+    			char* colon = ::strchr(host, ':');
+    			int length = (colon - host);
+    			if (length < sizeof(proxyInfo.proxyHost)) {
+        			strncpy(proxyInfo.proxyHost, host, length);
+        			proxyInfo.proxyPort = atoi(colon + 1);
+        			::JMSetProxyInfo(mSessionRef, proxyType, &proxyInfo);
+                }
+            }
+		}
+		
+		delete[] proxy;
 	}
 }
 
@@ -1173,19 +1187,6 @@ void MRJContext::drawApplet()
 			SetClip(oldClip);
 			DisposeRgn(oldClip);
 		}
-#endif
-
-#if defined(MRJPLUGIN_4X)
-	    // cache the current clipping region for later use.
-	    GrafPtr pluginPort = getPort();
-	    if (pluginPort != NULL) {
-	        if (!::EqualRgn(pluginPort->clipRgn, mCachedClipping)) {
-        	    ::CopyRgn(pluginPort->clipRgn, mCachedClipping);
-
-                // brute force, make sure clipping is in sync before every redraw.
-                setClipping();
-            }
-        }
 #endif
 
 		// ::JMFrameUpdate(mViewerFrame, framePort->visRgn);
@@ -1338,33 +1339,26 @@ void MRJContext::idle(short modifiers)
 void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 {
 	// don't do anything if the AWTContext hasn't been created yet.
-	if (mContext != NULL && pluginWindow != NULL) {
-		if (pluginWindow->height != 0 && pluginWindow->width != 0) {
-			mPluginWindow = pluginWindow;
+	if (mContext != NULL) {
+    	if (pluginWindow != NULL) {
+    		if (pluginWindow->height != 0 && pluginWindow->width != 0) {
+    			mPluginWindow = pluginWindow;
 
-			// establish the GrafPort the plugin will draw in.
-			mPluginPort = pluginWindow->window->port;
+    			// establish the GrafPort the plugin will draw in.
+    			mPluginPort = pluginWindow->window->port;
 
-			// set up the clipping region based on width & height.
-			::CopyRgn(mPluginPort->clipRgn, mCachedClipping);
-
-			if (! appletLoaded())
-				loadApplet();
-
-			setClipping();
-		}
-	} else {
-		// tell MRJ the window has gone away.
-		mPluginWindow = NULL;
-		
-		// use a single, 0x0, empty port for all future drawing.
-		mPluginPort = getEmptyPort();
-		
-		// perhaps we should set the port to something quite innocuous, no? say a 0x0, empty port?
-		::SetEmptyRgn(mCachedClipping);
-		
-		setClipping();
-	}
+    			if (! appletLoaded())
+    				loadApplet();
+    		}
+    	} else {
+    		// tell MRJ the window has gone away.
+    		mPluginWindow = NULL;
+    		
+    		// use a single, 0x0, empty port for all future drawing.
+    		mPluginPort = getEmptyPort();
+    	}
+    	synchronizeClipping();
+    }
 }
 
 static Boolean equalRect(const nsPluginRect* r1, const nsPluginRect* r2)
@@ -1392,34 +1386,39 @@ Boolean MRJContext::inspectWindow()
 	}
 	
 	if (recomputeClipping)
-		setClipping();
+		synchronizeClipping();
 	
 	return recomputeClipping;
 }
 
-void MRJContext::setClipping()
+/**
+ * This routine ensures that the browser and MRJ agree on what the current clipping
+ * should be. If the browser has assigned us a window to draw in (see setWindow()
+ * above), then we use that window's clipRect to set up clipping, which is cached
+ * in mPluginClipping, as a region. Otherwise, mPluginClipping is set to an empty
+ * region.
+ */
+void MRJContext::synchronizeClipping()
 {
 	// this is called on update events to make sure the clipping region is in sync with the browser's.
-	GrafPtr pluginPort = getPort();
-	if (pluginPort != NULL) {
+	if (mPluginWindow != NULL) {
 	    // plugin clipping is intersection of clipRgn and the clipRect.
         nsPluginRect clipRect = mPluginWindow->clipRect;
-        nsPluginPort* npPort = mPluginWindow->window;
-        clipRect.left += npPort->portx, clipRect.right += npPort->portx;
-        clipRect.top += npPort->porty, clipRect.bottom += npPort->porty;
+        nsPluginPort* pluginPort = mPluginWindow->window;
+        clipRect.left += pluginPort->portx, clipRect.right += pluginPort->portx;
+        clipRect.top += pluginPort->porty, clipRect.bottom += pluginPort->porty;
 	    ::SetRectRgn(mPluginClipping, clipRect.left, clipRect.top, clipRect.right, clipRect.bottom);
-#if defined(MRJPLUGIN_4X)
-	    ::SectRgn(mCachedClipping, mPluginClipping, mPluginClipping);
-#endif
-		setVisibility();
+	} else {
+	    ::SetEmptyRgn(mPluginClipping);
 	}
+    synchronizeVisibility();
 }
 
 MRJFrame* MRJContext::findFrame(WindowRef window)
 {
 	MRJFrame* frame = NULL;
 
-	// setVisibility();
+	// synchronizeVisibility();
 	
 	// locates the frame corresponding to this window.
 	if (window == NULL || (CGrafPtr(window) == mPluginPort) && mViewerFrame != NULL) {
@@ -1484,34 +1483,39 @@ static void blinkRgn(RgnHandle rgn)
 	::InvertRgn(rgn);
 }
 
-void MRJContext::setVisibility()
+void MRJContext::synchronizeVisibility()
 {
 	// always update the cached information.
-	if (mPluginWindow != NULL && mViewerFrame != NULL) {
-        nsPluginRect oldClipRect = mCachedClipRect;
-        nsPluginPort* npPort = mPluginWindow->window;
-	    mCachedOrigin.x = npPort->portx;
-	    mCachedOrigin.y = npPort->porty;
-	    mCachedClipRect = mPluginWindow->clipRect;
-		
-		// compute the frame's origin and clipping.
-		
-		// JManager wants the origin expressed in window coordinates.
-		// npWindow refers to the entire mozilla view port whereas the nport
-		// refers to the actual rendered html window.
-		Point frameOrigin = { -npPort->porty, -npPort->portx };
-	
-		// The clipping region is now maintained by a new browser event.
-		OSStatus status = ::JMSetFrameVisibility(mViewerFrame, GrafPtr(mPluginPort),
-												frameOrigin, mPluginClipping);
+	if (mViewerFrame != NULL) {
+    	if (mPluginWindow != NULL) {
+            nsPluginRect oldClipRect = mCachedClipRect;
+            nsPluginPort* pluginPort = mPluginWindow->window;
+    	    mCachedOrigin.x = pluginPort->portx;
+    	    mCachedOrigin.y = pluginPort->porty;
+    	    mCachedClipRect = mPluginWindow->clipRect;
+    		
+    		// compute the frame's origin and clipping.
+    		
+    		// JManager wants the origin expressed in window coordinates.
+    		// npWindow refers to the entire mozilla view port whereas the nport
+    		// refers to the actual rendered html window.
+    		Point frameOrigin = { -pluginPort->porty, -pluginPort->portx };
+    		GrafPtr framePort = (GrafPtr)mPluginPort;
+    		OSStatus status = ::JMSetFrameVisibility(mViewerFrame, framePort,
+    												 frameOrigin, mPluginClipping);
 
-        // Invalidate the old clip rectangle, so that any bogus drawing that may
-        // occurred at the old location, will be corrected.
-    	LocalPort port((GrafPtr)mPluginPort);
-        port.Enter();
-    	::InvalRect((Rect*)&oldClipRect);
-    	::InvalRect((Rect*)&mCachedClipRect);
-    	port.Exit();
+            // Invalidate the old clip rectangle, so that any bogus drawing that may
+            // occurred at the old location, will be corrected.
+        	LocalPort port(framePort);
+            port.Enter();
+        	::InvalRect((Rect*)&oldClipRect);
+        	::InvalRect((Rect*)&mCachedClipRect);
+        	port.Exit();
+        } else {
+            Point frameOrigin = { 0, 0 };
+    		OSStatus status = ::JMSetFrameVisibility(mViewerFrame, GrafPtr(mPluginPort),
+    												 frameOrigin, mPluginClipping);
+        }
     }
 }
 

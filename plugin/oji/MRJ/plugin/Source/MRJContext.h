@@ -87,7 +87,6 @@ public:
 	
 	void setWindow(nsPluginWindow* pluginWindow);
 	Boolean inspectWindow();
-	void setClipping();
 	
 	MRJFrame* findFrame(WindowRef window);
 	GrafPtr getPort();
@@ -105,7 +104,8 @@ public:
 private:
 	void localToFrame(Point* pt);
 	void ensureValidPort();
-	void setVisibility();
+	void synchronizeClipping();
+	void synchronizeVisibility();
 
 	static OSStatus requestFrame(JMAWTContextRef context, JMFrameRef newFrame, JMFrameKind kind,
 								const Rect *initialBounds, Boolean resizeable, JMFrameCallbacks *callbacks);
@@ -139,7 +139,6 @@ private:
 	Boolean					mIsActive;
 	nsPluginPoint           mCachedOrigin;
 	nsPluginRect            mCachedClipRect;
-	RgnHandle               mCachedClipping;
 	RgnHandle				mPluginClipping;
 	nsPluginWindow*			mPluginWindow;
 	CGrafPtr				mPluginPort;

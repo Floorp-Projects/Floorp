@@ -920,20 +920,17 @@ public:
 
     nsresult SetReadBuffer(PRUint32 len, const char* buffer) {
         // XXX this has to be way more sophisticated
+        if (mBuffer != NULL) delete[] mBuffer;
         mBuffer = dup(len, buffer);
         mBufferLength = len;
         mAmountRead = 0;
         return NS_OK;
     }
     
-    char* dup(PRUint32 len, const char* buffer) {
+    static char* dup(PRUint32 len, const char* buffer) {
     	char* result = new char[len];
-    	if (result != NULL) {
-    		const char *src = buffer;
-    		char *dest = result; 
-    		while (len-- > 0)
-    			*dest++ = *src++;
-    	}
+    	if (result != NULL)
+    	    memcpy(result, buffer, len);
     	return result;
     }
 
