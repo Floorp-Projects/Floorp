@@ -3171,6 +3171,8 @@ nsBrowserWindow::DoSiteWalker()
   mApp->CreateSiteWalker(this);
 }
 
+#endif NS_DEBUG
+
 //-----------------------------------------------------
 //-- Menu Struct
 //-----------------------------------------------------
@@ -3233,6 +3235,7 @@ nsIMenuItem * CreateMenuItem(nsIMenu * aMenu, const nsString & aName, PRUint32 a
 
   return menuItem;
 }
+
 
 //-----------------------------------------------------
 void CreateBrowserMenus(nsIMenuBar * aMenuBar) 
@@ -3325,6 +3328,7 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
 
 }
 
+//#endif // NS_DEBUG
 
 //-----------------------------------------------------
 nsresult
@@ -3343,6 +3347,8 @@ nsBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 
   return NS_OK;
 }
+
+#ifdef NS_DEBUG
 
 nsEventStatus
 nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
