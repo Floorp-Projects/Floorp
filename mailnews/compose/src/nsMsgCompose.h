@@ -80,6 +80,7 @@ private:
 
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports* object);
 	void HackToGetBody(PRInt32 what); //Temporary
+	void CleanUpRecipients(nsString& recipients);
 
   nsresult QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
 

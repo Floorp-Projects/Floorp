@@ -519,7 +519,9 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
 					{
 						nsString cString, dString;
 						message->GetRecipients(cString);
+						CleanUpRecipients(cString);
 						message->GetCCList(dString);
+						CleanUpRecipients(dString);
 						if (cString.Length() > 0 && dString.Length() > 0)
 							cString = cString + ", ";
 						cString = cString + dString;
@@ -673,17 +675,18 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   nsresult    rv;
 
   //
-  // For now, you need to set a pref to do the new quoting
+  // For now, you need to set a pref to do the old quoting
   //
-  PRBool newQuoting = PR_FALSE; 
+  PRBool oldQuoting = PR_FALSE; 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
-    rv = prefs->GetBoolPref("mail.new_quoting", &newQuoting);
+    rv = prefs->GetBoolPref("mail.old_quoting", &oldQuoting);
   }
 
-  if (!newQuoting)
+  if (oldQuoting)
   {
+  	printf("nsMsgCompose: using old quoting function!");
     HackToGetBody(what);
     return NS_OK;
   }
@@ -806,4 +809,55 @@ void nsMsgCompose::HackToGetBody(PRInt32 what)
         PR_Free(buffer);
     }
 }
+
+//CleanUpRecipient will remove un-necesary "<>" when a recipient as an address without name
+void nsMsgCompose::CleanUpRecipients(nsString& recipients)
+{
+//	TODO...
+	PRInt16 i;
+	PRBool startANewRecipient = PR_TRUE;
+	PRBool removeBracket = PR_FALSE;
+	nsAutoString newRecipient;
+	PRUnichar aChar;
+
+	for (i = 0; i < recipients.Length(); i ++)
+	{
+		aChar = recipients[i];
+		switch (aChar)
+		{
+			case '<'	:
+				if (startANewRecipient)
+					removeBracket = PR_TRUE;
+				else
+					newRecipient += aChar;
+				startANewRecipient = PR_FALSE;
+				break;
+
+			case '>'	:
+				if (removeBracket)
+					removeBracket = PR_FALSE;
+				else
+					newRecipient += aChar;
+				break;
+
+			case ' '	:
+				newRecipient += aChar;
+				break;
+
+			case ','	:
+				newRecipient += aChar;
+				startANewRecipient = PR_TRUE;
+				removeBracket = PR_FALSE;
+				break;
+
+			default		:
+				newRecipient += aChar;
+				startANewRecipient = PR_FALSE;
+				break;
+		}	
+	}
+	recipients = newRecipient;
+}
+
+
 

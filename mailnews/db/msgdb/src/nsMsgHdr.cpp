@@ -310,10 +310,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 
 		if (strlen(curAddress))
 		{
-			if (strlen(curName))
-				allRecipients += '<';
-			else
-				allRecipients = "<";
+			allRecipients += '<';
 			allRecipients += curAddress;
 			allRecipients += '>';
 		}
