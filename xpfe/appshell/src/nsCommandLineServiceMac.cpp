@@ -1006,7 +1006,7 @@ nsIWebShellWindow* FindWebShellWindow(nsIXULWindowCallbacks* inCallbacks)
     	nsnull,
     	urlObj, // nsIURI* of chrome
     	PR_TRUE,
-    	*aWindow,
+    	&aWindow,
         nsnull,
         inCallbacks, // callbacks
         windowWidth, windowHeight);
