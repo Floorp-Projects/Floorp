@@ -174,6 +174,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     apszFilterList[i] = 0;
     pmydata->papszIFilterList = (PAPSZ)apszFilterList;
 
+    pmydata->ulCurExt = 0;
+
     PRBool fileExists;
     do {
       DosError(FERR_DISABLEHARDERR);
@@ -216,20 +218,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       }
     } while (mMode == modeSave && fileExists && filedlg.lReturn == DID_OK);
 
-    for (i = 0; i < mTitles.Count(); i++)
-    {
-      nsMemory::Free(*(filedlg.papszITypeList[i]));
-    }
-    free(filedlg.papszITypeList);
-
-    for (i = 0; i < mFilters.Count(); i++)
-    {
-      nsMemory::Free(*(pmydata->papszIFilterList[i]));
-    }
-    free(pmydata->papszIFilterList);
-    free(pmydata);
-
-
     if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
       mFile.Append(filedlg.szFullFile);
@@ -242,6 +230,19 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       mDisplayDirectory->InitWithPath(filedlg.szFullFile);
       mSelectedType = (PRInt16)pmydata->ulCurExt;
     }
+
+    for (i = 0; i < mTitles.Count(); i++)
+    {
+      nsMemory::Free(*(filedlg.papszITypeList[i]));
+    }
+    free(filedlg.papszITypeList);
+
+    for (i = 0; i < mFilters.Count(); i++)
+    {
+      nsMemory::Free(*(pmydata->papszIFilterList[i]));
+    }
+    free(pmydata->papszIFilterList);
+    free(pmydata);
   }
 
   if (title)
@@ -332,12 +333,32 @@ NS_IMETHODIMP nsFilePicker::GetDefaultString(PRUnichar **aString)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetDefaultExtension(PRUnichar **aExtension)
 {
-  *aExtension = nsnull;
+  *aExtension = ToNewUnicode(mDefaultExtension);
+  if (!*aExtension)
+    return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const PRUnichar *aExtension)
 {
+  mDefaultExtension = aExtension;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Set the filter index
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
+{
+  *aFilterIndex = mSelectedType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
+{
+  mSelectedType = aFilterIndex;
   return NS_OK;
 }
 
@@ -608,12 +629,13 @@ MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2
                                         NULL, NULL );
        WinSendMsg( hwndTypeCombo, LM_DELETEALL, (MPARAM)0, (MPARAM)0 );
        pfiledlg = (PFILEDLG)WinQueryWindowULong( hwndDlg, QWL_USER );
+       pmydata = (PMYDATA)pfiledlg->ulUser;
        i = 0;
        while (*(pfiledlg->papszITypeList[i]) != NULL) {
            WinSendMsg( hwndTypeCombo, LM_INSERTITEM, (MPARAM)LIT_END, (MPARAM)*(pfiledlg->papszITypeList[i]) );
            i++;
        }
-       WinSendMsg( hwndTypeCombo, LM_SELECTITEM, (MPARAM)0, (MPARAM)TRUE );
+       WinSendMsg( hwndTypeCombo, LM_SELECTITEM, (MPARAM)pmydata->ulCurExt, (MPARAM)TRUE );
 
        return mr;
     case WM_CONTROL:

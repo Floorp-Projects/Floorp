@@ -51,6 +51,8 @@ public:
   NS_IMETHOD SetDefaultExtension(const PRUnichar * aDefaultExtension);
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
+  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
+  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
   NS_IMETHOD Show(PRInt16 *_retval); 
@@ -73,6 +75,7 @@ protected:
   PRInt16                mMode;
   nsCString              mFile;
   nsString               mDefault;
+  nsString               mDefaultExtension;
   nsStringArray          mFilters;
   nsStringArray          mTitles;
   nsIUnicodeEncoder*     mUnicodeEncoder;
