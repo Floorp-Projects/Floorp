@@ -70,6 +70,8 @@ console._executionHook = {
     onExecute: function exehook (frame, type, rv) {
                    if (frame.script && frame.script.fileName != MSG_VAL_CONSOLE)
                        return debugTrap(frame, type, rv);
+                   ASSERT (frame.script, "Execution hook called with no script");
+                   return jsdIExecutionHook.RETURN_CONTINUE;
                }
 };
 
@@ -348,9 +350,8 @@ function debugTrap (frame, type, rv)
         console.frames.push(frame);
     }
 
-    setTimeout (console.onDebugTrap, 100, type);
-    
-    console.jsds.enterNestedEventLoop(); 
+    console.trapType = type;    
+    console.jsds.enterNestedEventLoop({onNest: console.onDebugTrap}); 
 
     /* execution pauses here until someone calls 
      * console.dbg.exitNestedEventLoop() 
@@ -370,7 +371,8 @@ function debugTrap (frame, type, rv)
     $ = new Array();
     clearCurrentFrame();
     delete console.frames;
-
+    delete console.trapType;
+    
     console.onDebugContinue();
     
     return console._continueCodeStack.pop();

@@ -106,9 +106,10 @@ function con_reload ()
 }
 
 console.onDebugTrap =
-function con_ondt (type)
+function con_ondt ()
 {
     var frame = setCurrentFrameByIndex(0);
+    var type = console.trapType;
     
     if (type != jsdIExecutionHook.TYPE_INTERRUPTED ||
         console._lastStackDepth != console.frames.length)
@@ -155,10 +156,20 @@ function con_fchanged (currentFrame, currentFrameIndex)
     
     if (currentFrame)
     {
-        var frame = stack.childData[currentFrameIndex];
-        var vr = frame.calculateVisualRow();
+        var frameRecord = stack.childData[currentFrameIndex];
+        var vr = frameRecord.calculateVisualRow();
         console.stackView.selectedIndex = vr;
         console.stackView.scrollTo (vr, 0);
+        var source = console.scripts[currentFrame.script.fileName];
+        if (source)
+        {
+            console.sourceView.displaySource(source);
+            console.sourceView.softScrollTo(currentFrame.line);
+        }
+        else
+        {
+            dd ("frame from unknown source");
+        }
     }
     else
     {
@@ -166,10 +177,6 @@ function con_fchanged (currentFrame, currentFrameIndex)
         stack.childData = new Array();
         stack.hide();
     }
-
-    console.sourceView.outliner.invalidate();    /* invalidate to show the new 
-                                                  * currentLine */
-    return;
 }
 
 console.onInputCommand =
@@ -229,7 +236,7 @@ function cli_ibreak(e)
         return true;
     }
 
-    var ary = e.inputData.match(/([^\s\:]+)\:?\s*(\d+)\s*$/);
+    var ary = e.inputData.match(/([^\s]+)\s*(\d+)\s*$/);
     if (!ary)
     {
         console.displayUsageError(e.commandEntry);
@@ -253,7 +260,7 @@ function cli_ibreak(e)
 console.onInputClear =
 function cli_iclear (e)
 {
-    var ary = e.inputData.match(/(\d+)|([^\s\:]+)\:?\s*(\d+)\s*$/);
+    var ary = e.inputData.match(/(\d+)|([^\s]+)\s*(\d+)\s*$/);
     if (!ary)
     {
         console.displayUsageError(e.commandEntry);
@@ -382,7 +389,7 @@ function cli_ifbreak(e)
         return true;
     }
 
-    var ary = e.inputData.match(/([^\s\:]+)\:?\s*(\d+)\s*$/);
+    var ary = e.inputData.match(/([^\s]+)\s*(\d+)\s*$/);
     if (!ary)
     {
         console.displayUsageError(e.commandEntry);
@@ -663,7 +670,7 @@ function con_stacksel (e)
         ASSERT (0, "bogus row index " + rowIndex);
         return;
     }
-    
+
     var source;
     
     var sourceView = console.sourceView;
