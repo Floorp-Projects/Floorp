@@ -254,7 +254,7 @@ nsresult nsShellInstance::RegisterFactories()
   #define PREF_DLL   "libpref.so"
   #define WEB_DLL    "libraptorweb.so"
   #define PLUGIN_DLL "raptorplugin.so"
-  #define NETLIB_DLL "netlib.so"
+  #define NETLIB_DLL "libnetlib.so"
   #define DOM_DLL    "libjsdom.so"
   #define LAYOUT_DLL "libraptorhtml.so"
 #endif
