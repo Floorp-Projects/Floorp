@@ -62,6 +62,8 @@ public:
   NS_IMETHOD GetDrawable(Drawable &aDrawable) = 0;
   NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) = 0;
   NS_IMETHOD GetGC(xGC *&aXGC) = 0;
+
+  virtual Drawable GetDrawable() = 0;
 };
 
 
@@ -96,6 +98,8 @@ public:
   NS_IMETHOD GetXlibRgbHandle(XlibRgbHandle *&aHandle) { aHandle = mXlibRgbHandle; return NS_OK; }
   NS_IMETHOD GetGC(xGC *&aXGC) { mGC->AddRef(); aXGC = mGC; return NS_OK; }
 
+  virtual Drawable GetDrawable() { return mDrawable; }
+
 private:
   void       CommonInit();
 
@@ -104,18 +108,18 @@ private:
   Screen *       mScreen;
   Visual *       mVisual;
   int            mDepth;
-  xGC           * mGC;
+  xGC           *mGC;
   Drawable       mDrawable;
   XImage *       mImage;
   nsPixelFormat  mPixFormat;
 
   // for locking
-  PRInt32	       mLockX;
-  PRInt32	       mLockY;
-  PRUint32	     mLockWidth;
-  PRUint32	     mLockHeight;
-  PRUint32	     mLockFlags;
-  PRBool	       mLocked;
+  PRInt32        mLockX;
+  PRInt32        mLockY;
+  PRUint32       mLockWidth;
+  PRUint32       mLockHeight;
+  PRUint32       mLockFlags;
+  PRBool         mLocked;
 
   // dimensions
   PRUint32       mWidth;

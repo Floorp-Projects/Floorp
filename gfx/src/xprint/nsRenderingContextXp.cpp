@@ -80,31 +80,31 @@ nsRenderingContextXp::Init(nsIDeviceContext* aContext)
 
   mPrintContext->GetXlibRgbHandle(mXlibRgbHandle);
   mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
-  mScreen  = xxlib_rgb_get_screen(mXlibRgbHandle);
-  mVisual  = xxlib_rgb_get_visual(mXlibRgbHandle);
-  mDepth   = xxlib_rgb_get_depth(mXlibRgbHandle);
 
   /* A printer usually does not support things like multiple drawing surfaces
    * (nor "offscreen" drawing surfaces... would be quite difficult to 
-   * implement =:-) ...
+   * implement (however - Xprint API supports offscreen surfaces but Mozilla
+   * does not make use of them, see bug 124761 ("RFE: Make use of "offpaper"
+   * drawing surfaces in some printing APIs")) =:-) ...
    * We just feed the nsXPContext object here directly - this is the only
-   * "surface" the printer can "draw" on ...  
+   * "surface" the Mozilla printer API can "draw" on ...  
    */
-  Drawable drawable; mPrintContext->GetDrawable(drawable);
-  UpdateGC(drawable); // fill mGC
+  mSurface = mPrintContext; 
+  UpdateGC(); /* Fill |mGC| */
   mPrintContext->SetGC(mGC);
-  mRenderingSurface = mPrintContext;
 
   return CommonInit();
 }
 
 NS_IMETHODIMP nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsIWidget *aWidget) 
 { 
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
 {
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -261,6 +261,6 @@ nsRenderingContextXp::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CopyOffScreenBits()\n"));
 
-  NS_NOTREACHED("nsRenderingContextXp::CopyOffScreenBits() not yet implemented");
+  NS_NOTREACHED("nsRenderingContextXp::CopyOffScreenBits() not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
