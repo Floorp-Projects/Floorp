@@ -640,6 +640,13 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   AddInset(aSize);
   nsIBox::AddCSSPrefSize(aState, this, aSize);
 
+  nsSize minSize(0,0);
+  nsSize maxSize(0,0);
+  GetMinSize(aState, minSize);
+  GetMaxSize(aState, maxSize);
+
+  BoundsCheck(minSize, aSize, maxSize);
+
   return NS_OK;
 }
 
