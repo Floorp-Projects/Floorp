@@ -22,7 +22,7 @@
   -->
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-colors.dtd" >
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="StartUp('Colors')"  title="&window.title;" align="vertical">
 
@@ -140,4 +140,4 @@
 	</box>
 
 </html:div>
-</xul:window>
+</window>
