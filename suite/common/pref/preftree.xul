@@ -116,25 +116,25 @@
  
     <treeitem open="true">
       <treerow>       
-        <treecell name="chrome://messenger/content/pref-mailnews.html"><treeindentation/>&mail.label;</treecell>
+        <treecell name="chrome://messenger/content/pref-mailnews.xul"><treeindentation/>&mail.label;</treecell>
       </treerow>
 
       <treechildren>
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://addressbook/content/pref-addressing.html"><treeindentation/>&address.label;</treecell>
+            <treecell name="chrome://addressbook/content/pref-addressing.xul"><treeindentation/>&address.label;</treecell>
           </treerow>
         </treeitem>
 
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://messengercompose/content/pref-messages.html"><treeindentation/>&mess.label;</treecell>
+            <treecell name="chrome://messengercompose/content/pref-messages.xul"><treeindentation/>&mess.label;</treecell>
           </treerow>
         </treeitem>
 
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://messenger/content/pref-winsetting.html"><treeindentation/>&windowSet.label;</treecell>
+            <treecell name="chrome://messenger/content/pref-winsetting.xul"><treeindentation/>&windowSet.label;</treecell>
           </treerow>
         </treeitem>
 
@@ -146,19 +146,19 @@
 
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://messengercompose/content/pref-formatting.html"><treeindentation/>&format.label;</treecell>
+            <treecell name="chrome://messengercompose/content/pref-formatting.xul"><treeindentation/>&format.label;</treecell>
           </treerow>
         </treeitem>
 
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://messenger/content/pref-receipts.html"><treeindentation/>&return.label;</treecell>
+            <treecell name="chrome://messenger/content/pref-receipts.xul"><treeindentation/>&return.label;</treecell>
           </treerow>
         </treeitem>
 
         <treeitem open="true">
           <treerow>
-            <treecell name="chrome://messenger/content/pref-diskspace.html"><treeindentation/>&disk.label;</treecell>
+            <treecell name="chrome://messenger/content/pref-diskspace.xul"><treeindentation/>&disk.label;</treecell>
           </treerow>
         </treeitem>
       </treechildren>

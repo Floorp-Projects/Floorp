@@ -36,6 +36,6 @@
   <!-- type attribute is used by frame construction to locate iframes
        intended to hold (html) content -->
   <!-- id's use is a mystery -->
-  <html:iframe src="chrome://messenger/content/3panemail.html" name="browser.3panemail" flex="100%" id="messengerContent"/>
+  <html:iframe src="chrome://messenger/content/3panemail.xul" name="browser.3panemail" flex="100%" id="messengerContent"/>
 
 </window>

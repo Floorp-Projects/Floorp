@@ -23,11 +23,10 @@ install::
 	$(MAKE_INSTALL) messenger.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) folderPane.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) threadPane.xul 			$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) message.html			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) widgetglue.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) commandglue.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) shareglue.js			$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) 3panemail.html 			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) 3panemail.xul 			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) messagePane.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) subscribe.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) contentframe.xul		$(DIST)\bin\chrome\messenger\content\default
@@ -38,11 +37,10 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\messenger.xul
 	rm -f $(DIST)\chrome\messenger\content\default\folderPane.xul
 	rm -f $(DIST)\chrome\messenger\content\default\threadPane.xul
-	rm -f $(DIST)\chrome\messenger\content\default\message.html
 	rm -f $(DIST)\chrome\messenger\content\default\widgetglue.js
 	rm -f $(DIST)\chrome\messenger\content\default\commandglue.js
 	rm -f $(DIST)\chrome\messenger\content\default\shareglue.js
-	rm -f $(DIST)\chrome\messenger\content\default\3panemail.html
+	rm -f $(DIST)\chrome\messenger\content\default\3panemail.xul
 	rm -f $(DIST)\chrome\messenger\content\default\messagePane.xul
 	rm -f $(DIST)\chrome\messenger\content\default\subscribe.xul
 	rm -f $(DIST)\chrome\messenger\content\default\contentframe.xul

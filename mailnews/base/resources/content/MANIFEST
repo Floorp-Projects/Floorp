@@ -19,11 +19,10 @@
 messenger.xul
 folderPane.xul
 threadPane.xul
-message.html
 widgetglue.js
 commandglue.js
 shareglue.js
-3panemail.html
+3panemail.xul
 messagePane.xul
 subscribe.xul
 contentframe.xul

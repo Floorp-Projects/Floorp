@@ -25,11 +25,11 @@ am-server-top.xul
 am-server-pop3.xul
 am-copies.xul
 am-advanced.xul
-pref-mailnews.html
-pref-winsetting.html
-pref-receipts.html
-custreceipt.html
-pref-diskspace.html
+pref-mailnews.xul
+pref-winsetting.xul
+pref-receipts.xul
+custreceipt.xul
+pref-diskspace.xul
 AccountWizard.xul
 AccountWizard.js
 aw-accounttype.xul

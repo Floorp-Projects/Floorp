@@ -305,7 +305,7 @@ function MsgFolderProperties() {}
 function MsgPreferences() 
 {
     var prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
-    prefwindow.showWindow("widgetglue.js", window, "chrome://messenger/content/pref-mailnews.html");
+    prefwindow.showWindow("widgetglue.js", window, "chrome://messenger/content/pref-mailnews.xul");
 }
 
 function MsgShowMsgToolbar() {}

@@ -246,7 +246,7 @@ function MsgPreferences()
         prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
     }
 
-    prefwindow.showWindow("navigator.js", window, "chrome://pref/content/pref-mailnews.html");
+    prefwindow.showWindow("navigator.js", window, "chrome://pref/content/pref-mailnews.xul");
 }
 
 

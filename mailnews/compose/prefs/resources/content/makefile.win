@@ -21,11 +21,11 @@ MODULE=msgcompose
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) pref-messages.html $(DIST)\bin\chrome\messengercompose\content\default
+	$(MAKE_INSTALL) pref-messages.xul $(DIST)\bin\chrome\messengercompose\content\default
 	$(MAKE_INSTALL) pref-copiesfolders.html $(DIST)\bin\chrome\messengercompose\content\default
-	$(MAKE_INSTALL) pref-formatting.html $(DIST)\bin\chrome\messengercompose\content\default
+	$(MAKE_INSTALL) pref-formatting.xul $(DIST)\bin\chrome\messengercompose\content\default
 
 clobber::
-	rm -f $(DIST)\chrome\messengercompose\content\default\pref-messages.html
+	rm -f $(DIST)\chrome\messengercompose\content\default\pref-messages.xul
 	rm -f $(DIST)\chrome\messengercompose\content\default\pref-copiesfolders.html
-	rm -f $(DIST)\chrome\messengercompose\content\default\pref-formatting.html
+	rm -f $(DIST)\chrome\messengercompose\content\default\pref-formatting.xul

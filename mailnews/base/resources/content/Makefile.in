@@ -32,11 +32,10 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/messenger.xul \
 	$(srcdir)/folderPane.xul \
 	$(srcdir)/threadPane.xul \
-	$(srcdir)/message.html \
 	$(srcdir)/widgetglue.js \
 	$(srcdir)/commandglue.js \
 	$(srcdir)/shareglue.js \
-	$(srcdir)/3panemail.html \
+	$(srcdir)/3panemail.xul \
 	$(srcdir)/messagePane.xul \
 	$(srcdir)/subscribe.xul			\
 	$(srcdir)/contentframe.xul			\

@@ -29,9 +29,9 @@ include $(topsrcdir)/config/rules.mk
 SAMPLES_DIR = $(DIST)/bin/chrome/messengercompose/content/default
 
 EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/pref-messages.html \
+	$(srcdir)/pref-messages.xul \
 	$(srcdir)/pref-copiesfolders.html \
-	$(srcdir)/pref-formatting.html \
+	$(srcdir)/pref-formatting.xul \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

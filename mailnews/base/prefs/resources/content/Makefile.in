@@ -38,11 +38,11 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/am-server-pop3.xul	\
 	$(srcdir)/am-copies.xul		\
 	$(srcdir)/am-advanced.xul	\
-	$(srcdir)/pref-mailnews.html \
-	$(srcdir)/pref-winsetting.html \
-	$(srcdir)/pref-receipts.html \
-	$(srcdir)/custreceipt.html \
-	$(srcdir)/pref-diskspace.html \
+	$(srcdir)/pref-mailnews.xul \
+	$(srcdir)/pref-winsetting.xul \
+	$(srcdir)/pref-receipts.xul \
+	$(srcdir)/custreceipt.xul \
+	$(srcdir)/pref-diskspace.xul \
 	$(srcdir)/AccountWizard.xul		\
 	$(srcdir)/AccountWizard.js		\
 	$(srcdir)/aw-accounttype.xul	\
