@@ -18,8 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
+ *   Johnny Stenback <jst@netscape.com> (original author)
  */
 
 #include "domstubs.idl"

@@ -17,3 +17,4 @@ nsIDOMNotation.idl
 nsIDOMNSDocument.idl
 nsIDOMProcessingInstruction.idl
 nsIDOMText.idl
+nsIDOMXMLDocument.idl

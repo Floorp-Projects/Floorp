@@ -29,6 +29,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIHttpEventSink.h"
+#include "nsIDOMXMLDocument.h"
 
 class nsIParser;
 class nsIDOMNode;
@@ -39,7 +40,8 @@ class nsXMLDocument : public nsMarkupDocument,
                       public nsIXMLDocument,
                       public nsIHTMLContentContainer,
                       public nsIInterfaceRequestor,
-                      public nsIHttpEventSink
+                      public nsIHttpEventSink,
+                      public nsIDOMXMLDocument
 {
 public:
   nsXMLDocument();
@@ -87,7 +89,6 @@ public:
                                   nsIDOMAttr** aReturn);
   NS_IMETHOD    GetElementById(const nsAReadableString& aElementId,
                                nsIDOMElement** aReturn);
-  NS_IMETHOD    Load(const nsAReadableString& aUrl);
 
   // nsIXMLDocument interface
   NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
@@ -103,6 +104,9 @@ public:
 
   // nsIHTTPEventSink
   NS_DECL_NSIHTTPEVENTSINK
+
+  // nsIDOMXMLDocument
+  NS_DECL_NSIDOMXMLDOCUMENT
 
 protected:
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
