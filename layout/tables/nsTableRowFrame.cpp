@@ -865,7 +865,6 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         {
           // Reflow the cell to fit the available height
           nsSize  kidAvailSize(availWidth, aReflowState.reflowState.availableHeight);
-          nsSize  kidMaxElementSize(0,0);
 
           // If it's a dirty frame, then check whether it's the initial reflow
           nsReflowReason  reason = eReflowReason_Resize;
@@ -878,7 +877,6 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
               // width
               // XXX What about fixed layout tables?
               kidAvailSize.SizeTo(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-              desiredSize.maxElementSize=&kidMaxElementSize;
             }
           }
   
@@ -1153,7 +1151,6 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
 
         // Recover the max element size if requested
         if (aMaxElementSize) {
-          PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame*)frame);
           nsSize  kidMaxElementSize = ((nsTableCellFrame *)frame)->GetPass1MaxElementSize();
 
           aMaxElementSize->width += kidMaxElementSize.width;
@@ -1335,11 +1332,13 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
                                                            oldMinSize.width != kidMaxElementSize.width)) {
       // For fixed-layout tables we don't need to know the preferred width
       if (aReflowState.tableFrame->RequiresPass1Layout()) {
+#ifdef DEBUG_troy
         // Changes to the cell frame could require the columns to be rebalanced.
         // XXX We don't really need to compute the max element size again, we just
         // computed it above. However, for the time being do compute it again and
         // make sure it's consistent...
         nscoord prevMaxElementWidth = kidMaxElementSize.width;
+#endif
   
         // Do the unconstrained reflow and get the pass1 information
         // XXX Why the reflow reason of eReflowReason_Initial?
@@ -1355,7 +1354,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
         if (kidMaxElementSize.height>desiredSize.height)
           desiredSize.height = kidMaxElementSize.height;
         
-#if 0
+#ifdef DEBUG_troy
         // XXX See above
         NS_ASSERTION(prevMaxElementWidth == kidMaxElementSize.width,
                      "different max element width!");
@@ -1470,6 +1469,7 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
     break;
 
   case eReflowReason_Resize:
+  case eReflowReason_StyleChange:
     rv = ResizeReflow(aPresContext, aDesiredSize, state, aStatus);
     break;
 
