@@ -148,6 +148,17 @@ void nsUnicodeToGB18030Font0::Create4BytesEncoder()
   m4BytesEncoder = nsnull;
 }
 
+NS_IMETHODIMP nsUnicodeToGB18030Font0::FillInfo(PRUint32 *aInfo)
+{
+  nsresult rv = nsUnicodeToGB18030::FillInfo(aInfo); // call the super class
+  if(NS_SUCCEEDED(rv))
+  {
+    // mark the first 128 bits as 0. 4 x 32 bits = 128 bits
+    aInfo[0] = aInfo[1] = aInfo[2] = aInfo[3] = 0;
+  }
+  return rv;
+}
+
 //-----------------------------------------------------------------------
 //  nsUnicodeToGB18030Font1
 //-----------------------------------------------------------------------
