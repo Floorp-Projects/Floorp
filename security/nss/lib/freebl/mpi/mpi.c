@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.28 2000/12/09 03:36:41 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.29 2000/12/13 01:22:22 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -340,7 +340,7 @@ void   mp_set(mp_int *mp, mp_digit d)
 mp_err mp_set_int(mp_int *mp, long z)
 {
   int            ix;
-  unsigned long  v = abs(z);
+  unsigned long  v = labs(z);
   mp_err         res;
 
   ARGCHK(mp != NULL, MP_BADARG);
@@ -1990,7 +1990,7 @@ mp_size mp_trailing_zeros(const mp_int *mp)
     n += MP_DIGIT_BIT;
   if (!d)
     return 0;	/* shouldn't happen, but ... */
-#if (MP_DIGIT_MAX > MP_32BIT_MAX) 
+#if !defined(MP_USE_UINT_DIGIT)
   if (!(d & 0xffffffffU)) {
     d >>= 32;
     n  += 32;
@@ -2105,7 +2105,7 @@ mp_digit  s_mp_invmod_radix(mp_digit P)
   T *= 2 - (P * T);
   T *= 2 - (P * T);
   T *= 2 - (P * T);
-#if MP_DIGIT_MAX > MP_32BIT_MAX
+#if !defined(MP_USE_UINT_DIGIT)
   T *= 2 - (P * T);
   T *= 2 - (P * T);
 #endif
@@ -3791,7 +3791,7 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 
 /* }}} */
 
-#if defined(SOLARIS) && (ULONG_MAX == UINT_MAX)
+#if defined(MP_USE_UINT_DIGIT) && defined(MP_USE_LONG_LONG_MULTIPLY)
 /* This trick works on Sparc V8 CPUs with the Workshop compilers. */
 #define MP_MUL_DxD(a, b, Phi, Plo) \
   { unsigned long long product = (unsigned long long)a * b; \
@@ -3934,7 +3934,7 @@ void s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit
 }
 #endif
 
-#if defined(SOLARIS) && (ULONG_MAX == UINT_MAX)
+#if defined(MP_USE_UINT_DIGIT) && defined(MP_USE_LONG_LONG_MULTIPLY)
 /* This trick works on Sparc V8 CPUs with the Workshop compilers. */
 #define MP_SQR_D(a, Phi, Plo) \
   { unsigned long long square = (unsigned long long)a * a; \
@@ -4429,18 +4429,31 @@ int      s_mp_ispow2d(mp_digit d)
 {
   if ((d != 0) && ((d & (d-1)) == 0)) { /* d is a power of 2 */
     int pow = 0;
-#if MP_DIGIT_MAX == MP_32BIT_MAX
-    if (d & 0xffff0000)
+#if defined (MP_USE_UINT_DIGIT)
+    if (d & 0xffff0000U)
       pow += 16;
-    if (d & 0xff00ff00)
+    if (d & 0xff00ff00U)
       pow += 8;
-    if (d & 0xf0f0f0f0)
+    if (d & 0xf0f0f0f0U)
       pow += 4;
-    if (d & 0xcccccccc)
+    if (d & 0xccccccccU)
       pow += 2;
-    if (d & 0xaaaaaaaa)
+    if (d & 0xaaaaaaaaU)
       pow += 1;
-#else
+#elif defined(MP_USE_LONG_LONG_DIGIT)
+    if (d & 0xffffffff00000000ULL)
+      pow += 32;
+    if (d & 0xffff0000ffff0000ULL)
+      pow += 16;
+    if (d & 0xff00ff00ff00ff00ULL)
+      pow += 8;
+    if (d & 0xf0f0f0f0f0f0f0f0ULL)
+      pow += 4;
+    if (d & 0xccccccccccccccccULL)
+      pow += 2;
+    if (d & 0xaaaaaaaaaaaaaaaaULL)
+      pow += 1;
+#elif defined(MP_USE_LONG_DIGIT)
     if (d & 0xffffffff00000000UL)
       pow += 32;
     if (d & 0xffff0000ffff0000UL)
@@ -4453,6 +4466,8 @@ int      s_mp_ispow2d(mp_digit d)
       pow += 2;
     if (d & 0xaaaaaaaaaaaaaaaaUL)
       pow += 1;
+#else
+#error "unknown type for mp_digit"
 #endif
     return pow;
   }

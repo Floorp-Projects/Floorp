@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpi_sparc.c,v 1.3 2000/11/29 01:30:28 nelsonb%netscape.com Exp $
+ *  $Id: mpi_sparc.c,v 1.4 2000/12/13 01:22:22 nelsonb%netscape.com Exp $
  */
 
 /* Multiplication performance enhancements for sparc v8+vis CPUs. */
@@ -277,7 +277,7 @@ isSparcV8PlusVis(void)
     char buf[256];
     buflen = sysinfo(SI_ISALIST, buf, sizeof buf);
     if (buflen > 0) {
-#if defined(NSS_USE_64)
+#if defined(MP_USE_LONG_DIGIT)
         char * found = strstr(buf, "sparcv9+vis");
 #else
         char * found = strstr(buf, "sparcv8plus+vis");

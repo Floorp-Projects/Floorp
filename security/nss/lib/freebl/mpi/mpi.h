@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.16 2000/11/08 01:10:44 javi%netscape.com Exp $
+ *  $Id: mpi.h,v 1.17 2000/12/13 01:22:21 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -87,20 +87,6 @@ typedef int               mp_err;
 #error "USHRT_MAX not defined"
 #endif
 
-#if !defined(MP_USE_UINT_DIGIT) && ULONG_MAX > MP_32BIT_MAX
-typedef unsigned long     mp_digit;
-#define MP_DIGIT_MAX      ULONG_MAX
-#define MP_HALF_DIGIT_MAX UINT_MAX
-#undef MP_NO_MP_WORD
-#define MP_NO_MP_WORD 1
-#else
-typedef unsigned int      mp_digit;
-#define MP_DIGIT_MAX      UINT_MAX
-#define MP_HALF_DIGIT_MAX USHRT_MAX
-#endif
-
-#ifndef MP_NO_MP_WORD
-
 #if defined(ULONG_LONG_MAX)			/* GCC, HPUX */
 #define MP_ULONG_LONG_MAX ULONG_LONG_MAX
 #elif defined(ULLONG_MAX)			/* Solaris */
@@ -110,27 +96,59 @@ typedef unsigned int      mp_digit;
 #define MP_ULONG_LONG_MAX ULONGLONG_MAX
 #endif
 
-#if defined(MP_ULONG_LONG_MAX)
-#if (MP_ULONG_LONG_MAX > UINT_MAX) || defined(SOLARIS)
-#if MP_ULONG_LONG_MAX == ULONG_MAX || (defined(SOLARIS) && defined(NSS_USE_64))
+/* We only use unsigned long for mp_digit iff long is more than 32 bits. */
+#if !defined(MP_USE_UINT_DIGIT) && ULONG_MAX > MP_32BIT_MAX
+typedef unsigned long     mp_digit;
+#define MP_DIGIT_MAX      ULONG_MAX
+#define MP_DIGIT_FMT      "%016lX"   /* printf() format for 1 digit */
+#define MP_HALF_DIGIT_MAX UINT_MAX
+#undef  MP_NO_MP_WORD
+#define MP_NO_MP_WORD 1
+#undef  MP_USE_LONG_DIGIT
+#define MP_USE_LONG_DIGIT 1
+#undef  MP_USE_LONG_LONG_DIGIT
+
+#elif !defined(MP_USE_UINT_DIGIT) && defined(MP_ULONG_LONG_MAX) 
+typedef unsigned long long mp_digit;
+#define MP_DIGIT_MAX       MP_ULONG_LONG_MAX
+#define MP_DIGIT_FMT      "%016llX"  /* printf() format for 1 digit */
+#define MP_HALF_DIGIT_MAX  UINT_MAX
+#undef  MP_NO_MP_WORD
+#define MP_NO_MP_WORD 1
+#undef  MP_USE_LONG_LONG_DIGIT
+#define MP_USE_LONG_LONG_DIGIT 1
+#undef  MP_USE_LONG_DIGIT
+
+#else
+typedef unsigned int      mp_digit;
+#define MP_DIGIT_MAX      UINT_MAX
+#define MP_DIGIT_FMT      "%08X"     /* printf() format for 1 digit */
+#define MP_HALF_DIGIT_MAX USHRT_MAX
+#undef  MP_USE_UINT_DIGIT
+#define MP_USE_UINT_DIGIT 1
+#undef  MP_USE_LONG_LONG_DIGIT
+#undef  MP_USE_LONG_DIGIT
+#endif
+
+#if !defined(MP_NO_MP_WORD) 
+#if  defined(MP_USE_UINT_DIGIT) && \
+    (defined(MP_ULONG_LONG_MAX) || (ULONG_MAX > UINT_MAX))
+
+#if (ULONG_MAX > UINT_MAX)
 typedef unsigned long     mp_word;
 typedef          long     mp_sword;
 #define MP_WORD_MAX       ULONG_MAX
+
 #else
 typedef unsigned long long mp_word;
 typedef          long long mp_sword;
 #define MP_WORD_MAX       MP_ULONG_LONG_MAX
 #endif
-#else 
-/* MP_ULONG_LONG_MAX <= UINT_MAX */
-#define MP_NO_MP_WORD 1
-#endif
-#else 
-/* MP_ULONG_LONG_MAX not defined */
-#define MP_NO_MP_WORD 1
-#endif
 
-#endif /* !MP_NO_MP_WORD */
+#else 
+#define MP_NO_MP_WORD 1
+#endif
+#endif /* !defined(MP_NO_MP_WORD) */
 
 #if !defined(MP_WORD_MAX) && defined(MP_DEFINE_SMALL_WORD)
 typedef unsigned int      mp_word;
@@ -149,15 +167,6 @@ typedef          int      mp_sword;
 ** consistent with the other _HALF_ names.
 */
 
-#if MP_DIGIT_MAX == USHRT_MAX
-#define MP_DIGIT_FMT      "%04X"     /* printf() format for 1 digit */
-#elif MP_DIGIT_MAX == UINT_MAX
-#define MP_DIGIT_FMT      "%08X"     /* printf() format for 1 digit */
-#elif MP_DIGIT_MAX == ULONG_MAX
-#define MP_DIGIT_FMT      "%016lX"   /* printf() format for 1 digit */
-#else
-#define MP_DIGIT_FMT      "%016llX"  /* printf() format for 1 digit */
-#endif
 
 /* Macros for accessing the mp_int internals           */
 #define  MP_SIGN(MP)     ((MP)->sign)
