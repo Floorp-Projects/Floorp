@@ -4840,7 +4840,8 @@ nsGlobalHistory::WriteURLData(nsAString& aURL, PRFloat64* aURLFeatures)
   PRInt64ToChars(PR_Now(), dateStr);
   fprintf(mURLDataFile, " time='%s'>\n", dateStr.get());
 
-  for (PRInt32 i = 0; i < AC_NUM_URL_FEATURES - 1; i++)
+  PRInt32 i;
+  for (i = 0; i < AC_NUM_URL_FEATURES - 1; i++)
   {
     fprintf(mURLDataFile, "%f, ", aURLFeatures[i]);
   }
