@@ -3336,6 +3336,21 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
   return bg;
 }
 
+typedef nsCSSValue nsCSSRect::*CSSRectSide;
+
+#if (NS_SIDE_TOP != 0) || (NS_SIDE_RIGHT != 1) || (NS_SIDE_BOTTOM != 2) || (NS_SIDE_LEFT != 3)
+#error "Somebody changed the side constants."
+#endif
+
+static const CSSRectSide gCSSSides[] = {
+  &nsCSSRect::mTop,
+  &nsCSSRect::mRight,
+  &nsCSSRect::mBottom,
+  &nsCSSRect::mLeft
+};
+
+#define FOR_CSS_SIDES(var_) for (PRInt32 var_ = 0; var_ < 4; ++var_)
+                             
 const nsStyleStruct*
 nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct,
                               const nsRuleDataStruct& aData, 
@@ -3367,21 +3382,12 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct,
   if (marginData.mMargin) {
     nsStyleCoord  coord;
     nsStyleCoord  parentCoord;
-    parentMargin->mMargin.GetLeft(parentCoord);
-    if (SetCoord(marginData.mMargin->mLeft, coord, parentCoord, SETCOORD_LPAH, aContext, mPresContext, inherited)) {
-      margin->mMargin.SetLeft(coord);
-    }
-    parentMargin->mMargin.GetTop(parentCoord);
-    if (SetCoord(marginData.mMargin->mTop, coord, parentCoord, SETCOORD_LPAH, aContext, mPresContext, inherited)) {
-      margin->mMargin.SetTop(coord);
-    }
-    parentMargin->mMargin.GetRight(parentCoord);
-    if (SetCoord(marginData.mMargin->mRight, coord, parentCoord, SETCOORD_LPAH, aContext, mPresContext, inherited)) {
-      margin->mMargin.SetRight(coord);
-    }
-    parentMargin->mMargin.GetBottom(parentCoord);
-    if (SetCoord(marginData.mMargin->mBottom, coord, parentCoord, SETCOORD_LPAH, aContext, mPresContext, inherited)) {
-      margin->mMargin.SetBottom(coord);
+    FOR_CSS_SIDES(side) {
+      parentMargin->mMargin.Get(side, parentCoord);
+      if (SetCoord(marginData.mMargin->*(gCSSSides[side]), coord, parentCoord,
+                   SETCOORD_LPAH, aContext, mPresContext, inherited)) {
+        margin->mMargin.Set(side, coord);
+      }
     }
   }
 
@@ -3433,80 +3439,34 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   if (marginData.mBorderWidth) {
     nsStyleCoord  coord;
     nsStyleCoord  parentCoord;
-    if (SetCoord(marginData.mBorderWidth->mLeft, coord, parentCoord, SETCOORD_LE, aContext, mPresContext, inherited))
-      border->mBorder.SetLeft(coord);
-    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mLeft.GetUnit()) {
-      inherited = PR_TRUE;
-      border->mBorder.SetLeft(parentBorder->mBorder.GetLeft(coord));
-    }
-
-    if (SetCoord(marginData.mBorderWidth->mTop, coord, parentCoord, SETCOORD_LE, aContext, mPresContext, inherited))
-      border->mBorder.SetTop(coord);
-    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mTop.GetUnit()) {
-      inherited = PR_TRUE;
-      border->mBorder.SetTop(parentBorder->mBorder.GetTop(coord));
-    }
-
-    if (SetCoord(marginData.mBorderWidth->mRight, coord, parentCoord, SETCOORD_LE, aContext, mPresContext, inherited))
-      border->mBorder.SetRight(coord);
-    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mRight.GetUnit()) {
-      inherited = PR_TRUE;
-      border->mBorder.SetRight(parentBorder->mBorder.GetRight(coord));
-    }
-
-    if (SetCoord(marginData.mBorderWidth->mBottom, coord, parentCoord, SETCOORD_LE, aContext, mPresContext, inherited))
-      border->mBorder.SetBottom(coord);
-    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mBottom.GetUnit()) {
-      inherited = PR_TRUE;
-      border->mBorder.SetBottom(parentBorder->mBorder.GetBottom(coord));
+    FOR_CSS_SIDES(side) {
+      const nsCSSValue &value = marginData.mBorderWidth->*(gCSSSides[side]);
+      if (SetCoord(value, coord, parentCoord, SETCOORD_LE, aContext,
+                   mPresContext, inherited))
+        border->mBorder.Set(side, coord);
+      else if (eCSSUnit_Inherit == value.GetUnit()) {
+        inherited = PR_TRUE;
+        border->mBorder.Set(side, parentBorder->mBorder.Get(side, coord));
+      }
     }
   }
 
   // border-style: enum, none, inhert
   if (nsnull != marginData.mBorderStyle) {
     nsCSSRect* ourStyle = marginData.mBorderStyle;
-    if (eCSSUnit_Enumerated == ourStyle->mTop.GetUnit()) {
-      border->SetBorderStyle(NS_SIDE_TOP, ourStyle->mTop.GetIntValue());
-    }
-    else if (eCSSUnit_None == ourStyle->mTop.GetUnit()) {
-      border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-    }
-    else if (eCSSUnit_Inherit == ourStyle->mTop.GetUnit()) {
-      inherited = PR_TRUE;
-      border->SetBorderStyle(NS_SIDE_TOP, parentBorder->GetBorderStyle(NS_SIDE_TOP));
-    }
-
-    if (eCSSUnit_Enumerated == ourStyle->mRight.GetUnit()) {
-      border->SetBorderStyle(NS_SIDE_RIGHT, ourStyle->mRight.GetIntValue());
-    }
-    else if (eCSSUnit_None == ourStyle->mRight.GetUnit()) {
-      border->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-    }
-    else if (eCSSUnit_Inherit == ourStyle->mRight.GetUnit()) {
-      inherited = PR_TRUE;
-      border->SetBorderStyle(NS_SIDE_RIGHT, parentBorder->GetBorderStyle(NS_SIDE_RIGHT));
-    }
-
-    if (eCSSUnit_Enumerated == ourStyle->mBottom.GetUnit()) {
-      border->SetBorderStyle(NS_SIDE_BOTTOM, ourStyle->mBottom.GetIntValue());
-    }
-    else if (eCSSUnit_None == ourStyle->mBottom.GetUnit()) {
-      border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-    }
-    else if (eCSSUnit_Inherit == ourStyle->mBottom.GetUnit()) { 
-      inherited = PR_TRUE;
-      border->SetBorderStyle(NS_SIDE_BOTTOM, parentBorder->GetBorderStyle(NS_SIDE_BOTTOM));
-    }
-
-    if (eCSSUnit_Enumerated == ourStyle->mLeft.GetUnit()) {
-      border->SetBorderStyle(NS_SIDE_LEFT, ourStyle->mLeft.GetIntValue());
-    }
-    else if (eCSSUnit_None == ourStyle->mLeft.GetUnit()) {
-     border->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
-    }
-    else if (eCSSUnit_Inherit == ourStyle->mLeft.GetUnit()) {
-      inherited = PR_TRUE;
-      border->SetBorderStyle(NS_SIDE_LEFT, parentBorder->GetBorderStyle(NS_SIDE_LEFT));
+    FOR_CSS_SIDES(side) {
+      const nsCSSValue &value = ourStyle->*(gCSSSides[side]);
+      nsCSSUnit unit = value.GetUnit();
+      if (eCSSUnit_Enumerated == unit) {
+        border->SetBorderStyle(side, value.GetIntValue());
+      }
+      else if (eCSSUnit_None == unit) {
+        border->SetBorderStyle(side, NS_STYLE_BORDER_STYLE_NONE);
+      }
+      else if (eCSSUnit_Inherit == unit) {
+        inherited = PR_TRUE;
+        border->SetBorderStyle(side, parentBorder->GetBorderStyle(side));
+      }
     }
   }
 
@@ -3542,128 +3502,38 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     PRBool transparent;
     PRBool foreground;
 
-    // top
-    if (eCSSUnit_Inherit == ourBorderColor->mTop.GetUnit()) {
-      inherited = PR_TRUE;
-      parentBorder->GetBorderColor(NS_SIDE_TOP, borderColor, transparent, foreground);      
-      if (transparent)
-        border->SetBorderTransparent(NS_SIDE_TOP);
-      else if (foreground) {
-        // We want to inherit the color from the parent, not use the
-        // color on the element where this chunk of style data will be
-        // used.  We can ensure that the data for the parent are fully
-        // computed (unlike for the element where this will be used, for
-        // which the color could be specified on a more specific rule).
-        const nsStyleColor *parentColor;
-        ::GetStyleData(parentContext.get(), &parentColor);
-        border->SetBorderColor(NS_SIDE_TOP, parentColor->mColor);
-      } else
-        border->SetBorderColor(NS_SIDE_TOP, borderColor);
-    }
-    else if (SetColor(ourBorderColor->mTop, unused, mPresContext, borderColor, inherited)) {
-      border->SetBorderColor(NS_SIDE_TOP, borderColor);
-    }
-    else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
-      switch (ourBorderColor->mTop.GetIntValue()) {
-        case NS_STYLE_COLOR_TRANSPARENT:
-          border->SetBorderTransparent(NS_SIDE_TOP);
-          break;
-        case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
-          border->SetBorderToForeground(NS_SIDE_TOP);
-          break;
+    FOR_CSS_SIDES(side) {
+      const nsCSSValue &value = ourBorderColor->*(gCSSSides[side]);
+      if (eCSSUnit_Inherit == value.GetUnit()) {
+        inherited = PR_TRUE;
+        parentBorder->GetBorderColor(side, borderColor,
+                                     transparent, foreground);      
+        if (transparent)
+          border->SetBorderTransparent(side);
+        else if (foreground) {
+          // We want to inherit the color from the parent, not use the
+          // color on the element where this chunk of style data will be
+          // used.  We can ensure that the data for the parent are fully
+          // computed (unlike for the element where this will be used, for
+          // which the color could be specified on a more specific rule).
+          const nsStyleColor *parentColor;
+          ::GetStyleData(parentContext.get(), &parentColor);
+          border->SetBorderColor(side, parentColor->mColor);
+        } else
+          border->SetBorderColor(side, borderColor);
       }
-    }
-    // right
-    if (eCSSUnit_Inherit == ourBorderColor->mRight.GetUnit()) {
-      inherited = PR_TRUE;
-      parentBorder->GetBorderColor(NS_SIDE_RIGHT, borderColor, transparent, foreground);      
-      if (transparent)
-        border->SetBorderTransparent(NS_SIDE_RIGHT);
-      else if (foreground) {
-        // We want to inherit the color from the parent, not use the
-        // color on the element where this chunk of style data will be
-        // used.  We can ensure that the data for the parent are fully
-        // computed (unlike for the element where this will be used, for
-        // which the color could be specified on a more specific rule).
-        const nsStyleColor *parentColor;
-        ::GetStyleData(parentContext.get(), &parentColor);
-        border->SetBorderColor(NS_SIDE_RIGHT, parentColor->mColor);
-      } else
-        border->SetBorderColor(NS_SIDE_RIGHT, borderColor);
-    }
-    else if (SetColor(ourBorderColor->mRight, unused, mPresContext, borderColor, inherited)) {
-      border->SetBorderColor(NS_SIDE_RIGHT, borderColor);
-    }
-    else if (eCSSUnit_Enumerated == ourBorderColor->mRight.GetUnit()) {
-      switch (ourBorderColor->mRight.GetIntValue()) {
-        case NS_STYLE_COLOR_TRANSPARENT:
-          border->SetBorderTransparent(NS_SIDE_RIGHT);
-          break;
-        case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
-          border->SetBorderToForeground(NS_SIDE_RIGHT);
-          break;
+      else if (SetColor(value, unused, mPresContext, borderColor, inherited)) {
+        border->SetBorderColor(side, borderColor);
       }
-    }
-    // bottom
-    if (eCSSUnit_Inherit == ourBorderColor->mBottom.GetUnit()) {
-      inherited = PR_TRUE;
-      parentBorder->GetBorderColor(NS_SIDE_BOTTOM, borderColor, transparent, foreground);      
-      if (transparent)
-        border->SetBorderTransparent(NS_SIDE_BOTTOM);
-      else if (foreground) {
-        // We want to inherit the color from the parent, not use the
-        // color on the element where this chunk of style data will be
-        // used.  We can ensure that the data for the parent are fully
-        // computed (unlike for the element where this will be used, for
-        // which the color could be specified on a more specific rule).
-        const nsStyleColor *parentColor;
-        ::GetStyleData(parentContext.get(), &parentColor);
-        border->SetBorderColor(NS_SIDE_BOTTOM, parentColor->mColor);
-      } else
-        border->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
-    }
-    else if (SetColor(ourBorderColor->mBottom, unused, mPresContext, borderColor, inherited)) {
-      border->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
-    }
-    else if (eCSSUnit_Enumerated == ourBorderColor->mBottom.GetUnit()) {
-      switch (ourBorderColor->mBottom.GetIntValue()) {
-        case NS_STYLE_COLOR_TRANSPARENT:
-          border->SetBorderTransparent(NS_SIDE_BOTTOM);
-          break;
-        case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
-          border->SetBorderToForeground(NS_SIDE_BOTTOM);
-          break;
-      }
-    }
-    // left
-    if (eCSSUnit_Inherit == ourBorderColor->mLeft.GetUnit()) {
-      inherited = PR_TRUE;
-      parentBorder->GetBorderColor(NS_SIDE_LEFT, borderColor, transparent, foreground);      
-      if (transparent)
-        border->SetBorderTransparent(NS_SIDE_LEFT);
-      else if (foreground) {
-        // We want to inherit the color from the parent, not use the
-        // color on the element where this chunk of style data will be
-        // used.  We can ensure that the data for the parent are fully
-        // computed (unlike for the element where this will be used, for
-        // which the color could be specified on a more specific rule).
-        const nsStyleColor *parentColor;
-        ::GetStyleData(parentContext.get(), &parentColor);
-        border->SetBorderColor(NS_SIDE_LEFT, parentColor->mColor);
-      } else
-        border->SetBorderColor(NS_SIDE_LEFT, borderColor);
-    }
-    else if (SetColor(ourBorderColor->mLeft, unused, mPresContext, borderColor, inherited)) {
-      border->SetBorderColor(NS_SIDE_LEFT, borderColor);
-    }
-    else if (eCSSUnit_Enumerated == ourBorderColor->mLeft.GetUnit()) {
-      switch (ourBorderColor->mLeft.GetIntValue()) {
-        case NS_STYLE_COLOR_TRANSPARENT:
-          border->SetBorderTransparent(NS_SIDE_LEFT);
-          break;
-        case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
-          border->SetBorderToForeground(NS_SIDE_LEFT);
-          break;
+      else if (eCSSUnit_Enumerated == value.GetUnit()) {
+        switch (value.GetIntValue()) {
+          case NS_STYLE_COLOR_TRANSPARENT:
+            border->SetBorderTransparent(side);
+            break;
+          case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
+            border->SetBorderToForeground(side);
+            break;
+        }
       }
     }
   }
@@ -3672,18 +3542,13 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   if (marginData.mBorderRadius) {
     nsStyleCoord  coord;
     nsStyleCoord  parentCoord;
-    parentBorder->mBorderRadius.GetLeft(parentCoord);
-    if (SetCoord(marginData.mBorderRadius->mLeft, coord, parentCoord, SETCOORD_LPH, aContext, mPresContext, inherited))
-      border->mBorderRadius.SetLeft(coord);
-    parentBorder->mBorderRadius.GetTop(parentCoord);
-    if (SetCoord(marginData.mBorderRadius->mTop, coord, parentCoord, SETCOORD_LPH, aContext, mPresContext, inherited))
-      border->mBorderRadius.SetTop(coord);
-    parentBorder->mBorderRadius.GetRight(parentCoord);
-    if (SetCoord(marginData.mBorderRadius->mRight, coord, parentCoord, SETCOORD_LPH, aContext, mPresContext, inherited))
-      border->mBorderRadius.SetRight(coord);
-    parentBorder->mBorderRadius.GetBottom(parentCoord);
-    if (SetCoord(marginData.mBorderRadius->mBottom, coord, parentCoord, SETCOORD_LPH, aContext, mPresContext, inherited))
-      border->mBorderRadius.SetBottom(coord);
+    FOR_CSS_SIDES(side) {
+      parentBorder->mBorderRadius.Get(side, parentCoord);
+      if (SetCoord(marginData.mBorderRadius->*(gCSSSides[side]), coord,
+                   parentCoord, SETCOORD_LPH, aContext, mPresContext,
+                   inherited))
+        border->mBorderRadius.Set(side, coord);
+    }
   }
 
   // float-edge: enum, inherit
@@ -3742,21 +3607,12 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct,
   if (marginData.mPadding) {
     nsStyleCoord  coord;
     nsStyleCoord  parentCoord;
-    parentPadding->mPadding.GetLeft(parentCoord);
-    if (SetCoord(marginData.mPadding->mLeft, coord, parentCoord, SETCOORD_LPH, aContext, mPresContext, inherited)) {
-      padding->mPadding.SetLeft(coord);
-    }
-    parentPadding->mPadding.GetTop(parentCoord);
-    if (SetCoord(marginData.mPadding->mTop, coord, parentCoord, SETCOORD_LPH, aContext, mPresContext, inherited)) {
-      padding->mPadding.SetTop(coord);
-    }
-    parentPadding->mPadding.GetRight(parentCoord);
-    if (SetCoord(marginData.mPadding->mRight, coord, parentCoord, SETCOORD_LPH, aContext, mPresContext, inherited)) {
-      padding->mPadding.SetRight(coord);
-    }
-    parentPadding->mPadding.GetBottom(parentCoord);
-    if (SetCoord(marginData.mPadding->mBottom, coord, parentCoord, SETCOORD_LPH, aContext, mPresContext, inherited)) {
-      padding->mPadding.SetBottom(coord);
+    FOR_CSS_SIDES(side) {
+      parentPadding->mPadding.Get(side, parentCoord);
+      if (SetCoord(marginData.mPadding->*(gCSSSides[side]), coord, parentCoord,
+                   SETCOORD_LPH, aContext, mPresContext, inherited)) {
+        padding->mPadding.Set(side, coord);
+      }
     }
   }
 

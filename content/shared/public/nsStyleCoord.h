@@ -41,6 +41,7 @@
 #include "nscore.h"
 #include "nsCoord.h"
 #include "nsCRT.h"
+#include "nsStyleConsts.h"
 class nsString;
 
 enum nsStyleUnit {
@@ -121,34 +122,34 @@ public:
   PRBool         operator==(const nsStyleSides& aOther) const;
   PRBool         operator!=(const nsStyleSides& aOther) const;
 
-  nsStyleUnit GetLeftUnit(void) const;
-  nsStyleUnit GetTopUnit(void) const;
-  nsStyleUnit GetRightUnit(void) const;
-  nsStyleUnit GetBottomUnit(void) const;
+  // aSide is always one of NS_SIDE_* defined in nsStyleConsts.h
 
-  nsStyleCoord& GetLeft(nsStyleCoord& aCoord) const;
-  nsStyleCoord& GetTop(nsStyleCoord& aCoord) const;
-  nsStyleCoord& GetRight(nsStyleCoord& aCoord) const;
-  nsStyleCoord& GetBottom(nsStyleCoord& aCoord) const;
+  inline nsStyleUnit GetUnit(PRUint8 aSide) const;
+  inline nsStyleUnit GetLeftUnit(void) const;
+  inline nsStyleUnit GetTopUnit(void) const;
+  inline nsStyleUnit GetRightUnit(void) const;
+  inline nsStyleUnit GetBottomUnit(void) const;
+
+  inline nsStyleCoord& Get(PRUint8 aSide, nsStyleCoord& aCoord) const;
+  inline nsStyleCoord& GetLeft(nsStyleCoord& aCoord) const;
+  inline nsStyleCoord& GetTop(nsStyleCoord& aCoord) const;
+  inline nsStyleCoord& GetRight(nsStyleCoord& aCoord) const;
+  inline nsStyleCoord& GetBottom(nsStyleCoord& aCoord) const;
 
   void  Reset(void);
-  void  SetLeft(const nsStyleCoord& aCoord);
-  void  SetTop(const nsStyleCoord& aCoord);
-  void  SetRight(const nsStyleCoord& aCoord);
-  void  SetBottom(const nsStyleCoord& aCoord);
+
+  inline void Set(PRUint8 aSide, const nsStyleCoord& aCoord);
+  inline void SetLeft(const nsStyleCoord& aCoord);
+  inline void SetTop(const nsStyleCoord& aCoord);
+  inline void SetRight(const nsStyleCoord& aCoord);
+  inline void SetBottom(const nsStyleCoord& aCoord);
 
   void  AppendToString(nsString& aBuffer) const;
   void  ToString(nsString& aBuffer) const;
 
 protected:
-  PRUint8       mLeftUnit;
-  PRUint8       mTopUnit;
-  PRUint8       mRightUnit;
-  PRUint8       mBottomUnit;
-  nsStyleUnion  mLeftValue;
-  nsStyleUnion  mTopValue;
-  nsStyleUnion  mRightValue;
-  nsStyleUnion  mBottomValue;
+  PRUint8       mUnits[4];
+  nsStyleUnion  mValues[4];
 };
 
 // -------------------------
@@ -214,72 +215,81 @@ inline PRBool nsStyleSides::operator!=(const nsStyleSides& aOther) const
   return PRBool(! ((*this) == aOther));
 }
 
+inline nsStyleUnit nsStyleSides::GetUnit(PRUint8 aSide) const
+{
+  return (nsStyleUnit)mUnits[aSide];
+}
+
 inline nsStyleUnit nsStyleSides::GetLeftUnit(void) const
 {
-  return (nsStyleUnit)mLeftUnit;
+  return GetUnit(NS_SIDE_LEFT);
 }
 
 inline nsStyleUnit nsStyleSides::GetTopUnit(void) const
 {
-  return (nsStyleUnit)mTopUnit;
+  return GetUnit(NS_SIDE_TOP);
 }
 
 inline nsStyleUnit nsStyleSides::GetRightUnit(void) const
 {
-  return (nsStyleUnit)mRightUnit;
+  return GetUnit(NS_SIDE_RIGHT);
 }
 
 inline nsStyleUnit nsStyleSides::GetBottomUnit(void) const
 {
-  return (nsStyleUnit)mBottomUnit;
+  return GetUnit(NS_SIDE_BOTTOM);
+}
+
+inline nsStyleCoord& nsStyleSides::Get(PRUint8 aSide, nsStyleCoord& aCoord) const
+{
+  aCoord.SetUnionValue(mValues[aSide], (nsStyleUnit)mUnits[aSide]);
+  return aCoord;
 }
 
 inline nsStyleCoord& nsStyleSides::GetLeft(nsStyleCoord& aCoord) const
 {
-  aCoord.SetUnionValue(mLeftValue, (nsStyleUnit)mLeftUnit);
-  return aCoord;
+  return Get(NS_SIDE_LEFT, aCoord);
 }
 
 inline nsStyleCoord& nsStyleSides::GetTop(nsStyleCoord& aCoord) const
 {
-  aCoord.SetUnionValue(mTopValue, (nsStyleUnit)mTopUnit);
-  return aCoord;
+  return Get(NS_SIDE_TOP, aCoord);
 }
 
 inline nsStyleCoord& nsStyleSides::GetRight(nsStyleCoord& aCoord) const
 {
-  aCoord.SetUnionValue(mRightValue, (nsStyleUnit)mRightUnit);
-  return aCoord;
+  return Get(NS_SIDE_RIGHT, aCoord);
 }
 
 inline nsStyleCoord& nsStyleSides::GetBottom(nsStyleCoord& aCoord) const
 {
-  aCoord.SetUnionValue(mBottomValue, (nsStyleUnit)mBottomUnit);
-  return aCoord;
+  return Get(NS_SIDE_BOTTOM, aCoord);
+}
+
+inline void nsStyleSides::Set(PRUint8 aSide, const nsStyleCoord& aCoord)
+{
+  mUnits[aSide] = aCoord.GetUnit();
+  aCoord.GetUnionValue(mValues[aSide]);
 }
 
 inline void nsStyleSides::SetLeft(const nsStyleCoord& aCoord)
 {
-  mLeftUnit = aCoord.GetUnit();
-  aCoord.GetUnionValue(mLeftValue);
+  Set(NS_SIDE_LEFT, aCoord);
 }
 
 inline void nsStyleSides::SetTop(const nsStyleCoord& aCoord)
 {
-  mTopUnit = aCoord.GetUnit();
-  aCoord.GetUnionValue(mTopValue);
+  Set(NS_SIDE_TOP, aCoord);
 }
 
 inline void nsStyleSides::SetRight(const nsStyleCoord& aCoord)
 {
-  mRightUnit = aCoord.GetUnit();
-  aCoord.GetUnionValue(mRightValue);
+  Set(NS_SIDE_RIGHT, aCoord);
 }
 
 inline void nsStyleSides::SetBottom(const nsStyleCoord& aCoord)
 {
-  mBottomUnit = aCoord.GetUnit();
-  aCoord.GetUnionValue(mBottomValue);
+  Set(NS_SIDE_BOTTOM, aCoord);
 }
 
 #endif /* nsStyleCoord_h___ */
