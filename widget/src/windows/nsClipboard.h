@@ -49,12 +49,7 @@ protected:
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
 
-  PRBool              mIgnoreEmptyNotification;
-
-  nsIClipboardOwner * mClipboardOwner;
-  nsITransferable   * mTransferable;
   nsIWidget         * mWindow;
-
   nsDataObj         * mDataObj;
 
 };
