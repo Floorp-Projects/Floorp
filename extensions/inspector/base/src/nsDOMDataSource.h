@@ -104,16 +104,16 @@ private:
   nsresult GetFieldNameFromRes(nsIRDFResource* aProperty, nsAutoString* aResult);
   
   // Observer Notification
-  static PRBool ChangeEnumFunc(void *aElement, void *aData);
-  static PRBool AssertEnumFunc(void *aElement, void *aData);
-	static PRBool UnassertEnumFunc(void *aElement, void *aData);
-	nsresult NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property, nsIRDFNode *object, PRUint32 aType);
+  static PRBool PR_CALLBACK ChangeEnumFunc(void *aElement, void *aData);
+  static PRBool PR_CALLBACK AssertEnumFunc(void *aElement, void *aData);
+  static PRBool PR_CALLBACK UnassertEnumFunc(void *aElement, void *aData);
+  nsresult NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property, nsIRDFNode *object, PRUint32 aType);
   // Misc
   PRBool IsObjectInCache(nsISupports* aObject);
   nsresult RemoveResourceForObject(nsISupports* aObject);
   PRBool HasChildren(nsIDOMNode* aContainer);
   static nsresult FindAttrRes(nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aAttrRes);
-  static PRBool FindAttrResEnumFunc(nsHashKey *aKey, void *aData, void* closure);
+  static PRBool PR_CALLBACK FindAttrResEnumFunc(nsHashKey *aKey, void *aData, void* closure);
   static PRBool HasChild(nsIDOMNode* aContainer, nsIDOMNode* aChild);
   static PRBool HasAttribute(nsIDOMNode* aContainer, nsIDOMNode* aAttr);
   static void DumpResourceValue(nsIRDFResource* aRes);
