@@ -597,16 +597,16 @@ const PRInt32 nsCSSProps::kUserModifyKTable[] = {
   eCSSKeyword_read_only,  NS_STYLE_USER_MODIFY_READ_ONLY,
   eCSSKeyword_read_write, NS_STYLE_USER_MODIFY_READ_WRITE,
   eCSSKeyword_write_only, NS_STYLE_USER_MODIFY_WRITE_ONLY,
-  eCSSKeyword_toggle,     NS_STYLE_USER_MODIFY_TOGGLE,
-  eCSSKeyword_tri_state,  NS_STYLE_USER_MODIFY_TRI_STATE,
   -1,-1
 };
 
 const PRInt32 nsCSSProps::kUserSelectKTable[] = {
-  eCSSKeyword_text,     NS_STYLE_USER_SELECT_TEXT,
-  eCSSKeyword_element,  NS_STYLE_USER_SELECT_ELEMENT,
-  eCSSKeyword_elements, NS_STYLE_USER_SELECT_ELEMENTS,
-  eCSSKeyword_all,      NS_STYLE_USER_SELECT_ALL,
+  eCSSKeyword_text,       NS_STYLE_USER_SELECT_TEXT,
+  eCSSKeyword_element,    NS_STYLE_USER_SELECT_ELEMENT,
+  eCSSKeyword_elements,   NS_STYLE_USER_SELECT_ELEMENTS,
+  eCSSKeyword_all,        NS_STYLE_USER_SELECT_ALL,
+  eCSSKeyword_toggle,     NS_STYLE_USER_SELECT_TOGGLE,
+  eCSSKeyword_tri_state,  NS_STYLE_USER_SELECT_TRI_STATE,
   -1,-1
 };
 
