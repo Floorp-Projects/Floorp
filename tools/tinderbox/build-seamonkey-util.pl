@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.220 $ ';
+$::UtilsVersion = '$Revision: 1.221 $ ';
 
 package TinderUtils;
 
@@ -1986,8 +1986,14 @@ sub CodesizeTest {
       print_log "<a title=\"Change from last $zee value (+added/-subtracted)\" TinderboxPrint:" . $zee . "diff:$zdiff_data</a>\n";
     }
     
+    # Testing only!  Moves the old log to some unique name for testing.
+    # my $time = POSIX::strftime "%d%H%M%S", localtime;
+    # rename("$build_dir/$old_log", "$build_dir/$old_log.$time");
+    
     # Get ready for next cycle.
     rename("$build_dir/$new_log", "$build_dir/$old_log");
+    
+        
   } else {
     print_log "Error: $build_dir/$new_log not found.\n";
     $test_result = 'buildfailed';
