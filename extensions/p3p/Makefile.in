@@ -49,6 +49,8 @@ CHROME_DEPS = p3p200005.xsl p3p200010.xsl p3p200012.xsl p3p200109.xsl \
 
 PP = $(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/preprocessor.pl
 
+include $(topsrcdir)/config/rules.mk
+
 # Use the XUL preprocessor to adjust the stylesheet template to the slightly
 # varying needs of the supported versions of the p3p specification.
 
@@ -80,5 +82,3 @@ p3p200201.xsl: resources/content/p3p.xsl.in Makefile.in
 	$(PP) -DNAMESPACE=http://www.w3.org/2002/01/P3Pv1 \
 	-DHAS_CALL_OURS -DHAS_PURPOSE_SRC\
 	$< > $@
-
-include $(topsrcdir)/config/rules.mk
