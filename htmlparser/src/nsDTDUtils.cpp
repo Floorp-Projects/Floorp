@@ -179,6 +179,7 @@ PRInt32 nsTagStack::GetTopmostIndexOf(eHTMLTags aTag) const {
 /**
  * 
  * @update	gess9/10/98
+ * @update  gess 4/26/99
  */
 nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
 #ifdef  NS_DEBUG
@@ -190,6 +191,7 @@ nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
 /**
  * 
  * @update	gess9/10/98
+ * @update  gess 4/26/99
  */
 nsDTDContext::~nsDTDContext() {
 }
@@ -197,6 +199,7 @@ nsDTDContext::~nsDTDContext() {
 /**
  * 
  * @update  gess7/9/98, harishd 04/04/99 
+ * @update  gess 4/26/99
  */
 PRInt32 nsDTDContext::GetCount(void) {
   return mStack.GetSize();
@@ -205,6 +208,7 @@ PRInt32 nsDTDContext::GetCount(void) {
 /**
  * 
  * @update  gess7/9/98, harishd 04/04/99
+ * @update  gess 4/26/99
  */
 void nsDTDContext::Push(eHTMLTags aTag) {
 #ifdef  NS_DEBUG
@@ -217,6 +221,7 @@ void nsDTDContext::Push(eHTMLTags aTag) {
 
 /** 
  * @update  gess7/9/98, harishd 04/04/99
+ * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::Pop() {
 #ifdef  NS_DEBUG
@@ -231,6 +236,7 @@ eHTMLTags nsDTDContext::Pop() {
 /**
  * 
  * @update  gess7/9/98
+ * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::First() const {
   return mStack.First();
@@ -239,6 +245,7 @@ eHTMLTags nsDTDContext::First() const {
 /**
  * 
  * @update  gess7/9/98
+ * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
   return mStack.TagAt(anIndex);
@@ -248,6 +255,7 @@ eHTMLTags nsDTDContext::TagAt(PRInt32 anIndex) const {
 /**
  * 
  * @update  gess7/9/98
+ * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::operator[](PRInt32 anIndex) const {
   return mStack[anIndex];
@@ -256,6 +264,7 @@ eHTMLTags nsDTDContext::operator[](PRInt32 anIndex) const {
 /**
  * 
  * @update  gess7/9/98
+ * @update  gess 4/26/99
  */
 eHTMLTags nsDTDContext::Last() const {
   return mStack.Last();
@@ -264,12 +273,15 @@ eHTMLTags nsDTDContext::Last() const {
 /**
  * 
  * @update  gess7/9/98
+ * @update  gess 4/26/99
  */
 nsTagStack* nsDTDContext::GetStyles(void) const {
-  PRInt32 theIndex=mStack.mEntries[mStack.mCount-1].mStyleIndex;
   nsTagStack* result=0;
-  if(-1<theIndex){
-    result=(nsTagStack*)mStyles.ObjectAt(theIndex);
+  if(0<mStack.mCount){
+    PRInt32 theIndex=mStack.mEntries[mStack.mCount-1].mStyleIndex;  
+    if(-1<theIndex){
+      result=(nsTagStack*)mStyles.ObjectAt(theIndex);
+    }
   }
   return result;
 }
