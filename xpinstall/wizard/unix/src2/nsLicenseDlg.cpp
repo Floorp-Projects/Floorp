@@ -205,9 +205,8 @@ nsLicenseDlg::Show(int aDirection)
     gtk_widget_show(gCtx->next);
     gtk_widget_show(gCtx->back);
 
-    return err;
-
 BAIL:
+    XI_IF_FREE(licenseContents);
     return err;
 }
 

@@ -191,8 +191,6 @@ nsWelcomeDlg::Show(int aDirection)
         gtk_widget_show(gCtx->back);
     }
 
-    return OK;
-
 BAIL:
     XI_IF_FREE(readmeContents);
 
