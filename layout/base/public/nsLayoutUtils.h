@@ -42,6 +42,7 @@ class nsIFrame;
 class nsIPresContext;
 class nsIContent;
 class nsIAtom;
+class nsIView;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
@@ -101,7 +102,43 @@ public:
    */
   static PRBool IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame,
                                       nsIAtom* aPseudoElement);
+
+  /**
+   * CompareTreePosition determines whether aContent1 comes before or after aContent2 in
+   * a preorder traversal of the content tree.
+   * 
+   * @param aCommonAncestor either null, or a common ancestor of aContent1 and aContent2
+   * @return < 0 if aContent1 is before aContent2, > 0 if aContent1 is after aContent2,
+   * 0 otherwise (meaning they're the same, or they're in different documents)
+   */
+  static PRInt32 CompareTreePosition(nsIContent* aContent1, nsIContent* aContent2,
+                                     nsIContent* aCommonAncestor = nsnull);
   
+  /**
+   * GetLastSibling simply finds the last sibling of aFrame, or returns nsnull if
+   * aFrame is null.
+   */
+  static nsIFrame* GetLastSibling(nsIFrame* aFrame);
+
+  /**
+   * FindSiblingViewFor locates the child of aParentView that aFrame's
+   * view should be inserted 'above' (i.e., before in sibling view
+   * order).  This is the first child view of aParentView whose
+   * corresponding content is before aFrame's content (view siblings
+   * are in reverse content order).
+   */
+  static nsIView* FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame);
+
+  /**
+   * IsProperAncestorFrame checks whether aAncestorFrame is an ancestor
+   * of aFrame and not equal to aFrame.
+   * @param aCommonAncestor nsnull, or a common ancestor of aFrame and
+   * aAncestorFrame. If non-null, this can bound the search and speed up
+   * the function
+   */
+  static PRBool IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
+                                      nsIFrame* aCommonAncestor = nsnull);
+
   /**
    * HasPseudoStyle returns PR_TRUE if aContent (whose primary style
    * context is aStyleContext) has the aPseudoElement pseudo-style

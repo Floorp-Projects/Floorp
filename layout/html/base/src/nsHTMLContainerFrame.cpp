@@ -42,6 +42,7 @@
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsLayoutAtoms.h"
+#include "nsLayoutUtils.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIWidget.h"
 #include "nsILinkHandler.h"
@@ -376,8 +377,8 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
     aViewManager->RemoveChild(view);
     
     // The view will remember the Z-order and other attributes that have been set on it.
-    // XXX Pretend this view is last of the parent's views in document order
-    aViewManager->InsertChild(aNewParentView, view, nsnull, PR_TRUE);
+    nsIView* insertBefore = nsLayoutUtils::FindSiblingViewFor(aNewParentView, aFrame);
+    aViewManager->InsertChild(aNewParentView, view, insertBefore, insertBefore != nsnull);
   } else {
     PRInt32 listIndex = 0;
     nsCOMPtr<nsIAtom> listName;
@@ -582,13 +583,17 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollingView))) {
     scrollingView->SetScrolledView(view);
   } else {
-    // XXX Drop it at the end of the document order until we can do better
-    viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
+    nsIView* insertBefore = nsLayoutUtils::FindSiblingViewFor(parentView, aFrame);
+    // we insert this view 'above' the insertBefore view, unless insertBefore is null,
+    // in which case we want to call with aAbove == PR_FALSE to insert at the beginning
+    // in document order
+    viewManager->InsertChild(parentView, view, insertBefore, insertBefore != nsnull);
 
     if (nsnull != aContentParentFrame) {
       nsIView* zParentView = aContentParentFrame->GetClosestView();
       if (zParentView != parentView) {
-        viewManager->InsertZPlaceholder(zParentView, view, nsnull, PR_TRUE);
+        insertBefore = nsLayoutUtils::FindSiblingViewFor(zParentView, aFrame);
+        viewManager->InsertZPlaceholder(zParentView, view, insertBefore, insertBefore != nsnull);
       }
     }
   }

@@ -8053,6 +8053,74 @@ GetAdjustedParentFrame(nsIPresContext* aPresContext,
   return (newParent) ? newParent : aParentFrame;
 }
 
+static nsresult InsertOutOfFlow(nsIPresContext* aPresContext,
+                                const nsAbsoluteItems& aFrameItems,
+                                nsIAtom* aChildListName) {
+  if (!aFrameItems.childList) {
+    return NS_OK;
+  }
+
+  nsIFrame* firstChild;
+  aFrameItems.containingBlock->FirstChild(aPresContext, aChildListName, &firstChild);
+
+  // Note that whether the frame construction context is doing an append or
+  // not is not helpful here, since it could be appending to some frame in
+  // the middle of the document, which means we're not necessarily appending
+  // to the children of the containing block.
+  //
+  // We need to make sure the 'append to the end of document' case is fast.
+  // So first test the last child of the containing block
+  nsIFrame* lastChild = nsLayoutUtils::GetLastSibling(firstChild);
+  if (lastChild) {
+    if (nsLayoutUtils::CompareTreePosition(lastChild->GetContent(),
+                                           aFrameItems.childList->GetContent(),
+                                           aFrameItems.containingBlock->GetContent()) < 0) {
+      // lastChild comes before the new children, so insert after lastChild
+      return aFrameItems.containingBlock->
+        AppendFrames(aPresContext, *aPresContext->GetPresShell(),
+                     aChildListName, aFrameItems.childList);
+    }
+  }
+
+  nsIFrame* insertionPoint = nsnull;
+  // try the other children
+  for (nsIFrame* f = firstChild; f != lastChild; f = f->GetNextSibling()) {
+    if (nsLayoutUtils::CompareTreePosition(f->GetContent(),
+                                           aFrameItems.childList->GetContent(),
+                                           aFrameItems.containingBlock->GetContent()) > 0) {
+      // f comes after the new children, so stop here and insert after
+      // the previous frame
+      break;
+    }
+    insertionPoint = f;
+  }
+
+  return aFrameItems.containingBlock->
+    InsertFrames(aPresContext, *aPresContext->GetPresShell(),
+                 aChildListName, insertionPoint, aFrameItems.childList);
+}
+
+static nsresult
+InsertOutOfFlowFrames(const nsFrameConstructorState& aState,
+                      nsIPresContext* aPresContext) {
+  // If there are new absolutely positioned child frames, then notify
+  // the parent
+  nsresult rv = InsertOutOfFlow(aPresContext, aState.mAbsoluteItems,
+                                nsLayoutAtoms::absoluteList);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // If there are new fixed positioned child frames, then notify
+  // the parent
+  rv = InsertOutOfFlow(aPresContext, aState.mFixedItems,
+                       nsLayoutAtoms::fixedList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If there are new floating child frames, then notify
+  // the parent
+  return InsertOutOfFlow(aPresContext, aState.mFloatedItems,
+                         nsLayoutAtoms::floatList);
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
@@ -8390,35 +8458,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                    parentFrame, firstAppendedFrame);
     }
 
-    // If there are new absolutely positioned child frames, then notify
-    // the parent
-    // XXX We can't just assume these frames are being appended, we need to
-    // determine where in the list they should be inserted...
-    if (state.mAbsoluteItems.childList) {
-      state.mAbsoluteItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                         nsLayoutAtoms::absoluteList,
-                                                         state.mAbsoluteItems.childList);
-    }
-
-    // If there are new fixed positioned child frames, then notify
-    // the parent
-    // XXX We can't just assume these frames are being appended, we need to
-    // determine where in the list they should be inserted...
-    if (state.mFixedItems.childList) {
-      state.mFixedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                      nsLayoutAtoms::fixedList,
-                                                      state.mFixedItems.childList);
-    }
-
-    // If there are new floating child frames, then notify
-    // the parent
-    // XXX We can't just assume these frames are being appended, we need to
-    // determine where in the list they should be inserted...
-    if (state.mFloatedItems.childList) {
-      state.mFloatedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                        nsLayoutAtoms::floatList,
-                                                        state.mFloatedItems.childList);
-    }
+    InsertOutOfFlowFrames(state, aPresContext);
 
     // Recover first-letter frames
     if (haveFirstLetterStyle) {
@@ -9077,36 +9117,8 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
                                           nsnull, prevSibling, newFrame);
       }
     }
-        
-    // If there are new absolutely positioned child frames, then notify
-    // the parent
-    // XXX We can't just assume these frames are being appended, we need to
-    // determine where in the list they should be inserted...
-    if (state.mAbsoluteItems.childList) {
-      state.mAbsoluteItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                         nsLayoutAtoms::absoluteList,
-                                                         state.mAbsoluteItems.childList);
-    }
-        
-    // If there are new fixed positioned child frames, then notify
-    // the parent
-    // XXX We can't just assume these frames are being appended, we need to
-    // determine where in the list they should be inserted...
-    if (state.mFixedItems.childList) {
-      rv = state.mFixedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                           nsLayoutAtoms::fixedList,
-                                                           state.mFixedItems.childList);
-    }
-        
-    // If there are new floating child frames, then notify
-    // the parent
-    // XXX We can't just assume these frames are being appended, we need to
-    // determine where in the list they should be inserted...
-    if (state.mFloatedItems.childList) {
-      state.mFloatedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                        nsLayoutAtoms::floatList,
-                                                        state.mFloatedItems.childList);
-    }
+
+    InsertOutOfFlowFrames(state, aPresContext);
 
     if (haveFirstLetterStyle) {
       // Recover the letter frames for the containing block when
@@ -9154,23 +9166,6 @@ nsCSSFrameConstructor::ContentReplaced(nsIPresContext* aPresContext,
   }
 
   return res;
-}
-
-// Returns PR_TRUE if aAncestorFrame is an ancestor frame of aFrame
-static PRBool
-IsAncestorFrame(nsIFrame* aFrame, nsIFrame* aAncestorFrame)
-{
-  nsIFrame* parentFrame = aFrame->GetParent();
-
-  while (parentFrame) {
-    if (parentFrame == aAncestorFrame) {
-      return PR_TRUE;
-    }
-
-    parentFrame = parentFrame->GetParent();
-  }
-
-  return PR_FALSE;
 }
 
 /**
@@ -9244,7 +9239,8 @@ DoDeletingFrameSubtree(nsIPresContext*  aPresContext,
         // If aRemovedFrame is an ancestor of the out-of-flow frame, then 
         // the out-of-flow frame will be destroyed by aRemovedFrame.
         const nsStyleDisplay* display = outOfFlowFrame->GetStyleDisplay();
-        if (display->mDisplay == NS_STYLE_DISPLAY_POPUP || !IsAncestorFrame(outOfFlowFrame, aRemovedFrame)) {
+        if (display->mDisplay == NS_STYLE_DISPLAY_POPUP ||
+            !nsLayoutUtils::IsProperAncestorFrame(aRemovedFrame, outOfFlowFrame)) {
           if (aDestroyQueue.IndexOf(outOfFlowFrame) < 0)
             aDestroyQueue.AppendElement(outOfFlowFrame);
         }
@@ -10720,37 +10716,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       // ConstructFrameByDisplayType() has done this
       state.mFrameManager->SetPrimaryFrameFor(content, newFrame);
       
-      // If there are new absolutely positioned child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mAbsoluteItems.childList) {
-        rv = state.mAbsoluteItems.containingBlock->AppendFrames(aPresContext, *presShell,
-                                                     nsLayoutAtoms::absoluteList,
-                                                     state.mAbsoluteItems.childList);
-      }
-  
-      // If there are new fixed positioned child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mFixedItems.childList) {
-        rv = state.mFixedItems.containingBlock->AppendFrames(aPresContext, *presShell,
-                                                             nsLayoutAtoms::fixedList,
-                                                             state.mFixedItems.childList);
-      }
-  
-      // If there are new floating child frames, then notify the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mFloatedItems.childList) {
-        rv = state.mFloatedItems.containingBlock->AppendFrames(aPresContext,
-                                                    *presShell,
-                                                    nsLayoutAtoms::floatList,
-                                                    state.mFloatedItems.childList);
-      }
+      InsertOutOfFlowFrames(state, aPresContext);
     }
-
   } else if (nsHTMLAtoms::input == tag.get()) {
     // XXX image INPUT elements are also image frames, but don't throw away the
     // image frame, because the frame class has extra logic that is specific to
@@ -12785,35 +12752,8 @@ nsCSSFrameConstructor::CreateListBoxContent(nsIPresContext* aPresContext,
         rv = ((nsListBoxBodyFrame*)aParentFrame)->ListBoxAppendFrames(newFrame);
       else
         rv = ((nsListBoxBodyFrame*)aParentFrame)->ListBoxInsertFrames(aPrevFrame, newFrame);
-      // If there are new absolutely positioned child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mAbsoluteItems.childList) {
-        rv = state.mAbsoluteItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                         nsLayoutAtoms::absoluteList,
-                                                         state.mAbsoluteItems.childList);
-      }
-      
-      // If there are new fixed positioned child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mFixedItems.childList) {
-        rv = state.mFixedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                             nsLayoutAtoms::fixedList,
-                                                             state.mFixedItems.childList);
-      }
-      
-      // If there are new floating child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mFloatedItems.childList) {
-        rv = state.mFloatedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                    nsLayoutAtoms::floatList,
-                                                    state.mFloatedItems.childList);
-      }
+
+      InsertOutOfFlowFrames(state, aPresContext);
     }
   }
 
