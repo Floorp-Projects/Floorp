@@ -146,7 +146,6 @@ ipc/modules/liblockmodule.dylib
 ipc/modules/libtransmngr.dylib
 mozipcd
 components/libipcdc.dylib
-components/libtransmngr_client.dylib
 
 ; wallet
 ; Optional - only if you need password persistence

@@ -48,7 +48,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
       
 ifdef MOZ_PROFILESHARING
-REQUIRES	+= transmngr \
+REQUIRES	+= ipcd \
 		  profilesharingsetup \
 		  $(NULL)
 endif
