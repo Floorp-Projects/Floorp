@@ -450,19 +450,28 @@ function MsgDeleteFolder()
 
 function MsgNewMessage(event)
 {
-  ComposeMessage(msgComposeType.New, msgComposeFormat.Default);
+  if (event.shiftKey)
+    ComposeMessage(msgComposeType.New, msgComposeFormat.OppositeOfDefault);
+  else
+    ComposeMessage(msgComposeType.New, msgComposeFormat.Default);
 } 
 
 function MsgReplyMessage(event)
 {
   dump("\nMsgReplyMessage from XUL\n");
-  ComposeMessage(msgComposeType.Reply, msgComposeFormat.Default);
+  if (event.shiftKey)
+    ComposeMessage(msgComposeType.Reply, msgComposeFormat.OppositeOfDefault);
+  else
+    ComposeMessage(msgComposeType.Reply, msgComposeFormat.Default);
 }
 
 function MsgReplyToAllMessage(event) 
 {
   dump("\nMsgReplyToAllMessage from XUL\n");
-  ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.Default);
+  if (event.shiftKey)
+    ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.OppositeOfDefault);
+  else
+    ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.Default);
 }
 
 function MsgForwardMessage(event)
@@ -482,13 +491,21 @@ function MsgForwardMessage(event)
 function MsgForwardAsAttachment(event)
 {
   dump("\nMsgForwardAsAttachment from XUL\n");
-  ComposeMessage(msgComposeType.ForwardAsAttachment, msgComposeFormat.Default);
+  if (event.shiftKey)
+    ComposeMessage(msgComposeType.ForwardAsAttachment,
+                   msgComposeFormat.OppositeOfDefault);
+  else
+    ComposeMessage(msgComposeType.ForwardAsAttachment, msgComposeFormat.Default);
 }
 
 function MsgForwardAsInline(event)
 {
   dump("\nMsgForwardAsInline from XUL\n");
-  ComposeMessage(msgComposeType.ForwardInline, msgComposeFormat.Default);
+  if (event.shiftKey)
+    ComposeMessage(msgComposeType.ForwardInline,
+                   msgComposeFormat.OppositeOfDefault);
+  else
+    ComposeMessage(msgComposeType.ForwardInline, msgComposeFormat.Default);
 }
 
 function MsgCopyMessage(destFolder)

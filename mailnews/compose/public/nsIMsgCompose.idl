@@ -55,6 +55,7 @@ interface nsIMsgCompFormat {
     const long Default   = 0;
     const long HTML      = 1;
     const long PlainText = 2;
+    const long OppositeOfDefault = 3;
 };
 
 typedef long MSG_ComposeSaveType;

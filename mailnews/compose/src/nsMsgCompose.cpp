@@ -400,6 +400,12 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 	{
 		case nsIMsgCompFormat::HTML		: m_composeHTML = PR_TRUE;					break;
 		case nsIMsgCompFormat::PlainText	: m_composeHTML = PR_FALSE;					break;
+    case nsIMsgCompFormat::OppositeOfDefault:
+      /* ask the identity which compose to use */
+      if (m_identity) m_identity->GetComposeHtml(&m_composeHTML);
+      /* then use the opposite */
+      m_composeHTML = !m_composeHTML;
+      break;
     default							:
       /* ask the identity which compose to use */
       if (m_identity) m_identity->GetComposeHtml(&m_composeHTML);
