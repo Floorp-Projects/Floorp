@@ -38,6 +38,11 @@ extern "C" {
 #include "nsIProtocolConnection.h"
 #include "nsINetContainerApplication.h"
 
+#ifdef XP_PC
+#include <windows.h>
+static HINSTANCE g_hInst = NULL;
+#endif
+
 
 // Declare the nsFile struct here so it's state is initialized before
 // we initialize netlib.
@@ -65,6 +70,7 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
 nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct* URL_s, nsIURL* aURL);
 #endif /* XP_WIN && !NETLIB_THREAD */
 
+char *mangleResourceIntoFileURL(const char* aResourceFileName) ;
 extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener);
 
 extern "C" {
@@ -233,6 +239,18 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     pConn->pContainer = aUrl->GetContainer();
     NS_VERIFY_THREADSAFE_INTERFACE(pConn->pContainer);
 
+    
+    /* 
+     * XXX: Rewrite the resource: URL into a file: URL
+     */
+    if (PL_strcmp(aUrl->GetProtocol(), "resource") == 0) {
+      char* fileName;
+
+      fileName = mangleResourceIntoFileURL(aUrl->GetFile());
+      aUrl->Set(fileName);
+      PR_Free(fileName);
+    } 
+
     /* Create the URLStruct... */
 
     URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
@@ -344,6 +362,17 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
          */
         pConn->pContainer = aUrl->GetContainer();
         NS_VERIFY_THREADSAFE_INTERFACE(pConn->pContainer);
+
+        /* 
+         * XXX: Rewrite the resource: URL into a file: URL
+         */
+        if (PL_strcmp(aUrl->GetProtocol(), "resource") == 0) {
+            char* fileName;
+
+            fileName = mangleResourceIntoFileURL(aUrl->GetFile());
+            aUrl->Set(fileName);
+            PR_Free(fileName);
+        } 
 
         /* Create the URLStruct... */
 
@@ -768,3 +797,125 @@ extern "C" void net_ReleaseContext(MWContext *context)
         }
     }
 }
+
+
+/*
+ * Rewrite "resource://" URLs into file: URLs with the path of the 
+ * executable prepended to the file path...
+ */
+char *mangleResourceIntoFileURL(const char* aResourceFileName) 
+{
+  // XXX For now, resources are not in jar files 
+  // Find base path name to the resource file
+  char* resourceBase;
+  char* cp;
+
+#ifdef XP_PC
+  // XXX For now, all resources are relative to the .exe file
+  resourceBase = (char *)PR_Malloc(_MAX_PATH);;
+  DWORD mfnLen = GetModuleFileName(g_hInst, resourceBase, _MAX_PATH);
+  // Truncate the executable name from the rest of the path...
+  cp = strrchr(resourceBase, '\\');
+  if (nsnull != cp) {
+    *cp = '\0';
+  }
+  // Change the first ':' into a '|'
+  cp = PL_strchr(resourceBase, ':');
+  if (nsnull != cp) {
+      *cp = '|';
+  }
+#endif /* XP_PC */
+
+#ifdef XP_UNIX
+  // XXX For now, all resources are relative to the current working directory
+
+    FILE *pp;
+
+#define MAXPATHLEN 2000
+
+    resourceBase = (char *)PR_Malloc(MAXPATHLEN);;
+
+    if (!(pp = popen("pwd", "r"))) {
+      printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 1\n");
+      return(nsnull);
+    }
+    else {
+      if (fgets(resourceBase, MAXPATHLEN, pp)) {
+        printf("[%s] %d\n", resourceBase, PL_strlen(resourceBase));
+        resourceBase[PL_strlen(resourceBase)-1] = 0;
+      }
+      else {
+       printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 2\n");
+       return(nsnull);
+      }
+   }
+
+   printf("RESOURCE name %s\n", resourceBase);
+#endif /* XP_UNIX */
+
+#ifdef XP_MAC
+	resourceBase = XP_STRDUP("usr/local/netscape/bin");
+#endif /* XP_MAC */
+
+  // Join base path to resource name
+  if (aResourceFileName[0] == '/') {
+    aResourceFileName++;
+  }
+  PRInt32 baseLen = PL_strlen(resourceBase);
+  PRInt32 resLen = PL_strlen(aResourceFileName);
+  PRInt32 totalLen = 8 + baseLen + 1 + resLen + 1;
+  char* fileName = (char *)PR_Malloc(totalLen);
+  PR_snprintf(fileName, totalLen, "file:///%s/%s", resourceBase, aResourceFileName);
+
+#ifdef XP_PC
+  // Change any backslashes into foreward slashes...
+  while ((cp = PL_strchr(fileName, '\\')) != 0) {
+    *cp = '/';
+    cp++;
+  }
+#endif /* XP_PC */
+
+  PR_Free(resourceBase);
+
+  return fileName;
+}
+
+
+
+
+#ifdef XP_PC
+
+BOOL WINAPI DllMain(HINSTANCE hDllInst,
+                    DWORD fdwReason,
+                    LPVOID lpvReserved)
+{
+    BOOL bResult = TRUE;
+
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+          {
+            // save our instance
+            g_hInst = hDllInst;
+          }
+          break;
+
+        case DLL_PROCESS_DETACH:
+            break;
+
+        case DLL_THREAD_ATTACH:
+            break;
+
+        case DLL_THREAD_DETACH:
+            break;
+
+        default:
+            break;
+  }
+
+  return (bResult);
+}
+
+
+
+#endif /* XP_PC */
