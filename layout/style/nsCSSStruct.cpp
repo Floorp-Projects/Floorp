@@ -3640,6 +3640,7 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
           case eCSSProperty_page_break_after:   theDisplay->mBreakAfter.Reset();  break;
           case eCSSProperty_page_break_before:  theDisplay->mBreakBefore.Reset(); break;
           case eCSSProperty_page_break_inside:                                    break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
