@@ -2825,7 +2825,10 @@ shutdown:
     if (pubkey) {
 	SECKEY_DestroyPublicKey(pubkey);
     }
-    NSS_Shutdown();
+
+    if (NSS_Shutdown() != SECSuccess) {
+        exit(1);
+    }
 
     if (rv == SECSuccess) {
 	return 0;
