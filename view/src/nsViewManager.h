@@ -64,7 +64,7 @@ public:
   NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
 
-  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+  NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus);
 
   NS_IMETHOD  GrabMouseEvents(nsIView *aView, PRBool &aResult);
   NS_IMETHOD  GrabKeyEvents(nsIView *aView, PRBool &aresult);

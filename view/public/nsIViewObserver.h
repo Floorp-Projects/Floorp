@@ -56,7 +56,7 @@ public:
    */
   NS_IMETHOD HandleEvent(nsIView *       aView,
                          nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus) = 0;
+                         nsEventStatus*  aEventStatus) = 0;
 
   /* called when the view has been repositioned due to scrolling
    * @return error status

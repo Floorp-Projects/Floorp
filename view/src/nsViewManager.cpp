@@ -1552,9 +1552,10 @@ void nsViewManager::UpdateViews(nsIView *aView, PRUint32 aUpdateFlags)
 	}
 }
 
-NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
+NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus)
 {
-  aStatus = nsEventStatus_eIgnore;
+  NS_ENSURE_ARG_POINTER(aStatus);
+  *aStatus = nsEventStatus_eIgnore;
 
   switch(aEvent->message)
   {
@@ -1581,7 +1582,7 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 //printf("resize: (pix) %d, %d\n", width, height);
           SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
                               NSIntPixelsToTwips(height, p2t));
-          aStatus = nsEventStatus_eConsumeNoDefault;
+          *aStatus = nsEventStatus_eConsumeNoDefault;
         }
       }
 
@@ -1635,14 +1636,14 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
           }
         }
 
-        aStatus = nsEventStatus_eConsumeNoDefault;
+        *aStatus = nsEventStatus_eConsumeNoDefault;
       }
 
       break;
     }
 
     case NS_DESTROY:
-      aStatus = nsEventStatus_eConsumeNoDefault;
+      *aStatus = nsEventStatus_eConsumeNoDefault;
       break;
 
     default:
