@@ -522,20 +522,21 @@ void JavaDOMGlobals::TakeOutGarbage()
 
   PRCList* chain = NULL;
   PRCList* elem = NULL;
-  for (chain = garbage.next;
+  for (chain = PR_LIST_HEAD(&garbage);
        chain != &garbage; 
        chain = PR_NEXT_LINK(chain)) {
-    elem = chain;
 
+    delete elem;
+    elem = chain;
     domo = ((jniDOMGarbage*) elem)->domObject;
     PR_LOG(log, PR_LOG_DEBUG, 
 	   ("JavaDOMGlobals::TakeOutGarbage: Releasing %x\n", domo));
     domo->Release();
     domo = NULL;
 
-    delete elem;
     count++;
   }
+  delete elem;
   PR_INIT_CLIST(&garbage);
 
   if (count)
