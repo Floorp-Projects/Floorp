@@ -38,10 +38,6 @@ interface nsIDOMNSHTMLDocument : nsISupports
 
   readonly attribute nsIDOMHTMLCollection embeds;
 
-  // location is settable too but when set it's always set to a string
-  // so we can't express that in XPIDL.
-  readonly attribute nsIDOMLocation       location;
-
   DOMString                 getSelection();
   nsISupports               namedItem(in DOMString name);
 
