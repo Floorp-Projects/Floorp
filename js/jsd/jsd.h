@@ -41,7 +41,7 @@
 */
 #ifdef MOZILLA_CLIENT
 #define JSD_THREADSAFE 1
-#define JSD_HAS_DANGEROUS_THREAD 1
+//#define JSD_HAS_DANGEROUS_THREAD 1
 #define JSD_USE_NSPR_LOCKS 1
 #endif /* MOZILLA_CLIENT */
 
@@ -114,6 +114,7 @@ struct JSDContext
 {
     JSCList                 links;      /* we are part of a JSCList */
     JSBool                  inited;
+    void*                   data;
     JSD_ScriptHookProc      scriptHook;
     void*                   scriptHookData;
     JSD_ExecutionHookProc   interruptHook;
@@ -162,6 +163,7 @@ struct JSDScript
     uintN       lineExtent; /* we cache this */
     JSCList     hooks;      /* JSCList of JSDExecHooks for this script */
     char*       url;
+    void*       data;
 #ifdef LIVEWIRE
     LWDBGApp*    app;
     LWDBGScript* lwscript;
@@ -299,6 +301,12 @@ jsd_SetUserCallbacks(JSRuntime* jsrt, JSD_UserCallbacks* callbacks, void* user);
 extern JSDContext*
 jsd_JSDContextForJSContext(JSContext* context);
 
+extern void*
+jsd_SetContextPrivate(JSDContext* jsdc, void *data);
+
+extern void*
+jsd_GetContextPrivate(JSDContext* jsdc);
+
 extern JSBool
 jsd_SetErrorReporter(JSDContext*       jsdc,
                      JSD_ErrorReporter reporter,
@@ -325,6 +333,12 @@ jsd_FindJSDScript(JSDContext*  jsdc,
 
 extern JSDScript*
 jsd_IterateScripts(JSDContext* jsdc, JSDScript **iterp);
+
+extern void *
+jsd_SetScriptPrivate (JSDScript *jsdscript, void *data);
+
+extern void *
+jsd_GetScriptPrivate (JSDScript *jsdscript);
 
 extern JSBool
 jsd_IsActiveScript(JSDContext* jsdc, JSDScript *jsdscript);
@@ -565,6 +579,14 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx);
 
 extern void
 jsd_DestroyThreadState(JSDContext* jsdc, JSDThreadState* jsdthreadstate);
+
+extern JSBool
+jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
+                                 JSDThreadState* jsdthreadstate,
+                                 JSDStackFrameInfo* jsdframe,
+                                 const jschar *bytes, uintN length,
+                                 const char *filename, uintN lineno,
+                                 jsval *rval);
 
 extern JSBool
 jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
