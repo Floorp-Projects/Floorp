@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://communicator/content/bookmarks/oTest.css"?>
+
+<window id="bookmarksOutlinerTest"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        orient="vertical"
+        onload="Startup();">
+
+  <script>
+  <![CDATA[
+    var bookmarksBuilderObserver = {
+      onToggleOpenState: function (aIndex) {
+        dump("*** onToggleOpenState(" + aIndex + ");\n");
+      },
+
+      onCycleHeader: function (aColID, aDOMElement) {
+        dump("*** onCycleHeader(" + aColID + ", " + aDOMElement + ");\n");
+      },
+
+      onCycleCell: function (aIndex, aColID) {
+        dump("*** onCycleCell(" + aIndex + ", " + aColID + ");\n");
+      },
+
+      onSelectionChanged: function () {
+        dump("*** onSelectionChanged\n");
+      },
+
+      isEditable: function (aIndex, aColID) {
+        dump("*** isEditable(" + aIndex + ", " + aColID + ");\n");
+        return false;
+      },
+
+      onSetCellText: function (aIndex, aColID, aValue) {
+        dump("*** onSetCellText(" + aIndex + ", " + aColID + ", " + aValue + ");\n");
+      },
+
+      onPerformAction: function (aAction) {
+        dump("*** onPerformAction(" + aAction + ");\n");
+      },
+
+      onPerformActionOnRow: function (aAction, aIndex) {
+        dump("*** onPerformActionOnRow(" + aAction + ", " + aIndex + ");\n");
+      },
+
+      onPerformActionOnCell: function (aAction, aIndex, aColID) {
+        dump("*** onPerformActionOnCell(" + aAction + ", " + aIndex + ", " + aColID + ");\n");
+      }
+    };
+
+    function Startup()
+    {
+      var outliner = document.getElementById("tree");
+      var builder = outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+      builder.addObserver(bookmarksBuilderObserver);
+    }
+  ]]>
+  </script>
+
+  <toolbox>
+    <toolbar>
+      <button class="button-toolbar-2" label="Foopy Noopy" oncommand="alert('hi');"/>
+    </toolbar>
+  </toolbox>
+
+  <outliner flex="1" flags="dont-test-empty">
+    <outlinercol id="NameColumn"
+                 class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+                 flex="1"
+                 sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                 sortActive="true"
+                 label="Name"
+                 persist="width hidden sortActive sortDirection"
+                 primary="true" />
+
+    <splitter class="tree-splitter"/>
+
+    <outlinercol id="URLColumn"
+                 class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+                 flex="1"
+                 sort="rdf:http://home.netscape.com/NC-rdf#URL"
+                 label="Location"
+                 persist="width hidden sortActive sortDirection" />
+
+    <outlinerbody id="tree" datasources="rdf:bookmarks rdf:internetsearch rdf:files" flex="1"
+                  onclick="OnClick(event);" ref="NC:BookmarksRoot">
+      <template>
+        <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading">
+          <outlinercell ref="NameColumn"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name" />
+
+          <outlinercell ref="URLColumn"
+                        label="rdf:http://home.netscape.com/NC-rdf#URL" />
+        </outlinerrow>
+      </template>
+    </outlinerbody>
+  </outliner>
+
+</window>
