@@ -153,7 +153,10 @@ sub multipart_start {
     my(@header);
     my($self,@p) = @_;
     my($type,@other) = rearrange([['TYPE','CONTENT_TYPE','CONTENT-TYPE']],@p);
+    my $charset = $self->charset;
     $type = $type || 'text/html';
+    $type .= "; charset=$charset" if $type ne '' and $type =~ m!^text/! and $type !~ /\bcharset\b/ and $charset ne '';
+
     push(@header,"Content-Type: $type");
 
     # Add the cookies in if we have any
