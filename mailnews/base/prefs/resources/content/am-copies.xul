@@ -58,8 +58,8 @@
     <html:div flex="34%">&templateMailFolder.label;</html:div>
     <!-- name="identity.stationeryFolder " -->
     <box align="horizontal">
-	<menu id="msgStationeryFolderPicker"/>
-	<spring flex="100%"/>
+      <menu id="msgStationeryFolderPicker"/>
+      <spring flex="100%"/>
     </box>
   </box>
 </box>

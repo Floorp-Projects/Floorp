@@ -49,9 +49,13 @@ EXPORT_RESOURCE_SAMPLES = \
 		AccountWizard.js \
 		aw-accounttype.xul \
 		aw-identity.xul \
+		aw-identity.js \
 		aw-server.xul \
+		aw-server.js \
 		aw-login.xul \
+		aw-login.js \
 		aw-accname.xul \
+		aw-accname.js \
 		aw-done.xul \
 		aw-done.js	\
 		$(NULL)

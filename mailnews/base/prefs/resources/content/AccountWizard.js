@@ -49,11 +49,11 @@ function onLoad() {
 
     init();
     try {
-	wizardContents["smtp.hostname"] = smtpService.defaultServer.hostname;
-	dump("initialized with " + wizardContents["smtp.hostname"] + "\n");
+        wizardContents["smtp.hostname"] = smtpService.defaultServer.hostname;
+        dump("initialized with " + wizardContents["smtp.hostname"] + "\n");
     }
     catch (ex) {
-	//dump("failed to get the smtp hostname\n");
+        dump("failed to get the smtp hostname:" + ex + "\n");
     }
 }
 
@@ -73,12 +73,8 @@ function onNext(event) {
     }
     
     // only run validation routine if it's there
-    var validate = wizardMap[currentPageTag].validate;
-    if (validate)
-        if (!validate(contentWindow, wizardContents)) return;
-
-    if (typeof(contentWindow.ValidateContents) == "function")
-        if (!contentWindow.ValidateContents()) return;
+    if (contentWindow.validate)
+        if (!contentWindow.validate(wizardContents)) return;
 
     saveContents(contentWindow, wizardContents);
     
@@ -167,7 +163,6 @@ function saveContents(win, hash) {
 
 function restoreValue(hash, element) {
     if (!hash[element.name]) return;
-    dump("Restoring " + element.name + " from " + hash[element.name] + "\n");
     if (element.type=="radio") {
         if (hash[element.name] == element.value)
             element.checked=true;
@@ -194,25 +189,6 @@ function saveValue(hash, element) {
         hash[element.name] = element.value;
     }
 
-}
-
-function validateIdentity(win, hash) {
-    var email = win.document.getElementById("email").value;
-    
-    if (email.indexOf('@') == -1) {
-        window.alert("Invalid e-mail address!");
-        dump("Invalid e-mail address!\n");
-        return false;
-    }
-    return true;
-}
-
-function validateServer(win, hash) {
-    return true;
-}
-
-function validateSmtp(win, hash) {
-    return true;
 }
 
 function onFinish() {

@@ -44,9 +44,13 @@ install::
 	$(MAKE_INSTALL) AccountWizard.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-accounttype.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-identity.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-identity.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-server.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-server.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-login.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-login.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-accname.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-accname.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-done.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-done.js			$(DIST)\bin\chrome\messenger\content\default
 

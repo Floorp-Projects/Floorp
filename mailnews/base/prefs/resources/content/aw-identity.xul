@@ -28,6 +28,7 @@ Rights Reserved.
     align="vertical"
     class="dialog"
     onload="parent.wizardPageLoaded('identity');">
+  <html:script src="aw-identity.js"/>
 
   <box class="title" align="horizontal">
     <html:div class="title">&identityTitle.label;</html:div>

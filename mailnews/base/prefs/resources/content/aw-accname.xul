@@ -28,7 +28,8 @@ Rights Reserved.
     class="dialog"
     align="vertical"
     onload="parent.wizardPageLoaded('accname');">
-
+  <html:script src="aw-accname.js"/>
+  <html:input type="hidden" name="identity.email" id="identity.email"/>
   <box class="title" align="horizontal">
     <html:div class="title">&accnameTitle.label;</html:div>
     <spring flex="100%"/>

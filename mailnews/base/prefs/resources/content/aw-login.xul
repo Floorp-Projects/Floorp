@@ -28,6 +28,8 @@ Rights Reserved.
     align="vertical"
     class="dialog"
     onload="parent.wizardPageLoaded('login');">
+  <html:script src="aw-login.js"/>
+  <html:input type="hidden" name="identity.email" id="identity.email"/>
 
   <box class="title" align="horizontal">
     <html:div class="title">&loginTitle.label;</html:div>
@@ -49,6 +51,7 @@ Rights Reserved.
     <html:div>&savePasswordLabel.label;</html:div>
     <html:div>
       <html:input type="checkbox" name="server.rememberPassword"
+                  onclick="onSavePassword(event.target);"
                   id="server.rememberPassword"/>
       &savePasswordCheckbox.label;
     </html:div>
@@ -56,7 +59,8 @@ Rights Reserved.
       <html:div>&passwordDesc.label;</html:div>
       <html:div>
         &passwordLabel.label;
-        <html:input type="password" name="server.password" id="server.password"/>
+        <html:input type="password" disabled="true"
+                    name="server.password" id="server.password"/>
       </html:div>
     </html:div>
   </box>

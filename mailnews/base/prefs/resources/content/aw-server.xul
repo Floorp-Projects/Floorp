@@ -28,6 +28,7 @@ Rights Reserved.
     align="vertical"
     class="dialog"
     onload="parent.wizardPageLoaded('server');">
+  <html:script src="aw-server.js"/>
 
   <box class="title" align="horizontal">
     <html:div class="title">&serverTitle.label;</html:div>
