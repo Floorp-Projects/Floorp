@@ -39,81 +39,91 @@ package org.mozilla.javascript.optimizer;
 import org.mozilla.javascript.*;
 import java.util.*;
 
-final class OptFunctionNode extends FunctionNode {
-
-    OptFunctionNode(String name) {
-        super(name);
+final class OptFunctionNode
+{
+    OptFunctionNode(FunctionNode fnode)
+    {
+        this.fnode = fnode;
+        int N = fnode.getParamAndVarCount();
+        int parameterCount = fnode.getParamCount();
+        optVars = new OptLocalVariable[N];
+        for (int i = 0; i != N; ++i) {
+            String name = fnode.getParamOrVarName(i);
+            optVars[i] = new OptLocalVariable(name, i < parameterCount);
+        }
+        fnode.setCompilerData(this);
     }
 
     static OptFunctionNode get(ScriptOrFnNode scriptOrFn, int i)
     {
-        return (OptFunctionNode)scriptOrFn.getFunctionNode(i);
+        FunctionNode fnode = scriptOrFn.getFunctionNode(i);
+        return (OptFunctionNode)fnode.getCompilerData();
     }
 
     static OptFunctionNode get(ScriptOrFnNode scriptOrFn)
     {
-        return (OptFunctionNode)scriptOrFn;
+        return (OptFunctionNode)scriptOrFn.getCompilerData();
     }
 
-    void init()
+    boolean isTargetOfDirectCall()
     {
-        int N = getParamAndVarCount();
-        int parameterCount = getParamCount();
-        optVars = new OptLocalVariable[N];
-        for (int i = 0; i != N; ++i) {
-            String name = getParamOrVarName(i);
-            optVars[i] = new OptLocalVariable(name, i < parameterCount);
-        }
-    }
-
-    boolean isTargetOfDirectCall() {
         return directTargetIndex >= 0;
     }
 
-    int getDirectTargetIndex() {
+    int getDirectTargetIndex()
+    {
         return directTargetIndex;
     }
 
-    void setDirectTargetIndex(int directTargetIndex) {
+    void setDirectTargetIndex(int directTargetIndex)
+    {
         // One time action
         if (directTargetIndex < 0 || this.directTargetIndex >= 0)
             Kit.codeBug();
         this.directTargetIndex = directTargetIndex;
     }
 
-    void setParameterNumberContext(boolean b) {
+    void setParameterNumberContext(boolean b)
+    {
         itsParameterNumberContext = b;
     }
 
-    boolean getParameterNumberContext() {
+    boolean getParameterNumberContext()
+    {
         return itsParameterNumberContext;
     }
 
-    int getVarCount() {
+    int getVarCount()
+    {
         return optVars.length;
     }
 
-    OptLocalVariable getVar(int index) {
+    OptLocalVariable getVar(int index)
+    {
         return optVars[index];
     }
 
-    OptLocalVariable getVar(String name) {
-        int index = getParamOrVarIndex(name);
+    OptLocalVariable getVar(String name)
+    {
+        int index = fnode.getParamOrVarIndex(name);
         if (index < 0) { return null; }
         return optVars[index];
     }
 
-    void establishVarsIndices() {
+    void establishVarsIndices()
+    {
         int N = optVars.length;
         for (int i = 0; i != N; i++) {
             optVars[i].setIndex(i);
         }
     }
 
-    OptLocalVariable[] getVarsArray() {
+    OptLocalVariable[] getVarsArray()
+    {
         return optVars;
     }
 
+    FunctionNode fnode;
     private OptLocalVariable[] optVars;
     private int directTargetIndex = -1;
     private boolean itsParameterNumberContext;

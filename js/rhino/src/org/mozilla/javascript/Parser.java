@@ -53,15 +53,10 @@ import java.io.IOException;
 
 class Parser {
 
-    public Parser() { }
-
-    public void setLanguageVersion(int languageVersion) {
-        this.languageVersion = languageVersion;
-    }
-
-    public void setAllowMemberExprAsFunctionName(boolean flag) {
-        this.allowMemberExprAsFunctionName = flag;
-    }
+    public Parser(CompilerEnvirons compilerEnv) 
+	{ 
+		this.compilerEnv = compilerEnv;
+	}
 
     private void mustMatchToken(TokenStream ts, int toMatch, String messageId)
         throws IOException, ParserException
@@ -95,11 +90,10 @@ class Parser {
      * parse failure will result in a call to the current Context's
      * ErrorReporter.)
      */
-    public ScriptOrFnNode parse(TokenStream ts, IRFactory nf,
-                                Decompiler decompiler)
+    public ScriptOrFnNode parse(TokenStream ts, Decompiler decompiler)
         throws IOException
     {
-        this.nf = nf;
+        this.nf = new IRFactory(ts);
         currentScriptOrFn = nf.createScript();
         this.decompiler = decompiler;
         int sourceStartOffset = decompiler.getCurrentOffset();
@@ -211,7 +205,7 @@ class Parser {
         if (ts.matchToken(Token.NAME)) {
             name = ts.getString();
             if (!ts.matchToken(Token.LP)) {
-                if (allowMemberExprAsFunctionName) {
+                if (compilerEnv.allowMemberExprAsFunctionName) {
                     // Extension to ECMA: if 'function <name>' does not follow
                     // by '(', assume <name> starts memberExpr
                     decompiler.addName(name);
@@ -226,7 +220,7 @@ class Parser {
             name = "";
         } else {
             name = "";
-            if (allowMemberExprAsFunctionName) {
+            if (compilerEnv.allowMemberExprAsFunctionName) {
                 // Note that memberExpr can not start with '(' like
                 // in function (1+2).toString(), because 'function (' already
                 // processed as anonymous function
@@ -385,7 +379,7 @@ class Parser {
             return;
 
         case Token.FUNCTION:
-            if (languageVersion < Context.VERSION_1_2) {
+            if (compilerEnv.languageVersion < Context.VERSION_1_2) {
               /*
                * Checking against version < 1.2 and version >= 1.0
                * in the above line breaks old javascript, so we keep it
@@ -400,7 +394,7 @@ class Parser {
     private void checkWellTerminatedFunction(TokenStream ts)
         throws IOException, ParserException
     {
-        if (languageVersion < Context.VERSION_1_2) {
+        if (compilerEnv.languageVersion < Context.VERSION_1_2) {
             // See comments in checkWellTerminated
              return;
         }
@@ -1021,7 +1015,7 @@ class Parser {
                 ts.getToken();
                 int decompilerToken = tt;
                 int parseToken = tt;
-                if (languageVersion == Context.VERSION_1_2) {
+                if (compilerEnv.languageVersion == Context.VERSION_1_2) {
                     // JavaScript 1.2 uses shallow equality for == and != .
                     // In addition, convert === and !== for decompiler into
                     // == and != since the decompiler is supposed to show
@@ -1483,9 +1477,9 @@ class Parser {
         return null;    // should never reach here
     }
 
-    private IRFactory nf;
-    private int languageVersion = Context.VERSION_DEFAULT;
-    private boolean allowMemberExprAsFunctionName = false;
+    private CompilerEnvirons compilerEnv;
+	
+	private IRFactory nf;
 
     private boolean ok; // Did the parse encounter an error?
 

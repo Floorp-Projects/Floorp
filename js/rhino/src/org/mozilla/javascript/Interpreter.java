@@ -110,42 +110,6 @@ public class Interpreter
     // Last icode
         END_ICODE                       = BASE_ICODE + 30;
 
-    final void setSyntaxErrorReporter(ErrorReporter syntaxErrorReporter,
-                                      boolean fromEval)
-    {
-        this.syntaxErrorReporter = syntaxErrorReporter;
-        this.fromEval = fromEval;
-        this.syntaxErrorCount = 0;
-    }
-
-    public void reportSyntaxError(boolean isError,
-                                  String messageProperty, Object[] args,
-                                  String sourceName, int lineno,
-                                  String line, int lineOffset)
-    {
-        String message = Context.getMessage(messageProperty, args);
-        if (isError) {
-            ++syntaxErrorCount;
-            if (fromEval) {
-                // We're probably in an eval. Need to throw an exception.
-                throw ScriptRuntime.constructError(
-                    "SyntaxError", message, sourceName,
-                    lineno, line, lineOffset);
-            } else {
-                syntaxErrorReporter.error(message, sourceName,
-                                          lineno, line, lineOffset);
-            }
-        } else {
-            syntaxErrorReporter.warning(message, sourceName,
-                                        lineno, line, lineOffset);
-        }
-    }
-
-    public FunctionNode createFunctionNode(String name)
-    {
-        return new FunctionNode(name);
-    }
-
     public ScriptOrFnNode transform(Context cx, ScriptOrFnNode tree)
     {
         (new NodeTransformer(this)).transform(tree);
@@ -157,7 +121,8 @@ public class Interpreter
                           Object securityDomain, String encodedSource)
     {
         scriptOrFn = tree;
-        itsData = new InterpreterData(securityDomain, cx.getLanguageVersion());
+        itsData = new InterpreterData(securityDomain,
+		                              compilerEnv.getLanguageVersion());
         itsData.itsSourceFile = scriptOrFn.getSourceName();
         itsData.encodedSource = encodedSource;
         itsData.topLevel = true;
@@ -166,7 +131,7 @@ public class Interpreter
             return createFunction(cx, scope, itsData, false);
         } else {
             generateICodeFromTree(cx, scriptOrFn);
-            itsData.itsFromEvalCode = fromEval;
+            itsData.itsFromEvalCode = compilerEnv.isFromEval();
             return new InterpretedScript(itsData);
         }
     }
@@ -207,7 +172,7 @@ public class Interpreter
             itsData.itsNeedsActivation = true;
         }
         if (!theFunction.getIgnoreDynamicScope()) {
-            if (cx.hasCompileFunctionsWithDynamicScope()) {
+            if (compilerEnv.isUseDynamicScope()) {
                 itsData.useDynamicScope = true;
             }
         }
@@ -295,6 +260,7 @@ public class Interpreter
         for (int i = 0; i != functionCount; i++) {
             FunctionNode def = scriptOrFn.getFunctionNode(i);
             Interpreter jsi = new Interpreter();
+			jsi.compilerEnv = compilerEnv;
             jsi.scriptOrFn = def;
             jsi.itsData = new InterpreterData(itsData.securityDomain,
                                               itsData.languageVersion);
@@ -3316,11 +3282,9 @@ public class Interpreter
         return pc;
     }
 
-    private ErrorReporter syntaxErrorReporter;
-    private boolean fromEval;
-    int syntaxErrorCount;
-
-    private boolean itsInFunctionFlag;
+    protected CompilerEnvirons compilerEnv;
+	
+	private boolean itsInFunctionFlag;
 
     private InterpreterData itsData;
     private ScriptOrFnNode scriptOrFn;

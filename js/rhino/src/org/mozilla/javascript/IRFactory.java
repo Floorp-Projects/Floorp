@@ -43,21 +43,22 @@ package org.mozilla.javascript;
  * @author Mike McCabe
  * @author Norris Boyd
  */
-public class IRFactory {
-
-    public IRFactory(Interpreter compiler, TokenStream ts) {
-        this.compiler = compiler;
+class IRFactory 
+{
+    IRFactory(TokenStream ts) 
+	{
         this.ts = ts;
     }
 
-    public ScriptOrFnNode createScript() {
+    ScriptOrFnNode createScript() 
+	{
         return new ScriptOrFnNode(Token.SCRIPT);
     }
 
     /**
      * Script (for associating file/url names with toplevel scripts.)
      */
-    public void initScript(ScriptOrFnNode scriptNode, Object body)
+    void initScript(ScriptOrFnNode scriptNode, Object body)
     {
         Node children = ((Node) body).getFirstChild();
         if (children != null) { scriptNode.addChildrenToBack(children); }
@@ -66,11 +67,13 @@ public class IRFactory {
     /**
      * Leaf
      */
-    public Object createLeaf(int nodeType) {
+    Object createLeaf(int nodeType) 
+	{
         return new Node(nodeType);
     }
 
-    public Object createLeaf(int nodeType, int nodeOp) {
+    Object createLeaf(int nodeType, int nodeOp) 
+	{
         return new Node(nodeType, nodeOp);
     }
 
@@ -78,40 +81,47 @@ public class IRFactory {
      * Statement leaf nodes.
      */
 
-    public Object createSwitch(int lineno) {
+    Object createSwitch(int lineno) 
+	{
         return new Node.Jump(Token.SWITCH, lineno);
     }
 
-    public Object createVariables(int lineno) {
+    Object createVariables(int lineno) 
+	{
         return new Node(Token.VAR, lineno);
     }
 
-    public Object createExprStatement(Object expr, int lineno) {
+    Object createExprStatement(Object expr, int lineno) 
+	{
         return new Node(Token.EXPRSTMT, (Node) expr, lineno);
     }
 
-    public Object createExprStatementNoReturn(Object expr, int lineno) {
+    Object createExprStatementNoReturn(Object expr, int lineno) 
+	{
         return new Node(Token.POP, (Node) expr, lineno);
     }
 
     /**
      * Name
      */
-    public Object createName(String name) {
+    Object createName(String name) 
+	{
         return Node.newString(Token.NAME, name);
     }
 
     /**
      * String (for literals)
      */
-    public Object createString(String string) {
+    Object createString(String string) 
+	{
         return Node.newString(string);
     }
 
     /**
      * Number (for literals)
      */
-    public Object createNumber(double number) {
+    Object createNumber(double number) 
+	{
         return Node.newNumber(number);
     }
 
@@ -123,8 +133,8 @@ public class IRFactory {
      * @param stmts the statements in the catch clause
      * @param lineno the starting line number of the catch clause
      */
-    public Object createCatch(String varName, Object catchCond, Object stmts,
-                              int lineno)
+    Object createCatch(String varName, Object catchCond, Object stmts,
+                       int lineno)
     {
         if (catchCond == null) {
             catchCond = new Node(Token.EMPTY);
@@ -136,14 +146,16 @@ public class IRFactory {
     /**
      * Throw
      */
-    public Object createThrow(Object expr, int lineno) {
+    Object createThrow(Object expr, int lineno) 
+	{
         return new Node(Token.THROW, (Node)expr, lineno);
     }
 
     /**
      * Return
      */
-    public Object createReturn(Object expr, int lineno) {
+    Object createReturn(Object expr, int lineno) 
+	{
         return expr == null
             ? new Node(Token.RETURN, lineno)
             : new Node(Token.RETURN, (Node)expr, lineno);
@@ -152,7 +164,7 @@ public class IRFactory {
     /**
      * Label
      */
-    public Object createLabel(String label, int lineno)
+    Object createLabel(String label, int lineno)
     {
         Node.Jump n = new Node.Jump(Token.LABEL, lineno);
         n.setLabel(label);
@@ -162,7 +174,7 @@ public class IRFactory {
     /**
      * Break (possibly labeled)
      */
-    public Object createBreak(String label, int lineno)
+    Object createBreak(String label, int lineno)
     {
         Node.Jump n = new Node.Jump(Token.BREAK, lineno);
         if (label != null) {
@@ -174,7 +186,7 @@ public class IRFactory {
     /**
      * Continue (possibly labeled)
      */
-    public Object createContinue(String label, int lineno)
+    Object createContinue(String label, int lineno)
     {
         Node.Jump n = new Node.Jump(Token.CONTINUE, lineno);
         if (label != null) {
@@ -188,16 +200,18 @@ public class IRFactory {
      * Creates the empty statement block
      * Must make subsequent calls to add statements to the node
      */
-    public Object createBlock(int lineno) {
+    Object createBlock(int lineno)
+    {
         return new Node(Token.BLOCK, lineno);
     }
 
-    public FunctionNode createFunction(String name) {
-        return compiler.createFunctionNode(name);
+    FunctionNode createFunction(String name)
+    {
+        return new FunctionNode(name);
     }
 
-    public Object initFunction(FunctionNode fnNode, int functionIndex,
-                               Object statements, int functionType)
+    Object initFunction(FunctionNode fnNode, int functionIndex,
+                        Object statements, int functionType)
     {
         Node stmts = (Node)statements;
         fnNode.setFunctionType(functionType);
@@ -256,14 +270,16 @@ public class IRFactory {
      * breaks the Factory abstraction, but it removes a requirement
      * from implementors of Node.
      */
-    public void addChildToBack(Object parent, Object child) {
+    void addChildToBack(Object parent, Object child) 
+	{
         ((Node)parent).addChildToBack((Node)child);
     }
 
     /**
      * While
      */
-    public Object createWhile(Object cond, Object body, int lineno) {
+    Object createWhile(Object cond, Object body, int lineno) 
+	{
         return createLoop(LOOP_WHILE, (Node)body, (Node)cond, null, null,
                           lineno);
     }
@@ -271,7 +287,8 @@ public class IRFactory {
     /**
      * DoWhile
      */
-    public Object createDoWhile(Object body, Object cond, int lineno) {
+    Object createDoWhile(Object body, Object cond, int lineno) 
+	{
         return createLoop(LOOP_DO_WHILE, (Node)body, (Node)cond, null, null,
                           lineno);
     }
@@ -279,8 +296,8 @@ public class IRFactory {
     /**
      * For
      */
-    public Object createFor(Object init, Object test, Object incr,
-                            Object body, int lineno)
+    Object createFor(Object init, Object test, Object incr, Object body, 
+	                 int lineno)
     {
         return createLoop(LOOP_FOR, (Node)body, (Node)test,
                           (Node)init, (Node)incr, lineno);
@@ -344,7 +361,8 @@ public class IRFactory {
      * For .. In
      *
      */
-    public Object createForIn(Object lhs, Object obj, Object body, int lineno) {
+    Object createForIn(Object lhs, Object obj, Object body, int lineno) 
+	{
         String name;
         Node lhsNode = (Node) lhs;
         Node objNode = (Node) obj;
@@ -415,8 +433,8 @@ public class IRFactory {
 
      * ... and a goto to GOTO around these handlers.
      */
-    public Object createTryCatchFinally(Object tryblock, Object catchblocks,
-                                        Object finallyblock, int lineno)
+    Object createTryCatchFinally(Object tryblock, Object catchblocks,
+                                 Object finallyblock, int lineno)
     {
         Node trynode = (Node)tryblock;
         boolean hasFinally = false;
@@ -581,7 +599,8 @@ public class IRFactory {
     /**
      * With
      */
-    public Object createWith(Object obj, Object body, int lineno) {
+    Object createWith(Object obj, Object body, int lineno) 
+	{
         Node result = new Node(Token.BLOCK, lineno);
         result.addChildToBack(new Node(Token.ENTERWITH, (Node)obj));
         Node bodyNode = new Node(Token.WITH, (Node) body, lineno);
@@ -596,7 +615,8 @@ public class IRFactory {
      * plus a series of array element entries, so later compiler
      * stages don't need to know about array literals.
      */
-    public Object createArrayLiteral(Object obj) {
+    Object createArrayLiteral(Object obj) 
+	{
         Node array;
         array = new Node(Token.NEW, Node.newString(Token.NAME, "Array"));
         Node list = new Node(Token.INIT_LIST, array);
@@ -628,7 +648,7 @@ public class IRFactory {
          * (Which will make Array optimizations involving allocating a
          * Java array to back the javascript array work better.)
          */
-        if (ts.cx.getLanguageVersion() == Context.VERSION_1_2) {
+        if (ts.compilerEnv.languageVersion == Context.VERSION_1_2) {
             /* When last array element is empty, we need to set the
              * length explicitly, because we can't depend on SETELEM
              * to do it for us - because empty [,,] array elements
@@ -652,7 +672,8 @@ public class IRFactory {
      * creation plus object property entries, so later compiler
      * stages don't need to know about object literals.
      */
-    public Object createObjectLiteral(Object obj) {
+    Object createObjectLiteral(Object obj) 
+	{
         Node result = new Node(Token.NEW,
                                Node.newString(Token.NAME, "Object"));
         Node list = new Node(Token.INIT_LIST, result);
@@ -675,7 +696,8 @@ public class IRFactory {
     /**
      * Regular expressions
      */
-    public Object createRegExp(int regexpIndex) {
+    Object createRegExp(int regexpIndex) 
+	{
         Node n = new Node(Token.REGEXP);
         n.putIntProp(Node.REGEXP_PROP, regexpIndex);
         return n;
@@ -684,8 +706,7 @@ public class IRFactory {
     /**
      * If statement
      */
-    public Object createIf(Object condObj, Object ifTrue, Object ifFalse,
-                           int lineno)
+    Object createIf(Object condObj, Object ifTrue, Object ifFalse, int lineno)
     {
         Node cond = (Node)condObj;
         int condStatus = isAlwaysDefinedBoolean(cond);
@@ -722,7 +743,7 @@ public class IRFactory {
         return result;
     }
 
-    public Object createCondExpr(Object condObj, Object ifTrue, Object ifFalse)
+    Object createCondExpr(Object condObj, Object ifTrue, Object ifFalse)
     {
         Node cond = (Node)condObj;
         int condStatus = isAlwaysDefinedBoolean(cond);
@@ -737,7 +758,8 @@ public class IRFactory {
     /**
      * Unary
      */
-    public Object createUnary(int nodeType, Object child) {
+    Object createUnary(int nodeType, Object child) 
+	{
         Node childNode = (Node) child;
         int childType = childNode.getType();
         switch (nodeType) {
@@ -802,7 +824,7 @@ public class IRFactory {
         return new Node(nodeType, childNode);
     }
 
-    public Object createIncDec(int nodeType, boolean post, Object child)
+    Object createIncDec(int nodeType, boolean post, Object child)
     {
         Node childNode = (Node)child;
         int childType = childNode.getType();
@@ -854,7 +876,7 @@ public class IRFactory {
     /**
      * Binary
      */
-    public Object createBinary(int nodeType, Object leftObj, Object rightObj)
+    Object createBinary(int nodeType, Object leftObj, Object rightObj)
     {
         Node left = (Node)leftObj;
         Node right = (Node)rightObj;
@@ -1026,7 +1048,7 @@ public class IRFactory {
         return new Node(nodeType, left, right);
     }
 
-    public Object createAssignment(Object leftObj, Object rightObj)
+    Object createAssignment(Object leftObj, Object rightObj)
     {
         Node left = (Node)leftObj;
         Node right = (Node)rightObj;
@@ -1064,7 +1086,7 @@ public class IRFactory {
         }
     }
 
-    public Object createAssignmentOp(int assignOp, Object left, Object right)
+    Object createAssignmentOp(int assignOp, Object left, Object right)
     {
         return createAssignmentOp(assignOp, (Node)left, (Node)right, false);
     }
@@ -1111,7 +1133,8 @@ public class IRFactory {
         }
     }
 
-    public Node createUseLocal(Node localBlock) {
+    Node createUseLocal(Node localBlock) 
+	{
         if (Token.LOCAL_BLOCK != localBlock.getType()) Kit.codeBug();
         Node result = new Node(Token.LOCAL_LOAD);
         result.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
@@ -1140,7 +1163,8 @@ public class IRFactory {
         return 0;
     }
 
-    private static boolean hasSideEffects(Node exprTree) {
+    private static boolean hasSideEffects(Node exprTree) 
+	{
         switch (exprTree.getType()) {
             case Token.INC:
             case Token.DEC:
@@ -1161,8 +1185,6 @@ public class IRFactory {
         }
         return false;
     }
-
-    private Interpreter compiler;
 
     // Only needed to call reportCurrentLineError.
     private TokenStream ts;

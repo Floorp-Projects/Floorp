@@ -58,18 +58,9 @@ public class Codegen extends Interpreter {
     {
     }
 
-    public FunctionNode createFunctionNode(String name)
-    {
-        return new OptFunctionNode(name);
-    }
-
     public ScriptOrFnNode transform(Context cx, ScriptOrFnNode tree)
     {
         nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
-        itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
-        generateDebugInfo = (!cx.isGeneratingDebugChanged()
-                             || cx.isGeneratingDebug());
-        languageVersion = cx.getLanguageVersion();
 
         initOptFunctions_r(tree);
 
@@ -86,10 +77,10 @@ public class Codegen extends Interpreter {
                 int functionCount = tree.getFunctionCount();
                 for (int i = 0; i != functionCount; ++i) {
                     OptFunctionNode ofn = OptFunctionNode.get(tree, i);
-                    if (ofn.getFunctionType()
+                    if (ofn.fnode.getFunctionType()
                         == FunctionNode.FUNCTION_STATEMENT)
                     {
-                        String name = ofn.getFunctionName();
+                        String name = ofn.fnode.getFunctionName();
                         if (name.length() != 0) {
                             if (possibleDirectCalls == null) {
                                 possibleDirectCalls = new Hashtable();
@@ -119,9 +110,9 @@ public class Codegen extends Interpreter {
     private static void initOptFunctions_r(ScriptOrFnNode scriptOrFn)
     {
         for (int i = 0, N = scriptOrFn.getFunctionCount(); i != N; ++i) {
-            OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn, i);
-            ofn.init();
-            initOptFunctions_r(ofn);
+            FunctionNode fn = scriptOrFn.getFunctionNode(i);
+            new OptFunctionNode(fn);
+            initOptFunctions_r(fn);
         }
     }
 
@@ -271,7 +262,7 @@ public class Codegen extends Interpreter {
         boolean hasFunctions = (scriptOrFnNodes.length > 1 || !hasScript);
 
         String sourceFile = null;
-        if (generateDebugInfo) {
+        if (compilerEnv.isGenerateDebugInfo()) {
             sourceFile = scriptOrFnNodes[0].getSourceName();
         }
 
@@ -309,6 +300,7 @@ public class Codegen extends Interpreter {
             BodyCodegen bodygen = new BodyCodegen();
             bodygen.cfw = cfw;
             bodygen.codegen = this;
+			bodygen.compilerEnv = compilerEnv;
             bodygen.scriptOrFn = n;
 
             bodygen.generateBodyCode();
@@ -351,12 +343,12 @@ public class Codegen extends Interpreter {
             return newInstance;
         }
 */
-        cfw.startMethod(getDirectCtorName(ofn),
-                        getBodyMethodSignature(ofn),
+        cfw.startMethod(getDirectCtorName(ofn.fnode),
+                        getBodyMethodSignature(ofn.fnode),
                         (short)(ClassFileWriter.ACC_STATIC
                                 | ClassFileWriter.ACC_PRIVATE));
 
-        int argCount = ofn.getParamCount();
+        int argCount = ofn.fnode.getParamCount();
         int firstLocal = (4 + argCount * 3) + 1;
 
         cfw.addALoad(0); // this
@@ -381,8 +373,8 @@ public class Codegen extends Interpreter {
         cfw.addALoad(4 + argCount * 3);
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       mainClassName,
-                      getBodyMethodName(ofn),
-                      getBodyMethodSignature(ofn));
+                      getBodyMethodName(ofn.fnode),
+                      getBodyMethodSignature(ofn.fnode));
         int exitLabel = cfw.acquireLabel();
         cfw.add(ByteCode.DUP); // make a copy of direct call result
         cfw.add(ByteCode.INSTANCEOF, "org/mozilla/javascript/Scriptable");
@@ -445,7 +437,7 @@ public class Codegen extends Interpreter {
             if (n.getType() == Token.FUNCTION) {
                 OptFunctionNode ofn = OptFunctionNode.get(n);
                 if (ofn.isTargetOfDirectCall()) {
-                    int pcount = ofn.getParamCount();
+                    int pcount = ofn.fnode.getParamCount();
                     if (pcount != 0) {
                         // loop invariant:
                         // stack top == arguments array from addALoad4()
@@ -552,7 +544,7 @@ public class Codegen extends Interpreter {
         // NativeFunction.initScriptFunction(version, "", varNamesArray, 0)
 
         cfw.addLoadThis();
-        cfw.addPush(languageVersion);
+        cfw.addPush(compilerEnv.getLanguageVersion());
         cfw.addPush(""); // Function name
         pushParamNamesArray(cfw, script);
         cfw.addPush(0); // No parameters, only varnames
@@ -634,10 +626,10 @@ public class Codegen extends Interpreter {
 
         // Call NativeFunction.initScriptFunction
         cfw.addLoadThis();
-        cfw.addPush(languageVersion);
-        cfw.addPush(ofn.getFunctionName());
-        pushParamNamesArray(cfw, ofn);
-        cfw.addPush(ofn.getParamCount());
+        cfw.addPush(compilerEnv.getLanguageVersion());
+        cfw.addPush(ofn.fnode.getFunctionName());
+        pushParamNamesArray(cfw, ofn.fnode);
+        cfw.addPush(ofn.fnode.getParamCount());
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                       "org/mozilla/javascript/NativeFunction",
                       "initScriptFunction",
@@ -651,10 +643,10 @@ public class Codegen extends Interpreter {
                       "(Lorg/mozilla/javascript/Scriptable;)V");
 
         // precompile all regexp literals
-        int regexpCount = ofn.getRegexpCount();
+        int regexpCount = ofn.fnode.getRegexpCount();
         if (regexpCount != 0) {
             cfw.addLoadThis();
-            pushRegExpArray(cfw, ofn, CONTEXT_ARG, SCOPE_ARG);
+            pushRegExpArray(cfw, ofn.fnode, CONTEXT_ARG, SCOPE_ARG);
             cfw.add(ByteCode.PUTFIELD, mainClassName,
                     REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE);
         }
@@ -1007,7 +999,7 @@ public class Codegen extends Interpreter {
         if (n.getType() == Token.FUNCTION) {
             OptFunctionNode ofn = OptFunctionNode.get(n);
             if (ofn.isTargetOfDirectCall()) {
-                int pCount = ofn.getParamCount();
+                int pCount = ofn.fnode.getParamCount();
                 for (int i = 0; i != pCount; i++) {
                     sb.append("Ljava/lang/Object;D");
                 }
@@ -1019,7 +1011,7 @@ public class Codegen extends Interpreter {
 
     String getFunctionInitMethodName(OptFunctionNode ofn)
     {
-        return "_i"+getIndex(ofn);
+        return "_i"+getIndex(ofn.fnode);
     }
 
     String getCompiledRegexpName(ScriptOrFnNode n, int regexpIndex)
@@ -1067,7 +1059,6 @@ public class Codegen extends Interpreter {
     private byte[] mainClassBytes;
 
     boolean itsUseDynamicScope;
-    boolean generateDebugInfo;
     int languageVersion;
 
     private double[] itsConstantList;
@@ -1114,7 +1105,8 @@ class BodyCodegen
         inDirectCallFunction = (fnCurrent == null) ? false
                                    : fnCurrent.isTargetOfDirectCall();
 
-        hasVarsInRegs = (fnCurrent != null && !fnCurrent.requiresActivation());
+        hasVarsInRegs = (fnCurrent != null
+                         && !fnCurrent.fnode.requiresActivation());
 
         locals = new boolean[MAX_LOCALS];
 
@@ -1172,8 +1164,8 @@ class BodyCodegen
         }
 
         if (fnCurrent != null && directParameterCount == -1
-            && (!codegen.itsUseDynamicScope
-                || fnCurrent.getIgnoreDynamicScope()))
+            && (!compilerEnv.isUseDynamicScope()
+                || fnCurrent.fnode.getIgnoreDynamicScope()))
         {
             // Unless we're either in a direct call or using dynamic scope,
             // use the enclosing scope of the function as our variable object.
@@ -1203,7 +1195,7 @@ class BodyCodegen
             }
         }
 
-        if (fnCurrent != null && fnCurrent.getCheckThis()) {
+        if (fnCurrent != null && fnCurrent.fnode.getCheckThis()) {
             // Nested functions must check their 'this' value to
             //  insure it is not an activation object:
             //  see 10.1.6 Activation Object
@@ -1327,13 +1319,15 @@ class BodyCodegen
         int functionCount = scriptOrFn.getFunctionCount();
         for (int i = 0; i != functionCount; i++) {
             OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn, i);
-            if (ofn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
+            if (ofn.fnode.getFunctionType()
+                    == FunctionNode.FUNCTION_STATEMENT)
+            {
                 visitFunction(ofn, FunctionNode.FUNCTION_STATEMENT);
             }
         }
 
         // default is to generate debug info
-        if (codegen.generateDebugInfo) {
+        if (compilerEnv.isGenerateDebugInfo()) {
             OptLocalVariable lv = new OptLocalVariable(debugVariableName,
                                                        false);
             lv.assignJRegister(variableObjectLocal);
@@ -1440,7 +1434,7 @@ class BodyCodegen
                     int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
                     OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn,
                                                              fnIndex);
-                    int t = ofn.getFunctionType();
+                    int t = ofn.fnode.getFunctionType();
                     if (t != FunctionNode.FUNCTION_STATEMENT) {
                         visitFunction(ofn, t);
                     }
@@ -2029,7 +2023,7 @@ class BodyCodegen
 
     private void visitFunction(OptFunctionNode ofn, int functionType)
     {
-        int fnIndex = codegen.getIndex(ofn);
+        int fnIndex = codegen.getIndex(ofn.fnode);
         cfw.add(ByteCode.NEW, codegen.mainClassName);
         // Call function constructor
         cfw.add(ByteCode.DUP);
@@ -2223,7 +2217,7 @@ class BodyCodegen
             cfw.add(ByteCode.SWAP);
             cfw.add(ByteCode.POP);
 
-            if (!codegen.itsUseDynamicScope) {
+            if (!compilerEnv.isUseDynamicScope()) {
                 cfw.add(ByteCode.DUP);
                 cfw.addInvoke(ByteCode.INVOKEINTERFACE,
                               "org/mozilla/javascript/Scriptable",
@@ -2286,9 +2280,9 @@ class BodyCodegen
             cfw.addInvoke(ByteCode.INVOKESTATIC,
                           codegen.mainClassName,
                           (type == Token.NEW)
-                              ? codegen.getDirectCtorName(target)
-                              : codegen.getBodyMethodName(target),
-                          codegen.getBodyMethodSignature(target));
+                              ? codegen.getDirectCtorName(target.fnode)
+                              : codegen.getBodyMethodName(target.fnode),
+                          codegen.getBodyMethodSignature(target.fnode));
 
             int beyond = cfw.acquireLabel();
             cfw.add(ByteCode.GOTO, beyond);
@@ -3887,6 +3881,7 @@ class BodyCodegen
 
     ClassFileWriter cfw;
     Codegen codegen;
+	CompilerEnvirons compilerEnv;
     ScriptOrFnNode scriptOrFn;
 
     private OptFunctionNode fnCurrent;

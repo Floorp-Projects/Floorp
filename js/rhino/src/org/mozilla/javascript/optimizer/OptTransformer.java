@@ -176,18 +176,20 @@ class OptTransformer extends NodeTransformer {
                     targetName = left.getFirstChild().getNext().getString();
                 }
                 if (targetName != null) {
-                    OptFunctionNode fn;
-                    fn = (OptFunctionNode)possibleDirectCalls.get(targetName);
-                    if (fn != null && argCount == fn.getParamCount()) {
+                    OptFunctionNode ofn;
+                    ofn = (OptFunctionNode)possibleDirectCalls.get(targetName);
+                    if (ofn != null
+                        && argCount == ofn.fnode.getParamCount())
+                    {
                         // Refuse to directCall any function with more
                         // than 32 parameters - prevent code explosion
                         // for wacky test cases
                         if (argCount <= 32) {
-                            node.putProp(Node.DIRECTCALL_PROP, fn);
-                            if (!fn.isTargetOfDirectCall()) {
+                            node.putProp(Node.DIRECTCALL_PROP, ofn);
+                            if (!ofn.isTargetOfDirectCall()) {
                                 int index = directCallTargets.size();
-                                directCallTargets.add(fn);
-                                fn.setDirectTargetIndex(index);
+                                directCallTargets.add(ofn);
+                                ofn.setDirectTargetIndex(index);
                             }
                         }
                     }

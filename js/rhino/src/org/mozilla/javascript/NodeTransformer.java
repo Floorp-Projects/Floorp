@@ -534,8 +534,8 @@ public class NodeTransformer
     {
         int lineno = stmt.getLineno();
         String sourceName = tree.getSourceName();
-        compiler.reportSyntaxError(true, messageId, messageArgs,
-                                   sourceName, lineno, null, 0);
+        compiler.compilerEnv.reportSyntaxError(
+			true, messageId, messageArgs, sourceName, lineno, null, 0);
     }
 
     private ObjArray loops;

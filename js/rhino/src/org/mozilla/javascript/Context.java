@@ -977,17 +977,17 @@ public class Context
     public boolean stringIsCompilableUnit(String source)
     {
         boolean errorseen = false;
-        Interpreter compiler = new Interpreter();
-        compiler.setSyntaxErrorReporter(new DefaultErrorReporter(), false);
+		CompilerEnvirons compilerEnv = new CompilerEnvirons();
+        compilerEnv.initFromContext(this, new DefaultErrorReporter());
         // no source name or source text manager, because we're just
         // going to throw away the result.
-        TokenStream ts = new TokenStream(this, compiler, null, source, null, 1);
+        TokenStream ts = new TokenStream(compilerEnv, 
+		                                 null, source, null, 1);
 
-        IRFactory irf = new IRFactory(compiler, ts);
-        Parser p = createParser();
+        Parser p = new Parser(compilerEnv);
         Decompiler decompiler = new Decompiler();
         try {
-            p.parse(ts, irf, decompiler);
+            p.parse(ts, decompiler);
         } catch (IOException ioe) {
             errorseen = true;
         } catch (EvaluatorException ee) {
@@ -2014,16 +2014,10 @@ public class Context
         // scope should be given if and only if compiling function
         if (!(scope == null ^ returnFunction)) Kit.codeBug();
 
-        Interpreter compiler = createCompiler();
+		CompilerEnvirons compilerEnv = new CompilerEnvirons();
         ErrorReporter reporter = getErrorReporter();
-        compiler.setSyntaxErrorReporter(reporter, fromEval);
-
-        if (securityController != null) {
-            securityDomain = securityController.
-                                 getDynamicSecurityDomain(securityDomain);
-        } else {
-            securityDomain = null;
-        }
+        compilerEnv.initFromContext(this, reporter);
+		compilerEnv.setFromEval(fromEval);
 
         if (debugger != null) {
             if (sourceReader != null) {
@@ -2032,15 +2026,23 @@ public class Context
             }
         }
 
-        TokenStream ts = new TokenStream(this, compiler,
+        TokenStream ts = new TokenStream(compilerEnv,
                                          sourceReader, sourceString,
                                          sourceName, lineno);
-        Parser p = createParser();
-
-        IRFactory irf = new IRFactory(compiler, ts);
+        Parser p = new Parser(compilerEnv);
         Decompiler decompiler = new Decompiler();
-        ScriptOrFnNode tree = p.parse(ts, irf, decompiler);
-        if (compiler.syntaxErrorCount == 0) {
+        ScriptOrFnNode tree = p.parse(ts, decompiler);
+        int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
+		if (syntaxErrorCount == 0) {
+        	Interpreter compiler = createCompiler();
+			compiler.compilerEnv = compilerEnv;
+        	if (securityController != null) {
+            	securityDomain = securityController.
+                                	 getDynamicSecurityDomain(securityDomain);
+        	} else {
+            	securityDomain = null;
+        	}
+
             String encodedSource = null;
             if (isGeneratingSource()) {
                 encodedSource = decompiler.getEncodedSource();
@@ -2063,7 +2065,8 @@ public class Context
             Object result = compiler.compile(this, scope, tree,
                                              securityController, securityDomain,
                                              encodedSource);
-            if (compiler.syntaxErrorCount == 0) {
+        	syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
+            if (syntaxErrorCount == 0) {
                 if (debugger != null) {
                     if (sourceString == null) Kit.codeBug();
                     compiler.notifyDebuggerCompilationDone(this, result,
@@ -2073,7 +2076,7 @@ public class Context
             }
         }
         String msg = Context.getMessage1("msg.got.syntax.errors",
-                         String.valueOf(compiler.syntaxErrorCount));
+                                         String.valueOf(syntaxErrorCount));
         throw reporter.runtimeError(msg, sourceName, lineno, null, 0);
     }
 
@@ -2089,14 +2092,6 @@ public class Context
             result = new Interpreter();
         }
         return result;
-    }
-
-    private Parser createParser() {
-        Parser parser = new Parser();
-        parser.setLanguageVersion(getLanguageVersion());
-        parser.setAllowMemberExprAsFunctionName(
-            hasFeature(Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME));
-        return parser;
     }
 
     static String getSourcePositionFromStack(int[] linep) {

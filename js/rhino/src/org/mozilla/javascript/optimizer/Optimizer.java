@@ -72,12 +72,12 @@ class Optimizer
 
     private void optimizeFunction(OptFunctionNode theFunction)
     {
-        if (theFunction.requiresActivation()) return;
+        if (theFunction.fnode.requiresActivation()) return;
 
         inDirectCallFunction = theFunction.isTargetOfDirectCall();
 
         ObjArray statementsArray = new ObjArray();
-        buildStatementList_r(theFunction, statementsArray);
+        buildStatementList_r(theFunction.fnode, statementsArray);
         Node[] theStatementNodes = new Node[statementsArray.size()];
         statementsArray.toArray(theStatementNodes);
 
@@ -101,7 +101,7 @@ class Optimizer
             typeFlow(theFunction, theBlocks);
             findSinglyTypedVars(theFunction, theBlocks);
             localCSE(theBlocks, theFunction);
-            if (!theFunction.requiresActivation()) {
+            if (!theFunction.fnode.requiresActivation()) {
                 /*
                  * Now that we know which local vars are in fact always
                  * Numbers, we re-write the tree to take advantage of
@@ -634,8 +634,8 @@ class Optimizer
                 }
             case Token.CALL :
                 {
-                    FunctionNode target
-                            = (FunctionNode)n.getProp(Node.DIRECTCALL_PROP);
+                    OptFunctionNode target
+                            = (OptFunctionNode)n.getProp(Node.DIRECTCALL_PROP);
                     if (target != null) {
 /*
     we leave each child as a Number if it can be. The codegen will

@@ -75,12 +75,11 @@ public class TokenStream
     private final static int
         EOF_CHAR = -1;
 
-    public TokenStream(Context cx, Interpreter compiler,
+    public TokenStream(CompilerEnvirons compilerEnv,
                        Reader sourceReader, String sourceString,
                        String sourceName, int lineno)
     {
-        this.cx = cx;
-        this.compiler = compiler;
+        this.compilerEnv = compilerEnv;
         this.pushbackToken = Token.EOF;
         this.sourceName = sourceName;
         this.lineno = lineno;
@@ -296,17 +295,17 @@ public class TokenStream
     public final void reportCurrentLineError(String messageProperty,
                                              Object[] args)
     {
-        compiler.reportSyntaxError(true, messageProperty, args,
-                                   getSourceName(), getLineno(),
-                                   getLine(), getOffset());
+        compilerEnv.reportSyntaxError(true, messageProperty, args,
+                                      getSourceName(), getLineno(),
+                                      getLine(), getOffset());
     }
 
     public final void reportCurrentLineWarning(String messageProperty,
                                                Object[] args)
     {
-        compiler.reportSyntaxError(false, messageProperty, args,
-                                   getSourceName(), getLineno(),
-                                   getLine(), getOffset());
+        compilerEnv.reportSyntaxError(false, messageProperty, args,
+                                      getSourceName(), getLineno(),
+                                      getLine(), getOffset());
     }
 
     public final String getSourceName() { return sourceName; }
@@ -476,13 +475,10 @@ public class TokenStream
                     if (result != Token.EOF) {
                         if (result != Token.RESERVED) {
                             return result;
-                        }
-                        else if (!cx.hasFeature(
-                                Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER))
+                        } else if (!compilerEnv.reservedKeywordAsIdentifier)
                         {
                             return result;
-                        }
-                        else {
+                        } else {
                             // If implementation permits to use future reserved
                             // keywords in violation with the EcmaScript,
                             // treat it as name but issue warning
@@ -1207,6 +1203,5 @@ public class TokenStream
     private int sourceEnd;
     private int sourceCursor;
 
-    private Interpreter compiler;
-    Context cx;
+    CompilerEnvirons compilerEnv;
 }
