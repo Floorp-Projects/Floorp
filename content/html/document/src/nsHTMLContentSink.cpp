@@ -4986,7 +4986,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         nsStringArray linkTypes;
         nsStyleLinkElement::ParseLinkTypes(relVal, linkTypes);
         if (linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1 ||
-            linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != 1) {
+            linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1) {
           nsAutoString hrefVal;
           element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, hrefVal);
           if (!hrefVal.IsEmpty()) {
