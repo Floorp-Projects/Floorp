@@ -24,6 +24,7 @@
  */
 
 #include "gtkxtbin.h"
+#include <gtk/gtkcontainer.h>
 #include <gdk/gdkx.h>
 #include <glib.h>
 #include <assert.h>
@@ -43,9 +44,16 @@
 static void            gtk_xtbin_class_init (GtkXtBinClass *klass);
 static void            gtk_xtbin_init       (GtkXtBin      *xtbin);
 static void            gtk_xtbin_realize    (GtkWidget      *widget);
+static void            gtk_xtbin_destroy    (GtkObject      *object);
+static void            gtk_xtbin_shutdown   (GtkObject      *object);
+static void            gtk_xtbin_show       (GtkWidget *widget);
+
+static GtkWidgetClass *parent_class = NULL;
 
 static String          *fallback = NULL;
 static int              xt_is_initialized = 0;
+
+static GPollFD          xt_event_poll_fd;
 
 static gboolean
 xt_event_prepare (gpointer  source_data,
@@ -139,7 +147,7 @@ gtk_xtbin_get_type (void)
         (GtkClassInitFunc) NULL
       };
 
-      xtbin_type = gtk_type_unique (GTK_TYPE_WINDOW, &xtbin_info);
+      xtbin_type = gtk_type_unique (GTK_TYPE_WIDGET, &xtbin_info);
     }
 
   return xtbin_type;
@@ -149,25 +157,70 @@ static void
 gtk_xtbin_class_init (GtkXtBinClass *klass)
 {
   GtkWidgetClass *widget_class;
+  GtkObjectClass *object_class;
 
+  parent_class = gtk_type_class (gtk_widget_get_type ());
 
   widget_class = GTK_WIDGET_CLASS (klass);
   widget_class->realize = gtk_xtbin_realize;
+  widget_class->show = gtk_xtbin_show;
+
+  object_class = GTK_OBJECT_CLASS (klass);
+  object_class->shutdown= gtk_xtbin_shutdown;
+  object_class->destroy = gtk_xtbin_destroy;
 }
 
 static void
 gtk_xtbin_init (GtkXtBin *xtbin)
 {
+  static Display *xtdisplay = NULL;
 
   xtbin->xtwidget = NULL;
   xtbin->parent_window = NULL;
+  xtbin->xtwindow = 0;
   xtbin->x = 0;
   xtbin->y = 0;
 
-  xtbin->xtdisplay = NULL;
-  xtbin->xtcontext = 0;
-  xtbin->xtwindow = 0;
+  /* Initialize the Xt toolkit */
+  if (xt_is_initialized == 0) {
+    char         *mArgv[1];
+    int           mArgc = 0;
+    XtAppContext  app_context;
+    int            cnumber;
 
+#ifdef DEBUG_XTBIN
+    printf("starting up Xt stuff\n");
+#endif
+    /*
+     * Initialize Xt stuff
+     */
+
+    XtToolkitInitialize();
+    app_context = XtCreateApplicationContext();
+    if (fallback)
+      XtAppSetFallbackResources(app_context, fallback);
+  
+    xtdisplay = XtOpenDisplay(app_context, NULL, NULL, 
+                              "Wrapper", NULL, 0, &mArgc, mArgv);
+
+    /*
+     * hook Xt event loop into the glib event loop.
+     */
+
+    /* the assumption is that gtk_init has already been called */
+    g_source_add (GDK_PRIORITY_EVENTS, TRUE, 
+                  &xt_event_funcs, NULL, xtdisplay, NULL);	
+    
+    cnumber = ConnectionNumber(xtdisplay);
+    xt_event_poll_fd.fd = cnumber;
+    xt_event_poll_fd.events = G_IO_IN; 
+    xt_event_poll_fd.revents = 0;    /* hmm... is this correct? */
+
+    g_main_add_poll (&xt_event_poll_fd, G_PRIORITY_DEFAULT);
+  }
+  xt_is_initialized++; /* bump up our count here */
+
+  xtbin->xtdisplay = xtdisplay;
 }
 
 static void
@@ -176,12 +229,8 @@ gtk_xtbin_realize (GtkWidget *widget)
   GdkWindowAttr attributes;
   gint          attributes_mask, n;
   GtkXtBin     *xtbin;
-  Arg           args[20];
-  char         *mArgv[1];
-  int           mArgc = 0;
+  Arg           args[2];
   gint          width, height;
-  static Display      *xtdisplay;
-  XtAppContext  app_context;
   Widget        top_widget;
   Window        win;
   Widget        embeded;
@@ -192,9 +241,25 @@ gtk_xtbin_realize (GtkWidget *widget)
   gdk_flush();
   xtbin = GTK_XTBIN (widget);
 
-  /* GtkWindow checks against premature realization here. Just
-   * don't do it.
-   */
+
+  if (widget->allocation.x == -1 &&
+      widget->allocation.y == -1 &&
+      widget->allocation.width == 1 &&
+      widget->allocation.height == 1)
+  {
+    GtkRequisition requisition;
+    GtkAllocation allocation = { 0, 0, 200, 200 };
+
+    gtk_widget_size_request (widget, &requisition);
+    if (requisition.width || requisition.height)
+    {
+      /* non-empty window */
+      allocation.width = requisition.width;
+      allocation.height = requisition.height;
+    }
+    gtk_widget_size_allocate (widget, &allocation);
+  }
+
   GTK_WIDGET_SET_FLAGS (widget, GTK_REALIZED);
 
   attributes.window_type  = GDK_WINDOW_CHILD;
@@ -228,45 +293,10 @@ gtk_xtbin_realize (GtkWidget *widget)
   widget->style = gtk_style_attach (widget->style, widget->window);
   gtk_style_set_background (widget->style, widget->window, GTK_STATE_NORMAL);
 
-  xtbin->current_window = widget->window;
-
   /* ensure all the outgoing events are flushed */
   /* before we try this crazy dual toolkit stuff */
   gdk_flush();
 
-  /* Initialize the Xt toolkit */
-  if (!xt_is_initialized) {
-    int            cnumber;
-    static GPollFD xt_event_poll_fd;
-
-    /****
-     * Standard Xt initialization stuff
-     */
-
-    XtToolkitInitialize();
-    app_context = XtCreateApplicationContext();
-    if (fallback)
-      XtAppSetFallbackResources(app_context, fallback);
-  
-    xtdisplay = XtOpenDisplay(app_context, NULL, NULL, 
-                              "Wrapper", NULL, 0, &mArgc, mArgv);
-    xt_is_initialized++;
-
-    /****
-     * hook Xt event loop into the glib event loop.
-     */
-
-    /* the assumption is that gtk_init has already been called */
-    g_source_add (GDK_PRIORITY_EVENTS, TRUE, 
-                  &xt_event_funcs, NULL, xtdisplay, NULL);	
-    
-    cnumber = ConnectionNumber(xtdisplay);
-    xt_event_poll_fd.fd = cnumber;
-    xt_event_poll_fd.events = G_IO_IN | G_IO_OUT; 
-    xt_event_poll_fd.revents = 0;    /* hmm... is this correct? */
-
-    g_main_add_poll (&xt_event_poll_fd, G_PRIORITY_DEFAULT);
-  }
 
   /***
    * I'm sure there is a better way, but for now I'm 
@@ -277,9 +307,10 @@ gtk_xtbin_realize (GtkWidget *widget)
    */
 
   top_widget = XtAppCreateShell("drawingArea", "Wrapper", 
-                                applicationShellWidgetClass, xtdisplay, 
+                                applicationShellWidgetClass, xtbin->xtdisplay, 
                                 NULL, 0);
 
+  xtbin->xtwidget = top_widget;
 
   /* set size of Xt window */
   n = 0;
@@ -287,7 +318,7 @@ gtk_xtbin_realize (GtkWidget *widget)
   XtSetArg(args[n], XtNwidth,  xtbin->width);n++;
   XtSetValues(top_widget, args, n);
 
-  embeded = XtVaCreateWidget("form", compositeWidgetClass, top_widget);
+  embeded = XtVaCreateWidget("form", compositeWidgetClass, top_widget, NULL);
 
   n = 0;
   XtSetArg(args[n], XtNheight, xtbin->height);n++;
@@ -297,30 +328,34 @@ gtk_xtbin_realize (GtkWidget *widget)
   /* Ok, here is the dirty little secret on how I am */
   /* switching the widget's XWindow to the GdkWindow's XWindow. */
   /* I should be ashamed of myself! */
+  gtk_object_set_data(GTK_OBJECT(widget), "oldwindow",
+                      GUINT_TO_POINTER(top_widget->core.window)); /* save it off so we can get it during destroy */
+
   top_widget->core.window = GDK_WINDOW_XWINDOW(widget->window);
+  
 
   /* this little trick seems to finish initializing the widget */
-  XtRegisterDrawable(xtdisplay, 
+  XtRegisterDrawable(xtbin->xtdisplay, 
                      GDK_WINDOW_XWINDOW(widget->window),
                      top_widget);
   
   XtRealizeWidget(embeded);
-  printf("embeded window = %p\n", XtWindow(embeded));
-
+#ifdef DEBUG_XTBIN
+  printf("embeded window = %li\n", XtWindow(embeded));
+#endif
   XtManageChild(embeded);
 
   /* now fill out the xtbin info */
-  xtbin->xtdisplay = xtdisplay;
   xtbin->xtwindow  = XtWindow(embeded);
 
   /* listen to all Xt events */
-  XSelectInput(xtdisplay, 
+  XSelectInput(xtbin->xtdisplay, 
                XtWindow(top_widget), 
-               GDK_ALL_EVENTS_MASK);
-  XSelectInput(xtdisplay, 
+               0x0FFFFF);
+  XSelectInput(xtbin->xtdisplay, 
                XtWindow(embeded), 
-               GDK_ALL_EVENTS_MASK);
-  XFlush(xtdisplay);
+               0x0FFFFF);
+  XFlush(xtbin->xtdisplay);
 }
 
 GtkWidget*
@@ -351,13 +386,105 @@ gtk_xtbin_set_position (GtkXtBin *xtbin,
 }
 
 
+static void
+gtk_xtbin_shutdown (GtkObject *object)
+{
+  GtkXtBin *xtbin;
+  GtkWidget *widget;
+
+#ifdef DEBUG_XTBIN
+  printf("gtk_xtbin_shutdown()\n");
+#endif
+
+  /* gtk_object_destroy() will already hold a refcount on object
+   */
+  xtbin = GTK_XTBIN(object);
+  widget = GTK_WIDGET(object);
+
+  if (widget->parent)
+    gtk_container_remove (GTK_CONTAINER (widget->parent), widget);
+
+  GTK_WIDGET_UNSET_FLAGS (widget, GTK_VISIBLE);
+  if (GTK_WIDGET_REALIZED (widget)) {
+    XtUnregisterDrawable(xtbin->xtdisplay,
+                         GDK_WINDOW_XWINDOW(GTK_WIDGET(object)->window));
 
 
+    xtbin->xtwidget->core.window = GPOINTER_TO_UINT(gtk_object_get_data(object, "oldwindow"));
+    XtUnrealizeWidget(xtbin->xtwidget);
+
+    gtk_widget_unrealize (widget);
+  }
 
 
+  gtk_object_remove_data(object, "oldwindow");
+
+  GTK_OBJECT_CLASS(parent_class)->shutdown (object);
+}
 
 
+static void
+gtk_xtbin_destroy (GtkObject *object)
+{
+  GtkXtBin *xtbin;
 
+#ifdef DEBUG_XTBIN
+  printf("gtk_xtbin_destroy()\n");
+#endif
 
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GTK_IS_XTBIN (object));
 
+  xtbin = GTK_XTBIN (object);
 
+  XtDestroyWidget(xtbin->xtwidget);
+
+#if 0
+  xt_is_initialized--; /* reduce our count here */
+
+  /* Initialize the Xt toolkit */
+  if (xt_is_initialized == 0) {
+    XtAppContext  ac;
+
+#ifdef DEBUG_XTBIN
+    printf("shutting down Xt stuff\n");
+#endif
+
+    /*
+     * Shutdown Xt stuff
+     */
+
+    g_main_remove_poll(&xt_event_poll_fd);
+    g_source_remove_by_user_data(xtbin->xtdisplay);
+
+    ac = XtDisplayToApplicationContext(xtbin->xtdisplay);
+    XtDestroyApplicationContext(ac);
+
+    /*
+     * XtDestroyApplicationContext destroys the display for us
+     */
+    /* XtCloseDisplay(xtbin->xtdisplay); */
+    xtbin->xtdisplay = NULL;
+  }
+#endif
+  GTK_OBJECT_CLASS(parent_class)->destroy(object);
+}
+
+static void
+gtk_xtbin_show (GtkWidget *widget)
+{
+  g_return_if_fail (widget != NULL);
+  g_return_if_fail (GTK_IS_WIDGET (widget));
+
+#ifdef DEBUG_XTBIN
+  printf("gtk_xtbin_show()\n");
+#endif
+
+  if (!GTK_WIDGET_VISIBLE (widget))
+  {
+    GTK_WIDGET_SET_FLAGS (widget, GTK_VISIBLE);
+
+    if (!GTK_WIDGET_MAPPED(widget))
+      gtk_widget_map (widget);
+  }
+}

@@ -21,7 +21,7 @@
 #ifndef __GTK_XTBIN_H__
 #define __GTK_XTBIN_H__
 
-#include <gtk/gtkwindow.h>
+#include <gtk/gtkwidget.h>
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>
@@ -45,12 +45,12 @@ typedef struct _GtkXtBinClass GtkXtBinClass;
 
 struct _GtkXtBin
 {
-  GtkWindow      window;
-  GdkWindow     *current_window;
+  GtkWidget      widget;
   GdkWindow     *parent_window;
-  Widget         xtwidget;         /* Xt Toolkit Widget */
   Display       *xtdisplay;        /* Xt Toolkit Display */
-  XtAppContext   xtcontext;        /* Xt Toolkit Application Context */
+
+  Widget         xtwidget;         /* Xt Toolkit Widget */
+
   Window         xtwindow;         /* Xt Toolkit XWindow */
   gint           x, y;
   gint           width, height;
@@ -58,7 +58,7 @@ struct _GtkXtBin
   
 struct _GtkXtBinClass
 {
-  GtkWindowClass window_class;
+  GtkWidgetClass widget_class;
 };
 
 GtkType    gtk_xtbin_get_type (void);
