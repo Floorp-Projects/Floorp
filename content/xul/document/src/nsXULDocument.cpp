@@ -86,6 +86,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIEventListenerManager.h"
 #include "nsIScriptContextOwner.h"
@@ -1081,6 +1082,12 @@ XULDocumentImpl::~XULDocumentImpl()
         }
     }
 
+    if (mLocalStore) {
+        nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mLocalStore);
+        if (remote)
+            remote->Flush();
+    }
+
     if (mCSSLoader) {
       mCSSLoader->DropDocumentReference();
     }
@@ -2038,21 +2045,20 @@ XULDocumentImpl::EndLoad()
         NS_ASSERTION(NS_SUCCEEDED(rv), "could't add XUL builder");
         if (NS_FAILED(rv)) return rv;
 
-        // Add the main document datasource to the content model builder
-        rv = db->AddDataSource(mDocumentDataSource);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add XUL datasource to db");
-        if (NS_FAILED(rv)) return rv;
-
-        // Add the local store to the composite datasource.
+        // Add the local store to the composite datasource. It's first
+        // so that any local annotations will over-ride default values
+        // from the document.
         rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(mLocalStore));
-
-        if (NS_FAILED(rv)) {
-            NS_ERROR("couldn't create local data source");
-            return rv;
-        }
+        NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create local data source");
+        if (NS_FAILED(rv)) return rv;
 
         rv = db->AddDataSource(mLocalStore);
         NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't add local data source to db");
+        if (NS_FAILED(rv)) return rv;
+
+        // Add the main document datasource to the content model builder
+        rv = db->AddDataSource(mDocumentDataSource);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add XUL datasource to db");
         if (NS_FAILED(rv)) return rv;
 
         // Now create the root content for the document.
