@@ -72,13 +72,13 @@ nsMailDatabase::~nsMailDatabase()
 	// folder file.
 	summaryFileExists = summarySpec.Exists();
 
-	char	*nativeDBFileName = nsCRT::strdup((const char *) summarySpec);
+	char	*nativeFolderName = nsCRT::strdup((const char *) folderName);
 
 #ifdef XP_PC
-	UnixToNative(nativeDBFileName);
+	UnixToNative(nativeFolderName);
 #endif
-	stat (nativeDBFileName, &st);
-	PR_FREEIF(nativeDBFileName);
+	stat (nativeFolderName, &st);
+	PR_FREEIF(nativeFolderName);
 
 	nsresult err = mailDB->OpenMDB((const char *) summarySpec, create);
 
@@ -326,8 +326,12 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 {
 	nsresult ret = NS_OK;
 	struct stat st;
+	char	*nativeFileName = nsCRT::strdup(m_folderName);
+#ifdef XP_PC
+	UnixToNative(nativeFileName);
+#endif
 
-	if (stat(m_folderName, &st)) 
+	if (stat(nativeFileName, &st)) 
 		return NS_MSG_ERROR_FOLDER_MISSING;
 
 	if (valid)

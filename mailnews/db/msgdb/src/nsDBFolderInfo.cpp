@@ -69,8 +69,8 @@ nsDBFolderInfo::QueryInterface(REFNSIID iid, void** result)
 
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
-  : m_folderDate(0)      // now
 {
+    NS_INIT_REFCNT();
 	m_mdbTable = NULL;
 	m_mdbRow = NULL;
 	m_version = 1;			// for upgrading...
@@ -80,9 +80,13 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	m_sortOrder = 0;		// the last sort order (up or down
 	// mail only (for now)
 	m_folderSize = 0;
+	m_folderDate = 0;
 	m_expungedBytes = 0;	// sum of size of deleted messages in folder
 	m_highWaterMessageKey = 0;
-	
+
+	m_numNewMessages = 0;
+	m_numMessages = 0;
+	m_numVisibleMessages = 0;
 	// IMAP only
 	m_ImapUidValidity = 0;
 	m_totalPendingMessages =0;
@@ -267,7 +271,7 @@ NS_IMETHODIMP	nsDBFolderInfo::SetFolderSize(PRUint32 size)
 NS_IMETHODIMP	nsDBFolderInfo::SetFolderDate(time_t folderDate)
 {
 	m_folderDate = folderDate;
-	return SetUint32PropertyWithToken(m_folderDateColumnToken, m_folderSize);
+	return SetUint32PropertyWithToken(m_folderDateColumnToken, folderDate);
 }
 
 
@@ -523,9 +527,21 @@ NS_IMETHODIMP	nsDBFolderInfo::GetProperty(const char *propertyName, nsString &re
 
 NS_IMETHODIMP	nsDBFolderInfo::SetUint32Property(const char *propertyName, PRUint32 propertyValue)
 {
-	nsString propertyStr;
-	propertyStr.Append(propertyValue, 10);
-	return SetProperty(propertyName, propertyStr);
+	struct mdbYarn yarn;
+	char	int32StrBuf[20];
+	yarn.mYarn_Buf = int32StrBuf;
+	yarn.mYarn_Size = sizeof(int32StrBuf);
+	yarn.mYarn_Fill = sizeof(int32StrBuf);
+
+	mdb_token	property_token;
+
+	nsresult err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
+	if (err == NS_OK)
+	{
+		nsMsgDatabase::UInt32ToYarn(&yarn, propertyValue);
+		err = m_mdbRow->AddColumn(m_mdb->GetEnv(), property_token, &yarn);
+	}
+	return err;
 }
 
 NS_IMETHODIMP	nsDBFolderInfo::SetProperty(const char *propertyName, nsString &propertyStr)
@@ -552,9 +568,15 @@ nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString &pro
 
 nsresult	nsDBFolderInfo::SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue)
 {
-	nsString propertyStr;
-	propertyStr.Append(propertyValue, 10);
-	return SetPropertyWithToken(aProperty, propertyStr);
+	struct mdbYarn yarn;
+	char	int32StrBuf[20];
+	yarn.mYarn_Buf = int32StrBuf;
+	yarn.mYarn_Size = sizeof(int32StrBuf);
+	yarn.mYarn_Fill = sizeof(int32StrBuf);
+
+	nsMsgDatabase::UInt32ToYarn(&yarn, propertyValue);
+	nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, &yarn);
+	return err;
 }
 
 nsresult	nsDBFolderInfo::SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue)
