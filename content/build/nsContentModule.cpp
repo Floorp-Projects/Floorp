@@ -411,12 +411,17 @@ RegisterHTMLImgElement(nsIComponentManager *aCompMgr,
   nsCOMPtr<nsICategoryManager> catman =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
 
-  if (! catman)
+  if (!catman)
     return NS_ERROR_FAILURE;
 
   nsXPIDLCString previous;
-  return catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
-                                  "Image", NS_HTMLIMGELEMENT_CONTRACTID,
+  nsresult rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                         "Image", NS_HTMLIMGELEMENT_CONTRACTID,
+                                         PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
+                                  "Image", "HTMLImageElement",
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
@@ -456,12 +461,17 @@ RegisterHTMLOptionElement(nsIComponentManager *aCompMgr,
   nsCOMPtr<nsICategoryManager> catman =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
 
-  if (! catman)
+  if (!catman)
     return NS_ERROR_FAILURE;
 
   nsXPIDLCString previous;
-  return catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
-                                  "Option", NS_HTMLOPTIONELEMENT_CONTRACTID,
+  nsresult rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                         "Option", NS_HTMLOPTIONELEMENT_CONTRACTID,
+                                         PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_PROTO_ALIAS_CATEGORY,
+                                  "Option", "HTMLOptionElement",
                                   PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
