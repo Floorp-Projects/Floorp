@@ -25,11 +25,13 @@
 #include "nsNativeDragSource.h"
 #include "nsClipboard.h"
 #include "nsISupportsArray.h"
+#include "nsDataObjCollection.h"
 
 #include <OLE2.h>
 #include "OLEIDL.H"
 #include "DDCOMM.h" // SET_FORMATETC macro
 
+static const char * MULTI_MIME = "Mozilla/IDataObjectCollectionFormat";
 
 static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
 static NS_DEFINE_IID(kIDragSessionIID, NS_IDRAGSESSION_IID);
@@ -109,21 +111,18 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransf
   // The clipboard class contains some static utility methods
   // that we can use to create an IDataObject from the transferable
 
+  nsDataObjCollection * dataObjCollection = new nsDataObjCollection();
   IDataObject * dataObj = nsnull;
   PRUint32 i;
   for (i=0;i<cnt;i++) {
     nsISupports * supports = anArrayTransferables->ElementAt(i);
     nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
     NS_RELEASE(supports);
-    if (i == 0) {
-      nsClipboard::CreateNativeDataObject(trans, &dataObj);
-    } else {
-      nsClipboard::SetupNativeDataObject(trans, dataObj);
-    }
-    NS_RELEASE(supports);
+    nsClipboard::CreateNativeDataObject(trans, &dataObj);
+    dataObjCollection->AddDataObject(dataObj);
   }
 
-  StartInvokingDragSession(dataObj, aActionType);
+  StartInvokingDragSession((IDataObject *)dataObjCollection, aActionType);
 
   NS_IF_RELEASE(dataObj);
 
@@ -181,22 +180,65 @@ NS_IMETHODIMP nsDragService::StartInvokingDragSession(IDataObject * aDataObj, PR
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable)
+NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
+{
+  // First check to see if the mDataObject is is Collection of IDataObjects
+  UINT format = nsClipboard::GetFormat(MULTI_MIME);
+  FORMATETC fe;
+  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+
+  if (S_OK != mDataObject->QueryGetData(&fe)) {
+    *aNumItems = 1;
+    return NS_OK;
+  }
+
+  // If it is the get the number of items in the collection
+  nsDataObjCollection * dataObjCol = (nsDataObjCollection *)mDataObject;
+  *aNumItems = (PRUint32)dataObjCol->GetNumDataObjects();
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 anItem)
 {
   // This typcially happens on a drop, the target would be asking
   // for it's transferable to be filled in
-  // Use a static clipboard utiloity method for this
-  if (nsnull != mDataObject) {
-    return nsClipboard::GetDataFromDataObject(mDataObject, nsnull, aTransferable);
+  // Use a static clipboard utility method for this
+  if ( nsnull == mDataObject ) {
+    return NS_ERROR_FAILURE;
   }
+
+  // First check to see if the mDataObject is is Collection of IDataObjects
+  UINT format = nsClipboard::GetFormat(MULTI_MIME);
+  FORMATETC fe;
+  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+
+  // if it is a single object then get the data for it
+  if (S_OK != mDataObject->QueryGetData(&fe)) {
+    // Since there is only one object, they better be asking for item "0"
+    if (anItem == 0) {
+      return nsClipboard::GetDataFromDataObject(mDataObject, nsnull, aTransferable);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // If it is a collection of objects then get the data for the specified index
+  nsDataObjCollection * dataObjCol = (nsDataObjCollection *)mDataObject;
+  PRUint32 cnt = dataObjCol->GetNumDataObjects();
+  if (anItem >= 0 && anItem < cnt) {
+    IDataObject * dataObj = dataObjCol->GetDataObjectAt(anItem);
+    return nsClipboard::GetDataFromDataObject(dataObj, nsnull, aTransferable);
+  }
+
   return NS_ERROR_FAILURE;
 }
 
 //---------------------------------------------------------
 NS_IMETHODIMP nsDragService::SetIDataObject (IDataObject * aDataObj)
 {
-  // When the native drag starts the DragService gets the IDataObject
-  // that is being dragged
+  // When the native drag starts the DragService gets 
+  // the IDataObject that is being dragged
   NS_IF_RELEASE(mDataObject);
   mDataObject = aDataObj;
   NS_ADDREF(mDataObject);
@@ -211,21 +253,38 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(nsString * aDataFlavor)
     return NS_ERROR_FAILURE;
   }
 
-  //DWORD   types[]  = {TYMED_HGLOBAL, TYMED_FILE, TYMED_ISTREAM, TYMED_GDI};
-  //PRInt32 numTypes = 4;
-
-  UINT format = nsClipboard::GetFormat(*aDataFlavor);
-
-  // XXX at the moment we only support global memory transfers
-  // It is here where we will add support for native images 
-  // and IStream and Files
+  // First check to see if the mDataObject is is Collection of IDataObjects
+  UINT format = nsClipboard::GetFormat(MULTI_MIME);
   FORMATETC fe;
-  //SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1,TYMED_HGLOBAL | TYMED_FILE | TYMED_ISTREAM | TYMED_GDI);
+  SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+
+  if (S_OK != mDataObject->QueryGetData(&fe)) {
+    // Ok, so we have a single object
+    // now check to see if has the correct data type
+    format = nsClipboard::GetFormat(*aDataFlavor);
+    SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
+
+    if (S_OK == mDataObject->QueryGetData(&fe)) {
+      return NS_OK;
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Set it up for the data flavor
+  format = nsClipboard::GetFormat(*aDataFlavor);
   SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL | TYMED_FILE | TYMED_GDI);
 
-  // Starting by querying for the data to see if we can get it as from global memory
-  if (S_OK == mDataObject->QueryGetData(&fe)) {
-    return NS_OK;
+  // Ok, now see if any one of the IDataObjects in the collection
+  // supports this data type
+  nsDataObjCollection * dataObjCol = (nsDataObjCollection *)mDataObject;
+  PRUint32 i;
+  PRUint32 cnt = dataObjCol->GetNumDataObjects();
+  for (i=0;i<cnt;i++) {
+    IDataObject * dataObj = dataObjCol->GetDataObjectAt(i);
+    if (S_OK == dataObj->QueryGetData(&fe)) {
+      return NS_OK;
+    }
   }
 
   return NS_ERROR_FAILURE;

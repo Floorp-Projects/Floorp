@@ -46,7 +46,8 @@ public:
   NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession);
 
   // nsIDragSession
-  NS_IMETHOD GetData (nsITransferable * aTransferable);
+  NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 anItem);
+  NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
   NS_IMETHOD IsDataFlavorSupported(nsString * aDataFlavor);
 
   // native impl.
