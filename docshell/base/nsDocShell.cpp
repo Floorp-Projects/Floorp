@@ -68,6 +68,8 @@
 
 #include "nsIPrincipal.h"
 
+#include "nsPIDOMWindow.h"
+
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
 #include "nsIConsoleService.h"
@@ -76,6 +78,12 @@
 // used to dispatch urls to default protocol handlers
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
+
+// XXX Very unfortunate dependencies.  These are required to fix
+// some serious focus bugs.  Please read my comment in
+// SetupNewViewer.  -- hyatt
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULCommandDispatcher.h"
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
@@ -2619,13 +2627,57 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
          }
       }
 
+  // XXX The command dispatcher is the only object that understands
+  // focus in our system truly, madly, and deeply.  Right now it is attached to 
+  // XUL documents, but eventually it will move into the embedding layer and be 
+  // divorced from XUL.
+  //
+  // For 6.0, however, this isn't going to happen.
+  //
+  // It is necessary to obtain the command dispatcher to utilize its ability
+  // to suppress focus.  This is necessary to fix Win32-only bugs related to
+  // a loss of focus when mContentViewer is set to null.  The internal window
+  // is destroyed, and the OS focuses the parent window.  This call ends up
+  // notifying the command dispatcher that the outer window should focus
+  // and this hoses us on any link traversal.
+  //
+  // Please do not touch any of the command dispatcher code here without
+  // testing bugs #28580 and 50509.  These are immensely important bugs,
+  // so PLEASE take care not to regress them if you decide to alter this 
+  // code later              -- hyatt
+  nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+  if (mScriptGlobal) {
+    nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+    nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mScriptGlobal);
+    ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+    nsCOMPtr<nsIDOMDocument> rootDocument;
+    rootWindow->GetDocument(getter_AddRefs(rootDocument));
+    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+    if (xulDoc) {
+      // See if we have a command dispatcher attached.
+      xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+      if (commandDispatcher) {
+        // Suppress the command dispatcher.
+        commandDispatcher->SetSuppressFocus(PR_TRUE);
+      }
+    }
+  }
+
   // Stop any activity that may be happening in the old document before
   // releasing it...
   if (mContentViewer) {
     mContentViewer->Stop();
   }
+
    mContentViewer = nsnull;
    // End copying block (Don't hold content/document viewer ref beyond here!!)
+
+   // See the book I wrote above regarding why the command dispatcher is 
+   // being used here.  I reiterate that this object is not really a XUL
+   // object and will move post-6.0, so please don't come into my cube
+   // and beat me for checking this in.  -- hyatt
+   if (commandDispatcher)
+     commandDispatcher->SetSuppressFocus(PR_FALSE);
 
    if(mScriptContext)
       mScriptContext->GC();
