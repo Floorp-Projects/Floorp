@@ -5,3 +5,5 @@
 nsIDocumentLoader.h
 nsILinkHandler.h
 nsweb.h
+nsIWebShell.h
+nsIContentViewerContainer.h
