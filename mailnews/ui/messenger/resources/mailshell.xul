@@ -157,9 +157,9 @@
 <!ENTITY forwardCmd.label ".Forward">  
 <!ENTITY msgMenu.label "Message">  
 <!ENTITY newMsgCmd.label "New Message">  
-<!ENTITY replyMsgCmd.label ".Reply">  
-<!ENTITY replyToAllMsgCmd.label ".Reply to All">  
-<!ENTITY forwardMsgCmd.label ".Forward">  
+<!ENTITY replyMsgCmd.label "Reply">  
+<!ENTITY replyToAllMsgCmd.label "Reply to All">  
+<!ENTITY forwardMsgCmd.label "Forward">  
 <!ENTITY forwardAsMenu.label ".Forward As">  
 <!ENTITY forwardAsInline.label ".Inline">  
 <!ENTITY forwardAsQuoted.label ".Quoted">  
