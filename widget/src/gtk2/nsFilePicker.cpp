@@ -66,8 +66,8 @@ static NS_DEFINE_CID(kXULFilePickerCID, XULFILEPICKER_CID);
 // We should then decide to load the component (or not) from the component mgr.
 // We don't really have a mechanism to do that, though....
 
-typedef struct GtkFileChooser;
-typedef struct GtkFileFilter;
+typedef struct _GtkFileChooser GtkFileChooser;
+typedef struct _GtkFileFilter GtkFileFilter;
 
 /* Copied from gtkfilechooser.h */
 typedef enum
