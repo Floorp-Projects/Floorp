@@ -49,7 +49,7 @@ public:
 	// we suppport the nsIMailboxService Interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener * aMailboxParser, 
+	NS_IMETHOD ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListener * aMailboxParser, 
 							nsIUrlListener * aUrlListener, nsIURL ** aURL);
 	
 

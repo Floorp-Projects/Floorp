@@ -1,0 +1,62 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIUrlListener.idl"
+
+interface nsIURL;
+interface nsIStreamListener;
+
+[ref] native nsFileSpec(nsFileSpec);
+
+%{C++
+#include "nsFileSpec.h"
+%}
+
+[scriptable, uuid(EEF82460-CB69-11d2-8065-006008128C4E)]
+interface nsIMailboxService : nsISupports {
+
+  /*
+   * All of these functions build mailbox urls and run them. If you want a
+   * handle on the running task, pass in a valid nsIURL ptr. You can later
+   * interrupt this action by asking the netlib service manager to interrupt
+   * the url you are given back. Remember to release aURL when you are done
+   * with it. Pass nsnull in for aURL if you don't care about the returned URL.
+   */
+	
+  /*
+   * Pass in a file path for the mailbox you wish to parse. You also need to
+   * pass in a mailbox  parser (the consumer). The url listener can be null
+   * if you have no interest in tracking the url.
+   */
+  nsIURL ParseMailbox(in nsFileSpec aMailboxPath,
+                      in nsIStreamListener aMailboxParser,
+                      in nsIUrlListener aUrlListener);
+
+  /*
+   * This is more of a convience function for testing purposes. We want
+   * to able to say: display message number 'n' in this mailbox without
+   * having to go out and get the key for message number 'n'. this
+   * function simply makes that possible.
+   */
+
+  nsIURL DisplayMessageNumber(in string url,
+                              in unsigned long aMessageNumber,
+                              in nsISupports aDisplayConsumer,
+                              in nsIUrlListener aUrlListener);
+};

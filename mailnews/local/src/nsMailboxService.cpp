@@ -32,6 +32,7 @@
 #include "nsMsgDBCID.h"
 #include "nsMsgKeyArray.h"
 #include "nsLocalUtils.h"
+#include "nsMsgLocalCID.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -81,7 +82,7 @@ nsresult nsMailboxService::QueryInterface(const nsIID &aIID, void** aInstancePtr
     return NS_NOINTERFACE;
 }
 
-nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
+nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 	nsCOMPtr<nsIMailboxUrl> url;
