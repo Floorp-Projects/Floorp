@@ -19,16 +19,18 @@
 #
 # Contributor(s): Bradley Baetz <bbaetz@acm.org>
 
-use strict;
-
 package Bugzilla::Error;
 
+use strict;
 use base qw(Exporter);
 
-@Bugzilla::Error::EXPORT = qw(ThrowUserError);
+@Bugzilla::Error::EXPORT = qw(ThrowCodeError ThrowTemplateError ThrowUserError);
 
-sub ThrowUserError {
-    my ($error, $vars, $unlock_tables) = @_;
+use Bugzilla::Config;
+use Bugzilla::Util;
+
+sub _throw_error {
+    my ($name, $error, $vars, $unlock_tables) = @_;
 
     $vars ||= {};
 
@@ -39,9 +41,53 @@ sub ThrowUserError {
     print Bugzilla->cgi->header();
 
     my $template = Bugzilla->template;
-    $template->process("global/user-error.html.tmpl", $vars)
-      || &::ThrowTemplateError($template->error());
+    $template->process($name, $vars)
+      || ThrowTemplateError($template->error());
 
+    exit;
+}
+
+sub ThrowUserError {
+    _throw_error("global/user-error.html.tmpl", @_);
+}
+
+sub ThrowCodeError {
+    _throw_error("global/code-error.html.tmpl", @_);
+}
+
+sub ThrowTemplateError {
+    my ($template_err) = @_;
+
+    my $vars = {};
+
+    $vars->{'template_error_msg'} = $template_err;
+    $vars->{'error'} = "template_error";
+
+    my $template = Bugzilla->template;
+
+    # Try a template first; but if this one fails too, fall back
+    # on plain old print statements.
+    if (!$template->process("global/code-error.html.tmpl", $vars)) {
+        my $maintainer = Param('maintainer');
+        my $error = html_quote($vars->{'template_error_msg'});
+        my $error2 = html_quote($template->error());
+        print <<END;
+        <tt>
+          <p>
+            Bugzilla has suffered an internal error. Please save this page and 
+            send it to $maintainer with details of what you were doing at the 
+            time this message appeared.
+          </p>
+          <script type="text/javascript"> <!--
+            document.write("<p>URL: " + document.location + "</p>");
+          // -->
+          </script>
+          <p>Template->process() failed twice.<br>
+          First error: $error<br>
+          Second error: $error2</p>
+        </tt>
+END
+    }
     exit;
 }
 
@@ -81,6 +127,25 @@ An optional third argument may be supplied. If present (and defined), then the
 error handling code will unlock the database tables. In the long term, this
 argument will go away, to be replaced by transactional C<rollback> calls. There
 is no timeframe for doing so, however.
+
+=item C<ThrowCodeError>
+
+This function is used when an internal check detects an error of some sort.
+This usually indicates a bug in Bugzilla, although it can occur if the user
+manually constructs urls without correct parameters.
+
+This function's behaviour is similar to C<ThrowUserError>, except that the
+template used to display errors is I<global/code-error.html.tmpl>. In addition
+if the hashref used as the optional second argument contains a key I<variables>
+then the contents of the hashref (which is expected to be another hashref) will
+be displayed after the error message, as a debugging aid.
+
+=item C<ThrowTemplateError>
+
+This function should only be called if a C<template-<gt>process()> fails.
+It tries another template first, because often one template being
+broken or missing doesn't mean that they all are. But it falls back to
+a print statement as a last-ditch error.
 
 =back
 

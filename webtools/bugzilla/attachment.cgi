@@ -153,7 +153,7 @@ elsif ($action eq "update")
 }
 else 
 { 
-  ThrowCodeError("unknown_action");
+  ThrowCodeError("unknown_action", { action => $action });
 }
 
 exit;
@@ -302,8 +302,8 @@ sub validateContentType
   }
   else
   {
-    $vars->{'contenttypemethod'} = $::FORM{'contenttypemethod'};
-    ThrowCodeError("illegal_content_type_method");
+    ThrowCodeError("illegal_content_type_method",
+                   { contenttypemethod => $::FORM{'contenttypemethod'} });
   }
 
   if ( $::FORM{'contenttype'} !~ /^(application|audio|image|message|model|multipart|text|video)\/.+$/ )
@@ -387,13 +387,11 @@ sub validateObsolete
   # Make sure the attachment id is valid and the user has permissions to view
   # the bug to which it is attached.
   foreach my $attachid (@{$::MFORM{'obsolete'}}) {
-    # my $vars after ThrowCodeError is updated to not use the global
-    # vars hash
-
+    my $vars = {};
     $vars->{'attach_id'} = $attachid;
     
     detaint_natural($attachid)
-      || ThrowCodeError("invalid_attach_id_to_obsolete");
+      || ThrowCodeError("invalid_attach_id_to_obsolete", $vars);
   
     SendSQL("SELECT bug_id, isobsolete, description 
              FROM attachments WHERE attach_id = $attachid");
@@ -410,12 +408,12 @@ sub validateObsolete
     {
       $vars->{'my_bug_id'} = $::FORM{'bugid'};
       $vars->{'attach_bug_id'} = $bugid;
-      ThrowCodeError("mismatched_bug_ids_on_obsolete");
+      ThrowCodeError("mismatched_bug_ids_on_obsolete", $vars);
     }
 
     if ( $isobsolete )
     {
-      ThrowCodeError("attachment_already_obsolete");
+      ThrowCodeError("attachment_already_obsolete", $vars);
     }
 
     # Check that the user can modify this attachment

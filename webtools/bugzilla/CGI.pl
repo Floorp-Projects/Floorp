@@ -95,14 +95,15 @@ sub CheckFormField (\%$;\@) {
 
         SendSQL("SELECT description FROM fielddefs WHERE name=" . SqlQuote($fieldname));
         my $result = FetchOneColumn();
+        my $field;
         if ($result) {
-            $vars->{'field'} = $result;
+            $field = $result;
         }
         else {
-            $vars->{'field'} = $fieldname;
+            $field = $fieldname;
         }
         
-        ThrowCodeError("illegal_field", undef, "abort");
+        ThrowCodeError("illegal_field", { field => $field }, "abort");
       }
 }
 
@@ -113,8 +114,7 @@ sub CheckFormFieldDefined (\%$) {
        ) = @_;
 
     if (!defined $formRef->{$fieldname}) {
-        $vars->{'field'} = $fieldname;  
-        ThrowCodeError("undefined_field");
+        ThrowCodeError("undefined_field", { field => $fieldname });
     }
 }
 
@@ -239,81 +239,6 @@ sub PutHeader {
 sub PutFooter {
     $::template->process("global/footer.html.tmpl", $::vars)
       || ThrowTemplateError($::template->error());
-}
-
-###############################################################################
-# Error handling
-#
-# If you are doing incremental output, set $vars->{'header_done'} once you've
-# done the header.
-#
-# You can call Throw*Error with extra template variables in one pass by using
-# the $extra_vars hash reference parameter:
-# ThrowUserError("some_tag", { bug_id => $bug_id, size => 127 });
-###############################################################################
-
-# For "this shouldn't happen"-type places in the code.
-# The contents of $extra_vars get printed out in the template - useful for
-# debugging info.
-sub ThrowCodeError {
-  ($vars->{'error'}, my $extra_vars, my $unlock_tables) = (@_);
-
-  SendSQL("UNLOCK TABLES") if $unlock_tables;
-
-  # If we don't have this test here, then the %@extra_vars vivifies
-  # the hashref, and then setting $vars->{'variables'} uses an empty hashref
-  # so the error template prints out a bogus header for the empty hash
-  if (defined $extra_vars) {
-      # Copy the extra_vars into the vars hash 
-      foreach my $var (keys %$extra_vars) {
-          $vars->{$var} = $extra_vars->{$var};
-      }
-
-      # We may one day log something to file here also.
-      $vars->{'variables'} = $extra_vars;
-  }
-  
-  print Bugzilla->cgi->header();
-  $template->process("global/code-error.html.tmpl", $vars)
-    || ThrowTemplateError($template->error());
-    
-  exit;
-}
-
-# This function should only be called if a template->process() fails.
-# It tries another template first, because often one template being
-# broken or missing doesn't mean that they all are. But it falls back on
-# a print statement.
-# The Content-Type will already have been printed.
-sub ThrowTemplateError {
-    ($vars->{'template_error_msg'}) = (@_);
-    $vars->{'error'} = "template_error";
-    
-    # Try a template first; but if this one fails too, fall back
-    # on plain old print statements.
-    if (!$template->process("global/code-error.html.tmpl", $vars)) {
-        my $maintainer = Param('maintainer');
-        my $error = html_quote($vars->{'template_error_msg'});
-        my $error2 = html_quote($template->error());
-        print <<END;
-        <tt>
-          <p>
-            Bugzilla has suffered an internal error. Please save this page and 
-            send it to $maintainer with details of what you were doing at the 
-            time this message appeared.
-          </p>
-          <script type="text/javascript"> <!--
-            document.write("<p>URL: " + document.location + "</p>");
-          // -->
-          </script>
-          <p>Template->process() failed twice.<br>
-          First error: $error<br>
-          Second error: $error2</p>
-        </tt>
-END
-    }
-    
-    exit;  
 }
 
 sub CheckIfVotedConfirmed {

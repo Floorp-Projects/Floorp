@@ -198,13 +198,13 @@ sub validate {
         # Make sure the flag type exists.
         my $flag_type = get($id);
         $flag_type 
-          || &::ThrowCodeError("flag_type_nonexistent", { id => $id });
+          || ThrowCodeError("flag_type_nonexistent", { id => $id });
 
         # Make sure the value of the field is a valid status.
         grep($status eq $_, qw(X + - ?))
-          || &::ThrowCodeError("flag_status_invalid", 
-                               { id => $id , status => $status });
-                
+          || ThrowCodeError("flag_status_invalid", 
+                            { id => $id , status => $status });
+
         # Make sure the user didn't request the flag unless it's requestable.
         if ($status eq '?' && !$flag_type->{is_requestable}) {
             ThrowCodeError("flag_status_invalid", 

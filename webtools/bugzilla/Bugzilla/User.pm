@@ -33,6 +33,7 @@ use strict;
 package Bugzilla::User;
 
 use Bugzilla::Config;
+use Bugzilla::Error;
 use Bugzilla::Util;
 
 ################################################################################
@@ -551,9 +552,10 @@ sub match_field {
         }
         else {
             # bad argument
-            $vars->{'argument'} = $fields->{$field}->{'type'};
-            $vars->{'function'} = 'Bugzilla::User::match_field';
-            &::ThrowCodeError('bad_arg');
+            ThrowCodeError('bad_arg',
+                           { argument => $fields->{$field}->{'type'},
+                             function =>  'Bugzilla::User::match_field',
+                           });
         }
 
         for my $query (@queries) {
@@ -623,7 +625,7 @@ sub match_field {
     print Bugzilla->cgi->header();
 
     $::template->process("global/confirm-user-match.html.tmpl", $vars)
-      || &::ThrowTemplateError($::template->error());
+      || ThrowTemplateError($::template->error());
 
     exit;
 

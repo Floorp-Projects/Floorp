@@ -32,6 +32,7 @@ use strict;
 
 use Bugzilla::Config;
 use Bugzilla::Constants;
+use Bugzilla::Error;
 use Bugzilla::Util;
 
 sub login {
@@ -102,12 +103,12 @@ sub login {
 
     # An error may have occurred with the login mechanism
     if ($authres == AUTH_ERROR) {
-        $::vars->{'authmethod'} = lc($authmethod);
-        $::vars->{'userid'} = $userid;
-        $::vars->{'auth_err_tag'} = $extra;
-        $::vars->{'info'} = $info;
-
-        &::ThrowCodeError("auth_err");
+        ThrowCodeError("auth_err",
+                       { authmethod => lc($authmethod),
+                         userid => $userid,
+                         auth_err_tag => $extra,
+                         info => $info
+                       });
     }
 
     # We can load the page if the login was ok, or there was no data
@@ -134,7 +135,7 @@ sub login {
                              'caneditaccount' => Bugzilla::Auth->can_edit,
                            }
                           )
-          || &::ThrowTemplateError($template->error());
+          || ThrowTemplateError($template->error());
 
         # This seems like as good as time as any to get rid of old
         # crufty junk in the logincookies table.  Get rid of any entry
@@ -150,7 +151,7 @@ sub login {
     # the password was just wrong. (This makes it harder for a cracker
     # to find account names by brute force)
     if ($authres == AUTH_LOGINFAILED) {
-        &::ThrowUserError("invalid_username_or_password");
+        ThrowUserError("invalid_username_or_password");
     }
 
     # The account may be disabled
@@ -163,16 +164,16 @@ sub login {
                           -expires => "Tue, 15-Sep-1998 21:49:00 GMT");
 
         # and throw a user error
-        &::ThrowUserError("account_disabled",
-                          {'disabled_reason' => $extra});
+        ThrowUserError("account_disabled",
+                       {'disabled_reason' => $extra});
     }
 
     # If we get here, then we've run out of options, which shouldn't happen
-    &::ThrowCodeError("authres_unhandled",
-                      { authres => $authres,
-                        type => $type,
-                      }
-                     );
+    ThrowCodeError("authres_unhandled",
+                   { authres => $authres,
+                     type => $type,
+                   }
+                  );
 
 }
 

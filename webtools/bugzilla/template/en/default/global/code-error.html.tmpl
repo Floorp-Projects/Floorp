@@ -39,7 +39,7 @@
 
 [% error_message = BLOCK %]
   [% IF    error == "action_unrecognized" %]
-    I don't recognize the value (<em>[% variables.action FILTER html %]</em>)
+    I don't recognize the value (<em>[% action FILTER html %]</em>)
     of the <em>action</em> variable.
   
   [% ELSIF error == "attachment_already_obsolete" %]
@@ -84,9 +84,6 @@
   [% ELSIF error == "gd_not_installed" %]
     Charts will not work without the GD Perl module being installed.
     Run checksetup.pl for installation instructions.
-
-  [% ELSIF error == "group_bit_invalid" %]
-    One of the group bits submitted was invalid.
 
   [% ELSIF error == "illegal_content_type_method" %]
     Your form submission got corrupted somehow.  The <em>content
@@ -142,27 +139,31 @@
     [% terms.bug %] [%+ my_bug_id FILTER html %].
         
   [% ELSIF error == "flag_nonexistent" %]
-    There is no flag with ID #[% variables.id FILTER html %].
+    There is no flag with ID #[% id FILTER html %].
   
   [% ELSIF error == "flag_status_invalid" %]
-    The flag status <em>[% variables.status FILTER html %]</em> is invalid.
+    The flag status <em>[% status FILTER html %]</em>
+    [% IF id %]
+      for flag ID #[% id FILTER html %]
+    [% END %]
+    is invalid.
   
   [% ELSIF error == "flag_type_component_nonexistent" %]
-    The component <em>[% variables.component FILTER html %]</em> does not exist
-    in the product <em>[% variables.product FILTER html %]</em>.
+    The component <em>[% component FILTER html %]</em> does not exist
+    in the product <em>[% product FILTER html %]</em>.
   
   [% ELSIF error == "flag_type_component_without_product" %]
     A component was selected without a product being selected.
   
   [% ELSIF error == "flag_type_id_invalid" %]
-    The flag type ID <em>[% variables.id FILTER html %]</em> is not
+    The flag type ID <em>[% id FILTER html %]</em> is not
     a positive integer.
 
   [% ELSIF error == "flag_type_nonexistent" %]
-    There is no flag type with the ID <em>[% variables.id FILTER html %]</em>.
+    There is no flag type with the ID <em>[% id FILTER html %]</em>.
   
   [% ELSIF error == "flag_type_product_nonexistent" %]
-    The product <em>[% variables.product FILTER html %]</em> does not exist.
+    The product <em>[% product FILTER html %]</em> does not exist.
   
   [% ELSIF error == "flag_type_target_type_invalid" %]
     The target type was neither <em>[% terms.bug %]</em> nor <em>attachment</em>
@@ -170,10 +171,6 @@
   
   [% ELSIF error == "invalid_field_name" %]
     Can't use [% field FILTER html %] as a field name.
-    
-  [% ELSIF error == "invalid_output_type" %]
-    [% title = "Invalid Output Type" %]
-    Invalid output type [% type FILTER html %].
     
   [% ELSIF error == "missing_bug_id" %]
     No [% terms.bug %] ID was given.
@@ -195,10 +192,10 @@
     The group field <em>[% group FILTER html %]</em> is invalid.
 
   [% ELSIF error == "report_axis_invalid" %]
-    <em>[% variables.val FILTER html %]</em> is not a valid value for
-    [%+ IF    variables.fld == "x" %]the horizontal axis
-    [%+ ELSIF variables.fld == "y" %]the vertical axis
-    [%+ ELSIF variables.fld == "z" %]the multiple tables/images
+    <em>[% val FILTER html %]</em> is not a valid value for 
+    [%+ IF    fld == "x" %]the horizontal axis
+    [%+ ELSIF fld == "y" %]the vertical axis
+    [%+ ELSIF fld == "z" %]the multiple tables/images
     [%+ ELSE %]a report axis[% END %] field.
 
   [% ELSIF error == "token_generation_error" %]
@@ -222,21 +219,19 @@
 
   [% ELSIF error == "unknown_component" %]
     [% title = "Unknown Component" %]
-    There is no component named <em>[% variables.component FILTER html %]</em>.
+    There is no component named <em>[% component FILTER html %]</em>.
 
   [% ELSIF error == "unknown_product" %]
     [% title = "Unknown Product" %]
-    There is no product named <em>[% variables.product FILTER html %]</em>.
+    There is no product named <em>[% product FILTER html %]</em>.
 
   [% ELSE %]
-    [%# Give sensible error if error functions are used incorrectly.
-      #%]
-    You are using [% terms.Bugzilla %]'s ThrowCodeError() function incorrectly. 
-    You passed in the string '[% error FILTER html %]'. The correct use is to 
-    pass in a tag, and define that tag in the file code-error.html.tmpl.<br>
-    <br>
-    If you are a [% terms.Bugzilla %] end-user seeing this message, please save this
-    page and send it to [% Param('maintainer') %].
+    [% title = "Internal error" %]
+    An internal error has occured, but [% terms.Bugzilla %] doesn't know
+    what <code>[% error FILTER html %]</code> means.
+
+    If you are a [% terms.Bugzilla %] end-user seeing this message, please save
+    this page and send it to [% Param('maintainer') %].
   [% END %]
 [% END %]
 

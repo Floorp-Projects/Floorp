@@ -544,14 +544,14 @@ if ($order) {
                 # Accept an order fragment matching a column name, with
                 # asc|desc optionally following (to specify the direction)
                 if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @columnnames)) {
-                    $vars->{'fragment'} = $fragment;
+                    my $vars = { fragment => $fragment };
                     if ($order_from_cookie) {
                         $cgi->send_cookie(-name => 'LASTORDER',
                                           -expires => 'Tue, 15-Sep-1998 21:49:00 GMT');
-                        ThrowCodeError("invalid_column_name_cookie");
+                        ThrowCodeError("invalid_column_name_cookie", $vars);
                     }
                     else {
-                        ThrowCodeError("invalid_column_name_form");
+                        ThrowCodeError("invalid_column_name_form", $vars);
                     }
                 }
             }

@@ -976,9 +976,8 @@ SWITCH: for ($::FORM{'knob'}) {
 
         last SWITCH;
     };
-    
-    $vars->{'action'} = $::FORM{'knob'};
-    ThrowCodeError("unknown_action");
+
+    ThrowCodeError("unknown_action", { action => $::FORM{'knob'} });
 }
 
 
@@ -1746,8 +1745,7 @@ foreach my $id (@idlist) {
 if ($next_bug) {
     if (detaint_natural($next_bug) && CanSeeBug($next_bug, $::userid)) {
         my $bug = new Bug($next_bug, $::userid);
-        $vars->{'bug'} = $bug;
-        ThrowCodeError("bug_error") if $bug->error;
+        ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 
         $template->process("bug/process/next.html.tmpl", $vars)
           || ThrowTemplateError($template->error());

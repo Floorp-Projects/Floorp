@@ -165,10 +165,10 @@ sub queue {
                     push(@criteria, "bugs.component_id = $component_id");
                     push(@excluded_columns, 'component') unless $::FORM{'do_union'};
                 }
-                else { ThrowCodeError("unknown_component", { %::FORM }) }
+                else { ThrowCodeError("unknown_component", { component => $::FORM{component} }) }
             }
         }
-        else { ThrowCodeError("unknown_product", { %::FORM }) }
+        else { ThrowCodeError("unknown_product", { product => $::FORM{product} }) }
     }
     
     # Filter results by flag types.
@@ -281,7 +281,8 @@ sub validateStatus {
     return if !defined($::FORM{'status'});
     
     grep($::FORM{'status'} eq $_, qw(? +- + - all))
-      || ThrowCodeError("flag_status_invalid", { status => $::FORM{'status'} });
+      || ThrowCodeError("flag_status_invalid",
+                        { status => $::FORM{'status'} });
 }
 
 sub validateGroup {

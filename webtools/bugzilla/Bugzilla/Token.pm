@@ -30,6 +30,7 @@ use strict;
 package Token;
 
 use Bugzilla::Config;
+use Bugzilla::Error;
 
 use Date::Format;
 
@@ -88,7 +89,7 @@ sub IssueEmailChangeToken {
 
     my $message;
     $template->process("account/email/change-old.txt.tmpl", $vars, \$message)
-      || &::ThrowTemplateError($template->error());
+      || ThrowTemplateError($template->error());
 
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $message;
@@ -99,7 +100,7 @@ sub IssueEmailChangeToken {
 
     $message = "";
     $template->process("account/email/change-new.txt.tmpl", $vars, \$message)
-      || &::ThrowTemplateError($template->error());
+      || ThrowTemplateError($template->error());
 
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $message;
@@ -146,7 +147,7 @@ sub IssuePasswordToken {
     my $message = "";
     $template->process("account/password/forgotten-password.txt.tmpl", 
                                                                $vars, \$message)
-      || &::ThrowTemplateError($template->error());
+      || ThrowTemplateError($template->error());
 
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $message;
@@ -176,7 +177,7 @@ sub GenerateUniqueToken {
 
         ++$tries;
         if ($tries > 100) {
-            &::ThrowCodeError("token_generation_error");
+            ThrowCodeError("token_generation_error");
         }
 
         $token = &::GenerateRandomPassword();
@@ -225,7 +226,7 @@ sub Cancel {
 
     my $message;
     $template->process("account/cancel-token.txt.tmpl", $vars, \$message)
-      || &::ThrowTemplateError($template->error());
+      || ThrowTemplateError($template->error());
 
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $message;

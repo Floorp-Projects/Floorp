@@ -153,17 +153,17 @@ sub validate {
         
         # Make sure the flag exists.
         my $flag = get($id);
-        $flag || &::ThrowCodeError("flag_nonexistent", { id => $id });
+        $flag || ThrowCodeError("flag_nonexistent", { id => $id });
 
         # Make sure the user chose a valid status.
         grep($status eq $_, qw(X + - ?))
-          || &::ThrowCodeError("flag_status_invalid", 
-                               { id => $id , status => $status });
+          || ThrowCodeError("flag_status_invalid", 
+                            { id => $id, status => $status });
                 
         # Make sure the user didn't request the flag unless it's requestable.
         if ($status eq '?' && !$flag->{type}->{is_requestable}) {
             ThrowCodeError("flag_status_invalid", 
-                              { id => $id , status => $status });
+                           { id => $id, status => $status });
         }
         
         # Make sure the requestee is authorized to access the bug.
@@ -584,7 +584,7 @@ sub notify {
       $::template->process($template_file, $::vars, \$message);
     if (!$rv) {
         Bugzilla->cgi->header();
-        &::ThrowTemplateError($::template->error());
+        ThrowTemplateError($::template->error());
     }
     
     my $delivery_mode = Param("sendmailnow") ? "" : "-ODeliveryMode=deferred";

@@ -477,7 +477,7 @@ $vars->{'id'} = $id;
 my $bug = new Bug($id, $::userid);
 $vars->{'bug'} = $bug;
 
-ThrowCodeError("bug_error") if $bug->error;
+ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 
 $vars->{'sentmail'} = [];
 

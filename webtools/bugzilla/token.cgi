@@ -146,7 +146,7 @@ if ($::action eq 'reqpw') {
     # If the action that the user wants to take (specified in the "a" form field)
     # is none of the above listed actions, display an error telling the user 
     # that we do not understand what they would like to do.
-    ThrowCodeError("unknown_action");
+    ThrowCodeError("unknown_action", { action => $::action });
 }
 
 exit;
