@@ -130,10 +130,9 @@ struct JSArenaPool {
 #define JS_ARENA_GROW_CAST(p, type, pool, size, incr)                         \
     JS_BEGIN_MACRO                                                            \
         JSArena *_a = (pool)->current;                                        \
-        size_t _incr = JS_ARENA_ALIGN(pool, incr);                            \
-        jsuword _p = _a->avail;                                               \
-        jsuword _q = _p + _incr;                                              \
-        if (_p == (jsuword)(p) + JS_ARENA_ALIGN(pool, size)) {                \
+        if (_a->avail == (jsuword)(p) + JS_ARENA_ALIGN(pool, size)) {         \
+            size_t _nb = (size) + (incr);                                     \
+            jsuword _q = (jsuword)(p) + JS_ARENA_ALIGN(pool, _nb);            \
             if (_q <= _a->limit) {                                            \
                 _a->avail = _q;                                               \
                 JS_ArenaCountInplaceGrowth(pool, size, incr);                 \
