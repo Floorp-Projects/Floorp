@@ -628,9 +628,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   nsTableRowFrame* startRowFrame = aStartRowFrameIn;
   if (!startRowFrame || (startRowIndex != startRowIndexSave)) {
     PRInt32 rowX = rgStart;
-    for (startRowFrame = (nsTableRowFrame*)mFrames.FirstChild(); 
-         startRowFrame; 
-         startRowFrame->GetNextSibling((nsIFrame**)&startRowFrame)) {
+    for (startRowFrame = GetFirstRow(); startRowFrame; startRowFrame = startRowFrame->GetNextRow()) {
       if (rowX >= startRowIndex)
         break;
       rowX++;
