@@ -2071,6 +2071,7 @@ JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp)
 {
+    JSObject *proto_obj;
     JSClass *clasp;
     JSEnumerateOp enumerate;
     JSScopeProperty *sprop;
@@ -2098,21 +2099,37 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
          */
         JS_LOCK_OBJ(cx, obj);
         scope = (JSScope *) obj->map;
-        for (sprop = scope->props; sprop; sprop = sprop->next) {
-	    if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols)
-	        length++;
-        }
-        ida = js_NewIdArray(cx, length);
-        if (!ida) {
-	    JS_UNLOCK_OBJ(cx, obj);
-    	    goto init_error;
-        }
-        i = 0;
-        for (sprop = scope->props; sprop; sprop = sprop->next) {
-	    if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols) {
-	        PR_ASSERT(i < length);
-	        ida->vector[i++] = sym_id(sprop->symbols);
-	    }
+ 
+         /*
+          * If this object shares a scope with its prototype, don't enumerate
+          * its properties.  Otherwise they will be enumerated a second time
+          * when the prototype object is enumerated.
+          */
+         proto_obj = OBJ_GET_PROTO(cx, obj);
+         if (proto_obj && (scope == (JSScope *)proto_obj->map)) {
+             ida = js_NewIdArray(cx, 0);
+             if (!ida) {
+               JS_UNLOCK_OBJ(cx, obj);
+               goto init_error;
+             }
+         } else {
+             /* Object has a private scope; Enumerate all props in scope. */
+             for (sprop = scope->props; sprop; sprop = sprop->next) {
+                 if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols)
+                     length++;
+             }
+             ida = js_NewIdArray(cx, length);
+             if (!ida) {
+                 JS_UNLOCK_OBJ(cx, obj);
+                 goto init_error;
+             }
+             i = 0;
+             for (sprop = scope->props; sprop; sprop = sprop->next) {
+                 if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols) {
+                     PR_ASSERT(i < length);
+                     ida->vector[i++] = sym_id(sprop->symbols);
+                 }
+             }
         }
         JS_UNLOCK_OBJ(cx, obj);
         
