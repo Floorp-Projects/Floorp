@@ -33,17 +33,10 @@ use PLIF::Input::Arguments;
 @ISA = qw(PLIF::Input::Arguments);
 1;
 
-# Don't forget to put this module ABOVE the "CommandLine" module!  
-# The CommandLine module can't tell the difference between a keyword
-# query and real command line.
-
-# XXX should split this up into one CGI module per request method
-
 sub init {
     my $self = shift;
     my($app) = @_;
     require MIME::Base64; import MIME::Base64; # DEPENDENCY
-    require MIME::Parser; import MIME::Parser; # DEPENDENCY
     $self->SUPER::init(@_);
 }
 
@@ -79,81 +72,6 @@ sub splitArguments {
     $self->registerPropertyAsMetaData('acceptCharset', 'HTTP_ACCEPT_CHARSET');
     $self->registerPropertyAsMetaData('acceptEncoding', 'HTTP_ACCEPT_ENCODING');
     $self->registerPropertyAsMetaData('acceptLanguage', 'HTTP_ACCEPT_LANGUAGE');
-    # decode the arguments
-    my $method = $ENV{'REQUEST_METHOD'} || '';
-    if ($method eq 'POST') {
-        local $/ = undef;
-        $ENV{'QUERY_STRING'} = <STDIN>;
-        $method = 'GET';
-    }
-    if ($method eq 'GET') {
-        if (defined($ENV{'QUERY_STRING'})) {
-            foreach my $argument (split(/&/o, $ENV{'QUERY_STRING'})) {
-                if ($argument =~ /^(.*?)(?:=(.*))?$/os) {
-                    my $name = $1;
-                    my $value = $2;
-                    # decode the strings
-                    foreach my $string ($name, $value) {
-                        if (defined($string)) {
-                            $string =~ tr/+/ /; # convert + to spaces
-                            $string =~ s/% # a percent symbol
-                                ( # followed by
-                                  [0-9A-Fa-f]{2} # 2 hexidecimal characters
-                                  ) # which we shall put in $1
-                                    /chr(hex($1)) # and convert back into a character
-                                        /egox; # (evaluate, globally, optimised, with comments)
-                        } else {
-                            $string = '';
-                        }
-                    }
-                    $self->addArgument($name, $value);
-                } else {
-                    $self->warn(2, "argument (|$argument|) did not match regexp (can't happen!)");
-                }
-            }
-        } else {
-             # XXX no arguments
-        }
-    } elsif ($method eq 'POST') {
-=wip
-    # XXX
-
-   check CONTENT_TYPE. is it 'application/x-www-form-urlencoded', 'multipart/form-data'?
-
-    ### Create parser, and set some parsing options:
-        my $parser = new MIME::Parser;
-        $parser->output_under("$ENV{HOME}/mimemail");
-
-    ### Parse input:
-        my $entity = $parser->parse(\*STDIN);
-
-            foreach my $argument (XXX) {
-                if ($argument =~ /^(.*?)(?:=(.*))?$/os) {
-                    my $name = $1;
-                    my $value = $2;
-                    # decode the strings
-                    foreach my $string ($name, $value) {
-                        if (defined($string)) {
-                            $string =~ tr/+/ /; # convert + to spaces
-                            $string =~ s/% # a percent symbol
-                                ( # followed by
-                                  [0-9A-Fa-f]{2} # 2 hexidecimal characters
-                                  ) # which we shall put in $1
-                                    /chr(hex($1)) # and convert back into a character
-                                        /egox; # (evaluate, globally, optimised, with comments)
-                        } else {
-                            $string = '';
-                        }
-                    }
-                    $self->addArgument($name, $value);
-                } else {
-                    $self->warn(2, "argument (|$argument|) did not match regexp (can't happen!)");
-                }
-
-=cut
-    } else {
-        # should also deal with HTTP HEAD, PUT, etc, here XXX
-    }
     # decode username and password data
     if (defined($ENV{'HTTP_AUTHORIZATION'})) {
         if ($self->HTTP_AUTHORIZATION =~ /^Basic +(.*)$/os) {
@@ -163,6 +81,47 @@ sub splitArguments {
             $self->password($password);
         } else {
             # Some other authentication scheme
+        }
+    }
+    # decode the arguments
+    $self->decodeHTTPArguments;
+}
+
+sub decodeHTTPArguments {
+    my $self = shift;
+    $self->notImplemented();
+}
+
+# Takes as input a string encoded as per the
+#    application/x-www-form-urlencoded
+# ...format, and a coderef to a routine expecting a key/value pair.
+# Typically, the coderef will be  sub { $self->addArgument(@_); }
+# This is used by several methods, including GET, HEAD and one POST.
+sub splitURLEncodedForm {
+    my $self = shift;
+    my($input, $output) = @_;
+    use re 'taint'; # don't untaint stuff
+    foreach my $argument (split(/&/o, $input)) {
+        if ($argument =~ /^(.*?)(?:=(.*))?$/os) {
+            my $name = $1;
+            my $value = $2;
+            # decode the strings
+            foreach my $string ($name, $value) {
+                if (defined($string)) {
+                    $string =~ tr/+/ /; # convert + to spaces
+                    $string =~ s/% # a percent symbol
+                                 ( # followed by
+                    [0-9A-Fa-f]{2} # 2 hexidecimal characters
+                                 ) # which we shall put in $1
+                     /chr(hex($1)) # and convert back into a character
+                            /egox; # (evaluate, globally, optimised, with comments)
+                } else {
+                    $string = '';
+                }
+            }
+            &$output($name, $value);
+        } else {
+            $self->warn(2, "argument (|$argument|) did not match regexp (can't happen!)");
         }
     }
 }
