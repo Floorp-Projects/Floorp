@@ -19,8 +19,8 @@
 # date/time pairs.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2003/05/12 21:54:38 $ 
+# $Revision: 1.5 $ 
+# $Date: 2003/05/26 13:35:15 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/p4,v $ 
 # $Name:  $ 
@@ -301,13 +301,11 @@ sub time2perforceFormat {
   $mon++;
   $year += 1900;
 
-  my ($date_str);
-
   my $date_str = sprintf("%04u/%02u/%02u",
-                     $year, $mon, $mday);
+                         $year, $mon, $mday);
   
-  $time_str = sprintf("%02u:%02u:%02u",
-                  $hour, $min, $sec);
+  my $time_str = sprintf("%02u:%02u:%02u",
+                         $hour, $min, $sec);
 
   return ($date_str, $time_str);
 }
@@ -577,7 +575,7 @@ sub simulate_describe_cmd {
         my ($date_str, $time_str) = 
             time2perforceFormat($change_nums[$change_number]);
         
-        print "Change $change_number by $author on $date_str\n";
+        print "Change $change_number by $author on $date_str $time_str\n";
         print "\n";
         print "$comment";
         print "\n";
