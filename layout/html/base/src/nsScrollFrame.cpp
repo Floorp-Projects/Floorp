@@ -204,9 +204,12 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
     // has its scrolling set, use that value
     nsIFrame* parentFrame = nsnull;
     GetParent(&parentFrame);
-    nsCOMPtr<nsIAtom> frameType;
-    parent->GetFrameType(getter_AddRefs(frameType));
+    //nsCOMPtr<nsIAtom> frameType;
+    nsIAtom* frameType = nsnull;
+    //parent->GetFrameType(getter_AddRefs(frameType));
+    parent->GetFrameType(&frameType);
     if (nsLayoutAtoms::viewportFrame == frameType) {
+      NS_RELEASE(frameType);
       nsCOMPtr<nsISupports> container;
       rv = aPresContext.GetContainer(getter_AddRefs(container));
       if (NS_SUCCEEDED(rv)) {
