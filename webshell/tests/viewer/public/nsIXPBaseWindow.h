@@ -26,7 +26,6 @@
 #include "nsISupports.h"
 
 class nsIAppShell;
-class nsIPref;
 class nsIFactory;
 class nsIWebShell;
 class nsString;

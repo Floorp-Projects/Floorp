@@ -28,7 +28,6 @@
 
 // Forward declarations... 
 class nsIDeviceContext;
-class nsIPref;
 class nsString;
 struct nsRect;
 class nsIContentViewerContainer;
