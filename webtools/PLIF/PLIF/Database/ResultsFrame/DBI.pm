@@ -125,7 +125,14 @@ sub execute {
             $value = undef; # used to be '' # XXX ?
         }
     }
-    if ($self->handle->execute(@values)) {
+    my $result = try {
+        $self->handle->execute(@values);
+    } except {
+        raise PLIF::Exception::Database (
+            'message' => $_[0],
+        );
+    };
+    if ($result) {
         $self->executed(1);
         return $self;
     } elsif (not $raise) {
