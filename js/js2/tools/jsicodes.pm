@@ -337,15 +337,21 @@ $ops{"RETURN_VOID"} =
   };
 $ops{"CALL"} =
   {
-   super  => "Instruction_4",
-   rem    => "result, target, this, args",
-   params => [ ("TypedRegister", "TypedRegister", "TypedRegister", "ArgumentList*") ]
+   super  => "Instruction_3",
+   rem    => "result, target, args",
+   params => [ ("TypedRegister", "TypedRegister", "ArgumentList*") ]
   };
 $ops{"DIRECT_CALL"} =
   {
    super  => "Instruction_3",
    rem    => "result, target, args",
    params => [ ("TypedRegister", "JSFunction*", "ArgumentList*") ]
+  };
+$ops{"BIND_THIS"} =
+  {
+   super  => "Instruction_3",
+   rem    => "result, this, target",
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };
 $ops{"GET_METHOD"} =
   {
