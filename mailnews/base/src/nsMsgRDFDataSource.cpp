@@ -22,6 +22,7 @@
 #include "plstr.h"
 #include "nsXPIDLString.h"
 #include "nsMsgRDFUtils.h"
+#include "nsEnumeratorUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -197,7 +198,23 @@ nsMsgRDFDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 NS_IMETHODIMP
 nsMsgRDFDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)
 {
-    return NS_RDF_NO_VALUE;
+ //return empty enumerator
+  nsCOMPtr<nsISupportsArray> arcs;
+
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(arcs));
+  if(NS_FAILED(rv))
+	  return rv;
+
+  nsArrayEnumerator* arrayEnumerator =
+    new nsArrayEnumerator(arcs);
+  
+  if (arrayEnumerator == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(arrayEnumerator);
+  *_retval = arrayEnumerator;
+
+  return NS_OK;
 }
 
 

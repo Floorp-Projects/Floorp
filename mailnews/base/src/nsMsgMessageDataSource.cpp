@@ -297,8 +297,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::HasAssertion(nsIRDFResource* source,
 NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsIn(nsIRDFNode* node,
                                                  nsISimpleEnumerator** labels)
 {
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
+	return nsMsgRDFDataSource::ArcLabelsIn(node, labels);
 }
 
 NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
