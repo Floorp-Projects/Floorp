@@ -441,8 +441,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
         // persist position, but not immediately, in case this OS is firing
         // repeated move events as the user drags the window
-//      win->SetPersistenceTimer();
-        win->StoreBoundsToXUL(PR_TRUE, PR_FALSE);
+        win->SetPersistenceTimer(PR_FALSE, PR_TRUE);
         break;
       }
       case NS_SIZE: {
@@ -456,8 +455,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
         // persist size, but not immediately, in case this OS is firing
         // repeated size events as the user drags the sizing handle
-        //win->SetPersistenceTimer();
-        win->StoreBoundsToXUL(PR_FALSE, PR_TRUE);
+        win->SetPersistenceTimer(PR_TRUE, PR_FALSE);
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
@@ -1250,7 +1248,7 @@ nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
   PR_Lock(win->mSPTimerLock);
   win->mSPTimer = nsnull;
   PR_Unlock(win->mSPTimerLock);
-  win->StoreBoundsToXUL(win->mSPTimerSize, win->mSPTimerPosition);
+  win->StoreBoundsToXUL(win->mSPTimerPosition, win->mSPTimerSize);
 }
 
 
