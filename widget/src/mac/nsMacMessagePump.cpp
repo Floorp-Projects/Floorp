@@ -397,20 +397,23 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inMenuBar:
 			{
-			  // If a xul popup is displayed, roll it up and don't allow the click
-			  // through to the menu code. This is how MacOS context menus work, so
-			  // I think this is a valid solution.
-			  if ( gRollupListener && gRollupWidget )
-				  gRollupListener->Rollup();
-				else {
-  			  long menuResult = ::MenuSelect(anEvent.where);
-  			  if (HiWord(menuResult) != 0)
-  			  {
-  				    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
-  			      DoMenu(anEvent, menuResult);
-  			  }
-  				break;
-  		  }
+				// If a xul popup is displayed, roll it up and don't allow the click
+				// through to the menu code. This is how MacOS context menus work, so
+				// I think this is a valid solution.
+				if ( gRollupListener && gRollupWidget )
+				{
+					gRollupListener->Rollup();
+				}
+				else
+				{
+					long menuResult = ::MenuSelect(anEvent.where);
+					if (HiWord(menuResult) != 0)
+					{
+						menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
+						DoMenu(anEvent, menuResult);
+					}
+				}
+				break;
 			}
 
 			case inContent:
@@ -462,7 +465,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 					Point oldPt = anEvent.where;
 					while (::WaitMouseUp())
 					{
-				        Repeater::DoRepeaters(anEvent);
+						Repeater::DoRepeaters(anEvent);
 
 						Point origin = {0,0};
 						::LocalToGlobal(&origin);
