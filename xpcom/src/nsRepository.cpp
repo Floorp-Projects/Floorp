@@ -73,7 +73,10 @@ nsDllStore *nsRepository::dllStore = NULL;
 
 static PRLogModuleInfo *logmodule = NULL;
 
+#if 0
+// Factory2 commented out until proven required
 static NS_DEFINE_IID(kFactory2IID, NS_IFACTORY2_IID);
+#endif /* 0 */
 
 /***************************************************************************/
 
