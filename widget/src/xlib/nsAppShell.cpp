@@ -63,9 +63,7 @@
 #include "nsIDragSessionXlib.h"
 #include "nsITimer.h"
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 #include "nsIXlibWindowService.h"
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 #include "xlibrgb.h"
 
@@ -76,18 +74,14 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
 static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 // // this is so that we can get the timers in the base.  most widget
 // // toolkits do this through some set of globals.  not here though.  we
 // // don't have that luxury
 extern "C" int NS_TimeToNextTimeout(struct timeval *);
 extern "C" void NS_ProcessTimeouts(void);
-#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 PRBool nsAppShell::DieAppShellDie = PR_FALSE;
 PRBool nsAppShell::mClicked = PR_FALSE;
@@ -143,7 +137,6 @@ static const char *event_names[] =
   "MappingNotify"
 };
 
-#ifndef MOZ_MONOLITHIC_TOOLKIT
 static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
 {
   static nsXlibTimeToNextTimeoutFunc sFunc = nsnull;
@@ -219,13 +212,9 @@ static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
 
   return sProc;
 }
-#endif
 
 static int CallTimeToNextTimeoutFunc(struct timeval * aTimeval)
 {
-#ifdef MOZ_MONOLITHIC_TOOLKIT
-  return NS_TimeToNextTimeout(aTimeval);
-#else
   nsXlibTimeToNextTimeoutFunc func = GetTimeToNextTimeoutFunc();
 
   if (func)
@@ -234,21 +223,16 @@ static int CallTimeToNextTimeoutFunc(struct timeval * aTimeval)
   }
 
   return 0;
-#endif /* MOZ_MONOLITHIC_TOOLKIT */
 }
 
 static void CallProcessTimeoutsProc(Display *aDisplay)
 {
-#ifdef MOZ_MONOLITHIC_TOOLKIT
-  NS_ProcessTimeouts();
-#else
   nsXlibProcessTimeoutsProc proc = GetProcessTimeoutsProc();
 
   if (proc)
   {
     (*proc)(aDisplay);
   }
-#endif /* MOZ_MONOLITHIC_TOOLKIT */
 }
 
 #define COMPARE_FLAG1( a,b) ((b)[0]=='-' && !strcmp((a), &(b)[1]))
