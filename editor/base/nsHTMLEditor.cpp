@@ -3256,20 +3256,20 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   whitespaceStart = styleValue.Find("white-space", PR_TRUE);
   if (whitespaceStart >= 0)
     whitespaceEnd = styleValue.Find(";", PR_FALSE, whitespaceStart);
-  if (whitespaceStart > 0)
+  if (whitespaceStart >= 0)
   {
     if (whitespaceEnd > whitespaceStart)
-      styleValue.Cut(whitespaceStart, whitespaceEnd - whitespaceStart);
+      styleValue.Cut(whitespaceStart, whitespaceEnd - whitespaceStart + 1);
     else
       styleValue.Cut(whitespaceStart, styleValue.Length() - whitespaceStart);
   }
   widthStart = styleValue.Find("width", PR_TRUE);
   if (widthStart >= 0)
     widthEnd = styleValue.Find(";", PR_FALSE, widthStart);
-  if (widthStart > 0)
+  if (widthStart >= 0)
   {
     if (widthEnd > widthStart)
-      styleValue.Cut(widthStart, widthEnd - widthStart);
+      styleValue.Cut(widthStart, widthEnd - widthStart + 1);
     else
       styleValue.Cut(widthStart, styleValue.Length() - widthStart);
   }
