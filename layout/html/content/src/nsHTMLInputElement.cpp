@@ -999,6 +999,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           case NS_FORM_INPUT_BUTTON:
           case NS_FORM_INPUT_RESET:
           case NS_FORM_INPUT_SUBMIT:
+          case NS_FORM_INPUT_IMAGE:
             {
               // Tell the frame about the click
               nsIFormControlFrame* formControlFrame = nsnull;

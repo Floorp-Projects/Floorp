@@ -287,29 +287,16 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
   *aEventStatus = nsEventStatus_eIgnore;
 
   switch (aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
+    case NS_MOUSE_LEFT_BUTTON_UP:
     {
       // Store click point for GetNamesValues
+      // Do this on MouseUp because the specs don't say and that's what IE does.
       float t2p;
       aPresContext->GetTwipsToPixels(&t2p);
       mLastClickPoint.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
       mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
 
-      mLastMouseState = eMouseDown;
       mGotFocus = PR_TRUE;
-      *aEventStatus = nsEventStatus_eConsumeNoDefault;
-      return NS_OK;
-      break;
-    }
-    case NS_MOUSE_LEFT_BUTTON_UP: 
-    {
-      if (eMouseDown == mLastMouseState) {
-        if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
-          MouseClicked(aPresContext);
-        }
-      } 
-      mLastMouseState = eMouseUp;
-      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       return NS_OK;
       break;
     }
