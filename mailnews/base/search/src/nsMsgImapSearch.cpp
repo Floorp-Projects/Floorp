@@ -290,114 +290,114 @@ nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
 
     if (NS_SUCCEEDED(err))
     {
-        m_offlineMailTable->SetAvailable (attribSender, opContains, 1);
-        m_offlineMailTable->SetEnabled   (attribSender, opContains, 1);
-        m_offlineMailTable->SetAvailable (attribSender, opDoesntContain, 1);
-        m_offlineMailTable->SetEnabled   (attribSender, opDoesntContain, 1);
-        m_offlineMailTable->SetAvailable (attribSender, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribSender, opIs, 1);
-        m_offlineMailTable->SetAvailable (attribSender, opIsnt, 1);
-        m_offlineMailTable->SetEnabled   (attribSender, opIsnt, 1);
-        m_offlineMailTable->SetAvailable (attribSender, opBeginsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribSender, opBeginsWith, 1);
-        m_offlineMailTable->SetAvailable (attribSender, opEndsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribSender, opEndsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
 
-        m_offlineMailTable->SetAvailable (attribTo, opContains, 1);
-        m_offlineMailTable->SetEnabled   (attribTo, opContains, 1);
-        m_offlineMailTable->SetAvailable (attribTo, opDoesntContain, 1);
-        m_offlineMailTable->SetEnabled   (attribTo, opDoesntContain, 1);
-        m_offlineMailTable->SetAvailable (attribTo, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribTo, opIs, 1);
-        m_offlineMailTable->SetAvailable (attribTo, opIsnt, 1);
-        m_offlineMailTable->SetEnabled   (attribTo, opIsnt, 1);
-        m_offlineMailTable->SetAvailable (attribTo, opBeginsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribTo, opBeginsWith, 1);
-        m_offlineMailTable->SetAvailable (attribTo, opEndsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribTo, opEndsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::EndsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::EndsWith, 1);
 
-        m_offlineMailTable->SetAvailable (attribCC, opContains, 1);
-        m_offlineMailTable->SetEnabled   (attribCC, opContains, 1);
-        m_offlineMailTable->SetAvailable (attribCC, opDoesntContain, 1);
-        m_offlineMailTable->SetEnabled   (attribCC, opDoesntContain, 1);
-        m_offlineMailTable->SetAvailable (attribCC, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribCC, opIs, 1);
-        m_offlineMailTable->SetAvailable (attribCC, opIsnt, 1);
-        m_offlineMailTable->SetEnabled   (attribCC, opIsnt, 1);
-        m_offlineMailTable->SetAvailable (attribCC, opBeginsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribCC, opBeginsWith, 1);
-        m_offlineMailTable->SetAvailable (attribCC, opEndsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribCC, opEndsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::EndsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::EndsWith, 1);
 
-        m_offlineMailTable->SetAvailable (attribToOrCC, opContains, 1);
-        m_offlineMailTable->SetEnabled   (attribToOrCC, opContains, 1);
-        m_offlineMailTable->SetAvailable (attribToOrCC, opDoesntContain, 1);
-        m_offlineMailTable->SetEnabled   (attribToOrCC, opDoesntContain, 1);
-        m_offlineMailTable->SetAvailable (attribToOrCC, opBeginsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribToOrCC, opBeginsWith, 1);
-        m_offlineMailTable->SetAvailable (attribToOrCC, opEndsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribToOrCC, opEndsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::EndsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::EndsWith, 1);
 
-        m_offlineMailTable->SetAvailable (attribSubject, opContains, 1);
-        m_offlineMailTable->SetEnabled   (attribSubject, opContains, 1);
-        m_offlineMailTable->SetAvailable (attribSubject, opDoesntContain, 1);
-        m_offlineMailTable->SetEnabled   (attribSubject, opDoesntContain, 1);
-        m_offlineMailTable->SetAvailable (attribSubject, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribSubject, opIs, 1);
-        m_offlineMailTable->SetAvailable (attribSubject, opIsnt, 1);
-        m_offlineMailTable->SetEnabled   (attribSubject, opIsnt, 1);
-        m_offlineMailTable->SetAvailable (attribSubject, opBeginsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribSubject, opBeginsWith, 1);
-        m_offlineMailTable->SetAvailable (attribSubject, opEndsWith, 1);
-        m_offlineMailTable->SetEnabled   (attribSubject, opEndsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::BeginsWith, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::EndsWith, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::EndsWith, 1);
 
-        m_offlineMailTable->SetAvailable (attribBody, opContains, 1);
-        m_offlineMailTable->SetEnabled   (attribBody, opContains, 1);
-        m_offlineMailTable->SetAvailable (attribBody, opDoesntContain, 1);
-        m_offlineMailTable->SetEnabled   (attribBody, opDoesntContain, 1);
-        m_offlineMailTable->SetAvailable (attribBody, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribBody, opIs, 1);
-        m_offlineMailTable->SetAvailable (attribBody, opIsnt, 1);
-        m_offlineMailTable->SetEnabled   (attribBody, opIsnt, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::Isnt, 1);
 
-        m_offlineMailTable->SetAvailable (attribDate, opIsBefore, 1);
-        m_offlineMailTable->SetEnabled   (attribDate, opIsBefore, 1);
-        m_offlineMailTable->SetAvailable (attribDate, opIsAfter, 1);
-        m_offlineMailTable->SetEnabled   (attribDate, opIsAfter, 1);
-        m_offlineMailTable->SetAvailable (attribDate, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribDate, opIs, 1);
-        m_offlineMailTable->SetAvailable (attribDate, opIsnt, 1);
-        m_offlineMailTable->SetEnabled   (attribDate, opIsnt, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsBefore, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsBefore, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsAfter, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsAfter, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
 
-        m_offlineMailTable->SetAvailable (attribPriority, opIsHigherThan, 1);
-        m_offlineMailTable->SetEnabled   (attribPriority, opIsHigherThan, 1);
-        m_offlineMailTable->SetAvailable (attribPriority, opIsLowerThan, 1);
-        m_offlineMailTable->SetEnabled   (attribPriority, opIsLowerThan, 1);
-        m_offlineMailTable->SetAvailable (attribPriority, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribPriority, opIs, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Priority, nsMsgSearchOp::IsHigherThan, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Priority, nsMsgSearchOp::IsHigherThan, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Priority, nsMsgSearchOp::IsLowerThan, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Priority, nsMsgSearchOp::IsLowerThan, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Priority, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Priority, nsMsgSearchOp::Is, 1);
 
-        m_offlineMailTable->SetAvailable (attribMsgStatus, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribMsgStatus, opIs, 1);
-        m_offlineMailTable->SetAvailable (attribMsgStatus, opIsnt, 1);
-        m_offlineMailTable->SetEnabled   (attribMsgStatus, opIsnt, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
 
-//      m_offlineMailTable->SetValidButNotShown (attribAgeInDays, opIsHigherThan, 1);
-//      m_offlineMailTable->SetValidButNotShown (attribAgeInDays, opIsLowerThan,  1);
-        m_offlineMailTable->SetAvailable (attribAgeInDays, opIsGreaterThan, 1);
-        m_offlineMailTable->SetEnabled   (attribAgeInDays, opIsGreaterThan, 1);
-        m_offlineMailTable->SetAvailable (attribAgeInDays, opIsLessThan,  1);
-        m_offlineMailTable->SetEnabled   (attribAgeInDays, opIsLessThan, 1);
-        m_offlineMailTable->SetAvailable (attribAgeInDays, opIs,  1);
-        m_offlineMailTable->SetEnabled   (attribAgeInDays, opIs, 1);
+//      m_offlineMailTable->SetValidButNotShown (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsHigherThan, 1);
+//      m_offlineMailTable->SetValidButNotShown (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLowerThan,  1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is,  1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
 
-        m_offlineMailTable->SetAvailable (attribOtherHeader, opContains, 1);   // added for arbitrary headers
-        m_offlineMailTable->SetEnabled   (attribOtherHeader, opContains, 1);
-        m_offlineMailTable->SetAvailable (attribOtherHeader, opDoesntContain, 1);
-        m_offlineMailTable->SetEnabled   (attribOtherHeader, opDoesntContain, 1);
-        m_offlineMailTable->SetAvailable (attribOtherHeader, opIs, 1);
-        m_offlineMailTable->SetEnabled   (attribOtherHeader, opIs, 1);
-        m_offlineMailTable->SetAvailable (attribOtherHeader, opIsnt, 1);
-        m_offlineMailTable->SetEnabled   (attribOtherHeader, opIsnt, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Isnt, 1);
 
     }
 
@@ -412,61 +412,61 @@ nsresult nsMsgSearchValidityManager::InitOnlineMailTable ()
 
     if (NS_SUCCEEDED(err))
     {
-        m_onlineMailTable->SetAvailable (attribSender, opContains, 1);
-        m_onlineMailTable->SetEnabled   (attribSender, opContains, 1);
-        m_onlineMailTable->SetAvailable (attribSender, opDoesntContain, 1);
-        m_onlineMailTable->SetEnabled   (attribSender, opDoesntContain, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::DoesntContain, 1);
 
-        m_onlineMailTable->SetAvailable (attribTo, opContains, 1);
-        m_onlineMailTable->SetEnabled   (attribTo, opContains, 1);
-        m_onlineMailTable->SetAvailable (attribTo, opDoesntContain, 1);
-        m_onlineMailTable->SetEnabled   (attribTo, opDoesntContain, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
 
-        m_onlineMailTable->SetAvailable (attribCC, opContains, 1);
-        m_onlineMailTable->SetEnabled   (attribCC, opContains, 1);
-        m_onlineMailTable->SetAvailable (attribCC, opDoesntContain, 1);
-        m_onlineMailTable->SetEnabled   (attribCC, opDoesntContain, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::DoesntContain, 1);
 
-        m_onlineMailTable->SetAvailable (attribToOrCC, opContains, 1);
-        m_onlineMailTable->SetEnabled   (attribToOrCC, opContains, 1);
-        m_onlineMailTable->SetAvailable (attribToOrCC, opDoesntContain, 1);
-        m_onlineMailTable->SetEnabled   (attribToOrCC, opDoesntContain, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::DoesntContain, 1);
 
-        m_onlineMailTable->SetAvailable (attribSubject, opContains, 1);
-        m_onlineMailTable->SetEnabled   (attribSubject, opContains, 1);
-        m_onlineMailTable->SetAvailable (attribSubject, opDoesntContain, 1);
-        m_onlineMailTable->SetEnabled   (attribSubject, opDoesntContain, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::DoesntContain, 1);
 
-        m_onlineMailTable->SetAvailable (attribBody, opContains, 1);
-        m_onlineMailTable->SetEnabled   (attribBody, opContains, 1);
-        m_onlineMailTable->SetAvailable (attribBody, opDoesntContain, 1);
-        m_onlineMailTable->SetEnabled   (attribBody, opDoesntContain, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Body, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Body, nsMsgSearchOp::DoesntContain, 1);
 
-        m_onlineMailTable->SetAvailable (attribDate, opIsBefore, 1);
-        m_onlineMailTable->SetEnabled   (attribDate, opIsBefore, 1);
-        m_onlineMailTable->SetAvailable (attribDate, opIsAfter, 1);
-        m_onlineMailTable->SetEnabled   (attribDate, opIsAfter, 1);
-        m_onlineMailTable->SetAvailable (attribDate, opIs, 1);
-        m_onlineMailTable->SetEnabled   (attribDate, opIs, 1);
-        m_onlineMailTable->SetAvailable (attribDate, opIsnt, 1);
-        m_onlineMailTable->SetEnabled   (attribDate, opIsnt, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsBefore, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsBefore, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsAfter, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsAfter, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Is, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Is, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
 
-        m_onlineMailTable->SetAvailable (attribMsgStatus, opIs, 1);
-        m_onlineMailTable->SetEnabled   (attribMsgStatus, opIs, 1);
-        m_onlineMailTable->SetAvailable (attribMsgStatus, opIsnt, 1);
-        m_onlineMailTable->SetEnabled   (attribMsgStatus, opIsnt, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
 
-        m_onlineMailTable->SetAvailable (attribAgeInDays, opIsGreaterThan, 1);
-        m_onlineMailTable->SetEnabled   (attribAgeInDays, opIsGreaterThan, 1);
-        m_onlineMailTable->SetAvailable (attribAgeInDays, opIsLessThan,  1);
-        m_onlineMailTable->SetEnabled   (attribAgeInDays, opIsLessThan, 1);
-        m_onlineMailTable->SetEnabled   (attribAgeInDays, opIs, 1);
-        m_onlineMailTable->SetAvailable (attribAgeInDays, opIs, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
 
-        m_onlineMailTable->SetAvailable (attribOtherHeader, opContains, 1);   // added for arbitrary headers
-        m_onlineMailTable->SetEnabled   (attribOtherHeader, opContains, 1);
-        m_onlineMailTable->SetAvailable (attribOtherHeader, opDoesntContain, 1);
-        m_onlineMailTable->SetEnabled   (attribOtherHeader, opDoesntContain, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
+        m_onlineMailTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
 
     }
 
@@ -489,100 +489,100 @@ nsresult nsMsgSearchValidityManager::InitOnlineMailFilterTable ()
 
     if (NS_SUCCEEDED(err))
     {
-        m_onlineMailFilterTable->SetAvailable (attribSender, opContains, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSender, opContains, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSender, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSender, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSender, opIs, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSender, opIs, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSender, opIsnt, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSender, opIsnt, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSender, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSender, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSender, opEndsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSender, opEndsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
 
-        m_onlineMailFilterTable->SetAvailable (attribTo, opContains, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribTo, opContains, 1);
-        m_onlineMailFilterTable->SetAvailable (attribTo, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribTo, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetAvailable (attribTo, opIs, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribTo, opIs, 1);
-        m_onlineMailFilterTable->SetAvailable (attribTo, opIsnt, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribTo, opIsnt, 1);
-        m_onlineMailFilterTable->SetAvailable (attribTo, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribTo, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetAvailable (attribTo, opEndsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribTo, opEndsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::EndsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::EndsWith, 1);
 
-        m_onlineMailFilterTable->SetAvailable (attribCC, opContains, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribCC, opContains, 1);
-        m_onlineMailFilterTable->SetAvailable (attribCC, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribCC, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetAvailable (attribCC, opIs, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribCC, opIs, 1);
-        m_onlineMailFilterTable->SetAvailable (attribCC, opIsnt, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribCC, opIsnt, 1);
-        m_onlineMailFilterTable->SetAvailable (attribCC, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribCC, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetAvailable (attribCC, opEndsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribCC, opEndsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::CC, nsMsgSearchOp::EndsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::CC, nsMsgSearchOp::EndsWith, 1);
 
-        m_onlineMailFilterTable->SetAvailable (attribToOrCC, opContains, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribToOrCC, opContains, 1);
-        m_onlineMailFilterTable->SetAvailable (attribToOrCC, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribToOrCC, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetAvailable (attribToOrCC, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribToOrCC, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetAvailable (attribToOrCC, opEndsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribToOrCC, opEndsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::EndsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::ToOrCC, nsMsgSearchOp::EndsWith, 1);
 
-        m_onlineMailFilterTable->SetAvailable (attribSubject, opContains, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSubject, opContains, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSubject, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSubject, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSubject, opIs, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSubject, opIs, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSubject, opIsnt, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSubject, opIsnt, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSubject, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSubject, opBeginsWith, 1);
-        m_onlineMailFilterTable->SetAvailable (attribSubject, opEndsWith, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribSubject, opEndsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::BeginsWith, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::EndsWith, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::EndsWith, 1);
 
-        m_onlineMailFilterTable->SetAvailable (attribDate, opIsBefore, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribDate, opIsBefore, 1);
-        m_onlineMailFilterTable->SetAvailable (attribDate, opIsAfter, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribDate, opIsAfter, 1);
-        m_onlineMailFilterTable->SetAvailable (attribDate, opIs, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribDate, opIs, 1);
-        m_onlineMailFilterTable->SetAvailable (attribDate, opIsnt, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribDate, opIsnt, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsBefore, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsBefore, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsAfter, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::IsAfter, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Date, nsMsgSearchOp::Isnt, 1);
 
-        m_onlineMailFilterTable->SetAvailable (attribPriority, opIsHigherThan, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribPriority, opIsHigherThan, 1);
-        m_onlineMailFilterTable->SetAvailable (attribPriority, opIsLowerThan, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribPriority, opIsLowerThan, 1);
-        m_onlineMailFilterTable->SetAvailable (attribPriority, opIs, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribPriority, opIs, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Priority, nsMsgSearchOp::IsHigherThan, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Priority, nsMsgSearchOp::IsHigherThan, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Priority, nsMsgSearchOp::IsLowerThan, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Priority, nsMsgSearchOp::IsLowerThan, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Priority, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Priority, nsMsgSearchOp::Is, 1);
 
-        m_onlineMailFilterTable->SetAvailable (attribMsgStatus, opIs, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribMsgStatus, opIs, 1);
-        m_onlineMailFilterTable->SetAvailable (attribMsgStatus, opIsnt, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribMsgStatus, opIsnt, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::MsgStatus, nsMsgSearchOp::Isnt, 1);
 
-        m_onlineMailFilterTable->SetValidButNotShown (attribAgeInDays, opIsGreaterThan, 1);
-        m_onlineMailFilterTable->SetValidButNotShown (attribAgeInDays, opIsLessThan,  1);
-        m_onlineMailFilterTable->SetValidButNotShown (attribAgeInDays, opIs, 1);
+        m_onlineMailFilterTable->SetValidButNotShown (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsGreaterThan, 1);
+        m_onlineMailFilterTable->SetValidButNotShown (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::IsLessThan,  1);
+        m_onlineMailFilterTable->SetValidButNotShown (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
 
-        m_onlineMailFilterTable->SetAvailable (attribOtherHeader, opContains, 1);   // added for arbitrary headers
-        m_onlineMailFilterTable->SetEnabled   (attribOtherHeader, opContains, 1);
-        m_onlineMailFilterTable->SetAvailable (attribOtherHeader, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribOtherHeader, opDoesntContain, 1);
-        m_onlineMailFilterTable->SetAvailable (attribOtherHeader, opIs, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribOtherHeader, opIs, 1);
-        m_onlineMailFilterTable->SetAvailable (attribOtherHeader, opIsnt, 1);
-        m_onlineMailFilterTable->SetEnabled   (attribOtherHeader, opIsnt, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Contains, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::DoesntContain, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Is, 1);
+        m_onlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Isnt, 1);
+        m_onlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::OtherHeader, nsMsgSearchOp::Isnt, 1);
 
     }
 

@@ -49,11 +49,9 @@ interface nsIMsgSearchSession :  nsISupports {
                           in nsMsgSearchOperator op,
                           in nsMsgSearchValue value); // wrong, should be out
 
-    long MSG_CountSearchScopes();
+    long CountSearchScopes();
 
-    [noscript]
-    voidStar MSG_GetNthSearchScope(in long which,
-                                   in nsMsgSearchScope scopeId);
+    void GetNthSearchScope(in long which,out nsMsgSearchScopeAttribute scopeId, out nsIMsgFolder folder);
 
 	/* add a scope (e.g. a mail folder) to the search */
     void AddScopeTerm(in nsMsgSearchScopeAttribute attrib,

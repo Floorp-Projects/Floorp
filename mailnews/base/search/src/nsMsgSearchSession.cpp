@@ -78,17 +78,22 @@ NS_IMETHODIMP nsMsgSearchSession::GetNthSearchTerm(PRInt32 whichTerm, nsMsgSearc
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* long MSG_CountSearchScopes (); */
-NS_IMETHODIMP nsMsgSearchSession::MSG_CountSearchScopes(PRInt32 *_retval)
+/* long CountSearchScopes (); */
+NS_IMETHODIMP nsMsgSearchSession::CountSearchScopes(PRInt32 *_retval)
 {
   NS_ENSURE_ARG(_retval);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* [noscript] voidStar MSG_GetNthSearchScope (in long which, in nsMsgSearchScope scopeId); */
-NS_IMETHODIMP nsMsgSearchSession::MSG_GetNthSearchScope(PRInt32 which, nsMsgSearchScope *scopeId, void * *_retval)
+  /* void GetNthSearchScope (in long which, out nsMsgSearchScope scopeId, out nsIMsgFolder folder); */
+NS_IMETHODIMP nsMsgSearchSession::GetNthSearchScope(PRInt32 which, nsMsgSearchScopeAttribute *scopeId, nsIMsgFolder **folder)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  // argh, does this do an addref?
+	nsMsgSearchScopeTerm *scopeTerm = m_scopeList.ElementAt(which);
+	*scopeId = scopeTerm->m_attribute;
+	*folder = scopeTerm->m_folder;
+  NS_IF_ADDREF(*folder);
+  return NS_OK;
 }
 
 /* void AddScopeTerm (in nsMsgSearchScope attrib, in nsIMsgFolder folder); */
