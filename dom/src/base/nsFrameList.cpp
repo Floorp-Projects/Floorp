@@ -116,10 +116,10 @@ nsFrameList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
   if (NS_WARN_IF_FALSE(globalObject, "Couldn't get to the globalObject")) {
-    CallQueryInterface(globalObject.get(), aReturn);
+    *aReturn = nsnull;
   }
   else {
-    *aReturn = nsnull;
+    CallQueryInterface(globalObject.get(), aReturn);
   }
   return NS_OK;
 }
