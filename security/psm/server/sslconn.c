@@ -461,13 +461,12 @@ SSMStatus SSMSSLDataConnection_PickleSecurityStatus(SSMSSLDataConnection* conn,
      * very unlikely), we will wait until the handshake callback creates it
      */
     SSM_LockResource(SSMRESOURCE(conn));
-    while (conn->m_sockStat == NULL ||
-           conn->m_sockStat->m_cipherName == NULL) {
+    if (conn->m_sockStat == NULL ||
+        conn->m_sockStat->m_cipherName == NULL) {
         SSM_DEBUG("Oops, the security status has not been updated.  "
                   "Waiting...\n");
-        SSM_WaitResource(SSMRESOURCE(conn), PR_INTERVAL_NO_TIMEOUT);
+        SSM_WaitResource(SSMRESOURCE(conn), PR_TicksPerSecond());
     }
-    /* XXX is this really necessary? */
     if (conn->m_sockStat == NULL) {
         SSM_DEBUG("No socket status on dead socket.\n");
         SSM_UnlockResource(SSMRESOURCE(conn));
