@@ -321,7 +321,7 @@
 <!-- customizable toolbars -->
 <!ENTITY calendar.context.customize.label             "カスタマイズ">
 <!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
+<!ENTITY calendar.menu.customize.label                "ツールバーをカスタマイズ">
 <!ENTITY calendar.menu.customize.accesskey            "C">
 <!ENTITY calendar.maintoolbar.name                    "メインツールバー">
 <!ENTITY calendar.maintoolbar.accesskey               "M">
