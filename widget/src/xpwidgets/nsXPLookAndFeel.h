@@ -99,6 +99,8 @@ public:
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
   NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
 
+  NS_IMETHOD LookAndFeelChanged();
+
 #ifdef NS_DEBUG
   NS_IMETHOD GetNavSize(const nsMetricNavWidgetID aWidgetID,
                         const nsMetricNavFontID   aFontID, 

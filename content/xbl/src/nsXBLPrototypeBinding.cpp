@@ -425,6 +425,14 @@ nsXBLPrototypeBinding::AddResource(nsIAtom* aResourceType, const nsAReadableStri
 }
 
 NS_IMETHODIMP
+nsXBLPrototypeBinding::FlushSkinSheets()
+{
+  if (mResources)
+    return mResources->FlushSkinSheets();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLPrototypeBinding::BindingAttached(nsIDOMEventReceiver* aReceiver)
 {
   if (mImplementation && mImplementation->mConstructor)

@@ -60,6 +60,7 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
+#include "nsITheme.h"
 #include "nsUnicharUtils.h"
 
 #ifdef IBMBIDI
@@ -404,7 +405,33 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     CalculateUnderline(aRenderingContext);
 
     const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    aRenderingContext.SetColor(colorStyle->mColor);
+    PRBool useStyleColor = PR_TRUE;
+    if (colorStyle->mColorFlags & NS_COLORFLAGS_THEME) {
+      // Obtain the color dynamically from the theme if possible.
+      nsCOMPtr<nsITheme> theme;
+      aPresContext->GetTheme(getter_AddRefs(theme));
+      if (theme) {
+        // Find the nearest enclosing style context that defined an appearance.
+        nsIFrame* curr = this;
+        while (curr) {
+          const nsStyleDisplay* disp;
+          curr->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)disp);
+          if (disp->mAppearance) {
+            nscolor color;
+            if (NS_SUCCEEDED(theme->GetWidgetColor(aPresContext, &aRenderingContext, curr, 
+                                                   disp->mAppearance, &color))) {
+              useStyleColor = PR_FALSE;
+              aRenderingContext.SetColor(color);
+            }
+            break;
+          }
+          curr->GetParent(&curr);
+        }      
+      }
+    }
+
+    if (useStyleColor)
+      aRenderingContext.SetColor(colorStyle->mColor);
 
 #ifdef IBMBIDI
     nsresult rv = NS_ERROR_FAILURE;

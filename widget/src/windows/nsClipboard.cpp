@@ -383,11 +383,9 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
   // Currently this is only handling TYMED_HGLOBAL data
   // For Text, Dibs, Files, and generic data (like HTML)
   if (S_OK == hres) {
+    static CLIPFORMAT fileDescriptorFlavor = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTOR ); 
+    static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
     switch (stm.tymed) {
-
-     static CLIPFORMAT fileDescriptorFlavor = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTOR ); 
-     static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
-
      case TYMED_HGLOBAL: 
         {
           switch (fe.cfFormat) {

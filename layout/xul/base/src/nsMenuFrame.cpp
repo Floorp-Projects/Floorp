@@ -327,8 +327,8 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMenuFrame::Destroy(nsIPresContext* aPresContext)
+nsresult
+nsMenuFrame::DestroyPopupFrames(nsIPresContext* aPresContext)
 {
   // Remove our frame mappings
   if (mFrameConstructor) {
@@ -341,7 +341,13 @@ nsMenuFrame::Destroy(nsIPresContext* aPresContext)
 
    // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames(aPresContext);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsMenuFrame::Destroy(nsIPresContext* aPresContext)
+{
+  DestroyPopupFrames(aPresContext);
   return nsBoxFrame::Destroy(aPresContext);
 }
 
@@ -618,6 +624,22 @@ nsMenuFrame::MarkAsGenerated()
     child->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
     if (genVal.IsEmpty())
       child->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"), PR_TRUE);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuFrame::UngenerateMenu()
+{
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+  
+  if (child) {
+    nsAutoString genVal;
+    child->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, genVal);
+    if (!genVal.IsEmpty())
+      child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, PR_TRUE);
   }
 
   return NS_OK;

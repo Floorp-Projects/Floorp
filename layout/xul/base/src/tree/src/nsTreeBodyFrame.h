@@ -109,7 +109,9 @@ class nsOutlinerStyleCache
 {
 public:
   nsOutlinerStyleCache() :mTransitionTable(nsnull), mCache(nsnull), mNextState(0) {};
-  virtual ~nsOutlinerStyleCache() { delete mTransitionTable; delete mCache; };
+  virtual ~nsOutlinerStyleCache() { Clear(); };
+
+  void Clear() { delete mTransitionTable; mTransitionTable = nsnull; delete mCache; mCache = nsnull; mNextState = 0; };
 
   nsresult GetStyleContext(nsICSSPseudoComparator* aComparator, nsIPresContext* aPresContext, 
                            nsIContent* aContent, 

@@ -55,6 +55,7 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIXMLContent.h"
+#include "nsIXBLBinding.h"
 #include "nsIDocument.h"
 #include "nsIBindingManager.h"
 #include "nsIScrollableFrame.h"
@@ -1721,8 +1722,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       NS_ADDREF(aParentContext);
       NOISY_TRACE_FRAME("non-null parent context provided: using it and assuming already resolved",aFrame);
     }
-    NS_ASSERTION(aParentContext, "Failed to resolve parent context");
-
+    
     // do primary context
     nsIStyleContext* newContext = nsnull;
     if (pseudoTag) {
@@ -1859,60 +1859,67 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
     aResultChange = aMinChange;
 
-    // now do children
-    PRInt32 listIndex = 0;
-    nsIAtom* childList = nsnull;
-    PRInt32 childChange;
-    nsIFrame* child;
+    if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) {
+      // There is no need to waste time crawling into a frame's children on a frame change.
+      // The act of reconstructing frames will force new style contexts to be resolved on all
+      // of this frame's descendants anyway, so we want to avoid wasting time processing
+      // style contexts that we're just going to throw away anyway. - dwh
 
-    do {
-      child = nsnull;
-      result = aFrame->FirstChild(aPresContext, childList, &child);
-      while ((NS_SUCCEEDED(result)) && (child)) {
-        nsFrameState  state;
-        child->GetFrameState(&state);
-        if (NS_FRAME_OUT_OF_FLOW != (state & NS_FRAME_OUT_OF_FLOW)) {
-          // only do frames that are in flow
-          nsCOMPtr<nsIAtom> frameType;
-          child->GetFrameType(getter_AddRefs(frameType));
-          if (nsLayoutAtoms::placeholderFrame == frameType.get()) { // placeholder
-            // get out of flow frame and recurse there
-            nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
-            NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+      // now do children
+      PRInt32 listIndex = 0;
+      nsIAtom* childList = nsnull;
+      PRInt32 childChange;
+      nsIFrame* child;
 
-            if (outOfFlowFrame != resolvedDescendant) {
-              ReResolveStyleContext(aPresContext, outOfFlowFrame, nsnull, content,
-                                    aAttrNameSpaceID, aAttribute,
+      do {
+        child = nsnull;
+        result = aFrame->FirstChild(aPresContext, childList, &child);
+        while ((NS_SUCCEEDED(result)) && (child)) {
+          nsFrameState  state;
+          child->GetFrameState(&state);
+          if (NS_FRAME_OUT_OF_FLOW != (state & NS_FRAME_OUT_OF_FLOW)) {
+            // only do frames that are in flow
+            nsCOMPtr<nsIAtom> frameType;
+            child->GetFrameType(getter_AddRefs(frameType));
+            if (nsLayoutAtoms::placeholderFrame == frameType.get()) { // placeholder
+              // get out of flow frame and recurse there
+              nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
+              NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+
+              if (outOfFlowFrame != resolvedDescendant) {
+                ReResolveStyleContext(aPresContext, outOfFlowFrame, nsnull, content,
+                                      aAttrNameSpaceID, aAttribute,
+                                      aChangeList, aMinChange, childChange);
+              } else {
+                NOISY_TRACE("out of flow frame already resolved as descendent\n");
+              }
+
+              // reresolve placeholder's context under out of flow frame
+              nsIStyleContext*  outOfFlowContext;
+              outOfFlowFrame->GetStyleContext(&outOfFlowContext);
+              ReResolveStyleContext(aPresContext, child, outOfFlowContext, content,
+                                    kNameSpaceID_Unknown, nsnull,
                                     aChangeList, aMinChange, childChange);
-            } else {
-              NOISY_TRACE("out of flow frame already resolved as descendent\n");
+              NS_RELEASE(outOfFlowContext);
             }
-
-            // reresolve placeholder's context under out of flow frame
-            nsIStyleContext*  outOfFlowContext;
-            outOfFlowFrame->GetStyleContext(&outOfFlowContext);
-            ReResolveStyleContext(aPresContext, child, outOfFlowContext, content,
-                                  kNameSpaceID_Unknown, nsnull,
-                                  aChangeList, aMinChange, childChange);
-            NS_RELEASE(outOfFlowContext);
-          }
-          else {  // regular child frame
-            if (child != resolvedDescendant) {
-              ReResolveStyleContext(aPresContext, child, nsnull, content,
-                                    aAttrNameSpaceID, aAttribute,
-                                    aChangeList, aMinChange, childChange);
-            } else {
-              NOISY_TRACE_FRAME("child frame already resolved as descendent, skipping",aFrame);
+            else {  // regular child frame
+              if (child != resolvedDescendant) {
+                ReResolveStyleContext(aPresContext, child, nsnull, content,
+                                      aAttrNameSpaceID, aAttribute,
+                                      aChangeList, aMinChange, childChange);
+              } else {
+                NOISY_TRACE_FRAME("child frame already resolved as descendent, skipping",aFrame);
+              }
             }
           }
+          child->GetNextSibling(&child);
         }
-        child->GetNextSibling(&child);
-      }
 
-      NS_IF_RELEASE(childList);
-      aFrame->GetAdditionalChildListName(listIndex++, &childList);
-    } while (childList);
-    // XXX need to do overflow frames???
+        NS_IF_RELEASE(childList);
+        aFrame->GetAdditionalChildListName(listIndex++, &childList);
+      } while (childList);
+      // XXX need to do overflow frames???
+    }
 
     NS_RELEASE(newContext);
     NS_IF_RELEASE(localContent);

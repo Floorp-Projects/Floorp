@@ -76,6 +76,7 @@
 // support them correctly the old constants need to be renamed and
 // new ones should be entered.
 
+CSS_PROP(-moz-appearance, appearance, REFLOW)
 CSS_PROP(-moz-border-radius, _moz_border_radius, VISUAL)
 CSS_PROP(-moz-border-radius-topleft, _moz_border_radius_topLeft, VISUAL)
 CSS_PROP(-moz-border-radius-topright, _moz_border_radius_topRight, VISUAL)

@@ -111,8 +111,11 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWea
   NS_IMETHOD GetStyleSheets(nsISupportsArray** aResult);
 
   NS_IMETHOD HasInsertionPoints(PRBool* aResult) { *aResult = (mInsertionPointTable != nsnull); return NS_OK; };
+  
   NS_IMETHOD HasStyleSheets(PRBool* aResult) 
   { *aResult = (mResources && mResources->mStyleSheetList); return NS_OK; };
+
+  NS_IMETHOD FlushSkinSheets();
 
   NS_IMETHOD InstantiateInsertionPoints(nsIXBLBinding* aBinding);
 

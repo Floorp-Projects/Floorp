@@ -242,6 +242,8 @@ private:
   void InitBidiInfo(void);
 #endif // IBMBIDI
 
+friend class nsNativeThemeWin;
+
 protected:
   nscolor					  mCurrentColor;
   nsIFontMetrics	  *mFontMetrics;

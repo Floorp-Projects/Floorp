@@ -55,7 +55,11 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
 #include "nsIWidget.h"
-
+#include "nsIRenderingContext.h"
+#include "nsIDocument.h"
+#include "nsIDeviceContext.h"
+#include "nsITheme.h"
+#include "nsIServiceManager.h"
 
 //#define DEBUG_LAYOUT
 
@@ -209,6 +213,9 @@ void Coelesced()
 
 #endif
 
+PRUint32 nsBox::gRefCnt = 0;
+nsITheme* nsBox::gTheme = nsnull;
+
 nsBox::nsBox(nsIPresShell* aShell):mMouseThrough(unset),
                                    mNextChild(nsnull),
                                    mParentBox(nsnull)
@@ -216,6 +223,18 @@ nsBox::nsBox(nsIPresShell* aShell):mMouseThrough(unset),
 {
   //mX = 0;
   //mY = 0;
+  gRefCnt++;
+  if (gRefCnt == 1)
+    nsServiceManager::GetService("@mozilla.org/chrome/chrome-native-theme;1",
+                                 NS_GET_IID(nsITheme),
+                                 (nsISupports**)&gTheme);
+}
+
+nsBox::~nsBox()
+{
+  gRefCnt--;
+  if (gRefCnt == 0)
+    nsServiceManager::ReleaseService("@mozilla.org/chrome/chrome-native-theme;1", gTheme);
 }
 
 NS_IMETHODIMP 
@@ -625,6 +644,40 @@ nsBox::GetBorder(nsMargin& aMargin)
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
+  aMargin.SizeTo(0,0,0,0);
+    
+  const nsStyleDisplay* disp;
+  frame->GetStyleData(eStyleStruct_Display,
+                      (const nsStyleStruct*&) disp);
+  if (disp->mAppearance && gTheme) {
+    // Go to the theme for the border.
+    nsSize size;
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+    content->GetDocument(*getter_AddRefs(doc));
+    nsCOMPtr<nsIPresShell> shell;
+    if (doc) {
+      doc->GetShellAt(0, getter_AddRefs(shell));
+      nsCOMPtr<nsIPresContext> context;
+      shell->GetPresContext(getter_AddRefs(context));
+      if (gTheme->ThemeSupportsWidget(context, disp->mAppearance)) {
+        nsCOMPtr<nsIDeviceContext> dc;
+        context->GetDeviceContext(getter_AddRefs(dc));
+        nsMargin margin(0,0,0,0);
+        gTheme->GetWidgetPadding(dc, frame, 
+                                 disp->mAppearance, &margin);
+        float p2t;
+        context->GetScaledPixelsToTwips(&p2t);
+        aMargin.top = NSIntPixelsToTwips(margin.top, p2t);
+        aMargin.right = NSIntPixelsToTwips(margin.right, p2t);
+        aMargin.bottom = NSIntPixelsToTwips(margin.bottom, p2t);
+        aMargin.left = NSIntPixelsToTwips(margin.left, p2t);
+        return NS_OK;
+      }
+    }
+  }
+
   const nsStyleBorder* border;
   nsresult rv = frame->GetStyleData(eStyleStruct_Border,
         (const nsStyleStruct*&) border);
@@ -632,7 +685,6 @@ nsBox::GetBorder(nsMargin& aMargin)
   if (NS_FAILED(rv))
     return rv;
 
-  aMargin.SizeTo(0,0,0,0);
   border->GetBorder(aMargin);
 
   return rv;
@@ -666,7 +718,7 @@ nsBox::GetMargin(nsMargin& aMargin)
   const nsStyleMargin* margin;
         nsresult rv = frame->GetStyleData(eStyleStruct_Margin,
         (const nsStyleStruct*&) margin);
-
+  
   if (NS_FAILED(rv))
      return rv;
 
@@ -1230,6 +1282,27 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     nsIFrame* frame = nsnull;
     aBox->GetFrame(&frame);
+
+    // See if a native theme wants to supply a minimum size.
+    const nsStyleDisplay* display;
+    frame->GetStyleData(eStyleStruct_Display,
+                  (const nsStyleStruct*&) display);
+    if (display->mAppearance) {
+      nsCOMPtr<nsITheme> theme;
+      aState.GetPresContext()->GetTheme(getter_AddRefs(theme));
+      if (theme && theme->ThemeSupportsWidget(aState.GetPresContext(), display->mAppearance)) {
+        nsSize size;
+        const nsHTMLReflowState* reflowState = aState.GetReflowState();
+        if (reflowState) {
+          theme->GetMinimumWidgetSize(reflowState->rendContext, frame, 
+                                      display->mAppearance, &size);
+          float p2t;
+          aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
+          aSize.width = NSIntPixelsToTwips(size.width, p2t);
+          aSize.height = NSIntPixelsToTwips(size.height, p2t);
+        }
+      }
+    }
 
     // add in the css min, max, pref
     const nsStylePosition* position;

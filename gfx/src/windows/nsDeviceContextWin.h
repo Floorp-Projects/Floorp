@@ -93,6 +93,7 @@ public:
   // Static Helper Methods
   static char* GetACPString(const nsAString& aStr);
 
+friend class nsNativeThemeWin;
 
 protected:
   virtual ~nsDeviceContextWin();
@@ -103,6 +104,8 @@ protected:
   void ComputeFullAreaUsingScreen ( nsRect* outRect ) ;
   nsresult GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsFont* aFont) const;
 
+  nsresult CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont, nsFont* aFont) const;
+  
   PRBool mCachedClientRect;
   PRBool mCachedFullRect;
 

@@ -83,6 +83,7 @@ public:
   static const PRInt32  kHintTable[];
 
   // Keyword/Enum value tables
+  static const PRInt32 kAppearanceKTable[];
   static const PRInt32 kAzimuthKTable[];
   static const PRInt32 kBackgroundAttachmentKTable[];
   static const PRInt32 kBackgroundColorKTable[];

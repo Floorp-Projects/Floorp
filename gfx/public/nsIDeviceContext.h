@@ -139,7 +139,8 @@ typedef void * nsPalette;
     eSystemFont_Field,
 
     eSystemFont_Tooltips,        // moz
-    eSystemFont_Widget
+    eSystemFont_Widget,
+    eSystemFont_Theme
   } nsSystemFontID;
 
 class nsIDeviceContext : public nsISupports

@@ -417,6 +417,9 @@ enum nsDragDropEventStatus {
 // Indicates the display has changed depth
 #define NS_DISPLAYCHANGED                (NS_WINDOW_START + 40)
 
+// Indicates a theme change has occurred
+#define NS_THEMECHANGED                 (NS_WINDOW_START + 41)
+
 // Indicates a script error has occurred
 #define NS_SCRIPT_ERROR                 (NS_WINDOW_START + 50)
 

@@ -25,3 +25,6 @@ nsIDeviceContextSpec.h
 nsIDeviceContextSpecFactory.h
 nsIDrawingSurface.h
 nsRepeater.h
+nsThemeConstants.h
+nsITheme.h
+

@@ -28,6 +28,7 @@ MODULE_NAME	= nsChromeModule
 REQUIRES	= xpcom \
 		  string \
 		  rdf \
+		  gfx \
 		  necko \
 		  content \
 		  $(NULL)

@@ -364,13 +364,17 @@ nsGfxScrollFrame::GetScrollbarSizes(nsIPresContext* aPresContext,
 {
   nsBoxLayoutState state(aPresContext);
 
-  nsSize hs;
-  mInner->mHScrollbarBox->GetPrefSize(state, hs);
-  *aHbarHeight = hs.height;
+  if (mInner->mHScrollbarBox) {
+    nsSize hs;
+    mInner->mHScrollbarBox->GetPrefSize(state, hs);
+    *aHbarHeight = hs.height;
+  }
 
-  nsSize vs;
-  mInner->mVScrollbarBox->GetPrefSize(state, vs);
-  *aVbarWidth = vs.width;
+  if (mInner->mVScrollbarBox) {
+    nsSize vs;
+    mInner->mVScrollbarBox->GetPrefSize(state, vs);
+    *aVbarWidth = vs.width;
+  }
 
   return NS_OK;
 }
@@ -536,13 +540,30 @@ nsGfxScrollFrame::RemoveFrame(nsIPresContext* aPresContext,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
 {
-  nsIFrame* frame;
-  mInner->mScrollAreaBox->GetFrame(&frame);
+  nsIFrame* vscroll = nsnull;
+  if (mInner->mVScrollbarBox)
+    mInner->mVScrollbarBox->GetFrame(&vscroll);
+  nsIFrame* hscroll = nsnull;
+  if (mInner->mHScrollbarBox)
+    mInner->mHScrollbarBox->GetFrame(&hscroll);
 
-  return frame->RemoveFrame (aPresContext,
-                                     aPresShell,
-                                     aListName,
-                                     aOldFrame);
+  if (aOldFrame == vscroll) {
+    mInner->mVScrollbarBox = nsnull;
+    return nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  }
+  else if (aOldFrame == hscroll) {
+    mInner->mHScrollbarBox = nsnull;
+    return nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  }
+  else {
+    nsIFrame* frame;
+    mInner->mScrollAreaBox->GetFrame(&frame);
+
+    return frame->RemoveFrame (aPresContext,
+                                       aPresShell,
+                                       aListName,
+                                       aOldFrame);
+  }
 }
 
 
@@ -915,28 +936,33 @@ nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
 PRBool
 nsGfxScrollFrameInner::AddHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnTop)
 {
-#ifdef IBMBIDI
-  if (mHScrollbarBox) {
-    PRInt32 dir = GetIntegerAttribute(mHScrollbarBox, nsXULAtoms::dir, -1);
-    const nsStyleVisibility* vis;
-    mOuter->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+  if (!mHScrollbarBox)
+    return PR_TRUE;
 
-    // when creating the scrollbar for the first time, or whenever 
-    // display direction is changed, scroll the view horizontally
-    if (dir != vis->mDirection) {
-      SetAttribute(mHScrollbarBox, nsXULAtoms::curpos,
-                   (NS_STYLE_DIRECTION_LTR == vis->mDirection) ? 0 : 0x7FFFFFFF);
-      SetAttribute(mHScrollbarBox, nsXULAtoms::dir, vis->mDirection * mOnePixel);
-    }
+#ifdef IBMBIDI
+  PRInt32 dir = GetIntegerAttribute(mHScrollbarBox, nsXULAtoms::dir, -1);
+  const nsStyleVisibility* vis;
+  mOuter->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+
+  // when creating the scrollbar for the first time, or whenever 
+  // display direction is changed, scroll the view horizontally
+  if (dir != vis->mDirection) {
+    SetAttribute(mHScrollbarBox, nsXULAtoms::curpos,
+                 (NS_STYLE_DIRECTION_LTR == vis->mDirection) ? 0 : 0x7FFFFFFF);
+    SetAttribute(mHScrollbarBox, nsXULAtoms::dir, vis->mDirection * mOnePixel);
   }
 #endif // IBMBIDI
-   return AddRemoveScrollbar(aState, aScrollAreaSize, aOnTop, PR_TRUE, PR_TRUE);
+  
+  return AddRemoveScrollbar(aState, aScrollAreaSize, aOnTop, PR_TRUE, PR_TRUE);
 }
 
 PRBool
 nsGfxScrollFrameInner::AddVerticalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight)
 {
-   return AddRemoveScrollbar(aState, aScrollAreaSize, aOnRight, PR_FALSE, PR_TRUE);
+  if (!mVScrollbarBox)
+    return PR_TRUE;
+
+  return AddRemoveScrollbar(aState, aScrollAreaSize, aOnRight, PR_FALSE, PR_TRUE);
 }
 
 PRBool
@@ -1283,7 +1309,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (scrollBarRight)
      vRect.x += clientRect.width - vSize.width;
 
-  if (mHasVerticalScrollbar) {
+  if (mHasVerticalScrollbar && mVScrollbarBox) {
     SetAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY);
     SetAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(scrollAreaRect.height - fontHeight));
     SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight, PR_FALSE);
@@ -1295,7 +1321,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
     mVScrollbarBox->GetMinSize(aState, vMinSize);
   }
 
-  if (mHasVerticalScrollbar && (vMinSize.width > vRect.width || vMinSize.height > vRect.height)) {
+  if (mHasVerticalScrollbar && mVScrollbarBox && (vMinSize.width > vRect.width || vMinSize.height > vRect.height)) {
     if (RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight)) {
         needsLayout = PR_TRUE;
         SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
@@ -1322,7 +1348,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (scrollBarBottom)
      hRect.y += clientRect.height - hSize.height;
 
-  if (mHasHorizontalScrollbar) {
+  if (mHasHorizontalScrollbar && mHScrollbarBox) {
     SetAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX);
     SetAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(scrollAreaRect.width)*0.8));
     SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel, PR_FALSE);
@@ -1333,7 +1359,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
     mHScrollbarBox->GetMinSize(aState, hMinSize);
   }
 
-  if (mHasHorizontalScrollbar && (hMinSize.width > hRect.width || hMinSize.height > hRect.height)) {
+  if (mHasHorizontalScrollbar && mHScrollbarBox && (hMinSize.width > hRect.width || hMinSize.height > hRect.height)) {
     if (RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom)) {
       needsLayout = PR_TRUE;
       SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);

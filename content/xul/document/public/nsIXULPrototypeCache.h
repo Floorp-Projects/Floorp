@@ -84,6 +84,12 @@ public:
 
     NS_IMETHOD FlushXBLInformation() = 0;
 
+    /*
+     * Flush only the skin files from the cache while retaining all other
+     * files.
+     */
+    NS_IMETHOD FlushSkinFiles() = 0;
+
     /**
      * Flush the cache; remove all XUL prototype documents, style
      * sheets, and scripts.

@@ -1076,6 +1076,9 @@ nsSliderFrame::RemoveListener()
   NS_ASSERTION(mMediator, "No listener was ever added!!");
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
+  if (!thumbFrame)
+    return;
+
   nsCOMPtr<nsIContent> content;
   thumbFrame->GetContent(getter_AddRefs(content));
 

@@ -2562,6 +2562,13 @@ nsOutlinerBodyFrame::EnsureColumns()
   }
 }
 
+NS_IMETHODIMP nsOutlinerBodyFrame::ClearStyleAndImageCaches()
+{
+  mStyleCache.Clear();
+  mImageCache = nsnull;
+  mScrollbar = nsnull;
+  return NS_OK;
+}
 
 #ifdef XP_MAC
 #pragma mark - 

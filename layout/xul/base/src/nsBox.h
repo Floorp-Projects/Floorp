@@ -40,6 +40,8 @@
 
 #include "nsIBox.h"
 
+class nsITheme;
+
 class nsBox : public nsIBox {
 
 public:
@@ -102,6 +104,7 @@ public:
   NS_IMETHOD GetIndexOf(nsIBox* aChild, PRInt32* aIndex);
 
   nsBox(nsIPresShell* aShell);
+  virtual ~nsBox();
 
   virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
 
@@ -144,6 +147,9 @@ protected:
   NS_IMETHOD EndLayout(nsBoxLayoutState& aState);
 
   virtual void GetBoxName(nsAutoString& aName);
+
+  static PRUint32 gRefCnt;
+  static nsITheme* gTheme;
 
   enum eMouseThrough {
     unset,

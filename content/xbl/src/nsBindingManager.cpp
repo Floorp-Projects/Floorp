@@ -280,7 +280,7 @@ public:
   NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL);
 
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
-  NS_IMETHOD FlushChromeBindings();
+  NS_IMETHOD FlushSkinBindings();
 
   NS_IMETHOD GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
 
@@ -1031,18 +1031,29 @@ nsBindingManager::RemoveLoadingDocListener(const nsCString& aURL)
 
 PRBool PR_CALLBACK MarkForDeath(nsHashKey* aKey, void* aData, void* aClosure)
 {
+  PRBool marked = PR_FALSE;
   nsIXBLBinding* binding = (nsIXBLBinding*)aData;
-  binding->MarkForDeath();
+  binding->MarkedForDeath(&marked);
+  if (marked)
+    return PR_TRUE; // Already marked for death.
+
+  nsCAutoString uriStr;
+  binding->GetDocURI(uriStr);
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), uriStr.get());
+  if (uri) {
+    nsXPIDLCString path;
+    uri->GetPath(getter_Copies(path));
+    if (!PL_strncmp(path.get(), "/skin", 5))
+      binding->MarkForDeath();
+  }
   return PR_TRUE;
 }
 
 NS_IMETHODIMP
-nsBindingManager::FlushChromeBindings()
+nsBindingManager::FlushSkinBindings()
 {
   mBindingTable->Enumerate(MarkForDeath);
-
-  mDocumentTable = nsnull;
-  
   return NS_OK;
 }
 

@@ -105,6 +105,10 @@ public:
     eColor__moz_dialogtext,
     eColor__moz_dragtargetzone,				//used to highlight valid regions to drop something onto
 
+    // A special color value indicating that the current theme should pick the
+    // color.
+    eColor_theme,
+
     //colours needed by Mac Classic skin
     eColor__moz_mac_focusring,				//ring around text fields and lists
     eColor__moz_mac_menuselect,				//colour used when mouse is over a menu item
@@ -180,10 +184,11 @@ public:
     eMetricFloat_ButtonHorizontalInsidePadding
   } nsMetricFloatID;
 
-  
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric) = 0;
   NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric) = 0;
+  
+  NS_IMETHOD LookAndFeelChanged() = 0;
 
 
 #ifdef NS_DEBUG

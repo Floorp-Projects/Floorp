@@ -35,6 +35,8 @@ REQUIRES	= xpcom \
 			  unicharutil \
 			  locale \
 			  necko \
+			  content \
+			  layout \
 			  $(NULL)
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DSTRICT
@@ -57,6 +59,7 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsPrintOptionsWin.obj     \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	.\$(OBJDIR)\nsCompressedCharMap.obj          \
+	.\$(OBJDIR)\nsNativeThemeWin.obj \
 	$(NULL)
 
 EXPORTS= nsIRenderingContextWin.h \

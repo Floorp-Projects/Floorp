@@ -57,6 +57,9 @@
 #include "imgIContainer.h"
 #include "nsCSSRendering.h"
 #include "nsIPrintContext.h"
+#include "nsITheme.h"
+#include "nsThemeConstants.h"
+#include "nsIServiceManager.h"
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
@@ -1594,6 +1597,16 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   nsCompatibility     compatMode;
   aPresContext->GetCompatibilityMode(&compatMode);
 
+  // Check to see if we have an appearance defined.  If so, we let the theme
+  // renderer draw the border.
+  const nsStyleDisplay* displayData;
+  aForFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
+  if (displayData->mAppearance) {
+    nsCOMPtr<nsITheme> theme;
+    aPresContext->GetTheme(getter_AddRefs(theme));
+    if (theme && theme->ThemeSupportsWidget(aPresContext, displayData->mAppearance))
+      return; // Let the theme handle it.
+  }
   // Get our style context's color struct.
   const nsStyleColor* ourColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
 
@@ -2417,6 +2430,20 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   aPresContext->GetBackgroundDraw(canDrawBackground);
   if(!canDrawBackground){
     return;
+  }
+
+  // Check to see if we have an appearance defined.  If so, we let the theme
+  // renderer draw the background.
+  const nsStyleDisplay* displayData;
+  aForFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
+  if (displayData->mAppearance) {
+    nsCOMPtr<nsITheme> theme;
+    aPresContext->GetTheme(getter_AddRefs(theme));
+    if (theme && theme->ThemeSupportsWidget(aPresContext, displayData->mAppearance)) {
+      theme->DrawWidgetBackground(&aRenderingContext, aForFrame, 
+                                  displayData->mAppearance, aBorderArea, aDirtyRect); 
+      return;
+    }
   }
 
   // if there is no background image, try a color.

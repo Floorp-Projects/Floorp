@@ -355,6 +355,58 @@ NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
+nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLogFont,
+                                                 nsFont* aFont) const
+{
+  PRUnichar name[LF_FACESIZE];
+  name[0] = 0;
+  MultiByteToWideChar(CP_ACP, 0, ptrLogFont->lfFaceName,
+    strlen(ptrLogFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
+  aFont->name = name;
+
+  // Do Style
+  aFont->style = NS_FONT_STYLE_NORMAL;
+  if (ptrLogFont->lfItalic)
+  {
+    aFont->style = NS_FONT_STYLE_ITALIC;
+  }
+  // XXX What about oblique?
+
+  aFont->variant = NS_FONT_VARIANT_NORMAL;
+
+  // Do Weight
+  aFont->weight = (ptrLogFont->lfWeight == FW_BOLD ? 
+            NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL);
+
+  // Do decorations
+  aFont->decorations = NS_FONT_DECORATION_NONE;
+  if (ptrLogFont->lfUnderline)
+  {
+    aFont->decorations |= NS_FONT_DECORATION_UNDERLINE;
+  }
+  if (ptrLogFont->lfStrikeOut)
+  {
+    aFont->decorations |= NS_FONT_DECORATION_LINE_THROUGH;
+  }
+
+  // Do Point Size
+  //
+  // The lfHeight is in pixel and it needs to be adjusted for the
+  // device it will be "displayed" on
+  // Screens and Printers will differe in DPI
+  //
+  // So this accounts for the difference in the DeviceContexts
+  // The mPixelScale will be a "1" for the screen and could be
+  // any value when going to a printer, for example mPixleScale is
+  // 6.25 when going to a 600dpi printer.
+  // round, but take into account whether it is negative
+  LONG logHeight = LONG((float(ptrLogFont->lfHeight) * mPixelScale) + (ptrLogFont->lfHeight < 0 ? -0.5 : 0.5)); // round up
+  int pointSize = -MulDiv(logHeight, 72, ::GetDeviceCaps(*aHDC, LOGPIXELSY));
+
+  aFont->size = NSIntPointsToTwips(pointSize);
+  return NS_OK;
+}
+
 nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsFont* aFont) const
 {
   NONCLIENTMETRICS ncm;
@@ -442,54 +494,7 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsF
     return NS_ERROR_FAILURE;
   }
 
-  PRUnichar name[LF_FACESIZE];
-  name[0] = 0;
-  MultiByteToWideChar(CP_ACP, 0, ptrLogFont->lfFaceName,
-    strlen(ptrLogFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
-  aFont->name = name;
-
-  // Do Style
-  aFont->style = NS_FONT_STYLE_NORMAL;
-  if (ptrLogFont->lfItalic)
-  {
-    aFont->style = NS_FONT_STYLE_ITALIC;
-  }
-  // XXX What about oblique?
-
-  aFont->variant = NS_FONT_VARIANT_NORMAL;
-
-  // Do Weight
-  aFont->weight = (ptrLogFont->lfWeight == FW_BOLD ? 
-            NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL);
-
-  // Do decorations
-  aFont->decorations = NS_FONT_DECORATION_NONE;
-  if (ptrLogFont->lfUnderline)
-  {
-    aFont->decorations |= NS_FONT_DECORATION_UNDERLINE;
-  }
-  if (ptrLogFont->lfStrikeOut)
-  {
-    aFont->decorations |= NS_FONT_DECORATION_LINE_THROUGH;
-  }
-
-  // Do Point Size
-  //
-  // The lfHeight is in pixel and it needs to be adjusted for the
-  // device it will be "displayed" on
-  // Screens and Printers will differe in DPI
-  //
-  // So this accounts for the difference in the DeviceContexts
-  // The mPixelScale will be a "1" for the screen and could be
-  // any value when going to a printer, for example mPixleScale is
-  // 6.25 when going to a 600dpi printer.
-  // round, but take into account whether it is negative
-  LONG logHeight = LONG((float(ptrLogFont->lfHeight) * mPixelScale) + (ptrLogFont->lfHeight < 0 ? -0.5 : 0.5)); // round up
-  int pointSize = -MulDiv(logHeight, 72, ::GetDeviceCaps(aHDC, LOGPIXELSY));
-
-  aFont->size = NSIntPointsToTwips(pointSize);
-
-  return NS_OK;
+  return CopyLogFontToNSFont(&aHDC, ptrLogFont, aFont);
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
@@ -927,8 +932,6 @@ BOOL CALLBACK abortproc( HDC hdc, int iError )
   return TRUE;
 } 
  
-
-
 NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {

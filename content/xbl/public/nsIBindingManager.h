@@ -170,7 +170,7 @@ public:
   NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL)=0;
 
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult) = 0;
-  NS_IMETHOD FlushChromeBindings() = 0;
+  NS_IMETHOD FlushSkinBindings() = 0;
 
   NS_IMETHOD GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult)=0;
 
