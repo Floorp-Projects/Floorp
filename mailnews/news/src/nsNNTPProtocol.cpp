@@ -367,6 +367,11 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 
 nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH)
 {
+	m_cancelFromHdr = nsnull;
+	m_cancelNewsgroups = nsnull;
+	m_cancelDistribution = nsnull;
+	m_cancelID = nsnull;
+	m_cancelMessageFile = nsnull;
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
