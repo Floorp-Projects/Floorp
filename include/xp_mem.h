@@ -117,7 +117,7 @@ Allocating Large Buffers
 NOTE: this does not interchange with XP_ALLOC/XP_NEW/XP_FREE/XP_DELETE
 -----------------------------------------------------------------------------*/
 
-#if defined(XP_UNIX) || defined(XP_WIN32) 
+#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_BEOS)
 
 /* don't typedef this to void* unless you want obscure bugs... */
 typedef unsigned long *	XP_Block;
