@@ -37,7 +37,6 @@
 #ifndef nsIFrameManager_h___
 #define nsIFrameManager_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsIStatefulFrame.h"
 #include "nsString.h"
@@ -272,7 +271,7 @@ public:
  * Create a frame manager. Upon success, call Init() before attempting to
  * use it.
  */
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
   NS_NewFrameManager(nsIFrameManager** aInstancePtrResult);
 
 #endif /* nsIFrameManager_h___ */

@@ -24,6 +24,15 @@ DEPTH=..\..\..\..
 LIBRARY_NAME=xmlextrassoap_s 
 MODULE=xmlextras
 
+REQUIRES = xpcom \
+		   caps \
+		   dom \
+		   necko \
+		   js \
+		   xpconnect \
+		   string \
+           $(NULL)
+
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\

@@ -38,9 +38,10 @@ CallGetInterface( T* aSource, DestinationType** aDestination )
                                  NS_REINTERPRET_CAST(void**, aDestination));
   }
 
-class NS_EXPORT nsGetInterface : public nsCOMPtr_helper
+class nsGetInterface : public nsCOMPtr_helper
   {
     public:
+      inline
       nsGetInterface( nsISupports* aSource, nsresult* error )
           : mSource(aSource),
             mErrorPtr(error)
@@ -48,7 +49,7 @@ class NS_EXPORT nsGetInterface : public nsCOMPtr_helper
           // nothing else to do here
         }
 
-      virtual nsresult operator()( const nsIID&, void** ) const;
+      virtual NS_EXPORT nsresult operator()( const nsIID&, void** ) const;
       virtual ~nsGetInterface() {};
 
     private:

@@ -36,6 +36,18 @@ REQUIRES = xpcom \
 	   necko \
 	   $(NULL)
 
+REQUIRES = xpcom \
+		   string \
+		   dom \
+		   xpconnect \
+		   caps \
+		   layout \
+		   widget \
+		   content \
+		   js \
+		   necko \
+		   $(NULL)
+
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\

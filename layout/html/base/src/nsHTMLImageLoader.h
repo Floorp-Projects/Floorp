@@ -37,7 +37,6 @@
 #ifndef nsHTMLImageLoader_h___
 #define nsHTMLImageLoader_h___
 
-#include "nslayout.h"
 #include "nsString.h"
 #include "nsIPresContext.h"
 #include "nsSize.h"

@@ -273,7 +273,7 @@ protected:
     PRBool              mInCDATAContainer;
 };
 
-extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);
+extern nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);
 
 #endif 
 

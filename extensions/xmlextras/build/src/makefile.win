@@ -29,6 +29,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  webBrowser_core \
 		  appstartup \
+		  xpconnect \
 		  content \
 		  $(NULL)
 LIBRARY_NAME=xmlextras

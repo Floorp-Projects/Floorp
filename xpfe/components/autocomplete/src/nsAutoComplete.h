@@ -40,7 +40,6 @@
 #define nsAutoComplete_h___
 
 #include "nsCOMPtr.h"
-#include "nslayout.h"
 #include "nsString.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIAutoCompleteListener.h"

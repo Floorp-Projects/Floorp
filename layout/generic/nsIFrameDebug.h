@@ -37,7 +37,6 @@
 #ifndef nsIFrameDebug_h___
 #define nsIFrameDebug_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 
 class nsIFrame;
@@ -61,7 +60,7 @@ public:
    * lists the frames beginning from the root frame
    * - calls root frame's List(...)
    */
-  static NS_LAYOUT void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+  static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
   /**
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetFrameType() instead...
@@ -104,12 +103,12 @@ public:
    * (any non-zero debug level will work). Or, call SetVerifyTreeEnable
    * with PR_TRUE.
    */
-  static NS_LAYOUT PRBool GetVerifyTreeEnable();
+  static PRBool GetVerifyTreeEnable();
 
   /**
    * Set the verify-tree enable flag.
    */
-  static NS_LAYOUT void SetVerifyTreeEnable(PRBool aEnabled);
+  static void SetVerifyTreeEnable(PRBool aEnabled);
 
   /**
    * See if style tree verification is enabled. To enable style tree 
@@ -117,12 +116,12 @@ public:
    * environment variable (any non-zero debug level will work). Or, 
    * call SetVerifyStyleTreeEnable with PR_TRUE.
    */
-  static NS_LAYOUT PRBool GetVerifyStyleTreeEnable();
+  static PRBool GetVerifyStyleTreeEnable();
 
   /**
    * Set the verify-style-tree enable flag.
    */
-  static NS_LAYOUT void SetVerifyStyleTreeEnable(PRBool aEnabled);
+  static void SetVerifyStyleTreeEnable(PRBool aEnabled);
 
   /**
    * The frame class and related classes share an nspr log module
@@ -131,15 +130,15 @@ public:
    * Note: the log module is created during library initialization which
    * means that you cannot perform logging before then.
    */
-  static NS_LAYOUT PRLogModuleInfo* GetLogModuleInfo();
+  static PRLogModuleInfo* GetLogModuleInfo();
 
   // Show frame borders when rendering
-  static NS_LAYOUT void ShowFrameBorders(PRBool aEnable);
-  static NS_LAYOUT PRBool GetShowFrameBorders();
+  static void ShowFrameBorders(PRBool aEnable);
+  static PRBool GetShowFrameBorders();
 
   // Show frame border of event target
-  static NS_LAYOUT void ShowEventTargetFrameBorder(PRBool aEnable);
-  static NS_LAYOUT PRBool GetShowEventTargetFrameBorder();
+  static void ShowEventTargetFrameBorder(PRBool aEnable);
+  static PRBool GetShowEventTargetFrameBorder();
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

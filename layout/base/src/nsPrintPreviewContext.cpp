@@ -181,7 +181,7 @@ PrintPreviewContext::SetPageDim(nsRect* aPageDim)
   return NS_OK;
 }
 
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewPrintPreviewContext(nsIPresContext** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {

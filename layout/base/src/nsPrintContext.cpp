@@ -141,7 +141,7 @@ PrintContext::SetPageDim(nsRect* aPageDim)
 }
 
 
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewPrintContext(nsIPrintContext** aInstancePtrResult)
 {
 

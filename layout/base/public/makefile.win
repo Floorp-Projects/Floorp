@@ -25,7 +25,6 @@ XPIDL_MODULE=layout_base
 include <$(DEPTH)\config\config.mak>
 
 EXPORTS =				\
-	nslayout.h			\
 	nsHTMLReflowMetrics.h		\
 	nsHTMLReflowState.h		\
 	nsIAutoCopy.h			\

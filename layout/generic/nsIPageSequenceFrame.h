@@ -37,7 +37,6 @@
 #ifndef nsIPageSequenceFrame_h___
 #define nsIPageSequenceFrame_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsRect.h"
 

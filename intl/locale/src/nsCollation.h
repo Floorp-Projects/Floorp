@@ -44,7 +44,7 @@ public:
 };
 
 
-struct NS_EXPORT nsCollation {
+struct nsCollation {
 
 public: 
 

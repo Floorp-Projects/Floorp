@@ -37,7 +37,6 @@
 #ifndef nsHTMLReflowState_h___
 #define nsHTMLReflowState_h___
 
-#include "nslayout.h"
 #include "nsMargin.h"
 #include "nsStyleCoord.h"
 

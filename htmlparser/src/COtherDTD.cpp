@@ -222,7 +222,7 @@ COtherDTD::~COtherDTD(){
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult) {
+nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult) {
   COtherDTD* it = new COtherDTD();
 
   if (it == 0) {

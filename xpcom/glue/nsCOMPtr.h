@@ -396,6 +396,7 @@ class nsCOMPtr_base
   {
     public:
 
+      inline
       nsCOMPtr_base( nsISupports* rawPtr = 0 )
           : mRawPtr(rawPtr)
         {
@@ -403,11 +404,11 @@ class nsCOMPtr_base
         }
 
 #ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
-      NS_EXPORT ~nsCOMPtr_base();
-#else
       // Allow debug builds to link with optimized versions of nsCOMPtr-using
       // plugins (e.g., JVMs).
-      NS_EXPORT ~nsCOMPtr_base() { }
+      NS_EXPORT ~nsCOMPtr_base();
+#else
+      ~nsCOMPtr_base() { }
 #endif
 
       NS_EXPORT void    assign_with_AddRef( nsISupports* );
@@ -417,7 +418,7 @@ class nsCOMPtr_base
     protected:
       nsISupports* mRawPtr;
 
-      void
+      inline void
       assign_assuming_AddRef( nsISupports* newPtr )
         {
             /*

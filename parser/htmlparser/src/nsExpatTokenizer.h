@@ -114,7 +114,7 @@ extern "C" {
 }
 #endif
 
-CLASS_EXPORT_HTMLPARS nsExpatTokenizer : public nsHTMLTokenizer {
+class nsExpatTokenizer : public nsHTMLTokenizer {
 public:
           nsExpatTokenizer(nsString* aURL = nsnull);      
   virtual ~nsExpatTokenizer();

@@ -37,7 +37,6 @@
 #ifndef nsIHTMLStyleSheet_h___
 #define nsIHTMLStyleSheet_h___
 
-#include "nslayout.h"
 #include "nsIStyleSheet.h"
 #include "nsColor.h"
 
@@ -93,11 +92,11 @@ public:
 
 
 // XXX convenience method. Calls Initialize() automatically.
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
                        nsIDocument* aDocument);
 
-extern NS_HTML nsresult
+extern NS_EXPORT nsresult
   NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult);
 
 #define NS_HTML_STYLE_PROPERTY_NOT_THERE \

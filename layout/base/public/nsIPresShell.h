@@ -37,7 +37,6 @@
 #ifndef nsIPresShell_h___
 #define nsIPresShell_h___
 
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsIReflowCommand.h"
@@ -549,17 +548,17 @@ public:
    * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
    * with PR_TRUE.
    */
-  static NS_LAYOUT PRBool GetVerifyReflowEnable();
+  static PRBool GetVerifyReflowEnable();
 
   /**
    * Set the verify-reflow enable flag.
    */
-  static NS_LAYOUT void SetVerifyReflowEnable(PRBool aEnabled);
+  static void SetVerifyReflowEnable(PRBool aEnabled);
 
   /**
    * Get the flags associated with the VerifyReflow debug tool
    */
-  static NS_LAYOUT PRInt32 GetVerifyReflowFlags();
+  static PRInt32 GetVerifyReflowFlags();
 
 
 #ifdef MOZ_REFLOW_PERF
@@ -601,7 +600,7 @@ public:
  * Create a new empty presentation shell. Upon success, call Init
  * before attempting to use the shell.
  */
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
   NS_NewPresShell(nsIPresShell** aInstancePtrResult);
 
 #endif /* nsIPresShell_h___ */

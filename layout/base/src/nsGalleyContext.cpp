@@ -98,7 +98,7 @@ GalleyContext::SetPageDim(nsRect* aPageDim)
   return NS_ERROR_FAILURE;
 }
 
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewGalleyContext(nsIPresContext** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {

@@ -40,7 +40,6 @@ EXPORTS = \
 		nsIParserFilter.h           \
 		nsIElementObserver.h        \
 		nsIParserService.h          \
-		nshtmlpars.h                \
 		nsHTMLTagList.h             \
 		nsHTMLTags.h                \
 		nsHTMLTokens.h              \

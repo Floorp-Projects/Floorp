@@ -93,7 +93,7 @@
 // XXX Not the right place for this.
 #include "nsIDOMDOMException.h"
 
-extern "C" NS_DOM nsresult NS_NewDOMException(nsIDOMDOMException** aException,
+extern "C" nsresult NS_NewDOMException(nsIDOMDOMException** aException,
                                               nsresult aResult, 
                                               const char* aName, 
                                               const char* aMessage,

@@ -38,7 +38,6 @@
 #define nsHTMLReflowMetrics_h___
 
 #include <stdio.h>
-#include "nslayout.h"
 #include "nsISupports.h"
 #include "nsMargin.h"
 #include "nsRect.h"

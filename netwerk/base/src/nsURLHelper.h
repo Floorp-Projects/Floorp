@@ -30,25 +30,25 @@ extern "C" {
 #endif
 
 /* helper call function */
-NS_NET nsresult nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask);
+nsresult nsAppendURLEscapedString(nsCString& originalStr, const char* str, PRInt16 mask);
 
 /* Get port from string */ 
-NS_NET PRInt32 ExtractPortFrom(const char* src);
+PRInt32 ExtractPortFrom(const char* src);
 
 /* Extract string out of another */
-NS_NET nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
+nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
 
 /* Duplicate string */
-NS_NET nsresult DupString(char* *o_Dest, const char* i_Src);
+nsresult DupString(char* *o_Dest, const char* i_Src);
 
 /* handle .. in dirs */
-NS_NET void CoaleseDirs(char* io_Path);
+void CoaleseDirs(char* io_Path);
 
 /* convert to lower case */
-NS_NET void ToLowerCase(char* str);
+void ToLowerCase(char* str);
 
 /* Extract URI-Scheme if possible */
-NS_NET nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
+nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
                                  PRUint32 *endPos, char* *scheme);
 
 #ifdef __cplusplus

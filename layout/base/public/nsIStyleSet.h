@@ -40,7 +40,6 @@
 
 #include <stdio.h>
 #include "nsISupports.h"
-#include "nslayout.h"
 
 class nsIAtom;
 class nsIStyleRule;
@@ -275,7 +274,7 @@ public:
                                    PRBool &aAffects) = 0;
 };
 
-extern NS_LAYOUT nsresult
+extern NS_EXPORT nsresult
   NS_NewStyleSet(nsIStyleSet** aInstancePtrResult);
 
 
