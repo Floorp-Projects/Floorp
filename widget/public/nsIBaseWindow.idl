@@ -180,6 +180,13 @@ interface nsIBaseWindow : nsISupports
     */
     attribute boolean enabled;
 
+    /** set blurSuppression to true to suppress handling of blur events.
+     *  set it false to re-enable them. query it to determine whether
+     *  blur events are suppressed. The implementation should allow
+     *  for blur events to be suppressed multiple times.
+     */
+    attribute boolean blurSuppression;
+
 	/*
 	Allows you to find out what the widget is of a given object.  Depending
 	on the object, this may return the parent widget in which this object
