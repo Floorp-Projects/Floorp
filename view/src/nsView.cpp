@@ -31,6 +31,7 @@
 #include "nsTransform2D.h"
 #include "nsIScrollableView.h"
 #include "nsVoidArray.h"
+#include "nsIRegion.h"
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
@@ -131,6 +132,7 @@ nsView :: ~nsView()
     mWindow->Destroy();
     NS_RELEASE(mWindow);
   }
+  NS_IF_RELEASE(mDirtyRegion);
 }
 
 nsresult nsView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -317,8 +319,11 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   {
     nscoord posx, posy;
 
-    GetPosition(&posx, &posy);
-    rc.Translate(posx, posy);
+    if (nsnull == mWindow)
+    {
+      GetPosition(&posx, &posy);
+      rc.Translate(posx, posy);
+    }
 
     if (nsnull != mXForm)
     {
@@ -343,20 +348,31 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
         if (nsnull != kid)
         {
-          nsRect kidRect;
-          kid->GetBounds(kidRect);
-          nsRect damageArea;
-          PRBool overlap = damageArea.IntersectRect(rect, kidRect);
+          // Don't paint child views that have widgets. They'll get their own
+          // native paint requests
+          nsIWidget *widget;
+          PRBool     hasWidget;
 
-          if (overlap == PR_TRUE)
+          kid->GetWidget(widget);
+          hasWidget = (widget != nsnull);
+          NS_IF_RELEASE(widget);
+          if (!hasWidget)
           {
-            // Translate damage area into kid's coordinate system
-            nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                                 damageArea.width, damageArea.height);
-            kid->Paint(rc, kidDamageArea, aPaintFlags, clipres);
-
-            if (clipres == PR_TRUE)
-              break;
+            nsRect kidRect;
+            kid->GetBounds(kidRect);
+            nsRect damageArea;
+            PRBool overlap = damageArea.IntersectRect(rect, kidRect);
+  
+            if (overlap == PR_TRUE)
+            {
+              // Translate damage area into kid's coordinate system
+              nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+                                   damageArea.width, damageArea.height);
+              kid->Paint(rc, kidDamageArea, aPaintFlags, clipres);
+  
+              if (clipres == PR_TRUE)
+                break;
+            }
           }
         }
       }
@@ -1086,6 +1102,8 @@ NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidge
 {
   nsIView   *ancestor;
   
+  // XXX aDx and aDy are OUT parameters and so we should initialize them
+  // to 0 rather than relying on the caller to do so...
   GetParent(ancestor);
   while (nsnull != ancestor)
   {
@@ -1134,3 +1152,19 @@ NS_IMETHODIMP nsView :: GetScrollOffset(nscoord *aDx, nscoord *aDy)
   *aDx = *aDy = 0;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsView :: GetDirtyRegion(nsIRegion *&aRegion)
+{
+  aRegion = mDirtyRegion;
+  NS_IF_ADDREF(aRegion);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsView :: SetDirtyRegion(nsIRegion *aRegion)
+{
+  NS_IF_RELEASE(mDirtyRegion);
+  mDirtyRegion = aRegion;
+  NS_IF_ADDREF(mDirtyRegion);
+  return NS_OK;
+}
+

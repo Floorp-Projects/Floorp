@@ -95,6 +95,8 @@ public:
   NS_IMETHOD  GetClientData(void *&aData);
   NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
   NS_IMETHOD  GetScrollOffset(nscoord *aDx, nscoord *aDy);
+  NS_IMETHOD  GetDirtyRegion(nsIRegion*& aRegion);
+  NS_IMETHOD  SetDirtyRegion(nsIRegion* aRegion);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   // Helper function to get the view that's associated with a widget
@@ -122,6 +124,7 @@ protected:
   nsTransform2D     *mXForm;
   float             mOpacity;
   PRInt32           mVFlags;
+  nsIRegion*        mDirtyRegion;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);

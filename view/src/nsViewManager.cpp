@@ -32,7 +32,6 @@ static const PRBool gsDebug = PR_FALSE;
 
 #define UPDATE_QUANTUM  1000 / 40
 
-//#define USE_DIRTY_RECT
 //#define NO_DOUBLE_BUFFER
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
@@ -70,7 +69,6 @@ nsViewManager :: ~nsViewManager()
   }
 
   NS_IF_RELEASE(mRootWindow);
-  NS_IF_RELEASE(mDirtyRegion);
 
   --mVMCount;
 
@@ -360,19 +358,24 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   if (localcx != aContext)
     NS_RELEASE(localcx);
 
-  //is the dirty region the same as the region we just painted?
-
-  if ((region == mDirtyRegion) || region->IsEqual(*mDirtyRegion))
-    ClearDirtyRegion();
-  else
-    mDirtyRegion->Subtract(*region);
+  // Is the dirty region the same as the region we just painted?
+  nsIRegion *dirtyRegion;
+  aView->GetDirtyRegion(dirtyRegion);
+  if (nsnull != dirtyRegion)
+  {
+    if ((region == dirtyRegion) || region->IsEqual(*dirtyRegion))
+      dirtyRegion->SetTo(0, 0, 0, 0);
+    else
+      dirtyRegion->Subtract(*region);
+    NS_RELEASE(dirtyRegion);
+  }
 
   mLastRefresh = PR_IntervalNow();
 
   mPainting = PR_FALSE;
 }
 
-void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsRect *rect, PRUint32 aUpdateFlags)
+void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, const nsRect *rect, PRUint32 aUpdateFlags)
 {
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
@@ -441,26 +444,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   if (localcx != aContext)
     NS_RELEASE(localcx);
 
-#ifdef USE_DIRTY_RECT
-
-  nsRect  updaterect = *rect;
-
-  //does our dirty rect intersect the rect we just painted?
-
-  if (updaterect.IntersectRect(updaterect, mDirtyRect))
-  {
-    //does the update rect fully contain the dirty rect?
-    //if so, then clear the dirty rect.
-
-    if (updaterect.Contains(mDirtyRect))
-      ClearDirtyRegion();
-  }
-
-#else
-
-  //subtract the area we just painted from the dirty region
-
-  if ((nsnull != mDirtyRegion) && !mDirtyRegion->IsEmpty())
+  // Subtract the area we just painted from the dirty region
+  nsIRegion *dirtyRegion;
+  aView->GetDirtyRegion(dirtyRegion);
+  if ((nsnull != dirtyRegion) && !dirtyRegion->IsEmpty())
   {
     nsRect  pixrect = trect;
     float   t2p;
@@ -468,38 +455,61 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
     mContext->GetAppUnitsToDevUnits(t2p);
 
     pixrect.ScaleRoundIn(t2p);
-    mDirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
+    dirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
+    NS_RELEASE(dirtyRegion);
   }
-
-#endif
 
   mLastRefresh = PR_IntervalNow();
 
   mPainting = PR_FALSE;
 }
 
+void nsViewManager::UpdateDirtyViews(nsIView *aView) const
+{
+  // See if the view has a non-empty dirty region
+  nsIRegion *dirtyRegion;
+  aView->GetDirtyRegion(dirtyRegion);
+  if (nsnull != dirtyRegion)
+  {
+    if (!dirtyRegion->IsEmpty())
+    {
+      nsIWidget *widget;
+      nsRect     rect;
+
+      dirtyRegion->GetBoundingBox(&rect.x, &rect.y, &rect.width, &rect.height);
+      aView->GetWidget(widget);
+      widget->Invalidate(rect, PR_FALSE);
+      NS_RELEASE(widget);
+    }
+    NS_RELEASE(dirtyRegion);
+  }
+
+  // Check our child views
+  nsIView *child;
+  aView->GetChild(0, child);
+  while (nsnull != child)
+  {
+    UpdateDirtyViews(child);
+    child->GetNextSibling(child);
+  }
+}
+
 NS_IMETHODIMP nsViewManager :: Composite()
 {
-#ifdef USE_DIRTY_RECT
-
-  if ((nsnull != mRootView) && !mDirtyRect.IsEmpty())
-    Refresh(mRootView, nsnull, &mDirtyRect, NS_VMREFRESH_DOUBLE_BUFFER);
-
-#else
-
-  if ((nsnull != mRootView) && (nsnull != mDirtyRegion) && !mDirtyRegion->IsEmpty())
-    Refresh(mRootView, nsnull, mDirtyRegion, NS_VMREFRESH_DOUBLE_BUFFER);
-
-#endif
+  // Walk the view hierarchy and for each view that has a non-empty
+  // dirty region invalidate its associated widget
+  UpdateDirtyViews(mRootView);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
 {
+  // XXX Huh. What about the case where aRegion isn't nsull?
   if (aRegion == nsnull)
   {
     nsRect  trect;
 
+    // Mark the entire view as damaged
     aView->GetBounds(trect);
     trect.x = trect.y = 0;
     UpdateView(aView, trect, aUpdateFlags);
@@ -509,113 +519,86 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PR
 
 NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
-  nsRect  trect = aRect;
-  nsIView *par = aView;
-  nscoord x, y;
+  NS_PRECONDITION(nsnull != aView, "null view");
+  NS_PRECONDITION(0 == (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT), "bad update flag");
 
+  // Ignore any silly requests...
   if ((aRect.width == 0) || (aRect.height == 0))
     return NS_OK;
 
   if (gsDebug)
   {
     printf("ViewManager::UpdateView: %x, rect ", aView);
-    stdout << trect;
+    stdout << aRect;
     printf("\n");
   }
 
-  if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
+  // Find the nearest view (including this view) that has a widget
+  nsRect  trect = aRect;
+  nsIView *par = aView;
+  nscoord x, y;
+  nsIView *widgetView = aView;
+
+  do
   {
-    nscoord xoff, yoff;
+    nsIWidget *widget;
 
-    GetWindowOffsets(&xoff, &yoff);
+    // See if this view has a widget
+    widgetView->GetWidget(widget);
+    if (nsnull != widget)
+    {
+      NS_RELEASE(widget);
+      break;
+    }
 
-    trect.x += xoff;
-    trect.y += yoff;
-  }
-  else if (nsnull != aView)
+    // Get the parent view
+    widgetView->GetParent(widgetView);
+  } while (nsnull != widgetView);
+  NS_ASSERTION(nsnull != widgetView, "no widget");
+
+  // Convert damage rect to coordinate space of containing view with
+  // a widget
+  // XXX Consolidate this code with the code above...
+  if (aView != widgetView)
   {
     do
     {
-      //get absolute coordinates of view
-
       par->GetPosition(&x, &y);
-
       trect.x += x;
       trect.y += y;
 
       par->GetParent(par);
     }
-    while (nsnull != par);
+    while ((nsnull != par) && (par != widgetView));
   }
 
-//printf("updating... ");
-//stdout << trect;
-//printf("\n");
-#ifdef USE_DIRTY_RECT
-
-  if (mDirtyRect.IsEmpty())
-    mDirtyRect = trect;
-  else
-    mDirtyRect.UnionRect(mDirtyRect, trect);
-
-#else
-
-  AddRectToDirtyRegion(trect);
-
-#endif
-
-  if (nsnull != mContext)
+  // If widgetView is a scrolling view, then offset the rect by the visible
+  // offset
+  nsIScrollableView *scroller;
+  if (NS_OK == widgetView->QueryInterface(kIScrollableViewIID, (void **)&scroller))
   {
-    if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
-    {
-      if (aUpdateFlags & NS_VMREFRESH_AUTO_DOUBLE_BUFFER)
-      {
-        nsRect  vrect, rrect;
-        nscoord varea;
-
-        //see if the paint region is greater than .75 the area of our root view.
-        //if so, enable double buffered painting.
-
-        mRootView->GetBounds(vrect);
-
-        varea = vrect.width * vrect.height;
-
-        if (varea == 0)
-          return NS_OK;
-
-#ifdef USE_DIRTY_RECT
-        rrect = mDirtyRect;
-#else
-        mDirtyRegion->GetBoundingBox(&rrect.x, &rrect.y, &rrect.width, &rrect.height);
-        float   p2t;
-        mContext->GetDevUnitsToAppUnits(p2t);
-        rrect.ScaleRoundOut(p2t);
-#endif
-        rrect.IntersectRect(rrect, vrect);
-
-        if ((((float)rrect.width * rrect.height) / (float)varea) >  0.25f)
-          aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
-        else
-          aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-
-        //now clear the bit that got us here...
-
-        aUpdateFlags &= ~NS_VMREFRESH_AUTO_DOUBLE_BUFFER;
-      }
-
-#ifdef USE_DIRTY_RECT
-      Refresh(mRootView, nsnull, &mDirtyRect, aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
-#else
-      Refresh(mRootView, nsnull, mDirtyRegion, aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
-#endif
-    }
-    else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
-    {
-      PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
-      if (deltams > (1000 / (PRInt32)mFrameRate))
-        Composite();
-    }
+    nscoord xoffset, yoffset;
+    scroller->GetVisibleOffset(&xoffset, &yoffset);
+    trect.MoveBy(-xoffset, -yoffset);
   }
+
+  // Add this rect to the widgetView's dirty region.
+  AddRectToDirtyRegion(widgetView, trect);
+
+  // See if we should do an immediate refresh or wait
+  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
+  {
+    Composite();
+  }
+  // or if a sync paint is allowed and it's time for the compositor to
+  // do a refresh
+  else if ((mFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
+  {
+    PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+    if (deltams > (1000 / (PRInt32)mFrameRate))
+      Composite();
+  }
+
   return NS_OK;
 }
 
@@ -676,23 +659,69 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 
     case NS_PAINT:
     {
-      nsIView*      view = nsView::GetViewFor(aEvent->widget);
-      if (nsnull != view) {
+      // XXX If there's a region associated with the paint request then it
+      // should be passed along to us; otherwise, we're going to end up doing
+      // unnecessary repainting and we end up using a bounding rect for the
+      // clip region...
+      nsIView *view = nsView::GetViewFor(aEvent->widget);
+      if (nsnull != view)
+      {
+        // The rect is in device units, and it's in the coordinate space of its
+        // associated window.
+        nsRect  trect = *((nsPaintEvent*)aEvent)->rect;
 
-        float             convert;
-        nsRect            trect = *((nsPaintEvent*)aEvent)->rect;
+        // Convert it to app units, which is what AddRectToDirtyRegion() expects
+        float   p2t;
+        mContext->GetDevUnitsToAppUnits(p2t);
+        trect.ScaleRoundOut(p2t);
 
-        mContext->GetDevUnitsToAppUnits(convert);
+        // If the view is a scrolling view, then offset the rect by the visible
+        // offset
+        nsIScrollableView *scroller;
+        if (NS_OK == view->QueryInterface(kIScrollableViewIID, (void **)&scroller))
+        {
+          nscoord xoffset, yoffset;
+          scroller->GetVisibleOffset(&xoffset, &yoffset);
+          trect.MoveBy(xoffset, yoffset);
+        }
 
-        trect *= convert;
+        // Add the rect to the existing dirty region
+        AddRectToDirtyRegion(view, trect);
 
-//printf("damage repair...\n");
+        // Do an immediate refresh
+        if (nsnull != mContext)
+        {
+          nsRect  vrect;
+          nscoord varea;
 
-        UpdateView(view, trect,
-                   NS_VMREFRESH_SCREEN_RECT |
-                   NS_VMREFRESH_IMMEDIATE |
-                   NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+          // Check that there's actually something to paint
+          view->GetBounds(vrect);
+          varea = vrect.width * vrect.height;
+          if (varea > 0)
+          {
+            nsIRegion *dirtyRegion;
+            nsRect     rrect;
+            PRUint32   updateFlags = 0;
 
+            // Auto double buffering logic.
+            // See if the paint region is greater than .75 the area of our view.
+            // If so, enable double buffered painting.
+            view->GetDirtyRegion(dirtyRegion);
+            dirtyRegion->GetBoundingBox(&rrect.x, &rrect.y, &rrect.width, &rrect.height);
+
+            float   p2t;
+            mContext->GetDevUnitsToAppUnits(p2t);
+            rrect.ScaleRoundOut(p2t);
+            rrect.IntersectRect(rrect, vrect);
+  
+            if ((((float)rrect.width * rrect.height) / (float)varea) >  0.25f)
+              updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
+
+            // Refresh the view
+            Refresh(view, nsnull, dirtyRegion, updateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
+            NS_RELEASE(dirtyRegion);
+          }
+        }
         aStatus = nsEventStatus_eConsumeNoDefault;
       }
       break;
@@ -1116,24 +1145,6 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
   return mDrawingSurface;
 }
 
-NS_IMETHODIMP nsViewManager :: ClearDirtyRegion(void)
-{
-#ifdef USE_DIRTY_RECT
-
-  mDirtyRect.x = 0;
-  mDirtyRect.y = 0;
-  mDirtyRect.width = 0;
-  mDirtyRect.height = 0;
-
-#else
-
-  if (nsnull != mDirtyRegion)
-    mDirtyRegion->SetTo(0, 0, 0, 0);
-
-#endif
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsViewManager :: ShowQuality(PRBool aShow)
 {
   nsIScrollableView *scroller;
@@ -1219,31 +1230,37 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
   return cx;
 }
 
-void nsViewManager :: AddRectToDirtyRegion(nsRect &aRect)
+void nsViewManager :: AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const
 {
-  if (nsnull == mDirtyRegion)
+  // Get the dirty region associated with the view
+  nsIRegion *dirtyRegion;
+
+  aView->GetDirtyRegion(dirtyRegion);
+  if (nsnull == dirtyRegion)
   {
     static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
     static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
+    // The view doesn't have a dirty region so create one
     nsresult rv = nsRepository::CreateInstance(kRegionCID, 
                                        nsnull, 
                                        kIRegionIID, 
-                                       (void **)&mDirtyRegion);
+                                       (void **)&dirtyRegion);
 
-    if (NS_OK != rv)
-      return;
-    else
-      mDirtyRegion->Init();
+    dirtyRegion->Init();
+    aView->SetDirtyRegion(dirtyRegion);
   }
 
+  // Dirty regions are in device units, and aRect is in app units so
+  // we need to convert to device units
   nsRect  trect = aRect;
   float   t2p;
 
   mContext->GetAppUnitsToDevUnits(t2p);
 
   trect.ScaleRoundOut(t2p);
-  mDirtyRegion->Union(trect.x, trect.y, trect.width, trect.height);
+  dirtyRegion->Union(trect.x, trect.y, trect.width, trect.height);
+  NS_IF_RELEASE(dirtyRegion);
 }
 
 void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)

@@ -621,7 +621,8 @@ NS_IMETHODIMP nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& re
 
   GetBounds(brect);
 
-  if (mVis == nsViewVisibility_kShow)
+  //don't clip if we have a widget
+  if ((mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
     clipres = rc.SetClipRect(brect, nsClipCombine_kIntersect);
 
   if (clipres == PR_FALSE)
@@ -685,7 +686,11 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
       else
         sy = 0;
 
+      // XXX Clearing everything isn't correct, but maybe we should clear it for
+      // our view...
+#if 0
       mViewManager->ClearDirtyRegion();
+#endif
 
       nsIWidget *thiswin;
       GetWidget(thiswin);
@@ -751,7 +756,11 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
 
       mHScrollBarView->GetDimensions(&sx, &sy);
 
+      // XXX Clearing everything isn't correct, but maybe we should clear it for
+      // our view...
+#if 0
       mViewManager->ClearDirtyRegion();
+#endif
 
       nsIWidget *thiswin;
       GetWidget(thiswin);

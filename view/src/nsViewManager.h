@@ -104,8 +104,6 @@ public:
 
   NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext);
 
-  NS_IMETHOD  ClearDirtyRegion(void);
-
   NS_IMETHOD  ShowQuality(PRBool aShow);
   NS_IMETHOD  GetShowQuality(PRBool &aResult);
   NS_IMETHOD  SetQuality(nsContentQuality aQuality);
@@ -118,19 +116,19 @@ public:
 private:
   virtual ~nsViewManager();
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);
-  void AddRectToDirtyRegion(nsRect &aRect);
+  void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
+  void UpdateDirtyViews(nsIView *aView) const;
   void UpdateTransCnt(nsIView *oldview, nsIView *newview);
 
   void Refresh(nsIView *aView, nsIRenderingContext *aContext,
                        nsIRegion *region, PRUint32 aUpdateFlags);
   void Refresh(nsIView* aView, nsIRenderingContext *aContext,
-                       nsRect *rect, PRUint32 aUpdateFlags);
+                       const nsRect *rect, PRUint32 aUpdateFlags);
 
   nsIDeviceContext  *mContext;
   nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;
   PRIntervalTime    mLastRefresh;
-  nsIRegion         *mDirtyRegion;
   PRInt32           mTransCnt;
   PRBool            mRefreshEnabled;
   PRBool            mPainting;

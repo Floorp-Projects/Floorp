@@ -343,12 +343,6 @@ public:
   NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext) = 0;
 
   /**
-   * Set the area that the view manager considers to be "dirty"
-   * to an empty state
-   */
-  NS_IMETHOD  ClearDirtyRegion(void) = 0;
-
-  /**
    * Select whether quality level should be displayed in root view
    * @param aShow if PR_TRUE, quality level will be displayed, else hidden
    */
