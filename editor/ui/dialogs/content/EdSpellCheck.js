@@ -228,15 +228,21 @@ function SelectSuggestedWord()
   if (allowSelectWord)
   {
     var selValue = GetSelectedTreelistValue(dialog.SuggestedList);
-dump(selValue+"=Selected word in suggested list\n");
     dialog.ReplaceWordInput.value = selValue;
   }
 }
 
 function ChangeReplaceWord()
 {
+  // Calling this triggers SelectSuggestedWord(),
+  //  so temporarily suppress the effect of that
+  var saveAllow = allowSelectWord;
+  allowSelectWord = false;
+
   // Unselect the word in the suggested list when user edits the replacement word
   dialog.SuggestedList.clearItemSelection();
+
+  allowSelectWord = saveAllow;
 }
 
 function Ignore()
