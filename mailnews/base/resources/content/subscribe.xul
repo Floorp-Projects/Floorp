@@ -26,20 +26,18 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
 
 
-<window xmlns:html="http://www.w3.org/TR/REC-html40"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:NC="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
 		class="dialog"
 		height="300"
 		width="600"
-        onload="SubscribeOnLoad()"
-        style="padding:10px"> 
+        onload="SubscribeOnLoad()">
         
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/subscribe.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
+<script language="JavaScript" src="chrome://messenger/content/subscribe.js"/>
 
 	<keyset id="keyset"/>
 
@@ -70,8 +68,7 @@ Rights Reserved.
 	<box orient="horizontal" flex="100%">
 		<box orient="vertical" flex="100%">
 
-<tree style="width:100px;" flex="100%"
-				class="inset"
+<tree class="inset"
 				id="subscribetree"
 				datasources="rdf:subscribe"
 				onclick="SubscribeOnClick(event);"> 
