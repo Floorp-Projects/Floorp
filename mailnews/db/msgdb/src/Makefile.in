@@ -34,6 +34,7 @@ CPPSRCS = \
 	nsMsgHdr.cpp\
 	nsNewsDatabase.cpp\
 	nsMailDatabase.cpp\
+	nsImapMailDatabase.cpp\
 	nsMsgThread.cpp\
 	$(NULL)
 

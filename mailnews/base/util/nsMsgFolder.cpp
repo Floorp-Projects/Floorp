@@ -1188,7 +1188,7 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
 	if (force || !(mPrefFlags & MSG_FOLDER_PREF_CACHED))
     {
         nsIDBFolderInfo   *folderInfo;
-        nsMsgDatabase       *db;
+        nsIMsgDatabase       *db;
         result = NS_SUCCEEDED(GetDBFolderInfoAndDB(&folderInfo, &db));
         if(result)
         {

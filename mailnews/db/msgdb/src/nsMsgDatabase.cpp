@@ -343,6 +343,8 @@ nsMsgDatabase::nsMsgDatabase()
       m_statusOffsetColumnToken(0),
       m_numLinesColumnToken(0),
       m_ccListColumnToken(0),
+	  m_threadFlagsColumnToken(0),
+	  m_threadIdColumnToken(0),
 	  m_threadChildrenColumnToken(0),
 	  m_threadUnreadChildrenColumnToken(0)
 {
@@ -508,6 +510,12 @@ void nsMsgDatabase::NativeToUnix(char*& ioPath)
 }
 #endif /* XP_MAC */
 
+NS_IMETHODIMP nsMsgDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+{
+	NS_ASSERTION(FALSE, "must override");
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // Open the MDB database synchronously. If successful, this routine
 // will set up the m_mdbStore and m_mdbEnv of the database object 
 // so other database calls can work.
@@ -524,6 +532,8 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			struct stat st;
 			char	*nativeFileName = nsCRT::strdup(dbName);
 
+			if (m_mdbEnv)
+				m_mdbEnv->SetAutoClear(PR_TRUE);
 #if defined(XP_MAC)
 			char * unixPath = nsCRT::strdup(dbName);
 			NativeToUnix(unixPath);
@@ -596,7 +606,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 						ret = InitExistingDB();
 				}
 #ifdef DEBUG_bienvenu
-//				DumpContents();
+				DumpContents();
 #endif
 			}
 			else if (create)	// ### need error code saying why open file store failed
@@ -662,6 +672,15 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	return err;
 }
 
+// caller must Release result.
+NS_IMETHODIMP nsMsgDatabase::GetDBFolderInfo(nsIDBFolderInfo	**result)
+{
+	*result = m_dbFolderInfo;
+	if (m_dbFolderInfo)
+		m_dbFolderInfo->AddRef();
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommitType commitType)
 {
 	nsresult	err = NS_OK;
@@ -725,6 +744,8 @@ const char *kPriorityColumnName = "priority";
 const char *kStatusOffsetColumnName = "statusOfset";
 const char *kNumLinesColumnName = "numLines";
 const char *kCCListColumnName = "ccList";
+const char *kThreadFlagsColumnName = "threadFlags";
+const char *kThreadIdColumnName = "threadId";
 const char *kThreadChildrenColumnName = "children";
 const char *kThreadUnreadChildrenColumnName = "unreadChildren";
 
@@ -803,6 +824,8 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kStatusOffsetColumnName, &m_statusOffsetColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kNumLinesColumnName, &m_numLinesColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kCCListColumnName, &m_ccListColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kThreadIdColumnName, &m_threadIdColumnToken);
+			GetStore()->StringToToken(GetEnv(),  kThreadFlagsColumnName, &m_threadFlagsColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kThreadChildrenColumnName, &m_threadChildrenColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kThreadUnreadChildrenColumnName, &m_threadUnreadChildrenColumnToken);
 			
@@ -1596,6 +1619,7 @@ nsMsgDatabase::EnumerateMessages(nsIEnumerator* *result)
     *result = e;
     return NS_OK;
 }
+
 #endif
 
 #if HAVE_INT_ENUMERATORS
@@ -1644,6 +1668,121 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 	return err;
 }
 #endif
+
+
+class nsMsgDBThreadEnumerator : public nsIEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    // nsIEnumerator methods:
+    NS_IMETHOD First(void);
+    NS_IMETHOD Next(void);
+    NS_IMETHOD CurrentItem(nsISupports **aItem);
+    NS_IMETHOD IsDone(void);
+
+    // nsMsgDBEnumerator methods:
+    typedef nsresult (*nsMsgDBThreadEnumeratorFilter)(nsIMsgThread* hdr, void* closure);
+
+    nsMsgDBThreadEnumerator(nsMsgDatabase* db, 
+                      nsMsgDBThreadEnumeratorFilter filter, void* closure);
+    virtual ~nsMsgDBThreadEnumerator();
+
+protected:
+    nsMsgDatabase*              mDB;
+	nsIMdbPortTableCursor*       mTableCursor;
+    nsIMsgThread*                 mResultThread;
+    PRBool                      mDone;
+    nsMsgDBThreadEnumeratorFilter     mFilter;
+    void*                       mClosure;
+};
+
+nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
+                                     nsMsgDBThreadEnumeratorFilter filter, void* closure)
+    : mDB(db), mTableCursor(nsnull), mResultThread(nsnull), mDone(PR_FALSE),
+      mFilter(filter), mClosure(closure)
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF(mDB);
+}
+
+nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
+{
+	NS_IF_RELEASE(mTableCursor);
+	NS_IF_RELEASE(mResultThread);
+    NS_RELEASE(mDB);
+}
+
+NS_IMPL_ISUPPORTS(nsMsgDBThreadEnumerator, nsIEnumerator::GetIID())
+
+NS_IMETHODIMP nsMsgDBThreadEnumerator::First(void)
+{
+	nsresult rv = 0;
+
+	if (!mDB || !mDB->m_mdbStore)
+		return NS_ERROR_NULL_POINTER;
+		
+	mDB->m_mdbStore->GetPortTableCursor(mDB->GetEnv(),   mDB->m_hdrRowScopeToken, mDB->m_threadTableKindToken,
+	    &mTableCursor);
+
+	if (NS_FAILED(rv)) return rv;
+    return Next();
+}
+
+NS_IMETHODIMP nsMsgDBThreadEnumerator::Next(void)
+{
+	nsresult rv;
+	nsIMdbTable *table = nsnull;
+
+    do {
+        NS_IF_RELEASE(mResultThread);
+        mResultThread = nsnull;
+        rv = mTableCursor->NextTable(mDB->GetEnv(), &table);
+		if (!table) 
+		{
+            mDone = PR_TRUE;
+			return NS_RDF_CURSOR_EMPTY;
+        }
+        if (NS_FAILED(rv)) 
+		{
+            mDone = PR_TRUE;
+            return rv;
+        }
+
+        if (NS_FAILED(rv)) 
+			return rv;
+
+        mResultThread = new nsMsgThread(mDB, table);
+    } while (mFilter && mFilter(mResultThread, mClosure) != NS_OK);
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgDBThreadEnumerator::CurrentItem(nsISupports **aItem)
+{
+    if (mResultThread) {
+        *aItem = mResultThread;
+        NS_ADDREF(mResultThread);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMsgDBThreadEnumerator::IsDone(void)
+{
+    return mDone ? NS_OK : NS_COMFALSE;
+}
+
+NS_IMETHODIMP 
+nsMsgDatabase::EnumerateThreads(nsIEnumerator* *result)
+{
+    nsMsgDBThreadEnumerator* e = new nsMsgDBThreadEnumerator(this, nsnull, nsnull);
+    if (e == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(e);
+    *result = e;
+    return NS_OK;
+}
+
 
 #if 0
 // convenience function to iterate through a db only looking for unread messages.
@@ -1748,9 +1887,8 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMessage *newHdr, PRBool notify)
 				m_dbFolderInfo->ChangeNumNewMessages(1);
 		}
 		PRBool newThread;
-#if 0
+
 		err = ThreadNewHdr(hdr, newThread);
-#endif
 		if (notify)
 		{
 			NotifyKeyAddedAll(key, flags, NULL);
@@ -2103,7 +2241,7 @@ nsMsgThread *nsMsgDatabase::GetThreadForReference(const char * msgID)
 
 nsMsgThread *	nsMsgDatabase::GetThreadForSubject(const char * subject)
 {
-	NS_ASSERTION(PR_FALSE, "not implemented yet.");
+//	NS_ASSERTION(PR_FALSE, "not implemented yet.");
 	return nsnull;
 }
 
@@ -2176,8 +2314,8 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 
 nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsMsgThread *thread, PRBool threadInThread)
 {
-
-	return NS_ERROR_NOT_IMPLEMENTED;
+	// don't worry about real threading yet.
+	return thread->AddChild(newHdr, threadInThread);
 }
 
 nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(const char *reference)
@@ -2188,8 +2326,27 @@ nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(const char *reference)
 
 nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForMessageID(const char *msgID)
 {
-	NS_ASSERTION(PR_FALSE, "not implemented yet.");
-	return nsnull;
+    nsIEnumerator* hdrs;
+	nsMsgHdr *pHeader = nsnull;
+
+    nsresult rv = EnumerateMessages(&hdrs);
+    if (NS_FAILED(rv)) 
+		return nsnull;
+	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) 
+	{
+        rv = hdrs->CurrentItem((nsISupports**)&pHeader);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+        if (NS_FAILED(rv)) 
+			break;
+
+		nsString messageId;
+        (void)pHeader->GetMessageId(messageId);
+		if (!nsCRT::strcmp(messageId, msgID))
+			break;
+		NS_RELEASE(pHeader);
+		pHeader = nsnull;
+	}
+	return pHeader;
 }
 
 nsMsgThread *	nsMsgDatabase::GetThreadContainingMsgHdr(nsMsgHdr *msgHdr)
@@ -2202,6 +2359,12 @@ nsMsgThread *	nsMsgDatabase::GetThreadContainingMsgHdr(nsMsgHdr *msgHdr)
 nsMsgThread *nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey)
 {
 	NS_ASSERTION(PR_FALSE, "not implemented yet.");
+	return nsnull;
+}
+
+nsMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
+{
+	// not implemented yet. Need to iterate over the thread tables...
 	return nsnull;
 }
 
@@ -2257,6 +2420,33 @@ nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
 	return rv;
 }
 
+nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
+{
+	nsresult		rv;
+	nsMsgThread		*pThread;
+
+    nsIEnumerator* threads;
+    rv = EnumerateThreads(&threads);
+    if (NS_FAILED(rv)) return rv;
+	for (threads->First(); threads->IsDone() != NS_OK; threads->Next()) 
+	{
+        rv = threads->CurrentItem((nsISupports**)&pThread);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+        if (NS_FAILED(rv)) break;
+
+		if (threadIds)
+		{
+            nsMsgKey key;
+            (void)pThread->GetThreadKey(&key);
+			threadIds->Add(key);
+        }
+//		NS_RELEASE(pThread);
+		pThread = nsnull;
+	}
+	NS_RELEASE(threads);
+	return rv;
+}
+
 #ifdef DEBUG
 nsresult nsMsgDatabase::DumpContents()
 {
@@ -2296,6 +2486,15 @@ nsresult nsMsgDatabase::DumpContents()
 			NS_RELEASE(msgHdr);
 		}
     }
+	nsMsgKeyArray threads;
+    rv = ListAllThreads(&threads);
+    for ( i = 0; i < threads.GetSize(); i++) 
+	{
+        key = threads[i];
+		printf("thread key = %ld\n", key);
+    }
+
+
     return NS_OK;
 }
 #endif

@@ -81,8 +81,6 @@ LLIBS=										\
 			$(DIST)\lib\nntp.lib		\
 			$(DIST)\lib\netlib.lib		\
 			$(DIST)\lib\nntpTest.lib	\
-			$(DIST)\lib\msgdb.lib	\
-			$(DIST)\lib\mork.lib	\
 			$(DIST)\lib\rdfutil_s.lib \
 			$(LIBNSPR)						\
 			$(NULL)

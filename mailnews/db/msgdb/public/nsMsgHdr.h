@@ -56,6 +56,7 @@ public:
 	NS_IMETHOD GetAuthor(nsString &resultAuthor);
 	NS_IMETHOD GetSubject(nsString &resultSubject);
 	NS_IMETHOD GetRecipients(nsString &resultRecipients);
+	NS_IMETHOD GetMessageId(nsString &resultMessageId);
 
 	NS_IMETHOD GetMime2EncodedAuthor(nsString &resultAuthor);
 	NS_IMETHOD GetMime2EncodedSubject(nsString &resultSubject);

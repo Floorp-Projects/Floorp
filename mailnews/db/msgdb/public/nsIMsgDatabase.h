@@ -27,6 +27,7 @@ class nsIDBChangeListener;
 class nsIEnumerator;
 class nsThreadMessageHdr;       // XXX where's the public interface to this?
 class nsMsgKeyArray;
+class nsIDBFolderInfo;
 
 enum nsMsgDBCommitType {
   kSmallCommit,
@@ -69,6 +70,8 @@ public:
 
 class nsIMsgDatabase : public nsIDBChangeAnnouncer {
 public:
+  // open local folder...
+  NS_IMETHOD Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading) = 0;
   NS_IMETHOD Close(PRBool forceCommit) = 0;
   NS_IMETHOD OpenMDB(const char *dbName, PRBool create) = 0;
   NS_IMETHOD CloseMDB(PRBool commit) = 0;
@@ -76,6 +79,8 @@ public:
   // Force closed is evil, and we should see if we can do without it.
   // In 4.x, it was mainly used to remove corrupted databases.
   NS_IMETHOD ForceClosed(void) = 0;
+
+  NS_IMETHOD GetDBFolderInfo(nsIDBFolderInfo **result) = 0;
   // get a message header for the given key. Caller must release()!
   NS_IMETHOD GetMsgHdrForKey(nsMsgKey key, nsIMessage **msg) = 0;
   // create a new message header from a hdrStruct. Caller must release resulting header,

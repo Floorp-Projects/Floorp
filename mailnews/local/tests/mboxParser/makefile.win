@@ -47,8 +47,6 @@ MYLIBS=							\
  $(DIST)\lib\msgcore.lib \
  $(DIST)\lib\rdf.lib		\
  $(DIST)\lib\xplib.lib			\
- $(DIST)\lib\msgdb.lib			\
- $(DIST)\lib\mork.lib			\
  $(NULL)
 
 LLIBS= $(MYLIBS)				\

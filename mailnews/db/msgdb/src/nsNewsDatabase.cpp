@@ -81,7 +81,7 @@ NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMessage *msgHdr, PRBool bRead,
 
 NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 {
-	XP_ASSERT(pRead != NULL);
+	NS_ASSERTION(pRead != NULL, "null out param in IsRead");
 	if (pRead == NULL) 
 		return NS_ERROR_NULL_POINTER;
 #if 0

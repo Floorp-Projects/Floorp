@@ -54,7 +54,6 @@ LIBS = \
 	-lxp	\
 	-lpref	\
 	-lmozjs	\
-	-lmailnewsmsgdb \
 	-lmork \
 	-lmsgbaseutil \
 	-lraptorbase \

@@ -27,8 +27,11 @@
 
 #include "nsMailboxUrl.h"
 #include "nsMailboxProtocol.h"
-#include "nsMailDatabase.h"
+#include "nsIMsgDatabase.h"
+#include "nsMsgDBCID.h"
 #include "nsMsgKeyArray.h"
+
+static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 nsMailboxService::nsMailboxService()
 {
@@ -194,19 +197,28 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFileSpec& aMailboxPath, 
 	nsMsgKeyArray msgKeys;
 	nsresult rv = NS_OK;
 	// extract the message key for this message number and turn around and call the other displayMessage method on it...
-	nsMailDatabase * mailDb = nsnull;
-	rv = nsMailDatabase::Open((nsFileSpec&) aMailboxPath, PR_FALSE, &mailDb);
+	nsIMsgDatabase * mailDB = nsnull;
+	nsIMsgDatabase *mailDBFactory;
 
-	if (NS_SUCCEEDED(rv) && mailDb)
+	nsIMessage * msgHdr = nsnull;
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+		rv = mailDBFactory->Open((nsFileSpec&) aMailboxPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+		mailDBFactory->Release();
+	}
+//	rv = nsMailDatabase::Open((nsFileSpec&) aMailboxPath, PR_FALSE, &mailDb);
+
+	if (NS_SUCCEEDED(rv) && mailDB)
 	{
 		// extract the message key array
-		mailDb->ListAllKeys(msgKeys);
+		mailDB->ListAllKeys(msgKeys);
 		if (aMessageNumber < msgKeys.GetSize()) 
 		{
 			nsMsgKey msgKey = msgKeys[aMessageNumber];
 			// okay, we have the msgKey so let's get rid of our db state...
-			mailDb->Close(PR_TRUE);
-			mailDb = nsnull;
+			mailDB->Close(PR_TRUE);
+			mailDB = nsnull;
 			char * uri = nsnull;
 
 			nsBuildLocalMessageURI(aMailboxPath, msgKey, &uri);
@@ -217,8 +229,8 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFileSpec& aMailboxPath, 
 			rv = NS_ERROR_FAILURE;
 	}
 
-	if (mailDb) // in case we slipped through the cracks without releasing the db...
-		mailDb->Close(PR_TRUE);
+	if (mailDB) // in case we slipped through the cracks without releasing the db...
+		mailDB->Close(PR_TRUE);
 
 	return rv;
 }

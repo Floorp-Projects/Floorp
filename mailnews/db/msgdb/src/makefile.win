@@ -29,6 +29,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=    nsMsgDatabase.cpp\
 			nsDBFolderInfo.cpp\
 			nsMailDatabase.cpp\
+			nsImapMailDatabase.cpp\
 			nsNewsDatabase.cpp\
 			nsMsgHdr.cpp\
 			nsMsgThread.cpp\
@@ -37,6 +38,7 @@ CPPSRCS=    nsMsgDatabase.cpp\
 CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj  \
 			.\$(OBJDIR)\nsDBFolderInfo.obj\
 			.\$(OBJDIR)\nsMailDatabase.obj\
+			.\$(OBJDIR)\nsImapMailDatabase.obj\
 			.\$(OBJDIR)\nsNewsDatabase.obj\
 			.\$(OBJDIR)\nsMsgHdr.obj\
 			.\$(OBJDIR)\nsMsgThread.obj\

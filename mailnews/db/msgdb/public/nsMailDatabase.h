@@ -30,6 +30,7 @@ class MSG_FolderInfo;
 class nsIOFileStream;
 class nsFileSpec;
 
+
 // this is the version number for the mail db. If the file format changes, we 
 // just reparse the mail folder. 
 const int kMailDBVersion = 1;
@@ -37,9 +38,9 @@ const int kMailDBVersion = 1;
 class nsMailDatabase : public nsMsgDatabase
 {
 public:
-			nsMailDatabase(nsFileSpec& folder);
+	nsMailDatabase();
 	virtual ~nsMailDatabase();
-	static nsresult			Open(nsFileSpec &folderName, PRBool create, nsMailDatabase** pMessageDB,
+	NS_IMETHOD				Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB,
                                  PRBool upgrading = PR_FALSE);
 
 	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFileSpec &pathName, nsMailDatabase** pMailDB);
@@ -48,11 +49,9 @@ public:
 
 	NS_IMETHOD DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
 
-	static  nsresult		SetFolderInfoValid(nsFileSpec &pathname, int num, int numunread);
+	static  nsresult		SetFolderInfoValid(nsFileSpec *folderSpec, int num, int numunread);
 	nsresult				GetFolderName(nsString &folderName);
 	virtual nsMailDatabase	*GetMailDB() {return this;}
-	MSG_Master		*GetMaster() {return m_master;}
-	void			SetMaster(MSG_Master *master) {m_master = master;}
 
 	virtual PRUint32		GetCurVersion() {return kMailDBVersion;}
 	virtual MSG_FolderInfo *GetFolderInfo();
@@ -67,7 +66,7 @@ public:
 	nsresult				DeleteOfflineOp(nsMsgKey opKey);
 	nsresult				SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key);
 	
-    NS_IMETHOD SetSummaryValid(PRBool valid);
+    NS_IMETHOD				SetSummaryValid(PRBool valid);
 	
 	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
 #ifdef DEBUG	// strictly for testing purposes
@@ -82,9 +81,8 @@ protected:
 protected:
 	virtual PRBool	ThreadBySubjectWithoutRe() ;
 
-	MSG_Master				*m_master;
 	PRBool					m_reparse;
-	nsFileSpec				m_folderName;
+	nsFileSpec				*m_folderSpec;
 	nsIOFileStream			*m_folderStream; 	/* this is a cache for loops which want file left open */
 };
 

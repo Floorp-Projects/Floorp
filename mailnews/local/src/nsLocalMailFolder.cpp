@@ -36,6 +36,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsRDFCID.h"
 #include "nsFileStream.h"
+#include "nsMsgDBCID.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -43,6 +44,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
+static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -324,13 +326,26 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
     if (NS_FAILED(rv)) return rv;
 
 	nsresult folderOpen;
-	if(!NS_SUCCEEDED(folderOpen = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, PR_FALSE)) &&
+	nsIMsgDatabase * mailDBFactory = nsnull;
+	nsIMsgDatabase *mailDB;
+
+	nsIMessage * msgHdr = nsnull;
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+		folderOpen = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &mMailDatabase, PR_FALSE);
+	}
+	if(!NS_SUCCEEDED(folderOpen) &&
 			folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
 	{
 		// if it's out of date then reopen with upgrade.
-		if(!NS_SUCCEEDED(rv = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
+		if(!NS_SUCCEEDED(rv = mailDBFactory->Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
+		{
+			mailDBFactory->Release();
 			return rv;
+		}
 	}
+	mailDBFactory->Release();
 
 	if(mMailDatabase)
 	{
@@ -718,19 +733,27 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(nsString& prettyName)
   return NS_OK;
 }
 
-nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsMsgDatabase **db)
+nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
-    nsMailDatabase  *mailDB;
-
     nsresult openErr;
     if(!db || !folderInfo)
 		return NS_ERROR_NULL_POINTER;
 
-    openErr = nsMailDatabase::Open(mPath, FALSE, &mailDB, FALSE);
+	nsIMsgDatabase * mailDBFactory = nsnull;
+	nsIMsgDatabase *mailDB;
+
+	nsIMessage * msgHdr = nsnull;
+	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+		openErr = mailDBFactory->Open(mPath, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+		mailDBFactory->Release();
+	}
+//    openErr = nsMailDatabase::Open(mPath, FALSE, &mailDB, FALSE);
 
     *db = mailDB;
     if (NS_SUCCEEDED(openErr)&& *db)
-        *folderInfo = (*db)->GetDBFolderInfo();
+        openErr = (*db)->GetDBFolderInfo(folderInfo);
     return openErr;
 }
 

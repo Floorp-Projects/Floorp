@@ -18,20 +18,20 @@
 #ifndef _nsImapMailDatabase_H_
 #define _nsImapMailDatabase_H_
 
+#include "nsMailDatabase.h"
+
 class nsImapMailDatabase : public nsMailDatabase
 {
 public:
 	// OK, it's dumb that this should require a fileSpec, since there is no file
 	// for the folder. This is mainly because we're deriving from nsMailDatabase;
 	// Perhaps we shouldn't...
-	nsImapMailDatabase(nsFileSpec& folder);
+	nsImapMailDatabase();
 	virtual ~nsImapMailDatabase();
 	
-	static nsresult		Open(nsFileSpec &dbFileSpec, PRBool create, 
-						     nsImapMailDatabase** pMessageDB, 
-						     PRBool *dbWasCreated);
+	nsresult		Open(PRBool create, nsImapMailDatabase** pMessageDB, PRBool *dbWasCreated);
 	
-	virtual nsresult		SetSummaryValid(PRBool valid = TRUE);
+	NS_IMETHOD			SetSummaryValid(PRBool valid = TRUE);
 	
 protected:
 	// IMAP does not set local file flags, override does nothing

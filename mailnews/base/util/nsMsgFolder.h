@@ -274,7 +274,7 @@ public:
   NS_IMETHOD GetUsersName(char **userName);
   NS_IMETHOD GetHostName(char **hostName);
 
- virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsMsgDatabase **db) = 0;
+ virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
  	NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
 
 

@@ -25,9 +25,13 @@
 #include "nsIInputStream.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgDBCID.h"
 #include "libi18n.h"
 #include "nsIMailboxUrl.h"
 #include "nsCRT.h"
+
+static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
+
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMsgMailboxParser)
 NS_IMPL_RELEASE(nsMsgMailboxParser)
@@ -61,7 +65,13 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 		{	
 			nsFileSpec dbName(fileName);
 
-			(void)nsMailDatabase::Open(dbName, PR_TRUE, &m_mailDB, PR_TRUE);
+			nsIMsgDatabase * mailDB = nsnull;
+			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDB);
+			if (NS_SUCCEEDED(rv) && mailDB)
+			{
+				rv = mailDB->Open(dbName, PR_TRUE, (nsIMsgDatabase **) &m_mailDB, PR_TRUE);
+				mailDB->Release();
+			}
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 			printf("url file = %s\n", fileName);
 		}
@@ -69,7 +79,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 
 	// need to get the mailbox name out of the url and call SetMailboxName with it.
 	// then, we need to open the mail db for this parser.
-	return NS_OK;
+	return rv;
 
 }
 
@@ -229,8 +239,6 @@ void nsMsgMailboxParser::UpdateDBFolderInfo()
 // update folder info in db so we know not to reparse.
 void nsMsgMailboxParser::UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *mailboxName)
 {
-	nsIDBFolderInfo *folderInfo = mailDB->GetDBFolderInfo();
-
 	// ### wrong - use method on db.
 	mailDB->SetSummaryValid(PR_TRUE);
 	mailDB->Commit(kLargeCommit);
@@ -254,7 +262,8 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
         (void)m_newMsgHdr->GetFlags(&flags);
 		if (flags & MSG_FLAG_EXPUNGED)
 		{
-			nsIDBFolderInfo *folderInfo = m_mailDB->GetDBFolderInfo();
+			nsIDBFolderInfo *folderInfo = nsnull;
+			m_mailDB->GetDBFolderInfo(&folderInfo);
             PRUint32 size;
             (void)m_newMsgHdr->GetMessageSize(&size);
             folderInfo->ChangeExpungedBytes(size);
@@ -263,6 +272,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 				m_newMsgHdr->Release();;
 				m_newMsgHdr = NULL;
 			}
+			NS_RELEASE(folderInfo);
 		}
 		else if (m_mailDB != NULL)
 		{
@@ -276,7 +286,8 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 	}
 	else if (m_mailDB)
 	{
-		nsIDBFolderInfo *folderInfo = m_mailDB->GetDBFolderInfo();
+		nsIDBFolderInfo *folderInfo = nsnull;
+		m_mailDB->GetDBFolderInfo(&folderInfo);
 		if (folderInfo)
 			folderInfo->ChangeExpungedBytes(m_position - m_envelope_pos);
 	}
@@ -1297,7 +1308,14 @@ nsParseNewMailState::Init(MSG_Master *master, nsFileSpec &folder)
 
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartBinding mechanism the mailbox parser uses. So, let's open the db right now.
-	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
+	nsIMsgDatabase * mailDB = nsnull;
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDB);
+	if (NS_SUCCEEDED(rv) && mailDB)
+	{
+		rv = mailDB->Open(folder, PR_TRUE, (nsIMsgDatabase **) &m_mailDB, PR_FALSE);
+		mailDB->Release();
+	}
+//	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef DOING_FILTERS

@@ -51,7 +51,6 @@ EXTRA_DSO_LDOPTS = 	\
 	-lxp				\
 	-lrdfutil_s			\
 	-lmsgbaseutil			\
-	-lmailnewsmsgdb			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -24,19 +24,19 @@
 #include "nsLocalFolderSummarySpec.h"
 #include "nsFileSpec.h"
 
-nsMailDatabase::nsMailDatabase(nsFileSpec& folder)
-    : m_master(nsnull), m_reparse(PR_FALSE), m_folderName(folder), m_folderStream(nsnull)
+nsMailDatabase::nsMailDatabase()
+    : m_reparse(PR_FALSE), m_folderSpec(nsnull), m_folderStream(nsnull)
 {
 }
 
 nsMailDatabase::~nsMailDatabase()
 {
+	delete m_folderSpec;
 }
 
 
 
-/* static */ nsresult	nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsMailDatabase** pMessageDB,
-                                             PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
 	nsMailDatabase	*mailDB;
 	PRBool			summaryFileExists;
@@ -62,11 +62,12 @@ nsMailDatabase::~nsMailDatabase()
 	if (!summarySpec.Exists() && create)
 		newFile = PR_TRUE;
 
-	mailDB = new nsMailDatabase(folderName);
+	mailDB = new nsMailDatabase();
 
 	if (!mailDB)
 		return NS_ERROR_OUT_OF_MEMORY;
-	
+	mailDB->m_folderSpec = new nsFileSpec(folderName);
+	mailDB->AddRef();
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on
 	// folder file.
@@ -86,7 +87,7 @@ nsMailDatabase::~nsMailDatabase()
 
 	if (NS_SUCCEEDED(err))
 	{
-		folderInfo = mailDB->GetDBFolderInfo();
+		mailDB->GetDBFolderInfo(&folderInfo);
 		if (folderInfo == NULL)
 		{
 			err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
@@ -115,6 +116,7 @@ nsMailDatabase::~nsMailDatabase()
             folderInfo->GetDiskVersion(&version);
 			if (mailDB->GetCurVersion() != version)
 				err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+			NS_RELEASE(folderInfo);
 		}
 		if (err != NS_OK)
 		{
@@ -172,7 +174,7 @@ nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeLis
 	if (m_folderStream)
 		delete m_folderStream;
 	m_folderStream = NULL;
-	SetFolderInfoValid(m_folderName, 0, 0);
+	SetFolderInfoValid(m_folderSpec, 0, 0);
 	return ret;
 }
 
@@ -189,7 +191,7 @@ PRBool nsMailDatabase::SetHdrFlag(nsIMessage *msgHdr, PRBool bSet, MsgFlags flag
 		if (fileStream != NULL)
 		{
 			delete fileStream;
-			SetFolderInfoValid(m_folderName, 0, 0);
+			SetFolderInfoValid(m_folderSpec, 0, 0);
 		}
 		ret = PR_TRUE;
 	}
@@ -227,7 +229,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 	// mac file system only has one handle, and they compete for the file position.
 	// Prevent closing the file from under the incorporate stuff. #82785.
 	int32 savedPosition = -1;
-	if (!fid && gIncorporatePath && !XP_STRCMP(m_folderName, gIncorporatePath))
+	if (!fid && gIncorporatePath && !XP_STRCMP(m_folderSpec, gIncorporatePath))
 	{
 		fid = gIncorporateFID;
 		savedPosition = ftell(gIncorporateFID); // so we can restore it.
@@ -241,7 +243,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 		
 		if (fileStream == NULL) 
 		{
-			fileStream = new nsIOFileStream(nsFileSpec(m_folderName));
+			fileStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
 		}
 		if (fileStream) 
 		{
@@ -325,7 +327,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 		else
 		{
 			printf("Couldn't open mail folder for update%s!\n",
-                   (const char*)m_folderName);
+                   (const char*)m_folderSpec);
 			PR_ASSERT(PR_FALSE);
 		}
 	}
@@ -342,7 +344,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 {
 	nsresult ret = NS_OK;
 	struct stat st;
-	char	*nativeFileName = nsCRT::strdup(m_folderName);
+	char	*nativeFileName = nsCRT::strdup(*m_folderSpec);
 #if defined(XP_PC) || defined(XP_MAC)
 	UnixToNative(nativeFileName);
 #endif
@@ -367,7 +369,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 
 nsresult nsMailDatabase::GetFolderName(nsString &folderName)
 {
-	folderName = m_folderName;
+	folderName = *m_folderSpec;
 	return NS_OK;
 }
 
@@ -431,19 +433,19 @@ nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
 }
 
 /* static */
-nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec &folderName, int num, int numunread)
+nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int numunread)
 {
 	struct stat st;
-	nsLocalFolderSummarySpec	summarySpec(folderName);
+	nsLocalFolderSummarySpec	summarySpec(*folderName);
 	nsFileSpec					summaryPath(summarySpec);
 	nsresult		err;
 
-	char	*nativeFileName = nsCRT::strdup(folderName);
+	char	*nativeFileName = nsCRT::strdup(*folderName);
 #if defined(XP_PC) || defined(XP_MAC)
 	UnixToNative(nativeFileName);
 #endif
 
-	if (!folderName.Exists())
+	if (!folderName->Exists())
 		return NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
 
 	stat(nativeFileName, &st);
@@ -454,7 +456,8 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec &folderName, int num, int
 	nsMailDatabase *pMessageDB = (nsMailDatabase *) nsMailDatabase::FindInCache(summaryPath);
 	if (pMessageDB == NULL)
 	{
-		pMessageDB = new nsMailDatabase(summaryPath);
+		pMessageDB = new nsMailDatabase();
+		pMessageDB->m_folderSpec = &summarySpec;
 		// ### this does later stuff (marks latered messages unread), which may be a problem
 		err = pMessageDB->OpenMDB(summaryPath, PR_FALSE);
 		if (err != NS_OK)

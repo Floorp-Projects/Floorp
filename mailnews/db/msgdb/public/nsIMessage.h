@@ -57,7 +57,8 @@ public:
 	NS_IMETHOD GetAuthor(nsString &resultAuthor) = 0;
 	NS_IMETHOD GetSubject(nsString &resultSubject) = 0;
 	NS_IMETHOD GetRecipients(nsString &resultRecipients) = 0;
-	NS_IMETHOD GetCCList(nsString &ccList) =0;
+	NS_IMETHOD GetCCList(nsString &ccList) = 0;
+	NS_IMETHOD GetMessageId(nsString &resultMessageId) = 0;
 
 	NS_IMETHOD GetMime2EncodedAuthor(nsString &resultAuthor) = 0;
 	NS_IMETHOD GetMime2EncodedSubject(nsString &resultSubject) = 0;

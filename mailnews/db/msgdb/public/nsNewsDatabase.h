@@ -27,6 +27,8 @@ class MSG_RetrieveArtInfo;
 class MSG_PurgeInfo;
 // news group database
 
+
+
 class nsNewsDatabase : public nsMsgDatabase
 {
 public:

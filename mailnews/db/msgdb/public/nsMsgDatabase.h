@@ -29,12 +29,12 @@
 #include "nsISupportsArray.h"
 #include "nsDBFolderInfo.h"
 
-class nsThreadMessageHdr;
 class ListContext;
 class nsMsgKeyArray;
 class nsNewsSet;
 class nsMsgThread;
 class nsIMsgThread;
+class nsIDBFolderInfo;
 
 class nsMsgDatabase : public nsIMsgDatabase {
 public:
@@ -55,6 +55,7 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
   // nsIMsgDatabase methods:
+  NS_IMETHOD Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading);
   NS_IMETHOD Close(PRBool forceCommit);
   NS_IMETHOD OpenMDB(const char *dbName, PRBool create);
   NS_IMETHOD CloseMDB(PRBool commit);
@@ -88,6 +89,10 @@ public:
 #endif
   NS_IMETHOD EnumerateMessages(nsIEnumerator* *result);
   NS_IMETHOD EnumerateUnreadMessages(nsIEnumerator* *result);
+  NS_IMETHOD EnumerateThreads(nsIEnumerator* *result);
+
+  // this might just be for debugging - we'll see.
+  nsresult ListAllThreads(nsMsgKeyArray *threadIds);
 
   // helpers for user command functions like delete, mark read, etc.
 
@@ -172,7 +177,7 @@ public:
     NS_IMETHOD IsHeaderRead(nsIMessage *hdr, PRBool *pRead);
 
 	static nsIMdbFactory	*GetMDBFactory();
-	nsIDBFolderInfo			*GetDBFolderInfo() {return m_dbFolderInfo;}
+	NS_IMETHOD				GetDBFolderInfo(nsIDBFolderInfo **result);
 	nsIMdbEnv				*GetEnv() {return m_mdbEnv;}
 	nsIMdbStore				*GetStore() {return m_mdbStore;}
 	virtual PRUint32		GetCurVersion();
@@ -204,16 +209,16 @@ public:
 	friend class nsMsgHdr;	// use this to get access to cached tokens for hdr fields
 	friend class nsMsgThread;	// use this to get access to cached tokens for hdr fields
     friend class nsMsgDBEnumerator;
-
+	friend class nsMsgDBThreadEnumerator;
 protected:
     nsISupportsArray/*<nsIDBChangeListener>*/* m_ChangeListeners;
 	nsDBFolderInfo 	*m_dbFolderInfo;
-	nsIMdbEnv			*m_mdbEnv;	// to be used in all the db calls.
+	nsIMdbEnv		*m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore		*m_mdbStore;
 	nsIMdbTable		*m_mdbAllMsgHeadersTable;
 	nsFileSpec		m_dbName;
 
-	nsNewsSet *m_newSet;		// new messages since last open.
+	nsNewsSet		*m_newSet;		// new messages since last open.
 
     nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
 						  PRBool createKeyFromHeader = PR_FALSE);
@@ -223,6 +228,7 @@ protected:
 	nsMsgThread *	GetThreadForReference(const char * msgID);
 	nsMsgThread *	GetThreadForSubject(const char * subject);
 	nsMsgThread *	GetThreadForMsgKey(nsMsgKey msgKey);
+	nsMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
 	nsMsgHdr	*	GetMsgHdrForReference(const char *reference);
 	nsMsgHdr	*	GetMsgHdrForMessageID(const char *msgID);
 	nsMsgThread *	GetThreadContainingMsgHdr(nsMsgHdr *msgHdr);
@@ -284,6 +290,8 @@ protected:
 	mdb_token			m_statusOffsetColumnToken;
 	mdb_token			m_numLinesColumnToken;
 	mdb_token			m_ccListColumnToken;
+	mdb_token			m_threadIdColumnToken;
+	mdb_token			m_threadFlagsColumnToken;
 	mdb_token			m_threadChildrenColumnToken;
 	mdb_token			m_threadUnreadChildrenColumnToken;
 };

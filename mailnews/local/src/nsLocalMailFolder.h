@@ -109,7 +109,7 @@ public:
 	NS_IMETHOD RememberPassword(char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
 
-  virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsMsgDatabase **db);
+  virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessage(nsIMessage *message);
 
@@ -144,7 +144,7 @@ protected:
 	PRBool		mGettingMail;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
-	nsMailDatabase* mMailDatabase;
+	nsIMsgDatabase* mMailDatabase;
 	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a time
 };
 

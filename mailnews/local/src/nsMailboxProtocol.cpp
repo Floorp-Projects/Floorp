@@ -23,8 +23,9 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsINetService.h"
-
-#include "nsMailDatabase.h"
+#include "nsIMsgDatabase.h"
+#include "nsIMessage.h"
+#include "nsMsgDBCID.h"
 
 #include "rosetta.h"
 
@@ -38,6 +39,8 @@
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
+static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
+
 
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
@@ -332,18 +335,26 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 	m_runningUrl->GetMessageKey(messageKey);
 	if (dbFileSpec)
 	{
-		nsMailDatabase * mailDb = nsnull;
+		nsIMsgDatabase * mailDBFactory = nsnull;
+		nsIMsgDatabase *mailDB;
+
 		nsIMessage * msgHdr = nsnull;
-		nsMailDatabase::Open((nsFileSpec&) *dbFileSpec, PR_FALSE, &mailDb);
-		if (mailDb) // did we get a db back?
+		nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+		if (NS_SUCCEEDED(rv) && mailDBFactory)
 		{
-			mailDb->GetMsgHdrForKey(messageKey, &msgHdr);
+			rv = mailDBFactory->Open((nsFileSpec&) *dbFileSpec, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+			mailDBFactory->Release();
+		}
+//		nsMailDatabase::Open((nsFileSpec&) *dbFileSpec, PR_FALSE, &mailDb);
+		if (mailDB) // did we get a db back?
+		{
+			mailDB->GetMsgHdrForKey(messageKey, &msgHdr);
 			if (msgHdr)
 			{
 				msgHdr->GetMessageSize(&messageSize);
 				msgHdr->Release();
 			}
-			mailDb->Close(PR_TRUE);
+			mailDB->Close(PR_TRUE);
 		}
 	}
 	m_runningUrl->SetMessageSize(messageSize);

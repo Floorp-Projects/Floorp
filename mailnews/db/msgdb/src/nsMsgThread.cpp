@@ -67,6 +67,8 @@ NS_IMETHODIMP		nsMsgThread::SetThreadKey(nsMsgKey threadKey)
 	nsresult ret = NS_OK;
 
 	m_threadKey = threadKey;
+	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadIdColumnToken, threadKey);
+	// gotta set column in meta row here.
 	return ret;
 }
 
@@ -74,8 +76,9 @@ NS_IMETHODIMP	nsMsgThread::GetThreadKey(nsMsgKey *result)
 {
 	if (result)
 	{
+		nsresult res = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadIdColumnToken, &m_threadKey);
 		*result = m_threadKey;
-		return NS_OK;
+		return res;
 	}
 	else
 		return NS_ERROR_NULL_POINTER;
@@ -87,6 +90,7 @@ NS_IMETHODIMP nsMsgThread::GetFlags(PRUint32 *result)
 
 	if (result)
 	{
+		nsresult res = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, &m_flags);
 		*result = m_flags;
 		return NS_OK;
 	}
@@ -99,6 +103,7 @@ NS_IMETHODIMP nsMsgThread::SetFlags(PRUint32 flags)
 	nsresult ret = NS_OK;
 
 	m_flags = flags;
+	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, m_flags);
 	return ret;
 }
 

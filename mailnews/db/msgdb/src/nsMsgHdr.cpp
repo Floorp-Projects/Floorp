@@ -129,6 +129,7 @@ NS_IMETHODIMP nsMsgHdr::SetMessageKey(nsMsgKey value)
 
 NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
 {
+	nsresult res = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
     *result = m_flags;
     return NS_OK;
 }
@@ -430,6 +431,11 @@ NS_IMETHODIMP nsMsgHdr::GetRecipients(nsString &resultRecipients)
 NS_IMETHODIMP nsMsgHdr::GetCCList(nsString &resultCCList)
 {
 	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_ccListColumnToken, resultCCList);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetMessageId(nsString &resultMessageId)
+{
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageIdColumnToken, resultMessageId);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetMime2EncodedAuthor(nsString &resultAuthor)
