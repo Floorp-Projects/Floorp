@@ -130,8 +130,6 @@ GtkItemFactoryEntry menu_items[] =
   { "/Debug/Debug Toggle Selection",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOGGLE_SELECTION,nsnull },
   { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/Debug/Debug Robot",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_DEBUGROBOT,	nsnull },
-  { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
-  { "/Debug/Show Content Quality",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_SHOW_CONTENT_QUALITY,	nsnull },
   { "/_Style",				nsnull,	nsnull,			0,			"<Branch>"	},
   { "/Style/Select _Style Sheet",	       nsnull, nsnull,        0,        "<Branch>" },
   { "/Style/Select Style Sheet/List Available Sheets", nsnull, (GIFC)gtk_ifactory_cb, VIEWER_SELECT_STYLE_LIST, nsnull },

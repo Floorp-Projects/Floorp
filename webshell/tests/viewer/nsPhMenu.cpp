@@ -238,8 +238,6 @@ struct MenuList_s DemoList[18] =
   CreateMenuItem(menu, NULL, 0);
   CreateMenuItem(menu, "Debug Robot", VIEWER_DEBUGROBOT);
   CreateMenuItem(menu, NULL, 0);
-  CreateMenuItem(menu, "Show Content Quality", VIEWER_SHOW_CONTENT_QUALITY);
-  CreateMenuItem(menu, NULL, 0);
   submenu=CreateSubMenu(menu, "Style");
   submenu2=CreateSubMenu(submenu, "Select Style Sheet");
   CreateMenuItem(submenu2, "List Available Sheets", VIEWER_SELECT_STYLE_LIST);

@@ -2894,29 +2894,6 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
       result = nsEventStatus_eConsumeNoDefault;
       break;
 
-    case VIEWER_SHOW_CONTENT_QUALITY:
-      if (nsnull != mDocShell) {
-        nsIPresShell   *ps = GetPresShellFor(mDocShell);
-        nsIViewManager *vm = nsnull;
-        PRBool         qual;
-
-        if (ps) {
-          ps->GetViewManager(&vm);
-
-          if (vm) {
-            vm->GetShowQuality(qual);
-            vm->ShowQuality(!qual);
-
-            NS_RELEASE(vm);
-          }
-
-          NS_RELEASE(ps);
-        }
-      }
-
-      result = nsEventStatus_eConsumeNoDefault;
-      break;
-
     case VIEWER_DEBUGSAVE:
       DoDebugSave();
       break;
