@@ -35,17 +35,16 @@
 
 #include "nsTimerImpl.h"
 #include "TimerThread.h"
+#include "nsAutoLock.h"
 
-#include "nsSupportsArray.h"
+#include "nsVoidArray.h"
 
 #include "nsIEventQueue.h"
 
 static TimerThread *gThread = nsnull;
 
-  // only the main thread supports idle timers.
-static nsSupportsArray *gIdleTimers = nsnull;
-
 static PRBool gFireOnIdle = PR_FALSE;
+static nsTimerManager* gManager = nsnull;
 
 #include "prmem.h"
 #include "prinit.h"
@@ -202,7 +201,6 @@ void nsTimerImpl::Shutdown()
   NS_RELEASE(gThread);
 
   gFireOnIdle = PR_FALSE;
-  NS_IF_RELEASE(gIdleTimers);
 }
 
 
@@ -389,14 +387,9 @@ void* handleTimerEvent(TimerEventType* event)
 
   if (gFireOnIdle) {
     if (NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->IsIdle()) {
-      nsCOMPtr<nsIThread> currentThread, mainThread;
-      nsIThread::GetCurrent(getter_AddRefs(currentThread));
-      nsIThread::GetMainThread(getter_AddRefs(mainThread));
-      if (currentThread == mainThread) {
-        gIdleTimers->AppendElement(NS_STATIC_CAST(nsITimer*, NS_STATIC_CAST(nsTimerImpl*, event->e.owner)));
-
-        return NULL;
-      }
+      NS_ASSERTION(gManager, "Global Thread Manager is null!");
+      gManager->AddIdleTimer(NS_STATIC_CAST(nsTimerImpl*, event->e.owner));
+      return nsnull;
     }
   }
 
@@ -509,11 +502,23 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimerManager, nsITimerManager)
 nsTimerManager::nsTimerManager()
 {
   NS_INIT_REFCNT();
+  mLock = PR_NewLock();
+  gManager = this;
 }
 
 nsTimerManager::~nsTimerManager()
 {
+  gManager = nsnull;
+  PR_DestroyLock(mLock);
 
+  nsTimerImpl *theTimer;
+  PRInt32 count = mIdleTimers.Count();
+ 
+  for(PRInt32 i = 0; i<=count; i++) {
+    theTimer = NS_STATIC_CAST(nsTimerImpl*, mIdleTimers[0]);
+    mIdleTimers.RemoveElement(theTimer);
+    NS_IF_RELEASE(theTimer);
+  }
 }
 
 NS_IMETHODIMP nsTimerManager::SetUseIdleTimers(PRBool aUseIdleTimers)
@@ -522,14 +527,6 @@ NS_IMETHODIMP nsTimerManager::SetUseIdleTimers(PRBool aUseIdleTimers)
     return NS_ERROR_FAILURE;
 
   gFireOnIdle = aUseIdleTimers;
-
-  if (gFireOnIdle && !gIdleTimers) {
-    gIdleTimers = new nsSupportsArray();
-    if (!gIdleTimers)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(gIdleTimers);
-  }
 
   return NS_OK;
 }
@@ -542,52 +539,44 @@ NS_IMETHODIMP nsTimerManager::GetUseIdleTimers(PRBool *aUseIdleTimers)
 
 NS_IMETHODIMP nsTimerManager::HasIdleTimers(PRBool *aHasTimers)
 {
-  *aHasTimers = PR_FALSE;
-
-  if (!gFireOnIdle)
-    return NS_OK;
-
-  nsCOMPtr<nsIThread> currentThread, mainThread;
-  nsIThread::GetCurrent(getter_AddRefs(currentThread));
-  nsIThread::GetMainThread(getter_AddRefs(mainThread));
-
-  if (currentThread != mainThread) {
-    return NS_OK;
-  }
-
-  PRUint32 count;
-  gIdleTimers->Count(&count);
+  nsAutoLock lock (mLock);
+  PRUint32 count = mIdleTimers.Count();
   *aHasTimers = (count != 0);
+  return NS_OK;
+}
 
+nsresult nsTimerManager::AddIdleTimer(nsITimer* timer)
+{
+  if (!timer)
+    return NS_ERROR_FAILURE;
+  nsAutoLock lock(mLock);
+  mIdleTimers.AppendElement(timer);
+  NS_ADDREF(timer);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsTimerManager::FireNextIdleTimer()
 {
-  if (!gFireOnIdle)
-    return NS_OK;
-
-  nsCOMPtr<nsIThread> currentThread, mainThread;
-  nsIThread::GetCurrent(getter_AddRefs(currentThread));
-  nsIThread::GetMainThread(getter_AddRefs(mainThread));
-
-  if (currentThread != mainThread) {
+  if (!gFireOnIdle || !nsIThread::IsMainThread()) {
     return NS_OK;
   }
 
-  PRUint32 count;
-  gIdleTimers->Count(&count);
+  nsTimerImpl *theTimer = nsnull;
 
-  if (count > 0) {
-    nsTimerImpl *theTimer = NS_STATIC_CAST(nsTimerImpl*, NS_STATIC_CAST(nsITimer*, gIdleTimers->ElementAt(0))); // addrefs
-
-    gIdleTimers->RemoveElement(NS_STATIC_CAST(nsITimer*, theTimer), 0);
-
-    theTimer->Fire();
-
-    NS_RELEASE(theTimer);
+  {
+    nsAutoLock lock (mLock);
+    PRUint32 count = mIdleTimers.Count();
+    
+    if (count == 0) 
+      return NS_OK;
+    
+    theTimer = NS_STATIC_CAST(nsTimerImpl*, mIdleTimers[0]);
+    mIdleTimers.RemoveElement(theTimer);
   }
-  // pull out each one starting at the beginning until no more are left and fire them.
+
+  theTimer->Fire();
+
+  NS_RELEASE(theTimer);
 
   return NS_OK;
 }

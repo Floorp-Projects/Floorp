@@ -43,7 +43,7 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsIScriptableTimer.h"
-
+#include "nsVoidArray.h"
 #include "nsIThread.h"
 
 #include "nsCOMPtr.h"
@@ -181,6 +181,11 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERMANAGER
+
+  nsresult AddIdleTimer(nsITimer* timer);
+private:
+  PRLock *mLock;
+  nsVoidArray mIdleTimers;
 };
 
 
