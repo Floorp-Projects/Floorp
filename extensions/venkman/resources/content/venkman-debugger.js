@@ -44,6 +44,11 @@ const jsdIScript          = Components.interfaces.jsdIScript;
 const jsdIStackFrame      = Components.interfaces.jsdIStackFrame;
 const jsdIFilter          = Components.interfaces.jsdIFilter;
 
+const nsIXULWindow          = Components.interfaces.nsIXULWindow;
+const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
+const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
+const nsIDocShellTreeItem   = Components.interfaces.nsIDocShellTreeItem;
+
 const PCMAP_SOURCETEXT    = jsdIScript.PCMAP_SOURCETEXT;
 const PCMAP_PRETTYPRINT   = jsdIScript.PCMAP_PRETTYPRINT;
 
@@ -53,61 +58,104 @@ const FTYPE_ARRAY   = 2;
 
 const FILTER_ENABLED  = jsdIFilter.FLAG_ENABLED;
 const FILTER_DISABLED = ~jsdIFilter.FLAG_ENABLED;
+const FILTER_PASS     = jsdIFilter.FLAG_PASS;
 const FILTER_SYSTEM   = 0x100; /* system filter, do not show in UI */
 
 var $ = new Array(); /* array to store results from evals in debug frames */
 
 console._scriptHook = {
-    onScriptCreated: function scripthook (script) {
-                         if (script.fileName && 
-                             script.fileName != MSG_VAL_CONSOLE)
-                         {
-                             realizeScript (script);
-                         }
-                     },
+    onScriptCreated: realizeScript,
+    onScriptDestroyed: unrealizeScript
+};
+
+console._executionHook = {onExecute: vnk_exehook};
+function vnk_exehook (frame, type, rv)
+{
+    var hookReturn = jsdIExecutionHook.RETURN_CONTINUE;
+
+    if (!ASSERT(!("frames" in console), "Execution hook called while stopped") ||
+        frame.isNative ||
+        !ASSERT(frame.script, "Execution hook called with no script") ||
+        frame.script.fileName == MSG_VAL_CONSOLE)
+    {
+        return hookReturn;
+    }
+
+    var targetWindow = null;
+    var wasModal = false;
+    var ex;
+    var cx;
+
+    try
+    {
+        cx = frame.executionContext;
+    }
+    catch (ex)
+    {
+        dd ("no context");
+        cx = null;
+    }
     
-    onScriptDestroyed: function scripthook (script) {
-                           if (script.fileName && 
-                               script.fileName != MSG_VAL_CONSOLE)
-                           {
-                               unrealizeScript (script);
-                           }
-                       }
-};
+    if (cx)
+    {
+        cx.scriptsEnabled = false;
+        var glob = cx.globalObject;
+        if (glob)
+        {
+            try
+            {
+                var val = glob.getWrappedValue();
+                var requestor = val.QueryInterface(nsIInterfaceRequestor);
+                var nav = requestor.getInterface(nsIWebNavigation);
+                var dsti = nav.QueryInterface(nsIDocShellTreeItem);
+                var owner = dsti.treeOwner;
+                requestor = owner.QueryInterface(nsIInterfaceRequestor);
+                targetWindow = requestor.getInterface(nsIXULWindow);
+                console.targetWindow = targetWindow;
+                /*
+                targetWindow.enabled = false;
+                if (targetWindow.modalMien)
+                {
+                    wasModal = true;
+                    targetWindow.modalMien = false;
+                }
+                */
+            }
+            catch (ex)
+            {
+                dd ("not a nsIXULWindow: " + formatException(ex));
+                /* ignore no-interface exception */
+            }
+        }
+    }
+                  
+    try
+    {
+        hookReturn = debugTrap(frame, type, rv);
+    }
+    catch (ex)
+    {
+        display (MSG_ERR_INTERNAL_BPT, MT_ERROR);
+        display (formatException(ex), MT_ERROR);
+    }
+    
+    if (cx)
+    {
+        cx.scriptsEnabled = true;
+        if (targetWindow)
+        {
+            targetWindow.enabled = true;
+            if (wasModal)
+                targetWindow.modalMien = true;
+        }
+    }
+    
+    delete console.frames;
+    if ("__exitAfterContinue__" in console)
+        window.close();
 
-console._executionHook = {
-    onExecute: function exehook (frame, type, rv) {
-                   var hookReturn = jsdIExecutionHook.RETURN_CONTINUE;
-
-                   if (frame.script && frame.script.fileName != MSG_VAL_CONSOLE)
-                   {
-                       var ex;
-                       
-                       frame.executionContext.scriptsEnabled = false;
-                       
-                       try
-                       {
-                           hookReturn = debugTrap(frame, type, rv);
-                       }
-                       catch (ex)
-                       {
-                           display (MSG_ERR_INTERNAL_BPT, MT_ERROR);
-                           display (formatException(ex), MT_ERROR);
-                       }
-                       
-                       frame.executionContext.scriptsEnabled = true;
-                   }
-                   else
-                       ASSERT (frame.script,
-                               "Execution hook called with no script");
-
-                   delete console.frames;
-                   if ("__exitAfterContinue__" in console)
-                       window.close();
-
-                   return hookReturn;
-               }
-};
+    return hookReturn;
+}
 
 console._callHook = {
     onCall: function callhook (frame, type) {
@@ -124,7 +172,7 @@ console._callHook = {
                         console.jsds.functionHook = null;
                     }
                 }
-                dd ("Call Hook: " + frame.script.functionName + ", type " +
+                dd ("Call Hook: " + frame.functionName + ", type " +
                     type + " callCount: " + console._stepOverLevel);
             }
 };
@@ -181,6 +229,7 @@ function initDebugger()
     console.jsds.debugHook = console._executionHook;
     console.jsds.errorHook = console._errorHook;
     console.jsds.scriptHook = console._scriptHook;
+    console.jsds.flags = jsdIDebuggerService.ENABLE_NATIVE_FRAMES;
 
     console.chromeFilter = {
         globalObject: null,
@@ -249,6 +298,13 @@ function detachDebugger()
         console.jsds.off();
 }
 
+function isURLFiltered (url)
+{
+    return (!url || url == MSG_VAL_CONSOLE ||
+            (console.enableChromeFilter && url.indexOf ("chrome:") == 0) ||
+            url.indexOf ("x-jsd:internal") == 0);
+}    
+
 function realizeScript(script)
 {
     var container;
@@ -259,8 +315,7 @@ function realizeScript(script)
         {
             /* container record exists but is not inserted in the scripts view,
              * either we are reloading it, or the user added it manually */
-            if (!console.enableChromeFilter ||
-                script.fileName.indexOf ("chrome:") != 0)
+            if (!isURLFiltered(script.fileName))
                 console.scriptsView.childData.appendChild(container);
         }
     }
@@ -269,8 +324,7 @@ function realizeScript(script)
         container = console.scripts[script.fileName] =
             new ScriptContainerRecord (script.fileName);
         container.reserveChildren();
-        if (!console.enableChromeFilter ||
-            script.fileName.indexOf ("chrome:") != 0)
+        if (!isURLFiltered(script.fileName))
             console.scriptsView.childData.appendChild(container);
     }
     
@@ -477,8 +531,8 @@ function setCurrentFrameByIndex (index)
 
     console._currentFrameIndex = index;
     var cf = console.frames[console._currentFrameIndex];
+    console.stopFile = (cf.isNative) ? MSG_URL_NATIVE : cf.script.fileName;
     console.stopLine = cf.line;
-    console.stopFile = cf.script.fileName;
     delete console._pp_stopLine;
     console.onFrameChanged (cf, console._currentFrameIndex);
 
@@ -574,10 +628,9 @@ function formatFrame (f)
 {
     if (!f)
         throw new BadMojo (ERR_REQUIRED_PARAM, "f");
- 
+    var url = (f.isNative) ? MSG_URL_NATIVE : f.script.fileName;
     return getMsg (MSN_FMT_FRAME,
-                   [f.script.functionName, formatArguments(f.scope),
-                    f.script.fileName, f.line]);
+                   [f.functionName, formatArguments(f.scope), url, f.line]);
 }
 
 function formatValue (v, formatType)
@@ -669,7 +722,7 @@ function formatValue (v, formatType)
 
 function displayCallStack ()
 {
-    for (i = 0; i < console.frames.length; ++i)
+    for (var i = 0; i < console.frames.length; ++i)
         displayFrame (console.frames[i], i);
 }
 
@@ -692,8 +745,6 @@ function displaySource (url, line, contextLines)
     {
         if (status == Components.results.NS_OK)
             displaySource (url, line, contextLines);
-        else
-            display (getMsg(MSN_ERR_SOURCE_LOAD_FAILED, url), MT_ERROR);
     }
     
     var rec = console.scripts[url];
@@ -741,7 +792,7 @@ function displayFrame (f, idx, showSource)
         idx = "#" + idx;
     
     display(idx + ": " + formatFrame (f));
-    if (showSource)
+    if (!f.isNative && f.script.fileName && showSource)
             displaySource (f.script.fileName, f.line, 2);
 }
 

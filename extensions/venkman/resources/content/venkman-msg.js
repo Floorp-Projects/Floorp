@@ -144,6 +144,8 @@ const MSG_VAL_ON           = getMsg("msg.val.on");
 const MSG_VAL_OFF          = getMsg("msg.val.off");
 const MSG_VAL_TLSCRIPT     = getMsg("msg.val.tlscript");
 
+const MSG_URL_NATIVE       = getMsg("msg.url.native");
+
 const MSG_VF_ENUMERABLE    = getMsg("vf.enumerable");
 const MSG_VF_READONLY      = getMsg("vf.readonly");
 const MSG_VF_PERMANENT     = getMsg("vf.permanent");

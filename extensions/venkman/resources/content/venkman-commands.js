@@ -357,21 +357,17 @@ function cmdClearAll(e)
 
 function cmdClearScript (e)
 {
+    var i;
+    
     if ("scriptRecList" in e)
     {
-        do
-        {
-            dd ("clearing script " + e.scriptRecList[0].constructor.name);
-            cmdClearScript ({scriptRec: e.scriptRecList[0]});
-            e.scriptRecList.shift();
-        }
-        while (e.scriptRecList.length > 0);
-        
+        for (i = 0; i < e.scriptRecList.length; ++i)
+            cmdClearScript ({scriptRec: e.scriptRecList[i]});
         return true;
     }
 
     /* walk backwards so as not to disturb the indicies */
-    for (var i = console.breakpoints.childData.length - 1; i >= 0; --i)
+    for (i = console.breakpoints.childData.length - 1; i >= 0; --i)
     {
         var bpr = console.breakpoints.childData[i];
         if (bpr.hasScriptRecord(e.scriptRec))
@@ -615,10 +611,13 @@ function cmdFindURL (e)
 
 function cmdFindFrame (e)
 {
-    if (e.frameIndex != getCurrentFrameIndex())
-        dispatch ("frame", {frameIndex: e.frameIndex});
+    var frame = e.frameRec.frame;
 
-    var frame = getCurrentFrame();
+    displayFrame (frame, e.frameRec.childIndex, true);
+
+    if (frame.isNative)
+        return true;
+    
     var scriptContainer = console.scripts[frame.script.fileName];
     if (!scriptContainer)
     {
@@ -666,11 +665,13 @@ function cmdFocusInput (e)
 
 function cmdFrame (e)
 {
-    if (isNaN(e.frameIndex))
+    if (e.frameIndex != null)
+        setCurrentFrameByIndex(e.frameIndex);
+    else    
         e.frameIndex = getCurrentFrameIndex();
 
-    setCurrentFrameByIndex(e.frameIndex);
-    displayFrame (console.frames[e.frameIndex], e.frameIndex, true);
+    dispatch ("find-frame",
+              {frameRec: console.stackView.stack.childData[e.frameIndex]});
     return true;
 }
             

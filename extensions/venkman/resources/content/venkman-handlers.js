@@ -114,6 +114,9 @@ function con_fchanged (currentFrame, currentFrameIndex)
     
     if (currentFrame)
     {
+        if (currentFrame.isNative)
+            return;
+        
         var frameRecord = stack.childData[currentFrameIndex];
         var vr = frameRecord.calculateVisualRow();
         console.stackView.selectedIndex = vr;
@@ -285,7 +288,7 @@ function con_stacksel (e)
     var sourceView = console.sourceView;
     if (row instanceof FrameRecord)
     {
-        dispatch ("find-frame", {frameIndex: row.childIndex});
+        dispatch ("frame", {frameIndex: row.childIndex});
     }
     else if (row instanceof ValueRecord && row.jsType == jsdIValue.TYPE_OBJECT)
     {

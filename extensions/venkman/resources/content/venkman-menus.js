@@ -155,7 +155,7 @@ function initMenus()
     
     /* Context menu for stack view */
     C("stack-outliner", "stack");
-     m("find-frame");
+     m("frame",        {enabledif: "cx.target instanceof FrameRecord"});
      m("find-creator", {enabledif: "cx.target instanceof ValueRecord && " +
                                    "cx.target.jsType == jsdIValue.TYPE_OBJECT"});
      m("find-ctor",    {enabledif: "cx.target instanceof ValueRecord && " +

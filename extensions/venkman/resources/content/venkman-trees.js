@@ -800,9 +800,7 @@ function scv_getcx(cx)
     {
         cx.url = cx.fileName = rec.fileName;
         cx.scriptRec = rec.childData[0];
-        cx.scriptRecList = new Array();
-        for (var i in rec.childData)
-            cx.scriptRecList.push(rec.childData[i]);
+        cx.scriptRecList = rec.childData;
     }
     else if (rec instanceof ScriptRecord)
     {
@@ -869,29 +867,42 @@ function FrameRecord (frame)
     this.setColumnPropertyName ("stack-col-0", "functionName");
     this.setColumnPropertyName ("stack-col-2", "location");
 
-    var fn = frame.script.functionName;
+    var fn = frame.functionName;
     if (!fn)
         fn = MSG_VAL_TLSCRIPT;
 
-    var sourceRec = console.scripts[frame.script.fileName];
-    if (sourceRec)
+    if (!frame.isNative)
     {
-        this.location = sourceRec.shortName + ":" + frame.line;
-        var scriptRec = sourceRec.locateChildByScript(frame.script);
-        if (fn == "anonymous")
-            fn = scriptRec.functionName;
+        var sourceRec = console.scripts[frame.script.fileName];
+        if (sourceRec)
+        {
+            this.location = sourceRec.shortName + ":" + frame.line;
+            var scriptRec = sourceRec.locateChildByScript(frame.script);
+            if (fn == "anonymous")
+                fn = scriptRec.functionName;
+        }
+        else
+            dd ("no sourcerec");
     }
     else
-        dd ("no sourcerec");
+    {
+        this.location = MSG_URL_NATIVE;
+    }
     
     this.functionName = fn;
     this.frame = frame;
     this.reserveChildren();
-    this.scopeRec = new ValueRecord (frame.scope, MSG_WORD_SCOPE, "");
-    this.appendChild (this.scopeRec);
-    this.thisRec = new ValueRecord (frame.thisValue, MSG_WORD_THIS, "");
+    if (frame.scope)
+    {
+        this.scopeRec = new ValueRecord (frame.scope, MSG_WORD_SCOPE, "");
+        this.appendChild (this.scopeRec);
+    }
+    if (frame.thisValue)
+    {
+        this.thisRec = new ValueRecord (frame.thisValue, MSG_WORD_THIS, "");
+        this.appendChild (this.thisRec);
+    }
     this.property = console.stackView.atomFrame;
-    this.appendChild (this.thisRec);
 }
 
 FrameRecord.prototype = new TreeOViewRecord (stackShare);
@@ -1304,17 +1315,6 @@ function sv_getcx(cx)
         cx.jsdValue = rec.value;
     }
 
-    if (!("frameIndex" in cx))
-    {
-        var parent = rec.parentRecord;
-        while (parent && !(parent instanceof FrameRecord))
-                parent = parent.parentRecord;
-        
-        if (parent instanceof FrameRecord)
-            cx.frameIndex = parent.childIndex;
-    }
-    
-    
     var rangeCount = this.outliner.selection.getRangeCount();
     if (rangeCount > 0)
         cx.jsdValueList = new Array();

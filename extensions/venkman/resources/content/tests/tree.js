@@ -106,6 +106,21 @@ function formatBranch (rec, indent)
 
 function dbg()
 {
+    function compare(a, b)
+    {
+        debugger;
+        if (a > b)
+            return 1;
+
+        if (a < b)
+            return -1;
+
+        return 0;
+    };
+    
+    var ary = [2, 1];
+    ary.sort(compare);
+        
     var a = 0;
     dbg2();
     var c = 0;

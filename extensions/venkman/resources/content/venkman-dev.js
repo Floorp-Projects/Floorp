@@ -97,12 +97,14 @@ function cmdDumpContexts()
     
 function cmdDumpFilters()
 {
+    console.filters = new Array();
     var i = 0;
     
     var enumer = {
         enumerateFilter: function enum_f (filter) {
-                             dd ((i++) + ": " + filter.glob +
-                                 " '" + filter.urlPattern + "'");
+                             dd (i + ": " + filter.globalObject +
+                                 " '" + filter.urlPattern + "' " + filter.flags);
+                             console.filters[i++] = filter;
                          }
     };
     

@@ -45,6 +45,10 @@
     height: 0px;
 }
 
+outliner {
+    min-height: 50px;
+}
+
 #source-outliner {
     font-family: monospace;
 }

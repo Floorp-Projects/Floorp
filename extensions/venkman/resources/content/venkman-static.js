@@ -691,7 +691,8 @@ function st_reloadsrc (cb)
     function reloadCB (status)
     {
         sourceRec.invalidate();
-        cb(status);
+        if (typeof cb == "function")
+            cb(status);
     }
 
     this.isLoaded = false;
@@ -766,9 +767,8 @@ function st_loadsrc (cb)
                     {
                         cb = sourceText.extraCallbacks.pop();
                         cb (status);
-                        if (sourceText.extraCallbacks.length < 1)
-                            delete sourceText.extraCallbacks;
                     }
+                    delete sourceText.extraCallbacks;
                 }
             }
             
@@ -784,7 +784,6 @@ function st_loadsrc (cb)
             if (!ASSERT(data, "loadSource succeeded but got no data"))
                 data = "";
                 
-            sourceText.isLoaded = true;
             var ary = data.split(/\r\n|\n|\r/m);
             for (var i = 0; i < ary.length; ++i)
             {
@@ -802,6 +801,7 @@ function st_loadsrc (cb)
             
             sourceText.scriptContainer.guessFunctionNames(sourceText);
             sourceText.markBreakableLines();
+            sourceText.isLoaded = true;
             sourceText.invalidate();
             callall(status);
             console.popStatus();
@@ -822,9 +822,16 @@ function st_loadsrc (cb)
     catch (ex)
     {
         /* if we can't load it now, try to load it later */
-        loadURLAsync (url, observer);
+        try
+        {
+            loadURLAsync (url, observer);
+        }
+        catch (ex)
+        {
+            display (getMsg(MSN_ERR_SOURCE_LOAD_FAILED, [url, ex]), MT_ERROR);
+            observer.onComplete (src, url, Components.results.NS_ERROR_FAILURE);
+        }    
     }
-
 }
 
 function PPSourceText (scriptRecord)
