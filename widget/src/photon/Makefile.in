@@ -43,6 +43,7 @@ REQUIRES    = xpcom \
 			  util \
 			  docshell\
 			  layout\
+				content\
 			  webshell\
 				intl\
 			  $(NULL)	
