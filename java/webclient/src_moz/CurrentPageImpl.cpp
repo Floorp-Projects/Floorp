@@ -36,13 +36,27 @@
 #include "rdf_util.h"
 #include "nsActions.h"
 
+#include "nsLayoutCID.h"
 #include "nsCRT.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIFindComponent.h"
 #include "nsISearchContext.h"
+#include "nsIDocShell.h"
+#include "nsIDOMSelection.h"
+#include "nsIDocumentViewer.h"
+#include "nsIDocument.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMRange.h"
+#include "nsIContentViewer.h"
 #include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
+static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeCopyCurrentSelectionToSystemClipboard
@@ -224,8 +238,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSource
 (JNIEnv * env, jobject jobj)
 {
+
     jstring result = nsnull;
-    
     return result;
 }
 
@@ -235,11 +249,19 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
  * Signature: ()[B
  */
 JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
-(JNIEnv * env, jobject jobj)
+(JNIEnv * env, jobject jobj, jint webShellPtr, jboolean mode)
 {
+/*
+  WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+  nsCOMPtr <nsIDocShell> docShell = initContext->docShell;
+
+  if (mode)
+    docShell->SetViewMode(nsIDocShell::viewSource);
+  else
+    docShell->SetViewMode(nsIDocShell::viewNormal);
+*/
  
     jbyteArray result = nsnull;
-
     return result;
 }
 
@@ -261,7 +283,84 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeSelectAll
-(JNIEnv *, jobject)
+(JNIEnv * env, jobject obj, jint webShellPtr)
 {
+	WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    nsCOMPtr<nsIPresShell> presShell;
+    nsresult rv;
 
+    rv = initContext->docShell->GetPresShell(getter_AddRefs(presShell));
+
+    if (NS_FAILED(rv)) {
+        initContext->initFailCode = kSelectAllError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't get PresShell");
+        return;
+    }
+
+	nsCOMPtr<nsIDOMSelection> selection;
+	rv = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+	if (NS_FAILED(rv)) {
+        initContext->initFailCode = kSelectAllError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't get DOMSelection");
+        return;
+    }
+
+	nsCOMPtr<nsIContentViewer> contentViewer;
+	rv = initContext->docShell->GetContentViewer(getter_AddRefs(contentViewer));
+	if (NS_FAILED(rv)) {
+        initContext->initFailCode = kSelectAllError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't get contentViewer");
+        return;
+    }
+
+	nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
+	
+	nsCOMPtr<nsIDocument> doc;
+	rv = docViewer->GetDocument(*getter_AddRefs(doc));
+	if (NS_FAILED(rv)) {
+        initContext->initFailCode = kSelectAllError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't get Document object");
+        return;
+    }
+
+
+	nsCOMPtr<nsIDOMHTMLDocument> htmldoc;
+	rv = doc->QueryInterface(kIDOMHTMLDocumentIID, getter_AddRefs(htmldoc));
+	if (NS_FAILED(rv)) {
+        initContext->initFailCode = kSelectAllError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't get DOMHTMLDocument");
+        return;
+    }
+
+	nsCOMPtr<nsIDOMHTMLElement>bodyElement;
+	rv = htmldoc->GetBody(getter_AddRefs(bodyElement));
+	if (NS_FAILED(rv)) {
+        initContext->initFailCode = kSelectAllError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't get DOMHTMLElement");
+        return;
+    }
+
+	nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+	if (!bodyNode) {
+        initContext->initFailCode = kSelectAllError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't get DOMNode");
+        return;
+    }
+
+	rv = selection->ClearSelection();
+
+	nsCOMPtr<nsIDOMRange> range;
+	rv = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+		                                    NS_GET_IID(nsIDOMRange),
+			                               getter_AddRefs(range));
+
+	rv = range->SelectNodeContents(bodyNode);
+
+	rv = selection->AddRange(range);
+	
+	if (NS_FAILED(rv)) {
+        initContext->initFailCode = kSelectAllError;
+        ::util_ThrowExceptionToJava(env, "Exception: can't get final Select working");
+        return;
+    }
 }
