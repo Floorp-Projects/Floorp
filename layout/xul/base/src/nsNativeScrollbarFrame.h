@@ -84,10 +84,11 @@ public:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
-  NS_IMETHOD EndLayout(nsBoxLayoutState& aState);
                         
 protected:
   
+  void Hookup();
+
   nsresult FindScrollbar(nsIFrame* start, nsIFrame** outFrame, nsIContent** outContent);
   
   PRBool IsVertical() const { return mIsVertical; }
