@@ -29,6 +29,7 @@
 #include "nsIStreamListener.h"
 #include "nsIMenuManager.h"
 #include "nsICalToolkit.h"
+#include "nsIViewManager.h"
 
 class nsCalendarContainer : public nsICalendarContainer {
 
@@ -87,6 +88,7 @@ private:
   nsICalendarWidget * mCalendarWidget;
   nsIXPFCCanvas * mRootUI;
   nsICalToolkit * mToolkit;
+  nsIViewManager* mViewManager;
 
 };
 

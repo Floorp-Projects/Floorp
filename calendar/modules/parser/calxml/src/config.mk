@@ -13,7 +13,7 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-CFLAGS         +=-D_IMPL_NS_CALENDAR -DLIBJULIAN -DNSPR20
+CFLAGS         +=-D_IMPL_NS_CALENDAR -DNSPR20
 INCLUDES       += -I../inc -I$(GDEPTH)/include -I$(GDEPTH)/htmlparser/src
 
 LIBRARY_NAME      = calxml

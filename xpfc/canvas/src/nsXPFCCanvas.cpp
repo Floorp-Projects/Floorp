@@ -39,6 +39,7 @@
 #include "nsXPFCMethodInvokerCommand.h"
 
 #include "nsXPFCToolkit.h"
+#include "nsIViewObserver.h"
 
 #include "nsIButton.h"
 #include "nsITabWidget.h"
@@ -142,10 +143,11 @@ nsresult nsXPFCCanvas::AggregatedQueryInterface(const nsIID &aIID,
     return NS_ERROR_NULL_POINTER;
   }
 
-  static NS_DEFINE_IID(kCXPFCCanvasIID, NS_XPFC_CANVAS_CID);
-  static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kClassIID, kIXPFCCanvasIID);
+  static NS_DEFINE_IID(kCXPFCCanvasIID,   NS_XPFC_CANVAS_CID);
+  static NS_DEFINE_IID(kIXPFCCanvasIID,   NS_IXPFC_CANVAS_IID);
+  static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
+  static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
+  static NS_DEFINE_IID(kClassIID,         kIXPFCCanvasIID);
 
     if (aIID.Equals(kClassIID)) {
         *aInstancePtr = (void*)((nsIXPFCCanvas*)this);
@@ -164,6 +166,11 @@ nsresult nsXPFCCanvas::AggregatedQueryInterface(const nsIID &aIID,
     }
     if (aIID.Equals(kIXMLParserObjectIID)) {
         *aInstancePtr = (void*)((nsIXMLParserObject*)this);
+        AddRef();
+        return NS_OK;
+    }
+    if (aIID.Equals(kIViewObserverIID)) {
+        *aInstancePtr = (void*)((nsIViewObserver*)this);
         AddRef();
         return NS_OK;
     }
@@ -2009,19 +2016,44 @@ PRBool nsXPFCCanvas::PopState(nsIRenderingContext * aRenderingContext)
   return (aRenderingContext->PopState());
 }
 
-void  
-nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
-                      nsIImage *aImage,
-                      nsImageNotification aNotificationType,
-                      PRInt32 aParam1, PRInt32 aParam2,
-                      void *aParam3)
+void nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
+                          nsIImage *aImage,
+                          nsImageNotification aNotificationType,
+                          PRInt32 aParam1, PRInt32 aParam2,
+                          void *aParam3)
 {
   return ;
 }
 
-void 
-nsXPFCCanvas::NotifyError(nsIImageRequest *aImageRequest,
-                        nsImageError aErrorType)
+void nsXPFCCanvas::NotifyError(nsIImageRequest *aImageRequest,
+                               nsImageError aErrorType)
 {
   return ;
 }
+
+
+
+nsresult nsXPFCCanvas::Paint(nsIView * aView,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect)
+{
+  return NS_OK;
+}
+
+nsresult nsXPFCCanvas::HandleEvent(nsIView * aView,
+                                   nsGUIEvent*     aEvent,
+                                   nsEventStatus&  aEventStatus)
+{
+  return NS_OK;
+}
+
+nsresult nsXPFCCanvas::Scrolled(nsIView * aView)
+{
+  return NS_OK;
+}
+
+nsresult nsXPFCCanvas::ResizeReflow(nsIView * aView, nscoord aWidth, nscoord aHeight)
+{
+  return NS_OK;
+}
+

@@ -40,11 +40,14 @@
 #include "nsIImageGroup.h"
 #include "nsIImageObserver.h"
 #include "nsIImageRequest.h"
+#include "nsIView.h"
+#include "nsIViewObserver.h"
 
 CLASS_EXPORT_XPFC nsXPFCCanvas : public nsIXPFCCanvas,
                                  public nsIXPFCObserver,
                                  public nsIXMLParserObject,
-                                 public nsIImageRequestObserver
+                                 public nsIImageRequestObserver,
+                                 public nsIViewObserver
 
 {
 public:
@@ -224,6 +227,18 @@ public:
 
   virtual void NotifyError(nsIImageRequest *aImageRequest,
                            nsImageError aErrorType);
+
+
+  // nsIViewObserver Interfaces
+  NS_IMETHOD Paint(nsIView *            aView,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect);
+  NS_IMETHOD HandleEvent(nsIView *       aView,
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+  NS_IMETHOD Scrolled(nsIView * aView);
+  NS_IMETHOD ResizeReflow(nsIView * aView, nscoord aWidth, nscoord aHeight);
+
 
 #if defined(DEBUG) && defined(XP_PC)
   NS_IMETHOD  DumpCanvas(FILE * f, PRUint32 indent) ;

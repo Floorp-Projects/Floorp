@@ -13,7 +13,7 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-CFLAGS         +=-D_IMPL_NS_TREXTEST -DNSPR20 -I$(GDEPTH)/include
+CFLAGS         +=-D_IMPL_NS_TREXTEST -DNSPR20 -I$(GDEPTH)/include 
 
 PROGRAM        = trextest
 

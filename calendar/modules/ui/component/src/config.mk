@@ -13,7 +13,7 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-CFLAGS         +=-D_IMPL_NS_CALENDAR
+CFLAGS         +=-D_IMPL_NS_CALENDAR 
 INCLUDES       +=-I../inc
 
 LIBRARY_NAME      = component

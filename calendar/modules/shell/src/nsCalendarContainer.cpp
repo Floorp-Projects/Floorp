@@ -28,6 +28,8 @@
 #include "nsCalShellCIID.h"
 #include "nscalcids.h"
 #include "nsBoxLayout.h"
+#include "nsViewsCID.h"
+#include "nsIViewManager.h"
 
 // XXX: This code should use XML for defining the Root UI. We need to
 //      implement the stream manager first to do this, then lots of
@@ -42,6 +44,8 @@ static NS_DEFINE_IID(kCXPFCContentSink, NS_XPFCXMLCONTENTSINK_IID);
 static NS_DEFINE_IID(kCXPFCCommandServerCID, NS_XPFC_COMMAND_SERVER_CID);
 static NS_DEFINE_IID(kCXPFCHTMLCanvasCID, NS_XPFC_HTML_CANVAS_CID);
 
+static NS_DEFINE_IID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
+static NS_DEFINE_IID(kIViewManagerIID,      NS_IVIEWMANAGER_IID);
 
 // hardcode names of dll's
 #ifdef NS_WIN32
@@ -65,6 +69,7 @@ nsCalendarContainer::nsCalendarContainer()
   mRootUI = nsnull;
   mToolkit = nsnull;
   mToolbarManager = nsnull;
+  mViewManager = nsnull;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsCalendarContainer, kICalContainerIID)
@@ -73,6 +78,7 @@ NS_IMPL_RELEASE(nsCalendarContainer)
 
 nsCalendarContainer::~nsCalendarContainer()
 {
+  NS_IF_RELEASE(mViewManager);
   NS_IF_RELEASE(mMenuManager);
   NS_IF_RELEASE(mCalendarWidget);
   NS_IF_RELEASE(mRootUI);
@@ -118,6 +124,21 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
     return res ;
 
   mMenuManager->Init();
+
+  /*
+   * Create the view manager
+   */
+
+  res = nsRepository::CreateInstance(kViewManagerCID, 
+                                     nsnull, 
+                                     kIViewManagerIID, 
+                                     (void **)&mViewManager);
+
+
+  if (NS_OK != res)
+    return res ;
+
+  mViewManager->Init(aParent->GetDeviceContext());
 
   /*
    * Create the Root UI

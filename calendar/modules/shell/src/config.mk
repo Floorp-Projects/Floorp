@@ -13,7 +13,7 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-CFLAGS         +=-D_IMPL_NS_CALENDAR -DLIBJULIAN -DNSPR20 -I$(GDEPTH)/include
+CFLAGS         +=-D_IMPL_NS_CALENDAR -DNSPR20 -I$(GDEPTH)/include
 
 PROGRAM        = trex
 

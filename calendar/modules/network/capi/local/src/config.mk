@@ -13,7 +13,7 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-CFLAGS         +=-D_IMPL_NS_CALENDAR -DLIBJULIAN -DNSPR20 -DNLS_DEFINE_STANDARD_TYPES=1
+CFLAGS         +=-D_IMPL_NS_CALENDAR -DNSPR20 -DNLS_DEFINE_STANDARD_TYPES=1
 INCLUDES       += -I../inc -I$(GDEPTH)/include
 
 
