@@ -59,10 +59,6 @@ public:
   NS_IMETHOD    SelectAll()=0;
 
   NS_IMETHOD    InvertSelection()=0;
-
-  NS_IMETHOD    EnsureElementIsVisible(nsIDOMXULElement* aElement)=0;
-
-  NS_IMETHOD    GetRowIndexOf(nsIDOMXULElement* aElement, PRInt32* aReturn)=0;
 };
 
 
@@ -77,8 +73,6 @@ public:
   NS_IMETHOD    SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem);  \
   NS_IMETHOD    SelectAll();  \
   NS_IMETHOD    InvertSelection();  \
-  NS_IMETHOD    EnsureElementIsVisible(nsIDOMXULElement* aElement);  \
-  NS_IMETHOD    GetRowIndexOf(nsIDOMXULElement* aElement, PRInt32* aReturn);  \
 
 
 
@@ -93,8 +87,6 @@ public:
   NS_IMETHOD    SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem) { return _to SelectItemRange(aStartItem, aEndItem); }  \
   NS_IMETHOD    SelectAll() { return _to SelectAll(); }  \
   NS_IMETHOD    InvertSelection() { return _to InvertSelection(); }  \
-  NS_IMETHOD    EnsureElementIsVisible(nsIDOMXULElement* aElement) { return _to EnsureElementIsVisible(aElement); }  \
-  NS_IMETHOD    GetRowIndexOf(nsIDOMXULElement* aElement, PRInt32* aReturn) { return _to GetRowIndexOf(aElement, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULTreeElementClass(nsIScriptContext *aContext, void **aPrototype);

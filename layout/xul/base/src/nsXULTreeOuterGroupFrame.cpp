@@ -35,6 +35,8 @@
 
 #define TICK_FACTOR 50
 
+static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+
 //
 // NS_NewXULTreeOuterGroupFrame
 //
@@ -323,8 +325,17 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
     // as a hint to figure out how to build the frames.
     // Remove the scrollbar first.
     // get the starting row index and row count
-    
-    mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, this, nsnull);
+    nsIBox* currBox;
+    GetChildBox(&currBox);
+    while (currBox) {
+      nsIBox* nextBox;
+      currBox->GetNextBox(&nextBox);
+      nsIFrame* frame;
+      currBox->QueryInterface(kIFrameIID, (void**)&frame); 
+      mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, frame, nsnull);
+      currBox = nextBox;
+    }
+
     nsBoxLayoutState state(mPresContext);
     mFirstChild = mLastChild = nsnull;
     mFrames.DestroyFrames(mPresContext);
