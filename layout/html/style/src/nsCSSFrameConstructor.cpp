@@ -716,7 +716,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
  * Request to process the child content elements and create frames.
  *
  * @param   aContent the content object whose child elements to process
- * @param   aFrame the the associated with aContent. This will be the
+             * @param   aFrame the the associated with aContent. This will be the
  *            parent frame (both content and geometric) for the flowed
  *            child frames
  */
@@ -4502,17 +4502,32 @@ IsAncestorFrame(nsIFrame* aFrame, nsIFrame* aAncestorFrame)
   return PR_FALSE;
 }
 
-// Called to delete a frame subtree. Two important things happen:
-// 1. for each frame in the subtree we remove the mapping from the
-//    content object to its frame
-// 2. for child frames that have been moved out of the flow we delete
-//    the out-of-flow frame as well
+/**
+ * Called to delete a frame subtree. Two important things happen:
+ * 1. for each frame in the subtree we remove the mapping from the
+ *    content object to its frame
+ * 2. for child frames that have been moved out of the flow we delete
+ *    the out-of-flow frame as well
+ *
+ * @param   aRemovedFrame this is the frame that was removed from the
+ *            content model. As we recurse we need to remember this so we
+ *            can check if out-of-flow frames are a descendent of the frame
+ *            being removed
+ * @param   aFrame the local subtree that is being deleted. This is initially
+ *            the same as aRemovedFrame, but as we recurse down the tree
+ *            this changes
+ */
 static nsresult
 DeletingFrameSubtree(nsIPresContext* aPresContext,
                      nsIPresShell*   aPresShell,
                      nsIFrame*       aRemovedFrame,
                      nsIFrame*       aFrame)
 {
+  // Remove the mapping from the content object to its frame
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  aPresShell->SetPrimaryFrameFor(content, nsnull);
+  
   // Recursively walk aFrame's child frames looking for placeholder frames
   nsIFrame* childFrame;
   aFrame->FirstChild(nsnull, &childFrame);
@@ -4530,22 +4545,17 @@ DeletingFrameSubtree(nsIPresContext* aPresContext,
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)childFrame)->GetOutOfFlowFrame();
       NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
-      // Remove the mapping from the content object to its frame
-      nsCOMPtr<nsIContent> content;
-      outOfFlowFrame->GetContent(getter_AddRefs(content));
-      aPresShell->SetPrimaryFrameFor(content, nsnull);
-
-      // Find and delete any of its out-of-flow frames, and remove the mapping
-      // from content object to frame
+      // Remove the mapping from the out-of-flow frame to its placeholder
+      aPresShell->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
+      
+      // Recursively find and delete any of its out-of-flow frames, and remove
+      // the mapping from content objects to frames
       DeletingFrameSubtree(aPresContext, aPresShell, aRemovedFrame, outOfFlowFrame);
       
       // Don't delete the out-of-flow frame if aRemovedFrame is one of its
       // ancestor frames, because when aRemovedFrame is deleted it will delete
       // its child frames including this out-of-flow frame
       if (!IsAncestorFrame(outOfFlowFrame, aRemovedFrame)) {
-        // Remove the mapping from the out-of-flow frame to its placeholder
-        aPresShell->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
-
         // Get the out-of-flow frame's parent
         nsIFrame* parentFrame;
         outOfFlowFrame->GetParent(&parentFrame);
@@ -4560,6 +4570,8 @@ DeletingFrameSubtree(nsIPresContext* aPresContext,
       }
 
     } else {
+      // Recursively find and delete any of its out-of-flow frames, and remove
+      // the mapping from content objects to frames
       DeletingFrameSubtree(aPresContext, aPresShell, aRemovedFrame, childFrame);
     }
 
@@ -4585,12 +4597,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   shell->GetPrimaryFrameFor(aChild, &childFrame);
 
   if (childFrame) {
-    // Remove the mapping from content object to frame
-    shell->SetPrimaryFrameFor(aChild, nsnull);
-
-    // If the frame has any child frames that have been moved out of the
-    // flow, then delete them as well. Also remove the mapping from the
-    // content object to its frame
+    // Walk the frame subtree deleting any out-of-flow frames, and
+    // remove the mapping from content objects to frames
     DeletingFrameSubtree(aPresContext, shell, childFrame, childFrame);
 
     // See if the child frame is a floating frame
@@ -4626,7 +4634,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       }
     }
     else {
-      // See if it's absolutely positioned
+      // See if it's absolutely or fixed positioned
       const nsStylePosition* position;
       childFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
       if (position->IsAbsolutelyPositioned()) {
