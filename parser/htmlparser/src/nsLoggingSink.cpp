@@ -700,7 +700,7 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 				if (pos >= 0) {
 					tmp.Cut(pos, 1);
 				}
-				PR_fprintf(mOutput, "<entity value=\"%s\"/>\n", tmp.GetBuffer());
+				PR_fprintf(mOutput, "<entity value=\"%s\"/>\n", NS_LossyConvertUCS2toASCII(tmp).get());
 				break;
 
 			default:

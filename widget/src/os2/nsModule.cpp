@@ -395,15 +395,7 @@ const char *nsWidgetModuleData::ConvertFromUcs( const PRUnichar *pText)
 
 const char *nsWidgetModuleData::ConvertFromUcs( const nsString &aString)
 {
-   const char *szRet = 0;
-   const PRUnichar *pUnicode = aString.get();
-
-   if( pUnicode)
-      szRet = ConvertFromUcs( pUnicode);
-   else
-      szRet = aString.GetBuffer(); // hrm.
-
-   return szRet;
+   return ConvertFromUcs( aString.get());
 }
 
 ATOM nsWidgetModuleData::GetAtom( const char *atomname)
