@@ -328,4 +328,30 @@
 { 0x00e89c82, 0x1dd2, 0x11b2, \
   { 0x9a, 0x1c, 0xe7, 0x59, 0x95, 0xd7, 0xd5, 0x95}} 
 
+//
+// delegate factory
+//
+
+/* c6584cee-8ee8-4b2c-8dbe-7dfcb55c9c61 */
+#define NS_MSGFILTERDELEGATEFACTORY_CID \
+  {0xc6584cee, 0x8ee8, 0x4b2c, \
+    { 0x8d, 0xbe, 0x7d, 0xfc, 0xb5, 0x5c, 0x9c, 0x61 }}
+
+#define NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX \
+  NS_RDF_DELEGATEFACTORY_PROGID_PREFIX "filter" "."   
+
+// Note: the above CID should live in base, but each protocol
+// should be creating the ProgID themselves. for now we'll
+// do it for news/imap/local mail
+
+#define NS_MSGFILTERDELEGATEFACTORY_MAILBOX_PROGID \
+  NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX "mailbox"
+
+#define NS_MSGFILTERDELEGATEFACTORY_NEWS_PROGID \
+  NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX "news"
+
+#define NS_MSGFILTERDELEGATEFACTORY_IMAP_PROGID \
+  NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX "imap"
+
+
 #endif // nsMessageBaseCID_h__
