@@ -441,6 +441,10 @@ function nsExtensionUninstaller(aExtensionDS)
 nsExtensionUninstaller.prototype = {
   _extensionDS  : null,
   _cr           : null,
+  _isProfile    : true,
+  _extDirKey    : "",
+  _extensionsDir: null,
+  _extensionID  : "",
 
   uninstall: function (aExtensionID, aIsProfile)
   {
@@ -509,6 +513,51 @@ nsExtensionUninstaller.prototype = {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+// nsExtensionEnabler
+//
+function nsExtensionEnabler(aExtensionDS)
+{
+  this._cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Components.interfaces.nsIXULChromeRegistry);
+  this._extensionDS = aExtensionDS;
+}
+
+nsExtensionEnabler.prototype = {
+  _extensionDS  : null,
+  _cr           : null,
+  _enable       : true,
+  _isProfile    : true,
+  _extDirKey    : "",
+  _extensionsDir: null,
+
+  enable: function (aExtensionID, aIsProfile, aDisable)
+  {
+    // Initialize the installer for this extension
+    this._enable = !aDisable;
+    this._extensionID = aExtensionID;
+    this._isProfile = aIsProfile;
+    this._extDirKey = getDirKey(this._isProfile);
+    this._extensionsDir = getDir(this._extDirKey, [DIR_EXTENSIONS]);
+
+    // Create a logger to log install operations for uninstall
+    this._reader = new nsInstallLogReader(this._extensionID, 
+                                          this._isProfile, 
+                                          this);
+    this._reader.read();
+  },
+  
+  onRegisterChrome: function (aProviderName, aFile, aChromeType, aIsProfile)
+  {
+    this._cr.setAllowOverlaysForPackage(aProviderName, this._enable)
+  },
+  
+  onAddFile: function (aFile)
+  {
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
 // nsExtensionManager
 //
 function nsExtensionManager()
@@ -522,6 +571,7 @@ function nsExtensionManager()
 nsExtensionManager.prototype = {
   _extInstaller     : null,
   _extUninstaller   : null,
+  _extEnabler       : null,
   
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
@@ -570,12 +620,12 @@ nsExtensionManager.prototype = {
         // Look for extensions that need to be enabled
         items = this._ds.getItemsWithFlagSet("toBeEnabled");
         for (var i = 0; i < items.length; ++i)
-          this._finalizeEnable(items[i]);
+          this._finalizeEnableDisable(items[i], false);
         
         // Look for extensions that need to be disabled
         items = this._ds.getItemsWithFlagSet("toBeDisabled");
         for (var i = 0; i < items.length; ++i)
-          this._finalizeDisable(items[i]);
+          this._finalizeEnableDisable(items[i], true);
         
         // Look for extensions that need to be removed
         items = this._ds.getItemsWithFlagSet("toBeUninstalled");
@@ -585,6 +635,7 @@ nsExtensionManager.prototype = {
         // Clean up any helper objects
         delete this._extInstaller;
         delete this._extUninstaller;
+        delete this._extEnabler;
           
         win.close();
         
@@ -843,14 +894,14 @@ nsExtensionManager.prototype = {
     this._writeDefaults();
   },
   
-  _finalizeEnable: function (aExtensionID)
+  _finalizeEnableDisable: function (aExtensionID, aDisable)
   {
-  
-  },
-  
-  _finalizeDisable: function (aExtensionID)
-  {
-  
+    if (!this._extEnabler)
+      this._extEnabler = new nsExtensionEnabler(this._ds);
+    this._extEnabler.enable(aExtensionID, 
+                            this._ds.isProfileExtension(aExtensionID), 
+                            aDisable);
+    this._writeDefaults();
   },
   
   _finalizeUninstall: function (aExtensionID)
