@@ -99,7 +99,7 @@ nsRDFDOMNodeList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsRDFDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-    if (aIndex < 0 || aIndex >= mElements.Count()) {
+    if (aIndex >= (PRUint32) mElements.Count()) {
         // We simply return nsnull, as per the DOM spec.
         *aReturn = nsnull;
         return NS_OK;
