@@ -1697,3 +1697,9 @@ NS_IMETHODIMP nsMsgNewsFolder::CancelComplete()
   NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgNewsFolder::CancelFailed()
+{
+  NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
+  return NS_OK;
+}
