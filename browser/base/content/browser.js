@@ -3403,8 +3403,7 @@ nsContextMenu.prototype = {
       var uri = Components.classes["@mozilla.org/network/standard-url;1"]
                           .createInstance(Components.interfaces.nsIURI);
       uri.spec = this.imageURL;
-      permissionmanager.add(uri, 
-                            nsIPermissionManager.IMAGE_TYPE,
+      permissionmanager.add(uri, "image",
                             aBlock ? nsIPermissionManager.DENY_ACTION : nsIPermissionManager.ALLOW_ACTION);
     },
     isImageBlocked : function() {
@@ -3415,7 +3414,7 @@ nsContextMenu.prototype = {
       var uri = Components.classes["@mozilla.org/network/standard-url;1"]
                           .createInstance(Components.interfaces.nsIURI);
       uri.spec = this.imageURL;
-       return permissionmanager.testPermission(uri, nsIPermissionManager.IMAGE_TYPE);
+       return permissionmanager.testPermission(uri, "image");
     },
     // Generate email address and put it on clipboard.
     copyEmail : function () {

@@ -77,7 +77,7 @@ function whitelistSite()
 
   var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
   uri.spec = selectedItem.label;
-  permissionmanager.add(uri, nsIPermissionManager.POPUP_TYPE, nsIPermissionManager.ALLOW_ACTION);
+  permissionmanager.add(uri, "popup", nsIPermissionManager.ALLOW_ACTION);
   gSiteBox.removeChild(selectedItem);
 
   if (gSiteBox.getRowCount() == 0) {
