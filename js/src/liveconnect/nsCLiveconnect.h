@@ -34,7 +34,6 @@
 #define nsCLiveconnect_h___
 
 #include "nsILiveconnect.h"
-#include "nsIPluginManager.h"
 #include "nsAgg.h"
 
 

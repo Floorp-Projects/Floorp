@@ -129,9 +129,6 @@ LINCS=$(LINCS) -I$(JNI_GEN_DIR) \
                -I$(PUBLIC)\js \
                -I$(PUBLIC)\java \
                -I$(PUBLIC)\xpcom \
-               -I$(PUBLIC)\caps \
-               -I$(PUBLIC)\oji \
-               -I$(PUBLIC)\plugin \
 	$(NULL)
 
 

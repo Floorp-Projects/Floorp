@@ -27,7 +27,6 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsIPrincipal.h"
 #include "jni.h"
 
 
