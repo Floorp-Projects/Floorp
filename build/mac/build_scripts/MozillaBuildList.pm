@@ -1298,8 +1298,15 @@ sub BuildCommonProjects()
 
     StartBuildModule("common");
 
+    #//
+    #// Static libraries
+    #//
+
     BuildProject(":mozilla:string:macbuild:string.mcp",                      "string$D.o");
     MakeAlias(":mozilla:string:macbuild:string$D.o", ":mozilla:dist:string:");
+
+    BuildProject(":mozilla:intl:unicharutil:macbuild:UnicharUtilsStaticLib.mcp", "UnicharUtilsStatic$D.o");
+    MakeAlias(":mozilla:intl:unicharutil:macbuild:UnicharUtilsStatic$D.o", ":mozilla:dist:client_stubs:");
 
     #//
     #// Shared libraries
