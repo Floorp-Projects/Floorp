@@ -132,6 +132,7 @@
 #include "prlong.h"
 #include "nsIDragService.h"
 #include "nsCopySupport.h"
+#include "nsITimer.h"
 
 // Dummy layout request
 #include "nsIChannel.h"
@@ -1184,6 +1185,13 @@ private:
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
   nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView, PRUint32 aFlags, nsEventStatus *aStatus);
+
+  //help funcs for resize events
+  void CreateResizeEventTimer();
+  void KillResizeEventTimer();
+  void FireResizeEvent();
+  static void sResizeEventCallback(nsITimer* aTimer, void* aPresShell) ;
+  nsCOMPtr<nsITimer> mResizeEventTimer;
 };
 
 #ifdef PR_LOGGING
@@ -1445,6 +1453,7 @@ PresShell::~PresShell()
     mEventQueue->RevokeEvents(this);
   }
 
+  KillResizeEventTimer();
 }
 
 /**
@@ -2675,6 +2684,46 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   HandlePostedAttributeChanges();
   HandlePostedReflowCallbacks();
 
+  //Set resize event timer
+  CreateResizeEventTimer();
+  
+  return NS_OK; //XXX this needs to be real. MMP
+}
+
+#define RESIZE_EVENT_DELAY 200
+
+void
+PresShell::CreateResizeEventTimer ()
+{
+  KillResizeEventTimer();
+
+  mResizeEventTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (mResizeEventTimer) {
+    mResizeEventTimer->Init(sResizeEventCallback, this, RESIZE_EVENT_DELAY, NS_PRIORITY_HIGH);  
+  }
+}
+
+void
+PresShell::KillResizeEventTimer()
+{
+  if(mResizeEventTimer) {
+    mResizeEventTimer->Cancel();
+    mResizeEventTimer = nsnull;
+  }
+}
+
+void
+PresShell::sResizeEventCallback(nsITimer *aTimer, void* aPresShell)
+{
+  PresShell* self = NS_STATIC_CAST(PresShell*, aPresShell);
+  if (self) {
+    self->FireResizeEvent();  
+  }
+}
+
+void
+PresShell::FireResizeEvent()
+{
   //Send resize event from here.
   nsEvent event;
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -2685,8 +2734,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   nsCOMPtr<nsIScriptGlobalObject> globalObj;
 	mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
   globalObj->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  
-  return NS_OK; //XXX this needs to be real. MMP
 }
 
 NS_IMETHODIMP
