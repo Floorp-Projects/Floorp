@@ -2991,8 +2991,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
   if (mEditor && mUseEditor) 
   {
     nsAutoString currentValue;
-    nsAutoString format; format.AssignWithConversion("text/plain");
-    nsresult rv = mEditor->OutputToString(currentValue, format, 0);
+    GetTextControlFrameState(currentValue);
     if (PR_TRUE==IsSingleLineTextControl()) {
       RemoveNewlines(currentValue); 
     }
@@ -3015,7 +3014,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
       nsFormControlHelper::PlatformToDOMLineBreaks(currentValue);
 
       nsCOMPtr<nsIDOMDocument>domDoc;
-      rv = mEditor->GetDocument(getter_AddRefs(domDoc));
+      nsresult rv = mEditor->GetDocument(getter_AddRefs(domDoc));
 			if (NS_FAILED(rv)) return;
 			if (!domDoc) return;
       mSelCon->SelectAll();
