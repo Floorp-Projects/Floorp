@@ -10,59 +10,12 @@ Requires Ant version 1.2
     <property name="nest" value=".."/>
     <property name="build.dir" value="./build"/>
     <property name="classes" value="${build.dir}/classes"/>
-    <property name="src.debugger"
-               value="org/mozilla/javascript/tools/debugger"/>
-    <available file="${src.debugger}/AbstractCellEditor.java"
-               property="swing-ex-available"/>
+    <property name="debugger"
+              value="org/mozilla/javascript/tools/debugger"/>
   </target>
 
-  <target name="get-swing-ex" unless="swing-ex-available">
-    <!-- Download source from Sun's site, unzip it, remove
-         the files we don't need, and change the package
-    -->
-    <get src="http://java.sun.com/products/jfc/tsc/articles/treetable2/downloads/src.zip" dest="${nest}/${build.dir}/swingExSrc.zip"/>
-    <unzip src="${nest}/${build.dir}/swingExSrc.zip" dest="${src.debugger}"/>
-    <delete file="${src.debugger}/FileSystemModel2.java" />
-    <delete file="${src.debugger}/MergeSort.java" />
-    <delete file="${src.debugger}/TreeTableExample2.java" />
-    <replace file="${src.debugger}/AbstractCellEditor.java">
-       <replacetoken>import java.awt.Component;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import java.awt.Component;
-       </replacevalue>
-    </replace>
-    <replace file="${src.debugger}/AbstractTreeTableModel.java">
-       <replacetoken>import javax.swing.tree.*;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import javax.swing.tree.*;
-       </replacevalue>
-    </replace>
-    <replace file="${src.debugger}/JTreeTable.java">
-       <replacetoken>import javax.swing.*;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import javax.swing.*;
-       </replacevalue>
-    </replace>
-    <replace file="${src.debugger}/TreeTableModel.java">
-       <replacetoken>import javax.swing.tree.TreeModel;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import javax.swing.tree.TreeModel;
-       </replacevalue>
-    </replace>
-    <replace file="${src.debugger}/TreeTableModelAdapter.java">
-       <replacetoken>import javax.swing.JTree;</replacetoken>
-       <replacevalue>
-         package org.mozilla.javascript.tools.debugger;
-         import javax.swing.JTree;
-       </replacevalue>
-    </replace>
-  </target>
-
-  <target name="compile" depends="properties,get-swing-ex">
+  <target name="compile" depends="properties">
+    <ant dir="${debugger}" target="download"/>
     <javac srcdir="."
            destdir="${nest}/${classes}"
            includes="org/**/*.java"
@@ -78,7 +31,7 @@ Requires Ant version 1.2
     <copy todir="${nest}/${dist.toolsrc}">
       <fileset dir="."
                includes="org/**/*.java,org/**/*.properties,build.xml"
-               excludes="**/AbstractCellEditor.java,**/TreeTableModel.java,**/AbstractTreeTableModel.java,**/TreeTableModelAdapter.java,**/JTreeTable.java" />
+               excludes="${debugger}/downloaded/**" />
     </copy>
   </target>
 

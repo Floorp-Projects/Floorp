@@ -97,16 +97,13 @@ public class Main {
 
     static class StackFrame implements DebugFrame {
 
-        StackFrame(Context cx, Main db, DebuggableScript fnOrScript)
+        StackFrame(Context cx, Main db, FunctionSource fsource)
         {
             this.db = db;
             this.contextData = ContextData.get(cx);
-            this.fnOrScript = fnOrScript;
-            FunctionSource item = db.getFunctionSource(fnOrScript);
-            if (item != null) {
-                this.sourceInfo = item.sourceInfo();
-                this.lineNumber = item.firstLine();
-            }
+            this.fsource = fsource;
+            this.breakpoints = fsource.sourceInfo().breakpoints;
+            this.lineNumber = fsource.firstLine();
             contextData.pushFrame(this);
         }
 
@@ -120,33 +117,30 @@ public class Main {
             }
         }
 
-        public void onLineChange(Context cx, int lineno) {
+        public void onLineChange(Context cx, int lineno)
+        {
             this.lineNumber = lineno;
 
-          checks:
-            if (sourceInfo == null || !sourceInfo.checkBreakpointFast(lineno)) {
-                if (db.breakFlag) {
-                    break checks;
-                }
-                if (!contextData.breakNextLine) {
+            if (!breakpoints[lineno] && !db.breakFlag) {
+                if (!contextData.breakNextLine
+                    || contextData.frameCount() > contextData.stopAtFrameDepth)
+                {
                     return;
                 }
-                if (contextData.stopAtFrameDepth > 0) {
-                    if (contextData.frameCount() > contextData.stopAtFrameDepth) {
-                        return;
-                    }
-                    contextData.stopAtFrameDepth = -1;
-                }
+                contextData.stopAtFrameDepth = -1;
                 contextData.breakNextLine = false;
             }
+
             db.handleBreakpointHit(this, cx);
         }
 
-        public void onExceptionThrown(Context cx, Throwable exception) {
+        public void onExceptionThrown(Context cx, Throwable exception)
+        {
             db.handleExceptionThrown(cx, exception, this);
         }
 
-        public void onExit(Context cx, boolean byThrow, Object resultOrException) {
+        public void onExit(Context cx, boolean byThrow, Object resultOrException)
+        {
             if (db.breakOnReturn && !byThrow) {
                 db.handleBreakpointHit(this, cx);
             }
@@ -154,7 +148,7 @@ public class Main {
         }
 
         SourceInfo sourceInfo() {
-            return sourceInfo;
+            return fsource.sourceInfo();
         }
 
         ContextData contextData()
@@ -162,37 +156,31 @@ public class Main {
             return contextData;
         }
 
-        Scriptable scope()
+        Object scope()
         {
             return scope;
         }
 
-        Scriptable thisObj()
+        Object thisObj()
         {
             return thisObj;
         }
 
-        String getUrl() {
-            if (sourceInfo != null) {
-                return sourceInfo.url();
-            }
-            return db.getNormilizedUrl(fnOrScript);
+        String getUrl()
+        {
+            return fsource.sourceInfo().url();
         }
 
         int getLineNumber() {
             return lineNumber;
         }
 
-        DebuggableScript getScript() {
-            return fnOrScript;
-        }
-
         private Main db;
         private ContextData contextData;
         private Scriptable scope;
         private Scriptable thisObj;
-        private DebuggableScript fnOrScript;
-        private SourceInfo sourceInfo;
+        private FunctionSource fsource;
+        private boolean[] breakpoints;
         private int lineNumber;
     }
 
@@ -233,7 +221,7 @@ public class Main {
 
         private int minLine;
         private boolean[] breakableLines;
-        private boolean[] breakpoints;
+        boolean[] breakpoints;
 
         private static final boolean[] EMPTY_BOOLEAN_ARRAY = new boolean[0];
 
@@ -365,11 +353,6 @@ public class Main {
             return line < this.breakpoints.length && this.breakpoints[line];
         }
 
-        final boolean checkBreakpointFast(int line)
-        {
-            return this.breakpoints[line];
-        }
-
         boolean breakpoint(int line, boolean value)
         {
             if (!breakableLine(line)) {
@@ -468,7 +451,12 @@ public class Main {
 
     DebugFrame mirrorStackFrame(Context cx, DebuggableScript fnOrScript)
     {
-        return new StackFrame(cx, this, fnOrScript);
+        FunctionSource item = getFunctionSource(fnOrScript);
+        if (item == null) {
+            // Can not debug if source is not available
+            return null;
+        }
+        return new StackFrame(cx, this, item);
     }
 
     void onCompilationDone(Context cx, DebuggableScript fnOrScript,
@@ -704,39 +692,9 @@ public class Main {
         }
     }
 
-    public void doBreak() {
-        breakFlag = true;
-    }
-
     void handleBreakpointHit(StackFrame frame, Context cx) {
         breakFlag = false;
         interrupted(cx, frame, null);
-    }
-
-    private static String exceptionString(StackFrame frame, Throwable ex)
-    {
-        String details;
-        if (ex instanceof JavaScriptException) {
-            JavaScriptException jse = (JavaScriptException)ex;
-            details = ScriptRuntime.toString(jse.getValue());
-        } else if (ex instanceof EcmaError) {
-            details = ex.toString();
-        } else {
-            if (ex instanceof WrappedException) {
-                Throwable wrapped
-                    = ((WrappedException)ex).getWrappedException();
-                if (wrapped != null) {
-                    ex = wrapped;
-                }
-            }
-            details = ex.toString();
-            if (details == null || details.length() == 0) {
-                details = ex.getClass().toString();
-            }
-        }
-        String url = frame.getUrl();
-        int lineNumber = frame.getLineNumber();
-        return details+" (" + url + ", line " + lineNumber + ")";
     }
 
     void handleExceptionThrown(Context cx, Throwable ex, StackFrame frame) {
@@ -844,7 +802,7 @@ public class Main {
             if (scriptException == null) {
                 alertMessage = null;
             } else {
-                alertMessage = exceptionString(frame, scriptException);
+                alertMessage = scriptException.toString();
             }
 
             Runnable enterAction = new Runnable() {
@@ -946,6 +904,94 @@ public class Main {
         return result;
     }
 
+    String objectToString(Object object)
+    {
+        if (object == Undefined.instance) {
+            return "undefined";
+        }
+        if (object == null) {
+            return "null";
+        }
+        if (object instanceof NativeCall) {
+            return "[object Call]";
+        }
+        Context cx = Context.enter();
+        try {
+            return Context.toString(object);
+        } finally {
+            Context.exit();
+        }
+    }
+
+    Object getObjectProperty(Object object, Object id)
+    {
+        Scriptable scriptable = (Scriptable)object;
+        Object result;
+        if (id instanceof String) {
+            String name = (String)id;
+            if (name.equals("this")) {
+                result = scriptable;
+            } else if (name.equals("__proto__")) {
+                result = scriptable.getPrototype();
+            } else if (name.equals("__parent__")) {
+                result = scriptable.getParentScope();
+            } else {
+                result = ScriptableObject.getProperty(scriptable, name);
+                if (result == ScriptableObject.NOT_FOUND) {
+                    result = Undefined.instance;
+                }
+            }
+        } else {
+            int index = ((Integer)id).intValue();
+            result = ScriptableObject.getProperty(scriptable, index);
+            if (result == ScriptableObject.NOT_FOUND) {
+                result = Undefined.instance;
+            }
+        }
+        return result;
+    }
+
+    Object[] getObjectIds(Object object)
+    {
+        if (!(object instanceof Scriptable) || object == Undefined.instance) {
+            return Context.emptyArgs;
+        }
+        Scriptable scriptable = (Scriptable)object;
+        Object[] ids;
+        Context cx = Context.enter();
+        try {
+            if (scriptable instanceof DebuggableObject) {
+                ids = ((DebuggableObject)scriptable).getAllIds();
+            } else {
+                ids = scriptable.getIds();
+            }
+        } finally {
+            Context.exit();
+        }
+        Scriptable proto = scriptable.getPrototype();
+        Scriptable parent = scriptable.getParentScope();
+        int extra = 0;
+        if (proto != null) {
+            ++extra;
+        }
+        if (parent != null) {
+            ++extra;
+        }
+        if (extra != 0) {
+            Object[] tmp = new Object[extra + ids.length];
+            System.arraycopy(ids, 0, tmp, extra, ids.length);
+            ids = tmp;
+            extra = 0;
+            if (proto != null) {
+                ids[extra++] = "__proto__";
+            }
+            if (parent != null) {
+                ids[extra++] = "__parent__";
+            }
+        }
+        return ids;
+    }
+
     String eval(String expr)
     {
         String result = "undefined";
@@ -993,7 +1039,7 @@ public class Main {
         cx.setGeneratingDebug(false);
         try {
             Callable script = (Callable)cx.compileString(expr, "", 0, null);
-            Object result = script.call(cx, frame.scope(), frame.thisObj(),
+            Object result = script.call(cx, frame.scope, frame.thisObj,
                                         ScriptRuntime.emptyArgs);
             if (result == Undefined.instance) {
                 resultString = "";
@@ -1053,6 +1099,10 @@ public class Main {
     public Main(String title)
     {
         debugGui = new DebugGui(this, title);
+    }
+
+    public void doBreak() {
+        breakFlag = true;
     }
 
    /**

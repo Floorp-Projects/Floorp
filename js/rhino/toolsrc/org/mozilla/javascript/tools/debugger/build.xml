@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="toolsrc" default="help" basedir=".">
+
+  <target name="properties">
+    <property name="swing-ex-url" value="http://java.sun.com/products/jfc/tsc/articles/treetable2/downloads/src.zip"/>
+    <available file="downloaded/AbstractCellEditor.java"
+               property="swing-ex-available"/>
+  </target>
+
+  <target name="get-swing-ex" unless="swing-ex-available">
+    <!-- Download source from Sun's site, unzip it, remove
+         the files we don't need, and change the package
+    -->
+    <mkdir dir="downloaded"/>
+    <get src="${swing-ex-url}" dest="downloaded/swingExSrc.zip"/>
+    <unzip src="downloaded/swingExSrc.zip" dest="downloaded/">
+      <patternset>
+          <include name="AbstractCellEditor.java"/>
+          <include name="JTreeTable.java"/>
+          <include name="TreeTableModel.java"/>
+          <include name="TreeTableModelAdapter.java"/>
+      </patternset>
+    </unzip>
+    <replace file="downloaded/AbstractCellEditor.java">
+       <replacetoken>import java.awt.Component;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger.downloaded;
+         import java.awt.Component;
+       </replacevalue>
+    </replace>
+    <replace file="downloaded/JTreeTable.java">
+       <replacetoken>import javax.swing.*;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger.downloaded;
+         import javax.swing.*;
+       </replacevalue>
+    </replace>
+    <replace file="downloaded/JTreeTable.java">
+       <replacetoken>class ListToTreeSelectionModelWrapper</replacetoken>
+       <replacevalue>public class ListToTreeSelectionModelWrapper</replacevalue>
+    </replace>
+    <replace file="downloaded/JTreeTable.java">
+       <replacetoken>ListSelectionModel getListSelectionModel</replacetoken>
+       <replacevalue>public ListSelectionModel getListSelectionModel</replacevalue>
+    </replace>
+    <replace file="downloaded/TreeTableModel.java">
+       <replacetoken>import javax.swing.tree.TreeModel;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger.downloaded;
+         import javax.swing.tree.TreeModel;
+       </replacevalue>
+    </replace>
+    <replace file="downloaded/TreeTableModelAdapter.java">
+       <replacetoken>import javax.swing.JTree;</replacetoken>
+       <replacevalue>
+         package org.mozilla.javascript.tools.debugger.downloaded;
+         import javax.swing.JTree;
+       </replacevalue>
+    </replace>
+    <delete file="downloaded/swingExSrc.zip"/>
+  </target>
+
+  <target name="download" depends="properties,get-swing-ex"/>
+
+  <target name="help" depends="properties">
+<echo>The following targets are available with this build file:
+
+ download    Download ${swing-ex-url}
+             and extract the necessary files from it.
+
+ help        Print this help.
+
+</echo>
+  </target>
+
+</project>

@@ -49,6 +49,7 @@ import java.util.*;
 import java.io.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreePath;
 import java.lang.reflect.Method;
 
 import org.mozilla.javascript.Scriptable;
@@ -57,6 +58,9 @@ import org.mozilla.javascript.Kit;
 
 import org.mozilla.javascript.tools.shell.ConsoleTextArea;
 
+import org.mozilla.javascript.tools.debugger.downloaded.JTreeTable;
+import org.mozilla.javascript.tools.debugger.downloaded.TreeTableModel;
+import org.mozilla.javascript.tools.debugger.downloaded.TreeTableModelAdapter;
 
 class MessageDialogWrapper {
 
@@ -1100,9 +1104,204 @@ class Evaluator extends JTable {
     }
 }
 
+class VariableModel implements TreeTableModel {
+
+    static class VariableNode {
+        Object object;
+        Object id;
+        VariableNode[] children;
+
+        VariableNode(Object object, Object id) {
+            this.object = object;
+            this.id = id;
+        }
+
+        public String toString()
+        {
+            return (id instanceof String)
+                ? (String)id : "[" + ((Integer)id).intValue() + "]";
+        }
+
+    }
+
+    // Names of the columns.
+
+    private static final String[]  cNames = { " Name", " Value"};
+
+    // Types of the columns.
+
+    private static final Class[]  cTypes = {TreeTableModel.class, String.class};
+
+    private static final VariableNode[] CHILDLESS = new VariableNode[0];
+
+    private Main debugger;
+
+    private VariableNode root;
+
+    VariableModel()
+    {
+    }
+
+    VariableModel(Main debugger, Object scope)
+    {
+        this.debugger = debugger;
+        this.root = new VariableNode(scope, "this");
+    }
+
+    //
+    // The TreeModel interface
+    //
+
+    public Object getRoot()
+    {
+        if (debugger == null) { return null; }
+        return root;
+    }
+
+    public int getChildCount(Object nodeObj)
+    {
+        if (debugger == null) { return 0; }
+        VariableNode node = (VariableNode)nodeObj;
+        return children(node).length;
+    }
+
+    public Object getChild(Object nodeObj, int i)
+    {
+        if (debugger == null) { return null; }
+        VariableNode node = (VariableNode)nodeObj;
+        return children(node)[i];
+    }
+
+    public boolean isLeaf(Object nodeObj)
+    {
+        if (debugger == null) { return true; }
+        VariableNode node = (VariableNode)nodeObj;
+        return children(node).length == 0;
+    }
+
+    public int getIndexOfChild(Object parentObj, Object childObj)
+    {
+        if (debugger == null) { return -1; }
+        VariableNode parent = (VariableNode)parentObj;
+        VariableNode child = (VariableNode)childObj;
+        VariableNode[] children = children(parent);
+        for (int i = 0; i != children.length; ++i) {
+            if (children[i] == child) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public boolean isCellEditable(Object node, int column)
+    {
+        return column == 0;
+    }
+
+    public void setValueAt(Object value, Object node, int column) { }
+
+    public void addTreeModelListener(TreeModelListener l) { }
+
+    public void removeTreeModelListener(TreeModelListener l) { }
+
+    public void valueForPathChanged(TreePath path, Object newValue) { }
+
+    //
+    //  The TreeTableNode interface.
+    //
+
+    public int getColumnCount() {
+        return cNames.length;
+    }
+
+    public String getColumnName(int column) {
+        return cNames[column];
+    }
+
+    public Class getColumnClass(int column) {
+        return cTypes[column];
+    }
+
+    public Object getValueAt(Object nodeObj, int column) {
+        if (debugger == null) { return null; }
+        VariableNode node = (VariableNode)nodeObj;
+        switch (column) {
+        case 0: // Name
+            return node.toString();
+        case 1: // Value
+            String result;
+            try {
+                result = debugger.objectToString(getValue(node));
+            } catch (RuntimeException exc) {
+                result = exc.getMessage();
+            }
+            StringBuffer buf = new StringBuffer();
+            int len = result.length();
+            for (int i = 0; i < len; i++) {
+                char ch = result.charAt(i);
+                if (Character.isISOControl(ch)) {
+                    ch = ' ';
+                }
+                buf.append(ch);
+            }
+            return buf.toString();
+        }
+        return null;
+    }
+
+    private VariableNode[] children(VariableNode node)
+    {
+        if (node.children != null) {
+            return node.children;
+        }
+
+        VariableNode[] children;
+
+        Object value = getValue(node);
+        Object[] ids = debugger.getObjectIds(value);
+        if (ids.length == 0) {
+            children = CHILDLESS;
+        } else {
+            java.util.Arrays.sort(ids, new java.util.Comparator() {
+                    public int compare(Object l, Object r)
+                    {
+                        if (l instanceof String) {
+                            if (r instanceof Integer) {
+                                return -1;
+                            }
+                            return ((String)l).compareToIgnoreCase((String)r);
+                        } else {
+                            if (r instanceof String) {
+                                return 1;
+                            }
+                            int lint = ((Integer)l).intValue();
+                            int rint = ((Integer)r).intValue();
+                            return lint - rint;
+                        }
+                    }
+            });
+            children = new VariableNode[ids.length];
+            for (int i = 0; i != ids.length; ++i) {
+                children[i] = new VariableNode(value, ids[i]);
+            }
+        }
+        node.children = children;
+        return children;
+    }
+
+    Object getValue(VariableNode node) {
+        try {
+            return debugger.getObjectProperty(node.object, node.id);
+        } catch (Exception exc) {
+            return "undefined";
+        }
+    }
+
+}
+
 class MyTreeTable extends JTreeTable {
 
-    public MyTreeTable(TreeTableModel model) {
+    public MyTreeTable(VariableModel model) {
         super(model);
     }
 
@@ -1240,58 +1439,11 @@ class ContextWindow extends JPanel implements ActionListener
         left.add(context);
         tabs = new JTabbedPane(SwingConstants.BOTTOM);
         tabs.setPreferredSize(new Dimension(500,300));
-        thisTable = new MyTreeTable(new AbstractTreeTableModel(new DefaultMutableTreeNode()) {
-                public Object getChild(Object parent, int index) {
-                    return null;
-                }
-                public int getChildCount(Object parent) {
-                    return 0;
-                }
-                public int getColumnCount() {
-                    //return 3;
-                    return 2;
-                }
-                public String getColumnName(int column) {
-                    switch (column) {
-                    case 0:
-                        return " Name";
-                    case 1:
-                        //return "Type";
-                        //case 2:
-                        return " Value";
-                    }
-                    return null;
-                }
-                public Object getValueAt(Object node, int column) {
-                    return null;
-                }
-            });
+        thisTable = new MyTreeTable(new VariableModel());
         JScrollPane jsp = new JScrollPane(thisTable);
         jsp.getViewport().setViewSize(new Dimension(5,2));
         tabs.add("this", jsp);
-        localsTable = new MyTreeTable(new AbstractTreeTableModel(new DefaultMutableTreeNode()) {
-                public Object getChild(Object parent, int index) {
-                    return null;
-                }
-                public int getChildCount(Object parent) {
-                    return 0;
-                }
-                public int getColumnCount() {
-                    return 2;
-                }
-                public String getColumnName(int column) {
-                    switch (column) {
-                    case 0:
-                        return " Name";
-                    case 1:
-                        return " Value";
-                    }
-                    return null;
-                }
-                public Object getValueAt(Object node, int column) {
-                    return null;
-                }
-            });
+        localsTable = new MyTreeTable(new VariableModel());
         localsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         localsTable.setPreferredSize(null);
         jsp = new JScrollPane(localsTable);
@@ -1482,40 +1634,18 @@ class ContextWindow extends JPanel implements ActionListener
                 return;
             }
             Main.StackFrame frame = contextData.getFrame(frameIndex);
-            Scriptable scope = frame.scope();
-            Scriptable thisObj = frame.thisObj();
-            thisTable.resetTree(new VariableModel(thisObj));
-            AbstractTreeTableModel scopeModel;
+            Object scope = frame.scope();
+            Object thisObj = frame.thisObj();
+            thisTable.resetTree(new VariableModel(debugGui.main, thisObj));
+            VariableModel scopeModel;
             if (scope != thisObj) {
-                scopeModel = new VariableModel(scope);
+                scopeModel = new VariableModel(debugGui.main, scope);
             } else {
-                scopeModel = new AbstractTreeTableModel(new DefaultMutableTreeNode()) {
-                        public Object getChild(Object parent, int index) {
-                            return null;
-                        }
-                        public int getChildCount(Object parent) {
-                            return 0;
-                        }
-                        public int getColumnCount() {
-                            return 2;
-                        }
-                        public String getColumnName(int column) {
-                            switch (column) {
-                            case 0:
-                                return " Name";
-                            case 1:
-                                return " Value";
-                            }
-                            return null;
-                        }
-                        public Object getValueAt(Object node, int column) {
-                            return null;
-                        }
-                    };
+                scopeModel = new VariableModel();
             }
             localsTable.resetTree(scopeModel);
             debugGui.main.contextSwitch(frameIndex);
-            debugGui.showStackFrame(frame);
+            debugGui.showStopLine(frame);
             tableModel.updateModel();
         }
     }
@@ -2029,7 +2159,7 @@ class DebugGui extends JFrame
         windowMenu.revalidate();
     }
 
-    void showStackFrame(Main.StackFrame frame)
+    void showStopLine(Main.StackFrame frame)
     {
         String sourceName = frame.getUrl();
         if (sourceName == null || sourceName.equals("<stdin>")) {
@@ -2139,7 +2269,7 @@ class DebugGui extends JFrame
     {
         statusBar.setText("Thread: " + threadTitle);
 
-        showStackFrame(lastFrame);
+        showStopLine(lastFrame);
 
         if (alertMessage != null) {
             MessageDialogWrapper.showMessageDialog(this,
