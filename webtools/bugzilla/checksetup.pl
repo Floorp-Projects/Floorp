@@ -219,7 +219,7 @@ my $modules = [
     }, 
     {        
         name => 'Date::Format', 
-        version => '1.21' 
+        version => '2.21' 
     }, 
     { 
         name => 'DBI', 
