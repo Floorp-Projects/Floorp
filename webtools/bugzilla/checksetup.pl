@@ -1786,10 +1786,17 @@ $table{logincookies} =
 
     index(lastused)';
 
+$table{classifications} =
+   'id smallint not null auto_increment primary key,
+    name varchar(64) not null,
+    description mediumtext,
+
+    unique(name)';
 
 $table{products} =
    'id smallint not null auto_increment primary key,
     name varchar(64) not null,
+    classification_id smallint not null default 1,
     description mediumtext,
     milestoneurl tinytext not null,
     disallownew tinyint not null,
@@ -2153,6 +2160,7 @@ sub AddFDef ($$$) {
 # be created with their associated schema change.
 AddFDef("bug_id", "Bug \#", 1);
 AddFDef("short_desc", "Summary", 1);
+AddFDef("classification", "Classification", 1);
 AddFDef("product", "Product", 1);
 AddFDef("version", "Version", 1);
 AddFDef("rep_platform", "Platform", 1);
@@ -4021,6 +4029,7 @@ AddField("profiles", "extern_id", "varchar(64)");
 AddGroup('tweakparams', 'Can tweak operating parameters');
 AddGroup('editusers', 'Can edit or disable users');
 AddGroup('creategroups', 'Can create and destroy groups.');
+AddGroup('editclassifications', 'Can create, destroy, and edit classifications.');
 AddGroup('editcomponents', 'Can create, destroy, and edit components.');
 AddGroup('editkeywords', 'Can create, destroy, and edit keywords.');
 AddGroup('admin', 'Administrators');
@@ -4387,6 +4396,16 @@ if (GetFieldDef('bugs', 'short_desc')->[2]) { # if it allows nulls
 # Make sure groups get rederived
 $dbh->do("UPDATE groups SET last_changed = NOW() WHERE name = 'admin'");
 
+
+# 2003-10-24 - alt@sonic.net, bug 224208
+# Support classification level and make sure there is a default classification
+AddField('products', 'classification_id', 'smallint DEFAULT 1');
+$sth = $dbh->prepare("SELECT name FROM classifications WHERE id=1");
+$sth->execute;
+if (! $sth->rows) {
+    $dbh->do("INSERT INTO classifications (id,name,description) " .
+             "VALUES(1,'Unclassified','Unassigned to any classifications')");
+}
 
 #
 # Final checks...

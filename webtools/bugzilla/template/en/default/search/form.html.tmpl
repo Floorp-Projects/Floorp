@@ -21,6 +21,81 @@
   #                 Gervase Markham <gerv@gerv.net>
   #%]
 
+<script type="text/javascript" language="JavaScript">
+
+var first_load = true;         [%# is this the first time we load the page? %]
+var last_sel = new Array();    [%# caches last selection %]
+
+[% IF Param('useclassification') %]
+var useclassification = true;
+var prods = new Array();
+[% ELSE %]
+var useclassification = false;
+[% END %]
+var cpts = new Array();
+var vers = new Array();
+[% IF Param('usetargetmilestone') %]
+var tms = new Array();
+[% END %]
+
+[%# Create an array of products, indexed by the classification #%]
+
+[% nclass = 0 %]
+[% FOREACH c = classification %]
+  prods[[% nclass FILTER js %]] = [
+    [%- FOREACH item = c.products %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  [% nclass = nclass+1 %]
+[% END %]
+
+[%# Create three arrays of components, versions and target milestones, indexed
+  # numerically according to the product they refer to. #%]
+
+[% n = 0 %]
+[% FOREACH p = product %]
+  [% IF Param('useclassification') %]
+  prods['[% p.name FILTER js %]'] = [% n %]
+  [% END %]
+  cpts[[% n %]] = [
+    [%- FOREACH item = p.components %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  vers[[% n %]] = [
+    [%- FOREACH item = p.versions -%]'[%  item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  [% IF Param('usetargetmilestone') %]
+  tms[[% n %]]  = [
+     [%- FOREACH item = p.milestones %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  [% END %]
+  [% n = n+1 %]
+[% END %]
+
+/*
+ * doOnSelectProduct determines which selection should get updated 
+ *
+ * - selectmode = 0  - init
+ *   selectmode = 1  - classification selected
+ *   selectmode = 2  - product selected
+ *
+ * globals:
+ *   queryform - string holding the name of the selection form
+ */
+function doOnSelectProduct(selectmode) {
+    var f = document.forms[queryform];
+    milestone = (typeof(f.target_milestone) == "undefined" ? 
+                                               null : f.target_milestone);
+    if (selectmode == 0) {
+        if (useclassification) {
+            selectClassification(f.classification, f.product, f.component, f.version, milestone);
+        } else {
+            selectProduct(f.product, f.component, f.version, milestone);
+        }
+    } else if (selectmode == 1) {
+        selectClassification(f.classification, f.product, f.component, f.version, milestone);
+    } else {
+        selectProduct(f.product, f.component, f.version, milestone);
+    }
+}
+
+</script>
+
+
 [% PROCESS global/variables.none.tmpl %]
 
 [% query_variants = [
@@ -56,7 +131,7 @@
       <input name="short_desc" size="40" accesskey="s"
              value="[% default.short_desc.0 FILTER html %]">
       <script language="JavaScript" type="text/javascript"> <!--
-          document.forms['queryform'].short_desc.focus(); 
+          document.forms[queryform].short_desc.focus(); 
       // -->
       </script>
     </td>
@@ -67,12 +142,35 @@
     </td>
   </tr>
 
-[%# *** Product Component Version Target *** %]
-
+[%# *** Classification Product Component Version Target *** %]
   <tr>
     <td colspan="4">
       <table>
         <tr>
+        [% IF Param('useclassification') %]
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left"><u>C</u>lassification:</th>
+              </tr>
+              <tr valign="top">
+                <td align="left">
+                  <label for="classification">
+                    <select name="classification" multiple="multiple" size="5" id="classification"
+                            onchange="doOnSelectProduct(1);">
+                    [% FOREACH cat = classification %]
+                      <option value="[% cat.name FILTER html %]"
+                        [% " selected" IF lsearch(default.classification, cat.name) != -1 %]>
+                        [% cat.name FILTER html %]
+                      </option>
+                    [% END %]
+                    </select>
+                  </label>
+                </td>
+              </tr>
+            </table>
+          </td>
+        [% END %]
           <td valign="top">
             <table>
               <tr valign="bottom">
@@ -83,7 +181,7 @@
                 <td align="left">
                   <label for="product" accesskey="p">
                     <select name="product" multiple="multiple" size="5" id="product"
-                            onchange="doOnSelectProduct();">
+                            onchange="doOnSelectProduct(2);">
                     [% FOREACH p = product %]
                       <option value="[% p.name FILTER html %]"
                         [% " selected" IF lsearch(default.product, p.name) != -1 %]>

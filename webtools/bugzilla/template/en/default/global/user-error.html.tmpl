@@ -142,6 +142,40 @@
     [% title = "Comment Too Long" %]
     Comments cannot be longer than 65,535 characters.
 
+  [% ELSIF error == "auth_classification_not_enabled" %]
+    [% title = "Classification Not Enabled" %]
+    Sorry, classification is not enabled.
+
+  [% ELSIF error == "auth_cant_edit_classifications" %]
+    [% title = "Access Denied" %]
+    Sorry, you aren't a member of the 'editclassifications' group, and so
+    you aren't allowed to add, modify or delete classifications.
+
+  [% ELSIF error == "classification_not_specified" %]
+    [% title = "You Must Supply A Classification Name" %]
+    You must enter a classification name.
+
+  [% ELSIF error == "classification_already_exists" %]
+    [% title = "Classification Already Exists" %]
+    A classification with the name '[% name FILTER html %]' already exists.
+
+  [% ELSIF error == "classification_doesnt_exist" %]
+    [% title = "Classification Does Not Exist" %]
+    The classification '[% name FILTER html %]' does not exist.
+
+  [% ELSIF error == "classification_not_deletable" %]
+    [% title = "Default Classification Can Not Be Deleted" %]
+    You can not delete the default classification
+
+  [% ELSIF error == "classification_has_products" %]
+     Sorry, there are products for this classification. You
+     must reassign those products to another classification before you
+     can delete this one.
+
+  [% ELSIF error == "cant_delete_default_classification" %]
+     Sorry, but you can not delete the default classification,
+     '[% name FILTER html %]'.
+
   [% ELSIF error == "auth_cant_edit_components" %]
     [% title = "Access Denied" %]
     Sorry, you aren't a member of the 'editcomponents' group, and so
@@ -458,6 +492,10 @@
   [% ELSIF error == "invalid_group_ID" %]
     [% title = "Invalid group ID" %]
     The group you specified doesn't exist.
+
+  [% ELSIF error == "invalid_group_name" %]
+    [% title = "Invalid group name" %]
+    The group you specified, [% name FILTER html %], is not valid here.
 
   [% ELSIF error == "invalid_group_name" %]
     [% title = "Invalid group name" %]

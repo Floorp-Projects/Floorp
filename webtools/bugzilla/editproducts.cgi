@@ -86,19 +86,79 @@ sub CheckProduct ($)
     }
 }
 
+# TestClassification:  just returns if the specified classification does exists
+# CheckClassification: same check, optionally  emit an error text
+
+sub TestClassification ($)
+{
+    my $cl = shift;
+
+    # does the classification exist?
+    SendSQL("SELECT name
+             FROM classifications
+             WHERE name=" . SqlQuote($cl));
+    return FetchOneColumn();
+}
+
+sub CheckClassification ($)
+{
+    my $cl = shift;
+
+    # do we have a classification?
+    unless ($cl) {
+        print "Sorry, you haven't specified a classification.";
+        PutTrailer();
+        exit;
+    }
+
+    unless (TestClassification $cl) {
+        print "Sorry, classification '$cl' does not exist.";
+        PutTrailer();
+        exit;
+    }
+}
+
+sub CheckClassificationProduct ($$)
+{
+    my $cl = shift;
+    my $prod = shift;
+
+    CheckClassification($cl);
+    CheckProduct($prod);
+
+    # does the classification exist?
+    SendSQL("SELECT products.name
+             FROM products,classifications
+             WHERE products.name=" . SqlQuote($prod) .
+            " AND classifications.name=" . SqlQuote($cl));
+    my $res = FetchOneColumn();
+
+    unless ($res) {
+        print "Sorry, classification->product '$cl'->'$prod' does not exist.";
+        PutTrailer();
+        exit;
+    }
+}
+
 
 #
 # Displays the form to edit a products parameters
 #
 
-sub EmitFormElements ($$$$$$$$)
+sub EmitFormElements ($$$$$$$$$)
 {
-    my ($product, $description, $milestoneurl, $disallownew,
+    my ($classification, $product, $description, $milestoneurl, $disallownew,
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone)
         = @_;
 
     $product = value_quote($product);
     $description = value_quote($description);
+
+    if (Param('useclassification')) {
+        print "  <TH ALIGN=\"right\">Classification:</TH>\n";
+        print "  <TD><b>",html_quote($classification),"</b></TD>\n";
+        print "</TR><TR>\n";
+    }
 
     print "  <TH ALIGN=\"right\">Product:</TH>\n";
     print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"product\" VALUE=\"$product\"></TD>\n";
@@ -197,23 +257,83 @@ unless (UserInGroup("editcomponents")) {
 #
 # often used variables
 #
+my $classification = trim($::FORM{classification} || '');
 my $product = trim($::FORM{product} || '');
 my $action  = trim($::FORM{action}  || '');
 my $headerdone = 0;
 my $localtrailer = "<A HREF=\"editproducts.cgi\">edit</A> more products";
+my $classhtmlvarstart = "";
+my $classhtmlvar = "";
+
+if (Param('useclassification') && (defined $classification)) {
+   $classhtmlvar = "&classification=" . url_quote($classification);
+   $classhtmlvarstart = "?classification=" . url_quote($classification);
+}
+
+if (Param('useclassification') && (defined $classification)) {
+    $localtrailer .= ", <A HREF=\"editproducts.cgi" . $classhtmlvarstart . "\">edit</A> in this classification";
+}
+
+#
+# product = '' -> Show nice list of products
+#
+
+if (Param('useclassification')) {
+    unless ($classification) {
+        PutHeader("Select classification");
+
+        SendSQL("SELECT classifications.name,classifications.description,COUNT(classification_id) as total
+             FROM classifications
+             LEFT JOIN products ON classifications.id=products.classification_id
+             GROUP BY classifications.id
+             ORDER BY name");
+        print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
+        print "  <TH ALIGN=\"left\">Edit products of ...</TH>\n";
+        print "  <TH ALIGN=\"left\">Description</TH>\n";
+        print "  <TH ALIGN=\"left\">Total</TH>\n";
+        print "</TR>";
+        while ( MoreSQLData() ) {
+            my ($classification, $description, $count) = FetchSQLData();
+            $description ||= "<FONT COLOR=\"red\">missing</FONT>";
+            print "<TR>\n";
+            print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?classification=",url_quote($classification),"\"><B>$classification</B></A></TD>\n";
+            print "  <TD VALIGN=\"top\">$description</TD>\n";
+            $count ||= "none";
+            print "  <TD VALIGN=\"top\">$count</TD>\n";
+        }
+        print "</TR></TABLE>\n";
+
+        PutTrailer();
+        exit;
+    }
+}
+
 
 #
 # action='' -> Show nice list of products
 #
 
 unless ($action) {
-    PutHeader("Select product");
+    if (Param('useclassification')) {
+        PutHeader("Select product in " . $classification);
+    } else {
+        PutHeader("Select product");
+    }
 
-    SendSQL("SELECT products.name,description,disallownew,
+    my $query="SELECT products.name,products.description,disallownew,
                     votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
-             FROM products LEFT JOIN bugs ON products.id = bugs.product_id
-             GROUP BY products.name
-             ORDER BY products.name");
+             FROM products";
+    if (Param('useclassification')) {
+        $query .= ",classifications";
+    }
+    $query .= " LEFT JOIN bugs ON products.id = bugs.product_id";
+    if (Param('useclassification')) {
+        $query .= " WHERE classifications.name=" .
+          SqlQuote($classification) .
+            " AND classifications.id=products.classification_id";
+    }
+    $query .= " GROUP BY products.name ORDER BY products.name";
+    SendSQL($query);
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH ALIGN=\"left\">Edit product ...</TH>\n";
     print "  <TH ALIGN=\"left\">Description</TH>\n";
@@ -231,19 +351,19 @@ unless ($action) {
         $disallownew = $disallownew ? 'closed' : 'open';
         $bugs        ||= 'none';
         print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=edit&product=", url_quote($product), "\"><B>$product</B></A></TD>\n";
+        print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=edit&product=", url_quote($product), $classhtmlvar,"\"><B>$product</B></A></TD>\n";
         print "  <TD VALIGN=\"top\">$description</TD>\n";
         print "  <TD VALIGN=\"top\">$disallownew</TD>\n";
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votesperuser</TD>\n";
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$maxvotesperbug</TD>\n";
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votestoconfirm</TD>\n";
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$bugs</TD>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=del&product=", url_quote($product), "\">Delete</A></TD>\n";
+        print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=del&product=", url_quote($product), $classhtmlvar, "\">Delete</A></TD>\n";
         print "</TR>";
     }
     print "<TR>\n";
     print "  <TD VALIGN=\"top\" COLSPAN=7>Add a new product</TD>\n";
-    print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><A HREF=\"editproducts.cgi?action=add\">Add</A></TD>\n";
+    print "  <TD VALIGN=\"top\" ALIGN=\"center\"><A HREF=\"editproducts.cgi?action=add&classification=", url_quote($classification),"\">Add</A></TD>\n";
     print "</TR></TABLE>\n";
 
     PutTrailer();
@@ -262,12 +382,15 @@ unless ($action) {
 if ($action eq 'add') {
     PutHeader("Add product");
 
+    if (Param('useclassification')) {
+        CheckClassification($classification);
+    }
     #print "This page lets you add a new product to bugzilla.\n";
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0, 0, 10000, 0, "---");
+    EmitFormElements($classification,'', '', '', 0, 0, 10000, 0, "---");
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
@@ -282,6 +405,7 @@ if ($action eq 'add') {
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
     print "<INPUT TYPE=HIDDEN NAME='subcategory' VALUE='-All-'>\n";
     print "<INPUT TYPE=HIDDEN NAME='open_name' VALUE='All Open'>\n";
+    print "<INPUT TYPE=HIDDEN NAME='classification' VALUE='",html_quote($classification),"'>\n";
     print "</FORM>";
 
     my $other = $localtrailer;
@@ -349,10 +473,15 @@ if ($action eq 'new') {
     $votestoconfirm ||= 0;
     my $defaultmilestone = $::FORM{defaultmilestone} || "---";
 
+    my $classification_id = 1;
+    if (Param('useclassification')) {
+        $classification_id = get_classification_id($classification);
+    }
+
     # Add the new product.
     SendSQL("INSERT INTO products ( " .
             "name, description, milestoneurl, disallownew, votesperuser, " .
-            "maxvotesperbug, votestoconfirm, defaultmilestone" .
+            "maxvotesperbug, votestoconfirm, defaultmilestone, classification_id" .
             " ) VALUES ( " .
             SqlQuote($product) . "," .
             SqlQuote($description) . "," .
@@ -366,9 +495,11 @@ if ($action eq 'new') {
             SqlQuote($votesperuser) . "," .
             SqlQuote($maxvotesperbug) . "," .
             SqlQuote($votestoconfirm) . "," .
-            SqlQuote($defaultmilestone) . ")");
+            SqlQuote($defaultmilestone) . "," .
+            SqlQuote($classification_id) . ")");
     SendSQL("SELECT LAST_INSERT_ID()");
     my $product_id = FetchOneColumn();
+
     SendSQL("INSERT INTO versions ( " .
           "value, product_id" .
           " ) VALUES ( " .
@@ -455,7 +586,8 @@ if ($action eq 'new') {
     PutTrailer($localtrailer,
         "<a href=\"editproducts.cgi?action=add\">add</a> a new product",
         "<a href=\"editcomponents.cgi?action=add&product=" .
-        url_quote($product) . "\">add</a> components to this new product");
+        url_quote($product) . $classhtmlvar .
+        "\">add</a> components to this new product");
     exit;
 }
 
@@ -470,15 +602,23 @@ if ($action eq 'new') {
 if ($action eq 'del') {
     PutHeader("Delete product");
     CheckProduct($product);
+    my $classification_id=1;
+    if (Param('useclassification')) {
+        CheckClassificationProduct($classification,$product);
+        $classification_id = get_classification_id($classification);
+    }
 
     # display some data about the product
-    SendSQL("SELECT id, description, milestoneurl, disallownew
-             FROM products
-             WHERE name=" . SqlQuote($product));
-    my ($product_id, $description, $milestoneurl, $disallownew) = FetchSQLData();
+    SendSQL("SELECT classifications.description,
+                    products.id, products.description, milestoneurl, disallownew
+             FROM products,classifications
+             WHERE products.name=" . SqlQuote($product) .
+            " AND classifications.id=" . SqlQuote($classification_id));
+    my ($class_description, $product_id, $prod_description, $milestoneurl, $disallownew) = FetchSQLData();
     my $milestonelink = $milestoneurl ? "<a href=\"$milestoneurl\">$milestoneurl</a>"
                                       : "<font color=\"red\">missing</font>";
-    $description ||= "<FONT COLOR=\"red\">description missing</FONT>";
+    $prod_description ||= "<FONT COLOR=\"red\">description missing</FONT>";
+    $class_description ||= "<FONT COLOR=\"red\">description missing</FONT>";
     $disallownew = $disallownew ? 'closed' : 'open';
     
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
@@ -486,13 +626,23 @@ if ($action eq 'del') {
     print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
     print "  <TH VALIGN=\"top\" ALIGN=\"left\">Value</TH>\n";
 
+    if (Param('useclassification')) {
+        print "</TR><TR>\n";
+        print "  <TD VALIGN=\"top\">Classification:</TD>\n";
+        print "  <TD VALIGN=\"top\">$classification</TD>\n";
+
+        print "</TR><TR>\n";
+        print "  <TD VALIGN=\"top\">Description:</TD>\n";
+        print "  <TD VALIGN=\"top\">$class_description</TD>\n";
+    }
+
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Product:</TD>\n";
     print "  <TD VALIGN=\"top\">$product</TD>\n";
 
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Description:</TD>\n";
-    print "  <TD VALIGN=\"top\">$description</TD>\n";
+    print "  <TD VALIGN=\"top\">$prod_description</TD>\n";
 
     if (Param('usetargetmilestone')) {
         print "</TR><TR>\n";
@@ -548,7 +698,7 @@ if ($action eq 'del') {
     #
     if (Param('usetargetmilestone')) {
         print "</TD>\n</TR><TR>\n";
-        print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), "\">Edit milestones:</A></TH>\n";
+        print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), $classhtmlvar, "\">Edit milestones:</A></TH>\n";
         print "  <TD>";
         SendSQL("SELECT value
                  FROM milestones
@@ -603,6 +753,8 @@ one.";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
         html_quote($product) . "\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"classification\" VALUE=\"" .
+        html_quote($classification) . "\">\n";
     print "</FORM>";
 
     PutTrailer($localtrailer);
@@ -706,25 +858,32 @@ if ($action eq 'delete') {
 if ($action eq 'edit') {
     PutHeader("Edit product");
     CheckProduct($product);
+    my $classification_id=1;
+    if (Param('useclassification')) {
+        CheckClassificationProduct($classification,$product);
+        $classification_id = get_classification_id($classification);
+    }
 
     # get data of product
-    SendSQL("SELECT id,description,milestoneurl,disallownew,
+    SendSQL("SELECT classifications.description,
+                    products.id,products.description,milestoneurl,disallownew,
                     votesperuser,maxvotesperbug,votestoconfirm,defaultmilestone
-             FROM products
-             WHERE name=" . SqlQuote($product));
-    my ($product_id,$description, $milestoneurl, $disallownew,
+             FROM products,classifications
+             WHERE products.name=" . SqlQuote($product) .
+            " AND classifications.id=" . SqlQuote($classification_id));
+    my ($class_description, $product_id,$prod_description, $milestoneurl, $disallownew,
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone) =
         FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($product, $description, $milestoneurl, 
+    EmitFormElements($classification, $product, $prod_description, $milestoneurl, 
                      $disallownew, $votesperuser, $maxvotesperbug,
                      $votestoconfirm, $defaultmilestone);
     
     print "</TR><TR VALIGN=top>\n";
-    print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "\">Edit components:</A></TH>\n";
+    print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), $classhtmlvar, "\">Edit components:</A></TH>\n";
     print "  <TD>";
     SendSQL("SELECT name,description
              FROM components
@@ -744,7 +903,7 @@ if ($action eq 'edit') {
 
 
     print "</TD>\n</TR><TR>\n";
-    print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), "\">Edit versions:</A></TH>\n";
+    print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), $classhtmlvar, "\">Edit versions:</A></TH>\n";
     print "  <TD>";
     SendSQL("SELECT value
              FROM versions
@@ -767,7 +926,7 @@ if ($action eq 'edit') {
     #
     if (Param('usetargetmilestone')) {
         print "</TD>\n</TR><TR>\n";
-        print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), "\">Edit milestones:</A></TH>\n";
+        print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), $classhtmlvar, "\">Edit milestones:</A></TH>\n";
         print "  <TD>";
         SendSQL("SELECT value
                  FROM milestones
@@ -787,7 +946,7 @@ if ($action eq 'edit') {
     }
 
     print "</TD>\n</TR><TR>\n";
-    print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=editgroupcontrols&product=", url_quote($product), "\">Edit Group Access Controls</A></TH>\n";
+    print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=editgroupcontrols&product=", url_quote($product), $classhtmlvar,"\">Edit Group Access Controls</A></TH>\n";
     print "<TD>\n";
     SendSQL("SELECT id, name, isactive, entry, membercontrol, othercontrol, canedit " .
             "FROM groups, " .
@@ -820,10 +979,12 @@ if ($action eq 'edit') {
 
     print "</TD>\n</TR></TABLE>\n";
 
+    print "<INPUT TYPE=HIDDEN NAME=\"classification\" VALUE=\"" .
+        html_quote($classification) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"productold\" VALUE=\"" .
         html_quote($product) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"descriptionold\" VALUE=\"" .
-        html_quote($description) . "\">\n";
+        html_quote($prod_description) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"" .
         html_quote($milestoneurl) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
@@ -842,7 +1003,6 @@ if ($action eq 'edit') {
     PutTrailer($x);
     exit;
 }
-
 
 #
 # action='updategroupcontrols' -> update the product
@@ -1325,6 +1485,7 @@ if ($action eq 'editgroupcontrols') {
     }
     $vars->{'header_done'} = $headerdone;
     $vars->{'product'} = $product;
+    $vars->{'classification'} = $classification;
     $vars->{'groups'} = \@groups;
     $vars->{'const'} = {
         'CONTROLMAPNA' => CONTROLMAPNA,

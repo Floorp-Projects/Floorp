@@ -48,6 +48,7 @@ sub fields {
     # Keep this ordering in sync with bugzilla.dtd
     my @fields = qw(bug_id alias creation_ts short_desc delta_ts
                     reporter_accessible cclist_accessible
+                    classification_id classification
                     product component version rep_platform op_sys
                     bug_status resolution
                     bug_file_loc status_whiteboard keywords
@@ -137,7 +138,8 @@ sub initBug  {
 
   my $query = "
     SELECT
-      bugs.bug_id, alias, bugs.product_id, products.name, version,
+      bugs.bug_id, alias, products.classification_id, classifications.name,
+      bugs.product_id, products.name, version,
       rep_platform, op_sys, bug_status, resolution, priority,
       bug_severity, bugs.component_id, components.name, assigned_to,
       reporter, bug_file_loc, short_desc, target_milestone,
@@ -147,8 +149,9 @@ sub initBug  {
       reporter_accessible, cclist_accessible,
       estimated_time, remaining_time
     from bugs left join votes using(bug_id),
-      products, components
+      classifications, products, components
     where bugs.bug_id = $bug_id
+      AND classifications.id = products.classification_id
       AND products.id = bugs.product_id
       AND components.id = bugs.component_id
     group by bugs.bug_id";
@@ -159,7 +162,8 @@ sub initBug  {
   if ((@row = &::FetchSQLData()) && $self->{'who'}->can_see_bug($bug_id)) {
     my $count = 0;
     my %fields;
-    foreach my $field ("bug_id", "alias", "product_id", "product", "version", 
+    foreach my $field ("bug_id", "alias", "classification_id", "classification",
+                       "product_id", "product", "version", 
                        "rep_platform", "op_sys", "bug_status", "resolution", 
                        "priority", "bug_severity", "component_id", "component",
                        "assigned_to", "reporter", "bug_file_loc", "short_desc",

@@ -119,6 +119,11 @@
   <table cellspacing="1" cellpadding="1" border="0">
     <tr>
       <td align="right">
+        [% IF Param('useclassification') %]
+          [% IF bug.classification_id != "1" %]
+            <b>[[% bug.classification FILTER html %]]</b>
+          [% END %]
+        [% END %]
         <b>[% terms.Bug %]#:</b>
       </td>
       <td>

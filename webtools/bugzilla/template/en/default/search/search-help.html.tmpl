@@ -25,8 +25,13 @@
 { id => "short_desc", 
   html => "The $terms.bug summary is a short sentence which succinctly  
            describes <br> what the $terms.bug is about." },   
+{ id => "classification", 
+  html => "$terms.Bugs are categorised into Classifications, Products and Components. classifications is the<br>
+           top-level categorisation." },   
 { id => "product", 
-  html => "$terms.Bugs are categorised into Products and Components. Product is 
+  html => Param('useclassification') ?
+       "$terms.Bugs are categorised into Products and Components. Select a Classification to narrow down this list" :
+       "$terms.Bugs are categorised into Products and Components. Product is 
            the<br>top-level categorisation." },   
 { id => "component", 
   html => "Components are second-level categories; each belongs to a<br> 

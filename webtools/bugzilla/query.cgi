@@ -127,7 +127,7 @@ sub PrefillForm {
     # Nothing must be undef, otherwise the template complains.
     foreach my $name ("bug_status", "resolution", "assigned_to",
                       "rep_platform", "priority", "bug_severity",
-                      "product", "reporter", "op_sys",
+                      "classification", "product", "reporter", "op_sys",
                       "component", "version", "chfield", "chfieldfrom",
                       "chfieldto", "chfieldvalue", "target_milestone",
                       "email", "emailtype", "emailreporter",
@@ -274,8 +274,23 @@ for (my $i = 0; $i < @products; ++$i) {
     # Assign hash back to product array.
     $products[$i] = \%product;
 }
-
 $vars->{'product'} = \@products;
+
+# Create data structures representing each classification
+if (Param('useclassification')) {
+    my @classifications = ();
+
+    foreach my $c (sort(GetSelectableClassifications())) {
+        # Create hash to hold attributes for each classification.
+        my %classification = (
+            'name'       => $c,
+            'products'   => [ GetSelectableProducts(0,$c) ]
+        );
+        # Assign hash back to classification array.
+        push @classifications, \%classification;
+    }
+    $vars->{'classification'} = \@classifications;
+}
 
 # We use 'component_' because 'component' is a Template Toolkit reserved word.
 $vars->{'component_'} = \@components;
@@ -300,7 +315,9 @@ push @chfields, "[Bug creation]";
 # This is what happens when you have variables whose definition depends
 # on the DB schema, and then the underlying schema changes...
 foreach my $val (@::log_columns) {
-    if ($val eq 'product_id') {
+    if ($val eq 'classification_id') {
+        $val = 'classification';
+    } elsif ($val eq 'product_id') {
         $val = 'product';
     } elsif ($val eq 'component_id') {
         $val = 'component';

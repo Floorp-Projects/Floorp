@@ -43,6 +43,7 @@ my $generic_query = "
   SELECT 
     bugs.bug_id, 
     COALESCE(bugs.alias, ''), 
+    classifications.name, 
     products.name, 
     bugs.version, 
     bugs.rep_platform,
@@ -63,9 +64,10 @@ my $generic_query = "
     bugs.estimated_time,
     bugs.remaining_time,
     date_format(creation_ts,'%Y.%m.%d %H:%i')
-  FROM bugs,profiles assign,profiles report, products, components
+  FROM bugs,profiles assign,profiles report, classifications, products, components
   WHERE assign.userid = bugs.assigned_to AND report.userid = bugs.reporter
-    AND bugs.product_id=products.id AND bugs.component_id=components.id";
+    AND bugs.product_id=products.id AND bugs.component_id=components.id
+    AND products.classification_id = classifications.id";
 
 my $buglist = $cgi->param('buglist') || 
               $cgi->param('bug_id')  || 
@@ -81,7 +83,8 @@ foreach my $bug_id (split(/[:,]/, $buglist)) {
     my %bug;
     my @row = FetchSQLData();
 
-    foreach my $field ("bug_id", "alias", "product", "version", "rep_platform",
+    foreach my $field ("bug_id", "alias", "classification", "product",
+                       "version", "rep_platform",
                        "op_sys", "bug_status", "resolution", "priority",
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",

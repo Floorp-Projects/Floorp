@@ -96,6 +96,11 @@ sub init {
         push @wherepart, "bugs.product_id = map_products.id";
     }
 
+    if (lsearch($fieldsref, 'map_classifications.name') >= 0) {
+        push @supptables, "classifications AS map_classifications";
+        push @wherepart, "map_products.classification_id = map_classifications.id";
+    }
+
     if (lsearch($fieldsref, 'map_components.name') >= 0) {
         push @supptables, "components AS map_components";
         push @wherepart, "bugs.component_id = map_components.id";
@@ -152,7 +157,7 @@ sub init {
     
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
-                        "assigned_to", "reporter", "component",
+                        "assigned_to", "reporter", "component", "classification",
                         "target_milestone", "bug_group");
 
     foreach my $field ($params->param()) {
@@ -758,6 +763,16 @@ sub init {
              $term = build_subselect("bugs.product_id",
                                      "products.id",
                                      "products",
+                                     $term);
+         },
+
+         "^classification,(?!changed)" => sub {
+             # Generate the restriction condition
+             $f = $ff = "classifications.name";
+             $funcsbykey{",$t"}->();
+             $term = build_subselect("map_products.classification_id",
+                                     "classifications.id",
+                                     "classifications",
                                      $term);
          },
 

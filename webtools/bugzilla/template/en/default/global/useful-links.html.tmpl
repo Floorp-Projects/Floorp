@@ -77,8 +77,17 @@
                                                   IF user.groups.tweakparams %]
         [% ' | <a href="editusers.cgi">Users</a>'     IF user.groups.editusers 
                                                   || user.can_bless %]
-        [% ' | <a href="editproducts.cgi">Products</a>' 
+        [% IF Param('useclassification') %]
+          [% IF user.groups.editclassifications %]
+            [% ' | <a href="editclassifications.cgi">Classifications</a>' %]
+          [% END %]
+          [% IF user.groups.editcomponents %]
+            [% ' | <a href="editproducts.cgi">Products</a>' %]
+          [% END %]
+        [% ELSE %]
+          [% ' | <a href="editproducts.cgi">Products</a>' 
                                                IF user.groups.editcomponents %]
+        [% END %]
         [% ' | <a href="editflagtypes.cgi">Flags</a>'
                                                IF user.groups.editcomponents %]
         [% ' | <a href="editgroups.cgi">Groups</a>' 

@@ -458,6 +458,7 @@ DefineColumn("short_desc"        , "bugs.short_desc"            , "Summary"     
 DefineColumn("status_whiteboard" , "bugs.status_whiteboard"     , "Status Summary"   );
 DefineColumn("component"         , "map_components.name"        , "Component"        );
 DefineColumn("product"           , "map_products.name"          , "Product"          );
+DefineColumn("classification"    , "map_classifications.name"   , "Classification"   );
 DefineColumn("version"           , "bugs.version"               , "Version"          );
 DefineColumn("op_sys"            , "bugs.op_sys"                , "OS"               );
 DefineColumn("target_milestone"  , "bugs.target_milestone"      , "Target Milestone" );
@@ -553,6 +554,11 @@ if (grep('relevance', @displaycolumns) && !$fulltext) {
 # CSS classes.
 my @selectcolumns = ("bug_id", "bug_severity", "priority", "bug_status",
                      "resolution");
+
+# if using classification, we also need to look in product.classification_id
+if (Param("useclassification")) {
+    push (@selectcolumns,"product");
+}
 
 # remaining and actual_time are required for precentage_complete calculation:
 if (lsearch(\@displaycolumns, "percentage_complete") >= 0) {

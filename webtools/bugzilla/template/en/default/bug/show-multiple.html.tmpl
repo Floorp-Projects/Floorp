@@ -62,8 +62,14 @@
           ([% bug.alias FILTER html %])
         [% END %]
       </td>
-      [% PROCESS cell attr = { description => "Product",
-                               name => "product" } %]
+      <td>
+        <b> Product: </b>&nbsp;
+        [% IF Param("useclassification") %]
+          [[% bug.classification FILTER html %]]&nbsp;
+        [% END %]
+        [% bug.product FILTER html %]
+      </td>
+
       [% PROCESS cell attr = { description => "Version",
                                name => "version" } %]
       [% PROCESS cell attr = { description => "Platform",

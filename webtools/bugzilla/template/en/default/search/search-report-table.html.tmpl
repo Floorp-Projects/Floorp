@@ -26,9 +26,15 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
+[% js_data = BLOCK %]
+var queryform = "reportform"
+[% END %]
+
 [% PROCESS global/header.html.tmpl
   title = "Generate Tabular Report"
-  onload = "selectProduct(document.forms['reportform']);"
+  onload = "doOnSelectProduct(0)"
+  javascript = js_data
+  javascript_urls = [ "js/productform.js" ]
 %]
 
 [% PROCESS "search/search-report-select.html.tmpl" %]

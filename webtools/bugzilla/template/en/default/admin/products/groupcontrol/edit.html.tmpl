@@ -22,6 +22,7 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% filt_product = product FILTER html %]
+[% filt_classification = classification FILTER html %]
 [% PROCESS global/header.html.tmpl
   title = "Edit Group Controls for '$filt_product'"
 %]
@@ -29,6 +30,7 @@
 <form method="post" action="editproducts.cgi">
   <input type="hidden" name="action" value="updategroupcontrols">
   <input type="hidden" name="product" value="[% filt_product %]">
+  <input type="hidden" name="classification" value="[% filt_classification %]">
 
   <table id="form" cellspacing="0" cellpadding="4" border="1">
     <tr bgcolor="#6666ff">

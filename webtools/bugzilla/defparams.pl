@@ -321,6 +321,23 @@ sub find_languages {
   },
 
   {
+   name => 'useclassification',
+   desc => 'If this is on, Bugzilla will associate each product with a ' .
+           'specific classification.  But you must have "editclassification" ' .
+           'permissions enabled in order to edit classifications',
+   type => 'b',
+   default => 0
+  },
+
+  {
+   name => 'showallproducts',
+   desc => 'If this is on and useclassification is set, Bugzilla will add a' .
+           '"All" link in the "New Bug" page to list all available products',
+   type => 'b',
+   default => 0
+  },
+
+  {
    name => 'makeproductgroups',
    desc => 'If this is on, Bugzilla will associate a bug group with each ' .
            'product in the database, and use it for querying bugs.',

@@ -55,6 +55,7 @@ sub globals_pl_sillyness {
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
     $zz = %main::proddesc;
+    $zz = %main::classdesc;
     $zz = @main::prodmaxvotes;
     $zz = $main::template;
     $zz = $main::userid;
@@ -184,6 +185,19 @@ sub GenerateVersionTable {
         $carray{$c} = 1;
     }
 
+    SendSQL("SELECT products.name, classifications.name " .
+            "FROM products, classifications " .
+            "WHERE classifications.id = products.classification_id " .
+            "ORDER BY classifications.name");
+    while (@line = FetchSQLData()) {
+        my ($p,$c) = (@line);
+        if (!defined $::classifications{$c}) {
+            $::classifications{$c} = [];
+        }
+        my $ref = $::classifications{$c};
+        push @$ref, $p;
+    }
+
     my $dotargetmilestone = 1;  # This used to check the param, but there's
                                 # enough code that wants to pretend we're using
                                 # target milestones, even if they don't get
@@ -191,6 +205,13 @@ sub GenerateVersionTable {
                                 # about them anyway.
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
+
+    SendSQL("select name, description from classifications ORDER BY name");
+    while (@line = FetchSQLData()) {
+        my ($n, $d) = (@line);
+        $::classdesc{$n} = $d;
+    }
+
     SendSQL("select name, description, votesperuser, disallownew$mpart from products ORDER BY name");
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
@@ -275,8 +296,10 @@ sub GenerateVersionTable {
                                    '*::legal_bug_status', '*::legal_resolution']));
 
     print $fh (Data::Dumper->Dump([\@::settable_resolution, \%::proddesc,
+                                   \%::classifications, \%::classdesc,
                                    \@::enterable_products, \%::prodmaxvotes],
                                   ['*::settable_resolution', '*::proddesc',
+                                   '*::classifications', '*::classdesc',
                                    '*::enterable_products', '*::prodmaxvotes']));
 
     if ($dotargetmilestone) {
@@ -494,6 +517,24 @@ sub CanEditProductId {
     return (!defined($result));
 }
 
+sub IsInClassification {
+    my ($classification,$productname) = @_;
+
+    if (! Param('useclassification')) {
+        return 1;
+    } else {
+        my $query = "SELECT classifications.name " .
+          "FROM products,classifications " .
+            "WHERE products.classification_id=classifications.id ";
+        $query .= "AND products.name = " . SqlQuote($productname);
+        PushGlobalSQLState();
+        SendSQL($query);
+        my ($ret) = FetchSQLData();
+        PopGlobalSQLState();
+        return ($ret eq $classification);
+    }
+}
+
 #
 # This function determines if a user can enter bugs in the named
 # product.
@@ -527,18 +568,21 @@ sub GetEnterableProducts {
     return (@products);
 }
 
+
 #
 # This function returns an alphabetical list of product names to which
 # the user can enter bugs.  If the $by_id parameter is true, also retrieves IDs
 # and pushes them onto the list as id, name [, id, name...] for easy slurping
 # into a hash by the calling code.
 sub GetSelectableProducts {
-    my ($by_id) = @_;
+    my ($by_id,$by_classification) = @_;
 
     my $extra_sql = $by_id ? "id, " : "";
 
-    my $query = "SELECT $extra_sql name " .
-                "FROM products " .
+    my $extra_from_sql = $by_classification ? ", classifications" : "";
+
+    my $query = "SELECT $extra_sql products.name " .
+                "FROM products $extra_from_sql " .
                 "LEFT JOIN group_control_map " .
                 "ON group_control_map.product_id = products.id ";
     if (Param('useentrygroupdefault')) {
@@ -551,7 +595,13 @@ sub GetSelectableProducts {
         $query .= "AND group_id NOT IN(" . 
                    join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
-    $query .= "WHERE group_id IS NULL ORDER BY name";
+    $query .= "WHERE group_id IS NULL ";
+    if ($by_classification) {
+        $query .= "AND classifications.id = products.classification_id ";
+        $query .= "AND classifications.name = ";
+        $query .= SqlQuote($by_classification) . " ";
+    }
+    $query .= "ORDER BY name";
     PushGlobalSQLState();
     SendSQL($query);
     my @products = ();
@@ -609,6 +659,18 @@ sub GetSelectableProductHash {
     return $selectables;
 }
 
+#
+# This function returns an alphabetical list of classifications that has products the user can enter bugs.
+sub GetSelectableClassifications {
+    my @selectable_classes = ();
+
+    foreach my $c (keys %::classdesc) {
+        if ( scalar(GetSelectableProducts(0,$c)) > 0) {
+           push(@selectable_classes,$c);
+        }
+    }
+    return (@selectable_classes);
+}
 
 sub GetFieldDefs {
     my $extra = "";
@@ -740,6 +802,25 @@ sub DBNameToIdAndCheck {
                    { name => $name }, "abort");
 }
 
+sub get_classification_id {
+    my ($classification) = @_;
+    PushGlobalSQLState();
+    SendSQL("SELECT id FROM classifications WHERE name = " . SqlQuote($classification));
+    my ($classification_id) = FetchSQLData();
+    PopGlobalSQLState();
+    return $classification_id;
+}
+
+sub get_classification_name {
+    my ($classification_id) = @_;
+    die "non-numeric classification_id '$classification_id' passed to get_classification_name"
+      unless ($classification_id =~ /^\d+$/);
+    PushGlobalSQLState();
+    SendSQL("SELECT name FROM classifications WHERE id = $classification_id");
+    my ($classification) = FetchSQLData();
+    PopGlobalSQLState();
+    return $classification;
+}
 
 
 

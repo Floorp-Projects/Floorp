@@ -32,44 +32,13 @@
 
 
 [% js_data = BLOCK %]
-function doOnSelectProduct() {
-    var f = document.forms['queryform'];
-    milestone = (typeof(f.target_milestone) == "undefined" ? 
-                                               null : f.target_milestone);
-    selectProduct(f.product, f.component, f.version, milestone);
-}
-
-var first_load = true;         [%# is this the first time we load the page? %]
-var last_sel = new Array();    [%# caches last selection %]
-
-var cpts = new Array();
-var vers = new Array();
-[% IF Param('usetargetmilestone') %]
-var tms = new Array();
-[% END %]
-
-[%# Create three arrays of components, versions and target milestones, indexed
-  # numerically according to the product they refer to. #%]
-
-[% n = 0 %]
-[% FOREACH p = product %]
-  cpts[[% n %]] = [
-    [%- FOREACH item = p.components %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
-  vers[[% n %]] = [
-    [%- FOREACH item = p.versions -%]'[%  item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
-  [% IF Param('usetargetmilestone') %]
-  tms[[% n %]]  = [
-     [%- FOREACH item = p.milestones %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
-  [% END %]
-  [% n = n+1 %]
-[% END %]
-
+var queryform = "queryform"
 [% END %]
 
 [% PROCESS global/header.html.tmpl
   title = "Search for $terms.bugs"
   h1 = ""
-  onload = "doOnSelectProduct(); initHelp();"
+  onload = "doOnSelectProduct(0); initHelp();"
   javascript = js_data
   javascript_urls = [ "js/productform.js" ]
   style = "td.selected_tab {

@@ -53,6 +53,7 @@ use vars qw(
   $userid
   %versions
   $proddesc
+  $classdesc
 );
 
 # If we're using bug groups to restrict bug entry, we need to know who the 
@@ -67,12 +68,47 @@ if (!defined $product) {
     GetVersionTable();
     Bugzilla->login();
 
-    my %products;
+   if ( ! Param('useclassification') ) {
+      # just pick the default one
+      $::FORM{'classification'}=(keys %::classdesc)[0];
+   }
 
+   if (!defined $::FORM{'classification'}) {
+       my %classdesc;
+       my %classifications;
+    
+       foreach my $c (GetSelectableClassifications()) {
+           $classdesc{$c} = $::classdesc{$c};
+           $classifications{$c} = $::classifications{$c};
+       }
+
+       my $classification_size = scalar(keys %classdesc);
+       if ($classification_size == 0) {
+           ThrowUserError("no_products");
+       } 
+       elsif ($classification_size > 1) {
+           $vars->{'classdesc'} = \%classdesc;
+           $vars->{'classifications'} = \%classifications;
+
+           $vars->{'target'} = "enter_bug.cgi";
+           $vars->{'format'} = $::FORM{'format'};
+           
+           print "Content-type: text/html\n\n";
+           $template->process("global/choose-classification.html.tmpl", $vars)
+             || ThrowTemplateError($template->error());
+           exit;        
+       }
+       $::FORM{'classification'} = (keys %classdesc)[0];
+       $::MFORM{'classification'} = [$::FORM{'classification'}];
+   }
+
+    my %products;
     foreach my $p (@enterable_products) {
-        if (CanEnterProduct($p))
-        {
-            $products{$p} = $::proddesc{$p};
+        if (CanEnterProduct($p)) {
+            if (IsInClassification($::FORM{'classification'},$p) ||
+                $::FORM{'classification'} eq "__all") {
+                $products{$p} = $::proddesc{$p};
+            }
         }
     }
  
@@ -81,7 +117,19 @@ if (!defined $product) {
         ThrowUserError("no_products");
     } 
     elsif ($prodsize > 1) {
+        my %classifications;
+        if ( ! Param('useclassification') ) {
+            @{$classifications{"all"}} = keys %products;
+        }
+        elsif ($::FORM{'classification'} eq "__all") {
+            %classifications = %::classifications;
+        } else {
+            $classifications{$::FORM{'classification'}} =
+                $::classifications{$::FORM{'classification'}};
+        }
         $vars->{'proddesc'} = \%products;
+        $vars->{'classifications'} = \%classifications;
+        $vars->{'classdesc'} = \%::classdesc;
 
         $vars->{'target'} = "enter_bug.cgi";
         $vars->{'format'} = $cgi->param('format');
@@ -252,6 +300,7 @@ SendSQL("SELECT name, description, login_name, realname
              ORDER BY name");
 while (MoreSQLData()) {
     my ($name, $description, $login, $realname) = FetchSQLData();
+
     push @components, {
         name => $name,
         description => $description,

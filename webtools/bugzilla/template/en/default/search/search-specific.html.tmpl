@@ -75,10 +75,24 @@ for "crash secure SSL flash".
     <td>
       <select name="product" id="product">
         <option value="">All</option>
-        [% FOREACH p = product %]
-          <option value="[% p.name FILTER html %]"
-            [% " selected" IF lsearch(default.product, p.name) != -1 %]>
-            [% p.name FILTER html %]</option>
+        [% IF Param('useclassification') %]
+          [% FOREACH c = classification %]
+            <optgroup label="[% c.name FILTER html %]">
+            [% FOREACH p = c.products %]
+              <option value="[% p FILTER html %]"
+                [% " selected" IF lsearch(default.product, p) != -1 %]>
+                [% p FILTER html %]
+              </option>
+            [% END %]
+            </optgroup>
+          [% END %]
+        [% ELSE %]
+          [% FOREACH p = product %]
+            <option value="[% p.name FILTER html %]"
+              [% " selected" IF lsearch(default.product, p.name) != -1 %]>
+              [% p.name FILTER html %]
+            </option>
+          [% END %]
         [% END %]
       </select>
     </td>

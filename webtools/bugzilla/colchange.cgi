@@ -47,8 +47,13 @@ my $cgi = Bugzilla->cgi;
 my @masterlist = ("opendate", "changeddate", "bug_severity", "priority",
                   "rep_platform", "assigned_to", "assigned_to_realname",
                   "reporter", "reporter_realname", "bug_status",
-                  "resolution", "product", "component", "version", "op_sys",
-                  "votes");
+                  "resolution");
+
+if (Param("useclassification")) {
+    push(@masterlist, "classification");
+}
+
+push(@masterlist, ("product", "component", "version", "op_sys", "votes"));
 
 if (Param("usebugaliases")) {
     unshift(@masterlist, "alias");

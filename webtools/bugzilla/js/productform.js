@@ -21,6 +21,72 @@
 /* this file contains functions to update form controls based on a
  * collection of javascript arrays containing strings */
 
+/* selectClassification reads the selection from f.classification and updates
+ * f.product accordingly
+ *     - f: a form containing classification, product, component, varsion and
+ *       target_milestone select boxes.
+ * globals (3vil!):
+ *     - prods, indexed by classification name
+ *     - first_load: boolean, specifying if it is the first time we load
+ *       the query page.
+ *     - last_sel: saves our last selection list so we know what has
+ *       changed, and optimize for additions.
+ */
+function selectClassification(classfield, product, component, version, milestone) {
+    /* this is to avoid handling events that occur before the form
+     * itself is ready, which could happen in buggy browsers.
+     */
+    if (!classfield) {
+        return;
+    }
+
+    /* if this is the first load and nothing is selected, no need to
+     * merge and sort all components; perl gives it to us sorted.
+     */
+    if ((first_load) && (classfield.selectedIndex == -1)) {
+        first_load = false;
+        return;
+    }
+    
+    /* don't reset first_load as done in selectProduct.  That's because we
+       want selectProduct to handle the first_load attribute
+    */
+
+    /* - sel keeps the array of classifications we are selected. 
+     * - merging says if it is a full list or just a list of classifications 
+     *   that were added to the current selection.
+     */
+    var merging = false;
+    var sel = Array();
+
+    /* if nothing selected, pick all */
+    var findall = classfield.selectedIndex == -1;
+    sel = get_selection(classfield, findall, false);
+    if (!findall) {
+        /* save sel for the next invocation of selectClassification() */
+        var tmp = sel;
+    
+        /* this is an optimization: if we have just added classifications to an
+         * existing selection, no need to clear the form controls and add 
+         * everybody again; just merge the new ones with the existing 
+         * options.
+	 */
+        if ((last_sel.length > 0) && (last_sel.length < sel.length)) {
+            sel = fake_diff_array(sel, last_sel);
+            merging = true;
+        }
+        last_sel = tmp;
+    }
+    /* save original options selected */
+    var saved_prods = get_selection(product, false, true);
+
+    /* do the actual fill/update, reselect originally selected options */
+    updateSelect(prods, sel, product, merging);
+    restoreSelection(product, saved_prods);
+    selectProduct(product, component, version, milestone);
+}
+
+
 /* selectProduct reads the selection from the product control and
  * updates version, component and milestone controls accordingly.
  * 
@@ -68,7 +134,15 @@ function selectProduct(product, component, version, milestone) {
 
     /* if nothing selected, pick all */
     var findall = product.selectedIndex == -1;
-    sel = get_selection(product, findall, false);
+    if (useclassification) {
+        /* update index based on the complete product array */
+        sel = get_selection(product, findall, true);
+        for (var i=0; i<sel.length; i++) {
+           sel[i] = prods[sel[i]];
+        }
+    } else {
+        sel = get_selection(product, findall, false);
+    }
     if (!findall) {
         /* save sel for the next invocation of selectProduct() */
         var tmp = sel;

@@ -500,6 +500,7 @@
 ],
 
 'admin/products/groupcontrol/edit.html.tmpl' => [
+  'filt_classification', 
   'filt_product', 
   'group.bugcount', 
   'group.id', 
