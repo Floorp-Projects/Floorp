@@ -193,7 +193,7 @@ function onLoad()
     
     if (params.smFields.requireEncryptMessage)
     {
-      if (params.certsAvailable && canEncrypt.value)
+      if (params.isEncryptionCertAvailable && canEncrypt.value)
       {
         encrypted_element.value = yes_string;
       }
@@ -209,7 +209,7 @@ function onLoad()
     
     if (params.smFields.signMessage)
     {
-      if (params.certsAvailable)
+      if (params.isSigningCertAvailable)
       {
         signed_element.value = yes_string;
       }

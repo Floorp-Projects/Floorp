@@ -276,15 +276,9 @@ function showMessageComposeSecurityStatus()
 {
   Recipients2CompFields(gMsgCompose.compFields);
 
-  var areCertsAvailable = false;
   var encryptionCertName = gCurrentIdentity.getUnicharAttribute("encryption_cert_name");
   var signingCertName = gCurrentIdentity.getUnicharAttribute("signing_cert_name");
   
-  if (encryptionCertName.length > 0 && signingCertName.length > 0 )
-  {
-    areCertsAvailable = true;
-  }
-
   window.openDialog('chrome://messenger-smime/content/msgCompSecurityInfo.xul',
     '',
     'chrome,resizable=1,modal=1,dialog=1', 
@@ -292,7 +286,8 @@ function showMessageComposeSecurityStatus()
       compFields : gMsgCompose.compFields,
       subject : GetMsgSubjectElement().value,
       smFields : gSMFields,
-      certsAvailable : areCertsAvailable,
+      isSigningCertAvailable : (signingCertName.length > 0),
+      isEncryptionCertAvailable : (encryptionCertName.length > 0),
       currentIdentity : gCurrentIdentity
     }
   );
