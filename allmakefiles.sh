@@ -95,6 +95,8 @@ expat/Makefile
 expat/xmlparse/Makefile
 expat/xmltok/Makefile
 extensions/Makefile
+extensions/irc/Makefile
+extensions/irc/libbs/Makefile
 extensions/wallet/Makefile
 extensions/wallet/public/Makefile
 extensions/wallet/src/Makefile
