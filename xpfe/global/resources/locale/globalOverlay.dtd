@@ -6,6 +6,13 @@
 <!ENTITY fileMenu.accesskey				"f">
 <!ENTITY newMenu.label						"New">
 <!ENTITY newMenu.accesskey					"e">
+<!ENTITY newBlankPageCmd.label "Edit Blank Page">
+<!ENTITY newBlankPageCmd.accesskey "b" >
+<!ENTITY newBlankPageCmd.key "n" >
+<!ENTITY newPageFromTemplateCmd.label "Page Using Template">
+<!ENTITY newPageFromTemplateCmd.accesskey "t">
+<!ENTITY newPageFromDraftCmd.label "Page Using Draft">
+<!ENTITY newPageFromDraftCmd.accesskey "d">
 <!ENTITY newNavigatorCmd.label				"Navigator Window">
 <!ENTITY newNavigatorCmd.key				"N">
 <!ENTITY newNavigatorCmd.accesskey			"n">

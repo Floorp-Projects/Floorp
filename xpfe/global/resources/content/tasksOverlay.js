@@ -31,8 +31,6 @@ function toJavaConsole()
 	} catch(e) {
 		
 	}
-
-
 }
 
 function toOpenWindowByType( inType, uri )
@@ -50,63 +48,63 @@ function toOpenWindowByType( inType, uri )
 }
 
 
-  function OpenBrowserWindow()
-  {
-            pref = Components.classes['component://netscape/preferences'];
-    
-            // if all else fails, use trusty "about:blank" as the start page
-            var startpage = "about:blank";  
-            if (pref) {
-              pref = pref.getService(); 
-              pref = pref.QueryInterface(Components.interfaces.nsIPref);
-            }
-	 
-           
-          
-            if (pref) {
-              // from mozilla/modules/libpref/src/init/all.js
-              // 0 = blank 
-              // 1 = home (browser.startup.homepage)
-              // 2 = last 
-			choice = 1;
-			try {
-              		choice = pref.GetIntPref("browser.startup.page");
-			}
-			catch (ex) {
-				dump("failed to get the browser.startup.page pref\n");
-			}
-		
-    	  switch (choice) {
-    		case 0:
-                		startpage = "about:blank";
-          			break;
-    		case 1:
-				try {
-                			startpage = pref.CopyCharPref("browser.startup.homepage");
-				}
-				catch (ex) {
-					dump("failed to get the browser.startup.homepage pref\n");
-					startpage = "about:blank";
-				}
-          			break;
-    		case 2:
-			try {
-				var history = Components.classes["component://netscape/browser/global-history"].getService();
-                  		history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-				startpage = history.GetLastPageVisted();
-			}
-			catch (ex) {
-				dump(ex +"\n");
-			}
-          		break;
-       		default:
-                		startpage = "about:blank";
-    	  }
-  	}
-  //	window.open(startpage); // This doesn't size the window properly.
-     window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", startpage );
+function OpenBrowserWindow()
+{
+  dump("In OpenBrowserWindw()...\n");
+  pref = Components.classes['component://netscape/preferences'];
 
+  // if all else fails, use trusty "about:blank" as the start page
+  var startpage = "about:blank";  
+  if (pref) {
+    pref = pref.getService(); 
+    pref = pref.QueryInterface(Components.interfaces.nsIPref);
   }
+
+
+
+  if (pref) {
+    // from mozilla/modules/libpref/src/init/all.js
+    // 0 = blank 
+    // 1 = home (browser.startup.homepage)
+    // 2 = last 
+		choice = 1;
+	  try {
+      choice = pref.GetIntPref("browser.startup.page");
+	  }
+	  catch (ex) {
+		  dump("failed to get the browser.startup.page pref\n");
+	  }
+
+    switch (choice) {
+      case 0:
+        startpage = "about:blank";
+        break;
+      case 1:
+        try {
+          startpage = pref.CopyCharPref("browser.startup.homepage");
+        }
+        catch (ex) {
+	        dump("failed to get the browser.startup.homepage pref\n");
+	        startpage = "about:blank";
+        }
+                break;
+      case 2:
+        try {
+	        var history = Components.classes["component://netscape/browser/global-history"].getService();
+                        history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+	        startpage = history.GetLastPageVisted();
+        }
+        catch (ex) {
+	        dump(ex +"\n");
+        }
+                break;
+      default:
+                startpage = "about:blank";
+    }
+  }
+//	window.open(startpage); // This doesn't size the window properly.
+  window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", startpage );
+}
 
 
 function CycleWindow( inType, inChromeURL )
@@ -168,16 +166,18 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("open window \n");
-		window.OpenBrowserWindow(  );
+		window.OpenBrowserWindow();
 	}
 }
 
 function toEditor()
 {
+  //TODO: Find and existing editor window using CycleWindow()
+  // For now, this opens a new blank window
     window.openDialog( "chrome://editor/content/EditorAppShell.xul",
                        "_blank",
                        "chrome,dialog=no,all",
-                       "chrome://editor/content/EditorInitPage.html" );
+                       "resource:/res/html/empty_doc.html" );
 }
 
 function toNewTextEditorWindow()
@@ -185,7 +185,7 @@ function toNewTextEditorWindow()
     window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
                        "_blank",
                        "chrome,dialog=no,all",
-                       "chrome://editor/content/EditorInitPagePlain.html" );
+                       "resource:/res/html/empty_doc.html");
 }
 
 function ShowWindowFromResource( node )

@@ -13,13 +13,6 @@
 <!-- LOCALIZATION NOTE  fileMenu.label: Localize all the menu labels with accesskeys but not commandkeys. e.g.  "File" -> "XXXX(F)" in Japanese -->
 <!ENTITY browserCmd.label					"New Navigator Window">
 <!ENTITY browserCmd.accesskey				"n">
-<!ENTITY newBlankPageCmd.label "Blank Window">
-<!ENTITY newBlankPageCmd.accesskey "b" >
-<!ENTITY newBlankPageCmd.commandkey "n" >
-<!ENTITY newPageFromTemplateCmd.label "Page Using Template">
-<!ENTITY newPageFromTemplateCmd.accesskey "t">
-<!ENTITY newPageFromDraftCmd.label "Page using Draft">
-<!ENTITY newPageFromDraftCmd.accesskey "d">
 <!ENTITY openCmd.label "Open Web Location...">
 <!ENTITY openCmd.accesskey "o">
 <!ENTITY openCmd.commandkey "o">

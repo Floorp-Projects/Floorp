@@ -684,12 +684,8 @@ function OpenSearch(tabName, searchStr)
   {
     window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
   }
-  
-  function BrowserNewEditorWindow()
-  {
-    // Open editor window to default page.
-    BrowserEditPage( "resource:/res/html/empty_doc.html" );
-  }
+
+//Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
   
   function BrowserOpenWindow()
   {
