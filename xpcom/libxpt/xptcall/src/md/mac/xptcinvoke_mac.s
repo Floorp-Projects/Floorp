@@ -1,3 +1,22 @@
+ #
+ # -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ #
+ # The contents of this file are subject to the Netscape Public License
+ # Version 1.0 (the "NPL"); you may not use this file except in
+ # compliance with the NPL.  You may obtain a copy of the NPL at
+ # http://www.mozilla.org/NPL/
+ #
+ # Software distributed under the NPL is distributed on an "AS IS" basis,
+ # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ # for the specific language governing rights and limitations under the
+ # NPL.
+ #
+ # The Initial Developer of this code under the NPL is Netscape
+ # Communications Corporation.  Portions created by Netscape are
+ # Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ # Reserved.
+ #
+
                 csect   CODE{PR}
 #
 #   XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
@@ -24,6 +43,7 @@
 # set up for and call 'invoke_count_words' to get new stack size
 #	
 		mr	r3,r5
+		mr	r4,r6
 		bl	.invoke_count_words
 		nop
 
@@ -31,8 +51,10 @@
 #		
 		lwz	r4,168(sp)				# paramCount
 		lwz	r5,172(sp)				# params
-		addi	r6,sp,128				# fprData
+#		addi	r6,sp,128				# fprData
+		mr		r6,sp				# fprData
 		slwi	r3,r3,2				        # number of bytes of stack required
+		addi	r3,r3,28			# linkage area
 		mr	r31,sp					# save original stack top
 		sub	sp,sp,r3				# bump the stack
 		addi	r3,sp,28				# parameter pointer excludes linkage area size + 'this'
@@ -40,25 +62,25 @@
 		bl	.invoke_copy_to_stack
 		nop
 		
-		lfd	f1,128(r31)				
-		lfd	f2,120(r31)				
-		lfd	f3,112(r31)				
-		lfd	f4,104(r31)				
-		lfd	f5,96(r31)				
-		lfd	f6,88(r31)				
-		lfd	f7,80(r31)				
-		lfd	f8,72(r31)				
+		lfd	f1,0(r31)				
+		lfd	f2,8(r31)				
+		lfd	f3,16(r31)				
+		lfd	f4,24(r31)				
+		lfd	f5,32(r31)				
+		lfd	f6,40(r31)				
+		lfd	f7,48(r31)				
+		lfd	f8,56(r31)				
 		lfd	f9,64(r31)				
-		lfd	f10,56(r31)				
-		lfd	f11,48(r31)				
-		lfd	f12,40(r31)				
-		lfd	f13,32(r31)				
+		lfd	f10,72(r31)				
+		lfd	f11,80(r31)				
+		lfd	f12,88(r31)				
+		lfd	f13,96(r31)				
 		
 		lwz	r3,160(r31)				# that
 		lwz	r4,0(r3)				# get vTable from 'that'
 		lwz	r5,164(r31)				# methodIndex
 		slwi	r5,r5,2					# methodIndex * 4
-		addi	r5,r5,8					# step over junk at start of vTable !
+		addi	r5,r5,4					# step over junk at start of vTable !
 		lwzx	r12,r5,r4				# get function pointer
 		
 		lwz	r4,28(sp)
