@@ -242,7 +242,7 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, defaultvalue)
+NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, value)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, DefaultChecked, defaultchecked)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Accept, accept)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey)
