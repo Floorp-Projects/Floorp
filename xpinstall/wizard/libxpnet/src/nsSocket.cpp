@@ -41,13 +41,26 @@
 #define write(_socket, _buf, _len) \
         send(_socket, (char *) _buf, _len, 0);
 #include <winsock2.h>
+#elif defined(__OS2__)
+#define BSD_SELECT
+#include <types.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#define read(_socket, _buf, _len) \
+        recv(_socket, (char *) _buf, _len, 0);
+#define write(_socket, _buf, _len) \
+        send(_socket, (char *) _buf, _len, 0);
+#define close(_socket) \
+        soclose(_socket);
 #endif
 
 #include "nsSocket.h"
 
 #define MAXSOCKADDR 128
 
-#if (defined(SOLARIS) && !defined(_SOCKLEN_T)) || defined(_WINDOWS) || defined(IRIX)
+#if (defined(SOLARIS) && !defined(_SOCKLEN_T)) || defined(_WINDOWS) || defined(IRIX) || defined(__OS2__)
 #define socklen_t int
 #endif
 
@@ -176,7 +189,7 @@ nsSocket::Open()
                 unsigned long netAddr;
 
                 netAddr = inet_addr(mHost);
-                if ((hptr = gethostbyaddr((const char *)&netAddr, sizeof(unsigned long), AF_INET)) == NULL )
+                if ((hptr = gethostbyaddr((char *)&netAddr, sizeof(unsigned long), AF_INET)) == NULL )
                     return E_INVALID_HOST;
             }
             else

@@ -35,6 +35,9 @@
 #define MAXPATHLEN MAX_PATH
 #elif defined(macintosh)
 #define MAXPATHLEN 512
+#elif defined(__OS2__)
+#include <os2.h>
+#define MAXPATHLEN CCHMAXPATH
 #endif
 
 #include "nsSocket.h"
