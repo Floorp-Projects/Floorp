@@ -749,10 +749,26 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
     PopNameSpaces();
 
     if (mContextStack.Depth() == 0) {
+        // The root element should -always- be an element, because
+        // it'll have been created via XULContentSinkImpl::OpenRoot().
+        NS_ASSERTION(node->mType == nsXULPrototypeNode::eType_Element, "root is not an element");
+        if (node->mType != nsXULPrototypeNode::eType_Element)
+            return NS_ERROR_UNEXPECTED;
+
+        // Now that we're done parsing, set the prototype document's
+        // root element. This transfers ownership of the prototype
+        // element tree to the prototype document.
+        nsXULPrototypeElement* element =
+            NS_REINTERPRET_CAST(nsXULPrototypeElement*, node);
+
+        rv = mPrototype->SetRootElement(element);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set document root");
+        if (NS_FAILED(rv)) return rv;
+
         mState = eInEpilog;
     }
 
-    return rv;
+    return NS_OK;
 }
 
 
@@ -1487,10 +1503,6 @@ XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, PRInt32 aNameSpaceID, n
 
     // Add the attributes
     rv = AddAttributes(aNode, element);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mPrototype->SetRootElement(element);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set document root");
     if (NS_FAILED(rv)) return rv;
 
     mState = eInDocumentElement;
