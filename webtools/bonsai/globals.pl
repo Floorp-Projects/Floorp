@@ -1051,7 +1051,8 @@ sub validateRepository {
         }
     }
 
-    print "Invalid repository `$root' selected.\n";
+    my $escaped_root = html_quote($root);
+    print "Invalid repository `$escaped_root' selected.\n";
     print ConstructMailTo(Param('maintainer'), "Invalid Repository '$root'");
     print " if you think this should have worked.\n";
     exit;

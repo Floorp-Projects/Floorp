@@ -114,7 +114,8 @@ foreach (@src_roots) {
 }
 # File not found
 &print_top;
-print "Rcs file, $filename, does not exist.<BR><BR>\n";
+my $escaped_filename = html_quote($filename);
+print "Rcs file, $escaped_filename, does not exist.<BR><BR>\n";
 print "</BODY></HTML>\n";
 &print_bottom;
 exit;

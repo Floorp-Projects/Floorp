@@ -144,7 +144,8 @@ foreach (@src_roots) {
 
 unless ($found_rcs_file) {
   &print_top;
-  print "Rcs file, $filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
+  my $escaped_filename = html_quote($filename);
+  print "Rcs file, $escaped_filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
 print "</BODY></HTML>\n";
   &print_bottom;
   exit;
