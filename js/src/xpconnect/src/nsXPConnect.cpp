@@ -176,6 +176,13 @@ nsXPConnect::nsXPConnect()
 
 nsXPConnect::~nsXPConnect()
 {
+    // Calling this Cleanup *before* doing the ShutDown stuff below is 
+    // fairly aggressive. There is some danger that we could get into trouble
+    // With reentrancy into the xpconnect runtime as we are in the process of
+    // kiling it. But, this seems to be working. This call could be moved lower
+    // in this dtor (or commented out!) if problems develop.
+    xpcPerThreadData::CleanupAllThreads();
+  
     NS_IF_RELEASE(mArbitraryScriptable);
     NS_IF_RELEASE(mInterfaceInfoManager);
     NS_IF_RELEASE(mContextStack);

@@ -1348,8 +1348,8 @@ class xpcPerThreadData
 public:
     // Get the instance of this object for the current thread
     static xpcPerThreadData* GetData();
+    static void CleanupAllThreads();
 
-    xpcPerThreadData();
     ~xpcPerThreadData();
 
     nsIXPCException* GetException();
@@ -1360,10 +1360,21 @@ public:
 
     PRBool IsValid() const;
 
+    void Cleanup();
+
 private:
-    nsIXPCException* mException;
-    nsDeque*         mJSContextStack;
-    JSContext*       mSafeJSContext;
+    xpcPerThreadData();
+
+private:
+    nsIXPCException*  mException;
+    nsDeque*          mJSContextStack;
+    JSContext*        mSafeJSContext;
+    xpcPerThreadData* mNextThread;
+
+    static PRLock*           gLock;
+    static xpcPerThreadData* gThreads;
+    static PRUintn           gTLSIndex;
+
 };
 
 /**************************************************************/
@@ -1464,10 +1475,6 @@ extern JSBool
 xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt);
 
 /***************************************************************************/
-// the include of declarations of the maps comes last because they have
-// inlines which call methods on classes above.
-
-#include "xpcmaps.h"
 
 // Definition of nsScriptError, defined here because we lack a place to put
 // XPCOM objects associated with the JavaScript engine.
@@ -1492,5 +1499,12 @@ private:
     PRUint32 mFlags;
     nsCString mCategory;
 };
+
+
+/***************************************************************************/
+// the include of declarations of the maps comes last because they have
+// inlines which call methods on classes above.
+
+#include "xpcmaps.h"
 
 #endif /* xpcprivate_h___ */
