@@ -2,25 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#infoContainer {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+#filler {
+  margin-inline-start: -8px;
+  margin-inline-end: -10px;
 }
 
-/*
- * Since we size the window to content, and the icon load is asynchronous, we
- * make sure that we take the whole space we could possibly take, regardless of
- * whether the icon is loaded.
- */
 #iconContainer {
-  height: 55px; /* maximum icon height + some margin */
-  width: 58px; /* maximum icon width + some margin */
+  -moz-box-pack: center;
+  min-height: 55px; /* maximum icon height + icon margin */
+  min-width: 58px; /* maximum icon width + icon margin */
 }
 
 #infoIcon {
-  display: block;
   max-width: 48px;
   max-height: 48px;
-  margin: 3px auto 0;
+  margin: 3px 5px 4px;
 }
