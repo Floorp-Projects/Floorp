@@ -89,7 +89,7 @@ protected:
     * Since we need to know the full column structure before the COLS attribute
     * can be interpreted, we can't just use DidSetStyleContext
     */
-  NS_METHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext);
+  NS_METHOD SetStyleContextForFirstPass(nsIPresContext& aPresContext);
 
   nsresult InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);

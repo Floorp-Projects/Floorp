@@ -47,7 +47,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);

@@ -124,62 +124,62 @@ protected:
   PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild);
 
 // begin Incremental Reflow methods
-  nsresult RecoverState(OuterTableReflowState& aReflowState, nsIFrame* aKidFrame);
+  NS_IMETHOD RecoverState(OuterTableReflowState& aReflowState, nsIFrame* aKidFrame);
 
-  nsresult IncrementalReflow(nsIPresContext&        aPresContext,
-                             nsHTMLReflowMetrics&   aDesiredSize,
-                             OuterTableReflowState& aReflowState,
-                             nsReflowStatus&        aStatus);
-
-  nsresult IR_TargetIsChild(nsIPresContext&        aPresContext,
-                            nsHTMLReflowMetrics&   aDesiredSize,
-                            OuterTableReflowState& aReflowState,
-                            nsReflowStatus&        aStatus,
-                            nsIFrame *             aNextFrame);
-
-  nsresult IR_TargetIsInnerTableFrame(nsIPresContext&        aPresContext,
-                                      nsHTMLReflowMetrics&   aDesiredSize,
-                                      OuterTableReflowState& aReflowState,
-                                      nsReflowStatus&        aStatus);
-
-  nsresult IR_TargetIsCaptionFrame(nsIPresContext&        aPresContext,
-                                   nsHTMLReflowMetrics&   aDesiredSize,
-                                   OuterTableReflowState& aReflowState,
-                                   nsReflowStatus&        aStatus);
-
-  nsresult IR_TargetIsMe(nsIPresContext&        aPresContext,
-                         nsHTMLReflowMetrics&   aDesiredSize,
-                         OuterTableReflowState& aReflowState,
-                         nsReflowStatus&        aStatus);
-
-  nsresult IR_InnerTableReflow(nsIPresContext&        aPresContext,
+  NS_IMETHOD IncrementalReflow(nsIPresContext&        aPresContext,
                                nsHTMLReflowMetrics&   aDesiredSize,
                                OuterTableReflowState& aReflowState,
                                nsReflowStatus&        aStatus);
 
-  nsresult IR_CaptionInserted(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_TargetIsChild(nsIPresContext&        aPresContext,
                               nsHTMLReflowMetrics&   aDesiredSize,
                               OuterTableReflowState& aReflowState,
                               nsReflowStatus&        aStatus,
-                              nsIFrame *             aCaptionFrame,
-                              PRBool                 aReplace);
+                              nsIFrame *             aNextFrame);
 
-  nsresult IR_CaptionDeleted(nsIPresContext&        aPresContext,
-                             nsHTMLReflowMetrics&   aDesiredSize,
-                             OuterTableReflowState& aReflowState,
-                             nsReflowStatus&        aStatus);
+  NS_IMETHOD IR_TargetIsInnerTableFrame(nsIPresContext&        aPresContext,
+                                        nsHTMLReflowMetrics&   aDesiredSize,
+                                        OuterTableReflowState& aReflowState,
+                                        nsReflowStatus&        aStatus);
+
+  NS_IMETHOD IR_TargetIsCaptionFrame(nsIPresContext&        aPresContext,
+                                     nsHTMLReflowMetrics&   aDesiredSize,
+                                     OuterTableReflowState& aReflowState,
+                                     nsReflowStatus&        aStatus);
+
+  NS_IMETHOD IR_TargetIsMe(nsIPresContext&        aPresContext,
+                           nsHTMLReflowMetrics&   aDesiredSize,
+                           OuterTableReflowState& aReflowState,
+                           nsReflowStatus&        aStatus);
+
+  NS_IMETHOD IR_InnerTableReflow(nsIPresContext&        aPresContext,
+                                 nsHTMLReflowMetrics&   aDesiredSize,
+                                 OuterTableReflowState& aReflowState,
+                                 nsReflowStatus&        aStatus);
+
+  NS_IMETHOD IR_CaptionInserted(nsIPresContext&        aPresContext,
+                                nsHTMLReflowMetrics&   aDesiredSize,
+                                OuterTableReflowState& aReflowState,
+                                nsReflowStatus&        aStatus,
+                                nsIFrame *             aCaptionFrame,
+                                PRBool                 aReplace);
+
+  NS_IMETHOD IR_CaptionRemoved(nsIPresContext&        aPresContext,
+                               nsHTMLReflowMetrics&   aDesiredSize,
+                               OuterTableReflowState& aReflowState,
+                               nsReflowStatus&        aStatus);
 
   PRBool IR_CaptionChangedAxis(const nsStyleText* aOldStyle, 
                                const nsStyleText* aNewStyle) const;
 
-  nsresult SizeAndPlaceChildren(const nsSize &         aInnerSize, 
-                                const nsSize &         aCaptionSize,
-                                OuterTableReflowState& aReflowState);
+  NS_IMETHOD SizeAndPlaceChildren(const nsSize &         aInnerSize, 
+                                  const nsSize &         aCaptionSize,
+                                  OuterTableReflowState& aReflowState);
 
-  nsresult AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
-                                     OuterTableReflowState& aReflowState,
-                                     nsIFrame*              aKidFrame,
-                                     nscoord                aDeltaY);
+  NS_IMETHOD AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
+                                       OuterTableReflowState& aReflowState,
+                                       nsIFrame*              aKidFrame,
+                                       nscoord                aDeltaY);
 
 // end Incremental Reflow methods
 
