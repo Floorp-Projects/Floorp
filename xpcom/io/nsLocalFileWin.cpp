@@ -546,12 +546,13 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
             return NS_OK;
         }
        
-        // check to see that this is shortcut.
+        // check to see that this is shortcut, i.e., the leaf is ".lnk"
+        // if the length < 4, then it's not a link.
             
         int pathLen = strlen(workingFilePath);
         const char* leaf = workingFilePath + pathLen - 4;
     
-        if (pathLen >= 4 && (strcmp(leaf, ".lnk") != 0))
+        if (pathLen < 4 || (strcmp(leaf, ".lnk") != 0))
         {
 		    mDirty = PR_FALSE;
             return NS_OK;
