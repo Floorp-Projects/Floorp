@@ -68,7 +68,7 @@ bool JNIHeaderGenerator::genHeaderFile(ClassFileSummary &summ,
   PR_fprintf(fp, "extern \"C\" {\n");
   PR_fprintf(fp, "#endif\n");
 
-  for (Uint32 i = 0; i < methodCount; i++) {
+  for (i = 0; i < methodCount; i++) {
     Method *m = (Method *) methods[i];
     const Signature &sig = m->getSignature();
     
