@@ -292,9 +292,9 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
     nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
     nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
 
-
 #ifdef rickgdebug
-    rv = NS_New_HTML_ContentSinkStream(&sink);
+    nsString outString;   // added out. Redirect to stdout if desired -- gpk 04/01/99
+    rv = NS_New_HTML_ContentSinkStream(&sink,&outString);
 #else
     NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
     aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
