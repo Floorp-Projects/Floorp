@@ -60,11 +60,12 @@ public:
           mIStream(nsnull), mLength(0) {}
     virtual ~nsFtpOnDataAvailableEvent();
 
-    nsresult Init(nsIInputStream* aIStream, PRUint32 aLength);
+    nsresult Init(nsIInputStream* aIStream, PRUint32 aSourceOffset, PRUint32 aLength);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsIInputStream*     mIStream;
+    PRUint32            mSourceOffset;
     PRUint32            mLength;
 };
 
