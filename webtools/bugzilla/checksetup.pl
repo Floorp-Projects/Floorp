@@ -2076,7 +2076,7 @@ while (my ($tabname, $fielddef) = each %table) {
     $fielddef =~ s/\$my_opsys/$my_opsys/;
     $fielddef =~ s/\$my_platforms/$my_platforms/;
 
-    $dbh->do("CREATE TABLE $tabname (\n$fielddef\n)")
+    $dbh->do("CREATE TABLE $tabname (\n$fielddef\n) TYPE = MYISAM")
         or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
 }
 
