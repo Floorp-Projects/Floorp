@@ -28,4 +28,5 @@ import grendel.storage.intertwingle.*;
 public interface ITerm {
     public String   getExpression(IQueryString iqs);
     public AC_IDSet  getSet (IQuerySet iqs);
+    public AC_IDSet evaluate_ACSP (IQuerySet iqs);
 }

@@ -88,12 +88,21 @@ public class ACS_Personal implements ICardSource, IQuerySet {
         }
     }
 
+  /** 
+   * No-op implementations for now (just to get this building properly)
+   * (Jeff)
+   */
+
+  public AC_IDSet opEqual(IAttribute anAttribute) { return null; }
+
+  public AC_IDSet opNotEqual(IAttribute anAttribute) { return null; }
+
     /**
-     * retrieveing address cards
+     * retrieving address cards
      */
     public ICardSet getCardSet (ITerm aQueryTerm, String[] anAttributesArray) {
-        //get the card ID's that satidsfy the query.
-        ACIDSet CardIDSet = aQueryTerm.evaluate_ACSP (this);
+        //get the card ID's that satisfy the query.
+        AC_IDSet CardIDSet = aQueryTerm.evaluate_ACSP (this);
 
         //create the address card set that'll be returned.
         AddressCardSet retCardSet = new AddressCardSet ();
@@ -133,11 +142,12 @@ public class ACS_Personal implements ICardSource, IQuerySet {
         aCard.setID (thisCardID);
 
         //get the set of attributes and enumerate thruough them.
-        AddressCardAttributeSet attrSet = aCard.getAttributeSet();
+        AddressCardAttributeSet attrSet = 
+          (AddressCardAttributeSet)aCard.getAttributeSet();
 
         for (Enumeration enum = attrSet.elements (); enum.hasMoreElements(); ) {
             //get the next attribute
-            AddressCardAttribute attr = (AddressCardAttribute) enum.netxElement ();
+            AddressCardAttribute attr = (AddressCardAttribute) enum.nextElement ();
 
             //write the attribute to the DB
             try {
@@ -151,9 +161,22 @@ public class ACS_Personal implements ICardSource, IQuerySet {
     public void add (AddressCardSet aCardSet, boolean OverWrite) {
         for (Enumeration enum = aCardSet.getCardEnumeration (); enum.hasMoreElements() ;) {
             AddressCard card = (AddressCard) enum.nextElement();
-            addCard (card, OverWrite);
+            add (card, OverWrite);
         }
     }
+
+  /** No-op implementation of the add(ICard) method from ICardSource
+   */
+  public void add (ICard card) { }
+
+  /** No-op implementation of update(ICard) from ICardSource
+   */
+  public void update(ICard card) { }
+
+  /** No-op implementation of delete(ICard) from ICardSource
+   */
+  public void delete(ICard card) { }
+
 
     //*******************************
     //**** Operational functions ****
@@ -162,14 +185,17 @@ public class ACS_Personal implements ICardSource, IQuerySet {
     /** Search the database for all cards that match this value
      * and return a set Adddress Card ID's (ACID's).
      */
-    public ACIDSet opEqual (AddressCardAttribute ACA) {
-        ACIDSet retIDSet = new ACIDSet();
+    public AC_IDSet opEqual (AC_Attribute ACA) {
+        AC_IDSet retIDSet = new AC_IDSet();
 
         if (null != ACA) {
-            //the RDFish DB returns an enumeration of a matching card ID's
+         try {   //the RDFish DB returns an enumeration of a matching card ID's
             for (Enumeration enum = fDB.findAll(ACA.getName(), ACA.getValue (), false); enum.hasMoreElements() ;) {
                 retIDSet.addElement (enum.nextElement());
             }
+         } catch (IOException exc) {
+           exc.printStackTrace();
+         }
         }
 
         return retIDSet;
@@ -178,8 +204,8 @@ public class ACS_Personal implements ICardSource, IQuerySet {
     /** Search the database for all cards that DO NOT match this value
      * and return a set Adddress Card ID's (ACID's).
      */
-    public ACIDSet opNotEqual (AddressCardAttribute ACA) {
-        ACIDSet retIDSet = new ACIDSet();
+    public AC_IDSet opNotEqual (AC_Attribute ACA) {
+        AC_IDSet retIDSet = new AC_IDSet();
 
         return retIDSet;
     }

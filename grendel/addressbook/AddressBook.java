@@ -20,6 +20,7 @@
 package grendel.addressbook;
 
 import grendel.addressbook.addresscard.*;
+import grendel.ui.UIAction;
 import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
 
@@ -31,7 +32,6 @@ import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.text.*;
-import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.table.*;
@@ -122,13 +122,17 @@ public class AddressBook extends JFrame {
 
         setBackground(Color.lightGray);
         //setBorderStyle(JPanel.ETCHED);
-        setLayout(new BorderLayout());
+        getContentPane().setLayout(new BorderLayout());
 
 //        addWindowListener(new FrameHider());
 
         //create menubar (top)
         //merge both the editors commands with this applications commands.
         //        mMenubar = NsMenuManager.createMenuBar("grendel.addressbook.Menus", "grendel.addressbook.MenuLabels", "mainMenubar", defaultActions);
+        // FIXME - need to build the menu bar
+        // (Jeff)
+
+        mMenubar = new JMenuBar();
 
             //collapsble panels holds toolbar.
             CollapsiblePanel collapsePanel = new CollapsiblePanel(true);
@@ -147,7 +151,7 @@ public class AddressBook extends JFrame {
         panel1.setLayout(new BorderLayout());
         panel1.add(collapsePanel, BorderLayout.NORTH);
 
-        //hack togetther the data sources.
+        //hack together the data sources.
         mDataSourceList = new DataSourceList ();
         mDataSourceList.addEntry (new DataSource ("Four11 Directory", "ldap.four11.com"));
         mDataSourceList.addEntry (new DataSource ("InfoSpace Directory", "ldap.infospace.com"));
@@ -157,8 +161,8 @@ public class AddressBook extends JFrame {
         AddressPanel addressPanel = new AddressPanel (mDataSourceList);
         panel1.add(addressPanel, BorderLayout.CENTER);
 
-        add(mMenubar, BorderLayout.NORTH);
-        add(panel1, BorderLayout.CENTER);
+        getContentPane().add(mMenubar, BorderLayout.NORTH);
+        getContentPane().add(panel1, BorderLayout.CENTER);
 
         setSize (600, 400);
     }
@@ -233,7 +237,7 @@ public class AddressBook extends JFrame {
     public static final String myAddressBookCardTag     ="myAddressBookCard";
 
     // --- action implementations -----------------------------------
-    private Action[] defaultActions = {
+    private UIAction[] defaultActions = {
         //"File" actions
         new NewCard(),
 //        new NewList(),
@@ -277,7 +281,7 @@ public class AddressBook extends JFrame {
     //-----------------------
     /**
      */
-    class NewCard extends AbstractAction {
+    class NewCard extends UIAction {
         NewCard() {
             super(newCardTag);
             setEnabled(true);
@@ -292,7 +296,7 @@ public class AddressBook extends JFrame {
         }
     }
 
-    class SaveAs extends AbstractAction {
+    class SaveAs extends UIAction {
         SaveAs() {
             super(saveAsTag);
             setEnabled(true);
@@ -306,7 +310,7 @@ public class AddressBook extends JFrame {
         }
     }
 
-    class CloseWindow extends AbstractAction {
+    class CloseWindow extends UIAction {
         CloseWindow() {
             super(closeWindowTag);
             setEnabled(true);
@@ -325,7 +329,7 @@ public class AddressBook extends JFrame {
     //-----------------------
     //"Edit" actions
     //-----------------------
-    class Undo extends AbstractAction {
+    class Undo extends UIAction {
         Undo() {
             super(undoTag);
             setEnabled(true);
@@ -336,7 +340,7 @@ public class AddressBook extends JFrame {
     //-----------------------
     //"View" actions
     //-----------------------
-    class HideMessageToolbar extends AbstractAction {
+    class HideMessageToolbar extends UIAction {
         HideMessageToolbar() {
             super(hideMessageToolbarTag);
             setEnabled(true);
@@ -347,7 +351,7 @@ public class AddressBook extends JFrame {
 
     //-----------------------
     //-----------------------
-    class Search extends AbstractAction {
+    class Search extends UIAction {
         Search() {
             super(newListTag);
             setEnabled(true);
@@ -400,7 +404,7 @@ public class AddressBook extends JFrame {
      * @param aToolTip The buttons tool tip. like "Save the current file".
      * @see createToolbar
      */
-    public void addToolbarButton(GrendelToolBar aToolBar, AbstractAction aActionListener, String aImageName, String aToolTip) {
+    public void addToolbarButton(GrendelToolBar aToolBar, UIAction aActionListener, String aImageName, String aToolTip) {
         JButton b = new JButton();
 
         b.setHorizontalTextPosition(JButton.CENTER);
@@ -408,8 +412,12 @@ public class AddressBook extends JFrame {
         b.setToolTipText(aToolTip);
 
 //        URL iconUrl = getClass().getResource("images/" + gifName + ".gif");
-        b.setIcon(new ImageIcon(getClass().getResource(aImageName)));
+        //        b.setIcon(new ImageIcon(getClass().getResource(aImageName)));
 
+        // FIXME - need the toolbar graphics for this sub-app
+        // (Jeff)
+
+      b.setIcon(new ImageIcon(getClass().getResource("markAllRead.gif")));
 //    iconUrl = getClass().getResource("images/" + gifName + "-disabled.gif");
 //    button.setDisabledIcon(ImageIcon.createImageIcon(iconUrl));
 
@@ -670,7 +678,7 @@ System.out.println ("Done.");
             mTable.setShowGrid(false);
 
             // Put the table and header into a scrollPane
-                JScrollPane scrollpane = JTable.createScrollPaneForTable(mTable);
+                JScrollPane scrollpane = new JScrollPane(mTable);
 //            JTableHeader tableHeader = mTable.getTableHeader();
 
             // create and add the column heading to the scrollpane's
