@@ -15,12 +15,14 @@
 			projectDirPath = "";
 			targets = (
 				089C1673FE841209C02AAC07,
+				F59D147102AC328B01000104,
 			);
 		};
 		089C166AFE841209C02AAC07 = {
 			children = (
 				F5BFB5F1029AD43001000102,
 				08FB77ADFE841716C02AAC07,
+				F53C74E602A8021101000104,
 				089C167CFE841241C02AAC07,
 				089C1671FE841209C02AAC07,
 				19C28FB4FE9D528D11CA2CBB,
@@ -63,6 +65,7 @@
 				WRAPPER_EXTENSION = plugin;
 			};
 			dependencies = (
+				F59D147202AC350E01000104,
 			);
 			isa = PBXBundleTarget;
 			name = MRJPlugin;
@@ -107,8 +110,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				089C1680FE841241C02AAC07,
-				F5BFB5EC029AD0B901000102,
-				F5BFB5EF029AD0D001000102,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -145,8 +146,8 @@
 		089C1679FE841209C02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F5BFB5E6029AAC0B01000102,
-				F5BFB5E7029AAC0B01000102,
+				F59D146F02AC308301000104,
+				F59D147002AC308301000104,
 			);
 			isa = PBXRezBuildPhase;
 			name = "ResourceManager Resources";
@@ -154,8 +155,9 @@
 		089C167CFE841241C02AAC07 = {
 			children = (
 				089C167DFE841241C02AAC07,
-				F5BFB5E4029AAC0B01000102,
-				F5BFB5E5029AAC0B01000102,
+				F59D147302AC371D01000104,
+				F59D146D02AC308301000104,
+				F59D146E02AC308301000104,
 			);
 			isa = PBXGroup;
 			name = Resources;
@@ -393,29 +395,71 @@
 			settings = {
 			};
 		};
-		F5BFB5E4029AAC0B01000102 = {
-			isa = PBXFileReference;
-			name = Dialogs.rsrc;
-			path = Resources/Dialogs.rsrc;
+		F53C74E602A8021101000104 = {
+			children = (
+			);
+			isa = PBXGroup;
+			name = MRJPlugin.jar;
 			refType = 4;
 		};
-		F5BFB5E5029AAC0B01000102 = {
+		F59D146D02AC308301000104 = {
 			isa = PBXFileReference;
-			name = Strings.rsrc;
-			path = Resources/Strings.rsrc;
+			name = _Dialogs.rsrc;
+			path = Resources/_Dialogs.rsrc;
 			refType = 4;
 		};
-		F5BFB5E6029AAC0B01000102 = {
-			fileRef = F5BFB5E4029AAC0B01000102;
+		F59D146E02AC308301000104 = {
+			isa = PBXFileReference;
+			name = _Strings.rsrc;
+			path = Resources/_Strings.rsrc;
+			refType = 4;
+		};
+		F59D146F02AC308301000104 = {
+			fileRef = F59D146D02AC308301000104;
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		F5BFB5E7029AAC0B01000102 = {
-			fileRef = F5BFB5E5029AAC0B01000102;
+		F59D147002AC308301000104 = {
+			fileRef = F59D146E02AC308301000104;
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F59D147102AC328B01000104 = {
+			buildArgumentsString = $ACTION;
+			buildPhases = (
+			);
+			buildSettings = {
+				OPTIMIZATION_CFLAGS = "";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Resources;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			buildToolPath = /usr/bin/gnumake;
+			buildWorkingDirectory = ./Resources/;
+			dependencies = (
+			);
+			isa = PBXLegacyTarget;
+			name = Resources;
+			productName = Resources;
+			settingsToExpand = 6;
+			settingsToPassInEnvironment = 287;
+			settingsToPassOnCommandLine = 280;
+			shouldUseHeadermap = 0;
+		};
+		F59D147202AC350E01000104 = {
+			isa = PBXTargetDependency;
+			target = F59D147102AC328B01000104;
+		};
+		F59D147302AC371D01000104 = {
+			isa = PBXFileReference;
+			name = Makefile;
+			path = Resources/Makefile;
+			refType = 4;
 		};
 		F5BFB5E8029AD01B01000102 = {
 			buildActionMask = 2147483647;
@@ -439,20 +483,8 @@
 			path = MRJPlugin.properties;
 			refType = 4;
 		};
-		F5BFB5EC029AD0B901000102 = {
-			fileRef = F5BFB5EA029AD0B901000102;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5BFB5EE029AD0B901000102 = {
 			fileRef = F5BFB5EA029AD0B901000102;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BFB5EF029AD0D001000102 = {
-			fileRef = F5BFB5E9029AD0B901000102;
 			isa = PBXBuildFile;
 			settings = {
 			};
