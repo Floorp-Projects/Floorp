@@ -58,12 +58,17 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsFileStream.h"
 #include "nsSlidingString.h"
+#include "nsRecyclingAllocator.h"
+
+// Recycling memory used by scanner
+#define NS_SCANNER_BUCKETS 10
 
 class nsScannerString : public nsSlidingString {
   public: 
     nsScannerString(PRUnichar* aStorageStart, 
                     PRUnichar* aDataEnd, 
-                    PRUnichar* aStorageEnd);
+                    PRUnichar* aStorageEnd,
+                    nsFreeProc* aFreeProc);
 
     virtual void UngetReadable(const nsAReadableString& aReadable, const nsReadingIterator<PRUnichar>& aCurrentPosition) { InsertReadable(aReadable,aCurrentPosition); }
     virtual void ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
@@ -382,6 +387,19 @@ class nsScanner {
                           PRUnichar* aDataEnd, 
                           PRUnichar* aStorageEnd);
 
+     /**
+      * These versions of AppendToBuffer allocate from the recyclingallocator,
+      * convert to unicode if necessary and then add the buffer into the sliding
+      * string
+      */
+      void AppendToBuffer(const nsAString &aData);
+      void AppendToBuffer(const char* aData, PRUint32 aLen);
+
+      static void InitAllocator() { 
+         if (!gAllocator)
+            gAllocator = new nsRecyclingAllocator(NS_SCANNER_BUCKETS, NS_DEFAULT_RECYCLE_TIMEOUT, "parser");
+      }
+
       nsInputStream*  mInputStream;
       nsScannerString*             mSlidingBuffer;
       nsReadingIterator<PRUnichar> mCurrentPosition; // The position we will next read from in the scanner buffer
@@ -397,6 +415,10 @@ class nsScanner {
       nsString        mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
       PRInt32         mNewlinesSkipped;
+
+public:
+     // Allocator to recycle memory used by scanner
+     static nsRecyclingAllocator *gAllocator;
 };
 
 #endif
