@@ -29,6 +29,7 @@ XPIDL_MODULE=mozfind
 
 XPIDLSRCS=\
     nsIFindComponent.idl \
+    nsISearchContext.idl \
     $(NULL)
 
 include $(topsrcdir)/config/config.mk
