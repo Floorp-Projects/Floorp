@@ -36,15 +36,15 @@ Rights Reserved.
     ondragdrop="return DropOnAddressingWidgetTree(event);">
     
     <treecolgroup>
-      <treecol flex="2"/>
-      <treecol flex="12"/>
+      <treecol id="listcol-addressingWidget"/>
+      <treecol id="textcol-addressingWidget" flex="1"/>
     </treecolgroup>
   
     <treechildren flex="1" id="addressWidgetBody">
     	<treeitem>
     		<treerow>
     			<treecell class="treecell-addressingWidget" allowevents="true">
-            <menulist id="msgRecipientType#1" class="aw-menulist menulist-compact"
+            <menulist id="msgRecipientType#1" class="aw-menulist menulist-compact" flex="1"
                       onclick="awNotAnEmptyArea(event)" 
                       oncommand="awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
               <menupopup>
@@ -57,10 +57,8 @@ Rights Reserved.
               </menupopup>
             </menulist>
           </treecell>
-          <treecell class="treecell-addressingWidget">
-            <box autostretch="never">
-              <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
-            </box>
+          <treecell class="treecell-addressingWidget" autostretch="never">
+            <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
             <textfield id="msgRecipient#1" flex="1"
                        class="plain textfield-addressingWidget"
                        style="width:0px;" allowevents="true"

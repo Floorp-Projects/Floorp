@@ -54,14 +54,35 @@ box.padded {
 #addressingWidgetTree {
   height : 80px;
   width : 0px;
+  -moz-user-focus: ignore !important;
 }  
 
-tree[class="addressingWidget"] treeitem > treerow  > treecell > box > image {
+#addressingWidgetTree > treechildren > treeitem > treerow,
+#addressingWidgetTree > treechildren > treeitem[selected="true"] > treerow {
+  border: none;
+  background-color: transparent;
+  color: buttontext;
+}
+
+.treecell-addressingWidget {
 	vertical-align: middle;
-	padding:2px;
-	border:none;
+}
+
+tree.addressingWidget > treechildren > treeitem > treerow  > treecell > image {
+  margin : 0px 3px 0px 0px;
+	border: none;
 	list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
 	-moz-user-focus: ignore;
+}
+
+#listcol-addressingWidget {
+  width: 110px;
+}
+
+.menulist-compact {
+  -moz-user-focus: ignore;
+  margin: 3px;
+  border: none;
 }
 
 /*
@@ -321,5 +342,6 @@ tree#attachmentBucket {
 }
 
 #navprintplus {
-	display:none !important; 
+  display: none !important;                                                    
 }
+ 
