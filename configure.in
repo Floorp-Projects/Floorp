@@ -2124,6 +2124,7 @@ esac
 AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
 AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h sys/filio.h)
 AC_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
+AC_CHECK_HEADERS(X11/XKBlib.h)
 
 dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
