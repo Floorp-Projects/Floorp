@@ -72,8 +72,6 @@ public:
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                             nsDidReflowStatus aStatus);
 
-  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
-
   NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
@@ -106,6 +104,13 @@ public:
 
   nsIFrame* GetActiveChild();
   void GetActiveChildElement(nsIContent** aResult);
+
+  NS_IMETHOD GetFrameName(nsString& aResult) const
+  {
+      aResult = "PopupSet";
+      return NS_OK;
+  }
+
 
 protected:
   void MarkAsGenerated(nsIContent* aPopupContent);

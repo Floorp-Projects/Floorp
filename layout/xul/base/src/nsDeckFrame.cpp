@@ -267,6 +267,16 @@ nsDeckFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
       aInfo.maxSize.height = aChildInfo.maxSize.height;
 }
 
+
+void
+nsDeckFrame::ComputeChildsNextPosition( nsIFrame* aChild, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect)
+{
+   // let everything layout on top of each other.
+    aCurX = aNextX = aBoxRect.x;
+    aCurY = aNextY = aBoxRect.y;
+}
+
+/*
 nsresult
 nsDeckFrame::PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect)
 {
@@ -299,6 +309,7 @@ nsDeckFrame::PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect)
 
   return NS_OK;
 }
+*/
 
 NS_IMETHODIMP
 nsDeckFrame::DidReflow(nsIPresContext* aPresContext,

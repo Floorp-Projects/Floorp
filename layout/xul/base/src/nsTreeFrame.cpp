@@ -372,8 +372,8 @@ nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
   NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE, 
                "Reflowing tree with unconstrained width!!!!");
   
-  NS_ASSERTION(aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE, 
-               "Reflowing tree with unconstrained height!!!!");
+  //NS_ASSERTION(aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE, 
+  //             "Reflowing tree with unconstrained height!!!!");
 
   //printf("Tree Width: %d, Tree Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 

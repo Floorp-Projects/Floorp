@@ -25,7 +25,7 @@
 #include "nsISelfScrollingFrame.h"
 #include "nsITreeFrame.h"
 
-class nsTreeOuterFrame : public nsTableOuterFrame, public nsIBox, public nsISelfScrollingFrame
+class nsTreeOuterFrame : public nsTableOuterFrame, nsISelfScrollingFrame
 {
 public:
   friend nsresult NS_NewTreeOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -48,9 +48,6 @@ public:
   NS_IMETHOD AdjustZeroWidth();
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
 
   NS_IMETHOD FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
                                nsHTMLReflowState& aChildReflowState);

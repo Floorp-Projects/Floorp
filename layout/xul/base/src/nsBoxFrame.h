@@ -45,11 +45,8 @@ class nsCalculatedBoxInfo : public nsBoxInfo {
 public:
     nsSize calculatedSize;
     PRBool sizeValid;
-    PRBool needsReflow;
-    PRBool needsRecalc;
     PRBool collapsed;
-    PRBool isIncremental;
-    nsHTMLInfo* htmlInfo;
+    PRBool needsRecalc;
     nsCalculatedBoxInfo* next;
     nsIFrame* frame;
     PRBool prefWidthIntrinsic;
@@ -68,9 +65,10 @@ class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
 {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags = 0);
+  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
+
   virtual void GetInnerRect(nsRect& aInner);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
@@ -82,16 +80,10 @@ public:
                                      PRInt32&        aCursor);
 
 
-
-  // nsIBox methods
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
-
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
-
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                       nsDidReflowStatus aStatus);
 
+  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
@@ -148,7 +140,6 @@ public:
   virtual ~nsBoxFrame();
 
   virtual void GetChildBoxInfo(PRInt32 aIndex, nsBoxInfo& aSize);
-  virtual void SetChildNeedsRecalc(PRInt32 aIndex, PRBool aRecalc);
 
   // Paint one child frame
   virtual void PaintChild(nsIPresContext*      aPresContext,
@@ -157,27 +148,19 @@ public:
                              nsIFrame*            aFrame,
                              nsFramePaintLayer    aWhichLayer);
 
+  // nsIBox methods
+  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
+  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
+
 
 protected:
-    nsBoxFrame(PRUint32 aFlags = 0);
+    nsBoxFrame();
+
 
     virtual void GetRedefinedMinPrefMax(nsIPresContext* aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
     virtual nsresult GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
-    virtual nsresult FlowChildren(nsIPresContext*   aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus,
-                     nsRect& availableSize); 
-
-    virtual nsresult FlowChildAt(nsIFrame* frame, 
-                     nsIPresContext* aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus,
-                     nsCalculatedBoxInfo&     aInfo,
-                     PRBool& needsRedraw,
-                     nsString& aReason);
-
+    virtual void ComputeChildsNextPosition( nsIFrame* aChild, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect);
     virtual nsresult PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect);
     virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
     virtual void LayoutChildrenInRect(nsRect& size);

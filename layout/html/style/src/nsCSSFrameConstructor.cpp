@@ -111,7 +111,8 @@ static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
 
-//#define NEWGFX_LIST
+#define NEWGFX_LIST
+#define NEWGFX_LIST_SCROLLFRAME
 
 #ifdef NEWGFX_LIST
 nsresult
@@ -140,7 +141,7 @@ nsresult
 NS_NewTitledButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags );
+NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -3042,9 +3043,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         }
       } else {
 #ifdef NEWGFX_LIST
-        // Construct a frame-based list box 
+    // Construct a frame-based list box 
         nsIFrame * listFrame; 
-        rv = NS_NewGfxListControlFrame(&listFrame);
+        rv = NS_NewGfxListControlFrame(aPresShell, &listFrame);
 
         // initialize the list control 
         InitAndRestoreFrame(aPresContext, aState, aContent, 
@@ -3053,33 +3054,37 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         // create the area frame we are scrolling 
         PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
         nsIFrame* scrolledFrame = nsnull;
-        NS_NewSelectsAreaFrame(&scrolledFrame, flags);
-
-        nsCOMPtr<nsIListControlFrame> listControlframe(do_QueryInterface(listFrame));
-        if (listControlframe) {
-          listControlframe->SetMainChildFrame(scrolledFrame);
-        }
+        NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
 
         // resolve a style for our gfx scrollframe based on the list frames style 
-        /*nsCOMPtr<nsIStyleContext> scrollFrameStyle;
+        nsCOMPtr<nsIStyleContext> scrollFrameStyle;
         aPresContext->ResolvePseudoStyleContextFor(aContent, 
-                                          nsLayoutAtoms::scrolledContentPseudo,// (this will probably work but you might want to set up you own), 
+                                          nsLayoutAtoms::selectScrolledContentPseudo,
                                           aStyleContext, PR_FALSE, 
                                           getter_AddRefs(scrollFrameStyle)); 
-        */
+        
+       InitAndRestoreFrame(aPresContext, aState, aContent, 
+                            listFrame, scrollFrameStyle, nsnull, scrolledFrame);
+
         // this is what is returned when the scrollframe is created. 
         // newScrollFrame - Either a gfx scrollframe or a native scrollframe that was created 
         // scrolledFrameStyleContext - The resolved style context of the scrolledframe you passed in. 
         // this is not the style of the scrollFrame. 
 
         nsIFrame* newScrollFrame = nsnull; 
+
+        /* scroll frame */
+
+#ifdef NEWGFX_LIST_SCROLLFRAME
         nsIStyleContext * scrolledFrameStyleContext = nsnull; 
 
         // ok take the style context, the Select area frame to scroll,the listFrame, and its parent 
         // and build the scrollframe. 
-        BuildScrollFrame(aPresContext, aState, aContent, aStyleContext, scrolledFrame, 
+        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, scrollFrameStyle, scrolledFrame, 
                          listFrame, newScrollFrame, scrolledFrameStyleContext); 
-
+#else
+        newScrollFrame = scrolledFrame;
+#endif
 
         // The area frame is a floater container 
         PRBool haveFirstLetterStyle, haveFirstLineStyle; 
@@ -3108,7 +3113,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
             nsIStyleContext*  styleContext   = nsnull; 
             nsIFrame*         generatedFrame = nsnull; 
             scrolledFrame->GetStyleContext(&styleContext); 
-            if (CreateGeneratedContentFrame(aPresContext, aState, scrolledFrame, aContent, 
+            if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, scrolledFrame, aContent, 
                                             styleContext, nsLayoutAtoms::dummyOptionPseudo, 
                                             PR_FALSE, &generatedFrame)) { 
               // Add the generated frame to the child list 
@@ -7310,7 +7315,9 @@ StyleChangeReflow(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
-    
+ 
+
+  
   nsIReflowCommand* reflowCmd;
   nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
                                         nsIReflowCommand::StyleChanged,
@@ -7320,6 +7327,17 @@ StyleChangeReflow(nsIPresContext* aPresContext,
     shell->AppendReflowCommand(reflowCmd);
     NS_RELEASE(reflowCmd);
   }
+  
+  /*
+
+    nsFrameState state;
+    aFrame->GetFrameState(&state);
+    state |= NS_FRAME_IS_DIRTY;
+    aFrame->SetFrameState(state);
+    nsIFrame* parent;
+    aFrame->GetParent(&parent);
+    parent->ReflowDirtyChild(shell, aFrame);
+*/
 }
 
 NS_IMETHODIMP

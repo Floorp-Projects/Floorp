@@ -45,18 +45,14 @@
 
 #include "nsLeafFrame.h"
 #include "nsColor.h"
-#include "nsCOMPtr.h"
-#include "nsIStyleContext.h"
-#include "nsIPresContext.h"
 
 #include "prtypes.h"
+#include "nsIBox.h"
 
 class nsIPresContext;
 class nsIStyleContext;
 
-#define NS_PROGRESS_METER_STRIPE_CONTEXT_INDEX 1
-
-class nsProgressMeterFrame : public nsLeafFrame
+class nsProgressMeterFrame : public nsLeafFrame, nsIBox
 {
 public:
   friend nsresult NS_NewProgressMeterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -67,6 +63,13 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
   
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
+  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+
+  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
+
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -83,12 +86,6 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext** aStyleContext) const;
-  NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext* aStyleContext);
-
-  virtual void animate();
 
   virtual void Reflow(nsIPresContext* aPresContext);
 
@@ -111,18 +108,6 @@ protected:
 							nscolor color);
 
 
-  virtual void PaintBarStripped(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, 
-                                           const nsRect& rect, nscolor color);
-
-  virtual void PaintBarSolid(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, 
-                                           const nsRect& rect, nscolor color, float skew);
-
-
-  virtual nscolor BrightenBy(nscolor color, PRUint8 amount);
-  virtual PRUint8 GetBrightness(nscolor c);
-  virtual nsRect TransformXtoY(const nsRect& rect);
-  virtual nsRect TransformYtoX(const nsRect& rect);
-
     // pass-by-value not allowed for a coordinator because it corresponds 1-to-1
     // with an element in the UI.
   nsProgressMeterFrame ( const nsProgressMeterFrame& aFrame ) ;	            // DO NOT IMPLEMENT
@@ -133,11 +118,8 @@ private:
   void setProgress(nsAutoString progress);
   void setAlignment(nsAutoString alignment);
   void setMode(nsAutoString mode);
-  void setSize(nsAutoString s, int& size, PRBool& isPercent);
 
-  nsCOMPtr<nsIStyleContext>    mBarStyle;
   float   mProgress;
   PRBool  mHorizontal;
   PRBool  mUndetermined;
-  int     mStripeOffset;
 }; // class nsProgressMeterFrame

@@ -101,6 +101,13 @@ public:
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const
+  {
+      aResult = "MenuBar";
+      return NS_OK;
+  }
+
+
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
   nsMenuListener* mKeyboardNavigator;

@@ -106,6 +106,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/search.gif \
 		$(srcdir)/animthrob.gif \
 		$(srcdir)/animthrob_single.gif \
+		$(srcdir)/progressmeter-busy.gif \
 		$(srcdir)/commonDialog.css \
 		$(srcdir)/wizardOverlay.css \
 		$(NULL)

@@ -27,171 +27,14 @@
 // See documentation in associated header file
 //
 
-static float STRIPE_SKEW  = 1.0;      // pixels
-static int   STRIPE_WIDTH = 20;       // pixels
-static int   ANIMATION_INCREMENT = 4; // pixels
-static int   ANIMATION_SPEED = 250;    // miliseconds
-
-#include "nsINameSpaceManager.h"
 #include "nsProgressMeterFrame.h"
-#include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
-#include "nsITimerCallback.h"
-#include "nsITimer.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
-#include "nsIReflowCommand.h"
-#include "nsHTMLParts.h"
-#include "nsIPresShell.h"
-
-class StripeTimer : public nsITimerCallback {
-public:
-  StripeTimer();
-  virtual ~StripeTimer();
-
-  NS_DECL_ISUPPORTS
-
-  void AddFrame(nsIPresContext* aPresContext, nsProgressMeterFrame* aFrame);
-
-  PRBool RemoveFrame(nsProgressMeterFrame* aFrame);
-
-  PRInt32 FrameCount();
-
-  void Start();
-
-  void Stop();
-
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
-
-  PRInt32 GetFrameData(nsProgressMeterFrame* aFrame);
-
-  struct FrameData {
-    nsIPresContext*       mPresContext;  // pres context associated with the frame
-    nsProgressMeterFrame* mFrame;
-
-
-    FrameData(nsIPresContext*       aPresContext,
-              nsProgressMeterFrame* aFrame)
-      : mPresContext(aPresContext), mFrame(aFrame) {}
-  };
-
-  nsITimer* mTimer;
-  nsVoidArray mFrames;
-};
-
-static StripeTimer* gStripeAnimator;
-
-StripeTimer::StripeTimer()
-{
-  NS_INIT_REFCNT();
-  mTimer = nsnull;
-}
-
-StripeTimer::~StripeTimer()
-{
-  Stop();
-}
-
-void StripeTimer::Start()
-{
-  nsresult rv = NS_NewTimer(&mTimer);
-  if (NS_OK == rv) {
-    mTimer->Init(this, ANIMATION_SPEED, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
-  }
-}
-
-void StripeTimer::Stop()
-{
-  if (nsnull != mTimer) {
-    mTimer->Cancel();
-    NS_RELEASE(mTimer);
-  }
-}
-
-static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
-NS_IMPL_ISUPPORTS(StripeTimer, kITimerCallbackIID);
-
-PRInt32 StripeTimer::GetFrameData(nsProgressMeterFrame* aFrame)
-{
-  PRInt32 i, n = mFrames.Count();
-  for (i = 0; i < n; i++) {
-    FrameData* frameData = (FrameData*) mFrames.ElementAt(i);
-
-    if (frameData->mFrame == aFrame) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
-void StripeTimer::AddFrame(nsIPresContext* aPresContext, nsProgressMeterFrame* aFrame) {
-
-  // see if the frame is already here.
-  if (GetFrameData(aFrame) > -1)
-	  return;
-
-  // if not add it.
-  FrameData* frameData = new FrameData(aPresContext, aFrame);
-  mFrames.AppendElement(frameData);
-  if (1 == mFrames.Count()) {
-    Start();
-  }
-}
-
-PRBool StripeTimer::RemoveFrame(nsProgressMeterFrame* aFrame) {
-  PRBool  rv = PR_FALSE;
-  PRInt32 i = GetFrameData(aFrame);
-
-  if (i > -1) {
-    FrameData*  frameData = (FrameData*)mFrames.ElementAt(i);
-    rv = mFrames.RemoveElementAt(i);
-    delete frameData;
-  }
-  if (0 == mFrames.Count()) {
-    Stop();
-  }
-  return rv;
-}
-
-PRInt32 StripeTimer::FrameCount() {
-  return mFrames.Count();
-}
-
-NS_IMETHODIMP_(void) StripeTimer::Notify(nsITimer *timer)
-{
-  // XXX hack to get auto-repeating timers; restart before doing
-  // expensive work so that time between ticks is more even
-#ifndef REPEATING_TIMERS
-  Stop();
-  Start();
-#endif
-
-  PRInt32 i, n = mFrames.Count();
-  for (i = 0; i < n; i++) {
-    FrameData*  frameData = (FrameData*) mFrames.ElementAt(i);
-    frameData->mFrame->animate();
-
-    // Determine damaged area and tell view manager to redraw it
-    nsPoint offset;
-    nsRect bounds;
-    frameData->mFrame->GetRect(bounds);
-    nsIView* view;
-    frameData->mFrame->GetOffsetFromView(frameData->mPresContext, offset, &view);
-    nsIViewManager* vm;
-    view->GetViewManager(vm);
-    bounds.x = offset.x;
-    bounds.y = offset.y;
-    vm->UpdateView(view, bounds, 0);
-    NS_RELEASE(vm);
-  }
-}
-
+#include "nsCOMPtr.h"
 //
 // NS_NewToolbarFrame
 //
@@ -208,7 +51,6 @@ NS_NewProgressMeterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // it->SetFlags(aFlags);
   *aNewFrame = it;
   return NS_OK;
   
@@ -221,17 +63,9 @@ NS_NewProgressMeterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 //
 nsProgressMeterFrame :: nsProgressMeterFrame ( )
 {
-	// if we haven't created the timer create it.
-	if (nsnull == gStripeAnimator) {
-	gStripeAnimator = new StripeTimer();
-	}
-
-	NS_ADDREF(gStripeAnimator);
-
 	mProgress = float(0.0);
 	mHorizontal = PR_TRUE;
 	mUndetermined = PR_FALSE;
-	mStripeOffset = STRIPE_WIDTH;
 }
 
 //
@@ -241,7 +75,6 @@ nsProgressMeterFrame :: nsProgressMeterFrame ( )
 //
 nsProgressMeterFrame :: ~nsProgressMeterFrame ( )
 {
-    gStripeAnimator->RemoveFrame(this);
 }
 
 NS_IMETHODIMP
@@ -273,10 +106,6 @@ nsProgressMeterFrame::Init(nsIPresContext*  aPresContext,
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::mode, mode);
   setMode(mode); 
 
-  nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":progressmeter-stripe")) );
-  aPresContext->ProbePseudoStyleContextFor(aContent, barPseudo, aContext, 
-                                          PR_FALSE, getter_AddRefs(mBarStyle));
-
   return rv;
 }
 
@@ -296,43 +125,6 @@ nsProgressMeterFrame::setProgress(nsAutoString progress)
 //	printf("ProgressMeter value=%d\n", v);
     mProgress = float(v)/float(100);
 }
-
-void
-nsProgressMeterFrame::setSize(nsAutoString sizeString, int& size, PRBool& isPercent)
-{
-	// -1 means unset
-	size = -1;
-
-	int length = sizeString.Length();
-	if (length == 0)
-		return;
-
-	char w[100];
-	sizeString.ToCString(w,100);
-    
-	if (w[length-1] == '%')
-		isPercent = PR_TRUE;
-	else
-		isPercent = PR_FALSE;
-
-	// convert to and integer
-	PRInt32 error;
-	PRInt32 v = sizeString.ToInteger(&error);
- 
-	// adjust to 0 and 100
-	if (isPercent) {
-		if (v < 0)
-			v = 0;
-		else if (v > 100)
-			v = 100;
-	}
-
-	// printf("size=%d\n", v);
-
-  size = v;
-}
-
-
 
 void
 nsProgressMeterFrame::setAlignment(nsAutoString progress)
@@ -376,42 +168,35 @@ nsProgressMeterFrame :: Paint ( nsIPresContext* aPresContext,
   nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
   
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND)
-  {
-    // get our border
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    nsMargin border(0,0,0,0);
-    spacing->CalcBorderFor(this, border);
+    if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND)
+    {
+        if (!mUndetermined) {
+            // get our border
+            const nsStyleSpacing* spacing =
+            (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+            nsMargin border(0,0,0,0);
+            spacing->CalcBorderFor(this, border);
 
-    const nsStyleColor* colorStyle =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+            const nsStyleColor* colorStyle =
+            (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 
-    nscolor color = colorStyle->mColor;
-      
-    // figure our twips convertion ratio
-      //  float p2t;
-      //  aPresContext->GetScaledPixelsToTwips(p2t);
-      //  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+            nscolor color = colorStyle->mColor;
 
-    // figure out our rectangle
-    nsRect rect(0,0,mRect.width, mRect.height);
+            // figure out our rectangle
+            nsRect rect(0,0,mRect.width, mRect.height);
 
-    // if its vertical then transform the coords to the X coordinate system
-    // and do our calculations there.
-    if (!mHorizontal)
-        rect = TransformYtoX(rect);
 
-    //CalcSize(aPresContext,rect.width,rect.height);
-    rect.x = border.left;
-    rect.y = border.top;
-    rect.width -= border.left*2;
-    rect.height -= border.top*2;
+            //CalcSize(aPresContext,rect.width,rect.height);
+            rect.x = border.left;
+            rect.y = border.top;
+            rect.width -= border.left + border.right;
+            rect.height -= border.top + border.bottom;
 
-    // paint the current progress in blue
-    PaintBar(aPresContext, aRenderingContext, rect, mProgress, color);
-	}
- 
+            // paint the current progress in blue
+            PaintBar(aPresContext, aRenderingContext, rect, mProgress, color);
+        }
+    }
+
   return NS_OK;  
 } // Paint
 
@@ -422,232 +207,16 @@ nsProgressMeterFrame :: PaintBar ( nsIPresContext* aPresContext,
 							float progress,
 							nscolor color) {
 
-	// if the bar is undetermined then use the whole progress area.
-	// if the bar is determined then figure out the current progress and make
-	// the bar only that percent of the full progress meter.
+    nsRect bar(rect);
 
-	nsRect bar(rect);
-
-  if (!mUndetermined) 
-	{
-	  nscoord p = (nscoord)(bar.width*progress);
-	  bar.width = p;
-	}
-
-	// fill the bar first then we will do the shading over it.
-  aRenderingContext.SetColor(color);
-
-	if (mHorizontal)
-		aRenderingContext.FillRect(bar);
-	else { // if we are vert then transfrom to the y cood system.
-		nsRect nbar = TransformXtoY(bar);
-		aRenderingContext.FillRect(nbar);
-	}
-
-	// draw the stripped barber shop if undetermined.
-  if (mUndetermined) 
-    PaintBarStripped(aPresContext,aRenderingContext,bar, color);
-  else 
-	  PaintBarSolid(aPresContext,aRenderingContext,bar, color, 0);	
-
-}
-
-nsRect 
-nsProgressMeterFrame::TransformXtoY(const nsRect& rect)
-{
-   return nsRect(rect.y, mRect.height - (rect.x + rect.width), rect.height, rect.width);
-}
-
-nsRect 
-nsProgressMeterFrame::TransformYtoX(const nsRect& rect)
-{
-   return nsRect(mRect.width - (rect.y + rect.height), rect.x, rect.height, rect.width);
-}
-
-nscolor 
-nsProgressMeterFrame::BrightenBy(nscolor c, PRUint8 amount)
-{
-	PRUint8 r = NS_GET_R(c);
-	PRUint8 g = NS_GET_G(c);
-	PRUint8 b = NS_GET_B(c);
-
-	return NS_RGB(r+amount, g+amount, b+amount);
-}
-
-PRUint8 
-nsProgressMeterFrame::GetBrightness(nscolor c)
-{
-     
-	// get the biggest rgb component;
-  PRUint8 r = NS_GET_R(c);
-  PRUint8 g = NS_GET_G(c);
-  PRUint8 b = NS_GET_B(c);
-
-	PRUint8 biggest = r;
-
-	if (r > g && r > b)
-		biggest = r;
-	else if (g > r && g > b)
-		biggest = g;
-	else if (b > r && b > g)
-		biggest = b;
-
-  return biggest;
-}
-
-void 
-nsProgressMeterFrame::PaintBarSolid(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, 
-                                    const nsRect& rect, nscolor color, float skew)
-{
-
-  // figure out a pixel size
-	float p2t;
-	aPresContext->GetScaledPixelsToTwips(&p2t);
-	nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
-	// how many pixel lines will fit?
-  int segments = 0;
-  if(onePixel) {
-    segments = (rect.height/2) / onePixel;
-  } else {
-    // Zero-height rect?  Bail, don't paint.
-    return;
-  }
-
-	// get the skew in pixels;
-	int skewedPixels = int(skew * onePixel);
-
-	// we will draw from the top to center and from the bottom to center at the same time
-	// so we need 2 rects one for the top and one for the bottom
-
-	// top.
-
-	nsRect tr(rect);
-	tr.height= onePixel;
-
-	// bottom
-	nsRect br(rect);
-	br.height = onePixel;
-	br.y = rect.y + 2*segments*onePixel;
-    br.x = rect.x + 2*segments*skewedPixels;
-
-	// get the brightness of the color
-	PRUint8 brightness = GetBrightness(color);
-
-	// we need to figure out how bright we can get.
-  PRUint8 units = 0;
-  if(segments) {
-    units = (255 - brightness)/segments;
-  } else {
-    // Divide-by-zero case, zero-height rect?
-    units = 0;
-  }
-
-	// get a color we can set
-	nscolor c(color);
-  
-  for (int i=0; i <= segments; i++)
-  {
-    // set the color and fill the top and bottom lines
-    aRenderingContext.SetColor(c);
+    if (mHorizontal) 
+       bar.width = (nscoord)(bar.width*progress);
+    else 
+       bar.height = (nscoord)(bar.height*progress);
     
-    if (mHorizontal) {
-      aRenderingContext.FillRect(tr);
-      aRenderingContext.FillRect(br);
-    } else {
-      aRenderingContext.FillRect(TransformXtoY(tr));
-      aRenderingContext.FillRect(TransformXtoY(br));
-    }
-    // brighten the color
-    c = BrightenBy(c, units);
-    
-    // move one line down
-    tr.x += skewedPixels;
-    tr.y += onePixel;
-    
-    // move one line up
-    br.y -= onePixel;
-    br.x -= skewedPixels;
-  }
+    aRenderingContext.SetColor(color);
+    aRenderingContext.FillRect(bar);
 }
-
-
-void 
-nsProgressMeterFrame::PaintBarStripped(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, 
-                                       const nsRect& r, nscolor color)
-{
-	// get stripe color from the style system
-	nsCOMPtr<nsIStyleContext> style (mBarStyle) ;
-
-	nscolor altColor = NS_RGB(128,128,128);
-
-	// if we got a style then get the color from it
-	if (style != 0)
-	{
-		const nsStyleColor*   barColor   = (const nsStyleColor*)style->GetStyleData(eStyleStruct_Color);
-		altColor = barColor->mColor;
-	}
-
-  float skew = STRIPE_SKEW;
-  float stripeWidth = float(STRIPE_WIDTH);
-
-  nsRect rect(r);
-
-  PRBool clipState;
-
-  // Clip so we don't render outside the inner rect
-  aRenderingContext.PushState();
-  if (mHorizontal) 
-	aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);
-  else
-	aRenderingContext.SetClipRect(TransformXtoY(rect), nsClipCombine_kIntersect, clipState);
- 
- 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  // nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
-  int stripeWidthInTwips = (int)(stripeWidth * p2t);
- 
-  int offset = int(float(r.height) * skew);
-
-  //make things a little bigger and just clip them
-    rect.width += offset*2;
-  rect.x -= (offset + int(float(mStripeOffset)*p2t));
- 
-  int stripes = rect.width / (stripeWidthInTwips/2) + 2;
-
-  nsRect sr(rect.x,rect.y,stripeWidthInTwips,rect.height);
-
-  PRBool onoff = PR_FALSE;
-  nscolor c;
-
-
-  for (int i=0; i < stripes; i++)
-  {
-	 if (onoff)
-		 c = color;
-	 else
-		 c = altColor;
-
-	 PaintBarSolid(aPresContext,aRenderingContext,sr, c, skew);
-	 sr.x += (stripeWidthInTwips/2);
-
-	 onoff = !onoff;
-  }
-
-  aRenderingContext.PopState(clipState);
-}
-
-void
-nsProgressMeterFrame::animate()
-{
-    mStripeOffset -= ANIMATION_INCREMENT;
-  // 	printf("animate=%d\n", mStripeOffset);
-	if (mStripeOffset < 0)
-		mStripeOffset = STRIPE_WIDTH;
-}
-
 
 //
 // Reflow
@@ -661,6 +230,7 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext*          aPresContext,
                             nsReflowStatus&          aStatus)
 {	
 
+  // handle dirty and incremental reflow
   if (eReflowReason_Incremental == aReflowState.reason) {
     nsIFrame* targetFrame;
   
@@ -669,12 +239,9 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext*          aPresContext,
     if (this == targetFrame) {
       Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     }
+  } else if (eReflowReason_Dirty == aReflowState.reason) {
+      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
   }
-
-  if (mUndetermined)
-    gStripeAnimator->AddFrame(aPresContext, this);
-  else 
-	  gStripeAnimator->RemoveFrame(this);
 
   return nsLeafFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
 
@@ -701,9 +268,9 @@ nsProgressMeterFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void
 nsProgressMeterFrame::CalcSize(nsIPresContext* aPresContext, int& width, int& height)
 {
-	// make sure we convert to twips.
+    // set up a default size for the progress meter.
 	float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
 
 	if (mHorizontal) {
 		width = (int)(100 * p2t);
@@ -712,6 +279,28 @@ nsProgressMeterFrame::CalcSize(nsIPresContext* aPresContext, int& width, int& he
 		height = (int)(100 * p2t);
 		width = (int)(16 * p2t);
 	}
+}
+
+NS_IMETHODIMP
+nsProgressMeterFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+{
+    CalcSize(aPresContext, aSize.prefSize.width, aSize.prefSize.height);
+    aSize.minSize = aSize.prefSize;
+    return NS_OK;
+}
+
+NS_INTERFACE_MAP_BEGIN(nsProgressMeterFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIBox)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBox)
+NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
+
+
+
+NS_IMETHODIMP
+nsProgressMeterFrame::InvalidateCache(nsIFrame* aChild)
+{
+    // we don't have any cached children
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -744,8 +333,9 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
     setMode(newValue);
 
     // needs to reflow so we start the timer.
-    if (aHint != NS_STYLE_HINT_REFLOW)
-      Reflow(aPresContext);
+   /// if (aHint != NS_STYLE_HINT_REFLOW)
+    //  Reflow(aPresContext);
+    aPresContext->StopAllLoadImagesFor(this);
 
   } else if (nsHTMLAtoms::align == aAttribute) {
     nsAutoString newValue;
@@ -764,60 +354,21 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
 void
 nsProgressMeterFrame::Reflow(nsIPresContext* aPresContext)
 {
+   nsCOMPtr<nsIPresShell> shell;
+   aPresContext->GetShell(getter_AddRefs(shell));
+
    // reflow
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                                          nsIReflowCommand::StyleChanged);
-    if (NS_SUCCEEDED(rv)) 
-      shell->AppendReflowCommand(reflowCmd);
+   mState |= NS_FRAME_IS_DIRTY;
+   mParent->ReflowDirtyChild(shell, this);
 }
 
 void
 nsProgressMeterFrame::Redraw(nsIPresContext* aPresContext)
 {
    	nsRect frameRect;
-	  GetRect(frameRect);
-	  nsRect rect(0, 0, frameRect.width, frameRect.height);
+	GetRect(frameRect);
+	nsRect rect(0, 0, frameRect.width, frameRect.height);
     Invalidate(aPresContext, rect, PR_TRUE);
-}
-
-
-NS_IMETHODIMP
-nsProgressMeterFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
-                                                nsIStyleContext** aStyleContext) const
-{
-  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aStyleContext = nsnull;
-  switch (aIndex) {
-  case NS_PROGRESS_METER_STRIPE_CONTEXT_INDEX:
-    *aStyleContext = mBarStyle;
-    NS_IF_ADDREF(*aStyleContext);
-    break;
-  default:
-    return NS_ERROR_INVALID_ARG;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsProgressMeterFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
-                                                nsIStyleContext* aStyleContext)
-{
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  switch (aIndex) {
-  case NS_PROGRESS_METER_STRIPE_CONTEXT_INDEX:
-    mBarStyle = aStyleContext;
-    break;
-  }
-  return NS_OK;
 }
 
 

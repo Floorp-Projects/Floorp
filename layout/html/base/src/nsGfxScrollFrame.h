@@ -103,16 +103,18 @@ public:
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent);
 
+  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
+
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aAnonymousItems);
 
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
+  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
 
   // nsIScrollableFrame
   NS_IMETHOD  SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame);

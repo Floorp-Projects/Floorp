@@ -399,10 +399,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     }
   }
   
-  //
-  // At this point, we should be positioned where we're told. Ensure that we fit
-  // on the screen. 
-  //  
   nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
   nsCOMPtr<nsIDOMScreen> screen;
   window->GetScreen(getter_AddRefs(screen));
@@ -480,13 +476,17 @@ NS_IMETHODIMP
 nsMenuPopupFrame::DidReflow(nsIPresContext* aPresContext,
                             nsDidReflowStatus aStatus)
 {
+    return nsFrame::DidReflow(aPresContext, aStatus);
+
+    /*
   // Copied from nsContainerFrame reflow WITHOUT the call
   // nsFrame::DidReflow().  nsFrame::DidReflow() will move us to the
   // wrong place.
-  nsresult result = NS_OK; /* = nsFrame::DidReflow(aPresContext, aStatus) */
+  nsresult result = NS_OK; /* = nsFrame::DidReflow(aPresContext, aStatus) 
 
   NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
   return result;
+  */
 }
 
 NS_IMETHODIMP

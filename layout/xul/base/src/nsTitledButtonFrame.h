@@ -39,7 +39,7 @@ public:
 
   // nsIBox frame interface
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
+  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
 
   NS_DECL_ISUPPORTS
 
@@ -65,8 +65,8 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute);
-  virtual void UpdateImage(nsIPresContext*  aPresContext);
+  virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline);
+  virtual void UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize);
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
@@ -146,6 +146,11 @@ protected:
   void GetImageSource(nsString& aResult);
 
   virtual void GetImageSize(nsIPresContext* aPresContext);
+
+  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent);
+
 
 private:
 

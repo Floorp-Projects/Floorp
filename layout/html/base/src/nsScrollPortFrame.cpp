@@ -78,7 +78,7 @@ NS_NewScrollPortFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsScrollPortFrame::nsScrollPortFrame()
 {
-    mIncremental = PR_FALSE;
+    //mIncremental = PR_FALSE;
     mNeedsRecalc = PR_TRUE;
 }
 
@@ -328,41 +328,85 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
                       aReflowState.availableWidth,
                       aReflowState.availableHeight));
 
-  nsIFrame* kidFrame = mFrames.FirstChild();
-  nsIFrame* targetFrame;
-  nsIFrame* nextFrame;
+   // if we have any padding then ignore it. It is inherited down to our scrolled frame
+  if (aReflowState.mComputedPadding.left != 0 ||
+      aReflowState.mComputedPadding.right != 0 ||
+      aReflowState.mComputedPadding.top != 0 ||
+      aReflowState.mComputedPadding.bottom != 0) 
+  {
+      nsHTMLReflowState newState(aReflowState);
 
-  // Special handling for incremental reflow
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    // See whether we're the target of the reflow command
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
-      nsIReflowCommand::ReflowType  type;
+      // get the padding to remove
+      nscoord pwidth = (newState.mComputedPadding.left + newState.mComputedPadding.right);
+      nscoord pheight = (newState.mComputedPadding.top + newState.mComputedPadding.bottom);
 
-      // The only type of reflow command we expect to get is a style
-      // change reflow command
-      aReflowState.reflowCommand->GetType(type);
-      NS_ASSERTION(nsIReflowCommand::StyleChanged == type, "unexpected reflow type");
+      // adjust our computed size to add in the padding we are removing. Make sure
+      // the computed size doesn't go negative or anything.
+      if (newState.mComputedWidth != NS_INTRINSICSIZE)
+        newState.mComputedWidth += pwidth;
 
-      // Make a copy of the reflow state (with a different reflow reason) and
-      // then recurse
-      nsHTMLReflowState reflowState(aReflowState);
-      reflowState.reason = eReflowReason_StyleChange;
-      reflowState.reflowCommand = nsnull;
-      return Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-    }
+      if (newState.mComputedHeight != NS_INTRINSICSIZE)
+        newState.mComputedHeight += pheight;
 
-    // Get the next frame in the reflow chain, and verify that it's our
-    // child frame
-    aReflowState.reflowCommand->GetNext(nextFrame);
-    NS_ASSERTION(nextFrame == kidFrame, "unexpected reflow command next-frame");
+      // fix up the borderpadding
+      ((nsMargin&)newState.mComputedBorderPadding) -= newState.mComputedPadding;
+
+      // remove the padding
+      ((nsMargin&)newState.mComputedPadding) = nsMargin(0,0,0,0);
+
+      // reflow us again with the correct values.
+      return Reflow(aPresContext, aDesiredSize, newState, aStatus);
   }
 
+ // Handle Incremental Reflow
+  nsIFrame* incrementalChild = nsnull;
+  if ( aReflowState.reason == eReflowReason_Incremental ) {
+    nsIReflowCommand::ReflowType  reflowType;
+    aReflowState.reflowCommand->GetType(reflowType);
+
+    // See if it's targeted at us
+    nsIFrame* targetFrame;    
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+
+    if (this == targetFrame) {
+      // if we are the target see what the type was
+      // and generate a normal non incremental reflow.
+      switch (reflowType) {
+
+          case nsIReflowCommand::StyleChanged: 
+          {
+            nsHTMLReflowState newState(aReflowState);
+            newState.reason = eReflowReason_StyleChange;
+            return Reflow(aPresContext, aDesiredSize, newState, aStatus);
+          }
+          break;
+
+          // if its a dirty type then reflow us with a dirty reflow
+          case nsIReflowCommand::ReflowDirty: 
+          {
+            nsHTMLReflowState newState(aReflowState);
+            newState.reason = eReflowReason_Dirty;
+            return Reflow(aPresContext, aDesiredSize, newState, aStatus);
+          }
+          break;
+
+          default:
+            NS_ASSERTION(PR_FALSE, "unexpected reflow command type");
+      } 
+  
+    }
+
+    // then get the child we need to flow incrementally
+    aReflowState.reflowCommand->GetNext(incrementalChild);
+
+  }
+  nsIFrame* kidFrame = mFrames.FirstChild();
   // Reflow the child and get its desired size. Let it be as high as it
   // wants
 
   const nsMargin& border = aReflowState.mComputedBorderPadding;
 
+  /*
   // we only worry about our border. Out scrolled frame worries about the padding.
   // so lets remove the padding and add it to our computed size.
   nsMargin padding = aReflowState.mComputedPadding;
@@ -376,7 +420,8 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
 
   ((nsMargin&)aReflowState.mComputedPadding) = nsMargin(0,0,0,0);
   ((nsMargin&)aReflowState.mComputedBorderPadding) -= padding;
- 
+  */
+
   nscoord theHeight;
   nsIBox* box;
   nsresult result = kidFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
@@ -390,15 +435,20 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
                                      kidFrame, kidReflowSize);
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.maxElementSize);
 
-  if (mIncremental) {
-      kidReflowState.reason = eReflowReason_Incremental; 
-      mIncremental = PR_FALSE;
-  }
-
   kidReflowState.mComputedWidth = aReflowState.mComputedWidth;
   kidReflowState.mComputedHeight = theHeight;
+
+  nscoord pwidth = (kidReflowState.mComputedBorderPadding.left + kidReflowState.mComputedBorderPadding.right);
+  nscoord pheight = (kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom);
+
+  // child's size is our computed size minus its border and padding.
+  if (kidReflowState.mComputedWidth != NS_INTRINSICSIZE && kidReflowState.mComputedWidth >= pwidth)
+      kidReflowState.mComputedWidth -= pwidth; 
  
+  if (kidReflowState.mComputedHeight != NS_INTRINSICSIZE && kidReflowState.mComputedHeight >= pheight)
+      kidReflowState.mComputedHeight -= pheight; 
  
+  // reflow and place the child.
   ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
               border.left, border.top, NS_FRAME_NO_MOVE_VIEW, aStatus);
 
@@ -436,13 +486,16 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
 
 
   if (nsnull != aDesiredSize.maxElementSize) {
-    nscoord maxWidth = aDesiredSize.maxElementSize->width;
-    maxWidth += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
-    nscoord maxHeight = aDesiredSize.maxElementSize->height;
-    maxHeight += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
-    aDesiredSize.maxElementSize->width = maxWidth;
-    aDesiredSize.maxElementSize->height = maxHeight;
+   // nscoord maxWidth = aDesiredSize.maxElementSize->width;
+  //  maxWidth += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  //  nscoord maxHeight = aDesiredSize.maxElementSize->height;
+  //  maxHeight += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+  //  aDesiredSize.maxElementSize->width = maxWidth;
+  //  aDesiredSize.maxElementSize->height = maxHeight;
+      *aDesiredSize.maxElementSize = *kidDesiredSize.maxElementSize;
   }
+
+  //mIncremental = PR_FALSE;
 
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
@@ -515,6 +568,13 @@ nsScrollPortFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Scroll", aResult);
 }
 #endif
+
+NS_IMETHODIMP
+nsScrollPortFrame::InvalidateCache(nsIFrame* aChild)
+{
+    mNeedsRecalc = PR_TRUE;
+    return NS_OK;
+}
 
 /**
  * Goes though each child asking for its size to determine our size. Returns our box size minus our border.
@@ -654,26 +714,13 @@ nsScrollPortFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsScrollPortFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsScrollPortFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {
-  mIncremental = PR_FALSE;
-  incrementalChild = nsnull;
+    if (! (mState & NS_FRAME_IS_DIRTY)) {
+        mState |= NS_FRAME_IS_DIRTY;
+        return mParent->ReflowDirtyChild(aPresShell, aChild);
+    }
 
-  nsIFrame* frame;
-  aReflowState.reflowCommand->GetNext(frame);
-
-  nsIFrame* childFrame = mFrames.FirstChild(); 
-    
-  nsIBox* ibox;
-  if (NS_SUCCEEDED(childFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox)
-      ibox->Dirty(aPresContext, aReflowState, incrementalChild);
-  else {
-      incrementalChild = frame;
-  // if we found a leaf that is not a box. Then mark it as being incremental. So if we are ever
-  // flowed incremental then we will flow our child incrementally.
-      mIncremental = PR_TRUE;
-  }
-
-  return NS_OK;
+    return NS_OK;
 }
 

@@ -102,8 +102,6 @@ public:
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                             nsDidReflowStatus aStatus);
 
-  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
-
   NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
@@ -152,6 +150,13 @@ public:
   NS_IMETHOD ToggleMenuState();
 
   void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
+
+  NS_IMETHOD GetFrameName(nsString& aResult) const
+  {
+      aResult = "Menu";
+      return NS_OK;
+  }
+
 
 protected:
   static void UpdateDismissalListener(nsIMenuParent* aMenuParent);

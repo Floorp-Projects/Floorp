@@ -99,6 +99,12 @@ public:
   virtual nsresult DragGesture(nsIDOMEvent* aDragEvent) { return NS_OK; } 
 /*END implementations of dragevent handler interface*/
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const
+  {
+      aResult = "Toolbox";
+      return NS_OK;
+  }
+
 protected:
   enum { kGrippyWidthInPixels = 10, kCollapsedGrippyHeightInPixels = 10, kCollapsedGrippyWidthInPixels = 50 } ;
   enum { kNoGrippyHilighted = -1 } ;

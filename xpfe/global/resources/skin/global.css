@@ -601,8 +601,10 @@ progressmeter {
 	background-color: #999999;
 }
 
-:progressmeter-stripe {
-	color: #CCCCCC;
+progressmeter[mode="undetermined"]
+{
+   //background-color: yellow;
+   background-image: url(chrome://global/skin/progressmeter-busy.gif);
 }
 
 /********* XP Menus ***********/

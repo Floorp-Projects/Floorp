@@ -32,7 +32,7 @@
 #include "nsIAnonymousContentCreator.h"
 
 class nsISupportsArray;
-class nsSplitterFrameImpl;
+class nsSplitterFrameInner;
 
 nsresult NS_NewSplitterFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
@@ -98,11 +98,10 @@ public:
   // return true if the alignment is horizontal false if vertical
   virtual PRBool GetInitialAlignment(); 
 
-
 private:
 
-  friend class nsSplitterFrameImpl;
-  nsSplitterFrameImpl* mImpl;
+  friend class nsSplitterFrameInner;
+  nsSplitterFrameInner* mInner;
   // XXX Hack
   nsIPresContext* mPresContext;  // weak reference
 

@@ -176,32 +176,24 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
                                PRInt32 aHint)
 {
   mNeedsLayout = PR_TRUE;
-  UpdateAttributes(aPresContext, aAttribute);
+  PRBool aResize;
+  PRBool aRedraw;
+  PRBool aUpdateAccessUnderline;
+  UpdateAttributes(aPresContext, aAttribute, aResize, aRedraw, aUpdateAccessUnderline);
 
   // added back in because boxes now handle only redraw what is reflowed.
   // reflow
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  
-  if (aHint != NS_STYLE_HINT_REFLOW && 
-    (aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::value ||
-    aAttribute == nsHTMLAtoms::src || aAttribute == nsXULAtoms::crop)) {
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                                          nsIReflowCommand::StyleChanged);
-    if (NS_SUCCEEDED(rv)) 
-      shell->AppendReflowCommand(reflowCmd);
-  }
-
-  if (aAttribute == nsXULAtoms::accesskey ||
-      aAttribute == nsHTMLAtoms::value ||
-      aAttribute == nsXULAtoms::crop) {
+  if (aUpdateAccessUnderline)
       UpdateAccessUnderline();
-      nsFrame::Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
-  }
 
-  // redraw
-  mRenderer->Redraw(aPresContext);
+  if (aResize) {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    mState |= NS_FRAME_IS_DIRTY;
+    mParent->ReflowDirtyChild(shell, this);
+  } else if (aRedraw) {
+    mRenderer->Redraw(aPresContext);
+  }
 
 #if !ONLOAD_CALLED_TOO_EARLY
   // onload handlers are called to early, so we have to do this code
@@ -291,7 +283,8 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
   mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
   NS_IF_RELEASE(baseURL);
 
-  UpdateAttributes(aPresContext, nsnull /* all */);
+  PRBool a,b,c;
+  UpdateAttributes(aPresContext, nsnull, a, b, c  /* all */);
 
 // the following block is to append the accesskey to to mTitle if there is an accesskey 
 // but the mTitle doesn't have the character 
@@ -344,50 +337,87 @@ nsTitledButtonFrame::GetImageSource(nsString& aResult)
 }
 
 void
-nsTitledButtonFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute)
+nsTitledButtonFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline)
 {
+    aResize = PR_FALSE;
+    aRedraw = PR_FALSE;
+    aUpdateAccessUnderline = PR_FALSE;
+
     if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::align) {
-	nsAutoString value;
+    PRIntn align;
+    nsAutoString value;
 	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
 
         if (value.EqualsIgnoreCase(ALIGN_LEFT))
-            mAlign = NS_SIDE_LEFT;
+            align = NS_SIDE_LEFT;
         else if (value.EqualsIgnoreCase(ALIGN_RIGHT))
-            mAlign = NS_SIDE_RIGHT;
+            align = NS_SIDE_RIGHT;
         else if (value.EqualsIgnoreCase(ALIGN_BOTTOM))
-            mAlign = NS_SIDE_BOTTOM;
+            align = NS_SIDE_BOTTOM;
         else 
-            mAlign = NS_SIDE_TOP;
+            align = NS_SIDE_TOP;
+
+        if (align != mAlign) {
+            aRedraw = PR_TRUE;
+            mAlign = align;
+        }
     }
 
     if (aAttribute == nsnull || aAttribute == nsXULAtoms::crop) {
         nsAutoString value;
         mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, value);
+        CroppingStyle cropType;
 
         if (value.EqualsIgnoreCase(CROP_LEFT))
-            mCropType = CropLeft;
+            cropType = CropLeft;
         else if (value.EqualsIgnoreCase(CROP_CENTER))
-            mCropType = CropCenter;
+            cropType = CropCenter;
         else if (value.EqualsIgnoreCase(CROP_RIGHT))
-            mCropType = CropRight;
+            cropType = CropRight;
         else 
-            mCropType = CropNone;
+            cropType = CropNone;
+
+        if (cropType != mCropType) {
+            aResize = PR_TRUE;
+            mCropType = cropType;
+            aUpdateAccessUnderline = PR_TRUE;
+        }
     }
 
     if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::value) {
         nsAutoString value;
         mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-        mTitle = value;
+        if (!value.Equals(mTitle)) {
+            /*
+           ListTag(stdout);
+           char a[100];
+           char b[100];
+           mTitle.ToCString(a,100);
+           value.ToCString(b,100);
+
+           printf(" value changed '%s'->'%s'\n",a,b);
+           */
+           aResize = PR_TRUE;
+           mTitle = value;
+           aUpdateAccessUnderline = PR_TRUE;
+        }
     }
 
     if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::src) {
-        UpdateImage(aPresContext);
+        UpdateImage(aPresContext, aResize);
     }
+
+    if (aAttribute == nsXULAtoms::accesskey) {
+       aUpdateAccessUnderline = PR_TRUE;
+    }
+
 }
 
 void
-nsTitledButtonFrame::UpdateImage(nsIPresContext*  aPresContext)
+nsTitledButtonFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
 {
+  aResize = PR_FALSE;
+
   // see if the source changed
   // get the old image src
   nsAutoString oldSrc ="";
@@ -399,7 +429,6 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext*  aPresContext)
 
    // see if the images are different
   if (!oldSrc.Equals(src)) {      
-//   if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
 
         if (!src.Equals("")) {
           mSizeFrozen = PR_FALSE;
@@ -409,42 +438,9 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext*  aPresContext)
           mHasImage = PR_FALSE;
         }
 
-        mImageLoader.UpdateURLSpec(aPresContext, src);
-        //PRUint32 loadStatus = mImageLoader.GetLoadStatus();
+        mImageLoader.UpdateURLSpec(aPresContext, src);  
 
-        /*
-        // if the image is the same size only redraw otherwise reflow
-        PRBool reflow = PR_TRUE;
-
-        if (mImageLoader.IsImageSizeKnown()) {
-          nsIImage* image = mImageLoader.GetImage();
-          if ( image ) {
-            // imageLib stores width/height in pixels and we store it in twips. do the conversion
-            // before comparing.
-		    float p2t = 0.0;
-            aPresContext->GetScaledPixelsToTwips(&p2t);
-            int imageWidth = NSIntPixelsToTwips(image->GetWidth(), p2t);
-            int imageHeight = NSIntPixelsToTwips(image->GetHeight(), p2t);
-            if ( imageWidth == mImageRect.width && imageHeight == mImageRect.height ) {
-              reflow = PR_FALSE;
-              Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
-            }
-          }
-        } 
-
-        if (reflow) {
-          // Force a reflow when the image size isn't already known
-          if (nsnull != mContent) {
-            nsIDocument* document = nsnull;
-            mContent->GetDocument(document);
-            if (nsnull != document) {
-              document->ContentChanged(mContent, nsnull);
-              NS_RELEASE(document);
-            }
-          }
-        }
-        */
-  
+        aResize = PR_TRUE;
   }
 }
 
@@ -941,7 +937,7 @@ nsTitledButtonFrame::Reflow(nsIPresContext*   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  // redraw us on a reflow
+  // redraw us if we are flowed incremental and we are targeted or we are dirty.
   mNeedsAccessUpdate = PR_TRUE;
   if (eReflowReason_Incremental == aReflowState.reason) {
     nsIFrame* targetFrame;
@@ -951,10 +947,22 @@ nsTitledButtonFrame::Reflow(nsIPresContext*   aPresContext,
     if (this == targetFrame) {
       Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     }
+  } else if (eReflowReason_Dirty == aReflowState.reason) {
+    Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
   }
+
+  
 
   mNeedsLayout = PR_TRUE;
   nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
+      NS_ASSERTION(aMetrics.width == aReflowState.mComputedWidth + aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right,
+                   "TitledButtons width is wrong!!!");
+
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE)
+      NS_ASSERTION(aMetrics.height == aReflowState.mComputedHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom,
+                   "TitledButtons height is wrong!!!");
+
   return result;
 }
 
@@ -975,16 +983,16 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // if either the width or the height was not computed use our intrinsic size
   if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
-    if (aReflowState.mComputedWidth > info.minSize.width)
+    //if (aReflowState.mComputedWidth > info.minSize.width)
        aDesiredSize.width = aReflowState.mComputedWidth;
-    else 
-       aDesiredSize.width = info.minSize.width;
+    //else 
+      // aDesiredSize.width = info.minSize.width;
 
   if (aReflowState.mComputedHeight != NS_INTRINSICSIZE)
-    if (aReflowState.mComputedHeight > info.minSize.height)
+    //if (aReflowState.mComputedHeight > info.minSize.height)
        aDesiredSize.height = aReflowState.mComputedHeight;
-    else 
-       aDesiredSize.height = info.minSize.height;
+    //else 
+//       aDesiredSize.height = info.minSize.height;
 }
 
 
@@ -1374,7 +1382,8 @@ NS_IMETHODIMP
 nsTitledButtonFrame :: DidSetStyleContext( nsIPresContext* aPresContext )
 {
   // if list-style-image change we want to change the image
-  UpdateImage(aPresContext);
+  PRBool aResize;
+  UpdateImage(aPresContext, aResize);
   
   return NS_OK;
   
@@ -1414,6 +1423,13 @@ nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)
   mImageRect.height = desiredSize.height;
 
 
+}
+
+NS_IMETHODIMP
+nsTitledButtonFrame::InvalidateCache(nsIFrame* aChild)
+{
+    // we don't cache any information
+    return NS_OK;
 }
 
 /**
@@ -1514,14 +1530,6 @@ nsTitledButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return nsLeafFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
 
-NS_IMETHODIMP
-nsTitledButtonFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
-{
-  // leafs should just return themselves as the incremental child
-  incrementalChild = this;
-  return NS_OK;
-}
-
 /*
  * We are a frame and we do not maintain a ref count
  */
@@ -1541,6 +1549,20 @@ nsTitledButtonFrame::Release(void)
 NS_IMETHODIMP
 nsTitledButtonFrame::GetFrameName(nsString& aResult) const
 {
-  aResult = "TitledButton";
+  aResult = "TitledButton[value=";
+  aResult += mTitle;
+  aResult += "]";
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTitledButtonFrame::ContentChanged(nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent)
+{
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    mState |= NS_FRAME_IS_DIRTY;
+    return mParent->ReflowDirtyChild(shell, this);
+
 }
