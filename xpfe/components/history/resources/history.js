@@ -42,18 +42,13 @@ var gLastHostname;
 var gLastDomain;
 var gGlobalHistory;
 var gPrefService;
+var gIOService;
 var gDeleteByHostname;
 var gDeleteByDomain;
 var gHistoryBundle;
 var gHistoryStatus;
 var gHistoryGrouping = "";
 var gWindowManager = null;
-
-function HistoryWindowInit()
-{
-    HistoryCommonInit();
-    gHistoryTree.focus();
-}
 
 function HistoryCommonInit()
 {
@@ -113,7 +108,17 @@ function HistoryCommonInit()
     } 
 
     SortInNewDirection(find_sort_direction(find_sort_column()));
+
+    if (gHistoryStatus)
+        gHistoryTree.focus();
     gHistoryTree.treeBoxObject.view.selection.select(0);
+}
+
+function HistoryPanelUnload()
+{
+  var pb = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  var pbi = pb.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pbi.removeObserver("browser.history.grouping", groupObserver, false);
 }
 
 function updateHistoryCommands()
@@ -149,27 +154,24 @@ function historyOnSelect()
     var match;
     var currentIndex = gHistoryTree.currentIndex;
     var rowIsContainer = gHistoryGrouping != "none" && currentIndex >= 0 && isContainer(gHistoryTree, currentIndex);
-    var url = rowIsContainer ? gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL") : null;
+    var url = rowIsContainer ? "" : gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
 
     if (url) {
-        // matches scheme://(hostname)...
-        match = url.match(/^.*?:\/\/(?:([^\/:]*)(?::([^\/:]*))?@)?([^\/:]*)(?::([^\/:]*))?(.*)$/);
+        if (!gIOService)
+            gIOService = Components.classes['@mozilla.org/network/io-service;1']
+                                   .getService(Components.interfaces.nsIIOService);
+        try {
+            gLastHostname = gIOService.newURI(url, null, null).host;
+            // matches the last foo.bar in foo.bar or baz.foo.bar
+            match = gLastHostname.match(/([^.]+\.[^.]+$)/);
+            if (match)
+                gLastDomain = match[1];
+        } catch (e) {}
+    }
 
-        if (match && match.length>1)
-            gLastHostname = match[3];
-      
+    if (gHistoryStatus)
         gHistoryStatus.label = url;
-    }
-    else {
-        gHistoryStatus.label = "";
-    }
 
-    if (gLastHostname) {
-        // matches the last foo.bar in foo.bar or baz.foo.bar
-        match = gLastHostname.match(/([^.]+\.[^.]+$)/);
-        if (match)
-            gLastDomain = match[1];
-    }
     document.commandDispatcher.updateCommands("select");
 }
 
