@@ -115,6 +115,9 @@ my @row = $query->fetchrow();
 if ($row[0] > 10) {
     Punt("Sorry; you selected $row[0] pages, but I can only graph up to 10.");
 }
+if ($row[0] < 1) {
+    Punt("Sorry; I could not find any pages matching what you specified.  (Page names start with a leading /, like '/news.html'.)");
+}
 
 
 
