@@ -60,12 +60,8 @@ class NS_COM nsCString :
 
 #ifdef NEW_STRING_APIS
 protected:
-  typedef nsAReadableCString::FragmentRequest   FragmentRequest;
-  typedef nsAReadableCString::ReadableFragment  ReadableFragment;
-  typedef nsAWritableCString::WritableFragment  WritableFragment;
-
-  virtual const char* GetReadableFragment( ReadableFragment&, FragmentRequest, PRUint32 ) const;
-  virtual char* GetWritableFragment( WritableFragment&, FragmentRequest, PRUint32 );
+  virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
+  virtual char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 );
 
 public:
   nsCString( const nsAReadableCString& );
@@ -184,6 +180,7 @@ public:
   PRBool IsEmpty(void) const {
     return PRBool(0==mLength);
   }
+#endif
 
   /**********************************************************************
     Accessor methods...
@@ -196,6 +193,7 @@ public:
   const char* GetBuffer(void) const;
 
 
+#ifndef NEW_STRING_APIS
    /**
      * Get nth character.
      */
@@ -745,12 +743,10 @@ public:
 
 };
 
-#if 0
 #ifdef NEW_STRING_APIS
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const nsCString&);
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const char*)
 NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const char*, const nsCString&)
-#endif
 #endif
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
@@ -799,6 +795,11 @@ public:
     
     char mBuffer[kDefaultStringSize];
 };
+
+#ifdef NEW_STRING_APIS
+NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCAutoString&, const char*)
+NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const char*, const nsCAutoString&)
+#endif
 
 
 /***************************************************************

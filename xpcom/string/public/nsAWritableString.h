@@ -30,6 +30,158 @@
 #include "nsAReadableString.h"
 
 
+template <class CharT>
+struct nsWritableFragment
+  {
+    CharT*    mStart;
+    CharT*    mEnd;
+    PRUint32  mFragmentIdentifier;
+
+    nsWritableFragment()
+        : mStart(0), mEnd(0), mFragmentIdentifier(0)
+      {
+        // nothing else to do here
+      }
+  };
+
+template <class CharT> class basic_nsAWritableString;
+
+template <class CharT>
+class nsWritingIterator
+    : public bidirectional_iterator_tag
+  {
+    public:
+      typedef ptrdiff_t                   difference_type;
+      typedef CharT                       value_type;
+      typedef CharT*                      pointer;
+      typedef CharT&                      reference;
+      typedef bidirectional_iterator_tag  iterator_category;
+
+    private:
+      friend class basic_nsAWritableString<CharT>;
+
+      nsWritableFragment<CharT>       mFragment;
+      CharT*                          mPosition;
+      basic_nsAWritableString<CharT>* mOwningString;
+
+      inline void normalize_forward();
+      inline void normalize_backward();
+
+      nsWritingIterator( nsWritableFragment<CharT>& aFragment,
+                         CharT* aStartingPosition,
+                         basic_nsAWritableString<CharT>& aOwningString )
+          : mFragment(aFragment),
+            mPosition(aStartingPosition),
+            mOwningString(&aOwningString)
+        {
+          // nothing else to do here
+        }
+
+    public:
+      // nsWritingIterator( const nsWritingIterator<CharT>& ); ...use default copy-constructor
+      // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& ); ...use default copy-assignment operator
+
+      
+      reference
+      operator*() const
+        {
+          return *mPosition;
+        }
+
+      pointer
+      operator->() const
+        {
+          return mPosition;
+        }
+
+      nsWritingIterator<CharT>&
+      operator++()
+        {
+          ++mPosition;
+          normalize_forward();
+          return *this;
+        }
+
+      nsWritingIterator<CharT>
+      operator++( int )
+        {
+          nsWritingIterator<CharT> result(*this);
+          ++mPosition;
+          normalize_forward();
+          return result;
+        }
+
+      nsWritingIterator<CharT>&
+      operator--()
+        {
+          normalize_backward();
+          --mPosition;
+          return *this;
+        }
+
+      nsWritingIterator<CharT>
+      operator--( int )
+        {
+          nsWritingIterator<CharT> result(*this);
+          normalize_backward();
+          --mPosition;
+          return result;
+        }
+
+      const nsWritableFragment<CharT>&
+      fragment() const
+        {
+          return mFragment;
+        }
+
+      difference_type
+      size_forward() const
+        {
+          return mFragment.mEnd - mPosition;
+        }
+
+      difference_type
+      size_backward() const
+        {
+          return mPosition - mFragment.mStart;
+        }
+
+      nsWritingIterator<CharT>&
+      operator+=( difference_type n )
+        {
+          if ( n < 0 )
+            return operator-=(-n);
+
+          while ( n )
+            {
+              difference_type one_hop = NS_MIN(n, size_forward());
+              mPosition += one_hop;
+              normalize_forward();
+              n -= one_hop;
+            }
+
+          return *this;
+        }
+
+      nsWritingIterator<CharT>&
+      operator-=( difference_type n )
+        {
+          if ( n < 0 )
+            return operator+=(-n);
+
+          while ( n )
+            {
+              difference_type one_hop = NS_MIN(n, size_backward());
+              mPosition -= one_hop;
+              normalize_backward();
+              n -= one_hop;
+            }
+
+          return *this;
+        }
+  };
+
+
 /*
   This file defines the abstract interfaces |nsAWritableString| and
   |nsAWritableCString|.
@@ -45,204 +197,29 @@ class basic_nsAWritableString
       ...
     */
   {
-    protected:
-      typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
-
-      struct WritableFragment
-        {
-          CharT*    mStart;
-          CharT*    mEnd;
-          PRUint32  mFragmentIdentifier;
-
-          WritableFragment()
-              : mStart(0), mEnd(0), mFragmentIdentifier(0)
-            {
-              // nothing else to do here
-            }
-        };
+    // friend class nsWritingIterator<CharT>;
 
     public:
-      virtual CharT* GetWritableFragment( WritableFragment&, FragmentRequest, PRUint32 = 0 ) = 0;
+      typedef nsWritingIterator<CharT> Iterator;
 
-      friend class WritingIterator;
-      class WritingIterator
-          : public bidirectional_iterator_tag
-        {
-          public:
-            typedef ptrdiff_t                   difference_type;
-            typedef CharT                       value_type;
-            typedef CharT*                      pointer;
-            typedef CharT&                      reference;
-            typedef bidirectional_iterator_tag  iterator_category;
+      virtual CharT* GetWritableFragment( nsWritableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) = 0;
 
-          private:
-            friend class basic_nsAWritableString<CharT>;
 
-            WritableFragment                mFragment;
-            CharT*                          mPosition;
-            basic_nsAWritableString<CharT>* mOwningString;
-
-            void
-            normalize_forward()
-              {
-                if ( mPosition == mFragment.mEnd )
-                  if ( mOwningString->GetWritableFragment(mFragment, kNextFragment) )
-                    mPosition = mFragment.mStart;
-              }
-
-            void
-            normalize_backward()
-              {
-                if ( mPosition == mFragment.mStart )
-                  if ( mOwningString->GetWritableFragment(mFragment, kPrevFragment) )
-                    mPosition = mFragment.mEnd;
-              }
-
-            WritingIterator( WritableFragment& aFragment,
-                      CharT* aStartingPosition,
-                      basic_nsAWritableString<CharT>& aOwningString )
-                : mFragment(aFragment),
-                  mPosition(aStartingPosition),
-                  mOwningString(&aOwningString)
-              {
-                // nothing else to do here
-              }
-
-          public:
-            // WritingIterator( const WritingIterator& ); ...use default copy-constructor
-            // WritingIterator& operator=( const WritingIterator& ); ...use default copy-assignment operator
-
-            
-            reference
-            operator*() const
-              {
-                return *mPosition;
-              }
-
-            pointer
-            operator->() const
-              {
-                return mPosition;
-              }
-
-            WritingIterator&
-            operator++()
-              {
-                ++mPosition;
-                normalize_forward();
-                return *this;
-              }
-
-            WritingIterator
-            operator++( int )
-              {
-                WritingIterator result(*this);
-                ++mPosition;
-                normalize_forward();
-                return result;
-              }
-
-            WritingIterator&
-            operator--()
-              {
-                normalize_backward();
-                --mPosition;
-                return *this;
-              }
-
-            WritingIterator
-            operator--( int )
-              {
-                WritingIterator result(*this);
-                normalize_backward();
-                --mPosition;
-                return result;
-              }
-
-            const WritableFragment&
-            fragment() const
-              {
-                return mFragment;
-              }
-
-            difference_type
-            size_forward() const
-              {
-                return mFragment.mEnd - mPosition;
-              }
-
-            difference_type
-            size_backward() const
-              {
-                return mPosition - mFragment.mStart;
-              }
-
-            WritingIterator&
-            operator+=( difference_type n )
-              {
-                if ( n < 0 )
-                  return operator-=(-n);
-
-                while ( n )
-                  {
-                    difference_type one_hop = NS_MIN(n, size_forward());
-                    mPosition += one_hop;
-                    normalize_forward();
-                    n -= one_hop;
-                  }
-
-                return *this;
-              }
-
-            WritingIterator&
-            operator-=( difference_type n )
-              {
-                if ( n < 0 )
-                  return operator+=(-n);
-
-                while ( n )
-                  {
-                    difference_type one_hop = NS_MIN(n, size_backward());
-                    mPosition -= one_hop;
-                    normalize_backward();
-                    n -= one_hop;
-                  }
-
-                return *this;
-              }
-
-            PRBool
-            operator==( const WritingIterator& rhs ) const
-              {
-                return mPosition == rhs.mPosition;
-              }
-
-            PRBool
-            operator!=( const WritingIterator& rhs ) const
-              {
-                return mPosition != rhs.mPosition;
-              }
-        };
-
-      typedef WritingIterator Iterator;
-
-    public:
-
-      basic_nsAWritableString<CharT>::WritingIterator
+      nsWritingIterator<CharT>
       BeginWriting( PRUint32 aOffset = 0 )
         {
-          WritableFragment fragment;
+          nsWritableFragment<CharT> fragment;
           CharT* startPos = GetWritableFragment(fragment, kFragmentAt, aOffset);
-          return basic_nsAWritableString<CharT>::WritingIterator(fragment, startPos, *this);
+          return nsWritingIterator<CharT>(fragment, startPos, *this);
         }
 
 
-      basic_nsAWritableString<CharT>::WritingIterator
+      nsWritingIterator<CharT>
       EndWriting( PRUint32 aOffset = 0 )
         {
-          WritableFragment fragment;
+          nsWritableFragment<CharT> fragment;
           CharT* startPos = GetWritableFragment(fragment, kFragmentAt, NS_MAX(0U, Length()-aOffset));
-          return basic_nsAWritableString<CharT>::WritingIterator(fragment, startPos, *this);
+          return nsWritingIterator<CharT>(fragment, startPos, *this);
         }
 
 
@@ -321,12 +298,45 @@ class basic_nsAWritableString
         }
   };
 
+template <class CharT>
+inline
+void
+nsWritingIterator<CharT>::normalize_forward()
+  {
+    if ( mPosition == mFragment.mEnd )
+      if ( mOwningString->GetWritableFragment(mFragment, kNextFragment) )
+        mPosition = mFragment.mStart;
+  }
 
 template <class CharT>
-typename basic_nsAWritableString<CharT>::WritingIterator
-copy_chunky( typename basic_nsAReadableString<CharT>::ReadingIterator first,
-             typename basic_nsAReadableString<CharT>::ReadingIterator last,
-             typename basic_nsAWritableString<CharT>::WritingIterator result )
+inline
+void
+nsWritingIterator<CharT>::normalize_backward()
+  {
+    if ( mPosition == mFragment.mStart )
+      if ( mOwningString->GetWritableFragment(mFragment, kPrevFragment) )
+        mPosition = mFragment.mEnd;
+  }
+
+template <class CharT>
+inline
+PRBool
+operator==( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>& rhs )
+  {
+    return lhs.mPosition == rhs.mPosition;
+  }
+
+template <class CharT>
+inline
+PRBool
+operator!=( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>& rhs )
+  {
+    return lhs.mPosition != rhs.mPosition;
+  }
+
+template <class CharT>
+nsWritingIterator<CharT>
+copy_chunky( nsReadingIterator<CharT> first, nsReadingIterator<CharT> last, nsWritingIterator<CharT> result )
   {
     while ( first != last )
       {
@@ -346,10 +356,8 @@ copy_chunky( typename basic_nsAReadableString<CharT>::ReadingIterator first,
   }
 
 template <class CharT>
-typename basic_nsAWritableString<CharT>::WritingIterator
-copy_backward_chunky( typename basic_nsAReadableString<CharT>::ReadingIterator  first,
-                      typename basic_nsAReadableString<CharT>::ReadingIterator  last,
-                      typename basic_nsAWritableString<CharT>::WritingIterator  result )
+nsWritingIterator<CharT>
+copy_backward_chunky( nsReadingIterator<CharT> first, nsReadingIterator<CharT> last, nsWritingIterator<CharT> result )
   {
     while ( first != last )
       {
