@@ -416,7 +416,8 @@ function deselectEventInUnifinder( )
    {
       var Tree = document.getElementById( "unifinder-categories-tree" );
       
-      Tree.clearItemSelection( );
+      //HACK THIS DOESN"T WORK RIGHT NOW FOR MIKE POTTER????
+      //Tree.clearItemSelection( );
       
       gUnifinderSelection = null;
    }

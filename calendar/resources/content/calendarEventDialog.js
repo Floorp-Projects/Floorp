@@ -82,6 +82,7 @@ var gOnOkFunction;   // function to be called when user clicks OK
 
 var gChangeEndTime = true; //
 var gTimeDifference = 3600000;  //when editing an event, we change the end time if the start time is changing. This is the difference for the event time.
+var gDefaultAlarmLength = 15; //number of minutes to default the alarm to
 
 var gMode = ''; //what mode are we in? new or edit...
 
@@ -130,23 +131,19 @@ function loadCalendarEventDialog()
    }
    
    var titleString = titleDataItem.getAttribute( "value" );
-   var headerTitleItem = document.getElementById( "standard-dialog-title-text" );
-   headerTitleItem.setAttribute( "value" , titleString );
-   
+   setFieldValue( "standard-dialog-title-text", titleString );
+
    // show proper tip
    
-   var tipNewItem = document.getElementById( "tip-new" );
-   var tipEditItem = document.getElementById( "tip-edit" );
-  
    if( "new" == args.mode )
    {
-      tipNewItem.setAttribute( "collapsed", "false" );
-      tipEditItem.setAttribute( "collapsed", "true" );
+      setFieldValue( "tip-new", false, "collapsed" );
+      setFieldValue( "tip-edit", true, "collapsed" );
    }
    else
    {
-      tipNewItem.setAttribute( "collapsed", "true" );
-      tipEditItem.setAttribute( "collapsed", "false" );
+      setFieldValue( "tip-new", true, "collapsed" );
+      setFieldValue( "tip-edit", false, "collapsed" );
    }
    
   
@@ -191,6 +188,11 @@ function loadCalendarEventDialog()
    setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
    
+   if( gEvent.alarm === false && gEvent.alarmLength == 0 )
+   {
+      gEvent.alarmLength = gDefaultAlarmLength;
+   }
+   
    setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits, "data" );
@@ -218,8 +220,8 @@ function loadCalendarEventDialog()
    setFieldValue( "repeat-checkbox", gEvent.recur, "checked");
    setFieldValue( "repeat-length-field", gEvent.recurInterval );
    setFieldValue( "repeat-length-units", gEvent.recurUnits, "value" );  
-   setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
-   setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
+   setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "checked" );
+   setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "checked" );
    
    // update enabling and disabling
    
@@ -306,7 +308,7 @@ function onOKCommand()
    }
    gEvent.recur         = getFieldValue( "repeat-checkbox", "checked" );
    gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value"  );  
-   gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "selected" );
+   gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "checked" );
    gEvent.recurInterval  = getFieldValue( "repeat-length-field" );
    
    if( gEvent.recurInterval == 0 )
@@ -371,7 +373,7 @@ function prepareDatePicker( dateFieldName )
    
    // tell the date picker the date to edit.
    
-   datePickerPopup.setAttribute( "value", dateField.editDate );
+   setFieldValue( "oe-date-picker-popup", dateField.editDate, "value" );
    
    // remember the date field that is to be updated by adding a 
    // property "dateField" to the popup.
@@ -421,8 +423,7 @@ function prepareTimePicker( timeFieldName )
    var timeField = document.getElementById( timeFieldName );
    
    // tell the time picker the time to edit.
-   
-   timePickerPopup.setAttribute( "value", timeField.editDate );
+   setFieldValue( "oe-time-picker-popup", timeField.editDate, "value" );
    
    // remember the time field that is to be updated by adding a 
    // property "timeField" to the popup.
@@ -458,9 +459,9 @@ function onTimePick( timepopup )
    formattedEndTime = formatTime( newEndDate );
    if( timepopup.timeField.id != "end-time-text" )
    {
-      document.getElementById( "end-time-text" ).value = formattedEndTime;
-   
-      document.getElementById( "end-time-text" ).editDate = newEndDate;
+      setFieldValue( "end-time-text", formattedEndTime, "value" );
+
+      setFieldValue( "end-time-text", newEndDate, "editDate" );
    }
    
    
@@ -536,34 +537,32 @@ function commandAlarm()
 
 function updateAlarmItemEnabled()
 {
-   var alarmCheckBox = document.getElementById( "alarm-checkbox" );
+   var alarmCheckBox = "alarm-checkbox";
    
-   var alarmField = document.getElementById( "alarm-length-field" );
-   var alarmMenu = document.getElementById( "alarm-length-units" );
-   var alarmLabel = document.getElementById( "alarm-length-text" );
+   var alarmField = "alarm-length-field";
+   var alarmMenu = "alarm-length-units";
+   var alarmLabel = "alarm-length-text";
       
-   var alarmEmailCheckbox = document.getElementById( "alarm-email-checkbox" );
-   var alarmEmailField = document.getElementById( "alarm-email-field" );
+   var alarmEmailCheckbox = "alarm-email-checkbox";
+   var alarmEmailField = "alarm-email-field";
 
-   if( alarmCheckBox.checked )
+   if( getFieldValue(alarmCheckBox, "checked" ) )
    {
       // call remove attribute beacuse some widget code checks for the presense of a 
       // disabled attribute, not the value.
-      
-      alarmField.removeAttribute( "disabled" );
-      alarmMenu.removeAttribute( "disabled"  );
-      alarmLabel.removeAttribute( "disabled" );
-      alarmEmailCheckbox.removeAttribute( "disabled" );
+      setFieldValue( alarmField, false, "disabled" );
+      setFieldValue( alarmMenu, false, "disabled" );
+      setFieldValue( alarmLabel, false, "disabled" );
+      setFieldValue( alarmEmailCheckbox, false, "disabled" );
    }
    else
    {
-      alarmField.setAttribute( "disabled", "true" );
-      alarmMenu.setAttribute( "disabled", "true"  );
-      alarmLabel.setAttribute( "disabled", "true" );
-      alarmEmailField.setAttribute( "disabled", "true" );
-
-      alarmEmailCheckbox.setAttribute( "disabled", "true" );
-      alarmEmailCheckbox.setAttribute( "checked", false );
+      setFieldValue( alarmField, true, "disabled" );
+      setFieldValue( alarmMenu, true, "disabled" );
+      setFieldValue( alarmLabel, true, "disabled" );
+      setFieldValue( alarmEmailField, true, "disabled" );
+      setFieldValue( alarmEmailCheckbox, true, "disabled" );
+      setFieldValue( alarmEmailCheckbox, false, "checked" );
    }
 }
 
@@ -584,20 +583,20 @@ function commandAlarmEmail()
 
 function updateAlarmEmailItemEnabled()
 {
-   var alarmCheckBox = document.getElementById( "alarm-email-checkbox" );
+   var alarmCheckBox = "alarm-email-checkbox";
    
-   var alarmEmailField = document.getElementById( "alarm-email-field" );
+   var alarmEmailField = "alarm-email-field";
       
-   if( alarmCheckBox.checked )
+   if( getFieldValue( alarmCheckBox, "checked" ) )
    {
       // call remove attribute beacuse some widget code checks for the presense of a 
       // disabled attribute, not the value.
       
-      alarmEmailField.removeAttribute( "disabled" );
+      setFieldValue( alarmEmailField, false, "disabled" );
    }
    else
    {
-      alarmEmailField.setAttribute( "disabled", "true" );
+      setFieldValue( alarmEmailField, true, "disabled" );
    }
 }
 
@@ -621,7 +620,7 @@ function updateInviteItemEnabled()
    var inviteCheckBox = document.getElementById( "invite-checkbox" );
    
    var inviteField = document.getElementById( "invite-email-field" );
-      
+   
    if( inviteCheckBox.checked )
    {
       // call remove attribute beacuse some widget code checks for the presense of a 
@@ -652,7 +651,8 @@ function updateRepeatItemEnabled()
       // disabled attribute, not the value.
       for( var i = 0; i < repeatDisableList.length; ++i )
       {
-         repeatDisableList[i].removeAttribute( "disabled" );
+         if( repeatDisableList[i].getAttribute( "today" ) != "true" )
+            repeatDisableList[i].removeAttribute( "disabled" );
       }
    }
    else
@@ -674,8 +674,7 @@ function updateRepeatItemEnabled()
    updateUntilItemEnabled();
    
    // extra interface depending on units
-   
-   //updateRepeatUnitExtensions();
+   updateRepeatUnitExtensions();
 }
 
 /**
@@ -763,7 +762,9 @@ function updateUntilItemEnabled()
    
    var repeatEndText = document.getElementById( "repeat-end-date-text" );
    var repeatEndPicker = document.getElementById( "repeat-end-date-button" );
-   if( repeatCheckBox.checked && repeatUntilRadio.selected )
+   
+   //RADIO REQUIRES SELECTED NOT CHECKED
+   if( repeatCheckBox.checked && repeatUntilRadio.selected  )
    {
       repeatEndText.removeAttribute( "disabled"  );
       repeatEndText.setAttribute( "popup", "oe-date-picker-popup" );
@@ -835,6 +836,7 @@ function updateStartEndItemEnabled()
    var endTimeLabel = document.getElementById( "end-time-label" );
    var endTimePicker = document.getElementById( "end-time-button" );
    var endTimeText = document.getElementById( "end-time-text" );
+   
    if( allDayCheckBox.checked )
    {
       // disable popups by removing the popup attribute
@@ -914,10 +916,23 @@ function setAdvancedWeekRepeat()
          checked = ( ( gEvent.recurWeekdays | eval( "kRepeatDay_"+i ) ) == eval( gEvent.recurWeekdays ) );
          
          dump( "checked is "+checked );
-   
+         
          setFieldValue( "advanced-repeat-week-"+i, checked, "checked" );
+
+         setFieldValue( "advanced-repeat-week-"+i, false, "today" );
       }
    }
+  
+   //get the day number for today.
+   var startTime = getDateTimeFieldValue( "start-date-text" );
+   
+   var dayNumber = startTime.getDay();
+   
+   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "checked" );
+
+   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "disabled" );
+
+   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "today" );
    
 }
 
@@ -949,18 +964,28 @@ function updateAdvancedWeekRepeat()
    
    var dayNumber = startTime.getDay();
 
-   //uncheck them all
-   for( i = 0; i < 7; i++ )
+   //uncheck them all if the repeat checkbox is checked
+   var repeatCheckBox = document.getElementById( "repeat-checkbox" );
+   
+   if( repeatCheckBox.checked )
    {
-      document.getElementById( "advanced-repeat-week-"+i ).setAttribute( "checked", "false" );
+      //uncheck them all
+      for( i = 0; i < 7; i++ )
+      {
+         setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
 
-      document.getElementById( "advanced-repeat-week-"+i ).removeAttribute( "disabled" );
+         setFieldValue( "advanced-repeat-week-"+i, false, "disabled" );
+      
+         setFieldValue( "advanced-repeat-week-"+i, false, "today" );
+   
+      }
    }
 
+   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "checked" );
 
-   document.getElementById( "advanced-repeat-week-"+dayNumber ).setAttribute( "checked", "true" );
+   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "disabled" );
 
-   document.getElementById( "advanced-repeat-week-"+dayNumber ).setAttribute( "disabled", "true" );
+   setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "today" );
 }
 
 /*
@@ -1089,15 +1114,23 @@ function setFieldValue( elementId, newValue, propertyName  )
    {
       var field = document.getElementById( elementId );
       
-      if( propertyName )
+      if( newValue === false )
       {
-         field[ propertyName ] = newValue;
-         //field.setAttribute( propertyName, newValue );
+         field.removeAttribute( propertyName );
       }
       else
       {
-         field.value = newValue;
+         if( propertyName )
+         {
+            field.setAttribute( propertyName, newValue );
+         }
+         else
+         {
+            field.value = newValue;
+         }
       }
+
+      
    }
 }
 

@@ -275,8 +275,7 @@ WeekView.prototype.refreshEvents = function( )
             newImage.setAttribute( "onclick", "weekEventItemClick( this, event )" );
             newImage.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
             newImage.setAttribute( "tooltip", "savetip" );
-         
-
+            
             //ThisDayAllDayBox.appendChild( SeperatorNode );
             ThisDayAllDayBox.appendChild( newImage );
             //ThisDayAllDayBox.appendChild( newHTMLNode );

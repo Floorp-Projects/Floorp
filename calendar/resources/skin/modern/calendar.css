@@ -1144,6 +1144,7 @@ button.calendar-management-button:hover:active
 .all-day-content-box-week
 {
   	width				: 78px;
+   -moz-box-align : start;
    /*border					: 1px solid red;*/
 }
 

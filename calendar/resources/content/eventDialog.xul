@@ -263,10 +263,10 @@
                             <checkbox id="repeat-checkbox" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
                             <textbox id="repeat-length-field" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
                                     
-                            <menulist crop="never" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat" label="&repeat.units.days;" value="days" >
+                            <menulist crop="never" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
                                 <menupopup>
                                     <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   value="days" />
-                                    <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"   value="weeks" />
+                                    <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"   selected="true" value="weeks" />
                                     <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;"   value="months"  />
                                     <menuitem label="&repeat.units.years;"  labelplural="&repeat.units.years;"  labelsingular="&repeat.units.years.singular;"   value="years" />
                                 </menupopup>
@@ -274,7 +274,7 @@
                           </hbox>
                                
                           
-                          <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="true">
+                          <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="false">
                             <spacer class="repeat-left-spacer" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
                             <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />

@@ -269,7 +269,7 @@ function unifinderClickEvent( id, event )
 
 function unifinderModifyCommand()
 {
-   var SelectedItem = document.getElementById( "unifinder-categories-tree" ).selectedItems.item(0);
+   var SelectedItem = document.getElementById( "unifinder-categories-tree" ).selectedItems[0];
 
    if( SelectedItem )
    {
