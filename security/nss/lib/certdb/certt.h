@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.18 2002/06/13 21:42:41 relyea%netscape.com Exp $
+ * $Id: certt.h,v 1.19 2002/07/04 03:09:29 jpierre%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -472,6 +472,23 @@ typedef enum SECCertUsageEnum {
     certUsageStatusResponder = 10,
     certUsageAnyCA = 11
 } SECCertUsage;
+
+typedef PRInt64 SECCertificateUsage;
+
+#define certificateUsageSSLClient              (0x0001)
+#define certificateUsageSSLServer              (0x0002)
+#define certificateUsageSSLServerWithStepUp    (0x0004)
+#define certificateUsageSSLCA                  (0x0008)
+#define certificateUsageEmailSigner            (0x0010)
+#define certificateUsageEmailRecipient         (0x0020)
+#define certificateUsageObjectSigner           (0x0040)
+#define certificateUsageUserCertImport         (0x0080)
+#define certificateUsageVerifyCA               (0x0100)
+#define certificateUsageProtectedObjectSigner  (0x0200)
+#define certificateUsageStatusResponder        (0x0400)
+#define certificateUsageAnyCA                  (0x0800)
+
+#define highestUsage certificateUsageAnyCA
 
 /*
  * Does the cert belong to the user, a peer, or a CA.

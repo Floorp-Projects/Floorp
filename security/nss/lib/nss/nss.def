@@ -695,6 +695,8 @@ CERT_VerifyOCSPResponseSignature;
 CERT_GetOCSPResponseStatus;
 CERT_DestroyOCSPCertID;
 CERT_CreateOCSPCertID;
+CERT_VerifyCertificate;
+CERT_VerifyCertificateNow;
 ;+    local:
 ;+       *;
 ;+};
