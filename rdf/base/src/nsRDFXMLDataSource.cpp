@@ -397,12 +397,10 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
 
 RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 {
-    nsIRDFService* rdfService;
-    if (NS_SUCCEEDED(nsServiceManager::GetService(kRDFServiceCID,
-                                                  kIRDFServiceIID,
-                                                  (nsISupports**) &rdfService))) {
-        rdfService->UnregisterDataSource(this);
-        nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rdf->UnregisterDataSource(this);
     }
 
     Flush();
