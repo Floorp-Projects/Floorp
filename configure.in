@@ -3428,6 +3428,31 @@ if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c xmlterm`;
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xmlterm||'`
 fi
 
+dnl Disable jar packaging
+MOZ_ARG_DISABLE_BOOL(jar-packaging,
+[  --disable-jar-packaging Disable jar packaging of chrome (Deprecated) ],
+    MOZ_DISABLE_JAR_PACKAGING=1
+)
+
+MOZ_ARG_ENABLE_STRING(chrome-format,
+[  --enable-chrome-format=[jar|flat|both]
+                          Select format of chrome files (defaults to both)],
+    MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
+
+if test -z "$MOZ_CHROME_FILE_FORMAT"; then
+    if test -n "$MOZ_DISABLE_JAR_PACKAGING"; then
+        MOZ_CHROME_FILE_FORMAT=flat
+    else
+        MOZ_CHROME_FILE_FORMAT=jar
+    fi
+fi
+
+if test "$MOZ_CHROME_FILE_FORMAT" != "jar" && 
+    test "$MOZ_CHROME_FILE_FORMAT" != "flat" &&
+    test "$MOZ_CHROME_FILE_FORMAT" != "both"; then
+    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat or both])
+fi
+
 dnl ========================================================
 
 _cpp_md_flag=
@@ -3539,12 +3564,6 @@ dnl Should be smarter and check that the compiler does indeed have exceptions
 MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
 [  --enable-cpp-exceptions Enable C++ exceptions ],
     [ _MOZ_EXCEPTIONS_FLAGS=-fexceptions ]
-)
-
-dnl Disable jar packaging
-MOZ_ARG_DISABLE_BOOL(jar-packaging,
-[  --disable-jar-packaging Disable Jar packaging ],
-    MOZ_DISABLE_JAR_PACKAGING=1
 )
 
 dnl Enable Ultrasparc specific compiler options
@@ -4313,6 +4332,7 @@ AC_SUBST(OS_TEST)
 
 AC_SUBST(MOZ_DISABLE_DTD_DEBUG)
 AC_SUBST(MOZ_DISABLE_JAR_PACKAGING)
+AC_SUBST(MOZ_CHROME_FILE_FORMAT)
 
 AC_SUBST(WRAP_MALLOC_CFLAGS)
 AC_SUBST(WRAP_MALLOC_LIB)
