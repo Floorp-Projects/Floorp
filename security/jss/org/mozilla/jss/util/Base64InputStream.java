@@ -38,7 +38,6 @@ package org.mozilla.jss.util;
 
 
 import java.io.*;
-import org.mozilla.jss.asn1.ASN1Util;
 import java.util.Arrays;
 
 
