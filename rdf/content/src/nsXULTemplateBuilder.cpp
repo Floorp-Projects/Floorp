@@ -688,8 +688,8 @@ public:
         temp2 |= PLHashNumber(mMemberVariable) << 16;
         return temp1 ^ temp2; }
 
-    static PLHashNumber Hash(const void* aKey);
-    static PRIntn Compare(const void* aLeft, const void* aRight);
+    static PLHashNumber HashKey(const void* aKey);
+    static PRIntn CompareKeys(const void* aLeft, const void* aRight);
 
 protected:
     PRBool Equals(const Key& aKey) const {
@@ -717,14 +717,14 @@ Key::Key(const Instantiation& aInstantiation, const Rule* aRule)
 
 
 PLHashNumber
-Key::Hash(const void* aKey)
+Key::HashKey(const void* aKey)
 {
     const Key* key = NS_STATIC_CAST(const Key*, aKey);
     return key->Hash();
 }
 
 PRIntn
-Key::Compare(const void* aLeft, const void* aRight)
+Key::CompareKeys(const void* aLeft, const void* aRight)
 {
     const Key* left  = NS_STATIC_CAST(const Key*, aLeft);
     const Key* right = NS_STATIC_CAST(const Key*, aRight);
@@ -848,7 +848,7 @@ KeySet::KeySet()
 {
     mHead.mPrev = mHead.mNext = &mHead;
 
-    mTable = PL_NewHashTable(8, Key::Hash, Key::Compare, PL_CompareValues,
+    mTable = PL_NewHashTable(8, Key::HashKey, Key::CompareKeys, PL_CompareValues,
                              &gAllocOps, nsnull);
 
     MOZ_COUNT_CTOR(KeySet);
@@ -1060,8 +1060,8 @@ nsresult
 ConflictSet::Init()
 {
     mMatches = PL_NewHashTable(16 /* XXXwaterson we need a way to give a hint? */,
-                               Key::Hash,
-                               Key::Compare,
+                               Key::HashKey,
+                               Key::CompareKeys,
                                PL_CompareValues,
                                &gMatchAllocOps,
                                nsnull /* XXXwaterson use an arena */);
