@@ -1475,9 +1475,10 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 		nsFilePath		path(url);
 		nsFileSpec		spec(path);
 //		if (spec.IsFile() && (!spec.IsHidden()))
-		if (spec.IsFile())
+		if (spec.IsFile() || spec.IsDirectory())
 		{
 			const char	*nativeURI = spec.GetNativePathCString();
+			rv = NS_ERROR_FAILURE;
 			if (nativeURI)
 			{
 				BFile	bf(nativeURI, B_READ_ONLY);
@@ -1491,13 +1492,15 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 					{
 						beNameAttr[len] = '\0';
 						name = NS_ConvertUTF8toUCS2(beNameAttr);
+						rv = NS_OK;
 					}
 				}
 			}
-		}
-		else if (spec.IsDirectory())
-		{
-			name = NS_ConvertUTF8toUCS2(spec.GetLeafName());
+			if (NS_OK != rv)
+			{
+				name = NS_ConvertUTF8toUCS2(spec.GetLeafName());
+				rv = NS_OK;
+			}
 		}
 	}
 #endif
