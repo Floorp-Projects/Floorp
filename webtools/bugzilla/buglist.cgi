@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Stephan Niemz  <st.n@gmx.net>
 
 use diagnostics;
 use strict;
@@ -1207,8 +1208,6 @@ while (@row = FetchSQLData()) {
 			$value= sprintf "%02d:%02d:%02d", $h,$m,$s;
 		    }elsif( $age < 6*24*60*60 ) {
 			$value= sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
-		    }elsif( $age < 100*24*60*60 ) {
-			$value= sprintf "%02d-%02d", $mo+1,$d;
 		    }else {
 			$value= sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
 		    }
