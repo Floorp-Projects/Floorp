@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.21 2002/06/13 23:25:37 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.22 2002/06/20 18:46:46 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -373,14 +373,19 @@ ReadDBEntry(NSSLOWCERTCertDBHandle *handle, certDBEntryCommon *entry,
     /* format body of entry for return to caller */
     dbentry->len = data.size - SEC_DB_ENTRY_HEADER_LEN;
     if ( dbentry->len ) {
-	dbentry->data = (unsigned char *)PORT_ArenaAlloc(arena, dbentry->len);
-	if ( dbentry->data == NULL ) {
-	    PORT_SetError(SEC_ERROR_NO_MEMORY);
-	    goto loser;
-	}
+	if (arena) {
+	    dbentry->data = (unsigned char *)
+				PORT_ArenaAlloc(arena, dbentry->len);
+	    if ( dbentry->data == NULL ) {
+		PORT_SetError(SEC_ERROR_NO_MEMORY);
+		goto loser;
+	    }
     
-	PORT_Memcpy(dbentry->data, &buf[SEC_DB_ENTRY_HEADER_LEN],
+	    PORT_Memcpy(dbentry->data, &buf[SEC_DB_ENTRY_HEADER_LEN],
 		  dbentry->len);
+	} else {
+	    dbentry->data = &buf[SEC_DB_ENTRY_HEADER_LEN];
+	}
     } else {
 	dbentry->data = NULL;
     }
@@ -497,8 +502,15 @@ loser:
 static SECStatus
 EncodeDBCertKey(SECItem *certKey, PRArenaPool *arena, SECItem *dbkey)
 {
-    dbkey->len = certKey->len + SEC_DB_KEY_HEADER_LEN;
-    dbkey->data = (unsigned char *)PORT_ArenaAlloc(arena, dbkey->len);
+    unsigned int len = certKey->len + SEC_DB_KEY_HEADER_LEN;
+    if (arena) {
+	dbkey->data = (unsigned char *)PORT_ArenaAlloc(arena, len);
+    } else {
+	if (dbkey->len < len) {
+	    dbkey->data = (unsigned char *)PORT_Alloc(dbkey->len);
+	}
+    }
+    dbkey->len = len;
     if ( dbkey->data == NULL ) {
 	goto loser;
     }
@@ -837,15 +849,12 @@ static SECStatus
 DeleteDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
 {
     SECItem dbkey;
-    PRArenaPool *arena = NULL;
     SECStatus rv;
-    
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( arena == NULL ) {
-	goto loser;
-    }
 
-    rv = EncodeDBCertKey(certKey, arena, &dbkey);
+    dbkey.data= NULL;
+    dbkey.len = 0;
+
+    rv = EncodeDBCertKey(certKey, NULL, &dbkey);
     if ( rv != SECSuccess ) {
 	goto loser;
     }
@@ -855,14 +864,15 @@ DeleteDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
 	goto loser;
     }
 
-    PORT_FreeArena(arena, PR_FALSE);
+    if (dbkey.data) {
+	PORT_Free(dbkey.data);
+    }
     return(SECSuccess);
 
 loser:
-    if ( arena ) {
-	PORT_FreeArena(arena, PR_FALSE);
+    if (dbkey.data) {
+	PORT_Free(dbkey.data);
     }
-    
     return(SECFailure);
 }
 
@@ -873,11 +883,14 @@ static certDBEntryCert *
 ReadDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
 {
     PRArenaPool *arena = NULL;
-    PRArenaPool *tmparena = NULL;
     certDBEntryCert *entry;
     SECItem dbkey;
     SECItem dbentry;
     SECStatus rv;
+    unsigned char buf[512];
+
+    dbkey.data = buf;
+    dbkey.len = sizeof(buf);
     
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( arena == NULL ) {
@@ -885,12 +898,6 @@ ReadDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
 	goto loser;
     }
 
-    tmparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( tmparena == NULL ) {
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	goto loser;
-    }
-    
     entry = (certDBEntryCert *)PORT_ArenaAlloc(arena, sizeof(certDBEntryCert));
     if ( entry == NULL ) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
@@ -899,12 +906,12 @@ ReadDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
     entry->common.arena = arena;
     entry->common.type = certDBEntryTypeCert;
 
-    rv = EncodeDBCertKey(certKey, tmparena, &dbkey);
+    rv = EncodeDBCertKey(certKey, NULL, &dbkey);
     if ( rv != SECSuccess ) {
 	goto loser;
     }
     
-    rv = ReadDBEntry(handle, &entry->common, &dbkey, &dbentry, tmparena);
+    rv = ReadDBEntry(handle, &entry->common, &dbkey, &dbentry, NULL);
     if ( rv == SECFailure ) {
 	goto loser;
     }
@@ -914,12 +921,14 @@ ReadDBCertEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey)
 	goto loser;
     }
     
-    PORT_FreeArena(tmparena, PR_FALSE);
+    if (dbkey.data && dbkey.data != buf) {
+	PORT_Free(dbkey.data);
+    }
     return(entry);
     
 loser:
-    if ( tmparena ) {
-	PORT_FreeArena(tmparena, PR_FALSE);
+    if (dbkey.data && dbkey.data != buf) {
+	PORT_Free(dbkey.data);
     }
     if ( arena ) {
 	PORT_FreeArena(arena, PR_FALSE);
@@ -4160,26 +4169,11 @@ loser:
 static NSSLOWCERTCertificate *
 FindCertByKey(NSSLOWCERTCertDBHandle *handle, SECItem *certKey, PRBool lockdb)
 {
-    SECItem keyitem;
-    DBT key;
     SECStatus rv;
     NSSLOWCERTCertificate *cert = NULL;
     PRArenaPool *arena = NULL;
     certDBEntryCert *entry;
     PRBool locked = PR_FALSE;
-    
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( arena == NULL ) {
-	goto loser;
-    }
-    
-    rv = EncodeDBCertKey(certKey, arena, &keyitem);
-    if ( rv != SECSuccess ) {
-	goto loser;
-    }
-    
-    key.data = keyitem.data;
-    key.size = keyitem.len;
     
     if ( lockdb ) {
 	locked = PR_TRUE;
@@ -4206,10 +4200,6 @@ loser:
     if ( locked ) {
 	nsslowcert_UnlockDB(handle);
     }
-
-    if ( arena ) {
-	PORT_FreeArena(arena, PR_FALSE);
-    }
     
     return(cert);
 }
@@ -4220,26 +4210,11 @@ loser:
 static NSSLOWCERTTrust *
 FindTrustByKey(NSSLOWCERTCertDBHandle *handle, SECItem *certKey, PRBool lockdb)
 {
-    SECItem keyitem;
-    DBT key;
     SECStatus rv;
     NSSLOWCERTTrust *trust = NULL;
     PRArenaPool *arena = NULL;
     certDBEntryCert *entry;
     PRBool locked = PR_FALSE;
-    
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( arena == NULL ) {
-	goto loser;
-    }
-    
-    rv = EncodeDBCertKey(certKey, arena, &keyitem);
-    if ( rv != SECSuccess ) {
-	goto loser;
-    }
-    
-    key.data = keyitem.data;
-    key.size = keyitem.len;
     
     if ( lockdb ) {
 	locked = PR_TRUE;
@@ -4269,10 +4244,6 @@ loser:
 
     if ( locked ) {
 	nsslowcert_UnlockDB(handle);
-    }
-
-    if ( arena ) {
-	PORT_FreeArena(arena, PR_FALSE);
     }
     
     return(trust);

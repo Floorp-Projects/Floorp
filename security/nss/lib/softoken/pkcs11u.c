@@ -284,6 +284,9 @@ static const PK11Attribute pk11_StaticTrueAttr =
 static const PK11Attribute pk11_StaticFalseAttr = 
   PK11_DEF_ATTRIBUTE(&pk11_staticFalseValue,sizeof(pk11_staticFalseValue));
 static const PK11Attribute pk11_StaticNullAttr = PK11_DEF_ATTRIBUTE(NULL,0);
+char pk11_StaticOneValue = 1;
+static const PK11Attribute pk11_StaticOneAttr = 
+  PK11_DEF_ATTRIBUTE(&pk11_StaticOneValue,sizeof(pk11_StaticOneValue));
 
 CK_CERTIFICATE_TYPE pk11_staticX509Value = CKC_X_509;
 static const PK11Attribute pk11_StaticX509Attr =
@@ -622,7 +625,7 @@ pk11_FindPublicKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
         label = nsslowkey_FindKeyNicknameByPublicKey(object->obj.slot->keyDB,
 				&object->dbKey, object->obj.slot->password);
 	if (label == NULL) {
-	   return (PK11Attribute *)&pk11_StaticNullAttr;
+	   return (PK11Attribute *)&pk11_StaticOneAttr;
 	}
 	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label), PR_TRUE);
 	PORT_Free(label);
@@ -1048,6 +1051,11 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return pk11_NewTokenAttribute(type,cert->derCert.data,
 						cert->derCert.len,PR_FALSE);
     case CKA_ID:
+	if (((cert->trust->sslFlags & CERTDB_USER) == 0) &&
+		((cert->trust->emailFlags & CERTDB_USER) == 0) &&
+		((cert->trust->objectSigningFlags & CERTDB_USER) == 0)) {
+	    return (PK11Attribute *)&pk11_StaticNullAttr;
+	}
 	pubKey = nsslowcert_ExtractPublicKey(cert);
 	if (pubKey == NULL) break;
 	item = pk11_GetPubItem(pubKey);
@@ -1070,11 +1078,8 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return pk11_NewTokenAttribute(type,cert->derIssuer.data,
 						cert->derIssuer.len, PR_FALSE);
     case CKA_SERIAL_NUMBER:
-	item = SEC_ASN1EncodeItem(NULL,NULL,cert,pk11_SerialTemplate);
-	if (item == NULL) break;
-	attr = pk11_NewTokenAttribute(type, item->data, item->len, PR_TRUE);
-	SECITEM_FreeItem(item,PR_TRUE);
-	return attr;
+	return pk11_NewTokenAttribute(type,cert->derSN.data,
+						cert->derSN.len, PR_FALSE);
     case CKA_NETSCAPE_EMAIL:
 	return cert->emailAddr ? pk11_NewTokenAttribute(type, cert->emailAddr,
 				PORT_Strlen(cert->emailAddr), PR_FALSE) :

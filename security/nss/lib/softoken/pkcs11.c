@@ -3764,6 +3764,11 @@ pk11_searchKeys(PK11Slot *slot, SECItem *key_id, PRBool isLoggedIn,
 	if (keyHandle->version != 3) {
 	    return;
 	}
+	/* don't do the traversal if it can't possibly be the correct id */
+	/* all soft token id's are SHA1_HASH_LEN's */
+	if (key_id->len != SHA1_LENGTH) {
+	    return;
+	}
     }
     keyData.slot = slot;
     keyData.searchHandles = search;
