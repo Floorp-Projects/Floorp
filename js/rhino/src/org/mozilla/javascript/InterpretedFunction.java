@@ -36,6 +36,8 @@
 
 package org.mozilla.javascript;
 
+import org.mozilla.javascript.debug.DebuggableScript;
+
 final class InterpretedFunction extends NativeFunction implements Script
 {
     InterpreterData idata;
@@ -152,6 +154,11 @@ final class InterpretedFunction extends NativeFunction implements Script
     public String getEncodedSource()
     {
         return Interpreter.getEncodedSource(idata);
+    }
+
+    public DebuggableScript getDebuggableView()
+    {
+        return idata;
     }
 }
 

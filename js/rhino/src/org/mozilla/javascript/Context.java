@@ -2124,6 +2124,19 @@ public class Context
     }
 
     /**
+     * Return DebuggableScript instance if any associated with the script.
+     * If callable supports DebuggableScript implementation, the method
+     * returns it. Otherwise null is returned.
+     */
+    public static DebuggableScript getDebuggableView(Script script)
+    {
+        if (script instanceof NativeFunction) {
+            return ((NativeFunction)script).getDebuggableView();
+        }
+        return null;
+    }
+
+    /**
      * Controls certain aspects of script semantics.
      * Should be overwritten to alter default behavior.
      * <p>

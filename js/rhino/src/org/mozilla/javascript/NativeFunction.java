@@ -38,6 +38,8 @@
 
 package org.mozilla.javascript;
 
+import org.mozilla.javascript.debug.DebuggableScript;
+
 /**
  * This class implements the Function native object.
  * See ECMA 15.3.
@@ -133,6 +135,11 @@ public class NativeFunction extends BaseFunction
      * Get encoded source string.
      */
     public String getEncodedSource()
+    {
+        return null;
+    }
+
+    public DebuggableScript getDebuggableView()
     {
         return null;
     }
