@@ -427,39 +427,31 @@ nsIWin32LocaleImpl::~nsIWin32LocaleImpl(void)
 NS_IMETHODIMP
 nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 {
-	char*		locale_string;
 	char		language_code[3];
 	char		country_code[3];
 	char		region_code[3];
 	int			i,j;
 
-	locale_string = ToNewCString(*locale);
-	if (locale_string!=NULL)
-	{	
-		if (!ParseLocaleString(locale_string,language_code,country_code,region_code)) {
-			*winLCID = MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),
-				SORT_DEFAULT);
-			free(locale_string);
-			return NS_OK;
-		}
-		// we have a LL-CC-RR style string
+  if (!ParseLocaleString(*locale,language_code,country_code,region_code)) {
+    *winLCID = MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),
+                        SORT_DEFAULT);
+    return NS_OK;
+  }
+  // we have a LL-CC-RR style string
 
-		for(i=0;i<LENGTH_MAPPING_LIST;i++) {
-			if (strcmp(language_code,iso_list[i].iso_code)==0) {
-				for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;j++) {
-					if (strcmp(country_code,iso_list[i].sublang_list[j].iso_code)==0) {
-						free(locale_string);
-						*winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,iso_list[i].sublang_list[j].win_code),SORT_DEFAULT);
-						return NS_OK;
-					}
-				}
-				// here we have a language match but no country match
-				free(locale_string);
-				*winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,SUBLANG_DEFAULT),SORT_DEFAULT);
-				return NS_OK;
-			}
-		}
-	}
+  for(i=0;i<LENGTH_MAPPING_LIST;i++) {
+    if (strcmp(language_code,iso_list[i].iso_code)==0) {
+      for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;j++) {
+        if (strcmp(country_code,iso_list[i].sublang_list[j].iso_code)==0) {
+          *winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,iso_list[i].sublang_list[j].win_code),SORT_DEFAULT);
+          return NS_OK;
+        }
+      }
+      // here we have a language match but no country match
+      *winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,SUBLANG_DEFAULT),SORT_DEFAULT);
+      return NS_OK;
+    }
+  }
 		
 	return NS_ERROR_FAILURE;
 }
@@ -501,11 +493,11 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsString* locale)
 //
 // returns PR_FALSE/PR_TRUE depending on if it was of the form LL-CC-RR
 PRBool
-nsIWin32LocaleImpl::ParseLocaleString(const char* locale_string, char* language, char* country, char* region)
+nsIWin32LocaleImpl::ParseLocaleString(const nsString& locale_string, char* language, char* country, char* region)
 {
 	size_t		len;
 
-	len = strlen(locale_string);
+	len = locale_string.Length();
 	if (len==0 || (len!=2 && len!=5 && len!=8))
 		return PR_FALSE;
 	
