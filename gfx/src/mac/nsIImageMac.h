@@ -76,7 +76,7 @@ public:
   NS_IMETHOD ConvertFromPICT ( PicHandle inPicture ) = 0;
   
     // Get the PixMap for this image
-  NS_IMETHOD GetPixMap ( PixMap** aPixMap ) = 0;
+  NS_IMETHOD GetGWorldPtr ( GWorldPtr* aGWorld ) = 0;
   
     //Convert to the os-native icon format. Most used to put icons
     //onto windows and menus. The outIcon will be allocated, the caller
