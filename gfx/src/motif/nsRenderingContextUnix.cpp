@@ -561,7 +561,6 @@ void nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, 
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-
   ::XFillRectangle(mRenderingSurface->display, 
 		   mRenderingSurface->drawable,
 		   mRenderingSurface->gc,
@@ -807,7 +806,6 @@ void nsRenderingContextUnix :: DrawString(const nsString& aString,
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
 nscoord width,height;
-printf("1-----------------------\n");
   width = NS_TO_INT_ROUND(mP2T * aImage->GetWidth());
   height = NS_TO_INT_ROUND(mP2T * aImage->GetHeight());
 
@@ -819,7 +817,6 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord a
 {
 nsRect	tr;
 
-printf("2-----------------------\n");
   tr.x = aX;
   tr.y = aY;
   tr.width = aWidth;
@@ -831,7 +828,6 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aSRect,
 {
 nsRect	sr,dr;
   
-  printf("nsRenderingContextUnixStretch :: DrawImage 0x%x\n",aImage);
   sr = aSRect;
   mTMatrix ->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
 
@@ -846,7 +842,6 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
 nsRect	tr;
 
-  printf("nsRenderingContextUnix :: DrawImage 0x%x\n",aImage);
   tr = aRect;
   mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
 
@@ -860,7 +855,6 @@ nsRect	tr;
 nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
 {
   
-printf("CopyOffScreenBits-----------------------\n");
   ::XCopyArea(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
 	      mFrontBuffer->drawable,

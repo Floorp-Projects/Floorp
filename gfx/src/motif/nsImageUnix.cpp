@@ -49,7 +49,7 @@ nsImageUnix :: ~nsImageUnix()
   }
   if(nsnull != mImageBits)
     {
-    //delete[] (PRUint8*)mImageBits;
+    delete[] (PRUint8*)mImageBits;
     mImageBits = nsnull;
     }
 }
@@ -138,7 +138,7 @@ PRInt32 spanbytes;
 		spanbytes++;
 
 	spanbytes <<= 2;
-
+printf("scanbytes: %d\n", spanbytes);
   return(spanbytes);
 }
 
@@ -167,7 +167,6 @@ PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurf
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
  
-  printf("Draw::XPutImage %d %d %d %d %d %d\n",  aSX,aSY,aDX,aDY,aDWidth,aDHeight);
   if (nsnull == mImage)
     return PR_FALSE;
 
@@ -186,12 +185,15 @@ PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurf
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
  
-printf("Draw::XPutImage2 %d %d %d %d %d %d\n",  aX,aY,aX,aY,aWidth,aHeight);
   if (nsnull == mImage)
     return PR_FALSE;
 printf("Draw::XPutImage2 %d %d %d %d %d %d\n",  aX,aY,aX,aY,aWidth,aHeight);
   XPutImage(unixdrawing->display,unixdrawing->drawable,unixdrawing->gc,mImage,
-                    aX,aY,aX,aY,aWidth,aHeight);  
+                    0,0,aX,aY,aWidth,aHeight);  
+
+printf("DrawImage 0x%x 0x%x 0x%x \n", unixdrawing->display,
+                unixdrawing->drawable,
+                unixdrawing->gc);
 
   return PR_TRUE;
 }
@@ -232,20 +234,32 @@ void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
   
   if(mImageBits) {
     /* Need to support monochrome too */
-    if (unixdrawing->visual->c_class == TrueColor || unixdrawing->visual->c_class == DirectColor)
+    if (unixdrawing->visual->c_class == TrueColor || 
+        unixdrawing->visual->c_class == DirectColor) {
       format = ZPixmap;
-    else
+      printf("%s\n", (unixdrawing->visual->c_class == TrueColor?"True Color":"DirectColor"));
+    } else {
       format = XYPixmap;
-    
+      printf("Not True Color\n");
+    }
+printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", mWidth, mHeight,  
+            unixdrawing->depth, mDepth);
+
     mImage = ::XCreateImage(unixdrawing->display,
 			    unixdrawing->visual,
 			    unixdrawing->depth,
 			    format,
 			    0,
 			    (char *)mImageBits,
-			    mWidth, 
-			    mHeight,
-			    8,0);
+			    (unsigned int)mWidth, 
+			    (unsigned int)mHeight,
+			    32,mRowBytes);
+
+    mImage->byte_order       = ImageByteOrder(unixdrawing->display);
+    mImage->bits_per_pixel   = unixdrawing->depth;
+    mImage->bitmap_bit_order = BitmapBitOrder(unixdrawing->display);
+    mImage->bitmap_unit      = 32;
+
   }	
   return ;
 }
