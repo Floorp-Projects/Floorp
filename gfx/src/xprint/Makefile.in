@@ -32,7 +32,7 @@ LIBRARY_NAME	= gfxxprint
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= gkgfx
-REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2 necko
+REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2 necko imglib2
 
 CSRCS		= ../xlibrgb/xlibrgb.c \
                 xprintutil.c \
