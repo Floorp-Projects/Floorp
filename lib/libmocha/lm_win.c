@@ -3206,6 +3206,7 @@ lm_NewWindow(MWContext *context)
 #ifdef NAV_HARDWARE
     HOLD(decoder->hardware);
 #endif
+    HOLD(decoder->environment);
     HOLD(decoder->pkcs11);
     /* Drop ad-hoc GC roots. */
     HOLD(decoder->event_receiver);
@@ -3264,6 +3265,7 @@ lm_DestroyWindow(MochaDecoder *decoder)
 #ifdef NAV_HARDWARE
     DROP(decoder->hardware);
 #endif
+    DROP(decoder->environment);
     DROP(decoder->pkcs11);
     /* Drop ad-hoc GC roots. */
     DROP(decoder->event_receiver);
@@ -3392,6 +3394,7 @@ lm_DefineWindowProps(JSContext *cx, MochaDecoder *decoder)
 #endif
            lm_InitBuiltinClass(decoder) &&
            lm_InitInputClasses(decoder) &&
+		   lm_DefineEnvironment(decoder) &&
            lm_DefinePkcs11(decoder));
 }
 
@@ -3482,6 +3485,7 @@ lm_FreeWindowContent(MochaDecoder *decoder, JSBool fromDiscard)
 #ifdef NAV_HARDWARE
     CLEAR(decoder->hardware);
 #endif
+    CLEAR(decoder->environment);
     CLEAR(decoder->pkcs11);
 
     /* Drop ad-hoc GC roots, but not opener -- it survives unloads. */
