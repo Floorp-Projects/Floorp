@@ -6,7 +6,7 @@ CFLAGS = -g -ggdb $(DEFINES) -DDEBUG -DXP_UNIX -Wall -W -Wpointer-arith \
 
 objs = 	hash.o \
 	icodegenerator.o \
-	icodeemitter.o \
+	icodeEmitter.o \
 	interpreter.o \
 	js2.o \
 	jsmath.o \
@@ -27,7 +27,7 @@ test_objs = hash.o \
 	icodeasm.o \
 	ica_test.o \
 	icodegenerator.o \
-	icodeemitter.o \
+	icodeEmitter.o \
 	interpreter.o \
 	jsmath.o \
 	jstypes.o \
