@@ -297,7 +297,7 @@ PRUint16                red,green,blue,*cur16;
     for(y=0;y<mHeight;y++)
       {
       cursrc = mImageBits+(y*mOriginalRowBytes);
-      cur16 = (PRInt16*) (tempbuffer+(y*mRowBytes));
+      cur16 = (PRUint16*) (tempbuffer+(y*mRowBytes));
 
       for(x=0;x<mOriginalRowBytes;x++)
         {
