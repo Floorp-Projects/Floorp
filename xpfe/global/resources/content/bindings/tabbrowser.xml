@@ -646,7 +646,7 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (aTab.localName == 'tabs')
+            if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
             
             var l = this.mTabContainer.childNodes.length;
@@ -677,7 +677,7 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (aTab.localName == 'tabs')
+            if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
 
             var l = this.mTabContainer.childNodes.length;
