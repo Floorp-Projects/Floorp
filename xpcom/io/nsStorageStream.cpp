@@ -248,8 +248,8 @@ class nsStorageInputStream : public nsIInputStream
 public:
     nsStorageInputStream(nsStorageStream *aStorageStream, PRUint32 aSegmentSize)
         : mStorageStream(aStorageStream), mReadCursor(0),
-          mSegmentEnd(0), mLogicalCursor(0), mSegmentNum(0),
-          mSegmentSize(aSegmentSize)
+          mSegmentEnd(0), mSegmentNum(0),
+          mSegmentSize(aSegmentSize), mLogicalCursor(0)
 	{
         NS_ADDREF(mStorageStream);
 	    NS_INIT_REFCNT();
@@ -271,12 +271,12 @@ protected:
     friend class nsStorageStream;
 
 private:
+    nsStorageStream* mStorageStream;
     const char*      mReadCursor;    // Next memory location to read byte, or NULL
     const char*      mSegmentEnd;    // One byte past end of current buffer segment
     PRUint32         mSegmentNum;    // Segment number containing read cursor
     PRUint32         mSegmentSize;   // All segments, except the last, are of this size
     PRUint32         mLogicalCursor; // Logical offset into stream
-    nsStorageStream* mStorageStream;
 
     PRUint32 SegNum(PRUint32 aPosition)    {return aPosition >> mStorageStream->mSegmentSizeLog2;}
     PRUint32 SegOffset(PRUint32 aPosition) {return aPosition & (mSegmentSize - 1);}
