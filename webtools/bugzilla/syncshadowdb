@@ -195,7 +195,7 @@ $::dbwritesallowed = 1;
 # the shadowdb.  Note that this is carefully coded to ignore errors; we want
 # to keep going even on older mysqld's that don't have the
 # SQL_LOW_PRIORITY_UPDATES option.
-$::db->query("SET OPTION SQL_LOW_PRIORITY_UPDATES = 1"); 
+$::db->do("SET OPTION SQL_LOW_PRIORITY_UPDATES = 1"); 
 
 while (1) {
     SendSQL("SELECT id, command FROM $shadowtable WHERE reflected = 0 " .
