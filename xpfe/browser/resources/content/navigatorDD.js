@@ -44,7 +44,6 @@ catch (ex) {
 }  
 
 
-
 function GeneralDrag ( event )
 {
   if ( !gDragDropEnabled )
@@ -95,14 +94,14 @@ function BeginDragPersonalToolbar ( event )
       trans.addDataFlavor("moz/toolbaritem");
       var genData = 
         Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
-      trans.addDataFlavor("text/plain");
+      trans.addDataFlavor("text/unicode");
       var genTextData = 
-        Components.classes["component://netscape/supports-string"].createInstance(Components.interfaces.nsISupportsString);      
+        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);      
       if ( genData && genTextData ) {
       
 			  var id = event.target.getAttribute("id");
 			  genData.data = id;
-			      genTextData.data = id;
+			  genTextData.data = id;
 			      
 			  dump("ID: " + id + "\n");
 
@@ -130,7 +129,7 @@ this doesn't work anymore (target is null), not sure why.
 */
 
 	      trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
-	      trans.setTransferData ( "text/plain", genTextData, id.length );  // single byte data
+	      trans.setTransferData ( "text/unicode", genTextData, id.length*2 );  // double byte data
 	      var transArray = 
 	        Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
 	      if ( transArray ) {
@@ -254,7 +253,7 @@ function DragOverPersonalToolbar ( event )
     if ( dragSession ) {
       if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )
         validFlavor = true;
-      else if ( dragSession.isDataFlavorSupported("text/plain") )
+      else if ( dragSession.isDataFlavorSupported("text/unicode") )
         validFlavor = true;
       //XXX other flavors here...
 
@@ -280,9 +279,6 @@ function DragOverPersonalToolbar ( event )
 //
 function DragOverContentArea ( event )
 {
-  if ( !gDragDropEnabled )
-    return;
-  
   var validFlavor = false;
   var dragSession = null;
 
@@ -292,8 +288,6 @@ function DragOverContentArea ( event )
     dragSession = dragService.getCurrentSession();
     if ( dragSession ) {
       if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )
-        validFlavor = true;
-      else if ( dragSession.isDataFlavorSupported("text/plain") )
         validFlavor = true;
       else if ( dragSession.isDataFlavorSupported("text/unicode") )
         validFlavor = true;
@@ -319,9 +313,6 @@ function DragOverContentArea ( event )
 //
 function DropOnContentArea ( event )
 { 
-  if ( !gDragDropEnabled )
-    return;
-  
   var dropAccepted = false;
   
   var dragService = 
@@ -333,7 +324,6 @@ function DropOnContentArea ( event )
         Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
       if ( trans ) {
         trans.addDataFlavor("text/unicode");
-        trans.addDataFlavor("text/plain");
         for ( var i = 0; i < dragSession.numDropItems; ++i ) {
           var id = "";
           dragSession.getData ( trans, i );
@@ -346,14 +336,6 @@ function DropOnContentArea ( event )
             if ( dataObj ) {            
               // pull the URL out of the data object, two byte data
               var id = dataObj.data.substring(0, len.value / 2);
-              dump("ID: '" + id + "'\n");
-            }
-          }
-          else {
-            if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
-            if ( dataObj ) {            
-              // pull the URL out of the data object
-              var id = dataObj.data.substring(0, len.value);
               dump("ID: '" + id + "'\n");
             }
           }
@@ -382,9 +364,6 @@ function DropOnContentArea ( event )
 // 
 function DragProxyIcon ( event )
 {
-  if ( !gDragDropEnabled )
-    return;
-  
   var dragStarted = false;
   var dragService = 
     Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
@@ -392,9 +371,9 @@ function DragProxyIcon ( event )
     var trans = 
       Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
     if ( trans ) {
-      trans.addDataFlavor("text/plain");
+      trans.addDataFlavor("text/unicode");
       var genTextData =
-        Components.classes["component://netscape/supports-string"].createInstance(Components.interfaces.nsISupportsString);
+        Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
       if ( genTextData ) {
       
         // pull the url out of the url bar
@@ -406,7 +385,7 @@ function DragProxyIcon ( event )
       
         dump("ID: " + id + "\n");
 
-        trans.setTransferData ( "text/plain", genTextData, id.length );  // single byte data
+        trans.setTransferData ( "text/unicode", genTextData, id.length * 2 );  // double byte data
         var transArray = 
           Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
         if ( transArray ) {

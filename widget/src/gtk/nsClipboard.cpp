@@ -138,7 +138,7 @@ nsClipboard::~nsClipboard()
 
   // free the selection data, if any
   if (mSelectionData.data != nsnull)
-    g_free(mSelectionData.data);
+    nsAllocator::Free(mSelectionData.data);
 
   nsClipboard *cb = (nsClipboard*)gtk_object_get_data(GTK_OBJECT(sWidget), "cb");
   if (cb != nsnull)
@@ -536,6 +536,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   PRUint32 cnt;
   flavorList->Count(&cnt);
   nsCAutoString foundFlavor;
+  PRBool foundData = PR_FALSE;
   for ( PRUint32 i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
@@ -546,11 +547,31 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
       gint format = GetFormat(flavorStr);
       if (DoConvert(format)) {
         foundFlavor = flavorStr;
+        foundData = PR_TRUE;
         break;
       }
     }
   }
-
+  if ( !foundData ) {
+    // if we still haven't found anything yet and we're asked to find text/unicode, then
+    // try to give them text plain if it's there.
+    gint format = GetFormat(kTextMime);
+    if (DoConvert(format)) {
+       const char* castedText = NS_REINTERPRET_CAST(char*, mSelectionData.data);          
+       PRUnichar* convertedText = nsnull;
+       PRInt32 convertedTextLen = 0;
+       nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, mSelectionData.length, 
+                                                                 &convertedText, &convertedTextLen );
+       if ( convertedText ) {
+         // out with the old, in with the new 
+         nsAllocator::Free(mSelectionData.data);
+         mSelectionData.data = NS_REINTERPRET_CAST(guchar*, convertedText);
+         mSelectionData.length = convertedTextLen * 2;
+         foundData = PR_TRUE;
+       }
+     } // if plain text data on clipboard
+  }
+  
 #ifdef DEBUG_CLIPBOARD
   printf("  Got the callback: '%s', %d\n",
          mSelectionData.data, mSelectionData.length);
@@ -564,24 +585,16 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   // We just have to copy it to the transferable.
   // 
 
-#if 0  
-// pinkerton - we have the flavor already from above, so we don't need
-// to re-derrive it.
-  nsString *name = new nsString((const char*)gdk_atom_name(mSelectionData.type));
-  int format = GetFormat(*name);
-  df->SetString((const char*)gdk_atom_name(sSelTypes[format]));
-#endif
-
-  nsCOMPtr<nsISupports> genericDataWrapper;
-  nsPrimitiveHelpers::CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
-  aTransferable->SetTransferData(foundFlavor,
-                                 genericDataWrapper,
-                                 mSelectionData.length);
-
-//delete name;
-  
-  // transferable is now copying the data, so we can free it.
-  //  g_free(mSelectionData.data);
+  if ( foundData ) {
+    nsCOMPtr<nsISupports> genericDataWrapper;
+    nsPrimitiveHelpers::CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
+    aTransferable->SetTransferData(foundFlavor,
+                                   genericDataWrapper,
+                                   mSelectionData.length);
+  }
+    
+  // transferable is now owning the data, so we can free it.
+  nsAllocator::Free(mSelectionData.data);
   mSelectionData.data = nsnull;
   mSelectionData.length = 0;
 
@@ -661,7 +674,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     g_print("        Copying mSelectionData pointer -- ");
 #endif
     mSelectionData = *aSD;
-    mSelectionData.data = g_new(guchar, aSD->length + 1);
+    mSelectionData.data = NS_REINTERPRET_CAST(guchar*, nsAllocator::Alloc(aSD->length + 1));
 #ifdef DEBUG_CLIPBOARD
     g_print("        Data = %s\n    Length = %i\n", aSD->data, aSD->length);
 #endif
@@ -712,6 +725,14 @@ NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult)
 {
   // XXX this doesn't work right.  need to fix it.
+  
+  // Note to implementor...(from pink the clipboard bitch).
+  //
+  // If a client asks for unicode, first check if unicode is present. If not, then 
+  // check for plain text. If it's there, say "yes" as we will do the conversion
+  // in GetNativeClipboardData(). From this point on, no client will
+  // ever ask for text/plain explicitly. If they do, you must ASSERT!
+  
 #if 0
   *outResult = PR_FALSE;
   PRUint32 length;

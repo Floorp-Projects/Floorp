@@ -566,18 +566,38 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 
       void   * data;
       PRUint32 dataLen;
-      PRBool success = PR_FALSE;
-
+      PRBool dataFound = PR_FALSE;
       if (nsnull != aDataObject) {
         if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen)) )
-          success = PR_TRUE;
+          dataFound = PR_TRUE;
       } 
       else if (nsnull != aWindow) {
         if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, format, &data, &dataLen)) )
-          success = PR_TRUE;
+          dataFound = PR_TRUE;
       }
+      if ( !dataFound ) {
+	    // if we are looking for text/unicode and we fail to find it on the clipboard first,
+        // try again with text/plain. If that is present, convert it to unicode.
+        if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+          nsresult loadResult = GetNativeDataOffClipboard(aDataObject, GetFormat(kTextMime), &data, &dataLen);
+          if ( NS_SUCCEEDED(loadResult) && data ) {
+            const char* castedText = NS_REINTERPRET_CAST(char*, data);          
+            PRUnichar* convertedText = nsnull;
+            PRInt32 convertedTextLen = 0;
+            nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, dataLen, 
+                                                                      &convertedText, &convertedTextLen );
+            if ( convertedText ) {
+              // out with the old, in with the new 
+              nsAllocator::Free(data);
+              data = convertedText;
+              dataLen = convertedTextLen * 2;
+              dataFound = PR_TRUE;
+            }
+          } // if plain text data on clipboard
+        } // if looking for text/unicode   
+      } // if we try one last ditch effort to find our data
 
-      if ( success ) {
+      if ( dataFound ) {
         // the DOM only wants LF, so convert from Win32 line endings to DOM line
         // endings.
         PRInt32 signedLen = NS_STATIC_CAST(PRInt32, dataLen);
@@ -589,6 +609,8 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
 
         nsAllocator::Free ( NS_REINTERPRET_CAST(char*, data) );
+        
+        res = NS_OK;
         break;
       }
 
@@ -714,21 +736,33 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
 {
   *_retval = PR_FALSE;
   
-  PRUint32 i;
   PRUint32 cnt;
-
   aFlavorList->Count(&cnt);
-  for (i = 0;i < cnt; i++) {
+  for (PRUint32 i = 0;i < cnt; i++) {
     nsCOMPtr<nsISupports> genericFlavor;
     aFlavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
     nsCOMPtr<nsISupportsString> currentFlavor (do_QueryInterface(genericFlavor));
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));
+
+#ifdef NS_DEBUG
+      if ( strcmp(flavorStr, kTextMime) == 0 )
+        NS_WARNING ( "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD" );
+#endif
+
       UINT format = GetFormat(flavorStr);
       if (::IsClipboardFormatAvailable(format)) {
         *_retval = PR_TRUE;
         break;
+      }
+      else {
+        // if the client asked for unicode and it wasn't present, check if we have CF_TEXT.
+        // We'll handle the actual data substitution in the data object.
+        if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+          if ( ::IsClipboardFormatAvailable(GetFormat(kTextMime)) )
+            *_retval = PR_TRUE;
+        }      
       }
     }
   }

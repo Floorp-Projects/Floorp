@@ -383,13 +383,13 @@ nsContextMenu.prototype = {
                              .classes["component://netscape/widget/transferable"]
                                .createInstance( Components.interfaces.nsITransferable );
         if ( clipboard && transferable ) {
-          transferable.addDataFlavor( "text/plain" );
+          transferable.addDataFlavor( "text/unicode" );
           // Create wrapper for text.
-          var data = createInstance( "component://netscape/supports-string",
-                                      "nsISupportsString" );
+          var data = createInstance( "component://netscape/supports-wstring",
+                                      "nsISupportsWString" );
           if ( data ) {
             data.data = text ;
-            transferable.setTransferData( "text/plain", data, text.length );
+            transferable.setTransferData( "text/unicode", data, text.length * 2 );
             // Put on clipboard.
             clipboard.setData( transferable, null );
           }

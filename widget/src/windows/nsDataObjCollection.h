@@ -33,12 +33,30 @@ class nsITransferable;
 
 #define MULTI_MIME "Mozilla/IDataObjectCollectionFormat"
 
+#if NOT_YET
+// {6e99c280-d820-11d3-bb6f-bbf26bfe623c}
+EXTERN_C GUID CDECL IID_DATA_OBJ_COLLECTION = 
+    { 0x6e99c280, 0xd820, 0x11d3, { 0xbb, 0x6f, 0xbb, 0xf2, 0x6b, 0xfe, 0x62, 0x3c } };
+
+
+class nsPIDataObjCollection : IUnknown
+{
+public:
+
+  STDMETHODIMP AddDataObject(IDataObject * aDataObj) = 0;
+  STDMETHODIMP GetNumDataObjects(PRInt32* outNum) = 0;
+  STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) = 0;
+
+};
+#endif
+
 /*
  * This ole registered class is used to facilitate drag-drop of objects which
  * can be adapted by an object derived from CfDragDrop. The CfDragDrop is
  * associated with instances via SetDragDrop().
  */
-class nsDataObjCollection : public IDataObject
+ 
+class nsDataObjCollection : public IDataObject //, public nsPIDataObjCollection
 {
 	public: // construction, destruction
 		nsDataObjCollection();
@@ -65,10 +83,17 @@ class nsDataObjCollection : public IDataObject
     void AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE);
     void SetTransferable(nsITransferable * aTransferable);
 
+#if NOT_YET
+    // from nsPIDataObjCollection
+    STDMETHODIMP AddDataObject(IDataObject * aDataObj);
+    STDMETHODIMP GetNumDataObjects(PRInt32* outNum) { *outNum = mDataObjects->Count(); }
+    STDMETHODIMP GetDataObjectAt(PRUint32 aItem, IDataObject** outItem) { *outItem = (IDataObject *)mDataObjects->ElementAt(aItem); }
+#endif
+
+    // from nsPIDataObjCollection
     void AddDataObject(IDataObject * aDataObj);
     PRInt32 GetNumDataObjects() { return mDataObjects->Count(); }
-    IDataObject * GetDataObjectAt(PRUint32 aItem) { return (IDataObject *)mDataObjects->ElementAt(aItem); }
-
+    IDataObject* GetDataObjectAt(PRUint32 aItem) { return (IDataObject *)mDataObjects->ElementAt(aItem); }
 
 		// Return the registered OLE class ID of this object's CfDataObj.
 		CLSID GetClassID() const;

@@ -84,11 +84,7 @@ function BeginDragTree ( event )
     Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
   if (!genData) return(false);
 
-  var genTextData = 
-    Components.classes["component://netscape/supports-string"].createInstance(Components.interfaces.nsISupportsString);
-  if (!genTextData) return(false);
-
-  trans.addDataFlavor("text/plain");
+  trans.addDataFlavor("text/unicode");
         
   // id (url) is on the <treeitem> which is two levels above the <treecell> which is
   // the target of the event.
@@ -118,7 +114,7 @@ function BeginDragTree ( event )
 
 
 //  trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
-  trans.setTransferData ( "text/plain", genTextData, id.length );  // single byte data
+  trans.setTransferData ( "text/unicode", genData, id.length * 2);  // double byte data
 
   var transArray = 
     Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
@@ -154,7 +150,7 @@ function DragOverTree ( event )
   if ( !dragSession ) return(false);
 
   if ( dragSession.isDataFlavorSupported("moz/toolbaritem") ) validFlavor = true;
-  else if ( dragSession.isDataFlavorSupported("text/plain") ) validFlavor = true;
+  else if ( dragSession.isDataFlavorSupported("text/unicode") ) validFlavor = true;
   //XXX other flavors here...
 
   // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
@@ -230,7 +226,7 @@ function DropOnTree ( event )
   var trans = 
     Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
   if ( !trans )   return(false);
-  trans.addDataFlavor("text/plain");
+  trans.addDataFlavor("text/unicode");
 
   var dirty = false;
 
@@ -241,11 +237,11 @@ function DropOnTree ( event )
     var bestFlavor = new Object();
     var len = new Object();
     trans.getAnyTransferData ( bestFlavor, dataObj, len );
-    if ( dataObj )  dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+    if ( dataObj )  dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
     if ( !dataObj ) continue;
 
     // pull the URL out of the data object
-    var sourceID = dataObj.data.substring(0, len.value);
+    var sourceID = dataObj.data;
     if (!sourceID)  continue;
 
     debug("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'");

@@ -304,61 +304,61 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
       FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr, PR_FALSE);
 #if DEBUG_DD
 printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const char*,flavorStr), macOSFlavor);
-#endif	    
+#endif
+
       // check if it is present in the current drag item.
       FlavorFlags unused;
-      if ( macOSFlavor && ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {
-	      
-#if DEBUG_DD
-printf("flavor found\n");
-#endif
-        // we have it, pull it out of the drag manager. Put it into memory that we allocate
-        // with new[] so that the tranferable can own it (and then later use delete[]
-        // on it).
-        Size dataSize = 0;
-        OSErr err = ::GetFlavorDataSize ( mDragRef, itemRef, macOSFlavor, &dataSize );
-#if DEBUG_DD
-printf("flavor data size is %ld\n", dataSize);
-#endif
-        if ( !err && dataSize > 0 ) {
-          char* dataBuff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(dataSize));
-          if ( !dataBuff )
-            return NS_ERROR_OUT_OF_MEMORY;
-	          
-          err = ::GetFlavorData ( mDragRef, itemRef, macOSFlavor, dataBuff, &dataSize, 0 );
-          if ( err ) {
-            #ifdef NS_DEBUG
-              printf("nsClipboard: Error getting data out of drag manager, #%ld\n", err);
-            #endif
-            return NS_ERROR_FAILURE;
-          }
-	          
-          // the DOM only wants LF, so convert from MacOS line endings to DOM line
-          // endings.
-          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &dataBuff, NS_REINTERPRET_CAST(int*, &dataSize) );
+      PRBool dataFound = PR_FALSE;
+	  void* dataBuff;
+      PRInt32 dataSize = 0;
+      if ( macOSFlavor && ::GetFlavorFlags(mDragRef, itemRef, macOSFlavor, &unused) == noErr ) {	    
+        nsresult loadResult = ExtractDataFromOS(mDragRef, itemRef, macOSFlavor, &dataBuff, &dataSize);
+	    if ( NS_SUCCEEDED(loadResult) && dataBuff )
+	      dataFound = PR_TRUE;
+      }
+      else {
+	    // if we are looking for text/unicode and we fail to find it on the clipboard first,
+        // try again with text/plain. If that is present, convert it to unicode.
+        if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+          if ( ::GetFlavorFlags(mDragRef, itemRef, 'TEXT', &unused) == noErr ) {	    
+            nsresult loadResult = ExtractDataFromOS(mDragRef, itemRef, 'TEXT', &dataBuff, &dataSize);
+            if ( NS_SUCCEEDED(loadResult) && dataBuff ) {
+              const char* castedText = NS_REINTERPRET_CAST(char*, dataBuff);          
+              PRUnichar* convertedText = nsnull;
+              PRInt32 convertedTextLen = 0;
+              nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, dataSize, 
+                                                                        &convertedText, &convertedTextLen );
+              if ( convertedText ) {
+                // out with the old, in with the new 
+                nsAllocator::Free(dataBuff);
+                dataBuff = convertedText;
+                dataSize = convertedTextLen * 2;
+                dataFound = PR_TRUE;
+              }
+            } // if plain text data on clipboard
+          } // if plain text flavor present
+        } // if looking for text/unicode   
+      } // else we try one last ditch effort to find our data
+
+	  if ( dataFound ) {
+        // the DOM only wants LF, so convert from MacOS line endings to DOM line
+        // endings.
+        nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &dataBuff, NS_REINTERPRET_CAST(int*, &dataSize) );
         
-          // put it into the transferable.
-          nsCOMPtr<nsISupports> genericDataWrapper;
-          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
-          errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
-          #ifdef NS_DEBUG
-            if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
-          #endif
+        // put it into the transferable.
+        nsCOMPtr<nsISupports> genericDataWrapper;
+        nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, dataBuff, dataSize, getter_AddRefs(genericDataWrapper) );
+        errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
+        #ifdef NS_DEBUG
+         if ( errCode != NS_OK ) printf("nsDragService:: Error setting data into transferable\n");
+        #endif
           
-          nsAllocator::Free ( dataBuff );
-        } 
-        else {
-          #ifdef NS_DEBUG
-            printf("nsDragService: Error getting data out of drag manager, #%ld\n", err);
-          #endif
-          errCode = NS_ERROR_FAILURE;
-        }
-	        
+        nsAllocator::Free ( dataBuff );
+        errCode = NS_OK;
+
         // we found one, get out of this loop!
         break;
-	        
-      } // if a flavor found
-        
+      } 
     }
   } // foreach flavor
   
@@ -366,11 +366,17 @@ printf("flavor data size is %ld\n", dataSize);
 }
 
 
+
+
 //
 // IsDataFlavorSupported
 //
 // Check the OS to see if the given drag flavor is in the list. Oddly returns
 // NS_OK for success and NS_ERROR_FAILURE if flavor is not present.
+//
+// Handle the case where we ask for unicode and it's not there, but plain text is. We 
+// say "yes" in that case, knowing that we will have to perform a conversion when we actually
+// pull the data out of the drag.
 //
 // ¥¥¥ this is obviously useless with more than one drag item. Need to specify 
 // ¥¥¥Êand index to this API
@@ -380,6 +386,11 @@ nsDragService :: IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
   if ( !_retval )
     return NS_ERROR_INVALID_ARG;
+
+#ifdef NS_DEBUG
+      if ( strcmp(aDataFlavor, kTextMime) == 0 )
+        NS_WARNING ( "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD" );
+#endif
 
   *_retval = PR_FALSE;
 
@@ -400,9 +411,16 @@ nsDragService :: IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
       return NS_ERROR_FAILURE;
 
     FlavorFlags ignored;
-    char foundFlavor = ::GetFlavorFlags(mDragRef, currItem, macFlavor, &ignored) == noErr;
-    if ( foundFlavor )
+    if ( ::GetFlavorFlags(mDragRef, currItem, macFlavor, &ignored) == noErr )
       *_retval = PR_TRUE;
+    else {
+      // if the client asked for unicode and it wasn't present, check if we have TEXT.
+      // We'll handle the actual data substitution in GetDataForFlavor().
+      if ( strcmp(aDataFlavor, kUnicodeMime) == 0 ) {
+        if ( ::GetFlavorFlags(mDragRef, currItem, 'TEXT', &ignored) == noErr )
+          *_retval = PR_TRUE;
+      }          
+    }
   } // for each item in drag
 
   return NS_OK;
@@ -566,10 +584,15 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
 // Caller is responsible for deleting the memory.
 //
 char*
-nsDragService :: LookupMimeMappingsForItem ( DragReference inDragRef, ItemReference itemRef )
+nsDragService :: LookupMimeMappingsForItem ( DragReference inDragRef, ItemReference inItemRef )
 {
   char* mapperData = nsnull;
-  Size mapperSize = 0;
+  PRInt32 mapperSize = 0;
+  ExtractDataFromOS(inDragRef, inItemRef, nsMimeMapperMac::MappingFlavor(),  &mapperData, &mapperSize);
+
+  return mapperData;
+  
+#if 0 
   OSErr err = ::GetFlavorDataSize ( inDragRef, itemRef, nsMimeMapperMac::MappingFlavor(), &mapperSize );
   if ( !err && mapperSize > 0 ) {
     mapperData = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(mapperSize + 1));
@@ -587,6 +610,51 @@ nsDragService :: LookupMimeMappingsForItem ( DragReference inDragRef, ItemRefere
       mapperData[mapperSize] = '\0';    // null terminate the data
   }
 
-  return mapperData;
+  return mapperData; 
+#endif
 }
 
+
+//
+// ExtractDataFromOS
+//
+// Handles pulling the data from the DragManager. Will return NS_ERROR_FAILURE if it can't get
+// the data for whatever reason.
+//
+nsresult
+nsDragService :: ExtractDataFromOS ( DragReference inDragRef, ItemReference inItemRef, ResType inFlavor, 
+                                        void** outBuffer, PRInt32* outBuffSize )
+{
+  if ( !outBuffer || !outBuffSize || !inFlavor )
+    return NS_ERROR_FAILURE;
+
+  nsresult retval = NS_OK;
+  char* buff = nsnull;
+  Size buffSize = 0;
+  OSErr err = ::GetFlavorDataSize ( inDragRef, inItemRef, inFlavor, &buffSize );
+  if ( !err && buffSize > 0 ) {
+    buff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(buffSize + 1));
+    if ( buff ) {	     
+      err = ::GetFlavorData ( inDragRef, inItemRef, inFlavor, buff, &buffSize, 0 );
+      if ( err ) {
+        #ifdef NS_DEBUG
+          printf("nsDragService: Error getting data out of drag manager, #%ld\n", err);
+        #endif
+        retval = NS_ERROR_FAILURE;
+      }
+    }
+    else
+      retval = NS_ERROR_FAILURE;
+  }
+
+  if ( NS_FAILED(retval) ) {
+    if ( buff )
+      nsAllocator::Free(buff);
+  }
+  else {
+    *outBuffer = buff;
+    *outBuffSize = buffSize;
+  }
+  return retval;
+
+} // ExtractDataFromOS

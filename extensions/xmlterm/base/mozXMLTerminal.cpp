@@ -608,7 +608,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
 
   // DataFlavors to get out of transferable
   trans->AddDataFlavor(kHTMLMime);
-  trans->AddDataFlavor(kTextMime);
+  trans->AddDataFlavor(kUnicodeMime);
 
   // Get data from clipboard
   result = clipboard->GetData(trans);
@@ -629,7 +629,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
   XMLT_LOG(mozXMLTerminal::Paste,20,("flavour=%s\n", temCStr));
   nsAllocator::Free(temCStr);
 
-  if (flavor.Equals(kHTMLMime)) {
+  if (flavor.Equals(kHTMLMime) || flavor.Equals(kUnicodeMime)) {
     nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
     if (textDataObj && objLen > 0) {
       PRUnichar* text = nsnull;
@@ -637,17 +637,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
       pasteString.SetString ( text, objLen / 2 );
       result = SendTextAux(pasteString);
     }
-
-  } else if (flavor.Equals(kTextMime)) {
-    nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
-    if (textDataObj && objLen > 0) {
-      char* text = nsnull;
-      textDataObj->ToString ( &text );
-      pasteString.SetString ( text, objLen );
-      result = SendTextAux(pasteString);
-    }
   }
-
   nsAllocator::Free(bestFlavor);
 
   return NS_OK;
