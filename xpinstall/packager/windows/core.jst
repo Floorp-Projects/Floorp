@@ -62,15 +62,6 @@ if(verifyDiskSpace(communicatorFolder, srDest) == true)
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
 
-  err = addDirectory("/Microsoft/shared",
-                     "6.0.8168.0",       // hard code version here due to a bug in the
-                                         // xpinstall version settings code
-                     "system",           // dir name in jar to extract 
-                     fWindowsSystem,     // Where to put this file (Returned from GetFolder) 
-                     "",                 // subdir name to create relative to communicatorFolder
-                     false);             // Force Flag 
-  logComment("addDirectory() of system returned: " + err);
-
   // check return value
   if(!checkError(err))
   {
