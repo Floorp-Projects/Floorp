@@ -618,7 +618,10 @@ RRT_HEADER:
 
   // If we don't have disclosed recipient (only Bcc), address the message to
   // undisclosed-recipients to prevent problem with some servers
-  if (!hasDisclosedRecipient) {
+
+  // If we are saving the message as a draft, don't bother inserting the undisclosed recipients field. We'll take care of that when we
+  // really send the message.
+  if (!hasDisclosedRecipient && !isDraft) {
     PRBool bAddUndisclosedRecipients = PR_TRUE;
     prefs->GetBoolPref("mail.compose.add_undisclosed_recipients", &bAddUndisclosedRecipients);
     if (bAddUndisclosedRecipients) {
