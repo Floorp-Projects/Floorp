@@ -453,12 +453,12 @@ function make_query_URL(url, input, searchLong) {
         w = word[i];
         
         negation = false;
-        if (w[0] == "-") {
+        if (w.charAt(0) == "-") {
             negation = true;
             w = w.substring(1);
         }
 
-        switch (w[0]) {
+        switch (w.charAt(0)) {
             case "+":
                 alternative = w.substring(1).split(/[|,]/);
                 for (j=0; j<alternative.length; j++)
