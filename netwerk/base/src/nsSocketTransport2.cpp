@@ -72,14 +72,6 @@
 
 //-----------------------------------------------------------------------------
 
-// Large default timeouts approximate behavior of no timeout.  (It's better to
-// let the servers or host operating system time us out.)  These timeout values
-// are given in seconds.
-#define DEFAULT_TIMEOUT_CONNECT    (10 * 60)
-#define DEFAULT_TIMEOUT_READ_WRITE (10 * 60)
-
-//-----------------------------------------------------------------------------
-
 static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 
@@ -704,8 +696,8 @@ nsSocketTransport::nsSocketTransport()
 
     NS_ADDREF(gSocketTransportService);
 
-    mTimeouts[TIMEOUT_CONNECT]    = DEFAULT_TIMEOUT_CONNECT;
-    mTimeouts[TIMEOUT_READ_WRITE] = DEFAULT_TIMEOUT_READ_WRITE;
+    mTimeouts[TIMEOUT_CONNECT]    = PR_UINT16_MAX; // no timeout
+    mTimeouts[TIMEOUT_READ_WRITE] = PR_UINT16_MAX; // no timeout
 }
 
 nsSocketTransport::~nsSocketTransport()

@@ -95,6 +95,10 @@ public:
     // spent waiting for activity on this socket.  if this timeout is reached,
     // then OnSocketReady will be called with outFlags = -1.
     //
+    // the default value for this member is PR_UINT16_MAX, which disables the
+    // timeout error checking.  (i.e., a timeout value of PR_UINT16_MAX is
+    // never reached.)
+    //
     PRUint16 mPollTimeout;
 
     //
