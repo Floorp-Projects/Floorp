@@ -37,7 +37,23 @@ nsHTItem::~nsHTItem()
 
 PRBool nsHTItem::IsExpandedDelegate() const
 {
-	return PR_FALSE;
+	nsString attrValue;
+	nsresult result = mContentNode->GetAttribute("open", attrValue);
+    attrValue.ToLowerCase();
+	return (result == NS_CONTENT_ATTR_NO_VALUE ||
+	        (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));	
+}
+
+void nsHTItem::ToggleOpenStateDelegate() 
+{
+	nsString attrValue;
+	// Need to set the attribute's value.
+	if (IsExpandedDelegate())
+		attrValue = "false";
+	else attrValue = "true";
+
+	// Set it and wait for the callback.
+	mContentNode->SetAttribute("open", attrValue, PR_TRUE); 
 }
 
 PRUint32 nsHTItem::GetIndentationLevelDelegate() const

@@ -309,13 +309,17 @@ void nsTreeView::HandleMouseUp(nsGUIEvent* aEvent)
 		  nsHitLocation type;
 		  DetermineHitLocation(mCachedMovePoint, row, column, type);
 
-		  // If the user boinked the trigger, then we need to open or close the node.
+		  // If the user clicked the trigger, then we need to open or close the node.
 		  if (type == eTriggerHit)
 		  {
+			  nsHierarchicalDataItem* pItem = mDataModel->GetNthItem(row);
+			  pItem->ToggleOpenState();
 		  }
 		  else if (type == eContentHit)
 		  {
-			  // The user boinked content (a text or icon). Select it.
+			  // The user clicked on content (a text or icon). Select it.
+			  nsHierarchicalDataItem* pItem = mDataModel->GetNthItem(row);
+			  //pDataModel->SetSelection(pItem);
 		  }
 		  else
 		  {
