@@ -387,13 +387,14 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
                                                      PRInt32* aAllocTypes,
                                                      PRBool   aSkip0Proportional)
 {
-  nscoord divisor = 0;
-  PRInt32 numAvail = 0;
+  nscoord divisor          = 0;
+  PRInt32 numColsAllocated = 0; 
+  PRInt32 totalAllocated   = 0;
   PRInt32 colX;
   for (colX = 0; colX < mNumCols; colX++) { 
     if (-1 != aAllocTypes[colX]) {
       divisor += mTableFrame->GetColumnWidth(colX);
-      numAvail++;
+      numColsAllocated++;
     }
   }
   for (colX = 0; colX < mNumCols; colX++) { 
@@ -406,10 +407,15 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
       }
       nscoord oldWidth = mTableFrame->GetColumnWidth(colX);
       float percent = (divisor == 0) 
-        ? (1.0f / ((float)numAvail))
+        ? (1.0f / ((float)numColsAllocated))
         : ((float)oldWidth) / ((float)divisor);
       nscoord addition = NSToCoordRound(((float)aAllocAmount) * percent);
+      if (addition > (aAllocAmount - totalAllocated)) {
+        mTableFrame->SetColumnWidth(colX, oldWidth + (aAllocAmount - totalAllocated));
+        break;
+      }
       mTableFrame->SetColumnWidth(colX, oldWidth + addition);
+      totalAllocated += addition;
     }
   }
 }
@@ -450,6 +456,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
     // Scan the cells in the col that have colspan = 1 and find the maximum
     // min, desired, and fixed cells.
     nsTableCellFrame* fixContributor = nsnull;
+    nsTableCellFrame* desContributor = nsnull;
     for (rowX = 0; rowX < numRows; rowX++) {
       PRBool originates;
       PRInt32 colSpan;
@@ -461,7 +468,11 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
       }
       // these values include borders and padding
       minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementSize().width);
-      desWidth = PR_MAX(desWidth, cellFrame->GetPass1DesiredSize().width);
+      nscoord cellDesWidth = cellFrame->GetPass1DesiredSize().width;
+      if (cellDesWidth > desWidth) {
+        desContributor = cellFrame;
+        desWidth = cellDesWidth;
+      }
       // see if the cell has a style width specified
       const nsStylePosition* cellPosition;
       cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
@@ -474,7 +485,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
           nsMargin paddingMargin;
           spacing->CalcPaddingFor(cellFrame, paddingMargin); 
           nscoord newFixWidth = coordValue + paddingMargin.left + paddingMargin.right;
-          if (newFixWidth > fixWidth) {
+          // 2nd part of condition is Nav Quirk like below
+          if ((newFixWidth > fixWidth) || ((newFixWidth == fixWidth) && (desContributor == cellFrame))) {
             fixWidth = newFixWidth;
             fixContributor = cellFrame;
           }
@@ -484,6 +496,12 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
     }
 
     desWidth = PR_MAX(desWidth, minWidth);
+
+    // Nav Quirk like above
+    if ((fixWidth > 0) && (desWidth > fixWidth) && (fixContributor != desContributor)) {
+      fixWidth = WIDTH_NOT_SET;
+      fixContributor = nsnull;
+    }
 
     // cache the computed column info
     colFrame->SetWidth(MIN_CON, minWidth);
