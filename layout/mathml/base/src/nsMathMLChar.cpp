@@ -89,12 +89,12 @@ struct nsCharData {
 
 class nsGlyphTable {
 public:
-  nsGlyphTable(PRInt32       aType,
-               nsString&     aFontName,
-               nsCharData*   aCharArray,
-               PRInt32       aCharCount,
-               nsGlyphCode*  aGlyphArray,
-               PRInt32       aGlyphCount)
+  nsGlyphTable(PRInt32      aType,
+               nsString&    aFontName,
+               nsCharData*  aCharArray,
+               PRInt32      aCharCount,
+               nsGlyphCode* aGlyphArray,
+               PRInt32      aGlyphCount)
   {
     mType = aType;
     mFontName = aFontName;
@@ -352,7 +352,7 @@ nsGlyphTableList::Init(nsIPresContext* aPresContext,
 
   PRBool aliased;
   nsAutoString fontName, localName;
-  nsGlyphTable* lastTable;
+  nsGlyphTable* lastTable = nsnull;
   nsGlyphTable** glyphTable = aGlyphTables;
 
   while (*glyphTable) {
@@ -400,8 +400,9 @@ nsGlyphTableList::FindTableFor(nsMathMLCharEnum aCharEnum)
 nsGlyphTableList gGlyphTableList;
 
 // And this is a dummy glyph table that we will use as a flag for gCharInfo[].mGlyphTable
-nsGlyphTable gGlyphTableUNDEFINED(NS_TABLE_TYPE_UNICODE, nsAutoString("UNDEFINED"),
-                                  nsnull, 0, nsnull, 0);
+nsGlyphTable gGlyphTableUNDEFINED =
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("UNDEFINED"),
+             nsnull, 0, nsnull, 0);
 
 
 // Data sets that we have ...
@@ -425,9 +426,10 @@ static nsGlyphCode gGlyphCodeSymbol[] = {
 #undef WANT_SYMBOL_DATA
 };
 
-nsGlyphTable gGlyphTableSymbol(NS_TABLE_TYPE_UNICODE, nsAutoString("Symbol"),
-                               gCharDataSymbol,  sizeof(gCharDataSymbol)  / sizeof(gCharDataSymbol[0]),
-                               gGlyphCodeSymbol, sizeof(gGlyphCodeSymbol) / sizeof(gGlyphCodeSymbol[0]));
+nsGlyphTable gGlyphTableSymbol =
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("Symbol"),
+             gCharDataSymbol,  sizeof(gCharDataSymbol)  / sizeof(gCharDataSymbol[0]),
+             gGlyphCodeSymbol, sizeof(gGlyphCodeSymbol) / sizeof(gGlyphCodeSymbol[0]));
 
 // -----------------------------------------------------------------------------------
 // Data for strecthy chars that are supported by the MT Extra font -------------------
@@ -448,9 +450,10 @@ static nsGlyphCode gGlyphCodeMTExtra[] = {
 #undef WANT_MTEXTRA_DATA
 };
 
-nsGlyphTable gGlyphTableMTExtra(NS_TABLE_TYPE_UNICODE, nsAutoString("MT Extra"),
-                                gCharDataMTExtra,  sizeof(gCharDataMTExtra)  / sizeof(gCharDataMTExtra[0]),
-                                gGlyphCodeMTExtra, sizeof(gGlyphCodeMTExtra) / sizeof(gGlyphCodeMTExtra[0]));
+nsGlyphTable gGlyphTableMTExtra = 
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("MT Extra"),
+             gCharDataMTExtra,  sizeof(gCharDataMTExtra)  / sizeof(gCharDataMTExtra[0]),
+             gGlyphCodeMTExtra, sizeof(gGlyphCodeMTExtra) / sizeof(gGlyphCodeMTExtra[0]));
 
 // -----------------------------------------------------------------------------------
 // Data for strecthy chars that are supported by TeX's CMEX font ---------------------
@@ -471,9 +474,10 @@ static nsGlyphCode gGlyphCodeCMEX[] = {
 #undef WANT_CMEX_DATA
 };
 
-nsGlyphTable gGlyphTableCMEX(NS_TABLE_TYPE_UNICODE, nsAutoString("CMEX10"),
-                             gCharDataCMEX,  sizeof(gCharDataCMEX)  / sizeof(gCharDataCMEX[0]),
-                             gGlyphCodeCMEX, sizeof(gGlyphCodeCMEX) / sizeof(gGlyphCodeCMEX[0]));
+nsGlyphTable gGlyphTableCMEX =
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("CMEX10"),
+             gCharDataCMEX,  sizeof(gCharDataCMEX)  / sizeof(gCharDataCMEX[0]),
+             gGlyphCodeCMEX, sizeof(gGlyphCodeCMEX) / sizeof(gGlyphCodeCMEX[0]));
 
 // -----------------------------------------------------------------------------------
 // Data for strecthy chars that are supported by TeX's CMSY font ---------------------
@@ -494,9 +498,10 @@ static nsGlyphCode gGlyphCodeCMSY[] = {
 #undef WANT_CMSY_DATA
 };
 
-nsGlyphTable gGlyphTableCMSY(NS_TABLE_TYPE_UNICODE, nsAutoString("CMSY10"),
-                             gCharDataCMSY,  sizeof(gCharDataCMSY)  / sizeof(gCharDataCMSY[0]),
-                             gGlyphCodeCMSY, sizeof(gGlyphCodeCMSY) / sizeof(gGlyphCodeCMSY[0]));
+nsGlyphTable gGlyphTableCMSY =
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("CMSY10"),
+             gCharDataCMSY,  sizeof(gCharDataCMSY)  / sizeof(gCharDataCMSY[0]),
+             gGlyphCodeCMSY, sizeof(gGlyphCodeCMSY) / sizeof(gGlyphCodeCMSY[0]));
 
 // -----------------------------------------------------------------------------------
 
