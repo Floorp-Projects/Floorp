@@ -185,7 +185,7 @@ function EditorTestTableLayout()
         }
       }
       catch (e) {
-        dump("  *** GetCellDataAt failed at Row="+row+, Col="+col+" ***\n\n");
+        dump("  *** GetCellDataAt failed at Row="+row+", Col="+col+" ***\n\n");
         return;
       }
     }
