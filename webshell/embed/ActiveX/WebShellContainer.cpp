@@ -91,7 +91,8 @@ nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstanceP
 NS_IMETHODIMP
 CWebShellContainer::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
 {
-	ATLTRACE(_T("CWebShellContainer::WillLoadURL()\n"));
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::WillLoadURL(..., \"%s\", %d)\n"), W2T(aURL), (int) aReason);
 	return NS_OK;
 }
 
@@ -99,10 +100,14 @@ CWebShellContainer::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLo
 NS_IMETHODIMP
 CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
-	ATLTRACE(_T("CWebShellContainer::BeginLoadURL()\n"));
-
-	//Fire a BeforeNavigate event
 	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::BeginLoadURL(..., \"%s\")\n"), W2T(aURL));
+
+	// Fire a DownloadBegin
+//	m_pEvents1->Fire_DownloadBegin();
+	//m_pEvents2->Fire_DownloadBegin();
+
+	// Fire a BeforeNavigate event
 	OLECHAR *pszURL = W2OLE((WCHAR *)aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
 	BSTR bstrTargetFrameName = NULL;
@@ -113,7 +118,7 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 
 	m_pEvents1->Fire_BeforeNavigate(bstrURL, lFlags, bstrTargetFrameName, pvPostData, bstrHeaders, &bCancel);
 
-	//Fire a BeforeNavigate2 event
+	// Fire a BeforeNavigate2 event
 	CComVariant vURL(bstrURL);
 	CComVariant vFlags(lFlags);
 	CComVariant vTargetFrameName(bstrTargetFrameName);
@@ -143,7 +148,8 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 NS_IMETHODIMP
 CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
-	ATLTRACE(_T("CWebShellContainer::ProgressLoadURL()\n"));
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::ProgressLoadURL(..., \"%s\", %d, %d)\n"), W2T(aURL), (int) aProgress, (int) aProgressMax);
 	
 	m_pEvents1->Fire_ProgressChange(aProgress, aProgressMax);
 	m_pEvents2->Fire_ProgressChange(aProgress, aProgressMax);
@@ -154,17 +160,22 @@ CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, 
 NS_IMETHODIMP
 CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
 {
-	ATLTRACE(_T("CWebShellContainer::EndLoadURL()\n"));
-
-	//Fire a NavigateComplete event
 	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::EndLoadURL(..., \"%s\", %d)\n"), W2T(aURL), (int) aStatus);
+
+	// Fire a NavigateComplete event
 	OLECHAR *pszURL = W2OLE((WCHAR *) aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
 	m_pEvents1->Fire_NavigateComplete(bstrURL);
 
-	//Fire a NavigateComplete2 event
+	// Fire a NavigateComplete2 event
 	CComVariant vURL(bstrURL);
 	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
+
+
+	// Fire a DownloadComplete event
+	m_pEvents1->Fire_DownloadComplete();
+	m_pEvents2->Fire_DownloadComplete();
 
 	m_pOwner->m_bBusy = FALSE;
 	SysFreeString(bstrURL);
@@ -174,11 +185,9 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt
 
 
 NS_IMETHODIMP
-CWebShellContainer::NewWebShell(PRUint32 aChromeMask,
-                                PRBool aVisible,
-                                nsIWebShell *&aNewWebShell)
+CWebShellContainer::NewWebShell(PRUint32 aChromeMask, PRBool aVisible, nsIWebShell *&aNewWebShell)
 {
-	ATLTRACE(_T("CWebShellContainer::NewWebShell()\n"));
+	NG_TRACE(_T("CWebShellContainer::NewWebShell()\n"));
 	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 	return rv;
 }
@@ -187,14 +196,16 @@ CWebShellContainer::NewWebShell(PRUint32 aChromeMask,
 NS_IMETHODIMP
 CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 {
-	ATLTRACE(_T("CWebShellContainer::FindWebShellWithName()\n"));
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::FindWebShellWithName(\"%s\", ...)\n"), W2T(aName));
 	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell)
 {
-  return NS_OK;
+	NG_TRACE(_T("CWebShellContainer::FocusAvailable()\n"));
+	return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -204,7 +215,8 @@ CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell)
 NS_IMETHODIMP
 CWebShellContainer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
-	ATLTRACE(_T("CWebShellContainer::OnStartBinding()\n"));
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnStartBinding(..., \"%s\")\n"), A2CT(aContentType));
 	return NS_OK;
 }
 
@@ -212,7 +224,8 @@ CWebShellContainer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 NS_IMETHODIMP
 CWebShellContainer::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
-	ATLTRACE(_T("CWebShellContainer::OnProgress()\n"));
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnProgress(..., \"%d\", \"%d\")\n"), (int) aProgress, (int) aProgressMax);
 	return NS_OK;
 }
 
@@ -220,9 +233,9 @@ CWebShellContainer::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgr
 NS_IMETHODIMP
 CWebShellContainer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
-	ATLTRACE(_T("CWebShellContainer::OnStatus()\n"));
-
 	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnStatus(..., \"%s\")\n"), W2T((PRUnichar *) aMsg));
+
 	BSTR bstrText = SysAllocString(W2OLE((PRUnichar *) aMsg));
 	m_pEvents1->Fire_StatusTextChange(bstrText);
 	m_pEvents2->Fire_StatusTextChange(bstrText);
@@ -235,6 +248,7 @@ CWebShellContainer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 NS_IMETHODIMP
 CWebShellContainer::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
-	ATLTRACE(_T("CWebShellContainer::OnStopBinding()\n"));
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnStopBinding(..., %d, \"%s\")\n"), (int) aStatus, W2T((PRUnichar *) aMsg));
 	return NS_OK;
 }
