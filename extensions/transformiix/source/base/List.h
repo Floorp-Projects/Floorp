@@ -21,18 +21,16 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: List.h,v 1.4 2000/04/07 08:58:54 kvisco%ziplink.net Exp $
+ * $Id: List.h,v 1.5 2000/04/12 10:53:21 kvisco%ziplink.net Exp $
  */
 
 #include "baseutils.h"
 
-#ifndef MITRE_LIST_H
-#define MITRE_LIST_H
+#ifndef TRANSFRMX_LIST_H
+#define TRANSFRMX_LIST_H
 
 /**
  * Represents an ordered list of Object pointers. Modeled after a Java 2 List.
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/04/07 08:58:54 $
 **/
 class List {
 
@@ -107,7 +105,7 @@ private:
 
 /**
  * An Iterator for the List Class
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
+ * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
 class ListIterator {
 

@@ -19,7 +19,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: TxObject.h,v 1.1 2000/03/02 09:16:44 kvisco%ziplink.net Exp $
+ * $Id: TxObject.h,v 1.2 2000/04/12 10:53:27 kvisco%ziplink.net Exp $
  */
 
 
@@ -45,10 +45,18 @@ class TxObject {
     /**
      * Returns the Hashcode for this TxObject
 	**/
-    Int32 hashCode() {
+    virtual Int32 hashCode() {
 	    return (Int32)this;
     } //-- hashCode
 
+    /**
+     * Returns true if the given Object is equal to this object.
+     * By default the comparision operator == is used, but this may
+     * be overridden
+    **/
+    virtual MBool equals(TxObject* obj) {
+        return (MBool)(obj == this);
+    } //-- equals
 };
 
 #endif
