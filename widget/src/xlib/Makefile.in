@@ -41,29 +41,31 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../xlib -I$(srcdir)/.
 
 INCLUDES += $(TK_CFLAGS)
 
-CPPSRCS= nsWidgetFactory.cpp \
-	nsWidget.cpp \
-	nsWindow.cpp \
+CPPSRCS=\
+	nsAppShell.cpp \
 	nsButton.cpp \
 	nsCheckButton.cpp \
 	nsComboBox.cpp \
-	nsRadioButton.cpp \
 	nsFileWidget.cpp \
-	nsListBox.cpp \
-	nsScrollBar.cpp \
-	nsTextHelper.cpp \
-	nsTextAreaWidget.cpp \
-	nsTextWidget.cpp \
-	nsTabWidget.cpp \
-	nsTooltipWidget.cpp \
-	nsAppShell.cpp \
-	nsToolkit.cpp \
-	nsLookAndFeel.cpp \
+	nsKeyCode.cpp \
 	nsLabel.cpp \
-	nsMenuBar.cpp \
+	nsListBox.cpp \
+	nsLookAndFeel.cpp \
 	nsMenu.cpp \
+	nsMenuBar.cpp \
 	nsMenuItem.cpp \
 	nsPopUpMenu.cpp \
+	nsRadioButton.cpp \
+	nsScrollBar.cpp \
+	nsTabWidget.cpp \
+	nsTextAreaWidget.cpp \
+	nsTextHelper.cpp \
+	nsTextWidget.cpp \
+	nsToolkit.cpp \
+	nsTooltipWidget.cpp \
+	nsWidget.cpp \
+	nsWidgetFactory.cpp \
+	nsWindow.cpp \
 	$(NULL)
 
 TARGETS = $(LIBRARY)
