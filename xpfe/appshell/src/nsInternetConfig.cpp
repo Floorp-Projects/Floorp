@@ -117,6 +117,11 @@ nsresult nsInternetConfig::GetString( unsigned char* inKey, char** outString )
 		err = ::ICGetPref( instance, inKey, &junk, buffer, &size );
 		if ( err == noErr )
 		{
+			if (size == 0) {
+				*outString = nsnull;
+				return NS_OK;
+			}
+				
 			// Buffer is a Pascal string
 			nsCString temp( &buffer[1], buffer[0] );
 			*outString = temp.ToNewCString();
