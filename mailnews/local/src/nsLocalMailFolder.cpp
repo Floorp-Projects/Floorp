@@ -594,7 +594,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
     {
       folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
       if(NS_FAILED(folderOpen) &&
-        folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
+        folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
       {
         nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
         nsCOMPtr <nsIDBFolderInfo> transferInfo;
@@ -624,7 +624,8 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
         summarySpec.Delete(PR_FALSE);
       
         // if it's out of date then reopen with upgrade.
-        if(NS_FAILED(rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase))))
+        if (NS_FAILED(rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase)))
+          && rv != NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
           return rv;
         else if (transferInfo && mDatabase)
            SetDBTransferInfo(transferInfo);

@@ -855,7 +855,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
   nsCOMPtr<nsIMsgDatabase> mailDBFactory;
     nsCOMPtr<nsIMsgFolder> child;
 
-  rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
+  rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
   if (NS_SUCCEEDED(rv) && mailDBFactory)
   {
     nsCOMPtr<nsIMsgDatabase> unusedDB;
@@ -6963,7 +6963,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
     nsCOMPtr<nsIMsgFolder> child;
     nsCOMPtr <nsIMsgImapMailFolder> imapFolder;
 
-    rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
+    rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
     if (NS_SUCCEEDED(rv) && mailDBFactory)
     {
       nsCOMPtr<nsIMsgDatabase> unusedDB;

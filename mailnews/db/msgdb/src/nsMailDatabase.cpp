@@ -196,7 +196,7 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
     if (mailDB)
       GetDBCache()->AppendElement(mailDB);
   }
-  return err;
+  return (summaryFileExists) ? err : NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
 }
 
 NS_IMETHODIMP nsMailDatabase::ForceClosed()
