@@ -43,6 +43,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #button-security {
+  list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
   -moz-image-region: rect(0px 160px 32px 128px);
 }
 
@@ -59,6 +60,7 @@
 } 
 
 toolbar[iconsize="small"] #button-security {
+  list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
   -moz-image-region: rect(0px 100px 20px 80px);
 }
 
