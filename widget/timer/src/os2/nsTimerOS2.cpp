@@ -29,6 +29,7 @@
  * Date             Modified by     Description of modification
  * 03/31/2000       IBM Corp.      Get rid of mBusy message and call default WndProc. Message is 
  *                                         put out while wizards (i.e. Mail) is active.
+ * 05/01/2000       IBM Corp.      Added PR_CALLBACK for VisualAge. 
  *
  */
 
@@ -558,7 +559,7 @@ class nsTimerManagers
       DosCreateMutexSem( 0, &mMutex, 0, 0 /*unowned*/);
    }
 
-   static PRBool mgr_dtor( nsHashKey *aKey, void *aData, void */*aClosure*/)
+   static PRBool PR_CALLBACK mgr_dtor( nsHashKey *aKey, void *aData, void */*aClosure*/)
    {
       nsTimerManager *pManager = (nsTimerManager*) aData;
       delete pManager;
