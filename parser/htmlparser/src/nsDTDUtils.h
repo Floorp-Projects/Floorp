@@ -150,8 +150,10 @@ protected:
 class nsITagHandler {
 public:
   
-  virtual PRBool  HandleToken(CToken* aToken,nsIDTD* aDTD)=0;
-  virtual PRBool  HandleCapturedTokens(CToken* aToken,nsIDTD* aDTD)=0;
+  virtual void          SetString(nsAutoString *aTheString)=0;
+  virtual nsAutoString* GetString()=0;
+  virtual PRBool        HandleToken(CToken* aToken,nsIDTD* aDTD)=0;
+  virtual PRBool        HandleCapturedTokens(CToken* aToken,nsIDTD* aDTD)=0;
 };
 
 
