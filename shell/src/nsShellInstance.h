@@ -57,6 +57,7 @@ public:
   NS_IMETHOD ShowApplicationWindow(PRBool show) ;
 
   NS_IMETHOD_(void *) GetApplicationWindowNativeInstance() ; 
+  NS_IMETHOD_(nsIWidget *) GetApplicationWidget() ; 
 
   NS_IMETHOD ExitApplication() ;
 
