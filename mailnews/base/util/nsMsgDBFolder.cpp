@@ -426,7 +426,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
               if (!mInitializedFromCache)
               {
                 folderInfo->GetFlags((PRInt32 *)&mFlags);
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
                 nsXPIDLString name;
                 GetName(getter_Copies(name));
                 NS_ASSERTION(Compare(name, kLocalizedTrashName) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
@@ -749,39 +749,31 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey  aParentK
 nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread)
 {
-	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-	nsCOMPtr<nsIMsgDBHdr> parentDBHdr;
-	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgDBHdr));
-	if(NS_FAILED(rv))
-		return rv;
-
-	rv = mDatabase->GetMsgHdrForKey(aParentKey, getter_AddRefs(parentDBHdr));
-	if(NS_FAILED(rv))
-		return rv;
-
-	if(msgDBHdr)
-	{
-		nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(msgDBHdr));
-		nsCOMPtr<nsISupports> folderSupports;
-		rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
-		if(msgSupports && NS_SUCCEEDED(rv) && doFlat)
-		{
-			if(added)
-				NotifyItemAdded(folderSupports, msgSupports, "flatMessageView");
-			else
-				NotifyItemDeleted(folderSupports, msgSupports, "flatMessageView");
-		}
-		if(msgSupports && folderSupports)
-		{
-			if(added)
-				NotifyItemAdded(folderSupports, msgSupports, "threadMessageView");
-			else
-				NotifyItemDeleted(folderSupports, msgSupports, "threadMessageView");
-		}
-		UpdateSummaryTotals(PR_TRUE);
-	}
-	return NS_OK;
-
+  nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+  nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgDBHdr));
+  if(NS_SUCCEEDED(rv) && msgDBHdr)
+  {
+    nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(msgDBHdr));
+    nsCOMPtr<nsISupports> folderSupports;
+    rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
+    if(msgSupports && NS_SUCCEEDED(rv) && doFlat)
+    {
+      if(added)
+        NotifyItemAdded(folderSupports, msgSupports, "flatMessageView");
+      else
+        NotifyItemDeleted(folderSupports, msgSupports, "flatMessageView");
+    }
+    if(msgSupports && folderSupports)
+    {
+      if(added)
+        NotifyItemAdded(folderSupports, msgSupports, "threadMessageView");
+      else
+        NotifyItemDeleted(folderSupports, msgSupports, "threadMessageView");
+    }
+    UpdateSummaryTotals(PR_TRUE);
+  }
+  return NS_OK;
+  
 }
 
 
@@ -1333,7 +1325,8 @@ nsresult nsMsgDBFolder::WriteStartOfNewLocalMessage()
 nsresult nsMsgDBFolder::StartNewOfflineMessage()
 {
   nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(m_tempMessageStream));
-  WriteStartOfNewLocalMessage();
+  if (NS_SUCCEEDED(rv))
+    WriteStartOfNewLocalMessage();
   m_numOfflineMsgLines = 0;
   return rv;
 }
