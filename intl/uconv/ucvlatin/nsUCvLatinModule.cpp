@@ -211,6 +211,18 @@ static FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kISO88596IToUnicodeCID,
+    nsISO88596ToUnicode::CreateInstance,
+    "ISO-8859-6-I",
+    "Unicode"
+  },
+  {
+    &kISO88596EToUnicodeCID,
+    nsISO88596ToUnicode::CreateInstance,
+    "ISO-8859-6-E",
+    "Unicode"
+  },
+  {
     &kISO88597ToUnicodeCID,
     nsISO88597ToUnicode::CreateInstance,
     "ISO-8859-7",
@@ -220,6 +232,18 @@ static FactoryData g_FactoryData[] =
     &kISO88598ToUnicodeCID,
     nsISO88598ToUnicode::CreateInstance,
     "ISO-8859-8",
+    "Unicode"
+  },
+  {
+    &kISO88598IToUnicodeCID,
+    nsISO88598ToUnicode::CreateInstance,
+    "ISO-8859-8-I",
+    "Unicode"
+  },
+  {
+    &kISO88598EToUnicodeCID,
+    nsISO88598ToUnicode::CreateInstance,
+    "ISO-8859-8-E",
     "Unicode"
   },
   {
@@ -519,6 +543,18 @@ static FactoryData g_FactoryData[] =
     "ISO-8859-6"
   },
   {
+    &kUnicodeToISO88596ICID,
+    nsUnicodeToISO88596::CreateInstance,
+    "Unicode",
+    "ISO-8859-6-I"
+  },
+  {
+    &kUnicodeToISO88596ECID,
+    nsUnicodeToISO88596::CreateInstance,
+    "Unicode",
+    "ISO-8859-6-E"
+  },
+  {
     &kUnicodeToISO88597CID,
     nsUnicodeToISO88597::CreateInstance,
     "Unicode",
@@ -529,6 +565,18 @@ static FactoryData g_FactoryData[] =
     nsUnicodeToISO88598::CreateInstance,
     "Unicode",
     "ISO-8859-8"
+  },
+  {
+    &kUnicodeToISO88598ICID,
+    nsUnicodeToISO88598::CreateInstance,
+    "Unicode",
+    "ISO-8859-8-I"
+  },
+  {
+    &kUnicodeToISO88598ECID,
+    nsUnicodeToISO88598::CreateInstance,
+    "Unicode",
+    "ISO-8859-8-E"
   },
   {
     &kUnicodeToISO88599CID,

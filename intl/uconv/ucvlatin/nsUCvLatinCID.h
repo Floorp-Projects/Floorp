@@ -55,6 +55,16 @@ NS_DECLARE_ID(kISO88595ToUnicodeCID,
 NS_DECLARE_ID(kISO88596ToUnicodeCID,
   0x660d8ca3, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+// Class ID for our ISO88596IToUnicode charset converter
+// {495ECA44-0A5C-11d4-A135-005004832142}
+NS_DECLARE_ID(kISO88596IToUnicodeCID,
+  0x495eca44, 0xa5c, 0x11d4, 0xa1, 0x35, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42);
+
+// Class ID for our ISO88596EToUnicode charset converter
+// {495ECA45-0A5C-11d4-A135-005004832142}
+NS_DECLARE_ID(kISO88596EToUnicodeCID,
+  0x495eca45, 0xa5c, 0x11d4, 0xa1, 0x35, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42);
+
 // Class ID for our ISO88597ToUnicode charset converter
 // {AF7A9951-AA48-11d2-B3AE-00805F8A6670}
 NS_DECLARE_ID(kISO88597ToUnicodeCID, 
@@ -64,6 +74,16 @@ NS_DECLARE_ID(kISO88597ToUnicodeCID,
 // {660D8CA4-F763-11d2-8AAD-00600811A836}
 NS_DECLARE_ID(kISO88598ToUnicodeCID, 
   0x660d8ca4, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our ISO88598EToUnicode charset converter
+// {495ECA42-0A5C-11d4-A135-005004832142}
+NS_DECLARE_ID(kISO88598EToUnicodeCID, 
+  0x495eca42, 0xa5c, 0x11d4, 0xa1, 0x35, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42);
+
+// Class ID for our ISO88598IToUnicode charset converter
+// {495ECA43-0A5C-11d4-A135-005004832142}
+NS_DECLARE_ID(kISO88598IToUnicodeCID, 
+  0x495eca43, 0xa5c, 0x11d4, 0xa1, 0x35, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42);
 
 // Class ID for our ISO88599ToUnicode charset converter
 // {7C657D13-EC5E-11d2-8AAC-00600811A836}
@@ -240,6 +260,16 @@ NS_DECLARE_ID(kUnicodeToISO88595CID,
 NS_DECLARE_ID(kUnicodeToISO88596CID, 
   0x660d8ca8, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+// Class ID for our UnicodeToISO88596I charset converter
+// {495ECA46-0A5C-11d4-A135-005004832142}
+NS_DECLARE_ID(kUnicodeToISO88596ICID, 
+  0x495eca46, 0xa5c, 0x11d4, 0xa1, 0x35, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42);
+
+// Class ID for our UnicodeToISO88596E charset converter
+// {495ECA47-0A5C-11d4-A135-005004832142}
+NS_DECLARE_ID(kUnicodeToISO88596ECID, 
+  0x495eca47, 0xa5c, 0x11d4, 0xa1, 0x35, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42);
+
 // Class ID for our UnicodeToISO88597 charset converter
 // {7B8556A8-EC79-11d2-8AAC-00600811A836}
 NS_DECLARE_ID(kUnicodeToISO88597CID, 
@@ -249,6 +279,16 @@ NS_DECLARE_ID(kUnicodeToISO88597CID,
 // {660D8CA9-F763-11d2-8AAD-00600811A836}
 NS_DECLARE_ID(kUnicodeToISO88598CID, 
   0x660d8ca9, 0xf763, 0x11d2, 0x8a, 0xad, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+// Class ID for our UnicodeToISO88598I charset converter
+// {495ECA48-0A5C-11d4-A135-005004832142}
+NS_DECLARE_ID(kUnicodeToISO88598ICID, 
+  0x495eca48, 0xa5c, 0x11d4, 0xa1, 0x35, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42);
+
+// Class ID for our UnicodeToISO88598E charset converter
+// {495ECA49-0A5C-11d4-A135-005004832142}
+NS_DECLARE_ID(kUnicodeToISO88598ECID, 
+  0x495eca49, 0xa5c, 0x11d4, 0xa1, 0x35, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42);
 
 // Class ID for our UnicodeToISO88599 charset converter
 // {7B8556A9-EC79-11d2-8AAC-00600811A836}
