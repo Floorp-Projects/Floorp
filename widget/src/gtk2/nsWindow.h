@@ -175,7 +175,10 @@ class nsWindow : public nsCommonWidget, public nsSupportsWeakReference {
 
   void               NativeShow  (PRBool  aAction);
 
-  void               NativeGrab  (PRBool  aGrab);
+  void               EnsureGrabs  (void);
+  void               GrabPointer  (void);
+  void               GrabKeyboard (void);
+  void               ReleaseGrabs (void);
   
   nsWindow           *mFocusChild;
 
@@ -197,7 +200,8 @@ class nsWindow : public nsCommonWidget, public nsSupportsWeakReference {
   PRPackedBool        mInKeyRepeat;
 
   PRPackedBool        mIsVisible;
-  PRPackedBool        mRetryGrab;
+  PRPackedBool        mRetryPointerGrab;
+  PRPackedBool        mRetryKeyboardGrab;
   GtkWindow          *mTransientParent;
 };
 

@@ -106,7 +106,8 @@ nsWindow::nsWindow()
   mHasFocus            = PR_FALSE;
   mInKeyRepeat         = PR_FALSE;
   mIsVisible           = PR_FALSE;
-  mRetryGrab           = PR_FALSE;
+  mRetryPointerGrab    = PR_FALSE;
+  mRetryKeyboardGrab   = PR_FALSE;
   mTransientParent     = nsnull;
   mWindowType          = eWindowType_child;
 }
@@ -664,8 +665,21 @@ nsWindow::PreCreateWidget(nsWidgetInitData *aWidgetInitData)
 NS_IMETHODIMP
 nsWindow::CaptureMouse(PRBool aCapture)
 {
-  printf("nsWindow::CaptureMouse called!\n");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  LOG(("CaptureMouse %p\n", (void *)this));
+  
+  GtkWidget *widget = 
+    get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
+
+  if (aCapture) {
+    gtk_grab_add(widget);
+    GrabPointer();
+  }
+  else {
+    ReleaseGrabs();
+    gtk_grab_remove(widget);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -676,15 +690,18 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
   GtkWidget *widget = 
     get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
 
+  LOG(("CaptureRollupEvents %p\n", (void *)this));
+
   if (aDoCapture) {
     gRollupListener = aListener;
     gRollupWindow =
       getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
     gtk_grab_add(widget);
-    NativeGrab(PR_TRUE);
+    GrabPointer();
+    GrabKeyboard();
   }
   else {
-    NativeGrab(PR_FALSE);
+    ReleaseGrabs();
     gtk_grab_remove(widget);
     gRollupListener = nsnull;
     gRollupWindow = nsnull;
@@ -1080,8 +1097,7 @@ nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
   case GDK_VISIBILITY_PARTIAL:
     mIsVisible = PR_TRUE;
     // if we have to retry the grab, retry it.
-    if (mRetryGrab)
-      NativeGrab(PR_TRUE);
+    EnsureGrabs();
     break;
   default: // includes GDK_VISIBILITY_FULLY_OBSCURED
     mIsVisible = PR_FALSE;
@@ -1371,69 +1387,95 @@ nsWindow::NativeShow (PRBool  aAction)
 }
 
 void
-nsWindow::NativeGrab(PRBool aGrab)
+nsWindow::EnsureGrabs(void)
 {
-  LOG(("NativeGrab aGrab %d mRetryGrab %d\n", aGrab, mRetryGrab));
+  if (mRetryPointerGrab)
+    GrabPointer();
+  if (mRetryKeyboardGrab)
+    GrabKeyboard();
+}
 
-  // Clear the retry flag.  It doesn't matter if it's being released
-  // or grabbed.
-  mRetryGrab = PR_FALSE;
+void
+nsWindow::GrabPointer(void)
+{
+  LOG(("GrabPointer %d\n", mRetryPointerGrab));
 
-  if (aGrab) {
-    // If the window isn't visible, just set the flag to retry the
-    // grab.  When this window becomes visible, the grab will be
-    // retried.
-    PRBool visibility = PR_TRUE;
-    IsVisible(visibility);
-    if (!visibility) {
-      LOG(("window not visible\n"));
-      mRetryGrab = PR_TRUE;
-      return;
-    }
+  mRetryPointerGrab = PR_FALSE;
 
-    GdkCursor *cursor = gdk_cursor_new(GDK_ARROW);
-    
-    gint retval;
-    retval = gdk_pointer_grab(mDrawingarea->inner_window, TRUE,
-			      (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
-					     GDK_BUTTON_RELEASE_MASK |
-					     GDK_ENTER_NOTIFY_MASK |
-					     GDK_LEAVE_NOTIFY_MASK |
-					     GDK_POINTER_MOTION_MASK),
-			      (GdkWindow *)NULL, cursor, GDK_CURRENT_TIME);
-
-    // now that we're done with the cursor, destroy it
-    gdk_cursor_destroy(cursor);
-
-    if (retval != GDK_GRAB_SUCCESS) {
-      LOG(("pointer grab failed\n"));
-      mRetryGrab = PR_TRUE;
-      return;
-    }
-
-    GdkWindow *grabWindow;
-
-    // we need to grab the keyboard on the transient parent so that we
-    // don't end up with any focus events that end up on the parent
-    // window that will cause the popup to go away
-    if (mTransientParent)
-      grabWindow = GTK_WIDGET(mTransientParent)->window;
-    else
-      grabWindow = mDrawingarea->inner_window;
-
-    retval = gdk_keyboard_grab(grabWindow, TRUE, GDK_CURRENT_TIME);
-
-    if (retval != GDK_GRAB_SUCCESS) {
-      LOG(("keyboard grab failed %d\n", retval));
-      gdk_pointer_ungrab(GDK_CURRENT_TIME);
-      mRetryGrab = PR_TRUE;
-      return;
-    }
+  // If the window isn't visible, just set the flag to retry the
+  // grab.  When this window becomes visible, the grab will be
+  // retried.
+  PRBool visibility = PR_TRUE;
+  IsVisible(visibility);
+  if (!visibility) {
+    LOG(("GrabPointer: window not visible\n"));
+    mRetryPointerGrab = PR_TRUE;
+    return;
   }
-  else {
+
+  gint retval;
+  retval = gdk_pointer_grab(mDrawingarea->inner_window, FALSE,
+			    (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
+					   GDK_BUTTON_RELEASE_MASK |
+					   GDK_ENTER_NOTIFY_MASK |
+					   GDK_LEAVE_NOTIFY_MASK |
+					   GDK_POINTER_MOTION_MASK),
+			    (GdkWindow *)NULL, NULL, GDK_CURRENT_TIME);
+  
+  if (retval != GDK_GRAB_SUCCESS) {
+    LOG(("GrabPointer: pointer grab failed\n"));
+    mRetryPointerGrab = PR_TRUE;
+  }
+}
+
+void
+nsWindow::GrabKeyboard(void)
+{
+  LOG(("GrabKeyboard %d\n", mRetryKeyboardGrab));
+
+  mRetryKeyboardGrab = PR_FALSE;
+
+  // If the window isn't visible, just set the flag to retry the
+  // grab.  When this window becomes visible, the grab will be
+  // retried.
+  PRBool visibility = PR_TRUE;
+  IsVisible(visibility);
+  if (!visibility) {
+    LOG(("GrabKeyboard: window not visible\n"));
+    mRetryKeyboardGrab = PR_TRUE;
+    return;
+  }
+  
+  // we need to grab the keyboard on the transient parent so that we
+  // don't end up with any focus events that end up on the parent
+  // window that will cause the popup to go away
+  GdkWindow *grabWindow;
+  
+  if (mTransientParent)
+    grabWindow = GTK_WIDGET(mTransientParent)->window;
+  else
+    grabWindow = mDrawingarea->inner_window;
+
+  gint retval;
+  retval = gdk_keyboard_grab(grabWindow, TRUE, GDK_CURRENT_TIME);
+  
+  if (retval != GDK_GRAB_SUCCESS) {
+    LOG(("GrabKeyboard: keyboard grab failed %d\n", retval));
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
-    gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+    mRetryKeyboardGrab = PR_TRUE;
   }
+}
+
+void
+nsWindow::ReleaseGrabs(void)
+{
+  LOG(("ReleaseGrabs\n"));
+
+  mRetryPointerGrab = PR_FALSE;
+  mRetryKeyboardGrab = PR_FALSE;
+
+  gdk_pointer_ungrab(GDK_CURRENT_TIME);
+  gdk_keyboard_ungrab(GDK_CURRENT_TIME);
 }
 
 void
@@ -1515,15 +1557,13 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
 PRBool
 is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
 {
-  gint x, y;
+  gint x = 0;
+  gint y = y;
   gint w, h;
 
   gint offsetX = 0;
   gint offsetY = 0;
   
-  // XXX this causes a round trip to the ever lovely X server.  fix me.
-  //  gdk_window_get_origin(aWindow, &x, &y);
-  // use get_position
   GtkWidget *widget;
   GdkWindow *window;
 
