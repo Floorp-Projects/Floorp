@@ -1794,6 +1794,8 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
 {
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
+
+  NS_ENSURE_ARG_POINTER(aN);
   nsresult res;
 
   //get start offset, and start container
@@ -1810,6 +1812,7 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
   res = GetEndContainer(getter_AddRefs(tEndContainer));
   if(NS_FAILED(res)) return res;
 
+  //prep start
   PRUint16 tStartNodeType;
   tStartContainer->GetNodeType(&tStartNodeType);
   if( (nsIDOMNode::CDATA_SECTION_NODE == tStartNodeType) ||
@@ -1823,6 +1826,7 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
     tStartContainer = do_QueryInterface(tTempText);
   }
 
+  //prep end
   PRUint16 tEndNodeType;
   tEndContainer->GetNodeType(&tEndNodeType);
   if( (nsIDOMNode::CDATA_SECTION_NODE == tEndNodeType) ||
@@ -1836,6 +1840,7 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
     tEndContainer = do_QueryInterface(tTempText);
   }
 
+  //get ancestor info
   nsCOMPtr<nsIDOMNode> tAncestorContainer;
   this->GetCommonAncestorContainer(getter_AddRefs(tAncestorContainer));
 
@@ -1847,21 +1852,25 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
   nsCOMPtr<nsIDOMDocument> document;
   res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
   if (NS_FAILED(res)) return res;
+
   // Create a new document fragment in the context of this document
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
   res = document->CreateDocumentFragment(getter_AddRefs(docfrag));
   if (NS_FAILED(res)) return res;
-  this->ExtractContents(getter_AddRefs(docfrag));
+
+  res = this->ExtractContents(getter_AddRefs(docfrag));
+  if (NS_FAILED(res)) return res;
+
   tRangeContentsNode = do_QueryInterface(docfrag);
   aN->AppendChild(tRangeContentsNode, getter_AddRefs(tempNode));
 
   if( (nsIDOMNode::CDATA_SECTION_NODE == tCommonAncestorType) ||
       (nsIDOMNode::TEXT_NODE == tCommonAncestorType) )
-  {
+  {//easy stuff here
     this->InsertNode(aN);
   }
   else
-  {
+  {//hard stuff here
     nsCOMPtr<nsIDOMNodeList>tChildList;
     res = tAncestorContainer->GetChildNodes(getter_AddRefs(tChildList));
     PRUint32 i,tNumChildren;
@@ -1908,6 +1917,8 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
     }
     this->DoSetRange(tStartContainer, 0, tEndContainer, tEndOffset);
   }
+  this->SelectNode(aN);
+  return NS_OK;
 }
 
 nsresult nsRange::ToString(nsAWritableString& aReturn)
