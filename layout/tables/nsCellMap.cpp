@@ -2012,10 +2012,15 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
   Grow(aMap, numOrigRows);
 
   PRInt32 numNewCells = (aCellFrames) ? aCellFrames->Count() : 0;
+  
+  // the new cells might extend the previous column number
+  NS_ASSERTION(numOrigCols >= aColIndex, "Appending cells far beyond cellmap data?!");
+  PRInt32 numCols = aInsert ? PR_MAX(numOrigCols, aColIndex + 1) : numOrigCols;  
+  
   // build the new cell map 
   for (rowX = 0; rowX < numOrigRows; rowX++) {
     nsVoidArray* row = (nsVoidArray *)origRows[rowX];
-    for (PRInt32 colX = 0; colX < numOrigCols; colX++) {
+    for (PRInt32 colX = 0; colX < numCols; colX++) {
       if ((rowX == aRowIndex) && (colX == aColIndex)) { 
         if (aInsert) { // put in the new cells
           for (PRInt32 cellX = 0; cellX < numNewCells; cellX++) {
