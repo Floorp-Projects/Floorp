@@ -113,22 +113,23 @@ void
 mozTXTToHTMLConv::UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos, PRInt32 aLength, nsString& aOutString)
 {
   const PRUnichar * subString = nsnull;
-  for (PRUint32 i = aStartPos; PRInt32(i) < aLength;)
+  for (PRUint32 i = aStartPos; PRInt32(i) - aStartPos < aLength;)
   {
+    PRInt32 remainingChars = i - aStartPos;
     if (aInString[i] == '&')
     {
       subString = &aInString[i];
-      if (!nsCRT::strncmp(subString, "&lt;", MinInt(4, aLength - i)))
+      if (!nsCRT::strncmp(subString, "&lt;", MinInt(4, aLength - remainingChars)))
       {
         aOutString += '<';
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, "&gt;", MinInt(4, aLength - i)))
+      else if (!nsCRT::strncmp(subString, "&gt;", MinInt(4, aLength - remainingChars)))
       {
         aOutString += '>';
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, "&amp;", MinInt(5, aLength - i)))
+      else if (!nsCRT::strncmp(subString, "&amp;", MinInt(5, aLength - remainingChars)))
       {
         aOutString += '&';
         i += 5;
