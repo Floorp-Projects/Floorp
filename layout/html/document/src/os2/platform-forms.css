@@ -37,22 +37,21 @@
 @import url("resource:/res/forms.css");
 
 input {
-  font-family: inherit !important;
+  font: medium serif; font-family: inherit
 }
 
-/* Taking out for now - messes up some Yahoo! news stories
 select {
-  font-family: inherit !important;
-} */
+  font: medium serif; font-family: inherit
+}
 
 optgroup {
-  font-family: inherit !important;
+  font: medium serif; font-family: inherit
 }
 
 button, 
 input[type="reset"],
 input[type="button"],
 input[type="submit"] { 
-  font-family: inherit !important;
+  font: medium serif; font-family: inherit
 }
 
