@@ -219,10 +219,7 @@ lo_FormatBuiltinInternal (MWContext *context, lo_DocState *state, PA_Tag *tag,
 	/*
 	 * Get the optional src parameter.
 	 */
-	if (isObject)
-		buff = lo_FetchParamValue(context, tag, PARAM_DATA);
-	else
-		buff = lo_FetchParamValue(context, tag, PARAM_SRC);
+	buff = lo_FetchParamValue(context, tag, PARAM_SRC);
 	if (buff != NULL)
 	{
 		PA_Block new_buff;
