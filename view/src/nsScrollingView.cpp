@@ -1002,6 +1002,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
           mOffsetY = 0;
           dy = NSTwipsToIntPixels(offy, scale);
 
+          scrollv->SetPosition(0);  // make sure thumb is at the top
           if (mScrollPref == nsScrollPreference_kAlwaysScroll)
           {
             mVScrollBarView->SetVisibility(nsViewVisibility_kShow);
@@ -1083,6 +1084,7 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
             mHScrollBarView->SetVisibility(nsViewVisibility_kHide);
             win->Enable(PR_TRUE);
           }
+          scrollh->SetPosition(0);  // make sure thumb is all the way to the left
         }
 
         NS_RELEASE(scrollh);
