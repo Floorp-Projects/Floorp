@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.41 2001/04/12 10:13:59 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.cpp,v 1.42 2001/04/12 14:04:45 peterv%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -68,7 +68,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.41 $ $Date: 2001/04/12 10:13:59 $
+ * @version $Revision: 1.42 $ $Date: 2001/04/12 14:04:45 $
 **/
 
 /**
@@ -428,21 +428,19 @@ void XSLTProcessor::processTopLevel
                     //-- Read in XSL document
 
                     if (ps->getInclude(href)) {
+                        /* XXX this is wrong, it's allowed to include one stylesheet multiple
+                           times but we should build some sort of stack to make sure that we
+                           don't have circular inclusions */
                         String err("stylesheet already included: ");
                         err.append(href);
                         notifyError(err, ErrorObserver::WARNING);
                         break;
                     }
 
-                    //-- get document base
-                    String realHref;
-                    String thisDocBase = ps->getDocumentBase();
                     String errMsg;
                     XMLParser xmlParser;
 
-                    URIUtils::resolveHref(href, thisDocBase, realHref);
-
-                    Document* xslDoc = xmlParser.getDocumentFromURI(realHref, thisDocBase, errMsg);
+                    Document* xslDoc = xmlParser.getDocumentFromURI(href, element->getBaseURI(), errMsg);
 
                     if (!xslDoc) {
                         String err("error including XSL stylesheet: ");
@@ -454,11 +452,7 @@ void XSLTProcessor::processTopLevel
                     else {
                         //-- add stylesheet to list of includes
                         ps->addInclude(href, xslDoc);
-                        String newDocBase;
-                        URIUtils::getDocumentBase(realHref, newDocBase);
-                        ps->setDocumentBase(newDocBase);
                         processTopLevel(xslDoc, ps);
-                        ps->setDocumentBase(thisDocBase);
                     }
                     break;
 
@@ -552,7 +546,6 @@ Document* XSLTProcessor::process
 
     //-- create a new ProcessorState
     ProcessorState ps(xslDocument, *result);
-    ps.setDocumentBase(xslDocument.getBaseURI());
 
     //-- add error observers
     ListIterator* iter = errorObservers.iterator();
@@ -591,7 +584,6 @@ void XSLTProcessor::process
 
     //-- create a new ProcessorState
     ProcessorState ps(xslDocument, *result);
-    ps.setDocumentBase(xslDocument.getBaseURI());
 
     //-- add error observers
     ListIterator* iter = errorObservers.iterator();
@@ -1753,25 +1745,6 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     //-- create a new ProcessorState
     ProcessorState* ps = new ProcessorState(*xslDocument, *resultDocument);
-
-    // XXX HACK, baseURI is something to be done in the DOM
-    nsIURI* docURL = nsnull;
-    nsCOMPtr<nsIDocument> sourceNsDocument = do_QueryInterface(styleDOMDocument);
-    sourceNsDocument->GetBaseURL(docURL);
-    if (docURL) {
-        char* urlString;
-
-        docURL->GetSpec(&urlString);
-        String documentBase(urlString);
-//        NS_IMPL_LOG(XSLT)
-//        PRINTF("Transforming with stylesheet %s",documentBase.toCharArray());
-//        FLUSH();
-        ps->setDocumentBase(documentBase);
-        nsCRT::free(urlString);
-        NS_IF_RELEASE(docURL);
-    }
-    else
-        ps->setDocumentBase("");
 
     //-- add error observers
 
