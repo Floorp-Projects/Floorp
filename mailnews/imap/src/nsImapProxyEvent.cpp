@@ -1587,12 +1587,17 @@ PossibleImapMailboxProxyEvent::PossibleImapMailboxProxyEvent(
         if (aSpec->allocatedPathName)
             m_mailboxSpec.allocatedPathName =
                 PL_strdup(aSpec->allocatedPathName); 
+#if 0 // mscott - we appear to be creating a new name space on top of the existing one..
+      // i don't really understand what is going on here. but aSpec is pointing to the same
+	  // object as m_mailboxSpec. so m_mailboxSpec.namespacesforfolder =new (aspec->namespacesforfolder)
+	  // isn't going to fly...
         if (aSpec->namespaceForFolder)
             m_mailboxSpec.namespaceForFolder = 
                 new nsIMAPNamespace(aSpec->namespaceForFolder->GetType(),
                                     aSpec->namespaceForFolder->GetPrefix(),
                                     aSpec->namespaceForFolder->GetDelimiter(),
                                     aSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
+#endif
     }
     else
     {
@@ -1604,8 +1609,10 @@ PossibleImapMailboxProxyEvent::~PossibleImapMailboxProxyEvent()
 {
     if (m_mailboxSpec.allocatedPathName)
         PL_strfree(m_mailboxSpec.allocatedPathName);
-    if (m_mailboxSpec.namespaceForFolder)
-        delete m_mailboxSpec.namespaceForFolder;
+// mscott - again, i didn't actually copy the namespace over see my comment in the function above...so we 
+// shouldn't delete the name space as this is the original!
+//    if (m_mailboxSpec.namespaceForFolder)
+//        delete m_mailboxSpec.namespaceForFolder;
 }
 
 NS_IMETHODIMP
