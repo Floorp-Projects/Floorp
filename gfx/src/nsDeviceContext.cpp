@@ -540,8 +540,6 @@ nsresult DeviceContextImpl::CreateFontAliasTable()
       nsAutoString  helvetica;          helvetica.AssignWithConversion("Helvetica");
       nsAutoString  courier;            courier.AssignWithConversion("Courier");
       nsAutoString  courierNew;         courierNew.AssignWithConversion("Courier New");
-      nsAutoString  unicode;            unicode.AssignWithConversion("Unicode");
-      nsAutoString  bitstreamCyberbit;  bitstreamCyberbit.AssignWithConversion("Bitstream Cyberbit");
       nsAutoString  nullStr;
 
       AliasFont(times, timesNewRoman, timesRoman, PR_FALSE);
@@ -551,7 +549,6 @@ nsresult DeviceContextImpl::CreateFontAliasTable()
       AliasFont(helvetica, arial, nullStr, PR_FALSE);
       AliasFont(courier, courierNew, nullStr, PR_TRUE);
       AliasFont(courierNew, courier, nullStr, PR_FALSE);
-      AliasFont(unicode, bitstreamCyberbit, nullStr, PR_FALSE); // XXX ????
     }
     else {
       result = NS_ERROR_OUT_OF_MEMORY;
