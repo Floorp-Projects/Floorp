@@ -33,15 +33,36 @@
         title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="TutorialURL()" 
         orient="vertical">
 <!-- 
   <script language="javascript" src="chrome://global/content/strres.js" />
 -->
+
+  <script>
+  function TutorialURL() 
+  {
+    var tutorialURL = "chrome://communicator/locale/wallet/privacy.html";
+    try {
+      var pref = Components.classes["@mozilla.org/preferences;1"].getService();
+      if(pref) {
+        pref = pref.QueryInterface( Components.interfaces.nsIPref );
+        if(pref) {
+          tutorialURL = pref.getLocalizedUnicharPref("wallet.TutorialFromMenu");
+        }
+      }
+    }
+    catch(e) {
+    }
+    var element = document.getElementById("maintext");
+    element.setAttribute("src", tutorialURL);
+  }  
+
+  </script>
+
   <keyset id="keyset"/>
            
-  <iframe id="it-doesnt-matter-anyway" class="output-container"
-       type="content" src="chrome://communicator/locale/wallet/privacy.html" flex="1"/>
-
+  <iframe id="maintext" class="output-container" type="content" flex="1"/>
 
   <!-- from dialogOverlay.xul -->
   <spring style="height: 5px;"/>
