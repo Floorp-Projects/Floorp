@@ -913,26 +913,25 @@ nsEditor::Undo(PRUint32 aCount)
 
   if (gNoisy) { printf("Editor::Undo ----------\n"); }
   nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    selection->StartBatchChanges();
-    if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
-    {
-      PRUint32 i=0;
-      for ( ; i<aCount; i++)
-      {
-        result = mTxnMgr->Undo();
 
-        if (NS_SUCCEEDED(result))
-	        result = DoAfterUndoTransaction();
+  BeginUpdateViewBatch();
+
+  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
+  {
+    PRUint32 i=0;
+    for ( ; i<aCount; i++)
+    {
+      result = mTxnMgr->Undo();
+
+      if (NS_SUCCEEDED(result))
+        result = DoAfterUndoTransaction();
 	        
-        if (NS_FAILED(result))
-          break;
-      }
+      if (NS_FAILED(result))
+        break;
     }
-    selection->EndBatchChanges();
   }
+
+  EndUpdateViewBatch();
 
   return result;
 }
@@ -949,22 +948,22 @@ nsEditor::Redo(PRUint32 aCount)
 
   if (gNoisy) { printf("Editor::Redo ----------\n"); }
   nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    selection->StartBatchChanges();
-    if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
+
+  BeginUpdateViewBatch();
+
+  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
+  {
+    PRUint32 i=0;
+    for ( ; i<aCount; i++)
     {
-      PRUint32 i=0;
-      for ( ; i<aCount; i++)
-      {
-        result = mTxnMgr->Redo();
-        if (NS_FAILED(result))
-          break;
-      }
+      result = mTxnMgr->Redo();
+      if (NS_FAILED(result))
+        break;
     }
-    selection->EndBatchChanges();
   }
+
+  EndUpdateViewBatch();
+
   return result;
 }
 
