@@ -82,14 +82,6 @@ RELEASE_BINS = $(srcdir)/compile-et.pl $(srcdir)/prerr.properties
 
 include $(topsrcdir)/config/rules.mk
 
-# An AIX Optimization bug causes PR_dtoa() to produce wrong result.
-# This suppresses optimization for this single compilation unit.
-ifeq ($(OS_ARCH), AIX)
-$(OBJDIR)/prdtoa.o: prdtoa.c
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -c $(filter-out -O, $(CFLAGS)) $<
-endif
-
 #
 # Generate prerr.h, prerr.c, and prerr.properties from prerr.et.
 #
