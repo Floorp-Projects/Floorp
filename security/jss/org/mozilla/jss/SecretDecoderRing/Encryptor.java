@@ -88,6 +88,9 @@ public class Encryptor {
 
         // make sure this key exists on the token
         key = keyManager.lookupKey(alg, keyID);
+        if( key == null ) {
+            throw new InvalidKeyException("Key not found");
+        }
 
         // make sure key matches algorithm
         // !!! not sure how to do this
