@@ -26,20 +26,17 @@ DEPTH			= ../../../..
 
 ifdef XFE_WIDGETS_BUILD_UNUSED
 UNUSED_CSRCS		= \
+				demo.c \
 				prog1.c \
 				prog2.c \
 				prog3.c \
-				tree1.c \
-				tree2.c \
-				tree3.c \
-				tree4.c \
-				tree5.c \
+				uil1.c \
+				util1.c \
 				$(NULL)
 endif
 
 CSRCS			= \
 				$(UNUSED_CSRCS) \
-				demo.c \
 				folder1.c \
 				folder2.c \
 				folder3.c \
@@ -50,8 +47,11 @@ CSRCS			= \
 				grid4.c \
 				grid5.c \
 				grid6.c \
-				uil1.c \
-				util1.c \
+				tree1.c \
+				tree2.c \
+				tree3.c \
+				tree4.c \
+				tree5.c \
 				$(NULL)
 
 REQUIRES		= \
