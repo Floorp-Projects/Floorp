@@ -297,6 +297,7 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 
 PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
+printf("Scrollbar onresize\n");
   if (DBG) printf("*&*&*&*&*&*&*()()()()(((( nsScrollbar::OnResize\n");
   return nsWindow::OnResize(aEvent);
   //return PR_FALSE;
