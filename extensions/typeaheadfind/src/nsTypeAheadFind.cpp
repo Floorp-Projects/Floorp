@@ -610,7 +610,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  if (!mIsSoundInitialized) {
+  if (!mIsSoundInitialized && !mNotFoundSoundURL.IsEmpty()) {
     // This makes sure system sound library is loaded so that
     // there's no lag before the first sound is played
     // by waiting for the first keystroke, we still get the startup time benefits.
