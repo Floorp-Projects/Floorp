@@ -58,6 +58,15 @@ static char* MakeUpperCase(char* aPath)
 }
 #endif
 
+
+//----------------------------------------------------------------------------------------
+static void GetCurrentWorkingDirectory(nsFileSpec& aFileSpec)
+//----------------------------------------------------------------------------------------
+{
+    aFileSpec = ".";
+    return;
+}
+
 //----------------------------------------------------------------------------------------
 static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 //----------------------------------------------------------------------------------------
@@ -224,6 +233,10 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 
         case OS_CurrentProcessDirectory:
             GetCurrentProcessDirectory(*this);
+            break;
+
+        case OS_CurrentWorkingDirectory:
+            GetCurrentWorkingDirectory(*this);
             break;
 
 #ifdef XP_MAC
