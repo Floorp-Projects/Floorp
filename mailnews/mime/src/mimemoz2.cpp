@@ -400,7 +400,8 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
       PR_FREEIF(tmp->real_name);
       tmp->real_name = MimeHeaders_get_parameter(disp, "name", &charset, nsnull);
       if (isAnAppleDoublePart)
-        for (i = 0; i < 2 && !tmp->real_name; i ++)
+        // the data fork is the 2nd part, and we should ALWAYS look there first for the file name
+        for (i = 1; i >= 0 && !tmp->real_name; i --) 
         {
           PR_FREEIF(disp);
           nsMemory::Free(charset);
