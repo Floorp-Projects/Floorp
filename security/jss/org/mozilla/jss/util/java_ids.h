@@ -279,6 +279,29 @@ PR_BEGIN_EXTERN_C
 #define GET_PORT_NAME "getPort"
 #define GET_PORT_SIG "()I"
 
+#define GET_LOCAL_ADDR_NAME "getLocalAddress"
+#define GET_LOCAL_PORT_NAME "getLocalPort"
+
+#define SOCKET_CLOSE_NAME "close"
+#define SOCKET_CLOSE_SIG "()V"
+
+#define SET_SO_TIMEOUT_NAME "setSoTimeout"
+#define SET_SO_TIMEOUT_SIG "(I)V"
+
+#define GET_KEEPALIVE_NAME "getKeepAlive"
+#define GET_KEEPALIVE_SIG "()Z"
+
+#define GET_SEND_BUF_SIZE "getSendBufferSize"
+#define GET_RECV_BUF_SIZE "getReceiveBufferSize"
+#define GET_BUF_SIZE_SIG "()I"
+
+/*
+ * SocketBase
+ */
+#define SOCKET_BASE_NAME "org/mozilla/jss/ssl/SocketBase"
+#define PROCESS_EXCEPTIONS_NAME "processExceptions"
+#define PROCESS_EXCEPTIONS_SIG "(Ljava/lang/Throwable;Ljava/lang/Throwable;)Ljava/lang/Throwable;"
+
 /*
  * SSLCertificateApprovalCallback
  */

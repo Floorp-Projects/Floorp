@@ -230,7 +230,20 @@ public class SSLSocket extends java.net.Socket {
         socketConnect(address.getAddress(), hostname, port);
     }
 
-    public SSLSocket(java.net.Socket s, String host, int port,
+    /**
+     * Creates an SSL client socket using the given Java socket for underlying
+     *  I/O. Installs the given callbacks for certificate approval and
+     *  client certificate selection.
+     *
+     * @param s The Java socket to use for underlying I/O.
+     * @param host The hostname of the remote side of the connection.
+     *      This name is used to verify the server's certificate.
+     * @param certApprovalCallback A callback that can be used to override
+     *      approval of the peer's certificate.
+     * @param clientCertSelectionCallback A callback to select the client
+     *      certificate to present to the peer.
+     */
+    public SSLSocket(java.net.Socket s, String host,
         SSLCertificateApprovalCallback certApprovalCallback,
         SSLClientCertificateSelectionCallback clientCertSelectionCallback)
             throws IOException
@@ -240,11 +253,11 @@ public class SSLSocket extends java.net.Socket {
             new SocketProxy(
                 base.socketCreate(
                     this, certApprovalCallback, clientCertSelectionCallback,
-                    s, host, port) );
+                    s, host ) );
 
         base.setProxy(sockProxy);
+        resetHandshake();
     }
-
 
     /**
      * @return The remote peer's IP address.
@@ -260,11 +273,11 @@ public class SSLSocket extends java.net.Socket {
         try {
             int intAddr = getLocalAddressNative();
             InetAddress in;
-            byte[] addr = new byte[4];
-            addr[0] = (byte)((intAddr >>> 24) & 0xff);
-            addr[1] = (byte)((intAddr >>> 16) & 0xff);
-            addr[2] = (byte)((intAddr >>>  8) & 0xff);
-            addr[3] = (byte)((intAddr       ) & 0xff);
+            int[] addr = new int[4];
+            addr[0] = ((intAddr >>> 24) & 0xff);
+            addr[1] = ((intAddr >>> 16) & 0xff);
+            addr[2] = ((intAddr >>>  8) & 0xff);
+            addr[3] = ((intAddr       ) & 0xff);
             try {
             in = InetAddress.getByName(
                 addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
@@ -344,7 +357,7 @@ public class SSLSocket extends java.net.Socket {
 
     /**
      * Sets the SO_LINGER socket option.
-     * param linger The time (in hundredths of a second) to linger for.
+     * param linger The time (in seconds) to linger for.
      */
     public native void setSoLinger(boolean on, int linger)
         throws SocketException;

@@ -108,7 +108,7 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
         }
     }
 
-    newSD = JSSL_CreateSocketData(env, newSock, newFD);
+    newSD = JSSL_CreateSocketData(env, newSock, newFD, NULL /* priv */);
     newFD = NULL;
     if( newSD == NULL ) {
         goto finish;

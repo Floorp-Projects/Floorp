@@ -65,6 +65,7 @@ JSRCS =	\
 PRIVATE_JSRCS = \
         SSLClient.java     \
         SSLServer.java     \
+        SSLTest.java             \
 		TestCertApprovalCallback.java \
 		TestClientCertificateSelectionCallback.java \
         $(NULL)
@@ -92,6 +93,7 @@ CLASSES =	SSLHandshakeCompletedEvent    \
 PRIVATE_CLASSES = \
             SSLServer         \
             SSLClient \
+            SSLTest \
             $(NULL)
 
 			#SSLClient         \

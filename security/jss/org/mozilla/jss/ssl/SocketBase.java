@@ -38,6 +38,9 @@ import java.net.SocketException;
 import java.io.*;
 import java.io.IOException;
 import java.util.Vector;
+import java.util.Enumeration;
+import java.lang.reflect.Constructor;
+import org.mozilla.jss.util.Assert;
 
 
 class SocketBase {
@@ -62,7 +65,7 @@ class SocketBase {
     native byte[] socketCreate(Object socketObject,
         SSLCertificateApprovalCallback certApprovalCallback,
         SSLClientCertificateSelectionCallback clientCertSelectionCallback,
-        java.net.Socket javaSock, String host, int port)
+        java.net.Socket javaSock, String host)
             throws SocketException;
 
     byte[] socketCreate(Object socketObject,
@@ -71,7 +74,7 @@ class SocketBase {
             throws SocketException
     {
         return socketCreate(socketObject, certApprovalCallback,
-            clientCertSelectionCallback, null, null, 0);
+            clientCertSelectionCallback, null, null);
     }
 
     native void socketBind(byte[] addrBA, int port) throws SocketException;
@@ -139,18 +142,20 @@ class SocketBase {
     {
         try {
             int intAddr = getPeerAddressNative();
-            InetAddress in;
-            byte[] addr = new byte[4];
-            addr[0] = (byte)((intAddr >>> 24) & 0xff);
-            addr[1] = (byte)((intAddr >>> 16) & 0xff);
-            addr[2] = (byte)((intAddr >>>  8) & 0xff);
-            addr[3] = (byte)((intAddr       ) & 0xff);
+            int[] addr = new int[4];
+            InetAddress in = null;
+            addr[0] = ((intAddr >>> 24) & 0xff);
+            addr[1] = ((intAddr >>> 16) & 0xff);
+            addr[2] = ((intAddr >>>  8) & 0xff);
+            addr[3] = ((intAddr       ) & 0xff);
             try {
-            in = InetAddress.getByName(
-                addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
+                in = InetAddress.getByName(
+                  addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
             } catch (java.net.UnknownHostException e) {
+                e.printStackTrace();
                 in = null;
             }
+            
             return in;
         } catch(SocketException e) {
             e.printStackTrace();
@@ -193,19 +198,16 @@ class SocketBase {
         setSSLOption(SSL_NO_CACHE, !b);
     }
 
-/*
     static Throwable processExceptions(Throwable topException,
-        Vector bottomExceptions)
+        Throwable bottomException)
     {
       try {
         StringBuffer strBuf;
-        Enumeration bottoms = bottomExceptions.elements();
-
         strBuf = new StringBuffer( topException.toString() );
 
-        while( bottoms.hasMoreElements() ) {
+        if( bottomException != null ) {
             strBuf.append(" --> ");
-            strBuf.append( ((Throwable)bottoms.nextElement()).toString() );
+            strBuf.append( bottomException.toString() );
         }
 
         Class excepClass = topException.getClass();
@@ -214,9 +216,8 @@ class SocketBase {
 
         return (Throwable) cons.newInstance(new Object[] { strBuf.toString() });
       } catch(Exception e ) {
-        Assert.notReached();
+        Assert.notReached("Problem constructing exception container");
         return topException;
       }
     }
-*/
 }

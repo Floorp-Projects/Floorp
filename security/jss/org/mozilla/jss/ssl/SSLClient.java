@@ -92,7 +92,7 @@ public class SSLClient
     "/index",    	 // filename
     "443",	         // port to connect to
     "",			 // ipaddr (use hostname instead)
-    "www.amazon.com", // hostname to connect to
+    "trading.etrade.com", // hostname to connect to
     "1024",		 // filesize
     "2",	       	 // status, 2 means ???
     "128",		 // expected session key size
@@ -144,7 +144,7 @@ public class SSLClient
 	  results.println(htmlHeader);
 	results.println("SSL Client Tester");
 	results.println(
-			"$Id: SSLClient.java,v 1.3 2001/07/06 01:18:30 nicolson%netscape.com Exp $ " + 
+			"$Id: SSLClient.java,v 1.4 2001/09/08 01:53:32 nicolson%netscape.com Exp $ " + 
 			versionStr );
 	
 	SSLSocket s;
@@ -193,15 +193,14 @@ public class SSLClient
 	
 	SSLCertificateApprovalCallback approvalCallback = new TestCertApprovalCallback();
 	SSLClientCertificateSelectionCallback certSelectionCallback = new TestClientCertificateSelectionCallback();
-	s = new SSLSocket(InetAddress.getByName(hostname),
-						port,
-						null,   /* local addr */
-						0,      /* local port */
-						true,   /* stream     */
+    Socket js = new Socket(InetAddress.getByName(hostname), port);
+	//s = new SSLSocket(hostname, port, null, 0,
+	s = new SSLSocket(js, hostname, 
 						approvalCallback,
 						certSelectionCallback
 					);
 						
+    s.forceHandshake();
 	results.println("Connected.");
 	
 	// select the cert for client auth
@@ -377,7 +376,7 @@ public class SSLClient
       return result.toString();
     }
   
-  public SSLClient( PrintStream ps, String verStr)
+  public SSLClient( PrintStream ps, String verStr, String[] argv)
     {
       this.args       = new Hashtable();
       this.results    = ps;
@@ -387,6 +386,9 @@ public class SSLClient
 	String value = values[i];
 	if(value != null)
 	  this.args.put(argNames[i], value);
+      }
+      for(int i=0; i < argv.length; i+=2) {
+        this.args.put(argv[i], argv[i+1]);
       }
     }
   
@@ -409,12 +411,6 @@ public class SSLClient
 		new CryptoManager.InitializationValues(".");
 	CryptoManager.initialize(vals);
 
-        try {
-            System.out.println("Sleeping...");
-            Thread.currentThread().sleep(5000);
-            System.out.println("Awake.");
-        } catch(Throwable t) { }
-      
 
 //	NSSInit.initialize("secmod.db", "key3.db", "cert7.db");
       }
@@ -450,7 +446,7 @@ public class SSLClient
 	SSLSocket.setCipherPreference( cipherSuites[i], true);
       }
       
-      SSLClient x = new SSLClient(System.out, "Stand alone Ver 0.01");
+      SSLClient x = new SSLClient(System.out, "Stand alone Ver 0.01", argv);
       x.run(true);
     }
   

@@ -44,11 +44,6 @@
 #include <jssutil.h>
 #include <java_ids.h>
 
-typedef struct ExceptionNodeStr {
-    jobject excep;
-    struct ExceptionNodeStr *next;
-} ExceptionNode;
-
 static PRIntn
 invalidInt()
 {
@@ -59,41 +54,34 @@ invalidInt()
 struct PRFilePrivate {
     JavaVM *javaVM;
     jobject sockGlobalRef;
-    ExceptionNode *exceptionStack;
+    jthrowable exception;
+    PRIntervalTime timeout;
 };
 
 /*
  * exception should be a global ref
  */
 void
-pushException(PRFilePrivate *priv, jobject excep)
+setException(JNIEnv *env, PRFilePrivate *priv, jthrowable excep)
 {
-    ExceptionNode *node = PR_NEW(ExceptionNode);
-    node->excep = excep;
-    node->next = priv->exceptionStack;
-    priv->exceptionStack = node;
-    printf("pushed exception\n");
+    PR_ASSERT(priv->exception == NULL);
+    if( priv->exception != NULL) {
+        (*env)->DeleteGlobalRef(env, priv->exception);
+    }
+    priv->exception = excep;
 }
 
-jobject
-JSS_SSL_popException(PRFilePrivate *priv)
+jthrowable
+JSS_SSL_getException(PRFilePrivate *priv)
 {
-    jobject retval = NULL;
-    ExceptionNode *node = priv->exceptionStack;
-
-    if( node != NULL )  {
-        priv->exceptionStack = node->next;
-        retval = node->excep;
-        PR_Free(node);
-    }
-    printf("popped exception\n");
+    jobject retval = priv->exception;
+    priv->exception = NULL;
     return retval;
 }
 
 
 #define GET_ENV(vm, env) \
-    ( ((*(vm))->AttachCurrentThread((vm), (void**)&(env), NULL) == 0) ? 0 :  \
-        ( /* THROW EXCEPTION */printf("Failed to get env pointer\n"), 1 )  )
+    ( ((*(vm))->AttachCurrentThread((vm), (void**)&(env), NULL) == 0) ? 0 : 1 )
 
 static PRInt32 
 writebuf(JNIEnv *env, PRFileDesc *fd, jobject sockObj, jbyteArray byteArray)
@@ -144,14 +132,12 @@ writebuf(JNIEnv *env, PRFileDesc *fd, jobject sockObj, jbyteArray byteArray)
         0, arrayLen);
 
     /* this may have thrown an IO Exception */
-    printf("writebuf completed successfully\n");
 
 finish:
     if( env != NULL ) {
         jthrowable excep = (*env)->ExceptionOccurred(env);
         if( excep != NULL ) {
-            fprintf(stderr, "Exception was thrown\n");
-            pushException(fd->secret, (*env)->NewGlobalRef(env, excep));
+            setException(env, fd->secret, (*env)->NewGlobalRef(env, excep));
             (*env)->ExceptionClear(env);
             retval = -1;
             PR_SetError(PR_IO_ERROR, 0);
@@ -162,11 +148,59 @@ finish:
         retval = -1;
         PR_SetError(PR_IO_ERROR, 0);
     }
-
-    printf("writebuf returns %d\n", retval);
     return retval;
 }
 
+
+static PRStatus
+processTimeout(JNIEnv *env, PRFileDesc *fd, jobject sockObj,
+        PRIntervalTime timeout)
+{
+    jclass socketClass;
+    jmethodID setSoTimeoutMethod;
+    jint javaTimeout;
+
+    if( timeout == fd->secret->timeout ) {
+        /* no need to change it */
+        goto finish;
+    }
+
+    /*
+     * Call setSoTimeout on the Java socket
+     */
+    socketClass = (*env)->GetObjectClass(env, sockObj);
+    if( socketClass == NULL ) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+    setSoTimeoutMethod = (*env)->GetMethodID(env, socketClass,
+        SET_SO_TIMEOUT_NAME, SET_SO_TIMEOUT_SIG);
+    if( setSoTimeoutMethod == NULL ) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    if( timeout == PR_INTERVAL_NO_TIMEOUT ) {
+        javaTimeout = 0; /* 0 means no timeout in Java */
+    } else if( timeout == PR_INTERVAL_NO_WAIT ) {
+        PR_ASSERT(!"PR_INTERVAL_NO_WAIT not supported");
+        javaTimeout = 1;  /* approximate with 1ms wait */
+    } else {
+        javaTimeout = PR_IntervalToMilliseconds(timeout);
+    }
+
+    (*env)->CallVoidMethod(env, sockObj, setSoTimeoutMethod, javaTimeout);
+    /* This may have thrown an exception */
+
+    fd->secret->timeout = timeout;
+
+finish:
+    if( (*env)->ExceptionOccurred(env) ) {
+        return PR_FAILURE;
+    } else {
+        return PR_SUCCESS;
+    }
+}
 
 static PRInt32 
 jsock_write(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
@@ -177,8 +211,6 @@ jsock_write(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
     jbyteArray outbufArray;
     PRInt32 retval;
 
-    PR_ASSERT(timeout == PR_INTERVAL_NO_TIMEOUT);
-
     if( GET_ENV(fd->secret->javaVM, env) ) goto finish;
 
     /*
@@ -186,6 +218,8 @@ jsock_write(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
      */
     sockObj = fd->secret->sockGlobalRef;
     PR_ASSERT(sockObj != NULL);
+
+    if( processTimeout(env, fd, sockObj, timeout) != PR_SUCCESS ) goto finish;
 
     /*
      * convert iov to java byte array
@@ -227,8 +261,7 @@ finish:
     if( env != NULL ) {
         jthrowable excep = (*env)->ExceptionOccurred(env);
         if( excep != NULL ) {
-            fprintf(stderr, "Exception was thrown\n");
-            pushException(fd->secret, (*env)->NewGlobalRef(env, excep));
+            setException(env, fd->secret, (*env)->NewGlobalRef(env, excep));
             (*env)->ExceptionClear(env);
             retval = -1;
             PR_SetError(PR_IO_ERROR, 0);
@@ -238,12 +271,16 @@ finish:
         PR_SetError(PR_IO_ERROR, 0);
     }
 
-    printf("jsock_write returns %d\n", retval);
     return retval;
 }
 
+typedef enum {
+    LOCAL_NAME,
+    PEER_NAME
+} LocalOrPeer;
+
 static PRStatus
-jsock_getPeerName(PRFileDesc *fd, PRNetAddr *addr)
+getInetAddress(PRFileDesc *fd, PRNetAddr *addr, LocalOrPeer localOrPeer)
 {
     PRStatus status = PR_FAILURE;
     jobject sockObj;
@@ -267,11 +304,22 @@ jsock_getPeerName(PRFileDesc *fd, PRNetAddr *addr)
         jclass sockClass = (*env)->GetObjectClass(env, sockObj);
         jmethodID getInetAddrMethod;
         jmethodID getPortMethod;
+        const char *getAddrMethodName;
+        const char *getPortMethodName;
+
+        if( localOrPeer == LOCAL_NAME ) {
+            getAddrMethodName = GET_LOCAL_ADDR_NAME;
+            getPortMethodName = GET_LOCAL_PORT_NAME;
+        } else {
+            PR_ASSERT(localOrPeer == PEER_NAME);
+            getAddrMethodName = GET_INET_ADDR_NAME;
+            getPortMethodName = GET_PORT_NAME;
+        }
 
         PR_ASSERT( sockClass != NULL );
 
         getInetAddrMethod = (*env)->GetMethodID(env, sockClass,
-            GET_INET_ADDR_NAME, GET_INET_ADDR_SIG);
+            getAddrMethodName, GET_INET_ADDR_SIG);
         if( getInetAddrMethod == NULL ) {
             ASSERT_OUTOFMEM(env);
             goto finish;
@@ -285,7 +333,7 @@ jsock_getPeerName(PRFileDesc *fd, PRNetAddr *addr)
         if( (*env)->ExceptionOccurred(env) ) goto finish;
 
         getPortMethod = (*env)->GetMethodID(env, sockClass,
-            GET_PORT_NAME, GET_PORT_SIG);
+            getPortMethodName, GET_PORT_SIG);
         if( getPortMethod == NULL ) {
             ASSERT_OUTOFMEM(env);
             goto finish;
@@ -353,8 +401,7 @@ finish:
     if( env != NULL ) {
         jthrowable excep = (*env)->ExceptionOccurred(env);
         if( excep != NULL ) {
-            fprintf(stderr, "Exception was thrown\n");
-            pushException(fd->secret, (*env)->NewGlobalRef(env, excep));
+            setException(env, fd->secret, (*env)->NewGlobalRef(env, excep));
             (*env)->ExceptionClear(env);
             status = PR_FAILURE;
             PR_SetError(PR_IO_ERROR, 0);
@@ -366,6 +413,19 @@ finish:
     return status;
 }
 
+static PRStatus
+jsock_getPeerName(PRFileDesc *fd, PRNetAddr *addr)
+{
+    return getInetAddress(fd, addr, PEER_NAME);
+}
+
+static PRStatus
+jsock_getSockName(PRFileDesc *fd, PRNetAddr *addr)
+{
+    return getInetAddress(fd, addr, LOCAL_NAME);
+}
+
+
 static PRInt32
 jsock_send(PRFileDesc *fd, const void *buf, PRInt32 amount,
     PRIntn flags, PRIntervalTime timeout)
@@ -375,8 +435,6 @@ jsock_send(PRFileDesc *fd, const void *buf, PRInt32 amount,
     jbyteArray byteArray;
     PRInt32 retval = -1;;
 
-    PR_ASSERT(timeout == PR_INTERVAL_NO_TIMEOUT);
-
     if( GET_ENV(fd->secret->javaVM, env) ) goto finish;
 
     /*
@@ -384,6 +442,8 @@ jsock_send(PRFileDesc *fd, const void *buf, PRInt32 amount,
      */
     sockObj = fd->secret->sockGlobalRef;
     PR_ASSERT(sockObj != NULL);
+
+    if( processTimeout(env, fd, sockObj, timeout) != PR_SUCCESS ) goto finish;
 
     /*
      * Turn buf into byte array
@@ -414,8 +474,7 @@ finish:
     if( env != NULL ) {
         jthrowable excep = (*env)->ExceptionOccurred(env);
         if( excep != NULL ) {
-            fprintf(stderr, "Exception was thrown\n");
-            pushException(fd->secret, (*env)->NewGlobalRef(env, excep));
+            setException(env, fd->secret, (*env)->NewGlobalRef(env, excep));
             (*env)->ExceptionClear(env);
             retval = -1;
             PR_SetError(PR_IO_ERROR, 0);
@@ -437,8 +496,6 @@ jsock_recv(PRFileDesc *fd, void *buf, PRInt32 amount,
     jbyteArray byteArray;
     jobject inputStream;
 
-    PR_ASSERT(timeout == PR_INTERVAL_NO_TIMEOUT);
-
     if( GET_ENV(fd->secret->javaVM, env) ) goto finish;
 
     /*
@@ -446,6 +503,8 @@ jsock_recv(PRFileDesc *fd, void *buf, PRInt32 amount,
      */
     sockObj = fd->secret->sockGlobalRef;
     PR_ASSERT(sockObj != NULL);
+
+    if( processTimeout(env, fd, sockObj, timeout) != PR_SUCCESS ) goto finish;
 
     /*
      * get InputStream
@@ -503,10 +562,14 @@ jsock_recv(PRFileDesc *fd, void *buf, PRInt32 amount,
 
         if( (*env)->ExceptionOccurred(env) ) {
             goto finish;
-        }
-        if( retval == -1 ) {
+        } else if( retval == -1 ) {
             /* Java EOF == -1, NSPR EOF == 0 */
             retval = 0;
+        } else if( retval == 0 ) {
+            /* timeout */
+            PR_ASSERT( fd->secret->timeout != PR_INTERVAL_NO_TIMEOUT );
+            PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+            retval = -1;
         }
         PR_ASSERT(retval <= amount);
     }
@@ -529,7 +592,7 @@ finish:
     if( env ) {
         jthrowable excep = (*env)->ExceptionOccurred(env);
         if( excep != NULL ) {
-            pushException(fd->secret, excep);
+            setException(env, fd->secret, excep);
             (*env)->ExceptionClear(env);
             retval = -1;
             PR_SetError(PR_IO_ERROR, 0);
@@ -541,10 +604,127 @@ finish:
     return retval;
 }
 
+static jboolean
+getBooleanProperty(JNIEnv *env, jobject sock, const char* methodName)
+{
+    jclass sockClass;
+    jmethodID method;
+    jboolean retval = JNI_FALSE;
+
+    sockClass = (*env)->GetObjectClass(env, sock);
+    if( sockClass == NULL ) goto finish;
+
+    method = (*env)->GetMethodID(env, sockClass, methodName, "()Z");
+    if( method == NULL ) goto finish;
+
+    retval = (*env)->CallBooleanMethod(env, sock, method);
+finish:
+    return retval;
+}
+
+static jint
+getIntProperty(JNIEnv *env, jobject sock, const char* methodName)
+{
+    jclass sockClass;
+    jmethodID method;
+    jint retval;
+
+    sockClass = (*env)->GetObjectClass(env, sock);
+    if( sockClass == NULL ) goto finish;
+
+    method = (*env)->GetMethodID(env, sockClass, methodName, "()I");
+    if( method == NULL ) goto finish;
+
+    retval = (*env)->CallIntMethod(env, sock, method);
+finish:
+    return retval;
+}
+
+static void
+setBooleanProperty(JNIEnv *env, jobject sock, const char* methodName,
+    jboolean value)
+{
+    jclass sockClass;
+    jmethodID method;
+
+    sockClass = (*env)->GetObjectClass(env, sock);
+    if( sockClass == NULL ) goto finish;
+
+    method = (*env)->GetMethodID(env, sockClass, methodName, "(Z)V");
+    if( method == NULL ) goto finish;
+
+    (*env)->CallVoidMethod(env, sock, method, value);
+finish:
+    return;
+}
+
+static void
+setIntProperty(JNIEnv *env, jobject sock, const char* methodName, jint value)
+{
+    jclass sockClass;
+    jmethodID method;
+
+    sockClass = (*env)->GetObjectClass(env, sock);
+    if( sockClass == NULL ) goto finish;
+
+    method = (*env)->GetMethodID(env, sockClass, methodName, "(I)V");
+    if( method == NULL ) goto finish;
+
+    (*env)->CallVoidMethod(env, sock, method, value);
+finish:
+    return;
+}
+
+static void
+getSoLinger(JNIEnv *env, jobject sock, PRLinger *linger)
+{
+    jint lingSecs;
+
+    lingSecs = getIntProperty(env, sock, "getSoLinger");
+    if( (*env)->ExceptionOccurred(env) )  goto finish;
+
+    if( lingSecs == -1 ) {
+        linger->polarity = PR_FALSE;
+    } else {
+        linger->polarity = PR_TRUE;
+        linger->linger = PR_SecondsToInterval(lingSecs);
+    }
+
+finish:
+    return;
+}
+
+static void
+setSoLinger(JNIEnv *env, jobject sock, PRLinger *linger)
+{
+    jint lingSecs;
+    jclass clazz;
+    jmethodID methodID;
+    jboolean onoff;
+
+    if( linger->polarity == PR_FALSE ) {
+        onoff = JNI_FALSE;
+        lingSecs = 0; /* this should be ignored */
+    } else {
+        onoff = JNI_TRUE;
+        lingSecs = PR_IntervalToSeconds(linger->linger);
+    }
+
+    clazz = (*env)->GetObjectClass(env, sock);
+    if( clazz == NULL ) goto finish;
+    methodID = (*env)->GetMethodID(env, clazz, "setSoLinger", "(ZI)V");
+    if( methodID == NULL) goto finish;
+
+    (*env)->CallVoidMethod(env, sock, methodID, onoff, lingSecs);
+
+finish:
+    return;
+}
+
 static PRStatus
 jsock_getSockOpt(PRFileDesc *fd, PRSocketOptionData *data)
 {
-    PRStatus retval = PR_FAILURE;
+    PRStatus retval = PR_SUCCESS;
     JNIEnv *env;
     jobject sockObj;
 
@@ -559,21 +739,222 @@ jsock_getSockOpt(PRFileDesc *fd, PRSocketOptionData *data)
     switch(data->option) {
       case PR_SockOpt_Nonblocking:
         data->value.non_blocking = PR_FALSE;
-        retval = PR_SUCCESS;
+        break;
+      case PR_SockOpt_Keepalive:
+        data->value.keep_alive =
+            getBooleanProperty(env, sockObj, "getKeepAlive") == JNI_TRUE
+                ? PR_TRUE : PR_FALSE;
+        break;
+      case PR_SockOpt_RecvBufferSize:
+        data->value.send_buffer_size = getIntProperty(env, sockObj,
+            "getReceiveBufferSize");
+        break;
+      case PR_SockOpt_SendBufferSize:
+        data->value.recv_buffer_size = getIntProperty(env, sockObj,
+            "getSendBufferSize");
+        break;
+      case PR_SockOpt_Linger:
+        getSoLinger( env, sockObj, & data->value.linger );
+        break;
+      case PR_SockOpt_NoDelay:
+        data->value.no_delay = getBooleanProperty(env, sockObj,"getTcpNoDelay");
         break;
       default:
-        printf("getSockOpt called with option %d\n", data->option);
         retval = PR_FAILURE;
         break;
     }
 
 finish:
+    if( env != NULL ) {
+        jthrowable excep = (*env)->ExceptionOccurred(env);
+        if( excep != NULL ) {
+            setException(env, fd->secret, (*env)->NewGlobalRef(env, excep));
+            (*env)->ExceptionClear(env);
+            retval = PR_FAILURE;
+            PR_SetError(PR_IO_ERROR, 0);
+        }
+    } else {
+        retval = PR_FAILURE;
+        PR_SetError(PR_IO_ERROR, 0);
+    }
+    return retval;
+}
+
+static PRStatus
+jsock_setSockOpt(PRFileDesc *fd, PRSocketOptionData *data)
+{
+    PRStatus retval = PR_SUCCESS;
+    JNIEnv *env;
+    jobject sockObj;
+
+    if( GET_ENV(fd->secret->javaVM, env) ) goto finish;
+
+    /*
+     * get the socket
+     */
+    sockObj = fd->secret->sockGlobalRef;
+    PR_ASSERT(sockObj != NULL);
+
+    switch(data->option) {
+      case PR_SockOpt_Keepalive:
+        setBooleanProperty(env, sockObj, "setKeepAlive",data->value.keep_alive);
+        break;
+      case PR_SockOpt_Linger:
+        setSoLinger(env, sockObj, &data->value.linger);
+        break;
+      case PR_SockOpt_RecvBufferSize:
+        setIntProperty(env, sockObj, "setReceiveBufferSize",
+            data->value.recv_buffer_size);
+        break;
+      case PR_SockOpt_SendBufferSize:
+        setIntProperty(env, sockObj, "setSendBufferSize",
+            data->value.send_buffer_size);
+        break;
+      case PR_SockOpt_NoDelay:
+        setBooleanProperty(env, sockObj, "setTcpNoDelay", data->value.no_delay);
+        break;
+      default:
+        retval = PR_FAILURE;
+        break;
+    }
+
+finish:
+    if( env != NULL ) {
+        jthrowable excep = (*env)->ExceptionOccurred(env);
+        if( excep != NULL ) {
+            setException(env, fd->secret, (*env)->NewGlobalRef(env, excep));
+            (*env)->ExceptionClear(env);
+            retval = PR_FAILURE;
+            PR_SetError(PR_IO_ERROR, 0);
+        }
+    } else {
+        retval = PR_FAILURE;
+        PR_SetError(PR_IO_ERROR, 0);
+    }
+    return retval;
+}
+
+static PRStatus
+jsock_close(PRFileDesc *fd)
+{
+    PRStatus retval = PR_FAILURE;
+    JNIEnv *env;
+    jobject sockObj;
+    jclass sockClass;
+    jmethodID closeMethod;
+    jthrowable excep;
+
+    if( GET_ENV(fd->secret->javaVM, env) ) goto finish;
+
+    /*
+     * get the socket
+     */
+    sockObj = fd->secret->sockGlobalRef;
+    PR_ASSERT(sockObj != NULL);
+
+    /*
+     * Get the close method
+     */
+    sockClass = (*env)->GetObjectClass(env, sockObj);
+    if( sockClass == NULL ) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+    closeMethod = (*env)->GetMethodID(env, sockClass,
+        SOCKET_CLOSE_NAME, SOCKET_CLOSE_SIG);
+    if( closeMethod == NULL ) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+
+    /*
+     * call the close method
+     */
+    (*env)->CallVoidMethod(env, sockObj, closeMethod);
+
+    /*
+     * Free the PRFilePrivate
+     */
+    (*env)->DeleteGlobalRef(env, fd->secret->sockGlobalRef);
+    if( (excep = JSS_SSL_getException(fd->secret)) != NULL ) {
+        (*env)->DeleteGlobalRef(env, excep);
+    }
+    PR_Free(fd->secret);
+    fd->secret = NULL;
+
+    retval = PR_SUCCESS;
+
+finish:
+    /*
+     * If an exception was thrown, we can't put it in the fd because we
+     * just deleted it. So instead, we're going to let it ride and check for
+     * it up in socketClose().
+     */
+    if( env ) {
+        if( (*env)->ExceptionOccurred(env) != NULL ) {
+            retval = PR_FAILURE;
+            PR_SetError(PR_IO_ERROR, 0);
+        }
+    } else {
+        retval = PR_FAILURE;
+        PR_SetError(PR_IO_ERROR, 0);
+    }
+    return retval;
+}
+
+static PRStatus
+jsock_shutdown(PRFileDesc *fd, PRShutdownHow how)
+{
+    PRStatus retval = PR_FAILURE;
+    JNIEnv *env;
+    jobject sockObj;
+    jmethodID methodID;
+    jclass clazz;
+
+    if( GET_ENV(fd->secret->javaVM, env) ) goto finish;
+
+    /*
+     * get the socket
+     */
+    sockObj = fd->secret->sockGlobalRef;
+    PR_ASSERT(sockObj != NULL);
+
+    clazz = (*env)->GetObjectClass(env, sockObj);
+    if( clazz == NULL ) goto finish;
+
+    if( how == PR_SHUTDOWN_SEND || how == PR_SHUTDOWN_BOTH ) {
+        methodID = (*env)->GetMethodID(env, clazz, "shutdownOutput", "()V");
+        if( methodID == NULL ) goto finish;
+        (*env)->CallVoidMethod(env, sockObj, methodID);
+    }
+    if( (*env)->ExceptionOccurred(env) ) goto finish;
+
+    if( how == PR_SHUTDOWN_RCV || how == PR_SHUTDOWN_BOTH ) {
+        methodID = (*env)->GetMethodID(env, clazz, "shutdownInput", "()V");
+        if( methodID == NULL ) goto finish;
+        (*env)->CallVoidMethod(env, sockObj, methodID);
+    }
+    retval = PR_SUCCESS;
+
+finish:
+    if( env != NULL ) {
+        jthrowable excep = (*env)->ExceptionOccurred(env);
+        if( excep != NULL ) {
+            setException(env, fd->secret, (*env)->NewGlobalRef(env, excep));
+            (*env)->ExceptionClear(env);
+            retval = PR_FAILURE;
+            PR_SetError(PR_IO_ERROR, 0);
+        }
+    } else {
+        retval = PR_FAILURE;
+        PR_SetError(PR_IO_ERROR, 0);
+    }
     return retval;
 }
 
 static const PRIOMethods jsockMethods = {
     PR_DESC_SOCKET_TCP,
-    (PRCloseFN) invalidInt,
+    (PRCloseFN) jsock_close,
     (PRReadFN) invalidInt,
     (PRWriteFN) invalidInt,
     (PRAvailableFN) invalidInt,
@@ -588,7 +969,7 @@ static const PRIOMethods jsockMethods = {
     (PRAcceptFN) invalidInt,
     (PRBindFN) invalidInt,
     (PRListenFN) invalidInt,
-    (PRShutdownFN) invalidInt,
+    (PRShutdownFN) jsock_shutdown,
     (PRRecvFN) jsock_recv,
     (PRSendFN) jsock_send,
     (PRRecvfromFN) invalidInt,
@@ -596,12 +977,12 @@ static const PRIOMethods jsockMethods = {
     (PRPollFN) invalidInt,
     (PRAcceptreadFN) invalidInt,
     (PRTransmitfileFN) invalidInt,
-    (PRGetsocknameFN) invalidInt,
+    (PRGetsocknameFN) jsock_getSockName,
     (PRGetpeernameFN) jsock_getPeerName,
     (PRReservedFN) invalidInt,
     (PRReservedFN) invalidInt,
     (PRGetsocketoptionFN) jsock_getSockOpt,
-    (PRSetsocketoptionFN) invalidInt,
+    (PRSetsocketoptionFN) jsock_setSockOpt,
     (PRSendfileFN) invalidInt,
     (PRConnectcontinueFN) invalidInt,
     (PRReservedFN) invalidInt,
@@ -619,20 +1000,7 @@ getJsockMethods()
 static void
 jsockDestructor(PRFileDesc *fd)
 {
-    ExceptionNode *node;
-    jobject excep;
-    JNIEnv *env;
-    printf("In destructor");
-
-    if( GET_ENV(fd->secret->javaVM, env) ) {
-        PR_ASSERT(0);
-        return;
-    }
-
-    (*env)->DeleteGlobalRef(env, fd->secret->sockGlobalRef);
-    while( excep = JSS_SSL_popException(fd->secret) ) {
-        (*env)->DeleteGlobalRef(env, excep);
-    }
+    PR_ASSERT(!"This destructor shouldn't be called. close() does the work");
 }
 
 PRFileDesc*
@@ -642,8 +1010,7 @@ JSS_SSL_javasockToPRFD(JNIEnv *env, jobject sockObj)
     JavaVM *vm;
 
     if( (*env)->GetJavaVM(env, &vm) != 0 ) {
-        /* THROW EXCEPTION */
-        printf("Failed to get Java VM\n");
+        return NULL;
     }
 
     fd = PR_NEW(PRFileDesc);
@@ -652,105 +1019,12 @@ JSS_SSL_javasockToPRFD(JNIEnv *env, jobject sockObj)
         fd->secret = PR_NEW(PRFilePrivate);
         fd->secret->sockGlobalRef = (*env)->NewGlobalRef(env, sockObj);
         fd->secret->javaVM = vm;
-        fd->secret->exceptionStack = NULL;
+        fd->secret->exception = NULL;
+        fd->secret->timeout = PR_INTERVAL_NO_TIMEOUT;
         fd->lower = fd->higher = NULL;
         fd->dtor = jsockDestructor;
     } else {
         /* OUT OF MEM */
     }
     return fd;
-}
-
-JNIEXPORT void JNICALL
-Java_javasock_doSomething(JNIEnv *env, jclass clazz, jobject sockObj)
-{
-    PRFileDesc *fd;
-    PRStatus stat;
-    PRNetAddr addr;
-    SECStatus secstat;
-    struct PRFilePrivate *priv = NULL;
-
-    printf("Hello, world\n");
-
-    secstat = NSS_InitReadWrite(".");   
-    if( secstat != SECSuccess ) {
-        fprintf(stderr, "NSS_InitReadWrite failed with %d\n", PR_GetError());
-        goto finish;
-    }
-
-    secstat = NSS_SetDomesticPolicy();
-    if( secstat != SECSuccess ) {
-        fprintf(stderr, "NSS_SetDomestic failed with %d\n", PR_GetError());
-        goto finish;
-    }
-    
-    fd = JSS_SSL_javasockToPRFD(env, sockObj);
-    printf("fd is %d\n", fd);
-    priv = fd->secret;
-
-    fd = SSL_ImportFD(NULL, fd);
-    if(fd == NULL) {
-        fprintf(stderr, "SSL_ImportFD failed with %d\n", PR_GetError());
-        goto finish;
-    }
-
-    secstat = SSL_OptionSet(fd, SSL_SECURITY, PR_TRUE);
-    if( secstat != SECSuccess ) {
-        fprintf(stderr, "SSL_OptionSet failed with %d\n", PR_GetError());
-        goto finish;
-    }
-
-    if( SSL_SetURL(fd, "trading.etrade.com") ) {
-        fprintf(stderr, "SSL_SetURL failed with %d\n", PR_GetError());
-        goto finish;
-    }
-
-    secstat = SSL_ResetHandshake(fd, PR_FALSE /*asServer*/);
-    if(secstat != SECSuccess) {
-        fprintf(stderr, "ResetHandshake failed with %d\n", PR_GetError());
-        goto finish;
-    }
-
-    if( SSL_ForceHandshake(fd) ) {
-        fprintf(stderr, "SSL_ForceHandshake failed with %d\n", PR_GetError());
-        goto finish;
-    }
-    printf("Forced handshake\n");
-
-    {
-        PRIOVec iov[3];
-        int numwrit;
-
-        iov[0].iov_base = "GET / HTTP";
-        iov[0].iov_len = 10;
-        iov[1].iov_base = "/1.0";
-        iov[1].iov_len = 4;
-        iov[2].iov_base = "\n\n";
-        iov[2].iov_len = 2;
-
-        numwrit = PR_Writev(fd, iov, 3, PR_INTERVAL_NO_TIMEOUT);
-        printf("PR_Writev returned %d, prerr is %d\n", numwrit, PR_GetError());
-    }
-
-    {
-        char buf[257];
-        int numread;
-
-        printf("Recevied:==========================\n");
-        while( numread = PR_Read(fd, buf, 256) ) {
-            buf[numread] = '\0';
-            fprintf(stdout, "%s", buf);
-        }
-        printf("\nEND:===============================\n");
-    }
-
-finish:
-    if( priv) {
-        jthrowable excep = JSS_SSL_popException(priv);
-        if( excep != NULL ) {
-            jint retval;
-            retval = (*env)->Throw(env, excep);
-            PR_ASSERT(retval == 0);
-        }
-    }
 }
