@@ -454,14 +454,6 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
     /* This is a child part.  Just remember the mapping between the URL
        it represents and the part-URL to get it back. */
 
-    /* but first before acceptig it as a valid related part, make sure we
-       are able to display it inline as an embedded object. Else just ignore
-       it, that will prevent any bad surprise. */
-    MimeObjectClass *clazz = mime_find_class (child->content_type, child->headers, child->options, PR_FALSE);
-    PRBool canDisplay = (clazz
-          ? clazz->displayable_inline_p(clazz, child->headers)
-          : PR_FALSE);
-    if (canDisplay) {
     char* location = MimeHeaders_get(child->headers, HEADER_CONTENT_LOCATION,
                      PR_FALSE, PR_FALSE);
     if (!location) {
@@ -563,7 +555,6 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
           }
         }
       }
-    }
   } else {
     /* Ah-hah!  We're the head object.  */
     char* base_url;
@@ -766,6 +757,23 @@ push_tag(MimeMultipartRelated* relobj, const char* buf, PRInt32 size)
   return 0;
 }
 
+static PRBool accept_related_part(MimeMultipartRelated* relobj, MimeObject* part_obj)
+{
+  if (!relobj || !part_obj)
+    return PR_FALSE;
+    
+  /* before accepting it as a valid related part, make sure we
+     are able to display it inline as an embedded object. Else just ignore
+     it, that will prevent any bad surprise... */
+  MimeObjectClass *clazz = mime_find_class (part_obj->content_type, part_obj->headers, part_obj->options, PR_FALSE);
+  if (clazz ? clazz->displayable_inline_p(clazz, part_obj->headers) : PR_FALSE)
+    return PR_TRUE;
+
+  /* ...but we always accept it if it's referenced by an anchor */
+  return (relobj->curtag && relobj->curtag_length >= 3 &&
+    (relobj->curtag[1] == 'A' || relobj->curtag[1] == 'a') && nsCRT::IsAsciiSpace(relobj->curtag[2]));
+}
+
 static int
 flush_tag(MimeMultipartRelated* relobj)
 {
@@ -843,7 +851,7 @@ flush_tag(MimeMultipartRelated* relobj)
         }
         
         /*If we found a mailbox part URL, write that out instead.*/
-        if (part_url)
+        if (part_url && accept_related_part(relobj, value->m_obj))
         {
           status = real_write(relobj, part_url, strlen(part_url));
           if (status < 0) return status;
@@ -880,7 +888,7 @@ flush_tag(MimeMultipartRelated* relobj)
         *ptr2 = holder;
         PR_FREEIF(absolute);
 
-        if (realout)
+        if (realout && accept_related_part(relobj, value->m_obj))
         {
           status = real_write(relobj, realout, strlen(realout));
           if (status < 0) return status;

@@ -477,9 +477,7 @@ BuildAttachmentList(MimeObject *anObject, nsMsgAttachmentData *aAttachData, cons
       if (child->content_type)                          // and it's content-type is one of folowing...
         if (!nsCRT::strcasecmp (child->content_type, TEXT_PLAIN) ||
             !nsCRT::strcasecmp (child->content_type, TEXT_HTML) ||
-            !nsCRT::strcasecmp (child->content_type, TEXT_MDL) ||
-            !nsCRT::strcasecmp (child->content_type, MULTIPART_ALTERNATIVE) ||
-            !nsCRT::strcasecmp (child->content_type, MULTIPART_RELATED))
+            !nsCRT::strcasecmp (child->content_type, TEXT_MDL))
         {
           if (child->headers) // and finally, be sure it doesn't have a content-disposition: attachment 
           {
@@ -547,9 +545,6 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
       return ProcessBodyAsAttachment(obj, data);
   }
 
-  if (mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeMultipartAlternativeClass))
-    return 0;
-  
   isAnInlineMessage = mime_typep(obj, (MimeObjectClass *) &mimeMessageClass);
 
   cobj = (MimeContainer*) obj;
