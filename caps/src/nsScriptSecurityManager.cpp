@@ -163,7 +163,7 @@ nsScriptSecurityManager::CheckConnect(JSContext* aJSContext,
     nsresult rv = CheckLoadURIFromScript(aJSContext, aTargetURI);
     if (NS_FAILED(rv)) return rv;
 
-    return CheckPropertyAccessImpl(nsIXPCSecurityManager::ACCESS_GET_PROPERTY, nsnull,
+    return CheckPropertyAccessImpl(nsIXPCSecurityManager::ACCESS_CALL_METHOD, nsnull,
                                    aJSContext, nsnull, nsnull, aTargetURI,
                                    nsnull, nsnull, aClassName, aPropertyName, nsnull);
 }
@@ -187,6 +187,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         // We have native code or the system principal: just allow access
         return NS_OK;
 
+    static const char unknownClassName[] = "UnknownClass";
 #ifdef DEBUG_mstoltz
     if (aProperty)
           printf("### CheckPropertyAccess(%s.%s, %i) ", aClassName, aProperty, aAction);
@@ -198,7 +199,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             aClassInfo->GetClassDescription(getter_Copies(classNameStr));
         className = classNameStr.get();
         if(!className)
-            className = "UnknownClass";
+            className = unknownClassName;
         nsCAutoString propertyStr(className);
         propertyStr += '.';
         propertyStr.AppendWithConversion((PRUnichar*)JSValIDToString(aJSContext, aName));
@@ -236,11 +237,11 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             className = classNameStr.get();
 
             if (!className)
-                className = "UnknownClass";
+                className = unknownClassName;
             propertyName.AssignWithConversion((PRUnichar*)JSValIDToString(aJSContext, aName));
         }
 
-        // if (aPropertyStr), we were called from CheckPropertyAccess or checkConnect,
+        // if (aProperty), we were called from CheckPropertyAccess or checkConnect,
         // so we can assume this is a DOM class. Otherwise, we ask the ClassInfo.
         secLevel = GetSecurityLevel(subjectPrincipal,
                                     (aProperty || IsDOMClass(aClassInfo)),
@@ -350,14 +351,64 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
             }
         }
     }
-    rv = CheckXPCPermissions(aJSContext, aObj, objectSecurityLevel,
-                               "Permission denied to access property");
+    rv = CheckXPCPermissions(aObj, objectSecurityLevel);
 #ifdef DEBUG_mstoltz
     if(NS_SUCCEEDED(rv))
         printf("CheckXPCPerms GRANTED.\n");
     else
         printf("CheckXPCPerms DENIED.\n");
 #endif
+
+    if (NS_FAILED(rv)) //-- Security tests failed, access is denied, report error
+    {
+        nsCAutoString errorMsg("Permission denied to ");
+        switch(aAction)
+        {
+        case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
+            errorMsg += "get property ";
+            break;
+        case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
+            errorMsg += "set property ";
+            break;
+        case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
+            errorMsg += "call method ";
+        }
+
+        if (aProperty)
+        {
+            errorMsg += aClassName;
+            errorMsg += '.';
+            errorMsg += aProperty;
+        }
+        else
+        {
+            nsXPIDLCString className;
+            if (aClassInfo)
+                aClassInfo->GetClassDescription(getter_Copies(className));
+            if(className)
+                errorMsg += className;
+            else
+                errorMsg += unknownClassName;
+            errorMsg += '.';
+            errorMsg.AppendWithConversion(JSValIDToString(aJSContext, aName));
+        }
+
+        JS_SetPendingException(aJSContext,
+                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg)));
+        //-- if (aProperty) we were called from somewhere other than xpconnect, so we need to
+        //   tell xpconnect that an exception was thrown.
+        if (aProperty)
+        {
+            nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+            if (xpc)
+            {
+                nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
+                xpc->GetCurrentNativeCallContext(getter_AddRefs(xpcCallContext));
+                if (xpcCallContext)
+                    xpcCallContext->SetExceptionWasThrown(PR_TRUE);
+            }
+        }
+    }
     return rv;
 }
 
@@ -661,6 +712,9 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
 nsresult
 nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
 {
+    if (!aURI)
+       return NS_ERROR_FAILURE;
+
     nsresult rv;
     nsCOMPtr<nsIURI> uri(aURI);
 
@@ -696,9 +750,27 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
         if (NS_FAILED(rv)) return rv;
     }
 
+    //-- if uri is an about uri, distinguish 'safe' and 'unsafe' about URIs
+    static const char aboutScheme[] = "about";
+    if(nsCRT::strcasecmp(scheme, aboutScheme) == 0)
+            *aScheme = PL_strdup(scheme);
+    {
+        nsXPIDLCString spec;
+        if(NS_FAILED(uri->GetSpec(getter_Copies(spec))))
+            return NS_ERROR_FAILURE;
+        const char* page = spec.get() + sizeof(aboutScheme);
+        if ((PL_strcmp(page, "blank") == 0)   ||
+            (PL_strcmp(page, "") == 0)        ||
+            (PL_strcmp(page, "mozilla") == 0) ||
+            (PL_strcmp(page, "credits") == 0))
+        {
+            *aScheme = PL_strdup("about safe");
+            return *aScheme ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
     *aScheme = PL_strdup(scheme);
-    NS_ASSERTION(*aScheme, "GetBaseURIScheme returning null scheme");
-    return NS_OK;
+    return *aScheme ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -732,7 +804,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     }
 
     //-- If the schemes don't match, the policy is specified in this table.
-    enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol, AboutProtocol };
+    enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol };
     static const struct
     { 
         const char *name;
@@ -742,9 +814,9 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         //-- Keep the most commonly used protocols at the top of the list
         //   to increase performance
         { "http",            AllowProtocol  },
+        { "chrome",          ChromeProtocol },
         { "file",            PrefControlled },
         { "https",           AllowProtocol  },
-        { "chrome",          ChromeProtocol },
         { "mailbox",         DenyProtocol   },
         { "pop",             AllowProtocol  },
         { "imap",            DenyProtocol   },
@@ -752,7 +824,8 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         { "news",            AllowProtocol  },
         { "javascript",      AllowProtocol  },
         { "ftp",             AllowProtocol  },
-        { "about",           AboutProtocol  },
+        { "about safe",      AllowProtocol  },
+        { "about",           DenyProtocol   },
         { "mailto",          AllowProtocol  },
         { "aim",             AllowProtocol  },
         { "data",            AllowProtocol  },
@@ -764,8 +837,6 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         { "res",             DenyProtocol   }
     };
 
-    nsXPIDLCString targetSpec;
-    const char* targetPage;
     for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++)
     {
         if (nsCRT::strcasecmp(targetScheme, protocolList[i].name) == 0)
@@ -794,16 +865,6 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                     (PL_strcmp(sourceScheme, "resource") == 0))
                     return NS_OK;
                 return ReportErrorToConsole(aTargetURI);
-            case AboutProtocol:
-                // Allow loading 'safe' about pages, otherwise deny
-                if(NS_FAILED(aTargetURI->GetSpec(getter_Copies(targetSpec))))
-                    return NS_ERROR_FAILURE;
-                targetPage = targetSpec.get() + sizeof("about:") - 1;
-                return (PL_strcmp(targetPage, "blank") == 0)   ||
-                       (PL_strcmp(targetPage, "") == 0)        ||
-                       (PL_strcmp(targetPage, "mozilla") == 0) ||
-                       (PL_strcmp(targetPage, "credits") == 0) ?
-                    NS_OK : ReportErrorToConsole(aTargetURI);
             case DenyProtocol:
                 // Deny access
                 return ReportErrorToConsole(aTargetURI);
@@ -1571,7 +1632,8 @@ nsScriptSecurityManager::RequestCapability(nsIPrincipal* aPrincipal,
     if (*canEnable == nsIPrincipal::ENABLE_WITH_USER_PERMISSION)
     {
         // Prompt user for permission to enable capability.
-        static PRBool remember = PR_TRUE;
+        // "Remember This Decision" is unchecked by default.
+        static PRBool remember = PR_FALSE;
         nsAutoString query, check;
         if (NS_FAILED(Localize("EnableCapabilityQuery", query)))
             return NS_ERROR_FAILURE;
@@ -1775,23 +1837,44 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext,
     if (checkedComponent)
         checkedComponent->CanCreateWrapper((nsIID *)&aIID, getter_Copies(objectSecurityLevel));
 
-    return CheckXPCPermissions(aJSContext, aObj, objectSecurityLevel,
-                               "Permission denied to create wrapper for object");
+    nsresult rv = CheckXPCPermissions(aObj, objectSecurityLevel);
+    if (NS_FAILED(rv))
+    {
+        //-- Access denied, report an error
+        nsCAutoString errorMsg("Permission denied to create wrapper for object ");
+        // XXX get class name
+        nsXPIDLCString className;
+        if (aClassInfo)
+        {
+            aClassInfo->GetClassDescription(getter_Copies(className));
+            if (className)
+            {
+                errorMsg += "of class ";
+                errorMsg += className;
+            }
+        }
+        JS_SetPendingException(aJSContext,
+                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg)));
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateInstance(JSContext *aJSContext,
                                            const nsCID &aCID)
 {
-    //XXX Special cases needed: exceptions?
-#if 0
-    char* cidStr = aCID.ToString();
-    printf("### CanCreateInstance(%s) ", cidStr);
-    PR_FREEIF(cidStr);
-#endif
-
-    return CheckXPCPermissions(aJSContext, nsnull, nsnull,
-        "Permission denied to create instance of class");
+    nsresult rv = CheckXPCPermissions(nsnull, nsnull);
+    if (NS_FAILED(rv))
+    {
+        //-- Access denied, report an error
+        nsCAutoString errorMsg("Permission denied to create instance of class. CID=");
+        nsXPIDLCString cidStr;
+        cidStr += aCID.ToString();
+        errorMsg.Append(cidStr);
+        JS_SetPendingException(aJSContext,
+                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg)));
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -1804,8 +1887,18 @@ nsScriptSecurityManager::CanGetService(JSContext *aJSContext,
     PR_FREEIF(cidStr);
 #endif
 
-    return CheckXPCPermissions(aJSContext, nsnull, nsnull,
-                              "Permission denied to get service");
+    nsresult rv = CheckXPCPermissions(nsnull, nsnull);
+    if (NS_FAILED(rv))
+    {
+        //-- Access denied, report an error
+        nsCAutoString errorMsg("Permission denied to get service. CID=");
+        nsXPIDLCString cidStr;
+        cidStr += aCID.ToString();
+        errorMsg.Append(cidStr);
+        JS_SetPendingException(aJSContext,
+                               STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, errorMsg)));
+    }
+    return rv;
 }
 
 /* void CanAccess (in PRUint32 aAction, in nsIXPCNativeCallContext aCallContext, in JSContextPtr aJSContext, in JSObjectPtr aJSObject, in nsISupports aObj, in nsIClassInfo aClassInfo, in JSVal aName, inout voidPtr aPolicy); */
@@ -1825,10 +1918,8 @@ nsScriptSecurityManager::CanAccess(PRUint32 aAction,
 }
 
 nsresult
-nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext,
-                                             nsISupports* aObj,
-                                             const char* aObjectSecurityLevel,
-                                             const char* aErrorMsg)
+nsScriptSecurityManager::CheckXPCPermissions(nsISupports* aObj,
+                                             const char* aObjectSecurityLevel)
 {
     //-- Check for the all-powerful UniversalXPConnect privilege
     PRBool ok = PR_FALSE;
@@ -1873,9 +1964,7 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext,
         }
     }
 
-    //-- Access tests failed, so report error
-    JS_SetPendingException(aJSContext,
-                           STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, aErrorMsg)));
+    //-- Access tests failed
     return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 

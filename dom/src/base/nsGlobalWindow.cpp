@@ -4244,8 +4244,6 @@ NavigatorImpl::Preference()
                                    "Navigator", "preferenceinternal", action);
   if (NS_FAILED(rv))
   {
-      //-- XXX doing the right thing here? Does the exception propagate?
-      ncc->SetExceptionWasThrown(PR_TRUE);
       return NS_OK;
   }
 
