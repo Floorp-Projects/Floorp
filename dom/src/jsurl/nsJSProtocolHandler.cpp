@@ -231,8 +231,7 @@ nsresult nsJSThunk::EvaluateScript()
     nsString result;
     PRBool bIsUndefined;
     {
-        nsAutoString scriptString;
-        scriptString.AssignWithConversion(script);
+        NS_ConvertUTF8toUCS2 scriptString(script);
         rv = scriptContext->EvaluateString(scriptString,
                                            nsnull,      // obj
                                            principal,
