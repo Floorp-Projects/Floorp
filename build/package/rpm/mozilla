@@ -1,0 +1,117 @@
+#!/bin/sh
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+## 
+## Usage:
+##
+## $ mozilla
+##
+## This script is meant to run a mozilla program from the mozilla
+## rpm installation.
+##
+## The script will setup all the environment voodoo needed to make
+## mozilla work.
+
+##
+## Standard shell script disclaimer blurb thing:
+##
+## This script is a hcak.  Its brute force.  Its horrible.  
+## It doesnt use Artificial Intelligence.  It doesnt use Virtual Reality.
+## Its not perl.  Its not python.  It probably wont work unchanged on
+## the "other" thousands of unices.  But it worksforme.
+##
+## If you have an improvement, patch, idea, whatever, on how to make this
+## script better, post it here:
+##
+## news://news.mozilla.org/netscape.public.mozilla.patches
+## news://news.mozilla.org/netscape.public.mozilla.unix
+##
+## 
+
+##
+## Potential improvements:
+##
+## + Run ldd on the program and report missing dlls
+## + All the "other" unices/packages
+##
+
+cmdname=`basename $0`
+
+##
+## location of the apprunner binary.
+##
+MOZ_APPRUNNER_NAME="/usr/lib/mozilla/bin/apprunner"
+
+##
+## Variables
+##
+MOZ_DIST_BIN=""
+MOZ_PROGRAM=""
+
+##
+## Functions
+##
+moz_bail()
+{
+	message=$1
+
+	echo
+	echo "$cmdname: $message"
+	echo
+
+	exit 1
+}
+
+moz_test_binary()
+{
+	binary=$1
+
+	if [ -f "$binary" ]
+	then
+		if [ -x "$binary" ]
+		then
+			return 1
+		fi
+	fi
+
+	return 0
+}
+
+moz_test_binary $MOZ_APPRUNNER_NAME
+
+if [ $? -eq 1 ]
+then
+	MOZ_PROGRAM=$MOZ_APPRUNNER_NAME
+fi
+
+##
+## Make sure the program is executable
+##
+if [ ! -x $MOZ_PROGRAM ]
+then
+	moz_bail "Cannot execute $MOZ_PROGRAM."
+fi
+
+##
+## Set MOZILLA_FIVE_HOME
+##
+MOZILLA_FIVE_HOME="/usr/lib/mozilla"
+
+export MOZILLA_FIVE_HOME
+
+exec ./$MOZ_PROGRAM ${1+"$@"}
