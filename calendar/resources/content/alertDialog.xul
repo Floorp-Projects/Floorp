@@ -39,7 +39,6 @@
    
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
 <?xml-stylesheet href="chrome://calendar/skin/alertDialog.css" ?>
@@ -75,11 +74,6 @@
 <script type="application/x-javascript">
    var gCalendarBundle = document.getElementById("bundle_calendar");
 </script>  
-
-<!-- Picker popups -->
-
- <popup  id="oe-date-picker-popup"  position="after_start" oncommand="onDatePick( this )" label=""/>
- <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" label=""/>
 
 <!-- The dialog -->
     
