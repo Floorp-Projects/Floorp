@@ -706,6 +706,11 @@ nsHTMLFrameInnerFrame::Destroy(nsIPresContext* aPresContext)
       docShell->GetContentViewer(getter_AddRefs(content_viewer));
 
       if (content_viewer) {
+        // Mark the content viewer as non-sticky so that the presentation
+        // can safely go away when this frame is destroyed.
+
+        content_viewer->SetSticky(PR_FALSE);
+
         // Hide the content viewer now that the frame is going away...
 
         content_viewer->Hide();
@@ -1022,16 +1027,6 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
     // The docshell is already showing, nothing left to do...
 
     return NS_OK;
-  }
-
-  nsCOMPtr<nsIContentViewer> content_viewer;
-  docShell->GetContentViewer(getter_AddRefs(content_viewer));
-
-  if (content_viewer) {
-    // Mark the content viewer as non-sticky so that the presentation
-    // can safely go away when this frame is destroyed.
-
-    content_viewer->SetSticky(PR_FALSE);
   }
 
   nsCOMPtr<nsIContent> content;
