@@ -203,7 +203,7 @@ NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
   if (!mBits)
     return NS_ERROR_NOT_INITIALIZED;
 
-
+#if 0
 
   HWND bg = GetDesktopWindow();
   HDC memDC = GetDC(NULL);
@@ -237,7 +237,7 @@ NS_IMETHODIMP nsImage::GetFormat(gfx_format *aFormat)
 
   DeleteObject(memBM);
 
-
+#endif
   *aFormat = mFormat;
   return NS_OK;
 }
@@ -279,6 +279,9 @@ NS_IMETHODIMP nsImage::SetBits(const PRUint8 *data, PRUint32 length, PRInt32 off
 {
   if (!mBits)
     return NS_ERROR_NOT_INITIALIZED;
+
+  if (((PRUint32)offset + length) > mBitsLength)
+    return NS_ERROR_FAILURE;
 
   memcpy(mBits + offset, data, length);
 
