@@ -19,7 +19,7 @@
                                        (:character-literal #\A) :nbhy (:character-literal #\Z) ", and "
                                        (:character-literal #\a) :nbhy (:character-literal #\z) ")"))
                 () t)
-               (:line-terminator (#?000A #?000D #?2028 #?2029) () t)
+               (:line-terminator (#?000A #?000D #?0085 #?2028 #?2029) () t)
                (:decimal-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
                                (($default-action $default-action)
                                 (decimal-value $digit-value)))
@@ -662,6 +662,12 @@
 (run-regexp "a." "AAab" :ignore-case t)
 (run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd"))
 (run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd") :span t)
+
+(run-regexp "(a|b*)*" "a")
+(run-regexp "(b*)*" "a")
+(run-regexp "^\\-?(\\d{1,}|\\.{0,})*(\\,\\d{1,})?$" "100.00")
+(run-regexp "^\\-?(\\d{1,}|\\.{0,})*(\\,\\d{1,})?$" "100,00")
+(run-regexp "^\\-?(\\d{1,}|\\.{0,})*(\\,\\d{1,})?$" "1.000,00")
 
 (run-regexp "^(a\\1?){4}$" "aaaaaaaaaa")
 (run-regexp "(?:(f)(o)(o)|(b)(a)(r))*" "foobar")
