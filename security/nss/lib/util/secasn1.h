@@ -36,7 +36,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.3 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
+ * $Id: secasn1.h,v 1.4 2001/05/02 20:14:46 wtc%netscape.com Exp $
  */
 
 #ifndef _SECASN1_H_
@@ -169,7 +169,6 @@ extern const SEC_ASN1Template *
 SEC_ASN1GetSubtemplate (const SEC_ASN1Template *inTemplate, void *thing,
 			PRBool encoding);
 
-SEC_END_PROTOS
 /************************************************************************/
 
 /*
@@ -278,4 +277,5 @@ SEC_ASN1_CHOOSER_DECLARE(SEC_PointerToOctetStringTemplate)
 
 SEC_ASN1_CHOOSER_DECLARE(SEC_SetOfAnyTemplate)
 
+SEC_END_PROTOS
 #endif /* _SECASN1_H_ */
