@@ -388,13 +388,21 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsISupports* aContainer,
                                   nsIStreamListener **aDocListener)
 {
+  PRBool needsParser=PR_TRUE;
+  if (aCommand)
+  {
+    nsAutoString command(aCommand);
+    nsAutoString delayedView("view delayedContentLoad");
+    if (command.Equals(delayedView)) {
+      needsParser = PR_FALSE;
+    }
+  }
+
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer, 
                                               aDocListener);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) { return rv; }
 
   nsCOMPtr<nsIWebShell> webShell;
   nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
@@ -406,7 +414,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   
   nsAutoString lastModified;
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
+  if (httpChannel) 
+  {
     nsXPIDLCString lastModHeader;
     nsIAtom* lastModKey = NS_NewAtom("last-modified");
 
@@ -481,194 +490,195 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     PRTime modDate;
     
     rv = fileChannel->GetModDate(&modDate);
-    if (NS_SUCCEEDED(rv)) {
-      PRExplodedTime prtime;
-      char buf[100];
-      PRInt64 prusec, scale;
+    if (NS_FAILED(rv)) { return rv; }
+    PRExplodedTime prtime;
+    char buf[100];
+    PRInt64 prusec, scale;
 
-      LL_I2L(scale, 1000000L);
-      LL_MUL(prusec, modDate, scale);
-      PR_ExplodeTime(prusec, PR_LocalTimeParameters, &prtime);
-      PR_FormatTime(buf, sizeof buf, "%#c", &prtime);
-      lastModified.SetString(buf);
-      SetLastModified(lastModified);
-    }
+    LL_I2L(scale, 1000000L);
+    LL_MUL(prusec, modDate, scale);
+    PR_ExplodeTime(prusec, PR_LocalTimeParameters, &prtime);
+    PR_FormatTime(buf, sizeof buf, "%#c", &prtime);
+    lastModified.SetString(buf);
+    SetLastModified(lastModified);
   }
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-  if (rv == NS_OK)
+  if (needsParser)
+  {
     rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                      nsnull, 
-                                      kCParserIID, 
-                                      (void **)&mParser);
+                                            nsnull, 
+                                            kCParserIID, 
+                                            (void **)&mParser);
+    if (NS_FAILED(rv)) { return rv; }
+  }
 
-  if (NS_OK == rv) { 
-    nsIHTMLContentSink* sink;
-
-    PRUnichar* requestCharset = nsnull;
-    nsCharsetSource requestCharsetSource = kCharsetUninitialized;
-    
-    nsIParserFilter *cdetflt = nsnull;
-
+  PRUnichar* requestCharset = nsnull;
+  nsCharsetSource requestCharsetSource = kCharsetUninitialized;
+  
+  nsIParserFilter *cdetflt = nsnull;
+  nsCOMPtr<nsIHTMLContentSink> sink;
 #ifdef rickgdebug
-    nsString outString;   // added out. Redirect to stdout if desired -- gpk 04/01/99
-    rv = NS_New_HTML_ContentSinkStream(&sink,&outString,0);
+  nsString outString;   // added out. Redirect to stdout if desired -- gpk 04/01/99
+  rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink),&outString,0);
+  if (NS_FAILED(rv)) return rv;
+  NS_ASSERTION(sink, "null sink in debug code variant.");
 #else
-    NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
-    aContainer->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
-    rv = NS_NewHTMLContentSink(&sink, this, aURL, webShell);
+  NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
+  aContainer->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
 
-    if (NS_SUCCEEDED(rv)) 
-    {
-      nsCOMPtr<nsIMarkupDocumentViewer> muCV;
-      nsCOMPtr<nsIContentViewer> cv;
-      webShell->GetContentViewer(getter_AddRefs(cv));
-      if (cv) {
-         muCV = do_QueryInterface(cv);            
-      }
-		  if(kCharsetFromUserDefault > charsetSource) 
-      {
-		    PRUnichar* defaultCharsetFromWebShell = NULL;
-        if (muCV) {
-  		    rv = muCV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
-        }
-        if(NS_SUCCEEDED(rv)) {
-          charset = defaultCharsetFromWebShell;
-          Recycle(defaultCharsetFromWebShell);
-          charsetSource = kCharsetFromUserDefault;
-        }
-        // for html, we need to find out the Meta tag from the hint.
-        if (muCV) {
-          rv = muCV->GetHintCharacterSet(&requestCharset);
-          if(NS_SUCCEEDED(rv)) {
-            rv = muCV->GetHintCharacterSetSource((PRInt32*)(&requestCharsetSource));
-          }
-        }
-        if(NS_SUCCEEDED(rv)) 
-        {
-          if(requestCharsetSource > charsetSource) 
-          {
-            charsetSource = requestCharsetSource;
-            charset = requestCharset;
-            Recycle(requestCharset);
-          }
-        }
-	      if(kCharsetFromPreviousLoading > charsetSource)
-        {
-          PRUnichar* forceCharsetFromWebShell = NULL;
-          if (muCV) {
-		        rv = muCV->GetForceCharacterSet(&forceCharsetFromWebShell);
-          }
-		      if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) 
-          {
-				    charset = forceCharsetFromWebShell;
-            Recycle(forceCharsetFromWebShell);
-				    //TODO: we should define appropriate constant for force charset
-				    charsetSource = kCharsetFromPreviousLoading;  
-          }
-        }
-        nsresult rv_detect = NS_OK;
-        if(! gInitDetector)
-        {
-          nsIPref* pref = nsnull;
-          if(NS_SUCCEEDED(webShell->GetPrefs(pref)) && pref)
-          {
-            char* detector_name = nsnull;
-            if(NS_SUCCEEDED(
-                 rv_detect = pref->CopyCharPref("intl.charset.detector",
-                                     &detector_name)))
-            {
-              PL_strncpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE,DETECTOR_PROGID_MAX);
-              PL_strncat(g_detector_progid, detector_name,DETECTOR_PROGID_MAX);
-              gPlugDetector = PR_TRUE;
-              PR_FREEIF(detector_name);
-            }
-            pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback, nsnull);
-          }
-          NS_IF_RELEASE(pref);
-          gInitDetector = PR_TRUE;
-        }
-   
-        if((kCharsetFromAutoDetection > charsetSource )  && gPlugDetector)
-        {
-          // we could do charset detection
-          nsICharsetDetector *cdet = nsnull;
-          nsIWebShellServices *wss = nsnull;
-          nsICharsetDetectionAdaptor *adp = nsnull;
-
-          if(NS_SUCCEEDED( rv_detect = 
-                nsComponentManager::CreateInstance(g_detector_progid, nsnull,
-                               nsICharsetDetector::GetIID(), (void**)&cdet)))
-          {
-            if(NS_SUCCEEDED( rv_detect = 
-                nsComponentManager::CreateInstance(
-                               NS_CHARSET_DETECTION_ADAPTOR_PROGID, nsnull,
-                               kIParserFilterIID, (void**)&cdetflt)))
-            {
-              if(cdetflt && 
-                    NS_SUCCEEDED( rv_detect=
-                         cdetflt->QueryInterface(
-                            nsICharsetDetectionAdaptor::GetIID(),(void**) &adp)))
-              {
-                if( NS_SUCCEEDED( rv_detect=
-                         webShell->QueryInterface(
-                            nsIWebShellServices::GetIID(),(void**) &wss)))
-                {
-                  rv_detect = adp->Init(wss, cdet, aCommand);
-                }
-              }
-            }
-          }
-          else 
-          {
-            // IF we cannot create the detector, don't bother to 
-            // create one next time.
-            gPlugDetector = PR_FALSE;
-          }
-          NS_IF_RELEASE(wss);
-          NS_IF_RELEASE(cdet);
-          NS_IF_RELEASE(adp);
-          // NO NS_IF_RELEASE(cdetflt); here, do it after mParser->SetParserFilter
-        }
+  nsCOMPtr<nsIMarkupDocumentViewer> muCV;
+  nsCOMPtr<nsIContentViewer> cv;
+  webShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+     muCV = do_QueryInterface(cv);            
+  }
+	if(kCharsetFromUserDefault > charsetSource) 
+  {
+		PRUnichar* defaultCharsetFromWebShell = NULL;
+    if (muCV) {
+  		rv = muCV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
+    }
+    if(NS_SUCCEEDED(rv)) {
+      charset = defaultCharsetFromWebShell;
+      Recycle(defaultCharsetFromWebShell);
+      charsetSource = kCharsetFromUserDefault;
+    }
+    // for html, we need to find out the Meta tag from the hint.
+    if (muCV) {
+      rv = muCV->GetHintCharacterSet(&requestCharset);
+      if(NS_SUCCEEDED(rv)) {
+        rv = muCV->GetHintCharacterSetSource((PRInt32*)(&requestCharsetSource));
       }
     }
+    if(NS_SUCCEEDED(rv)) 
+    {
+      if(requestCharsetSource > charsetSource) 
+      {
+        charsetSource = requestCharsetSource;
+        charset = requestCharset;
+        Recycle(requestCharset);
+      }
+    }
+	  if(kCharsetFromPreviousLoading > charsetSource)
+    {
+      PRUnichar* forceCharsetFromWebShell = NULL;
+      if (muCV) {
+		    rv = muCV->GetForceCharacterSet(&forceCharsetFromWebShell);
+      }
+		  if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) 
+      {
+				charset = forceCharsetFromWebShell;
+        Recycle(forceCharsetFromWebShell);
+				//TODO: we should define appropriate constant for force charset
+				charsetSource = kCharsetFromPreviousLoading;  
+      }
+    }
+    nsresult rv_detect = NS_OK;
+    if(! gInitDetector)
+    {
+      nsIPref* pref = nsnull;
+      if(NS_SUCCEEDED(webShell->GetPrefs(pref)) && pref)
+      {
+        char* detector_name = nsnull;
+        if(NS_SUCCEEDED(
+             rv_detect = pref->CopyCharPref("intl.charset.detector",
+                                 &detector_name)))
+        {
+          PL_strncpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE,DETECTOR_PROGID_MAX);
+          PL_strncat(g_detector_progid, detector_name,DETECTOR_PROGID_MAX);
+          gPlugDetector = PR_TRUE;
+          PR_FREEIF(detector_name);
+        }
+        pref->RegisterCallback("intl.charset.detector", MyPrefChangedCallback, nsnull);
+      }
+      NS_IF_RELEASE(pref);
+      gInitDetector = PR_TRUE;
+    }
+
+    if((kCharsetFromAutoDetection > charsetSource )  && gPlugDetector)
+    {
+      // we could do charset detection
+      nsICharsetDetector *cdet = nsnull;
+      nsIWebShellServices *wss = nsnull;
+      nsICharsetDetectionAdaptor *adp = nsnull;
+
+      if(NS_SUCCEEDED( rv_detect = 
+            nsComponentManager::CreateInstance(g_detector_progid, nsnull,
+                           nsICharsetDetector::GetIID(), (void**)&cdet)))
+      {
+        if(NS_SUCCEEDED( rv_detect = 
+            nsComponentManager::CreateInstance(
+                           NS_CHARSET_DETECTION_ADAPTOR_PROGID, nsnull,
+                           kIParserFilterIID, (void**)&cdetflt)))
+        {
+          if(cdetflt && 
+                NS_SUCCEEDED( rv_detect=
+                     cdetflt->QueryInterface(
+                        nsICharsetDetectionAdaptor::GetIID(),(void**) &adp)))
+          {
+            if( NS_SUCCEEDED( rv_detect=
+                     webShell->QueryInterface(
+                        nsIWebShellServices::GetIID(),(void**) &wss)))
+            {
+              rv_detect = adp->Init(wss, cdet, aCommand);
+            }
+          }
+        }
+      }
+      else 
+      {
+        // IF we cannot create the detector, don't bother to 
+        // create one next time.
+        gPlugDetector = PR_FALSE;
+      }
+      NS_IF_RELEASE(wss);
+      NS_IF_RELEASE(cdet);
+      NS_IF_RELEASE(adp);
+      // NO NS_IF_RELEASE(cdetflt); here, do it after mParser->SetParserFilter
+    }
+  }
 #endif
 
-    if (NS_SUCCEEDED(rv)) {
-       rv = this->SetDocumentCharacterSet(charset);
-    }
+  if (NS_FAILED(rv)) { return rv; }
 
-    if (NS_OK == rv) {
-      // Set the parser as the stream listener for the document loader...
-      static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-      rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
+  rv = this->SetDocumentCharacterSet(charset);
+  if (NS_FAILED(rv)) { return rv; }
 
-      if (NS_OK == rv) {
+  // Set the parser as the stream listener for the document loader...
+  if (mParser) 
+  {
+    static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+    rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
+    if (NS_FAILED(rv)) { return rv; }
 
-        //The following lines were added by Rick.
-        //These perform "dynamic" DTD registration, allowing
-        //the caller total control over process, and decoupling
-        //parser from any given grammar.
+
+    //The following lines were added by Rick.
+    //These perform "dynamic" DTD registration, allowing
+    //the caller total control over process, and decoupling
+    //parser from any given grammar.
 
 //        nsIDTD* theDTD=0;
 //        NS_NewNavHTMLDTD(&theDTD);
 //        mParser->RegisterDTD(theDTD);
 
-        nsIParserFilter *oldFilter = nsnull;
-        if(cdetflt)
-           oldFilter = mParser->SetParserFilter(cdetflt);
-        NS_IF_RELEASE(oldFilter);
-        NS_IF_RELEASE(cdetflt);
+    nsIParserFilter *oldFilter = nsnull;
+    if(cdetflt)
+       oldFilter = mParser->SetParserFilter(cdetflt);
+    NS_IF_RELEASE(oldFilter);
+    NS_IF_RELEASE(cdetflt);
 
-        mParser->SetDocumentCharset( charset, charsetSource);
-        mParser->SetCommand(aCommand);
-        mParser->SetContentSink(sink); 
-        mParser->Parse(aURL, nsnull, PR_FALSE, (void *)this);
-      }
-      NS_RELEASE(sink);
-    }
+    mParser->SetDocumentCharset( charset, charsetSource);
+    mParser->SetCommand(aCommand);
+    // create the content sink
+    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, webShell);
+    if (NS_FAILED(rv)) { return rv; }
+    NS_ASSERTION(sink, "null sink with successful result from factory method");
+    mParser->SetContentSink(sink); 
+    // parser the content of the URL
+    mParser->Parse(aURL, nsnull, PR_FALSE, (void *)this);
   }
 
   return rv;
