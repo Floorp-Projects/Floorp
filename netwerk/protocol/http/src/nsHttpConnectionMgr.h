@@ -196,8 +196,12 @@ private:
     PRBool   BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
 
+    // SUN WS6U2 needs this to be public
+public:
     // message handlers have this signature
     typedef void (nsHttpConnectionMgr:: *nsConnEventHandler)(nsresult, void *);
+
+private:
 
     // nsConnEvent
     //
@@ -238,7 +242,6 @@ private:
         nsresult            mStatus;
         void               *mParam;
     };
-    friend class nsConnEvent;
 
     nsresult PostEvent(nsConnEventHandler  handler,
                        nsresult            status = NS_OK,
