@@ -93,8 +93,8 @@ function removeListeners()
 {
   gSearchSession.unregisterListener(gViewSearchListener);
 }
-  
-function onEnterInSearchBar()
+
+function initializeSearchBar()
 {
    if (!gDBView) 
      return;
@@ -116,6 +116,13 @@ function onEnterInSearchBar()
      removeListeners();
    }
 
+   addListeners();
+}
+
+function onEnterInSearchBar()
+{
+   initializeSearchBar();
+
    if (gSearchInput.value == "") 
    {
      var searchView = gDBView.isSearchView;
@@ -128,13 +135,12 @@ function onEnterInSearchBar()
      return;
    }
    else
-     gClearButton.setAttribute("disabled", false); //coming into search enable clear button
+     gClearButton.setAttribute("disabled", false); //coming into search enable clear button   
 
    ClearThreadPaneSelection();
    ClearMessagePane();
 
-   addListeners();
-   onSearch();
+   onSearch(null);
 }
 
 function initializeGlobalListeners()
@@ -151,7 +157,7 @@ function removeGlobalListeners()
   gSearchSession.removeFolderListener(folderListener);
   gSearchSession.unregisterListener(gSearchNotificationListener); 
 }
-function onSearch()
+function onSearch(aSearchTerms)
 {
     var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
     if (treeView)
@@ -159,7 +165,12 @@ function onSearch()
       var tree = GetThreadTree();
       tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
     }
-    createSearchTerms();
+
+    if (aSearchTerms)
+      createSearchTermsWithList(aSearchTerms);
+    else
+      createSearchTerms();
+
     gDBView.searchSession = gSearchSession;
     try
     {
@@ -171,7 +182,7 @@ function onSearch()
     }
 }
 
-function createSearchTerms()
+function createSearchTermsWithList(aTermsArray)
 {
   var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
   var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
@@ -184,17 +195,61 @@ function createSearchTerms()
 
   var selectedFolder = GetThreadPaneFolder();
   gSearchSession.addScopeTerm(nsMsgSearchScope.offlineMail, selectedFolder);
+
+  // add each item in termsArray to the search session
+  var isupports = null;
+  var searchTerm; 
+
+  var termsArray = aTermsArray.QueryInterface(Components.interfaces.nsISupportsArray);
+  for (var i = 0; i < termsArray.Count(); i++)
+  {
+    isupports = termsArray.GetElementAt(i);
+    searchTerm = isupports.QueryInterface(Components.interfaces.nsIMsgSearchTerm);
+    gSearchSession.appendTerm(searchTerm);
+  }
+
+}
+
+function createSearchTerms()
+{
+  var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
+  var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+  var nsMsgSearchOp = Components.interfaces.nsMsgSearchOp;
+
+  // create an i supports array to store our search terms 
+  var searchTermsArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+  var selectedFolder = GetThreadPaneFolder();
+
   var term = gSearchSession.createTerm();
   var value = term.value;
 
-  if (value)
-    value.str = gSearchInput.value;
-  gSearchSession.addSearchTerm(nsMsgSearchAttrib.Subject, nsMsgSearchOp.Contains, value, false, null);
+  value.str = gSearchInput.value;
+  term.value = value;
+  term.attrib = nsMsgSearchAttrib.Subject;
+  term.op = nsMsgSearchOp.Contains;
+  term.booleanAnd = false;
+
+  searchTermsArray.AppendElement(term);
+
+  // fill in the 2nd term
+  term = gSearchSession.createTerm();
 
   if (IsSpecialFolder(selectedFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE))
-    gSearchSession.addSearchTerm(nsMsgSearchAttrib.ToOrCC, nsMsgSearchOp.Contains, value, false, null); 
+    term.attrib = nsMsgSearchAttrib.ToOrCC;
   else
-    gSearchSession.addSearchTerm(nsMsgSearchAttrib.Sender, nsMsgSearchOp.Contains, value, false, null);
+    term.attrib = nsMsgSearchAttrib.Sender;
+
+  value = term.value;
+  value.str = gSearchInput.value;
+  term.value = value;
+  term.op = nsMsgSearchOp.Contains; 
+  term.booleanAnd = false;
+  searchTermsArray.AppendElement(term);
+  
+  createSearchTermsWithList(searchTermsArray);
+  
+  // now that we've added the terms, clear out our input array
+  searchTermsArray.Clear();
 }
 
 function onAdvancedSearch()
