@@ -32,7 +32,7 @@ class nsLocalFolderSummarySpec : public nsFileSpec
 public:
 			nsLocalFolderSummarySpec();
 			nsLocalFolderSummarySpec(const char *folderPath, PRBool create = PR_FALSE);
-			nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath, PRBool create = PR_FALSE);
+			nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath);
 			nsLocalFolderSummarySpec(const nsFilePath &inFolderPath, PRBool create = PR_FALSE);
 			void SetFolderName(const char *folderPath);
 

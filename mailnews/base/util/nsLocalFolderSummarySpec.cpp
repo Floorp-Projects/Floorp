@@ -30,8 +30,8 @@ nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const char *folderPath, PRBoo
 	CreateSummaryFileName();
 }
 
-nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath, PRBool create)
-: nsFileSpec(inFolderPath, create)
+nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath)
+: nsFileSpec(inFolderPath)
 {
 	CreateSummaryFileName();
 }
