@@ -28,6 +28,7 @@
 #elif defined(XP_UNIX)
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #ifndef MAP_FAILED
 #if defined (__STDC__) && __STDC__

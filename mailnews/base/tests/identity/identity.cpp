@@ -176,7 +176,7 @@ printIncomingServer(nsIMsgIncomingServer *server)
 
 #if 0
   value=nsnull;
-  rv = server->GetPrettyName(&value);
+  rv = server->GetPrettyName((PRUnichar **)&value);
   if (NS_SUCCEEDED(rv) && value) printf("\tPrettyName: %s\n", value);
 #endif
   
