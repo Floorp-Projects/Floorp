@@ -2016,8 +2016,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
       PRInt32 qMarkLoc = -1, spaceLoc = -1;
 
+      rv = NS_ERROR_FAILURE;
       if (keywordsEnabled) {
-          rv = NS_ERROR_FAILURE;
           // These are keyword formatted strings
           // "what is mozilla"
           // "what is mozilla?"
