@@ -45,6 +45,17 @@
 #include "CHBrowserView.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsIPrompt.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIInterfaceRequestor.h"
+
+#include "nsINSSDialogs.h"
+#include "nsIFactory.h"
+#include "nsIComponentRegistrar.h"
+
+// {0ffd3880-7a1a-11d6-a384-975d1d5f86fc}
+#define NS_BADCERTHANDLER_CID \
+  {0x0ffd3880, 0x7a1a, 0x11d6,{0xa3, 0x84, 0x97, 0x5d, 0x1d, 0x5f, 0x86, 0xfc}}
 
 nsAlertController* nsCocoaBrowserService::sController = nsnull;
 nsCocoaBrowserService* nsCocoaBrowserService::sSingleton = nsnull;
@@ -61,10 +72,11 @@ nsCocoaBrowserService::~nsCocoaBrowserService()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsCocoaBrowserService,
+NS_IMPL_ISUPPORTS6(nsCocoaBrowserService,
                    nsIWindowCreator,
                    nsIPromptService,
-                   nsIFactory)
+                   nsIFactory, 
+                   nsIBadCertListener, nsISecurityWarningDialogs, nsINSSDialogs)
 
 nsresult
 nsCocoaBrowserService::InitEmbedding()
@@ -75,34 +87,37 @@ nsCocoaBrowserService::InitEmbedding()
     return NS_OK;
 
   sSingleton = new nsCocoaBrowserService();
-  if (!sSingleton) {
+  if (!sSingleton)
     return NS_ERROR_OUT_OF_MEMORY;
-  }
   NS_ADDREF(sSingleton);
   
+  nsCOMPtr<nsIComponentRegistrar> cr;
+  NS_GetComponentRegistrar(getter_AddRefs(cr));
+  if ( !cr )
+    return NS_ERROR_FAILURE;
+
   // Register as the prompt service
-#define NS_PROMPTSERVICE_CID \
+  #define NS_PROMPTSERVICE_CID \
      {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
   static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
-
-  nsresult rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
-                                                    "Prompt Service",
-                                                    "@mozilla.org/embedcomp/prompt-service;1",
-                                           sSingleton,
-                                           PR_TRUE); // replace existing
-  if (NS_FAILED(rv)) {
+	nsresult rv = cr->RegisterFactory(kPromptServiceCID, "Prompt Service", "@mozilla.org/embedcomp/prompt-service;1",
+                                    sSingleton);
+  if (NS_FAILED(rv))
     return rv;
-  }
 
   // Register as the window creator
   nsCOMPtr<nsIWindowWatcher> watcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  if (!watcher) {
+  if (!watcher) 
     return NS_ERROR_FAILURE;
-  }
-
   watcher->SetWindowCreator(sSingleton);
 
-  return NS_OK;
+  // replace gecko's cert dialogs with our own implementation that doesn't use XUL. We rely
+  // on our own dialogs in the alert nib and use the alert controller to display them.
+  static NS_DEFINE_CID(kBadCertHandlerCID, NS_BADCERTHANDLER_CID);
+  rv = cr->RegisterFactory(kBadCertHandlerCID, "Bad Cert Handler", NS_NSSDIALOGS_CONTRACTID,
+                            sSingleton);
+
+  return rv;
 }
 
 void
@@ -506,3 +521,188 @@ nsCocoaBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent,
   return browserChrome->CreateChromeWindow(parent, chromeFlags, _retval);
 }
 
+
+/* boolean unknownIssuer (in nsITransportSecurityInfo socketInfo,
+                          in nsIX509Cert cert, out addType); */
+NS_IMETHODIMP
+nsCocoaBrowserService::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
+                                      nsIX509Cert *cert, PRInt16 *outAddType,
+                                      PRBool *_retval)
+{
+  *_retval = PR_TRUE;
+  *outAddType = ADD_TRUSTED_FOR_SESSION;
+
+  nsAlertController* controller = GetAlertController();
+  if (!controller)
+    return NS_ERROR_FAILURE;
+
+  // HACK: there is no way to get which window this is for from the API. The
+  // security team in mozilla just cheats and assumes the frontmost window so
+  // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
+  *outAddType = (PRBool)[controller unknownCert:[NSApp mainWindow]];
+  switch ( *outAddType ) {
+    case nsIBadCertListener::ADD_TRUSTED_FOR_SESSION:
+    case nsIBadCertListener::ADD_TRUSTED_PERMANENTLY:
+      *_retval = PR_TRUE;
+      break;  
+    default:
+      *_retval = PR_FALSE;
+  }
+  
+  return NS_OK;
+}
+
+/* boolean mismatchDomain (in nsITransportSecurityInfo socketInfo, 
+                           in wstring targetURL, 
+                           in nsIX509Cert cert); */
+NS_IMETHODIMP 
+nsCocoaBrowserService::MismatchDomain(nsITransportSecurityInfo *socketInfo, 
+                                        const PRUnichar *targetURL, 
+                                        nsIX509Cert *cert, PRBool *_retval) 
+{
+  nsAlertController* controller = GetAlertController();
+  if (!controller)
+    return NS_ERROR_FAILURE;
+
+  // HACK: there is no way to get which window this is for from the API. The
+  // security team in mozilla just cheats and assumes the frontmost window so
+  // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
+  *_retval = (PRBool)[controller badCert:[NSApp mainWindow]];
+  
+  return NS_OK;
+}
+
+
+/* boolean certExpired (in nsITransportSecurityInfo socketInfo, 
+                        in nsIX509Cert cert); */
+NS_IMETHODIMP 
+nsCocoaBrowserService::CertExpired(nsITransportSecurityInfo *socketInfo, 
+                                      nsIX509Cert *cert, PRBool *_retval)
+{
+  nsAlertController* controller = GetAlertController();
+  if (!controller)
+    return NS_ERROR_FAILURE;
+
+  // HACK: there is no way to get which window this is for from the API. The
+  // security team in mozilla just cheats and assumes the frontmost window so
+  // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
+  *_retval = (PRBool)[controller badCert:[NSApp mainWindow]];
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsCocoaBrowserService::CrlNextupdate(nsITransportSecurityInfo *socketInfo, 
+                                      const PRUnichar * targetURL, nsIX509Cert *cert)
+{
+  // what does this do!?
+  return NS_OK;
+}
+
+
+#define ENTER_SITE_PREF      "security.warn_entering_secure"
+#define WEAK_SITE_PREF       "security.warn_entering_weak"
+#define LEAVE_SITE_PREF      "security.warn_leaving_secure"
+#define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
+#define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
+
+NS_IMETHODIMP
+nsCocoaBrowserService::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
+{
+  // I don't think any user cares they're entering a secure site.
+#if 0
+  rv = AlertDialog(ctx, ENTER_SITE_PREF, 
+                   NS_LITERAL_STRING("EnterSecureMessage").get(),
+                   NS_LITERAL_STRING("EnterSecureShowAgain").get());
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::AlertEnteringWeak(nsIInterfaceRequestor *ctx)
+{
+  return AlertDialog(ctx, WEAK_SITE_PREF,
+                      NS_LITERAL_STRING("WeakSecureMessage").get(),
+                      NS_LITERAL_STRING("WeakSecureShowAgain").get());
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
+{
+  return AlertDialog(ctx, LEAVE_SITE_PREF, 
+                      NS_LITERAL_STRING("LeaveSecureMessage").get(),
+                      NS_LITERAL_STRING("LeaveSecureShowAgain").get());
+}
+
+
+NS_IMETHODIMP
+nsCocoaBrowserService::AlertMixedMode(nsIInterfaceRequestor *ctx)
+{
+  return AlertDialog(ctx, MIXEDCONTENT_PREF, 
+                        NS_LITERAL_STRING("MixedContentMessage").get(),
+                        NS_LITERAL_STRING("MixedContentShowAgain").get());
+}
+
+
+nsresult
+nsCocoaBrowserService::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
+                          const PRUnichar *dialogMessageName,
+                          const PRUnichar *showAgainName)
+{
+  nsresult rv = NS_OK;
+
+  // Get user's preference for this alert
+  PRBool prefValue = PR_TRUE;
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+  if ( pref )
+  	pref->GetBoolPref(prefName, &prefValue);
+
+  // Stop if alert is not requested
+  if (!prefValue) return NS_OK;
+  
+  if (!mSecurityStringBundle) {
+    #define STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
+    nsCOMPtr<nsIStringBundleService> service = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if ( service )
+      rv = service->CreateBundle(STRING_BUNDLE_URL, getter_AddRefs(mSecurityStringBundle));
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  // Get Prompt to use
+  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
+  if (!prompt) return NS_ERROR_FAILURE;
+
+  // Get messages strings from localization file
+  nsXPIDLString windowTitle, message, dontShowAgain;
+
+  mSecurityStringBundle->GetStringFromName(NS_LITERAL_STRING("Title").get(), getter_Copies(windowTitle));
+  mSecurityStringBundle->GetStringFromName(dialogMessageName, getter_Copies(message));
+  mSecurityStringBundle->GetStringFromName(showAgainName, getter_Copies(dontShowAgain));
+  if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
+      
+  rv = prompt->AlertCheck(windowTitle, message, dontShowAgain, &prefValue);
+  if (NS_FAILED(rv)) return rv;
+      
+  if (!prefValue)
+    pref->SetBoolPref(prefName, PR_FALSE);
+ 
+  return rv;
+}
+
+nsresult
+nsCocoaBrowserService::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool* _result)
+{
+  // no user cares about this. the first thing they do is turn it off.
+  *_result = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsCocoaBrowserService::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool* _result)
+{
+  // users may care about this one, but we haven't yet implemented ConfirmEx().
+  *_result = PR_TRUE;
+  return NS_OK;
+}

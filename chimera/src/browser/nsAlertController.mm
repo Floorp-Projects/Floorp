@@ -38,6 +38,8 @@
 #import "nsAlertController.h"
 #import "nsCocoaBrowserService.h"
 
+#include "nsIBadCertListener.h"
+
 @implementation nsAlertController
 
 - (IBAction)hitButton1:(id)sender
@@ -240,4 +242,22 @@
 
   return (result == 1);	
 }
+
+
+- (BOOL)badCert:(NSWindow*)parent
+{
+  int result = [NSApp runModalForWindow:securityMismatchPanel relativeToWindow:parent];
+  [securityMismatchPanel close];
+
+  return (result == 1);
+}
+
+- (int)unknownCert:(NSWindow*)parent
+{
+  int result = [NSApp runModalForWindow:securityUnknownPanel relativeToWindow:parent];
+  [securityUnknownPanel close];
+
+  return result;
+}
+
 @end

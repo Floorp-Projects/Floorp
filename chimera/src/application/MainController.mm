@@ -45,7 +45,6 @@
 #include "nsIPrefBranch.h"
 #import	"CHAboutBox.h"
 
-
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 @implementation MainController
@@ -94,7 +93,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     // offline.
     if (mOffline)
         [mOfflineMenuItem setTitle: @"Go Online"];
-
 }
 
 -(IBAction)newWindow:(id)aSender
