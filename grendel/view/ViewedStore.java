@@ -17,6 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  2 Dec 1997.
+ *
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.view;
@@ -58,6 +60,18 @@ public interface ViewedStore extends ViewedFolder {
   public ViewedFolder getDefaultFolder() throws MessagingException;
 
   /**
+   * Returns the id which identifies this store in the preferences/
+   */
+
+  public int getID();
+
+  /**
+   * Returns the description for this store
+   */
+
+  public String getDescription();
+
+  /**
    * Returns the protocol used by this store.
    */
 
@@ -75,6 +89,12 @@ public interface ViewedStore extends ViewedFolder {
    */
 
   public String getUsername();
+
+  /**
+   * Returns the password.
+   */
+
+  public String getPassword();
 
   /**
    * Returns the port used to connect. Returns -1 for the protocol default.

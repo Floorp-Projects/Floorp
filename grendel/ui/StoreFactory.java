@@ -24,6 +24,7 @@
 
 package grendel.ui;
 
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -39,9 +40,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.EventListenerList;
 
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
-
+import grendel.prefs.base.ServerArray;
+import grendel.prefs.base.ServerStructure;
 import grendel.view.ViewedStore;
 import grendel.view.ViewedStoreBase;
 
@@ -63,10 +63,11 @@ public class StoreFactory {
   EventListenerList fListeners = new EventListenerList();
 
   private StoreFactory() {
-    Preferences prefs = PreferencesFactory.Get();
-    fAuthenticator = new DialogAuthenticator();
-    fSession = Session.getDefaultInstance(prefs.getAsProperties(),
-                                 fAuthenticator);
+    //Preferences prefs = PreferencesFactory.Get();
+    //fAuthenticator = new DialogAuthenticator();
+    //fSession = Session.getDefaultInstance(prefs.getAsProperties(),
+    //                             fAuthenticator);
+    fSession = Session.getDefaultInstance(new Properties(),null);
     fSession.setDebug(true);
   }
 
@@ -89,45 +90,29 @@ public class StoreFactory {
     return fStores;
   }
 
-  synchronized ViewedStore createStore(String storename) {
-    ResourceBundle labels = ResourceBundle.getBundle("grendel.ui.Labels");
-    URLName urlName = null;
+  private synchronized ViewedStore createStore(int ID) {
 
-    String proto;
+    ServerStructure prefs = ServerArray.GetMaster().get(ID);
 
-    if (storename.indexOf(":") != -1) {
-      urlName = new URLName(storename);
-    } else {
-      urlName = new URLName(storename, null, -1, null, null, null);
-    }
-
-    proto = urlName.getProtocol();
-
-    // ### Very wrong temporary hack -- special case "berkeley" and "pop3",
-    // since they doesn't play with the proper registration mechanism right
-    // now.
     Store store = null;
     ViewedStore viewedStore = null;
+
+    String proto = prefs.getType();
+    URLName urlName = new URLName(proto,null,-1,null,null,null);
+
+    // ### Very wrong temporary hack -- these protocols should be registered 
+    // correctly with JavaMail trough the javamail.providers file
 
     try {
       Class c = null;
       if (proto.equalsIgnoreCase("berkeley")) {
         c = Class.forName("grendel.storage.BerkeleyStore");
-      // Two pop3 providers  
-      } else if (proto.equalsIgnoreCase("gpop3")) {
-        c = Class.forName("grendel.storage.PopStore");
-      } else if (proto.equalsIgnoreCase("spop3")) {
-        c = Class.forName("com.sun.mail.pop3.POP3Store;");
-      // Two news providers  
-      } else if (proto.equalsIgnoreCase("gnews")) {
-        c = Class.forName("grendel.storage.NewsStore");
-      } else if (proto.equalsIgnoreCase("dnews")) {
-        c = Class.forName("dog.mail.nntp.NNTPStore");
-      // Defaults
+        urlName = new URLName(proto,null,-1,prefs.getBerkeleyDirectory(),null,null);
       } else if (proto.equalsIgnoreCase("pop3")) {
         c = Class.forName("com.sun.mail.pop3.POP3Store;");
       } else if (proto.equalsIgnoreCase("news")) {
-        c = Class.forName("grendel.storage.NewsStore");
+        c = Class.forName("dog.mail.nntp.NNTPStore");
+        //c = Class.forName("grendel.storage.NewsStore");
       }
 
       if (c != null) {
@@ -154,93 +139,37 @@ public class StoreFactory {
       }
     }
 
-    viewedStore = new ViewedStoreBase(store,
-                                      urlName.getProtocol(),
-                                      urlName.getHost(),
-                                      urlName.getPort(),
-                                      urlName.getUsername());
+    viewedStore = new ViewedStoreBase(store, ID);
+
     return viewedStore;
   }
-
-  public ViewedStore getViewedStore(Store aStore) {
-    if (fStores == null) {
-      return null;
-    }
-
-    for (int i = 0; i < fStores.length; i++) {
-      if (fStores[i].getStore().equals(aStore)) {
-        return fStores[i];
+  
+  private synchronized void closeStores() {
+    for (int i=0; i<fStores.length; i++) {
+      try {
+        fStores[i].getStore().close();
+      } catch (MessagingException mex) {
+        mex.printStackTrace();
       }
     }
-    return null;
   }
 
-  boolean SafeEquals(Object a, Object b) {
-    if (a == b) {
-      return true;
-    } else if (a != null && b != null) {
-      return a.equals(b);
-    } else {
-      return false;
-    }
-  }
-
-  public ViewedStore findStore(String storename) {
-    URLName urlName = null;
-
-    if (storename.indexOf(":") != -1) {
-      urlName = new URLName(storename);
-    } else {
-      urlName = new URLName(storename, null, -1, null, null, null);
-    }
-    for (int i = 0; fStores != null && i < fStores.length; i++) {
-      if (urlName.getProtocol().equals(fStores[i].getProtocol())) {
-        if (SafeEquals(urlName.getHost(), fStores[i].getHost()) &&
-            SafeEquals(urlName.getUsername(), fStores[i].getUsername()) &&
-            //SafeEquals(urlName.getFile(), fStores[i].getFile()) &&
-            urlName.getPort() == fStores[i].getPort()) {
-          return fStores[i];
-        }
-      }
-    }
-    return null;
-  }
-
-  synchronized void updateStores() {
+  private synchronized void updateStores() {
     if (fSession == null) {
       getSession();
     }
 
-    Preferences prefs = PreferencesFactory.Get();
-    Vector resVector = new Vector();
-
-    String defStore = "";
-    if (!prefs.getString("mail.directory","").equals("")) {
-      defStore = "berkeley";
+    if (fStores != null) {
+      closeStores();
     }
+        
+    ServerArray prefs = ServerArray.GetMaster();
 
-    String storelist = prefs.getString("mail.storelist", defStore);
-    StringTokenizer st = new StringTokenizer(storelist, " ,;");
-
-    while (st.hasMoreTokens()) {
-      String storename = st.nextToken().trim();
-
-      ViewedStore viewedStore = null;
-
-      viewedStore = findStore(storename);
-      if (viewedStore == null) {
-        viewedStore = createStore(storename);
-        System.out.println("created " + viewedStore);
-      } else {
-        System.out.println("recycled " + viewedStore);
-      }
-
-      if (viewedStore != null) {
-        resVector.addElement(viewedStore);
-      }
+    fStores = new ViewedStore[prefs.size()];
+    
+    for (int i=0; i<prefs.size(); i++) {
+      fStores[i] = createStore(i);
     }
-    fStores = new ViewedStore[resVector.size()];
-    resVector.copyInto(fStores);
   }
 
   public synchronized void refreshStores() {

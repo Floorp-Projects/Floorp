@@ -17,7 +17,9 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Terry Weissman <terry@netscape.com>, 22 Oct 1997.
+ *
  * Contributors: Joel York <joel_york@yahoo.com>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.storage;
@@ -42,26 +44,20 @@ import javax.mail.event.StoreEvent;
   tie into javamail's Session class properly.  So, instead of using
   <tt>Session.getStore(String)</tt>, you instead need to call
   <tt>BerkeleyStore.GetDefaultStore(Session)</tt>.
+  <p>
+  (edwin)BerkeleyStore.GetDefaultStore(Session) has been removed to
+  support multiple berkeley stores. You should construct a berkeley
+  store via the normal way or ask grendel.ui.StoreFactory for a list
+  of available BerkeleyStore's.
   */
 
 public class BerkeleyStore extends Store {
   protected Folder defaultFolder;
-
-  static protected BerkeleyStore DefaultStore = null;
-  public static Store GetDefaultStore(Session s) {
-    if (DefaultStore == null) {
-      DefaultStore = new BerkeleyStore(s);
-    }
-    return DefaultStore;
-  }
-
-
-  public BerkeleyStore(Session s) {
-    super(s, null);
-  }
+  private String Dir;
 
   public BerkeleyStore(Session s, URLName u) {
     super(s, u);
+    Dir = u.getFile();
   }
 
   public void connect(String host,
@@ -85,15 +81,7 @@ public class BerkeleyStore extends Store {
 
   public Folder getDefaultFolder() {
     if (defaultFolder == null) {
-      if (getURLName() == null || getURLName().getFile() == null) {
-        defaultFolder =
-          new BerkeleyFolder(this,
-                             new File(session.getProperty("mail.directory")));
-      } else {
-        defaultFolder =
-          new BerkeleyFolder(this,
-                             new File(getURLName().getFile()));
-      }
+      defaultFolder = new BerkeleyFolder(this, new File(Dir));
     }
     return defaultFolder;
   }

@@ -53,10 +53,6 @@
     <menuitem id="appRunFilters" category="edit" action="appRunFilters"
      label="$appRunFiltersLabel" accel="$appRunFiltersAccel"
      description=""/>
-    <menuitem type="separator"/>
-    <menuitem id="appPrefs" category="edit" action="appPrefs"
-     label="$appPrefsLabel" accel="$appPrefsAccel"
-     description=""/>
   </menu>
   <menu id="ViewMenu" category="view"
    label="$multiViewLabel" accel="$multiViewAccel">
@@ -84,30 +80,6 @@
       label="$sortSubjectLabel" accel="$sortSubjectAccel"
       description=""/>
     </menu>
-    <menu id="LayoutMenu" category="view"
-     label="$viewLayoutLabel" accel="$viewLayoutAccel">
-      <menuitem id="splitTop" category="view" action="splitTop"
-       type="radio" group="layout"
-      label="$splitTopLabel" accel="$splitTopAccel"
-      description=""/>
-      <menuitem id="splitLeft" category="view" action="splitLeft"
-       type="radio" group="layout"
-      label="$splitLeftLabel" accel="$splitLeftAccel"
-      description=""/>
-      <menuitem id="splitRight" category="view" action="splitRight"
-       type="radio" group="layout"
-      label="$splitRightLabel" accel="$splitRightAccel"
-      description=""/>
-      <menuitem id="stacked" category="view" action="stacked"
-       type="radio" group="layout"
-       label="$stackedLabel" accel="$stackedAccel"
-       description=""/>
-    </menu>
-    <menuitem type="separator"/>
-    <menuitem id="appShowTooltips" category="view" action="appShowTooltips"
-     type="checkbox"
-     label="$appShowTooltipsLabel" accel="$appShowTooltipsAccel"
-     description=""/>
   </menu>
   <menu id="MessageMenu" category="message"
    label="$multiMessageLabel" accel="$multiMessageAccel">
@@ -143,6 +115,21 @@
       label="$markAllReadLabel" accel="$markAllReadAccel"
       description=""/>
     </menu>
+  </menu>
+  <menu id="PrefsMenu" category="prefs"
+   label="$multiPrefsLabel" accel="$multiPrefsAccel">
+   <menuitem id="prefGeneral" category="prefs" action="prefGeneral"
+    label="$prefGeneralLabel" accel="$prefGeneralAccel"
+    description=""/>
+   <menuitem id="prefIds" category="prefs" action="prefIds"
+    label="$prefIdsLabel" accel="$prefIdsAccel"
+    description=""/>
+   <menuitem id="prefSrvs" category="prefs" action="prefSrvs"
+    label="$prefSrvsLabel" accel="$prefSrvsAccel"
+    description=""/>
+   <menuitem id="prefUI" category="prefs" action="prefUI"
+    label="$prefUILabel" accel="$prefUIAccel"
+    description=""/>
   </menu>
   </menubar>
 </body>

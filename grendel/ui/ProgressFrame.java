@@ -55,7 +55,7 @@ public abstract class ProgressFrame extends GeneralFrame implements Runnable {
   Container       fContentPanel;
 
   public ProgressFrame(String aCaption) {
-    super("", "mail.progress");
+    super("", "progress");
 
     setTitle(fLabels.getString(aCaption));
     setBackground(UIManager.getColor("control"));

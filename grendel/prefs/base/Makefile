@@ -17,23 +17,15 @@
 # Netscape Communications Corporation.  All Rights Reserved.
 #
 # Contributors: Giao Nguyen <grail@cafebabe.org>
-#               Edwin Woudt <edwin@woudt.nl>
 
-SUBDIRS=		\
-	base	\
-	ui \
+SRCS=                     \
+  GeneralPrefs.java       \
+  IdentityArray.java      \
+	IdentityStructure.java  \
+  InvisiblePrefs.java        \
+  ServerArray.java        \
+	ServerStructure.java    \
+  UIPrefs.java            \
 	$(NULL)
 
-
-SRCS=					\
-	MailServerPrefs.java		\
-	Prefs.java			\
-	PrefsBeanInfo.java		\
-	UIPrefs.java			\
-	UIPrefsEditor.java		\
-	UserPrefs.java			\
-	UserPrefsEditor.java		\
-	MailServerPrefsEditor.java	\
-	$(NULL)
-
-include ../rules.mk
+include ../../rules.mk

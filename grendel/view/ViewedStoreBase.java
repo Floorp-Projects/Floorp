@@ -20,6 +20,7 @@
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
  *               Giao Nguyen <grail@cafebabe.org>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.view;
@@ -39,25 +40,22 @@ import javax.mail.event.FolderListener;
 import javax.swing.JOptionPane;
 import javax.swing.event.EventListenerList;
 
-import calypso.util.PreferencesFactory;
-
+import grendel.prefs.base.ServerArray;
+import grendel.prefs.base.IdentityStructure;
 import grendel.storage.FolderExtraFactory;
 
 public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
 
+  int fID;
+  
   Vector fUpdateQueue;
   Thread fUpdateThread;
 
   ViewedFolder fDefaultFolder;
   Store fStore;
-  String fProto;
-  String fHost;
-  String fUser;
-  String fPrefBase;
-  int fPort;
+
   ViewedStore fNext;
   boolean fConnected;
-  boolean fSorted;
 
   int fVisible = kSubscribed;
 
@@ -69,23 +67,24 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
    * state.
    */
 
-  public ViewedStoreBase(Store aStore, String aProto, String aHost,
-                         int aPort, String aUser) {
+  public ViewedStoreBase(Store aStore, int aID) {
     super(null, null, null);
-
+    
+    fID = aID;
     fViewedStore = this;
     fStore = aStore;
-    fProto = aProto;
-    fHost = aHost;
-    fPort = aPort;
-    fUser = aUser;
-
-    fPrefBase = "mail." + aProto + (aHost != null ? "-" + aHost : "");
-    fSorted = PreferencesFactory.Get().getBoolean(fPrefBase + ".sort", false);
 
     fStore.addConnectionListener(new StoreConnectionListener());
   }
 
+  /**
+   * Returns the id which identifies this store in the preferences/
+   */
+
+  public int getID() {
+    return fID;
+  }
+  
   /**
    * Returns the associated folder
    */
@@ -132,11 +131,19 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
   }
 
   /**
+   * Returns the description for this store
+   */
+
+  public String getDescription() {
+    return ServerArray.GetMaster().get(fID).getDescription();
+  }
+
+  /**
    * Returns the protocol used by this store.
    */
 
   public String getProtocol() {
-    return fProto;
+    return ServerArray.GetMaster().get(fID).getType();
   }
 
   /**
@@ -144,7 +151,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
    */
 
   public String getHost() {
-    return fHost;
+    return ServerArray.GetMaster().get(fID).getHost();
   }
 
   /**
@@ -153,7 +160,15 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
    */
 
   public String getUsername() {
-    return fUser;
+    return ServerArray.GetMaster().get(fID).getUsername();
+  }
+
+  /**
+   * Returns the password.
+   */
+
+  public String getPassword() {
+    return ServerArray.GetMaster().get(fID).getPassword();
   }
 
   /**
@@ -161,7 +176,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
    */
 
   public int getPort() {
-    return fPort;
+    return ServerArray.GetMaster().get(fID).getPort();
   }
 
   /**
@@ -191,7 +206,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
   void connectStore() {
     try {
       if (fStore != null) {
-        fStore.connect(getHost(), getUsername(), null);
+        fStore.connect(getHost(), getPort(), getUsername(), getPassword());
       }
     } catch (AuthenticationFailedException e) {
       JOptionPane.showMessageDialog(null,
@@ -210,16 +225,14 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
 
   void checkConnected() throws MessagingException {
     if (!isConnected()) {
-      boolean success = false;
-
-      Thread connect = new Thread(new ConnectThread());
-      connect.start();
-      success = true;
+      //Thread connect = new Thread(new ConnectThread());
+      //connect.start();
+      connectStore();
     }
   }
 
   boolean isSorted() {
-    return fSorted;
+    return true;
   }
 
   /**
@@ -239,13 +252,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
   }
 
   public String toString() {
-    StringBuffer buffer = new StringBuffer();
-    buffer.append(fProto);
-    if (fHost != null) {
-      buffer.append(":");
-      buffer.append(fHost);
-    }
-    return buffer.toString();
+    return ServerArray.GetMaster().get(fID).getDescription();
   }
 
   void addFolderUpdate(ViewedFolderBase aFolder) {
@@ -353,7 +360,6 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
       try {
         Folder folder = viewedFolder.getFolder();
         if (folder != null) {
-
           if (!folder.isOpen()) {
             try {
               folder.open(Folder.READ_WRITE);
@@ -368,7 +374,9 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
           viewedFolder.setCounts(messageCount, unreadCount, undeletedCount);
         }
       } catch (MessagingException e) {
+        e.printStackTrace();
       } catch (IllegalStateException e) {
+        e.printStackTrace();
       } catch (Exception e) {
         e.printStackTrace();
       }

@@ -20,6 +20,7 @@
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
  *               Giao Nguyen <grail@cafebabe.org>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.ui;
@@ -124,7 +125,7 @@ class MasterFrame extends GeneralFrame {
   MasterPanel fMasterPanel;
 
   public MasterFrame() {
-    super("masterFrameLabel", "mail.session");
+    super("masterFrameLabel", "session");
 
     PrefsDialog.CheckPrefs(this);
 

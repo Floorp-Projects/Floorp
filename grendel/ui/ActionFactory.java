@@ -36,15 +36,20 @@ import java.util.ResourceBundle;
 import javax.swing.JFrame;
 import javax.swing.ToolTipManager;
 
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
-
 //import netscape.orion.uimanager.AbstractUICmd;
 //import netscape.orion.uimanager.IUICmd;
 
+import grendel.prefs.base.UIPrefs;
+import grendel.prefs.ui.Identities;
+import grendel.prefs.ui.Servers;
+import grendel.prefs.ui.General;
+import grendel.prefs.ui.UI;
 import grendel.storage.MailDrop;
 import grendel.search.SearchFrame;
+
+/* Temporarily removed because FilterMaster is broken (edwin)
 import grendel.filters.FilterMaster;
+*/
 
 import grendel.composition.Composition;
 import grendel.ui.UIAction;
@@ -57,6 +62,10 @@ public class ActionFactory {
   static SearchAction fSearchAction = new SearchAction();
   static RunFiltersAction fRunFiltersAction = new RunFiltersAction();
   static ShowTooltipsAction fShowTooltipsAction = new ShowTooltipsAction();
+  static RunIdentityPrefsAction fRunIdentityPrefsAction = new RunIdentityPrefsAction();
+  static RunServerPrefsAction fRunServerPrefsAction = new RunServerPrefsAction();
+  static RunGeneralPrefsAction fRunGeneralPrefsAction = new RunGeneralPrefsAction();
+  static RunUIPrefsAction fRunUIPrefsAction = new RunUIPrefsAction();
   
   static int fIdent = 0;
   
@@ -102,6 +111,22 @@ public class ActionFactory {
 
   static public ShowTooltipsAction GetShowTooltipsAction() {
     return fShowTooltipsAction;
+  }
+  
+  static public RunIdentityPrefsAction GetRunIdentityPrefsAction() {
+    return fRunIdentityPrefsAction;
+  }
+  
+  static public RunServerPrefsAction GetRunServerPrefsAction() {
+    return fRunServerPrefsAction;
+  }
+
+  static public RunGeneralPrefsAction GetRunGeneralPrefsAction() {
+    return fRunGeneralPrefsAction;
+  }
+  
+  static public RunUIPrefsAction GetRunUIPrefsAction() {
+    return fRunUIPrefsAction;
   }
 }
 
@@ -212,8 +237,10 @@ class RunFiltersAction extends UIAction {
   }
 
   public void actionPerformed(ActionEvent aEvent) {
+    /* Temporarily removed because FilterMaster is broken (edwin)
     FilterMaster fm = FilterMaster.Get();
     fm.applyFiltersToTestInbox();
+    */
   }
 }
 
@@ -222,8 +249,7 @@ class ShowTooltipsAction extends UIAction {
   ShowTooltipsAction() {
     super("appShowTooltips");
 
-    boolean enabled =
-      PreferencesFactory.Get().getBoolean("app.tooltips", true);
+    boolean enabled = UIPrefs.GetMaster().getTooltips();
     ToolTipManager.sharedInstance().setEnabled(enabled);
 
     //    setSelected(enabled ? AbstractUICmd.kSelected : AbstractUICmd.kUnselected);
@@ -233,6 +259,54 @@ class ShowTooltipsAction extends UIAction {
     boolean enabled = !ToolTipManager.sharedInstance().isEnabled();
     ToolTipManager.sharedInstance().setEnabled(enabled);
     //    setSelected(enabled ? AbstractUICmd.kSelected : AbstractUICmd.kUnselected);
-    PreferencesFactory.Get().putBoolean("app.tooltips", enabled);
+    UIPrefs.GetMaster().setTooltips(enabled);
+  }
+}
+
+class RunIdentityPrefsAction extends UIAction {
+  
+  RunIdentityPrefsAction() {
+    super("prefIds");
+  }
+  
+  public void actionPerformed(ActionEvent aEvent) {
+    JFrame prefs = new Identities();
+    prefs.show();
+  }
+}
+
+class RunServerPrefsAction extends UIAction {
+  
+  RunServerPrefsAction() {
+    super("prefSrvs");
+  }
+  
+  public void actionPerformed(ActionEvent aEvent) {
+    JFrame prefs = new Servers();
+    prefs.show();
+  }
+}
+
+class RunGeneralPrefsAction extends UIAction {
+  
+  RunGeneralPrefsAction() {
+    super("prefGeneral");
+  }
+  
+  public void actionPerformed(ActionEvent aEvent) {
+    JFrame prefs = new General();
+    prefs.show();
+  }
+}
+
+class RunUIPrefsAction extends UIAction {
+  
+  RunUIPrefsAction() {
+    super("prefUI");
+  }
+  
+  public void actionPerformed(ActionEvent aEvent) {
+    JFrame prefs = new UI();
+    prefs.show();
   }
 }

@@ -29,9 +29,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
-
+import grendel.prefs.base.IdentityArray;
 import grendel.ui.ActionFactory;
 
 public class OptionsPanel extends JPanel implements Serializable  {
@@ -94,11 +92,10 @@ public class OptionsPanel extends JPanel implements Serializable  {
 
         ident = new LabeledCombo("Identity");
 
-	// Read all the different identities from the preferences file
-        Preferences prefs = PreferencesFactory.Get();
-        int numIdentities = prefs.getInt("mail.identities", 1);
-        for (int i=0; i<numIdentities; i++) {
-            ident.addPossibleValue(prefs.getString("mail.identity.description."+ i, "(no description available)"));
+        // Read all the different identities from the preferences file
+        IdentityArray ia  = IdentityArray.GetMaster();
+        for (int i=0; i<ia.size(); i++) {
+            ident.addPossibleValue(ia.get(i).getDescription());
         }
         // Select the default identity
         ident.setSelectedIndex(ActionFactory.getIdent());

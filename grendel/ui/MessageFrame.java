@@ -20,6 +20,7 @@
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
  *               Giao Nguyen <grail@cafebabe.org>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.ui;
@@ -41,17 +42,11 @@ public class MessageFrame extends GeneralFrame {
   MessagePanel  fMessagePanel;
 
   /**
-   * Identifying String
-   */
-
-  public static final String kID = "mail.message";
-
-  /**
    * Creates a MessageFrame displaying the given message.
    */
 
   public MessageFrame(Message aMessage) {
-    super("messageFrameLabel", "mail.message");
+    super("messageFrameLabel", "message");
 
     fMessagePanel = new MessagePanel();
 

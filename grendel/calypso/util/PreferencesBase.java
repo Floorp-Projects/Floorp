@@ -15,6 +15,8 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package calypso.util;
@@ -29,48 +31,43 @@ import java.util.Properties;
 import java.util.MissingResourceException;
 import java.util.Enumeration;
 
+import grendel.util.Constants;
+
+/**
+ * Contains the File handling logic of the prefs.
+ */
+
 class PreferencesBase extends Properties implements Preferences {
 
-  static final String gPrefsPath = System.getProperties().getProperty("user.home");
-  static final String gPrefsFile = "xena.pref";
+  static final File gPrefsPath = Constants.HOMEDIR;
+  static final String gPrefsFile = "grendel.pref";
 
   PreferencesBase() {
     super();
 
-    File infile = new File(new File(gPrefsPath), gPrefsFile);
+    // create the dir if it doesn't exist
+    gPrefsPath.mkdirs();
+
+    File infile = new File(gPrefsPath, gPrefsFile);
     InputStream in = null;
     try {
       in = new FileInputStream(infile);
       load(in);
       in.close();
     } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
   void writePrefs() {
-    File outfile = new File(new File(gPrefsPath), gPrefsFile);
+    File outfile = new File(gPrefsPath, gPrefsFile);
     OutputStream out = null;
     try {
       out = new FileOutputStream(outfile);
-      save(out, "Xena User Preferences.  Do not directly modify this file!");
+      save(out, "Grendel User Preferences.  Do not directly modify this file!");
       out.close();
     } catch (IOException e) {
-    }
-  }
-
-  public void addDefaults(Properties defs) {
-    if(defs == null) {
-      return;
-    }
-
-    if(defaults == null) {
-      defaults = defs;
-      return;
-    }
-
-    for(Enumeration e = defs.keys(); e.hasMoreElements();) {
-      Object key = e.nextElement();
-      defaults.put(key, defs.get(key));
+      e.printStackTrace();
     }
   }
 

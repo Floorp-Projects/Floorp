@@ -77,9 +77,9 @@ public class Constants {
   /** Whether this is a OS/2 machine. */
   public final static boolean ISOS2 = os2;
 
-
-  /** File representing the user's home directory. */
+/** File representing the user's home directory. */
   public final static File HOMEDIR = ISUNIX ?
-  new File(System.getProperties().getProperty("user.home")) :
+  new File(System.getProperties().getProperty("user.home")+File.separator+ ".grendel") :
   new File(System.getProperties().getProperty("user.dir"));
+ 
 };

@@ -20,6 +20,7 @@
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
  *               Giao Nguyen <grail@cafebabe.org>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.ui;
@@ -44,14 +45,8 @@ public class FolderFrame extends GeneralFrame {
   static Vector fFolderFrames = new Vector();
   FolderPanel   fFolderPanel;
 
-  /**
-   * Identifying String
-   */
-
-  public static final String kID = "mail.folder";
-
   public FolderFrame(Folder aFolder) {
-    super("folderFrameLabel", kID);
+    super("folderFrameLabel", "folder");
 
     fFolderPanel = new FolderPanel();
     fFolderPanel.addFolderPanelListener(new MessageSelectionListener());

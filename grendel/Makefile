@@ -26,7 +26,6 @@ SUBDIRS=		\
 	composition	\
 	dnd		\
 	dog		\
-	filters		\
 	mime		\
 	prefs		\
 	search		\
@@ -37,11 +36,14 @@ SUBDIRS=		\
 	widgets		\
 	$(NULL)
 
+# Temporarily removed because FilterMaster is broken (edwin)
+#	filters		\
+
 SRCS=				\
 	Main.java		\
-	TestFolderViewer.java	\
 	$(NULL)
 
+#	TestFolderViewer.java	\
 #	SelfTest.java		\
 
 

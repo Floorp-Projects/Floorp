@@ -19,6 +19,7 @@
  * Created: Will Scullin <scullin@netscape.com>,  9 Oct 1997.
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.search;
@@ -53,7 +54,7 @@ public class SearchFrame extends GeneralFrame {
   JButton     fCloseButton;
 
   public SearchFrame() {
-    super("Search", "mail.search");
+    super("Search", "search");
 
     fSearchPanel = new SearchPanel(new MailSearch());
     getContentPane().add(fSearchPanel);

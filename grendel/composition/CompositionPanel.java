@@ -28,8 +28,6 @@ package grendel.composition;
 
 import calypso.util.ByteBuf;
 import calypso.util.ByteLineBuffer;
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -80,6 +78,9 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeUtility;
 import javax.mail.internet.InternetAddress;
 
+import grendel.prefs.base.GeneralPrefs;
+import grendel.prefs.base.IdentityArray;
+import grendel.prefs.base.IdentityStructure;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.ui.ActionFactory;
@@ -451,126 +452,119 @@ public class CompositionPanel extends GeneralPanel {
 
       //Check that is at least one recipient.
       if (0 < recipients.length) {
-        //get the sending identity
-        Preferences prefs = PreferencesFactory.Get();
-        int ident = mAddressBar.getOptionsPanel().getSelectedIdentity();
-	String userName = 
-	  prefs.getString("mail.identity.username." + ident,
-			  "Nobody") + " <" 	
-	  + prefs.getString("mail.identity.email." + ident,
-			    "nobody@localhost") + ">";
 
-        if (userName != null) {
-          //create a mime message
-          MimeMessage msg = new MimeMessage(mSession); // TD
+        //create a mime message
+        MimeMessage msg = new MimeMessage(mSession); // TD
+
+        try {
+          IdentityStructure ident = IdentityArray.GetMaster().get(
+                            mAddressBar.getOptionsPanel().getSelectedIdentity());
+          
+          //set who's sending this message.
+          msg.setFrom (new InternetAddress(ident.getEMail(), ident.getName()));
+
+          //add the recipients one at a time.
+          for (int i = 0; i < recipients.length; i++) {
+            javax.mail.Address[] toAddress = new InternetAddress[1];
+            toAddress[0] = new InternetAddress(recipients[i].getText());
+
+            Message.RecipientType deliverMode = Message.RecipientType.TO;
+
+            //map grendel.composition.Addressee delivery modes
+            //  into javax.mail.Message delivery modes.
+            switch (recipients[i].getDelivery()) {
+              case Addressee.TO:
+                deliverMode = Message.RecipientType.TO;
+                break;
+              case Addressee.CC:
+                deliverMode = Message.RecipientType.CC;
+                break;
+              case Addressee.BCC:
+                deliverMode = Message.RecipientType.BCC;
+                break;
+            }
+            msg.addRecipients(deliverMode, toAddress);
+          }
+
+          msg.setSubject(mSubject.getText());        //set subject from text
+                                                     //field.
+          msg.setHeader("X-Mailer", "Grendel [development version]");
+                                                     //and proud of it! 
+          msg.setSentDate(new java.util.Date());     //set date to now.
+
+          String [] attachments = mAttachmentsList.getAttachments();
+          if (attachments.length == 0) {
+            msg.setContent(messageText, "text/plain"); //contents.
+          } else {
+            MimeMultipart multi = new MimeMultipart();
+              
+            MimeBodyPart mainText = new MimeBodyPart();
+            mainText.setText(messageText);
+            multi.addBodyPart(mainText);
+
+            for (int i = 0; i < attachments.length; ++i) {
+              try {
+                File f = new File(attachments[i]);
+                int len = (int) f.length();
+                String mimeString =
+                  FileTypeMap.getDefaultFileTypeMap().getContentType(f);
+                MimeType mimeType = new MimeType(mimeString);
+
+                byte [] bs = new byte[len];
+                FileInputStream fis = new FileInputStream(f);
+                DataInputStream dis = new DataInputStream(fis);
+                dis.readFully(bs);
+                dis.close();
+                fis.close();
+
+                MimeBodyPart att = new MimeBodyPart();
+                String encName = "7bit";
+                if (mimeType.getPrimaryType().equalsIgnoreCase("text")) {
+                  if (!isCleanText(bs)) {
+                    encName = "quoted-printable";
+                  }
+                } else {
+                  encName = "base64";
+                }
+
+                att.setText(new String(bs)); 
+                att.setHeader("Content-Type", mimeString);
+                att.setHeader("Content-Transfer-Encoding", encName);
+                att.setFileName(new File(attachments[i]).getName());
+                att.setDisposition("Attachment");
+                multi.addBodyPart(att);
+              } catch (Exception e) {
+                // Could be IOException or MessagingException.  For now...
+                e.printStackTrace();
+              }
+            }
+
+            msg.setContent(multi);
+          }
 
           try {
-            //set who's sending this message.
-            msg.setFrom (new InternetAddress(userName));
-
-            //add the recipients one at a time.
-            for (int i = 0; i < recipients.length; i++) {
-              javax.mail.Address[] toAddress = new InternetAddress[1];
-              toAddress[0] = new InternetAddress(recipients[i].getText());
-
-              Message.RecipientType deliverMode = Message.RecipientType.TO;
-
-              //map grendel.composition.Addressee delivery modes
-              //  into javax.mail.Message delivery modes.
-              switch (recipients[i].getDelivery()) {
-                case Addressee.TO:
-                  deliverMode = Message.RecipientType.TO;
-                  break;
-                case Addressee.CC:
-                  deliverMode = Message.RecipientType.CC;
-                  break;
-                case Addressee.BCC:
-                  deliverMode = Message.RecipientType.BCC;
-                  break;
-              }
-              msg.addRecipients(deliverMode, toAddress);
-            }
-
-            msg.setSubject(mSubject.getText());        //set subject from text
-                                                       //field.
-            msg.setHeader("X-Mailer", "Grendel [development version]");
-                                                       //and proud of it! 
-            msg.setSentDate(new java.util.Date());     //set date to now.
-
-            String [] attachments = mAttachmentsList.getAttachments();
-            if (attachments.length == 0) {
-              msg.setContent(messageText, "text/plain"); //contents.
-            } else {
-              MimeMultipart multi = new MimeMultipart();
-              
-              MimeBodyPart mainText = new MimeBodyPart();
-              mainText.setText(messageText);
-              multi.addBodyPart(mainText);
-
-              for (int i = 0; i < attachments.length; ++i) {
-                try {
-                  File f = new File(attachments[i]);
-                  int len = (int) f.length();
-                  String mimeString =
-                    FileTypeMap.getDefaultFileTypeMap().getContentType(f);
-                  MimeType mimeType = new MimeType(mimeString);
-
-                  byte [] bs = new byte[len];
-                  FileInputStream fis = new FileInputStream(f);
-                  DataInputStream dis = new DataInputStream(fis);
-                  dis.readFully(bs);
-                  dis.close();
-                  fis.close();
-
-                  MimeBodyPart att = new MimeBodyPart();
-                  String encName = "7bit";
-                  if (mimeType.getPrimaryType().equalsIgnoreCase("text")) {
-                    if (!isCleanText(bs)) {
-                      encName = "quoted-printable";
-                    }
-                  } else {
-                    encName = "base64";
-                  }
-
-                  att.setText(new String(bs)); 
-                  att.setHeader("Content-Type", mimeString);
-                  att.setHeader("Content-Transfer-Encoding", encName);
-                  att.setFileName(new File(attachments[i]).getName());
-                  att.setDisposition("Attachment");
-                  multi.addBodyPart(att);
-                } catch (Exception e) {
-                  // Could be IOException or MessagingException.  For now...
-                  e.printStackTrace();
-                }
-              }
-
-              msg.setContent(multi);
-            }
-
-            try {
-              Properties props = mSession.getProperties();
-              props.put("mail.host", prefs.getString("mail.identity.smtphost." + ident, "localhost"));
-              Session newSession = Session.getInstance(props,null);
-              newSession.getTransport("smtp").send(msg);       // send the message.
-            } catch (MessagingException exc) {
-              exc.printStackTrace();
-            }
-                    
-            success = true;
-          } catch (javax.mail.SendFailedException sex) {
-            sex.printStackTrace();
-            Address addr[] = sex.getInvalidAddresses();
-            if (addr != null) {
-              System.err.println("Addresses: ");
-              for (int i = 0; i < addr.length; i++) {
-                System.err.println("  " + addr[i].toString());
-              }
-            }
-          } catch (MessagingException mex) {
-            mex.printStackTrace();
+            Properties props = mSession.getProperties();
+            props.put("mail.host", GeneralPrefs.GetMaster().getSMTPServer());
+            Session newSession = Session.getInstance(props,null);
+            newSession.getTransport("smtp").send(msg);       // send the message.
+          } catch (MessagingException exc) {
+            exc.printStackTrace();
           }
-        }  else {
-          System.err.println("user.email_address undefined");
+                  
+          success = true;
+        } catch (javax.mail.SendFailedException sex) {
+          sex.printStackTrace();
+          Address addr[] = sex.getInvalidAddresses();
+          if (addr != null) {
+            System.err.println("Addresses: ");
+            for (int i = 0; i < addr.length; i++) {
+              System.err.println("  " + addr[i].toString());
+            }
+          }
+        } catch (MessagingException mex) {
+          mex.printStackTrace();
+        } catch (UnsupportedEncodingException uee) {
+          uee.printStackTrace();
         }
       }
 
@@ -772,17 +766,14 @@ public class CompositionPanel extends GeneralPanel {
     }
     public void actionPerformed(ActionEvent event) {
 
-      int ident = mAddressBar.getOptionsPanel().getSelectedIdentity();
-      Preferences prefs = PreferencesFactory.Get();
-      String sigFileName = prefs.getString("mail.identity.signature." + ident, "");
-
       Document doc = mEditor.getDocument();
       int oldPosition = mEditor.getCaretPosition();
       
-      for (int i=0; i<doc.getLength()-3;i++) {
+      //remove the old signature
+      for (int i=0; i<doc.getLength()-4;i++) {
         try {
           if (doc.getText(i,1).equals("\n")) {
-            if (doc.getText(i+1,3).equals("-- ")) {
+            if (doc.getText(i+1,4).equals("-- \n")) {
               doc.remove(i, doc.getLength()-i);
             }
           }
@@ -791,28 +782,23 @@ public class CompositionPanel extends GeneralPanel {
         }
       }
       
+      //the signature will be added at the end
       int position = doc.getEndPosition().getOffset() - 1;
       
-      try {
-        BufferedReader sigReader = new BufferedReader(new FileReader(sigFileName));
+      //compose the string including the separator
+      String s = "\n-- \n";
+      int ident = mAddressBar.getOptionsPanel().getSelectedIdentity();
+      s = s + IdentityArray.GetMaster().get(ident).getSignature();
 
-        String s = "\n-- ";
-        while (s != null) {
-          s = s + "\n";
+      //if a signature was specified, add it now
+      if (s.length()>5) {
+        try {
           doc.insertString(position, s, null);
-          position += s.length();
-      	  s = sigReader.readLine();
+        } catch (BadLocationException ble) {
+          ble.printStackTrace();
         }
-      } catch (FileNotFoundException fnfe) {
-        //this can mean two things: either there's no signature specified
-        //or the file is missing. I the last case we should do
-        //something sensible.
-      } catch (IOException ioe) {
-        ioe.printStackTrace();
-      } catch (BadLocationException ble) {
-        ble.printStackTrace();
       }
-      
+            
       mEditor.setCaretPosition(oldPosition);
       
     }

@@ -15,6 +15,8 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package calypso.util;
@@ -26,10 +28,6 @@ import java.util.Properties;
     @see PreferencesFactory */
 
 public interface Preferences {
-  /** Add a table of default values.  You must add defaults for each
-      preference you use. */
-  void addDefaults(Properties defs);
-
   /** Given a name of a preference, return its value as a String.  If it's not
       defined, return the given default. */
   String getString(String prefname, String defaultValue);

@@ -21,6 +21,7 @@
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
  *               Giao Nguyen <grail@cafebabe.org>
  *               Mauro Botelho <mabotelh@bellsouth.net>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.ui;
@@ -84,9 +85,7 @@ import javax.swing.BoxLayout;
 //import xml.tree.TreeBuilder;
 //import xml.tree.XMLNode;
 
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
-
+import grendel.prefs.base.InvisiblePrefs;
 import grendel.ui.ToolBarLayout;
 import grendel.widgets.*;
 
@@ -318,13 +317,7 @@ public class GeneralFrame extends JFrame
   }
 
   private void saveBounds(String aName) {
-    Preferences prefs = PreferencesFactory.Get();
-    Rectangle bounds = getBounds();
-
-    prefs.putInt(aName + ".x", bounds.x);
-    prefs.putInt(aName + ".y", bounds.y);
-    prefs.putInt(aName + ".width", bounds.width);
-    prefs.putInt(aName + ".height", bounds.height);
+    InvisiblePrefs.GetMaster().setBounds(aName, getBounds());
   }
 
   protected void saveBounds() {
@@ -332,15 +325,7 @@ public class GeneralFrame extends JFrame
   }
 
   private void restoreBounds(String aName, int aWidth, int aHeight) {
-    Preferences prefs = PreferencesFactory.Get();
-    int x, y, w, h;
-
-    x = prefs.getInt(aName + ".x", 100);
-    y = prefs.getInt(aName + ".y", 100);
-    w = prefs.getInt(aName + ".width", aWidth);
-    h = prefs.getInt(aName + ".height", aHeight);
-
-    setBounds(x, y, w, h);
+    setBounds(InvisiblePrefs.GetMaster().getBounds(aName, aWidth, aHeight));
   }
 
   protected void restoreBounds(int aWidth, int aHeight) {

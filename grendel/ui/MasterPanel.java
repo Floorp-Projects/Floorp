@@ -63,9 +63,6 @@ import javax.swing.event.ChangeListener;
 
 import calypso.util.ArrayEnumeration;
 import calypso.util.Assert;
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
-
 //import netscape.orion.toolbars.NSToolbar;
 //import netscape.orion.uimanager.AbstractUICmd;
 //import netscape.orion.uimanager.IUICmd;
@@ -76,6 +73,8 @@ import javax.mail.Session;
 import javax.mail.Store;
 
 import grendel.composition.Composition;
+import grendel.prefs.base.InvisiblePrefs;
+import grendel.prefs.base.ServerArray;
 import grendel.storage.FolderExtraFactory;
 import grendel.storage.SearchResultsFolderFactory;
 import grendel.ui.UIAction;
@@ -161,8 +160,7 @@ public class MasterPanel extends GeneralPanel {
     column.setCellRenderer(renderer);
     fFolderTree.addColumn(column);
 
-    Preferences prefs = PreferencesFactory.Get();
-    fFolderTree.getColumnModel().setPrefString(prefs.getString("mail.master_panel.column_layout", ""));
+    fFolderTree.getColumnModel().setPrefString(InvisiblePrefs.GetMaster().getMasterPanelColumnLayout());
 
     registerKeyboardAction(new CopyToClipboardAction(),
                            KeyStroke.getKeyStroke(KeyEvent.VK_C,
@@ -215,9 +213,8 @@ public class MasterPanel extends GeneralPanel {
   }
 
   public void dispose() {
-    Preferences prefs = PreferencesFactory.Get();
-    prefs.putString("mail.master_panel.column_layout",
-                    fFolderTree.getColumnModel().getPrefString());
+    InvisiblePrefs.GetMaster().setMasterPanelColumnLayout(fFolderTree.getColumnModel().getPrefString());
+    InvisiblePrefs.GetMaster().writePrefs();
 
     fFolderTree.getSelectionManager().removeSelectionListener(fSelectionListener);
     StoreFactory.Instance().removeChangeListener(fStoreChangeListener);
@@ -384,17 +381,10 @@ public class MasterPanel extends GeneralPanel {
 
       int identity;
       try {
-        Preferences prefs = PreferencesFactory.Get();
-        InetAddress ia = InetAddress.getByName(getSelectedViewedFolder().getViewedStore().getHost());
-        String fPrefBase = "mail." + getSelectedViewedFolder().getViewedStore().getProtocol()
-                    + "-" + ia.getHostName();
-        System.out.println("fPrefBase");
-        identity = prefs.getInt(fPrefBase + ".default-identity", 0);
-      } catch (NullPointerException npe) {
-      	identity = 0;
-      } catch (UnknownHostException uhe) {
-      	uhe.printStackTrace();
-      	identity = 0;
+        int index = getSelectedViewedFolder().getViewedStore().getID();
+        identity = ServerArray.GetMaster().get(index).getDefaultIdentity();
+      } catch (NullPointerException e) {
+        identity = 0;
       }
 
       ActionFactory.setIdent(identity);
@@ -671,13 +661,7 @@ class FolderModel implements TreeTableDataModel {
 
     if (aNode instanceof ViewedStore) {
       if (aID == MasterPanel.kNameID) {
-        String host = ((ViewedStore) aNode).getHost();
-        if (host != null) {
-          return MessageFormat.format(fLabels.getString("remoteStoreLabel"),
-                                                        new Object[] {host});
-        } else {
-          return fLabels.getString("localStoreLabel");
-        }
+        return ((ViewedStore) aNode).getDescription();
       }
       return "";
     }
@@ -812,22 +796,6 @@ class FolderModel implements TreeTableDataModel {
       }
     }
     return new TreePath(pathVector);
-  }
-
-  TreePath createTreePath(Folder aFolder) {
-    ViewedStore store =
-      StoreFactory.Instance().getViewedStore(aFolder.getStore());
-    if (store != null) {
-      try {
-        ViewedFolder folder = store.getViewedFolder(aFolder);
-        if (folder != null) {
-          return createTreePath(folder);
-        }
-      } catch (MessagingException e) {
-        e.printStackTrace();
-      }
-    }
-    return null;
   }
 
   void updateFolder(ViewedFolder aFolder) {

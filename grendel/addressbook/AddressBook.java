@@ -253,7 +253,7 @@ public class AddressBook extends GeneralFrame {
    *
    */
   public AddressBook() {
-    super("Address Book","0");
+    super("Address Book","addressbook");
 
     // Setting the default values to the variables
     mSortAscending = true;

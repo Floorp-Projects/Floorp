@@ -22,6 +22,8 @@
  *               Edwin Woudt <edwin@woudt.nl>
  */
 
+//### Warning, this code is obsolete now because of prefs changes
+
 package grendel.ui;
 
 import java.awt.Canvas;
@@ -70,6 +72,7 @@ public class DialogAuthenticator extends Authenticator {
     InetAddress site = getRequestingSite();
     String protocol = getRequestingProtocol();
 
+    //### Warning, this code is obsolete now because of prefs changes
     fPrefBase = "mail." + protocol + "-" + site.getHostName();
 
     String user = null;

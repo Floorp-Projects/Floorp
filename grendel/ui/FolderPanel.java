@@ -60,14 +60,12 @@ import javax.swing.ToolTipManager;
 import javax.swing.event.ChangeEvent;
 //import javax.swing.plaf.BorderUIResource;
 
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
-
 //import netscape.orion.toolbars.NSToolbar;
 //import netscape.orion.uimanager.AbstractUICmd;
 //import netscape.orion.uimanager.IUICmd;
 
 import grendel.composition.Composition;
+import grendel.prefs.base.InvisiblePrefs;
 import grendel.storage.MessageExtra;
 import grendel.storage.MessageExtraFactory;
 import grendel.ui.UIAction;
@@ -341,8 +339,7 @@ public class FolderPanel extends GeneralPanel {
     column.setCellRenderer(cellrenderer);
     fMessageTree.addColumn(column);
 
-    Preferences prefs = PreferencesFactory.Get();
-    fColumnModel.setPrefString(prefs.getString("mail.folder_panel.column_layout", ""));
+    fColumnModel.setPrefString(InvisiblePrefs.GetMaster().getFolderPanelColumnLayout());
 
     // Setup keys
     registerKeyboardAction(new DeleteMessageAction(),
@@ -374,9 +371,8 @@ public class FolderPanel extends GeneralPanel {
   public void dispose() {
     setFolder(null);
 
-    Preferences prefs = PreferencesFactory.Get();
-    prefs.putString("mail.folder_panel.column_layout",
-                    fColumnModel.getPrefString());
+    InvisiblePrefs.GetMaster().setFolderPanelColumnLayout(fColumnModel.getPrefString());
+    InvisiblePrefs.GetMaster().writePrefs();
 
     fMessageTree.getSelectionManager().removeSelectionListener(fSelectionListener);
   }

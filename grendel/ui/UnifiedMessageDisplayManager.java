@@ -41,9 +41,6 @@ import javax.swing.JToolBar;
 import javax.swing.JSplitPane;
 import javax.swing.event.ChangeEvent;
 
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
-
 //import netscape.orion.toolbars.NSToolbar;
 //import netscape.orion.toolbars.ToolbarFactory;
 //import netscape.orion.toolbars.ToolBarLayout;
@@ -55,8 +52,9 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
+import grendel.prefs.base.InvisiblePrefs;
+import grendel.prefs.base.UIPrefs;
 import grendel.ui.UIAction;
-
 import grendel.view.ViewedMessage;
 import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
@@ -161,7 +159,7 @@ class UnifiedMessageFrame extends GeneralFrame {
   boolean relayout = false;
 
   public UnifiedMessageFrame() {
-    super("appNameLabel", "mail.multi_pane");
+    super("appNameLabel", "multipane");
 
     PrefsDialog.CheckPrefs(this);
 
@@ -183,10 +181,7 @@ class UnifiedMessageFrame extends GeneralFrame {
     fThreads.addFolderPanelListener(listener);
     fMessage.addMessagePanelListener(listener);
 
-    Preferences prefs = PreferencesFactory.Get();
-    String layout = prefs.getString("mail.multi_pane.layout",
-                                    UnifiedMessageDisplayManager.SPLIT_TOP);
-
+    String layout = UIPrefs.GetMaster().getMultiPaneLayout();
 
     layoutPanels(layout);
 
@@ -230,18 +225,13 @@ class UnifiedMessageFrame extends GeneralFrame {
       fLayout = UnifiedMessageDisplayManager.SPLIT_TOP;
     }
 
-    Preferences prefs = PreferencesFactory.Get();
-
-    prefs.putString("mail.multi_pane.folder_x",
-		    Integer.toString(fFolders.getSize().width));
-    prefs.putString("mail.multi_pane.folder_y",
-		    Integer.toString(fFolders.getSize().height));
-    prefs.putString("mail.multi_pane.thread_x",
-		    Integer.toString(fThreads.getSize().width));
-    prefs.putString("mail.multi_pane.thread_y",
-		    Integer.toString(fThreads.getSize().height));
-    prefs.putString("mail.multi_pane.layout",
-                    fLayout);
+    InvisiblePrefs.GetMaster().setMultiPaneSizes(
+      fFolders.getSize().width, fFolders.getSize().height,
+      fThreads.getSize().width, fThreads.getSize().height
+    );
+    
+    UIPrefs.GetMaster().setMultiPaneLayout(fLayout);
+    UIPrefs.GetMaster().writePrefs();
 
     fFolders.dispose();
     fThreads.dispose();
@@ -275,23 +265,15 @@ class UnifiedMessageFrame extends GeneralFrame {
 
 
     if (relayout == false) {
-      Preferences prefs = PreferencesFactory.Get();
+      InvisiblePrefs prefs = InvisiblePrefs.GetMaster();
 
       // read dimensions out of preferences
       try {
         int tx, ty, fx, fy; // temporary dimensions
-        fx = 
-          Integer.parseInt(prefs.getString("mail.multi_pane.folder_x", 
-                                           Integer.toString(folderX)));
-        fy =
-          Integer.parseInt(prefs.getString("mail.multi_pane.folder_y",
-                                           Integer.toString(folderY)));
-        tx = 
-          Integer.parseInt(prefs.getString("mail.multi_pane.thread_x",
-                                           Integer.toString(threadX)));
-        ty =
-          Integer.parseInt(prefs.getString("mail.multi_pane.thread_y",
-                                           Integer.toString(threadY)));
+        fx = prefs.getMultiPaneFolderX(folderX);
+        fy = prefs.getMultiPaneFolderY(folderY);
+        tx = prefs.getMultiPaneThreadX(threadX);
+        ty = prefs.getMultiPaneThreadY(threadY);
         folderX = fx;
         folderY = fy;
         threadX = tx;
@@ -378,6 +360,10 @@ class UnifiedMessageFrame extends GeneralFrame {
                        ActionFactory.GetSearchAction(),
                        ActionFactory.GetRunFiltersAction(),
                        ActionFactory.GetShowTooltipsAction(),
+                       ActionFactory.GetRunIdentityPrefsAction(),
+                       ActionFactory.GetRunServerPrefsAction(),
+                       ActionFactory.GetRunGeneralPrefsAction(),
+                       ActionFactory.GetRunUIPrefsAction(),
                        fSplitLeftLayoutAction,
                        fSplitRightLayoutAction,
                        fSplitTopLayoutAction,

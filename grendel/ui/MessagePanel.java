@@ -19,6 +19,7 @@
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.ui;
@@ -76,8 +77,6 @@ import calypso.net.URLSource;
 */
 
 import calypso.util.ByteBuf;
-import calypso.util.Preferences;
-import calypso.util.PreferencesFactory;
 
 //import netscape.orion.uimanager.IUICmd;
 
@@ -108,10 +107,8 @@ public class MessagePanel extends GeneralPanel {
   public MessagePanel() {
     fPanel = this;
 
-    Preferences prefs = PreferencesFactory.Get();
-    //    useMagellan = prefs.getBoolean("usemagellan", true);
     useMagellan = false;
-    makeRealHTML = prefs.getBoolean("makerealhtml", true);
+    makeRealHTML = true;
 
     if (useMagellan) {
       //    fViewer = (URLComponent) URLComponentFactory.NewURLComponent(null);

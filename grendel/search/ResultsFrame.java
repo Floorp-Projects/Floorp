@@ -17,6 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 18 Nov 1997.
+ *
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.search;
@@ -28,7 +30,7 @@ import grendel.ui.GeneralFrame;
 public class ResultsFrame extends GeneralFrame {
 
   public ResultsFrame(Component aComponent) {
-    super("Search Results", "mail.search_results");
+    super("Search Results", "searchresults");
     fPanel.add(aComponent);
 
     restoreBounds();

@@ -73,7 +73,7 @@ public class Composition extends GeneralFrame {
      *
      */
     public Composition() {
-        super("Composition", "mail.composition");
+        super("Composition", "composition");
         fResourceBase = "grendel.composition";
         Box mBox = Box.createVerticalBox();
 
