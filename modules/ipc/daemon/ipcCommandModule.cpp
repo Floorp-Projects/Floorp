@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdlib.h>
 #include <string.h>
 #include "ipcLog.h"
 #include "ipcCommandModule.h"
@@ -46,6 +47,52 @@
 #include "ipcm.h"
 
 typedef void (* ipcmMsgHandler)(ipcClient *, const ipcMessage *);
+
+//
+// helpers
+//
+
+static char **
+ipcm_BuildStringArray(const ipcStringNode *nodes)
+{
+    size_t count = 0;
+
+    const ipcStringNode *node;
+    
+    for (node = nodes; node; node = node->mNext)
+        count++;
+
+    char **strs = (char **) calloc(count + 1, sizeof(char *));
+    if (!strs)
+        return NULL;
+
+    count = 0;
+    for (node = nodes; node; node = node->mNext, ++count)
+        strs[count] = (char *) node->Value();
+
+    return strs;
+}
+
+static nsID **
+ipcm_BuildIDArray(const ipcIDNode *nodes)
+{
+    size_t count = 0;
+
+    const ipcIDNode *node;
+    
+    for (node = nodes; node; node = node->mNext)
+        count++;
+
+    nsID **ids = (nsID **) calloc(count + 1, sizeof(nsID *));
+    if (!ids)
+        return NULL;
+
+    count = 0;
+    for (node = nodes; node; node = node->mNext, ++count)
+        ids[count] = (nsID *) &node->Value();
+
+    return ids;
+}
 
 //
 // message handlers
@@ -130,6 +177,28 @@ ipcm_OnQueryClientByName(ipcClient *client, const ipcMessage *rawMsg)
 }
 
 static void
+ipcm_OnQueryClientInfo(ipcClient *client, const ipcMessage *rawMsg)
+{
+    LOG(("got QUERY_CLIENT_INFO\n"));
+
+    ipcMessageCast<ipcmMessageQueryClientInfo> msg(rawMsg);
+    ipcClient *result = IPC_GetClientByID(msg->ClientID());
+    if (result) {
+        char **names = ipcm_BuildStringArray(result->Names());
+        nsID **targets = ipcm_BuildIDArray(result->Targets());
+        IPC_SendMsg(client, new ipcmMessageClientInfo(result->ID(),
+                                                      (const char **) names,
+                                                      (const nsID **)targets));
+        free(names);
+        free(targets);
+    }
+    else {
+        LOG(("  client does not exist\n"));
+        IPC_SendMsg(client, new ipcmMessageError(IPCM_ERROR_CLIENT_NOT_FOUND));
+    }
+}
+
+static void
 ipcm_OnForward(ipcClient *client, const ipcMessage *rawMsg)
 {
     LOG(("got FORWARD\n"));
@@ -162,7 +231,7 @@ IPCM_HandleMsg(ipcClient *client, const ipcMessage *rawMsg)
         ipcm_OnClientAddTarget,
         ipcm_OnClientDelTarget,
         ipcm_OnQueryClientByName,
-        NULL, // QUERY_CLIENT_INFO
+        ipcm_OnQueryClientInfo,
         ipcm_OnForward,
     };
 

@@ -100,18 +100,24 @@ interface ipcIService : nsISupports
     void removeClientName(in ACString aName);
 
     /**
-     * query info about a particular client given its client name.
+     * query info about a particular client given its client name. the
+     * observer's onClientInfo method is called with the result of the lookup,
+     * or if there is no client matching the given name, the observer's
+     * onClientDown method will be called instead.
      *
-     * @param aNameOrAlias  name or alias of the client being queried.
-     * @param aObserver     client observer to be notified.
+     * @param aName      name or alias of the client being queried.
+     * @param aObserver  client observer to be notified.
      *
      * @return integer token identifying this request.
      */
-    unsigned long queryClientByName(in ACString           aNameOrAlias,
+    unsigned long queryClientByName(in ACString           aName,
                                     in ipcIClientObserver aObserver);
 
     /**
-     * query info about a particular client given its client ID.
+     * query info about a particular client given its client ID. the observer's
+     * onClientInfo method is called with the result of the lookup, or if there
+     * is no client matching the given name, the observer's onClientDown method
+     * will be called instead.
      *
      * @return integer token identifying this request.
      */
@@ -119,14 +125,13 @@ interface ipcIService : nsISupports
                                   in ipcIClientObserver aObserver);
 
     /**
-     * set client observer.  observer is notified whenever the status of
-     * a client changes.
+     * set client observer.  observer's onClientUp method is called whenever 
+     * a new client comes online, and the observer's onClientDown method is
+     * called whenever a client goes offline.
      *
-     * @param aClientID  the ID of the client to observe.
      * @param aObserver  the client observer.
      */
-    void setClientObserver(in unsigned long aClientID,
-                           in ipcIClientObserver aObserver);
+    void setClientObserver(in ipcIClientObserver aObserver);
 
     /**
      * set a message observer for a particular message target.
@@ -176,38 +181,23 @@ interface ipcIMessageObserver : nsISupports
                             in unsigned long aDataLen);
 };
 
-[scriptable, uuid(e858d450-62b2-482d-99bb-3b5425aa28cc)]
-interface ipcIClientInfo : nsISupports
-{
-    readonly attribute unsigned long ID;
-    readonly attribute ACString name;
-    readonly attribute nsISimpleEnumerator aliases;
-    readonly attribute nsISimpleEnumerator targets;
-};
-
 [scriptable, uuid(42283079-030c-4b13-b069-a08b7ad5eab2)]
 interface ipcIClientObserver : nsISupports
 {
-    /**
-     * client status values
-     */
-    const unsigned long CLIENT_UP   = 1;
-    const unsigned long CLIENT_DOWN = 2;
+    void onClientUp   (in unsigned long aReqToken,
+                       in unsigned long aClientID);
 
-    /**
-     * @param aRequestToken  the request token returned from the call that
-     *                       initiated this observation.  0 if initiated
-     *                       from a setClientObserver call.
-     * @param aClientInfo    client info.
-     * @param aStatus        client status (e.g. CLIENT_UP).
-     */
-    void onClientStatus(in unsigned long  aRequestToken,
-                        in unsigned long  aClientStatus,
-                        in unsigned long  aClientID,
-                        in ipcIClientInfo aClientInfo);
+    void onClientDown (in unsigned long aReqToken,
+                       in unsigned long aClientID);
 
-    // XXX do we care about changes to the aliases and targets supported
-    //     by a client?  if so, how should we pass this information up?
+    void onClientInfo (in unsigned long aReqToken,
+                       in unsigned long aClientID,
+                       [array, size_is(aNameCount)]
+                       in string        aClientNames,
+                       in unsigned long aNameCount,
+                       [array, const, size_is(aTargetCount)]
+                       in nsIDPtr       aClientTargets,
+                       in unsigned long aTargetCount);
 };
 
 %{C++

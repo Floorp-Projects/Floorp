@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsString.h"
+#include "prmem.h"
 
 static const nsID kTestTargetID =
 { /* e628fc6e-a6a7-48c7-adba-f241d1128fb8 */
@@ -112,20 +113,43 @@ public:
 NS_IMPL_ISUPPORTS1(myIpcClientObserver, ipcIClientObserver)
 
 NS_IMETHODIMP
-myIpcClientObserver::OnClientStatus(PRUint32 aReqToken,
-                                    PRUint32 aStatus,
-                                    PRUint32 aClientID,
-                                    ipcIClientInfo *aClientInfo)
+myIpcClientObserver::OnClientUp(PRUint32 aReqToken,
+                                PRUint32 aClientID)
 {
-    printf("*** got client status [token=%u status=%u info=%p]\n",
-            aReqToken, aStatus, (void *) aClientInfo);
+    printf("*** got client up [token=%u clientID=%u]\n", aReqToken, aClientID);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+myIpcClientObserver::OnClientDown(PRUint32 aReqToken,
+                                  PRUint32 aClientID)
+{
+    printf("*** got client down [token=%u clientID=%u]\n", aReqToken, aClientID);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+myIpcClientObserver::OnClientInfo(PRUint32 aReqToken,
+                                  PRUint32 aClientID,
+                                  const char **aNames,
+                                  PRUint32 aNameCount,
+                                  const nsID **aTargets,
+                                  PRUint32 aTargetCount)
+{
+    printf("*** got client info [token=%u clientID=%u]\n", aReqToken, aClientID);
+
+    PRUint32 i;
+    printf("***  names:\n");
+    for (i = 0; i < aNameCount; ++i)
+        printf("***    %d={%s}\n", i, aNames[i]);
+    printf("***  targets:\n");
+    for (i = 0; i < aTargetCount; ++i) {
+        char *str = aTargets[i]->ToString();
+        printf("***    %d=%s\n", i, str);
+        PR_Free(str);
+    }
 
     if (aClientID != 0) {
-        if (aClientInfo) {
-            nsCAutoString cName;
-            if (NS_SUCCEEDED(aClientInfo->GetName(cName)))
-                printf("***   name:%s --> ID:%u\n", cName.get(), aClientID);
-        }
         const char hello[] = "hello friend!";
         SendMsg(gIpcServ, aClientID, kTestTargetID, hello, sizeof(hello));
     }
