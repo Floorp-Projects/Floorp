@@ -311,8 +311,51 @@ nsHttpAuthIdentity::Equals(const nsHttpAuthIdentity &ident) const
 
 nsHttpAuthEntry::~nsHttpAuthEntry()
 {
-    if (mPath)
-        free(mPath);
+    if (mRealm)
+        free(mRealm);
+
+    while (mRoot) {
+        nsHttpAuthPath *ap = mRoot;
+        mRoot = mRoot->mNext;
+        free(ap);
+    }
+}
+
+nsresult
+nsHttpAuthEntry::AddPath(const char *aPath)
+{
+    // null path matches empty path
+    if (!aPath)
+        aPath = "";
+
+    nsHttpAuthPath *tempPtr = mRoot;
+    while (tempPtr) {
+        const char *curpath = tempPtr->mPath;
+        if (strncmp(aPath, curpath, nsCRT::strlen(curpath)) == 0)
+            return NS_OK; // subpath already exists in the list
+
+        tempPtr = tempPtr->mNext;
+
+    }
+    
+    //Append the aPath
+    nsHttpAuthPath *newAuthPath;
+    int newpathLen = nsCRT::strlen(aPath);
+    newAuthPath = (nsHttpAuthPath *) malloc(sizeof(nsHttpAuthPath) + newpathLen);
+    if (!newAuthPath)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    memcpy(newAuthPath->mPath, aPath, newpathLen+1);
+    newAuthPath->mNext = nsnull;
+
+    if (!mRoot)
+        mRoot = newAuthPath; //first entry
+    else
+        mTail->mNext = newAuthPath; // Append newAuthPath
+
+    //update the tail pointer.
+    mTail = newAuthPath;
+    return NS_OK;
 }
 
 nsresult
@@ -323,23 +366,17 @@ nsHttpAuthEntry::Set(const char *path,
                      const nsHttpAuthIdentity &ident,
                      nsISupports *metadata)
 {
-    char *newPath, *newRealm, *newCreds, *newChall;
+    char *newRealm, *newCreds, *newChall;
 
-    int pathLen  = path  ? nsCRT::strlen(path)  : 0;
     int realmLen = realm ? nsCRT::strlen(realm) : 0;
     int credsLen = creds ? nsCRT::strlen(creds) : 0;
     int challLen = chall ? nsCRT::strlen(chall) : 0;
 
-    int len = pathLen + 1 + realmLen + 1 + credsLen + 1 + challLen + 1;
-    newPath = (char *) malloc(len);
-    if (!newPath)
+    int len = realmLen + 1 + credsLen + 1 + challLen + 1;
+    newRealm = (char *) malloc(len);
+    if (!newRealm)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (path)
-        memcpy(newPath, path, pathLen);
-    newPath[pathLen] = 0;
-
-    newRealm = &newPath[pathLen + 1];
     if (realm)
         memcpy(newRealm, realm, realmLen);
     newRealm[realmLen] = 0;
@@ -356,19 +393,26 @@ nsHttpAuthEntry::Set(const char *path,
 
     nsresult rv = mIdent.Set(ident);
     if (NS_FAILED(rv)) {
-        free(newPath);
+        free(newRealm);
+        return rv;
+    }
+
+    rv = AddPath(path);
+    if (NS_FAILED(rv)) {
+        free(newRealm);
         return rv;
     }
 
     // wait until the end to clear member vars in case input params
     // reference our members!
-    if (mPath)
-        free(mPath);
-    mPath = newPath;
+    if (mRealm)
+        free(mRealm);
+
     mRealm = newRealm;
     mCreds = newCreds;
     mChallenge = newChall;
     mMetaData = metadata;
+
     return NS_OK;
 }
 
@@ -405,15 +449,20 @@ nsHttpAuthNode::LookupEntryByPath(const char *path)
     // directory of an existing entry.
     for (PRInt32 i=0; i<mList.Count(); ++i) {
         entry = (nsHttpAuthEntry *) mList[i];
-        const char *entryPath = entry->Path();
-        // proxy auth entries have no path, so require exact match on
-        // empty path string.
-        if (entryPath[0] == '\0') {
-            if (path[0] == '\0')
+        nsHttpAuthPath *authPath = entry->RootPath();
+        while (authPath) {
+            const char *entryPath = authPath->mPath;
+            // proxy auth entries have no path, so require exact match on
+            // empty path string.
+            if (entryPath[0] == '\0') {
+                if (path[0] == '\0')
+                    return entry;
+            }
+            else if (strncmp(path, entryPath, nsCRT::strlen(entryPath)) == 0)
                 return entry;
+
+            authPath = authPath->mNext;
         }
-        else if (strncmp(path, entryPath, strlen(entryPath)) == 0)
-            return entry;
     }
     return nsnull;
 }
@@ -455,13 +504,6 @@ nsHttpAuthNode::SetAuthEntry(const char *path,
     }
     else {
         // update the entry...
-        if (path) {
-            // we should hold onto the top-most of the two path
-            PRUint32 len1 = strlen(path);
-            PRUint32 len2 = strlen(entry->Path());
-            if (len1 >= len2)
-                path = entry->Path(); // keep the old path
-        }
         entry->Set(path, realm, creds, challenge, ident, metadata);
     }
 

@@ -2017,7 +2017,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
                 if (entry->Creds()[0] != '\0') {
                     LOG(("    using cached credentials!\n"));
                     creds.Assign(entry->Creds());
-                    return NS_OK;
+                    return entry->AddPath(path.get());
                 }
             }
         }
