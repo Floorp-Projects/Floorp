@@ -41,6 +41,7 @@ public:
 
   // Alphabetical list of html attribute atoms
   static nsIAtom* a;
+  static nsIAtom* abbr;
   static nsIAtom* above;
   static nsIAtom* accept;
   static nsIAtom* acceptcharset;
@@ -52,6 +53,7 @@ public:
   static nsIAtom* alt;
   static nsIAtom* applet;
   static nsIAtom* archive;
+  static nsIAtom* axis;
 
   static nsIAtom* background;
   static nsIAtom* below;
@@ -64,8 +66,10 @@ public:
 
   static nsIAtom* cellpadding;
   static nsIAtom* cellspacing;
+  static nsIAtom* ch;
   static nsIAtom* charset;
   static nsIAtom* checked;
+  static nsIAtom* choff;
   static nsIAtom* cite;
   static nsIAtom* kClass;
   static nsIAtom* classid;
@@ -85,6 +89,7 @@ public:
   static nsIAtom* datetime;
   static nsIAtom* defer;
   static nsIAtom* defaultchecked;
+  static nsIAtom* defaultselected;
   static nsIAtom* defaultvalue;
   static nsIAtom* dir;
   static nsIAtom* disabled;
@@ -111,6 +116,7 @@ public:
   static nsIAtom* h4;
   static nsIAtom* h5;
   static nsIAtom* h6;
+  static nsIAtom* headers;
   static nsIAtom* height;
   static nsIAtom* hidden;
   static nsIAtom* hover;
@@ -123,8 +129,10 @@ public:
   static nsIAtom* id;
   static nsIAtom* iframe;
   static nsIAtom* img;
+  static nsIAtom* index;
   static nsIAtom* ismap;
 
+  static nsIAtom* label;
   static nsIAtom* lang;
   static nsIAtom* li;
   static nsIAtom* link;
@@ -186,7 +194,9 @@ public:
   static nsIAtom* rootContentPseudo;
   static nsIAtom* rows;
   static nsIAtom* rowspan;
+  static nsIAtom* rules;
 
+  static nsIAtom* scope;
   static nsIAtom* scrolling;
   static nsIAtom* selected;
   static nsIAtom* shape;
@@ -217,6 +227,7 @@ public:
   static nsIAtom* value;
   static nsIAtom* valuetype;
   static nsIAtom* variable;
+  static nsIAtom* version;
   static nsIAtom* visibility;
   static nsIAtom* visited;
   static nsIAtom* vlink;
