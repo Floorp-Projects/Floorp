@@ -25,6 +25,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+ifndef MOZ_NSS_AUTOCONF
+
 CORE_DEPTH=$(topsrcdir)/security
 
 include $(DEPTH)/config/autoconf.mk
@@ -46,18 +48,23 @@ CPU_TAG := _$(CPU_ARCH)
 LOADABLE_ROOT_MODULE := $(DLL_PREFIX)nssckbi.$(DLL_SUFFIX)
 CORECONF_OBJDIR:=$(OBJDIR_NAME)
 
+endif # MOZ_NSS_AUTOCONF
+
 include $(DEPTH)/config/autoconf.mk
 
+ifndef MOZ_NSS_AUTOCONF
 DEFAULT_GMAKE_FLAGS = -f Makefile $(OPT_GMAKE_FLAGS)
 DEFAULT_GMAKE_FLAGS += SOURCE_MDHEADERS_DIR=$(MOZ_BUILD_ROOT)/dist/include/nspr
 DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
-
 CORECONF_INSTALL     = $(DIST)/$(CORECONF_OBJDIR)
-
 SUBMAKEFILES = ssl/Makefile pki/Makefile
+else
+DIRS		= ssl pki
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifndef MOZ_NSS_AUTOCONF
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 
 export::
@@ -110,3 +117,4 @@ else
 	fi;
 endif
 
+endif # MOZ_NSS_AUTOCONF
