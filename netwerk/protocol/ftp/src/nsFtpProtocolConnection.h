@@ -24,11 +24,11 @@
 #include "nsIFtpProtocolConnection.h"
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
+#include "nsIThread.h"
 
 #include "nsString2.h"
 
 class nsIConnectionGroup;
-class nsIFtpEventSink;
 
 class nsFtpProtocolConnection : public nsIFtpProtocolConnection
                                 /*,public nsIStreamListener*/ {
@@ -72,7 +72,6 @@ public:
 
 protected:
     nsIUrl*                 mUrl;
-    nsIFtpEventSink*        mEventSink;
     PLEventQueue*           mEventQueue;
 
     PRBool                  mConnected;

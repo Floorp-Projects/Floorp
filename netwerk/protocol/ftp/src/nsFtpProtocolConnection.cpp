@@ -24,6 +24,7 @@
 #include "nsIFtpEventSink.h"
 #include "nsIServiceManager.h"
 #include "nsIByteBufferInputStream.h"
+#include "nsFtpConnectionThread.h"
 
 #include "prprf.h" // PR_sscanf
 
@@ -38,14 +39,13 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 // Client initiation is the most command case and is attempted first.
 
 nsFtpProtocolConnection::nsFtpProtocolConnection()
-    : mUrl(nsnull), mEventSink(nsnull), mConnected(PR_FALSE) {
+    : mUrl(nsnull), mConnected(PR_FALSE) {
 
     mEventQueue = PL_CreateEventQueue("FTP Event Queue", PR_CurrentThread());
 }
 
 nsFtpProtocolConnection::~nsFtpProtocolConnection() {
     NS_IF_RELEASE(mUrl);
-    NS_IF_RELEASE(mEventSink);
     NS_IF_RELEASE(mListener);
 }
 
@@ -73,19 +73,16 @@ nsFtpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 
 nsresult 
 nsFtpProtocolConnection::Init(nsIUrl* aUrl, nsISupports* aEventSink, PLEventQueue* aEventQueue) {
-    nsresult rv;
-
+ 
     if (mConnected)
         return NS_ERROR_NOT_IMPLEMENTED;
 
     mUrl = aUrl;
     NS_ADDREF(mUrl);
 
-    rv = aEventSink->QueryInterface(nsIFtpEventSink::GetIID(), (void**)&mEventSink);
-
     mEventQueue = aEventQueue;
 
-    return rv;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,30 +110,21 @@ nsFtpProtocolConnection::Resume(void) {
 // establishes the connection and initiates the file transfer.
 NS_IMETHODIMP
 nsFtpProtocolConnection::Open(void) {
-/*    nsresult rv;
+    nsresult rv;
+    nsIThread* workerThread = nsnull;
+    nsFtpConnectionThread* protocolInterpreter = 
+        new nsFtpConnectionThread(mEventQueue, mListener);
 
-    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
-    if(NS_FAILED(rv)) return rv;
+    if (!protocolInterpreter)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    rv = NS_NewThread(&workerThread, protocolInterpreter);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "new thread failed");
+    
+    // XXX not sure this is necessary.
+    protocolInterpreter->Init(workerThread);
 
-    // Create the command channel transport
-    const char *host;
-    const PRInt32 port = 0;
-    rv = mUrl->GetHost(&host);
-    if (NS_FAILED(rv)) return rv;
-    rv = mUrl->GetPort(port);
-	if (NS_FAILED(rv)) return rv;
-
-	// XXX this should be reusing connections for us behind the scenes.
-    rv = sts->CreateTransport(host, port, &mCPipe); // the command channel
-    if (NS_FAILED(rv)) return rv;
-
-    // XXX the underlying PR_Connect() has not occured, but we
-    // XXX don't know when the transport does that so, we're going to
-    // XXX consider ourselves conencted.
-	mConnected = TRUE;
-*/
     return NS_OK;
-
 }
 
 NS_IMETHODIMP
