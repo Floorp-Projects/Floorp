@@ -826,10 +826,10 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
     }
     else if (details->mStart == details->mEnd)//no collapsed selections here!
     {
-      mDone = true;
+      mDone = PR_TRUE;
       return;
     }
-    mInit = true;
+    mInit = PR_TRUE;
 }
 
 void
@@ -842,7 +842,7 @@ DrawSelectionIterator::FillCurrentData()
     mCurrentIdx+=mCurrentLength;
     if (mCurrentIdx >= mLength)
     {
-      mDone = true;
+      mDone = PR_TRUE;
       return;
     }
     if (mCurrentIdx < (PRUint32)mDetails->mStart)
@@ -879,7 +879,7 @@ DrawSelectionIterator::First()
   mCurrentIdx = 0;
   mCurrentLength = 0;
   if (!mTypes && mDetails->mStart == mDetails->mEnd)//no collapsed selections here!
-    mDone = true;
+    mDone = PR_TRUE;
   mDone = (mCurrentIdx+mCurrentLength) >= mLength;
   FillCurrentData();
   return PR_TRUE;
@@ -950,15 +950,15 @@ DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
       if (mCurrentIdx == (PRUint32)mDetails->mStart)
       {
         aColor=NS_RGB(0,128,0);
-        return true;
+        return PR_TRUE;
       }
   }
   else if (mTypes[mCurrentIdx] | SELECTION_NORMAL)
   {
     aColor=NS_RGB(0,128,0);
-    return true;
+    return PR_TRUE;
   }
-  return false;
+  return PR_FALSE;
 }
 
 
