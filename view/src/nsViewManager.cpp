@@ -102,6 +102,7 @@ static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
 nsViewManager :: nsViewManager()
 {
   mVMCount++;
+  mUpdateBatchCnt = 0;
 }
 
 nsViewManager :: ~nsViewManager()
@@ -1478,7 +1479,7 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PR
 NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
   NS_PRECONDITION(nsnull != aView, "null view");
-  if (!mRefreshEnabled) {
+  if (!mRefreshEnabled && 0 == mUpdateBatchCnt) {
     return NS_OK;
   }
 
@@ -1519,7 +1520,7 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
   if (nsnull != widgetView)
   {
-    if (0 == mUpdateCnt)
+    if (0 == mUpdateCnt && 0 == mUpdateBatchCnt)
       RestartTimer();
 
     mUpdateCnt++;
@@ -1548,19 +1549,22 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
 
     // See if we should do an immediate refresh or wait
 
-    if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
+    if (0 == mUpdateBatchCnt)
     {
-      Composite();
-    }
-    else if ((mTrueFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
-    {
-      // or if a sync paint is allowed and it's time for the compositor to
-      // do a refresh
-
-      PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
-
-      if (deltams > (1000 / (PRInt32)mTrueFrameRate))
+      if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
+      {
         Composite();
+      }
+      else if ((mTrueFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC))
+      {
+        // or if a sync paint is allowed and it's time for the compositor to
+        // do a refresh
+
+        PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
+
+        if (deltams > (1000 / (PRInt32)mTrueFrameRate))
+          Composite();
+      }
     }
   }
 
@@ -2365,6 +2369,39 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager :: BeginUpdateViewBatch(void)
+{
+  nsresult result = NS_OK;
+  
+  if (mUpdateBatchCnt == 0)
+    result = DisableRefresh();
+
+  if (NS_SUCCEEDED(result))
+    ++mUpdateBatchCnt;
+
+  return result;
+}
+
+NS_IMETHODIMP nsViewManager :: EndUpdateViewBatch(void)
+{
+  nsresult result = NS_OK;
+
+  --mUpdateBatchCnt;
+
+  NS_ASSERTION(mUpdateBatchCnt >= 0, "Invalid batch count!");
+
+  if (mUpdateBatchCnt < 0)
+  {
+    mUpdateBatchCnt = 0;
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mUpdateBatchCnt == 0)
+    result = EnableRefresh();
+
+  return result;
 }
 
 NS_IMETHODIMP nsViewManager :: SetRootScrollableView(nsIScrollableView *aScrollable)

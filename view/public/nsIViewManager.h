@@ -358,6 +358,22 @@ public:
   NS_IMETHOD EnableRefresh(void) = 0;
 
   /**
+   * prevents the view manager from refreshing. allows UpdateView()
+   * to notify widgets of damaged regions that should be repainted
+   * when the batch is ended.
+   * @return error status
+   */
+  NS_IMETHOD BeginUpdateViewBatch(void) = 0;
+
+  /**
+   * allow the view manager to refresh any damaged areas accumulated
+   * after the BeginUpdateViewBatch() call.  this may cause a
+   * synchronous paint to occur inside the call.
+   * @return error status
+   */
+  NS_IMETHOD EndUpdateViewBatch(void) = 0;
+
+  /**
    * set the view that is is considered to be the root scrollable
    * view for the document.
    * @param aScrollable root scrollable view

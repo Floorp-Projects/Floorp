@@ -108,6 +108,9 @@ public:
   NS_IMETHOD  DisableRefresh(void);
   NS_IMETHOD  EnableRefresh(void);
 
+  NS_IMETHOD  BeginUpdateViewBatch(void);
+  NS_IMETHOD  EndUpdateViewBatch(void);
+
   NS_IMETHOD SetRootScrollableView(nsIScrollableView *aScrollable);
   NS_IMETHOD GetRootScrollableView(nsIScrollableView **aScrollable);
 
@@ -155,6 +158,7 @@ private:
   nsIView           *mMouseGrabber;
   nsIView           *mKeyGrabber;
   PRInt32           mUpdateCnt;
+  PRInt32           mUpdateBatchCnt;
   nsVoidArray       *mDisplayList;
   nsIScrollableView *mRootScrollable;
 
