@@ -289,7 +289,7 @@ void
 nsTraceRefcnt::DumpStatistics()
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  if (!gTrackBloat) {
+  if (!gTrackBloat || !gBloatView) {
     return;
   }
 
