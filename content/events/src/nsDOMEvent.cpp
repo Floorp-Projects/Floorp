@@ -647,9 +647,7 @@ NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 {
   if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT 
-        && mEvent->eventStructType != NS_EVENT 
-        && mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
+       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
       !mPresContext) {
     *aClientX = 0;
     return NS_OK;
@@ -700,9 +698,7 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
   if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT 
-        && mEvent->eventStructType != NS_EVENT 
-        && mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
+       (mEvent->eventStructType != NS_MOUSE_EVENT && mEvent->eventStructType != NS_DRAGDROP_EVENT) ||
       !mPresContext) {
     *aClientY = 0;
     return NS_OK;
