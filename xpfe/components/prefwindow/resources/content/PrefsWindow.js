@@ -213,3 +213,4 @@ function setColorFromPicker(colorWell,color,otherId,setbackground)
 	    }
     }
 }
+
