@@ -316,7 +316,7 @@ nsMimeXULEmitter::AddHeaderFieldHTML(const char *field, const char *value)
 
   UtilityWrite("</TR>");
 
-  nsCRT::free(newValue);
+  PR_FREEIF(newValue);
   return NS_OK;
 }
 
@@ -394,7 +394,7 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
   // Output the message ID to make it query-able via the DOM
   UtilityWrite("<message id=\"");
   UtilityWrite(newValue);
-  nsCRT::free(newValue);
+  PR_FREEIF(newValue);
   UtilityWriteCRLF("\"/>");
 
   // Now, the JavaScript...
@@ -576,7 +576,7 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       if (escapedUrl)
       {
         UtilityWrite(escapedUrl);
-        nsCRT::free(escapedUrl);
+        PR_FREEIF(escapedUrl);
       }
       else
       {
@@ -598,7 +598,7 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       if (NS_SUCCEEDED(rv) && urlString)
       {
         UtilityWrite(urlString);
-        nsCRT::free(urlString);
+        PR_FREEIF(urlString);
         urlString = nsnull;
       }
 
@@ -649,7 +649,7 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
   if (newNameValue) 
   {
     newName.SetString(newNameValue);
-    nsCRT::free(newNameValue);
+    PR_FREEIF(newNameValue);
   }
   else
   {
@@ -939,7 +939,7 @@ nsMimeXULEmitter::WriteMiscXULTag(const char *tagName, const char *value)
   if (newValue) 
   {
     UtilityWrite(newValue);
-    nsCRT::free(newValue);
+    PR_FREEIF(newValue);
   }
   else
   {
@@ -1022,7 +1022,7 @@ nsMimeXULEmitter::OutputEmailAddresses(const char *aHeader, const char *aEmailAd
     if (newValue) 
     {
       UtilityWrite(newValue);
-      nsCRT::free(newValue);
+      PR_FREEIF(newValue);
     }
     return NS_OK;
   }
@@ -1113,7 +1113,7 @@ nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, 
   if (htmlString)
   {
     workName = htmlString;
-    nsCRT::free(htmlString);
+    PR_FREEIF(htmlString);
   }
 
   workAddr.Trim("\"");
@@ -1143,7 +1143,7 @@ nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, 
   if (link)
     UtilityWriteCRLF("</html:a>");
 
-  nsCRT::free(link);
+  PR_FREEIF(link);
   PR_FREEIF(tLink);
 
   // Misc here
