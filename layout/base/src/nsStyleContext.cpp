@@ -2007,7 +2007,7 @@ private:  // all data and methods private: only friends have access
   PRUint32                mRefCnt;
   PRUint32                mCRC;
 
-#ifdef NS_ENABLE_LOGGING
+#ifdef DEBUG
   static PRUint32         gInstanceCount;
 #endif
 };
@@ -2031,14 +2031,16 @@ PRUint32 nsStyleContextData::Release(void)
   --mRefCnt;
   NS_LOG_RELEASE(this,mRefCnt,"nsStyleContextData");
   if (0 == mRefCnt) {
+#ifdef DEBUG
     PRINTF("deleting nsStyleContextData instance: (%ld)\n", (long)(--gInstanceCount));
+#endif
     delete this;
     return 0;
   }
   return mRefCnt;
 }
 
-#ifdef NS_ENABLE_LOGGING
+#ifdef DEBUG
 /*static*/ PRUint32 nsStyleContextData::gInstanceCount;
 #endif  // DEBUG
 
@@ -2050,8 +2052,10 @@ nsStyleContextData *nsStyleContextData::Create(nsIPresContext *aPresContext)
     pData = new nsStyleContextData(aPresContext);
     if (pData) {
       NS_ADDREF(pData);
+#ifdef DEBUG
       PRINTF("new nsStyleContextData instance: (%ld) CRC=%lu\n", 
              (long)(++gInstanceCount), (unsigned long)pData->ComputeCRC32(0));
+#endif
     }
   }
   return pData;
