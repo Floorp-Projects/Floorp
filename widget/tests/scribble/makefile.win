@@ -34,6 +34,7 @@ LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
  $(DIST)\lib\raptorgfxwin.lib \
+ $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\raptorwidget.lib \
 !ifdef NECKO
 !else

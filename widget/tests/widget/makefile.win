@@ -32,6 +32,7 @@ LINCS=-I$(PUBLIC)\raptor \
 LLIBS=                         \
  $(DIST)\lib\xpcom.lib        \
  $(LIBNSPR)                     \
+ $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\raptorwidget.lib   \
  $(DIST)\lib\raptorgfxwin.lib   \
  $(NULL)

@@ -83,6 +83,7 @@ LLIBS=                         \
  $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\raptorhtml.lib     \
  $(DIST)\lib\raptorweb.lib      \
+ $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\raptorwidget.lib     \
  $(DIST)\lib\raptorhtmlpars.lib         \
  $(DIST)\lib\DebugRobot.lib     \

@@ -24,9 +24,9 @@ DLLNAME = raptorwidget
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = widget.res
 
-CPPSRCS  = nsWidgetSupport.cpp nsWinWidgetFactory.cpp
+CPPSRCS  = nsWinWidgetFactory.cpp
 
-CPP_OBJS = .\$(OBJDIR)\nsWidgetSupport.obj .\$(OBJDIR)\nsWinWidgetFactory.obj
+CPP_OBJS = .\$(OBJDIR)\nsWinWidgetFactory.obj
 
 
 DEFINES =-D_IMPL_NS_WIDGET
