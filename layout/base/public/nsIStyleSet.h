@@ -65,14 +65,27 @@ public:
   virtual PRInt32 GetNumberOfBackstopStyleSheets() = 0;
   virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex) = 0;
 
-
+  // get a style context for a non-pseudo frame
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
                                            nsIFrame* aParentFrame) = 0;
 
+  // get a style context for a pseudo-frame (ie: tag = NS_NewAtom(":FIRST-LINE");
+  virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
+                                                 nsIAtom* aPseudoTag,
+                                                 nsIFrame* aParentFrame) = 0;
+
+  // This funtions just like ResolvePseudoStyleFor except that it will
+  // return nsnull if there are no explicit style rules for that
+  // pseudo element
+  virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
+                                               nsIAtom* aPseudoTag,
+                                               nsIFrame* aParentFrame) = 0;
+
   // xxx style rules enumeration
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
+  virtual void ListContexts(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
 };
 
 extern NS_LAYOUT nsresult
