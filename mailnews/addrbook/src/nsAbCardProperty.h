@@ -30,14 +30,13 @@
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
-#include "nsIAddrDBListener.h"
 #include "nsIAddrDatabase.h"
 
  /* 
   * Address Book Card Property
   */ 
 
-class nsAbCardProperty: public nsIAbCard, public nsIAddrDBListener
+class nsAbCardProperty: public nsIAbCard
 {
 public: 
 
@@ -45,11 +44,6 @@ public:
 
 	nsAbCardProperty(void);
 	virtual ~nsAbCardProperty(void);
-
-	// nsIAddrDBListener methods:
-	NS_IMETHOD OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator);
-	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
-	NS_IMETHOD OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator);
 
 	// nsICollection methods:
 

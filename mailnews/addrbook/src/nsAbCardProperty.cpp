@@ -135,9 +135,6 @@ nsAbCardProperty::nsAbCardProperty(void)
 
 nsAbCardProperty::~nsAbCardProperty(void)
 {
-	if(mDatabase)
-		mDatabase->RemoveListener(this);
-
 	PR_FREEIF(m_pFirstName);
 	PR_FREEIF(m_pLastName);
 	PR_FREEIF(m_pDisplayName);
@@ -223,7 +220,6 @@ NS_IMETHODIMP nsAbCardProperty::QueryInterface(REFNSIID aIID, void** aResult)
         return NS_ERROR_NULL_POINTER;  
 
     if (aIID.Equals(nsCOMTypeInfo<nsIAbCard>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIAddrDBListener>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIAbCard*, this);   
         NS_ADDREF_THIS();
@@ -233,22 +229,6 @@ NS_IMETHODIMP nsAbCardProperty::QueryInterface(REFNSIID aIID, void** aResult)
 }   
 
 ////////////////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP nsAbCardProperty::OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::OnCardEntryChange
-(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsAbCardProperty::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator)
-{
-  return NS_OK;
-}
 
 nsresult nsAbCardProperty::GetAttributeName(char **aName, char* pValue)
 {
