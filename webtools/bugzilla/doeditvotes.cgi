@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Christopher Aillon <christopher@aillon.com>
 
 use diagnostics;
 use strict;
@@ -37,6 +38,25 @@ confirm_login();
 # are submitted in form fields in which the field names are the bug 
 # IDs and the field values are the number of votes.
 my @buglist = grep {/^[1-9][0-9]*$/} keys(%::FORM);
+
+# If no bugs are in the buglist, let's make sure the user gets notified
+# that their votes will get nuked if they continue.
+if ((0 == @buglist) && (! defined $::FORM{'delete_all_votes'})) {
+    print "Content-type: text/html\n\n";
+    PutHeader("Remove your votes?");
+    print "<p>You are about to remove all of your bug votes. Are you sure you wish to remove your vote from every bug you've voted on?</p>";
+    print qq{<form action="doeditvotes.cgi" method="post">\n};
+    print qq{<p><input type="radio" name="delete_all_votes" value="1"> Yes</p>\n};
+    print qq{<p><input type="radio" name="delete_all_votes" value="0" checked="checked"> No</p>\n};
+    print qq{<p><a href="showvotes.cgi">Review your votes</a></p>\n};
+    print qq{<p><input type="submit" value="Submit"></p></form>\n};
+    PutFooter();
+    exit();
+}
+elsif ($::FORM{'delete_all_votes'} == 0) {
+    print "Location: showvotes.cgi\n\n";
+    exit();
+}
 
 # Call ValidateBugID on each bug ID to make sure it is a positive
 # integer representing an existing bug that the user is authorized 
