@@ -66,7 +66,12 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
           (nsHTMLAtoms::applet == tag) ||
           (nsHTMLAtoms::object == tag) ||
           (nsHTMLAtoms::input == tag) ||
-          (nsHTMLAtoms::select == tag)) {
+          (nsHTMLAtoms::select == tag) ||
+          (nsHTMLAtoms::textarea == tag) ||
+          (nsHTMLAtoms::button == tag) ||
+          (nsHTMLAtoms::legend == tag) ||
+          (nsHTMLAtoms::fieldset == tag) ||
+          (nsHTMLAtoms::iframe == tag)) {
         frameType = eCSSFrameType_InlineReplaced;
       }
       else {
