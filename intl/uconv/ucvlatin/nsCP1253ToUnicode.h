@@ -39,7 +39,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsCP1253ToUnicode();
+  virtual ~nsCP1253ToUnicode();
 
   /**
    * Static class constructor.

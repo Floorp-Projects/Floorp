@@ -37,7 +37,7 @@ public:
   /**
    * Class destructor.
    */
-  ~ns1ByteToUnicodeBase();
+  virtual ~ns1ByteToUnicodeBase();
 
   //--------------------------------------------------------------------
   // Interface nsIUnicodeDecoder [declaration]
