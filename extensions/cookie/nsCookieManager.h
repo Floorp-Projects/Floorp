@@ -39,18 +39,19 @@
 #ifndef nsCookieManager_h__
 #define nsCookieManager_h__
 
-#include "nsICookieManager.h"
+#include "nsICookieManager2.h"
 #include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsCookieManager : public nsICookieManager,
+class nsCookieManager : public nsICookieManager2,
                         public nsSupportsWeakReference {
 public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIEMANAGER
+  NS_DECL_NSICOOKIEMANAGER2
 
   nsCookieManager();
   virtual ~nsCookieManager(void);
