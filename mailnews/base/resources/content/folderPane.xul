@@ -31,8 +31,7 @@
 
 <html:script src="chrome://messenger/content/messengerdnd.js"/>
 
-<html:div id="folder-panel" flex="100%" style="width: 100px; height: 600px">
-	<tree style="height: 100%"
+	<tree style="width:100px; height: 600px;" flex="100%"
 	      rdf:datasources="rdf:null"
 	      id="folderTree" class="mail-folders"
 	      rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
@@ -67,5 +66,5 @@
             </treerow>
           </treehead>
 	</tree>
-</html:div>
+
 </overlay>

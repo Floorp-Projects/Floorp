@@ -563,7 +563,7 @@ Rights Reserved.
 		              onclick="sidebarOpenClosePanel(this)"> 
 		 		<html:div class="panel-bar">&mail-sidebar-header.label;</html:div>
 		    </splitter>
-            <html:div id="folder-panel"/>
+            <tree id="folderTree"/>
           </box>
           
           <splitter id="sidebar-splitter"/>
