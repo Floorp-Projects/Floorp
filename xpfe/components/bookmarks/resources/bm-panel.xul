@@ -76,18 +76,18 @@
   </commands>
   
   <hbox id="panel-bar" class="toolbar">
-    <toolbarbutton label="&command.addBookmark.label;"
+    <toolbarbutton id="btnAddBookmark" label="&command.addBookmark.label;"
             oncommand="gBookmarksShell.addBookmark();"/>
-    <toolbarbutton label="&command.manageBookmarks.label;"
+    <toolbarbutton id="btnManageBookmarks" label="&command.manageBookmarks.label;"
             oncommand="gBookmarksShell.manageBookmarks();"/>
     <spacer flex="1"/>
     <toolbarseparator/>
-    <toolbarbutton label="&command.findBookmarks.label;"
+    <toolbarbutton id="btnFindBookmarks" label="&command.findBookmarks.label;"
             oncommand="gBookmarksShell.findInBookmarks();"/>
   </hbox>
   
   <tree id="bookmarksTree" context="bmContext" ref="NC:BookmarksRoot" class="sidebarTree"
-        datasources="rdf:bookmarks rdf:files rdf:httpindex rdf:localsearch rdf:internetsearch"
+        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
         flags="dont-test-empty"
         type="http://home.netscape.com/NC-rdf#Folder"
         ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
