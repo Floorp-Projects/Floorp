@@ -2252,11 +2252,8 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 		}
   }
 
-/*
-  if ( (attachments && attachments[0].url) || 
-       (mMultipartRelatedAttachmentCount > 0) ||
-       (mCompFieldRemoteAttachments > 0) )
-*/
+  PRBool needToCallGatherMimeAttachments = PR_TRUE;
+
   if (m_attachment_count > 0)
   {
 	  // If there is more than one mailbox URL, or more than one NNTP url,
@@ -2311,6 +2308,11 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
         PR_FREEIF(printfString);  
       }
       
+      /* As SnarfAttachment will call GatherMimeAttachments when it will be done (this is an async process),
+         we need to avoid to call it ourself.
+      */ 
+      needToCallGatherMimeAttachments = PR_FALSE;
+
       int status = m_attachments[i].SnarfAttachment(mCompFields);
       if (status < 0)
         return status;
@@ -2320,7 +2322,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   }
 
   // If no attachments - finish now (this will call the done_callback).
-	if (m_attachment_pending_count <= 0)
+	if (needToCallGatherMimeAttachments)
 		return GatherMimeAttachments();
 
 	return 0;
