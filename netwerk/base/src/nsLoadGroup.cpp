@@ -24,9 +24,27 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsCOMPtr.h"
+#include "nsIURI.h"
+#include "prlog.h"
 
 static NS_DEFINE_CID(kLoadGroupCID, NS_LOADGROUP_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
+
+#if defined(PR_LOGGING)
+//
+// Log module for nsILoadGroup logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=LoadGroup:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
+PRLogModuleInfo* gLoadGroupLog = nsnull;
+
+#endif /* PR_LOGGING */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,6 +54,16 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
       mObserver(nsnull), mParent(nsnull), mForegroundCount(0)
 {
     NS_INIT_AGGREGATED(outer);
+
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for nsILoadGroup logging 
+    // if necessary...
+    //
+    if (nsnull == gLoadGroupLog) {
+        gLoadGroupLog = PR_NewLogModule("LoadGroup");
+    }
+#endif /* PR_LOGGING */
 }
 
 nsLoadGroup::~nsLoadGroup()
@@ -158,6 +186,23 @@ nsLoadGroup::IsPending(PRBool *result)
 static nsresult
 CancelFun(nsIRequest* req)
 {
+#ifdef DEBUG
+    char* uriStr;
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(req, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIURI> uri;
+        rv = channel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv)) {
+            rv = uri->GetSpec(&uriStr);
+        }
+    }
+    if (NS_FAILED(rv))
+        uriStr = nsCRT::strdup("?");
+    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+           ("Canceling request %x %s.\n", req, uriStr));
+    nsCRT::free(uriStr);
+#endif
     return req->Cancel();
 }
 
@@ -170,6 +215,23 @@ nsLoadGroup::Cancel()
 static nsresult
 SuspendFun(nsIRequest* req)
 {
+#ifdef DEBUG
+    char* uriStr;
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(req, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIURI> uri;
+        rv = channel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv)) {
+            rv = uri->GetSpec(&uriStr);
+        }
+    }
+    if (NS_FAILED(rv))
+        uriStr = nsCRT::strdup("?");
+    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+           ("Suspending request %x %s.\n", req, uriStr));
+    nsCRT::free(uriStr);
+#endif
     return req->Suspend();
 }
 
@@ -182,6 +244,23 @@ nsLoadGroup::Suspend()
 static nsresult
 ResumeFun(nsIRequest* req)
 {
+#ifdef DEBUG
+    char* uriStr;
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(req, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIURI> uri;
+        rv = channel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv)) {
+            rv = uri->GetSpec(&uriStr);
+        }
+    }
+    if (NS_FAILED(rv))
+        uriStr = nsCRT::strdup("?");
+    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+           ("Resuming request %x %s.\n", req, uriStr));
+    nsCRT::free(uriStr);
+#endif
     return req->Resume();
 }
 
@@ -246,6 +325,23 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
         rv = NS_NewISupportsArray(&mChannels);
         if (NS_FAILED(rv)) return rv;
     }
+
+#ifdef DEBUG
+    char* uriStr;
+    nsCOMPtr<nsIURI> uri;
+    rv = channel->GetURI(getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv))
+        rv = uri->GetSpec(&uriStr);
+    if (NS_FAILED(rv))
+        uriStr = nsCRT::strdup("?");
+    PRUint32 count;
+    mChannels->Count(&count);
+    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+           ("Adding channel %x %s to group %x (count=%d).\n", 
+            channel, uriStr, this, count));
+    nsCRT::free(uriStr);
+#endif
+
     rv = mChannels->AppendElement(channel) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
     if (NS_FAILED(rv)) return rv;
 
@@ -258,6 +354,18 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
         if (!(flags & nsIChannel::LOAD_BACKGROUND)) {
             mForegroundCount++;
             if (mForegroundCount == 1 && mObserver) {
+#ifdef DEBUG
+                char* uriStr;
+                nsCOMPtr<nsIURI> uri;
+                rv = channel->GetURI(getter_AddRefs(uri));
+                if (NS_SUCCEEDED(rv))
+                    rv = uri->GetSpec(&uriStr);
+                if (NS_FAILED(rv))
+                    uriStr = nsCRT::strdup("?");
+                PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+                       ("First channel %x %s in group %x.\n", channel, uriStr, this));
+                nsCRT::free(uriStr);
+#endif
                 rv = mObserver->OnStartRequest(channel, ctxt);
                 // return with rv, below
             }
@@ -274,6 +382,22 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
     nsresult rv;
     NS_ASSERTION(mChannels, "Forgot to call AddChannel");
 
+#ifdef DEBUG
+    char* uriStr;
+    nsCOMPtr<nsIURI> uri;
+    rv = channel->GetURI(getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv))
+        rv = uri->GetSpec(&uriStr);
+    if (NS_FAILED(rv))
+        uriStr = nsCRT::strdup("?");
+    PRUint32 count;
+    mChannels->Count(&count);
+    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+           ("Removing channel %x %s from group %x status %d (count=%d).\n", 
+            channel, uriStr, this, status, count-1));
+    nsCRT::free(uriStr);
+#endif
+
     nsLoadFlags flags;
     rv = channel->GetLoadAttributes(&flags);
     if (NS_SUCCEEDED(rv)) {
@@ -284,6 +408,19 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
                 PRBool pending;
                 rv = IsPending(&pending);
                 if (NS_SUCCEEDED(rv) && !pending) {
+#ifdef DEBUG
+                    char* uriStr;
+                    nsCOMPtr<nsIURI> uri;
+                    rv = channel->GetURI(getter_AddRefs(uri));
+                    if (NS_SUCCEEDED(rv))
+                        rv = uri->GetSpec(&uriStr);
+                    if (NS_FAILED(rv))
+                        uriStr = nsCRT::strdup("?");
+                    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+                           ("Last channel %x %s in group %x status %d.\n", 
+                            channel, uriStr, this, status));
+                    nsCRT::free(uriStr);
+#endif
                     rv = mObserver->OnStopRequest(channel, ctxt, status, errorMsg);
                     // return with rv, below
                 }
@@ -322,6 +459,9 @@ nsLoadGroup::AddSubGroup(nsILoadGroup *group)
         rv = NS_NewISupportsArray(&mSubGroups);
         if (NS_FAILED(rv)) return rv;
     }
+
+    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+           ("Adding sub-group %x to group %x.\n", group, this));
     return mSubGroups->AppendElement(group) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
 }
 
@@ -339,6 +479,8 @@ nsLoadGroup::RemoveSubGroup(nsILoadGroup *group)
     subGroup->mParent = nsnull;   // weak ref -- don't Release
     NS_RELEASE(subGroup);
 
+    PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
+           ("Removing sub-group %x from group %x.\n", group, this));
     return mSubGroups->RemoveElement(group) ? NS_OK : NS_ERROR_FAILURE;	// XXX this method incorrectly returns a bool
 }
 
