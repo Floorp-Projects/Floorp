@@ -103,8 +103,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 	if (m_mailDB)
 	{
 		nsMsgKeyArray	keys;
-		nsString		author;
-		nsString		subject;
+		nsAutoString	author (eOneByte);
+		nsAutoString	subject (eOneByte);
 
 //		m_mailDB->PrePopulate();
 		m_mailDB->ListAllKeys(keys);
@@ -124,7 +124,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 				msgHdr->GetSubject(subject);
 #ifdef DEBUG
 				// leak nsString return values...
-				printf("hdr key = %d, author = %s subject = %s\n", key, (const char *) nsAutoCString(author), (const char *) nsAutoCString(subject));
+				printf("hdr key = %d, author = %s subject = %s\n", key, author.GetBuffer(), subject.GetBuffer());
 #endif
 			}
 		}
