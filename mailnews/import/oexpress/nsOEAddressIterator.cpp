@@ -139,7 +139,7 @@ PRBool nsOEAddressIterator::EnumList( const PRUnichar * pName, LPENTRYID pEid, U
 
 void nsOEAddressIterator::SanitizeValue( nsString& val)
 {
-	val.ReplaceSubstring( "\x0D\x0A", ", ");
+	val.ReplaceSubstring(NS_ConvertASCIItoUCS2("\x0D\x0A"), NS_ConvertASCIItoUCS2(", "));
 	val.ReplaceChar( 13, ',');
 	val.ReplaceChar( 10, ',');
 }
