@@ -117,13 +117,37 @@ nsHelperAppDialog.prototype = {
     promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension) {
         var result = "";
 
+        const prefSvcContractID = "@mozilla.org/preferences-service;1";
+        const prefSvcIID = Components.interfaces.nsIPrefService;
+        var branch = Components.classes[prefSvcContractID].getService(prefSvcIID)
+                                                          .getBranch("browser.download.");
+        var dir = null;
+
+        const nsILocalFile = Components.interfaces.nsILocalFile;
+        const kDownloadDirPref = "dir";
+
+        // Try and pull in download directory pref
+        try {
+            dir = branch.getComplexValue(kDownloadDirPref, nsILocalFile);
+        } catch (e) { }
+
+        var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                               .getService(Components.interfaces.nsIStringBundleService)
+                               .createBundle("chrome://global/locale/nsHelperAppDlg.properties");
+
+        var autoDownload = branch.getBoolPref("autoDownload");
+        // If the autoDownload pref is set then just download to default download directory
+        if (dir && autoDownload) {
+            if (aDefaultFile == "")
+                aDefaultFile = bundle.GetStringFromName("noDefaultFile") + (aSuggestedFileExtension || "");
+            dir.append(aDefaultFile);
+            return uniqueFile(dir);
+        }
+
         // Use file picker to show dialog.
         var nsIFilePicker = Components.interfaces.nsIFilePicker;
         var picker = Components.classes[ "@mozilla.org/filepicker;1" ]
                        .createInstance( nsIFilePicker );
-        var bundle = Components.classes[ "@mozilla.org/intl/stringbundle;1" ]
-                       .getService( Components.interfaces.nsIStringBundleService )
-                           .createBundle( "chrome://global/locale/nsHelperAppDlg.properties");
 
         var windowTitle = bundle.GetStringFromName( "saveDialogTitle" );
 
@@ -150,35 +174,23 @@ nsHelperAppDialog.prototype = {
 
         picker.appendFilters( nsIFilePicker.filterAll );
 
-        // Pull in the user's preferences and get the default download directory.
-        var prefs = Components.classes[ "@mozilla.org/preferences-service;1" ]
-                              .getService( Components.interfaces.nsIPrefBranch );
         try {
-            var startDir = prefs.getComplexValue("browser.download.dir",
-                                                 Components.interfaces.nsILocalFile);
-            if ( startDir.exists() ) {
-                picker.displayDirectory = startDir;
-            }
-        } catch( exception ) {
-        }
+            if (dir.exists())
+                picker.displayDirectory = dir;
+        } catch (e) { }
 
-        var dlgResult = picker.show();
-
-        if ( dlgResult == nsIFilePicker.returnCancel ) {
+        if (picker.show() == nsIFilePicker.returnCancel || !picker.file) {
             // Null result means user cancelled.
             return null;
         }
 
-
-        // be sure to save the directory the user chose as the new browser.download.dir
-        result = picker.file;
-
-        if ( result ) {
-            var newDir = result.parent;
-            prefs.setComplexValue("browser.download.dir",
-                                  Components.interfaces.nsILocalFile, newDir);
+        // If not using specified location save the user's choice of directory
+        if (branch.getBoolPref("lastLocation") || autoDownload) {
+            var directory = picker.file.parent.QueryInterface(nsILocalFile);
+            branch.setComplexValue(kDownloadDirPref, nsILocalFile, directory);
         }
-        return result;
+
+        return picker.file;
     },
 
     // ---------- implementation methods ----------
@@ -791,4 +803,18 @@ var module = {
 // NSGetModule: Return the nsIModule object.
 function NSGetModule(compMgr, fileSpec) {
     return module;
+}
+
+// Since we're automatically downloading, we don't get the file picker's
+// logic to check for existing files, so we need to do that here.
+//
+// Note - this code is identical to that in contentAreaUtils.js.
+// If you are updating this code, update that code too! We can't share code
+// here since this is called in a js component.
+function uniqueFile(aLocalFile) {
+    while (aLocalFile.exists()) {
+        parts = /(-\d+)?(\.[^.]+)?$/.test(aLocalFile.leafName);
+        aLocalFile.leafName = RegExp.leftContext + (RegExp.$1 - 1) + RegExp.$2;
+    }
+    return aLocalFile;
 }

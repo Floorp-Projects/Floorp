@@ -194,3 +194,11 @@ function captureContentClick(aEvent)
 
   return true;
 }
+
+function updateSavePageItems()
+{
+  var autoDownload = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefBranch)
+                               .getBoolPref("browser.download.autoDownload");
+  goSetMenuValue("savepage", autoDownload ? "valueSave" : "valueSaveAs");
+}
