@@ -159,13 +159,13 @@ function WM_ProgressUpdate( currentPageNumber )
   if ( statusbar ) {
       var string;
       try {
+          dump("mapLength = " + this.GetMapLength() + "\n");
           string = this.bundle.formatStringFromName("oflabel",
-                                                    [currentPageNumber,
-                                                    this.GetMapLength], 2);
+                                                    [currentPageNumber+1,
+                                                    this.GetMapLength()], 2);
       } catch (e) {
           string = "";
       }
-    string += this.GetMapLength();
     statusbar.setAttribute( "progress", string );
   }
 }
