@@ -36,7 +36,7 @@ extern "C" NS_EXPORT PLEventQueue* GetMacPLEventQueue()
  *  @param   NONE
  *  @return  NONE
  */
-nsToolkit::nsToolkit(): LPeriodical()
+nsToolkit::nsToolkit(): Repeater()
 {
 	NS_INIT_REFCNT();
 }
@@ -115,7 +115,7 @@ NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
  *  @param   inMacEvent -- A mac os event, Not used
  *  @return  NONE
  */
-void	nsToolkit::SpendTime(const EventRecord& /*inMacEvent*/)
+void	nsToolkit::RepeatAction(const EventRecord& /*inMacEvent*/)
 {
 	// Handle pending NSPR events
 	PL_ProcessPendingEvents( sPLEventQueue );

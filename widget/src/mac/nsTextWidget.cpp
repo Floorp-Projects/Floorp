@@ -26,7 +26,7 @@ NS_IMPL_RELEASE(nsTextWidget);
 //
 //
 //-------------------------------------------------------------------------
-nsTextWidget::nsTextWidget() : nsMacControl(), nsITextWidget(), LPeriodical()
+nsTextWidget::nsTextWidget() : nsMacControl(), nsITextWidget(), Repeater()
 {
   NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsTextWidget");
@@ -441,7 +441,7 @@ NS_METHOD nsTextWidget::GetCaretPosition(PRUint32& aPos)
 //
 //
 //-------------------------------------------------------------------------
-void	nsTextWidget::SpendTime(const EventRecord& inMacEvent)
+void	nsTextWidget::RepeatAction(const EventRecord& inMacEvent)
 {
 	if (mTE)
 	{

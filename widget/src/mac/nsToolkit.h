@@ -20,7 +20,7 @@
 #define TOOLKIT_H
 
 #include "nsIToolkit.h"
-#include "LPeriodical.h"
+#include "nsRepeater.h"
 struct PLEventQueue;
 class nsWindow;
 
@@ -32,7 +32,7 @@ struct MethodInfo;
  * execute within the same thread that created the widget under Win32.
  */ 
 
-class nsToolkit : public nsIToolkit, public LPeriodical
+class nsToolkit : public nsIToolkit, public Repeater
 {
 
 public:
@@ -50,7 +50,7 @@ public:
 	// Event Queue
 	static PLEventQueue*	GetEventQueue(){ return sPLEventQueue; }
 	// LPeriodical interface
-	virtual	void	SpendTime(const EventRecord& inMacEvent);
+	virtual	void	RepeatAction(const EventRecord& inMacEvent);
 
 private:
 	static nsWindow*	mFocusedWidget;
