@@ -188,10 +188,10 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       for (int i = 0; i < ida->length; i++ )
       {
         JS_IdToValue( cx, ida->vector[i], &v );
-        name = JS_GetStringChars( JS_ValueToString( cx, v ) );
+        name = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v ) ));
 
-        JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), name, nsCRT::strlen(name), &v );
-        URL = JS_GetStringChars( JS_ValueToString( cx, v ) );
+        JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), NS_REINTERPRET_CAST(const jschar*, name), nsCRT::strlen(name), &v );
+        URL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v ) ));
 
         if ( name && URL )
         {

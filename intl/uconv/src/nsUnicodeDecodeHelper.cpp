@@ -115,13 +115,13 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByTable(
   nsresult res = NS_OK;
 
   while ((srcLen > 0) && (dest < destEnd)) {
-    if (!uScan(aShiftTable, NULL, (PRUint8 *)src, &med, srcLen, 
+    if (!uScan(aShiftTable, NULL, (PRUint8 *)src, NS_REINTERPRET_CAST(PRUint16*, &med), srcLen, 
     (PRUint32 *)&bcr)) {
       res = NS_OK_UDEC_MOREINPUT;
       break;
     }
 
-    if (!uMapCode((uTable*) aMappingTable, med, dest)) {
+    if (!uMapCode((uTable*) aMappingTable, NS_STATIC_CAST(PRUint16, med), NS_REINTERPRET_CAST(PRUint16*, dest))) {
       if (med < 0x20) {
         // somehow some table miss the 0x00 - 0x20 part
         *dest = med;
@@ -173,13 +173,13 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
       break;
     }
 
-    if (!uScan(aShiftTable[i], NULL, src, &med, srcLen, 
+    if (!uScan(aShiftTable[i], NULL, src, NS_REINTERPRET_CAST(PRUint16*, &med), srcLen, 
     (PRUint32 *)&bcr)) {
       res = NS_OK_UDEC_MOREINPUT;
       break;
     }
 
-    if (!uMapCode((uTable*) aMappingTable[i], med, dest)) {
+    if (!uMapCode((uTable*) aMappingTable[i], NS_STATIC_CAST(PRUint16, med), NS_REINTERPRET_CAST(PRUint16*, dest))) {
       if (med < 0x20) {
         // somehow some table miss the 0x00 - 0x20 part
         *dest = med;

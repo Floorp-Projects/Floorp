@@ -507,7 +507,7 @@ void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString ti
   	// convert from Unicode to script run
   	// 
 	err = ::ConvertFromUnicodeToScriptCodeRun(unicodeTextRunInfo,
-				unicodeTextLengthInBytes,unicodeText,
+				unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
 				0, /* no flags */
 				0,NULL,NULL,NULL, /* no offset arrays */
 				scriptRunTextSizeInBytes,&unicodeTextReadInBytes,&scriptRunTextLengthInBytes,
@@ -527,7 +527,7 @@ void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString ti
 	  	// convert from Unicode to script run
 	  	// 
 		err = ::ConvertFromUnicodeToScriptCodeRun(unicodeTextRunInfo,
-					unicodeTextLengthInBytes,unicodeText,
+					unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
 					0, /* no flags */
 					0,NULL,NULL,NULL, /* no offset arrays */
 					scriptRunTextSizeInBytes,&unicodeTextReadInBytes,&scriptRunTextLengthInBytes,

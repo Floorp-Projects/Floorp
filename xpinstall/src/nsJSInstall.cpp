@@ -96,7 +96,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         if (NS_OK == a->GetUserPackageName(prop)) 
         {
-            *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length()) );
+            *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.GetUnicode()), prop.Length()) );
         }
         else 
         {
@@ -110,7 +110,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         if (NS_OK == a->GetRegPackageName(prop)) 
         {
-          *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length()) );
+          *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.GetUnicode()), prop.Length()) );
         }
         else 
         {
@@ -145,7 +145,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         
         a->GetInstallArguments(prop); 
-        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length()) );
+        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.GetUnicode()), prop.Length()) );
         
         break;
       }
@@ -155,7 +155,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsString prop;
         
         a->GetInstallURL(prop); 
-        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length()) );
+        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, prop.GetUnicode()), prop.Length()) );
         
         break;
       }
@@ -237,7 +237,7 @@ void ConvertJSValToStr(nsString&  aString,
 
   if((jsstring = JS_ValueToString(aContext, aValue)) != nsnull)
   {
-    aString.Assign(JS_GetStringChars(jsstring));
+    aString.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
     if (aString.EqualsIgnoreCase("null"))
     {
         aString.Truncate();
@@ -253,7 +253,7 @@ void ConvertStrToJSVal(const nsString& aProp,
                       JSContext* aContext,
                       jsval* aReturn)
 {
-  JSString *jsstring = JS_NewUCStringCopyN(aContext, aProp.GetUnicode(), aProp.Length());
+  JSString *jsstring = JS_NewUCStringCopyN(aContext, NS_REINTERPRET_CAST(const jschar*, aProp.GetUnicode()), aProp.Length());
   // set the return value
   *aReturn = STRING_TO_JSVAL(jsstring);
 }

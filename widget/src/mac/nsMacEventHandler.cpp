@@ -933,7 +933,7 @@ PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 									kUnicodeLooseMappingsMask,
 									0,NULL,NULL,NULL,
 									sizeof(PRUnichar)*UNICODE_BUFFER_SIZE_FOR_KEY,&source_read,
-									&result_size,unicharResult);
+									&result_size,NS_REINTERPRET_CAST(PRUint16*, unicharResult));
 	::DisposeTextToUnicodeInfo(&textToUnicodeInfo);
 	NS_ASSERTION(err == noErr, "nsMacEventHandler::ConvertKeyEventToUnicode: ConverFromTextToUnicode failed.");
 	// if we got the following result, then it mean we got more than one Unichar from it.
@@ -1574,7 +1574,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 		err = ::ConvertFromTextToUnicode(textToUnicodeInfo,committedLen,text,kUnicodeLooseMappingsMask,
 						0,NULL,NULL,NULL,
 						mIMECompositionStr->mCapacity *sizeof(PRUnichar),
-						&source_read,&len,ubuf);
+						&source_read,&len,NS_REINTERPRET_CAST(PRUint16*, ubuf));
 		NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: ConvertFromTextToUnicode failed.\n");
 		if (err!=noErr)
 		{
@@ -1723,7 +1723,7 @@ nsresult nsMacEventHandler::HandleUpdateInputArea(char* text,Size text_size, Scr
 			err = ::ConvertFromTextToUnicode(textToUnicodeInfo,text_size-committedLen,text+committedLen,kUnicodeLooseMappingsMask,
 							destinationLength,sourceOffset,&destinationLength,destinationOffset,
 							mIMECompositionStr->mCapacity *sizeof(PRUnichar),
-							&source_read,&len, ubuf);
+							&source_read,&len, NS_REINTERPRET_CAST(PRUint16*, ubuf));
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::UpdateInputArea: ConvertFromTextToUnicode failed.\n");
 			if (err!=noErr) 
 			{

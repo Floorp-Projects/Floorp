@@ -252,7 +252,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     JSString *jsstring = JS_ValueToString(cx, id);
     if (nsnull != jsstring) {
-      name.Assign(JS_GetStringChars(jsstring));
+      name.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
     }
     else {
       name.SetLength(0);

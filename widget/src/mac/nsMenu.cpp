@@ -1062,7 +1062,7 @@ void nsMenu::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, n
 	scriptRunText = new char[scriptRunTextSizeInBytes + 1];
 	
 	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
-				unicodeTextLengthInBytes,unicodeText,
+				unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
 				0, /* no flags*/
 				0,NULL,NULL,NULL, /* no offset arrays */
 				scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,
@@ -1115,7 +1115,7 @@ MenuHandle nsMenu::NSStringNewMenu(short menuID, nsString& menuTitle)
 	scriptRunText = new char[scriptRunTextSizeInBytes + 1];	// +1 for the null terminator.
 	
 	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
-				unicodeTextLengthInBytes,unicodeText,
+				unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
 				0, /* no flags*/
 				0,NULL,NULL,NULL, /* no offset arrays */
 				scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,
@@ -1172,7 +1172,7 @@ MenuHandle nsMenu::NSStringNewChildMenu(short menuID, nsString& menuTitle)
 	scriptRunText = new char[scriptRunTextSizeInBytes];
 	
 	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
-				unicodeTextLengthInBytes,unicodeText,
+				unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
 				0, /* no flags*/
 				0,NULL,NULL,NULL, /* no offset arrays */
 				scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,

@@ -539,7 +539,7 @@ nsMenuBar::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsS
 	scriptRunText = new char[scriptRunTextSizeInBytes + 1];
 	
 	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
-				unicodeTextLengthInBytes,unicodeText,
+				unicodeTextLengthInBytes,NS_REINTERPRET_CAST(const PRUint16*, unicodeText),
 				0, /* no flags*/
 				0,NULL,NULL,NULL, /* no offset arrays */
 				scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,

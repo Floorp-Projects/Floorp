@@ -104,7 +104,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         
         PRUint32 column = report->uctokenptr - report->uclinebuf;
 
-        rv = errorObject->Init(report->ucmessage, newFileUni, report->uclinebuf,
+        rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage), newFileUni, NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf),
                                report->lineno, column, report->flags,
                                "XPInstall JavaScript");
         nsMemory::Free((void *)newFileUni);
@@ -142,7 +142,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         logMessage.AppendInt(report->lineno, 10);
         logMessage.AppendWithConversion("\t");
         if (report->ucmessage)
-            logMessage.Append( report->ucmessage ); 
+            logMessage.Append( NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage) ); 
         else
             logMessage.AppendWithConversion( message ); 
 

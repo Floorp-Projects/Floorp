@@ -116,7 +116,7 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
   else {
     nsCOMPtr<nsISupportsWString> doubleByteText ( do_QueryInterface(aPrimitive) );
     if ( doubleByteText )
-      doubleByteText->GetData ( NS_REINTERPRET_CAST(unsigned short**, aDataBuff) );
+      doubleByteText->GetData ( NS_REINTERPRET_CAST(PRUnichar**, aDataBuff) );
   }
 
 }
