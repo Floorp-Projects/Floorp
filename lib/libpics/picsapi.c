@@ -669,6 +669,7 @@ cleanup:
 	return rv;
 }
 
+#ifdef TRUST_LABELS
 /***************************************************************************/
 /***************************************************************************/
 /***********  TRUST.C  at a latter time   **********************************/
@@ -745,7 +746,6 @@ cleanup:
 #include "mkaccess.h"		/* use #include "trust.h" when it is broken out of mkaccess.h */
 #include "prlong.h"
 
-#ifdef TRUST_LABELS
 
 #ifdef _DEBUG
 #define HTTrace OutputDebugString 
