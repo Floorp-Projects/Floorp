@@ -39,12 +39,12 @@
 
 interface nsICollation;
 
-[scriptable, uuid(D4CF2F80-A98B-11d2-9119-006008A6EDF6)]
+[scriptable, uuid(04971e14-d6b3-4ada-8cbb-c3a13842b349)]
 interface nsICollationFactory : nsISupports {
   nsICollation CreateCollation(in nsILocale locale);
 };
 
-[scriptable, uuid(CDBFD3F0-A4FE-11d2-9119-006008A6EDF6)]
+[scriptable, uuid(b0132cc0-3786-4557-9874-910d7def5f93)]
 interface nsICollation : nsISupports {
 
   // use the primary comparison for the given local - no flags
