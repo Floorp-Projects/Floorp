@@ -20,6 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..
+include <$(DEPTH)/config/config.mak>
+
 MODULE=necko
 
 MAKE_OBJ_TYPE=DLL
