@@ -119,6 +119,13 @@ function OnDblClick(treeitem, root)
     // Next, check to see if it's a container. If so, then just let
     // the tree do its open and close stuff.
     if (treeitem.getAttribute('container') == 'true') {
+
+    //    if (treeitem.getAttribute('open') == 'true') {
+    //      treeitem.setAttribute('open','')
+    //    } else {
+    //      treeitem.setAttribute('open','true')
+    //    }
+
         return;
     }
 
