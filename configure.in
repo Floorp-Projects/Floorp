@@ -140,10 +140,8 @@ case "$target" in
 	MKSHLIB_FORCE_ALL=''
 	MKSHLIB_UNFORCE_ALL=''
 	if [ test "$GNU_CC" != 1 ]; then
-		AIX_DEFINES='-D_THREAD_SAFE -D_REENTRANT -DPIC'
-		AIX_CFLAGS='-brtl -O -qtune=604 -qlanglvl=extended -qflag=w:w'
 		DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
-		DSO_CFLAGS='$(AIX_DEFINES) $(AIX_CFLAGS)'
+		DSO_CFLAGS='-DPIC -brtl -O -qnortti -qflag=w:w'
 	fi
 dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
 	MKSHLIB='/usr/ibmcxx/bin/makeC++SharedLib_r -p1 -brtl -berok --'

@@ -28,12 +28,12 @@
 
 PR_BEGIN_EXTERN_C
 
-#if (defined(__sun) && !defined(SOLARIS2_6)) || defined(HPUX9) || defined(HPUX10_10) || defined(XP_PC) || defined(AIX) || defined(OSF1) || defined(XP_MAC) || defined(SONY) || defined(SNI) || defined(UNIXWARE) || defined(LINUX) || defined(DGUX)
+#if (defined(__sun) && !defined(SOLARIS2_6)) || defined(HPUX9) || defined(HPUX10_10) || defined(XP_PC) || !defined(AIX) || defined(OSF1) || defined(XP_MAC) || defined(SONY) || defined(SNI) || defined(UNIXWARE) || defined(LINUX) || defined(DGUX)
 typedef int16 int16_t;
 typedef int32 int32_t;
 #endif
 
-#if !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11)
+#if !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11) && !defined(AIX)
 typedef uint16 uint16_t;
 #ifndef	_UINT32_T
 #define	_UINT32_T
@@ -43,7 +43,7 @@ typedef uint32 uint32_t;
 
 typedef prword_t uintVP_t; /* unsigned that is same size as a void pointer */
 
-#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11) && !defined(RHAPSODY) && !defined(NETBSD)
+#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11) && !defined(RHAPSODY) && !defined(NETBSD) && !defined(AIX)
 typedef int64 int64_t;
 #else
 /*
