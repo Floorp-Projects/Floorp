@@ -1185,8 +1185,9 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 
 // Returns NULL if nothing was done.
 // Otherwise, returns a newly allocated name.
-char *nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailboxName)
+NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailboxName, char ** directory)
 {
+	nsresult result = NS_OK;
 	char *rv = NULL;
 #ifdef HAVE_PORT
 	// If this host has an online server directory configured
@@ -1218,13 +1219,18 @@ char *nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailboxName)
 		}
 	}
 #endif // HAVE_PORT
-	return rv;
+	if (directory)
+		*directory = rv;
+	else
+		PR_FREEIF(rv);
+	return result;
 }
 
 // Converts from canonical format (hierarchy is indicated by '/' and all real slashes ('/') are escaped)
 // to the real online name on the server.
-char *nsImapUrl::AllocateServerPath(const char *canonicalPath, char onlineDelimiter /* = kOnlineHierarchySeparatorUnknown */)
+NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onlineDelimiter, char ** aAllocatedPath)
 {
+	nsresult retVal = NS_OK;
 	char *rv = NULL;
 	char delimiterToUse = onlineDelimiter;
 	if (onlineDelimiter == kOnlineHierarchySeparatorUnknown)
@@ -1235,15 +1241,20 @@ char *nsImapUrl::AllocateServerPath(const char *canonicalPath, char onlineDelimi
 	else
 		rv = PL_strdup("");
 
-	char *onlineNameAdded = AddOnlineDirectoryIfNecessary(rv);
+	char *onlineNameAdded = nsnull;
+	AddOnlineDirectoryIfNecessary(rv, &onlineNameAdded);
 	if (onlineNameAdded)
 	{
 		PR_FREEIF(rv);
 		rv = onlineNameAdded;
 	}
 
-	return rv;
+	if (aAllocatedPath)
+		*aAllocatedPath = rv;
+	else
+		PR_FREEIF(rv);
 
+	return retVal;
 }
 
 
@@ -1344,7 +1355,7 @@ NS_IMETHODIMP  nsImapUrl::CreateServerSourceFolderPathString(char **result)
 	if (!result)
 	    return NS_ERROR_NULL_POINTER;
 	NS_LOCK_INSTANCE();
-	*result = AllocateServerPath(m_sourceCanonicalFolderPathSubString);
+	AllocateServerPath(m_sourceCanonicalFolderPathSubString, kOnlineHierarchySeparatorUnknown, result);
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;

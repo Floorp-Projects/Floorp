@@ -65,6 +65,23 @@ public:
 	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
 	NS_IMETHOD GetRequiredImapState(nsImapState * aImapUrlState);
 
+	NS_IMETHOD AddOnlineDirectoryIfNecessary(const char *onlineMailboxName, char ** directory);
+	
+	NS_IMETHOD GetImapPartToFetch(char **result);
+	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) ;
+	NS_IMETHOD AllocateServerPath(const char * aCanonicalPath, char aOnlineDelimiter, char ** aAllocatedPath);
+	NS_IMETHOD CreateCanonicalSourceFolderPathString(char **result);
+	NS_IMETHOD CreateServerSourceFolderPathString(char **result) ;
+
+	NS_IMETHOD	CreateListOfMessageIdsString(char **result) ;
+	NS_IMETHOD	MessageIdsAreUids(PRBool *result);
+	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result);	// kAddMsgFlags or kSubtractMsgFlags only
+
+	// for enabling or disabling mime parts on demand. Setting this to TRUE says we
+	// can use mime parts on demand, if we chose.
+	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange);
+	NS_IMETHOD  GetAllowContentChange(PRBool *results);
+
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsINetlibURL interface
 	///////////////////////////////////////////////////////////////////////////////
@@ -105,19 +122,6 @@ public:
     NS_IMETHOD GetServerStatus(PRInt32 *status);  // make obsolete
     NS_IMETHOD ToString(PRUnichar* *aString) const;
 
-	NS_IMETHOD GetImapPartToFetch(char **result) ;
-	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) ;
-	NS_IMETHOD CreateCanonicalSourceFolderPathString(char **result);
-	NS_IMETHOD CreateServerSourceFolderPathString(char **result) ;
-
-	NS_IMETHOD	CreateListOfMessageIdsString(char **result) ;
-	NS_IMETHOD	MessageIdsAreUids(PRBool *result);
-	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result);	// kAddMsgFlags or kSubtractMsgFlags only
-
-	// for enabling or disabling mime parts on demand. Setting this to TRUE says we
-	// can use mime parts on demand, if we chose.
-	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange);
-	NS_IMETHOD  GetAllowContentChange(PRBool *results);
 	// nsImapUrl
 	nsImapUrl();
 	virtual ~nsImapUrl();
@@ -145,10 +149,6 @@ protected:
 
 	char		GetOnlineSubDirSeparator();
 	void		SetOnlineSubDirSeparator(char onlineDirSeparator);
-	char *		AllocateServerPath(const char *canonicalPath, 
-									char onlineDelimiter = kOnlineHierarchySeparatorUnknown);
-	char *		AddOnlineDirectoryIfNecessary(const char *onlineMailboxName);
-
 	char *		ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
 	void		ParseFolderPath(char **resultingCanonicalPath);
 	void		ParseSearchCriteriaString();
