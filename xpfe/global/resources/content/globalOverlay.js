@@ -156,9 +156,11 @@ function goSetCommandEnabled(id, enabled)
 function goSetMenuValue(command, valueAttribute)
 {
 	var commandNode = top.document.getElementById(command);
-	var value = commandNode.getAttribute(valueAttribute);
-	if ( commandNode && value )
-		commandNode.setAttribute('value', value);
+	if ( commandNode ) {
+		var value = commandNode.getAttribute(valueAttribute);
+		if ( value )
+			commandNode.setAttribute('value', value);
+	}
 }
 
 function goUpdateGlobalEditMenuItems()
