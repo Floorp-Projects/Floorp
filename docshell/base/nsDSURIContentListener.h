@@ -68,6 +68,12 @@ protected:
         mDocShell = nsnull;
     }
 
+    // Check whether aContentType is supported.  If this method throws, the
+    // value of aIsSupported is undefined and should not be looked at.
+    // aContentType must not be null before this is called, and we must have an
+    // mCatMgr.
+    nsresult IsTypeSupported(const char* aContentType, PRBool* aIsSupported);
+
 protected:
     nsDocShell*                      mDocShell;
 
