@@ -1650,6 +1650,58 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
   return UpdateView(view, bounds, aUpdateFlags);
 }
 
+// This method accumulates the intersectons of all dirty regions attached to
+// descendants of aSourceView with the cliprect of aTargetView into the dirty
+// region of aTargetView, after offseting said intersections by aOffset.
+static void
+AccumulateIntersectionsIntoDirtyRegion(nsView* aTargetView,
+                                       nsView* aSourceView,
+                                       const nsPoint& aOffset)
+{
+  if (aSourceView->HasNonEmptyDirtyRegion()) {
+    // In most cases, aSourceView is an ancestor of aTargetView, since most
+    // commonly we have dirty rects on the root view.
+    nsPoint offset = aTargetView->GetOffsetTo(aSourceView);
+    nsRegion intersection;
+    intersection.And(*aSourceView->GetDirtyRegion(),
+                     aTargetView->GetClippedRect() + offset);
+    if (!intersection.IsEmpty()) {
+      nsRegion* targetRegion = aTargetView->GetDirtyRegion();
+      if (targetRegion) {
+        intersection.MoveBy(-offset + aOffset);
+        targetRegion->Or(*targetRegion, intersection);
+        // Random simplification number...
+        targetRegion->SimplifyOutward(20);
+      }
+    }
+  }
+
+  if (aSourceView == aTargetView) {
+    // No need to do this with kids of aTargetView
+    return;
+  }
+  
+  for (nsView* kid = aSourceView->GetFirstChild();
+       kid;
+       kid = kid->GetNextSibling()) {
+    AccumulateIntersectionsIntoDirtyRegion(aTargetView, kid, aOffset);
+  }
+}
+
+void
+nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
+{
+  if (!IsRootVM()) {
+    return RootViewManager()->WillBitBlit(aView, aScrollAmount);
+  }
+
+  NS_PRECONDITION(aView, "Must have a view");
+  NS_PRECONDITION(aView->HasWidget(), "View must have a widget");
+
+  // Since the view is actually moving the widget by -aScrollAmount, that's the
+  // offset we want to use when accumulating dirty rects.
+  AccumulateIntersectionsIntoDirtyRegion(aView, GetRootView(), -aScrollAmount);
+}
 
 // Invalidate all widgets which overlap the view, other than the view's own widgets.
 void
