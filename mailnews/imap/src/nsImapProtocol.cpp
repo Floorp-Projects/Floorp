@@ -7768,8 +7768,9 @@ nsresult nsImapMockChannel::OpenCacheEntry()
   // Open a cache entry with key = url
   nsCAutoString urlSpec;
   m_url->GetAsciiSpec(urlSpec);
+
   // for now, truncate of the query part so we don't duplicate urls in the cache...
-  char * anchor = (char *)strrchr(urlSpec.get(), '?');
+  char * anchor = (char *)strrchr(urlSpec.BeginWriting(), '?');
   if (anchor)
   {
     // if we were trying to read a part, we failed - fall back and look for whole msg
