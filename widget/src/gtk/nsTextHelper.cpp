@@ -61,84 +61,50 @@ NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize)
 {
   char *str;
-  if (!mIsPassword) {
-    if (GTK_IS_ENTRY(mWidget))
-    {
-      str = gtk_entry_get_text(GTK_ENTRY(mWidget));
-    }
-    else if (GTK_IS_TEXT(mWidget))
-    {
-      str = gtk_editable_get_chars (GTK_EDITABLE (mWidget), 0,
-                   gtk_text_get_length (GTK_TEXT (mWidget)));
-    }
-    aTextBuffer.SetLength(0);
-    aTextBuffer.Append(str);
-    PRUint32 len = (PRUint32)strlen(str);
-    aActualSize = len;
-  } else {
-/*
-    PasswordData * data;
-    XtVaGetValues(mWidget, XmNuserData, &data, NULL);
-    aTextBuffer = data->mPassword;
-    aActualSize = aTextBuffer.Length();
-*/
+  if (GTK_IS_ENTRY(mWidget))
+  {
+    str = gtk_entry_get_text(GTK_ENTRY(mWidget));
   }
-  return(NS_OK);
+  else if (GTK_IS_TEXT(mWidget))
+  {
+    str = gtk_editable_get_chars (GTK_EDITABLE (mWidget), 0,
+                 gtk_text_get_length (GTK_TEXT (mWidget)));
+  }
+  aTextBuffer.SetLength(0);
+  aTextBuffer.Append(str);
+  PRUint32 len = (PRUint32)strlen(str);
+  aActualSize = len;
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 {
-  if (!mIsPassword) {
-    NS_ALLOC_STR_BUF(buf, aText, 512);
+  char *buf = aText.ToNewCString();
 
-    if (GTK_IS_ENTRY(mWidget)) {
-      gtk_entry_set_text(GTK_ENTRY(mWidget), buf);
-    } else if (GTK_IS_TEXT(mWidget)) {
-      gtk_text_insert(GTK_TEXT(mWidget), nsnull, nsnull, nsnull, buf, aActualSize);
-    }
-
-    NS_FREE_STR_BUF(buf);
-  } else {
-/*
-    PasswordData * data;
-    XtVaGetValues(mWidget, XmNuserData, &data, NULL);
-    data->mPassword = aText;
-    data->mIgnore   = PR_TRUE;
-    char * buf = new char[aText.Length()+1];
-    memset(buf, '*', aText.Length());
-    buf[aText.Length()] = 0;
+  if (GTK_IS_ENTRY(mWidget)) {
     gtk_entry_set_text(GTK_ENTRY(mWidget), buf);
-    data->mIgnore = PR_FALSE;
-*/
+  } else if (GTK_IS_TEXT(mWidget)) {
+    gtk_text_insert(GTK_TEXT(mWidget), nsnull, nsnull, nsnull, buf, aText.Length());
   }
+
   aActualSize = aText.Length();
 
+  delete[] buf;
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize)
 {
-#if 0
-  if (!mIsPassword) {
-    NS_ALLOC_STR_BUF(buf, aText, 512);
-    XmTextInsert(mWidget, aStartPos, buf);
-    NS_FREE_STR_BUF(buf);
-  } else {
-    PasswordData * data;
-    XtVaGetValues(mWidget, XmNuserData, &data, NULL);
-    data->mIgnore   = PR_TRUE;
-    nsString newText(aText);
-    data->mPassword.Insert(newText, aStartPos, aText.Length());
-    char * buf = new char[data->mPassword.Length()+1];
-    memset(buf, '*', data->mPassword.Length());
-    buf[data->mPassword.Length()] = 0;
-    XmTextInsert(mWidget, aStartPos, buf);
-    data->mIgnore = PR_FALSE;
-  }
+  char *buf = aText.ToNewCString();
+
+  gtk_editable_insert_text(GTK_EDITABLE(mWidget), buf, (gint)aText.Length(), (gint*)&aStartPos);
+
   aActualSize = aText.Length();
-#endif
+
+  delete[] buf;
   return NS_OK;
 }
 
@@ -157,7 +123,10 @@ NS_METHOD  nsTextHelper::RemoveText()
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 {
-  mIsPassword = aIsPassword;
+  if (GTK_IS_ENTRY(mWidget)) {
+    gtk_entry_set_visibility(GTK_ENTRY(mWidget), aIsPassword);
+  }
+  // this won't work for gtk_texts
   return NS_OK;
 }
 
@@ -168,7 +137,7 @@ NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyF
                "SetReadOnly - Widget is NULL, Create may not have been called!");
   aOldReadOnlyFlag = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
-  gtk_editable_set_editable(GTK_EDITABLE(mWidget), aReadOnlyFlag?PR_FALSE:PR_TRUE);
+  gtk_editable_set_editable(GTK_EDITABLE(mWidget), aReadOnlyFlag);
   return NS_OK;
 }
 
