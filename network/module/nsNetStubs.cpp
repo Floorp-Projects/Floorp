@@ -25,6 +25,9 @@
 #include "libevent.h"
 #include "mkgeturl.h"
 #include "net.h"
+#include "nsIRefreshUrl.h"
+#include "nsString.h"
+#include "nsNetStream.h"
 
 extern "C" {
 #include "secnav.h"
@@ -362,8 +365,40 @@ char *WH_FilePlatformName(const char *pName)
 //  05-03-96    modified to use new API outside of idle loop.
 //
 
-void FE_SetRefreshURLTimer(MWContext *pContext, uint32 ulSeconds, char *pRefreshUrl) 
+NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
+
+void FE_SetRefreshURLTimer(MWContext *pContext, uint32 seconds, char *pRefreshURL) 
 {
+    nsresult rv;
+    nsIRefreshUrl* IRefreshURL=nsnull;
+    nsString refreshURL(pRefreshURL);
+    nsConnectionInfo* pConn;
+
+    NS_PRECONDITION((pRefreshURL != nsnull), "Null pointer...");
+    NS_PRECONDITION((pContext != nsnull), "Null pointer...");
+    NS_PRECONDITION((pContext->modular_data != nsnull), "Null pointer...");
+    NS_PRECONDITION((pContext->modular_data->fe_data != nsnull), "Null pointer...");
+
+    // Get the nsConnectionInfo out of the context.
+    // modular_data points to a URL_Struct.
+    pConn = (nsConnectionInfo*) pContext->modular_data->fe_data;
+
+    NS_PRECONDITION((pConn->pConsumer != nsnull), "Null pointer...");
+
+    if (pConn->pConsumer) {
+
+        rv = pConn->pConsumer->QueryInterface(kRefreshURLIID, (void**)&IRefreshURL);
+
+        if(rv == NS_OK) {
+            nsIURL* aURL;
+            rv = NS_NewURL(&aURL, refreshURL);
+            if(rv == NS_OK) {
+                IRefreshURL->RefreshURL(aURL, seconds*1000, FALSE);
+                NS_RELEASE(IRefreshURL);
+            }
+        }
+    }
+
     MOZ_FUNCTION_STUB;
 }
 

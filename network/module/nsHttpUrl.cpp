@@ -28,6 +28,8 @@
 #include "prmem.h"
 #include "plstr.h"
 
+MWContext *new_stub_context(URL_Struct *URL_s);
+
 static NS_DEFINE_IID(kIOutputStreamIID,  NS_IOUTPUTSTREAM_IID);
 
 
@@ -57,6 +59,12 @@ public:
     NS_IMETHOD  SendData(const char *aBuffer, PRInt32 aLength);
     NS_IMETHOD  SendDataFromFile(const char *aFile);
 
+    /* Handle http-equiv meta tags. */
+    NS_IMETHOD  AddMimeHeader(const char *name, const char *value);
+
+    /* Here's our link to the netlib world.... */
+    URL_Struct *m_URL_s;
+
     /* nsIHttpUrl interface... */
 
 
@@ -81,6 +89,7 @@ nsHttpUrlImpl::nsHttpUrlImpl(nsISupports* outer)
     m_PostType = Send_None;
     m_PostBuffer = nsnull;
     m_PostBufferLength = 0;
+    m_URL_s = nsnull;
 }
 
 nsHttpUrlImpl::~nsHttpUrlImpl()
@@ -131,6 +140,9 @@ nsresult nsHttpUrlImpl::AggregatedQueryInterface(const nsIID &aIID,
 NS_METHOD nsHttpUrlImpl::InitializeURLInfo(URL_Struct *URL_s)
 {
     nsresult result = NS_OK;
+
+    /* Hook us up with the world. */
+    m_URL_s                  = URL_s;
 
     if (Send_None != m_PostType) {
         /* Free any existing POST data hanging off the URL_Struct */
@@ -212,6 +224,59 @@ done:
     return result;
 }
 
+
+NS_METHOD nsHttpUrlImpl::AddMimeHeader(const char *name, const char *value)
+{
+    MWContext *stubContext=NULL;
+    char *aName=NULL;
+    char *aVal=NULL;
+    PRBool addColon=TRUE;
+    PRInt32 len=0;
+
+    NS_PRECONDITION((name != nsnull) && ((*name) != nsnull), "Bad name");
+    NS_PRECONDITION((value != nsnull) && ((*value) != nsnull), "Bad value");
+    
+    if(!name
+       || !*name
+       || !value
+       || !*value)
+        return NS_FALSE;
+
+    // Make sure we've got a colon on the end of the header name
+    if(PL_strchr(name, ':'))
+        addColon=FALSE;
+
+    /* Bring in our own copies of the data. */
+    if(addColon)
+        aName = (char*)PR_Malloc(PL_strlen(name)+2); // add extra byte for colon
+    else
+        aName = (char*)PR_Malloc(PL_strlen(name)+1);
+    if(!aName)
+        return NS_ERROR_OUT_OF_MEMORY;
+    aVal  = (char*)PR_Malloc(PL_strlen(value)+1);
+    if(!aVal)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_strcpy(aName, name);
+    if(addColon) {
+        PL_strcat(aName, ":");
+    }
+        
+    PL_strcpy(aVal, value);
+
+    stubContext = new_stub_context(m_URL_s);
+
+    /* Make the real call to NET_ParseMimeHeader, passing in the dummy bam context. */
+
+
+    NET_ParseMimeHeader(FO_CACHE_AND_NGLAYOUT,
+				stubContext, 
+				m_URL_s, 
+				aName, 
+				aVal,
+				TRUE);
+    return NS_OK;
+}
 
 nsresult nsHttpUrlImpl::PostFile(const char *aFile)
 {

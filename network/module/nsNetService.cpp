@@ -123,7 +123,7 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
                                            NET_ChunkedDecoderStream);
 
     mPollingTimer = nsnull;
-    
+
     RL_Init();
     
     mContainer = aContainerApp;
@@ -493,10 +493,6 @@ void nsNetlibService::NetPollSocketsCallback(nsITimer* aTimer, void* aClosure)
     }
 }
 
-
-
-
-
 extern "C" {
 
 static nsNetlibService *pNetlib = NULL;
@@ -587,7 +583,18 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
             if (pConn->pConsumer) {
                 nsAutoString status;
 
-                pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_FAILED, status);
+                /* If we were redirected, the Data Consumer will still be
+                 * around (not released in the stream completion routine.
+                 * In this case we want to notify the consumer that the
+                 * binding completed. This leaves a hole: when we're
+                 * redirected, and we're in this if statement because
+                 * the stream was never "competed". */
+                if (pConn->redirect) {
+                    pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status);
+                } else {
+                    pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_FAILED, status);
+                }
+
                 pConn->pConsumer->Release();
                 pConn->pConsumer = NULL;
             }
