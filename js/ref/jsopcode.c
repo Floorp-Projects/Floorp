@@ -1691,7 +1691,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		todo = -2;
 		break;
 
-#ifdef JS_HAS_INITIALIZERS
+#if JS_HAS_INITIALIZERS
 	      case JSOP_NEWINIT:
 		LOCAL_ASSERT(ss->top >= 2);
 		(void) PopOff(ss, op);

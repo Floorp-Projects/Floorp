@@ -985,7 +985,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    pn1 = NULL;
 	} else {
 	    /* Set pn1 to a var list or an initializing expression. */
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
             /* 
              * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
              * of the for statement.  This flag will will be used by the
@@ -1004,7 +1004,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    } else {
 		pn1 = Expr(cx, ts, tc);
 	    }
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
             tc->flags &= ~TCF_IN_FOR_INIT;
 #endif /* JS_HAS_IN_OPERATOR */
 	    if (!pn1)
@@ -1727,7 +1727,7 @@ static JSParseNode *
 CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn1, *pn2, *pn3;
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
     uintN oldflags;
 #endif /* JS_HAS_IN_OPERATOR */
 
@@ -1737,7 +1737,7 @@ CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn = NewParseNode(cx, &ts->token, PN_TERNARY);
 	if (!pn)
 	    return NULL;
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
         /*
          * Always accept the 'in' operator in the middle clause of a ternary,
          * where it's unambiguous, even if we might be parsing the init of a
@@ -1747,7 +1747,7 @@ CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         tc->flags &= ~TCF_IN_FOR_INIT;
 #endif /* JS_HAS_IN_OPERATOR */
 	pn2 = AssignExpr(cx, ts, tc);
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
         tc->flags = oldflags;
 #endif /* JS_HAS_IN_OPERATOR */
 
@@ -2360,13 +2360,13 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       case TOK_LP:
       {
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
         uintN oldflags;
 #endif
 	pn = NewParseNode(cx, &ts->token, PN_UNARY);
 	if (!pn)
 	    return NULL;
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
         /*
          * Always accept the 'in' operator in a parenthesized expression,
          * where it's unambiguous, even if we might be parsing the init of a
@@ -2376,7 +2376,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         tc->flags &= ~TCF_IN_FOR_INIT;
 #endif /* JS_HAS_IN_OPERATOR */
 	pn2 = Expr(cx, ts, tc);
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
         tc->flags = oldflags;
 #endif /* JS_HAS_IN_OPERATOR */
 	if (!pn2)
@@ -2679,3 +2679,4 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
 
     return JS_TRUE;
 }
+

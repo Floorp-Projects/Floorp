@@ -1158,7 +1158,7 @@ js_Interpret(JSContext *cx, jsval *result)
     }                                                                         \
 }
 
-#ifdef JS_HAS_IN_OPERATOR
+#if JS_HAS_IN_OPERATOR
 	  case JSOP_IN:
 	    rval = POP();
             if (!JSVAL_IS_OBJECT(rval) || rval == JSVAL_NULL) {
@@ -2460,7 +2460,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    *vp = sp[-1];
 	    break;
 
-#ifdef JS_HAS_INITIALIZERS
+#if JS_HAS_INITIALIZERS
 	  case JSOP_NEWINIT:
 	    argc = 0;
 	    fp->sharpDepth++;
@@ -2640,3 +2640,4 @@ out:
     cx->interpLevel--;
     return ok;
 }
+
