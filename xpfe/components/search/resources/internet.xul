@@ -43,14 +43,8 @@
 
 			<treehead>
 				<treerow>
-					<treecell>
-						&checkbox.column.label;
-					</treecell>
-					<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" >
-						<observes element="NameColumn" attribute="sortActive"/>
-						<observes element="NameColumn" attribute="sortDirection"/>
-						&engine.column.label;
-					</treecell>
+					<treecell value="&checkbox.column.label;"/>
+					<treecell observes="NameColumn" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending"/>
 				</treerow>
 			</treehead>
 		</tree>
