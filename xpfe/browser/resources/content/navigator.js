@@ -1643,6 +1643,14 @@ function hiddenWindowStartup()
       broadcaster.setAttribute("disabled", "true");
   }
 
+  // Get the preferences service
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefService);
+  pref = prefService.getBranch(null);
+
+  // init global strings bundle
+  gNavigatorBundle = document.getElementById("bundle_navigator");
+
   // now load bookmarks after a delay
   setTimeout(hiddenWindowLoadBookmarksCallback, 0);
 }
