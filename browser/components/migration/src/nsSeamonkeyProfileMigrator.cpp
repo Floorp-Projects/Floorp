@@ -123,8 +123,13 @@ nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
                                            PRBool aReplace, 
                                            PRUint16* aResult)
 {
-  if (!mSourceProfile) 
+  *aResult = 0;
+
+  if (!mSourceProfile) {
     GetSourceProfile(aProfile);
+    if (!mSourceProfile)
+      return NS_ERROR_FILE_NOT_FOUND;
+  }
 
   MigrationData data[] = { { ToNewUnicode(FILE_NAME_PREFS),
                              nsIBrowserProfileMigrator::SETTINGS,

@@ -141,8 +141,12 @@ nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
                                          PRBool aReplace,
                                          PRUint16* aResult)
 {
-  if (!mSourceProfile) 
+  *aResult = 0;
+  if (!mSourceProfile) {
     GetSourceProfile(aProfile);
+    if (!mSourceProfile) 
+      return NS_ERROR_FILE_NOT_FOUND;
+  }
 
   PRBool exists;
   MigrationData data[] = { { ToNewUnicode(PREF_FILE_NAME_IN_4x),
