@@ -1852,7 +1852,7 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 
   // Add the map content object to the document
   rv = mCurrentContext->AddLeaf(map);
-
+  NS_RELEASE(map);
   return rv;
 }
 
