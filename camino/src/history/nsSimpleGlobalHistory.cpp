@@ -66,6 +66,7 @@
 
 #include "nsSimpleGlobalHistory.h"
 
+#define DEBUG_HISTORY 1 // for bug 280342
 
 #define PREF_BRANCH_BASE                        "browser."
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
@@ -126,7 +127,7 @@ public:
 
 // closure structures for RemoveMatchingRows
 struct MatchExpirationData {
-  PRTime*                 expirationDate;
+  PRTime                  expirationDate;
   nsSimpleGlobalHistory*  history;
 };
 
@@ -161,126 +162,11 @@ struct AutocompleteExcludeData {
 
 #pragma mark -
 
-static PRTime
-NormalizeTime(PRTime aTime)
-{
-#if 0
-  // we can optimize this by converting the time to local time, rounding
-  // down to the previous day boundary, and then converting back to UTC.
-  // This avoids two costly calls to localtime()
-
-  // we calculate (gmtTime - (gmtTime % MSECS_PER_DAY)) - mCachedGMTOffset
-  PRTime gmtTime;
-  LL_ADD(gmtTime, aTime, mCachedGMTOffset);
-  PRInt64 curDayUSec;
-  LL_MOD(curDayUSec, gmtTime, MSECS_PER_DAY);
-  PRTime gmtMidnight;
-  LL_SUB(gmtMidnight, gmtTime, curDayUSec);
-  PRTime localMidnight;
-  LL_SUB(localMidnight, gmtMidnight, mCachedGMTOffset);
-  
-  return localMidnight;
-#else
-  // normalize both now and date to midnight of the day they occur on
-  PRExplodedTime explodedTime;
-  PR_ExplodeTime(aTime, PR_LocalTimeParameters, &explodedTime);
-
-  // set to midnight (0:00)
-  explodedTime.tm_min =
-    explodedTime.tm_hour =
-    explodedTime.tm_sec =
-    explodedTime.tm_usec = 0;
-
-  return PR_ImplodeTime(&explodedTime);
-#endif
-}
-
-static PRInt32
-GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
-{
-  PRTime dateMidnight = NormalizeTime(aDate);
-#if 0
-  PRTime diff;
-  LL_SUB(diff, timeNow, dateMidnight);
-  PRInt64 ageInDays;
-  LL_DIV(ageInDays, diff, MSECS_PER_DAY);
-  PRInt32 retval;
-  LL_L2I(retval, ageInDays);
-#else
-  PRInt64 diff;
-  LL_SUB(diff, aNormalizedNow, dateMidnight);
-
-  // two-step process since I can't seem to load
-  // MSECS_PER_DAY * PR_MSEC_PER_SEC into a PRInt64 at compile time
-  PRInt64 msecPerSec;
-  LL_I2L(msecPerSec, PR_MSEC_PER_SEC);
-  PRInt64 ageInSeconds;
-  LL_DIV(ageInSeconds, diff, msecPerSec);
-
-  PRInt32 ageSec; LL_L2I(ageSec, ageInSeconds);
-  
-  PRInt64 msecPerDay;
-  LL_I2L(msecPerDay, MSECS_PER_DAY);
-  
-  PRInt64 ageInDays;
-  LL_DIV(ageInDays, ageInSeconds, msecPerDay);
-
-  PRInt32 retval;
-  LL_L2I(retval, ageInDays);
-#endif
-  return retval;
-}
-
-
-static PRBool
-matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
-{
-  MatchSearchTermData *matchSearchTerm = (MatchSearchTermData*)aClosure;
-  const HistorySearchTerm *term = matchSearchTerm->term;
-  nsIMdbEnv *env = matchSearchTerm->env;
-  nsIMdbStore *store = matchSearchTerm->store;
-  
-  // fill in the rest of the closure if it's not filled in yet
-  // this saves us from recalculating this stuff on every row
-  if (!matchSearchTerm->haveClosure) {
-    PRInt32 err;
-    // Need to create an nsAutoString to use ToInteger
-    matchSearchTerm->intValue =  nsAutoString(term->text).ToInteger(&err);
-    matchSearchTerm->now = NormalizeTime(PR_Now());
-    if (err != 0) return PR_FALSE;
-    matchSearchTerm->haveClosure = PR_TRUE;
-  }
-  
-  // XXX convert the property to a column, get the column value
-
-  mdb_column column;
-  mdb_err err = store->StringToToken(env, "LastVisitDate", &column);
-  if (err != 0) return PR_FALSE;
-
-  mdbYarn yarn;
-  err = row->AliasCellYarn(env, column, &yarn);
-  if (err != 0) return PR_FALSE;
-  
-  PRTime rowDate;
-  PR_sscanf((const char*)yarn.mYarn_Buf, "%lld", &rowDate);
-
-  PRInt32 days = GetAgeInDays(matchSearchTerm->now, rowDate);
-  
-  if (term->method.Equals("is"))
-    return (days == matchSearchTerm->intValue);
-  else if (term->method.Equals("isgreater"))
-    return (days >  matchSearchTerm->intValue);
-  else if (term->method.Equals("isless"))
-    return (days <  matchSearchTerm->intValue);
-  
-  return PR_FALSE;
-}
-
 static PRBool
 matchExpirationCallback(nsIMdbRow *row, void *aClosure)
 {
   MatchExpirationData *expires = (MatchExpirationData*)aClosure;
-  return expires->history->MatchExpiration(row, expires->expirationDate);
+  return expires->history->MatchExpiration(row, &expires->expirationDate);
 }
 
 static PRBool
@@ -1355,7 +1241,16 @@ nsSimpleGlobalHistory::MatchExpiration(nsIMdbRow *row, PRTime* expirationDate)
   if (NS_FAILED(rv)) 
     return PR_FALSE;
   
-  return LL_CMP(lastVisitedTime, <, *expirationDate);
+  PRBool matches = LL_CMP(lastVisitedTime, <, (*expirationDate));
+#if 0
+  if (matches)
+  {
+    nsCAutoString url;
+    GetRowValue(row, kToken_URLColumn, url);
+    printf("  Removing history row for %s\n", url.get());
+  }
+#endif
+  return matches;
 }
 
 
@@ -1703,7 +1598,7 @@ nsSimpleGlobalHistory::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+  gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);  
   gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
   nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(gPrefBranch);
   if (pbi) {
@@ -1762,9 +1657,15 @@ nsSimpleGlobalHistory::OpenDB()
   PRBool exists = PR_TRUE;
 
   historyFile->Exists(&exists);
-    
+#ifdef DEBUG_HISTORY
+  fprintf(stderr, "HISTORY DEBUG: historyFile exists: %d\n", exists);
+#endif
+
   if (!exists || NS_FAILED(rv = OpenExistingFile(gMdbFactory, filePath.get())))
   {
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: removing old history file, making new one\n");
+#endif
     // we couldn't open the file, so it's either corrupt or doesn't exist.
     // attempt to delete the file, but ignore the error
     historyFile->Remove(PR_FALSE);
@@ -1788,6 +1689,9 @@ nsSimpleGlobalHistory::OpenDB()
 nsresult
 nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *filePath)
 {
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: OpenExistingFile(%s)\n", filePath);
+#endif
 
   mdb_err err;
   nsresult rv;
@@ -1800,11 +1704,19 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
   err = factory->OpenOldFile(mEnv, dbHeap, filePath,
                              dbFrozen, getter_AddRefs(oldFile));
 
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: OpenOldFile returned err 0x%08x (file %p)\n", err, oldFile.get());
+#endif
+
   // don't assert, the file might just not be there
   if ((err !=0) || !oldFile) return NS_ERROR_FAILURE;
 
   err = factory->CanOpenFilePort(mEnv, oldFile, // the file to investigate
                                  &canopen, &outfmt);
+
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: CanOpenFilePort returned err 0x%08x (canopen %hu)\n", err, canopen);
+#endif
 
   // XXX possible that format out of date, in which case we should
   // just re-write the file.
@@ -1814,6 +1726,11 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
   mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
 
   err = factory->OpenFileStore(mEnv, dbHeap, oldFile, &policy, &thumb);
+
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: OpenFileStore returned err 0x%08x (thumb %p)\n", err, thumb);
+#endif
+
   if ((err !=0) || !thumb) return NS_ERROR_FAILURE;
 
   mdb_count total;
@@ -1831,9 +1748,18 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
 
   NS_IF_RELEASE(thumb);
 
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: DoMore or ThumbToOpenStore returned err 0x%08x\n", err);
+#endif
+
   if (err != 0) return NS_ERROR_FAILURE;
 
   rv = CreateTokens();
+
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: CreateTokens returned err 0x%08x\n", rv);
+#endif
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   mdbOid oid = { kToken_HistoryRowScope, 1 };
@@ -1841,12 +1767,21 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
   if (!mTable) {
     NS_WARNING("Your history file is somehow corrupt.. deleting it.");
+
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: GetTable failed\n");
+#endif
+
     return NS_ERROR_FAILURE;
   }
 
   err = mTable->GetMetaRow(mEnv, &oid, nsnull, getter_AddRefs(mMetaRow));
   if (err != 0)
     NS_WARNING("Could not get meta row\n");
+
+#ifdef DEBUG_HISTORY
+    fprintf(stderr, "HISTORY DEBUG: GetMetaRow failed (err 0x%08x\n", err);
+#endif
 
   CheckHostnameEntries();
 
@@ -2110,6 +2045,7 @@ nsSimpleGlobalHistory::Commit(eCommitType commitType)
       }
     }
   }
+
   switch (commitType)
   {
     case kLargeCommit:
@@ -2155,7 +2091,7 @@ nsSimpleGlobalHistory::ExpireEntries(PRBool notify)
 
   MatchExpirationData expiration;
   expiration.history = this;
-  expiration.expirationDate = &expirationDate;
+  expiration.expirationDate = expirationDate;
   
   return RemoveMatchingRows(matchExpirationCallback, (void *)&expiration, notify);
 }
@@ -2201,34 +2137,9 @@ nsSimpleGlobalHistory::FireSyncTimer(nsITimer *aTimer, void *aClosure)
 }
 
 
-// hack to avoid calling PR_Now() too often, as is the case when
-// we're asked the ageindays of many history entries in a row
 PRTime
 nsSimpleGlobalHistory::GetNow()
 {
-#if 0
-  if (!mNowValid) {             // not dirty, mLastNow is crufty
-    mLastNow = PR_Now();
-
-    // we also cache our offset from GMT, to optimize NormalizeTime()
-    // note that this cache is only valid if GetNow() is called before
-    // NormalizeTime(), but that is always the case here.
-    PRExplodedTime explodedNow;
-    PR_ExplodeTime(mLastNow, PR_LocalTimeParameters, &explodedNow);
-    mCachedGMTOffset = nsInt64(explodedNow.tm_params.tp_gmt_offset) * nsInt64((PRUint32)PR_USEC_PER_SEC) +
-                       nsInt64(explodedNow.tm_params.tp_dst_offset) * nsInt64((PRUint32)PR_USEC_PER_SEC);
-
-    mNowValid = PR_TRUE;
-    if (!mExpireNowTimer)
-      mExpireNowTimer = do_CreateInstance("@mozilla.org/timer;1");
-
-    if (mExpireNowTimer)
-      mExpireNowTimer->InitWithFuncCallback(expireNowTimer, this, HISTORY_EXPIRE_NOW_TIMEOUT,
-                                            nsITimer::TYPE_ONE_SHOT);
-  }
-  
-  return mLastNow;
-#endif
   return PR_Now();
 }
 
