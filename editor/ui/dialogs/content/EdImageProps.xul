@@ -229,8 +229,9 @@
               <menuitem class="align-menu" value="top" label="&topPopup.value;"/>
               <menuitem class="align-menu" value="center" label="&centerPopup.value;"/>
               <menuitem class="align-menu" value="bottom" label="&bottomPopup.value;"/>
-              <menuitem class="align-menu" value="left" label="&wrapLeftPopup.value;"/>
-              <menuitem class="align-menu" value="right" label="&wrapRightPopup.value;"/>
+              <!-- HTML attribute value is opposite of the button label on purpose -->
+              <menuitem class="align-menu" value="right" label="&wrapLeftPopup.value;"/>
+              <menuitem class="align-menu" value="left"  label="&wrapRightPopup.value;"/>
             </menupopup>
           </menulist>
         </titledbox>
