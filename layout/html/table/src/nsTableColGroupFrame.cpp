@@ -437,7 +437,7 @@ nsTableColGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                    nsIFrame**     aFrame)
 {
   // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
 }
 
 NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,

@@ -161,15 +161,6 @@ nsTableColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                           nsFramePaintLayer aWhichLayer,
                           nsIFrame** aFrame)
 {
-  if ((aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) &&
-      (mRect.Contains(aPoint))) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
-    }
-  }
   return NS_ERROR_FAILURE;
 }
 
