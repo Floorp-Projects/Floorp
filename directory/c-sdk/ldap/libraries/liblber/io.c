@@ -103,6 +103,8 @@ static int nslberi_extwrite_compat( int s, const void *buf, int len,
 static unsigned long get_tag( Sockbuf *sb, BerElement *ber);
 static unsigned long get_ber_len( BerElement *ber);
 static unsigned long read_len_in_ber( Sockbuf *sb, BerElement *ber);
+static unsigned long get_and_check_length( BerElement *ber,
+		unsigned long length, Sockbuf *sock );
 
 /*
  * internal global structure for memory allocation callback functions
@@ -1178,6 +1180,7 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 	long		rc;
 	int		noctets, diff;
 	byte_buffer sb = {0};
+	int rcnt = 0;
 
 
 	/*
@@ -1199,16 +1202,17 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 
 	sb.p = buffer;
 	sb.length = buffer_size;
+	*len = netlen = 0;
 
 	if ( ber->ber_rwptr == NULL ) {
 		/*
 		 * First, we read the tag.
 		 */
 
-                /* if we have been called before with a fragment not
-		 * containing a comlete length, we have no rwptr but
+		/* if we have been called before with a fragment not
+		 * containing a complete length, we have no rwptr but
 	 	 * a tag already
-                 */
+		*/
 		if ( ber->ber_tag == LBER_DEFAULT ) {
 			if ( (tag = get_buffer_tag( &sb )) == LBER_DEFAULT ) {
 				goto premature_exit;
@@ -1230,11 +1234,6 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 		 * long.
 		 */
 
-                /* if the length is in long form and we don't get it in one
-                 * fragment, we should handle this (TBD).
-                 */
-
-		*len = netlen = 0;
 		if ( read_bytes( &sb, &lc, 1 ) != 1 ) {
 			goto premature_exit;
 		}
@@ -1243,41 +1242,65 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 			if ( noctets > sizeof(unsigned long) )
 				goto premature_exit;
 			diff = sizeof(unsigned long) - noctets;
-			if ( read_bytes( &sb, (unsigned char *)&netlen + diff,
-			    noctets ) != noctets ) {
+			rcnt = read_bytes( &sb, (unsigned char *)&netlen + diff, noctets );
+			if ( rcnt != noctets ) {
+				/* keep the read bytes in buffer for the next round */
+				if ( ber->ber_end - ber->ber_buf < rcnt + 1 ) {
+					if ( nslberi_ber_realloc( ber, rcnt + 1 ) != 0 )
+						goto premature_exit;
+					ber->ber_end = ber->ber_buf + rcnt + 1;
+				}
+				ber->ber_ptr = ber->ber_buf;
+				ber->ber_buf[0] = lc;
+				SAFEMEMCPY( &ber->ber_buf[1], (const char *)&netlen + diff, rcnt );
+				/* The way how ber_rwptr is used here is exceptional.
+				 * Here, ber_rwptr is set after the buffer contents,
+				 * not to the next byte to be read.
+				 * This is b/c we need the number of bytes that were read (rcnt)
+				 * in the next process [ in "else if (0 == ber->ber_len)" ]
+				 */
+				ber->ber_rwptr = ber->ber_buf + rcnt + 1;
 				goto premature_exit;
 			}
 			*len = LBER_NTOHL( netlen );
 		} else {
 			*len = lc;
 		}
-		ber->ber_len = *len;
 
-		/*
-		 * Finally, malloc a buffer for the contents and read it in.
-		 * It's this buffer that's passed to all the other ber decoding
-		 * routines.
-		 */
-
-#if defined( DOS ) && !defined( _WIN32 )
-		if ( *len > 65535 ) {	/* DOS can't allocate > 64K */
+		if ( LBER_DEFAULT == get_and_check_length(ber, *len, sock)) {
 			goto premature_exit;
 		}
-#endif /* DOS && !_WIN32 */
-
-                if ( (sock != NULL)  &&
-		    ( sock->sb_options & LBER_SOCKBUF_OPT_MAX_INCOMING_SIZE )
-                    && (*len > sock->sb_max_incoming) ) {
-                        return( LBER_DEFAULT );
-                }
-
-		if ( ber->ber_buf + *len > ber->ber_end ) {
-			if ( nslberi_ber_realloc( ber, *len ) != 0 )
+	} else if (0 == ber->ber_len) {
+		/* Still waiting to receive the length */
+		lc = ber->ber_buf[0];
+		if ( lc & 0x80 ) {
+			int prevcnt = ber->ber_rwptr - ber->ber_buf - 1/* lc */;
+			noctets = (lc & 0x7f);
+			diff = sizeof(unsigned long) - noctets;
+			SAFEMEMCPY( (char *)&netlen + diff, &ber->ber_buf[1], prevcnt );
+			rcnt = read_bytes( &sb, (unsigned char *)&netlen + diff + prevcnt,
+				noctets - prevcnt );
+			if ( rcnt != noctets - prevcnt) {
+				/* keep the read bytes in buffer for the next round */
+				if ( ber->ber_end - ber->ber_rwptr < rcnt ) {
+					if ( nslberi_ber_realloc( ber, prevcnt + rcnt + 1 ) != 0 )
+						goto premature_exit;
+					ber->ber_end = ber->ber_rwptr + rcnt;
+				}
+				SAFEMEMCPY( ber->ber_rwptr,
+					(const char *)&netlen + diff + prevcnt, rcnt );
+				/* ditto */
+				ber->ber_rwptr += rcnt;
 				goto premature_exit;
+			}
+			*len = LBER_NTOHL( netlen );
+		} else {
+			*len = lc;	/* should not come here */
 		}
-		ber->ber_ptr = ber->ber_buf;
-		ber->ber_end = ber->ber_buf + *len;
-		ber->ber_rwptr = ber->ber_buf;
+
+		if ( LBER_DEFAULT == get_and_check_length(ber, *len, sock)) {
+			goto premature_exit;
+		}
 	}
 
 	toread = (unsigned long)ber->ber_end - (unsigned long)ber->ber_rwptr;
@@ -1302,6 +1325,39 @@ premature_exit:
 	 */
 	*Bytes_Scanned = sb.offset;
 	return(LBER_DEFAULT);
+}
+
+
+static unsigned long
+get_and_check_length( BerElement *ber, unsigned long length, Sockbuf *sock )
+{
+	/*
+	 * malloc a buffer for the contents and read it in.  This buffer
+	 * is passed to all the other ber decoding routines.
+	 */
+	ber->ber_len = length;
+
+#if defined( DOS ) && !defined( _WIN32 )
+	if ( length > 65535 ) {	/* DOS can't allocate > 64K */
+		return( LBER_DEFAULT );
+	}
+#endif /* DOS && !_WIN32 */
+
+	if ( (sock != NULL)  &&
+		( sock->sb_options & LBER_SOCKBUF_OPT_MAX_INCOMING_SIZE )
+		&& (length > sock->sb_max_incoming) ) {
+		return( LBER_DEFAULT );
+	}
+
+	if ( ber->ber_buf + length > ber->ber_end ) {
+		if ( nslberi_ber_realloc( ber, length ) != 0 )
+			return( LBER_DEFAULT );
+	}
+	ber->ber_ptr = ber->ber_buf;
+	ber->ber_end = ber->ber_buf + length;
+	ber->ber_rwptr = ber->ber_buf;
+
+	return 0;
 }
 
 
