@@ -37,27 +37,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* nsIVariant based Property Bag support. */
+/* nsIVariant based Property support. */
 
 #include "nsISupports.idl"
 
 interface nsIVariant;
-interface nsISimpleEnumerator;
 
-[scriptable, uuid(bfcd37b0-a49f-11d5-910d-0010a4e73d9a)]
-interface nsIPropertyBag : nsISupports
+[scriptable, uuid(6dcf9030-a49f-11d5-910d-0010a4e73d9a)]
+interface nsIProperty : nsISupports
 {
     /**
-     * Get a nsISimpleEnumerator whose elements are nsIProperty objects.
+     * Get the name of the property.
      */
-    readonly attribute nsISimpleEnumerator enumerator;
+    readonly attribute AString    name;
 
     /**
-     * Get a property value for the given name.
-     * @throws NS_ERROR_FAILURE if a property with that name doesn't
-     * exist.
+     * Get the value of the property.
      */
-    nsIVariant getProperty(in AString name);
+    readonly attribute nsIVariant value;
 };
-
-

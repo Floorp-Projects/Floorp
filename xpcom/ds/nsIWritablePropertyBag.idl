@@ -37,27 +37,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* nsIVariant based Property Bag support. */
+/* nsIVariant based writable Property Bag support. */
 
-#include "nsISupports.idl"
+#include "nsIPropertyBag.idl"
 
-interface nsIVariant;
-interface nsISimpleEnumerator;
-
-[scriptable, uuid(bfcd37b0-a49f-11d5-910d-0010a4e73d9a)]
-interface nsIPropertyBag : nsISupports
+[scriptable, uuid(96fc4671-eeb4-4823-9421-e50fb70ad353)]
+interface nsIWritablePropertyBag : nsIPropertyBag
 {
     /**
-     * Get a nsISimpleEnumerator whose elements are nsIProperty objects.
+     * Set a property with the given name to the given value.  If
+     * a property already exists with the given name, it is
+     * overwritten.
      */
-    readonly attribute nsISimpleEnumerator enumerator;
+    void setProperty(in AString name, in nsIVariant value);
 
     /**
-     * Get a property value for the given name.
+     * Delete a property with the given name.
      * @throws NS_ERROR_FAILURE if a property with that name doesn't
      * exist.
      */
-    nsIVariant getProperty(in AString name);
+    void deleteProperty(in AString name);
 };
-
-
