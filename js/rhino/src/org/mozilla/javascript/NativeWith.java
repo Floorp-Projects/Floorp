@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -35,19 +36,16 @@
 
 package org.mozilla.javascript;
 
-import java.lang.reflect.Method;
-
 /**
  * This class implements the object lookup required for the
  * <code>with</code> statement.
  * It simply delegates every action to its prototype except
  * for operations on its parent.
  */
-public final class NativeWith implements Scriptable, IdFunctionMaster {
+public class NativeWith implements Scriptable, IdFunctionMaster {
 
     static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeWith obj = new NativeWith();
-        obj.prototypeFlag = true;
 
         obj.setParentScope(scope);
         obj.setPrototype(ScriptableObject.getObjectPrototype(scope));
@@ -61,7 +59,7 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
     private NativeWith() {
     }
 
-    NativeWith(Scriptable parent, Scriptable prototype) {
+    protected NativeWith(Scriptable parent, Scriptable prototype) {
         this.parent = parent;
         this.prototype = prototype;
     }
@@ -180,9 +178,6 @@ public final class NativeWith implements Scriptable, IdFunctionMaster {
     private static final int
         Id_constructor = 1;
 
-    private Scriptable prototype;
-    private Scriptable parent;
-    private Scriptable constructor;
-
-    private boolean prototypeFlag;
+    protected Scriptable prototype;
+    protected Scriptable parent;
 }
