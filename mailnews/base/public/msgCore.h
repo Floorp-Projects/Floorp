@@ -126,52 +126,10 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #endif /* XP_MAC */
 
 ////////////////////////////////////////////////////////////////////////////////
-// URI Utilities for RDF
-
-static const char kMailboxRootURI[] = "mailbox:/";
-static const char kMailboxMessageRootURI[] = "mailbox_message:/";
-
-static const char kNewsRootURI[] = "news:/";
-static const char kNewsMessageRootURI[] = "news_message:/";
-
-static const char kImapRootURI[] = "imap:/";
-static const char kImapMessageRootURI[] = "imap_message:/";
-
-extern nsresult
-nsGetMailboxRoot(nsFileSpec &result);
-
-extern nsresult
-nsGetNewsRoot(nsFileSpec &result);
-
-extern nsresult
-nsGetImapRoot(nsFileSpec &result);
+// Utilities 
 
 extern nsresult
 nsGetMailFolderSeparator(nsString& result);
-
-extern nsresult
-nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
-
-extern nsresult
-nsPath2URI(const char* rootURI, const nsFileSpec& path, char* *uri);
-
-extern nsresult
-nsURI2Name(const char* rootURI, char* uriStr, nsString& name);
-
-extern nsresult
-nsParseMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
-
-extern nsresult
-nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri);
-
-extern nsresult 
-nsBuildNewsMessageURI(const nsFileSpec& path, PRUint32 key, char **uri);
-
-extern nsresult 
-nsBuildImapMessageURI(const nsFileSpec& path, PRUint32 key, char **uri);
-
-extern nsresult 
-nsGetFolderFromMessage(nsIMessage *message, nsIMsgFolder** folder);
 
 ////////////////////////////////////////////////////////////////////////////////
 
