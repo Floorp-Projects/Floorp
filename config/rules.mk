@@ -460,6 +460,14 @@ else
 endif
 	$(INSTALL) -m 555 $^.pure $(DIST)/bin
 
+quantify: $(PROGRAM)
+ifeq ($(CPP_PROG_LINK),1)
+	$(QUANTIFY) $(CCC) $(CXXFLAGS) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+else
+	$(QUANTIFY) $(CCF) -o $^.quantify $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+endif
+	$(INSTALL) -m 555 $^.quantify $(DIST)/bin
+
 ifneq ($(OS_ARCH),OS2)
 $(LIBRARY): $(OBJS) $(LOBJS)
 	@$(MAKE_OBJDIR)
