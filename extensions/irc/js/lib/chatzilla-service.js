@@ -39,7 +39,7 @@ ChatzillaService.prototype.chromeUrlForTask="chrome://chatzilla/content";
 ChatzillaService.prototype.helpText = "Start with an IRC chat client";
 ChatzillaService.prototype.handlesArgs=false;
 ChatzillaService.prototype.defaultArgs ="";
-ChatzillaService.prototype.openWindowWithArgs=true;
+ChatzillaService.prototype.openWindowWithArgs=false;
 
 var chatzillaModule = new Object();
 
