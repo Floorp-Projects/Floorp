@@ -432,7 +432,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       }
 
       nsHTMLReflowState kidReflowState(GetPresContext(), aReflowState, child,
-                                       availSize, tmpReason);
+                                       availSize, availSize.width,
+                                       aReflowState.mComputedHeight, tmpReason);
                                        
 #ifdef DEBUG_roc
       printf("*** Reflowing child #%d %p: reason = %d, availHeight=%d\n",

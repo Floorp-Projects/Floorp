@@ -153,6 +153,11 @@
   /* the column boxes inside a column-flowed block */
   /* make unicode-bidi inherit, otherwise it has no effect on column boxes */
   unicode-bidi: inherit;
+  /* inherit the outer frame's display, otherwise we turn into an inline */
+  display: inherit !important;
+  /* Carry through our parent's height so that %-height children get
+  their heights set */
+  height: 100%;
 }
 
 *|*::-moz-page, *|*::-moz-page-sequence {
