@@ -40,6 +40,11 @@
 # Contributor(s): 
 
 
+# $Revision: 1.21 $ 
+# $Date: 2002/05/02 04:12:40 $ 
+# $Author: kestes%walrus.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
+# $Name:  $ 
 
 
 
@@ -95,7 +100,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.20 $ )[1];
+$VERSION = ( qw $Revision: 1.21 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -561,7 +566,7 @@ sub status_table_row {
       my $cell_contents = $text_browser_color_string ||
           $HTMLPopUp::EMPTY_TABLE_CELL;
 
-    @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
+    @outrow = ("\t<!-- skipping: VC_Bonsai: tree: $tree -->".
                "<td align=center $cell_options>$cell_contents</td>\n");
   }
   

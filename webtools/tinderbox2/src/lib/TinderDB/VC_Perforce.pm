@@ -71,6 +71,11 @@
 # Contributor(s): 
 
 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/02 04:12:41 $ 
+# $Author: kestes%walrus.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
+# $Name:  $ 
 
 
 
@@ -143,7 +148,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.10 $ )[1];
+$VERSION = ( qw $Revision: 1.11 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -358,6 +363,9 @@ sub status_table_row {
          HTMLPopUp::text_browser_color_string($cell_color, $char);
   }
 
+  my $query_links = '';
+  $query_links.=  "\t\t".$text_browser_color_string."\n";
+
   if ( scalar(%{$affected_files}) || scalar(%{$jobs_fixed}) ) {
     
     # find the times which bound the cell so that we can set up a
@@ -508,7 +516,7 @@ sub status_table_row {
       my $cell_contents = $text_browser_color_string ||
           $HTMLPopUp::EMPTY_TABLE_CELL;
 
-    @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
+    @outrow = ("\t<!-- skipping: VC_Perforce: tree: $tree -->".
                "<td align=center $cell_options>$cell_contents</td>\n");
   }
   
