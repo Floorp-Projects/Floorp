@@ -10,7 +10,7 @@ Requires Ant version 1.2 or later
   <target name="properties">
     <property name="name" value="rhino"/>
     <property name="Name" value="Rhino"/>
-    <property name="version" value="1_5R5.1pre"/>
+    <property name="version" value="1_6R1pre"/>
     <property name="rhino.jar" value="js.jar"/>
     <property name="small-rhino.jar" value="smalljs.jar"/>
 

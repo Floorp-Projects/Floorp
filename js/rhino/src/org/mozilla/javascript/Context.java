@@ -132,6 +132,11 @@ public class Context
     public static final int VERSION_1_5 =      150;
 
     /**
+     * JavaScript 1.5
+     */
+    public static final int VERSION_1_6 =      160;
+
+    /**
      * Controls behaviour of <tt>Date.prototype.getYear()</tt>.
      * If <tt>hasFeature(FEATURE_NON_ECMA_GET_YEAR)</tt> returns true,
      * Date.prototype.getYear subtructs 1900 only if 1900 <= date < 2000.
@@ -710,6 +715,7 @@ public class Context
             case VERSION_1_3:
             case VERSION_1_4:
             case VERSION_1_5:
+            case VERSION_1_6:
                 return;
         }
         throw new IllegalArgumentException("Bad language version: "+version);
@@ -733,7 +739,7 @@ public class Context
      */
      public final String getImplementationVersion()
      {
-        return "Rhino 1.5 release 5.1 0000 00 00";
+        return "Rhino 1.6 release 1 0000 00 00";
      }
 
     /**
@@ -2123,7 +2129,7 @@ public class Context
                 return true;
         }
         // It is a bug to call the method with unknown featureIndex
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException(String.valueOf(featureIndex));
     }
 
     /**
