@@ -5239,7 +5239,7 @@ JSBool JS_DefineFunctions(JSContext *cx, JSObject *obj,
     <DESCRIPTION>
       <C>JS_DefineFunctions</C> creates one or more functions and makes them properties (methods) of a specified object, <C>obj</C>. <P/>
       <C>fs</C> is a pointer to the first element of an array of <C>JSFunctionSpec</C>. Each array element defines a single function: its name, the native C call wrapped by the function, the number of arguments passed to the function, and its attribute flags. The last element of the array must contain zero values. <C>JS_DefineFunctions</C> creates one function for each non-zero element in the array.<P/>
-      <C>JS_DefineFunctions</C> always returns <C>JS_TRUE</C>, indicating it has created all functions specified in the array.<P/>
+      If it successfully creates properties for all the functions specified in the array, <C>JS_DefineFunctions</C> returns <C>JS_TRUE</C>. Otherwise it returns <C>JS_FALSE</C>.<P/>
     </DESCRIPTION>
     <NOTE>
       To define only a single function for an object, call <C>JS_DefineFunction</C>.
