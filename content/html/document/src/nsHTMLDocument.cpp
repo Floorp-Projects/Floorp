@@ -2480,6 +2480,10 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     return rv;
   }
 
+  // Set the content type to "text/html" since we're always producing
+  // HTML when calling document.write().
+  mContentType = "text/html";
+
   if (root) {
     // Tear down the frames for the root element.
     ContentRemoved(nsnull, root, 0);
