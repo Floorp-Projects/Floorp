@@ -78,7 +78,7 @@ function goEditCardDialog(abURI, card, okCallback)
 function goPreferences(id, pane)
 {
 	if (!top.goPrefWindow)
-		top.goPrefWindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+		top.goPrefWindow = Components.classes['component://netscape/prefwindow'].getService(Components.interfaces.nsIPrefWindow);
 	
 	if ( top.goPrefWindow )
 		top.goPrefWindow.showWindow(id, window, pane);
