@@ -129,10 +129,10 @@ nsresult nsKeyBindMgr::ProcessKeyEvent(
 	        nsString theChar = tempChar;
 	         // NOTE - convert theChar and keyName to upper
 	        if (theChar == keyName) {
-		      keyElement->GetAttribute(nsAutoString("modifiedcommand"), modCommand);
+		      keyElement->GetAttribute(nsAutoString("modifiercommand"), modCommand);
 		      keyElement->GetAttribute(nsAutoString("modifiershift"),   modShift);
 		      keyElement->GetAttribute(nsAutoString("modifieralt"),     modAlt);
-		      keyElement->GetAttribute(nsAutoString("onclick"),         cmdToExecute);
+		      keyElement->GetAttribute(nsAutoString("onkeypress"),         cmdToExecute);
 	          do {
 	            // Test Command attribute
 	            #ifdef XP_MAC
