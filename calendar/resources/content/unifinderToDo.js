@@ -77,7 +77,7 @@ var unifinderToDoDataSourceObserver =
 
    onModifyItem : function( calendarToDo, originalToDo )
    {
-      toDoUnifinderItemUpdate( calendarToDo );
+      toDoUnifinderRefresh( );
    },
 
    onDeleteItem : function( calendarToDo )
@@ -292,10 +292,25 @@ var toDoTreeView =
    sortDirection : null,
 
    isContainer : function(){return false;},
-   getCellProperties : function( row,column, props ){ return false; },
+   getCellProperties : function( row,column, props )
+   { 
+      var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
+    
+      if( column == "unifinder-todo-tree-col-completed" )
+      {
+         props.AppendElement(aserv.getAtom("completed"));
+      }
+
+      if( column == "unifinder-todo-tree-col-priority" )
+      {
+         dump( "\nTREE-> adding in highpriority property for row "+row+" and column "+column );
+         props.AppendElement(aserv.getAtom("highpriority"));
+      }
+
+    
+   },
    getColumnProperties : function(){return false;},
    getRowProperties : function( row,props ){
-      return;
       calendarToDo = gTaskArray[row];
       
       var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
@@ -403,10 +418,10 @@ var toDoTreeView =
       switch( column )
       {
          case "unifinder-todo-tree-col-completed":
-            return( formatUnifinderEventDate( new Date( calendarToDo.completed.getTime() ) ) );
+            return;
          
          case "unifinder-todo-tree-col-priority":
-            return( calendarToDo.priority );
+            return;
 
          case "unifinder-todo-tree-col-title":
             if( calendarToDo.title == "" )
@@ -485,102 +500,6 @@ calendarTaskView.prototype.getRowOfCalendarTask = function( Task )
    return( "null" );
 }
 
-
-
-/**
-*  Attach the calendarToDo event to the treeitem
-*/
-
-function setUnifinderToDoTreeItem( treeItem, calendarToDo )
-{
-   var now = new Date();
-   
-   var thisMorning = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0 );
-   
-   var textProperties = "";
-   if( calendarToDo.start.getTime() <= thisMorning.getTime() )
-   {
-      //this task should be started
-      textProperties = textProperties + " started";
-   }
-   
-   var completed = calendarToDo.completed.getTime();
-   
-   if( completed > 0 )
-   {
-      /* for setting some css */
-      var completedDate = new Date( calendarToDo.completed.getTime() );
-      var FormattedCompletedDate = formatUnifinderEventDate( completedDate );
-   
-      treeCellCompleteddate.setAttribute( "label", FormattedCompletedDate );
-      textProperties = textProperties + " completed";
-      treeItem.setAttribute( "checked", "true" );
-   }
-   else
-      treeCellCompleteddate.setAttribute( "label", "" );
-      
-   
-   treeCellTitle.setAttribute( "label", calendarToDo.title );
-   
-   var startDate     = new Date( calendarToDo.start.getTime() );
-   var dueDate = new Date( calendarToDo.due.getTime() );
-   
-   var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 00 );
-   
-   var yesterdayMidnight = new Date( now.getFullYear(), now.getMonth(), ( now.getDate() - 1 ), 23, 59, 00 );
-   
-   if( tonightMidnight.getTime() > dueDate.getTime() )
-   {
-      /* for setting some css */
-      textProperties += " overdue";
-   } else if ( dueDate.getFullYear() == now.getFullYear() &&
-               dueDate.getMonth() == now.getMonth() &&
-               dueDate.getDate() == now.getDate() )
-   {
-      textProperties += " duetoday";
-   }
-   else
-   {
-      textProperties += " inprogress";
-   }
-   if(calendarToDo.priority > 0 && calendarToDo.priority < 5)
-      textProperties = textProperties + " highpriority";
-   if(calendarToDo.priority > 5 && calendarToDo.priority < 10)
-      textProperties = textProperties + " lowpriority";
-   
-   
-   var FormattedStartDate = formatUnifinderEventDate( startDate );
-   var FormattedDueDate = formatUnifinderEventDate( dueDate );
-   
-   treeCellStartdate.setAttribute( "label", FormattedStartDate );
-   treeCellDuedate.setAttribute( "label", FormattedDueDate );
-   treeCellPercentcomplete.setAttribute( "label", calendarToDo.percent + "%" );
-   treeCellCategories.setAttribute( "label", calendarToDo.categories );
-   
-   treeItem.setAttribute( "taskitem", "true" );
-   
-   treeRow.setAttribute("properties", textProperties);
-   treeCellCompleted.setAttribute("properties", textProperties);
-   treeCellPriority.setAttribute("properties", textProperties);
-   treeCellTitle.setAttribute("properties", textProperties);
-   treeCellStartdate.setAttribute("properties", textProperties);
-   treeCellDuedate.setAttribute("properties", textProperties);
-   treeCellCompleteddate.setAttribute("properties", textProperties);
-   treeCellPercentcomplete.setAttribute("properties", textProperties);
-   treeCellCategories.setAttribute("properties", textProperties);
-   
-   treeRow.appendChild( treeCellCompleted );
-   treeRow.appendChild( treeCellPriority );
-   treeRow.appendChild( treeCellTitle );
-   treeRow.appendChild( treeCellStartdate );
-   treeRow.appendChild( treeCellDuedate );
-   treeRow.appendChild( treeCellCompleteddate );
-   treeRow.appendChild( treeCellPercentcomplete );
-   treeRow.appendChild( treeCellCategories );
-   treeItem.appendChild( treeRow );
-}
-
-
 /**
 *  Redraw the categories unifinder tree
 */
@@ -616,26 +535,6 @@ function getTaskTable( )
    var taskTable = gEventSource.getAllToDos();
    
    return( taskTable );
-}
-
-
-/**
-*  Redraw a single item of the ToDo unifinder tree
-*/
-
-function toDoUnifinderItemUpdate( calendarToDo )
-{
-   var tree = document.getElementById( ToDoUnifinderTreeName );
-
-   var elementsToRemove = document.getElementsByAttribute( "taskitem", "true" );
-
-   for( var i = 0; i < elementsToRemove.length; i++ )
-   {
-      if(elementsToRemove[i].getAttribute("toDoID") == calendarToDo.id)
-      {
-         setUnifinderToDoTreeItem( elementsToRemove[i], calendarToDo );
-      }
-   }
 }
 
 
@@ -745,3 +644,4 @@ function changeContextMenuForToDo( event )
       }
    }
 }
+
