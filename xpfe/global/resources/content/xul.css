@@ -662,6 +662,11 @@ stringbundle {
   visibility: collapse;
 }
 
+/********** resourcebundle **********/
+resourcebundle {
+  visibility: collapse;
+}  
+
 /********** wizard **********/
 
 wizard {

@@ -76,6 +76,9 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
+  <resourcebundle id="resource_bundle_editor" />
+
+
   <popupset id="aTooltipSet">
     <popupset id="editorContentContextSet"/>
     <popup id="sidebarPopup"/>
