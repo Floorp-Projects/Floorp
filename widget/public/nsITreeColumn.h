@@ -27,13 +27,20 @@
 #define NS_ITREECOLUMN_IID \
 { 0xdd719481, 0x5d79, 0x11d2, { 0x96, 0xed, 0x0, 0x10, 0x4b, 0x7b, 0x7d, 0xeb } }
 
+// Sort State enum
+enum nsColumnSortState {
+	eUnsorted;
+	eAscending;
+	eDescending;
+};
+
 class nsITreeColumn : public nsISupports
 {
 public:
 	// Inspectors
 	NS_IMETHOD GetPixelWidth(int& width) = 0;
 	NS_IMETHOD GetDesiredPercentage(double& percentage) = 0;
-	NS_IMETHOD GetSortState(int& answer) = 0;
+	NS_IMETHOD GetSortState(nsColumnSortState& answer) = 0;
 	NS_IMETHOD GetColumnName(nsString& name) = 0;
 
 	// Setters
