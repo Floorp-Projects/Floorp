@@ -126,17 +126,24 @@ public:
                       const nsRect &aTileRect);
 
   /** 
-   * Draw a tiled version of the bitmap, but use the windows specific highly optimized PatBlt
-   * @update - dwc 3/30/00
+   * Progressivly double the bitmap size as we blit.. very fast way to tile
+   * @update - dwc 4/160/02
    * @param aSurface  the surface to blit to
-   * @param aX The destination horizontal location
-   * @param aY The destination vertical location
+   * @param aDestBufferWidth   Width of buffer
+   * @param aDestBufferHeight  Height of buffer
+   * @param aScaledTileWidth   Width of tile
+   * @param aScaledTileHeight  Height of tile
+   * @param aX0,aY0,aX1,aY1    Coordinates of screen to blit to
    * @return if TRUE, no errors
-   */
-  PRBool  PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1);
+  */
 
+  PRBool ProgressiveDoubleBlit(nsDrawingSurface aSurface,
+                              PRInt32 aDestBufferWidth, PRInt32 aDestBufferHeight,
+                              PRInt32 aScaledTileWidth,PRInt32 aScaledTileHeight,
+                              PRInt32 aX0,PRInt32 aY0,
+                              PRInt32 aX1,PRInt32 aY1);
 
-  /** 
+   /** 
    * Return the header size of the Device Independent Bitmap(DIB).
    * @return size of header in bytes
    */
