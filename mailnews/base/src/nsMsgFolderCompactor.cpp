@@ -57,6 +57,7 @@ nsFolderCompactState::nsFolderCompactState()
   m_status = NS_OK;
   m_messageService = nsnull;
   m_compactAll = PR_FALSE;
+  m_compactOfflineAlso = PR_FALSE;
   m_folderIndex =0;
 }
 
@@ -143,46 +144,21 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
   return rv;
 }
 
-NS_IMETHODIMP nsFolderCompactState::InitCompactAll(nsIMsgFolder *folder, nsIMsgWindow *aMsgWindow)
+NS_IMETHODIMP nsFolderCompactState::StartCompactingAll(nsISupportsArray *aArrayOfFoldersToCompact, nsIMsgWindow *aMsgWindow, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIMsgFolder> rootFolder;
-  nsCOMPtr<nsISupportsArray> allDescendents;
-  folder->GetRootFolder(getter_AddRefs(rootFolder));
-  NS_NewISupportsArray(getter_AddRefs(allDescendents));
-  rootFolder->ListDescendents(allDescendents);
-  PRUint32 cnt =0;
-  rv = allDescendents->Count(&cnt);
-  NS_ENSURE_SUCCESS(rv,rv);
+  if (aArrayOfFoldersToCompact)  
+    m_folderArray =do_QueryInterface(aArrayOfFoldersToCompact, &rv);
+
+  if (NS_FAILED(rv) || !m_folderArray)
+    return rv;
   
   m_window = aMsgWindow;
-  NS_NewISupportsArray(getter_AddRefs(m_folderArray));
-  PRUint32 expungedBytes=0;
-  for (PRUint32 i=0; i< cnt;i++)
-  {
-    nsCOMPtr<nsISupports> supports = getter_AddRefs(allDescendents->ElementAt(i));
-    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-    
-    expungedBytes=0;
-    if (folder)
-      rv = folder->GetExpungedBytes(&expungedBytes);
-    
-    NS_ENSURE_SUCCESS(rv,rv);
-    
-    if (expungedBytes > 0)
-      rv = m_folderArray->AppendElement(supports);
+  m_compactAll = PR_TRUE;
+  m_compactOfflineAlso = aCompactOfflineAlso;
+  if (m_compactOfflineAlso)
+    m_offlineFolderArray = do_QueryInterface(aOfflineFolderArray);
 
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  
-  rv = m_folderArray->Count(&cnt);
-  NS_ENSURE_SUCCESS(rv,rv);
-  if ( cnt == 0)
-    return rv;   //no folders to compact
-  else
-    m_compactAll = PR_TRUE;
-  
   m_folderIndex = 0;
   nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex));
   nsCOMPtr<nsIMsgFolder> firstFolder = do_QueryInterface(supports, &rv);
@@ -296,14 +272,11 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
   return rv;
 }
 
-NS_IMETHODIMP nsFolderCompactState::StartCompacting()
-{
-  nsresult rv = NS_OK;
-  if (m_size > 0)
+void nsFolderCompactState::ShowCompactingStatusMsg()
   {
     nsXPIDLString formatString;
 
-    rv = GetStatusFromMsgName("compactingFolder", getter_Copies(formatString));
+  nsresult rv = GetStatusFromMsgName("compactingFolder", getter_Copies(formatString));
     if (NS_SUCCEEDED(rv))
     {
       nsXPIDLString folderName;
@@ -313,19 +286,17 @@ NS_IMETHODIMP nsFolderCompactState::StartCompacting()
         ShowStatusMsg(u);
       PR_FREEIF(u);
     }
+}
+
+NS_IMETHODIMP nsFolderCompactState::StartCompacting()
+{
+  nsresult rv = NS_OK;
+  if (m_size > 0)
+  {
+    ShowCompactingStatusMsg();
     AddRef();
-#ifdef OLD_WAY
-    rv = BuildMessageURI(m_baseMessageUri,
-                                m_keyArray[0],
-                                m_messageUri);
-    if (NS_SUCCEEDED(rv))
-      rv = m_messageService->CopyMessage(
-        m_messageUri, this, PR_FALSE, nsnull,
-        /* ### should get msg window! */ nsnull, nsnull);
-#else
     rv = m_messageService->CopyMessages(&m_keyArray, m_folder, this, PR_FALSE, nsnull, m_window, nsnull);
     // m_curIndex = m_size;  // advance m_curIndex to the end - we're done
-#endif // OLD_WAY
 
   }
   else
@@ -391,22 +362,37 @@ nsFolderCompactState::FinishCompact()
   m_folder->GetMsgDatabase(m_window, getter_AddRefs(db));
   db = nsnull;
   if (m_compactAll)
-  {
-    m_folderIndex++;
-    PRUint32 cnt=0;
-    rv = m_folderArray->Count(&cnt);
-    NS_ENSURE_SUCCESS(rv,rv);
-    if (m_folderIndex == cnt) 
-      return rv;
-    
-    nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex));
-    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
-
-    if (NS_SUCCEEDED(rv) && folder)
-      CompactHelper(folder);                    
-  }
+    rv = CompactNextFolder();
 
   return rv;
+}
+
+nsresult
+nsFolderCompactState::CompactNextFolder()
+{
+   nsresult rv = NS_OK;
+   m_folderIndex++;
+   PRUint32 cnt=0;
+   rv = m_folderArray->Count(&cnt);
+   NS_ENSURE_SUCCESS(rv,rv);
+   if (m_folderIndex == cnt)
+   {
+     if (m_compactOfflineAlso)
+     {
+       nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex-1));
+       nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+       if (NS_SUCCEEDED(rv) && folder)
+         folder->CompactAllOfflineStores(m_window, m_offlineFolderArray);
+     }
+     else
+       return rv;
+   } 
+   nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex));
+   nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+
+   if (NS_SUCCEEDED(rv) && folder)
+     rv = CompactHelper(folder);                    
+   return rv;
 }
 
 nsresult
@@ -514,6 +500,7 @@ nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
+  nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
 
   if (NS_FAILED(rv)) goto done;
   uri = do_QueryInterface(ctxt, &rv);
@@ -521,13 +508,20 @@ nsOfflineStoreCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt
   rv = GetMessage(getter_AddRefs(msgHdr));
   if (NS_FAILED(rv)) goto done;
 
-  msgHdr->SetMessageOffset(m_startOfNewMsg);
+  if (msgHdr)
+    msgHdr->SetMessageOffset(m_startOfNewMsg);
 
-  m_db->Commit(nsMsgDBCommitType::kLargeCommit);
+  if (m_window)
+  {
+    m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
+    if (statusFeedback)
+      statusFeedback->ShowProgress (100 * m_curIndex / m_size);
+  }
     // advance to next message 
   m_curIndex ++;
   if (m_curIndex >= m_size)
   {
+    m_db->Commit(nsMsgDBCommitType::kLargeCommit);
     msgHdr = nsnull;;
     newMsgHdr = nsnull;
     // no more to copy finish it up
@@ -597,6 +591,10 @@ nsOfflineStoreCompactState::FinishCompact()
     // rename the copied folder to be the original folder 
   m_fileSpec.Rename((const char*) idlName);
 
+  PRUnichar emptyStr = 0;
+  ShowStatusMsg(&emptyStr);
+  if (m_compactAll)
+    rv = CompactNextFolder();
   return rv;
 }
 
@@ -655,5 +653,29 @@ nsFolderCompactState::EndCopy(nsISupports *url, nsresult aStatus)
       statusFeedback->ShowProgress (100 * m_curIndex / m_size);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP nsOfflineStoreCompactState::StartCompacting()
+{
+  nsresult rv = NS_OK;
+  if (m_size > 0 && m_curIndex == 0)
+  {
+    AddRef(); // we own ourselves, until we're done, anyway.
+    ShowCompactingStatusMsg();
+    m_messageUri.SetLength(0); // clear the previous message uri
+    rv = BuildMessageURI(m_baseMessageUri,
+                                m_keyArray[0],
+                                m_messageUri);
+    if (NS_SUCCEEDED(rv))
+      rv = m_messageService->CopyMessage(
+        m_messageUri, this, PR_FALSE, nsnull, m_window, nsnull);
+
+  }
+  else
+  { // no messages to copy with
+    FinishCompact();
+//    Release(); // we don't "own" ourselves yet.
+  }
+  return rv;
 }
 

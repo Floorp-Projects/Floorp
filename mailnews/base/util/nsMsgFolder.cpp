@@ -1165,7 +1165,7 @@ NS_IMETHODIMP nsMsgFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsg
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::CompactAll(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
+NS_IMETHODIMP nsMsgFolder::CompactAll(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aCompactOfflineArray)
 {
   NS_ASSERTION(PR_FALSE, "should be overridden by child class");
   return NS_ERROR_NOT_IMPLEMENTED;

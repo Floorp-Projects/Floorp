@@ -55,6 +55,8 @@ public:
   nsresult BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);  
   nsresult GetStatusFromMsgName(const char *statusMsgName, PRUnichar ** retval);
   nsresult ShowStatusMsg(const PRUnichar *aMsg);
+  void     ShowCompactingStatusMsg();
+  nsresult CompactNextFolder();
 
   char *m_baseMessageUri; // base message uri
   nsCString m_messageUri; // current message uri being copy
@@ -74,6 +76,8 @@ public:
   nsCOMPtr <nsIMsgWindow> m_window;
   PRUint32 m_folderIndex; // tells which folder to compact in case of compact all
   PRBool m_compactAll;  //flag for compact all
+  PRBool m_compactOfflineAlso; //whether to compact offline also
+  nsCOMPtr <nsISupportsArray> m_offlineFolderArray;
 
 };
 
@@ -85,6 +89,7 @@ public:
   virtual ~nsOfflineStoreCompactState(void);
   virtual nsresult InitDB(nsIMsgDatabase *db);
 
+  NS_IMETHOD StartCompacting();
   NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                     nsresult status);
 

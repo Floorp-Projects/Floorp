@@ -429,6 +429,8 @@ nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
       rv = mDatabase->ApplyRetentionSettings(retentionSettings);
     }
     rv = GetNewMessages(aWindow);
+    rv = AutoCompact(aWindow);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
   if (rv == NS_MSG_ERROR_OFFLINE)
   {

@@ -565,7 +565,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 					return NS_ERROR_NOT_INITIALIZED;
 			}
 			else
-			{
+            {
 				//We must have loaded the folder so send a notification
         NotifyFolderEvent(mFolderLoadedAtom);
 				//Otherwise we have a valid database so lets extract necessary info.
@@ -583,13 +583,16 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 	//If we don't currently have a database, get it.  Otherwise, the folder has been updated (presumably this
 	//changes when we download headers when opening inbox).  If it's updated, send NotifyFolderLoaded.
 	if(!mDatabase)
-		rv = GetDatabase(aWindow); // this will cause a reparse, if needed.
+      rv = GetDatabase(aWindow); // this will cause a reparse, if needed.
 	else
-    NotifyFolderEvent(mFolderLoadedAtom);
-	return rv;
-}
-
-NS_IMETHODIMP
+    {
+      NotifyFolderEvent(mFolderLoadedAtom);
+      rv = AutoCompact(aWindow);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+     
+    return rv;
+}NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
 	nsresult rv = GetDatabase(aMsgWindow);
@@ -842,14 +845,50 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::CompactAll(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
+NS_IMETHODIMP nsMsgLocalMailFolder::CompactAll(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISupportsArray> folderArray;
+  if (!aFolderArray)
+  {
+    nsCOMPtr<nsIMsgFolder> rootFolder;
+    nsCOMPtr<nsISupportsArray> allDescendents;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));  
+    if (NS_SUCCEEDED(rv) && rootFolder)
+    {
+      NS_NewISupportsArray(getter_AddRefs(allDescendents));
+      rootFolder->ListDescendents(allDescendents);
+      PRUint32 cnt =0;
+      rv = allDescendents->Count(&cnt);
+      NS_ENSURE_SUCCESS(rv,rv);
+      NS_NewISupportsArray(getter_AddRefs(folderArray));
+      PRUint32 expungedBytes=0;
+      for (PRUint32 i=0; i< cnt;i++)
+      {
+        nsCOMPtr<nsISupports> supports = getter_AddRefs(allDescendents->ElementAt(i));
+        nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+    
+        expungedBytes=0;
+        if (folder)
+          rv = folder->GetExpungedBytes(&expungedBytes);
+    
+        NS_ENSURE_SUCCESS(rv,rv);
+    
+        if (expungedBytes > 0)
+          rv = folderArray->AppendElement(supports);
+      }
+      rv = folderArray->Count(&cnt);
+      NS_ENSURE_SUCCESS(rv,rv);
+      if (cnt == 0 ) return NS_OK;
+    }
+  }
   nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && folderCompactor)
-  {
-      rv=folderCompactor->InitCompactAll(this, aMsgWindow);  // start with each folder compaction from there
-  }
+    if (aFolderArray)
+       rv = folderCompactor->StartCompactingAll(aFolderArray, aMsgWindow, aCompactOfflineAlso, aOfflineFolderArray);  
+    else if (folderArray)
+       rv = folderCompactor->StartCompactingAll(folderArray, aMsgWindow, aCompactOfflineAlso, aOfflineFolderArray);  
   return rv;
 }
 
@@ -916,7 +955,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
           rv = aEnumerator->First();    //will fail if no subfolders 
           if (NS_FAILED(rv)) return NS_OK;
         }
-
         nsCOMPtr<nsIFolder> parent;
         rv = trashFolder->GetParent(getter_AddRefs(parent));
         if (NS_SUCCEEDED(rv) && parent)

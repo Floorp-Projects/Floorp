@@ -33,6 +33,7 @@
 #include "nsIMsgHdr.h"
 #include "nsIOutputStream.h"
 #include "nsITransport.h"
+#include "nsIMsgStringService.h"
 class nsIMsgFolderCacheElement;
 
  /* 
@@ -95,9 +96,11 @@ public:
   NS_IMETHOD SetRetentionSettings(nsIMsgRetentionSettings *settings);
   NS_IMETHOD GetDownloadSettings(nsIMsgDownloadSettings **settings);
   NS_IMETHOD SetDownloadSettings(nsIMsgDownloadSettings *settings);
+  NS_IMETHOD CompactAllOfflineStores(nsIMsgWindow *msgWindow, nsISupportsArray *aOfflineFolderArray);
   NS_IMETHOD GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
   NS_IMETHOD GetOfflineStoreInputStream(nsIInputStream **outputStream);
   NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
+
 protected:
   virtual nsresult ReadDBFolderInfo(PRBool force);
   virtual nsresult FlushToFolderCache();
@@ -117,9 +120,11 @@ protected:
   nsresult WriteStartOfNewLocalMessage();
   nsresult EndNewOfflineMessage();
   nsresult CompactOfflineStore(nsIMsgWindow *inWindow);
+  nsresult AutoCompact(nsIMsgWindow *aWindow);
   // this is a helper routine that ignores whether MSG_FLAG_OFFLINE is set for the folder
   nsresult MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result);
-
+  nsresult GetPromptPurgeThreshold(PRBool *aPrompt);
+  nsresult GetPurgeThreshold(PRInt32 *aThreshold);
 protected:
   nsCOMPtr<nsIMsgDatabase> mDatabase;
   nsString mCharset;

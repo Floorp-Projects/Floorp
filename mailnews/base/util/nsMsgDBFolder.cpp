@@ -38,11 +38,23 @@
 #include "nsITransport.h"
 #include "nsIFileTransportService.h"
 #include "nsIMsgFolderCompactor.h"
-#include "nsMsgUtils.h"
+#include "nsIDocShell.h"
+#include "nsIMsgWindow.h"
+#include "nsIPrompt.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIStringBundle.h"
 
+
+#define oneHour 3600000000
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static PRTime gtimeOfLastPurgeCheck = 0;    //variable to know when to check for purge_threshhold
+
+
+#define PREF_MAIL_PROMPT_PURGE_THRESHOLD "mail.prompt_purge_threshhold"
+#define PREF_MAIL_PURGE_THRESHOLD "mail.purge_threshhold"
 
 nsIAtom* nsMsgDBFolder::mFolderLoadedAtom=nsnull;
 nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgCompletedAtom=nsnull;
@@ -576,7 +588,6 @@ nsresult nsMsgDBFolder::CreateFileSpecForDB(const char *userLeafName, nsFileSpec
 {
   NS_ENSURE_ARG_POINTER(dbFileSpec);
   NS_ENSURE_ARG_POINTER(userLeafName);
-
   nsCAutoString proposedDBName(userLeafName);
   NS_MsgHashIfNecessary(proposedDBName);
 
@@ -1326,3 +1337,190 @@ nsresult nsMsgDBFolder::CompactOfflineStore(nsIMsgWindow *inWindow)
   return rv;
 }
 
+nsresult
+nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow) 
+{
+   NS_ENSURE_ARG_POINTER(aWindow);
+   nsresult rv = NS_OK;
+   PRTime timeNow = PR_Now();  //time in microsec
+   PRTime timeOfLastPurgeCheck = gtimeOfLastPurgeCheck;
+   PRBool prompt;
+   rv = GetPromptPurgeThreshold(&prompt);
+   NS_ENSURE_SUCCESS(rv, rv);
+   timeOfLastPurgeCheck += oneHour;   
+   if ((timeOfLastPurgeCheck == oneHour || timeOfLastPurgeCheck < timeNow) && prompt)
+   {
+     nsCOMPtr<nsIMsgAccountManager> accountMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+     if (NS_SUCCEEDED(rv))
+     {
+       nsCOMPtr<nsISupportsArray> allServers;
+       accountMgr->GetAllServers(getter_AddRefs(allServers));
+       NS_ENSURE_SUCCESS(rv,rv);
+       PRUint32 numServers, serverIndex=0;
+       rv = allServers->Count(&numServers);
+       PRInt32 offlineSupportLevel;
+       if ( numServers > 0 )
+       {
+         nsCOMPtr <nsISupports> serverSupports = allServers->ElementAt(serverIndex);
+         nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
+         NS_ENSURE_SUCCESS(rv,rv);
+         nsCOMPtr<nsISupportsArray> folderArray;
+         nsCOMPtr<nsISupportsArray> offlineFolderArray;
+         NS_NewISupportsArray(getter_AddRefs(folderArray));
+         NS_NewISupportsArray(getter_AddRefs(offlineFolderArray));
+         PRInt32 totalExpungedBytes=0;
+         PRInt32 offlineExpungedBytes =0;
+         PRInt32 localExpungedBytes = 0;
+         do 
+         {
+           nsCOMPtr<nsIFolder> rootFolder;
+           rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+           if(NS_SUCCEEDED(rv) && rootFolder)
+           {  
+             rv = server->GetOfflineSupportLevel(&offlineSupportLevel);
+             NS_ENSURE_SUCCESS(rv,rv);
+             nsCOMPtr<nsISupportsArray> allDescendents;
+             NS_NewISupportsArray(getter_AddRefs(allDescendents));
+             rootFolder->ListDescendents(allDescendents);
+             PRUint32 cnt=0;
+             rv = allDescendents->Count(&cnt);
+             NS_ENSURE_SUCCESS(rv,rv);
+             PRUint32 expungedBytes=0;
+         
+             if (offlineSupportLevel > 0)
+             {
+               PRUint32 flags;
+               for (PRUint32 i=0; i< cnt;i++)
+               {
+                 nsCOMPtr<nsISupports> supports = getter_AddRefs(allDescendents->ElementAt(i));
+                 nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+                 expungedBytes = 0;
+                 folder->GetFlags(&flags);
+                 if (flags & MSG_FOLDER_FLAG_OFFLINE)
+                   folder->GetExpungedBytes(&expungedBytes);
+                 if (expungedBytes > 0 )
+                 { 
+                   offlineFolderArray->AppendElement(supports);
+                   offlineExpungedBytes += expungedBytes;
+                 }
+               }
+             }
+             else  //pop or local
+             {
+               for (PRUint32 i=0; i< cnt;i++)
+               {
+                 nsCOMPtr<nsISupports> supports = getter_AddRefs(allDescendents->ElementAt(i));
+                 nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+                 folder->GetExpungedBytes(&expungedBytes);
+                 if (expungedBytes > 0 )
+                 {
+                   folderArray->AppendElement(supports);
+                   localExpungedBytes += expungedBytes;
+                 }
+               }
+             }
+           }
+           serverSupports = allServers->ElementAt(++serverIndex);
+           server = do_QueryInterface(serverSupports, &rv);
+         }
+         while (serverIndex < numServers);
+         totalExpungedBytes = localExpungedBytes + offlineExpungedBytes;
+         PRInt32 purgeThreshold;
+         rv = GetPurgeThreshold(&purgeThreshold);
+         NS_ENSURE_SUCCESS(rv, rv);
+         if (totalExpungedBytes > (purgeThreshold*1024))
+         {
+           nsCOMPtr<nsIDocShell> docShell;
+           if (aWindow) 
+           {
+             aWindow->GetRootDocShell(getter_AddRefs(docShell));
+             nsCOMPtr<nsIStringBundleService> bundleService =
+                       do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+             NS_ENSURE_SUCCESS(rv, rv);
+             nsCOMPtr<nsIStringBundle> bundle;
+             rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
+                                      getter_AddRefs(bundle));
+             NS_ENSURE_SUCCESS(rv, rv);
+             nsXPIDLString alertString;
+             bundle->GetStringFromName(NS_LITERAL_STRING("autoCompactAllFolders").get(),
+                            getter_Copies(alertString));
+             if (docShell)
+             {
+               nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+               if (dialog && alertString)
+               {
+                 PRBool okToCompact = PR_FALSE;
+                 dialog->Confirm(nsnull, alertString.get(), &okToCompact);
+                 if (okToCompact)
+                 {
+                   if ( localExpungedBytes > 0)
+                   {
+                     nsCOMPtr <nsISupports> aSupports = getter_AddRefs(folderArray->ElementAt(0));
+                     nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(aSupports, &rv);
+                     if (msgFolder && NS_SUCCEEDED(rv))
+                       if (offlineExpungedBytes > 0)
+                         msgFolder->CompactAll(nsnull, aWindow, folderArray, PR_TRUE, offlineFolderArray);
+                       else
+                         msgFolder->CompactAll(nsnull, aWindow, folderArray, PR_FALSE, nsnull);
+                   }
+                   else if (offlineExpungedBytes > 0)
+                      CompactAllOfflineStores(aWindow, offlineFolderArray);
+                 }
+               }
+             }
+           }  
+         }
+       }
+     }
+     gtimeOfLastPurgeCheck = PR_Now();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMsgDBFolder::CompactAllOfflineStores(nsIMsgWindow *aWindow, nsISupportsArray *aOfflineFolderArray)
+{
+  nsresult rv= NS_OK;
+  nsCOMPtr <nsIMsgFolderCompactor> folderCompactor;
+  folderCompactor = do_CreateInstance(NS_MSGOFFLINESTORECOMPACTOR_CONTRACTID, &rv);
+
+  if (NS_SUCCEEDED(rv) && folderCompactor)
+    rv = folderCompactor->StartCompactingAll(aOfflineFolderArray, aWindow, PR_FALSE, nsnull);
+  return rv;
+}
+
+nsresult
+nsMsgDBFolder::GetPromptPurgeThreshold(PRBool *aPrompt)
+{
+  NS_ENSURE_ARG(aPrompt);
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefService)
+  {
+    rv = prefService->GetBoolPref(PREF_MAIL_PROMPT_PURGE_THRESHOLD, aPrompt);
+    if (NS_FAILED(rv)) 
+    {
+      *aPrompt = PR_FALSE;
+      rv = NS_OK;
+    }
+  }
+  return rv;
+}
+
+nsresult
+nsMsgDBFolder::GetPurgeThreshold(PRInt32 *aThreshold)
+{
+  NS_ENSURE_ARG(aThreshold);
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefService)
+  {
+    rv = prefService->GetIntPref(PREF_MAIL_PURGE_THRESHOLD, aThreshold);
+    if (NS_FAILED(rv)) 
+    {
+      *aThreshold = 0;
+      rv = NS_OK;
+    }
+  }
+  return rv;
+}

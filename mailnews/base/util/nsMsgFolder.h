@@ -95,7 +95,7 @@ public:
   NS_IMETHOD CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow);
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder **newFolder);
   NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *msgWindow);
-  NS_IMETHOD CompactAll(nsIUrlListener *aListener, nsIMsgWindow *msgWindow);
+  NS_IMETHOD CompactAll(nsIUrlListener *aListener, nsIMsgWindow *msgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray);
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
   NS_IMETHOD Rename(const PRUnichar *name, nsIMsgWindow *msgWindow);
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval);

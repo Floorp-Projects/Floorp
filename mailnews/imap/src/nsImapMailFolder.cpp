@@ -634,6 +634,8 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   else if (NS_SUCCEEDED(rv))  // tell the front end that the folder is loaded if we're not going to 
   {                           // actually run a url.
     NotifyFolderEvent(mFolderLoadedAtom);
+    rv = AutoCompact(msgWindow);  
+    NS_ENSURE_SUCCESS(rv,rv);
   }
 
   return rv;
@@ -738,6 +740,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         if (NS_FAILED(rv)) return rv;
         uri.Append('/');
         uri.AppendWithConversion(parentName);
+        
         rv = rdf->GetResource(uri,
                               getter_AddRefs(res));
         if (NS_FAILED(rv)) return rv;
@@ -1015,7 +1018,7 @@ NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow 
   // compact offline part purely for testing purposes
   if (WeAreOffline() && (mFlags & MSG_FOLDER_FLAG_OFFLINE))
   {
-    rv = CompactOfflineStore(nsnull);
+    rv = CompactOfflineStore(aMsgWindow);
   }
   else
   {
@@ -1028,7 +1031,7 @@ NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow 
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::CompactAll(nsIUrlListener *aListener,  nsIMsgWindow *aMsgWindow)
+NS_IMETHODIMP nsImapMailFolder::CompactAll(nsIUrlListener *aListener,  nsIMsgWindow *aMsgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray)
 {
   return Compact(aListener, aMsgWindow);  //for now
 }

@@ -731,7 +731,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if ((aCommand == kNC_CompactAll))
       {
-        rv = folder->CompactAll(nsnull, mWindow);
+        rv = folder->CompactAll(nsnull, mWindow, nsnull, PR_FALSE, nsnull);
       }
       else if ((aCommand == kNC_EmptyTrash))
       {
@@ -743,8 +743,8 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
         nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
         if(NS_SUCCEEDED(rv))
 		{
-		  PRUnichar *name;
-		  literal->GetValue(&name);
+          PRUnichar *name;
+          literal->GetValue(&name);
 
           rv = folder->Rename(name,mWindow);
           PR_FREEIF(name);
