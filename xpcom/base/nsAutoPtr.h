@@ -65,8 +65,19 @@ nsAutoPtr
             return *this;
         }
 
+        nsAutoPtr<T>&
+        operator=(nsAutoPtr<T>& aSmartPtr)
+        {
+            T* temp = mPtr;
+            enter(aPtr);
+            mPtr = aPtr.release();
+            exit(temp);
+            return *this;
+        }
+
         operator T*() const { return mPtr; }
         T* get() const { return mPtr; }
+        T* release() { T* temp = mPtr; mPtr = 0; return temp; }
 
         // To be used only by helpers (such as |getter_Transfers| below)
         T** begin_assignment() { mPtr = 0; return &mPtr; }
@@ -105,8 +116,19 @@ nsAutoArrayPtr
             return *this;
         }
 
+        nsAutoArrayPtr<T>&
+        operator=(nsAutoArrayPtr<T>& aSmartPtr)
+        {
+            T* temp = mPtr;
+            enter(aPtr);
+            mPtr = aPtr.release();
+            exit(temp);
+            return *this;
+        }
+
         operator T*() const { return mPtr; }
         T* get() const { return mPtr; }
+        T* release() { T* temp = mPtr; mPtr = 0; return temp; }
 
         // To be used only by helpers (such as |getter_Transfers| below)
         T** begin_assignment() { mPtr = 0; return &mPtr; }
@@ -149,8 +171,19 @@ nsMemoryAutoPtr
             return *this;
         }
 
+        nsMemoryAutoPtr<T>&
+        operator=(nsMemoryAutoPtr<T>& aSmartPtr)
+        {
+            T* temp = mPtr;
+            enter(aPtr);
+            mPtr = aPtr.release();
+            exit(temp);
+            return *this;
+        }
+
         operator T*() const { return mPtr; }
         T* get() const { return mPtr; }
+        T* release() { T* temp = mPtr; mPtr = 0; return temp; }
 
         // To be used only by helpers (such as |getter_Transfers| below)
         T** begin_assignment() { mPtr = 0; return &mPtr; }
@@ -302,3 +335,64 @@ getter_AddRefs(nsRefPtr<T>& aSmartPtr)
 {
     return nsRefPtrGetterAddRefs<T>(aSmartPtr);
 }
+
+
+#define EQ_OP(op_, lhtype_, rhtype_, lhget_, rhget_)                          \
+    template <class T, class U>                                               \
+    inline PRBool                                                             \
+    operator op_( lhtype_ lhs, rhtype_ rhs )                                  \
+    {                                                                         \
+        return lhs lhget_ op_ rhs rhget_;                                     \
+    }
+
+#define SMART_SMART_EQ_OP(op_, type_, lhconst_, rhconst_)                     \
+    EQ_OP(op_, const type_<lhconst_ T>&, const type_<rhconst_ U>&,            \
+          .get(), .get())
+
+#define SMART_RAW_EQ_OP(op_, type_, lhconst_, rhconst_)                       \
+    EQ_OP(op_, const type_<lhconst_ T>&, rhconst_ U *, .get(), )
+
+#define RAW_SMART_EQ_OP(op_, type_, lhconst_, rhconst_)                       \
+    EQ_OP(op_, lhconst_ T *, const type_<rhconst_ U>&, , .get())
+
+#define CONST_OPEQ_OPS(type_)                                                 \
+    SMART_SMART_EQ_OP(==, type_, , const)                                     \
+    SMART_SMART_EQ_OP(!=, type_, , const)                                     \
+    SMART_SMART_EQ_OP(==, type_, const, )                                     \
+    SMART_SMART_EQ_OP(!=, type_, const, )                                     \
+    SMART_SMART_EQ_OP(==, type_, const, const)                                \
+    SMART_SMART_EQ_OP(!=, type_, const, const)                                \
+    SMART_RAW_EQ_OP(==, type_, , const)                                       \
+    SMART_RAW_EQ_OP(!=, type_, , const)                                       \
+    SMART_RAW_EQ_OP(==, type_, const, )                                       \
+    SMART_RAW_EQ_OP(!=, type_, const, )                                       \
+    SMART_RAW_EQ_OP(==, type_, const, const)                                  \
+    SMART_RAW_EQ_OP(!=, type_, const, const)                                  \
+    RAW_SMART_EQ_OP(==, type_, , const)                                       \
+    RAW_SMART_EQ_OP(!=, type_, , const)                                       \
+    RAW_SMART_EQ_OP(==, type_, const, )                                       \
+    RAW_SMART_EQ_OP(!=, type_, const, )                                       \
+    RAW_SMART_EQ_OP(==, type_, const, const)                                  \
+    RAW_SMART_EQ_OP(!=, type_, const, const)
+
+#define NON_CONST_OPEQ_OPS(type_)                                             \
+    SMART_SMART_EQ_OP(==, type_, , )                                          \
+    SMART_SMART_EQ_OP(!=, type_, , )                                          \
+    SMART_RAW_EQ_OP(==, type_, , )                                            \
+    SMART_RAW_EQ_OP(!=, type_, , )                                            \
+    RAW_SMART_EQ_OP(==, type_, , )                                            \
+    RAW_SMART_EQ_OP(!=, type_, , )
+
+#ifdef NSCAP_DONT_PROVIDE_NONCONST_OPEQ
+#define ALL_EQ_OPS(type_)                                                     \
+    CONST_OPEQ_OPS(type_)
+#else
+#define ALL_EQ_OPS(type_)                                                     \
+    NON_CONST_OPEQ_OPS(type_)                                                 \
+    CONST_OPEQ_OPS(type_)
+#endif
+
+ALL_EQ_OPS(nsAutoPtr)
+ALL_EQ_OPS(nsAutoArrayPtr)
+ALL_EQ_OPS(nsMemoryAutoPtr)
+ALL_EQ_OPS(nsRefPtr)
