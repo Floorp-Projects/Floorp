@@ -310,8 +310,8 @@ struct nsHTMLReflowState {
                                        nscoord&                 aContainingBlockWidth,
                                        nscoord&                 aContainingBlockHeight);
 
-  void CalculateBlockSideMargins(const nsHTMLReflowState* aContainingBlockRS,
-                                 nscoord                  aComputedWidth);
+  void CalculateBlockSideMargins(nscoord aAvailWidth,
+                                 nscoord aComputedWidth);
 
 
 protected:

@@ -45,6 +45,58 @@ static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 // end includes for style optimizations that require real content knowledge
 
 
+struct nsTableCellReflowState : public nsHTMLReflowState
+{
+  nsTableCellReflowState(nsIPresContext*          aPresContext,
+                         const nsHTMLReflowState& aParentReflowState,
+                         nsIFrame*                aFrame,
+                         const nsSize&            aAvailableSpace,
+                         nsReflowReason           aReason);
+
+  nsTableCellReflowState(nsIPresContext*          aPresContext,
+                         const nsHTMLReflowState& aParentReflowState,
+                         nsIFrame*                aFrame,
+                         const nsSize&            aAvailableSpace);
+
+  void FixUp(const nsSize& aAvailSpace);
+};
+
+nsTableCellReflowState::nsTableCellReflowState(nsIPresContext*          aPresContext,
+                                               const nsHTMLReflowState& aParentRS,
+                                               nsIFrame*                aFrame,
+                                               const nsSize&            aAvailSpace,
+                                               nsReflowReason           aReason)
+  :nsHTMLReflowState(aPresContext, aParentRS, aFrame, aAvailSpace, aReason)
+{
+  FixUp(aAvailSpace);
+}
+
+nsTableCellReflowState::nsTableCellReflowState(nsIPresContext*          aPresContext,
+                                               const nsHTMLReflowState& aParentRS,
+                                               nsIFrame*                aFrame,
+                                               const nsSize&            aAvailSpace)
+  :nsHTMLReflowState(aPresContext, aParentRS, aFrame, aAvailSpace)
+{
+  FixUp(aAvailSpace);
+}
+
+void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
+{
+  // fix the mComputed values during a pass 2 reflow since the cell can be a percentage base
+  if (NS_UNCONSTRAINEDSIZE != aAvailSpace.width) {
+    if (NS_UNCONSTRAINEDSIZE != mComputedWidth) {
+      mComputedWidth = aAvailSpace.width - mComputedBorderPadding.left - mComputedBorderPadding.right;
+      mComputedWidth = PR_MAX(0, mComputedWidth);
+    }
+    if (NS_UNCONSTRAINEDSIZE != mComputedHeight) {
+      if (NS_UNCONSTRAINEDSIZE != aAvailSpace.height) {
+        mComputedHeight = aAvailSpace.height - mComputedBorderPadding.top - mComputedBorderPadding.bottom;
+        mComputedHeight = PR_MAX(0, mComputedHeight);
+      }
+    }
+  }
+}
+
 /* ----------- nsTableRowpFrame ---------- */
 
 nsTableRowFrame::nsTableRowFrame()
@@ -837,10 +889,9 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
           }
   
           // Reflow the child
-          nsHTMLReflowState kidReflowState(aPresContext,
-                                           aReflowState.reflowState, kidFrame,
-                                           kidAvailSize,
-                                           reason);
+          nsTableCellReflowState kidReflowState(aPresContext, aReflowState.reflowState, kidFrame,
+                                                kidAvailSize, reason);
+
           nsReflowStatus status;
           rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
                            aReflowState.x, 0, 0, status);
@@ -904,9 +955,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
       }
       else
       {// it's an unknown frame type, give it a generic reflow and ignore the results
-        nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
-                                         kidFrame,
-                                         nsSize(0,0), eReflowReason_Resize);
+        nsTableCellReflowState kidReflowState(aPresContext, aReflowState.reflowState,
+                                              kidFrame, nsSize(0,0), eReflowReason_Resize);
         nsHTMLReflowMetrics desiredSize(nsnull);
         nsReflowStatus  status;
         ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, status);
@@ -986,10 +1036,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
         kidAvailSize.SizeTo(table->GetColumnWidth(colIndex), NS_UNCONSTRAINEDSIZE); 
       }
 
-      nsHTMLReflowState kidReflowState(aPresContext,
-                                       aReflowState.reflowState,
-                                       kidFrame, kidAvailSize,
-                                       eReflowReason_Initial);
+      nsTableCellReflowState kidReflowState(aPresContext, aReflowState.reflowState,
+                                            kidFrame, kidAvailSize, eReflowReason_Initial);
 
       rv = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState,
                        x + cellSpacingX, 0, 0, aStatus);
@@ -1018,8 +1066,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
     }
     else
     {// it's an unknown frame type, give it a generic reflow and ignore the results
-      nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
-                                       kidFrame, nsSize(0,0), eReflowReason_Initial);
+      nsTableCellReflowState kidReflowState(aPresContext, aReflowState.reflowState,
+                                            kidFrame, nsSize(0,0), eReflowReason_Initial);
       nsHTMLReflowMetrics desiredSize(nsnull);
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, aStatus);
       kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
@@ -1229,9 +1277,8 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     nsHTMLReflowMetrics desiredSize(&kidMaxElementSize,
                                     aReflowState.tableFrame->IsAutoLayout() ?
                                     NS_REFLOW_CALC_MAX_WIDTH : 0);
-    nsHTMLReflowState   kidReflowState(aPresContext,
-                                       aReflowState.reflowState,
-                                       aNextFrame, kidAvailSize);
+    nsTableCellReflowState kidReflowState(aPresContext, aReflowState.reflowState,
+                                          aNextFrame, kidAvailSize);
 
     // Remember the current desired size, we'll need it later
     nsSize  oldMinSize = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
@@ -1438,8 +1485,8 @@ void nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
   aCellFrame->GetSize(cellSize);
   
   nsSize  availSize(cellSize.width, aAvailableHeight);
-  nsHTMLReflowState cellReflowState(aPresContext, aReflowState, aCellFrame, availSize,
-                                    eReflowReason_Resize);
+  nsTableCellReflowState cellReflowState(aPresContext, aReflowState, aCellFrame, availSize,
+                                         eReflowReason_Resize);
   nsHTMLReflowMetrics desiredSize(nsnull);
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
