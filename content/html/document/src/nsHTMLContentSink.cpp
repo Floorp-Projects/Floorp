@@ -4720,9 +4720,6 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   rv = ResumeParsing();
   if (NS_FAILED(rv)) return rv;
 
-  // We added a reference when the loader was created. This
-  // release should destroy it.
-  NS_RELEASE(aLoader);
   //invalidate Xfer buffer content
   mUnicodeXferBuf.SetLength(0); 
 
@@ -4915,7 +4912,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       }
 
       nsCOMPtr<nsILoadGroup> loadGroup;
-      nsIStreamLoader* loader;
+      nsCOMPtr<nsIStreamLoader> loader;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
@@ -4923,8 +4920,9 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       // from within this new stream loader to have proper parenting. but it's
       // not fatal if there isn't a prompter.
       nsCOMPtr<nsIInterfaceRequestor> promptcall(do_QueryInterface(mWebShell));
-      rv = NS_NewStreamLoader(&loader, mScriptURI, this, nsnull, loadGroup,
-                              promptcall, nsIChannel::FORCE_RELOAD);
+      rv = NS_NewStreamLoader(getter_AddRefs(loader), mScriptURI, this,
+                              nsnull, loadGroup, promptcall,
+                              nsIChannel::FORCE_RELOAD);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;
       }

@@ -50,6 +50,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsISupports* GetReceiver()      { return mReceiver.get(); }
+    void Clear()      { mReceiver = nsnull; }
 
 protected:
     nsCOMPtr<nsIEventQueue>     mEventQueue;

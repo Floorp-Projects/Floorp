@@ -1675,10 +1675,6 @@ nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   rv = ResumeParsing();
   if (NS_FAILED(rv)) return rv;
 
-  // We added a reference when the loader was created. This
-  // release should destroy it.
-  NS_RELEASE(aLoader);
-
   return rv;
 }
 
@@ -1754,11 +1750,12 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       if (NS_FAILED(rv)) 
           return rv;
 
-      nsIStreamLoader* loader;
+      nsCOMPtr<nsIStreamLoader> loader;
       nsCOMPtr<nsILoadGroup> loadGroup;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      rv = NS_NewStreamLoader(&loader, url, this, nsnull, loadGroup);
+      rv = NS_NewStreamLoader(getter_AddRefs(loader), url, this, nsnull,
+                              loadGroup);
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;
