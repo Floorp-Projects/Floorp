@@ -458,32 +458,35 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
 
   result = NS_OK;
   // if there is a controller, remove the editor from it
-  nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMNSHTMLInputElement>    inputElement = do_QueryInterface(mContent);
-  nsCOMPtr<nsIControllers> controllers;
-  if (textAreaElement)
-    result = textAreaElement->GetControllers(getter_AddRefs(controllers));
-  else if (inputElement)
-    result = inputElement->GetControllers(getter_AddRefs(controllers));
-  else
-    result = NS_ERROR_FAILURE;
-  if (NS_SUCCEEDED(result))
+  if (mEditor)
   {
-    PRUint32 count;
-    PRBool found = PR_FALSE;
-    result = controllers->GetControllerCount(&count);
-    NS_ASSERTION((NS_SUCCEEDED(result)), "bad result in gfx text control destructor");
-    for (PRUint32 i = 0; i < count; i ++)
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+    nsCOMPtr<nsIDOMNSHTMLInputElement>    inputElement = do_QueryInterface(mContent);
+    nsCOMPtr<nsIControllers> controllers;
+    if (textAreaElement)
+      result = textAreaElement->GetControllers(getter_AddRefs(controllers));
+    else if (inputElement)
+      result = inputElement->GetControllers(getter_AddRefs(controllers));
+    else
+      result = NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(result))
     {
-      nsCOMPtr<nsIController> controller;
-      result = controllers->GetControllerAt(i, getter_AddRefs(controller));
-      if (NS_SUCCEEDED(result) && controller)
+      PRUint32 count;
+      PRBool found = PR_FALSE;
+      result = controllers->GetControllerCount(&count);
+      NS_ASSERTION((NS_SUCCEEDED(result)), "bad result in gfx text control destructor");
+      for (PRUint32 i = 0; i < count; i ++)
       {
-        nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
-        if (editController)
+        nsCOMPtr<nsIController> controller;
+        result = controllers->GetControllerAt(i, getter_AddRefs(controller));
+        if (NS_SUCCEEDED(result) && controller)
         {
-          editController->SetEditor(nsnull);
-          found = PR_TRUE;
+          nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
+          if (editController)
+          {
+            editController->SetEditor(nsnull);
+            found = PR_TRUE;
+          }
         }
       }
     }
