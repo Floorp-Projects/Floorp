@@ -703,6 +703,9 @@ sec_pkcs12_decoder_safe_contents_callback(void *arg, const char *buf,
     /* update the decoder */
     rv = SEC_ASN1DecoderUpdate(safeContentsCtx->safeContentsDcx, buf, len);
     if(rv != SECSuccess) {
+	/* if we fail while trying to decode a 'safe', it's probably because
+	 * we didn't have the correct password. */
+	PORT_SetError(SEC_ERROR_BAD_PASSWORD);
 	p12dcx->errorValue = SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE;
 	goto loser;
     }
