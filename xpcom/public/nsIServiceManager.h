@@ -158,19 +158,41 @@ public:
 class NS_COM nsServiceManager {
 public:
 
-    static nsresult RegisterService(const nsCID& aClass, nsISupports* aService);
+    static nsresult
+    RegisterService(const nsCID& aClass, nsISupports* aService);
 
-    static nsresult UnregisterService(const nsCID& aClass);
+    static nsresult
+    UnregisterService(const nsCID& aClass);
 
-    static nsresult GetService(const nsCID& aClass, const nsIID& aIID,
-                               nsISupports* *result,
-                               nsIShutdownListener* shutdownListener = NULL);
+    static nsresult
+    GetService(const nsCID& aClass, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL);
 
-    static nsresult ReleaseService(const nsCID& aClass, nsISupports* service,
-                                   nsIShutdownListener* shutdownListener = NULL);
+    static nsresult
+    ReleaseService(const nsCID& aClass, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL);
 
-    // Since the global Service Manager is truly global, there's no need to
-    // release it.
+    ////////////////////////////////////////////////////////////////////////////
+    // let's do it again, this time with ProgIDs...
+
+    static nsresult
+    RegisterService(const char* aProgID, nsISupports* aService);
+
+    static nsresult
+    UnregisterService(const char* aProgID);
+
+    static nsresult
+    GetService(const char* aProgID, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL);
+
+    static nsresult
+    ReleaseService(const char* aProgID, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL);
+
+    ////////////////////////////////////////////////////////////////////////////
+
     static nsresult GetGlobalServiceManager(nsIServiceManager* *result);
 
     // This method can be called when shutting down the application. It  
