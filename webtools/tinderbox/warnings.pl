@@ -207,6 +207,8 @@ sub build_blame {
       my $source_text = join '', @text[$line-4..$line+2];
       chomp $source_text;
       
+      $who = "$who%netscape.com" unless $who =~ /[%]/;
+
       $warn_rec->{line_rev} = $line_rev;
       $warn_rec->{source}   = $source_text;
 
