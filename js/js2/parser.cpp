@@ -35,11 +35,11 @@ namespace JS = JavaScript;
 JS::Reader::Reader(const String &source, const String &sourceLocation, uint32 initialLineNum):
 	source(source), sourceLocation(sourceLocation), initialLineNum(initialLineNum)
 {
+	Reader::source += char16(uni::null);   // ensure last character is always '\0'
 	const char16 *b = Reader::source.data();
 	begin = b;
 	p = b;
-	end = b + Reader::source.size();
-	Reader::source.append(uni::null);   // ensure last character is always '\0'
+	end = b + Reader::source.size() - 1;
   #ifdef DEBUG
 	recordString = 0;
   #endif
