@@ -37,12 +37,15 @@
 #include "nsINetDataCacheManager.h"
 #include "nsINetDataCache.h"
 #include "nsCOMPtr.h"
+#include "nsIObserver.h"
 
 class nsHashtable;
 class nsReplacementPolicy;
 class nsCachedNetData;
 
-class nsCacheManager : public nsINetDataCacheManager {
+class nsCacheManager : public nsINetDataCacheManager,
+                       public nsIObserver
+{
 
 public:
     nsCacheManager();
@@ -55,6 +58,9 @@ public:
 
     // nsINetDataCacheManager methods
     NS_DECL_NSINETDATACACHEMANAGER
+
+    // nsIObserver methods
+    NS_DECL_NSIOBSERVER
 
 private:
 	
