@@ -163,9 +163,56 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
   return NS_OK;
 }
 
+PRBool
+nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAReadableString& aValueString)
+{
+  if (aAttrNameAtom == nsHTMLAtoms::href
+  || aAttrNameAtom == nsHTMLAtoms::src) {
+    // note that there is a problem in that if this value starts with leading spaces we won't do the right thing
+    // this is covered in bug #59604
+    static const char kJavaScript[] = "javascript";
+    PRInt32 pos = aValueString.FindChar(':');
+    nsAutoString scheme;
+    if ((pos == (PRInt32)(sizeof kJavaScript - 1)) &&
+        (aValueString.Left(scheme, pos) != -1) &&
+        scheme.EqualsIgnoreCase(kJavaScript))
+      return PR_TRUE;
+    else
+      return PR_FALSE;  
+  }
+
+  PRBool result = 
+                 (aAttrNameAtom == nsLayoutAtoms::onblur)      || (aAttrNameAtom == nsLayoutAtoms::onchange)
+              || (aAttrNameAtom == nsLayoutAtoms::onclick)     || (aAttrNameAtom == nsLayoutAtoms::ondblclick)
+              || (aAttrNameAtom == nsLayoutAtoms::onfocus)     || (aAttrNameAtom == nsLayoutAtoms::onkeydown)
+              || (aAttrNameAtom == nsLayoutAtoms::onkeypress)  || (aAttrNameAtom == nsLayoutAtoms::onkeyup)
+              || (aAttrNameAtom == nsLayoutAtoms::onload)      || (aAttrNameAtom == nsLayoutAtoms::onmousedown)
+              || (aAttrNameAtom == nsLayoutAtoms::onmousemove) || (aAttrNameAtom == nsLayoutAtoms::onmouseout)
+              || (aAttrNameAtom == nsLayoutAtoms::onmouseover) || (aAttrNameAtom == nsLayoutAtoms::onmouseup)
+              || (aAttrNameAtom == nsLayoutAtoms::onreset)     || (aAttrNameAtom == nsLayoutAtoms::onselect)
+              || (aAttrNameAtom == nsLayoutAtoms::onsubmit)    || (aAttrNameAtom == nsLayoutAtoms::onunload)
+              || (aAttrNameAtom == nsLayoutAtoms::onabort)     || (aAttrNameAtom == nsLayoutAtoms::onerror)
+              || (aAttrNameAtom == nsLayoutAtoms::onpaint)     || (aAttrNameAtom == nsLayoutAtoms::onresize)
+              || (aAttrNameAtom == nsLayoutAtoms::onscroll)    || (aAttrNameAtom == nsLayoutAtoms::onbroadcast)
+              || (aAttrNameAtom == nsLayoutAtoms::onclose)     || (aAttrNameAtom == nsLayoutAtoms::oncontextmenu)
+              || (aAttrNameAtom == nsLayoutAtoms::oncommand)   || (aAttrNameAtom == nsLayoutAtoms::oncommandupdate)
+              || (aAttrNameAtom == nsLayoutAtoms::oncreate)    || (aAttrNameAtom == nsLayoutAtoms::ondestroy)
+              || (aAttrNameAtom == nsLayoutAtoms::ondragdrop)  || (aAttrNameAtom == nsLayoutAtoms::ondragenter)
+              || (aAttrNameAtom == nsLayoutAtoms::ondragexit)  || (aAttrNameAtom == nsLayoutAtoms::ondraggesture)
+              || (aAttrNameAtom == nsLayoutAtoms::ondragover)  || (aAttrNameAtom == nsLayoutAtoms::oninput);
+  return result;
+}
+
 nsresult 
 nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableString& aEscapedURI)
 {
+  // URL escape %xx cannot be used in JS.
+  // No escaping if the scheme is 'javascript'.
+  if (IsJavaScript(nsHTMLAtoms::href, aURI)) {
+    aEscapedURI = aURI;
+    return NS_OK;
+  }
+
   // nsITextToSubURI does charset convert plus uri escape
   // This is needed to convert to a document charset which is needed to support existing browsers.
   // But we eventually want to use UTF-8 instead of a document charset, then the code would be much simpler.
@@ -272,6 +319,8 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         continue;
     }
 
+    PRBool isJS = IsJavaScript(attrName, valueStr);
+    
     if (((attrName.get() == nsHTMLAtoms::href) || 
          (attrName.get() == nsHTMLAtoms::src))) {
       // Make all links absolute when converting only the selection:
@@ -294,30 +343,15 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
           }
         }
       }
-
       // Need to escape URI.
       nsAutoString tempURI(valueStr);
-      if (NS_FAILED(EscapeURI(tempURI, valueStr)))
+      if (!isJS && NS_FAILED(EscapeURI(tempURI, valueStr)))
         valueStr = tempURI;
     }
-
+  
     attrName->ToString(nameStr);
-    
-    PRBool doTreatAsCDATA = 
-                 (attrName.get() == nsHTMLAtoms::onblur)      || (attrName.get() == nsHTMLAtoms::onchange)
-              || (attrName.get() == nsHTMLAtoms::onclick)     || (attrName.get() == nsHTMLAtoms::ondblclick)
-              || (attrName.get() == nsHTMLAtoms::onfocus)     || (attrName.get() == nsHTMLAtoms::onkeydown)
-              || (attrName.get() == nsHTMLAtoms::onkeypress)  || (attrName.get() == nsHTMLAtoms::onkeyup)
-              || (attrName.get() == nsHTMLAtoms::onload)      || (attrName.get() == nsHTMLAtoms::onmousedown)
-              || (attrName.get() == nsHTMLAtoms::onmousemove) || (attrName.get() == nsHTMLAtoms::onmouseout)
-              || (attrName.get() == nsHTMLAtoms::onmouseover) || (attrName.get() == nsHTMLAtoms::onmouseup)
-              || (attrName.get() == nsHTMLAtoms::onreset)     || (attrName.get() == nsHTMLAtoms::onselect)
-              || (attrName.get() == nsHTMLAtoms::onsubmit)    || (attrName.get() == nsHTMLAtoms::onunload)
-              || (attrName.get() == nsHTMLAtoms::onabort)     || (attrName.get() == nsHTMLAtoms::onerror)
-              || (attrName.get() == nsHTMLAtoms::onpaint)     || (attrName.get() == nsHTMLAtoms::onresize)
-              || (attrName.get() == nsHTMLAtoms::onscroll);
 
-    SerializeAttr(nsAutoString(), nameStr, valueStr, aStr, !doTreatAsCDATA);
+    SerializeAttr(nsAutoString(), nameStr, valueStr, aStr, !isJS);
   }
 }
 
