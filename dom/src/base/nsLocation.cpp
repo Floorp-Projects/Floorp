@@ -131,24 +131,14 @@ LocationImpl::CheckURL(nsIURI* aURL, nsIDocShellLoadInfo** aLoadInfo)
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
-    
 
-  // Now get the principal and referrer to use when loading the URI
+  // Now get the principal to use when loading the URI
   nsCOMPtr<nsIPrincipal> principal;
   if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))) ||
       !principal)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
   loadInfo->SetOwner(owner);
-
-  nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-  if (codebase)
-  {
-    nsCOMPtr<nsIURI> referrer;
-    if (NS_FAILED(result = codebase->GetURI(getter_AddRefs(referrer))))
-      return result;
-    loadInfo->SetReferrer(referrer);
-  }
 
   *aLoadInfo = loadInfo.get();
   NS_ADDREF(*aLoadInfo);

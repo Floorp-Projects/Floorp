@@ -170,11 +170,11 @@ protected:
 
 #ifdef SH_IN_FRAMES
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
-      nsISupports* owner, const char* aWindowTarget=nsnull, 
+      nsISupports* owner, PRBool inheritOwnerFromDocument, const char* aWindowTarget=nsnull, 
       nsIInputStream* aPostData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal, nsISHEntry * aSHEntry = nsnull);
 #else
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
-      nsISupports* owner, const char* aWindowTarget=nsnull, 
+      nsISupports* owner, PRBool inheritOwnerFromDocument, const char* aWindowTarget=nsnull, 
       nsIInputStream* aPostData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal);
 #endif
 
@@ -185,7 +185,7 @@ protected:
    NS_IMETHOD KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD GetCurrentDocumentOwner(nsISupports** aOwner);
    NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, nsISupports *aOwner,
-      nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
+      PRBool inheritOwnerFromDocument, nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
       nsIInputStream* aPostData);
    NS_IMETHOD DoChannelLoad(nsIChannel* aChannel, nsURILoadCommand aLoadCmd,
       const char* aWindowTarget, nsIURILoader *aURILoader);
