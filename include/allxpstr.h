@@ -6492,14 +6492,6 @@ ResDef(XP_EDT_MSG_TEXT_BUFFER_TOO_LARGE,    (XP_MSG_BASE + 843),
 ResDef(XP_EDT_MSG_CANNOT_PASTE, (XP_MSG_BASE + 844),
 "You cannot paste this much text in a single operation.\nTry pasting the text in several smaller segments.")
 
-ResDef(XP_EDT_CAN_PASTE_AS_TABLE, (XP_MSG_BASE + 845),
-"Text can be pasted as %d rows and %d columns.\n\n")
-ResDef(XP_EDT_REPLACE_CELLS, (XP_MSG_BASE + 846),
-"Replace existing cells?")
-ResDef(XP_EDT_PASTE_AS_TABLE, (XP_MSG_BASE + 847),
-"Paste text as a new table?")
-
-
 ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
 ResDef(MK_ADDR_IMPORT_CARDS, XP_MSG_BASE+861, "Adding cards to %s") /* line text for progress window on importing an address book */
 ResDef(MK_ADDR_IMPORT_MAILINGLISTS, XP_MSG_BASE+862, "Updating Mailing Lists in %s") /* line text for progress window on importing an address book */
