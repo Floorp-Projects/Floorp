@@ -37,6 +37,8 @@
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMElementObserver.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeObserver.h"
 #include "nsINameSpaceManager.h"
@@ -102,7 +104,8 @@ DEFINE_RDF_VOCAB(XUL_NAMESPACE_URI_PREFIX, XUL, element);
 
 class RDFXULBuilderImpl : public nsIRDFContentModelBuilder,
                           public nsIRDFObserver,
-                          public nsIDOMNodeObserver
+                          public nsIDOMNodeObserver,
+                          public nsIDOMElementObserver
 {
 private:
     nsIRDFCompositeDataSource* mDB;
@@ -111,7 +114,8 @@ private:
 
     // pseudo-constants
     static PRInt32 gRefCnt;
-    static nsIRDFService*  gRDFService;
+    static nsIRDFService*       gRDFService;
+    static nsINameSpaceManager* gNameSpaceManager;
 
     static PRInt32  kNameSpaceID_RDF;
     static PRInt32  kNameSpaceID_XUL;
@@ -149,6 +153,9 @@ public:
 
     // nsIDOMNodeObserver interface
     NS_DECL_IDOMNODEOBSERVER
+
+    // nsIDOMElementObserver interface
+    NS_DECL_IDOMELEMENTOBSERVER
 
     // Implementation methods
     nsresult AppendChild(nsIContent* aElement,
@@ -199,17 +206,18 @@ public:
 ////////////////////////////////////////////////////////////////////////
 // Pseudo-constants
 
-PRInt32         RDFXULBuilderImpl::gRefCnt = 0;
-nsIRDFService*  RDFXULBuilderImpl::gRDFService = nsnull;
+PRInt32              RDFXULBuilderImpl::gRefCnt;
+nsIRDFService*       RDFXULBuilderImpl::gRDFService;
+nsINameSpaceManager* RDFXULBuilderImpl::gNameSpaceManager;
 
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_RDF = kNameSpaceID_Unknown;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_XUL = kNameSpaceID_Unknown;
 
-nsIAtom*        RDFXULBuilderImpl::kContainerAtom         = nsnull;
-nsIAtom*        RDFXULBuilderImpl::kContentsGeneratedAtom = nsnull;
-nsIAtom*        RDFXULBuilderImpl::kIdAtom                = nsnull;
-nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom       = nsnull;
-nsIAtom*        RDFXULBuilderImpl::kTreeAtom              = nsnull;
+nsIAtom*        RDFXULBuilderImpl::kContainerAtom;
+nsIAtom*        RDFXULBuilderImpl::kContentsGeneratedAtom;
+nsIAtom*        RDFXULBuilderImpl::kIdAtom;
+nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
+nsIAtom*        RDFXULBuilderImpl::kTreeAtom;
 
 nsIRDFResource* RDFXULBuilderImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_nextVal;
@@ -246,19 +254,16 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
     if (gRefCnt++ == 0) {
         // XXX should hold on to the manager for the duration, as well.
         nsresult rv;
-        nsINameSpaceManager* mgr;
         if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
                                                            nsnull,
                                                            kINameSpaceManagerIID,
-                                                           (void**) &mgr))) {
+                                                           (void**) &gNameSpaceManager))) {
 
-            rv = mgr->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+            rv = gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
 
-            rv = mgr->RegisterNameSpace(kRDFNameSpaceURI, kNameSpaceID_RDF);
+            rv = gNameSpaceManager->RegisterNameSpace(kRDFNameSpaceURI, kNameSpaceID_RDF);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
-
-            NS_RELEASE(mgr);
         }
         else {
             NS_ERROR("couldn't create namepsace manager");
@@ -309,6 +314,8 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         if (gRDFService)
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 
+        NS_IF_RELEASE(gNameSpaceManager);
+
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_nextVal);
         NS_IF_RELEASE(kRDF_type);
@@ -338,23 +345,22 @@ RDFXULBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
     if (iid.Equals(kIRDFContentModelBuilderIID) ||
         iid.Equals(kISupportsIID)) {
         *aResult = NS_STATIC_CAST(nsIRDFContentModelBuilder*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
     else if (iid.Equals(kIRDFObserverIID)) {
         *aResult = NS_STATIC_CAST(nsIRDFObserver*, this);
-        NS_ADDREF(this);
-        return NS_OK;
     }
     else if (iid.Equals(nsIDOMNodeObserver::IID())) {
         *aResult = NS_STATIC_CAST(nsIDOMNodeObserver*, this);
-        NS_ADDREF(this);
-        return NS_OK;
+    }
+    else if (iid.Equals(nsIDOMElementObserver::IID())) {
+        *aResult = NS_STATIC_CAST(nsIDOMElementObserver*, this);
     }
     else {
         *aResult = nsnull;
         return NS_NOINTERFACE;
     }
+    NS_ADDREF(this);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -822,6 +828,111 @@ RDFXULBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 
 NS_IMETHODIMP
 RDFXULBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIDOMElementObserver interface
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIRDFResource> resource;
+    if (NS_FAILED(rv = GetDOMNodeResource(aElement, getter_AddRefs(resource)))) {
+        // XXX it's not a resource element, so there's no assertions
+        // we need to make on the back-end. Should we just do the
+        // update?
+        return NS_OK;
+    }
+
+    // Get the nsIContent interface, it's a bit more utilitarian
+    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
+    if (! element) {
+        NS_ERROR("element doesn't support nsIContent");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Split the property name into its namespace and tag components
+    PRInt32  nameSpaceID;
+    nsCOMPtr<nsIAtom> nameAtom;
+    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
+        NS_ERROR("unable to parse attribute string");
+        return rv;
+    }
+
+    NS_ASSERTION(nameAtom != nsnull, "no name");
+    NS_ASSERTION(nameSpaceID != kNameSpaceID_Unknown, "no namespace");
+
+    // construct a fully-qualified URI from the namespace/tag pair.
+    nsAutoString uri;
+    gNameSpaceManager->GetNameSpaceURI(nameSpaceID, uri);
+
+    // XXX check to see if we need to insert a '/' or a '#'
+    nsAutoString tag(nameAtom->GetUnicode());
+    if (uri.Last() != '#' && uri.Last() != '/' && tag.First() != '#')
+        uri.Append('#');
+
+    uri.Append(tag);
+
+    nsCOMPtr<nsIRDFResource> property;
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, getter_AddRefs(property)))) {
+        NS_ERROR("unable to get property resource");
+        return rv;
+    }
+
+    // Unassert the old value, if there was one.
+    nsAutoString oldValue;
+    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
+        nsCOMPtr<nsIRDFLiteral> value;
+        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+            NS_ERROR("unable to construct literal");
+            return rv;
+        }
+
+        rv = mDB->Unassert(resource, property, value);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+    }
+
+    // Assert the new value
+    {
+        nsCOMPtr<nsIRDFLiteral> value;
+        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
+            NS_ERROR("unable to construct literal");
+            return rv;
+        }
+
+        if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
+            NS_ERROR("unable to assert new property value");
+            return rv;
+        }
+    }
+    
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr)
+{
+    NS_NOTYETIMPLEMENTED("write me!");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
