@@ -166,7 +166,7 @@ CPPSRCS		= \
 
 EXPORTS		= nsUCvLatinCID.h
 
-LOCAL_INCLUDES = -I$(srcdir)/../util
+LOCAL_INCLUDES = -I$(srcdir)/../util -I$(srcdir)/../src
 
 include $(topsrcdir)/config/rules.mk
 

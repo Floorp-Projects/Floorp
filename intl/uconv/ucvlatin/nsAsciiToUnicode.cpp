@@ -46,7 +46,7 @@
 // labeled as us-ascii for iso-8859-1. Be generous here should be fine. 
 
 static const PRUint16 g_utMappingTable[] = {
-#include "../src/cp1252.ut"
+#include "cp1252.ut"
 };
 
 static const PRInt16 g_utShiftTable[] =  {
