@@ -69,28 +69,30 @@ nsBaseClipboard::~nsBaseClipboard()
 NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner,
                                         PRInt32 aWhichClipboard)
 {
-  if (aTransferable == mTransferable && anOwner == mClipboardOwner) {
+  NS_ASSERTION ( aTransferable, "clipboard given a null transferable" );
+
+  if (aTransferable == mTransferable && anOwner == mClipboardOwner)
     return NS_OK;
-  }
+  PRBool selectClipPresent;
+  SupportsSelectionClipboard(&selectClipPresent);
+  if ( !selectClipPresent && aWhichClipboard != kGlobalClipboard )
+    return NS_ERROR_FAILURE;
 
   EmptyClipboard(aWhichClipboard);
 
   mClipboardOwner = anOwner;
-  if (nsnull != anOwner) {
+  if ( anOwner )
     NS_ADDREF(mClipboardOwner);
-  }
 
   mTransferable = aTransferable;
   
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (nsnull != mTransferable) {
+  if ( mTransferable ) {
     NS_ADDREF(mTransferable);
     rv = SetNativeClipboardData(aWhichClipboard);
-  } else {
-    printf("  nsBaseClipboard::SetData(), aTransferable is NULL.\n");
   }
-
+  
   return rv;
 }
 
@@ -100,11 +102,15 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
   */
 NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, PRInt32 aWhichClipboard)
 {
-  if (nsnull != aTransferable) {
+  NS_ASSERTION ( aTransferable, "clipboard given a null transferable" );
+  
+  PRBool selectClipPresent;
+  SupportsSelectionClipboard(&selectClipPresent);
+  if ( !selectClipPresent && aWhichClipboard != kGlobalClipboard )
+    return NS_ERROR_FAILURE;
+
+  if ( aTransferable )
     return GetNativeClipboardData(aTransferable, aWhichClipboard);
-  } else {
-    printf("  nsBaseClipboard::GetData(), aTransferable is NULL.\n");
-  }
 
   return NS_ERROR_FAILURE;
 }
@@ -116,18 +122,20 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, PRInt32 
   */
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 {
-  if (mIgnoreEmptyNotification) {
-    return NS_OK;
-  }
+  PRBool selectClipPresent;
+  SupportsSelectionClipboard(&selectClipPresent);
+  if ( !selectClipPresent && aWhichClipboard != kGlobalClipboard )
+    return NS_ERROR_FAILURE;
 
-  if (nsnull != mClipboardOwner) {
+  if (mIgnoreEmptyNotification)
+    return NS_OK;
+
+  if ( mClipboardOwner ) {
     mClipboardOwner->LosingOwnership(mTransferable);
     NS_RELEASE(mClipboardOwner);
   }
 
-  if (nsnull != mTransferable) {
-    NS_RELEASE(mTransferable);
-  }
+  NS_IF_RELEASE(mTransferable);
 
   return NS_OK;
 }
