@@ -6,5 +6,5 @@ interface RDFCore : BaseAppCore
 
         void RDFCore();
 
-        void doSort(in Node node, in DOMString sortResource);
+        void doSort(in Node node, in DOMString sortResource, in DOMString sortDirection);
   };

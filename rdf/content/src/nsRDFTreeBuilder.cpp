@@ -80,7 +80,7 @@
 #include "rdfutil.h"
 
 #include "nsVoidArray.h"
-#include "rdf_qsort.h"
+#include "nsIXULSortService.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -106,6 +106,9 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+
+static NS_DEFINE_IID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -139,6 +142,7 @@ private:
     static nsIAtom* kTreeIndentationAtom;
     static nsIAtom* kTreeItemAtom;
     static nsIAtom* kContainmentAtom;
+    static nsIAtom* kNaturalOrderPosAtom;
 
     static PRInt32  kNameSpaceID_RDF;
     static PRInt32  kNameSpaceID_XUL;
@@ -201,7 +205,8 @@ public:
     nsresult
     AddTreeRow(nsIContent* aTreeItemElement,
                nsIRDFResource* aProperty,
-               nsIRDFResource* aValue);
+               nsIRDFResource* aValue,
+               PRInt32 naturalOrderPos);
 
     nsresult
     EnsureCell(nsIContent* aTreeItemElement, PRInt32 aIndex, nsIContent** aCellElement);
@@ -282,6 +287,7 @@ nsIAtom* RDFTreeBuilderImpl::kTreeIconAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeIndentationAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeItemAtom;
 nsIAtom* RDFTreeBuilderImpl::kContainmentAtom;
+nsIAtom* RDFTreeBuilderImpl::kNaturalOrderPosAtom;
 
 PRInt32  RDFTreeBuilderImpl::kNameSpaceID_RDF;
 PRInt32  RDFTreeBuilderImpl::kNameSpaceID_XUL;
@@ -339,6 +345,7 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kTreeIndentationAtom = NS_NewAtom("treeindentation");
         kTreeItemAtom        = NS_NewAtom("treeitem");
         kContainmentAtom     = NS_NewAtom("containment");
+        kNaturalOrderPosAtom = NS_NewAtom("pos");
 
         nsresult rv;
 
@@ -421,7 +428,7 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
         NS_RELEASE(kTreeIndentationAtom);
         NS_RELEASE(kTreeItemAtom);
         NS_RELEASE(kContainmentAtom);
-
+        NS_RELEASE(kNaturalOrderPosAtom);
         NS_RELEASE(kNC_Title);
         NS_RELEASE(kNC_Column);
 
@@ -591,76 +598,6 @@ RDFTreeBuilderImpl::SetRootContent(nsIContent* aElement)
 }
 
 
-typedef	struct	_sortStruct	{
-    nsIRDFCompositeDataSource	*db;
-    nsIRDFResource		*sortProperty;
-    PRBool			descendingSort;
-} sortStruct, *sortPtr;
-
-
-int rdfSortCallback(const void *data1, const void *data2, void *data);
-
-
-int
-rdfSortCallback(const void *data1, const void *data2, void *sortData)
-{
-	int		sortOrder = 0;
-	nsresult	rv;
-
-	nsIRDFNode	*node1, *node2;
-	node1 = *(nsIRDFNode **)data1;
-	node2 = *(nsIRDFNode **)data2;
-	_sortStruct	*sortPtr = (_sortStruct *)sortData;
-
-	nsIRDFResource	*res1;
-	nsIRDFResource	*res2;
-	const PRUnichar	*uniStr1 = nsnull;
-	const PRUnichar	*uniStr2 = nsnull;
-
-	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) &res1)))
-	{
-		nsIRDFNode	*nodeVal1;
-		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res1, sortPtr->sortProperty, PR_TRUE, &nodeVal1)))
-		{
-			nsIRDFLiteral *literal1;
-			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
-			{
-				literal1->GetValue(&uniStr1);
-			}
-		}
-	}
-	if (NS_SUCCEEDED(node2->QueryInterface(kIRDFResourceIID, (void **) &res2)))
-	{
-		nsIRDFNode	*nodeVal2;
-		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res2, sortPtr->sortProperty, PR_TRUE, &nodeVal2)))
-		{
-			nsIRDFLiteral	*literal2;
-			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) &literal2)))
-			{
-				literal2->GetValue(&uniStr2);
-			}
-		}
-	}
-	if ((uniStr1 != nsnull) && (uniStr2 != nsnull))
-	{
-		nsAutoString	str1(uniStr1), str2(uniStr2);
-		sortOrder = (int)str1.Compare(str2, PR_TRUE);
-		if (sortPtr->descendingSort == PR_TRUE)
-		{
-			sortOrder = -sortOrder;
-		}
-	}
-	else if ((uniStr1 != nsnull) && (uniStr2 == nsnull))
-	{
-		sortOrder = -1;
-	}
-	else
-	{
-		sortOrder = 1;
-	}
-	return(sortOrder);
-}
-
 
 NS_IMETHODIMP
 RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
@@ -761,11 +698,6 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
 			       due to sort callback implementation */
                 	tempArray->AppendElement(valueResource);
                 	tempArray->AppendElement(property);
-/*                if (NS_FAILED(rv = AddTreeRow(aElement, property, valueResource))) {
-                    NS_ERROR("unable to create tree row");
-                    return rv;
-                }
-*/
             }
             else {
                 if (NS_FAILED(rv = SetCellValue(aElement, property, value))) {
@@ -780,41 +712,33 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
         unsigned long numElements = tempArray->Count();
         if (numElements > 0)
         {
-        	nsIRDFResource ** flatArray = (nsIRDFResource **)malloc(numElements * sizeof(void *));
+        	nsIRDFResource ** flatArray = new nsIRDFResource *[numElements];
         	if (flatArray)
         	{
-			_sortStruct		sortInfo;
-
-			// get sorting info (property to sort on, direction to sort, etc)
-
-			// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-			// XXX Note: currently hardcoded; should get from DOM, or... ?
-			// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-			sortInfo.db = mDB;
-			sortInfo.descendingSort = PR_FALSE;
-			if (NS_FAILED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#Name", &sortInfo.sortProperty)))
-			{
-				NS_ERROR("unable to create gSortProperty resource");
-				return rv;
-			}
-
 			// flatten array of resources, sort them, then add as tree elements
 			unsigned long loop;
 
         	        for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
-        		rdf_qsort((void *)flatArray, numElements/2, 2 * sizeof(void *), rdfSortCallback, (void *)&sortInfo);
+
+			nsIXULSortService		*gXULSortService = nsnull;
+
+			nsresult rv = nsServiceManager::GetService(kXULSortServiceCID,
+				kIXULSortServiceIID, (nsISupports**) &gXULSortService);
+			if (nsnull != gXULSortService)
+			{
+				gXULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
+				nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
+			}
+
         		for (loop=0; loop<numElements; loop+=2)
         		{
-				if (NS_FAILED(rv = AddTreeRow(aElement,
-							(nsIRDFResource *)flatArray[loop+1],
-							(nsIRDFResource *)flatArray[loop])))
+				if (NS_FAILED(rv = AddTreeRow(aElement, flatArray[loop+1], flatArray[loop], loop+1)))
 				{
 					NS_ERROR("unable to create tree row");
 				}
         		}
-        		free(flatArray);
+			delete [] flatArray;
         	}
         }
         delete tempArray;
@@ -888,7 +812,7 @@ RDFTreeBuilderImpl::OnAssert(nsIRDFResource* aSubject,
                 contentsGenerated.EqualsIgnoreCase("true")) {
                 // Okay, it's a "live" element, so go ahead and append the new
                 // child to this node.
-                if (NS_FAILED(rv = AddTreeRow(element, aPredicate, resource))) {
+                if (NS_FAILED(rv = AddTreeRow(element, aPredicate, resource, 0))) {
                     NS_ERROR("unable to create new tree row");
                     return rv;
                 }
@@ -1318,7 +1242,8 @@ RDFTreeBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
 nsresult
 RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
                                nsIRDFResource* aProperty,
-                               nsIRDFResource* aValue)
+                               nsIRDFResource* aValue,
+                               PRInt32 naturalOrderPos)
 {
     // If it's a tree property, then we need to add the new child
     // element to a special "children" element in the parent.  The
@@ -1446,6 +1371,17 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
         }
 
         treeItem->SetAttribute(nameSpaceID, tag, s, PR_FALSE);
+
+	if (naturalOrderPos > 0)
+	{
+		nsAutoString	pos, zero("0");;
+		pos.Append(naturalOrderPos, 10);
+		if (pos.Length() < 4)
+		{
+			pos.Insert(zero, 0, 4-pos.Length()); 
+		}
+		treeItem->SetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos, PR_FALSE);
+	}
     }
 
     if (NS_FAILED(rv) && (rv != NS_ERROR_RDF_CURSOR_EMPTY)) {

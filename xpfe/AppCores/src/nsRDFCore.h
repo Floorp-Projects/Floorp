@@ -49,7 +49,7 @@ class nsRDFCore : public nsBaseAppCore,
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)  { return nsBaseAppCore::SetDocumentCharset(aCharset); } 
 
-    NS_IMETHOD    DoSort(nsIDOMNode* node, const nsString& sortResource);
+    NS_IMETHOD    DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
 
   protected:
 

@@ -35,17 +35,17 @@ class nsIDOMRDFCore : public nsIDOMBaseAppCore {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMRDFCORE_IID; return iid; }
 
-  NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource)=0;
+  NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource, const nsString& aSortDirection)=0;
 };
 
 
 #define NS_DECL_IDOMRDFCORE   \
-  NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource);  \
+  NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource, const nsString& aSortDirection);  \
 
 
 
 #define NS_FORWARD_IDOMRDFCORE(_to)  \
-  NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource) { return _to##DoSort(aNode, aSortResource); }  \
+  NS_IMETHOD    DoSort(nsIDOMNode* aNode, const nsString& aSortResource, const nsString& aSortDirection) { return _to##DoSort(aNode, aSortResource, aSortDirection); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitRDFCoreClass(nsIScriptContext *aContext, void **aPrototype);
