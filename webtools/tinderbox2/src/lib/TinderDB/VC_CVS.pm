@@ -133,7 +133,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -517,7 +517,7 @@ sub status_table_row {
       # the group of links.
 
       my (%popup_args) = (
-                          "linktxt" => "\t\t<tt>$author</tt>".
+                          "linktxt" => "\t\t<tt>$author</tt>",
                           
                           "windowtxt" => $table,
                           "windowtitle" => "VC Info",
