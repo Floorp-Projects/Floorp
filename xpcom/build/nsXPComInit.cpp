@@ -168,6 +168,10 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 	if (NS_FAILED(rv)) return rv;
 #endif
 
+	// Establish the main thread here.
+    rv = nsIThread::SetMainThread();
+	if (NS_FAILED(rv)) return rv;
+
     // 1. Create the Global Service Manager
     nsIServiceManager* servMgr = NULL;
     if (nsServiceManager::mGlobalServiceManager == NULL)
