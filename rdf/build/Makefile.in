@@ -84,6 +84,7 @@ endif
 install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/sidebar.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/sidebar.css $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bm-props.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmarks.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmarks.css $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/history.xul $(DIST)/bin/res/rdf

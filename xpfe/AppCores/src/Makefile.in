@@ -32,6 +32,8 @@ MODULE=raptor
 
 CPPSRCS= \
 	nsBaseAppCore.cpp       \
+	nsDOMPropsCore.cpp		\
+	nsDOMPropsCoreFactory.cpp	\
 	nsMailCore.cpp       \
 	nsPrefsCore.cpp       \
 	nsRDFCore.cpp		\
@@ -51,6 +53,7 @@ CPPSRCS= \
 	nsAppCoresManagerFactory.cpp       \
 	nsJSBaseAppCore.cpp       \
 	nsJSAppCoresManager.cpp       \
+	nsJSDOMPropsCore.cpp		\
 	nsJSEditorAppCore.cpp       \
 	nsJSMailCore.cpp   \
 	nsJSPrefsCore.cpp   \
