@@ -1326,6 +1326,11 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/spellcheck/myspell/dictionaries/Makefile
             extensions/spellcheck/src/Makefile
             " ;;
+        tasks ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/tasks/Makefile
+            extensions/tasks/resources/content/contents.rdf
+            extensions/tasks/resources/locale/en-US/contents.rdf
+            " ;;
         transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_transformiix"
             ;;

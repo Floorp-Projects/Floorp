@@ -3599,7 +3599,7 @@ dnl ========================================================
 
 MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck"
 
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm datetime finger cview layout-debug"
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm datetime finger cview layout-debug tasks"
 
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
@@ -4838,7 +4838,7 @@ if test "$MOZ_XUL"; then
   AC_DEFINE(MOZ_XUL)
 else
   dnl remove extensions that require XUL
-  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's/inspector//' -e 's/venkman//' -e 's/irc//'`
+  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's/inspector//' -e 's/venkman//' -e 's/irc//' -e 's/tasks//'`
 fi
 
 AC_SUBST(MOZ_XUL)
