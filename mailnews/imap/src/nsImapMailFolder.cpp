@@ -628,7 +628,7 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const char *newName)
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetChildNamed(nsString& name, nsISupports **
+NS_IMETHODIMP nsImapMailFolder::GetChildNamed(const char * name, nsISupports **
                                               aChild)
 {
     nsresult rv = NS_ERROR_FAILURE;

@@ -75,7 +75,7 @@ public:
 	NS_IMETHOD Rename (const char *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
     
-    NS_IMETHOD GetChildNamed(nsString& name, nsISupports ** aChild);
+    NS_IMETHOD GetChildNamed(const char * name, nsISupports ** aChild);
     
     // this override pulls the value from the db
 	NS_IMETHOD GetName(char ** name);   // Name of this folder (as presented to user).
