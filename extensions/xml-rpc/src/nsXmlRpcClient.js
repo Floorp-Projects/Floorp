@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.30 $
+ *  Version: $Revision: 1.31 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.30 2002/12/04 07:59:57 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.31 2003/01/04 19:07:37 samuel%sieb.net Exp $
  */
 
 /*
@@ -188,7 +188,7 @@ nsXmlRpcClient.prototype = {
     }, // Do exactly nada.
 
     // End of the request
-    onStopRequest: function(channel, ctxt, status, errorMsg) {
+    onStopRequest: function(channel, ctxt, status) {
         debug('Stop Request');
         if (!this._inProgress) return; // No longer interested.
 
@@ -196,11 +196,13 @@ nsXmlRpcClient.prototype = {
         this._parser = null;
         
         if (status) {
-            debug('Non-zero status: (' + status.toString(16) + ') ' + errorMsg);
+            debug('Non-zero status: (' + status.toString(16) + ') ');
             this._status = status;
             this._errorMsg = errorMsg;
-            try { this._listener.onError(this, ctxt, status, errorMsg); }
-            catch (ex) {
+            try {
+                this._listener.onError(this, ctxt, status,
+                                       status.toString(16));
+            } catch (ex) {
                 debug('Exception in listener.onError: ' + ex);
             }
             return;
