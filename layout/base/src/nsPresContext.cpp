@@ -25,6 +25,8 @@
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsEventStateManager.h"
+#include "nsIURL.h"
+#include "nsIDocument.h"
 
 #define NOISY_IMAGES
 
@@ -55,6 +57,7 @@ nsPresContext::nsPresContext()
   mFontScaler = 0;  
 
   mCompatibilityMode = eCompatibility_NavQuirks;
+  mBaseURL = nsnull;
 
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
@@ -92,6 +95,7 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mEventManager);
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mPrefs);
+  NS_IF_RELEASE(mBaseURL);
 }
 
 nsrefcnt
@@ -160,7 +164,16 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
 void
 nsPresContext::SetShell(nsIPresShell* aShell)
 {
+  NS_IF_RELEASE(mBaseURL);
   mShell = aShell;
+  if (nsnull != mShell) {
+    nsIDocument*  doc = mShell->GetDocument();
+    NS_ASSERTION(nsnull != doc, "expect document here");
+    if (nsnull != doc) {
+      mBaseURL = doc->GetDocumentURL();
+      NS_RELEASE(doc);
+    }
+  }
 }
 
 nsIPresShell*
@@ -189,6 +202,14 @@ NS_IMETHODIMP
 nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
 {
   mCompatibilityMode = aMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetBaseURL(nsIURL*& aURL)
+{
+  NS_IF_ADDREF(mBaseURL);
+  aURL = mBaseURL;
   return NS_OK;
 }
 

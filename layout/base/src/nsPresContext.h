@@ -37,6 +37,7 @@ public:
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
+  NS_IMETHOD GetBaseURL(nsIURL*& aURL);
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
                                                   nsIFrame* aParentFrame,
                                                   PRBool aForceUnique = PR_FALSE);
@@ -92,6 +93,7 @@ protected:
   nsVoidArray           mImageLoaders;
   nsIEventStateManager* mEventManager;
   nsCompatibility       mCompatibilityMode;
+  nsIURL*               mBaseURL;
 
 #ifdef DEBUG
   PRBool                mInitialized;
