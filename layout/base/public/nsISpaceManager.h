@@ -57,6 +57,9 @@ struct nsBandTrapezoid {
 
   // Get the bouding rect of the trapezoid
   void    GetRect(nsRect& aRect);
+
+  // Set the trapezoid from a rectangle
+  void operator=(const nsRect& aRect);
 };
 
 /**
@@ -104,7 +107,7 @@ public:
 
   /**
    * Returns a band starting at the specified y-offset. The band data indicates
-   * which parts of the band are available
+   * which parts of the band are available, and which parts are unavailable
    *
    * The band data that is returned is in the coordinate space of the local
    * coordinate system.
@@ -115,14 +118,16 @@ public:
    * @param   aYOffset the y-offset of where the band begins. The coordinate is
    *            relative to the upper-left corner of the local coordinate space
    * @param   aMaxSize the size to use to constrain the band data
-   * @param   aAvailableSpace <i>out</i> parameter used to return the list of
-   *            rects that make up the available space.
-   * @returns the number of rects in the band data. If the band data is not
-   *            large enough returns the negative of the number of rects needed
+   * @param   aBandData <i>out</i> parameter used to return the list of
+   *            trapezoids that describe the available space and the unavailable
+   *            space.
+   * @returns the number of trapezoids in the band data. If the band data is
+   *            not large enough, returns the negative of the number of
+   *            trapezoids needed
    */
   virtual PRInt32 GetBandData(nscoord       aYOffset,
                               const nsSize& aMaxSize,
-                              nsBandData&   aAvailableSpace) const = 0;
+                              nsBandData&   aBandData) const = 0;
 
   /**
    * Add a rectangular region of unavailable space. The space is relative to
@@ -142,6 +147,14 @@ void inline nsBandTrapezoid::GetRect(nsRect& aRect)
   aRect.y = yTop;
   aRect.width = PR_MAX(xTopRight, xBottomRight) - aRect.x;
   aRect.height = yBottom - yTop;
+}
+
+void inline nsBandTrapezoid::operator=(const nsRect& aRect)
+{
+  xTopLeft = xBottomLeft = aRect.x;
+  xTopRight = xBottomRight = aRect.XMost();
+  yTop = aRect.y;
+  yBottom = aRect.YMost();
 }
 
 #endif /* nsISpaceManager_h___ */
