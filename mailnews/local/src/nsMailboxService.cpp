@@ -35,7 +35,7 @@
 #include "nsLocalUtils.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -130,10 +130,10 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
     msgUrl->SetMsgWindow(aMsgWindow);
 
 		// instead of running the mailbox url like we used to, let's try to run the url in the webshell...
-		nsCOMPtr<nsIWebShell> webshell = do_QueryInterface(aDisplayConsumer, &rv);
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
     // if we were given a webshell, run the url in the webshell..otherwise just run it normally.
-    if (NS_SUCCEEDED(rv) && webshell)
-	  rv = webshell->LoadURI(url, "view", nsnull, PR_TRUE);
+    if (NS_SUCCEEDED(rv) && docShell)
+	  rv = docShell->LoadURI(url, nsnull);
     else
       rv = RunMailboxUrl(url, aDisplayConsumer); 
 	}

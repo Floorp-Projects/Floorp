@@ -52,6 +52,7 @@
 #include "nsINntpIncomingServer.h"
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
+#include "nsIDocShell.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -190,9 +191,9 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
     // now is where our behavior differs....if the consumer is the webshell then we want to 
     // run the url in the webshell in order to display it. If it isn't a webshell then just
     // run the news url like we would any other news url. 
-	  nsCOMPtr<nsIWebShell> webshell = do_QueryInterface(aDisplayConsumer, &rv);
-    if (NS_SUCCEEDED(rv) && webshell)
-	    rv = webshell->LoadURI(myuri, "view", nsnull, PR_TRUE);
+	  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
+    if (NS_SUCCEEDED(rv) && docShell)
+	    rv = docShell->LoadURI(myuri, nsnull);
     else
       rv = RunNewsUrl(myuri, aMsgWindow, aDisplayConsumer);
   }

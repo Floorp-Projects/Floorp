@@ -37,7 +37,7 @@
 #include "nsIImapServerSink.h"
 #include "nsIImapMockChannel.h"
 #include "nsImapUtils.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIRDFService.h"
 #include "nsIEventQueueService.h"
 #include "nsXPIDLString.h"
@@ -469,9 +469,9 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
       // otherwise, it should be a stream listener....so open a channel using AsyncRead
       // and the provided stream listener....
 
-      nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(aDisplayConsumer, &rv);
-      if (NS_SUCCEEDED(rv) && webShell)
-         rv = webShell->LoadURI(url, "view", nsnull, PR_TRUE);
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
+      if (NS_SUCCEEDED(rv) && docShell)
+         rv = docShell->LoadURI(url, nsnull);
       else
       {
         nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
@@ -770,9 +770,9 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
       // otherwise, it should be a stream listener....so open a channel using AsyncRead
       // and the provided stream listener....
 
-      nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(aDisplayConsumer, &rv);
-      if (NS_SUCCEEDED(rv) && webShell)
-         rv = webShell->LoadURI(url, "view", nsnull, PR_TRUE);
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
+      if (NS_SUCCEEDED(rv) && docShell)
+         rv = docShell->LoadURI(url, nsnull);
       else
       {
         nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);

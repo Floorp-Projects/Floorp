@@ -26,6 +26,7 @@
 #include "nsIHTMLContent.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
@@ -967,6 +968,10 @@ nsHTMLFrameInnerFrame::ReloadURL()
         nsAutoString absURL;
         TempMakeAbsURL(content, url, absURL);
 
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), absURL.GetUnicode(), nsnull);
+
+
         // Get the referrer from the currently executing script, if any.
         NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                         NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
@@ -976,40 +981,33 @@ nsHTMLFrameInnerFrame::ReloadURL()
         rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
         if (NS_FAILED(rv))
           return rv;
-        nsString referrer;
+        
+        nsCOMPtr<nsIURI> referrer;
         if (principal) {
           nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-          nsCOMPtr<nsIURI> fromURI;
-          nsXPIDLCString spec;
           if (codebase) {
-            rv = codebase->GetURI(getter_AddRefs(fromURI));
+            rv = codebase->GetURI(getter_AddRefs(referrer));
             if (NS_FAILED(rv))
               return rv;
             nsCOMPtr<nsIURI> newURI;
             rv = NS_NewURI(getter_AddRefs(newURI), absURL);           
             if (NS_FAILED(rv))
               return rv;
-            rv = secMan->CheckLoadURI(fromURI, newURI, PR_FALSE);
+            rv = secMan->CheckLoadURI(referrer, newURI, PR_FALSE);
             if (NS_FAILED(rv))
               return rv;
-            rv = fromURI->GetSpec(getter_Copies(spec));
-            if (NS_FAILED(rv))
-              return rv;
-            referrer = spec;
           }
         }
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
+        NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mSubShell));
-        NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
+        nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+        docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+        NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-        // load with an URL string with a default nsnull value for post Data
-        rv = webShell->LoadURL(absURL.GetUnicode(),
-                               nsnull, PR_TRUE,
-                               nsIChannel::LOAD_NORMAL,
-                               0,
-                               nsnull,
-                               referrer.Length() > 0 ? referrer.GetUnicode()
-                                                     : nsnull);
+        loadInfo->SetReferrer(referrer);
+
+        rv = docShell->LoadURI(uri, loadInfo);
       }
     } else {
       mCreatingViewer = PR_TRUE;
