@@ -193,9 +193,9 @@ else
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
-ConfigureBuildSystem();
-
 Checkout();
+
+ConfigureBuildSystem();
 
 my(@gen_files) = (
     ":mozilla:xpfe:appshell:public:nsBuildID.h",

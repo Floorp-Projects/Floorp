@@ -190,9 +190,9 @@ else
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
-ConfigureBuildSystem();
-
 Checkout();
+
+ConfigureBuildSystem();
 
 chdir($MOZ_SRC);
 BuildDist();

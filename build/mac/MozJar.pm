@@ -418,7 +418,7 @@ sub registerChromePackage($$$$$$)
     if ($main::options{use_jars}) {
         $chrome_entry = "$chrome_type,install,url,jar:resource:/chrome/$manifest_subdir!/$chrome_type/$pkg_name";
     } else {
-        $manifest_subdir =~ s/\.jar$/\//;
+        $manifest_subdir =~ s/\.jar$//;
         $chrome_entry = "$chrome_type,install,url,resource:/chrome/$manifest_subdir/$chrome_type/$pkg_name";
     }
 
