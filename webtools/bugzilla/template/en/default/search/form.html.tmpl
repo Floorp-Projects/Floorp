@@ -359,56 +359,79 @@ function selectProduct(f) {
   <tr>
     <td colspan="4">
       <table>
-        <tr valign="bottom">
-          <th align="left"><u>P</u>roduct:</th>
-          <th align="left">
-            <a href="describecomponents.cgi">Co<u>m</u>ponent</a>:
-          </th>
-          <th align="left"><u>V</u>ersion:</th>
-
-        [% IF (Param("usetargetmilestone")) %]
-          <th align="left"><u>T</u>arget:</th>
-        [% END %]
-        </tr>
-
-        <tr valign="top">
-
-          [%# Can't use the select block here because of onChange and the fact that
-              'component' is a toolkit reserved word - we use 'component_' instead. %]
-          <td align="left">
-            <label for="product" accesskey="p">
-              <select name="product" multiple="multiple" size="5" id="product"
-                      onchange="selectProduct(this.form);">
-              [% FOREACH p = product %]
-                <option value="[% p.name FILTER html %]"
-                  [% " selected" IF lsearch(default.product, p.name) != -1 %]>
-                  [% p.name FILTER html %]</option>
-              [% END %]
-              </select>
-            </label>
+        <tr>
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left"><u>P</u>roduct:</th>
+              </tr>
+              <tr valign="top">
+                [%# Can't use the select block here because of the onChange %]
+                <td align="left">
+                  <label for="product" accesskey="p">
+                    <select name="product" multiple="multiple" size="5" id="product"
+                            onchange="selectProduct(this.form);">
+                    [% FOREACH p = product %]
+                      <option value="[% p.name FILTER html %]"
+                        [% " selected" IF lsearch(default.product, p.name) != -1 %]>
+                        [% p.name FILTER html %]</option>
+                    [% END %]
+                    </select>
+                  </label>
+                </td>
+              </tr>
+            </table>
           </td>
-
-          <td align="left">
-            <label for="component" accesskey="m">
-              <select name="component" id="component" 
-                      multiple="multiple" size="5">
-              [% FOREACH c = component_ %]
-                <option value="[% c FILTER html %]"
-                  [% " selected" IF lsearch(default.component, c) != -1 %]>
-                  [% c FILTER html %]</option>
-              [% END %]
-              </select>
-            </label>
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left">
+                  <a href="describecomponents.cgi">Co<u>m</u>ponent</a>:
+                </th>
+              </tr>
+              <tr valign="top">
+                [%# Can't use the select block here because 'component' is a toolkit
+                    reserved word - we use 'component_' instead. %]
+                <td align="left">
+                  <label for="component" accesskey="m">
+                    <select name="component" id="component" 
+                            multiple="multiple" size="5">
+                    [% FOREACH c = component_ %]
+                      <option value="[% c FILTER html %]"
+                        [% " selected" IF lsearch(default.component, c) != -1 %]>
+                        [% c FILTER html %]</option>
+                    [% END %]
+                    </select>
+                  </label>
+                </td>
+              </tr>
+            </table>
           </td>
-
-          [% PROCESS select sel = { name => 'version', 
-                                    size => 5, 
-                                    accesskey => 'v' } %]
-
-        [% IF Param('usetargetmilestone') && target_milestone.size > 0 %]
-          [% PROCESS select sel = { name => 'target_milestone', 
-                                    size => 5,
-                                    accesskey => 't' } %]
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left"><u>V</u>ersion:</th>
+              </tr>
+              <tr valign="top">
+                [% PROCESS select sel = { name => 'version', 
+                                          size => 5, 
+                                          accesskey => 'v' } %]
+              </tr>
+            </table>
+          </td>
+        [% IF Param('usetargetmilestone') %]
+          <td valign="top">
+            <table>
+              <tr valign="bottom">
+                <th align="left"><u>T</u>arget:</th>
+              </tr>
+              <tr valign="top">
+                [% PROCESS select sel = { name => 'target_milestone', 
+                                          size => 5,
+                                          accesskey => 't' } %]
+              </tr>
+            </table>
+          </td>
         [% END %]
         </tr>
       </table>
@@ -478,35 +501,80 @@ function selectProduct(f) {
 
 <table>
   <tr>
-    <th align="left"><a href="queryhelp.cgi#status">St<u>a</u>tus</a>:</th>
-    <th align="left">
-      <a href="queryhelp.cgi#resolution"><u>R</u>esolution</a>:
-    </th>
-    <th align="left"><a href="queryhelp.cgi#severity">S<u>e</u>verity</a>:</th>
-    <th align="left"><a href="queryhelp.cgi#priority">Pr<u>i</u>ority</a>:</th>
-    <th align="left"><a href="queryhelp.cgi#platform"><u>H</u>ardware</a>:</th>
-    <th align="left"><a href="queryhelp.cgi#opsys"><u>O</u>S</a>:</th>
-  </tr>
-
-  <tr valign="top">
-    [% PROCESS select sel = { name => 'bug_status', 
-                              size => 7,
-                              accesskey => 'a' } %]
-    [% PROCESS select sel = { name => 'resolution', 
-                              size => 7,
-                              accesskey => 'r' } %]
-    [% PROCESS select sel = { name => 'bug_severity', 
-                              size => 7,
-                              accesskey => 'e' } %]    
-    [% PROCESS select sel = { name => 'priority', 
-                              size => 7, 
-                              accesskey => 'i' } %]    
-    [% PROCESS select sel = { name => 'rep_platform', 
-                              size => 7,
-                              accesskey => 'h' } %]
-    [% PROCESS select sel = { name => 'op_sys', 
-                              size => 7, 
-                              accesskey => 'o' } %]
+    <td>
+      <table>
+        <tr>
+          <th align="left"><a href="queryhelp.cgi#status">St<u>a</u>tus</a>:</th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'bug_status', 
+                                    size => 7,
+                                    accesskey => 'a' } %]
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left">
+            <a href="queryhelp.cgi#resolution"><u>R</u>esolution</a>:
+          </th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'resolution', 
+                                    size => 7,
+                                    accesskey => 'r' } %]
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left"><a href="queryhelp.cgi#severity">S<u>e</u>verity</a>:</th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'bug_severity', 
+                                    size => 7,
+                                    accesskey => 'e' } %]    
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left"><a href="queryhelp.cgi#priority">Pr<u>i</u>ority</a>:</th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'priority', 
+                                    size => 7, 
+                                    accesskey => 'i' } %]    
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left"><a href="queryhelp.cgi#platform"><u>H</u>ardware</a>:</th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'rep_platform', 
+                                    size => 7,
+                                    accesskey => 'h' } %]
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th align="left"><a href="queryhelp.cgi#opsys"><u>O</u>S</a>:</th>
+        </tr>
+        <tr valign="top">
+          [% PROCESS select sel = { name => 'op_sys', 
+                                    size => 7, 
+                                    accesskey => 'o' } %]
+        </tr>
+      </table>
+    </td>
   </tr>
 </table>
 
