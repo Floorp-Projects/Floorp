@@ -488,9 +488,9 @@ wallet_DumpStopwatch() {
 #endif /* DEBUG */
 
 
-/**********************/
+/*************************************/
 /* Concatenating and Copying Strings */
-/**********************/
+/*************************************/
 
 #undef StrAllocCopy
 #define StrAllocCopy(dest, src) Local_SACopy (&(dest), src)
