@@ -462,7 +462,11 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
 
     rv = IDL_parse_filename_with_input(filename, input_callback, &stack,
                                        msg_callback, &top,
-                                       &state.ns, IDLF_XPIDL,
+                                       &state.ns,
+#if LIBIDL_VERSION_CODE >= LIBIDL_VERSION (0,6,2)
+                                       IDLF_IGNORE_FORWARDS |
+#endif
+                                       IDLF_XPIDL,
                                        enable_warnings ? IDL_WARNING1 :
                                        IDL_ERROR);
     if (rv != IDL_SUCCESS) {
