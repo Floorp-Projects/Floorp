@@ -1127,7 +1127,7 @@ XMLArrayFinish(JSContext *cx, JSXMLArray *array, JSXMLArrayElemDtor dtor)
 #define XML_NOT_FOUND   ((uint32) -1)
 
 static uint32
-XMLArrayFindMember(JSXMLArray *array, void *elt, JSIdentityOp identity)
+XMLArrayFindMember(const JSXMLArray *array, void *elt, JSIdentityOp identity)
 {
     void **vector;
     uint32 i, n;
@@ -2296,11 +2296,11 @@ EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
 
 /* 13.3.5.4 [[GetNamespace]]([InScopeNamespaces]) */
 static JSXMLNamespace *
-GetNamespace(JSContext *cx, JSXMLQName *qn, JSXMLArray *inScopeNSes)
+GetNamespace(JSContext *cx, JSXMLQName *qn, const JSXMLArray *inScopeNSes)
 {
     JSXMLNamespace *match, *ns;
     uint32 i, n;
-    jsval argv[1];
+    jsval argv[2];
     JSObject *nsobj;
 
     JS_ASSERT(qn->uri);
@@ -2361,14 +2361,13 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, JSXMLArray *inScopeNSes)
 
     /* If we didn't match, make a new namespace from qn. */
     if (!match) {
-        argv[0] = STRING_TO_JSVAL(qn->uri);
+        argv[0] = qn->prefix ? STRING_TO_JSVAL(qn->prefix) : JSVAL_VOID;
+        argv[1] = STRING_TO_JSVAL(qn->uri);
         nsobj = js_ConstructObject(cx, &js_NamespaceClass.base, NULL, NULL,
-                                   1, argv);
+                                   2, argv);
         if (!nsobj)
             return NULL;
         match = (JSXMLNamespace *) JS_GetPrivate(cx, nsobj);
-        if (!match->prefix)
-            match->prefix = qn->prefix;
     } else {
         /* Share ns reference by converting it to GC'd allocation. */
         if (!js_GetXMLNamespaceObject(cx, match))
@@ -2462,7 +2461,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
 
 /* ECMA-357 10.2.1 and 10.2.2 */
 static JSString *
-XMLToXMLString(JSContext *cx, JSXML *xml, JSXMLArray *ancestorNSes,
+XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
                uintN indentLevel)
 {
     JSBool pretty, indentKids;
@@ -2646,14 +2645,36 @@ XMLToXMLString(JSContext *cx, JSXML *xml, JSXMLArray *ancestorNSes,
          * Create a namespace prefix that isn't used by any member of decls.
          * Assign the new prefix to a copy of ns.  Flag this namespace as if
          * it were declared, for assertion-testing's sake later below.
+         *
+         * Erratum: ns->prefix and xml->name are both null (*undefined* in
+         * ECMA-357), we know that xml was named using the default namespace
+         * (proof: see GetNamespace and the Namespace constructor called with
+         * two arguments).  So we ought not generate a new prefix here, when
+         * we can declare ns as the default namespace for xml.
+         *
+         * This helps descendants inherit the namespace instead of redundantly
+         * redeclaring it with generated prefixes in each descendant.
          */
-        prefix = GeneratePrefix(cx, ns->uri, &ancdecls);
-        if (!prefix)
-            goto out;
+        if (!xml->name->prefix) {
+            prefix = cx->runtime->emptyString;
+        } else {
+            prefix = GeneratePrefix(cx, ns->uri, &ancdecls);
+            if (!prefix)
+                goto out;
+        }
         ns = js_NewXMLNamespace(cx, prefix, ns->uri, JS_TRUE);
         if (!ns)
             goto out;
-        if (!XMLARRAY_APPEND(cx, &decls, ns)) {
+
+        /*
+         * In the spec, ancdecls has no name, but is always written out as
+         * (AncestorNamespaces U namespaceDeclarations).  Since we compute
+         * that union in ancdecls, any time we append a namespace strong
+         * ref to decls, we must also append a weak ref to ancdecls.  Order
+         * matters here: code at label out: releases strong refs in decls.
+         */
+        if (!XMLARRAY_APPEND(cx, &ancdecls, ns) ||
+            !XMLARRAY_APPEND(cx, &decls, ns)) {
             js_DestroyXMLNamespace(cx, ns);
             goto out;
         }
@@ -2717,7 +2738,16 @@ XMLToXMLString(JSContext *cx, JSXML *xml, JSXMLArray *ancestorNSes,
             ns2 = js_NewXMLNamespace(cx, prefix, ns2->uri, JS_TRUE);
             if (!ns2)
                 goto out;
-            if (!XMLARRAY_APPEND(cx, &decls, ns2)) {
+
+            /*
+             * In the spec, ancdecls has no name, but is always written out as
+             * (AncestorNamespaces U namespaceDeclarations).  Since we compute
+             * that union in ancdecls, any time we append a namespace strong
+             * ref to decls, we must also append a weak ref to ancdecls.  Order
+             * matters here: code at label out: releases strong refs in decls.
+             */
+            if (!XMLARRAY_APPEND(cx, &ancdecls, ns2) ||
+                !XMLARRAY_APPEND(cx, &decls, ns2)) {
                 js_DestroyXMLNamespace(cx, ns2);
                 goto out;
             }
