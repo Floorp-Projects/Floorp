@@ -4100,6 +4100,14 @@ NS_IMETHODIMP nsWindow::ResetInputState()
   return NS_OK;
 }
 
+NS_IMETHODIMP SetIMEOpenState(PRBool aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GetIMEOpenState(PRBool* aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 static void
 gdk_wmspec_change_state (gboolean   add,
                          GdkWindow *window,

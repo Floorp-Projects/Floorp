@@ -24,6 +24,7 @@
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
  *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -107,6 +108,8 @@ class nsIMM
   typedef LONG (CALLBACK *GetCompWindowPtr)(HIMC, LPCOMPOSITIONFORM);
   typedef LONG (CALLBACK *GetPropertyPtr)  (HKL, DWORD);
   typedef LONG (CALLBACK *GetDefaultIMEWndPtr) (HWND);
+  typedef BOOL (CALLBACK *GetOpenStatusPtr)  (HIMC);
+  typedef BOOL (CALLBACK *SetOpenStatusPtr)  (HIMC, BOOL);
 public:
 
   static nsIMM& LoadModule() {
@@ -147,6 +150,12 @@ public:
 
     mGetDefaultIMEWnd=(mInstance) ? (GetDefaultIMEWndPtr)GetProcAddress(mInstance, "ImmGetDefaultIMEWnd") : 0;
     NS_ASSERTION(mGetDefaultIMEWnd!=NULL, "nsIMM.ImmGetDefaultIMEWnd failed.");
+
+    mGetOpenStatus=(mInstance) ? (GetOpenStatusPtr)GetProcAddress(mInstance,"ImmGetOpenStatus") : 0;
+    NS_ASSERTION(mGetOpenStatus!=NULL, "nsIMM.ImmGetOpenStatus failed.");
+
+    mSetOpenStatus=(mInstance) ? (SetOpenStatusPtr)GetProcAddress(mInstance,"ImmSetOpenStatus") : 0;
+    NS_ASSERTION(mSetOpenStatus!=NULL, "nsIMM.ImmSetOpenStatus failed.");
   }
 
   ~nsIMM() {
@@ -163,6 +172,8 @@ public:
     mSetCompositionWindow=0;
     mGetProperty=0;
     mGetDefaultIMEWnd=0;
+    mGetOpenStatus=0;
+    mSetOpenStatus=0;
   }
 
   LONG GetCompositionStringA(HIMC h, DWORD d1, LPVOID v, DWORD d2) {
@@ -205,6 +216,14 @@ public:
     return (mGetDefaultIMEWnd) ? mGetDefaultIMEWnd(hWnd) : 0L;
   }
 
+  BOOL GetOpenStatus(HIMC h) {
+    return (mGetOpenStatus) ? mGetOpenStatus(h) : FALSE;
+  }
+
+  BOOL SetOpenStatus(HIMC h, BOOL b) {
+    return (mSetOpenStatus) ? mSetOpenStatus(h,b) : FALSE;
+  }
+
 private:
 
   HINSTANCE           mInstance;
@@ -218,6 +237,8 @@ private:
   GetCompWindowPtr    mGetCompositionWindow;
   GetPropertyPtr      mGetProperty;
   GetDefaultIMEWndPtr mGetDefaultIMEWnd;
+  GetOpenStatusPtr    mGetOpenStatus;
+  SetOpenStatusPtr    mSetOpenStatus;
 };
 
 /**
@@ -339,6 +360,8 @@ public:
   // nsIKBStateControl interface
 
   NS_IMETHOD ResetInputState();
+  NS_IMETHOD SetIMEOpenState(PRBool aState);
+  NS_IMETHOD GetIMEOpenState(PRBool* aState);
 
   PRBool IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam);
   PRBool IMECompositionHitTest(PRUint32 aEventType, POINT * ptPos);

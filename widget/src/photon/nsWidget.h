@@ -213,7 +213,8 @@ public:
 
   // nsIKBStateControl
   NS_IMETHOD ResetInputState();
-  NS_IMETHOD PasswordFieldInit();
+  NS_IMETHOD SetIMEOpenState(PRBool aState);
+  NS_IMETHOD GetIMEOpenState(PRBool* aState);
 
   inline void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull)
 		{

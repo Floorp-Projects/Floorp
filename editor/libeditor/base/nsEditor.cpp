@@ -114,6 +114,10 @@ static PRBool gNoisy = PR_FALSE;
 
 PRInt32 nsEditor::gInstanceCount = 0;
 
+// Value of "ime.password.onFocus.dontCare"
+static PRBool gDontCareForIMEOnFocusPassword = PR_FALSE;
+// Value of "ime.password.onBlur.dontCare"
+static PRBool gDontCareForIMEOnBlurPassword  = PR_FALSE;
 
 //---------------------------------------------------------------------------
 //
@@ -146,6 +150,7 @@ nsEditor::nsEditor()
 ,  mIMETextOffset(0)
 ,  mIMEBufferLength(0)
 ,  mIsIMEComposing(PR_FALSE)
+,  mNeedRecoverIMEOpenState(PR_FALSE)
 ,  mActionListeners(nsnull)
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
@@ -303,6 +308,17 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 #endif
 
   NS_POSTCONDITION(mDocWeak && mPresShellWeak, "bad state");
+
+  nsresult result;
+  nsCOMPtr<nsIPrefBranch> prefBranch = 
+      do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
+  if (NS_SUCCEEDED(result) && prefBranch) {
+    PRBool val;
+    if (NS_SUCCEEDED(prefBranch->GetBoolPref("ime.password.onFocus.dontCare", &val)))
+      gDontCareForIMEOnFocusPassword = val;
+    if (NS_SUCCEEDED(prefBranch->GetBoolPref("ime.password.onBlur.dontCare", &val)))
+      gDontCareForIMEOnBlurPassword = val;
+  }
 
   return NS_OK;
 }
@@ -1912,6 +1928,12 @@ nsEditor::BeginComposition(nsTextEventReply* aReply)
   mInIMEMode = PR_TRUE;
   if (mPhonetic)
     mPhonetic->Truncate(0);
+
+  // If user changes the IME open state, don't recover it.
+  // Because the user may not want to change the state.
+  if (mNeedRecoverIMEOpenState)
+    mNeedRecoverIMEOpenState = PR_FALSE;
+
   return ret;
 }
 
@@ -2015,6 +2037,35 @@ GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget
   return NS_OK;
 }
 
+nsresult
+nsEditor::GetKBStateControl(nsIKBStateControl **aKBSC)
+{
+  if (!aKBSC)
+    return NS_ERROR_NULL_POINTER;
+  *aKBSC = nsnull;
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult res = GetPresShell(getter_AddRefs(shell));
+
+  if (NS_FAILED(res))
+    return res;
+
+  if (!shell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWidget> widget;
+  res = GetEditorContentWindow(shell, mBodyElement, getter_AddRefs(widget));
+  if (NS_FAILED(res))
+    return res;
+
+  nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(widget);
+  if (!kb)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  NS_ADDREF(*aKBSC = kb);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsEditor::ForceCompositionEnd()
 {
@@ -2034,27 +2085,74 @@ nsEditor::ForceCompositionEnd()
 	return NS_OK;
 #endif
 
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult res = GetPresShell(getter_AddRefs(shell));
-
+  nsCOMPtr<nsIKBStateControl> kb;
+  nsresult res = GetKBStateControl(getter_AddRefs(kb));
   if (NS_FAILED(res))
     return res;
 
-  if (!shell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIWidget> widget;
-
-  res = GetEditorContentWindow(shell, mBodyElement, getter_AddRefs(widget));
-
-  if (NS_FAILED(res))
-    return res;
-
-  nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(widget);
-
-  if (kb)
+  if (kb) {
     res = kb->ResetInputState();
-  
+    if (NS_FAILED(res)) 
+      return res;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::NotifyIMEOnFocus()
+{
+  mNeedRecoverIMEOpenState = PR_FALSE;
+
+  if(gDontCareForIMEOnFocusPassword
+      || !(mFlags & nsIPlaintextEditor::eEditorPasswordMask))
+    return NS_OK;
+
+  nsCOMPtr<nsIKBStateControl> kb;
+  nsresult res = GetKBStateControl(getter_AddRefs(kb));
+  if (NS_FAILED(res))
+    return res;
+
+  if (kb) {
+    PRBool isOpen;
+    res = kb->GetIMEOpenState(&isOpen);
+    if (NS_FAILED(res)) 
+      return res;
+
+    if (isOpen) {
+      res = kb->SetIMEOpenState(PR_FALSE);
+      if (NS_FAILED(res)) 
+        return res;
+    }
+
+    mNeedRecoverIMEOpenState = isOpen;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::NotifyIMEOnBlur()
+{
+  if (!mNeedRecoverIMEOpenState)
+    return NS_OK;
+  mNeedRecoverIMEOpenState = PR_FALSE;
+
+  if (gDontCareForIMEOnBlurPassword
+      || !(mFlags & nsIPlaintextEditor::eEditorPasswordMask))
+    return NS_OK;
+
+  nsCOMPtr<nsIKBStateControl> kb;
+  nsresult res = GetKBStateControl(getter_AddRefs(kb));
+  if (NS_FAILED(res))
+    return res;
+
+  if (kb) {
+    res = kb->SetIMEOpenState(PR_TRUE);
+    if (NS_FAILED(res)) 
+      return res;
+  }
+
   return NS_OK;
 }
 
