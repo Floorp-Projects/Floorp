@@ -66,6 +66,14 @@ final class NativeBoolean extends IdScriptable {
         return super.getDefaultValue(typeHint);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+    {
+        if (booleanValue)
+            return "(new Boolean(true))";
+        else
+            return "(new Boolean(false))";
+    }
+
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             if (methodId == Id_constructor) return 1;

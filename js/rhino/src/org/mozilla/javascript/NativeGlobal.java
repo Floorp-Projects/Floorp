@@ -70,6 +70,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 case Id_parseFloat:         name = "parseFloat";         break;
                 case Id_parseInt:           name = "parseInt";           break;
                 case Id_unescape:           name = "unescape";           break;
+                case Id_uneval:             name = "uneval";             break;
                 default:
                     Kit.codeBug(); name = null;
             }
@@ -173,6 +174,12 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 case Id_unescape:
                     return js_unescape(cx, args);
 
+                case Id_uneval: {
+                    Object value = (args.length != 0)
+                                   ? args[0] : Undefined.instance;
+                    return ScriptRuntime.uneval(cx, scope, value);
+                }
+
                 case Id_new_CommonError:
                     return new_CommonError(function, cx, scope, args);
             }
@@ -194,6 +201,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 case Id_parseFloat:          return 1;
                 case Id_parseInt:            return 2;
                 case Id_unescape:            return 1;
+                case Id_uneval:              return 1;
 
                 case Id_new_CommonError:     return 1;
             }
@@ -748,10 +756,11 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         Id_parseFloat          =  9,
         Id_parseInt            = 10,
         Id_unescape            = 11,
+        Id_uneval              = 12,
 
-        LAST_SCOPE_FUNCTION_ID = 11,
+        LAST_SCOPE_FUNCTION_ID = 12,
 
-        Id_new_CommonError     = 12;
+        Id_new_CommonError     = 13;
 
     private boolean scopeSlaveFlag;
 

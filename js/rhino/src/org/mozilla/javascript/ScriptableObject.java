@@ -677,6 +677,50 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return ScriptRuntime.jsDelegatesTo(instance, this);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+        throws JavaScriptException
+    {
+        StringBuffer result = new StringBuffer(256);
+        result.append("({");
+
+        boolean toplevel, iterating;
+        if (cx.iterating == null) {
+            toplevel = true;
+            iterating = false;
+            cx.iterating = new ObjToIntMap(31);
+        } else {
+            toplevel = false;
+            iterating = cx.iterating.has(this);
+        }
+
+        // Make sure cx.iterating is set to null when done
+        // so we don't leak memory
+        try {
+            if (!iterating) {
+                cx.iterating.intern(this); // stop recursion.
+                Object[] ids = this.getIds();
+                for(int i=0; i < ids.length; i++) {
+                    if (i > 0)
+                        result.append(", ");
+                    Object id = ids[i];
+                    result.append(id);
+                    result.append(':');
+                    Object p = (id instanceof String)
+                        ? this.get((String) id, this)
+                        : this.get(((Integer) id).intValue(), this);
+                    result.append(ScriptRuntime.uneval(cx, scope, p));
+                }
+            }
+        } finally {
+            if (toplevel) {
+                cx.iterating = null;
+            }
+        }
+
+        result.append("})");
+        return result.toString();
+    }
+
     /**
      * Defines JavaScript objects from a Java class that implements Scriptable.
      *

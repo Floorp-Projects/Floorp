@@ -86,6 +86,11 @@ final class NativeNumber extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+    {
+        return "(new Number("+ScriptRuntime.toString(doubleValue)+"))";
+    }
+
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             switch (methodId) {

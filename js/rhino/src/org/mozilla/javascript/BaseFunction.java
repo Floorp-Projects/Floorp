@@ -91,6 +91,21 @@ public class BaseFunction extends IdScriptable implements Function {
                                        functionName);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+    {
+        int indent = 0;
+        int flags = Decompiler.TO_SOURCE_FLAG;
+        if (args.length != 0) {
+            indent = ScriptRuntime.toInt32(args[0]);
+            if (indent >= 0) {
+                flags = 0;
+            } else {
+                indent = 0;
+            }
+        }
+        return decompile(cx, indent, flags);
+    }
+
     protected int getIdAttributes(int id)
     {
         switch (id) {

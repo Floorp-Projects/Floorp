@@ -72,6 +72,11 @@ final class NativeString extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+    {
+        return "(new String(\""+ScriptRuntime.escapeString(string)+"\"))";
+    }
+
     protected int getIdAttributes(int id)
     {
         if (id == Id_length) {

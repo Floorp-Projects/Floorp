@@ -56,6 +56,11 @@ final class NativeMath extends IdScriptable
 
     public String getClassName() { return "Math"; }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+    {
+        return "Math";
+    }
+
     protected int getIdAttributes(int id)
     {
         if (id > LAST_METHOD_ID) {

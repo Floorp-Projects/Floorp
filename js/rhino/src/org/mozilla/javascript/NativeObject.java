@@ -62,6 +62,7 @@ public class NativeObject extends IdScriptable
     protected int mapNameToId(String s) { return 0; }
 
     protected String getIdName(int id) { return null; }
+
 }
 
 final class NativeObjectPrototype extends NativeObject
@@ -81,6 +82,7 @@ final class NativeObjectPrototype extends NativeObject
             case Id_hasOwnProperty:        return 1;
             case Id_propertyIsEnumerable:  return 1;
             case Id_isPrototypeOf:         return 1;
+            case Id_toSource:              return 0;
         }
         return super.methodArity(methodId);
     }
@@ -104,9 +106,20 @@ final class NativeObjectPrototype extends NativeObject
                 return ScriptRuntime.toObject(cx, scope, args[0]);
             }
 
-            case Id_toString:
-            case Id_toLocaleString: /* For now just alias toString */
-                return js_toString(cx, thisObj);
+            case Id_toLocaleString: // For now just alias toString
+            case Id_toString: {
+                if (cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE)) {
+                    String s = toSource(cx, scope, thisObj, args);
+                    int L = s.length();
+                    if (L != 0 && s.charAt(0) == '(' && s.charAt(L - 1) == ')')
+                    {
+                        // Strip () that surrounds toSource
+                        s = s.substring(1, L - 1);
+                    }
+                    return s;
+                }
+                return toString(thisObj);
+            }
 
             case Id_valueOf:
                 return thisObj;
@@ -147,75 +160,27 @@ final class NativeObjectPrototype extends NativeObject
                 }
                 return Boolean.FALSE;
             }
+
+            case Id_toSource:
+                return toSource(cx, scope, thisObj, args);
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
     static String toString(Scriptable thisObj)
     {
-        Context cx = Context.getCurrentContext();
-        if (cx != null) {
-            return js_toString(cx, thisObj);
-        } else {
-            return "[object " + thisObj.getClassName() + "]";
-        }
-    }
-
-    private static String js_toString(Context cx, Scriptable thisObj)
-    {
-        if (cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE)) {
-            return toSource(cx, thisObj);
-        }
         return "[object " + thisObj.getClassName() + "]";
     }
 
-    private static String toSource(Context cx, Scriptable thisObj)
+    private static String toSource(Context cx, Scriptable scope,
+                                   Scriptable thisObj, Object[] args)
+        throws JavaScriptException
     {
-        StringBuffer result = new StringBuffer(256);
-        result.append('{');
-
-        boolean toplevel, iterating;
-        if (cx.iterating == null) {
-            toplevel = true;
-            iterating = false;
-            cx.iterating = new ObjToIntMap(31);
-        } else {
-            toplevel = false;
-            iterating = cx.iterating.has(thisObj);
+        if (thisObj instanceof ScriptableObject) {
+            ScriptableObject so = (ScriptableObject)thisObj;
+            return so.toSource(cx, scope, args);
         }
-
-        // Make sure cx.iterating is set to null when done
-        // so we don't leak memory
-        try {
-            if (!iterating) {
-                cx.iterating.put(thisObj, 0); // stop recursion.
-                Object[] ids = thisObj.getIds();
-                for(int i=0; i < ids.length; i++) {
-                    if (i > 0)
-                        result.append(", ");
-                    Object id = ids[i];
-                    result.append(id);
-                    result.append(':');
-                    Object p = (id instanceof String)
-                        ? thisObj.get((String) id, thisObj)
-                        : thisObj.get(((Integer) id).intValue(), thisObj);
-                    if (p instanceof String) {
-                        result.append('\"');
-                        result.append(ScriptRuntime.escapeString((String)p));
-                        result.append('\"');
-                    } else {
-                        result.append(ScriptRuntime.toString(p));
-                    }
-                }
-            }
-        } finally {
-            if (toplevel) {
-                cx.iterating = null;
-            }
-        }
-
-        result.append('}');
-        return result.toString();
+        return ScriptRuntime.toString(thisObj);
     }
 
     protected String getIdName(int id)
@@ -228,6 +193,7 @@ final class NativeObjectPrototype extends NativeObject
             case Id_hasOwnProperty:       return "hasOwnProperty";
             case Id_propertyIsEnumerable: return "propertyIsEnumerable";
             case Id_isPrototypeOf:        return "isPrototypeOf";
+            case Id_toSource:             return "toSource";
         }
         return null;
     }
@@ -237,11 +203,14 @@ final class NativeObjectPrototype extends NativeObject
     protected int mapNameToId(String s)
     {
         int id;
-// #generated# Last update: 2001-04-24 12:37:03 GMT+02:00
+// #generated# Last update: 2003-11-11 01:51:40 CET
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
             case 7: X="valueOf";id=Id_valueOf; break L;
-            case 8: X="toString";id=Id_toString; break L;
+            case 8: c=s.charAt(3);
+                if (c=='o') { X="toSource";id=Id_toSource; }
+                else if (c=='t') { X="toString";id=Id_toString; }
+                break L;
             case 11: X="constructor";id=Id_constructor; break L;
             case 13: X="isPrototypeOf";id=Id_isPrototypeOf; break L;
             case 14: c=s.charAt(0);
@@ -264,7 +233,8 @@ final class NativeObjectPrototype extends NativeObject
         Id_hasOwnProperty        = 5,
         Id_propertyIsEnumerable  = 6,
         Id_isPrototypeOf         = 7,
-        MAX_PROTOTYPE_ID         = 7;
+        Id_toSource              = 8,
+        MAX_PROTOTYPE_ID         = 8;
 
 // #/string_id_map#
 }

@@ -548,6 +548,49 @@ public class ScriptRuntime {
 
     }
 
+    static String uneval(Context cx, Scriptable scope, Object value)
+        throws JavaScriptException
+    {
+        if (value == null) {
+            return "null";
+        }
+        if (value instanceof String) {
+            String escaped = escapeString((String)value);
+            StringBuffer sb = new StringBuffer(escaped.length() + 2);
+            sb.append('\"');
+            sb.append(escaped);
+            sb.append('\"');
+            return sb.toString();
+        }
+        if (value instanceof Number) {
+            double d = ((Number)value).doubleValue();
+            if (d == 0 && 1 / d < 0) {
+                return "-0";
+            }
+            return toString(d);
+        }
+        if (value instanceof Boolean) {
+            return toString(value);
+        }
+        if (value == Undefined.instance) {
+            return "undefined";
+        }
+        if (value instanceof Scriptable) {
+            Scriptable obj = (Scriptable)value;
+            Object v = ScriptableObject.getProperty(obj, "toSource");
+            if (v instanceof Function) {
+                Function f = (Function)v;
+                return toString(f.call(cx, scope, obj, emptyArgs));
+            }
+            if (value instanceof ScriptableObject) {
+                ScriptableObject so = (ScriptableObject)obj;
+                return so.toSource(cx, scope, emptyArgs);
+            }
+            return toString(value);
+        }
+        throw errorWithClassName("msg.invalid.type", value);
+    }
+
     public static Scriptable toObject(Scriptable scope, Object val)
     {
         if (val instanceof Scriptable && val != Undefined.instance) {

@@ -2625,8 +2625,15 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         throw ScriptRuntime.constructError("SyntaxError", msg);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+        throws JavaScriptException
+    {
+        return toString();
+    }
+
+
     protected int getIdAttributes(int id)
-     {
+    {
         switch (id) {
             case Id_lastIndex:
                 return ScriptableObject.PERMANENT | ScriptableObject.DONTENUM;

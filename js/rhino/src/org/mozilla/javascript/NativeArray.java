@@ -158,12 +158,12 @@ public class NativeArray extends IdScriptable {
                     return jsConstructor(cx, scope, args, f, thisObj == null);
 
                 case Id_toString:
-                    return toStringHelper(cx, thisObj,
+                    return toStringHelper(cx, scope, thisObj,
                         cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE),
                         false);
 
                 case Id_toLocaleString:
-                    return toStringHelper(cx, thisObj, false, true);
+                    return toStringHelper(cx, scope, thisObj, false, true);
 
                 case Id_join:
                     return js_join(cx, thisObj, args);
@@ -317,6 +317,13 @@ public class NativeArray extends IdScriptable {
         return super.getDefaultValue(hint);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+        throws JavaScriptException
+    {
+        return toStringHelper(cx, scope, this, true, false);
+    }
+
+
     /**
      * See ECMA 15.4.1,2
      */
@@ -449,7 +456,8 @@ public class NativeArray extends IdScriptable {
         }
     }
 
-    private static String toStringHelper(Context cx, Scriptable thisObj,
+    private static String toStringHelper(Context cx, Scriptable scope,
+                                         Scriptable thisObj,
                                          boolean toSource, boolean toLocale)
         throws JavaScriptException
     {
@@ -498,7 +506,10 @@ public class NativeArray extends IdScriptable {
                     }
                     haslast = true;
 
-                    if (elem instanceof String) {
+                    if (toSource) {
+                        result.append(ScriptRuntime.uneval(cx, scope, elem));
+
+                    } else if (elem instanceof String) {
                         String s = (String)elem;
                         if (toSource) {
                             result.append('\"');
@@ -507,6 +518,7 @@ public class NativeArray extends IdScriptable {
                         } else {
                             result.append(s);
                         }
+
                     } else {
                         if (toLocale && elem != Undefined.instance &&
                             elem != null)

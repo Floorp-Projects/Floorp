@@ -55,6 +55,17 @@ final class NativeError extends IdScriptable
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+        throws JavaScriptException
+    {
+        Object value = messageValue;
+        if (value == NOT_FOUND)
+            return "(new Error())";
+        String str = ScriptRuntime.toString(value);
+        str = ScriptRuntime.escapeString(str);
+        return "(new Error(\""+str+"\"))";
+    }
+
     protected int getIdAttributes(int id)
     {
         if (id == Id_message || id == Id_name) { return EMPTY; }

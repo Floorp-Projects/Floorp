@@ -91,6 +91,11 @@ final class NativeDate extends IdScriptable {
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
+    protected String toSource(Context cx, Scriptable scope, Object[] args)
+    {
+        return "(new Date("+ScriptRuntime.toString(date)+"))";
+    }
+
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             switch (methodId) {
