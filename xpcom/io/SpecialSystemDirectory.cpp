@@ -63,6 +63,8 @@
 #define MAX_PATH _MAX_PATH
 #define INCL_WINWORKPLACE
 #define INCL_DOSMISC
+#define INCL_DOSMODULEMGR
+#define INCL_DOSPROCESS
 #define INCL_WINSHELLDATA
 #include <os2.h>
 #include <stdlib.h>
@@ -738,9 +740,18 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             nsresult rv;
             char *tPath = PR_GetEnv("MOZILLA_HOME");
+            char buffer[CCHMAXPATH];
             /* If MOZILLA_HOME is not set, use GetCurrentProcessDirectory */
             /* To ensure we get a long filename system */
-            rv = NS_NewNativeLocalFile(nsDependentCString(tPath), // ask mkaply
+            if (!tPath || !*tPath) {
+               PPIB ppib;
+               PTIB ptib;
+               DosGetInfoBlocks( &ptib, &ppib);
+               DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
+               *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
+               tPath = buffer;
+            }
+            rv = NS_NewNativeLocalFile(nsDependentCString(tPath),
                                        PR_TRUE, 
                                        aFile);
 
@@ -759,7 +770,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             szPath[len] = '\\';     
             szPath[len + 1] = '\0';
 
-            return NS_NewNativeLocalFile(nsDependentCString(szPath), // ask mkaply - this block didn't do anything prior to my change..
+            return NS_NewNativeLocalFile(nsDependentCString(szPath),
                                          PR_TRUE, 
                                          aFile);
         }
