@@ -1571,7 +1571,9 @@ nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
     mDragLeaveTimer = do_CreateInstance("@mozilla.org/timer;1");
     NS_ASSERTION(mDragLeaveTimer, "Failed to create drag leave timer!");
     // fire this baby asafp
-    mDragLeaveTimer->InitWithCallback(DragLeaveTimerCallback, 0, nsITimer::TYPE_ONE_SHOT);
+    mDragLeaveTimer->InitWithFuncCallback(DragLeaveTimerCallback,
+                                          (void *)this,
+                                          0, nsITimer::TYPE_ONE_SHOT);
 }
 
 gboolean
