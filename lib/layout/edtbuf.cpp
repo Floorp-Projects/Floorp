@@ -18129,6 +18129,35 @@ XP_Bool EDT_ScrollToTarget(MWContext *pMWContext, char *pTargetURL)
     return bResult;
 }
 
+// Tells if URL is to an internal Target tag 
+XP_Bool EDT_IsInternalLink(MWContext *pMWContext, char *pURL)
+{
+    if( !pMWContext || !pURL )
+        return FALSE;
+    
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer) FALSE;
+    XP_Bool bReturn = FALSE;
+    
+    // We are only interested in relative URLs to internal targets
+    char *pTarget = XP_STRCHR(pURL, '#');
+    if( pTarget )
+    {
+        char *pCurrentURL = LO_GetBaseURL(pMWContext);
+        char *pAbsolute = NET_MakeAbsoluteURL(pURL, pCurrentURL);
+        // If memory error, act as if the link is internal
+        if( pAbsolute )
+        {
+            bReturn = EDT_IsSameURL(pAbsolute, pCurrentURL, 0, 0);
+            XP_FREE(pAbsolute);
+        }
+        else
+        {
+            bReturn = TRUE;
+        }
+    }
+    return bReturn;
+}
+
 char * EDT_GetTargetNameFromIcon(LO_ImageStruct *pIcon)
 {
     CEditElement * pEdElement = 0;
