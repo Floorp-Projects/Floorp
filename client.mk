@@ -183,40 +183,43 @@ everything: checkout clobber_all build
 # CVS checkout
 #
 checkout:
-	@: Backup the last checkout log. \
-	 ; \
-	if test -f $(CVSCO_LOGFILE) ; then \
+	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
+	@echo $(CVSCO) mozilla/client.mk; \
+        cd $(ROOTDIR); \
+	$(CVSCO) mozilla/client.mk && \
+	make -f mozilla/client.mk real_checkout
+
+real_checkout:
+	@: Backup the last checkout log.
+	@if test -f $(CVSCO_LOGFILE) ; then \
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
 	else true; \
 	fi
 	@: Start the checkout. Pipe the output to the tty and a log file. \
 	 : If it fails, touch an error file because the pipe hides the    \
-	 : error. If the file is created, remove it and return an error.  \
-	 ; \
-	echo "checkout start: "`date` | tee $(CVSCO_LOGFILE); \
-	echo "cd $(ROOTDIR)"; \
-	cd $(ROOTDIR); \
-	rm -f cvs-failed.tmp*; \
-       echo "$(CVSCO_NSPR) $(NSPR_CO_MODULE)"; \
-       ( $(CVSCO_NSPR) $(NSPR_CO_MODULE) || touch cvs-failed.tmp ) 2>&1 \
-         | tee -a $(CVSCO_LOGFILE); \
-       echo "$(CVSCO) $(MOZ_CO_MODULE)"; \
-	( $(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp ) 2>&1 \
+	 : error. If the file is created, remove it and return an error.
+	@rm -f cvs-failed.tmp*; \
+	: Checkout NSPR; \
+	echo $(CVSCO_NSPR) $(NSPR_CO_MODULE); \
+	($(CVSCO_NSPR) $(NSPR_CO_MODULE) || touch cvs-failed.tmp) 2>&1 \
 	  | tee -a $(CVSCO_LOGFILE); \
-	if test -f cvs-failed.tmp ; then \
-	  rm cvs-failed.tmp; \
-	  false; \
-	else true; \
-	fi
-	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE); \
-	 : \
-	 : Check the log for conflicts. \
-	 ; \
+	if test -f cvs-failed.tmp; then exit 1; else true; fi; \
+	: Checkout the SeaMonkeyAll; \
+	echo $(CVSCO) $(MOZ_CO_MODULE); \
+	($(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp) 2>&1 \
+	  | tee -a $(CVSCO_LOGFILE)
+	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
+	@: Check the log for conflicts. ;\
 	conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
 	  echo "$$conflicts" ;\
 	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE) for full log." ;\
+	  false; \
+	else true; \
+	fi
+	@if test -f cvs-failed.tmp ; then \
+	  rm cvs-failed.tmp; \
 	  false; \
 	else true; \
 	fi
@@ -347,4 +350,4 @@ cleansrcdir:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-.PHONY: checkout depend build clean realclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
+.PHONY: checkout real_checkout depend build clean realclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
