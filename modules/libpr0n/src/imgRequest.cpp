@@ -103,12 +103,12 @@ nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
   if (mObservers.Count() == 1) {
     PRUint32 nframes;
     mImage->GetNumFrames(&nframes);
-    if (nframes > 1) {
+    //if (nframes > 1) {
       PR_LOG(gImgLog, PR_LOG_DEBUG,
              ("[this=%p] imgRequest::AddObserver -- starting animation\n", this));
 
       mImage->StartAnimation();
-    }
+    //}
   }
 
   if (mState & onStopRequest) {
