@@ -44,9 +44,12 @@ PACKAGE =       org/mozilla/jss/ssl
 JNI_GEN = org.mozilla.jss.ssl.SSLSocket \
 		$(NULL)
 
-JSRCS =	        SSLHandshakeCompletedEvent.java \
+JSRCS =	\
+        SocketProxy.java \
+        SSLHandshakeCompletedEvent.java \
 		SSLSecurityStatus.java          \
 		SSLHandshakeCompletedListener.java \
+        SSLServerSocket.java            \
 		SSLSocket.java                  \
         SSLInputStream.java             \
         SSLOutputStream.java             \
@@ -55,7 +58,9 @@ JSRCS =	        SSLHandshakeCompletedEvent.java \
 		SSLClientCertificateSelectionCallback.java    \
 		$(NULL)
 
-PRIVATE_JSRCS = SSLClient.java     \
+PRIVATE_JSRCS = \
+        SSLClient.java     \
+        SSLServer.java     \
 		TestCertApprovalCallback.java \
 		TestClientCertificateSelectionCallback.java \
         $(NULL)
@@ -69,6 +74,7 @@ PRIVATE_JSRCS = SSLClient.java     \
 CLASSES =	SSLHandshakeCompletedEvent    \
 		SSLSecurityStatus             \
 		SSLHandshakeCompletedListener \
+        SSLServerSocket                 \
 		SSLSocket                     \
 		PrintOutputStreamWriter       \
 		SSLCallbackNotifier           \
@@ -76,7 +82,11 @@ CLASSES =	SSLHandshakeCompletedEvent    \
 		SSLClientCertificateSelectionCallback \
 		$(NULL)
 
-#PRIVATE_CLASSES =	SSLServer         \
+PRIVATE_CLASSES = \
+            SSLServer         \
+            SSLClient \
+            $(NULL)
+
 			#SSLClient         \
 			#ServerHandshakeCB \
 			#ClientHandshakeCB \
@@ -84,6 +94,8 @@ CLASSES =	SSLHandshakeCompletedEvent    \
 
 CSRCS =	SSLSocket.c \
         callbacks.c \
+        SSLServerSocket.c \
+        common.c \
 	$(NULL)
 
 LIBRARY_NAME = jssssl

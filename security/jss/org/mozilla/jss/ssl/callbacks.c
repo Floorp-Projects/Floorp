@@ -607,3 +607,94 @@ finish:
     return retval;
 }
 
+PR_IMPLEMENT( int )
+JSSL_GetClientAuthData( void * arg,
+                        PRFileDesc *        fd,
+                        CERTDistNames *     caNames,
+                        CERTCertificate **  pRetCert,
+                        SECKEYPrivateKey ** pRetKey)
+{
+    CERTCertificate *  cert;
+    SECKEYPrivateKey * privkey;
+    JSSL_SocketData *  sock;
+    SECStatus          rv         = SECFailure;
+
+    PR_ASSERT(arg != NULL);
+    sock = (JSSL_SocketData*) arg;
+
+    if (sock->clientCertNickname) {
+        cert = PK11_FindCertFromNickname(sock->clientCertNickname,
+                                         NULL /*pinarg*/);
+        if ( cert ) {
+            privkey = PK11_FindKeyByAnyCert(cert, NULL /*pinarg*/);
+            if ( privkey ) {
+                rv = SECSuccess;
+            } else { 
+                CERT_DestroyCertificate(cert);
+            }
+        }
+    }
+    
+    if (rv == SECSuccess) {
+        *pRetCert = cert; 
+        *pRetKey  = privkey;
+    }
+    
+    return rv;
+}
+
+/*
+ * Callback from SSL for checking a (possibly) expired
+ * certificate the peer presents.
+ */
+PR_IMPLEMENT( int )
+JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
+             PRBool isServer)
+{
+    char* hostname;
+    SECStatus rv=SECFailure;
+    SECCertUsage certUsage;
+    CERTCertificate* peerCert=NULL;
+    int64 notAfter, notBefore;
+
+    certUsage = isServer ? certUsageSSLClient : certUsageSSLServer;
+
+    peerCert = SSL_PeerCertificate(fd);
+
+    if (peerCert) {
+        rv = CERT_GetCertTimes(peerCert, &notBefore, &notAfter);
+        if (rv != SECSuccess) goto finish;
+
+        /*
+         * Verify the certificate based on it's expiry date. This should
+         * always succeed, if the cert is trusted. It doesn't care if
+         * the cert has expired.
+         */
+        rv = CERT_VerifyCert(CERT_GetDefaultCertDB(), peerCert,
+                             checkSig, certUsage, 
+                             notAfter, NULL /*pinarg*/,
+                             NULL /* log */);
+    }
+    if ( rv != SECSuccess ) goto finish;
+
+    if( ! isServer )  {
+        /* This is the client side of an SSL connection.
+        * Now check the name field in the cert against the desired hostname.
+        * NB: This is our only defense against Man-In-The-Middle (MITM) attacks!
+        */
+        if( peerCert == NULL ) {
+            rv = SECFailure;
+        } else {
+            hostname = SSL_RevealURL(fd); /* really is a hostname, not a URL */
+            if (hostname && hostname[0]) {
+                rv = CERT_VerifyCertName(peerCert, hostname);
+            } else {
+                rv = SECFailure;
+            }
+        }
+    }
+
+finish:
+    if (peerCert!=NULL) CERT_DestroyCertificate(peerCert);
+    return (int)rv;
+}

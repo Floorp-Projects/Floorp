@@ -34,7 +34,9 @@
 package org.mozilla.jss.ssl;
 
 import java.net.*;
+import java.net.SocketException;
 import java.io.*;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -44,6 +46,14 @@ public class SSLSocket extends java.net.Socket {
      * For sockets that get created by accept().
      */
     SSLSocket() throws IOException {
+    }
+
+    /**
+     * Should only be called by SSLServerSocket after a successful
+     * accept().
+     */
+    void setSockProxy(SocketProxy sp) {
+        sockProxy = sp;
     }
 
     public SSLSocket(String host, int port)
@@ -194,7 +204,6 @@ public class SSLSocket extends java.net.Socket {
         return new SSLOutputStream(this);
     }
 
-
     public native void setTcpNoDelay(boolean on) throws SocketException;
 
     public native boolean getTcpNoDelay() throws SocketException;
@@ -292,14 +301,66 @@ public class SSLSocket extends java.net.Socket {
         setSSLDefaultOption(SSL_ENABLE_SSL3, enable);
     }
 
+    public void requireClientAuth(boolean require, boolean onRedo)
+            throws SocketException
+    {
+        setSSLOption(SSL_REQUIRE_CERTIFICATE, require ? (onRedo ? 1 : 2) : 0);
+    }
+
+    public void requireClientAuthDefault(boolean require, boolean onRedo)
+            throws SocketException
+    {
+        setSSLDefaultOption(SSL_REQUIRE_CERTIFICATE,
+                            require ? (onRedo ? 1 : 2) : 0);
+    }
+
     public native void forceHandshake() throws SocketException;
 
+    public void setUseClientMode(boolean b) {
+        handshakeAsClient = b;
+    }
+
+    public boolean getUseClientMode() {
+        return handshakeAsClient;
+    }
+
+    public void resetHandshake() throws SocketException {
+        resetHandshakeNative(handshakeAsClient);
+    }
+
+    private native void resetHandshakeNative(boolean asClient)
+        throws SocketException;
+
     public native SSLSecurityStatus getStatus() throws SocketException;
+
+    public void setClientCertNickname(String nick) throws SocketException {
+        if( nick != null && nick.length() > 0 ) {
+            setClientCertNicknameNative(nick);
+        }
+    }
+    public native void setClientCertNicknameNative(String nick)
+        throws SocketException;
+
+    public void setNeedClientAuth(boolean b) throws SocketException {
+        setSSLOption(SSL_REQUEST_CERTIFICATE, b);
+    }
+
+    public native void setNeedClientAuthNoExpiryCheck(boolean b)
+        throws SocketException;
+
+    public void useCache(boolean b) throws SocketException {
+        setSSLOption(SSL_NO_CACHE, !b);
+    }
+
+    public void useCacheDefault(boolean b) throws SocketException {
+        setSSLDefaultOption(SSL_NO_CACHE, !b);
+    }
 
     private InetAddress inetAddress;
     private int port;
     private SocketProxy sockProxy;
     private boolean open = false;
+    private boolean handshakeAsClient=true;
 
     /**
      * Enums. These must match the enums table in SSLSocket.c. This is
@@ -312,6 +373,9 @@ public class SSLSocket extends java.net.Socket {
     private static final int SO_KEEPALIVE = 3;
     private static final int PR_SHUTDOWN_RCV = 4;
     private static final int PR_SHUTDOWN_SEND = 5;
+    private static final int SSL_REQUIRE_CERTIFICATE = 6;
+    private static final int SSL_REQUEST_CERTIFICATE = 7;
+    private static final int SSL_NO_CACHE = 8;
 
     /**
      * SO_TIMEOUT timeout in millis. I don't know why we have to keep it here
@@ -319,9 +383,19 @@ public class SSLSocket extends java.net.Socket {
      */
     private int timeout;
 
-    private native void setSSLOption(int option, boolean on)
+    private void setSSLOption(int option, boolean on)
+        throws SocketException
+    {
+        setSSLOption(option, on ? 1 : 0);
+    }
+    private native void setSSLOption(int option, int on)
         throws SocketException;
-    private static native void setSSLDefaultOption(int option, boolean on)
+    private static void setSSLDefaultOption(int option, boolean on)
+        throws SocketException
+    {
+        setSSLDefaultOption(option, on ? 1 : 0);
+    }
+    private static native void setSSLDefaultOption(int option, int on)
         throws SocketException;
 
     private native byte[] socketCreate(
@@ -424,20 +498,3 @@ public class SSLSocket extends java.net.Socket {
 
 }
 
-class SocketProxy extends org.mozilla.jss.util.NativeProxy {
-
-    public SocketProxy(byte[] pointer) {
-        super(pointer);
-    }
-
-    /** 
-     * Theoretically, we don't need to do anything, since SSLSocket should
-     * call close() when it finalizes. When a socket is closed all its
-     * resources are freed, and there's nothing left to release.
-     */
-    protected void releaseNativeResources() { }
-
-    protected void finalize() throws Throwable {
-        super.finalize();
-    }
-}

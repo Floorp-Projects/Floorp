@@ -39,7 +39,83 @@ struct JSSL_SocketData {
     jobject socketObject; /* weak global ref */
     jobject certApprovalCallback; /* global ref */
     jobject clientCertSelectionCallback; /* global ref */
+    char *clientCertNickname;
 };
 typedef struct JSSL_SocketData JSSL_SocketData;
+
+SECStatus
+JSSL_JavaCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
+             PRBool isServer);
+
+void
+JSSL_HandshakeCallback(PRFileDesc *fd, void *arg);
+
+int
+JSSL_DefaultCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
+             PRBool isServer);
+
+int
+JSSL_CallCertSelectionCallback(    void * arg,
+            PRFileDesc *        fd,
+            CERTDistNames *     caNames,
+            CERTCertificate **  pRetCert,
+            SECKEYPrivateKey ** pRetKey);
+
+int
+JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
+             PRBool isServer);
+
+int
+JSSL_GetClientAuthData( void * arg,
+                        PRFileDesc *        fd,
+                        CERTDistNames *     caNames,
+                        CERTCertificate **  pRetCert,
+                        SECKEYPrivateKey ** pRetKey);
+
+
+#ifdef JDK1_2
+/* JDK 1.2 and higher provide weak references in JNI. */
+
+#define NEW_WEAK_GLOBAL_REF(env, obj) \
+    ((*env)->NewWeakGlobalRef((env), (obj)))
+#define DELETE_WEAK_GLOBAL_REF(env, obj) \
+    ((*env)->DeleteWeakGlobalRef((env), (obj)))
+
+#else
+/* JDK 1.1 doesn't have weak references, so we'll have to use regular ones */
+
+#define NEW_WEAK_GLOBAL_REF(env, obj) \
+    ((*env)->NewGlobalRef((env), (obj)))
+#define DELETE_WEAK_GLOBAL_REF(env, obj) \
+    ((*env)->DeleteGlobalRef((env), (obj)))
+
+#endif
+
+#define JSSL_getSockData(env, sockObject, sdptr) \
+    JSS_getPtrFromProxyOwner(env, sockObject, SSLSOCKET_PROXY_FIELD, \
+        SSLSOCKET_PROXY_SIG, (void**)sdptr)
+
+
+void
+JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd);
+
+
+extern PRInt32 JSSL_enums[];
+
+void 
+JSSL_socketBind(JNIEnv *env, jobject self, jbyteArray addrBA, jint port);
+
+void
+JSSL_socketClose(JNIEnv *env, jobject self);
+
+jbyteArray
+JSSL_socketCreate(JNIEnv *env, jobject self,
+    jobject certApprovalCallback, jobject clientCertSelectionCallback);
+
+JSSL_SocketData*
+JSSL_CreateSocketData(JNIEnv *env, jobject sockObj, PRFileDesc* newFD);
+
+void
+JSSL_setNeedClientAuthNoExpiryCheck(JNIEnv *env, jobject self, jboolean b);
 
 #endif
