@@ -1427,15 +1427,15 @@ public class Context
      * by calling {@link WrapFactory#wrap(Context cx, Scriptable scope,
      * Object obj, Class staticType)} as in:
      * <pre>
-     *    return contextInstance.getWrapFactory().wrap(contextInstance, scope,
-     *                                                 value, null);
+     *    Context cx = Context.getCurrentContext();
+     *    return cx.getWrapFactory().wrap(cx, scope, value, null);
      * </pre>
      *
      * @param value any Java object
      * @param scope top scope object
      * @return value suitable to pass to any API that takes JavaScript values.
      */
-    public Object javaToJS(Object value, Scriptable scope)
+    public static Object javaToJS(Object value, Scriptable scope)
     {
         if (value instanceof String || value instanceof Number
             || value instanceof Boolean || value instanceof Scriptable)
@@ -1444,7 +1444,8 @@ public class Context
         } else if (value instanceof Character) {
             return String.valueOf(((Character)value).charValue());
         } else {
-            return getWrapFactory().wrap(this, scope, value, null);
+            Context cx = Context.getContext();
+            return cx.getWrapFactory().wrap(cx, scope, value, null);
         }
     }
 
