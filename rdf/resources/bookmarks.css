@@ -35,6 +35,18 @@ treecell {
  font-size: 8pt;
 } 
 
+treecell[selectedcell] {
+ background-color: yellow;
+ }
+ 
+treecell[sortActive="true"] {
+ background-color: #404040;
+ }
+ 
+treecol[sortActive="true"] {
+  background-color: green;
+}
+
 treehead treeitem treecell { 
  background-color: #c0c0c0; 
  border: outset 1px;

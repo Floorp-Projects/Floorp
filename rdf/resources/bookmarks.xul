@@ -50,6 +50,43 @@
 
     return true;
   }
+
+function doSort(sortColName)
+{
+        var node = document.getElementById(sortColName);
+	// determine column resource to sort on
+	var sortResource = node.getAttribute('resource');
+	if (!node)	return(false);
+
+        var sortDirection="ascending";
+        var isSortActive = node.getAttribute('sortActive');
+        if (isSortActive == "true")
+        {
+                var currentDirection = node.getAttribute('sortDirection');
+                if (currentDirection == "ascending")
+                        sortDirection = "descending";
+                else if (currentDirection == "descending")
+                        sortDirection = "natural";
+                else    sortDirection = "ascending";
+        }
+
+	// get RDF Core service
+	var rdfCore = XPAppCoresManager.Find("RDFCore");
+	if (!rdfCore)
+	{
+		rdfCore = new RDFCore();
+		if (!rdfCore)
+		{
+			return(false);
+		}
+		rdfCore.Init("RDFCore");
+                XPAppCoresManager.Add(rdfCore);
+	}
+	// sort!!!
+        rdfCore.doSort(node, sortResource, sortDirection);
+        return(false);
+}
+
   </html:script>
 
   <menubar>
@@ -77,12 +114,18 @@
   </menubar>
 
 <tree datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treehead>
     <treeitem>
-      <treecell>Name</treecell>
-      <treecell>URL</treecell>
+      <treecell onclick="return doSort('NameColumn');">
+	<xul:observes element="NameColumn" attribute="sortActive"/>
+	<xul:observes element="NameColumn" attribute="sortDirection"/>
+      Name</treecell>
+      <treecell onclick="return doSort('URLColumn');">
+	<xul:observes element="URLColumn" attribute="sortActive"/>
+	<xul:observes element="URLColumn" attribute="sortDirection"/>
+      URL</treecell>
     </treeitem>
   </treehead>
 
@@ -91,3 +134,4 @@
 </tree>
 
 </window>
+
