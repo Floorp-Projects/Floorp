@@ -31,6 +31,9 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIStringCharsetDetector.h"
+#include "nsIPref.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // BEGIN EXTERNAL DEPENDANCY
 
@@ -1324,15 +1327,23 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
   mAutoDetect = autoDetect;
   mMaxNumCharsDetect = maxNumCharsDetect;
 
-  //TODO: For now, restrict to Japanese only
-  if (mAutoDetect &&
-      (mInputCharset.EqualsIgnoreCase("ISO-2022-JP") ||
-      mInputCharset.EqualsIgnoreCase("EUC-JP") ||
-      mInputCharset.EqualsIgnoreCase("Shift_JIS"))) {
-    char aComponent[128];
-    PL_strcpy(aComponent, NS_STRCDETECTOR_PROGID_BASE);
-    PL_strcat(aComponent, "japsm"); //TODO: get this from pref
-    res = nsComponentManager::CreateInstance(aComponent, nsnull, 
+  if (mAutoDetect) {
+    char detector_progid[128];
+    char* detector_name = nsnull;
+    PL_strcpy(detector_progid, NS_STRCDETECTOR_PROGID_BASE);
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
+    if (nsnull != prefs && NS_SUCCEEDED(res)) {
+      if (NS_SUCCEEDED(prefs->CopyCharPref("intl.charset.detector", &detector_name))) {
+        PL_strcat(detector_progid, detector_name);
+        PR_FREEIF(detector_name);
+      }
+    }
+    else {
+      PL_strcat(detector_progid, "japsm"); //fallback
+    }
+
+    res = nsComponentManager::CreateInstance(detector_progid, nsnull, 
                                              nsIStringCharsetDetector::GetIID(), (void**)&mDetector);
     if (NS_FAILED(res)) {
       mDetector = NULL;   // no charset detector is available

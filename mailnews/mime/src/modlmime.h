@@ -258,8 +258,8 @@ struct MimeDisplayOptions
 	 `output_size_ret' is how long the returned string is (it need not be
 	   NULL-terminated.).
    */
-  int (*charset_conversion_fn) (const char *input_line, PRInt32 input_length,
-								const char *input_charset,
+  int (*charset_conversion_fn) (const PRBool input_autodetect, const char *input_line, 
+                PRInt32 input_length, const char *input_charset,
 								const char *output_charset,
 								char **output_ret, PRInt32 *output_size_ret,
 								void *stream_closure);

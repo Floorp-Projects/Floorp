@@ -145,7 +145,7 @@ mime_type_icon(const char *type, void *stream_closure)
 }
 
 static int
-mime_convert_charset (const char *input_line, PRInt32 input_length,
+mime_convert_charset (const PRBool input_autodetect, const char *input_line, PRInt32 input_length,
                       const char *input_charset, const char *output_charset,
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure)
@@ -155,7 +155,7 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
   // Now do conversion to UTF-8 for output
   char  *convertedString = NULL;
   PRInt32 convertedStringLen;
-  PRInt32 res = MIME_ConvertCharset(PR_TRUE, input_charset, "UTF-8", input_line, input_length, 
+  PRInt32 res = MIME_ConvertCharset(input_autodetect, input_charset, "UTF-8", input_line, input_length, 
                                     &convertedString, &convertedStringLen);
   if (res != 0)
   {
@@ -498,8 +498,8 @@ mime_insert_html_abort(nsMIMESession *stream, int status)
 #endif
 
 static int
-mime_insert_html_convert_charset (const char *input_line, PRInt32 input_length,
-                                  const char *input_charset,
+mime_insert_html_convert_charset (const PRBool input_autodetect, const char *input_line, 
+                                  PRInt32 input_length, const char *input_charset, 
                                   const char *output_charset,
                                   char **output_ret, PRInt32 *output_size_ret,
                                   void *stream_closure)
@@ -521,7 +521,7 @@ mime_insert_html_convert_charset (const char *input_line, PRInt32 input_length,
     msd->outcsid = 0;
   }
   INTL_SetCSIDocCSID(csi, msd->lastcsid);
-  status = mime_convert_charset (input_line, input_length,
+  status = mime_convert_charset (input_autodetect, input_line, input_length,
                                  input_charset, output_charset,
                                  output_ret, output_size_ret,
                                  stream_closure);
