@@ -67,6 +67,7 @@ WalletEditorImpl::GetValue(PRUnichar** aValue)
   return res;
 }
 
+#if 0
 static void DOMWindowToWebShellWindow(
               nsIDOMWindow *DOMWindow,
               nsCOMPtr<nsIWebShellWindow> *webWindow)
@@ -87,6 +88,7 @@ static void DOMWindowToWebShellWindow(
   webshell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
   *webWindow = do_QueryInterface(topLevelWindow);
 }
+#endif /* 0 */
 
 NS_IMETHODIMP
 WalletEditorImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)

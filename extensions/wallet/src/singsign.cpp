@@ -2866,6 +2866,54 @@ SINGSIGN_GetRejectListForViewer(nsAutoString& aRejectList)
   aRejectList = buffer;
 }
 
+PUBLIC nsresult
+SINGSIGN_HaveData(const char *url, const PRUnichar *userName, PRBool strip, PRBool *retval)
+{
+  nsresult res;
+  nsAutoString data, usernameForLookup;
+
+  *retval = PR_FALSE;
+
+  if (!si_GetSignonRememberingPref()) {
+    return NS_OK;
+  }
+
+  NS_ASSERTION(strip == PR_FALSE, "this code needs to be finished for the strip case");
+
+  /* convert to a uri so we can parse out the username and hostname */
+  nsCOMPtr<nsIURL> uri;
+  nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
+  res = uri->SetSpec(url);
+  if (NS_FAILED(res)) return res;
+
+  /* get host part of the uri */
+  nsXPIDLCString host;
+  if (strip) {
+    res = uri->GetHost(getter_Copies(host));
+    if (NS_FAILED(res)) {
+      return res;
+    }
+  } else {
+    res = MangleUrl(url, getter_Copies(host));
+    if (NS_FAILED(res)) return res;
+  }
+
+  if (strip) {
+      /* convert url to a uri so we can parse out the username and hostname */
+      /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  /* get previous data used with this username, pick first user if no username found */
+  si_RestoreOldSignonDataFromBrowser((const char *)host, (usernameForLookup.Length() == 0), usernameForLookup, data);
+
+  if (data.Length()) {
+    *retval = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
 
 #ifdef APPLE_KEYCHAIN
 /************************************

@@ -374,3 +374,9 @@ nsWalletlibService::GetPassword(PRUnichar **password)
 {
   return Wallet_GetMasterPassword(password);
 }
+
+NS_IMETHODIMP
+nsWalletlibService::HaveData(const char *url, const PRUnichar *userName, PRBool stripUrl, PRBool *_retval)
+{
+  return ::SINGSIGN_HaveData(url, userName, stripUrl, _retval);
+}

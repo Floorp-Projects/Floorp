@@ -529,8 +529,9 @@ SI_GetCharPref(const char * prefname, char** aPrefvalue);
 
 #ifdef AutoCapture
 static const char *pref_captureForms = "wallet.captureForms";
-#endif
+#else
 static const char *pref_WalletNotified = "wallet.Notified";
+#endif /* AutoCapture */
 static const char *pref_WalletKeyFileName = "wallet.KeyFileName";
 static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
 static const char *pref_WalletServer = "wallet.Server";
@@ -539,8 +540,9 @@ static const char *pref_WalletVersion = "wallet.version";
 
 #ifdef AutoCapture
 PRIVATE PRBool wallet_captureForms = PR_FALSE;
-#endif
+#else
 PRIVATE PRBool wallet_Notified = PR_FALSE;
+#endif
 PRIVATE char * wallet_Server = nsnull;
 
 #ifdef AutoCapture
@@ -588,6 +590,7 @@ wallet_GetFormsCapturingPref(void)
 }
 #endif
 
+#ifndef AutoCapture
 PRIVATE void
 wallet_SetWalletNotificationPref(PRBool x) {
   SI_SetBoolPref(pref_WalletNotified, x);
@@ -603,6 +606,7 @@ wallet_GetWalletNotificationPref(void) {
   }
   return wallet_Notified;
 }
+#endif /* ! AutoCapture */
 
 
 /*************************************************************************/

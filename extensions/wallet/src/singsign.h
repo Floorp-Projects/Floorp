@@ -65,6 +65,10 @@ extern PRBool
 SINGSIGN_RemoveUser
     (const char *URLName, const PRUnichar *userName, PRBool strip);
 
+extern nsresult
+SINGSIGN_HaveData(const char *url, const PRUnichar *userName, PRBool strip, PRBool *retval);
+
+
 XP_END_PROTOS
 
 #endif /* !_SINGSIGN_H */

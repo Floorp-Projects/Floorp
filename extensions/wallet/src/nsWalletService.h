@@ -61,6 +61,7 @@ public:
      const char *urlname, PRBool stripUrl, nsIPrompt* dialog, PRBool *_retval);
 
   NS_IMETHOD SI_RemoveUser(const char *URLName, PRBool stripUrl, const PRUnichar *userName);
+  NS_IMETHOD HaveData(const char *url, const PRUnichar *userName, PRBool stripUrl, PRBool *_retval);
 
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList);
   NS_IMETHOD WALLET_GetNocaptureListForViewer(nsAutoString& aNocaptureList);
