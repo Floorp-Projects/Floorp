@@ -142,7 +142,8 @@ public:
   NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
   NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
 
-  // Gets and sets properties on a given frame
+  // Gets a property value on a given frame. Returns 0 if the property is
+  // not set
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
                               nsIAtom*  aPropertyName,
                               PRUint32  aOptions,
