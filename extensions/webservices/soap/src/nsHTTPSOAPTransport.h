@@ -45,6 +45,15 @@ public:
   NS_DECL_NSISOAPTRANSPORT
 };
 
+class nsHTTPSSOAPTransport: public nsHTTPSOAPTransport
+{
+public:
+  nsHTTPSSOAPTransport();
+  virtual ~nsHTTPSSOAPTransport();
+
+  NS_DECL_ISUPPORTS
+};
+
 class nsHTTPSOAPTransportCompletion : public nsIDOMEventListener, public nsISOAPCallCompletion
 {
 public:
@@ -77,4 +86,10 @@ protected:
  0x9032e336, 0x1dd2, 0x11b2,                       \
  {0x99, 0xbe, 0xa4, 0x43, 0x76, 0xd4, 0xd5, 0xb1} }
 #define NS_HTTPSOAPTRANSPORTCOMPLETION_CONTRACTID "@mozilla.org/xmlextras/soap/transport/completion;1?protocol=http"
+
+#define NS_HTTPSSOAPTRANSPORT_CID                   \
+ { /* aad00c5a-1dd1-11b2-9ee1-c9f6b898a7b8 */      \
+ 0xaad00c5a, 0x1dd1, 0x11b2,                       \
+ {0x9e, 0xe1, 0xc9, 0xf6, 0xb8, 0x98, 0xa7, 0xb8} }
+#define NS_HTTPSSOAPTRANSPORT_CONTRACTID NS_SOAPTRANSPORT_CONTRACTID_PREFIX "https"
 #endif

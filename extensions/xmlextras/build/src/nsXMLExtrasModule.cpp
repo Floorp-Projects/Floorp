@@ -84,8 +84,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPResponse)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPEncoding)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPHeaderBlock)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPParameter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder_1_1)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder_1_2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSSOAPTransport)
 NS_DECL_CLASSINFO(nsSOAPCall)
 NS_DECL_CLASSINFO(nsSOAPResponse)
 NS_DECL_CLASSINFO(nsSOAPEncoding)
@@ -94,6 +96,7 @@ NS_DECL_CLASSINFO(nsSOAPHeaderBlock)
 NS_DECL_CLASSINFO(nsSOAPParameter)
 NS_DECL_CLASSINFO(nsHTTPSOAPTransport)
 NS_DECL_CLASSINFO(nsHTTPSOAPTransportCompletion)
+NS_DECL_CLASSINFO(nsHTTPSSOAPTransport)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaLoader)
 NS_DECL_CLASSINFO(nsSchemaLoader)
@@ -315,17 +318,29 @@ static nsModuleComponentInfo components[] = {
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPParameter), 
     nsnull, &NS_CLASSINFO_NAME(nsSOAPParameter), 
     nsIClassInfo::DOM_OBJECT },
-  { "Default SOAP Encoder", NS_DEFAULTSOAPENCODER_CID,
-    NS_DEFAULTSOAPENCODER_CONTRACTID, 
-    nsDefaultSOAPEncoderConstructor },
+  { "Default SOAP 1.1 Encoder", NS_DEFAULTSOAPENCODER_1_1_CID,
+    NS_DEFAULTSOAPENCODER_1_1_CONTRACTID, 
+    nsDefaultSOAPEncoder_1_1Constructor },
+  { "Default SOAP 1.2 Encoder", NS_DEFAULTSOAPENCODER_1_2_CID,
+    NS_DEFAULTSOAPENCODER_1_2_CONTRACTID, 
+    nsDefaultSOAPEncoder_1_2Constructor },
   { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID,
     NS_HTTPSOAPTRANSPORT_CONTRACTID, 
-    nsHTTPSOAPTransportConstructor },
+    nsHTTPSOAPTransportConstructor, nsnull, nsnull, nsnull,
+    NS_CI_INTERFACE_GETTER_NAME(nsHTTPSOAPTransport), 
+    nsnull, &NS_CLASSINFO_NAME(nsHTTPSOAPTransport), 
+    nsIClassInfo::DOM_OBJECT },
   { "HTTP SOAP Transport Completion", NS_HTTPSOAPTRANSPORTCOMPLETION_CID,
     NS_HTTPSOAPTRANSPORTCOMPLETION_CONTRACTID, 
     nsnull, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsHTTPSOAPTransportCompletion), 
     nsnull, &NS_CLASSINFO_NAME(nsHTTPSOAPTransportCompletion), 
+    nsIClassInfo::DOM_OBJECT },
+  { "HTTPS SOAP Transport", NS_HTTPSSOAPTRANSPORT_CID,
+    NS_HTTPSSOAPTRANSPORT_CONTRACTID, 
+    nsHTTPSSOAPTransportConstructor, nsnull, nsnull, nsnull,
+    NS_CI_INTERFACE_GETTER_NAME(nsHTTPSSOAPTransport), 
+    nsnull, &NS_CLASSINFO_NAME(nsHTTPSSOAPTransport), 
     nsIClassInfo::DOM_OBJECT },
   { "SchemaLoader", NS_SCHEMALOADER_CID, NS_SCHEMALOADER_CONTRACTID,
     nsSchemaLoaderConstructor, nsnull, nsnull, nsnull, 

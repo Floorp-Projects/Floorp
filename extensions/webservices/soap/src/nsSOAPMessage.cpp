@@ -75,21 +75,84 @@ NS_IMETHODIMP nsSOAPMessage::GetEnvelope(nsIDOMElement * *aEnvelope)
     nsCOMPtr<nsIDOMElement> root;
     mMessage->GetDocumentElement(getter_AddRefs(root));
     if (root) {
-      nsAutoString name, namespaceURI;
-      root->GetLocalName(name);
-      root->GetNamespaceURI(namespaceURI);
+      nsAutoString namespaceURI;
+      nsAutoString name;
+      nsresult rc = root->GetNamespaceURI(namespaceURI);
+      if (NS_FAILED(rc)) return rc;
+      rc = root->GetLocalName(name);
+      if (NS_FAILED(rc)) return rc;
       if (name.Equals(nsSOAPUtils::kEnvelopeTagName)
-        && namespaceURI.Equals(nsSOAPUtils::kSOAPEnvURI))
+        && (namespaceURI.Equals(*nsSOAPUtils::kSOAPEnvURI[nsISOAPMessage::VERSION_1_2])
+        || namespaceURI.Equals(*nsSOAPUtils::kSOAPEnvURI[nsISOAPMessage::VERSION_1_1])))
       {
         *aEnvelope = root;
         NS_ADDREF(*aEnvelope);
         return NS_OK;
       }
     } 
-
   }
   *aEnvelope = nsnull;
   return NS_OK;
+}
+
+/* readonly attribute unsigned short version; */
+NS_IMETHODIMP nsSOAPMessage::GetVersion(PRUint16 *aVersion)
+{
+  if (mMessage) {
+    nsCOMPtr<nsIDOMElement> root;
+    mMessage->GetDocumentElement(getter_AddRefs(root));
+    if (root) {
+      nsAutoString namespaceURI;
+      nsAutoString name;
+      nsresult rc = root->GetNamespaceURI(namespaceURI);
+      if (NS_FAILED(rc)) return rc;
+      rc = root->GetLocalName(name);
+      if (NS_FAILED(rc)) return rc;
+      if (name.Equals(nsSOAPUtils::kEnvelopeTagName)) {
+	if (namespaceURI.Equals(*nsSOAPUtils::kSOAPEnvURI[nsISOAPMessage::VERSION_1_2])) {
+          *aVersion = nsISOAPMessage::VERSION_1_2;
+	  return NS_OK;
+	}
+	else if (namespaceURI.Equals(*nsSOAPUtils::kSOAPEnvURI[nsISOAPMessage::VERSION_1_1])) {
+          *aVersion = nsISOAPMessage::VERSION_1_1;
+	  return NS_OK;
+	}
+      }
+    } 
+  }
+  *aVersion = nsISOAPMessage::VERSION_UNKNOWN;
+  return NS_OK;
+}
+
+/* Internal method for getting  envelope and  version */
+unsigned short nsSOAPMessage::GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope)
+{
+  NS_ENSURE_ARG_POINTER(aEnvelope);
+
+  if (mMessage) {
+    nsCOMPtr<nsIDOMElement> root;
+    mMessage->GetDocumentElement(getter_AddRefs(root));
+    if (root) {
+      nsAutoString namespaceURI;
+      nsAutoString name;
+      root->GetNamespaceURI(namespaceURI);
+      root->GetLocalName(name);
+      if (name.Equals(nsSOAPUtils::kEnvelopeTagName)) {
+        if (namespaceURI.Equals(*nsSOAPUtils::kSOAPEnvURI[nsISOAPMessage::VERSION_1_2])) {
+	  *aEnvelope = root;
+          NS_ADDREF(*aEnvelope);
+	  return nsISOAPMessage::VERSION_1_2;
+	}
+	else if (namespaceURI.Equals(*nsSOAPUtils::kSOAPEnvURI[nsISOAPMessage::VERSION_1_1])) {
+          *aEnvelope = root;
+          NS_ADDREF(*aEnvelope);
+	  return nsISOAPMessage::VERSION_1_1;
+	}
+      }
+    } 
+  }
+  *aEnvelope = nsnull;
+  return nsISOAPMessage::VERSION_UNKNOWN;
 }
 
 /* readonly attribute nsIDOMElement header; */
@@ -97,10 +160,10 @@ NS_IMETHODIMP nsSOAPMessage::GetHeader(nsIDOMElement * *aHeader)
 {
   NS_ENSURE_ARG_POINTER(aHeader);
   nsCOMPtr<nsIDOMElement> env;
-  GetEnvelope(getter_AddRefs(env));
+  unsigned short version = GetEnvelopeWithVersion(getter_AddRefs(env));
   if (env) {
     nsSOAPUtils::GetSpecificChildElement(env, 
-      nsSOAPUtils::kSOAPEnvURI, nsSOAPUtils::kHeaderTagName, 
+      *nsSOAPUtils::kSOAPEnvURI[version], nsSOAPUtils::kHeaderTagName, 
       aHeader);
   }
   else {
@@ -114,10 +177,10 @@ NS_IMETHODIMP nsSOAPMessage::GetBody(nsIDOMElement * *aBody)
 {
   NS_ENSURE_ARG_POINTER(aBody);
   nsCOMPtr<nsIDOMElement> env;
-  GetEnvelope(getter_AddRefs(env));
+  unsigned short version = GetEnvelopeWithVersion(getter_AddRefs(env));
   if (env) {
     nsSOAPUtils::GetSpecificChildElement(env, 
-      nsSOAPUtils::kSOAPEnvURI, nsSOAPUtils::kBodyTagName, 
+      *nsSOAPUtils::kSOAPEnvURI[version], nsSOAPUtils::kBodyTagName, 
       aBody);
   }
   else {
@@ -175,11 +238,17 @@ NS_IMETHODIMP nsSOAPMessage::GetTargetObjectURI(nsAString & aTargetObjectURI)
   return NS_OK;
 }
 
-NS_NAMED_LITERAL_STRING(kEmptySOAPDocStr, "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema-datatypes\"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body></SOAP-ENV:Body></SOAP-ENV:Envelope>");
+NS_NAMED_LITERAL_STRING(realEmptySOAPDocStr1, "<env:Envelope xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:enc=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/1999/XMLSchema-instance\" xmlns:xs=\"http://www.w3.org/1999/XMLSchema\"><env:Header/><env:Body/></env:Envelope>");
+NS_NAMED_LITERAL_STRING(realEmptySOAPDocStr2, "<env:Envelope xmlns:env=\"http://www.w3.org/2001/09/soap-envelope\" xmlns:enc=\"http://www.w3.org/2001/09/soap-encoding\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"><env:Header/><env:Body/></env:Envelope>");
+
+const nsAString* kEmptySOAPDocStr[] = {&realEmptySOAPDocStr1, &realEmptySOAPDocStr2};
 
 /* void encode (in AString aMethodName, in AString aTargetObjectURI, in PRUint32 aHeaderBlockCount, [array, size_is (aHeaderBlockCount)] in nsISOAPHeaderBlock aHeaderBlocks, in PRUint32 aParameterCount, [array, size_is (aParameterCount)] in nsISOAPParameter aParameters); */
-NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAString & aTargetObjectURI, PRUint32 aHeaderBlockCount, nsISOAPHeaderBlock **aHeaderBlocks, PRUint32 aParameterCount, nsISOAPParameter **aParameters)
+NS_IMETHODIMP nsSOAPMessage::Encode(unsigned short aVersion, const nsAString & aMethodName, const nsAString & aTargetObjectURI, PRUint32 aHeaderBlockCount, nsISOAPHeaderBlock **aHeaderBlocks, PRUint32 aParameterCount, nsISOAPParameter **aParameters)
 {
+  if (aVersion != nsISOAPMessage::VERSION_1_1
+    && aVersion != nsISOAPMessage::VERSION_1_2)
+    return  NS_ERROR_ILLEGAL_VALUE;
 
 //  Construct the message skeleton
 
@@ -189,7 +258,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString docstr;
-  rv = parser->ParseFromString(kEmptySOAPDocStr.get(), "text/xml", 
+  rv = parser->ParseFromString(nsString(*kEmptySOAPDocStr[aVersion]).get(), "text/xml", 
 		               getter_AddRefs(mMessage));
   if (NS_FAILED(rv)) return rv;
 
@@ -202,7 +271,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
     if (envelope) {
       nsAutoString enc;
       mEncoding->GetStyleURI(enc);
-      envelope->SetAttributeNS(nsSOAPUtils::kSOAPEncodingURI, nsSOAPUtils::kEncodingStyleAttribute, enc);
+      envelope->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion], nsSOAPUtils::kEncodingStyleAttribute, enc);
     }
   }
 
@@ -268,7 +337,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
         if (mEncoding != encoding) {
           nsAutoString enc;
           encoding->GetStyleURI(enc);
-          element->SetAttributeNS(nsSOAPUtils::kSOAPEncodingURI, nsSOAPUtils::kEncodingStyleAttribute, enc);
+          element->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion], nsSOAPUtils::kEncodingStyleAttribute, enc);
         }
       }
     }
@@ -288,7 +357,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
     if (NS_FAILED(rv)) return rv;
     body = call;
     nsAutoString prefix;
-    rv = nsSOAPUtils::MakeNamespacePrefixFixed(body, aTargetObjectURI, prefix);
+    rv = nsSOAPUtils::MakeNamespacePrefixFixed(body, aTargetObjectURI, aVersion, prefix);
     if (NS_FAILED(rv)) return rv;
     if (!prefix.IsEmpty()) {
       rv = body->SetPrefix(prefix);
@@ -340,7 +409,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAStri
       if (mEncoding != encoding) {
         nsAutoString enc;
         encoding->GetStyleURI(enc);
-        element->SetAttributeNS(nsSOAPUtils::kSOAPEncodingURI, nsSOAPUtils::kEncodingStyleAttribute, enc);
+        element->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion], nsSOAPUtils::kEncodingStyleAttribute, enc);
       }
     }
   }
@@ -430,9 +499,14 @@ NS_IMETHODIMP nsSOAPMessage::GetEncoding(nsISOAPEncoding* * aEncoding)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
   if (!mEncoding) {
-    mEncoding = new nsSOAPEncoding();
-    if (!mEncoding)
-      return NS_ERROR_OUT_OF_MEMORY;
+    unsigned short version;
+    nsresult rc = GetVersion(&version);
+    if (NS_FAILED(rc)) return rc;
+    if (version != nsISOAPMessage::VERSION_UNKNOWN) {
+        mEncoding = new nsSOAPEncoding(version);
+      if (!mEncoding)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   *aEncoding = mEncoding;
   NS_IF_ADDREF(*aEncoding);

@@ -22,29 +22,31 @@
 
 #include "nsSOAPUtils.h"
 #include "nsIDOMText.h"
+#include "nsISOAPMessage.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsCOMPtr.h"
 
-NS_NAMED_LITERAL_STRING(realSOAPEnvURI,"http://schemas.xmlsoap.org/soap/envelope/");
-const nsAString& nsSOAPUtils::kSOAPEnvURI = realSOAPEnvURI;
+NS_NAMED_LITERAL_STRING(realSOAPEnvURI1,"http://schemas.xmlsoap.org/soap/envelope/");
+NS_NAMED_LITERAL_STRING(realSOAPEnvURI2,"http://www.w3.org/2001/09/soap-envelope");
+const nsAString* nsSOAPUtils::kSOAPEnvURI[] = {&realSOAPEnvURI1, &realSOAPEnvURI2};
 
-NS_NAMED_LITERAL_STRING(realSOAPEncodingURI,"http://schemas.xmlsoap.org/soap/encoding/");
-const nsAString& nsSOAPUtils::kSOAPEncodingURI = realSOAPEncodingURI;
+NS_NAMED_LITERAL_STRING(realSOAPEncURI1,"http://schemas.xmlsoap.org/soap/encoding/");
+NS_NAMED_LITERAL_STRING(realSOAPEncURI2,"http://www.w3.org/2001/09/soap-encoding");
+const nsAString* nsSOAPUtils::kSOAPEncURI[] = {&realSOAPEncURI1, &realSOAPEncURI2};
 
-NS_NAMED_LITERAL_STRING(realSOAPEnvPrefix,"SOAP-ENV");
+NS_NAMED_LITERAL_STRING(realXSIURI1,"http://www.w3.org/1999/XMLSchema-instance");
+NS_NAMED_LITERAL_STRING(realXSIURI2,"http://www.w3.org/2001/XMLSchema-instance");
+const nsAString* nsSOAPUtils::kXSIURI[] = {&realXSIURI1, &realXSIURI2};
+
+NS_NAMED_LITERAL_STRING(realXSURI1,"http://www.w3.org/1999/XMLSchema");
+NS_NAMED_LITERAL_STRING(realXSURI2,"http://www.w3.org/2001/XMLSchema");
+const nsAString* nsSOAPUtils::kXSURI[] = {&realXSURI1, &realXSURI2};
+
+NS_NAMED_LITERAL_STRING(realSOAPEnvPrefix,"env");
 const nsAString& nsSOAPUtils::kSOAPEnvPrefix = realSOAPEnvPrefix;
 
-NS_NAMED_LITERAL_STRING(realSOAPEncodingPrefix,"SOAP-ENC");
-const nsAString& nsSOAPUtils::kSOAPEncodingPrefix = realSOAPEncodingPrefix;
-
-NS_NAMED_LITERAL_STRING(realXSURI,"http://www.w3.org/2001/XMLSchema");
-const nsAString& nsSOAPUtils::kXSURI = realXSURI;
-
-NS_NAMED_LITERAL_STRING(realXSIURI,"http://www.w3.org/2001/XMLSchema-instance");
-const nsAString& nsSOAPUtils::kXSIURI = realXSIURI;
-
-NS_NAMED_LITERAL_STRING(realXSDURI,"http://www.w3.org/2001/XMLSchema-datatypes");
-const nsAString& nsSOAPUtils::kXSDURI = realXSDURI;
+NS_NAMED_LITERAL_STRING(realSOAPEncPrefix,"enc");
+const nsAString& nsSOAPUtils::kSOAPEncPrefix = realSOAPEncPrefix;
 
 NS_NAMED_LITERAL_STRING(realXSIPrefix,"xsi");
 const nsAString& nsSOAPUtils::kXSIPrefix = realXSIPrefix;
@@ -54,9 +56,6 @@ const nsAString& nsSOAPUtils::kXSITypeAttribute = realXSITypeAttribute;
 
 NS_NAMED_LITERAL_STRING(realXSPrefix,"xs");
 const nsAString& nsSOAPUtils::kXSPrefix = realXSPrefix;
-
-NS_NAMED_LITERAL_STRING(realXSDPrefix,"xsd");
-const nsAString& nsSOAPUtils::kXSDPrefix = realXSDPrefix;
 
 NS_NAMED_LITERAL_STRING(realEncodingStyleAttribute,"encodingStyle");
 const nsAString& nsSOAPUtils::kEncodingStyleAttribute = realEncodingStyleAttribute;
@@ -155,7 +154,7 @@ nsSOAPUtils::GetSpecificSiblingElement(
     sibling->GetLocalName(name);
     sibling->GetNamespaceURI(namespaceURI);
     if (name.Equals(aType)
-      && namespaceURI.Equals(nsSOAPUtils::kSOAPEnvURI))
+      && namespaceURI.Equals(aNamespace))
     {
       *aElement = sibling;
       NS_ADDREF(*aElement);
@@ -454,20 +453,25 @@ nsSOAPUtils::MakeNamespacePrefix(nsIDOMElement* aScope,
   *i2 = 'n';
   return NS_OK;
 }
-
+/**
+ * This code optimizes  the cases of known prefixes, which
+ * it is assumed are not overridden.  The specified version
+ * number is also assumed to be  correct.
+ */
 nsresult 
 nsSOAPUtils::MakeNamespacePrefixFixed(nsIDOMElement* aScope,
 		                      const nsAString & aURI,
+				      PRUint16 aVersion,
 				      nsAString & aPrefix)
 {
-  if (aURI.Equals(kSOAPEncodingURI))
-    aPrefix = kSOAPEncodingPrefix;
-  else if (aURI.Equals(kSOAPEnvURI))
+  if (aURI.Equals(*kSOAPEncURI[aVersion]))
+    aPrefix = kSOAPEncPrefix;
+  else if (aURI.Equals(*kSOAPEnvURI[aVersion]))
     aPrefix = kSOAPEnvPrefix;
-  else if (aURI.Equals(kXSIURI))
+  else if (aURI.Equals(*kXSIURI[aVersion]))
     aPrefix = kXSIPrefix;
-  else if (aURI.Equals(kXSDURI))
-    aPrefix = kXSDPrefix;
+  else if (aURI.Equals(*kXSURI[aVersion]))
+    aPrefix = kXSPrefix;
   else
     return MakeNamespacePrefix(aScope, aURI, aPrefix);
 

@@ -26,13 +26,14 @@
 #include "nsSOAPUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISOAPAttachments.h"
+#include "nsISOAPMessage.h"
 
-nsSOAPHeaderBlock::nsSOAPHeaderBlock()
+nsSOAPHeaderBlock::nsSOAPHeaderBlock():mVersion(nsISOAPMessage::VERSION_UNKNOWN)
 {
   NS_INIT_ISUPPORTS();
 }
 
-nsSOAPHeaderBlock::nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments): nsSOAPBlock(aAttachments)
+nsSOAPHeaderBlock::nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments, unsigned short aVersion): nsSOAPBlock(aAttachments), mVersion(aVersion)
 {
 }
 
@@ -54,7 +55,8 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetActorURI(nsAString & aActorURI)
 {
   NS_ENSURE_ARG_POINTER(&aActorURI);
   if (mElement) {
-    return mElement->GetAttributeNS(nsSOAPUtils::kSOAPEnvURI,nsSOAPUtils::kActorAttribute,aActorURI);
+    if (mVersion == nsISOAPMessage::VERSION_UNKNOWN) return NS_ERROR_NOT_AVAILABLE;
+    return mElement->GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],nsSOAPUtils::kActorAttribute,aActorURI);
   }
   else {
     aActorURI.Assign(mActorURI);
@@ -74,12 +76,13 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool * aMustUnderstand)
 {
   NS_ENSURE_ARG_POINTER(&aMustUnderstand);
   if (mElement) {
+    if (mVersion == nsISOAPMessage::VERSION_UNKNOWN) return NS_ERROR_NOT_AVAILABLE;
     nsAutoString m;
-    nsresult rc = mElement->GetAttributeNS(nsSOAPUtils::kSOAPEnvURI,nsSOAPUtils::kMustUnderstandAttribute,m);
+    nsresult rc = mElement->GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],nsSOAPUtils::kMustUnderstandAttribute,m);
     if (NS_FAILED(rc)) return rc;
     if (m.Length() == 0) *aMustUnderstand = PR_FALSE;
-    else if (m.Equals(nsSOAPUtils::kTrueA) || m.Equals(nsSOAPUtils::kTrueA)) *aMustUnderstand = PR_TRUE;
-    else if (m.Equals(nsSOAPUtils::kFalseA) || m.Equals(nsSOAPUtils::kFalseA)) *aMustUnderstand = PR_FALSE;
+    else if (m.Equals(nsSOAPUtils::kTrue) || m.Equals(nsSOAPUtils::kTrueA)) *aMustUnderstand = PR_TRUE;
+    else if (m.Equals(nsSOAPUtils::kFalse) || m.Equals(nsSOAPUtils::kFalseA)) *aMustUnderstand = PR_FALSE;
     else return NS_ERROR_ILLEGAL_VALUE;
     return NS_OK;
   }

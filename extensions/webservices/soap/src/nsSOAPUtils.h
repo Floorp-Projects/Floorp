@@ -51,6 +51,7 @@ public:
                                      nsAString & aPrefix);
   static nsresult MakeNamespacePrefixFixed(nsIDOMElement* aElement,
                                      const nsAString & aURI,
+                                     PRUint16 aVersion,
                                      nsAString & aPrefix);
   static nsresult GetNamespaceURI(nsIDOMElement* aElement,
                                   const nsAString & aQName, 
@@ -62,17 +63,17 @@ public:
 
   static PRBool StartsWith(nsAString& aSuper,
 		           nsAString& aSub);
-  static const nsAString& kSOAPEnvURI;
-  static const nsAString& kSOAPEncodingURI;
+  
+  static const nsAString* kSOAPEnvURI[];
+  static const nsAString* kSOAPEncURI[];
+  static const nsAString* kXSIURI[];
+  static const nsAString* kXSURI[];
+
   static const nsAString& kSOAPEnvPrefix;
-  static const nsAString& kSOAPEncodingPrefix;
-  static const nsAString& kXSURI;
-  static const nsAString& kXSIURI;
-  static const nsAString& kXSDURI;
-  static const nsAString& kXSPrefix;
+  static const nsAString& kSOAPEncPrefix;
   static const nsAString& kXSIPrefix;
   static const nsAString& kXSITypeAttribute;
-  static const nsAString& kXSDPrefix;
+  static const nsAString& kXSPrefix;
   static const nsAString& kEncodingStyleAttribute;
   static const nsAString& kActorAttribute;
   static const nsAString& kMustUnderstandAttribute;

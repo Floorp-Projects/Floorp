@@ -169,8 +169,20 @@ nsSOAPEncoding::nsSOAPEncoding(): mEncoders(new nsSupportsHashtable),
 
   /* member initializers and constructor code */
 
-  mStyleURI.Assign(nsSOAPUtils::kSOAPEncodingURI);
-  mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODER_CONTRACTID);
+  mStyleURI.Assign(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_1]);
+  mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODER_1_1_CONTRACTID);
+  mRegistry = new nsSOAPEncodingRegistry(this);
+}
+
+nsSOAPEncoding::nsSOAPEncoding(unsigned short aVersion): mEncoders(new nsSupportsHashtable),
+  mDecoders(new nsSupportsHashtable)
+{
+  NS_INIT_ISUPPORTS();
+
+  /* member initializers and constructor code */
+
+  mStyleURI.Assign(*nsSOAPUtils::kSOAPEncURI[aVersion]);
+  mDefaultEncoding = do_GetService(aVersion ? NS_DEFAULTSOAPENCODER_1_2_CONTRACTID : NS_DEFAULTSOAPENCODER_1_1_CONTRACTID);
   mRegistry = new nsSOAPEncodingRegistry(this);
 }
 

@@ -41,7 +41,7 @@ nsHTTPSOAPTransport::~nsHTTPSOAPTransport()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsHTTPSOAPTransport, nsISOAPTransport)
+NS_IMPL_ISUPPORTS1_CI(nsHTTPSOAPTransport, nsISOAPTransport)
 
 #ifdef DEBUG
 #define DEBUG_DUMP_DOCUMENT(message,doc) \
@@ -285,3 +285,13 @@ NS_IMETHODIMP nsHTTPSOAPTransport::RemoveListener(nsISOAPTransportListener *aLis
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsHTTPSSOAPTransport::nsHTTPSSOAPTransport()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsHTTPSSOAPTransport::~nsHTTPSSOAPTransport()
+{
+}
+
+NS_IMPL_ISUPPORTS1_CI(nsHTTPSSOAPTransport, nsISupports)

@@ -40,7 +40,7 @@ class nsSOAPHeaderBlock : public nsSOAPBlock,
 {
 public:
   nsSOAPHeaderBlock();
-  nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments);
+  nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments, unsigned short aVersion);
   virtual ~nsSOAPHeaderBlock();
 
   NS_DECL_ISUPPORTS
@@ -56,6 +56,7 @@ public:
 protected:
   nsString mActorURI;
   PRBool mMustUnderstand;
+  PRBool mVersion;
 };
 
 #endif

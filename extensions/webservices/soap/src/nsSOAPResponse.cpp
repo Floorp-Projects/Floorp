@@ -51,16 +51,23 @@ NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
   nsCOMPtr<nsIDOMElement> body;
 
   *aFault = nsnull;
-  GetBody(getter_AddRefs(body));
+  nsresult rc = GetBody(getter_AddRefs(body));
+  if (NS_FAILED(rc)) return rc;
   if (body) {
-    nsSOAPUtils::GetSpecificChildElement(body, 
-      nsSOAPUtils::kSOAPEnvURI, nsSOAPUtils::kFaultTagName, 
-      getter_AddRefs(body));
-    if (body) {
-      *aFault = new nsSOAPFault(body);
-      if (!*aFault)
-        return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(*aFault);
+    unsigned short version;
+    rc = GetVersion(&version);
+    if (NS_FAILED(rc)) return rc;
+    if (rc != nsSOAPMessage::VERSION_UNKNOWN) {
+      nsCOMPtr<nsIDOMElement> fault;
+      nsSOAPUtils::GetSpecificChildElement(body, 
+        *nsSOAPUtils::kSOAPEnvURI[version], nsSOAPUtils::kFaultTagName, 
+        getter_AddRefs(fault));
+      if (fault) {
+        *aFault = new nsSOAPFault(fault);
+        if (!*aFault)
+          return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(*aFault);
+      }
     }
   }
   else {
