@@ -270,6 +270,36 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
   return result;
 }
 
-
+void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle) {
+  const char* prefix="     ";
+  fstream out(aFilename,ios::out);
+  out << "==================================================" << endl;
+  out << aTitle << endl;
+  out << "==================================================";
+  int i,j=0;
+  int written;
+  for(i=1;i<eHTMLTag_text;i++){
+    const char* tag=NS_EnumToTag((eHTMLTags)i);
+    out << endl << endl << "Tag: <" << tag << ">" << endl;
+    out << prefix;
+    written=0;
+    if(theDTD.IsContainer(i)) {
+      for(j=1;j<eHTMLTag_text;j++){
+        if(15==written) {
+          out << endl << prefix;
+          written=0;
+        }
+        if(theDTD.CanContain(i,j)){
+          tag=NS_EnumToTag((eHTMLTags)j);
+          if(tag) {
+            out<< tag << ", ";
+            written++;
+          }
+        }
+      }//for
+    }
+    else out<<"(not container)" << endl;
+  }
+}
 
 

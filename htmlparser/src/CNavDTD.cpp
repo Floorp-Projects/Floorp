@@ -34,6 +34,7 @@
 #include "plstr.h"
 #include "nsDTDUtils.h"
 #include "nsTagHandler.h"
+#include "nsViewSourceHTML.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
@@ -177,9 +178,17 @@ static eHTMLTags gInlineChildTags []={
   eHTMLTag_dfn,
   eHTMLTag_em,      eHTMLTag_embed,
   eHTMLTag_font,
+
+  eHTMLTag_form, //Added this for backward compatibility...
+
   eHTMLTag_i,       eHTMLTag_iframe,      eHTMLTag_ilayer,    eHTMLTag_img,       eHTMLTag_input,
   eHTMLTag_kbd,     
-  eHTMLTag_label,   eHTMLTag_li,
+  eHTMLTag_label,   
+  
+  eHTMLTag_layer, //Added this for backward compatibility...
+
+  
+  eHTMLTag_li,
   eHTMLTag_map,
   eHTMLTag_nobr,
   eHTMLTag_object,
@@ -189,8 +198,11 @@ static eHTMLTags gInlineChildTags []={
   eHTMLTag_s,       eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
   eHTMLTag_sound,   eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,
   eHTMLTag_sub,     eHTMLTag_sup,
+
+  eHTMLTag_table, //Added this for backward compatibility...
+
   eHTMLTag_textarea,eHTMLTag_tt,
-  eHTMLTag_u,
+  eHTMLTag_u,       eHTMLTag_userdefined,
   eHTMLTag_var,
   eHTMLTag_wbr,
   eHTMLTag_text,
@@ -506,7 +518,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   mBodyContext=new nsDTDContext();
   mFormContext=0;
   mMapContext=0;
-
+//  DebugDumpContainmentRules(*this,"c:/temp/DTDRules1.out","New CNavDTD Containment Rules");
 }
 
 /**
@@ -713,25 +725,45 @@ nsresult CNavDTD::ReleaseTokenPump(nsITagHandler* aHandler){
  */
 PRInt32 CNavDTD::DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag){
   PRInt32 result=kNoError;
-
-
   CToken* theNextToken=mParser->PeekToken();
-  if(theNextToken)  {
-    eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
-    if(eToken_newline==theType){
 
-      switch(aChildTag){
-        case eHTMLTag_pre:
-        case eHTMLTag_listing:
-            //we skip the first newline token inside PRE and LISTING
-          mParser->PopToken();
-          break;
-        default:
-          break;
-      }//switch
+  switch(aChildTag){
+    case eHTMLTag_pre:
+    case eHTMLTag_listing:
+      {
+        if(theNextToken)  {
+          eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
+          if(eToken_newline==theType){
 
-    }//if
-  }//if
+            switch(aChildTag){
+              case eHTMLTag_pre:
+              case eHTMLTag_listing:
+                  //we skip the first newline token inside PRE and LISTING
+                mParser->PopToken();
+                break;
+              default:
+                break;
+            }//switch
+
+          }//if
+        }//if
+      }
+      break;
+
+    case eHTMLTag_plaintext:
+    case eHTMLTag_xmp:
+      //grab the skipped content and dump it out as text...
+      if(theNextToken){
+        eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
+        if(eToken_skippedcontent==theType){
+          nsString& theText=((CAttributeToken*)theNextToken)->GetKey();
+          CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE);
+        }
+      }
+      break;
+    default:
+      break;
+  }//switch
   return result;
 }
 
@@ -835,6 +867,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(attrNode,attrCount);
   eHTMLTags     theParent=mBodyContext->mElements.Last();
   eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
+  PRInt32       theAttrCount;
 
   if(NS_OK==result) {
       //now check to see if this token should be omitted...
@@ -847,8 +880,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           {
             result=OpenHead(attrNode); //open the head...
             if(NS_OK==result) {
-              PRInt32 theCount;
-              result=CollectSkippedContent(attrNode,theCount);
+
+              result=CollectSkippedContent(attrNode,theAttrCount);
               mSink->SetTitle(attrNode.GetSkippedContent());
               result=CloseHead(attrNode); //close the head...
             }
@@ -1271,90 +1304,6 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
   return result;
 }
 
-
- /***********************************************************************************
-   The following tables determine the set of elements each tag can contain...
-  ***********************************************************************************/
-
-static eHTMLTags gTagSet1[]={ 
-  eHTMLTag_a,         eHTMLTag_abbr,      eHTMLTag_acronym,   
-  eHTMLTag_address,   eHTMLTag_applet,
-  eHTMLTag_blink,     eHTMLTag_b,         eHTMLTag_basefont,  eHTMLTag_bdo,
-  eHTMLTag_big,
-  eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
-  eHTMLTag_cite,      eHTMLTag_code,      
-  eHTMLTag_del,       eHTMLTag_dfn,       eHTMLTag_dir,
-  eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_dt,
-  eHTMLTag_em,        eHTMLTag_embed,
-  eHTMLTag_fieldset,  eHTMLTag_font,      eHTMLTag_form,      
-  eHTMLTag_h1,        eHTMLTag_h2,        eHTMLTag_h3,        
-  eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
-  eHTMLTag_hr,        eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,
-  eHTMLTag_input,     eHTMLTag_ins,       eHTMLTag_isindex,   
-  
-  eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_layer,     eHTMLTag_li,
-  eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
-  eHTMLTag_noframes,  eHTMLTag_noscript,
-  eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_p,         eHTMLTag_pre,
-  eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-  eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
-  eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,
-  eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
-  
-  eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
-  eHTMLTag_userdefined,   eHTMLTag_var,   eHTMLTag_wbr,
-  eHTMLTag_whitespace};
-
-static eHTMLTags gTagSet2[]={ 
-  eHTMLTag_a,         eHTMLTag_abbr,      eHTMLTag_acronym,   
-  eHTMLTag_applet,    eHTMLTag_blink,
-  eHTMLTag_b,
-  eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
-  eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      
-  eHTMLTag_del,       eHTMLTag_dfn,       eHTMLTag_div,       
-  eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_hr,        
-  eHTMLTag_embed,
-  eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       
-  eHTMLTag_input,     eHTMLTag_ins,
-  eHTMLTag_kbd,        
-
-  eHTMLTag_label,     eHTMLTag_layer,     eHTMLTag_map,       eHTMLTag_newline,
-  eHTMLTag_nobr,      eHTMLTag_object,    eHTMLTag_p, 
-  eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-  eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
-  eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,    
-  eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
-
-  eHTMLTag_table,// XXX kipp was here
-
-  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
-  eHTMLTag_wbr,       eHTMLTag_whitespace};
-
-static eHTMLTags gTagSet3[]={ 
-  eHTMLTag_a,         eHTMLTag_abbr,      eHTMLTag_acronym,   
-  eHTMLTag_applet,    eHTMLTag_blink,
-  eHTMLTag_b,
-  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
-  eHTMLTag_body,      eHTMLTag_caption,   eHTMLTag_center,    eHTMLTag_cite,
-  eHTMLTag_code,      eHTMLTag_dd,        eHTMLTag_del,       eHTMLTag_dfn,        
-  eHTMLTag_div,       eHTMLTag_dt,        eHTMLTag_em,        eHTMLTag_fieldset,    
-  eHTMLTag_embed,
-  eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
-  eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
-  eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
-
-  eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_li,        eHTMLTag_map,
-  
-  eHTMLTag_newline,   eHTMLTag_noframes,
-  eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p,         eHTMLTag_pre,
-  eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-  eHTMLTag_samp,      eHTMLTag_small,     eHTMLTag_spacer,
-  eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
-  eHTMLTag_td,        eHTMLTag_text,
-  
-  eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined,
-  eHTMLTag_var,       eHTMLTag_wbr,       eHTMLTag_whitespace};
-
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...
   ***********************************************************************************/
@@ -1429,7 +1378,12 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       break;
 
       case eHTMLTag_button:
-        result=FindTagInSet(aChild,gTagSet3,sizeof(gTagSet3)/sizeof(eHTMLTag_unknown));
+        {
+          static eHTMLTags okTags[]={eHTMLTag_caption,eHTMLTag_legend};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
+          if(PR_FALSE==result)
+            result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
+        }
         break;
 
       case eHTMLTag_caption:    case eHTMLTag_center:
@@ -1502,7 +1456,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
       case eHTMLTag_html:
         {
-          static eHTMLTags okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_script};
+          static eHTMLTags okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_script,eHTMLTag_noscript};
           result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
@@ -1557,38 +1511,25 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         result=PRBool((eHTMLTag_option==aChild) || (aParent==aChild));
         break;
 
-      case eHTMLTag_p:
-        {
-          static eHTMLTags datalistTags[]={eHTMLTag_dt,eHTMLTag_dd};
-
-          if(eHTMLTag_p==aChild)
-            result=PR_FALSE;
-          if(eHTMLTag_div==aChild)
-            result=PR_FALSE;
-          else if(FindTagInSet(aChild,datalistTags,sizeof(datalistTags)/sizeof(eHTMLTag_unknown))) {
-            //we now allow DT/DD inside a paragraph, so long as a DL is open...
-            if(PR_TRUE==HasOpenContainer(eHTMLTag_dl)) {
-              if(PR_TRUE==HasOpenContainer(eHTMLTag_dt))
-                result=PR_FALSE;
-            } else
-              result=PR_TRUE;
-          }
-          else
-            result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
-        }
-        break;
-
       case eHTMLTag_applet:
       case eHTMLTag_object:
         if(eHTMLTag_param==aChild) {
           result=PR_TRUE;
           break;
         }
-        //otherwise fall through...
+        result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
+        break;
 
       case eHTMLTag_address:
+        if(eHTMLTag_p==aChild) {
+          result=PR_TRUE;
+          break;
+        }
+        //else fall through...
+
+      case eHTMLTag_p:
       case eHTMLTag_pre:
-        result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
+        result=FindTagInSet(aChild,gInlineChildTags,sizeof(gInlineChildTags)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_script:
@@ -3325,8 +3266,7 @@ CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToke
  *  @return new token or null
  */
 nsresult
-CNavDTD::ConsumeContentToEndTag(const nsString& aString,
-                                PRUnichar aChar,
+CNavDTD::ConsumeContentToEndTag(PRUnichar aChar,
                                 eHTMLTags aChildTag,
                                 CScanner& aScanner,
                                 CToken*& aToken){
@@ -3335,7 +3275,7 @@ CNavDTD::ConsumeContentToEndTag(const nsString& aString,
   //consume all the input until we find a matching end tag.
 
   nsAutoString endTag("</");
-  endTag.Append(aString);
+  endTag.Append(NS_EnumToTag(aChildTag));
   endTag.Append(">");
   aToken=gTokenRecycler.CreateTokenOfType(eToken_skippedcontent,aChildTag,endTag);
   return aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
@@ -3352,7 +3292,15 @@ CNavDTD::ConsumeContentToEndTag(const nsString& aString,
  *  @return new token or null 
  */
 
-static eHTMLTags gSkippedContentTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea};
+static eHTMLTags gSkippedContentTags[]=
+  { eHTMLTag_noscript,
+    eHTMLTag_plaintext, eHTMLTag_script,   eHTMLTag_style, 
+    eHTMLTag_title,     eHTMLTag_textarea, eHTMLTag_xmp};
+
+static eHTMLTags gSkippedContentTargets[]=
+  { eHTMLTag_noscript,
+    eHTMLTag_html,      eHTMLTag_script,   eHTMLTag_style, 
+    eHTMLTag_title,     eHTMLTag_textarea, eHTMLTag_xmp};
 
 nsresult
 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
@@ -3374,16 +3322,14 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
         eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
 
-        if(FindTagInSet(theTag,gSkippedContentTags,sizeof(gSkippedContentTags)/sizeof(eHTMLTag_unknown))) {
+        PRInt32 theIndex=IndexOfTagInSet(theTag,gSkippedContentTags,sizeof(gSkippedContentTags)/sizeof(eHTMLTag_unknown));
+        if(-1<theIndex) {
 
             //Do special case handling for <script>, <style>, <title> or <textarea>...
           CToken*   skippedToken=0;
-          nsString& str=aToken->GetStringValueXXX();
-          result=ConsumeContentToEndTag(str,aChar,theTag,aScanner,skippedToken);
+          result=ConsumeContentToEndTag(aChar,gSkippedContentTargets[theIndex],aScanner,skippedToken);
     
           if((NS_OK==result) && skippedToken){
-              //now we strip the ending sequence from our new SkippedContent token...
-            nsString& skippedText=((CSkippedContentToken*)skippedToken)->GetKey();    
             mTokenDeque.Push(skippedToken);
   
             //In the case that we just read a given tag, we should go and

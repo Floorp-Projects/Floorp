@@ -805,59 +805,20 @@ nsresult WriteNBSP(PRInt32 aCount, nsIContentSink& aSink) {
  *  @param   
  *  @return  result status
  */
-nsresult WriteText(CToken* aToken,nsIContentSink& aSink) {
+nsresult CViewSourceHTML::WriteText(nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveSpace) {
   nsresult result=NS_OK;
 
-  nsString& theText=aToken->GetStringValueXXX();
-  PRInt32 theStart=0;
-  PRInt32 theOffset=theText.Find(kNewLine,theStart);
-  if(-1<theOffset){
-    while(-1!=theOffset){
-      nsString temp;
-      theText.Mid(temp,theStart,theOffset-theStart-1);
-      CTextToken theToken(temp);  
-      nsCParserNode theNode((CToken*)&theToken,0);
-      result=aSink.AddLeaf(theNode); //just dump the whole string...
-      WriteNewline(aSink);
-      theStart=theOffset+1;
-      theOffset=theText.Find(kNewLine,theStart);
-    }
-    if(theStart>=theText.Length())
-      return result;
-  }
-  nsString temp;
-  theText.Mid(temp,theStart,theText.Length()-theStart);
-  CTextToken theToken(temp);  
-  nsCParserNode theNode((CToken*)&theToken,0);
-  result=aSink.AddLeaf(theNode); //just dump the whole string...
-
-  return result;
-}
-
-/**
- *  This method gets called when a comment needs to be saved.
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  result status
- */
-nsresult WriteComment(CToken* aToken,nsIContentSink& aSink) {
-  nsresult result=NS_OK;
-
-  SetColor("green",PR_TRUE,aSink);
-  SetStyle(eHTMLTag_i,PR_TRUE,aSink);
-
-  nsString&   theText=aToken->GetStringValueXXX();
   CTextToken  theTextToken;
   nsCParserNode theTextNode((CToken*)&theTextToken,0);
   nsString&   temp=theTextToken.GetStringValueXXX();
 
-  PRInt32 theEnd=theText.Length();
+  PRInt32 theEnd=aTextString.Length();
   PRInt32 theOffset=0;
 
   while(theOffset<theEnd){
-    switch(theText[theOffset]){
-      case kCR:
+    switch(aTextString[theOffset]){
+      case kCR: break;
+      case kLF:
         {
           if(temp.Length())
             result=aSink.AddLeaf(theTextNode); //just dump the whole string...
@@ -866,7 +827,7 @@ nsresult WriteComment(CToken* aToken,nsIContentSink& aSink) {
         temp="";
         break;
       case kSpace:
-        if(kSpace==theText[theOffset+1]) {
+        if((PR_TRUE==aPreserveSpace) && (kSpace==aTextString[theOffset+1])) {
           if(temp.Length())
             result=aSink.AddLeaf(theTextNode); //just dump the whole string...
           WriteNBSP(1,aSink);
@@ -876,30 +837,16 @@ nsresult WriteComment(CToken* aToken,nsIContentSink& aSink) {
         //fall through...
       default:
           //scan ahead looking for valid chars...
-        temp+=theText[theOffset];
+        temp+=aTextString[theOffset];
         break;
     }//switch...
     theOffset++;
   }
   if(temp.Length())
     result=aSink.AddLeaf(theTextNode); //just dump the whole string...
-  SetStyle(eHTMLTag_i,PR_FALSE,aSink);
-  SetStyle(eHTMLTag_font,PR_FALSE,aSink);
 
   return result;
 }
-
-/*
-        {
-
-          PRInt32 theFirst=theOffset;
-          while((++theOffset<theEnd) && (kNewLine!=theText[theOffset]) && (kSpace!=theText[theOffset]));
-          theText.Mid(temp,theFirst,theOffset-theFirst);
-          CTextToken theToken(temp);  
-          nsCParserNode theNode((CToken*)&theToken,0);
-          
-        }
-*/
 
 /**
  *  This method gets called when a tag needs to be sent out
@@ -1009,11 +956,21 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
       break;
 
     case eToken_comment:
-      WriteComment(aToken,*mSink);
+      {
+        SetColor("green",PR_TRUE,*mSink);
+        SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
+        nsString& theText=aToken->GetStringValueXXX();
+        WriteText(theText,*mSink,PR_TRUE);
+        SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
+        SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
+      }
       break;
 
     case eToken_text:
-      WriteText(aToken,*mSink);
+      {
+        nsString& theText=aToken->GetStringValueXXX();
+        WriteText(theText,*mSink,PR_FALSE);
+      }
       break;
 
     case eToken_instruction:

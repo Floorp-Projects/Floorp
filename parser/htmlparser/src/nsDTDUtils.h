@@ -31,6 +31,7 @@
 #include "nsCRT.h"
 #include "nsDeque.h"
 #include "nsIDTD.h"
+#include <fstream.h>
 
 /***************************************************************
   Before digging into the NavDTD, we'll define a helper 
@@ -45,42 +46,7 @@
   you can see the htmltags on the stack if its not dynamic.
  ***************************************************************/
 
-/**
- * This method quickly scans the given set of tags,
- * looking for the given tag.
- * @update	gess8/27/98
- * @param   aTag -- tag to be search for in set
- * @param   aTagSet -- set of tags to be searched
- * @return
- */
-inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
-  PRInt32 index;
-
-  for(index=0;index<aCount;index++)
-    if(aTag==aTagSet[index]) {
-      return PR_TRUE;
-    }
-  return PR_FALSE;
-}
-
-
-/**
- * Called from various DTD's to determine the type of data in the buffer...
- * @update	gess11/20/98
- * @param 
- * @return
- */
-inline PRBool BufferContainsHTML(nsString& aBuffer){
-  PRBool result=PR_FALSE;
-  nsString temp;
-  aBuffer.Left(temp,200);
-  temp.ToLowerCase();
-  if((-1<temp.Find("<html") || (-1<temp.Find("!doctype html public \"-//w3c//dtd html")))) {
-    result=PR_TRUE;
-  }
-  return result;
-}
-
+void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 
 //#define _dynstack 1
 class nsTagStack {
@@ -174,6 +140,56 @@ public:
   virtual PRBool        HandleCapturedTokens(CToken* aToken,nsIDTD* aDTD)=0;
 };
 
+/************************************************************************
+  Here are a few useful utility methods...
+ ************************************************************************/
+
+/**
+ * This method quickly scans the given set of tags,
+ * looking for the given tag.
+ * @update	gess8/27/98
+ * @param   aTag -- tag to be search for in set
+ * @param   aTagSet -- set of tags to be searched
+ * @return
+ */
+inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
+  PRInt32 index;
+
+  for(index=0;index<aCount;index++)
+    if(aTag==aTagSet[index]) {
+      return index;
+    }
+  return kNotFound;
+}
+
+/**
+ * This method quickly scans the given set of tags,
+ * looking for the given tag.
+ * @update	gess8/27/98
+ * @param   aTag -- tag to be search for in set
+ * @param   aTagSet -- set of tags to be searched
+ * @return
+ */
+inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
+  return PRBool(-1<IndexOfTagInSet(aTag,aTagSet,aCount));
+}
+
+/**
+ * Called from various DTD's to determine the type of data in the buffer...
+ * @update	gess11/20/98
+ * @param 
+ * @return
+ */
+inline PRBool BufferContainsHTML(nsString& aBuffer){
+  PRBool result=PR_FALSE;
+  nsString temp;
+  aBuffer.Left(temp,200);
+  temp.ToLowerCase();
+  if((-1<temp.Find("<html") || (-1<temp.Find("!doctype html public \"-//w3c//dtd html")))) {
+    result=PR_TRUE;
+  }
+  return result;
+}
 
 #endif
 
