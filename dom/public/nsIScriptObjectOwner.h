@@ -42,6 +42,8 @@ class nsIScriptContext;
  */
 class nsIScriptObjectOwner : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ISCRIPTOBJECTOWNER_IID; return iid; }
+
   /**
    * Return the script object associated with this object.
    * Create a script object if not present.
