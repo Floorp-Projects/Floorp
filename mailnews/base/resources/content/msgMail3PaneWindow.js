@@ -380,7 +380,7 @@ function loadStartPage() {
 
 function PerformExpandForAllOpenServers(tree)
 {
-	dump("PerformExpandForAllOpenServers()\n");
+	//dump("PerformExpandForAllOpenServers()\n");
 
 	var uri = null;
 	var open = null;
@@ -394,16 +394,16 @@ function PerformExpandForAllOpenServers(tree)
 				var treeitems = treechild.childNodes;
 				for ( var j = treeitems.length - 1; j >= 0; j--) {
 					open = treeitems[j].getAttribute('open');
-					dump("open="+open+"\n");
+					//dump("open="+open+"\n");
 					if (open == "true") {
 						var isServer = (treeitems[j].getAttribute('IsServer') == "true");
-						dump("isServer="+isServer+"\n");
+						//dump("isServer="+isServer+"\n");
 						if (isServer) {
 							uri = treeitems[j].getAttribute('id');
-							dump("uri="+uri+"\n");
+							//dump("uri="+uri+"\n");
 							server = GetServer(uri);
 							if (server) {
-								dump("PerformExpand on " + uri + "\n");
+								//dump("PerformExpand on " + uri + "\n");
 								server.PerformExpand();
 							}
 						}
@@ -759,7 +759,7 @@ function FolderPaneOnClick(event)
         var treeitem = event.target.parentNode.parentNode.parentNode;
 		var open = treeitem.getAttribute('open');
 		if(open == "true") {
-			dump("twisty open\n");
+			//dump("twisty open\n");
 
 			var item = event.target.parentNode.parentNode.parentNode;
 			if (item.nodeName == "treeitem") {
@@ -794,12 +794,12 @@ function FolderPaneDoubleClick(treeitem)
 				var uri = treeitem.getAttribute("id");
 				server = GetServer(uri);
 				if (server) {
-					dump("double clicking open, PerformExpand()\n");
+					//dump("double clicking open, PerformExpand()\n");
 					server.PerformExpand();
 				}
 			}
 			else {
-				dump("double clicking close, don't PerformExpand()\n");
+				//dump("double clicking close, don't PerformExpand()\n");
 			}
 		}
 	}
