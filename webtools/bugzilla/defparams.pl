@@ -131,6 +131,10 @@ sub check_despotbaseurl {
 }
 
 
+DefParam("headerhtml",
+         "Additional HTML to add to the HEAD area of documents, eg. links to stylesheets.",
+         "l",
+         '');
 
 
 DefParam("bannerhtml",

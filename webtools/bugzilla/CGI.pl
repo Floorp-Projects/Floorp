@@ -220,17 +220,20 @@ sub make_options {
     my $last = "";
     my $popup = "";
     my $found = 0;
-    foreach my $item (@$src) {
-        if ($item eq "-blank-" || $item ne $last) {
-            if ($item eq "-blank-") {
-		$item = "";
-	    }
-            $last = $item;
-            if ($isregexp ? $item =~ $default : $default eq $item) {
-                $popup .= "<OPTION SELECTED VALUE=\"$item\">$item";
-                $found = 1;
-            } else {
-		$popup .= "<OPTION VALUE=\"$item\">$item";
+
+    if ($src) {
+        foreach my $item (@$src) {
+            if ($item eq "-blank-" || $item ne $last) {
+                if ($item eq "-blank-") {
+                    $item = "";
+                }
+                $last = $item;
+                if ($isregexp ? $item =~ $default : $default eq $item) {
+                    $popup .= "<OPTION SELECTED VALUE=\"$item\">$item";
+                    $found = 1;
+                } else {
+                    $popup .= "<OPTION VALUE=\"$item\">$item";
+                }
             }
         }
     }
@@ -293,6 +296,9 @@ sub quietly_check_login() {
                 $::usergroupset = $row[0];
             }
         }
+    }
+    if (!$loginok) {
+        delete $::COOKIE{"Bugzilla_login"};
     }
     return $loginok;
 }
@@ -468,7 +474,8 @@ sub PutHeader {
 	$h2 = "";
     }
 
-    print "<HTML><HEAD><TITLE>$title</TITLE></HEAD>\n";
+    print "<HTML><HEAD>\n<TITLE>$title</TITLE>\n";
+    print Param("headerhtml") . "\n</HEAD>\n";
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";
     print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">\n";
 

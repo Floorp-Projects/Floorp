@@ -219,11 +219,16 @@ foreach $v (@::legal_versions) {
 
 
 for $p (@::legal_product) {
-    foreach $c (@{$::components{$p}}) {
-        $jscript .= "cpts['$c'].push('$p');\n";
+    if ($::components{$p}) {
+        foreach $c (@{$::components{$p}}) {
+            $jscript .= "cpts['$c'].push('$p');\n";
+        }
     }
-    foreach $v (@{$::versions{$p}}) {
-        $jscript .= "vers['$v'].push('$p');\n";
+
+    if ($::versions{$p}) {
+        foreach $v (@{$::versions{$p}}) {
+            $jscript .= "vers['$v'].push('$p');\n";
+        }
     }
 }
 
