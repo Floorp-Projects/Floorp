@@ -245,7 +245,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
         // The OS might have thought this extension was a different mime type.
         // We must reset this to match the actual mime type.  Otherwise, we
         // won't use this MIMEInfo when we see the real mime type next time.
-        mimeInfo->SetMIMEType(aMimeContentType);
+        //mimeInfo->SetMIMEType(aMimeContentType);
       }
     }
   }
