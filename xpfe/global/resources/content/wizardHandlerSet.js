@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*-
+/* -*- Mode: Java; tab-width: 2; c-basic-offset: 2; -*-
  * 
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -58,6 +58,11 @@ function DEF_onNext()
   var oParent = this.WHANDLER;
   if( oParent.nextButton.getAttribute("disabled") == "true" )
     return;
+
+  // make sure page is valid!
+  if (!oParent.SM.PageIsValid())
+      return;
+  
 	oParent.SM.SavePageData( this.currentPageTag, null, null, null );      // persist data
   var nextPageTag = this.wizardMap[this.currentPageTag].next;
 	this.LoadPage( nextPageTag, false );     // load the next page
