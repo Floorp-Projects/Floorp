@@ -143,6 +143,7 @@
 
 #messagepane {
   border: 1px solid #FFFFFF;
+  border-right: none;
 }
 
 #messagepanebox[focusring="true"] > #messagepane {

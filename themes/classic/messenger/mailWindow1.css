@@ -125,6 +125,7 @@
 
 #messagepane {
   border: 1px solid -moz-Field;
+  border-right: none;
 }
 
 #messagepanebox[focusring="true"] > #messagepane {
