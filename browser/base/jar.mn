@@ -50,6 +50,7 @@ en-US.jar:
         locale/en-US/browser/aboutDialog.dtd          (locale/aboutDialog.dtd)
 *       locale/en-US/browser/browser.dtd              (locale/browser.dtd)
         locale/en-US/browser/browser.properties       (locale/browser.properties)
+        locale/en-US/browser/contentAreaCommands.properties  (locale/contentAreaCommands.properties)
         locale/en-US/browser/metaData.dtd             (locale/metaData.dtd)
         locale/en-US/browser/metaData.properties      (locale/metaData.properties)
         locale/en-US/browser/openLocation.dtd         (locale/openLocation.dtd)

@@ -674,9 +674,10 @@ function getPostData()
   return null;
 }
 
+//XXXPch: that that be removed.
 function getStringBundle()
 {
-  const bundleURL = "chrome://communicator/locale/contentAreaCommands.properties";
+  const bundleURL = "chrome://browser/locale/contentAreaCommands.properties";
   
   const sbsContractID = "@mozilla.org/intl/stringbundle;1";
   const sbsIID = Components.interfaces.nsIStringBundleService;
