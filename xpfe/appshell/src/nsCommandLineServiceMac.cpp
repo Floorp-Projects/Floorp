@@ -29,7 +29,6 @@
 // Mozilla
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
-#include "nsAppleEvents.h"
 #include "nsDebug.h"
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
@@ -72,6 +71,7 @@ nsMacCommandLine::nsMacCommandLine()
 nsMacCommandLine::~nsMacCommandLine()
 //----------------------------------------------------------------------------------------
 {
+  ShutdownAEHandlerClasses();
 }
 
 
