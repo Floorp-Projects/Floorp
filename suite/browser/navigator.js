@@ -35,7 +35,12 @@
 
     var history = Components.classes["component://netscape/browser/global-history"].getService();
     if (history) history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-    if (history) history.SetPageTitle(window.content.location.href, window.content.document.title);
+    try {
+	if (history) history.SetPageTitle(window.content.location.href, window.content.document.title);
+    }
+    catch (ex) {
+	dump("failed to set the page title.\n");
+    }
   }
 
 function UpdateBookmarksLastVisitiedDate(event)
