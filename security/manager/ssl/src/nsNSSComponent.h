@@ -34,6 +34,7 @@
 #include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
+#include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsIScriptSecurityManager.h"
