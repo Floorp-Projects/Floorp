@@ -718,7 +718,11 @@ function DoCellSelection()
 
   // Currently, we can only allow advanced editing on ONE cell element at a time
   //   else we ignore CSS, JS, and HTML attributes not already in dialog
-  SetElementEnabledById("AdvancedEditButton2", gSelectedCellCount == 1);
+  SetElementEnabled(gDialog.AdvancedEditCell, gSelectedCellCount == 1);
+
+  gDialog.AdvancedEditCell.setAttribute("tooltiptext", 
+    gSelectedCellCount > 1 ? GetString("AdvancedEditForCellMsg") :
+                             gDialog.AdvancedEditCellToolTipText);
 }
 
 function SetSelectionButtons()
