@@ -39,7 +39,7 @@ nsMimeHeaders::~nsMimeHeaders()
 
 NS_IMPL_ISUPPORTS(nsMimeHeaders, NS_GET_IID(nsIMimeHeaders))
 
-nsresult nsMimeHeaders::Initialize(const char * aAllHeaders)
+nsresult nsMimeHeaders::Initialize(const char * aAllHeaders, PRInt32 allHeadersSize)
 {
 	/* just in case we want to reuse the object, cleanup...*/
 	if (mHeaders)
@@ -47,7 +47,7 @@ nsresult nsMimeHeaders::Initialize(const char * aAllHeaders)
 
 	mHeaders = MimeHeaders_new();
 	if (mHeaders)
-		return MimeHeaders_parse_line(aAllHeaders, nsCRT::strlen(aAllHeaders), mHeaders);
+		return MimeHeaders_parse_line(aAllHeaders, allHeadersSize, mHeaders);
 	
 	return NS_ERROR_OUT_OF_MEMORY;
 }
@@ -60,3 +60,4 @@ nsresult nsMimeHeaders::ExtractHeader(const char *headerName, PRBool getAllOfThe
 	*_retval = MimeHeaders_get(mHeaders, headerName, PR_FALSE, getAllOfThem);
 	return NS_OK;
 }
+

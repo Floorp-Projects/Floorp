@@ -36,7 +36,7 @@
 [scriptable, uuid(13E16676-6648-11d3-A72F-0060B0EB39B5)]
 interface nsIMimeHeaders : nsISupports {
 
-	void initialize([const] in string allHeaders);
+	void initialize([const] in string allHeaders, in long allHeadersSize);
 	string extractHeader ([const] in string headerName, in boolean getAllOfThem);
 };
 

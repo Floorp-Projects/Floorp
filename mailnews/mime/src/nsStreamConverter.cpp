@@ -939,7 +939,7 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
         if (NS_SUCCEEDED(rv))
         {
           if (*workHeaders)
-            mimeHeaders->Initialize((*workHeaders)->all_headers);
+            mimeHeaders->Initialize((*workHeaders)->all_headers, (*workHeaders)->all_headers_fp);
           mMimeStreamConverterListener->OnHeadersReady(mimeHeaders);
         }
         else
