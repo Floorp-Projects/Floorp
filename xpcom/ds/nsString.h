@@ -153,8 +153,8 @@ class NS_BASE nsString {
   ///comparision methods...
   //@{
     virtual PRInt32       Compare(const nsString &S,PRBool aIgnoreCase=PR_FALSE) const;
-    virtual PRInt32       Compare(const char *anISOLatin1,PRInt32 aLength=-1,PRBool aIgnoreCase=PR_FALSE) const;
-    virtual PRInt32       Compare(const PRUnichar *aString,PRInt32 aLength=-1,PRBool aIgnoreCase=PR_FALSE) const;
+    virtual PRInt32       Compare(const char *anISOLatin1,PRBool aIgnoreCase=PR_FALSE,PRInt32 aLength=-1) const;
+    virtual PRInt32       Compare(const PRUnichar *aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aLength=-1) const;
 
             PRBool        operator==(const nsString &S) const;
             PRBool        operator==(const char *anISOLatin1) const;

@@ -618,8 +618,8 @@ nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
     }
 
   } else {
-    PRInt32 len=(kNotFound==aLength) ? nsCRT::strlen(aStr) : aLength;
-    if(mCapacity< len ) 
+    PRInt32 len=(aLength<0) ? nsCRT::strlen(aStr) : aLength;
+    if(mCapacity<=len) 
       EnsureCapacityFor(len);
     nsCRT::memcpy(mStr,aStr,len*sizeof(chartype));
     mLength=len;
@@ -638,8 +638,8 @@ nsString& nsString::SetString(const PRUnichar* aStr,PRInt32 aLength) {
  */
 nsString& nsString::SetString(const char* anISOLatin1,PRInt32 aLength) {
   if(anISOLatin1!=0) {
-    PRInt32 len=(kNotFound==aLength) ? nsCRT::strlen(anISOLatin1) : aLength; 
-    if(mCapacity<len) 
+    PRInt32 len=(aLength<0) ? nsCRT::strlen(anISOLatin1) : aLength; 
+    if(mCapacity<=len) 
       EnsureCapacityFor(len);
     for(int i=0;i<len;i++) {
       mStr[i]=chartype(anISOLatin1[i]);
@@ -698,8 +698,8 @@ nsString& nsString::Append(const nsString& aString,PRInt32 aLength) {
  */
 nsString& nsString::Append(const char* anISOLatin1,PRInt32 aLength) {
   if(anISOLatin1!=0) {
-    PRInt32 len=(kNotFound==aLength) ? strlen(anISOLatin1) : aLength;
-    if(mLength+len > mCapacity) {
+    PRInt32 len=(aLength<0) ? strlen(anISOLatin1) : aLength;
+    if(mLength+len >= mCapacity) {
       EnsureCapacityFor(mLength+len);
     }
     for(int i=0;i<len;i++) {
@@ -729,8 +729,8 @@ nsString& nsString::Append(char aChar) {
  */
 nsString& nsString::Append(const PRUnichar* aString,PRInt32 aLength) {
   if(aString!=0) {
-    PRInt32 len=(kNotFound==aLength) ? nsCRT::strlen(aString) : aLength;
-    if(mLength+len > mCapacity) {
+    PRInt32 len=(aLength<0) ? nsCRT::strlen(aString) : aLength;
+    if(mLength+len >= mCapacity) {
       EnsureCapacityFor(mLength+len);
     }
     if(len>0)
@@ -918,7 +918,7 @@ PRInt32 nsString::Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
       return aCopy.mLength;
     }
 
-    if(mLength+aCount > mCapacity) {
+    if(mLength+aCount >= mCapacity) {
       EnsureCapacityFor(mLength+aCount);
     }
 
@@ -961,7 +961,7 @@ PRInt32 nsString::Insert(PRUnichar aChar,PRInt32 anOffset){
   //1st optimization: If you're inserting at end, then simply append!
   if(anOffset<mLength){
 
-    if(mLength+1> mCapacity) {
+    if(mLength+1>=mCapacity) {
       EnsureCapacityFor(mLength+1);
     }
 
@@ -1444,7 +1444,7 @@ PRInt32 nsString::RFind(PRUnichar aChar,PRBool aIgnoreCase) const{
  * @param   aIgnoreCase tells us how to treat case
  * @return  -1,0,1
  */
-PRInt32 nsString::Compare(const char *anISOLatin1,PRInt32 aLength,PRBool aIgnoreCase) const {
+PRInt32 nsString::Compare(const char *anISOLatin1,PRBool aIgnoreCase,PRInt32 aLength) const {
   NS_ASSERTION(0!=anISOLatin1,kNullPointerError);
 
   if(-1!=aLength) {
@@ -1485,7 +1485,7 @@ PRInt32 nsString::Compare(const nsString &S,PRBool aIgnoreCase) const {
  * @param 
  * @return
  */
-PRInt32 nsString::Compare(const PRUnichar* aString,PRInt32 aLength,PRBool aIgnoreCase) const {
+PRInt32 nsString::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aLength) const {
   NS_ASSERTION(0!=aString,kNullPointerError);
   if(-1!=aLength) {
 
@@ -1856,7 +1856,8 @@ NS_BASE int fputs(const nsString& aString, FILE* out)
   } else {
     aString.ToCString(cp, len + 1);
   }
-  ::fwrite(cp, 1, len, out);
+  if(len>0)
+    ::fwrite(cp, 1, len, out);
   if (cp != buf) {
     delete cp;
   }
