@@ -541,9 +541,8 @@ nsJSIID::Enumerate(JSContext *cx, JSObject *obj,
 /*
 * nsJSCID supports 'createInstance' and 'getService'. These are implemented
 * using the (somewhat complex) nsIXPCScriptable scheme so that when called
-* they can do security checks (knows in which JSContect is calling) and also
-* so that 'getService' can add a fancy FinalizeListener to follow the
-* ServiceManager's protocol for releasing a service.
+* they can do security checks (i.e so that the methods know in which JSContect 
+* the call is being made).
 */
 
 // {16A43B00-F116-11d2-985A-006008962422}
@@ -712,43 +711,6 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
 /***************************************************************************/
 /***************************************************************************/
 
-// {23423AA0-F142-11d2-985A-006008962422}
-#define NS_SERVICE_RELEASER_IID \
-{ 0x23423aa0, 0xf142, 0x11d2, \
-  { 0x98, 0x5a, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-
-class ServiceReleaser : public nsIXPConnectFinalizeListener
-{
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_SERVICE_RELEASER_IID)
-    NS_DECL_ISUPPORTS
-    NS_IMETHOD AboutToRelease(nsISupports* aObj);
-    ServiceReleaser(const nsCID& aCID);
-
-    virtual ~ServiceReleaser();
-private:
-    ServiceReleaser(); // not implemented
-    nsCID mCID;
-};
-
-NS_IMPL_ISUPPORTS2(ServiceReleaser, ServiceReleaser, nsIXPConnectFinalizeListener)
-
-ServiceReleaser::ServiceReleaser(const nsCID& aCID)
-    : mCID(aCID)
-{
-    NS_INIT_ISUPPORTS();
-}
-
-ServiceReleaser::~ServiceReleaser() {}
-
-NS_IMETHODIMP
-ServiceReleaser::AboutToRelease(nsISupports* aObj)
-{
-    return nsServiceManager::ReleaseService(mCID, aObj, nsnull);
-}
-
-/*********************************************/
-
 // {C46BC320-F13E-11d2-985A-006008962422}
 #define NS_CIDGETSERVICE_IID \
 { 0xc46bc320, 0xf13e, 0x11d2, \
@@ -861,6 +823,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
            !(iidobj = JSVAL_TO_OBJECT(val)) ||
            !(piid = xpc_JSObjectToID(cx, iidobj)))
         {
+            nsAllocator::Free(cid);
             ThrowException(NS_ERROR_XPC_BAD_IID, cx);
             *retval = JS_FALSE;
             return NS_OK;
@@ -871,12 +834,12 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     else
         iid = NS_GET_IID(nsISupports);
 
-    nsISupports* srvc;
     nsresult rv;
 
-    rv = nsServiceManager::GetService(*cid, iid, &srvc, nsnull);
+    nsCOMPtr<nsISupports> srvc;
+    rv = nsServiceManager::GetService(*cid, iid, getter_AddRefs(srvc), nsnull);
+    nsAllocator::Free(cid);
     NS_ASSERTION(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
-
     if(NS_FAILED(rv) || !srvc)
     {
         ThrowBadResultException(NS_ERROR_XPC_GS_RETURNED_FAILURE, cx, rv);
@@ -884,47 +847,27 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
         return NS_OK;
     }
 
-    nsIXPConnectWrappedNative* srvcWrapper = nsnull;
-
-    nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if(xpc)
+    nsCOMPtr<nsXPConnect> xpc = dont_AddRef(nsXPConnect::GetXPConnect());
+    if(!xpc)
     {
-        rv = xpc->WrapNative(cx, srvc, iid, &srvcWrapper);
-        NS_RELEASE(xpc);
+        ThrowBadResultException(NS_ERROR_UNEXPECTED, cx, rv);
+        *retval = JS_FALSE;
+        return NS_OK;
     }
 
-    if(NS_FAILED(rv) || !srvcWrapper)
+    nsCOMPtr<nsIXPConnectWrappedNative> srvcWrapper;
+    rv = xpc->WrapNative(cx, srvc, iid, getter_AddRefs(srvcWrapper));
+    if(NS_FAILED(rv))
     {
-        nsServiceManager::ReleaseService(*cid, srvc, nsnull);
-        nsAllocator::Free(cid);
         ThrowException(NS_ERROR_XPC_CANT_CREATE_WN, cx);
         *retval = JS_FALSE;
         return NS_OK;
     }
 
-    // This will eventually release the reference we got from
-    // nsServiceManager::GetService
-    ServiceReleaser* releaser = new ServiceReleaser(*cid);
-    if(releaser)
-    {
-        NS_ADDREF(releaser);
-        if(NS_FAILED(srvcWrapper->SetFinalizeListener(releaser)))
-        {
-            // Failure means that we are using a preexisting wrapper on
-            // this service that has already setup a listener. So, we just
-            // release our extra ref and trust the listener that is already in
-            // place to do the right thing.
-            NS_RELEASE(srvc);
-        }
-        NS_RELEASE(releaser);
-    }
-    nsAllocator::Free(cid);
-
     JSObject* srvcJSObj;
     srvcWrapper->GetJSObject(&srvcJSObj);
     *rval = OBJECT_TO_JSVAL(srvcJSObj);
     *retval = JS_TRUE;
-    NS_RELEASE(srvcWrapper);
 
     return NS_OK;
 }
