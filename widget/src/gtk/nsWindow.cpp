@@ -3746,7 +3746,7 @@ nsWindow::IMEDestroyIC()
   }
 
   // reset parent window for status window
-  if (xic->mInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
+  if (xic->mInputStyle & GDK_IM_STATUS_CALLBACKS) {
     xic->ResetStatusWindow(this);
   }
 
@@ -3757,11 +3757,26 @@ nsWindow::IMEDestroyIC()
     delete xic;
   } else {
     // xic and mIMEShellWindow are valid
-    // see discussion in bug 53989
+
+    nsWindow *gwin = xic->GetGlobalFocusWindow();
     nsWindow *fwin = xic->GetFocusWindow();
+
+    // bug 53989
+    // if the current focused widget in xic is being destroyed,
+    // we need to change focused window to mIMEShellWindow
     if (fwin && fwin == this) {
       xic->SetFocusWindow(mIMEShellWindow);
       xic->UnsetFocusWindow();
+
+      // bug 142873
+      // if focus is already changed before, we need to change
+      // focus window to the current focused window again for XIC
+      if (gwin && gwin != this && sFocusWindow == gwin) {
+        nsIMEGtkIC *focused_xic = gwin->IMEGetInputContext(PR_FALSE);
+        if (focused_xic) {
+          focused_xic->SetFocusWindow(gwin);
+        }
+      }
     }
   }
 }
