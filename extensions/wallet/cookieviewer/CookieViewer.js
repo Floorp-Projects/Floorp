@@ -26,7 +26,8 @@
 var cookiemanager         = null;          // cookiemanager interface
 var permissionmanager     = null;          // permissionmanager interface
 var cookies               = [];            // array of cookies
-var permissions           = [];            // array of permissions
+var cpermissions           = [];           // array of cookie permissions
+var ipermissions           = [];           // array of image permissions
 var images                = [];            // array of images (NEW OBJECT)
 var deleted_cookies       = [];
 var deleted_permissions   = [];
@@ -320,11 +321,19 @@ function RestoreCookies()
 // function : <CookieViewer.js>::AddPermissionToList();
 // purpose  : creates an array of permission objects
 function AddPermissionToList(count, host, type, capability) {
-  permissions[count] = new Permission();
-  permissions[count].number = count;
-  permissions[count].host = host;
-  permissions[count].type = type;
-  permissions[count].capability = capability;
+  if (type == cookieType) {
+    cpermissions[count] = new Permission();
+    cpermissions[count].number = count;
+    cpermissions[count].host = host;
+    cpermissions[count].type = type;
+    cpermissions[count].capability = capability;
+  } else if (type == imageType) {
+    ipermissions[count] = new Permission();
+    ipermissions[count].number = count;
+    ipermissions[count].host = host;
+    ipermissions[count].type = type;
+    ipermissions[count].capability = capability;
+  }
 }
 
 // function : <CookieViewer.js>::Permission();
@@ -475,7 +484,7 @@ function onOK(){
        cperm_count<deletedCookiePermissions.length-1;
        cperm_count++) {
     permissionmanager.remove
-      (permissions[deletedCookiePermissions[cperm_count]].host, cookieType);
+      (cpermissions[deletedCookiePermissions[cperm_count]].host, cookieType);
   }
 
   var deletedImagePermissions = [];
@@ -485,7 +494,7 @@ function onOK(){
        iperm_count<deletedImagePermissions.length-1;
        iperm_count++) {
     permissionmanager.remove
-      (permissions[deletedImagePermissions[iperm_count]].host, imageType);
+      (ipermissions[deletedImagePermissions[iperm_count]].host, imageType);
   }
   return true;
 }
