@@ -253,7 +253,7 @@ CEditorFrame::MakeEditable()
     if (!editingSession)
         return NS_ERROR_FAILURE;
   
-    rv= editingSession->MakeWindowEditable(domWindow, PR_TRUE);
+    rv= editingSession->MakeWindowEditable(domWindow, NULL, PR_TRUE);
   
 
     return rv;  
