@@ -574,7 +574,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
     PRUint32 bufAmt = 0;
     if (mProcessingHeaders)
         bufAmt = bufLen;
-    else {
+    else if (bufLen) {
         // if the data ends in a linefeed, and we're in the middle
         // of a "part" (ie. mPartChannel exists) don't bother
         // buffering, go ahead and send the data we have. Otherwise
