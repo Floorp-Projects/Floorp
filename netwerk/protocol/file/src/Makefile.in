@@ -32,6 +32,7 @@ REQUIRES	= xpcom \
 		  string \
 		  exthandler \
 		  mimetype \
+		  pref \
 		  $(NULL)
 
 CPPSRCS		= \

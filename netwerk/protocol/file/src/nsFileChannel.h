@@ -80,8 +80,9 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(PRInt32 ioFlags, PRInt32 perm, nsIURI* uri);
+    nsresult Init(PRInt32 ioFlags, PRInt32 perm, nsIURI* uri, PRBool generateHTMLDirs = PR_FALSE);
     nsresult EnsureTransport();
+    nsresult SetStreamConverter();
 
 protected:
     nsCOMPtr<nsIFile>                   mFile;
@@ -104,6 +105,8 @@ protected:
     nsresult                            mStatus;
     nsCOMPtr<nsIProgressEventSink>      mProgress;
     nsCOMPtr<nsIRequest>                mCurrentRequest;
+    PRBool                              mGenerateHTMLDirs;
+
 #ifdef DEBUG
     PRThread*                           mInitiator;
 #endif
