@@ -377,6 +377,8 @@ nsObjectFrame::GetSkipSides() const
 #define IMAGE_EXT_JPG "jpg"
 #define IMAGE_EXT_PNG "png"
 #define IMAGE_EXT_XBM "xbm"
+#define IMAGE_EXT_BMP "bmp"
+#define IMAGE_EXT_ICO "ico"
 
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 
@@ -399,7 +401,9 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
        type.EqualsIgnoreCase(IMAGE_PPM) ||
        type.EqualsIgnoreCase(IMAGE_XBM) ||
        type.EqualsIgnoreCase(IMAGE_XBM2)||
-       type.EqualsIgnoreCase(IMAGE_XBM3))
+       type.EqualsIgnoreCase(IMAGE_XBM3)||
+       type.EqualsIgnoreCase(IMAGE_BMP) ||
+       type.EqualsIgnoreCase(IMAGE_ICO))
     {
       *aImage = PR_TRUE;
     }
@@ -432,7 +436,9 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
       if(ext.EqualsIgnoreCase(IMAGE_EXT_GIF) ||
          ext.EqualsIgnoreCase(IMAGE_EXT_JPG) ||
          ext.EqualsIgnoreCase(IMAGE_EXT_PNG) ||
-         ext.EqualsIgnoreCase(IMAGE_EXT_XBM))
+         ext.EqualsIgnoreCase(IMAGE_EXT_XBM) ||
+         ext.EqualsIgnoreCase(IMAGE_EXT_BMP) ||
+         ext.EqualsIgnoreCase(IMAGE_EXT_ICO))
       {
         *aImage = PR_TRUE;
       }

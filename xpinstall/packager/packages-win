@@ -128,6 +128,7 @@ bin\components\gkplugin.dll
 bin\components\gkview.dll
 bin\components\imggif.dll
 bin\components\imgjpeg.dll
+bin\components\imgbmp.dll
 bin\components\imglib2.dll
 bin\components\imglib2.xpt
 bin\components\imgpng.dll

@@ -45,6 +45,14 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 
+#include "prcpucfg.h" // To get IS_LITTLE_ENDIAN / IS_BIG_ENDIAN
+
+#if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
+#define LITTLE_TO_NATIVE16(x) ((((x) & 0xFF) << 8) | ((x) >> 8))
+#else
+#define LITTLE_TO_NATIVE16(x) x
+#endif
+
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
@@ -792,6 +800,97 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
    ((unsigned char) buf[4])==0x00 )
   {
     mContentType = nsCRT::strndup("image/x-jg", 10);
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = nsCRT::strndup("image/bmp", 9);
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  // ALWAYS KEEP THIS SNIFF AT THE END OF THE FILE!
+  if (len >= 4 && 
+      ((PRUint16*)buf)[0]==0 &&
+      (LITTLE_TO_NATIVE16(((PRUint16*)buf)[1]))==1) {
+    mContentType = nsCRT::strndup("image/x-icon", 12);
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = nsCRT::strndup("image/bmp", 9);
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = nsCRT::strndup("image/x-icon", 12);
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = nsCRT::strndup("image/bmp", 9);
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = nsCRT::strndup("image/x-icon", 12);
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = nsCRT::strndup("image/bmp", 9);
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = nsCRT::strndup("image/x-icon", 12);
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = nsCRT::strndup("image/bmp", 9);
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = nsCRT::strndup("image/x-icon", 12);
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = nsCRT::strndup("image/bmp", 9);
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = nsCRT::strndup("image/x-icon", 12);
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = nsCRT::strndup("image/bmp", 9);
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = nsCRT::strndup("image/x-icon", 12);
+    return;
+  }
+
+  if (len >= 2 && !nsCRT::strncmp(buf, "BM", 2)) {
+    mContentType = nsCRT::strndup("image/bmp", 9);
+    return;
+  }
+
+  // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
+  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+    mContentType = nsCRT::strndup("image/x-icon", 12);
     return;
   }
 

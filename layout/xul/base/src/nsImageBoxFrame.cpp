@@ -88,19 +88,160 @@
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
 #include "nsBoxLayoutState.h"
+#include "nsIDOMDocument.h"
+#include "nsIEventQueueService.h"
 
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsGUIEvent.h"
 
 #include "nsFormControlHelper.h"
 
 #define ONLOAD_CALLED_TOO_EARLY 1
 
+static void PR_CALLBACK
+HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
+{
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
+
+  if (!node) {
+    NS_ERROR("null or non-DOM node passed to HandleImagePLEvent!");
+
+    return;
+  }
+
+  nsCOMPtr<nsIDOMDocument> dom_doc;
+  node->GetOwnerDocument(getter_AddRefs(dom_doc));
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+
+  if (!doc) {
+    return;
+  }
+
+  nsCOMPtr<nsIPresShell> pres_shell;
+  doc->GetShellAt(0, getter_AddRefs(pres_shell));
+
+  if (!pres_shell) {
+    return;
+  }
+
+  nsCOMPtr<nsIPresContext> pres_context;
+  pres_shell->GetPresContext(getter_AddRefs(pres_context));
+
+  if (!pres_context) {
+    return;
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = aMessage;
+
+  aContent->HandleDOMEvent(pres_context, &event, nsnull, aFlags, &status);
+}
+
+static void PR_CALLBACK
+HandleImageOnloadPLEvent(PLEvent *aEvent)
+{
+  nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
+
+  HandleImagePLEvent(content, NS_IMAGE_LOAD,
+                     NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE);
+
+  NS_RELEASE(content);
+}
+
+static void PR_CALLBACK
+HandleImageOnerrorPLEvent(PLEvent *aEvent)
+{
+  nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
+
+  HandleImagePLEvent(content, NS_IMAGE_ERROR, NS_EVENT_FLAG_INIT);
+
+  NS_RELEASE(content);
+}
+
+static void PR_CALLBACK
+DestroyImagePLEvent(PLEvent* aEvent)
+{
+  delete aEvent;
+}
+
+// Fire off a PLEvent that'll asynchronously call the image elements
+// onload handler once handled. This is needed since the image library
+// can't decide if it wants to call it's observer methods
+// synchronously or asynchronously. If an image is loaded from the
+// cache the notifications come back synchronously, but if the image
+// is loaded from the netswork the notifications come back
+// asynchronously.
+
+void
+FireDOMEvent(nsIContent* aContent, PRUint32 aMessage)
+{
+  static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
+
+  nsCOMPtr<nsIEventQueueService> event_service =
+    do_GetService(kEventQueueServiceCID);
+
+  if (!event_service) {
+    NS_WARNING("Failed to get event queue service");
+
+    return;
+  }
+
+  nsCOMPtr<nsIEventQueue> event_queue;
+
+  event_service->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                     getter_AddRefs(event_queue));
+
+  if (!event_queue) {
+    NS_WARNING("Failed to get event queue from service");
+
+    return;
+  }
+
+  PLEvent *event = new PLEvent;
+
+  if (!event) {
+    // Out of memory, but none of our callers care, so just warn and
+    // don't fire the event
+
+    NS_WARNING("Out of memory?");
+
+    return;
+  }
+
+  PLHandleEventProc f;
+
+  switch (aMessage) {
+  case NS_IMAGE_LOAD :
+    f = (PLHandleEventProc)::HandleImageOnloadPLEvent;
+
+    break;
+  case NS_IMAGE_ERROR :
+    f = (PLHandleEventProc)::HandleImageOnerrorPLEvent;
+
+    break;
+  default:
+    NS_WARNING("Huh, I don't know how to fire this type of event?!");
+
+    return;
+  }
+
+  PL_InitEvent(event, aContent, f, (PLDestroyEventProc)::DestroyImagePLEvent);
+
+  // The event owns the content pointer now.
+  NS_ADDREF(aContent);
+
+  event_queue->PostEvent(event);
+}
+
 //
-// NS_NewToolbarFrame
+// NS_NewImageBoxFrame
 //
-// Creates a new Toolbar frame and returns it in |aNewFrame|
+// Creates a new image frame and returns it in |aNewFrame|
 //
 nsresult
 NS_NewImageBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
@@ -615,9 +756,13 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request, nsIPresCont
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request, nsIPresContext *aPresContext, nsresult status, const PRUnichar *statusArg)
+NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request, nsIPresContext *aPresContext, nsresult aStatus, const PRUnichar *statusArg)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (NS_FAILED(aStatus))
+    // Fire an onerror DOM event.
+    FireDOMEvent(mContent, NS_IMAGE_ERROR);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIContainer *container, nsIPresContext *aPresContext, gfxIImageFrame *newframe, nsRect * dirtyRect)
@@ -703,7 +848,9 @@ NS_IMETHODIMP nsImageBoxListener::OnStopDecode(imgIRequest *request, nsISupports
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresContext> pc(do_QueryInterface(cx));
-  return mFrame->OnStopDecode(request, pc, status, statusArg);
+  nsresult rv = mFrame->OnStopDecode(request, pc, status, statusArg);
+
+  return rv;
 }
 
 NS_IMETHODIMP nsImageBoxListener::FrameChanged(imgIContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
