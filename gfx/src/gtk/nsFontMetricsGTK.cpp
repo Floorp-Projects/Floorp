@@ -704,6 +704,8 @@ static PLHashTable* gFamilies = nsnull;
 
 static PLHashTable* gFamilyNames = nsnull;
 
+static nsString* gGeneric = nsnull;
+
 static nsFontFamilyName gFamilyNameTable[] =
 {
 #ifdef MOZ_MATHML
@@ -2343,11 +2345,135 @@ GetFontNames(char* aPattern)
 }
 
 static void
-FindFamily(nsFontSearch* aSearch, nsString* aName)
+FreeGlobals(void)
 {
-  aSearch->mFont = nsnull;
-  nsFontFamily* family =
-    (nsFontFamily*) PL_HashTableLookup(gFamilies, aName);
+  // XXX finish this
+
+  if (gGeneric) {
+    delete gGeneric;
+    gGeneric = nsnull;
+  }
+}
+
+/*
+ * Initialize all the font lookup hash tables and other globals
+ */
+static int
+InitFontTables(void)
+{
+  gFamilies = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
+  if (!gFamilies) {
+    FreeGlobals();
+    return 0;
+  }
+  gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
+  if (!gFamilyNames) {
+    FreeGlobals();
+    return 0;
+  }
+  gGeneric = new nsAutoString();
+  if (!gGeneric) {
+    FreeGlobals();
+    return 0;
+  }
+  nsFontFamilyName* f = gFamilyNameTable;
+  while (f->mName) {
+    nsString* name = new nsString(f->mName);
+    if (!name) {
+      FreeGlobals();
+      return 0;
+    }
+    nsString* xName;
+    if (f->mXName) {
+      xName = new nsString(f->mXName);
+      if (!xName) {
+        FreeGlobals();
+        return 0;
+      }
+    }
+    else {
+      xName = gGeneric;
+    }
+    if (name && xName) {
+      if (!PL_HashTableAdd(gFamilyNames, name, (void*) xName)) {
+        FreeGlobals();
+        return 0;
+      }
+    }
+    f++;
+  }
+  gWeights = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL, NULL,
+    NULL);
+  if (!gWeights) {
+    FreeGlobals();
+    return 0;
+  }
+  nsFontPropertyName* p = gWeightNames;
+  while (p->mName) {
+    if (!PL_HashTableAdd(gWeights, p->mName, (void*) p->mValue)) {
+      FreeGlobals();
+      return 0;
+    }
+    p++;
+  }
+  gStretches = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL,
+    NULL, NULL);
+  if (!gStretches) {
+    FreeGlobals();
+    return 0;
+  }
+  p = gStretchNames;
+  while (p->mName) {
+    if (!PL_HashTableAdd(gStretches, p->mName, (void*) p->mValue)) {
+      FreeGlobals();
+      return 0;
+    }
+    p++;
+  }
+  gCharSets = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL, NULL,
+    NULL);
+  if (!gCharSets) {
+    FreeGlobals();
+    return 0;
+  }
+  nsFontCharSetMap* charSetMap = gCharSetMap;
+  while (charSetMap->mName) {
+    if (!PL_HashTableAdd(gCharSets, charSetMap->mName,
+                         (void*) charSetMap->mInfo)) {
+      FreeGlobals();
+      return 0;
+    }
+    charSetMap++;
+  }
+  gSpecialCharSets = PL_NewHashTable
+    (0, PL_HashString, PL_CompareStrings, NULL, NULL, NULL);
+  if (!gSpecialCharSets) {
+    FreeGlobals();
+    return 0;
+  }
+  nsFontCharSetMap* specialCharSetMap = gSpecialCharSetMap;
+  while (specialCharSetMap->mName) {
+    if (!PL_HashTableAdd (gSpecialCharSets, 
+                     specialCharSetMap->mName, 
+                     (void*) specialCharSetMap->mInfo)) {
+      FreeGlobals();
+      return 0;
+    }
+    specialCharSetMap++;
+  }
+  return 1;
+}
+
+static nsFontFamily*
+FindFamily(const nsString* aName)
+{
+  nsFontFamily* family = nsnull;
+  if (!gFamilies) {
+    if (!InitFontTables()) {
+      return nsnull;
+    }
+  }
+  family = (nsFontFamily*) PL_HashTableLookup(gFamilies, aName);
   if (!family) {
     char name[128];
     aName->ToCString(name, sizeof(name));
@@ -2363,15 +2489,37 @@ FindFamily(nsFontSearch* aSearch, nsString* aName)
         }
         else {
           delete family;
-          return;
+          return nsnull;
         }
       }
       else {
-        return;
+        return nsnull;
       }
     }
   }
-  TryFamily(aSearch, family);
+  return family;
+}
+
+static void
+FindFamily(nsFontSearch* aSearch, nsString* aName)
+{
+  aSearch->mFont = nsnull;
+  nsFontFamily* family = FindFamily(aName);
+  if (family) {
+    TryFamily(aSearch, family);
+  }
+}
+
+nsresult
+nsFontMetricsGTK::FamilyExists(const nsString& aName)
+{
+  nsAutoString familyName(aName);
+  familyName.ToLowerCase();
+  nsFontFamily* family = FindFamily(&familyName);
+  if (family && family->mCharSets) { // need to check for dummy entry
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 static void
@@ -2492,60 +2640,9 @@ nsFontMetricsGTK::FindSubstituteFont(nsFontSearch* aSearch)
 nsFontGTK*
 nsFontMetricsGTK::FindFont(PRUnichar aChar)
 {
-  static nsString* gGeneric = nsnull;
-  static int gInitialized = 0;
-  if (!gInitialized) {
-    gInitialized = 1;
-    gFamilies = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
-    gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
-    gGeneric = new nsAutoString();
-    if (!gGeneric) {
+  if (!gFamilies) {
+    if (!InitFontTables()) {
       return nsnull;
-    }
-    nsFontFamilyName* f = gFamilyNameTable;
-    while (f->mName) {
-      nsString* name = new nsString(f->mName);
-      nsString* xName;
-      if (f->mXName) {
-        xName = new nsString(f->mXName);
-      }
-      else {
-        xName = gGeneric;
-      }
-      if (name && xName) {
-        PL_HashTableAdd(gFamilyNames, name, (void*) xName);
-      }
-      f++;
-    }
-    gWeights = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL, NULL,
-      NULL);
-    nsFontPropertyName* p = gWeightNames;
-    while (p->mName) {
-      PL_HashTableAdd(gWeights, p->mName, (void*) p->mValue);
-      p++;
-    }
-    gStretches = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL,
-      NULL, NULL);
-    p = gStretchNames;
-    while (p->mName) {
-      PL_HashTableAdd(gStretches, p->mName, (void*) p->mValue);
-      p++;
-    }
-    gCharSets = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, NULL, NULL,
-      NULL);
-    nsFontCharSetMap* charSetMap = gCharSetMap;
-    while (charSetMap->mName) {
-      PL_HashTableAdd(gCharSets, charSetMap->mName, (void*) charSetMap->mInfo);
-      charSetMap++;
-    }
-    gSpecialCharSets = PL_NewHashTable
-      (0, PL_HashString, PL_CompareStrings, NULL, NULL, NULL);
-    nsFontCharSetMap* specialCharSetMap = gSpecialCharSetMap;
-    while (specialCharSetMap->mName) {
-      PL_HashTableAdd (gSpecialCharSets, 
-                       specialCharSetMap->mName, 
-                       (void*) specialCharSetMap->mInfo);
-      specialCharSetMap++;
     }
   }
 

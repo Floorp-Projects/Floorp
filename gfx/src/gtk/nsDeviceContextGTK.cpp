@@ -29,6 +29,7 @@
 #include "nsCRT.h"
 
 #include "nsDeviceContextGTK.h"
+#include "nsFontMetricsGTK.h"
 #include "nsGfxCIID.h"
 
 #include "nsGfxPSCID.h"
@@ -370,40 +371,7 @@ NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor,
 
 NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
 {
-  char        **fnames = nsnull;
-  PRInt32     namelen = aFontName.Length() + 1;
-  char        *wildstring = (char *)PR_Malloc(namelen + 200);
-  float       t2d;
-  GetTwipsToDevUnits(t2d);
-  PRInt32     dpi = NSToIntRound(t2d * 1440);
-  int         numnames = 0;
-  nsresult    rv = NS_ERROR_FAILURE;
-  
-  if (nsnull == wildstring)
-    return NS_ERROR_UNEXPECTED;
-  
-  if (abs(dpi - 75) < abs(dpi - 100))
-    dpi = 75;
-  else
-    dpi = 100;
-  
-  char* fontName = aFontName.ToNewCString();
-  PR_snprintf(wildstring, namelen + 200,
-             "-*-%s-*-*-normal-*-*-*-%d-%d-*-*-*-*",
-             fontName, dpi, dpi);
-  nsCRT::free(fontName);
- 
-  fnames = ::XListFonts(GDK_DISPLAY(), wildstring, 1, &numnames);
- 
-  if (numnames > 0)
-  {
-    ::XFreeFontNames(fnames);
-    rv = NS_OK;
-  }
-  
-  PR_Free(wildstring);
-  
-  return rv;
+  return nsFontMetricsGTK::FamilyExists(aFontName);
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)

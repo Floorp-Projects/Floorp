@@ -127,6 +127,7 @@ public:
   void        FindGenericFont(nsFontSearch* aSearch);
   void        FindSubstituteFont(nsFontSearch* aSearch);
   static void InitFonts(void);
+  static nsresult FamilyExists(const nsString& aFontName);
 
   friend void PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
                                nsFontCharSet* aCharSet);
