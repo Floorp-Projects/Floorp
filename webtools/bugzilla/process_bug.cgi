@@ -292,7 +292,7 @@ sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me) = (@_);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
-        SendSQL("insert into bugs_activity (bug_id,who,when,field,oldvalue,newvalue) values ($i,$whoid,$timestamp,'$target','$oldstr','$newstr')");
+        SendSQL("insert into bugs_activity (bug_id,who,bug_when,field,oldvalue,newvalue) values ($i,$whoid,$timestamp,'$target','$oldstr','$newstr')");
         return 1;
     }
     return 0;
@@ -491,7 +491,7 @@ The changes made were:
             $col = SqlQuote($col);
             $old = SqlQuote($old);
             $new = SqlQuote($new);
-            my $q = "insert into bugs_activity (bug_id,who,when,field,oldvalue,newvalue) values ($id,$whoid,$timestamp,$col,$old,$new)";
+            my $q = "insert into bugs_activity (bug_id,who,bug_when,field,oldvalue,newvalue) values ($id,$whoid,$timestamp,$col,$old,$new)";
             # puts "<pre>$q</pre>"
             SendSQL($q);
         }

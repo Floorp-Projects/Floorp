@@ -392,13 +392,13 @@ if (defined $ref && 0 < @$ref) {
     }
     $query .= "and bugs_activity.bug_id = bugs.bug_id and (" .
         join(' or ', @list) . ") ";
-    $query .= "and bugs_activity.when >= " .
+    $query .= "and bugs_activity.bug_when >= " .
         SqlifyDate($::FORM{'chfieldfrom'}) . "\n";
     my $to = $::FORM{'chfieldto'};
     if (defined $to) {
         $to = trim($to);
         if ($to ne "" && $to !~ /^now$/i) {
-            $query .= "and bugs_activity.when <= " . SqlifyDate($to) . "\n";
+            $query .= "and bugs_activity.bug_when <= " . SqlifyDate($to) . "\n";
         }
     }
     my $value = $::FORM{'chfieldvalue'};

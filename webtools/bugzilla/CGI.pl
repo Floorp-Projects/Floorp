@@ -523,16 +523,16 @@ sub DumpBugActivity {
     my ($id, $starttime) = (@_);
     my $datepart = "";
     if (defined $starttime) {
-        $datepart = "and bugs_activity.when >= $starttime";
+        $datepart = "and bugs_activity.bug_when >= $starttime";
     }
     my $query = "
-        select bugs_activity.field, bugs_activity.when,
+        select bugs_activity.field, bugs_activity.bug_when,
                 bugs_activity.oldvalue, bugs_activity.newvalue,
                 profiles.login_name
         from bugs_activity,profiles
         where bugs_activity.bug_id = $id $datepart
         and profiles.userid = bugs_activity.who
-        order by bugs_activity.when";
+        order by bugs_activity.bug_when";
 
     SendSQL($query);
     

@@ -29,13 +29,13 @@ use bugs;
 create table bugs_activity (
         bug_id mediumint not null,
         who mediumint not null,
-        when datetime not null,
+        bug_when datetime not null,
         field varchar(64) not null,
         oldvalue tinytext,
         newvalue tinytext,
 
         index (bug_id),
-        index (when),
+        index (bug_when),
 	index (field)
 );
 
