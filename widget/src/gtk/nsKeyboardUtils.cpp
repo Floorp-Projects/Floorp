@@ -22,6 +22,7 @@
 #endif
 #include <X11/keysym.h>
 #include <gdk/gdkx.h>
+#include <string.h>
 #include "nsKeyboardUtils.h"
 #include "nspr.h"
 
