@@ -50,6 +50,12 @@
 #   define POPEN   popen
 #   define PCLOSE  pclose
 #   define PLATFORM "UNIX"
+#elif  XP_BEOS
+#   define ENVIRON environ
+#   define PUTENV  putenv
+#   define POPEN   popen
+#   define PCLOSE  pclose
+#   define PLATFORM "BeOS"
 #else
 #   error "Platform not supported."
 #endif
