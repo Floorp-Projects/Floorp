@@ -888,6 +888,11 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                     return MK_IMAGE_LOSSAGE;
                 }
             }
+
+            status = gif_clear_screen(gs);             
+            if (status < 0)
+               return status;
+
             /* Initialize LZW parser/decoder */
             gs->datasize = *q;
             if(gs->datasize > MAX_LZW_BITS)
@@ -1384,14 +1389,8 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                     !(gs->interlaced && gs->is_transparent);
             }
 
-             status = gif_clear_screen(gs);             
-             if (status < 0)
-                return status;
-
             /* Clear state from last image */
             gs->requested_buffer_fullness = 0;
-            gs->control_extension = FALSE;
-            gs->is_transparent = FALSE;
             gs->irow = 0;
             gs->rows_remaining = gs->height;
             gs->rowend = gs->rowbuf + gs->width;
@@ -1502,6 +1501,10 @@ il_gif_write(il_container *ic, const PRUint8 *buf, int32 len)
                 }
         
                 gs->images_decoded++;                
+
+                /* Clear state from this image */
+                gs->control_extension = FALSE;
+                gs->is_transparent = FALSE;
 
                 if(ic->animate_request == eImageAnimation_None){
                     /* This is not really an error, but a mechanism
