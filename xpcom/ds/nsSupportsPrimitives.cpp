@@ -938,7 +938,7 @@ NS_IMETHODIMP nsSupportsVoidImpl::GetType(PRUint16 *aType)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsVoidImpl::GetData(const void * *aData)
+NS_IMETHODIMP nsSupportsVoidImpl::GetData(void * *aData)
 {
     NS_ASSERTION(aData, "Bad pointer");
     *aData = mData;
