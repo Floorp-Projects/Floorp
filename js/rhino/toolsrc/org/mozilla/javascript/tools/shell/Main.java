@@ -61,6 +61,38 @@ public class Main
         shellContextFactory = new ShellContextFactory();
 
     /**
+     * Proxy class to avoid proliferation of anonymous classes.
+     */
+    private static class IProxy implements ContextAction
+    {
+        private static final int PROCESS_FILES = 1;
+        private static final int EVAL_INLINE_SCRIPT = 2;
+
+        private int type;
+        String[] args;
+        String scriptText;
+
+        IProxy(int type)
+        {
+            this.type = type;
+        }
+
+        public Object run(Context cx)
+        {
+            if (type == PROCESS_FILES) {
+                processFiles(cx, args);
+            } else if (type == EVAL_INLINE_SCRIPT) {
+                evaluateScript(cx, getGlobal(), null, scriptText,
+                               "<command>", 1, null);
+            } else {
+                throw Kit.codeBug();
+            }
+            return null;
+        }
+    }
+
+
+    /**
      * Main entry point.
      *
      * Process arguments as would a normal Java program. Also
@@ -97,45 +129,42 @@ public class Main
             }
         }
 
-        global = getGlobal();
         errorReporter = new ToolErrorReporter(false, global.getErr());
         shellContextFactory.setErrorReporter(errorReporter);
-        final String[] args = processOptions(origArgs);
+        String[] args = processOptions(origArgs);
         if (processStdin)
             fileList.addElement(null);
 
-        withContext(new ContextAction() {
-            public Object run(Context cx)
-            {
-                // define "arguments" array in the top-level object:
-                // need to allocate new array since newArray requires instances
-                // of exactly Object[], not ObjectSubclass[]
-                Object[] array = new Object[args.length];
-                System.arraycopy(args, 0, array, 0, args.length);
-                Scriptable argsObj = cx.newArray(global, array);
-                global.defineProperty("arguments", argsObj,
-                                      ScriptableObject.DONTENUM);
-
-                for (int i=0; i < fileList.size(); i++) {
-                    processSource(cx, (String) fileList.elementAt(i));
-                }
-
-                return null;
-            }
-        });
+        IProxy iproxy = new IProxy(IProxy.PROCESS_FILES);
+        iproxy.args = args;
+        shellContextFactory.call(iproxy);
 
         return exitCode;
     }
 
-    public static Global getGlobal() {
-        if (global == null) {
-            global = new Global();
+    static void processFiles(Context cx, String[] args)
+    {
+        if (!global.initialized) {
+            global.init(cx);
         }
-        return global;
+        // define "arguments" array in the top-level object:
+        // need to allocate new array since newArray requires instances
+        // of exactly Object[], not ObjectSubclass[]
+        Object[] array = new Object[args.length];
+        System.arraycopy(args, 0, array, 0, args.length);
+        Scriptable argsObj = cx.newArray(global, array);
+        global.defineProperty("arguments", argsObj,
+                              ScriptableObject.DONTENUM);
+
+        for (int i=0; i < fileList.size(); i++) {
+            processSource(cx, (String) fileList.elementAt(i));
+        }
+
     }
 
-    static Object withContext(ContextAction action) {
-        return shellContextFactory.call(action);
+    public static Global getGlobal()
+    {
+        return global;
     }
 
     /**
@@ -216,15 +245,9 @@ public class Main
                     usageError = arg;
                     break goodUsage;
                 }
-                final String scriptText = args[i];
-                withContext(new ContextAction() {
-                    public Object run(Context cx)
-                    {
-                        evaluateScript(cx, global, null, scriptText,
-                                       "<command>", 1, null);
-                        return null;
-                    }
-                });
+                IProxy iproxy = new IProxy(IProxy.EVAL_INLINE_SCRIPT);
+                iproxy.scriptText = args[i];
+                shellContextFactory.call(iproxy);
                 continue;
             }
             if (arg.equals("-w")) {
@@ -254,7 +277,8 @@ public class Main
         return null;
     }
 
-    private static void initJavaPolicySecuritySupport() {
+    private static void initJavaPolicySecuritySupport()
+    {
         Throwable exObj;
         try {
             Class cl = Class.forName
@@ -282,7 +306,8 @@ public class Main
      * @param filename the name of the file to compile, or null
      *                 for interactive mode.
      */
-    public static void processSource(Context cx, String filename) {
+    public static void processSource(Context cx, String filename)
+    {
         if (filename == null || filename.equals("-")) {
             if (filename == null) {
                 // print implementation version
@@ -335,7 +360,9 @@ public class Main
                 h.put((int)h.getLength(), h, source);
             }
             global.getErr().println();
-        } else processFile(cx, global, filename);
+        } else {
+            processFile(cx, global, filename);
+        }
         System.gc();
     }
 
@@ -344,7 +371,7 @@ public class Main
     {
         if (securityImpl == null) {
             processFileSecure(cx, scope, filename, null);
-        }else {
+        } else {
             securityImpl.callProcessFileSecure(cx, scope, filename);
         }
     }
@@ -490,8 +517,8 @@ public class Main
         Global.getInstance(getGlobal()).setErr(err);
     }
 
+    static protected final Global global = new Global();
     static protected ToolErrorReporter errorReporter;
-    static protected Global global;
     static protected int exitCode = 0;
     static private final int EXITCODE_RUNTIME_ERROR = 3;
     static private final int EXITCODE_FILE_NOT_FOUND = 4;

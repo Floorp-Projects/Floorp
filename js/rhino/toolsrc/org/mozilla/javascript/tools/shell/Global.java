@@ -940,7 +940,7 @@ class Runner implements Runnable, ContextAction {
 
     public void run()
     {
-        Main.withContext(this);
+        Main.shellContextFactory.call(this);
     }
 
     public Object run(Context cx)
