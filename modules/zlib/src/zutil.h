@@ -8,7 +8,9 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zutil.h,v 3.3 2001/06/30 23:38:04 leaf%mozilla.org Exp $ */
+/* @(#) $Id: zutil.h,v 3.4 2001/07/13 10:50:26 colin%theblakes.com Exp $ */
+
+/* This file has been modified from the original distribution */
 
 #ifndef _Z_UTIL_H
 #define _Z_UTIL_H
@@ -151,7 +153,9 @@ extern const char *z_errmsg[10]; /* indexed by 2-zlib_error */
          /* functions */
 
 #ifdef HAVE_STRERROR
+#ifndef VMS
    extern char *strerror OF((int));
+#endif
 #  define zstrerror(errnum) strerror(errnum)
 #else
 #  define zstrerror(errnum) ""
