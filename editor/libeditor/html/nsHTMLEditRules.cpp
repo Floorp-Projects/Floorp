@@ -1386,7 +1386,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     res = CheckForEmptyBlock(startNode, bodyNode, aSelection, aHandled);
     if (NS_FAILED(res)) return res;
     if (*aHandled) return NS_OK;
-    
+        
 #ifdef IBMBIDI
     // Test for distance between caret and text that will be deleted
     res = CheckBidiLevelForDeletion(startNode, startOffset, aAction, aCancel);
@@ -1397,11 +1397,27 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     if (!bPlaintext)
     {
       // Check for needed whitespace adjustments.  If we need to delete
-      // just whitespace, that is handled here.
-      res = CheckForWhitespaceDeletion(address_of(startNode), &startOffset, 
+      // just whitespace, that is handled here.  
+      // CheckForWhitespaceDeletion also adjusts it's first two args to
+      // skip over invisible ws.  So we need to check that we didn't cross a table
+      // element boundary afterwards.
+      nsCOMPtr<nsIDOMNode> visNode = startNode;
+      PRInt32 visOffset = startOffset;
+      res = CheckForWhitespaceDeletion(address_of(visNode), &visOffset, 
                                        aAction, aHandled);
       if (NS_FAILED(res)) return res;
       if (*aHandled) return NS_OK;
+      // dont cross any table elements
+      PRBool bInDifTblElems;
+      res = InDifferentTableElements(visNode, startNode, &bInDifTblElems);
+      if (NS_FAILED(res)) return res;
+      if (bInDifTblElems) 
+      {
+        *aCancel = PR_TRUE;
+        return NS_OK;
+      }
+      // else reset startNode/startOffset
+      startNode = visNode;  startOffset = visOffset;
     }
     // in a text node:
     if (mHTMLEditor->IsTextNode(startNode))
@@ -1506,7 +1522,18 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           else return NS_OK; // punt to default
         }
         
-        // deleting across blocks
+        // ---- deleting across blocks ---------------------------------------------
+        
+        // dont cross any table elements
+        PRBool bInDifTblElems;
+        res = InDifferentTableElements(startNode, priorNode, &bInDifTblElems);
+        if (NS_FAILED(res)) return res;
+        if (bInDifTblElems) 
+        {
+          *aCancel = PR_TRUE;
+          return NS_OK;
+        }
+
         nsCOMPtr<nsIDOMNode> leftParent;
         nsCOMPtr<nsIDOMNode> rightParent;
         if (IsBlockNode(priorNode))
@@ -1523,13 +1550,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         if (!leftParent || !rightParent)
           return NS_OK;  // bail to default
           
-        // do not delete across table structures
-        if (nsHTMLEditUtils::IsTableElement(leftParent) || nsHTMLEditUtils::IsTableElement(rightParent))
-        {
-          *aCancel = PR_TRUE;
-          return NS_OK;
-        }
-                
         // are the blocks of same type?
         if (mHTMLEditor->NodesSameType(leftParent, rightParent))
         {
@@ -1646,7 +1666,18 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           else return NS_OK; // punt to default
         }
                 
-        // deleting across blocks
+        // ---- deleting across blocks ---------------------------------------------
+        
+        // dont cross any table elements
+        PRBool bInDifTblElems;
+        res = InDifferentTableElements(startNode, nextNode, &bInDifTblElems);
+        if (NS_FAILED(res)) return res;
+        if (bInDifTblElems) 
+        {
+          *aCancel = PR_TRUE;
+          return NS_OK;
+        }
+
         nsCOMPtr<nsIDOMNode> leftParent;
         nsCOMPtr<nsIDOMNode> rightParent;
         if (IsBlockNode(startNode))
@@ -1663,13 +1694,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         if (!leftParent || !rightParent)
           return NS_OK;  // bail to default
           
-        // do not delete across table structures
-        if (nsHTMLEditUtils::IsTableElement(leftParent) || nsHTMLEditUtils::IsTableElement(rightParent))
-        {
-          *aCancel = PR_TRUE;
-          return NS_OK;
-        }
-                
         // are the blocks of same type?
         if (mHTMLEditor->NodesSameType(leftParent, rightParent))
         {
@@ -1765,12 +1789,23 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           return NS_OK;
       } 
       
+      // don't delete the root element!
       if (NS_FAILED(res)) return res;
       if (!nodeToDelete) return NS_ERROR_NULL_POINTER;
       if (mBody == nodeToDelete) 
       {
         *aCancel = PR_TRUE;
         return res;
+      }
+      
+      // dont cross any table elements
+      PRBool bInDifTblElems;
+      res = InDifferentTableElements(startNode, nodeToDelete, &bInDifTblElems);
+      if (NS_FAILED(res)) return res;
+      if (bInDifTblElems) 
+      {
+        *aCancel = PR_TRUE;
+        return NS_OK;
       }
       
       // if this node is text node, adjust selection
