@@ -1009,7 +1009,7 @@
       (depict-semicolon markup-stream semicolon))))
 
 
-; (&= <record-expr> <value-expr>)
+; (&= <label> <record-expr> <value-expr>)
 (defun depict-&= (markup-stream world semicolon last-paragraph-style record-type label record-annotated-expr value-annotated-expr)
   (depict-paragraph (markup-stream last-paragraph-style)
     (depict-& markup-stream world %unary% record-type label record-annotated-expr)
