@@ -67,9 +67,9 @@ PRLogModuleInfo* gFileTransportLog = nsnull;
 nsFileTransport::nsFileTransport()
     : mState(QUIESCENT),
       mSuspended(PR_FALSE), 
+      mMonitor(nsnull),
       mStatus(NS_OK), 
       mOffset(0),
-      mMonitor(nsnull),
       mBuffer(nsnull)
 {
     NS_INIT_REFCNT();
