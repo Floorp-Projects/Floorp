@@ -265,6 +265,28 @@
     </locale>
   </chrome>
 
+  <chrome about="chrome://regviewer/">
+    <content>
+      <RDF:Description about="chrome://regviewer/content/">
+        <base>resource:/chrome/regviewer/content/default/</base>
+        <main>regviewer.xul</main>
+      </RDF:Description>
+    </content>
+
+    <skin>
+      <RDF:Description about="chrome://regviewer/skin/">
+        <base>resource:/chrome/regviewer/skin/default/</base>
+        <main>regviewer.css</main>
+      </RDF:Description>
+    </skin>
+
+    <locale>
+      <RDF:Description about="chrome://regviewer/locale/">
+        <name>en-US</name>
+      </RDF:Description>
+    </locale>
+  </chrome>
+
   <chrome about="chrome://history/"> 
 
     <content> 
