@@ -61,6 +61,7 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsColor.h"
 #include "nsStyleConsts.h"
 #include "nsLayoutAtoms.h"
@@ -148,10 +149,6 @@ public:
   virtual ~CSSParserImpl();
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init(nsICSSStyleSheet* aSheet);
-
-  NS_IMETHOD GetInfoMask(PRUint32& aResult);
 
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
 
@@ -323,37 +320,57 @@ protected:
   PRBool TranslateDimension(PRInt32& aErrorCode, nsCSSValue& aValue, PRInt32 aVariantMask,
                             float aNumber, const nsString& aUnit);
 
+  void SetParsingCompoundProperty(PRBool aBool) {
+    mParsingCompoundProperty = aBool;
+  }
+  PRBool IsParsingCompoundProperty(void) {
+    return mParsingCompoundProperty;
+  }
+
   // Current token. The value is valid after calling GetToken
   nsCSSToken mToken;
 
-  // After an UngetToken is done this flag is true. The next call to
-  // GetToken clears the flag.
-  PRBool mHavePushBack;
-
+  // Our scanner.  We own this and are responsible for deallocating it.
   nsCSSScanner* mScanner;
-  nsIURI* mURL;
-  nsICSSStyleSheet* mSheet;
+
+  // The URI to be used as a base for relative URIs.
+  nsCOMPtr<nsIURI> mURL;
+
+  // The sheet we're parsing into
+  nsCOMPtr<nsICSSStyleSheet> mSheet;
+
+  // Used for @import rules
   nsICSSLoader* mChildLoader; // not ref counted, it owns us
 
+  // Sheet section we're in.  This is used to enforce correct ordering of the
+  // various rule types (eg the fact that a @charset rule must come before
+  // anything else).
   enum nsCSSSection { 
     eCSSSection_Charset, 
     eCSSSection_Import, 
     eCSSSection_NameSpace,
     eCSSSection_General 
   };
-
   nsCSSSection  mSection;
 
-  PRBool  mNavQuirkMode;
-  PRBool  mCaseSensitive;
+  nsCOMPtr<nsINameSpace> mNameSpace;
 
-  nsINameSpace* mNameSpace;
+  // After an UngetToken is done this flag is true. The next call to
+  // GetToken clears the flag.
+  PRPackedBool mHavePushBack;
 
-  nsISupportsArray* mGroupStack;
+  // True if we are in quirks mode; false in standards or almost standards mode
+  PRPackedBool  mNavQuirkMode;
 
-  PRBool  mParsingCompoundProperty;
-  void    SetParsingCompoundProperty(PRBool aBool) {mParsingCompoundProperty = aBool;};
-  PRBool  IsParsingCompoundProperty(void) {return mParsingCompoundProperty;};
+  // True if tagnames and attributes are case-sensitive
+  PRPackedBool  mCaseSensitive;
+
+  // This flag is set when parsing a non-box shorthand; it's used to not apply
+  // some quirks during shorthand parsing
+  PRPackedBool  mParsingCompoundProperty;
+
+  // Stack of rule groups; used for @media and such.
+  nsCOMArray<nsICSSGroupRule> mGroupStack;
 };
 
 PR_STATIC_CALLBACK(void) AppendRuleToArray(nsICSSRule* aRule, void* aArray)
@@ -423,48 +440,20 @@ static void ReportUnexpectedToken(nsCSSScanner *sc,
 
 CSSParserImpl::CSSParserImpl()
   : mToken(),
-    mHavePushBack(PR_FALSE),
     mScanner(nsnull),
-    mURL(nsnull),
-    mSheet(nsnull),
     mChildLoader(nsnull),
     mSection(eCSSSection_Charset),
+    mHavePushBack(PR_FALSE),
     mNavQuirkMode(PR_FALSE),
     mCaseSensitive(PR_FALSE),
-    mNameSpace(nsnull),
-    mGroupStack(nsnull),
     mParsingCompoundProperty(PR_FALSE)
 {
-}
-
-NS_IMETHODIMP
-CSSParserImpl::Init(nsICSSStyleSheet* aSheet)
-{
-  NS_IF_RELEASE(mGroupStack);
-  NS_IF_RELEASE(mNameSpace);
-  NS_IF_RELEASE(mSheet);
-  mSheet = aSheet;
-  if (mSheet) {
-    NS_ADDREF(aSheet);
-    mSheet->GetNameSpace(mNameSpace);
-  }
-  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(CSSParserImpl, nsICSSParser)
 
 CSSParserImpl::~CSSParserImpl()
 {
-  NS_IF_RELEASE(mGroupStack);
-  NS_IF_RELEASE(mNameSpace);
-  NS_IF_RELEASE(mSheet);
-}
-
-NS_IMETHODIMP
-CSSParserImpl::GetInfoMask(PRUint32& aResult)
-{
-  aResult = NS_CSS_GETINFO_CSS1 | NS_CSS_GETINFO_CSSP;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -477,12 +466,9 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
 
   if (aSheet != mSheet) {
     // Switch to using the new sheet
-    NS_IF_RELEASE(mGroupStack);
-    NS_IF_RELEASE(mNameSpace);
-    NS_IF_RELEASE(mSheet);
+    mGroupStack.Clear();
     mSheet = aSheet;
-    NS_ADDREF(mSheet);
-    mSheet->GetNameSpace(mNameSpace);
+    mSheet->GetNameSpace(*getter_AddRefs(mNameSpace));
   }
 
   return NS_OK;
@@ -519,9 +505,7 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aURI)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   mScanner->Init(aInput, aURI);
-  NS_IF_RELEASE(mURL);
   mURL = aURI;
-  NS_IF_ADDREF(mURL);
 
   mHavePushBack = PR_FALSE;
 
@@ -535,7 +519,7 @@ CSSParserImpl::ReleaseScanner(void)
     delete mScanner;
     mScanner = nsnull;
   }
-  NS_IF_RELEASE(mURL);
+  mURL = nsnull;
   return NS_OK;
 }
 
@@ -548,7 +532,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   NS_ASSERTION(nsnull != aInputURL, "need base URL");
 
   if (! mSheet) {
-    NS_NewCSSStyleSheet(&mSheet, aInputURL);
+    NS_NewCSSStyleSheet(getter_AddRefs(mSheet), aInputURL);
   }
 #ifdef DEBUG
   else {
@@ -1327,8 +1311,7 @@ PRBool CSSParserImpl::ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPre
   NS_NewCSSNameSpaceRule(getter_AddRefs(rule), prefix, aURLSpec);
   if (rule) {
     (*aAppendFunc)(rule, aData);
-    NS_IF_RELEASE(mNameSpace);
-    mSheet->GetNameSpace(mNameSpace);
+    mSheet->GetNameSpace(*getter_AddRefs(mNameSpace));
   }
 
   return result;
@@ -1428,37 +1411,25 @@ void CSSParserImpl::SkipRuleSet(PRInt32& aErrorCode)
 
 PRBool CSSParserImpl::PushGroup(nsICSSGroupRule* aRule)
 {
-  if (! mGroupStack) {
-    NS_NewISupportsArray(&mGroupStack);
-  }
-  if (mGroupStack) {
-    mGroupStack->AppendElement(aRule);
+  if (mGroupStack.AppendObject(aRule))
     return PR_TRUE;
-  }
+
   return PR_FALSE;
 }
 
 void CSSParserImpl::PopGroup(void)
 {
-  if (mGroupStack) {
-    PRUint32 count;
-    mGroupStack->Count(&count);
-    if (0 < count) {
-      mGroupStack->RemoveElementAt(count - 1);
-    }
+  PRInt32 count = mGroupStack.Count();
+  if (0 < count) {
+    mGroupStack.RemoveObjectAt(count - 1);
   }
 }
 
 void CSSParserImpl::AppendRule(nsICSSRule* aRule)
 {
-  PRUint32 count = 0;
-  if (mGroupStack) {
-    mGroupStack->Count(&count);
-  }
+  PRInt32 count = mGroupStack.Count();
   if (0 < count) {
-    nsICSSGroupRule* group = (nsICSSGroupRule*)mGroupStack->ElementAt(count - 1);
-    group->AppendStyleRule(aRule);
-    NS_RELEASE(group);
+    mGroupStack[count - 1]->AppendStyleRule(aRule);
   }
   else {
     mSheet->AppendStyleRule(aRule);
@@ -3346,7 +3317,7 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       // the style sheet.
       // XXX editors won't like this - too bad for now
       nsAutoString absURL;
-      if (nsnull != mURL && css_RequiresAbsoluteURI(tk->mIdent)) {
+      if (mURL && css_RequiresAbsoluteURI(tk->mIdent)) {
         nsresult rv;
         rv = NS_MakeAbsoluteURI(absURL, tk->mIdent, mURL);
         if (NS_FAILED(rv)) {
