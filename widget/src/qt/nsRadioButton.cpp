@@ -32,11 +32,36 @@ nsQRadioButton::nsQRadioButton(nsWidget * widget,
                                const char * name)
 	: QRadioButton(parent, name), nsQBaseWidget(widget)
 {
+#if 0
+    connect((QRadioButton *)this,
+            SIGNAL(clicked()),
+            SLOT(ButtonClicked()));
+#endif
 }
 
 nsQRadioButton::~nsQRadioButton()
 {
 }
+
+#if 0
+void nsQRadioButton::ButtonClicked()
+{
+    if (mWidget)
+    {
+        nsMouseEvent nsEvent;
+        
+        nsEvent.message         = NS_MOUSE_LEFT_CLICK;
+        nsEvent.widget          = mWidget;
+        NS_IF_ADDREF(nsEvent.widget);
+        nsEvent.eventStructType = NS_MOUSE_EVENT;
+        nsEvent.clickCount      = 1;
+        
+        ((nsRadioButton *)mWidget)->OnScroll(nsEvent, value);
+    }
+    
+}
+#endif
+
 
 NS_IMPL_ADDREF(nsRadioButton)
 NS_IMPL_RELEASE(nsRadioButton)
@@ -63,7 +88,7 @@ nsRadioButton::~nsRadioButton()
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsRadioButton::~nsRadioButton()\n"));
     if (mWidget)
     {
-        delete ((QRadioButton *) mWidget);
+        delete ((nsQRadioButton *) mWidget);
         mWidget = nsnull;
     }
 }
@@ -95,12 +120,17 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // Create the native RadioButton widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsRadioButton::CreateNative(QWidget *parentWindow)
+NS_METHOD nsRadioButton::CreateNative(QWidget *parentWindow)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsRadioButton::CreateNative()\n"));
+#if 0
+    mWidget = new QRadioButton(parentWindow,
+                               QRadioButton::tr("nsRadioButton"));
+#else
     mWidget = new nsQRadioButton(this,
                                  parentWindow, 
                                  QRadioButton::tr("nsRadioButton"));
+#endif
 
     if (mWidget)
     {
@@ -108,6 +138,7 @@ NS_METHOD  nsRadioButton::CreateNative(QWidget *parentWindow)
     }
 
     return nsWidget::CreateNative(parentWindow);
+    //return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -117,20 +148,30 @@ NS_METHOD  nsRadioButton::CreateNative(QWidget *parentWindow)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetState(const PRBool aState)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsRadioButton::SetState()\n"));
+    PRBool newState;
+    GetState(newState);
+
+    PR_LOG(QtWidgetsLM, 
+           PR_LOG_DEBUG, 
+           ("nsRadioButton::SetState() %p:%d\n", mWidget, aState));
     ((QRadioButton *)mWidget)->setChecked(aState);
+
+    GetState(newState);
 
     return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 //
-// Set this button state
+// Get this button state
+//
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsRadioButton::GetState()\n"));
     aState = ((QRadioButton *)mWidget)->isChecked();
+    PR_LOG(QtWidgetsLM, 
+           PR_LOG_DEBUG, 
+           ("nsRadioButton::GetState() %p:%d\n", mWidget, aState));
 
     return NS_OK;
 }
