@@ -524,8 +524,14 @@ namespace MetaData {
 
     uint8 *printInstruction(uint8 *pc, uint8 *start, BytecodeContainer *bCon, JS2Engine *engine)
     {
-        if (engine)
+        if (engine) {
+            stdOut << bCon->fName << " ";
+            if (bCon->fName.length() < 30) {
+                for (int32 i = 0; i < (30 - bCon->fName.length()); i++)
+                    stdOut << " ";
+            }
             printFormat(stdOut, "%.4d %.4d ", pc - start, (int32)(engine->sp - engine->execStack));
+        }
         else
             printFormat(stdOut, "%.4d ", pc - start);
         stdOut << opcodeData[*pc].name;

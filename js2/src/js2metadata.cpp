@@ -1097,6 +1097,9 @@ namespace MetaData {
                 FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
                 CompilationData *oldData = startCompilationUnit(f->function.fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
                 env->addFrame(f->function.fWrap->compileFrame);
+#ifdef DEBUG
+                bCon->fName = *f->function.name;
+#endif
                 SetupStmt(env, phase, f->function.body);
                 // XXX need to make sure that all paths lead to an exit of some kind
                 bCon->emitOp(eReturnVoid, p->pos);
