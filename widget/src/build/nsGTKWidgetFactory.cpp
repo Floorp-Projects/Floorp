@@ -197,7 +197,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
       //      inst = (nsISupports*)(nsWidget *)new nsTooltipWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
-        inst = (nsISupports*)(nsWidget *)new nsAppShell();
+        inst = (nsISupports*)new nsAppShell();
     }
     else if (mClassID.Equals(kCToolkit)) {
         inst = (nsISupports*)(nsWidget *)new nsToolkit();
