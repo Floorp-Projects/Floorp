@@ -78,6 +78,8 @@
   		    &maxMessagesEnd.label;
           </html:div>
         </box>
+	<html:div>&newsrcFilePath.label;</html:div>
+	<html:input type="text" name="nntp.newsrcFilePath" datatype="nsIFileSpec"/>
       </box>
       <!-- None -->
       <box align="vertical" flex="100%">

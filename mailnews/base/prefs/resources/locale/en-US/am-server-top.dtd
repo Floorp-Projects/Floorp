@@ -35,4 +35,5 @@
 <!ENTITY emptyTrashOnExit.label "Empty Trash on Exit.">
 <!ENTITY maxMessagesStart.label "Ask me before downloading more than">
 <!ENTITY maxMessagesEnd.label "messages.">
+<!ENTITY newsrcFilePath.label "newsrc file:">
 <!ENTITY localPath.label "Local directory:">
