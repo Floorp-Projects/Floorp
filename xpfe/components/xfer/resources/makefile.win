@@ -19,11 +19,19 @@ IGNORE_MANIFEST=1
 
 DEPTH=..\..\..\..
 
+CHROME_DIR = global
+
+CHROME_CONTENT_DIR = content\default
+
+CHROME_CONTENT=\
+    .\downloadProgress.xul \
+    .\downloadProgress.js  \
+    $(NULL)
+
+CHROME_SKIN=
+
+CHROME_L10N=\
+    .\locale\en-US\downloadProgress.dtd \
+    $(NULL)
+
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) downloadProgress.xul $(DIST)\bin\res\samples
-
-clobber::
-	rm -f $(DIST)\bin\res\samples\downloadProgress.xul
-

@@ -28,7 +28,7 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= \
 		nsStreamTransfer.cpp \
-		nsDownloadProgressDialog.cpp \
+		nsStreamXferOp.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -36,6 +36,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		-lxpcom \
 		-lmozreg \
+		-l$(MOZ_LIB_JS_PREFIX)js \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

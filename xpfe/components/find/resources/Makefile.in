@@ -20,15 +20,21 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+CHROME_DIR = global
+
+CHROME_CONTENT_DIR = content/default
+
+CHROME_CONTENT = \
+	finddialog.xul \
+	finddialog.js  \
+	$(NULL)
+
+CHROME_SKIN = 
+
+CHROME_L10N = \
+	./locale/en-US/finddialog.dtd \
+	$(NULL)
+
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
-
-EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/finddialog.xul \
-	$(srcdir)/finddialog.js \
-	$(NULL)
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
-

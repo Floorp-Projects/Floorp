@@ -1,17 +1,7 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
-<!DOCTYPE window
-[
-<!ENTITY unknownWindow.title "Unknown File Type"> 
-<!ENTITY startDownload "You have started to download a file of type">
-<!ENTITY contentType.label "contentType goes here"> 
-<!ENTITY dialogMore.label "More Info..."> 
-<!ENTITY dialogPick.label "Pick App..."> 
-<!ENTITY dialogSave.label "Save File..."> 
-<!ENTITY dialogCancel.label "Cancel"> 
-
-]> 
+<!DOCTYPE window SYSTEM "chrome://global/locale/unknownContent.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -19,107 +9,41 @@
         onload="onLoad()"
         onunload="onUnload()">
 
-    <html:script>
-        var data;
-        var dialog;
-
-        function initData() {
-            // Create data object and initialize.
-            data = new Object;
-            data.location      = window.arguments[0];
-            data.contentType   = window.arguments[1];
-        }
-
-        function initDialog() {
-            // Create dialog object and initialize.
-            dialog = new Object;
-            dialog.contentType = document.getElementById("dialog.contentType");
-            dialog.more        = document.getElementById("dialog.more");
-            dialog.pick        = document.getElementById("dialog.pick");
-            dialog.save        = document.getElementById("dialog.save");
-            dialog.cancel      = document.getElementById("dialog.cancel");
-        }
-
-        function loadDialog() {
-            // Set initial dialog field contents.
-            dialog.contentType.childNodes[0].nodeValue = " " + data.contentType;
-        }
-
-        function onLoad() {
-            // Init data.
-            initData();
-
-            // Init dialog.
-            initDialog();
-
-            // Fill dialog.
-            loadDialog();
-        }
-
-        function onUnload() {
-            // Nothing for now.
-        }
-
-        function more() {
-            // Have parent browser window go to appropriate web page.
-            var moreInfo = "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi?";
-            moreInfo += data.contentType;
-            window.opener.content.location = moreInfo;
-        }
-
-        function pick() {
-            alert( "PickApp not implemented yet!" );
-        }
-
-        function save() {
-            // Use stream xfer component to prompt for destination and save.
-            var xfer = Components.classes[ "component://netscape/appshell/component/xfer" ].getService();
-            xfer = xfer.QueryInterface( Components.interfaces.nsIStreamTransfer );
-            try {
-                // When Necko lands, we need to receive the real nsIChannel and
-                // do SelectFileAndTransferLocation!
-
-                // Use this for now...
-                xfer.SelectFileAndTransferLocationSpec( data.location );
-            } catch( exception ) {
-                // Failed (or cancelled), give them another chance.
-                return;
-            }
-            // Save underway, close this dialog.
-            window.close();
-        }
-
-        function cancel() {
-            // Close the window.
-            window.close();
-        }
-
-    </html:script>
+    <html:script src="chrome://global/content/unknownContent.js"/>
 
     <html:table style="width:100%;">
         <html:tr>
             <html:td colspan="4">
                 &startDownload;
+                <!-- This should be removed when putting it in the .dtd works. -->
                 <html:strong>
-                <html:div id="dialog.contentType" style="display:inline;">
-                    &contentType.label;
-                </html:div>
+                    <html:div id="dialog.contentType" style="display:inline;"> 
+                        placeholder
+                    </html:div>
                 </html:strong>
             </html:td>
         </html:tr>
     
         <html:tr>
             <html:td style="width:25%">
-                <html:button id="dialog.more" onclick="more()">&dialogMore.label;</html:button>
+                <html:button id="dialog.more" onclick="more()">
+                    &dialogMore.label;
+                </html:button>
             </html:td>
             <html:td style="width:25%">
-                <html:button id="dialog.pick" onclick="pick()">&dialogPick.label;</html:button>
+                <html:button id="dialog.pick" onclick="pick()">
+                    &dialogPick.label;
+                </html:button>
             </html:td>
             <html:td style="width:25%">
-                <html:button id="dialog.save" onclick="save()">&dialogSave.label;</html:button>
+                <html:button id="dialog.save" onclick="save()">
+                    &dialogSave.label;
+                </html:button>
             </html:td>
             <html:td style="width:25%">
-                <html:button id="dialog.cancel" onclick="cancel()">&dialogCancel.label;</html:button>
+                <html:button id="dialog.cancel" onclick="cancel()">
+                    &dialogCancel.label;
+                </html:button>
             </html:td>
         </html:tr>
     </html:table>

@@ -29,6 +29,7 @@ XPIDL_MODULE=mozxfer
 
 XPIDLSRCS=\
     nsIStreamTransfer.idl \
+    nsIStreamTransferOperation.idl \
     $(NULL)
 
 include $(topsrcdir)/config/config.mk

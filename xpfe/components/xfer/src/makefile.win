@@ -54,6 +54,7 @@ LINCS = \
 LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
+	$(DIST)\lib\js3250.lib \
 !ifdef NECKO
         $(DIST)\lib\neckoutil_s.lib    \
 !else
@@ -68,7 +69,7 @@ LLIBS	= \
 #//------------------------------------------------------------------------
 OBJS =	\
 	.\$(OBJDIR)\nsStreamTransfer.obj	\
-	.\$(OBJDIR)\nsDownloadProgressDialog.obj	\
+	.\$(OBJDIR)\nsStreamXferOp.obj	\
 	$(NULL)
 
 #//------------------------------------------------------------------------

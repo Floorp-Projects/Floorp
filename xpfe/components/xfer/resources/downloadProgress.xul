@@ -1,187 +1,15 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
-<!DOCTYPE window
-[
-<!ENTITY downloadWindow.title "Saving file"> 
-<!ENTITY  location "Location"> 
-<!ENTITY  saving "Saving"> 
-<!ENTITY  status "Status:"> 
-<!ENTITY  dialogStatus.label "( nn.nK of mm.mK bytes )"> 
-<!ENTITY  timeLeft "Time Left:">
-<!ENTITY dialogTimeLeft.label "?"> 
-<!ENTITY dialogCancel.label "Cancel"> 
-
-]
-> 
+<!DOCTYPE window SYSTEM "chrome://global/locale/downloadProgress.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
   		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Saving file"
-        onunload="onUnload()"
-        width="425"
-        height="225">
+        onload="onLoad()"
+        onunload="onUnload()">
 
-    <data>
-        <broadcaster id="data.location" type="url" value="url"/>
-        <broadcaster id="data.contentType" type="string" value="content-type"/>
-        <broadcaster id="data.fileName" type="string" value=""/>
-        <broadcaster id="data.progress" type="progress" value="0" max="0" completed="false"/>
-        <broadcaster id="data.status" type="string" value=""/>
-        <broadcaster id="data.execute" command=""/>
-        <!-- Temporary onLoad() trigger -->
-        <broadcaster id="dialog.start" ready="false"/>
-        <observes element="dialog.start" attribute="ready" onchange="onLoad()"/>
-    </data>
-
-    <dialog>
-        <observes element="data.progress" attribute="value" onchange="onProgress()"/>
-        <observes element="data.progress" attribute="completed" onchange="onCompletion()"/>
-        <observes element="data.status"   attribute="value" onchange="onStatus()"/>
-    </dialog>
-
-    <html:script>
-        var data;
-        var dialog;
-
-        function loadDialog() {
-            dialog.location.setAttribute( "value", data.location.getAttribute( "value" ) );
-            dialog.fileName.setAttribute( "value", data.fileName.getAttribute( "value" ) );
-        }
-
-        function onLoad() {
-            // Set global variables.
-            data = new Object;
-            data.location      = document.getElementById("data.location");
-            data.contentType   = document.getElementById("data.contentType");
-            data.fileName      = document.getElementById("data.fileName");
-            data.progress      = document.getElementById("data.progress");
-            data.status        = document.getElementById("data.status");
-            data.execute       = document.getElementById("data.execute");
-            dialog = new Object;
-            dialog.location    = document.getElementById("dialog.location");
-            dialog.contentType = document.getElementById("dialog.contentType");
-            dialog.fileName    = document.getElementById("dialog.fileName");
-            dialog.status      = document.getElementById("dialog.status");
-            dialog.progress    = document.getElementById("dialog.progress");
-            dialog.progressPercent = document.getElementById("dialog.progressPercent");
-            dialog.timeLeft    = document.getElementById("dialog.timeLeft");
-            dialog.cancel      = document.getElementById("dialog.cancel");
-
-            // Fill dialog.
-            loadDialog();
-
-            // Commence.
-            data.execute.setAttribute("command","start");
-        }
-
-        function onUnload() {
-            // Inform underlying C++ object.
-            data.execute.setAttribute("command","unload");
-        }
-
-        var started = false;
-        var completed = false;
-        var startTime;
-        var interval = 1000; // Update every 1000 milliseconds.
-        var lastUpdate = -interval; // Update initially.
-
-        function stop() {
-            if ( started &amp;&amp; !completed ) {
-                // Stop the download.
-                data.execute.setAttribute( "command", "stop" );
-            } else {
-                // Close the window.
-                data.execute.setAttribute( "command", "close" );
-            }
-        }
-
-        function onProgress() {
-            // Check for first time.
-            if ( !started ) {
-                // Initialize download start time.
-                started = true;
-                startTime = ( new Date() ).getTime();
-                // Let the user stop, now.
-                dialog.cancel.removeAttribute( "disabled" );
-            }
-            // Get stats.
-            var bytes = data.progress.getAttribute("value");
-            var max   = data.progress.getAttribute("max");
-
-            // Get current time.
-            var now = ( new Date() ).getTime();
-            // If interval hasn't elapsed, ignore it.
-            if ( now - lastUpdate &lt; interval &amp;&amp; eval(bytes) &lt; eval(max) ) {
-                return;
-            }
-
-            // Update this time.
-            lastUpdate = now;
-
-            // Update download rate.
-            var elapsed = now - startTime;
-            var rate; // bytes/sec
-            if ( elapsed ) {
-                rate = ( bytes * 1000 ) / elapsed;
-            } else {
-                rate = 0;
-            }
-
-            // Calculate percentage.
-            var percent = Math.round( (bytes*100)/max );
-
-            // Advance progress meter.
-            dialog.progress.setAttribute( "value", percent );
-            
-            // Update status (nnn of mmm)
-            var status = "( ";
-            status += Math.round( bytes/1024 );
-            status += "K of ";
-            status += Math.round( max/1024 );
-            status += "K bytes ";
-            if ( rate ) {
-                status += "at ";
-                status += Math.round( (rate*10)/1024 ) / 10;
-                status += "K bytes/sec )";
-            } else {
-                status += ")";
-            }
-            status += 
-            dialog.status.childNodes[0].nodeValue = status;
-
-            // Update percentage label on progress meter.
-            dialog.progressPercent.childNodes[0].nodeValue = percent + "%";
-            
-            // Update time remaining.
-            if ( rate ) {
-                var rem = Math.round( ( max - bytes ) / rate ); // In seconds.
-                status = "";
-                if ( rem >= 3600 ) {
-                    status += Math.round( rem/3600 ) + " hours, ";
-                    rem = rem % 3600;
-                }
-                status += Math.round( rem/60 ) + " minutes and ";
-                rem = rem % 60;
-                status += rem + " seconds";
-                dialog.timeLeft.childNodes[0].nodeValue = status;
-            }
-        }
-
-        function onCompletion() {
-            if ( !completed ) {
-                completed = true;
-                data.execute.setAttribute( "command", "close" );
-            }
-        }
-
-        function onStatus() {
-            var txt = data.status.getAttribute( "value" );
-            dialog.status.childNodes[0].nodeValue = txt;
-        }
-    </html:script>
-
-    <html:div flex="100%">
+    <html:script src="chrome://global/content/downloadProgress.js"/>
 
     <html:table style="width:100%;">
 
@@ -242,7 +70,5 @@
         </html:tr>
 
     </html:table>
-
-    </html:div>
 
 </window>

@@ -846,7 +846,7 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         }
 
         // Open Find dialog and prompt for search parameters.
-        char * urlStr = "resource:/res/samples/finddialog.xul";
+        char * urlStr = "chrome://global/content/finddialog.xul";
 
         // We need the parent's nsIDOMWindow...
         // 1. Get root nsIWebShell (chrome included).
