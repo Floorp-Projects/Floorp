@@ -461,17 +461,20 @@ input {
 	background-color: white;
   box-sizing: border-box;
   font-family:-moz-fixed;
+  behavior: url("resource:/chrome/platformHTMLBindings.xml#inputFields");
 }
 
 input[type=hidden] {
   border: none;
   visibility: collapse;
+  behavior: none;
 }
 
 input[type=image] {
   box-sizing: border-box;
   border: 2px solid blue;
   vertical-align:baseline;
+  behavior: none;
   background-color: inherit;
 }
 
@@ -488,6 +491,7 @@ input[type=file] {
   box-sizing: border-box;
   white-space: nowrap;
   border:none;
+  behavior: none;
 }
 
 /* browse button for file selector */
@@ -523,6 +527,7 @@ input[type=radio] {
   color:black;
   width:12px;
   height:12px;
+  behavior: none;
   -moz-border-radius:6px;
 }
 
@@ -576,6 +581,7 @@ input[type=checkbox] {
   width:13px;
   height:13px;
   color:black;
+  behavior: none;
 /*  -moz-border-radius:1px; */
 }
 
@@ -613,6 +619,8 @@ input[type="submit"] {
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
+
+  behavior: none;
 }
 
 input[type="submit"]:hover {
@@ -693,6 +701,7 @@ input[type="reset"] {
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
+  behavior: none;
 }
 
 input[type="reset"]:hover {
@@ -770,6 +779,7 @@ input[type="button"] {
   padding: 1px;
   font-family: sans-serif;
   font-size: small;
+  behavior: none;
 }
 
 input[type="button"]:hover {
@@ -1287,6 +1297,7 @@ textarea {
   margin-bottom: 1px;
   margin-left:   0px;
   margin-right:  0px;
+  behavior: url("resource:/chrome/platformHTMLBindings.xml#textAreas");
 }
 
 textarea[disabled] {
@@ -1545,4 +1556,3 @@ viewsource|end:after {content: ">"; color: black;}
 viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre; font-size:10pt;} 
 
 viewsource|txt {font-weight: normal; }
-
