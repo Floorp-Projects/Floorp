@@ -415,7 +415,8 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
 
     }
   }
-  return rv;
+  //for the moment return NS_OK, because failure stops entire DoCommand process.
+  return NS_OK;
 }
 
 nsresult
