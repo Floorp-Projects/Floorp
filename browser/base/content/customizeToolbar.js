@@ -205,6 +205,10 @@ var toolbarDNDObserver = {
     // the item to space it properly in the palette.
     item.removeAttribute("flex");
     item.removeAttribute("width");
+    item.removeAttribute("minwidth");
+    item.removeAttribute("minheight");
+    item.removeAttribute("align");
+    item.removeAttribute("pack");
     
     // Set whatever flex the item in our enclosure has on the enclosure,
     // so that we flex properly.
