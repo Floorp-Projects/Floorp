@@ -20,9 +20,10 @@ use Cwd;
 use File::Basename; # for basename();
 use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
+use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.152 $ ';
+$::UtilsVersion = '$Revision: 1.153 $ ';
 
 package TinderUtils;
 
@@ -889,14 +890,20 @@ sub run_all_tests {
     my $pref_file = "prefs.js";
     my $moz_profile_dir = "$build_dir/.mozilla";
     if ($Settings::OS =~ /^WIN/) {
-        $moz_profile_dir = "$ENV{APPDATA}" . "\\Mozilla\\Profiles\\$Settings::MozProfileName";
+        my $is9x = eval 'use Win32; return Win32::IsWin95();';
+        if ($is9x) {
+            # works on win98 and win2k. (Different on Me, XP, NT??)
+            $moz_profile_dir = $ENV{winbootdir} || $ENV{windir} || "C:\\WINDOWS";
+            $moz_profile_dir .= "\\Application Data";
+        } else {
+            $moz_profile_dir = $ENV{APPDATA};
+        }
+        $moz_profile_dir .= "\\Mozilla\\Profiles\\$Settings::MozProfileName";
         $moz_profile_dir =~ s|\\|/|g;
         print "moz_profile_dir: $moz_profile_dir\n";
     }
-    open PREFS, "find '$moz_profile_dir' -name prefs.js|"
-        or die "couldn't find prefs file\n";
-    $pref_file = $_ while <PREFS>;
-    chomp $pref_file;
+    my $sub = sub { $pref_file eq $_ and $pref_file = $File::Find::name; };
+    File::Find::find($sub, $moz_profile_dir);
 
     # Find profile_dir while we're at it.
     my $profile_dir = $pref_file;
