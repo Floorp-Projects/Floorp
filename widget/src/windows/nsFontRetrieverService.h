@@ -38,6 +38,8 @@ public:
 
 	NS_IMETHOD CreateFontSizeIterator( const nsString * aFontName, nsIFontSizeIterator** aIterator );
 
+  NS_IMETHOD IsFontScalable( const nsString * aFontName, PRBool* aResult );	
+
   // nsIFontNameIterator
 
 	NS_IMETHOD Reset();

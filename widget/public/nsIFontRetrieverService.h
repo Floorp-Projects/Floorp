@@ -31,14 +31,16 @@ class nsString;
 
 class nsIFontRetrieverService : public nsISupports
 		// This (singleton) service exists soley as a factory to manufacture iterators
-	{
+{
 		public:
       static const nsIID& GetIID() { static nsIID iid = NS_IFONTRETRIEVERSERVICE_IID; return iid; }
 
 			NS_IMETHOD CreateFontNameIterator( nsIFontNameIterator** aIterator ) = 0;
 
 			NS_IMETHOD CreateFontSizeIterator( const nsString * aFontName, nsIFontSizeIterator** aIterator ) = 0;
-	};
+
+			NS_IMETHOD IsFontScalable( const nsString * aFontName, PRBool* aResult ) = 0;	
+};
 
 
 #endif
