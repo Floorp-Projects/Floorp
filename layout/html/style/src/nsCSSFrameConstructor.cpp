@@ -445,18 +445,10 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(void)
     mGfxScrollFrame(nsnull)
 {
   NS_INIT_REFCNT();
-#ifdef INCLUDE_XUL
-  nsXULAtoms::AddRefAtoms();
-  nsHTMLAtoms::AddRefAtoms();
-#endif
 }
 
 nsCSSFrameConstructor::~nsCSSFrameConstructor(void)
 {
-#ifdef INCLUDE_XUL
-  nsXULAtoms::ReleaseAtoms();
-  nsHTMLAtoms::ReleaseAtoms();
-#endif
 }
 
 NS_IMPL_ISUPPORTS(nsCSSFrameConstructor, kIStyleFrameConstructionIID);
