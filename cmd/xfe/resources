@@ -3222,6 +3222,11 @@ dialog_cancel_button
 *dontDisplayAgain.labelString:	Don't display this message again.
 *hintDialog.dontDisplayAgainRow.marginWidth: 9
 
+! The Editor encoding dialog
+*changeEncoding_popup.title:		@NAME@: Change Encoding
+*encodeContent.labelString:		Change Encoding for content
+*dontEncodeContent.labelString:		Change encoding but leave content untouched
+
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! Editor popups.
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
