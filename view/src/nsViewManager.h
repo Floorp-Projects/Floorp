@@ -427,6 +427,7 @@ private:
 
   //list of view managers
   static nsVoidArray       *gViewManagers;
+  static PRBool            gTransitoryBackbuffer;
 
   //compositor regions
   nsIRegion         *mOpaqueRgn;
