@@ -1237,7 +1237,7 @@ CPrefs::PrefErr CPrefs::DoRead( LFile * file, short fileType )
 		// contain its own IC Preferences file.
 		
 		// We do not want a stupid break to source debugger every time
-		StValueChanger<EDebugAction> okayToFail(gDebugThrow, debugAction_Nothing);
+		StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 		CInternetConfigInterface::ConnectToInternetConfig(/*&prefSpec*/);
 	}
 	
