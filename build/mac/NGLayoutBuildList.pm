@@ -231,7 +231,7 @@ sub BuildDist()
     [":mozilla:modules:libreg:include:MANIFEST",				"$distdirectory:libreg:"],
 
 	#XPCOM
-    [":mozilla:xpcom:src:MANIFEST",								"$distdirectory:xpcom:"],
+    [":mozilla:xpcom:public:MANIFEST",								"$distdirectory:xpcom:"],
 
 	#ZLIB
     [":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:"],
