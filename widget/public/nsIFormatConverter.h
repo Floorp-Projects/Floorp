@@ -20,9 +20,9 @@
 #define nsIFormatConverter_h__
 
 #include "nsISupports.h"
+#include "nsString.h"
 
-class nsIDataFlavor;
-class nsISupportsArray;
+class nsVoidArray;
 
 // {948A0023-E3A7-11d2-96CF-0060B0FB9956}
 #define NS_IFORMATCONVERTER_IID      \
@@ -40,7 +40,7 @@ class nsIFormatConverter : public nsISupports {
     *
     * @param  aDataFlavorList fills list with supported flavors
     */
-    NS_IMETHOD GetInputDataFlavors(nsISupportsArray ** aDataFlavorList) = 0;
+    NS_IMETHOD GetInputDataFlavors(nsVoidArray ** aDataFlavorList) = 0;
 
   /**
     * Get the list of the "output" data flavors, in otherwords, the flavors  
@@ -48,7 +48,7 @@ class nsIFormatConverter : public nsISupports {
     *
     * @param  aDataFlavorList fills list with supported flavors
     */
-    NS_IMETHOD GetOutputDataFlavors(nsISupportsArray ** aDataFlavorList) = 0;
+    NS_IMETHOD GetOutputDataFlavors(nsVoidArray ** aDataFlavorList) = 0;
 
   /**
     * Determines whether a converion from one flavor to another is supported
@@ -57,7 +57,7 @@ class nsIFormatConverter : public nsISupports {
     * @param  aFromFormatConverter flavor to convert to
     * @returns returns NS_OK if it can be converted
     */
-    NS_IMETHOD CanConvert(nsIDataFlavor * aFromDataFlavor, nsIDataFlavor * aToDataFlavor) = 0;
+    NS_IMETHOD CanConvert(nsString * aFromDataFlavor, nsString * aToDataFlavor) = 0;
 
 
   /**
@@ -67,8 +67,8 @@ class nsIFormatConverter : public nsISupports {
     * @param  aFromFormatConverter flavor to convert to (destination own the memory)
     * @returns returns NS_OK if it was converted
     */
-    NS_IMETHOD Convert(nsIDataFlavor * aFromDataFlavor, void * aFromData, PRUint32 aDataLen,
-                       nsIDataFlavor * aToDataFlavor,   void ** aToData, PRUint32 * aDataToLen) = 0;
+    NS_IMETHOD Convert(nsString * aFromDataFlavor, void * aFromData, PRUint32 aDataLen,
+                       nsString * aToDataFlavor,   void ** aToData, PRUint32 * aDataToLen) = 0;
 
 
 

@@ -20,9 +20,8 @@
 #define nsFileListTransferable_h__
 
 #include "nsITransferable.h"
-#include "nsIGenericTransferable.h"
 #include "nsIFileListTransferable.h"
-#include "nsIDataFlavor.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 
@@ -35,7 +34,7 @@ class nsVoidArray;
  * XP FileListTransferable wrapper
  */
 
-class nsFileListTransferable : public nsIFileListTransferable, public nsITransferable, public nsIGenericTransferable
+class nsFileListTransferable : public nsIFileListTransferable, public nsITransferable
 {
 
 public:
@@ -51,10 +50,9 @@ public:
   //////////////////////////
   NS_IMETHOD FlavorsTransferableCanExport ( nsISupportsArray** outFlavorList ) ;
   NS_IMETHOD GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList);
-  NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aFlavor);
 
    // Transferable still owns |aData|. Do not delete it.
-  NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen);
+  NS_IMETHOD GetTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen);
   NS_IMETHOD_(PRBool) IsLargeDataSet();
 
   //////////////////////////
@@ -64,14 +62,14 @@ public:
   NS_IMETHOD GetFileList(nsVoidArray * aFileList);
 
   //////////////////////////
-  //nsIGenericTransferable
+  // Getter interface
   //////////////////////////
-  NS_IMETHOD FlavorsTransferableCanImport ( nsISupportsArray** outFlavorList ) ;
+  NS_IMETHOD FlavorsTransferableCanImport ( nsVoidArray** outFlavorList ) ;
   
-  NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen); // Transferable consumes |aData|. Do not delete it.
+  NS_IMETHOD SetTransferData(nsString * aFlavor, void * aData, PRUint32 aDataLen); // Transferable consumes |aData|. Do not delete it.
 
-  NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor);
-  NS_IMETHOD RemoveDataFlavor(nsIDataFlavor * aDataFlavor);
+  NS_IMETHOD AddDataFlavor(nsString * aDataFlavor);
+  NS_IMETHOD RemoveDataFlavor(nsString * aDataFlavor);
 
   NS_IMETHOD SetConverter(nsIFormatConverter * aConverter);
   NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter);
@@ -82,8 +80,8 @@ protected:
   NS_IMETHODIMP nsFileListTransferable::CopyFileList(nsVoidArray * aFromFileList,
                                                      nsVoidArray * aToFileList);
 
-  nsVoidArray           * mFileList;
-  nsCOMPtr<nsIDataFlavor> mFileListDataFlavor;
+  nsVoidArray * mFileList;
+  nsString      mFileListDataFlavor;
 
 };
 

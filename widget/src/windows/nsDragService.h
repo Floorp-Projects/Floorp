@@ -47,7 +47,7 @@ public:
 
   // nsIDragSession
   NS_IMETHOD GetData (nsITransferable * aTransferable);
-  NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor);
+  NS_IMETHOD IsDataFlavorSupported(nsString * aDataFlavor);
 
   // native impl.
   NS_IMETHOD SetIDataObject (IDataObject * aDataObj);

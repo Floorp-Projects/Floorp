@@ -22,7 +22,7 @@
 #include "nsIFormatConverter.h"
 #include "nsString.h"
 
-class nsIDataFlavor;
+#include "nsITransferable.h" // for mime defs
 
 class nsXIFFormatConverter : public nsIFormatConverter
 {
@@ -35,12 +35,12 @@ public:
   NS_DECL_ISUPPORTS
   
   //nsIXIFConverter
-  NS_IMETHOD GetInputDataFlavors(nsISupportsArray ** aDataFlavorList);
-  NS_IMETHOD GetOutputDataFlavors(nsISupportsArray ** aDataFlavorList);
+  NS_IMETHOD GetInputDataFlavors(nsVoidArray ** aDataFlavorList);
+  NS_IMETHOD GetOutputDataFlavors(nsVoidArray ** aDataFlavorList);
 
-  NS_IMETHOD CanConvert(nsIDataFlavor * aFromDataFlavor, nsIDataFlavor * aToDataFlavor);
-  NS_IMETHOD Convert(nsIDataFlavor * aFromDataFlavor, void * aFromData, PRUint32 aDataLen,
-                     nsIDataFlavor * aToDataFlavor,   void ** aToData, PRUint32 * aDataToLen);
+  NS_IMETHOD CanConvert(nsString * aFromDataFlavor, nsString * aToDataFlavor);
+  NS_IMETHOD Convert(nsString * aFromDataFlavor, void * aFromData, PRUint32 aDataLen,
+                     nsString * aToDataFlavor,   void ** aToData, PRUint32 * aDataToLen);
 
 protected:
 
@@ -48,7 +48,7 @@ protected:
   NS_IMETHOD ConvertFromXIFToText(const nsString & aFromStr, nsString & aToStr);
   NS_IMETHOD ConvertFromXIFToAOLMail(const nsString & aFromStr, nsString & aToStr);
 
-  nsISupportsArray * mDFList;
+  //nsVoidArray * mDFList;
 
 };
 

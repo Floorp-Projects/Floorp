@@ -45,7 +45,6 @@ public:
   NS_IMETHOD SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner);
   NS_IMETHOD GetData(nsITransferable * aTransferable);
 
-  NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor);
   NS_IMETHOD EmptyClipboard();
   NS_IMETHOD ForceDataToClipboard();
 

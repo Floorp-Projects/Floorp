@@ -23,11 +23,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsDataObj.h"
-#include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
-#include "nsIDataFlavor.h"
+#include "nsString.h"
 #include "nsIFormatConverter.h"
-#include "nsIGenericTransferable.h"
 #include "nsITransferable.h"
 
 #include "nsIWidget.h"
@@ -39,14 +37,6 @@
 #include "nsVoidArray.h"
 #include "nsFileSpec.h"
 
-// interface definitions
-static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
-
-//static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
-//static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
-
-NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
-NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 
 //-------------------------------------------------------------------------
 //
@@ -78,30 +68,6 @@ nsClipboard::~nsClipboard()
     mDataObj->Release();
   }
 
-}
-
-//-------------------------------------------------------------------------
-// * @param aIID The name of the class implementing the method
-// * @param _classiiddef The name of the #define symbol that defines the IID
-// * for the class (e.g. NS_ISUPPORTS_IID)
-//-------------------------------------------------------------------------
-nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv = NS_NOINTERFACE;
-
-  static NS_DEFINE_IID(kIClipboard, NS_ICLIPBOARD_IID);
-  if (aIID.Equals(kIClipboard)) {
-    *aInstancePtr = (void*) ((nsIClipboard*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -163,22 +129,17 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
   dObj->SetTransferable(aTransferable);
 
   // Get the transferable list of data flavors
-  nsISupportsArray * dfList;
+  nsVoidArray * dfList;
   aTransferable->FlavorsTransferableCanExport(&dfList);
 
   // Walk through flavors that contain data and register them
   // into the DataObj as supported flavors
   PRUint32 i;
-  PRUint32 cnt = 0;
-  nsresult rv = dfList->Count(&cnt);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  PRUint32 cnt = dfList->Count();
   for (i=0;i<cnt;i++) {
-    nsIDataFlavor * df;
-    nsISupports * supports = dfList->ElementAt(i);
-    if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-      nsString mime;
-      df->GetMimeType(mime);
-      UINT format = GetFormat(mime);
+    nsString * df = (nsString *)dfList->ElementAt(i);
+    if (nsnull != df) {
+      UINT format = GetFormat(*df);
 
       // check here to see if we can the data back from global member
       // XXX need IStream support, or file support
@@ -188,12 +149,10 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
       // Now tell the native IDataObject about both the DataFlavor and 
       // the native data format
       dObj->AddDataFlavor(df, &fe);
-      NS_RELEASE(df);
     }
-    NS_RELEASE(supports);
   }
   // Delete the data flavors list
-  NS_RELEASE(dfList);
+  delete dfList;
 
   return NS_OK;
 }
@@ -443,27 +402,18 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
   if (nsnull == aTransferable) {
     return res;
   }
-  nsCOMPtr<nsIGenericTransferable> genericTrans(do_QueryInterface(aTransferable));
-  if (!genericTrans) {
-    return res;
-  }
 
   // Get the transferable list of data flavors
-  nsISupportsArray * dfList;
+  nsVoidArray * dfList;
   aTransferable->GetTransferDataFlavors(&dfList);
 
   // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
   PRUint32 i;
-  PRUint32 cnt = 0;
-  nsresult rv = dfList->Count(&cnt);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  PRUint32 cnt = dfList->Count();
   for (i=0;i<cnt;i++) {
-    nsIDataFlavor * df;
-    nsISupports * supports = dfList->ElementAt(i);
-    if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-      nsString mime;
-      df->GetMimeType(mime);
-      UINT format = GetFormat(mime);
+    nsString * df = (nsString *)dfList->ElementAt(i);
+    if (nsnull != df) {
+      UINT format = GetFormat(*df);
 
       void   * data;
       PRUint32 dataLen;
@@ -471,19 +421,17 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       if (nsnull != aDataObject) {
         res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
         if (NS_OK == res) {
-          genericTrans->SetTransferData(df, data, dataLen);
+          aTransferable->SetTransferData(df, data, dataLen);
         }
       } else if (nsnull != aWindow) {
         res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
         if (NS_OK == res) {
-          genericTrans->SetTransferData(df, data, dataLen);
+          aTransferable->SetTransferData(df, data, dataLen);
         }
       } 
-      NS_IF_RELEASE(df);
     }
-    NS_RELEASE(supports);
   }
-
+  delete dfList;
   return res;
 
 }
@@ -554,23 +502,16 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
   ::EmptyClipboard();
 
   // Get the transferable list of data flavors
-  nsISupportsArray * dfList;
+  nsVoidArray * dfList;
   mTransferable->GetTransferDataFlavors(&dfList);
 
   // Walk through flavors and see which flavor is on the native clipboard,
   PRUint32 i;
-  PRUint32 cnt = 0;
-  nsresult rv = dfList->Count(&cnt);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+  PRUint32 cnt = dfList->Count();
   for (i=0;i<cnt;i++) {
-    nsIDataFlavor * df;
-    nsISupports * supports = dfList->ElementAt(i);
-    if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-      nsString mime;
-      df->GetMimeType(mime);
-
-      // convert mime to native format identifier
-      UINT format = GetFormat(mime);
+    nsString * df = (nsString *)dfList->ElementAt(i);
+    if (nsnull != df) {
+      UINT format = GetFormat(*df);
 
       void   * data;
       PRUint32 dataLen;
@@ -582,11 +523,9 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
       if (nsnull != data) {
         PlaceDataOnClipboard(format, (char *)data, dataLen);
       }
-      NS_RELEASE(df);
     }
-    NS_RELEASE(supports);
   }
-
+  delete dfList;
   ::CloseClipboard();
 
   return NS_OK;

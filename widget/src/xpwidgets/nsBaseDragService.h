@@ -58,7 +58,7 @@ public:
   NS_IMETHOD GetTargetSize (nsSize * aDragTargetSize); 
 
   NS_IMETHOD GetData (nsITransferable * aTransferable);
-  NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor);
+  NS_IMETHOD IsDataFlavorSupported(nsString * aDataFlavor);
 
 protected:
 

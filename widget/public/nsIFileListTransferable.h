@@ -22,8 +22,6 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-class nsIDataFlavor;
-class nsISupportsArray;
 class nsVoidArray;
 
 #define FileListMime "filelist"
