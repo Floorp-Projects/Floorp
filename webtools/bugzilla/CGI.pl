@@ -157,7 +157,7 @@ sub ValidateBugID {
     my $alias = $id;
     if (!detaint_natural($id)) {
         $id = BugAliasToID($alias);
-        $id || ThrowUserError("invalid_bug_id_or_alias", {'bug_id' => $id});
+        $id || ThrowUserError("invalid_bug_id_or_alias", {'bug_id' => $alias});
     }
     
     # Modify the calling code's original variable to contain the trimmed,

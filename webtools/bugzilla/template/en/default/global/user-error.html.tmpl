@@ -356,15 +356,13 @@
     
   [% ELSIF error == "invalid_bug_id_or_alias" %]
     [% title = BLOCK %]Invalid [% terms.Bug %] ID[% END %]
-    The '[% terms.bug %] number' <em>[% bug_id FILTER html %]</em> is invalid.
+    '[% bug_id FILTER html %]' is not a valid [% terms.bug %] number.
     [% IF Param("usebugaliases") %]
       It is neither [% terms.abug %] number nor an alias to [% terms.abug %]
       number.
     [% END %]
     If you are trying to use QuickSearch, you need to enable JavaScript 
-    in your browser. To help us fix this limitation, add your comments to 
-    <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">b<!--
-    word broken up to pass test 009 -->ug 70907</a>.
+    in your browser. 
 
   [% ELSIF error == "invalid_changedsince" %]
     [% title = "Invalid 'Changed Since'" %]
