@@ -643,59 +643,61 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
     nsCOMPtr<nsIContent> realElement;
     LocateInstance(aChangedElement, content, aAnonymousContent, element, getter_AddRefs(realElement));
 
-    xblAttr->GetDstAttribute(getter_AddRefs(dstAttr));
+    if (realElement) {
+      xblAttr->GetDstAttribute(getter_AddRefs(dstAttr));
 
-    if (aRemoveFlag)
-      realElement->UnsetAttr(aNameSpaceID, dstAttr, PR_TRUE);
-    else {
-      PRBool attrPresent = PR_TRUE;
-      nsAutoString value;
-      // Check to see if the src attribute is xbl:text.  If so, then we need to obtain the 
-      // children of the real element and get the text nodes' values.
-      if (aAttribute == kXBLTextAtom) {
-        nsXBLBinding::GetTextData(aChangedElement, value);
-        value.StripChar('\n');
-        value.StripChar('\r');
-        nsAutoString stripVal(value);
-        stripVal.StripWhitespace();
-        if (stripVal.IsEmpty()) 
-          attrPresent = PR_FALSE;
-      }    
+      if (aRemoveFlag)
+        realElement->UnsetAttr(aNameSpaceID, dstAttr, PR_TRUE);
       else {
-        nsresult result = aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
-        attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
-                       result == NS_CONTENT_ATTR_HAS_VALUE);
+        PRBool attrPresent = PR_TRUE;
+        nsAutoString value;
+        // Check to see if the src attribute is xbl:text.  If so, then we need to obtain the 
+        // children of the real element and get the text nodes' values.
+        if (aAttribute == kXBLTextAtom) {
+          nsXBLBinding::GetTextData(aChangedElement, value);
+          value.StripChar('\n');
+          value.StripChar('\r');
+          nsAutoString stripVal(value);
+          stripVal.StripWhitespace();
+          if (stripVal.IsEmpty()) 
+            attrPresent = PR_FALSE;
+        }    
+        else {
+          nsresult result = aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
+          attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
+                         result == NS_CONTENT_ATTR_HAS_VALUE);
+        }
+
+        if (attrPresent)
+          realElement->SetAttr(aNameSpaceID, dstAttr, value, PR_TRUE);
       }
 
-      if (attrPresent)
-        realElement->SetAttr(aNameSpaceID, dstAttr, value, PR_TRUE);
-    }
-
-    // See if we're the <html> tag in XUL, and see if value is being
-    // set or unset on us.  We may also be a tag that is having
-    // xbl:text set on us.
-    nsCOMPtr<nsIAtom> tag;
-    realElement->GetTag(*getter_AddRefs(tag));
-    if (dstAttr.get() == kXBLTextAtom || (tag.get() == kHTMLAtom) && (dstAttr.get() == kValueAtom)) {
-      // Flush out all our kids.
-      PRInt32 childCount;
-      realElement->ChildCount(childCount);
-      for (PRInt32 i = 0; i < childCount; i++)
-        realElement->RemoveChildAt(0, PR_TRUE);
+      // See if we're the <html> tag in XUL, and see if value is being
+      // set or unset on us.  We may also be a tag that is having
+      // xbl:text set on us.
+      nsCOMPtr<nsIAtom> tag;
+      realElement->GetTag(*getter_AddRefs(tag));
+      if (dstAttr.get() == kXBLTextAtom || (tag.get() == kHTMLAtom) && (dstAttr.get() == kValueAtom)) {
+        // Flush out all our kids.
+        PRInt32 childCount;
+        realElement->ChildCount(childCount);
+        for (PRInt32 i = 0; i < childCount; i++)
+          realElement->RemoveChildAt(0, PR_TRUE);
       
-      if (!aRemoveFlag) {
-        // Construct a new text node and insert it.
-        nsAutoString value;
-        aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
-        if (!value.IsEmpty()) {
-          nsCOMPtr<nsIDOMText> textNode;
-          nsCOMPtr<nsIDocument> doc;
-          aChangedElement->GetDocument(*getter_AddRefs(doc));
-          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
-          domDoc->CreateTextNode(value, getter_AddRefs(textNode));
-          nsCOMPtr<nsIDOMNode> dummy;
-          nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(realElement));
-          domElement->AppendChild(textNode, getter_AddRefs(dummy));
+        if (!aRemoveFlag) {
+          // Construct a new text node and insert it.
+          nsAutoString value;
+          aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
+          if (!value.IsEmpty()) {
+            nsCOMPtr<nsIDOMText> textNode;
+            nsCOMPtr<nsIDocument> doc;
+            aChangedElement->GetDocument(*getter_AddRefs(doc));
+            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+            domDoc->CreateTextNode(value, getter_AddRefs(textNode));
+            nsCOMPtr<nsIDOMNode> dummy;
+            nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(realElement));
+            domElement->AppendChild(textNode, getter_AddRefs(dummy));
+          }
         }
       }
     }
