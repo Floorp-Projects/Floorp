@@ -240,7 +240,7 @@ nsWebScriptsAccess::CanAccess(nsIURI* aTransportURI,
   rv =
     mSecurityManager->IsCapabilityEnabled("UniversalBrowserRead", 
                                           aAccessGranted);
-  if (NS_FAILED(rv) || aAccessGranted)
+  if (NS_FAILED(rv) || *aAccessGranted)
     return rv;
   
   rv = mSecurityManager->CheckSameOrigin(0, aTransportURI);
