@@ -21,6 +21,8 @@ CPPSRCS = \
 	nsXPFCCommand.cpp \
 	nsXPFCActionCommand.cpp \
 	nsXPFCMethodInvokerCommand.cpp \
+	nsXPFCNotificationStateCommand.cpp \
+	nsXPFCModelUpdateCommand.cpp \
 	$(NULL)
 
 REQUIRES = xpcom raptor

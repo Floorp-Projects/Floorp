@@ -56,6 +56,8 @@
 #include "nsXPFCCanvas.h"
 #include "nsXPFCCanvasManager.h"
 #include "nsXPFCMethodInvokerCommand.h"
+#include "nsXPFCNotificationStateCommand.h"
+#include "nsXPFCModelUpdateCommand.h"
 #include "nsXPFCActionCommand.h"
 #include "nsCommandServer.h"
 #include "nsXPFCHTMLCanvas.h"
@@ -100,6 +102,8 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,                NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCStack,                     NS_STACK_CID);
 static NS_DEFINE_IID(kCXPFCMethodInvokerCommand,  NS_XPFC_METHODINVOKER_COMMAND_CID);
+static NS_DEFINE_IID(kCXPFCNotificationStateCommand,  NS_XPFC_NOTIFICATIONSTATE_COMMAND_CID);
+static NS_DEFINE_IID(kCXPFCModelUpdateCommand,    NS_XPFC_MODELUPDATE_COMMAND_CID);
 static NS_DEFINE_IID(kCXPFCCommandServerCID,      NS_XPFC_COMMAND_SERVER_CID);
 static NS_DEFINE_IID(kCXPFCActionCommand,         NS_XPFC_ACTION_COMMAND_CID);
 static NS_DEFINE_IID(kCUserCID,                   NS_USER_CID);

@@ -20,13 +20,13 @@
 #include "nsIXPFCObserver.h"
 #include "nsIXPFCSubject.h"
 #include "nsIXPFCCommand.h"
-#include "nsIXPFCCommandStateObserver.h"
 #include "nsxpfcCIID.h"
+#include "nsXPFCNotificationStateCommand.h"
 
-static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
-static NS_DEFINE_IID(kCXPFCObserverIID, NS_IXPFC_OBSERVER_IID);
-static NS_DEFINE_IID(kCXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
+static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kXPFCObserverManagerIID,   NS_IXPFC_OBSERVERMANAGER_IID);
+static NS_DEFINE_IID(kCXPFCObserverIID,         NS_IXPFC_OBSERVER_IID);
+static NS_DEFINE_IID(kCXPFCSubjectIID,          NS_IXPFC_SUBJECT_IID);
 
 class ListEntry {
 public:
@@ -45,12 +45,14 @@ public:
 class StateEntry {
 public:
   nsCommandState state;
-  nsIXPFCCommandStateObserver * observer;
+  nsIXPFCObserver * observer;
+  PRBool update_when_complete;
 
   StateEntry(nsCommandState aState, 
-            nsIXPFCCommandStateObserver * aObserver) { 
+            nsIXPFCObserver * aObserver) { 
     state = aState;
     observer = aObserver;
+    update_when_complete = PR_FALSE;
   }
   ~StateEntry() {
   }
@@ -64,6 +66,8 @@ nsXPFCObserverManager :: nsXPFCObserverManager()
   mList = nsnull;
   mState = nsnull;
   monitor = nsnull;
+  mNotificationCount = 0;
+  mOriginalNotifier = nsnull;
 
   Init();
 }
@@ -160,6 +164,8 @@ nsresult nsXPFCObserverManager::Unregister(nsIXPFCSubject * aSubject, nsIXPFCObs
     iterator->Next();
   }
 
+  NS_RELEASE(iterator);
+
   PR_ExitMonitor(monitor);
 
   return NS_OK;
@@ -226,6 +232,8 @@ nsresult nsXPFCObserverManager::Unregister(nsISupports * aSubjectObserver)
     iterator->Next();
   }
 
+  NS_RELEASE(iterator);
+
   PR_ExitMonitor(monitor);
 
   NS_IF_RELEASE(subject);
@@ -238,6 +246,14 @@ nsresult nsXPFCObserverManager::Unregister(nsISupports * aSubjectObserver)
 nsresult nsXPFCObserverManager::Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
 {
   PR_EnterMonitor(monitor);
+
+  if (0 == mNotificationCount)
+  {
+    mOriginalNotifier = aSubject;
+    NS_ADDREF(aSubject);
+  }
+
+  mNotificationCount++;
 
   nsIIterator * iterator;
 
@@ -252,9 +268,36 @@ nsresult nsXPFCObserverManager::Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand
     item = (ListEntry *) iterator->CurrentItem();
 
     if (item->subject == aSubject || aSubject == nsnull)
+    {
       item->observer->Update(item->subject, aCommand);
 
+      /*
+       * Check to see if this observer has registered for 
+       * Command State Notifications and if so, update it
+       */
+
+      CheckForCommandStateNotification(item->observer);
+    }
+
     iterator->Next();
+  }
+
+  NS_RELEASE(iterator);
+
+  mNotificationCount--;
+
+  /*
+   * If this set of Notifications has completed, check to see
+   * if anyone has registered to be notified of command complete
+   * notifications, and tell them if their state was indeed updated
+   * as a result of the previous notification round
+   */
+
+  if (0 == mNotificationCount)
+  {
+    SendCommandStateNotifications(nsCommandState_eComplete);
+    mOriginalNotifier = nsnull;
+    NS_RELEASE(aSubject);
   }
 
   PR_ExitMonitor(monitor);
@@ -262,13 +305,90 @@ nsresult nsXPFCObserverManager::Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand
   return NS_OK;
 }
 
-nsresult nsXPFCObserverManager::RegisterForCommandState(nsIXPFCCommandStateObserver * aCommandStateObserver, nsCommandState aCommandState)
+nsresult nsXPFCObserverManager::RegisterForCommandState(nsIXPFCObserver * aObserver, nsCommandState aCommandState)
 {
   PR_EnterMonitor(monitor);
 
-  mState->Append(new StateEntry(aCommandState, aCommandStateObserver));
+  mState->Append(new StateEntry(aCommandState, aObserver));
 
   PR_ExitMonitor(monitor);
+
+  return NS_OK;
+}
+
+nsresult nsXPFCObserverManager::CheckForCommandStateNotification(nsIXPFCObserver * aObserver)
+{
+  nsIIterator * iterator;
+
+  mState->CreateIterator(&iterator);
+
+  iterator->Init();
+
+  StateEntry * item ;
+
+  while(!(iterator->IsDone()))
+  {
+    item = (StateEntry *) iterator->CurrentItem();
+
+    if (item->observer == aObserver)
+      item->update_when_complete = PR_TRUE;
+
+    iterator->Next();
+  }
+
+  NS_RELEASE(iterator);
+
+  return NS_OK;
+}
+
+nsresult nsXPFCObserverManager::SendCommandStateNotifications(nsCommandState aCommandState)
+{
+  nsIIterator * iterator;
+  nsXPFCNotificationStateCommand * command = nsnull;
+  nsresult res = NS_OK;
+
+  mState->CreateIterator(&iterator);
+
+  iterator->Init();
+
+  StateEntry * item ;
+
+  while(!(iterator->IsDone()))
+  {
+    item = (StateEntry *) iterator->CurrentItem();
+
+    if (PR_TRUE == item->update_when_complete)
+    {
+      /*
+       * Create the CommandState Event with attribute eComplete
+       */
+      if (nsnull == command)
+      {
+        static NS_DEFINE_IID(kCXPFCNotificationStateCommandCID, NS_XPFC_NOTIFICATIONSTATE_COMMAND_CID);
+        static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
+
+        res = nsRepository::CreateInstance(kCXPFCNotificationStateCommandCID, 
+                                           nsnull, 
+                                           kXPFCCommandIID, 
+                                           (void **)&command);
+
+        if (NS_OK != res)
+          break ;
+
+        command->Init();
+
+        command->mCommandState = aCommandState;
+      }
+
+      item->update_when_complete = PR_FALSE;
+      item->observer->Update(mOriginalNotifier, command);
+    }
+
+    iterator->Next();
+  }
+
+  NS_RELEASE(iterator);
+  NS_IF_RELEASE(command);
 
   return NS_OK;
 }
