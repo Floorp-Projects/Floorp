@@ -2343,7 +2343,8 @@ static call_tree* find_tree(stack_frame* frame)
     /* primordial root of the call tree. */
     static call_tree root = { 0, 0, 0, 0, 0 };
 
-    if ((frame == NULL) || ((word)frame & 0x1))
+    /* ensure frame is non-NULL and 4-byte aligned. */
+    if ((frame == NULL) || ((word)frame & 0x3))
         return &root;
     else {
         call_tree* parent = find_tree(frame->next);
@@ -2381,18 +2382,41 @@ static call_tree* find_tree(stack_frame* frame)
     }
 }
 
+static int fix_stack(stack_frame* frame)
+{
+    // only fix the REAL stack.
+    if (! GC_base(frame)) {
+        Ptr stackBase = LMGetCurStackBase();
+        while (frame) {
+            // if we find a bogus frame in the stack, we clear it out.
+            if (frame->next < frame || (Ptr)frame->next > stackBase) {
+                frame->next = NULL;
+                return 1;
+            }
+            frame = frame->next;
+        }
+    }
+    return 0;
+}
+
 void GC_save_callers(struct callinfo info[NFRAMES]) 
 {
 	int	i;
 	stack_frame* currentFrame;
-	call_tree* currentTree;
+	call_tree* currentTree = NULL;
 	
 	currentFrame = getStackFrame();		// GC_save_callers's frame.
 	currentFrame = currentFrame->next;	// GC_debug_malloc's frame.
 	currentFrame = currentFrame->next;	// GC_debug_malloc's caller's frame.
-	
-	currentTree = find_tree(currentFrame);
-	
+
+	if (info != GC_last_stack) {
+    	currentTree = find_tree(currentFrame);
+    } else {
+        static int fixed_stack = 0;
+        if (!fixed_stack)
+            fixed_stack = fix_stack(currentFrame);
+    }
+    
 	info[0].ci_pc = (word) currentTree;
 	info[1].ci_pc = 0;
 }
