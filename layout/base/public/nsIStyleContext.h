@@ -64,7 +64,7 @@ struct nsStyleColor : public nsStyleStruct {
 
   PRUint8 mCursor;                // [reset] See nsStyleConsts.h NS_STYLE_CURSOR_*
   nsString mCursorImage;          // [reset] url string
-  nsStyleCoord mOpacity;          // [inherited] percent, factor, inherit
+  float mOpacity;                 // [inherited] percentage
 
 protected:
   nsStyleColor(void);
