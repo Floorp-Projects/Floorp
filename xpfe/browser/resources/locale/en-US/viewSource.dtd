@@ -16,3 +16,6 @@
 
 <!ENTITY findNextCmd.label "Find Next">
 <!ENTITY findNextCmd.accesskey "n">
+
+<!ENTITY printSetupCmd.label "Page Setup...">
+<!ENTITY printSetupCmd.accesskey "u">
