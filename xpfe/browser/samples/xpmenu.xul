@@ -48,6 +48,7 @@ Contributor(s): ______________________________________. -->
 		  <html:div><html:u>C</html:u>lose</html:div> 
 	   <spring flex="100%"/> 
 	  </xpmenu> 
+	  <html:hr style="border: 1px black solid; margin-left: 10px; margin-right: 10px"/>
 	  <xpmenu> 
 		  <html:div><html:u>S</html:u>ave</html:div> 
 	   <spring flex="100%"/> 
@@ -67,27 +68,51 @@ Contributor(s): ______________________________________. -->
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>E</html:u>dit</html:div>
+		<xpmenuchildren>
+		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>V</html:u>iew</html:div>
+		<xpmenuchildren>
+		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>S</html:u>earch</html:div>
+	    <xpmenuchildren>
+		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>G</html:u>o</html:div>
+	    <xpmenuchildren>
+		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>B</html:u>ookmarks</html:div>
+	    <xpmenuchildren>
+		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>T</html:u>asks</html:div>
+	    <xpmenuchildren>
+		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>D</html:u>ebug</html:div>
+		<xpmenuchildren>
+		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		</xpmenuchildren>
 	  </xpmenu>
 	  <xpmenu>
 	    <html:div><html:u>Q</html:u>A</html:div>
+		<xpmenuchildren>
+		  <xpmenu><html:div>Sample Item</html:div></xpmenu>
+		</xpmenuchildren>
 	  </xpmenu>
 	  <spring flex="100%"/>
     </xpmenubar>
