@@ -472,16 +472,20 @@ int HaveDecodedRow(
     switch (format) {
     case gfxIFormats::RGB:
       {
-        while(rowBufIndex != decoder->mGIFStruct->rowend) {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-          *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
-#endif
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
-          ++rowBufIndex;
-        }
-
+          if (cmap) {// cmap could have null value if the global color table flag is 0
+              while (rowBufIndex != decoder->mGIFStruct->rowend) {
+              #if defined(XP_MAC) || defined(XP_MACOSX)
+                  *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
+              #endif
+                  *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
+                  *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
+                  *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
+                  ++rowBufIndex;
+            }
+          }
+          else 
+              memset(decoder->mRGBLine, 0, bpr);   
+          
         for (int i=0; i<aDuplicateCount; i++)
           decoder->mImageFrame->SetImageData(decoder->mRGBLine,
                                              bpr, (aRowNumber+i)*bpr);
@@ -489,12 +493,16 @@ int HaveDecodedRow(
       break;
     case gfxIFormats::BGR:
       {
-        while(rowBufIndex != decoder->mGIFStruct->rowend) {
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
-          *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
-          ++rowBufIndex;
+        if (cmap) {// cmap could have null value if the global color table flag is 0
+            while (rowBufIndex != decoder->mGIFStruct->rowend) {
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
+                ++rowBufIndex;
+            }
         }
+        else 
+            memset(decoder->mRGBLine, 0, bpr);   
 
         for (int i=0; i<aDuplicateCount; i++)
           decoder->mImageFrame->SetImageData(decoder->mRGBLine,
@@ -504,42 +512,44 @@ int HaveDecodedRow(
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
       {
-        if (decoder->mGIFStruct->is_transparent &&
+        gfx_color transColor = 0;
+        if (cmap && // cmap could have null value if the global color table flag is 0
+            decoder->mGIFStruct->is_transparent &&
             (decoder->mGIFStruct->tpixel < cmapsize)) {
-          gfx_color transColor = 0;
           transColor |= cmap[decoder->mGIFStruct->tpixel].red;
           transColor |= cmap[decoder->mGIFStruct->tpixel].green << 8;
           transColor |= cmap[decoder->mGIFStruct->tpixel].blue << 16;
-          decoder->mImageFrame->SetTransparentColor(transColor);
         }
-
+        decoder->mImageFrame->SetTransparentColor(transColor);
         memset(decoder->mRGBLine, 0, bpr);
         memset(decoder->mAlphaLine, 0, abpr);
         PRUint32 iwidth = (PRUint32)width;
-        for (PRUint32 x=0; x<iwidth; x++) {
-          if (*rowBufIndex != decoder->mGIFStruct->tpixel) {
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
-            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
-            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
-#else
-#if defined(XP_MAC) || defined(XP_MACOSX)
-          *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
-#endif
-            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
-            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
-            *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
-#endif
-            decoder->mAlphaLine[x>>3] |= 1<<(7-x&0x7);
-          } else {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-            rgbRowIndex+=4;
-#else
-            rgbRowIndex+=3;
-#endif
-          }
+        if (cmap) {// cmap could have null value if the global color table flag is 0
+            for (PRUint32 x=0; x<iwidth; x++) {
+                if (*rowBufIndex != decoder->mGIFStruct->tpixel) {
+        #if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
+        #else
+        #if defined(XP_MAC) || defined(XP_MACOSX)
+              *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
+        #endif
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
+                *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
+        #endif
+                decoder->mAlphaLine[x>>3] |= 1<<(7-x&0x7);
+              } else {
+        #if defined(XP_MAC) || defined(XP_MACOSX)
+                rgbRowIndex+=4;
+        #else
+                rgbRowIndex+=3;
+        #endif
+              }
 
-          ++rowBufIndex;
+              ++rowBufIndex;
+            }
         }
         for (int i=0; i<aDuplicateCount; i++) {
           decoder->mImageFrame->SetAlphaData(decoder->mAlphaLine,
