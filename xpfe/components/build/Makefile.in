@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  downloadmanager \
       uriloader \
       webbrowserpersist \
+      progressDlg \
 		  pref \
 		  docshell \
 		  webshell \
