@@ -903,27 +903,31 @@ void nsImapProtocol::ReleaseUrlState(PRBool rerunning)
       m_imapServerSink->RemoveChannelFromUrl(mailnewsurl, NS_OK);
 
     {
-      nsAutoCMonitor mon (this);
-      m_runningUrl = nsnull; // force us to release our last reference on the url
-      m_urlInProgress = PR_FALSE;
-    }
+      nsCOMPtr <nsIImapMailFolderSink> saveFolderSink = m_imapMailFolderSink;
+      {
+        nsAutoCMonitor mon (this);
+        m_runningUrl = nsnull; // force us to release our last reference on the url
+        m_imapMailFolderSink = nsnull;
+        m_urlInProgress = PR_FALSE;
+      }
 
-    // we want to make sure the imap protocol's last reference to the url gets released
-    // back on the UI thread. This ensures that the objects the imap url hangs on to
-    // properly get released back on the UI thread. In order to do this, we need a
-    // a fancy texas two step where we first give the ui thread the url we want to
-    // release, then we forget about our copy. Then we tell it to release the url
-    // for real.
-    if (m_imapMailFolderSink)
-    {
-      nsCOMPtr <nsISupports> supports = do_QueryInterface(mailnewsurl);
-      m_imapMailFolderSink->PrepareToReleaseObject(supports);
-      supports = nsnull;
-      mailnewsurl = nsnull;
-      // at this point in time, we MUST have released all of our references to 
-      // the url from the imap protocol. otherwise this whole exercise is moot.
-      m_imapMailFolderSink->ReleaseObject();
-      m_imapMailFolderSink = nsnull;
+      // we want to make sure the imap protocol's last reference to the url gets released
+      // back on the UI thread. This ensures that the objects the imap url hangs on to
+      // properly get released back on the UI thread. In order to do this, we need a
+      // a fancy texas two step where we first give the ui thread the url we want to
+      // release, then we forget about our copy. Then we tell it to release the url
+      // for real.
+      if (saveFolderSink)
+      {
+        nsCOMPtr <nsISupports> supports = do_QueryInterface(mailnewsurl);
+        saveFolderSink->PrepareToReleaseObject(supports);
+        supports = nsnull;
+        mailnewsurl = nsnull;
+        // at this point in time, we MUST have released all of our references to 
+        // the url from the imap protocol. otherwise this whole exercise is moot.
+        saveFolderSink->ReleaseObject();
+        saveFolderSink = nsnull;
+      }
     }
   }
   else
