@@ -1101,14 +1101,14 @@ BookmarksService::AddMenuBookmark(NSMenu* aMenu, nsIContent* aParent, nsIContent
     NSMenu* menu = [[[NSMenu alloc] initWithTitle: title] autorelease];
     [aMenu setSubmenu: menu forItem: menuItem];
     [menu setAutoenablesItems: NO];
-    [menuItem setOffStateImage: [NSImage imageNamed:@"folder"]];
+    [menuItem setImage: [NSImage imageNamed:@"folder"]];
     ConstructBookmarksMenu(menu, aChild);
   }
   else {
     if (group.IsEmpty())
-      [menuItem setOffStateImage: [NSImage imageNamed:@"smallbookmark"]];
+      [menuItem setImage: [NSImage imageNamed:@"smallbookmark"]];
     else
-      [menuItem setOffStateImage: [NSImage imageNamed:@"groupbookmark"]];
+      [menuItem setImage: [NSImage imageNamed:@"groupbookmark"]];
     
     [menuItem setTarget: gMainController];
     [menuItem setAction: @selector(openMenuBookmark:)];
@@ -1117,8 +1117,6 @@ BookmarksService::AddMenuBookmark(NSMenu* aMenu, nsIContent* aParent, nsIContent
   PRUint32 contentID;
   aChild->GetContentID(&contentID);
   [menuItem setTag: contentID];
-  // Figure out why this doesn't work.
-  [menuItem setState: NSOffState];
 }
 
 void 

@@ -82,8 +82,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [self setSession:@"history"];
   
   // construct and configure the popup window
-  mPopupWin = [[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,0,0)
-                      styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO];
+  mPopupWin = [[[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,0,0)
+                      styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:NO] retain];
   [mPopupWin setReleasedWhenClosed:NO];
   [mPopupWin setLevel:NSPopUpMenuWindowLevel];
   [mPopupWin setHasShadow:YES];
@@ -92,6 +92,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // construct and configure the view
   mTableView = [[[NSTableView alloc] initWithFrame:NSMakeRect(0,0,0,0)] autorelease];
   [mTableView setIntercellSpacing:NSMakeSize(1, 2)];
+  [mTableView setTarget:self];
+  [mTableView setAction:@selector(onRowClicked:)];
   
   // Create the icon column if we have a proxy icon
   if (mProxyIcon != nil) {
@@ -142,6 +144,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   if (mSearchString)
     [mSearchString release];
 
+  [mPopupWin release];
   [mDataSource release];
 
   NS_IF_RELEASE(mSession);
@@ -313,6 +316,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   }
 }
 
+- (void) completeSelectedResult
+{
+  [self completeResult:[mTableView selectedRow]];
+}
 
 - (void) completeResult:(int)aRow
 {
@@ -346,6 +353,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 {
   if ([self isOpen] && aRow >= 0) {
     [self setStringValue: [mDataSource resultString:[mTableView selectedRow] column:@"col1"]];
+    [self selectText:self];
+    [self closePopup];
   }
 }
 
@@ -389,6 +398,12 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 // event handlers ////////////////////////////////////////////
 
+- (void) onRowClicked:(id)sender
+{
+  [self enterResult:[mTableView clickedRow]];
+  [self sendAction:[self action] to:[self target]];
+}
+
 - (void) onBlur:(id)sender
 {
   [self closePopup];
@@ -419,18 +434,24 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [self enterResult:[mTableView selectedRow]];
   } else if (command == @selector(moveUp:)) {
     [self selectRowBy:-1];
+    [self completeSelectedResult];
     return YES;
   } else if (command == @selector(moveDown:)) {
     [self selectRowBy:1];
+    [self completeSelectedResult];
     return YES;
   } else if (command == @selector(scrollPageUp:)) {
     [self selectRowBy:-kMaxRows];
+    [self completeSelectedResult];
   } else if (command == @selector(scrollPageDown:)) {
     [self selectRowBy:kMaxRows];
+    [self completeSelectedResult];
   } else if (command == @selector(moveToBeginningOfDocument:)) {
     [self selectRowAt:0];
+    [self completeSelectedResult];
   } else if (command == @selector(moveToEndOfDocument:)) {
     [self selectRowAt:[mTableView numberOfRows]-1];
+    [self completeSelectedResult];
   } else if (command == @selector(insertTab:) || command == @selector(insertNewline:)) {
     [self closePopup];
   } else if (command == @selector(deleteBackward:) || 

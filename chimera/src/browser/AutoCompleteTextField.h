@@ -59,6 +59,7 @@
 - (void) searchTimer:(NSTimer *)aTimer;
 
 - (void) completeDefaultResult;
+- (void) completeSelectedResult;
 - (void) completeResult:(int)aRow;
 - (void) enterResult:(int)aRow;
 
@@ -70,6 +71,7 @@
 - (void) resizePopup;
 - (BOOL) isOpen;
 
+- (void) onRowClicked:(id)sender;
 - (void) onBlur:(id)sender;
 - (void) onResize:(id)sender;
 
