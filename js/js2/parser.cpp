@@ -33,12 +33,10 @@ namespace JS = JavaScript;
 // sourceLocation describes the origin of the source and may be used for error messages.
 // initialLineNum is the line number of the first line of the source string.
 JS::Reader::Reader(const String &source, const String &sourceLocation, uint32 initialLineNum):
-	source(source), sourceLocation(sourceLocation), initialLineNum(initialLineNum)
+	source(source + uni::null), sourceLocation(sourceLocation), initialLineNum(initialLineNum)
 {
-	const char16 *b = Reader::source.c_str();
-	begin = b;
-	p = b;
-	end = b + Reader::source.size();
+	begin = p = this->source.data();
+	end = begin + this->source.size() - 1;
   #ifdef DEBUG
 	recordString = 0;
   #endif
