@@ -92,6 +92,9 @@ public:
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                              PRInt32 *aStart, PRInt32 *aEnd, PRBool *aDrawSelected , PRUint32 aFlag/*not used*/);
+  NS_IMETHOD SetMouseDownState(PRBool aState);
+  NS_IMETHOD GetMouseDownState(PRBool *aState);
+
 /*END nsIFrameSelection interfacse*/
 
 /*BEGIN nsIDOMSelection interface implementations*/
@@ -172,6 +175,7 @@ private:
   // for nsIScriptContextOwner
   void*		mScriptObject;
   nsIFocusTracker *mTracker;
+  PRBool mMouseDownState; //for drag purposes
 };
 
 class nsRangeListIterator : public nsIBidirectionalEnumerator
@@ -237,6 +241,7 @@ nsRangeListIterator::nsRangeListIterator(nsRangeList *aList)
     return;
   }
   mRangeList = aList;
+  mDirection = PR_TRUE;
   NS_INIT_REFCNT();
 }
 
@@ -682,6 +687,7 @@ NS_IMETHODIMP
 nsRangeList::Init(nsIFocusTracker *aTracker)
 {
   mTracker = aTracker;
+  mMouseDownState = PR_FALSE;
   return NS_OK;
 }
 
@@ -996,6 +1002,27 @@ nsRangeList::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
 
 
 
+NS_METHOD 
+nsRangeList::SetMouseDownState(PRBool aState)
+{
+  mMouseDownState = aState;
+  return NS_OK;
+}
+
+
+
+NS_METHOD
+nsRangeList::GetMouseDownState(PRBool *aState)
+{
+  if (!aState)
+    return NS_ERROR_NULL_POINTER;
+  *aState = mMouseDownState;
+  return NS_OK;
+}
+
+
+
+//////////END FRAMESELECTION
 NS_METHOD
 nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListener)
 {
@@ -1465,11 +1492,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
   }
 
-  // If we get here, the focus wasn't contained in any of the ranges.
-#ifdef DEBUG
-  printf("nsRangeList::Extend: focus not contained in any ranges\n");
-#endif
-  return NS_ERROR_UNEXPECTED;
+  return NS_OK;
 }
 
 
