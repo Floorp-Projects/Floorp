@@ -298,7 +298,7 @@ nsresult nsMailboxTestDriver::RunDriver()
 	return status;
 }
 
-static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
+static const char kMsgRootFolderPref[] = "mail.rootFolder";
 
 void nsMailboxTestDriver::InitializeTestDriver()
 {
