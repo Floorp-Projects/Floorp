@@ -62,7 +62,7 @@ CPPSRCS		= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp
 #else
-#ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+#ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 #CPPSRCS     += nsLocalFileMac.cpp
 #CSRCS       += macDirectoryCopy.c
 else
@@ -97,7 +97,7 @@ EXPORTS		= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS		+= nsLocalFileOS2.h
 else
-#ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+#ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 #EXPORTS     += nsLocalFileMac.h nsILocalFileMac.h
 #else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

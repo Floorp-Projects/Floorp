@@ -98,7 +98,7 @@ tier_0_dirs = \
 tier_1_dirs = js
 
 # MacOSX needs to build lib for MoreFiles before xpcom
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 tier_1_dirs += lib/mac/MoreFiles
 endif
 

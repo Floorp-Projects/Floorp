@@ -47,7 +47,7 @@ XPIDLSRCS	= \
 		nsINativeAppSupport.idl \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 XPIDLSRCS	+= nsIInternetConfigService.idl
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

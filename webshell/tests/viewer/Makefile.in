@@ -74,7 +74,7 @@ CPPSRCS			= \
 			nsWindowCreator.cpp \
 			$(NULL)
 
-ifeq (,$(filter beos os2 photon mac windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter beos os2 photon mac cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 DIRS			+= unix
 VIEWER_TK_LIBS	= unix/$(MOZ_WIDGET_TOOLKIT)/libviewer_$(MOZ_WIDGET_TOOLKIT)_s.a
 else
@@ -88,7 +88,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 TOOLKIT_CPPSRCS		= nsPhMain.cpp nsPhMenu.cpp
 endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 TOOLKIT_CPPSRCS		= nsMacMain.cpp
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

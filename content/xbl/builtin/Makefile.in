@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 DIRS		= win
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		= mac
 else
 DIRS		= unix

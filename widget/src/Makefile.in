@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= xpwidgets support
 
-ifneq (,$(filter beos os2 mac,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter beos os2 mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= $(MOZ_WIDGET_TOOLKIT)
 endif
 

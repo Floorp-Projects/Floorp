@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq (mac,$(MOZ_WIDGET_TOOLKIT))
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 THEME_PLATFORM = mac
 else
 THEME_PLATFORM = win

@@ -55,7 +55,7 @@ EXPORTS		= \
 		nsIXRemoteWidgetHelper.h \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXPORTS       += nsWidgetAtoms.h nsWidgetAtomList.h
 endif
 
@@ -79,7 +79,7 @@ XPIDLSRCS	= \
 		nsIXRemoteClient.idl \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 XPIDLSRCS       += nsIEventSink.idl
 endif
 
