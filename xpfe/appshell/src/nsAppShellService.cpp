@@ -48,6 +48,7 @@
 #include "nsIEnumerator.h"
 #include "nsICmdLineService.h"
 #include "nsCRT.h"
+#include "nsITimelineService.h"
 #ifdef NS_DEBUG
 #include "prprf.h"    
 #endif
@@ -144,10 +145,12 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService,
     goto done;
   }
 
+  NS_TIMELINE_ENTER("nsComponentManager::CreateInstance.");
   // Create widget application shell
   rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull,
                                           NS_GET_IID(nsIAppShell),
                                           (void**)getter_AddRefs(mAppShell));
+  NS_TIMELINE_LEAVE("nsComponentManager::CreateInstance");
   if (NS_FAILED(rv)) {
     goto done;
   }

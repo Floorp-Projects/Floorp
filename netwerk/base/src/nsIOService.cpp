@@ -40,6 +40,7 @@
 #include "nsICategoryManager.h"
 #include "nsIURLParser.h"
 #include "nsISupportsPrimitives.h"
+#include "nsITimelineService.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -663,6 +664,7 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
     NS_ENSURE_ARG_POINTER(aURI);
+    NS_TIMELINE_MARK_URI("nsIOService::NewChannelFromURI(%s)", aURI);
 
     nsXPIDLCString scheme;
     rv = aURI->GetScheme(getter_Copies(scheme));

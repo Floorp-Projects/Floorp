@@ -246,6 +246,11 @@ CFLAGS=$(CFLAGS) -DXPCONNECT_STANDALONE
 CFLAGS=$(CFLAGS) -DMOZ_PERF_METRICS
 !endif
 
+# Enable timeline service if MOZ_TIMELINE is set
+!ifdef MOZ_TIMELINE
+CFLAGS=$(CFLAGS) -DMOZ_TIMELINE
+!endif
+
 !ifndef MOZ_JAVA
 MOZ_OJI = 1             # on by default now
 !endif

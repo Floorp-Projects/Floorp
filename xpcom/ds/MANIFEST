@@ -27,3 +27,4 @@ nsVoidBTree.h
 pldhash.h
 plvector.h
 nsTextFormatter.h
+nsTimelineService.h

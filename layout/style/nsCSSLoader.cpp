@@ -51,6 +51,7 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsITimelineService.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIXULPrototypeCache.h"
@@ -614,6 +615,8 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
                                 PRUint32 stringLen,
                                 const char* string)
 {
+  NS_TIMELINE_OUTDENT();
+  NS_TIMELINE_MARK_LOADER("SheetLoadData::OnStreamComplete(%s)", aLoader);
   nsresult result = NS_OK;
   nsString *strUnicodeBuffer = nsnull;
 
@@ -1230,6 +1233,10 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         nsCOMPtr<nsILoadGroup> loadGroup;
         mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
+#ifdef MOZ_TIMELINE
+        NS_TIMELINE_MARK_URI("Loading style sheet: %s", urlClone);
+        NS_TIMELINE_INDENT();
+#endif
         result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull, loadGroup,
                                     nsnull, nsIChannel::LOAD_NORMAL);
 #ifdef NS_DEBUG

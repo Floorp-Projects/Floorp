@@ -36,6 +36,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsITimelineService.h"
 #if defined(VMS) && defined(DEBUG)
 #include <lib$routines.h>
 #include <ssdef.h>
@@ -337,7 +338,10 @@ PRBool nsDll::Load(void)
 #ifdef NS_BUILD_REFCNT_LOGGING
         nsTraceRefcnt::SetActivityIsLegal(PR_FALSE);
 #endif
+        NS_TIMELINE_START_TIMER("PR_LoadLibrary");
         m_instance = PR_LoadLibrary(m_dllName);
+        NS_TIMELINE_STOP_TIMER("PR_LoadLibrary");
+        NS_TIMELINE_MARK_TIMER("PR_LoadLibrary");
 
 #ifdef NS_BUILD_REFCNT_LOGGING
         nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);

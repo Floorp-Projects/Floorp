@@ -66,6 +66,7 @@ CPPSRCS		= \
 		nsVoidArray.cpp \
 		nsVoidBTree.cpp \
 		nsTextFormatter.cpp \
+		nsTimelineService.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -114,6 +115,7 @@ XPIDLSRCS	= \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
 		nsISupportsPrimitives.idl \
+		nsITimelineService.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

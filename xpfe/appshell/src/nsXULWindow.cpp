@@ -59,6 +59,7 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsITimelineService.h"
 
 #include "nsStyleConsts.h"
 
@@ -546,14 +547,18 @@ NS_IMETHODIMP nsXULWindow::GetVisibility(PRBool* aVisibility)
 
 NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
 {
+   NS_TIMELINE_ENTER("nsXULWindow::SetVisibility.");
    if(!mChromeLoaded)
       {
       mShowAfterLoad = aVisibility;
+      NS_TIMELINE_LEAVE("nsXULWindow::SetVisibility");
       return NS_OK;
       }
 
-   if(mDebuting)
+   if(mDebuting) {
+      NS_TIMELINE_LEAVE("nsXULWindow::SetVisibility");
       return NS_OK;
+   }
    mDebuting = PR_TRUE;  // (Show / Focus is recursive)
 
    //XXXTAB Do we really need to show docshell and the window?  Isn't 
@@ -576,6 +581,7 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
       splashScreenGone = PR_TRUE;
       }
    mDebuting = PR_FALSE;
+   NS_TIMELINE_LEAVE("nsXULWindow::SetVisibility");
    return NS_OK;
 }
 
@@ -1261,6 +1267,7 @@ NS_IMETHODIMP nsXULWindow::GetNewWindow(PRInt32 aChromeFlags,
 NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
+   NS_TIMELINE_ENTER("nsXULWindow::CreateNewChromeWindow");
    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
    
@@ -1286,12 +1293,14 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
    newWindow->GetDocShell(getter_AddRefs(docShell));
    CallQueryInterface(docShell, aDocShellTreeItem);
 
+   NS_TIMELINE_LEAVE("nsXULWindow::CreateNewChromeWindow done");
    return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
+   NS_TIMELINE_ENTER("nsXULWindow::CreateNewContentWindow");
    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
 
@@ -1387,6 +1396,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    // into the new window's content shell array.  Locate the "content area" content
    // shell.
    newWindow->GetPrimaryContentShell(aDocShellTreeItem);
+   NS_TIMELINE_LEAVE("nsXULWindow::CreateNewContentWindow");
    return NS_OK;
 }
 

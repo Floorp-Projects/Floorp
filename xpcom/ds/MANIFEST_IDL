@@ -9,5 +9,6 @@ nsIProperties.idl
 nsISerializable.idl
 nsIStopwatch.idl
 nsISupportsArray.idl
+nsITimelineService.idl
 nsISupportsIterators.idl
 nsISupportsPrimitives.idl
