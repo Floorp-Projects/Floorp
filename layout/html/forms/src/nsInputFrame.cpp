@@ -59,7 +59,7 @@ nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 
 nsInputFrame::~nsInputFrame()
 {
-  printf("nsInputFrame::~nsInputFrame \n");
+  //printf("nsInputFrame::~nsInputFrame \n");
 }
 
 NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
