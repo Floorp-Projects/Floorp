@@ -1868,9 +1868,9 @@ struct PRPollDesc {
 ** returned unless a timeout occurs in which case zero is returned.
 **
 ** PRPollDesc.in_flags should be set to the desired request
-** (read/write/except or some combination). Upon return from this call
-** PRPollDesc.out_flags will be set to indicate what kind of i/o can be
-** performed on the respective descriptor.
+** (read/write/except or some combination). Upon successful return from
+** this call PRPollDesc.out_flags will be set to indicate what kind of
+** i/o can be performed on the respective descriptor.
 **
 ** INPUTS:
 **      PRPollDesc *pds         A pointer to an array of PRPollDesc
@@ -1888,9 +1888,12 @@ struct PRPollDesc {
 ** RETURN:
 **      PRInt32                 Number of PRPollDesc's with events or zero
 **                              if the function timed out or -1 on failure.
-**                              The reason for the failure is obtained by calling 
-**                              PR_GetError().
-** XXX can we implement this on windoze and mac?
+**                              The reason for the failure is obtained by
+**                              calling PR_GetError().  PR_Poll() uses the
+**                              out_flags fields as scratch variables
+**                              during the call.  If PR_Poll() returns 0
+**                              or -1, the out_flags fields do not contain
+**                              meaningful values and must not be used.
 **************************************************************************
 */
 NSPR_API(PRInt32) PR_Poll(
