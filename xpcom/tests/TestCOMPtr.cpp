@@ -382,7 +382,6 @@ main()
     }
 
     {
-#ifdef NSCAP_FEATURE_DONT_ADDREF
       cout << endl << "### Test 15,16 ...setup..." << endl;
       IFoo* raw_foo1p = new IFoo;
       raw_foo1p->AddRef();
@@ -397,7 +396,6 @@ main()
       cout << endl << "### Test 16: what if I don't want to |AddRef| when I assign in?" << endl;
       nsCOMPtr<IFoo> foo2p;
       foo2p = dont_AddRef(raw_foo2p);
-#endif
     }
 
 
