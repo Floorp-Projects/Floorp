@@ -90,6 +90,7 @@ public:
     nsresult Init(PRInt32 ioFlags, PRInt32 perm, nsIURI* uri, PRBool generateHTMLDirs = PR_FALSE);
     nsresult GetFileTransport(nsITransport **);
     nsresult SetStreamConverter();
+    nsresult EnsureFile();
 
 protected:
     nsCOMPtr<nsIFile>                   mFile;
