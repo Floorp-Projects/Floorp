@@ -251,12 +251,12 @@ nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     if (result == NS_NOINTERFACE) {
       if (aIID.Equals(kInsListBoxIID)) {
         *aInstancePtr = (void*) ((nsIListBox*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         result = NS_OK;
       }
       else if (aIID.Equals(kInsListWidgetIID)) {
         *aInstancePtr = (void*) ((nsIListWidget*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         result = NS_OK;
       }
     }

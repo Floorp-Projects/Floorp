@@ -172,12 +172,12 @@ nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   if (aIID.Equals(kInsComboBoxIID)) {
     *aInstancePtr = (void*) ((nsIComboBox*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   else if (aIID.Equals(kInsListWidgetIID)) {
     *aInstancePtr = (void*) ((nsIListWidget*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
 

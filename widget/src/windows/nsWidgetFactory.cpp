@@ -125,7 +125,7 @@ nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,
         return NS_NOINTERFACE;   
     }   
 
-    AddRef(); // Increase reference count for caller   
+    NS_ADDREF_THIS(); // Increase reference count for caller   
     return NS_OK;   
 }   
 

@@ -102,7 +102,7 @@ nsresult nsAppShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     if (result == NS_NOINTERFACE && aIID.Equals(kInsAppShellIID)) {
         nsIAppShell* shell = this;
         *aInstancePtr = (void*)shell;
-        AddRef();
+        NS_ADDREF_THIS();
         result = NS_OK;
     }
 

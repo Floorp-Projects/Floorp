@@ -59,7 +59,7 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
   if (result == NS_NOINTERFACE && aIID.Equals(kIRadioButtonIID)) {
       *aInstancePtr = (void*) ((nsIRadioButton*)this);
-      AddRef();
+      NS_ADDREF_THIS();
       result = NS_OK;
   }
   return result;

@@ -58,7 +58,7 @@ nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kInsTextWidgetIID, NS_ITEXTWIDGET_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsTextWidgetIID)) {
         *aInstancePtr = (void*) ((nsITextWidget*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         result = NS_OK;
     }
 

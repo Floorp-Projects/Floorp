@@ -181,7 +181,7 @@ nsresult nsRadioGroup::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kInsRadioGroupIID, NS_IRADIOGROUP_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsRadioGroupIID)) {
         *aInstancePtr = (void*) ((nsIRadioGroup*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         result = NS_OK;
     }
 
@@ -263,7 +263,7 @@ nsIEnumerator* nsRadioGroup::GetChildren()
 {
     if (mChildren) {
         mChildren->Reset();
-        mChildren->AddRef();
+        NS_ADDREF(mChildren);
         return mChildren;
     }
 
@@ -317,7 +317,7 @@ NS_IMPL_ISUPPORTS(nsRadioGroup::Enumerator, NS_IENUMERATOR_IID);
 nsISupports* nsRadioGroup::Enumerator::Next()
 {
     if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) {
-        mChildrens[mCurrentPosition]->AddRef();
+        NS_ADDREF(mChildrens[mCurrentPosition]);
         return mChildrens[mCurrentPosition++];
     }
 
@@ -351,7 +351,7 @@ void nsRadioGroup::Enumerator::Append(nsIRadioButton* aRadioButton)
             GrowArray();
         }
         mChildrens[pos] = aRadioButton;
-        aRadioButton->AddRef();
+        NS_ADDREF(aRadioButton);
     }
 }
 

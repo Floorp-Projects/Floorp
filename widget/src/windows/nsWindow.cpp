@@ -429,7 +429,7 @@ nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kIWidgetIID)) {
         *aInstancePtr = (void*) ((nsIWidget*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         result = NS_OK;
     }
 
@@ -732,7 +732,7 @@ nsIWidget* nsWindow::GetParent(void)
               if (widget->mIsDestroying) {
                 widget = NULL;
               } else {
-                widget->AddRef();
+                NS_ADDREF(widget);
               }
             }
         }

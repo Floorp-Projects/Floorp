@@ -66,7 +66,7 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
     if (aIID.Equals(kICheckButtonIID)) {
         *aInstancePtr = (void*) ((nsICheckButton*)this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     return nsWindow::QueryInterface(aIID,aInstancePtr);
