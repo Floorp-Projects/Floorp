@@ -101,7 +101,7 @@ my $last_moon;
 
 # leave @trees empty if you don't want tinderbox details
 
-my @trees = qw (Mozilla raptor);
+my @trees = qw (Mozilla Mozilla-External raptor);
 my $trees;
 my $last;
 my $last_tree;
@@ -421,8 +421,23 @@ sub killed
 sub tinderbox
     {
     &debug ("fetching tinderbox status");
-    ($trees, $last) = Tinderbox::status (\@trees);
+    my $newtrees;
+    ($newtrees, $last) = Tinderbox::status (\@trees);
     $last_tree = time;
+    if (defined $trees) {
+        foreach my $t (@trees) {
+            foreach my $e (sort keys %{$$newtrees{$t}}) {
+                if (!defined $$trees{$t}{$e}) {
+                    $bot->privmsg($channel, "$t: A new column '$e' has appeared ($$newtrees{$t}{$e})");
+                } else {
+                    if ($$trees{$t}{$e} ne $$newtrees{$t}{$e}) {
+                        $bot->privmsg($channel, "$t: '$e' has changed state from $$trees{$t}{$e} to $$newtrees{$t}{$e}");
+                    }
+                }
+            }
+        }
+    }
+    $trees = $newtrees;
     
     $bot->schedule (360, \&tinderbox);
     }
