@@ -16,13 +16,16 @@
  * Reserved.
  */
 
+#ifndef nsNNTPProtocol_h___
+#define nsNNTPProtocol_h___
+
 #include "nsIStreamListener.h"
 #include "rosetta.h"
 #include HG40855
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
-// commands, etc. I do not intend it to refer to protocol state
+// commands, etc. I do not intend it to refer to protocol state)
 
 #define NNTP_PAUSE_FOR_READ			0x00000001  /* should we pause for the next read */
 #define NNTP_PROXY_AUTH_REQUIRED    0x00000002  /* is auth required */
@@ -31,10 +34,105 @@
 #define NNTP_READER_PERFORMED       0x00000010  /* have we sent any cmds to the server yet? */
 #define NNTP_USE_FANCY_NEWSGROUP    0x00000020	/* use LIST XACTIVE or LIST */
 #define NNTP_DESTROY_PROGRESS_GRAPH 0x00000040  /* do we need to destroy graph progress */  
+#define NNTP_SOME_PROTOCOL_SUCCEEDED 0x0000080  /* some protocol has suceeded so don't kill the connection */
+#define NNTP_NO_XOVER_SUPPORT       0x00000100  /* xover command is not supported here */
+
+/* forward declarations */
+class nsIMsgXOVERParser;
+class nsIMsgNewsArticleList;
+class nsIMsgOfflineNewsState;
+class nsIMsgNewsHost;
+class nsIMsgNewsgroup;
+class nsIMsgOfflineNewsState;
+class nsIOutputStream;
+
+/* states of the machine
+ */
+typedef enum _StatesEnum {
+NNTP_RESPONSE,
+#ifdef BLOCK_UNTIL_AVAILABLE_CONNECTION
+NNTP_BLOCK_UNTIL_CONNECTIONS_ARE_AVAILABLE,
+NNTP_CONNECTIONS_ARE_AVAILABLE,
+#endif
+NNTP_CONNECT,
+NNTP_CONNECT_WAIT,
+HG07711
+NNTP_LOGIN_RESPONSE,
+NNTP_SEND_MODE_READER,
+NNTP_SEND_MODE_READER_RESPONSE,
+SEND_LIST_EXTENSIONS,
+SEND_LIST_EXTENSIONS_RESPONSE,
+SEND_LIST_SEARCHES,
+SEND_LIST_SEARCHES_RESPONSE,
+NNTP_LIST_SEARCH_HEADERS,
+NNTP_LIST_SEARCH_HEADERS_RESPONSE,
+NNTP_GET_PROPERTIES,
+NNTP_GET_PROPERTIES_RESPONSE,
+SEND_LIST_SUBSCRIPTIONS,
+SEND_LIST_SUBSCRIPTIONS_RESPONSE,
+SEND_FIRST_NNTP_COMMAND,
+SEND_FIRST_NNTP_COMMAND_RESPONSE,
+SETUP_NEWS_STREAM,
+NNTP_BEGIN_AUTHORIZE,
+NNTP_AUTHORIZE_RESPONSE,
+NNTP_PASSWORD_RESPONSE,
+NNTP_READ_LIST_BEGIN,
+NNTP_READ_LIST,
+DISPLAY_NEWSGROUPS,
+NNTP_NEWGROUPS_BEGIN,
+NNTP_NEWGROUPS,
+NNTP_BEGIN_ARTICLE,
+NNTP_READ_ARTICLE,
+NNTP_XOVER_BEGIN,
+NNTP_FIGURE_NEXT_CHUNK,
+NNTP_XOVER_SEND,
+NNTP_XOVER_RESPONSE,
+NNTP_XOVER,
+NEWS_PROCESS_XOVER,
+NNTP_READ_GROUP,
+NNTP_READ_GROUP_RESPONSE,
+NNTP_READ_GROUP_BODY,
+NNTP_SEND_GROUP_FOR_ARTICLE,
+NNTP_SEND_GROUP_FOR_ARTICLE_RESPONSE,
+NNTP_PROFILE_ADD,
+NNTP_PROFILE_ADD_RESPONSE,
+NNTP_PROFILE_DELETE,
+NNTP_PROFILE_DELETE_RESPONSE,
+NNTP_SEND_ARTICLE_NUMBER,
+NEWS_PROCESS_BODIES,
+NNTP_PRINT_ARTICLE_HEADERS,
+NNTP_SEND_POST_DATA,
+NNTP_SEND_POST_DATA_RESPONSE,
+NNTP_CHECK_FOR_MESSAGE,
+NEWS_NEWS_RC_POST,
+NEWS_DISPLAY_NEWS_RC,
+NEWS_DISPLAY_NEWS_RC_RESPONSE,
+NEWS_START_CANCEL,
+NEWS_DO_CANCEL,
+NNTP_XPAT_SEND,
+NNTP_XPAT_RESPONSE,
+NNTP_SEARCH,
+NNTP_SEARCH_RESPONSE,
+NNTP_SEARCH_RESULTS,
+NNTP_LIST_PRETTY_NAMES,
+NNTP_LIST_PRETTY_NAMES_RESPONSE,
+NNTP_LIST_XACTIVE,
+NNTP_LIST_XACTIVE_RESPONSE,
+NNTP_LIST_GROUP,
+NNTP_LIST_GROUP_RESPONSE,
+NEWS_DONE,
+NEWS_ERROR,
+NNTP_ERROR,
+NEWS_FREE
+} StatesEnum;
 
 class nsNNTPProtocol : public nsIStreamListener
 {
 public:
+	nsNNTPProtocol();
+	
+	~nsNNTPProtocol();
+
 	NS_DECL_ISUPPORTS
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +142,7 @@ public:
 	// mscott; I don't think we need to worry about this yet so I'll leave it stubbed out for now
 	NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} ;
 	
-	// Whenever data arrives from the connection, core netlib notifices the protocol by calling
+	// Whenever data arrives from the connection, core netlib notifies the protocol by calling
 	// OnDataAvailable. We then read and process the incoming data from the input stream. 
 	NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
 
@@ -64,12 +162,12 @@ public:
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	nsString m_ProxyServer;		/* proxy server hostname */
+	char * m_ProxyServer;		/* proxy server hostname */
 
 	// Flag manipulators
-	PRBool TestFlag  (PRUInt32 flag) {return flag & m_flags;}
-	void   SetFlag   (PRUInt32 flag) { m_flags |= flag; }
-	void   ClearFlag (PRUInt32 flag) { m_flags &= ~flag; }
+	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
+	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
+	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
 private:
 	// News Event Sinks
@@ -80,29 +178,35 @@ private:
 	nsIMsgNewsgroup			* m_newsgroup;
 	nsIMsgOfflineNewsState  * m_offlineNewsState;
 
+	// Ouput stream for writing commands to the socket
+	nsIOutputStream			* m_outputStream;
+	char					* m_outputBuffer;
+
 	
-	PRUInt32 m_flags; // used to store flag information
+	PRUint32 m_flags; // used to store flag information
 
 	// Generic state information -- What state are we in? What state do we want to go to
 	// after the next response? What was the last response code? etc. 
 	StatesEnum  m_nextState;
     StatesEnum  m_nextStateAfterResponse;
-	PRInt       m_typeWanted;     /* Article, List, or Group */
-    PRInt       m_reponseCode;    /* code returned from NNTP server */
-	PRInt		m_previousResponseCode; 
+	PRInt32     m_typeWanted;     /* Article, List, or Group */
+    PRInt32     m_responseCode;    /* code returned from NNTP server */
+	PRInt32 	m_previousResponseCode; 
     char       *m_responseText;   /* text returned from NNTP server */
+
+	char	   *m_hostName;
 
 #ifdef XP_WIN
 	PRBool		calling_netlib_all_the_time;
 #endif
 
-    char   *	m_dataBuf;
-    PRUInt32     m_dataBufSize;
+    char		*	m_dataBuf;
+    PRUint32		m_dataBufSize;
 
 	/* for group command */
     char    * m_path; /* message id */
+    char    * m_currentGroup;     /* current group */
 
-    char    * m_groupName;
     PRInt32   m_firstArticle;
     PRInt32   m_lastArticle;
     PRInt32   m_firstPossibleArticle;
@@ -114,24 +218,25 @@ private:
 	// Cancelation specific state. In particular, the headers that should be 
 	// used for the cancelation message. 
 	// mscott: we can probably replace this stuff with nsString
-    nsString  m_cancelFromHdr;
-    nsString  m_cancelNewsgroups;
-    nsString  m_cancelDistribution;
-    nsString  m_cancelID;
-    nsString  m_cancelMessageFile;
-    PRInt	  m_cancelStatus;
+    char	 *m_cancelFromHdr;
+    char     *m_cancelNewsgroups;
+    char     *m_cancelDistribution;
+    char     *m_cancelID;
+    char     *m_cancelMessageFile;
+    PRInt32	  m_cancelStatus;
 
 	// variables for ReadNewsRC
 	PRInt32   m_newsRCListIndex;
 	PRInt32   m_newsRCListCount;
 
 	// Per news article state information. (article number, author, subject, id, etc
+	char	 *m_messageID;
     PRInt32   m_articleNumber;   /* current article number */
 
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
-	PRInt	  ProcessNewsState(nsIInputStream * inputStream, PRUint32 length)
-	PRInt	  CloseConnection(); // releases and closes down this protocol instance...
+	PRInt32	  ProcessNewsState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
+	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is designed 
@@ -141,109 +246,115 @@ private:
 
 	// gets the response code from the nntp server and the response line. Returns the TCP return code 
 	// from the read.
-	PRInt NewsResponse(); 
+	PRInt32 NewsResponse(nsIInputStream * inputStream, PRUint32 length); 
 
 	// Interpret the server response after the connect. 
 	// Returns negative if the server responds unexpectedly
-	PRInt LoginResponse(); 
-	PRInt SendModeReader();
-	PRInt SendModeReaderResponse();
+	PRInt32 LoginResponse(); 
+	PRInt32 SendModeReader();
+	PRInt32 SendModeReaderResponse();
 
-	PRInt SendListExtensions();
-	PRInt SendListExtensionsResponse();
+	PRInt32 SendListExtensions();
+	PRInt32 SendListExtensionsResponse(nsIInputStream * inputStream, PRUint32 length);
 	
-	PRInt SendListSearches();
-	PRInt SendListSearchesResponse();
+	PRInt32 SendListSearches();
+	PRInt32 SendListSearchesResponse(nsIInputStream * inputStream, PRUint32 length);
 
-	PRInt SendListSearchHeaders();
-	PRInt SendListSearchHeadersResponse();
+	PRInt32 SendListSearchHeaders();
+	PRInt32 SendListSearchHeadersResponse(nsIInputStream * inputStream, PRUint32 length);
 
-	PRInt GetProperties();
-	PRInt GetPropertiesResponse();
+	PRInt32 GetProperties();
+	PRInt32 GetPropertiesResponse(nsIInputStream * inputStream, PRUint32 length);
 
-	PRInt SendListSubscriptions();
-	PRInt SendListSubscriptionsResponse();
+	PRInt32 SendListSubscriptions();
+	PRInt32 SendListSubscriptionsResponse(nsIInputStream * inputStream, PRUint32 length);
 
 	// Figure out what the first command is and send it. 
 	// Returns the status from the NETWrite.
-	PRInt SendFirstNNTPCommand();
+	PRInt32 SendFirstNNTPCommand(nsIURL * url);
 
 	// Interprets the server response from the first command sent.
 	// returns negative if the server responds unexpectedly.
-	PRInt SendFirstNNTPCommandResponse();
+	PRInt32 SendFirstNNTPCommandResponse();
 
-	PRInt SendGroupForArticle();
-	PRInt SendGroupForArticleResponse();
+	PRInt32 SendGroupForArticle();
+	PRInt32 SendGroupForArticleResponse();
 
-	PRInt SendArticleNumber();
-	PRInt BeginArticle();
-	PRInt ReadArticle();
+	PRInt32 SendArticleNumber();
+	PRInt32 BeginArticle();
+	PRInt32 ReadArticle(nsIInputStream * inputStream, PRUint32 length);
 
-	PRInt BeginAuthorization();
-	PRInt AuthorizationResponse();
+	PRInt32 BeginAuthorization();
+	PRInt32 AuthorizationResponse();
 
-	PRInt NewsPasswordResponse();
+	PRInt32 PasswordResponse();
 
-	PRInt BeginReadNewsList();
-	PRInt ReadNewsList();
+	PRInt32 BeginReadNewsList();
+	PRInt32 ReadNewsList(nsIInputStream * inputStream, PRUint32 length);
 
 	// Newsgroup specific protocol handlers
-	PRInt DisplayNewsgroups();
-	PRInt BeginNewsgroups();
-	PRInt ProcessNewsgroups();
+	PRInt32 DisplayNewsgroups();
+	PRInt32 BeginNewsgroups();
+	PRInt32 ProcessNewsgroups(nsIInputStream * inputStream, PRUint32 length);
 
-	PRInt ReadNewsgroup();
-	PRInt ReadNewsgroupResponse();
+	PRInt32 ReadNewsgroup();
+	PRInt32 ReadNewsgroupResponse();
 
-	PRInt ReadNewsgroupBody();
+	PRInt32 ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32 length);
 
 	// Protocol handlers used for posting data 
-	PRInt PostData();
-	PRInt PostDataResponse();
+	PRInt32 PostData();
+	PRInt32 PostDataResponse();
 
-	PRInt CheckForArticle();
+	PRInt32 CheckForArticle();
 
 	// NewsRC specific
-	PRInt DisplayNewsRC();
-	PRInt DisplayNewsRCResponse();
+	PRInt32 DisplayNewsRC();
+	PRInt32 DisplayNewsRCResponse();
 
 	// start off the xover command 
-	PRInt BeginReadXover();
+	PRInt32 BeginReadXover();
 
 	// process the xover list as it comes from the server and load it into the sort list.  
-	PRInt ReadXover();
+	PRInt32 ReadXover(nsIInputStream * inputStream, PRUint32 length);
 	// See if the xover response is going to return us data. If the proper code isn't returned then 
 	// assume xover isn't supported and use normal read_group.
-	PRInt ReadXoverResponse();
+	PRInt32 ReadXoverResponse();
 
-	PRInt XoverSend();
-	PRInt ProcessXover();
+	PRInt32 XoverSend();
+	PRInt32 ProcessXover();
 
-	PRInt FigureNextChunk();
+	PRInt32 FigureNextChunk();
 
 	// Canceling
-	PRInt StartCancel();
-	PRInt Cancel();
+	PRInt32 StartCancel();
+	PRInt32 Cancel();
 
 	// XPAT 
-	PRInt XPATSend();
-	PRInt XPATResponse();
-	PRInt ListPrettyNames();
-	PRInt ListPrettyNamesResponse();
+	PRInt32 XPATSend();
+	PRInt32 XPATResponse(nsIInputStream * inputStream, PRUint32 length);
+	PRInt32 ListPrettyNames();
+	PRInt32 ListPrettyNamesResponse(nsIInputStream * inputStream, PRUint32 length);
 
-	PRInt ListXActive();
-	PRInt ListXActiveResponse();
+	PRInt32 ListXActive();
+	PRInt32 ListXActiveResponse(nsIInputStream * inputStream, PRUint32 length);
 
-	PRInt ListGroup();
-	PRInt ListGroupResponse();
+	PRInt32 ListGroup();
+	PRInt32 ListGroupResponse(nsIInputStream * inputStream, PRUint32 length);
 
 	// Searching Protocol....
-	PRInt Search();
-	PRInt SearchResponse();
-	PRInt SearchResults();
+	PRInt32 Search();
+	PRInt32 SearchResponse();
+	PRInt32 SearchResults(nsIInputStream *inputStream, PRUint32 length);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
+
+	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line,
+					 char ** buffer, PRUint32 * buffer_size);
 };
+
+#endif  // nsNNTPProtocol_h___
+
 
