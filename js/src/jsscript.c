@@ -250,32 +250,35 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /*
      * Emulate eval() by using caller's this, var object, sharp array, etc.,
-     * all propagated by js_Execute via a non-null fourth |down| argument to
+     * all propagated by js_Execute via a non-null fourth (down) argument to
      * js_Execute.  If there is no scripted caller, js_Execute uses its second
-     * |obj| argument to set the exec frame's varobj, thisp, and scopeChain.
+     * (chain) argument to set the exec frame's varobj, thisp, and scopeChain.
      *
      * Unlike eval, which the compiler detects, Script.prototype.exec may be
      * called from a lightweight function, or even from native code (in which
-     * case fp->varobj and fp->scopeChain are null).
+     * case fp->varobj and fp->scopeChain are null).  If exec is called from
+     * a lightweight function, we will need to get a Call object representing
+     * its frame, to act as the var object and scope chain head.
      */
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
+    if (caller && !caller->varobj) {
+        /* Called from a lightweight function. */
+        JS_ASSERT(caller->fun && !(caller->fun->flags & JSFUN_HEAVYWEIGHT));
+
+        /* Scope chain links from Call object to callee's parent. */
+        parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(caller->argv[-2]));
+        if (!js_GetCallObject(cx, caller, parent))
+            return JS_FALSE;
+    }
+
     if (!scopeobj) {
-        /* No scope object passed in, use the caller's scope chain head. */
+        /* No scope object passed in: try to use the caller's scope chain. */
         if (caller) {
-            /* Called from a scripted function. */
-            if (!caller->varobj) {
-                /* Called from a lightweight function. */
-                JS_ASSERT(caller->fun &&
-                          !(caller->fun->flags & JSFUN_HEAVYWEIGHT));
-
-                /* Scope chain links from Call object to callee's parent. */
-                parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(caller->argv[-2]));
-                if (!js_GetCallObject(cx, caller, parent))
-                    return JS_FALSE;
-            }
-
-            /* Load caller->scopeChain after conditional js_GetCallObject. */
+            /*
+             * Load caller->scopeChain after the conditional js_GetCallObject
+             * call above, which resets scopeChain as well as varobj.
+             */
             scopeobj = caller->scopeChain;
         } else {
             /*
