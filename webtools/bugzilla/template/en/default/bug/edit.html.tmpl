@@ -524,7 +524,7 @@ function updateRemainingTime() {
 
       <input type="radio" name="knob" value="reassignbycomponent">
       Reassign bug to owner
-      [% "and QA contact" IF Param('useqacontact') %]
+      [% " and QA contact" IF Param('useqacontact') %]
       of selected component
       <br>
       [% IF bug.isunconfirmed && user.canconfirm %]
