@@ -710,13 +710,12 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				if ((strMailAcctID.IsEmpty()) || 
 					(strMailAcctDisplayName.IsEmpty()) || 
 					(strMailAcctServer.IsEmpty()) || 
-					(strMailAcctPortNumber.IsEmpty())	|| 
-					(strMailAcctSMTPServer.IsEmpty()))
+					(strMailAcctSMTPServer.IsEmpty())  ||
+					(strMailAcctPortNumber.IsEmpty())) 
 				{
 					if (!((strMailAcctID.IsEmpty()) && 
 						(strMailAcctDisplayName.IsEmpty()) && 
 						(strMailAcctServer.IsEmpty()) && 
-						(strMailAcctPortNumber.IsEmpty())	&& 
 						(strMailAcctSMTPServer.IsEmpty())))
 					{
 						AfxMessageBox("All fields must be filled to create a customized mail account", MB_OK);
