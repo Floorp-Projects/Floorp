@@ -8,6 +8,32 @@
     tables to document dependencies. Any takers?</para>
   </note>
 
+  <section id="dbmodify">
+      <title>Modifying Your Running System</title>
+
+      <para>Bugzilla optimizes database lookups by storing all relatively
+      static information in the 
+      <filename>versioncache</filename> file, located in the 
+      <filename class="directory">data/</filename>
+      subdirectory under your installation directory.</para>
+
+      <para>If you make a change to the structural data in your database (the
+      versions table for example), or to the 
+      <quote>constants</quote>
+
+      encoded in <filename>defparams.pl</filename>, you will need to remove 
+      the cached content from the data directory (by doing a 
+      <quote>rm data/versioncache</quote>
+
+      ), or your changes won't show up.</para>
+
+      <para> <filename>versioncache</filename> 
+      gets automatically regenerated whenever it's more than
+      an hour old, so Bugzilla will eventually notice your changes by itself,
+      but generally you want it to notice right away, so that you can test
+      things.</para>
+    </section>
+
   <section id="dbdoc">
     <title>MySQL Bugzilla Database Introduction</title>
 
