@@ -168,7 +168,6 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     char *currFile = NULL, *currMsg = NULL;
     nsLegacyCheck *currLC = NULL, *nextLC = NULL;
     nsComponent *currComp = NULL;
-    nsComponent *currCompDup = NULL;
     int currIndex;
     int currNumComps = 0;
 
@@ -340,8 +339,7 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
             if (currComp)
             {
                 // preserve next ptr
-                currCompDup = currComp->Duplicate(); 
-                currST->SetComponent(currCompDup);
+                currST->SetComponent(currComp);
                 currNumComps++;
             }
         }
@@ -1177,7 +1175,7 @@ nsSetupTypeDlg::DSRequired(void)
             dsReqd += currComp->GetArchiveSize();
         }
 
-        currComp = currComp->GetNext();
+        currComp = comps->GetNext();
     }
 
     return dsReqd;

@@ -48,7 +48,6 @@ nsComponent::nsComponent() :
     mArchiveSize(0),
     mNextDependeeIdx(0),
     mAttributes(NO_ATTR),
-    mNext(NULL),
     mIndex(-1),
     mRefCount(0),
     mDepRefCount(0),
@@ -82,7 +81,6 @@ nsComponent::Duplicate()
     nsComponent *zdup = new nsComponent();
     *zdup = *this;
     zdup->InitRefCount();
-    zdup->InitNext();
 
     return zdup;
 }
@@ -356,34 +354,6 @@ nsComponent::IsDownloadOnly()
         return TRUE;
 
     return FALSE;
-}
-
-int
-nsComponent::SetNext(nsComponent *aComponent)
-{
-    if (!aComponent)
-        return E_PARAM;
-
-    mNext = aComponent;
-    
-    return OK;
-}
-
-int
-nsComponent::InitNext()
-{
-    mNext = NULL;
-
-    return OK;
-}
-
-nsComponent *
-nsComponent::GetNext()
-{
-    if (mNext)
-        return mNext;
-
-    return NULL;
 }
 
 int

@@ -84,9 +84,6 @@ public:
     int             IsLaunchApp();
     int             SetDownloadOnly();
     int             IsDownloadOnly();
-    int             SetNext(nsComponent *aComponent);
-    int             InitNext();
-    nsComponent     *GetNext();
     int             SetIndex(int aIndex);
     int             GetIndex();
     int             AddRef();
@@ -124,7 +121,6 @@ private:
     char            *mDependees[MAX_COMPONENTS];
     int             mNextDependeeIdx;
     int             mAttributes;
-    nsComponent     *mNext;
     int             mIndex;
     int             mRefCount;
     int             mDepRefCount;

@@ -172,9 +172,15 @@ public:
     nsComponent     *GetFirstVisible();
 
 private:
-    nsComponent     *mHead; 
-    nsComponent     *mTail;
-    nsComponent     *mNext;
+    typedef struct _nsComponentItem
+    {
+       nsComponent             *mComp;
+       struct _nsComponentItem *mNext;
+    } nsComponentItem;
+
+    nsComponentItem *mHeadItem; 
+    nsComponentItem *mTailItem;
+    nsComponentItem *mNextItem;
     int             mLength;
 };
 
