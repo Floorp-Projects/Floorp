@@ -26,12 +26,12 @@
         </getter>
         <setter>
           <![CDATA[
-            // If there is a label, store the accesskey on the labelElement
+            // Always store on the control
+            this.setAttribute('accesskey', val);
+            // If there is a label, change the accesskey on the labelElement
+            // if it's also set there
             if (this.labelElement) {
               this.labelElement.accessKey = val;
-            }
-            else {
-              this.setAttribute('accesskey', val);
             }
             return val;
           ]]>
