@@ -235,9 +235,12 @@ nsLoggingProgressListener::ItemScheduled(const PRUnichar* message )
 NS_IMETHODIMP
 nsLoggingProgressListener::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
+    nsCString messageConverted;
+    messageConverted.AssignWithConversion(message);
+
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     [" << (itemNum) << "/" << totNum << "]\t" << NS_ConvertUCS2toUTF8(message).get() << nsEndl;
+    *mLogStream << "     [" << (itemNum) << "/" << totNum << "]\t" << messageConverted.get() << nsEndl;
     return NS_OK;
 }
 
@@ -287,9 +290,12 @@ nsLoggingProgressListener::GetTime(char** aString)
 NS_IMETHODIMP
 nsLoggingProgressListener::LogComment(const PRUnichar* comment)
 {
+    nsCString commentConverted;
+    commentConverted.AssignWithConversion(comment);
+
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     ** " << NS_ConvertUCS2toUTF8(comment).get() << nsEndl;
+    *mLogStream << "     ** " << commentConverted.get() << nsEndl;
     return NS_OK;
 }
 
