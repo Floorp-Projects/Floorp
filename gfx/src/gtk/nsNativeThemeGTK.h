@@ -79,8 +79,6 @@ public:
 
 protected:
   PRBool IsDisabled(nsIFrame* aFrame);
-  PRBool IsChecked(nsIFrame* aFrame);
-  PRBool IsSelected(nsIFrame* aFrame);
 
   void GetGtkWidgetState(nsIFrame* aFrame, GtkWidgetState* aState);
   void GetScrollbarMetrics(gint* slider_width,
@@ -95,12 +93,15 @@ protected:
   void EnsureGripperWidget();
   void EnsureEntryWidget();
   void EnsureArrowWidget();
+  void EnsureHandleBoxWidget();
 
 private:
   nsCOMPtr<nsIAtom> mCheckedAtom;
   nsCOMPtr<nsIAtom> mDisabledAtom;
   nsCOMPtr<nsIAtom> mSelectedAtom;
   nsCOMPtr<nsIAtom> mTypeAtom;
+  nsCOMPtr<nsIAtom> mInputCheckedAtom;
+  nsCOMPtr<nsIAtom> mInputAtom;
 
   GtkWidget* mProtoWindow;
   GtkWidget* mProtoLayout;
