@@ -1495,11 +1495,7 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
      * the nsISupports pointer so the backend can have access to the front
      * end nsIContentViewerContainer for refreshing urls.
      */
-#ifndef NECKO
     rv = m_DocLoader->CreateURL(&url, nsnull, aURLSpec, m_Container);
-#else
-    rv = NS_ERROR_NULL_POINTER;
-#endif // NECKO
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1532,7 +1528,7 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
      */
 #ifdef NECKO
 //    m_DocLoader->SetDocumentChannel(channel);
-    NS_ASSERTION(0, "help");
+    //NS_ASSERTION(0, "help");
 #else
     m_DocLoader->SetDocumentUrl(url);
 #endif
@@ -1787,8 +1783,9 @@ nsDocumentBindInfo::OnStartBinding(nsIURI* aURL, const char *aContentType)
     nsCOMPtr<nsIURI> aURL;
     rv = channel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(rv)) return rv;
-    char* aContentType;
+    char* aContentType = nsnull;
     channel->GetContentType(&aContentType);
+    aContentType = "text/html";
 #endif // NECKO
 
 #if defined(DEBUG)
@@ -1804,7 +1801,6 @@ nsDocumentBindInfo::OnStartBinding(nsIURI* aURL, const char *aContentType)
             this, spec, aContentType));
 #ifdef NECKO
     nsCRT::free(spec);
-    nsCRT::free(aContentType);
 #endif // NECKO
 #endif /* DEBUG */
 
