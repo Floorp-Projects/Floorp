@@ -109,7 +109,7 @@ NS_IMETHODIMP nsGenericFactory::GetContractID(char **aContractID)
     const char *contractID = NS_GENERICFACTORY_CONTRACTID;
     if (mInfo && mInfo->mContractID)
         contractID = mInfo->mContractID;
-    *aContractID = nsMemory::Clone(contractID, strlen(contractID) + 1);
+    *aContractID = (char *)nsMemory::Clone(contractID, strlen(contractID) + 1);
     if (!*aContractID)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -122,7 +122,7 @@ NS_IMETHODIMP nsGenericFactory::GetClassDescription(char * *aClassDescription)
         "that is, a class used to produce instance objects";
     if (mInfo && mInfo->mDescription)
         description=mInfo->mDescription;
-    *aClassDescription = nsMemory::Clone(description, strlen(description) + 1);
+    *aClassDescription = (char *)nsMemory::Clone(description, strlen(description) + 1);
     if (!*aClassDescription)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
