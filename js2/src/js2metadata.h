@@ -1156,6 +1156,8 @@ public:
     // The one and only 'public' namespace
     Namespace *publicNamespace;
 
+    Multiname *mn1, *mn2;           // useful, gc-rooted multiname temps.
+
     LocalMember *forbiddenMember;  // just need one of these hanging around
 
     // The base classes:

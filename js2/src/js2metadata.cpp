@@ -342,7 +342,7 @@ namespace MetaData {
                             case StmtNode::For:
                             case StmtNode::ForIn:
                                 {
-                                    ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                                    ForStmtNode *f = checked_cast<ForStmtNode *>(*si);
                                     g->tgtID = f->breakLabelID;
                                 }
                             }
@@ -2539,7 +2539,7 @@ doUnary:
         for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
             GCMARKOBJECT(*n)
         }
-        JS2Object::mark(name);
+        if (name) JS2Object::mark(name);
     }
 
 /************************************************************************************
@@ -3150,9 +3150,14 @@ static const uint8 urlCharType[256] =
         glob(new GlobalObject(world)),
         env(new Environment(new MetaData::SystemFrame(), glob)),
         flags(JS1),
-        showTrees(false)
+        showTrees(false),
+        mn1(new Multiname(NULL, publicNamespace)),
+        mn2(new Multiname(NULL, publicNamespace))
     {
         engine->meta = this;
+
+        JS2Object::addRoot(&mn1);
+        JS2Object::addRoot(&mn2);
 
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
@@ -4605,7 +4610,7 @@ deleteClassProperty:
         GCMARKOBJECT(super)
         GCMARKOBJECT(prototype)
         GCMARKOBJECT(privateNamespace)
-        JS2Object::mark(name);
+        if (name) JS2Object::mark(name);
         GCMARKVALUE(defaultValue);
         InstanceBindingIterator ib, iend;
         for (ib = instanceReadBindings.begin(), iend = instanceReadBindings.end(); (ib != iend); ib++) {
