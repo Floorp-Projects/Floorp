@@ -36,6 +36,7 @@
 #include "nsHashtable.h"
 #include "nsReadableUtils.h"
 #include "nsAWritableString.h"
+#include "nsXPIDLString.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -3342,13 +3343,11 @@ PrefEnumCallback(const char* aName, void* aClosure)
     NS_ASSERTION(s->mFont->SupportsChar(s->mChar), "font supposed to support this char");
     return;
   }
-  char* value = nsnull;
-  gPref->CopyCharPref(aName, &value);
+  nsXPIDLCString value;
+  gPref->CopyCharPref(aName, getter_Copies(value));
   nsCAutoString name;
   if (value) {
     name = value;
-    nsMemory::Free(value);
-    value = nsnull;
     FIND_FONT_PRINTF(("       PrefEnumCallback"));
     s->mFont = s->mMetrics->TryNode(&name, s->mChar);
     if (s->mFont) {
@@ -3361,11 +3360,9 @@ PrefEnumCallback(const char* aName, void* aClosure)
     NS_ASSERTION(s->mFont->SupportsChar(s->mChar), "font supposed to support this char");
     return;
   }
-  gPref->CopyDefaultCharPref(aName, &value);
+  gPref->CopyDefaultCharPref(aName, getter_Copies(value));
   if ((value) && (!name.Equals(value))) {
     name = value;
-    nsMemory::Free(value);
-    value = nsnull;
     FIND_FONT_PRINTF(("       PrefEnumCallback:default"));
     s->mFont = s->mMetrics->TryNode(&name, s->mChar);
     if (s->mFont) {
