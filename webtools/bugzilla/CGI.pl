@@ -1027,12 +1027,14 @@ Content-type: text/html
               <hr>
               <form method="get" action="token.cgi">
                 <input type="hidden" name="a" value="reqpw">
-                If you don't have a password or have forgotten it,
+                If you have forgotten your password,
                 enter your login name below and submit a request 
                 to change your password.<br>
                 <input size="35" name="loginname">
                 <input type="submit" value="Submit Request">
               </form>
+              <hr>
+              If you don't have a Bugzilla account, you can <a href="createaccount.cgi">create a new account</a>.
             |;
         }
 
