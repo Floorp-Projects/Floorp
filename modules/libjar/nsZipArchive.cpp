@@ -58,7 +58,7 @@
 
 #endif /* STANDALONE */
 
-#if defined(XP_UNIX)
+#ifdef XP_UNIX
     #include <sys/stat.h>
 #elif defined(XP_PC)
     #include <io.h>
@@ -292,27 +292,33 @@ PRInt32 nsZipArchive::OpenArchive( const char * aArchiveName )
 //---------------------------------------------
 // nsZipArchive::ReadInit
 //---------------------------------------------
-PRInt32 nsZipArchive::ReadInit( const char* aFilename )
+PRInt32 nsZipArchive::ReadInit(const char* aFilename, nsZipRead** aRead)
 {
-  PRInt32 status;
   //-- Parameter validity check
-  if (aFilename == 0)
+  if (aFilename == 0 || aRead == 0)
     return ZIP_ERR_PARAM;
 
+  PRInt32 result;
+
   //-- find item and seek to file position
-  status = ReadInitImpl(aFilename, &mCurItem);
-  if (status != ZIP_OK) return status;
-  mCurPos = 0; // Signifies beginning of item  
+  nsZipItem* item;
+  result = ReadInitImpl(aFilename, &item);
+  if (result != ZIP_OK) return result;
+
+  //-- Create nsZipRead object
+  *aRead = new nsZipRead(this, item);
+  if (aRead == 0)
+    return ZIP_ERR_MEMORY;
 
   //-- If file is deflated, do the inflation now.
   //   We save the complete inflated item in mInflatedFileBuffer
   //   to be copied later.
-  if (mCurItem->compression == DEFLATED)
+  if (item->compression == DEFLATED)
   {
-    PR_FREEIF(mInflatedFileBuffer);
-    mInflatedFileBuffer = (char*)PR_Malloc(mCurItem->realsize);
-    status = InflateItem( mCurItem, 0, mInflatedFileBuffer);
-    if (status != ZIP_OK) return status;
+    char* buf = (char*)PR_Malloc(item->realsize);
+    result = InflateItem(item, 0, buf);
+    if (result != ZIP_OK) return result;
+    (*aRead)->mInflatedFileBuffer = buf;
   }
 
   return ZIP_OK;
@@ -322,32 +328,30 @@ PRInt32 nsZipArchive::ReadInit( const char* aFilename )
 //---------------------------------------------
 // nsZipArchive::Read
 //---------------------------------------------
-PRInt32 nsZipArchive::Read(char* aBuf,
+PRInt32 nsZipArchive::Read(nsZipRead* aRead, char* aBuf,
                            PRUint32 aCount, PRUint32* aBytesRead)
 {
   //-- Parameter validity check
-  if (aBuf == 0 || aBytesRead == 0)
+  /*
+   * Note the nsZipRead passed in must have been created
+   * by this nsZipArchive.
+   */
+  if (aBytesRead == 0 || aRead == 0 || aBuf == 0 ||
+      aRead->mArchive != this)
     return ZIP_ERR_PARAM;
 
-  //-- Make sure we've run ReadInit already
-  if (mCurItem == 0)
-  {
-    *aBytesRead = 0;
-    return ZIP_ERR_GENERAL;
-  }
-
   //-- extract the file using appropriate method
-  switch( mCurItem->compression )
+  switch( aRead->mItem->compression )
   {
     case STORED:
       //-- Read from the zip file directly into the caller's buffer
-      return ReadItem( mCurItem, aBuf, &mCurPos, aCount, aBytesRead);
+      return ReadItem( aRead->mItem, aBuf, &(aRead->mCurPos), aCount, aBytesRead);
 
     case DEFLATED:
       //-- We've already done the inflation; copy from mInflatedFileBuffer
       //   into the caller's buffer
-      return ReadInflatedItem( mCurItem, mInflatedFileBuffer, aBuf, 
-                               &mCurPos, aCount, aBytesRead);
+      return ReadInflatedItem( aRead->mItem, aRead->mInflatedFileBuffer, aBuf, 
+                               &(aRead->mCurPos), aCount, aBytesRead);
 
     default:
       //-- unsupported compression type
@@ -359,14 +363,17 @@ PRInt32 nsZipArchive::Read(char* aBuf,
 //---------------------------------------------
 // nsZipArchive::Available
 //---------------------------------------------
-PRUint32 nsZipArchive::Available()
+PRUint32 nsZipArchive::Available(nsZipRead* aRead)
 {
-  if (mCurItem == 0)
+  if (aRead == 0)
     return 0;
-  else if (mCurItem->compression == DEFLATED)
-    return mCurItem->realsize - mCurPos;
+
+  nsZipItem* item = aRead->mItem;
+
+  if (item->compression == DEFLATED)
+    return item->realsize - aRead->mCurPos;
   else
-    return mCurItem->size - mCurPos;
+    return item->size - aRead->mCurPos;
 }
 
 //---------------------------------------------
@@ -655,7 +662,6 @@ PRInt32 nsZipArchive::BuildFileList()
         {
           item->name[namelen] = 0;
           item->namelen = namelen;
-
           item->headerloc = xtolong( Central.localhdr_offset );
 
           //-- seek to local header
@@ -792,6 +798,11 @@ PRInt32 nsZipArchive::ReadItem(const nsZipItem* aItem, char* aBuf,
 {
   PRUint32    chunk;
   PR_ASSERT(aBuf != 0 && aItem != 0);
+
+  // Seek to position in file
+  if ( PR_Seek( mFd, (PROffset32)(aItem->offset + aCurPos), PR_SEEK_SET ) != 
+                     (PROffset32)(aItem->offset + aCurPos) )
+    return  ZIP_ERR_CORRUPT;
 
   //-- Read from file
   chunk = (aCount <= ((aItem->size) - *aCurPos) ) ? aCount
@@ -984,8 +995,8 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
         //-- copy inflated buffer to our big buffer
         // Assertion makes sure we don't overflow bigBuf
         PR_ASSERT( outpos + ZIP_BUFLEN <= bigBufSize);
-        for (PRUint32 c = 0; c < ZIP_BUFLEN; c++)
-          bigBuf[outpos + c] = (char)outbuf[c];
+        char* copyStart = bigBuf + outpos;
+        memcpy(copyStart, outbuf, ZIP_BUFLEN);
       }    
       outpos = zs.total_out;
       zs.next_out  = outbuf;
@@ -1019,8 +1030,8 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
     else
     {
       PR_ASSERT( (outpos + chunk) <= bigBufSize );
-      for (PRUint32 c = 0; c < chunk; c++)
-        bigBuf[outpos + c] = (char)outbuf[c];
+        char* copyStart = bigBuf + outpos;
+        memcpy(copyStart, outbuf, chunk);
     }
   }
 
@@ -1064,13 +1075,11 @@ PRInt32 nsZipArchive::ReadInflatedItem( nsZipItem* aItem,
   //-- Set up the copy
   PRUint32 bigBufSize = aItem->realsize;
   PRUint32 c  = ((*aCurPos + count) < bigBufSize) ? count : bigBufSize - *aCurPos;
-  *actual = c;
   char* src = inflatedBuf + (*aCurPos);
-  char* dest = outbuf; 
 
   //-- Do the copy and record number of bytes copied
-  for( ; c; dest++, src++, c-- )
-    *dest = *src;
+  memcpy(outbuf, src, c);
+  *actual = c;
   *aCurPos += *actual;
 
   return ZIP_OK;
@@ -1089,10 +1098,6 @@ nsZipArchive::nsZipArchive()
     mFiles[i] = 0;
   }
 
-  // initialize internal state
-  mCurItem = 0;
-  mInflatedFileBuffer = 0;
-  mCurPos = 0;
 }
 
 nsZipArchive::~nsZipArchive()
@@ -1114,9 +1119,6 @@ nsZipArchive::~nsZipArchive()
       pItem = mFiles[i];
     }
   }
-
-  // Free inflated file buffer if necessary
-  PR_FREEIF(mInflatedFileBuffer);
 }
 
 
@@ -1134,8 +1136,21 @@ nsZipItem::~nsZipItem()
     delete [] name;
 }
 
+//------------------------------------------
+// nsZipRead constructor and destructor
+//------------------------------------------
 
+nsZipRead::nsZipRead( nsZipArchive* aZipArchive, nsZipItem* aZipItem )
+: mArchive(aZipArchive), 
+  mItem(aZipItem), 
+  mCurPos(0), 
+  mInflatedFileBuffer(0)
+{}
 
+nsZipRead::~nsZipRead()
+{
+  PR_FREEIF(mInflatedFileBuffer);
+}
 
 //------------------------------------------
 // nsZipFind constructor and destructor

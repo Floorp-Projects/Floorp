@@ -43,13 +43,11 @@
 nsJAR::nsJAR()
 {
     NS_INIT_REFCNT();
-    mInputStream = nsnull;
 }
 
 
 nsJAR::~nsJAR()
 {
-  NS_IF_RELEASE(mInputStream);
 }
 
 NS_IMPL_ISUPPORTS2(nsJAR, nsIZip, nsIJAR);
@@ -98,12 +96,8 @@ nsJAR::GetInputStream(const char *aFilename, nsIInputStream **_retval)
   rv = is->Init(&mZip, aFilename);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  NS_IF_RELEASE(mInputStream);
-  mInputStream = (nsIInputStream*)is;
-  NS_ADDREF(mInputStream); // because this holds a reference to the InputStream
-
-  *_retval = mInputStream;
-  NS_ADDREF(*_retval); // for the reference passed to the caller
+  *_retval = (nsIInputStream*)is;
+  NS_ADDREF(*_retval);
   return NS_OK;
 }
  

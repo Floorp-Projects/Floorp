@@ -35,6 +35,7 @@
 
 
 class nsZipFind;
+class nsZipRead;
 
 /**
  * nsZipItem -- a helper class for nsZipArchive
@@ -106,9 +107,10 @@ public:
    * before any calls to Read or Available
    *
    * @param   aFilename name of item in file
+   * @param   (out) a structure used by Read and Available
    * @return  status code
    */
-  PRInt32 ReadInit( const char* aFilename );
+  PRInt32 ReadInit( const char* aFilename, nsZipRead** aRead);
 
   /** 
    * Read 
@@ -116,22 +118,24 @@ public:
    * Read from the item specified to ReadInit. ReadInit must be 
    * called first.
    *
+   * @param  aRead the structure returned by ReadInit
    * @param  buf buffer to write data into.
    * @param  count number of bytes to read
    * @param  actual (out) number of bytes read
    * @return  status code
    */
-  PRInt32 Read(char* buf, PRUint32 count, PRUint32* actual );
+  PRInt32 Read(nsZipRead* aRead, char* buf, PRUint32 count, PRUint32* actual );
 
  /**
    * Available
    *
    * Returns the number of bytes left to be read from the
-   * item specified to ReadInit. ReadInit must be called first,
-   * otherwise Available returns zero.
+   * item specified to ReadInit. ReadInit must be called first.
+   *
+   * @param aRead the structure returned by ReadInit
    * @return the number of bytes still to be read
    */
-   PRUint32 Available();
+   PRUint32 Available(nsZipRead* aRead);
 
   /**
    * ExtractFile 
@@ -169,10 +173,7 @@ private:
   
   PRFileDesc    *mFd;
   nsZipItem*    mFiles[ZIP_TABSIZE];
-  PRUint32      mCurPos;  // Used by ReadInit,Read, and Available
-  nsZipItem*    mCurItem;
-  char*         mInflatedFileBuffer; // Filled by InflateItem, read by ReadInflatedItem
- 
+
   //--- private methods ---
   
   nsZipArchive& operator=(const nsZipArchive& rhs); // prevent assignments
@@ -184,7 +185,7 @@ private:
 
   PRInt32           ReadInitImpl(const char* aFilename, nsZipItem** aItem);
   PRInt32           ReadItem( const nsZipItem* aItem, char* buf, 
-                              PRUint32* aCurPos,PRUint32 count, PRUint32* actual );
+                              PRUint32* aCurPos, PRUint32 count, PRUint32* actual );
   PRInt32           CopyItemToDisk( const nsZipItem* aItem, const char* aOutname );
   PRInt32           InflateItem( const nsZipItem* aItem, 
                                  const char* aOutname,
@@ -194,7 +195,30 @@ private:
                                       PRUint32* aCurPos, PRUint32 count, PRUint32* actual);
 };
 
+/** 
+ * nsZipRead
+ *
+ * a helper class for nsZipArchive, representing a read in progress
+ */
+class nsZipRead
+{
+  friend class nsZipArchive;
 
+public:
+
+  nsZipRead( nsZipArchive* aZip, nsZipItem* item );
+  ~nsZipRead();
+
+private:
+  nsZipArchive* mArchive;
+  nsZipItem*    mItem;
+  PRUint32      mCurPos;
+  char*         mInflatedFileBuffer;
+
+  //-- prevent copies and assignments
+  nsZipRead& operator=(const nsZipRead& rhs);
+  nsZipRead(const nsZipFind& rhs);
+};
 
 
 /** 

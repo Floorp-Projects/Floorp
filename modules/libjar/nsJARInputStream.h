@@ -62,6 +62,7 @@ class nsJARInputStream : public nsIInputStream
   private:
 
     nsZipArchive* mZip;
+    nsZipRead* mReadInfo;
 };
 
 #endif /* nsJAR_h__ */
