@@ -1112,7 +1112,8 @@ void EraseDirectory(CString sPath)
      }
 }
 
-void CopyDirectory(CString source, CString dest)
+void CopyDirectory(CString source, CString dest, int subdir)
+// Copy files in subdirectories if the subdir flag is set (equal to 1).
 {
 	CFileFind finder;
 	CString sFileToFind = source + "\\*.*";
@@ -1128,7 +1129,8 @@ void CopyDirectory(CString source, CString dest)
 			CString dirPath = finder.GetFilePath();
 			newPath += finder.GetFileName();
 			_mkdir(newPath);
-			CopyDirectory(dirPath, newPath);
+			if (subdir == 1)
+				CopyDirectory(dirPath, newPath, 1);
 			if (!CopyFile(dirPath,newPath,0))
 				DWORD e = GetLastError();
 			continue; 
@@ -1145,7 +1147,7 @@ void CreateLinuxInstaller()
 {
 	char currentdir[_MAX_PATH];
 	_getcwd(currentdir,_MAX_PATH);
-	CopyDirectory(xpiDstPath, templinuxPath + xpiDir);
+	CopyDirectory(xpiDstPath, templinuxPath + xpiDir, 1);
 	CopyFile(xpiDstPath+"\\Config.ini", templinuxPath+"\\Config.ini",FALSE);
 	DeleteFile(templinuxPath + xpiDir + "\\Config.ini");
 
@@ -1288,7 +1290,18 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 		CString tPath = nscpxpiPath;
 		tPath.Replace(xpiDir,"");
-		CopyDirectory(tPath, templinuxPath);
+		CopyDirectory(tPath, templinuxPath, 0);
+		
+		// get rid of this ugly code when bugzilla bug 105351 is fixed
+		CopyFile(nscpxpiPath+"\\full.start", 
+			templinuxPath+"\\xpi\\full.start", FALSE);
+		CopyFile(nscpxpiPath+"\\full.end", 
+			templinuxPath+"\\xpi\\full.end", FALSE);
+		CopyFile(nscpxpiPath+"\\recommended.start", 
+			templinuxPath+"\\xpi\\recommended.start", FALSE);
+		CopyFile(nscpxpiPath+"\\recommended.end",
+			templinuxPath+"\\xpi\\recommended.end", FALSE);
+		
 		_chdir(currentdir);
 	}
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
@@ -1469,6 +1482,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 	// Put all the extracted files back into their new XPI homes
 	ReplaceJARFiles();
+
+	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||");
 
 	ReplaceXPIFiles();
 
