@@ -63,12 +63,6 @@
 #include "nsIDOMXULCommandDispatcher.h"
 
 #undef DEBUG_scroll            // define to see ugly mousewheel messages
-#undef GFXSCROLL_IS_PRIMARY    // define this when the code is enabled to make
-                               // nsGfxScrollFrame the primary document frame
-
-#ifdef GFXSCROLL_IS_PRIMARY
-#include "nsIScrollableFrame.h"
-#endif
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  
@@ -2496,8 +2490,6 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
          aDocument->GetParentDocument());
 #endif
 
-#ifndef GFXSCROLL_IS_PRIMARY
-
   aFrame->GetView(aPresContext, &aView);
 #ifdef DEBUG_scroll
   printf("GetDocumentFrame: got document view = %p\n", aView);
@@ -2509,8 +2501,6 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
 #endif
     aFrame->GetParentWithView(aPresContext, &aFrame);
   }
-
-#endif // !GFXSCROLL_IS_PRIMARY
 
   return aFrame;
 }
@@ -2687,37 +2677,6 @@ nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
     return NS_OK;
   }
   else {
-#ifdef GFXSCROLL_IS_PRIMARY
-    if (focusFrame) {
-#ifdef DEBUG_scroll
-      printf("Checking if frame is an nsIScrollableFrame\n");
-#endif
-      nsIScrollableFrame* scrollableFrame = nsnull;
-      if (NS_OK == focusFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame),
-                       (void**)&scrollableFrame)) {
-#ifdef DEBUG_scroll
-        printf("Got an nsIScrollableFrame: %p\n", scrollableFrame);
-#endif
-        nsIFrame* scrolledFrame = nsnull;
-        scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
-        if (scrolledFrame) {
-#ifdef DEBUG_scroll
-          printf("Got a scrolled frame\n");
-#endif
-          scrolledFrame->GetView(aPresContext, &focusView);
-          sv = GetNearestScrollingView(focusView);
-          if (sv) {
-           sf = nsnull;
-#ifdef DEBUG_scroll
-           printf("Got a scrolling view via nsGfxScrollFrame\n");
-#endif
-           return NS_OK;
-          }
-        }
-      }
-    }
-#endif // GFXSCROLL_IS_PRIMARY
-           
 #ifdef DEBUG_scroll
     printf("GetScrollableFrameOrView: No scrolling view, looking for a scrolling frame\n");
 #endif
