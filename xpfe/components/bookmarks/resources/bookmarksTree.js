@@ -487,6 +487,8 @@ BookmarksTree.prototype = {
       case "cmd_setnewbookmarkfolder":
       case "cmd_setpersonaltoolbarfolder":
       case "cmd_setnewsearchfolder":    
+      case "cmd_import":
+      case "cmd_export":
         return true;
       default:
         return false;
@@ -519,20 +521,25 @@ BookmarksTree.prototype = {
       case "cmd_newbookmark":
       case "cmd_newfolder":
       case "cmd_newseparator":
+      case "cmd_import":
+      case "cmd_export":
         return true;
       case "cmd_properties":
       case "cmd_rename": 
         return numSelectedItems == 1;
       case "cmd_setnewbookmarkfolder":
         seln = gBookmarksShell.tree.selectedItems;
+        if (!seln.length) return false;
         var folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
         return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:NewBookmarkFolder") && folderType;
       case "cmd_setpersonaltoolbarfolder":
         seln = gBookmarksShell.tree.selectedItems;
+        if (!seln.length) return false;
         folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
         return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:PersonalToolbarFolder") && folderType;
       case "cmd_setnewsearchfolder":
         seln = gBookmarksShell.tree.selectedItems;
+        if (!seln.length) return false;
         folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
         return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:NewSearchFolder") && folderType;
       default:
@@ -562,6 +569,8 @@ BookmarksTree.prototype = {
       case "cmd_setpersonaltoolbarfolder":
       case "cmd_setnewsearchfolder":
       case "cmd_find":
+      case "cmd_import":
+      case "cmd_export":
         gBookmarksShell.execCommand(aCommand.substring("cmd_".length));
         break;
       case "cmd_selectAll":
