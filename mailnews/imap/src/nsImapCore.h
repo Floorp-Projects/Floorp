@@ -232,22 +232,6 @@ typedef struct _utf_name_struct {
 } utf_name_struct;
 
 
-typedef struct _msg_line_info {
-    char   *adoptedMessageLine;
-    PRUint32 uidOfMessage;
-} msg_line_info;
-
-
-typedef struct _TunnelInfo {
-	PRInt32 maxSize;
-	// NETSOCK		ioSocket; *** not yet ****
-	// char**		inputSocketBuffer;
-    // PRInt32*		inputBufferSize;
-	PRBool		fromHeaderSeenAlready;
-	const char	*xSenderInfo;
-	PRUint32		uidOfMessage;
-} TunnelInfo;
-
 typedef struct _delete_message_struct {
 	char *onlineFolderName;
 	PRBool		deleteAllMsgs;
@@ -283,28 +267,5 @@ typedef struct _uid_validity_info {
 	int32 returnValidity;
 } uid_validity_info;
 
-
-#define kDownLoadCacheSize 1536
-
-class TLineDownloadCache {
-public:
-    TLineDownloadCache();
-    virtual ~TLineDownloadCache();
-
-    PRUint32  CurrentUID();
-    PRUint32  SpaceAvailable();
-    PRBool CacheEmpty();
-    
-    msg_line_info *GetCurrentLineInfo();
-    
-    void ResetCache();
-    void CacheLine(const char *line, PRUint32 uid);
-private:
-    char   fLineCache[kDownLoadCacheSize];
-    PRUint32 fBytesUsed;
-    
-    msg_line_info *fLineInfo;
-    
-};
 
 #endif

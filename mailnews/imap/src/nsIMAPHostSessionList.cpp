@@ -57,7 +57,12 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *serverKey,
 	fCachedPassword = NULL;
 	fCapabilityFlags = kCapabilityUndefined;
 	fHierarchyDelimiters = NULL;
-	fHaveWeEverDiscoveredFolders = PR_FALSE;
+#ifdef DEBUG_bienvenu1
+	fHaveWeEverDiscoveredFolders = PR_TRUE; // try this, see what bad happens - we'll need to 
+                                                // figure out a way to make new accounts have it be false
+#else
+       	fHaveWeEverDiscoveredFolders = PR_FALSE; // try this, see what bad happens
+#endif
 	fCanonicalOnlineSubDir = NULL;
 	fNamespaceList = nsIMAPNamespaceList::CreatensIMAPNamespaceList();
 	fUsingSubscription = PR_TRUE;

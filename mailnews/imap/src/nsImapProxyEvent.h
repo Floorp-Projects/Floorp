@@ -120,10 +120,6 @@ public:
                               PRUint32 statusMsgId, const PRUnichar *extraInfo);
     NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
-    NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
-														 msg_line_info* aInfo);
-    NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
-                             TunnelInfo *aInfo);
     nsIImapMiscellaneousSink* m_realImapMiscellaneousSink;
 };
 
@@ -258,24 +254,6 @@ struct PercentProgressProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     virtual ~PercentProgressProxyEvent();
     NS_IMETHOD HandleEvent();
     ProgressInfo m_progressInfo;
-};
-
-struct TunnelOutStreamProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    TunnelOutStreamProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                              msg_line_info* aInfo);
-    virtual ~TunnelOutStreamProxyEvent();
-    NS_IMETHOD HandleEvent();
-    msg_line_info m_msgLineInfo;
-};
-
-struct ProcessTunnelProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    ProcessTunnelProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                            TunnelInfo *aInfo);
-    virtual ~ProcessTunnelProxyEvent();
-    NS_IMETHOD HandleEvent();
-    TunnelInfo m_tunnelInfo;
 };
 
 #endif

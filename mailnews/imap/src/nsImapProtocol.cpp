@@ -99,7 +99,6 @@ PRLogModuleInfo *IMAP;
 #include "nsIProxyObjectManager.h"
 #include "nsIStreamConverterService.h"
 #include "nsIProxyInfo.h"
-
 #if 0
 #include "nsIHashAlgorithm.h"
 #endif
@@ -126,46 +125,130 @@ static const PRIntervalTime kImapSleepTime = PR_MillisecondsToInterval(1000);
 static PRInt32 gPromoteNoopToCheckCount = 0;
 nsXPIDLString nsImapProtocol::mAcceptLanguages;
 
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgImapHdrXferInfo, nsIImapHeaderXferInfo)
+
+static const PRInt32 kNumHdrsToXfer=10;
+
+nsMsgImapHdrXferInfo::nsMsgImapHdrXferInfo()
+{
+  NS_INIT_ISUPPORTS();
+  NS_NewISupportsArray(getter_AddRefs(m_hdrInfos));
+  m_nextFreeHdrInfo = 0;
+}
+
+nsMsgImapHdrXferInfo::~nsMsgImapHdrXferInfo()
+{
+}
+
+NS_IMETHODIMP nsMsgImapHdrXferInfo::GetNumHeaders(PRUint32 *aNumHeaders)
+{
+  *aNumHeaders = m_nextFreeHdrInfo;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgImapHdrXferInfo::GetHeader(PRInt32 hdrIndex, nsIImapHeaderInfo **aResult)
+{
+  if (m_hdrInfos)
+    return m_hdrInfos->QueryElementAt(hdrIndex, NS_GET_IID(nsIImapHeaderInfo), (void **) aResult);
+  else
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
+static const PRInt32 kInitLineHdrCacheSize = 512; // should be about right
+
+nsresult nsMsgImapHdrXferInfo::GetFreeHeaderInfo(nsIImapHeaderInfo **aResult)
+{
+  if (m_nextFreeHdrInfo >= kNumHdrsToXfer)
+  {
+    *aResult = nsnull;
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsresult rv = m_hdrInfos->QueryElementAt(m_nextFreeHdrInfo++, NS_GET_IID(nsIImapHeaderInfo), (void **) aResult);
+  if (!*aResult && m_nextFreeHdrInfo - 1 < kNumHdrsToXfer)
+  {
+      nsMsgImapLineDownloadCache *lineCache = new nsMsgImapLineDownloadCache();
+      if (!lineCache)
+        return NS_ERROR_OUT_OF_MEMORY;
+      rv = lineCache->GrowBuffer(kInitLineHdrCacheSize);
+      NS_ADDREF(*aResult = lineCache);
+      m_hdrInfos->AppendElement(lineCache);
+  }
+  return rv;
+}
+
+void nsMsgImapHdrXferInfo::StartNewHdr(nsIImapHeaderInfo **newHdrInfo)
+{
+  GetFreeHeaderInfo(newHdrInfo);
+}
+
+// maybe not needed...
+void nsMsgImapHdrXferInfo::FinishCurrentHdr()
+{
+  // nothing to do?
+}
+
+void nsMsgImapHdrXferInfo::ResetAll()
+{
+  nsCOMPtr <nsIImapHeaderInfo> hdrInfo;
+  for (PRInt32 i = 0; i < kNumHdrsToXfer; i++)
+  {
+    nsresult rv = GetHeader(i, getter_AddRefs(hdrInfo));
+    if (NS_SUCCEEDED(rv) && hdrInfo)
+      hdrInfo->ResetCache();
+  }
+  m_nextFreeHdrInfo = 0;
+}
+
+void nsMsgImapHdrXferInfo::ReleaseAll()
+{
+  m_hdrInfos->Clear();
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgImapLineDownloadCache, nsIImapHeaderInfo)
+
 // **** helper class for downloading line ****
-TLineDownloadCache::TLineDownloadCache()
+nsMsgImapLineDownloadCache::nsMsgImapLineDownloadCache()
 {
+  NS_INIT_ISUPPORTS();
     fLineInfo = (msg_line_info *) PR_CALLOC(sizeof( msg_line_info));
-    fLineInfo->adoptedMessageLine = fLineCache;
     fLineInfo->uidOfMessage = 0;
-    fBytesUsed = 0;
+    m_msgSize = 0;
 }
 
-TLineDownloadCache::~TLineDownloadCache()
+nsMsgImapLineDownloadCache::~nsMsgImapLineDownloadCache()
 {
-    PR_FREEIF( fLineInfo);
+    PR_Free( fLineInfo);
 }
 
-PRUint32 TLineDownloadCache::CurrentUID()
+PRUint32 nsMsgImapLineDownloadCache::CurrentUID()
 {
     return fLineInfo->uidOfMessage;
 }
 
-PRUint32 TLineDownloadCache::SpaceAvailable()
+PRUint32 nsMsgImapLineDownloadCache::SpaceAvailable()
 {
-    return kDownLoadCacheSize - fBytesUsed;
+    return kDownLoadCacheSize - m_bufferPos;
 }
 
-msg_line_info *TLineDownloadCache::GetCurrentLineInfo()
+msg_line_info *nsMsgImapLineDownloadCache::GetCurrentLineInfo()
 {
-    return fLineInfo;
+  AppendBuffer("", 1); // null terminate the buffer
+  fLineInfo->adoptedMessageLine = GetBuffer();
+  return fLineInfo;
 }
     
-void TLineDownloadCache::ResetCache()
+NS_IMETHODIMP nsMsgImapLineDownloadCache::ResetCache()
 {
-    fBytesUsed = 0;
+    ResetWritePos();
+    return NS_OK;
 }
     
-PRBool TLineDownloadCache::CacheEmpty()
+PRBool nsMsgImapLineDownloadCache::CacheEmpty()
 {
-    return fBytesUsed == 0;
+    return m_bufferPos == 0;
 }
 
-void TLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
+NS_IMETHODIMP nsMsgImapLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
 {
     PRUint32 lineLength = PL_strlen(line);
     NS_ASSERTION((lineLength + 1) <= SpaceAvailable(), 
@@ -173,8 +256,37 @@ void TLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
     
     fLineInfo->uidOfMessage = uid;
     
-    PL_strcpy(fLineInfo->adoptedMessageLine + fBytesUsed, line);
-    fBytesUsed += lineLength;
+    AppendString(line);
+    return NS_OK;
+}
+
+/* attribute nsMsgKey msgUid; */
+NS_IMETHODIMP nsMsgImapLineDownloadCache::GetMsgUid(nsMsgKey *aMsgUid)
+{
+    *aMsgUid = fLineInfo->uidOfMessage;
+    return NS_OK;
+}
+
+/* attribute long msgSize; */
+NS_IMETHODIMP nsMsgImapLineDownloadCache::GetMsgSize(PRInt32 *aMsgSize)
+{
+    *aMsgSize = m_msgSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgImapLineDownloadCache::SetMsgSize(PRInt32 aMsgSize)
+{
+    m_msgSize = aMsgSize;
+    return NS_OK;
+}
+
+/* attribute string msgHdrs; */
+NS_IMETHODIMP nsMsgImapLineDownloadCache::GetMsgHdrs(const char **aMsgHdrs)
+{
+  // this doesn't copy the string
+    AppendBuffer("", 1); // null terminate the buffer
+    *aMsgHdrs = GetBuffer();
+    return NS_OK;
 }
 
 /* the following macros actually implement addref, release and query interface for our component. */
@@ -306,6 +418,11 @@ nsImapProtocol::nsImapProtocol() :
 
   m_progressStringId = 0;
 
+  // since these are embedded in the nsImapProtocol object, but passed
+  // through proxied xpcom methods, just AddRef them here.
+  m_hdrDownloadCache.AddRef();
+  m_downloadLineCache.AddRef();
+
   // subscription
   m_autoSubscribe = PR_TRUE;
   m_autoUnsubscribe = PR_TRUE;
@@ -342,6 +459,9 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
              "oops...trying to initalize with a null sink event queue!");
   if (!aSinkEventQueue || !aHostSessionList)
         return NS_ERROR_NULL_POINTER;
+
+   nsresult rv = m_downloadLineCache.GrowBuffer(kDownLoadCacheSize);
+   NS_ENSURE_SUCCESS(rv, rv);
 
    m_flagState = new nsImapFlagAndUidState(kImapFlagAndUidStateSize, PR_FALSE);
    if (!m_flagState)
@@ -2301,60 +2421,58 @@ void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
 #endif
 }
 
+static int gEventCount = 0;
 
 nsresult nsImapProtocol::BeginMessageDownLoad(
-    PRUint32 total_message_size, // for user, headers and body
-    const char *content_type)
+                                              PRUint32 total_message_size, // for user, headers and body
+                                              const char *content_type)
 {
   nsresult rv = NS_OK;
   char *sizeString = PR_smprintf("OPEN Size: %ld", total_message_size);
   Log("STREAM",sizeString,"Begin Message Download Stream");
   PR_FREEIF(sizeString);
-    //total_message_size)); 
+  //total_message_size)); 
   if (content_type)
   {
     if (GetServerStateParser().GetDownloadingHeaders())
     {
-      if (m_imapMailFolderSink)
-      {
-        m_imapMailFolderSink->SetupHeaderParseStream(this, total_message_size, content_type, nsnull);
-      }
+      m_hdrDownloadCache.StartNewHdr(getter_AddRefs(m_curHdrInfo));
+      return NS_OK;
     }
-
     // if we have a mock channel, that means we have a channel listener who wants the
     // message. So set up a pipe. We'll write the messsage into one end of the pipe
     // and they will read it out of the other end.
     else if (m_channelListener)
     {
-     // create a pipe to pump the message into...the output will go to whoever
-     // is consuming the message display
-        rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed!");
+      // create a pipe to pump the message into...the output will go to whoever
+      // is consuming the message display
+      rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed!");
     }
     // else, if we are saving the message to disk!
     else if (m_imapMessageSink /* && m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk */) 
     {
       // we get here when download the inbox for offline use
-        nsCOMPtr<nsIFileSpec> fileSpec;
-        PRBool addDummyEnvelope = PR_TRUE;
-        nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningUrl);
-        msgurl->GetMessageFile(getter_AddRefs(fileSpec));
-        msgurl->GetAddDummyEnvelope(&addDummyEnvelope);
-//                m_imapMessageSink->SetupMsgWriteStream(fileSpec, addDummyEnvelope);
-        nsXPIDLCString nativePath;
-//        NS_ASSERTION(fileSpec, "no fileSpec!");
-        if (fileSpec) 
-	      {
-           fileSpec->GetNativePath(getter_Copies(nativePath));
-           rv = m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
-	       }
-	}
-	if (m_imapMailFolderSink && m_runningUrl)
-	{
-    nsCOMPtr<nsIMsgMailNewsUrl> mailurl = do_QueryInterface(m_runningUrl);
-    m_imapMailFolderSink->StartMessage(mailurl);
-  }
-  
+      nsCOMPtr<nsIFileSpec> fileSpec;
+      PRBool addDummyEnvelope = PR_TRUE;
+      nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningUrl);
+      msgurl->GetMessageFile(getter_AddRefs(fileSpec));
+      msgurl->GetAddDummyEnvelope(&addDummyEnvelope);
+      //                m_imapMessageSink->SetupMsgWriteStream(fileSpec, addDummyEnvelope);
+      nsXPIDLCString nativePath;
+      //        NS_ASSERTION(fileSpec, "no fileSpec!");
+      if (fileSpec) 
+      {
+        fileSpec->GetNativePath(getter_Copies(nativePath));
+        rv = m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
+      }
+    }
+    if (m_imapMailFolderSink && m_runningUrl)
+    {
+      nsCOMPtr<nsIMsgMailNewsUrl> mailurl = do_QueryInterface(m_runningUrl);
+      m_imapMailFolderSink->StartMessage(mailurl);
+    }
+    
   }
   else
     HandleMemoryFailure();
@@ -2932,15 +3050,7 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
     NS_ASSERTION(downloadLineDontDelete, 
                  "Oops... null msg line info not good");
 
-  if (GetServerStateParser().GetDownloadingHeaders())
-  {
-    if (m_imapMailFolderSink && downloadLineDontDelete)
-    {
-      m_imapMailFolderSink->ParseAdoptedHeaderLine(this, downloadLineDontDelete->adoptedMessageLine, downloadLineDontDelete->uidOfMessage);
-    }
-  }
-
-  else 
+  if (!GetServerStateParser().GetDownloadingHeaders())
   {
     PRBool echoLineToMessageSink = PR_TRUE;
     // if we have a channel listener, then just spool the message
@@ -2976,88 +3086,94 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
 // Perhaps we'll send the line to a messageSink...
 void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd)
 {
-    // when we duplicate this line, whack it into the native line
-    // termination.  Do not assume that it really ends in CRLF
-    // to start with, even though it is supposed to be RFC822
 
+  if (GetServerStateParser().GetDownloadingHeaders())
+  {
+    m_curHdrInfo->CacheLine(line, GetServerStateParser().CurrentResponseUID());
+    return;
+  }
+  // when we duplicate this line, whack it into the native line
+  // termination.  Do not assume that it really ends in CRLF
+  // to start with, even though it is supposed to be RFC822
+  
   // If we are fetching by chunks, we can make no assumptions about
   // the end-of-line terminator, and we shouldn't mess with it.
-    
-    // leave enough room for two more chars. (CR and LF)
-    char *localMessageLine = (char *) PR_CALLOC(strlen(line) + 3);
-    if (localMessageLine)
-        strcpy(localMessageLine,line);
-    char *endOfLine = localMessageLine + strlen(localMessageLine);
-    PRBool canonicalLineEnding = PR_FALSE;
-    nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl);
-    
-    if (m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk && msgUrl)
-        msgUrl->GetCanonicalLineEnding(&canonicalLineEnding);
-
-	if (!chunkEnd)
-	{
-        if (MSG_LINEBREAK_LEN == 1 && !canonicalLineEnding)
-        {
-            if ((endOfLine - localMessageLine) >= 2 &&
-                endOfLine[-2] == nsCRT::CR &&
-                endOfLine[-1] == nsCRT::LF)
-			{
-                /* CRLF -> CR or LF */
-                endOfLine[-2] = MSG_LINEBREAK[0];
-                endOfLine[-1] = '\0';
-			}
-            else if (endOfLine > localMessageLine + 1 &&
-                     endOfLine[-1] != MSG_LINEBREAK[0] &&
-                     ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF)))
-			{
-                /* CR -> LF or LF -> CR */
-                endOfLine[-1] = MSG_LINEBREAK[0];
-			}
-            else // no eol characters at all
-            {
-                endOfLine[0] = MSG_LINEBREAK[0]; // CR or LF
-                endOfLine[1] = '\0';
-            }
-        }
-        else
-        {
-            if (((endOfLine - localMessageLine) >= 2 && endOfLine[-2] != nsCRT::CR) ||
-                ((endOfLine - localMessageLine) >= 1 && endOfLine[-1] != nsCRT::LF))
-			{
-                if ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF))
-                {
-				  /* LF -> CRLF or CR -> CRLF */
-                    endOfLine[-1] = MSG_LINEBREAK[0];
-                    endOfLine[0]  = MSG_LINEBREAK[1];
-                    endOfLine[1]  = '\0';
-                }
-                else	// no eol characters at all
-                {
-                    endOfLine[0] = MSG_LINEBREAK[0];	// CR
-                    endOfLine[1] = MSG_LINEBREAK[1];	// LF
-                    endOfLine[2] = '\0';
-			  }
-			}
-        }
-	}
-
-	const char *xSenderInfo = GetServerStateParser().GetXSenderInfo();
-
-	if (xSenderInfo && *xSenderInfo && !m_fromHeaderSeen)
-	{
-		if (!PL_strncmp("From: ", localMessageLine, 6))
-		{
-			m_fromHeaderSeen = PR_TRUE;
-			if (PL_strstr(localMessageLine, xSenderInfo) != NULL)
-				AddXMozillaStatusLine(0);
-			GetServerStateParser().FreeXSenderInfo();
-		}
-	}
-
-    // if this line is for a different message, or the incoming line is too big
-    if (((m_downloadLineCache.CurrentUID() != GetServerStateParser().CurrentResponseUID()) && !m_downloadLineCache.CacheEmpty()) ||
-        (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1)) )
+  
+  // leave enough room for two more chars. (CR and LF)
+  char *localMessageLine = (char *) PR_CALLOC(strlen(line) + 3);
+  if (localMessageLine)
+    strcpy(localMessageLine,line);
+  char *endOfLine = localMessageLine + strlen(localMessageLine);
+  PRBool canonicalLineEnding = PR_FALSE;
+  nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl);
+  
+  if (m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk && msgUrl)
+    msgUrl->GetCanonicalLineEnding(&canonicalLineEnding);
+  
+  if (!chunkEnd)
+  {
+    if (MSG_LINEBREAK_LEN == 1 && !canonicalLineEnding)
     {
+      if ((endOfLine - localMessageLine) >= 2 &&
+        endOfLine[-2] == nsCRT::CR &&
+        endOfLine[-1] == nsCRT::LF)
+      {
+        /* CRLF -> CR or LF */
+        endOfLine[-2] = MSG_LINEBREAK[0];
+        endOfLine[-1] = '\0';
+      }
+      else if (endOfLine > localMessageLine + 1 &&
+        endOfLine[-1] != MSG_LINEBREAK[0] &&
+        ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF)))
+      {
+        /* CR -> LF or LF -> CR */
+        endOfLine[-1] = MSG_LINEBREAK[0];
+      }
+      else // no eol characters at all
+      {
+        endOfLine[0] = MSG_LINEBREAK[0]; // CR or LF
+        endOfLine[1] = '\0';
+      }
+    }
+    else
+    {
+      if (((endOfLine - localMessageLine) >= 2 && endOfLine[-2] != nsCRT::CR) ||
+        ((endOfLine - localMessageLine) >= 1 && endOfLine[-1] != nsCRT::LF))
+      {
+        if ((endOfLine[-1] == nsCRT::CR) || (endOfLine[-1] == nsCRT::LF))
+        {
+          /* LF -> CRLF or CR -> CRLF */
+          endOfLine[-1] = MSG_LINEBREAK[0];
+          endOfLine[0]  = MSG_LINEBREAK[1];
+          endOfLine[1]  = '\0';
+        }
+        else	// no eol characters at all
+        {
+          endOfLine[0] = MSG_LINEBREAK[0];	// CR
+          endOfLine[1] = MSG_LINEBREAK[1];	// LF
+          endOfLine[2] = '\0';
+        }
+      }
+    }
+  }
+  
+  const char *xSenderInfo = GetServerStateParser().GetXSenderInfo();
+  
+  if (xSenderInfo && *xSenderInfo && !m_fromHeaderSeen)
+  {
+    if (!PL_strncmp("From: ", localMessageLine, 6))
+    {
+      m_fromHeaderSeen = PR_TRUE;
+      if (PL_strstr(localMessageLine, xSenderInfo) != NULL)
+        AddXMozillaStatusLine(0);
+      GetServerStateParser().FreeXSenderInfo();
+    }
+  }
+  
+  // if this line is for a different message, or the incoming line is too big
+  if (((m_downloadLineCache.CurrentUID() != GetServerStateParser().CurrentResponseUID()) && !m_downloadLineCache.CacheEmpty()) ||
+    (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1)) )
+  {
     if (!m_downloadLineCache.CacheEmpty())
     {
       msg_line_info *downloadLineDontDelete = m_downloadLineCache.GetCurrentLineInfo();
@@ -3066,31 +3182,31 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
     }
     m_downloadLineCache.ResetCache();
   }
-     
-    // so now the cache is flushed, but this string might still be to big
-    if (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1) )
+  
+  // so now the cache is flushed, but this string might still be to big
+  if (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1) )
+  {
+    // has to be dynamic to pass to other win16 thread
+    msg_line_info *downLoadInfo = (msg_line_info *) PR_CALLOC(sizeof(msg_line_info));
+    if (downLoadInfo)
     {
-        // has to be dynamic to pass to other win16 thread
-        msg_line_info *downLoadInfo = (msg_line_info *) PR_CALLOC(sizeof(msg_line_info));
-        if (downLoadInfo)
-        {
-            downLoadInfo->adoptedMessageLine = localMessageLine;
-            downLoadInfo->uidOfMessage = GetServerStateParser().CurrentResponseUID();
-            PostLineDownLoadEvent(downLoadInfo);
-            if (!DeathSignalReceived())
-              PR_Free(downLoadInfo);
-            else
-            {
-              // this is very rare, interrupt while waiting to display a huge single line
-              // Net_InterruptIMAP will read this line so leak the downLoadInfo              
-              // set localMessageLine to NULL so the FREEIF( localMessageLine) leaks also
-              localMessageLine = NULL;
-            }
-        }
+      downLoadInfo->adoptedMessageLine = localMessageLine;
+      downLoadInfo->uidOfMessage = GetServerStateParser().CurrentResponseUID();
+      PostLineDownLoadEvent(downLoadInfo);
+      if (!DeathSignalReceived())
+        PR_Free(downLoadInfo);
+      else
+      {
+        // this is very rare, interrupt while waiting to display a huge single line
+        // Net_InterruptIMAP will read this line so leak the downLoadInfo              
+        // set localMessageLine to NULL so the FREEIF( localMessageLine) leaks also
+        localMessageLine = NULL;
+      }
+    }
   }
   else
     m_downloadLineCache.CacheLine(localMessageLine, GetServerStateParser().CurrentResponseUID());
-
+  
   PR_FREEIF( localMessageLine);
 }
 
@@ -3102,6 +3218,17 @@ void nsImapProtocol::NormalMessageEndDownload()
 
   if (m_trackingTime)
     AdjustChunkSize();
+  if (m_imapMailFolderSink && GetServerStateParser().GetDownloadingHeaders())
+  {
+    m_hdrDownloadCache.FinishCurrentHdr();
+    PRUint32 numHdrsCached;
+    m_hdrDownloadCache.GetNumHeaders(&numHdrsCached);
+    if (numHdrsCached == kNumHdrsToXfer)
+    {
+      m_imapMailFolderSink->ParseMsgHdrs(this, &m_hdrDownloadCache);
+      m_hdrDownloadCache.ResetAll();
+    }
+  }
   if (!m_downloadLineCache.CacheEmpty())
   {
       msg_line_info *downloadLineDontDelete = m_downloadLineCache.GetCurrentLineInfo();
@@ -3109,12 +3236,7 @@ void nsImapProtocol::NormalMessageEndDownload()
       m_downloadLineCache.ResetCache();
     }
 
-  if (GetServerStateParser().GetDownloadingHeaders())
-  {
-    if (m_imapMailFolderSink)
-      m_imapMailFolderSink->NormalEndHeaderParseStream(this);
-  }
-  else 
+  if (!GetServerStateParser().GetDownloadingHeaders())
   {
     if (m_channelListener)
     {
@@ -3403,11 +3525,12 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
 
   PRInt32 msgCountLeft = msgCount;
   PRUint32 msgsDownloaded = 0;
+  const PRInt32 kHdrsToFetchAtOnce = 200;
   do 
   {
     nsCString idString;
 
-    PRUint32 msgsToDownload = (msgCountLeft > 200) ? 200 : msgCountLeft;
+    PRUint32 msgsToDownload = (msgCountLeft > kHdrsToFetchAtOnce) ? kHdrsToFetchAtOnce : msgCountLeft;
       AllocateImapUidString(msgUids + msgsDownloaded, msgsToDownload, idString);  // 20 * 200
 
     // except I don't think this works ### DB
@@ -3423,9 +3546,13 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
 
 void nsImapProtocol::HeaderFetchCompleted()
 {
-    if (m_imapMiscellaneousSink)
+  if (m_imapMailFolderSink)
+    m_imapMailFolderSink->ParseMsgHdrs(this, &m_hdrDownloadCache);
+  m_hdrDownloadCache.ReleaseAll();
+
+  if (m_imapMiscellaneousSink)
   {
-        m_imapMiscellaneousSink->HeaderFetchCompleted(this);
+    m_imapMiscellaneousSink->HeaderFetchCompleted(this);
     WaitForFEEventCompletion();
   }
 }
@@ -3897,10 +4024,10 @@ char* nsImapProtocol::CreateNewLineFromSocket()
       {
 //		  printf("waiting for data\n");
         // wait on the data available monitor!!
-        PR_EnterMonitor(m_dataAvailableMonitor);
+//        PR_EnterMonitor(m_dataAvailableMonitor);
         // wait for data arrival
-        PR_Wait(m_dataAvailableMonitor, /* PR_INTERVAL_NO_TIMEOUT */ PR_MillisecondsToInterval(50));
-        PR_ExitMonitor(m_dataAvailableMonitor);
+//        PR_Wait(m_dataAvailableMonitor, /* PR_INTERVAL_NO_TIMEOUT */ PR_MillisecondsToInterval(50));
+//        PR_ExitMonitor(m_dataAvailableMonitor);
 
         // now that we are awake...process some events
         m_eventQueue->ProcessPendingEvents();
@@ -3940,7 +4067,8 @@ nsImapProtocol::NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key)
 {
     if (m_imapMessageSink)
     {
-      if (m_imapAction != nsIImapUrl::nsImapMsgFetch || (flags & ~kImapMsgRecentFlag) != kImapMsgSeenFlag)
+      // if we're selecting the folder, don't need to report the flags; we've already fetched them.
+      if (m_imapAction != nsIImapUrl::nsImapSelectFolder && (m_imapAction != nsIImapUrl::nsImapMsgFetch || (flags & ~kImapMsgRecentFlag) != kImapMsgSeenFlag))
         m_imapMessageSink->NotifyMessageFlags(flags, key);
     }
 }
@@ -4294,7 +4422,7 @@ nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentPr
   {
     int64 minIntervalBetweenProgress;
 
-    LL_I2L(minIntervalBetweenProgress, 250);
+    LL_I2L(minIntervalBetweenProgress, 750);
     int64 diffSinceLastProgress;
     LL_I2L(nowMS, PR_IntervalToMilliseconds(PR_IntervalNow()));
     LL_SUB(diffSinceLastProgress, nowMS, m_lastProgressTime); // r = a - b
@@ -6724,6 +6852,8 @@ void nsImapProtocol::ProcessAfterAuthenticated()
         m_imapServerSink->SetMailServerUrls(GetServerStateParser().GetMailAccountUrl(),
           GetServerStateParser().GetManageListsUrl(),
           GetServerStateParser().GetManageFiltersUrl());
+        // we've tried to ask for it, so don't try again this session.
+        m_hostSessionList->SetHostHasAdminURL(GetImapServerKey(), PR_TRUE);
       }
     }
     else if (GetServerStateParser().ServerIsNetscape3xServer())

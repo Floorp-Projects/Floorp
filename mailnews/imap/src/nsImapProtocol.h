@@ -80,9 +80,60 @@
 #include "nsIMsgWindow.h"
 #include "nsIMsgLogonRedirector.h"
 #include "nsICacheListener.h"
+#include "nsIImapHeaderXferInfo.h"
+#include "nsMsgLineBuffer.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
+
+#define kDownLoadCacheSize 1536
+
+
+typedef struct _msg_line_info {
+    char   *adoptedMessageLine;
+    PRUint32 uidOfMessage;
+} msg_line_info;
+
+
+class nsMsgImapLineDownloadCache : public nsIImapHeaderInfo, public nsByteArray
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIIMAPHEADERINFO
+  nsMsgImapLineDownloadCache();
+  virtual ~nsMsgImapLineDownloadCache();
+    PRUint32  CurrentUID();
+    PRUint32  SpaceAvailable();
+    PRBool CacheEmpty();
+    
+    msg_line_info *GetCurrentLineInfo();
+    
+private:
+    
+    msg_line_info *fLineInfo;
+    PRInt32 m_msgSize;
+};
+
+class nsMsgImapHdrXferInfo : public nsIImapHeaderXferInfo
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIIMAPHEADERXFERINFO
+  nsMsgImapHdrXferInfo();
+  virtual ~nsMsgImapHdrXferInfo();
+  // this will return null if we're full, in which case the client code
+  // should transfer the headers and retry.
+  nsresult GetFreeHeaderInfo(nsIImapHeaderInfo **aResult);
+  void    ResetAll(); // reset HeaderInfo's for re-use
+  void    ReleaseAll(); // release HeaderInfos (frees up memory)
+  void                        StartNewHdr(nsIImapHeaderInfo **newHdrInfo);
+  // get the hdr info we're currently adding lines to
+  nsIImapHeaderInfo           *GetCurrentHdrInfo();
+  // call when we've finished adding lines to current hdr
+  void                        FinishCurrentHdr();
+  nsCOMPtr <nsISupportsArray> m_hdrInfos;
+  PRInt32                     m_nextFreeHdrInfo;
+};
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
@@ -551,7 +602,9 @@ private:
   PRBool                m_ignoreExpunges;
   PRInt32		m_chunkSize;
   PRInt32		m_chunkThreshold;
-  TLineDownloadCache m_downloadLineCache;
+  nsMsgImapLineDownloadCache m_downloadLineCache;
+  nsMsgImapHdrXferInfo  m_hdrDownloadCache;
+  nsCOMPtr <nsIImapHeaderInfo> m_curHdrInfo;
 
 	nsIImapHostSessionList * m_hostSessionList;
 

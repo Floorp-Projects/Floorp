@@ -330,11 +330,6 @@ public:
                               PRUint32 aMsgId, const PRUnichar *extraInfo);
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
-	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
-                               msg_line_info* aInfo);
-	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
-                             TunnelInfo *aInfo);
-
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	// nsIMsgFilterHitNotification method(s)
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindow *msgWindow, PRBool *applyMore);
@@ -360,6 +355,10 @@ protected:
 	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr *tweakMe);
 
 	nsresult SyncFlags(nsIImapFlagAndUidState *flagState);
+
+  nsresult SetupHeaderParseStream(PRUint32 size, const char *content_type, nsIMailboxSpec *boxSpec);
+  nsresult  ParseAdoptedHeaderLine(const char *messageLine, PRUint32 msgKey);
+  nsresult  NormalEndHeaderParseStream(nsIImapProtocol *aProtocol);
 
   nsresult MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, PRBool deleted, nsIMsgDatabase *db);
 

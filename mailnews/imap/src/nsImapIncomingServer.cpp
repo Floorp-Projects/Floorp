@@ -128,6 +128,7 @@ nsImapIncomingServer::nsImapIncomingServer()
   m_canHaveFilters = PR_TRUE;
   m_userAuthenticated = PR_FALSE;
   m_readPFCName = PR_FALSE;
+  m_readRedirectorType = PR_FALSE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()
@@ -1383,20 +1384,27 @@ NS_IMETHODIMP nsImapIncomingServer::RefreshFolderRights(const char *folderPath)
 
 NS_IMETHODIMP nsImapIncomingServer::GetRedirectorType(char **redirectorType)
 {
+  if (m_readRedirectorType)
+  {
+    *redirectorType = ToNewCString(m_redirectorType);
+    return NS_OK;
+  }
   nsresult rv;
   
   // Differentiate 'aol' and non-aol redirector type.
   rv = GetCharValue("redirector_type", redirectorType);
+  m_redirectorType = *redirectorType;
+  m_readRedirectorType = PR_TRUE;
   if (*redirectorType && !nsCRT::strcasecmp(*redirectorType, "aol"))
-      {
+  {
     nsXPIDLCString hostName;
     GetHostName(getter_Copies(hostName));
-
+    
     // Change redirector_type from "aol" to "netscape" if necessary
     if (hostName.get() && !nsCRT::strcasecmp(hostName, "imap.mail.netcenter.com"))
       SetRedirectorType("netscape");
   }
-
+  
   return NS_OK;
 }
 

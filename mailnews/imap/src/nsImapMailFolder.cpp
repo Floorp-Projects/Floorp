@@ -82,6 +82,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIImapFlagAndUidState.h"
+#include "nsIImapHeaderXferInfo.h"
 #include "nsIMessenger.h"
 #include "nsIMsgSearchAdapter.h"
 #include "nsIImapMockChannel.h"
@@ -2492,8 +2493,37 @@ NS_IMETHODIMP nsImapMailFolder::PromptUserForSubscribeUpdatePath(
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
-    nsIImapProtocol* aProtocol, PRUint32 aSize, const char *content_type, nsIMailboxSpec *boxSpec)
+NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImapHeaderXferInfo *aHdrXferInfo)
+{
+  PRUint32 numHdrs;
+  nsCOMPtr <nsIImapHeaderInfo> headerInfo;
+
+  nsresult rv = aHdrXferInfo->GetNumHeaders(&numHdrs);
+  for (PRInt32 i = 0; NS_SUCCEEDED(rv) && i < numHdrs; i++)
+  {
+
+    rv = aHdrXferInfo->GetHeader(i, getter_AddRefs(headerInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!headerInfo)
+      break;
+    PRInt32 msgSize;
+    nsMsgKey msgKey;
+    const char *msgHdrs;
+    headerInfo->GetMsgSize(&msgSize);
+    nsresult rv = SetupHeaderParseStream(msgSize, nsnull, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    headerInfo->GetMsgUid(&msgKey);
+    headerInfo->GetMsgHdrs(&msgHdrs);
+    rv = ParseAdoptedHeaderLine(msgHdrs, msgKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = NormalEndHeaderParseStream(aProtocol);
+  }
+
+  return rv;
+}
+
+nsresult nsImapMailFolder::SetupHeaderParseStream(
+    PRUint32 aSize, const char *content_type, nsIMailboxSpec *boxSpec)
 {
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -2522,8 +2552,7 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
-    nsIImapProtocol* aProtocol, const char *aMessageLine, PRUint32 aMsgKey)
+nsresult nsImapMailFolder::ParseAdoptedHeaderLine(const char *aMessageLine, PRUint32 aMsgKey)
 {
     // we can get blocks that contain more than one line, 
     // but they never contain partial lines
@@ -2557,7 +2586,7 @@ NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
     return NS_OK;
 }
     
-NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
+nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
                                                            aProtocol)
 {
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
@@ -5499,20 +5528,6 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::TunnelOutStream(nsIImapProtocol* aProtocol,
-                                  msg_line_info* aInfo)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::ProcessTunnel(nsIImapProtocol* aProtocol,
-                                TunnelInfo *aInfo)
-{
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

@@ -44,6 +44,7 @@
 interface nsIMsgMailNewsUrl;
 interface nsIImapMockChannel;
 interface nsIMsgWindow;
+interface nsIImapHeaderXferInfo;
 
 typedef long ImapOnlineCopyState;
 
@@ -77,12 +78,7 @@ interface nsIImapMailFolderSink : nsISupports {
   void ChildDiscoverySucceeded(in nsIImapProtocol aProtocol) ;
   void PromptUserForSubscribeUpdatePath(in nsIImapProtocol aProtocol,
                                               out boolean aBool) ;
-  void SetupHeaderParseStream(in nsIImapProtocol aProtocol, in unsigned long size, in string content_type, in nsIMailboxSpec boxSpec);
-
-  void ParseAdoptedHeaderLine(in nsIImapProtocol aProtocol, in string messageLine, in unsigned long msgKey) ;
-  
-  void NormalEndHeaderParseStream(in nsIImapProtocol aProtocol);
-  
+  void parseMsgHdrs(in nsIImapProtocol aProtocol, in nsIImapHeaderXferInfo aHdrXferInfo);
   void AbortHeaderParseStream(in nsIImapProtocol aProtocol) ;
   
   void OnlineCopyCompleted(in nsIImapProtocol aProtocol, in ImapOnlineCopyState aCopyState);

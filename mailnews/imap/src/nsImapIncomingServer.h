@@ -130,16 +130,18 @@ private:
   nsVoidArray       m_urlConsumers;
   PRUint32          m_capability;
   nsCString         m_manageMailAccountUrl;
-  PRBool            m_readPFCName;
-  PRBool            m_userAuthenticated;
+  PRPackedBool      m_readPFCName;
+  PRPackedBool      m_readRedirectorType;
+  PRPackedBool      m_userAuthenticated;
+  PRPackedBool	    m_waitingForConnectionInfo;
+  PRPackedBool	    mDoingSubscribeDialog;
+  PRPackedBool	    mDoingLsub;
   nsCString         m_pfcName;
-  PRBool						m_waitingForConnectionInfo;
+  nsCString         m_redirectorType;
   PRInt32						m_redirectedLogonRetries;
   nsCOMPtr<nsIMsgLogonRedirector> m_logonRedirector;
   
   // subscribe dialog stuff
-  PRBool	mDoingSubscribeDialog;
-  PRBool	mDoingLsub;
   nsresult AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName);
 
   nsCOMPtr <nsISubscribableServer> mInner;
