@@ -639,7 +639,7 @@ nsBrowserAppCore::UpdateGoMenu()
       }
       nsString nodeid;
             rv = childElement->GetAttribute(nsAutoString("id"), nodeid);
-      if (nodeid == "gomenu") {
+      if (nodeid.Equals("gomenu")) {
         goMenuNode = child;
         break;
       }
@@ -738,7 +738,7 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
       nsString  attrname("ishist");
       nsString  attrvalue;
       rv = childElement->GetAttribute(attrname, attrvalue);
-      if (NS_SUCCEEDED(rv) && attrvalue == "true") {
+      if (NS_SUCCEEDED(rv) && attrvalue.Equals("true")) {
         // It is a history menu item. Remove it
                 nsCOMPtr<nsIDOMNode> ret;         
                 rv = menu->RemoveChild(child, getter_AddRefs(ret));

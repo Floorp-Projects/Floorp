@@ -773,7 +773,7 @@ NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
 
    nsAutoString windowTitle;
    docShellElement->GetAttribute("title", windowTitle);
-   if(windowTitle == "")
+   if(windowTitle.IsEmpty())
       return NS_OK;
 
    NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
