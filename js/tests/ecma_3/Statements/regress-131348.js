@@ -57,6 +57,12 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
+/*
+ * As of 10 Apr 2002, we only want to run this test in SpiderMonkey
+ */
+if (inRhino())
+  quit();
+
 
 status = inSection(1);
 expect = TEST_PASSED;
