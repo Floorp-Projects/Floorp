@@ -691,9 +691,7 @@ tab[busy] {
   padding: 0px !important;
   border: none !important;
   margin: 2px 4px !important;
-
   background-color: transparent;
-
   list-style-image: url("chrome://browser/skin/throbber-stopped.gif");
 }
 
