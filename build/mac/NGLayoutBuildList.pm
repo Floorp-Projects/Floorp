@@ -505,6 +505,7 @@ sub BuildClientDist()
 	# MAILNEWS
    InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
+#   BuildOneProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp", 				"headers", "", 0, 0, 0);
    InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
@@ -929,16 +930,33 @@ sub MakeResourceAliases()
 
 	# if ($main::build{mailnews})
 	{
-		my($mailnews_dir) = "$resource_dir" . "mailnews";
-		
-		InstallResources(":mozilla:mailnews:ui:messenger:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);
-		InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",				"$mailnews_dir:messenger:", 0);	
-		InstallResources(":mozilla:mailnews:mime:emitters:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);	
-		InstallResources(":mozilla:mailnews:ui:compose:resources:MANIFEST",			"$mailnews_dir:compose:", 0);	
-		InstallResources(":mozilla:mailnews:ui:preference:resources:MANIFEST",		"$mailnews_dir:preference:", 0);
-		InstallResources(":mozilla:mailnews:ui:ab:resources:MANIFEST",				"$mailnews_dir:addrbook:", 0);
-	}
+        my($mailnews_dir) = "$resource_dir" . "mailnews";
+        my($messenger_chrome_dir) = "$chrome_dir" . "messenger";
+        my($messengercomposer_chrome_dir) = "$chrome_dir" . "messengercompose";
+        my($addressbook_chrome_dir) = "$chrome_dir" . "addressbook";
+        
+        InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",           "$messenger_chrome_dir:content:default:", 0);
+        InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",     "$messenger_chrome_dir:content:default:", 0);
+        InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",        "$messenger_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",    "$messenger_chrome_dir:content:default:", 0);
+        InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",                      "$messenger_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",     "$messenger_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",                     "$messenger_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",                      "$messenger_chrome_dir:skin:default:", 0);
 
+        InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                           "$mailnews_dir:messenger:", 0); 
+		InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",	"$mailnews_dir:messenger:", 0);	
+
+        InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",                "$messengercomposer_chrome_dir:content:default:", 0);
+        InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",                   "$messengercomposer_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",  "$messengercomposer_chrome_dir:content:default:", 0);
+
+        InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",               "$addressbook_chrome_dir:content:default:", 0);
+        InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",                  "$addressbook_chrome_dir:skin:default:", 0);
+        InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
+    }
+	
 	# copy the chrome registry. We want an actual copy so that changes for custom UI's
 	# don't accidentally get checked into the tree. (pinkerton, bug#5296).
 	copy ( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
