@@ -1846,6 +1846,8 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
           mComputedWidth = NS_SHRINKWRAPWIDTH;
 
         } else {
+          NS_ASSERTION(eStyleUnit_Auto == mStylePosition->mWidth.GetUnit(),
+                       "How did we get here?");
           // The CSS2 spec says the computed width should be 0; however, that's
           // not what Nav and IE do and even the spec doesn't really want that
           // to happen.
@@ -1853,8 +1855,10 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
           // Instead, have the element shrink wrap its width
           mComputedWidth = NS_SHRINKWRAPWIDTH;
 
-          // Limnit the width to the containing block width
-          nscoord widthFromCB = aContainingBlockWidth;
+          // Limit the width to the available width.  This factors in
+          // other floats that impact this float.
+          // XXX It's possible that this should be quirks-only.  Probable, in fact.
+          nscoord widthFromCB = availableWidth;
           if (NS_UNCONSTRAINEDSIZE != widthFromCB) {
             widthFromCB -= mComputedBorderPadding.left + mComputedBorderPadding.right +
                            mComputedMargin.left + mComputedMargin.right;
