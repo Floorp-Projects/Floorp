@@ -233,7 +233,7 @@ nsBox::nsBox(nsIPresShell* aShell):mMouseThrough(unset),
 nsBox::~nsBox()
 {
   gRefCnt--;
-  if (gRefCnt == 0)
+  if (gRefCnt == 0 && gTheme)
     nsServiceManager::ReleaseService("@mozilla.org/chrome/chrome-native-theme;1", gTheme);
 }
 
