@@ -5110,6 +5110,8 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
+#define ZH_CN_INTELLEGENT_ABC_IME ((HKL)0xe0040804L)
+
 void
 nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 {
@@ -5189,6 +5191,15 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
                              event.theReply.mCursorPosition.height;
  
     NS_IMM_SETCANDIDATEWINDOW(hIMEContext,&candForm);
+    // somehow the "Intellegent ABC IME" in Simplified Chinese
+    // window listen to the caret position to decide where to put the
+    // candidate window
+    if(gKeyboardLayout == ZH_CN_INTELLEGENT_ABC_IME) 
+    {
+      CreateCaret(mWnd, nsnull, 1, 1);
+      SetCaretPos( candForm.ptCurrentPos.x, candForm.ptCurrentPos.y);
+      DestroyCaret();
+    }
   } else {
     // for some reason we don't know yet, theReply may contains invalid result
     // need more debugging in nsCaret to find out the reason
