@@ -71,11 +71,6 @@ public final class LazilyLoadedCtor {
         synchronized (obj) {
             if (!isReplaced) {
                 boolean removeOnError = false;
-
-                // Treat security exceptions as absence of object.
-                // They can be due to the following reasons:
-                //  java.lang.RuntimePermission createClassLoader
-
                 Class cl = Kit.classOrNull(className);
                 if (cl == null) {
                     removeOnError = true;
@@ -83,13 +78,27 @@ public final class LazilyLoadedCtor {
                     try {
                         ScriptableObject.defineClass(obj, cl, sealed);
                         isReplaced = true;
-                    } catch (RhinoException e) {
-                        throw e;
-                    } catch (SecurityException ex) {
+                    } catch (ClassDefinitionException ex) {
                         removeOnError = true;
-                    } catch (Throwable ex) {
-                        // Ignore any other erors. Due to lazily class loading
-                        // it may indicate absence of some necessary classes.
+                    } catch (InvocationTargetException ex) {
+                        Throwable target = ex.getTargetException();
+                        if (target instanceof RuntimeException) {
+                            throw (RuntimeException)target;
+                        }
+                        removeOnError = true;
+                    } catch (PropertyException ex) {
+                        removeOnError = true;
+                    } catch (InstantiationException ex) {
+                        removeOnError = true;
+                    } catch (IllegalAccessException ex) {
+                        removeOnError = true;
+                    } catch (SecurityException ex) {
+                        // Treat security exceptions as absence of object.
+                        // They can be due to the following reasons:
+                        //  java.lang.RuntimePermission createClassLoader
+                        removeOnError = true;
+                    } catch (LinkageError ex) {
+                        // No dependant classes
                         removeOnError = true;
                     }
                 }
