@@ -146,26 +146,23 @@ GetSilentDownloadDefaults(PRBool* enabled, PRInt32 *bytes_range, PRInt32 *interv
 nsFileSpec * 
 CreateOutFileLocation(const nsString& url, const nsString& directory)
 {
-    nsSpecialSystemDirectory *outFileLocation =  
-        new nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    nsSpecialSystemDirectory outFileLocation(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     
-    //*outFileLocation += directory;
-
     PRInt32 result = url.RFind('/');
     if (result != -1)
     {            
         nsString fileName;
         url.Right(fileName, (url.Length() - result) );        
-        *outFileLocation += fileName;
+        outFileLocation += fileName;
     }
     else
     {   
-        *outFileLocation += "sdl";
+        outFileLocation += "sdl";
     }
 
-    outFileLocation->MakeUnique();
+    outFileLocation.MakeUnique();
 
-    return outFileLocation;
+    return new nsSpecialSystemDirectory(outFileLocation);
 }
 
 
