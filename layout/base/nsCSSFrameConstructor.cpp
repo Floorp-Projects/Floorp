@@ -52,6 +52,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsITextContent.h"
+#include "nsPlaceholderFrame.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -101,12 +102,14 @@ struct nsFrameItems {
 };
 
 nsFrameItems::nsFrameItems()
-:childList(nsnull), lastChild(nsnull)
-{}
+  : childList(nsnull), lastChild(nsnull)
+{
+}
 
 nsFrameItems::nsFrameItems(nsIFrame* aFrame)
-:childList(aFrame), lastChild(aFrame)
-{}
+  : childList(aFrame), lastChild(aFrame)
+{
+}
 
 void 
 nsFrameItems::AddChild(nsIFrame* aChild)
@@ -126,7 +129,8 @@ nsFrameItems::AddChild(nsIFrame* aChild)
 // Structure used when constructing formatting object trees. Contains
 // state information needed for absolutely positioned elements
 struct nsAbsoluteItems : nsFrameItems {
-  nsIFrame* const containingBlock;  // containing block for absolutely positioned elements
+  // containing block for absolutely positioned elements
+  nsIFrame* const containingBlock;
 
   nsAbsoluteItems(nsIFrame* aContainingBlock);
 };
@@ -250,10 +254,6 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
  * @param   aFrame the the associated with aContent. This will be the
  *            parent frame (both content and geometric) for the flowed
  *            child frames
- * @param   aState the state information associated with the current process
- * @param   aChildList an OUT parameter. This is the list of flowed child
- *            frames that should go in the principal child list
- * @param aLastChildInList contains a pointer to the last child in aChildList
  */
 nsresult
 nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
@@ -261,19 +261,19 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
                                        nsIFrame*        aFrame,
                                        nsAbsoluteItems& aAbsoluteItems,
                                        nsFrameItems&    aFrameItems,
-                                       nsAbsoluteItems& aFixedItems)
+                                       nsAbsoluteItems& aFixedItems,
+                                       nsAbsoluteItems& aFloatingItems)
 {
-  // Iterate the child content objects and construct a frame
+  // Iterate the child content objects and construct frames
   PRInt32   count;
 
   aContent->ChildCount(count);
   for (PRInt32 i = 0; i < count; i++) {
     nsCOMPtr<nsIContent> childContent;
-    
     if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent)))) {
       // Construct a child frame
       ConstructFrame(aPresContext, childContent, aFrame, aAbsoluteItems,
-                     aFrameItems, aFixedItems);
+                     aFrameItems, aFixedItems, aFloatingItems);
     }
   }
 
@@ -657,10 +657,17 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
                            adjStyleContext, nsnull);
     innerFrame->SetNextSibling(aNewCaptionFrame);
   }
+
   nsFrameItems childItems;
+  nsAbsoluteItems floatingKids(aNewCaptionFrame);
   ProcessChildren(aPresContext, aContent, aNewCaptionFrame, aAbsoluteItems, 
-                  childItems, aFixedItems);
+                  childItems, aFixedItems, floatingKids);
   aNewCaptionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+  if (floatingKids.childList) {
+    aNewCaptionFrame->SetInitialChildList(*aPresContext,
+                                          nsLayoutAtoms::floaterList,
+                                          floatingKids.childList);
+  }
 
   return rv;
 }
@@ -796,8 +803,10 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*  aPresContex
       TableProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
                            childItems, aFixedItems, aTableCreator);
     } else {
+        nsAbsoluteItems floatingKids(nsnull);
       ProcessChildren(aPresContext, aContent, aNewGroupFrame, aAbsoluteItems, 
-                      childItems, aFixedItems);
+                      childItems, aFixedItems, floatingKids);
+        NS_ASSERTION(nsnull == floatingKids.childList, "floater in odd spot");
     }
     aNewGroupFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   }
@@ -948,10 +957,13 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresContext*  aPresContext,
 
   if (NS_SUCCEEDED(rv)) {
     nsFrameItems colChildItems;
+    nsAbsoluteItems floatingKids(nsnull);
     rv = ProcessChildren(aPresContext, aContent, aNewColFrame, aAbsoluteItems, 
-                         colChildItems, aFixedItems);
+                         colChildItems, aFixedItems, floatingKids);
     if (NS_SUCCEEDED(rv)) {
-      aNewColFrame->SetInitialChildList(*aPresContext, nsnull, colChildItems.childList);
+      aNewColFrame->SetInitialChildList(*aPresContext, nsnull,
+                                        colChildItems.childList);
+      NS_ASSERTION(nsnull == floatingKids.childList, "floater in odd spot");
     }
   }
 
@@ -1068,10 +1080,16 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext
 
   if (aProcessChildren) {
     nsFrameItems childItems;
+    nsAbsoluteItems floaterList(aNewCellBodyFrame);
     rv = ProcessChildren(aPresContext, aContent, aNewCellBodyFrame, aAbsoluteItems,
-                         childItems, aFixedItems);
+                         childItems, aFixedItems, floaterList);
     if (NS_FAILED(rv)) return rv;
     aNewCellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+    if (floaterList.childList) {
+      aNewCellBodyFrame->SetInitialChildList(*aPresContext,
+                                             nsLayoutAtoms::floaterList,
+                                             floaterList.childList);
+    }
   }
   aNewCellFrame->SetInitialChildList(*aPresContext, nsnull, aNewCellBodyFrame);
 
@@ -1135,25 +1153,37 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresContext*  aPresContext,
          (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW) ||
          (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN) ||
          (childDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) ) {
-      rv = ConstructFrame(aPresContext, aChildContent, aParentFrame, aAbsoluteItems, aChildItems, aFixedItems);
+      nsAbsoluteItems floaterList(nsnull);
+      rv = ConstructFrame(aPresContext, aChildContent, aParentFrame,
+                          aAbsoluteItems, aChildItems, aFixedItems,
+                          floaterList);
+      NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
     } else {
       nsCOMPtr<nsIAtom> tag;
       aChildContent->GetTag(*getter_AddRefs(tag));
+
+      // XXX this needs to be fixed so that the form can work without
+      // a frame. This is *disgusting*
+
       // forms need a frame but it can't be a child of an inner table
       if (nsHTMLAtoms::form == tag.get()) {  
         // if the parent is a table, put the form in the outer table frame
         const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
           aParentStyleContext->GetStyleData(eStyleStruct_Display);
+        nsAbsoluteItems floaterList(nsnull);
         if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
           nsIFrame* outerFrame; 
           aParentFrame->GetParent(&outerFrame);
-          rv = ConstructFrame(aPresContext, aChildContent, outerFrame, aAbsoluteItems, 
-                              aChildItems, aFixedItems);
+          rv = ConstructFrame(aPresContext, aChildContent, outerFrame,
+                              aAbsoluteItems, aChildItems, aFixedItems,
+                              floaterList);
           // XXX: Seems like this is going into the inner frame's child list instead of the outer frame. - DWH
         } else {
           rv = ConstructFrame(aPresContext, aChildContent, aParentFrame, 
-                              aAbsoluteItems, aChildItems, aFixedItems);
+                              aAbsoluteItems, aChildItems, aFixedItems,
+                              floaterList);
         }
+        NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
       // wrap it in a table cell, row, row group, table if it is a valid tag or display
       // and not whitespace. For example we don't allow map, head, body, etc.
       } else { 
@@ -1331,16 +1361,24 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
 
     // Process the child content
     nsAbsoluteItems  absoluteItems(areaFrame);
+    nsAbsoluteItems  floaterList(areaFrame);
     nsFrameItems     childItems;
 
-    ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems, childItems,
-                    aFixedItems);
+    ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems,
+                    childItems, aFixedItems, floaterList);
     
     // Set the initial child lists
-    areaFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+    areaFrame->SetInitialChildList(*aPresContext, nsnull,
+                                   childItems.childList);
     if (nsnull != absoluteItems.childList) {
-      areaFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
+      areaFrame->SetInitialChildList(*aPresContext,
+                                     nsLayoutAtoms::absoluteList,
                                      absoluteItems.childList);
+    }
+    if (floaterList.childList) {
+      areaFrame->SetInitialChildList(*aPresContext,
+                                     nsLayoutAtoms::floaterList,
+                                     floaterList.childList);
     }
 
     // Return the area frame
@@ -1386,16 +1424,24 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     
     // Process the child content
     nsAbsoluteItems  absoluteItems(areaFrame);
+    nsAbsoluteItems  floatingItems(areaFrame);
     nsFrameItems     childItems;
 
-    ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems, childItems,
-                    aFixedItems);
+    ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems,
+                    childItems, aFixedItems, floatingItems);
     
     // Set the initial child lists
-    areaFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+    areaFrame->SetInitialChildList(*aPresContext, nsnull,
+                                   childItems.childList);
     if (nsnull != absoluteItems.childList) {
-      areaFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
+      areaFrame->SetInitialChildList(*aPresContext,
+                                     nsLayoutAtoms::absoluteList,
                                      absoluteItems.childList);
+    }
+    if (nsnull != floatingItems.childList) {
+      areaFrame->SetInitialChildList(*aPresContext,
+                                     nsLayoutAtoms::floaterList,
+                                     floatingItems.childList);
     }
     if (nsnull != scrollFrame) {
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
@@ -1612,6 +1658,39 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
 }
 
 nsresult
+nsCSSFrameConstructor::CreateFloaterPlaceholderFrameFor(nsIPresContext*  aPresContext,
+                                                        nsIContent*      aContent,
+                                                        nsIFrame*        aFrame,
+                                                        nsIStyleContext* aStyleContext,
+                                                        nsIFrame*        aParentFrame,
+                                                        nsIFrame**       aPlaceholderFrame)
+{
+  nsPlaceholderFrame* placeholder;
+  nsresult  rv = NS_NewPlaceholderFrame((nsIFrame**)&placeholder);
+  if (NS_SUCCEEDED(rv)) {
+    // The placeholder frame gets a pseudo style context
+    nsCOMPtr<nsIStyleContext>  sc;
+    aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                               nsHTMLAtoms::placeholderPseudo,
+                                               aStyleContext,
+                                               PR_FALSE,
+                                               getter_AddRefs(sc));
+    placeholder->Init(*aPresContext, aContent, aParentFrame, sc, nsnull);
+  
+    // Add mapping from absolutely positioned frame to its placeholder frame
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->SetPlaceholderFrameFor(aFrame, placeholder);
+  
+    placeholder->SetAnchoredItem(aFrame);
+
+    *aPlaceholderFrame = NS_STATIC_CAST(nsIFrame*, placeholder);
+  }
+
+  return rv;
+}
+
+nsresult
 nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
                                             nsIContent*      aContent,
                                             nsIFrame*        aParentFrame,
@@ -1711,20 +1790,23 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
                                            nsIStyleContext* aStyleContext,
                                            nsAbsoluteItems& aAbsoluteItems,
                                            nsFrameItems&    aFrameItems,
-                                           nsAbsoluteItems& aFixedItems)
+                                           nsAbsoluteItems& aFixedItems,
+                                           nsAbsoluteItems& aFloatingItems)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
+  PRBool    isFloating = PR_FALSE;
   PRBool    canBePositioned = PR_TRUE;
   PRBool    frameHasBeenInitialized = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
+  PRBool    newFrameIsFloaterContainer = PR_FALSE;
   PRBool    isReplaced = PR_FALSE;
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
     rv = NS_NewTextFrame(newFrame);
-    isReplaced = PR_TRUE;   // XXX kipp: temporary?
+    isReplaced = PR_TRUE;   // XXX kipp: temporary
   }
   else {
     nsIHTMLContent *htmlContent;
@@ -1736,11 +1818,16 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       // See if the element is absolute or fixed positioned
       const nsStylePosition* position = (const nsStylePosition*)
         aStyleContext->GetStyleData(eStyleStruct_Position);
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        aStyleContext->GetStyleData(eStyleStruct_Display);
       if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
         isAbsolutelyPositioned = PR_TRUE;
       }
-      if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+      else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
         isFixedPositioned = PR_TRUE;
+      }
+      else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+        isFloating = PR_TRUE;
       }
 
       // Create a frame based on the tag
@@ -1755,7 +1842,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       }
       else if (nsHTMLAtoms::br == aTag) {
         rv = NS_NewBRFrame(newFrame);
-        isReplaced = PR_TRUE;   // XXX kipp: temporary?
+        isReplaced = PR_TRUE;
       }
       else if (nsHTMLAtoms::wbr == aTag) {
         rv = NS_NewWBRFrame(newFrame);
@@ -1771,8 +1858,10 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       else if (nsHTMLAtoms::select == aTag) {
         isReplaced = PR_TRUE;
         rv = ConstructSelectFrame(aPresContext, aContent, aParentFrame,
-                                  aTag, aStyleContext, aAbsoluteItems, newFrame, 
-                                  processChildren, isAbsolutelyPositioned, frameHasBeenInitialized);
+                                  aTag, aStyleContext, aAbsoluteItems,
+                                  newFrame,  processChildren,
+                                  isAbsolutelyPositioned,
+                                  frameHasBeenInitialized);
       }
       else if (nsHTMLAtoms::applet == aTag) {
         isReplaced = PR_TRUE;
@@ -1797,6 +1886,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         NS_NewBlockFrame(blockFrame, 0);
         blockFrame->Init(*aPresContext, aContent, newFrame, aStyleContext, nsnull);
         newFrame = blockFrame;
+        newFrameIsFloaterContainer = PR_TRUE;
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::form == aTag) {
@@ -1849,29 +1939,48 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
                      nsnull);
 
-      // See if we need to create a view, e.g. the frame is absolutely positioned
+      // See if we need to create a view, e.g. the frame is absolutely
+      // positioned
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
                                                aStyleContext, PR_FALSE);
 
       // Process the child content if requested
       nsFrameItems childItems;
+      nsAbsoluteItems floaterList(newFrame);
       if (processChildren) {
-        rv = ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems,
-                             childItems, aFixedItems);
+        if (newFrameIsFloaterContainer) {
+          rv = ProcessChildren(aPresContext, aContent, newFrame,
+                               aAbsoluteItems, childItems, aFixedItems,
+                               floaterList);
+        }
+        else {
+          rv = ProcessChildren(aPresContext, aContent, newFrame,
+                               aAbsoluteItems, childItems, aFixedItems,
+                               aFloatingItems);
+        }
       }
 
       // Set the frame's initial child list
-      newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+      newFrame->SetInitialChildList(*aPresContext, nsnull,
+                                    childItems.childList);
+
+      // Set the frame's floating child list too
+      if (floaterList.childList) {
+        newFrame->SetInitialChildList(*aPresContext,
+                                      nsLayoutAtoms::floaterList,
+                                      floaterList.childList);
+      }
     }
 
     // If the frame is positioned then create a placeholder frame
     if (isAbsolutelyPositioned || isFixedPositioned) {
       nsIFrame* placeholderFrame;
 
-      CreatePlaceholderFrameFor(aPresContext, aContent, newFrame, aStyleContext,
-                                aParentFrame, placeholderFrame);
+      CreatePlaceholderFrameFor(aPresContext, aContent, newFrame,
+                                aStyleContext, aParentFrame, placeholderFrame);
 
-      // Add the positioned frame to its containing block's list of child frames
+      // Add the positioned frame to its containing block's list of
+      // child frames
       if (isAbsolutelyPositioned) {
         aAbsoluteItems.AddChild(newFrame);
       } else {
@@ -1881,6 +1990,17 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
 
+    } else if (isFloating) {
+      nsIFrame* placeholderFrame;
+      CreateFloaterPlaceholderFrameFor(aPresContext, aContent, newFrame,
+                                       aStyleContext, aParentFrame,
+                                       &placeholderFrame);
+
+      // Add the floating frame to its containing block's list of child frames
+      aFloatingItems.AddChild(newFrame);
+
+      // Add the placeholder frame to the flow
+      aFrameItems.AddChild(placeholderFrame);
     } else {
       // Add the newly constructed frame to the flow
       aFrameItems.AddChild(newFrame);
@@ -1900,6 +2020,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
                                          nsAbsoluteItems& aAbsoluteItems,
                                          nsFrameItems&    aFrameItems,
                                          nsAbsoluteItems& aFixedItems,
+                                         nsAbsoluteItems& aFloatingItems,
                                          PRBool&          haltProcessing)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
@@ -1935,15 +2056,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewRadioControlFrame(newFrame);
     else if (aTag == nsXULAtoms::text)
       rv = NS_NewTextControlFrame(newFrame);
-  else if (aTag == nsXULAtoms::widget)
-    rv = NS_NewObjectFrame(newFrame);
+    else if (aTag == nsXULAtoms::widget)
+      rv = NS_NewObjectFrame(newFrame);
   
-  // TREE CONSTRUCTION
-  // The following code is used to construct a tree view from the XUL content
-  // model.  It has to take the hierarchical tree content structure and build a flattened
-  // table row frame structure.
-  else if (aTag == nsXULAtoms::tree)
-  {
+    // TREE CONSTRUCTION
+    // The following code is used to construct a tree view from the XUL content
+    // model.  It has to take the hierarchical tree content structure and build a flattened
+    // table row frame structure.
+    else if (aTag == nsXULAtoms::tree)
+    {
       nsIFrame* geometricParent = aParentFrame;
       if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
         isAbsolutelyPositioned = PR_TRUE;
@@ -1978,58 +2099,61 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
         aFrameItems.AddChild(newFrame);
       }
       return rv;
-  }
-  else if (aTag == nsXULAtoms::treechildren)
-  {
-	  haltProcessing = PR_TRUE;
-	  return rv; // This is actually handled by the treeitem node.
-  }
-  else if (aTag == nsXULAtoms::treeitem)
-  {
-    // A tree item causes a table row to be constructed that is always
-    // slaved to the nearest enclosing table row group (regardless of how
-    // deeply nested it is within other tree items).
-	rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
-                                aAbsoluteItems, newFrame, ignore, aFixedItems, treeCreator);
-    aFrameItems.AddChild(newFrame);
-
-	// We need to find the treechildren node that is a child of this node
-	// and we need to construct new rows.
-	PRInt32 aChildCount;
-	aContent->ChildCount(aChildCount);
-	for (PRInt32 i = 0; i < aChildCount; i++) 
-	{
-		nsCOMPtr<nsIContent> childContent;
-		
-    if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent))))
+    }
+    else if (aTag == nsXULAtoms::treechildren)
     {
-		  // Construct a child frame
-		  nsCOMPtr<nsIAtom> pTag;
-		  childContent->GetTag(*getter_AddRefs(pTag));
-		  if (pTag.get() == nsXULAtoms::treechildren)
-		  {
-			  // We want to call ConstructFrame to keep building rows, but only if we're
-			  // open.
-			  nsString attrValue;
-			  nsIAtom* kOpenAtom = NS_NewAtom("open");
-			  nsresult result = aContent->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
-			  attrValue.ToLowerCase();
-			  processChildren =  (result == NS_CONTENT_ATTR_NO_VALUE ||
-				(result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
-			  NS_RELEASE(kOpenAtom);
+      haltProcessing = PR_TRUE;
+      return rv; // This is actually handled by the treeitem node.
+    }
+    else if (aTag == nsXULAtoms::treeitem)
+    {
+      // A tree item causes a table row to be constructed that is always
+      // slaved to the nearest enclosing table row group (regardless of how
+      // deeply nested it is within other tree items).
+      rv = ConstructTableRowFrame(aPresContext, aContent, aParentFrame, aStyleContext, 
+                                  aAbsoluteItems, newFrame, ignore, aFixedItems, treeCreator);
+      aFrameItems.AddChild(newFrame);
+
+      // We need to find the treechildren node that is a child of this node
+      // and we need to construct new rows.
+      PRInt32 aChildCount;
+      aContent->ChildCount(aChildCount);
+      for (PRInt32 i = 0; i < aChildCount; i++) 
+      {
+        nsCOMPtr<nsIContent> childContent;
+		
+        if (NS_SUCCEEDED(aContent->ChildAt(i, *getter_AddRefs(childContent))))
+        {
+          // Construct a child frame
+          nsCOMPtr<nsIAtom> pTag;
+          childContent->GetTag(*getter_AddRefs(pTag));
+          if (pTag.get() == nsXULAtoms::treechildren)
+          {
+            // We want to call ConstructFrame to keep building rows, but only if we're
+            // open.
+            nsString attrValue;
+            nsIAtom* kOpenAtom = NS_NewAtom("open");
+            nsresult result = aContent->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
+            attrValue.ToLowerCase();
+            processChildren =  (result == NS_CONTENT_ATTR_NO_VALUE ||
+                                (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+            NS_RELEASE(kOpenAtom);
 			  
-			  // If we do need to process, we have to "skip" this content node, since it
-			  // doesn't really have any associated display.
+            // If we do need to process, we have to "skip" this content node, since it
+            // doesn't really have any associated display.
   
-			  if (processChildren)
-			  {
-				rv = ProcessChildren(aPresContext, childContent, aParentFrame, aAbsoluteItems,
-						   aFrameItems, aFixedItems);
-			  }
-		  }
-		}
-	}
-    return rv;
+            if (processChildren)
+            {
+              nsAbsoluteItems floaterList(nsnull);
+              rv = ProcessChildren(aPresContext, childContent, aParentFrame,
+                                   aAbsoluteItems, aFrameItems, aFixedItems,
+                                   floaterList);
+              NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
+            }
+          }
+        }
+      }
+      return rv;
   
 	// Note: See later in this method.  More processing has to be done after the
 	// tree item has constructed its children and after this frame has been added
@@ -2058,39 +2182,41 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
   }
   // End of TREE CONSTRUCTION code here (there's more later on in the function)
 
-  // TOOLBAR CONSTRUCTION
-  else if (aTag == nsXULAtoms::toolbox) {
-    processChildren = PR_TRUE;
-    rv = NS_NewToolboxFrame(newFrame);
-  }
-  else if (aTag == nsXULAtoms::toolbar) {
-    processChildren = PR_TRUE;
-    rv = NS_NewToolbarFrame(newFrame);
-  }
-  // End of TOOLBAR CONSTRUCTION logic
+    // TOOLBAR CONSTRUCTION
+    else if (aTag == nsXULAtoms::toolbox) {
+      processChildren = PR_TRUE;
+      rv = NS_NewToolboxFrame(newFrame);
+    }
+    else if (aTag == nsXULAtoms::toolbar) {
+      processChildren = PR_TRUE;
+      rv = NS_NewToolbarFrame(newFrame);
+    }
+    // End of TOOLBAR CONSTRUCTION logic
 
-  // PROGRESS METER CONSTRUCTION
-  else if (aTag == nsXULAtoms::progressmeter) {
-    processChildren = PR_TRUE;
-    rv = NS_NewProgressMeterFrame(newFrame);
-  }
-  // End of PROGRESS METER CONSTRUCTION logic
+    // PROGRESS METER CONSTRUCTION
+    else if (aTag == nsXULAtoms::progressmeter) {
+      processChildren = PR_TRUE;
+      rv = NS_NewProgressMeterFrame(newFrame);
+    }
+    // End of PROGRESS METER CONSTRUCTION logic
 
-  // TITLED BUTTON CONSTRUCTION
-  else if (aTag == nsXULAtoms::titledbutton) {
-    processChildren = PR_TRUE;
-    rv = NS_NewTitledButtonFrame(newFrame);
-  }
-  // End of TITLED BUTTON CONSTRUCTION logic
+    // TITLED BUTTON CONSTRUCTION
+    else if (aTag == nsXULAtoms::titledbutton) {
+      processChildren = PR_TRUE;
+      rv = NS_NewTitledButtonFrame(newFrame);
+    }
+    // End of TITLED BUTTON CONSTRUCTION logic
 
   }
 
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
-    nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
-                                                         aParentFrame;
-    newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext, nsnull);
+    nsIFrame* geometricParent = isAbsolutelyPositioned
+      ? aAbsoluteItems.containingBlock
+      : aParentFrame;
+    newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
+                   nsnull);
 
     // See if we need to create a view, e.g. the frame is absolutely positioned
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -2101,9 +2227,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
 
     // Process the child content if requested
     nsFrameItems childItems;
-    if (processChildren)
+    if (processChildren) {
       rv = ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems,
-                           childItems, aFixedItems);
+                           childItems, aFixedItems, aFloatingItems);
+    }
+
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -2118,13 +2246,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       // Add the positioned frame to its containing block's list of child frames
       if (isAbsolutelyPositioned) {
         aAbsoluteItems.AddChild(newFrame);
-	  } else {
+      } else {
         aFixedItems.AddChild(newFrame);
-	  }
+      }
 
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
-	}
+    }
   }
 
   return rv;
@@ -2145,64 +2273,77 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIFrame*        scrollFrame,
                                              PRBool           aIsFixedPositioned,
                                              PRBool           aCreateBlock)
 {
-    // Initialize it
-    nsIFrame* geometricParent = aParentFrame;
+  // Initialize it
+  nsIFrame* geometricParent = aParentFrame;
     
-    if (aIsAbsolutelyPositioned) {
-      geometricParent = aAbsoluteItems.containingBlock;
-    } else if (aIsFixedPositioned) {
-      geometricParent = aFixedItems.containingBlock;
+  if (aIsAbsolutelyPositioned) {
+    geometricParent = aAbsoluteItems.containingBlock;
+  } else if (aIsFixedPositioned) {
+    geometricParent = aFixedItems.containingBlock;
+  }
+  scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
+                    nsnull);
+
+  // The scroll frame gets the original style context, and the scrolled
+  // frame gets a SCROLLED-CONTENT pseudo element style context that
+  // inherits the background properties
+  nsCOMPtr<nsIStyleContext> scrolledPseudoStyle;
+  aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                          nsHTMLAtoms::scrolledContentPseudo,
+                                          aStyleContext, PR_FALSE,
+                                          getter_AddRefs(scrolledPseudoStyle));
+
+  // Create an area container for the frame
+  nsIFrame* scrolledFrame;
+  NS_NewAreaFrame(scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+
+  // Initialize the frame and force it to have a view
+  scrolledFrame->Init(*aPresContext, aContent, scrollFrame,
+                      scrolledPseudoStyle, nsnull);
+  nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
+                                           scrolledPseudoStyle, PR_TRUE);
+
+  // Process children
+  nsAbsoluteItems floaterList(scrolledFrame);
+  if (aIsAbsolutelyPositioned || aIsFixedPositioned) {
+    // The area frame becomes a container for child frames that are
+    // absolutely positioned
+    nsAbsoluteItems  absoluteItems(scrolledFrame);
+    nsFrameItems     childItems;
+    ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
+                    childItems, aFixedItems, floaterList);
+
+    // Set the initial child lists
+    scrolledFrame->SetInitialChildList(*aPresContext, nsnull,
+                                       childItems.childList);
+    if (nsnull != absoluteItems.childList) {
+      scrolledFrame->SetInitialChildList(*aPresContext,
+                                         nsLayoutAtoms::absoluteList,
+                                         absoluteItems.childList);
     }
-    scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
-                      nsnull);
-
-    // The scroll frame gets the original style context, and the scrolled
-    // frame gets a SCROLLED-CONTENT pseudo element style context that
-    // inherits the background properties
-    nsCOMPtr<nsIStyleContext> scrolledPseudoStyle;
-    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::scrolledContentPseudo,
-                                               aStyleContext, PR_FALSE,
-                                               getter_AddRefs(scrolledPseudoStyle));
-
-    // Create an area container for the frame
-    nsIFrame* scrolledFrame;
-    NS_NewAreaFrame(scrolledFrame, NS_BLOCK_SHRINK_WRAP);
-
-    // Initialize the frame and force it to have a view
-    scrolledFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle,
-                        nsnull);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
-                                             scrolledPseudoStyle, PR_TRUE);
-
-    // Process children
-    if (aIsAbsolutelyPositioned | aIsFixedPositioned) {
-      // The area frame becomes a container for child frames that are
-      // absolutely positioned
-      nsAbsoluteItems  absoluteItems(scrolledFrame);
-      nsFrameItems     childItems;
-      ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
-                      childItems, aFixedItems);
-  
-      // Set the initial child lists
-      scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-      if (nsnull != absoluteItems.childList) {
-        scrolledFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
-                                           absoluteItems.childList);
-      }
-
-    } else {
-      nsFrameItems childItems;
-      ProcessChildren(aPresContext, aContent, scrolledFrame, aAbsoluteItems,
-                      childItems, aFixedItems);
-  
-      // Set the initial child lists
-      scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+    if (floaterList.childList) {
+      scrolledFrame->SetInitialChildList(*aPresContext,
+                                         nsLayoutAtoms::floaterList,
+                                         floaterList.childList);
     }
-    scrollFrame->SetInitialChildList(*aPresContext, nsnull, scrolledFrame);
-    aNewFrame = scrollFrame;
+  } else {
+    nsFrameItems childItems;
+    ProcessChildren(aPresContext, aContent, scrolledFrame, aAbsoluteItems,
+                    childItems, aFixedItems, floaterList);
+  
+    // Set the initial child lists
+    scrolledFrame->SetInitialChildList(*aPresContext, nsnull,
+                                       childItems.childList);
+    if (floaterList.childList) {
+      scrolledFrame->SetInitialChildList(*aPresContext,
+                                         nsLayoutAtoms::floaterList,
+                                         floaterList.childList);
+    }
+  }
+  scrollFrame->SetInitialChildList(*aPresContext, nsnull, scrolledFrame);
+  aNewFrame = scrollFrame;
 
-
-    return NS_OK;
+  return NS_OK;
 }
 
 nsresult
@@ -2213,10 +2354,12 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
                                                    nsIStyleContext*      aStyleContext,
                                                    nsAbsoluteItems&      aAbsoluteItems,
                                                    nsFrameItems&         aFrameItems,
-                                                   nsAbsoluteItems&      aFixedItems)
+                                                   nsAbsoluteItems&      aFixedItems,
+                                                   nsAbsoluteItems&      aFloatingItems)
 {
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
+  PRBool    isFloating = PR_FALSE;
   PRBool    isBlock = aDisplay->IsBlockLevel();
   nsIFrame* newFrame = nsnull;  // the frame we construct
   nsTableCreator tableCreator; // Used to make table frames.
@@ -2228,8 +2371,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
   // The frame is also a block if it's an inline frame that's floated or
   // absolutely positioned
+  if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
+    isFloating = PR_TRUE;
+  }
   if ((NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) &&
-      ((NS_STYLE_FLOAT_NONE != aDisplay->mFloats) || position->IsAbsolutelyPositioned())) {
+      (isFloating || position->IsAbsolutelyPositioned())) {
     isBlock = PR_TRUE;
   }
 
@@ -2253,64 +2399,16 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     NS_NewScrollFrame(scrollFrame);
 
     // Initialize it
-    InitializeScrollFrame(scrollFrame, aPresContext, aContent, aParentFrame,  aStyleContext,
-                          aAbsoluteItems,  newFrame, aFixedItems,
-                          isAbsolutelyPositioned, isFixedPositioned, PR_FALSE);
-
-#if 0 // XXX The following "ifdef" could has been moved to the method "InitializeScrollFrame"
-    nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
-                                                         aParentFrame;
-    scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
-
-    // The scroll frame gets the original style context, and the scrolled
-    // frame gets a SCROLLED-CONTENT pseudo element style context that
-    // inherits the background properties
-    nsIStyleContext*  scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
-                        (aContent, nsHTMLAtoms::scrolledContentPseudo, aStyleContext);
-
-    // Create an area container for the frame
-    nsIFrame* scrolledFrame;
-    NS_NewAreaFrame(scrolledFrame, NS_BLOCK_SHRINK_WRAP);
-
-    // Initialize the frame and force it to have a view
-    scrolledFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
-                                             scrolledPseudoStyle, PR_TRUE);
-    NS_RELEASE(scrolledPseudoStyle);
-
-    // Process children
-    if (isAbsolutelyPositioned) {
-      // The area frame becomes a container for child frames that are
-      // absolutely positioned
-      nsAbsoluteItems  absoluteItems(scrolledFrame);
-      nsFrameItems     childItems;
-      ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
-                      childItems);
-  
-      // Set the initial child lists
-      scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-      if (nsnull != absoluteItems.childList) {
-        scrolledFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
-                                           absoluteItems.childList);
-      }
-
-    } else {
-      nsFrameItems childItems;
-      ProcessChildren(aPresContext, aContent, scrolledFrame, aAbsoluteItems,
-                      childItems);
-  
-      // Set the initial child lists
-      scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-    }
-    scrollFrame->SetInitialChildList(*aPresContext, nsnull, scrolledFrame);
-    aNewFrame = scrollFrame;
-#endif
-
+    InitializeScrollFrame(scrollFrame, aPresContext, aContent, aParentFrame,
+                          aStyleContext, aAbsoluteItems,  newFrame,
+                          aFixedItems, isAbsolutelyPositioned,
+                          isFixedPositioned, PR_FALSE);
+  }
   // See if the frame is absolute or fixed positioned
-  } else if (position->IsAbsolutelyPositioned() &&
-             ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
-              (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
-              (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
+  else if (position->IsAbsolutelyPositioned() &&
+           ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
+            (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
+            (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
 
     if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
       isAbsolutelyPositioned = PR_TRUE;
@@ -2320,8 +2418,10 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
     // Create an area frame
     NS_NewAreaFrame(newFrame, 0);
-    newFrame->Init(*aPresContext, aContent, isAbsolutelyPositioned ?
-                   aAbsoluteItems.containingBlock : aFixedItems.containingBlock,
+    newFrame->Init(*aPresContext, aContent,
+                   (isAbsolutelyPositioned
+                    ? aAbsoluteItems.containingBlock
+                    : aFixedItems.containingBlock),
                    aStyleContext, nsnull);
 
     // Create a view
@@ -2332,23 +2432,28 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     // frames that are absolutely positioned
     nsAbsoluteItems  absoluteItems(newFrame);
     nsFrameItems     childItems;
+    nsAbsoluteItems  floaterList(newFrame);
 
-    ProcessChildren(aPresContext, aContent, newFrame, absoluteItems, childItems,
-                    aFixedItems);
+    ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
+                    childItems, aFixedItems, floaterList);
 
-    // Set the frame's initial child list
+    // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
     if (nsnull != absoluteItems.childList) {
       newFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
                                      absoluteItems.childList);
     }
-
+    if (floaterList.childList) {
+      newFrame->SetInitialChildList(*aPresContext,
+                                    nsLayoutAtoms::floaterList,
+                                    floaterList.childList);
+    }
+  }
   // See if the frame is floated, and it's a block or inline frame
-  } else if ((NS_STYLE_FLOAT_NONE != aDisplay->mFloats) &&
-             ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
-              (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
-              (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
-
+  else if (isFloating &&
+           ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
+            (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
+            (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
     // Create an area frame
     NS_NewAreaFrame(newFrame, NS_BLOCK_SHRINK_WRAP);
 
@@ -2361,15 +2466,21 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
     // Process the child content
     nsFrameItems childItems;
-    ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems, childItems,
-                    aFixedItems);
+    nsAbsoluteItems  floaterList(newFrame);
+    ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems,
+                    childItems, aFixedItems, floaterList);
 
-    // Set the frame's initial child list
+    // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-
+    if (floaterList.childList) {
+      newFrame->SetInitialChildList(*aPresContext,
+                                    nsLayoutAtoms::floaterList,
+                                    floaterList.childList);
+    }
+  }
   // See if it's a relatively positioned block
-  } else if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) &&
-             ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay))) {
+  else if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) &&
+           ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay))) {
 
     // Create an area frame. No space manager, though
     NS_NewAreaFrame(newFrame, NS_AREA_NO_SPACE_MGR);
@@ -2382,9 +2493,10 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     // Process the child content. Relatively positioned frames becomes a
     // container for child frames that are positioned
     nsAbsoluteItems  absoluteItems(newFrame);
+    nsAbsoluteItems  floaterList(newFrame);
     nsFrameItems     childItems;
-    ProcessChildren(aPresContext, aContent, newFrame, absoluteItems, childItems,
-                    aFixedItems);
+    ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
+                    childItems, aFixedItems, floaterList);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -2392,9 +2504,16 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
       newFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
                                     absoluteItems.childList);
     }
-
-  } else {
+    if (floaterList.childList) {
+      newFrame->SetInitialChildList(*aPresContext,
+                                    nsLayoutAtoms::floaterList,
+                                    floaterList.childList);
+    }
+  }
+  // otherwise let the display property choose the frame to create
+  else {
     PRBool  processChildren = PR_FALSE;  // whether we should process child content
+    PRBool  newFrameIsFloaterContainer = PR_FALSE;
     nsIFrame* ignore;
 
     // Use the 'display' property to chose a frame type
@@ -2405,6 +2524,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     case NS_STYLE_DISPLAY_COMPACT:
       rv = NS_NewBlockFrame(newFrame, 0);
       processChildren = PR_TRUE;
+      newFrameIsFloaterContainer = PR_TRUE;
       break;
   
     case NS_STYLE_DISPLAY_INLINE:
@@ -2510,12 +2630,32 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
       // Process the child content if requested
       nsFrameItems childItems;
       if (processChildren) {
-        rv = ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems,
-                             childItems, aFixedItems);
+        if (newFrameIsFloaterContainer) {
+          nsAbsoluteItems floaterList(newFrame);
+          rv = ProcessChildren(aPresContext, aContent, newFrame,
+                               aAbsoluteItems, childItems, aFixedItems,
+                               aFloatingItems);
+
+          // Set the frame's initial child list
+          newFrame->SetInitialChildList(*aPresContext, nsnull,
+                                        childItems.childList);
+          if (floaterList.childList) {
+            newFrame->SetInitialChildList(*aPresContext,
+                                          nsLayoutAtoms::floaterList,
+                                          floaterList.childList);
+          }
+        }
+        else {
+          rv = ProcessChildren(aPresContext, aContent, newFrame,
+                               aAbsoluteItems, childItems, aFixedItems,
+                               aFloatingItems);
+
+          // Set the frame's initial child list
+          newFrame->SetInitialChildList(*aPresContext, nsnull,
+                                        childItems.childList);
+        }
       }
 
-      // Set the frame's initial child list
-      newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
     }
   }
 
@@ -2536,6 +2676,17 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     // Add the placeholder frame to the flow
     aFrameItems.AddChild(placeholderFrame);
 
+  } else if (isFloating) {
+    nsIFrame* placeholderFrame;
+    CreateFloaterPlaceholderFrameFor(aPresContext, aContent, newFrame,
+                                     aStyleContext, aParentFrame,
+                                     &placeholderFrame);
+
+    // Add the floating frame to its containing block's list of child frames
+    aFloatingItems.AddChild(newFrame);
+
+    // Add the placeholder frame to the flow
+    aFrameItems.AddChild(placeholderFrame);
   } else if (nsnull != newFrame) {
     // Add the frame we just created to the flowed list
     aFrameItems.AddChild(newFrame);
@@ -2643,7 +2794,8 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
                                       nsIFrame*        aParentFrame,
                                       nsAbsoluteItems& aAbsoluteItems,
                                       nsFrameItems&    aFrameItems,
-                                      nsAbsoluteItems& aFixedItems)
+                                      nsAbsoluteItems& aFixedItems,
+                                      nsAbsoluteItems& aFloatingItems)
 {
   NS_PRECONDITION(nsnull != aParentFrame, "no parent frame");
 
@@ -2705,7 +2857,7 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
       // Handle specific frame types
       rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame, tag,
                                styleContext, aAbsoluteItems, aFrameItems,
-                               aFixedItems);
+                               aFixedItems, aFloatingItems);
 
 #ifdef INCLUDE_XUL
       // Failing to find a matching HTML frame, try creating a specialized
@@ -2716,7 +2868,7 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
         PRBool haltProcessing = PR_FALSE;
         rv = ConstructXULFrame(aPresContext, aContent, aParentFrame, tag,
                                styleContext, aAbsoluteItems, aFrameItems,
-                               aFixedItems, haltProcessing);
+                               aFixedItems, aFloatingItems, haltProcessing);
         if (haltProcessing) {
           return rv;
         }
@@ -2727,9 +2879,10 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*  aPresContext,
                                (lastChild == aFrameItems.lastChild))) {
         // When there is no explicit frame to create, assume it's a
         // container and let display style dictate the rest
-        rv = ConstructFrameByDisplayType(aPresContext, display, aContent, aParentFrame,
-                                         styleContext, aAbsoluteItems, aFrameItems,
-                                         aFixedItems);
+        rv = ConstructFrameByDisplayType(aPresContext, display, aContent,
+                                         aParentFrame, styleContext,
+                                         aAbsoluteItems, aFrameItems,
+                                         aFixedItems, aFloatingItems);
       }
     }
   }
@@ -2850,6 +3003,35 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
   return containingBlock;
 }
 
+nsIFrame*
+nsCSSFrameConstructor::GetFloaterContainingBlock(nsIPresContext* aPresContext,
+                                                 nsIFrame*       aFrame)
+{
+  NS_PRECONDITION(mInitialContainingBlock, "no initial containing block");
+  
+  // Starting with aFrame, look for a frame that is a real block frame
+  nsIFrame* containingBlock = aFrame;
+  while (nsnull != containingBlock) {
+    const nsStyleDisplay* display;
+    containingBlock->GetStyleData(eStyleStruct_Display,
+                                  (const nsStyleStruct*&)display);
+    if ((NS_STYLE_DISPLAY_BLOCK == display->mDisplay) ||
+        (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay)) {
+      break;
+    }
+
+    // Continue walking up the hierarchy
+    containingBlock->GetParent(&containingBlock);
+  }
+
+  // If we didn't find a containing block, then use the initial
+  // containing block
+  if (nsnull == containingBlock) {
+    containingBlock = mInitialContainingBlock;
+  }
+  return containingBlock;
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
@@ -2875,14 +3057,18 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     }
 
     // Get the containing block for absolutely positioned elements
-    nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
-                                                                   parentFrame);
+    nsIFrame* absoluteContainingBlock =
+      GetAbsoluteContainingBlock(aPresContext, parentFrame);
+
+    nsIFrame* floaterContainingBlock =
+      GetFloaterContainingBlock(aPresContext, parentFrame);
 
     // Create some new frames
     PRInt32         count;
     nsIFrame*       firstAppendedFrame = nsnull;
     nsAbsoluteItems absoluteItems(absoluteContainingBlock);
     nsAbsoluteItems fixedItems(mFixedContainingBlock);
+    nsAbsoluteItems floaterList(floaterContainingBlock);
     nsFrameItems    frameItems;
 
     aContainer->ChildCount(count);
@@ -2891,8 +3077,8 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       nsCOMPtr<nsIContent> child;
       
       aContainer->ChildAt(i, *getter_AddRefs(child));
-      ConstructFrame(aPresContext, child, parentFrame, absoluteItems, frameItems,
-                     fixedItems);
+      ConstructFrame(aPresContext, child, parentFrame, absoluteItems,
+                     frameItems, fixedItems, floaterList);
     }
 
     // Adjust parent frame for table inner/outer frame
@@ -2902,8 +3088,11 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     firstAppendedFrame = frameItems.childList;
     if (nsnull != firstAppendedFrame) {
       const nsStyleDisplay* firstAppendedFrameDisplay;
-      firstAppendedFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)firstAppendedFrameDisplay);
-      result = GetAdjustedParentFrame(parentFrame, firstAppendedFrameDisplay->mDisplay, adjustedParentFrame);
+      firstAppendedFrame->GetStyleData(eStyleStruct_Display,
+                                       (const nsStyleStruct *&)firstAppendedFrameDisplay);
+      result = GetAdjustedParentFrame(parentFrame,
+                                      firstAppendedFrameDisplay->mDisplay,
+                                      adjustedParentFrame);
     }
 
     // Notify the parent frame passing it the list of new frames
@@ -2929,6 +3118,16 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         fixedItems.containingBlock->AppendFrames(*aPresContext, *shell,
                                                  nsLayoutAtoms::fixedList,
                                                  fixedItems.childList);
+      }
+
+      // If there are new floating child frames, then notify
+      // the parent
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (floaterList.childList) {
+        floaterList.containingBlock->AppendFrames(*aPresContext, *shell,
+                                                  nsLayoutAtoms::floaterList,
+                                                  floaterList.childList);
       }
     }
   }
@@ -2960,6 +3159,18 @@ FindPreviousSibling(nsIPresShell* aPresShell,
           prevSibling = nextInFlow;
         }
       } while (nsnull != nextInFlow);
+
+      // Did we really get the *right* frame?
+      const nsStyleDisplay* display;
+      prevSibling->GetStyleData(eStyleStruct_Display,
+                                (const nsStyleStruct*&)display);
+      if (display->IsFloating()) {
+        // Nope. Get the place-holder instead
+        nsIFrame* placeholderFrame;
+        aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
+        NS_ASSERTION(nsnull != placeholderFrame, "yikes");
+        prevSibling = placeholderFrame;
+      }
 
       break;
     }
@@ -2994,6 +3205,18 @@ FindNextSibling(nsIPresShell* aPresShell,
           nextSibling = nextInFlow;
         }
       } while (nsnull != nextInFlow);
+
+      // Did we really get the *right* frame?
+      const nsStyleDisplay* display;
+      nextSibling->GetStyleData(eStyleStruct_Display,
+                                (const nsStyleStruct*&)display);
+      if (display->IsFloating()) {
+        // Nope. Get the place-holder instead
+        nsIFrame* placeholderFrame;
+        aPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
+        NS_ASSERTION(nsnull != placeholderFrame, "yikes");
+        nextSibling = placeholderFrame;
+      }
 
       break;
     }
@@ -3078,14 +3301,19 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     // Construct a new frame
     if (nsnull != parentFrame) {
       // Get the containing block for absolutely positioned elements
-      nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
-                                                                     parentFrame);
+      nsIFrame* absoluteContainingBlock =
+        GetAbsoluteContainingBlock(aPresContext, parentFrame);
+
+      // Get the containing block for floating elements
+      nsIFrame* floaterContainingBlock =
+        GetFloaterContainingBlock(aPresContext, parentFrame);
       
       nsAbsoluteItems absoluteItems(absoluteContainingBlock);
+      nsAbsoluteItems floaterList(floaterContainingBlock);
       nsFrameItems    frameItems;
       nsAbsoluteItems fixedItems(mFixedContainingBlock);
-      rv = ConstructFrame(aPresContext, aChild, parentFrame, absoluteItems, frameItems,
-                          fixedItems);
+      rv = ConstructFrame(aPresContext, aChild, parentFrame, absoluteItems,
+                          frameItems, fixedItems, floaterList);
       
       nsIFrame* newFrame = frameItems.childList;
       
@@ -3117,6 +3345,16 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
           rv = fixedItems.containingBlock->AppendFrames(*aPresContext, *shell,
                                                         nsLayoutAtoms::fixedList,
                                                         fixedItems.childList);
+        }
+        
+        // If there are new floating child frames, then notify
+        // the parent
+        // XXX We can't just assume these frames are being appended, we need to
+        // determine where in the list they should be inserted...
+        if (floaterList.childList) {
+          rv = floaterList.containingBlock->AppendFrames(*aPresContext, *shell,
+                                                   nsLayoutAtoms::floaterList,
+                                                   floaterList.childList);
         }
       }
     }
@@ -3158,10 +3396,11 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   shell->GetPrimaryFrameFor(aChild, &childFrame);
 
   if (nsnull != childFrame) {
-    // See if it's absolutely positioned
-    const nsStylePosition* position;
-    childFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-    if (position->IsAbsolutelyPositioned()) {
+    // See if the child frame is a floating frame
+    const nsStyleDisplay* display;
+    childFrame->GetStyleData(eStyleStruct_Display,
+                             (const nsStyleStruct*&)display);
+    if (display->IsFloating()) {
       // Get the placeholder frame
       nsIFrame* placeholderFrame;
       shell->GetPlaceholderFrameFor(childFrame, &placeholderFrame);
@@ -3169,25 +3408,58 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       // Remove the mapping from the frame to its placeholder
       shell->SetPlaceholderFrameFor(childFrame, nsnull);
 
-      // Generate two notifications. First for the absolutely positioned
-      // frame
+      // Now we remove the floating frame
+
+      // XXX has to be done first for now: the blocks line list
+      // contains an array of pointers to the placeholder - we have to
+      // remove the floater first (which gets rid of the lines
+      // reference to the placeholder and floater) and then remove the
+      // placeholder
       nsIFrame* parentFrame;
       childFrame->GetParent(&parentFrame);
       rv = parentFrame->RemoveFrame(*aPresContext, *shell,
-                                    nsLayoutAtoms::absoluteList, childFrame);
+                                    nsLayoutAtoms::floaterList, childFrame);
 
-      // Now the placeholder frame
+      // Remove the placeholder frame first (XXX second for now) (so
+      // that it doesn't retain a dangling pointer to memory)
       if (nsnull != placeholderFrame) {
         placeholderFrame->GetParent(&parentFrame);
         rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull,
                                       placeholderFrame);
       }
+    }
+    else {
+      // See if it's absolutely positioned
+      const nsStylePosition* position;
+      childFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+      if (position->IsAbsolutelyPositioned()) {
+        // Get the placeholder frame
+        nsIFrame* placeholderFrame;
+        shell->GetPlaceholderFrameFor(childFrame, &placeholderFrame);
 
-    } else {
-      // Notify the parent frame that it should delete the frame
-      nsIFrame* parentFrame;
-      childFrame->GetParent(&parentFrame);
-      rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull, childFrame);
+        // Remove the mapping from the frame to its placeholder
+        shell->SetPlaceholderFrameFor(childFrame, nsnull);
+
+        // Generate two notifications. First for the absolutely positioned
+        // frame
+        nsIFrame* parentFrame;
+        childFrame->GetParent(&parentFrame);
+        rv = parentFrame->RemoveFrame(*aPresContext, *shell,
+                                      nsLayoutAtoms::absoluteList, childFrame);
+
+        // Now the placeholder frame
+        if (nsnull != placeholderFrame) {
+          placeholderFrame->GetParent(&parentFrame);
+          rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull,
+                                        placeholderFrame);
+        }
+
+      } else {
+        // Notify the parent frame that it should delete the frame
+        nsIFrame* parentFrame;
+        childFrame->GetParent(&parentFrame);
+        rv = parentFrame->RemoveFrame(*aPresContext, *shell, nsnull, childFrame);
+      }
     }
 
     if (mInitialContainingBlock == childFrame) {
@@ -3607,19 +3879,25 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     display = (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
 
     // Get the containing block for absolutely positioned elements
-    nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
-                                                                   parentFrame);
+    nsIFrame* absoluteContainingBlock =
+      GetAbsoluteContainingBlock(aPresContext, parentFrame);
+
+    // Get the containing block for floating elements
+    nsIFrame* floaterContainingBlock =
+      GetFloaterContainingBlock(aPresContext, parentFrame);
     
     // Create a frame based on the display type
     nsAbsoluteItems absoluteItems(absoluteContainingBlock);
+    nsAbsoluteItems floaterList(floaterContainingBlock);
     nsFrameItems    frameItems;
     nsAbsoluteItems fixedItems(mFixedContainingBlock);
 
-    rv = ConstructFrameByDisplayType(aPresContext, display, content, parentFrame,
-                                     styleContext, absoluteItems, frameItems,
-                                     fixedItems);
-    nsIFrame* newFrame = frameItems.childList;
+    rv = ConstructFrameByDisplayType(aPresContext, display, content,
+                                     parentFrame, styleContext,
+                                     absoluteItems, frameItems,
+                                     fixedItems, floaterList);
 
+    nsIFrame* newFrame = frameItems.childList;
     if (NS_SUCCEEDED(rv)) {
       // Delete the current frame and insert the new frame
       nsCOMPtr<nsIPresShell> presShell;
@@ -3645,6 +3923,17 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
         rv = fixedItems.containingBlock->AppendFrames(*aPresContext, *presShell,
                                                       nsLayoutAtoms::fixedList,
                                                       fixedItems.childList);
+      }
+
+      // If there are new floating child frames, then notify
+      // the parent
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (floaterList.childList) {
+        rv = floaterList.containingBlock->AppendFrames(*aPresContext,
+                                                       *presShell,
+                                                    nsLayoutAtoms::floaterList,
+                                                    floaterList.childList);
       }
     }
 
@@ -3711,11 +4000,17 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresCon
         nsFrameItems    childItems;
         nsAbsoluteItems absoluteItems(absoluteContainingBlock);
         nsAbsoluteItems fixedItems(mFixedContainingBlock);
+        nsAbsoluteItems floaterList(captionFrame);
         NS_NewAreaFrame(captionFrame, 0);
         captionFrame->Init(*aPresContext, caption, newFrame, captionStyle, nsnull);
         ProcessChildren(aPresContext, caption, captionFrame, absoluteItems, 
-                        childItems, fixedItems);
+                        childItems, fixedItems, floaterList);
         captionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+        if (floaterList.childList) {
+          captionFrame->SetInitialChildList(*aPresContext,
+                                            nsLayoutAtoms::floaterList,
+                                            floaterList.childList);
+        }
         newChildFrames.AddChild(captionFrame);
         NS_RELEASE(caption);
         NS_RELEASE(captionStyle);
