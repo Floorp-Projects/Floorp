@@ -2333,7 +2333,7 @@ function RemoveSelectedAttachment()
   if (bucket.selectedItems.length > 0) {
     for (var item = bucket.selectedItems.length - 1; item >= 0; item-- )
     {
-      child = bucket.removeChild(bucket.selectedItems[item];
+      child = bucket.removeChild(bucket.selectedItems[item]);
       // Let's release the attachment object hold by the node else it won't go away until the window is destroyed
       child.attachment = null;
     }
