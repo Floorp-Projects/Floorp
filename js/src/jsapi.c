@@ -173,7 +173,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
         }
         if (sp == argv + argc) {
             if (required) {
-                fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
+                fun = js_ValueToFunction(cx, &argv[-2], 0);
                 if (fun) {
                     char numBuf[12];
                     JS_snprintf(numBuf, sizeof numBuf, "%u", argc);
@@ -237,7 +237,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             *va_arg(ap, JSObject **) = obj;
             break;
           case 'f':
-            fun = js_ValueToFunction(cx, sp, JS_FALSE);
+            fun = js_ValueToFunction(cx, sp, 0);
             if (!fun)
                 return JS_FALSE;
             *sp = OBJECT_TO_JSVAL(fun->object);
@@ -459,7 +459,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
             *vp = OBJECT_TO_JSVAL(obj);
         break;
       case JSTYPE_FUNCTION:
-        fun = js_ValueToFunction(cx, &v, JS_FALSE);
+        fun = js_ValueToFunction(cx, &v, JSV2F_SEARCH_STACK);
         ok = (fun != NULL);
         if (ok)
             *vp = OBJECT_TO_JSVAL(fun->object);
@@ -507,14 +507,14 @@ JS_PUBLIC_API(JSFunction *)
 JS_ValueToFunction(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
-    return js_ValueToFunction(cx, &v, JS_FALSE);
+    return js_ValueToFunction(cx, &v, JSV2F_SEARCH_STACK);
 }
 
 JS_PUBLIC_API(JSFunction *)
 JS_ValueToConstructor(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
-    return js_ValueToFunction(cx, &v, JS_TRUE);
+    return js_ValueToFunction(cx, &v, JSV2F_SEARCH_STACK);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -1956,7 +1956,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
     if (OBJ_GET_CLASS(cx, obj) == clasp)
         return JS_TRUE;
     if (argv) {
-        fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
+        fun = js_ValueToFunction(cx, &argv[-2], 0);
         if (fun) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_INCOMPATIBLE_PROTO,

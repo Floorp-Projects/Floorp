@@ -2002,8 +2002,12 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
     return fun;
 }
 
+#if (JSV2F_CONSTRUCT & JSV2F_SEARCH_STACK)
+# error "JSINVOKE_CONSTRUCT and JSV2F_SEARCH_STACK are not disjoint!"
+#endif
+
 JSFunction *
-js_ValueToFunction(JSContext *cx, jsval *vp, JSBool constructing)
+js_ValueToFunction(JSContext *cx, jsval *vp, uintN flags)
 {
     jsval v;
     JSObject *obj;
@@ -2019,18 +2023,17 @@ js_ValueToFunction(JSContext *cx, jsval *vp, JSBool constructing)
         }
     }
     if (!obj) {
-        js_ReportIsNotFunction(cx, vp, constructing);
+        js_ReportIsNotFunction(cx, vp, flags);
         return NULL;
     }
     return (JSFunction *) JS_GetPrivate(cx, obj);
 }
 
 void
-js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
+js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
 {
     JSType type;
     JSString *fallback;
-    JSStackFrame *fp;
     JSString *str;
 
     /*
@@ -2041,13 +2044,19 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
      */
     type = JS_TypeOfValue(cx, *vp);
     fallback = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
-    fp = cx->fp;
-    str = js_DecompileValueGenerator(cx, fp ? vp - fp->sp : JSDVG_IGNORE_STACK,
-                                     *vp, fallback);
+    str = js_DecompileValueGenerator(cx,
+                                     (flags & JSV2F_SEARCH_STACK)
+                                     ? JSDVG_SEARCH_STACK
+                                     : cx->fp
+                                     ? vp - cx->fp->sp
+                                     : JSDVG_IGNORE_STACK,
+                                     *vp,
+                                     fallback);
     if (str) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             (uintN)(constructing ? JSMSG_NOT_CONSTRUCTOR
-                                                  : JSMSG_NOT_FUNCTION),
+                             (uintN)((flags & JSV2F_CONSTRUCT)
+                                     ? JSMSG_NOT_CONSTRUCTOR
+                                     : JSMSG_NOT_FUNCTION),
                              JS_GetStringBytes(str));
     }
 }
