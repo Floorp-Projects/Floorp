@@ -2337,7 +2337,7 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
         OnNewURI(aURI, nsnull, mLoadType);
         return NS_OK;
     }
-   
+
     NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
     // Cancel any timers that were set for this loader.
     CancelRefreshURITimers();
@@ -2841,17 +2841,89 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
         }
     }
 
-    SetCurrentURI(aURI);
+   SetCurrentURI(aURI);
+   nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+   if(httpChannel)
+   {
+      nsCOMPtr<nsIURI> referrer;
+      httpChannel->GetReferrer(getter_AddRefs(referrer));
+      SetReferrerURI(referrer);
 
-    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
-    if(httpChannel)
-    {
-        nsCOMPtr<nsIURI> referrer;
-        httpChannel->GetReferrer(getter_AddRefs(referrer));
-        SetReferrerURI(referrer);
-    }
+      nsXPIDLCString refreshHeader;
+      nsCOMPtr<nsIAtom> refreshAtom = NS_NewAtom ("refresh");
 
-    mInitialPageLoad = PR_FALSE;
+      httpChannel -> GetResponseHeader (refreshAtom, getter_Copies (refreshHeader));
+
+      if (refreshHeader)
+      {
+        nsCOMPtr<nsIURI> baseURI = mCurrentURI;
+
+        PRInt32 millis = -1;
+        PRUnichar *uriAttrib = nsnull;
+        nsString result; result.AssignWithConversion (refreshHeader);
+
+        PRInt32 semiColon = result.FindCharInSet(";,");
+        nsAutoString token;
+        if (semiColon > -1)
+            result.Left(token, semiColon);
+        else
+            token = result;
+  
+        PRBool done = PR_FALSE;
+        while (!done && !token.IsEmpty()) {
+            token.CompressWhitespace();
+            if (millis == -1 && nsCRT::IsAsciiDigit(token.First())) {
+                PRInt32 i = 0;
+                PRUnichar value = nsnull;
+                while ((value = token[i++])) {
+                    if (!nsCRT::IsAsciiDigit(value)) {
+                        i = -1;
+                        break;
+                     }
+                }
+            
+                if (i > -1) {
+                    PRInt32 err;
+                    millis = token.ToInteger(&err) * 1000;
+                } else {
+                    done = PR_TRUE;
+                }
+            } else {
+                   done = PR_TRUE;
+            }
+            if (done) {
+                PRInt32 loc = token.FindChar('=');
+                    if (loc > -1)
+                        token.Cut(0, loc+1);
+                     token.Trim(" \"'");
+                     uriAttrib = token.ToNewUnicode();
+            } else {
+                // Increment to the next token.
+                    if (semiColon > -1) {
+                        semiColon++;
+                        PRInt32 semiColon2 = result.FindCharInSet(";,", semiColon);
+                        if (semiColon2 == -1) semiColon2 = result.Length();
+                        result.Mid(token, semiColon, semiColon2 - semiColon);
+                        semiColon = semiColon2;
+                     } else {
+                         done = PR_TRUE;
+                    }
+            }
+        } // end while
+
+        nsCOMPtr<nsIURI> uri;
+        if (!uriAttrib) {
+            uri = baseURI;
+        } else {
+            NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
+            nsAllocator::Free(uriAttrib);
+        }
+
+        RefreshURI (uri, millis, PR_FALSE);
+      }
+   }
+
+   mInitialPageLoad = PR_FALSE;
 }
 
 NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
