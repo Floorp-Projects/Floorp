@@ -1708,17 +1708,17 @@ nsNntpIncomingServer::SetSearchValue(const char *searchValue)
     // so that we can do case insensitive searching
     ToLowerCase(mSearchValue);
 
-    PRInt32 oldCount = mSubscribeSearchResult.Count();
+    if (mTree) {
+        mTree->BeginUpdateBatch();
+        mTree->RowCountChanged(0, -mSubscribeSearchResult.Count());
+    }
 
     mSubscribeSearchResult.Clear();
     mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)buildSubscribeSearchResult, (void *)this);
 
-    PRInt32 newCount = mSubscribeSearchResult.Count();
-
     if (mTree) {
-     mTree->RowCountChanged(0, oldCount - newCount);
-     mTree->Invalidate();
-     mTree->InvalidateScrollbar();
+        mTree->RowCountChanged(0, mSubscribeSearchResult.Count());
+        mTree->EndUpdateBatch();
     }
     return NS_OK;
 }
