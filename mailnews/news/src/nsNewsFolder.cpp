@@ -374,14 +374,14 @@ nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsAutoString uri;
+	nsAutoString uri (eOneByte);
 	uri.Append(mURI);
 	uri.Append('/');
 
 	uri.Append(name);
 
 	nsIRDFResource* res;
-	rv = rdf->GetResource(nsAutoCString(uri), &res);
+	rv = rdf->GetResource(uri.GetBuffer(), &res);
 	if (NS_FAILED(rv))
 		return rv;
 
@@ -631,8 +631,8 @@ NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
   nsresult rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
 #if defined(XP_MAC)
-  nsAutoString tmpPath((nsFilePath)path);	//ducarroz: please don't cast a nsFilePath to char* on Mac
-  *url = PR_smprintf("%s%s", urlScheme, nsAutoCString(tmpPath));
+  nsAutoString tmpPath((nsFilePath)path, eOneByte);	//ducarroz: please don't cast a nsFilePath to char* on Mac
+  *url = PR_smprintf("%s%s", urlScheme, tmpPath.GetBuffer());
 #else
   const char *pathName = path;
   *url = PR_smprintf("%s%s", urlScheme, pathName);

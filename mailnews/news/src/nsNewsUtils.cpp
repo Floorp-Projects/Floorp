@@ -144,13 +144,13 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   while (uri[hostStart]=='/') hostStart++;
   
   // cut news://hostname/newsgroup -> hostname/newsgroup
-  nsAutoString hostname;
+  nsAutoString hostname (eOneByte);
   uri.Right(hostname, uri.Length() - hostStart);
 
   PRInt32 hostEnd = hostname.Find('/');
 
   // newsgroup comes after the hostname, after the '/'
-  nsAutoString newsgroup = "";
+  nsAutoString newsgroup (eOneByte);
  
   if (hostEnd != -1) {
     hostname.Right(newsgroup, hostname.Length() - hostEnd - 1);
@@ -162,7 +162,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     hostname.Truncate(hostEnd);
   }
 
-  rv = nsGetNewsRoot(nsAutoCString(hostname), pathResult);
+  rv = nsGetNewsRoot(hostname.GetBuffer(), pathResult);
 
   if (NS_FAILED(rv)) {
     pathResult = nsnull;
@@ -178,7 +178,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (!pathResult.Exists())
     pathResult.CreateDir();
               
-  nsAutoString alteredHost = "host-";
+  nsAutoString alteredHost ((const char *) "host-", eOneByte);
   alteredHost += hostname;
   
   // can't do pathResult += "host-"; pathresult += hostname; 
@@ -198,8 +198,8 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
 #ifdef DEBUG_NEWS
   printf("nsGetNewsRoot(%s) = %s\n\tnewsgroup = %s\n",
-         (const char *)nsAutoCString(hostname), (const char*)pathResult,
-         (const char *)nsAutoCString(newsgroup));
+         hostname.GetBuffer(), (const char*)pathResult,
+         newsgroup.GetBuffer();
 #endif
 
   return NS_OK;
@@ -248,13 +248,13 @@ nsresult nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri)
 		return NS_ERROR_NULL_POINTER;
   // need to convert news://hostname/.. to news_message://hostname/..
 
-  nsAutoString tailURI(baseURI);
+  nsAutoString tailURI(baseURI, eOneByte);
 
   // chop off news:/
   if (tailURI.Find(kNewsRootURI) == 0)
     tailURI.Cut(0, kNewsRootURILen);
   
-	*uri = PR_smprintf("%s%s#%d", kNewsMessageRootURI, (const char *)nsAutoCString(tailURI), key);
+	*uri = PR_smprintf("%s%s#%d", kNewsMessageRootURI, tailURI.GetBuffer(), key);
   
 	return NS_OK;
 }
