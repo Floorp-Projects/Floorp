@@ -18,9 +18,15 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.49 $ ';
+$::UtilsVersion = '$Revision: 1.50 $ ';
 
 package TinderUtils;
+
+#
+# Optional, external, post-mozilla build 
+#
+require "post-mozilla.pl" if -e "post-mozilla.pl";
+
 
 #
 # Driver script should call into this file like this:
@@ -536,7 +542,7 @@ sub mail_build_finished_message {
 }
 
 sub BuildIt {
-    # $Settings::DirName is set in buildl-seamonkey-utils.pl
+    # $Settings::DirName is set in build-seamonkey-utils.pl
     mkdir $Settings::DirName, 0777;
     chdir $Settings::DirName or die "Couldn't enter $Settings::DirName";
     
@@ -676,6 +682,14 @@ sub BuildIt {
                 $build_status = 'success';
             }
         }
+
+		#
+		#  Run (optional) external, post-mozilla build here.
+		#
+		my $external_build = "$Settings::BaseDir/post-mozilla.pl";
+		if (-e $external_build and $build_status eq 'success') {
+		  PostMozilla::main();
+		} 
 
         close LOG;
         chdir $build_dir;
