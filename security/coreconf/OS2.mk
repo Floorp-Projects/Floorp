@@ -111,7 +111,7 @@ NSPR_INCLUDE_DIR =
 
 
 ifdef BUILD_OPT
-OPTIMIZER		= -O6 
+OPTIMIZER		= -O2 -s
 DEFINES 		+= -UDEBUG -U_DEBUG -DNDEBUG
 DLLFLAGS		= -DLL -OUT:$@ -MAP:$(@:.dll=.map)
 EXEFLAGS    		= -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE
