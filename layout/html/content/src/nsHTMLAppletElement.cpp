@@ -30,12 +30,19 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 
-#if defined(OJI) && defined(XP_MAC)
+#if defined(OJI) && !defined(XP_UNIX)
 #include "nsIServiceManager.h"
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
 #include "nsIPluginInstance.h"
 #include "nsIJVMPluginInstance.h"
+#endif
+
+// XXX this is to get around conflicts with windows.h defines
+// introduced through jni.h
+#ifdef XP_PC
+#undef GetClassName
+#undef GetObject
 #endif
 
 static NS_DEFINE_IID(kIDOMHTMLAppletElementIID, NS_IDOMHTMLAPPLETELEMENT_IID);
@@ -244,7 +251,7 @@ nsHTMLAppletElement::GetStyleHintForAttributeChange(
   return NS_OK;
 }
 
-#if defined(OJI) && defined(XP_MAC)
+#if defined(OJI) && !defined(XP_UNIX)
 extern nsresult NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance);
 #endif
 
@@ -259,12 +266,12 @@ NS_IMETHODIMP
 nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
                                      void** aScriptObject)
 {
-#if defined(OJI) && defined(XP_MAC)
+#if defined(OJI) && !defined(XP_UNIX)
 	nsresult rv = NS_OK;
 	if (!mReflectedApplet) {
 		// 1. get the script object corresponding to the <APPLET> element itself.
 		JSObject* elementObject = nsnull;
-		rv = mInner.GetScriptObject(aContext, &elementObject);
+		rv = mInner.GetScriptObject(aContext, (void**)&elementObject);
 		if (NS_OK != rv)
 			return rv;
 	
@@ -281,7 +288,7 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
 		rv = NS_GetObjectFramePluginInstance(frame, pluginInstance);
 		if (nsnull != pluginInstance) {
 			nsIJVMPluginInstance* javaPluginInstance = nsnull;
-			if (pluginInstance->QueryInterface(nsIJVMPluginInstance::GetIID(), &javaPluginInstance) == NS_OK) {
+			if (pluginInstance->QueryInterface(nsIJVMPluginInstance::GetIID(), (void**)&javaPluginInstance) == NS_OK) {
 				jobject appletObject = nsnull;
 				rv = javaPluginInstance->GetJavaObject(&appletObject);
 				if (NS_OK == rv) {

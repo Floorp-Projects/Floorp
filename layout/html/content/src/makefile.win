@@ -157,10 +157,11 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLWBRElement.obj		\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
- -I$(PUBLIC)\dom -I$(PUBLIC)\netlib				\
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
+ -I$(PUBLIC)\dom -I$(PUBLIC)\netlib \
  -I..\..\style\src						\
- -I..\..\..\base\src -I..\..\base\src
+ -I..\..\..\base\src -I..\..\base\src \
+ -I$(PUBLIC)\plugin -I$(PUBLIC)\oji -I$(PUBLIC)\java
 
 LCFLAGS = \
         $(LCFLAGS) \

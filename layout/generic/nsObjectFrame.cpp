@@ -950,11 +950,11 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 		if((rv = cv->QueryCapability(kIPluginHostIID, (void **)&pluginHost)) != NS_OK)
 			{ NS_RELEASE(container); NS_RELEASE(cv); return rv;}
 
-	    if(pluginHost->IsPluginAvailableForType("application/x-oleobject") == NS_OK)
+	    if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
 		  rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/x-oleobject", fullURL);
-     	else if(pluginHost->IsPluginAvailableForType("application/oleobject") == NS_OK)
+     	else if(pluginHost->IsPluginEnabledForType("application/oleobject") == NS_OK)
 		  rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/oleobject", fullURL);
-		else if(pluginHost->IsPluginAvailableForType("*") == NS_OK)
+		else if(pluginHost->IsPluginEnabledForType("*") == NS_OK)
 		  rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "*", fullURL);
 		else
 		  rv = NS_ERROR_FAILURE;

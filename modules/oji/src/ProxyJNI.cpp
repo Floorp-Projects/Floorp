@@ -373,7 +373,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, jargs, &outObject, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 		
 		return outObject;
 	}
@@ -385,7 +385,7 @@ private:
 		JNIMethod* method = (JNIMethod*)methodID;
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, args, &outObject, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 		return outObject;
 	}
 
@@ -434,7 +434,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
 	
@@ -451,7 +451,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->CallMethod(jvoid_type, obj, method->mMethodID, args, &unusedValue, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 	}
 
 	static void InvokeVoidMethod(JNIEnv *env, jobject obj, JNIMethod* method, va_list args)
@@ -538,7 +538,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
 	
@@ -555,7 +555,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->CallNonvirtualMethod(jvoid_type, obj, clazz, method->mMethodID, args, &unusedValue, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 	}
 
 	static void InvokeNonVirtualVoidMethod(JNIEnv *env, jobject obj, jclass clazz, JNIMethod* method, va_list args)
@@ -638,7 +638,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
 
@@ -665,7 +665,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->SetField(field->mFieldType, obj, field->mFieldID, value, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 	}
 
 #define IMPLEMENT_SET_FIELD(methodName, fieldType, jvalueField)										\
@@ -717,7 +717,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
 	
@@ -734,7 +734,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->CallStaticMethod(jvoid_type, clazz, method->mMethodID, args, &unusedValue, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 	}
 
 	static void InvokeStaticVoidMethod(JNIEnv *env, jclass clazz, JNIMethod* method, va_list args)
@@ -817,7 +817,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
 
@@ -844,7 +844,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		nsISecurityContext* securityContext = secureEnv.getContext();
 		nsresult result = secureEnv->SetStaticField(field->mFieldType, clazz, field->mFieldID, value, securityContext);
-		securityContext->Release();
+		NS_IF_RELEASE(securityContext);
 	}
 
 #define IMPLEMENT_SET_FIELD(methodName, fieldType, jvalueField)										\

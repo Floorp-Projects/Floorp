@@ -60,10 +60,10 @@ public:
   SetUpPluginInstance(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
-  IsPluginAvailableForType(const char* aMimeType) = 0;
+  IsPluginEnabledForType(const char* aMimeType) = 0;
 
   NS_IMETHOD
-  IsPluginAvailableForExtension(const char* aExtension, const char* &aMimeType) = 0;
+  IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType) = 0;
 
 };
 
