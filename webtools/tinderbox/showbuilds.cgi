@@ -163,8 +163,9 @@ sub print_page_head {
 
   $treename = $tree . ($tree2 ne '' ? " and $tree2" : '');
 
-  my ($minute, $hour) = (localtime)[1,2];
-  my $now = sprintf("%02d:%02d", $hour, $minute);
+  use POSIX;
+  # Print time in format, "HH:MM timezone"
+  my $now = strftime("%H:%M %Z", localtime);
 
   EmitHtmlTitleAndHeader("tinderbox: $treename", "tinderbox",
                          "tree: $treename ($now)");
