@@ -50,6 +50,11 @@
 #include "nsScreenManagerOS2.h"
 #include "nsString.h"
 
+#ifdef DEBUG
+  #include <ctype.h>
+  #include <string.h>
+#endif
+
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
@@ -68,6 +73,10 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
 
 static BOOL bIsDBCS;
+
+#ifdef DEBUG
+PRLogModuleInfo *gGFXOS2LogModule;
+#endif
 
 class nsGfxFactoryOS2 : public nsIFactory
 {   
@@ -129,6 +138,13 @@ nsGfxFactoryOS2::nsGfxFactoryOS2(const nsCID &aClass)
 
   NS_INIT_REFCNT();
   mClassID = aClass;
+
+#ifdef DEBUG  
+  if (!gGFXOS2LogModule) {
+    gGFXOS2LogModule = PR_NewLogModule("gfxos2");
+    NS_ABORT_IF_FALSE(gGFXOS2LogModule, "failed to iniailize GFX OS2 log module");
+  } /* endif */
+#endif
 }
 
 nsGfxFactoryOS2::~nsGfxFactoryOS2()   
@@ -300,11 +316,42 @@ extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
 }
 
 // Module-level data ---------------------------------------------------------
+#ifdef DEBUG
+void GFX_LogErr (unsigned ReturnCode, const char* ErrorExpression, const char* FileName, const char* FunctionName, long LineNum)
+{
+   char TempBuf [300];
+
+   strcpy (TempBuf, ErrorExpression);
+   char* APIName = TempBuf;
+
+   char* ch = strstr (APIName , "(");                 // Find start of function parameter list
+   if (ch != NULL)                                    // Opening parenthesis found - it is a function
+   {
+      while (isspace (*--ch)) {}                      // Remove whitespaces before opening parenthesis
+      *++ch = '\0';
+
+      if (APIName [0] == ':' && APIName [1] == ':')   // Remove global scope operator
+         APIName += 2;
+
+      while (isspace (*APIName))                      // Remove spaces before function name
+         APIName++;
+   }
+
+
+   USHORT ErrorCode = ERRORIDERROR (::WinGetLastError (0));
+
+   if (FunctionName)      // Compiler knows function name from where we were called
+      PR_LogPrint ("GFX_Err: %s = 0x%X, 0x%X (%s - %s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, FunctionName, LineNum);
+   else
+      PR_LogPrint ("GFX_Err: %s = 0x%X, 0x%X (%s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, LineNum);
+}
+#endif
+
 void PMERROR( const char *api)
 {
-   ERRORID eid = WinGetLastError(0);
+   ERRORID eid = ::WinGetLastError(0);
    USHORT usError = ERRORIDERROR(eid);
-   printf( "%s failed, error = 0x%X\n", api, usError);
+   PR_LogPrint( "%s failed, error = 0x%X\n", api, usError);
 }
 
 nsGfxModuleData::nsGfxModuleData() : hModResources(0), hpsScreen(0),
@@ -320,18 +367,16 @@ void nsGfxModuleData::Init()
 
    if( rc)
    {
-      printf( "Gfx failed to load self.  rc = %d, cause = %s\n", (int)rc, buffer);
+      PR_LogPrint( "Gfx failed to load self.  rc = %d, cause = %s\n", (int)rc, buffer);
       // rats.  Can't load ourselves.  Oh well.  Try to be harmless...
       hModResources = 0;
    }
    PrnInitialize( hModResources);
 
    // get screen bit-depth
-   hpsScreen = WinGetScreenPS( HWND_DESKTOP);
-   HDC hdc = GpiQueryDevice( hpsScreen);
-   DevQueryCaps( hdc, CAPS_COLOR_BITCOUNT, 1, &lDisplayDepth);
-
-
+   hpsScreen = ::WinGetScreenPS (HWND_DESKTOP);
+   HDC hdc = GFX (::GpiQueryDevice (hpsScreen), HDC_ERROR);
+   ::DevQueryCaps (hdc, CAPS_COLOR_BITCOUNT, 1, &lDisplayDepth);
 }
 
 nsGfxModuleData::~nsGfxModuleData()
@@ -339,14 +384,14 @@ nsGfxModuleData::~nsGfxModuleData()
   /* Free any converters that were created */
   for (int i=0; i < 15 /* eCharSet_COUNT from nsFontMetricsOS2.cpp */ ; i++ ) {
     if (gUconvInfo[i].mConverter) {
-      UniFreeUconvObject(gUconvInfo[i].mConverter);
+      ::UniFreeUconvObject(gUconvInfo[i].mConverter);
     } /* endif */
   } /* endfor */
 
   PrnTerminate();
   if( hModResources)
      DosFreeModule( hModResources);
-  WinReleasePS( hpsScreen);
+  ::WinReleasePS( hpsScreen);
 }
 
 nsGfxModuleData gModuleData;
@@ -360,11 +405,11 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
     if (gUconvInfo[i].mCodePage == CodePage) {
       if (!gUconvInfo[i].mConverter) {
         UniChar codepage[20];
-        int unirc = UniMapCpToUcsCp( CodePage, codepage, 20);
-        UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
-        break;
+        int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
+        ::UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
       } /* endif */
       pConverter = &gUconvInfo[i].mConverter;
+      break;
     } /* endif */
   } /* endfor */
   if (!pConverter) {
@@ -378,8 +423,8 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
 
   char *tmp = szBuffer; // function alters the out pointer
 
-   int unirc = UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
-                                (void**) &tmp, &cplen, &cSubs);
+   int unirc = ::UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
+                                  (void**) &tmp, &cplen, &cSubs);
 
   if( unirc == UCONV_E2BIG) // k3w1
   {
@@ -388,7 +433,7 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
   }
   else if( unirc != ULS_SUCCESS)
   {
-     printf("very bad");
+     PR_LogPrint("very bad");
   }
   return ulSize - cplen;
 }
@@ -401,11 +446,11 @@ int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnich
     if (gUconvInfo[i].mCodePage == CodePage) {
       if (!gUconvInfo[i].mConverter) {
         UniChar codepage[20];
-        int unirc = UniMapCpToUcsCp( CodePage, codepage, 20);
-        UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
-        break;
+        int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
+        ::UniCreateUconvObject( codepage, &gUconvInfo[i].mConverter);
       } /* endif */
       pConverter = &gUconvInfo[i].mConverter;
+      break;
     } /* endif */
   } /* endfor */
   if (!pConverter) {
@@ -419,9 +464,9 @@ int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnich
 
   PRUnichar *tmp = szBuffer; // function alters the out pointer
 
-  int unirc = UniUconvToUcs( *pConverter, (void**)&ucsString, &ucsLen,
-                             NS_REINTERPRET_CAST(UniChar**, &tmp),
-                             &cplen, &cSubs);
+  int unirc = ::UniUconvToUcs( *pConverter, (void**)&ucsString, &ucsLen,
+                               NS_REINTERPRET_CAST(UniChar**, &tmp),
+                               &cplen, &cSubs);
 
   if( unirc == UCONV_E2BIG) // k3w1
   {
@@ -430,54 +475,54 @@ int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnich
   }
   else if( unirc != ULS_SUCCESS)
   {
-     printf("very bad");
+     PR_LogPrint("very bad");
   }
   return ulSize - cplen;
 }
 
 BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL)
 {
-    POINTL ptls[5];
+  POINTL ptls[5];
 
-    aSizeL->cx = 0;
+  aSizeL->cx = 0;
 
-    while(aLength)
-    {
-      ULONG thislen = min(aLength, 512);
-      GpiQueryTextBox(aPS, thislen, (PCH) aString, 5, ptls);
-      aSizeL->cx += ptls[TXTBOX_CONCAT].x;
-      aLength -= thislen;
-      aString += thislen;
-    }
-    aSizeL->cy = ptls[TXTBOX_TOPLEFT].y - ptls[TXTBOX_BOTTOMLEFT].y;
-    return TRUE;
+  while(aLength)
+  {
+    ULONG thislen = min(aLength, 512);
+    GFX (::GpiQueryTextBox (aPS, thislen, (PCH)aString, 5, ptls), FALSE);
+    aSizeL->cx += ptls[TXTBOX_CONCAT].x;
+    aLength -= thislen;
+    aString += thislen;
+  }
+  aSizeL->cy = ptls[TXTBOX_TOPLEFT].y - ptls[TXTBOX_BOTTOMLEFT].y;
+  return TRUE;
 }
 
 BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
                 const char* aString, unsigned int aLength, const int* pSpacing)
 {
-   POINTL ptl = {X, Y};
+  POINTL ptl = {X, Y};
 
-   GpiMove( aPS, &ptl);
+  GFX (::GpiMove (aPS, &ptl), FALSE);
 
-   // GpiCharString has a max length of 512 chars at a time...
-   while( aLength)
-   {
-      ULONG thislen = min( aLength, 512);
-      if (pSpacing)
-      {
-         GpiCharStringPos( aPS, 0, CHS_VECTOR, thislen,
-                           (PCH)aString, (PLONG)pSpacing);
-         pSpacing += thislen;
-      }
-      else
-      {
-         GpiCharString( aPS, thislen, (PCH)aString);
-      }
-      aLength -= thislen;
-      aString += thislen;
-   }
-   return TRUE;
+  // GpiCharString has a max length of 512 chars at a time...
+  while( aLength)
+  {
+    ULONG ulChunkLen = min(aLength, 512);
+    if (pSpacing)
+    {
+      GFX (::GpiCharStringPos (aPS, nsnull, CHS_VECTOR, ulChunkLen,
+                               (PCH)aString, (PLONG)pSpacing), GPI_ERROR);
+        pSpacing += ulChunkLen;
+    }
+    else
+    {
+      GFX (::GpiCharString (aPS, ulChunkLen, (PCH)aString), GPI_ERROR);
+    }
+    aLength -= ulChunkLen;
+    aString += ulChunkLen;
+  }
+  return TRUE;
 }
 
 
