@@ -604,7 +604,7 @@ nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * a
 #endif
   }
 
-  if (NS_CONTENT_ATTR_NOT_THERE != rv) {
+  if (!accessKey.IsEmpty()) {
     nsIEventStateManager *stateManager = aPresContext->EventStateManager();
     if (aDoReg) {
       return stateManager->RegisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
