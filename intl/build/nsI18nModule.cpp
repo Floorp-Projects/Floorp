@@ -49,7 +49,13 @@
 
 // unicharutil
 #include "nsUcharUtilConstructors.h"
-    
+
+// string bundles (intl)
+#include "nsStrBundleConstructors.h"
+
+// locale
+#include "nsLocaleConstructors.h"
+
 static NS_METHOD
 AddCategoryEntry(const char* category,
                  const char* key,
@@ -294,6 +300,98 @@ static nsModuleComponentInfo components[] =
       NS_SAVEASCHARSET_CONTRACTID, nsSaveAsCharsetConstructor},
   { "Japanese Hankaku To Zenkaku", NS_HANKAKUTOZENKAKU_CID, 
       NS_HANKAKUTOZENKAKU_CONTRACTID, CreateNewHankakuToZenkaku},
+
+ // strres
+  { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_CONTRACTID, nsStringBundleServiceConstructor},
+
+ // locale
+  { "nsLocaleService component",
+    NS_LOCALESERVICE_CID,
+    NS_LOCALESERVICE_CONTRACTID,
+    CreateLocaleService },
+  { "Collation factory",
+    NS_COLLATIONFACTORY_CID,
+    NULL,
+    nsCollationFactoryConstructor },
+  { "Scriptable Date Format",
+    NS_SCRIPTABLEDATEFORMAT_CID,
+    NS_SCRIPTABLEDATEFORMAT_CONTRACTID,
+    NS_NewScriptableDateFormat },
+  { "Language Atom Service",
+    NS_LANGUAGEATOMSERVICE_CID,
+    NS_LANGUAGEATOMSERVICE_CONTRACTID,
+    nsLanguageAtomServiceConstructor },
+  { "Font Package Service",
+    NS_FONTPACKAGESERVICE_CID,
+    NS_FONTPACKAGESERVICE_CONTRACTID,
+    nsFontPackageServiceConstructor },
+ 
+#ifdef XP_WIN 
+  { "Platform locale",
+    NS_WIN32LOCALE_CID,
+    NS_WIN32LOCALE_CONTRACTID,
+    nsIWin32LocaleImplConstructor },
+  { "Collation",
+    NS_COLLATION_CID,
+    NULL,
+    nsCollationWinConstructor },
+  { "Date/Time formatter",
+    NS_DATETIMEFORMAT_CID,
+    NULL,
+    nsDateTimeFormatWinConstructor },
+#endif
+ 
+#ifdef XP_UNIX
+  { "Platform locale",
+    NS_POSIXLOCALE_CID,
+    NS_POSIXLOCALE_CONTRACTID,
+    nsPosixLocaleConstructor },
+
+  { "Collation",
+    NS_COLLATION_CID,
+    NULL,
+    nsCollationUnixConstructor },
+
+  { "Date/Time formatter",
+    NS_DATETIMEFORMAT_CID,
+    NULL,
+    nsDateTimeFormatUnixConstructor },
+#endif
+
+#ifdef XP_MAC
+  { "Mac locale",
+    NS_MACLOCALE_CID,
+    NS_MACLOCALE_CONTRACTID,
+    nsMacLocaleConstructor },
+  { "Collation",
+    NS_COLLATION_CID,
+    NULL,
+#ifdef USE_UCCOLLATIONKEY
+    nsCollationMacUCConstructor },
+#else
+    nsCollationMacConstructor },
+#endif
+  { "Date/Time formatter",
+    NS_DATETIMEFORMAT_CID,
+    NULL,
+    nsDateTimeFormatMacConstructor },
+#endif
+
+#ifdef XP_OS2
+  { "OS/2 locale",
+    NS_OS2LOCALE_CID,
+    NS_OS2LOCALE_CONTRACTID,
+    nsOS2LocaleConstructor },
+  { "Collation",
+    NS_COLLATION_CID,
+    NULL,
+    nsCollationOS2Constructor },
+  { "Date/Time formatter",
+    NS_DATETIMEFORMAT_CID,
+    NULL,
+    nsDateTimeFormatOS2Constructor },
+#endif
+      
 };
 
 
