@@ -2462,7 +2462,11 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 			}
 			else
 			{
-				rv = ns4xPlugin::CreatePlugin(pluginTag, mServiceMgr);
+				rv = ns4xPlugin::CreatePlugin(mServiceMgr,
+                                              pluginTag->mFileName,
+                                              pluginTag->mLibrary,
+                                              &pluginTag->mEntryPoint);
+
 				plugin = pluginTag->mEntryPoint;
                 pluginTag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
 

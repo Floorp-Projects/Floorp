@@ -68,7 +68,7 @@ class ns4xPlugin : public nsIPlugin
 {
 public:
 
-  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr);
+  ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr);
   virtual ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
@@ -114,7 +114,10 @@ public:
    */
    
   static nsresult
-  CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr);
+  CreatePlugin(nsIServiceManager* aServiceMgr,
+               const char* aFileName,
+               PRLibrary* aLibrary,
+               nsIPlugin** aResult);
 
 #ifdef XP_MAC
   void
@@ -238,6 +241,7 @@ protected:
    * plugin callbacks for each plugin.
    */
   NPPluginFuncs fCallbacks;
+  PRLibrary*    fLibrary;
 
   NP_PLUGINSHUTDOWN fShutdownEntry;
 
