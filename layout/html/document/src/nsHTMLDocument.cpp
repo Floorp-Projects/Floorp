@@ -392,7 +392,7 @@ nsHTMLDocument::GetImageMap(const nsString& aMapName,
     }
   }
 
-  return 1;/* XXX NS_NOT_FOUND */
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
