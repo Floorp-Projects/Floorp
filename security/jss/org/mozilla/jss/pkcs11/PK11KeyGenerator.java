@@ -153,16 +153,8 @@ public final class PK11KeyGenerator implements KeyGenerator {
                     Password.wipeBytes(pwbytes);
                 }
             }
-        } else if( algorithm==KeyGenAlgorithm.RC4 ) {
-            // RC4 is the only non-PBE algorithm without a fixed key size
-            if( strength==0 ) {
-                throw new IllegalStateException(
-                    "RC4 keygen must be initialized with a strength");
-            }
-            return generateNormal(token, algorithm, strength);
         } else {
-            // fixed-length algorithm, use 0 for key strength
-            return generateNormal(token, algorithm, 0);
+            return generateNormal(token, algorithm, strength);
         }
     }
 
