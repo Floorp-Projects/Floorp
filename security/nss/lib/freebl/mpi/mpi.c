@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.9 2000/07/27 03:02:42 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.10 2000/07/28 23:03:12 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -82,15 +82,15 @@ static const char *s_dmap_1 =
 /* {{{ Default precision manipulation */
 
 /* Default precision for newly created mp_int's      */
-static unsigned int s_mp_defprec = MP_DEFPREC;
+static mp_size s_mp_defprec = MP_DEFPREC;
 
-unsigned int mp_get_prec(void)
+mp_size mp_get_prec(void)
 {
   return s_mp_defprec;
 
 } /* end mp_get_prec() */
 
-void         mp_set_prec(unsigned int prec)
+void         mp_set_prec(mp_size prec)
 {
   if(prec == 0)
     s_mp_defprec = MP_DEFPREC;
@@ -1311,10 +1311,10 @@ mp_err mp_sqrmod(mp_int *a, mp_int *m, mp_int *c)
 
 /* }}} */
 
-/* {{{ mp_exptmod(a, b, m, c) */
+/* {{{ s_mp_exptmod(a, b, m, c) */
 
 /*
-  mp_exptmod(a, b, m, c)
+  s_mp_exptmod(a, b, m, c)
 
   Compute c = (a ** b) mod m.  Uses a standard square-and-multiply
   method with modular reductions at each step. (This is basically the
@@ -1324,7 +1324,7 @@ mp_err mp_sqrmod(mp_int *a, mp_int *m, mp_int *c)
   s_mp_reduce() below for details)
  */
 
-mp_err mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
+mp_err s_mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
 {
   mp_int   s, x, mu;
   mp_err   res;
@@ -1404,7 +1404,7 @@ mp_err mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c)
 
   return res;
 
-} /* end mp_exptmod() */
+} /* end s_mp_exptmod() */
 
 /* }}} */
 
@@ -2489,9 +2489,9 @@ mp_err s_mp_mul_2(mp_int *mp)
  */
 void     s_mp_mod_2d(mp_int *mp, mp_digit d)
 {
-  unsigned int  ndig = (d / DIGIT_BIT), nbit = (d % DIGIT_BIT);
-  unsigned int  ix;
-  mp_digit      dmask;
+  mp_size  ndig = (d / DIGIT_BIT), nbit = (d % DIGIT_BIT);
+  mp_size  ix;
+  mp_digit dmask;
 
   if(ndig >= USED(mp))
     return;
@@ -2882,6 +2882,7 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset)
 
     DIGIT(a, ia) = (mp_digit)k;
   }
+  s_mp_clamp(a);
 
   return MP_OKAY;
 
@@ -2938,10 +2939,11 @@ mp_err   s_mp_sub(mp_int *a, mp_int *b)        /* magnitude subtract      */
 /* Compute a = |a| * |b|                                                  */
 mp_err   s_mp_mul(mp_int *a, mp_int *b)
 {
-  mp_word w, k = 0;
-  mp_int  tmp;
-  mp_err  res;
-  mp_size ix, jx;
+  mp_digit *pb = MP_DIGITS(b);
+  mp_word  w;
+  mp_int   tmp;
+  mp_err   res;
+  mp_size  ib;
 
   if((res = mp_init_size(&tmp, USED(a) + USED(b))) != MP_OKAY)
     return res;
@@ -2950,19 +2952,24 @@ mp_err   s_mp_mul(mp_int *a, mp_int *b)
   USED(&tmp) = USED(a) + USED(b);
 
   /* Outer loop:  Digits of b */
-  for(ix = 0; ix < USED(b); ix++) {
-    if(DIGIT(b, ix) == 0)
+  for(ib = 0; ib < USED(b); ib++) {
+    mp_digit b_i    = *pb++;
+    mp_digit *pt    = DIGITS(&tmp) + ib;
+    mp_digit *pa    = DIGITS(a);
+    mp_digit *palim = DIGITS(a) + USED(a);
+
+    if(b_i == 0)
       continue;
 
+    w = 0;
     /* Inner product:  Digits of a */
-    for(jx = 0; jx < USED(a); jx++) {
-      w = ((mp_word)DIGIT(b, ix) * DIGIT(a, jx)) + k + DIGIT(&tmp, ix+jx);
-      DIGIT(&tmp, ix+jx) = ACCUM(w);
-      k = CARRYOUT(w);
+    while (pa < palim) {
+      w += ((mp_word)b_i * *pa++) + *pt;
+      *pt++ = ACCUM(w);
+      w = CARRYOUT(w);
     }
 
-    DIGIT(&tmp, ix+jx) = (mp_digit)k;
-    k = 0;
+    *pt = (mp_digit)w;
   }
 
   s_mp_clamp(&tmp);
@@ -2975,6 +2982,40 @@ mp_err   s_mp_mul(mp_int *a, mp_int *b)
 } /* end s_mp_mul() */
 
 /* }}} */
+
+/* c += a * b * (MP_RADIX ** offset);  */
+mp_err	s_mp_mul_d_add_offset(mp_int *a, mp_digit b, mp_int *c, mp_size offset)
+{
+  mp_word   w;
+  mp_digit *pc;
+  mp_digit *pa    = MP_DIGITS(a);
+  mp_digit *palim = MP_DIGITS(a) + MP_USED(a);
+  mp_err    res;
+
+  if((res = s_mp_pad(c, MP_USED(a) + 2 + offset)) != MP_OKAY)
+      return res;
+
+  pc = MP_DIGITS(c) + offset;
+  w = 0;
+  /* Inner product:  Digits of a */
+  while (pa < palim) {
+    w += ((mp_word)b * *pa++) + *pc;
+    *pc++ = ACCUM(w);
+    w = CARRYOUT(w);
+  }
+
+  while (w) {
+    w += *pc;
+    *pc++ = ACCUM(w);
+    w = CARRYOUT(w);
+  }
+  /* reuse offset here as a new "used" value */
+  offset = pc - MP_DIGITS(c);
+  if (offset > MP_USED(c))
+    MP_USED(c) = offset;
+  s_mp_clamp(c);
+  return MP_OKAY;
+}
 
 /* {{{ s_mp_sqr(a) */
 
@@ -3504,7 +3545,7 @@ int      s_mp_outlen(int bits, int r)
  */
 
 mp_err  
-mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, unsigned int len)
+mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, mp_size len)
 {
   int            count;
   mp_err         res;
@@ -3578,7 +3619,7 @@ mp_unsigned_octet_size(const mp_int *mp)
 /* {{{ mp_to_unsigned_octets(mp, str) */
 /* output a buffer of big endian octets no longer than specified. */
 mp_err 
-mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen)
+mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, mp_size maxlen)
 {
   int  ix, pos = 0;
   int  bytes;
@@ -3608,7 +3649,7 @@ mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen)
 /* {{{ mp_to_signed_octets(mp, str) */
 /* output a buffer of big endian octets no longer than specified. */
 mp_err 
-mp_to_signed_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen)
+mp_to_signed_octets(const mp_int *mp, unsigned char *str, mp_size maxlen)
 {
   int  ix, pos = 0;
   int  bytes;
@@ -3646,7 +3687,7 @@ mp_to_signed_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen)
 /* {{{ mp_to_fixlen_octets(mp, str) */
 /* output a buffer of big endian octets exactly as long as requested. */
 mp_err 
-mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, unsigned int length)
+mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, mp_size length)
 {
   int  ix, pos = 0;
   int  bytes;

@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.2 2000/07/27 03:02:42 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.3 2000/07/28 23:03:12 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -103,8 +103,8 @@ extern const float s_logv_2[];
   ourselves with the low-order 2 mp_digits)
  */
 
-#define  CARRYOUT(W)  (mp_digit)(((W)>>DIGIT_BIT)&DIGIT_MAX)
-#define  ACCUM(W)     (mp_digit)((W)&DIGIT_MAX)
+#define  CARRYOUT(W)  (mp_digit)((W)>>DIGIT_BIT)
+#define  ACCUM(W)     (mp_digit)(W)
 
 /* }}} */
 
@@ -191,12 +191,15 @@ mp_err   s_mp_add_offset(mp_int *a, mp_int *b, mp_size offset);
                                                /* a += b * RADIX^offset   */
 mp_err   s_mp_sub(mp_int *a, mp_int *b);       /* magnitude subtract      */
 mp_err   s_mp_mul(mp_int *a, mp_int *b);       /* magnitude multiply      */
+mp_err   s_mp_mul_d_add_offset(mp_int *a, mp_digit b, mp_int *c, mp_size off);
+                                      /* c += a * b * (MP_RADIX ** offset);  */
 #if MP_SQUARE
 mp_err   s_mp_sqr(mp_int *a);                  /* magnitude square        */
 #else
 #define  s_mp_sqr(a) s_mp_mul(a, a)
 #endif
 mp_err   s_mp_div(mp_int *a, mp_int *b);       /* magnitude divide        */
+mp_err   s_mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
 mp_err   s_mp_2expt(mp_int *a, mp_digit k);    /* a = 2^k                 */
 int      s_mp_cmp(mp_int *a, mp_int *b);       /* magnitude comparison    */
 int      s_mp_cmp_d(mp_int *a, mp_digit d);    /* magnitude digit compare */
