@@ -426,24 +426,31 @@ public:
    * event handling
    * @param aFlags flags to be added to view
    */
-  NS_IMETHOD SetViewFlags(PRInt32 aFlags) = 0;
-
-  /**
-   * Get pointer to temporary data storage used by
-   * the compositor. make no assumptions about the
-   * data returned by this method.
-   * @param aPoint out paramemter for nsPoint structure
-   *        stored in view.
-   * @return error status
-   */
-  NS_IMETHOD GetScratchPoint(nsPoint **aPoint) = 0;
+  NS_IMETHOD SetViewFlags(PRUint32 aFlags) = 0;
 
   /**
    * Remove flags from view to allow customization of view behavior during
    * event handling
    * @param aFlags flags to be removed from view
    */
-  NS_IMETHOD ClearViewFlags(PRInt32 aFlags) = 0;
+  NS_IMETHOD ClearViewFlags(PRUint32 aFlags) = 0;
+
+  /**
+   * Get flags on view to allow customization of view behavior during
+   * event handling
+   * @param aFlags out parameter for view flags
+   */
+  NS_IMETHOD GetViewFlags(PRUint32 *aFlags) = 0;
+
+  /**
+   * Get pointer to temporary data storage used by
+   * the compositor. make no assumptions about the
+   * data returned by this method. oh yeah, and it's a hack.
+   * @param aPoint out paramemter for nsPoint structure
+   *        stored in view.
+   * @return error status
+   */
+  NS_IMETHOD GetScratchPoint(nsPoint **aPoint) = 0;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
@@ -484,8 +491,21 @@ private:
 //of the world.
 #define NS_VIEW_FLAG_JUST_PAINT     0x0080
 
+//the following are public flags accessed through the *ViewFlags methods.
+
 //Flag to determine whether the view will check if events can be handled
 //by its children or just handle the events itself
-#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001
+#define NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN  0x0001
+//the view is dying.
+#define NS_VIEW_PUBLIC_FLAG_DYING                0x0002
+//the view is transparent
+#define NS_VIEW_PUBLIC_FLAG_TRANSPARENT          0x0004
+//indicates that a view should not zoom values to/from widgets
+#define NS_VIEW_PUBLIC_FLAG_DONT_ZOOM            0x0008
+
+#define ALL_VIEW_FLAGS        (NS_VIEW_FLAG_DONT_CHECK_CHILDREN | \
+                               NS_VIEW_FLAG_DYING | \
+                               NS_VIEW_FLAG_TRANSPARENT | \
+                               NS_VIEW_FLAG_DONT_ZOOM)
 
 #endif

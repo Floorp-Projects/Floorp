@@ -93,9 +93,10 @@ public:
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
   NS_IMETHOD  GetWidget(nsIWidget *&aWidget);
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  NS_IMETHOD SetViewFlags(PRInt32 aFlags);
+  NS_IMETHOD SetViewFlags(PRUint32 aFlags);
+  NS_IMETHOD ClearViewFlags(PRUint32 aFlags);
+  NS_IMETHOD GetViewFlags(PRUint32 *aFlags);
   NS_IMETHOD GetScratchPoint(nsPoint **aPoint);
-  NS_IMETHOD ClearViewFlags(PRInt32 aFlags);
 
   // Helper function to get the view that's associated with a widget
   static nsIView*  GetViewFor(nsIWidget* aWidget);
@@ -121,19 +122,13 @@ protected:
   nsViewClip        mClip;
   nsTransform2D     *mXForm;
   float             mOpacity;
-  PRInt32           mVFlags;
+  PRUint32          mVFlags;
   nsIRegion*        mDirtyRegion;
-  PRInt32           mEventFlags;
   nsPoint           mScratchPoint;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 };
-
-#define VIEW_FLAG_DYING       0x0001
-#define VIEW_FLAG_TRANSPARENT 0x0002
-
-#define ALL_VIEW_FLAGS        (VIEW_FLAG_DYING | VIEW_FLAG_TRANSPARENT)
 
 #endif
