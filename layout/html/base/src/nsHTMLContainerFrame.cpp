@@ -440,29 +440,17 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
   aFrame->GetView(view);
   // If we don't yet have a view; see if we need a view
   if (nsnull == view) {
+    // We don't yet have a view; see if we need a view
+
     // Get my nsStyleColor
     const nsStyleColor* myColor = (const nsStyleColor*)
       aStyleContext->GetStyleData(eStyleStruct_Color);
 
-    // See if the opacity is not the same as the geometric parent
-    // frames opacity.
-    if (!aForce) {
-      nsIFrame* parent;
-      aFrame->GetGeometricParent(parent);
-      if (nsnull != parent) {
-        // Get parent's nsStyleColor
-        const nsStyleColor* parentColor;
-        parent->GetStyleData(eStyleStruct_Color,
-                             (const nsStyleStruct*&)parentColor);
-
-        // If the opacities are different then I need a view
-        if (myColor->mOpacity != parentColor->mOpacity) {
-          NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-            ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p opacity=%g parentOpacity=%g",
-             aFrame, myColor->mOpacity, parentColor->mOpacity));
-          aForce = PR_TRUE;
-        }
-      }
+    if (myColor->mOpacity != 1.0f) {
+      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+        ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p opacity=%g",
+         aFrame, myColor->mOpacity));
+      aForce = PR_TRUE;
     }
 
     // See if the frame is being relatively positioned
@@ -518,6 +506,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         if (NS_STYLE_BG_COLOR_TRANSPARENT & myColor->mBackgroundFlags) {
           viewManager->SetViewContentTransparency(view, PR_TRUE);
         }
+        viewManager->SetViewOpacity(view, myColor->mOpacity);
 
         NS_RELEASE(viewManager);
       }
