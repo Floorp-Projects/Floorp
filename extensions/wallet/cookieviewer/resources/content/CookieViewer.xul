@@ -55,6 +55,7 @@
     </tabs>
     <tabpanels id="panel" flex="1">
       <vbox class="tabpanel" id="system" flex="1">
+        <vbox id="dummyContainer" flex="1">
           <label value="&div.cookiesonsystem.label;"/>
           <separator class="thin"/>
           <tree id="cookiesTree" flex="1" style="height: 10em;"
@@ -150,6 +151,7 @@
           <hbox align="start">
             <checkbox id="checkbox" label="&checkbox.label;" persist="checked"/>
           </hbox>
+        </vbox>
       </vbox>
       
       <vbox id="servers" flex="1">
