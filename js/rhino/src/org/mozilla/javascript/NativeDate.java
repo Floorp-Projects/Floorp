@@ -555,6 +555,15 @@ final class NativeDate extends IdScriptable
     private final static boolean TZO_WORKAROUND = false;
     private static double DaylightSavingTA(double t)
     {
+        // Another workaround!  The JRE doesn't seem to know about DST
+        // before year 1 AD, so we map to equivalent dates for the
+        // purposes of finding dst.  To be safe, we do this for years
+        // outside 1970-2038.
+        if (t < 0.0 || t > 2145916800000.0) {
+            int year = EquivalentYear(YearFromTime(t));
+            double day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
+            t = MakeDate(day, TimeWithinDay(t));
+        }
         if (!TZO_WORKAROUND) {
             Date date = new Date((long) t);
             if (thisTimeZone.inDaylightTime(date))
@@ -587,6 +596,45 @@ final class NativeDate extends IdScriptable
                 return 0;
             //         return offset - LocalTZA;
         }
+    }
+
+    /*
+     * Find a year for which any given date will fall on the same weekday.
+     *
+     * This function should be used with caution when used other than
+     * for determining DST; it hasn't been proven not to produce an
+     * incorrect year for times near year boundaries.
+     */
+    private static int EquivalentYear(int year)
+    {
+        int day = (int) DayFromYear(year) + 4;
+        day = day % 7;
+        if (day < 0)
+            day += 7;
+        // Years and leap years on which Jan 1 is a Sunday, Monday, etc.
+        if (IsLeapYear(year)) {
+            switch (day) {
+                case 0: return 1984;
+                case 1: return 1996;
+                case 2: return 1980;
+                case 3: return 1992;
+                case 4: return 1976;
+                case 5: return 1988;
+                case 6: return 1972;
+            }
+        } else {
+            switch (day) {
+                case 0: return 1978;
+                case 1: return 1973;
+                case 2: return 1974;
+                case 3: return 1975;
+                case 4: return 1981;
+                case 5: return 1971;
+                case 6: return 1977;
+            }
+        }
+        // Unreachable
+        throw Kit.codeBug();
     }
 
     private static double LocalTime(double t)
@@ -991,6 +1039,13 @@ final class NativeDate extends IdScriptable
             if (timeZoneFormatter == null)
                 timeZoneFormatter = new java.text.SimpleDateFormat("zzz");
 
+            // Find an equivalent year before getting the timezone
+            // comment.  See DaylightSavingTA.
+            if (t < 0.0 || t > 2145916800000.0) {
+                int equiv = EquivalentYear(YearFromTime(local));
+                double day = MakeDay(equiv, MonthFromTime(t), DateFromTime(t));
+                t = MakeDate(day, TimeWithinDay(t));
+             }
             result.append(" (");
             java.util.Date date = new Date((long) t);
             result.append(timeZoneFormatter.format(date));
