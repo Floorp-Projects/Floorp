@@ -298,19 +298,11 @@ public:
 	virtual void            MessageReceived(BMessage *msg);
 	virtual void            DispatchMessage(BMessage *msg, BHandler *handler);
 	virtual void            WindowActivated(bool active);
-	virtual void            FrameResized(float width, float height);
 	virtual void            FrameMoved(BPoint origin);
 	virtual void            WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace);
 
-
-	void                  ResizeToWithoutEvent(float width, float height);
-
 private:
-	void                  DoFrameResized();
-
-	float            lastWidth, lastHeight;
-	BPoint          lastpoint;
-	BMessageRunner  *resizeRunner;
+	BPoint          lastWindowPoint;
 };
 
 //
@@ -335,14 +327,19 @@ public:
 	                                   uint32 transit, 
 	                                   const BMessage *message);
 	virtual void            MouseUp(BPoint point);
-	bool                  GetPaintRegion(/*nsRect &r*/BRegion *breg);
+	bool                  GetPaintRegion(BRegion *breg);
 	void                  KeyDown(const char *bytes, int32 numBytes);
 	void                  KeyUp(const char *bytes, int32 numBytes);
 	virtual void            MakeFocus(bool focused);
 	virtual void            MessageReceived(BMessage *msg);
 	virtual void            FrameResized(float width, float height);
+	virtual void            FrameMoved(BPoint origin);
+
 private:
 	void                  DoDraw(BRect updateRect);
+	float                 lastViewWidth;
+	float                 lastViewHeight;
+	BPoint               lastViewPoint;
 };
 
 //
