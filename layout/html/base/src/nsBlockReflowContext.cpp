@@ -51,7 +51,9 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
     mOuterReflowState(aParentRS),
     mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull),
     mMaxElementSize(0, 0),
-    mComputeMaximumWidth(aComputeMaximumWidth)
+    mIsTable(PR_FALSE),
+    mComputeMaximumWidth(aComputeMaximumWidth),
+    mBlockShouldInvalidateItself(PR_FALSE)
 {
   mStyleSpacing = nsnull;
 }
@@ -291,6 +293,12 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                  (state & NS_FRAME_IS_DIRTY)) {
           reason = eReflowReason_Dirty;
         }
+      }
+      if (eReflowReason_Resize == reason) {
+        // we're doing a resize reflow, even though our outer reflow state is incremental
+        // text (and possibly other objects) don't do incremental painting for resize reflows
+        // so, we have to handle the invalidation for repainting ourselves
+        mBlockShouldInvalidateItself = PR_TRUE;
       }
     }
   }
