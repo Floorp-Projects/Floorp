@@ -70,6 +70,13 @@ static XtGeometryResult GeometryManager	(Widget,XtWidgetGeometry *,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Composite XtOrderProc for XmNinsertPosition							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Cardinal	InsertPosition		(Widget);
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -151,6 +158,9 @@ static void		ButtonSelectedCB	(Widget,XtPointer,XtPointer);
 /*----------------------------------------------------------------------*/
 static void		IndicatorCreate			(Widget);
 static void		IndicatorCheckPosition	(Widget);
+static Widget	IndicatorGetTarget		(Widget);
+static Boolean	IndicatorIsShown		(Widget);
+static Boolean	IndicatorIsIndicator	(Widget);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -393,6 +403,16 @@ static XtResource resources[] =
 		(XtPointer) DEFAULT_MAX_CHILD_WIDTH
     },
 
+
+	{ 
+		XmNinsertPosition,
+		XmCInsertPosition,
+		XmRFunction,
+		sizeof(XtOrderProc),
+		XtOffsetOf(XfeToolBarRec , composite . insert_position),
+		XmRImmediate, 
+		(XtPointer) InsertPosition
+    },
 };   
 
 /*----------------------------------------------------------------------*/
@@ -610,6 +630,8 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	tp->total_children_height	= 0;
 	tp->indicator				= NULL;
 	tp->indicator_target		= NULL;
+
+/* 	IndicatorCreate(nw); */
 	
     /* Finish of initialization */
     _XfeManagerChainInitialize(rw,nw,xfeToolBarWidgetClass);
@@ -954,6 +976,34 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Composite XtOrderProc for XmNinsertPosition							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static Cardinal
+InsertPosition(Widget child)
+{
+	Widget				w = _XfeParent(child);
+	XfeToolBarPart *	tp = _XfeToolBarPart(w);
+
+	/* Always insert the indicator at the tail */
+	if (IndicatorIsIndicator(child))
+	{
+		return _XfemNumChildren(w);
+	}
+	
+	/* Insert children before the indicator if it is alive */
+	if (_XfeIsAlive(tp->indicator))
+	{
+		return _XfemNumChildren(w) - 1;
+	}
+
+	/* Otherwise return the default position - tail */
+	return _XfemNumChildren(w);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeManager class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -1171,7 +1221,7 @@ LayoutIndicator(Widget w)
 		return;
 	}
 
-	tp->indicator_target = _XfeChildrenIndex(w,tp->indicator_position);
+	tp->indicator_target = IndicatorGetTarget(w);
 
 	/* Make sure the tp->indicator_target is alive */
 	if (!_XfeIsAlive(tp->indicator_target))
@@ -1296,6 +1346,8 @@ LayoutIndicator(Widget w)
 
 	_XfeMoveWidget(tp->indicator,x,y);
 
+	XtManageChild(tp->indicator);
+
 	/* Raise the indicator so that it is always on top of tool items */
 	if (_XfeIsRealized(tp->indicator))
 	{
@@ -1383,6 +1435,12 @@ PreferredVertical(Widget w,Dimension * width,Dimension * height)
 
 
 	*width += tp->max_child_width;
+
+	/* Indicator */
+	if (IndicatorIsShown(w))
+	{
+/* 		*height += _XfeHeight(tp->indicator); */
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1432,6 +1490,11 @@ PreferredHorizontal(Widget w,Dimension * width,Dimension * height)
 
 	*height += tp->max_child_height;
 
+	/* Indicator */
+	if (IndicatorIsShown(w))
+	{
+/* 		*width += _XfeWidth(tp->indicator); */
+	}
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1443,6 +1506,8 @@ LayoutVertical(Widget w)
 	Position			y;
 	Dimension			width;
 	Dimension			height;
+	Boolean				show_indicator = IndicatorIsShown(w);
+	Cardinal			count = 0;
 	
 	y = _XfemOffsetTop(w) + tp->raise_border_thickness;
 
@@ -1506,6 +1571,8 @@ LayoutHorizontal(Widget w)
 	Position			y;
 	Dimension			width;
 	Dimension			height;
+	Boolean				show_indicator = IndicatorIsShown(w);
+	Cardinal			layable_index = 0;
 
 	x = _XfemOffsetLeft(w) + tp->raise_border_thickness;
 
@@ -1555,6 +1622,8 @@ LayoutHorizontal(Widget w)
 			{
 				assert( 0 );
 			}
+
+			layable_index++;
 		} /* IsLayableChild */
 	} /* for */
 }
@@ -1868,6 +1937,7 @@ IndicatorCreate(Widget w)
 {
 	XfeToolBarPart *	tp = _XfeToolBarPart(w);
 
+#if 1
 	tp->indicator = XtVaCreateManagedWidget(
 		INDICATOR_NAME,
 		xmSeparatorWidgetClass,
@@ -1879,6 +1949,15 @@ IndicatorCreate(Widget w)
 		XmNwidth,				8,
 		XmNshadowThickness,		4,
 		NULL);
+#else
+	tp->indicator = XtVaCreateManagedWidget(
+		INDICATOR_NAME,
+		xfeButtonWidgetClass,
+		w,
+		XmNprivateComponent,	True,
+		XmNraised,				True,
+		NULL);
+#endif
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -1920,6 +1999,62 @@ IndicatorCheckPosition(Widget w)
 
 		_XfeWarning(w,MESSAGE6);
 	}
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+IndicatorIsShown(Widget w)
+{
+	XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	Boolean				shown = False;
+	
+	if (_XfeIsAlive(tp->indicator))
+	{
+		if (tp->indicator_position != XmINDICATOR_DONT_SHOW)
+		{
+			Widget target = IndicatorGetTarget(w);
+			
+			if (_XfeIsAlive(target))
+			{
+				/* Cascade */
+				if (XfeIsCascade(target))
+				{
+					shown = (tp->indicator_location != 
+							 XmINDICATOR_LOCATION_MIDDLE);
+				}
+				else
+				{
+					shown = True;
+				}
+			}
+		}
+	}
+
+	return shown;
+}
+/*----------------------------------------------------------------------*/
+static Boolean
+IndicatorIsIndicator(Widget w)
+{
+	return (XfeIsButton(w) && _XfeManagerPrivateComponent(w));
+}
+/*----------------------------------------------------------------------*/
+static Widget
+IndicatorGetTarget(Widget w)
+{
+    XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	Widget				target = NULL;
+	
+	if (tp->indicator_position != XmINDICATOR_DONT_SHOW)
+	{
+		target = _XfeChildrenIndex(w,tp->indicator_position);
+
+		if (!_XfeIsAlive(target))
+		{
+			target = NULL;
+		}
+	}
+
+	return target;
 }
 /*----------------------------------------------------------------------*/
 
@@ -2112,5 +2247,22 @@ XfeToolBarGetLastItem(Widget w)
 	}
 	
 	return NULL;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ Widget
+XfeToolBarGetIndicator(Widget w)
+{
+    XfeToolBarPart *	tp = _XfeToolBarPart(w);
+	
+	assert( XfeIsToolBar(w) );
+	assert( _XfeIsAlive(w) );
+
+	/* Make sure the indicator exists */
+    if (!tp->indicator)
+    {
+      IndicatorCreate(w);
+    }
+
+    return tp->indicator;
 }
 /*----------------------------------------------------------------------*/

@@ -127,6 +127,9 @@ XfeToolBarXYToIndicatorLocation	(Widget		w,
 extern Widget
 XfeToolBarGetLastItem			(Widget		w);
 /*----------------------------------------------------------------------*/
+extern Widget
+XfeToolBarGetIndicator			(Widget		w);
+/*----------------------------------------------------------------------*/
 
 #ifdef __cplusplus								/* end C++				*/
 }
