@@ -1055,6 +1055,9 @@ treepusher.decrement[disabled="true"] {
 
 splitter {
    display: block;
+   cursor: arrow;
+   min-width: 5px;
+   min-height: 5px;
 }
 
 splitter[state="dragging"] {
