@@ -67,6 +67,8 @@
 #define IDD_PROMPT                      109
 #define IDD_PROMPT_PASSWD               110
 #define IDR_SEARCHFRAME                 111
+#define IDC_ENTER_URL_MSG               109
+#define IDC_URL_EDITOR                  110
 #define IDC_URL                         112
 #define IDD_URLTITLEBAR                 112
 #define IDC_TITLE                       113
@@ -2417,7 +2419,6 @@
 #define ID_VIEW_FRAME_INFO              34487
 #define ID_MAIL_WRAPLONGLINES           34496
 #define ID_HOTLIST_ADDCURRENTTOHOTLIST2 34497
-#define IDS_PUBLISH_FILES               34503
 #define IDS_FILE_COUNT_FORMAT           34504
 #define IDS_UPLOADING_FILE              34505
 #define IDS_SAVING_FILE                 34506
@@ -2792,7 +2793,6 @@
 #define IDS_SELECT_HTML_EDITOR          42256
 #define IDS_OTHER_HREF_ATTRIBUTES       42257
 #define IDS_EDIT_HTML_ATTRIB_CAPTION    42258
-#define IDS_BAD_PUBLISH_URL             42261
 #define IDS_TARGETS_IN_CURRENT_DOC      42263
 #define IDS_TARGETS_IN_FILE             42264
 #define IDS_NO_TARGETS                  42265
@@ -3119,7 +3119,6 @@
 #define ID_FORMAT_INCREASE_FONTSIZE     42764
 #define ID_FORMAT_DECREASE_FONTSIZE     42765
 #define IDS_8_PTS                       42766
-#define IDS_EDIT_LINK_HINT              42767
 #define ID_HISTORY_LOPCONTAINS          43000
 #define ID_HISTORY_LOPNOTCONTAINS       43001
 #define ID_HISTORY_LOPIS                43002
@@ -3610,11 +3609,13 @@
 #define IDS_FRAME_MAILPREF              62287
 #define IDS_FRAME_EDITORPREF            62288
 #define IDS_USER_PROMPT                 62289
-#define IDS_LOAD_PREFS                  62292
-#define IDS_LOAD_BOOKMARKS              62293
-#define IDS_LOAD_PLUGINS                62294
-#define IDS_DRAG_THIS_URL_TIP           62295
-#define IDS_OPEN                        62296
+#define IDS_LOAD_PREFS                  62290
+#define IDS_LOAD_BOOKMARKS              62291
+#define IDS_LOAD_PLUGINS                62292
+#define IDS_DRAG_THIS_URL_TIP           62293
+#define IDS_OPEN                        62294
+#define IDS_OPEN_PAGE                   62295
+#define IDS_OPEN_FILE                   62296
 #define IDS_PROXIE_FOLDERS              62297
 #define IDS_BROWSE_TO_PUB_LOC_CAPTION   62298
 #define IDS_LOAD_JAVA                   62298

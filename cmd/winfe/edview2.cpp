@@ -4467,12 +4467,12 @@ LRESULT CNetscapeEditView::OnButtonMenuOpen(WPARAM wParam, LPARAM lParam)
         idArray = idArrayNewDoc;
 		strArray = strArrayNewDoc;
 	} 
-    else if( nCommand == ID_FILE_OPEN )
+    else if( nCommand == ID_FILE_OPENURL )
     {
         // Menu length is dynamic - don't use fixed arrays
         // First 2 items are always the same
-        AppendMenu(hMenu, MF_STRING, ID_FILE_OPEN, szLoadString(IDS_FILE_OPEN));
         AppendMenu(hMenu, MF_STRING, ID_FILE_OPENURL, szLoadString(IDS_FILE_OPENURL));
+        AppendMenu(hMenu, MF_STRING, ID_FILE_OPEN, szLoadString(IDS_FILE_OPEN));
         AppendMenu(hMenu, MF_SEPARATOR, 0, 0);
 
         // The rest of the menu comes from the history list of recently-edited URLs

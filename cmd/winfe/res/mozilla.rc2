@@ -1076,25 +1076,27 @@ BEGIN
     EDITTEXT        IDC_PROMPT_ANS,5,39,233,12,ES_PASSWORD | ES_AUTOHSCROLL
 END
 
-IDD_OPENURL_BOX DIALOG DISCARDABLE  0, 0, 319, 77
+IDD_OPENURL_BOX DIALOG DISCARDABLE  0, 0, 319, 76
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Open Page"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Enter the World Wide Web location (URL) or specify the local file you would like to open:",
-                    IDC_STATIC,6,6,243,18
-    EDITTEXT        IDC_URL,6,26,245,12,ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON      "Choose &File...",IDC_BROWSE_FILE,255,25,50,14
 #ifdef EDITOR
-    LTEXT           "Open location or file in:",IDC_STATIC,6,43,80,8
+    LTEXT           "Open page in:",IDC_STATIC,6,7,61,8
     CONTROL         "&Navigator",IDC_OPEN_URL_BROWSER,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,85,56,49,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,79,7,58,10
     CONTROL         "&Composer",IDC_OPEN_URL_EDITOR,"Button",
-                    BS_AUTORADIOBUTTON,85,43,56,10
-#endif // EDITOR
-    DEFPUSHBUTTON   "Open",IDOK,145,49,50,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,201,49,50,14
-    PUSHBUTTON      "Help",ID_HELP,255,49,50,14
+                    BS_AUTORADIOBUTTON,143,7,56,10
+    COMBOBOX        IDC_URL_EDITOR,6,34,245,115,CBS_DROPDOWN | WS_VSCROLL | CBS_AUTOHSCROLL | WS_TABSTOP
+#endif
+    LTEXT           "Enter the World Wide Web location or the local file you would like to open:",
+                    IDC_ENTER_URL_MSG,6,23,301,11
+    COMBOBOX        IDC_URL,6,34,245,115,CBS_DROPDOWN | WS_VSCROLL | CBS_AUTOHSCROLL | WS_TABSTOP
+//    EDITTEXT        IDC_URL,6,34,245,12,ES_AUTOHSCROLL | WS_GROUP
+    PUSHBUTTON      "Open &File...",IDC_BROWSE_FILE,255,33,56,14
+    DEFPUSHBUTTON   "Open",IDOK,78,56,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,134,56,50,14
+    PUSHBUTTON      "Help",ID_HELP,190,56,50,14
 END
 
 IDD_CHECKCONFIRM_BOX DIALOG DISCARDABLE  0, 0, 186, 95

@@ -3475,6 +3475,8 @@ BEGIN
     IDS_LOAD_PLUGINS        "Loading plugins..."
     IDS_DRAG_THIS_URL_TIP   "Drag this location"
     IDS_OPEN                "Open"
+    IDS_OPEN_PAGE           "Open Page"
+    IDS_OPEN_FILE           "Open: "
     IDS_PROXIE_FOLDERS      "Drag this icon to create a link to this window"
     IDS_LOAD_JAVA           "Starting java..."
     IDS_LANGUAGE_GREEK      "Greek"

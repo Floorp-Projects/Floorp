@@ -7389,8 +7389,8 @@ int CLinkPage::GetTargetsInFile()
         m_csTargetFile = m_csHref;
     } else {
         // HREF wasn't a file or
-        //  was same as current
-        // TODO: How can we know if current URL is same as HREF?
+        //  was same as current document
+        ((CButton*)GetDlgItem(IDC_TARGETS_IN_CURRENT_DOC))->SetCheck(1);
         ((CButton*)GetDlgItem(IDC_TARGETS_IN_FILE))->SetCheck(0);
         return 0;
     }

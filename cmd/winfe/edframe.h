@@ -148,7 +148,6 @@ public:
 
 protected:  
     void DockControlBarLeftOf(CToolBar* Bar,CToolBar* LeftOf);
-    //void BuildRecentFilesMenu(CMenu * pMenu);
 
     // Prompts user to supply required URL if missing from preferences.
     // Allows selecting a local file

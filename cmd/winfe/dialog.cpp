@@ -25,6 +25,7 @@
 
 #include "nsIDefaultBrowser.h"
 #include "prefapi.h"
+#include "edt.h" // For EDT_GetEditHistory and MAX_EDT_HISTORY_LOCATIONS
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -33,10 +34,9 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 
 extern "C" void sample_exit_routine(URL_Struct *URL_s,int status,MWContext *window_id);
 
+// Last URL entered in the Open Page dialog
 static CString url_string = "";
-// Retain radio button setting across dialog calls
-// 0 = Load URL into Browser, 1 = Editor
-static int browse_or_edit = 0;
+
 /////////////////////////////////////////////////////////////////////////////
 // CDialogURL dialog
 
@@ -49,38 +49,115 @@ CDialogURL::CDialogURL(CWnd* pParent, MWContext * context)
     //}}AFX_DATA_INIT
 	ASSERT(context);
     m_Context = context;
+    m_bInitNavComboBox = FALSE;
+    m_bInternalChange = FALSE;
+
+#ifdef EDITOR
+    m_bInitComposerComboBox = FALSE;
+#endif
 }
 
+CDialogURL::~CDialogURL() 
+{
+    for( int i = 0; i < MAX_HISTORY_LOCATIONS; i++ )
+        XP_FREEIF(m_pNavTitleList[i]);
+
+    // Note: Composer history list points to other static strings,
+    //  don't delete here
+}
+
+
+#ifndef EDITOR
+#define MOVE_CONTROL_AMOUNT 30
+static void wfe_MoveControl(CDialog *pDialog, UINT nID)
+{
+    CRect cRect;
+    CWnd *pWnd = pDialog->GetDlgItem(nID);
+    if( pWnd )
+    {
+        pWnd->GetWindowRect(&cRect);
+        pDialog->ScreenToClient(&cRect);
+        pWnd->SetWindowPos(0, cRect.left, cRect.top-MOVE_CONTROL_AMOUNT, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    }
+}
+#endif
 
 BOOL CDialogURL::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
+	CComboBox *pNavBox = (CComboBox*)GetDlgItem(IDC_URL);
+    if( !pNavBox )
+        return(1);
 
-	CEdit * pBox = (CEdit *) GetDlgItem(IDC_URL); 
+    // Used a separate define in dialog.h to avoid having to include edt.h for MAX_EDIT_HISTORY_LOCATIONS
+    XP_ASSERT(MAX_HISTORY_LOCATIONS <= MAX_EDIT_HISTORY_LOCATIONS); 
 
-	if(pBox) {
-		pBox->SetWindowText((const char *) url_string);
-		pBox->SetFocus();
-		pBox->SetSel(0, -1);
 #ifdef EDITOR
-		// Communicator version has radio buttons to select 
-		//  loading URL into a browser or editor
-		if ( EDT_IS_EDITOR(m_Context) ){
-    	    ((CButton *)GetDlgItem(IDC_OPEN_URL_EDITOR))->SetCheck(1);
-        } else {
-    	    ((CButton *)GetDlgItem(IDC_OPEN_URL_BROWSER))->SetCheck(1);
-        }
+	CComboBox *pComposerBox = (CComboBox *) GetDlgItem(IDC_URL_EDITOR); 
+    if( !pComposerBox )
+        return(1);
+
+    if( EDT_IS_EDITOR(m_Context) )
+    {
+        // Default is to open into Composer
+    	((CButton *)GetDlgItem(IDC_OPEN_URL_EDITOR))->SetCheck(1);
+        // Hide Navigator's editbox
+        pNavBox->ShowWindow(SW_HIDE);
+
+        // This will init the dropdown list
+        GetComposerComboBox();
+
+        pComposerBox->SetFocus();
+        pComposerBox->SetEditSel(0, -1);
+    }
+    else
+    {
+        // Default is open in Navigator
+    	((CButton *)GetDlgItem(IDC_OPEN_URL_BROWSER))->SetCheck(1);
+        // Hide the editor's combobox
+        pComposerBox->ShowWindow(SW_HIDE);
+
+        // This will init the dropdown list
+        GetNavComboBox();
+
+        pNavBox->SetFocus();
+        pNavBox->SetEditSel(0, -1);
+    }
+	return(0);
+#else
+    GetNavComboBox();
+	pNavBox->SetFocus();
+	pNavBox->SetSel(0, -1);
+
+    // Move all controls up and resize the dialog as well
+    // We could have made a different dialog, but that makes it more difficult
+    //  for I18N, so just move the controls instead
+    wfe_MoveControl(this, IDC_ENTER_URL_MSG);
+    wfe_MoveControl(this, IDC_URL);
+    wfe_MoveControl(this, IDC_BROWSE_FILE);
+    wfe_MoveControl(this, IDOK);
+    wfe_MoveControl(this, IDCANCEL);
+    wfe_MoveControl(this, ID_HELP);
+    CRect cRect;
+    GetWindowRect(&cRect);
+    SetWindowPos(0, 0, 0, cRect.Width(), cRect.Height()-MOVE_CONTROL_AMOUNT, SWP_NOMOVE | SWP_NOZORDER);
 #endif // EDITOR
-		return(0);
-	} 
-    return(1);
+	return(0);
 }
 
 BEGIN_MESSAGE_MAP(CDialogURL, CDialog)
 	//{{AFX_MSG_MAP(CDialogURL)
 	ON_BN_CLICKED(IDC_BROWSE_FILE, OnBrowseForFile)
 	ON_COMMAND(ID_HELP, OnHelp)
+	ON_CBN_EDITCHANGE(IDC_URL, OnChangeNavLocation)
+	ON_CBN_SELCHANGE(IDC_URL, OnSelchangeNavList)
 	//}}AFX_MSG_MAP
+#ifdef EDITOR
+	ON_BN_CLICKED(IDC_OPEN_URL_BROWSER, OnOpenInBrowser)
+	ON_BN_CLICKED(IDC_OPEN_URL_EDITOR, OnOpenInEditor)
+	ON_CBN_SELCHANGE(IDC_URL_EDITOR, OnSelchangeComposerList)
+	ON_CBN_EDITCHANGE(IDC_URL_EDITOR, OnChangeComposerLocation)
+#endif
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -98,11 +175,10 @@ void CDialogURL::OnBrowseForFile()
 #endif
     char * pName = wfe_GetExistingFileName( this->m_hWnd, szLoadString(IDS_OPEN), type, TRUE, NULL);
     if( pName ){
-        GetDlgItem(IDC_URL)->SetWindowText(pName);
+        GetDlgItem(EDT_IS_EDITOR(m_Context) ? IDC_URL_EDITOR: IDC_URL)->SetWindowText(pName);
         XP_FREE(pName);
-        // Set focus to Open button so Enter can be used 
-        // immediately after choosing file
-        GotoDlgCtrl(GetDlgItem(IDOK));
+        // New behavior - immediately end dialog with filename selected
+        OnOK();
     }
 }
 
@@ -115,11 +191,19 @@ void CDialogURL::OnHelp()
 void CDialogURL::OnOK()
 {
 
-	CEdit * pBox = (CEdit *) GetDlgItem(IDC_URL); 
+	CWnd *pNavBox = GetNavComboBox();
 
-	if(pBox) {
-		pBox->GetWindowText(url_string);
+#ifdef EDITOR
+    BOOL bEdit = ((CButton *)GetDlgItem(IDC_OPEN_URL_EDITOR))->GetCheck() != 0;
+    CWnd *pComposerBox = GetComposerComboBox();
+    if( bEdit ) {
+		pComposerBox->GetWindowText(url_string);
+    } else
+#else
+	if(pNavBox) {
+		pNavBox->GetWindowText(url_string);
 	}
+#endif
 
 	CDialog::OnOK();
 #ifdef XP_WIN32
@@ -152,21 +236,268 @@ void CDialogURL::OnOK()
         }
 
 #ifdef EDITOR
-        BOOL bEdit = ((CButton *)GetDlgItem(IDC_OPEN_URL_EDITOR))->GetCheck() != 0;
-
         if (bEdit || EDT_IS_EDITOR(m_Context)) {
-            FE_LoadUrl(/*pAbsoluteURL*/(char *)LPCSTR(url_string), bEdit);
+            // This creates a new edit or browser window
+            FE_LoadUrl((char *)LPCSTR(url_string), bEdit);
         } else
 #endif
             // Load the URL into the same window only if called from an existing browser
-    		ABSTRACTCX(m_Context)->NormalGetUrl(/*pAbsoluteURL*/ url_string);
+    		ABSTRACTCX(m_Context)->NormalGetUrl(url_string);
 
         if( pAbsoluteURL && bFreeString )
             XP_FREE(pAbsoluteURL);
 	}
-
 }
 
+CComboBox *CDialogURL::GetNavComboBox()
+{
+    CComboBox *pComboBox = (CComboBox*)GetDlgItem(IDC_URL); 
+    
+    // Use flag to init once only when we need to
+    if( m_bInitNavComboBox )
+        return pComboBox;
+
+    XP_MEMSET(m_pNavTitleList, 0, MAX_HISTORY_LOCATIONS*sizeof(char*));
+
+    m_bInitNavComboBox = TRUE;
+
+    CDC *pDC = pComboBox->GetDC();
+    // Get the size of the strings added in the dropdown...
+    CSize cSize;
+    int iMaxWidth = 0;
+    int wincsid = INTL_CharSetNameToID(INTL_ResourceCharSet());
+
+    // Fill the combobox with Composer's "Recent Files" list
+    char * pUrl = NULL;
+    int j = 0; // Separate counter for title array
+
+// We would like to get Browser history items from the new history system (RDF store?)
+
+    // Use this for the current Browser History (same as in the Go menu)
+    // Get the session history list
+    XP_List* pList = SHIST_GetList(m_Context);
+    if( pList )
+    {
+        // Get the pointer to the current history entry
+	    for( int i = 0; i < MAX_HISTORY_LOCATIONS; i++, pList = pList->prev )
+	    {
+            //pList = pList->prev;
+            if( !pList )
+                break;
+
+		    History_entry*  pEntry = (History_entry*)pList->object;
+		    //ASSERT(pEntry);
+		    if( !pEntry )
+                continue;
+
+            // Don't include current page's URL
+            if( pEntry == m_Context->hist.cur_doc_ptr )
+                continue;
+
+            pComboBox->AddString(pEntry->address);
+            m_pNavTitleList[j] = XP_STRDUP(pEntry->title);
+
+            CString csTemp(pUrl);
+            if ( pDC )
+            {
+    		    cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
+	            pDC->LPtoDP(&cSize);
+	    	    if ( cSize.cx > iMaxWidth )
+    			    iMaxWidth = cSize.cx;
+    	    }
+            j++;
+	    }
+    }
+
+    iMaxWidth += 4;
+    if( pComboBox->GetDroppedWidth() < iMaxWidth )
+        pComboBox->SetDroppedWidth(iMaxWidth);
+    
+    // Initialize the edit field with the first history item
+    //   or last-used global string
+    if( pComboBox->GetCount() > 0 )
+    {
+        pComboBox->SetCurSel(0);
+        SetCaption(m_pNavTitleList[0]);
+    }
+    else
+    {
+        pComboBox->SetWindowText((const char*)url_string);
+        SetCaption();
+    }
+    return pComboBox;
+}
+
+void CDialogURL::SetCaption(char *pPageTitle)
+{
+    CString csCaption(szLoadString(pPageTitle ? IDS_OPEN_FILE : IDS_OPEN_PAGE));
+    if( pPageTitle )
+    {
+        // Append the page title so caption is "Open: My Page Title"
+        csCaption += pPageTitle;
+    }
+    SetWindowText((const char*)csCaption);
+}
+
+void CDialogURL::OnChangeNavLocation()
+{
+    // Any text typed in the edit box invalidates the page title
+    //  show in the dialog caption, 
+    //  but search the title list to find a match
+    if( !m_bInternalChange )
+    {
+    	CString csString;
+        CComboBox *pComboBox = GetNavComboBox();
+        pComboBox->GetWindowText(csString);
+        csString.TrimLeft();
+        csString.TrimRight();
+        char *pCaption = NULL;
+        if( !csString.IsEmpty() )
+        {
+            // Find user-typed string in the combobox
+            //  and set corresponding title
+            int nIndex = pComboBox->FindStringExact(0,csString);
+            if( nIndex >= 0 )
+                pCaption = m_pNavTitleList[nIndex];
+        }
+        SetCaption(pCaption);
+    }
+}
+
+void CDialogURL::OnSelchangeNavList()
+{
+    if( !m_bInternalChange )
+        SetCaption(m_pNavTitleList[GetNavComboBox()->GetCurSel()]);
+}
+
+
+#ifdef EDITOR
+CComboBox *CDialogURL::GetComposerComboBox()
+{
+    CComboBox *pComboBox = (CComboBox*)GetDlgItem(IDC_URL_EDITOR); 
+    
+    // Use flag to init once only when we need to
+    if( m_bInitComposerComboBox )
+        return pComboBox;
+
+    m_bInitComposerComboBox = TRUE;
+
+    CDC *pDC = pComboBox->GetDC();
+    // Get the size of the strings added in the dropdown...
+    CSize cSize;
+    int iMaxWidth = 0;
+    int wincsid = INTL_CharSetNameToID(INTL_ResourceCharSet());
+
+    // Fill the combobox with Composer's "Recent Files" list
+    char * pUrl = NULL;
+    char * pTitle = NULL;
+    int j = 0; // Separate counter for title array
+	for( int i = 0; i < MAX_EDIT_HISTORY_LOCATIONS; i++ )
+	{
+        // Save the Page Title for each URL as well
+        // NOTE: We don't have to free these - static list is in xp edit code
+		m_pComposerTitleList[i] = 0;
+        if(EDT_GetEditHistory(m_Context, i, &pUrl, &m_pComposerTitleList[j]))
+        {
+            pComboBox->AddString(pUrl);
+            CString csTemp(pUrl);
+            if ( pDC ){            
+    		    cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
+	        	pDC->LPtoDP(&cSize);
+	    	    if ( cSize.cx > iMaxWidth ){
+    			    iMaxWidth = cSize.cx;
+		        }
+    		}
+            j++;
+        }
+    }
+    // ...so we can be sure it's visible by using wider dropdown width
+    iMaxWidth += 4;
+    if( pComboBox->GetDroppedWidth() < iMaxWidth )
+        pComboBox->SetDroppedWidth(iMaxWidth);
+    
+    // Initialize the edit field with the first history item
+    //   or last-used global string (shared with Navigator)
+    if( pComboBox->GetCount() > 0 )
+    {
+        pComboBox->SetCurSel(0);
+        SetCaption(m_pComposerTitleList[0]);
+    }
+    else
+    {
+        pComboBox->SetWindowText((const char*)url_string);
+        SetCaption();
+    }
+
+    return pComboBox;
+}
+
+void CDialogURL::OnSelchangeComposerList()
+{
+    if( !m_bInternalChange )
+        SetCaption(m_pComposerTitleList[GetComposerComboBox()->GetCurSel()]);
+}
+
+void CDialogURL::OnChangeComposerLocation()
+{
+    // Any text typed in the edit box invalidates the page title
+    //  show in the dialog caption, but search the title list
+    if( !m_bInternalChange )
+    {
+    	CString csString;
+        CComboBox *pComboBox = GetComposerComboBox();
+        pComboBox->GetWindowText(csString);
+        csString.TrimLeft();
+        csString.TrimRight();
+        char *pCaption = NULL;
+        if( !csString.IsEmpty() )
+        {
+            // Find user-typed string in the combobox
+            //  and set corresponding title
+            int nIndex = pComboBox->FindStringExact(0,csString);
+            if( nIndex >= 0 )
+                pCaption = m_pComposerTitleList[nIndex];
+        }
+        SetCaption(pCaption);
+    }
+}
+
+void CDialogURL::OnOpenInBrowser()
+{
+	CComboBox *pComposerComboBox = GetComposerComboBox();
+    CWnd *pNavComboBox = GetNavComboBox();
+    CString csString;
+    pComposerComboBox->GetWindowText(csString);
+    csString.TrimLeft();
+    csString.TrimRight();
+    if( !csString.IsEmpty() )
+    {
+        m_bInternalChange = TRUE;
+        pNavComboBox->SetWindowText(csString);
+        m_bInternalChange = FALSE;
+    }
+    pComposerComboBox->ShowWindow(SW_HIDE);
+    pNavComboBox->ShowWindow(SW_SHOW);
+}
+
+void CDialogURL::OnOpenInEditor()
+{
+	CComboBox *pComposerComboBox = GetComposerComboBox();
+    CWnd *pNavComboBox = GetNavComboBox();
+    CString csString;
+    pNavComboBox->GetWindowText(csString);
+    csString.TrimLeft();
+    csString.TrimRight();
+    if( !csString.IsEmpty() )
+    {
+        m_bInternalChange = TRUE;
+        pComposerComboBox->SetWindowText(csString);
+        m_bInternalChange = FALSE;
+    }
+    pNavComboBox->ShowWindow(SW_HIDE);
+    pComposerComboBox->ShowWindow(SW_SHOW);
+}
+#endif //EDITOR
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -471,7 +802,6 @@ char * CDialogPASS::DoModal(const char * Msg)
     else    
         return(NULL);
 }
-                                                             
                                                              
 int CDialogPASS::OnInitDialog()
 {

@@ -535,8 +535,9 @@ BOOL CPublishDlg::OnInitDialog()
     CString csURL = m_pCurrentFile ? m_pCurrentFile : m_pCurrentUrl;
     WFE_CondenseURL(csURL, 50, FALSE);
     
-    CString csCaption;
-    csCaption.Format(szLoadString(IDS_PUBLISH_CAPTION), csURL);
+    CString csCaption = szLoadString(IDS_PUBLISH_CAPTION);
+    csCaption += csURL;
+
     // Display the main filepath (or URL) in dialog Caption
     SetWindowText(csCaption);
 
@@ -768,11 +769,11 @@ void CPublishDlg::OnOK()
     m_csLocation.TrimLeft();
     m_csLocation.TrimRight();
     
-    int type = NET_URL_Type((char*)LPCSTR(m_csLocation));
-    if( type == FTP_TYPE_URL  ||
-        type == HTTP_TYPE_URL ||
-        type == SECURE_HTTP_TYPE_URL ){
-
+//    int type = NET_URL_Type((char*)LPCSTR(m_csLocation));
+//    if( type == FTP_TYPE_URL  ||
+//        type == HTTP_TYPE_URL ||
+//        type == SECURE_HTTP_TYPE_URL ){
+    {
         m_csUserName.TrimLeft();
         m_csUserName.TrimRight();
         m_csPassword.TrimLeft();
@@ -785,20 +786,28 @@ void CPublishDlg::OnOK()
         NET_MakeUploadURL( &pLocation, (char*)LPCSTR(m_csLocation), 
                            (char*)LPCSTR(m_csUserName),
                            (char*)LPCSTR(m_csPassword) );
-              
+        int iFilenameOffset = XP_STRLEN(pLocation);
+
+        XP_FREEIF(m_pFullLocation);
         // Add filename to end of location URL for validation
         // This is final string used by Publishing
-        m_pFullLocation = EDT_ReplaceFilename(pLocation, (char*)LPCSTR(m_csFilename), TRUE);
+        m_pFullLocation = EDT_ReplaceFilename(pLocation, (char*)LPCSTR(m_csFilename), FALSE);
         XP_FREEIF(pLocation);
         
-        // HARDTS:        
         // Tell user the URL they are publishing looks like it might be wrong.
         // e.g. ends in a slash or does not have a file extension.
-        // Give the user the option of attempting to publish to the
-        // specified URL even if it looks suspicious.
-        if (!EDT_CheckPublishURL(m_pMWContext,m_pFullLocation)) {
+        // Give the user the option of replacing bad characters with '_'
+        //  ot attempting to publish to the specified URL anyway
+        BOOL bResult = EDT_CheckPublishURL(m_pMWContext, &m_pFullLocation);
+
+        // Reset filename in case we replaced any bad characters
+        // FALSE = strip filename even if there's no extension
+        //  since that may have been the error and we know we appended it
+        SetPublishingControls(m_pFullLocation, FALSE);
+
+        // If user selected "Cancel", then don't publish
+        if( !bResult ) 
             return;
-        }
 
         CListBox * pIncludeListBox = (CListBox*)GetDlgItem(IDC_PUBLISH_OTHER_FILES);
         int iCount = pIncludeListBox->GetSelCount();
@@ -815,12 +824,15 @@ void CPublishDlg::OnOK()
 
         // Construct an array of included files
         //   from just the selected items in listbox
-        if( iCount ){
+        if( iCount )
+        {
             int *pIndexes = (int*)XP_ALLOC(iCount * sizeof(int));
-            if( pIndexes ){
+            if( pIndexes )
+            {
                 pIncludeListBox->GetSelItems(iCount, pIndexes);
                 CString csItem;
-                for( int i=0; i < iCount; i++ ){
+                for( int i=0; i < iCount; i++ )
+                {
                     if( bUseImageList ){
                         // Copy the URL from the original, sorted list of image URLs
                         csItem = m_ppImageList[pIndexes[i]];
@@ -837,12 +849,17 @@ void CPublishDlg::OnOK()
 
         // Don't use CDialog::OnOK() -- it will overwrite our changed m_csLocation
         EndDialog(IDOK);
-    } else {
+    } 
+#if 0
+// Let XP put up error messages
+    else 
+    {
         // Tell user they must use "ftp://" or "http://"
         MessageBox(szLoadString(IDS_BAD_PUBLISH_URL),
                    szLoadString(IDS_PUBLISH_FILES),
                    MB_ICONEXCLAMATION | MB_OK);
     }
+#endif
 }
 
 void CPublishDlg::OnHelp() 
@@ -1046,6 +1063,69 @@ void CPublishDlg::OnSelchangePublishLocation()
     }
 }
 
+void CPublishDlg::SetPublishingControls(char *pFullLocation, BOOL bMustHaveExt)
+{
+    char *pUserName = NULL;
+    char *pPassword = NULL;
+    char *pLocation = NULL;
+    char *pFilename = NULL;
+
+    NET_ParseUploadURL( pFullLocation, &pLocation, 
+                        &pUserName, &pPassword );
+    if( pUserName )
+    {
+        CString csUser = pUserName;
+        csUser.TrimLeft();
+        csUser.TrimRight();
+        if( !csUser.IsEmpty() )
+            m_csUserName = csUser;
+        XP_FREE(pUserName);
+    }
+    if( pPassword )
+    {
+        CString csPassword = pPassword;
+        csPassword.TrimLeft();
+        csPassword.TrimRight();
+        if( !csPassword.IsEmpty() )
+        {
+            m_csPassword = csPassword;
+            PadPassword();
+        }
+        XP_FREE(pPassword);
+    }
+    if( pLocation )
+    {
+        // Extract filename at end of Location
+        // If bMustHaveExt is FALSE, then we are correcting errors,
+        //   so allow filenames without an extension.
+        pFilename = EDT_GetFilename(pLocation, bMustHaveExt);
+
+        char * pDot = pFilename ? strchr(pFilename, '.') : NULL;
+        if( !bMustHaveExt ||
+            (pFilename && *pFilename && pDot &&
+             (0 == stricmp(".htm", pDot) || 0 == stricmp(".html", pDot) || 0 == stricmp(".shtml", pDot))) )
+        {
+            m_csFilename = pFilename;
+            XP_FREE(pFilename);
+
+            // Save version with filename stripped off
+            char * pURL = EDT_ReplaceFilename(pLocation, NULL, bMustHaveExt);
+            m_csLocation = pURL;
+            XP_FREEIF(pURL);
+        } else {
+            m_csLocation = pLocation;
+        }
+        XP_FREE(pLocation);
+
+        // We don't use DDX for this
+        GetDlgItem(IDC_PUBLISH_LOCATION_LIST)->SetWindowText((char*)LPCSTR(m_csLocation));
+    }
+
+
+    // Update Filename, username, and password controls
+    UpdateData(FALSE);
+}
+
 // Parse editfield location into URL, Filename, UserName, and Password
 //  NOTE: Anything found in this Location will override contents of 
 //        individual Filename, UserName, and Password edit boxes
@@ -1054,59 +1134,12 @@ void CPublishDlg::OnKillfocusPublishLocationList()
     // If user included a filename, user name, or password within location string,
     //  use that instead of current edit fields
     UpdateData(TRUE);
-
-    char *pUserName = NULL;
-    char *pPassword = NULL;
-    char *pLocation = NULL;
-    char *pFilename = NULL;
     GetDlgItem(IDC_PUBLISH_LOCATION_LIST)->GetWindowText(m_csLocation);
     m_csLocation.TrimLeft();
     m_csLocation.TrimRight();
-
-    NET_ParseUploadURL( (char*)LPCSTR(m_csLocation), &pLocation, 
-                        &pUserName, &pPassword );
-    if( pUserName ){
-        CString csUser = pUserName;
-        csUser.TrimLeft();
-        csUser.TrimRight();
-        if( !csUser.IsEmpty() ){
-            m_csUserName = csUser;
-        }
-        XP_FREE(pUserName);
-    }
-    if( pPassword ){
-        CString csPassword = pPassword;
-        csPassword.TrimLeft();
-        csPassword.TrimRight();
-        if( !csPassword.IsEmpty() ){
-            m_csPassword = csPassword;
-        }
-        XP_FREE(pPassword);
-    }
-    if( pLocation ){
-        // Extract filename at end of Location
-        //  ONLY if it ends in ".htm" or ".html" or ".shtml"
-        pFilename = EDT_GetFilename(pLocation, TRUE);
-        // Put in check for pFilename to be NULL.  hardts
-        char * pDot = pFilename ? strchr(pFilename, '.') : NULL;
-        if( pFilename && *pFilename && pDot &&
-            (0 == stricmp(".htm", pDot) || 0 == stricmp(".html", pDot) || 0 == stricmp(".shtml", pDot)) ){
-            m_csFilename = pFilename;
-            XP_FREE(pFilename);
-
-            // Save version with filename stripped off
-            char * pURL = EDT_ReplaceFilename(pLocation, NULL, TRUE);
-            m_csLocation = pURL;
-            GetDlgItem(IDC_PUBLISH_LOCATION_LIST)->SetWindowText(pURL);
-            XP_FREEIF(pURL);
-        } else {
-            m_csLocation = pLocation;
-        }
-        XP_FREE(pLocation);
-    }
-
-    // Update Filename, User name, and password controls
-    UpdateData(FALSE);
+    
+    // TRUE = remove a filename ONLY if it has an extension
+    SetPublishingControls((char*)LPCSTR(m_csLocation), TRUE);
 }
 
 void CPublishDlg::OnGetNetcenterLocation() 

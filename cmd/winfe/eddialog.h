@@ -291,6 +291,7 @@ protected:
 #endif
 	DECLARE_MESSAGE_MAP()
 
+    void SetPublishingControls(char *pFullLocation, BOOL bMustHaveExt);
     void PadPassword();
 };
 

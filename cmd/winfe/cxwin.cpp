@@ -2331,8 +2331,11 @@ win_click_callback(MWContext * pContext, LO_Element * pEle, int32 event,
 		
 #ifdef EDITOR
     if( EDT_IS_EDITOR(pWin->GetContext()) ){
-        // Ctrl Click = edit the URL
-        FE_LoadUrl((char*)LPCSTR(csAnchor), LOAD_URL_COMPOSER);
+        // Ctrl Click: Scroll to a target or load the URL into another editor
+        char *pAnchor = (char*)LPCSTR(csAnchor);
+        if( !EDT_ScrollToTarget(pWin->GetContext(), pAnchor) )
+            FE_LoadUrl(pAnchor, LOAD_URL_COMPOSER);
+
     	goto done;
     }
 #endif // EDITOR
@@ -2648,6 +2651,7 @@ CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
 #ifdef EDITOR
     if((uFlags & MK_CONTROL) == 0 && EDT_IS_EDITOR(GetContext())){
         m_pLastImageObject = NULL;
+        // Ctrl is NOT pressed in an editor - we are done
         return;
     }
 #endif
@@ -6361,7 +6365,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
                 //   pressing Ctrl + mouse click will edit the link
                 CString csStatus = (char*)text_struct->anchor_href->anchor;
                 WFE_CondenseURL(csStatus, 40, FALSE);
-                csStatus += szLoadString(IDS_EDIT_LINK_HINT);
+                csStatus += XP_GetString(XP_EDT_LINK_HINT);
                 wfe_Progress(context, csStatus);
                 if( bCtrlPressed )
                 {
@@ -6523,14 +6527,15 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
                 PA_UNLOCK(image_struct->alt);
             }
         }
-        if( !bCursorSet ){
+        // Set special status and cursor for images that are NOT icons
+        if( !bCursorSet )
+        {
             // Image can be dragged from a Browser or from an Editor after it is selected, 
-            //   so if no cursor set above,
-            //   use Open Hand with arrow to indicate "draggability" of the image
-            // Do this for a Browser window ONLY if we have a Composer Window available
-            //   to drag into
+            //   If no cursor set above, use Open Hand with arrow to indicate "draggability" of the image
+            // Do this for a Browser window ONLY if we have a Composer Window available to drag into
             BOOL bHaveEditorWindow = bIsEditor;
-            if( !bHaveEditorWindow )
+            
+            if( !image_struct->is_icon && !bHaveEditorWindow )
             {
                 // Check if there are any editor windows open (either Mail or Page Composer)
                 CGenericFrame * f;
@@ -6545,18 +6550,17 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
                     }
                 }
             }
-
-
+            UINT nID = 0;
             if( !bIsEditor && bHaveEditorWindow || 
-                 (bIsEditor && (image_struct->ele_attrmask & LO_ELE_SELECTED) != 0) )
+                 (bIsEditor && (image_struct->ele_attrmask & LO_ELE_SELECTED) != 0
+                  && !image_struct->is_icon ) )
             {
                 SetCursor(theApp.LoadCursor(IDC_ARROW_HAND));
                 bCursorSet = TRUE;
                 // Display some help on the status line
                 // NOTE: In Browser, there is no Image selection,
                 //   so image can be dragged upon first mouse down
-    	        wfe_Progress(context, XP_GetString(XP_EDT_CLICK_AND_DRAG_IMAGE));
-    	        bTextSet = TRUE;
+                nID = XP_EDT_CLICK_AND_DRAG_IMAGE;
             }
             else if( bIsEditor )
             {
@@ -6564,8 +6568,24 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
                 bCursorSet = TRUE;
     	        // Tell user how to select image
                 // NOTE: Image must be selected before dragging when in Composer
-                wfe_Progress(context, XP_GetString(XP_EDT_CLICK_TO_SELECT_IMAGE));
+                nID = XP_EDT_CLICK_TO_SELECT_IMAGE;
+            }
+            // Show status for image only if not an internal icon
+            if( nID && !image_struct->is_icon )
+            {
+    	        wfe_Progress(context, XP_GetString(nID));
     	        bTextSet = TRUE;
+            }
+        }
+        if( bIsEditor && image_struct->is_icon )
+        {
+            // Display the target name on the status line
+            char *pName = EDT_GetTargetNameFromIcon(image_struct);
+            if( pName )
+            {
+                wfe_Progress(context, pName);
+    	        bTextSet = TRUE;
+                XP_FREE(pName);
             }
         }
     }

@@ -30,6 +30,7 @@ protected:
 
 public:
     CDialogURL(CWnd *pParent, MWContext * context = NULL);
+	virtual ~CDialogURL();
     void SetContext(MWContext * context) {m_Context = context;}
 
     enum { IDD = IDD_OPENURL_BOX };
@@ -43,12 +44,33 @@ protected:
     virtual void OnOK();
     
     afx_msg void OnBrowseForFile();
-	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg int  OnCreate(LPCREATESTRUCT lpCreateStruct);
+    afx_msg void OnChangeNavLocation();
+	afx_msg void OnSelchangeNavList();
 	// Generated message map functions
 	//{{AFX_MSG(CDialogURL)
 	// NOTE: the ClassWizard will add member functions here
 		afx_msg void OnHelp();
 	//}}AFX_MSG
+    
+    BOOL m_bInternalChange;
+    BOOL m_bInitNavComboBox;
+    CComboBox *GetNavComboBox();
+    void SetCaption(char *pPageTitle = NULL);
+    
+#define MAX_HISTORY_LOCATIONS 10
+    char *m_pNavTitleList[MAX_HISTORY_LOCATIONS];
+
+#ifdef EDITOR
+
+    afx_msg void OnOpenInBrowser();
+    afx_msg void OnOpenInEditor();
+	afx_msg void OnSelchangeComposerList();
+    afx_msg void OnChangeComposerLocation();
+    char *m_pComposerTitleList[MAX_HISTORY_LOCATIONS];
+    BOOL  m_bInitComposerComboBox;
+    CComboBox *GetComposerComboBox();
+#endif
 
 	BOOL OnInitDialog();
     DECLARE_MESSAGE_MAP()

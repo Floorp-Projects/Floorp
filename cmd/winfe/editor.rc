@@ -637,7 +637,6 @@ BEGIN
     IDS_SELECT_HTML_EDITOR  "Choose HTML Editor Application"
     IDS_OTHER_HREF_ATTRIBUTES 
                             "Enter any additional attributes, such as Java Script, for the HREF tag.  Carriage returns are ignored."
-    IDS_BAD_PUBLISH_URL     "Publish destination must begin with ""ftp://"" or ""http://"""
     IDS_TARGETS_IN_CURRENT_DOC 
                             "Select a named target in current page (optional):"
     IDS_TARGETS_IN_FILE     "Select a named target in the specified file (optional):"
@@ -723,7 +722,8 @@ BEGIN
     IDS_SELECT_BROWSETO_CAPTION "Choose ""Browse To""  File"
     IDS_NEW_PAGE_TEMPLATE   "New Page From Template"
     IDS_EDITING_TEMPLATE    "You are already editing the chosen template page.\nYour new page will not have the latest changes\nyou made in the template page."
-    IDS_PUBLISH_CAPTION     "Publish: %s"
+    IDS_PUBLISH_CAPTION     "Publish: "
+    IDS_PUBLISH_PAGE        "Publish Page"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -750,7 +750,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_PUBLISH_FILES       "Publish Files"
     IDS_FILE_COUNT_FORMAT   "File %d of %d"
     IDS_UPLOADING_FILE      "Uploading file to remote server:"
     IDS_SAVING_FILE         "Saving file to local disk:"
@@ -864,8 +863,6 @@ BEGIN
     ID_FORMAT_INCREASE_FONTSIZE "Increase font size 1 unit\nIncrease font size"
     ID_FORMAT_DECREASE_FONTSIZE "Decrease font size 1 unit\nDecrease font size"
     IDS_8_PTS                   "8 pts"
-    IDS_EDIT_LINK_HINT           " [Press Ctrl and click to edit link]"
-
 END
 
 #endif    // English (U.S.) resources

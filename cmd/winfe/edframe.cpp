@@ -81,7 +81,7 @@ static UINT BASED_CODE nIDEditBarArray[] =
 {
 	// same order as in the bitmap for toolbar
     ID_EDT_NEW_DOC_BLANK,
-    ID_FILE_OPEN,
+    ID_FILE_OPENURL,
     ID_EDT_FILE_SAVE,
     ID_FILE_PUBLISH,
     ID_OPEN_NAV_WINDOW,
@@ -447,7 +447,7 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, CView *pComma
 			pIToolBar->SetButtons( nIDEditBarArray, EDITBAR_ID_COUNT );
 			// Set menu/toolbar popup styles for specific buttons:
             pIToolBar->SetButtonStyle(ID_EDT_NEW_DOC_BLANK, TB_HAS_TIMED_MENU);
-            pIToolBar->SetButtonStyle(ID_FILE_OPEN, TB_HAS_TIMED_MENU);
+            pIToolBar->SetButtonStyle(ID_FILE_OPENURL, TB_HAS_TIMED_MENU);
             pIToolBar->SetButtonStyle(ID_FILE_PRINT, TB_HAS_TIMED_MENU);
             
             // First pair are actually ignored! Second is bitmap size
