@@ -242,11 +242,13 @@
   </groupbox>
 #ifdef XP_WIN
   <groupbox orient="horizontal">
-     <caption label="&defaultBrowserGroup.label;"/>
-       <description>&makeDefaultText;</description>
-       <spacer flex="1"/>
-       <button label="&defaultBrowserButton.label;"
-               oncommand="makeDefault()"/>
+    <caption label="&defaultBrowserGroup.label;"/>
+      <hbox align="center" flex="1">      
+        <description>&makeDefaultText;</description>
+        <spacer flex="1"/>
+        <button label="&defaultBrowserButton.label;"
+                oncommand="makeDefault()"/>
+      </hbox>
    </groupbox>
 #endif
 </page>
