@@ -41,7 +41,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-
 #PersonalToolbar {
   min-height: 26px;
 }
@@ -51,12 +50,14 @@
 toolbarbutton.bookmark-item {
   min-width: 0;
   max-width: 13em;
-  border: 1px solid transparent !important;
+  padding: 2px 3px;
   color: black !important;
+}
+
+toolbarbutton.bookmark-item:not([container="true"]) {
+  -moz-appearance: none;
   cursor: default;
-  margin-left: -3px;
-  padding-left: 3px;
-  padding-right: 3px
+  border: 1px solid transparent !important;
 }
 
 toolbarbutton.bookmark-item:not([container="true"]):hover {
@@ -68,9 +69,9 @@ toolbarbutton.bookmark-item:not([container="true"]):hover {
   cursor: pointer;
 }
 
-toolbarbutton.bookmark-item:not([container="true"]):hover:active {
-  padding-left: 4px;
-  padding-right: 2px
+toolbarbutton.bookmark-item:hover:active,
+toolbarbutton.bookmark-item[open="true"] {
+  padding: 3px 2px 1px 4px;
 }
 
 .bookmark-item > .toolbarbutton-icon {
@@ -104,6 +105,7 @@ menuitem.bookmark-item {
 }
 
 /* ..... drag and drop styles ..... */
+
 .bookmark-item[dragover-left="true"] {
   -moz-border-left-colors: #000000;
 }
@@ -161,19 +163,15 @@ treechildren:-moz-tree-image(Name, container, group) {
   list-style-image: url("chrome://browser/skin/bookmarks/bookmark-group.gif");
 }
 
-
 /* ::::: primary toolbar buttons ::::: */
 
-toolbarbutton, menubutton {
-  -moz-appearance: none !important;
-}
-
 .toolbarbutton-1 {
+  -moz-appearance: none !important;
+  -moz-box-orient: vertical;
   min-width: 0px;
   padding: 2px 0px !important;
   margin: 0px !important;
   border: 0px !important;
-  -moz-appearance: none !important;
 }
 
 toolbarbutton:not([disabled="true"]):hover,
@@ -181,6 +179,10 @@ menubutton:not([disabled="true"]):hover,
 toolbarbutton:not([disabled="true"]):hover:active,
 menubutton:not([disabled="true"]):hover:active {
   color: black !important;
+}
+
+.toolbarbutton-menubutton-button {
+  -moz-appearance: none !important;
 }
 
 .toolbarbutton-menubutton-stack,
@@ -522,67 +524,33 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
   color: #555566;
 }
 
-.autocomplete-search-box {
-  border-top: 2px groove -moz-Dialog;
-  background-color: -moz-Dialog;
-  color: ButtonText;
-}
-
-.autocomplete-result-popup[nomatch] > .autocomplete-search-box {
-  border-top: 1px solid ThreeDHighlight;
-}
-
-.autocomplete-search-engine {
-  padding: 2px;
-}
-
-.autocomplete-search-engine[menuactive="true"] {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-.autocomplete-search-engine-img {
-  margin-right: 4px;
-}
-
-.autocomplete-history-dropmarker {
-  margin: -1px 3px 0px 1px !important;
-  background: transparent;
-  border: 0px;
-  padding-top: 2px;
-
-  list-style-image: url("chrome://browser/skin/dropmarker.png");
-  -moz-image-region: rect(0 14px 15px 0px) !important;
-  -moz-appearance: none !important;
-}
-
-.autocomplete-history-dropmarker:hover {
-  -moz-image-region: rect(0 29px 15px 15px) !important;
-}
-
-.autocomplete-history-dropmarker[open="true"] {
-  -moz-image-region: rect(0 60px 15px 46px) !important;
-}
-
 /* ::::: go button ::::: */
 
 #go-button,
 #go-container {
-  border: 0px;
-  padding: 0px;
-  margin: 0px;
   -moz-appearance: none !important;
+  margin: 0px;
+  border: none;
+  padding: 0px;
+  min-width: 0;
   list-style-image: url("chrome://browser/skin/go-large.png");
   -moz-image-region: rect(0px 26px 27px 0px) !important;
 }
+
 #go-button:hover {
   -moz-image-region: rect(0px 53px 27px 27px) !important;
 }
+
 #go-button[disabled="true"] {
   -moz-image-region: rect(0px 80px 27px 54px) !important;
 }
+
 #go-button:hover:active {
   -moz-image-region: rect(0px 107px 27px 81px) !important;
+}
+
+#go-button > .button-box {
+  border: none;
 }
 
 #go-button > .button-box > .button-text {
@@ -620,8 +588,6 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
   list-style-image: url("chrome://browser/skin/lock-broken.gif");
   display: -moz-box;
 }
-
-/* --- close button --- */
 
 /* ::::: throbber ::::: */
 
