@@ -77,7 +77,7 @@ namespace JSTypes {
             JSArray* array;
             JSFunction *function;
             JSString *string;
-            const JSType *type;
+            JSType *type;
             bool boolean;
         };
         
@@ -107,7 +107,7 @@ namespace JSTypes {
         explicit JSValue(JSFunction* function) : function(function), tag(function_tag) {}
         explicit JSValue(JSString* string) : string(string), tag(string_tag) {}
         explicit JSValue(bool boolean) : boolean(boolean), tag(boolean_tag) {}
-        explicit JSValue(const JSType* type) : type(type), tag(type_tag) {}
+        explicit JSValue(JSType* type) : type(type), tag(type_tag) {}
 
         int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
         uint32& operator=(uint32 u32)                   { return (tag = u32_tag, this->u32 = u32); }
@@ -117,7 +117,7 @@ namespace JSTypes {
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
         JSString*& operator=(JSString* string)          { return (tag = string_tag, this->string = string); }
         bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
-        const JSType*& operator=(const JSType* type)    { return (tag = type_tag, this->type = type); }
+        const JSType*& operator=(JSType* type)          { return (tag = type_tag, this->type = type); }
         
         bool isFunction() const                         { return (tag == function_tag); }
         bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag) || (tag == type_tag)); }
@@ -184,18 +184,18 @@ namespace JSTypes {
     extern const JSValue kFalse;
     extern const JSValue kNull;
 
-    extern const JSType Any_Type;
-    extern const JSType Integer_Type;
-    extern const JSType Number_Type;
-    extern const JSType Character_Type;
-    extern const JSType String_Type;
-    extern const JSType Function_Type;
-    extern const JSType Array_Type;
-    extern const JSType Type_Type;
-    extern const JSType Boolean_Type;
-    extern const JSType Null_Type;
-    extern const JSType Void_Type;
-    extern const JSType None_Type;
+    extern JSType Any_Type;
+    extern JSType Integer_Type;
+    extern JSType Number_Type;
+    extern JSType Character_Type;
+    extern JSType String_Type;
+    extern JSType Function_Type;
+    extern JSType Array_Type;
+    extern JSType Type_Type;
+    extern JSType Boolean_Type;
+    extern JSType Null_Type;
+    extern JSType Void_Type;
+    extern JSType None_Type;
 
     /**
      * Basic behavior of all JS objects, mapping a name to a value,
