@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS=public src editor
+DIRS=public src editor signonviewer cookieviewer walletpreview
 
 include <$(DEPTH)\config\rules.mak>

@@ -52,7 +52,7 @@ NS_DEF_PTR(nsIDOMWindow);
 PR_STATIC_CALLBACK(JSBool)
 GetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMBrowserAppCore *a = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *a = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -62,7 +62,7 @@ GetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -87,7 +87,7 @@ GetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMBrowserAppCore *a = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *a = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -97,7 +97,7 @@ SetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -152,7 +152,7 @@ ResolveBrowserAppCore(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -200,7 +200,7 @@ BrowserAppCoreBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -248,7 +248,7 @@ BrowserAppCoreForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -296,7 +296,7 @@ BrowserAppCoreStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
@@ -347,7 +347,7 @@ BrowserAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreLoadInitialPage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -390,12 +390,192 @@ BrowserAppCoreLoadInitialPage(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
 
 //
+// Native method WalletPreview
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreWalletPreview(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMWindowPtr b0;
+  nsIDOMWindowPtr b1;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletpreview", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->WalletPreview(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function walletPreview requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CookieViewer
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreCookieViewer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMWindowPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.cookieviewer", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->CookieViewer(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function cookieViewer requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SignonViewer
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreSignonViewer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMWindowPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.signonviewer", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SignonViewer(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function signonViewer requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method WalletEditor
 //
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreWalletEditor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
@@ -452,7 +632,7 @@ BrowserAppCoreWalletEditor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreWalletChangePassword(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -500,7 +680,7 @@ BrowserAppCoreWalletChangePassword(JSContext *cx, JSObject *obj, uintN argc, jsv
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreWalletQuickFillin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
@@ -557,7 +737,7 @@ BrowserAppCoreWalletQuickFillin(JSContext *cx, JSObject *obj, uintN argc, jsval 
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreWalletSamples(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -605,7 +785,7 @@ BrowserAppCoreWalletSamples(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreSetToolbarWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
@@ -662,7 +842,7 @@ BrowserAppCoreSetToolbarWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreSetContentWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
@@ -719,7 +899,7 @@ BrowserAppCoreSetContentWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreSetWebShellWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
@@ -776,7 +956,7 @@ BrowserAppCoreSetWebShellWindow(JSContext *cx, JSObject *obj, uintN argc, jsval 
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreNewWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -824,7 +1004,7 @@ BrowserAppCoreNewWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreOpenWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -872,7 +1052,7 @@ BrowserAppCoreOpenWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCorePrintPreview(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -920,7 +1100,7 @@ BrowserAppCorePrintPreview(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -968,7 +1148,7 @@ BrowserAppCoreCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCorePrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -1016,7 +1196,7 @@ BrowserAppCorePrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -1064,7 +1244,7 @@ BrowserAppCoreClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -1112,7 +1292,7 @@ BrowserAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -1160,7 +1340,7 @@ BrowserAppCoreFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 PR_STATIC_CALLBACK(JSBool)
 BrowserAppCoreFindNext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -1239,6 +1419,9 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"stop",          BrowserAppCoreStop,     0},
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"loadInitialPage",          BrowserAppCoreLoadInitialPage,     0},
+  {"walletPreview",          BrowserAppCoreWalletPreview,     2},
+  {"cookieViewer",          BrowserAppCoreCookieViewer,     1},
+  {"signonViewer",          BrowserAppCoreSignonViewer,     1},
   {"walletEditor",          BrowserAppCoreWalletEditor,     1},
   {"walletChangePassword",          BrowserAppCoreWalletChangePassword,     0},
   {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     1},

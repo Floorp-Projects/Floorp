@@ -528,15 +528,11 @@
 
   function WalletSafeFillin()
   {
-    var walletCore = XPAppCoresManager.Find("WalletCore");
-    if (!walletCore) {
-      walletCore = new WalletCore();
-      if (walletCore) {
-        walletCore.Init("WalletCore");
-      }
-    }
-    if (walletCore) {
-      walletCore.ShowWindow(window, window.frames[0].frames[1]);
+    if (appCore != null) {
+      dump("Wallet Safe Fillin\n");
+      appCore.walletPreview(window, window.frames[0].frames[1]);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
     }
   }
 
@@ -573,29 +569,21 @@
 
   function SignonViewer()
   {
-    var signonCore = XPAppCoresManager.Find("SignonCore");
-    if (!signonCore) {
-      signonCore = new SignonCore();
-      if (signonCore) {
-        signonCore.Init("SignonCore");
-      }
-    }
-    if (signonCore) {
-      signonCore.ShowWindow(window);
+    if (appCore != null) {
+      dump("Signon Viewer\n");
+      appCore.signonViewer(window);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
     }
   }
 
   function CookieViewer()
   {
-    var cookieCore = XPAppCoresManager.Find("CookieCore");
-    if (!cookieCore) {
-      cookieCore = new CookieCore();
-      if (cookieCore) {
-      cookieCore.Init("CookieCore");
-      }
-    }
-    if (cookieCore) {
-      cookieCore.ShowWindow(window);
+    if (appCore != null) {
+      dump("Cookie Viewer\n");
+      appCore.cookieViewer(window);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
     }
   }
 
