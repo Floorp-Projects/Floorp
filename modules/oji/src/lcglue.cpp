@@ -267,7 +267,7 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, v
 }
 
 JS_STATIC_DLL_CALLBACK(jobject)
-get_java_wrapper_impl(JNIEnv *pJNIEnv, jint a_jsobject)
+get_java_wrapper_impl(JNIEnv *pJNIEnv, lcjsobject a_jsobject)
 {
     nsresult       err    = NS_OK;
     jobject  pJSObjectWrapper = NULL;
@@ -287,10 +287,10 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint a_jsobject)
     return pJSObjectWrapper;
 }
 
-JS_STATIC_DLL_CALLBACK(jint)
+JS_STATIC_DLL_CALLBACK(lcjsobject)
 unwrap_java_wrapper_impl(JNIEnv *pJNIEnv, jobject java_wrapper)
 {
-    jint obj = 0;
+    lcjsobject obj = 0;
     nsresult       err    = NS_OK;
     nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &err);
     if (NS_FAILED(err)) return 0;

@@ -56,6 +56,12 @@ JS_BEGIN_EXTERN_C
 #include "jni.h"             /* Java Native Interface */
 #include "jsapi.h"           /* JavaScript engine API */
 
+#if JS_BYTES_PER_LONG == 8
+typedef jlong lcjsobject;
+#else
+typedef jint lcjsobject;
+#endif
+
 /*
  * A JSJavaVM structure is a wrapper around a JavaVM which incorporates
  * additional LiveConnect state.
@@ -146,11 +152,11 @@ typedef struct JSJCallbacks {
     /* This enables liveconnect to ask the VM for a java wrapper so that VM gets a chance to
        store a mapping between a jsobject and java wrapper. So the unwrapping can be done on the
        VM side before calling nsILiveconnect apis. This saves on a round trip request. */
-    jobject             (*get_java_wrapper)(JNIEnv *jEnv, jint jsobject);
+    jobject             (*get_java_wrapper)(JNIEnv *jEnv, lcjsobject jsobj);
 
     /* This allows liveconnect to unwrap a wrapped JSObject that is passed from java to js. 
        This happens when Java code is passing back to JS an object that it got from JS. */
-    jint                (*unwrap_java_wrapper)(JNIEnv *jEnv, jobject java_wrapper);
+    lcjsobject          (*unwrap_java_wrapper)(JNIEnv *jEnv, jobject java_wrapper);
 
     /* The following set of methods abstract over the JavaVM object. */
     JSBool              (*create_java_vm)(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs);

@@ -51,6 +51,7 @@
 #include "nsISupports.h"
 #include "nsIPrincipal.h"
 #include "jni.h"
+#include "jsjava.h" // for lcjsobject
 
 class nsISecureEnv;
 
@@ -90,7 +91,7 @@ public:
 	GetClassPath(const char* *result) = 0;
 
 	NS_IMETHOD
-	GetJavaWrapper(JNIEnv* jenv, jint obj, jobject *jobj) = 0;
+	GetJavaWrapper(JNIEnv* jenv, lcjsobject obj, jobject *jobj) = 0;
 
 	/**
 	 * This creates a new secure communication channel with Java. The second parameter,
@@ -110,7 +111,7 @@ public:
 	SpendTime(PRUint32 timeMillis) = 0;
 
 	NS_IMETHOD
-	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj) = 0;
+	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, lcjsobject* obj) = 0;
 
  	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMPLUGIN_IID)
 };
