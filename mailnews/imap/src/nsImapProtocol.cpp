@@ -1183,15 +1183,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
         ProcessSelectedStateURL();
 
     // The URL has now been processed
-        if (!logonFailed && GetConnectionStatus() < 0)
+      if ((!logonFailed && GetConnectionStatus() < 0) || DeathSignalReceived())
            HandleCurrentUrlError();
-        if (DeathSignalReceived())
-        {
-          HandleCurrentUrlError();
-        }
-        else
-        {
-        }
+        
     }
     else if (!logonFailed)
         HandleCurrentUrlError(); 
@@ -1203,11 +1197,17 @@ PRBool nsImapProtocol::ProcessCurrentURL()
         m_imapMailFolderSink->SetUrlState(this, mailnewsurl, PR_FALSE,
                                              rv);  // we are done with this
                                                       // url.
+        if (NS_FAILED(rv) && DeathSignalReceived())
+        {
+            // doom the cache entry
+            if (m_mockChannel)
+                m_mockChannel->Cancel(rv);
+        }
     }
     else
       NS_ASSERTION(PR_FALSE, "missing url or sink");
 
-  // if we are set up as a channel, we should notify our channel listener that we are starting...
+  // if we are set up as a channel, we should notify our channel listener that we are stopping...
   // so pass in ourself as the channel and not the underlying socket or file channel the protocol
   // happens to be using
     if (m_channelListener) 
@@ -1349,10 +1349,13 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
         case NS_ERROR_NET_TIMEOUT:
             AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
             break;
+        case NS_ERROR_NET_RESET:
+            AlertUserEventUsingId(IMAP_SERVER_DISCONNECTED);
+            killThread = PR_TRUE;
+            break;
         default:
             break;
     }
-
   }
   // if aStatus is successful, but we never saw a greeting, the server
   // must have dropped us while establishing the connection.
@@ -1360,7 +1363,14 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
   {
     AlertUserEventUsingId(IMAP_SERVER_DROPPED_CONNECTION);
   }
-
+  // if the server closes the connection gracefully, aStatus is successful
+  // but the situation may still be unexpected
+  else if (GetConnectionStatus() >= 0 && !DeathSignalReceived())
+  {
+    // alert the user that the connection was closed unexpectedly
+    AlertUserEventUsingId(IMAP_SERVER_DISCONNECTED);
+  }
+  
   PR_CEnterMonitor(this);
   mAsyncReadRequest = nsnull; // don't need to cache this anymore, it's going away
   if (killThread == PR_TRUE) 
@@ -1414,7 +1424,14 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSuppressLoggi
   PRUint32 writeCount = 0; 
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  NS_ENSURE_TRUE(m_channel, NS_ERROR_FAILURE);
+  if (!m_channel)
+  {
+      // the connection died unexpectedly! so clear the open connection flag
+      ClearFlag(IMAP_CONNECTION_IS_OPEN); 
+      TellThreadToDie(PR_FALSE);
+      SetConnectionStatus(-1);
+      return NS_ERROR_FAILURE;
+  }
 
   if (dataBuffer && m_outputStream)
   {
@@ -1429,6 +1446,7 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSuppressLoggi
       // the connection died unexpectedly! so clear the open connection flag
       ClearFlag(IMAP_CONNECTION_IS_OPEN); 
       TellThreadToDie(PR_FALSE);
+      SetConnectionStatus(-1);
     }
   }
 
