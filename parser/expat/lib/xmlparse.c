@@ -2533,14 +2533,6 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
           const char *attStr, TAG_NAME *tagNamePtr,
           BINDING **bindingsPtr)
 {
-/* BEGIN MOZILLA CHANGE (Include xmlns attributes in attributes array) */
-  static const XML_Char xmlnsNamespace[] =
-    { 'h', 't', 't', 'p', ':', '/', '/', 'w', 'w', 'w', '.', 'w', '3', '.',
-      'o', 'r', 'g', '/', '2', '0', '0', '0', '/', 'x', 'm', 'l', 'n', 's',
-      '/', '\0' };
-  static const XML_Char xmlnsPrefix[] =
-    { 'x', 'm', 'l', 'n', 's', '\0' };
-/* END MOZILLA CHANGE */
   DTD * const dtd = _dtd;  /* save one level of indirection */
   ELEMENT_TYPE *elementType;
   int nDefaultAtts;
@@ -2833,7 +2825,16 @@ storeAtts(XML_Parser parser, const ENCODING *enc,
       }
 /* BEGIN MOZILLA CHANGE (Include xmlns attributes in attributes array) */
       else if (s[-1] == 3) { /* xmlns attribute */
+        static const XML_Char xmlnsNamespace[] = {
+          'h', 't', 't', 'p', ':', '/', '/',
+          'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
+          '2', '0', '0', '0', '/', 'x', 'm', 'l', 'n', 's', '/', '\0'
+        };
+        static const XML_Char xmlnsPrefix[] = {
+          'x', 'm', 'l', 'n', 's', '\0'
+        };
         XML_Bool appendXMLNS = XML_TRUE;
+
         ((XML_Char *)s)[-1] = 0;  /* clear flag */
         if (!poolAppendString(&tempPool, xmlnsNamespace)
             || !poolAppendChar(&tempPool, namespaceSeparator))
@@ -2940,6 +2941,28 @@ static enum XML_Error
 addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
            const XML_Char *uri, BINDING **bindingsPtr)
 {
+/* BEGIN MOZILLA CHANGE (backport of bug fix from Expat trunk) */
+  static const XML_Char xmlNamespace[] = {
+    'h', 't', 't', 'p', ':', '/', '/',
+    'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
+    'X', 'M', 'L', '/', '1', '9', '9', '8', '/',
+    'n', 'a', 'm', 'e', 's', 'p', 'a', 'c', 'e', '\0'
+  };
+  static const int xmlLen = 
+    (int)sizeof(xmlNamespace)/sizeof(XML_Char) - 1;
+  static const XML_Char xmlnsNamespace[] = {
+    'h', 't', 't', 'p', ':', '/', '/',
+    'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
+    '2', '0', '0', '0', '/', 'x', 'm', 'l', 'n', 's', '/', '\0'
+  };
+  static const int xmlnsLen = 
+    (int)sizeof(xmlnsNamespace)/sizeof(XML_Char) - 1;
+
+  XML_Bool mustBeXML = XML_FALSE;
+  XML_Bool isXML = XML_TRUE;
+  XML_Bool isXMLNS = XML_TRUE;
+/* END MOZILLA CHANGE */
+
   BINDING *b;
   int len;
 
@@ -2947,8 +2970,41 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
   if (*uri == XML_T('\0') && prefix->name)
     return XML_ERROR_SYNTAX;
 
-  for (len = 0; uri[len]; len++)
-    ;
+/* BEGIN MOZILLA CHANGE (backport of bug fix from Expat trunk) */
+  if (prefix->name
+      && prefix->name[0] == XML_T('x')
+      && prefix->name[1] == XML_T('m')
+      && prefix->name[2] == XML_T('l')) {
+
+    /* Not allowed to bind xmlns */
+    if (prefix->name[3] == XML_T('n')
+        && prefix->name[4] == XML_T('s')
+        && prefix->name[5] == XML_T('\0'))
+      return XML_ERROR_RESERVED_PREFIX_XMLNS;
+
+    if (prefix->name[3] == XML_T('\0'))
+      mustBeXML = XML_TRUE;
+  }
+
+  for (len = 0; uri[len]; len++) {
+    if (isXML && (len > xmlLen || uri[len] != xmlNamespace[len]))
+      isXML = XML_FALSE;
+
+    if (!mustBeXML && isXMLNS 
+        && (len > xmlnsLen || uri[len] != xmlnsNamespace[len]))
+      isXMLNS = XML_FALSE;
+  }
+  isXML = isXML && len == xmlLen;
+  isXMLNS = isXMLNS && len == xmlnsLen;
+
+  if (mustBeXML != isXML)
+    return mustBeXML ? XML_ERROR_RESERVED_PREFIX_XML
+                     : XML_ERROR_RESERVED_NAMESPACE_URI;
+
+  if (isXMLNS)
+    return XML_ERROR_RESERVED_NAMESPACE_URI;
+/* END MOZILLA CHANGE */
+
   if (namespaceSeparator)
     len++;
   if (freeBindingList) {
