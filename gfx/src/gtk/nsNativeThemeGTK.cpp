@@ -86,6 +86,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   mMaxPosAtom = do_GetAtom("maxpos");
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
+  memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
 
   // Look up the symbol for gtk_style_get_prop_experimental
   PRLibrary* gtkLibrary;
@@ -205,6 +206,33 @@ static void SetWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType)
   aDisabledVector[aWidgetType >> 3] |= (1 << (aWidgetType & 7));
 }
 
+static inline PRUint16
+GetWidgetStateKey(PRUint8 aWidgetType, GtkWidgetState *aWidgetState)
+{
+  return (aWidgetState->active |
+          aWidgetState->focused << 1 |
+          aWidgetState->inHover << 2 |
+          aWidgetState->disabled << 3 |
+          aWidgetState->isDefault << 4 |
+          aWidgetType << 5);
+}
+
+static PRBool IsWidgetStateSafe(PRUint8* aSafeVector,
+                                PRUint8 aWidgetType,
+                                GtkWidgetState *aWidgetState)
+{
+  PRUint8 key = GetWidgetStateKey(aWidgetType, aWidgetState);
+  return aSafeVector[key >> 3] & (1 << (key & 7));
+}
+
+static void SetWidgetStateSafe(PRUint8 *aSafeVector,
+                               PRUint8 aWidgetType,
+                               GtkWidgetState *aWidgetState)
+{
+  PRUint8 key = GetWidgetStateKey(aWidgetType, aWidgetState);
+  aSafeVector[key >> 3] |= (1 << (key & 7));
+}
+
 PRBool
 nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                                        GtkThemeWidgetType& aGtkWidgetType,
@@ -222,14 +250,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
 
       PRInt32 eventState = GetContentState(aFrame);
 
-      aState->active = (eventState & NS_EVENT_STATE_ACTIVE);
+      aState->active = ((eventState & NS_EVENT_STATE_ACTIVE) == NS_EVENT_STATE_ACTIVE);
 
       if (aWidgetType == NS_THEME_TEXTFIELD ||
           aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
           aWidgetType == NS_THEME_RADIO_CONTAINER)
         aState->focused = CheckBooleanAttr(aFrame, mFocusedAtom);
       else
-        aState->focused = (eventState & NS_EVENT_STATE_FOCUS);
+        aState->focused = ((eventState & NS_EVENT_STATE_FOCUS) == NS_EVENT_STATE_FOCUS);
 
       if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
           aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
@@ -241,7 +269,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         aState->maxpos = CheckIntegerAttr(tmpFrame, mMaxPosAtom);
       }
 
-      aState->inHover = (eventState & NS_EVENT_STATE_HOVER);
+      aState->inHover = ((eventState & NS_EVENT_STATE_HOVER) == NS_EVENT_STATE_HOVER);
       aState->disabled = IsDisabled(aFrame);
       aState->isDefault = FALSE; // XXX fix me
       aState->canDefault = FALSE; // XXX fix me
@@ -398,27 +426,35 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
                "Trying to render an unsafe widget!");
 
-  gLastXError = 0;
-  XErrorHandler oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
+  PRBool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
+  XErrorHandler oldHandler;
+  if (!safeState) {
+    gLastXError = 0;
+    oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
+  }
 
   moz_gtk_widget_paint(gtkWidgetType, window, &gdk_rect, &gdk_clip, &state,
                        flags);
 
-  gdk_flush();
-  XSetErrorHandler(oldHandler);
+  if (!safeState) {
+    gdk_flush();
+    XSetErrorHandler(oldHandler);
 
-  if (gLastXError) {
+    if (gLastXError) {
 #ifdef DEBUG
-    printf("GTK theme failed for widget type %d, error was %d, state was "
-           "[active=%d,focused=%d,inHover=%d,disabled=%d]\n",
-           aWidgetType, gLastXError, state.active, state.focused,
-           state.inHover, state.disabled);
+      printf("GTK theme failed for widget type %d, error was %d, state was "
+             "[active=%d,focused=%d,inHover=%d,disabled=%d]\n",
+             aWidgetType, gLastXError, state.active, state.focused,
+             state.inHover, state.disabled);
 #endif
-    NS_WARNING("GTK theme failed; disabling unsafe widget");
-    SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
-    // force refresh of the window, because the widget was not
-    // successfully drawn it must be redrawn using the default look
-    RefreshWidgetWindow(aFrame);
+      NS_WARNING("GTK theme failed; disabling unsafe widget");
+      SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
+      // force refresh of the window, because the widget was not
+      // successfully drawn it must be redrawn using the default look
+      RefreshWidgetWindow(aFrame);
+    } else {
+      SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
+    }
   }
 
   return NS_OK;
