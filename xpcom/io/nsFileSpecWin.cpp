@@ -19,7 +19,8 @@
 //	This file is included by nsFileSpec.cp, and includes the Windows-specific
 //	implementations.
 
-#include <stat.h>
+#include <sys/stat.h>
+#include <direct.h>
 
 //----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::Canonify(char*& ioPath, bool inMakeDirs)
@@ -27,7 +28,6 @@ void nsFileSpecHelpers::Canonify(char*& ioPath, bool inMakeDirs)
 //----------------------------------------------------------------------------------------
 {
 	NS_NOTYETIMPLEMENTED("Please, some Winhead please write this!");
-    return ioPath;
 }
 
 //----------------------------------------------------------------------------------------
@@ -106,16 +106,18 @@ bool nsNativeFileSpec::Exists() const
 bool nsNativeFileSpec::IsFile() const
 //----------------------------------------------------------------------------------------
 {
-	struct stat st;
-	return 0 == stat(mPath, &st) && S_ISREG(st.st_mode); 
+//	struct stat st;
+//	return 0 == stat(mPath, &st) && S_ISREG(st.st_mode); 
+  return 0;
 } // nsNativeFileSpec::IsFile
 
 //----------------------------------------------------------------------------------------
 bool nsNativeFileSpec::IsDirectory() const
 //----------------------------------------------------------------------------------------
 {
-	struct stat st;
-	return 0 == stat(mPath, &st) && S_ISDIR(st.st_mode); 
+//	struct stat st;
+//	return 0 == stat(mPath, &st) && S_ISDIR(st.st_mode); 
+  return 0;
 } // nsNativeFileSpec::IsDirectory
 
 //----------------------------------------------------------------------------------------
@@ -141,12 +143,12 @@ void nsNativeFileSpec::operator += (const char* inRelativePath)
 } // nsNativeFileSpec::operator +=
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::CreateDirectory()
+void nsNativeFileSpec::CreateDirectory(int mode)
 //----------------------------------------------------------------------------------------
 {
 	// Note that mPath is canonical!
 	NS_NOTYETIMPLEMENTED("Please, some Winhead please fix this!");
-	mkdir(mPath, mode);
+	mkdir(mPath);
 } // nsNativeFileSpec::CreateDirectory
 
 //----------------------------------------------------------------------------------------
@@ -159,7 +161,7 @@ void nsNativeFileSpec::Delete(bool inRecursive)
 	    {
 			for (nsDirectoryIterator i(*this); i; i++)
 			{
-				const nsNativeFileSpec& child = (nsNativeFileSpec&)i;
+				nsNativeFileSpec& child = (nsNativeFileSpec&)i;
 				child.Delete(inRecursive);
 			}		
 	    }
