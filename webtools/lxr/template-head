@@ -69,7 +69,7 @@ function js_file_menu(file,d) {
  BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
 
 <P>
-<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
  <TR>
   <TD ALIGN=LEFT VALIGN=CENTER>
    <A HREF="http://www.mozilla.org/">Mozilla</A>
@@ -80,22 +80,22 @@ function js_file_menu(file,d) {
    <TABLE CELLPADDING=0 CELLSPACING=0>
     <TR>
      <TD NOWRAP ID="ident">
-      <FORM METHOD=GET ACTION="/mozilla/ident">
-       <A HREF="/mozilla/ident">Id</A>:
+      <FORM METHOD=GET ACTION="/webtools/lxr/ident">
+       <A HREF="/webtools/lxr/ident">Id</A>:
        <INPUT TYPE=TEXT NAME="i" VALUE="" SIZE=6>
        <INPUT TYPE=SUBMIT VALUE="Find">
       </FORM>
      </TD>
      <TD NOWRAP ID="string">
-      <FORM METHOD=GET ACTION="/mozilla/search">
-       <A HREF="/mozilla/search">Glimpse</A>:
+      <FORM METHOD=GET ACTION="/webtools/lxr/search">
+       <A HREF="/webtools/lxr/search">Glimpse</A>:
        <INPUT TYPE=TEXT NAME="string" VALUE="" SIZE=6>
        <INPUT TYPE=SUBMIT VALUE="Find">
       </FORM>
      </TD>
      <TD NOWRAP ID="find">
-      <FORM METHOD=GET ACTION="/mozilla/find">
-       <A HREF="/mozilla/find">File</A>:
+      <FORM METHOD=GET ACTION="/webtools/lxr/find">
+       <A HREF="/webtools/lxr/find">File</A>:
        <INPUT TYPE=TEXT NAME="string" VALUE="" SIZE=6>
        <INPUT TYPE=SUBMIT VALUE="Find">
       </FORM>
