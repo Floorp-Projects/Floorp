@@ -901,6 +901,23 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   nsTableFrame* tableFirstInFlow = (nsTableFrame*)tableFrame->GetFirstInFlow();
   PRBool isAutoLayout = tableFrame->IsAutoLayout();
   PRBool needToNotifyTable = PR_TRUE;
+  // If the incremental reflow command is a StyleChanged reflow and
+  // it's target is the current frame, then make sure we send
+  // StyleChange reflow reasons down to the children so that they
+  // don't over-optimize their reflow.
+  
+  nsIFrame* target = nsnull;
+  PRBool notifyStyleChange = PR_FALSE;
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    aReflowState.reflowCommand->GetTarget(target);
+    if (this == target) {
+      nsIReflowCommand::ReflowType type;
+      aReflowState.reflowCommand->GetType(type);
+      if (nsIReflowCommand::StyleChanged == type) {
+        notifyStyleChange = PR_TRUE;
+      }
+    }
+  }
   // Reflow each of our existing cell frames
   nsIFrame* kidFrame = iter.First();
   while (kidFrame) {
@@ -962,7 +979,8 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
             (eReflowReason_StyleChange == aReflowState.reason)        ||
             isPaginated                                               ||
             (aReflowState.mFlags.mSpecialTableReflow && cellFrame->NeedSpecialReflow()) ||
-            HasPctHeight()) {
+            HasPctHeight() ||
+            notifyStyleChange ){
           // Reflow the cell to fit the available width, height
           nsSize  kidAvailSize(availColWidth, aReflowState.availableHeight);
           nsReflowReason reason = eReflowReason_Resize;
@@ -974,6 +992,10 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
             cellToWatch = PR_TRUE;
           }
           else if (eReflowReason_StyleChange == aReflowState.reason) {
+            reason = eReflowReason_StyleChange;
+            cellToWatch = PR_TRUE;
+          }
+          else if (notifyStyleChange) {
             reason = eReflowReason_StyleChange;
             cellToWatch = PR_TRUE;
           }
@@ -1122,11 +1144,10 @@ nsTableRowFrame::IR_TargetIsMe(nsIPresContext*          aPresContext,
   nsIReflowCommand::ReflowType type;
   aReflowState.reflowCommand->GetType(type);
   switch (type) {
-    case nsIReflowCommand::ReflowDirty: {
+    case nsIReflowCommand::ReflowDirty: 
       // Reflow the dirty child frames. Typically this is newly added frames.
       rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus, PR_TRUE);
       break;
-    }
     case nsIReflowCommand::StyleChanged :
       rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus);
       break;
@@ -1154,6 +1175,7 @@ nsTableRowFrame::IR_StyleChanged(nsIPresContext*          aPresContext,
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
   aTableFrame.SetNeedStrategyInit(PR_TRUE);
+  rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, aTableFrame, aStatus, PR_FALSE);
   return rv;
 }
 
