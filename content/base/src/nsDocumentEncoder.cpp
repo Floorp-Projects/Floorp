@@ -75,9 +75,6 @@
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID,
-                     NS_ICHARSETCONVERTERMANAGER_CID);
-
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
 enum nsRangeIterationDirection {

@@ -58,7 +58,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 // PrintOptions is now implemented by PrintSettingsService
 static const char sPrintSettingsServiceContractID[] = "@mozilla.org/gfx/printsettings-service;1";
@@ -180,11 +179,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 // New PrintPreview
 static NS_DEFINE_CID(kPrintPreviewContextCID,  NS_PRINT_PREVIEW_CONTEXT_CID);
-
-static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
-static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
 static NS_DEFINE_CID(kPrintContextCID,  NS_PRINTCONTEXT_CID);
-static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
 
 //-----------------------------------------------------
 // PR LOGGING
