@@ -23,7 +23,7 @@
 #   Neil Rashbrook <neil@parkwaycc.co.uk> (ass'td polish fix)
 
 <?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?>
-
+<?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -546,17 +546,14 @@
                id="quoteButton" label="&quoteButton.label;" 
                tooltiptext="&quoteButton.tooltip;" 
                command="cmd_quoteMessage"/>
-
     <toolbarbutton id="cut-button" class="toolbarbutton-1"
                    label="&cutCmd.label;"
                    command="cmd_cut"
                    tooltiptext="&cutButton.tooltip;"/>
-
     <toolbarbutton id="copy-button" class="toolbarbutton-1"
                    label="&copyCmd.label;"
                    command="cmd_copy"
                    tooltiptext="&copyButton.tooltip;"/>
-
     <toolbarbutton id="paste-button" class="toolbarbutton-1"
                    label="&pasteCmd.label;"
                    command="cmd_paste"
