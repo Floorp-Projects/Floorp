@@ -150,7 +150,9 @@ public:
 		virtual long 		HandlePositionToOffset(Point aPoint,short* regionClass);
 		virtual nsresult 	HandleOffsetToPosition(long offset,Point* position);
 		virtual nsresult	HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
+		virtual nsresult	UnicodeHandleUpdateInputArea(PRUnichar* text, long charCount, long fixedLength,TextRangeArray* textRangeArray);
 		virtual nsresult	ResetInputState();
+		virtual PRBool		HandleUKeyEvent(PRUnichar* text, long charCount, EventRecord& aOSEvent);
 		
 		//
 		// Synthetic events, generated internally to do things at specific times and
@@ -162,7 +164,9 @@ public:
 		 
 protected:
 #if 1
-		virtual void			InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message);
+		virtual void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, 
+                              nsWindow* aFocusedWidget, PRUint32 aMessage, 
+                              PRBool* aIsChar=nsnull, PRBool aConvertChar=PR_TRUE);
 		virtual PRBool		IsSpecialRaptorKey(UInt32 macKeyCode);
 		virtual PRUint32	ConvertKeyEventToUnicode(EventRecord& aOSEvent);
 #endif
@@ -194,7 +198,6 @@ protected:
 	nsPoint 		mIMEPos;
 	PRBool				mIMEIsComposing;
 	nsAutoString		*mIMECompositionStr;
-
 };
 
 #endif // MacMacEventHandler_h__

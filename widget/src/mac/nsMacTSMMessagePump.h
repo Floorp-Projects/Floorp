@@ -63,9 +63,12 @@ private:
 	static pascal OSErr PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
 	static pascal OSErr OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
 	static pascal OSErr UpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
+	static pascal OSErr UnicodeUpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
+	static pascal OSErr UnicodeNotFromInputMethodHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon);
 	static AEEventHandlerUPP mPos2OffsetUPP;
 	static AEEventHandlerUPP mOffset2PosUPP;
 	static AEEventHandlerUPP mUpdateUPP;
+	static AEEventHandlerUPP mKeyboardUPP;
 	
 	static nsMacTSMMessagePump* gSingleton;
 
