@@ -61,8 +61,12 @@ PRUint32  nsTextHelper::SetText(const nsString &aText)
 
 PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
 { 
-   // NOT IMPLEMENTED
-  return(0);
+  nsString currentText;
+  GetText(currentText, 256);
+  nsString newText(aText);
+  currentText.Insert(newText, aStartPos, aText.Length());
+  SetText(currentText);
+  return(aText.Length());
 }
 
 void  nsTextHelper::RemoveText()
@@ -102,11 +106,18 @@ void  nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 
 void  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
 {
+  SetSelection(aPosition, aPosition);
 }
 
 PRUint32  nsTextHelper::GetCaretPosition()
 {
-  return(0);
+  PRUint32 start;
+  PRUint32 end;
+  GetSelection(&start, &end);
+  if (start == end) {
+    return start;
+  }
+  return -1;
 }
 
 //-------------------------------------------------------------------------
