@@ -43,12 +43,13 @@
 #include "nsIPluginTagInfo.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIJVMPluginTagInfo.h"
-
+#include "nsPIPluginInstancePeer.h"
 
 class nsPluginInstancePeerImpl : public nsIPluginInstancePeer2,
                                  public nsIWindowlessPluginInstancePeer,
                                  public nsIPluginTagInfo2,
-                                 public nsIJVMPluginTagInfo
+                                 public nsIJVMPluginTagInfo,
+                                 public nsPIPluginInstancePeer
 								
 {
 public:
@@ -171,14 +172,17 @@ public:
   NS_IMETHOD
   GetMayScript(PRBool *result);
 
+  // nsPIPluginInstancePeer interface
+
+  NS_IMETHOD
+  GetOwner(nsCOMPtr<nsIPluginInstanceOwner> &aOwner);
+
   //locals
 
   nsresult Initialize(nsIPluginInstanceOwner *aOwner,
                       const nsMIMEType aMimeType);
 
   nsresult SetOwner(nsIPluginInstanceOwner *aOwner);
-
-  nsresult GetOwner(nsIPluginInstanceOwner *&aOwner);
 
 private:
   nsIPluginInstance       *mInstance; //we don't add a ref to this
