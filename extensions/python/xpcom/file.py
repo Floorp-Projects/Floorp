@@ -62,9 +62,13 @@ def LocalFileToURL(localFileName):
           .createInstance(components.interfaces.nsILocalFile)
     localFile.initWithPath(localFileName)
 
-    # Create a standard URL, but we QI for the FileURL interface!
-    url = components.classes["@mozilla.org/network/standard-url;1"] \
-          .createInstance(components.interfaces.nsIFileURL)
+    # Use the IO Service to create the interface
+    # Or not - I don't know - I give up.
+    io_service = components.classes["@mozilla.org/network/io-service;1"] \
+                    .getService(components.interfaces.nsIIOService)
+    url = io_service.newFileURI(localFile).queryInterface(components.interfaces.nsIFileURL)
+#    url = components.classes["@mozilla.org/network/standard-url;1"] \
+#          .createInstance(components.interfaces.nsIFileURL)
     # Setting the "file" attribute causes initialization...
     url.file = localFile
     return url

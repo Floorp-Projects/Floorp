@@ -22,12 +22,9 @@ import factory
 import module
 
 import glob, os, types
+import traceback
 
 from xpcom.client import Component
-
-fileSizeValueName = "FileSize"
-lastModValueName = "LastModTimeStamp"
-xpcomKeyName = "software/mozilla/XPCOM/components"
 
 # Until we get interface constants.
 When_Startup = 0
@@ -100,17 +97,6 @@ class PythonComponentLoader:
 
     def init(self, comp_mgr, registry):
         # void
-        registry = registry.QueryInterface(components.interfaces.nsIRegistry)
-        try:
-            self.xpcom_registry_key = registry.getSubtree(
-                            components.interfaces.nsIRegistry.Common,
-                            xpcomKeyName)
-            # If we worked, we can use the registry!
-            self.registry = registry
-        except xpcom.Exception, details:
-            print "Registry failed", details
-            self.registry = None # no registry ops allowed
-
         self.comp_mgr = comp_mgr
         if xpcom.verbose:
             print "Python component loader init() called"
@@ -124,8 +110,8 @@ class PythonComponentLoader:
 
     def autoRegisterComponents (self, when, directory):
         directory_path = directory.path
-        print "Auto-registering all Python components in", directory_path
-        import traceback
+        if xpcom.verbose:
+            print "Auto-registering all Python components in", directory_path
 
         # ToDo - work out the right thing here
         # eg - do we recurse?
@@ -157,29 +143,28 @@ class PythonComponentLoader:
     def autoRegisterComponent (self, when, componentFile):
         # bool return
         
-        reg_loc = components.manager.registryLocationForSpec(componentFile)
-        # Use the registry to see if we actually need to do anything
-        if not self._hasChanged(reg_loc, componentFile):
+        # Check if we actually need to do anything
+        modtime = componentFile.lastModifiedTime
+        loader_mgr = components.manager.queryInterface(components.interfaces.nsIComponentLoaderManager)
+        if not loader_mgr.hasFileChanged(componentFile, None, modtime):
             return 1
-
-        # Sheesh - it appears we should also use the observer service
-        # to let the system know of our auto-register progress.
 
         # auto-register via the module.
         m = self._getCOMModuleForLocation(componentFile)
-        m.registerSelf(components.manager, componentFile, reg_loc, self._reg_component_type_)
-        self._setRegistryInfo(reg_loc, componentFile)
+        m.registerSelf(components.manager, componentFile, None, self._reg_component_type_)
+        loader_mgr = components.manager.queryInterface(components.interfaces.nsIComponentLoaderManager)
+        loader_mgr.saveFileInfo(componentFile, None, modtime)
         return 1
 
     def autoUnregisterComponent (self, when, componentFile):
         # bool return
         # auto-unregister via the module.
         m = self._getCOMModuleForLocation(componentFile)
-        reg_loc = components.manager.registryLocationForSpec(componentFile)
+        loader_mgr = components.manager.queryInterface(components.interfaces.nsIComponentLoaderManager)
         try:
-            m.unregisterSelf(components.manager, componentFile, reg_loc)
+            m.unregisterSelf(components.manager, componentFile)
         finally:
-            self._removeRegistryInfo( reg_loc, componentFile)
+            loader_mgr.removeFileInfo(componentFile, None)
         return 1
 
     def registerDeferredComponents (self, when):
@@ -190,46 +175,8 @@ class PythonComponentLoader:
     def unloadAll (self, when):
         if xpcom.verbose:
             print "Python component loader being asked to unload all components!"
-        self.registry = None
         self.comp_mgr = None
         self.com_modules = {}
-    # Internal Helpers
-    def _setRegistryInfo(self, registry_location, nsIFile):
-        if self.registry is None:
-            return # No registry work allowed.
-        e_location = self.registry.escapeKey(registry_location, 1)
-        if e_location is None: # No escaped key needed.
-            e_location = registry_location
-        key = self.registry.addSubtreeRaw(self.xpcom_registry_key, e_location)
-        self.registry.setLongLong(key, lastModValueName, nsIFile.lastModifiedTime)
-        self.registry.setLongLong(key, fileSizeValueName, nsIFile.fileSize)
-    def _hasChanged(self, registry_location, nsIFile):
-        if self.registry is None:
-            # Can't cache in registry - assume it has changed.
-            return 1
-        e_location = self.registry.escapeKey(registry_location, 1)
-        if e_location is None: # No escaped key needed.
-            e_location = registry_location
-        try:
-            key = self.registry.getSubtreeRaw(self.xpcom_registry_key, e_location)
-            if nsIFile.lastModifiedTime != self.registry.getLongLong(key, lastModValueName):
-                return 1
-            if nsIFile.fileSize != self.registry.getLongLong(key, fileSizeValueName):
-                return 1
-            return 0
-        except xpcom.Exception, details:
-            return 1
-
-    def _removeRegistryInfo(self, registry_location, nsIFile):
-        if self.registry is None:
-            return # No registry work allowed.
-        e_location = self.registry.escapeKey(registry_location, 1)
-        if e_location is None: # No escaped key needed.
-            e_location = registry_location
-        try:
-            key = self.registry.removeSubtreeRaw(self.xpcom_registry_key, e_location)
-        except xpcom.Exception, details:
-            pass
 
 def MakePythonComponentLoaderModule(serviceManager, nsIFile):
     import module

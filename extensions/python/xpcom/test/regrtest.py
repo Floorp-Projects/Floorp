@@ -24,6 +24,10 @@ import sys
 import test.regrtest # The standard Python test suite.
 
 path = os.path.abspath(os.path.split(sys.argv[0])[0])
+# This sucks - python now uses "test." - so to worm around this,
+# we append our test path to the test packages!
+test.__path__.append(path)
+
 tests = []
 for arg in sys.argv[1:]:
     if arg[0] not in "-/":
