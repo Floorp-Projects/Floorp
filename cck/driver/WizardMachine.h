@@ -137,7 +137,10 @@ typedef struct NODE
 	BOOL isWidgetsSorted;
 }NODE;
 //NODE WizardTree;
+void CreateRshell();
+//extern WIDGET GlobalWidgetArray[1000];
 
+//extern int GlobalArrayIndex;
 
 /////////////////////////////////////////////////////////////////////////////
 // CWizardMachineApp:

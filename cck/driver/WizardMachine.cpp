@@ -65,7 +65,7 @@ NODE *WizardTree;
 NODE *CurrentNode;
 WIDGET GlobalWidgetArray[1000];
 
-int GlobalArrayIndex=0;
+int GlobalArrayIndex;
 int CurrentPageBaseIndex=100;
 
 CString Path;
@@ -81,6 +81,10 @@ extern CSingleLock prevLock;
 extern BOOL isBuildInstaller;
 //Output file pointer for QA purposes
 FILE *out, *globs;
+//CString CWizardMachineApp::GetGlobal(CString theName);
+//BOOL CWizardMachineApp::SetGlobal(CString theName, CString theValue);
+//CString CWizardMachineApp::GetGlobalOptions(CString theName);
+//WIDGET* CWizardMachineApp::findWidget(char *theName);
 
 /////////////////////////////////////////////////////////////////////////////
 // CWizardMachineApp initialization
@@ -250,6 +254,7 @@ BOOL CWizardMachineApp::InitInstance()
 
 	if (PageReturnValue == ID_WIZFINISH)
 	{
+		CreateRshell();
 		if (!isBuildInstaller) {
 			theApp.CreateNewCache();
 
