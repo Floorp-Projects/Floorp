@@ -133,7 +133,7 @@ bugzilla.mozilla.org.
   properly inaccessible or confidential information might become
   available to enterprising individuals.  This includes the
   localconfig file, the entire shadow directory and the entire
-  data directory except for data/quips.
+  data directory except for data/comments (the quips file).
   (bug 65572)
 - Renaming or removing keywords will not update the "keyword
   cache", and queries on keywords may not work properly, until
