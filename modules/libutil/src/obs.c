@@ -20,12 +20,7 @@
  * Contributor(s): 
  */
 
-#if 0
-#include "platform.h"
-#include "coremem.h"
-#else
 #include "prmem.h"
-#endif
 
 #include "xp_obs.h"
 #include "prclist.h"

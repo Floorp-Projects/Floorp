@@ -86,7 +86,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIHTMLContent.h"
 #include "nsIDOMHTMLInputElement.h"
 
-#include "net.h"
 #include "xp_file.h"
 #include "prio.h"
 #include "prmem.h"
