@@ -1274,6 +1274,11 @@ nsGlobalHistory::MarkPageAsTyped(const char* aURL)
   return SetRowValue(row, kToken_TypedColumn, 1);
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::OutputReferrerURL(const char* aURL, const char* aReferrer)
+{
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 //
