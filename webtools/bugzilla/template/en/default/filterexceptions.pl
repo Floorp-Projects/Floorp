@@ -471,9 +471,8 @@
 
 'attachment/diff-header.html.tmpl' => [
   'attachid',
+  'id',
   'bugid',
-  'old_url',
-  'new_url',
   'oldid',
   'newid',
   'style',

@@ -24,7 +24,7 @@
   # relations can change and screw up the javascript for restoring, collapsing
   # and expanding.  Do not change without testing all three of those.
   #%]
-<table class="file_table"><thead><tr><td class="file_head" colspan="2"><a style="text-decoration: none" href="#" onclick="return twisty_click(this)">[% collapsed ? '(+)' : '(-)' %]</a><input type="checkbox" name="[% file.filename FILTER html %]"[% collapsed ? '' : ' checked' %] style="display: none"> 
+<table class="file_table"><thead><tr><td class="file_head" colspan="2"><a href="#" onclick="return twisty_click(this)">[% collapsed ? '(+)' : '(-)' %]</a><input type="checkbox" name="[% file.filename FILTER html %]"[% collapsed ? '' : ' checked' %] style="display: none"> 
   [% IF lxr_prefix && !file.is_add %]
     <a href="[% lxr_prefix %]">[% file.filename FILTER html %]</a>
   [% ELSE %]
@@ -76,7 +76,7 @@ incremental_restore()
     &nbsp;&nbsp;[% section.func_info FILTER html IF section.func_info %]
   [% END %] 
     </th><th>
-  <a name="[% file.filename FILTER html %]_sec[% section_num %]"><a href="#[% file.filename FILTER html %]_sec[% section_num %]">Link&nbsp;Here</a></a>&nbsp;
+  <a name="[% file.filename FILTER html %]_sec[% section_num %]" href="#[% file.filename FILTER html %]_sec[% section_num %]">Link&nbsp;Here</a>&nbsp;
     </th></tr></table>
   </th></tr>
   [% FOREACH group = section.groups %]

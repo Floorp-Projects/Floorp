@@ -25,60 +25,77 @@
 
 [% title = BLOCK %]
   [% IF attachid %]
-Attachment #[% attachid %] for [% terms.Bug %] #[% bugid %]
+Attachment #[% attachid %] for [% terms.bug %] #[% bugid %]
   [% ELSE %]
-Interdiff of #[% oldid %] and #[% newid %] for #[% terms.Bug %] #[% bugid %]
+Interdiff of #[% oldid %] and #[% newid %] for #[% terms.bug %] #[% bugid %]
   [% END %]
 [% END %]
 
 [% style = BLOCK %]
 .file_head {
-  font-size: x-large;
   font-weight: bold;
-  background-color: #d3d3d3;
+  font-size: 1em;
+  background-color: #c3c3c3;
   border: 1px solid black;
   width: 100%;
 }
+
+.file_head a {
+  text-decoration: none; 
+  font-family: monospace; 
+  font-size: 1.1em;
+}
+
 .file_collapse {
   display: none;
 }
+
 .section_head {
   width: 100%;
-  font-weight: bold;
-  background-color: #d3d3d3;
+  background-color: #f0f0f0;
   border: 1px solid black;
   text-align: left;
 }
+
 table.file_table {
   table-layout: fixed;
   width: 100%;
   empty-cells: show;
   border-spacing: 0px;
   border-collapse: collapse;
+  /* draw border below last open context section in listing */
+  border-bottom: 1px solid black;
 }
+
 tbody.file td {
   border-left: 1px dashed black;
   border-right: 1px dashed black;
   width: 50%;
 }
+
 tbody.file pre {
   display: inline;
   white-space: -moz-pre-wrap;
   font-size: 0.9em;
 }
+
 tbody.file pre:empty {
   display: block;
   height: 1em;
 }
+
 .changed {
   background-color: lightblue;
 }
+
 .added {
   background-color: lightgreen;
 }
+
 .removed {
   background-color: #FFCC99;
 }
+
 .warning {
   color: red
 }
@@ -186,22 +203,21 @@ tbody.file pre:empty {
 
 [% onload = 'restore_all(); document.checkboxform.restore_indicator.checked = true' %]
 
+[% BLOCK viewurl %]attachment.cgi?id=[% id %][% END %]
+[% BLOCK editurl %][% PROCESS viewurl %]&amp;action=edit[% END %]
+[% BLOCK diffurl %][% PROCESS viewurl %]&amp;action=diff[% END %]
+
 [% IF headers %]
   [% h1 = BLOCK %]
     [% IF attachid %]
-      [% description FILTER html %] (#[% attachid %])
+      Attachment #[% attachid %]: [% description FILTER html %]
     [% ELSE %]
-      [% USE url %]
-      [% old_url = url('attachment.cgi', action = 'diff', id = oldid) %]
-      [% new_url = url('attachment.cgi', action = 'diff', id = newid) %]
       Diff Between 
-      <a href="[% old_url %]">[% old_desc FILTER html %]</a>
-      (#[% oldid %])
+       #[% oldid %]: <a href="[% PROCESS diffurl id=oldid %]">[% old_desc FILTER html %]</a>
       and 
-      <a href="[% new_url %]">[% new_desc FILTER html %]</a>
-      (#[% newid %])
+       #[% newid %]: <a href="[% PROCESS diffurl id=newid %]">[% new_desc FILTER html %]</a>
     [% END %]
-    for <a href="show_bug.cgi?id=[% bugid %]">[% terms.Bug %] #[% bugid %]</a>
+    for <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %] #[% bugid %]</a>
   [% END %]
   [% h2 = BLOCK %]
     [% bugsummary FILTER html %]
@@ -226,18 +242,14 @@ tbody.file pre:empty {
 [% IF attachid %]
   [%# HEADER %]
   [% IF headers %]
-    [% USE url('attachment.cgi', id = attachid) %]
-    <a href="[% url() %]">View</a>
-    | <a href="[% url(action = 'edit') %]">Edit</a>
-    [% USE url('attachment.cgi', id = attachid, context = context,
-                                 collapsed = collapsed, headers = headers,
-                                 action = 'diff') %]
-    | <a href="[% url(format = 'raw') %]">Raw Unified</a>
+    <a href="[% PROCESS viewurl id=attachid %]">View</a>
+    | <a href="[% PROCESS editurl id=attachid %]">Edit</a>
+    | <a href="[% PROCESS diffurl id=attachid %]&amp;context=[% context FILTER html %]&amp;collapsed=[% collapsed FILTER html %]&amp;headers=[% headers FILTER html %]&amp;format=raw">Raw&nbsp;Unified</a>
   [% END %]
   [% IF other_patches %]
     [% IF headers %] |[%END%]
     Differences between
-    <form style="display: inline">
+    <form style="display: inline" action="">
       <select name="oldid">
       [% FOREACH patch = other_patches %]
         <option value="[% patch.id %]"
@@ -255,13 +267,8 @@ tbody.file pre:empty {
   <br>
 [% ELSE %]
   [% IF headers %]
-    [% USE url('attachment.cgi', newid = newid, oldid = oldid, action = 'interdiff') %]
-    <a href="[% url(format = 'raw') %]">Raw Unified</a>
-    [% IF attachid %]
-    <br>
-    [% ELSE %]
+    <a href="attachment.cgi?oldid=[% oldid %]&amp;newid=[% newid %]&amp;action=interdiff&amp;format=raw">Raw Unified</a>
     |
-    [% END %]
   [% END %]
 [% END %]
   
@@ -276,23 +283,24 @@ tbody.file pre:empty {
    onclick="return expand_all()">Expand All</a>
 
 [% IF do_context %]
+  [%# only happens for normal viewing, not interdiff %]
   | <span style='font-weight: bold'>Context:</span>
   [% IF context == "patch" %]
     (<strong>Patch</strong> / 
   [% ELSE %]
-    (<a href="[% url(context = '') %]">Patch</a> / 
+    (<a href="[% PROCESS diffurl id=attachid %]&amp;headers=[% headers FILTER html %]">Patch</a> / 
   [% END %]
   [% IF context == "file" %]
     <strong>File</strong> /
   [% ELSE %]
-    <a href="[% url(context = 'file') %]">File</a> / 
+    <a href="[% PROCESS diffurl id=attachid %]&amp;headers=[% headers FILTER html %]&amp;context=file">File</a> / 
   [% END %]
 
   [% IF context == "patch" || context == "file" %]
     [% context = 3 %]
   [% END %]
   [%# textbox for context %]
-  <form style="display: inline"><input type="hidden" name="action" value="diff"><input type="hidden" name="id" value="[% attachid %]"><input type="hidden" name="collapsed" value="[% collapsed FILTER html %]"><input type="hidden" name="headers" value="[% headers FILTER html %]"><input type="text" name="context" value="[% context FILTER html %]" size="3"></form>)
+  <form style="display: inline" action=""><input type="hidden" name="action" value="diff"><input type="hidden" name="id" value="[% attachid %]"><input type="hidden" name="collapsed" value="[% collapsed FILTER html %]"><input type="hidden" name="headers" value="[% headers FILTER html %]"><input type="text" name="context" value="[% context FILTER html %]" size="3"></form>)
 [% END %]
 
 [% IF warning %]
@@ -307,10 +315,12 @@ tbody.file pre:empty {
   [%+ terms.Bugzilla %] when comparing patches made against different revisions.
   [% END %]
 </h2>
+[% ELSE %]
+    <br><br>
 [% END %]
  
 [%# Restore Stuff %]
-<form name="checkboxform">
+<form name="checkboxform" action="">
 <input type="checkbox" name="restore_indicator" style="display: none">
 
 
