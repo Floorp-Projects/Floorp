@@ -49,6 +49,8 @@ public:
   nsClipboard();
   virtual ~nsClipboard();
 
+  static void Shutdown();
+
   //nsISupports
   NS_DECL_ISUPPORTS
 
@@ -64,7 +66,7 @@ protected:
   NS_IMETHOD SetNativeClipboardData(PRInt32 aWhichClipboard);
 
 private:
-  static nsCOMPtr<nsITransferable>   mTransferable;
+  static nsITransferable*     mTransferable; // strong reference
   nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
   nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
   nsCOMPtr<nsITransferable>   mSelectionTransferable;

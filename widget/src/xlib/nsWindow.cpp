@@ -366,59 +366,6 @@ NS_IMETHODIMP nsWindow::SetFocus(void)
   return NS_OK;
 }
 
-
-// Borrowed heavily from GTK. This should go through heirarchy of XWindow
-// windows, and destroy the appropriate children. 
-// KenF
-void
-nsWindow::DestroyNativeChildren(void)
-{
-  Display     *display;
-  Window       window;
-  Window       root_return;
-  Window       parent_return;
-  Window      *children_return = NULL;
-  unsigned int nchildren_return = 0;
-  unsigned int i = 0;
-  
-  display = mDisplay;
-  window = mBaseWindow;
-  XQueryTree(display, window, &root_return, &parent_return,
-             &children_return, &nchildren_return);
-  // walk the list of children
-  for (i=0; i < nchildren_return; i++)
-    {
-      Window child_window = children_return[i];
-      nsWindow *thisWindow = (nsWindow*) GetWidgetForWindow(child_window);
-      if (thisWindow)
-        {
-          thisWindow->Destroy();
-        }
-    }      
-
-  // free up this struct
-  if (children_return)
-    XFree(children_return);
-}
-
-void nsWindow::DestroyNative(void)
-{
-
-  // Destroy Children. DOH!!!! KenF
-  DestroyNativeChildren();
-
-  // This is handled in nsDrawingSurfaceXlib for now
-#if 0
-  if (mGC)
-    XFreeGC(mDisplay, mGC);
-#endif
-
-  if (mBaseWindow) {
-      XDestroyWindow(mDisplay, mBaseWindow);
-      DeleteWindowCallback(mBaseWindow);
-  }
-}
-
 /* NOTE: Originally, nsWindow just uses Resize from nsWidget. 
  * Changed so it will first use the nsWidget resizing routine, then
  * send out a NS_SIZE event. This makes sure that the resizing is known
@@ -588,8 +535,10 @@ NS_IMETHODIMP nsWindow::Update()
     if (numRects != 1 && numRects < 10) {
       nsRegionRectSet *regionRectSet = nsnull;
 
-      if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
+      if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet))) {
+        delete pevent.rect;
         return NS_ERROR_FAILURE;
+      }
 
       PRUint32 len;
       PRUint32 i;
@@ -609,6 +558,8 @@ NS_IMETHODIMP nsWindow::Update()
       }
       mUpdateArea->FreeRects(regionRectSet);
       mUpdateArea->SetTo(0,0,0,0);
+
+      delete pevent.rect;
       return NS_OK;
     } else {
       PRInt32 x,y,w,h;

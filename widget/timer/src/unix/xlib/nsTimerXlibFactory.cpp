@@ -48,4 +48,12 @@ static nsModuleComponentInfo components[] =
     nsTimerXlibConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsXlibTimerModule", components)
+PR_STATIC_CALLBACK(void)
+nsXlibTimerModuleDtor(nsIModule *self)
+{
+    nsTimerXlib::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsXlibTimerModule",
+                              components,
+                              nsXlibTimerModuleDtor)

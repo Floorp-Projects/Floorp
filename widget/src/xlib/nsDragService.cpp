@@ -70,7 +70,6 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
     return NS_ERROR_INVALID_ARG;
 
   mDataItems = anArrayTransferables;
-  NS_ADDREF(mDataItems);
 
   rv = mDataItems->Count(&numItemsToDrag);
   if (!numItemsToDrag)

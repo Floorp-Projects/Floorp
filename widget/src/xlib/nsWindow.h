@@ -99,9 +99,6 @@ class nsWindow : public nsWidget
   NS_IMETHOD GetAttention(void);
   
 protected:
-  virtual void DestroyNative(void);
-  virtual void DestroyNativeChildren(void);
-
   virtual long GetEventMask();
 
   // Keyboard and Pointer Grabbing

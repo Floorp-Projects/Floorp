@@ -79,7 +79,27 @@ nsTimerXlib::~nsTimerXlib()
   NS_IF_RELEASE(mCallback);
 }
 
-NS_IMPL_ISUPPORTS(nsTimerXlib, kITimerIID)
+/*static*/ void nsTimerXlib::Shutdown()
+{
+  delete nsTimerXlib::gHighestList;
+  nsTimerXlib::gHighestList = nsnull;
+
+  delete nsTimerXlib::gHighList;
+  nsTimerXlib::gHighList = nsnull;
+
+  delete nsTimerXlib::gNormalList;
+  nsTimerXlib::gNormalList = nsnull;
+
+  delete nsTimerXlib::gLowList;
+  nsTimerXlib::gLowList = nsnull;
+
+  delete nsTimerXlib::gLowestList;
+  nsTimerXlib::gLowestList = nsnull;
+
+  nsTimerXlib::gTimeoutAdded = PR_FALSE;
+}
+
+NS_IMPL_ISUPPORTS1(nsTimerXlib, nsITimer)
 
 nsresult
 nsTimerXlib::Init(nsTimerCallbackFunc aFunc,
@@ -90,7 +110,6 @@ nsTimerXlib::Init(nsTimerCallbackFunc aFunc,
 {
   mFunc = aFunc;
   mClosure = aClosure;
-  mPriority = aPriority;
   mType = aType;
   return Init(aDelay, aPriority);
 }
@@ -116,6 +135,7 @@ nsTimerXlib::Init(PRUint32 aDelay, PRUint32 aPriority)
 #endif
   
   mDelay = aDelay;
+  mPriority = aPriority;
   // get the cuurent time
   
   gettimeofday(&Now, NULL);
@@ -161,9 +181,6 @@ nsTimerXlib::Init(PRUint32 aDelay, PRUint32 aPriority)
       nsTimerXlib::gLowestList->InsertElementAt(this, 0);
       break;
   }
-
-  //FIXME Do we need this???? 
-  NS_ADDREF(this);
 
   EnsureWindowService();
 

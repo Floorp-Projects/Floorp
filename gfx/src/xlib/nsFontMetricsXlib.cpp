@@ -61,8 +61,6 @@ static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 
-static Display *gDisplay = NULL;
-
 static int gFontMetricsXlibCount = 0;
 static int gInitialized = 0;
 
@@ -500,6 +498,12 @@ static void
 FreeStretch(nsFontStretch* aStretch)
 {
   PR_smprintf_free(aStretch->mScalable);
+
+  for (PRInt32 count = aStretch->mScaledFonts.Count()-1; count >= 0; count--) {
+    nsFontXlib *font = (nsFontXlib*)aStretch->mScaledFonts.ElementAt(count);
+    if (font) delete font;
+  }
+
   for (int i=0; i < aStretch->mSizesCount; i++)
     delete aStretch->mSizes[i];
 
@@ -1616,6 +1620,7 @@ MOZ_DECL_CTOR_COUNTER(nsFontXlib);
 nsFontXlib::nsFontXlib()
 {
   MOZ_COUNT_CTOR(nsFontXlib);
+  mFont = nsnull;
 }
 
 nsFontXlib::~nsFontXlib()
