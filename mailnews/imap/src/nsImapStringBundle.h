@@ -92,4 +92,5 @@ NS_END_EXTERN_C
 #define IMAP_DELETE_NO_TRASH                        5058
 #define IMAP_HTML_NO_CACHED_BODY_TITLE              5059
 #define IMAP_HTML_NO_CACHED_BODY_BODY               5060
+#define IMAP_MAILBOX_ALREADY_EXISTS                 5061
 #endif /* _nsImapStringBundle_H__ */

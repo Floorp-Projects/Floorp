@@ -636,10 +636,42 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName, nsI
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!folderName) return rv;
+
+    if ( nsCRT::strcasecmp(folderName,"Trash") == 0 )   // Trash , a special folder
+    {
+        AlertSpecialFolderExists(msgWindow);
+        return NS_MSG_FOLDER_EXISTS;
+    }
+    else if ( nsCRT::strcasecmp(folderName,"Inbox") == 0 )  // Inbox, a special folder
+    {
+        AlertSpecialFolderExists(msgWindow);
+        return NS_MSG_FOLDER_EXISTS;
+    }
+
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv))
         rv = imapService->CreateFolder(m_eventQueue, this, 
                                        folderName, this, nsnull);
+    return rv;
+}
+
+nsresult
+nsImapMailFolder::AlertSpecialFolderExists(nsIMsgWindow *msgWindow) 
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIDocShell> docShell;
+    msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+    PRUnichar *alertString = IMAPGetStringByID(IMAP_MAILBOX_ALREADY_EXISTS);
+    if (!alertString) return rv;
+        if (docShell)
+        {
+            nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+            if (dialog)
+            {
+                rv = dialog->Alert(nsnull, alertString);
+                return rv;
+            }
+        }
     return rv;
 }
 

@@ -751,12 +751,33 @@ nsMsgLocalMailFolder::AlertFolderExists(nsIMsgWindow *msgWindow)
 	return rv;
 }
 
+nsresult 
+nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpec &path, nsIMsgWindow *msgWindow)
+{
+   nsresult rv = NS_OK;
+   char *leafName=nsnull;
+   for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++)
+   {
+      nsFileSpec currentFolderPath = dir.Spec();
+      leafName = currentFolderPath.GetLeafName();
+      if (leafName && nsCRT::strcasecmp(folderName,leafName) == 0)
+      {
+           if (msgWindow)
+              AlertFolderExists(msgWindow);
+           PL_strfree(leafName);
+           return NS_MSG_FOLDER_EXISTS;
+      }
+   }
+   if (leafName)
+      PL_strfree(leafName);
+   return rv;
+}
+
 nsresult
 nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow )
 {
 	nsresult rv = NS_OK;
-	PRBool exists = PR_FALSE;
-    
+	    
 	nsFileSpec path;
     nsCOMPtr<nsIMsgFolder> child;
 	//Get a directory based on our current path.
@@ -766,14 +787,11 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
+    rv = CheckIfFolderExists(folderName, path, msgWindow);
+    if(NS_FAILED(rv))
+       return rv;
+
 	path += nsAutoString(folderName);
-	exists=path.Exists();
-        if (exists){
-		if (msgWindow)
-		AlertFolderExists(msgWindow);
-                return NS_MSG_FOLDER_EXISTS;
-	}
-		
 		
 	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
    
@@ -1118,28 +1136,31 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 		return NS_ERROR_FAILURE;
 	nsCAutoString newNameStr(convertedNewName);
 
-    PRBool sameName = PR_FALSE;
-	PRBool exists = PR_FALSE;
-	nsXPIDLCString oldLeafName;
+    nsXPIDLCString oldLeafName;
 	oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
 
-	if (strcmp(oldLeafName.get(), convertedNewName) == 0) {
-		sameName = PR_TRUE;
+    if (PL_strcasecmp(oldLeafName.get(), convertedNewName) == 0) {
+       if(msgWindow)
+           rv=AlertFolderExists(msgWindow);
+       return NS_MSG_FOLDER_EXISTS;
     }
 	else
-	{
-	   oldPathSpec->SetLeafName(convertedNewName);
-	   oldPathSpec->Exists(&exists);
-       //Set it back to oldLeafName so that actual renaming on disk can be done....
-	   oldPathSpec->SetLeafName(oldLeafName);
+    {
+       nsCOMPtr <nsIFileSpec> parentPathSpec;
+       parentFolder->GetPath(getter_AddRefs(parentPathSpec));
+       NS_ENSURE_SUCCESS(rv,rv);
 
-	}
+       nsFileSpec parentPath;
+       parentPathSpec->GetFileSpec(&parentPath);
+       NS_ENSURE_SUCCESS(rv,rv);
+	   
+       if (!parentPath.IsDirectory())
+       AddDirectorySeparator(parentPath);
 
-	if ( exists || sameName ){
-		if(msgWindow)
-	    rv=AlertFolderExists(msgWindow);
-		return NS_MSG_FOLDER_EXISTS;
-	}
+       rv = CheckIfFolderExists(aNewName, parentPath, msgWindow);
+       if (NS_FAILED(rv)) return rv;
+
+    }
 
 	NotifyStoreClosedAllHeaders();
 	ForceDBClosed();
@@ -1831,18 +1852,8 @@ nsMsgLocalMailFolder::CopyFolderLocal( nsIMsgFolder *destFolder, nsIMsgFolder *s
       newPath.CreateDirectory();
   }
 
-  PRBool exists = PR_FALSE;
-  nsFileSpec checkPath = newPath;
-
-  checkPath += folderName;
-  exists=checkPath.Exists();
-  
-  if (exists)
-  {
-		if (msgWindow)
-     		AlertFolderExists(msgWindow);
-        return NS_MSG_FOLDER_EXISTS;
-  }
+  rv = CheckIfFolderExists(idlName.get(), newPath, msgWindow);
+  if(NS_FAILED(rv)) return rv;
  
   nsFileSpec path = oldPath;
 

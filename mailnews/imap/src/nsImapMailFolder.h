@@ -273,6 +273,9 @@ public:
 	static nsresult AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCString &msgIds);
 protected:
     // Helper methods
+
+    nsresult AlertSpecialFolderExists(nsIMsgWindow *msgWindow); 
+
 	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
                        &keysToFetch, nsIImapFlagAndUidState *flagState);
 	void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray

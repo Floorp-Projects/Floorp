@@ -163,6 +163,8 @@ protected:
   nsresult RecursiveSetDeleteIsMoveTrash(PRBool bVal);
   nsresult AlertFolderExists(nsIMsgWindow *msgWindow);
 
+  nsresult CheckIfFolderExists(const PRUnichar *folderName, nsFileSpec &path, nsIMsgWindow *msgWindow);
+
 	/* Finds the directory associated with this folder.  That is if the path is
 	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
 	currently exist then it will create it

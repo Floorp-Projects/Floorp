@@ -930,9 +930,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 			rv = folderResource->GetValue(&folderURI);
 			if(NS_FAILED(rv)) return rv;
 
-			// case-insensitive compare is probably LCD across OS filesystems
-
-			PRBool equal = (folderURI && nsCRT::strcasecmp(folderURI, uri)==0);
+            PRBool equal = (folderURI && nsCRT::strcmp(folderURI, uri)==0);
 			nsMemory::Free(folderURI);
 			if (equal)
 			{
