@@ -36,6 +36,10 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 
+#ifdef MOZ_FULLCIRCLE
+#include "fullsoft.h"
+#endif
+
 // header file for profile manager
 #include "nsIProfile.h"
 
@@ -117,6 +121,11 @@ int main(int argc, char* argv[])
   nsIDOMAppCoresManager *appCoresManager;
   nsIURL* url;
   nsIPref *prefs;
+
+  // initialization for Full Circle
+#ifdef MOZ_FULLCIRCLE
+  FCInitialize();
+#endif
 
   // initializations for profile manager
 #if defined(NS_USING_PROFILES)
