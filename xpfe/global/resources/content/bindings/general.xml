@@ -4,13 +4,6 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding id="basewindow">
-    <content>
-      <xul:popupgroup/>
-      <children/>
-    </content>
-  </binding>
-
   <binding id="basetext">
     <implementation>
       <!-- public implementation -->

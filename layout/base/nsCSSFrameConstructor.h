@@ -515,7 +515,8 @@ protected:
                                              nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
                                              nsIFrame*                aNewFrame,
-                                             nsFrameItems&            aChildItems);
+                                             nsFrameItems&            aChildItems,
+                                             PRBool                   aIsRoot = PR_FALSE);
 
   nsresult CreateAnonymousFrames(nsIPresShell*        aPresShell, 
                                              nsIPresContext*          aPresContext,

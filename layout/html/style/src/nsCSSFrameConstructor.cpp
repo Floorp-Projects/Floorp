@@ -204,6 +204,9 @@ nsresult
 NS_NewRootBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 nsresult
+NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+nsresult
 NS_NewThumbFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
@@ -3529,7 +3532,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
         PRInt32 nameSpaceID;
         if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
             nameSpaceID == nsXULAtoms::nameSpaceID) {
-          rv = NS_NewBoxFrame(aPresShell, &contentFrame, PR_TRUE);
+          rv = NS_NewDocElementBoxFrame(aPresShell, &contentFrame);
           if (NS_FAILED(rv)) {
             return rv;
           }
@@ -3620,7 +3623,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
      // Create any anonymous frames the doc element frame requires
     CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aDocElement, contentFrame,
-                          childItems);
+                          childItems, PR_TRUE);
 
     // Set the initial child lists
     contentFrame->SetInitialChildList(aPresContext, nsnull,
@@ -4008,7 +4011,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
     // The eventual parent of the document element frame
     mDocElementContainingBlock = pageFrame;
-
 
     // Set the initial child lists
     rootFrame->SetInitialChildList(aPresContext, nsnull, pageFrame);
@@ -5257,7 +5259,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
                                              nsIFrame*                aNewFrame,
-                                             nsFrameItems&            aChildItems)
+                                             nsFrameItems&            aChildItems,
+                                             PRBool                   aIsRoot)
 {
   // See if we might have anonymous content
   // by looking at the tag rather than doing a QueryInterface on
@@ -5269,14 +5272,13 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   // nsGenericElement::SetDocument ought to keep a list like this one,
   // but it can't because nsGfxScrollFrames get around this.
 #ifdef INCLUDE_XUL
-  if (aTag !=  nsHTMLAtoms::input &&
+  if (!aIsRoot && aTag !=  nsHTMLAtoms::input &&
       aTag !=  nsHTMLAtoms::textarea &&
       aTag !=  nsHTMLAtoms::combobox &&
       aTag !=  nsHTMLAtoms::isindex &&
       aTag !=  nsXULAtoms::scrollbar
-     ) {
+      ) {
      return NS_OK;
-
   }
 #endif
 
