@@ -195,7 +195,7 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
         rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString, mFlags);
 
       else  // default to text/plain
-        rv = NS_New_HTMLToTXT_SinkStream(&sink, &aOutputString,
+        rv = NS_New_HTMLToTXT_SinkStream(&sink, &aOutputString, nsnull,
                                          mWrapColumn, mFlags);
 
       if (sink && NS_SUCCEEDED(rv))

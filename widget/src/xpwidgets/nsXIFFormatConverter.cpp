@@ -50,6 +50,12 @@
 #include "nsWidgetsCID.h"
 #include "nsXIFFormatConverter.h"
 
+// unicode conversion
+#define NS_IMPL_IDS
+#include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
+#include "nsISaveAsCharset.h"
+  
 
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
@@ -303,17 +309,28 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
 NS_IMETHODIMP
 nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsAutoString & aToStr)
 {
+  // we may cache it since the platform charset will not change through application life
+  nsAutoString aCharset;
+  nsCOMPtr <nsIPlatformCharset> platformCharset;
+  nsresult rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+                                                     NS_GET_IID(nsIPlatformCharset), 
+                                                     getter_AddRefs(platformCharset));
+  if (NS_SUCCEEDED(rv))
+    rv = platformCharset->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, aCharset);
+  if (NS_FAILED(rv))
+    aCharset.SetString("ISO-8859-1");
+ 
   aToStr = "";
   nsCOMPtr<nsIParser> parser;
-  nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                             nsnull, 
-                                             nsIParser::GetIID(), 
-                                             getter_AddRefs(parser));
+  rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                           nsnull, 
+                                           nsIParser::GetIID(), 
+                                           getter_AddRefs(parser));
   if ( !parser )
     return rv;
 
   nsCOMPtr<nsIHTMLContentSink> sink;
-  rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink),&aToStr,0);
+  rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink),&aToStr,&aCharset);
   if ( sink ) {
     parser->SetContentSink(sink);
 	
