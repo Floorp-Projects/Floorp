@@ -11,9 +11,9 @@
       <para>
 	Permission is granted to copy, distribute and/or modify this
 	document under the terms of the GNU Free Documentation
-	License, Version 1.1 or any later version published  by the
+	License, Version 1.1 or any later version published by the
 	Free Software Foundation; with no Invariant Sections, no
-	Front-Cover Texts, and  with no Back-Cover Texts.  A copy of
+	Front-Cover Texts, and with no Back-Cover Texts. A copy of
 	the license is included in <xref linkend="gfdl"/>.
       </para>
     </blockquote>
@@ -37,15 +37,15 @@
     </para>
     <para>
       All copyrights are held by their respective owners, unless
-      specifically noted otherwise.  Use of a term in this document
+      specifically noted otherwise. Use of a term in this document
       should not be regarded as affecting the validity of any
       trademark or service mark.
     </para>
     <para>
       Naming of particular products or brands should not be seen as
-      endorsements, with the exception of the term "GNU/Linux".  We
+      endorsements, with the exception of the term "GNU/Linux". We
       wholeheartedly endorse the use of GNU/Linux in every situation
-      where it is appropriate.  It is an extremely versatile, stable,
+      where it is appropriate. It is an extremely versatile, stable,
       and robust operating system that offers an ideal operating
       environment for Bugzilla.
     </para>
@@ -60,10 +60,10 @@
       documented or fixed in the code, security holes surely exist.
       Great care should be taken both in the installation and usage of
       this software. Carefully consider the implications of installing
-      other network services with Bugzilla.  The Bugzilla development
+      other network services with Bugzilla. The Bugzilla development
       team members, Netscape Communications, America Online Inc., and
       any affiliated developers or sponsors assume no liability for
-      your use of this product.  You have the source code to this
+      your use of this product. You have the source code to this
       product, and are responsible for auditing it yourself to ensure
       your security needs are met.
     </para>
@@ -88,7 +88,7 @@
     </para>
     <para>
       The newest version of this guide can always be found at <ulink
-      url="http://www.bugzilla.org">bugzilla.org</ulink>; including
+      url="http://www.bugzilla.org"/>; including
       documentation for past releases and the current development version.
     </para>
     <para>
@@ -98,9 +98,8 @@
     </para>
     <para>
       The latest version of this document can always be checked out via CVS.
-	    Please follow the instructions available at 
-      <ulink url="http://www.mozilla.org/cvs.html">the Mozilla CVS page</ulink>,
-      and check out the <filename>mozilla/webtools/bugzilla/docs/</filename>
+      Please follow the <ulink url="http://www.mozilla.org/cvs.html">Mozilla CVS</ulink>
+      instructions and check out the <filename>mozilla/webtools/bugzilla/docs/</filename>
       subtree.
     </para>
     <para>
@@ -181,7 +180,7 @@
     <para>
       Last but not least, all the members of the 
       <ulink url="news://news.mozilla.org/netscape/public/mozilla/webtools"/>
-      newsgroup.  Without your discussions, insight, suggestions, and patches,
+      newsgroup. Without your discussions, insight, suggestions, and patches,
       this could never have happened.
     </para>
     <para>
@@ -194,6 +193,7 @@
         <member>Gervase Markham</member>
         <member>Joe Robins</member>
         <member>Kevin Brannen</member>
+        <member>Martin Wulffeld</member>
         <member>Ron Teitelbaum</member>
         <member>Spencer Smith</member>
         <member>Zach Liption</member>

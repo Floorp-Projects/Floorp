@@ -44,7 +44,7 @@
 
 <listitem>
   <para>
-    <ulink url="http://www.perl.org">Perl</ulink>
+    <ulink url="http://www.perl.org/">Perl</ulink>
     (&min-perl-ver;, 5.6.1 is recommended if you wish to
     use Bundle::Bugzilla)
   </para>
@@ -209,7 +209,7 @@
       <title>MySQL</title>
 
       <para>Visit the MySQL homepage at 
-      <ulink url="http://www.mysql.com">www.mysql.com</ulink>
+      <ulink url="http://www.mysql.com"/>
       to grab and install the latest stable release of the server. 
       </para>
       
@@ -257,7 +257,7 @@
 
       <para>Any machine that doesn't have Perl on it is a sad machine indeed.
       Perl can be got in source form from 
-      <ulink url="http://www.perl.com">perl.com</ulink> for the rare 
+      <ulink url="http://www.perl.org"/> for the rare 
       *nix systems which don't have it. 
       Although Bugzilla runs with perl &min-perl-ver;,
       it's a good idea to be up to the very latest version
@@ -620,7 +620,7 @@
       </title>
 
       <para>Next, run the magic checksetup.pl script. (Many thanks to 
-      <ulink url="mailto:holgerschurig@nikocity.de">Holger Schurig </ulink> 
+      <ulink url="mailto:holgerschurig@nikocity.de">Holger Schurig</ulink> 
       for writing this script!) 
       This script is designed to make sure your MySQL database and other
       configuration options are consistent with the Bugzilla CGI files. 
@@ -870,10 +870,9 @@ man 5 crontab
 
       <para>You can also try using <ulink url="http://www.openldap.org/">
       OpenLDAP</ulink> with Bugzilla, using any of a number of administration
-      tools.  You should apply the patch attached this bug:
-      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=158630">
-      http://bugzilla.mozilla.org/show_bug.cgi?id=158630</ulink>, then set
-      the following object classes for your users:
+      tools.  You should apply the patch attached to 
+      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=158630">bug 158630</ulink>
+      , then set the following object classes for your users:
 
       <orderedlist>
       <listitem><para>objectClass: person</para></listitem>
@@ -902,8 +901,7 @@ man 5 crontab
       incorporate the code changes necessary to fulfill the CERT advisory
       requirements mentioned in 
       <ulink
-      url="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3">
-      http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3</ulink>.
+      url="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3"/>.
       Executing the following code snippet from a UNIX command shell will
       rectify the problem if your Bugzilla installation is intended for an
       English-speaking audience. As always, be sure your Bugzilla
@@ -931,9 +929,9 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
       <note>
         <para>Using &lt;meta&gt; tags to set the charset is not
         recommended, as there's a bug in Netscape 4.x which causes pages
-        marked up in this way to load twice. See 
-        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=126266">bug
-        126266</ulink> for more information including progress toward making
+        marked up in this way to load twice. See  
+        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=126266">bug 126266</ulink>
+        for more information including progress toward making
         bugzilla charset aware by default.
         </para>
       </note>
@@ -1032,7 +1030,7 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
         <para>Perl for Windows can be obtained from <ulink
         url="http://www.activestate.com/">ActiveState</ulink>. You should be
         able to find a compiled binary at <ulink
-        url="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/">http://aspn.activestate.com/ASPN/Downloads/ActivePerl/</ulink>.
+        url="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/"/>.
         </para>
       </section>
 
@@ -1059,7 +1057,7 @@ C:\perl&gt; <command>ppm &lt;module name&gt;</command>
 
         <tip>
           <para>A complete list of modules that can be installed using ppm can
-          be found at <ulink url="http://www.activestate.com/PPMPackages/5.6plus">http://www.activestate.com/PPMPackages/5.6plus</ulink>.
+          be found at <ulink url="http://www.activestate.com/PPMPackages/5.6plus"/>.
           </para>
         </tip>
       </section>
@@ -1362,7 +1360,7 @@ deny from all
       <productname>Personal Web Server</productname> you should be able
       to. You will need to configure them to know how to run CGI scripts,
       however. This is described in Microsoft Knowledge Base article
-      <ulink url="http://support.microsoft.com/support/kb/articles/Q245/2/25.asp">Q245225 </ulink>
+      <ulink url="http://support.microsoft.com/support/kb/articles/Q245/2/25.asp">Q245225</ulink>
       for <productname>Internet Information Services</productname> and
       <ulink url="http://support.microsoft.com/support/kb/articles/Q231/9/98.asp">Q231998</ulink>          
       for <productname>Personal Web Server</productname>.
@@ -1415,9 +1413,9 @@ proc filter_deny { why } {
       <warning>
         <para>This probably doesn't account for all possible editor backup
         files so you may wish to add some additional variations of
-        <filename>localconfig</filename>. For more information, see
-        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">bug
-        186383</ulink> or <ulink
+        <filename>localconfig</filename>. For more information, see 
+        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">
+        bug 186383</ulink> or <ulink
         url="http://online.securityfocus.com/bid/6501">Bugtraq ID 6501</ulink>.
         </para>
       </warning>

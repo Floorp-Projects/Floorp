@@ -6,59 +6,52 @@
   stay current for a while.</para>
 
   <para>Apache Web Server: 
-  <ulink url="http://www.apache.org/">http://www.apache.org</ulink>
+  <ulink url="http://www.apache.org/"/>
 
   Optional web server for Bugzilla, but recommended because of broad user
   base and support.</para>
 
   <para>Bugzilla: 
-  <ulink url="http://www.bugzilla.org/">
-  http://www.bugzilla.org/</ulink>
+  <ulink url="http://www.bugzilla.org/"/>
   </para>
 
   <para>MySQL: 
-  <ulink url="http://www.mysql.com/">http://www.mysql.com/</ulink>
+  <ulink url="http://www.mysql.com/"/>
   </para>
 
   <para>Perl: 
-  <ulink url="http://www.perl.org">http://www.perl.org/</ulink>
+  <ulink url="http://www.perl.org/"/>
   </para>
 
   <para>CPAN: 
-  <ulink url="http://www.cpan.org/">http://www.cpan.org/</ulink>
+  <ulink url="http://www.cpan.org/"/>
   </para>
 
   <para>DBI Perl module: 
-  <ulink url="http://www.cpan.org/modules/by-module/DBI/">
-  http://www.cpan.org/modules/by-module/DBI/</ulink>
+  <ulink url="http://www.cpan.org/modules/by-module/DBI/"/>
   </para>
 
   <para>Data::Dumper module: 
-  <ulink url="http://www.cpan.org/modules/by-module/Data/">
-  http://www.cpan.org/modules/by-module/Data/</ulink>
+  <ulink url="http://www.cpan.org/modules/by-module/Data/"/>
   </para>
 
   <para>MySQL related Perl modules: 
-  <ulink url="http://www.cpan.org/modules/by-module/Mysql/">
-  http://www.cpan.org/modules/by-module/Mysql/</ulink>
+  <ulink url="http://www.cpan.org/modules/by-module/Mysql/"/>
   </para>
 
   <para>TimeDate Perl module collection: 
-  <ulink url="http://www.cpan.org/modules/by-module/Date/">
-  http://www.cpan.org/modules/by-module/Date/</ulink>
+  <ulink url="http://www.cpan.org/modules/by-module/Date/"/>
   </para>
 
   <para>GD Perl module: 
-  <ulink url="http://www.cpan.org/modules/by-module/GD/">
-  http://www.cpan.org/modules/by-module/GD/</ulink>
+  <ulink url="http://www.cpan.org/modules/by-module/GD/"/>
 
   Alternately, you should be able to find the latest version of GD at 
-  <ulink url="http://www.boutell.com/gd/">http://www.boutell.com/gd/</ulink>
+  <ulink url="http://www.boutell.com/gd/"/>
   </para>
 
   <para>Chart::Base module: 
-  <ulink url="http://www.cpan.org/modules/by-module/Chart/">
-  http://www.cpan.org/modules/by-module/Chart/</ulink>
+  <ulink url="http://www.cpan.org/modules/by-module/Chart/"/>
   </para>
 
   <para>(But remember, Bundle::Bugzilla will install all the modules for you.)

@@ -22,8 +22,7 @@
       Consult with the administrator responsible for your installation of
       Bugzilla for the URL you should use to access it. If you're
       test-driving Bugzilla, use this URL: 
-      <ulink url="http://landfill.bugzilla.org/bugzilla-tip/">
-      http://landfill.bugzilla.org/bugzilla-tip/</ulink>
+      <ulink url="http://landfill.bugzilla.org/bugzilla-tip/"/>.
       </para>
 
       <orderedlist>
@@ -269,10 +268,7 @@
       <para>The Bugzilla Search page is is the interface where you can find
       any bug report, comment, or patch currently in the Bugzilla system. You
       can play with it here: 
-      <ulink url="http://landfill.bugzilla.org/bugzilla-tip/query.cgi">
-      landfill.bugzilla.org/bugzilla-tip/query.cgi</ulink>
-
-      .</para>
+      <ulink url="http://landfill.bugzilla.org/bugzilla-tip/query.cgi"/>.</para>
 
       <para>The Search page has controls for selecting different possible
       values for all of the fields in a bug, as described above. Once you've
@@ -392,7 +388,7 @@
       However, Bugzilla will automatically make hyperlinks out of certain
       sorts of text in comments. For example, the text 
       http://www.bugzilla.org will be turned into
-      <ulink url="http://www.bugzilla.org">http://www.bugzilla.org</ulink>.
+      <ulink url="http://www.bugzilla.org"/>.
       Other strings which get linkified in the obvious manner are:
       <simplelist>
         <member>bug 12345</member>

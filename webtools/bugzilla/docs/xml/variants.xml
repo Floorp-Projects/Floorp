@@ -6,28 +6,25 @@
   and variants, then found a wonderful site which covers an awful lot of what
   I wanted to discuss. Rather than quote it in its entirety, I'll simply
   refer you here: 
-  <ulink url="http://linas.org/linux/pm.html">
-  http://linas.org/linux/pm.html</ulink>
+  <ulink url="http://linas.org/linux/pm.html"/>.
   </para>
 
   <section id="variant-redhat">
     <title>Red Hat Bugzilla</title>
 
     <para>Red Hat's old fork of Bugzilla which was based on version 2.8 is now
-    obsolete.  The newest version in use is based on version 2.17.1 and is in
-    the process of being integrated into the main Bugzilla source tree.  The
+    obsolete. The newest version in use is based on version 2.17.1 and is in
+    the process of being integrated into the main Bugzilla source tree. The
     back-end is modified to work with PostgreSQL instead of MySQL and they have
     custom templates to get their desired look and feel, but other than that it
-    is Bugzilla 2.17.1.  Dave Lawrence of Red Hat put forth a great deal of
+    is Bugzilla 2.17.1. Dave Lawrence of Red Hat put forth a great deal of
     effort to make sure that the changes he made could be integrated back into
     the main tree. 
-    <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=98304">Bug
-    98304</ulink> exists to track this integration.
+    <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=98304">Bug 98304</ulink>
+    exists to track this integration.
     </para>
 
-    <para>URL: 
-    <ulink url="http://bugzilla.redhat.com/bugzilla/">
-    http://bugzilla.redhat.com/bugzilla/</ulink>
+    <para>URL: <ulink url="http://bugzilla.redhat.com/bugzilla/"/>
     </para>
 
     <para>This section last updated 24 Dec 2002</para>
@@ -61,8 +58,7 @@
     <para>Scarab is a new open source bug-tracking system built using Java
     Servlet technology. It is currently at version 1.0 beta 13.</para>
 
-    <para>URL: 
-    <ulink url="http://scarab.tigris.org/">http://scarab.tigris.org</ulink>
+    <para>URL: <ulink url="http://scarab.tigris.org/"/>
     </para>
 
     <para>This section last updated 18 Jan 2003</para>
@@ -75,10 +71,7 @@
     such through the <quote>jobs</quote>
     functionality.</para>
 
-    <para>URL: 
-    <ulink url="http://www.perforce.com/perforce/technotes/note052.html">
-    http://www.perforce.com/perforce/technotes/note052.html
-    </ulink>
+    <para>URL: <ulink url="http://www.perforce.com/perforce/technotes/note052.html"/>
     </para>
 
     <para>This section last updated 27 Jul 2002</para>
@@ -91,9 +84,7 @@
     distributed free software and open source projects over the Internet.
     It has a built-in bug tracker, but it's not highly thought of.</para>
 
-    <para>URL: 
-    <ulink url="http://www.sourceforge.net">
-    http://www.sourceforge.net</ulink>
+    <para>URL: <ulink url="http://www.sourceforge.net"/>
     </para>
 
     <para>This section last updated 27 Jul 2002</para>

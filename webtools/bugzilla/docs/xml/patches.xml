@@ -37,7 +37,7 @@ RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
       <listitem>
         <para>There are many, many more things you can do with mod_rewrite.
         Please refer to the mod_rewrite documentation at 
-        <ulink url="http://www.apache.org">http://www.apache.org</ulink>.
+        <ulink url="http://www.apache.org"/>.
         </para>
       </listitem>
     </orderedlist>

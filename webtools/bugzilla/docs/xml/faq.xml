@@ -21,8 +21,7 @@
 	<answer>
 	  <para>
 	    You can stay up-to-date with the latest Bugzilla
-	    information at <ulink url="http://www.bugzilla.org/">
-	    http://www.bugzilla.org/</ulink>
+	    information at <ulink url="http://www.bugzilla.org/"/>.
 	  </para>
 	</answer>
       </qandaentry>
@@ -36,8 +35,7 @@
 	<answer>
 	  <para>
 	    Bugzilla is covered by the Mozilla Public License.
-	    See details at <ulink url="http://www.mozilla.org/MPL/">
-	    http://www.mozilla.org/MPL/</ulink>
+	    See details at <ulink url="http://www.mozilla.org/MPL/"/>.
 	  </para>
 	</answer>
       </qandaentry>
@@ -50,12 +48,12 @@
 	</question>
 	<answer>
           <para>
-            <ulink url="http://bugzilla.org/consulting.html">http://bugzilla.org/consulting.html</ulink>
+            <ulink url="http://bugzilla.org/consulting.html"/>
             is a list of people and companies who have asked us to list them
             as consultants for Bugzilla.
           </para>
 	  <para>
-	    <ulink url="http://www.collab.net/">www.collab.net</ulink> offers
+	    <ulink url="http://www.collab.net/"/> offers
 	    Bugzilla as part of their standard offering to large projects.
 	    They do have some minimum fees that are pretty hefty, and generally
 	    aren't interested in small projects.
@@ -79,7 +77,7 @@
 	<answer>
 	  <para>
 	    There are <emphasis>dozens</emphasis> of major companies with public
-	    Bugzilla sites to track bugs in their products.  A few include:
+	    Bugzilla sites to track bugs in their products. A few include:
 	    <simplelist>
 	      <member>Netscape/AOL</member>
 	      <member>Mozilla.org</member>
@@ -116,7 +114,7 @@
 	  <para>
 	    A 
       <ulink url="http://www.bugzilla.org/who_we_are.html">core team</ulink>,
-      led by Dave Miller (justdave@netscape.com).      
+      led by Dave Miller (justdave@netscape.com).
 	  </para>
 	</answer>
       </qandaentry>
@@ -158,8 +156,8 @@
 	<answer>
 	  <para>
 	    It may be that the support has not been built yet, or that you
-	    have not yet found it.  Bugzilla is making tremendous strides in
-	    usability, customizability, scalability, and user interface.  It
+	    have not yet found it. Bugzilla is making tremendous strides in
+	    usability, customizability, scalability, and user interface. It
 	    is widely considered the most complete and popular open-source
 	    bug-tracking software in existence.
 	  </para>
@@ -187,11 +185,11 @@
 	  </para>
           <para>
             There is currently work in progress to make Bugzilla work on
-            PostgreSQL and Sybase in the default distribution.  You can track
-            the progress of these initiatives in bugs <ulink
-            url="http://bugzilla.mozilla.org/show_bug.cgi?id=98304">98304</ulink>
+            PostgreSQL and Sybase in the default distribution. You can track
+            the progress of these initiatives in <ulink
+            url="http://bugzilla.mozilla.org/show_bug.cgi?id=98304">bug 98304</ulink>
             and <ulink
-            url="http://bugzilla.mozilla.org/show_bug.cgi?id=173130">173130</ulink>
+            url="http://bugzilla.mozilla.org/show_bug.cgi?id=173130">bug 173130</ulink>
             respectively.
           </para>
           <para>
@@ -213,8 +211,8 @@
             <filename>/usr/bonsaitools/bin/perl</filename> because when
             Terry first started writing the code for mozilla.org he needed a
             version of Perl and other tools that were completely under his
-            control.  This location was abandoned for the 2.18 release in favor
-            of the more sensible <filename>/usr/bin/perl</filename>.  If you
+            control. This location was abandoned for the 2.18 release in favor
+            of the more sensible <filename>/usr/bin/perl</filename>. If you
             installed an older verion of Bugzilla and created the symlink we
             suggested, you can remove it now (provided that you don't have
             anything else, such as Bonsai, using it and you don't intend to
@@ -233,7 +231,7 @@
         <answer>
           <para>
             Yes, the following bit of perl magic will change all the shebang
-            lines.  Be sure to change <filename>/usr/local/bin/perl</filename>
+            lines. Be sure to change <filename>/usr/local/bin/perl</filename>
             to your path to the perl binary.
           </para>
           <programlisting>
@@ -276,7 +274,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    It is web and e-mail based.  You can edit bugs by sending specially
+	    It is web and e-mail based. You can edit bugs by sending specially
 	    formatted email to a properly configured Bugzilla, or control via the web.
 	  </para>
 	</answer>
@@ -335,7 +333,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	<answer>
 	  <para>
 	    Yes - any sort of attachment is allowed, although administrators can
-      configure a maximum size.  
+      configure a maximum size.
             Bugzilla gives the user the option of either using the MIME-type
             supplied by the browser, choosing from a pre-defined list or
             manually typing any arbitrary MIME-type. 
@@ -353,15 +351,14 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Yes.  However, modifying some fields, notably those related to bug
+	    Yes. However, modifying some fields, notably those related to bug
 	    progression states, also require adjusting the program logic to
 	    compensate for the change.
 	  </para>
 	  <para>
 	    There is no GUI for adding fields to Bugzilla at this
-	    time.  You can follow development of this feature at
-	    <ulink
-		   url="http://bugzilla.mozilla.org/show_bug.cgi?id=91037">http://bugzilla.mozilla.org/show_bug.cgi?id=91037</ulink>
+	    time. You can follow development of this feature in 
+	    <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=91037">bug 91037</ulink>
 	  </para>
 	</answer>
       </qandaentry>
@@ -375,9 +372,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Yes.  Look at <ulink url="http://bugzilla.mozilla.org/report.cgi">
-	    http://bugzilla.mozilla.org/report.cgi</ulink> for samples of what
-            Bugzilla can do in reporting and graphing.
+	    Yes. Look at <ulink url="http://bugzilla.mozilla.org/report.cgi"/>
+            for samples of what Bugzilla can do in reporting and graphing.
 	  </para>
 	  <para>
             If you can not get the reports you want from the included reporting
@@ -399,7 +395,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Email notification is user-configurable.  By default, the bug id and 
+	    Email notification is user-configurable. By default, the bug id and 
       Summary of the bug report accompany each email notification, along with
 	    a list of the changes made.
 	  </para>
@@ -436,7 +432,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 		If you decide to use the bugzilla_email integration features
 		to allow Bugzilla to record responses to mail with the associated bug,
 		you may need to caution your users to set their mailer to "respond
-		to messages in the format in which they were sent".  For security reasons
+		to messages in the format in which they were sent". For security reasons
 		Bugzilla ignores HTML tags in comments, and if a user sends HTML-based
 		email into Bugzilla the resulting comment looks downright awful.
 	      </para>
@@ -458,12 +454,12 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
           <para>
             Bugzilla can output buglists as HTML (the default), CSV or RDF.
             The link for CSV can be found at the bottom of the buglist in HTML
-            format.  This CSV format can easily be imported into MS Excel or
+            format. This CSV format can easily be imported into MS Excel or
             other spread-sheet applications.
           </para>
           <para>
             To use the RDF format of the buglist it is necessary to append a
-            <computeroutput>&amp;ctype=rdf</computeroutput> to the URL.  RDF
+            <computeroutput>&amp;ctype=rdf</computeroutput> to the URL. RDF
             is meant to be machine readable and thus it is assumed that the
             URL would be generated progmatically so there is no user visible
             link to this format.
@@ -493,12 +489,12 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-            Yes.  For more information including available translated templates,
+            Yes. For more information including available translated templates,
             see <ulink
             url="http://www.bugzilla.org/download.html#localizations"/>.
             The admin interfaces are still not included in these translated
-            templates and is therefore still English only.  Also, there may be
-            issues with the charset not being declared.  See <ulink
+            templates and is therefore still English only. Also, there may be
+            issues with the charset not being declared. See <ulink
             url="http://bugzilla.mozilla.org/show_bug.cgi?id=126266">bug 126226</ulink>
             for more information.
 	  </para>
@@ -514,7 +510,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Yes.  No.  Yes (using the CSV format).
+	    Yes. No. Yes (using the CSV format).
 	  </para>
 	</answer>
       </qandaentry>
@@ -528,7 +524,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    You have no idea.  Bugzilla's query interface, particularly with the
+	    You have no idea. Bugzilla's query interface, particularly with the
 	    advanced Boolean operators, is incredibly versatile.
 	  </para>
 	</answer>
@@ -544,7 +540,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Bugzilla does not lock records.  It provides mid-air collision detection,
+	    Bugzilla does not lock records. It provides mid-air collision detection,
 	    and offers the offending user a choice of options to deal with the conflict.
 	  </para>
 	</answer>
@@ -560,8 +556,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	  <para>
 	    MySQL, the database back-end for Bugzilla, allows hot-backup of data.
 	    You can find strategies for dealing with backup considerations
-	    at <ulink url="http://www.mysql.com/doc/B/a/Backup.html">
-	    http://www.mysql.com/doc/B/a/Backup.html</ulink>
+	    at <ulink url="http://www.mysql.com/doc/B/a/Backup.html"/>.
 	  </para>
 	</answer>
       </qandaentry>
@@ -574,8 +569,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Yes.  However, commits to the database must wait
-	    until the tables are unlocked.  Bugzilla databases are typically
+	    Yes. However, commits to the database must wait
+	    until the tables are unlocked. Bugzilla databases are typically
 	    very small, and backups routinely take less than a minute.
 	  </para>
 	</answer>
@@ -598,7 +593,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	  </para>
 	  <para>
 	    Commercial Bug-tracking software typically costs somewhere upwards
-	    of $20,000 or more for 5-10 floating licenses.  Bugzilla consultation
+	    of $20,000 or more for 5-10 floating licenses. Bugzilla consultation
 	    is available from skilled members of the newsgroup. Simple questions
       are answered there and then.
 	  </para>
@@ -617,9 +612,9 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    It all depends on your level of commitment.  Someone with much Bugzilla
+	    It all depends on your level of commitment. Someone with much Bugzilla
 	    experience can get you up and running in less than a day, and
-	    your Bugzilla install can run untended for years.  If your
+	    your Bugzilla install can run untended for years. If your
 	    Bugzilla strategy is critical to your business workflow, hire somebody
 	    with reasonable UNIX or Perl skills to handle your process management and
 	    bug-tracking maintenance &amp; customization.
@@ -636,7 +631,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    No.  MySQL asks, if you find their product valuable, that you purchase
+	    No. MySQL asks, if you find their product valuable, that you purchase
 	    a support contract from them that suits your needs.
 	  </para>
 	</answer>
@@ -655,7 +650,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Run MySQL like this: "mysqld --skip-grant-tables".  Please remember <emphasis>this
+	    Run MySQL like this: "mysqld --skip-grant-tables". Please remember <emphasis>this
 	    makes MySQL as secure as taping a $100 to the floor of a football stadium
 	    bathroom for safekeeping.</emphasis> 
 	  </para>
@@ -741,12 +736,12 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Try Klaas Freitag's excellent patch for "whineatassigned" functionality.
-	    You can find it at <ulink
-            url="http://bugzilla.mozilla.org/show_bug.cgi?id=6679"/>. This
+	    Try Klaas Freitag's excellent patch for "whineatassigned"
+            functionality. You can find it in <ulink
+            url="http://bugzilla.mozilla.org/show_bug.cgi?id=6679">bug 6679</ulink>. This
 	    patch is against an older version of Bugzilla, so you must apply
 	    the diffs manually.
-            <!-- TODO: Mention Joel's "Fine Whine" patch" -->
+            <!-- TODO: Mention Joel's "Fine Whine" patch. -->
 	  </para>
 	</answer>
       </qandaentry>
@@ -769,7 +764,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	    </blockquote>
 	    However, this is fairly nasty and subject to problems; you also
 	    need to set up your smrsh (sendmail restricted shell) to allow
-	    it.  In a pinch, though, it can work.
+	    it. In a pinch, though, it can work.
 	  </para>
 	</answer>
       </qandaentry>
@@ -826,7 +821,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	  </para>
 	  <para>
 	    If you never receive mail from Bugzilla, chances you do not have
-	    sendmail in "/usr/lib/sendmail".  Ensure sendmail lives in, or is symlinked
+	    sendmail in "/usr/lib/sendmail". Ensure sendmail lives in, or is symlinked
 	    to, "/usr/lib/sendmail".
 	  </para>
 	</answer>
@@ -846,7 +841,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	  <para>
             Red Hat's old version of Bugzilla (based on 2.8) worked on Oracle.
             Red Hat's newer version (based on 2.17.1 and soon to be merged into
-            the main distribution) runs on PostgreSQL.  At this time we know of
+            the main distribution) runs on PostgreSQL. At this time we know of
             no recent ports of Bugzilla to Oracle but do intend to support it
             in the future (possibly the 2.20 time-frame).
 	  </para>
@@ -866,15 +861,15 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	    (<filename>./sanitycheck.cgi</filename> in the
 	    Bugzilla_home directory) from your web browser to see! If
 	    it finishes without errors, you're
-	    <emphasis>probably</emphasis> OK.  If it doesn't come back
+	    <emphasis>probably</emphasis> OK. If it doesn't come back
 	    OK (i.e. any red letters), there are certain things
-	    Bugzilla can recover from and certain things it can't.  If
+	    Bugzilla can recover from and certain things it can't. If
 	    it can't auto-recover, I hope you're familiar with
 	    mysqladmin commands or have installed another way to
-	    manage your database.  Sanity Check, although it is a good
+	    manage your database. Sanity Check, although it is a good
 	    basic check on your database integrity, by no means is a
 	    substitute for competent database administration and
-	    avoiding deletion of data.  It is not exhaustive, and was
+	    avoiding deletion of data. It is not exhaustive, and was
 	    created to do a basic check for the most common problems
 	    in Bugzilla databases.
 	  </para>
@@ -893,7 +888,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	    not a smart thing to do if you don't know exactly what you're doing.
 	    However, if you understand SQL you can use the <command>mysql</command>
             command line utility to manually insert, delete and modify table
-            information.  There are also more intuitive GUI clients available.
+            information. There are also more intuitive GUI clients available.
             Personal favorites of the Bugzilla team are <ulink
             url="http://www.phpmyadmin.net/">phpMyAdmin</ulink> and <ulink
             url="http://www.mysql.com/downloads/gui-mycc.html">MySQL Control
@@ -936,7 +931,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Well, you can synchronize or you can move bugs.  Synchronization will
+	    Well, you can synchronize or you can move bugs. Synchronization will
 	    only work one way -- you can create a read-only copy of the database
 	    at one site, and have it regularly updated at intervals from the main
 	    database.
@@ -980,8 +975,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    Not currently.  Bundle::Bugzilla enormously simplifies Bugzilla
-	    installation on UNIX systems.  If someone can volunteer to
+	    Not currently. Bundle::Bugzilla enormously simplifies Bugzilla
+	    installation on UNIX systems. If someone can volunteer to
 	    create a suitable PPM bundle for Win32, it would be appreciated.
 	  </para>
 	</answer>
@@ -1058,8 +1053,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	    </orderedlist>
 	    I reckon TimeDate and Data::Dumper come with the activeperl. You can check
 	    the ActiveState site for packages for installation through PPM.
-	    <ulink url=" http://www.activestate.com/Packages/">
-	      http://www.activestate.com/Packages/</ulink>
+	    <ulink url="http://www.activestate.com/Packages/"/>.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1086,7 +1080,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
       <qandaentry>
 	<question id="faq-use-query">
 	  <para>
-	    The query page is very confusing.  Isn't there a simpler way to query?
+	    The query page is very confusing. Isn't there a simpler way to query?
 	  </para>
 	</question>
 	<answer>
@@ -1108,16 +1102,15 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	<answer>
 	  <para>
 	    The current behavior is acceptable to bugzilla.mozilla.org and most
-	    users.  You have your choice of patches
-	    to change this behavior, however.
+	    users. You have your choice of patches to change this behavior, however.
 	    <simplelist>
 	      <member><ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8029">
 		Add a "and accept bug" radio button</ulink></member>
 	      <member><ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8153">
 		"Accept" button automatically assigns to you</ulink></member>
 	    </simplelist>
-	    Note that these patches are somewhat dated.  You will need to apply
-      them manually.  
+	    Note that these patches are somewhat dated. You will need to apply
+      them manually.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1126,13 +1119,13 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	<question id="faq-use-attachment">
 	  <para>
 	    I can't upload anything into the database via the "Create Attachment"
-	    link.  What am I doing wrong?
+	    link. What am I doing wrong?
 	  </para>
 	</question>
 	<answer>
 	  <para>
 	    The most likely cause is a very old browser or a browser that is
-	    incompatible with file upload via POST.  Download the latest Netscape,
+	    incompatible with file upload via POST. Download the latest Netscape,
 	    Microsoft, or Mozilla browser to handle uploads correctly.
 	  </para>
 	</answer>
@@ -1147,8 +1140,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	<answer>
 	  <para>
 	    In the Bugzilla administrator UI, edit the keyword and it will let you
-	    replace the old keyword name with a new one.  This will cause a problem
-	    with the keyword cache.  Run sanitycheck.cgi to fix it.
+	    replace the old keyword name with a new one. This will cause a problem
+	    with the keyword cache. Run sanitycheck.cgi to fix it.
 	  </para>
 	</answer>
       </qandaentry>
@@ -1167,7 +1160,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	<answer>
 	  <para>
 	    Gerv and Myk suggest a 2-space indent, with embedded code sections on
-	    their own line, in line with outer tags.  Like this:</para>
+	    their own line, in line with outer tags. Like this:</para>
 	    <programlisting><![CDATA[
 <fred>
 [% IF foo %]
@@ -1189,7 +1182,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
 	<para>Please note that many have differing opinions on this subject,
 	and the existing templates in Bugzilla espouse both this and a 4-space
-	style.  Either is acceptable; the above is preferred.</para>
+	style. Either is acceptable; the above is preferred.</para>
 	</answer>
       </qandaentry>
 
@@ -1209,7 +1202,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	    You can view bugs marked for &bz-nextver; release
 	    <ulink url="http://bugzilla.mozilla.org/buglist.cgi?product=Bugzilla&amp;target_milestone=Bugzilla+&bz-nextver;">here</ulink>.
 	    This list includes bugs for the &bz-nextver; release that have already
-	    been fixed and checked into CVS.  Please consult the
+	    been fixed and checked into CVS. Please consult the
 	    <ulink url="http://www.bugzilla.org/">
 	      Bugzilla Project Page</ulink> for details on how to
 	    check current sources out of CVS so you can have these
@@ -1227,11 +1220,10 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    This is well-documented here: <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=49862">
-	    http://bugzilla.mozilla.org/show_bug.cgi?id=49862</ulink>.  Ultimately, it's as easy
-	    as adding the "---" priority field to your localconfig file in the appropriate area,
-	    re-running checksetup.pl, and then changing the default priority in your browser using
-	    "editparams.cgi". 
+	    This is well-documented in <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=49862">
+	    bug 49862</ulink>. Ultimately, it's as easy as adding the "---" priority field to your
+            localconfig file in the appropriate area, re-running checksetup.pl, and then changing the
+            default priority in your browser using "editparams.cgi". 
 	  </para>
 	</answer>
       </qandaentry>
@@ -1259,7 +1251,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 		  or new source file by clicking
 		  "Create a new attachment" link on the bug page you've just created, and
 		  include any descriptions of database changes you may make, into the bug
-		  ID you submitted in step #1.  Be sure and click the "Patch" checkbox
+		  ID you submitted in step #1. Be sure and click the "Patch" checkbox
 		  to indicate the text you are sending is a patch!
 		</para>
 	      </listitem>
@@ -1267,7 +1259,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 		<para>
 		  Announce your patch and the associated URL
 		  (http://bugzilla.mozilla.org/show_bug.cgi?id=XXXXXX) for discussion in
-		  the newsgroup (netscape.public.mozilla.webtools).  You'll get a really
+		  the newsgroup (netscape.public.mozilla.webtools). You'll get a really
 		  good, fairly immediate reaction to the implications of your patch,
 		  which will also give us an idea how well-received the change would
 		  be.

@@ -618,7 +618,7 @@
 
       <listitem>
         <para><emphasis>Maximum Votes a person can put on a single
-         bug"</emphasis>: 
+         bug</emphasis>: 
          It should probably be some number lower than the
         "Maximum votes per person". Don't set this field to "0" if
         "Maximum votes per person" is non-zero; that doesn't make
@@ -884,9 +884,9 @@ skip-networking
       not be accessible is rather complicated. A new installation method
       is currently in the works which should solve this by allowing files
       that shouldn't be accessible from the web to be placed in directory
-      outside the webroot. See
-      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=44659">bug
-      44659</ulink> for more information.
+      outside the webroot. See 
+      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=44659">
+      bug 44659</ulink> for more information.
       </para>
 
       <itemizedlist spacing="compact">

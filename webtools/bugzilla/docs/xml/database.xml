@@ -68,7 +68,7 @@
 
     <para>But Certain Death speaks up -- a tiny voice, from the dark corners
     of the conference room. "I have a concern," the voice hisses from the
-    darkness, "about the use of the word 'verified'.</para>
+    darkness, "about the use of the word 'verified'."</para>
 
     <para>The room, previously filled with happy chatter, lapses into
     reverential silence as Certain Death (better known as the Vice President
@@ -103,10 +103,8 @@
       and a 
       <quote>tinyint</quote>
 
-      entry in MySQL. I recommend you refer to the MySQL documentation,
-      available at 
-      <ulink url="http://www.mysql.com/doc.html">MySQL.com</ulink>
-
+      entry in MySQL. I recommend you refer to the
+      <ulink url="http://www.mysql.com/documentation/">MySQL documentation</ulink>
       . Below are the basics you need to know about the Bugzilla database.
       Check the chart above for more details.</para>
 
@@ -131,7 +129,7 @@
             your database in the Bugzilla FAQ in this directory (under
             "Security"), or more robust security generalities in the 
             <ulink url="http://www.mysql.com/php/manual.php3?section=Privilege_system">MySQL
-            searchable documentation</ulink>.            
+            searchable documentation</ulink>.
             </para>
           </listitem>
 
@@ -207,14 +205,14 @@
 </para>
 
 <literallayout>
-  Here's an overview of what each table does.  Most columns in each table have
+  Here's an overview of what each table does. Most columns in each table have
 descriptive names that make it fairly trivial to figure out their jobs.
 
-attachments: This table stores all attachments to bugs.  It tends to be your
+attachments: This table stores all attachments to bugs. It tends to be your
 largest table, yet also generally has the fewest entries because file
 attachments are so (relatively) large.
 
-bugs:  This is the core of your system.  The bugs table stores most of the
+bugs:  This is the core of your system. The bugs table stores most of the
 current information about a bug, with the exception of the info stored in the
 other tables.
 
@@ -222,26 +220,26 @@ bugs_activity:  This stores information regarding what changes are made to bugs
 when -- a history file.
 
 cc:  This tiny table simply stores all the CC information for any bug which has
-any entries in the CC field of the bug.  Note that, like most other tables in
+any entries in the CC field of the bug. Note that, like most other tables in
 Bugzilla, it does not refer to users by their user names, but by their unique
 userid, stored as a primary key in the profiles table.
 
 components: This stores the programs and components (or products and
-components, in newer Bugzilla parlance) for Bugzilla.  Curiously, the "program"
+components, in newer Bugzilla parlance) for Bugzilla. Curiously, the "program"
 (product) field is the full name of the product, rather than some other unique
 identifier, like bug_id and user_id are elsewhere in the database.
 
 dependencies: Stores data about those cool dependency trees.
 
-fielddefs:  A nifty table that defines other tables.  For instance, when you
+fielddefs:  A nifty table that defines other tables. For instance, when you
 submit a form that changes the value of "AssignedTo" this table allows
 translation to the actual field name "assigned_to" for entry into MySQL.
 
-groups:  defines bitmasks for groups.  A bitmask is a number that can uniquely
-identify group memberships.  For instance, say the group that is allowed to
+groups:  defines bitmasks for groups. A bitmask is a number that can uniquely
+identify group memberships. For instance, say the group that is allowed to
 tweak parameters is assigned a value of "1", the group that is allowed to edit
 users is assigned a "2", and the group that is allowed to create new groups is
-assigned the bitmask of "4".  By uniquely combining the group bitmasks (much
+assigned the bitmask of "4". By uniquely combining the group bitmasks (much
 like the chmod command in UNIX,) you can identify a user is allowed to tweak
 parameters and create groups, but not edit users, by giving him a bitmask of
 "5", or a user allowed to edit users and create groups, but not tweak
@@ -256,15 +254,15 @@ keywords: Unlike what you'd think, this table holds which keywords are
 associated with which bug id's.
 
 logincookies: This stores every login cookie ever assigned to you for every
-machine you've ever logged into Bugzilla from.  Curiously, it never does any
-housecleaning -- I see cookies in this file I've not used for months.  However,
+machine you've ever logged into Bugzilla from. Curiously, it never does any
+housecleaning -- I see cookies in this file I've not used for months. However,
 since Bugzilla never expires your cookie (for convenience' sake), it makes
 sense.
 
 longdescs:  The meat of bugzilla -- here is where all user comments are stored!
 You've only got 2^24 bytes per comment (it's a mediumtext field), so speak
 sparingly -- that's only the amount of space the Old Testament from the Bible
-would take (uncompressed, 16 megabytes).  Each comment is keyed to the
+would take (uncompressed, 16 megabytes). Each comment is keyed to the
 bug_id to which it's attached, so the order is necessarily chronological, for
 comments are played back in the order in which they are received.
 
@@ -272,12 +270,12 @@ milestones:  Interesting that milestones are associated with a specific product
 in this table, but Bugzilla does not yet support differing milestones by
 product through the standard configuration interfaces.
 
-namedqueries:  This is where everybody stores their "custom queries".  Very
+namedqueries:  This is where everybody stores their "custom queries". Very
 cool feature; it beats the tar out of having to bookmark each cool query you
 construct.
 
 products:  What products you have, whether new bug entries are allowed for the
-product, what milestone you're working toward on that product, votes, etc.  It
+product, what milestone you're working toward on that product, votes, etc. It
 will be nice when the components table supports these same features, so you
 could close a particular component for bug entry without having to close an
 entire product...
@@ -312,7 +310,7 @@ mysql> show columns from table;
 mysql> select * from table;
 
   -- note: this is a very bad idea to do on, for instance, the "bugs" table if
-you have 50,000 bugs.  You'll be sitting there a while until you ctrl-c or
+you have 50,000 bugs. You'll be sitting there a while until you ctrl-c or
 50,000 bugs play across your screen.
 
   You can limit the display from above a little with the command, where
@@ -325,7 +323,7 @@ mysql> select * from table where (column = "some info");
 mysql> select * from table where (column != "some info");
 
   Let's take our example from the introduction, and assume you need to change
-the word "verified" to "approved" in the resolution field.  We know from the
+the word "verified" to "approved" in the resolution field. We know from the
 above information that the resolution is likely to be stored in the "bugs"
 table. Note we'll need to change a little perl code as well as this database
 change, but I won't plunge into that in this document. Let's verify the
@@ -336,10 +334,10 @@ mysql> show columns from bugs
   (exceedingly long output truncated here)
 | bug_status| enum('UNCONFIRMED','NEW','ASSIGNED','REOPENED','RESOLVED','VERIFIED','CLOSED')||MUL | UNCONFIRMED||
 
-  Sorry about that long line.  We see from this that the "bug status" column is
+  Sorry about that long line. We see from this that the "bug status" column is
 an "enum field", which is a MySQL peculiarity where a string type field can
-only have certain types of entries.  While I think this is very cool, it's not
-standard SQL.  Anyway, we need to add the possible enum field entry
+only have certain types of entries. While I think this is very cool, it's not
+standard SQL. Anyway, we need to add the possible enum field entry
 'APPROVED' by altering the "bugs" table.
 
 mysql> ALTER table bugs CHANGE bug_status bug_status
@@ -355,15 +353,15 @@ mysql> show columns from bugs;
 
   you'll see that the bug_status field has an extra "APPROVED" enum that's
 available!  Cool thing, too, is that this is reflected on your query page as
-well -- you can query by the new status.  But how's it fit into the existing
+well -- you can query by the new status. But how's it fit into the existing
 scheme of things?
   Looks like you need to go back and look for instances of the word "verified"
 in the perl code for Bugzilla -- wherever you find "verified", change it to
 "approved" and you're in business (make sure that's a case-insensitive search).
 Although you can query by the enum field, you can't give something a status
-of "APPROVED" until you make the perl changes.   Note that this change I
+of "APPROVED" until you make the perl changes. Note that this change I
 mentioned can also be done by editing checksetup.pl, which automates a lot of
-this.  But you need to know this stuff anyway, right?
+this. But you need to know this stuff anyway, right?
 	</literallayout>
       </section>
     </section>
