@@ -29,12 +29,11 @@
 
   <stringbundle id="bundle_prefutilities"
                 src="chrome://communicator/locale/pref/prefutilities.properties"/>
-  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-colors.js"/>
   <script type="application/x-javascript" 
           src="chrome://browser/content/pref/pref-fonts.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["selectLangs", "foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseMyColors"];
+    var _elementIDs = ["selectLangs"];
   ]]>
   </script>
  
@@ -245,14 +244,13 @@
   <separator class="thin"/>
   
   <hbox align="center">
-    <label value="Allow documents to use other: "/>
+    <label value="Always use my: "/>
     <!-- Unchecking this removes the ability to select dynamic fonts -->
-    <checkbox id="browserUseDocumentFonts" 
-              label="&useDocumentFonts.label;" 
-              accesskey="&useDocumentFonts.accesskey;"/>
-    <checkbox id="browserUseMyColors" label="&alwaysUseMyColors.label;"
-              accesskey="&alwaysUseMyColors.accesskey;"
-              prefstring="browser.display.use_document_colors"/>
+    <checkbox id="useMyFonts" 
+              label="&useMyFonts.label;" 
+              accesskey="&useMyFonts.accesskey;"/>
+    <checkbox id="useMyColors" label="&useMyColors.label;"
+              accesskey="&useMyColors.accesskey;"/>
   </hbox>
   <hbox>
     <groupbox flex="1" id="pageColours">
@@ -260,13 +258,13 @@
       <hbox align="center">
         <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
         <spacer flex="1"/>
-        <colorpicker type="button" id="foregroundtextmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <colorpicker type="button" id="foregroundtextmenu" palettename="standard"/> 
         <data id="foregroundText" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <hbox align="center" style="margin-top: 5px">
         <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
         <spacer flex="1"/>
-        <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <colorpicker type="button" id="backgroundmenu" palettename="standard"/> 
         <data id="background" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <separator class="thin"/>
@@ -281,13 +279,13 @@
       <hbox align="center">
         <label value="&linkColor.label;" accesskey="&linkColor.accesskey;" control="unvisitedlinkmenu"/>
         <spacer flex="1"/>
-        <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard"/> 
         <data id="unvisitedLinks" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <hbox align="center" style="margin-top: 5px">
         <label value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu"/>
         <spacer flex="1"/>
-        <colorpicker type="button" id="visitedlinkmenu" palettename="standard" onchange="setColorWell(this)"/> 
+        <colorpicker type="button" id="visitedlinkmenu" palettename="standard"/> 
         <data id="visitedLinks" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
       </hbox>
       <separator class="thin"/>

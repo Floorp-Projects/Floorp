@@ -50,7 +50,7 @@ catch(e)
     dump("failed to get font list or pref object: "+e+" in pref-fonts.js\n");
   }
 
-var fontTypes   = ["serif", "sans-serif", "cursive", "fantasy", "monospace"];
+var fontTypes   = ["serif", "sans-serif", "monospace"];
 var variableSize, fixedSize, minSize, languageList;
 var languageData = [];
 var currentLanguage;
@@ -73,7 +73,21 @@ function GetFields()
 
    dataObject.defaultFont = document.getElementById( "proportionalFont" ).value;
    dataObject.fontDPI = document.getElementById( "screenResolution" ).value;
-   dataObject.useDocFonts = document.getElementById( "browserUseDocumentFonts" ).checked ? 1 : 0;
+   dataObject.useMyFonts = document.getElementById( "useMyFonts" ).checked ? 1 : 0;
+
+   var items = ["foregroundText", "background", "unvisitedLinks", "visitedLinks", "browserUseSystemColors", "browserUnderlineAnchors", "useMyColors", "useMyFonts"];
+   for (i = 0; i < items.length; ++i) {
+     dataObject.dataEls[items[i]] = [];
+   }
+   dataObject.dataEls["foregroundText"].value = document.getElementById("foregroundtextmenu").color;
+   dataObject.dataEls["background"].value = document.getElementById("backgroundmenu").color;
+   dataObject.dataEls["unvisitedLinks"].value = document.getElementById("unvisitedlinkmenu").color;
+   dataObject.dataEls["visitedLinks"].value = document.getElementById("visitedlinkmenu").color;
+
+   dataObject.dataEls["browserUseSystemColors"].checked = document.getElementById("browserUseSystemColors").checked;
+   dataObject.dataEls["browserUnderlineAnchors"].checked = document.getElementById("browserUnderlineAnchors").checked;
+   dataObject.dataEls["useMyColors"].checked = document.getElementById("useMyColors").checked;
+   dataObject.dataEls["useMyFonts"].checked = document.getElementById("useMyFonts").checked;
 
     // save current state for language dependent fields and store
     saveState();
@@ -132,19 +146,47 @@ function SetFields( aDataObject )
         screenResolution.disabled = true;
     }
 
-    var useDocFontsCheckbox = document.getElementById( "browserUseDocumentFonts" );
-    if( "useDocFonts" in aDataObject && aDataObject.useDocFonts != undefined )
-      useDocFontsCheckbox.checked = aDataObject.useDocFonts ? true : false;
-    else
-      {
-        prefvalue = parent.hPrefWindow.getPref( "int", "browser.display.use_document_fonts" );
-        if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
-          useDocFontsCheckbox.checked = prefvalue ? true : false ;
-      }
     if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.use_document_fonts" ) ) {
-        useDocFontsCheckbox.disabled = true;
+        useMyFontsCheckbox.disabled = true;
     }
-  }
+   if ("dataEls" in aDataObject) {
+     document.getElementById("foregroundtextmenu").color = aDataObject.dataEls["foregroundText"].value
+     document.getElementById("backgroundmenu").color = aDataObject.dataEls["background"].value;
+     document.getElementById("unvisitedlinkmenu").color = aDataObject.dataEls["unvisitedLinks"].value;
+     document.getElementById("visitedlinkmenu").color = aDataObject.dataEls["visitedLinks"].value;
+ 
+     document.getElementById("browserUseSystemColors").checked = aDataObject.dataEls["browserUseSystemColors"].checked;
+     document.getElementById("browserUnderlineAnchors").checked = aDataObject.dataEls["browserUnderlineAnchors"].checked;
+     document.getElementById("useMyColors").checked = aDataObject.dataEls["useMyColors"].checked;
+     document.getElementById("useMyFonts").checked = aDataObject.dataEls["useMyFonts"].checked;
+   }
+   else {
+     var elt, prefstring;
+     var checkboxes = ["browserUseSystemColors", "browserUnderlineAnchors"];
+     for (i = 0; i < checkboxes.length; ++i) {
+       elt = document.getElementById(checkboxes[i]);
+       prefstring = elt.getAttribute( "prefstring" );
+       if( prefstring  ) {
+         prefvalue = parent.hPrefWindow.getPref( "bool", prefstring );
+         elt.checked = prefvalue;
+       }
+     }
+     var colors = ["foregroundtextmenu", "backgroundmenu", "unvisitedlinkmenu", "visitedlinkmenu"];
+     for (i = 0; i < colors.length; ++i) {
+       elt = document.getElementById(colors[i]);
+       prefstring = elt.nextSibling.getAttribute("prefstring");
+       if (prefstring) {
+         prefvalue = parent.hPrefWindow.getPref("color", prefstring);
+         elt.color = prefvalue;
+       }
+     }
+     var useDocColors = parent.hPrefWindow.getPref("bool", "browser.display.use_document_colors");
+     document.getElementById("useMyColors").checked = !useDocColors;
+     var useDocFonts = parent.hPrefWindow.getPref("int", "browser.display.use_document_fonts");
+     document.getElementById("useMyFonts").checked = !useDocFonts;
+
+   }
+}
 
 function Startup()
   {
@@ -212,10 +254,6 @@ function Startup()
     if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.languageList" ) ) {
       disableAllFontElements();
     }
-    getColorFromWellAndSetValue("foregroundtextmenu");
-    getColorFromWellAndSetValue("backgroundmenu");
-    getColorFromWellAndSetValue("unvisitedlinkmenu");
-    getColorFromWellAndSetValue("visitedlinkmenu");
   }
 
 function listElement( aListID )
@@ -251,7 +289,7 @@ listElement.prototype =
           var fontName;
           while (aDataObject.hasMoreElements()) {
             fontName = aDataObject.getNext();
-            fontName = fontName.QueryInterface(Components.interfaces.nsISupportsWString);
+            fontName = fontName.QueryInterface(Components.interfaces.nsISupportsString);
             var fontNameStr = fontName.toString();
             if (strDefaultFontFace == "")
               strDefaultFontFace = fontNameStr;
@@ -326,13 +364,14 @@ function saveFontPrefs()
 
     // font scaling
     var fontDPI       = parseInt( dataObject.fontDPI );
-    var documentFonts = dataObject.useDocFonts;
+    var myFonts = dataObject.dataEls["useMyFonts"].checked;
     var defaultFont   = dataObject.defaultFont;
-
+    var myColors = dataObject.dataEls["useMyColors"].checked;
     try
       {
         var currDPI = pref.GetIntPref( "browser.display.screen_resolution" );
         var currFonts = pref.GetIntPref( "browser.display.use_document_fonts" );
+        var currColors = pref.GetBoolPref("browser.display.use_document_colors");
         var currDefault = pref.CopyUnicharPref( "font.default" );
       }
     catch(e)
@@ -340,12 +379,29 @@ function saveFontPrefs()
       }
     if( currDPI != fontDPI )
       pref.SetIntPref( "browser.display.screen_resolution", fontDPI );
-    if( currFonts != documentFonts )
-      pref.SetIntPref( "browser.display.use_document_fonts", documentFonts );
+    if( currFonts == myFonts )
+      pref.SetIntPref( "browser.display.use_document_fonts", !myFonts );
     if( currDefault != defaultFont )
       {
         pref.SetUnicharPref( "font.default", defaultFont );
       }
+    if (currColors == myColors)
+      pref.SetBoolPref("browser.display.use_document_colors", !myColors);
+
+    var items = ["foregroundText", "background", "unvisitedLinks", "visitedLinks"];
+    var prefs = ["browser.display.foreground_color", "browser.display.background_color",
+                 "browser.anchor_color", "browser.visited_color"];
+    var prefvalue;
+    for (var i = 0; i < items.length; ++i) {
+      prefvalue = dataObject.dataEls[items[i]].value;
+      pref.SetUnicharPref(prefs[i], prefvalue)
+    }
+    items = ["browserUseSystemColors", "browserUnderlineAnchors"];
+    prefs = ["browser.display.use_system_colors", "browser.underline_anchors"];
+    for (var i = 0; i < items.length; ++i) {
+      prefvalue = dataObject.dataEls[items[i]].checked;
+      pref.SetBoolPref(prefs[i], prefvalue)
+    }
   }
 
 function saveState()
@@ -627,13 +683,12 @@ function onCancel()
       return true;
   }
 
-// disable font items, but not the browserUseDocumentFonts checkbox nor the resolution
+// disable font items, but not the useMyFonts checkbox nor the resolution
 // menulist
 function disableAllFontElements()
   {
       var doc_ids = [ "selectLangs", "proportionalFont",
                       "sizeVar", "serif", "sans-serif",
-                      "cursive", "fantasy", "monospace",
                       "sizeMono", "minSize" ];
       for (i=0; i<doc_ids.length; i++) {
           element = document.getElementById( doc_ids[i] );
@@ -641,33 +696,3 @@ function disableAllFontElements()
       }
   }
 
-function setColorWell(aPicker)
-{
-  var colorRef = aPicker.nextSibling;                // colour value is held here
-  colorRef.setAttribute( "value", aPicker.color );
-}
-
-  function setColorWellSr(menu,otherId,setbackground)
-  {
-    // Find the colorWell and colorPicker in the hierarchy.
-    var colorWell = menu.firstChild;
-    var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
-    var colorRef = menu.nextSibling;                // colour value is held here
-  
-    // Extract color from colorPicker and assign to colorWell.
-    var color = colorPicker.getAttribute('color');
-    // set colour values in the display 
-    setColorFromPicker( colorWell, color );
-    // set the colour value internally for use in prefwindow
-    colorRef.setAttribute( "value", color );
-  }
-
-  function getColorFromWellAndSetValue(aPickerId)
-  {
-    var picker = document.getElementById(aPickerId);
-    var colorRef  = picker.nextSibling;
-    var color = colorRef.getAttribute("value");
-    picker.color = color;
-    return color;
-  }     
-  
