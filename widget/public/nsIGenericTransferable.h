@@ -60,9 +60,15 @@ class nsIGenericTransferable : public nsISupports {
     * can receive this type of flavor
     *
     * @param  aDataFlavor a new data flavor to handle
-    * @param  aHumanPresentableName human readable string for mime
     */
     NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor) = 0;
+
+  /**
+    * Removes the data flavor by MIME name (NOT by pointer addr)
+    *
+    * @param  aDataFlavor a data flavor to remove
+    */
+    NS_IMETHOD RemoveDataFlavor(nsIDataFlavor * aDataFlavor) = 0;
 
   /**
     * Sets the converter for this transferable
