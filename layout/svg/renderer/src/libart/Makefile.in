@@ -60,6 +60,7 @@ REQUIRES = \
 	uconv \
 	windowwatcher \
 	locale \
+	embed_base \
 	$(NULL)
 
 CPPSRCS = \

@@ -52,14 +52,12 @@
 #include "nsMIMEInfoMac.h"
 
 #include "nsIInternetConfigService.h"
-
+#include "nsEmbedCID.h"
 #include <LaunchServices.h>
 
 // chrome URL's
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
 #define BRAND_BUNDLE_URL "chrome://global/locale/brand.properties"
-
-#define NS_PROMPTSERVICE_CONTRACTID "@mozilla.org/embedcomp/prompt-service;1"
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {

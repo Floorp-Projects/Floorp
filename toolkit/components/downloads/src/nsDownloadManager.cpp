@@ -64,6 +64,7 @@
 #include "nsVoidArray.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIFileURL.h"
+#include "nsEmbedCID.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
@@ -1390,7 +1391,7 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount, nsISupportsPRBool* aCa
     wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(dmWindow));
 
   // Show alert.
-  nsCOMPtr<nsIPromptService> prompter(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+  nsCOMPtr<nsIPromptService> prompter(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
   if (prompter) {
     PRInt32 flags = (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_0) + (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_1);
     PRBool nothing = PR_FALSE;
@@ -1526,7 +1527,7 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
       xpinstallBundle->FormatStringFromName(NS_LITERAL_STRING("installComplete").get(), strings, 1, getter_Copies(message));
       xpinstallBundle->GetStringFromName(NS_LITERAL_STRING("installCompleteTitle").get(), getter_Copies(title));
 
-      nsCOMPtr<nsIPromptService> ps(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+      nsCOMPtr<nsIPromptService> ps(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
       ps->Alert(nsnull, title, message);
     }
 

@@ -97,7 +97,7 @@
 #include "nsIWindowWatcher.h"
 #include "jsapi.h"
 #include "nsIJSContextStack.h"
-
+#include "nsEmbedCID.h"
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #define OLD_REGISTRY_FILE_NAME "Netscape Registry"
@@ -648,7 +648,7 @@ nsProfile::ConfirmAutoMigration(PRBool canInteract, PRBool *confirmed)
     rv = migrationBundle->GetStringFromName(NS_LITERAL_STRING("manage").get(), getter_Copies(button1Title));
     if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsIPromptService> promptService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
+    nsCOMPtr<nsIPromptService> promptService(do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     PRInt32 buttonPressed;
     rv = promptService->ConfirmEx(nsnull, dialogTitle.get(), msgString.get(),

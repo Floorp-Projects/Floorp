@@ -47,7 +47,7 @@
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
 #include "nsIPromptService.h"
-
+#include "nsEmbedCID.h"
 
 nsXPIProxy::nsXPIProxy()
 {
@@ -85,7 +85,7 @@ nsXPIProxy::NotifyRestartNeeded()
 NS_IMETHODIMP
 nsXPIProxy::Alert(const PRUnichar* aTitle, const PRUnichar* aText)
 {
-    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    nsCOMPtr<nsIPromptService> dialog(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
     
     if (!dialog)
         return NS_ERROR_FAILURE;
@@ -96,7 +96,7 @@ nsXPIProxy::Alert(const PRUnichar* aTitle, const PRUnichar* aText)
 NS_IMETHODIMP
 nsXPIProxy::ConfirmEx(const PRUnichar* aDialogTitle, const PRUnichar* aText, PRUint32 aButtonFlags, const PRUnichar* aButton0Title, const PRUnichar* aButton1Title, const PRUnichar* aButton2Title, const PRUnichar* aCheckMsg, PRBool* aCheckState, PRInt32* aReturn)
 {
-    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    nsCOMPtr<nsIPromptService> dialog(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
 
     if (!dialog)
         return NS_ERROR_FAILURE;

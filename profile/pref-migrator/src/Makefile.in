@@ -63,6 +63,7 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  uconv \
 		  windowwatcher \
+		  embed_base \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -50,6 +50,7 @@
 #include "nsCommandGroup.h"
 #include "nsPrintingPromptService.h"
 #include "nsBaseCommandController.h"
+#include "nsEmbedCID.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowWatcher, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartupNotifier)

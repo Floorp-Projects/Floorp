@@ -58,4 +58,19 @@
 #define NS_WEBBROWSER_CONTRACTID \
   "@mozilla.org/embedding/browser/nsWebBrowser;1"
 
+/**
+ * Prompt Service ContractID
+ *   The prompt service is the way to pose various prompts, alerts,
+ *   and confirmation dialogs to the user.
+ * 
+ * This contract implements the following interfaces:
+ * nsIPromptService
+ *
+ * Embedders may override this ContractID with their own implementation if they
+ * want more control over the way prompts, alerts, and confirmation dialogs are
+ * presented to the user.
+ */
+#define NS_PROMPTSERVICE_CONTRACTID \
+ "@mozilla.org/embedcomp/prompt-service;1"
+
 #endif // NSEMBEDCID_H

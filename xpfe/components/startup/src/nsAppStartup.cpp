@@ -70,6 +70,7 @@
 #include "nsWidgetsCID.h"
 #include "nsAppShellCID.h"
 #include "nsXPFEComponentsCID.h"
+#include "nsEmbedCID.h"
 
 NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -524,7 +525,7 @@ nsAppStartup::CheckAndRemigrateDefunctProfile()
   rv = migrationBundle->GetStringFromName(NS_LITERAL_STRING("confirmRemigration").get(), getter_Copies(dialogText));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr<nsIPromptService> promptService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
+  nsCOMPtr<nsIPromptService> promptService(do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
   PRInt32 buttonPressed;
   rv = promptService->ConfirmEx(nsnull, brandName.get(),

@@ -72,6 +72,7 @@
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
 #include "nsXPFEComponentsCID.h"
+#include "nsEmbedCID.h"
 
 struct JSContext;
 
@@ -933,7 +934,7 @@ struct MessageWindow {
 
              }
              if ( !dialogMsg.IsEmpty() && !dialogTitle.IsEmpty() && !brandName.IsEmpty() ) {
-                 nsCOMPtr<nsIPromptService> dialog( do_GetService( "@mozilla.org/embedcomp/prompt-service;1" ) );
+                 nsCOMPtr<nsIPromptService> dialog( do_GetService( NS_PROMPTSERVICE_CONTRACTID ) );
                  if ( dialog ) {
                      PRBool reallyDisable;
                      nsNativeAppSupportWin::mLastWindowIsConfirmation = PR_TRUE;

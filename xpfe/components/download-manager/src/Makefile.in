@@ -62,6 +62,7 @@ REQUIRES  = xpcom \
             widget \
             pref \
             appcomps \
+            embed_base \
             $(NULL)
 CPPSRCS   = \
     nsDownloadManager.cpp \

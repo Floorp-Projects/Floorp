@@ -73,6 +73,7 @@
 #include "nsIDOMNSDocument.h"
 
 #include "nsEmbedAPI.h"
+#include "nsEmbedCID.h"
 
 #define HACK_NON_REENTRANCY
 #ifdef HACK_NON_REENTRANCY
@@ -1056,7 +1057,7 @@ HRESULT CMozillaBrowser::Initialize()
 
         rv = registrar->RegisterFactory(kPromptServiceCID,
             "Prompt Service",
-            "@mozilla.org/embedcomp/prompt-service;1",
+            NS_PROMPTSERVICE_CONTRACTID,
             promptFactory);
         if (NS_FAILED(rv)) return rv;
 

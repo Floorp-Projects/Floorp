@@ -83,6 +83,8 @@
 
 #include "CertReader.h"
 
+#include "nsEmbedCID.h"
+
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -425,7 +427,7 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWin
 
     // confirmation dialog
     PRBool bInstall = PR_FALSE;
-    nsCOMPtr<nsIPromptService> dlgService(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
     if (dlgService)
     {
         dlgService->Confirm(

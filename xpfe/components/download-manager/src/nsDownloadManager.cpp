@@ -64,6 +64,7 @@
 #include "nsIPrefService.h"
 #include "nsIFileURL.h"
 #include "nsIAlertsService.h"
+#include "nsEmbedCID.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
@@ -870,7 +871,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
                                     getter_Copies(proceed));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPromptService> promptService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
+    nsCOMPtr<nsIPromptService> promptService(do_GetService(NS_PROMPTSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
       return rv;
 
@@ -1145,7 +1146,7 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
         wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(dmWindow));
 
       // Show alert.
-      nsCOMPtr<nsIPromptService> prompter(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+      nsCOMPtr<nsIPromptService> prompter(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
       if (prompter)
         prompter->Alert(dmWindow, title, aMessage);
     }
