@@ -68,7 +68,7 @@ public:                                                 \
   NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, PRBool *_retval); \
   NS_IMETHOD DoCommand(const char *aCommandName, nsISupports *aCommandRefCon); \
   NS_IMETHOD DoCommandParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon); \
-  NS_IMETHOD GetCommandState(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon); \
+  NS_IMETHOD GetCommandStateParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon); \
 };
 
 
