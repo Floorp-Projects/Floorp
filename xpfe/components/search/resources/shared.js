@@ -25,16 +25,13 @@ function OpenURL(event,node)
 		}
 	}
 
-	dump("OpenURL: double-clicked on '" + url + "'\n");
-
 	// Ignore "NC:" urls.
 	if (url.substring(0, 3) == "NC:")
-	{
 		return(false);
-	}
 
 	dump("Opening URL: " + url + "\n");
-	window.open(url, "_blank");
+  if( top.content )
+    top.content.location.href = url;
 
 	return true;
 }
@@ -42,7 +39,6 @@ function OpenURL(event,node)
 
 
 /* Note: doSort() does NOT support natural order sorting! */
-
 function doSort(sortColName)
 {
 	var node = document.getElementById(sortColName);
@@ -66,5 +62,25 @@ function doSort(sortColName)
 	if (!xulSortService)    return(false);
 	xulSortService.Sort(node, sortResource, sortDirection);
 
+	return(true);
+}
+
+function setInitialSort(node, sortDirection)
+{
+	// determine column resource to sort on
+	var sortResource = node.getAttribute('resource');
+	if (!sortResource) return(false);
+
+	try
+	{
+		var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+		if (!isupports)    return(false);
+		var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+		if (!xulSortService)    return(false);
+		xulSortService.Sort(node, sortResource, sortDirection);
+	}
+	catch(ex)
+	{
+	}
 	return(true);
 }

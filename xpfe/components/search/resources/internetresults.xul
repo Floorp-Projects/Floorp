@@ -13,15 +13,40 @@
 	<html:script src="chrome://search/content/internetresults.js" />
 	<html:script src="chrome://search/content/shared.js" />
 
-	<box id="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" style="height: 64;" align="horizontal">
-		<template>
-			<titledbutton uri="..." onclick="doEngineClick(this)" class="iconic" align="left" crop="right" src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" value="rdf:http://home.netscape.com/NC-rdf#Name" loading="rdf:http://home.netscape.com/NC-rdf#loading" />
-		</template>
-		<titledbutton id="internetresultssummary" align="left" value="&results.title.label;" style="list-style-image: none;" />
-		<titledbutton id="allEngines" onclick="doEngineClick(this)" class="iconic" value="&allresults.title.label;" align="left" />
-	</box>
-
-	<tree id="internetresultstree" ref="" flex="1" datasources="rdf:internetsearch"
+  <toolbox>
+    <toolbar flex="100%" style="background-color: white;">
+      <titledbutton src="http://search.netscape.com/img/search.gif" class="plain"/>
+      <spring flex="100%"/>
+      <html:table border="0" cellpadding="0" cellspacing="5" width="585"> 
+      <html:tr> 
+      <html:td width="465" bgcolor="#99cccc" height="17"  align="middle" valign="middle"> 
+        <html:font face="sans-serif, arial, helvetica" size="2"> 
+          <html:a href="http://home.netscape.com/misc/nav_redir/netsearch.html" target="_top" style="margin-left: 5px; margin-right: 5px;">Search</html:a>
+          |
+          <html:a href="http://home.netscape.com/misc/nav_redir/webmail.html" target="_top" style="margin-left: 5px; margin-right: 5px;">Webmail</html:a>
+          |
+          <html:a href="http://home.netscape.com/misc/nav_redir/personalize.html" target="_top" style="margin-left: 5px; margin-right: 5px;">My Netscape</html:a>
+          |
+          <html:a href="http://home.netscape.com/misc/nav_redir/aim.html" target="_top" style="margin-left: 5px; margin-right: 5px;">Buddy Chat</html:a>
+          |
+          <html:a href="http://home.netscape.com/misc/nav_redir/help.html" target="_top" style="margin-left: 5px; margin-right: 5px;">Help</html:a>
+          |
+          <html:a href="http://home.netscape.com/misc/nav_redir/download.html" target="_top" style="margin-left: 5px; margin-right: 5px;">Download</html:a>
+        </html:font> 
+      </html:td> 
+      </html:tr> 
+      </html:table> 
+    </toolbar>
+  </toolbox>
+  
+  <box id="engineTabs" ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" style="height: 64;" align="horizontal">
+  	<template>
+	  	<titledbutton uri="..." onclick="doEngineClick(this)" class="iconic push" align="left" crop="right" src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" value="rdf:http://home.netscape.com/NC-rdf#Name" loading="rdf:http://home.netscape.com/NC-rdf#loading" />
+  	</template>
+	  <titledbutton id="allEngines" onclick="doEngineClick(this)" class="iconic push" value="&allresults.title.label;" align="left" />
+  </box>
+    
+	<tree id="internetresultstree" ref="" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch"
 		onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode); else return doResultClick(event.target.parentNode.parentNode);">
 
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
@@ -41,33 +66,33 @@
 
 		<template>
 			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-                                <treechildren>
-				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-					<treerow>
-						<treecell>
-							<html:hr width="75%" align="center" size="1" />
-						</treecell>
-					</treerow>
-				</treeitem>  	
-                                </treechildren>	
+        <treechildren>
+  				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+  					<treerow>
+  						<treecell>
+  							<html:hr width="75%" align="center" size="1" />
+  						</treecell>
+  					</treerow>
+  				</treeitem>  	
+        </treechildren>	
 			</rule>
 
 			<rule>
-                                <treechildren>
-				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-					<treerow>
-						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
-						<treecell>
-							<progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
-							<titledbutton align="left" crop="right" flex="1" value="rdf:http://home.netscape.com/NC-rdf#Relevance" style="list-style-image: none;" />
-						</treecell>
-						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Price" />
-						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Availability" />
-						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
-						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
-					</treerow>
-				</treeitem>
-                                </treechildren>
+        <treechildren>
+  				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+  					<treerow>
+  						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+  						<treecell>
+  							<progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
+  							<titledbutton align="left" crop="right" flex="1" value="rdf:http://home.netscape.com/NC-rdf#Relevance" style="list-style-image: none;" />
+  						</treecell>
+  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Price" />
+  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Availability" />
+  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
+  						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
+  					</treerow>
+  				</treeitem>
+        </treechildren>
 			</rule>
 		</template>
 
@@ -102,7 +127,7 @@
 		</treehead>
 	</tree>
 
-	<splitter id="searchHtmlAreaSplitter" persist="state" style="border-top:solid black 1px; border-bottom:solid black 1px; background-color:lightgray;" collapse="after" />
+	<splitter id="gray_horizontal_splitter" persist="state" collapse="after" />
 	<html:iframe id="content" type="content-primary" style="height: 100; width: 100%;" flex="100%" src="chrome://search/content/default.htm" />
 
 <!--
