@@ -314,6 +314,14 @@
     </handlers>
   </binding>
 
+  <binding id="tooltips" extends="chrome://global/content/xulBindings.xml#popups">
+    <content>
+      <xul:box class="popup-internal-box" orient="vertical" flex="1">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
+
   <binding id="popups">
     <content>
       <!--xul:box class="popup-internal-box" orient="vertical" flex="1" style="overflow: auto">
