@@ -140,18 +140,22 @@ listElement.prototype =
           faces.sort();                
           for( var i = 0; i < faces.length; i++ )
             {
-              var itemNode = document.createElement( "menuitem" );
               if( faces[i] == "" )
                 {
-                  itemNode.setAttribute( "data", faces[i] );
-                  itemNode.setAttribute( "value", bundle.GetStringFromName("nofontsforlang") );
+                  this.listElement.setAttribute( "data", faces[i] );
+                  this.listElement.setAttribute( "value", bundle.GetStringFromName("nofontsforlang") );
+                  this.listElement.setAttribute( "disabled", "true" );
+                  gNoFontsForThisLang = true; // hack, hack hack!
                 }
               else
                 {
+                  var itemNode = document.createElement( "menuitem" );
                   itemNode.setAttribute( "data", faces[i] );
                   itemNode.setAttribute( "value", faces[i] );
+                  this.listElement.removeAttribute( "disabled" );
+                  gNoFontsForThisLang = false; // hack, hack hack!
+                  popupNode.appendChild( itemNode );
                 }
-              popupNode.appendChild( itemNode );
             }
           this.listElement.appendChild( popupNode );
         }
@@ -271,11 +275,21 @@ function selectLanguage()
         if( languageData[languageList.data] )
           {
             // data exists for this language, pre-select items based on this information
-            var selectedItem = selectElement.listElement.getElementsByAttribute( "data", languageData[languageList.data].types[fontTypes[i]] )[0];
-            selectElement.listElement.selectedItem = selectedItem;
-
-            variableSize.selectedItem = variableSize.getElementsByAttribute( "data", languageData[languageList.data].variableSize )[0];
-            fixedSize.selectedItem = fixedSize.getElementsByAttribute( "data", languageData[languageList.data].fixedSize )[0];
+            var dataElements = selectElement.listElement.getElementsByAttribute( "data", languageData[languageList.data].types[fontTypes[i]] );
+            var selectedItem = dataElements.length ? dataElements[0] : null;
+            if (!gNoFontsForThisLang) 
+              {
+                selectElement.listElement.selectedItem = selectedItem;
+                variableSize.removeAttribute("disabled");
+                fixedSize.removeAttribute("disabled");
+                variableSize.selectedItem = variableSize.getElementsByAttribute( "data", languageData[languageList.data].variableSize )[0];
+                fixedSize.selectedItem = fixedSize.getElementsByAttribute( "data", languageData[languageList.data].fixedSize )[0];
+              }
+            else
+              {
+                variableSize.setAttribute("disabled","true");
+                fixedSize.setAttribute("disabled","true");
+              }
           }
         else
           {
@@ -283,18 +297,27 @@ function selectLanguage()
               {
                 var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.data;
                 var selectVal = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
-                var selectedItem = selectElement.listElement.getElementsByAttribute( "data", selectVal )[0];
-                selectElement.listElement.data = selectVal;
-                selectElement.listElement.selectedItem = selectedItem;
-
-                var variableSizePref = "font.size.variable." + languageList.data;
-                var fixedSizePref = "font.size.fixed." + languageList.data;
-                var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
-                var sizeFixedVal = parent.hPrefWindow.pref.GetIntPref( fixedSizePref );
-                variableSize.data = sizeVarVal;
-                variableSize.selectedItem = variableSize.getElementsByAttribute( "data", sizeVarVal )[0];
-                fixedSize.data = sizeFixedVal;
-                fixedSize.selectedItem = fixedSize.getElementsByAttribute( "data", sizeFixedVal )[0];
+                var dataEls = selectElement.listElement.getElementsByAttribute( "data", selectVal );
+                selectedItem = dataEls.length ? dataEls[0] : null;
+                if (selectedItem)
+                  {
+                    selectElement.listElement.data = selectVal;
+                    var variableSizePref = "font.size.variable." + languageList.data;
+                    var fixedSizePref = "font.size.fixed." + languageList.data;
+                    var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
+                    var sizeFixedVal = parent.hPrefWindow.pref.GetIntPref( fixedSizePref );
+                    variableSize.removeAttribute("disabled");
+                    variableSize.data = sizeVarVal;
+                    variableSize.selectedItem = variableSize.getElementsByAttribute( "data", sizeVarVal )[0];
+                    fixedSize.removeAttribute("disabled");
+                    fixedSize.data = sizeFixedVal;
+                    fixedSize.selectedItem = fixedSize.getElementsByAttribute( "data", sizeFixedVal )[0];
+                  }
+                else
+                  {
+                    variableSize.setAttribute("disabled","true");
+                    fixedSize.setAttribute("disabled","true");
+                  }
               }
             catch(e)
               {
