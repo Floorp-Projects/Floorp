@@ -100,14 +100,13 @@ namespace fd {
     inline double copysign(double x, double y) { return ::copysign(x, y); }
 }
 
+double fd_asin __P((double));
+double fd_acos __P((double));
+double fd_exp __P((double));
+double fd_log __P((double));
+double fd_pow __P((double, double));
+
 namespace fd {
-    extern "C" {
-        double fd_asin __P((double));
-        double fd_acos __P((double));
-        double fd_exp __P((double));
-        double fd_log __P((double));
-        double fd_pow __P((double, double));
-    }
     inline double asin(double x)                 { return fd_asin(x); }
     inline double acos(double x)                 { return fd_acos(x); }
     inline double exp(double x)                  { return fd_exp(x); }

@@ -4630,8 +4630,8 @@ deleteClassProperty:
         
         js2val argumentsVal = OBJECT_TO_JS2VAL(new ArrayInstance(meta->arrayClass));
         ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(argumentsVal));
-
-        for (uint32 i = 0; ((i < argCount) && (i < plural->positionalCount)); i++) {
+	uint32 i;
+        for (i = 0; ((i < argCount) && (i < plural->positionalCount)); i++) {
             ASSERT(plural->positional[i]->cloneContent);
             ASSERT(plural->positional[i]->cloneContent->kind == Member::Variable);
             (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
