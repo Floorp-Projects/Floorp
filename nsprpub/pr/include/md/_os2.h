@@ -96,17 +96,16 @@ typedef int (*FARPROC)();
 #define _MD_MAGIC_DIR		0x55555555
 #define _MD_MAGIC_CV        0x66666666
 
-typedef struct _MDSemaphore
-{
+struct _MDSemaphore {
    HEV sem;
-} MDSEM;
+};
 
 struct _MDCPU {
     int              unused;
 }; 
 
 struct _MDThread {
-    MDSEM            blocked_sema;       /* Threads block on this when waiting
+    HEV              blocked_sema;      /* Threads block on this when waiting
                                          * for IO or CondVar.
                                          */
     PRBool           inCVWaitQueue;     /* PR_TRUE if the thread is in the
@@ -326,7 +325,7 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_PUT_ENV                 (_PR_MD_PUT_ENV)
 
 /* --- Threading Stuff --- */
-#define _MD_DEFAULT_STACK_SIZE      32767L
+#define _MD_DEFAULT_STACK_SIZE      65536L
 #define _MD_INIT_THREAD             (_PR_MD_INIT_THREAD)
 #define _MD_INIT_ATTACHED_THREAD    (_PR_MD_INIT_THREAD)
 #define _MD_CREATE_THREAD           (_PR_MD_CREATE_THREAD)

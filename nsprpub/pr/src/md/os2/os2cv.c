@@ -177,7 +177,7 @@ md_UnlockAndPostNotifies(
 
                 next = thred->md.next;
                 thred->md.prev = thred->md.next = NULL;
-                rv = DosPostEventSem(thred->md.blocked_sema.sem);
+                rv = DosPostEventSem(thred->md.blocked_sema);
                 PR_ASSERT(rv == NO_ERROR);
                 thred = next;
             }
@@ -274,9 +274,9 @@ _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
     }
 
     /* Wait for notification or timeout; don't really care which */
-    rv = DosWaitEventSem(thred->md.blocked_sema.sem, msecs);
+    rv = DosWaitEventSem(thred->md.blocked_sema, msecs);
     if (rv == NO_ERROR) {
-        DosResetEventSem(thred->md.blocked_sema.sem, &count);
+        DosResetEventSem(thred->md.blocked_sema, &count);
     }
 
     DosRequestMutexSem((lock->mutex), SEM_INDEFINITE_WAIT);
@@ -315,9 +315,9 @@ _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
             * times out.  Wait on the semaphore again to make it
             * non-signaled.  We assume this wait won't take long.
             */
-           rv = DosWaitEventSem(thred->md.blocked_sema.sem, SEM_INDEFINITE_WAIT);
+           rv = DosWaitEventSem(thred->md.blocked_sema, SEM_INDEFINITE_WAIT);
            if (rv == NO_ERROR) {
-               DosResetEventSem(thred->md.blocked_sema.sem, &count);
+               DosResetEventSem(thred->md.blocked_sema, &count);
            }
            PR_ASSERT(rv == NO_ERROR);
        }

@@ -80,8 +80,8 @@ _PR_MD_WAIT(PRThread *thread, PRIntervalTime ticks)
 
     PRUint32 msecs = (ticks == PR_INTERVAL_NO_TIMEOUT) ?
         SEM_INDEFINITE_WAIT : PR_IntervalToMilliseconds(ticks);
-    rv = DosWaitEventSem(thread->md.blocked_sema.sem, msecs);
-    DosResetEventSem(thread->md.blocked_sema.sem, &count); 
+    rv = DosWaitEventSem(thread->md.blocked_sema, msecs);
+    DosResetEventSem(thread->md.blocked_sema, &count); 
     switch(rv) 
     {
         case NO_ERROR:
@@ -101,8 +101,8 @@ _PR_MD_WAIT(PRThread *thread, PRIntervalTime ticks)
                      * call SemRequest() to clear the semaphore.
                      */
                     _PR_THREAD_UNLOCK(thread);
-                    rv = DosWaitEventSem(thread->md.blocked_sema.sem, 0);
-                    DosResetEventSem(thread->md.blocked_sema.sem, &count); 
+                    rv = DosWaitEventSem(thread->md.blocked_sema, 0);
+                    DosResetEventSem(thread->md.blocked_sema, &count); 
                     PR_ASSERT(rv == NO_ERROR);
                 }
             }
@@ -118,7 +118,7 @@ _PR_MD_WAKEUP_WAITER(PRThread *thread)
 {
     if ( _PR_IS_NATIVE_THREAD(thread) ) 
     {
-        if (DosPostEventSem(thread->md.blocked_sema.sem) != NO_ERROR)
+        if (DosPostEventSem(thread->md.blocked_sema) != NO_ERROR)
             return PR_FAILURE;
         else
 			return PR_SUCCESS;
