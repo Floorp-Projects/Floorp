@@ -34,6 +34,7 @@ CSRCS = \
 	plarena.c \
 	plevent.c \
 	plhash.c \
+	plvrsion.c \
 	$(NULL)
 
 HEADERS = \
@@ -103,6 +104,51 @@ RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)
 RELEASE_LIBS	= $(TARGETS)
 
 include $(MOD_DEPTH)/config/rules.mk
+
+#
+# Version information generation (begin)
+#
+ECHO = echo
+TINC = $(OBJDIR)/_pl_bld.h
+PROD = $(notdir $(SHARED_LIBRARY))
+NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
+SH_DATE = $(shell date)
+SH_NOW = $(shell $(NOW))
+
+ifeq ($(OS_ARCH), WINNT)
+ifeq ($(OS_TARGET),OS2)
+	SUF =
+else
+	SUF = i64
+endif
+else
+	SUF = LL
+endif
+
+$(TINC):
+	@$(MAKE_OBJDIR)
+	@$(ECHO) '#define _BUILD_STRING "$(SH_DATE)"' > $(TINC)
+	@if test ! -z "$(SH_NOW)"; then \
+	    $(ECHO) '#define _BUILD_TIME $(SH_NOW)$(SUF)' >> $(TINC); \
+	else \
+	    true; \
+	fi
+	@$(ECHO) '#define _PRODUCTION "$(PROD)"' >> $(TINC)
+
+
+$(OBJDIR)/plvrsion.$(OBJ_SUFFIX): plvrsion.c $(TINC)
+ifeq ($(OS_ARCH), WINNT)
+ifdef XP_OS2_EMX
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+else
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+endif
+else
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+endif
+#
+# Version information generation (end)
+#
 
 #
 # The Client build wants the shared libraries in $(DIST)/bin,

@@ -341,18 +341,14 @@ endif
 ECHO = echo
 INCLUDES = -I$(DIST)/include
 TINC = $(OBJDIR)/_pr_bld.h
-ifeq ($(OS_TARGET),OS2)
-PROD = nspr$(MOD_VERSION).$(DLL_SUFFIX)
-else
-PROD = libnspr$(MOD_VERSION).$(DLL_SUFFIX)
-endif
+PROD = $(notdir $(SHARED_LIBRARY))
 NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
 SH_DATE = $(shell date)
 SH_NOW = $(shell $(NOW))
 
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET),OS2)
-        SUF =
+	SUF =
 else
 	SUF = i64
 endif

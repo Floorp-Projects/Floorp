@@ -37,7 +37,7 @@
 #define _PRODUCTION ""
 #endif
 
-static PRVersionDescription prVersionDescription_libplc3 =
+static PRVersionDescription prVersionDescription_libprstrms3 =
 {
     /* version          */  2,                  /* this is the only one supported */
     /* buildTime        */  _BUILD_TIME,        /* usecs since midnight 1/1/1970 GMT */
@@ -82,7 +82,7 @@ PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint()
     dummy = rcsid;
     dummy = sccsid;
 #endif
-    return &prVersionDescription_libplc3;
+    return &prVersionDescription_libprstrms3;
 }  /* versionEntryPointType */
 
 /* plvrsion.c */
