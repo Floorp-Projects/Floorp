@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.12 $ $Date: 2002/01/31 19:18:55 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.13 $ $Date: 2002/02/27 23:17:12 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -945,6 +945,12 @@ nssList_GetArray
  */
 NSS_EXTERN nssListIterator *
 nssList_CreateIterator
+(
+  nssList *list
+);
+
+NSS_IMPLEMENT nssList *
+nssList_Clone
 (
   nssList *list
 );
