@@ -1786,7 +1786,7 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMNode* aNode)
 	if (attrPresent)
   {
     // Set the attribute 
-    pListener->SetAttribute(namespaceID, kAtom, attrValue, PR_FALSE);
+    pListener->SetAttribute(namespaceID, kAtom, attrValue, PR_TRUE);
   }
   else
   {
