@@ -33,22 +33,15 @@
  */
 
 #include "plstr.h"
+#include <string.h>
 
 PR_IMPLEMENT(char *)
 PL_strcat(char *dest, const char *src)
 {
-    char *rv;
-    
-    if( (char *)0 == dest ) return (char *)0;
-    if( (const char *)0 == src ) return dest;
+    if( ((char *)0 == dest) || ((const char *)0 == src) )
+        return dest;
 
-    for( rv = dest; *dest; dest++ )
-        ;
-
-    for( ; ((*dest = *src) != 0); dest++, src++ )
-        ;
-
-    return rv;
+    return strcat(dest, src);
 }
 
 PR_IMPLEMENT(char *)

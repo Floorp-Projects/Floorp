@@ -33,20 +33,14 @@
  */
 
 #include "plstr.h"
+#include <string.h>
 
 PR_IMPLEMENT(char *)
 PL_strpbrk(const char *s, const char *list)
 {
-    const char *p;
-
     if( ((const char *)0 == s) || ((const char *)0 == list) ) return (char *)0;
 
-    for( ; *s; s++ )
-        for( p = list; *p; p++ )
-            if( *s == *p )
-                return (char *)s;
-
-    return (char *)0;
+    return strpbrk(s, list);
 }
 
 PR_IMPLEMENT(char *)
