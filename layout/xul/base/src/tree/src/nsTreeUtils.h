@@ -21,6 +21,8 @@
  *
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
+ *   Jan Varga <varga@nixcorp.com>
+ *   Nate Nielsen <nielsen@memberwebs.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -55,6 +57,15 @@ class nsTreeUtils
 
     static nsresult
     GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult);
+
+    static nsresult
+    GetDescendantChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult);
+
+    static nsresult
+    UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirection);
+
+    static nsresult
+    GetColumnIndex(nsIContent* aColumn, PRInt32* aResult);
 };
 
 #endif // nsTreeUtils_h__

@@ -209,9 +209,9 @@ var signonsTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column) {
     var rv="";
-    if (column=="siteCol") {
+    if (column.id=="siteCol") {
       rv = signons[row].host;
-    } else if (column=="userCol") {
+    } else if (column.id=="userCol") {
       rv = signons[row].user;
     } else if (column=="passwordCol") {
       rv = signons[row].password;
@@ -221,10 +221,10 @@ var signonsTreeView = {
   isSeparator : function(index) { return false; },
   isSorted : function() { return false; },
   isContainer : function(index) { return false; },
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop) {},
-  getColumnProperties : function(column,columnElement,prop) {},
-  getCellProperties : function(row,prop) {}
+  cycleHeader : function(column) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 var signonsTree;
 
@@ -400,7 +400,7 @@ var rejectsTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="rejectCol") {
+    if (column.id=="rejectCol") {
       rv = rejects[row].host;
     }
     return rv;
@@ -408,10 +408,10 @@ var rejectsTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(column) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 var rejectsTree;
 
@@ -497,7 +497,7 @@ var nopreviewsTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="nopreviewCol") {
+    if (column.id=="nopreviewCol") {
       rv = nopreviews[row].host;
     }
     return rv;
@@ -505,10 +505,10 @@ var nopreviewsTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(column) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 var nopreviewsTree;
 
@@ -602,7 +602,7 @@ var nocapturesTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="nocaptureCol") {
+    if (column.id=="nocaptureCol") {
       rv = nocaptures[row].host;
     }
     return rv;
@@ -610,10 +610,10 @@ var nocapturesTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(column) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 var nocapturesTree;
 

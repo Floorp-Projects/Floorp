@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings SYSTEM "chrome://global/locale/tree.dtd">
+
 <bindings id="treeBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -19,7 +21,43 @@
       </xul:treerows>
     </content>
     
-    <implementation implements="nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULTreeElement, nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
+
+      <!-- ///////////////// nsIDOMXULTreeElement ///////////////// -->
+
+      <property name="columns"
+                onget="return this.treeBoxObject.columns;"/>
+
+      <property name="view"
+                onget="return this.treeBoxObject.view;"
+                onset="return this.treeBoxObject.view=val;"/>
+
+      <property name="body"
+                onget="return this.treeBoxObject.treeBody;"/>
+
+      <property name="editable"
+                onget="return this.hasAttribute('editable');"
+                onset="if (val) this.setAttribute('editable', 'true');
+                       else this.removeAttribute('editable'); return val;"/>
+
+      <!-- ///////////////// nsIDOMXULControlElement ///////////////// -->
+
+      <property name="disabled"
+                onget="return this.hasAttribute('disabled');"
+                onset="if (val) this.setAttribute('disabled', 'true');
+                       else this.removeAttribute('disabled'); return val;"/>
+
+      <!-- ///////////////// nsIDOMXULSelectControlElement ///////////////// -->
+
+      <!-- ///////////////// nsIDOMXULMultiSelectControlElement ///////////////// -->
+
+      <property name="selType"
+                onget="return this.getAttribute('seltype')"
+                onset="this.setAttribute('seltype', val); return val;"/>
+
+      <property name="currentIndex"
+                onget="return this.treeBoxObject.view.selection.currentIndex;"
+                onset="return this.treeBoxObject.view.selection.currentIndex=val;"/>
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
 
@@ -35,9 +73,6 @@
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
-      <property name="view"
-                onget="return this.treeBoxObject.view;"
-                onset="return this.treeBoxObject.view=val;"/>
 # contentView is obsolete (see bug 202391)
       <property name="contentView"
                 onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
@@ -46,9 +81,6 @@
       <property name="builderView"
                 onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
-      <property name="currentIndex"
-                onget="return this.treeBoxObject.selection.currentIndex;"
-                onset="return this.treeBoxObject.selection.currentIndex=val;"/>
       <field name="pageUpOrDownMovesSelection">
 #ifdef XP_MACOSX
         false
@@ -205,11 +237,6 @@
       <handler event="focus" action="this.treeBoxObject.focused = true;"/>
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
   
-      <handler event="dragenter" action="this.treeBoxObject.onDragEnter(event);"/>
-      <handler event="dragexit" action="this.treeBoxObject.onDragExit(event);"/>
-      <handler event="dragover" action="this.treeBoxObject.onDragOver(event);"/>
-      <handler event="dragdrop" action="this.treeBoxObject.onDragDrop(event);"/>
-
       <handler event="keypress" keycode="vk_enter">
         <![CDATA[
          if (this.currentIndex == -1)
@@ -237,7 +264,7 @@
          else {
            var parentIndex = this.treeBoxObject.view.getParentIndex(this.currentIndex);
            if (parentIndex >= 0) {
-             this.treeBoxObject.selection.select(parentIndex);
+             this.view.selection.select(parentIndex);
              this.treeBoxObject.ensureRowIsVisible(parentIndex);
            }
          }
@@ -260,7 +287,7 @@
            return;
          this.selectionHead = -1;
          this.selectionTail = -1;
-         this.treeBoxObject.selection.timedSelect(c-1, this._selectDelay);
+         this.view.selection.timedSelect(c-1, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(c-1);
         ]]>
       </handler>
@@ -272,30 +299,30 @@
          } catch (e) {}
          this.selectionHead = -1;
          this.selectionTail = -1;
-         this.treeBoxObject.selection.timedSelect(c+1, this._selectDelay);
+         this.view.selection.timedSelect(c+1, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(c+1);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="shift">
         <![CDATA[
-         if (this.treeBoxObject.selection.single)
+         if (this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c == -1 || c == 0)
            return;
          if (c == this.selectionTail) {
            if (this.selectionHead < this.selectionTail) {
-             this.treeBoxObject.selection.toggleSelect(c);
+             this.view.selection.toggleSelect(c);
              this.currentIndex = c - 1;
            }
            else {
-             this.treeBoxObject.selection.toggleSelect(c - 1);
+             this.view.selection.toggleSelect(c - 1);
            }
          }
          else {
-           this.treeBoxObject.selection.clearSelection();
+           this.view.selection.clearSelection();
            this.selectionHead = c;
-           this.treeBoxObject.selection.rangedSelect(c, c - 1, true);
+           this.view.selection.rangedSelect(c, c - 1, true);
          }
          this.selectionTail = c - 1;
          this.treeBoxObject.ensureRowIsVisible(c - 1);
@@ -303,7 +330,7 @@
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="shift">
         <![CDATA[
-         if (this.treeBoxObject.selection.single)
+         if (this.view.selection.single)
            return;
          var c = this.currentIndex;
          try { if (c+1 == this.treeBoxObject.view.rowCount)
@@ -311,16 +338,16 @@
          } catch (e) {}
          if (c == this.selectionTail) {
            if (this.selectionHead > this.selectionTail) {
-             this.treeBoxObject.selection.toggleSelect(c);
+             this.view.selection.toggleSelect(c);
              this.currentIndex = c + 1;
            }
            else
-             this.treeBoxObject.selection.toggleSelect(c + 1);
+             this.view.selection.toggleSelect(c + 1);
          }
          else {
-           this.treeBoxObject.selection.clearSelection();
+           this.view.selection.clearSelection();
            this.selectionHead = c;
-           this.treeBoxObject.selection.rangedSelect(c, c + 1, true);
+           this.view.selection.rangedSelect(c, c + 1, true);
          }
          this.selectionTail = c + 1;
          this.treeBoxObject.ensureRowIsVisible(c + 1);
@@ -359,14 +386,14 @@
          var f = this.treeBoxObject.getFirstVisibleRow();
          var i = 0;
          if (f > 0) {
-           var p = this.treeBoxObject.getPageCount();
+           var p = this.treeBoxObject.getPageLength();
            if (f - p >= 0)
              i = c - p;
            else
              i = c - f;
            this.treeBoxObject.scrollByPages(-1);
          }
-         this.treeBoxObject.selection.timedSelect(i, this._selectDelay);
+         this.view.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down">
@@ -382,7 +409,7 @@
          this.selectionHead = -1;
          this.selectionTail = -1;
          var f = this.treeBoxObject.getFirstVisibleRow();
-         var p = this.treeBoxObject.getPageCount();
+         var p = this.treeBoxObject.getPageLength();
          var i = l;
          var lastTopRowIndex = l - p;
          if (f <= lastTopRowIndex) {
@@ -392,12 +419,12 @@
              i = lastTopRowIndex + c - f + 1;
            this.treeBoxObject.scrollByPages(1);
          }
-         this.treeBoxObject.selection.timedSelect(i, this._selectDelay);
+         this.view.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="shift">
         <![CDATA[
-         if (this.treeBoxObject.selection.single)
+         if (this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c == 0)
@@ -405,7 +432,7 @@
          var f = this.treeBoxObject.getFirstVisibleRow();
          var i = 0;
          if (f > 0) {
-           var p = this.treeBoxObject.getPageCount();
+           var p = this.treeBoxObject.getPageLength();
            if (f - p >= 0)
              i = c - p;
            else
@@ -415,35 +442,35 @@
          if (c == this.selectionTail) {
            if (this.selectionHead < this.selectionTail) {
              if (i < this.selectionHead) {
-               this.treeBoxObject.selection.clearRange(c, this.selectionHead + 1);
-               this.treeBoxObject.selection.rangedSelect(this.selectionHead - 1, i, true);
+               this.view.selection.clearRange(c, this.selectionHead + 1);
+               this.view.selection.rangedSelect(this.selectionHead - 1, i, true);
              }
              else {
-               this.treeBoxObject.selection.clearRange(c, i + 1);
+               this.view.selection.clearRange(c, i + 1);
                this.currentIndex = i;
              }
            }
            else
-             this.treeBoxObject.selection.rangedSelect(c - 1, i, true);
+             this.view.selection.rangedSelect(c - 1, i, true);
          }
          else {
-           this.treeBoxObject.selection.clearSelection();
+           this.view.selection.clearSelection();
            this.selectionHead = c;
-           this.treeBoxObject.selection.rangedSelect(c, i, true);
+           this.view.selection.rangedSelect(c, i, true);
          }
          this.selectionTail = i;
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="shift">
         <![CDATA[
-         if (this.treeBoxObject.selection.single)
+         if (this.view.selection.single)
            return;
          var c = this.currentIndex;
          var l = this.treeBoxObject.view.rowCount - 1;
          if (c == l)
            return;
          var f = this.treeBoxObject.getFirstVisibleRow();
-         var p = this.treeBoxObject.getPageCount();
+         var p = this.treeBoxObject.getPageLength();
          var i = l;
          var lastTopRowIndex = l - p;
          if (f <= lastTopRowIndex) {
@@ -456,21 +483,21 @@
          if (c == this.selectionTail) {
            if (this.selectionHead > this.selectionTail) {
              if (i > this.selectionHead) {
-               this.treeBoxObject.selection.clearRange(c, this.selectionHead - 1);
-               this.treeBoxObject.selection.rangedSelect(this.selectionHead + 1, i, true);
+               this.view.selection.clearRange(c, this.selectionHead - 1);
+               this.view.selection.rangedSelect(this.selectionHead + 1, i, true);
              }
              else {
-               this.treeBoxObject.selection.clearRange(c, i - 1);
+               this.view.selection.clearRange(c, i - 1);
                this.currentIndex = i;
              }
            }
            else
-             this.treeBoxObject.selection.rangedSelect(c + 1, i, true);
+             this.view.selection.rangedSelect(c + 1, i, true);
          }
          else {
-           this.treeBoxObject.selection.clearSelection();
+           this.view.selection.clearSelection();
            this.selectionHead = c;
-           this.treeBoxObject.selection.rangedSelect(c, i, true);
+           this.view.selection.rangedSelect(c, i, true);
          }
          this.selectionTail = i;
         ]]>
@@ -483,7 +510,7 @@
          var f = this.treeBoxObject.getFirstVisibleRow();
          var i = 0;
          if (f > 0) {
-           var p = this.treeBoxObject.getPageCount();
+           var p = this.treeBoxObject.getPageLength();
            if (f - p >= 0)
              i = c - p;
            else
@@ -500,7 +527,7 @@
          if (c == l)
            return;
          var f = this.treeBoxObject.getFirstVisibleRow();
-         var p = this.treeBoxObject.getPageCount();
+         var p = this.treeBoxObject.getPageLength();
          var i = l;
          var lastTopRowIndex = l - p;
          if (f <= lastTopRowIndex) {
@@ -519,7 +546,7 @@
            return;
          this.selectionHead = -1;
          this.selectionTail = -1;
-         this.treeBoxObject.selection.select(0);
+         this.view.selection.select(0);
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
@@ -530,39 +557,39 @@
            return;
          this.selectionHead = -1;
          this.selectionTail = -1;
-         this.treeBoxObject.selection.select(l);
+         this.view.selection.select(l);
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="shift">
         <![CDATA[
-         if (this.treeBoxObject.selection.single)
+         if (this.view.selection.single)
            return;
          var c = this.currentIndex;
          if (c == 0)
            return;
          if (c != this.selectionTail) {
-           this.treeBoxObject.selection.clearSelection();
+           this.view.selection.clearSelection();
            this.selectionHead = c;
          }
-         this.treeBoxObject.selection.rangedSelect(c, 0, true);
+         this.view.selection.rangedSelect(c, 0, true);
          this.selectionTail = 0;
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="shift">
         <![CDATA[
-         if (this.treeBoxObject.selection.single)
+         if (this.view.selection.single)
            return;
          var c = this.currentIndex;
          var l = this.treeBoxObject.view.rowCount - 1;
          if (c == l)
            return;
          if (c != this.selectionTail) {
-           this.treeBoxObject.selection.clearSelection();
+           this.view.selection.clearSelection();
            this.selectionHead = c;
          }
-         this.treeBoxObject.selection.rangedSelect(c, l, true);
+         this.view.selection.rangedSelect(c, l, true);
          this.selectionTail = l;
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
@@ -588,8 +615,8 @@
         <![CDATA[
          var c = this.currentIndex;
          if (event.keyCode == ' '.charCodeAt(0)) {
-           if (!this.treeBoxObject.selection.isSelected(c))
-             this.treeBoxObject.selection.toggleSelect(c);
+           if (!this.view.selection.isSelected(c))
+             this.view.selection.toggleSelect(c);
          }
          else if (!this.disableKeyNavigation && event.charCode > 0 &&
                   !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
@@ -612,9 +639,8 @@
              incrementalString = incrementalString.substring(0, length);
            }
 
-           var primarycol = this.treeBoxObject.getKeyColumnIndex();
-           var colID = this.treeBoxObject.getColumnID(primarycol);
-           var rowCount = this.treeBoxObject.view.rowCount;
+           var keyCol = this.columns.getKeyColumn();
+           var rowCount = this.view.rowCount;
            var start = 1;
            
            if (length > 1) {
@@ -625,12 +651,12 @@
 
            for (var i = 0; i < rowCount; i++) {
              var l = (i + start + c) % rowCount;
-             var cellText = this.treeBoxObject.view.getCellText(l, colID);
+             var cellText = this.view.getCellText(l, keyCol);
              cellText = cellText.substring(0, length).toLowerCase();
              if (cellText == incrementalString) {
                this.selectionHead = -1;
                this.selectionTail = -1;
-               this.treeBoxObject.selection.timedSelect(l, this._selectDelay);
+               this.view.selection.timedSelect(l, this._selectDelay);
                this.treeBoxObject.ensureRowIsVisible(l);
                break;
              }
@@ -699,7 +725,7 @@
       <![CDATA[
          if (((!event.ctrlKey || !this.parentNode.pageUpOrDownMovesSelection) &&
              !event.shiftKey && !event.metaKey) ||
-             this.parentNode.treeBoxObject.selection.single) {
+             this.parentNode.view.selection.single) {
            var row = {};
            var col = {};
            var obj = {};
@@ -713,14 +739,19 @@
              return;
 
            if (col.value && obj.value != "twisty") {
-             var column = document.getElementById(col.value);
-             var cycler = column.hasAttribute('cycler');
-
-             if (cycler)
+             if (col.value.cycler)
                b.view.cycleCell(row.value, col.value);
+             else if (col.value.type == Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
+               if (this.parentNode.editable && col.value.editable &&
+                   b.view.isEditable(row.value, col.value)) {
+                 var value = b.view.getCellValue(row.value, col.value);
+                 value = value == "true" ? "false" : "true";
+                 b.view.setCellValue(row.value, col.value, value);
+               }
+             }
              else
-    	         if (!b.selection.isSelected(row.value)) {
-                 b.selection.select(row.value);
+               if (!b.view.selection.isSelected(row.value)) {
+                 b.view.selection.select(row.value);
                  b.ensureRowIsVisible(row.value);
                }
            }
@@ -743,29 +774,29 @@
           return;
 
         if (obj.value == "twisty") {
-          if (b.selection.currentIndex >= 0 &&
+          if (b.view.selection.currentIndex >= 0 &&
               b.view.isContainerOpen(row.value)) {
-            var parentIndex = b.view.getParentIndex(b.selection.currentIndex);
+            var parentIndex = b.view.getParentIndex(b.view.selection.currentIndex);
             while (parentIndex >= 0 && parentIndex != row.value)
               parentIndex = b.view.getParentIndex(parentIndex);
             if (parentIndex == row.value)
-              b.selection.select(parentIndex);
+              b.view.selection.select(parentIndex);
           }
           b.view.toggleOpenState(row.value);
           return;
         }
 
-        if (! this.parentNode.treeBoxObject.selection.single) {
+        if (! b.view.selection.single) {
           var augment = event.ctrlKey || event.metaKey;
           if (event.shiftKey) {
-            b.selection.rangedSelect(-1, row.value, augment);
+            b.view.selection.rangedSelect(-1, row.value, augment);
             b.ensureRowIsVisible(row.value);
             return;
           }
           if (augment) {
-            b.selection.toggleSelect(row.value);
+            b.view.selection.toggleSelect(row.value);
             b.ensureRowIsVisible(row.value);
-            b.selection.currentIndex = row.value;
+            b.view.selection.currentIndex = row.value;
             return;
           }
         }
@@ -776,14 +807,13 @@
           selected group of items */
 
         if (!col.value) return;
-        var column = document.getElementById(col.value);
-        var cycler = column.hasAttribute('cycler');
 
         // if the last row has changed in between the time we 
         // mousedown and the time we click, don't fire the select handler.
         // see bug #92366
-        if (!cycler && this._lastSelectedRow == row.value) {
-          b.selection.select(row.value);  
+        if (!col.value.cycler && this._lastSelectedRow == row.value &&
+            col.value.type != Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
+          b.view.selection.select(row.value);  
           b.ensureRowIsVisible(row.value);
         }
       ]]>
@@ -801,10 +831,7 @@
            if (row.value == -1)
              return;
 
-		   var column = document.getElementById(col.value);
-		   var cycler = column.hasAttribute('cycler');
-
-		   if (!cycler && obj.value != "twisty" && b.view.isContainer(row.value))
+           if (!col.value.cycler && obj.value != "twisty" && b.view.isContainer(row.value))
              b.view.toggleOpenState(row.value);
       ]]>
       </handler>
@@ -872,11 +899,13 @@
             // remove previous insertbefore/after attributes
             col.mTargetCol.removeAttribute("insertbefore");
             col.mTargetCol.removeAttribute("insertafter");
-            tree.treeBoxObject.invalidateColumn(col.mTargetCol.id);
+            var column = tree.columns.getColumnFor(col.mTargetCol);
+            tree.treeBoxObject.invalidateColumn(column);
             sib = col.mTargetCol._previousVisibleColumn;
             if (sib) {
               sib.removeAttribute("insertafter");
-              tree.treeBoxObject.invalidateColumn(sib.id);
+              var column = tree.columns.getColumnFor(sib);
+              tree.treeBoxObject.invalidateColumn(column);
             }
             col.mTargetCol = null;
             col.mTargetDir = null;
@@ -891,10 +920,12 @@
               sib = targetCol._previousVisibleColumn;
               if (sib) {
                 sib.setAttribute("insertafter", "true");
-                tree.treeBoxObject.invalidateColumn(sib.id);
+                var column = tree.columns.getColumnFor(sib);
+                tree.treeBoxObject.invalidateColumn(column);
               }
             }
-            tree.treeBoxObject.invalidateColumn(targetCol.id);
+            var column = tree.columns.getColumnFor(targetCol);
+            tree.treeBoxObject.invalidateColumn(column);
             col.mTargetCol = targetCol;
             col.mTargetDir = pos.value;
           }
@@ -975,6 +1006,13 @@
           }
         }
       ]]></handler>
+      <handler event="click" button="0" phase="target">
+        <![CDATA[
+          var tree = this.parentNode.parentNode;
+          var column = tree.columns.getColumnFor(this);
+          tree.treeBoxObject.view.cycleHeader(column);
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
@@ -993,26 +1031,22 @@
         </getter>
       </property>
     </implementation>
-
-    <handlers>
-      <handler event="click" button="0" phase="target" action="this.parentNode.parentNode.treeBoxObject.view.cycleHeader(this.id, this);"/>
-    </handlers>
   </binding>
 
   <binding id="treecol-image" extends="chrome://global/content/bindings/tree.xml#treecol-base">
     <content>
       <xul:image class="treecol-icon" xbl:inherits="src"/>
     </content>
-    <handlers>
-      <handler event="click" button="0" action="this.parentNode.parentNode.treeBoxObject.view.cycleHeader(this.id, this)"/>
-    </handlers>
   </binding>
 
   <binding id="columnpicker" display="xul:button"
            extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <xul:image class="tree-columnpicker-icon"/>
-      <xul:menupopup anonid="popup"/>
+      <xul:menupopup anonid="popup">
+        <xul:menuseparator anonid="menuseparator"/>
+        <xul:menuitem anonid="menuitem" label="&restoreNaturalOrder.label;"/>
+      </xul:menupopup>
     </content>
     
     <implementation>
@@ -1020,26 +1054,38 @@
         <parameter name="aPopup"/>
         <body>
           <![CDATA[
-            // we no longer cache the picker content.
-            // remove the old content
-            while (aPopup.hasChildNodes())
-              aPopup.removeChild(aPopup.lastChild);
+            // We no longer cache the picker content, remove the old content.
+            while (aPopup.childNodes.length > 2)
+              aPopup.removeChild(aPopup.firstChild);
 
-            for (var currCol = this.parentNode.firstChild; currCol; currCol = currCol.nextSibling) {
+            var refChild = aPopup.firstChild;
+
+            var tree = this.parentNode.parentNode;
+            for (var currCol = tree.columns.getFirstColumn(); currCol;
+                 currCol = currCol.getNext()) {
               // Construct an entry for each column in the row, unless
-              // it is not being shown
-              if (currCol.localName == "treecol" && !currCol.hasAttribute("ignoreincolumnpicker")) {
+              // it is not being shown.
+              var currElement = currCol.element;
+              if (!currElement.hasAttribute("ignoreincolumnpicker")) {
                 var popupChild = document.createElement("menuitem");
                 popupChild.setAttribute("type", "checkbox");
-                var columnName = currCol.getAttribute("display") || currCol.getAttribute("label");
+                var columnName = currElement.getAttribute("display") ||
+                                 currElement.getAttribute("label");
                 popupChild.setAttribute("label", columnName);
-                popupChild.setAttribute("colid", currCol.id);
-                if (currCol.getAttribute("hidden") != "true")
+                popupChild.setAttribute("colindex", currCol.index);
+                if (currElement.getAttribute("hidden") != "true")
                   popupChild.setAttribute("checked", "true");
-                if (currCol.getAttribute("primary") == "true")
+                if (currCol.primary)
                   popupChild.setAttribute("disabled", "true");
-                aPopup.appendChild(popupChild);
+                aPopup.insertBefore(popupChild, refChild);
               }
+            }
+
+            var hidden = !tree.enableColumnDrag;
+            const anonids = ["menuseparator", "menuitem"];
+            for (var anonid in anonids) {
+              var element = document.getAnonymousElementByAttribute(this, "anonid", anonids[anonid]);
+              element.hidden = hidden;
             }
           ]]>
         </body>
@@ -1053,14 +1099,24 @@
             var popup = document.getAnonymousElementByAttribute(this, "anonid", "popup");
             this.buildPopup(popup);
             popup.showPopup(this, -1, -1, "popup", "bottomright", "topright");
-          } else {
-            var colid = event.originalTarget.getAttribute("colid");
-            var colNode = document.getElementById(colid);
-            if (colNode) {
-              if (colNode.getAttribute("hidden") == "true")
-                colNode.setAttribute("hidden", "false");
-              else
-                colNode.setAttribute("hidden", "true");
+          }
+          else {
+            var tree = this.parentNode.parentNode;
+            var menuitem = document.getAnonymousElementByAttribute(this, "anonid", "menuitem");
+            if (event.originalTarget == menuitem) {
+              tree.columns.restoreNaturalOrder();
+              tree._ensureColumnOrder();
+            }
+            else {
+              var colindex = event.originalTarget.getAttribute("colindex");
+              var column = tree.columns[colindex];
+              if (column) {
+                var element = column.element;
+                if (element.getAttribute("hidden") == "true")
+                  element.setAttribute("hidden", "false");
+                else
+                  element.setAttribute("hidden", "true");
+              }
             }
           }
         ]]>

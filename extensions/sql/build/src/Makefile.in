@@ -41,7 +41,7 @@ VPATH			= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE			= sql
-MODULE_NAME    		= sqlModule
+MODULE_NAME    		= mozSqlModule
 LIBRARY_NAME		= sql
 SHORT_LIBNAME		= sql
 EXPORT_LIBRARY  	= 1

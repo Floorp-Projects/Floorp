@@ -75,7 +75,7 @@ function onChangeCSSAttribute()
 
 function ClearCSSInputWidgets()
 {
-  gDialog.AddCSSAttributeTree.treeBoxObject.selection.clearSelection();
+  gDialog.AddCSSAttributeTree.view.selection.clearSelection();
   gDialog.AddCSSAttributeNameInput.value ="";
   gDialog.AddCSSAttributeValueInput.value = "";
   SetTextboxFocus(gDialog.AddCSSAttributeNameInput);
@@ -87,7 +87,7 @@ function onSelectCSSTreeItem()
     return;
 
   var tree = gDialog.AddCSSAttributeTree;
-  if (tree && tree.treeBoxObject.selection.count)
+  if (tree && tree.view.selection.count)
   {
     gDialog.AddCSSAttributeNameInput.value = GetTreeItemAttributeStr(getSelectedItem(tree));
     gDialog.AddCSSAttributeValueInput.value = GetTreeItemValueStr(getSelectedItem(tree));
@@ -148,7 +148,7 @@ function RemoveCSSAttribute()
   var treechildren = gDialog.AddCSSAttributeTree.lastChild;
 
   // We only allow 1 selected item
-  if (gDialog.AddCSSAttributeTree.treeBoxObject.selection.count)
+  if (gDialog.AddCSSAttributeTree.view.selection.count)
   {
     var item = getSelectedItem(gDialog.AddCSSAttributeTree);
 

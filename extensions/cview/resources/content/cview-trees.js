@@ -109,9 +109,9 @@ var componentShare = new Object();
 cview.componentView = new TreeOView(componentShare);
 
 cview.componentView.getCellProperties =
-function cmp_getrow (index, colID, properties)
+function cmp_getrow (index, col, properties)
 {
-    if (colID != "cmp-name")
+    if (col.id != "cmp-name")
         return;
 
     var row = this.childData.locateChildByVisualRow(index);

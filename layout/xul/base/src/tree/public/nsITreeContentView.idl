@@ -43,11 +43,6 @@
 interface nsITreeContentView : nsISupports
 {
   /**
-   * The element in the DOM which this view uses as root content.
-   */
-  readonly attribute nsIDOMElement root;
-
-  /**
    * Retrieve the content item associated with the specified index.
    */
   nsIDOMElement getItemAtIndex(in long index);

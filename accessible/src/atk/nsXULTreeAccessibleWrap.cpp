@@ -39,6 +39,7 @@
 
 #include "nsIDOMElement.h"
 #include "nsITreeSelection.h"
+#include "nsITreeColumns.h"
 #include "nsXULTreeAccessibleWrap.h"
 
 // --------------------------------------------------------
@@ -170,8 +171,12 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetSelectedRows(PRUint32 *aNumRows, PRInt
   PRInt32 *outArray = (PRInt32 *)nsMemory::Alloc((*aNumRows) * sizeof(PRInt32));
   NS_ENSURE_TRUE(outArray, NS_ERROR_OUT_OF_MEMORY);
 
+  nsCOMPtr<nsITreeView> view;
+  rv = mTree->GetView(getter_AddRefs(view));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsITreeSelection> selection;
-  rv = mTree->GetSelection(getter_AddRefs(selection));
+  rv = view->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 rowCount;
@@ -212,15 +217,15 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::CellRefAt(PRInt32 aRow, PRInt32 aColumn, 
   nsCOMPtr<nsIDOMElement> columnElement(do_QueryInterface(columnNode, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString id;
-  rv = columnElement->GetAttribute(NS_LITERAL_STRING("id"), id);
+  nsCOMPtr<nsITreeColumns> treeColumns;
+  rv = mTree->GetColumns(getter_AddRefs(treeColumns));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 realColumn;
-  rv = mTree->GetColumnIndex(id.get(), &realColumn);
+  nsCOMPtr<nsITreeColumn> treeColumn;
+  rv = treeColumns->GetColumnFor(columnElement, getter_AddRefs(treeColumn));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *_retval = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, aRow, realColumn);
+  *_retval = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, aRow, treeColumn);
   NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
   NS_IF_ADDREF(*_retval);
@@ -323,8 +328,12 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::IsRowSelected(PRInt32 aRow, PRBool *_retv
 
   nsresult rv = NS_OK;
 
+  nsCOMPtr<nsITreeView> view;
+  rv = mTree->GetView(getter_AddRefs(view));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsITreeSelection> selection;
-  rv = mTree->GetSelection(getter_AddRefs(selection));
+  rv = view->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return selection->IsSelected(aRow, _retval);

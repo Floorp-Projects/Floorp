@@ -678,7 +678,7 @@ function GetSelectedFolderResource()
     var folderTree = GetFolderTree();
     var startIndex = {};
     var endIndex = {};
-    folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    folderTree.view.selection.getRangeAt(0, startIndex, endIndex);
     return GetFolderResource(folderTree, startIndex.value);
 }
 
@@ -709,7 +709,7 @@ function OnMouseUpThreadAndMessagePaneSplitter()
 function FolderPaneSelectionChange()
 {
     var folderTree = GetFolderTree();
-    var folderSelection = folderTree.treeBoxObject.selection;
+    var folderSelection = folderTree.view.selection;
 
     // This prevents a folder from being loaded in the case that the user
     // has right-clicked on a folder different from the one that was

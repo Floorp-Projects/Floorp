@@ -47,10 +47,9 @@ function contactsListDoubleClick(event)
   if (event.button != 0)
     return;
 
-  var row = {}, colID = {}, childElt = {};
   var contactsTree = document.getElementById("abResultsTree");
-  contactsTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
-  if (row.value == -1 || row.value > contactsTree.view.rowCount-1 || event.originalTarget.localName != "treechildren") 
+  var row = contactsTree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+  if (row == -1 || row > contactsTree.view.rowCount-1 || event.originalTarget.localName != "treechildren") 
   {
     // double clicking on a non valid row should not open the edit filter dialog
     return;

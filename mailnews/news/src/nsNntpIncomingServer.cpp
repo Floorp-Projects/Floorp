@@ -59,6 +59,7 @@
 #include "nsIStringBundle.h"
 #include "nntpCore.h"
 #include "nsIWindowWatcher.h"
+#include "nsITreeColumns.h"
 
 #define INVALID_VERSION         0
 #define VALID_VERSION           1
@@ -1759,11 +1760,13 @@ nsNntpIncomingServer::GetRowProperties(PRInt32 index, nsISupportsArray *properti
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
+nsNntpIncomingServer::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *properties)
 {
     if (!IsValidRow(row))
       return NS_ERROR_UNEXPECTED;
 
+    const PRUnichar* colID;
+    col->GetIdConst(&colID);
     if (colID[0] == 's') { 
         // if <name> is in our temporary list of subscribed groups
         // add the "subscribed" property so the check mark shows up
@@ -1783,7 +1786,7 @@ nsNntpIncomingServer::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsI
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::GetColumnProperties(const PRUnichar *colID, nsIDOMElement *colElt, nsISupportsArray *properties)
+nsNntpIncomingServer::GetColumnProperties(nsITreeColumn* col, nsISupportsArray *properties)
 {
     return NS_OK;
 }
@@ -1821,13 +1824,7 @@ nsNntpIncomingServer::IsSorted(PRBool *_retval)
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::CanDropOn(PRInt32 index, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsNntpIncomingServer::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+nsNntpIncomingServer::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1864,28 +1861,31 @@ nsNntpIncomingServer::IsValidRow(PRInt32 row)
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::GetImageSrc(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+nsNntpIncomingServer::GetImageSrc(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+nsNntpIncomingServer::GetProgressMode(PRInt32 row, nsITreeColumn* col, PRInt32* _retval)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::GetCellValue(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+nsNntpIncomingServer::GetCellValue(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+nsNntpIncomingServer::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
     if (!IsValidRow(row))
       return NS_ERROR_UNEXPECTED;
+
+    const PRUnichar* colID;
+    col->GetIdConst(&colID);
 
     nsresult rv = NS_OK;
     if (colID[0] == 'n') {
@@ -1912,7 +1912,7 @@ nsNntpIncomingServer::ToggleOpenState(PRInt32 index)
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
+nsNntpIncomingServer::CycleHeader(nsITreeColumn* col)
 {
     return NS_OK;
 }
@@ -1924,20 +1924,26 @@ nsNntpIncomingServer::SelectionChanged()
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::CycleCell(PRInt32 row, const PRUnichar *colID)
+nsNntpIncomingServer::CycleCell(PRInt32 row, nsITreeColumn* col)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::IsEditable(PRInt32 row, const PRUnichar *colID, PRBool *_retval)
+nsNntpIncomingServer::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
 {
     *_retval = PR_FALSE;
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::SetCellText(PRInt32 row, const PRUnichar *colID, const PRUnichar *value)
+nsNntpIncomingServer::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::SetCellText(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1955,7 +1961,7 @@ nsNntpIncomingServer::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUnichar *colID)
+nsNntpIncomingServer::PerformActionOnCell(const PRUnichar *action, PRInt32 row, nsITreeColumn* col)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -112,21 +112,21 @@ interface nsIXULTemplateBuilder : nsISupports
 [scriptable, uuid(f6ed69be-1dd1-11b2-adfc-9db02ac57d88)]
 interface nsIXULTreeBuilderObserver : nsISupports
 {
+    const long DROP_BEFORE = -1;
+    const long DROP_ON = 0;
+    const long DROP_AFTER = 1;
     /**
      * Methods used by the drag feedback code to determine if a drag is allowable at
      * the current location. To get the behavior where drops are only allowed on
-     * items, such as the mailNews folder pane, always return false from |canDropBeforeAfter()|.
+     * items, such as the mailNews folder pane, always return false whe
+     * the orientation is not DROP_ON.
      */
-    boolean canDropOn(in long index);
-    boolean canDropBeforeAfter(in long index, in boolean before);
+    boolean canDrop(in long index, in long orientation);
 
     /**
      * Called when the user drops something on this view. The |orientation| param
      * specifies before/on/after the given |row|.
      */
-    const long inDropBefore = 1;
-    const long inDropOn = 2;
-    const long inDropAfter = 3;
     void onDrop(in long row, in long orientation);
  
     /** 
@@ -149,19 +149,6 @@ interface nsIXULTreeBuilderObserver : nsISupports
      * Called when selection in the tree changes
      */
     void onSelectionChanged();
-
-    /** 
-     * APIs for inline editing.  isEditable is called to ask the view if the 
-     * cell contents are editable.  A value of true will result in the 
-     * tree popping up a text field when the user tries to inline edit 
-     * the cell. 
-     */
-    boolean isEditable(in long row, in wstring colID);
-
-    /** 
-     * onSetCellText is called when the contents of the cell have been edited by the user.
-     */
-    void onSetCellText(in long row, in wstring colID, in wstring value);
 
     /**
      * A command API that can be used to invoke commands on the selection.  

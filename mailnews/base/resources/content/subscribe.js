@@ -305,12 +305,12 @@ function SearchOnClick(event)
   // we only care about button 0 (left click) events
   if (event.button != 0 || event.originalTarget.localName != "treechildren") return;
 
-  var row = {}, colID = {}, childElt = {};
-  gSearchTreeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+  var row = {}, col = {}, childElt = {};
+  gSearchTreeBoxObject.getCellAt(event.clientX, event.clientY, row, col, childElt);
   if (row.value == -1 || row.value > gSearchView.rowCount-1)
     return;
 
-  if (colID.value == "subscribedColumn2") {
+  if (col.value.id == "subscribedColumn2") {
     if (event.detail != 2) {
       // single clicked on the check box 
       // (in the "subscribedColumn2" column) reverse state
@@ -334,7 +334,8 @@ function ReverseStateFromRow(row)
     // if the "subscribed" atom is in the list of properties
     // we are subscribed
     var properties = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    gSearchView.getCellProperties(row, "subscribedColumn2", properties);
+    var col = gSearchTree.columns["subscribedColumn2"];
+    gSearchView.getCellProperties(row, col, properties);
 
     var isSubscribed = (properties.GetIndexOf(gSubscribedAtom) != -1);
     SetStateFromRow(row, !isSubscribed);
@@ -342,7 +343,8 @@ function ReverseStateFromRow(row)
 
 function SetStateFromRow(row, state)
 {
-    var name = gSearchView.getCellText(row,"nameColumn2");
+    var col = gSearchTree.columns["nameColumn2"];
+    var name = gSearchView.getCellText(row, col);
     // we need to escape the name because
     // some news servers have newsgroups with non ASCII names
     // we need to escape those name before calling SetState()
@@ -432,7 +434,7 @@ function SubscribeOnClick(event)
     }
     else {
       // if the user single clicks on the subscribe check box, we handle it here
-      if (col.value == "subscribedColumn")
+      if (col.value.id == "subscribedColumn")
         ReverseStateFromNode(row.value);
     }
   }

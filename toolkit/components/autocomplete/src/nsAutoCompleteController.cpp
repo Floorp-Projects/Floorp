@@ -46,6 +46,7 @@
 #include "nsIAtomService.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsITreeColumns.h"
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
@@ -500,7 +501,7 @@ nsAutoCompleteController::GetRowProperties(PRInt32 index, nsISupportsArray *prop
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
+nsAutoCompleteController::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray* properties)
 {
   GetRowProperties(row, properties);
   
@@ -519,39 +520,40 @@ nsAutoCompleteController::GetCellProperties(PRInt32 row, const PRUnichar *colID,
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetColumnProperties(const PRUnichar *colID, nsIDOMElement *colElt, nsISupportsArray *properties)
+nsAutoCompleteController::GetColumnProperties(nsITreeColumn* col, nsISupportsArray* properties)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetImageSrc(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+nsAutoCompleteController::GetImageSrc(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+nsAutoCompleteController::GetProgressMode(PRInt32 row, nsITreeColumn* col, PRInt32* _retval)
 {
   NS_NOTREACHED("tree has no progress cells");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetCellValue(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+nsAutoCompleteController::GetCellValue(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {  
   NS_NOTREACHED("all of our cells are text");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+nsAutoCompleteController::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
-  nsDependentString columnId(colID);
+  const PRUnichar* colID;
+  col->GetIdConst(&colID);
   
-  if (columnId.Equals(NS_LITERAL_STRING("treecolAutoCompleteValue")))
+  if (NS_LITERAL_STRING("treecolAutoCompleteValue").Equals(colID))
     GetValueAt(row, _retval);
-  else if(columnId.Equals(NS_LITERAL_STRING("treecolAutoCompleteComment")))
+  else if (NS_LITERAL_STRING("treecolAutoCompleteComment").Equals(colID))
     GetCommentAt(row, _retval);
      
   return NS_OK;
@@ -633,25 +635,31 @@ nsAutoCompleteController::SelectionChanged()
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::SetCellText(PRInt32 row, const PRUnichar *colID, const PRUnichar *value)
+nsAutoCompleteController::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
+nsAutoCompleteController::SetCellText(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::CycleCell(PRInt32 row, const PRUnichar *colID)
+nsAutoCompleteController::CycleHeader(nsITreeColumn* col)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::IsEditable(PRInt32 row, const PRUnichar *colID, PRBool *_retval)
+nsAutoCompleteController::CycleCell(PRInt32 row, nsITreeColumn* col)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -672,13 +680,7 @@ nsAutoCompleteController::IsSorted(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::CanDropOn(PRInt32 index, PRBool *_retval)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAutoCompleteController::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+nsAutoCompleteController::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
 {
   return NS_OK;
 }
@@ -702,7 +704,7 @@ nsAutoCompleteController::PerformActionOnRow(const PRUnichar *action, PRInt32 ro
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUnichar *colID)
+nsAutoCompleteController::PerformActionOnCell(const PRUnichar* action, PRInt32 row, nsITreeColumn* col)
 {
   return NS_OK;
 }

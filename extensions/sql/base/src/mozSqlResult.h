@@ -47,6 +47,9 @@
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
+#include "nsITreeView.h"
+#include "nsITreeSelection.h"
+#include "nsITreeBoxObject.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIInputStream.h"
 #include "mozISqlConnection.h"
@@ -285,7 +288,8 @@ class Row {
 class mozSqlResult : public mozISqlResult,
                      public mozISqlDataSource,
                      public nsIRDFDataSource,
-                     public nsIRDFRemoteDataSource
+                     public nsIRDFRemoteDataSource,
+                     public nsITreeView
 {
   public:
     mozSqlResult(mozISqlConnection* aConnection,
@@ -296,13 +300,28 @@ class mozSqlResult : public mozISqlResult,
 
     NS_DECL_ISUPPORTS
 
-    NS_DECL_MOZISQLRESULT
+    //NS_DECL_MOZISQLRESULT
+    NS_IMETHOD GetConnection(mozISqlConnection * *aConnection);
+    NS_IMETHOD GetQuery(nsAString & aQuery);
+    NS_IMETHOD GetTableName(nsAString & aTableName);
+    //NS_IMETHOD GetRowCount(PRInt32 *aRowCount);
+    NS_IMETHOD GetColumnCount(PRInt32 *aColumnCount);
+    NS_IMETHOD GetColumnName(PRInt32 aColumnIndex, nsAString & _retval);
+    NS_IMETHOD GetColumnIndex(const nsAString & aColumnName, PRInt32 *_retval);
+    NS_IMETHOD GetColumnType(PRInt32 aColumnIndex, PRInt32 *_retval);
+    NS_IMETHOD GetColumnTypeAsString(PRInt32 aColumnIndex, nsAString & _retval);
+    NS_IMETHOD GetColumnDisplaySize(PRInt32 aColumnIndex, PRInt32 *_retval);
+    NS_IMETHOD Enumerate(mozISqlResultEnumerator **_retval);
+    NS_IMETHOD Open(mozISqlInputStream **_retval);
+    NS_IMETHOD Reload(void);
 
     NS_DECL_MOZISQLDATASOURCE
 
     NS_DECL_NSIRDFDATASOURCE
 
     NS_DECL_NSIRDFREMOTEDATASOURCE
+
+    NS_DECL_NSITREEVIEW
 
     friend class mozSqlResultEnumerator;
     friend class mozSqlResultStream;
@@ -350,6 +369,8 @@ class mozSqlResult : public mozISqlResult,
     nsVoidArray                         mRows;
     nsObjectHashtable                   mSources;
     nsCOMArray<nsIRDFObserver>          mObservers;
+    nsCOMPtr<nsITreeSelection>          mSelection;
+    nsCOMPtr<nsITreeBoxObject>          mBoxObject;
     nsCOMPtr<mozISqlResultEnumerator>   mPrimaryKeys;
     PRInt32                             mCanInsert;
     PRInt32                             mCanUpdate;

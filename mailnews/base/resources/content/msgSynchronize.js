@@ -126,7 +126,8 @@ function SortSynchronizePane(column, sortKey)
 
     node.setAttribute("sort", sortKey);
     node.setAttribute("sortDirection", "natural");
-    gSynchronizeTree.treeBoxObject.view.cycleHeader(column, node);
+    var col = gSynchronizeTree.columns[column];
+    gSynchronizeTree.view.cycleHeader(col);
 }
 
 function FindInWindow(currentWindow, id)
@@ -181,7 +182,7 @@ function onSynchronizeClick(event)
         }
     }
     else {
-      if (col.value == "syncCol") {   
+      if (col.value.id == "syncCol") {   
         UpdateNode(GetFolderResource(gSynchronizeTree, row.value), row.value);
       }
     }

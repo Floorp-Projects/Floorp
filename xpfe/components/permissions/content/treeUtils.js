@@ -44,7 +44,7 @@ function DeleteSelectedItemFromTree
     (tree, view, table, deletedTable, removeButton, removeAllButton) {
 
   // Turn off tree selection notifications during the deletion
-  tree.treeBoxObject.view.selection.selectEventsSuppressed = true;
+  tree.view.selection.selectEventsSuppressed = true;
 
   // remove selected items from list (by setting them to null) and place in deleted list
   var selections = GetTreeSelections(tree);
@@ -72,7 +72,7 @@ function DeleteSelectedItemFromTree
 
     // update selection
     var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
-    tree.treeBoxObject.view.selection.select(nextSelection);
+    tree.view.selection.select(nextSelection);
     tree.treeBoxObject.ensureRowIsVisible(nextSelection);
 
   } else {
@@ -83,12 +83,12 @@ function DeleteSelectedItemFromTree
 
   }
 
-  tree.treeBoxObject.view.selection.selectEventsSuppressed = false;
+  tree.view.selection.selectEventsSuppressed = false;
 }
 
 function GetTreeSelections(tree) {
   var selections = [];
-  var select = tree.treeBoxObject.selection;
+  var select = tree.view.selection;
   if (select) {
     var count = select.getRangeCount();
     var min = new Object();
@@ -143,8 +143,8 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
       if (table[s].number == selectedNumber) {
         // update selection
         // note: we need to deselect before reselecting in order to trigger ...Selected()
-        tree.treeBoxObject.view.selection.select(-1);
-        tree.treeBoxObject.view.selection.select(s);
+        tree.view.selection.select(-1);
+        tree.view.selection.select(s);
         selectedRow = s;
         break;
       }

@@ -110,7 +110,7 @@ function HistoryCommonInit()
 
     if (gHistoryStatus)
         gHistoryTree.focus();
-    gHistoryTree.treeBoxObject.view.selection.select(0);
+    gHistoryTree.view.selection.select(0);
 }
 
 function HistoryPanelUnload()
@@ -153,7 +153,8 @@ function historyOnSelect()
     var match;
     var currentIndex = gHistoryTree.currentIndex;
     var rowIsContainer = currentIndex < 0 || (gHistoryGrouping != "none" && isContainer(gHistoryTree, currentIndex));
-    var url = rowIsContainer ? "" : gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
+    var col = gHistoryTree.columns["URL"];
+    var url = rowIsContainer ? "" : gHistoryTree.view.getCellText(currentIndex, col);
 
     if (url) {
         if (!gIOService)
@@ -247,8 +248,10 @@ var historyDNDObserver = {
         var currentIndex = gHistoryTree.currentIndex;
         if (isContainer(gHistoryTree, currentIndex))
             return false;
-        var url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
-        var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
+        var col = gHistoryTree.columns["URL"];
+        var url = gHistoryTree.view.getCellText(currentIndex, col);
+        col = gHistoryTree.columns["Name"];
+        var title = gHistoryTree.view.getCellText(currentIndex, col);
 
         var htmlString = "<A HREF='" + url + "'>" + title + "</A>";
         aXferData.data = new TransferData();
@@ -297,7 +300,7 @@ function OpenURL(aTarget)
     }
 
     if (aTarget != "current") {
-      var count = gHistoryTree.treeBoxObject.view.selection.count;
+      var count = gHistoryTree.view.selection.count;
       var URLArray = [];
       if (count == 1) {
         if (isContainer(gHistoryTree, currentIndex))
@@ -307,13 +310,14 @@ function OpenURL(aTarget)
           URLArray.push(url);
       }
       else {
+        var col = gHistoryTree.columns["URL"];
         var min = new Object(); 
         var max = new Object();
-        var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
+        var rangeCount = gHistoryTree.view.selection.getRangeCount();
         for (var i = 0; i < rangeCount; ++i) {
-          gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
+          gHistoryTree.view.selection.getRangeAt(i, min, max);
           for (var k = max.value; k >= min.value; --k) {
-            url = gHistoryTree.treeBoxObject.view.getCellText(k, "URL");
+            url = gHistoryTree.view.getCellText(k, col);
             URLArray.push(url);
           }
         }
@@ -385,28 +389,31 @@ var groupObserver = {
 
 function historyAddBookmarks()
 {
-  var count = gHistoryTree.treeBoxObject.view.selection.count;
+  var urlCol = gHistoryTree.columns["URL"];
+  var titleCol = gHistoryTree.columns["Name"];
+
+  var count = gHistoryTree.view.selection.count;
   var url;
   var title;
   if (count == 1) {
     var currentIndex = gHistoryTree.currentIndex;
-    url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
-    title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
+    url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, urlCol);
+    title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, titleCol);
     BookmarksUtils.addBookmark(url, title, null, true);
   }
   else if (count > 1) {
     var min = new Object(); 
     var max = new Object();
-    var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
+    var rangeCount = gHistoryTree.view.selection.getRangeCount();
     if (!BMSVC) {
       initServices();
       initBMService();
     }
     for (var i = 0; i < rangeCount; ++i) {
-      gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
+      gHistoryTree.view.selection.getRangeAt(i, min, max);
       for (var k = max.value; k >= min.value; --k) {
-        url = gHistoryTree.treeBoxObject.view.getCellText(k, "URL");
-        title = gHistoryTree.treeBoxObject.view.getCellText(k, "Name");
+        url = gHistoryTree.view.getCellText(k, urlCol);
+        title = gHistoryTree.view.getCellText(k, titleCol);
         BookmarksUtils.addBookmark(url, title, null, false);
       }
     }
@@ -416,7 +423,7 @@ function historyAddBookmarks()
 
 function updateItems()
 {
-  var count = gHistoryTree.treeBoxObject.view.selection.count;
+  var count = gHistoryTree.view.selection.count;
   var openItem = document.getElementById("miOpen");
   var bookmarkItem = document.getElementById("miAddBookmark");
   var copyLocationItem = document.getElementById("miCopyLinkLocation");
@@ -430,9 +437,9 @@ function updateItems()
     if (gHistoryGrouping != "none") {
       var min = new Object(); 
       var max = new Object();
-      var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
+      var rangeCount = gHistoryTree.view.selection.getRangeCount();
       for (var i = 0; i < rangeCount; ++i) {
-        gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
+        gHistoryTree.view.selection.getRangeAt(i, min, max);
         for (var k = max.value; k >= min.value; --k) {
           if (isContainer(gHistoryTree, k)) {
             hasContainer = true;

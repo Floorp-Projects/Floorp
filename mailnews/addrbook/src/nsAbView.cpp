@@ -50,6 +50,7 @@
 #include "nsAbBaseCID.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
+#include "nsITreeColumns.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -347,13 +348,15 @@ NS_IMETHODIMP nsAbView::GetRowProperties(PRInt32 index, nsISupportsArray *proper
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
+NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *properties)
 {
   NS_ENSURE_TRUE(row >= 0, NS_ERROR_UNEXPECTED);
 
   if (mCards.Count() <= row)
     return NS_OK;
 
+  const PRUnichar* colID;
+  col->GetIdConst(&colID);
   // "G" == "GeneratedName"
   if (colID[0] != PRUnichar('G'))
     return NS_OK;
@@ -372,7 +375,7 @@ NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, n
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetColumnProperties(const PRUnichar *colID, nsIDOMElement *colElt, nsISupportsArray *properties)
+NS_IMETHODIMP nsAbView::GetColumnProperties(nsITreeColumn* col, nsISupportsArray *properties)
 {
     return NS_OK;
 }
@@ -404,12 +407,7 @@ NS_IMETHODIMP nsAbView::IsSorted(PRBool *_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAbView::CanDropOn(PRInt32 index, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsAbView::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+NS_IMETHODIMP nsAbView::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -436,17 +434,17 @@ NS_IMETHODIMP nsAbView::GetLevel(PRInt32 index, PRInt32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetImageSrc(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+NS_IMETHODIMP nsAbView::GetImageSrc(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+NS_IMETHODIMP nsAbView::GetProgressMode(PRInt32 row, nsITreeColumn* col, PRInt32* _retval)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetCellValue(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+NS_IMETHODIMP nsAbView::GetCellValue(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   return NS_OK;
 }
@@ -509,12 +507,14 @@ nsresult nsAbView::RefreshTree()
   return rv;
 }
 
-NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 {
   NS_ENSURE_TRUE(row >= 0, NS_ERROR_UNEXPECTED);
 
   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
   // XXX fix me by converting GetCardValue to take an nsAString&
+  const PRUnichar* colID;
+  col->GetIdConst(&colID);
   nsXPIDLString cellText;
   nsresult rv = GetCardValue(card, colID, getter_Copies(cellText));
   _retval.Assign(cellText);
@@ -532,7 +532,7 @@ NS_IMETHODIMP nsAbView::ToggleOpenState(PRInt32 index)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAbView::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
+NS_IMETHODIMP nsAbView::CycleHeader(nsITreeColumn* col)
 {
   return NS_OK;
 }
@@ -557,17 +557,22 @@ NS_IMETHODIMP nsAbView::SelectionChanged()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::CycleCell(PRInt32 row, const PRUnichar *colID)
+NS_IMETHODIMP nsAbView::CycleCell(PRInt32 row, nsITreeColumn* col)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAbView::IsEditable(PRInt32 row, const PRUnichar *colID, PRBool *_retval)
+NS_IMETHODIMP nsAbView::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool* _retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAbView::SetCellText(PRInt32 row, const PRUnichar *colID, const PRUnichar *value)
+NS_IMETHODIMP nsAbView::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsAbView::SetCellText(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -582,7 +587,7 @@ NS_IMETHODIMP nsAbView::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsAbView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUnichar *colID)
+NS_IMETHODIMP nsAbView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, nsITreeColumn* col)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -65,6 +65,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsISpamSettings.h"
 #include "nsIMsgAccountManager.h"
+#include "nsITreeColumns.h"
 
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 
@@ -892,13 +893,18 @@ nsresult nsMsgDBView::CycleThreadedColumn(nsIDOMElement * aElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::IsEditable(PRInt32 index, const PRUnichar *colID, PRBool * aReturnValue)
+NS_IMETHODIMP nsMsgDBView::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool* _retval)
 {
-  * aReturnValue = PR_FALSE;
+  *_retval = PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::SetCellText(PRInt32 row, const PRUnichar *colID, const PRUnichar * value)
+NS_IMETHODIMP nsMsgDBView::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::SetCellText(PRInt32 row, nsITreeColumn* col, const nsAString& value)
 {
   return NS_OK;
 }
@@ -1152,17 +1158,13 @@ NS_IMETHODIMP nsMsgDBView::GetRowProperties(PRInt32 index, nsISupportsArray *pro
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetColumnProperties(const PRUnichar *colID, nsIDOMElement * aElement, nsISupportsArray *properties)
+NS_IMETHODIMP nsMsgDBView::GetColumnProperties(nsITreeColumn* col, nsISupportsArray *properties)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colID, nsISupportsArray *properties)
+NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, nsITreeColumn *col, nsISupportsArray *properties)
 {
-  // remove once #116341 is fixed
-  if (!colID[0])
-    return NS_OK;
-
   nsMsgLabelValue label;
 
   if (!IsValidIndex(aRow))
@@ -1298,6 +1300,8 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  const PRUnichar* colID;
+  col->GetIdConst(&colID);
   if (colID[0] == 'f')  
   {
     if (m_flags[aRow] & MSG_FLAG_MARKED) 
@@ -1477,28 +1481,24 @@ nsresult nsMsgDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **d
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetImageSrc(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
+NS_IMETHODIMP nsMsgDBView::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgDBView::GetProgressMode(PRInt32 aRow, const PRUnichar * aColID, PRInt32* _retval)
+nsMsgDBView::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* _retval)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetCellValue(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
+NS_IMETHODIMP nsMsgDBView::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
+NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue)
 {
-  // remove once #116341 is fixed
-  if (!aColID[0])
-    return NS_OK;
-
   nsresult rv = NS_OK;
 
   if (!IsValidIndex(aRow))
@@ -1517,16 +1517,18 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
   nsXPIDLString valueText;
   nsCOMPtr <nsIMsgThread> thread;
 
-  switch (aColID[0])
+  const PRUnichar* colID;
+  aCol->GetIdConst(&colID);
+  switch (colID[0])
   {
   case 's':
-    if (aColID[1] == 'u') // subject
+    if (colID[1] == 'u') // subject
       rv = FetchSubject(msgHdr, m_flags[aRow], getter_Copies(valueText));
-    else if (aColID[1] == 'e') // sender
+    else if (colID[1] == 'e') // sender
       rv = FetchAuthor(msgHdr, getter_Copies(valueText));
-    else if (aColID[1] == 'i') // size
+    else if (colID[1] == 'i') // size
       rv = FetchSize(msgHdr, getter_Copies(valueText));
-    else if (aColID[1] == 't') // status
+    else if (colID[1] == 't') // status
       rv = FetchStatus(m_flags[aRow], getter_Copies(valueText));
     aValue.Assign(valueText);
     break;
@@ -1548,7 +1550,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
     break;
   case 't':   
     // total msgs in thread column
-    if (aColID[1] == 'o' && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
+    if (colID[1] == 'o' && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
     {
       if (m_flags[aRow] & MSG_VIEW_FLAG_ISTHREAD)
       {
@@ -1566,7 +1568,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
     break;
   case 'u':
     // unread msgs in thread col
-    if (aColID[6] == 'C' && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
+    if (colID[6] == 'C' && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
     {
       if (m_flags[aRow] & MSG_VIEW_FLAG_ISTHREAD)
       {
@@ -1621,22 +1623,20 @@ NS_IMETHODIMP nsMsgDBView::ToggleOpenState(PRInt32 index)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement * aElement)
+NS_IMETHODIMP nsMsgDBView::CycleHeader(nsITreeColumn* aCol)
 {
     // let HandleColumnClick() in threadPane.js handle it
     // since it will set / clear the sort indicators.
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
+NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, nsITreeColumn* col)
 {
-  // remove once #116341 is fixed
-  if (!colID[0])
-    return NS_OK;
-
   if (!IsValidIndex(row))
     return NS_MSG_INVALID_DBVIEW_INDEX;
 
+  const PRUnichar* colID;
+  col->GetIdConst(&colID);
   switch (colID[0])
   {
   case 'u': // unreadButtonColHeader
@@ -1713,7 +1713,7 @@ NS_IMETHODIMP nsMsgDBView::PerformActionOnRow(const PRUnichar *action, PRInt32 r
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUnichar *colID)
+NS_IMETHODIMP nsMsgDBView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, nsITreeColumn* col)
 {
   return NS_OK;
 }
@@ -5662,24 +5662,11 @@ nsresult nsMsgDBView::GetImapDeleteModel(nsIMsgFolder *folder)
 
 
 //
-// CanDropOn
+// CanDrop
 //
 // Can't drop on the thread pane.
 //
-NS_IMETHODIMP nsMsgDBView::CanDropOn(PRInt32 index, PRBool *_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
-  
-  return NS_OK;
-}
-
-//
-// CanDropBeforeAfter
-//
-// Can't drop on the thread pane.
-//
-NS_IMETHODIMP nsMsgDBView::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+NS_IMETHODIMP nsMsgDBView::CanDrop(PRInt32 index, PRInt32 orient, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;

@@ -61,7 +61,7 @@ function resetAllowSelection()
    doingSelection = false;
 
    var SearchTree = document.getElementById( UnifinderTreeName );
-   SearchTree.treeBoxObject.selection.selectEventsSuppressed = false;
+   SearchTree.view.selection.selectEventsSuppressed = false;
    SearchTree.addEventListener( "select", unifinderOnSelect, true );
 }  
 
@@ -88,7 +88,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    */
    SearchTree.onselect = null;
    SearchTree.removeEventListener( "select", unifinderOnSelect, true );
-   SearchTree.treeBoxObject.selection.selectEventsSuppressed = true;
+   SearchTree.view.selection.selectEventsSuppressed = true;
 
    if( EventsToSelect.length == 1 )
    {
@@ -96,15 +96,15 @@ function selectSelectedEventsInTree( EventsToSelect )
          
       if( RowToScrollTo != "null" )
       {
-         SearchTree.treeBoxObject.selection.clearSelection( );
+         SearchTree.view.selection.clearSelection( );
    
          SearchTree.treeBoxObject.ensureRowIsVisible( RowToScrollTo );
 
-         SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
+         SearchTree.view.selection.timedSelect( RowToScrollTo, 1 );
       }
       else
       {
-         SearchTree.treeBoxObject.selection.clearSelection( );
+         SearchTree.view.selection.clearSelection( );
       }
    }
    else if( EventsToSelect.length > 1 )
@@ -113,7 +113,7 @@ function selectSelectedEventsInTree( EventsToSelect )
       ** Other than that, there's no other way to get in here. */
       if( gSelectAll === true )
       {
-         SearchTree.treeBoxObject.selection.selectAll( );
+         SearchTree.view.selection.selectAll( );
          
          gSelectAll = false;
       }   
@@ -121,7 +121,7 @@ function selectSelectedEventsInTree( EventsToSelect )
    else
    {
       dump( "\n--->>>>unifinder.js selection callback :: Clear selection" );
-      SearchTree.treeBoxObject.selection.clearSelection( );
+      SearchTree.view.selection.clearSelection( );
    }
    
    /* This needs to be in a setTimeout */
@@ -262,13 +262,12 @@ function unifinderDoubleClickEvent( event )
 function getCalendarEventFromEvent( event )
 {
    var tree = document.getElementById( UnifinderTreeName );
-   var row = new Object();
 
-   tree.treeBoxObject.getCellAt( event.clientX, event.clientY, row, {}, {} );
+   var row = tree.treeBoxObject.getRowAt( event.clientX, event.clientY );
 
-   if( row.value != -1 && row.value < tree.view.rowCount )
+   if( row != -1 && row < tree.view.rowCount )
    { 
-      return ( tree.eventView.getCalendarEventAtRow( row.value ) );
+      return ( tree.eventView.getCalendarEventAtRow( row ) );
    } else {
       return ( null );
    }
@@ -481,15 +480,15 @@ var treeView =
    isEditable : function(){return true;},
    isSeparator : function(){return false;},
    getImageSrc : function(){return false;},
-   cycleHeader : function( ColId, element )
+   cycleHeader : function(col)
    {
       //dump( "\nin cycle header" );
       var sortActive;
       var treeCols;
    
-      this.selectedColumn = ColId;
-      sortActive = element.getAttribute("sortActive");
-      this.sortDirection = element.getAttribute("sortDirection");
+      this.selectedColumn = col.id;
+      sortActive = col.element.getAttribute("sortActive");
+      this.sortDirection = col.element.getAttribute("sortDirection");
    
       if (sortActive != "true")
       {
@@ -514,8 +513,8 @@ var treeView =
             this.sortDirection = "descending";
          }
       }
-      element.setAttribute("sortActive", sortActive);
-      element.setAttribute("sortDirection", this.sortDirection);
+      col.element.setAttribute("sortActive", sortActive);
+      col.element.setAttribute("sortDirection", this.sortDirection);
       //dump( "\nabout to sort events "+gEventArray.length );
       gEventArray.sort( sortEvents );
       //dump( "\nSORTED!");
@@ -525,7 +524,7 @@ var treeView =
    getCellText : function(row,column)
    {
       calendarEvent = gEventArray[row];
-      switch( column )
+      switch( column.id )
       {
          case "unifinder-search-results-tree-col-title":
             return( calendarEvent.title );

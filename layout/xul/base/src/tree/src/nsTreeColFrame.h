@@ -42,9 +42,9 @@
 class nsSupportsHashtable;
 
 nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
-                                nsIFrame** aNewFrame, 
-                                PRBool aIsRoot = PR_FALSE,
-                                nsIBoxLayout* aLayoutManager = nsnull);
+                            nsIFrame** aNewFrame, 
+                            PRBool aIsRoot = PR_FALSE,
+                            nsIBoxLayout* aLayoutManager = nsnull);
 
 // The actual frame that paints the cells and rows.
 class nsTreeColFrame : public nsBoxFrame
@@ -83,7 +83,6 @@ protected:
   // Members.
   
   void EnsureTree();
-  void InvalidateColumnCache(nsIPresContext* aPresContext);
   
   nsCOMPtr<nsITreeBoxObject> mTree;
 }; // class nsTreeColFrame

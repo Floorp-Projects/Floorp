@@ -42,6 +42,7 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
+#include "nsITreeColumns.h"
 #include "nsXULSelectAccessible.h"
 
 /*
@@ -82,7 +83,7 @@ class nsXULTreeitemAccessible : public nsLeafAccessible
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, PRInt32 aColumn = -1);
+  nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, nsITreeColumn* aColumn = nsnull);
   virtual ~nsXULTreeitemAccessible() {}
 
   /* ----- nsIAccessible ----- */
@@ -109,8 +110,8 @@ public:
 private:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
-  PRInt32  mRow, mColumnIndex;
-  nsString mColumn;
+  PRInt32 mRow;
+  nsCOMPtr<nsITreeColumn> mColumn;
 };
 
 class nsXULTreeColumnsAccessible : public nsAccessibleWrap

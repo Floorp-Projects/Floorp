@@ -65,4 +65,4 @@ static nsModuleComponentInfo components[] =
 #endif
 };
 
-NS_IMPL_NSGETMODULE("sql", components)
+NS_IMPL_NSGETMODULE("mozSqlModule", components)

@@ -89,11 +89,11 @@ function InitDialog()
   gDialog.TitleInput.value = GetDocumentTitle();
 
   var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-  var index = gDialog.charsetTree.builderView.getIndexOfResource(RDF.GetResource(gCharset));
+  var tree = gDialog.charsetTree;
+  var index = tree.view.getIndexOfResource(RDF.GetResource(gCharset));
   if (index >= 0) {
-    var treeBox = gDialog.charsetTree.treeBoxObject;
-    treeBox.selection.select(index);
-    treeBox.ensureRowIsVisible(index);
+    tree.view.selection.select(index);
+    tree.treeBoxObject.ensureRowIsVisible(index);
   }
 }
 

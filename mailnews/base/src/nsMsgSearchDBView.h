@@ -62,7 +62,7 @@ public:
   NS_IMETHOD DoCommandWithFolder(nsMsgViewCommandTypeValue command, nsIMsgFolder *destFolder);
   NS_IMETHOD GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr);
   // override to get location
-  NS_IMETHOD GetCellText(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue);
+  NS_IMETHOD GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue);
   virtual nsresult GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr);
   virtual nsresult OnNewHeader(nsMsgKey newKey, nsMsgKey parentKey, PRBool ensureListed);
   NS_IMETHOD GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **folder);

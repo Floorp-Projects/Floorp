@@ -578,7 +578,7 @@ DOMViewer.prototype =
     var bx = this.mDOMTree.treeBoxObject;
 
     if (!aEl) {
-      bx.selection.select(null);
+      bx.view.selection.select(null);
       return false;      
     }
       
@@ -614,7 +614,7 @@ DOMViewer.prototype =
     }
 
     if (!aQuickie && lastIndex >= 0) {
-      bx.selection.select(lastIndex);
+      view.selection.select(lastIndex);
       bx.ensureRowIsVisible(lastIndex);
     }
     
@@ -628,7 +628,7 @@ DOMViewer.prototype =
   rebuild: function()
   {
     var selNode = this.getNodeFromRowIndex(this.mDOMTree.currentIndex);
-    this.mDOMTree.treeBoxObject.selection.select(null);
+    this.mDOMView.selection.select(null);
     
     var opened = [];
     var i;

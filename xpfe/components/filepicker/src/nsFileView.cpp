@@ -40,6 +40,7 @@
 #include "nsITreeView.h"
 #include "nsIGenericFactory.h"
 #include "nsITreeSelection.h"
+#include "nsITreeColumns.h"
 #include "nsITreeBoxObject.h"
 #include "nsIFile.h"
 #include "nsString.h"
@@ -410,7 +411,7 @@ nsFileView::GetRowProperties(PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsFileView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID,
+nsFileView::GetCellProperties(PRInt32 aRow, nsITreeColumn* aCol,
                               nsISupportsArray* aProperties)
 {
   PRUint32 dirCount;
@@ -425,8 +426,7 @@ nsFileView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID,
 }
 
 NS_IMETHODIMP
-nsFileView::GetColumnProperties(const PRUnichar* aColID, 
-                                nsIDOMElement* aColElement,
+nsFileView::GetColumnProperties(nsITreeColumn* aCol,
                                 nsISupportsArray* aProperties)
 {
   return NS_OK;
@@ -468,15 +468,7 @@ nsFileView::IsSorted(PRBool* aIsSorted)
 }
 
 NS_IMETHODIMP
-nsFileView::CanDropOn(PRInt32 aIndex, PRBool* aCanDrop)
-{
-  *aCanDrop = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileView::CanDropBeforeAfter(PRInt32 aIndex, PRBool aBefore, 
-                               PRBool* aCanDrop)
+nsFileView::CanDrop(PRInt32 aIndex, PRInt32 aOrientation, PRBool* aCanDrop)
 {
   *aCanDrop = PR_FALSE;
   return NS_OK;
@@ -511,28 +503,28 @@ nsFileView::GetLevel(PRInt32 aIndex, PRInt32* aLevel)
 }
 
 NS_IMETHODIMP
-nsFileView::GetImageSrc(PRInt32 aRow, const PRUnichar* aColID,
+nsFileView::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol,
                         nsAString& aImageSrc)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetProgressMode(PRInt32 aRow, const PRUnichar* aColID,
+nsFileView::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol,
                             PRInt32* aProgressMode)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetCellValue(PRInt32 aRow, const PRUnichar* aColID,
+nsFileView::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol,
                          nsAString& aCellValue)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
+nsFileView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol,
                         nsAString& aCellText)
 {
   PRUint32 dirCount, fileCount;
@@ -554,9 +546,11 @@ nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
     return NS_OK;
   }
 
-  if (NS_LITERAL_STRING("FilenameColumn").Equals(aColID)) {
+  const PRUnichar* colID;
+  aCol->GetIdConst(&colID);
+  if (NS_LITERAL_STRING("FilenameColumn").Equals(colID)) {
     curFile->GetLeafName(aCellText);
-  } else if (NS_LITERAL_STRING("LastModifiedColumn").Equals(aColID)) {
+  } else if (NS_LITERAL_STRING("LastModifiedColumn").Equals(colID)) {
     PRInt64 lastModTime;
     curFile->GetLastModifiedTime(&lastModTime);
     // XXX FormatPRTime could take an nsAString&
@@ -592,7 +586,7 @@ nsFileView::ToggleOpenState(PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-nsFileView::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aElement)
+nsFileView::CycleHeader(nsITreeColumn* aCol)
 {
   return NS_OK;
 }
@@ -604,13 +598,13 @@ nsFileView::SelectionChanged()
 }
 
 NS_IMETHODIMP
-nsFileView::CycleCell(PRInt32 aRow, const PRUnichar* aColID)
+nsFileView::CycleCell(PRInt32 aRow, nsITreeColumn* aCol)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileView::IsEditable(PRInt32 aRow, const PRUnichar* aColID,
+nsFileView::IsEditable(PRInt32 aRow, nsITreeColumn* aCol,
                        PRBool* aIsEditable)
 {
   *aIsEditable = PR_FALSE;
@@ -618,8 +612,15 @@ nsFileView::IsEditable(PRInt32 aRow, const PRUnichar* aColID,
 }
 
 NS_IMETHODIMP
-nsFileView::SetCellText(PRInt32 aRow, const PRUnichar* aColID,
-                        const PRUnichar* aValue)
+nsFileView::SetCellValue(PRInt32 aRow, nsITreeColumn* aCol,
+                         const nsAString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileView::SetCellText(PRInt32 aRow, nsITreeColumn* aCol,
+                        const nsAString& aValue)
 {
   return NS_OK;
 }
@@ -638,7 +639,7 @@ nsFileView::PerformActionOnRow(const PRUnichar* aAction, PRInt32 aRow)
 
 NS_IMETHODIMP
 nsFileView::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRow,
-                                const PRUnichar* aColID)
+                                nsITreeColumn* aCol)
 {
   return NS_OK;
 }

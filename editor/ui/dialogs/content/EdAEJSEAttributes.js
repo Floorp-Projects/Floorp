@@ -131,7 +131,7 @@ function onSelectJSEAttribute()
 function onSelectJSETreeItem()
 {
   var tree = gDialog.AddJSEAttributeTree;
-  if (tree && tree.treeBoxObject.selection.count)
+  if (tree && tree.view.selection.count)
   {
     // Select attribute name in list
     gDialog.AddJSEAttributeNameList.value = GetTreeItemAttributeStr(getSelectedItem(tree));
@@ -200,7 +200,7 @@ function RemoveJSEAttribute()
   var newIndex = gDialog.AddJSEAttributeTree.selectedIndex;
 
   // We only allow 1 selected item
-  if (gDialog.AddJSEAttributeTree.treeBoxObject.selection.count)
+  if (gDialog.AddJSEAttributeTree.view.selection.count)
   {
     var item = getSelectedItem(gDialog.AddJSEAttributeTree);
 

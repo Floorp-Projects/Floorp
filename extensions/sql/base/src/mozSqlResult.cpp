@@ -44,6 +44,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "mozSqlResult.h"
 #include "mozSqlConnection.h"
+#include "nsITreeColumns.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -148,11 +149,12 @@ mozSqlResult::~mozSqlResult()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(mozSqlResult,
+NS_IMPL_THREADSAFE_ISUPPORTS5(mozSqlResult,
                               mozISqlResult,
                               mozISqlDataSource,
                               nsIRDFDataSource,
-                              nsIRDFRemoteDataSource);
+                              nsIRDFRemoteDataSource,
+                              nsITreeView);
 
 NS_IMETHODIMP
 mozSqlResult::GetConnection(mozISqlConnection** aConnection)
@@ -667,6 +669,284 @@ mozSqlResult::FlushTo(const char *aURI)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+/*
+NS_IMETHODIMP
+mozSqlResult::GetRowCount(PRInt32 *aRowCount)
+{
+  *aRowCount = mRows.Count();
+  return NS_OK;
+}
+*/
+
+NS_IMETHODIMP
+mozSqlResult::GetSelection(nsITreeSelection * *aSelection)
+{
+  NS_IF_ADDREF(*aSelection = mSelection);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::SetSelection(nsITreeSelection * aSelection)
+{
+  mSelection = aSelection;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray *properties)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetColumnProperties(nsITreeColumn* aCol, nsISupportsArray *properties)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::IsContainer(PRInt32 index, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::IsContainerOpen(PRInt32 index, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::IsContainerEmpty(PRInt32 index, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::IsSeparator(PRInt32 index, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::IsSorted(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::Drop(PRInt32 row, PRInt32 orientation)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
+{
+  *_retval = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetLevel(PRInt32 index, PRInt32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetImageSrc(PRInt32 row, nsITreeColumn* col, nsAString & _retval)
+{
+  _retval.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetProgressMode(PRInt32 row, nsITreeColumn* col, PRInt32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetCellValue(PRInt32 row, nsITreeColumn* col, nsAString & _retval)
+{
+  PRInt32 columnIndex;
+  col->GetIndex(&columnIndex);
+
+  Cell* cell = ((Row*)mRows[row])->mCells[columnIndex];
+  if (! cell->IsNull()) {
+    PRInt32 type = cell->GetType();
+    if (type == mozISqlResult::TYPE_BOOL) {
+      if (cell->mBool)
+        _retval.Assign(NS_LITERAL_STRING("true"));
+      else
+        _retval.Assign(NS_LITERAL_STRING("false"));
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString & _retval)
+{
+  PRInt32 columnIndex;
+  col->GetIndex(&columnIndex);
+
+  Cell* cell = ((Row*)mRows[row])->mCells[columnIndex];
+  if (! cell->IsNull()) {
+    PRInt32 type = cell->GetType();
+    if (type == mozISqlResult::TYPE_STRING)
+      _retval.Assign(cell->mString);
+    else if (type == mozISqlResult::TYPE_INT) {
+      nsAutoString s;
+      s.AppendInt(cell->mInt);
+      _retval.Assign(s);
+    }
+    else if (type == mozISqlResult::TYPE_FLOAT ||
+             type == mozISqlResult::TYPE_DECIMAL) {
+      nsAutoString s;
+      s.AppendFloat(cell->mFloat);
+      _retval.Assign(s);
+    }
+    else if (type == mozISqlResult::TYPE_DATE ||
+             type == mozISqlResult::TYPE_TIME ||
+             type == mozISqlResult::TYPE_DATETIME) {
+      nsAutoString value;
+      mozSqlResult::gFormat->FormatPRTime(nsnull,
+                                          type != mozISqlResult::TYPE_TIME ? kDateFormatShort : kDateFormatNone,
+                                          type != mozISqlResult::TYPE_DATE ? kTimeFormatSeconds : kTimeFormatNone,
+                                          PRTime(cell->mDate),
+                                          value);
+      _retval.Assign(value);
+    }
+    else if (type == mozISqlResult::TYPE_BOOL) {
+      if (cell->mBool)
+        _retval.Assign(NS_LITERAL_STRING("true"));
+      else
+        _retval.Assign(NS_LITERAL_STRING("false"));
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::SetTree(nsITreeBoxObject *tree)
+{
+  mBoxObject = tree;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::ToggleOpenState(PRInt32 index)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::CycleHeader(nsITreeColumn* aCol)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::SelectionChanged()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::CycleCell(PRInt32 row, nsITreeColumn* aCol)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
+{
+  return CanUpdate(_retval);
+}
+
+NS_IMETHODIMP
+mozSqlResult::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
+{
+  PRInt32 columnIndex;
+  col->GetIndex(&columnIndex);
+
+  Row* srcRow = (Row*)mRows[row];
+  Row* buffer = Row::Create(mAllocator, nsnull, mColumnInfo, srcRow);
+
+  Cell* cell = buffer->mCells[columnIndex];
+
+  if (value.Equals(NS_LITERAL_STRING("true"))) {
+    cell->mBool = PR_TRUE;
+  }
+  else if (value.Equals(NS_LITERAL_STRING("false"))) {
+    cell->mBool = PR_FALSE;
+  }
+  
+  PRInt32 count;
+  nsresult rv = UpdateRow(row, buffer, &count);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (mBoxObject)
+    mBoxObject->InvalidateCell(row, col);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::SetCellText(PRInt32 row, nsITreeColumn* col, const nsAString& value)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::PerformAction(const PRUnichar *action)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::PerformActionOnCell(const PRUnichar *action, PRInt32 row, nsITreeColumn* aCol)
+{
+  return NS_OK;
+}
+
+
 void
 mozSqlResult::ClearColumnInfo()
 {
@@ -1020,6 +1300,9 @@ mozSqlResult::InsertRow(Row* aSrcRow, PRInt32* _retval)
   for (i = 0; i < mObservers.Count(); i++)
     mObservers[i]->OnAssert(this, kSQL_ResultRoot, kNC_Child, resource);
 
+  if (mBoxObject)
+    mBoxObject->RowCountChanged(mRows.Count() - 1, 1);
+
   *_retval = 1;
   return NS_OK;
 }
@@ -1081,6 +1364,9 @@ mozSqlResult::UpdateRow(PRInt32 aRowIndex, Row* aSrcRow, PRInt32* _retval)
     for (PRInt32 i = 0; i < mObservers.Count(); i++)
       mObservers[i]->OnUnassert(this, kSQL_ResultRoot, kNC_Child, row->mSource);
 
+    if (mBoxObject)
+      mBoxObject->RowCountChanged(aRowIndex, -1);
+
     Row::Destroy(mAllocator, mColumnInfo.Count(), row);
 
     *_retval = 0;
@@ -1138,6 +1424,9 @@ mozSqlResult::UpdateRow(PRInt32 aRowIndex, Row* aSrcRow, PRInt32* _retval)
     }
   }
 
+  if (mBoxObject)
+    mBoxObject->InvalidateRow(aRowIndex);
+
   *_retval = 1;
   return NS_OK;
 }
@@ -1177,6 +1466,9 @@ mozSqlResult::DeleteRow(PRInt32 aRowIndex, PRInt32* _retval)
 
   for (PRInt32 i = 0; i < mObservers.Count(); i++)
     mObservers[i]->OnUnassert(this, kSQL_ResultRoot, kNC_Child, row->mSource);
+
+  if (mBoxObject)
+    mBoxObject->RowCountChanged(aRowIndex, -1);
 
   Row::Destroy(mAllocator, mColumnInfo.Count(), row);
 

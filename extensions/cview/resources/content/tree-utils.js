@@ -143,12 +143,14 @@ function bov_scrollto (line, align)
 
 BasicOView.prototype.rowCount = 0;
 
+BasicOView.prototype.selection = null;
+
 BasicOView.prototype.getCellProperties =
-function bov_cellprops (row, colID, properties)
+function bov_cellprops (row, col, properties)
 {}
 
 BasicOView.prototype.getColumnProperties =
-function bov_colprops (colID, elem, properties)
+function bov_colprops (col, properties)
 {}
 
 BasicOView.prototype.getRowProperties =
@@ -185,14 +187,8 @@ function bov_issorted (index)
     return false;
 }
 
-BasicOView.prototype.canDropOn =
-function bov_dropon (index)
-{
-    return false;
-}
-
-BasicOView.prototype.canDropBeforeAfter =
-function bov_dropba (index, before)
+BasicOView.prototype.canDrop =
+function bov_drop (index, orientation)
 {
     return false;
 }
@@ -222,32 +218,32 @@ function bov_getlvl (index)
 }
 
 BasicOView.prototype.getImageSrc =
-function bov_getimgsrc (row, colID)
+function bov_getimgsrc (row, col)
 {
 }
 
 BasicOView.prototype.getProgressMode =
-function bov_getprgmode (row, colID)
+function bov_getprgmode (row, col)
 {
 }
 
 BasicOView.prototype.getCellValue =
-function bov_getcellval (row, colID)
+function bov_getcellval (row, col)
 {
 }
 
 BasicOView.prototype.getCellText =
-function bov_getcelltxt (row, colID)
+function bov_getcelltxt (row, col)
 {
     if (!this.columnNames)
         return "";
     
-    var col = this.columnNames[colID];
+    var colName = this.columnNames[col.id];
     
-    if (typeof col == "undefined")
+    if (typeof colName == "undefined")
         return "";
     
-    return this.data[row][col];
+    return this.data[row][colName];
 }
 
 BasicOView.prototype.setTree =
@@ -262,7 +258,7 @@ function bov_toggleopen (index)
 }
 
 BasicOView.prototype.cycleHeader =
-function bov_cyclehdr (colID, elt)
+function bov_cyclehdr (col)
 {
 }
 
@@ -272,18 +268,23 @@ function bov_selchg ()
 }
 
 BasicOView.prototype.cycleCell =
-function bov_cyclecell (row, colID)
+function bov_cyclecell (row, col)
 {
 }
 
 BasicOView.prototype.isEditable =
-function bov_isedit (row, colID)
+function bov_isedit (row, col)
 {
     return false;
 }
 
+BasicOView.prototype.setCellValue =
+function bov_setct (row, col, value)
+{
+}
+
 BasicOView.prototype.setCellText =
-function bov_setct (row, colID, value)
+function bov_setct (row, col, value)
 {
 }
 
@@ -1026,18 +1027,18 @@ function tov_isctr (index)
 TreeOView.prototype.__defineGetter__("selectedIndex", tov_getsel);
 function tov_getsel()
 {
-    if (this.tree.selection.getRangeCount() < 1)
+    if (this.tree.view.selection.getRangeCount() < 1)
         return -1;
 
     var min = new Object();
-    this.tree.selection.getRangeAt(0, min, {});
+    this.tree.view.selection.getRangeAt(0, min, {});
     return min.value;
 }
 
 TreeOView.prototype.__defineSetter__("selectedIndex", tov_setsel);
 function tov_setsel(i)
 {
-    this.tree.selection.timedSelect (i, 500);
+    this.tree.view.selection.timedSelect (i, 500);
     return i;
 }
 
@@ -1124,37 +1125,37 @@ function tov_getlvl (index)
 }
 
 TreeOView.prototype.getImageSrc =
-function tov_getimgsrc (index, colID)
+function tov_getimgsrc (index, col)
 {
 }
 
 TreeOView.prototype.getProgressMode =
-function tov_getprgmode (index, colID)
+function tov_getprgmode (index, col)
 {
 }
 
 TreeOView.prototype.getCellValue =
-function tov_getcellval (index, colID)
+function tov_getcellval (index, col)
 {
 }
 
 TreeOView.prototype.getCellText =
-function tov_getcelltxt (index, colID)
+function tov_getcelltxt (index, col)
 {
     var row = this.childData.locateChildByVisualRow (index);
     //ASSERT(row, "bogus row " + index);
     if (row._colValues)
-        return row._colValues[colID];
+        return row._colValues[col.id];
     else
         return null;
 }
 
 TreeOView.prototype.getCellProperties =
-function tov_cellprops (row, colID, properties)
+function tov_cellprops (row, col, properties)
 {}
 
 TreeOView.prototype.getColumnProperties =
-function tov_colprops (colID, elem, properties)
+function tov_colprops (col, properties)
 {}
 
 TreeOView.prototype.getRowProperties =
@@ -1173,21 +1174,12 @@ function tov_issorted (index)
     return false;
 }
 
-TreeOView.prototype.canDropOn =
-function tov_dropon (index)
+TreeOView.prototype.canDrop =
+function tov_dropon (index, orientation)
 {
     var row = this.childData.locateChildByVisualRow (index);
     //ASSERT(row, "bogus row " + index);
-    return (row && ("canDropOn" in row) && row.canDropOn());
-}
-
-TreeOView.prototype.canDropBeforeAfter =
-function tov_dropba (index, before)
-{
-    var row = this.childData.locateChildByVisualRow (index);
-    //ASSERT(row, "bogus row " + index);
-    return (row && ("canDropBeforeAfter" in row) &&
-            row.canDropBeforeAfter(before));
+    return (row && ("canDrop" in row) && row.canDropOn(orientation));
 }
 
 TreeOView.prototype.drop =
@@ -1205,7 +1197,7 @@ function tov_seto (tree)
 }
 
 TreeOView.prototype.cycleHeader =
-function tov_cyclehdr (colID, elt)
+function tov_cyclehdr (col)
 {
 }
 
@@ -1215,18 +1207,23 @@ function tov_selchg ()
 }
 
 TreeOView.prototype.cycleCell =
-function tov_cyclecell (row, colID)
+function tov_cyclecell (row, col)
 {
 }
 
 TreeOView.prototype.isEditable =
-function tov_isedit (row, colID)
+function tov_isedit (row, col)
 {
     return false;
 }
 
+TreeOView.prototype.setCellValue =
+function tov_setct (row, col, value)
+{
+}
+
 TreeOView.prototype.setCellText =
-function tov_setct (row, colID, value)
+function tov_setct (row, col, value)
 {
 }
 

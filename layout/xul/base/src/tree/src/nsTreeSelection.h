@@ -19,6 +19,7 @@
  * Contributor(s):
  *   David W. Hyatt <hyatt@netscape.com> (Original Author)
  *   Brian Ryner <bryner@brianryner.com>
+ *   Jan Varga <varga@nixcorp.com>
  */
 
 #ifndef nsTreeSelection_h__
@@ -34,7 +35,7 @@ class nsTreeSelection : public nsITreeSelection
 {
 public:
   nsTreeSelection(nsITreeBoxObject* aTree);
-  virtual ~nsTreeSelection();
+  ~nsTreeSelection();
    
   NS_DECL_ISUPPORTS
   NS_DECL_NSITREESELECTION

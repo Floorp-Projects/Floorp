@@ -99,5 +99,7 @@ classic.jar:
   skin/classic/global/wizard/wizard-btn-rit.gif                 (wizard/wizard-btn-rit.gif)
   skin/classic/global/wizard/wizard-btn-lft.gif                 (wizard/wizard-btn-lft.gif)
   skin/classic/global/wizard/wizard-btn-rit-dis.gif             (wizard/wizard-btn-rit-dis.gif)
+  skin/classic/global/tree/checkbox.gif                         (tree/checkbox.gif)
+  skin/classic/global/tree/checkbox-checked.gif                 (tree/checkbox-checked.gif)
   skin/classic/global/tree/twisty-open.gif                      (tree/twisty-open.gif)
   skin/classic/global/tree/twisty-clsd.gif                      (tree/twisty-clsd.gif)

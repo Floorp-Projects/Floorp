@@ -60,17 +60,13 @@ function AbResultsPaneOnClick(event)
       SortAndUpdateIndicators(t.id, sortDirection);
     }
     else if (t.localName == "treechildren") {
-       var row = new Object;
-       var colID = new Object;
-       var childElt = new Object;
-
-       // figure out what cell the click was in
-       gAbResultsTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
-       if (row.value == -1)
+       // figure out what row the click was in
+       var row = gAbResultsTree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+       if (row == -1)
          return;
 
        if (event.detail == 2) {
-         AbResultsPaneDoubleClick(gAbView.getCardFromRow(row.value));
+         AbResultsPaneDoubleClick(gAbView.getCardFromRow(row));
        }
        else {
          UpdateCardView();

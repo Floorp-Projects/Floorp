@@ -174,7 +174,7 @@ function selectServer(server, selectPage)
     selectedItem = selectedServer;
 
   var index = accounttree.contentView.getIndexOfItem(selectedItem);
-  accounttree.treeBoxObject.selection.select(index);
+  accounttree.view.selection.select(index);
   accounttree.treeBoxObject.ensureRowIsVisible(index);
 
   var lastItem = selectedServer.lastChild.lastChild;
@@ -671,7 +671,7 @@ function updateButtons(tree,serverId) {
     canDuplicate = false;
   }
 
-  if (tree.treeBoxObject.selection.count < 1)
+  if (tree.view.selection.count < 1)
     canDuplicate = canSetDefault = canDelete = false;
 
   // check for disabled preferences on the account buttons.  
@@ -1167,7 +1167,7 @@ function getServerIdAndPageIdFromTree(tree)
 {
   var serverId = null;
 
-  if (tree.treeBoxObject.selection.count < 1) return null;
+  if (tree.view.selection.count < 1) return null;
   var node = tree.contentView.getItemAtIndex(tree.currentIndex);
 
   // get the page to load

@@ -48,6 +48,8 @@ classic.jar:
   skin/classic/global/menu/menu-radio-disabled.gif            (menu/menu-radio-disabled.gif)
   skin/classic/global/menu/menu-radio-hover.gif               (menu/menu-radio-hover.gif)
   skin/classic/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
+  skin/classic/global/tree/checkbox.gif                       (tree/checkbox.gif)
+  skin/classic/global/tree/checkbox-checked.gif               (tree/checkbox-checked.gif)
   skin/classic/global/tree/twisty-open.gif                    (tree/twisty-open.gif)
   skin/classic/global/tree/twisty-clsd.gif                    (tree/twisty-clsd.gif)
   skin/classic/global/progressmeter/progressmeter-busy.gif    (progressmeter/progressmeter-busy.gif)

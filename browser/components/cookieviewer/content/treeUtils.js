@@ -71,7 +71,7 @@ function DeleteSelectedItemFromTree
 
     // update selection
     var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
-    tree.treeBoxObject.view.selection.select(nextSelection);
+    tree.view.selection.select(nextSelection);
     tree.treeBoxObject.ensureRowIsVisible(nextSelection);
 
   } else {
@@ -86,7 +86,7 @@ function DeleteSelectedItemFromTree
 
 function GetTreeSelections(tree) {
   var selections = [];
-  var select = tree.treeBoxObject.selection;
+  var select = tree.view.selection;
   if (select) {
     var count = select.getRangeCount();
     var min = new Object();
@@ -127,8 +127,8 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
       if (table[s].number == selectedNumber) {
         // update selection
         // note: we need to deselect before reselecting in order to trigger ...Selected()
-        tree.treeBoxObject.view.selection.select(-1);
-        tree.treeBoxObject.view.selection.select(s);
+        tree.view.selection.select(-1);
+        tree.view.selection.select(s);
         selectedRow = s;
         break;
       }

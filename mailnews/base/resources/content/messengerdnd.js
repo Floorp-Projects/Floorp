@@ -49,8 +49,11 @@ function debugDump(msg)
   // dump(msg+"\n");
 }
 
-function CanDropOnFolderTree(index)
+function CanDropOnFolderTree(index, orientation)
 {
+    if (orientation != Components.interfaces.nsITreeView.DROP_ON)
+        return false;
+
     var dragSession = null;
     var dragFolder = false;
 
@@ -188,14 +191,9 @@ function CanDropOnFolderTree(index)
     return false;
 }
 
-function CanDropBeforeAfterFolderTree(index, before)
-{
-    return false;
-}
-
 function DropOnFolderTree(row, orientation)
 {
-    if (orientation != Components.interfaces.nsITreeView.inDropOn)
+    if (orientation != Components.interfaces.nsITreeView.DROP_ON)
         return false;
 
     var folderTree = GetFolderTree();
@@ -324,14 +322,11 @@ function BeginDragFolderTree(event)
       return false;
 
     var folderTree = GetFolderTree();
-    var row = {};
-    var col = {};
-    var elt = {};
-    folderTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
-    if (row.value == -1)
+    var row = folderTree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+    if (row == -1)
       return false;
 
-    var folderResource = GetFolderResource(folderTree, row.value);
+    var folderResource = GetFolderResource(folderTree, row);
 
     if (GetFolderAttribute(folderTree, folderResource, "IsServer") == "true")
     {
@@ -382,7 +377,7 @@ function BeginDragTree(event, tree, selArray, flavor)
       region.init();
       var obo = tree.treeBoxObject;
       var bo = obo.treeBody.boxObject;
-      var obosel= obo.selection;
+      var sel= tree.view.selection;
 
       var rowX = bo.x;
       var rowY = bo.y;
@@ -392,7 +387,7 @@ function BeginDragTree(event, tree, selArray, flavor)
       //add a rectangle for each visible selected row
       for (var i = obo.getFirstVisibleRow(); i <= obo.getLastVisibleRow(); i ++)
       {
-        if (obosel.isSelected(i))
+        if (sel.isSelected(i))
           region.unionRect(rowX, rowY, rowWidth, rowHeight);
         rowY = rowY + rowHeight;
       }

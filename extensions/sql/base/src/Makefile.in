@@ -48,6 +48,8 @@ REQUIRES	= xpcom \
 		  locale \
 		  necko \
 		  rdf \
+		  dom \
+		  layout \
 		  windowwatcher \
 		  $(NULL)
 

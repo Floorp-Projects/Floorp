@@ -40,6 +40,7 @@
 #include "nsIBoxObject.h"
 #include "nsIDOMXULElement.h"
 #include "nsITreeSelection.h"
+#include "nsITreeColumns.h"
 #include "nsXULTreeAccessible.h"
 #include "nsArray.h"
 
@@ -119,7 +120,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetValue(nsAString& _retval)
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (! selection)
     return NS_ERROR_FAILURE;
 
@@ -127,11 +128,14 @@ NS_IMETHODIMP nsXULTreeAccessible::GetValue(nsAString& _retval)
   nsCOMPtr<nsIDOMElement> selectItem;
   selection->GetCurrentIndex(&currentIndex);
   if (currentIndex >= 0) {
-    nsAutoString colID;
-    PRInt32 keyColumn;
-    mTree->GetKeyColumnIndex(&keyColumn);
-    mTree->GetColumnID(keyColumn, colID);
-    return mTreeView->GetCellText(currentIndex, colID.get(), _retval);
+    nsCOMPtr<nsITreeColumn> keyCol;
+
+    nsCOMPtr<nsITreeColumns> cols;
+    mTree->GetColumns(getter_AddRefs(cols));
+    if (cols)
+      cols->GetKeyColumn(getter_AddRefs(keyCol));
+
+    return mTreeView->GetCellText(currentIndex, keyCol, _retval);
   }
 
   return NS_OK;
@@ -205,7 +209,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsIArray **_retval)
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (!selection)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIMutableArray> selectedAccessibles;
@@ -244,7 +248,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection)
     selection->GetCount(aSelectionCount);
 
@@ -256,7 +260,7 @@ NS_IMETHODIMP nsXULTreeAccessible::ChangeSelection(PRInt32 aIndex, PRUint8 aMeth
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
     selection->IsSelected(aIndex, aSelState);
     if ((!(*aSelState) && eSelection_Add == aMethod) || 
@@ -289,7 +293,7 @@ NS_IMETHODIMP nsXULTreeAccessible::ClearSelection()
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection)
     selection->ClearSelection();
 
@@ -303,7 +307,7 @@ NS_IMETHODIMP nsXULTreeAccessible::RefSelection(PRInt32 aIndex, nsIAccessible **
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (!selection)
     return NS_ERROR_FAILURE;
 
@@ -343,7 +347,7 @@ NS_IMETHODIMP nsXULTreeAccessible::SelectAllSelection(PRBool *_retval)
     if (selType.IsEmpty() || !selType.Equals(NS_LITERAL_STRING("single"))) {
       *_retval = PR_TRUE;
       nsCOMPtr<nsITreeSelection> selection;
-      mTree->GetSelection(getter_AddRefs(selection));
+      mTreeView->GetSelection(getter_AddRefs(selection));
       if (selection)
         selection->SelectAll();
     }
@@ -354,8 +358,8 @@ NS_IMETHODIMP nsXULTreeAccessible::SelectAllSelection(PRBool *_retval)
 
 // ---------- nsXULTreeitemAccessible ---------- 
 
-nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, PRInt32 aColumn):
-nsLeafAccessible(aDOMNode, aShell)
+nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, nsITreeColumn* aColumn)
+  : nsLeafAccessible(aDOMNode, aShell)
 {
   Init(); // Add ourselves to cache using GetUniqueID() override
   mParent = aParent;  // xxx todo: do we need this? We already have mParent on nsAccessible
@@ -367,15 +371,13 @@ nsLeafAccessible(aDOMNode, aShell)
 
   // Since the real tree item does not correspond to any DOMNode, use the row index to distinguish each item
   mRow = aRow;
-  mColumnIndex = aColumn;
-  if (mTree) {
-    if (mColumnIndex < 0) {
-      PRInt32 keyColumn;
-      mTree->GetKeyColumnIndex(&keyColumn);
-      mTree->GetColumnID(keyColumn, mColumn);
-    } else {
-      mTree->GetColumnID(aColumn, mColumn);
-    }
+  mColumn = aColumn;
+
+  if (!mColumn && mTree) {
+    nsCOMPtr<nsITreeColumns> cols;
+    mTree->GetColumns(getter_AddRefs(cols));
+    if (cols)
+      cols->GetKeyColumn(getter_AddRefs(mColumn));
   }
 }
 
@@ -385,7 +387,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& _retval)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
-  return mTreeView->GetCellText(mRow, mColumn.get(), _retval);
+  return mTreeView->GetCellText(mRow, mColumn, _retval);
 }
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetValue(nsAString& _retval)
@@ -435,7 +437,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
 
   // get selected state
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
     PRBool isSelected, currentIndex;
     selection->IsSelected(mRow, &isSelected);
@@ -504,7 +506,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetParent(nsIAccessible **aParent)
   return NS_OK;
 }
 
-// Return the next row of tree if mColumnIndex < 0 (if any),
+// Return the next row of tree if mColumn (if any),
 // otherwise return the next cell.
 NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibling)
 {
@@ -515,7 +517,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
   PRInt32 rowCount;
   mTreeView->GetRowCount(&rowCount);
 
-  if (mColumnIndex < 0) {
+  if (!mColumn) {
     if (mRow < rowCount - 1) {
       *aNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, mRow + 1);
       if (! *aNextSibling)
@@ -528,18 +530,17 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
 
   nsresult rv = NS_OK;
 #ifdef MOZ_ACCESSIBILITY_ATK
-  nsCOMPtr<nsIAccessibleTable> table(do_QueryInterface(mParent, &rv));
+  PRInt32 row = mRow;
+  nsCOMPtr<nsITreeColumn> column;
+  rv = mColumn->GetNext(getter_AddRefs(column));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 columnCount, row = mRow, column = mColumnIndex;
-  rv = table->GetColumns(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mColumnIndex < columnCount - 1) {
-    column++;
-  } else if (mRow < rowCount - 1) {
-    column = 0;
+  
+  if (!column && mRow < rowCount - 1) {
     row++;
+    nsCOMPtr<nsITreeColumns> cols;
+    mTree->GetColumns(getter_AddRefs(cols));
+    if (cols)
+      cols->GetFirstColumn(getter_AddRefs(column));
   }
 
   *aNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, row, column);
@@ -551,15 +552,15 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
   return rv;
 }
 
-// Return the previou row of tree if mColumnIndex < 0 (if any),
-// otherwise return the previou cell.
+// Return the previous row of tree if mColumn (if any),
+// otherwise return the previous cell.
 NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPreviousSibling)
 {
   *aPreviousSibling = nsnull;
 
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
-  if (mRow > 0 && mColumnIndex < 0) {
+  if (!mColumn && mRow > 0) {
     *aPreviousSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, mRow - 1);
     if (! *aPreviousSibling)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -570,18 +571,17 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetPreviousSibling(nsIAccessible **aPrevi
 
   nsresult rv = NS_OK;
 #ifdef MOZ_ACCESSIBILITY_ATK
-  nsCOMPtr<nsIAccessibleTable> table(do_QueryInterface(mParent, &rv));
+  PRInt32 row = mRow;
+  nsCOMPtr<nsITreeColumn> column;
+  rv = mColumn->GetPrevious(getter_AddRefs(column));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 columnCount, row = mRow, column = mColumnIndex;
-  rv = table->GetColumns(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mColumnIndex > 0) {
-    column--;
-  } else if (mRow > 0) {
-    column = columnCount - 1;
+  
+  if (!column && mRow > 0) {
     row--;
+    nsCOMPtr<nsITreeColumns> cols;
+    mTree->GetColumns(getter_AddRefs(cols));
+    if (cols)
+      cols->GetLastColumn(getter_AddRefs(column));
   }
 
   *aPreviousSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, row, column);
@@ -609,12 +609,11 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32
 
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
-  const PRUnichar empty[] = {'\0'};
-
   // This Bounds are based on Tree's coord
-  mTree->GetCoordsForCellItem(mRow, mColumn.get(), empty, x, y, width, height);
+  mTree->GetCoordsForCellItem(mRow, mColumn, NS_LITERAL_CSTRING(""), x, y, width, height);
 
   // Get treechildren's BoxObject to adjust the Bounds' upper left corner
+  // XXXvarga consider using mTree->GetTreeBody()
   nsCOMPtr<nsIBoxObject> boxObject(do_QueryInterface(mTree));
   if (boxObject) {
     nsCOMPtr<nsIDOMElement> boxElement;
@@ -660,7 +659,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::RemoveSelection()
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
     PRBool isSelected;
     selection->IsSelected(mRow, &isSelected);
@@ -676,7 +675,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::TakeSelection()
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection) {
     PRBool isSelected;
     selection->IsSelected(mRow, &isSelected);
@@ -692,7 +691,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::TakeFocus()
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsITreeSelection> selection;
-  mTree->GetSelection(getter_AddRefs(selection));
+  mTreeView->GetSelection(getter_AddRefs(selection));
   if (selection)
     selection->SetCurrentIndex(mRow);
 

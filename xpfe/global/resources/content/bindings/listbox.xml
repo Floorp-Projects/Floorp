@@ -221,7 +221,19 @@
         ]]>
         </setter>
       </property>
-      
+
+      <property name="currentIndex">
+        <getter><![CDATA[
+          return this.getIndexOfItem(this.currentItem);
+        ]]></getter>
+        <setter><![CDATA[
+          if (val >= 0)
+            this.currentItem = this.getItemAtIndex(val);
+          else
+            this.currentItem = null;
+        ]]></setter>
+      </property>
+
       <property name="selectedCount" onget="return this.selectedItems.length;"/>
       
       <method name="getSelectedItem">

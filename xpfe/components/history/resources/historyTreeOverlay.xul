@@ -78,7 +78,7 @@
             context="historyMenu"
             datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
             onkeypress="if (event.keyCode == 13) OpenURL(event.ctrlKey || event.metaKey ? 'window' : 'current');"
-            onselect="this.treeBoxObject.view.selectionChanged();
+            onselect="this.view.selectionChanged();
                       historyOnSelect();"
             onclick="historyOnClick(event);"
             ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"

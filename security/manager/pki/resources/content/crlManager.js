@@ -161,7 +161,7 @@ function DeleteCrlSelected() {
 
 function EnableCrlActions() {
   var tree = document.getElementById("crltree");
-  if (tree.treeBoxObject.selection.count) {
+  if (tree.view.selection.count) {
     document.getElementById("deleteCrl").removeAttribute("disabled");
     document.getElementById("editPrefs").removeAttribute("disabled");
     document.getElementById("updateCRL").removeAttribute("disabled");

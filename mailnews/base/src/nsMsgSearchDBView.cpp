@@ -47,6 +47,7 @@
 #include "nsIMsgCopyService.h"
 #include "nsICopyMsgStreamListener.h"
 #include "nsMsgUtils.h"
+#include "nsITreeColumns.h"
 
 nsMsgSearchDBView::nsMsgSearchDBView()
 {
@@ -84,9 +85,11 @@ NS_IMETHODIMP nsMsgSearchDBView::Close()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgSearchDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
+NS_IMETHODIMP nsMsgSearchDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue)
 {
-  if (aColID[0] == 'l' && aColID[1] == 'o') // location, need to check for "lo" not just "l" to avoid "label" column
+  const PRUnichar* colID;
+  aCol->GetIdConst(&colID);
+  if (colID[0] == 'l' && colID[1] == 'o') // location, need to check for "lo" not just "l" to avoid "label" column
   {
     // XXX fix me by converting Fetch* to take an nsAString& parameter
     nsXPIDLString valueText;
@@ -95,7 +98,7 @@ NS_IMETHODIMP nsMsgSearchDBView::GetCellText(PRInt32 aRow, const PRUnichar * aCo
     return rv;
   }
   else
-    return nsMsgDBView::GetCellText(aRow, aColID, aValue);
+    return nsMsgDBView::GetCellText(aRow, aCol, aValue);
 }
 
 nsresult nsMsgSearchDBView::FetchLocation(PRInt32 aRow, PRUnichar ** aLocationString)

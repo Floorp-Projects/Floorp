@@ -62,9 +62,9 @@ var permissionsTreeView = {
   getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
-    if (column=="siteCol") {
+    if (column.id=="siteCol") {
       rv = permissions[row].rawHost;
-    } else if (column=="statusCol") {
+    } else if (column.id=="statusCol") {
       rv = permissions[row].capability;
     }
     return rv;
@@ -72,10 +72,10 @@ var permissionsTreeView = {
   isSeparator : function(index) {return false;},
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
+  cycleHeader : function(column) {},
+  getRowProperties : function(row,prop) {},
+  getColumnProperties : function(column,prop) {},
+  getCellProperties : function(row,column,prop) {}
  };
 
 function Permission(number, host, rawHost, type, capability, perm) {

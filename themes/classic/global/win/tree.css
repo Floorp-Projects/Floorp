@@ -140,8 +140,12 @@ treechildren::-moz-tree-line(selected, focus) {
 /* ::::: tree separator ::::: */
 
 treechildren::-moz-tree-separator {
+  margin-top: 1px;
   border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDShadow;
+  height: 2px;
 }
 
 
@@ -158,6 +162,16 @@ treechildren::-moz-tree-drop-feedback {
   width: 50px;
   height: 2px;
   margin-left: 5px;
+}
+
+/* ::::: tree checkbox ::::: */
+
+treechildren::-moz-tree-checkbox {
+  list-style-image: url("chrome://global/skin/tree/checkbox.gif");
+}
+
+treechildren::-moz-tree-checkbox(checked) {
+  list-style-image: url("chrome://global/skin/tree/checkbox-checked.gif");
 }
 
 /* ::::: tree progress meter ::::: */

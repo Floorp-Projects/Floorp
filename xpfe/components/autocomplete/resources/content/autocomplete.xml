@@ -1233,11 +1233,11 @@
             }
           },
           
-          getCellText: function(aRow, aColId)
+          getCellText: function(aRow, aCol)
           {
             var result = this.mTextbox.getResultAt(aRow);
             if (!result) return "";
-            return aColId == "value" ? result.value : (aColId == "comment" ? result.comment : "");
+            return aCol.id == "value" ? result.value : (aCol.id == "comment" ? result.comment : "");
           },
 
           getRowProperties: function(aIndex, aProperties) 
@@ -1246,7 +1246,7 @@
               aProperties.AppendElement(this.mAtomSelected);
           },
 
-          getCellProperties: function(aIndex, aColId, aProperties)
+          getCellProperties: function(aIndex, aCol, aProperties)
           {
             this.getRowProperties(aIndex, aProperties);
 
@@ -1254,7 +1254,7 @@
             // to the property list so that we can style this column
             // using that property
             try { 
-              if (aColId == "value") {
+              if (aCol.id == "value") {
                 var className = this.mTextbox.getResultAt(aIndex).className;
                   if ( className != "" ) {
                     aProperties.AppendElement(this.createAtom(className));
@@ -1266,16 +1266,16 @@
             } 
           },
 
-          getColumnProperties: function(aColId, aColElt, aProperties) 
+          getColumnProperties: function(aCol, aProperties) 
           {
           },
           
           getParentIndex: function(aRowIndex) { },
           hasNextSibling: function(aRowIndex, aAfterIndex) { },
           getLevel: function(aIndex) {},
-          getImageSrc: function(aRow, aColId) {},
-          getProgressMode: function(aRow, aColId) {},
-          getCellValue: function(aRow, aColId) {},
+          getImageSrc: function(aRow, aCol) {},
+          getProgressMode: function(aRow, aCol) {},
+          getCellValue: function(aRow, aCol) {},
           isContainer: function(aIndex) {},
           isContainerOpen: function(aIndex) {},
           isContainerEmpty: function(aIndex) {},
@@ -1283,13 +1283,14 @@
           isSorted: function() {},
           toggleOpenState: function(aIndex) {},
           selectionChanged: function() {},
-          cycleHeader: function(aColId, aElt) {},
-          cycleCell: function(aRow, aColId) {},
-          isEditable: function(aRow, aColId) {},
-          setCellText: function(aRow, aColId, aValue) {},
+          cycleHeader: function(aCol) {},
+          cycleCell: function(aRow, aCol) {},
+          isEditable: function(aRow, aCol) {},
+          setCellValue: function(aRow, aCol, aValue) {},
+          setCellText: function(aRow, aCol, aValue) {},
           performAction: function(aAction) {},
           performActionOnRow: function(aAction, aRow) {},
-          performActionOnCell: function(aAction, aRow, aColId) {}
+          performActionOnCell: function(aAction, aRow, aCol) {}
         });
       ]]></field>
 
@@ -1352,7 +1353,7 @@
       </property>
 
      <property name="pageCount"
-               onget="return this.tree.treeBoxObject.getPageCount();"/>
+               onget="return this.tree.treeBoxObject.getPageLength();"/>
 
       <property name="selectedIndex"
                 onget="return this.textbox.view.selectedIndex"
@@ -1515,7 +1516,7 @@
            var y = aEvent.screenY - this.boxObject.screenY + this.boxObject.y;
            this.textbox.view.treeBoxObject.getCellAt(x, y, row, col, obj);
            if (row.value >= 0)
-             return {row: row.value, column: col.value};
+             return {row: row.value, column: col.value.id};
            else
             return null;
         ]]></body>

@@ -24,6 +24,7 @@ en-US.jar:
 +  locale/en-US/global/tabbrowser.properties            (widgets/tabbrowser.properties)
 +  locale/en-US/global/textcontext.dtd                  (widgets/textcontext.dtd)
 +  locale/en-US/global/wizard.properties                (widgets/wizard.properties)
++  locale/en-US/global/tree.dtd                         (widgets/tree.dtd)
 
 en-win.jar:
 +  locale/en-US/global-platform/contents.rdf 		(contents-platform.rdf)

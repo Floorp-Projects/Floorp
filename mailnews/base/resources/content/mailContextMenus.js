@@ -41,8 +41,7 @@ function RestoreSelectionWithoutContentLoad(tree)
       return;
     }
 
-    var treeBoxObj = tree.treeBoxObject;
-    var treeSelection = treeBoxObj.selection;
+    var treeSelection = tree.view.selection;
 
     // make sure that currentIndex is valid so that we don't try to restore
     // a selection of an invalid row.
@@ -261,7 +260,7 @@ function fillFolderPaneContextMenu()
   var folderTree = GetFolderTree();
   var startIndex = {};
   var endIndex = {};
-  folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+  folderTree.view.selection.getRangeAt(0, startIndex, endIndex);
   if (startIndex.value < 0)
     return false;
   var numSelected = endIndex.value - startIndex.value + 1;

@@ -150,8 +150,10 @@ treechildren::-moz-tree-line(selected, focus) {
 /* ::::: tree separator ::::: */
 
 treechildren::-moz-tree-separator {
+  margin-top: 1px;
   border-top: 1px solid #7A8490;
   border-bottom: 1px solid #FEFEFE;
+  height: 2px;
 }
 
 /* ::::: drop feedback ::::: */
@@ -167,6 +169,16 @@ treechildren::-moz-tree-drop-feedback {
   width: 50px;
   height: 2px;
   margin-left: 5px;
+}
+
+/* ::::: tree checkbox ::::: */
+                                                                                
+treechildren::-moz-tree-checkbox {
+  list-style-image: url("chrome://global/skin/tree/checkbox.gif");
+}
+                                                                                
+treechildren::-moz-tree-checkbox(checked) {
+  list-style-image: url("chrome://global/skin/tree/checkbox-checked.gif");
 }
 
 /* ::::: tree progress meter ::::: */

@@ -46,7 +46,7 @@ function ConvertDOMListToResourceArray(nodeList)
 function GetSelectedFolderURI()
 {
     var folderTree = GetFolderTree();
-    var selection = folderTree.treeBoxObject.selection;
+    var selection = folderTree.view.selection;
     if (selection.count == 1)
     {
         var startIndex = {};
@@ -89,7 +89,7 @@ function RenameFolder(name,uri)
 
       ClearThreadPane();
       ClearMessagePane();
-      folderTree.treeBoxObject.selection.clearSelection();
+      folderTree.view.selection.clearSelection();
 
       try
       {
@@ -118,7 +118,7 @@ function MsgEmptyTrash()
     var folderTree = GetFolderTree();
     var startIndex = {};
     var endIndex = {};
-    folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    folderTree.view.selection.getRangeAt(0, startIndex, endIndex);
     if (startIndex.value >= 0)
     {
         var folderResource = GetFolderResource(folderTree, startIndex.value);

@@ -109,9 +109,9 @@ optionObject.prototype.container = false;
 
 optionObject.prototype.getCellText = function getCellText(column)
 {
-  if (column == "SelectSelCol")
+  if (column.id == "SelectSelCol")
     return "";
-  if (column == "SelectValCol" && this.element.hasAttribute("value"))
+  if (column.id == "SelectValCol" && this.element.hasAttribute("value"))
     return this.element.getAttribute("value");
   return this.element.text;
 }
@@ -132,12 +132,14 @@ optionObject.prototype.cycleCell = function cycleCell(index)
     else if (selectedOption)
     {
       selectedOption.removeAttribute("selected");
-      treeBoxObject.invalidateColumn("SelectSelCol");
+      var column = treeBoxObject.columns["SelectSelCol"];
+      treeBoxObject.invalidateColumn(column);
       selectedOption = null;
     }
     this.element.setAttribute("selected", "");
     selectedOption = this.element;
-    treeBoxObject.invalidateCell(index, "SelectSelCol");
+    var column = treeBoxObject.columns["SelectSelCol"];
+    treeBoxObject.invalidateCell(index, column);
   }
   if (currentItem == this)
     // Also update the deck
@@ -281,7 +283,7 @@ optgroupObject.prototype.container = true;
 
 optgroupObject.prototype.getCellText = function getCellText(column)
 {
-  return column == "SelectTextCol" ? this.element.label : "";
+  return column.id == "SelectTextCol" ? this.element.label : "";
 }
 
 optgroupObject.prototype.cycleCell = function cycleCell(index)
@@ -357,7 +359,8 @@ optgroupObject.prototype.appendOption = function appendOption(child, parent)
 {
   var index = gDialog.nextChild(parent);
   // XXX need to repaint the lines, tree won't do this
-  treeBoxObject.invalidatePrimaryCell(index - 1);
+  var primaryCol = treeBoxObject.getPrimaryColumn();
+  treeBoxObject.invalidateCell(index - 1, primaryCol);
   // insert the wrapped object as the last child
   itemArray.splice(index, 0, new optionObject(child, 2));
   treeBoxObject.rowCountChanged(index, 1);
@@ -430,7 +433,7 @@ function Startup()
     container:        true,
     getCellText:      function getCellText(column)
     {
-      return column == "SelectTextCol" ? this.element.getAttribute("name") : "";
+      return column.id == "SelectTextCol" ? this.element.getAttribute("name") : "";
     },
     cycleCell:        function cycleCell(index) {},
     onFocus:          function onFocus()
@@ -535,10 +538,10 @@ function Startup()
     // could have used a wrapper for this
     getCellProperties: function getCellProperties(index, column, prop)
     {
-      if (column == "SelectSelCol" && !itemArray[index].container)
+      if (column.id == "SelectSelCol" && !itemArray[index].container)
         prop.AppendElement(checkedAtoms[itemArray[index].element.hasAttribute("selected")]);
     },
-    getColumnProperties: function getColumnProperties(column, elem, prop) { },
+    getColumnProperties: function getColumnProperties(column, prop) { },
     // get info from wrapper
     isContainer: function isContainer(index) { return itemArray[index].container; },
     isContainerOpen: function isContainerOpen(index) { return true; },
@@ -546,8 +549,7 @@ function Startup()
     isSeparator: function isSeparator(index) { return false; },
     isSorted: function isSorted() { return false; },
     // d&d not implemented yet!
-    canDropOn: function canDropOn(index) { return false; },
-    canDropBeforeAfter: function canDropBeforeAfter(index, before) { return index >= before; },
+    canDrop: function canDrop(index, orientation) { return false; },
     drop: function drop(index, orientation) { alert('drop:' + index + ',' + orientation); },
     // same as the global helper
     getParentIndex: getParentIndex,
@@ -572,7 +574,7 @@ function Startup()
     getCellText: function getCellText(index, column) { return itemArray[index].getCellText(column); },
     setTree: function setTree(tree) { this.tree = tree; },
     toggleOpenState: function toggleOpenState(index) { },
-    cycleHeader: function cycleHeader(col, elem) { },
+    cycleHeader: function cycleHeader(col) { },
     selectionChanged: function selectionChanged()
     {
       // Save current values and update buttons and deck
@@ -713,22 +715,26 @@ function onNameInput()
     gDialog.accept.disabled = disabled;
   gDialog.element.setAttribute("name", gDialog.selectName.value);
   // repaint the tree
-  treeBoxObject.invalidatePrimaryCell(treeSelection.currentIndex);
+  var primaryCol = treeBoxObject.getPrimaryColumn();
+  treeBoxObject.invalidateCell(treeSelection.currentIndex, primaryCol);
 }
 
 function onLabelInput()
 {
   currentItem.element.setAttribute("label", gDialog.optgroupLabel.value);
   // repaint the tree
-  treeBoxObject.invalidatePrimaryCell(treeSelection.currentIndex);
+  var primaryCol = treeBoxObject.getPrimaryColumn();
+  treeBoxObject.invalidateCell(treeSelection.currentIndex, primaryCol);
 }
 
 function onTextInput()
 {
   currentItem.element.text = gDialog.optionText.value;
   // repaint the tree
-  if (hasValue)
-    treeBoxObject.invalidatePrimaryCell(treeSelection.currentIndex);
+  if (hasValue) {
+    var primaryCol = treeBoxObject.getPrimaryColumn();
+    treeBoxObject.invalidateCell(treeSelection.currentIndex, primaryCol);
+  }
   else
   {
     gDialog.optionValue.value = gDialog.optionText.value;
@@ -742,7 +748,8 @@ function onValueInput()
   oldValue = gDialog.optionValue.value;
   currentItem.element.setAttribute("value", oldValue);
   // repaint the tree
-  treeBoxObject.invalidateCell(treeSelection.currentIndex, "SelectValCol");
+  var column = treeBoxObject.columns["SelectValCol"];
+  treeBoxObject.invalidateCell(treeSelection.currentIndex, column);
 }
 
 function onHasValueClick()
@@ -760,7 +767,8 @@ function onHasValueClick()
     currentItem.element.removeAttribute("value");
   }
   // repaint the tree
-  treeBoxObject.invalidateCell(treeSelection.currentIndex, "SelectValCol");
+  var column = treeBoxObject.columns["SelectValCol"];
+  treeBoxObject.invalidateCell(treeSelection.currentIndex, column);
 }
 
 function onSelectMultipleClick()

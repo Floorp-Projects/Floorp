@@ -317,28 +317,28 @@ ContactsTree.prototype =
 
     set selection(aSelection) { this.mSelection = aSelection; },
     setTree: function(aTree) { this.mTree = aTree; },
-    getCellText: function(aRow, aColId) 
+    getCellText: function(aRow, aCol) 
     { 
         var card = this.cardSet.cardList[ aRow ];
 
         if( card )
         {
-            if( aColId == "PrimaryEmail" && !card.isMailList() )
+            if( aCol.id == "PrimaryEmail" && !card.isMailList() )
             {
-                if( card.getCardValue( aColId ).length == 0 )
+                if( card.getCardValue( aCol.id ).length == 0 )
                 {
                     return DTD_noEmailMessage;
                 }
 
                 else
                 {
-                    return card.getCardValue( aColId );
+                    return card.getCardValue( aCol.id );
                 }
             }
 
             else
             {
-                return card.getCardValue( aColId );
+                return card.getCardValue( aCol.id );
             }
         }
 
@@ -365,7 +365,7 @@ ContactsTree.prototype =
         }
     },
 
-    getCellProperties: function(aRow, aColId, aProperties) 
+    getCellProperties: function(aRow, aCol, aProperties) 
     {
         var card = this.cardSet.cardList[ aRow ];
         
@@ -382,13 +382,13 @@ ContactsTree.prototype =
         }
     },
     
-    getColumnProperties: function(aColId, aColElt, aProperties) {},
+    getColumnProperties: function(aCol, aProperties) {},
     getParentIndex: function(aRowIndex) { return -1; },
     //hasNextSibling: function(aRowIndex, aAfterIndex) { },
     getLevel: function(aIndex) { return 0; },
-    getImageSrc: function(aRow, aColId) {},
-    //getProgressMode: function(aRow, aColId) {},
-    //getCellValue: function(aRow, aColId) {},
+    getImageSrc: function(aRow, aCol) {},
+    //getProgressMode: function(aRow, aCol) {},
+    //getCellValue: function(aRow, aCol) {},
     isContainer: function(aIndex) { return false; },
     //isContainerOpen: function(aIndex) {},
     //isContainerEmpty: function(aIndex) {},
@@ -401,13 +401,14 @@ ContactsTree.prototype =
     },
     
     
-    cycleHeader: function(aColId, aElt) {},
-    //cycleCell: function(aRow, aColId) {},
-    //isEditable: function(aRow, aColId) {},
-    setCellText: function(aRow, aColId, aValue) {},
+    cycleHeader: function(aCol) {},
+    //cycleCell: function(aRow, aCol) {},
+    //isEditable: function(aRow, aCol) {},
+    setCellValue: function(aRow, aCol, aValue) {},
+    setCellText: function(aRow, aCol, aValue) {},
     //performAction: function(aAction) {},
     //performActionOnRow: function(aAction, aRow) {},
-    //performActionOnCell: function(aAction, aRow, aColId) {},
+    //performActionOnCell: function(aAction, aRow, aCol) {},
     
     
     // extra utility stuff
@@ -468,18 +469,16 @@ ContactsTree.prototype =
         }
         else if (target.localName == "treechildren") 
         {
-            var row = new Object();
+            var row = this.recipientTreeElement.treeBoxObject.getRowAt( event.clientX, event.clientY );
             
-            this.recipientTreeElement.treeBoxObject.getCellAt( event.clientX, event.clientY, row, {}, {} );
-            
-            if( row.value != -1 && row.value < this.recipientTreeElement.view.rowCount )
+            if( row != -1 && row < this.recipientTreeElement.view.rowCount )
             {
-                var card = this.cardSet.cardList[ row.value ];
+                var card = this.cardSet.cardList[ row ];
                 
                 if( card.getPrimaryEmail() != "" )
                 {
                     card._checked = !card._checked; 
-                    this.recipientTreeElement.treeBoxObject.invalidateRow( row.value ); 
+                    this.recipientTreeElement.treeBoxObject.invalidateRow( row ); 
                 }
             }
         }
@@ -493,17 +492,16 @@ ContactsTree.prototype =
         if( target.localName == "treechildren" ) 
         {
             // Get the email address of the card just clicked
-            var row = new Object();
-            this.resultsTree.treeBoxObject.getCellAt( event.clientX, event.clientY, row, {}, {} );
+            var row = this.resultsTree.treeBoxObject.getRowAt( event.clientX, event.clientY );
 
-            if( row.value != -1 )
+            if( row != -1 )
             {
-                var card = this.cardSet.cardList[ row.value ];
+                var card = this.cardSet.cardList[ row ];
  
                 // If the card has no email address, remove it from the selection
                 if( card && ( !card.isMailList() ) && ( card.getCardValue( "PrimaryEmail" ) == "" ) )
                 {
-                    this.selection.clearRange( row.value, row.value );
+                    this.selection.clearRange( row, row );
                     return;
                 }
     
@@ -650,7 +648,7 @@ function addSelectedAddressesIntoBucket( displayPrefix, addressPrefix )
     addSelectedCardsToBucket( displayPrefix, addressPrefix );
 
     // Clear selection and update mailto commands
-    gContactsTree.resultsTree.treeBoxObject.selection.clearSelection();
+    gContactsTree.resultsTree.view.selection.clearSelection();
     updateCommands( gMailToCommandsArray, true );
 }   // End function addSelectedAddressesIntoBucket
 
@@ -919,16 +917,16 @@ function getSelectedRecipients( tree )
 {
     var selectedItems = new Array();
                                       
-    if( tree && tree.treeBoxObject && tree.treeBoxObject.selection )
+    if( tree && tree.view && tree.view.selection )
     {
-        var rangeCount = tree.treeBoxObject.selection.getRangeCount();
+        var rangeCount = tree.view.selection.getRangeCount();
     
         for( var i = 0; i < rangeCount; i++ )
         {
             var startIndex = new Object();
             var endIndex = new Object();
     
-            tree.treeBoxObject.selection.getRangeAt( i, startIndex, endIndex );
+            tree.view.selection.getRangeAt( i, startIndex, endIndex );
     
             for( var j = startIndex.value; j <= endIndex.value; j++ )
             {
@@ -1292,28 +1290,28 @@ EventContactsTree.prototype =
 
     set selection(aSelection) { this.mSelection = aSelection; },
     setTree: function(aTree) { this.mTree = aTree; },
-    getCellText: function(aRow, aColId) 
+    getCellText: function(aRow, aCol) 
     { 
         var card = this.cardSet.cardList[ aRow ];
 
         if( card )
         {
-            if( aColId == "PrimaryEmail" && !card.isMailList() )
+            if( aCol.id == "PrimaryEmail" && !card.isMailList() )
             {
-                if( card.getCardValue( aColId ).length == 0 )
+                if( card.getCardValue( aCol.id ).length == 0 )
                 {
                     return DTD_noEmailMessage;
                 }
 
                 else
                 {
-                    return card.getCardValue( aColId );
+                    return card.getCardValue( aCol.id );
                 }
             }
 
             else
             {
-                return card.getCardValue( aColId );
+                return card.getCardValue( aCol.id );
             }
         }
 
@@ -1340,7 +1338,7 @@ EventContactsTree.prototype =
         }
     },
 
-    getCellProperties: function(aRow, aColId, aProperties) 
+    getCellProperties: function(aRow, aCol, aProperties) 
     {
         var card = this.cardSet.cardList[ aRow ];
         
@@ -1357,13 +1355,13 @@ EventContactsTree.prototype =
         }
     },
     
-    getColumnProperties: function(aColId, aColElt, aProperties) {},
+    getColumnProperties: function(aCol, aProperties) {},
     getParentIndex: function(aRowIndex) { return -1; },
     //hasNextSibling: function(aRowIndex, aAfterIndex) { },
     getLevel: function(aIndex) { return 0; },
-    getImageSrc: function(aRow, aColId) {},
-    //getProgressMode: function(aRow, aColId) {},
-    //getCellValue: function(aRow, aColId) {},
+    getImageSrc: function(aRow, aCol) {},
+    //getProgressMode: function(aRow, aCol) {},
+    //getCellValue: function(aRow, aCol) {},
     isContainer: function(aIndex) { return false; },
     //isContainerOpen: function(aIndex) {},
     //isContainerEmpty: function(aIndex) {},
@@ -1376,13 +1374,14 @@ EventContactsTree.prototype =
     },
     
     
-    cycleHeader: function(aColId, aElt) {},
-    //cycleCell: function(aRow, aColId) {},
-    //isEditable: function(aRow, aColId) {},
-    setCellText: function(aRow, aColId, aValue) {},
+    cycleHeader: function(aCol) {},
+    //cycleCell: function(aRow, aCol) {},
+    //isEditable: function(aRow, aCol) {},
+    setCellValue: function(aRow, aCol, aValue) {},
+    setCellText: function(aRow, aCol, aValue) {},
     //performAction: function(aAction) {},
     //performActionOnRow: function(aAction, aRow) {},
-    //performActionOnCell: function(aAction, aRow, aColId) {},
+    //performActionOnCell: function(aAction, aRow, aCol) {},
     
     
     // extra utility stuff
@@ -1443,18 +1442,16 @@ EventContactsTree.prototype =
         }
         else if (target.localName == "treechildren") 
         {
-            var row = new Object();
+            var row = this.recipientTreeElement.treeBoxObject.getRowAt( event.clientX, event.clientY );
             
-            this.recipientTreeElement.treeBoxObject.getCellAt( event.clientX, event.clientY, row, {}, {} );
-            
-            if( row.value != -1 && row.value < this.recipientTreeElement.view.rowCount )
+            if( row != -1 && row < this.recipientTreeElement.view.rowCount )
             {
-                var card = this.cardSet.cardList[ row.value ];
+                var card = this.cardSet.cardList[ row ];
                 
                 if( card.getPrimaryEmail() != "" )
                 {
                     card._checked = !card._checked; 
-                    this.recipientTreeElement.treeBoxObject.invalidateRow( row.value ); 
+                    this.recipientTreeElement.treeBoxObject.invalidateRow( row ); 
                 }
             }
         }
@@ -1468,17 +1465,16 @@ EventContactsTree.prototype =
         if( target.localName == "treechildren" ) 
         {
             // Get the email address of the card just clicked
-            var row = new Object();
-            this.resultsTree.treeBoxObject.getCellAt( event.clientX, event.clientY, row, {}, {} );
+            var row = this.resultsTree.treeBoxObject.getRowAt( event.clientX, event.clientY );
 
-            if( row.value != -1 )
+            if( row != -1 )
             {
-                var card = this.cardSet.cardList[ row.value ];
+                var card = this.cardSet.cardList[ row ];
  
                 // If the card has no email address, remove it from the selection
                 if( card && ( !card.isMailList() ) && ( card.getCardValue( "PrimaryEmail" ) == "" ) )
                 {
-                    this.selection.clearRange( row.value, row.value );
+                    this.selection.clearRange( row, row );
                     return;
                 }
     
@@ -1644,7 +1640,7 @@ function addSelectedAddressesIntoInviteBucket( displayPrefix, addressPrefix )
     addSelectedInviteCardsToBucket( displayPrefix, addressPrefix );
 
     // Clear selection and update mailto commands
-    gContactsTree.resultsTree.treeBoxObject.selection.clearSelection();
+    gContactsTree.resultsTree.view.selection.clearSelection();
     updateCommands( gInviteCommandsArray, true );
 }   // End function addSelectedAddressesIntoInviteBucket
 

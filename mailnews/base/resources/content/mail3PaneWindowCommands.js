@@ -63,7 +63,7 @@ var FolderPaneController =
       var folderTree = GetFolderTree();
       var startIndex = {};
       var endIndex = {};
-      folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+      folderTree.view.selection.getRangeAt(0, startIndex, endIndex);
       if (startIndex.value >= 0) {
         var canDeleteThisFolder;
 				var specialFolder = null;
@@ -802,7 +802,7 @@ function IsSendUnsentMsgsEnabled(folderResource)
 function IsRenameFolderEnabled()
 {
     var folderTree = GetFolderTree();
-    var selection = folderTree.treeBoxObject.selection;
+    var selection = folderTree.view.selection;
     if (selection.count == 1)
     {
         var startIndex = {};
@@ -851,7 +851,7 @@ function IsPropertiesEnabled(command)
    if (IsFakeAccount())
      return false;
 
-   var selection = folderTree.treeBoxObject.selection;
+   var selection = folderTree.view.selection;
    return (selection.count == 1);
 }
 
@@ -863,7 +863,7 @@ function IsViewNavigationItemEnabled()
 function IsFolderSelected()
 {
     var folderTree = GetFolderTree();
-    var selection = folderTree.treeBoxObject.selection;
+    var selection = folderTree.view.selection;
     if (selection.count == 1)
     {
         var startIndex = {};

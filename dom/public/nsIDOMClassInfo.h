@@ -230,6 +230,11 @@ enum nsDOMClassInfoID {
   // NameList object used by the DOM
   eDOMClassInfo_NameList_id,
 
+#ifdef MOZ_XUL
+  eDOMClassInfo_TreeColumn_id,
+  eDOMClassInfo_TreeColumns_id,
+#endif
+
 #ifdef MOZ_SVG
   // The SVG document
   eDOMClassInfo_SVGDocument_id,

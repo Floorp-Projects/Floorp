@@ -80,16 +80,16 @@ function onTreeResort (e, view)
 {
     /* resort by column */
     var rowIndex = new Object();
-    var colID = new Object();
+    var col = new Object();
     var childElt = new Object();
     
     var obo = view.tree;
-    obo.getCellAt(e.clientX, e.clientY, rowIndex, colID, childElt);
+    obo.getCellAt(e.clientX, e.clientY, rowIndex, col, childElt);
     if (rowIndex.value == -1)
       return;
 
     var prop;
-    switch (colID.value.substr(4))
+    switch (col.value.id.substr(4))
     {
         case "name":
             prop = "sortName";
@@ -107,7 +107,7 @@ function onTreeResort (e, view)
 
 function onComponentSelect (e)
 {
-    var index = cview.componentView.tree.selection.currentIndex;
+    var index = cview.componentView.selection.currentIndex;
     var row = cview.componentView.childData.locateChildByVisualRow (index);
     if (!row)
         return;
@@ -118,7 +118,7 @@ function onComponentSelect (e)
 
 function onInterfaceSelect (e)
 {
-    var index = cview.interfaceView.tree.selection.currentIndex;
+    var index = cview.interfaceView.selection.currentIndex;
     var row = cview.interfaceView.childData.locateChildByVisualRow (index);
     if (!row)
         return;
@@ -129,7 +129,7 @@ function onInterfaceSelect (e)
             
 function onLXRIFCLookup (e, type)
 {
-    var index = cview.interfaceView.tree.selection.currentIndex;
+    var index = cview.interfaceView.selection.currentIndex;
     var row = cview.interfaceView.childData.locateChildByVisualRow (index);
     if (!row)
         return;

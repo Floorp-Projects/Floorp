@@ -58,7 +58,7 @@ function selectDownload(aDownload)
 {
   var dlElt = document.getElementById(aDownload.targetFile.path);
   var dlIndex = gDownloadView.contentView.getIndexOfItem(dlElt);
-  gDownloadView.treeBoxObject.selection.select(dlIndex);
+  gDownloadView.view.selection.select(dlIndex);
   gDownloadView.treeBoxObject.ensureRowIsVisible(dlIndex);
 }
 
@@ -122,7 +122,7 @@ function onRebuild() {
   }
   else if (gDownloadView.view && gDownloadView.view.rowCount > 0) {
     // Select the first item in the view, if any.
-    gDownloadView.treeBoxObject.selection.select(0);
+    gDownloadView.view.selection.select(0);
   }
 }
 
@@ -130,7 +130,7 @@ function onSelect(aEvent) {
   if (!gStatusBar)
     gStatusBar = document.getElementById("statusbar-text");
   
-  var selectionCount = gDownloadView.treeBoxObject.selection.count;
+  var selectionCount = gDownloadView.view.selection.count;
   if (selectionCount == 1)
     gStatusBar.label = createLocalFile(getSelectedItem().id).path;
   else
@@ -164,8 +164,8 @@ var downloadViewController = {
   
   isCommandEnabled: function dVC_isCommandEnabled (aCommand)
   {
-    if (!gDownloadView.treeBoxObject.selection) return false;
-    var selectionCount = gDownloadView.treeBoxObject.selection.count;
+    if (!gDownloadView.view.selection) return false;
+    var selectionCount = gDownloadView.view.selection.count;
     if (!selectionCount) return false;
 
     var selectedItem = getSelectedItem();
@@ -298,7 +298,7 @@ var downloadViewController = {
         // Select the item that replaced the first deleted one
         if (newSelectionPos >= gDownloadView.treeBoxObject.view.rowCount)
           newSelectionPos = gDownloadView.treeBoxObject.view.rowCount - 1;
-        gDownloadView.treeBoxObject.selection.select(newSelectionPos);
+        gDownloadView.view.selection.select(newSelectionPos);
         gDownloadView.treeBoxObject.ensureRowIsVisible(newSelectionPos);
         gStatusBar.label = createLocalFile(getSelectedItem().id).path;
       }
@@ -309,7 +309,7 @@ var downloadViewController = {
       window.updateCommands("tree-select");
       break;
     case "cmd_selectAll":
-      gDownloadView.treeBoxObject.selection.selectAll();
+      gDownloadView.view.selection.selectAll();
       break;
     default:
     }
@@ -344,7 +344,7 @@ function getSelectedItems()
   var items = [];
   var k = 0;
 
-  var selection = gDownloadView.treeBoxObject.selection;
+  var selection = gDownloadView.view.selection;
   var rangeCount = selection.getRangeCount();
   for (var i = 0; i < rangeCount; i++) {
     var startIndex = {};

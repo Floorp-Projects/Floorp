@@ -52,6 +52,7 @@
 #include "nsString.h"
 #ifdef MOZ_XUL
 #include "nsITreeBoxObject.h"
+#include "nsITreeColumns.h"
 #endif
 
 class nsXULTooltipListener : public nsIDOMMouseListener,
@@ -151,7 +152,7 @@ protected:
   PRBool mIsSourceTree;
   PRBool mNeedTitletip;
   PRInt32 mLastTreeRow;
-  nsAutoString mLastTreeCol;
+  nsCOMPtr<nsITreeColumn> mLastTreeCol;
 #endif
 };
 

@@ -454,7 +454,7 @@ var PrefDialogService =
 
 		var index = this.prefTree.view.getIndexOfItem(selectItem);
 		if (index != -1)
-			this.prefTree.treeBoxObject.selection.select(index);
+			this.prefTree.view.selection.select(index);
 	}
   
 }; 

@@ -106,7 +106,7 @@ mozSqlResultPgsql::BuildColumnInfo()
 {
   for (PRInt32 i = 0; i < PQnfields(mResult); i++) {
     char* n = PQfname(mResult, i);
-    PRUnichar* name = UTF8ToNewUnicode(n);
+    PRUnichar* name = UTF8ToNewUnicode(nsDependentCString(n));
     PRInt32 type = GetColType(i);
     PRInt32 size = PQfsize(mResult, i);
     PRInt32 mod = PQfmod(mResult, i);
@@ -140,7 +140,7 @@ mozSqlResultPgsql::BuildRows()
         cell->SetNull(PR_FALSE);
         PRInt32 type = cell->GetType();
         if (type == mozISqlResult::TYPE_STRING)
-          cell->SetString(UTF8ToNewUnicode(value));
+          cell->SetString(UTF8ToNewUnicode(nsDependentCString(value)));
         else if (type == mozISqlResult::TYPE_INT)
           PR_sscanf(value, "%d", &cell->mInt);
         else if (type == mozISqlResult::TYPE_FLOAT)

@@ -462,7 +462,7 @@
       <property name="selectedIndex"
                 onget="return this.tree.currentIndex;">
         <setter><![CDATA[
-          this.tree.treeBoxObject.selection.select(val);
+          this.tree.view.selection.select(val);
           if (this.tree.treeBoxObject.height > 0)
             this.tree.treeBoxObject.ensureRowIsVisible(val < 0 ? 0 : val);
           return val;
@@ -680,7 +680,7 @@
            var y = aEvent.screenY - this.boxObject.screenY + this.boxObject.y;
            this.parentNode.treeBoxObject.getCellAt(x, y, row, col, obj);
            if (row.value >= 0)
-             return {row: row.value, column: col.value};
+             return {row: row.value, column: col.value.id};
            else
             return null;
         ]]></body>
@@ -695,7 +695,7 @@
         if (new Date() - this.mLastMoveTime > 30) {
          var rc = this.getHoverCell(event);
          if (rc && rc.row != this.parentNode.currentIndex)
-            this.parentNode.treeBoxObject.selection.select(rc.row);
+            this.parentNode.view.selection.select(rc.row);
          this.mLastMoveTime = new Date();
         }
       ]]></handler>

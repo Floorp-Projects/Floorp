@@ -35,6 +35,7 @@
 
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsCertTree.h"
+#include "nsITreeColumns.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertValidity.h"
 #include "nsIX509CertDB.h"
@@ -524,24 +525,22 @@ nsCertTree::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
   return NS_OK;
 }
 
-/* void getCellProperties (in long row, in wstring colID, 
- *                           in nsISupportsArray properties); 
+/* void getCellProperties (in long row, in nsITreeColumn col, 
+ *                         in nsISupportsArray properties); 
  */
 NS_IMETHODIMP 
-nsCertTree::GetCellProperties(PRInt32 row, const PRUnichar *colID, 
-                                  nsISupportsArray *properties)
+nsCertTree::GetCellProperties(PRInt32 row, nsITreeColumn* col, 
+                              nsISupportsArray* properties)
 {
   return NS_OK;
 }
 
-/* void getColumnProperties (in wstring colID, 
- *                           in nsIDOMElement colElt, 
+/* void getColumnProperties (in nsITreeColumn col, 
  *                           in nsISupportsArray properties); 
  */
 NS_IMETHODIMP 
-nsCertTree::GetColumnProperties(const PRUnichar *colID, 
-                                    nsIDOMElement *colElt, 
-                                    nsISupportsArray *properties)
+nsCertTree::GetColumnProperties(nsITreeColumn* col, 
+                                nsISupportsArray* properties)
 {
   return NS_OK;
 }
@@ -649,34 +648,34 @@ nsCertTree::GetLevel(PRInt32 index, PRInt32 *_retval)
   return NS_OK;
 }
 
-/* Astring getImageSrc (in long row, in wstring colID); */
+/* Astring getImageSrc (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::GetImageSrc(PRInt32 row, const PRUnichar *colID, 
-                            nsAString& _retval)
+nsCertTree::GetImageSrc(PRInt32 row, nsITreeColumn* col, 
+                        nsAString& _retval)
 {
   _retval.Truncate();
   return NS_OK;
 }
 
-/* long getProgressMode (in long row, in wstring colID); */
+/* long getProgressMode (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP
-nsCertTree::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+nsCertTree::GetProgressMode(PRInt32 row, nsITreeColumn* col, PRInt32* _retval)
 {
   return NS_OK;
 }
 
-/* Astring getCellValue (in long row, in wstring colID); */
+/* Astring getCellValue (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::GetCellValue(PRInt32 row, const PRUnichar *colID, 
-                             nsAString& _retval)
+nsCertTree::GetCellValue(PRInt32 row, nsITreeColumn* col, 
+                         nsAString& _retval)
 {
   _retval.Truncate();
   return NS_OK;
 }
 
-/* Astring getCellText (in long row, in wstring colID); */
+/* Astring getCellText (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID, 
+nsCertTree::GetCellText(PRInt32 row, nsITreeColumn* col, 
                         nsAString& _retval)
 {
   if (!mTreeArray)
@@ -684,11 +683,13 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
 
   nsresult rv;
   _retval.Truncate();
-  NS_ConvertUCS2toUTF8 aUtf8ColID(colID);
-  const char *col = aUtf8ColID.get();
+
+  const PRUnichar* colID;
+  col->GetIdConst(&colID);
+
   treeArrayEl *el = GetThreadDescAtIndex(row);
   if (el != nsnull) {
-    if (strcmp(col, "certcol") == 0)
+    if (NS_LITERAL_STRING("certcol").Equals(colID))
       _retval.Assign(el->orgName);
     else
       _retval.SetCapacity(0);
@@ -696,7 +697,7 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
   }
   nsCOMPtr<nsIX509Cert> cert = dont_AddRef(GetCertAtIndex(row));
   if (cert == nsnull) return NS_ERROR_FAILURE;
-  if (strcmp(col, "certcol") == 0) {
+  if (NS_LITERAL_STRING("certcol").Equals(colID)) {
     rv = cert->GetCommonName(_retval);
     if (NS_FAILED(rv) || _retval.IsEmpty()) {
       // kaie: I didn't invent the idea to cut off anything before 
@@ -718,11 +719,11 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
         _retval = nick;
       }
     }
-  } else if (strcmp(col, "tokencol") == 0) {
+  } else if (NS_LITERAL_STRING("tokencol").Equals(colID)) {
     rv = cert->GetTokenName(_retval);
-  } else if (strcmp(col, "emailcol") == 0) {
+  } else if (NS_LITERAL_STRING("emailcol").Equals(colID)) {
     rv = cert->GetEmailAddress(_retval);
-  } else if (strcmp(col, "purposecol") == 0 && mNSSComponent) {
+  } else if (NS_LITERAL_STRING("purposecol").Equals(colID) && mNSSComponent) {
     PRUint32 verified;
 
     nsAutoString theUsages;
@@ -760,21 +761,21 @@ nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID,
         rv = mNSSComponent->GetPIPNSSBundleString("VerifyUnknown", _retval);
         break;
     }
-  } else if (strcmp(col, "issuedcol") == 0) {
+  } else if (NS_LITERAL_STRING("issuedcol").Equals(colID)) {
     nsCOMPtr<nsIX509CertValidity> validity;
 
     rv = cert->GetValidity(getter_AddRefs(validity));
     if (NS_SUCCEEDED(rv)) {
       validity->GetNotBeforeLocalDay(_retval);
     }
-  } else if (strcmp(col, "expiredcol") == 0) {
+  } else if (NS_LITERAL_STRING("expiredcol").Equals(colID)) {
     nsCOMPtr<nsIX509CertValidity> validity;
 
     rv = cert->GetValidity(getter_AddRefs(validity));
     if (NS_SUCCEEDED(rv)) {
       validity->GetNotAfterLocalDay(_retval);
     }
-  } else if (strcmp(col, "serialnumcol") == 0) {
+  } else if (NS_LITERAL_STRING("serialnumcol").Equals(colID)) {
     rv = cert->GetSerialNumber(_retval);
   } else {
     return NS_ERROR_FAILURE;
@@ -804,9 +805,9 @@ nsCertTree::ToggleOpenState(PRInt32 index)
   return NS_OK;
 }
 
-/* void cycleHeader (in wstring colID, in nsIDOMElement elt); */
+/* void cycleHeader (in nsITreeColumn); */
 NS_IMETHODIMP 
-nsCertTree::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
+nsCertTree::CycleHeader(nsITreeColumn* col)
 {
   return NS_OK;
 }
@@ -818,25 +819,33 @@ nsCertTree::SelectionChanged()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void cycleCell (in long row, in wstring colID); */
+/* void cycleCell (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::CycleCell(PRInt32 row, const PRUnichar *colID)
+nsCertTree::CycleCell(PRInt32 row, nsITreeColumn* col)
 {
   return NS_OK;
 }
 
-/* boolean isEditable (in long row, in wstring colID); */
+/* boolean isEditable (in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsCertTree::IsEditable(PRInt32 row, const PRUnichar *colID, PRBool *_retval)
+nsCertTree::IsEditable(PRInt32 row, nsITreeColumn* col, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
 }
 
-/* void setCellText (in long row, in wstring colID, in wstring value); */
+/* void setCellValue (in long row, in nsITreeColumn col, in AString value); */
 NS_IMETHODIMP 
-nsCertTree::SetCellText(PRInt32 row, const PRUnichar *colID, 
-                            const PRUnichar *value)
+nsCertTree::SetCellValue(PRInt32 row, nsITreeColumn* col, 
+                         const nsAString& value)
+{
+  return NS_OK;
+}
+
+/* void setCellText (in long row, in nsITreeColumn col, in AString value); */
+NS_IMETHODIMP 
+nsCertTree::SetCellText(PRInt32 row, nsITreeColumn* col, 
+                        const nsAString& value)
 {
   return NS_OK;
 }
@@ -860,7 +869,7 @@ nsCertTree::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
  */
 NS_IMETHODIMP 
 nsCertTree::PerformActionOnCell(const PRUnichar *action, PRInt32 row, 
-                                    const PRUnichar *colID)
+                                nsITreeColumn* col)
 {
   return NS_OK;
 }
@@ -894,24 +903,9 @@ nsCertTree::dumpMap()
 #endif
 
 //
-// CanDropOn
+// CanDrop
 //
-// Can't drop on the thread pane.
-//
-NS_IMETHODIMP nsCertTree::CanDropOn(PRInt32 index, PRBool *_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = PR_FALSE;
-  
-  return NS_OK;
-}
-
-//
-// CanDropBeforeAfter
-//
-// Can't drop on the thread pane.
-//
-NS_IMETHODIMP nsCertTree::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+NS_IMETHODIMP nsCertTree::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -922,8 +916,6 @@ NS_IMETHODIMP nsCertTree::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBoo
 
 //
 // Drop
-//
-// Can't drop on the thread pane.
 //
 NS_IMETHODIMP nsCertTree::Drop(PRInt32 row, PRInt32 orient)
 {

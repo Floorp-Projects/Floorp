@@ -430,9 +430,10 @@ function showPanel(panelId) {
 
 function onselect_loadURI(tree, columnName) {
   try {
-    var row = tree.treeBoxObject.view.selection.currentIndex;
+    var row = tree.currentIndex;
     var properties = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    tree.treeBoxObject.view.getCellProperties(row, columnName, properties);
+    var col = tree.columns[columnName];
+    tree.view.getCellProperties(row, col, properties);
     if (!properties) return;
     var uri = getPropertyValue(properties, "link-");
     if (uri)

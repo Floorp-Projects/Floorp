@@ -271,6 +271,8 @@ modern.jar:
   skin/modern/global/toolbar/tbgrip-arrow-clps-act.gif             (global/toolbar/tbgrip-arrow-clps-act.gif)
   skin/modern/global/toolbar/tb-mid.gif                            (global/toolbar/tb-mid.gif)
   skin/modern/global/toolbar/chevron.gif                           (global/toolbar/chevron.gif)
+  skin/modern/global/tree/checkbox.gif                             (global/tree/checkbox.gif)
+  skin/modern/global/tree/checkbox-checked.gif                     (global/tree/checkbox-checked.gif)
   skin/modern/global/tree/sort-asc.gif                             (global/tree/sort-asc.gif)
   skin/modern/global/tree/sort-dsc.gif                             (global/tree/sort-dsc.gif)
   skin/modern/global/tree/twisty-clsd.gif                          (global/tree/twisty-clsd.gif)

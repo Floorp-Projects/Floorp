@@ -143,13 +143,12 @@ function toDoUnifinderRefresh()
 function getToDoFromEvent( event )
 {
    var tree = document.getElementById( ToDoUnifinderTreeName );
-   var row = new Object();
 
-   tree.treeBoxObject.getCellAt( event.clientX, event.clientY, row, {}, {} );
-   
-   if( row.value != -1 && row.value < tree.view.rowCount )
+   var row = tree.treeBoxObject.getRowAt( event.clientX, event.clientY );
+
+   if( row != -1 && row < tree.view.rowCount )
    { 
-      return( tree.taskView.getCalendarTaskAtRow( row.value ) );
+      return( tree.taskView.getCalendarTaskAtRow( row ) );
    }
    return false;
 }
@@ -202,7 +201,7 @@ function unifinderMouseDownToDo( event )
    {
       if(event.button == 2)
           treechildren.setAttribute("context", "context-menu");
-      tree.treeBoxObject.selection.clearSelection();
+      tree.view.selection.clearSelection();
 
       // TODO HACK notifiers should be rewritten to integrate events and todos
       document.getElementById( "delete_todo_command" ).setAttribute( "disabled", "true" );
@@ -294,7 +293,7 @@ var toDoTreeView =
       calendarToDo = gTaskArray[row];
       var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
 
-      if( column == "unifinder-todo-tree-col-priority" )
+      if( column.id == "unifinder-todo-tree-col-priority" )
       {
       if(calendarToDo.priority > 0 && calendarToDo.priority < 5)
          props.AppendElement(aserv.getAtom("highpriority"));
@@ -322,12 +321,12 @@ var toDoTreeView =
    // to use moz-tree-image pseudoelement : 
    // it is mandatory to return "" and not false :-(
    getImageSrc : function(){return("");},
-   cycleCell : function(row,colId)
+   cycleCell : function(row,col)
    {
     calendarToDo = gTaskArray[row];
     if( !calendarToDo ) return;
 
-    if( colId == "unifinder-todo-tree-col-completed")
+    if( col.id == "unifinder-todo-tree-col-completed")
 	{
 	  var completed = calendarToDo.completed.getTime();
 	  
@@ -337,14 +336,14 @@ var toDoTreeView =
 	  checkboxClick( calendarToDo, true ) ;
 	}
    },
-   cycleHeader : function( ColId, element )
+   cycleHeader : function(col )
    {
       var sortActive;
       var treeCols;
    
-      this.selectedColumn = ColId;
-      sortActive = element.getAttribute("sortActive");
-      this.sortDirection = element.getAttribute("sortDirection");
+      this.selectedColumn = col.id;
+      sortActive = col.element.getAttribute("sortActive");
+      this.sortDirection = col.element.getAttribute("sortDirection");
    
       if (sortActive != "true")
       {
@@ -369,8 +368,8 @@ var toDoTreeView =
             this.sortDirection = "descending";
          }
       }
-      element.setAttribute("sortActive", sortActive);
-      element.setAttribute("sortDirection", this.sortDirection);
+      col.element.setAttribute("sortActive", sortActive);
+      col.element.setAttribute("sortDirection", this.sortDirection);
       gTaskArray.sort( sortTasks );
       document.getElementById( ToDoUnifinderTreeName ).view = this;
    },
@@ -381,7 +380,7 @@ var toDoTreeView =
       if( !calendarToDo )
          return false;
 
-      switch( column )
+      switch( column.id )
       {
          case "unifinder-todo-tree-col-completed":
             return( "" );
@@ -526,7 +525,7 @@ function contextChangeProgress( event, Progress )
 {
    var tree = document.getElementById( ToDoUnifinderTreeName );
 
-   if (tree.treeBoxObject.selection.count > 0)
+   if (tree.view.selection.count > 0)
    {
       var toDoItem = tree.taskView.getCalendarTaskAtRow( tree.currentIndex );
       if(toDoItem)
@@ -542,7 +541,7 @@ function contextChangePriority( event, Priority )
 {
    var tree = document.getElementById( ToDoUnifinderTreeName );
 
-   if (tree.treeBoxObject.selection.count > 0)
+   if (tree.view.selection.count > 0)
    {
       var toDoItem = tree.taskView.getCalendarTaskAtRow( tree.currentIndex );
       if(toDoItem)

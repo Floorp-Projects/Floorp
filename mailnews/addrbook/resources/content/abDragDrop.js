@@ -69,8 +69,11 @@ var abResultsPaneObserver = {
 var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);
 
 var abDirTreeObserver = {
-    canDropOn: function(index)
+    canDrop: function(index, orientation)
     {
+      if (orientation != Components.interfaces.nsITreeView.DROP_ON)
+        return false;
+
       var targetResource = dirTree.builderView.getResourceAtIndex(index);
       var targetURI = targetResource.Value;
 
@@ -90,10 +93,6 @@ var abDirTreeObserver = {
       var targetDirectory = GetDirectoryFromURI(targetURI);
       return (targetDirectory.isMailList ||
               (targetDirectory.operations & targetDirectory.opWrite));
-    },
-
-    canDropBeforeAfter: function(index, before)
-    {
     },
 
     onDrop: function(row, orientation)
@@ -183,14 +182,6 @@ var abDirTreeObserver = {
     },
       
     onSelectionChanged: function()
-    {
-    },
-
-    isEditable: function(row, colID)
-    {        
-    },
-
-    onSetCellText: function(row, colID, value)
     {
     },
 

@@ -305,14 +305,9 @@ var folderListener = {
 }
 
 var folderObserver = {
-    canDropOn: function(index)
+    canDrop: function(index, orientation)
     {
-        return CanDropOnFolderTree(index);
-    },
-
-    canDropBeforeAfter: function(index, before)
-    {
-        return CanDropBeforeAfterFolderTree(index, before);
+        return CanDropOnFolderTree(index, orientation);
     },
 
     onDrop: function(row, orientation)
@@ -336,15 +331,6 @@ var folderObserver = {
     {
     },
 
-    isEditable: function(row, colID)
-    {
-        return false;
-    },
-
-    onSetCellText: function(row, colID, value)
-    {
-    },
-
     onPerformAction: function(action)
     {
     },
@@ -353,7 +339,7 @@ var folderObserver = {
     {
     },
 
-    onPerformActionOnCell: function(action, row, colID)
+    onPerformActionOnCell: function(action, row, col)
     {
     }
 }
@@ -1252,7 +1238,7 @@ function GetSelectedFolderIndex()
     var folderTree = GetFolderTree();
     var startIndex = {};
     var endIndex = {};
-    folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    folderTree.view.selection.getRangeAt(0, startIndex, endIndex);
     return startIndex.value;
 }
 
@@ -1261,27 +1247,24 @@ function GetSelectedFolderIndex()
 // It will also keep the outline/dotted line in the original row.
 function ChangeSelectionWithoutContentLoad(event, tree)
 {
-    var row = {};
-    var col = {};
-    var elt = {};
     var treeBoxObj = tree.treeBoxObject;
-    var treeSelection = treeBoxObj.selection;
+    var treeSelection = treeBoxObj.view.selection;
 
-    treeBoxObj.getCellAt(event.clientX, event.clientY, row, col, elt);
+    var row = treeBoxObj.getRowAt(event.clientX, event.clientY);
     // make sure that row.value is valid so that it doesn't mess up
     // the call to ensureRowIsVisible().
-    if((row.value >= 0) && !treeSelection.isSelected(row.value))
+    if((row >= 0) && !treeSelection.isSelected(row))
     {
         var saveCurrentIndex = treeSelection.currentIndex;
         treeSelection.selectEventsSuppressed = true;
-        treeSelection.select(row.value);
+        treeSelection.select(row);
         treeSelection.currentIndex = saveCurrentIndex;
-        treeBoxObj.ensureRowIsVisible(row.value);
+        treeBoxObj.ensureRowIsVisible(row);
         treeSelection.selectEventsSuppressed = false;
 
         // Keep track of which row in the thread pane is currently selected.
         if(tree.id == "threadTree")
-          gThreadPaneCurrentSelectedIndex = row.value;
+          gThreadPaneCurrentSelectedIndex = row;
     }
     event.preventBubble();
 }
@@ -1388,7 +1371,7 @@ function ChangeSelection(tree, newIndex)
 {
     if(newIndex >= 0)
     {
-        tree.treeBoxObject.selection.select(newIndex);
+        tree.view.selection.select(newIndex);
         tree.treeBoxObject.ensureRowIsVisible(newIndex);
     }
 }
@@ -1398,13 +1381,13 @@ function GetSelectedFolders()
     var folderArray = [];
     var k = 0;
     var folderTree = GetFolderTree();
-    var rangeCount = folderTree.treeBoxObject.selection.getRangeCount();
+    var rangeCount = folderTree.view.selection.getRangeCount();
 
     for(var i = 0; i < rangeCount; i++)
     {
         var startIndex = {};
         var endIndex = {};
-        folderTree.treeBoxObject.selection.getRangeAt(i, startIndex, endIndex);
+        folderTree.view.selection.getRangeAt(i, startIndex, endIndex);
         for (var j = startIndex.value; j <= endIndex.value; j++)
         {
             var folderResource = GetFolderResource(folderTree, j);
@@ -1420,13 +1403,13 @@ function GetSelectedMsgFolders()
     var folderArray = [];
     var k = 0;
     var folderTree = GetFolderTree();
-    var rangeCount = folderTree.treeBoxObject.selection.getRangeCount();
+    var rangeCount = folderTree.view.selection.getRangeCount();
 
     for(var i = 0; i < rangeCount; i++)
     {
         var startIndex = {};
         var endIndex = {};
-        folderTree.treeBoxObject.selection.getRangeAt(i, startIndex, endIndex);
+        folderTree.view.selection.getRangeAt(i, startIndex, endIndex);
         for (var j = startIndex.value; j <= endIndex.value; j++)
         {
           var folderResource = GetFolderResource(folderTree, j); 
@@ -1536,7 +1519,7 @@ function NumberOfSelectedMessagesAboveCurrentIndex(index)
 
 function SetNextMessageAfterDelete()
 {
-  var treeSelection = GetThreadTree().treeBoxObject.selection;
+  var treeSelection = GetThreadTree().view.selection;
 
   if (treeSelection.isSelected(treeSelection.currentIndex))
     gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;

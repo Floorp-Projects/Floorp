@@ -34,6 +34,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prprf.h"
+#include "nsReadableUtils.h"
 #include "mozSqlConnectionPgsql.h"
 #include "mozSqlResultPgsql.h"
 

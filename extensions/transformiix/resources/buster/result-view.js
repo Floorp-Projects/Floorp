@@ -42,7 +42,7 @@ function onNewResultView(event)
     dump("onNewResultView\n");
     const db = runItem.prototype.kDatabase;
     const kXalan = runItem.prototype.kXalan;
-    var index = view.boxObject.selection.currentIndex;
+    var index = view.boxObject.view.selection.currentIndex;
     var res = view.builder.getResourceAtIndex(index);
     var name = db.GetTarget(res, krTypeName, true);
     if (!name) {

@@ -179,7 +179,7 @@ var DirPaneController =
     switch (command) {
       case "cmd_selectAll":
         if (dirTree)
-          dirTree.treeBoxObject.selection.selectAll();
+          dirTree.view.selection.selectAll();
         break;
 
       case "cmd_delete":
@@ -203,7 +203,7 @@ var DirPaneController =
 
 function AbEditSelectedDirectory()
 {
-  if (dirTree.treeBoxObject.selection.count == 1) {
+  if (dirTree.view.selection.count == 1) {
     var mailingListUri = GetSelectedDirectory();
     var directory = GetDirectoryFromURI(mailingListUri);
     if (directory.isMailList) {
@@ -563,13 +563,13 @@ function DirPaneClick(event)
 
 function DirPaneDoubleClick()
 {
-  if (dirTree && dirTree.treeBoxObject.selection && dirTree.treeBoxObject.selection.count == 1)
+  if (dirTree && dirTree.view.selection && dirTree.view.selection.count == 1)
     AbEditSelectedDirectory();
 }
 
 function DirPaneSelectionChange()
 {
-  if (dirTree && dirTree.treeBoxObject.selection && dirTree.treeBoxObject.selection.count == 1)
+  if (dirTree && dirTree.view.selection && dirTree.view.selection.count == 1)
     ChangeDirectoryByURI(GetSelectedDirectory());
 }
 

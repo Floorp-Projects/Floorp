@@ -45,22 +45,22 @@ REQUIRES	= xpcom \
 		  webshell \
 		  $(NULL)
 
-CPPSRCS	= \
- nsTreeBodyFrame.cpp \
- nsTreeBoxObject.cpp \
- nsTreeColFrame.cpp \
- nsTreeSelection.cpp \
- nsTreeUtils.cpp \
- nsTreeContentView.cpp \
- $(NULL)
+CPPSRCS		= \
+		nsTreeBodyFrame.cpp \
+		nsTreeBoxObject.cpp \
+		nsTreeColFrame.cpp \
+		nsTreeColumns.cpp \
+		nsTreeContentView.cpp \
+		nsTreeImageListener.cpp \
+		nsTreeSelection.cpp \
+		nsTreeStyleCache.cpp \
+		nsTreeUtils.cpp \
+		$(NULL)
 
-EXPORTS = \
- nsTreeBodyFrame.h \
- nsTreeColFrame.h \
- nsTreeSelection.h \
- nsTreeUtils.h \
- nsTreeContentView.h \
- $(NULL)
+EXPORTS		= \
+		nsTreeColFrame.h \
+		nsTreeUtils.h \
+		$(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \

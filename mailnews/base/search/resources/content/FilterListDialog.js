@@ -459,7 +459,7 @@ function refresh()
         var previousSel = gFilterTree.builderView.getIndexOfResource(selectedRes);
         if (previousSel >= 0) {
             // sometimes the selected element is gone.
-            gFilterTree.treeBoxObject.selection.select(previousSel);
+            gFilterTree.view.selection.select(previousSel);
             gFilterTree.treeBoxObject.ensureRowIsVisible(previousSel);
         }
     }
@@ -572,9 +572,9 @@ function onFilterClick(event)
     if (event.button != 0)
       return;
     
-    var row = {}, colID = {}, childElt = {};
+    var row = {}, col = {}, childElt = {};
     var filterTree = document.getElementById("filterTree");
-    filterTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+    filterTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, childElt);
     if (row.value == -1 || row.value > filterTree.view.rowCount-1 || event.originalTarget.localName != "treechildren") {
       if (event.originalTarget.localName == "treecol") { 
         // clicking on the name column in the filter list should not sort
@@ -583,7 +583,7 @@ function onFilterClick(event)
       return;
     }
         
-    if (colID.value == "activeColumn") {
+    if (col.value.id == "activeColumn") {
       var res = filterTree.builderView.getResourceAtIndex(row.value);
       toggleFilter(res.Value);
     }
@@ -595,9 +595,9 @@ function onFilterDoubleClick(event)
     if (event.button != 0)
       return;
 
-    var row = {}, colID = {}, childElt = {};
+    var row = {}, col = {}, childElt = {};
     var filterTree = document.getElementById("filterTree");
-    filterTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+    filterTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, childElt);
     if (row.value == -1 || row.value > filterTree.view.rowCount-1 || event.originalTarget.localName != "treechildren") {
       // double clicking on a non valid row should not open the edit filter dialog
       return;
@@ -605,8 +605,7 @@ function onFilterDoubleClick(event)
 
     // if the cell is in a "cycler" column (the enabled column)
     // don't open the edit filter dialog with the selected filter
-    var col = document.getElementById(colID.value);
-    if (col.getAttribute("cycler") != "true")
+    if (!col.value.isCycler)
       onEditFilter();
 }
 

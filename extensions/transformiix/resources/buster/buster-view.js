@@ -42,7 +42,7 @@ var view =
     onRun : function()
     {
         runQueue.mArray = new Array();
-        var sels = this.boxObject.selection,a=new Object(),b=new Object(),k;
+        var sels = this.boxObject.view.selection,a=new Object(),b=new Object(),k;
         var rowResource, name, path;
         for (k=0;k<sels.getRangeCount();k++){
             sels.getRangeAt(k,a,b);
@@ -55,7 +55,7 @@ var view =
     },
     displayTest : function()
     {
-        var current = this.boxObject.selection.currentIndex;
+        var current = this.boxObject.view.selection.currentIndex;
         var rowResource = this.builder.getResourceAtIndex(current);
         var item = itemCache.getItem(rowResource);
     },
@@ -139,7 +139,7 @@ var view =
     },
     fillItemContext : function()
     {
-        var index = view.boxObject.selection.currentIndex;
+        var index = view.boxObject.view.selection.currentIndex;
         var res = view.builder.getResourceAtIndex(index);
         var purp = view.mXalanDS.GetTarget(res, krTypePurp, true);
         return (purp != null);

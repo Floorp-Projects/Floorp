@@ -67,7 +67,7 @@ function initP3PTab()
   
   // now select the main link
   var tree = document.getElementById("linkList");
-  tree.treeBoxObject.selection.select(0);
+  tree.view.selection.select(0);
 
   var linkTypes = 
   [

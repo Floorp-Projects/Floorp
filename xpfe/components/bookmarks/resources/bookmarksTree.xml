@@ -50,7 +50,7 @@
         initBMService();
 
         BMSVC.readBookmarks();
-        
+
         // Add controllers and listeners.
         this.tree.controllers.appendController(this.controller);
 
@@ -175,7 +175,7 @@
 
       <property name="currentIndex">
         <getter><![CDATA[
-          return this.treeBoxObject.selection.currentIndex;
+          return this.tree.view.selection.currentIndex;
         ]]></getter>
       </property>
 
@@ -249,13 +249,13 @@
           selection.item       = [];
           selection.parent     = [];
           selection.isExpanded = [];
-          var rangeCount = this.treeBoxObject.selection.getRangeCount();
+          var rangeCount = this.treeBoxObject.view.selection.getRangeCount();
           // workaround for bug 171547: if rowCount==0, rangeCount==1
           if (this.treeBuilder.rowCount > 0)
           for (var k = 0; k < rangeCount; ++k) {
             var rangeMin = {};
             var rangeMax = {};
-            this.treeBoxObject.selection.getRangeAt(k, rangeMin, rangeMax);
+            this.treeBoxObject.view.selection.getRangeAt(k, rangeMin, rangeMax);
             for (var i = rangeMin.value; i <= rangeMax.value; ++i) {
               var selectedItem   = this.getRowResource(i);
               var selectedParent = this.getParentResource(i);
@@ -356,11 +356,11 @@
 
       <method name="updateTreeSelection">
         <body><![CDATA[
-          this.treeBoxObject.selection.clearSelection();
+          this.treeBoxObject.view.selection.clearSelection();
           for (var i=0; i<this._itemToBeToggled.length; ++i) {
             index = this.treeBuilder.getIndexOfResource(this._itemToBeToggled[i]);
             if (index >=0)
-              this.treeBoxObject.selection.toggleSelect(index);
+              this.treeBoxObject.view.selection.toggleSelect(index);
           }
         ]]></body>
       </method>
@@ -397,7 +397,7 @@
             return;
 
           if (this.clickCount == 2 && modifKey) {
-            this.treeBoxObject.selection.select(row);
+            this.treeBoxObject.view.selection.select(row);
             this._selection = this.getTreeSelection();
           }
           var selection = this._selection;
@@ -427,7 +427,7 @@
       <method name="searchBookmarks">
       <parameter name="aInput"/>
         <body><![CDATA[
-          this.treeBoxObject.selection.currentIndex=-1;
+          this.treeBoxObject.view.selection.currentIndex=-1;
           if (!aInput) {
             this.tree.setAttribute("ref", this.originalRef);
           }
@@ -437,38 +437,6 @@
             }
             this.tree.setAttribute("ref",
                                    "find:datasource=rdf:bookmarks&match=http://home.netscape.com/NC-rdf#Name&method=contains&text=" + encodeURIComponent(aInput));
-          }
-        ]]></body>
-      </method>
-
-      <method name="sortBookmarks">
-      <parameter name="aColumn"/>
-      <parameter name="aReverse"/>
-        <body><![CDATA[
-          var confirmed;
-          if (PREF && PREF.getBoolPref("browser.bookmarks.confirm_sorting")) {
-            var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                .getService(Components.interfaces.nsIPromptService);
-            var title = BookmarksUtils.getLocaleString("confirm_sorting_title");
-            var message = BookmarksUtils.getLocaleString("confirm_sorting_message");
-            var checkMessage = BookmarksUtils.getLocaleString("confirm_sorting_check_message");
-            var checkValue = {};
-            confirmed = promptService.confirmCheck(window, title, message,
-                                                   checkMessage, checkValue);
-            if (checkValue.value) {
-              PREF.setBoolPref("browser.bookmarks.confirm_sorting", false);
-            }
-          }
-          else {
-            confirmed = true;
-          }
-          if (confirmed) {
-            var folder = RDF.GetResource("NC:BookmarksRoot");
-            var property = BookmarksUtils.getResource(aColumn);
-            var direction =
-              aReverse ? kBMSVCIID.SORT_DESCENDING : kBMSVCIID.SORT_ASCENDING;
-            var foldersFirst = aColumn == "Name";
-            BMDS.sortFolder(folder, property, direction, foldersFirst, true);
           }
         ]]></body>
       </method>
@@ -531,7 +499,7 @@
               // Since rows have been removed, the row immediately after the
               // first range in the original selection now has the index of
               // the first item in the first range.
-              var s = this.mOuter.treeBoxObject.selection;
+              var s = this.mOuter.treeBoxObject.view.selection;
               rangeMin = {};
               rangeMax = {};
               s.getRangeAt(0, rangeMin, rangeMax);
@@ -547,7 +515,7 @@
               this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
               break;
             case "cmd_bm_selectAll":
-              this.mOuter.treeBoxObject.selection.selectAll();
+              this.mOuter.treeBoxObject.view.selection.selectAll();
               break;
             default:
               BookmarksController.doCommand(aCommand, selection, target);
@@ -572,15 +540,7 @@
       <field name="builderObserver"><![CDATA[
       ({
         mOuter: this,
-        canDropOn: function(index)
-        {
-          var dragSession = DS && DS.getCurrentSession();
-          if (!dragSession)
-            return false;
-          var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
-          return !selection.containsRF;
-        },
-        canDropBeforeAfter: function(index, before)
+        canDrop: function(index, orientation)
         {
           var dragSession = DS && DS.getCurrentSession();
           if (!dragSession)
@@ -588,12 +548,14 @@
           var selection = BookmarksUtils.getSelectionFromXferData(dragSession);
           if (selection.containsRF)
             return false;
+          if (orientation == BookmarksUtils.DROP_ON)
+            return true;
 
           if (index != 0)
             return true;
           if (this.mOuter.getRowResource(index).Value != "NC:BookmarksRoot")
             return true;
-          return before? false:this.mOuter.treeBoxObject.view.isContainerOpen(0)
+          return orientation == BookmarksUtils.DROP_BEFORE ? false : this.mOuter.treeBoxObject.view.isContainerOpen(0)
         },
         onDrop: function(row, orientation)
         {  
@@ -666,8 +628,6 @@
         },
         
         onCycleCell          : function (aItemIndex, aColumnID)          {},
-        isEditable           : function (aItemIndex, aColumnID)          {},
-        onSetCellText        : function (aItemIndex, aColumnID, aValue)  {},
         onPerformAction      : function (aAction)                        {},
         onPerformActionOnRow : function (aAction, aItemIndex)            {},
         onPerformActionOnCell: function (aAction, aItemIndex, aColumnID) {}
@@ -795,42 +755,48 @@
               </treechildren>
             </rule>
           </template>
-          <treecols anonid="treecols" onclick="if (event.target.localName == 'treecol') this.parentNode.parentNode.parentNode.sortBookmarks(event.target.id, event.ctrlKey || event.metaKey)">
+          <treecols anonid="treecols">
             <treecol id="Name" flex="1" primary="true"
                      label="&treecol.name.label;"
                      tooltiptext="&treecol.name.tooltip;"
                      sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                     sortActive="true" sortLocked="true"
+                     sortActive="true"
                      persist="width hidden ordinal"/>
             <splitter class="tree-splitter" />
             <treecol id="URL" flex="1"
                      label="&treecol.url.label;"
                      tooltiptext="&treecol.url.tooltip;"
+                     sort="rdf:http://home.netscape.com/NC-rdf#URL"
                      persist="width hidden ordinal"/>
             <splitter class="tree-splitter" />
             <treecol id="ShortcutURL" flex="1" hidden="true"
                      label="&treecol.shortcut.label;"
                      tooltiptext="&treecol.shortcut.tooltip;"
+                     sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"
                      persist="hidden width ordinal"/>
             <splitter class="tree-splitter"/>
             <treecol id="Description" flex="1"
                      label="&treecol.description.label;"
                      tooltiptext="&treecol.description.tooltip;"
+                     sort="rdf:http://home.netscape.com/NC-rdf#Description"
                      persist="hidden width ordinal"/>
             <splitter class="tree-splitter"/>
             <treecol id="BookmarkAddDate" flex="1" hidden="true"
                      label="&treecol.addedon.label;"
                      tooltiptext="&treecol.addedon.tooltip;"
+                     sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"
                      persist="width hidden ordinal"/>
             <splitter class="tree-splitter" />
             <treecol id="LastModifiedDate" flex="1" hidden="true"
                      label="&treecol.lastmod.label;"
                      tooltiptext="&treecol.lastmod.tooltip;"
+                     sort="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"
                      persist="width hidden ordinal"/>
             <splitter class="tree-splitter" />
             <treecol id="LastVisitDate" flex="1" hidden="true"
                      label="&treecol.lastvisit.label;"
                      tooltiptext="&treecol.lastvisit.tooltip;"
+                     sort="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"
                      persist="width hidden ordinal"/>
           </treecols>
         </tree>

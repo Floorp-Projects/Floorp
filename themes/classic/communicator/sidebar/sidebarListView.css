@@ -21,6 +21,7 @@
  *   Ben Goodger <ben@netscape.com>
  */
 
-treechildren {
+treechildren::-moz-tree-image,
+treechildren::-moz-tree-cell-text {
   cursor: pointer;  
 }

@@ -247,9 +247,8 @@ function BeginDragTree (event)
   try {
     // determine which treeitem was dragged
     var tree = document.getElementById("tree");
-    var row = {}, colId = {}, child = {};
-    tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colId, child);
-    var item = tree.contentView.getItemAtIndex(row.value);
+    var row = tree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+    var item = tree.contentView.getItemAtIndex(row);
 
     // get information from treeitem for drag
     var url = item.getAttributeNS(NC_NS, "url");

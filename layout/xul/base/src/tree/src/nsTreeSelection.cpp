@@ -22,6 +22,7 @@
  * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *   Brian Ryner <bryner@brianryner.com>
+ *   Jan Varga <varga@nixcorp.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -356,17 +357,6 @@ NS_IMETHODIMP nsTreeSelection::TimedSelect(PRInt32 aIndex, PRInt32 aMsec)
   }
 
   return NS_OK;
-}
-
-void
-nsTreeSelection::SelectCallback(nsITimer *aTimer, void *aClosure)
-{
-  nsTreeSelection* self = NS_STATIC_CAST(nsTreeSelection*, aClosure);
-  if (self) {
-    self->FireOnSelectHandler();
-    aTimer->Cancel();
-    self->mSelectTimer = nsnull;
-  }
 }
 
 NS_IMETHODIMP nsTreeSelection::Select(PRInt32 aIndex)
@@ -754,6 +744,7 @@ nsTreeSelection::GetShiftSelectPivot(PRInt32* aIndex)
   return NS_OK;
 }
 
+
 nsresult
 nsTreeSelection::FireOnSelectHandler()
 {
@@ -791,6 +782,16 @@ nsTreeSelection::FireOnSelectHandler()
   return NS_OK;
 }
 
+void
+nsTreeSelection::SelectCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsTreeSelection* self = NS_STATIC_CAST(nsTreeSelection*, aClosure);
+  if (self) {
+    self->FireOnSelectHandler();
+    aTimer->Cancel();
+    self->mSelectTimer = nsnull;
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 

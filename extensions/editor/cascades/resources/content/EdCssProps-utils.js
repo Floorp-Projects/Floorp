@@ -40,7 +40,7 @@
 //   return integer
 function getSelectedItem(tree)
 {
-  if (tree.treeBoxObject.selection.count == 1)
+  if (tree.view.selection.count == 1)
     return tree.contentView.getItemAtIndex(tree.currentIndex);
   else
     return null;
@@ -71,7 +71,7 @@ function selectTreeItem(aItem)
 
   /* then select the item */
   var itemIndex = gDialog.sheetsTree.contentView.getIndexOfItem(aItem);
-  gDialog.sheetsTree.treeBoxObject.selection.select(itemIndex);
+  gDialog.sheetsTree.view.selection.select(itemIndex);
   /* and make sure it is visible in the clipping area of the tree */
   gDialog.sheetsTree.treeBoxObject.ensureRowIsVisible(itemIndex);
 }
@@ -162,5 +162,5 @@ function doDump(text, value) {
 
 function ClearTreeSelection(tree) {
   if (tree)
-    tree.treeBoxObject.selection.clearSelection();
+    tree.view.selection.clearSelection();
 }

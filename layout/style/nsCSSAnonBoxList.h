@@ -89,17 +89,18 @@ CSS_ANON_BOX(viewportScroll, ":-moz-viewport-scroll")
 CSS_ANON_BOX(selectScrolledContent, ":-moz-select-scrolled-content")
 
 #ifdef MOZ_XUL
-CSS_ANON_BOX(moztreerow, ":-moz-tree-row")
-CSS_ANON_BOX(moztreecell, ":-moz-tree-cell")
 CSS_ANON_BOX(moztreecolumn, ":-moz-tree-column")
-CSS_ANON_BOX(moztreecelltext, ":-moz-tree-cell-text")
-CSS_ANON_BOX(moztreetwisty, ":-moz-tree-twisty")
+CSS_ANON_BOX(moztreerow, ":-moz-tree-row")
+CSS_ANON_BOX(moztreeseparator, ":-moz-tree-separator")
+CSS_ANON_BOX(moztreecell, ":-moz-tree-cell")
 CSS_ANON_BOX(moztreeindentation, ":-moz-tree-indentation")
 CSS_ANON_BOX(moztreeline, ":-moz-tree-line")
+CSS_ANON_BOX(moztreetwisty, ":-moz-tree-twisty")
 CSS_ANON_BOX(moztreeimage, ":-moz-tree-image")
-CSS_ANON_BOX(moztreeseparator, ":-moz-tree-separator")
-CSS_ANON_BOX(moztreedropfeedback, ":-moz-tree-drop-feedback")
+CSS_ANON_BOX(moztreecelltext, ":-moz-tree-cell-text")
+CSS_ANON_BOX(moztreecheckbox, ":-moz-tree-checkbox")
 CSS_ANON_BOX(moztreeprogressmeter, ":-moz-tree-progressmeter")
+CSS_ANON_BOX(moztreedropfeedback, ":-moz-tree-drop-feedback")
 #endif
 
 #ifdef MOZ_MATHML

@@ -42,30 +42,27 @@ function ThreadPaneOnClick(event)
     }
     else if (t.localName == "treechildren") {
       var row = new Object;
-      var colID = new Object;
+      var col = new Object;
       var childElt = new Object;
 
       var tree = GetThreadTree();
       // figure out what cell the click was in
-      tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+      tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, childElt);
       if (row.value == -1)
        return;
 
       // if the cell is in a "cycler" column
       // or if the user double clicked on the twisty,
       // don't open the message in a new window
-      var col = document.getElementById(colID.value);
-      if (col) {
-        if (event.detail == 2 && col.getAttribute("cycler") != "true" && (childElt.value != "twisty")) {
-          ThreadPaneDoubleClick();
-          // double clicking should not toggle the open / close state of the 
-          // thread.  this will happen if we don't prevent the event from
-          // bubbling to the default handler in tree.xml
-          event.preventBubble();
-        }
-        else if (colID.value == "junkStatusCol") {
-          MsgJunkMailInfo(true);
-        }
+      if (event.detail == 2 && !col.value.isCycler && (childElt.value != "twisty")) {
+        ThreadPaneDoubleClick();
+        // double clicking should not toggle the open / close state of the 
+        // thread.  this will happen if we don't prevent the event from
+        // bubbling to the default handler in tree.xml
+        event.preventBubble();
+      }
+      else if (col.value.id == "junkStatusCol") {
+        MsgJunkMailInfo(true);
       }      
     }
 }
@@ -414,10 +411,8 @@ function ThreadPaneOnLoad()
 
 function ThreadPaneSelectionChanged()
 {
-  var treeBoxObj = GetThreadTree().treeBoxObject;
-  var treeSelection = treeBoxObj.selection;
   if (!gRightMouseButtonDown)
-    treeBoxObj.view.selectionChanged();
+    GetThreadTree().view.selectionChanged();
 }
 
 addEventListener("load",ThreadPaneOnLoad,true);
