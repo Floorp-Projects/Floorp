@@ -712,7 +712,6 @@ nsBlockFrame::ReflowMapped(nsBlockReflowState& aState)
   // Get some space to start reflowing with
   GetAvailableSpace(aState, aState.mY);
 
-  nsLineData* prevLine = nsnull;
   nsLineData* line = mLines;
   nsLineLayout lineLayout(aState);
   aState.mCurrentLine = &lineLayout;
@@ -726,7 +725,7 @@ nsBlockFrame::ReflowMapped(nsBlockReflowState& aState)
 
     // Reflow the line
     nsresult lineReflowStatus = lineLayout.ReflowLine();
-    if (lineReflowStatus < 0) {
+    if (PRInt32(lineReflowStatus) < 0) {
       // Some kind of hard error
       rv = lineReflowStatus;
       goto done;
@@ -741,7 +740,6 @@ nsBlockFrame::ReflowMapped(nsBlockReflowState& aState)
 
     mLastContentOffset = line->mLastContentOffset;
     mLastContentIsComplete = PRBool(line->mLastContentIsComplete);
-    prevLine = line;
     line = line->mNextLine;
     aState.mPrevKidFrame = lineLayout.mPrevKidFrame;
   }
@@ -773,7 +771,7 @@ nsBlockFrame::ReflowMappedFrom(nsBlockReflowState& aState, nsLineData* aLine)
 
     // Reflow the line
     nsresult lineReflowStatus = lineLayout.ReflowLine();
-    if (lineReflowStatus < 0) {
+    if (PRInt32(lineReflowStatus) < 0) {
       // Some kind of hard error
       rv = lineReflowStatus;
       goto done;
@@ -869,7 +867,7 @@ nsBlockFrame::ReflowUnmapped(nsBlockReflowState& aState)
 
     // Reflow the line
     nsresult lineReflowStatus = lineLayout.ReflowLine();
-    if (lineReflowStatus < 0) {
+    if (PRInt32(lineReflowStatus) < 0) {
       // Some kind of hard error
       rv = lineReflowStatus;
       goto done;
@@ -951,8 +949,6 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
       // instead of subtracting it out of our maxsize.
       nscoord lr =
         aState.mBorderPadding.left + aState.mBorderPadding.right;
-      nscoord tb =
-        aState.mBorderPadding.top + aState.mBorderPadding.bottom;
 
       // Get and apply the stylistic size. Note: do not limit the
       // height until we are done reflowing.
