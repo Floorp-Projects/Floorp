@@ -42,7 +42,7 @@ $CLASSNAME = $ARGV[1];
 $DEPTH = $ARGV[2];
 
 # determine the path separator
-$_ = $ENV{"PATH"};
+$_ = $ENV{PATH};
 if (m|/|) {
   $SEP = "/";
   $CPSEP = ":";
@@ -62,7 +62,7 @@ $JAVA_CMD = $ENV{"JDKHOME"} . $SEP . "bin" . $SEP . "java";
 $ENV{"MOZILLA_FIVE_HOME"} = $BINDIR;
 
 # prepend mozilla dist to path
-$ENV{"PATH"} = $BINDIR . $CPSEP . $ENV{"PATH"};
+$ENV{PATH} = $BINDIR . $CPSEP . $ENV{PATH};
 
 # if on UNIX, stock the LD_LIBRARY_PATH
 if ($SEP eq "/") {
@@ -103,6 +103,8 @@ $cmd = $JAVA_CMD;
 if ($SEP eq "/") {
   $cmd = $cmd . " -native";
 }
+#tack on the java library path
+$cmd = $cmd . " -Djava.library.path=" . $BINDIR;
 #tack on the classpath, class name, and bin dir
 $cmd = $cmd . " -classpath " . $ENV{"CLASSPATH"} . " " . $CLASSNAME . " " . 
   $BINDIR;
@@ -113,20 +115,6 @@ if ($MIN_ARGC < $ARGC) {
     $cmd = $cmd . " " . $ARGV[$i];
   }
 }
-
-# print out environment details
-print "====================================================================\n";
-print "JDKHOME=" . $ENV{"JDKHOME"} . "\n";
-print "====================================================================\n";
-print "CLASSPATH=" . $ENV{"CLASSPATH"} . "\n";
-print "====================================================================\n";
-print "MOZILLA_FIVE_HOME=" . $ENV{"MOZILLA_FIVE_HOME"} . "\n";
-print "====================================================================\n";
-print "LD_LIBRARY_PATH=" . $ENV{"LD_LIBRARY_PATH"} . "\n";
-print "====================================================================\n";
-print "PATH=" . $ENV{"PATH"} . "\n";
-
-print "\n";
 
 print $cmd . "\n";
 
