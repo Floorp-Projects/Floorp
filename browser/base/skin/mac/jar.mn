@@ -1,4 +1,6 @@
 classic.jar:
+  skin/classic/browser/about.png
+  skin/classic/browser/aboutDialog.css
   skin/classic/browser/bookmark-hover-dropmarker.png
   skin/classic/browser/bookmark-hover-left.png
   skin/classic/browser/bookmark-hover-mid.png

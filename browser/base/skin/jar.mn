@@ -1,4 +1,5 @@
 classic.jar:
+        skin/classic/browser/about.png
         skin/classic/browser/aboutDialog.css 
         skin/classic/browser/Bookmarks-folder.png 
         skin/classic/browser/browser.css 

@@ -1,10 +1,10 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
 <html lang="en-GB-hixie">
  <head>
-  <title>Mozilla Firebird</title>
+  <title>Firefox</title>
  </head>
  <body>
-  <h1>Mozilla Firebird</h1>
+  <h1>Firefox</h1>
 
   <p><span class="LXRLONGDESC">This project is a redesign of the
   Mozilla browser component, similar to Galeon, K-Meleon and Chimera,
@@ -27,9 +27,9 @@
    multiple profiles from the command line.</li>
 
    <li>The default theme will be based on Classic, utilizing nsITheme 
-   to respects the system look and feel. Mozilla Firebird will not use the old 
+   to respects the system look and feel. Firefox will not use the old 
    and stale Communicator icons. Additional themes will be supported 
-   but will not be part of Mozilla Firebird.</li>
+   but will not be part of Firefox.</li>
 
    <li>The toolbar(s) will be configurable. That includes moving the
    location bar where the user wants it (not just splitting it so it
@@ -95,8 +95,8 @@
   <p>We're still chopping with strong bursts and broad strokes. There's 
   plenty that's obviously broken and we don't need bugs on that. If you 
   find a bug (a feature request is not a bug) and you're sure that it's 
-  specific to Mozilla Firebird (not present in Mozilla) and you've read all of the 
-  existing Mozilla Firebird bugs well enough to know that it's not already reported 
+  specific to Firefox (not present in Mozilla) and you've read all of the 
+  existing Firefox bugs well enough to know that it's not already reported 
   then feel free report it on the Phoenix product in Bugzilla. </p>
 
   <h3>Q4: Why are you guys wasting time making a FAQ?</h3>
@@ -112,28 +112,8 @@
 
   <h2>Getting and Building the Source</h2>
 
-  <h3>UNIX, Windows (gmake), Mac (mach-o)</h3>
-
-  <ol>
-   <li>Create a .mozconfig file in your home directory, or in the mozilla directory, containing the following:<br>
-       <br>
-       <code>
-        export MOZ_PHOENIX=1<br>
-        mk_add_options MOZ_PHOENIX=1<br>
-        ac_add_options --enable-crypto<br>
-        ac_add_options --disable-tests<br>
-        ac_add_options --disable-debug<br>
-        ac_add_options --disable-composer<br>
-        ac_add_options --enable-optimize=-O2<br>
-        ac_add_options --disable-ldap<br>
-        ac_add_options --disable-mailnews<br>
-        ac_add_options --enable-extensions=cookie,xml-rpc,xmlextras,p3p,pref,transformiix,universalchardet,typeaheadfind,webservices<br>
-        <br>
-        <b>Note: DO NOT USE --enable-optimize=-O2 on Windows. There are bugs.  Simply use --enable-optimize.</b>
-       </code>
-   <li>Pull from CVS and build as described in the <a href="http://www.mozilla.org/build/unix.html">Mozilla build instructions</a>.
-   <li>Run the MozillaFirebird executable that is left in dist/bin</li>
-  </ol>
+  <p>Read <a href="http://www.mozilla.org/projects/firefox/build.html">this document</a>
+  for up-to-date instructions.</p>
 
   <h2>Mac (CodeWarrior)</h2>
 
