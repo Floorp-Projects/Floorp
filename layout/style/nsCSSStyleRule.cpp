@@ -1633,46 +1633,44 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
         nsStyleCoord  coord;
 
-#if 0
         // border-collapse: enum, inherit
         if (eCSSUnit_Enumerated == ourTable->mBorderCollapse.GetUnit()) {
-          table->m = ourTable->mBorderCollapse.GetIntValue();
+          table->mBorderCollapse = ourTable->mBorderCollapse.GetIntValue();
         }
         else if (eCSSUnit_Inherit == ourTable->mBorderCollapse.GetUnit()) {
-          table->m = parentTable->m;
+          table->mBorderCollapse = parentTable->mBorderCollapse;
         }
 
         // border-spacing-x: length, inherit
         if (SetCoord(ourTable->mBorderSpacingX, coord, SETCOORD_LENGTH, font, aPresContext)) {
-          table->m = coord.GetCoordValue();
+          table->mBorderSpacingX = coord.GetCoordValue();
         }
         else if (eCSSUnit_Inherit == ourTable->mBorderSpacingX.GetUnit()) {
-          table->m = parentTable->m;
+          table->mBorderSpacingX = parentTable->mBorderSpacingX;
         }
         // border-spacing-y: length, inherit
         if (SetCoord(ourTable->mBorderSpacingY, coord, SETCOORD_LENGTH, font, aPresContext)) {
-          table->m = coord.GetCoordValue();
+          table->mBorderSpacingY = coord.GetCoordValue();
         }
         else if (eCSSUnit_Inherit == ourTable->mBorderSpacingY.GetUnit()) {
-          table->m = parentTable->m;
+          table->mBorderSpacingY = parentTable->mBorderSpacingY;
         }
 
         // caption-side: enum, inherit
         if (eCSSUnit_Enumerated == ourTable->mCaptionSide.GetUnit()) {
-          table->m = ourTable->mCaptionSide.GetIntValue();
+          table->mCaptionSide = ourTable->mCaptionSide.GetIntValue();
         }
         else if (eCSSUnit_Inherit == ourTable->mCaptionSide.GetUnit()) {
-          table->m = parentTable->m;
+          table->mCaptionSide = parentTable->mCaptionSide;
         }
 
         // empty-cells: enum, inherit
         if (eCSSUnit_Enumerated == ourTable->mEmptyCells.GetUnit()) {
-          table->m = ourTable->mEmptyCells.GetIntValue();
+          table->mEmptyCells = ourTable->mEmptyCells.GetIntValue();
         }
         else if (eCSSUnit_Inherit == ourTable->mEmptyCells.GetUnit()) {
-          table->m = parentTable->m;
+          table->mEmptyCells = parentTable->mEmptyCells;
         }
-#endif
 
         // table-layout: auto, enum, inherit
         if (eCSSUnit_Enumerated == ourTable->mLayout.GetUnit()) {
