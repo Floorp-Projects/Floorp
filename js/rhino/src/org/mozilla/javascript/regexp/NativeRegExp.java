@@ -133,7 +133,6 @@ public class NativeRegExp extends IdScriptable implements Function {
         proto.prototypeFlag = true;
         proto.setMaxId(MAX_PROTOTYPE_ID);
         proto.setSealFunctionsFlag(sealed);
-        proto.setFunctionParametrs(cx);
         proto.setParentScope(scope);
         proto.setPrototype(getObjectPrototype(scope));
 
@@ -2700,29 +2699,28 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         if (prototypeFlag) {
             switch (methodId) {
                 case Id_compile:
-                    return realThis(thisObj, f, false).compile(cx, scope, args);
+                    return realThis(thisObj, f).compile(cx, scope, args);
 
                 case Id_toString:
-                    return realThis(thisObj, f, true).toString();
+                    return realThis(thisObj, f).toString();
 
                 case Id_exec:
-                    return realThis(thisObj, f, false).exec(cx, scope, args);
+                    return realThis(thisObj, f).exec(cx, scope, args);
 
                 case Id_test:
-                    return realThis(thisObj, f, false).test(cx, scope, args);
+                    return realThis(thisObj, f).test(cx, scope, args);
 
                 case Id_prefix:
-                    return realThis(thisObj, f, false).prefix(cx, scope, args);
+                    return realThis(thisObj, f).prefix(cx, scope, args);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeRegExp realThis(Scriptable thisObj, IdFunction f,
-                                  boolean readOnly)
+    private NativeRegExp realThis(Scriptable thisObj, IdFunction f)
     {
         while (!(thisObj instanceof NativeRegExp)) {
-            thisObj = nextInstanceCheck(thisObj, f, readOnly);
+            thisObj = nextInstanceCheck(thisObj, f);
         }
         return (NativeRegExp)thisObj;
     }

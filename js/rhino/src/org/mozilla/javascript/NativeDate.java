@@ -163,217 +163,217 @@ final class NativeDate extends IdScriptable {
                     return jsConstructor(args, thisObj == null);
 
                 case Id_toString: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     return date_format(t, FORMATSPEC_FULL);
                 }
 
                 case Id_toTimeString: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     return date_format(t, FORMATSPEC_TIME);
                 }
 
                 case Id_toDateString: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     return date_format(t, FORMATSPEC_DATE);
                 }
 
                 case Id_toLocaleString: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     return js_toLocaleString(t);
                 }
 
                 case Id_toLocaleTimeString: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     return js_toLocaleTimeString(t);
                 }
 
                 case Id_toLocaleDateString: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     return js_toLocaleDateString(t);
                 }
 
                 case Id_toUTCString: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { return js_toUTCString(t); }
                     return js_NaN_date_str;
                 }
 
                 case Id_valueOf:
-                    return wrap_double(realThis(thisObj, f, true).date);
+                    return wrap_double(realThis(thisObj, f).date);
 
                 case Id_getTime:
-                    return wrap_double(realThis(thisObj, f, true).date);
+                    return wrap_double(realThis(thisObj, f).date);
 
                 case Id_getYear: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = js_getYear(cx, t); }
                     return wrap_double(t);
                 }
 
                 case Id_getFullYear: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = YearFromTime(LocalTime(t)); }
                     return wrap_double(t);
                 }
 
                 case Id_getUTCFullYear: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = YearFromTime(t); }
                     return wrap_double(t);
                 }
 
                 case Id_getMonth: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = MonthFromTime(LocalTime(t)); }
                     return wrap_double(t);
                 }
 
                 case Id_getUTCMonth: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = MonthFromTime(t); }
                     return wrap_double(t);
                 }
 
                 case Id_getDate: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = DateFromTime(LocalTime(t)); }
                     return wrap_double(t);
                 }
 
                 case Id_getUTCDate: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = DateFromTime(t); }
                     return wrap_double(t);
                 }
 
                 case Id_getDay: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = WeekDay(LocalTime(t)); }
                     return wrap_double(t);
                 }
 
                 case Id_getUTCDay: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = WeekDay(t); }
                     return wrap_double(t);
                 }
 
                 case Id_getHours: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = HourFromTime(LocalTime(t)); }
                     return wrap_double(t);
                 }
 
                 case Id_getUTCHours: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = HourFromTime(t); }
                     return wrap_double(t);
                 }
 
                 case Id_getMinutes: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = MinFromTime(LocalTime(t)); }
                     return wrap_double(t);
                 }
 
                 case Id_getUTCMinutes: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = MinFromTime(t); }
                     return wrap_double(t);
                 }
 
                 case Id_getSeconds: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = SecFromTime(LocalTime(t)); }
                     return wrap_double(t);
                 }
 
                 case Id_getUTCSeconds: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = SecFromTime(t); }
                     return wrap_double(t);
                 }
 
                 case Id_getMilliseconds: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = msFromTime(LocalTime(t)); }
                     return wrap_double(t);
                 }
 
                 case Id_getUTCMilliseconds: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = msFromTime(t); }
                     return wrap_double(t);
                 }
 
                 case Id_getTimezoneOffset: {
-                    double t = realThis(thisObj, f, true).date;
+                    double t = realThis(thisObj, f).date;
                     if (t == t) { t = js_getTimezoneOffset(t); }
                     return wrap_double(t);
                 }
 
                 case Id_setTime:
-                    return wrap_double(realThis(thisObj, f, true).
+                    return wrap_double(realThis(thisObj, f).
                         js_setTime(ScriptRuntime.toNumber(args, 0)));
 
                 case Id_setMilliseconds:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeTime(args, 1, true));
 
                 case Id_setUTCMilliseconds:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeTime(args, 1, false));
 
                 case Id_setSeconds:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeTime(args, 2, true));
 
                 case Id_setUTCSeconds:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeTime(args, 2, false));
 
                 case Id_setMinutes:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeTime(args, 3, true));
 
                 case Id_setUTCMinutes:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeTime(args, 3, false));
 
                 case Id_setHours:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeTime(args, 4, true));
 
                 case Id_setUTCHours:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeTime(args, 4, false));
 
                 case Id_setDate:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeDate(args, 1, true));
 
                 case Id_setUTCDate:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeDate(args, 1, false));
 
                 case Id_setMonth:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeDate(args, 2, true));
 
                 case Id_setUTCMonth:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeDate(args, 2, false));
 
                 case Id_setFullYear:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeDate(args, 3, true));
 
                 case Id_setUTCFullYear:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         makeDate(args, 3, false));
 
                 case Id_setYear:
-                    return wrap_double(realThis(thisObj, f, false).
+                    return wrap_double(realThis(thisObj, f).
                         js_setYear(ScriptRuntime.toNumber(args, 0)));
             }
         }
@@ -381,11 +381,10 @@ final class NativeDate extends IdScriptable {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeDate realThis(Scriptable thisObj, IdFunction f,
-                                boolean readOnly)
+    private NativeDate realThis(Scriptable thisObj, IdFunction f)
     {
         while (!(thisObj instanceof NativeDate)) {
-            thisObj = nextInstanceCheck(thisObj, f, readOnly);
+            thisObj = nextInstanceCheck(thisObj, f);
         }
         return (NativeDate)thisObj;
     }

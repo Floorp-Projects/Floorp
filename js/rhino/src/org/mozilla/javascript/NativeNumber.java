@@ -137,7 +137,7 @@ final class NativeNumber extends IdScriptable {
 
     private NativeNumber realThis(Scriptable thisObj, IdFunction f) {
         while (!(thisObj instanceof NativeNumber)) {
-            thisObj = nextInstanceCheck(thisObj, f, true);
+            thisObj = nextInstanceCheck(thisObj, f);
         }
         return (NativeNumber)thisObj;
     }

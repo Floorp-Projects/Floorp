@@ -47,7 +47,6 @@ final class NativeMath extends IdScriptable
     static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeMath obj = new NativeMath();
         obj.setSealFunctionsFlag(sealed);
-        obj.setFunctionParametrs(cx);
         obj.setPrototype(getObjectPrototype(scope));
         obj.setParentScope(scope);
         if (sealed) { obj.sealObject(); }

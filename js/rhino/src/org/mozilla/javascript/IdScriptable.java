@@ -379,18 +379,6 @@ public abstract class IdScriptable extends ScriptableObject
         setSetupFlag(SEAL_FUNCTIONS_FLAG, sealed);
     }
 
-    /**
-     * Set parameters of function properties.
-     * Currently only determines whether functions should use dynamic scope.
-     * @param cx context to read function parameters.
-     *
-     * @see org.mozilla.javascript.Context#hasCompileFunctionsWithDynamicScope
-     */
-    protected void setFunctionParametrs(Context cx) {
-        setSetupFlag(USE_DYNAMIC_SCOPE_FLAG,
-                     cx.hasCompileFunctionsWithDynamicScope());
-    }
-
     private void setSetupFlag(int flag, boolean value) {
         setupFlags = (byte)(value ? setupFlags | flag : setupFlags & ~flag);
     }
@@ -411,7 +399,6 @@ public abstract class IdScriptable extends ScriptableObject
         setMaxId(maxId);
 
         setSealFunctionsFlag(sealed);
-        setFunctionParametrs(cx);
 
         int constructorId = mapNameToId("constructor");
         if (constructorId == 0) {
@@ -471,14 +458,8 @@ public abstract class IdScriptable extends ScriptableObject
     * @throws RuntimeException if no more instanceof target can be found
     */
     protected Scriptable nextInstanceCheck(Scriptable thisObj,
-                                           IdFunction f,
-                                           boolean readOnly)
+                                           IdFunction f)
     {
-        if (readOnly && 0 != (setupFlags & USE_DYNAMIC_SCOPE_FLAG)) {
-            // for read only functions under dynamic scope look prototype chain
-            thisObj = thisObj.getPrototype();
-            if (thisObj != null) { return thisObj; }
-        }
         throw NativeGlobal.typeError1("msg.incompat.call",
                                       f.getFunctionName(), f);
     }
@@ -572,7 +553,6 @@ public abstract class IdScriptable extends ScriptableObject
     private static final boolean CACHE_NAMES = true;
     private int lastIdCache;
 
-    private static final int USE_DYNAMIC_SCOPE_FLAG = 1 << 0;
     private static final int SEAL_FUNCTIONS_FLAG    = 1 << 1;
 
     private byte setupFlags;

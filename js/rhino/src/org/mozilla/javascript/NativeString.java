@@ -249,7 +249,7 @@ final class NativeString extends IdScriptable {
 
     private NativeString realThis(Scriptable thisObj, IdFunction f) {
         while (!(thisObj instanceof NativeString)) {
-            thisObj = nextInstanceCheck(thisObj, f, true);
+            thisObj = nextInstanceCheck(thisObj, f);
         }
         return (NativeString)thisObj;
     }

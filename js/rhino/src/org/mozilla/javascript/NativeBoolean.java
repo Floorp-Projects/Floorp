@@ -101,7 +101,7 @@ final class NativeBoolean extends IdScriptable {
 
     private NativeBoolean realThis(Scriptable thisObj, IdFunction f) {
         while (!(thisObj instanceof NativeBoolean)) {
-            thisObj = nextInstanceCheck(thisObj, f, true);
+            thisObj = nextInstanceCheck(thisObj, f);
         }
         return (NativeBoolean)thisObj;
     }

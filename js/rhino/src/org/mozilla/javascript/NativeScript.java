@@ -112,13 +112,13 @@ public class NativeScript extends NativeFunction implements Script {
                     return jsConstructor(cx, scope, args);
 
                 case Id_toString:
-                    return realThis(thisObj, f, true).js_toString(cx, args);
+                    return realThis(thisObj, f).js_toString(cx, args);
 
                 case Id_exec:
-                    return realThis(thisObj, f, true).js_exec();
+                    return realThis(thisObj, f).js_exec();
 
                 case Id_compile:
-                    return realThis(thisObj, f, false).
+                    return realThis(thisObj, f).
                         js_compile(cx, ScriptRuntime.toString(args, 0));
             }
         }
@@ -126,11 +126,10 @@ public class NativeScript extends NativeFunction implements Script {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeScript realThis(Scriptable thisObj, IdFunction f,
-                                  boolean readOnly)
+    private NativeScript realThis(Scriptable thisObj, IdFunction f)
     {
         while (!(thisObj instanceof NativeScript)) {
-            thisObj = nextInstanceCheck(thisObj, f, readOnly);
+            thisObj = nextInstanceCheck(thisObj, f);
         }
         return (NativeScript)thisObj;
     }
