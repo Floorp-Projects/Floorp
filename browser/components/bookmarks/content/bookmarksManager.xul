@@ -24,6 +24,7 @@
 #   Pierre Chanial <chanial@noos.fr>
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/bookmarks/bookmarksManager.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
