@@ -34,6 +34,7 @@
 #include "nsIWidget.h"
 
 #include "nsIStringBundle.h"
+#include "nsXPIDLString.h"
 
 #include "nsBaseFilePicker.h"
 
@@ -124,37 +125,37 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  PRUnichar *title;
-  PRUnichar *filter;
+  nsXPIDLString title;
+  nsXPIDLString filter;
 
   if (aFilterMask & filterAll) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("allTitle").GetUnicode(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("allFilter").GetUnicode(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterHTML) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("htmlTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("htmlFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("htmlTitle").GetUnicode(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("htmlFilter").GetUnicode(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterText) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("textTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("textFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("textTitle").GetUnicode(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("textFilter").GetUnicode(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterImages) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("imageTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("imageFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("imageTitle").GetUnicode(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("imageFilter").GetUnicode(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterXML) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xmlTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xmlFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("xmlTitle").GetUnicode(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("xmlFilter").GetUnicode(), getter_Copies(filter));
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterXUL) {
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xulTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xulFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("xulTitle").GetUnicode(), getter_Copies(title));
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("xulFilter").GetUnicode(), getter_Copies(filter));
     AppendFilter(title, filter);
   }
 
