@@ -69,7 +69,6 @@ OBJS =							\
 	.\$(OBJDIR)\nsPrefBranch.obj	\
 	.\$(OBJDIR)\nsPrefService.obj	\
 	.\$(OBJDIR)\nsPrefsFactory.obj	\
-	.\$(OBJDIR)\nsSafeSaveFile.obj	\
 	$(NULL)
 
 #//------------------------------------------------------------------------
