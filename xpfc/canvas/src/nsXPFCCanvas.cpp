@@ -834,7 +834,7 @@ nsEventStatus nsXPFCCanvas :: OnPaint(nsIRenderingContext& aRenderingContext,
 
 }
 
-nsEventStatus nsXPFCCanvas :: OnResize(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCCanvas :: OnResize(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   //SetBounds(*((nsSizeEvent*)aEvent)->windowSize);
 
@@ -844,15 +844,15 @@ nsEventStatus nsXPFCCanvas :: OnResize(nsGUIEvent *aEvent)
     mBounds.x = 0 ;
     mBounds.y = 0 ;
   } else {
-    mBounds.x = ((nsSizeEvent*)aEvent)->windowSize->x ;
-    mBounds.y = ((nsSizeEvent*)aEvent)->windowSize->y ;
+    mBounds.x = aX ;
+    mBounds.y = aY ;
   }
-  mBounds.width = ((nsSizeEvent*)aEvent)->windowSize->width ;
-  mBounds.height = ((nsSizeEvent*)aEvent)->windowSize->height ;
+  mBounds.width = aWidth ;
+  mBounds.height = aHeight ;
 
   mLayout->Layout();
 
-  return (DefaultProcessing(aEvent));
+  return (DefaultProcessing(nsnull));
 }
 
 nsEventStatus nsXPFCCanvas :: OnLeftButtonDown(nsGUIEvent *aEvent)
@@ -1228,7 +1228,12 @@ nsEventStatus nsXPFCCanvas :: ResizeChildWidgets(nsGUIEvent *aEvent)
   {
     widget = (nsIXPFCCanvas *) iterator->CurrentItem();
 
-    widget->OnResize(aEvent);
+    nscoord x = ((nsSizeEvent*)aEvent)->windowSize->x;
+    nscoord y = ((nsSizeEvent*)aEvent)->windowSize->y;
+    nscoord w = ((nsSizeEvent*)aEvent)->windowSize->width;
+    nscoord h = ((nsSizeEvent*)aEvent)->windowSize->height;
+
+    widget->OnResize(x,y,w,h);
 
     iterator->Next();
   }
@@ -1290,7 +1295,7 @@ nsEventStatus nsXPFCCanvas :: HandleEvent(nsGUIEvent *aEvent)
             canvas = (nsXPFCCanvas *) iterator->CurrentItem();
 
             if (canvas->mWidget != nsnull)
-              mWidget->Invalidate(PR_FALSE);
+              canvas->mWidget->Invalidate(PR_FALSE);
 
             iterator->Next();
           }
@@ -1306,7 +1311,12 @@ nsEventStatus nsXPFCCanvas :: HandleEvent(nsGUIEvent *aEvent)
 
       case NS_SIZE:
       {
-        OnResize(aEvent);
+        nscoord x = ((nsSizeEvent*)aEvent)->windowSize->x;
+        nscoord y = ((nsSizeEvent*)aEvent)->windowSize->y;
+        nscoord w = ((nsSizeEvent*)aEvent)->windowSize->width;
+        nscoord h = ((nsSizeEvent*)aEvent)->windowSize->height;
+
+        OnResize(x,y,w,h);
       }
       break;
 

@@ -98,9 +98,9 @@ nsresult nsXPFCHTMLCanvas :: Init()
   return NS_OK;
 }
 
-nsEventStatus nsXPFCHTMLCanvas :: OnResize(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCHTMLCanvas :: OnResize(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  return (nsXPFCCanvas::OnResize(aEvent));
+  return (nsXPFCCanvas::OnResize(aX, aY, aWidth, aHeight));
 }
 
 nsresult nsXPFCHTMLCanvas :: SetBounds(const nsRect &aBounds)

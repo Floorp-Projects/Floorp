@@ -246,6 +246,8 @@ nsresult nsXPFCCanvasManager::HandleEvent(nsIView * aView,
   if (canvas == nsnull)
     return NS_OK;
 
+  aEventStatus = canvas->HandleEvent(aEvent);
+
   return NS_OK;
 }
 
@@ -267,6 +269,8 @@ nsresult nsXPFCCanvasManager::ResizeReflow(nsIView * aView,
 
   if (canvas == nsnull)
     return NS_OK;
+
+  canvas->OnResize(0,0,aWidth,aHeight);
 
   return NS_OK;
 }
