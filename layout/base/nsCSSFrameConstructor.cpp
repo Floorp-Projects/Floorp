@@ -5102,7 +5102,7 @@ ContentIsLogicalFirstChild(nsIContent* aContent, nsIContent* aContainingBlock)
       if (0 != ix) {
         return PR_FALSE;
       }
-      if (contentParent != aContainingBlock) {
+      if (contentParent.get() != aContainingBlock) {
         return ContentIsLogicalFirstChild(contentParent, aContainingBlock);
       }
       return PR_TRUE;
