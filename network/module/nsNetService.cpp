@@ -199,7 +199,17 @@ nsNetlibService::nsNetlibService()
      */
     XP_AppLanguage = PL_strdup("en");
 #ifdef XP_WIN
-    XP_AppPlatform = PL_strdup("Win95");
+    {
+    OSVERSIONINFO info = { sizeof OSVERSIONINFO };
+    GetVersionEx( &info );
+    if ( info.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
+        XP_AppPlatform = PL_strdup("WinNT");
+    } else if ( info.dwMinorVersion > 0 ) {
+        XP_AppPlatform = PL_strdup("Win98");
+    } else {
+        XP_AppPlatform = PL_strdup("Win95");
+    }
+    }
 #elif defined(XP_MAC)
     XP_AppPlatform = PL_strdup("MacPPC");
 #elif defined(XP_BEOS)
