@@ -54,7 +54,7 @@ public:
   /* stream */
   NS_IMETHOD ImgDInit();
 
-  NS_IMETHOD ImgDWriteReady(PRUint32 *request_size);
+  NS_IMETHOD ImgDWriteReady(PRUint8 *modata);
   NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len);
   NS_IMETHOD ImgDComplete();
   NS_IMETHOD ImgDAbort();
@@ -265,7 +265,7 @@ PNGDecoder::ImgDInit()
 
 
 NS_IMETHODIMP 
-PNGDecoder::ImgDWriteReady(PRUint32 *request_size)
+PNGDecoder::ImgDWriteReady(PRUint8 *modata)
 {
   /* dummy return needed */
   return NS_OK;

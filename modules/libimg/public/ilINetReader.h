@@ -34,17 +34,17 @@ class ilIURL;
 class ilINetReader : public nsISupports {
 public:
 
-  /*NS_IMETHOD*/virtual int WriteReady()=0;
+  NS_IMETHOD WriteReady(PRUint32 *chunksizep)=0;
   
-  virtual int FirstWrite(const unsigned char *str, int32 len)=0;
+  NS_IMETHOD FirstWrite(const unsigned char *str, int32 len)=0;
 
-  virtual int Write(const unsigned char *str, int32 len)=0;
+  NS_IMETHOD Write(const unsigned char *str, int32 len)=0;
 
-  virtual void StreamAbort(int status)=0;
+  NS_IMETHOD StreamAbort(int status)=0;
 
-  virtual void StreamComplete(PRBool is_multipart)=0;
+  NS_IMETHOD StreamComplete(PRBool is_multipart)=0;
 
-  virtual void NetRequestDone(ilIURL *urls, int status)=0;
+  NS_IMETHOD NetRequestDone(ilIURL *urls, int status)=0;
   
   virtual PRBool StreamCreated(ilIURL *urls, int type)=0;
   
