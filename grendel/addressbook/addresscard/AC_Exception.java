@@ -17,6 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  *  Created: Lester Schueler <lesters@netscape.com>, 14 Nov 1997.
+ *
+ * Contributors: Christoph Toshok <toshok@netscape.com>
  */
 
 package grendel.addressbook.addresscard;

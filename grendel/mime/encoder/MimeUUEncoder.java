@@ -17,6 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Jamie Zawinski <jwz@netscape.com>, 28 Aug 1997.
+ *
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.mime.encoder;

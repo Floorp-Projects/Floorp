@@ -15,6 +15,10 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Joel York <yorkjoe@charlie.acc.iit.edu>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel;

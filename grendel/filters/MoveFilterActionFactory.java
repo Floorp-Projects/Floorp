@@ -19,6 +19,8 @@
  * Class MoveFilterActionFactory.
  *
  * Created: David Williams <djw@netscape.com>,  1 Oct 1997.
+ *
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.filters;

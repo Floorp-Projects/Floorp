@@ -17,6 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 10 Nov 1997.
+ *
+ * Contributors: Jeff Galyan <talisman@anamorphic.com>
  */
 
 package grendel.integrator;

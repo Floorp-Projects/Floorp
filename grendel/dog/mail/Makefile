@@ -12,9 +12,9 @@
 # 
 # The Original Code is the Grendel mail/news client.
 # 
-# The Initial Developer of the Original Code is Netscape Communications
-# Corporation.  Portions created by Netscape are Copyright (C) 1997
-# Netscape Communications Corporation.  All Rights Reserved.
+# The Initial Developer of the Original Code is Edwin Woudt 
+# <edwin@woudt.nl> Portions created by Edwin Woudt are Copyright 
+# (C) 1999 Edwin Woudt.  All Rights Reserved.
 
 SUBDIRS=		\
 	nntp		\

@@ -18,6 +18,8 @@
  *
  * Created: Jamie Zawinski <jwz@netscape.com>,  3 Aug 1995.
  * Ported from C on 19 Aug 1997.
+ *
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package calypso.util;

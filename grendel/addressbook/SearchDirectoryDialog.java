@@ -12,10 +12,11 @@
  *
  * The Original Code is the Grendel mail/news client.
  *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1997
- * Netscape Communications Corporation.  All Rights Reserved.
+ * The Initial Developer of the Original Code is Mauro Botelho.
+ * Portions created by Mauro Botelho are Copyright (C) 1997
+ * Mauro Botelho.  All Rights Reserved.
  *
+ * Contributors: Giao Nguyen <grail@cafebabe.org>
  */
 
 package grendel.addressbook;

@@ -16,7 +16,7 @@
  * The Initial Developer of the Original Code is dog.
  * Portions created by dog are Copyright (C) 1998 dog <dog@dog.net.uk>. All Rights Reserved.
  *
- * Contributor(s): n/a.
+ * Contributors: Edwin Woudt <edwin@woudt.nl>
  */
 
 package dog.mail.nntp;

@@ -15,6 +15,11 @@
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Giao Nguyen <grail@cafebabe.org>
+ *               Edwin Woudt <edwin@woudt.nl>
+ *               Mauro Botelho <mabotelh@bellsouth.net>
  */
 
 package grendel.addressbook;
