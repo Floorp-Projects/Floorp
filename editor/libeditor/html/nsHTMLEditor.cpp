@@ -78,8 +78,8 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsParserCIID.h"
 #include "nsIParserService.h"
+#include "nsParserCIID.h"
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
@@ -429,6 +429,13 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool &aIsBlock)
 {
   if (!aNode) { return NS_ERROR_NULL_POINTER; }
 
+//#define USE_PARSER_FOR_BLOCKNESS 1
+#ifdef USE_PARSER_FOR_BLOCKNESS
+  // We want to use the parser rather than keeping this info
+  // here in the editor, but the problem is that the ownership
+  // model for the parser service is unclear; we don't want to
+  // have to get it every time, but if we keep it statically
+  // here, it may show up as a leak.
   nsresult rv;
 
   nsCOMPtr<nsIDOMElement>element;
@@ -448,7 +455,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool &aIsBlock)
   if (NS_FAILED(rv)) return rv;
 
   tagName.ToLowerCase();
-  nsCOMPtr<nsIAtom> tagAtom = NS_NewAtom(tagName);
+  nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tagName));
   if (!tagAtom) return NS_ERROR_NULL_POINTER;
 
   static nsCOMPtr<nsIParserService> sParserService;
@@ -522,6 +529,72 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool &aIsBlock)
 #endif /* DEBUG */
 
   return rv;
+#else /* USE_PARSER_FOR_BLOCKNESS */
+  nsresult result = NS_ERROR_FAILURE;
+  aIsBlock = PR_FALSE;
+  nsCOMPtr<nsIDOMElement>element;
+  element = do_QueryInterface(aNode);
+  if (element)
+  {
+    nsAutoString tagName;
+    result = element->GetTagName(tagName);
+    if (NS_SUCCEEDED(result))
+    {
+      tagName.ToLowerCase();
+      nsIAtom *tagAtom = NS_NewAtom(tagName);
+      if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
+
+      if (tagAtom==nsIEditProperty::p          ||
+          tagAtom==nsIEditProperty::div        ||
+          tagAtom==nsIEditProperty::blockquote ||
+          tagAtom==nsIEditProperty::h1         ||
+          tagAtom==nsIEditProperty::h2         ||
+          tagAtom==nsIEditProperty::h3         ||
+          tagAtom==nsIEditProperty::h4         ||
+          tagAtom==nsIEditProperty::h5         ||
+          tagAtom==nsIEditProperty::h6         ||
+          tagAtom==nsIEditProperty::ul         ||
+          tagAtom==nsIEditProperty::ol         ||
+          tagAtom==nsIEditProperty::dl         ||
+          tagAtom==nsIEditProperty::pre        ||
+          tagAtom==nsIEditProperty::noscript   ||
+          tagAtom==nsIEditProperty::form       ||
+          tagAtom==nsIEditProperty::hr         ||
+          tagAtom==nsIEditProperty::table      ||
+          tagAtom==nsIEditProperty::fieldset   ||
+          tagAtom==nsIEditProperty::address    ||
+          tagAtom==nsIEditProperty::body       ||
+          tagAtom==nsIEditProperty::tr         ||
+          tagAtom==nsIEditProperty::td         ||
+          tagAtom==nsIEditProperty::th         ||
+          tagAtom==nsIEditProperty::caption    ||
+          tagAtom==nsIEditProperty::col        ||
+          tagAtom==nsIEditProperty::colgroup   ||
+          tagAtom==nsIEditProperty::tbody      ||
+          tagAtom==nsIEditProperty::thead      ||
+          tagAtom==nsIEditProperty::tfoot      ||
+          tagAtom==nsIEditProperty::li         ||
+          tagAtom==nsIEditProperty::dt         ||
+          tagAtom==nsIEditProperty::dd         ||
+          tagAtom==nsIEditProperty::legend     )
+      {
+        aIsBlock = PR_TRUE;
+      }
+      NS_RELEASE(tagAtom);
+      result = NS_OK;
+    }
+  } else {
+    // We don't have an element -- probably a text node
+    nsCOMPtr<nsIDOMCharacterData>nodeAsText = do_QueryInterface(aNode);
+    if (nodeAsText)
+    {
+      aIsBlock = PR_FALSE;
+      result = NS_OK;
+    }
+  }
+  return result;
+
+#endif /* USE_PARSER_FOR_BLOCKNESS */
 }
 
 // Non-static version for the nsIEditor interface and JavaScript
