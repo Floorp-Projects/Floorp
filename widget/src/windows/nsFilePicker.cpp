@@ -281,9 +281,9 @@ NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *aParent,
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::Init(nsIWidget *aParent,
-                                 const PRUnichar *aTitle,
-                                 PRInt16 aMode)
+NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
+                                       const PRUnichar *aTitle,
+                                       PRInt16 aMode)
 {
   mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
   mTitle.SetLength(0);
