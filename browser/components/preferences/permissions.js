@@ -83,10 +83,10 @@ var gPermissionManager = {
     getCellProperties: function(row,column,prop){}
   },
   
-  _getCapabilityString: function (aPermission)
+  _getCapabilityString: function (aCapability)
   {
     var stringKey = null;
-    switch (aPermission.capability) {
+    switch (aCapability) {
     case nsIPermissionManager.ALLOW_ACTION:
       stringKey = "can";
       break;
@@ -100,7 +100,7 @@ var gPermissionManager = {
     return this._bundle.getString(stringKey);
   },
   
-  addPermission: function (aPermission)
+  addPermission: function (aCapability)
   {
     var textbox = document.getElementById("url");
     var host = textbox.value.replace(/^\s*([-\w]*:\/+)?/, ""); // trim any leading space and scheme
@@ -117,7 +117,7 @@ var gPermissionManager = {
       promptservice.alert(window,title,message);
     }
 
-    var capabilityString = this._getCapabilityString(aPermission);
+    var capabilityString = this._getCapabilityString(aCapability);
 
     // check whether the permission already exists, if not, add it
     var exists = false;
@@ -125,7 +125,7 @@ var gPermissionManager = {
       if (this._permissions[i].rawHost == host) {
         exists = true;
         this._permissions[i].capability = capabilityString;
-        this._permissions[i].perm = aPermission;
+        this._permissions[i].perm = aCapability;
         break;
       }
     }
@@ -135,7 +135,7 @@ var gPermissionManager = {
                              (host.charAt(0) == ".") ? host.substring(1,host.length) : host, 
                              this._type, 
                              capabilityString,
-                             aPermission);
+                             aCapability);
       this._permissions.push(p);
       
       this._view._rowCount = this._permissions.length;
@@ -227,7 +227,7 @@ var gPermissionManager = {
       else if (aData == "changed") {
         for (var i = 0; i < this._permissions.length; ++i) {
           if (this._permissions[i].host == permission.host) {
-            this._permissions[i].capability = this._getCapabilityString(permission);
+            this._permissions[i].capability = this._getCapabilityString(permission.capability);
             break;
           }
         }
@@ -331,7 +331,7 @@ var gPermissionManager = {
   {
     if (aPermission.type == this._type) {
       var host = aPermission.host;
-      var capabilityString = this._getCapabilityString(aPermission);
+      var capabilityString = this._getCapabilityString(aPermission.capability);
       var p = new Permission(host,
                              (host.charAt(0) == ".") ? host.substring(1,host.length) : host,
                              aPermission.type,
