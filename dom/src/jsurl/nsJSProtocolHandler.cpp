@@ -43,12 +43,13 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIEvaluateStringProxy.h"
 #include "nsXPIDLString.h"
+#include "nsIByteArrayInputStream.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
 
-class nsJSInputStream;
+class nsJSThunk;
 
 /***************************************************************************/
 /* nsEvaluateStringProxy                                                   */
@@ -172,18 +173,18 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsJSInputStream : public nsIInputStream
+class nsJSThunk : public nsIStreamIO
 {
 public:
     NS_DECL_ISUPPORTS
 
-    nsJSInputStream()
+    nsJSThunk()
         : mChannel(nsnull), mResult(nsnull), mLength(0), mReadCursor(0) {
         NS_INIT_REFCNT();
     }
 
-    virtual ~nsJSInputStream() {
-        (void)Close();
+    virtual ~nsJSThunk() {
+        (void)Close(NS_BASE_STREAM_CLOSED);
     }
 
     nsresult Init(nsIURI* uri, nsIChannel* channel) {
@@ -194,45 +195,16 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD Close() {
-        if (mResult) {
-            nsCRT::free(mResult);
-            mResult = nsnull;
-        }
-        mLength = 0;
-        mReadCursor = 0;
-        mChannel = nsnull;
-        return NS_OK;
-    }
+    NS_IMETHOD Open(char* *contentType, PRInt32 *contentLength) {
+        // IMPORTANT CHANGE: We used to just implement nsIInputStream and use an
+        // input stream channel in the js protocol, but that had the nasty side effect
+        // of doing the evaluation after the window content was already torn down (in
+        // the webshell's OnStartRequest callback). By using an nsIStreamIO instead, 
+        // we now get more control over when the evaluation occurs. By evaluating in the
+        // Open method, we can can get the status of the channel in the OnStartRequest
+        // callback and detect NS_ERROR_DOM_RETVAL_UNDEFINED, thereby avoiding tearing
+        // down the current document.
 
-    NS_IMETHOD Available(PRUint32 *result) {
-        if (!mResult) {
-            nsresult rv = Eval();
-            if (NS_FAILED(rv))
-                return rv;
-            NS_ASSERTION(mResult, "Eval didn't set mResult");
-        }
-        PRUint32 rest = mLength - mReadCursor;
-        *result = rest;
-        return NS_OK;
-    }
-
-    NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *result) {
-        nsresult rv;
-        PRUint32 rest;
-        rv = Available(&rest);
-        if (rv != NS_OK)
-            return rv;
-        PRUint32 amt = PR_MIN(count, rest);
-        if (amt > 0) {
-            nsCRT::memcpy(buf, &mResult[mReadCursor], amt);
-            mReadCursor += amt;
-        }
-        *result = amt;
-        return NS_OK;
-    }
-
-    nsresult Eval() {
         nsresult rv;
 
         // We do this by proxying back to the main thread.
@@ -292,7 +264,39 @@ public:
 
         mResult = retString;
         mLength = nsCRT::strlen(retString);
+
+        *contentType = nsCRT::strdup("text/html");
+        *contentLength = mLength;
         return rv;
+    }
+
+    NS_IMETHOD Close(nsresult status) {
+        if (mResult) {
+            nsCRT::free(mResult);
+            mResult = nsnull;
+        }
+        mLength = 0;
+        mReadCursor = 0;
+        mChannel = nsnull;
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetInputStream(nsIInputStream* *aInputStream) {
+        nsresult rv;
+        nsIByteArrayInputStream* str;
+        rv = NS_NewByteArrayInputStream(&str, mResult, mLength);
+        *aInputStream = str;
+        return rv;
+    }
+
+    NS_IMETHOD GetOutputStream(nsIOutputStream* *aOutputStream) {
+        // should never be called
+        NS_NOTREACHED("nsJSThunk::GetOutputStream");
+        return NS_ERROR_FAILURE;
+    }
+
+    NS_IMETHOD GetName(char* *aName) {
+        return mURI->GetSpec(aName);
     }
 
 protected:
@@ -303,7 +307,7 @@ protected:
     PRUint32                    mReadCursor;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsJSInputStream, NS_GET_IID(nsIInputStream));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIStreamIO);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -398,18 +402,17 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     nsresult rv;
     NS_ENSURE_ARG_POINTER(uri);
 
-    nsJSInputStream* in = new nsJSInputStream();
-    if (in == nsnull)
+    nsJSThunk* thunk = new nsJSThunk();
+    if (thunk == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(in);
+    NS_ADDREF(thunk);
 
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
-                                  uri, in, "text/html", -1);
+    nsCOMPtr<nsIStreamIOChannel> channel;
+    rv = NS_NewStreamIOChannel(getter_AddRefs(channel), uri, thunk);
     if (NS_SUCCEEDED(rv)) {
-        rv = in->Init(uri, channel);
+        rv = thunk->Init(uri, channel);
     }
-    NS_RELEASE(in);
+    NS_RELEASE(thunk);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
