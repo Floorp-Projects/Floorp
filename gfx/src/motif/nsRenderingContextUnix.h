@@ -153,6 +153,8 @@ protected:
   nsIFontCache           *mFontCache;
   Region                 mRegion;
   Font                   mCurrFontHandle;
+  XChar2b*               mDrawStringBuf;
+  PRInt32                mDrawStringSize;
 
   //state management
   nsVoidArray       *mStateCache;
