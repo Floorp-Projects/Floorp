@@ -31,28 +31,33 @@ LOCAL_MD_EXPORTS_x86 =  x86SysCallsRuntime.h			\
 
 MODULE_NAME = EF
 
-#######################################################################
-# (2) Include "component" configuration information.                  #
-#######################################################################
-
 include $(DEPTH)/config/config.mk
 
 #######################################################################
 # (3) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include config.mk
+ifeq ($(OS_ARCH),Linux)
+ASFILES	=	x86LinuxException.s					\
+		x86LinuxInvokeNative.s					\
+		$(NULL)
 
+CPPSRCS	+= 	x86LinuxThread.cpp					\
+		$(NULL)
 
-#######################################################################
-# (4) Execute "component" rules. (OPTIONAL)                           #
-#######################################################################
+LOCAL_MD_EXPORTS_x86 +=  	x86LinuxThread.h			\
+				$(NULL)
+
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS	+= 	Win32ExceptionHandler.cpp                               \
+		x86Win32InvokeNative.cpp				\
+		x86Win32Thread.cpp					\
+		$(NULL)
+
+LOCAL_MD_EXPORTS_x86 +=  	x86Win32Thread.h			\
+				$(NULL)
+endif
 
 include $(DEPTH)/config/rules.mk
-
-#######################################################################
-# (7) Execute "local" rules. (OPTIONAL).                              #
-#######################################################################
-
-
-
