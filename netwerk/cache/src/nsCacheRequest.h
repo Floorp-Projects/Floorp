@@ -41,6 +41,7 @@ private:
     nsCacheRequest( nsCString *           key, 
                     nsICacheListener *    listener,
                     nsCacheAccessMode     accessRequested,
+                    PRBool                blockingMode,
                     nsCacheSession *      session)
         : mKey(key),
           mInfo(0),
@@ -54,6 +55,7 @@ private:
         SetStoragePolicy(session->StoragePolicy());
         if (session->IsStreamBased())             MarkStreamBased();
         if (session->WillDoomEntriesIfExpired())  MarkDoomEntriesIfExpired();
+        if (blockingMode == nsICache::BLOCKING)    MarkBlockingMode();
         MarkWaitingForValidation();
     }
     
@@ -72,7 +74,8 @@ private:
         eStoragePolicyMask         = 0x000000FF,
         eStreamBasedMask           = 0x00000100,
         eDoomEntriesIfExpiredMask  = 0x00001000,
-        eWaitingForValidationMask  = 0x00010000,
+        eBlockingModeMask          = 0x00010000,
+        eWaitingForValidationMask  = 0x00100000,
         eAccessRequestedMask       = 0xFF000000
     };
 
@@ -92,8 +95,12 @@ private:
     PRBool IsStreamBased()      { return (mInfo & eStreamBasedMask) != 0; }
 
 
-    void   MarkDoomEntriesIfExpired()  { mInfo |=  eDoomEntriesIfExpiredMask; }
-    PRBool WillDoomEntriesIfExpired()  { return (mInfo & eDoomEntriesIfExpiredMask); }
+    void   MarkDoomEntriesIfExpired()   { mInfo |=  eDoomEntriesIfExpiredMask; }
+    PRBool WillDoomEntriesIfExpired()   { return (mInfo & eDoomEntriesIfExpiredMask); }
+    
+    void   MarkBlockingMode()           { mInfo |= eBlockingModeMask; }
+    PRBool IsBlocking()                 { return  (mInfo & eBlockingModeMask); }
+    PRBool IsNonBlocking()              { return !(mInfo & eBlockingModeMask); }
 
     void SetStoragePolicy(nsCacheStoragePolicy policy)
     {

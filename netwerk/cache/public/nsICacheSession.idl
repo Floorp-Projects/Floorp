@@ -50,10 +50,11 @@ interface nsICacheSession : nsISupports
      * Synchronous cache access.  This returns a unique descriptor each
      * time it is called, even if the same key is specified.  When
      * called by multiple threads for write access, only one writable
-     * descriptor will be granted.
+     * descriptor will be granted.  If 'blocking' is set to false, 
      */
     nsICacheEntryDescriptor openCacheEntry(in string            key,
-                                           in nsCacheAccessMode accessRequested);
+                                           in nsCacheAccessMode accessRequested,
+                                           in boolean           blockingMode);
 
     /**
      * Asynchronous cache access. Does not block the calling thread.
