@@ -31,7 +31,7 @@
 #include <X11/Xmu/Editres.h>
 #endif
 
-extern XtAppContext gAppContext;
+XtAppContext gAppContext;
 
 //-------------------------------------------------------------------------
 //
@@ -40,9 +40,6 @@ extern XtAppContext gAppContext;
 //-------------------------------------------------------------------------
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
-
-//XtAppContext nsAppShell::gAppContext = NULL;
-
 
 //-------------------------------------------------------------------------
 //
@@ -189,19 +186,14 @@ NS_METHOD nsAppShell::Run()
 
 
 done:
-  printf("Calling gdk_input_add with event queue\n");
+
+  printf("Calling XtAppAddInput() with event queue\n");
 
   XtAppAddInput(gAppContext, 
                 EQueue->GetEventQueueSelectFD(),
                 (XtPointer)(XtInputReadMask), 
                 nsUnixEventProcessorCallback, 
                 0);
-
-//   gdk_input_add(EQueue->GetEventQueueSelectFD(),
-//                 GDK_INPUT_READ,
-//                 event_processor_callback,
-//                 EQueue);
-//   gtk_main();
 
   XtRealizeWidget(mTopLevel);
 
