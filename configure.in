@@ -18,6 +18,7 @@ dnl Contributors:
 dnl Jamie Zawinski <jwz@jwz.org>	gettimeofday args check
 dnl Christopher Blizzard <blizzard@appliedtheory.com>
 dnl					gnomefe update & enable-pthreads
+dnl Ramiro Estrugo <ramiro@netscape.com>	X11 makedepend support
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
@@ -901,6 +902,12 @@ if [ test -n "${NSPR_DIR}" && test -d "${NSPR_DIR}" ]; then
     NSPR_CFLAGS="-I${NSPR_DIR}/include"
     NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
 fi
+
+dnl Support for X11 makedepend, if found on the system
+dnl ========================================================
+AC_PATH_PROG(SYSTEM_MAKEDEPEND,makedepend)
+
+AC_SUBST(SYSTEM_MAKEDEPEND)
 
 AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)

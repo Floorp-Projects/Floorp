@@ -785,9 +785,11 @@ else
 	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(INCLUDES) $(CSRCS) $(CPPSRCS)
 endif
 
+ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND)::
 	cd $(DEPTH)/config; $(MAKE) nsinstall tweak_nspr
 	cd $(MKDEPEND_DIR); $(MAKE)
+endif
 
 # Dont do the detect hackery for autoconf builds.  It makes them painfully
 # slow and its not needed anyway, since autoconf does it much better.
@@ -801,8 +803,14 @@ detect: $(MOZILLA_DETECT_GEN)
 
 endif
 
+ifndef MOZ_NATIVE_MAKEDEPEND
+MKDEPEND_BUILTIN = $(MKDEPEND) 
+else
+MKDEPEND_BUILTIN =
+endif
+
 ifdef OBJS
-depend:: $(MKDEPEND) $(MKDEPENDENCIES)
+depend:: $(MKDEPEND_BUILTIN) $(MKDEPENDENCIES)
 else
 depend::
 endif
@@ -870,4 +878,3 @@ envirocheck::
 	@echo "MOZ_LITE       = $(MOZ_LITE)"
 	@echo "MOZ_MEDIUM     = $(MOZ_MEDIUM)"
 	@echo -----------------------------------
-

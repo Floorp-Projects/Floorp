@@ -433,9 +433,17 @@ DEPENDENCIES	= $(OBJDIR)/.md
 endif
 
 ifneq ($(OS_ARCH),WINNT)
+
+ifdef MOZ_NATIVE_MAKEDEPEND
+MKDEPEND_DIR	=
+MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND) -Y
+else
 MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
 MKDEPEND	= $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
+endif
+
 MKDEPENDENCIES	= $(OBJDIR)/depend.mk
+
 endif
 
 #
