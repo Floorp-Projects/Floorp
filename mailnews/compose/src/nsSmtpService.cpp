@@ -137,10 +137,20 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
     nsXPIDLCString smtpHostName;
     nsXPIDLCString smtpUserName;
     PRInt32 smtpPort;
+    PRInt32 trySSL;
 
     smtpServer->GetHostname(getter_Copies(smtpHostName));
     smtpServer->GetUsername(getter_Copies(smtpUserName));
     smtpServer->GetPort(&smtpPort);
+    smtpServer->GetTrySSL(&trySSL);
+
+    if (smtpPort == 0)
+    {
+        if (trySSL == PREF_SECURE_ALWAYS_SMTPS)
+            smtpPort = nsISmtpUrl::DEFAULT_SMTPS_PORT;
+        else
+            smtpPort = nsISmtpUrl::DEFAULT_SMTP_PORT;
+    }
 
     if (smtpHostName && smtpHostName.get()[0] && !CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_10)) 
     {
@@ -204,7 +214,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
         if (!PL_strchr(aSmtpHostName, ':'))
         {
             urlSpec += ':';
-            urlSpec.AppendInt((aSmtpPort > 0) ? aSmtpPort : nsISmtpUrl::DEFAULT_SMTP_PORT);
+            urlSpec.AppendInt(aSmtpPort);
         }
 
         if (urlSpec.get())
