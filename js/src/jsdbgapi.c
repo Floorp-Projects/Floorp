@@ -867,7 +867,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
                           const char *filename, uintN lineno,
                           jsval *rval)
 {
-    uint32 flags;
+    uint32 flags, options;
     JSScript *script;
     JSBool ok;
 
@@ -877,10 +877,13 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
      */
     flags = fp->flags;
     fp->flags |= JSFRAME_DEBUGGER | JSFRAME_EVAL;
+    options = cx->options;
+    cx->options = options | JSOPTION_COMPILE_N_GO;
     script = JS_CompileUCScriptForPrincipals(cx, fp->scopeChain,
                                              JS_StackFramePrincipals(cx, fp),
                                              bytes, length, filename, lineno);
     fp->flags = flags;
+    cx->options = options;
     if (!script)
         return JS_FALSE;
 
