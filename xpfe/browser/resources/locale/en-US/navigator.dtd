@@ -127,7 +127,7 @@
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "B">
-<!ENTITY addCurPageCmd.label "Add to Bookmarks">
+<!ENTITY addCurPageCmd.label "Bookmark This Page">
 <!ENTITY addCurPageCmd.accesskey "B">
 <!ENTITY addCurPageCmd.commandkey "d">
 <!ENTITY addCurPageAsCmd.label "File Bookmark...">
