@@ -97,11 +97,18 @@ function isDuplicateFilterNameExists()
 {
     var args = window.arguments[0];
     var myFilterList = args.filterList;
-    var numOfFilters = myFilterList.filterCount;
+    var numOfFilters;
 
     var filterName= gFilterNameElement.value;
     var currentFilter;
     var alreadyExists = false;
+	if (myFilterList) 
+	{
+		numOfFilters = myFilterList.filterCount;
+	} 
+	else 
+		return false;
+
     for (var i = 0; i < numOfFilters; i++)
     {
         currentFilter = (myFilterList.getFilterAt(i)).filterName;
