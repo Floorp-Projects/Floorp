@@ -1,14 +1,23 @@
 <!-- extracted from content/pref-smart_browsing.xul -->
 
+<!--LOCALIZATION NOTE pref-smart_browsing.dtd The SmartBrowsing prefs dialog -->
+<!--LOCALIZATION NOTE title.label Don't translate the term 'Smart Browsing' -->
 <!ENTITY  title.label "Smart Browsing">
+
+<!--LOCALIZATION NOTE lHeader Translate "What's Related" according to Netscape glossary -->
 <!ENTITY  lHeader "What's Related">
 <!ENTITY  rHeader "Configure browsing aids">
+<!--LOCALIZATION NOTE enableRelatedRadio.label Translate "What's Related" according to Netscape glossary -->
 <!ENTITY  enableRelatedRadio.label "Enable 'What's Related'">
+<!--LOCALIZATION NOTE autoDecp.label Translate "What's Related" according to Netscape glossary -->
 <!ENTITY  autoDecp.label "Automatically load 'Whats Related' information">
 <!ENTITY  neverRadio "Never">
 <!ENTITY  afterAutoloadFirstRadio "After first use">
 <!ENTITY  afterAutoloadAlwaysRadio "Always">
+<!--LOCALIZATION NOTE doNotDecp.label Translate "What's Related" according to Netscape glossary -->
 <!ENTITY  doNotDecp.label "Do not request What's Related information for the following domains  (a comma-seprated list)">
+<!--LOCALIZATION NOTE internetKeywordsHeader.label Do not translate 'Internet Keywords' -->
 <!ENTITY  internetKeywordsHeader.label "Internet Keywords">
+<!--LOCALIZATION NOTE enableKeyCheck.label Do not translate 'Internet Keywords' -->
 <!ENTITY  enableKeyCheck.label "Enable Internet Keywords">
 
