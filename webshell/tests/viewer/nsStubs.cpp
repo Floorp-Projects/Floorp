@@ -23,12 +23,6 @@
 #include "xp_linebuf.h"
 #include "mkbuf.h"
 
-extern "C" XP_Bool ValidateDocData(MWContext *window_id) 
-{ 
-  printf("ValidateDocData not implemented, stubbed in webshell/tests/viewer/nsStubs.cpp\n"); 
-  return PR_TRUE; 
-}
-
 /* Unix: Moved these stubs to lib/xp/xp_stubs.c so we don't keep
    copying this stub function around.  Mac & Win32 should follow suit. */
 
