@@ -324,8 +324,8 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mTitle(aTitle),
     mMedia(aMedia),
     mDefaultNameSpaceID(aDefaultNameSpaceID),
-    mOwningElement(aOwner),
     mSheetIndex(aDocIndex),
+    mOwningElement(aOwner),
     mParserToUnblock(aParserToUnblock),
     mDidBlockParser(PR_FALSE),
     mParentSheet(nsnull),
@@ -650,7 +650,7 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
     }
     // start pending alternate loads
     while (mPendingAlternateSheets.Count()) {
-      SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(0);
+      data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(0);
       mPendingAlternateSheets.RemoveElementAt(0);
       URLKey key(data->mURL);
       LoadSheet(key, data); // this may pull other pending alternates (with same URL)
