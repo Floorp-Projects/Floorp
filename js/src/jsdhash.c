@@ -207,7 +207,7 @@ JS_DHashTableFinish(JSDHashTable *table)
 #define MARK_ENTRY_FREE(entry)      ((entry)->keyHash = 0)
 #define MARK_ENTRY_REMOVED(entry)   ((entry)->keyHash = 1)
 #define ENTRY_IS_LIVE(entry)        ((entry)->keyHash >= 2)
-#define ENSURE_LIVE_KEYHASH(hash0)  if (hash0 < 2) hash0 -= 2; else
+#define ENSURE_LIVE_KEYHASH(hash0)  if (hash0 < 2) hash0 -= 2; else (void)0
 
 /* Compute the address of the indexed entry in table. */
 #define ADDRESS_ENTRY(table, index) \
