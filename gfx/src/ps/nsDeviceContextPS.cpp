@@ -90,7 +90,8 @@ nsDeviceContextPS :: nsDeviceContextPS()
   : DeviceContextImpl(),
   mSpec(nsnull),
   mParentDeviceContext(nsnull),
-  mPSObj(nsnull)
+  mPSObj(nsnull),
+  mPSFontGeneratorList(nsnull)
 { 
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::nsDeviceContextPS()\n"));
 
