@@ -213,7 +213,7 @@ NS_NewURI(nsIURI* *result,
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
     nsresult rv = theServiceManager->GetService(kIOServiceCID, NS_GET_IID(nsIIOService), (void**)&ioService);
     if (rv == NS_OK)
-        rv = ioService->NewURI(spec, baseURI, result);
+        rv = ioService->NewURI(spec, nsnull, baseURI, result);
     NS_RELEASE(ioService);
     return rv;
 }
@@ -252,10 +252,9 @@ NS_METHOD MRJSecurityContext::Implies(const char* target, const char* action, PR
 NS_METHOD 
 MRJSecurityContext::GetOrigin(char* buf, int len)
 {
-    char* origin = nsnull;
-    if (mLocation && NS_SUCCEEDED(mLocation->GetPrePath(&origin))) {
-        ::strncpy(buf, origin, len);
-        delete[] origin;
+    nsCAutoString origin;
+    if (mLocation && NS_SUCCEEDED(mLocation->GetUserPass(origin))) {
+        ::strncpy(buf, origin.get(), len);
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
