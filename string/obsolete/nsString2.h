@@ -916,7 +916,23 @@ public:
     char mBuffer[kDefaultStringSize<<eTwoByte];
 };
 
+inline
+nsAutoString
+NS_ConvertToString( const char* aCString )
+  {
+    nsAutoString result;
+    result.AssignWithConversion(aCString);
+    return result;
+  }
 
+inline
+nsAutoString
+NS_ConvertToString( const char* aCString, PRUint32 aLength )
+  {
+    nsAutoString result;
+    result.AssignWithConversion(aCString, aLength);
+    return result;
+  }
 
 /***************************************************************
   The subsumestr class is very unusual. 
