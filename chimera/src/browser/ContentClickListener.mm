@@ -180,7 +180,7 @@ ContentClickListener::MouseDown(nsIDOMEvent* aEvent)
       option->GetLabel(text);
       if (text.IsEmpty())
         option->GetText(text);
-      NSString* title = [NSString stringWith_nsAString: text];
+      NSString* title = [[NSString stringWith_nsAString: text] stringByTruncatingTo:75 at:kTruncateAtMiddle];
       NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];
       [menu addItem: menuItem];
       [menuItem setTag: contentID];
