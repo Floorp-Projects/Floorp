@@ -21,6 +21,7 @@
 #include "nsISupports.h"
 
 class nsIHTMLStyleSheet;
+class nsIHTMLCSSStyleSheet;
 
 /* a6cf90cc-15b3-11d2-932e-00805f8add32 */
 #define NS_IHTMLCONTENTCONTAINER_IID \
@@ -35,6 +36,7 @@ class nsIHTMLStyleSheet;
 class nsIHTMLContentContainer : public nsISupports {
 public:
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet) = 0;
+  NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aStyleSheet) = 0;
  
 };
 

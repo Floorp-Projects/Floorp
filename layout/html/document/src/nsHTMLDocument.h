@@ -56,6 +56,7 @@ public:
   NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult);
 
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
+  NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aStyleSheet);
 
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);

@@ -367,6 +367,22 @@ NS_IMETHODIMP nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = mStyleAttrStyleSheet;
+  if (nsnull == mStyleAttrStyleSheet) {
+    return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
+  }
+  else {
+    NS_ADDREF(mStyleAttrStyleSheet);
+  }
+  return NS_OK;
+}
+
 void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
 {
   if ((nsnull != mStyleAttrStyleSheet) && (aSheet != mStyleAttrStyleSheet)) {
