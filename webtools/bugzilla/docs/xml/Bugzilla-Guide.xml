@@ -23,11 +23,10 @@
      * bz-ver to current stable
      * bz-nexver to next stable
      * bz-date to the release date
-     * bz-devel to "IGNORE"
+     * Remove the BZ-DEVEL comments
      - COMPILE DOCS AND CHECKIN -
        Also, tag and tarball before completing
      * bz-ver to devel version
-     * bz-devel to "INCLUDE"
  
      For a devel release, simple bump bz-ver and bz-date
 -->
@@ -35,7 +34,6 @@
 <!ENTITY bz-ver "2.19.1">
 <!ENTITY bz-nextver "2.20">
 <!ENTITY bz-date "2004-10-24">
-<!ENTITY % bz-devel "INCLUDE">
 <!ENTITY current-year "2004">
 
 <!ENTITY landfillbase "http://landfill.bugzilla.org/bugzilla-tip/">
@@ -98,7 +96,8 @@
 
   <bookinfo>
     <title>The Bugzilla Guide - &bz-ver; 
-    <![%bz-devel;[Development ]]>Release</title>
+    <!-- BZ-DEVEL -->Development <!-- /BZ-DEVEL -->
+    Release</title>
 
     <authorgroup>
       <corpauthor>The Bugzilla Team</corpauthor>

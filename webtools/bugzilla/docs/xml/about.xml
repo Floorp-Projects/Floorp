@@ -1,6 +1,6 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
 <!ENTITY conventions SYSTEM "conventions.xml"> ] > -->
-<!-- $Id: about.xml,v 1.18 2004/12/13 03:27:24 jake%bugzilla.org Exp $ -->
+<!-- $Id: about.xml,v 1.19 2005/01/14 12:08:47 jake%bugzilla.org Exp $ -->
 
 <chapter id="about">
 <title>About This Guide</title>
@@ -65,10 +65,8 @@
     <para>
       This is the &bz-ver; version of The Bugzilla Guide. It is so named 
       to match the current version of Bugzilla. 
-      <![%bz-devel;[
-        This version of the guide, like its associated Bugzilla version, is a
-        development version. 
-      ]]>
+      <!-- BZ-DEVEL --> This version of the guide, like its associated Bugzilla version, is a
+      development version.<!-- /BZ-DEVEL --> 
     </para>
     <para>
       The latest version of this guide can always be found at <ulink

@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: troubleshooting.xml,v 1.3 2004/12/21 20:57:39 jake%bugzilla.org Exp $ -->
+<!-- $Id: troubleshooting.xml,v 1.4 2005/01/14 12:08:47 jake%bugzilla.org Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>
@@ -257,9 +257,7 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.</programlisting>
     past and need to set it to something more restrictive
     (i.e. <quote>/bugzilla/</quote>), you can safely do this without
     requiring users to delete their Bugzilla-related cookies in their
-    browser (this is true starting with 
-    <!-- Need OR logic here for bz-devel logic here --> 
-    Bugzilla 2.18<![%bz-devel;[, Bugzilla 2.17.7,]]> and Bugzilla 2.16.5).
+    browser (this is true starting with Bugzilla 2.18 and Bugzilla 2.16.5).
     </para>
   </section>
 
@@ -277,8 +275,7 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.</programlisting>
      log in again.
      </para>
 
-     <para>If you are using 2.18
-     <![%bz-devel[(or 2.17.1 in the development series)]]>, there is a
+     <para>If you are using 2.18 (or later), there is a
      parameter called <quote>loginnetmask</quote>, which you can use to set
      the number of bits of the user's IP address to require to be matched when
      authenticating the cookies. If you set this to something less than 32,
