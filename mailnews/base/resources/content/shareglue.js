@@ -39,7 +39,9 @@ function MessengerSetDefaultCharacterSet(aCharset)
 	var folderResource = GetSelectedFolderResource();
 	SetFolderCharset(folderResource, aCharset);
 	RefreshThreadTreeView();
-    MsgReload();
+  // DO NOT try to reload the message here. we do this automatically now in
+  //  messenger.SetDocumentCharset. You'll just break things and reak havoc
+  // if you call MsgReload() here...
 }
 
 function PrintPreview() {
