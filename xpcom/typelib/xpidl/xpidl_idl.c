@@ -146,8 +146,16 @@ fopen_from_includes(const char *filename, const char *mode,
 
     if (filename[0] != '/') {
         while (include_path) {
-            pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
-                                       include_path->directory, filename);
+#ifdef XP_MAC
+				if (!*include_path->directory)
+		        pathname = g_strdup_printf("%s", filename);
+				else
+		        pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
+	                             include_path->directory, filename);
+#else
+        pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
+                                   include_path->directory, filename);
+#endif
             if (!pathname)
                 return NULL;
 #ifdef DEBUG_shaver_bufmgmt
@@ -168,12 +176,24 @@ fopen_from_includes(const char *filename, const char *mode,
     return NULL;
 }
 
+#ifdef XP_MAC
+extern FILE* mac_fopen(const char* filename, const char *mode);
+#endif
+
 static struct input_callback_data *
 new_input_callback_data(const char *filename, IncludePathEntry *include_path)
 {
     struct input_callback_data *new_data = xpidl_malloc(sizeof *new_data);
     memset(new_data, 0, sizeof *new_data);
+#ifdef XP_MAC
+    // if file is a full path name, just use fopen, otherwise search access paths.
+    if (strchr(filename, ':') == NULL)
+        new_data->input = mac_fopen(filename, "r");
+    else
+        new_data->input = fopen(filename, "r");
+#else
     new_data->input = fopen_from_includes(filename, "r", include_path);
+#endif
     if (!new_data->input)
         return NULL;
     new_data->buf = xpidl_malloc(INPUT_BUF_CHUNK + 1); /* trailing NUL */
