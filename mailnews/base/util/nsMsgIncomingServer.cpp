@@ -187,6 +187,17 @@ nsMsgIncomingServer::getCharPref(const char *prefname,
 }
 
 nsresult
+nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
+                                        char **val) {
+  
+  char *fullPrefName = getDefaultPrefName(m_serverKey);
+  nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  return rv;
+}
+
+nsresult
 nsMsgIncomingServer::setCharPref(const char *prefname,
                                  char * val)
 {
