@@ -303,19 +303,15 @@ nsresult nsExceptionService::DoGetExceptionFromProvider( nsresult errCode, nsIEx
 
 /*static*/ void nsExceptionService::DoDropThread(nsExceptionManager *thread)
 {
-    if (thread == firstThread) {
-        firstThread = nsnull;
-    } else {
-        nsExceptionManager *look = firstThread->mNextThread;
-        while (look && look->mNextThread != thread) {
-            look = look->mNextThread;
-        }
-        NS_ABORT_IF_FALSE(look, "Could not find the thread to drop!");
-        if (look)
-            look->mNextThread = thread->mNextThread;
+    nsExceptionManager **emp = &firstThread;
+    while (*emp != thread) {
+        NS_ABORT_IF_FALSE(*emp, "Could not find the thread to drop!");
+        emp = &(*emp)->mNextThread;
     }
+    *emp = thread->mNextThread;
     NS_RELEASE(thread);
 }
+
 /*static*/ void nsExceptionService::DropThread(nsExceptionManager *thread)
 {
     PR_Lock(lock);
