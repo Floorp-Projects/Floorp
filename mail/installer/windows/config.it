@@ -255,10 +255,10 @@ C3=Component US English Profile Defaults
 C4=Component En US lang pack
 C5=Component US region pack
 C6=Component Offline
-C7=Component ADT
+;C7=Component ADT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C8=Component QFA
+C7=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -661,16 +661,16 @@ Attributes=FORCE_UPGRADE|VISIBLE
 Force Upgrade File0=[SETUP PATH]\chrome\offline.jar
 FileCount=$FileCount$
 
-[Component ADT]
-Description Short=Developer Tools
+;[Component ADT]
+;Description Short=Developer Tools
 ;*** LOCALIZE ME BABY ***
-Description Long=Tools for web developers including the Document Inspector. 
-Archive=adt.xpi
-$InstallSize$:adt
-$InstallSizeArchive$:adt.xpi
-Attributes=FORCE_UPGRADE|VISIBLE
-Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
-FileCount=$FileCount$
+;Description Long=Tools for web developers including the Document Inspector. 
+;Archive=adt.xpi
+;$InstallSize$:adt
+;$InstallSizeArchive$:adt.xpi
+;Attributes=FORCE_UPGRADE|VISIBLE
+;Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
+;FileCount=$FileCount$
 
 [Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller
