@@ -234,13 +234,14 @@
          if (event.target != this)
            return;
 
+         var n;
          if (this.selectedItems.length == 0) {
-           var n = this.getItemAtIndex(0);
+           n = this.getItemAtIndex(0);
          }
          else {
            this.isUpSelection=0;
            this.isDownSelection=0;
-           var n = this.getNextItem(this.selectedItems[this.selectedItems.length-1], 1);
+           n = this.getNextItem(this.selectedItems[this.selectedItems.length-1], 1);
          }
 
          if (n) {
@@ -324,8 +325,9 @@
          var i = this.getIndexOfFirstVisibleRow();
          var v = this.getNumberOfVisibleRows();
          var count = this.getRowCount();
+         var n;
          if ( i >= count - v )
-           var n=this.getItemAtIndex(count - 1);
+           n=this.getItemAtIndex(count - 1);
          else {
            n = this.getNextItem(this.selectedItems[l-1], v);
            var newIndex = i + v;
