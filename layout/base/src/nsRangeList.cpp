@@ -482,7 +482,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
     if (domNode && NS_SUCCEEDED(aTracker->GetFocus(&frame, &anchor))){
       //traverse through document and unselect crap here
       if (!aContinueSelection){
-        if (anchor && frame && anchor != frame && aFrame != frame){//selected across frames, must "deselect" frames between in correct order
+        if (anchor && frame && anchor != frame ){//selected across frames, must "deselect" frames between in correct order
           PRInt32 compareResult = compareFrames(anchor,frame);
           if ( compareResult < 0 )
             selectFrames(anchor,0,frame,-1,PR_FALSE); //unselect all between
