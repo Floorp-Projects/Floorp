@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Viswanath Ramachandran <vishy@netscape.com>
  */
 
 // Local Includes
@@ -32,6 +33,7 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
 	NS_INIT_REFCNT();
    mLoadType = nsIDocShellLoadInfo::loadNormal;
    mInheritOwner = PR_FALSE;
+   mTarget.Assign("");
    mStopActiveDocument = PR_FALSE; 
 }
 
@@ -135,10 +137,25 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetSHEntry(nsISHEntry** aSHEntry)
    NS_IF_ADDREF(*aSHEntry);
    return NS_OK;
 }
-
+ 
 NS_IMETHODIMP nsDocShellLoadInfo::SetSHEntry(nsISHEntry* aSHEntry)
 {
    mSHEntry = aSHEntry;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::GetTarget(char** aTarget)
+{
+   NS_ENSURE_ARG_POINTER(aTarget);
+
+   *aTarget = mTarget.ToNewCString();
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetTarget(const char* aTarget)
+{
+   mTarget.Assign(aTarget);
    return NS_OK;
 }
 
