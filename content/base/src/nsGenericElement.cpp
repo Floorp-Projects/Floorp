@@ -773,7 +773,13 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
   if (NS_EVENT_FLAG_BUBBLE != aFlags) {
     if (nsnull != mDOMSlots && nsnull != mDOMSlots->mCapturer) {
       mDOMSlots->mCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-    } 
+    } else {
+      // Node capturing stage
+      if (mParent) {
+        // Pass off to our parent.
+        mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+      }
+    }
   }
   
   //Local handling stage
