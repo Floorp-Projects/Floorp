@@ -169,12 +169,20 @@ ifdef AR_LIBS
   endif
 endif
 
+ifdef STATIC_LIBS
+  ifeq ($(OS_ARCH), WINNT)
+	STATIC_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH), $(STATIC_LIBS:%=%$(ARCHIVE_SUFFIX)$(STATIC_LIB_SUFFIX)))
+  else
+	STATIC_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)lib, $(STATIC_LIBS:%=%_s$(ARCHIVE_SUFFIX)$(STATIC_LIB_SUFFIX)))
+  endif
+endif
+
 # Rules to convert LD_LIBS to platform-dependent naming scheme
 ifdef LD_LIBS
   ifeq ($(OS_ARCH), WINNT)
 	LD_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH), $(LD_LIBS:%=%$(STATIC_LIB_SUFFIX)))
   else
-	LD_LIBS := $(addprefix $(CONFIG_DIST_BIN)$(OPT_SLASH)lib, $(LD_LIBS:%=%$(STATIC_LIB_SUFFIX)))
+	LD_LIBS := $(addprefix $(DIST)$(OPT_SLASH)bin$(OPT_SLASH)lib, $(LD_LIBS:%=%.$(DLL_SUFFIX)))
   endif
 endif
 
