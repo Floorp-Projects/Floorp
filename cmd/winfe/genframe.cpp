@@ -50,9 +50,8 @@
 #elif defined(JAVA)
 #include "java.h"
 #endif
-#ifdef PRIVACY_POLICIES
+
 #include "privacy.h"
-#endif
 
 // for whitebox testing
 //#define DEBUG_WHITEBOX
@@ -2287,7 +2286,6 @@ void CGenericFrame::OnUpdatePrivacyReceipt(CCmdUI* pCmdUI)
 void CGenericFrame::OnDisplayPrivacyPolicy()
 {
    
-#ifdef PRIVACY_POLICIES
 
     MWContext * context = GetMainContext()->GetContext();
     History_entry *he = SHIST_GetCurrent(&context->hist);
@@ -2318,13 +2316,11 @@ void CGenericFrame::OnDisplayPrivacyPolicy()
     } else
 #endif
 	CFE_CreateNewDocWindow(GetMainContext()->GetContext(), pUrl);
-#endif
 }
 
 void CGenericFrame::OnUpdatePrivacyPolicy(CCmdUI* pCmdUI)
 {
 
-#ifdef PRIVACY_POLICIES
 
     if (PRVCY_CurrentHasPrivacyPolicy(GetMainContext()->GetContext())) {
 	pCmdUI->Enable(TRUE);
@@ -2332,11 +2328,6 @@ void CGenericFrame::OnUpdatePrivacyPolicy(CCmdUI* pCmdUI)
 	pCmdUI->Enable(FALSE);
     }
 
-#else
-
-    pCmdUI->Enable(FALSE);
-
-#endif
 
 }
 
@@ -2356,13 +2347,7 @@ void CGenericFrame::OnDisplayPrivacyReceipts()
 
 void CGenericFrame::OnDisplayPrivacyTutorial()
 {
-#ifdef PRIVACY_POLICIES
     GetMainContext()->NormalGetUrl(PRVCY_TutorialURL());
-#else
-    GetMainContext()->NormalGetUrl(
-        "http://people.netscape.com/morse/privacy/index.html");
-#endif
-    
 }
 //////////////////////////////////////////////////////////////////////////////
 
