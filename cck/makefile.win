@@ -60,8 +60,7 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\ISetup\NCIFiles
 
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\CD
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Network
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Output
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\AnimLogo
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun
