@@ -302,7 +302,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
     
     if (NS_SUCCEEDED(rv) && appendMail) {
         rv = getEmailAddr(emailAddr);
-        if (NS_SUCCEEDED(rv) && emailAddr) {
+        if (NS_SUCCEEDED(rv) && emailAddr.get()) {
 
             /* Adding the unique identifier at the end of autoconfig URL. 
                In this case the autoconfig URL is a script and 
@@ -317,7 +317,7 @@ nsresult nsAutoConfig::downloadAutoConfig()
     nsCOMPtr<nsIURI> url;
     nsCOMPtr<nsIChannel> channel;
     
-    rv = NS_NewURI(getter_AddRefs(url), mConfigURL, nsnull, nsnull);
+    rv = NS_NewURI(getter_AddRefs(url), mConfigURL.get(), nsnull, nsnull);
     if (NS_FAILED(rv))
         return rv;
 
@@ -544,7 +544,7 @@ nsresult nsAutoConfig::getEmailAddr(nsAWritableCString & emailAddr)
         emailAddr = nsDependentCString(prefValue, len);
     }
     else {
-        if (mCurrProfile) {
+        if (mCurrProfile.get()) { // XXXjag this is always non-null. Did you mean !IsEmpty()?
             emailAddr = mCurrProfile;
         }
     }
