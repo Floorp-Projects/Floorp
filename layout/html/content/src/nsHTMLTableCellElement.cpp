@@ -131,8 +131,11 @@ NS_NewHTMLTableCellElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLTableCellElement);
+
 nsHTMLTableCellElement::nsHTMLTableCellElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLTableCellElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mColIndex=0;
@@ -140,6 +143,7 @@ nsHTMLTableCellElement::nsHTMLTableCellElement(nsIAtom* aTag)
 
 nsHTMLTableCellElement::~nsHTMLTableCellElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLTableCellElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLTableCellElement)
@@ -547,3 +551,9 @@ nsHTMLTableCellElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+NS_IMETHODIMP
+nsHTMLTableCellElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+}

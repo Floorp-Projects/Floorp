@@ -43,6 +43,10 @@ public:
 
   NS_IMETHOD    ParentDestroyed();
 
+#ifdef DEBUG
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
+
 protected:
   nsIContent * mParent;
   nsIAtom * mTag;

@@ -114,8 +114,12 @@ protected:
   nsIHTMLContent *mContent;  
 };
 
+MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration);
+
 nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent)
 {
+  MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);
+
   // This reference is not reference-counted. The content
   // object tells us when its about to go away.
   mContent = aContent;
@@ -123,6 +127,7 @@ nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIHTMLContent *aCont
 
 nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
 {
+  MOZ_COUNT_DTOR(nsDOMCSSAttributeDeclaration);
 }
 
 void 
@@ -2919,4 +2924,3 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
   return NS_OK;
 }
-

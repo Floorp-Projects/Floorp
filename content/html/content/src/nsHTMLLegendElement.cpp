@@ -28,6 +28,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIForm.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -92,8 +93,11 @@ NS_NewHTMLLegendElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLLegendElement);
+
 nsHTMLLegendElement::nsHTMLLegendElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLLegendElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
@@ -101,6 +105,7 @@ nsHTMLLegendElement::nsHTMLLegendElement(nsIAtom* aTag)
 
 nsHTMLLegendElement::~nsHTMLLegendElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLLegendElement);
   if (mForm) {
     NS_RELEASE(mForm);
   }
@@ -231,3 +236,22 @@ nsHTMLLegendElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+NS_IMETHODIMP
+nsHTMLLegendElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  if (mForm) {
+    PRBool recorded;
+    aSizer->RecordObject(mForm, &recorded);
+    if (!recorded) {
+      PRUint32 formSize;
+      mForm->SizeOf(aSizer, &formSize);
+      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
+    }
+  }
+#endif
+  return NS_OK;
+}

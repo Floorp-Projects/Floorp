@@ -89,14 +89,18 @@ NS_NewHTMLOListElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLOListElement);
+
 nsHTMLOListElement::nsHTMLOListElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLOListElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLOListElement::~nsHTMLOListElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLOListElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLOListElement)
@@ -265,3 +269,9 @@ nsHTMLOListElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+NS_IMETHODIMP
+nsHTMLOListElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+}

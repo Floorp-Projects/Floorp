@@ -49,6 +49,12 @@ public:
 
   void DropReference();
 
+#ifdef DEBUG
+  static nsresult SizeOfNamedNodeMap(nsIDOMNamedNodeMap* aMap,
+                                     nsISizeOfHandler* aSizer,
+                                     PRUint32* aResult);
+#endif
+
 protected:
   nsresult GetNamedItemCommon(const nsString& aAttrName,
                               PRInt32 aNameSpaceID,

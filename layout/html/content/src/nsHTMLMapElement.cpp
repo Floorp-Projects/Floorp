@@ -175,9 +175,7 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   
     return mInner.GetRangeList(aResult);                                       
   }                                                                        
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-    return mInner.SizeOf(aSizer, aResult, sizeof(*this));
-  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
@@ -201,8 +199,11 @@ NS_NewHTMLMapElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLMapElement);
+
 nsHTMLMapElement::nsHTMLMapElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLMapElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mAreas = nsnull;
@@ -210,6 +211,7 @@ nsHTMLMapElement::nsHTMLMapElement(nsIAtom* aTag)
 
 nsHTMLMapElement::~nsHTMLMapElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLMapElement);
   if (nsnull != mAreas) {
     mAreas->ParentDestroyed();
     NS_RELEASE(mAreas);
@@ -358,3 +360,20 @@ nsHTMLMapElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+NS_IMETHODIMP
+nsHTMLMapElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  PRUint32 sum = 0;
+  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  if (mAreas) {
+    PRUint32 asize;
+    mAreas->SizeOf(aSizer, &asize);
+    sum += asize;
+  }
+  *aResult = sum;
+#endif
+  return NS_OK;
+}

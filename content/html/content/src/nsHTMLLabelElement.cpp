@@ -29,6 +29,7 @@
 #include "nsIPresContext.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLabelElementIID, NS_IDOMHTMLLABELELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -102,8 +103,11 @@ NS_NewHTMLLabelElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLLabelElement);
+
 nsHTMLLabelElement::nsHTMLLabelElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLLabelElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
@@ -111,6 +115,7 @@ nsHTMLLabelElement::nsHTMLLabelElement(nsIAtom* aTag)
 
 nsHTMLLabelElement::~nsHTMLLabelElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLLabelElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -297,3 +302,22 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+NS_IMETHODIMP
+nsHTMLLabelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  if (mForm) {
+    PRBool recorded;
+    aSizer->RecordObject(mForm, &recorded);
+    if (!recorded) {
+      PRUint32 formSize;
+      mForm->SizeOf(aSizer, &formSize);
+      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
+    }
+  }
+#endif
+  return NS_OK;
+}

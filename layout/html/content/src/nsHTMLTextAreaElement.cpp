@@ -33,6 +33,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIFocusableContent.h"
 #include "nsIEventStateManager.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -128,8 +129,11 @@ NS_NewHTMLTextAreaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLTextAreaElement);
+
 nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLTextAreaElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
@@ -137,6 +141,7 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsIAtom* aTag)
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLTextAreaElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -491,4 +496,23 @@ nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
     }
   }
   return result;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  if (mForm) {
+    PRBool recorded;
+    aSizer->RecordObject(mForm, &recorded);
+    if (!recorded) {
+      PRUint32 formSize;
+      mForm->SizeOf(aSizer, &formSize);
+      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
+    }
+  }
+#endif
+  return NS_OK;
 }

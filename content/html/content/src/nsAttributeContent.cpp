@@ -131,17 +131,7 @@ public:
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const { aResult = 0; return NS_OK; }
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {  return NS_OK;  }
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-    if (!aResult) {
-      return NS_ERROR_NULL_POINTER;
-    }
-#ifdef DEBUG
-    *aResult = sizeof(*this);
-#else
-    *aResult = 0;
-#endif
-    return NS_OK;
-  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
@@ -546,5 +536,13 @@ nsAttributeContent::IsOnlyWhitespace(PRBool* aResult)
   }
 
   *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAttributeContent::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+  *aResult = sizeof(*this);
   return NS_OK;
 }

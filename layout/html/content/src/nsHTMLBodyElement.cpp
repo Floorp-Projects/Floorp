@@ -116,15 +116,19 @@ public:
   BodyFixupRule*  mInlineStyleRule;
 };
 
+MOZ_DECL_CTOR_COUNTER(nsBodyInner);
+
 nsBodyInner::nsBodyInner()
   : nsGenericHTMLContainerElement(),
     mContentStyleRule(nsnull),
     mInlineStyleRule(nsnull)
 {
+  MOZ_COUNT_CTOR(nsBodyInner);
 }
 
 nsBodyInner::~nsBodyInner()
 {
+  MOZ_COUNT_DTOR(nsBodyInner);
   if (nsnull != mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
     mContentStyleRule->mSheet = nsnull;
@@ -211,8 +215,11 @@ friend class BodyFixupRule;
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR_COUNTER(BodyRule);
+
 BodyRule::BodyRule(nsHTMLBodyElement* aPart, nsIHTMLStyleSheet* aSheet)
 {
+  MOZ_COUNT_CTOR(BodyRule);
   NS_INIT_REFCNT();
   mPart = aPart;
   mSheet = aSheet;
@@ -220,6 +227,7 @@ BodyRule::BodyRule(nsHTMLBodyElement* aPart, nsIHTMLStyleSheet* aSheet)
 
 BodyRule::~BodyRule()
 {
+  MOZ_COUNT_DTOR(BodyRule);
 }
 
 NS_IMPL_ISUPPORTS(BodyRule, kIStyleRuleIID);
@@ -387,15 +395,19 @@ BodyRule::List(FILE* out, PRInt32 aIndent) const
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR_COUNTER(BodyFixupRule);
+
 BodyFixupRule::BodyFixupRule(nsHTMLBodyElement* aPart, nsIHTMLCSSStyleSheet* aSheet)
   : mPart(aPart),
     mSheet(aSheet)
 {
+  MOZ_COUNT_CTOR(BodyFixupRule);
   NS_INIT_REFCNT();
 }
 
 BodyFixupRule::~BodyFixupRule()
 {
+  MOZ_COUNT_DTOR(BodyFixupRule);
 }
 
 NS_IMPL_ADDREF(BodyFixupRule);
@@ -558,14 +570,18 @@ NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLBodyElement);
+
 nsHTMLBodyElement::nsHTMLBodyElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLBodyElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLBodyElement::~nsHTMLBodyElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLBodyElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLBodyElement)
@@ -807,4 +823,10 @@ nsHTMLBodyElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }

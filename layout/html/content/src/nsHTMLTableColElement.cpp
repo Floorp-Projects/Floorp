@@ -101,14 +101,18 @@ NS_NewHTMLTableColElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLTableColElement);
+
 nsHTMLTableColElement::nsHTMLTableColElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLTableColElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLTableColElement::~nsHTMLTableColElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLTableColElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLTableColElement)
@@ -339,3 +343,9 @@ NS_METHOD nsHTMLTableColElement::GetSpanValue(PRInt32* aSpan)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsHTMLTableColElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+}

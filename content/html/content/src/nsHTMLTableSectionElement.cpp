@@ -36,9 +36,9 @@ static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 // you will see the phrases "rowgroup" and "section" used interchangably
 
 class nsHTMLTableSectionElement : public nsIDOMHTMLTableSectionElement,
-                           public nsIScriptObjectOwner,
-                           public nsIDOMEventReceiver,
-                           public nsIHTMLContent
+                                  public nsIScriptObjectOwner,
+                                  public nsIDOMEventReceiver,
+                                  public nsIHTMLContent
 {
 public:
   nsHTMLTableSectionElement(nsIAtom* aTag);
@@ -100,8 +100,11 @@ NS_NewHTMLTableSectionElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLTableSectionElement);
+
 nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLTableSectionElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mRows = nsnull;
@@ -109,6 +112,7 @@ nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsIAtom* aTag)
 
 nsHTMLTableSectionElement::~nsHTMLTableSectionElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLTableSectionElement);
   if (nsnull!=mRows) {
     mRows->ParentDestroyed();
     NS_RELEASE(mRows);
@@ -368,3 +372,20 @@ nsHTMLTableSectionElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
+
+NS_IMETHODIMP
+nsHTMLTableSectionElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  PRUint32 sum = 0;
+  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  if (mRows) {
+    PRUint32 asize;
+    mRows->SizeOf(aSizer, &asize);
+    sum += asize;
+  }
+  *aResult = sum;
+#endif
+  return NS_OK;
+}

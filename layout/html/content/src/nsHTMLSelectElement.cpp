@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMNSHTMLSelectElement.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -39,7 +40,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsISelectElement.h"
 #include "nsISelectControlFrame.h"
-#include "nsCOMPtr.h"
+#include "nsISizeOfHandler.h"
 
 // Notify/query select frame for selectedIndex
 #include "nsIDocument.h"
@@ -202,8 +203,11 @@ NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLSelectElement);
+
 nsHTMLSelectElement::nsHTMLSelectElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLSelectElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mOptions = nsnull;
@@ -212,6 +216,7 @@ nsHTMLSelectElement::nsHTMLSelectElement(nsIAtom* aTag)
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLSelectElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -837,6 +842,8 @@ nsHTMLSelectElement::Init()
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+
 // nsOptionList implementation
 // XXX this was modified form nsHTMLFormElement.cpp. We need a base class implementation
 
@@ -869,8 +876,11 @@ nsOptionList::GetOptions()
   mDirty = PR_FALSE;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsOptionList);
+
 nsOptionList::nsOptionList(nsHTMLSelectElement* aSelect) 
 {
+  MOZ_COUNT_CTOR(nsOptionList);
   mDirty = PR_TRUE;
   // Do not maintain a reference counted reference. When
   // the select goes away, it will let us know.
@@ -879,6 +889,7 @@ nsOptionList::nsOptionList(nsHTMLSelectElement* aSelect)
 
 nsOptionList::~nsOptionList()
 {
+  MOZ_COUNT_DTOR(nsOptionList);
   DropReference();
 }
 
@@ -1131,3 +1142,22 @@ nsOptionList::Clear()
   mElements.Clear();
 }
 
+
+NS_IMETHODIMP
+nsHTMLSelectElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  if (mForm) {
+    PRBool recorded;
+    aSizer->RecordObject(mForm, &recorded);
+    if (!recorded) {
+      PRUint32 formSize;
+      mForm->SizeOf(aSizer, &formSize);
+      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
+    }
+  }
+#endif
+  return NS_OK;
+}

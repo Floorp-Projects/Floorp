@@ -62,6 +62,10 @@ public:
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
 
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  }
+
   // nsITextContent
   NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(mInner)
 

@@ -54,14 +54,24 @@ public:
 
   nsTableCellCollection(nsIContent* aParent, 
                         nsIAtom*    aTag);
+  ~nsTableCellCollection();
+
   NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 };
+
+MOZ_DECL_CTOR_COUNTER(nsTableCellCollection);
 
 nsTableCellCollection::nsTableCellCollection(nsIContent* aParent, 
                                              nsIAtom*    aTag)
   : GenericElementCollection(aParent, aTag)
 {
+  MOZ_COUNT_CTOR(nsTableCellCollection);
+}
+
+nsTableCellCollection::~nsTableCellCollection()
+{
+  MOZ_COUNT_DTOR(nsTableCellCollection);
 }
 
 NS_IMETHODIMP 
@@ -123,6 +133,8 @@ nsTableCellCollection::Item(PRUint32     aIndex,
   }
   return rv;
 }
+
+//----------------------------------------------------------------------
 
 class nsHTMLTableRowElement : public nsIDOMHTMLTableRowElement,
                               public nsIScriptObjectOwner,
@@ -227,8 +239,11 @@ NS_NewHTMLTableRowElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLTableRowElement);
+
 nsHTMLTableRowElement::nsHTMLTableRowElement(nsIAtom* aTag)
 {
+  MOZ_COUNT_CTOR(nsHTMLTableRowElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mCells = nsnull;
@@ -236,6 +251,7 @@ nsHTMLTableRowElement::nsHTMLTableRowElement(nsIAtom* aTag)
 
 nsHTMLTableRowElement::~nsHTMLTableRowElement()
 {
+  MOZ_COUNT_DTOR(nsHTMLTableRowElement);
   if (nsnull != mCells) {
     mCells->ParentDestroyed();
     NS_RELEASE(mCells);
@@ -726,3 +742,20 @@ nsHTMLTableRowElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
 
 
+
+NS_IMETHODIMP
+nsHTMLTableRowElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  PRUint32 sum = 0;
+  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  if (mCells) {
+    PRUint32 asize;
+    mCells->SizeOf(aSizer, &asize);
+    sum += asize;
+  }
+  *aResult = sum;
+#endif
+  return NS_OK;
+}
