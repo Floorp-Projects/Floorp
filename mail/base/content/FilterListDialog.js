@@ -217,10 +217,13 @@ function setServer(uri)
    if (msgFolder)
      msgFolder.getFilterList(gFilterListMsgWindow);
 
+   // this will get the deferred to account root folder, if server is deferred
+   msgFolder = msgFolder.server.rootMsgFolder;
+   var rootFolderUri = msgFolder.URI;
    rebuildFilterTree(uri);
    
    // root the folder picker to this server
-   gRunFiltersFolderPicker.setAttribute("ref", uri);
+   gRunFiltersFolderPicker.setAttribute("ref", rootFolderUri);
  
    // run filters after the fact not supported by news
    if (CanRunFiltersAfterTheFact(msgFolder.server)) {
