@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -178,8 +178,11 @@ nsresult nsPref::useDefaultPrefFile()
 	    	return NS_ERROR_FAILURE;
 	    prefsFile->SetUnixStyleFilePath("default_prefs.js"); // in default working directory.
     }
-    if (Exists(prefsFile))
-        return ReadUserPrefsFrom(prefsFile);
+    if (Exists(prefsFile)) {
+        rv = ReadUserPrefsFrom(prefsFile);
+        NS_RELEASE(prefsFile);
+        return rv;
+    }
 
     // need to save the prefs now
     mFileSpec = prefsFile; // Already addreffed when retrieved.
