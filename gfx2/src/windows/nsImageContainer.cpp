@@ -31,11 +31,13 @@ nsImageContainer::nsImageContainer()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
+  mCurrentFrame = 0;
 }
 
 nsImageContainer::~nsImageContainer()
 {
   /* destructor code */
+  mFrames.Clear();
 }
 
 
@@ -72,25 +74,30 @@ NS_IMETHODIMP nsImageContainer::GetHeight(gfx_dimension *aHeight)
 /* readonly attribute nsIImageFrame currentFrame; */
 NS_IMETHODIMP nsImageContainer::GetCurrentFrame(nsIImageFrame * *aCurrentFrame)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return this->GetFrameAt(mCurrentFrame, aCurrentFrame);
 }
 
 /* readonly attribute unsigned long numFrames; */
 NS_IMETHODIMP nsImageContainer::GetNumFrames(PRUint32 *aNumFrames)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return mFrames.Count(aNumFrames);
 }
 
 /* nsIImageFrame getFrameAt (in unsigned long index); */
 NS_IMETHODIMP nsImageContainer::GetFrameAt(PRUint32 index, nsIImageFrame **_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsISupports *sup = mFrames.ElementAt(index);
+  if (!sup)
+    return NS_ERROR_FAILURE;
+
+  *_retval = NS_REINTERPRET_CAST(nsIImageFrame *, sup);
+  return NS_OK;
 }
 
 /* void appendFrame (in nsIImageFrame item); */
 NS_IMETHODIMP nsImageContainer::AppendFrame(nsIImageFrame *item)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mFrames.AppendElement(NS_REINTERPRET_CAST(nsISupports*, item));
 }
 
 /* void removeFrame (in nsIImageFrame item); */
@@ -108,5 +115,5 @@ NS_IMETHODIMP nsImageContainer::Enumerate(nsIEnumerator **_retval)
 /* void clear (); */
 NS_IMETHODIMP nsImageContainer::Clear()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return mFrames.Clear();
 }
