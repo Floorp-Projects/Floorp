@@ -853,13 +853,56 @@ NS_IMETHODIMP nsRegistry::AddSubtreeRaw( nsRegistryKey baseKey, const char *path
 | Deletes the subtree at a given location using NR_RegDeleteKey.               |
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistry::RemoveSubtree( nsRegistryKey baseKey, const char *path ) {
+    nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
-    // Delete the subkey.
+
+	// libreg doesn't delete keys if there are subkeys under the key
+	// Hence we have to recurse through to delete the subtree
+
+    RKEY key;
+
     PR_Lock(mregLock);
-    err = NR_RegDeleteKey( mReg,(RKEY)baseKey,(char*)path );
+    err = NR_RegGetKey(mReg, baseKey, (char *)path, &key);
     PR_Unlock(mregLock);
-    // Convert result.
-    return regerr2nsresult( err );
+    if (err != REGERR_OK)
+	{
+		rv = regerr2nsresult( err );
+        return rv;
+	}
+
+    // Now recurse through and delete all keys under hierarchy
+	
+    char subkeyname[MAXREGPATHLEN+1];
+    REGENUM state = 0;
+    subkeyname[0] = '\0';
+    while (NR_RegEnumSubkeys(mReg, key, &state, subkeyname, sizeof(subkeyname),
+           REGENUM_NORMAL) == REGERR_OK)
+    {
+#ifdef DEBUG_dp
+		printf("...recursing into %s\n", subkeyname);
+#endif /* DEBUG_dp */
+        // Even though this is not a "Raw" API the subkeys may still, in fact,
+        // *be* raw. Since we're recursively deleting this will work either way.
+        // If we were guaranteed none would be raw then a depth-first enumeration
+        // would be much more efficient.
+        err = RemoveSubtreeRaw(key, subkeyname);
+        if (err != REGERR_OK) break;
+    }
+
+    // If success in deleting all subkeys, delete this key too
+    if (err == REGERR_OK)
+    {
+#ifdef DEBUG_dp
+		printf("...deleting %s\n", path);
+#endif /* DEBUG_dp */
+        PR_Lock(mregLock);
+        err = NR_RegDeleteKey(mReg, baseKey, (char *)path);
+        PR_Unlock(mregLock);
+    }
+
+	// Convert result.
+  	rv = regerr2nsresult( err );
+    return rv;
 }
 
 
