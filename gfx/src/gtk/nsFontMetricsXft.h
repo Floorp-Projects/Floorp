@@ -219,12 +219,18 @@ public:
 #endif /* MOZ_MATHML */
 
 private:
+    enum FontMatch {
+        eNoMatch,
+        eBestMatch,
+        eAllMatching
+    };
+
     // local methods
     nsresult    RealizeFont      (void);
     nsresult    CacheFontMetrics (void);
     nsFontXft  *FindFont         (PRUnichar);
     void        SetupFCPattern   (void);
-    void        DoMatch          (void);
+    void        DoMatch          (PRBool aMatchAll);
 
     gint        RawGetWidth      (const PRUnichar* aString,
                                   PRUint32         aLength);
@@ -264,7 +270,7 @@ private:
     // Xft-related items
     nsFontXft           *mWesternFont;
     FcPattern           *mPattern;
-    PRBool               mMatched;
+    FontMatch            mMatchType;
 
     // for rendering unknown fonts
     XftFont                 *mMiniFont;
