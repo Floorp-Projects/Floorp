@@ -135,6 +135,15 @@ public:
                                 nsIFrame*&  aPrimaryFrame) const = 0;
 
   /**
+   * Returns a layout object associated with the primary frame for the content object.
+   *
+   * @param aContent   the content object for which we seek a layout object
+   * @param aResult    the resulting layout object as an nsISupports, if found.  Refcounted.
+   */
+  NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
+                                nsISupports** aResult) const = 0;
+
+  /**
    * Get/Set the placeholder frame associated with the specified frame.
    *
    * Out of flow frames (e.g., absolutely positioned frames and floated frames)

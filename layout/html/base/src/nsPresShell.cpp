@@ -254,6 +254,8 @@ public:
   NS_IMETHOD GetRootFrame(nsIFrame*& aFrame) const;
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const;
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent, nsIFrame*& aPrimaryFrame) const;
+  NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
+                                nsISupports** aResult) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame*& aPlaceholderFrame) const;
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
@@ -1422,6 +1424,26 @@ PresShell::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame*& aPrimaryFrame) co
   aPrimaryFrame = ::FindFrameWithContent(mRootFrame, aContent);
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+PresShell::GetLayoutObjectFor(nsIContent*   aContent,
+                              nsISupports** aResult) const 
+{
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if ((nsnull!=aResult) && (nsnull!=aContent))
+  {
+    *aResult = nsnull;
+    nsIFrame *primaryFrame=nsnull;
+    result = GetPrimaryFrameFor(aContent, primaryFrame);
+    if ((NS_SUCCEEDED(result)) && (nsnull!=primaryFrame))
+    {
+      result = primaryFrame->QueryInterface(kISupportsIID, (void**)aResult);
+    }
+  }
+  return result;
+}
+  
 
 NS_IMETHODIMP
 PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
