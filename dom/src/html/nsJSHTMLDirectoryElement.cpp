@@ -156,7 +156,7 @@ ResolveHTMLDirectoryElement(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass HTMLDirectoryElementClass = {
   "HTMLDirectoryElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLDirectoryElementProperty,

@@ -474,7 +474,7 @@ HTMLTextAreaElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 //
 JSClass HTMLTextAreaElementClass = {
   "HTMLTextAreaElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLTextAreaElementProperty,

@@ -611,7 +611,7 @@ SelectionRemoveSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval
 //
 JSClass SelectionClass = {
   "Selection", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetSelectionProperty,

@@ -282,7 +282,7 @@ ResolveHTMLScriptElement(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass HTMLScriptElementClass = {
   "HTMLScriptElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLScriptElementProperty,

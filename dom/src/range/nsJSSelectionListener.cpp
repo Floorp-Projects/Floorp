@@ -163,7 +163,7 @@ SelectionListenerNotifySelectionChanged(JSContext *cx, JSObject *obj, uintN argc
 //
 JSClass SelectionListenerClass = {
   "SelectionListener", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetSelectionListenerProperty,

@@ -310,7 +310,7 @@ ResolveHTMLAreaElement(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass HTMLAreaElementClass = {
   "HTMLAreaElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLAreaElementProperty,

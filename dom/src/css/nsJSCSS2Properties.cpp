@@ -2716,7 +2716,7 @@ ResolveCSS2Properties(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass CSS2PropertiesClass = {
   "CSS2Properties", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetCSS2PropertiesProperty,

@@ -156,7 +156,7 @@ ResolveHTMLMenuElement(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass HTMLMenuElementClass = {
   "HTMLMenuElement", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetHTMLMenuElementProperty,
