@@ -20,6 +20,7 @@
 
 #include "nsImapCore.h"
 #include "nsImapFlagAndUidState.h"
+#include "prcmon.h"
 
 NS_IMETHODIMP nsImapFlagAndUidState::GetNumberOfMessages(PRInt32 *result)
 {

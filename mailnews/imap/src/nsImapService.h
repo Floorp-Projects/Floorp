@@ -22,6 +22,8 @@
 #include "nsIImapService.h"
 
 class nsIImapHostSessionList; 
+class nsString2;
+class nsIImapUrl;
 
 class nsImapService : public nsIImapService
 {
@@ -39,11 +41,14 @@ public:
 	NS_IMETHOD CreateImapConnection (PLEventQueue *aEventQueue, nsIImapProtocol ** aImapConnection);
 
 	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink *, nsIUrlListener * aUrlListener, nsIURL ** aURL);	
+	NS_IMETHOD LiteSelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+											  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsISmtpService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
+	nsresult CreateStartOfImapUrl(nsIImapUrl &imapUrl, nsString2 &urlString);
 	nsIImapHostSessionList * m_sessionList; // the one and only list of all host sessions...
 
 };
