@@ -75,31 +75,31 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
 {
   { TEXT_PLAIN, "txt,text", "Text File", 'TEXT', 'ttxt' },
 #if defined(VMS)
-  { APPLICATION_OCTET_STREAM, "exe,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary Executable", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+  { APPLICATION_OCTET_STREAM, "exe,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary Executable", 0, 0 },
 #elif defined(XP_MAC) // don't define .bin on the mac...use internet config to look that up...
-  { APPLICATION_OCTET_STREAM, "exe", "Binary Executable", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+  { APPLICATION_OCTET_STREAM, "exe", "Binary Executable", 0, 0 },
 #else
-  { APPLICATION_OCTET_STREAM, "exe,bin", "Binary Executable", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+  { APPLICATION_OCTET_STREAM, "exe,bin", "Binary Executable", 0, 0 },
 #endif
 
 
-  { TEXT_HTML, "htm,html,shtml,ehtml", "Hyper Text Markup Language", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+  { TEXT_HTML, "htm,html,shtml,ehtml", "Hyper Text Markup Language", 'TEXT', 'MOSS' },
   { TEXT_RDF, "rdf", "Resource Description Framework", 'TEXT','ttxt' },
   { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
   { TEXT_XML, "xml,xsl", "Extensible Markup Language", 'TEXT', 'ttxt' },
   { TEXT_CSS, "css", "Style Sheet", 'TEXT', 'ttxt' },
   { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", 'TEXT', 'ttxt' },
-  { MESSAGE_RFC822, "eml", "RFC-822 data", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
-  { APPLICATION_GZIP2, "gz", "gzip", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
-  { IMAGE_GIF, "gif", "GIF Image", 'GIFf','GCon' },
-  { IMAGE_JPG, "jpeg,jpg", "JPEG Image", 'JPEG', 'GCon' },
-  { IMAGE_PNG, "png", "PNG Image", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
-  { IMAGE_ART, "art", "ART Image", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
-  { IMAGE_TIFF, "tiff,tif", "TIFF Image", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
-  { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
-  { TEXT_RTF, "rtf", "Rich Text Format", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+  { MESSAGE_RFC822, "eml", "RFC-822 data", 'TEXT', 'MOSS' },
+  { APPLICATION_GZIP2, "gz", "gzip", 0, 0 },
+  { IMAGE_GIF, "gif", "GIF Image", 0,0 },
+  { IMAGE_JPG, "jpeg,jpg", "JPEG Image", 0, 0 },
+  { IMAGE_PNG, "png", "PNG Image", 0, 0 },
+  { IMAGE_ART, "art", "ART Image", 0, 0 },
+  { IMAGE_TIFF, "tiff,tif", "TIFF Image", 0, 0 },
+  { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File",0, 0 },
+  { TEXT_RTF, "rtf", "Rich Text Format", 0, 0 },
   { TEXT_CPP, "cpp", "CPP file", 'TEXT','CWIE' },
-  { "application/x-arj", "arj", "ARJ file", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+  { "application/x-arj", "arj", "ARJ file", 0,0 },
   { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", 'xpi*','MOSS' },
 };
 
