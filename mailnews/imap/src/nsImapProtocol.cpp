@@ -1191,7 +1191,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   if (!anotherUrlRun)
       m_imapServerSink = null_nsCOMPtr();
   
-  if (GetConnectionStatus() < 0)
+  if (GetConnectionStatus() < 0 || !GetServerStateParser().Connected())
   {
     nsCOMPtr<nsIImapIncomingServer> imapServer  = do_QueryReferent(m_server, &rv);
     if (NS_SUCCEEDED(rv))
@@ -3156,6 +3156,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       FolderHeaderDump(msgIdList, msgCount);
       PR_FREEIF( msgIdList);
     }
+    HeaderFetchCompleted();
       // this might be bogus, how are we going to do pane notification and stuff when we fetch bodies without
       // headers!
   }
@@ -3184,9 +3185,6 @@ void nsImapProtocol::UpdatedMailboxSpec(nsImapMailboxSpec *aSpec)
 void nsImapProtocol::FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount)
 {
   FolderMsgDump(msgUids, msgCount, kHeadersRFC822andUid);
-  
-    if (GetServerStateParser().NumberOfMessages())
-        HeaderFetchCompleted();
 }
 
 void nsImapProtocol::FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)
@@ -3308,7 +3306,7 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
     msgCountLeft -= msgsToDownload;
 
     }
-  while (msgCountLeft > 0);
+  while (msgCountLeft > 0 && !DeathSignalReceived());
 }     
     
 

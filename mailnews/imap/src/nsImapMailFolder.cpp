@@ -612,17 +612,6 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   // don't run select if we're already running a url/select...
   if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
   {
-    // check if we should download message bodies because it's the inbox and 
-    // the server is specified as one where where we download msg bodies automatically.
-    if (mFlags & MSG_FOLDER_FLAG_INBOX)
-    {
-      nsCOMPtr<nsIImapIncomingServer> imapServer;
-      nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
-
-      if (NS_SUCCEEDED(rv) && imapServer)
-        imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
-    }
-
     nsCOMPtr <nsIEventQueue> eventQ;
     NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
@@ -2276,20 +2265,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 //      NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
 //      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_FALSE);
     }
-    if (aProtocol)
-    {
-      if (m_downloadingFolderForOfflineUse)
-      {
-        nsMsgKeyArray keysToDownload;
-        GetBodysToDownload(&keysToDownload);
-        if (keysToDownload.GetSize() > 0)
-          SetNotifyDownloadedLines(PR_TRUE); // ### TODO need to clear this when we've finished
-
-        aProtocol->NotifyBodysToDownload(keysToDownload.GetArray(), keysToDownload.GetSize());
-      }
-      else
-        aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
-    }
   }
 
   return rv;
@@ -3246,20 +3221,13 @@ NS_IMETHODIMP nsImapMailFolder::DownloadAllForOffline(nsIUrlListener *listener, 
 
     GetDatabase(msgWindow);
     m_downloadingFolderForOfflineUse = PR_TRUE;
-    GetBodysToDownload(&msgsToDownload);
-    if (msgsToDownload.GetSize() == 0)
-    {
-      if (listener)
-        listener->OnStopRunningUrl(nsnull, NS_OK);
-      return NS_OK;
-    }
-    rv = AllocateUidStringFromKeys(msgsToDownload.GetArray(), msgsToDownload.GetSize(), messageIdsToDownload);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    SetNotifyDownloadedLines(PR_TRUE); // ### TODO need to clear this when we've finished
-     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    SetNotifyDownloadedLines(PR_TRUE); 
+    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = imapService->DownloadMessagesForOffline(messageIdsToDownload, this, listener, msgWindow);
+    // selecting the folder with m_downloadingFolderForOfflineUse true will cause
+    // us to fetch any message bodies we don't have.
+    rv = imapService->SelectFolder(m_eventQueue, this, listener, msgWindow, nsnull);
     if (NS_SUCCEEDED(rv))
       m_urlRunning = PR_TRUE;
   }
@@ -4243,7 +4211,39 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
     delete m_moveCoalescer;
     m_moveCoalescer = nsnull;
   }
-    return NS_OK;
+  if (aProtocol)
+  {
+    // check if we should download message bodies because it's the inbox and 
+    // the server is specified as one where where we download msg bodies automatically.
+    PRBool autoDownloadNewHeaders = PR_FALSE;
+    if (mFlags & MSG_FOLDER_FLAG_INBOX)
+    {
+      nsCOMPtr<nsIImapIncomingServer> imapServer;
+      nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+
+      if (NS_SUCCEEDED(rv) && imapServer)
+        imapServer->GetDownloadBodiesOnGetNewMail(&autoDownloadNewHeaders);
+      // this isn't quite right - we only want to download bodies for new headers
+      // but we don't know what the new headers are. We could query the inbox db
+      // for new messages, if the above filter playback actually moves the filtered
+      // messages before we get to this code.
+      if (autoDownloadNewHeaders)
+        m_downloadingFolderForOfflineUse = PR_TRUE;
+    }
+
+    if (m_downloadingFolderForOfflineUse)
+    {
+      nsMsgKeyArray keysToDownload;
+      GetBodysToDownload(&keysToDownload);
+      if (keysToDownload.GetSize() > 0)
+        SetNotifyDownloadedLines(PR_TRUE);
+
+      aProtocol->NotifyBodysToDownload(keysToDownload.GetArray(), keysToDownload.GetSize());
+    }
+    else
+      aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5130,6 +5130,8 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                                             PR_TRUE, isDraftOrTemplate,
                                             urlListener, nsnull,
                                             copySupport);
+    if (NS_FAILED(rv))
+      ClearCopyState(rv);
 
     return rv;
 }
