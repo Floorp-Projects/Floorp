@@ -96,14 +96,147 @@ void EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* data) ;
 
 #pragma mark -
 
+
 //#define PAINT_DEBUGGING         // flash areas as they are painted
 //#define INVALIDATE_DEBUGGING    // flash areas as they are invalidated
 
 #if defined(INVALIDATE_DEBUGGING) || defined(PAINT_DEBUGGING)
-static void blinkRect(Rect* r);
-static void blinkRgn(RgnHandle rgn);
+static void blinkRect(const Rect* r, PRBool isPaint);
+static void blinkRgn(RgnHandle rgn, PRBool isPaint);
 #endif
 
+
+static Boolean KeyDown(const UInt8 theKey)
+{
+	KeyMap map;
+	GetKeys(map);
+	return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
+}
+
+#if defined(INVALIDATE_DEBUGGING) || defined(PAINT_DEBUGGING)
+
+static Boolean caps_lock()
+{
+  return KeyDown(0x39);
+}
+
+
+static void FlushCurPortBuffer()
+{
+#if TARGET_CARBON
+    CGrafPtr    curPort;
+    ::GetPort((GrafPtr*)&curPort);
+    ::QDFlushPortBuffer(curPort, nil);      // OK to call on 9/carbon (does nothing)
+#endif
+}
+
+static void blinkRect(const Rect* r, PRBool isPaint)
+{
+	StRegionFromPool oldClip;
+	UInt32 endTicks;
+
+    if (oldClip != NULL)
+    ::GetClip(oldClip);
+
+    ::ClipRect(r);
+
+    if (isPaint)
+    {
+        Pattern grayPattern;
+#if TARGET_CARBON
+        ::GetQDGlobalsGray(&grayPattern);
+#else
+        grayPattern = qd.gray;
+#endif
+
+        ::ForeColor(blackColor);
+        ::BackColor(whiteColor);
+
+        ::PenMode(patXor);
+        ::PenPat(&grayPattern);
+        ::PaintRect(r);
+        FlushCurPortBuffer();
+        ::Delay(5, &endTicks);
+        ::PaintRect(r);
+        FlushCurPortBuffer();
+        ::PenNormal();
+    }
+    else
+    {
+        ::InvertRect(r);
+        FlushCurPortBuffer();
+        ::Delay(5, &endTicks);
+        ::InvertRect(r);
+        FlushCurPortBuffer();
+    }
+
+	if (oldClip != NULL)
+		::SetClip(oldClip);
+}
+
+static void blinkRgn(RgnHandle rgn, PRBool isPaint)
+{
+    StRegionFromPool oldClip;
+    UInt32 endTicks;
+
+    if (oldClip != NULL)
+        ::GetClip(oldClip);
+
+    ::SetClip(rgn);
+
+    if (isPaint)
+    {
+        Pattern grayPattern;
+#if TARGET_CARBON
+        ::GetQDGlobalsGray(&grayPattern);
+#else
+        grayPattern = qd.gray;
+#endif
+
+        ::ForeColor(blackColor);
+        ::BackColor(whiteColor);
+
+        ::PenMode(patXor);
+        ::PenPat(&grayPattern);
+        ::PaintRgn(rgn);
+        FlushCurPortBuffer();
+
+        ::Delay(5, &endTicks);
+        ::PaintRgn(rgn);
+        FlushCurPortBuffer();
+        ::PenNormal();
+    }
+    else
+    {
+        ::InvertRgn(rgn);
+        FlushCurPortBuffer();
+        ::Delay(5, &endTicks);
+        ::InvertRgn(rgn);
+        FlushCurPortBuffer();
+    }
+
+    if (oldClip != NULL)
+        ::SetClip(oldClip);
+}
+
+#endif
+
+
+static Boolean control_key_down()
+{
+	EventRecord event;
+	::EventAvail(0, &event);
+	return (event.modifiers & controlKey) != 0;
+}
+
+static long long microseconds()
+{
+	unsigned long long micros;
+	Microseconds((UnsignedWide*)&micros);
+	return micros;
+}
+
+#pragma mark -
 
 //-------------------------------------------------------------------------
 //
@@ -915,59 +1048,6 @@ NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 	return NS_OK;
 }
 
-#pragma mark -
-
-static Boolean KeyDown(const UInt8 theKey)
-{
-	KeyMap map;
-	GetKeys(map);
-	return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
-}
-
-#if defined(INVALIDATE_DEBUGGING) || defined(PAINT_DEBUGGING)
-
-static Boolean caps_lock()
-{
-  return KeyDown(0x39);
-}
-
-static void blinkRect(Rect* r)
-{
-	StRegionFromPool oldClip;
-	if (oldClip != NULL)
-		::GetClip(oldClip);
-
-	::ClipRect(r);
-	::InvertRect(r);
-	// to make this work under Mac OS X as well as earlier,
-	// need to give time to the OS to allow screen to update
-	EventRecord ev;
-	::WaitNextEvent(nullEvent, &ev, 5L, nsnull);
-	::InvertRect(r);
-
-	if (oldClip != NULL)
-		::SetClip(oldClip);
-}
-
-static void blinkRgn(RgnHandle rgn)
-{
-	StRegionFromPool oldClip;
-	if (oldClip != NULL)
-		::GetClip(oldClip);
-
-	::SetClip(rgn);
-	::InvertRgn(rgn);
-	// to make this work under Mac OS X as well as earlier,
-	// need to give time to the OS to allow screen to update
-	EventRecord ev;
-	::WaitNextEvent(nullEvent, &ev, 5L, nsnull);
-	::InvertRgn(rgn);
-
-	if (oldClip != NULL)
-		::SetClip(oldClip);
-}
-
-#endif
 
 //-------------------------------------------------------------------------
 //
@@ -1029,7 +1109,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 
 #ifdef INVALIDATE_DEBUGGING
 	if (caps_lock())
-		::blinkRect(&macRect);
+		::blinkRect(&macRect, PR_FALSE);
 #endif
 
 	::InvalWindowRect(mWindowPtr, &macRect);
@@ -1061,7 +1141,7 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 
 	// translate this region into window coordinates.
 	PRInt32	offX, offY;
-	this->CalcOffset(offX, offY);
+	CalcOffset(offX, offY);
 	::OffsetRgn(windowRgn, mBounds.x + offX, mBounds.y + offY);
 	
 	StPortSetter    portSetter(mWindowPtr);
@@ -1069,7 +1149,7 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 
 #ifdef INVALIDATE_DEBUGGING
 	if (caps_lock())
-		::blinkRgn(windowRgn);
+		::blinkRgn(windowRgn, PR_FALSE);
 #endif
 
 	::InvalWindowRgn(mWindowPtr, windowRgn);
@@ -1255,21 +1335,6 @@ NS_IMETHODIMP	nsWindow::Update()
 #pragma mark -
 
 
-static Boolean control_key_down()
-{
-	EventRecord event;
-	::EventAvail(0, &event);
-	return (event.modifiers & controlKey) != 0;
-}
-
-static long long microseconds()
-{
-	unsigned long long micros;
-	Microseconds((UnsignedWide*)&micros);
-	return micros;
-}
-
-
 #if TARGET_CARBON
 
 
@@ -1355,7 +1420,7 @@ nsWindow::CountRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect,
 // this. |inData| contains the |nsWindow| being updated. 
 //
 void 
-nsWindow::PaintUpdateRect (Rect *inDirtyRect, void* inData)
+nsWindow::PaintUpdateRect(Rect *inDirtyRect, void* inData)
 {
   nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, inData);
   Rect dirtyRect = *inDirtyRect;
@@ -1363,16 +1428,16 @@ nsWindow::PaintUpdateRect (Rect *inDirtyRect, void* inData)
 	nsCOMPtr<nsIRenderingContext> renderingContext ( dont_AddRef(self->GetRenderingContext()) );
 	if (renderingContext)
 	{
-  	nsRect bounds = self->mBounds;
-  	self->LocalToWindowCoordinate(bounds);
-  	
-		// determine the rect to draw
-		::OffsetRect(&dirtyRect, -bounds.x, -bounds.y);
-		nsRect rect ( dirtyRect.left, dirtyRect.top, dirtyRect.right - dirtyRect.left,
-		                dirtyRect.bottom - dirtyRect.top );
+        nsRect bounds = self->mBounds;
+        self->LocalToWindowCoordinate(bounds);
 
-		// update the widget
-		self->UpdateWidget(rect, renderingContext);
+        // determine the rect to draw
+        ::OffsetRect(&dirtyRect, -bounds.x, -bounds.y);
+        nsRect rect ( dirtyRect.left, dirtyRect.top, dirtyRect.right - dirtyRect.left,
+                        dirtyRect.bottom - dirtyRect.top );
+
+        // update the widget
+        self->UpdateWidget(rect, renderingContext);
   }
 
 } // PaintUpdateRect
@@ -1440,10 +1505,12 @@ else
 		return NS_ERROR_OUT_OF_MEMORY;
 	::GetPortVisibleRegion(GetWindowPort(mWindowPtr), damagedRgn);
 
+/*
 #ifdef PAINT_DEBUGGING	
-	blinkRgn(damagedRgn);
+	if (caps_lock())
+  	blinkRgn(damagedRgn, PR_TRUE);
 #endif
-
+*/
 	// calculate the update region relatively to the window port rect
 	// (at this point, the grafPort origin should always be 0,0
 	// so mWindowRegion has to be converted to window coordinates)
@@ -1456,12 +1523,14 @@ else
 	LocalToWindowCoordinate(bounds);
 	::OffsetRgn(updateRgn, bounds.x, bounds.y);
 
-#ifdef PAINT_DEBUGGING
-	blinkRgn(updateRgn);
-#endif
-	
 	// check if the update region is visible
 	::SectRgn(damagedRgn, updateRgn, updateRgn);
+
+#ifdef PAINT_DEBUGGING
+	if (caps_lock())
+  	blinkRgn(updateRgn, PR_TRUE);
+#endif
+
 	if (!::EmptyRgn(updateRgn))
 	{
 #if DEBUG
