@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Blake Ross (blake@blakeross.com)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -167,8 +168,8 @@
       <caption label="&preview.label;"/>
       <stack>
         <vbox id="monitor" align="center" pack="center"
-              style="width: 153px !important; height: 114px !important;"
-              left="13" top="17"/>
+              style="width: 153px !important; height: 114px !important; overflow: hidden;"
+              left="13" top="18"/>
         <image src="chrome://browser/content/monitor.png"/>
       </stack>
     </groupbox>
