@@ -3109,6 +3109,20 @@ MOZ_ARG_ENABLE_BOOL(crash-on-assert,
 
 dnl ========================================================
 dnl =
+dnl = --enable-lea
+dnl = 
+dnl = Enable Lea malloc in xpcom. OFF by default.
+dnl = 
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(lea,
+[  --enable-lea            Enable Lea malloc for Linux ],
+  [ XPCOM_USE_LEA=1
+    AC_DEFINE(XPCOM_USE_LEA)] )
+
+
+dnl ========================================================
+dnl =
 dnl = --enable-optimize
 dnl = 
 dnl = Enable code optimization. OFF by default.
@@ -3835,6 +3849,7 @@ AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(MOZ_BUILD_XPFE)
 AC_SUBST(MOZ_LDAP_XPCOM)
 
+AC_SUBST(XPCOM_USE_LEA)
 AC_SUBST(UNIX_CRASH_ON_ASSERT)
 AC_SUBST(NO_UNIX_ASYNC_DNS)
 AC_SUBST(NO_SHARED_LIB)
