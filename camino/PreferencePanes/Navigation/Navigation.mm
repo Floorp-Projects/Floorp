@@ -347,6 +347,12 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   // add user chosen browsers to list
   [browsersSet addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenBrowserUserDefaultsKey]];
 
+  // add default browser in case it hasn't been already
+  NSURL *currSetURL = nil;
+  _LSCopyDefaultSchemeHandlerURL(@"http", &currSetURL);
+  [browsersSet addObject:[OrgMozillaChimeraPreferenceNavigation bundleIDForURL:currSetURL]];
+  [currSetURL release];
+  
   NSMutableArray* browsers = [[browsersSet allObjects] mutableCopy];
 
   // sort by display name
@@ -372,9 +378,8 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   [menu addItem:[NSMenuItem separatorItem]];
 
   // set up new menu
-  NSString *bundleID;
   NSEnumerator *browserEnumerator = [browsers objectEnumerator];
-  while (bundleID = [browserEnumerator nextObject]) {
+  while (NSString *bundleID = [browserEnumerator nextObject]) {
     NSURL *appURL = nil;
     if (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID, NULL, NULL, (CFURLRef*)&appURL) == noErr) {
       NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:[OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURL]
@@ -398,17 +403,6 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
       
       [item release];
     }
-  }
-  
-  // if the current default browser was not seen in the list, it must be user chosen and LS
-  // isn't detecting it. Add it to the user chosen list and call this method again, then get out.
-  if (!selectedBrowserMenuItem) {
-    NSMutableArray *userSelectedBrowsers = [NSMutableArray arrayWithCapacity:10];
-    [userSelectedBrowsers addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenBrowserUserDefaultsKey]];
-    [userSelectedBrowsers addObject:currentDefaultBrowserBundleID];
-    [[NSUserDefaults standardUserDefaults] setObject:userSelectedBrowsers forKey:kUserChosenBrowserUserDefaultsKey];
-    [self updateDefaultBrowserMenu];
-    return;
   }
   
   // allow user to select a browser
