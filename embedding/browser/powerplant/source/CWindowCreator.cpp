@@ -41,6 +41,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIWebBrowserSetup.h"
+#include "nsIPrefBranch.h"
 
 #include "CBrowserShell.h"
 #include "CBrowserWindow.h"
@@ -51,7 +52,7 @@
 //  CWindowCreator
 // ---------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(CWindowCreator, nsIWindowCreator);
+NS_IMPL_ISUPPORTS2(CWindowCreator, nsIWindowCreator, nsIWindowCreator2);
 
 CWindowCreator::CWindowCreator()
 {
@@ -82,6 +83,53 @@ NS_IMETHODIMP CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 
     return NS_OK;
 }
+
+NS_IMETHODIMP CWindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *parent,
+                                                  PRUint32 chromeFlags, PRUint32 contextFlags,
+                                                  nsIWebBrowserChrome **_retval)
+{
+    if (contextFlags & nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT) {
+        nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
+        if (prefs) {
+            PRBool showBlocker = PR_TRUE;
+            prefs->GetBoolPref("browser.popups.showPopupBlocker", &showBlocker);
+            if (showBlocker) {
+                short itemHit;
+                AlertStdAlertParamRec pb;
+
+                LStr255 msgString(STRx_StdAlertStrings, str_OpeningPopupWindow);
+                LStr255 explainString(STRx_StdAlertStrings, str_OpeningPopupWindowExp);
+                LStr255 defaultButtonText(STRx_StdButtonTitles, str_DenyAll);
+                LStr255 cancelButtonText(STRx_StdButtonTitles, str_Allow);
+                
+                pb.movable = false;
+                pb.helpButton = false;
+                pb.filterProc = nil;
+                pb.defaultText = defaultButtonText;
+                pb.cancelText = cancelButtonText;
+                pb.otherText = nil;
+                pb.defaultButton = kStdOkItemIndex;
+                pb.cancelButton = kStdCancelItemIndex;
+                pb.position = kWindowAlertPositionParentWindowScreen;
+
+                ::StandardAlert(kAlertStopAlert, msgString, explainString, &pb, &itemHit);
+                // This a one-time (for the life of prefs.js) alert
+                prefs->SetBoolPref("browser.popups.showPopupBlocker", PR_FALSE);
+                if (itemHit == kAlertStdAlertOKButton) {
+                    // Also, if these prefs are set, the DOM itself will prevent future
+                    // popups from being opened and our window creator won't even get
+                    // called. If you wanted to filter each request, don't set these
+                    // prefs. For this purpose, it's what we want, though.
+                    prefs->SetBoolPref("dom.disable_open_during_load", PR_TRUE);
+                    prefs->SetIntPref("dom.disable_open_click_delay", 1000);
+                    return NS_ERROR_FAILURE;
+                }
+            }
+        }
+    }
+    return CreateChromeWindow(parent, chromeFlags, _retval);
+}
+
 
 
 /*

@@ -370,7 +370,7 @@ Boolean CBrowserWindow::ObeyCommand(CommandT            inCommand,
                 mURLField->GetText(nil, 0, &urlTextLen);
                 StPointerBlock  urlTextPtr(urlTextLen, true, false);
                 mURLField->GetText(urlTextPtr.Get(), urlTextLen, &urlTextLen);
-                mBrowserShell->LoadURL(nsDependentCString(urlTextPtr.Get(), urlTextLen));
+                mBrowserShell->LoadURL(Substring(urlTextPtr.Get(), urlTextPtr.Get() + urlTextLen));
             }
             break;
             

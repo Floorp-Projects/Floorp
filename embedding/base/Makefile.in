@@ -41,8 +41,10 @@ EXPORTS         = \
                 nsEmbedAPI.h \
                 $(NULL)
 
-XPIDLSRCS	= nsIWindowCreator.idl \
-                  $(NULL)
+XPIDLSRCS	    = \
+                nsIWindowCreator.idl \
+                nsIWindowCreator2.idl \
+                $(NULL)
 
 CPPSRCS         = \
                 nsEmbedAPI.cpp \

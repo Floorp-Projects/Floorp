@@ -38,6 +38,7 @@ LIBRARY_NAME=baseembed_s
 
 XPIDLSRCS = \
     .\nsIWindowCreator.idl \
+    .\nsIWindowCreator2.idl \
     $(NULL)
 
 CPP_OBJS=											\
