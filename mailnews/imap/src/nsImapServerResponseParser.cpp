@@ -1218,7 +1218,8 @@ void nsImapServerResponseParser::msg_fetch()
 	
 	if (ContinueParse())
 	{
-		if (CurrentResponseUID() && fCurrentLineContainedFlagInfo && fFlagState)
+		if (CurrentResponseUID() && CurrentResponseUID() != nsMsgKey_None 
+                  && fCurrentLineContainedFlagInfo && fFlagState)
 			fFlagState->AddUidFlagPair(CurrentResponseUID(), fSavedFlagInfo);
 
         if (fFetchingAllFlags)
