@@ -55,7 +55,9 @@ nsImageGTK::~nsImageGTK()
   if (nsnull != mAlphaBits) {
     delete[] (PRUint8*)mAlphaBits;
     mAlphaBits = nsnull;
-    gdk_pixmap_unref(mAlphaPixmap);
+    if (nsnull != mAlphaPixmap) {
+      gdk_pixmap_unref(mAlphaPixmap);
+    }
   }
 }
 
@@ -77,8 +79,10 @@ nsresult
   if (nsnull != mAlphaBits) {
     delete[] (PRUint8*)mAlphaBits;
     mAlphaBits = nsnull;
-    gdk_pixmap_unref(mAlphaPixmap);
-    mAlphaPixmap = nsnull;
+    if (nsnull != mAlphaPixmap) {
+      gdk_pixmap_unref(mAlphaPixmap);
+      mAlphaPixmap = nsnull;
+    }
   }
 
   if (24 == aDepth) {
