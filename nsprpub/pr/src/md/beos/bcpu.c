@@ -31,6 +31,11 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
+
+#include "primpl.h"
+
+PR_EXTERN(void) _PR_MD_INIT_CPUS();
+PR_EXTERN(void) _PR_MD_WAKEUP_CPUS();
 PR_EXTERN(void) _PR_MD_START_INTERRUPTS(void);
 PR_EXTERN(void) _PR_MD_STOP_INTERRUPTS(void);
 PR_EXTERN(void) _PR_MD_DISABLE_CLOCK_INTERRUPTS(void);
