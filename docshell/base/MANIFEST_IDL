@@ -23,6 +23,7 @@
 nsCDocShell.idl
 nsIDocShell.idl
 nsIDocShellContainer.idl
+nsIDocShellTreeItem.idl
 nsIDocShellTreeNode.idl
 nsIMarkupDocumentViewer.idl
 nsIScrollable.idl
