@@ -134,20 +134,23 @@ void nsUnicodeFontMappingMac::InitByFontFamily(nsFont* aFont, nsIDeviceContext *
 
 void nsUnicodeFontMappingMac::processOneLangRegion(const char* aLanguage, const char* aRegion )
 {
-	if(! nsCRT::strcmp(aLanguage,"zh")) {
-		if((! nsCRT::strcmp(aRegion,"TW")) || (! nsCRT::strcmp(aRegion,"HK"))) {
-			if(gUtil->ScriptEnabled(smTradChinese))
-				FillVarBlockToScript(smTradChinese, mPrivBlockToScript);
-		} else {
-			if(gUtil->ScriptEnabled(smSimpChinese))
-				FillVarBlockToScript(smSimpChinese, mPrivBlockToScript);
-		}
-	} else if(! nsCRT::strcmp(aLanguage,"ko")) {
-		if(gUtil->ScriptEnabled(smKorean))
-			FillVarBlockToScript(smKorean, mPrivBlockToScript);
-	} else if(! nsCRT::strcmp(aLanguage,"ja")) {
-		if(gUtil->ScriptEnabled(smJapanese))
-			FillVarBlockToScript(smJapanese, mPrivBlockToScript);
+	if(gUtil->ScriptEnabled(smTradChinese) &&
+	   ((! nsCRT::strcmp(aLanguage,"zh")) &&
+	    ((! nsCRT::strcmp(aRegion,"TW")) || (! nsCRT::strcmp(aRegion,"HK"))))) 
+	{
+		FillVarBlockToScript(smTradChinese, mPrivBlockToScript);
+	} 
+	else if(gUtil->ScriptEnabled(smSimpChinese) && (! nsCRT::strcmp(aLanguage,"zh"))) 
+	{
+		FillVarBlockToScript(smSimpChinese, mPrivBlockToScript);
+	} 
+	else if(gUtil->ScriptEnabled(smKorean) && (! nsCRT::strcmp(aLanguage,"ko"))) 
+	{
+		FillVarBlockToScript(smKorean, mPrivBlockToScript);
+	}
+	else if(gUtil->ScriptEnabled(smJapanese) && (! nsCRT::strcmp(aLanguage,"ja"))) 
+	{
+		FillVarBlockToScript(smJapanese, mPrivBlockToScript);
 	}
 }
 //--------------------------------------------------------------------------
@@ -207,8 +210,7 @@ void nsUnicodeFontMappingMac::InitByLANG(const nsString& aLANG)
   			case 2:
   				if(kComma == *p) {
   					processOneLangRegion(language, region);
-				  	language[0]= language[1] = region[0]= region[1] = ' ';
-  					state = 0;
+				  	return;
   				} else if(kUnderline == *p) {
   					state = 3;
   				} else {
@@ -227,8 +229,7 @@ void nsUnicodeFontMappingMac::InitByLANG(const nsString& aLANG)
   			case 5:
   				if(kComma == *p) {
  					processOneLangRegion(language, region);
-				  	language[0]= language[1] = region[0]= region[1] = ' ';
- 					state = 0;
+				  	return;
   				} else {
   					state = -1;
   				}
@@ -245,28 +246,31 @@ void nsUnicodeFontMappingMac::InitByDocumentCharset(const nsString& aDocumentCha
 	// do not countinue if there are no difference to look at the document Charset
 	if( ScriptMapInitComplete() )
 		return;
-  	if (aDocumentCharset.EqualsIgnoreCase("GB2312") ||
+	if(gUtil->ScriptEnabled(smRoman) && aDocumentCharset.EqualsIgnoreCase("ISO-8859-1"))
+  	{
+		FillVarBlockToScript(smRoman, mPrivBlockToScript);		
+  	} else if(gUtil->ScriptEnabled(smSimpChinese) &&
+	   (aDocumentCharset.EqualsIgnoreCase("GB2312") ||
   	    aDocumentCharset.EqualsIgnoreCase("ISO-2022-CN") ||
-  	    aDocumentCharset.EqualsIgnoreCase("ZH") )
+  	    aDocumentCharset.EqualsIgnoreCase("ZH") ))
   	{
-		if(gUtil->ScriptEnabled(smSimpChinese))
-			FillVarBlockToScript(smSimpChinese, mPrivBlockToScript);
-  	} else if(  aDocumentCharset.EqualsIgnoreCase("EUC-KR") ||
-  	   			aDocumentCharset.EqualsIgnoreCase("ISO-2022-KR") )
+		FillVarBlockToScript(smSimpChinese, mPrivBlockToScript);
+  	} else if(gUtil->ScriptEnabled(smKorean) &&
+  	          ( aDocumentCharset.EqualsIgnoreCase("EUC-KR") ||
+  	   			aDocumentCharset.EqualsIgnoreCase("ISO-2022-KR") ))
   	{
-		if(gUtil->ScriptEnabled(smKorean))
-			FillVarBlockToScript(smKorean, mPrivBlockToScript);
-  	} else if( 	aDocumentCharset.EqualsIgnoreCase("Big5") ||
-  	   		   	aDocumentCharset.EqualsIgnoreCase("x-euc-tw") )
+		FillVarBlockToScript(smKorean, mPrivBlockToScript);
+  	} else if(gUtil->ScriptEnabled(smTradChinese) &&
+  	          (	aDocumentCharset.EqualsIgnoreCase("Big5") ||
+  	   		   	aDocumentCharset.EqualsIgnoreCase("x-euc-tw") ))
   	{
-		if(gUtil->ScriptEnabled(smTradChinese))
-			FillVarBlockToScript(smTradChinese, mPrivBlockToScript);
-  	} else if( 	aDocumentCharset.EqualsIgnoreCase("Shift_JIS") ||
+		FillVarBlockToScript(smTradChinese, mPrivBlockToScript);
+  	} else if(gUtil->ScriptEnabled(smJapanese) &&
+  	          ( aDocumentCharset.EqualsIgnoreCase("Shift_JIS") ||
   	    		aDocumentCharset.EqualsIgnoreCase("EUC-JP") ||
-  	     		aDocumentCharset.EqualsIgnoreCase("ISO-2022-JP") )
+  	     		aDocumentCharset.EqualsIgnoreCase("ISO-2022-JP") ))
   	{
-		if(gUtil->ScriptEnabled(smJapanese))
-			FillVarBlockToScript(smJapanese, mPrivBlockToScript);
+		FillVarBlockToScript(smJapanese, mPrivBlockToScript);
   	}
 }
 //--------------------------------------------------------------------------
