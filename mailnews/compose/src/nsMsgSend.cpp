@@ -8,7 +8,6 @@
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgCompose.h"
 #include "nsMsgSendPart.h"
-#include "secrng.h"	/* for RNG_GenerateGlobalRandomBytes() */
 #include "xp_time.h"
 #include "nsMsgSendFact.h"
 #include "nsMsgBaseCID.h"
@@ -72,44 +71,12 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 // defined in msgCompGlue.cpp
 extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
 extern PRBool INTL_stateful_charset(const char *charset);
+
 extern MimeEncoderData * MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
 extern MimeEncoderData * MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
 extern MimeEncoderData * MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
 extern int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
 
-extern "C"
-{
-	extern int MK_MSG_ASSEMBLING_MSG;
-	extern int MK_MSG_ASSEMB_DONE_MSG;
-	extern int MK_MSG_LOAD_ATTACHMNT;
-	extern int MK_MSG_LOAD_ATTACHMNTS;
-	extern int MK_MSG_DELIV_MAIL;
-	extern int MK_MSG_DELIV_MAIL_DONE;
-	extern int MK_MSG_DELIV_NEWS;
-	extern int MK_MSG_DELIV_NEWS_DONE;
-	extern int MK_MSG_QUEUEING;
-	extern int MK_MSG_WRITING_TO_FCC;
-	extern int MK_MSG_QUEUED;
-	extern int MK_MIME_ERROR_WRITING_FILE;
-	extern int MK_MIME_MULTIPART_BLURB;
-	extern int MK_MIME_NO_RECIPIENTS;
-	extern int MK_MIME_NO_SENDER;
-	extern int MK_MSG_COULDNT_OPEN_FCC_FILE;
-	extern int MK_OUT_OF_MEMORY;
-	extern int MK_UNABLE_TO_OPEN_TMP_FILE;
-	extern int MK_MSG_CANT_CREATE_FOLDER;
-	extern int MK_MSG_SAVE_DRAFT;
-	extern int MK_ADDR_BOOK_CARD;
-	extern int MK_MSG_MAC_PROMPT_UUENCODE;
-	extern int MK_MSG_SAVING_AS_DRAFT;
-	extern int MK_MSG_SAVING_AS_TEMPLATE;
-	extern int MK_MSG_UNABLE_TO_SAVE_DRAFT;
-	extern int MK_MSG_UNABLE_TO_SAVE_TEMPLATE;
-	extern int MK_UNABLE_TO_OPEN_FILE;
-	extern int MK_IMAP_UNABLE_TO_SAVE_MESSAGE;
-	extern int MK_IMAP_NO_ONLINE_FOLDER;
-  extern int MK_MSG_FAILED_COPY_OPERATION;
-}
 
 #ifdef XP_MAC
 #include "m_cvstrm.h"
@@ -499,7 +466,9 @@ MSG_DeliverMimeAttachment::~MSG_DeliverMimeAttachment()
 extern "C" char * mime_make_separator(const char *prefix)
 {
 	unsigned char rand_buf[13]; 
+#ifdef UNREADY_CODE  // mscott: I don't think we can do this in the mozilla world...
 	RNG_GenerateGlobalRandomBytes((void *) rand_buf, 12);
+#endif
 
 	return PR_smprintf("------------%s"
 					 "%02X%02X%02X%02X"
@@ -840,8 +809,12 @@ JFD */
 				NS_ASSERTION(UseUUEncode_p(), "not UseUUEncode_p");
 				if (!((nsMsgCompose *) m_mime_delivery_state->m_pane)->m_confirmed_uuencode_p)
 				{
+#ifdef UNREADY_CODE
 					PRBool confirmed = FE_Confirm(m_mime_delivery_state->m_pane->GetContext(), 
 													XP_GetString(MK_MSG_MAC_PROMPT_UUENCODE)); 
+#else
+				PRBool confirmed = PR_TRUE;
+#endif
 
 					// only want to do this once
 					((nsMsgCompose *) m_mime_delivery_state->m_pane)->m_confirmed_uuencode_p = PR_TRUE;
@@ -2362,7 +2335,9 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 
 	NS_ASSERTION (m_attachment_pending_count == 0, "m_attachment_pending_count != 0");
 
+#ifdef UNREADY_CODE
 	FE_Progress(GetContext(), XP_GetString(MK_MSG_ASSEMBLING_MSG));
+#endif
 
 	/* First, open the message file.
 	*/
@@ -2376,9 +2351,11 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	}
 	if (! m_msg_file->is_open()) {
 		status = MK_UNABLE_TO_OPEN_TMP_FILE;
+#ifdef UNREADY_CODE
 		error_msg = PR_smprintf(XP_GetString(status), m_msg_file_name);
 		if (!error_msg)
 			status = MK_OUT_OF_MEMORY;
+#endif
 		goto FAIL;
 	}
 
@@ -2387,7 +2364,9 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 								  MSG_FOLDER_FLAG_TEMPLATES :
 								  MSG_FOLDER_FLAG_DRAFTS );
 		if (status < 0) {
+#ifdef UNREADY_CODE
 			error_msg = PL_strdup (XP_GetString(status));
+#endif
 			goto FAIL;
 		}
 	}
@@ -2561,7 +2540,12 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		if (status < 0)
 			goto FAIL;
 		if (!m_crypto_closure) {
+#ifdef UNREADY_CODE
 			status = toppart->SetBuffer(XP_GetString (MK_MIME_MULTIPART_BLURB));
+#else
+			status = toppart->SetBuffer("string not implemented yet");
+#endif
+
 			if (status < 0)
 				goto FAIL;
 		}
@@ -2764,7 +2748,9 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		m_imapLocalMailDB->AddHdrToDB(m_imapOutgoingParser->m_newMsgHdr, NULL, PR_TRUE);
 	}
 
+#ifdef UNREADY_CODE
 	FE_Progress(GetContext(), XP_GetString(MK_MSG_ASSEMB_DONE_MSG));
+#endif
 
 	if (m_dont_deliver_p && m_message_delivery_done_callback)
 	{
@@ -2873,7 +2859,9 @@ char * msg_generate_message_id (void)
 	const char *host = 0;
 	const char *from = pCompPrefs.GetUserEmail();
 
+#ifdef UNREADY_CODE
 	RNG_GenerateGlobalRandomBytes((void *) &salt, sizeof(salt));
+#endif
 
 	if (from) {
 		host = PL_strchr (from, '@');
@@ -4313,10 +4301,12 @@ int nsMsgSendMimeDeliveryState::HackAttachments(
 		/* Start the URL attachments loading (eventually, an exit routine will
 		call the done_callback). */
 
+#ifdef UNREADY_CODE
 		if (m_attachment_count == 1)
 			FE_Progress(GetContext(), XP_GetString(MK_MSG_LOAD_ATTACHMNT));
 		else
 			FE_Progress(GetContext(), XP_GetString(MK_MSG_LOAD_ATTACHMNTS));
+#endif
 
 		for (i = 0; i < m_attachment_count; i++) {
 			/* This only returns a failure code if NET_GetURL was not called
@@ -4929,7 +4919,9 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 {
 	char *buf, *buf2;
 
+#ifdef UNREADY_CODE
 	FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_MAIL));
+#endif
 
 	buf = (char *) PR_Malloc ((m_fields->GetTo() ? PL_strlen (m_fields->GetTo())  + 10 : 0) +
 						   (m_fields->GetCc() ? PL_strlen (m_fields->GetCc())  + 10 : 0) +
@@ -4975,7 +4967,9 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsNews ()
 		return;
 	}
 
+#ifdef UNREADY_CODE
 	FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_NEWS));
+#endif
 
 	/*  put the filename of the message into the post data field and set a flag
 	  in the URL struct to specify that it is a file.
@@ -5050,10 +5044,12 @@ nsMsgSendMimeDeliveryState::DeliverAsMailExit(URL_Struct *url, int status)
       {
         // If we hit here, the copy operation FAILED and we should at least tell the
         // user that it did fail but the send operation has already succeeded.
+#ifdef UNREADY_CODE
         if (FE_Confirm(GetContext(), XP_GetString(MK_MSG_FAILED_COPY_OPERATION)))
 		{
 			status = MK_INTERRUPTED;
 		}
+#endif
       } 
       else if ( retCode == FCC_ASYNC_SUCCESS )
       {
@@ -5062,7 +5058,9 @@ nsMsgSendMimeDeliveryState::DeliverAsMailExit(URL_Struct *url, int status)
       }
     }
 
+#ifdef UNREADY_CODE
 	  FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_MAIL_DONE));
+#endif
 	  if (m_message_delivery_done_callback)
 		m_message_delivery_done_callback (GetContext(),
 										  m_fe_data, status, NULL);
@@ -5124,10 +5122,12 @@ nsMsgSendMimeDeliveryState::DeliverAsNewsExit(URL_Struct *url, int status)
       {
         // If we hit here, the copy operation FAILED and we should at least tell the
         // user that it did fail but the send operation has already succeeded.
+#ifdef UNREADY_CODE
         if (FE_Confirm(GetContext(), XP_GetString(MK_MSG_FAILED_COPY_OPERATION)))
 		{
 			status = MK_INTERRUPTED;
 		}
+#endif
       } 
       else if ( retCode == FCC_ASYNC_SUCCESS )
       {
@@ -5136,7 +5136,9 @@ nsMsgSendMimeDeliveryState::DeliverAsNewsExit(URL_Struct *url, int status)
       }
     }
 
+#ifdef UNREADY_CODE
 	  FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_NEWS_DONE));
+#endif
 
 	  if (m_message_delivery_done_callback)
 		m_message_delivery_done_callback (GetContext(),
@@ -5189,6 +5191,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  output_file_name = PL_strdup(output_name);
   }
 
+#ifdef UNREADY_CODE
   if (mode == MSG_QueueForLater)
 	FE_Progress (pane->GetContext(), XP_GetString(MK_MSG_QUEUEING));
   else if ( mode == MSG_SaveAsDraft )
@@ -5197,6 +5200,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	FE_Progress (pane->GetContext(), XP_GetString(MK_MSG_SAVING_AS_TEMPLATE));
   else
 	FE_Progress (pane->GetContext(), XP_GetString(MK_MSG_WRITING_TO_FCC));
+#endif
 
   ibuffer = NULL;
   while (!ibuffer && (ibuffer_size >= 1024))
@@ -5236,8 +5240,10 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  pane->GetMaster()->FindMailFolder(output_file_name,
 										PR_TRUE /*createIfMissing*/);
 
+#ifdef UNREADY_CODE
 	  if (-1 == XP_Stat (output_file_name, &st, output_file_type))
 		FE_Alert (pane->GetContext(), XP_GetString(MK_MSG_CANT_CREATE_FOLDER));
+#endif
 	}
 
 
@@ -6167,6 +6173,7 @@ nsMsgSendMimeDeliveryState::SendToImapMagicFolder ( PRUint32 flag )
 	}
 	else
 	{
+#ifdef UNREADY_CODE
 		switch (m_deliver_mode)
 		{
 		case MSG_SaveAsDraft:
@@ -6180,6 +6187,7 @@ nsMsgSendMimeDeliveryState::SendToImapMagicFolder ( PRUint32 flag )
 			FE_Alert(GetContext(), XP_GetString(MK_MSG_COULDNT_OPEN_FCC_FILE));
 			break;
 		}
+#endif
 		Fail(MK_IMAP_UNABLE_TO_SAVE_MESSAGE, 0);	/* -1 rb */
 		ret_code = FCC_FAILURE;
 	}
@@ -6361,11 +6369,13 @@ nsMsgSendMimeDeliveryState::PostListImapMailboxFolder (	URL_Struct *url,
 		   message. If not, then this was not a Send operation and this prompt doesn't make sense. */
 		if (state->m_deliver_mode == MSG_DeliverNow)
 		{
+#ifdef UNREADY_CODE
 			if (FE_Confirm(state->GetContext(), XP_GetString(MK_MSG_FAILED_COPY_OPERATION)))
 			{        
 				state->Fail (MK_INTERRUPTED, 0);
 			}
 			else
+#endif
 			{
 		        // treated as successful close down the compose window
 		        /* The message has now been queued successfully. */
@@ -6453,8 +6463,10 @@ nsMsgSendMimeDeliveryState::PostListImapMailboxFolder (	URL_Struct *url,
 
 				if (status < 0)
 				{
+#ifdef UNREADY_CODE
 					char *error_msg = XP_GetString(status);
 					state->Fail(status, error_msg ? PL_strdup(error_msg) : 0);
+#endif
 					delete state;
 				}
 				else if (!onlineFolderName)
@@ -6573,6 +6585,7 @@ nsMsgSendMimeDeliveryState::PostSendToImapMagicFolder (	URL_Struct *url,
 		   prompt doesn't make sense. */
 		if (state->m_deliver_mode == MSG_DeliverNow)
 		{
+#ifdef UNREADY_CODE
 			if (FE_Confirm(state->GetContext(), 
 						   XP_GetString(MK_MSG_FAILED_COPY_OPERATION)))
 			{
@@ -6580,6 +6593,7 @@ nsMsgSendMimeDeliveryState::PostSendToImapMagicFolder (	URL_Struct *url,
 			}
 			else
 			{
+#endif
 				// treated as successful close down the compose window
 				/* The message has now been queued successfully. */
 				if (state->m_message_delivery_done_callback)
@@ -6715,9 +6729,11 @@ nsMsgSendMimeDeliveryState::SendToMagicFolder ( PRUint32 flag )
   name = msg_MagicFolderName(m_pane->GetMaster()->GetPrefs(), flag, &status);
   if (status < 0)
   {
+#ifdef UNREADY_CODE
 	  char *error_msg = XP_GetString(status);
 	  Fail (status, error_msg ? PL_strdup(error_msg) : 0);
 //JFD don't delete myself	  delete this;
+#endif
 	  PR_FREEIF(name);
 	  return;
   }
@@ -6755,8 +6771,9 @@ nsMsgSendMimeDeliveryState::SendToMagicFolder ( PRUint32 flag )
   else
 	{
 	  MWContext *context = GetContext();
+#ifdef UNREADY_CODE
 	  FE_Progress(context, XP_GetString(MK_MSG_QUEUED));
-
+#endif
 	  // Clear() clears the m_related_part now. So, we need to decide
 	  // whether we need to make an extra all connections complete call or not.
 	  PRBool callAllConnectionsComplete =
