@@ -599,7 +599,7 @@ SWITCH: for ($::FORM{'knob'}) {
                           intentionally cleared out the \"Reassign bug to\" 
                           field, " . Param("browserbugmessage"));
         }
-        my $newid = DBNameToIdAndCheck($::FORM{'assigned_to'});
+        my $newid = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
         $::query .= "assigned_to = $newid";
         last SWITCH;
     };

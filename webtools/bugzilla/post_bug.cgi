@@ -124,7 +124,7 @@ if ($::FORM{'assigned_to'} eq "") {
             "WHERE program=$sql_product AND value=$sql_component");
     $::FORM{'assigned_to'} = FetchOneColumn();
 } else {
-    $::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'});
+    $::FORM{'assigned_to'} = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
 }
 
 my @bug_fields = ("product", "version", "rep_platform",
