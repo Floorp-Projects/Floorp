@@ -2226,7 +2226,6 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
       if (aSelf->mCCMap) {
 #ifdef DEBUG_bzbarsky
           NS_WARNING(nsPrintfCString("\n\ncharset = %s", aSelf->mCharSet).get());
-          nsMemory::Free(atomname);
 #endif /* DEBUG */
   
         /*
