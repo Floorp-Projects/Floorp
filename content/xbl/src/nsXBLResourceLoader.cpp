@@ -95,14 +95,8 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
   nsCOMPtr<imgILoader> il;
   nsCOMPtr<nsICSSLoader> cssLoader;
 
-  nsCOMPtr<nsIXBLDocumentInfo> info = mBinding->GetXBLDocumentInfo(nsnull);
-  if (!info) {
-    mInLoadResourcesFunc = PR_FALSE;
-    return;
-  }
-
   nsCOMPtr<nsIDocument> doc;
-  info->GetDocument(getter_AddRefs(doc));
+  mBinding->XBLDocumentInfo()->GetDocument(getter_AddRefs(doc));
 
   nsIURI *docURL = doc->GetDocumentURI();
 

@@ -218,6 +218,8 @@ static const PRInt32 kInsInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLInsertionPoi
 
 // Implementation /////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(nsXBLPrototypeBinding)
+
 // Constructors/Destructors
 nsXBLPrototypeBinding::nsXBLPrototypeBinding()
 : mImplementation(nsnull),
@@ -230,6 +232,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
   mInsertionPointTable(nsnull),
   mInterfaceTable(nsnull)
 {
+  MOZ_COUNT_CTOR(nsXBLPrototypeBinding);
   gRefCnt++;
 
   if (gRefCnt == 1) {
@@ -263,7 +266,7 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
   mBindingURI = do_QueryInterface(uri, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  mXBLDocInfoWeak = do_GetWeakReference(aInfo);
+  mXBLDocInfoWeak = aInfo;
 
   SetBindingElement(aElement);
   return NS_OK;
@@ -291,6 +294,7 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
     delete kAttrPool;
     delete kInsPool;
   }
+  MOZ_COUNT_DTOR(nsXBLPrototypeBinding);
 }
 
 void
@@ -325,19 +329,10 @@ nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
     mInheritStyle = PR_FALSE;
 }
 
-nsIURI*
-nsXBLPrototypeBinding::DocURI() const
-{
-  nsCOMPtr<nsIXBLDocumentInfo> info = GetXBLDocumentInfo(nsnull);
-  
-  return info->DocumentURI();
-}
-
 nsresult
 nsXBLPrototypeBinding::GetAllowScripts(PRBool* aResult)
 {
-  nsCOMPtr<nsIXBLDocumentInfo> info = GetXBLDocumentInfo(nsnull);
-  return info->GetScriptAccess(aResult);
+  return mXBLDocInfoWeak->GetScriptAccess(aResult);
 }
 
 PRBool
@@ -387,14 +382,6 @@ nsXBLPrototypeBinding::BindingDetached(nsIDOMEventReceiver* aReceiver)
   if (mImplementation && mImplementation->mDestructor)
     return mImplementation->mDestructor->BindingDetached(aReceiver);
   return NS_OK;
-}
-
-already_AddRefed<nsIXBLDocumentInfo>
-nsXBLPrototypeBinding::GetXBLDocumentInfo(nsIContent* aBoundElement) const
-{
-  nsIXBLDocumentInfo* result = nsnull;
-  CallQueryReferent(mXBLDocInfoWeak.get(), &result);  // addrefs
-  return result;
 }
 
 nsXBLPrototypeHandler*

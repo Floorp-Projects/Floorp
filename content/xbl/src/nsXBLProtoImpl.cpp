@@ -143,11 +143,8 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   // We want to pre-compile our implementation's members against a "prototype context". Then when we actually 
   // bind the prototype to a real xbl instance, we'll clone the pre-compiled JS into the real instance's 
   // context.
-  nsCOMPtr<nsIXBLDocumentInfo> docInfo = aBinding->GetXBLDocumentInfo(nsnull);
-  if (!docInfo)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(do_QueryInterface(docInfo));
+  nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(
+      do_QueryInterface(aBinding->XBLDocumentInfo()));
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   globalOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
 
