@@ -76,9 +76,9 @@ nsGrippyFrame::nsGrippyFrame(nsIPresShell* aShell):nsButtonBoxFrame(aShell),mCol
 }
 
 void
-nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext) 
+nsGrippyFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent) 
 {
-    //nsButtonBoxFrame::MouseClicked(aPresContext);
+    nsButtonBoxFrame::MouseClicked(aPresContext, aEvent);
 
     nsIFrame* splitter;
     nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::splitter, this, splitter);
