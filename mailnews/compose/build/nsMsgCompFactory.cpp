@@ -46,7 +46,9 @@
 #include "nsISmtpService.h"
 #include "nsSmtpService.h"
 #include "nsMsgComposeService.h"
+#include "nsMsgComposeContentHandler.h"
 #include "nsMsgCompose.h"
+#include "nsMsgComposeParams.h"
 #include "nsMsgSend.h"
 #include "nsMsgQuote.h"
 #include "nsIMsgDraft.h"
@@ -61,11 +63,13 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpServer);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompose);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeParams);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompFields);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeAndSend);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSendLater);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgDraft)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeContentHandler);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuote);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuoteListener);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl);
@@ -96,9 +100,13 @@ static nsModuleComponentInfo components[] =
     nsMsgComposeService::RegisterProc,
     nsMsgComposeService::UnregisterProc },
   { "mailto content handler",
-     NS_MSGCOMPOSESERVICE_CID,
-     NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-mailto",
-     nsMsgComposeServiceConstructor },
+     NS_MSGCOMPOSECONTENTHANDLER_CID,
+     NS_MSGCOMPOSECONTENTHANDLER_CONTRACTID,
+     nsMsgComposeContentHandlerConstructor },
+  { "Msg Compose Parameters",
+    NS_MSGCOMPOSEPARAMS_CID,
+    NS_MSGCOMPOSEPARAMS_CONTRACTID,
+    nsMsgComposeParamsConstructor },
   { "Msg Compose Fields",
     NS_MSGCOMPFIELDS_CID,
     NS_MSGCOMPFIELDS_CONTRACTID,

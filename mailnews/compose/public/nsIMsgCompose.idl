@@ -23,6 +23,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 #include "nsIMsgCompFields.idl"
+#include "nsIMsgComposeParams.idl"
 #include "nsIEditorShell.idl"
 #include "nsIMsgIdentity.idl"
 
@@ -32,34 +33,6 @@
 #include "nsIEditorShell.h"
 %}
 
-
-typedef long MSG_ComposeType;
-
-[scriptable, uuid(c7035852-7531-11d3-9a73-006008948010)]
-interface nsIMsgCompType {
-    const long New                      = 0;
-    const long Reply                    = 1;
-    const long ReplyAll                 = 2;
-    const long ForwardAsAttachment      = 3;
-    const long ForwardInline            = 4;
-    const long NewsPost		            = 5;
-    const long ReplyToGroup     		= 6;
-    const long ReplyToSenderAndGroup    = 7;
-    const long Draft		            = 8;
-    const long Template		            = 9;
-    const long MailToUrl	            = 10;
-};
-
-
-typedef long MSG_ComposeFormat;
-
-[scriptable, uuid(a28325e8-7531-11d3-8f1c-006008948010)]
-interface nsIMsgCompFormat {
-    const long Default   = 0;
-    const long HTML      = 1;
-    const long PlainText = 2;
-    const long OppositeOfDefault = 3;
-};
 
 typedef long MSG_ComposeSaveType;
 
@@ -119,10 +92,7 @@ interface nsIMsgComposeStateListener : nsISupports
 interface nsIMsgCompose : nsISupports {
 
 	/* ... */
-	void Initialize(in nsIDOMWindowInternal aWindow, in wstring originalMsgURI,
-                    in MSG_ComposeType type, in MSG_ComposeFormat format,
-                    in nsIMsgCompFields compFields,
-                    in nsIMsgIdentity identity); 
+	void Initialize(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams params); 
 
 	/* ... */
 	void SetDocumentCharset(in wstring charset);

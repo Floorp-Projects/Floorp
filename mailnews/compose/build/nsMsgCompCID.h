@@ -41,6 +41,17 @@
   "@mozilla.org/commandlinehandler/general-startup;1?type=compose"
 
 //
+// nsMsgComposeContentHandler
+//
+#define NS_MSGCOMPOSECONTENTHANDLER_CID				  \
+{ /* 0B63FB80-BBBA-11D4-9DAA-91B657EB313C */    \
+0x0b63fb80, 0xbbba, 0x11d4,                     \
+ {0x9d, 0xaa, 0x91, 0xb6, 0x57, 0xeb, 0x31, 0x3c}}
+
+#define NS_MSGCOMPOSECONTENTHANDLER_CONTRACTID  \
+  NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-mailto"
+
+//
 // nsMsgCompose
 //
 #define NS_MSGCOMPOSE_CONTRACTID \
@@ -50,6 +61,17 @@
 { /* EB5BDAF8-BBC6-11d2-A6EC-0060B0EB39B5 */      \
  0xeb5bdaf8, 0xbbc6, 0x11d2,                      \
  {0xa6, 0xec, 0x0, 0x60, 0xb0, 0xeb, 0x39, 0xb5}}
+
+//
+// nsMsgComposeParams
+//
+#define NS_MSGCOMPOSEPARAMS_CONTRACTID \
+  "@mozilla.org/messengercompose/composeparams;1"
+
+#define NS_MSGCOMPOSEPARAMS_CID						  \
+{ /* CB998A00-C079-11D4-9DAA-8DF64BAB2EFC */      \
+ 0xcb998a00, 0xc079, 0x11d4,                      \
+ {0x9d, 0xaa, 0x8d, 0xf6, 0x4b, 0xab, 0x2e, 0xfc}}
 
 //
 // nsMsgCompFields

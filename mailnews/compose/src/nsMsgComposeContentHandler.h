@@ -24,7 +24,7 @@
 #include "nsISupportsArray.h"
 #include "nsIContentHandler.h"
 
-class nsMsgComposeContentHandler : public nsISupports, public nsIContentHandler
+class nsMsgComposeContentHandler : public nsIContentHandler
 {
 public: 
 	nsMsgComposeContentHandler();

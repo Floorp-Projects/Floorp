@@ -31,84 +31,79 @@
 #include "nsIMsgIdentity.h"
 #include "nsISmtpUrl.h"
 #include "nsIURI.h"
-#include "nsIChannel.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgDraft.h"
+#include "nsIMsgComposeParams.h"
 #include "nsEscape.h"
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
-static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
-static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
 
 nsMsgComposeService::nsMsgComposeService()
 {
-	nsresult rv;
-
 	NS_INIT_REFCNT();
-    rv = NS_NewISupportsArray(getter_AddRefs(m_msgQueue));
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS3(nsMsgComposeService, nsIMsgComposeService, nsIContentHandler,nsICmdLineHandler);
+NS_IMPL_ISUPPORTS2(nsMsgComposeService, nsIMsgComposeService, nsICmdLineHandler);
 
 nsMsgComposeService::~nsMsgComposeService()
 {
 }
 
-// Utility function to open a message compose window and pass an argument string to it.
-static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
-    nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-    JSContext *jsContext;
-    nsresult rv;
-    NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
-    if ( NS_SUCCEEDED( rv ) ) {
-        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                    &jsContext );
-        if ( NS_SUCCEEDED( rv ) ) {
-            // Set up arguments for "window.openDialog"
-            void *stackPtr;
-            jsval *argv = JS_PushArguments( jsContext,
-                                            &stackPtr,
-                                            "WssW",
-                                            chrome,
-                                            "_blank",
-                                            "chrome,dialog=no,all",
-                                            args );
-            if ( argv ) {
-                nsCOMPtr<nsIDOMWindowInternal> newWindow;
-                rv = hiddenWindow->OpenDialog( jsContext,
-                                               argv,
-                                               4,
-                                               getter_AddRefs( newWindow ) );
-                JS_PopArguments( jsContext, stackPtr );
-            }
-        }
+// Utility function to open a message compose window and pass an nsIMsgComposeParams parameter to it.
+static nsresult openWindow( const PRUnichar *chrome, nsIMsgComposeParams *params )
+{
+  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
+  JSContext *jsContext;
+  nsresult rv;
+
+  nsCOMPtr<nsIAppShellService> appShell (do_GetService(kAppShellServiceCID));
+  if (appShell)
+  {
+    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow), &jsContext);
+    if (NS_SUCCEEDED(rv))
+    {
+      // Set up arguments for "window.openDialog"
+      void *stackPtr;
+      jsval *argv = JS_PushArguments( jsContext,
+                                      &stackPtr,
+                                      "Wss%ip",
+                                      chrome,
+                                      "_blank",
+                                      "chrome,dialog=no,all",
+                                      (const nsIID*) (&NS_GET_IID(nsIMsgComposeParams)),
+                                      (nsISupports*) params);
+      if (argv)
+      {
+        nsCOMPtr<nsIDOMWindowInternal> newWindow;
+        rv = hiddenWindow->OpenDialog(jsContext,
+                                      argv,
+                                      4,
+                                      getter_AddRefs(newWindow));
+                                      JS_PopArguments(jsContext, stackPtr);
+      }
     }
-    return rv;
+  }
+  return rv;
 }
 
 nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI,
 	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity)
 {
-	nsAutoString args;
 	nsresult rv;
 	
 	/* Actually, the only way to implement forward inline is to simulate a template message. 
 	   Maybe one day when we will have more time we can change that
 	*/
-	if (type == nsIMsgCompType::ForwardInline || type == nsIMsgCompType::Draft || type == nsIMsgCompType::Template)
+  if (type == nsIMsgCompType::ForwardInline || type == nsIMsgCompType::Draft || type == nsIMsgCompType::Template)
 	{
-	    nsCOMPtr<nsIMsgDraft> pMsgDraft;
-	    rv = nsComponentManager::CreateInstance(kMsgDraftCID,
-	                                 nsnull,
-	                                 NS_GET_IID(nsIMsgDraft), 
-	                                 getter_AddRefs(pMsgDraft));
-	    if (NS_SUCCEEDED(rv) && pMsgDraft)
+    nsCOMPtr<nsIMsgDraft> pMsgDraft (do_CreateInstance(NS_MSGDRAFT_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv) && pMsgDraft)
 		{
-        nsAutoString uriToOpen(originalMsgURI);
-        uriToOpen.Append((const PRUnichar*)
-               NS_LITERAL_STRING("?fetchCompleteMessage=true").get()); 
+      nsAutoString uriToOpen(originalMsgURI);
+      uriToOpen.Append((const PRUnichar*)
+             NS_LITERAL_STRING("?fetchCompleteMessage=true").get()); 
 
 			switch(type)
 			{
@@ -122,67 +117,56 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	    			rv = pMsgDraft->OpenEditorTemplate(uriToOpen.GetUnicode(), nsnull, identity);
 					break;
 			}
-
 		}
 		return rv;
 	}
-
-	args.Append((const PRUnichar*) NS_LITERAL_STRING("type=").get());
-	args.AppendInt(type);
-
-	args.Append((const PRUnichar*) NS_LITERAL_STRING(",format=").get());
-	args.AppendInt(format);
-
-	if (identity) {
-		nsXPIDLCString key;
-		rv = identity->GetKey(getter_Copies(key));
-		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
-			args.Append((const PRUnichar*) NS_LITERAL_STRING(",preselectid=").get());
-			args.AppendWithConversion(key);
-		}
-	}
-
-	if (originalMsgURI && *originalMsgURI)
-	{
-		if (type == nsIMsgCompType::NewsPost) 
+	
+  nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv) && pMsgComposeParams)
+  {
+    nsCOMPtr<nsIMsgCompFields> pMsgCompFields (do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv) && pMsgCompFields)
     {
-      nsAutoString newsURI;
-      nsAutoString group;
-      nsAutoString host;
+      pMsgComposeParams->SetType(type);
+      pMsgComposeParams->SetFormat(format);
+      pMsgComposeParams->SetIdentity(identity);
       
-      newsURI.Assign(originalMsgURI);
-      PRInt32 slashpos = newsURI.FindChar('/');
-      if (slashpos > 0 ) {
-        // uri is "host/group"
-        newsURI.Left(host, slashpos);
-        newsURI.Right(group, newsURI.Length() - slashpos - 1);
-      }
-      else
-        group.Assign(originalMsgURI);
+  	  if (originalMsgURI && *originalMsgURI)
+  		  if (type == nsIMsgCompType::NewsPost) 
+        {
+          nsAutoString newsURI;
+          nsAutoString group;
+          nsAutoString host;
+        
+          newsURI.Assign(originalMsgURI);
+          PRInt32 slashpos = newsURI.FindChar('/');
+          if (slashpos > 0 )
+          {
+            // uri is "host/group"
+            newsURI.Left(host, slashpos);
+            newsURI.Right(group, newsURI.Length() - slashpos - 1);
+          }
+          else
+            group.Assign(originalMsgURI);
+
+          
+          pMsgCompFields->SetNewsgroups(group.GetUnicode());
+          pMsgCompFields->SetNewshost(host.GetUnicode());
+  		}
+  		else
+        pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
+        
+      pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
 
-			args.Append((const PRUnichar*) NS_LITERAL_STRING(",newsgroups=").get());
-			args.Append(group);
-      if (host.Length() > 0)
-      {
-        args.Append((const PRUnichar*) NS_LITERAL_STRING(",newshost=").get());
-        args.Append(host);
-      }
-		}
-		else {
-			args.Append((const PRUnichar*)
-                  NS_LITERAL_STRING(",originalMsg='").get());
-			args.Append(originalMsgURI);
-			args.Append((const PRUnichar*) NS_LITERAL_STRING("'").get());
-		}
-	}
-	
-	if (msgComposeWindowURL && *msgComposeWindowURL)
-        rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
-	else
-        rv = openWindow( NS_ConvertASCIItoUCS2("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
-                         args.GetUnicode() );
-	
+	    if (msgComposeWindowURL && *msgComposeWindowURL)
+        rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
+	    else
+        rv = openWindow(NS_ConvertASCIItoUCS2("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
+                        pMsgComposeParams);
+    }
+  }
+
 	return rv;
 }
 
@@ -248,25 +232,21 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 														  nsIMsgIdentity *identity)
 {
 	nsresult rv;
-	nsCOMPtr<nsIMsgCompFields> pCompFields;
-    rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID,
-                                 nsnull,
-                                 NS_GET_IID(nsIMsgCompFields), 
-                                 getter_AddRefs(pCompFields));
-    if (NS_SUCCEEDED(rv) && pCompFields)
-    {
-		if (to)			{pCompFields->SetTo(to);}
-		if (cc)			{pCompFields->SetCc(cc);}
-		if (bcc)		{pCompFields->SetBcc(bcc);}
+  nsCOMPtr<nsIMsgCompFields> pCompFields (do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv) && pCompFields)
+  {
+		if (to)			    {pCompFields->SetTo(to);}
+		if (cc)			    {pCompFields->SetCc(cc);}
+		if (bcc)		    {pCompFields->SetBcc(bcc);}
 		if (newsgroups)	{pCompFields->SetNewsgroups(newsgroups);}
-		if (subject)	{pCompFields->SetSubject(subject);}
+		if (subject)	  {pCompFields->SetSubject(subject);}
 		if (attachment)	{pCompFields->SetAttachments(attachment);}
-		if (body)		{pCompFields->SetBody(body);}
+		if (body)		    {pCompFields->SetBody(body);}
 	
 		rv = OpenComposeWindowWithCompFields(msgComposeWindowURL, type, format, pCompFields, identity);
-    }
+  }
     
-    return rv;
+  return rv;
 }
 
 nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *msgComposeWindowURL,
@@ -275,48 +255,28 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 														  nsIMsgCompFields *compFields,
 														  nsIMsgIdentity *identity)
 {
-	nsAutoString args;
 	nsresult rv;
 
-	args.Append((const PRUnichar*) NS_LITERAL_STRING("type=").get());
-	args.AppendInt(type);
+  nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv) && pMsgComposeParams)
+  {
+      pMsgComposeParams->SetType(type);
+      pMsgComposeParams->SetFormat(format);
+      pMsgComposeParams->SetIdentity(identity);
+      pMsgComposeParams->SetComposeFields(compFields);    
 
-	args.Append((const PRUnichar*) NS_LITERAL_STRING(",format=").get());
-	args.AppendInt(format);
-	
-	if (compFields)
-	{
-		NS_ADDREF(compFields);
-		args.Append((const PRUnichar*) NS_LITERAL_STRING(",fieldsAddr=").get());
-    args.AppendInt((PRInt32)compFields, 10);
-	}
+	    if (msgComposeWindowURL && *msgComposeWindowURL)
+        rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
+	    else
+        rv = openWindow(NS_ConvertASCIItoUCS2("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
+                        pMsgComposeParams);
+  }
 
-	if (identity) {
-		nsXPIDLCString key;
-		rv = identity->GetKey(getter_Copies(key));
-		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
-			args.Append((const PRUnichar*) NS_LITERAL_STRING(",preselectid=").get());
-			args.AppendWithConversion(key);
-		}
-	}
-	if (msgComposeWindowURL && *msgComposeWindowURL)
-        rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
-	else
-        rv = openWindow( NS_ConvertASCIItoUCS2("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
-                         args.GetUnicode() );
-
-    if (NS_FAILED(rv))
-		NS_IF_RELEASE(compFields);
-    	
 	return rv;
 }
 
 nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
-                                          const PRUnichar *originalMsgURI,
-                                          PRInt32 type,
-                                          PRInt32 format,
-                                          PRInt32 compFieldsAddr,
-                                          nsIMsgIdentity *identity,
+                                          nsIMsgComposeParams *params,
                                           nsIMsgCompose **_retval)
 {
 	nsresult rv;
@@ -327,13 +287,7 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 	                                        (void **) &msgCompose);
 	if (NS_SUCCEEDED(rv) && msgCompose)
 	{
-// ducarroz: I am not quite sure than dynamic_cast is supported on all platforms/compilers!
-//		nsIMsgCompFields* compFields = dynamic_cast<nsIMsgCompFields *>((nsIMsgCompFields *)compFieldsAddr);
-		nsIMsgCompFields* compFields = (nsIMsgCompFields *)compFieldsAddr;
-		msgCompose->Initialize(aWindow, originalMsgURI, type, format,
-                           compFields, identity);
-		NS_IF_RELEASE(compFields);
-		m_msgQueue->AppendElement(msgCompose);
+		msgCompose->Initialize(aWindow, params);
 		*_retval = msgCompose;
 	}
 	
@@ -341,48 +295,9 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 }
 
 
-nsresult nsMsgComposeService::DisposeCompose(nsIMsgCompose *compose, PRBool closeWindow)
+nsresult nsMsgComposeService::DisposeCompose(nsIMsgCompose *compose)
 {
-	PRInt32 i = m_msgQueue->IndexOf(compose);
-	if (i >= 0)
-	{
-		m_msgQueue->RemoveElementAt(i);
-		
-    // rhp: Commenting out for now to cleanup compile warning...
-		// if (closeWindow)
-			;//TODO
-
-
-		// comment copied from nsMessenger.cpp. It's the same issue.
-    // ** clean up
-    // *** jt - We seem to have one extra ref count. I have no idea where it
-    // came from. This could be the global object we created in commandglue.js
-    // which causes us to have one more ref count. Call Release() here
-    // seems the right thing to do. This gurantees the nsMessenger instance
-    // gets deleted after we close down the messenger window.
-    
-    // smfr the one extra refcount is the result of a bug 8555, which I have 
-    // checked in a fix for. So I'm commenting out this extra release.
-		//NS_RELEASE(compose);
-	}
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgComposeService::HandleContent(const char * aContentType, const char * aCommand,
-                                                const char * aWindowTarget, nsISupports * aWindowContext, nsIChannel * aChannel)
-{
-  nsresult rv = NS_OK;
-  if (!aChannel) return NS_ERROR_NULL_POINTER;
-
-  // First of all, get the content type and make sure it is a content type we know how to handle!
-  if (nsCRT::strcasecmp(aContentType, "x-application-mailto") == 0) {
-      nsCOMPtr<nsIURI> aUri;
-      rv = aChannel->GetURI(getter_AddRefs(aUri));
-      if (aUri)
-         rv = OpenComposeWindowWithURI(nsnull, aUri);
-  }
-
-  return rv;
 }
 
 CMDLINEHANDLER_IMPL(nsMsgComposeService,"-compose","general.startup.messengercompose","chrome://messenger/content/messengercompose/messengercompose.xul","Start with messenger compose.",NS_MSGCOMPOSESTARTUPHANDLER_CONTRACTID,"Messenger Compose Startup Handler", PR_TRUE, "about:blank", PR_TRUE)

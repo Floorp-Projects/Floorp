@@ -75,20 +75,15 @@
 #include "nsIPrompt.h"
 
 // Defines....
-static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
-static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgRecipientArrayCID, NS_MSGRECIPIENTARRAY_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static PRInt32 GetReplyOnTop()
 {
 	PRInt32 reply_on_top = 1;
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-  	if (NS_SUCCEEDED(rv))
+	nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+  if (prefs)
 		prefs->GetIntPref("mailnews.reply_on_top", &reply_on_top);
 	return reply_on_top;
 }
@@ -97,7 +92,7 @@ static nsresult RemoveDuplicateAddresses(const char * addresses, const char * an
 {
 	nsresult rv;
 
-	nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);;
+	nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
 	if (parser)
 		rv= parser->RemoveDuplicateAddresses(msgCompHeaderInternalCharset(), addresses, anothersAddresses, removeAliasesToMe, newAddress);
 	else
@@ -135,9 +130,8 @@ nsMsgCompose::nsMsgCompose()
   // For TagConvertible
   // Read and cache pref
   mConvertStructs = PR_FALSE;
-  nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-  if (NS_SUCCEEDED(rv) && prefs)
+	nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+  if (prefs)
     prefs->GetBoolPref("converter.html2txt.structs", &mConvertStructs);
 
 	m_composeHTML = PR_FALSE;
@@ -392,15 +386,13 @@ nsMsgCompose::QuotingToFollow(void)
 }
 
 nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
-                                  const PRUnichar *originalMsgURI,
-                                  MSG_ComposeType type,
-                                  MSG_ComposeFormat format,
-                                  nsIMsgCompFields *compFields,
-                                  nsIMsgIdentity *identity)
+                                  nsIMsgComposeParams *params)
 {
-	nsresult rv = NS_OK;
+	nsresult rv;
 
-  m_identity = identity;
+  NS_ENSURE_ARG(params);
+
+  params->GetIdentity(getter_AddRefs(m_identity));
 
 	if (aWindow)
 	{
@@ -419,10 +411,22 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
     m_baseWindow = do_QueryInterface(treeOwner);
   }
 	
+	MSG_ComposeFormat format;
+	params->GetFormat(&format);
+	
+  MSG_ComposeType type;
+  params->GetType(&type);
+
+  nsXPIDLString originalMsgURI;
+  params->GetOriginalMsgURI(getter_Copies(originalMsgURI));
+  
+  nsCOMPtr<nsIMsgCompFields> composeFields;
+  params->GetComposeFields(getter_AddRefs(composeFields));
+
 	switch (format)
 	{
-		case nsIMsgCompFormat::HTML		: m_composeHTML = PR_TRUE;					break;
-		case nsIMsgCompFormat::PlainText	: m_composeHTML = PR_FALSE;					break;
+		case nsIMsgCompFormat::HTML             : m_composeHTML = PR_TRUE;					break;
+		case nsIMsgCompFormat::PlainText        : m_composeHTML = PR_FALSE;					break;
     case nsIMsgCompFormat::OppositeOfDefault:
       /* ask the identity which compose to use */
       if (m_identity) m_identity->GetComposeHtml(&m_composeHTML);
@@ -430,15 +434,13 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
       m_composeHTML = !m_composeHTML;
       break;
     default							:
-      /* ask the identity which compose to use */
+      /* ask the identity which compose format to use */
       if (m_identity) m_identity->GetComposeHtml(&m_composeHTML);
       break;
 
 	}
 
-	 CreateMessage(originalMsgURI, type, format, compFields);
-
-	return rv;
+  return CreateMessage(originalMsgURI, type, format, composeFields);
 }
 
 nsresult nsMsgCompose::SetDocumentCharset(const PRUnichar *charset) 
@@ -507,7 +509,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     identity->GetOrganization(getter_Copies(organization));
     
 	char * sender = nsnull;
-	nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+	nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
   if (parser) {
     // convert to UTF8 before passing to MakeFullAddress
     nsAutoString fullNameStr(fullName);
@@ -976,7 +978,7 @@ nsresult nsMsgCompose::GetComposeHTML(PRBool *aComposeHTML)
 nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 {
   nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
   
   return prefs->GetIntPref("mailnews.wraplength", aWrapLength);
@@ -989,11 +991,11 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 {
   nsresult rv = NS_OK;
 
-    mType = type;
+  mType = type;
 	if (compFields)
 	{
 		if (m_compFields)
-			rv = m_compFields->Copy(compFields);
+			rv = m_compFields->Copy(compFields); //TODO: we should not doing a copy, it's a waste of time!!!
 	}
 	
 	if (m_identity)
@@ -1038,8 +1040,9 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 	    m_compFields->SetBcc(bccStr.GetUnicode());
 	}
 
-  // If we were passed in fields, we can return now, otherwise, more work to do
-  if (compFields) return rv;
+  // If we don't have an original message URI, nothing else to do...
+  if (!originalMsgURI || *originalMsgURI == 0)
+    return rv;
   
     /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
     /* we need to extract only the first URI*/
@@ -1086,7 +1089,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           // HACK: if we are replying to a message and that message used a charset over ride
           // (as speciifed in the top most window (assuming the reply originated from that window)
           // then use that over ride charset instead of the charset specified in the message
-	        nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID);          
+	        nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(NS_MSGMAILSESSION_CONTRACTID));          
           if (mailSession)
           {
             nsCOMPtr<nsIMsgWindow>    msgWindow;
@@ -1195,7 +1198,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
       {
         nsCString unencodedURL(myGetter);
              // would be nice, if nsXPIDL*String were ns*String
-        NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv)
+        nsCOMPtr<nsIIOService> serv (do_GetService(kIOServiceCID, &rv));
         if (!unencodedURL.IsEmpty() && NS_SUCCEEDED(rv) && serv)
         {
           if (NS_SUCCEEDED(serv->Escape(unencodedURL.GetBuffer(),
@@ -1218,7 +1221,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
       if (NS_SUCCEEDED(rv))
       {
         char * authorName = nsnull;
-        nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+        nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
 
         if (parser)
         {
@@ -1553,15 +1556,13 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   mQuotingToFollow = PR_FALSE;
   
   // Create a mime parser (nsIStreamConverter)!
-  rv = nsComponentManager::CreateInstance(kMsgQuoteCID, 
-                                          NULL, NS_GET_IID(nsIMsgQuote), 
-                                          (void **) getter_AddRefs(mQuote)); 
+  mQuote = do_CreateInstance(NS_MSGQUOTE_CONTRACTID, &rv);
   if (NS_FAILED(rv) || !mQuote)
     return NS_ERROR_FAILURE;
 
   PRBool bAutoQuote = PR_TRUE;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-  if (NS_SUCCEEDED(rv))
+	nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+  if (prefs)
     prefs->GetBoolPref("mail.auto_quote", &bAutoQuote);
 
   // Create the consumer output stream.. this will receive all the HTML from libmime
@@ -2310,12 +2311,12 @@ static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase,
 	if (!aDatabase || !aDirectory)
 		return NS_ERROR_NULL_POINTER;
 
-	nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
-  if (NS_SUCCEEDED(rv))
+  nsresult rv;
+  nsCOMPtr<nsIAddressBook> addresBook (do_GetService(NS_ADDRESSBOOK_CONTRACTID)); 
+  if (addresBook)
     rv = addresBook->GetAbDatabaseFromURI(dbUri, aDatabase);
 
-	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdfService (do_GetService(kRDFServiceCID, &rv));
 	if (NS_FAILED(rv)) 
 		return rv;
 
@@ -2337,7 +2338,7 @@ nsresult nsMsgCompose::GetABDirectories(const char * dirUri, nsISupportsArray* d
     collectedAddressbookFound = PR_FALSE;
 
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	nsCOMPtr<nsIRDFService> rdfService (do_GetService(kRDFServiceCID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr <nsIRDFResource> resource;
@@ -2522,8 +2523,7 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
       nsXPIDLString addr;
 			addressArray->GetCount(&nbrRecipients);
 
-      rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
-                  NS_GET_IID(nsISupportsArray), getter_AddRefs(recipientsList[i]));
+      recipientsList[i] = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
       if (NS_FAILED(rv))
         return rv;
 
@@ -2559,16 +2559,12 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
   nsCOMPtr<nsIAbDirectory> abDirectory;   
   nsCOMPtr <nsIAbCard> existingCard;
   nsCOMPtr <nsISupportsArray> mailListAddresses;
-  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
-  nsCOMPtr<nsISupportsArray> mailListArray;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
-              NS_GET_IID(nsISupportsArray), getter_AddRefs(mailListArray));
+  nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
+  nsCOMPtr<nsISupportsArray> mailListArray (do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsISupportsArray> addrbookDirArray;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
-                NS_GET_IID(nsISupportsArray), getter_AddRefs(addrbookDirArray));
+  nsCOMPtr<nsISupportsArray> addrbookDirArray (do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && addrbookDirArray)
   {
     nsString dirPath;
@@ -3316,7 +3312,7 @@ nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbD
 {
   NS_INIT_ISUPPORTS();
  
-  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+  nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
 
   if (parser)
   {

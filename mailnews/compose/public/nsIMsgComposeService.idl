@@ -24,6 +24,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 #include "nsIMsgCompose.idl"
+#include "nsIMsgComposeParams.idl"
 #include "nsIMsgIdentity.idl"
 
 interface nsIURI;
@@ -57,12 +58,9 @@ interface nsIMsgComposeService : nsISupports {
 
 	/* ... */
 	nsIMsgCompose InitCompose(in nsIDOMWindowInternal aWindow,
-                              in wstring originalMsgURI,
-                              in long type, in long format,
-                              in long compFieldsAddr,
-                              in nsIMsgIdentity identity);
+                              in nsIMsgComposeParams params);
 
 	/* ... */
-	void DisposeCompose(in nsIMsgCompose compose, in boolean closeWindow);	
+	void DisposeCompose(in nsIMsgCompose compose);	
 };
 

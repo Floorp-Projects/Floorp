@@ -48,6 +48,8 @@ CPPSRCS		= \
 		nsMsgAttachmentHandler.cpp \
 		nsMsgPrompts.cpp \
 		nsMsgComposeService.cpp \
+		nsMsgComposeParams.cpp \
+		nsMsgComposeContentHandler.cpp \
 		nsMsgCompose.cpp \
 		nsMsgQuote.cpp \
 		nsMsgRecipientArray.cpp \
@@ -70,6 +72,8 @@ EXPORTS		= \
 		nsMsgEncoders.h \
 		nsMsgCompUtils.h \
 		nsMsgComposeService.h \
+		nsMsgComposeParams.h \
+		nsMsgComposeContentHandler.h \
 		nsMsgCompose.h \
 		nsMsgCompFields.h \
 		nsMsgAttachmentHandler.h \

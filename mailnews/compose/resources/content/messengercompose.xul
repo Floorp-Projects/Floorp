@@ -179,10 +179,6 @@
 
 <broadcaster id="args" value="editorType=default"/>
 
-<!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
-<broadcaster id="dialog.start" ready="false"/>
-<observes element="dialog.start" attribute="ready" onbroadcast="ComposeStartup()"/>
-
 <popupset>
 	<popup id="TextColorPopup"/>
 	<popup id="BackColorPopup"/>

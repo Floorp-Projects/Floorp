@@ -2965,7 +2965,10 @@ nsMsgComposeAndSend::Fail(nsIPrompt * aPrompt, nsresult failure_code, const PRUn
       if (mGUINotificationEnabled)
       {
 	      if (!error_msg)
-	        nsMsgDisplayMessageByID(aPrompt, failure_code);
+	      {
+         if (NS_FAILED(nsMsgDisplayMessageByID(aPrompt, failure_code)))
+            nsMsgDisplayMessageByID(aPrompt, NS_ERROR_SEND_FAILED);
+	      }
 	      else
 	        nsMsgDisplayMessageByString(aPrompt, error_msg);
       }

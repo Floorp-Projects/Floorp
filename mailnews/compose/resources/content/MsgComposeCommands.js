@@ -22,6 +22,7 @@ var msgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
 var msgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
 var msgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
 var msgCompType = Components.interfaces.nsIMsgCompType;
+var msgCompFormat = Components.interfaces.nsIMsgCompFormat;
 
 var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
 var accountManager = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
@@ -200,6 +201,8 @@ var defaultController =
   {
     //For some reason, when editor has the focus, focusedElement is null!.
     var focusedElement = top.document.commandDispatcher.focusedElement;
+    
+    var composeHTML = msgCompose && msgCompose.composeHTML;
 
     switch (command)
     {
@@ -233,7 +236,7 @@ var defaultController =
       case "cmd_showComposeToolbar":
         return true;
       case "cmd_showFormatToolbar":
-        return msgCompose.composeHTML;
+        return composeHTML;
 
       //Insert Menu
       case "cmd_insert":
@@ -255,11 +258,11 @@ var defaultController =
       case "cmd_spelling":
         return !focusedElement;
       case "cmd_outputFormat":
-        return msgCompose.composeHTML;
+        return composeHTML;
 //      case "cmd_quoteMessage":
 //        return mailSession && mailSession.topmostMsgWindow;
       case "cmd_rewrap":
-        return !msgCompose.composeHTML && !focusedElement;
+        return !composeHTML && !focusedElement;
       
       //Format Menu
       case "cmd_format":
@@ -400,7 +403,7 @@ function CommandUpdate_MsgCompose()
   goUpdateCommand("cmd_showFormatToolbar");
   
   //Insert Menu
-  if (msgCompose.composeHTML)
+  if (msgCompose && msgCompose.composeHTML)
   {
     goUpdateCommand("cmd_insert");
     goUpdateCommand("cmd_link");
@@ -412,11 +415,8 @@ function CommandUpdate_MsgCompose()
     goUpdateCommand("cmd_insertChars");
     goUpdateCommand("cmd_insertBreak");
     goUpdateCommand("cmd_insertBreakAll");
-  }
   
-  //Format Menu
-  if (msgCompose.composeHTML)
-  {
+    //Format Menu
     goUpdateCommand("cmd_format");
     goUpdateCommand("cmd_decreaseFont");
     goUpdateCommand("cmd_increaseFont");
@@ -513,10 +513,14 @@ function ToggleWindowLock()
   CommandUpdate_MsgCompose();
 }
 
-function GetArgs()
+/* This function will go away soon as now arguments are passed to the window using a object of type nsMsgComposeParams instead of a string */
+function GetArgs(originalData)
 {
 	var args = new Object();
-	var originalData = document.getElementById("args").getAttribute("value");
+	
+	if (originalData == "")
+	  return null;
+
 	var data = "";
 	var separator = String.fromCharCode(1);
 
@@ -605,51 +609,91 @@ function ComposeStartup()
 {
 	dump("Compose: ComposeStartup\n");
 
-	//dump("Get arguments\n");
-	var args = GetArgs();
-
-    //dump("fill in Identity menulist\n");
-    var identityList = document.getElementById("msgIdentity");
-    var identityListPopup = document.getElementById("msgIdentityPopup");
-
-    if (identityListPopup) {
-        fillIdentityListPopup(identityListPopup);
+  var params = null; // New way to pass parameters to the compose window as a nsIMsgComposeParameters object
+  var args = null;   // old way, parameters are passed as a string
+  
+  if (window.arguments && window.arguments[0])
+  {
+    try {
+      params = window.arguments[0].QueryInterface(Components.interfaces.nsIMsgComposeParams);
     }
+    catch(ex){}
+    if (params == null)
+	    args = GetArgs(window.arguments[0]);
+  }
+    
+  //dump("fill in Identity menulist\n");
+  var identityList = document.getElementById("msgIdentity");
+  var identityListPopup = document.getElementById("msgIdentityPopup");
 
-    var identity = null;
-    if (args.preselectid)
-        identity = getIdentityForKey(args.preselectid);
+  if (identityListPopup) {
+    fillIdentityListPopup(identityListPopup);
+  }
+
+  if (!params)
+  {
+    /* This code will go away soon as now arguments are passed to the window using a object of type nsMsgComposeParams instead of a string */
+
+    params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
+    params.composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
+    
+    if (args) //Convert old fashion arguments into params
+    {
+      var composeFields = params.composeFields;
+      if (args.bodyislink == "true")
+        params.bodyIsLink = true;
+      if (args.type)
+        params.type = args.type;
+      if (args.format)
+        params.format = args.format;
+      if (args.originalMsg)
+        params.originalMsgURI = args.originalMsg;
+      if (args.preselectid)
+        params.identity = getIdentityForKey(args.preselectid);
+  		if (args.to)
+  			composeFields.SetTo(args.to);
+  		if (args.cc)
+  			composeFields.SetCc(args.cc);
+  		if (args.bcc)
+  			composeFields.SetBcc(args.bcc);
+  		if (args.newsgroups)
+  			composeFields.SetNewsgroups(args.newsgroups);
+  		if (args.subject)
+  			composeFields.SetSubject(args.subject);
+  		if (args.attachment)
+  			composeFields.SetAttachments(args.attachment);
+			if (args.newshost)
+				composeFields.SetNewshost(args.newshost);
+			if (args.body)
+         composeFields.SetBody(args.body);
+    }
+  }
+  
+  if (params.identity == null) {
+    // no pre selected identity, so use the default account
+    var identities = accountManager.defaultAccount.identities;
+    if (identities.Count() >= 1)
+      params.identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
     else
     {
-       // no preselect, so use the default account
-       var identities = accountManager.defaultAccount.identities;      
-      if (identities.Count() >= 1)
-    	  identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
-    	else
-    	{
-        identities = GetIdentities();
-        identity = identities[0];
-      }	  
-    }
-   
-    for (i=0;i<identityListPopup.childNodes.length;i++) {
-        var item = identityListPopup.childNodes[i];
-        var id = item.getAttribute('id');
-        if (id == identity.key) {
-            identityList.selectedItem = item;
-            break;
-        }
-    }
-    LoadIdentity(true);
+      identities = GetIdentities();
+      params.identity = identities[0];
+    }	  
+  }
 
+  for (i = 0; i < identityListPopup.childNodes.length;i++) {
+    var item = identityListPopup.childNodes[i];
+    var id = item.getAttribute('id');
+    if (id == params.identity.key) {
+        identityList.selectedItem = item;
+        break;
+    }
+  }
+  LoadIdentity(true);
+  
 	if (msgComposeService)
 	{
-        // this is frustrating, we need to convert the preselect identity key
-        // back to an identity, to pass to initcompose
-        // it would be nice if there was some way to actually send the
-        // identity through "args"
-        
-		msgCompose = msgComposeService.InitCompose(window, args.originalMsg, args.type, args.format, args.fieldsAddr, identity);
+		msgCompose = msgComposeService.InitCompose(window, params);
 		if (msgCompose)
 		{
 			//Creating a Editor Shell
@@ -668,25 +712,24 @@ function ComposeStartup()
 			
 			// save the editorShell in the window. The editor JS expects to find it there.
 			window.editorShell = editorShell;
-			dump("Created editorShell\n");
+//			dump("Created editorShell\n");
 
 			// setEditorType MUST be call before setContentWindow
 			if (msgCompose.composeHTML)
 			{
 				window.editorShell.editorType = "htmlmail";
-				dump("editor initialized in HTML mode\n");
+//				dump("editor initialized in HTML mode\n");
 			}
 			else
 			{
-			    //Remove HTML toolbar, format and insert menus as we are editing in plain text mode
-			    document.getElementById("FormatToolbar").setAttribute("hidden", true);
-			    document.getElementById("formatMenu").setAttribute("hidden", true);
-			    document.getElementById("insertMenu").setAttribute("hidden", true);
-			    document.getElementById("menu_showFormatToolbar").setAttribute("checked", false);
-
+		    //Remove HTML toolbar, format and insert menus as we are editing in plain text mode
+		    document.getElementById("FormatToolbar").setAttribute("hidden", true);
+		    document.getElementById("formatMenu").setAttribute("hidden", true);
+		    document.getElementById("insertMenu").setAttribute("hidden", true);
+		    document.getElementById("menu_showFormatToolbar").setAttribute("checked", false);
 
 				window.editorShell.editorType = "textmail";
-				dump("editor initialized in PLAIN TEXT mode\n");
+//				dump("editor initialized in PLAIN TEXT mode\n");
 			}
 			window.editorShell.webShellWindow = window;
 			window.editorShell.contentWindow = window._content;
@@ -694,59 +737,37 @@ function ComposeStartup()
 			// Do setup common to Message Composer and Web Composer
 			EditorSharedStartup();
 
-	    	var msgCompFields = msgCompose.compFields;
-	    	if (msgCompFields)
-	    	{
-	    		if (args.body) //We need to set the body before setting
-                         //msgCompose.editor;
+    	var msgCompFields = msgCompose.compFields;
+    	if (msgCompFields)
+    	{    	  
+        if (params.bodyIsLink)
+        {
+          var body = msgCompFields.GetBody();
+          if (msgCompose.composeHTML)
           {
-            if (args.bodyislink == "true")
-            {
-              if (msgCompose.composeHTML)
-              {
-                var cleanBody;
-                try {
-                  cleanBody = unescape(args.body);
-                } catch(e) { cleanBody = args.body;}
+            var cleanBody;
+            try {
+              cleanBody = unescape(body);
+            } catch(e) { cleanBody = body;}
 
-                msgCompFields.SetBody("<BR><A HREF=\"" + args.body +
-                                      "\">" + cleanBody + "</A><BR>");
-              }
-              else
-                msgCompFields.SetBody("\n<" + args.body + ">\n");
-            }
-            else
-              msgCompFields.SetBody(args.body);
+            msgCompFields.SetBody("<BR><A HREF=\"" + body +
+                                  "\">" + cleanBody + "</A><BR>");
           }
+          else
+            msgCompFields.SetBody("\n<" + body + ">\n");
+        }
 
-	    		if (args.to)
-	    			msgCompFields.SetTo(args.to);
-	    		if (args.cc)
-	    			msgCompFields.SetCc(args.cc);
-	    		if (args.bcc)
-	    			msgCompFields.SetBcc(args.bcc);
-	    		if (args.newsgroups)
-	    			msgCompFields.SetNewsgroups(args.newsgroups);
-	    		if (args.subject)
-	    			msgCompFields.SetSubject(args.subject);
-	    		if (args.attachment)
-	    			msgCompFields.SetAttachments(args.attachment);
-				dump("args newshost = " + args.newshost + "\n");
-				if (args.newshost)
-					msgCompFields.SetNewshost(args.newshost);
-			
 				var subjectValue = msgCompFields.GetSubject();
 				if (subjectValue != "") {
 					document.getElementById("msgSubject").value = subjectValue;
 				}
-                var attachmentValue = msgCompFields.GetAttachments();
-                if (attachmentValue != "") {
-                   var atts =  attachmentValue.split(",");
-                    for (var i=0; i < atts.length; i++)
-                    {
-                        AddAttachment(atts[i], null);
-                    }
-                }
+
+        var attachmentValue = msgCompFields.GetAttachments();
+        if (attachmentValue != "") {
+           var atts =  attachmentValue.split(",");
+            for (var i=0; i < atts.length; i++)
+                AddAttachment(atts[i], null);
+        }
 			}
  			
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
@@ -756,11 +777,10 @@ function ComposeStartup()
 
 			// call updateCommands to disable while we're loading the page
 		  try {
-			window.updateCommands("create");
+			  window.updateCommands("create");
   		} catch(e) {}
 			
-//	    SetupCommandUpdateHandlers();
-			WaitFinishLoadingDocument(args.type);
+			WaitFinishLoadingDocument(params.type);
 		}
 	}
 }
@@ -769,30 +789,40 @@ function ComposeLoad()
 {
 	dump("\nComposeLoad from XUL\n");
 	
-	SetupCommandUpdateHandlers();
+  try {
+  	SetupCommandUpdateHandlers();
 
-	verifyAccounts();	// this will do migration, if we need to.
+  	verifyAccounts();	// this will do migration, or create a new account if we need to.
 
-	if (other_header != "") {
-        var selectNode = document.getElementById('msgRecipientType#1');
+  	if (other_header != "") {
+      var selectNode = document.getElementById('msgRecipientType#1');
 
-        selectNode = selectNode.childNodes[0];
-        var opt = document.createElement('menuitem');
-        opt.setAttribute("data", "addr_other");
-        opt.setAttribute("value", other_header + ":");
-        selectNode.appendChild(opt);
-	}
+      selectNode = selectNode.childNodes[0];
+      var opt = document.createElement('menuitem');
+      opt.setAttribute("data", "addr_other");
+      opt.setAttribute("value", other_header + ":");
+      selectNode.appendChild(opt);
+  	}
 
-    // See if we got arguments.
-    if ( window.arguments && window.arguments[0] != null ) {
-        // Window was opened via window.openDialog.  Copy argument
-        // and perform compose initialization (as if we were
-        // opened via toolkitCore's ShowWindowWithArgs).
-        document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
-        ComposeStartup();
-    }
+    ComposeStartup();
+  }
+  catch (ex) {
+    dump("###ERROR WHILE LOADING MESSAGE COMPOSE: " + ex + "\n");
+    var errorTitle = Bundle.GetStringFromName("initErrorDlogTitle");
+    var errorMsg = Bundle.GetStringFromName("initErrorDlogMessage");
+    errorMsg = errorMsg.replace(/%1\$s/, ex);
+    if (commonDialogsService)
+      commonDialogsService.Alert(window, errorTitle, errorMsg);
+    else
+      window.alert(errorMsg);
+      
+    if (msgCompose)
+      msgCompose.CloseWindow();
+    else
+      window.close();
+    return;
+  }
 	window.tryToClose=ComposeCanClose;
-
 }
 
 function ComposeUnload(calledFromExit)
