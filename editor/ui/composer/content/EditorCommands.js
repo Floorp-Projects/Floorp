@@ -21,6 +21,7 @@
  *    Sammy Ford
  *    Dan Haddix (dan6992@hotmail.com)
  *    John Ratke (jratke@owc.net)
+ *    Ryan Cassin (kidteckco@hotmail.com)
  */
 
 /* Main Composer window UI control */
@@ -30,6 +31,7 @@ var documentModified;
 var prefAuthorString = "";
 var EditorDisplayMode = 1;  // Normal Editor mode
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
+var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 
 // These must be kept in synch with the XUL <options> lists
 var gParagraphTagNames = new Array("","P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
@@ -78,6 +80,11 @@ function TextEditorOnLoad()
     EditorStartup('text', document.getElementById("content-frame"));
 }
 
+function PageIsEmptyAndUntouched()
+{
+  return (editorShell.documentIsEmpty == true) && (docWasModified == false);
+}
+
 // This is called when the real editor document is created,
 // before it's loaded.
 var DocumentStateListener =
@@ -89,8 +96,15 @@ var DocumentStateListener =
     //  so it gets the default author before initing toolbars
     EditorInitToolbars();
   },
+  
   NotifyDocumentWillBeDestroyed: function() {},
-  NotifyDocumentStateChanged:function( isNowDirty ) {}
+  NotifyDocumentStateChanged:function( isNowDirty )
+  {
+    /* Notify our dirty detector so this window won't be closed if
+       another document is opened */
+    if (isNowDirty)
+      docWasModified = true;
+  }
 };
 
 function EditorStartup(editorType, editorElement)
@@ -288,12 +302,21 @@ function EditorOpen()
   if (fp.file && fp.file.path.length > 0) {
 
     var found = FindAndSelectEditorWindowWithURL(fp.fileURL.spec);
-    if (!found) {
-      /* open new window */
-      window.openDialog("chrome://editor/content",
-                        "_blank",
-                        "chrome,dialog=no,all",
-                        fp.fileURL.spec);
+    if (!found)
+    {
+      // if the existing window is untouched, just load there
+      if (PageIsEmptyAndUntouched())
+      {
+        editorShell.LoadUrl(fp.fileURL.spec);
+      }
+      else
+      {
+	      /* open new window */
+	      window.openDialog("chrome://editor/content",
+	                        "_blank",
+	                        "chrome,dialog=no,all",
+	                        fp.fileURL.spec);
+      }
     }
   }
 }
@@ -308,8 +331,12 @@ function EditorOpenRemote()
 }
 
 // used by openLocation. see navigator.js for additional notes.
-function delayedOpenWindow(chrome,flags,url) {
-  setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
+function delayedOpenWindow(chrome, flags, url)
+{
+  if (PageIsEmptyAndUntouched())
+    editorShell.LoadUrl(url);
+  else
+    setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
 }
 
 function EditorNewPlaintext()
