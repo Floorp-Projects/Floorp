@@ -438,7 +438,6 @@ sub GenerateArrayCode {
 
 
 sub GenerateVersionTable {
-    ConnectToDatabase();
     SendSQL("select value, program from versions order by value");
     my @line;
     my %varray;
@@ -1251,7 +1250,6 @@ sub UserInGroup {
     if ($::usergroupset eq "0") {
         return 0;
     }
-    ConnectToDatabase();
     PushGlobalSQLState();
     SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
     my $bit = FetchOneColumn();
@@ -1274,7 +1272,6 @@ sub BugInGroup {
 
 sub GroupExists {
     my ($groupname) = (@_);
-    ConnectToDatabase();
     PushGlobalSQLState();
     SendSQL("select count(*) from groups where name=" . SqlQuote($groupname));
     my $count = FetchOneColumn();
@@ -1287,7 +1284,6 @@ sub GroupExists {
 # !!! Remove this function when the new group system is implemented!
 sub GroupNameToBit {
     my ($groupname) = (@_);
-    ConnectToDatabase();
     PushGlobalSQLState();
     SendSQL("SELECT bit FROM groups WHERE name = " . SqlQuote($groupname));
     my $bit = FetchOneColumn() || 0;
@@ -1301,7 +1297,6 @@ sub GroupNameToBit {
 sub GroupIsActive {
     my ($groupbit) = (@_);
     $groupbit ||= 0;
-    ConnectToDatabase();
     PushGlobalSQLState();
     SendSQL("select isactive from groups where bit=$groupbit");
     my $isactive = FetchOneColumn();
@@ -1331,7 +1326,6 @@ sub OpenStates {
 
 sub RemoveVotes {
     my ($id, $who, $reason) = (@_);
-    ConnectToDatabase();
     my $whopart = "";
     if ($who) {
         $whopart = " AND votes.who = $who";

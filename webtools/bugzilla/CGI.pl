@@ -442,7 +442,6 @@ sub quietly_check_login() {
     $::userid = 0;
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
-        ConnectToDatabase();
         SendSQL("SELECT profiles.userid, profiles.groupset, " .
                 "profiles.login_name, " .
                 "profiles.login_name = " .
@@ -559,7 +558,6 @@ sub confirm_login {
 # Uncommenting the next line can help debugging...
 #    print "Content-type: text/plain\n\n";
 
-    ConnectToDatabase();
     # I'm going to reorganize some of this stuff a bit.  Since we're adding
     # a second possible validation method (LDAP), we need to move some of this
     # to a later section.  -Joe Robins, 8/3/00
