@@ -85,6 +85,7 @@
 #include "nsContentCID.h"
 #include "nsIDocShell.h"
 #include "nsFormControlHelper.h"
+#include "nsObjectFrame.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -4827,6 +4828,13 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
         }
         isReplaced = PR_TRUE;
         rv = NS_NewObjectFrame(aPresShell, &newFrame);
+        if (newFrame) {
+          PRBool isImage;
+          ((nsObjectFrame*)newFrame)->IsSupportedImage(aContent, &isImage);
+          if (!isImage) {
+            processChildren = PR_TRUE;
+          }
+        }
       }
       else if (nsHTMLAtoms::applet == aTag) {
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
