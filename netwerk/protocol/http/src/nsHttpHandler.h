@@ -165,7 +165,7 @@ public:
     // The HTTP handler caches pointers to specific XPCOM services, and
     // provides the following helper routines for accessing those services:
     //
-    nsresult GetEventQueueService(nsIEventQueueService **);
+    nsresult GetCurrentEventQ(nsIEventQueue **);
     nsresult GetStreamConverterService(nsIStreamConverterService **);
     nsresult GetMimeService(nsIMIMEService **);
     nsresult GetIOService(nsIIOService** service);

@@ -235,14 +235,7 @@ nsHttpChannel::Init(nsIURI *uri,
 nsresult
 nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
 {
-    nsCOMPtr<nsIEventQueueService> eqs;
-    nsCOMPtr<nsIEventQueue> eventQ;
-
-    gHttpHandler->GetEventQueueService(getter_AddRefs(eqs));
-    if (eqs)
-        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(eventQ));
-    if (!eventQ)
-        return NS_ERROR_FAILURE;
+    nsresult rv;
 
     nsAsyncCallEvent *event = new nsAsyncCallEvent;
     if (!event)
@@ -256,7 +249,7 @@ nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
                  nsHttpChannel::AsyncCall_EventHandlerFunc,
                  nsHttpChannel::AsyncCall_EventCleanupFunc);
 
-    nsresult rv = eventQ->PostEvent(event);
+    rv = mEventQ->PostEvent(event);
     if (NS_FAILED(rv)) {
         PL_DestroyEvent(event);
         NS_RELEASE_THIS();
@@ -374,8 +367,7 @@ nsHttpChannel::AsyncAbort(nsresult status)
 
     // create a proxy for the listener..
     nsCOMPtr<nsIRequestObserver> observer;
-    NS_NewRequestObserverProxy(getter_AddRefs(observer),
-                               mListener, NS_CURRENT_EVENTQ);
+    NS_NewRequestObserverProxy(getter_AddRefs(observer), mListener, mEventQ);
     if (observer) {
         observer->OnStartRequest(this, mListenerContext);
         observer->OnStopRequest(this, mListenerContext, mStatus);
@@ -563,14 +555,6 @@ nsHttpChannel::SetupTransaction()
 
             }
         }
-    }
-
-    if (!mEventQ) {
-        // grab a reference to the calling thread's event queue.
-        nsCOMPtr<nsIEventQueueService> eqs;
-        gHttpHandler->GetEventQueueService(getter_AddRefs(eqs));
-        if (eqs)
-            eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mEventQ));
     }
 
     // create the transaction object
@@ -2988,8 +2972,18 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     NS_ENSURE_ARG_POINTER(listener);
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
+    nsresult rv;
+
+    // we want to grab a reference to the calling thread's event queue at
+    // this point.  we will proxy all events back to the current thread via
+    // this event queue.
+    if (!mEventQ) {
+        rv = gHttpHandler->GetCurrentEventQ(getter_AddRefs(mEventQ));
+        if (NS_FAILED(rv)) return rv;
+    }
+
     PRInt32 port;
-    nsresult rv = mURI->GetPort(&port);
+    rv = mURI->GetPort(&port);
     if (NS_FAILED(rv))
         return rv;
  
