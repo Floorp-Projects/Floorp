@@ -795,8 +795,14 @@ SHIST_SetTitleOfCurrentDoc( MWContext *context )
     
 	if( he )
     {
-		StrAllocCopy( he->title, context->title );
-
+		/* StrAllocCopy( he->title, context->title );   */
+		/* Let's save the History as UTF8 */
+		he->title = (char*)INTL_ConvertLineWithoutAutoDetect(
+						INTL_DefaultWinCharSetID(context), 
+                        CS_UTF8, 
+                        (unsigned char*) context->title, 
+                        XP_STRLEN(context->title)
+                );
         /*
          * This is the place where we set the title for *global* history hash records
          * In addition to not making grid cells normal history entries we've added two 

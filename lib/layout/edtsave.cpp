@@ -923,16 +923,29 @@ CEditSaveObject::~CEditSaveObject(){
                 // Note: hist_ent->title should always = m_pContext->title?
                 // Change "file:///Untitled" into URL
                 // Use the new address if old title == old address
-                if( 0 != XP_STRCMP(hist_ent->title, XP_GetString(XP_EDIT_NEW_DOC_NAME) ) && 
+                char* utf8_edit_new_doc_name = (char*)
+                	INTL_ConvertLineWithoutAutoDetect(
+                			INTL_CharSetNameToID(INTL_ResourceCharSet()),
+                			CS_UTF8,
+                			(unsigned char*) XP_GetString(XP_EDIT_NEW_DOC_NAME),
+                			XP_STRLEN(XP_GetString(XP_EDIT_NEW_DOC_NAME))
+                		);
+                if( 0 != XP_STRCMP(hist_ent->title, utf8_edit_new_doc_name ) && 
                     0 != XP_STRCMP(hist_ent->title, hist_ent->address) )
                 {
-                    pTitle = XP_STRDUP(hist_ent->title);
+                    // pTitle = XP_STRDUP(hist_ent->title);
+                    pTitle = (char*)INTL_ConvertLineWithoutAutoDetect(
+                				CS_UTF8,
+                				m_pBuffer->GetRAMCharSetID(),
+                				(unsigned char*) hist_ent->title,
+                				XP_STRLEN(hist_ent->title)
+                			);
                 } else {
                     pTitle = XP_STRDUP(pDestFileURL);
                     XP_FREE(hist_ent->title);
                     hist_ent->title = XP_STRDUP(pDestFileURL);
                 }
-
+				XP_FREEIF(utf8_edit_new_doc_name);
             } else {
                 // Use the URL if no Document title
                 pTitle = XP_STRDUP(pDestFileURL);

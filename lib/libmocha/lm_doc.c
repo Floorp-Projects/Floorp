@@ -327,7 +327,7 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         /* XXX BUGBUG Need a story for some of these for a layer's document */
       case DOC_TITLE:
         he = SHIST_GetCurrent(&context->hist);
-        str = lm_LocalEncodingToStr(context, he ? he->title : "");
+        str = lm_EncodingToStr(context->mocha_context, CS_UTF8, he ? he->title : "");
         LO_UnlockLayout();
         break;
 
