@@ -52,11 +52,7 @@ nsIAtom* nsMsgDBFolder::mFolderLoadedAtom=nsnull;
 nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgCompletedAtom=nsnull;
 nsrefcnt nsMsgDBFolder::mInstanceCount=0;
 
-NS_IMPL_ADDREF_INHERITED(nsMsgDBFolder, nsMsgFolder)
-NS_IMPL_RELEASE_INHERITED(nsMsgDBFolder, nsMsgFolder)
-
-NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMsgDBFolder,
-                                   nsMsgFolder,
+NS_IMPL_ISUPPORTS_INHERITED2(nsMsgDBFolder, nsMsgFolder,
                                    nsIDBChangeListener,
                                    nsIUrlListener)
 
@@ -610,7 +606,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 			{
 				SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
 			}
-			UpdateSummaryTotals(PR_TRUE);
+		  UpdateSummaryTotals(PR_TRUE);
 		}
 	}
 
@@ -961,8 +957,11 @@ nsMsgDBFolder::MarkAllMessagesRead(void)
 	nsresult rv = GetDatabase(nsnull);
 	
 	if(NS_SUCCEEDED(rv))
-		return mDatabase->MarkAllRead(nsnull);
-
+  {
+    EnableNotifications(allMessageCountNotifications, PR_FALSE);
+		rv = mDatabase->MarkAllRead(nsnull);
+    EnableNotifications(allMessageCountNotifications, PR_TRUE);
+  }
 	return rv;
 }
 

@@ -172,10 +172,7 @@ nsMsgFolder::~nsMsgFolder(void)
     }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsMsgFolder, nsRDFResource)
-NS_IMPL_RELEASE_INHERITED(nsMsgFolder, nsRDFResource)
-
-NS_IMPL_QUERY_INTERFACE_INHERITED3(nsMsgFolder, nsRDFResource,
+NS_IMPL_ISUPPORTS_INHERITED3(nsMsgFolder, nsRDFResource,
                                    nsIMsgFolder,
                                    nsIFolder,
                                    nsISupportsWeakReference)
@@ -1647,6 +1644,7 @@ NS_IMETHODIMP nsMsgFolder::GetExpansionArray(nsISupportsArray *expansionArray)
 
 	return NS_OK;
 }
+
 
 #ifdef HAVE_PANE
 NS_IMETHODIMP nsMsgFolder::SetFlagInAllFolderPanes(PRUInt32 which)

@@ -1041,6 +1041,9 @@ NS_IMETHODIMP nsImapMailFolder::GetFolderURL(char **url)
     
 NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force) 
 {
+  if (!mNotifyCountChanges)
+    return NS_OK;
+
   // could we move this into nsMsgDBFolder, or do we need to deal
   // with the pending imap counts?
   nsresult rv = NS_OK;
@@ -1049,10 +1052,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
   PRInt32 oldTotalMessages = mNumTotalMessages + mNumPendingTotalMessages;
   //We need to read this info from the database
   ReadDBFolderInfo(force);
-
-  // If we asked, but didn't get any, stop asking
-  if (mNumUnreadMessages == -1)
-    mNumUnreadMessages = -2;
 
   PRInt32 newUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
   PRInt32 newTotalMessages = mNumTotalMessages + mNumPendingTotalMessages;
@@ -1174,7 +1173,9 @@ nsImapMailFolder::MarkAllMessagesRead(void)
   if(NS_SUCCEEDED(rv))
   {
     nsMsgKeyArray thoseMarked;
+    EnableNotifications(allMessageCountNotifications, PR_FALSE);
     rv = mDatabase->MarkAllRead(&thoseMarked);
+    EnableNotifications(allMessageCountNotifications, PR_TRUE);
     if (NS_SUCCEEDED(rv))
     {
       rv = StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, thoseMarked);
@@ -3274,7 +3275,11 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     if (msgTxn)
                         msgTxn->GetSrcKeyArray(srcKeyArray);
                   if (!ShowDeletedMessages())
+                  {
+                    EnableNotifications(allMessageCountNotifications, PR_FALSE);
                     srcDB->DeleteMessages(&srcKeyArray, nsnull);
+                    EnableNotifications(allMessageCountNotifications, PR_TRUE);
+                  }
                   else
                     MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, srcDB);
                 }

@@ -843,6 +843,9 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 
 NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 {
+  if (!mNotifyCountChanges)
+    return NS_OK;
+
 #ifdef DEBUG_NEWS
 	printf("nsMsgNewsFolder::UpdateSummaryTotals(%s)\n",mURI);
 #endif
@@ -851,10 +854,6 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 	PRInt32 oldTotalMessages = mNumTotalMessages;
 	//We need to read this info from the database
 	ReadDBFolderInfo(force);
-
-	// If we asked, but didn't get any, stop asking
-	if (mNumUnreadMessages == -1)
-		mNumUnreadMessages = -2;
 
 	//Need to notify listeners that total count changed.
 	if(oldTotalMessages != mNumTotalMessages) {
@@ -865,6 +864,7 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 		NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
 	}
 
+  FlushToFolderCache();
 	return NS_OK;
 }
 
