@@ -253,10 +253,10 @@ function Commit()
         newValue = "http://" + newValue;
     }
 
-    if (newValue) {
+    if (newValue)
       newValue = RDF.GetLiteral(newValue);
-      changed |= updateAttribute(gProperties[i], oldValue, newValue);
-    }
+
+    changed |= updateAttribute(gProperties[i], oldValue, newValue);
   }
 
   // Update bookmark schedule if necessary;
