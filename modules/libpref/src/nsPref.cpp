@@ -1620,7 +1620,7 @@ extern "C" JSBool pref_InitInitialObjects()
             printf("Parsing %s\n", specialFiles[k]);
 #endif /* DEBUG_prefs */
 
-        if (NS_FAILED(specialChild2->Exists(&exists)))
+        if (NS_FAILED(specialChild2->Exists(&exists)) || !exists)
 	    	continue;
 
 	    worked = (JSBool)(pref_OpenFileSpec(
