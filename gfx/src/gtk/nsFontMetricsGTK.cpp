@@ -2552,7 +2552,7 @@ nsFontMetricsGTK::FindGenericFont(nsFontSearch* aSearch)
   char name[128];
   if (mLangGroup) {
     nsAutoString pref = prefix;
-    pref.Append('.');
+    pref.Append(PRUnichar('.'));
     const PRUnichar* langGroup = nsnull;
     mLangGroup->GetUnicode(&langGroup);
     pref.Append(langGroup);
