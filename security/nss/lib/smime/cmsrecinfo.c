@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.12 2003/03/03 19:46:22 relyea%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.13 2003/03/11 03:38:54 jpierre%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -714,5 +714,20 @@ SECStatus NSS_CMSRecipientInfo_GetCertAndKey(NSSCMSRecipientInfo *ri,
         }
     }
 
+    return rv;
+}
+
+SECStatus NSS_CMSRecipientInfo_Encode(PRArenaPool* poolp,
+                                      const NSSCMSRecipientInfo *src,
+                                      SECItem* returned)
+{
+    extern const SEC_ASN1Template NSSCMSRecipientInfoTemplate[];
+    SECStatus rv = SECFailure;
+    if (!src || !returned) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    } else if (SEC_ASN1EncodeItem(poolp, returned, src,
+        NSSCMSRecipientInfoTemplate))   {
+        rv = SECSuccess;
+    }
     return rv;
 }
