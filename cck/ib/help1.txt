@@ -1,16 +1,42 @@
 <?xml version="1.0"?>
+<!DOCTYPE RDF 
+[
+<!ENTITY helpMenu.label					"Help">
+<!ENTITY helpContentCmd.label				"Help Contents">
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/helpMenu.dtd" >
+<!ENTITY webBrowseCmd.label 				"Web Browsing">
+<!ENTITY emailCmd.label					"Mail and News">  
+<!ENTITY imCmd.label						"Instant Messenger">
+<!ENTITY composeCmd.label					"Composer">
+<!ENTITY customCmd.label					"Customization">  
 
-<overlay id="helpMenuID"
-xmlns:html="http://www.w3.org/TR/REC-html40"
-xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<!ENTITY privSecCmd.label			"Privacy and Security">  
+<!ENTITY secCmd.label			"Security Center">  
+<!ENTITY whatNewCmd.label			"What's New in Netscape 6?">  
+<!ENTITY newNetCmd.label			"New to the Net Tutorial">
+<!ENTITY feedBackCmd.label			"Feedback Center">
+<!ENTITY supportChannelCmd.label		"Netscape Technical Support"> 
+<!ENTITY interUsersCmd.label		"International Users">
 
+<!ENTITY helpAtCmd.label			"Netscape.com Help">
+] 
+>
 
-<menupopup id="helpPopup">
-	<menuitem  id="nscpHelpCmd.label" position="1" value="&nscpHelpCmd.label;" oncommand="openTopWin('urn:clienturl:help:nscphelp')" />
-	<menuitem  id="whatNew" position="2" value="&whatNewCmd.label;" disabled="true" oncommand="" />  
-	<menuitem  id="netHelp"  position="3" value="&netHelpCmd.label;" oncommand="openTopWin('urn:clienturl:help:nethelp')" />
-	<menuseparator position="4" />
-	<menuitem  id="feedBack"  position="5" value="&feedBackCmd.label;" oncommand="openTopWin('urn:clienturl:help:feedback')" />
-	<menuitem  id="intUsers"  position="6" value="&intUsersCmd.label;" oncommand="openTopWin('urn:clienturl:help:intlusers')" />
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+<!-- root start  -->
+  <RDF:Seq ID="root">
+
+    <RDF:li resource="urn:helpmenu:help-contents" />
+    <RDF:li resource="urn:helpmenu:separator" />
+
+    <RDF:li resource="urn:helpmenu:whatsnew" />
+    <RDF:li resource="urn:helpmenu:newnet" />
+    <RDF:li resource="urn:helpmenu:support" />
+    <RDF:li resource="urn:helpmenu:security" />
+    <RDF:li resource="urn:helpmenu:intl" />
+
+    <RDF:li resource="urn:helpmenu:separator2" />
+
+    <RDF:li resource="urn:helpmenu:feedback" />

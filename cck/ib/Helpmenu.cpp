@@ -26,7 +26,7 @@ void CreateHelpMenu (void)
 	ifstream help1(file1);
 	ifstream help2(file2);
 	_mkdir (HelpPath);
-	CString HelpMenuFile = HelpPath +"helpmenu.xul";
+	CString HelpMenuFile = HelpPath +"helpMenu.rdf";
 
 	ofstream Hlp(HelpMenuFile);
 	CString HelpMenuName = GetGlobal("HelpMenuCommandName");
@@ -46,10 +46,11 @@ void CreateHelpMenu (void)
 
 		Hlp <<jsprefname<<"\n";
 	}
-	
-	Hlp <<"<menuitem position=\"7\" value=\""<<HelpMenuName<<"\"\n\t";
-	Hlp <<"oncommand=\"openTopWin('"<<HelpMenuUrl<<"')\" /> \n\t";
-	Hlp <<"<menuseparator position=\"9\" /> \n";
+	Hlp <<"     <RDF:li resource=\"urn:helpmenu:customizedHelp\" />\n";
+
+//	Hlp <<"<menuitem position=\"7\" value=\""<<HelpMenuName<<"\"\n\t";
+//	Hlp <<"oncommand=\"openTopWin('"<<HelpMenuUrl<<"')\" /> \n\t";
+//	Hlp <<"<menuseparator position=\"9\" /> \n";
 
 	if(!help2) {
 		cout << "cannot open the file \n";
@@ -59,5 +60,14 @@ void CreateHelpMenu (void)
 		help2.getline(jsprefname,200);
 		Hlp <<jsprefname<<"\n";
 	}
+
+	Hlp <<"<RDF:Description about=\"urn:helpmenu:customizedHelp\">\n";
+	Hlp	<<"	<NC:level>1</NC:level> \n";
+	Hlp <<"	<NC:title>"<<HelpMenuName<<"</NC:title> \n";
+	Hlp <<"	<NC:content>openTopWin('"<<HelpMenuUrl<<"')</NC:content>\n";
+	Hlp <<"</RDF:Description>\n";
+	Hlp <<"</RDF:RDF>\n";
+
+
 	Hlp.close();
 }

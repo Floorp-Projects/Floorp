@@ -872,8 +872,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 		SetGlobal("HelpMenuCommandURL",httpvalue);
 	}
 // Create the HelpMenu.xul in the beginning so that it can be called from the script.ib
-	CString setHlpXul = tempPath +"\\HelpMenu.xul";
-	SetGlobal("HlpXul",setHlpXul);
+	CString setHlpRDF = tempPath +"\\helpMenu.rdf";
+	SetGlobal("HlpRDF",setHlpRDF);
 	CreateHelpMenu();
 
 

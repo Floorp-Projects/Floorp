@@ -1,4 +1,58 @@
+  </RDF:Seq>
+<!-- root end    -->
 
-</menupopup>
+<!-- Description -->
+<!-- help contents -->
 
-</overlay>
+<RDF:Description about="urn:helpmenu:separator">
+    <NC:sep>y</NC:sep>
+</RDF:Description>
+
+<RDF:Description about="urn:helpmenu:separator2">
+    <NC:sep>y</NC:sep>
+</RDF:Description>
+
+<RDF:Description about="urn:helpmenu:help-contents">
+    <NC:level>1</NC:level>
+    <NC:title>&helpContentCmd.label;</NC:title>
+    <NC:content>toOpenWindowByType('help:main', 'chrome://communicator/content/help/help_main.xul')</NC:content>
+</RDF:Description>
+
+ 
+
+  <RDF:Description about="urn:helpmenu:whatsnew">
+    <NC:level>1</NC:level>
+    <NC:title>&whatNewCmd.label;</NC:title> 
+    <NC:content>openTopWin('urn:clienturl:help:whatsnew')</NC:content>
+  </RDF:Description>
+
+  <RDF:Description about="urn:helpmenu:newnet">
+    <NC:level>1</NC:level>
+    <NC:title>&newNetCmd.label;</NC:title> 
+    <NC:content>openTopWin('urn:clienturl:help:newnethelp')</NC:content>
+  </RDF:Description>
+
+  <RDF:Description about="urn:helpmenu:support">
+    <NC:level>1</NC:level>
+    <NC:title>&supportChannelCmd.label;</NC:title> 
+    <NC:content>openTopWin('urn:clienturl:help:supporthelp')</NC:content>
+  </RDF:Description>
+
+  <RDF:Description about="urn:helpmenu:security">
+    <NC:level>1</NC:level>
+    <NC:title>&secCmd.label;</NC:title> 
+    <NC:content>openTopWin('urn:clienturl:help:security')</NC:content>
+  </RDF:Description>
+
+  <RDF:Description about="urn:helpmenu:intl">
+    <NC:level>1</NC:level>
+    <NC:title>&interUsersCmd.label;</NC:title> 
+    <NC:content>openTopWin('urn:clienturl:help:intlusers')</NC:content>
+  </RDF:Description>
+
+  <RDF:Description about="urn:helpmenu:feedback">
+    <NC:level>1</NC:level>
+    <NC:title>&feedBackCmd.label;</NC:title> 
+    <NC:content>openTopWin('urn:clienturl:help:feedback')</NC:content>
+  </RDF:Description>
+

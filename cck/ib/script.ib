@@ -13,6 +13,7 @@ replaceXPI(browser.xpi,bin/chrome/modern.jar,skin/modern/global/animthrob.gif,%L
 replaceXPI(browser.xpi,bin/chrome/modern.jar,skin/modern/global/animthrob_single.gif,%LargeStillPath%)
 replaceXPI(deflenus.xpi,no.jar,bin/defaults/profile/bookmarks.html,%CustomBookmarkFile%)
 replaceXPI(deflenus.xpi,no.jar,bin/defaults/profile/panels.rdf,%SidebarPath%)
+replaceXPI(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/communicator/helpMenu.rdf,%HlpRDF%)
 modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/navigator/navigator.dtd,mainWindow.titlemodifier,%CompanyName%)
 modifyProperties(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/navigator/navigator.properties,browser.startup.homepage,%HomePageURL%)
 modifyProperties(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/navigator/navigator.properties,browser.throbber.url,%AnimatedLogoURL%)
