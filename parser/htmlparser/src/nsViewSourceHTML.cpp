@@ -526,7 +526,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       // Note that XUL with automatically add the prefix "Source of: "
       mSink->SetTitle(mFilename);
 
-      if (mSyntaxHighlight && theAllocator) {
+      if (theAllocator) {
         tag.Assign(NS_LITERAL_STRING("LINK"));
         CStartToken* theToken=NS_STATIC_CAST(CStartToken*,theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_link,tag));
         if(theToken) {
