@@ -35,6 +35,10 @@
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
 
+#ifdef NECKO
+#include "nsNeckoUtil.h"
+#endif
+
  /************************************************************************
   And now for the main class -- nsExpatTokenizer...
  ************************************************************************/
@@ -490,6 +494,7 @@ nsExpatTokenizer::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
 
 #else // NECKO
   nsIURI* uri;
+
   ret = NS_NewURI(&uri, aURLStr);
   if (NS_FAILED(ret)) return ret;
 
