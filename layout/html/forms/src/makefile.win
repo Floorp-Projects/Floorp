@@ -23,18 +23,41 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 REQUIRES=xpcom raptor js
 
-CPPSRCS=nsFormFrame.cpp nsFormControlFrame.cpp nsButtonControlFrame.cpp nsCheckboxControlFrame.cpp \
-    nsFileControlFrame.cpp nsRadioControlFrame.cpp nsTextControlFrame.cpp nsSelectControlFrame.cpp \
-    nsFieldSetFrame.cpp nsLegendFrame.cpp nsHTMLButtonControlFrame.cpp nsLabelFrame.cpp \
-    nsImageControlFrame.cpp
+CPPSRCS= \
+  nsFormControlHelper.cpp \
+	nsComboboxControlFrame.cpp \
+  nsListControlFrame.cpp \
+  nsFormFrame.cpp \
+  nsFormControlFrame.cpp \
+  nsButtonControlFrame.cpp \
+  nsCheckboxControlFrame.cpp \
+  nsFileControlFrame.cpp \
+  nsRadioControlFrame.cpp \
+  nsTextControlFrame.cpp \
+  nsSelectControlFrame.cpp \
+  nsFieldSetFrame.cpp \
+  nsLegendFrame.cpp \
+  nsHTMLButtonControlFrame.cpp \
+  nsLabelFrame.cpp \
+  nsImageControlFrame.cpp
 
-CPP_OBJS=.\$(OBJDIR)\nsFormFrame.obj .\$(OBJDIR)\nsFormControlFrame.obj \
-    .\$(OBJDIR)\nsButtonControlFrame.obj .\$(OBJDIR)\nsCheckboxControlFrame.obj \
-    .\$(OBJDIR)\nsFileControlFrame.obj .\$(OBJDIR)\nsRadioControlFrame.obj \
-    .\$(OBJDIR)\nsTextControlFrame.obj .\$(OBJDIR)\nsSelectControlFrame.obj \
-		.\$(OBJDIR)\nsFieldSetFrame.obj .\$(OBJDIR)\nsLegendFrame.obj \
-		.\$(OBJDIR)\nsHTMLButtonControlFrame.obj .\$(OBJDIR)\nsLabelFrame.obj \
-        .\$(OBJDIR)\nsImageControlFrame.obj
+CPP_OBJS= \
+  .\$(OBJDIR)\nsFormControlHelper.obj \
+  .\$(OBJDIR)\nsComboboxControlFrame.obj \
+  .\$(OBJDIR)\nsListControlFrame.obj \
+  .\$(OBJDIR)\nsFormFrame.obj \
+  .\$(OBJDIR)\nsFormControlFrame.obj \
+  .\$(OBJDIR)\nsButtonControlFrame.obj \
+  .\$(OBJDIR)\nsCheckboxControlFrame.obj \
+  .\$(OBJDIR)\nsFileControlFrame.obj \
+  .\$(OBJDIR)\nsRadioControlFrame.obj \
+  .\$(OBJDIR)\nsTextControlFrame.obj \
+  .\$(OBJDIR)\nsSelectControlFrame.obj \
+  .\$(OBJDIR)\nsFieldSetFrame.obj \
+  .\$(OBJDIR)\nsLegendFrame.obj \
+  .\$(OBJDIR)\nsHTMLButtonControlFrame.obj \
+  .\$(OBJDIR)\nsLabelFrame.obj \
+  .\$(OBJDIR)\nsImageControlFrame.obj
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
   -I$(PUBLIC)\dom  -I$(PUBLIC)\netlib				\
