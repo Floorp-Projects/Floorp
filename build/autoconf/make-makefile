@@ -22,7 +22,7 @@
 
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
-$debug = 1;
+#$debug = 1;
 
 # Determine various tree path variables
 #
