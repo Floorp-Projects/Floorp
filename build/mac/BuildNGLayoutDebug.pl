@@ -97,10 +97,9 @@ $build{extensions} 		= 0;
 $build{plugins}			= 0;
 $build{mailnews} 		= 0;
 $build{apprunner}		= 0;
-$build{resources} 		= 0;
-$build{jars}    		= 0;
+$build{resources} 		= 1;
 
-$build{xptlink}		= 0;
+$build{xptlink}		    = 0;
 
 $options{transformiix}	= 0;
 $options{mathml}		= 0;
@@ -108,6 +107,9 @@ $options{svg}			= 0;
 $options{mng}			= 1;
 $options{ldap}			= 0;
 $options{xmlextras}		= 0;
+
+$options{jar_manifests} = 0;        # use jar.mn files for resources, not MANIFESTs
+$options{jars}    		= 0;        # build jar files
 
 # Don't change these (where should they go?)
 $optiondefines{transformiix}{MOZ_XSL}	= 1;
