@@ -345,7 +345,7 @@ nsChromeRegistry::GetChromeBase(nsString& aResult, nsIRDFResource* aChromeResour
         return NS_ERROR_FAILURE; // Must have a DB to attempt this operation.
 
     nsCOMPtr<nsIRDFResource> chromeBase;
-    if (NS_FAILED(rv = gRegistryDB->GetSource(kCHROME_base, aChromeResource, PR_TRUE, getter_AddRefs(chromeBase)))) {
+    if (NS_FAILED(rv = gRegistryDB->GetTarget(kCHROME_base, aChromeResource, PR_TRUE, getter_AddRefs(chromeBase)))) {
         NS_ERROR("Unable to obtain a base resource.");
         return rv;
     }
