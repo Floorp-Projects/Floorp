@@ -1087,37 +1087,39 @@ CViewDropSource::CViewDropSource(UINT nDragType)
 
 SCODE CViewDropSource::GiveFeedback(DROPEFFECT dropEffect)
 {
-    if( dropEffect != DROPEFFECT_COPY &&
-        dropEffect != DROPEFFECT_MOVE ){
-        	return COleDropSource::GiveFeedback(dropEffect);
-    }
-    BOOL bCopy = (dropEffect == DROPEFFECT_COPY);
+    if( (dropEffect & DROPEFFECT_COPY) ||
+        (dropEffect & DROPEFFECT_MOVE) )
+    {
+        BOOL bCopy = (dropEffect == DROPEFFECT_COPY);
 
-    switch ( m_nDragType ) {
-        case FE_DRAG_TEXT:
-            SetCursor(theApp.LoadCursor( bCopy ?
-                        IDC_TEXT_COPY : IDC_TEXT_MOVE));
-            break;
-        case FE_DRAG_HTML:
-            SetCursor(theApp.LoadCursor( bCopy ?
-                        IDC_HTML_COPY : IDC_HTML_MOVE));
-            break;
-        case FE_DRAG_TABLE:
-            SetCursor(theApp.LoadCursor( bCopy ?
-                        IDC_TABLE_COPY : IDC_TABLE_MOVE));
-            break;
-        case FE_DRAG_LINK:
-            SetCursor(theApp.LoadCursor( bCopy ?
-                        IDC_LINK_COPY : IDC_LINK_MOVE));
-            break;
-        case FE_DRAG_IMAGE:
-            SetCursor(theApp.LoadCursor( bCopy ?
-                        IDC_IMAGE_COPY : IDC_IMAGE_MOVE));
-            break;
-        default:
-        	return COleDropSource::GiveFeedback(dropEffect);
+        switch ( m_nDragType )
+        {
+            case FE_DRAG_TEXT:
+                SetCursor(theApp.LoadCursor( bCopy ?
+                            IDC_TEXT_COPY : IDC_TEXT_MOVE));
+                break;
+            case FE_DRAG_HTML:
+                SetCursor(theApp.LoadCursor( bCopy ?
+                            IDC_HTML_COPY : IDC_HTML_MOVE));
+                break;
+            case FE_DRAG_TABLE:
+                SetCursor(theApp.LoadCursor( bCopy ?
+                            IDC_TABLE_COPY : IDC_TABLE_MOVE));
+                break;
+            case FE_DRAG_LINK:
+                SetCursor(theApp.LoadCursor( bCopy ?
+                            IDC_LINK_COPY : IDC_LINK_MOVE));
+                break;
+            case FE_DRAG_IMAGE:
+                SetCursor(theApp.LoadCursor( bCopy ?
+                            IDC_IMAGE_COPY : IDC_IMAGE_MOVE));
+                break;
+            default:
+        	    return COleDropSource::GiveFeedback(dropEffect);
+        }
+        return NOERROR;
     }
-    return NOERROR;
+    return COleDropSource::GiveFeedback(dropEffect);
 }
 
 void CNetscapeView::OnSize ( UINT nType, int cx, int cy )

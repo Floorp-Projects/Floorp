@@ -3526,7 +3526,7 @@ CHECK_SCROLL_WINDOW:
                 CViewDropSource * pDropSource = new CViewDropSource(FE_DRAG_IMAGE);
 
                 // do the drag/drop operation.
-                // set the m_bDragging flag so that we can prevent ourseleves from dropping on
+                // set the m_bDragging flag so that we can prevent us from dropping on
                 //   ourselves                
                 m_bDragging = TRUE;
                 // no saved image for next time
@@ -6463,11 +6463,13 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
         int sizing = EDT_CanSizeObject(context, lo_element, pClose->xVal, pClose->yVal);
         if( sizing )
         {
+            UINT nIDS = 0;
             switch ( sizing )
             {
                 case ED_SIZE_TOP:
                 case ED_SIZE_BOTTOM:
                     SetCursor(theApp.LoadStandardCursor(IDC_SIZENS));
+                    nIDS = XP_EDT_SIZE_HEIGHT;
                     break;
                 case ED_SIZE_RIGHT:
                     // Tables and cells can only size from the right border
@@ -6485,17 +6487,25 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
                     //  to set horizontal sizing cursor
                 case ED_SIZE_LEFT:
                     SetCursor(theApp.LoadStandardCursor(IDC_SIZEWE));
+                    nIDS = XP_EDT_SIZE_WIDTH;
                     break;
                 case ED_SIZE_TOP_RIGHT:
                 case ED_SIZE_BOTTOM_LEFT:
                     SetCursor(theApp.LoadStandardCursor(IDC_SIZENESW));
+                    nIDS = XP_EDT_SIZE_CORNER;
                     break;
                 case ED_SIZE_TOP_LEFT:
                 case ED_SIZE_BOTTOM_RIGHT:
                     SetCursor(theApp.LoadStandardCursor(IDC_SIZENWSE));
+                    nIDS = XP_EDT_SIZE_CORNER;
                     break;
             }
             bCursorSet = TRUE;
+            if( !bTextSet && nIDS )
+            {
+    	        wfe_Progress(context, XP_GetString(nIDS));
+    	        bTextSet = TRUE;
+            }
         }
     }
 #endif // EDITOR

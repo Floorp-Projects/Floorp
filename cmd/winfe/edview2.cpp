@@ -4533,6 +4533,7 @@ DROPEFFECT CEditViewDropTarget::OnDragOver(CWnd* pWnd,
 {
     if ( !m_nIsOKDrop )
     {
+        m_LastDropEffect = DROPEFFECT_NONE;
         return(DROPEFFECT_NONE);
     }
     DROPEFFECT DropEffect = DROPEFFECT_NONE;
@@ -4555,6 +4556,7 @@ DROPEFFECT CEditViewDropTarget::OnDragOver(CWnd* pWnd,
         // Don't allow dropping on selection if drag source is our view
         if( pContext->IsDragging() && pContext->PtInSelectedRegion(cPoint, TRUE) )
         {
+            m_LastDropEffect = DROPEFFECT_NONE;
             return(DROPEFFECT_NONE);
         }
         
