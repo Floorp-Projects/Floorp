@@ -144,7 +144,7 @@
       
         <tree align="horizontal" id="searchengines" flex="1" datasources="rdf:internetsearch" class="inset">
           <treecol id="CheckboxColumn" class="checkboxColumn" />
-          <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
+          <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
           <template>
             <treechildren>
               <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading" >
@@ -162,7 +162,7 @@
           <treehead>
             <treerow>
               <treecell value="&checkbox.column.label;" style="width: 23px;"/>
-              <treecell observes="NameColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending" flex="1"/>
+              <treecell observes="NameColumn" align="center" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" flex="1"/>
             </treerow>
           </treehead>
         </tree>
