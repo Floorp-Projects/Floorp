@@ -61,6 +61,15 @@ namespace MetaData {
     /*
      * Validate the linked list of statement nodes beginning at 'p'
      */
+    void JS2Metadata::ValidateStmtList(StmtNode *p) {
+        cxt.openNamespaces.clear();
+        cxt.openNamespaces.push_back(publicNamespace);
+        while (p) {
+            ValidateStmt(&cxt, &env, p);
+            p = p->next;
+        }
+    }
+
     void JS2Metadata::ValidateStmtList(Context *cxt, Environment *env, StmtNode *p) {
         while (p) {
             ValidateStmt(cxt, env, p);
@@ -92,10 +101,10 @@ namespace MetaData {
                 Attribute *attr = NULL;
                 VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
 
-                ValidateAttributeExpression(cxt, env, vs->attributes);
-                if (vs->attributes)
+                if (vs->attributes) {
+                    ValidateAttributeExpression(cxt, env, vs->attributes);
                     attr = EvalAttributeExpression(env, CompilePhase, vs->attributes);
-                
+                }
                 
                 VariableBinding *v = vs->bindings;
                 Frame *regionalFrame = env->getRegionalFrame();
@@ -130,10 +139,10 @@ namespace MetaData {
     /*
      * Evaluate the linked list of statement nodes beginning at 'p'
      */
-    jsval JS2Metadata::EvalStmtList(Environment *env, Phase phase, StmtNode *p) {
+    jsval JS2Metadata::EvalStmtList(Phase phase, StmtNode *p) {
         jsval retval = JSVAL_VOID;
         while (p) {
-            retval = EvalStmt(env, phase, p);
+            retval = EvalStmt(&env, phase, p);
             p = p->next;
         }
         return retval;
@@ -150,7 +159,7 @@ namespace MetaData {
         case StmtNode::group:
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-                retval = EvalStmtList(env, phase, b->statements);
+                retval = EvalStmtList(phase, b->statements);
             }
             break;
         case StmtNode::label:
@@ -438,9 +447,10 @@ namespace MetaData {
     jsval JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
         String s;
-        EvalExprNode(env, phase, p, s);
+        if (EvalExprNode(env, phase, p, s))
+            s += ".readReference()";
         try {
-            return execute(&s, env, this, p->pos);
+            return execute(&s, p->pos);
         }
         catch (const char *err) {
             reportError(Exception::internalError, err, p->pos);
@@ -495,10 +505,10 @@ namespace MetaData {
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                // rather than inserting "(r = , a = readRef(), r.writeRef(a + 1), a)" with
-                // all the attendant performance overhead and temp. handling issues.
                 if (!EvalExprNode(env, phase, u->op, s))
                     ASSERT(false);  // not an lvalue
+                // rather than inserting "(r = , a = readRef(), r.writeRef(a + 1), a)" with
+                // all the attendant performance overhead and temp. handling issues.
                 s += ".postIncrement()";
                 returningRef = true;
             }
@@ -512,11 +522,14 @@ namespace MetaData {
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
-                s += "new LexicalReference(" + (i->cxt->strict) ? "true, " : "false, ";
+                s += "new LexicalReference(";
+                s += (i->cxt->strict) ? "true, " : "false, ";
                 s += "new Multiname(\"" + i->name + "\"";
                 for (NamespaceListIterator nli = i->cxt->openNamespaces.begin(), end = i->cxt->openNamespaces.end();
                         (nli != end); nli++) {
-                    s += ", " + (*nli)->name;
+                    s += ", new Namespace(\""
+                    s += (*nli)->name;
+                    s += "\")";
                 }
                 s += "))";
                 returningRef = true;
@@ -584,29 +597,24 @@ namespace MetaData {
         return JSVAL_VOID;
     }
 
-    // Slightly varies from spec. - the multiname is actually the list of
-    // qualifiers to apply to the name
-    jsval Environment::lexicalRead(ExecutionState *eState, Multiname *multiname, Phase phase)
+    // Read the value of a lexical reference - it's an error if that reference
+    // doesn't have a binding somewhere
+    jsval Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
         Frame *pf = firstFrame;
         while (pf) {
             jsval rval;
-            if (readProperty(eState, pf, multiname, &lookup, phase, &rval))
+            // have to wrap the frame in a Monkey object in order
+            // to have readProperty handle it...
+            if (meta->readProperty(pf, multiname, &lookup, phase, &rval))
                 return rval;
 
             pf = pf->nextFrame;
         }
-        eState->meta->reportError(Exception::referenceError, "{0} is undefined", eState->pos, multiname->name);
+        meta->reportError(Exception::referenceError, "{0} is undefined", meta->errorPos, multiname->name);
         return JSVAL_VOID;
     }
-
-
-
-    bool Environment::readProperty(ExecutionState *eState, jsval container, Multiname *multinameVal, LookupKind *lookupKind, Phase phase, jsval *rval)
-    {
-    }
-
 
 
 
@@ -620,6 +628,21 @@ namespace MetaData {
     {
     }
 
+/************************************************************************************
+ *
+ *  Multiname
+ *
+ ************************************************************************************/
+
+    // return true if the given namespace is on the namespace list
+    bool Multiname::onList(Namespace *nameSpace)
+    { 
+        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
+            if (*n == nameSpace)
+                return true;
+        }
+        return false;
+    }
 
 /************************************************************************************
  *
@@ -679,7 +702,10 @@ namespace MetaData {
     }
 
     JS2Metadata::JS2Metadata(World &world) :
-        publicNamespace(new Namespace(world.identifiers["public"]))
+        world(world),
+        publicNamespace(new Namespace(world.identifiers["public"])),
+        glob(world),
+        env(new MetaData::SystemFrame(), &glob)
     {
         initializeMonkey();
     }
@@ -701,6 +727,8 @@ namespace MetaData {
             else 
                 return stringClass;
         }
+        ASSERT(JSVAL_IS_OBJECT(obj));
+        return NULL;
 /*
             NAMESPACE do return namespaceClass;
             COMPOUNDATTRIBUTE do return attributeClass;
@@ -712,6 +740,68 @@ namespace MetaData {
 */
     }
 
+    bool JS2Metadata::readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase)
+    {
+        return true;
+    }
+
+    bool JS2Metadata::readStaticMember(StaticMember *m, Phase phase)
+    {
+        return true;
+    }
+
+    // Read the value of a property in the container. Return true/false if that container has
+    // the property or not. If it does, return it's value
+    bool JS2Metadata::readProperty(jsval container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval)
+    {
+        return true;
+    }
+
+    // Read the value of a property in the frame. Return true/false if that frame has
+    // the property or not. If it does, return it's value
+    bool JS2Metadata::readProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval)
+    {
+        StaticMember *m = findFlatMember(container, multiname, ReadAccess, phase);
+        if (!m && (container->kind == Frame::GlobalObject))
+            return readDynamicProperty(container, multiname, lookupKind, phase);
+        else
+            return readStaticMember(m, phase);
+    }
+
+    // Find a binding in the frame that matches the multiname and access
+    // It's an error if more than one such binding exists.
+    StaticMember *JS2Metadata::findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase)
+    {
+        StaticMember *found = NULL;
+        StaticBindingIterator b, end;
+        if ((access == ReadAccess) || (access == ReadWriteAccess)) {
+            b = container->staticReadBindings.lower_bound(multiname->name);
+            end = container->staticReadBindings.upper_bound(multiname->name);
+        }
+        else {
+            b = container->staticWriteBindings.lower_bound(multiname->name);
+            end = container->staticWriteBindings.upper_bound(multiname->name);
+        }
+        while (true) {
+            if (b == end) {
+                if (access == ReadWriteAccess) {
+                    access = WriteAccess;
+                    b = container->staticWriteBindings.lower_bound(multiname->name);
+                    end = container->staticWriteBindings.upper_bound(multiname->name);
+                }
+                else
+                    break;
+            }
+            if (multiname->matches(b->second->qname)) {
+                if (found)
+                    reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", errorPos, multiname->name);
+                else
+                    found = b->second->content;
+            }
+            b++;
+        }
+        return found;
+    }
 
     /*
      * Throw an exception of the specified kind, indicating the position 'pos' and

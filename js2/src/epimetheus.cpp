@@ -97,8 +97,6 @@ const bool showTokens = false;
 #define INTERPRET_INPUT 1
 //#define SHOW_ICODE 1
 
-MetaData::GlobalObject glob(world);
-MetaData::Environment env(new MetaData::SystemFrame(), &glob);
 MetaData::JS2Metadata *metadata;
 
 
@@ -140,10 +138,9 @@ static int readEvalPrint(FILE *in)
                 }
 
                 metadata->setCurrentParser(&p);  // for error reporting
-                MetaData::Context cxt;
 
-                metadata->ValidateStmtList(&cxt, &env, parsedStatements);
-                metadata->EvalStmtList(&env, MetaData::RunPhase, parsedStatements);
+                metadata->ValidateStmtList(parsedStatements);
+                metadata->EvalStmtList(MetaData::RunPhase, parsedStatements);
 
             }
             clear(buffer);

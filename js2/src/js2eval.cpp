@@ -69,26 +69,33 @@ namespace JavaScript {
 namespace MetaData {
 
 
-    JSRuntime *gMonkeyRuntime;
-    JSContext *gMonkeyContext;
-    JSObject *gMonkeyGlobalObject;
     JSClass gMonkeyGlobalClass = { "MyClass", 0, JS_PropertyStub, JS_PropertyStub,
                                        JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
                                        JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub };
 
-    JSClass gMonkeyMultinameClass = 
-            { "Multiname", 0, JS_PropertyStub, JS_PropertyStub,
-               JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
-               JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub };
-
-    // forward ref.
+    // forward refs.
+    static void Multiname_finalize(JSContext *cx, JSObject *obj);
     static void LexicalReference_finalize(JSContext *cx, JSObject *obj);
+    static void Namespace_finalize(JSContext *cx, JSObject *obj);
+
+    JSClass gMonkeyMultinameClass = 
+            { "Multiname", JSCLASS_HAS_PRIVATE, 
+               JS_PropertyStub, JS_PropertyStub,
+               JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
+               JS_ResolveStub, JS_ConvertStub, Multiname_finalize };
+
 
     JSClass gMonkeyLexicalReferenceClass =
             { "LexicalReference", JSCLASS_HAS_PRIVATE, 
                JS_PropertyStub, JS_PropertyStub,
                JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
                JS_ResolveStub, JS_ConvertStub, LexicalReference_finalize };
+
+    JSClass gMonkeyNamespaceClass =
+            { "Namespace", JSCLASS_HAS_PRIVATE, 
+               JS_PropertyStub, JS_PropertyStub,
+               JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
+               JS_ResolveStub, JS_ConvertStub, Namespace_finalize };
 
     // member functions at global scope
     JSFunctionSpec jsfGlobal [] =
@@ -112,7 +119,7 @@ namespace MetaData {
     static JSBool
     LexicalReference_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     {
-        ExecutionState *eState = static_cast<ExecutionState *>(JS_GetContextPrivate(cx));
+        JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
 
         ASSERT(argc == 2);
         ASSERT(JSVAL_IS_BOOLEAN(argv[0]));  // the 'strict' flag (XXX what's that for?)
@@ -122,7 +129,7 @@ namespace MetaData {
         ASSERT(OBJ_GET_CLASS(cx, multiNameObj) == &gMonkeyMultinameClass); 
         Multiname *mName = static_cast<Multiname *>(JS_GetPrivate(cx, multiNameObj));
 
-        if (!JS_SetPrivate(cx, obj, new LexicalReference(mName, eState->env, (JSVAL_TO_BOOLEAN(argv[0])) == JS_TRUE) ))
+        if (!JS_SetPrivate(cx, obj, new LexicalReference(mName, &meta->env, (JSVAL_TO_BOOLEAN(argv[0])) == JS_TRUE) ))
             return JS_FALSE;
 
         return JS_TRUE;
@@ -142,10 +149,10 @@ namespace MetaData {
     readLexicalReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     {
         ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyLexicalReferenceClass);
-        ExecutionState *eState = static_cast<ExecutionState *>(JS_GetContextPrivate(cx));
+        JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
         LexicalReference *lRef = static_cast<LexicalReference *>(JS_GetPrivate(cx, obj));
 
-        eState->env->lexicalRead(eState, lRef->variableMultiname, RunPhase);
+        meta->env.lexicalRead(meta, lRef->variableMultiname, RunPhase);
         return JS_TRUE;
     }
 
@@ -154,7 +161,7 @@ namespace MetaData {
     writeLexicalReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     {
         ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyLexicalReferenceClass);
-        ExecutionState *eState = static_cast<ExecutionState *>(JS_GetContextPrivate(cx));
+        JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
         LexicalReference *lRef = static_cast<LexicalReference *>(JS_GetPrivate(cx, obj));
 
 
@@ -179,34 +186,66 @@ namespace MetaData {
     static JSBool
     Multiname_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     {
+        JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
+
         ASSERT(argc >= 1);      // could be just the base name
         ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyMultinameClass);
 
         ASSERT(JSVAL_IS_STRING(argv[0]));
+        JSString *str = JSVAL_TO_STRING(argv[0]);
 
-        // XXX use reserved slots instead
-        if (!JS_SetProperty(cx, obj, "name", &argv[0]))
+        Multiname *mName = new Multiname(meta->world.identifiers[String(JS_GetStringChars(str), JS_GetStringLength(str))]);
+        if (!JS_SetPrivate(cx, obj, mName))
             return JS_FALSE;
 
-        jsval qualifierVal = JSVAL_NULL;
-        if (argc > 1) {
-            JSObject *qualArray = JS_NewArrayObject(cx, argc - 1, &argv[1]);
-            if (!qualArray)
-                return JS_FALSE;
-            qualifierVal = OBJECT_TO_JSVAL(qualArray);
+        for (uintN i = 1; i < argc; i++) {
+            ASSERT(JSVAL_IS_OBJECT(argv[i]));
+            JSObject *obj = JSVAL_TO_OBJECT(argv[i]);
+            ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyNamespaceClass);
+            Namespace *ns = static_cast<Namespace *>(JS_GetPrivate(cx, obj));
+            mName->addNamespace(ns);
         }
-        if (!JS_SetProperty(cx, obj, "qualifiers", &qualifierVal))
-            return JS_FALSE;
 
         return JS_TRUE;
     }
 
-    // member functions in a Multiname
-    JSFunctionSpec jsfMultiname [] =
+    // finalize a Multiname - called by Monkey gc
+    static void
+    Multiname_finalize(JSContext *cx, JSObject *obj)
     {
-	{ 0 }
-    };
+        ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyMultinameClass);
+        Multiname *mName = static_cast<Multiname *>(JS_GetPrivate(cx, obj));
+        if (mName) delete mName;
+    }
 
+
+    /******************************************************************************
+     Namespace
+    ******************************************************************************/
+
+    // finish constructing a Namespace
+    static JSBool
+    Namespace_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        JS2Metadata *meta = static_cast<JS2Metadata *>(JS_GetContextPrivate(cx));
+        ASSERT(argc == 1);
+        ASSERT(JSVAL_IS_STRING(argv[0]));
+        JSString *str = JSVAL_TO_STRING(argv[0]);
+
+        Namespace *ns = new Namespace(meta->world.identifiers[String(JS_GetStringChars(str), JS_GetStringLength(str))]);
+        if (!JS_SetPrivate(cx, obj, ns))
+            return JS_FALSE;
+        return JS_TRUE;
+    }
+
+    // finalize a Namespace - called by Monkey gc
+    static void
+    Namespace_finalize(JSContext *cx, JSObject *obj)
+    {
+        ASSERT(OBJ_GET_CLASS(cx, obj) == &gMonkeyNamespaceClass);
+        Namespace *ns = static_cast<Namespace *>(JS_GetPrivate(cx, obj));
+        if (ns) delete ns;
+    }
 
 
 
@@ -216,45 +255,50 @@ namespace MetaData {
     // Initialize the SpiderMonkey engine
     void JS2Metadata::initializeMonkey()
     {
-        gMonkeyRuntime = JS_NewRuntime( 1000000L );
-        if (!gMonkeyRuntime)
+        monkeyRuntime = JS_NewRuntime(1000000L);
+        if (!monkeyRuntime)
             throw "Monkey start failure";
 
-        gMonkeyContext = JS_NewContext( gMonkeyRuntime, 8192 );
-        if (!gMonkeyContext)
+        monkeyContext = JS_NewContext(monkeyRuntime, 8192);
+        if (!monkeyContext)
             throw "Monkey start failure";
 
 
-        gMonkeyGlobalObject = JS_NewObject(gMonkeyContext, &gMonkeyGlobalClass, NULL, NULL);
-        if (!gMonkeyGlobalObject)
+        monkeyGlobalObject = JS_NewObject(monkeyContext, &gMonkeyGlobalClass, NULL, NULL);
+        if (!monkeyGlobalObject)
             throw "Monkey start failure";
 
-        JS_SetErrorReporter(gMonkeyContext, MonkeyError);
+        JS_SetErrorReporter(monkeyContext, MonkeyError);
 
-        JS_InitStandardClasses(gMonkeyContext, gMonkeyGlobalObject);
+        if (!JS_InitStandardClasses(monkeyContext, monkeyGlobalObject))
+            throw "Monkey start failure";
 
-        JS_InitClass(gMonkeyContext, gMonkeyGlobalObject, NULL,
+        JS_InitClass(monkeyContext, monkeyGlobalObject, NULL,
                      &gMonkeyLexicalReferenceClass, LexicalReference_constructor, 0,
                      NULL, jsfLexicalReference, NULL, NULL);
 
-        JS_InitClass(gMonkeyContext, gMonkeyGlobalObject, NULL,
+        JS_InitClass(monkeyContext, monkeyGlobalObject, NULL,
                      &gMonkeyMultinameClass, Multiname_constructor, 0,
-                     NULL, jsfMultiname, NULL, NULL);
+                     NULL, NULL, NULL, NULL);
 
-        JS_DefineFunctions(gMonkeyContext, gMonkeyGlobalObject, jsfGlobal);
+        JS_InitClass(monkeyContext, monkeyGlobalObject, NULL,
+                     &gMonkeyNamespaceClass, Namespace_constructor, 0,
+                     NULL, NULL, NULL, NULL);
 
+        if (!JS_DefineFunctions(monkeyContext, monkeyGlobalObject, jsfGlobal))
+            throw "Monkey start failure";
     }
 
     // Execute a JS string against the given environment
     // Errors are thrown back to C++ by the error handler
-    jsval JS2Metadata::execute(String *str, Environment *env, JS2Metadata *meta, size_t pos)
+    jsval JS2Metadata::execute(String *str, size_t pos)
     {
         jsval retval;
 
-        ExecutionState eState(gMonkeyContext, env, meta, pos);
-        JS_SetContextPrivate(gMonkeyContext, &eState);
+        errorPos = pos;
+        JS_SetContextPrivate(monkeyContext, this);
 
-        JS_EvaluateUCScript(gMonkeyContext, gMonkeyGlobalObject, str->c_str(), str->length(), "file", 1, &retval);
+        JS_EvaluateUCScript(monkeyContext, monkeyGlobalObject, str->c_str(), str->length(), "file", 1, &retval);
         
         return retval;
     }

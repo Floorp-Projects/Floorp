@@ -59,7 +59,8 @@ namespace JavaScript
             userException,
             definitionError,
             badValueError,
-            compileExpressionError
+            compileExpressionError,
+            propertyAccessError
         };
         
         Kind kind;              // The exception's kind

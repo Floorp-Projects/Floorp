@@ -46,7 +46,6 @@ namespace MetaData {
 
 
 // forward definitions:
-class ExecutionState;
 class JS2Metadata;
 class JS2Class;
 class StaticBinding;
@@ -59,7 +58,8 @@ typedef Invokable Callor;
 typedef Invokable Constructor;
 
 
-enum Phase { CompilePhase, RunPhase };
+enum Phase  { CompilePhase, RunPhase };
+enum Access { ReadAccess, WriteAccess, ReadWriteAccess };
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
@@ -105,11 +105,19 @@ public:
 };
 
 // MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
-typedef std::vector<QualifiedName *> QualifierList;
-typedef QualifierList::iterator QualifierListIterator;
+// We keep Multinames as a basename and a list of namespace qualifiers
+typedef std::vector<Namespace *> NamespaceList;
+typedef NamespaceList::iterator NamespaceListIterator;
 class Multiname {
 public:
-    QualifierList qList;
+    
+    Multiname(StringAtom &name) : name(name) { }
+    void addNamespace(Namespace *ns)    { nsList.push_back(ns); }
+
+    bool matches(QualifiedName &q)      { return (name == q.id) && onList(q.nameSpace); }
+    bool onList(Namespace *nameSpace);
+
+    NamespaceList nsList;
     StringAtom &name;
 };
 
@@ -237,7 +245,9 @@ public:
 class Frame {
 public:
     enum Plurality { Singular, Plural };
-    enum FrameKind { GlobalObject, Package, Function, Class, Block };
+    enum FrameKind { System, GlobalObject, Package, Function, Class, Block };
+
+    Frame(FrameKind kind) : kind(kind), nextFrame(NULL) { }
 
     StaticBindingMap staticReadBindings;        // Map of qualified names to readable static members defined in this frame
     StaticBindingMap staticWriteBindings;       // Map of qualified names to writable static members defined in this frame
@@ -252,6 +262,7 @@ public:
 
 class JS2Class : public Frame {
 public:
+    JS2Class() : Frame(Class) { }
         
     InstanceBindingMap instanceReadBindings;    // Map of qualified names to readable instance members defined in this class    
     InstanceBindingMap instanceWriteBindings;   // Map of qualified names to writable instance members defined in this class    
@@ -276,7 +287,7 @@ public:
 
 class GlobalObject : public Frame {
 public:
-    GlobalObject(World &world) : internalNamespace(new Namespace(world.identifiers["internal"])) { }
+    GlobalObject(World &world) : Frame(Frame::GlobalObject), internalNamespace(new Namespace(world.identifiers["internal"])) { }
 
     Namespace *internalNamespace;               // This global object's internal namespace
     DynamicPropertyMap dynamicProperties;       // A set of this global object's dynamic properties
@@ -369,11 +380,14 @@ public:
 // The top-level frame containing predefined constants, functions, and classes.
 class SystemFrame : public Frame {
 public:
+    SystemFrame() : Frame(System) { }
 };
 
 // Frames holding bindings for invoked functions
 class FunctionFrame : public Frame {
 public:
+    FunctionFrame() : Frame(Function) { }
+
     Plurality plurality;
     jsval thisObject;               // The value of this; none if this function doesn't define this;
                                     // inaccessible if this function defines this but the value is not 
@@ -386,6 +400,8 @@ public:
 
 class BlockFrame : public Frame {
 public:
+    BlockFrame() : Frame(Block) { }
+
     Plurality plurality;
 };
 
@@ -410,9 +426,7 @@ public:
     Frame *getTopFrame()            { return firstFrame; }
 
     jsval findThis(bool allowPrototypeThis);
-    jsval lexicalRead(ExecutionState *eState, Multiname *multiname, Phase phase);
-
-    bool readProperty(ExecutionState *eState, jsval container, Multiname *multinameVal, LookupKind *lookupKind, Phase phase, jsval *rval);
+    jsval lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
 
 
 private:
@@ -468,32 +482,47 @@ public:
 
     void setCurrentParser(Parser *parser) { mParser = parser; }
 
-    void ValidateTypeExpression(ExprNode *e);
+    void ValidateStmtList(StmtNode *p);
+    jsval EvalStmtList(Phase phase, StmtNode *p);
+
+
     void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
+    void ValidateTypeExpression(ExprNode *e);
     void ValidateStmt(Context *cxt, Environment *env, StmtNode *p);
     void defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 
+    jsval EvalStmtList(Environment *env, Phase phase, StmtNode *p);
     jsval EvalExpression(Environment *env, Phase phase, ExprNode *p);
     bool EvalExprNode(Environment *env, Phase phase, ExprNode *p, String &s);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
-    jsval EvalStmtList(Environment *env, Phase phase, StmtNode *p);
     jsval EvalStmt(Environment *env, Phase phase, StmtNode *p);
 
 
     JS2Class *objectType(jsval obj);
+
+    bool readProperty(jsval container, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
+    bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, jsval *rval);
+    StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
+
+    bool readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase);
+    bool readStaticMember(StaticMember *m, Phase phase);
+
+
 
     void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
     void reportError(Exception::Kind kind, const char *message, size_t pos, const String& name);
 
 
     void initializeMonkey();
-    jsval execute(String *str, Environment *env, JS2Metadata *meta, size_t pos);
+    jsval execute(String *str, size_t pos);
 
+    // Used for interning strings
+    World &world;
 
     // The one and only 'public' namespace
-    Namespace *publicNamespace;      // XXX is this the right place for this ???
+    Namespace *publicNamespace;
 
     // The base classes:
     JS2Class *undefinedClass;
@@ -505,21 +534,18 @@ public:
 
     
     Parser *mParser;                // used for error reporting
+    size_t errorPos;
 
-};
 
-// Captures some metadata-related info. that gets passed back into
-//       js2metadata routines from executing JS code
-// - it's hidden in the Monkey context private
-class ExecutionState {
-public:        
-    ExecutionState(JSContext *cx, Environment *env, JS2Metadata *meta, size_t pos) : cx(cx), env(env), meta(meta), pos(pos) { }
-    virtual ~ExecutionState()   { }
+    GlobalObject glob;
+    Environment env;
+    Context cxt;
 
-    JSContext *cx;          // the SpiderMonkey context
-    Environment *env;       // the frame array, used for lookups
-    JS2Metadata *meta;      // base class for error reporting
-    size_t pos;             // position from node being executed (vaguely)
+    // SpiderMonkey execution data:
+    JSRuntime *monkeyRuntime;
+    JSContext *monkeyContext;
+    JSObject *monkeyGlobalObject;
+
 };
 
 
