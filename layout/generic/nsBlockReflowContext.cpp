@@ -661,7 +661,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   aBottomMarginResult.Include(mMargin.bottom);
 
   // See if the block will fit in the available space
-  PRBool fits = PR_TRUE;
+  PRBool fits;
   nscoord x = mX;
   nscoord y = mY;
 
@@ -684,20 +684,11 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
            y, mSpace.y);
 #endif
 
+    // Empty blocks are placed at the top of the collapsed margin
     y = mSpace.y;
-
-    // Now place the frame and complete the reflow process
-    nsContainerFrame::FinishReflowChild(mFrame, mPresContext, &aReflowState, mMetrics, x, y, 0);
-
-    // Empty blocks do not have anything special done to them and they
-    // always fit. Note: don't force the width to 0
-    aInFlowBounds = nsRect(x, y, mMetrics.width, 0);
-
-    // Retain combined area information in case we contain a float
-    // and nothing else.
-    aCombinedRect = mMetrics.mOverflowArea;
-    aCombinedRect.x += x;
-    aCombinedRect.y += y;
+   
+    // Empty blocks always fit
+    fits = PR_TRUE;
   }
   else {
     // See if the frame fit. If it's the first frame then it always
@@ -709,38 +700,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
         mSpace.height == NS_UNCONSTRAINEDSIZE ||
         y + mMetrics.height <= mSpace.YMost())
     {
-      // Calculate the actual x-offset and left and right margin
-      nsBlockHorizontalAlign  align;
-      
-      align.mXOffset = x;
-      AlignBlockHorizontally(mMetrics.width, align);
-      x = align.mXOffset;
-      mMargin.left = align.mLeftMargin;
-      mMargin.right = align.mRightMargin;
-
-      // Update the in-flow bounds rectangle
-      aInFlowBounds.SetRect(x, y,
-                            mMetrics.width,
-                            mMetrics.height);
-
-      // Apply CSS relative positioning to update x,y coordinates
-      const nsStyleDisplay* styleDisp = mFrame->GetStyleDisplay();
-      if (NS_STYLE_POSITION_RELATIVE == styleDisp->mPosition) {
-        x += aComputedOffsets.left;
-        y += aComputedOffsets.top;
-      }
-
-      // Compute combined-rect in callers coordinate system. The value
-      // returned in the reflow metrics is relative to the child
-      // frame.  This includes relative positioning and the result should
-      // be used only for painting and for 'overflow' handling.
-      aCombinedRect.x = mMetrics.mOverflowArea.x + x;
-      aCombinedRect.y = mMetrics.mOverflowArea.y + y;
-      aCombinedRect.width = mMetrics.mOverflowArea.width;
-      aCombinedRect.height = mMetrics.mOverflowArea.height;
-
-      // Now place the frame and complete the reflow process
-      nsContainerFrame::FinishReflowChild(mFrame, mPresContext, &aReflowState, mMetrics, x, y, 0);
+      fits = PR_TRUE;
 
       // Adjust the max-element-size in the metrics to take into
       // account the margins around the block element.
@@ -795,6 +755,30 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
       mFrame->DidReflow(mPresContext, &aReflowState, NS_FRAME_REFLOW_FINISHED);
       fits = PR_FALSE;
     }
+  }
+
+  if (fits) {
+    // Calculate the actual x-offset and left and right margin
+    nsBlockHorizontalAlign  align;
+    align.mXOffset = x;
+    AlignBlockHorizontally(mMetrics.width, align);
+    x = align.mXOffset;
+    mMargin.left = align.mLeftMargin;
+    mMargin.right = align.mRightMargin;
+    
+    aInFlowBounds = nsRect(x, y, mMetrics.width, mMetrics.height);
+
+    // Apply CSS relative positioning
+    const nsStyleDisplay* styleDisp = mFrame->GetStyleDisplay();
+    if (NS_STYLE_POSITION_RELATIVE == styleDisp->mPosition) {
+      x += aComputedOffsets.left;
+      y += aComputedOffsets.top;
+    }
+
+    // Now place the frame and complete the reflow process
+    nsContainerFrame::FinishReflowChild(mFrame, mPresContext, &aReflowState, mMetrics, x, y, 0);
+
+    aCombinedRect = mMetrics.mOverflowArea + nsPoint(x, y);
   }
 
   return fits;
