@@ -250,12 +250,8 @@ function GetPrefsService()
 
   try {
     gPrefsService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
-
-    if (!gPrefsService)
-      dump("failed to get prefs service!\n");
   }
-  catch(ex)
-  {
+  catch(ex) {
     dump("failed to get prefs service!\n");
   }
 
@@ -276,10 +272,8 @@ function GetPrefs()
       return gPrefsBranch;
     else
       dump("failed to get root prefs!\n");
-
   }
-  catch(ex)
-  {
+  catch(ex) {
     dump("failed to get root prefs!\n");
   }
   return null;
@@ -290,8 +284,7 @@ function SetUnicharPref(aPrefName, aPrefValue)
   var prefs = GetPrefs();
   if (prefs)
   {
-    try
-    {
+    try {
       var str = Components.classes["@mozilla.org/supports-wstring;1"]
                           .createInstance(Components.interfaces.nsISupportsWString);
       str.data = aPrefValue;
@@ -301,13 +294,12 @@ function SetUnicharPref(aPrefName, aPrefValue)
   }
 }
 
-function  GetUnicharPref(aPrefName, aDefVal)
+function GetUnicharPref(aPrefName, aDefVal)
 {
   var prefs = GetPrefs();
   if (prefs)
   {
-    try
-    {
+    try {
       return prefs.getComplexValue(aPrefName, Components.interfaces.nsISupportsWString).data;
     }
     catch(e) {}
@@ -682,14 +674,14 @@ function ConvertRGBColorIntoHEXColor(color)
 {
   if (color.search( /rgb.*/ ) != -1)
   {
-    res = color.match( /rgb\((\d*),(\d*),(\d*)\)/ );
-    r = Number(RegExp.$1).toString(16);
+    var res = color.match( /rgb\((\d*),(\d*),(\d*)\)/ );
+    var r = Number(RegExp.$1).toString(16);
     if (r.length == 1) r = "0"+r;
-    v = Number(RegExp.$2).toString(16);
-    if (v.length == 1) v = "0"+v;
-    b = Number(RegExp.$3).toString(16);
+    var g = Number(RegExp.$2).toString(16);
+    if (g.length == 1) g = "0"+v;
+    var b = Number(RegExp.$3).toString(16);
     if (b.length == 1) b = "0"+b;
-    return "#"+r+v+b;
+    return "#"+r+g+b;
   }
   else
   {
@@ -717,4 +709,15 @@ function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
     value = "";
   }
   return value;
+}
+
+function GetPromptService()
+{
+  var promptService = null;
+  try {
+    promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+  }
+  catch (e) {}
+  return promptService;
 }
