@@ -856,6 +856,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp",				"MsgNews");
 	BuildIDLProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook");
 	BuildIDLProject(":mozilla:mailnews:db:macbuild:msgDBIDL.mcp",					"MsgDB");
+	BuildIDLProject(":mozilla:mailnews:imap:macbuild:msgimapIDL.mcp",				"MsgImap");
 	BuildIDLProject(":mozilla:mailnews:mime:macbuild:mimeIDL.mcp",					"Mime");
 
 	BuildIDLProject(":mozilla:caps:macbuild:CapsIDL.mcp",							"caps");
