@@ -47,6 +47,8 @@ public:
                     nsReflowStatus& aStatus);
 
   // nsIFrame overrides
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);

@@ -56,6 +56,17 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 }
 
 NS_IMETHODIMP
+nsPlaceholderFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+  // XXX Delete the floated frame
+  if (nsnull != mAnchoredItem) {
+    mAnchoredItem->DeleteFrame(aPresContext);
+  }
+
+  return nsFrame::DeleteFrame(aPresContext);
+}
+
+NS_IMETHODIMP
 nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
