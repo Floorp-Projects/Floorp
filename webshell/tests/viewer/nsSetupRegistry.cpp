@@ -33,7 +33,6 @@
 #include "nsXPComCIID.h"
 #include "nsParserCIID.h"
 #include "nsDOMCID.h"
-#include "nsLayoutCID.h"
 #include "nsINetService.h"
 #ifdef OJI
 #include "nsICapsManager.h"
@@ -75,7 +74,6 @@
     #define PREF_DLL   "xppref32.dll"
     #define PARSER_DLL "raptorhtmlpars.dll"
     #define DOM_DLL    "jsdom.dll"
-    #define LAYOUT_DLL "raptorhtml.dll"
     #define NETLIB_DLL "netlib.dll"
     #define EDITOR_DLL "ender.dll"
     #define RDF_DLL    "rdf.dll"
@@ -105,7 +103,6 @@
     #define PREF_DLL        "PREF_DLL"
     #define PARSER_DLL    "PARSER_DLL"
     #define DOM_DLL        "DOM_DLL"
-    #define LAYOUT_DLL    "LAYOUT_DLL"
     #define NETLIB_DLL    "NETLIB_DLL"
     #define EDITOR_DLL    "ENDER_DLL"
     #define RDF_DLL            "RDF_DLL"
@@ -140,7 +137,6 @@
     #define PREF_DLL   "libpref.so"
     #define PARSER_DLL "libraptorhtmlpars.so"
     #define DOM_DLL    "libjsdom.so"
-    #define LAYOUT_DLL "libraptorhtml.so"
     #define NETLIB_DLL "libnetlib.so"
     #define EDITOR_DLL "libender.so"
     #define RDF_DLL    "librdf.so"
@@ -199,12 +195,6 @@ static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
-static NS_DEFINE_IID(kCHTMLDocument, NS_HTMLDOCUMENT_CID);
-static NS_DEFINE_IID(kCXMLDocument, NS_XMLDOCUMENT_CID);
-static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
-static NS_DEFINE_IID(kCHTMLImageElement, NS_HTMLIMAGEELEMENT_CID);
-static NS_DEFINE_IID(kCHTMLOptionElement, NS_HTMLOPTIONELEMENT_CID);
-static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
@@ -218,36 +208,6 @@ static NS_DEFINE_CID(kCGenericTransferableCID, NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kDataFlavorCID,           NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
-
-#if 0    // autoregistration now works on all platforms, and RDF self-registers, so commenting out
-#if defined(XP_MAC) || defined (XP_UNIX)
-static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFHTMLBuilderCID,        NS_RDFHTMLBUILDER_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFTreeBuilderCID,        NS_RDFTREEBUILDER_CID);
-static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
-static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFXULBuilderCID,         NS_RDFXULBUILDER_CID);
-static NS_DEFINE_CID(kXULDataSourceCID,         NS_XULDATASOURCE_CID);
-static NS_DEFINE_CID(kXULDocumentCID,           NS_XULDOCUMENT_CID);
-static NS_DEFINE_CID(kXULContentSinkCID,        NS_XULCONTENTSINK_CID);
-#endif
-#endif
-
-static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
-static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
-static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
-static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,     NS_HTML_CSS_STYLESHEET_CID);
-static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
-static NS_DEFINE_CID(kSelectionCID,             NS_SELECTION_CID);
-static NS_DEFINE_CID(kRangeCID,                 NS_RANGE_CID);
-static NS_DEFINE_CID(kRangeListCID,                NS_RANGELIST_CID);
-static NS_DEFINE_IID(kContentIteratorCID,       NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kSubtreeIteratorCID,       NS_SUBTREEITERATOR_CID);
-static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
-static NS_DEFINE_CID(kCEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
 #ifdef OJI
@@ -316,36 +276,13 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kWellFormedDTDCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCDOMScriptObjectFactory, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCScriptNameSetRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCHTMLDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCXMLDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCImageDocument, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCHTMLImageElement, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCHTMLOptionElement, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kNameSpaceManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCEventListenerManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kObserverServiceCID, NULL, NULL, BASE_DLL,PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kObserverCID, NULL, NULL, BASE_DLL,PR_FALSE, PR_FALSE);
 
 #if defined(NS_USING_PROFILES)
   nsComponentManager::RegisterComponent(kProfileCID, NULL, NULL, PROFILE_DLL, PR_FALSE, PR_FALSE);
-#endif
-
-#if 0    // autoregistration now works on all platforms, and RDF self-registers, so commenting out
-#if defined(XP_MAC) || defined (XP_UNIX)
-  nsComponentManager::RegisterComponent(kRDFBookMarkDataSourceCID, NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFCompositeDataSourceCID, NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFHTMLBuilderCID,        NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFInMemoryDataSourceCID, NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFServiceCID,            NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFTreeBuilderCID,        NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFContentSinkCID,        NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFXMLDataSourceCID,      NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFXULBuilderCID,         NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kXULDataSourceCID,         NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kXULDocumentCID,           NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kXULContentSinkCID,        NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
-#endif
 #endif
 
   nsComponentManager::RegisterComponent(kClipboardCID,            NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -355,30 +292,6 @@ NS_SetupRegistry()
 
   nsComponentManager::RegisterComponent(kCDragServiceCID,         NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
-  nsComponentManager::RegisterComponent(kCSSParserCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kPresShellCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kHTMLStyleSheetCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kHTMLCSSStyleSheetCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kTextNodeCID,       NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kSelectionCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRangeCID,            NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRangeListCID,        NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kContentIteratorCID,NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kSubtreeIteratorCID,NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kFrameUtilCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-
-#if 0    // autoregistration now works on all platforms, so commenting out
-  nsComponentManager::RegisterComponent(kCharsetConverterManagerCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCharsetAliasCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kISO88591ToUnicodeCID,      NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kISO88597ToUnicodeCID,    NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCP1253ToUnicodeCID,      NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kSJIS2UnicodeCID,         NULL, NULL, UCVJA_DLL, PR_FALSE, PR_FALSE);
-  // nsComponentManager::RegisterComponent(kEUCJPToUnicodeCID,       NULL, NULL, UCVJA2_DLL, PR_FALSE, PR_FALSE);
-  // nsComponentManager::RegisterComponent(kISO2022JPToUnicodeCID,   NULL, NULL, UCVJA2_DLL, PR_FALSE, PR_FALSE);
-
-  nsComponentManager::RegisterComponent(kPlatformCharsetCID,      NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
-#endif
 
   nsComponentManager::RegisterComponent(kUnicharUtilCID,          NULL, NULL, UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
 
@@ -402,5 +315,4 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kCMenuBarCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCMenuCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCMenuItemCID,      NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  //nsComponentManager::RegisterComponent(kCXULCommandCID,    NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 }
