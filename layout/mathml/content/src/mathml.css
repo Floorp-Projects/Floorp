@@ -260,6 +260,7 @@ p {
 
 [background="yellow"] {
    background-color: yellow;
+  border: 1px dotted red;
 }
 
 /*
@@ -270,7 +271,7 @@ maction:hover  {
 */
 
 maction {
-  background-color: yellow;
+  background-color: gray;
 /*  border: 1px solid black; */
 }
 
