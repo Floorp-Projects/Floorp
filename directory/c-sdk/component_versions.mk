@@ -40,13 +40,13 @@ COMPONENTS_DIR		= /share/builds/components
 
 # NSPR - Netscape Portable Runtime
 NSPR_LIBVERSION		= 4
-NSPR_RELEASE_TAG	= v4.1.2
+NSPR_RELEASE_TAG	= v4.2.2
 NSPR_RELEASE_TREE	= $(COMPONENTS_DIR)
 
 # NSS - Network Security Services
 NSSVERS			= 3
-NSS_RELEASE_TAG		= NSS_3_3_2_RTM
-#NSS_DYNAMIC_SOFTOKN	= 1
+NSS_RELEASE_TAG		= NSS_3_7_7_RTM
+NSS_DYNAMIC_SOFTOKN	= 1
 NSS_RELEASE_TREE	= $(COMPONENTS_DIR)
 
 # SVRCORE - Client/server utility library

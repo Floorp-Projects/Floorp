@@ -65,7 +65,7 @@ static void *ldaptool_debug_realloc( void *ptr, size_t size );
 static void ldaptool_debug_free( void *ptr );
 #endif /* LDAPTOOL_DEBUG_MEMORY */
 
-#if defined(NET_SSL)
+#if defined(NET_SSL) && defined(LDAP_TOOL_PKCS11)
 static void ldaptool_setcallbacks( struct ldapssl_pkcs_fns *pfns);
 static char * buildTokenCertName( const char *tokenName, const char *certName);
 #ifdef FORTEZZA

@@ -74,7 +74,8 @@ GARBAGE 	+= $(LIBPRLDAP) $(DLLPRLDAP)
 
 LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
 INCLUDES	+= -I$(DISTHDIR) -I$(HDIR) -I$(INSTALLDIR)/include \
-                   -I$(DIST)/include/nspr
+                   -I$(DIST)/include/nspr \
+		   -I$(DIST)/$(RELEASE_OBJDIR_NAME)/include
 DEFINES		+= $(DEFS)
 
 PLATFORMCFLAGS	= -DUSE_WAITPID -DNEEDPROTOS

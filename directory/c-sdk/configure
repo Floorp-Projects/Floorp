@@ -2864,6 +2864,7 @@ fi
 
 if test "$OS_ARCH" = "Linux"; then
     OS_RELEASE=`echo $OS_RELEASE | sed 's/-.*//'`
+    OS_RELEASE=`echo $OS_RELEASE | awk -F. '{ print $1 "." $2 }'`
 fi
 
 #######################################################################

@@ -92,7 +92,9 @@ all export::	$(INCLUDEDIR) $(GENHEADERS)
 	$(INSTALL) $(INSTALLFLAGS) -m 644 $(HEADERS) $(INCLUDEDIR)
 	$(INSTALL) $(INSTALLFLAGS) -m 644 $(PRIVATEHEADERS) $(PRIVATEINCDIR)
 	rm -rf $(NSPRINCDIR)/*
-	cp -r $(DIST)/$(OBJDIR_NAME)/include/nspr/* $(NSPRINCDIR)
+	if [ -d $(DIST)/$(OBJDIR_NAME)/include/nspr ]; then				\
+		cp -r $(DIST)/$(OBJDIR_NAME)/include/nspr/* $(NSPRINCDIR);	\
+	fi
 
 $(INCLUDEDIR):	FORCE
 	$(NSINSTALL) -D $(INCLUDEDIR)

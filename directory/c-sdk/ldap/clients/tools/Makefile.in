@@ -44,11 +44,13 @@ include $(MOD_DEPTH)/config/autoconf.mk
 include $(topsrcdir)/build.mk
 
 INSTALLDIR     = $(DIST)/$(OBJDIR_NAME)/bin
+DIST_LIB_PATH  = $(DIST)/$(RELEASE_OBJDIR_NAME)/lib
 HEADERDIR      = $(MOD_DEPTH)/dist/$(OBJDIR_NAME)
 
 INCLUDES	+= -I$(HEADERDIR)/include \
 		-I$(DIST)/include/obsolete \
 		-I$(DIST)/include/nspr \
+		-I$(DIST)/$(RELEASE_OBJDIR_NAME)/include \
 		-I$(DIST)/include \
 		-I$(DIST)/public/security \
 		-I$(DIST)/public/nss \
@@ -127,6 +129,9 @@ endif
 CLIENT_OBJS = $(LDAPDELETE_OBJ) $(LDAPMODIFY_OBJ) \
 	$(LDAPSEARCH_OBJ) $(LDAPCOMPARE_OBJ) $(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ)
 
+# For 'clean' target:
+TARGETS=$(BINDIR) $(LIBDIR) $(CLIENT_OBJS)
+
 LDAPDELETE = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapdelete))
 LDAPMODIFY = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapmodify))
 LDAPSEARCH = $(addsuffix $(EXE_SUFFIX), $(addprefix $(BINDIR)/, ldapsearch))
@@ -150,7 +155,7 @@ endif
 ifeq ($(OS_ARCH), SunOS)
 EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
 	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib $(SVRCORE_LINK) \
+             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
 	     $(LDAPTOOLS_NSS_LINK) \
 	     -lthread -lposix4 -lsocket -lnls \
 	     -ldl -lresolv -lgen 
@@ -183,7 +188,7 @@ endif
 ifeq ($(OS_ARCH), OSF1)
 EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
 	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib $(SVRCORE_LINK) \
+             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
 	     $(LDAPTOOLS_NSS_LINK) \
 	     -lcxx -lpthread -lrt -lmach -lexc 
 EXTRA_LIBS += -L$(DIST)/lib $(DYNAMICNSPR)
@@ -192,26 +197,29 @@ endif
 ifeq ($(OS_ARCH), Linux)
 EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
 	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib $(SVRCORE_LINK) \
+             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
 	     $(LDAPTOOLS_NSS_LINK) \
 	     -l$(LBER_LIBNAME) \
 	     -ldl -lresolv -lpthread 
 EXTRA_LIBS += -L$(DIST)/lib $(DYNAMICNSPR)
+# On Linux, we must link with stdc++ because one of
+# our object files (convutf8.o) was compiled as a C++ object.
+EXTRA_LIBS += -lstdc++
 endif
 
 ifeq ($(OS_ARCH), HP-UX)
 EXTRA_LIBS = -ldld -lm -lpthread -lrt \
 	     -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
 	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib $(SVRCORE_LINK) -l$(LBER_LIBNAME) \
-	     $(LDAPTOOLS_NSS_LINK)
+             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
+	      -l$(LBER_LIBNAME) $(LDAPTOOLS_NSS_LINK)
 EXTRA_LIBS += -L$(DIST)/lib $(DYNAMICNSPR)
 endif
 
 ifeq ($(OS_ARCH), AIX)
 EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
 	     -l$(LDIF_LIBNAME) -l$(SSLDAP_LIBNAME) -l$(PRLDAP_LIBNAME) \
-             -L$(DIST)/lib $(SVRCORE_LINK) \
+             -L$(DIST)/lib -L$(DIST_LIB_PATH) $(SVRCORE_LINK) \
 	     $(LDAPTOOLS_NSS_LINK) \
 	     -ldl -brtl -lpthreads -lc_r -lm
 EXTRA_LIBS += -L$(DIST)/lib $(DYNAMICNSPR)
@@ -254,7 +262,7 @@ include $(topsrcdir)/config/rules.mk
 
 ###########################################################################
 
-all::	$(BINS) $(OBJDEST) linklibnls libdir $(BINS)
+all::	$(OBJDEST) linklibnls libdir $(BINS)
 
 libdir: linklibnls
 ifeq ($(OS_ARCH), WINNT)
@@ -268,6 +276,7 @@ else
 endif
 ifeq ($(COMPS_FROM_OBJDIR), 1)
 ifeq ($(OS_ARCH), WINNT)
+#	Windows, COMPS_FROM_OBJDIR
 	$(NSINSTALL) $(DIST)/$(OBJDIR_NAME)/lib/$(PLC_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
 	$(NSINSTALL) $(DIST)/$(OBJDIR_NAME)/lib/$(PLDS_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
 	$(NSINSTALL) $(DIST)/$(OBJDIR_NAME)/lib/$(NSPR_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
@@ -277,6 +286,7 @@ ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
 	$(NSINSTALL) $(DIST)/$(OBJDIR_NAME)/lib/$(SOFTOKN_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 endif
 else
+#	Non-Windows, COMPS_FROM_OBJDIR
 	$(NSINSTALL) $(DIST)/$(OBJDIR_NAME)/lib/lib$(PLC_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 	$(NSINSTALL) $(DIST)/$(OBJDIR_NAME)/lib/lib$(PLDS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 	$(NSINSTALL) $(DIST)/$(OBJDIR_NAME)/lib/lib$(NSPR_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
@@ -291,6 +301,7 @@ ifeq ($(COPYFREEBL), 1)
 	$(NSINSTALL) $(DIST)/$(OBJDIR_NAME)/lib/lib$(PURE32_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 endif
 else
+#	Windows, !COMPS_FROM_OBJDIR
 ifeq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) $(DIST)/lib/$(PLC_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
 	$(NSINSTALL) $(DIST)/lib/$(PLDS_BASENAME).$(DLL_SUFFIX) $(LIBDIR)
@@ -301,18 +312,19 @@ ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
 	$(NSINSTALL) $(DIST)/lib/$(SOFTOKN_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 endif
 else
-	$(NSINSTALL) $(DIST)/lib/lib$(PLC_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
-	$(NSINSTALL) $(DIST)/lib/lib$(PLDS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
-	$(NSINSTALL) $(DIST)/lib/lib$(NSPR_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
-	$(NSINSTALL) $(DIST)/lib/lib$(SSL_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
-	$(NSINSTALL) $(DIST)/lib/lib$(NSS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+#	Non-Windows, !COMPS_FROM_OBJDIR
+	$(NSINSTALL) $(DIST_LIB_PATH)/lib$(PLC_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(DIST_LIB_PATH)/lib$(PLDS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(DIST_LIB_PATH)/lib$(NSPR_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(DIST_LIB_PATH)/lib$(SSL_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(DIST_LIB_PATH)/lib$(NSS_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 ifeq ($(NSS_DYNAMIC_SOFTOKN),1)
-	$(NSINSTALL) $(DIST)/lib/lib$(SOFTOKN_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(DIST_LIB_PATH)/lib$(SOFTOKN_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 endif
 endif
 ifeq ($(COPYFREEBL), 1)
-	$(NSINSTALL) $(DIST)/lib/lib$(HYBRID_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
-	$(NSINSTALL) $(DIST)/lib/lib$(PURE32_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(DIST_LIB_PATH)/lib$(HYBRID_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
+	$(NSINSTALL) $(DIST_LIB_PATH)/lib$(PURE32_LIBNAME).$(DLL_SUFFIX) $(LIBDIR)
 endif
 endif
 
@@ -372,7 +384,7 @@ $(LDAPCMP):	$(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ) \
 		$(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS_DEP)
 	$(LINK_EXE) $(LDAPCMP_OBJ) $(LDAPTOOLCOMMON_OBJ) $(LDAPTOOLCPPCOMMON_OBJ) $(LDTOOLS_LIBS)
 
-$(OBJDEST):
+$(OBJDEST):	FORCE
 	$(NSINSTALL) -D $(OBJDEST)
 	$(NSINSTALL) -D $(BINDIR)
 	$(NSINSTALL) -D $(LIBDIR)
