@@ -40,7 +40,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
 
   <stringbundle id="searchBundle" src="chrome://communicator/locale/search/search-panel.properties"/>
-  <stringbundle id="regionalBundle" src="chrome://navigator-region/locale/region.properties"/>
+  <stringbundle id="regionalBundle" src="chrome://communicator-region/locale/region.properties"/>
   
   <popupset>
     <popup id="contextual" onpopupshowing="return fillContextMenu('contextual', 'Tree');" >
