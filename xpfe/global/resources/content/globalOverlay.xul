@@ -50,7 +50,8 @@
 	<key id="key_cut" xulkey="true" key="&cutCmd.key;" observes="cmd_cut"/>
 	<key id="key_copy" xulkey="true" key="&copyCmd.key;" observes="cmd_copy"/>
 	<key id="key_paste" xulkey="true" key="&pasteCmd.key;" observes="cmd_paste"/>
-        <key id="key_delete" keycode="VK_DELETE" key="&deleteCmd.key;" observes="cmd_delete"/>
+	<key id="key_delete" keycode="VK_DELETE" observes="cmd_delete"/>
+	<key id="key_backspace" keycode="VK_BACK" observes="cmd_delete"/>
 	<key id="key_selectAll" xulkey="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
 	<key id="key_preferences" xulkey="true" key="&preferencesCmd.key;" observes="cmd_preferences"/>
 
