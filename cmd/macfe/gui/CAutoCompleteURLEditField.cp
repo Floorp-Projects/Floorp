@@ -101,7 +101,7 @@ void CAutoCompleteURLEditField::SpendTime(const EventRecord	&inMacEvent)
 		{
 			char urlText[2048];
 			Int32 urlLength = sizeof(urlText);
-			GetDescriptor(urlText, urlLength);
+			GetDescriptorLen(urlText, urlLength);
 			if (urlLength > 0)
 			{
 				string originalText = urlText;
@@ -130,7 +130,7 @@ void CAutoCompleteURLEditField::SpendTime(const EventRecord	&inMacEvent)
 				if (status == foundDone && result.get() && result.get() != originalText )
 				{
 					selEnd = strlen(result.get());
-					SetDescriptor(result.get(), selEnd);
+					SetDescriptorLen(result.get(), selEnd);
 
 					FocusDraw();			// SetDescriptor() mucks with the port rect					
 					// then set selection
