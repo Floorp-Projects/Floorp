@@ -123,10 +123,6 @@ struct nsLineLayout {
     mState.mColumn = aNewColumn;
   }
 
-  void LineBreak() {
-    mPendingLineBreak = PR_TRUE;
-  }
-
   // A value set by line-layout cognizant frames. Frames that are not
   // aware of line layout leave the value unchanged and can thus be
   // detected by the line-layout algorithm.
@@ -157,7 +153,7 @@ struct nsLineLayout {
   // requested then this is where the line will break at.
   nsIFrame* mBreakFrame;
   nscoord mBreakX;
-  PRBool mPendingLineBreak;
+  PRUint8 mPendingBreak;
 
   // XXX ick
   // This is set by the block code when it updates the available

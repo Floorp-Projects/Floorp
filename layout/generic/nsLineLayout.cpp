@@ -216,7 +216,7 @@ nsLineLayout::Initialize(nsBlockReflowState& aState, nsLineData* aLine)
 
   mSavedState.mKidFrame = nsnull;
   mBreakFrame = nsnull;
-  mPendingLineBreak = PR_FALSE;
+  mPendingBreak = NS_STYLE_CLEAR_NONE;
 
   mLine = aLine;
   mKidPrevInFlow = nsnull;
@@ -923,8 +923,12 @@ nsLineLayout::PlaceChild(nsRect& kidRect,
   if (NS_FRAME_IS_COMPLETE(kidReflowStatus)) {
     mLine->mLastContentIsComplete = PR_TRUE;
     if (mLine->mIsBlock ||
-        (NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER == mReflowResult)) {
+        (NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER == mReflowResult) ||
+        (NS_STYLE_CLEAR_NONE != mPendingBreak)) {
       rv = NS_LINE_LAYOUT_BREAK_AFTER;
+      if (NS_STYLE_CLEAR_LINE == mPendingBreak) {
+        mPendingBreak = NS_STYLE_CLEAR_NONE;
+      }
     }
     mKidPrevInFlow = nsnull;
   }
