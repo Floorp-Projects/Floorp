@@ -277,7 +277,8 @@ public:
                                  const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
                                nsIURL* aURL, 
-                               PRInt32 aStatus);
+                               PRInt32 aStatus,
+							   nsIDocumentLoaderObserver * );
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
                             nsIURL* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
@@ -363,6 +364,14 @@ public:
 
   NS_IMETHOD GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource);
 
+  NS_IMETHOD SetSessionHistory(nsISessionHistory * aSHist);
+  NS_IMETHOD GetSessionHistory(nsISessionHistory *& aResult);
+  NS_IMETHOD SetIsInSHist(PRBool aIsFrame);
+  NS_IMETHOD GetIsInSHist(PRBool& aIsFrame);
+  NS_IMETHOD GetURL(const PRUnichar** aURL);
+  NS_IMETHOD SetURL(const PRUnichar* aURL);
+
+
 protected:
   void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURL* aURL);
@@ -389,11 +398,14 @@ protected:
   nsVoidArray mHistory;
   PRInt32 mHistoryIndex;
   nsIGlobalHistory* mHistoryService;
+  nsISessionHistory * mSHist;
 
   nsString mTitle;
+  nsString mURL;
 
   nsString mOverURL;
   nsString mOverTarget;
+  PRBool   mIsInSHist;
 
   nsScrollPreference mScrollPref;
   PRInt32 mMarginWidth;
@@ -463,6 +475,7 @@ static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID,      NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIClipboardCommandsIID,  NS_ICLIPBOARDCOMMANDS_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_IID(kISessionHistoryIID,  NS_ISESSION_HISTORY_IID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
@@ -537,6 +550,8 @@ nsWebShell::nsWebShell()
   mIsFrame = PR_FALSE;
 	mWebShellType = nsWebShellContent;
   mChromeShell = nsnull;
+  mSHist = nsnull;
+  mIsInSHist = PR_FALSE;
 
   // XXX we should get such mDefaultCharacterSet from pref laster...
   mDefaultCharacterSet = "ISO-8859-1";
@@ -1116,6 +1131,23 @@ nsWebShell::GetContainer(nsIWebShellContainer*& aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShell::SetSessionHistory(nsISessionHistory* aSHist)
+{
+  NS_IF_RELEASE(mSHist);
+  mSHist = aSHist;
+  NS_IF_ADDREF(aSHist);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetSessionHistory(nsISessionHistory *& aResult)
+{
+  aResult = mSHist;
+  NS_IF_ADDREF(mSHist);
+  return NS_OK;
+}
+
 nsEventStatus PR_CALLBACK
 nsWebShell::HandleEvent(nsGUIEvent *aEvent)
 { 
@@ -1321,6 +1353,34 @@ NS_IMETHODIMP
 nsWebShell::SetName(const PRUnichar* aName)
 {
   mName = aName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetURL(const PRUnichar** aURL)
+{
+  *aURL = mURL.GetUnicode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetURL(const PRUnichar* aURL)
+{
+  mURL = aURL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShell::GetIsInSHist(PRBool& aResult)
+{
+  aResult = mIsInSHist;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetIsInSHist(PRBool aIsInSHist)
+{ 
+  mIsInSHist = aIsInSHist;
   return NS_OK;
 }
 
@@ -1687,6 +1747,31 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       return rv;
     }
   }
+
+   mURL = urlSpec.GetUnicode();
+
+  nsISessionHistory * shist;
+
+  /* If this is one of the frames, get it from the top level shell */
+  nsIWebShell * ws;
+  GetRootWebShell(ws);
+  if (ws)
+     ws->GetSessionHistory(shist);
+      /* Add yourself to the Session History */
+      if (shist) {
+        PRInt32  ret=0;
+        ret = shist->add(this);
+        /* If shist->add returned a non-zero that means that history
+         * does n't quite want this page to be loaded, because, it
+         * it doesn't match with what's in history. Just return.
+         * shist->add() will return a non-zero only when trying to go
+         * back or forward in history and what's on page doesn't quite 
+         * match with what's in history.
+
+        if (ret)
+          return;
+         */
+      }
 
   nsString* url = new nsString(urlSpec);
   if (aModifyHistory) {
@@ -2479,7 +2564,8 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader, 
                               nsIURL* aURL, 
-                              PRInt32 aStatus)
+                              PRInt32 aStatus,
+							  nsIDocumentLoaderObserver * aWebShell)
 {
 #if DEBUG_nisheeth
   const char* spec;
@@ -2522,13 +2608,27 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        }
     }
 
+	nsIDocumentLoaderObserver * dlObserver = nsnull;
+    if (!mDocLoaderObserver && mParent) {
+      /* If this is a frame (in which case it would have a parent && doesn't
+       * have a documentloaderObserver, get it from the rootWebShell
+       */
+      nsIWebShell * root=nsnull;
+      GetRootWebShell(root);
+   
+      if (root) 
+        root->GetDocLoaderObserver(dlObserver);
+    }
+    else
+      dlObserver = mDocLoaderObserver;
     /*
      * Fire the OnEndDocumentLoad of the DocLoaderobserver
      */
-    if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver) && (nsnull != aURL)){
-       mDocLoaderObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus);
+    if ((nsnull != dlObserver) && (nsnull != aURL)){
+       dlObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus, aWebShell);
     }
-  }
+
+  } //!mProcessedEndDocumentLoad
   else {
     rv = NS_OK;
   }
