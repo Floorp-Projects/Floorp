@@ -6811,9 +6811,24 @@ void nsImapProtocol::Search(const char * searchCriteria,
      protocolString.Append(" uid");
   protocolString.Append(" ");
   protocolString.Append(searchCriteria);
+  // the search criteria can contain string literals, which means we
+  // need to break up the protocol string by CRLF's, and after sending CRLF,
+  // wait for the server to respond OK before sending more data
+  nsresult rv;
+  PRInt32 crlfIndex;
+  while (crlfIndex = protocolString.Find(CRLF), crlfIndex != kNotFound && !DeathSignalReceived())
+  {
+    nsCAutoString tempProtocolString;
+    protocolString.Left(tempProtocolString, crlfIndex + 2);
+    rv = SendData(tempProtocolString.get());
+    if (NS_FAILED(rv))
+      return;
+    ParseIMAPandCheckForNewMail();
+    protocolString.Cut(0, crlfIndex + 2);
+  }
   protocolString.Append(CRLF);
 
-  nsresult rv = SendData(protocolString.get());
+  rv = SendData(protocolString.get());
   if (NS_SUCCEEDED(rv))
      ParseIMAPandCheckForNewMail();
 }

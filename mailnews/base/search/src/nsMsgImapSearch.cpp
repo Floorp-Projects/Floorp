@@ -111,55 +111,55 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
                                         nsISupportsArray *searchTerms,
                                         const PRUnichar *destCharset)
 {
-    nsXPIDLCString imapTerms;
-
-	//check if searchTerms are ascii only
-	PRBool asciiOnly = PR_TRUE;
+  nsXPIDLCString imapTerms;
+  
+  //check if searchTerms are ascii only
+  PRBool asciiOnly = PR_TRUE;
   // ### what's this mean in the NWO?????
-
-	if (PR_TRUE) // !(srcCharset & CODESET_MASK == STATEFUL || srcCharset & CODESET_MASK == WIDECHAR) )   //assume all single/multiple bytes charset has ascii as subset
-	{
-		PRUint32 termCount;
+  
+  if (PR_TRUE) // !(srcCharset & CODESET_MASK == STATEFUL || srcCharset & CODESET_MASK == WIDECHAR) )   //assume all single/multiple bytes charset has ascii as subset
+  {
+    PRUint32 termCount;
     searchTerms->Count(&termCount);
-		PRUint32 i = 0;
-
-		for (i = 0; i < termCount && asciiOnly; i++)
-		{
+    PRUint32 i = 0;
+    
+    for (i = 0; i < termCount && asciiOnly; i++)
+    {
       nsCOMPtr<nsIMsgSearchTerm> pTerm;
       searchTerms->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
-                               (void **)getter_AddRefs(pTerm));
-
+        (void **)getter_AddRefs(pTerm));
+      
       nsMsgSearchAttribValue attribute;
       pTerm->GetAttrib(&attribute);
-			if (IsStringAttribute(attribute))
-			{
+      if (IsStringAttribute(attribute))
+      {
         nsXPIDLString pchar;
         nsCOMPtr <nsIMsgSearchValue> searchValue;
-
+        
         nsresult rv = pTerm->GetValue(getter_AddRefs(searchValue));
         if (NS_FAILED(rv) || !searchValue)
           continue;
-
-
+        
+        
         rv = searchValue->GetStr(getter_Copies(pchar));
-      	if (NS_FAILED(rv) || !pchar)
-      		continue;
+        if (NS_FAILED(rv) || !pchar)
+          continue;
         asciiOnly = nsCRT::IsAscii(pchar.get());
-			}
-		}
-	}
-	else
-		asciiOnly = PR_FALSE;
-
+      }
+    }
+  }
+  else
+    asciiOnly = PR_FALSE;
+  
   nsAutoString usAsciiCharSet(NS_LITERAL_STRING("us-ascii"));
-	// Get the optional CHARSET parameter, in case we need it.
+  // Get the optional CHARSET parameter, in case we need it.
   char *csname = GetImapCharsetParam(asciiOnly ? usAsciiCharSet.get() : destCharset);
-
+  
   // We do not need "srcCharset" since the search term in always unicode.
   // I just pass destCharset for both src and dest charset instead of removing srcCharst from the arguemnt.
   nsresult err = nsMsgSearchAdapter::EncodeImap (getter_Copies(imapTerms), searchTerms, 
-                                                 asciiOnly ?  usAsciiCharSet.get(): destCharset, 
-                                                 asciiOnly ?  usAsciiCharSet.get(): destCharset, PR_FALSE);
+    asciiOnly ?  usAsciiCharSet.get(): destCharset, 
+    asciiOnly ?  usAsciiCharSet.get(): destCharset, PR_FALSE);
   if (NS_SUCCEEDED(err))
   {
     pEncoding.Append("SEARCH");

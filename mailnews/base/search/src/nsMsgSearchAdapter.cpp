@@ -391,401 +391,412 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
   char *arbitraryHeader = nsnull;
   const char *whichMnemonic = nsnull;
   const char *orHeaderMnemonic = nsnull;
-
+  
   *ppOutTerm = nsnull;
-
+  
   nsCOMPtr <nsIMsgSearchValue> searchValue;
   nsresult rv = term->GetValue(getter_AddRefs(searchValue));
-
+  
   if (NS_FAILED(rv))
     return rv;
-
+  
   nsMsgSearchOpValue op;
   term->GetOp(&op);
-
-	if (op == nsMsgSearchOp::DoesntContain || op == nsMsgSearchOp::Isnt)
-		useNot = PR_TRUE;
-
+  
+  if (op == nsMsgSearchOp::DoesntContain || op == nsMsgSearchOp::Isnt)
+    useNot = PR_TRUE;
+  
   nsMsgSearchAttribValue attrib;
   term->GetAttrib(&attrib);
-
-	switch (attrib)
-	{
-	case nsMsgSearchAttrib::ToOrCC:
-		orHeaderMnemonic = m_kImapCC;
-		// fall through to case nsMsgSearchAttrib::To:
-	case nsMsgSearchAttrib::To:
-		whichMnemonic = m_kImapTo;
-		break;
-	case nsMsgSearchAttrib::CC:
-		whichMnemonic = m_kImapCC;
-		break;
-	case nsMsgSearchAttrib::Sender:
-		whichMnemonic = m_kImapFrom;
-		break;
-	case nsMsgSearchAttrib::Subject:
-		whichMnemonic = m_kImapSubject;
-		break;
-	case nsMsgSearchAttrib::Body:
-		whichMnemonic = m_kImapBody;
-		excludeHeader = PR_TRUE;
-		break;
-	case nsMsgSearchAttrib::AgeInDays:  // added for searching online for age in days...
-		// for AgeInDays, we are actually going to perform a search by date, so convert the operations for age
-		// to the IMAP mnemonics that we would use for date!
-		switch (op)
-		{
-		case nsMsgSearchOp::IsGreaterThan:
-			whichMnemonic = m_kImapBefore;
-			break;
-		case nsMsgSearchOp::IsLessThan:
-			whichMnemonic = m_kImapSince;
-			break;
-		case nsMsgSearchOp::Is:
-			whichMnemonic = m_kImapSentOn;
-			break;
-		default:
-			NS_ASSERTION(PR_FALSE, "invalid search operator");
-			return NS_ERROR_INVALID_ARG;
-		}
-		excludeHeader = PR_TRUE;
-		break;
-	case nsMsgSearchAttrib::Date:
-		switch (op)
-		{
-		case nsMsgSearchOp::IsBefore:
-			whichMnemonic = m_kImapBefore;
-			break;
-		case nsMsgSearchOp::IsAfter:
-			whichMnemonic = m_kImapSince;
-			break;
-		case nsMsgSearchOp::Isnt:  /* we've already added the "Not" so just process it like it was a date is search */
-		case nsMsgSearchOp::Is:
-			whichMnemonic = m_kImapSentOn;
-			break;
-		default:
-			NS_ASSERTION(PR_FALSE, "invalid search operator");
-			return NS_ERROR_INVALID_ARG;
-		}
-		excludeHeader = PR_TRUE;
-		break;
-	case nsMsgSearchAttrib::AnyText:
-		whichMnemonic = m_kImapAnyText;
-		excludeHeader = PR_TRUE;
-		break;
-	case nsMsgSearchAttrib::Keywords:
-		whichMnemonic = m_kNntpKeywords;
-		break;
-	case nsMsgSearchAttrib::MsgStatus:
-		useNot = PR_FALSE; // bizarrely, NOT SEEN is wrong, but UNSEEN is right.
-		ignoreValue = PR_TRUE; // the mnemonic is all we need
-		excludeHeader = PR_TRUE;
-    PRUint32 status;
-    searchValue->GetStatus(&status);
-
-		switch (status)
-		{
-		case MSG_FLAG_READ:
-			whichMnemonic = op == nsMsgSearchOp::Is ? m_kImapSeen : m_kImapNotSeen;
-			break;
-		case MSG_FLAG_REPLIED:
-			whichMnemonic = op == nsMsgSearchOp::Is ? m_kImapAnswered : m_kImapNotAnswered;
-			break;
-		default:
-			NS_ASSERTION(PR_FALSE, "invalid search operator");
-			return NS_ERROR_INVALID_ARG;
-		}
-		break;
-	default:
-    if ( attrib > nsMsgSearchAttrib::OtherHeader && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+  
+  switch (attrib)
+  {
+  case nsMsgSearchAttrib::ToOrCC:
+    orHeaderMnemonic = m_kImapCC;
+    // fall through to case nsMsgSearchAttrib::To:
+  case nsMsgSearchAttrib::To:
+    whichMnemonic = m_kImapTo;
+    break;
+  case nsMsgSearchAttrib::CC:
+    whichMnemonic = m_kImapCC;
+    break;
+  case nsMsgSearchAttrib::Sender:
+    whichMnemonic = m_kImapFrom;
+    break;
+  case nsMsgSearchAttrib::Subject:
+    whichMnemonic = m_kImapSubject;
+    break;
+  case nsMsgSearchAttrib::Body:
+    whichMnemonic = m_kImapBody;
+    excludeHeader = PR_TRUE;
+    break;
+  case nsMsgSearchAttrib::AgeInDays:  // added for searching online for age in days...
+    // for AgeInDays, we are actually going to perform a search by date, so convert the operations for age
+    // to the IMAP mnemonics that we would use for date!
+    switch (op)
     {
-      nsXPIDLCString arbitraryHeaderTerm;
-      term->GetArbitraryHeader(getter_Copies(arbitraryHeaderTerm));
-      if (!arbitraryHeaderTerm.IsEmpty())
-		  {
-			  arbitraryHeader = new char [strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
-			  if (!arbitraryHeader)
-				  return NS_ERROR_OUT_OF_MEMORY;
-			  arbitraryHeader[0] = '\0';
-			  PL_strcat(arbitraryHeader, " \"");
-			  PL_strcat(arbitraryHeader, (const char *)arbitraryHeaderTerm);
-			  PL_strcat(arbitraryHeader, "\" ");
-			  whichMnemonic = arbitraryHeader;
-		  }
-		  else
-			  return NS_ERROR_FAILURE;
+    case nsMsgSearchOp::IsGreaterThan:
+      whichMnemonic = m_kImapBefore;
+      break;
+    case nsMsgSearchOp::IsLessThan:
+      whichMnemonic = m_kImapSince;
+      break;
+    case nsMsgSearchOp::Is:
+      whichMnemonic = m_kImapSentOn;
+      break;
+    default:
+      NS_ASSERTION(PR_FALSE, "invalid search operator");
+      return NS_ERROR_INVALID_ARG;
     }
-    else
-    {
-			NS_ASSERTION(PR_FALSE, "invalid search operator");
-		  return NS_ERROR_INVALID_ARG;
-    }
-	}
-
-	char *value = "";
-	char dateBuf[100];
-	dateBuf[0] = '\0';
-	
-	PRBool valueWasAllocated = PR_FALSE;
-	if (attrib == nsMsgSearchAttrib::Date)
-	{
-		// note that there used to be code here that encoded an RFC822 date for imap searches.
-		// The IMAP RFC 2060 is misleading to the point that it looks like it requires an RFC822
-		// date but really it expects dd-mmm-yyyy, like dredd, and refers to the RFC822 date only in that the
-		// dd-mmm-yyyy date will match the RFC822 date within the message.
-
-		PRTime adjustedDate;
-    searchValue->GetDate(&adjustedDate);
-		if (whichMnemonic == m_kImapSince)
-		{
-			// it looks like the IMAP server searches on Since includes the date in question...
-			// our UI presents Is, IsGreater and IsLessThan. For the IsGreater case (m_kImapSince)
-			// we need to adjust the date so we get greater than and not greater than or equal to which
-			// is what the IMAP server wants to search on
-      // won't work on Mac.
-      // ack, is this right? is PRTime seconds or microseconds?
-	    PRInt64 microSecondsPerSecond, secondsInDay, microSecondsInDay;
-	    
-	    LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-      LL_UI2L(secondsInDay, 60 * 60 * 24);
-	    LL_MUL(microSecondsInDay, secondsInDay, microSecondsPerSecond);
-			LL_ADD(adjustedDate, adjustedDate, microSecondsInDay); // bump up to the day after this one...
-		}
-
-   	PRExplodedTime exploded;
-    PR_ExplodeTime(adjustedDate, PR_LocalTimeParameters, &exploded);
-    PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
-//		strftime (dateBuf, sizeof(dateBuf), "%d-%b-%Y", localtime (/* &term->m_value.u.date */ &adjustedDate));
-		value = dateBuf;
-	}
-	else
-	{
-		if (attrib == nsMsgSearchAttrib::AgeInDays)
-		{
-			// okay, take the current date, subtract off the age in days, then do an appropriate Date search on 
-			// the resulting day.
-      PRUint32 ageInDays;
-
-      searchValue->GetAge(&ageInDays);
-
-			PRTime now = PR_Now();
-			PRTime matchDay;
-
-	    PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDay;
-	    
-	    LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-      LL_UI2L(secondsInDays, 60 * 60 * 24 * ageInDays);
-	    LL_MUL(microSecondsInDay, secondsInDays, microSecondsPerSecond);
-
-			LL_SUB(matchDay, now, microSecondsInDay); // = now - term->m_value.u.age * 60 * 60 * 24; 
-   	PRExplodedTime exploded;
-    PR_ExplodeTime(matchDay, PR_LocalTimeParameters, &exploded);
-    PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
-//			strftime (dateBuf, sizeof(dateBuf), "%d-%b-%Y", localtime (&matchDay));
-			value = dateBuf;
-		}
-		else
-
-		if (IsStringAttribute(attrib))
-		{
-			PRUnichar *convertedValue; // = reallyDredd ? MSG_EscapeSearchUrl (term->m_value.u.string) : msg_EscapeImapSearchProtocol(term->m_value.u.string);
-            nsXPIDLString searchTermValue;
-            searchValue->GetStr(getter_Copies(searchTermValue));
-			// Ugly switch for Korean mail/news charsets.
-			// We want to do this here because here is where
-			// we know what charset we want to use.
-#ifdef DOING_CHARSET
-			if (reallyDredd)
-				dest_csid = INTL_DefaultNewsCharSetID(dest_csid);
-			else
-				dest_csid = INTL_DefaultMailCharSetID(dest_csid);
-#endif
-
-            // do all sorts of crazy escaping
-      convertedValue = reallyDredd ? EscapeSearchUrl (searchTermValue) :
-                EscapeImapSearchProtocol(searchTermValue);
-      useQuotes = !reallyDredd || 
-        (nsDependentString(convertedValue).FindChar(PRUnichar(' ')) != -1);
-      // now convert to char* and escape quoted_specials
-      nsCAutoString valueStr;
-      nsresult rv = ConvertFromUnicode(NS_LossyConvertUTF16toASCII(destCharset).get(),
-                                       nsDependentString(convertedValue), valueStr);
-      if (NS_SUCCEEDED(rv))
+    excludeHeader = PR_TRUE;
+    break;
+    case nsMsgSearchAttrib::Date:
+      switch (op)
       {
-        const char *vptr = valueStr.get();
-        // max escaped length is one extra character for every character in the cmd.
-        nsAutoArrayPtr<char> newValue(new char[2*strlen(vptr) + 1]);
-        if (newValue)
-        {
-          char *p = newValue;
-          while (1)
-          {
-            char ch = *vptr++;
-            if (!ch)
-              break;
-            if ((useQuotes ? ch == '"' : 0) || ch == '\\')
-              *p++ = '\\';
-            *p++ = ch;
-          }
-          *p = '\0';
-          value = nsCRT::strdup(newValue); // realloc down to smaller size
-        }
+      case nsMsgSearchOp::IsBefore:
+        whichMnemonic = m_kImapBefore;
+        break;
+      case nsMsgSearchOp::IsAfter:
+        whichMnemonic = m_kImapSince;
+        break;
+      case nsMsgSearchOp::Isnt:  /* we've already added the "Not" so just process it like it was a date is search */
+      case nsMsgSearchOp::Is:
+        whichMnemonic = m_kImapSentOn;
+        break;
+      default:
+        NS_ASSERTION(PR_FALSE, "invalid search operator");
+        return NS_ERROR_INVALID_ARG;
       }
-			else
-				value = nsCRT::strdup("");
-			nsCRT::free(convertedValue);
-			valueWasAllocated = PR_TRUE;
-
-		}
-	}
-
-	int len = strlen(whichMnemonic) + strlen(value) + (useNot ? strlen(m_kImapNot) : 0) + 
-		(useQuotes ? 2 : 0) + strlen(m_kImapHeader) + 
-		(orHeaderMnemonic ? (strlen(m_kImapHeader) + strlen(m_kImapOr) + (useNot ? strlen(m_kImapNot) : 0) + 
-		strlen(orHeaderMnemonic) + strlen(value) + 2 /*""*/) : 0) + 1;
-	char *encoding = new char[len];
-	if (encoding)
-	{
-		encoding[0] = '\0';
-		// Remember: if ToOrCC and useNot then the expression becomes NOT To AND Not CC as opposed to (NOT TO) || (NOT CC)
-		if (orHeaderMnemonic && !useNot)
-			PL_strcat(encoding, m_kImapOr);
-		if (useNot)
-			PL_strcat (encoding, m_kImapNot);
-		if (!excludeHeader)
-			PL_strcat (encoding, m_kImapHeader);
-		PL_strcat (encoding, whichMnemonic);
-		if (!ignoreValue)
-			err = EncodeImapValue(encoding, value, useQuotes, reallyDredd);
-		
-		if (orHeaderMnemonic)
-		{
-			if (useNot)
-				PL_strcat(encoding, m_kImapNot);
-			
-			PL_strcat (encoding, m_kImapHeader);
-
-			PL_strcat (encoding, orHeaderMnemonic);
-			if (!ignoreValue)
-				err = EncodeImapValue(encoding, value, useQuotes, reallyDredd);
-		}
-		
-		// kmcentee, don't let the encoding end with whitespace, 
-		// this throws off later url STRCMP
-		if (*encoding && *(encoding + strlen(encoding) - 1) == ' ')
-			*(encoding + strlen(encoding) - 1) = '\0';
-	}
-
-	if (value && valueWasAllocated)
-		PR_Free (value);
-	if (arbitraryHeader)
-		delete arbitraryHeader;
-
-	*ppOutTerm = encoding;
-
-	return err;
+      excludeHeader = PR_TRUE;
+      break;
+      case nsMsgSearchAttrib::AnyText:
+        whichMnemonic = m_kImapAnyText;
+        excludeHeader = PR_TRUE;
+        break;
+      case nsMsgSearchAttrib::Keywords:
+        whichMnemonic = m_kNntpKeywords;
+        break;
+      case nsMsgSearchAttrib::MsgStatus:
+        useNot = PR_FALSE; // bizarrely, NOT SEEN is wrong, but UNSEEN is right.
+        ignoreValue = PR_TRUE; // the mnemonic is all we need
+        excludeHeader = PR_TRUE;
+        PRUint32 status;
+        searchValue->GetStatus(&status);
+        
+        switch (status)
+        {
+        case MSG_FLAG_READ:
+          whichMnemonic = op == nsMsgSearchOp::Is ? m_kImapSeen : m_kImapNotSeen;
+          break;
+        case MSG_FLAG_REPLIED:
+          whichMnemonic = op == nsMsgSearchOp::Is ? m_kImapAnswered : m_kImapNotAnswered;
+          break;
+        default:
+          NS_ASSERTION(PR_FALSE, "invalid search operator");
+          return NS_ERROR_INVALID_ARG;
+        }
+        break;
+        default:
+          if ( attrib > nsMsgSearchAttrib::OtherHeader && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)
+          {
+            nsXPIDLCString arbitraryHeaderTerm;
+            term->GetArbitraryHeader(getter_Copies(arbitraryHeaderTerm));
+            if (!arbitraryHeaderTerm.IsEmpty())
+            {
+              arbitraryHeader = new char [strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
+              if (!arbitraryHeader)
+                return NS_ERROR_OUT_OF_MEMORY;
+              arbitraryHeader[0] = '\0';
+              PL_strcat(arbitraryHeader, " \"");
+              PL_strcat(arbitraryHeader, (const char *)arbitraryHeaderTerm);
+              PL_strcat(arbitraryHeader, "\" ");
+              whichMnemonic = arbitraryHeader;
+            }
+            else
+              return NS_ERROR_FAILURE;
+          }
+          else
+          {
+            NS_ASSERTION(PR_FALSE, "invalid search operator");
+            return NS_ERROR_INVALID_ARG;
+          }
+        }
+        
+        char *value = "";
+        char dateBuf[100];
+        dateBuf[0] = '\0';
+        
+        PRBool valueWasAllocated = PR_FALSE;
+        if (attrib == nsMsgSearchAttrib::Date)
+        {
+          // note that there used to be code here that encoded an RFC822 date for imap searches.
+          // The IMAP RFC 2060 is misleading to the point that it looks like it requires an RFC822
+          // date but really it expects dd-mmm-yyyy, like dredd, and refers to the RFC822 date only in that the
+          // dd-mmm-yyyy date will match the RFC822 date within the message.
+          
+          PRTime adjustedDate;
+          searchValue->GetDate(&adjustedDate);
+          if (whichMnemonic == m_kImapSince)
+          {
+            // it looks like the IMAP server searches on Since includes the date in question...
+            // our UI presents Is, IsGreater and IsLessThan. For the IsGreater case (m_kImapSince)
+            // we need to adjust the date so we get greater than and not greater than or equal to which
+            // is what the IMAP server wants to search on
+            // won't work on Mac.
+            // ack, is this right? is PRTime seconds or microseconds?
+            PRInt64 microSecondsPerSecond, secondsInDay, microSecondsInDay;
+            
+            LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+            LL_UI2L(secondsInDay, 60 * 60 * 24);
+            LL_MUL(microSecondsInDay, secondsInDay, microSecondsPerSecond);
+            LL_ADD(adjustedDate, adjustedDate, microSecondsInDay); // bump up to the day after this one...
+          }
+          
+          PRExplodedTime exploded;
+          PR_ExplodeTime(adjustedDate, PR_LocalTimeParameters, &exploded);
+          PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
+          //		strftime (dateBuf, sizeof(dateBuf), "%d-%b-%Y", localtime (/* &term->m_value.u.date */ &adjustedDate));
+          value = dateBuf;
+        }
+        else
+        {
+          if (attrib == nsMsgSearchAttrib::AgeInDays)
+          {
+            // okay, take the current date, subtract off the age in days, then do an appropriate Date search on 
+            // the resulting day.
+            PRUint32 ageInDays;
+            
+            searchValue->GetAge(&ageInDays);
+            
+            PRTime now = PR_Now();
+            PRTime matchDay;
+            
+            PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDay;
+            
+            LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+            LL_UI2L(secondsInDays, 60 * 60 * 24 * ageInDays);
+            LL_MUL(microSecondsInDay, secondsInDays, microSecondsPerSecond);
+            
+            LL_SUB(matchDay, now, microSecondsInDay); // = now - term->m_value.u.age * 60 * 60 * 24; 
+            PRExplodedTime exploded;
+            PR_ExplodeTime(matchDay, PR_LocalTimeParameters, &exploded);
+            PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
+            //			strftime (dateBuf, sizeof(dateBuf), "%d-%b-%Y", localtime (&matchDay));
+            value = dateBuf;
+          }
+          else
+            
+            if (IsStringAttribute(attrib))
+            {
+              PRUnichar *convertedValue; // = reallyDredd ? MSG_EscapeSearchUrl (term->m_value.u.string) : msg_EscapeImapSearchProtocol(term->m_value.u.string);
+              nsXPIDLString searchTermValue;
+              searchValue->GetStr(getter_Copies(searchTermValue));
+              // Ugly switch for Korean mail/news charsets.
+              // We want to do this here because here is where
+              // we know what charset we want to use.
+#ifdef DOING_CHARSET
+              if (reallyDredd)
+                dest_csid = INTL_DefaultNewsCharSetID(dest_csid);
+              else
+                dest_csid = INTL_DefaultMailCharSetID(dest_csid);
+#endif
+              
+              // do all sorts of crazy escaping
+              convertedValue = reallyDredd ? EscapeSearchUrl (searchTermValue) :
+              EscapeImapSearchProtocol(searchTermValue);
+              useQuotes = !reallyDredd || 
+                (nsDependentString(convertedValue).FindChar(PRUnichar(' ')) != -1);
+              // now convert to char* and escape quoted_specials
+              nsCAutoString valueStr;
+              nsresult rv = ConvertFromUnicode(NS_LossyConvertUTF16toASCII(destCharset).get(),
+                nsDependentString(convertedValue), valueStr);
+              if (NS_SUCCEEDED(rv))
+              {
+                const char *vptr = valueStr.get();
+                // max escaped length is one extra character for every character in the cmd.
+                nsAutoArrayPtr<char> newValue(new char[2*strlen(vptr) + 1]);
+                if (newValue)
+                {
+                  char *p = newValue;
+                  while (1)
+                  {
+                    char ch = *vptr++;
+                    if (!ch)
+                      break;
+                    if ((useQuotes ? ch == '"' : 0) || ch == '\\')
+                      *p++ = '\\';
+                    *p++ = ch;
+                  }
+                  *p = '\0';
+                  value = nsCRT::strdup(newValue); // realloc down to smaller size
+                }
+              }
+              else
+                value = nsCRT::strdup("");
+              nsCRT::free(convertedValue);
+              valueWasAllocated = PR_TRUE;
+              
+            }
+        }
+        
+        // this should be rewritten to use nsCString
+        int len = strlen(whichMnemonic) + strlen(value) + (useNot ? strlen(m_kImapNot) : 0) + 
+          (useQuotes ? 2 : 0) + strlen(m_kImapHeader) + 
+          (orHeaderMnemonic ? (strlen(m_kImapHeader) + strlen(m_kImapOr) + (useNot ? strlen(m_kImapNot) : 0) + 
+          strlen(orHeaderMnemonic) + strlen(value) + 2 /*""*/) : 0) + 10; // add slough for imap string literals
+        char *encoding = new char[len];
+        if (encoding)
+        {
+          encoding[0] = '\0';
+          // Remember: if ToOrCC and useNot then the expression becomes NOT To AND Not CC as opposed to (NOT TO) || (NOT CC)
+          if (orHeaderMnemonic && !useNot)
+            PL_strcat(encoding, m_kImapOr);
+          if (useNot)
+            PL_strcat (encoding, m_kImapNot);
+          if (!excludeHeader)
+            PL_strcat (encoding, m_kImapHeader);
+          PL_strcat (encoding, whichMnemonic);
+          if (!ignoreValue)
+            err = EncodeImapValue(encoding, value, useQuotes, reallyDredd);
+          
+          if (orHeaderMnemonic)
+          {
+            if (useNot)
+              PL_strcat(encoding, m_kImapNot);
+            
+            PL_strcat (encoding, m_kImapHeader);
+            
+            PL_strcat (encoding, orHeaderMnemonic);
+            if (!ignoreValue)
+              err = EncodeImapValue(encoding, value, useQuotes, reallyDredd);
+          }
+          
+          // kmcentee, don't let the encoding end with whitespace, 
+          // this throws off later url STRCMP
+          if (*encoding && *(encoding + strlen(encoding) - 1) == ' ')
+            *(encoding + strlen(encoding) - 1) = '\0';
+        }
+        
+        if (value && valueWasAllocated)
+          PR_Free (value);
+        if (arbitraryHeader)
+          delete arbitraryHeader;
+        
+        *ppOutTerm = encoding;
+        
+        return err;
 }
 
 nsresult nsMsgSearchAdapter::EncodeImapValue(char *encoding, const char *value, PRBool useQuotes, PRBool reallyDredd)
 {
-	// By NNTP RFC, SEARCH HEADER SUBJECT "" is legal and means 'find messages without a subject header'
-	if (!reallyDredd)
-	{
-		// By IMAP RFC, SEARCH HEADER SUBJECT "" is illegal and will generate an error from the server
-		if (!value || !value[0])
-			return NS_ERROR_NULL_POINTER;
-	}
-	
-	if (useQuotes)
-		PL_strcat(encoding, "\"");
-	PL_strcat (encoding, value);
-	if (useQuotes)
-		PL_strcat(encoding, "\"");
-
-	return NS_OK;
+  // By NNTP RFC, SEARCH HEADER SUBJECT "" is legal and means 'find messages without a subject header'
+  if (!reallyDredd)
+  {
+    // By IMAP RFC, SEARCH HEADER SUBJECT "" is illegal and will generate an error from the server
+    if (!value || !value[0])
+      return NS_ERROR_NULL_POINTER;
+  }
+  
+  if (!nsCRT::IsAscii(value))
+  {
+    nsCAutoString lengthStr;
+    PL_strcat(encoding, "{");
+    lengthStr.AppendInt(strlen(value));
+    PL_strcat(encoding, lengthStr.get());
+    PL_strcat(encoding, "}"CRLF);
+    PL_strcat(encoding, value);
+    return NS_OK;
+  }
+  if (useQuotes)
+    PL_strcat(encoding, "\"");
+  PL_strcat (encoding, value);
+  if (useQuotes)
+    PL_strcat(encoding, "\"");
+  
+  return NS_OK;
 }
 
 
 nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray *searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset, PRBool reallyDredd)
 {
-	// i've left the old code (before using CBoolExpression for debugging purposes to make sure that
-	// the new code generates the same encoding string as the old code.....
-
-	nsresult err = NS_OK;
-	*ppOutEncoding = nsnull;
-
-	PRUint32 termCount;
+  // i've left the old code (before using CBoolExpression for debugging purposes to make sure that
+  // the new code generates the same encoding string as the old code.....
+  
+  nsresult err = NS_OK;
+  *ppOutEncoding = nsnull;
+  
+  PRUint32 termCount;
   searchTerms->Count(&termCount);
-	PRUint32 i = 0;
-	int encodingLength = 0;
-
-	// Build up an array of encodings, one per query term
-	char **termEncodings = new char *[termCount];
-	if (!termEncodings)
-		return NS_ERROR_OUT_OF_MEMORY;
-	// create our expression
-	nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();
-	if (!expression)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	for (i = 0; i < termCount && NS_SUCCEEDED(err); i++)
-	{
+  PRUint32 i = 0;
+  int encodingLength = 0;
+  
+  // Build up an array of encodings, one per query term
+  char **termEncodings = new char *[termCount];
+  if (!termEncodings)
+    return NS_ERROR_OUT_OF_MEMORY;
+  // create our expression
+  nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();
+  if (!expression)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  for (i = 0; i < termCount && NS_SUCCEEDED(err); i++)
+  {
     nsCOMPtr<nsIMsgSearchTerm> pTerm;
     searchTerms->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
-                             (void **)getter_AddRefs(pTerm));
-		err = EncodeImapTerm (pTerm, reallyDredd, srcCharset, destCharset, &termEncodings[i]);
-		if (NS_SUCCEEDED(err) && nsnull != termEncodings[i])
-		{
-			encodingLength += strlen(termEncodings[i]) + 1;
-            expression = nsMsgSearchBoolExpression::AddSearchTermWithEncoding(expression, pTerm,termEncodings[i]);
-		}
-	}
-
-	if (NS_SUCCEEDED(err)) 
-	{
-		// Catenate the intermediate encodings together into a big string
-		char *totalEncoding = new char [encodingLength + (!reallyDredd ? strlen(m_kImapUnDeleted) : 0) + 1];
-		nsCString encodingBuff;
-
-		if (totalEncoding)
-		{
-			totalEncoding[0] = '\0';
-
-			int offset = 0;       // offset into starting place for the buffer
-			if (!reallyDredd)
-				PL_strcat(totalEncoding, m_kImapUnDeleted);
-
-			if (!reallyDredd)
-			{
-				encodingBuff.Append(m_kImapUnDeleted);
-				offset = strlen(m_kImapUnDeleted);
-			}
-
-			expression->GenerateEncodeStr(&encodingBuff);
-
-			for (i = 0; i < termCount; i++)
-			{
-				if (termEncodings[i])
-				{
-					PL_strcat (totalEncoding, termEncodings[i]);
-					delete [] termEncodings[i];
-				}
-			}
-		}
-		else
-			err = NS_ERROR_OUT_OF_MEMORY;
-
-		delete totalEncoding;
-		delete expression;
-
-		// Set output parameter if we encoded the query successfully
-		if (NS_SUCCEEDED(err))
-			*ppOutEncoding = ToNewCString(encodingBuff);
-	}
-
-	delete [] termEncodings;
-
-	return err;
+      (void **)getter_AddRefs(pTerm));
+    err = EncodeImapTerm (pTerm, reallyDredd, srcCharset, destCharset, &termEncodings[i]);
+    if (NS_SUCCEEDED(err) && nsnull != termEncodings[i])
+    {
+      encodingLength += strlen(termEncodings[i]) + 1;
+      expression = nsMsgSearchBoolExpression::AddSearchTermWithEncoding(expression, pTerm,termEncodings[i]);
+    }
+  }
+  
+  if (NS_SUCCEEDED(err)) 
+  {
+    // Catenate the intermediate encodings together into a big string
+    char *totalEncoding = new char [encodingLength + (!reallyDredd ? strlen(m_kImapUnDeleted) : 0) + 1];
+    nsCString encodingBuff;
+    
+    if (totalEncoding)
+    {
+      totalEncoding[0] = '\0';
+      
+      int offset = 0;       // offset into starting place for the buffer
+      if (!reallyDredd)
+        PL_strcat(totalEncoding, m_kImapUnDeleted);
+      
+      if (!reallyDredd)
+      {
+        encodingBuff.Append(m_kImapUnDeleted);
+        offset = strlen(m_kImapUnDeleted);
+      }
+      
+      expression->GenerateEncodeStr(&encodingBuff);
+      
+      for (i = 0; i < termCount; i++)
+      {
+        if (termEncodings[i])
+        {
+          PL_strcat (totalEncoding, termEncodings[i]);
+          delete [] termEncodings[i];
+        }
+      }
+    }
+    else
+      err = NS_ERROR_OUT_OF_MEMORY;
+    
+    delete totalEncoding;
+    delete expression;
+    
+    // Set output parameter if we encoded the query successfully
+    if (NS_SUCCEEDED(err))
+      *ppOutEncoding = ToNewCString(encodingBuff);
+  }
+  
+  delete [] termEncodings;
+  
+  return err;
 }
 
 
