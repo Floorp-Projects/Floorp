@@ -26,6 +26,7 @@
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsIMIMEInfo.h"
+#include "nsMimeTypes.h"
 #include "nsILocalFile.h"
 
 // we need windows.h to read out registry information...
@@ -34,6 +35,7 @@
 // helper methods: forward declarations...
 BYTE * GetValueBytes( HKEY hKey, const char *pValueName);
 nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension);
+nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& aFileExtension);
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {}
@@ -58,58 +60,6 @@ NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentTyp
   return NS_OK;
 }
 
-nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo)
-{
-  nsresult rv = NS_OK;
-  nsCAutoString fileExtension;
-  nsCOMPtr<nsIMIMEInfo> mimeInfo;
-
-  // (1) ask the base class if they have a mime info object for this content type...
-  rv = GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
-  if (mimeInfo)
-  {
-    nsXPIDLCString mimefileExt;
-    mimeInfo->FirstExtension(getter_Copies(mimefileExt));
-    fileExtension = ".";  
-    fileExtension.Append(mimefileExt);
-  }
-
-  // we don't have a mozilla override extension for this content type....
-  // try looking in the netscape windows registry to see if we got lucky
-  // and have pre-populated the registry with mappings
-  if (fileExtension.IsEmpty()) 
-    rv = GetExtensionFrom4xRegistryInfo(aMimeContentType, fileExtension);
-
-  if (FAILED(rv) || fileExtension.IsEmpty())
-  {
-    // if we couldn't find one, don't give up yet! Try and see if there is an extension in the 
-    // url itself...
-    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-
-    if (url)
-    {
-      nsXPIDLCString extenion;
-      url->GetFileExtension(getter_Copies(extenion));
-    
-     fileExtension = ".";  
-     fileExtension.Append(extenion);
-    }
-  } // if we couldn't get extension information from the registry...
-
-  // look up the content type and get a platform specific handle to the app we want to use for this 
-  // download...create a nsExternalAppHandler, bind the application token to it (as a nsIFile??) and return this
-  // as the stream listener to use...
-
-  if (!fileExtension.IsEmpty())
-  {
-    GetFromExtension(fileExtension, aMIMEInfo);
-     // this is the ONLY code path which leads to success where we should set our return variables...
-     *aFileExtension = fileExtension.ToNewCString();
-  } // if we got an entry out of the registry...
-
-  return rv;
-}
-
 NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
@@ -132,11 +82,51 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
 
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
   nsXPIDLCString fileExtension;
-  rv = FindOSMimeInfoForType(aMimeContentType, aURI, getter_Copies(fileExtension), getter_AddRefs(mimeInfo));
+
+  rv = GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
+
+  // here's a nifty little trick. If we got a match back for the content type; but the content type is
+  // unknown or octet (both of these are pretty much unhelpful mime objects), then see if the file extension
+  // produces a better mime object...
+  if (((nsCRT::strcmp(aMimeContentType, UNKNOWN_CONTENT_TYPE) == 0) ||
+       (nsCRT::strcmp(aMimeContentType, APPLICATION_OCTET_STREAM) == 0) || 
+       !mimeInfo))
+  {
+    // if we couldn't find one, don't give up yet! Try and see if there is an extension in the 
+    // url itself...
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+
+    if (url)
+    {
+      url->GetFileExtension(getter_Copies(fileExtension));    
+      nsCOMPtr<nsIMIMEInfo> tempMIMEObject;
+      GetFromExtension(fileExtension, getter_AddRefs(tempMIMEObject));
+      // only over write mimeInfo if we got a non-null temp mime info object.
+      if (tempMIMEObject)
+        mimeInfo = tempMIMEObject;
+    }
+  }
+
+  if (NS_FAILED(rv) || !mimeInfo)
+  {
+    // if we didn't get a mime info object then the OS knows nothing about this mime type and WE know nothing about this mime type
+    // so create a new mime info object and use it....
+    mimeInfo = do_CreateInstance(NS_MIMEINFO_CONTRACTID);
+    if (mimeInfo)
+    {
+      // the file extension was conviently already filled in by our call to FindOSMimeInfoForType.
+      mimeInfo->SetFileExtensions(fileExtension);
+      mimeInfo->SetMIMEType(aMimeContentType);
+      // we may need to add a new method to nsIMIMEService so we can add this mime info object to our mime service.
+    }
+  }
 
   *aStreamListener = nsnull;
   if (NS_SUCCEEDED(rv) && mimeInfo)
   {
+    // ensure that the file extension field is always filled in
+    mimeInfo->FirstExtension(getter_Copies(fileExtension));
+
     // this code is incomplete and just here to get things started..
     nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
     handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
@@ -177,6 +167,34 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   }
 
   return rv;
+}
+
+// The windows registry provides a mime database key which lists a set of mime types and corresponding "Extension" values. 
+// we can use this to look up our mime type to see if there is a preferred extension for the mime type.
+nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& aFileExtension)
+{
+   nsresult rv = NS_OK;
+   HKEY hKey;
+   nsCAutoString mimeDatabaseKey ("MIME\\Database\\Content Type\\");
+
+   mimeDatabaseKey += aMimeType;
+   
+   LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, mimeDatabaseKey, 0, KEY_QUERY_VALUE, &hKey);
+   if (err == ERROR_SUCCESS)
+   {
+      LPBYTE pBytes = GetValueBytes( hKey, "Extension");
+      if (pBytes)
+      { 
+        aFileExtension = (char * )pBytes;
+      }
+
+      delete pBytes;
+
+      ::RegCloseKey(hKey);
+   }
+
+   return NS_OK;
+
 }
 
 // We have a serious problem!! I have this content type and the windows registry only gives me
@@ -340,8 +358,6 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMI
 
         mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
-        // the following is just a test for right now...I'll find something useful out of the registry
-        // or just stuff the file executable here...
         nsAutoString description;
         description.AssignWithConversion((char *) pFileDescription);
 
@@ -381,12 +397,14 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMI
   nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, _retval);
   if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
 
-  // we currently don't know anything about this content type....
-  // the windows registry is indexed by file extension not content type....so all we can do is try
-  // to see if netscape has registered this extension...
+  // (1) try to use the windows mime database to see if there is a mapping to a file extension
+  // (2) try to see if we have some left over 4.x registry info we can peek at...
   nsCAutoString fileExtension;
-  GetExtensionFrom4xRegistryInfo(aMIMEType, fileExtension);
+  GetExtensionFromWindowsMimeDatabase(aMIMEType, fileExtension);
+  if (fileExtension.IsEmpty())
+    GetExtensionFrom4xRegistryInfo(aMIMEType, fileExtension);
 
+  // now look up based on the file extension.
   if (!fileExtension.IsEmpty())
     return GetFromExtension(fileExtension, _retval);
   else
