@@ -29,6 +29,10 @@ DISTBROWSER=$(DIST)\bin\chrome\global\content\default
 install::
 	$(MAKE_INSTALL) platformGlobalOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) platformDialogOverlay.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) platformBrowserBindings.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) platformInputBindings.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) platformTextFieldBindings.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) platformEditorBindings.xul $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\content\default\*.*

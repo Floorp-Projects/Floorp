@@ -1,0 +1,69 @@
+<?xml version="1.0"?> 
+<!-- unix version of platformTextAreaBindings.xul -->
+
+<keybinding id="platformTextAreaBindings"
+	 xmlns:html="http://www.w3.org/TR/REC-html40"
+	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!-- change the xul key for Unix -->
+<keyset id="editorKeySet" xulkey="alt">
+
+<!-- emacs delete keys -->
+<key id="emDelCharBWkb" key="h" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteCharBackward');
+    controller.doCommand('cmd_deleteCharBackward');"/>
+<key id="emDelCharFWkb" key="d" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteCharForward');
+    controller.doCommand('cmd_deleteCharForward');"/>
+<key id="emDelWordBWkb" key="w" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteWordBackward');
+    controller.doCommand('cmd_deleteWordBackward');"/>
+<key id="emKillToEndkb" key="k" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteToEndOfLine');
+    controller.doCommand('cmd_deleteToEndOfLine');"/>
+
+<!-- emacs motion keys: these use the selection controller API -->
+<key id="emBeginLinekb" key="a" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_beginLine');
+    controller.doCommand('cmd_beginLine');"/>
+<key id="emEndLinekb" key="e" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_endLine');
+    controller.doCommand('cmd_endLine');"/>
+<key id="emCharPrevkb" key="b" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_charPrevious');
+    controller.doCommand('cmd_charPrevious');"/>
+<key id="emCharNextkb" key="f" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_charNext');
+    controller.doCommand('cmd_charNext');"/>
+<key id="emPrevLinekb" key="p" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_linePrevious');
+    controller.doCommand('cmd_linePrevious');"/>
+<key id="emNextLinekb" key="" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_lineNext');
+    controller.doCommand('cmd_lineNext');"/>
+<key id="emPageDownkb" key="v" control="true" shift="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
+    controller.doCommand('cmd_scrollPageDown');"/>
+<key id="emacspagedownkb" key="v" control="true" onkeypress="SelectionPageDown()" />
+<key id="emPageUpkb" key="v" control="true" shift="false" meta="true"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
+    controller.doCommand('cmd_scrollPageUp');"/>
+
+</keyset>
+
+<!-- End Unix-specific keybindings -->
+
+</keybinding>
+

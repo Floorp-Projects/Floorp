@@ -29,6 +29,11 @@ include $(DEPTH)/config/autoconf.mk
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/platformGlobalOverlay.xul \
 		$(srcdir)/platformDialogOverlay.xul \
+		$(srcdir)/platformInputBindings.xul \
+		$(srcdir)/platformBrowserBindings.xul \
+		$(srcdir)/platformInputBindings.xul \
+		$(srcdir)/platformEditorBindings.xul \
+		$(srcdir)/platformTextAreaBindings.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
