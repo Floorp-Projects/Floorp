@@ -1,5 +1,4 @@
-#file:///s|/mozilla/layout/html/tests/table/bugs/bug26178.html
-#file:///s|/mozilla/layout/html/tests/table/bugs/bug26193.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug26178.html
 delay:=8
 file:///s|/mozilla/layout/html/tests/table/bugs/bug26553.html
 delay:=1
@@ -34,12 +33,12 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug2997.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug30273.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug30332-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug30332-2.html
-#file:///s|/mozilla/layout/html/tests/table/bugs/bug3037-1.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug3037-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3037-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug30418.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug30559.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug30985.html
-#file:///s|/mozilla/layout/html/tests/table/bugs/bug30692.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug30692.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3103.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3105.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug3191.html

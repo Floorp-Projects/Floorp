@@ -15,8 +15,7 @@ delay:=1
 file:///s|/mozilla/layout/html/tests/table/bugs/bug10036.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug10039.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug10565.html
-##the following does not seem to load, perhaps a remote image problem
-##file:///s|/mozilla/layout/html/tests/table/bugs/bug10633.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug10633.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug1067-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug1067-2.html
 delay:=2

@@ -35,6 +35,7 @@ file:///s|/mozilla/layout/html/tests/table/core/margins.html
 file:///s|/mozilla/layout/html/tests/table/core/misc.html
 delay:=1
 file:///s|/mozilla/layout/html/tests/table/core/nested1.html
+file:///s|/mozilla/layout/html/tests/table/core/one_row.html
 delay:=2
 file:///s|/mozilla/layout/html/tests/table/core/row_span.html
 delay:=1
