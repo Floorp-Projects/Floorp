@@ -76,22 +76,23 @@
 #endif
 
 static JSConstDoubleSpec math_constants[] = {
-    {M_E,       "E"},
-    {M_LOG2E,   "LOG2E"},
-    {M_LOG10E,  "LOG10E"},
-    {M_LN2,     "LN2"},
-    {M_LN10,    "LN10"},
-    {M_PI,      "PI"},
-    {M_SQRT2,   "SQRT2"},
-    {M_SQRT1_2, "SQRT1_2"},
-    {0}
+    {M_E,       "E",            0, {0,0,0}},
+    {M_LOG2E,   "LOG2E",        0, {0,0,0}},
+    {M_LOG10E,  "LOG10E",       0, {0,0,0}},
+    {M_LN2,     "LN2",          0, {0,0,0}},
+    {M_LN10,    "LN10",         0, {0,0,0}},
+    {M_PI,      "PI",           0, {0,0,0}},
+    {M_SQRT2,   "SQRT2",        0, {0,0,0}},
+    {M_SQRT1_2, "SQRT1_2",      0, {0,0,0}},
+    {0,0,0,{0,0,0}}
 };
 
 static JSClass math_class = {
     "Math",
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
@@ -412,27 +413,27 @@ math_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 static JSFunctionSpec math_static_methods[] = {
 #ifdef JS_HAS_TOSOURCE
-    {js_toSource_str,   math_toSource,  0},
+    {js_toSource_str,   math_toSource,		0, 0, 0},
 #endif
-    {"abs",		math_abs,		1},
-    {"acos",		math_acos,		1},
-    {"asin",		math_asin,		1},
-    {"atan",		math_atan,		1},
-    {"atan2",		math_atan2,		2},
-    {"ceil",		math_ceil,		1},
-    {"cos",		math_cos,		1},
-    {"exp",		math_exp,		1},
-    {"floor",		math_floor,		1},
-    {"log",		math_log,		1},
-    {"max",		math_max,		2},
-    {"min",		math_min,		2},
-    {"pow",		math_pow,		2},
-    {"random",		math_random,		0},
-    {"round",		math_round,		1},
-    {"sin",		math_sin,		1},
-    {"sqrt",		math_sqrt,		1},
-    {"tan",		math_tan,		1},
-    {0}
+    {"abs",		math_abs,		1, 0, 0},
+    {"acos",		math_acos,		1, 0, 0},
+    {"asin",		math_asin,		1, 0, 0},
+    {"atan",		math_atan,		1, 0, 0},
+    {"atan2",		math_atan2,		2, 0, 0},
+    {"ceil",		math_ceil,		1, 0, 0},
+    {"cos",		math_cos,		1, 0, 0},
+    {"exp",		math_exp,		1, 0, 0},
+    {"floor",		math_floor,		1, 0, 0},
+    {"log",		math_log,		1, 0, 0},
+    {"max",		math_max,		2, 0, 0},
+    {"min",		math_min,		2, 0, 0},
+    {"pow",		math_pow,		2, 0, 0},
+    {"random",		math_random,		0, 0, 0},
+    {"round",		math_round,		1, 0, 0},
+    {"sin",		math_sin,		1, 0, 0},
+    {"sqrt",		math_sqrt,		1, 0, 0},
+    {"tan",		math_tan,		1, 0, 0},
+    {0,0,0,0,0}
 };
 
 JSObject *
