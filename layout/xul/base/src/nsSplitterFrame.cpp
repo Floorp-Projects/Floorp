@@ -84,7 +84,7 @@ public:
   virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
   virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
   virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return MouseMove(aMouseEvent); }
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
   // mouse motion listener
@@ -522,6 +522,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
 
             ResizeChildTo(pos, mChildInfosBefore, mChildInfosAfter, mChildInfosBeforeCount, mChildInfosAfterCount, bounded);
 
+            /*
             if (oldPos > 0 && oldPos > pos)
             {
                 printf("Collapse right\n");
@@ -548,6 +549,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
                   return;
                 }
             }
+            */
 
            // printf("----- resize ----- ");
             /*
@@ -604,20 +606,20 @@ nsSplitterFrameImpl :: CaptureMouse(PRBool aGrabMouseEvents)
   mSplitter->GetView(&view);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
-  nsCOMPtr<nsIWidget> widget;
+  //nsCOMPtr<nsIWidget> widget;
 
   if (view) {
     view->GetViewManager(*getter_AddRefs(viewMan));
-    view->GetWidget(*getter_AddRefs(widget));
+    //view->GetWidget(*getter_AddRefs(widget));
     if (viewMan) {
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
-        if (widget)
-           widget->CaptureMouse(PR_TRUE);
+      //  if (widget)
+        //   widget->CaptureMouse(PR_TRUE);
       } else {
         viewMan->GrabMouseEvents(nsnull,result);
-        if (widget)
-           widget->CaptureMouse(PR_FALSE);
+       // if (widget)
+         //  widget->CaptureMouse(PR_FALSE);
       }
     }
   }

@@ -2029,9 +2029,28 @@ nsBoxDebugInner::MouseMove(nsIDOMEvent* aMouseEvent)
                     if (mDebugChild == childFrame)
                         return NS_OK;
 
-                    printf("-------box info---------\n");
-                    nsFrame::ListTag(stdout, childFrame);
-                    printf("\n");
+                    nsCOMPtr<nsIContent> content;
+                    childFrame->GetContent(getter_AddRefs(content));
+
+                    nsString id;
+                    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
+                    char idValue[100];
+                    id.ToCString(idValue,100);
+                       
+                    nsString kClass;
+                    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, kClass);
+                    char kClassValue[100];
+                    kClass.ToCString(kClassValue,100);
+
+                    nsCOMPtr<nsIAtom> tag;
+                    content->GetTag(*getter_AddRefs(tag));
+                    nsString tagString;
+                    tag->ToString(tagString);
+                    char tagValue[100];
+                    tagString.ToCString(tagValue,100);
+
+                    printf("--------------------\n");
+                    printf("Tag='%s', id='%s' class='%s'\n", tagValue, idValue, kClassValue);
 
                     mDebugChild = childFrame;
                     nsCalculatedBoxInfo aSize;
@@ -2087,10 +2106,6 @@ nsBoxDebugInner::MouseMove(nsIDOMEvent* aMouseEvent)
                         nscoord max = position->mMaxHeight.GetCoordValue();
                         aSize.maxSize.height = max;
                     }
-
-                    // get the flexibility
-                    nsCOMPtr<nsIContent> content;
-                    childFrame->GetContent(getter_AddRefs(content));
 
                     PRInt32 error;
                     nsAutoString value;
