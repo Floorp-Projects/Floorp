@@ -26,7 +26,6 @@
  
 #include <Xfe/XfeTest.h>
 #include <Xfe/ToolTip.h>
-#include <Xfe/TextCaption.h>
 
 static Widget	_button_gadgets[3];
 static Widget	_label_gadgets[3];
