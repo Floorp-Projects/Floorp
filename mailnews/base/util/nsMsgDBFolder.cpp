@@ -1525,3 +1525,27 @@ nsMsgDBFolder::GetPurgeThreshold(PRInt32 *aThreshold)
   }
   return rv;
 }
+
+NS_IMETHODIMP //called on the folder that is renamed or about to be deleted
+nsMsgDBFolder::ChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsensitive, PRBool *changed)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr <nsIMsgFilterList> filterList;
+  rv = GetFilterList(getter_AddRefs(filterList));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsXPIDLCString oldUri;
+  rv = GetURI(getter_Copies(oldUri));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsXPIDLCString newUri;
+  if (newFolder) //for delete this will be null
+  {
+    rv = newFolder->GetURI(getter_Copies(newUri));
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  rv = filterList->ChangeFilterTarget(oldUri, newUri, caseInsensitive, changed);
+  return rv;
+}
+

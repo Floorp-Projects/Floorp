@@ -136,8 +136,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 	void Delete ();
 
 	void deleteSubFolders(in nsISupportsArray folders, in nsIMsgWindow msgWindow);
-	void propagateDelete(in nsIMsgFolder folder, in boolean deleteStorage);
-	void recursiveDelete(in boolean deleteStorage);
+	void propagateDelete(in nsIMsgFolder folder, in boolean deleteStorage, in nsIMsgWindow msgWindow);
+	void recursiveDelete(in boolean deleteStorage, in nsIMsgWindow msgWindow);
 
 	void createSubfolder(in wstring folderName, in nsIMsgWindow msgWindow);
   [noscript] nsIMsgFolder addSubfolder(in nsAutoString folderName);
@@ -366,6 +366,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   const unsigned long allMessageCountNotifications    = 0;
   void enableNotifications(in long notificationType, in boolean enable);
   boolean isCommandEnabled(in string command);
+  boolean changeFilterDestination(in nsIMsgFolder folder, in boolean caseInsensitive);
 
   attribute nsIMsgRetentionSettings retentionSettings;
   attribute nsIMsgDownloadSettings downloadSettings;

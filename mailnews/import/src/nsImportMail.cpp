@@ -772,7 +772,7 @@ void ImportThreadData::DriverAbort()
 {
 	if (abort && !threadAlive && destRoot) {
 		if (ownsDestRoot) {
-			destRoot->RecursiveDelete( PR_TRUE);
+			destRoot->RecursiveDelete(PR_TRUE, nsnull);
 		}
 		else {
 			// FIXME: just delete the stuff we created?
@@ -983,7 +983,7 @@ ImportMailThread( void *stuff)
 		if (pData->ownsDestRoot) {
 			IMPORT_LOG0( "Calling destRoot->RecursiveDelete\n");
 
-			destRoot->RecursiveDelete( PR_TRUE);
+			destRoot->RecursiveDelete( PR_TRUE, nsnull);
 		}
 		else {
 			// FIXME: just delete the stuff we created?

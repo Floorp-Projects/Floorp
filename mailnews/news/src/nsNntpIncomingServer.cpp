@@ -1187,7 +1187,7 @@ nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
     if (NS_FAILED(rv)) return rv;	
 	if (!newsgroupFolder) return NS_ERROR_FAILURE;
 
-	rv = serverFolder->PropagateDelete(newsgroupFolder, PR_TRUE /* delete storage */);
+	rv = serverFolder->PropagateDelete(newsgroupFolder, PR_TRUE /* delete storage */, nsnull);
     if (NS_FAILED(rv)) return rv;	
 
 	/* since we've unsubscribed to a newsgroup, the newsrc needs to be written out */

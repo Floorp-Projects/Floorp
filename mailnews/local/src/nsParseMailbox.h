@@ -183,7 +183,7 @@ public:
 protected:
 	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 
-	virtual PRInt32			PublishMsgHeader();
+	virtual PRInt32			PublishMsgHeader(nsIMsgWindow *msgWindow);
 	virtual void			FolderTypeSpecificTweakMsgHeader(nsIMsgDBHdr *tweakMe);
 	void					FreeBuffers();
 
@@ -237,11 +237,11 @@ public:
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
 
 	nsOutputFileStream *GetLogFile();
-	virtual PRInt32	PublishMsgHeader();
+	virtual PRInt32	PublishMsgHeader(nsIMsgWindow *msgWindow);
 protected:
 	char				*m_tmpdbName;				// Temporary filename of new database
 	PRBool				m_usingTempDB;
-	virtual void	ApplyFilters(PRBool *pMoved);
+	virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow);
 	virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
 	virtual nsresult	MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
@@ -277,9 +277,9 @@ public:
 	const IDArray 			&GetBodyKeys() { return fFetchBodyKeys; }
 	MSG_UrlQueue	*GetFilterUrlQueue() {return fUrlQueue;}
 protected:
-	virtual PRInt32			PublishMsgHeader();
+	virtual PRInt32			PublishMsgHeader(nsIMsgWindow *msgWindow);
 	virtual void			FolderTypeSpecificTweakMsgHeader(nsIMsgDBHdr *tweakMe);
-	virtual void			ApplyFilters(PRBool *pMoved);
+	virtual void			ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow);
 	
 	virtual MSG_FolderInfoMail *GetTrashFolder();
 	virtual nsresult		MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 

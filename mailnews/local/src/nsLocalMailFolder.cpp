@@ -969,7 +969,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                 {
                     nsString folderName(idlFolderName);
                     trashFolder->SetParent(nsnull);
-                    parentFolder->PropagateDelete(trashFolder, PR_TRUE);
+                    parentFolder->PropagateDelete(trashFolder, PR_TRUE, msgWindow);
                     parentFolder->CreateSubfolder(folderName.get(),nsnull);
                     nsCOMPtr<nsIMsgFolder> newTrashFolder;
                     rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
@@ -1023,7 +1023,6 @@ nsresult nsMsgLocalMailFolder::IsChildOfTrash(PRBool *result)
   }
   return rv;
 }
-
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 {
@@ -1235,7 +1234,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
     if (parentFolder)
     {
         SetParent(nsnull);
-        parentFolder->PropagateDelete(this, PR_FALSE);
+        parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
     }
 
     oldPathSpec->Rename(newNameStr.get());
@@ -1262,6 +1261,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 			newFolder->SetName(newFolderName.get());
 			nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
 			NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
+            ChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, nsnull);
 		}
         /***** jefft -
         * Needs to find a way to reselect the new renamed folder and the
@@ -1928,6 +1928,8 @@ nsMsgLocalMailFolder::CopyFolderLocal( nsIMsgFolder *destFolder, nsIMsgFolder *s
   srcFolder->GetFlags(&flags);
   newMsgFolder->SetFlags(flags);
 
+  rv = srcFolder->ChangeFilterDestination(newMsgFolder, PR_TRUE, nsnull);
+
   if (newMsgFolder) 
   {
       newMsgFolder->SetName(folderName.get());
@@ -1965,7 +1967,7 @@ nsMsgLocalMailFolder::CopyFolderLocal( nsIMsgFolder *destFolder, nsIMsgFolder *s
 	 {
          msgParent = do_QueryInterface(parent);
          if (msgParent)
-		     msgParent->PropagateDelete(srcFolder, PR_FALSE);  // The files have already been moved, so delete storage PR_FALSE 
+		     msgParent->PropagateDelete(srcFolder, PR_FALSE, msgWindow);  // The files have already been moved, so delete storage PR_FALSE 
 	     if (!oldPath.IsDirectory())   
 		 {
 		     AddDirectorySeparator(oldPath);

@@ -46,7 +46,7 @@ interface nsIPop3Sink : nsISupports {
   [noscript] void IncorporateWrite(in string block,
                                    in long length);
 
-  [noscript] void IncorporateComplete();
+  [noscript] void IncorporateComplete(in nsIMsgWindow msgWindow);
   [noscript] void IncorporateAbort(in boolean uidlDownload);
 
   void BiffGetNewMail();

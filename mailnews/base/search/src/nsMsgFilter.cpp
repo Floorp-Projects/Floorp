@@ -223,10 +223,15 @@ NS_IMETHODIMP nsMsgFilter::SetActionPriority(nsMsgPriorityValue aPriority)
 NS_IMETHODIMP
     nsMsgFilter::SetActionTargetFolderUri(const char *aUri)
 {
+    nsresult rv=NS_OK;
     NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::MoveToFolder,
                    NS_ERROR_ILLEGAL_VALUE);
-    m_action.m_folderUri = aUri;
-    return NS_OK;
+    if (aUri)
+      m_action.m_folderUri = aUri;
+    else
+      SetEnabled(PR_FALSE);
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -253,7 +258,8 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::MoveToFolder,
                    NS_ERROR_ILLEGAL_VALUE);
-    *aResult = m_action.m_folderUri.ToNewCString();
+    if (m_action.m_folderUri)
+      *aResult = m_action.m_folderUri.ToNewCString();
     return NS_OK;
 }
 
@@ -389,12 +395,14 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
       if (rootFolder)
       {
         rootFolder->FindSubFolder (m_action.m_originalServerPath, getter_AddRefs(destIFolder));
-
-        nsCOMPtr <nsIMsgFolder> msgFolder;
-        msgFolder = do_QueryInterface(destIFolder);	
-        destIFolder->GetURI(getter_Copies(folderUri));
-		    m_action.m_folderUri.Assign(folderUri);
-        moveValue.Assign(folderUri);
+        if (destIFolder)
+        {
+          nsCOMPtr <nsIMsgFolder> msgFolder;
+          msgFolder = do_QueryInterface(destIFolder);	
+          destIFolder->GetURI(getter_Copies(folderUri));
+		  m_action.m_folderUri.Assign(folderUri);
+          moveValue.Assign(folderUri);
+        }
       }
     }
 	  else
@@ -444,21 +452,20 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 #endif
         destFolderUri.Append('/');
         destFolderUri.Append(moveValue);
-        //local folders are case-insensitive
-        localMailRootMsgFolder->GetChildWithURI (destFolderUri, PR_TRUE, PR_TRUE /*caseInsensitive*/, getter_AddRefs(destIMsgFolder));
+        localMailRootMsgFolder->GetChildWithURI (destFolderUri, PR_TRUE, PR_FALSE /*caseInsensitive*/, getter_AddRefs(destIMsgFolder));
 
         if (destIMsgFolder)
         {
           destIMsgFolder->GetURI(getter_Copies(folderUri));
-		      m_action.m_folderUri.Assign(folderUri);
+		  m_action.m_folderUri.Assign(folderUri);
           moveValue.Assign(folderUri);
         }
       }
     }
   }
   else
-    m_action.m_folderUri = moveValue;
-
+    SetActionTargetFolderUri(moveValue);
+    
 	return NS_OK;
 	// set m_action.m_value.m_folderUri
 }

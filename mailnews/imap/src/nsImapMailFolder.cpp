@@ -1139,7 +1139,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                 aSupportsArray->RemoveElementAt(i);
                 aFolder = do_QueryInterface(aSupport);
                 if (aFolder)
-                    trashFolder->PropagateDelete(aFolder, PR_TRUE);
+                    trashFolder->PropagateDelete(aFolder, PR_TRUE, msgWindow);
             }
         }
     }
@@ -2019,7 +2019,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     }
     
     if (confirmed && deleteNoTrash)   //delete subfolders only if you are  deleting things from trash
-        return nsMsgFolder::DeleteSubFolders(folders, nsnull);
+        return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
     else
         return rv;
 }
@@ -2037,7 +2037,6 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
  
     if (NS_SUCCEEDED(rv) && imapServer)
       imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
-
 
     // Check preferences to see if we should check all folders for new 
     // messages, or just the inbox.
@@ -2463,7 +2462,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
             if (!m_moveCoalescer)
               m_moveCoalescer = new nsImapMoveCoalescer(this, msgWindow);
             m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
-                                            headers, headersSize, this);
+                                            headers, headersSize, this, msgWindow);
           }
         }
       }
@@ -2661,7 +2660,11 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
   {
 
     if (actionType == nsMsgFilterAction::MoveToFolder)
+    {
         filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
+        if (!actionTargetFolderUri || !actionTargetFolderUri[0])
+          return rv;
+    }
     nsCOMPtr<nsIMsgDBHdr> msgHdr;
 
     if (m_msgParser)
@@ -2709,7 +2712,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
         rv = GetURI(getter_Copies(uri));
 
         if ((const char*)actionTargetFolderUri &&
-            nsCRT::strcasecmp(uri, actionTargetFolderUri))
+            nsCRT::strcmp(uri, actionTargetFolderUri))
         {
           msgHdr->GetFlags(&msgFlags);
 
@@ -5687,6 +5690,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
              nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName);
              folderInfo->SetMailboxName(&unicodeOnlineName);
            }
+           msgFolder->ChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, nsnull);
         }
         unusedDB->SetSummaryValid(PR_TRUE);
         unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -5699,7 +5703,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
 	msgFolder->GetParent(getter_AddRefs(parent));
 	nsCOMPtr<nsIMsgFolder> msgParent = do_QueryInterface(parent);
     msgFolder->SetParent(nsnull);
-	msgParent->PropagateDelete(msgFolder,PR_FALSE);
+	msgParent->PropagateDelete(msgFolder,PR_FALSE, nsnull);
 
     if(NS_SUCCEEDED(rv) && child)
     {
@@ -5796,6 +5800,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubfolders(nsIMsgFolder *oldFolder)
      imapFolder->SetOnlineName(onlineCName.get());
      imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
      imapFolder->SetBoxFlags(boxflags);
+     msgFolder->ChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, nsnull);
 
      rv = aEnumerator->Next();
 	

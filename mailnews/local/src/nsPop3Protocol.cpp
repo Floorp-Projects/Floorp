@@ -2194,8 +2194,13 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     {
         if (m_pop3ConData->dot_fix && m_pop3ConData->assumed_end && m_pop3ConData->msg_closure)
         {
+          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+          nsCOMPtr<nsIMsgWindow> msgWindow;
+          if (NS_SUCCEEDED(rv))
+            rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+
             rv =
-                m_nsIPop3Sink->IncorporateComplete();
+                m_nsIPop3Sink->IncorporateComplete(msgWindow);
             // The following was added to prevent the loss of Data when we try
             // and write to somewhere we dont have write access error to (See 
             // bug 62480)
@@ -2254,8 +2259,12 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     if (pauseForMoreData && m_pop3ConData->dot_fix &&
         m_pop3ConData->assumed_end && m_pop3ConData->msg_closure)
     {
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+        nsCOMPtr<nsIMsgWindow> msgWindow;
+        if (NS_SUCCEEDED(rv))
+          rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
         rv = 
-            m_nsIPop3Sink->IncorporateComplete();
+            m_nsIPop3Sink->IncorporateComplete(msgWindow);
 
         // The following was added to prevent the loss of Data when we try
         // and write to somewhere we dont have write access error to (See
@@ -2397,7 +2406,11 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
         if (!m_pop3ConData->dot_fix || m_pop3ConData->truncating_cur_msg ||
             (m_pop3ConData->parsed_bytes >= (m_pop3ConData->pop3_size -3))) 
         {
-            rv = m_nsIPop3Sink->IncorporateComplete();
+          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+          nsCOMPtr<nsIMsgWindow> msgWindow;
+          if (NS_SUCCEEDED(rv))
+            rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+          rv = m_nsIPop3Sink->IncorporateComplete(msgWindow);
 
             // The following was added to prevent the loss of Data when we try
             // and write to somewhere we dont have write access error to (See

@@ -91,8 +91,8 @@ public:
   NS_IMETHOD Delete(void);
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
   NS_IMETHOD CreateStorageIfMissing(nsIUrlListener* urlListener);
-  NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage);
-  NS_IMETHOD RecursiveDelete(PRBool deleteStorage);
+  NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage, nsIMsgWindow *msgWindow);
+  NS_IMETHOD RecursiveDelete(PRBool deleteStorage, nsIMsgWindow *msgWindow);
   NS_IMETHOD CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow);
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder **newFolder);
   NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *msgWindow);
@@ -231,7 +231,7 @@ protected:
 
   // helper routine to parse the URI and update member variables
   nsresult parseURI(PRBool needServer=PR_FALSE);
-  
+  nsresult WarnAndDisableFilter(nsIMsgWindow *msgWindow);
 protected:
   PRUint32 mFlags;
   nsWeakPtr mParent;     //This won't be refcounted for ownership reasons.
@@ -261,7 +261,6 @@ protected:
   PRInt32	mNumNewBiffMessages;
 
   PRBool mIsCachable;
-
   //
   // stuff from the uri
   //

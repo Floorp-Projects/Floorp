@@ -282,7 +282,7 @@ void nsMsgMailboxParser::DoneParsingFolder(nsresult status)
 {
 	/* End of file.  Flush out any partial line remaining in the buffer. */
 	FlushLastLine();
-	PublishMsgHeader();
+	PublishMsgHeader(nsnull);
 
 	// only mark the db valid if we've succeeded.
 	if (NS_SUCCEEDED(status) && m_mailDB)	// finished parsing, so flush db folder info 
@@ -328,7 +328,7 @@ void nsMsgMailboxParser::FolderTypeSpecificTweakMsgHeader(nsIMsgDBHdr * /* tweak
 }
 
 // Tell the world about the message header (add to db, and view, if any)
-PRInt32 nsMsgMailboxParser::PublishMsgHeader()
+PRInt32 nsMsgMailboxParser::PublishMsgHeader(nsIMsgWindow *msgWindow)
 {
 	FinishHeader();
 	if (m_newMsgHdr)
@@ -412,7 +412,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 
 		NS_ASSERTION (m_state == nsIMsgParseMailMsgState::ParseBodyState ||
 				   m_state == nsIMsgParseMailMsgState::ParseHeadersState, "invalid parse state"); /* else folder corrupted */
-		PublishMsgHeader();
+		PublishMsgHeader(nsnull);
 		Clear();
 		status = StartNewEnvelope(line, lineLength);
 		NS_ASSERTION(status >= 0, " error starting envelope parsing mailbox");
@@ -1460,7 +1460,7 @@ void nsParseNewMailState::DoneParsingFolder(nsresult status)
 		ParseFolderLine(m_ibuffer, m_ibuffer_fp);
 		m_ibuffer_fp = 0;
 	}
-	PublishMsgHeader();
+	PublishMsgHeader(nsnull);
 	if (!moved && m_mailDB)	// finished parsing, so flush db folder info 
 		UpdateDBFolderInfo();
 
@@ -1477,7 +1477,7 @@ void nsParseNewMailState::DoneParsingFolder(nsresult status)
 	m_obuffer_size = 0;
 }
 
-PRInt32 nsParseNewMailState::PublishMsgHeader()
+PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
 {
 	PRBool		moved = PR_FALSE;
 
@@ -1490,7 +1490,7 @@ PRInt32 nsParseNewMailState::PublishMsgHeader()
 		{
 			// flush the inbox because filters will read from disk
 			m_inboxFileStream->flush();
-			ApplyFilters(&moved);
+			ApplyFilters(&moved, msgWindow);
 		}
 		if (!moved)
 		{
@@ -1560,7 +1560,7 @@ nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 	return rv;
 }
 
-void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
+void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow)
 {
 	m_msgMovedByFilter = PR_FALSE;
 
@@ -1580,7 +1580,8 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
             matchTermStatus =
                 m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule,
                                                 msgHdr, inbox, m_mailDB,
-                                                headers, headersSize, this);
+                                                headers, headersSize, this,
+                                                msgWindow);
 	}
 
 	if (pMoved)
@@ -1610,6 +1611,8 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 	{
         if (actionType == nsMsgFilterAction::MoveToFolder)
             filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
+        if (!actionTargetFolderUri)
+          return rv;
 		nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
 		PRUint32 msgFlags;
 
@@ -2080,10 +2083,10 @@ MSG_FolderInfoMail *ParseIMAPMailboxState::GetTrashFolder()
 
 
 // only apply filters for new unread messages in the imap inbox
-void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved)
+void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow)
 {
  	if (fParsingInbox && !(GetCurrentMsg()->GetFlags() & MSG_FLAG_READ) )
- 		nsParseNewMailState::ApplyFilters(pMoved);
+ 		nsParseNewMailState::ApplyFilters(pMoved, msgWindow);
  	else
  		*pMoved = PR_FALSE;
  	
@@ -2092,7 +2095,7 @@ void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved)
 }
 
 
-PRInt32	ParseIMAPMailboxState::PublishMsgHeader()
+PRInt32	ParseIMAPMailboxState::PublishMsgHeader(nsIMsgWindow *msgWindow)
 {
 	PRBool		moved = PR_FALSE;
 
@@ -2102,7 +2105,7 @@ PRInt32	ParseIMAPMailboxState::PublishMsgHeader()
 	{
 		FolderTypeSpecificTweakMsgHeader(m_parseMsgState->m_newMsgHdr);
 		if (!m_disableFilters) {
-			ApplyFilters(&moved);
+			ApplyFilters(&moved, msgWindow);
 		}
 		if (!moved)
 		{

@@ -53,6 +53,12 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
+#include "nsIDocShell.h"
+#include "nsIMsgWindow.h"
+#include "nsIPrompt.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIStringBundle.h"
+#include "nsTextFormatter.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1040,7 +1046,7 @@ NS_IMETHODIMP nsMsgFolder::DeleteSubFolders(nsISupportsArray *folders,
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(i));
 		folder = do_QueryInterface(supports);
 		if(folder)	
-			PropagateDelete(folder, PR_TRUE);
+			PropagateDelete(folder, PR_TRUE, msgWindow);
 	}
 	return rv;
 
@@ -1055,7 +1061,7 @@ NS_IMETHODIMP nsMsgFolder::CreateStorageIfMissing(nsIUrlListener* /* urlListener
 }
 
 
-NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage)
+NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage, nsIMsgWindow *msgWindow)
 {
 	nsresult status = NS_OK;
 
@@ -1076,7 +1082,7 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
         //Remove self as parent
         child->SetParent(nsnull);
 				// maybe delete disk storage for it, and its subfolders
-				status = child->RecursiveDelete(deleteStorage);	
+				status = child->RecursiveDelete(deleteStorage, msgWindow);	
 
 				if (status == NS_OK) 
 				{
@@ -1097,7 +1103,7 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 			}
 			else
 			{
-				status = child->PropagateDelete (folder, deleteStorage);
+				status = child->PropagateDelete (folder, deleteStorage, msgWindow);
 			}
 		}
 	}
@@ -1105,7 +1111,7 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 	return status;
 }
 
-NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
+NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage, nsIMsgWindow *msgWindow)
 {
 	// If deleteStorage is PR_TRUE, recursively deletes disk storage for this folder
 	// and all its subfolders.
@@ -1125,7 +1131,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 		if(NS_SUCCEEDED(status))
 		{
 			child->SetParent(nsnull);
-			status = child->RecursiveDelete(deleteStorage);  // recur
+			status = child->RecursiveDelete(deleteStorage,msgWindow);  // recur
       if (NS_SUCCEEDED(status))
         {
           mSubFolders->RemoveElement(supports);  // unlink it from this's child list
@@ -1144,9 +1150,12 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 	}
 
 	// now delete the disk storage for _this_
-	if (deleteStorage && (status == NS_OK))
-		status = Delete();
-
+    if (deleteStorage && (status == NS_OK))
+    {
+        if ((mFlags & MSG_FOLDER_FLAG_TRASH) == 0)
+          WarnAndDisableFilter(msgWindow);            
+        status = Delete();
+    }
 	return status;
 }
 
@@ -2553,4 +2562,46 @@ NS_IMETHODIMP nsMsgFolder::GenerateMessageURI(nsMsgKey msgKey, char **aURI)
   if (! *aURI)
 	  return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
+}
+
+nsresult nsMsgFolder::WarnAndDisableFilter(nsIMsgWindow *msgWindow)
+{
+  nsresult rv = NS_OK;
+  PRBool changed;
+  rv = ChangeFilterDestination(nsnull, PR_FALSE, &changed);
+  if (msgWindow && changed) 
+  {
+    nsCOMPtr <nsIDocShell> docShell;
+    msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIStringBundleService> bundleService =
+            do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if (bundleService)
+    {
+      nsCOMPtr<nsIStringBundle> bundle;
+      bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
+                getter_AddRefs(bundle));
+      if (bundle)
+      {
+        nsXPIDLString formatString;
+        bundle->GetStringFromName(NS_LITERAL_STRING("disableFilter").get(),
+                getter_Copies(formatString));
+        nsXPIDLString folderName;
+        GetName(getter_Copies(folderName));
+        if (folderName && formatString)
+        {
+          PRUnichar *alertString = nsTextFormatter::smprintf(formatString.get(), folderName.get());
+          if (docShell)
+          { 
+            nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+            if (dialog && alertString)
+            {
+              dialog->Alert(nsnull, alertString);
+              nsTextFormatter::smprintf_free(alertString);
+            }
+          }
+        }
+      }
+    }
+  }
+  return rv;
 }

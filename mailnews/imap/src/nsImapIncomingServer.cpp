@@ -1202,7 +1202,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       if (hideFolder)
       {
         nsCOMPtr<nsISupports> support(do_QueryInterface(child, &rv));
-        a_nsIFolder->PropagateDelete(child, PR_FALSE);
+        a_nsIFolder->PropagateDelete(child, PR_FALSE, nsnull);
       }
       else
       {

@@ -406,7 +406,7 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
 }
 
 nsresult
-nsPop3Sink::IncorporateComplete()
+nsPop3Sink::IncorporateComplete(nsIMsgWindow *msgWindow)
 {
   if (m_buildMessageUri && m_baseMessageUri)
   {
@@ -422,7 +422,7 @@ nsPop3Sink::IncorporateComplete()
     if (NS_FAILED(rv)) return rv;
     NS_ASSERTION(m_newMailParser, "could not get m_newMailParser");
     if (m_newMailParser)
-      m_newMailParser->PublishMsgHeader();
+      m_newMailParser->PublishMsgHeader(msgWindow);
 
 	// do not take out this printf as it is used by QA 
     // as part of the smoketest process!. They depend on seeing

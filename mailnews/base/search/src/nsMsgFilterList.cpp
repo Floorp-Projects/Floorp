@@ -120,7 +120,8 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
                                    nsIMsgDatabase *db, 
                                    const char *headers,
                                    PRUint32 headersSize,
-                                   nsIMsgFilterHitNotify *listener)
+                                   nsIMsgFilterHitNotify *listener,
+                                   nsIMsgWindow *msgWindow)
 {
 	nsCOMPtr <nsIMsgFilter>	filter;
 	PRUint32		filterCount = 0;
@@ -891,8 +892,52 @@ nsMsgFilterList::GetVersion(PRInt16 *aResult)
     return NS_OK;
 }
 
-
-
+NS_IMETHODIMP nsMsgFilterList::ChangeFilterTarget(const char *oldFolderUri, const char *newFolderUri, PRBool caseInsensitive, PRBool *changed)
+{
+  nsresult rv = NS_OK;
+  PRUint32 numFilters;
+  rv = m_filters->Count(&numFilters);
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr <nsIMsgFilter> filter;
+  nsMsgRuleActionType actionType;
+  nsXPIDLCString folderUri;
+  nsCOMPtr <nsISupports> filterSupports;
+  for (PRUint32 index = 0; index < numFilters; index++)
+  {
+    filterSupports = getter_AddRefs(m_filters->ElementAt(index));
+    filter = do_QueryInterface(filterSupports, &rv);
+    if (NS_SUCCEEDED(rv) && filter)
+    {
+      rv = filter->GetAction(&actionType);
+      if (NS_SUCCEEDED(rv) && actionType == nsMsgFilterAction::MoveToFolder)
+      {
+        rv = filter->GetActionTargetFolderUri(getter_Copies(folderUri));
+        if (NS_SUCCEEDED(rv) && folderUri)
+          if (caseInsensitive)
+          {
+            if (PL_strcasecmp(folderUri,oldFolderUri) == 0 ) //local
+            {
+              rv = filter->SetActionTargetFolderUri(newFolderUri);
+              NS_ENSURE_SUCCESS(rv,rv);
+              if (changed)  //for rename it will be null 
+                *changed =PR_TRUE;
+            }
+          }
+          else
+          {
+            if (PL_strcmp(folderUri,oldFolderUri) == 0 )  //imap
+            {
+              rv = filter->SetActionTargetFolderUri(newFolderUri);
+              NS_ENSURE_SUCCESS(rv,rv);
+              if (changed) //for rename it will be null;
+                *changed =PR_TRUE;
+            }
+          }
+      }
+    }
+  }
+  return rv;
+}
 #ifdef DEBUG
 void nsMsgFilterList::Dump()
 {
