@@ -35,6 +35,7 @@
 #include "nsICSSParser.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
+#include "nsICSSLoader.h"
 #include "nsIDOMRange.h"
 #include "nsIContentIterator.h"
 #include "nsINameSpaceManager.h"
@@ -56,6 +57,7 @@ static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCSSParserCID,     NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_CID(kHTMLCSSStyleSheetCID, NS_HTML_CSS_STYLESHEET_CID);
+static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 static NS_DEFINE_IID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_IID(kHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
 
@@ -297,6 +299,14 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewHTMLCSSStyleSheet((nsIHTMLCSSStyleSheet**)&inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewHTMLCSSStyleSheet", res);
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kCSSLoaderCID)) {
+    res = NS_NewCSSLoader((nsICSSLoader**)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewCSSLoader", res);
       return res;
     }
     refCounted = PR_TRUE;
@@ -612,6 +622,12 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
       LOG_REGISTER_FAILURE("kHTMLCSSStyleSheetCID", rv);
       break;
     }
+    rv = cm->RegisterComponent(kCSSLoaderCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kCSSLoaderCID", rv);
+      break;
+    }
     rv = cm->RegisterComponent(kTextNodeCID, NULL, NULL, aPath,
                                PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) {
@@ -708,6 +724,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
   rv = cm->UnregisterComponent(kCSSParserCID, aPath);
   rv = cm->UnregisterComponent(kHTMLStyleSheetCID, aPath);
   rv = cm->UnregisterComponent(kHTMLCSSStyleSheetCID, aPath);
+  rv = cm->UnregisterComponent(kCSSLoaderCID, aPath);
   rv = cm->UnregisterComponent(kTextNodeCID, aPath);
   rv = cm->UnregisterComponent(kSelectionCID, aPath);
   rv = cm->UnregisterComponent(kRangeCID, aPath);
