@@ -31,6 +31,9 @@
 #include "nsMessenger.h"
 #include "nsMsgGroupRecord.h"
 
+#include "nsIAppShellComponent.h"
+#include "nsIRegistry.h"
+
 
 /* Include all of the interfaces our factory can generate components for */
 
@@ -356,7 +359,27 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   "component://netscape/appshell/component/messenger",
                                   path,
                                   PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
+  if ( NS_SUCCEEDED( rv ) ) {
+  /* Add to appshell component list. */
+	NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv); 
+
+    if ( NS_SUCCEEDED( rv ) ) { 
+      registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+      char buffer[256]; 
+      char *cid = kCMessengerBootstrapCID.ToString();
+      PR_snprintf( buffer, 
+                   sizeof buffer, 
+                   "%s/%s", 
+                   NS_IAPPSHELLCOMPONENT_KEY, 
+                   cid ? cid : "unknown" ); 
+                    delete [] cid; 
+                    nsIRegistry::Key key; 
+                    rv = registry->AddSubtree( nsIRegistry::Common, 
+                                               buffer, 
+                                               &key ); 
+	}
+  }
+  else finalResult = rv;
 
   rv = compMgr->RegisterComponent(kCMessengerCID,
                                   "Messenger DOM interaction object",
@@ -365,12 +388,16 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
+
   rv = compMgr->RegisterComponent(kMsgAccountManagerCID,
                                   "Messenger Account Manager",
                                   "component://netscape/messenger/account-manager",
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
+
+
+	
 
   rv = compMgr->RegisterComponent(kMsgAccountCID,
                                   "Messenger User Account",
