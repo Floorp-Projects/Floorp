@@ -235,7 +235,7 @@ void nsMacMessagePump::DoMessagePump()
 PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 {
 	long				sleep		= 0;
-	unsigned short		eventMask 	= (everyEvent - diskMask);
+	unsigned short		eventMask 	= everyEvent;
 
 	::LMSetSysEvtMask(eventMask);	// we need keyUp events
 	PRBool haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mMouseRgn) ? PR_TRUE : PR_FALSE;
@@ -298,6 +298,10 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 
 			case activateEvt:
 				DoActivate(*anEvent);
+				break;
+
+			case diskEvt:
+				DoDisk(*anEvent);
 				break;
 
 			case osEvt:
@@ -695,9 +699,13 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 	}
 }
 
+
+//-------------------------------------------------------------------------
+//
+// DoDisk
+//
 //-------------------------------------------------------------------------
 void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
-//-------------------------------------------------------------------------
 {
 	if (HiWord(anEvent.message) != noErr)
 	{
@@ -708,6 +716,7 @@ void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
 		::DIUnload();
 	}
 }
+
 
 //-------------------------------------------------------------------------
 //
