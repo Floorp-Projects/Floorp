@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.7 2000/09/29 16:37:29 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.8 2000/10/05 01:39:35 mcgreer%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -47,6 +47,7 @@
 #include "secoid.h"
 #include "cms.h"
 #include "smime.h"
+#include "cmslocal.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>
@@ -524,7 +525,7 @@ enveloped_data(struct envelopeOptionsStr envelopeOptions)
     }
     /* XXX find the recipient's certs by email address or nickname */
     if ((recipientcerts = 
-          (CERTCertificate **)NSS_CMSArray_Alloc(tmppoolp, cnt)) == NULL) {
+          (CERTCertificate **)NSS_CMSArray_Alloc(tmppoolp, cnt+1)) == NULL) {
 	fprintf(stderr, "ERROR: out of memory.\n");
 	goto loser;
     }
@@ -772,7 +773,7 @@ signed_data_certsonly(struct certsonlyOptionsStr certsonlyOptions)
 	goto loser;
     }
     if ((certs = 
-           (CERTCertificate **)NSS_CMSArray_Alloc(tmppoolp, cnt)) == NULL) {
+           (CERTCertificate **)NSS_CMSArray_Alloc(tmppoolp, cnt+1)) == NULL) {
 	fprintf(stderr, "ERROR: out of memory.\n");
 	goto loser;
     }
