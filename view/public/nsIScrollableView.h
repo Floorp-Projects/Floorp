@@ -139,6 +139,13 @@ public:
    */
   NS_IMETHOD GetControlInsets(nsMargin &aInsets) const = 0;
 
+  /**
+   * Get information about whether the vertical and horizontal scrollbars
+   * are currently visible
+   */
+  NS_IMETHOD GetScrollbarVisibility(PRBool *aVerticalVisible,
+                                    PRBool *aHorizontalVisible) const = 0;
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
