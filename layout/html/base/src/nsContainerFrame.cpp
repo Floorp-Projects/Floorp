@@ -175,7 +175,8 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
   nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aParentContext);
   if (oldContext != mStyleContext) {
     // Update primary child list
-    nsIFrame* child = mFirstChild;
+    nsIFrame* child;
+    result = FirstChild(nsnull, child);
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
       result = child->ReResolveStyleContext(aPresContext, mStyleContext);
       child->GetNextSibling(child);
