@@ -302,7 +302,7 @@ nsXMLContentSink::DidBuildModel()
 
   // Drop our reference to the parser to get rid of a circular
   // reference.
-  NS_IF_RELEASE(mParser);
+  mParser = nsnull;
 
   return NS_OK;
 }
@@ -346,10 +346,9 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 
   nsCOMPtr<nsIDocument> originalDocument = mDocument;
   if (NS_SUCCEEDED(aResult) || aResultDocument) {
-    NS_RELEASE(mDocument);
     // Transform succeeded or it failed and we have an error
     // document to display.
-    CallQueryInterface(aResultDocument, &mDocument);
+    mDocument = do_QueryInterface(aResultDocument);
   }
 
   nsIScriptLoader *loader = originalDocument->GetScriptLoader();
@@ -406,10 +405,7 @@ nsXMLContentSink::WillResume(void)
 NS_IMETHODIMP
 nsXMLContentSink::SetParser(nsIParser* aParser)
 {
-  NS_IF_RELEASE(mParser);
   mParser = aParser;
-  NS_IF_ADDREF(mParser);
-
   return NS_OK;
 }
 
@@ -707,9 +703,7 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
       if (NS_SUCCEEDED(rv)) {
         rv = mDocument->SetBaseURL(baseURI); // The document checks if it is legal to set this base
         if (NS_SUCCEEDED(rv)) {
-          NS_IF_RELEASE(mDocumentBaseURL);
           mDocumentBaseURL = mDocument->GetBaseURL();
-          NS_IF_ADDREF(mDocumentBaseURL);
         }
       }
     }
@@ -1692,7 +1686,7 @@ nsXMLContentSink::ProcessEndSCRIPTTag(nsIContent* aContent)
 
   nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(aContent));
   NS_ASSERTION(scriptElement, "null script element in XML content sink");
-  mScriptElements->AppendElement(scriptElement);
+  mScriptElements.AppendObject(scriptElement);
 
   nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(aContent));
   if (sele) {

@@ -2421,7 +2421,7 @@ HTMLContentSink::DidBuildModel(void)
 
   // Drop our reference to the parser to get rid of a circular
   // reference.
-  NS_IF_RELEASE(mParser);
+  mParser = nsnull;
 
   if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
     // Reset the performance hint which was set to FALSE
@@ -2574,10 +2574,7 @@ HTMLContentSink::WillResume()
 NS_IMETHODIMP
 HTMLContentSink::SetParser(nsIParser* aParser)
 {
-  NS_IF_RELEASE(mParser);
   mParser = aParser;
-  NS_IF_ADDREF(mParser);
-
   return NS_OK;
 }
 
@@ -3935,9 +3932,7 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
     rv = mDocument->SetBaseURL(baseHrefURI);
 
     if (NS_SUCCEEDED(rv)) {
-      NS_IF_RELEASE(mDocumentBaseURL);
       mDocumentBaseURL = mDocument->GetBaseURL();
-      NS_IF_ADDREF(mDocumentBaseURL);
     }
   } else {
     // NAV compatibility quirk
@@ -4481,7 +4476,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     mNeedToBlockParser = PR_TRUE;
 
     nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = do_QueryInterface(element);
-    mScriptElements->AppendElement(scriptElement);
+    mScriptElements.AppendObject(scriptElement);
   }
 
   // Insert the child into the content tree. This will evaluate the
