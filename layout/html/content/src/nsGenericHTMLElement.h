@@ -92,6 +92,14 @@ public:
   nsresult    GetClassName(nsString& aClassName);
   nsresult    SetClassName(const nsString& aClassName);
   nsresult    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  nsresult    GetOffsetTop(PRInt32* aOffsetTop);
+  nsresult    GetOffsetLeft(PRInt32* aOffsetLeft);
+  nsresult    GetOffsetWidth(PRInt32* aOffsetWidth);
+  nsresult    GetOffsetHeight(PRInt32* aOffsetHeight);
+  nsresult    GetOffsetParent(nsIDOMElement** aOffsetParent);
+  nsresult    GetOffsetRect(nsRect& aRect, 
+                            nsIAtom* aOffsetParentTag,
+                            nsIContent** aOffsetParent);
 
   // Implementation for nsIContent
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
@@ -467,7 +475,23 @@ public:
   }                                                     \
   NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { \
     return _g.GetStyle(aStyle);                         \
+  }                                                     \
+  NS_IMETHOD GetOffsetTop(PRInt32* aOffsetTop) {        \
+    return _g.GetOffsetTop(aOffsetTop);                 \
+  }                                                     \
+  NS_IMETHOD GetOffsetLeft(PRInt32* aOffsetLeft) {      \
+    return _g.GetOffsetLeft(aOffsetLeft);               \
+  }                                                     \
+  NS_IMETHOD GetOffsetWidth(PRInt32* aOffsetWidth) {    \
+    return _g.GetOffsetWidth(aOffsetWidth);             \
+  }                                                     \
+  NS_IMETHOD GetOffsetHeight(PRInt32* aOffsetHeight) {  \
+    return _g.GetOffsetHeight(aOffsetHeight);           \
+  }                                                     \
+  NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) { \
+    return _g.GetOffsetParent(aOffsetParent);           \
   }
+
 
 #define NS_IMPL_IHTMLCONTENT_USING_GENERIC(_g)                         \
   NS_IMETHOD Compact() {                                               \

@@ -422,6 +422,212 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   return res;
 }
 
+nsresult 
+nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, 
+                                    nsIAtom* aOffsetParentTag,
+                                    nsIContent** aOffsetParent)
+{
+  nsresult res = NS_OK;
+
+  aRect.x = aRect.y = 0;
+  aRect.Empty();
+ 
+  if(mDocument != nsnull) {
+    // Get Presentation shell 0
+    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(mDocument->GetShellAt(0));
+
+    if(presShell) {
+      // Get the Frame for our content
+      nsIFrame* frame = nsnull;
+      presShell->GetPrimaryFrameFor(mContent, &frame);
+      if(frame != nsnull) {
+        // Get it's origin
+        nsPoint origin;
+        frame->GetOrigin(origin);
+
+        // Get the union of all rectangles in this and continuation frames
+        nsRect rcFrame;
+        nsIFrame* next = frame;
+        do {
+          nsRect rect;
+          next->GetRect(rect);
+          rcFrame.UnionRect(rcFrame, rect);
+          next->GetNextInFlow(&next);
+        } while (nsnull != next);
+        
+
+        // Find the frame parent whose content's tagName either matches 
+        // the tagName passed in or is the document element.
+        nsCOMPtr<nsIContent> docElement = getter_AddRefs(mDocument->GetRootContent());
+        nsIFrame* parent = frame;
+        nsCOMPtr<nsIContent> parentContent;
+        frame->GetParent(&parent);
+        while (parent) {
+          parent->GetContent(getter_AddRefs(parentContent));
+          if (parentContent) {
+            // If we've hit the document element, break here
+            if (parentContent.get() == docElement.get()) {
+              break;
+            }
+            nsCOMPtr<nsIAtom> tag;
+            // If the tag of this frame matches the one passed in, break here
+            parentContent->GetTag(*getter_AddRefs(tag));
+            if (tag.get() == aOffsetParentTag) {
+              break;
+            }
+          }
+          // Add the parent's origin to our own to get to the
+          // right coordinate system
+          nsPoint parentOrigin;
+          parent->GetOrigin(parentOrigin);
+          origin += parentOrigin;
+
+          parent->GetParent(&parent);
+        }
+
+        *aOffsetParent = parentContent;
+        NS_IF_ADDREF(*aOffsetParent);
+          
+        // For the origin, add in the border for the frame
+        const nsStyleSpacing* spacing;
+        nsStyleCoord coord;
+        frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+        if (spacing) {
+          if (eStyleUnit_Coord == spacing->mBorder.GetLeftUnit()) {
+            origin.x += spacing->mBorder.GetLeft(coord).GetCoordValue();
+          }
+          if (eStyleUnit_Coord == spacing->mBorder.GetTopUnit()) {
+            origin.y += spacing->mBorder.GetTop(coord).GetCoordValue();
+          }
+        }
+
+        // And subtract out the border for the parent
+        if (parent) {
+          const nsStyleSpacing* parentSpacing;
+          parent->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)parentSpacing);
+          if (parentSpacing) {
+            if (eStyleUnit_Coord == parentSpacing->mBorder.GetLeftUnit()) {
+              origin.x -= parentSpacing->mBorder.GetLeft(coord).GetCoordValue();
+            }
+            if (eStyleUnit_Coord == parentSpacing->mBorder.GetTopUnit()) {
+              origin.y -= parentSpacing->mBorder.GetTop(coord).GetCoordValue();
+            }
+          }
+        }
+
+
+        // Get the Presentation Context from the Shell
+        nsCOMPtr<nsIPresContext> context;
+        presShell->GetPresContext(getter_AddRefs(context));
+       
+        if(context) {
+          // Get the scale from that Presentation Context
+          float scale;
+          context->GetTwipsToPixels(&scale);
+              
+          // Convert to pixels using that scale
+          aRect.x = NSTwipsToIntPixels(origin.x, scale);
+          aRect.y = NSTwipsToIntPixels(origin.y, scale);
+          aRect.width = NSTwipsToIntPixels(rcFrame.width, scale);
+          aRect.height = NSTwipsToIntPixels(rcFrame.height, scale);
+        }
+      }
+    }
+  }
+ 
+  return res;
+}     
+
+nsresult    
+nsGenericHTMLElement::GetOffsetTop(PRInt32* aOffsetTop)
+{
+  nsRect rcFrame;
+  nsCOMPtr<nsIContent> parent;
+  nsresult res = GetOffsetRect(rcFrame, 
+                               nsHTMLAtoms::body, 
+                               getter_AddRefs(parent));
+  
+  if(NS_SUCCEEDED(res)) {
+    *aOffsetTop = rcFrame.y;
+  }
+  else {
+    *aOffsetTop = 0;
+  }
+  
+  return res;
+}
+
+nsresult    
+nsGenericHTMLElement::GetOffsetLeft(PRInt32* aOffsetLeft)
+{
+  nsRect rcFrame;
+  nsCOMPtr<nsIContent> parent;
+  nsresult res = GetOffsetRect(rcFrame, 
+                               nsHTMLAtoms::body, 
+                               getter_AddRefs(parent));
+  
+  if(NS_SUCCEEDED(res)) {
+    *aOffsetLeft = rcFrame.x;
+  }
+  else {
+    *aOffsetLeft = 0;
+  }
+  
+  return res;
+}
+ 
+nsresult    
+nsGenericHTMLElement::GetOffsetWidth(PRInt32* aOffsetWidth)
+{
+  nsRect rcFrame;
+  nsCOMPtr<nsIContent> parent;
+  nsresult res = GetOffsetRect(rcFrame, 
+                               nsHTMLAtoms::body, 
+                               getter_AddRefs(parent));
+  
+  if(NS_SUCCEEDED(res)) {
+    *aOffsetWidth = rcFrame.width;
+  }
+  else {
+    *aOffsetWidth = 0;
+  }
+  
+  return res;
+}
+ 
+nsresult    
+nsGenericHTMLElement::GetOffsetHeight(PRInt32* aOffsetHeight)
+{
+  nsRect rcFrame;
+  nsCOMPtr<nsIContent> parent;
+  nsresult res = GetOffsetRect(rcFrame, 
+                               nsHTMLAtoms::body, 
+                               getter_AddRefs(parent));
+  
+  if(NS_SUCCEEDED(res)) {
+    *aOffsetHeight = rcFrame.height;
+  }
+  else {
+    *aOffsetHeight = 0;
+  }
+  
+  return res;
+}
+
+nsresult    
+nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
+{
+  nsRect rcFrame;
+  nsCOMPtr<nsIContent> parent;
+  nsresult res = GetOffsetRect(rcFrame, 
+                               nsHTMLAtoms::body, 
+                               getter_AddRefs(parent));
+  if (NS_SUCCEEDED(res)) {
+    res = parent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aOffsetParent);
+  }
+  return res;
+}
+
 static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 {
   nsIHTMLStyleSheet*  sheet = nsnull;
