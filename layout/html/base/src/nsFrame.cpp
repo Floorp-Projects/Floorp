@@ -3805,10 +3805,10 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   else
     aPos->mStartOffset = -1;
 #ifdef IBMBIDI
-  long oldLevel, newLevel, baseLevel;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&oldLevel);
-  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&newLevel);
-  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel);
+  PRUint8 oldLevel, newLevel, baseLevel;
+  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&oldLevel,sizeof(oldLevel));
+  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&newLevel,sizeof(newLevel));
+  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel,sizeof(baseLevel));
   if (newLevel & 1) // The new frame is RTL, go to the other end
     aPos->mStartOffset = -1 - aPos->mStartOffset;
 
@@ -4101,10 +4101,10 @@ nsFrame::SetDefaultBackgroundColor(nsIPresContext* aPresContext)
  *  @lina 5/1/2000
  */
 
-nsresult nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
                                   nsIAtom*        aPropertyName,
                                   void**          aPropertyValue,
-                                  long            aSize) const
+                                  size_t          aSize) const
 {
   if (!aPropertyValue || !aPropertyName) {
     return NS_ERROR_NULL_POINTER;
@@ -4133,9 +4133,9 @@ nsresult nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-nsresult nsFrame::SetBidiProperty(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsFrame::SetBidiProperty(nsIPresContext* aPresContext,
                                   nsIAtom*        aPropertyName,
-                                  void*           aPropertyValue) const
+                                  void*           aPropertyValue) 
 {
   nsresult rv = NS_ERROR_FAILURE;
 

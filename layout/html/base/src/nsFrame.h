@@ -377,10 +377,10 @@ public:
   NS_IMETHOD GetBidiProperty(nsIPresContext* aPresContext,
                              nsIAtom*        aPropertyName,
                              void**          aPropertyValue,
-                             long            aSize = sizeof(void*) ) const;
+                             size_t          aSize ) const;
   NS_IMETHOD SetBidiProperty(nsIPresContext* aPresContext,
                              nsIAtom*        aPropertyName,
-                             void*           aPropertyValue) const ;
+                             void*           aPropertyValue) ;
 #endif // IBMBIDI
 
 #ifdef NS_DEBUG
