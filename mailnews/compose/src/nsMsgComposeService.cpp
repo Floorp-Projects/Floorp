@@ -141,7 +141,7 @@ nsMsgComposeService::nsMsgComposeService()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS3(nsMsgComposeService, nsIMsgComposeService, nsIObserver, nsICmdLineHandler);
+NS_IMPL_ISUPPORTS4(nsMsgComposeService, nsIMsgComposeService, nsIObserver, nsICmdLineHandler, nsISupportsWeakReference);
 
 nsMsgComposeService::~nsMsgComposeService()
 {
@@ -161,18 +161,22 @@ nsresult nsMsgComposeService::Init()
 
   // Register observers
 
-  // register for profile change, we will need to clear the cache.
+  // Register for quit application and profile change, we will need to clear the cache.
   nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv))
-    rv = observerService->AddObserver(this, "profile-do-change", PR_FALSE);
+  {
+    rv = observerService->AddObserver(this, "quit-application", PR_TRUE);
+    rv = observerService->AddObserver(this, "profile-do-change", PR_TRUE);
+  }
 
+  // Register some pref observer
   nsCOMPtr<nsIPrefBranch> prefBranch;
   rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
     if (NS_SUCCEEDED(rv))
-      rv = pbi->AddObserver(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS, this, PR_FALSE);
+      rv = pbi->AddObserver(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS, this, PR_TRUE);
   }
 
 	Reset();
@@ -319,7 +323,7 @@ void nsMsgComposeService::CloseWindow(nsIDOMWindowInternal *domWindow)
 NS_IMETHODIMP
 nsMsgComposeService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {
-  if (!nsCRT::strcmp(aTopic,"profile-do-change"))
+  if (!nsCRT::strcmp(aTopic,"profile-do-change") || !nsCRT::strcmp(aTopic,"quit-application"))
   {
     DeleteCachedWindows();
     return NS_OK;

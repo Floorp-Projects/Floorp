@@ -44,6 +44,7 @@
 #include "nsICmdLineHandler.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 class nsMsgCachedWindowInfo
 {
@@ -66,7 +67,7 @@ public:
   PRBool                                    htmlCompose;
 };
 
-class nsMsgComposeService : public nsIMsgComposeService, public nsIObserver ,public nsICmdLineHandler
+class nsMsgComposeService : public nsIMsgComposeService, public nsIObserver ,public nsICmdLineHandler, public nsSupportsWeakReference
 {
 public: 
 	nsMsgComposeService();
