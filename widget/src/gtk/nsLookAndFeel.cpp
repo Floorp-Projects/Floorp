@@ -17,8 +17,12 @@
  */
 
 #include "nsLookAndFeel.h"
- 
+#include <gtk/gtk.h>
+
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+
+#define GDK_COLOR_TO_NS_RGB(c) \
+  ((nscolor) ((255 << 24) | ((c.blue)<<16) | ((c.green)<<8) | (c.blue)))
 
 NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID);
 
@@ -38,25 +42,26 @@ nsLookAndFeel::~nsLookAndFeel()
 
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
+    GtkStyle *style = gtk_style_new();  // get the default styles
     nsresult res = NS_OK;
     switch (aID) {
     case eColor_WindowBackground:
-        aColor = NS_RGB(0xff,0xff,0xff);
+        aColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
         break;
     case eColor_WindowForeground:
-        aColor = NS_RGB(0x00,0x00,0x00);        
+        aColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
         break;
     case eColor_WidgetBackground:
-        aColor = NS_RGB(192, 192, 192);
+        aColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
         break;
     case eColor_WidgetForeground:
-        aColor = NS_RGB(0x00,0x00,0x00);        
+        aColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
         break;
     case eColor_WidgetSelectBackground:
-        aColor = NS_RGB(0x80,0x80,0x80);
+        aColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_SELECTED]);
         break;
     case eColor_WidgetSelectForeground:
-        aColor = NS_RGB(0x00,0x00,0x80);
+        aColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_SELECTED]);
         break;
     case eColor_Widget3DHighlight:
         aColor = NS_RGB(0xa0,0xa0,0xa0);
@@ -65,49 +70,58 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0x40,0x40,0x40);
         break;
     case eColor_TextBackground:
-        aColor = NS_RGB(0xff,0xff,0xff);
+        aColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
         break;
     case eColor_TextForeground: 
-        aColor = NS_RGB(0x00,0x00,0x00);
-	      break;
+        aColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
+        break;
     case eColor_TextSelectBackground:
-        res = NS_RGB(0x00,0x00,0x80);
+        aColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_SELECTED]);
         aColor;
     case eColor_TextSelectForeground:
-        aColor = NS_RGB(0xff,0xff,0xff);
+        aColor = GDK_COLOR_TO_NS_RGB(style->text[GTK_STATE_SELECTED]);
         break;
     default:
-        aColor = NS_RGB(0xff,0xff,0xff);
+        aColor = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
         res    = NS_ERROR_FAILURE;
         break;
     }
+    gtk_style_unref(style);
 
     return res;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
+    GtkStyle *style = gtk_style_new();  // get the default styles
     nsresult res = NS_OK;
     switch (aID) {
     case eMetric_WindowTitleHeight:
         aMetric = 0;
         break;
     case eMetric_WindowBorderWidth:
-        aMetric = 4;
+//        aMetric = 4;
+        aMetric = style->klass->xthickness;
         break;
     case eMetric_WindowBorderHeight:
-        aMetric = 4;
+//        aMetric = 4;
+        aMetric = style->klass->ythickness;
         break;
     case eMetric_Widget3DBorder:
+// XXX look into this
         aMetric = 4;
         break;
     case eMetric_TextFieldHeight:
-        aMetric = 30;
+	// FIXME we need to allow the entry to size itself based on the font
+        aMetric = 20;
         break;
     default:
         aMetric = 0;
         res     = NS_ERROR_FAILURE;
     }
+
+    gtk_style_unref(style);
+
     return res;
 }
 
