@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.15 $ 
-# $Date: 2002/05/03 04:11:12 $ 
+# $Revision: 1.16 $ 
+# $Date: 2002/05/03 04:16:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -260,7 +260,7 @@ foreach $tree (keys %VC_TREE) {
 
 		     'Metered' => {
                          "html_color" => '#eeff00', # a yellow
-                         "hdml_char" => "R",
+                         "hdml_char" => "M",
                          "order" => 4,
                          "description" => "Require Current Sherriff approval",
                      },
@@ -321,7 +321,7 @@ sub get_all_sorted_tree_states {
   @tree_states = (
                   map { $_->[0] }
                   sort{ $a->[1] <=> $b->[1] }	
-                  map { [ $_, $STATUS{$_}{'order'} ] }
+                  map { [ $_, $TREE_STATES{$_}{'order'} ] }
                   (keys %TREE_STATES)
                   );
   
