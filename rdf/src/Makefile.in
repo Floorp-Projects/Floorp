@@ -37,7 +37,6 @@ CPPSRCS =				\
 	nsRDFDocumentContentSink.cpp	\
         nsRDFElement.cpp                \
         nsRDFFactory.cpp                \
-        nsRDFRegistryImpl.cpp           \
         nsRDFResourceManager.cpp        \
 	nsRDFSimpleContentSink.cpp	\
 	nsRDFTreeDocument.cpp		\

@@ -33,7 +33,6 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFElement.obj              \
         .\$(OBJDIR)\nsRDFFactory.obj              \
         .\$(OBJDIR)\nsRDFHTMLDocument.obj         \
-        .\$(OBJDIR)\nsRDFRegistryImpl.obj         \
         .\$(OBJDIR)\nsRDFResourceManager.obj      \
         .\$(OBJDIR)\nsRDFSimpleContentSink.obj    \
         .\$(OBJDIR)\nsRDFTreeDocument.obj         \
