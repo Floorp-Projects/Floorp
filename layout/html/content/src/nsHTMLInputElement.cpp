@@ -305,7 +305,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
 {
   PRInt32 type;
   GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type) {
+  if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
     if (nsnull != mWidget) {
       nsITextWidget* text = nsnull;
       if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {

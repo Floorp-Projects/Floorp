@@ -770,7 +770,9 @@ NS_IMETHODIMP ImageMapImpl::IsInside(nscoord aX, nscoord aY)
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     if (area->IsInside(aX, aY)) {
-      return NS_OK;
+      if ((area->mHREF).Length() > 0) {
+        return NS_OK;
+      }
     }
   }
   return NS_NOT_INSIDE;

@@ -243,26 +243,34 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
   GetType(&type);
 
   if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
-    nsEventStatus status;
+    nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event;
     event.eventStructType = NS_EVENT;
+    nsIContent *formContent = nsnull;
+    mFormFrame->GetContent(formContent);
 
     switch(type) {
     case NS_FORM_INPUT_RESET:
       event.message = NS_FORM_RESET;
-      mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+      if (nsnull != formContent) {
+        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+      }
       if (nsEventStatus_eConsumeNoDefault != status) {
         mFormFrame->OnReset();
       }
       break;
     case NS_FORM_INPUT_SUBMIT:
       event.message = NS_FORM_SUBMIT;
-      mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+      if (nsnull != formContent) {
+        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+      }
       if (nsEventStatus_eConsumeNoDefault != status) {
         mFormFrame->OnSubmit(aPresContext, this);
       }
     }
-  } else if ((NS_FORM_BROWSE == type) && mFileControlFrame) {
+    NS_IF_RELEASE(formContent);
+  } 
+  else if ((NS_FORM_BROWSE == type) && mFileControlFrame) {
     mFileControlFrame->MouseClicked(aPresContext);
   }
 }
