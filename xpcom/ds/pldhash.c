@@ -189,7 +189,7 @@ PL_DHashTableInit(PLDHashTable *table, PLDHashTableOps *ops, void *data,
         capacity = PL_DHASH_MIN_SIZE;
     log2 = PR_CeilingLog2(capacity);
     capacity = PR_BIT(log2);
-    if (capacity >= PL_DHASH_MAX_SIZE)
+    if (capacity >= PL_DHASH_SIZE_LIMIT)
         return PR_FALSE;
     table->hashShift = PL_DHASH_BITS - log2;
     table->maxAlphaFrac = 0xC0;                 /* 12/16 or .75 */
@@ -429,7 +429,7 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
     newLog2 = oldLog2 + deltaLog2;
     oldCapacity = PR_BIT(oldLog2);
     newCapacity = PR_BIT(newLog2);
-    if (newCapacity >= PL_DHASH_MAX_SIZE)
+    if (newCapacity >= PL_DHASH_SIZE_LIMIT)
         return PR_FALSE;
     entrySize = table->entrySize;
     nbytes = newCapacity * entrySize;
