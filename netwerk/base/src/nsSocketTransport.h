@@ -226,7 +226,16 @@ protected:
   PRInt32                           mSuspendCount;
   PRInt32                           mWriteCount;
   nsCOMPtr<nsISupports>             mWriteContext;
+
+  // The following four members are used when AsyncWrite(...) is called
+  // with an nsIInputStream which does not also support the
+  // nsIBufferedInputStream interface...
+  //
   nsCOMPtr<nsIInputStream>          mWriteFromStream;
+  char *                            mWriteBuffer;
+  PRUint32                          mWriteBufferIndex;
+  PRUint32                          mWriteBufferLength;
+
   nsCOMPtr<nsIStreamObserver>       mWriteObserver;
   nsCOMPtr<nsIBufferInputStream>    mWritePipeIn;
   nsCOMPtr<nsIBufferOutputStream>   mWritePipeOut;
