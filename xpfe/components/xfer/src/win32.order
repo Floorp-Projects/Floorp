@@ -1,7 +1,0 @@
-?Release@nsStreamTransferModule@@UAGKXZ ; 4
-?AddRef@nsStreamTransferModule@@UAGKXZ ; 4
-?CanUnload@nsStreamTransferModule@@UAGIPAVnsIComponentManager@@PAH@Z ; 1
-??_EnsStreamTransferModule@@UAEPAXI@Z ; 1
-?QueryInterface@nsStreamTransferModule@@UAGIABUnsID@@PAPAX@Z ; 1
-_NSGetModule ; 1
-?RegisterSelf@nsStreamTransferModule@@UAGIPAVnsIComponentManager@@PAVnsIFile@@PBD2@Z ; 1
