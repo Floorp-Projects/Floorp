@@ -188,6 +188,10 @@ struct XPTTypeDescriptorPrefix {
 #define XPT_TDP_TAGMASK          (~XPT_TDP_FLAGMASK)
 #define XPT_TDP_TAG(tdp)         ((tdp).flags & XPT_TDP_TAGMASK)
 
+#define XPT_TDP_IS_POINTER(flags)        (flags & XPT_TDP_POINTER)
+#define XPT_TDP_IS_UNIQUE_POINTER(flags) (flags & XPT_TDP_UNIQUE_POINTER)
+#define XPT_TDP_IS_REFERENCE(flags)      (flags & XPT_TDP_REFERENCE)
+
 /* XXX TD #defines should include required flag bits! */
 
 /* 
@@ -280,17 +284,23 @@ struct XPTTypeDescriptor {
  * String record containing the constant string.
  */
 union XPTConstValue {
-        int8      i8;
-        uint8     ui8; 
-        int16     i16; 
-        uint16    ui16;
-        int32     i32; 
-        uint32    ui32;
-        int64     i64; 
-        uint64    ui64; 
-        uint16    wch;
-        char      ch; 
-        XPTString *string;
+    int8      i8;
+    uint8     ui8; 
+    int16     i16; 
+    uint16    ui16;
+    int32     i32; 
+    uint32    ui32;
+    int64     i64; 
+    uint64    ui64; 
+    float     flt;
+    double    dbl;
+    PRBool    bul;
+    char      ch; 
+    uint16    wch;
+    nsID      *iid;
+    XPTString *string;
+    char      *str;
+    uint16    *wstr;
 }; /* varies according to type */
 
 struct XPTConstDescriptor {
@@ -313,6 +323,10 @@ struct XPTParamDescriptor {
 #define XPT_PD_OUT      0x40
 #define XPT_PD_RETVAL   0x20
 #define XPT_PD_FLAGMASK 0x70
+
+#define XPT_PD_IS_IN(flags)     (flags & XPT_PD_IN)
+#define XPT_PD_IS_OUT(flags)    (flags & XPT_PD_OUT)
+#define XPT_PD_IS_RETVAL(flags) (flags & XPT_PD_RETVAL)
 
 #define XPT_PARAMDESCRIPTOR_SIZE (XPT_TYPEDESCRIPTOR_SIZE + 1)
 
@@ -339,6 +353,12 @@ struct XPTMethodDescriptor {
 #define XPT_MD_CTOR     0x10
 #define XPT_MD_HIDDEN   0x08
 #define XPT_MD_FLAGMASK 0xf8
+
+#define XPT_MD_IS_GETTER(flags)     (flags & XPT_MD_GETTER)
+#define XPT_MD_IS_SETTER(flags)     (flags & XPT_MD_SETTER)
+#define XPT_MD_IS_VARARGS(flags)    (flags & XPT_MD_VARARGS)
+#define XPT_MD_IS_CTOR(flags)       (flags & XPT_MD_CTOR)
+#define XPT_MD_IS_HIDDEN(flags)     (flags & XPT_MD_HIDDEN)
 
 PRBool
 XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, uint8 flags, char *name,
