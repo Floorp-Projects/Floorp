@@ -163,7 +163,12 @@ PRBool
 nsRadioControlFrame::GetChecked(PRBool aGetInitialValue) 
 {
   PRBool checked = PR_FALSE;
-  GetCurrentCheckState(&checked);
+  if (PR_TRUE == aGetInitialValue) {
+    GetDefaultCheckState(&checked);
+  }
+  else {
+    GetCurrentCheckState(&checked);
+  }
   return(checked);
 }
 
@@ -368,7 +373,6 @@ void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
   if (nsnull != mWidget) {
     nsIRadioButton* radio = nsnull;
     if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
-      PRBool state = PR_FALSE;
       if (aValue == "1")
         radio->SetState(PR_TRUE);
       else
