@@ -176,7 +176,9 @@ if ($::FORM{'raw'}) {
 #
 # branch
 #
-$::query_branch = &SanitizeRevision($::FORM{'branch'});
+$::query_branch = $::FORM{'branch'};
+$::query_branch = 'HEAD' if !defined($::query_branch);
+$::query_branch = &SanitizeRevision($::query_branch);
 $::query_branchtype = &ExpectMatchtype($::FORM{'branchtype'});
 
 if ($::query_branch eq 'HEAD' && 
