@@ -17,3 +17,5 @@ Bug 135579 - small interlaced PNG images not decoded correctly.
 Bug 154996 - PNG files with invalid IHDR can crash/hand browser.
 	Affected files: pngpread.c
 
+Bug 155222 - PNG files with invalid IHDR can corrupt heap.
+	Affected files: pngget.c
