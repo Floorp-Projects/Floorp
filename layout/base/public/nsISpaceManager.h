@@ -20,10 +20,10 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
+#include "nsRect.h"
 
 class nsIFrame;
-struct nsPoint;
-struct nsRect;
+class nsVoidArray;
 struct nsSize;
 
 // IID for the nsISpaceManager interface {17C8FB50-BE96-11d1-80B5-00805F8A274D}
@@ -32,13 +32,41 @@ struct nsSize;
   {0x80, 0xb5, 0x0, 0x80, 0x5f, 0x8a, 0x27, 0x4d}}
 
 /**
- * Structure used for returning the available space in a band.
+ * Information about a particular trapezoid within a band. The space described
+ * by the trapezoid is in one of three states:
+ * <ul>
+ * <li>available
+ * <li>occupied by one frame
+ * <li>occupied by more than one frame
+ * </ul>
+ */
+struct nsBandTrapezoid {
+  enum State {smAvailable, smOccupied, smOccupiedMultiple};
+
+  nscoord   yTop, yBottom;  // horizontal top and bottom coordinates
+  nscoord   xTopLeft, xBottomLeft;
+  nscoord   xTopRight, xBottomRight;
+  State     state;  // state of the space
+  union {
+    nsIFrame*          frame;  // frame occupying the space
+    const nsVoidArray* frames; // list of frames occupying the space
+  };
+
+  // Get the height of the trapezoid
+  nscoord GetHeight() {return yBottom - yTop;}
+
+  // Get the bouding rect of the trapezoid
+  void    GetRect(nsRect& aRect);
+};
+
+/**
+ * Structure used for describing the space within a band.
  * @see #GetBandData()
  */
 struct nsBandData {
-  PRInt32 count;  // 'out' parameter. Actual number of rects in the band data
-  PRInt32 size;   // 'in' parameter. The size of the array
-  nsRect* rects;  // 'out' parameter. Array of length 'size'
+  PRInt32          count;      // 'out' parameter. Actual number of trapezoids in the band data
+  PRInt32          size;       // 'in' parameter. The size of the array
+  nsBandTrapezoid* trapezoids; // 'out' parameter. Array of length 'size'
 };
 
 /**
@@ -107,5 +135,13 @@ public:
    */
   virtual void ClearRegions() = 0;
 };
+
+void inline nsBandTrapezoid::GetRect(nsRect& aRect)
+{
+  aRect.x = PR_MIN(xTopLeft, xBottomLeft);
+  aRect.y = yTop;
+  aRect.width = PR_MAX(xTopRight, xBottomRight) - aRect.x;
+  aRect.height = yBottom - yTop;
+}
 
 #endif /* nsISpaceManager_h___ */
