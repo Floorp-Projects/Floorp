@@ -138,6 +138,21 @@ private:
                                         nsIRDFResource* aSelectionArc, 
                                         PRBool aUseProfile, PRBool aIsAdding);
 
+  NS_IMETHOD IsProviderSelected(const nsCString& aProvider,
+                                const PRUnichar* aProviderName,
+                                nsIRDFResource* aSelectionArc,
+                                PRBool aUseProfile, PRBool* aResult);
+  NS_IMETHOD IsProviderSelectedForPackage(const nsCString& aProviderType,
+                                          const PRUnichar *aProviderName, 
+                                          const PRUnichar *aPackageName, 
+                                          nsIRDFResource* aSelectionArc, 
+                                          PRBool aUseProfile, PRBool* aResult);
+  NS_IMETHOD IsProviderSetForPackage(const nsCString& aProvider,
+                                     nsIRDFResource* aPackageResource, 
+                                     nsIRDFResource* aProviderPackageResource, 
+                                     nsIRDFResource* aSelectionArc, 
+                                     PRBool aUseProfile, PRBool* aResult);
+
   NS_IMETHOD InstallProvider(const nsCString& aProviderType,
                              const nsCString& aBaseURL,
                              PRBool aUseProfile, PRBool aAllowScripts, PRBool aRemove);
@@ -173,6 +188,9 @@ protected:
   nsCOMPtr<nsIRDFResource> mImage;
   nsCOMPtr<nsIRDFResource> mLocType;
   nsCOMPtr<nsIRDFResource> mAllowScripts;
+  nsCOMPtr<nsIRDFResource> mSkinVersion;
+  nsCOMPtr<nsIRDFResource> mLocaleVersion;
+  nsCOMPtr<nsIRDFResource> mPackageVersion;
 
   // Style Sheets
   nsCOMPtr<nsICSSStyleSheet> mScrollbarSheet;

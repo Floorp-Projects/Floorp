@@ -55,10 +55,10 @@ interface nsIChromeRegistry : nsISupports
    *
    * @param aChromeURL the URL that is to be converted.
    */
-	string convertChromeURL(in nsIURI aChromeURL);
+  string convertChromeURL(in nsIURI aChromeURL);
 
-	nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
-	nsISupportsArray getStyleSheets(in nsIURI aChromeURL);
+  nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
+  nsISupportsArray getStyleSheets(in nsIURI aChromeURL);
 
   /* Should be called when locales change to reload all chrome (including XUL). */
 	void reloadChrome();
@@ -69,17 +69,22 @@ interface nsIChromeRegistry : nsISupports
   /* Applies a skin or locale to all possible packages */
   void selectSkin(in wstring skinName, in boolean useProfile);
   void selectLocale(in wstring localeName, in boolean useProfile);
-  void selectLocaleForProfile(in wstring localeName, in wstring profilePath);
-  wstring getSelectedLocale(in wstring packageName);
-
-  void deselectSkin(in wstring skinName, in boolean useProfile);
+	void deselectSkin(in wstring skinName, in boolean useProfile);
   void deselectLocale(in wstring localeName, in boolean useProfile);
-
+  boolean isSkinSelected(in wstring skinName, in boolean useProfile);
+	boolean isLocaleSelected(in wstring localeName, in boolean useProfile);
+ 
   /* Apply skin/locale to a specific package */
 	void selectSkinForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
 	void selectLocaleForPackage(in wstring localeName, in wstring packageName, in boolean useProfile); 
   void deselectSkinForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
 	void deselectLocaleForPackage(in wstring localeName, in wstring packageName, in boolean useProfile); 
+  boolean isSkinSelectedForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
+  boolean isLocaleSelectedForPackage(in wstring localeName, in wstring packageName, in boolean useProfile);
+
+ // Special additional APIs for locales only.
+  void selectLocaleForProfile(in wstring localeName, in wstring profilePath);
+  wstring getSelectedLocale(in wstring packageName);
 
   /* Installation APIs */
   void installSkin(in string baseURL, in boolean useProfile, in boolean allowScripts);
