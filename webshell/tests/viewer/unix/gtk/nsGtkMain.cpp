@@ -186,6 +186,8 @@ int main(int argc, char **argv)
     manager->FlushCache();
     NS_RELEASE(manager);
 
+    delete gTheApp;
+
     // Shutdown XPCOM
     rv = NS_ShutdownXPCOM(nsnull);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
