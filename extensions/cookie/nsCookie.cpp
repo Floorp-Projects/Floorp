@@ -2275,6 +2275,12 @@ COOKIE_GetPermissionListForViewer(nsString& aPermissionList) {
   cookie_LockPermissionList();
   buffer[0] = '\0';
   permissionNum = 0;
+
+  if (cookie_permissionList == nsnull) {
+    cookie_UnlockPermissionListst();
+    return;
+  }
+
   PRInt32 count = cookie_permissionList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
     permission = NS_STATIC_CAST(cookie_PermissionStruct*, cookie_permissionList->ElementAt(i));
