@@ -2655,6 +2655,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
         else {
           NS_NewDocumentElementFrame(aPresShell, &contentFrame);
           isBlockFrame = PR_TRUE;
+
+          // Since we always create a block frame, we need to make sure that the 
+          // style context's display type is block level.
+          nsStyleDisplay* disp = (nsStyleDisplay*)styleContext->GetMutableStyleData(eStyleStruct_Display);
+          disp->mDisplay = NS_STYLE_DISPLAY_BLOCK;
         }
 
         // initialize the child
