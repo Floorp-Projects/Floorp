@@ -263,7 +263,9 @@ char* charset_name = NULL;
   XP_FilePrintf(f, "%%%%EndComments\n");
 
   // general comments: Mozilla-specific 
+#ifdef NOTYET
   XP_FilePrintf(f, "\n%% MozillaURL: %s\n", mPrintContext->prSetup->url->address);
+#endif
   // get charset name of non-latin1 fonts 
   // for external filters, supply information 
   if (mPrintContext->prSetup->otherFontName[0] || mPrintContext->prSetup->otherFontInfo[0]){
