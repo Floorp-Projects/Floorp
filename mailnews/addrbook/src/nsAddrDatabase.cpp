@@ -1876,6 +1876,9 @@ nsresult nsAddrDatabase::DeleteCardFromListRow(nsIMdbRow* pListRow, mdb_id cardR
                 err = AddIntColumn(pListRow, listAddressColumnToken, lastRowID);
                 err = pListRow->CutColumn(GetEnv(), lastAddressColumnToken);
             }
+
+            // Reset total count after the card has been deleted.
+            SetListAddressTotal(pListRow, totalAddress-1);
             break;
         }
     }
