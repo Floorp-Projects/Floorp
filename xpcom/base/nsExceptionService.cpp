@@ -142,7 +142,7 @@ NS_IMETHODIMP nsExceptionManager::GetExceptionFromProvider(nsresult rc, nsIExcep
 /* The Exception Service */
 
 PRUintn nsExceptionService::tlsIndex = BAD_TLS_INDEX;
-PRLock *nsExceptionService::lock = PR_FALSE;
+PRLock *nsExceptionService::lock = nsnull;
 nsExceptionManager *nsExceptionService::firstThread = nsnull;
 
 #ifdef NS_DEBUG
