@@ -79,6 +79,7 @@ public:
   NS_IMETHOD GetAccName(nsAString& _retval);
   NS_IMETHOD GetAccId(PRInt32 *_retval);
   NS_IMETHOD GetAccKeyboardShortcut(nsAString& _retval);
+  NS_IMETHOD GetAccDescription(nsAString& _retval);
   NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
@@ -148,7 +149,7 @@ class nsAccessibleTreeWalker {
 public:
   nsAccessibleTreeWalker(nsIWeakReference* aShell, nsIDOMNode* aContent, 
     PRInt32 aCachedSiblingIndex, nsIDOMNodeList *aCachedSiblingList, PRBool mWalkAnonymousContent);
-  ~nsAccessibleTreeWalker();
+  virtual ~nsAccessibleTreeWalker();
 
   NS_IMETHOD GetNextSibling();
   NS_IMETHOD GetPreviousSibling();

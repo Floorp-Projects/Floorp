@@ -225,6 +225,11 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccName(nsAString& _retval)
   nsAutoString name;
   button->GetValue(name);
   name.CompressWhitespace();
+  if (name.IsEmpty()) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+    elt->GetAttribute(NS_LITERAL_STRING("title"), name);
+  }
+
   _retval.Assign(name);
 
   return NS_OK;
