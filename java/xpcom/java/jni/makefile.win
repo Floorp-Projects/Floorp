@@ -1,5 +1,4 @@
-#!nmake
-#
+# 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -18,22 +17,23 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-# Igor Kushnirskiy <idk@eng.sun.com>
-#
+# Igor Kushnriskiy <idk@eng.sun.com>
 
-DEPTH = ..\..\..
+MODULE = blackconnectjni
+LIBRARY_NAME = blackconnectjni	
 
-DIRS=   \
-	xpidl \
-        loader \
-	src \
-	jni \
-	import \
-	classes \
-#	test \
-	components \
-        $(NULL)
+DEPTH= ..\..\..\..
 
-include <$(DEPTH)\config\rules.mak>
+OBJS =  \
+	.\$(OBJDIR)\org_mozilla_xpcom_Components.obj \
+	$(NULL)
 
+
+MAKE_OBJ_TYPE = DLL
+DLL = .\$(OBJDIR)\$(LIBRARY_NAME).dll
+
+LLIBS=$(LLIBS)  $(LIBNSPR) $(DIST)\lib\xpcom.lib
+include <$(DEPTH)/config/rules.mak>
+install:: $(DLL)
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\
 
