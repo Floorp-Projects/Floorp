@@ -2864,7 +2864,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   if (mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE) {
     // Reset the performance hint which was set to FALSE
     // when NS_SINK_FLAG_DYNAMIC_LOWER_VALUE was set. 
-    PL_FavorPerformanceHint(TRUE , 0);
+    PL_FavorPerformanceHint(PR_TRUE , 0);
   }
 
   if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
