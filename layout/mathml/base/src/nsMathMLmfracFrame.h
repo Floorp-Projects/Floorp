@@ -68,13 +68,7 @@ element. (See Section 3.3.4.)
 
 /*
 TODO:
--  Take care of displaystyle=true|false and inheritered <mstyle> 
-   Before reflow, <mfrac> should change the font-size of the children with scriptlevel<=2
-   How to do it? From the DOM interface?
-   From direct CSS manipulation? In nsCSSStyleRule, there is
-   nsCSSFont*  ourFont;
-    if (NS_OK == aDeclaration->GetData(kCSSFontSID, (nsCSSStruct**)&ourFont)) 
-
+Units...
 - CalcLength(..) in nsCSSStyleRule.cpp is where CSS units are implemented. 
 How to use that for linethickness and, in general, how to factor the use
 of units in the MathML world?
