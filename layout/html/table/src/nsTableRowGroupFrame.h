@@ -143,6 +143,9 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
+  // row groups don't paint their own background -- the cells do
+  virtual PRBool CanPaintBackground() { return PR_FALSE; }
+
   /** ask all children to paint themselves, without clipping (for cells with rowspan>1)
     * @see nsIFrame::Paint 
     */
