@@ -41,6 +41,8 @@
 #include "nsXFormsAtoms.h"
 #include "nsXFormsModelElement.h"
 #include "nsXFormsUtils.h"
+#include "nsICategoryManager.h"
+#include "nsIServiceManager.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsElementFactory)
 
