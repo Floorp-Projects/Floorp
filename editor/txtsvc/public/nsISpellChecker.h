@@ -44,9 +44,9 @@
 #define NS_SPELLCHECKER_CONTRACTID "@mozilla.org/spellchecker;1"
 
 #define NS_ISPELLCHECKER_IID                    \
-{ /* F72A52F1-F83B-11d2-8D54-000064657374 */    \
-0xf72a52f1, 0xf83b, 0x11d2,                     \
-{ 0x8d, 0x54, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+{ /* E75AC48C-E948-452E-8DB3-30FEE29FE3D2 */    \
+0xe75ac48c, 0xe948, 0x452e, \
+  { 0x8d, 0xb3, 0x30, 0xfe, 0xe2, 0x9f, 0xe3, 0xd2 } }
 
 class nsITextServicesDocument;
 class nsString;
@@ -74,7 +74,7 @@ public:
    * @param aSuggestions is an array of nsStrings, that represent the
    * suggested replacements for the misspelled word.
    */
-  NS_IMETHOD NextMisspelledWord(nsString *aWord, nsStringArray *aSuggestions) = 0;
+  NS_IMETHOD NextMisspelledWord(nsAString &aWord, nsStringArray *aSuggestions) = 0;
 
   /**
    * Checks if a word is misspelled. No document is required to use this method.
@@ -84,7 +84,7 @@ public:
    * suggested replacements for the misspelled word. The array will be empty
    * if there aren't any suggestions.
    */
-  NS_IMETHOD CheckWord(const nsString *aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions) = 0;
+  NS_IMETHOD CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions) = 0;
 
   /**
    * Replaces the old word with the specified new word.
@@ -94,25 +94,25 @@ public:
    * word, in the document, with new word when it is true. If
    * false, it will replace the 1st occurrence only!
    */
-  NS_IMETHOD Replace(const nsString *aOldWord, const nsString *aNewWord, PRBool aAllOccurrences) = 0;
+  NS_IMETHOD Replace(const nsAString &aOldWord, const nsAString &aNewWord, PRBool aAllOccurrences) = 0;
 
   /**
    * Ignores all occurrences of the specified word in the document.
    * @param aWord is the word to ignore.
    */
-  NS_IMETHOD IgnoreAll(const nsString *aWord) = 0;
+  NS_IMETHOD IgnoreAll(const nsAString &aWord) = 0;
 
   /**
    * Add a word to the user's personal dictionary.
    * @param aWord is the word to add.
    */
-  NS_IMETHOD AddWordToPersonalDictionary(const nsString *aWord) = 0;
+  NS_IMETHOD AddWordToPersonalDictionary(const nsAString &aWord) = 0;
 
   /**
    * Remove a word from the user's personal dictionary.
    * @param aWord is the word to remove.
    */
-  NS_IMETHOD RemoveWordFromPersonalDictionary(const nsString *aWord) = 0;
+  NS_IMETHOD RemoveWordFromPersonalDictionary(const nsAString &aWord) = 0;
 
   /**
    * Returns the list of words in the user's personal dictionary.
@@ -138,14 +138,14 @@ public:
    * This name is the same string that is in the list returned
    * by GetDictionaryList().
    */
-  NS_IMETHOD GetCurrentDictionary(nsString *aDictionary) = 0;
+  NS_IMETHOD GetCurrentDictionary(nsAString &aDictionary) = 0;
 
   /**
    * Tells the spellchecker to use a specific dictionary.
    * @param aDictionary a string that is in the list returned
    * by GetDictionaryList().
    */
-  NS_IMETHOD SetCurrentDictionary(const nsString *aDictionary) = 0;
+  NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary) = 0;
 };
 
 #endif // nsISpellChecker_h__

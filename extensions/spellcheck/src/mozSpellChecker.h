@@ -57,18 +57,18 @@ public:
 
   // nsISpellChecker
   NS_IMETHOD SetDocument(nsITextServicesDocument *aDoc, PRBool aFromStartofDoc);
-  NS_IMETHOD NextMisspelledWord(nsString *aWord, nsStringArray *aSuggestions);
-  NS_IMETHOD CheckWord(const nsString *aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions);
-  NS_IMETHOD Replace(const nsString *aOldWord, const nsString *aNewWord, PRBool aAllOccurrences);
-  NS_IMETHOD IgnoreAll(const nsString *aWord);
+  NS_IMETHOD NextMisspelledWord(nsAString &aWord, nsStringArray *aSuggestions);
+  NS_IMETHOD CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStringArray *aSuggestions);
+  NS_IMETHOD Replace(const nsAString &aOldWord, const nsAString &aNewWord, PRBool aAllOccurrences);
+  NS_IMETHOD IgnoreAll(const nsAString &aWord);
 
-  NS_IMETHOD AddWordToPersonalDictionary(const nsString *aWord);
-  NS_IMETHOD RemoveWordFromPersonalDictionary(const nsString *aWord);
+  NS_IMETHOD AddWordToPersonalDictionary(const nsAString &aWord);
+  NS_IMETHOD RemoveWordFromPersonalDictionary(const nsAString &aWord);
   NS_IMETHOD GetPersonalDictionary(nsStringArray *aWordList);
 
   NS_IMETHOD GetDictionaryList(nsStringArray *aDictionaryList);
-  NS_IMETHOD GetCurrentDictionary(nsString *aDictionary);
-  NS_IMETHOD SetCurrentDictionary(const nsString *aDictionary);
+  NS_IMETHOD GetCurrentDictionary(nsAString &aDictionary);
+  NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary);
 
 protected:
   nsCOMPtr<mozISpellI18NUtil> mConverter;
