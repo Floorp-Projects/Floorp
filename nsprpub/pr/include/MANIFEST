@@ -42,8 +42,6 @@ prtypes.h
 prvrsion.h
 prwin16.h
 
-prlink_mac.h
-
 obsolete/protypes.h
 obsolete/prsem.h
 obsolete/probslet.h
