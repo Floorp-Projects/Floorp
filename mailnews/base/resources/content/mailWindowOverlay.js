@@ -1020,3 +1020,16 @@ function MsgGoBack() {}
 function MsgGoForward() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
+
+function SpaceHit()
+{
+  var contentWindow = window.top._content;
+  var oldScrollY = contentWindow.scrollY;
+
+  contentWindow.scrollByPages(1);
+
+  // if at the end of the message, go to the next one
+  if (oldScrollY == contentWindow.scrollY) {
+    goDoCommand('cmd_nextUnreadMsg');
+  }
+}

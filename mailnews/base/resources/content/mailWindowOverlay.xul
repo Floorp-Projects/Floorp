@@ -194,6 +194,8 @@ Rights Reserved.
 </broadcasterset>
 
 <keyset id="keyset">
+    <key id="space" key=" " oncommand="SpaceHit()"/>
+
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_close"/>
