@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://sidebar/locale/customize.dtd" >
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="Init();">
+
+<html:script src="chrome://sidebar/content/customize.js" />
+
+<box align="vertical" flex="100%" id="main-box">
+
+  <html:div class="title">
+    &sidebar.customize.current.label;
+  </html:div>
+
+  <box align="horizontal" class="box-group">
+
+    <box align="vertical">
+      <spring flex="50%"/>
+      <titledbutton onclick="moveUp();"   id="up"   class="borderless up" />
+      <titledbutton onclick="moveDown();" id="down" class="borderless down" />
+      <spring flex="50%"/>
+    </box>
+
+    <html:form name="one" >
+      <html:select name="two" id="selectList" size="10" 
+         onclick="selectChange();">
+      </html:select>
+    </html:form>
+
+    <box align="vertical" class="button-group">
+      <spring flex="50%"/>
+      <titledbutton id="customize-button" onclick="" 
+         value="&sidebar.customize.customize.label;" />
+      <titledbutton onclick="RemovePanel()"
+         value="&sidebar.customize.remove.label;" />
+      <spring flex="50%"/>
+    </box>
+
+  </box>
+
+  <html:hr/>
+
+  <html:div class="title">
+    &sidebar.customize.additional.label;
+  </html:div>
+
+  <box align="horizontal"  class="box-group">
+
+      <tree id="other-panels" style="width:15em;height:15em;"
+            datasources="chrome://sidebar/content/sidebar-registry.rdf"
+            onclick="selected()"
+            ref="NC:SidebarRoot" >
+    
+        <!-- The template we'll use to build rows in the content model. -->
+        <template>
+          <rule>
+            <treechildren>
+            <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
+              <treerow>
+                <treecell>
+                  <treeindentation />
+                  <titledbutton align="right"
+                     value="rdf:http://home.netscape.com/NC-rdf#title" />
+                </treecell>
+              </treerow>
+            </treeitem>
+            </treechildren>
+          </rule>
+        </template>
+
+        <treehead>
+          <treerow>
+            <treecell>&sidebar.customize.name-column.label;</treecell>
+          </treerow>
+        </treehead>
+      </tree>
+  
+    <box align="vertical" class="button-group">
+      <spring flex="50%"/>
+      <titledbutton id="add_button" onclick="AddPanel()"
+         value="&sidebar.customize.add.label;"
+         disabled="true"/>
+      <titledbutton id="preview_button" onclick=""
+         value="&sidebar.customize.preview.label;"
+         disabled="true"/>
+      <spring flex="50%"/>
+    </box>
+
+  </box> 
+
+  <html:a href="http://dmoz.org/Computers/Internet/WWW/Web_Portals/Netscape.com/My_Netscape_Network/">
+    &sidebar.customize.more.label;
+  </html:a>
+   |
+  <html:a href="http://my.netscape.com/publish/">
+    &sidebar.customize.create.label;
+  </html:a>
+
+  <html:hr/>
+
+  <box align="horizontal">
+    <spring flex="48%"/>
+    <titledbutton onclick="window.close()"
+       value="&sidebar.customize.cancel.label;" />
+    <spring flex="4%"/>
+    <titledbutton id="save_button" onclick="Save();"
+       value="&sidebar.customize.save.label;"
+       disabled="true"/>
+    <spring flex="48%"/>
+  </box>
+
+</box>
+
+</window>
