@@ -132,7 +132,6 @@ nsHTMLEditor::InsertTableRow(PRInt32 aNumber, PRBool aAfter)
   {
     nsAutoEditBatch beginBatching(this);
     //TODO: FINISH ME! 
-    selection->ClearSelection();
   }
   return res;
 }
@@ -181,6 +180,8 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
   {
     nsAutoEditBatch beginBatching(this);
 
+    // We clear the selection to avoid problems when nodes in the selection are deleted,
+    // Be sure to set it correctly later (in SetCaretAfterTableEdit)!
     selection->ClearSelection();
     PRInt32 i;
     for (i = 0; i < aNumber; i++)

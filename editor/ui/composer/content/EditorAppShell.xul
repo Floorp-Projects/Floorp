@@ -89,6 +89,8 @@
       
       <menu id="headingMenu"/>
       <menu id="paragraphMenu"/>
+      <!-- This brings up dialog. Alternative is: <menu id="listMenu"> -->
+      <menuitem id="listProps"/>
       <menuseparator />
       <menu id="stylesheetMenu"/>
     </menupopup>

@@ -795,11 +795,9 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   }
 #endif
   
-#if DEBUG_cmanske
   //TODO: TEMPORARY -- THIS IS NOT THE RIGHT THING TO DO!
   nsAutoString styleURL("chrome://editor/content/EditorContent.css");
   ApplyStyleSheet(styleURL.GetUnicode());
-#endif
 
   // Force initial focus to the content window -- HOW?
 //  mWebShellWin->SetFocus();
