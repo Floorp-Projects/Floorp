@@ -82,7 +82,7 @@ function loadWebPanel(aURI) {
     try {
       document.getElementById('webpanels-browser').webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
       var addButton = document.getElementById('addpanel-button');
-      addButton.disabled = false;
+      addButton.disabled = true;
     } catch (e) {}
 }
 
