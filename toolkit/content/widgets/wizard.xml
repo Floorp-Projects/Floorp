@@ -339,7 +339,11 @@
          if (btn) {
            btn.addEventListener("command", this["_"+aName+"Func"], false);
 #ifdef XP_UNIX
+#ifdef XP_MACOSX
+           btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-mac"));
+#else
            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-unix"));
+#endif
 #else
            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
 #endif
