@@ -19,18 +19,28 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Mike Shaver <shaver@zeroknowledge.com>
  */
 
 #include <gdk/gdk.h>
 #include <string.h>
+#include "prclist.h"
 
 #ifndef nsGCCache_h___
 #define nsGCCache_h___
 
 #define countof(x) ((int)(sizeof(x) / sizeof (*x)))
+#define GC_CACHE_SIZE 10
 
-struct GCData
+#ifdef DEBUG
+#define DEBUG_METER(x) x
+#else
+#define DEBUG_METER(x)
+#endif
+
+struct GCCacheEntry
 {
+  PRCList clist;
   GdkGCValuesMask flags;
   GdkGCValues gcv;
   GdkRegion *clipRegion;
@@ -56,11 +66,12 @@ class nsGCCache
   }
 
 private:
-  static struct GCData gc_cache [30];
-  static int gc_cache_fp;
-  static int gc_cache_wrapped_p;
+  PRCList GCCache;
+  PRCList GCFreeList;
+  void free_cache_entry(PRCList *clist);
   static GdkRegion * gdk_region_copy(GdkRegion *region);
   static GdkRegion *copyRegion;
+  void ReportStats();
 };
 
 #endif
