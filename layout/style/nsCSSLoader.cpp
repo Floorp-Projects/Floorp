@@ -38,6 +38,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIStreamLoader.h"
 #include "nsIUnicharInputStream.h"
+#include "nsIConverterInputStream.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsICharsetAlias.h"
@@ -1573,8 +1574,11 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
       NS_RELEASE(urlClone);
       if (NS_SUCCEEDED(result)) {
         // Translate the input, using our characterset, into unicode
-        nsIUnicharInputStream* uin;
-        result = NS_NewConverterStream(&uin, nsnull, in, 0, &mCharset);
+        nsCOMPtr<nsIConverterInputStream> uin =
+          do_CreateInstance("@mozilla.org/intl/converter-input-stream;1",
+                            &result);
+        if (NS_SUCCEEDED(result))
+          result = uin->Init(in, mCharset.get(), 0);
         if (NS_SUCCEEDED(result)) {
           SheetLoadData* data = new SheetLoadData(this, aURL, aObserver);
           if (data == nsnull) {
@@ -1592,7 +1596,6 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
 	      			aCompleted = PR_FALSE;
 	      		}
           }
-          NS_RELEASE(uin);
         }
         else {
           fputs("CSSLoader::LoadAgentSheet - failed to get converter stream\n", stderr);
