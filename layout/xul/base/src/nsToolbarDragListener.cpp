@@ -232,7 +232,6 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
           nsCOMPtr<nsIDOMElement> domElement;
           domElement = do_QueryInterface(content);
           if (nsnull != domElement ) {
-            nsCOMPtr<nsIAtom> tag;
             nsAutoString value;
             domElement->GetAttribute(nsAutoString("naturalorder"), value);
             naturalOrder = value.Equals("true");
