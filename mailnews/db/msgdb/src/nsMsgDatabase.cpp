@@ -2260,8 +2260,8 @@ NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 
 NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
 {
-  nsresult			err = NS_OK;
-  if (notify)	// need to update view
+  nsresult err = NS_OK;
+  if (notify && m_newSet.GetSize() > 0)	// need to update view
   {
     PRInt32 firstMember;
     nsMsgKeyArray saveNewSet;
