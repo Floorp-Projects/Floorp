@@ -410,10 +410,9 @@ protected:
 #ifdef MOZ_UNICODE
     virtual LPCWSTR         WindowClassW();
     virtual LPCWSTR         WindowPopupClassW();
-#else
+#endif
     virtual LPCTSTR         WindowClass();
     virtual LPCTSTR         WindowPopupClass();
-#endif
     virtual DWORD           WindowStyle();
     virtual DWORD           WindowExStyle();
 
