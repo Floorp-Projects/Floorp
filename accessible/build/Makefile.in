@@ -45,7 +45,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/../src
 SHARED_LIBRARY_LIBS = \
     $(DIST)/lib/libaccessibility_base_s.$(LIB_SUFFIX) \
     $(DIST)/lib/libaccessibility_html_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/libaccessibility_xul_s.$(LIB_SUFFIX)
+    $(DIST)/lib/libaccessibility_xul_s.$(LIB_SUFFIX) \
     $(NULL)
 
 
