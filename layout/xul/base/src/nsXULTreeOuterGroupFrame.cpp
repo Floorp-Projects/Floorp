@@ -40,6 +40,8 @@
 #include "nsIDragService.h"
 #include "nsIServiceManager.h"
 #include "nsIScrollableView.h"
+#include "nsIMonument.h"
+#include "nsTempleLayout.h"
 
 #define TICK_FACTOR 50
 
@@ -924,12 +926,7 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   InternalPositionChanged(up, delta);
 
   // This change has to happen immediately.
-  // Flush any pending reflow commands.
   PostReflowCallback();
-
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
-  doc->FlushPendingNotifications();
 }
 
 void
@@ -1023,9 +1020,19 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
 {
+  nsCOMPtr<nsIContent> tree;
+  mContent->GetParent(*getter_AddRefs(tree));
+  
+  nsIFrame* treeFrame;
+  aPresShell->GetPrimaryFrameFor(tree, &treeFrame);
+
+  nsCOMPtr<nsIBox> treeBox(do_QueryInterface(treeFrame));
+
   mReflowCallbackPosted = PR_FALSE;
   nsBoxLayoutState state(mPresContext);
-  MarkDirtyChildren(state);
+  //MarkDirtyChildren(state);
+  treeBox->MarkStyleChange(state);
+
   *aFlushFlag = PR_TRUE;
   return NS_OK;
 }
