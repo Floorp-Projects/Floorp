@@ -108,17 +108,15 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 TK_LIBS += -framework Cocoa
 endif
 
-XP_DIST_LIBS		= \
-			-lgkgfx \
-			$(NULL)
+EXTRA_DSO_LIBS	= gkgfx
 
 ifdef NS_TRACE_MALLOC
-XP_DIST_LIBS		+= -ltracemalloc
+EXTRA_DSO_LIBS	+= tracemalloc
 endif
 
 ifeq ($(OS_ARCH),WINNT)
 RESFILE		= viewer.res
-XP_DIST_LIBS    += -lxpwidgets_s -ldbgrobot -lwidget_windows
+EXTRA_DSO_LIBS	+= xpwidgets_s dbgrobot widget_windows
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -129,13 +127,13 @@ endif
 
 ifdef MOZ_OJI
 ifeq ($(OS_ARCH),WINNT)
-XP_DIST_LIBS		+= -ljsj$(MOZ_BITS)$(VERSION_NUMBER)
+EXTRA_DSO_LIBS	+= jsj$(MOZ_BITS)$(VERSION_NUMBER)
 else
 XP_DIST_LIBS		+= -ljsj
 endif
 endif
 ifdef MOZ_PERF_METRICS
-XP_DIST_LIBS		+= -lmozutil_s
+EXTRA_DSO_LIBS		+= mozutil_s
 endif
 
 XP_LIBS			= \
@@ -220,9 +218,13 @@ endif
 GARBAGE			+= $(PROGRAM)_gtk $(PROGRAM)_xlib
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS		+= shell32.lib ole32.lib oleaut32.lib oleacc.lib \
-	imm32.lib uuid.lib comdlg32.lib
+OS_LIBS		+= $(call EXPAND_LIBNAME, shell32 ole32 oleaut32 imm32 uuid comdlg32)
+ifdef GNU_CC
+OS_LIBS		+= -lgdi32
+else
+OS_LIBS		+= oleacc.lib
 LDFLAGS		+= -SUBSYSTEM:CONSOLE
+endif
 ifdef MOZ_NO_DEBUG_RTL
 CXXFLAGS	+= -DMOZ_NO_DEBUG_RTL
 endif
