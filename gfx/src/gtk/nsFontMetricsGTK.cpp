@@ -918,6 +918,29 @@ static nsFontCharSetInfo CMCMEX =
    { "x-t1-cmex", SingleByteConvert, 0 };
 static nsFontCharSetInfo CMCMSY =
    { "x-t1-cmsy", SingleByteConvert, 0 };
+#ifdef MOZ_MATHML
+static nsFontCharSetInfo Mathematica1 =
+   { "x-mathematica1", SingleByteConvert, 0 };
+static nsFontCharSetInfo Mathematica2 =
+   { "x-mathematica2", SingleByteConvert, 0 };
+static nsFontCharSetInfo Mathematica3 =
+   { "x-mathematica3", SingleByteConvert, 0 };
+static nsFontCharSetInfo Mathematica4 =
+   { "x-mathematica4", SingleByteConvert, 0 };
+static nsFontCharSetInfo Mathematica5 =
+   { "x-mathematica5", SingleByteConvert, 0 };
+
+static nsFontCharSetInfo Mathematica1mono =
+   { "x-mathematica1", SingleByteConvert, 0 };
+static nsFontCharSetInfo Mathematica2mono =
+   { "x-mathematica2", SingleByteConvert, 0 };
+static nsFontCharSetInfo Mathematica3mono =
+   { "x-mathematica3", SingleByteConvert, 0 };
+static nsFontCharSetInfo Mathematica4mono =
+   { "x-mathematica4", SingleByteConvert, 0 };
+static nsFontCharSetInfo Mathematica5mono =
+   { "x-mathematica5", SingleByteConvert, 0 };
+#endif
 
 /*
  * Normally, the charset of an X font can be determined simply by looking at
@@ -1047,7 +1070,19 @@ static nsFontCharSetMap gSpecialCharSetMap[] =
   { "symbol-adobe-fontspecific", &AdobeSymbol  },
   { "cmex10-adobe-fontspecific", &CMCMEX  },
   { "cmsy10-adobe-fontspecific", &CMCMSY  },
+#ifdef MOZ_MATHML
+  { "math1-adobe-fontspecific", &Mathematica1 },
+  { "math2-adobe-fontspecific", &Mathematica2 },
+  { "math3-adobe-fontspecific", &Mathematica3 },
+  { "math4-adobe-fontspecific", &Mathematica4 },
+  { "math5-adobe-fontspecific", &Mathematica5 },
 
+  { "math1mono-adobe-fontspecific", &Mathematica1mono },
+  { "math2mono-adobe-fontspecific", &Mathematica2mono },
+  { "math3mono-adobe-fontspecific", &Mathematica3mono },
+  { "math4mono-adobe-fontspecific", &Mathematica4mono },
+  { "math5mono-adobe-fontspecific", &Mathematica5mono },
+#endif
   { nsnull,                      nsnull        }
 };
 
