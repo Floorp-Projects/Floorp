@@ -529,18 +529,13 @@ DocumentViewerImpl::~DocumentViewerImpl()
     Close();
   }
 
-  NS_ASSERTION(!mPresShell, "User did not call nsIContentViewer::Destroy");
-  if (mPresShell) {
+  NS_ASSERTION(!mPresShell && !mPresContext,
+               "User did not call nsIContentViewer::Destroy");
+  if (mPresShell || mPresContext) {
     Destroy();
   }
 
   // XXX(?) Revoke pending invalidate events
-
-  // clear weak references before we go away
-  if (mPresContext) {
-    mPresContext->SetContainer(nsnull);
-    mPresContext->SetLinkHandler(nsnull);
-  }
 }
 
 /*
@@ -1225,6 +1220,12 @@ DocumentViewerImpl::Destroy()
     mPresShell = nsnull;
   }
 
+  if (mPresContext) {
+    mPresContext->SetContainer(nsnull);
+    mPresContext->SetLinkHandler(nsnull);
+    mPresContext = nsnull;
+  }
+
   mContainer = nsnull;
 
   return NS_OK;
@@ -1495,6 +1496,7 @@ DocumentViewerImpl::Show(void)
       return NS_ERROR_UNEXPECTED;
     }
 
+    NS_ASSERTION(!mPresContext, "Shouldn't have a prescontext if we have no shell!");
     mPresContext = do_CreateInstance(kGalleyContextCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1574,6 +1576,8 @@ DocumentViewerImpl::Hide(void)
     return NS_OK;
   }
 
+  NS_ASSERTION(mPresContext, "Can't have a presshell and no prescontext!");
+
   // Avoid leaking the old viewer.
   if (mPreviousViewer) {
     mPreviousViewer->Destroy();
@@ -1623,6 +1627,9 @@ DocumentViewerImpl::Hide(void)
   }
 
   mPresShell->Destroy();
+  // Clear weak refs
+  mPresContext->SetContainer(nsnull);
+  mPresContext->SetLinkHandler(nsnull);                             
 
   mPresShell     = nsnull;
   mPresContext   = nsnull;
