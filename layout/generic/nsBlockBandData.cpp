@@ -52,14 +52,6 @@ nsBlockBandData::Init(nsISpaceManager* aSpaceManager,
   aSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
 
   mSpace = aSpace;
-#ifdef DEBUG_kipp
-  if (mSpace.width != NS_UNCONSTRAINEDSIZE) {
-    NS_ASSERTION((mSpace.width > -200000) && (mSpace.width < 200000), "oy");
-  }
-  if (mSpace.height != NS_UNCONSTRAINEDSIZE) {
-    NS_ASSERTION((mSpace.height > -200000) && (mSpace.height < 200000), "oy");
-  }
-#endif
   return NS_OK;
 }
 
@@ -187,14 +179,6 @@ nsBlockBandData::ComputeAvailSpaceRect()
   if (NS_UNCONSTRAINEDSIZE == mSpace.width) {
     mAvailSpace.width = NS_UNCONSTRAINEDSIZE;
   }
-#ifdef DEBUG_kipp
-  if (mAvailSpace.width != NS_UNCONSTRAINEDSIZE) {
-    NS_ASSERTION((mAvailSpace.width > -200000) && (mAvailSpace.width < 200000), "oy");
-  }
-  if (mAvailSpace.height != NS_UNCONSTRAINEDSIZE) {
-    NS_ASSERTION((mAvailSpace.height > -200000) && (mAvailSpace.height < 200000), "oy");
-  }
-#endif
 }
 
 /**

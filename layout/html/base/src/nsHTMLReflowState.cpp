@@ -766,12 +766,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // XXX fix to provide 0,0 for the top&bottom margins for
     // inline-non-replaced elements
     ComputeMargin(containingBlockWidth);
-#ifdef DEBUG_kipp
-    NS_ASSERTION((computedMargin.left > -200000) &&
-                 (computedMargin.left < 200000), "oy");
-    NS_ASSERTION((computedMargin.right > -200000) &&
-                 (computedMargin.right < 200000), "oy");
-#endif
     ComputePadding(containingBlockWidth);
     if (!mStyleSpacing->GetBorder(mComputedBorderPadding)) {
       // CSS2 has no percentage borders
@@ -1096,12 +1090,6 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* cbrs,
     } else if (isAutoRightMargin) {
       computedMargin.right = availMarginSpace - computedMargin.left;
     }
-#ifdef DEBUG_kipp
-    NS_ASSERTION((computedMargin.left > -200000) &&
-                 (computedMargin.left < 200000), "oy");
-    NS_ASSERTION((computedMargin.right > -200000) &&
-                 (computedMargin.right < 200000), "oy");
-#endif
   }
 }
 
