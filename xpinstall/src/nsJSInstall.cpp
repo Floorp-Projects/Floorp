@@ -379,7 +379,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsInstallFolder *folder;
   PRBool b5;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -409,12 +409,17 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSValToStr(b3, cx, argv[3]);
-    jsObj = JSVAL_TO_OBJECT(argv[2]);
-
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    if (argv[2] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[2])) //argv[2] MUST be a jsval
     {
-      JS_ReportError(cx, "GetFolder:Invalid Parameter");
-      return JS_FALSE; 
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsObj = JSVAL_TO_OBJECT(argv[2]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
     }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -438,12 +443,18 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
     ConvertJSValToStr(b4, cx, argv[4]);
-    jsObj = JSVAL_TO_OBJECT(argv[3]);
 
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
     {
-      JS_ReportError(cx, "GetFolder:Invalid Parameter");
-      return JS_FALSE; 
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+    
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE; 
     }
     
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -468,19 +479,27 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
-    jsObj = JSVAL_TO_OBJECT(argv[3]);
     ConvertJSValToStr(b4, cx, argv[4]);
+
+    if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE; 
+    }
 
     if(!ConvertJSValToBool(&b5, cx, argv[5]))
     {
       return JS_FALSE;
     }
 
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
-    {
-      JS_ReportError(cx, "GetFolder:Invalid Parameter");
-      return JS_FALSE; 
-    }
+
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
@@ -537,19 +556,26 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
-    jsObj = JSVAL_TO_OBJECT(argv[3]);
     ConvertJSValToStr(b4, cx, argv[4]);
+    
+    if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE; 
+    }
 
     if(!ConvertJSValToBool(&b5, cx, argv[5]))
     {
       return JS_FALSE;
     }
 
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
-    {
-      JS_ReportError(cx, "AddSubcomponent:Invalid Parameter");
-      return JS_FALSE; 
-    }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
@@ -572,12 +598,19 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
     ConvertJSValToStr(b4, cx, argv[4]);
+
+    if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
     jsObj = JSVAL_TO_OBJECT(argv[3]);
 
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
     {
-      JS_ReportError(cx, "AddSubcomponent:Invalid Parameter");
-      return JS_FALSE; 
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE; 
     }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -599,12 +632,18 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSValToStr(b3, cx, argv[3]);
-    jsObj = JSVAL_TO_OBJECT(argv[2]);
 
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    if ((argv[2] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[2])) //argv[2] MUST be a jsval
     {
-      JS_ReportError(cx, "AddSubcomponent:Invalid Parameter");
-      return JS_FALSE; 
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+    
+    jsObj = JSVAL_TO_OBJECT(argv[2]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE; 
     }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -703,13 +742,18 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     //  public int DeleteFile ( Object folder,
     //                          String relativeFileName);
 
-    jsObj = JSVAL_TO_OBJECT(argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    if ((argv[0] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
-      JS_ReportError(cx, "DeleteFile:Invalid Parameter");
-      return JS_FALSE; 
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsObj = JSVAL_TO_OBJECT(argv[0]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE; 
     }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -1009,12 +1053,18 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     }
     else /* it must be an object */
     {
-      jsObj = JSVAL_TO_OBJECT(argv[0]);
-
-      if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+      
+      if ((argv[0] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
       {
-        JS_ReportError(cx, "GetFolder:Invalid Parameter");
-        return JS_FALSE; 
+        *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+        return JS_TRUE;
+      }
+
+      jsObj = JSVAL_TO_OBJECT(argv[0]);
+      if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+      {
+        *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+        return JS_TRUE; 
       }
 
       folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
@@ -1262,10 +1312,19 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ConvertJSvalToVersionString(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
     ConvertJSValToStr(b3, cx, argv[4]);
-    jsObj = JSVAL_TO_OBJECT(argv[3]);
 
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
-      return JS_FALSE; // Do we return an error message to the console here?
+    if ((argv[3] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[3])) //argv[3] MUST be a jsval
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+    
+    jsObj = JSVAL_TO_OBJECT(argv[3]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
@@ -1286,10 +1345,19 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[3]);
+    
+    if ((argv[2] == JSVAL_NULL) || !JSVAL_IS_OBJECT(argv[2])) //argv[2] MUST be a jsval
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+    
     jsObj = JSVAL_TO_OBJECT(argv[2]);
-
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
-      return JS_FALSE; // Do we return an error message to the console here?
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
@@ -1367,11 +1435,17 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   {
     //  public int SetPackageFolder (Object folder);
 
-    jsObj = JSVAL_TO_OBJECT(argv[0]);
-    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, argv))
+    if ((argv[0] == JSVAL_NULL)  || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
-      JS_ReportError(cx, "setPackageFolder:Invalid Parameter");
-      return JS_FALSE; 
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsObj = JSVAL_TO_OBJECT(argv[0]);
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE; 
     }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
