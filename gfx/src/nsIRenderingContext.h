@@ -448,10 +448,12 @@ public:
    * @param aX Horizontal starting point of baseline
    * @param aY Vertical starting point of baseline.
    * @param aWidth Width of the underline
+   * @param aSpacing inter-character spacing to apply
    */
   virtual void DrawString(const char *aString, PRUint32 aLength,
                           nscoord aX, nscoord aY,
-                          nscoord aWidth) = 0;
+                          nscoord aWidth,
+                          const nscoord* aSpacing = nsnull) = 0;
 
   /**
    * Draw a string in the RenderingContext
@@ -460,10 +462,12 @@ public:
    * @param aX Horizontal starting point of baseline
    * @param aY Vertical starting point of baseline.
    * @param aWidth length in twips of the underline
+   * @param aSpacing inter-character spacing to apply
    */
   virtual void DrawString(const PRUnichar *aString, PRUint32 aLength,
                           nscoord aX, nscoord aY,
-                          nscoord aWidth) = 0;
+                          nscoord aWidth,
+                          const nscoord* aSpacing = nsnull) = 0;
 
   /**
    * Draw a string in the RenderingContext
@@ -471,9 +475,11 @@ public:
    * @param aX Horizontal starting point of baseline
    * @param aY Vertical starting point of baseline.
    * @param aWidth Width of the underline
+   * @param aSpacing inter-character spacing to apply
    */
   virtual void DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                          nscoord aWidth) = 0;
+                          nscoord aWidth,
+                          const nscoord* aSpacing = nsnull) = 0;
 
   /**
    * Copy an image to the RenderingContext

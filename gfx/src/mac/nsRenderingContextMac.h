@@ -105,9 +105,9 @@ public:
   NS_IMETHOD  GetWidth(const char *aString, nscoord &aWidth);
   NS_IMETHOD  GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
   NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth);
-  virtual void 		DrawString(const char *aString, PRUint32 aLength,nscoord aX, nscoord aY,nscoord aWidth);
-  virtual void 		DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,nscoord aWidth);
-  virtual void 		DrawString(const nsString& aString, nscoord aX, nscoord aY,nscoord aWidth);
+  virtual void 		DrawString(const char *aString, PRUint32 aLength,nscoord aX, nscoord aY,nscoord aWidth, const nscoord* aSpacing);
+  virtual void 		DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,nscoord aWidth, const nscoord* aSpacing);
+  virtual void 		DrawString(const nsString& aString, nscoord aX, nscoord aY,nscoord aWidth, const nscoord* aSpacing);
   virtual void 		DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
   virtual void 		DrawImage(nsIImage *aImage, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight); 
   virtual void 		DrawImage(nsIImage *aImage, const nsRect& aRect);

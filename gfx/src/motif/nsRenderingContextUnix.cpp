@@ -1151,9 +1151,11 @@ NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const PRUnichar *aString,
   return NS_OK;
 }
 
-void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY,
-                                    nscoord aWidth)
+void
+nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
+                                     nscoord aX, nscoord aY,
+                                     nscoord aWidth,
+                                     const nscoord* aSpacing)
 {
   nscoord x = aX;
   nscoord y = aY;
@@ -1200,8 +1202,10 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
   }
 }
 
-void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                         nscoord aX, nscoord aY, nscoord aWidth)
+void
+nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                     nscoord aX, nscoord aY, nscoord aWidth,
+                                     const nscoord* aSpacing)
 {
   nscoord x = aX;
   nscoord y = aY;
@@ -1271,10 +1275,12 @@ void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLe
   }
 }
 
-void nsRenderingContextUnix :: DrawString(const nsString& aString,
-                                         nscoord aX, nscoord aY, nscoord aWidth)
+void
+nsRenderingContextUnix :: DrawString(const nsString& aString,
+                                     nscoord aX, nscoord aY, nscoord aWidth,
+                                     const nscoord* aSpacing)
 {
-  DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth);
+  DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
 }
 
 void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)

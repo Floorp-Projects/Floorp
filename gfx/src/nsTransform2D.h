@@ -185,6 +185,17 @@ public:
   void Transform(float *aX, float *aY, float *aWidth, float *aHeight);
   void TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight);
 
+  /**
+   * Scale an array of X/Y coordinates by the X/Y scale factor in the
+   * matrix. The scale is done as if the other coordinate were zero.
+   *
+   * @param aSrc Base of coordinate input array
+   * @param aDst Base of coordinate output array
+   * @param aNumCoords Number of coordinates to scale
+   */
+  void ScaleXCoords(const nscoord* aSrc, PRUint32 aNumCoords, PRIntn* aDst);
+  void ScaleYCoords(const nscoord* aSrc, PRUint32 aNumCoords, PRIntn* aDst);
+
  /**
   * add a translation to a Transform via x, y pair
   *
