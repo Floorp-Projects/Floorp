@@ -43,7 +43,6 @@ if ($status != 0) {
 
 print "Testing simple html to plaintext formatting ...\n";
 $status = system("TestOutput -i text/html -o text/plain -f 34 -w 70 -c OutTestData/simplefmt.out OutTestData/simple.html");
-print "xxxxxxxx Status = " + $status + "\n";
 if ($status != 0) {
   print("Simple formatting test failed.\n");
   $errmsg = "$errmsg simplefmt.out ";
@@ -57,7 +56,7 @@ if ($status != 0) {
 }
 
 # print "Testing wrapped and formatted plaintext ...\n";
-$status = system("# TestOutput -i text/html -o text/plain -f 32 -c OutTestData/plainwrap.out OutTestData/plain.html");
+# $status = system("TestOutput -i text/html -o text/plain -f 32 -c OutTestData/plainwrap.out OutTestData/plain.html");
 # if ($status != 0) {
 #   print "Wrapped plaintext test failed.\n";
 #   $errmsg = "$errmsg plainwrap.out";
