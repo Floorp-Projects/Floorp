@@ -50,6 +50,7 @@
 #include "nsISelfScrollingFrame.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIGfxTextControlFrame.h"
+#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 
 #include "nsIServiceManager.h"
@@ -58,6 +59,8 @@
 #include "nsISessionHistory.h"
 
 #include "nsXULAtoms.h"
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULCommandDispatcher.h"
 
 #undef DEBUG_scroll            // define to see ugly mousewheel messages
 #undef GFXSCROLL_IS_PRIMARY    // define this when the code is enabled to make
@@ -425,6 +428,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
+      printf("Got focus.\n");
+
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
       
@@ -466,6 +471,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     
   case NS_LOSTFOCUS:
     {
+      printf("Lost focus.\n");
+
       // Hold the blur, wait for the focus so we can query the style of the focus
       // target as to what to do with the event. If appropriate we fire the blur
       // at that time.
@@ -474,25 +481,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     
  case NS_ACTIVATE:
     {
-      nsIContent* newFocus;
-      mCurrentTarget->GetContentForEvent(aPresContext, aEvent, &newFocus);
-      if (newFocus) {
-        nsIFocusableContent *focusChange;
-        if (NS_SUCCEEDED(newFocus->QueryInterface(NS_GET_IID(nsIFocusableContent),
-                                                  (void **)&focusChange))) {
-          NS_RELEASE(focusChange);
-          NS_RELEASE(newFocus);
-          break;
-        }
-        NS_RELEASE(newFocus);
-      }
-      
-      //fire focus
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent focusevent;
-      focusevent.eventStructType = NS_EVENT;
-      focusevent.message = NS_FOCUS_CONTENT;
-
+      // If we have a command dispatcher, and if it has a focused window and a
+      // focused element in its focus memory, then restore the focus to those
+      // objects.
       if (!mDocument) {
         nsCOMPtr<nsIPresShell> presShell;
         aPresContext->GetShell(getter_AddRefs(presShell));
@@ -501,65 +492,139 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         }
       }
 
-      if (mDocument) {
-        // NS_IF_RELEASE(gLastFocusedContent);
-        // mCurrentTarget->GetContent(&gLastFocusedContent);
-                
-        mCurrentTarget = nsnull;
+      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+      nsCOMPtr<nsIDOMElement> focusedElement;
+      nsCOMPtr<nsIDOMWindow> focusedWindow;
+      nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(mDocument);
+      if (xulDoc) {
+        // See if we have a command dispatcher attached.
+        xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+        if (commandDispatcher) {
+          // Obtain focus info from the command dispatcher.
+          commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
+          commandDispatcher->GetFocusedElement(getter_AddRefs(focusedElement));
+        }
+      }
 
-        // fire focus on window, not document
+      if (!focusedWindow) {
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
         mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
-        if(!globalObject) break;
-                     
-        globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
+        focusedWindow = do_QueryInterface(globalObject);
       }
+
+      // Focus the DOM window.
+      focusedWindow->Focus();
+
+      if (focusedElement) {
+        // Focus the content node.
+        nsCOMPtr<nsIFocusableContent> focusContent = do_QueryInterface(focusedElement);
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        nsCOMPtr<nsIDocument> document;
+        focusedWindow->GetDocument(getter_AddRefs(domDoc));
+        document = do_QueryInterface(domDoc);
+        nsCOMPtr<nsIPresShell> shell;
+        nsCOMPtr<nsIPresContext> context;
+        shell = getter_AddRefs(document->GetShellAt(0));
+        shell->GetPresContext(getter_AddRefs(context));
+        focusContent->SetFocus(context);
+      }       
+
+      if (commandDispatcher)
+        commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
           
     }
     break;
     
  case NS_DEACTIVATE:
     {
-      nsIContent* newFocus;
-      mCurrentTarget->GetContentForEvent(aPresContext, aEvent, &newFocus);
-      if (newFocus) {
-        nsIFocusableContent *focusChange;
-        if (NS_SUCCEEDED(newFocus->QueryInterface(NS_GET_IID(nsIFocusableContent),
-                                                  (void **)&focusChange))) {
-          NS_RELEASE(focusChange);
-          NS_RELEASE(newFocus);
-          break;
+      if (!mDocument) {
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext->GetShell(getter_AddRefs(presShell));
+        if (presShell) {
+          presShell->GetDocument(&mDocument);
         }
-        NS_RELEASE(newFocus);
       }
-          
-              //fire blur
-              nsEventStatus status = nsEventStatus_eIgnore;
-              nsEvent event;
-              event.eventStructType = NS_EVENT;
-              event.message = NS_BLUR_CONTENT;
 
-              if (!mDocument) {
-                nsCOMPtr<nsIPresShell> presShell;
-                aPresContext->GetShell(getter_AddRefs(presShell));
-                if (presShell) {
-                  presShell->GetDocument(&mDocument);
-                }
-              }
-                          
-              if (mDocument) {
-                mCurrentTarget = nsnull;
+      // We can get a deactivate on an Ender widget.  In this
+      // case, we would like to obtain the DOM Window to start
+      // with by looking at gLastFocusedContent.
+      nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+      if (gLastFocusedContent) {
+        nsCOMPtr<nsIDocument> doc;
+        gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
+        doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+      }
+      else mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+      
+      // Suppress the command dispatcher for the duration of the
+      // de-activation.  This will cause it to remember the last
+      // focused sub-window and sub-element for this top-level
+      // window.
+      nsCOMPtr<nsIDOMWindow> rootWindow;
+      nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+      ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+      nsCOMPtr<nsIDOMDocument> rootDocument;
+      rootWindow->GetDocument(getter_AddRefs(rootDocument));
 
-                // fire focus on window, not document
-                nsCOMPtr<nsIScriptGlobalObject> globalObject;
-                mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-                mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-                if(!globalObject) break;
-                     
-                globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-              }
-                          
+      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+      nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+      if (xulDoc) {
+        // See if we have a command dispatcher attached.
+        xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+        if (commandDispatcher) {
+          // Suppress the command dispatcher.
+          commandDispatcher->SetSuppressFocus(PR_TRUE);
+        }
+      }
+
+      // Now fire blurs.  We have to fire a blur on the focused window
+      // and on the focused element if there is one.
+      if (gLastFocusedDocument && gLastFocusedPresContext) {
+        // Blur the element.
+        if (gLastFocusedContent) {
+          // Retrieve this content node's pres context. it can be out of sync in
+          // the Ender widget case.
+          nsCOMPtr<nsIDocument> doc;
+          gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
+          if (doc) {
+            nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+            nsCOMPtr<nsIPresContext> oldPresContext;
+            shell->GetPresContext(getter_AddRefs(oldPresContext));
+
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsEvent event;
+            event.eventStructType = NS_EVENT;
+            event.message = NS_BLUR_CONTENT;
+            nsCOMPtr<nsIEventStateManager> esm;
+            oldPresContext->GetEventStateManager(getter_AddRefs(esm));
+            esm->SetFocusedContent(gLastFocusedContent);
+            gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+            esm->SetFocusedContent(nsnull);
+            NS_RELEASE(gLastFocusedContent);
+          }
+        }
+
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_BLUR_CONTENT;
+    
+        // fire blur on document and window
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        if(!globalObject) break;
+             
+        globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        mCurrentTarget = nsnull;
+
+        // Now clear our our global variables
+        NS_RELEASE(gLastFocusedDocument);
+        gLastFocusedPresContext = nsnull;
+      }             
+
+      if (commandDispatcher)
+        commandDispatcher->SetSuppressFocus(PR_FALSE);
     } 
     break;
     
