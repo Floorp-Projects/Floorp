@@ -130,6 +130,8 @@ nsMsgDBView::nsMsgDBView()
   m_deletingRows = PR_FALSE;
   mRemovingRow = PR_FALSE;
   mIsSearchView = PR_FALSE;
+  m_saveRestoreSelectionDepth = 0;
+
   // initialize any static atoms or unicode strings
   if (gInstanceCount == 0) 
   {
@@ -162,7 +164,7 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   // priority strings
   kHighestPriorityString = GetString(NS_LITERAL_STRING("priorityHighest").get());
   kHighPriorityString = GetString(NS_LITERAL_STRING("priorityHigh").get());
-  kLowestPriorityString =  GetString(NS_LITERAL_STRING("priorityLowest").get());
+  kLowestPriorityString = GetString(NS_LITERAL_STRING("priorityLowest").get());
   kLowPriorityString = GetString(NS_LITERAL_STRING("priorityLow").get());
   kNormalPriorityString = GetString(NS_LITERAL_STRING("priorityNormal").get());
 
@@ -681,8 +683,13 @@ nsresult nsMsgDBView::FetchLabel(nsIMsgHdr *aHdr, PRUnichar ** aLabelString)
   return NS_OK;
 }
 
-nsresult nsMsgDBView::SaveSelection(nsMsgKeyArray *aMsgKeyArray)
+nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKeyArray *aMsgKeyArray)
 {
+  // we don't do anything on nested Save / Restore calls.
+  m_saveRestoreSelectionDepth++;
+  if (m_saveRestoreSelectionDepth != 1)
+    return NS_OK;
+  
   if (!mOutlinerSelection)
     return NS_OK;
 
@@ -702,16 +709,22 @@ nsresult nsMsgDBView::SaveSelection(nsMsgKeyArray *aMsgKeyArray)
     aMsgKeyArray->Add(msgKey);
   }
 
+  // clear the selection, we'll manually restore it later.
+  if (mOutlinerSelection)
+    mOutlinerSelection->ClearSelection();
+
   return NS_OK;
 }
 
 nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
 {
-  if (!mOutlinerSelection)  // don't assert.
+  // we don't do anything on nested Save / Restore calls.
+  m_saveRestoreSelectionDepth--;
+  if (m_saveRestoreSelectionDepth)
     return NS_OK;
 
-  // unfreeze selection.
-  mOutlinerSelection->ClearSelection(); // clear the existing selection.
+  if (!mOutlinerSelection)  // don't assert.
+    return NS_OK;
   
   // turn our message keys into corresponding view indices
   PRInt32 arraySize = aMsgKeyArray->GetSize();
@@ -743,7 +756,7 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
       if (mOutliner) mOutliner->EnsureRowIsVisible(currentViewPosition);
     }
   }
- 
+
   for (PRInt32 index = 0; index < arraySize; index ++)
   {
     newViewPosition = FindKey(aMsgKeyArray->GetAt(index), PR_FALSE);  
@@ -753,6 +766,7 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
       mOutlinerSelection->RangedSelect(newViewPosition, newViewPosition, PR_TRUE /* augment */);
   }
 
+  // unfreeze selection.
   mOutlinerSelection->SetSelectEventsSuppressed(PR_FALSE);
   return NS_OK;
 }
@@ -904,6 +918,16 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
     }
     else
       numSelected = 0; // selection seems bogus, so set to 0.
+  }
+  else {
+    // if we have zero or multiple items selected, we shouldn't be displaying any message
+    m_currentlyDisplayedMsgKey = nsMsgKey_None;
+
+    // if we used to have one item selected, and now we have more than one, we should clear the message pane.
+    nsCOMPtr <nsIMsgMessagePaneController> controller;
+    if ((mNumSelectedRows == 1) && (numSelected > 1) && mMsgWindow && NS_SUCCEEDED(mMsgWindow->GetMessagePaneController(getter_AddRefs(controller))) && controller) {
+      controller->ClearMsgPane();
+    }
   }
 
   // determine if we need to push command update notifications out to the UI or not.
@@ -1507,14 +1531,18 @@ NS_IMETHODIMP nsMsgDBView::Close()
 {
   RemoveLabelPrefObservers();
 
-  if (mOutliner) 
-    mOutliner->RowCountChanged(0, -GetSize());
+  PRInt32 oldSize = GetSize();
   // this is important, because the outliner will ask us for our
   // row count, which get determine from the number of keys.
   m_keys.RemoveAll();
   // be consistent
   m_flags.RemoveAll();
   m_levels.RemoveAll();
+
+  // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
+  if (mOutliner) 
+    mOutliner->RowCountChanged(0, -oldSize);
+
   ClearHdrCache();
   if (m_db)
   {
@@ -1800,14 +1828,16 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
 
 NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, PRBool *selectable_p, nsMsgViewCommandCheckStateValue *selected_p)
 {
-  nsUInt32Array selection;
-
-  GetSelectedIndices(&selection);
-
-  //nsMsgViewIndex *indices = selection.GetData();
-  PRInt32 numindices = selection.GetSize();
-
   nsresult rv = NS_OK;
+
+  PRBool haveSelection;
+  PRInt32 rangeCount;
+  // if range count is non-zero, we have at least one item selected, so we have a selection
+  if (mOutlinerSelection && NS_SUCCEEDED(mOutlinerSelection->GetRangeCount(&rangeCount)) && rangeCount > 0)
+    haveSelection = PR_TRUE;
+  else 
+    haveSelection = PR_FALSE;
+
   switch (command)
   {
   case nsMsgViewCommandType::markMessagesRead:
@@ -1825,12 +1855,15 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
   case nsMsgViewCommandType::label3:
   case nsMsgViewCommandType::label4:
   case nsMsgViewCommandType::label5:
-    *selectable_p = (numindices > 0);
+    *selectable_p = haveSelection;
     break;
   case nsMsgViewCommandType::cmdRequiringMsgBody:
     {
+    nsUInt32Array selection;
+    GetSelectedIndices(&selection);
+    PRInt32 numindices = selection.GetSize();
     nsMsgViewIndex *indices = selection.GetData();
-    *selectable_p = (numindices > 0) && (!WeAreOffline() || OfflineMsgSelected(indices, numindices));
+    *selectable_p = haveSelection && (!WeAreOffline() || OfflineMsgSelected(indices, numindices));
     }
     break;
   case nsMsgViewCommandType::downloadFlaggedForOffline:
@@ -2004,6 +2037,8 @@ nsresult nsMsgDBView::RemoveByIndex(nsMsgViewIndex index)
 	m_flags.RemoveAt(index);
 	m_levels.RemoveAt(index);
 
+  // the call to NoteChange() has to happen after we remove the key
+  // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
   if (!m_deletingRows)
     NoteChange(index, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
   
@@ -3599,13 +3634,19 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
 	  m_keys.Add(msgKey);
 	  m_flags.Add(flags);
       m_levels.Add(levelToAdd);
-      NoteChange(m_keys.GetSize() - 1, 1, nsMsgViewNotificationCode::insertOrDelete);
+
+      // the call to NoteChange() has to happen after we add the key
+      // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
+      NoteChange(GetSize() - 1, 1, nsMsgViewNotificationCode::insertOrDelete);
 	}
 	else
 	{
       m_keys.InsertAt(0, msgKey);
       m_flags.InsertAt(0, flags);
       m_levels.InsertAt(0, levelToAdd);
+
+      // the call to NoteChange() has to happen after we insert the key
+      // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
       NoteChange(0, 1, nsMsgViewNotificationCode::insertOrDelete);
 	}
 	m_sortValid = PR_FALSE;
@@ -3622,6 +3663,9 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
     }
 #endif
     m_levels.InsertAt(insertIndex, level);
+
+    // the call to NoteChange() has to happen after we add the key
+    // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
     NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
   }
   OnHeaderAddedOrDeleted();
@@ -3967,6 +4011,8 @@ void	nsMsgDBView::NoteChange(nsMsgViewIndex firstLineChanged, PRInt32 numChanged
     case nsMsgViewNotificationCode::insertOrDelete:
       if (numChanged < 0)
         mRemovingRow = PR_TRUE;
+      // the caller needs to have adjusted m_keys before getting here, since
+      // RowCountChanged() will call our GetRowCount()
       mOutliner->RowCountChanged(firstLineChanged, numChanged);
       mRemovingRow = PR_FALSE;
     case nsMsgViewNotificationCode::all:
@@ -4836,7 +4882,10 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
         endRangeArray[i] -= delta;
         PRInt32 numRows = endRangeArray[i]-startRangeArray[i]+1;
         delta += numRows;
-        NoteChange(startRangeArray[i], -1*numRows, nsMsgViewNotificationCode::insertOrDelete);
+
+        // the call to NoteChange() has to happen after we are done removing the keys
+        // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
+        NoteChange(startRangeArray[i], -numRows, nsMsgViewNotificationCode::insertOrDelete);
       }
       PR_FREEIF(startRangeArray);
       PR_FREEIF(endRangeArray);
@@ -4904,7 +4953,12 @@ nsresult nsMsgDBView::AdjustRowCount(PRInt32 rowCountBeforeSort, PRInt32 rowCoun
   if (rowChange) {
     // this is not safe to use when you have a selection
     // RowCountChanged() will call AdjustSelection()
-    if (mOutliner) mOutliner->RowCountChanged(0, rowChange);
+    PRUint32 numSelected = 0;
+    GetNumSelected(&numSelected);
+    NS_ASSERTION(numSelected == 0, "it is not save to call AdjustRowCount() when you have a selection");
+
+    if (mOutliner)
+      mOutliner->RowCountChanged(0, rowChange);
   }
   return NS_OK;
 }
@@ -4975,11 +5029,20 @@ NS_IMETHODIMP nsMsgDBView::IsSorted(PRBool *_retval)
 
 NS_IMETHODIMP nsMsgDBView::SelectMsgByKey(nsMsgKey aKey)
 {
+  // use SaveAndClearSelection()
+  // and RestoreSelection() so that we'll clear the current selection
+  // but pass in a different key array so that we'll
+  // select (and load) the desired message
+  
+  nsMsgKeyArray preservedSelection;
+  nsresult rv = SaveAndClearSelection(&preservedSelection);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // now, restore our desired selection
   nsMsgKeyArray keyArray;
   keyArray.Add(aKey);
 
-  // use RestoreSelection() so that we'll select (and load) the desired message
-  nsresult rv = RestoreSelection(&keyArray);
+  rv = RestoreSelection(&keyArray);
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }

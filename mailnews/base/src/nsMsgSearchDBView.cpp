@@ -178,8 +178,10 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
   m_keys.Add(msgKey);
   m_levels.Add(0);
   m_flags.Add(msgFlags);
+
+  // this needs to be called after we add the key, since RowCountChanged() will call our GetRowCount()
   if (mOutliner)
-    mOutliner->RowCountChanged(m_keys.GetSize() - 1, 1);
+    mOutliner->RowCountChanged(GetSize() - 1, 1);
 
   return rv;
 }
@@ -195,15 +197,16 @@ nsMsgSearchDBView::OnSearchDone(nsresult status)
 NS_IMETHODIMP
 nsMsgSearchDBView::OnNewSearch()
 {
-  if (mOutliner)
-  {
-    PRInt32 viewSize = m_keys.GetSize();
-    mOutliner->RowCountChanged(0, -viewSize); // all rows gone.
-  }
+  PRInt32 oldSize = GetSize();
+
   m_folders->Clear();
   m_keys.RemoveAll();
   m_levels.RemoveAll();
   m_flags.RemoveAll();
+
+  // needs to happen after we remove the keys, since RowCountChanged() will call our GetRowCount()
+  if (mOutliner) 
+    mOutliner->RowCountChanged(0, -oldSize);
 
 //    mSearchResults->Clear();
     return NS_OK;
@@ -457,7 +460,8 @@ NS_IMETHODIMP nsMsgSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgView
     nsresult rv;
 
     nsMsgKeyArray preservedSelection;
-    SaveSelection(&preservedSelection);
+    SaveAndClearSelection(&preservedSelection);
+
     PRInt32 rowCountBeforeSort = GetSize();
 
     if (!rowCountBeforeSort)

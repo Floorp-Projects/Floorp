@@ -138,12 +138,12 @@ protected:
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
   PRUint32 mNumSelectedRows; // we cache this to determine when to push command status notifications.
-  PRBool   mSuppressMsgDisplay; // set when the message pane is collapsed
-  PRBool   mSuppressCommandUpdating;
-  PRBool   mIsSearchView; // tells if the search view is loaded.
-  PRBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to suppress msg loading.
+  PRPackedBool   mSuppressMsgDisplay; // set when the message pane is collapsed
+  PRPackedBool   mSuppressCommandUpdating;
+  PRPackedBool   mIsSearchView; // tells if the search view is loaded.
+  PRPackedBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to suppress msg loading.
                         // during delete/move operations.
-  PRBool  mOfflineMsgSelected;
+  PRPackedBool  mOfflineMsgSelected;
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
   nsresult FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
@@ -157,16 +157,17 @@ protected:
   // Save and Restore Selection are a pair of routines you should
   // use when performing an operation which is going to change the view
   // and you want to remember the selection. (i.e. for sorting). 
-  // Call SaveSelection and we'll give you an array of msg keys for
-  // the current selection. We also freeze selection. When  you are done
-  // changing the view, call RestoreSelection passing in the same array
+  // Call SaveAndClearSelection and we'll give you an array of msg keys for
+  // the current selection. We also freeze and clear the selection. 
+  // When you are done changing the view, 
+  // call RestoreSelection passing in the same array
   // and we'll restore the selection AND unfreeze selection in the UI.
-  nsresult SaveSelection(nsMsgKeyArray * aMsgKeyArray);
+  nsresult SaveAndClearSelection(nsMsgKeyArray * aMsgKeyArray);
   nsresult RestoreSelection(nsMsgKeyArray * aMsgKeyArray);
 
   // this is not safe to use when you have a selection
   // RowCountChanged() will call AdjustSelection() 
-  // it should be called after SaveSelection() and before
+  // it should be called after SaveAndClearSelection() and before
   // RestoreSelection()
   nsresult AdjustRowCount(PRInt32 rowCountBeforeSort, PRInt32 rowCountAfterSort);
 
@@ -312,13 +313,15 @@ protected:
   nsMsgKey                m_currentlyDisplayedMsgKey;
   // if we're deleting messages, we want to hold off loading messages on selection changed until the delete is done
   // and we want to batch notifications.
-  PRBool                  m_deletingRows;
-  
-  nsCOMPtr <nsIMsgFolder> m_folder;
-  PRBool mIsSpecialFolder; // for special folders, the Sender column really shows recipients.
-  PRBool mIsNews;          // we have special icons for news, and for news, we show lines instead of size
+  PRPackedBool m_deletingRows;
+  PRPackedBool mIsSpecialFolder; // for special folders, the Sender column really shows recipients.
+  PRPackedBool mIsNews;          // we have special icons for news, and for news, we show lines instead of size
+  PRPackedBool m_sortValid;
+  PRUint8      m_saveRestoreSelectionDepth;
+
   nsCOMPtr <nsIMsgDatabase> m_db;
-  PRBool		m_sortValid;
+  nsCOMPtr <nsIMsgFolder> m_folder;
+  
   nsMsgViewSortTypeValue  m_sortType;
   nsMsgViewSortOrderValue m_sortOrder;
   nsMsgViewFlagsTypeValue m_viewFlags;

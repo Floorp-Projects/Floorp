@@ -388,7 +388,7 @@ nsMessengerWinIntegration::UpdateRegistryWithCurrent()
     return NS_OK;
   }
 
-  // Commadliner has to be built in the form of statement
+  // commandliner has to be built in the form of statement
   // which can be open the mailer app to the default user account
   // For given profile 'foo', commandliner will be built as 
   // ""<absolute path to application>" -p foo -mail" where absolute

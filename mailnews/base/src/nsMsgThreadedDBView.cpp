@@ -107,10 +107,12 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
   {
     // restore saved id array and flags array
     // first, remove all the search hits
-    PRInt32 oldSize = m_keys.GetSize();
+    PRInt32 oldSize = GetSize();
     m_keys.RemoveAll();
     m_flags.RemoveAll();
     m_levels.RemoveAll();
+
+    // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
     if (mOutliner)
       mOutliner->RowCountChanged(0, -oldSize);
 
@@ -122,8 +124,9 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
     InitSort(m_sortType, m_sortOrder);
 
     // now, account for adding all the pre search items back.
+    // this needs to happen after we add back the keys, as RowCountChanged() will call our GetRowCount()
     if (mOutliner)
-      mOutliner->RowCountChanged(0, m_keys.GetSize());
+      mOutliner->RowCountChanged(0, GetSize());
   }
   else
   {
@@ -211,7 +214,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
 {
   nsresult rv;
   nsMsgKeyArray preservedSelection;
-  SaveSelection(&preservedSelection);
+  SaveAndClearSelection(&preservedSelection);
   
   PRInt32 rowCountBeforeSort = GetSize();
 
@@ -596,7 +599,11 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
           m_flags.InsertAt(insertIndex, newFlags, 1);
           m_levels.InsertAt(insertIndex, level);
           NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
+
+          // the call to NoteChange() has to happen after we add the key
+          // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
           NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
+
           if (level == 0)
             ExpandByIndex(threadIndex, nsnull);
         }
@@ -785,8 +792,10 @@ nsMsgThreadedDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
   m_keys.Add(msgKey);
   m_levels.Add(0);
   m_flags.Add(msgFlags);
+
+  // this needs to happen after we add the key, as RowCountChanged() will call our GetRowCount()
   if (mOutliner)
-    mOutliner->RowCountChanged(m_keys.GetSize() - 1, 1);
+    mOutliner->RowCountChanged(GetSize() - 1, 1);
 
   return NS_OK;
 }
@@ -804,12 +813,15 @@ nsMsgThreadedDBView::OnNewSearch()
   if (!mIsSearchView)
     SavePreSearchInfo();  //save the folder view to reload it later. 
   
-  PRInt32 oldSize = m_keys.GetSize();
+  PRInt32 oldSize = GetSize();
+
   m_keys.RemoveAll();
   m_levels.RemoveAll();
   m_flags.RemoveAll();
+  
+  // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
   if (mOutliner)
-    mOutliner->RowCountChanged(0, -oldSize); // all rows gone.
+    mOutliner->RowCountChanged(0, -oldSize);
 
   ClearPrevIdArray(); // previous cached info about non threaded display is not useful
   mIsSearchView = PR_TRUE;  
