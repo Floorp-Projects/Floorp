@@ -41,6 +41,7 @@
        (production :identifier (get) identifier-get)
        (production :identifier (set) identifier-set)
        (production :identifier (constructor) identifier-constructor)
+       (production :identifier (box) identifier-box)
        
        (production :qualified-identifier (:identifier) qualified-identifier-identifier)
        (production :qualified-identifier (:qualified-identifier \:\: :identifier) qualified-identifier-multi-level)
@@ -125,10 +126,15 @@
        (production :arguments (\( :argument-list \)) arguments-argument-list)
        
        (production :argument-list () argument-list-none)
-       (production :argument-list (:argument-list-prefix) argument-list-some)
+       (production :argument-list (:argument-list-prefix) argument-list-unnamed)
+       (production :argument-list (:named-argument-list-prefix) argument-list-named)
        
        (production :argument-list-prefix ((:assignment-expression allow-in)) argument-list-prefix-one)
        (production :argument-list-prefix (:argument-list-prefix \, (:assignment-expression allow-in)) argument-list-prefix-more)
+       
+       (production :named-argument-list-prefix (:literal-field) named-argument-list-prefix-one)
+       (production :named-argument-list-prefix (:argument-list-prefix \, :literal-field) named-argument-list-prefix-unnamed)
+       (production :named-argument-list-prefix (:named-argument-list-prefix \, :literal-field) named-argument-list-prefix-more)
        
        
        (%subsection "Prefix Unary Operators")
@@ -290,7 +296,7 @@
        
        (%subsection "Block")
        (production :annotated-block (:block) annotated-block-block)
-       (production :annotated-block (local :block) annotated-block-local-block)
+       (production :annotated-block (:visibility :~ :block) annotated-block-visibility-block)
        
        (production :block ({ :statements }) block-statements)
        
@@ -407,14 +413,14 @@
        (production :import-item (protected :identifier = :import-source) import-item-protected-import-source)
        
        (production :import-source ((:non-assignment-expression no-in)) import-source-no-version)
-       (production :import-source ((:non-assignment-expression no-in) \: :version) import-source-version)
+       (production :import-source ((:non-assignment-expression no-in) \: $string) import-source-version)
        
        
        (%section "Definitions")
-       (production (:annotated-definition :omega_3) (:visibility (:definition :omega_3)) annotated-definition-visibility-and-definition)
+       (production (:annotated-definition :omega_3) (:visibility :~ (:definition :omega_3)) annotated-definition-visibility-and-definition)
        (production (:annotated-definition :omega_3) ((:definition :omega_3)) annotated-definition-definition)
        
-       (production (:definition :omega_3) (:version-definition (:semicolon :omega_3)) definition-version-definition)
+       ;(production (:definition :omega_3) (:version-definition (:semicolon :omega_3)) definition-version-definition)
        (production (:definition :omega_3) (:variable-definition (:semicolon :omega_3)) definition-variable-definition)
        (production (:definition :omega_3) (:function-definition) definition-function-definition)
        (production (:definition :omega_3) ((:member-definition :omega_3)) definition-member-definition)
@@ -423,9 +429,12 @@
        
        (%subsection "Visibility Specifications")
        (production :visibility (local) visibility-local)
+       (production :visibility (box) visibility-box)
        (production :visibility (private) visibility-private)
        (production :visibility (package) visibility-package)
-       ;(production :visibility ($identifier) visibility-identifier)
+       (production :visibility (public) visibility-public)
+       (production :visibility ($identifier) visibility-user-defined)
+       #|
        (production :visibility (public :versions-and-renames) visibility-public)
        
        (production :versions-and-renames () versions-and-renames-none)
@@ -455,6 +464,7 @@
        
        (production :version-list (:version) version-list-one)
        (production :version-list (:version-list \, :version) version-list-more)
+       |#
        
        
        (%subsection "Variable Definition")
@@ -484,8 +494,8 @@
        
        (production :named-function (function :identifier :function-signature :block) named-function-signature-and-body)
        
-       (production :accessor-function (function get :identifier :function-signature :block) accessor-function-getter)
-       (production :accessor-function (function set :identifier :function-signature :block) accessor-function-setter)
+       (production :accessor-function (function get :~ :identifier :function-signature :block) accessor-function-getter)
+       (production :accessor-function (function set :~ :identifier :function-signature :block) accessor-function-setter)
 
        (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures)
        
@@ -510,7 +520,8 @@
        (production :optional-parameter ((:typed-identifier allow-in) = (:assignment-expression allow-in)) optional-parameter-assignment-expression)
        
        (production :rest-parameter (\.\.\.) rest-parameter-none)
-       (production :rest-parameter (\.\.\. :identifier) rest-parameter-identifier)
+       (production :rest-parameter (\.\.\. (:typed-identifier allow-in)) rest-parameter-typed-identifier)
+       (production :rest-parameter (\.\.\. (:typed-identifier allow-in) = (:assignment-expression allow-in)) rest-parameter-assignment-expression)
        
        (production :result-signature () result-signature-none)
        (production :result-signature (\: (:type-expression allow-in)) result-signature-colon-and-type-expression)
@@ -522,25 +533,25 @@
        (production (:member-definition :omega_3) ((:method-definition :omega_3)) member-definition-method-definition)
        (production (:member-definition :omega_3) (:constructor-definition) member-definition-constructor-definition)
        
-       (production :field-definition (field (:variable-binding-list allow-in)) field-definition-variable-binding-list)
+       (production :field-definition (field :~ (:variable-binding-list allow-in)) field-definition-variable-binding-list)
        
        (production (:method-definition :omega_3) (:concrete-method-definition) method-definition-concrete-method-definition)
        (production (:method-definition :omega_3) ((:abstract-method-definition :omega_3)) method-definition-abstract-method-definition)
        
-       (production :concrete-method-definition (:method-prefix :method-name :function-signature :block) concrete-method-definition-signature-and-body)
+       (production :concrete-method-definition (:method-prefix :~ :method-name :function-signature :block) concrete-method-definition-signature-and-body)
        
-       (production (:abstract-method-definition :omega_3) (:method-prefix :method-name :function-signature (:semicolon :omega_3)) abstract-method-definition-signature)
+       (production (:abstract-method-definition :omega_3) (:method-prefix :~ :method-name :function-signature (:semicolon :omega_3)) abstract-method-definition-signature)
        
        (production :method-prefix (method) method-prefix-method)
-       (production :method-prefix (override method) method-prefix-override-method)
-       (production :method-prefix (final method) method-prefix-final-method)
-       (production :method-prefix (final override method) method-prefix-final-override-method)
+       (production :method-prefix (override :~ method) method-prefix-override-method)
+       (production :method-prefix (final :~ method) method-prefix-final-method)
+       (production :method-prefix (final :~ override :~ method) method-prefix-final-override-method)
        
        (production :method-name (:identifier) method-name-method)
-       (production :method-name (get :identifier) method-name-getter-method)
-       (production :method-name (set :identifier) method-name-setter-method)
+       (production :method-name (get :~ :identifier) method-name-getter-method)
+       (production :method-name (set :~ :identifier) method-name-setter-method)
        
-       (production :constructor-definition (constructor :constructor-name :parameter-signature :block) constructor-definition-signature-and-body)
+       (production :constructor-definition (constructor :~ :constructor-name :parameter-signature :block) constructor-definition-signature-and-body)
        
        (production :constructor-name (new) constructor-name-new)
        (production :constructor-name (:identifier) constructor-name-identifier)
