@@ -77,6 +77,9 @@ ICONS += \
 ICONS += $(wildcard images/hidecolumn*.gif images/showcolumn*.gif) \
 	images/oparent.gif
 
+# Icons referenced in rosetta.h
+ICONS += $(wildcard images/M_*.gif)
+
 MAIL_OR_COMPOSE_ICONS = $(wildcard images/MNC*.gif \
 								   images/MNTB_Next*.gif \
 								   images/MN_*)
