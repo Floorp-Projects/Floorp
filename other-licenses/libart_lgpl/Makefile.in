@@ -118,6 +118,11 @@ EXPORTS = \
 
 FORCE_SHARED_LIB=1
 
+# Since libart does not mark its exported functions, don't make symbols
+# hidden by default.
+
+VISIBILITY_FLAGS =
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES	+= -DLIBART_COMPILATION
