@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.39 $ $Date: 2002/08/27 23:38:29 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.40 $ $Date: 2002/08/29 22:11:06 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -293,7 +293,7 @@ nssCertificate_GetDecoding
     return c->decoding;
 }
 
-static NSSCertificate *
+static NSSCertificate **
 filter_subject_certs_for_id
 (
   NSSCertificate **subjectCerts, 
@@ -303,16 +303,21 @@ filter_subject_certs_for_id
     NSSCertificate **si;
     NSSCertificate *rvCert = NULL;
     nssDecodedCert *dcp;
+    int nextOpenSlot = 0;
+
     /* walk the subject certs */
     for (si = subjectCerts; *si; si++) {
 	dcp = nssCertificate_GetDecoding(*si);
 	if (dcp->matchIdentifier(dcp, id)) {
 	    /* this cert has the correct identifier */
-	    rvCert = nssCertificate_AddRef(*si);
-	    break;
+	    subjectCerts[nextOpenSlot++] = *si;
+	} else {
+	    NSSCertificate_Destroy(*si);
+	    *si = NULL;
 	}
     }
-    return rvCert;
+    subjectCerts[nextOpenSlot] = NULL;
+    return subjectCerts;
 }
 
 static NSSCertificate *
@@ -363,14 +368,13 @@ find_cert_issuer
 	    issuerID = dc->getIssuerIdentifier(dc);
 	}
 	if (issuerID) {
-	    issuer = filter_subject_certs_for_id(certs, issuerID);
+	    certs = filter_subject_certs_for_id(certs, issuerID);
 	    nssItem_Destroy(issuerID);
-	} else {
-	    issuer = nssCertificateArray_FindBestCertificate(certs,
-	                                                     timeOpt,
-	                                                     usage,
-	                                                     policiesOpt);
-	}
+	} 
+	issuer = nssCertificateArray_FindBestCertificate(certs,
+	                                                 timeOpt,
+	                                                 usage,
+	                                                 policiesOpt);
 	nssCertificateArray_Destroy(certs);
     }
     nssArena_Destroy(arena);
