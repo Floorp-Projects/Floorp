@@ -15,6 +15,7 @@
 <!ENTITY  minText "minutes">
 <!ENTITY  exterLegend.label "External Editors">
 <!ENTITY  htmlSource "HTML Source:">
+<!ENTITY  imageeditor.label "Images:">
 <!ENTITY  chooseButton.label "Choose...">
 <!ENTITY  pageColorHeader "Default Page Colors">
 <!ENTITY  backgroundImage.label "Background Image">
