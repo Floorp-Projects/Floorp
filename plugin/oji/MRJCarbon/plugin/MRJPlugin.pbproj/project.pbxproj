@@ -55,7 +55,6 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../MRJSDK/JavaFrameworks/JavaVM ../MRJSDK/JavaFrameworks/JavaEmbedding ../../../../dist/sdk/xpcom/include ../../../../dist/include/caps ../../../../dist/include/java ../../../../dist/include/js ../../../../dist/include/nspr ../../../../dist/include/oji ../../../../dist/include/plugin ../../../../dist/include/xpcom ../../../../dist/include/xpconnect /Developer/Headers/FlatCarbon";
-				INSTALL_PATH = "$(HOME)/Library/Bundles";
 				LIBRARY_SEARCH_PATHS = /usr/lib;
 				OTHER_CFLAGS = "-DXP_MACOSX=1 -DNO_X11=1 -DUSE_SYSTEM_CONSOLE=1";
 				OTHER_LDFLAGS = "";
@@ -71,7 +70,6 @@
 			);
 			isa = PBXBundleTarget;
 			name = MRJPlugin;
-			productInstallPath = "$(HOME)/Library/Bundles";
 			productName = MRJPlugin;
 			productReference = 4F9091AB011F3BD104CA0E50;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -403,20 +401,20 @@
 				F59D148502AC3AC401000104,
 			);
 			isa = PBXGroup;
-			name = MRJPlugin.jar;
+			name = Classes;
 			refType = 4;
 		};
 		F59D146D02AC308301000104 = {
 			isa = PBXFileReference;
 			name = _Dialogs.rsrc;
 			path = Resources/_Dialogs.rsrc;
-			refType = 4;
+			refType = 2;
 		};
 		F59D146E02AC308301000104 = {
 			isa = PBXFileReference;
 			name = _Strings.rsrc;
 			path = Resources/_Strings.rsrc;
-			refType = 4;
+			refType = 2;
 		};
 		F59D146F02AC308301000104 = {
 			fileRef = F59D146D02AC308301000104;
@@ -435,7 +433,6 @@
 			buildPhases = (
 			);
 			buildSettings = {
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -463,7 +460,7 @@
 			isa = PBXFileReference;
 			name = Makefile;
 			path = Resources/Makefile;
-			refType = 4;
+			refType = 2;
 		};
 		F59D147402AC39EF01000104 = {
 			isa = PBXLibraryReference;
@@ -481,12 +478,11 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = MRJPlugin.jar;
+				PRODUCT_NAME = MRJPlugin;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
