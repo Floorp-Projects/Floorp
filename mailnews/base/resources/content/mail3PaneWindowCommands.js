@@ -690,19 +690,22 @@ function GetNumSelectedMessages()
     }
 }
 
-var lastFocusedElement=null;
+var gLastFocusedElement=null;
 
 function FocusRingUpdate_Mail()
 {
-  //dump ('entering focus ring update\n');
+  // WhichPaneHasFocus() uses on top.document.commandDispatcher.focusedElement
+  // to determine which pane has focus
+  // if the focusedElement is null, we're here on a blur.
+  // nsFocusController::Blur() calls nsFocusController::SetFocusedElement(null), 
+  // which will update any commands listening for "focus".
+  // we really only care about nsFocusController::Focus() happens, 
+  // which calls nsFocusController::SetFocusedElement(element)
   var currentFocusedElement = WhichPaneHasFocus();
   if (!currentFocusedElement)
-  {
-     // dump ('setting default focus to message pane');
-     currentFocusedElement = GetMessagePane();
-  }
+    return;
     
-	if(currentFocusedElement != lastFocusedElement) {
+	if (currentFocusedElement != gLastFocusedElement) {
         if( currentFocusedElement == GetThreadOutliner()) {
             // XXX fix me
             GetThreadOutliner().setAttribute("focusring","true");
@@ -725,13 +728,11 @@ function FocusRingUpdate_Mail()
             GetMessagePane().setAttribute("focusring","false");
         }
         
-        lastFocusedElement=currentFocusedElement;
+        gLastFocusedElement = currentFocusedElement;
 
         // since we just changed the pane with focus we need to update the toolbar to reflect this
         document.commandDispatcher.updateCommands('mail-toolbar');
     }
-//    else
-//      dump('current focused element matched last focused element\n');
 }
 
 function MessagePaneHasFocus()
@@ -773,22 +774,24 @@ function IsSubWindowOf(search, wind)
 }
 
 
-function WhichPaneHasFocus(){
-	var whichPane= null;
+function WhichPaneHasFocus()
+{
 	var currentNode = top.document.commandDispatcher.focusedElement;	
-
+  if (!currentNode) 
+    return null;
+  
   var threadOutliner = GetThreadOutliner();
   var folderOutliner = GetFolderOutliner();
   var messagePane = GetMessagePane();
     
 	while (currentNode) {
-        if (currentNode === threadOutliner ||
-            currentNode === folderOutliner ||
-            currentNode === messagePane)
-            return currentNode;
+    if (currentNode === threadOutliner ||
+        currentNode === folderOutliner ||
+        currentNode === messagePane)
+      return currentNode;
 					
-			currentNode = currentNode.parentNode;
-    }
+		currentNode = currentNode.parentNode;
+  }
 	
 	return null;
 }
