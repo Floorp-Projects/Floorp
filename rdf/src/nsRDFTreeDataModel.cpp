@@ -75,38 +75,33 @@ nsRDFTreeDataModel::QueryInterface(const nsIID& iid, void** result)
 }
 
 ////////////////////////////////////////////////////////////////////////
+// nsIDataModel implementation -- delgates to superclass
 
-#if 0
 NS_IMETHODIMP
 nsRDFTreeDataModel::InitFromURL(const nsString& url)
 {
-    SetDB(url);
-    SetRoot(url);
-    CreateColumns();
-    return NS_OK;
+    return nsRDFDataModel::InitFromURL(url);
 }
 
 
 NS_IMETHODIMP
 nsRDFTreeDataModel::InitFromResource(nsIDMItem* pResource)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModel::InitFromResource(pResource);
 }
 
 
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetDMWidget(nsIDMWidget*& widget) const
 {
-    widget = GetWidget();
-    return NS_OK;
+    return nsRDFDataModel::GetDMWidget(widget);
 }
 
 
 NS_IMETHODIMP
 nsRDFTreeDataModel::SetDMWidget(nsIDMWidget* widget)
 {
-    SetWidget(widget);
-    return NS_OK;
+    return nsRDFDataModel::SetDMWidget(widget);
 }
 
 
@@ -114,19 +109,18 @@ nsRDFTreeDataModel::SetDMWidget(nsIDMWidget* widget)
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetStringPropertyValue(nsString& value, const nsString& property) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModel::GetStringPropertyValue(value, property);
 }
 
 
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetIntPropertyValue(PRInt32& value, const nsString& property) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModel::GetIntPropertyValue(value, property);
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////
-
+// nsITreeDataModel interface
 
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetVisibleColumnCount(PRUint32& count) const
@@ -219,6 +213,7 @@ nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
 
 
 ////////////////////////////////////////////////////////////////////////
+// nsRDFTreeDataModel implementation methods
 
 void
 nsRDFTreeDataModel::CreateColumns(void)
@@ -271,8 +266,6 @@ nsRDFTreeDataModel::CreateColumns(void)
     }	
     RDF_DisposeCursor(cursor);
 }
-
-////////////////////////////////////////////////////////////////////////
 
 void
 nsRDFTreeDataModel::AddColumn(const nsString& name, RDF_Resource property)

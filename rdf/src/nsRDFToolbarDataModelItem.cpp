@@ -68,27 +68,24 @@ nsRDFToolbarDataModelItem::QueryInterface(const nsIID& iid, void** result)
 
 
 ////////////////////////////////////////////////////////////////////////
+// nsIDMItem interface -- delgates to superclass
 
-#if 0
 NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetIconImage(nsIImage*& image, nsIImageGroup* group) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetIconImage(image, group);
 }
-
-
 
 NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetOpenState(PRBool& result) const
 {
-    result = IsOpen();
-    return NS_OK;
+    return nsRDFDataModelItem::GetOpenState(result);
 }
 
 NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetChildCount(PRUint32& count) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetChildCount(count);
 }
 
 
@@ -96,29 +93,29 @@ nsRDFToolbarDataModelItem::GetChildCount(PRUint32& count) const
 NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetNthChild(nsIDMItem*& pItem, PRUint32 item) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetNthChild(pItem, item);
 }
 
 
 NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetParent(nsIDMItem*& pItem) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetParent(pItem);
 }
 
 
 NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetStringPropertyValue(nsString& result, const nsString& property) const
 {
-    // 1. convert the property to a URI
-    // 2. ask the RDF database for the value of the property
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetStringPropertyValue(result, property);
 }
 
 
 NS_IMETHODIMP
 nsRDFToolbarDataModelItem::GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetIntPropertyValue(value, itemProperty);
 }
-#endif
+
+////////////////////////////////////////////////////////////////////////
+// nsIToolbarDMItem interface
