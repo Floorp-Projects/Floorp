@@ -69,9 +69,9 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *fullpath);
 #define NS_QUICKREGISTER_DATA_SYMBOL "g_NSQuickRegisterData"
 
 typedef struct NSQuickRegisterClassData {
-	const char *classIdStr;
-	const char *progId;
-	const char *version;
+	const char *CIDString;	// {98765-8776-8958758759-958785}
+	const char *className;	// "Layout Engine"
+	const char *progID;		// "Gecko.LayoutEngine.1"
 } NSQuickRegisterClassData;
 
 typedef NSQuickRegisterClassData* NSQuickRegisterData;
@@ -153,11 +153,13 @@ public:
                                  void **aResult);
 
   // Creates a class instance for a specific class ID
+  /*
   static nsresult CreateInstance2(const nsCID &aClass, 
                                   nsISupports *aDelegate,
                                   const nsIID &aIID,
                                   void *aSignature,
                                   void **aResult);
+  */
 
   // Manually registry a factory for a class
   static nsresult RegisterFactory(const nsCID &aClass,
