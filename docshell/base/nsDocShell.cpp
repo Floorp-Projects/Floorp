@@ -2206,8 +2206,9 @@ nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
 
         nsXPIDLString messageStr;
         NS_ENSURE_SUCCESS(stringBundle->
-                          GetStringFromName(NS_LITERAL_STRING("protocolNotFound").get(),
-                                            getter_Copies(messageStr)),
+                          GetStringFromName(
+                              NS_LITERAL_STRING("protocolNotFound").get(),
+                              getter_Copies(messageStr)),
                           NS_ERROR_FAILURE);
 
         nsAutoString uriString(aURI);
@@ -2225,6 +2226,24 @@ nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
         prompter->Alert(nsnull, msg);
         nsTextFormatter::smprintf_free(msg);
     }                           // end unknown protocol
+    else if (NS_ERROR_MALFORMED_URI == rv) {
+        // malformed URI
+        nsCOMPtr<nsIPrompt> prompter;
+        nsCOMPtr<nsIStringBundle> stringBundle;
+        GetPromptAndStringBundle(getter_AddRefs(prompter),
+                                 getter_AddRefs(stringBundle));
+
+        NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
+
+        nsXPIDLString messageStr;
+        NS_ENSURE_SUCCESS(stringBundle->
+                          GetStringFromName(
+                              NS_LITERAL_STRING("malformedURI").get(),
+                              getter_Copies(messageStr)),
+                          NS_ERROR_FAILURE);
+
+        prompter->Alert(nsnull, messageStr.get());
+    }
 
     if (!uri)
         return NS_ERROR_FAILURE;
