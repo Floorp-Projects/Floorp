@@ -98,8 +98,8 @@ function AddAddressFromComposeWindow(addresses, prefix)
 function SelectAddressOKButton()
 {
 	var body = document.getElementById('bucketBody');
-	var item, row, cell, text, colon;
-	var toAddress="", ccAddress="", bccAddress="";
+	var item, row, cell, text, colon,email;
+	var toAddress="", ccAddress="", bccAddress="", emptyEmail="";
 
 	for ( var index = 0; index < body.childNodes.length; index++ )
 	{
@@ -111,6 +111,7 @@ function SelectAddressOKButton()
 			{
 				cell = row.childNodes[0];
 				text = cell.getAttribute('value');
+				email = cell.getAttribute('email');
 				if ( text )
 				{
 					switch ( text[0] )
@@ -132,16 +133,28 @@ function SelectAddressOKButton()
 							break;
 					}
 				}
+				if(!email)
+				{
+					if (emptyEmail)
+						emptyEmail +=", ";
+						emptyEmail += text.substring(prefixTo.length, text.length-2);
+				}
 			}
 		}
 	}
-
+	if(emptyEmail)
+	{	
+		var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
+		var alertText = Bundle.GetStringFromName("emptyEmailCard");
+		alert(alertText + emptyEmail);
+		return false;
+	}
 	// reset the UI in compose window
 	msgCompFields.SetTo(toAddress);
 	msgCompFields.SetCc(ccAddress);
 	msgCompFields.SetBcc(bccAddress);
 	top.composeWindow.CompFields2Recipients(top.msgCompFields);
-
+	
 	return true;
 }
 
@@ -163,7 +176,7 @@ function SelectAddressBccButton()
 function AddSelectedAddressesIntoBucket(prefix)
 {
 	var item, uri, rdf, cardResource, card, address;
-	
+	var email ="";
 	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -174,13 +187,22 @@ function AddSelectedAddressesIntoBucket(prefix)
 			uri = resultsTree.selectedItems[item].getAttribute('id');
 			cardResource = rdf.GetResource(uri);
 			card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
-			address = prefix + "\"" + card.name + "\" <" + card.primaryEmail + ">";
-			AddAddressIntoBucket(address);
+			if (card.isMailList)
+			{
+				address = prefix + "\"" + card.name + "\" <" + card.name + ">";
+				email = card.name;
+			}
+			else 
+			{
+				address = prefix + "\"" + card.name + "\" <" + card.primaryEmail + ">";
+				email = card.primaryEmail;
+			}
+			AddAddressIntoBucket(address,email);
 		}
 	}	
 }
 
-function AddAddressIntoBucket(address)
+function AddAddressIntoBucket(address,email)
 {
 	var body = document.getElementById("bucketBody");
 	
@@ -188,6 +210,7 @@ function AddAddressIntoBucket(address)
 	var row = document.createElement('treerow');
 	var cell = document.createElement('treecell');
 	cell.setAttribute('value', address);
+	cell.setAttribute('email',email);
 	
 	row.appendChild(cell);
 	item.appendChild(row);
