@@ -33,6 +33,7 @@ CPPSRCS=                                \
  nsFileLocations.cpp                    \
  nsGlobalHistory.cpp			\
  nsNetSupportDialog.cpp		\
+ nsDefaultHelper.cpp	\
  $(NULL)
 
 CPP_OBJS=                               \
