@@ -26,12 +26,12 @@
 
 %{C++
 
-#define NS_MIMESERVICE_CID                             \
-{ /* 9ac9e770-18bc-11d3-9337-00104ba0fd40 */         \
-    0x9ac9e770,                                      \
-    0x18bc,                                          \
+#define NS_MIMESERVICE_CID                           \
+{ /* 03af31da-3109-11d3-8cd0-0060b0fc14a3 */         \
+    0x03af31da,                                      \
+    0x3109,                                          \
     0x11d3,                                          \
-    {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
 %}
