@@ -294,7 +294,11 @@ POLICY  = moz40p3
 #
 # If you add a file in a new directory, you must add flags for that directory
 #
+!ifdef SMART_MAIL
+CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /DMOZILLA_30 /I$(DEPTH)\dist\public\mime /I$(DEPTH)\lib\xp
+!else
 CFLAGS_LIBMIME_C=       $(CFLAGS_DEFAULT) /I$(DEPTH)\dist\public\mime
+!endif
 CFLAGS_LIBI18N_C=       $(CFLAGS_DEFAULT) /Fp"$(OUTDIR)/intlpriv.pch" /YX"intlpriv.h"
 CFLAGS_LIBIMG_C=        $(CFLAGS_DEFAULT) /I$(DEPTH)\jpeg /Fp"$(OUTDIR)/xp.pch" /YX"xp.h"
 CFLAGS_JTOOLS_C=        $(CFLAGS_DEFAULT)
@@ -483,6 +487,9 @@ LINK_LIBS= \
 !ifdef MOZ_LOC_INDEP
     $(DIST)\lib\li32.lib \
 !endif
+#!ifdef SMART_MAIL 
+#    $(DIST)\lib\mime.lib \
+#!endif
 !ifdef MOZ_MAIL_NEWS
     $(DIST)\lib\mime.lib \
     $(DIST)\lib\msg.lib \
@@ -743,6 +750,9 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 	/DNSPR20 \
 !endif
 !endif
+!ifdef NO_SECURITY
+    /DNO_SECURITY \
+!endif
 !if defined(MOZ_OJI)
     /DOJI \
 !elseif defined(MOZ_JAVA)
@@ -914,7 +924,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libcnv\readbmp.c
 	$(DEPTH)\lib\libcnv\libppm3.c
 
-!ifdef MOZ_MAIL_NEWS
+!if defined( MOZ_MAIL_NEWS ) || defined( SMART_MAIL )
 	$(DEPTH)\lib\libmime\mimecont.c
 	$(DEPTH)\lib\libmime\mimeebod.c
 	$(DEPTH)\lib\libmime\mimeenc.c
@@ -942,10 +952,14 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmime\mimetpla.c
 	$(DEPTH)\lib\libmime\mimetric.c
 	$(DEPTH)\lib\libmime\mimeunty.c
-	$(DEPTH)\lib\libmime\mimevcrd.c
 	$(DEPTH)\lib\libmime\mimedrft.c
+!ifndef SMART_MAIL
+	$(DEPTH)\lib\libmime\mimevcrd.c
 	$(DEPTH)\lib\libmisc\mime.c
 	$(DEPTH)\lib\libmisc\dirprefs.c
+!else
+	$(DEPTH)\lib\libmime\addr.c
+!endif
 !endif
 !ifdef MOZ_CALENDAR
 	$(DEPTH)\lib\libmime\mimecal.c
@@ -1126,6 +1140,9 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\xp\xp_mesg.c
 !ifdef MOZ_MAIL_NEWS
 	$(DEPTH)\lib\xp\xp_md5.c
+!endif
+!ifdef SMART_MAIL
+	$(DEPTH)\lib\xp\xp_linebuf.c
 !endif
 	$(DEPTH)\lib\xp\xp_ncent.c
 	$(DEPTH)\lib\xp\xp_reg.c
