@@ -32,12 +32,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sha512.c,v 1.2 2002/11/05 01:52:49 nelsonb%netscape.com Exp $
+ * $Id: sha512.c,v 1.3 2002/11/20 00:48:09 nelsonb%netscape.com Exp $
  */
 #include "prcpucfg.h"
-#if defined(_X86_)
+#if defined(_X86_) || defined(SHA_NO_LONG_LONG)
 #define NOUNROLL512 1
-/* #undef HAVE_LONG_LONG */
+#undef HAVE_LONG_LONG
 #endif
 #include "prtypes.h"	/* for PRUintXX */
 #include "secport.h"	/* for PORT_XXX */
@@ -120,7 +120,16 @@ swap4b(PRUint32 dwd)
 #define SHA_HTONL(x) swap4b(x)
 #define BYTESWAP4(x)  x = SHA_HTONL(x)
 
-#else
+#elif defined(LINUX) && defined(_X86_)
+#undef  __OPTIMIZE__
+#define __OPTIMIZE__ 1
+#undef  __pentium__
+#define __pentium__ 1
+#include <byteswap.h>
+#define SHA_HTONL(x) bswap_32(x)
+#define BYTESWAP4(x)  x = SHA_HTONL(x)
+
+#else /* neither windows nor Linux PC */
 #define SWAP4MASK  0x00FF00FF
 #define SHA_HTONL(x) (t1 = (x), t1 = (t1 << 16) | (t1 >> 16), \
                       ((t1 & SWAP4MASK) << 8) | ((t1 >> 8) & SWAP4MASK))
@@ -189,70 +198,70 @@ SHA256_Compress(SHA256Context *ctx)
     BYTESWAP4(W[15]);
 #endif
 
-#define INITW(t) (s1(W[t-2]) + W[t-7] + s0(W[t-15]) + W[t-16])
+#define INITW(t) W[t] = (s1(W[t-2]) + W[t-7] + s0(W[t-15]) + W[t-16])
 
     /* prepare the "message schedule"   */
 #ifdef NOUNROLL256
     {
 	int t;
 	for (t = 16; t < 64; ++t) {
-	    W[t] = INITW(t);
+	    INITW(t);
 	}
     }
 #else
-    W[16] = INITW(16);
-    W[17] = INITW(17);
-    W[18] = INITW(18);
-    W[19] = INITW(19);
+    INITW(16);
+    INITW(17);
+    INITW(18);
+    INITW(19);
 
-    W[20] = INITW(20);
-    W[21] = INITW(21);
-    W[22] = INITW(22);
-    W[23] = INITW(23);
-    W[24] = INITW(24);
-    W[25] = INITW(25);
-    W[26] = INITW(26);
-    W[27] = INITW(27);
-    W[28] = INITW(28);
-    W[29] = INITW(29);
+    INITW(20);
+    INITW(21);
+    INITW(22);
+    INITW(23);
+    INITW(24);
+    INITW(25);
+    INITW(26);
+    INITW(27);
+    INITW(28);
+    INITW(29);
 
-    W[30] = INITW(30);
-    W[31] = INITW(31);
-    W[32] = INITW(32);
-    W[33] = INITW(33);
-    W[34] = INITW(34);
-    W[35] = INITW(35);
-    W[36] = INITW(36);
-    W[37] = INITW(37);
-    W[38] = INITW(38);
-    W[39] = INITW(39);
+    INITW(30);
+    INITW(31);
+    INITW(32);
+    INITW(33);
+    INITW(34);
+    INITW(35);
+    INITW(36);
+    INITW(37);
+    INITW(38);
+    INITW(39);
 
-    W[40] = INITW(40);
-    W[41] = INITW(41);
-    W[42] = INITW(42);
-    W[43] = INITW(43);
-    W[44] = INITW(44);
-    W[45] = INITW(45);
-    W[46] = INITW(46);
-    W[47] = INITW(47);
-    W[48] = INITW(48);
-    W[49] = INITW(49);
+    INITW(40);
+    INITW(41);
+    INITW(42);
+    INITW(43);
+    INITW(44);
+    INITW(45);
+    INITW(46);
+    INITW(47);
+    INITW(48);
+    INITW(49);
 
-    W[50] = INITW(50);
-    W[51] = INITW(51);
-    W[52] = INITW(52);
-    W[53] = INITW(53);
-    W[54] = INITW(54);
-    W[55] = INITW(55);
-    W[56] = INITW(56);
-    W[57] = INITW(57);
-    W[58] = INITW(58);
-    W[59] = INITW(59);
+    INITW(50);
+    INITW(51);
+    INITW(52);
+    INITW(53);
+    INITW(54);
+    INITW(55);
+    INITW(56);
+    INITW(57);
+    INITW(58);
+    INITW(59);
 
-    W[60] = INITW(60);
-    W[61] = INITW(61);
-    W[62] = INITW(62);
-    W[63] = INITW(63);
+    INITW(60);
+    INITW(61);
+    INITW(62);
+    INITW(63);
 
 #endif
 #undef INITW
@@ -274,6 +283,21 @@ SHA256_Compress(SHA256Context *ctx)
     d += h; \
     h += S0(a) + Maj(a,b,c); 
 
+#ifdef NOUNROLL256
+    {
+	int t;
+	for (t = 0; t < 64; t+= 8) {
+	    ROUND(t+0,a,b,c,d,e,f,g,h)
+	    ROUND(t+1,h,a,b,c,d,e,f,g)
+	    ROUND(t+2,g,h,a,b,c,d,e,f)
+	    ROUND(t+3,f,g,h,a,b,c,d,e)
+	    ROUND(t+4,e,f,g,h,a,b,c,d)
+	    ROUND(t+5,d,e,f,g,h,a,b,c)
+	    ROUND(t+6,c,d,e,f,g,h,a,b)
+	    ROUND(t+7,b,c,d,e,f,g,h,a)
+	}
+    }
+#else
     ROUND( 0,a,b,c,d,e,f,g,h)
     ROUND( 1,h,a,b,c,d,e,f,g)
     ROUND( 2,g,h,a,b,c,d,e,f)
@@ -345,6 +369,7 @@ SHA256_Compress(SHA256Context *ctx)
     ROUND(61,d,e,f,g,h,a,b,c)
     ROUND(62,c,d,e,f,g,h,a,b)
     ROUND(63,b,c,d,e,f,g,h,a)
+#endif
 
     H[0] += a;
     H[1] += b;
@@ -491,6 +516,7 @@ SHA256_Resurrect(unsigned char *space, void *arg)
 /* ======= SHA512 and SHA384 common constants and defines ================= */
 
 /* common #defines for SHA512 and SHA384 */
+#if defined(HAVE_LONG_LONG)
 #define ROTR64(x,n) ((x >> n) | (x << (64 - n)))
 #define ROTL64(x,n) ((x << n) | (x >> (64 - n)))
 
@@ -499,20 +525,12 @@ SHA256_Resurrect(unsigned char *space, void *arg)
 #define s0(x) (t1 = x, ROTR64(t1, 1) ^ ROTR64(t1, 8) ^ SHR(t1,7))
 #define s1(x) (t2 = x, ROTR64(t2,19) ^ ROTR64(t2,61) ^ SHR(t2,6))
 
-#if defined(HAVE_LONG_LONG)
 #if PR_BYTES_PER_LONG == 8
 #define ULLC(hi,lo) 0x ## hi ## lo ## UL
 #elif defined(_MSC_VER)
 #define ULLC(hi,lo) 0x ## hi ## lo ## ui64
 #else
 #define ULLC(hi,lo) 0x ## hi ## lo ## ULL
-#endif
-#else
-#if defined(IS_LITTLE_ENDIAN)
-#define ULLC(hi,lo) { 0x ## lo ## U, 0x ## hi ## U }
-#else
-#define ULLC(hi,lo) { 0x ## hi ## U, 0x ## lo ## U }
-#endif
 #endif
 
 #define SHA_MASK16 ULLC(0000FFFF,0000FFFF)
@@ -522,6 +540,20 @@ SHA256_Resurrect(unsigned char *space, void *arg)
   t1 = ((t1 & SHA_MASK16) << 16) | ((t1 >> 16) & SHA_MASK16), \
   (t1 >> 32) | (t1 << 32))
 #define BYTESWAP8(x)  x = SHA_HTONLL(x)
+
+#else /* no long long */
+
+#if defined(IS_LITTLE_ENDIAN)
+#define ULLC(hi,lo) { 0x ## lo ## U, 0x ## hi ## U }
+#else
+#define ULLC(hi,lo) { 0x ## hi ## U, 0x ## lo ## U }
+#endif
+
+#define SHA_HTONLL(x) ( BYTESWAP4(x.lo), BYTESWAP4(x.hi), \
+   x.hi ^= x.lo ^= x.hi ^= x.lo, x)
+#define BYTESWAP8(x)  do { PRUint32 tmp; BYTESWAP4(x.lo); BYTESWAP4(x.hi); \
+   tmp = x.lo; x.lo = x.hi; x.hi = tmp; } while (0)
+#endif
 
 /* SHA-384 and SHA-512 constants, K512. */
 static const PRUint64 K512[80] = {
@@ -660,13 +692,99 @@ SHA512_Begin(SHA512Context *ctx)
     memcpy(H, H512, sizeof H512);
 }
 
+#if defined(SHA512_TRACE)
+#if defined(HAVE_LONG_LONG)
+#define DUMP(n,a,d,e,h) printf(" t = %2d, %s = %016lx, %s = %016lx\n", \
+			       n, #e, d, #a, h);
+#else
+#define DUMP(n,a,d,e,h) printf(" t = %2d, %s = %08x%08x, %s = %08x%08x\n", \
+			       n, #e, d.hi, d.lo, #a, h.hi, h.lo);
+#endif
+#else
+#define DUMP(n,a,d,e,h)
+#endif
+
+#if defined(HAVE_LONG_LONG)
+
+#define ADDTO(x,y) y += x
+
+#define INITW(t) W[t] = (s1(W[t-2]) + W[t-7] + s0(W[t-15]) + W[t-16])
+
+#define ROUND(n,a,b,c,d,e,f,g,h) \
+    h += S1(e) + Ch(e,f,g) + K512[n] + W[n]; \
+    d += h; \
+    h += S0(a) + Maj(a,b,c); \
+    DUMP(n,a,d,e,h)
+
+#else /* use only 32-bit variables, and don't unroll loops */
+
+#undef  NOUNROLL512
+#define NOUNROLL512 1
+
+#define ADDTO(x,y) y.lo += x.lo; y.hi += x.hi + (x.lo > y.lo)
+
+#define ROTR64a(x,n,lo,hi) (x.lo >> n | x.hi << (32-n))
+#define ROTR64A(x,n,lo,hi) (x.lo << (64-n) | x.hi >> (n-32))
+#define  SHR64a(x,n,lo,hi) (x.lo >> n | x.hi << (32-n))
+
+/* Capitol Sigma and lower case sigma functions */
+#define s0lo(x) (ROTR64a(x,1,lo,hi) ^ ROTR64a(x,8,lo,hi) ^ SHR64a(x,7,lo,hi))
+#define s0hi(x) (ROTR64a(x,1,hi,lo) ^ ROTR64a(x,8,hi,lo) ^ (x.hi >> 7))
+
+#define s1lo(x) (ROTR64a(x,19,lo,hi) ^ ROTR64A(x,61,lo,hi) ^ SHR64a(x,6,lo,hi))
+#define s1hi(x) (ROTR64a(x,19,hi,lo) ^ ROTR64A(x,61,hi,lo) ^ (x.hi >> 6))
+
+#define S0lo(x)(ROTR64a(x,28,lo,hi) ^ ROTR64A(x,34,lo,hi) ^ ROTR64A(x,39,lo,hi))
+#define S0hi(x)(ROTR64a(x,28,hi,lo) ^ ROTR64A(x,34,hi,lo) ^ ROTR64A(x,39,hi,lo))
+
+#define S1lo(x)(ROTR64a(x,14,lo,hi) ^ ROTR64a(x,18,lo,hi) ^ ROTR64A(x,41,lo,hi))
+#define S1hi(x)(ROTR64a(x,14,hi,lo) ^ ROTR64a(x,18,hi,lo) ^ ROTR64A(x,41,hi,lo))
+
+/* 32-bit versions of Ch and Maj */
+#define Chxx(x,y,z,lo) ((x.lo & y.lo) ^ (~x.lo & z.lo))
+#define Majx(x,y,z,lo) ((x.lo & y.lo) ^ (x.lo & z.lo) ^ (y.lo & z.lo))
+
+#define INITW(t) \
+    do { \
+	PRUint32 lo, tm; \
+	PRUint32 cy = 0; \
+	lo = s1lo(W[t-2]); \
+	lo += (tm = W[t-7].lo);     if (lo < tm) cy++; \
+	lo += (tm = s0lo(W[t-15])); if (lo < tm) cy++; \
+	lo += (tm = W[t-16].lo);    if (lo < tm) cy++; \
+	W[t].lo = lo; \
+	W[t].hi = cy + s1hi(W[t-2]) + W[t-7].hi + s0hi(W[t-15]) + W[t-16].hi; \
+    } while (0)
+
+#define ROUND(n,a,b,c,d,e,f,g,h) \
+    { \
+	PRUint32 lo, tm, cy; \
+	lo  = S1lo(e); \
+	lo += (tm = Chxx(e,f,g,lo));    cy = (lo < tm); \
+	lo += (tm = K512[n].lo);	if (lo < tm) cy++; \
+	lo += (tm =    W[n].lo);	if (lo < tm) cy++; \
+	h.lo += lo;			if (h.lo < lo) cy++; \
+	h.hi += cy + S1hi(e) + Chxx(e,f,g,hi) + K512[n].hi + W[n].hi; \
+	d.lo += h.lo; \
+	d.hi += h.hi + (d.lo < h.lo); \
+	lo  = S0lo(a);  \
+	lo += (tm = Majx(a,b,c,lo));	cy = (lo < tm); \
+	h.lo += lo;			if (h.lo < lo) cy++; \
+	h.hi += cy + S0hi(a) + Majx(a,b,c,hi); \
+	DUMP(n,a,d,e,h) \
+    }
+#endif
+
 static void
 SHA512_Compress(SHA512Context *ctx)
 {
-  {
-    PRUint64 t1, t2;
-
 #if defined(IS_LITTLE_ENDIAN)
+  {
+#if defined(HAVE_LONG_LONG)
+    PRUint64 t1;
+#else
+    PRUint32 t1;
+#endif
     BYTESWAP8(W[0]);
     BYTESWAP8(W[1]);
     BYTESWAP8(W[2]);
@@ -683,91 +801,104 @@ SHA512_Compress(SHA512Context *ctx)
     BYTESWAP8(W[13]);
     BYTESWAP8(W[14]);
     BYTESWAP8(W[15]);
+  }
 #endif
 
-#define INITW(t) (s1(W[t-2]) + W[t-7] + s0(W[t-15]) + W[t-16])
-
+  {
+    PRUint64 t1, t2;
 #ifdef NOUNROLL512
     {
 	/* prepare the "message schedule"   */
 	int t;
 	for (t = 16; t < 80; ++t) {
-	    W[t] = INITW(t);
+	    INITW(t);
 	}
     }
 #else
-    W[16] = INITW(16);
-    W[17] = INITW(17);
-    W[18] = INITW(18);
-    W[19] = INITW(19);
+    INITW(16);
+    INITW(17);
+    INITW(18);
+    INITW(19);
 
-    W[20] = INITW(20);
-    W[21] = INITW(21);
-    W[22] = INITW(22);
-    W[23] = INITW(23);
-    W[24] = INITW(24);
-    W[25] = INITW(25);
-    W[26] = INITW(26);
-    W[27] = INITW(27);
-    W[28] = INITW(28);
-    W[29] = INITW(29);
+    INITW(20);
+    INITW(21);
+    INITW(22);
+    INITW(23);
+    INITW(24);
+    INITW(25);
+    INITW(26);
+    INITW(27);
+    INITW(28);
+    INITW(29);
 
-    W[30] = INITW(30);
-    W[31] = INITW(31);
-    W[32] = INITW(32);
-    W[33] = INITW(33);
-    W[34] = INITW(34);
-    W[35] = INITW(35);
-    W[36] = INITW(36);
-    W[37] = INITW(37);
-    W[38] = INITW(38);
-    W[39] = INITW(39);
+    INITW(30);
+    INITW(31);
+    INITW(32);
+    INITW(33);
+    INITW(34);
+    INITW(35);
+    INITW(36);
+    INITW(37);
+    INITW(38);
+    INITW(39);
 
-    W[40] = INITW(40);
-    W[41] = INITW(41);
-    W[42] = INITW(42);
-    W[43] = INITW(43);
-    W[44] = INITW(44);
-    W[45] = INITW(45);
-    W[46] = INITW(46);
-    W[47] = INITW(47);
-    W[48] = INITW(48);
-    W[49] = INITW(49);
+    INITW(40);
+    INITW(41);
+    INITW(42);
+    INITW(43);
+    INITW(44);
+    INITW(45);
+    INITW(46);
+    INITW(47);
+    INITW(48);
+    INITW(49);
 
-    W[50] = INITW(50);
-    W[51] = INITW(51);
-    W[52] = INITW(52);
-    W[53] = INITW(53);
-    W[54] = INITW(54);
-    W[55] = INITW(55);
-    W[56] = INITW(56);
-    W[57] = INITW(57);
-    W[58] = INITW(58);
-    W[59] = INITW(59);
+    INITW(50);
+    INITW(51);
+    INITW(52);
+    INITW(53);
+    INITW(54);
+    INITW(55);
+    INITW(56);
+    INITW(57);
+    INITW(58);
+    INITW(59);
 
-    W[60] = INITW(60);
-    W[61] = INITW(61);
-    W[62] = INITW(62);
-    W[63] = INITW(63);
-    W[64] = INITW(64);
-    W[65] = INITW(65);
-    W[66] = INITW(66);
-    W[67] = INITW(67);
-    W[68] = INITW(68);
-    W[69] = INITW(69);
+    INITW(60);
+    INITW(61);
+    INITW(62);
+    INITW(63);
+    INITW(64);
+    INITW(65);
+    INITW(66);
+    INITW(67);
+    INITW(68);
+    INITW(69);
 
-    W[70] = INITW(70);
-    W[71] = INITW(71);
-    W[72] = INITW(72);
-    W[73] = INITW(73);
-    W[74] = INITW(74);
-    W[75] = INITW(75);
-    W[76] = INITW(76);
-    W[77] = INITW(77);
-    W[78] = INITW(78);
-    W[79] = INITW(79);
+    INITW(70);
+    INITW(71);
+    INITW(72);
+    INITW(73);
+    INITW(74);
+    INITW(75);
+    INITW(76);
+    INITW(77);
+    INITW(78);
+    INITW(79);
 #endif
   }
+#ifdef SHA512_TRACE
+  {
+    int i;
+    for (i = 0; i < 80; ++i) {
+#ifdef HAVE_LONG_LONG
+	printf("W[%2d] = %016lx\n", i, W[i]);
+#else
+	printf("W[%2d] = %08x%08x\n", i, W[i].hi, W[i].lo);
+#endif
+    }
+  }
+#endif
   {
     PRUint64 a, b, c, d, e, f, g, h;
 
@@ -779,11 +910,6 @@ SHA512_Compress(SHA512Context *ctx)
     f = H[5];
     g = H[6];
     h = H[7];
-
-#define ROUND(n,a,b,c,d,e,f,g,h) \
-    h += S1(e) + Ch(e,f,g) + K512[n] + W[n]; \
-    d += h; \
-    h += S0(a) + Maj(a,b,c); 
 
 #ifdef NOUNROLL512
     {
@@ -891,14 +1017,14 @@ SHA512_Compress(SHA512Context *ctx)
     ROUND(79,b,c,d,e,f,g,h,a)
 #endif
 
-    H[0] += a;
-    H[1] += b;
-    H[2] += c;
-    H[3] += d;
-    H[4] += e;
-    H[5] += f;
-    H[6] += g;
-    H[7] += h;
+    ADDTO(a,H[0]);
+    ADDTO(b,H[1]);
+    ADDTO(c,H[2]);
+    ADDTO(d,H[3]);
+    ADDTO(e,H[4]);
+    ADDTO(f,H[5]);
+    ADDTO(g,H[6]);
+    ADDTO(h,H[7]);
   }
 }
 
@@ -906,12 +1032,19 @@ void
 SHA512_Update(SHA512Context *ctx, const unsigned char *input,
               unsigned int inputLen)
 {
-    unsigned int inBuf = (unsigned int)ctx->sizeLo & 0x7f;
+    unsigned int inBuf;
     if (!inputLen)
     	return;
 
+#if defined(HAVE_LONG_LONG)
+    inBuf = (unsigned int)ctx->sizeLo & 0x7f;
     /* Add inputLen into the count of bytes processed, before processing */
     ctx->sizeLo += inputLen;
+#else
+    inBuf = (unsigned int)ctx->sizeLo.lo & 0x7f;
+    ctx->sizeLo.lo += inputLen;
+    if (ctx->sizeLo.lo < inputLen) ctx->sizeLo.hi++;
+#endif
 
     /* if data already in buffer, attemp to fill rest of buffer */
     if (inBuf) {
@@ -941,20 +1074,31 @@ void
 SHA512_End(SHA512Context *ctx, unsigned char *digest,
            unsigned int *digestLen, unsigned int maxDigestLen)
 {
+#if defined(HAVE_LONG_LONG)
     unsigned int inBuf  = (unsigned int)ctx->sizeLo & 0x7f;
     unsigned int padLen = (inBuf < 112) ? (112 - inBuf) : (112 + 128 - inBuf);
     PRUint64 lo, t1;
-
     lo = (ctx->sizeLo << 3);
+#else
+    unsigned int inBuf  = (unsigned int)ctx->sizeLo.lo & 0x7f;
+    unsigned int padLen = (inBuf < 112) ? (112 - inBuf) : (112 + 128 - inBuf);
+    PRUint64 lo = ctx->sizeLo;
+    PRUint32 t1;
+    lo.lo <<= 3;
+#endif
 
     SHA512_Update(ctx, pad, padLen);
 
-#if defined(IS_LITTLE_ENDIAN)
+#if defined(HAVE_LONG_LONG)
     W[14] = 0;
-    W[15] = SHA_HTONLL(lo);
 #else
-    W[14] = 0;
+    W[14].lo = 0;
+    W[14].hi = 0;
+#endif
+
     W[15] = lo;
+#if defined(IS_LITTLE_ENDIAN)
+    BYTESWAP8(W[15]);
 #endif
     SHA512_Compress(ctx);
 
@@ -1122,6 +1266,15 @@ SHA384_Resurrect(unsigned char *space, void *arg)
 #ifdef SELFTEST
 #include <stdio.h>
 
+static const char abc[] = { "abc" };
+static const char abcdbc[] = { 
+    "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+};
+static const char abcdef[] = { 
+    "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
+    "hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu" 
+};
+
 void
 dumpHash32(const unsigned char *buf, unsigned int bufLen)
 {
@@ -1135,10 +1288,13 @@ dumpHash32(const unsigned char *buf, unsigned int bufLen)
 void test256(void)
 {
     unsigned char outBuf[SHA256_LENGTH];
-    SHA256_Hash(outBuf, "abc");
+
+    printf("SHA256, input = %s\n", abc);
+    SHA256_Hash(outBuf, abc);
     dumpHash32(outBuf, sizeof outBuf);
-    SHA256_Hash(outBuf, 
-		"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+
+    printf("SHA256, input = %s\n", abcdbc);
+    SHA256_Hash(outBuf, abcdbc);
     dumpHash32(outBuf, sizeof outBuf);
 }
 
@@ -1159,30 +1315,53 @@ dumpHash64(const unsigned char *buf, unsigned int bufLen)
 void test512(void)
 {
     unsigned char outBuf[SHA512_LENGTH];
-    SHA512_Hash(outBuf, "abc");
+
+    printf("SHA512, input = %s\n", abc);
+    SHA512_Hash(outBuf, abc);
     dumpHash64(outBuf, sizeof outBuf);
-    SHA512_Hash(outBuf, 
-		"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
-		"hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+
+    printf("SHA512, input = %s\n", abcdef);
+    SHA512_Hash(outBuf, abcdef);
     dumpHash64(outBuf, sizeof outBuf);
+}
+
+void time512(void)
+{
+    unsigned char outBuf[SHA512_LENGTH];
+
+    SHA512_Hash(outBuf, abc);
+    SHA512_Hash(outBuf, abcdef);
 }
 
 void test384(void)
 {
     unsigned char outBuf[SHA384_LENGTH];
-    SHA384_Hash(outBuf, "abc");
+
+    printf("SHA384, input = %s\n", abc);
+    SHA384_Hash(outBuf, abc);
     dumpHash64(outBuf, sizeof outBuf);
-    SHA384_Hash(outBuf, 
-		"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
-		"hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+
+    printf("SHA384, input = %s\n", abcdef);
+    SHA384_Hash(outBuf, abcdef);
     dumpHash64(outBuf, sizeof outBuf);
 }
 
-int main() 
+int main (int argc, char *argv[], char *envp[])
 {
-    test256();
-    test512();
-    test384();
+    int i = 1;
+    if (argc > 1) {
+    	i = atoi(argv[1]);
+    }
+    if (i < 2) {
+	test256();
+	test512();
+	test384();
+    } else {
+    	while (i-- > 0) {
+	    time512();
+	}
+	printf("done\n");
+    }
     return 0;
 }
 
