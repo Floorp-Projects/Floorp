@@ -3769,6 +3769,9 @@ nsWindow::HandleTextEvent(HIMC hIMEContext)
   (void)DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
 
+  if(event.rangeArray)
+     delete [] event.rangeArray;
+
   //
   // Post process event
   //
@@ -3828,6 +3831,23 @@ nsWindow::HandleEndComposition(void)
 	NS_RELEASE(event.widget);
 }
 
+static PRUint32 PlatformToNSAttr(PRUint32 aAttr)
+{
+ switch(aAttr)
+ {
+    case ATTR_INPUT:
+         return NS_TEXTRANGE_RAWINPUT;
+    case ATTR_CONVERTED:
+         return NS_TEXTRANGE_CONVERTEDTEXT;
+    case ATTR_TARGET_NOTCONVERTED:
+         return NS_TEXTRANGE_SELECTEDRAWTEXT;
+    case ATTR_TARGET_CONVERTED:
+         return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+    default:
+         NS_ASSERTION(PR_FALSE, "unknown attribute");
+         return NS_TEXTRANGE_CARETPOSITION;
+ }
+}
 //
 // This function converters the composition string (CGS_COMPSTR) into Unicode while mapping the 
 //  attribute (GCS_ATTR) string t
@@ -3852,9 +3872,9 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
 		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,
 								mIMECursorPosition,NULL,0);
-		(*textRangeListResult)[0].mStartOffset=substringLength;
-		(*textRangeListResult)[0].mEndOffset = substringLength;
-		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_CARETPOSITION;
+		(*textRangeListResult)[1].mStartOffset=substringLength;
+		(*textRangeListResult)[1].mEndOffset = substringLength;
+		(*textRangeListResult)[1].mRangeType = NS_TEXTRANGE_CARETPOSITION;
 
 		
 	} else {
@@ -3892,7 +3912,8 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 				substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString+lastMBCSOffset,
 										mIMECompClauseString[ictr]-lastMBCSOffset,NULL,0);
 				(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset + substringLength;
-				(*textRangeListResult)[rangePointer].mRangeType = mIMEAttributeString[mIMECompClauseString[ictr]-1];
+				(*textRangeListResult)[rangePointer].mRangeType = 
+                   PlatformToNSAttr(mIMEAttributeString[mIMECompClauseString[ictr]-1]);
 				lastUnicodeOffset+= substringLength;
 				lastMBCSOffset = mIMECompClauseString[ictr];
 				rangePointer++;
@@ -3900,35 +3921,5 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		}
 	}
 
-#ifdef DEBUG_tague
-	printf("rangeCount =%lu\n",*textRangeListLengthResult);
-	for(uctr=0;uctr<*textRangeListLengthResult;uctr++) {
-		printf("range %ld: rangeStart=%lu\trangeEnd=%lu ",uctr,(*textRangeListResult)[uctr].mStartOffset,
-			(*textRangeListResult)[uctr].mEndOffset);
-		if ((*textRangeListResult)[uctr].mRangeType==ATTR_INPUT) printf("ATTR_INPUT\n");
-		if ((*textRangeListResult)[uctr].mRangeType==ATTR_TARGET_CONVERTED) printf("ATTR_TARGET_CONVERTED\n");
-		if ((*textRangeListResult)[uctr].mRangeType==ATTR_CONVERTED) printf("ATTR_CONVERTED\n");
-		if ((*textRangeListResult)[uctr].mRangeType==ATTR_TARGET_NOTCONVERTED) printf("ATTR_TARGET_NOTCONVERTED\n");
-		if ((*textRangeListResult)[uctr].mRangeType==ATTR_INPUT_ERROR) printf("ATTR_INPUT_ERROR\n");
-		if ((*textRangeListResult)[uctr].mRangeType==ATTR_FIXEDCONVERTED) printf("ATTR_FIXEDCONVERTED\n");
-	}
-#endif
-
-	//
-	// convert from windows attributes into nsGUI/DOM attributes
-	//
-	for(uctr=0;uctr<*textRangeListLengthResult;uctr++) {
-		if ((*textRangeListResult)[uctr].mRangeType==ATTR_INPUT)
-			(*textRangeListResult)[uctr].mRangeType=NS_TEXTRANGE_RAWINPUT;
-		else 
-			if ((*textRangeListResult)[uctr].mRangeType==ATTR_TARGET_CONVERTED)
-				(*textRangeListResult)[uctr].mRangeType=NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
-		else
-			if ((*textRangeListResult)[uctr].mRangeType==ATTR_CONVERTED)
-				(*textRangeListResult)[uctr].mRangeType=NS_TEXTRANGE_CONVERTEDTEXT;
-		else
-			if ((*textRangeListResult)[uctr].mRangeType==ATTR_TARGET_NOTCONVERTED)
-				(*textRangeListResult)[uctr].mRangeType=NS_TEXTRANGE_RAWINPUT;
-	}
 
 }
