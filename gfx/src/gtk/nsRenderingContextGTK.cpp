@@ -394,7 +394,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(void)
       mTranMatrix = state->mMatrix;
     }
 
-    mClipRegion = state->mClipRegion;
+    mClipRegion.swap(state->mClipRegion);
 
     if (state->mFontMetrics && (mFontMetrics != state->mFontMetrics))
       SetFont(state->mFontMetrics);
