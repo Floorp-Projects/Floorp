@@ -65,64 +65,10 @@ static NS_DEFINE_CID(kRDFServiceCID,   NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
-// XXX This'll permanently leak
-static nsIRDFService* gRDFService = nsnull;
-
-static nsIRDFResource* kRDF_instanceOf = nsnull;
-static nsIRDFResource* kRDF_Bag        = nsnull;
-static nsIRDFResource* kRDF_Seq        = nsnull;
-static nsIRDFResource* kRDF_Alt        = nsnull;
-static nsIRDFResource* kRDF_nextVal    = nsnull;
-
-static nsresult
-rdf_EnsureRDFService(void)
-{
-    if (gRDFService)
-        return NS_OK;
-
-    nsresult rv;
-
-    rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      kIRDFServiceIID,
-                                      (nsISupports**) &gRDFService);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-    if (NS_FAILED(rv)) return rv;
-
-    rv = gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
-    rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
-    rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
-    rv = gRDFService->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
-    rv = gRDFService->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
-
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-PRBool
-rdf_IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType)
-{
-    nsresult rv;
-    rv = rdf_EnsureRDFService();
-    if (NS_FAILED(rv)) return PR_FALSE;
-
-    PRBool result;
-    rv = aDataSource->HasAssertion(aResource, kRDF_instanceOf, aType, PR_TRUE, &result);
-    if (NS_FAILED(rv)) return PR_FALSE;
-
-    return result;
-}
-
-
 nsresult
-rdf_CreateAnonymousResource(const nsString& aContextURI, nsIRDFResource** aResult)
+rdf_CreateAnonymousResource(const nsCString& aContextURI, nsIRDFResource** aResult)
 {
 static PRUint32 gCounter = 0;
-
-    nsresult rv;
-    rv = rdf_EnsureRDFService();
-    if (NS_FAILED(rv)) return rv;
 
     if (! gCounter) {
         // Start it at a semi-unique value, just to minimize the
@@ -136,54 +82,68 @@ static PRUint32 gCounter = 0;
         LL_L2UI(gCounter, PR_Now());
     }
 
+    nsresult rv;
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     do {
-        nsAutoString s(aContextURI);
+        char buf[128];
+        CBufDescriptor desc(buf, PR_TRUE, sizeof(buf));
+        nsCAutoString s(desc);
+
+        s = aContextURI;
         s.Append("#$");
         s.Append(++gCounter, 16);
 
         nsIRDFResource* resource;
-        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(s.GetUnicode(), &resource)))
-            return rv;
+        rv = rdf->GetResource((const char*) s, &resource);
+        if (NS_FAILED(rv)) return rv;
 
         // XXX an ugly but effective way to make sure that this
         // resource is really unique in the world.
-        nsrefcnt refcnt = resource->AddRef();
-        resource->Release();
+        resource->AddRef();
+        nsrefcnt refcnt = resource->Release();
 
-        if (refcnt == 2) {
+        if (refcnt == 1) {
             *aResult = resource;
             break;
         }
+
+        NS_RELEASE(resource);
     } while (1);
 
     return NS_OK;
 }
 
 PRBool
-rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource)
+rdf_IsAnonymousResource(const nsCString& aContextURI, nsIRDFResource* aResource)
 {
     nsresult rv;
-    nsXPIDLCString s;
-    if (NS_FAILED(rv = aResource->GetValue( getter_Copies(s) ))) {
-        NS_ASSERTION(PR_FALSE, "unable to get resource URI");
+    const char* p;
+    rv = aResource->GetValueConst(&p);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
+    if (NS_FAILED(rv))
         return PR_FALSE;
+
+    {
+        CBufDescriptor desc(NS_CONST_CAST(char*, p), PR_TRUE, -1);
+        nsCAutoString uri(desc);
+
+        if (uri.Find(aContextURI) != 0)
+            return PR_FALSE;
     }
 
-    nsAutoString uri((const char*) s);
+    {
+        CBufDescriptor desc(NS_CONST_CAST(char*, p + aContextURI.Length()), PR_TRUE, -1);
+        nsCAutoString id(desc);
 
-    // Make sure that they have the same context (prefix)
-    if (uri.Find(aContextURI) != 0)
-        return PR_FALSE;
-
-    uri.Cut(0, aContextURI.Length());
-
-    // Anonymous resources look like the regexp "\$[0-9]+"
-    if (uri.CharAt(0) != '#' || uri.CharAt(1) != '$')
-        return PR_FALSE;
-
-    for (PRInt32 i = uri.Length() - 1; i >= 1; --i) {
-        if (uri.CharAt(i) < '0' || uri.CharAt(i) > '9')
+        if (id.CharAt(0) != '#' || id.CharAt(1) != '$')
             return PR_FALSE;
+
+        for (PRInt32 i = id.Length() - 1; i >= 1; --i) {
+            if (id.CharAt(i) < '0' || id.CharAt(i) > '9')
+                return PR_FALSE;
+        }
     }
 
     return PR_TRUE;

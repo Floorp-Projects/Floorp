@@ -26,12 +26,9 @@
 
   TO DO
 
-  1) Create an nsIRDFContainerService and lump all the container
-     utilities there.
+  1) Move the anonymous resource stuff to nsIRDFService?
 
-  2) Move the anonymous resource stuff to nsIRDFService
-
-  3) All that's left is rdf_PossiblyMakeRelative() and
+  2) All that's left is rdf_PossiblyMakeRelative() and
      -Absolute(). Maybe those go on nsIRDFService, too.
 
  */
@@ -41,33 +38,24 @@
 
 #include "prtypes.h"
 
-class nsIRDFDataSource;
-class nsISimpleEnumerator;
 class nsIRDFResource;
-class nsIRDFNode;
-class nsIRDFResource;
+class nsCString;
 class nsString;
 class nsIURI;
-
-/**
- * The dreaded is-a function. Uses rdf:instanceOf to determine if aResource is aType.
- */
-PRBool
-rdf_IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
 
 /**
  * Construct a new, "anonymous" node; that is, a node with an internal
  * resource URI.
  */
 nsresult
-rdf_CreateAnonymousResource(const nsString& aContextURI, nsIRDFResource** result);
+rdf_CreateAnonymousResource(const nsCString& aContextURI, nsIRDFResource** result);
 
 /**
  * Determine if a resource is an "anonymous" resource that we've constructed
  * ourselves.
  */
 PRBool
-rdf_IsAnonymousResource(const nsString& aContextURI, nsIRDFResource* aResource);
+rdf_IsAnonymousResource(const nsCString& aContextURI, nsIRDFResource* aResource);
 
 nsresult
 rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI);
@@ -81,8 +69,6 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI);
 nsresult
 rdf_MakeAbsoluteURI(nsIURI* aBaseURL, nsString& aURI);
 
-void SHTtest ();
-                       
 #endif // rdfutil_h__
 
 
