@@ -262,9 +262,9 @@ OPDEF(JSOP_SETTER,    124,js_setter_str,js_setter_str,1,  0,  0,  0,  JOF_BYTE)
 /*
  * Prolog bytecodes for defining function, var, and const names.
  */
-OPDEF(JSOP_DEFFUN,    125,"deffun",     NULL,         3,  0,  0,  0,  JOF_CONST)
-OPDEF(JSOP_DEFCONST,  126,"defconst",   NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME)
-OPDEF(JSOP_DEFVAR,    127,"defvar",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME)
+OPDEF(JSOP_DEFFUN,    125,"deffun",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_DECLARING)
+OPDEF(JSOP_DEFCONST,  126,"defconst",   NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME|JOF_DECLARING)
+OPDEF(JSOP_DEFVAR,    127,"defvar",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME|JOF_DECLARING)
 
 /* Auto-clone (if needed due to re-parenting) and push an anonymous function. */
 OPDEF(JSOP_ANONFUNOBJ,  128, "anonfunobj",  NULL,     3,  0,  1, 12,  JOF_CONST)
@@ -309,7 +309,7 @@ OPDEF(JSOP_ARGCNT,      137,"argcnt",     NULL,       1,  0,  1, 12,  JOF_BYTE)
  * The local variable's slot number is the first immediate two-byte operand.
  * The function object's atom index is the second immediate operand.
  */
-OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_DEFLOCALVAR)
+OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_DEFLOCALVAR|JOF_DECLARING)
 
 /* Extended jumps. */
 OPDEF(JSOP_GOTOX,         139,"gotox",    NULL,       5,  0,  0,  0,  JOF_JUMPX)

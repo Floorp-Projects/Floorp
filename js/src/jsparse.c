@@ -2090,8 +2090,12 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                         : JSPROP_ENUMERATE | JSPROP_PERMANENT;
         PN_APPEND(pn, pn2);
 
-        if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop))
-            return NULL;
+        if (!fun) {
+            prop = NULL; /* don't lookup global variables at compile time */
+        } else {
+            if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop))
+                return NULL;
+        }
         if (prop && pobj == obj && OBJ_IS_NATIVE(pobj)) {
             sprop = (JSScopeProperty *)prop;
             if (sprop->getter == js_GetArgument) {
